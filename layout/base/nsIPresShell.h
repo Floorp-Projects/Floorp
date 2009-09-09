@@ -122,10 +122,9 @@ typedef struct CapturingContentInfo {
     mAllowed(PR_FALSE), mRetargetToElement(PR_FALSE), mContent(nsnull) { }
 } CapturingContentInfo;
 
-// 06AA90C2-5234-4F1C-81D7-773B5E4CBB8B
 #define NS_IPRESSHELL_IID     \
-{ 0x06aa90c2, 0x5234, 0x4f1c, \
- { 0x81, 0xd7, 0x77, 0x3b, 0x5e, 0x4c, 0xbb, 0x8b } }
+  { 0xe092e019, 0x1aa2, 0x4f36, \
+    { 0x8c, 0x2e, 0xc6, 0xb0, 0xfe, 0x74, 0x7c, 0x78 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -146,6 +145,14 @@ typedef struct CapturingContentInfo {
 #define VERIFY_REFLOW_DURING_RESIZE_REFLOW  0x40
 
 #undef NOISY_INTERRUPTIBLE_REFLOW
+
+enum nsRectVisibility { 
+  nsRectVisibility_kVisible, 
+  nsRectVisibility_kAboveViewport, 
+  nsRectVisibility_kBelowViewport, 
+  nsRectVisibility_kLeftOfViewport, 
+  nsRectVisibility_kRightOfViewport
+}; 
 
 /**
  * Presentation shell interface. Presentation shells are the
@@ -499,6 +506,24 @@ public:
   NS_IMETHOD ScrollContentIntoView(nsIContent* aContent,
                                    PRIntn      aVPercent,
                                    PRIntn      aHPercent) = 0;
+
+  /**
+   * Determine if a rectangle specified in the frame's coordinate system 
+   * intersects the viewport "enough" to be considered visible.
+   * @param aFrame frame that aRect coordinates are specified relative to
+   * @param aRect rectangle in twips to test for visibility 
+   * @param aMinTwips is the minimum distance in from the edge of the viewport
+   *                  that an object must be to be counted visible
+   * @return nsRectVisibility_kVisible if the rect is visible
+   *         nsRectVisibility_kAboveViewport
+   *         nsRectVisibility_kBelowViewport 
+   *         nsRectVisibility_kLeftOfViewport 
+   *         nsRectVisibility_kRightOfViewport rectangle is outside the viewport
+   *         in the specified direction 
+   */
+  virtual nsRectVisibility GetRectVisibility(nsIFrame *aFrame,
+                                             const nsRect &aRect, 
+                                             nscoord aMinTwips) = 0;
 
   /**
    * Suppress notification of the frame manager that frames are

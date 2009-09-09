@@ -70,7 +70,6 @@
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIEventStateManager.h"
-#include "nsIViewManager.h"
 #include "nsIDocument.h"
 #include "nsISelection.h"
 #include "nsISelectElement.h"
@@ -1130,34 +1129,21 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
 
   // Set up the variables we need, return true if we can't get at them all
   const PRUint16 kMinPixels  = 12;
-  PRUint16 minPixels = nsPresContext::CSSPixelsToAppUnits(kMinPixels);
-
-  nsIViewManager* viewManager = aPresShell->GetViewManager();
-  if (!viewManager)
-    return PR_TRUE;
+  nscoord minDistance = nsPresContext::CSSPixelsToAppUnits(kMinPixels);
 
   // Get the bounds of the current frame, relative to the current view.
   // We don't use the more accurate AccGetBounds, because that is
   // more expensive and the STATE_OFFSCREEN flag that this is used
   // for only needs to be a rough indicator
-  nsIView *containingView = nsnull;
-  nsPoint frameOffset;
   nsRectVisibility rectVisibility = nsRectVisibility_kAboveViewport;
 
-  if (!aGetTopVisibleLeaf) {
-    nsRect relFrameRect = frame->GetRect();
-    frame->GetOffsetFromView(frameOffset, &containingView);
-    if (!containingView)      
-      return PR_FALSE;  // no view -- not visible    
+  if (!aGetTopVisibleLeaf && !frame->GetRect().IsEmpty()) {
+    rectVisibility =
+      aPresShell->GetRectVisibility(frame,
+                                    nsRect(nsPoint(0,0), frame->GetSize()),
+                                    minDistance);
 
-    relFrameRect.x = frameOffset.x;
-    relFrameRect.y = frameOffset.y;
-
-    viewManager->GetRectVisibility(containingView, relFrameRect,
-                                   minPixels, &rectVisibility);
-
-    if (rectVisibility != nsRectVisibility_kAboveViewport &&
-        rectVisibility != nsRectVisibility_kZeroAreaRect) {
+    if (rectVisibility != nsRectVisibility_kAboveViewport) {
       return PR_TRUE;
     }
   }
@@ -1179,19 +1165,17 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   if (!frameTraversal)
     return PR_FALSE;
 
-  while (rectVisibility == nsRectVisibility_kAboveViewport || rectVisibility == nsRectVisibility_kZeroAreaRect) {
+  while (rectVisibility == nsRectVisibility_kAboveViewport) {
     frameTraversal->Next();
     frame = frameTraversal->CurrentItem();
     if (!frame)
       return PR_FALSE;
 
-    nsRect relFrameRect = frame->GetRect();
-    frame->GetOffsetFromView(frameOffset, &containingView);
-    if (containingView) {
-      relFrameRect.x = frameOffset.x;
-      relFrameRect.y = frameOffset.y;
-      viewManager->GetRectVisibility(containingView, relFrameRect,
-                                     minPixels, &rectVisibility);
+    if (!frame->GetRect().IsEmpty()) {
+      rectVisibility =
+        aPresShell->GetRectVisibility(frame,
+                                      nsRect(nsPoint(0,0), frame->GetSize()),
+                                      minDistance);
     }
   }
 
