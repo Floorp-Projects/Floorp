@@ -47,7 +47,6 @@
 #include "nsITextControlFrame.h"
 #include "nsIFontMetrics.h"
 #include "nsWeakReference.h" //for service and presshell pointers
-#include "nsIScrollableViewProvider.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
 #include "nsIScrollableFrame.h"
@@ -57,7 +56,6 @@ class nsISelectionController;
 class nsTextInputSelectionImpl;
 class nsTextInputListener;
 class nsIDOMCharacterData;
-class nsIScrollableView;
 #ifdef ACCESSIBILITY
 class nsIAccessible;
 #endif
@@ -65,9 +63,7 @@ class nsTextInputSelectionImpl;
 
 class nsTextControlFrame : public nsStackFrame,
                            public nsIAnonymousContentCreator,
-                           public nsITextControlFrame,
-                           public nsIScrollableViewProvider
-
+                           public nsITextControlFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -312,9 +308,6 @@ protected:
   // for <textarea>).
   nsresult CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
                              nsSize&              aIntrinsicSize);
-
-  // nsIScrollableViewProvider
-  virtual nsIScrollableView* GetScrollableView();
 
 private:
   //helper methods

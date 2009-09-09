@@ -130,7 +130,6 @@ public:
     nsISVGGlyphFragmentNode_id,
     nsISVGSVGFrame_id,
     nsIScrollableFrame_id,
-    nsIScrollableViewProvider_id,
     nsIScrollbarFrame_id,
     nsIScrollbarMediator_id,
     nsIScrollPositionListener_id,

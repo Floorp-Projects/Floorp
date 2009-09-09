@@ -67,7 +67,6 @@ EXPORTS		= \
 		nsIObjectFrame.h \
 		nsIPageSequenceFrame.h \
 		nsIScrollableFrame.h \
-		nsIScrollableViewProvider.h \
 		nsIStatefulFrame.h \
 		nsFrameSelection.h \
 		$(NULL)
