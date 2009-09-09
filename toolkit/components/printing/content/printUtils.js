@@ -130,7 +130,7 @@ var PrintUtils = {
     // just in case we are already printing, 
     // an error code could be returned if the Prgress Dialog is already displayed
     try {
-      PPROMPTSVC.showProgress(this, webBrowserPrint, printSettings, this._obsPP, false,
+      PPROMPTSVC.showProgress(window, webBrowserPrint, printSettings, this._obsPP, false,
                               this._webProgressPP, ppParams, notifyOnOpen);
       if (ppParams.value) {
         var webNav = getWebNavigation();
