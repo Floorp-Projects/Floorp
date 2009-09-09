@@ -300,6 +300,20 @@ _cairo_glitz_surface_acquire_source_image (void              *abstract_surface,
     return _cairo_glitz_surface_get_image (surface, NULL, image_out, NULL);
 }
 
+static cairo_surface_t *
+_cairo_glitz_surface_snapshot (void *abstract_surface)
+{
+    cairo_glitz_surface_t *surface = abstract_surface;
+    cairo_status_t status;
+    cairo_image_surface_t *image;
+
+    status = _cairo_glitz_surface_get_image (surface, NULL, &image, NULL);
+    if (unlikely (status))
+	return _cairo_surface_create_in_error (status);
+
+    return &image->base;
+}
+
 static void
 _cairo_glitz_surface_release_source_image (void              *abstract_surface,
 					   cairo_image_surface_t *image,
@@ -719,6 +733,7 @@ _cairo_glitz_pattern_acquire_surface (const cairo_pattern_t	       *pattern,
 	status = _cairo_pattern_acquire_surface (pattern, &dst->base,
 						 CAIRO_CONTENT_COLOR_ALPHA,
 						 x, y, width, height,
+						 CAIRO_PATTERN_ACQUIRE_NONE,
 						 (cairo_surface_t **) &src,
 						 &attr->base);
 	if (status)
@@ -2316,7 +2331,7 @@ static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     NULL, /* fill */
     NULL, /* show_glyphs */
 
-    NULL, /* snapshot */
+    _cairo_glitz_surface_snapshot,
     _cairo_glitz_surface_is_similar,
 
     _cairo_glitz_surface_reset

@@ -38,6 +38,8 @@
 void
 _cairo_stroke_style_init (cairo_stroke_style_t *style)
 {
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (style, sizeof (cairo_stroke_style_t)));
+
     style->line_width = CAIRO_GSTATE_LINE_WIDTH_DEFAULT;
     style->line_cap = CAIRO_GSTATE_LINE_CAP_DEFAULT;
     style->line_join = CAIRO_GSTATE_LINE_JOIN_DEFAULT;
@@ -54,6 +56,8 @@ _cairo_stroke_style_init_copy (cairo_stroke_style_t *style,
 {
     if (CAIRO_INJECT_FAULT ())
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (style, sizeof (cairo_stroke_style_t)));
 
     style->line_width = other->line_width;
     style->line_cap = other->line_cap;
@@ -86,6 +90,8 @@ _cairo_stroke_style_fini (cairo_stroke_style_t *style)
 	style->dash = NULL;
     }
     style->num_dashes = 0;
+
+    VG (VALGRIND_MAKE_MEM_NOACCESS (style, sizeof (cairo_stroke_style_t)));
 }
 
 /*

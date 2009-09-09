@@ -268,19 +268,29 @@ void
 _cairo_xlib_screen_info_close_display (cairo_xlib_screen_info_t *info)
 {
     cairo_xlib_visual_info_t **visuals;
-    int i;
+    Display *dpy;
+    int i, old;
 
     CAIRO_MUTEX_LOCK (info->mutex);
+
+    dpy = info->display->display;
+
+#if HAS_ATOMIC_OPS
+    do {
+	old = info->gc_depths;
+    } while (_cairo_atomic_int_cmpxchg (&info->gc_depths, old, 0) != old);
+#else
+    old = info->gc_depths;
+#endif
+
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
-	if (info->gc[i] != NULL) {
-	    XFreeGC (info->display->display, info->gc[i]);
-	    info->gc[i] = NULL;
-	}
+	if (old >> (8*i) & 0x7f)
+	    XFreeGC (dpy, info->gc[i]);
     }
 
     visuals = _cairo_array_index (&info->visuals, 0);
     for (i = 0; i < _cairo_array_num_elements (&info->visuals); i++)
-	_cairo_xlib_visual_info_destroy (info->display->display, visuals[i]);
+	_cairo_xlib_visual_info_destroy (dpy, visuals[i]);
     _cairo_array_truncate (&info->visuals, 0);
 
     CAIRO_MUTEX_UNLOCK (info->mutex);
@@ -358,8 +368,8 @@ _cairo_xlib_screen_info_get (cairo_xlib_display_t *display,
 	info->screen = screen;
 	info->has_render = FALSE;
 	info->has_font_options = FALSE;
+	info->gc_depths = 0;
 	memset (info->gc, 0, sizeof (info->gc));
-	info->gc_needs_clip_reset = 0;
 
 	_cairo_array_init (&info->visuals,
 			   sizeof (cairo_xlib_visual_info_t*));
@@ -386,71 +396,165 @@ _cairo_xlib_screen_info_get (cairo_xlib_display_t *display,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static int
-depth_to_index (int depth)
-{
-    switch(depth){
-	case 1:  return 1;
-	case 8:  return 2;
-	case 12: return 3;
-	case 15: return 4;
-	case 16: return 5;
-	case 24: return 6;
-	case 30: return 7;
-	case 32: return 8;
-    }
-    return 0;
-}
-
+#if HAS_ATOMIC_OPS
 GC
 _cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info,
-			   int depth,
+			   unsigned int depth,
+			   Drawable drawable,
 			   unsigned int *dirty)
 {
+    XGCValues gcv;
+    int i, new, old;
     GC gc;
-    cairo_bool_t needs_reset;
 
-    depth = depth_to_index (depth);
+    do {
+	gc = NULL;
+	old = info->gc_depths;
+	if (old == 0)
+	    break;
+
+	if (((old >> 0) & 0x7f) == depth)
+	    i = 0;
+	else if (((old >> 8) & 0x7f) == depth)
+	    i = 1;
+	else if (((old >> 16) & 0x7f) == depth)
+	    i = 2;
+	else if (((old >> 24) & 0x7f) == depth)
+	    i = 3;
+	else
+	    break;
+
+	gc = info->gc[i];
+	new = old & ~(0xff << (8*i));
+    } while (_cairo_atomic_int_cmpxchg (&info->gc_depths, old, new) != old);
+
+    if (likely (gc != NULL)) {
+	(void) _cairo_atomic_ptr_cmpxchg (&info->gc[i], gc, NULL);
+
+	if (old & 0x80 << (8 * i))
+	    *dirty |= CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC;
+
+	return gc;
+    }
+
+    gcv.graphics_exposures = False;
+    return XCreateGC (info->display->display, drawable,
+		      GCGraphicsExposures, &gcv);
+}
+
+void
+_cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info,
+			   unsigned int depth,
+			   GC gc,
+			   cairo_bool_t reset_clip)
+{
+    int i, old, new;
+
+    depth |= reset_clip ? 0x80 : 0;
+    do {
+	do {
+	    i = -1;
+	    old = info->gc_depths;
+
+	    if (((old >> 0) & 0x7f) == 0)
+		i = 0;
+	    else if (((old >> 8) & 0x7f) == 0)
+		i = 1;
+	    else if (((old >> 16) & 0x7f) == 0)
+		i = 2;
+	    else if (((old >> 24) & 0x7f) == 0)
+		i = 3;
+	    else
+		goto out;
+
+	    new = old | (depth << (8*i));
+	} while (_cairo_atomic_ptr_cmpxchg (&info->gc[i], NULL, gc) != NULL);
+    } while (_cairo_atomic_int_cmpxchg (&info->gc_depths, old, new) != old);
+
+    return;
+
+out:
+    if (unlikely (_cairo_xlib_display_queue_work (info->display,
+				(cairo_xlib_notify_func) XFreeGC,
+				gc,
+				NULL)))
+    {
+	/* leak the server side resource... */
+	XFree ((char *) gc);
+    }
+}
+#else
+GC
+_cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info,
+			   unsigned int depth,
+			   Drawable drawable,
+			   unsigned int *dirty)
+{
+    GC gc = NULL;
+    int i;
 
     CAIRO_MUTEX_LOCK (info->mutex);
-    gc = info->gc[depth];
-    info->gc[depth] = NULL;
-    needs_reset = info->gc_needs_clip_reset & (1 << depth);
-    info->gc_needs_clip_reset &= ~(1 << depth);
+    for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
+	if (((info->gc_depths >> (8*i)) & 0x7f) == depth) {
+	    if (info->gc_depths & 0x80 << (8*i))
+		*dirty |= CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC;
+
+	    info->gc_depths &= ~(0xff << (8*i));
+	    gc = info->gc[i];
+	    break;
+	}
+    }
     CAIRO_MUTEX_UNLOCK (info->mutex);
 
-    if (needs_reset)
-	*dirty |= CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC;
+    if (gc == NULL) {
+	XGCValues gcv;
+
+	gcv.graphics_exposures = False;
+	gc = XCreateGC (info->display->display, drawable,
+			GCGraphicsExposures, &gcv);
+    }
 
     return gc;
 }
 
-cairo_status_t
-_cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info, int depth, GC gc, cairo_bool_t reset_clip)
+void
+_cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info,
+			   unsigned int depth,
+			   GC gc,
+			   cairo_bool_t reset_clip)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    GC oldgc;
+    int i;
 
-    depth = depth_to_index (depth);
+    depth |= reset_clip ? 0x80 : 0;
 
     CAIRO_MUTEX_LOCK (info->mutex);
-    oldgc = info->gc[depth];
-    info->gc[depth] = gc;
-    if (reset_clip)
-	info->gc_needs_clip_reset |= 1 << depth;
-    else
-	info->gc_needs_clip_reset &= ~(1 << depth);
-    CAIRO_MUTEX_UNLOCK (info->mutex);
-
-    if (oldgc != NULL) {
-	status = _cairo_xlib_display_queue_work (info->display,
-		                               (cairo_xlib_notify_func) XFreeGC,
-					       oldgc,
-					       NULL);
+    for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
+	if (((info->gc_depths >> (8*i)) & 0x7f) == 0)
+	    break;
     }
 
-    return status;
+    if (i == ARRAY_LENGTH (info->gc)) {
+	cairo_status_t status;
+
+	/* perform random substitution to ensure fair caching over depths */
+	i = rand () % ARRAY_LENGTH (info->gc);
+	status =
+	    _cairo_xlib_display_queue_work (info->display,
+					    (cairo_xlib_notify_func) XFreeGC,
+					    info->gc[i],
+					    NULL);
+	if (unlikely (status)) {
+	    /* leak the server side resource... */
+	    XFree ((char *) info->gc[i]);
+	}
+    }
+
+    info->gc[i] = gc;
+    info->gc_depths &= ~(0xff << (8*i));
+    info->gc_depths |= depth << (8*i);
+    CAIRO_MUTEX_UNLOCK (info->mutex);
 }
+#endif
 
 cairo_status_t
 _cairo_xlib_screen_get_visual_info (cairo_xlib_screen_info_t *info,

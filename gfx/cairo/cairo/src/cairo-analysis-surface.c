@@ -874,6 +874,7 @@ _return_success (void)
 typedef cairo_int_status_t
 (*_set_clip_region_func)	(void			*surface,
 				 cairo_region_t		*region);
+
 typedef cairo_int_status_t
 (*_paint_func)			(void			*surface,
 			         cairo_operator_t	 op,

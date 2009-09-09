@@ -48,48 +48,10 @@ _cairo_cache_entry_is_non_zero (const void *entry)
     return ((const cairo_cache_entry_t *) entry)->size;
 }
 
-static cairo_status_t
-_cairo_cache_init (cairo_cache_t		*cache,
-		   cairo_cache_keys_equal_func_t keys_equal,
-		   cairo_cache_predicate_func_t  predicate,
-		   cairo_destroy_func_t		 entry_destroy,
-		   unsigned long		 max_size)
-{
-    cache->hash_table = _cairo_hash_table_create (keys_equal);
-    if (unlikely (cache->hash_table == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    if (predicate == NULL)
-	predicate = _cairo_cache_entry_is_non_zero;
-    cache->predicate = predicate;
-    cache->entry_destroy = entry_destroy;
-
-    cache->max_size = max_size;
-    cache->size = 0;
-
-    cache->freeze_count = 0;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static void
-_cairo_cache_pluck (void *entry, void *closure)
-{
-    _cairo_cache_remove (closure, entry);
-}
-
-static void
-_cairo_cache_fini (cairo_cache_t *cache)
-{
-    _cairo_hash_table_foreach (cache->hash_table,
-			       _cairo_cache_pluck,
-			       cache);
-    assert (cache->size == 0);
-    _cairo_hash_table_destroy (cache->hash_table);
-}
 
 /**
- * _cairo_cache_create:
+ * _cairo_cache_init:
+ * @cache: the #cairo_cache_t to initialise
  * @keys_equal: a function to return %TRUE if two keys are equal
  * @entry_destroy: destroy notifier for cache entries
  * @max_size: the maximum size for this cache
@@ -122,49 +84,53 @@ _cairo_cache_fini (cairo_cache_t *cache)
  * used to establish a window during which no automatic removal of
  * entries will occur.
  **/
-cairo_cache_t *
-_cairo_cache_create (cairo_cache_keys_equal_func_t keys_equal,
-		     cairo_cache_predicate_func_t  predicate,
-		     cairo_destroy_func_t	   entry_destroy,
-		     unsigned long		   max_size)
+cairo_status_t
+_cairo_cache_init (cairo_cache_t		*cache,
+		   cairo_cache_keys_equal_func_t keys_equal,
+		   cairo_cache_predicate_func_t  predicate,
+		   cairo_destroy_func_t		 entry_destroy,
+		   unsigned long		 max_size)
 {
-    cairo_status_t status;
-    cairo_cache_t *cache;
+    cache->hash_table = _cairo_hash_table_create (keys_equal);
+    if (unlikely (cache->hash_table == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    cache = malloc (sizeof (cairo_cache_t));
-    if (unlikely (cache == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return NULL;
-    }
+    if (predicate == NULL)
+	predicate = _cairo_cache_entry_is_non_zero;
+    cache->predicate = predicate;
+    cache->entry_destroy = entry_destroy;
 
-    status = _cairo_cache_init (cache,
-				keys_equal,
-				predicate,
-				entry_destroy,
-				max_size);
-    if (unlikely (status)) {
-	free (cache);
-	return NULL;
-    }
+    cache->max_size = max_size;
+    cache->size = 0;
 
-    return cache;
+    cache->freeze_count = 0;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_cache_pluck (void *entry, void *closure)
+{
+    _cairo_cache_remove (closure, entry);
 }
 
 /**
- * _cairo_cache_destroy:
+ * _cairo_cache_fini:
  * @cache: a cache to destroy
  *
  * Immediately destroys the given cache, freeing all resources
  * associated with it. As part of this process, the entry_destroy()
- * function, (as passed to _cairo_cache_create()), will be called for
+ * function, (as passed to _cairo_cache_init()), will be called for
  * each entry in the cache.
  **/
 void
-_cairo_cache_destroy (cairo_cache_t *cache)
+_cairo_cache_fini (cairo_cache_t *cache)
 {
-    _cairo_cache_fini (cache);
-
-    free (cache);
+    _cairo_hash_table_foreach (cache->hash_table,
+			       _cairo_cache_pluck,
+			       cache);
+    assert (cache->size == 0);
+    _cairo_hash_table_destroy (cache->hash_table);
 }
 
 /**
@@ -222,7 +188,7 @@ _cairo_cache_thaw (cairo_cache_t *cache)
  *
  * Performs a lookup in @cache looking for an entry which has a key
  * that matches @key, (as determined by the keys_equal() function
- * passed to _cairo_cache_create()).
+ * passed to _cairo_cache_init()).
  *
  * Return value: %TRUE if there is an entry in the cache that matches
  * @key, (which will now be in *entry_return). %FALSE otherwise, (in

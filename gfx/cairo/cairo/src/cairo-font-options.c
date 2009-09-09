@@ -132,7 +132,7 @@ cairo_font_options_copy (const cairo_font_options_t *original)
  * cairo_font_options_destroy:
  * @options: a #cairo_font_options_t
  *
- * Destroys a #cairo_font_options_t object created with with
+ * Destroys a #cairo_font_options_t object created with
  * cairo_font_options_create() or cairo_font_options_copy().
  **/
 void
