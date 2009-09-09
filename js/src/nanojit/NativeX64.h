@@ -162,7 +162,27 @@ namespace nanojit
         X64_andrr   = 0xC023400000000003LL, // 32bit and r &= b
         X64_call    = 0x00000000E8000005LL, // near call
         X64_callrax = 0xD0FF000000000002LL, // indirect call to addr in rax (no REX)
+        X64_cmovqno = 0xC0410F4800000004LL, // 64bit conditional mov if (no overflow) r = b
+        X64_cmovqb  = 0xC0420F4800000004LL, // 64bit conditional mov if (uint <) r = b
+        X64_cmovqae = 0xC0430F4800000004LL, // 64bit conditional mov if (uint >=) r = b
         X64_cmovqne = 0xC0450F4800000004LL, // 64bit conditional mov if (c) r = b
+        X64_cmovqbe = 0xC0460F4800000004LL, // 64bit conditional mov if (uint <=) r = b
+        X64_cmovqa  = 0xC0470F4800000004LL, // 64bit conditional mov if (uint >) r = b
+        X64_cmovql  = 0xC04C0F4800000004LL, // 64bit conditional mov if (int <) r = b
+        X64_cmovqge = 0xC04D0F4800000004LL, // 64bit conditional mov if (int >=) r = b
+        X64_cmovqle = 0xC04E0F4800000004LL, // 64bit conditional mov if (int <=) r = b
+        X64_cmovqg  = 0xC04F0F4800000004LL, // 64bit conditional mov if (int >) r = b
+        X64_cmovno  = 0xC0410F4000000004LL, // 32bit conditional mov if (no overflow) r = b
+        X64_cmovb   = 0xC0420F4000000004LL, // 32bit conditional mov if (uint <) r = b
+        X64_cmovae  = 0xC0430F4000000004LL, // 32bit conditional mov if (uint >=) r = b
+        X64_cmovne  = 0xC0450F4000000004LL, // 32bit conditional mov if (c) r = b
+        X64_cmovbe  = 0xC0460F4000000004LL, // 32bit conditional mov if (uint <=) r = b
+        X64_cmova   = 0xC0470F4000000004LL, // 32bit conditional mov if (uint >) r = b
+        X64_cmovl   = 0xC04C0F4000000004LL, // 32bit conditional mov if (int <) r = b
+        X64_cmovge  = 0xC04D0F4000000004LL, // 32bit conditional mov if (int >=) r = b
+        X64_cmovle  = 0xC04E0F4000000004LL, // 32bit conditional mov if (int <=) r = b
+        X64_cmovg   = 0xC04F0F4000000004LL, // 32bit conditional mov if (int >) r = b
+        X64_cmov_64 = 0x0000000800000000LL, // OR with 32-bit cmov to promote to 64-bit
         X64_cmplr   = 0xC03B400000000003LL, // 32bit compare r,b
         X64_cmpqr   = 0xC03B480000000003LL, // 64bit compare r,b
         X64_cmplri  = 0xF881400000000003LL, // 32bit compare r,imm32
@@ -179,6 +199,7 @@ namespace nanojit
         X64_imul8   = 0x00C06B4000000004LL, // 32bit signed mul r = b * imm8
         X64_jmp     = 0x00000000E9000005LL, // jump near rel32
         X64_jmp8    = 0x00EB000000000002LL, // jump near rel8
+        X64_jo      = 0x00000000800F0006LL, // jump near if overflow
         X64_jb      = 0x00000000820F0006LL, // jump near if below (uint <)
         X64_jae     = 0x00000000830F0006LL, // jump near if above or equal (uint >=)
         X64_ja      = 0x00000000870F0006LL, // jump near if above (uint >)
@@ -192,6 +213,7 @@ namespace nanojit
         X64_jp      = 0x000000008A0F0006LL, // jump near if parity (PF == 1)
         X64_jnp     = 0x000000008B0F0006LL, // jump near if not parity (PF == 0)
         X64_jneg    = 0x0000000001000000LL, // xor with this mask to negate the condition
+        X64_jo8     = 0x0070000000000002LL, // jump near if overflow
         X64_jb8     = 0x0072000000000002LL, // jump near if below (uint <)
         X64_jae8    = 0x0073000000000002LL, // jump near if above or equal (uint >=)
         X64_ja8     = 0x0077000000000002LL, // jump near if above (uint >)

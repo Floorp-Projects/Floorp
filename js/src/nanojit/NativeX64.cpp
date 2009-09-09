@@ -670,13 +670,18 @@ namespace nanojit
         // (This is true on Intel, is it true on all architectures?)
         const Register rr = prepResultReg(ins, GpRegs);
         const Register rf = findRegFor(iffalse, GpRegs & ~rmask(rr));
-        X64Opcode xop;
-        switch (cond->opcode()) {
-            default: TODO(asm_cmov);
-            case LIR_qeq:
-                xop = X64_cmovqne;
-                break;
-        }
+
+        int condop = (cond->opcode() & ~LIR64) - LIR_ov;
+        static const X64Opcode cmov[] = {
+            X64_cmovno, X64_cmovne,                       // ov, eq
+            X64_cmovge, X64_cmovle, X64_cmovg, X64_cmovl, // lt,  gt,  le,  ge
+            X64_cmovae, X64_cmovbe, X64_cmova, X64_cmovb  // ult, ugt, ule, uge
+        };
+        NanoAssert(condop >= 0 && condop < int(sizeof(cmov) / sizeof(cmov[0])));
+        NanoStaticAssert(sizeof(cmov) / sizeof(cmov[0]) == size_t(LIR_uge - LIR_ov + 1));
+        uint64_t xop = cmov[condop];
+        if (ins->opcode() == LIR_qcmov)
+            xop |= (uint64_t)X64_cmov_64;
         emitrr(xop, rr, rf);
         /*const Register rt =*/ findSpecificRegFor(iftrue, rr);
         asm_cmp(cond);
@@ -690,22 +695,26 @@ namespace nanojit
         // we must ensure there's room for the instr before calculating
         // the offset.  and the offset, determines the opcode (8bit or 32bit)
         underrunProtect(8);
+        NanoAssert((condop & ~LIR64) >= LIR_ov);
+        NanoAssert((condop & ~LIR64) <= LIR_uge);
         if (target && isS8(target - _nIns)) {
             static const X64Opcode j8[] = {
-                X64_je8, // eq
+                X64_jo8, X64_je8,                     // ov, eq
                 X64_jl8, X64_jg8, X64_jle8, X64_jge8, // lt,  gt,  le,  ge
                 X64_jb8, X64_ja8, X64_jbe8, X64_jae8  // ult, ugt, ule, uge
             };
-            uint64_t xop = j8[(condop & ~LIR64) - LIR_eq];
+            NanoStaticAssert(sizeof(j8) / sizeof(j8[0]) == LIR_uge - LIR_ov + 1);
+            uint64_t xop = j8[(condop & ~LIR64) - LIR_ov];
             xop ^= onFalse ? (uint64_t)X64_jneg8 : 0;
             emit8(xop, target - _nIns);
         } else {
             static const X64Opcode j32[] = {
-                X64_je, // eq
+                X64_jo, X64_je,                   // ov, eq
                 X64_jl, X64_jg, X64_jle, X64_jge, // lt,  gt,  le,  ge
                 X64_jb, X64_ja, X64_jbe, X64_jae  // ult, ugt, ule, uge
             };
-            uint64_t xop = j32[(condop & ~LIR64) - LIR_eq];
+            NanoStaticAssert(sizeof(j32) / sizeof(j32[0]) == LIR_uge - LIR_ov + 1);
+            uint64_t xop = j32[(condop & ~LIR64) - LIR_ov];
             xop ^= onFalse ? (uint64_t)X64_jneg : 0;
             emit32(xop, target ? target - _nIns : 0);
         }
@@ -715,6 +724,9 @@ namespace nanojit
     }
 
     void Assembler::asm_cmp(LIns *cond) {
+        // LIR_ov recycles the flags set by arithmetic ops
+        if (cond->opcode() == LIR_ov)
+            return;
         LIns *b = cond->oprnd2();
         if (isImm32(b)) {
             asm_cmp_imm(cond);
