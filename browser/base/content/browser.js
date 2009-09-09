@@ -4393,7 +4393,6 @@ nsBrowserAccess.prototype =
   openURI : function(aURI, aOpener, aWhere, aContext)
   {
     var newWindow = null;
-    var referrer = null;
     var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
 
     if (isExternal && aURI && aURI.schemeIs("chrome")) {
@@ -4404,7 +4403,6 @@ nsBrowserAccess.prototype =
     var loadflags = isExternal ?
                        Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                        Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-    var location;
     if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW)
       aWhere = gPrefService.getIntPref("browser.link.open_newwindow");
     switch (aWhere) {
@@ -4433,51 +4431,32 @@ nsBrowserAccess.prototype =
           // we couldn't find a suitable window, a new one needs to be opened.
           return null;
         }
-        var loadInBackground = gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground");
-        var newTab = win.gBrowser.loadOneTab("about:blank", null, null, null, loadInBackground, false);
-        newWindow = win.gBrowser.getBrowserForTab(newTab).docShell
-                                .QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindow);
-        try {
-          if (aURI) {
-            if (aOpener) {
-              location = aOpener.location;
-              referrer = makeURI(location);
-            }
-            newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebNavigation)
-                     .loadURI(aURI.spec, loadflags, referrer, null, null);
-          }
-          if (needToFocusWin || (!loadInBackground && isExternal))
-            newWindow.focus();
-        } catch(e) {
-        }
+
+        let loadInBackground = gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground");
+        let referrer = aOpener ? makeURI(aOpener.location.href) : null;
+
+        // If this is an external load, we need to load a blank tab first,
+        // because loadflags can't be passed to loadOneTab.
+        let loadBlankFirst = !aURI || isExternal;
+        let tab = win.gBrowser.loadOneTab(loadBlankFirst ? "about:blank" : aURI.spec,
+                                          referrer, null, null, loadInBackground, false);
+        let browser = win.gBrowser.getBrowserForTab(tab);
+
+        if (loadBlankFirst && aURI)
+          browser.loadURIWithFlags(aURI.spec, loadflags, referrer, null, null);
+
+        newWindow = browser.contentWindow;
+        if (needToFocusWin || (!loadInBackground && isExternal))
+          newWindow.focus();
         break;
       default : // OPEN_CURRENTWINDOW or an illegal value
-        try {
-          if (aOpener) {
-            newWindow = aOpener.top;
-            if (aURI) {
-              location = aOpener.location;
-              referrer = makeURI(location);
-
-              newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(nsIWebNavigation)
-                       .loadURI(aURI.spec, loadflags, referrer, null, null);
-            }
-          } else {
-            newWindow = gBrowser.selectedBrowser.docShell
-                                .QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindow);
-            if (aURI) {
-              gBrowser.loadURIWithFlags(aURI.spec, loadflags, null, 
-                                        null, null);
-            }
-          }
-          if(!gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground"))
-            content.focus();
-        } catch(e) {
+        newWindow = content;
+        if (aURI) {
+          let referrer = aOpener ? makeURI(aOpener.location.href) : null;
+          gBrowser.loadURIWithFlag(aURI.spec, loadflags, referrer, null, null);
         }
+        if (!gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground"))
+          content.focus();
     }
     return newWindow;
   },
