@@ -208,7 +208,7 @@ namespace nanojit
     }
 
     // disp32 modrm form when the disp must be written separately (opcode is 4+ bytes)
-    void Assembler::emitprm(uint64_t op, Register r, int32_t d, Register b) {
+    uint64_t Assembler::emit_disp32(uint64_t op, int32_t d) {
         if (isS8(d)) {
             NanoAssert(((op>>56)&0xC0) == 0x80); // make sure mod bits == 2 == disp32 mode
             underrunProtect(1+8);
@@ -220,6 +220,19 @@ namespace nanojit
             *((int32_t*)(_nIns -= 4)) = d;
             _nvprof("x64-bytes", 4);
         }
+        return op;
+    }
+
+    // disp32 modrm form when the disp must be written separately (opcode is 4+ bytes)
+    void Assembler::emitrm_wide(uint64_t op, Register r, int32_t d, Register b) {
+        op = emit_disp32(op, d);
+        emitrr(op, r, b);
+    }
+
+    // disp32 modrm form when the disp must be written separately (opcode is 4+ bytes)
+    // p = prefix -- opcode must have a 66, F2, or F3 prefix
+    void Assembler::emitprm(uint64_t op, Register r, int32_t d, Register b) {
+        op = emit_disp32(op, d);
         emitprr(op, r, b);
     }
 
@@ -960,7 +973,18 @@ namespace nanojit
         Register r, b;
         int32_t d;
         regalloc_load(ins, r, d, b);
-        emitrm(X64_movlrm, r, d, b);
+        LOpcode op = ins->opcode();
+        switch (op) {
+        case LIR_ldcb:
+            emitrm_wide(X64_movzx8m, r, d, b);
+            break;
+        case LIR_ldcs:
+            emitrm_wide(X64_movzx16m, r, d, b);
+            break;
+        default:
+            emitrm(X64_movlrm, r, d, b);
+            break;
+        }
     }
 
     void Assembler::asm_store64(LIns *value, int d, LIns *base) {
