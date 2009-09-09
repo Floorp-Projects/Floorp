@@ -225,6 +225,8 @@ namespace nanojit
         X64_movsdmr = 0x80110F40F2000005LL, // 64bit store xmm-r -> [b+d32]
         X64_movsxdr = 0xC063480000000003LL, // sign extend i32 to i64 r = (int64)(int32) b
         X64_movzx8  = 0xC0B60F4000000004LL, // zero extend i8 to i64 r = (uint64)(uint8) b
+        X64_movzx8m = 0x80B60F4000000004LL, // zero extend i8 load to i32 r <- [b+d32]
+        X64_movzx16m= 0x80B70F4000000004LL, // zero extend i16 load to i32 r <- [b+d32]
         X64_neg     = 0xD8F7400000000003LL, // 32bit two's compliment b = -b
         X64_nop1    = 0x9000000000000001LL, // one byte NOP
         X64_nop2    = 0x9066000000000002LL, // two byte NOP
@@ -326,6 +328,8 @@ namespace nanojit
         void emitr8(uint64_t op, Register b) { emitrr8(op, (Register)0, b); }\
         void emitprr(uint64_t op, Register r, Register b);\
         void emitrm(uint64_t op, Register r, int32_t d, Register b);\
+        void emitrm_wide(uint64_t op, Register r, int32_t d, Register b);\
+        uint64_t emit_disp32(uint64_t op, int32_t d);\
         void emitprm(uint64_t op, Register r, int32_t d, Register b);\
         void emitrr_imm(uint64_t op, Register r, Register b, int32_t imm);\
         void emitr_imm(uint64_t op, Register r, int32_t imm) { emitrr_imm(op, (Register)0, r, imm); }\
