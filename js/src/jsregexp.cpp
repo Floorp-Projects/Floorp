@@ -2276,6 +2276,12 @@ class RegExpNativeCompiler {
     CompilerState*   cs;            /* RegExp to compile */
     Fragment*        fragment;
     LirWriter*       lir;
+#ifdef DEBUG
+    LirWriter*       sanity_filter;
+#endif
+#ifdef NJ_VERBOSE
+    LirWriter*       verbose_filter;
+#endif
     LirBufWriter*    lirBufWriter;  /* for skip */
 
     LIns*            state;
@@ -2317,7 +2323,7 @@ class RegExpNativeCompiler {
 
     LIns* compileFlatSingleChar(jschar ch, LIns* pos, LInsList& fails)
     {
-        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
+        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_plt, pos, cpend), 0);
         if (!fails.append(to_fail))
             return NULL;
         LIns* text_ch = lir->insLoad(LIR_ldcs, pos, 0);
@@ -2409,7 +2415,7 @@ class RegExpNativeCompiler {
 
         for (int i = 0; i < nextras; ++i)
             targetCurrentPoint(extras[i].match);
-        return lir->ins2(LIR_piadd, pos, lir->insImm(2));
+        return lir->ins2(LIR_piadd, pos, lir->insImmWord(2));
     }
 
     JS_INLINE bool hasCases(jschar ch)
@@ -2450,7 +2456,13 @@ class RegExpNativeCompiler {
             }
         }
 
-        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, lir->ins2(LIR_sub, cpend, lir->insImm(2))), 0);
+        LIns* to_fail = lir->insBranch(LIR_jf,
+                                       lir->ins2(LIR_plt,
+                                                 pos,
+                                                 lir->ins2(LIR_piadd,
+                                                           cpend,
+                                                           lir->insImmWord(-2))),
+                                       0);
         if (!fails.append(to_fail))
             return NULL;
         LIns* text_word = lir->insLoad(LIR_ld, pos, 0);
@@ -2460,7 +2472,7 @@ class RegExpNativeCompiler {
         if (!fails.append(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, comp_word, lir->insImm(word)), 0)))
             return NULL;
 
-        return lir->ins2(LIR_piadd, pos, lir->insImm(4));
+        return lir->ins2(LIR_piadd, pos, lir->insImmWord(4));
     }
 
     LIns* compileFlat(RENode *&node, LIns* pos, LInsList& fails)
@@ -2533,7 +2545,7 @@ class RegExpNativeCompiler {
         void* bitmapData = skip->payload();
         memcpy(bitmapData, charSet->u.bits, bitmapLen);
 
-        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
+        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_plt, pos, cpend), 0);
         if (!fails.append(to_fail))
             return NULL;
         LIns* text_ch = lir->insLoad(LIR_ldcs, pos, 0);
@@ -2542,7 +2554,7 @@ class RegExpNativeCompiler {
                                          0))) {
             return NULL;
         }
-        LIns* byteIndex = lir->ins2(LIR_rsh, text_ch, lir->insImm(3));
+        LIns* byteIndex = lir->ins_i2p(lir->ins2(LIR_rsh, text_ch, lir->insImm(3)));
         LIns* bitmap = lir->insImmPtr(bitmapData);
         LIns* byte = lir->insLoad(LIR_ldcb, lir->ins2(LIR_piadd, bitmap, byteIndex), (int) 0);
         LIns* bitMask = lir->ins2(LIR_lsh, lir->insImm(1),
@@ -2552,7 +2564,7 @@ class RegExpNativeCompiler {
         LIns* to_next = lir->insBranch(LIR_jt, test, 0);
         if (!fails.append(to_next))
             return NULL;
-        return lir->ins2(LIR_piadd, pos, lir->insImm(2));
+        return lir->ins2(LIR_piadd, pos, lir->insImmWord(2));
     }
 
     /* Factor out common code to index js_alnum. */
@@ -2562,7 +2574,7 @@ class RegExpNativeCompiler {
             LIns *sizeLog2 = lir->insImm(StaticLog2<sizeof(bool)>::result);
             chr = lir->ins2(LIR_lsh, chr, sizeLog2);
         }
-        LIns *addr = lir->ins2(LIR_add, lir->insImmPtr(tbl), chr);
+        LIns *addr = lir->ins2(LIR_piadd, lir->insImmPtr(tbl), lir->ins_u2p(chr));
         return lir->insLoad(LIR_ldcb, addr, 0);
     }
 
@@ -2570,7 +2582,7 @@ class RegExpNativeCompiler {
     LIns *compileBuiltinClass(RENode *node, LIns *pos, LInsList &fails)
     {
         /* All the builtins checked below consume one character. */
-        if (!fails.append(lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0)))
+        if (!fails.append(lir->insBranch(LIR_jf, lir->ins2(LIR_plt, pos, cpend), 0)))
             return NULL;
         LIns *chr = lir->insLoad(LIR_ldcs, pos, 0);
 
@@ -2743,7 +2755,7 @@ class RegExpNativeCompiler {
             return NULL;
         }
 
-        return lir->ins2(LIR_piadd, pos, lir->insImm(2));
+        return lir->ins2(LIR_piadd, pos, lir->insImmWord(2));
     }
 
     LIns *compileAlt(RENode *node, LIns *pos, bool atEnd, LInsList &fails)
@@ -2908,7 +2920,7 @@ class RegExpNativeCompiler {
          * we need to abort the loop or else we will loop forever.
          */
         if (mayMatchEmpty(bodyRe)) {
-            LIns *eqCnd = lir->ins2(LIR_eq, iterBegin, iterEnd);
+            LIns *eqCnd = lir->ins2(LIR_peq, iterBegin, iterEnd);
             if (!kidFails.append(lir->insBranch(LIR_jt, eqCnd, NULL)))
                 return NULL;
         }
@@ -3032,13 +3044,13 @@ class RegExpNativeCompiler {
     bool compileAnchoring(RENode *root, LIns *start)
     {
         /* Guard outer anchoring loop. Use <= to allow empty regexp match. */
-        LIns *anchorFail = lir->insBranch(LIR_jf, lir->ins2(LIR_le, start, cpend), 0);
+        LIns *anchorFail = lir->insBranch(LIR_jf, lir->ins2(LIR_ple, start, cpend), 0);
 
         if (!compileRootNode(root, start, anchorFail))
             return false;
 
         /* Outer loop increment. */
-        lir->insStorei(lir->ins2(LIR_piadd, start, lir->insImm(2)), state,
+        lir->insStorei(lir->ins2(LIR_piadd, start, lir->insImmWord(2)), state,
                        offsetof(REGlobalData, skipped));
 
         return !JS_TRACE_MONITOR(cx).reAllocator->outOfMemory();
@@ -3117,10 +3129,13 @@ class RegExpNativeCompiler {
 #ifdef NJ_VERBOSE
         debug_only_stmt(
             if (js_LogController.lcbits & LC_TMRegexp) {
-                lir = new (&gc) VerboseWriter(alloc, lir, lirbuf->names,
-                                              &js_LogController);
+                lir = verbose_filter = new (&gc) VerboseWriter(alloc, lir, lirbuf->names,
+                                                               &js_LogController);
             }
         )
+#endif
+#ifdef DEBUG
+        lir = sanity_filter = new (&gc) SanityFilter(lir);
 #endif
 
         /*
@@ -3165,9 +3180,12 @@ class RegExpNativeCompiler {
         }
 
         delete lirBufWriter;
+#ifdef DEBUG
+        delete sanity_filter;
+#endif
 #ifdef NJ_VERBOSE
         debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
-                             delete lir; )
+                             delete verbose_filter; )
 #endif
         return JS_TRUE;
     fail:
