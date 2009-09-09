@@ -11,15 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Plugin App.
+# The Original Code is Mozilla Plugins.
 #
 # The Initial Developer of the Original Code is
 #   Ben Turner <bent.mozilla@gmail.com>.
 # Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
-#   Chris Jones <jones.chris.g@gmail.com>
 #
 # Contributor(s):
+#   Chris Jones <jones.chris.g@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,14 +58,14 @@ ifdef MOZ_IPC
 EXPORTS_NAMESPACES = mozilla mozilla/plugins
 
 EXPORTS_mozilla/plugins = \
-  NPAPIPluginChild.h \
-  NPAPIPluginParent.h \
-  NPObjectChild.h \
-  NPObjectParent.h \
-  NPPInstanceChild.h \
-  NPPInstanceParent.h \
-  NPBrowserStreamChild.h \
-  NPBrowserStreamParent.h \
+  PluginModuleChild.h \
+  PluginModuleParent.h \
+  PluginScriptableObjectChild.h \
+  PluginScriptableObjectParent.h \
+  PluginInstanceChild.h \
+  PluginInstanceParent.h \
+  PluginStreamChild.h \
+  PluginStreamParent.h \
   PluginMessageUtils.h \
   PluginProcessParent.h \
   PluginThreadChild.h \
@@ -78,16 +78,16 @@ FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 ENABLE_CXX_EXCEPTIONS = 1
 
-CPPSRCS =	 \
-  NPAPIPluginChild.cpp \
-  NPAPIPluginParent.cpp \
-  NPObjectChild.cpp \
-  NPObjectParent.cpp \
-  NPPInstanceChild.cpp \
-  NPPInstanceParent.cpp \
-  NPBrowserStreamParent.cpp \
-  NPBrowserStreamChild.cpp \
+CPPSRCS = \
+  PluginInstanceChild.cpp \
+  PluginInstanceParent.cpp \
+  PluginModuleChild.cpp \
+  PluginModuleParent.cpp \
   PluginProcessParent.cpp \
+  PluginScriptableObjectChild.cpp \
+  PluginScriptableObjectParent.cpp \
+  PluginStreamChild.cpp \
+  PluginStreamParent.cpp \
   PluginThreadChild.cpp \
   $(NULL)
 

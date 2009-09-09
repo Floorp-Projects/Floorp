@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "NPPInstanceChild.h"
-#include "NPBrowserStreamChild.h"
+#include "PluginInstanceChild.h"
+#include "PluginStreamChild.h"
 
 #if defined(OS_LINUX)
 
@@ -91,7 +91,7 @@ NPNVariableToString(NPNVariable aVar)
 namespace mozilla {
 namespace plugins {
 
-NPPInstanceChild::~NPPInstanceChild()
+PluginInstanceChild::~PluginInstanceChild()
 {
 #if defined(OS_WIN)
   DestroyPluginWindow();
@@ -99,9 +99,10 @@ NPPInstanceChild::~NPPInstanceChild()
 }
 
 NPError
-NPPInstanceChild::NPN_GetValue(NPNVariable aVar, void* aValue)
+PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
+                                  void* aValue)
 {
-    printf ("[NPPInstanceChild] NPN_GetValue(%s)\n",
+    printf ("[PluginInstanceChild] NPN_GetValue(%s)\n",
             NPNVariableToString(aVar));
 
     switch(aVar) {
@@ -133,15 +134,17 @@ NPPInstanceChild::NPN_GetValue(NPNVariable aVar, void* aValue)
 }
 
 nsresult
-NPPInstanceChild::AnswerNPP_GetValue(const nsString& key, nsString* value)
+PluginInstanceChild::AnswerNPP_GetValue(const nsString& key,
+                                        nsString* value)
 {
     return NPERR_GENERIC_ERROR;
 }
 
 nsresult
-NPPInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow, NPError* rv)
+PluginInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow,
+                                         NPError* rv)
 {
-    printf("[NPPInstanceChild] NPP_SetWindow(%lx, %d, %d)\n",
+    printf("[PluginInstanceChild] NPP_SetWindow(%lx, %d, %d)\n",
            reinterpret_cast<unsigned long>(aWindow.window),
            aWindow.width, aWindow.height);
 
@@ -206,7 +209,7 @@ NPPInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow, NPError* rv)
 }
 
 bool
-NPPInstanceChild::Initialize()
+PluginInstanceChild::Initialize()
 {
 #if defined(OS_WIN)
   if (!CreatePluginWindow())
@@ -219,11 +222,11 @@ NPPInstanceChild::Initialize()
 #if defined(OS_WIN)
 
 static const TCHAR kWindowClassName[] = TEXT("GeckoPluginWindow");
-static const TCHAR kNPPInstanceChildProperty[] = TEXT("NPPInstanceChildProperty");
+static const TCHAR kPluginInstanceChildProperty[] = TEXT("PluginInstanceChildProperty");
 
 // static
 bool
-NPPInstanceChild::RegisterWindowClass()
+PluginInstanceChild::RegisterWindowClass()
 {
     static bool alreadyRegistered = false;
     if (alreadyRegistered)
@@ -249,7 +252,7 @@ NPPInstanceChild::RegisterWindowClass()
 }
 
 bool
-NPPInstanceChild::CreatePluginWindow()
+PluginInstanceChild::CreatePluginWindow()
 {
     if (!RegisterWindowClass())
         return false;
@@ -264,7 +267,7 @@ NPPInstanceChild::CreatePluginWindow()
                            0, 0, NULL, 0, GetModuleHandle(NULL), 0);
         if (!mPluginWindowHWND)
             return false;
-        if (!SetProp(mPluginWindowHWND, kNPPInstanceChildProperty, this))
+        if (!SetProp(mPluginWindowHWND, kPluginInstanceChildProperty, this))
             return false;
 
         // Apparently some plugins require an ASCII WndProc.
@@ -276,7 +279,7 @@ NPPInstanceChild::CreatePluginWindow()
 }
 
 void
-NPPInstanceChild::DestroyPluginWindow()
+PluginInstanceChild::DestroyPluginWindow()
 {
     if (mPluginWindowHWND) {
         // Unsubclass the window.
@@ -289,14 +292,14 @@ NPPInstanceChild::DestroyPluginWindow()
             mPluginWndProc = 0;
         }
 
-        RemoveProp(mPluginWindowHWND, kNPPInstanceChildProperty);
+        RemoveProp(mPluginWindowHWND, kPluginInstanceChildProperty);
         DestroyWindow(mPluginWindowHWND);
         mPluginWindowHWND = 0;
     }
 }
 
 void
-NPPInstanceChild::ReparentPluginWindow(HWND hWndParent)
+PluginInstanceChild::ReparentPluginWindow(HWND hWndParent)
 {
     if (hWndParent != mPluginParentHWND && IsWindow(hWndParent)) {
         LONG style = GetWindowLongPtr(mPluginWindowHWND, GWL_STYLE);
@@ -309,8 +312,8 @@ NPPInstanceChild::ReparentPluginWindow(HWND hWndParent)
 }
 
 void
-NPPInstanceChild::SizePluginWindow(int width,
-                                   int height)
+PluginInstanceChild::SizePluginWindow(int width,
+                                      int height)
 {
     if (mPluginWindowHWND) {
         SetWindowPos(mPluginWindowHWND, NULL, 0, 0, width, height,
@@ -321,23 +324,23 @@ NPPInstanceChild::SizePluginWindow(int width,
 // See chromium's webplugin_delegate_impl.cc for explanation of this function.
 // static
 LRESULT CALLBACK
-NPPInstanceChild::DummyWindowProc(HWND hWnd,
-                                  UINT message,
-                                  WPARAM wParam,
-                                  LPARAM lParam)
+PluginInstanceChild::DummyWindowProc(HWND hWnd,
+                                     UINT message,
+                                     WPARAM wParam,
+                                     LPARAM lParam)
 {
     return CallWindowProc(DefWindowProc, hWnd, message, wParam, lParam);
 }
 
 // static
 LRESULT CALLBACK
-NPPInstanceChild::PluginWindowProc(HWND hWnd,
-                                   UINT message,
-                                   WPARAM wParam,
-                                   LPARAM lParam)
+PluginInstanceChild::PluginWindowProc(HWND hWnd,
+                                      UINT message,
+                                      WPARAM wParam,
+                                      LPARAM lParam)
 {
-    NPPInstanceChild* self = reinterpret_cast<NPPInstanceChild*>(
-        GetProp(hWnd, kNPPInstanceChildProperty));
+    PluginInstanceChild* self = reinterpret_cast<PluginInstanceChild*>(
+        GetProp(hWnd, kPluginInstanceChildProperty));
     if (!self) {
         NS_NOTREACHED("Badness!");
         return 0;
@@ -352,44 +355,46 @@ NPPInstanceChild::PluginWindowProc(HWND hWnd,
         self->DestroyPluginWindow();
 
     if (message == WM_NCDESTROY)
-        RemoveProp(hWnd, kNPPInstanceChildProperty);
+        RemoveProp(hWnd, kPluginInstanceChildProperty);
 
     return res;
 }
 
 #endif // OS_WIN
 
-NPObjectProtocolChild*
-NPPInstanceChild::NPObjectConstructor(NPError* _retval)
+PPluginScriptableObjectProtocolChild*
+PluginInstanceChild::PPluginScriptableObjectConstructor(NPError* _retval)
 {
-    NS_NOTYETIMPLEMENTED("NPPInstanceChild::NPObjectConstructor");
+    NS_NOTYETIMPLEMENTED("PluginInstanceChild::NPObjectConstructor");
     return nsnull;
 }
 
 nsresult
-NPPInstanceChild::NPObjectDestructor(NPObjectProtocolChild* aObject,
-                                     NPError* _retval)
+PluginInstanceChild::PPluginScriptableObjectDestructor(PPluginScriptableObjectProtocolChild* aObject,
+                                                       NPError* _retval)
 {
-    NS_NOTYETIMPLEMENTED("NPPInstanceChild::NPObjectDestructor");
+    NS_NOTYETIMPLEMENTED("PluginInstanceChild::NPObjectDestructor");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NPBrowserStreamProtocolChild*
-NPPInstanceChild::NPBrowserStreamConstructor(const nsCString& url, const uint32_t& length,
-                                             const uint32_t& lastmodified,
-                                             const nsCString& headers,
-                                             const nsCString& mimeType,
-                                             const bool& seekable,
-                                             NPError* rv, uint16_t *stype)
+PPluginStreamProtocolChild*
+PluginInstanceChild::PPluginStreamConstructor(const nsCString& url,
+                                              const uint32_t& length,
+                                              const uint32_t& lastmodified,
+                                              const nsCString& headers,
+                                              const nsCString& mimeType,
+                                              const bool& seekable,
+                                              NPError* rv,
+                                              uint16_t *stype)
 {
-    return new NPBrowserStreamChild(this, url, length, lastmodified, headers,
-                                    mimeType, seekable, rv, stype);
+    return new PluginStreamChild(this, url, length, lastmodified, headers,
+                                 mimeType, seekable, rv, stype);
 }
 
 nsresult
-NPPInstanceChild::NPBrowserStreamDestructor(NPBrowserStreamProtocolChild* stream,
-                                            const NPError& reason,
-                                            const bool& artificial)
+PluginInstanceChild::PPluginStreamDestructor(PPluginStreamProtocolChild* stream,
+                                             const NPError& reason,
+                                             const bool& artificial)
 {
     delete stream;
     return NS_OK;

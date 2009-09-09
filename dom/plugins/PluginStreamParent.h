@@ -3,22 +3,22 @@
 #ifndef mozilla_plugins_NPBrowserStreamParent_h
 #define mozilla_plugins_NPBrowserStreamParent_h
 
-#include "mozilla/plugins/NPBrowserStreamProtocolParent.h"
+#include "mozilla/plugins/PPluginStreamProtocolParent.h"
 
 namespace mozilla {
 namespace plugins {
 
-class NPPInstanceParent;
+class PluginInstanceParent;
 
-class NPBrowserStreamParent : public NPBrowserStreamProtocolParent
+class PluginStreamParent : public PPluginStreamProtocolParent
 {
-  friend class NPAPIPluginParent;
-  friend class NPPInstanceParent;
+  friend class PluginModuleParent;
+  friend class PluginInstanceParent;
 
 public:
-  NPBrowserStreamParent(NPPInstanceParent* npp,
-                        NPStream* stream);
-  virtual ~NPBrowserStreamParent() { }
+  PluginStreamParent(PluginInstanceParent* npp,
+                     NPStream* stream);
+  virtual ~PluginStreamParent() { }
 
   virtual nsresult AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                          NPError* result);
@@ -29,7 +29,7 @@ public:
   NPError NPN_DestroyStream(NPError reason);
 
 private:
-  NPPInstanceParent* mNPP;
+  PluginInstanceParent* mNPP;
   NPStream* mStream;
 };
 

@@ -16,12 +16,11 @@
  * The Original Code is Mozilla Plugin App.
  *
  * The Initial Developer of the Original Code is
- *   Ben Turner <bent.mozilla@gmail.com>.
+ *   Ben Turner <bent.mozilla@gmail.com>
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,47 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef dom_plugins_PluginThreadChild_h
-#define dom_plugins_PluginThreadChild_h 1
+#include "mozilla/plugins/PluginScriptableObjectParent.h"
 
-#include "base/basictypes.h"
+using mozilla::plugins::PluginScriptableObjectParent;
 
-#include "chrome/common/child_thread.h"
-#include "base/file_path.h"
+PluginScriptableObjectParent::PluginScriptableObjectParent()
+{
+}
 
-#include "mozilla/ipc/GeckoThread.h"
-#include "mozilla/plugins/PluginModuleChild.h"
-
-#undef _MOZ_LOG
-#define _MOZ_LOG(s)  printf("[PluginThreadChild] %s", s)
-
-namespace mozilla {
-namespace plugins {
-//-----------------------------------------------------------------------------
-
-// The PluginThreadChild class represents a background thread where plugin instances
-// live.
-class PluginThreadChild : public mozilla::ipc::GeckoThread {
-public:
-    PluginThreadChild();
-    ~PluginThreadChild();
-
-private:
-    // Thread implementation:
-    virtual void Init();
-    virtual void CleanUp();
-
-    // FIXME/cjones: this is kinda broken; this thread is generic,
-    // not NPAPI-specific, but there's not really another good
-    // place to store this reference.  and there's no need to make
-    // a generic |Plugin| class yet
-    PluginModuleChild mPlugin;
-    IPC::Channel* mChannel;
-
-    DISALLOW_EVIL_CONSTRUCTORS(PluginThreadChild);
-};
-
-}  // namespace plugins
-}  // namespace mozilla
-
-#endif  // ifndef dom_plugins_PluginThreadChild_h
+PluginScriptableObjectParent::~PluginScriptableObjectParent()
+{
+}

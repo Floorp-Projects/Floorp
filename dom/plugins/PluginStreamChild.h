@@ -1,3 +1,4 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: sw=4 ts=4 et :
  * ***** BEGIN LICENSE BLOCK *****
@@ -16,7 +17,7 @@
  * The Original Code is Mozilla Plugin App.
  *
  * The Initial Developer of the Original Code is
- *   Ben Turner <bent.mozilla@gmail.com>
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -36,22 +37,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __DOM_PLUGINS_NPOBJECTPARENT_H__
-#define __DOM_PLUGINS_NPOBJECTPARENT_H__
+#ifndef mozilla_plugins_PluginStreamChild_h
+#define mozilla_plugins_PluginStreamChild_h 1
 
-#include "mozilla/plugins/NPObjectProtocolParent.h"
+#include "mozilla/plugins/PPluginStreamProtocolChild.h"
 
 namespace mozilla {
 namespace plugins {
 
-class NPObjectParent : public NPObjectProtocolParent
+class PluginInstanceChild;
+
+class PluginStreamChild : public PPluginStreamProtocolChild
 {
 public:
-    NPObjectParent();
-    virtual ~NPObjectParent();
+  PluginStreamChild(PluginInstanceChild* instance,
+                    const nsCString& url,
+                    const uint32_t& length,
+                    const uint32_t& lastmodified,
+                    const nsCString& headers,
+                    const nsCString& mimeType,
+                    const bool& seekable,
+                    NPError* rv,
+                    uint16_t* stype);
+  virtual ~PluginStreamChild() { }
+
+  virtual nsresult AnswerNPP_WriteReady(const int32_t& newlength,
+                                        int32_t *size);
+  virtual nsresult AnswerNPP_Write(const int32_t& offset,
+                                   const Buffer& data,
+                                   int32_t* consumed);
+
+  virtual nsresult AnswerNPP_StreamAsFile(const nsCString& fname);
+
+private:
+  PluginInstanceChild* mInstance;
+  NPStream mStream;
+  bool mClosed;
+  nsCString mURL;
+  nsCString mHeaders;
 };
 
-} /* namespace plugins */
-} /* namespace mozilla */
+} // namespace plugins
+} // namespace mozilla
 
-#endif /* __DOM_PLUGINS_NPOBJECTPARENT_H__ */
+#endif /* mozilla_plugins_PluginStreamChild_h */
