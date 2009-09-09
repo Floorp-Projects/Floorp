@@ -7223,7 +7223,7 @@ js_FinishTakingTryNotes(JSCodeGenerator *cg, JSTryNoteArray *array)
  * If the code being compiled is function code, allocate a reserved slot in
  * the cloned function object that shares its precompiled script with other
  * cloned function objects and with the compiler-created clone-parent. There
- * are nregexps = JS_SCRIPT_REGEXPS(script)->length such reserved slots in each
+ * are nregexps = script->regexps()->length such reserved slots in each
  * function object cloned from fun->object. NB: during compilation, a funobj
  * slots element must never be allocated, because js_AllocSlot could hand out
  * one of the slots that should be given to a regexp clone.

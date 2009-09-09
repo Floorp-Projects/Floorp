@@ -84,6 +84,7 @@
 #endif
 
 #include "jsatominlines.h"
+#include "jsscriptinlines.h"
 
 #include "jsautooplen.h"
 
@@ -2841,10 +2842,10 @@ js_Interpret(JSContext *cx)
     (atoms - script->atomMap.vector + GET_INDEX(regs.pc + PCOFF))
 
 #define LOAD_OBJECT(PCOFF)                                                    \
-    JS_GET_SCRIPT_OBJECT(script, GET_FULL_INDEX(PCOFF), obj)
+    (obj = script->getObject(GET_FULL_INDEX(PCOFF)))
 
 #define LOAD_FUNCTION(PCOFF)                                                  \
-    JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
+    (fun = script->getFunction(GET_FULL_INDEX(PCOFF)))
 
 #ifdef JS_TRACER
 
@@ -3126,8 +3127,8 @@ js_Interpret(JSContext *cx)
             goto no_catch;
 
         offset = (uint32)(regs.pc - script->main);
-        tn = JS_SCRIPT_TRYNOTES(script)->vector;
-        tnlimit = tn + JS_SCRIPT_TRYNOTES(script)->length;
+        tn = script->trynotes()->vector;
+        tnlimit = tn + script->trynotes()->length;
         do {
             if (offset - tn->start >= tn->length)
                 continue;
