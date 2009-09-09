@@ -37,40 +37,40 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "PluginInstanceParent.h"
-#include "PluginStreamParent.h"
+#include "BrowserStreamParent.h"
 
 namespace mozilla {
 namespace plugins {
 
-PPluginStreamProtocolParent*
-PluginInstanceParent::PPluginStreamConstructor(const nsCString& url,
-                                               const uint32_t& length,
-                                               const uint32_t& lastmodified,
-                                               const nsCString& headers,
-                                               const nsCString& mimeType,
-                                               const bool& seekable,
-                                               NPError* rv,
-                                               uint16_t *stype)
+PBrowserStreamProtocolParent*
+PluginInstanceParent::PBrowserStreamConstructor(const nsCString& url,
+                                                const uint32_t& length,
+                                                const uint32_t& lastmodified,
+                                                const nsCString& headers,
+                                                const nsCString& mimeType,
+                                                const bool& seekable,
+                                                NPError* rv,
+                                                uint16_t *stype)
 {
     NS_RUNTIMEABORT("Not reachable");
     return NULL;
 }
 
 nsresult
-PluginInstanceParent::AnswerPPluginStreamDestructor(PPluginStreamProtocolParent* stream,
-                                                    const NPError& reason,
-                                                    const bool& artificial)
+PluginInstanceParent::AnswerPBrowserStreamDestructor(PBrowserStreamProtocolParent* stream,
+                                                     const NPError& reason,
+                                                     const bool& artificial)
 {
     if (!artificial) {
-        static_cast<PluginStreamParent*>(stream)->NPN_DestroyStream(reason);
+        static_cast<BrowserStreamParent*>(stream)->NPN_DestroyStream(reason);
     }
     return NS_OK;
 }
 
 nsresult
-PluginInstanceParent::PPluginStreamDestructor(PPluginStreamProtocolParent* stream,
-                                              const NPError& reason,
-                                              const bool& artificial)
+PluginInstanceParent::PBrowserStreamDestructor(PBrowserStreamProtocolParent* stream,
+                                               const NPError& reason,
+                                               const bool& artificial)
 {
     delete stream;
     return NS_OK;
@@ -116,24 +116,24 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
     _MOZ_LOG(__FUNCTION__);
         
     NPError err;
-    CallPPluginStreamConstructor(new PluginStreamParent(this, stream),
-                                 nsCString(stream->url),
-                                 stream->end,
-                                 stream->lastmodified,
-                                 nsCString(stream->headers),
-                                 nsCString(type), seekable, &err, stype);
+    CallPBrowserStreamConstructor(new BrowserStreamParent(this, stream),
+                                  nsCString(stream->url),
+                                  stream->end,
+                                  stream->lastmodified,
+                                  nsCString(stream->headers),
+                                  nsCString(type), seekable, &err, stype);
     return err;
 }    
 
 NPError
 PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
 {
-    PluginStreamParent* sp =
-        static_cast<PluginStreamParent*>(stream->pdata);
+    BrowserStreamParent* sp =
+        static_cast<BrowserStreamParent*>(stream->pdata);
     if (sp->mNPP != this)
         NS_RUNTIMEABORT("Mismatched plugin data");
 
-    return CallPPluginStreamDestructor(sp, reason, false);
+    return CallPBrowserStreamDestructor(sp, reason, false);
 }
 
 PPluginScriptableObjectProtocolParent*

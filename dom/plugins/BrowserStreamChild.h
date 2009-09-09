@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Plugins.
+ * The Original Code is Mozilla Plugin App.
  *
  * The Initial Developer of the Original Code is
  *   Benjamin Smedberg <benjamin@smedbergs.us>
@@ -35,38 +35,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PPluginInstance.ipdl";
+#ifndef mozilla_plugins_BrowserStreamChild_h
+#define mozilla_plugins_BrowserStreamChild_h 1
 
-using mozilla::plugins::Buffer;
-using mozilla::plugins::IPCByteRanges;
-
-using NPError;
+#include "mozilla/plugins/PBrowserStreamProtocolChild.h"
 
 namespace mozilla {
 namespace plugins {
 
-/**
- * NPBrowserStream represents a NPStream sent from the browser to the plugin.
- */
+class PluginInstanceChild;
 
-rpc protocol PPluginStream
+class BrowserStreamChild : public PBrowserStreamProtocolChild
 {
-  manager PPluginInstance;
+public:
+  BrowserStreamChild(PluginInstanceChild* instance,
+                     const nsCString& url,
+                     const uint32_t& length,
+                     const uint32_t& lastmodified,
+                     const nsCString& headers,
+                     const nsCString& mimeType,
+                     const bool& seekable,
+                     NPError* rv,
+                     uint16_t* stype);
+  virtual ~BrowserStreamChild() { }
 
-child:
-  rpc NPP_WriteReady(int32_t newlength)
-    returns (int32_t size);
+  virtual nsresult AnswerNPP_WriteReady(const int32_t& newlength,
+                                        int32_t *size);
+  virtual nsresult AnswerNPP_Write(const int32_t& offset,
+                                   const Buffer& data,
+                                   int32_t* consumed);
 
-  rpc NPP_Write(int32_t offset,
-                Buffer data)
-    returns (int32_t consumed);
+  virtual nsresult AnswerNPP_StreamAsFile(const nsCString& fname);
 
-  rpc NPP_StreamAsFile(nsCString fname);
-
-parent:
-  rpc NPN_RequestRead(IPCByteRanges ranges)
-    returns (NPError result);
+private:
+  PluginInstanceChild* mInstance;
+  NPStream mStream;
+  bool mClosed;
+  nsCString mURL;
+  nsCString mHeaders;
 };
 
 } // namespace plugins
 } // namespace mozilla
+
+#endif /* mozilla_plugins_BrowserStreamChild_h */

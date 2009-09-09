@@ -1,24 +1,24 @@
 /* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
 
-#ifndef mozilla_plugins_NPBrowserStreamParent_h
-#define mozilla_plugins_NPBrowserStreamParent_h
+#ifndef mozilla_plugins_BrowserStreamParent_h
+#define mozilla_plugins_BrowserStreamParent_h
 
-#include "mozilla/plugins/PPluginStreamProtocolParent.h"
+#include "mozilla/plugins/PBrowserStreamProtocolParent.h"
 
 namespace mozilla {
 namespace plugins {
 
 class PluginInstanceParent;
 
-class PluginStreamParent : public PPluginStreamProtocolParent
+class BrowserStreamParent : public PBrowserStreamProtocolParent
 {
   friend class PluginModuleParent;
   friend class PluginInstanceParent;
 
 public:
-  PluginStreamParent(PluginInstanceParent* npp,
-                     NPStream* stream);
-  virtual ~PluginStreamParent() { }
+  BrowserStreamParent(PluginInstanceParent* npp,
+                      NPStream* stream);
+  virtual ~BrowserStreamParent() { }
 
   virtual nsresult AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                          NPError* result);

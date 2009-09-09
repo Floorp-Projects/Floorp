@@ -186,7 +186,7 @@ private:
     }
 
     static PluginInstanceParent* InstCast(NPP instance);
-    static PluginStreamParent* StreamCast(NPP instance, NPStream* s);
+    static BrowserStreamParent* StreamCast(NPP instance, NPStream* s);
 
     static inline const PluginInstanceParent& InstCast(const void* p)
     {
