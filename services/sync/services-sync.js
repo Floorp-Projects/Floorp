@@ -1,4 +1,4 @@
-pref("extensions.weave.serverURL", "https://auth.services.mozilla.com/user/");
+pref("extensions.weave.serverURL", "@server_url@");
 pref("extensions.weave.miscURL", "https://auth.services.mozilla.com/misc/");
 pref("extensions.weave.termsURL", "https://labs.mozilla.com/projects/weave/tos/");
 
@@ -26,7 +26,6 @@ pref("extensions.weave.engine.tabs", true);
 
 pref("extensions.weave.log.appender.console", "Warn");
 pref("extensions.weave.log.appender.dump", "Error");
-pref("extensions.weave.log.appender.briefLog", "Info");
 pref("extensions.weave.log.appender.debugLog", "Trace");
 
 pref("extensions.weave.log.rootLogger", "Trace");

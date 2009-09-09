@@ -187,17 +187,11 @@ WeaveSvc.prototype = {
     this._genKeyURLs();
   },
 
-  get password() { return ID.get('WeaveID').password; },
-  set password(value) {
-    ID.get('WeaveID').setTempPassword(null);
-    ID.get('WeaveID').password = value;
-  },
+  get password password() ID.get("WeaveID").password,
+  set password password(value) ID.get("WeaveID").password = value,
 
-  get passphrase() { return ID.get('WeaveCryptoID').password; },
-  set passphrase(value) {
-    ID.get('WeaveCryptoID').setTempPassword(null);
-    ID.get('WeaveCryptoID').password = value;
-  },
+  get passphrase passphrase() ID.get("WeaveCryptoID").password,
+  set passphrase passphrase(value) ID.get("WeaveCryptoID").password = value,
 
   get baseURL() {
     return Utils.getURLPref("serverURL");
@@ -221,9 +215,8 @@ WeaveSvc.prototype = {
     this._genKeyURLs();
   },
 
-  get userURL() {
-    return this.clusterURL + this.username;
-  },
+  get userURL() this.clusterURL + this.username,
+  get infoURL() this.userURL + "/info/collections",
 
   get userPath() { return ID.get('WeaveID').username; },
 
@@ -346,29 +339,20 @@ WeaveSvc.prototype = {
     dapp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.dump")];
     root.addAppender(dapp);
 
-    let brief = Svc.Directory.get("ProfD", Ci.nsIFile);
-    brief.QueryInterface(Ci.nsILocalFile);
-    brief.append("weave");
-    brief.append("logs");
-    brief.append("brief-log.txt");
-    if (!brief.exists())
-      brief.create(brief.NORMAL_FILE_TYPE, PERMS_FILE);
-
-    let verbose = brief.parent.clone();
+    let verbose = Svc.Directory.get("ProfD", Ci.nsIFile);
+    verbose.QueryInterface(Ci.nsILocalFile);
+    verbose.append("weave");
+    verbose.append("logs");
     verbose.append("verbose-log.txt");
     if (!verbose.exists())
       verbose.create(verbose.NORMAL_FILE_TYPE, PERMS_FILE);
 
-    this._briefApp = new Log4Moz.RotatingFileAppender(brief, formatter);
-    this._briefApp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.briefLog")];
-    root.addAppender(this._briefApp);
     this._debugApp = new Log4Moz.RotatingFileAppender(verbose, formatter);
     this._debugApp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.debugLog")];
     root.addAppender(this._debugApp);
   },
 
   clearLogs: function WeaveSvc_clearLogs() {
-    this._briefApp.clear();
     this._debugApp.clear();
   },
 
@@ -383,9 +367,7 @@ WeaveSvc.prototype = {
         break;
 
       case FIREFOX_ID:
-        engines = ["Bookmarks", "Cookie", "Extension", "Form", "History",
-          "Input", "MicroFormat", "Password", "Plugin", "Prefs", "Tab",
-          "Theme"];
+        engines = ["Bookmarks", "Form", "History", "Password", "Prefs", "Tab"];
         break;
 
       case SEAMONKEY_ID:
@@ -451,10 +433,10 @@ WeaveSvc.prototype = {
   // These are global (for all engines)
 
   // gets cluster from central LDAP server and returns it, or null on error
-  findCluster: function WeaveSvc_findCluster(username) {
-    this._log.debug("Finding cluster for user " + username);
+  _findCluster: function _findCluster() {
+    this._log.debug("Finding cluster for user " + this.username);
 
-    let res = new Resource(this.baseURL + "1/" + username + "/node/weave");
+    let res = new Resource(this.baseURL + "1/" + this.username + "/node/weave");
     try {
       let node = res.get();
       switch (node.status) {
@@ -476,9 +458,8 @@ WeaveSvc.prototype = {
   },
 
   // gets cluster from central LDAP server and sets this.clusterURL
-  setCluster: function WeaveSvc_setCluster(username) {
-    let cluster = this.findCluster(username);
-
+  _setCluster: function _setCluster() {
+    let cluster = this._findCluster();
     if (cluster) {
       if (cluster == this.clusterURL)
         return false;
@@ -488,16 +469,16 @@ WeaveSvc.prototype = {
       return true;
     }
 
-    this._log.debug("Error setting cluster for user " + username);
+    this._log.debug("Error setting cluster for user " + this.username);
     return false;
   },
 
   // update cluster if required. returns false if the update was not required
-  updateCluster: function WeaveSvc_updateCluster(username) {
+  _updateCluster: function _updateCluster() {
     let cTime = Date.now();
     let lastUp = parseFloat(Svc.Prefs.get("lastClusterUpdate"));
     if (!lastUp || ((cTime - lastUp) >= CLUSTER_BACKOFF)) {
-      if (this.setCluster(username)) {
+      if (this._setCluster()) {
         Svc.Prefs.set("lastClusterUpdate", cTime.toString());
         return true;
       }
@@ -505,35 +486,24 @@ WeaveSvc.prototype = {
     return false;
   },
 
-  verifyLogin: function WeaveSvc_verifyLogin(username, password, passphrase, isLogin)
+  _verifyLogin: function _verifyLogin()
     this._catch(this._notify("verify-login", "", function() {
-      this._log.debug("Verifying login for user " + username);
+      this._log.debug("Verifying login for user " + this.username);
 
-      let url = this.findCluster(username);
-      if (isLogin)
-        this.clusterURL = url;
-
-      let res = new Resource(this.userURL + "/info/collections");
-      res.authenticator = {
-        onRequest: function(headers) {
-          headers['Authorization'] = 'Basic ' + btoa(username + ':' + password);
-          return headers;
-        }
-      };
-
-      // login may fail because of cluster change
+      this._setCluster();
+      let res = new Resource(this.infoURL);
       try {
         let test = res.get();
         switch (test.status) {
           case 200:
-            if (passphrase && !this.verifyPassphrase(username, password, passphrase)) {
+            if (!this._verifyPassphrase()) {
               this._setSyncFailure(LOGIN_FAILED_INVALID_PASSPHRASE);
               return false;
             }
             return true;
           case 401:
-            if (this.updateCluster(username))
-              return this.verifyLogin(username, password, passphrase, isLogin);
+            if (this._updateCluster())
+              return this._verifyLogin();
 
             this._setSyncFailure(LOGIN_FAILED_LOGIN_REJECTED);
             this._log.debug("verifyLogin failed: login failed")
@@ -549,24 +519,20 @@ WeaveSvc.prototype = {
       }
     }))(),
 
-  verifyPassphrase: function WeaveSvc_verifyPassphrase(username, password, passphrase)
+  _verifyPassphrase: function _verifyPassphrase()
     this._catch(this._notify("verify-passphrase", "", function() {
       this._log.debug("Verifying passphrase");
-      this.username = username;
-      ID.get("WeaveID").setTempPassword(password);
-
       try {
         let pubkey = PubKeys.getDefaultKey();
         let privkey = PrivKeys.get(pubkey.privateKeyUri);
         return Svc.Crypto.verifyPassphrase(
-          privkey.payload.keyData, passphrase,
+          privkey.payload.keyData, this.passphrase,
           privkey.payload.salt, privkey.payload.iv
         );
       } catch (e) {
         // this means no keys are present (or there's a network error)
         return true;
       }
-      return true;
     }))(),
 
   changePassphrase: function WeaveSvc_changePassphrase(newphrase)
@@ -668,6 +634,15 @@ WeaveSvc.prototype = {
                     interval / 1000 + " seconds.");
   },
 
+  persistLogin: function persistLogin() {
+    // Canceled master password prompt can prevent these from succeeding
+    try {
+      ID.get("WeaveID").persist();
+      ID.get("WeaveCryptoID").persist();
+    }
+    catch(ex) {}
+  },
+
   login: function WeaveSvc_login(username, password, passphrase)
     this._catch(this._lock(this._notify("login", "", function() {
       this._loggedIn = false;
@@ -675,12 +650,12 @@ WeaveSvc.prototype = {
       if (Svc.IO.offline)
         throw "Application is offline, login should not be called";
 
-      if (typeof(username) != "undefined")
+      if (username != null)
         this.username = username;
-      if (typeof(password) != "undefined")
-        ID.get("WeaveID").setTempPassword(password);
-      if (typeof(passphrase) != "undefined")
-        ID.get("WeaveCryptoID").setTempPassword(passphrase);
+      if (password != null)
+        this.password = password;
+      if (passphrase != null)
+        this.passphrase = passphrase;
 
       if (!this.username) {
         this._setSyncFailure(LOGIN_FAILED_NO_USERNAME);
@@ -692,8 +667,7 @@ WeaveSvc.prototype = {
       }
       this._log.debug("Logging in user " + this.username);
 
-      if (!(this.verifyLogin(this.username, this.password,
-        passphrase, true))) {
+      if (!this._verifyLogin()) {
         // verifyLogin sets the failure states here
         throw "Login failed: " + this.detailedStatus.sync;
       }
@@ -713,8 +687,6 @@ WeaveSvc.prototype = {
     this._log.info("Logging out");
     this._loggedIn = false;
     this._keyPair = {};
-    ID.get('WeaveID').setTempPassword(null); // clear cached password
-    ID.get('WeaveCryptoID').setTempPassword(null); // and passphrase
 
     // Cancel the sync timer now that we're logged out
     this._checkSyncStatus();
@@ -1098,6 +1070,16 @@ WeaveSvc.prototype = {
     if (!(this._remoteSetup()))
       throw "aborting sync, remote setup failed";
 
+    // Figure out what the last modified time is for each collection
+    let info = new Resource(this.infoURL).get();
+    if (!info.success)
+      throw "aborting sync, failed to get collections";
+
+    // Convert the response to an object and read out the modified times
+    info = JSON.parse(info);
+    for each (let engine in [Clients].concat(Engines.getEnabled()))
+      engine.lastModified = info[engine.name] || 0;
+
     this._log.debug("Refreshing client list");
     Clients.sync();
 
@@ -1186,7 +1168,7 @@ WeaveSvc.prototype = {
     }
     catch(e) {
       // maybe a 401, cluster update needed?
-      if (e.status == 401 && this.updateCluster(this.username))
+      if (e.status == 401 && this._updateCluster())
         return this._syncEngine(engine);
 
       this._syncError = true;
@@ -1233,7 +1215,7 @@ WeaveSvc.prototype = {
   wipeServer: function WeaveSvc_wipeServer(engines)
     this._catch(this._notify("wipe-server", "", function() {
       // Grab all the collections for the user
-      let res = new Resource(this.userURL + "/info/collections");
+      let res = new Resource(this.infoURL);
       res.get();
 
       // Get the array of collections and delete each one

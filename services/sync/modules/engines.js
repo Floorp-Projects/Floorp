@@ -183,7 +183,78 @@ Engine.prototype = {
   sync: function Engine_sync() {
     if (!this._sync)
       throw "engine does not implement _sync method";
-    this._notify("sync", this.name, this._sync)();
+
+    let times = {};
+    let wrapped = {};
+    // Find functions in any point of the prototype chain
+    for (let _name in this) {
+      let name = _name;
+
+      // Ignore certain constructors/functions
+      if (name.search(/^_(.+Obj|notify)$/) == 0)
+        continue;
+
+      // Only track functions but skip the constructors
+      if (typeof this[name] == "function") {
+        times[name] = [];
+        wrapped[name] = this[name];
+
+        // Wrap the original function with a start/stop timer
+        this[name] = function() {
+          let start = Date.now();
+          try {
+            return wrapped[name].apply(this, arguments);
+          }
+          finally {
+            times[name].push(Date.now() - start);
+          }
+        };
+      }
+    }
+
+    try {
+      this._notify("sync", this.name, this._sync)();
+    }
+    finally {
+      // Restore original unwrapped functionality
+      for (let [name, func] in Iterator(wrapped))
+        this[name] = func;
+
+      let stats = {};
+      for (let [name, time] in Iterator(times)) {
+        // Figure out stats on the times unless there's nothing
+        let num = time.length;
+        if (num == 0)
+          continue;
+
+        // Track the min/max/sum of the values
+        let stat = {
+          num: num,
+          sum: 0
+        };
+        time.forEach(function(val) {
+          if (val < stat.min || stat.min == null)
+            stat.min = val;
+          if (val > stat.max || stat.max == null)
+            stat.max = val;
+          stat.sum += val;
+        });
+
+        stat.avg = Number((stat.sum / num).toFixed(2));
+        stats[name] = stat;
+      }
+
+      stats.toString = function() {
+        let sums = [];
+        for (let [name, stat] in Iterator(this))
+          if (stat.sum != null)
+            sums.push(name.replace(/^_/, "") + " " + stat.sum);
+
+        return "Total (ms): " + sums.sort().join(", ");
+      };
+
+      this._log.info(stats);
+    }
   },
 
   wipeServer: function Engine_wipeServer() {
@@ -299,6 +370,12 @@ SyncEngine.prototype = {
 
   // Generate outgoing records
   _processIncoming: function SyncEngine__processIncoming() {
+    // Only bother getting data from the server if there's new things
+    if (this.lastModified <= this.lastSync) {
+      this._log.debug("Nothing new from the server to process");
+      return;
+    }
+
     this._log.debug("Downloading & applying server changes");
 
     // enable cache, and keep only the first few items.  Otherwise (when

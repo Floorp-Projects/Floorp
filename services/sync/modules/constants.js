@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ["WEAVE_VERSION", "COMPATIBLE_VERSION",
-			  'PREFS_BRANCH',
+			  "PREFS_BRANCH", "PWDMGR_HOST",
 			  'MODE_RDONLY', 'MODE_WRONLY',
 			  'MODE_CREATE', 'MODE_APPEND', 'MODE_TRUNCATE',
 			  'PERMS_FILE', 'PERMS_PASSFILE', 'PERMS_DIRECTORY',
@@ -63,6 +63,9 @@ const WEAVE_VERSION = "@weave_version@";
 const COMPATIBLE_VERSION = "@compatible_version@";
 
 const PREFS_BRANCH = "extensions.weave.";
+
+// Host "key" to access Weave Identity in the password manager
+const PWDMGR_HOST = "chrome://weave";
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
