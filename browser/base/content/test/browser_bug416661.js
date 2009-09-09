@@ -18,7 +18,7 @@ function continue_test_prefNotSet () {
   tabElm.linkedBrowser.removeEventListener("load", continue_test_prefNotSet, true);
   tabElm.linkedBrowser.addEventListener("load", end_test_prefNotSet, true);
 
-  is(ZoomManager.zoom, zoomLevel, "zoom level pref should apply to an image");
+  is(ZoomManager.zoom, 1, "zoom level pref should not apply to an image");
   FullZoom.reset();
 
   content.location = 
