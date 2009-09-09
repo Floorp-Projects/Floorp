@@ -10836,7 +10836,7 @@ TraceRecorder::record_JSOP_GETUPVAR()
 {
     uintN index = GET_UINT16(cx->fp->regs->pc);
     JSScript *script = cx->fp->script;
-    JSUpvarArray* uva = JS_SCRIPT_UPVARS(script);
+    JSUpvarArray* uva = script->upvars();
     JS_ASSERT(index < uva->length);
 
     jsval v;
@@ -11658,7 +11658,7 @@ TraceRecorder::record_JSOP_OBJECT()
     unsigned index = atoms - script->atomMap.vector + GET_INDEX(fp->regs->pc);
 
     JSObject* obj;
-    JS_GET_SCRIPT_OBJECT(script, index, obj);
+    obj = script->getObject(index);
     stack(0, INS_CONSTOBJ(obj));
     return JSRS_CONTINUE;
 }
@@ -12242,7 +12242,7 @@ JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_LAMBDA()
 {
     JSFunction* fun;
-    JS_GET_SCRIPT_FUNCTION(cx->fp->script, getFullIndex(), fun);
+    fun = cx->fp->script->getFunction(getFullIndex());
 
     if (FUN_NULL_CLOSURE(fun) && OBJ_GET_PARENT(cx, FUN_OBJECT(fun)) == globalObj) {
         LIns *proto_ins;
@@ -12260,7 +12260,7 @@ JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_LAMBDA_FC()
 {
     JSFunction* fun;
-    JS_GET_SCRIPT_FUNCTION(cx->fp->script, getFullIndex(), fun);
+    fun = cx->fp->script->getFunction(getFullIndex());
 
     LIns* scopeChain_ins = get(&cx->fp->argv[-2]);
     JS_ASSERT(scopeChain_ins);
@@ -12278,7 +12278,7 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
     stack(0, call_ins);
 
     if (fun->u.i.nupvars) {
-        JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
+        JSUpvarArray *uva = fun->u.i.script->upvars();
         for (uint32 i = 0, n = uva->length; i < n; i++) {
             jsval v;
             LIns* upvar_ins = upvar(fun->u.i.script, uva, i, v);
@@ -12913,7 +12913,7 @@ JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_ENTERBLOCK()
 {
     JSObject* obj;
-    JS_GET_SCRIPT_OBJECT(cx->fp->script, getFullIndex(0), obj);
+    obj = cx->fp->script->getObject(getFullIndex(0));
 
     LIns* void_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
     for (int i = 0, n = OBJ_BLOCK_COUNT(cx, obj); i < n; i++)

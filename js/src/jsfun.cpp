@@ -427,7 +427,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     }
 
     JSScript *script = fun->u.i.script;
-    jssrcnote *snbase = SCRIPT_NOTES(script);
+    jssrcnote *snbase = script->notes();
     jssrcnote *sn = snbase;
     while (!SN_IS_TERMINATOR(sn))
         sn = SN_NEXT(sn);
@@ -437,14 +437,14 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     JSScript *wscript = js_NewScript(cx, script->length, nsrcnotes,
                                      script->atomMap.length,
                                      (script->objectsOffset != 0)
-                                     ? JS_SCRIPT_OBJECTS(script)->length
+                                     ? script->objects()->length
                                      : 0,
                                      fun->u.i.nupvars,
                                      (script->regexpsOffset != 0)
-                                     ? JS_SCRIPT_REGEXPS(script)->length
+                                     ? script->regexps()->length
                                      : 0,
                                      (script->trynotesOffset != 0)
-                                     ? JS_SCRIPT_TRYNOTES(script)->length
+                                     ? script->trynotes()->length
                                      : 0);
     if (!wscript)
         return NULL;
@@ -452,25 +452,25 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     memcpy(wscript->code, script->code, script->length);
     wscript->main = wscript->code + (script->main - script->code);
 
-    memcpy(SCRIPT_NOTES(wscript), snbase, nsrcnotes);
+    memcpy(wscript->notes(), snbase, nsrcnotes * sizeof(jssrcnote));
     memcpy(wscript->atomMap.vector, script->atomMap.vector,
            wscript->atomMap.length * sizeof(JSAtom *));
     if (script->objectsOffset != 0) {
-        memcpy(JS_SCRIPT_OBJECTS(wscript)->vector, JS_SCRIPT_OBJECTS(script)->vector,
-               JS_SCRIPT_OBJECTS(wscript)->length * sizeof(JSObject *));
+        memcpy(wscript->objects()->vector, script->objects()->vector,
+               wscript->objects()->length * sizeof(JSObject *));
     }
     if (script->regexpsOffset != 0) {
-        memcpy(JS_SCRIPT_REGEXPS(wscript)->vector, JS_SCRIPT_REGEXPS(script)->vector,
-               JS_SCRIPT_REGEXPS(wscript)->length * sizeof(JSObject *));
+        memcpy(wscript->regexps()->vector, script->regexps()->vector,
+               wscript->regexps()->length * sizeof(JSObject *));
     }
     if (script->trynotesOffset != 0) {
-        memcpy(JS_SCRIPT_TRYNOTES(wscript)->vector, JS_SCRIPT_TRYNOTES(script)->vector,
-               JS_SCRIPT_TRYNOTES(wscript)->length * sizeof(JSTryNote));
+        memcpy(wscript->trynotes()->vector, script->trynotes()->vector,
+               wscript->trynotes()->length * sizeof(JSTryNote));
     }
 
     if (wfun->u.i.nupvars != 0) {
-        JS_ASSERT(wfun->u.i.nupvars == JS_SCRIPT_UPVARS(wscript)->length);
-        memcpy(JS_SCRIPT_UPVARS(wscript)->vector, JS_SCRIPT_UPVARS(script)->vector,
+        JS_ASSERT(wfun->u.i.nupvars == wscript->upvars()->length);
+        memcpy(wscript->upvars()->vector, script->upvars()->vector,
                wfun->u.i.nupvars * sizeof(uint32));
     }
 
@@ -1800,9 +1800,9 @@ JSFunction::countInterpretedReservedSlots() const
 
     uint32 nslots = (u.i.nupvars == 0)
                     ? 0
-                    : JS_SCRIPT_UPVARS(u.i.script)->length;
+                    : u.i.script->upvars()->length;
     if (u.i.script->regexpsOffset != 0)
-        nslots += JS_SCRIPT_REGEXPS(u.i.script)->length;
+        nslots += u.i.script->regexps()->length;
     return nslots;
 }
 
@@ -2364,7 +2364,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     if (!fun->u.i.script)
         goto bad;
     fun->u.i.script->code[0] = JSOP_STOP;
-    *SCRIPT_NOTES(fun->u.i.script) = SRC_NULL;
+    *fun->u.i.script->notes() = SRC_NULL;
 #ifdef CHECK_SCRIPT_OWNER
     fun->u.i.script->owner = NULL;
 #endif
@@ -2456,7 +2456,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 {
     JS_ASSERT(FUN_FLAT_CLOSURE(fun));
     JS_ASSERT((fun->u.i.script->upvarsOffset
-               ? JS_SCRIPT_UPVARS(fun->u.i.script)->length
+               ? fun->u.i.script->upvars()->length
                : 0) == fun->u.i.nupvars);
 
     JSObject *closure = js_CloneFunctionObject(cx, fun, scopeChain);
@@ -2482,7 +2482,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
     if (!closure || fun->u.i.nupvars == 0)
         return closure;
 
-    JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
+    JSUpvarArray *uva = fun->u.i.script->upvars();
     JS_ASSERT(uva->length <= size_t(closure->dslots[-1]));
 
     uintN level = fun->u.i.script->staticLevel;

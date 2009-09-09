@@ -4273,7 +4273,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
             return NULL;
         }
 
-        JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
+        JSUpvarArray *uva = fun->u.i.script->upvars();
         JS_ASSERT(uva->length <= size_t(clone->dslots[-1]));
 
         void *mark = JS_ARENA_MARK(&cx->tempPool);
