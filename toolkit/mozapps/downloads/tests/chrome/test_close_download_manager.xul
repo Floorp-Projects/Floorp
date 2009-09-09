@@ -107,18 +107,20 @@ function runTest()
             getService(Ci.nsIObserverService);
   let testObs = {
     observe: function(aSubject, aTopic, aData) {
-      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.focus();
-      switch(testPhase++) {
-        case 0:
-          testCloseDMWithEscKey(win);
-          break;
-        case 1:
-          obs.removeObserver(testObs, DLMGR_UI_DONE);
-          testCloseDMWithAccelKey(win);
-      }
+      SimpleTest.waitForFocus(function () { closeDM(aSubject) }, aSubject);
     }
   };
+
+  function closeDM(win) {
+    switch(testPhase++) {
+      case 0:
+        testCloseDMWithEscKey(win);
+        break;
+      case 1:
+        obs.removeObserver(testObs, DLMGR_UI_DONE);
+        testCloseDMWithAccelKey(win);
+    }
+  }
   obs.addObserver(testObs, DLMGR_UI_DONE, false);
 
   dmui.show();

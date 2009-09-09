@@ -178,12 +178,14 @@ function test()
       if (aTopic != DLMGR_UI_DONE)
         return;
 
-      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.focus();
-      // Send the enter key to Download Manager to retry the download
-      synthesizeKey("VK_ENTER", {}, win);
-      os.removeObserver(testObs, DLMGR_UI_DONE);
+      SimpleTest.waitForFocus(function () { sendEnter(aSubject) }, aSubject);
     }
+  };
+
+  function sendEnter(win) {
+    // Send the enter key to Download Manager to retry the download
+    synthesizeKey("VK_ENTER", {}, win);
+    os.removeObserver(testObs, DLMGR_UI_DONE);
   };
 
   // Register with the observer service
