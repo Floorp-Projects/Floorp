@@ -104,7 +104,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsIScrollableView.h"
 #include "nsIScriptChannel.h"
 #include "nsIURIClassifier.h"
 #include "nsIOfflineCacheUpdate.h"
@@ -4639,81 +4638,58 @@ nsDocShell::GetCurScrollPos(PRInt32 scrollOrientation, PRInt32 * curPos)
 {
     NS_ENSURE_ARG_POINTER(curPos);
 
-    nsIScrollableView* scrollView;
-    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
-                      NS_ERROR_FAILURE);
-    if (!scrollView) {
-        return NS_ERROR_FAILURE;
-    }
+    nsIScrollableFrame* sf = GetRootScrollFrame();
+    NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
-    nscoord x, y;
-    NS_ENSURE_SUCCESS(scrollView->GetScrollPosition(x, y), NS_ERROR_FAILURE);
+    nsPoint pt = sf->GetScrollPosition();
 
     switch (scrollOrientation) {
     case ScrollOrientation_X:
-        *curPos = x;
+        *curPos = pt.x;
         return NS_OK;
 
     case ScrollOrientation_Y:
-        *curPos = y;
+        *curPos = pt.y;
         return NS_OK;
 
     default:
         NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
     }
-    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsDocShell::SetCurScrollPos(PRInt32 scrollOrientation, PRInt32 curPos)
 {
-    nsIScrollableView* scrollView;
-    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
-                      NS_ERROR_FAILURE);
-    if (!scrollView) {
-        return NS_ERROR_FAILURE;
-    }
+    nsIScrollableFrame* sf = GetRootScrollFrame();
+    NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
-    PRInt32 other;
-    PRInt32 x;
-    PRInt32 y;
-
-    GetCurScrollPos(scrollOrientation, &other);
+    nsPoint pt = sf->GetScrollPosition();
 
     switch (scrollOrientation) {
     case ScrollOrientation_X:
-        x = curPos;
-        y = other;
+        pt.x = curPos;
         break;
 
     case ScrollOrientation_Y:
-        x = other;
-        y = curPos;
+        pt.y = curPos;
         break;
 
     default:
         NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
-        x = 0;
-        y = 0;                  // fix compiler warning, not actually executed
     }
 
-    NS_ENSURE_SUCCESS(scrollView->ScrollTo(x, y, 0),
-                      NS_ERROR_FAILURE);
+    sf->ScrollTo(pt, nsIScrollableFrame::INSTANT);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::SetCurScrollPosEx(PRInt32 curHorizontalPos, PRInt32 curVerticalPos)
 {
-    nsIScrollableView* scrollView;
-    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
-                      NS_ERROR_FAILURE);
-    if (!scrollView) {
-        return NS_ERROR_FAILURE;
-    }
+    nsIScrollableFrame* sf = GetRootScrollFrame();
+    NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
-    NS_ENSURE_SUCCESS(scrollView->ScrollTo(curHorizontalPos, curVerticalPos, 0),
-                      NS_ERROR_FAILURE);
+    sf->ScrollTo(nsPoint(curHorizontalPos, curVerticalPos),
+                 nsIScrollableFrame::INSTANT);
     return NS_OK;
 }
 
@@ -4724,33 +4700,26 @@ nsDocShell::GetScrollRange(PRInt32 scrollOrientation,
 {
     NS_ENSURE_ARG_POINTER(minPos && maxPos);
 
-    nsIScrollableView* scrollView;
-    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
-                      NS_ERROR_FAILURE);
-    if (!scrollView) {
-        return NS_ERROR_FAILURE;
-    }
+    nsIScrollableFrame* sf = GetRootScrollFrame();
+    NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
-    PRInt32 cx;
-    PRInt32 cy;
-
-    NS_ENSURE_SUCCESS(scrollView->GetContainerSize(&cx, &cy), NS_ERROR_FAILURE);
-    *minPos = 0;
+    nsSize portSize = sf->GetScrollPortRect().Size();
+    nsRect range = sf->GetScrollRange();
 
     switch (scrollOrientation) {
     case ScrollOrientation_X:
-        *maxPos = cx;
+        *minPos = range.x;
+        *maxPos = range.XMost() + portSize.width;
         return NS_OK;
 
     case ScrollOrientation_Y:
-        *maxPos = cy;
+        *minPos = range.y;
+        *maxPos = range.YMost() + portSize.height;
         return NS_OK;
 
     default:
         NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
     }
-
-    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -4839,23 +4808,10 @@ NS_IMETHODIMP
 nsDocShell::GetScrollbarVisibility(PRBool * verticalVisible,
                                    PRBool * horizontalVisible)
 {
-    nsIScrollableView* scrollView;
-    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
-                      NS_ERROR_FAILURE);
-    if (!scrollView)
-        return NS_ERROR_FAILURE;
+    nsIScrollableFrame* sf = GetRootScrollFrame();
+    NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
-    // We should now call nsLayoutUtils::GetScrollableFrameFor,
-    // but we can't because of stupid linkage!
-    nsIFrame* scrollFrame =
-        static_cast<nsIFrame*>(scrollView->View()->GetParent()->GetClientData());
-    if (!scrollFrame)
-        return NS_ERROR_FAILURE;
-    nsIScrollableFrame* scrollable = do_QueryFrame(scrollFrame);
-    if (!scrollable)
-        return NS_ERROR_FAILURE;
-
-    nsMargin scrollbars = scrollable->GetActualScrollbarSizes();
+    nsMargin scrollbars = sf->GetActualScrollbarSizes();
     if (verticalVisible)
         *verticalVisible = scrollbars.left != 0 || scrollbars.right != 0;
     if (horizontalVisible)
@@ -4871,32 +4827,22 @@ nsDocShell::GetScrollbarVisibility(PRBool * verticalVisible,
 NS_IMETHODIMP
 nsDocShell::ScrollByLines(PRInt32 numLines)
 {
-    nsIScrollableView* scrollView;
+    nsIScrollableFrame* sf = GetRootScrollFrame();
+    NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
-    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
-                      NS_ERROR_FAILURE);
-    if (!scrollView) {
-        return NS_ERROR_FAILURE;
-    }
-
-    NS_ENSURE_SUCCESS(scrollView->ScrollByLines(0, numLines), NS_ERROR_FAILURE);
-
+    sf->ScrollBy(nsIntPoint(0, numLines), nsIScrollableFrame::LINES,
+                 nsIScrollableFrame::SMOOTH);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::ScrollByPages(PRInt32 numPages)
 {
-    nsIScrollableView* scrollView;
+    nsIScrollableFrame* sf = GetRootScrollFrame();
+    NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
-    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
-                      NS_ERROR_FAILURE);
-    if (!scrollView) {
-        return NS_ERROR_FAILURE;
-    }
-
-    NS_ENSURE_SUCCESS(scrollView->ScrollByPages(0, numPages), NS_ERROR_FAILURE);
-
+    sf->ScrollBy(nsIntPoint(0, numPages), nsIScrollableFrame::PAGES,
+                 nsIScrollableFrame::SMOOTH);
     return NS_OK;
 }
 
@@ -9860,22 +9806,14 @@ nsDocShell::GetChildOffset(nsIDOMNode * aChild, nsIDOMNode * aParent,
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetRootScrollableView(nsIScrollableView ** aOutScrollView)
+nsIScrollableFrame *
+nsDocShell::GetRootScrollFrame()
 {
-    NS_ENSURE_ARG_POINTER(aOutScrollView);
-
     nsCOMPtr<nsIPresShell> shell;
-    NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(shell)), NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(shell, NS_ERROR_NULL_POINTER);
+    NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(shell)), nsnull);
+    NS_ENSURE_TRUE(shell, nsnull);
 
-    NS_ENSURE_SUCCESS(shell->GetViewManager()->GetRootScrollableView(aOutScrollView),
-                      NS_ERROR_FAILURE);
-
-    if (*aOutScrollView == nsnull) {
-        return NS_ERROR_FAILURE;
-    }
-    return NS_OK;
+    return shell->GetRootScrollFrameAsScrollableExternal();
 }
 
 #ifdef DEBUG

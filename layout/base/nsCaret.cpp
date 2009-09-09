@@ -60,7 +60,6 @@
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsIView.h"
-#include "nsIScrollableView.h"
 #include "nsIViewManager.h"
 #include "nsPresContext.h"
 #include "nsILookAndFeel.h"
@@ -1216,22 +1215,14 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   if (scrollFrame)
   {
     // First, use the scrollFrame to get at the scrollable view that we're in.
-    nsIScrollableFrame *scrollable = do_QueryFrame(scrollFrame);
-    nsIScrollableView *scrollView = scrollable->GetScrollableView();
-    nsIView *view;
-    scrollView->GetScrolledView(view);
-
-    // Compute the caret's coordinates in the enclosing view's coordinate
-    // space. To do so, we need to correct for both the original frame's
-    // offset from the scrollframe, and the scrollable view's offset from the
-    // scrolled frame's view.
-    nsPoint toScroll = aFrame->GetOffsetTo(scrollFrame) -
-      view->GetOffsetTo(scrollFrame->GetView());
-    nsRect caretInScroll = mCaretRect + toScroll;
+    nsIScrollableFrame *sf = do_QueryFrame(scrollFrame);
+    nsIFrame *scrolled = sf->GetScrolledFrame();
+    nsRect caretInScroll = mCaretRect + aFrame->GetOffsetTo(scrolled);
 
     // Now see if thet caret extends beyond the view's bounds. If it does,
     // then snap it back, put it as close to the edge as it can.
-    nscoord overflow = caretInScroll.XMost() - view->GetBounds().width;
+    nscoord overflow = caretInScroll.XMost() -
+      scrolled->GetOverflowRectRelativeToSelf().width;
     if (overflow > 0)
       mCaretRect.x -= overflow;
   }

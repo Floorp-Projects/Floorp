@@ -71,7 +71,6 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIEventStateManager.h"
 #include "nsIViewManager.h"
-#include "nsIScrollableView.h"
 #include "nsIDocument.h"
 #include "nsISelection.h"
 #include "nsISelectElement.h"
