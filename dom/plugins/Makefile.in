@@ -64,8 +64,8 @@ EXPORTS_mozilla/plugins = \
   PluginScriptableObjectParent.h \
   PluginInstanceChild.h \
   PluginInstanceParent.h \
-  PluginStreamChild.h \
-  PluginStreamParent.h \
+  BrowserStreamChild.h \
+  BrowserStreamParent.h \
   PluginMessageUtils.h \
   PluginProcessParent.h \
   PluginThreadChild.h \
@@ -86,8 +86,8 @@ CPPSRCS = \
   PluginProcessParent.cpp \
   PluginScriptableObjectChild.cpp \
   PluginScriptableObjectParent.cpp \
-  PluginStreamChild.cpp \
-  PluginStreamParent.cpp \
+  BrowserStreamChild.cpp \
+  BrowserStreamParent.cpp \
   PluginThreadChild.cpp \
   $(NULL)
 

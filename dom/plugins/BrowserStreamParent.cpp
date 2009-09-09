@@ -1,13 +1,13 @@
 /* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
 
-#include "PluginStreamParent.h"
+#include "BrowserStreamParent.h"
 #include "PluginInstanceParent.h"
 
 namespace mozilla {
 namespace plugins {
 
-PluginStreamParent::PluginStreamParent(PluginInstanceParent* npp,
-                                       NPStream* stream)
+BrowserStreamParent::BrowserStreamParent(PluginInstanceParent* npp,
+                                         NPStream* stream)
   : mNPP(npp)
   , mStream(stream)
 {
@@ -15,8 +15,8 @@ PluginStreamParent::PluginStreamParent(PluginInstanceParent* npp,
 }
 
 nsresult
-PluginStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
-                                          NPError* result)
+BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
+                                           NPError* result)
 {
   if (!mStream)
     return NS_ERROR_NOT_INITIALIZED;
@@ -38,7 +38,7 @@ PluginStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
 }
 
 int32_t
-PluginStreamParent::WriteReady()
+BrowserStreamParent::WriteReady()
 {
   int32_t result;
   nsresult rv = CallNPP_WriteReady(mStream->end, &result);
@@ -49,9 +49,9 @@ PluginStreamParent::WriteReady()
 }
 
 int32_t
-PluginStreamParent::Write(int32_t offset,
-                          int32_t len,
-                          void* buffer)
+BrowserStreamParent::Write(int32_t offset,
+                           int32_t len,
+                           void* buffer)
 {
   int32_t result;
   nsresult rv = CallNPP_Write(offset,
@@ -61,22 +61,21 @@ PluginStreamParent::Write(int32_t offset,
     return -1;
 
   if (result == -1)
-    mNPP->CallPPluginStreamDestructor(this, NPRES_USER_BREAK, true);
+    mNPP->CallPBrowserStreamDestructor(this, NPRES_USER_BREAK, true);
   return result;
 }
 
 void
-PluginStreamParent::StreamAsFile(const char* fname)
+BrowserStreamParent::StreamAsFile(const char* fname)
 {
   CallNPP_StreamAsFile(nsCString(fname));
 }
 
 NPError
-PluginStreamParent::NPN_DestroyStream(NPReason reason)
+BrowserStreamParent::NPN_DestroyStream(NPReason reason)
 {
   return mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, reason);
 }
-
 
 } // namespace plugins
 } // namespace mozilla
