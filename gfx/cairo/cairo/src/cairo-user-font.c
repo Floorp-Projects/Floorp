@@ -85,14 +85,13 @@ _cairo_user_scaled_font_create_meta_context (cairo_user_scaled_font_t *scaled_fo
 						     CAIRO_CONTENT_COLOR_ALPHA :
 						     CAIRO_CONTENT_ALPHA;
 
-    meta_surface = cairo_meta_surface_create (content, -1, -1);
+    meta_surface = _cairo_meta_surface_create (content, -1, -1);
     cr = cairo_create (meta_surface);
     cairo_surface_destroy (meta_surface);
 
     cairo_set_matrix (cr, &scaled_font->base.scale);
     cairo_set_font_size (cr, 1.0);
     cairo_set_font_options (cr, &scaled_font->base.options);
-    cairo_set_source_rgb (cr, 1., 1., 1.);
 
     return cr;
 }
@@ -158,7 +157,8 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 
 	    _cairo_analysis_surface_set_ctm (analysis_surface,
 					     &scaled_font->extent_scale);
-	    status = cairo_meta_surface_replay (meta_surface, analysis_surface);
+	    status = _cairo_meta_surface_replay (meta_surface,
+						 analysis_surface);
 	    _cairo_analysis_surface_get_bounding_box (analysis_surface, &bbox);
 	    cairo_surface_destroy (analysis_surface);
 
@@ -213,7 +213,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	cairo_surface_set_device_offset (surface,
 	                                 - _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.x),
 	                                 - _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.y));
-	status = cairo_meta_surface_replay (meta_surface, surface);
+	status = _cairo_meta_surface_replay (meta_surface, surface);
 
 	if (unlikely (status)) {
 	    cairo_surface_destroy(surface);

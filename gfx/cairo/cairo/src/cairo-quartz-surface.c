@@ -1717,23 +1717,6 @@ _cairo_quartz_surface_acquire_source_image (void *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_surface_t *
-_cairo_quartz_surface_snapshot (void *abstract_surface)
-{
-    cairo_int_status_t status;
-    cairo_quartz_surface_t *surface = abstract_surface;
-    cairo_image_surface_t *image;
-
-    if (surface->imageSurfaceEquiv)
-	return NULL;
-
-    status = _cairo_quartz_get_image (surface, &image);
-    if (unlikely (status))
-        return _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
-
-    return &image->base;
-}
-
 static void
 _cairo_quartz_surface_release_source_image (void *abstract_surface,
 					     cairo_image_surface_t *image,
@@ -2717,7 +2700,7 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     NULL, /* show_glyphs */
 #endif
 
-    _cairo_quartz_surface_snapshot,
+    NULL, /* snapshot */
     NULL, /* is_similar */
     NULL, /* reset */
     NULL  /* fill_stroke */
