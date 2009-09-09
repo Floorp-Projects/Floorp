@@ -75,6 +75,8 @@
 
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
 #define CLICK_IMAGE_RESIZING_PREF "browser.enable_click_image_resizing"
+//XXX A hack needed for Firefox's site specific zoom.
+#define SITE_SPECIFIC_ZOOM "browser.zoom.siteSpecific"
 
 class nsImageDocument;
 
@@ -338,7 +340,9 @@ nsImageDocument::StartDocumentLoad(const char*         aCommand,
     return rv;
   }
 
-  mOriginalZoomLevel = GetZoomLevel();
+  mOriginalZoomLevel =
+    nsContentUtils::GetBoolPref(SITE_SPECIFIC_ZOOM, PR_FALSE) ?
+      1.0 : GetZoomLevel();
 
   NS_ASSERTION(aDocListener, "null aDocListener");
   *aDocListener = new ImageListener(this);
@@ -413,7 +417,9 @@ nsImageDocument::OnPageShow(PRBool aPersisted,
                             nsIDOMEventTarget* aDispatchStartTarget)
 {
   if (aPersisted) {
-    mOriginalZoomLevel = GetZoomLevel();
+    mOriginalZoomLevel =
+      nsContentUtils::GetBoolPref(SITE_SPECIFIC_ZOOM, PR_FALSE) ?
+        1.0 : GetZoomLevel();
   }
   nsMediaDocument::OnPageShow(aPersisted, aDispatchStartTarget);
 }
@@ -564,7 +570,6 @@ nsImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
 {
   aImage->GetWidth(&mImageWidth);
   aImage->GetHeight(&mImageHeight);
-  ResetZoomLevel();
   CheckOverflowing(mResizeImageByDefault);
   UpdateTitleAndCharset();
 
