@@ -97,7 +97,7 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
 
     surface->backend = backend;
 
-    surface->meta = cairo_meta_surface_create (content, width, height);
+    surface->meta = _cairo_meta_surface_create (content, width, height);
     status = cairo_surface_status (surface->meta);
     if (unlikely (status))
 	goto FAIL_CLEANUP_SURFACE;
@@ -148,8 +148,8 @@ _cairo_paginated_surface_set_size (cairo_surface_t	*surface,
     paginated_surface->height = height;
 
     cairo_surface_destroy (paginated_surface->meta);
-    paginated_surface->meta = cairo_meta_surface_create (paginated_surface->content,
-							 width, height);
+    paginated_surface->meta = _cairo_meta_surface_create (paginated_surface->content,
+							  width, height);
     status = cairo_surface_status (paginated_surface->meta);
     if (unlikely (status))
 	return _cairo_surface_set_error (surface, status);
@@ -222,7 +222,7 @@ _cairo_paginated_surface_acquire_source_image (void	       *abstract_surface,
 							   extents.width,
 							   extents.height);
 
-    status = cairo_meta_surface_replay (surface->meta, image);
+    status = _cairo_meta_surface_replay (surface->meta, image);
     if (unlikely (status)) {
 	cairo_surface_destroy (image);
 	return status;
@@ -266,7 +266,7 @@ _paint_fallback_image (cairo_paginated_surface_t *surface,
      * so we have to do the scaling manually. */
     cairo_surface_set_device_offset (image, -x*x_scale, -y*y_scale);
 
-    status = cairo_meta_surface_replay (surface->meta, image);
+    status = _cairo_meta_surface_replay (surface->meta, image);
     if (unlikely (status))
 	goto CLEANUP_IMAGE;
 
@@ -481,9 +481,9 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
 
     cairo_surface_destroy (surface->meta);
 
-    surface->meta = cairo_meta_surface_create (surface->content,
-					       surface->width,
-                                               surface->height);
+    surface->meta = _cairo_meta_surface_create (surface->content,
+						surface->width,
+						surface->height);
     status = cairo_surface_status (surface->meta);
     if (unlikely (status))
 	return status;

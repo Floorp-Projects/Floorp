@@ -647,7 +647,7 @@ cairo_truetype_font_write_head_table (cairo_truetype_font_t *font,
     if (unlikely (status))
 	return _cairo_truetype_font_set_error (font, status);
 
-    /* set checkSumAdjustment to 0 for table checksum calculation */
+    /* set checkSumAdjustment to 0 for table checksum calcualtion */
     *(uint32_t *)(buffer + 8) = 0;
 
     return CAIRO_STATUS_SUCCESS;
