@@ -744,7 +744,10 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
     return PR_FALSE;
   }
 
-  PRBool isVisible = CheckVisibilityInParentChain(doc, frame->GetClosestView());
+  nsIFrame* frameWithView =
+    frame->HasView() ? frame : frame->GetAncestorWithViewExternal();
+  nsIView* view = frameWithView->GetViewExternal();
+  PRBool isVisible = CheckVisibilityInParentChain(doc, view);
   if (isVisible && rectVisibility == nsRectVisibility_kVisible) {
     *aIsOffscreen = PR_FALSE;
   }
