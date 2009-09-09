@@ -119,10 +119,12 @@ public:
   void PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt);
 
   // nsIScrollPositionListener
-  NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
-  virtual void ViewPositionDidChange(nsIScrollableView* aScrollable,
-                                     nsTArray<nsIWidget::Configuration>* aConfigurations) {}
-  NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
+  NS_IMETHOD ScrollPositionWillChange(nscoord aX, nscoord aY);
+  // The scrollframe implementation of this method appends a list of widget
+  // configuration requests to aConfigurations. No other implementor
+  // should touch it. No longer gets called!!!
+  virtual void ViewPositionDidChange(nsTArray<nsIWidget::Configuration>* aConfigurations) {}
+  NS_IMETHOD ScrollPositionDidChange(nscoord aX, nscoord aY);
 
   /**
    * Get the "type" of the frame

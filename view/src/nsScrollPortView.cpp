@@ -673,7 +673,7 @@ NS_IMETHODIMP nsScrollPortView::ScrollToImpl(nscoord aX, nscoord aY)
     if (NS_SUCCEEDED(mListeners->Count(&listenerCount))) {
       for (PRUint32 i = 0; i < listenerCount; i++) {
         if (NS_SUCCEEDED(mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener))) {
-          listener->ScrollPositionWillChange(this, aX, aY);
+          listener->ScrollPositionWillChange(aX, aY);
           NS_RELEASE(listener);
         }
       }
@@ -692,7 +692,7 @@ NS_IMETHODIMP nsScrollPortView::ScrollToImpl(nscoord aX, nscoord aY)
     if (NS_SUCCEEDED(mListeners->Count(&listenerCount))) {
       for (PRUint32 i = 0; i < listenerCount; i++) {
         if (NS_SUCCEEDED(mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener))) {
-          listener->ViewPositionDidChange(this, &configurations);
+          listener->ViewPositionDidChange(&configurations);
           NS_RELEASE(listener);
         }
       }
@@ -714,7 +714,7 @@ NS_IMETHODIMP nsScrollPortView::ScrollToImpl(nscoord aX, nscoord aY)
     if (NS_SUCCEEDED(mListeners->Count(&listenerCount))) {
       for (PRUint32 i = 0; i < listenerCount; i++) {
         if (NS_SUCCEEDED(mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener))) {
-          listener->ScrollPositionDidChange(this, aX, aY);
+          listener->ScrollPositionDidChange(aX, aY);
           NS_RELEASE(listener);
         }
       }
