@@ -1078,19 +1078,28 @@ ToSource(JSContext *cx, jsval *vp)
 static JSBool
 AssertEq(JSContext *cx, uintN argc, jsval *vp)
 {
-    if (argc != 2) {
+    if (!(argc == 2 || (argc == 3 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[2])))) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                             (argc > 2) ? JSSMSG_TOO_MANY_ARGS : JSSMSG_NOT_ENOUGH_ARGS,
+                             (argc < 2)
+                             ? JSSMSG_NOT_ENOUGH_ARGS
+                             : (argc == 3)
+                             ? JSSMSG_INVALID_ARGS
+                             : JSSMSG_TOO_MANY_ARGS,
                              "assertEq");
         return JS_FALSE;
     }
 
     jsval *argv = JS_ARGV(cx, vp);
-    if (!JS_StrictlyEqual(cx, argv[0], argv[1])) {
+    if (!JS_SameValue(cx, argv[0], argv[1])) {
         const char *actual = ToSource(cx, &argv[0]);
         const char *expected = ToSource(cx, &argv[1]);
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_EQ_FAILED,
-                             actual, expected);
+        if (argc == 2) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_EQ_FAILED,
+                                 actual, expected);
+        } else {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_EQ_FAILED_MSG,
+                                 actual, expected, JS_GetStringBytes(JSVAL_TO_STRING(argv[2])));
+        }
         return JS_FALSE;
     }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -3725,8 +3734,9 @@ static const char *const shell_help_messages[] = {
 "print([exp ...])         Evaluate and print expressions",
 "help([name ...])         Display usage and help messages",
 "quit()                   Quit the shell",
-"assertEq(actual, expected)\n"
-"                         Throw if the two arguments are not ===",
+"assertEq(actual, expected[, msg])\n"
+"  Throw if the first two arguments are not the same (both +0 or both -0,\n"
+"  both NaN, or non-zero and ===)",
 "gc()                     Run the garbage collector",
 "gcparam(name, value)\n"
 "  Wrapper for JS_SetGCParameter. The name must be either 'maxBytes' or\n"
