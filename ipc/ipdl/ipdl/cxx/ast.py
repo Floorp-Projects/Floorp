@@ -231,6 +231,10 @@ class Block(Node):
     def addstmt(self, stmt):
         self.stmts.append(stmt)
 
+    def addstmts(self, stmts):
+        for stmt in stmts:
+            self.addstmt(stmt)
+
 ##------------------------------
 # type and decl thingies
 class Namespace(Block):
@@ -239,16 +243,17 @@ class Namespace(Block):
         self.name = name
 
 class Type(Node):
-    def __init__(self, name, const=False, ptr=False, ref=False):
+    def __init__(self, name, const=0, ptr=0, ref=0, actor=0):
         Node.__init__(self)
         self.name = name
         self.const = const
         self.ptr = ptr
         self.ref = ref
+        self.actor = actor
         # XXX could get serious here with recursive types, but shouldn't 
         # need that for this codegen
     def __deepcopy__(self, memo):
-        return Type(self.name, self.const, self.ptr, self.ref)
+        return Type(self.name, self.const, self.ptr, self.ref, self.actor)
 
 class TypeEnum(Node):
     def __init__(self, name=None):

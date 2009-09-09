@@ -50,8 +50,12 @@ def _protocolHeaderFilename(p, pname):
 def _protocolHeaderName(pname):
     return pname +'Protocol'
 
-def _makeForwardDecl(p, namesuffix=''):
-    clsname = p.decl.type.qname.baseid + namesuffix
+def _actorName(pname, side):
+    """|pname| is the protocol name. |side| is 'Parent' or 'Child'."""
+    return pname +'Protocol'+ side
+
+def _makeForwardDecl(p, side):
+    clsname = _actorName(p.decl.type.qname.baseid, side)
     
     fd = cxx.ForwardDecl(clsname, cls=1)
     if 0 == len(p.namespaces):
@@ -222,14 +226,16 @@ class GenerateProtocolHeader(Visitor):
         # where we squirrel away some common information
         md._cxx = _struct()
 
-        md._cxx.params = [ ]
-        for param in md.inParams:
-            md._cxx.params.append(cxx.Decl(cxx.Type(param.type.name()),
-                                           param.progname))
-        md._cxx.returns = [ ]
-        for param in md.outParams:
-            md._cxx.returns.append(cxx.Decl(cxx.Type(param.type.name()),
-                                            param.progname))
+        def makeCxxDecl(decl):
+            cxxd = cxx.Decl(cxx.Type(decl.type.name()),
+                            decl.progname)
+            if decl.type.isIPDL() and decl.type.isActor():
+                cxxd.type.actor = 1
+                cxxd.type.ptr = 1
+            return cxxd
+
+        md._cxx.params = [ makeCxxDecl(d) for d in md.inParams ]
+        md._cxx.returns = [ makeCxxDecl(d) for d in md.outParams ]
 
         # generate C++ interface to message sending/handling
         method = cxx.MethodDecl(
@@ -240,11 +246,15 @@ class GenerateProtocolHeader(Visitor):
         for param in md._cxx.params:
             pcopy = deepcopy(param)
             pcopy.type.const = True
-            pcopy.type.ref = True
+            if not param.type.actor:
+                pcopy.type.ref = True
             method.params.append(pcopy)
         for ret in md._cxx.returns:
             rcopy = deepcopy(ret)
-            rcopy.type.ptr = True
+            if rcopy.type.actor:
+                rcopy.type.ptrptr = True
+            else:
+                rcopy.type.ptr = True
             method.params.append(rcopy)
         md._cxx.method = method
 
@@ -273,11 +283,12 @@ def generateMsgClass(md, clsname, params, typedefInjector):
         idenum.addId('ID', clsname +'__ID')
         cls.addstmt(cxx.StmtDecl(cxx.Decl(idenum, '')))
 
-        # FIXME/cjones: need to handle "managed" messages
-
         constparams = deepcopy(params)
         writestmts = [ ]
         for cparam in constparams:
+            if cparam.type.actor:
+                # this is an actor. it goes across the wire as a Handle
+                cparam.type = cxx.Type('mozilla::ipc::ActorHandle')
             cparam.type.const = True
             cparam.type.ref = True
 
@@ -308,6 +319,9 @@ def generateMsgClass(md, clsname, params, typedefInjector):
         # make the message deserializer
         outparams = deepcopy(params)
         for oparam in outparams:
+            if oparam.type.actor:
+                # this is an actor. it comes across the wire as a Handle
+                oparam.type = cxx.Type('mozilla::ipc::ActorHandle')
             oparam.type.ptr = True
 
         if md.decl.type.hasImplicitActorParam():
@@ -465,6 +479,29 @@ _listenerTable = {
     RPC: 'RPCListener',
 }
 
+# helper functions for converting between actors and actor handles
+def _actorToActorHandle(actor, handle, failcode):
+    failifnull = cxx.StmtIf(cxx.ExprPrefixUnop(actor, '!'))
+    failifnull.addifstmt(cxx.StmtReturn(failcode))
+    convert = cxx.StmtExpr(cxx.ExprAssn(
+        cxx.ExprSelect(handle, '.', 'mId'),
+        cxx.ExprSelect(actor, '->', 'mId')))
+    return failifnull, convert
+
+def _actorHandleToActor(handle, actor, actortype, failcode):
+    idvar = cxx.ExprSelect(handle, '.', 'mId')
+    cast = cxx.ExprCast(
+        cxx.ExprCall(cxx.ExprVar('Lookup'), [ idvar ]),
+        actortype,
+        static=1)
+    caststmt = cxx.StmtExpr(cxx.ExprAssn(actor, cast))
+
+    failif = cxx.StmtIf(cxx.ExprPrefixUnop(actor, '!'))
+    failif.ifb.addstmt(cxx.StmtReturn(failcode))
+
+    return caststmt, failif
+
+
 class GenerateProtocolActorHeader(Visitor):
     def __init__(self, myside, otherside):
         self.myside = myside  # "Parent" or "Child"
@@ -514,15 +551,15 @@ class GenerateProtocolActorHeader(Visitor):
 
         if self.protocol.decl.type.isManagerOf(p.decl.type):
             header = _protocolHeaderFilename(
-                p, _protocolHeaderName(p.name)+ self.myside)
+                p, _actorName(p.name, self.myside))
             self.file.addthing(cxx.CppDirective('include', '"'+ header +'"'))
         else:
-            self.file.addthing(_makeForwardDecl(p, 'Protocol'+ self.myside))
+            self.file.addthing(_makeForwardDecl(p, self.myside))
             
         if p.decl.fullname is not None:
             self.typedefs.append(cxx.Typedef(
-                cxx.Type(_protocolHeaderName(p.decl.fullname) + self.myside),
-                cxx.Type(_protocolHeaderName(p.decl.shortname) + self.myside)))
+                cxx.Type(_actorName(p.decl.fullname, self.myside)),
+                cxx.Type(_actorName(p.decl.shortname, self.myside))))
 
     def visitProtocol(self, p):
         p._cxx = _struct()
@@ -584,8 +621,8 @@ class GenerateProtocolActorHeader(Visitor):
 
         if p.decl.type.isManaged():
             cls.addstmt(cxx.FriendClassDecl(
-                    _protocolHeaderName(p.decl.type.manager.fullname())
-                                        + self.myside))
+                _actorName(p.decl.type.manager.fullname(),
+                           self.myside)))
             cls.addstmt(cxx.Whitespace.NL)
 
         cls.addstmt(cxx.Label('protected'))
@@ -597,10 +634,14 @@ class GenerateProtocolActorHeader(Visitor):
         for md in p.messageDecls:
             if md.decl.type.isCtor() or md.decl.type.isDtor():
                 objtype = cxx.Type(
-                    (_protocolHeaderName(md.decl.type.constructedType().name())
-                     + self.myside),
+                    _actorName(md.decl.type.constructedType().name(),
+                               self.myside),
                     ptr=1)
                 meth = deepcopy(md._cxx.method)
+                for param in meth.params:
+                    if param.type.actor:
+                        param.type.name = _actorName(param.type.name,
+                                                     self.myside)
                 meth.pure = True
 
                 actordecl = cxx.Decl(objtype, '__a')
@@ -614,6 +655,10 @@ class GenerateProtocolActorHeader(Visitor):
                 if md.decl.type.isRpc():  pfx = 'Answer'
                 else:                     pfx = 'Recv'
                 meth = deepcopy(md._cxx.method)
+                for param in meth.params:
+                    if param.type.actor:
+                        param.type.name = _actorName(param.type.name,
+                                                     self.myside)
                 meth.name = pfx + meth.name
                 if md.decl.type.isCtor() or md.decl.type.isDtor():
                     # allow implementations to receive a notification
@@ -926,12 +971,16 @@ class GenerateProtocolActorHeader(Visitor):
                 pfx = 'Send'
 
             mdecl = deepcopy(md._cxx.method)
+            for param in mdecl.params:
+                if param.type.actor:
+                    # needs a "side", i.e., Parent/Child
+                    param.type.name = _actorName(param.type.name, self.myside)
             mdecl.name = pfx + mdecl.name
             mdecl.virtual = False
             if md.decl.type.hasImplicitActorParam():
                 objtype = cxx.Type(
-                    (_protocolHeaderName(md.decl.type.constructedType().name())
-                     + self.myside),
+                    _actorName(md.decl.type.constructedType().name(),
+                               self.myside),
                     ptr=1)
             if md.decl.type.isCtor():
                 mdecl.ret = objtype
@@ -939,6 +988,10 @@ class GenerateProtocolActorHeader(Visitor):
                 mdecl.params.insert(0, cxx.Decl(objtype, '__a'))
                 objvar = cxx.ExprVar('__a')
             impl = cxx.MethodDefn(mdecl)
+
+            okcode = cxx.ExprVar('NS_OK')
+            failerrcode = cxx.ExprVar('NS_ERROR_FAILURE')
+            valueerrcode = cxx.ExprVar('NS_ERROR_ILLEGAL_VALUE')
 
             if md.decl.type.isCtor():
                 #
@@ -969,9 +1022,9 @@ class GenerateProtocolActorHeader(Visitor):
                 self.cls.addstmt(cxx.Whitespace.NL)
 
                 # now we make the second ctor interface
-                mdecl2 = deepcopy(mdecl)
-                mdecl2.params.insert(0, cxx.Decl(objtype, '__a'))
-                impl = cxx.MethodDefn(mdecl2)
+                mdecl = deepcopy(mdecl)
+                mdecl.params.insert(0, cxx.Decl(objtype, '__a'))
+                impl = cxx.MethodDefn(mdecl)
 
                 objvar = cxx.ExprVar('__a')
 
@@ -999,10 +1052,6 @@ class GenerateProtocolActorHeader(Visitor):
                 impl.addstmt(cxx.Whitespace.NL)
 
             elif md.decl.type.isDtor():
-                okcode = cxx.ExprVar('NS_OK')
-                failerrcode = cxx.ExprVar('NS_ERROR_FAILURE')
-                valueerrcode = cxx.ExprVar('NS_ERROR_ILLEGAL_VALUE')
-
                 failif = cxx.StmtIf(cxx.ExprPrefixUnop(objvar, '!'))
                 failif.ifb.addstmt(cxx.StmtReturn(valueerrcode))
                 impl.addstmt(failif)
@@ -1030,25 +1079,40 @@ class GenerateProtocolActorHeader(Visitor):
                                      objid)))
                 impl.addstmt(cxx.Whitespace.NL)
 
-            else:               # normal message
-                okcode = cxx.ExprVar('NS_OK')
-                failerrcode = cxx.ExprVar('NS_ERROR_FAILURE')
-                valueerrcode = cxx.ExprVar('NS_ERROR_ILLEGAL_VALUE')
+            # if this message has explicit actor params, we need to
+            # convert them to Handle's before sending
+            for param in mdecl.params:
+                if not param.type.actor:
+                    continue
+                pavar = cxx.ExprVar(param.name)
+                pahvar = cxx.ExprVar(param.name +'__ah')
+                impl.addstmt(cxx.StmtDecl(cxx.Decl(
+                    cxx.Type('mozilla::ipc::ActorHandle'), pahvar.name)))
+                impl.addstmts(_actorToActorHandle(actor=pavar,
+                                                  handle=pahvar,
+                                                  failcode=valueerrcode))
+            impl.addstmt(cxx.Whitespace.NL)
 
             hasreply = md.decl.type.hasReply()
             if hasreply:
                 impl.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type('Message'),
                                                    '__reply')))
                 replyvar = cxx.ExprVar('__reply')
+
             impl.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type(md._cxx.nsid, ptr=1),
                                                '__msg')))
             msgvar = cxx.ExprVar('__msg')
 
-            msgctor = cxx.ExprNew(cxx.Type(md._cxx.nsid),
-                                  [ cxx.ExprVar(p.name)
-                                    for p in md._cxx.params ])
+            msgctorargs = [ ]
+            for param in md._cxx.params:
+                aname = param.name
+                if param.type.actor:
+                    aname += '__ah'
+                msgctorargs.append(cxx.ExprVar(aname))
             if md.decl.type.hasImplicitActorParam():
-                msgctor.args.append(ahvar)
+                msgctorargs.append(ahvar)
+                
+            msgctor = cxx.ExprNew(cxx.Type(md._cxx.nsid), msgctorargs)
                 
             if self.p.decl.type.isManaged():
                 route = cxx.ExprVar('mId')
@@ -1090,12 +1154,37 @@ class GenerateProtocolActorHeader(Visitor):
             impl.addstmt(failif)
 
             if hasreply:
-                unpack = cxx.ExprCall(cxx.ExprVar(md._cxx.nsreplyid +'::Read'),
-                                      [ cxx.ExprAddrOf(replyvar) ]
-                                      + [ cxx.ExprVar(r.name)
-                                          for r in md._cxx.returns ])
+                # if this message has explicit actor returns, we need
+                # to convert them from Handle before returning to C++
+                for ret in md._cxx.returns:
+                    if not ret.type.actor: continue
+                    
+                    ravar = cxx.ExprVar(ret.name)
+                    rahvar = cxx.ExprVar(ret.name +'__ah')
+                    actortype = deepcopy(ret.type)
+                    actortype.name = _actorName(actortype.name, self.myside)
+                    actortype.ptrptr = 0; actortype.ptr = 1
+                    
+                    impl.addstmt(cxx.StmtDecl(cxx.Decl(
+                        cxx.Type('mozilla::ipc::ActorHandle'), rahvar.name)))
+                    impl.addstmts(_actorHandleToActor(handle=rahvar,
+                                                      actor=ravar,
+                                                      actortype=actortype,
+                                                      failcode=valueerrcode))
+                impl.addstmt(cxx.Whitespace.NL)
+
+                unpackargs = [ cxx.ExprAddrOf(replyvar) ]
+                for ret in md._cxx.returns:
+                    rname = ret.name
+                    if ret.type.actor:
+                        unpackargs.append(cxx.ExprAddrOf(cxx.ExprVar(rname +'__ah')))
+                    else:
+                        unpackargs.append(cxx.ExprVar(rname))
                 if md.decl.type.hasImplicitActorParam():
-                    unpack.args.append(cxx.ExprAddrOf(ahvar))
+                    unpackargs.append(cxx.ExprAddrOf(ahvar))
+
+                unpack = cxx.ExprCall(cxx.ExprVar(md._cxx.nsreplyid +'::Read'),
+                                      unpackargs)
                 errhandle = cxx.StmtIf(cxx.ExprPrefixUnop(unpack, '!'))
                 errhandle.ifb.addstmt(cxx.StmtReturn(valueerrcode))
                 impl.addstmt(errhandle)
@@ -1154,15 +1243,31 @@ class GenerateProtocolActorHeader(Visitor):
             hasactor = md.decl.type.hasImplicitActorParam()
             if hasactor:
                 objtype = cxx.Type(
-                    (_protocolHeaderName(md.decl.type.constructedType().name())
-                     + self.myside),
+                    _actorName(md.decl.type.constructedType().name(),
+                               self.myside),
                     ptr=1)
                 objvar = cxx.ExprVar('__a')
                 objid = cxx.ExprSelect(objvar, '->', 'mId')
 
             for param in md._cxx.params:
+                if param.type.actor:
+                    param = deepcopy(param)
+                    # actors need a "side", i.e., Parent/Child
+                    param.type.name = _actorName(param.type.name, self.myside)
+                    # and come in as Handles
+                    block.addstmt(cxx.StmtDecl(cxx.Decl(
+                        cxx.Type('mozilla::ipc::ActorHandle'),
+                        param.name +'__ah')))
                 block.addstmt(cxx.StmtDecl(param))
             for ret in md._cxx.returns:
+                if ret.type.actor:
+                    ret = deepcopy(ret)
+                    # actors need a "side", i.e., Parent/Child
+                    ret.type.name = _actorName(ret.type.name, self.myside)
+                    # and go out as Handles
+                    block.addstmt(cxx.StmtDecl(cxx.Decl(
+                        cxx.Type('mozilla::ipc::ActorHandle'),
+                        ret.name +'__ah')))
                 block.addstmt(cxx.StmtDecl(ret))
             if hasactor:
                 block.addstmt(cxx.StmtDecl(cxx.Decl(
@@ -1171,12 +1276,17 @@ class GenerateProtocolActorHeader(Visitor):
             block.addstmt(cxx.Whitespace.NL)
 
             msgvar = cxx.ExprVar('msg')
-            unpack = cxx.ExprCall(cxx.ExprVar(md._cxx.nsid +'::Read'),
-                                  [ cxx.ExprAddrOf(msgvar) ]
-                                  + [ cxx.ExprAddrOf(cxx.ExprVar(p.name))
-                                      for p in md._cxx.params ])
+            unpackargs = [ cxx.ExprAddrOf(msgvar) ] # msg to unpack
+            for p in md._cxx.params:
+                argvar = cxx.ExprVar(p.name)
+                if p.type.actor:
+                    argvar.name += '__ah'
+                unpackargs.append(cxx.ExprAddrOf(argvar))
             if hasactor:
-                unpack.args.append(cxx.ExprAddrOf(ahvar))
+                unpackargs.append(cxx.ExprAddrOf(ahvar))
+                
+            unpack = cxx.ExprCall(cxx.ExprVar(md._cxx.nsid +'::Read'),
+                                  unpackargs)
             errhandle = cxx.StmtIf(cxx.ExprPrefixUnop(unpack, '!'))
             errhandle.ifb.addstmt(cxx.StmtReturn(
                     cxx.ExprVar('MsgPayloadError')))
@@ -1187,6 +1297,20 @@ class GenerateProtocolActorHeader(Visitor):
                                       cxx.Type(md._cxx.nsid, ptr=1, const=1),
                                       static=1),
                          pfx +' ')
+
+            # match up Actor*s specified by Handles
+            for param in md._cxx.params:
+                if not param.type.actor: continue
+
+                pavar = cxx.ExprVar(param.name)
+                pahvar = cxx.ExprVar(pavar.name +'__ah')
+                actortype = deepcopy(param.type)
+                actortype.name = _actorName(actortype.name, self.myside)
+                block.addstmts(
+                    _actorHandleToActor(handle=pahvar,
+                                        actor=pavar,
+                                        actortype=actortype,
+                                        failcode=cxx.ExprVar('MsgPayloadError')))
 
             if md.decl.type.isCtor():
                 block.addstmt(cxx.Whitespace.NL)
