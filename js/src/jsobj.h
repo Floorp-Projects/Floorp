@@ -483,8 +483,11 @@ extern JSClass  js_BlockClass;
 static inline bool
 OBJ_IS_CLONED_BLOCK(JSObject *obj)
 {
-    return obj->fslots[JSSLOT_PROTO] != JSVAL_NULL;
+    return obj->getProto() != NULL;
 }
+
+extern JSBool
+js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, int16 index);
 
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
     (OBJ_SCOPE(obj)->entryCount)
