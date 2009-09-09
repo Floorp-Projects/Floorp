@@ -947,9 +947,41 @@ namespace nanojit
         return ins2i(LIR_eq, oprnd1, 0);
     }
 
+    LIns* LirWriter::ins_peq0(LIns* oprnd1)
+    {
+        return ins2(LIR_peq, oprnd1, insImmWord(0));
+    }
+
+    LIns* LirWriter::ins_i2p(LIns* intIns)
+    {
+#ifdef NANOJIT_64BIT
+        return ins1(LIR_i2q, intIns);
+#else
+        return intIns;
+#endif
+    }
+
+    LIns* LirWriter::ins_u2p(LIns* uintIns)
+    {
+#ifdef NANOJIT_64BIT
+        return ins1(LIR_u2q, uintIns);
+#else
+        return uintIns;
+#endif
+    }
+
     LIns* LirWriter::qjoin(LInsp lo, LInsp hi)
     {
         return ins2(LIR_qjoin, lo, hi);
+    }
+
+    LIns* LirWriter::insImmWord(intptr_t value)
+    {
+#ifdef NANOJIT_64BIT
+        return insImmq(value);
+#else
+        return insImm(value);
+#endif
     }
 
     LIns* LirWriter::insImmPtr(const void *ptr)
@@ -1631,18 +1663,15 @@ namespace nanojit
             const char* name = names.get(ref)->name;
             VMPI_strcat(buf, name);
         }
-        else if (ref->isconstq()) {
-#if defined NANOJIT_64BIT
-            VMPI_sprintf(buf, "#0x%lx", (nj_printf_ld)ref->imm64());
-#else
-            formatImm(ref->imm64_1(), buf);
-            buf += VMPI_strlen(buf);
-            *buf++ = ':';
-            formatImm(ref->imm64_0(), buf);
-#endif
-        }
         else if (ref->isconstf()) {
             VMPI_sprintf(buf, "%g", ref->imm64f());
+        }
+        else if (ref->isconstq()) {
+            int64_t c = ref->imm64();
+            if (c >= 10000 || c <= -10000)
+                VMPI_sprintf(buf, "#0x%llxLL", (long long unsigned int) c);
+            else
+                VMPI_sprintf(buf, "%dLL", (int)c);
         }
         else if (ref->isconst()) {
             formatImm(ref->imm32(), buf);
