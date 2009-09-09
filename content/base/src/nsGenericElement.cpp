@@ -3346,7 +3346,7 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
         do_GetService("@mozilla.org/accessibilityService;1");
       if (accService) {
         accService->InvalidateSubtreeFor(presShell, aKid,
-                                         nsIAccessibleEvent::EVENT_DOM_DESTROY);
+                                         nsIAccessibilityService::NODE_REMOVE);
       }
     }
   }

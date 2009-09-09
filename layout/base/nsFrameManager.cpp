@@ -1425,11 +1425,12 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       nsCOMPtr<nsIAccessibilityService> accService = 
         do_GetService("@mozilla.org/accessibilityService;1");
       if (accService) {
-        PRUint32 event = isVisible ?
-          nsIAccessibleEvent::EVENT_ASYNCH_HIDE :
-          nsIAccessibleEvent::EVENT_ASYNCH_SHOW;
+        PRUint32 changeType = isVisible ?
+          nsIAccessibilityService::FRAME_HIDE :
+          nsIAccessibilityService::FRAME_SHOW;
+
         accService->InvalidateSubtreeFor(mPresShell, aFrame->GetContent(),
-                                         event);
+                                         changeType);
         fireAccessibilityEvents = PR_FALSE;
       }
     }

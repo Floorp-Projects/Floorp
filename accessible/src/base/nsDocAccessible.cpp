@@ -935,7 +935,8 @@ nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
     if (sameTypeRoot != treeItem) {
       // Fire show/hide events to indicate frame/iframe content is new, rather than
       // doc load event which causes screen readers to act is if entire page is reloaded
-      InvalidateCacheSubtree(nsnull, nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE);
+      InvalidateCacheSubtree(nsnull,
+                             nsIAccessibilityService::NODE_SIGNIFICANT_CHANGE);
     }
     // Fire STATE_CHANGE event for doc load finish if focus is in same doc tree
     if (gLastFocusedNode) {
@@ -1183,7 +1184,8 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
     // Not worth the expense to ensure which namespace these are in
     // It doesn't kill use to recreate the accessible even if the attribute was used
     // in the wrong namespace or an element that doesn't support it
-    InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE);
+    InvalidateCacheSubtree(aContent,
+                           nsIAccessibilityService::NODE_SIGNIFICANT_CHANGE);
     return;
   }
   
@@ -1356,7 +1358,8 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     // This affects whether the accessible supports nsIAccessibleSelectable.
     // COM says we cannot change what interfaces are supported on-the-fly,
     // so invalidate this object. A new one will be created on demand.
-    InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE);
+    InvalidateCacheSubtree(aContent,
+                           nsIAccessibilityService::NODE_SIGNIFICANT_CHANGE);
     return;
   }
 
@@ -1386,7 +1389,7 @@ void nsDocAccessible::ContentAppended(nsIDocument *aDocument,
     // unless an accessible can be created for the passed in node, which it
     // can't do unless the node is visible. The right thing happens there so
     // no need for an extra visibility check here.
-    InvalidateCacheSubtree(child, nsIAccessibleEvent::EVENT_DOM_CREATE);
+    InvalidateCacheSubtree(child, nsIAccessibilityService::NODE_APPEND);
   }
 }
 
@@ -1425,18 +1428,19 @@ nsDocAccessible::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
   // unless an accessible can be created for the passed in node, which it
   // can't do unless the node is visible. The right thing happens there so
   // no need for an extra visibility check here.
-  InvalidateCacheSubtree(aChild, nsIAccessibleEvent::EVENT_DOM_CREATE);
+  InvalidateCacheSubtree(aChild, nsIAccessibilityService::NODE_APPEND);
 }
 
 void
 nsDocAccessible::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
                                 nsIContent* aChild, PRInt32 aIndexInContainer)
 {
-  // Invalidate the subtree of the removed element.
-  // InvalidateCacheSubtree(aChild, nsIAccessibleEvent::EVENT_DOM_DESTROY);
-  // This is no longer needed, we get our notifications directly from content
-  // *before* the frame for the content is destroyed, or any other side effects occur.
-  // That allows us to correctly calculate the TEXT_REMOVED event if there is one.
+  // It's no needed to invalidate the subtree of the removed element,
+  // because we get notifications directly from content (see
+  // nsGenericElement::doRemoveChildAt) *before* the frame for the content is
+  // destroyed, or any other side effects occur . That allows us to correctly
+  // calculate the TEXT_REMOVED event if there is one and coalesce events from
+  // the same subtree.
 }
 
 void
@@ -1697,9 +1701,10 @@ nsDocAccessible::FlushPendingEvents()
     PRUint32 eventType = nsAccEvent::EventType(accessibleEvent);
     PRBool isFromUserInput = nsAccEvent::IsFromUserInput(accessibleEvent);
 
-    if (domNode == gLastFocusedNode &&
-        (eventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE || 
-        eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW)) {
+    PRBool isAsync = nsAccEvent::IsAsyncEvent(accessibleEvent);
+    if (domNode == gLastFocusedNode && isAsync &&
+        (eventType == nsIAccessibleEvent::EVENT_SHOW ||
+         eventType == nsIAccessibleEvent::EVENT_HIDE)) {
       // If frame type didn't change for this event, then we don't actually need to invalidate
       // However, we only keep track of the old frame type for the focus, where it's very
       // important not to destroy and recreate the accessible for minor style changes,
@@ -1714,15 +1719,15 @@ nsDocAccessible::FlushPendingEvents()
         if (newFrameType == gLastFocusedFrameType) {
           // Don't need to invalidate this current accessible, but can
           // just invalidate the children instead
-          FireShowHideEvents(domNode, PR_TRUE, eventType, PR_FALSE, isFromUserInput); 
+          FireShowHideEvents(domNode, PR_TRUE, eventType, eNormalEvent,
+                             isAsync, isFromUserInput); 
           continue;
         }
         gLastFocusedFrameType = newFrameType;
       }
     }
 
-    if (eventType == nsIAccessibleEvent::EVENT_DOM_CREATE || 
-        eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
+    if (eventType == nsIAccessibleEvent::EVENT_SHOW) {
 
       nsCOMPtr<nsIAccessible> containerAccessible;
       if (accessible)
@@ -1735,7 +1740,7 @@ nsDocAccessible::FlushPendingEvents()
           containerAccessible = this;
       }
 
-      if (eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
+      if (isAsync) {
         // For asynch show, delayed invalidatation of parent's children
         nsRefPtr<nsAccessible> containerAcc =
           nsAccUtils::QueryAccessible(containerAccessible);
@@ -1766,7 +1771,8 @@ nsDocAccessible::FlushPendingEvents()
       }
 
       // Fire show/create events for this node or first accessible descendants of it
-      FireShowHideEvents(domNode, PR_FALSE, eventType, PR_FALSE, isFromUserInput); 
+      FireShowHideEvents(domNode, PR_FALSE, eventType, eNormalEvent, isAsync,
+                         isFromUserInput); 
       continue;
     }
 
@@ -1827,9 +1833,9 @@ nsDocAccessible::FlushPendingEvents()
         nsAccEvent::PrepareForEvent(accessibleEvent);
         FireAccessibleEvent(accessibleEvent);
         // Post event processing
-        if (eventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
-            eventType == nsIAccessibleEvent::EVENT_DOM_DESTROY) {
-          // Shutdown nsIAccessNode's or nsIAccessibles for any DOM nodes in this subtree
+        if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
+          // Shutdown nsIAccessNode's or nsIAccessibles for any DOM nodes in
+          // this subtree.
           nsCOMPtr<nsIDOMNode> hidingNode;
           accessibleEvent->GetDOMNode(getter_AddRefs(hidingNode));
           if (hidingNode) {
@@ -1979,27 +1985,27 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
 
 void
 nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
-                                        PRUint32 aChangeEventType)
+                                        PRUint32 aChangeType)
 {
-  PRBool isHiding = 
-    aChangeEventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
-    aChangeEventType == nsIAccessibleEvent::EVENT_DOM_DESTROY;
+  PRBool isHiding =
+    aChangeType == nsIAccessibilityService::FRAME_HIDE ||
+    aChangeType == nsIAccessibilityService::NODE_REMOVE;
 
-  PRBool isShowing = 
-    aChangeEventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW ||
-    aChangeEventType == nsIAccessibleEvent::EVENT_DOM_CREATE;
+  PRBool isShowing =
+    aChangeType == nsIAccessibilityService::FRAME_SHOW ||
+    aChangeType == nsIAccessibilityService::NODE_APPEND;
 
-  PRBool isChanging = 
-    aChangeEventType == nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE ||
-    aChangeEventType == nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE;
+  PRBool isChanging =
+    aChangeType == nsIAccessibilityService::NODE_SIGNIFICANT_CHANGE ||
+    aChangeType == nsIAccessibilityService::FRAME_SIGNIFICANT_CHANGE;
 
   NS_ASSERTION(isChanging || isHiding || isShowing,
                "Incorrect aChangeEventType passed in");
 
-  PRBool isAsynch = 
-    aChangeEventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
-    aChangeEventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW ||
-    aChangeEventType == nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE;
+  PRBool isAsynch =
+    aChangeType == nsIAccessibilityService::FRAME_HIDE ||
+    aChangeType == nsIAccessibilityService::FRAME_SHOW ||
+    aChangeType == nsIAccessibilityService::FRAME_SIGNIFICANT_CHANGE;
 
   // Invalidate cache subtree
   // We have to check for accessibles for each dom node by traversing DOM tree
@@ -2059,24 +2065,18 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   nsAutoString localName;
   childNode->GetLocalName(localName);
   const char *hasAccessible = childAccessible ? " (acc)" : "";
-  if (aChangeEventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE) {
+  if (aChangeType == nsIAccessibilityService::FRAME_HIDE)
     printf("[Hide %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
-  }
-  else if (aChangeEventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
+  else if (aChangeType == nsIAccessibilityService::FRAME_SHOW)
     printf("[Show %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
-  }
-  else if (aChangeEventType == nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE) {
+  else if (aChangeType == nsIAccessibilityService::FRAME_SIGNIFICANT_CHANGE)
     printf("[Layout change %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
-  }
-  else if (aChangeEventType == nsIAccessibleEvent::EVENT_DOM_CREATE) {
+  else if (aChangeType == nsIAccessibleEvent::NODE_APPEND)
     printf("[Create %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
-  }
-  else if (aChangeEventType == nsIAccessibleEvent::EVENT_DOM_DESTROY) {
+  else if (aChangeType == nsIAccessibilityService::NODE_REMOVE)
     printf("[Destroy  %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
-  }
-  else if (aChangeEventType == nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE) {
+  else if (aChangeEventType == nsIAccessibilityService::NODE_SIGNIFICANT_CHANGE)
     printf("[Type change %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
-  }
 #endif
 
   nsCOMPtr<nsIAccessible> containerAccessible;
@@ -2086,7 +2086,7 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   }
 
   if (!isShowing) {
-    // Fire EVENT_ASYNCH_HIDE or EVENT_DOM_DESTROY
+    // Fire EVENT_HIDE.
     if (isHiding) {
       nsCOMPtr<nsIContent> content(do_QueryInterface(childNode));
       if (content) {
@@ -2105,12 +2105,12 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       }
     }
 
-    PRUint32 removalEventType = isAsynch ? nsIAccessibleEvent::EVENT_ASYNCH_HIDE :
-                                           nsIAccessibleEvent::EVENT_DOM_DESTROY;
-
     // Fire an event if the accessible existed for node being hidden, otherwise
-    // for the first line accessible descendants. Fire before the accessible(s) away.
-    nsresult rv = FireShowHideEvents(childNode, PR_FALSE, removalEventType, PR_TRUE, PR_FALSE);
+    // for the first line accessible descendants. Fire before the accessible(s)
+    // away.
+    nsresult rv = FireShowHideEvents(childNode, PR_FALSE,
+                                     nsIAccessibleEvent::EVENT_HIDE,
+                                     eDelayedEvent, isAsynch, PR_FALSE);
     NS_ENSURE_SUCCESS(rv,);
 
     if (childNode != mDOMNode) { // Fire text change unless the node being removed is for this doc
@@ -2145,14 +2145,15 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
         containerAcc->InvalidateChildren();
 
     }
+
     // Fire EVENT_SHOW, EVENT_MENUPOPUP_START for newly visible content.
+
     // Fire after a short timer, because we want to make sure the view has been
     // updated to make this accessible content visible. If we don't wait,
     // the assistive technology may receive the event and then retrieve
     // nsIAccessibleStates::STATE_INVISIBLE for the event's accessible object.
-    PRUint32 additionEvent = isAsynch ? nsIAccessibleEvent::EVENT_ASYNCH_SHOW :
-                                        nsIAccessibleEvent::EVENT_DOM_CREATE;
-    FireDelayedAccessibleEvent(additionEvent, childNode,
+
+    FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_SHOW, childNode,
                                nsAccEvent::eCoalesceFromSameSubtree,
                                isAsynch);
 
@@ -2251,15 +2252,18 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
 }
 
 nsresult
-nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNode, PRUint32 aEventType,
-                                    PRBool aDelay, PRBool aForceIsFromUserInput)
+nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode,
+                                    PRBool aAvoidOnThisNode,
+                                    PRUint32 aEventType,
+                                    EEventFiringType aDelayedOrNormal,
+                                    PRBool aIsAsyncChange,
+                                    PRBool aForceIsFromUserInput)
 {
   NS_ENSURE_ARG(aDOMNode);
 
   nsCOMPtr<nsIAccessible> accessible;
   if (!aAvoidOnThisNode) {
-    if (aEventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
-        aEventType == nsIAccessibleEvent::EVENT_DOM_DESTROY) {
+    if (aEventType == nsIAccessibleEvent::EVENT_HIDE) {
       // Don't allow creation for accessibles when nodes going away
       nsCOMPtr<nsIAccessNode> accessNode;
       GetCachedAccessNode(aDOMNode, getter_AddRefs(accessNode));
@@ -2272,21 +2276,20 @@ nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNod
   }
 
   if (accessible) {
-    // Found an accessible, so fire the show/hide on it and don't
-    // look further into this subtree
-    PRBool isAsynch = aEventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
-                      aEventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW;
-
+    // Found an accessible, so fire the show/hide on it and don't look further
+    // into this subtree.
     nsCOMPtr<nsIAccessibleEvent> event =
-      new nsAccEvent(aEventType, accessible, isAsynch,
+      new nsAccEvent(aEventType, accessible, aIsAsyncChange,
                      nsAccEvent::eCoalesceFromSameSubtree);
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
     if (aForceIsFromUserInput) {
       nsAccEvent::PrepareForEvent(event, aForceIsFromUserInput);
     }
-    if (aDelay) {
+
+    if (aDelayedOrNormal == eDelayedEvent)
       return FireDelayedAccessibleEvent(event);
-    }
+
     return FireAccessibleEvent(event);
   }
 
@@ -2297,7 +2300,8 @@ nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNod
   for (PRUint32 index = 0; index < count; index++) {
     nsCOMPtr<nsIDOMNode> childNode = do_QueryInterface(node->GetChildAt(index));
     nsresult rv = FireShowHideEvents(childNode, PR_FALSE, aEventType,
-                                     aDelay, aForceIsFromUserInput);
+                                     aDelayedOrNormal, aIsAsyncChange,
+                                     aForceIsFromUserInput);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

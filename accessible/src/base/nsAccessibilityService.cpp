@@ -2042,25 +2042,27 @@ NS_IMETHODIMP nsAccessibilityService::RemoveNativeRootAccessible(nsIAccessible *
 }
 
 // Called from layout when the frame tree owned by a node changes significantly
-NS_IMETHODIMP nsAccessibilityService::InvalidateSubtreeFor(nsIPresShell *aShell,
-                                                           nsIContent *aChangeContent,
-                                                           PRUint32 aEvent)
+NS_IMETHODIMP
+nsAccessibilityService::InvalidateSubtreeFor(nsIPresShell *aShell,
+                                             nsIContent *aChangeContent,
+                                             PRUint32 aChangeType)
 {
-  NS_ASSERTION(aEvent == nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE ||
-               aEvent == nsIAccessibleEvent::EVENT_ASYNCH_SHOW ||
-               aEvent == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
-               aEvent == nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE ||
-               aEvent == nsIAccessibleEvent::EVENT_DOM_CREATE ||
-               aEvent == nsIAccessibleEvent::EVENT_DOM_DESTROY,
+  NS_ASSERTION(aChangeType == nsIAccessibilityService::FRAME_SIGNIFICANT_CHANGE ||
+               aChangeType == nsIAccessibilityService::FRAME_SHOW ||
+               aChangeType == nsIAccessibilityService::FRAME_HIDE ||
+               aChangeType == nsIAccessibilityService::NODE_SIGNIFICANT_CHANGE ||
+               aChangeType == nsIAccessibilityService::NODE_APPEND ||
+               aChangeType == nsIAccessibilityService::NODE_REMOVE,
                "Incorrect aEvent passed in");
 
   NS_ENSURE_ARG_POINTER(aShell);
+
   nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
     nsAccessNode::GetDocAccessibleFor(aShell->GetDocument());
   nsRefPtr<nsDocAccessible> docAcc =
     nsAccUtils::QueryAccessibleDocument(accessibleDoc);
   if (docAcc)
-    docAcc->InvalidateCacheSubtree(aChangeContent, aEvent);
+    docAcc->InvalidateCacheSubtree(aChangeContent, aChangeType);
 
   return NS_OK;
 }

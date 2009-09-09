@@ -257,18 +257,31 @@ protected:
                                  PRBool aIsInserting,
                                  PRBool aIsAsynch);
 
-    /**
-     * Fire show/hide events for either the current node if it has an accessible,
-     * or the first-line accessible descendants of the given node.
-     *
-     * @param aDOMNode               the given node
-     * @param aEventType             event type to fire an event
-     * @param aAvoidOnThisNode       Call with PR_TRUE the first time to prevent event firing on root node for change
-     * @param aDelay                 whether to fire the event on a delay
-     * @param aForceIsFromUserInput  the event is known to be from user input
-     */
-    nsresult FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNode, PRUint32 aEventType,
-                                PRBool aDelay, PRBool aForceIsFromUserInput);
+  /**
+   * Used to define should the event be fired on a delay.
+   */
+  enum EEventFiringType {
+    eNormalEvent,
+    eDelayedEvent
+  };
+
+  /**
+   * Fire show/hide events for either the current node if it has an accessible,
+   * or the first-line accessible descendants of the given node.
+   *
+   * @param aDOMNode               [in] the given node
+   * @param aAvoidOnThisNode       [in] call with PR_TRUE the first time to
+   *                                prevent event firing on root node for change
+   * @param aEventType             [in] event type to fire an event
+   * @param aDelayedOrNormal       [in] whether to fire the event on a delay
+   * @param aIsAsyncChange         [in] whether casual change is async
+   * @param aForceIsFromUserInput  [in] the event is known to be from user input
+   */
+  nsresult FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNode,
+                              PRUint32 aEventType,
+                              EEventFiringType aDelayedOrNormal,
+                              PRBool aIsAsyncChange,
+                              PRBool aForceIsFromUserInput);
 
     /**
      * If the given accessible object is a ROLE_ENTRY, fire a value change event for it

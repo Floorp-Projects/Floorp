@@ -42,11 +42,8 @@
      * @param aNodeOrID          [in] node invoker's action is executed for
      * @param aEventTypes        [in] events to register (see constants above)
      * @param aDoNotExpectEvents [in] boolean indicates if events are expected
-     * @param aIsDOMChange       [in] boolean indicates if these are DOM events
-     *                           layout events.
      */
-    function mutateA11yTree(aNodeOrID, aEventTypes,
-                            aDoNotExpectEvents, aIsDOMChange)
+    function mutateA11yTree(aNodeOrID, aEventTypes, aDoNotExpectEvents)
     {
       // Interface
       this.DOMNode = getNode(aNodeOrID);
@@ -89,27 +86,17 @@
         if (aEventType == kReorderEvent)
           return nsIAccessibleEvent.EVENT_REORDER;
 
-        if (this.mIsDOMChange) {
-          if (aEventType == kHideEvent)
-            return nsIAccessibleEvent.EVENT_DOM_DESTROY;
+        if (aEventType == kHideEvent)
+          return nsIAccessibleEvent.EVENT_HIDE;
 
-          if (aEventType == kShowEvent)
-            return nsIAccessibleEvent.EVENT_DOM_CREATE;
-        } else {
-          if (aEventType == kHideEvent)
-            return nsIAccessibleEvent.EVENT_ASYNCH_HIDE;
-
-          if (aEventType == kShowEvent)
-            return nsIAccessibleEvent.EVENT_ASYNCH_SHOW;
-        }
+        if (aEventType == kShowEvent)
+          return nsIAccessibleEvent.EVENT_SHOW;
       }
 
       this.getEventSeq = function mutateA11yTree_getEventSeq()
       {
         return this.doNotExpectEvents ? this.unexpectedEventSeq : this.eventSeq;
       }
-
-      this.mIsDOMChange = aIsDOMChange;
 
       if (aEventTypes & kHideEvent) {
         var checker = new invokerChecker(this.getA11yEventType(kHideEvent),
@@ -135,7 +122,7 @@
      */
     function changeStyle(aNodeOrID, aProp, aValue, aEventTypes)
     {
-      this.__proto__ = new mutateA11yTree(aNodeOrID, aEventTypes, false, false);
+      this.__proto__ = new mutateA11yTree(aNodeOrID, aEventTypes, false);
 
       this.invoke = function changeStyle_invoke()
       {
@@ -153,7 +140,7 @@
      */
     function changeClass(aParentNodeOrID, aNodeOrID, aClassName, aEventTypes)
     {
-      this.__proto__ = new mutateA11yTree(aNodeOrID, aEventTypes, false, false);
+      this.__proto__ = new mutateA11yTree(aNodeOrID, aEventTypes, false);
 
       this.invoke = function changeClass_invoke()
       {
@@ -178,7 +165,7 @@
       var doNotExpectEvents = (aEventTypes == kNoEvents);
 
       this.__proto__ = new mutateA11yTree(aNodeOrID, eventTypes,
-                                          doNotExpectEvents, true);
+                                          doNotExpectEvents);
 
       this.invoke = function cloneAndAppendToDOM_invoke()
       {
@@ -213,7 +200,7 @@
       var doNotExpectEvents = (aEventTypes == kNoEvents);
 
       this.__proto__ = new mutateA11yTree(aNodeOrID, eventTypes,
-                                          doNotExpectEvents, true);
+                                          doNotExpectEvents);
 
       this.invoke = function removeFromDOM_invoke()
       {
@@ -239,7 +226,7 @@
     function cloneAndReplaceInDOM(aNodeOrID)
     {
       this.__proto__ = new mutateA11yTree(aNodeOrID, kHideAndShowEvents,
-                                          false, true);
+                                          false);
 
       this.invoke = function cloneAndReplaceInDOM_invoke()
       {
@@ -292,7 +279,7 @@
      * Do tests.
      */
     var gQueue = null;
-    // var gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpID = "eventdump"; // debug stuff
 
     function doTests()
     {
