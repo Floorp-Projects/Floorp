@@ -74,14 +74,11 @@ var gPrevCharset = null;
 var gProxyFavIcon = null;
 var gLastValidURLStr = "";
 var gProgressCollapseTimer = null;
-var gSidebarCommand = "";
 var gInPrintPreviewMode = false;
 let gDownloadMgr = null;
 
 // Global variable that holds the nsContextMenu instance.
 var gContextMenu = null;
-
-var gChromeState = null; // chrome state before we went into print preview
 
 var gAutoHideTabbarPrefListener = null;
 var gBookmarkAllTabsHandler = null;
@@ -2516,74 +2513,71 @@ function BrowserReloadWithFlags(reloadFlags) {
   }
 }
 
-function toggleAffectedChrome(aHide)
-{
-  // chrome to toggle includes:
-  //   (*) menubar
-  //   (*) navigation bar
-  //   (*) bookmarks toolbar
-  //   (*) tabstrip
-  //   (*) browser messages
-  //   (*) sidebar
-  //   (*) find bar
-  //   (*) statusbar
+var PrintPreviewListener = {
+  onEnter: function () {
+    gInPrintPreviewMode = true;
+    this._toggleAffectedChrome();
+  },
+  onExit: function () {
+    gInPrintPreviewMode = false;
+    this._toggleAffectedChrome();
+  },
+  _toggleAffectedChrome: function () {
+    // chrome to toggle includes:
+    //   (*) menubar
+    //   (*) navigation bar
+    //   (*) bookmarks toolbar
+    //   (*) tabstrip
+    //   (*) browser messages
+    //   (*) sidebar
+    //   (*) find bar
+    //   (*) statusbar
 
-  gNavToolbox.hidden = aHide;
-  if (aHide)
-  {
-    gChromeState = {};
+    gNavToolbox.hidden = gInPrintPreviewMode;
+
+    if (gInPrintPreviewMode)
+      this._hideChrome();
+    else
+      this._showChrome();
+
+    if (this._chromeState.sidebarOpen)
+      toggleSidebar(this._sidebarCommand);
+  },
+  _hideChrome: function () {
+    this._chromeState = {};
+
     var sidebar = document.getElementById("sidebar-box");
-    gChromeState.sidebarOpen = !sidebar.hidden;
-    gSidebarCommand = sidebar.getAttribute("sidebarcommand");
+    this._chromeState.sidebarOpen = !sidebar.hidden;
+    this._sidebarCommand = sidebar.getAttribute("sidebarcommand");
 
-    gChromeState.hadTabStrip = gBrowser.getStripVisibility();
+    this._chromeState.hadTabStrip = gBrowser.getStripVisibility();
     gBrowser.setStripVisibilityTo(false);
 
     var notificationBox = gBrowser.getNotificationBox();
-    gChromeState.notificationsOpen = !notificationBox.notificationsHidden;
-    notificationBox.notificationsHidden = aHide;
+    this._chromeState.notificationsOpen = !notificationBox.notificationsHidden;
+    notificationBox.notificationsHidden = true;
 
     document.getElementById("sidebar").setAttribute("src", "about:blank");
     var statusbar = document.getElementById("status-bar");
-    gChromeState.statusbarOpen = !statusbar.hidden;
-    statusbar.hidden = aHide;
+    this._chromeState.statusbarOpen = !statusbar.hidden;
+    statusbar.hidden = true;
 
-    gChromeState.findOpen = !gFindBar.hidden;
+    this._chromeState.findOpen = !gFindBar.hidden;
     gFindBar.close();
-  }
-  else {
-    if (gChromeState.hadTabStrip) {
+  },
+  _showChrome: function () {
+    if (this._chromeState.hadTabStrip)
       gBrowser.setStripVisibilityTo(true);
-    }
 
-    if (gChromeState.notificationsOpen) {
-      gBrowser.getNotificationBox().notificationsHidden = aHide;
-    }
+    if (this._chromeState.notificationsOpen)
+      gBrowser.getNotificationBox().notificationsHidden = false;
 
-    if (gChromeState.statusbarOpen) {
-      var statusbar = document.getElementById("status-bar");
-      statusbar.hidden = aHide;
-    }
+    if (this._chromeState.statusbarOpen)
+      document.getElementById("status-bar").hidden = false;
 
-    if (gChromeState.findOpen)
+    if (this._chromeState.findOpen)
       gFindBar.open();
   }
-
-  if (gChromeState.sidebarOpen)
-    toggleSidebar(gSidebarCommand);
-}
-
-function onEnterPrintPreview()
-{
-  gInPrintPreviewMode = true;
-  toggleAffectedChrome(true);
-}
-
-function onExitPrintPreview()
-{
-  // restore chrome to original state
-  gInPrintPreviewMode = false;
-  toggleAffectedChrome(false);
 }
 
 function getPPBrowser()

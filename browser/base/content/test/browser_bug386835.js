@@ -98,23 +98,23 @@ function testPrintPreview(aTab, aCallback) {
   FullZoom.enlarge();
   let level = ZoomManager.zoom;
 
-  function onEnterPP() {
-    toggleAffectedChromeOrig.apply(null, arguments);
-
-    function onExitPP() {
-      toggleAffectedChromeOrig.apply(null, arguments);
-      toggleAffectedChrome = toggleAffectedChromeOrig;
-
-      zoomTest(aTab, level, "Toggling print preview mode should not affect zoom level");
-
-      FullZoom.reset();
-      aCallback();
-    }
-    toggleAffectedChrome = onExitPP;
+  let onEnterOrig = PrintPreviewListener.onEnter;
+  PrintPreviewListener.onEnter = function () {
+    PrintPreviewListener.onEnter = onEnterOrig;
+    PrintPreviewListener.onEnter.apply(PrintPreviewListener, arguments);
     PrintUtils.exitPrintPreview();
-  }
-  let toggleAffectedChromeOrig = toggleAffectedChrome;
-  toggleAffectedChrome = onEnterPP;
+  };
+
+  let onExitOrig = PrintPreviewListener.onExit;
+  PrintPreviewListener.onExit = function () {
+    PrintPreviewListener.onExit = onExitOrig;
+    PrintPreviewListener.onExit.apply(PrintPreviewListener, arguments);
+
+    zoomTest(aTab, level, "Toggling print preview mode should not affect zoom level");
+
+    FullZoom.reset();
+    aCallback();
+  };
 
   let printPreview = new Function(document.getElementById("cmd_printPreview")
                                           .getAttribute("oncommand"));
