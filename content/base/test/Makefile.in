@@ -293,10 +293,6 @@ _TEST_FILES = 	test_bug5141.html \
 		bug455629-helper.svg \
 		test_bug473162-1.html \
 		test_bug473162-2.html \
-		test_XHRSendData.html \
-		file_XHRSendData.sjs \
-		file_XHRSendData_doc.xml \
-		file_XHRSendData_doc.xml^headers^ \
 		test_bug466751.xhtml \
 		test_bug461555.html \
 		test_sync_xhr_timer.xhtml \
