@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/plugins/NPAPIPluginChild.h"
+#include "mozilla/plugins/PluginModuleChild.h"
 
 #ifdef OS_LINUX
 #include <gtk/gtk.h>
@@ -50,13 +50,13 @@
 #include "nsCOMPtr.h"
 #include "nsPluginsDir.h"
 
-#include "mozilla/plugins/NPPInstanceChild.h"
+#include "mozilla/plugins/PluginInstanceChild.h"
 
 namespace mozilla {
 namespace plugins {
 
 
-NPAPIPluginChild::NPAPIPluginChild() :
+PluginModuleChild::PluginModuleChild() :
     mLibrary(0),
     mInitializeFunc(0),
     mShutdownFunc(0)
@@ -69,7 +69,7 @@ NPAPIPluginChild::NPAPIPluginChild() :
     memset(&mSavedData, 0, sizeof(mSavedData));
 }
 
-NPAPIPluginChild::~NPAPIPluginChild()
+PluginModuleChild::~PluginModuleChild()
 {
     if (mLibrary) {
         PR_UnloadLibrary(mLibrary);
@@ -77,9 +77,9 @@ NPAPIPluginChild::~NPAPIPluginChild()
 }
 
 bool
-NPAPIPluginChild::Init(const std::string& aPluginFilename,
-                       MessageLoop* aIOLoop,
-                       IPC::Channel* aChannel)
+PluginModuleChild::Init(const std::string& aPluginFilename,
+                        MessageLoop* aIOLoop,
+                        IPC::Channel* aChannel)
 {
     _MOZ_LOG(__FUNCTION__);
 
@@ -145,7 +145,7 @@ NPAPIPluginChild::Init(const std::string& aPluginFilename,
 }
 
 bool
-NPAPIPluginChild::InitGraphics()
+PluginModuleChild::InitGraphics()
 {
     // FIXME/cjones: is this the place for this?
 #if defined(OS_LINUX)
@@ -158,7 +158,7 @@ NPAPIPluginChild::InitGraphics()
 }
 
 void
-NPAPIPluginChild::CleanUp()
+PluginModuleChild::CleanUp()
 {
     // FIXME/cjones: destroy all instances
 }
@@ -343,7 +343,7 @@ _getauthenticationinfo(NPP instance, const char *protocol, const char *host,
 
 PR_END_EXTERN_C
 
-const NPNetscapeFuncs NPAPIPluginChild::sBrowserFuncs = {
+const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
     sizeof(sBrowserFuncs),
     (NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR,
     _geturl,
@@ -395,10 +395,10 @@ const NPNetscapeFuncs NPAPIPluginChild::sBrowserFuncs = {
 #endif
 };
 
-NPPInstanceChild&
+PluginInstanceChild&
 InstCast(NPP aNPP)
 {
-    return *static_cast<NPPInstanceChild*>(aNPP->ndata);
+    return *static_cast<PluginInstanceChild*>(aNPP->ndata);
 }
 
 NPError NP_CALLBACK
@@ -652,8 +652,8 @@ _createobject(NPP aNPP,
     }
 
     int classId = sDelegate->GetClassId(aClass);
-    NPAPIPluginChild::Instance* instance =
-        static_cast<NPAPIPluginChild::Instance*>(aNPP);
+    PluginModuleChild::Instance* instance =
+        static_cast<PluginModuleChild::Instance*>(aNPP);
 
     int objectId = -1;
     sDelegate->Send(new PluginHostMsg_MozCreateObject(
@@ -662,7 +662,7 @@ _createobject(NPP aNPP,
         return 0;
     }
 
-    NPAPIPluginChild::ScriptableObjectInfo& info =
+    PluginModuleChild::ScriptableObjectInfo& info =
         sDelegate->GetScriptableObjectInfo(obj);
     DCHECK(info.object = obj);
     info.id = objectId;
@@ -678,7 +678,7 @@ _retainobject(NPObject* aNPObj)
 {
     _MOZ_LOG(__FUNCTION__);
 #if 0
-    NPAPIPluginChild::ScriptableObjectInfo& info =
+    PluginModuleChild::ScriptableObjectInfo& info =
         sDelegate->GetScriptableObjectInfo(aNPObj);
     DCHECK(info.object == aNPObj);
     sDelegate->Send(new PluginHostMsg_MozRetainObject(info.instanceId, info.id));
@@ -694,7 +694,7 @@ _releaseobject(NPObject* aNPObj)
 {
     _MOZ_LOG(__FUNCTION__);
 #if 0
-    NPAPIPluginChild::ScriptableObjectInfo& info =
+    PluginModuleChild::ScriptableObjectInfo& info =
         sDelegate->GetScriptableObjectInfo(aNPObj);
     DCHECK(info.object == aNPObj);
     sDelegate->Send(new PluginHostMsg_MozReleaseObject(info.instanceId, info.id));
@@ -890,7 +890,7 @@ _getauthenticationinfo(NPP aNPP,
 #endif /* NP_VERSION_MINOR > 19 */
 
 nsresult
-NPAPIPluginChild::AnswerNP_Initialize(NPError* _retval)
+PluginModuleChild::AnswerNP_Initialize(NPError* _retval)
 {
     _MOZ_LOG(__FUNCTION__);
 
@@ -912,18 +912,18 @@ NPAPIPluginChild::AnswerNP_Initialize(NPError* _retval)
 #endif
 }
 
-NPPProtocolChild*
-NPAPIPluginChild::NPPConstructor(const nsCString& aMimeType,
-                                 const uint16_t& aMode,
-                                 const nsTArray<nsCString>& aNames,
-                                 const nsTArray<nsCString>& aValues,
-                                 NPError* rv)
+PPluginInstanceProtocolChild*
+PluginModuleChild::PPluginInstanceConstructor(const nsCString& aMimeType,
+                                              const uint16_t& aMode,
+                                              const nsTArray<nsCString>& aNames,
+                                              const nsTArray<nsCString>& aValues,
+                                              NPError* rv)
 {
     _MOZ_LOG(__FUNCTION__);
 
     // create our wrapper instance
-    nsAutoPtr<NPPInstanceChild> childInstance(
-        new NPPInstanceChild(&mFunctions));
+    nsAutoPtr<PluginInstanceChild> childInstance(
+        new PluginInstanceChild(&mFunctions));
     if (!childInstance->Initialize()) {
         *rv = NPERR_GENERIC_ERROR;
         return 0;
@@ -961,16 +961,17 @@ NPAPIPluginChild::NPPConstructor(const nsCString& aMimeType,
         return nsnull;
     }
 
-    printf ("[NPAPIPluginChild] %s: returning %hd\n", __FUNCTION__, *rv);
+    printf ("[PluginModuleChild] %s: returning %hd\n", __FUNCTION__, *rv);
     return childInstance.forget();
 }
 
 nsresult
-NPAPIPluginChild::NPPDestructor(NPPProtocolChild* actor, NPError* rv)
+PluginModuleChild::PPluginInstanceDestructor(PPluginInstanceProtocolChild* actor,
+                                             NPError* rv)
 {
     _MOZ_LOG(__FUNCTION__);
 
-    NPPInstanceChild* inst = static_cast<NPPInstanceChild*>(actor);
+    PluginInstanceChild* inst = static_cast<PluginInstanceChild*>(actor);
     *rv = mFunctions.destroy(inst->GetNPP(), 0);
     delete actor;
     inst->GetNPP()->ndata = 0;

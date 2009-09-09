@@ -36,16 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/plugins/NPObjectParent.h"
+#ifndef dom_plugins_PluginScriptableObjectParent_h
+#define dom_plugins_PluginScriptableObjectParent_h 1
 
-using mozilla::plugins::NPObjectParent;
+#include "mozilla/plugins/PPluginScriptableObjectProtocolParent.h"
 
-NPObjectParent::NPObjectParent()
+namespace mozilla {
+namespace plugins {
+
+class PluginScriptableObjectParent : public PPluginScriptableObjectProtocolParent
 {
+public:
+  PluginScriptableObjectParent();
+  virtual ~PluginScriptableObjectParent();
+};
 
-}
+} /* namespace plugins */
+} /* namespace mozilla */
 
-NPObjectParent::~NPObjectParent()
-{
-
-}
+#endif /* dom_plugins_PluginScriptableObjectParent_h */

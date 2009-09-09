@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/plugins/NPAPIPluginParent.h"
-#include "mozilla/plugins/NPBrowserStreamParent.h"
+#include "mozilla/plugins/PluginModuleParent.h"
+#include "mozilla/plugins/PluginStreamParent.h"
 
 using mozilla::SharedLibrary;
 
@@ -45,58 +45,58 @@ namespace mozilla {
 namespace plugins {
 
 // HACKS
-NPAPIPluginParent* NPAPIPluginParent::Shim::HACK_target;
+PluginModuleParent* PluginModuleParent::Shim::HACK_target;
 
 SharedLibrary*
-NPAPIPluginParent::LoadModule(const char* aFilePath, PRLibrary* aLibrary)
+PluginModuleParent::LoadModule(const char* aFilePath, PRLibrary* aLibrary)
 {
     _MOZ_LOG(__FUNCTION__);
 
     // Block on the child process being launched and initialized.
-    NPAPIPluginParent* parent = new NPAPIPluginParent(aFilePath);
+    PluginModuleParent* parent = new PluginModuleParent(aFilePath);
     parent->mSubprocess.Launch();
     parent->Open(parent->mSubprocess.GetChannel());
 
-    // FIXME/cjones: leaking NPAPIPluginParents ...
+    // FIXME/cjones: leaking PluginModuleParents ...
     return parent->mShim;
 }
 
 
-NPAPIPluginParent::NPAPIPluginParent(const char* aFilePath) :
+PluginModuleParent::PluginModuleParent(const char* aFilePath) :
     mFilePath(aFilePath),
     mSubprocess(aFilePath),
     ALLOW_THIS_IN_INITIALIZER_LIST(mShim(new Shim(this)))
 {
 }
 
-NPAPIPluginParent::~NPAPIPluginParent()
+PluginModuleParent::~PluginModuleParent()
 {
     _MOZ_LOG("  (closing Shim ...)");
     delete mShim;
 }
 
-NPPProtocolParent*
-NPAPIPluginParent::NPPConstructor(const nsCString& aMimeType,
-                                  const uint16_t& aMode,
-                                  const nsTArray<nsCString>& aNames,
-                                  const nsTArray<nsCString>& aValues,
-                                  NPError* rv)
+PPluginInstanceProtocolParent*
+PluginModuleParent::PPluginInstanceConstructor(const nsCString& aMimeType,
+                                               const uint16_t& aMode,
+                                               const nsTArray<nsCString>& aNames,
+                                               const nsTArray<nsCString>& aValues,
+                                               NPError* rv)
 {
     NS_ERROR("Not reachable!");
     return NULL;
 }
 
 nsresult
-NPAPIPluginParent::NPPDestructor(NPPProtocolParent* __a,
-                                 NPError* rv)
+PluginModuleParent::PPluginInstanceDestructor(PPluginInstanceProtocolParent* aActor,
+                                              NPError* _retval)
 {
     _MOZ_LOG(__FUNCTION__);
-    delete __a;
+    delete aActor;
     return NS_OK;
 }
 
 void
-NPAPIPluginParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
+PluginModuleParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
 {
     aFuncs->version = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
     aFuncs->javaClass = nsnull;
@@ -107,10 +107,10 @@ NPAPIPluginParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
     aFuncs->destroy = Shim::NPP_Destroy;
     aFuncs->setwindow = Shim::NPP_SetWindow;
     aFuncs->newstream = Shim::NPP_NewStream;
-    aFuncs->destroystream = NPAPIPluginParent::NPP_DestroyStream;
-    aFuncs->asfile = NPAPIPluginParent::NPP_StreamAsFile;
-    aFuncs->writeready = NPAPIPluginParent::NPP_WriteReady;
-    aFuncs->write = NPAPIPluginParent::NPP_Write;
+    aFuncs->destroystream = PluginModuleParent::NPP_DestroyStream;
+    aFuncs->asfile = PluginModuleParent::NPP_StreamAsFile;
+    aFuncs->writeready = PluginModuleParent::NPP_WriteReady;
+    aFuncs->write = PluginModuleParent::NPP_Write;
     aFuncs->print = Shim::NPP_Print;
     aFuncs->event = Shim::NPP_HandleEvent;
     aFuncs->urlnotify = Shim::NPP_URLNotify;
@@ -120,7 +120,7 @@ NPAPIPluginParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
 
 #ifdef OS_LINUX
 NPError
-NPAPIPluginParent::NP_Initialize(const NPNetscapeFuncs* npnIface,
+PluginModuleParent::NP_Initialize(const NPNetscapeFuncs* npnIface,
                                  NPPluginFuncs* nppIface)
 {
     _MOZ_LOG(__FUNCTION__);
@@ -137,7 +137,7 @@ NPAPIPluginParent::NP_Initialize(const NPNetscapeFuncs* npnIface,
 }
 #else
 NPError
-NPAPIPluginParent::NP_Initialize(const NPNetscapeFuncs* npnIface)
+PluginModuleParent::NP_Initialize(const NPNetscapeFuncs* npnIface)
 {
     _MOZ_LOG(__FUNCTION__);
 
@@ -149,7 +149,7 @@ NPAPIPluginParent::NP_Initialize(const NPNetscapeFuncs* npnIface)
 }
 
 NPError
-NPAPIPluginParent::NP_GetEntryPoints(NPPluginFuncs* nppIface)
+PluginModuleParent::NP_GetEntryPoints(NPPluginFuncs* nppIface)
 {
     NS_ASSERTION(nppIface, "Null pointer!");
 
@@ -159,13 +159,13 @@ NPAPIPluginParent::NP_GetEntryPoints(NPPluginFuncs* nppIface)
 #endif
 
 NPError
-NPAPIPluginParent::NPP_New(NPMIMEType pluginType,
-                           NPP instance,
-                           uint16_t mode,
-                           int16_t argc,
-                           char* argn[],
-                           char* argv[],
-                           NPSavedData* saved)
+PluginModuleParent::NPP_New(NPMIMEType pluginType,
+                            NPP instance,
+                            uint16_t mode,
+                            int16_t argc,
+                            char* argn[],
+                            char* argv[],
+                            NPSavedData* saved)
 {
     _MOZ_LOG(__FUNCTION__);
 
@@ -179,12 +179,13 @@ NPAPIPluginParent::NPP_New(NPMIMEType pluginType,
     }
 
     NPError prv = NPERR_GENERIC_ERROR;
-    nsAutoPtr<NPPInstanceParent> parentInstance(
-        static_cast<NPPInstanceParent*>(
-            CallNPPConstructor(new NPPInstanceParent(instance, mNPNIface),
-                               nsDependentCString(pluginType), mode, names,
-                               values, &prv)));
-    printf ("[NPAPIPluginParent] %s: got return value %hd\n", __FUNCTION__,
+    nsAutoPtr<PluginInstanceParent> parentInstance(
+        static_cast<PluginInstanceParent*>(
+            CallPPluginInstanceConstructor(new PluginInstanceParent(instance,
+                                                                    mNPNIface),
+                                           nsDependentCString(pluginType), mode,
+                                           names,values, &prv)));
+    printf ("[PluginModuleParent] %s: got return value %hd\n", __FUNCTION__,
             prv);
 
     if (NPERR_NO_ERROR != prv)
@@ -197,8 +198,8 @@ NPAPIPluginParent::NPP_New(NPMIMEType pluginType,
 }
 
 NPError
-NPAPIPluginParent::NPP_Destroy(NPP instance,
-                               NPSavedData** save)
+PluginModuleParent::NPP_Destroy(NPP instance,
+                                NPSavedData** save)
 {
     // FIXME/cjones:
     //  (1) send a "destroy" message to the child
@@ -208,11 +209,11 @@ NPAPIPluginParent::NPP_Destroy(NPP instance,
 
     _MOZ_LOG(__FUNCTION__);
 
-    NPPInstanceParent* parentInstance =
-        static_cast<NPPInstanceParent*>(instance->pdata);
+    PluginInstanceParent* parentInstance =
+        static_cast<PluginInstanceParent*>(instance->pdata);
 
     NPError prv;
-    if (CallNPPDestructor(parentInstance, &prv)) {
+    if (CallPPluginInstanceDestructor(parentInstance, &prv)) {
         prv = NPERR_GENERIC_ERROR;
     }
     instance->pdata = nsnull;
@@ -221,91 +222,100 @@ NPAPIPluginParent::NPP_Destroy(NPP instance,
  }
 
 nsresult
-NPAPIPluginParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
-                                               NPRemoteIdentifier* aId)
+PluginModuleParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
+                                                NPRemoteIdentifier* aId)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-NPAPIPluginParent::RecvNPN_GetIntIdentifier(const int32_t& aInt,
-                                            NPRemoteIdentifier* aId)
+PluginModuleParent::RecvNPN_GetIntIdentifier(const int32_t& aInt,
+                                             NPRemoteIdentifier* aId)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-NPAPIPluginParent::RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
-                                              nsCString* aString)
+PluginModuleParent::RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
+                                               nsCString* aString)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-NPAPIPluginParent::RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
-                                             int32_t* aInt)
+PluginModuleParent::RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
+                                              int32_t* aInt)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-NPAPIPluginParent::RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
-                                              bool* aIsString)
+PluginModuleParent::RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
+                                               bool* aIsString)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-NPAPIPluginParent::RecvNPN_GetStringIdentifiers(nsTArray<nsCString>* aNames,
-                                                nsTArray<NPRemoteIdentifier>* aIds)
+PluginModuleParent::RecvNPN_GetStringIdentifiers(nsTArray<nsCString>* aNames,
+                                                 nsTArray<NPRemoteIdentifier>* aIds)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NPPInstanceParent*
-NPAPIPluginParent::InstCast(NPP instance)
+PluginInstanceParent*
+PluginModuleParent::InstCast(NPP instance)
 {
-    NPPInstanceParent* ip =
-        static_cast<NPPInstanceParent*>(instance->pdata);
-    if (instance != ip->mNPP)
+    PluginInstanceParent* ip =
+        static_cast<PluginInstanceParent*>(instance->pdata);
+    if (instance != ip->mNPP) {
         NS_RUNTIMEABORT("Corrupted plugin data.");
+    }
     return ip;
 }
 
-NPBrowserStreamParent*
-NPAPIPluginParent::StreamCast(NPP instance, NPStream* s)
+PluginStreamParent*
+PluginModuleParent::StreamCast(NPP instance,
+                               NPStream* s)
 {
-    NPPInstanceParent* ip = InstCast(instance);
-    NPBrowserStreamParent* sp =
-        static_cast<NPBrowserStreamParent*>(s->pdata);
-    if (sp->mNPP != ip || s != sp->mStream)
+    PluginInstanceParent* ip = InstCast(instance);
+    PluginStreamParent* sp =
+        static_cast<PluginStreamParent*>(s->pdata);
+    if (sp->mNPP != ip || s != sp->mStream) {
         NS_RUNTIMEABORT("Corrupted plugin stream data.");
+    }
     return sp;
 }
 
 NPError
-NPAPIPluginParent::NPP_DestroyStream(NPP instance,
-                                     NPStream* stream, NPReason reason)
+PluginModuleParent::NPP_DestroyStream(NPP instance,
+                                      NPStream* stream,
+                                      NPReason reason)
 {
     return InstCast(instance)->NPP_DestroyStream(stream, reason);
 }
 
 int32_t
-NPAPIPluginParent::NPP_WriteReady(NPP instance, NPStream* stream)
+PluginModuleParent::NPP_WriteReady(NPP instance,
+                                   NPStream* stream)
 {
     return StreamCast(instance, stream)->WriteReady();
 }
 
 int32_t
-NPAPIPluginParent::NPP_Write(NPP instance, NPStream* stream,
-                             int32_t offset, int32_t len, void* buffer)
+PluginModuleParent::NPP_Write(NPP instance,
+                              NPStream* stream,
+                              int32_t offset,
+                              int32_t len,
+                              void* buffer)
 {
     return StreamCast(instance, stream)->Write(offset, len, buffer);
 }
 
 void
-NPAPIPluginParent::NPP_StreamAsFile(NPP instance,
-                                    NPStream* stream, const char* fname)
+PluginModuleParent::NPP_StreamAsFile(NPP instance,
+                                     NPStream* stream,
+                                     const char* fname)
 {
     StreamCast(instance, stream)->StreamAsFile(fname);
 }

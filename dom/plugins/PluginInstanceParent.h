@@ -36,36 +36,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef dom_plugins_NPPInstanceParent_h
-#define dom_plugins_NPPInstanceParent_h 1
+#ifndef dom_plugins_PluginInstanceParent_h
+#define dom_plugins_PluginInstanceParent_h 1
 
-#include "mozilla/plugins/NPPProtocolParent.h"
-#include "mozilla/plugins/NPObjectParent.h"
+#include "mozilla/plugins/PPluginInstanceProtocolParent.h"
+#include "mozilla/plugins/PluginScriptableObjectParent.h"
 
 #include "npfunctions.h"
 
 #undef _MOZ_LOG
-#define _MOZ_LOG(s) printf("[NPPInstanceParent] %s\n", s)
+#define _MOZ_LOG(s) printf("[PluginInstanceParent] %s\n", s)
 
 namespace mozilla {
 namespace plugins {
 
-class NPBrowserStreamParent;
+class PluginStreamParent;
 
-class NPPInstanceParent :
-    public NPPProtocolParent
+class PluginInstanceParent : public PPluginInstanceProtocolParent
 {
-    friend class NPAPIPluginParent;
-    friend class mozilla::plugins::NPBrowserStreamParent;
+    friend class PluginModuleParent;
+    friend class PluginStreamParent;
 
 public:
-    NPPInstanceParent(NPP npp, const NPNetscapeFuncs* npniface)
+    PluginInstanceParent(NPP npp, const NPNetscapeFuncs* npniface)
         : mNPP(npp)
         , mNPNIface(npniface)
     {
     }
 
-    virtual ~NPPInstanceParent()
+    virtual ~PluginInstanceParent()
     {
     }
 
@@ -74,27 +73,32 @@ public:
         return NS_OK;
     }
 
-    virtual NPObjectProtocolParent*
-    NPObjectConstructor(NPError* _retval);
+    virtual PPluginScriptableObjectProtocolParent*
+    PPluginScriptableObjectConstructor(NPError* _retval);
 
     virtual nsresult
-    NPObjectDestructor(NPObjectProtocolParent* aObject,
-                       NPError* _retval);
+    PPluginScriptableObjectDestructor(PPluginScriptableObjectProtocolParent* aObject,
+                                      NPError* _retval);
 
-    virtual NPBrowserStreamProtocolParent*
-    NPBrowserStreamConstructor(const nsCString& url, const uint32_t& length,
-                               const uint32_t& lastmodified,
-                               const nsCString& headers,
-                               const nsCString& mimeType, const bool& seekable,
-                               NPError* rv, uint16_t *stype);
+    virtual PPluginStreamProtocolParent*
+    PPluginStreamConstructor(const nsCString& url,
+                             const uint32_t& length,
+                             const uint32_t& lastmodified,
+                             const nsCString& headers,
+                             const nsCString& mimeType,
+                             const bool& seekable,
+                             NPError* rv,
+                             uint16_t *stype);
 
     virtual nsresult
-    AnswerNPBrowserStreamDestructor(NPBrowserStreamProtocolParent* stream,
-                                    const NPError& reason, const bool& artificial);
+    AnswerPPluginStreamDestructor(PPluginStreamProtocolParent* stream,
+                                  const NPError& reason,
+                                  const bool& artificial);
 
     virtual nsresult
-    NPBrowserStreamDestructor(NPBrowserStreamProtocolParent* stream,
-                              const NPError& reason, const bool& artificial);
+    PPluginStreamDestructor(PPluginStreamProtocolParent* stream,
+                            const NPError& reason,
+                            const bool& artificial);
 
     NPError NPP_SetWindow(NPWindow* aWindow);
     NPError NPP_GetValue(NPPVariable variable, void *ret_value);
@@ -135,4 +139,4 @@ private:
 } // namespace plugins
 } // namespace mozilla
 
-#endif // ifndef dom_plugins_NPPInstanceParent_h
+#endif // ifndef dom_plugins_PluginInstanceParent_h
