@@ -210,7 +210,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_SUCCESS: no error has occurred
  * @CAIRO_STATUS_NO_MEMORY: out of memory
  * @CAIRO_STATUS_INVALID_RESTORE: cairo_restore() called without matching cairo_save()
- * @CAIRO_STATUS_INVALID_POP_GROUP: no saved group to pop
+ * @CAIRO_STATUS_INVALID_POP_GROUP: no saved group to pop, i.e. cairo_pop_group() without matching cairo_push_group()
  * @CAIRO_STATUS_NO_CURRENT_POINT: no current point defined
  * @CAIRO_STATUS_INVALID_MATRIX: invalid matrix (not invertible)
  * @CAIRO_STATUS_INVALID_STATUS: invalid value for an input #cairo_status_t
@@ -239,7 +239,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_INVALID_CLUSTERS: input clusters do not represent the accompanying text and glyph array (Since 1.8)
  * @CAIRO_STATUS_INVALID_SLANT: invalid value for an input #cairo_font_slant_t (Since 1.8)
  * @CAIRO_STATUS_INVALID_WEIGHT: invalid value for an input #cairo_font_weight_t (Since 1.8)
- * @CAIRO_STATUS_INVALID_SIZE: invalid value (typically too big) for a size (Since 1.10)
+ * @CAIRO_STATUS_INVALID_SIZE: invalid value (typically too big) for the size of the input (surface, pattern, etc.) (Since 1.10)
  * @CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED: user-font method not implemented (Since 1.10)
  * @CAIRO_STATUS_LAST_STATUS: this is a special value indicating the number of
  *   status values defined in this enumeration.  When using this value, note
@@ -1889,7 +1889,8 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_WIN32_PRINTING: The surface is a win32 printing surface
  * @CAIRO_SURFACE_TYPE_QUARTZ_IMAGE: The surface is of type quartz_image
  * @CAIRO_SURFACE_TYPE_SCRIPT: The surface is of type script, since 1.10
- * @CAIRO_SURFACE_TYPE_QPAINTER: The surface is of type qpainter
+ * @CAIRO_SURFACE_TYPE_QT: The surface is of type Qt, since 1.10
+ * @CAIRO_SURFACE_TYPE_META: The surface is a meta-type, since 1.10
  * @CAIRO_SURFACE_TYPE_DDRAW: The surface is of type ddraw
  *
  * #cairo_surface_type_t is used to describe the type of a given
@@ -1931,7 +1932,8 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_WIN32_PRINTING,
     CAIRO_SURFACE_TYPE_QUARTZ_IMAGE,
     CAIRO_SURFACE_TYPE_SCRIPT,
-    CAIRO_SURFACE_TYPE_QPAINTER,
+    CAIRO_SURFACE_TYPE_QT,
+    CAIRO_SURFACE_TYPE_META,
     CAIRO_SURFACE_TYPE_DDRAW
 } cairo_surface_type_t;
 
@@ -2109,6 +2111,24 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t	read_func,
 					    void		*closure);
 
 #endif
+
+/* Meta-surface functions */
+
+cairo_public cairo_surface_t *
+cairo_meta_surface_create (cairo_content_t	content,
+			   double		width_pixels,
+			   double		height_pixels);
+
+cairo_public void
+cairo_meta_surface_ink_extents (cairo_surface_t *surface,
+				double *x0,
+				double *y0,
+				double *width,
+				double *height);
+
+cairo_public cairo_status_t
+cairo_meta_surface_replay (cairo_surface_t *surface,
+			   cairo_surface_t *target);
 
 /* Pattern creation functions */
 
@@ -2376,6 +2396,10 @@ cairo_region_create (void);
 
 cairo_public cairo_region_t *
 cairo_region_create_rectangle (const cairo_rectangle_int_t *rectangle);
+
+cairo_public cairo_region_t *
+cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
+				int count);
 
 cairo_public cairo_region_t *
 cairo_region_copy (cairo_region_t *original);

@@ -122,20 +122,6 @@ struct _cairo_font_options {
     cairo_hint_metrics_t hint_metrics;
 };
 
-typedef cairo_bool_t (*cairo_cache_predicate_func_t) (const void *entry);
-
-struct _cairo_cache {
-    cairo_hash_table_t *hash_table;
-
-    cairo_cache_predicate_func_t predicate;
-    cairo_destroy_func_t entry_destroy;
-
-    unsigned long max_size;
-    unsigned long size;
-
-    int freeze_count;
-};
-
 /* XXX: Right now, the _cairo_color structure puts unpremultiplied
    color in the doubles and premultiplied color in the shorts. Yes,
    this is crazy insane, (but at least we don't export this
@@ -176,8 +162,7 @@ typedef enum _cairo_int_status {
 } cairo_int_status_t;
 
 typedef enum _cairo_internal_surface_type {
-    CAIRO_INTERNAL_SURFACE_TYPE_META = 0x1000,
-    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
+    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED = 0x1000,
     CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,

@@ -283,11 +283,11 @@ face_props_parse (twin_face_properties_t *props,
 }
 
 static cairo_status_t
-twin_font_face_set_properties_from_toy (cairo_font_face_t *twin_face,
-					cairo_toy_font_face_t *toy_face)
+twin_font_face_create_properties (cairo_font_face_t *twin_face,
+				  twin_face_properties_t **props_out)
 {
-    cairo_status_t status;
     twin_face_properties_t *props;
+    cairo_status_t status;
 
     props = malloc (sizeof (twin_face_properties_t));
     if (unlikely (props == NULL))
@@ -297,22 +297,37 @@ twin_font_face_set_properties_from_toy (cairo_font_face_t *twin_face,
     props->monospace = FALSE;
     props->smallcaps = FALSE;
 
+    status = cairo_font_face_set_user_data (twin_face,
+					    &twin_properties_key,
+					    props, free);
+    if (unlikely (status)) {
+	free (props);
+	return status;
+    }
+
+    if (props_out)
+	*props_out = props;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+twin_font_face_set_properties_from_toy (cairo_font_face_t *twin_face,
+					cairo_toy_font_face_t *toy_face)
+{
+    cairo_status_t status;
+    twin_face_properties_t *props;
+
+    status = twin_font_face_create_properties (twin_face, &props);
+    if (unlikely (status))
+	return status;
+
     props->slant = toy_face->slant;
     props->weight = toy_face->weight == CAIRO_FONT_WEIGHT_NORMAL ?
 		    TWIN_WEIGHT_NORMAL : TWIN_WEIGHT_BOLD;
     face_props_parse (props, toy_face->family);
 
-    status = cairo_font_face_set_user_data (twin_face,
-					    &twin_properties_key,
-					    props, free);
-    if (unlikely (status))
-	goto FREE_PROPS;
-
     return CAIRO_STATUS_SUCCESS;
-
-FREE_PROPS:
-    free (props);
-    return status;
 }
 
 
@@ -694,6 +709,35 @@ twin_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
  * Face constructor
  */
 
+static cairo_font_face_t *
+_cairo_font_face_twin_create_internal (void)
+{
+    cairo_font_face_t *twin_font_face;
+
+    twin_font_face = cairo_user_font_face_create ();
+    cairo_user_font_face_set_init_func             (twin_font_face, twin_scaled_font_init);
+    cairo_user_font_face_set_render_glyph_func     (twin_font_face, twin_scaled_font_render_glyph);
+    cairo_user_font_face_set_unicode_to_glyph_func (twin_font_face, twin_scaled_font_unicode_to_glyph);
+
+    return twin_font_face;
+}
+
+cairo_font_face_t *
+_cairo_font_face_twin_create_fallback (void)
+{
+    cairo_font_face_t *twin_font_face;
+    cairo_status_t status;
+
+    twin_font_face = _cairo_font_face_twin_create_internal ();
+    status = twin_font_face_create_properties (twin_font_face, NULL);
+    if (status) {
+	cairo_font_face_destroy (twin_font_face);
+	return (cairo_font_face_t *) &_cairo_font_face_nil;
+    }
+
+    return twin_font_face;
+}
+
 cairo_status_t
 _cairo_font_face_twin_create_for_toy (cairo_toy_font_face_t   *toy_face,
 				      cairo_font_face_t      **font_face)
@@ -701,10 +745,7 @@ _cairo_font_face_twin_create_for_toy (cairo_toy_font_face_t   *toy_face,
     cairo_status_t status;
     cairo_font_face_t *twin_font_face;
 
-    twin_font_face = cairo_user_font_face_create ();
-    cairo_user_font_face_set_init_func             (twin_font_face, twin_scaled_font_init);
-    cairo_user_font_face_set_render_glyph_func     (twin_font_face, twin_scaled_font_render_glyph);
-    cairo_user_font_face_set_unicode_to_glyph_func (twin_font_face, twin_scaled_font_unicode_to_glyph);
+    twin_font_face = _cairo_font_face_twin_create_internal ();
     status = twin_font_face_set_properties_from_toy (twin_font_face, toy_face);
     if (status) {
 	cairo_font_face_destroy (twin_font_face);

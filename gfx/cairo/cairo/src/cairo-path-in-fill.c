@@ -122,11 +122,11 @@ _cairo_in_fill_add_edge (cairo_in_fill_t *in_fill,
     }
 
     /* First check whether the query is on an edge */
-    if ((p1->x == in_fill->x && p1->x == in_fill->y) ||
-	(p2->x == in_fill->x && p2->x == in_fill->y) ||
-	(! (p2->y < in_fill->y || p1->y > in_fill->y) &&
-	 ! (p1->x > in_fill->x && p2->x > in_fill->x) &&
-	 ! (p1->x < in_fill->x && p2->x < in_fill->x) &&
+    if ((p1->x == in_fill->x && p1->y == in_fill->y) ||
+	(p2->x == in_fill->x && p2->y == in_fill->y) ||
+	(! (p2->y < in_fill->y || p1->y > in_fill->y ||
+	   (p1->x > in_fill->x && p2->x > in_fill->x) ||
+	   (p1->x < in_fill->x && p2->x < in_fill->x)) &&
 	 edge_compare_for_y_against_x (p1, p2, in_fill->y, in_fill->x) == 0))
     {
 	in_fill->on_edge = TRUE;

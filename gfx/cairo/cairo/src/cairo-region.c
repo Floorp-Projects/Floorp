@@ -79,6 +79,8 @@ _cairo_region_set_error (cairo_region_t *region,
 void
 _cairo_region_init (cairo_region_t *region)
 {
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (region, sizeof (cairo_region_t)));
+
     region->status = CAIRO_STATUS_SUCCESS;
     pixman_region32_init (&region->rgn);
 }
@@ -87,6 +89,8 @@ void
 _cairo_region_init_rectangle (cairo_region_t *region,
 			      const cairo_rectangle_int_t *rectangle)
 {
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (region, sizeof (cairo_region_t)));
+
     region->status = CAIRO_STATUS_SUCCESS;
     pixman_region32_init_rect (&region->rgn,
 			       rectangle->x, rectangle->y,
@@ -97,6 +101,7 @@ void
 _cairo_region_fini (cairo_region_t *region)
 {
     pixman_region32_fini (&region->rgn);
+    VG (VALGRIND_MAKE_MEM_NOACCESS (region, sizeof (cairo_region_t)));
 }
 
 /**
@@ -128,6 +133,51 @@ cairo_region_create (void)
     return region;
 }
 slim_hidden_def (cairo_region_create);
+
+cairo_region_t *
+cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
+				int count)
+{
+    pixman_box32_t stack_pboxes[CAIRO_STACK_ARRAY_LENGTH (pixman_box32_t)];
+    pixman_box32_t *pboxes = stack_pboxes;
+    cairo_region_t *region;
+    int i;
+
+    region = _cairo_malloc (sizeof (cairo_region_t));
+
+    if (!region)
+	return (cairo_region_t *)&_cairo_region_nil;
+
+    region->status = CAIRO_STATUS_SUCCESS;
+
+    if (count > ARRAY_LENGTH (stack_pboxes)) {
+	pboxes = _cairo_malloc_ab (count, sizeof (pixman_box32_t));
+
+	if (unlikely (pboxes == NULL)) {
+	    free (region);
+	    return (cairo_region_t *)&_cairo_region_nil;
+	}
+    }
+
+    for (i = 0; i < count; i++) {
+	pboxes[i].x1 = rects[i].x;
+	pboxes[i].y1 = rects[i].y;
+	pboxes[i].x2 = rects[i].x + rects[i].width;
+	pboxes[i].y2 = rects[i].y + rects[i].height;
+    }
+
+    if (! pixman_region32_init_rects (&region->rgn, pboxes, count)) {
+	free (region);
+
+	region = (cairo_region_t *)&_cairo_region_nil;
+    }
+
+    if (pboxes != stack_pboxes)
+	free (pboxes);
+
+    return region;
+}
+slim_hidden_def (cairo_region_create_rectangles);
 
 /**
  * cairo_region_create_rectangle:
