@@ -1328,11 +1328,16 @@ namespace nanojit
     {
         LirBuffer *lirbuf;
         LInsp sp;
-        BitSet stk;
-        int top;
-        int getTop(LInsp br);
+        LInsp rp;
+        BitSet spStk;
+        BitSet rpStk;
+        int spTop;
+        int rpTop;
+        void getTops(LInsp br, int& spTop, int& rpTop);
+
     public:
-        StackFilter(LirFilter *in, Allocator& alloc, LirBuffer *lirbuf, LInsp sp);
+        StackFilter(LirFilter *in, Allocator& alloc, LirBuffer *lirbuf, LInsp sp, LInsp rp);
+        bool ignoreStore(LInsp ins, int top, BitSet* stk);
         LInsp read();
     };
 
