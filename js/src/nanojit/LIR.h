@@ -966,11 +966,17 @@ namespace nanojit
         LIns*        ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse);
         // Inserts an integer comparison to 0
         LIns*        ins_eq0(LIns* oprnd1);
+        // Inserts a pointer comparison to 0
+        LIns*        ins_peq0(LIns* oprnd1);
         // Inserts a binary operation where the second operand is an
         // integer immediate.
         LIns*        ins2i(LOpcode op, LIns *oprnd1, int32_t);
         LIns*        qjoin(LInsp lo, LInsp hi);
         LIns*        insImmPtr(const void *ptr);
+        LIns*        insImmWord(intptr_t ptr);
+        // Sign or zero extend integers to native integers. On 32-bit this is a no-op.
+        LIns*        ins_i2p(LIns* intIns);
+        LIns*        ins_u2p(LIns* uintIns);
     };
 
 
