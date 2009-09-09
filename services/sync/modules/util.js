@@ -209,41 +209,6 @@ let Utils = {
     return file;
   },
 
-  findPassword: function findPassword(realm, username) {
-    // fixme: make a request and get the realm ?
-    let password;
-    let logins = Svc.Login.findLogins({}, 'chrome://weave', null, realm);
-
-    for (let i = 0; i < logins.length; i++) {
-      if (logins[i].username == username) {
-        password = logins[i].password;
-        break;
-      }
-    }
-    return password;
-  },
-
-  setPassword: function setPassword(realm, username, password) {
-    // cleanup any existing passwords
-    let lm = Svc.Login;
-    let logins = lm.findLogins({}, 'chrome://weave', null, realm);
-    for (let i = 0; i < logins.length; i++)
-      lm.removeLogin(logins[i]);
-
-    if (!password)
-      return;
-
-    let log = Log4Moz.repository.getLogger("Service.Util");
-    log.trace("Setting '" + realm + "' password for user " + username);
-
-    // save the new one
-    let nsLoginInfo = new Components.Constructor(
-      "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
-    let login = new nsLoginInfo('chrome://weave', null, realm,
-                                username, password, "", "");
-    lm.addLogin(login);
-  },
-
   /**
    * Add a simple getter/setter to an object that defers access of a property
    * to an inner property.
