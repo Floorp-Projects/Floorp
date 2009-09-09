@@ -2164,8 +2164,9 @@ JSTraceMonitor::mark(JSTracer* trc)
  * are too large to fit into a jsval are automatically boxed into
  * heap-allocated doubles.
  */
-static void
-NativeToValue(JSContext* cx, jsval& v, JSTraceType type, double* slot)
+template <typename E>
+static inline bool
+NativeToValueBase(JSContext* cx, jsval& v, JSTraceType type, double* slot)
 {
     jsint i;
     jsdouble d;
@@ -2206,12 +2207,9 @@ NativeToValue(JSContext* cx, jsval& v, JSTraceType type, double* slot)
 #endif
                 js_NewDoubleInRootedValue(cx, d, &v);
             JS_ASSERT(ok);
-            return;
+            return true;
         }
-        v = AllocateDoubleFromReservedPool(cx);
-        JS_ASSERT(JSVAL_IS_DOUBLE(v) && *JSVAL_TO_DOUBLE(v) == 0.0);
-        *JSVAL_TO_DOUBLE(v) = d;
-        return;
+        return E::handleDoubleOOM(cx, d, v);
       }
 
       case TT_JSVAL:
@@ -2251,6 +2249,38 @@ NativeToValue(JSContext* cx, jsval& v, JSTraceType type, double* slot)
         break;
       }
     }
+    return true;
+}
+
+struct ReserveDoubleOOMHandler {
+    static bool handleDoubleOOM(JSContext *cx, double d, jsval& v) {
+        v = AllocateDoubleFromReservedPool(cx);
+        JS_ASSERT(JSVAL_IS_DOUBLE(v) && *JSVAL_TO_DOUBLE(v) == 0.0);
+        *JSVAL_TO_DOUBLE(v) = d;
+        return true;
+    }
+};
+
+static void
+NativeToValue(JSContext* cx, jsval& v, JSTraceType type, double* slot)
+{
+#ifdef DEBUG
+    bool ok = 
+#endif
+        NativeToValueBase<ReserveDoubleOOMHandler>(cx, v, type, slot);
+    JS_ASSERT(ok);
+}
+
+struct FailDoubleOOMHandler {
+    static bool handleDoubleOOM(JSContext *cx, double d, jsval& v) {
+        return false;
+    }
+};
+
+bool
+js_NativeToValue(JSContext* cx, jsval& v, JSTraceType type, double* slot)
+{
+    return NativeToValueBase<FailDoubleOOMHandler>(cx, v, type, slot);
 }
 
 class BuildNativeFrameVisitor : public SlotVisitorBase
@@ -2653,8 +2683,8 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, JSTraceType* mp, double
         for (; n != 0; fp = fp->down) {
             --n;
             if (fp->argv) {
-                // fp->argsobj->getPrivate() is NULL iff we created argsobj on trace.
-                if (fp->argsobj && !JSVAL_TO_OBJECT(fp->argsobj)->getPrivate()) {
+                if (fp->argsobj && 
+                    js_GetArgsPrivateNative(JSVAL_TO_OBJECT(fp->argsobj))) {
                     JSVAL_TO_OBJECT(fp->argsobj)->setPrivate(fp);
                 }
 
@@ -8769,23 +8799,62 @@ TraceRecorder::record_JSOP_IFNE()
     return ifop();
 }
 
+LIns*
+TraceRecorder::newArguments()
+{
+    LIns* global_ins = INS_CONSTOBJ(globalObj);
+    LIns* argc_ins = INS_CONST(cx->fp->argc);
+    LIns* callee_ins = get(&cx->fp->argv[-2]);
+    LIns* argv_ins = cx->fp->argc
+        ? lir->ins2(LIR_piadd, lirbuf->sp, 
+                    INS_CONST(-treeInfo->nativeStackBase + nativeStackOffset(&cx->fp->argv[0])))
+        : INS_CONSTPTR((void *) 2);
+    js_ArgsPrivateNative *apn = js_ArgsPrivateNative::create(*traceMonitor->allocator, 
+                                                             cx->fp->argc);
+    for (uintN i = 0; i < cx->fp->argc; ++i) {
+        apn->typemap()[i] = determineSlotType(&cx->fp->argv[i]);
+    }
+
+    LIns* args[] = { INS_CONSTPTR(apn), argv_ins, callee_ins, argc_ins, global_ins, cx_ins };
+    LIns* call_ins = lir->insCall(&js_Arguments_ci, args);
+    guard(false, lir->ins_eq0(call_ins), OOM_EXIT);
+    return call_ins;
+}
+
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_ARGUMENTS()
 {
     if (cx->fp->flags & JSFRAME_OVERRIDE_ARGS)
         ABORT_TRACE("Can't trace |arguments| if |arguments| is assigned to");
 
-    LIns* global_ins = INS_CONSTOBJ(globalObj);
-    LIns* argc_ins = INS_CONST(cx->fp->argc);
-    LIns* callee_ins = get(&cx->fp->argv[-2]);
     LIns* a_ins = get(&cx->fp->argsobj);
+    LIns* args_ins;
+    if (a_ins->opcode() == LIR_int) {
+        // |arguments| is set to 0 by EnterFrame on this trace, so call to create it.
+        args_ins = newArguments();
+    } else {
+        // Generate LIR to create arguments only if it has not already been created.
+        
+        LIns* mem_ins = lir->insAlloc(sizeof(jsval));
 
-    /* FIXME inline a_ins check in js_Arguments. */
-    LIns* args[] = { a_ins, callee_ins, argc_ins, global_ins, cx_ins };
-    a_ins = lir->insCall(&js_Arguments_ci, args);
-    guard(false, lir->ins_eq0(a_ins), OOM_EXIT);
-    stack(0, a_ins);
-    set(&cx->fp->argsobj, a_ins);
+        LIns* br1 = lir->insBranch(LIR_jt, lir->ins_eq0(a_ins), NULL);
+        lir->insStorei(a_ins, mem_ins, 0);
+        LIns* br2 = lir->insBranch(LIR_j, NULL, NULL);
+
+        LIns* label1 = lir->ins0(LIR_label);
+        br1->setTarget(label1);
+
+        LIns* call_ins = newArguments();
+        lir->insStorei(call_ins, mem_ins, 0);
+
+        LIns* label2 = lir->ins0(LIR_label);
+        br2->setTarget(label2);
+
+        args_ins = lir->insLoad(LIR_ld, mem_ins, 0);
+    }
+
+    stack(0, args_ins);
+    set(&cx->fp->argsobj, args_ins);
     return JSRS_CONTINUE;
 }
 
