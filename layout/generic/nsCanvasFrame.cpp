@@ -60,7 +60,6 @@
 // for focus
 #include "nsIDOMWindowInternal.h"
 #include "nsIScrollableFrame.h"
-#include "nsIScrollableView.h"
 #include "nsIDocShell.h"
 
 #ifdef DEBUG_rods
@@ -115,7 +114,7 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 NS_IMETHODIMP
-nsCanvasFrame::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
+nsCanvasFrame::ScrollPositionWillChange(nscoord aX, nscoord aY)
 {
   if (mDoPaintFocus) {
     mDoPaintFocus = PR_FALSE;
@@ -125,7 +124,7 @@ nsCanvasFrame::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord 
 }
 
 NS_IMETHODIMP
-nsCanvasFrame::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
+nsCanvasFrame::ScrollPositionDidChange(nscoord aX, nscoord aY)
 {
   return NS_OK;
 }

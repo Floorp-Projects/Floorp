@@ -90,12 +90,9 @@ public:
   NS_IMETHOD TakeFocus(void);
 
   // nsIScrollPositionListener
-  NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView,
-                                      nscoord aX, nscoord aY);
-  virtual void ViewPositionDidChange(nsIScrollableView* aScrollable,
-                                     nsTArray<nsIWidget::Configuration>* aConfigurations) {}
-  NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView,
-                                     nscoord aX, nscoord aY);
+  NS_IMETHOD ScrollPositionWillChange(nscoord aX, nscoord aY);
+  virtual void ViewPositionDidChange(nsTArray<nsIWidget::Configuration>* aConfigurations) {}
+  NS_IMETHOD ScrollPositionDidChange(nscoord aX, nscoord aY);
 
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER
