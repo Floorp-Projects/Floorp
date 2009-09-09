@@ -62,7 +62,6 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
-#include "nsIScrollableView.h"
 #include "nsIScrollableFrame.h" //to turn off scroll bars
 #include "nsFormControlFrame.h" //for registering accesskeys
 #include "nsIDeviceContext.h" // to measure fonts
@@ -944,7 +943,6 @@ NS_QUERYFRAME_HEAD(nsTextControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
   NS_QUERYFRAME_ENTRY(nsITextControlFrame)
-  NS_QUERYFRAME_ENTRY_CONDITIONAL(nsIScrollableViewProvider, IsScrollable())
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 #ifdef ACCESSIBILITY
@@ -2741,13 +2739,6 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
 
   mSelCon->SetScrollableFrame(do_QueryFrame(first));
   return rv;
-}
-
-nsIScrollableView* nsTextControlFrame::GetScrollableView()
-{
-  nsIFrame* first = GetFirstChild(nsnull);
-  nsIScrollableFrame* scrollableFrame = do_QueryFrame(first);
-  return scrollableFrame ? scrollableFrame->GetScrollableView() : nsnull;
 }
 
 PRBool
