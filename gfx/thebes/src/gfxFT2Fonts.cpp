@@ -52,9 +52,34 @@
 #include "gfxFT2Fonts.h"
 #include <locale.h>
 #include "cairo-ft.h"
-#include <freetype/tttables.h>
+#include FT_TRUETYPE_TAGS_H
+#include FT_TRUETYPE_TABLES_H
 #include "gfxFontUtils.h"
 #include "nsTArray.h"
+#include "nsUnicodeRange.h"
+#include "nsIPrefService.h"
+#include "nsIPrefLocalizedString.h"
+#include "nsServiceManagerUtils.h"
+#include "nsCRT.h"
+
+#include "prlog.h"
+#include "prinit.h"
+static PRLogModuleInfo *gFontLog = PR_NewLogModule("ft2fonts");
+
+static const char *sCJKLangGroup[] = {
+    "ja",
+    "ko",
+    "zh-CN",
+    "zh-HK",
+    "zh-TW"
+};
+
+#define COUNT_OF_CJK_LANG_GROUP 5
+#define CJK_LANG_JA    sCJKLangGroup[0]
+#define CJK_LANG_KO    sCJKLangGroup[1]
+#define CJK_LANG_ZH_CN sCJKLangGroup[2]
+#define CJK_LANG_ZH_HK sCJKLangGroup[3]
+#define CJK_LANG_ZH_TW sCJKLangGroup[4]
 
 /**
  * FontEntry
@@ -63,6 +88,7 @@
 FontEntry::FontEntry(const FontEntry& aFontEntry) :
     gfxFontEntry(aFontEntry)
 {
+    mFTFace = aFontEntry.mFTFace;
     if (aFontEntry.mFontFace)
         mFontFace = cairo_font_face_reference(aFontEntry.mFontFace);
     else
@@ -71,6 +97,9 @@ FontEntry::FontEntry(const FontEntry& aFontEntry) :
 
 FontEntry::~FontEntry()
 {
+    // Do nothing for mFTFace here since FTFontDestroyFunc is called by cairo.
+    mFTFace = nsnull;
+
     if (mFontFace) {
         cairo_font_face_destroy(mFontFace);
         mFontFace = nsnull;
@@ -122,6 +151,7 @@ FontEntry::CreateFontEntryFromFace(FT_Face aFace) {
     }
     FontEntry *fe = new FontEntry(fontName);
     fe->mItalic = aFace->style_flags & FT_STYLE_FLAG_ITALIC;
+    fe->mFTFace = aFace;
     fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, 0);
     cairo_font_face_set_user_data(fe->mFontFace, &key,
                                   aFace, FTFontDestroyFunc);
@@ -165,10 +195,43 @@ FontEntry::CairoFontFace()
     if (!mFontFace) {
         FT_Face face;
         FT_New_Face(gfxToolkitPlatform::GetPlatform()->GetFTLibrary(), mFilename.get(), mFTFontIndex, &face);
+        mFTFace = face;
         mFontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
         cairo_font_face_set_user_data(mFontFace, &key, face, FTFontDestroyFunc);
     }
     return mFontFace;
+}
+
+nsresult
+FontEntry::ReadCMAP()
+{
+    if (mCmapInitialized) return NS_OK;
+
+    // attempt this once, if errors occur leave a blank cmap
+    mCmapInitialized = PR_TRUE;
+
+    // Ensure existence of mFTFace
+    CairoFontFace();
+    NS_ENSURE_TRUE(mFTFace, NS_ERROR_FAILURE);
+
+    FT_Error status;
+    FT_ULong len = 0;
+    status = FT_Load_Sfnt_Table(mFTFace, TTAG_cmap, 0, nsnull, &len);
+    NS_ENSURE_TRUE(status == 0, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(len != 0, NS_ERROR_FAILURE);
+
+    nsAutoTArray<PRUint8,16384> buffer;
+    if (!buffer.AppendElements(len))
+        return NS_ERROR_FAILURE;
+    PRUint8 *buf = buffer.Elements();
+
+    status = FT_Load_Sfnt_Table(mFTFace, TTAG_cmap, 0, buf, &len);
+    NS_ENSURE_TRUE(status == 0, NS_ERROR_FAILURE);
+
+    PRPackedBool unicodeFont;
+    PRPackedBool symbolFont;
+    return gfxFontUtils::ReadCMAP(buf, len, mCharacterMap,
+                                  unicodeFont, symbolFont);
 }
 
 FontEntry *
@@ -367,184 +430,240 @@ PRUint32 getUTF8CharAndNext(const PRUint8 *aString, PRUint8 *aLength)
 }
 
 
-
-
-
-
-
-
-PRBool
-HasCharacter(gfxFT2Font *aFont, PRUint32 ch)
+static PRBool
+AddFontNameToArray(const nsAString& aName,
+                   const nsACString& aGenericName,
+                   void *aClosure)
 {
-    if (aFont->GetFontEntry()->mCharacterMap.test(ch))
-        return PR_TRUE;
+    if (!aName.IsEmpty()) {
+        nsTArray<nsString> *list = static_cast<nsTArray<nsString> *>(aClosure);
 
-    // XXX move this lock way way out
-    FT_Face face = cairo_ft_scaled_font_lock_face(aFont->CairoScaledFont());
-    FT_UInt gid = FT_Get_Char_Index(face, ch);
-    cairo_ft_scaled_font_unlock_face(aFont->CairoScaledFont());
-
-    if (gid != 0) {
-        aFont->GetFontEntry()->mCharacterMap.set(ch);
-        return PR_TRUE;
+        if (list->IndexOf(aName) == list->NoIndex)
+            list->AppendElement(aName);
     }
-    return PR_FALSE;
+ 
+    return PR_TRUE;
+}
+  
+void
+gfxFT2FontGroup::FamilyListToArrayList(const nsString& aFamilies,
+                                       const nsCString& aLangGroup,
+                                       nsTArray<nsRefPtr<FontEntry> > *aFontEntryList)
+{
+    nsAutoTArray<nsString, 15> fonts;
+    ForEachFont(aFamilies, aLangGroup, AddFontNameToArray, &fonts);
+
+    PRUint32 len = fonts.Length();
+    for (PRUint32 i = 0; i < len; ++i) {
+        const nsString& str = fonts[i];
+        nsRefPtr<FontEntry> fe = gfxToolkitPlatform::GetPlatform()->FindFontEntry(str, mStyle);
+        aFontEntryList->AppendElement(fe);
+    }
 }
 
-#if 0
-inline FontEntry *
-gfxFT2FontGroup::WhichFontSupportsChar(const nsTArray<>& foo, PRUint32 ch)
-{
-    for (int i = 0; i < aGroup->FontListLength(); i++) {
-        nsRefPtr<gfxFT2Font> font = aGroup->GetFontAt(i);
-        if (HasCharacter(font, ch))
-            return font;
+void gfxFT2FontGroup::GetPrefFonts(const char *aLangGroup, nsTArray<nsRefPtr<FontEntry> >& aFontEntryList) {
+    NS_ASSERTION(aLangGroup, "aLangGroup is null");
+    gfxToolkitPlatform *platform = gfxToolkitPlatform::GetPlatform();
+    nsAutoTArray<nsRefPtr<FontEntry>, 5> fonts;
+    /* this lookup has to depend on weight and style */
+    nsCAutoString key(aLangGroup);
+    key.Append("-");
+    key.AppendInt(GetStyle()->style);
+    key.Append("-");
+    key.AppendInt(GetStyle()->weight);
+    if (!platform->GetPrefFontEntries(key, &fonts)) {
+        nsString fontString;
+        platform->GetPrefFonts(aLangGroup, fontString);
+        if (fontString.IsEmpty())
+            return;
+
+        FamilyListToArrayList(fontString, nsDependentCString(aLangGroup),
+                                      &fonts);
+
+        platform->SetPrefFontEntries(key, fonts);
     }
-    return nsnull;
+    aFontEntryList.AppendElements(fonts);
 }
+
+static PRInt32 GetCJKLangGroupIndex(const char *aLangGroup) {
+    PRInt32 i;
+    for (i = 0; i < COUNT_OF_CJK_LANG_GROUP; i++) {
+        if (!PL_strcasecmp(aLangGroup, sCJKLangGroup[i]))
+            return i;
+    }
+    return -1;
+}
+
+// this function assigns to the array passed in.
+void gfxFT2FontGroup::GetCJKPrefFonts(nsTArray<nsRefPtr<FontEntry> >& aFontEntryList) {
+    gfxToolkitPlatform *platform = gfxToolkitPlatform::GetPlatform();
+
+    nsCAutoString key("x-internal-cjk-");
+    key.AppendInt(mStyle.style);
+    key.Append("-");
+    key.AppendInt(mStyle.weight);
+
+    if (!platform->GetPrefFontEntries(key, &aFontEntryList)) {
+        nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (!prefs)
+            return;
+
+        nsCOMPtr<nsIPrefBranch> prefBranch;
+        prefs->GetBranch(0, getter_AddRefs(prefBranch));
+        if (!prefBranch)
+            return;
+
+        // Add the CJK pref fonts from accept languages, the order should be same order
+        nsCAutoString list;
+        nsCOMPtr<nsIPrefLocalizedString> val;
+        nsresult rv = prefBranch->GetComplexValue("intl.accept_languages", NS_GET_IID(nsIPrefLocalizedString),
+                                                  getter_AddRefs(val));
+        if (NS_SUCCEEDED(rv) && val) {
+            nsAutoString temp;
+            val->ToString(getter_Copies(temp));
+            LossyCopyUTF16toASCII(temp, list);
+        }
+        if (!list.IsEmpty()) {
+            const char kComma = ',';
+            const char *p, *p_end;
+            list.BeginReading(p);
+            list.EndReading(p_end);
+            while (p < p_end) {
+                while (nsCRT::IsAsciiSpace(*p)) {
+                    if (++p == p_end)
+                        break;
+                }
+                if (p == p_end)
+                    break;
+                const char *start = p;
+                while (++p != p_end && *p != kComma)
+                    /* nothing */ ;
+                nsCAutoString lang(Substring(start, p));
+                lang.CompressWhitespace(PR_FALSE, PR_TRUE);
+                PRInt32 index = GetCJKLangGroupIndex(lang.get());
+                if (index >= 0)
+                    GetPrefFonts(sCJKLangGroup[index], aFontEntryList);
+                p++;
+            }
+        }
+
+        // Add the system locale
+#ifdef XP_WIN
+        switch (::GetACP()) {
+            case 932: GetPrefFonts(CJK_LANG_JA, aFontEntryList); break;
+            case 936: GetPrefFonts(CJK_LANG_ZH_CN, aFontEntryList); break;
+            case 949: GetPrefFonts(CJK_LANG_KO, aFontEntryList); break;
+            // XXX Don't we need to append CJK_LANG_ZH_HK if the codepage is 950?
+            case 950: GetPrefFonts(CJK_LANG_ZH_TW, aFontEntryList); break;
+        }
+#else
+        const char *ctype = setlocale(LC_CTYPE, NULL);
+        if (ctype) {
+            if (!PL_strncasecmp(ctype, "ja", 2)) {
+                GetPrefFonts(CJK_LANG_JA, aFontEntryList);
+            } else if (!PL_strncasecmp(ctype, "zh_cn", 5)) {
+                GetPrefFonts(CJK_LANG_ZH_CN, aFontEntryList);
+            } else if (!PL_strncasecmp(ctype, "zh_hk", 5)) {
+                GetPrefFonts(CJK_LANG_ZH_HK, aFontEntryList);
+            } else if (!PL_strncasecmp(ctype, "zh_tw", 5)) {
+                GetPrefFonts(CJK_LANG_ZH_TW, aFontEntryList);
+            } else if (!PL_strncasecmp(ctype, "ko", 2)) {
+                GetPrefFonts(CJK_LANG_KO, aFontEntryList);
+            }
+        }
 #endif
 
-inline gfxFT2Font *
-gfxFT2FontGroup::FindFontForChar(PRUint32 ch, PRUint32 prevCh, PRUint32 nextCh, gfxFT2Font *aFont)
-{
-    gfxFT2Font *selectedFont;
+        // last resort...
+        GetPrefFonts(CJK_LANG_JA, aFontEntryList);
+        GetPrefFonts(CJK_LANG_KO, aFontEntryList);
+        GetPrefFonts(CJK_LANG_ZH_CN, aFontEntryList);
+        GetPrefFonts(CJK_LANG_ZH_HK, aFontEntryList);
+        GetPrefFonts(CJK_LANG_ZH_TW, aFontEntryList);
 
-    // if this character or the next one is a joiner use the
-    // same font as the previous range if we can
-    if (gfxFontUtils::IsJoiner(ch) || gfxFontUtils::IsJoiner(prevCh) || gfxFontUtils::IsJoiner(nextCh)) {
-        if (aFont && HasCharacter(aFont, ch))
-            return aFont;
+        platform->SetPrefFontEntries(key, aFontEntryList);
     }
+}
 
-    for (PRUint32 i = 0; i < FontListLength(); i++) {
-        nsRefPtr<gfxFT2Font> font = GetFontAt(i);
-        if (HasCharacter(font, ch))
-            return font;
+already_AddRefed<gfxFT2Font>
+gfxFT2FontGroup::WhichFontSupportsChar(const nsTArray<nsRefPtr<FontEntry> >& aFontEntryList, PRUint32 aCh)
+{
+    for (PRUint32 i = 0; i < aFontEntryList.Length(); i++) {
+        nsRefPtr<FontEntry> fe = aFontEntryList[i];
+        if (fe->HasCharacter(aCh)) {
+            nsRefPtr<gfxFT2Font> font =
+                gfxFT2Font::GetOrMakeFont(fe, &mStyle);
+            return font.forget();
+        }
     }
     return nsnull;
+}
 
-#if 0
-    // check the list of fonts
-    selectedFont = WhichFontSupportsChar(mGroup->GetFontList(), ch);
+already_AddRefed<gfxFont> 
+gfxFT2FontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
+{
+    if (aCh > 0xFFFF)
+        return nsnull;
 
-
-    // don't look in other fonts if the character is in a Private Use Area
-    if ((ch >= 0xE000  && ch <= 0xF8FF) || 
-        (ch >= 0xF0000 && ch <= 0x10FFFD))
-        return selectedFont;
+    nsRefPtr<gfxFT2Font> selectedFont;
 
     // check out the style's language group
-    if (!selectedFont) {
-        nsAutoTArray<nsRefPtr<FontEntry>, 5> fonts;
-        this->GetPrefFonts(mGroup->GetStyle()->langGroup.get(), fonts);
-        selectedFont = WhichFontSupportsChar(fonts, ch);
-    }
+    nsAutoTArray<nsRefPtr<FontEntry>, 5> fonts;
+    GetPrefFonts(mStyle.langGroup.get(), fonts);
+    selectedFont = WhichFontSupportsChar(fonts, aCh);
 
     // otherwise search prefs
     if (!selectedFont) {
-        /* first check with the script properties to see what they think */
-        if (ch <= 0xFFFF) {
-            PRUint32 unicodeRange = FindCharUnicodeRange(ch);
-            
-            /* special case CJK */
-            if (unicodeRange == kRangeSetCJK) {
-                if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
-                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: CJK"));
+        PRUint32 unicodeRange = FindCharUnicodeRange(aCh);
 
-                nsAutoTArray<nsRefPtr<FontEntry>, 15> fonts;
-                this->GetCJKPrefFonts(fonts);
-                selectedFont = WhichFontSupportsChar(fonts, ch);
-            } else {
-                const char *langGroup = LangGroupFromUnicodeRange(unicodeRange);
-                if (langGroup) {
-                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: %s", langGroup));
+        /* special case CJK */
+        if (unicodeRange == kRangeSetCJK) {
+            if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
+                PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: CJK"));
 
-                    nsAutoTArray<nsRefPtr<FontEntry>, 5> fonts;
-                    this->GetPrefFonts(langGroup, fonts);
-                    selectedFont = WhichFontSupportsChar(fonts, ch);
-                }
+            nsAutoTArray<nsRefPtr<FontEntry>, 15> fonts;
+            GetCJKPrefFonts(fonts);
+            selectedFont = WhichFontSupportsChar(fonts, aCh);
+        } else {
+            const char *langGroup = LangGroupFromUnicodeRange(unicodeRange);
+            if (langGroup) {
+                PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: %s", langGroup));
+
+                nsAutoTArray<nsRefPtr<FontEntry>, 5> fonts;
+                GetPrefFonts(langGroup, fonts);
+                selectedFont = WhichFontSupportsChar(fonts, aCh);
             }
         }
     }
 
-    // before searching for something else check the font used for the previous character
-    if (!selectedFont && aFont && HasCharacter(aFont, ch))
-        selectedFont = aFont;
-
-    // otherwise look for other stuff
-    if (!selectedFont) {
-        PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Looking for best match"));
-        
-        nsRefPtr<gfxWindowsFont> refFont = mGroup->GetFontAt(0);
-        gfxWindowsPlatform *platform = gfxWindowsPlatform::GetPlatform();
-        selectedFont = platform->FindFontForChar(ch, refFont);
+    if (selectedFont) {
+        nsRefPtr<gfxFont> f = static_cast<gfxFont*>(selectedFont.get());
+        return f.forget();
     }
 
-    return selectedFont;
-#endif
+    return nsnull;
 }
 
-PRUint32
-gfxFT2FontGroup::ComputeRanges()
+already_AddRefed<gfxFont> 
+gfxFT2FontGroup::WhichSystemFontSupportsChar(PRUint32 aCh)
 {
-    const PRUnichar *str = mString.get();
-    PRUint32 len = mString.Length();
-
-    mRanges.Clear();
-
-    PRUint32 prevCh = 0;
-    for (PRUint32 i = 0; i < len; i++) {
-        const PRUint32 origI = i; // save off incase we increase for surrogate
-        PRUint32 ch = str[i];
-        if ((i+1 < len) && NS_IS_HIGH_SURROGATE(ch) && NS_IS_LOW_SURROGATE(str[i+1])) {
-            i++;
-            ch = SURROGATE_TO_UCS4(ch, str[i]);
-        }
-
-        PRUint32 nextCh = 0;
-        if (i+1 < len) {
-            nextCh = str[i+1];
-            if ((i+2 < len) && NS_IS_HIGH_SURROGATE(ch) && NS_IS_LOW_SURROGATE(str[i+2]))
-                nextCh = SURROGATE_TO_UCS4(nextCh, str[i+2]);
-        }
-        gfxFT2Font *fe = FindFontForChar(ch,
-                                        prevCh,
-                                        nextCh,
-                                        (mRanges.Length() == 0) ? nsnull : mRanges[mRanges.Length() - 1].font);
-
-        prevCh = ch;
-
-        if (mRanges.Length() == 0) {
-            TextRange r(0,1);
-            r.font = fe;
-            mRanges.AppendElement(r);
-        } else {
-            TextRange& prevRange = mRanges[mRanges.Length() - 1];
-            if (prevRange.font != fe) {
-                // close out the previous range
-                prevRange.end = origI;
-
-                TextRange r(origI, i+1);
-                r.font = fe;
-                mRanges.AppendElement(r);
-            }
-        }
-    }
-    mRanges[mRanges.Length()-1].end = len;
-
-    PRUint32 nranges = mRanges.Length();
-    return nranges;
+    nsRefPtr<gfxFont> selectedFont;
+    nsRefPtr<gfxFT2Font> refFont = GetFontAt(0);
+    gfxToolkitPlatform *platform = gfxToolkitPlatform::GetPlatform();
+    selectedFont = platform->FindFontForChar(aCh, refFont);
+    if (selectedFont)
+        return selectedFont.forget();
+    return nsnull;
 }
 
 void gfxFT2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun)
 {
-    ComputeRanges();
+    ComputeRanges(mRanges, mString.get(), 0, mString.Length());
 
     PRUint32 offset = 0;
     for (PRUint32 i = 0; i < mRanges.Length(); ++i) {
-        const TextRange& range = mRanges[i];
+        const gfxTextRange& range = mRanges[i];
         PRUint32 rangeLength = range.Length();
-        gfxFT2Font *font = range.font ? range.font.get() : GetFontAt(0);
+        gfxFT2Font *font = static_cast<gfxFT2Font *>(range.font ? range.font.get() : GetFontAt(0));
         AddRange(aTextRun, font, mString.get(), offset, rangeLength);
         offset += rangeLength;
     }
@@ -908,9 +1027,16 @@ gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
         return nsnull;
     }
 
-    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(fe->Name(), aStyle);
+    nsRefPtr<gfxFT2Font> font = GetOrMakeFont(fe, aStyle);
+    return font.forget();
+}
+
+already_AddRefed<gfxFT2Font>
+gfxFT2Font::GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
+{
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry->Name(), aStyle);
     if (!font) {
-        font = new gfxFT2Font(fe, aStyle);
+        font = new gfxFT2Font(aFontEntry, aStyle);
         if (!font)
             return nsnull;
         gfxFontCache::GetCache()->AddNew(font);

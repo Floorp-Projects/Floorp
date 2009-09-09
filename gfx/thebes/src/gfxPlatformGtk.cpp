@@ -44,6 +44,7 @@
 
 #include "gfxPlatformGtk.h"
 
+#include "nsUnicharUtils.h"
 #include "gfxFontconfigUtils.h"
 #ifdef MOZ_PANGO
 #include "gfxPangoFonts.h"
@@ -95,8 +96,11 @@ gfxFontconfigUtils *gfxPlatformGtk::sFontconfigUtils = nsnull;
 
 #ifndef MOZ_PANGO
 typedef nsDataHashtable<nsStringHashKey, nsRefPtr<FontFamily> > FontTable;
+typedef nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<FontEntry> > > PrefFontTable;
 static FontTable *gPlatformFonts = NULL;
 static FontTable *gPlatformFontAliases = NULL;
+static PrefFontTable *gPrefFonts = NULL;
+static gfxSparseBitSet *gCodepointsWithNoFonts = NULL;
 static FT_Library gPlatformFTLibrary = NULL;
 #endif
 
@@ -119,6 +123,9 @@ gfxPlatformGtk::gfxPlatformGtk()
     gPlatformFonts->Init(100);
     gPlatformFontAliases = new FontTable();
     gPlatformFontAliases->Init(100);
+    gPrefFonts = new PrefFontTable();
+    gPrefFonts->Init(100);
+    gCodepointsWithNoFonts = new gfxSparseBitSet();
     UpdateFontList();
 #endif
 
@@ -137,6 +144,10 @@ gfxPlatformGtk::~gfxPlatformGtk()
     gPlatformFonts = NULL;
     delete gPlatformFontAliases;
     gPlatformFontAliases = NULL;
+    delete gPrefFonts;
+    gPrefFonts = NULL;
+    delete gCodepointsWithNoFonts;
+    gCodepointsWithNoFonts = NULL;
 
     FT_Done_FreeType(gPlatformFTLibrary);
     gPlatformFTLibrary = NULL;
@@ -369,15 +380,14 @@ gfxPlatformGtk::UpdateFontList()
 
         nsAutoString name(NS_ConvertUTF8toUTF16(nsDependentCString(str)).get());
         nsAutoString key(name);
-        /* FIXME DFB */
-        //ToLowerCase(key);
+        ToLowerCase(key);
         nsRefPtr<FontFamily> ff;
         if (!gPlatformFonts->Get(key, &ff)) {
             ff = new FontFamily(name);
             gPlatformFonts->Put(key, ff);
         }
 
-        FontEntry *fe = new FontEntry(ff->mName);
+        FontEntry *fe = new FontEntry(ff->Name());
         ff->AddFontEntry(fe);
 
         if (FcPatternGetString(fs->fonts[i], FC_FILE, 0, (FcChar8 **) &str) == FcResultMatch) {
@@ -429,13 +439,12 @@ gfxPlatformGtk::ResolveFontName(const nsAString& aFontName,
 {
 
     nsAutoString name(aFontName);
-    /* FIXME: DFB */
-    //ToLowerCase(name);
+    ToLowerCase(name);
 
     nsRefPtr<FontFamily> ff;
     if (gPlatformFonts->Get(name, &ff) ||
         gPlatformFontAliases->Get(name, &ff)) {
-        aAborted = !(*aCallback)(ff->mName, aClosure);
+        aAborted = !(*aCallback)(ff->Name(), aClosure);
         return NS_OK;
     }
 
@@ -451,8 +460,7 @@ gfxPlatformGtk::ResolveFontName(const nsAString& aFontName,
         if (FcPatternGetString(nfs->fonts[k], FC_FAMILY, 0, (FcChar8 **) &str) != FcResultMatch)
             continue;
         nsAutoString altName = NS_ConvertUTF8toUTF16(nsDependentCString(reinterpret_cast<char*>(str)));
-        /* FIXME: DFB */
-        //ToLowerCase(altName);
+        ToLowerCase(altName);
         if (gPlatformFonts->Get(altName, &ff)) {
             //printf("Adding alias: %s -> %s\n", utf8Name.get(), str);
             gPlatformFontAliases->Put(name, ff);
@@ -486,8 +494,7 @@ gfxPlatformGtk::ResolveFontName(const nsAString& aFontName,
         if (FcPatternGetString(nfs->fonts[k], FC_FAMILY, 0, (FcChar8 **) &str) != FcResultMatch)
             continue;
         nsAutoString altName = NS_ConvertUTF8toUTF16(nsDependentCString(reinterpret_cast<char*>(str)));
-        /* FIXME: DFB */
-        //ToLowerCase(altName);
+        ToLowerCase(altName);
         if (gPlatformFonts->Get(altName, &ff)) {
             //printf("Adding alias: %s -> %s\n", utf8Name.get(), str);
             gPlatformFontAliases->Put(name, ff);
@@ -668,8 +675,7 @@ FontFamily *
 gfxPlatformGtk::FindFontFamily(const nsAString& aName)
 {
     nsAutoString name(aName);
-    /* FIXME: DFB */
-    //ToLowerCase(name);
+    ToLowerCase(name);
 
     nsRefPtr<FontFamily> ff;
     if (!gPlatformFonts->Get(name, &ff)) {
@@ -686,6 +692,58 @@ gfxPlatformGtk::FindFontEntry(const nsAString& aName, const gfxFontStyle& aFontS
         return nsnull;
 
     return ff->FindFontEntry(aFontStyle);
+}
+
+static PLDHashOperator
+FindFontForCharProc(nsStringHashKey::KeyType aKey,
+                    nsRefPtr<FontFamily>& aFontFamily,
+                    void* aUserArg)
+{
+    FontSearch *data = (FontSearch*)aUserArg;
+    aFontFamily->FindFontForChar(data);
+    return PL_DHASH_NEXT;
+}
+
+already_AddRefed<gfxFont>
+gfxPlatformGtk::FindFontForChar(PRUint32 aCh, gfxFont *aFont)
+{
+    if (!gPlatformFonts || !gCodepointsWithNoFonts)
+        return nsnull;
+
+    // is codepoint with no matching font? return null immediately
+    if (gCodepointsWithNoFonts->test(aCh)) {
+        return nsnull;
+    }
+
+    FontSearch data(aCh, aFont);
+
+    // find fonts that support the character
+    gPlatformFonts->Enumerate(FindFontForCharProc, &data);
+
+    if (data.mBestMatch) {
+        nsRefPtr<gfxFT2Font> font =
+            gfxFT2Font::GetOrMakeFont(static_cast<FontEntry*>(data.mBestMatch.get()),
+                                      aFont->GetStyle()); 
+        gfxFont* ret = font.forget().get();
+        return already_AddRefed<gfxFont>(ret);
+    }
+
+    // no match? add to set of non-matching codepoints
+    gCodepointsWithNoFonts->set(aCh);
+
+    return nsnull;
+}
+
+PRBool
+gfxPlatformGtk::GetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<FontEntry> > *aFontEntryList)
+{
+    return gPrefFonts->Get(aKey, aFontEntryList);
+}
+
+void
+gfxPlatformGtk::SetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<FontEntry> >& aFontEntryList)
+{
+    gPrefFonts->Put(aKey, aFontEntryList);
 }
 #endif
 
