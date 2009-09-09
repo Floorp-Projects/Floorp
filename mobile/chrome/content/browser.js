@@ -1009,7 +1009,7 @@ var Browser = {
 
     /* Try to set zoom-level such that once zoomed element is as wide
      *  as the visible rect */
-    let zoomLevel = BrowserView.Util.clampZoomLevel((vrWidth + (2 * margin)) / elWidth);
+    let zoomLevel = BrowserView.Util.clampZoomLevel((vrWidth - (2 * margin)) / elWidth);
     let oldZoomLevel = bv.getZoomLevel();
 
     //dump("element width: " + elWidth + "\n");
