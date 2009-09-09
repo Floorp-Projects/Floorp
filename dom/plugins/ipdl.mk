@@ -38,5 +38,5 @@ IPDLSRCS = \
   PPluginModule.ipdl \
   PPluginInstance.ipdl \
   PPluginScriptableObject.ipdl \
-  PPluginStream.ipdl \
+  PBrowserStream.ipdl \
   $(NULL)

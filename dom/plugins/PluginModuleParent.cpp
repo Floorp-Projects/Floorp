@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/plugins/PluginModuleParent.h"
-#include "mozilla/plugins/PluginStreamParent.h"
+#include "mozilla/plugins/BrowserStreamParent.h"
 
 using mozilla::SharedLibrary;
 
@@ -274,13 +274,13 @@ PluginModuleParent::InstCast(NPP instance)
     return ip;
 }
 
-PluginStreamParent*
+BrowserStreamParent*
 PluginModuleParent::StreamCast(NPP instance,
                                NPStream* s)
 {
     PluginInstanceParent* ip = InstCast(instance);
-    PluginStreamParent* sp =
-        static_cast<PluginStreamParent*>(s->pdata);
+    BrowserStreamParent* sp =
+        static_cast<BrowserStreamParent*>(s->pdata);
     if (sp->mNPP != ip || s != sp->mStream) {
         NS_RUNTIMEABORT("Corrupted plugin stream data.");
     }

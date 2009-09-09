@@ -1,7 +1,5 @@
 /* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 et :
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -14,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Plugin App.
+ * The Original Code is Mozilla Plugins.
  *
  * The Initial Developer of the Original Code is
  *   Benjamin Smedberg <benjamin@smedbergs.us>
@@ -37,47 +35,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_plugins_PluginStreamChild_h
-#define mozilla_plugins_PluginStreamChild_h 1
+include protocol "PPluginInstance.ipdl";
 
-#include "mozilla/plugins/PPluginStreamProtocolChild.h"
+using mozilla::plugins::Buffer;
+using mozilla::plugins::IPCByteRanges;
+
+using NPError;
 
 namespace mozilla {
 namespace plugins {
 
-class PluginInstanceChild;
+/**
+ * NPBrowserStream represents a NPStream sent from the browser to the plugin.
+ */
 
-class PluginStreamChild : public PPluginStreamProtocolChild
+rpc protocol PBrowserStream
 {
-public:
-  PluginStreamChild(PluginInstanceChild* instance,
-                    const nsCString& url,
-                    const uint32_t& length,
-                    const uint32_t& lastmodified,
-                    const nsCString& headers,
-                    const nsCString& mimeType,
-                    const bool& seekable,
-                    NPError* rv,
-                    uint16_t* stype);
-  virtual ~PluginStreamChild() { }
+  manager PPluginInstance;
 
-  virtual nsresult AnswerNPP_WriteReady(const int32_t& newlength,
-                                        int32_t *size);
-  virtual nsresult AnswerNPP_Write(const int32_t& offset,
-                                   const Buffer& data,
-                                   int32_t* consumed);
+child:
+  rpc NPP_WriteReady(int32_t newlength)
+    returns (int32_t size);
 
-  virtual nsresult AnswerNPP_StreamAsFile(const nsCString& fname);
+  rpc NPP_Write(int32_t offset,
+                Buffer data)
+    returns (int32_t consumed);
 
-private:
-  PluginInstanceChild* mInstance;
-  NPStream mStream;
-  bool mClosed;
-  nsCString mURL;
-  nsCString mHeaders;
+  rpc NPP_StreamAsFile(nsCString fname);
+
+parent:
+  rpc NPN_RequestRead(IPCByteRanges ranges)
+    returns (NPError result);
 };
 
 } // namespace plugins
 } // namespace mozilla
-
-#endif /* mozilla_plugins_PluginStreamChild_h */

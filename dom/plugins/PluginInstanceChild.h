@@ -60,7 +60,7 @@ class PluginInstanceChild : public PPluginInstanceProtocolChild
 #endif
 
 protected:
-    friend class PluginStreamChild;
+    friend class BrowserStreamChild;
 
     virtual nsresult AnswerNPP_SetWindow(const NPWindow& window, NPError* rv);
 
@@ -74,20 +74,20 @@ protected:
                                       NPError* _retval);
 
 
-    virtual PPluginStreamProtocolChild*
-    PPluginStreamConstructor(const nsCString& url,
-                             const uint32_t& length,
-                             const uint32_t& lastmodified,
-                             const nsCString& headers,
-                             const nsCString& mimeType,
-                             const bool& seekable,
-                             NPError* rv,
-                             uint16_t *stype);
+    virtual PBrowserStreamProtocolChild*
+    PBrowserStreamConstructor(const nsCString& url,
+                              const uint32_t& length,
+                              const uint32_t& lastmodified,
+                              const nsCString& headers,
+                              const nsCString& mimeType,
+                              const bool& seekable,
+                              NPError* rv,
+                              uint16_t *stype);
 
     virtual nsresult
-    PPluginStreamDestructor(PPluginStreamProtocolChild* stream,
-                            const NPError& reason,
-                            const bool& artificial);
+    PBrowserStreamDestructor(PBrowserStreamProtocolChild* stream,
+                             const NPError& reason,
+                             const bool& artificial);
 
 public:
     PluginInstanceChild(const NPPluginFuncs* aPluginIface) :

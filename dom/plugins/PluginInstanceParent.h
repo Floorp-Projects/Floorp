@@ -50,12 +50,12 @@
 namespace mozilla {
 namespace plugins {
 
-class PluginStreamParent;
+class BrowserStreamParent;
 
 class PluginInstanceParent : public PPluginInstanceProtocolParent
 {
     friend class PluginModuleParent;
-    friend class PluginStreamParent;
+    friend class BrowserStreamParent;
 
 public:
     PluginInstanceParent(NPP npp, const NPNetscapeFuncs* npniface)
@@ -80,25 +80,25 @@ public:
     PPluginScriptableObjectDestructor(PPluginScriptableObjectProtocolParent* aObject,
                                       NPError* _retval);
 
-    virtual PPluginStreamProtocolParent*
-    PPluginStreamConstructor(const nsCString& url,
-                             const uint32_t& length,
-                             const uint32_t& lastmodified,
-                             const nsCString& headers,
-                             const nsCString& mimeType,
-                             const bool& seekable,
-                             NPError* rv,
-                             uint16_t *stype);
+    virtual PBrowserStreamProtocolParent*
+    PBrowserStreamConstructor(const nsCString& url,
+                              const uint32_t& length,
+                              const uint32_t& lastmodified,
+                              const nsCString& headers,
+                              const nsCString& mimeType,
+                              const bool& seekable,
+                              NPError* rv,
+                              uint16_t *stype);
 
     virtual nsresult
-    AnswerPPluginStreamDestructor(PPluginStreamProtocolParent* stream,
-                                  const NPError& reason,
-                                  const bool& artificial);
+    AnswerPBrowserStreamDestructor(PBrowserStreamProtocolParent* stream,
+                                   const NPError& reason,
+                                   const bool& artificial);
 
     virtual nsresult
-    PPluginStreamDestructor(PPluginStreamProtocolParent* stream,
-                            const NPError& reason,
-                            const bool& artificial);
+    PBrowserStreamDestructor(PBrowserStreamProtocolParent* stream,
+                             const NPError& reason,
+                             const bool& artificial);
 
     NPError NPP_SetWindow(NPWindow* aWindow);
     NPError NPP_GetValue(NPPVariable variable, void *ret_value);

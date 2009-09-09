@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "PluginInstanceChild.h"
-#include "PluginStreamChild.h"
+#include "BrowserStreamChild.h"
 
 #if defined(OS_LINUX)
 
@@ -377,24 +377,24 @@ PluginInstanceChild::PPluginScriptableObjectDestructor(PPluginScriptableObjectPr
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-PPluginStreamProtocolChild*
-PluginInstanceChild::PPluginStreamConstructor(const nsCString& url,
-                                              const uint32_t& length,
-                                              const uint32_t& lastmodified,
-                                              const nsCString& headers,
-                                              const nsCString& mimeType,
-                                              const bool& seekable,
-                                              NPError* rv,
-                                              uint16_t *stype)
+PBrowserStreamProtocolChild*
+PluginInstanceChild::PBrowserStreamConstructor(const nsCString& url,
+                                               const uint32_t& length,
+                                               const uint32_t& lastmodified,
+                                               const nsCString& headers,
+                                               const nsCString& mimeType,
+                                               const bool& seekable,
+                                               NPError* rv,
+                                               uint16_t *stype)
 {
-    return new PluginStreamChild(this, url, length, lastmodified, headers,
-                                 mimeType, seekable, rv, stype);
+    return new BrowserStreamChild(this, url, length, lastmodified, headers,
+                                  mimeType, seekable, rv, stype);
 }
 
 nsresult
-PluginInstanceChild::PPluginStreamDestructor(PPluginStreamProtocolChild* stream,
-                                             const NPError& reason,
-                                             const bool& artificial)
+PluginInstanceChild::PBrowserStreamDestructor(PBrowserStreamProtocolChild* stream,
+                                              const NPError& reason,
+                                              const bool& artificial)
 {
     delete stream;
     return NS_OK;

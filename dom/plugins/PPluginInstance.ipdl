@@ -39,7 +39,7 @@
 
 include protocol "PPluginModule.ipdl";
 include protocol "PPluginScriptableObject.ipdl";
-include protocol "PPluginStream.ipdl";
+include protocol "PBrowserStream.ipdl";
 
 include "mozilla/plugins/PluginMessageUtils.h";
 
@@ -54,16 +54,16 @@ rpc protocol PPluginInstance
   manager PPluginModule;
 
   manages PPluginScriptableObject;
-  manages PPluginStream;
+  manages PBrowserStream;
 
 child:
   /* NPP_NewStream */
-  rpc PPluginStream(nsCString url,
-                    uint32_t length,
-                    uint32_t lastmodified,
-                    nsCString headers,
-                    nsCString mimeType,
-                    bool seekable)
+  rpc PBrowserStream(nsCString url,
+                     uint32_t length,
+                     uint32_t lastmodified,
+                     nsCString headers,
+                     nsCString mimeType,
+                     bool seekable)
     returns (NPError rv,
              uint16_t stype);
 
@@ -80,12 +80,12 @@ parent:
 
 both:
   /**
-   * ~PluginStream is for both NPN_DestroyStream and NPP_DestroyStream.
+   * ~BrowserStream is for both NPN_DestroyStream and NPP_DestroyStream.
    * @param artificial True when the stream is closed as a by-product of
    *                        some other call (such as a failure in NPP_Write).
    */
-  rpc ~PPluginStream(NPError reason,
-                     bool artificial);
+  rpc ~PBrowserStream(NPError reason,
+                      bool artificial);
 };
 
 } // namespace plugins
