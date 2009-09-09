@@ -191,8 +191,6 @@ nsViewManager::~nsViewManager()
     NS_RELEASE(mRootViewManager);
   }
 
-  mRootScrollable = nsnull;
-
   NS_ASSERTION((mVMCount > 0), "underflow of viewmanagers");
   --mVMCount;
 
@@ -804,15 +802,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
   nsView* view = static_cast<nsView*>(aView);
 
   nsRect damagedRect(aRect);
-
-   // If the rectangle is not visible then abort
-   // without invalidating. This is a performance 
-   // enhancement since invalidating a native widget
-   // can be expensive.
-   // This also checks for silly request like damagedRect.width = 0 or damagedRect.height = 0
-  nsRectVisibility rectVisibility;
-  GetRectVisibility(view, damagedRect, 0, &rectVisibility);
-  if (rectVisibility != nsRectVisibility_kVisible) {
+  if (damagedRect.IsEmpty()) {
     return NS_OK;
   }
 
@@ -1781,18 +1771,6 @@ NS_IMETHODIMP nsViewManager::EndUpdateViewBatch(PRUint32 aUpdateFlags)
   return result;
 }
 
-NS_IMETHODIMP nsViewManager::SetRootScrollableView(nsIScrollableView *aScrollable)
-{
-  mRootScrollable = aScrollable;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsViewManager::GetRootScrollableView(nsIScrollableView **aScrollable)
-{
-  *aScrollable = mRootScrollable;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsViewManager::GetRootWidget(nsIWidget **aWidget)
 {
   if (!mRootView) {
@@ -1844,128 +1822,6 @@ nsIntRect nsViewManager::ViewToWidget(nsView *aView, nsView* aWidgetView, const 
 
   // finally, convert to device coordinates.
   return rect.ToOutsidePixels(mContext->AppUnitsPerDevPixel());
-}
-
-nsresult nsViewManager::GetVisibleRect(nsRect& aVisibleRect)
-{
-  nsresult rv = NS_OK;
-
-  // Get the viewport scroller
-  nsIScrollableView* scrollingView;
-  GetRootScrollableView(&scrollingView);
-
-  if (scrollingView) {   
-    // Determine the visible rect in the scrolled view's coordinate space.
-    // The size of the visible area is the clip view size
-    nsScrollPortView* clipView = static_cast<nsScrollPortView*>(scrollingView);
-    clipView->GetDimensions(aVisibleRect);
-
-    scrollingView->GetScrollPosition(aVisibleRect.x, aVisibleRect.y);
-  } else {
-    rv = NS_ERROR_FAILURE;
-  }
-
-  return rv;
-}
-
-nsresult nsViewManager::GetAbsoluteRect(nsView *aView, const nsRect &aRect, 
-                                        nsRect& aAbsRect)
-{
-  nsIScrollableView* scrollingView = nsnull;
-  GetRootScrollableView(&scrollingView);
-  if (nsnull == scrollingView) { 
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIView* scrolledIView = nsnull;
-  scrollingView->GetScrolledView(scrolledIView);
-  
-  nsView* scrolledView = static_cast<nsView*>(scrolledIView);
-
-  // Calculate the absolute coordinates of the aRect passed in.
-  // aRects values are relative to aView
-  aAbsRect = aRect;
-  nsView *parentView = aView;
-  while ((parentView != nsnull) && (parentView != scrolledView)) {
-    parentView->ConvertToParentCoords(&aAbsRect.x, &aAbsRect.y);
-    parentView = parentView->GetParent();
-  }
-
-  if (parentView != scrolledView) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP nsViewManager::GetRectVisibility(nsIView *aView, 
-                                               const nsRect &aRect,
-                                               nscoord aMinTwips,
-                                               nsRectVisibility *aRectVisibility)
-{
-  nsView* view = static_cast<nsView*>(aView);
-
-  // The parameter aMinTwips determines how many rows/cols of pixels must be visible on each side of the element,
-  // in order to be counted as visible
-
-  *aRectVisibility = nsRectVisibility_kZeroAreaRect;
-  if (aRect.width == 0 || aRect.height == 0) {
-    return NS_OK;
-  }
-
-  // is this view even visible?
-  if (!view->IsEffectivelyVisible()) {
-    return NS_OK; 
-  }
-
-  // nsViewManager::InsertChild ensures that descendants of floating views
-  // are also marked floating.
-  if (view->GetFloating()) {
-    *aRectVisibility = nsRectVisibility_kVisible;
-    return NS_OK;
-  }
-
-  // Calculate the absolute coordinates for the visible rectangle   
-  nsRect visibleRect;
-  if (GetVisibleRect(visibleRect) == NS_ERROR_FAILURE) {
-    *aRectVisibility = nsRectVisibility_kVisible;
-    return NS_OK;
-  }
-
-  // Calculate the absolute coordinates of the aRect passed in.
-  // aRects values are relative to aView
-  nsRect absRect;
-  if ((GetAbsoluteRect(view, aRect, absRect)) == NS_ERROR_FAILURE) {
-    *aRectVisibility = nsRectVisibility_kVisible;
-    return NS_OK;
-  }
- 
-  /*
-   * If aMinTwips > 0, ensure at least aMinTwips of space around object is visible
-   * The object is not visible if:
-   * ((objectTop     < windowTop    && objectBottom < windowTop) ||
-   *  (objectBottom  > windowBottom && objectTop    > windowBottom) ||
-   *  (objectLeft    < windowLeft   && objectRight  < windowLeft) ||
-   *  (objectRight   > windowRight  && objectLeft   > windowRight))
-   */
-
-  if (absRect.y < visibleRect.y  && 
-      absRect.y + absRect.height < visibleRect.y + aMinTwips)
-    *aRectVisibility = nsRectVisibility_kAboveViewport;
-  else if (absRect.y + absRect.height > visibleRect.y + visibleRect.height &&
-           absRect.y > visibleRect.y + visibleRect.height - aMinTwips)
-    *aRectVisibility = nsRectVisibility_kBelowViewport;
-  else if (absRect.x < visibleRect.x && 
-           absRect.x + absRect.width < visibleRect.x + aMinTwips)
-    *aRectVisibility = nsRectVisibility_kLeftOfViewport;
-  else if (absRect.x + absRect.width > visibleRect.x  + visibleRect.width &&
-           absRect.x > visibleRect.x + visibleRect.width - aMinTwips)
-    *aRectVisibility = nsRectVisibility_kRightOfViewport;
-  else
-    *aRectVisibility = nsRectVisibility_kVisible;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
