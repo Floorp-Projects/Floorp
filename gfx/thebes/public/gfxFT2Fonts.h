@@ -65,9 +65,6 @@ public:
 protected:
     virtual PRBool FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
                                        PRBool anItalic, PRInt16 aStretch);
-
-public:
-    nsString mName;
 };
 
 class FontEntry : public gfxFontEntry
@@ -76,6 +73,7 @@ public:
     FontEntry(const nsAString& aFaceName) :
         gfxFontEntry(aFaceName)
     {
+        mFTFace = nsnull;
         mFontFace = nsnull;
         mFTFontIndex = 0;
     }
@@ -95,7 +93,9 @@ public:
     CreateFontEntryFromFace(FT_Face aFace);
     
     cairo_font_face_t *CairoFontFace();
+    nsresult ReadCMAP();
 
+    FT_Face mFTFace;
     cairo_font_face_t *mFontFace;
 
     nsString mFaceName;
@@ -124,6 +124,8 @@ public: // new functions
 
     static already_AddRefed<gfxFT2Font>
     GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle);
+    static already_AddRefed<gfxFT2Font>
+    GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle);
 
 private:
     cairo_scaled_font_t *mScaledFont;
@@ -180,17 +182,18 @@ protected: // new functions
                                 void *closure);
     PRBool mEnableKerning;
 
-    gfxFT2Font *FindFontForChar(PRUint32 ch, PRUint32 prevCh, PRUint32 nextCh, gfxFT2Font *aFont);
-    PRUint32 ComputeRanges();
+    void GetPrefFonts(const char *aLangGroup,
+                      nsTArray<nsRefPtr<FontEntry> >& aFontEntryList);
+    void GetCJKPrefFonts(nsTArray<nsRefPtr<FontEntry> >& aFontEntryList);
+    void FamilyListToArrayList(const nsString& aFamilies,
+                               const nsCString& aLangGroup,
+                               nsTArray<nsRefPtr<FontEntry> > *aFontEntryList);
+    already_AddRefed<gfxFT2Font> WhichFontSupportsChar(const nsTArray<nsRefPtr<FontEntry> >& aFontEntryList,
+                                                       PRUint32 aCh);
+    already_AddRefed<gfxFont> WhichPrefFontSupportsChar(PRUint32 aCh);
+    already_AddRefed<gfxFont> WhichSystemFontSupportsChar(PRUint32 aCh);
 
-    struct TextRange {
-        TextRange(PRUint32 aStart,  PRUint32 aEnd) : start(aStart), end(aEnd) { }
-        PRUint32 Length() const { return end - start; }
-        nsRefPtr<gfxFT2Font> font;
-        PRUint32 start, end;
-    };
-
-    nsTArray<TextRange> mRanges;
+    nsTArray<gfxTextRange> mRanges;
     nsString mString;
 };
 
