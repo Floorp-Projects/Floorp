@@ -912,7 +912,7 @@ PluginModuleChild::AnswerNP_Initialize(NPError* _retval)
 #endif
 }
 
-PPluginInstanceProtocolChild*
+PPluginInstanceChild*
 PluginModuleChild::PPluginInstanceConstructor(const nsCString& aMimeType,
                                               const uint16_t& aMode,
                                               const nsTArray<nsCString>& aNames,
@@ -966,7 +966,7 @@ PluginModuleChild::PPluginInstanceConstructor(const nsCString& aMimeType,
 }
 
 nsresult
-PluginModuleChild::PPluginInstanceDestructor(PPluginInstanceProtocolChild* actor,
+PluginModuleChild::PPluginInstanceDestructor(PPluginInstanceChild* actor,
                                              NPError* rv)
 {
     _MOZ_LOG(__FUNCTION__);

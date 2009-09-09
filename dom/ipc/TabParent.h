@@ -39,7 +39,7 @@
 #ifndef mozilla_tabs_TabParent_h
 #define mozilla_tabs_TabParent_h
 
-#include "mozilla/dom/PIFrameEmbeddingProtocolParent.h"
+#include "mozilla/dom/PIFrameEmbeddingParent.h"
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
@@ -48,8 +48,7 @@ class nsIURI;
 namespace mozilla {
 namespace dom {
 
-class TabParent
-    : public PIFrameEmbeddingProtocolParent
+class TabParent : public PIFrameEmbeddingParent
 {
 public:
     TabParent();

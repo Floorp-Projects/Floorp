@@ -38,14 +38,13 @@
 #ifndef ipc_test_harness_TestParent_h
 #define ipc_test_harness_TestParent_h 1
 
-#include "mozilla/test/PTestProtocolParent.h"
+#include "mozilla/test/PTestParent.h"
 
 namespace mozilla {
 namespace test {
 
 // Header file contents
-class TestParent :
-    public PTestProtocolParent
+class TestParent : public PTestParent
 {
 protected:
 #if 1

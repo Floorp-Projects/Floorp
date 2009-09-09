@@ -3,14 +3,14 @@
 #ifndef mozilla_plugins_BrowserStreamParent_h
 #define mozilla_plugins_BrowserStreamParent_h
 
-#include "mozilla/plugins/PBrowserStreamProtocolParent.h"
+#include "mozilla/plugins/PBrowserStreamParent.h"
 
 namespace mozilla {
 namespace plugins {
 
 class PluginInstanceParent;
 
-class BrowserStreamParent : public PBrowserStreamProtocolParent
+class BrowserStreamParent : public PBrowserStreamParent
 {
   friend class PluginModuleParent;
   friend class PluginInstanceParent;

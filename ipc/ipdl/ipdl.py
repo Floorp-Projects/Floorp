@@ -81,7 +81,7 @@ for f in files:
         print >>sys.stderr, 'Specification could not be parsed.'
         sys.exit(1)
 
-    allprotocols.append('%sProtocolMsgStart' % ast.protocol.name)
+    allprotocols.append('%sMsgStart' % ast.protocol.name)
 
     log(2, 'checking types')
     if not ipdl.typecheck(ast):

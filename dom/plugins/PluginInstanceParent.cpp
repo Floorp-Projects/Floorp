@@ -42,7 +42,7 @@
 namespace mozilla {
 namespace plugins {
 
-PBrowserStreamProtocolParent*
+PBrowserStreamParent*
 PluginInstanceParent::PBrowserStreamConstructor(const nsCString& url,
                                                 const uint32_t& length,
                                                 const uint32_t& lastmodified,
@@ -57,7 +57,7 @@ PluginInstanceParent::PBrowserStreamConstructor(const nsCString& url,
 }
 
 nsresult
-PluginInstanceParent::AnswerPBrowserStreamDestructor(PBrowserStreamProtocolParent* stream,
+PluginInstanceParent::AnswerPBrowserStreamDestructor(PBrowserStreamParent* stream,
                                                      const NPError& reason,
                                                      const bool& artificial)
 {
@@ -68,7 +68,7 @@ PluginInstanceParent::AnswerPBrowserStreamDestructor(PBrowserStreamProtocolParen
 }
 
 nsresult
-PluginInstanceParent::PBrowserStreamDestructor(PBrowserStreamProtocolParent* stream,
+PluginInstanceParent::PBrowserStreamDestructor(PBrowserStreamParent* stream,
                                                const NPError& reason,
                                                const bool& artificial)
 {
@@ -136,7 +136,7 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
     return CallPBrowserStreamDestructor(sp, reason, false);
 }
 
-PPluginScriptableObjectProtocolParent*
+PPluginScriptableObjectParent*
 PluginInstanceParent::PPluginScriptableObjectConstructor(NPError* _retval)
 {
     NS_NOTYETIMPLEMENTED("PluginInstanceParent::PPluginScriptableObjectConstructor");
@@ -144,7 +144,7 @@ PluginInstanceParent::PPluginScriptableObjectConstructor(NPError* _retval)
 }
 
 nsresult
-PluginInstanceParent::PPluginScriptableObjectDestructor(PPluginScriptableObjectProtocolParent* aObject,
+PluginInstanceParent::PPluginScriptableObjectDestructor(PPluginScriptableObjectParent* aObject,
                                                         NPError* _retval)
 {
     NS_NOTYETIMPLEMENTED("PluginInstanceParent::PPluginScriptableObjectDestructor");

@@ -37,7 +37,7 @@
 #include "TestShellChild.h"
 
 using mozilla::ipc::TestShellChild;
-using mozilla::ipc::PTestShellCommandProtocolChild;
+using mozilla::ipc::PTestShellCommandChild;
 using mozilla::ipc::XPCShellEnvironment;
 
 TestShellChild::TestShellChild()
@@ -56,14 +56,14 @@ TestShellChild::RecvExecuteCommand(const nsString& aCommand)
   return mXPCShell->EvaluateString(aCommand) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-PTestShellCommandProtocolChild*
+PTestShellCommandChild*
 TestShellChild::PTestShellCommandConstructor(const nsString& aCommand)
 {
-  return new PTestShellCommandProtocolChild();
+  return new PTestShellCommandChild();
 }
 
 nsresult
-TestShellChild::PTestShellCommandDestructor(PTestShellCommandProtocolChild* aCommand,
+TestShellChild::PTestShellCommandDestructor(PTestShellCommandChild* aCommand,
                                             const nsString& aResponse)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
@@ -72,7 +72,7 @@ TestShellChild::PTestShellCommandDestructor(PTestShellCommandProtocolChild* aCom
 }
 
 nsresult
-TestShellChild::RecvPTestShellCommandConstructor(PTestShellCommandProtocolChild* aActor,
+TestShellChild::RecvPTestShellCommandConstructor(PTestShellCommandChild* aActor,
                                                  const nsString& aCommand)
 {
   NS_ASSERTION(aActor, "Shouldn't be null!");

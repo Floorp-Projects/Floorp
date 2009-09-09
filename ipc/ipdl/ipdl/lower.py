@@ -48,11 +48,11 @@ def _protocolHeaderFilename(p, pname):
     return _joinProtocolNamespacesName('/', p, pname)+ '.h'
 
 def _protocolHeaderName(pname):
-    return pname +'Protocol'
+    return pname
 
 def _actorName(pname, side):
     """|pname| is the protocol name. |side| is 'Parent' or 'Child'."""
-    return pname +'Protocol'+ side
+    return pname + side
 
 def _makeForwardDecl(p, side):
     clsname = _actorName(p.decl.type.qname.baseid, side)
