@@ -119,10 +119,10 @@
 #include "nsICommandManager.h"
 #include "nsCRT.h"
 
-class nsIScrollableView;
 class nsDocShell;
 class nsIController;
 class OnLinkClickEvent;
+class nsIScrollableFrame;
 
 /* load commands were moved to nsIDocShell.h */
 /* load types were moved to nsDocShellLoadTypes.h */
@@ -480,7 +480,7 @@ protected:
         nsIStringBundle ** aStringBundle);
     NS_IMETHOD GetChildOffset(nsIDOMNode * aChild, nsIDOMNode * aParent,
         PRInt32 * aOffset);
-    NS_IMETHOD GetRootScrollableView(nsIScrollableView ** aOutScrollView);
+    nsIScrollableFrame* GetRootScrollFrame();
     NS_IMETHOD EnsureScriptEnvironment();
     NS_IMETHOD EnsureEditorData();
     nsresult   EnsureTransferableHookData();
