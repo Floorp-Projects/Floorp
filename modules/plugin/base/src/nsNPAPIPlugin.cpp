@@ -95,8 +95,8 @@ using mozilla::SharedLibrary;
 using mozilla::SharedPRLibrary;
 
 #ifdef MOZ_IPC
-#include "mozilla/plugins/NPAPIPluginParent.h"
-using mozilla::plugins::NPAPIPluginParent;
+#include "mozilla/plugins/PluginModuleParent.h"
+using mozilla::plugins::PluginModuleParent;
 #endif
 
 static PRLock *sPluginThreadAsyncCallLock = nsnull;
@@ -397,7 +397,7 @@ GetNewSharedLibrary(const char* aFilePath,
 {
 #ifdef MOZ_IPC
   if (aFilePath && OOPPluginsEnabled()) {
-    return NPAPIPluginParent::LoadModule(aFilePath, aLibrary);
+    return PluginModuleParent::LoadModule(aFilePath, aLibrary);
   }
 #endif
   return new SharedPRLibrary(aFilePath, aLibrary);
