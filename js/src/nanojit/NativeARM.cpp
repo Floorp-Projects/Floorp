@@ -519,13 +519,7 @@ Assembler::nFragExit(LInsp guard)
         // will work correctly.
         JMP_far(_epilogue);
 
-        // Load the guard record pointer into R2. We want it in R0 but we can't
-        // do this at this stage because R0 is used for something else.
-        // I don't understand why I can't load directly into R0. It works for
-        // the JavaScript JIT but not for the Regular Expression compiler.
-        // However, I haven't pushed this further as it only saves a single MOV
-        // instruction in genEpilogue.
-        asm_ld_imm(R2, int(gr));
+        asm_ld_imm(R0, int(gr));
 
         // Set the jmp pointer to the start of the sequence so that patched
         // branches can skip the LDi sequence.
@@ -555,10 +549,6 @@ Assembler::genEpilogue()
     RegisterMask savingMask = rmask(FP) | rmask(PC);
 
     POP_mask(savingMask); // regs
-
-    // nFragExit loads the guard record pointer into R2, but we need it in R0
-    // so it must be moved here.
-    MOV(R0,R2); // return GuardRecord*
 
     return _nIns;
 }
