@@ -220,6 +220,16 @@ extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
     (JS_ASSERT(HAS_FUNCTION_CLASS(funobj)),                                   \
      (JSFunction *) (funobj)->getPrivate())
 
+struct js_ArgsPrivateNative;
+
+inline js_ArgsPrivateNative *
+js_GetArgsPrivateNative(JSObject *argsobj)
+{
+    JS_ASSERT(STOBJ_GET_CLASS(argsobj) == &js_ArgumentsClass);
+    uintptr_t p = (uintptr_t) argsobj->getPrivate();
+    return (js_ArgsPrivateNative *) (p & 2 ? p & ~2 : NULL);
+}
+
 extern JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj);
 
