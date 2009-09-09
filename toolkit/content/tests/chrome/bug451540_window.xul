@@ -43,7 +43,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
-        onload="onLoad();"
         title="451540 test">
 
   <script type="application/javascript"><![CDATA[
@@ -240,6 +239,8 @@
       testInput(textarea, "Textarea:");
       finishTest();
     }
+
+    window.opener.wrappedJSObject.SimpleTest.waitForFocus(onLoad, window);
   ]]></script>
 
   <browser type="content-primary" flex="1" id="content" src="about:blank"/>

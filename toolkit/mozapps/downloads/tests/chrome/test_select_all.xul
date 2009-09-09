@@ -115,45 +115,31 @@ function test()
       if (aTopic != DLMGR_UI_DONE)
         return;
 
-      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.focus();
-
-      var checkSelectAndRemove = function(alreadyFocused)
-      {
-        if (!alreadyFocused) {
-          win.removeEventListener("focus", checkSelectAndRemove, true);
-        }
-
-        let $ = function(aId) win.document.getElementById(aId);
-        let downloadView = $("downloadView");
-        is(downloadView.itemCount, sites.length, "All downloads displayed");
-
-        // Select all downloads
-        let isMac = navigator.platform.search("Mac") == 0;
-        synthesizeKey("a", { metaKey: isMac, ctrlKey: !isMac }, win);
-        is(downloadView.selectedCount, sites.length, "All downloads selected");
-
-        // Delete all downloads
-        synthesizeKey("VK_DELETE", {}, win);
-        is(downloadView.itemCount, 0, "All downloads removed");
-
-        // We're done!
-        win.close();
-        obs.removeObserver(testObs, DLMGR_UI_DONE);
-        SimpleTest.finish();
-      }
-
-      // if the downloads window is focused, continue, otherwise, wait until it is focused
-      var fm = Components.classes["@mozilla.org/focus-manager;1"].
-                          getService(Components.interfaces.nsIFocusManager);
-      if (fm.activeWindow == win) {
-        checkSelectAndRemove(true);
-      }
-      else {
-        win.addEventListener("focus", checkSelectAndRemove, true);
-      }
+      SimpleTest.waitForFocus(function () { checkSelectAndRemove(aSubject) }, aSubject);
     }
   };
+
+  var checkSelectAndRemove = function(win)
+  {
+    let $ = function(aId) win.document.getElementById(aId);
+    let downloadView = $("downloadView");
+    is(downloadView.itemCount, sites.length, "All downloads displayed");
+
+    // Select all downloads
+    let isMac = navigator.platform.search("Mac") == 0;
+    synthesizeKey("a", { metaKey: isMac, ctrlKey: !isMac }, win);
+    is(downloadView.selectedCount, sites.length, "All downloads selected");
+
+    // Delete all downloads
+    synthesizeKey("VK_DELETE", {}, win);
+    is(downloadView.itemCount, 0, "All downloads removed");
+
+    // We're done!
+    win.close();
+    obs.removeObserver(testObs, DLMGR_UI_DONE);
+    SimpleTest.finish();
+  }
+
   obs.addObserver(testObs, DLMGR_UI_DONE, false);
 
   // Show the Download Manager UI
