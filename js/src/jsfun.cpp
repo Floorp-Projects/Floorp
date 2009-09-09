@@ -69,6 +69,7 @@
 #include "jsstr.h"
 #include "jsexn.h"
 #include "jsstaticcheck.h"
+#include "jstracer.h"
 
 #if JS_HAS_GENERATORS
 # include "jsiter.h"
