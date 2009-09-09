@@ -44,20 +44,19 @@
 
 #include "nsISupports.h"
 #include "nsCoord.h"
-#include "nsIViewManager.h"
-#include "nsIScrollableViewProvider.h"
 #include "nsPresContext.h"
 #include "nsIFrame.h" // to get nsIBox, which is a typedef
 
 class nsBoxLayoutState;
 class nsIScrollPositionListener;
+class nsIScrollableView;
 
 /**
  * Interface for frames that are scrollable. This interface exposes
  * APIs for examining scroll state, observing changes to scroll state,
  * and triggering scrolling.
  */
-class nsIScrollableFrame : public nsIScrollableViewProvider {
+class nsIScrollableFrame : public nsQueryFrame {
 public:
 
   NS_DECL_QUERYFRAME_TARGET(nsIScrollableFrame)

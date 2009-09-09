@@ -51,7 +51,6 @@
 #include "nsBaseWidget.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsIPluginWidget.h"
-#include "nsIScrollableView.h"
 #include "nsWeakPtr.h"
 #include "nsCocoaTextInputHandler.h"
 #include "nsCocoaUtils.h"
