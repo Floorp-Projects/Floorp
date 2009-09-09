@@ -40,7 +40,6 @@ testFileTxt = createFileWithDataExt(testData, ".txt");
 testFilePng = createFileWithDataExt(testData, ".png");
 testFileJpg = createFileWithDataExt(testData, ".jpg");
 testFileGif = createFileWithDataExt(testData, ".gif");
-testFilePdf = createFileWithDataExt(testData, ".pdf");
 testFileXml = createFileWithDataExt(testData, ".xml");
 testFileUnknown = createFileWithDataExt(testData, "noext");
 
@@ -156,11 +155,6 @@ tests = [{ body: null,
            resContentType: "image/gif",
            resContentLength: testData.length,
          },
-         { body: testFilePdf,
-           resBody: testData,
-           resContentType: "application/pdf",
-           resContentLength: testData.length,
-         },
          { body: testFileXml,
            resBody: testData,
            resContentType: "text/xml",
@@ -220,7 +214,6 @@ function cleanUpData() {
   removeFileWithExt(".png");
   removeFileWithExt(".jpg");
   removeFileWithExt(".gif");
-  removeFileWithExt(".pdf");
   removeFileWithExt(".xml");
   removeFileWithExt("noext");
 }
