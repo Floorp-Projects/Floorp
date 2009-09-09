@@ -75,6 +75,8 @@
 #include "jstracer.h"
 #include "jsvector.h"
 
+#include "jsscriptinlines.h"
+
 #include "jsautooplen.h"
 
 /*
@@ -369,9 +371,9 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
             v = ATOM_KEY(atom);
         } else {
             if (type == JOF_OBJECT)
-                JS_GET_SCRIPT_OBJECT(script, index, obj);
+                obj = script->getObject(index);
             else
-                JS_GET_SCRIPT_REGEXP(script, index, obj);
+                obj = script->getRegExp(index);
             v = OBJECT_TO_JSVAL(obj);
         }
         bytes = ToDisassemblySource(cx, v);
@@ -455,7 +457,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
             JS_GET_SCRIPT_ATOM(script, pc, index, atom);
             v = ATOM_KEY(atom);
         } else {
-            JS_GET_SCRIPT_OBJECT(script, index, obj);
+            obj = script->getObject(index);
             v = OBJECT_TO_JSVAL(obj);
         }
         bytes = ToDisassemblySource(cx, v);
@@ -1297,10 +1299,10 @@ GetLocal(SprintStack *ss, jsint i)
     script = ss->printer->script;
     if (script->objectsOffset == 0)
         return GetStr(ss, i);
-    for (j = 0, n = JS_SCRIPT_OBJECTS(script)->length; ; j++) {
+    for (j = 0, n = script->objects()->length; ; j++) {
         if (j == n)
             return GetStr(ss, i);
-        JS_GET_SCRIPT_OBJECT(script, j, obj);
+        obj = script->getObject(j);
         if (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
             depth = OBJ_BLOCK_DEPTH(cx, obj);
             count = OBJ_BLOCK_COUNT(cx, obj);
@@ -2241,9 +2243,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     break;
 
                   case SRC_FUNCDEF:
-                    JS_GET_SCRIPT_FUNCTION(jp->script,
-                                           js_GetSrcNoteOffset(sn, 0),
-                                           fun);
+                    fun = jp->script->getFunction(js_GetSrcNoteOffset(sn, 0));
                   do_function:
                     js_puts(jp, "\n");
                     jp2 = JS_NEW_PRINTER(cx, "nested_function", fun,
@@ -2812,7 +2812,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               {
                 if (!jp->fun) {
                     JS_ASSERT(jp->script->flags & JSSF_SAVED_CALLER_FUN);
-                    JS_GET_SCRIPT_FUNCTION(jp->script, 0, jp->fun);
+                    jp->fun = jp->script->getFunction(0);
                 }
 
                 if (!jp->localNames)
@@ -2844,7 +2844,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                         JS_ASSERT(jp->script->upvarsOffset != 0);
                     }
 #endif
-                    uva = JS_SCRIPT_UPVARS(jp->script);
+                    uva = jp->script->upvars();
                     index = UPVAR_FRAME_SLOT(uva->vector[index]);
                 }
                 atom = GetArgOrVarAtom(jp, index);

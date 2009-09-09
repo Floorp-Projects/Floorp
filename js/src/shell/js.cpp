@@ -1574,7 +1574,7 @@ SrcNotes(JSContext *cx, JSScript *script)
 
     fprintf(gOutFile, "\nSource notes:\n");
     offset = 0;
-    notes = SCRIPT_NOTES(script);
+    notes = script->notes();
     switchTableEnd = switchTableStart = 0;
     for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         delta = SN_DELTA(sn);
@@ -1632,7 +1632,7 @@ SrcNotes(JSContext *cx, JSScript *script)
             JSFunction *fun;
 
             index = js_GetSrcNoteOffset(sn, 0);
-            JS_GET_SCRIPT_OBJECT(script, index, obj);
+            obj = script->getObject(index);
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
             str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             if (str) {
@@ -1700,8 +1700,8 @@ TryNotes(JSContext *cx, JSScript *script)
     if (script->trynotesOffset == 0)
         return JS_TRUE;
 
-    tn = JS_SCRIPT_TRYNOTES(script)->vector;
-    tnlimit = tn + JS_SCRIPT_TRYNOTES(script)->length;
+    tn = script->trynotes()->vector;
+    tnlimit = tn + script->trynotes()->length;
     fprintf(gOutFile, "\nException table:\n"
             "kind      stack    start      end\n");
     do {
@@ -1754,7 +1754,7 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
     TryNotes(cx, script);
 
     if (recursive && script->objectsOffset != 0) {
-        JSObjectArray *objects = JS_SCRIPT_OBJECTS(script);
+        JSObjectArray *objects = script->objects();
         for (uintN i = 0; i != objects->length; ++i) {
             JSObject *obj = objects->vector[i];
             if (HAS_FUNCTION_CLASS(obj)) {

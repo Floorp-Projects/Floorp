@@ -118,7 +118,7 @@ js_UntrapScriptCode(JSContext *cx, JSScript *script)
                 size_t nbytes;
 
                 nbytes = script->length * sizeof(jsbytecode);
-                notes = SCRIPT_NOTES(script);
+                notes = script->notes();
                 for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn))
                     continue;
                 nbytes += (sn - notes + 1) * sizeof *sn;
@@ -1641,13 +1641,13 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
     if (script->filename)
         nbytes += strlen(script->filename) + 1;
 
-    notes = SCRIPT_NOTES(script);
+    notes = script->notes();
     for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn))
         continue;
     nbytes += (sn - notes + 1) * sizeof *sn;
 
     if (script->objectsOffset != 0) {
-        objarray = JS_SCRIPT_OBJECTS(script);
+        objarray = script->objects();
         i = objarray->length;
         nbytes += sizeof *objarray + i * sizeof objarray->vector[0];
         do {
@@ -1656,7 +1656,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
     }
 
     if (script->regexpsOffset != 0) {
-        objarray = JS_SCRIPT_REGEXPS(script);
+        objarray = script->regexps();
         i = objarray->length;
         nbytes += sizeof *objarray + i * sizeof objarray->vector[0];
         do {
@@ -1666,7 +1666,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
 
     if (script->trynotesOffset != 0) {
         nbytes += sizeof(JSTryNoteArray) +
-            JS_SCRIPT_TRYNOTES(script)->length * sizeof(JSTryNote);
+            script->trynotes()->length * sizeof(JSTryNote);
     }
 
     principals = script->principals;

@@ -178,7 +178,7 @@ GlobalVarCount(JSStackFrame *fp)
     JS_ASSERT(!fp->fun);
     n = fp->script->nfixed;
     if (fp->script->regexpsOffset != 0)
-        n -= JS_SCRIPT_REGEXPS(fp->script)->length;
+        n -= fp->script->regexps()->length;
     return n;
 }
 

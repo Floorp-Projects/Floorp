@@ -1424,7 +1424,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                  * See JSCompiler::compileScript in jsparse.cpp.
                  */
                 JSFunction *fun;
-                JS_GET_SCRIPT_FUNCTION(script, 0, fun);
+                fun = script->getFunction(0);
 
                 if (fun == caller->fun) {
                     /*
@@ -1441,11 +1441,11 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                          * script has no compiled-in dependencies on the prior
                          * eval's scopeobj.
                          */
-                        JSObjectArray *objarray = JS_SCRIPT_OBJECTS(script);
+                        JSObjectArray *objarray = script->objects();
                         int i = 1;
                         if (objarray->length == 1) {
                             if (script->regexpsOffset != 0) {
-                                objarray = JS_SCRIPT_REGEXPS(script);
+                                objarray = script->regexps();
                                 i = 0;
                             } else {
                                 EVAL_CACHE_METER(noscope);
@@ -2794,7 +2794,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
         parent = OBJ_GET_PARENT(cx, obj);
         parentId = (xdr->script->objectsOffset == 0)
                    ? NO_PARENT_INDEX
-                   : FindObjectIndex(JS_SCRIPT_OBJECTS(xdr->script), parent);
+                   : FindObjectIndex(xdr->script->objects(), parent);
         depth = (uint16)OBJ_BLOCK_DEPTH(cx, obj);
         count = (uint16)OBJ_BLOCK_COUNT(cx, obj);
         tmp = (uint32)(depth << 16) | count;
@@ -2821,7 +2821,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
         if (parentId == NO_PARENT_INDEX)
             parent = NULL;
         else
-            JS_GET_SCRIPT_OBJECT(xdr->script, parentId, parent);
+            parent = xdr->script->getObject(parentId);
         STOBJ_SET_PARENT(obj, parent);
     }
 
