@@ -148,6 +148,14 @@ GetArgsLength(JSObject *obj)
     return argc;
 }
 
+static inline void 
+SetArgsPrivateNative(JSObject *argsobj, js_ArgsPrivateNative *apn)
+{
+    JS_ASSERT(STOBJ_GET_CLASS(argsobj) == &js_ArgumentsClass);
+    uintptr_t p = (uintptr_t) apn;
+    argsobj->setPrivate((void*) (p | 2));
+}
+
 JSBool
 js_GetArgsValue(JSContext *cx, JSStackFrame *fp, jsval *vp)
 {
@@ -305,22 +313,27 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
 /*
  * Traced versions of js_GetArgsObject and js_PutArgsObject.
  */
+
+#ifdef JS_TRACER
 JSObject * JS_FASTCALL
 js_Arguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee,
-             JSObject* cached)
+             double *argv, js_ArgsPrivateNative *apn)
 {
-    return cached
-           ? cached
-           : NewArguments(cx, parent, argc, callee);
+    JSObject *argsobj = NewArguments(cx, parent, argc, callee);
+    apn->argv = argv;
+    SetArgsPrivateNative(argsobj, apn);
+    return argsobj;
 }
+#endif
 
-JS_DEFINE_CALLINFO_5(extern, OBJECT, js_Arguments, CONTEXT, OBJECT, UINT32, OBJECT, OBJECT, 0, 0)
+JS_DEFINE_CALLINFO_6(extern, OBJECT, js_Arguments, CONTEXT, OBJECT, UINT32, OBJECT, 
+                     DOUBLEPTR, APNPTR, 0, 0)
 
 /* FIXME change the return type to void. */
 JSBool JS_FASTCALL
 js_PutArguments(JSContext *cx, JSObject *argsobj, jsval *args)
 {
-    JS_ASSERT(!argsobj->getPrivate());
+    JS_ASSERT(js_GetArgsPrivateNative(argsobj));
     PutArguments(cx, argsobj, args);
     return true;
 }
@@ -525,6 +538,16 @@ ArgGetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
          */
         uintN arg = uintN(JSVAL_TO_INT(idval));
         if (arg < GetArgsLength(obj)) {
+#ifdef JS_TRACER
+            js_ArgsPrivateNative *argp = js_GetArgsPrivateNative(obj);
+            if (argp) {
+                if (js_NativeToValue(cx, *vp, (JSTraceType) 1, &argp->argv[arg]))
+                    return true;
+                js_LeaveTrace(cx);
+                return false;
+            }
+#endif
+
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
                 *vp = fp->argv[arg];
@@ -569,6 +592,11 @@ ArgSetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
     if (JSVAL_IS_INT(idval)) {
         uintN arg = uintN(JSVAL_TO_INT(idval));
         if (arg < GetArgsLength(obj)) {
+            if (js_GetArgsPrivateNative(obj)) {
+                js_LeaveTrace(cx);
+                return false;
+            }
+
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
                 fp->argv[arg] = *vp;
@@ -669,6 +697,8 @@ args_or_call_trace(JSTracer *trc, JSObject *obj)
 {
     JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_ArgumentsClass ||
               STOBJ_GET_CLASS(obj) == &js_CallClass);
+    if (STOBJ_GET_CLASS(obj) == &js_ArgumentsClass && js_GetArgsPrivateNative(obj))
+        return;
 
     JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
     if (fp && (fp->flags & JSFRAME_GENERATOR)) {

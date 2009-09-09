@@ -622,6 +622,23 @@ struct InterpState
     double*        deepBailSp;
 };
 
+// Arguments objects created on trace have a private value that points to an
+// instance of this struct. The struct includes a typemap that is allocated
+// as part of the object.
+struct js_ArgsPrivateNative {
+    double      *argv;
+
+    static js_ArgsPrivateNative *create(VMAllocator &alloc, unsigned argc)
+    {
+        return (js_ArgsPrivateNative*) new (alloc) char[sizeof(js_ArgsPrivateNative) + argc];
+    }
+
+    JSTraceType *typemap()
+    {
+        return (JSTraceType*) (this+1);
+    }
+};
+
 static JS_INLINE void
 js_SetBuiltinError(JSContext *cx)
 {
@@ -780,6 +797,8 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LIns* f2i(nanojit::LIns* f);
     JS_REQUIRES_STACK nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
     JS_REQUIRES_STACK nanojit::LIns* stringify(jsval& v);
+
+    nanojit::LIns* newArguments();
 
     JS_REQUIRES_STACK JSRecordingStatus call_imacro(jsbytecode* imacro);
 
@@ -1085,6 +1104,9 @@ js_GetBuiltinFunction(JSContext *cx, uintN index);
 
 extern void
 js_SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes);
+
+extern bool
+js_NativeToValue(JSContext* cx, jsval& v, JSTraceType type, double* slot);
 
 #ifdef MOZ_TRACEVIS
 
