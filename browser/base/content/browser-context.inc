@@ -44,6 +44,10 @@
                 accesskey="&spellAddToDictionary.accesskey;"
                 oncommand="InlineSpellCheckerUI.addToDictionary();"/>
       <menuseparator id="spell-suggestions-separator"/>
+      <menuitem id="context-openlinkincurrent"
+                label="&openLinkCmdInCurrent.label;"
+                accesskey="&openLinkCmdInCurrent.accesskey;"
+                oncommand="gContextMenu.openLinkInCurrent();"/>
       <menuitem id="context-openlink"
                 label="&openLinkCmd.label;"
                 accesskey="&openLinkCmd.accesskey;"
