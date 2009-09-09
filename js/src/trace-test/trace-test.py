@@ -162,7 +162,7 @@ def run_tests(tests, test_dir, lib_dir):
                     else:
                         msg = ''
                     print('TEST-UNEXPECTED-FAIL | trace-test.py | %s: %s'%
-                          (test, msg))
+                          (test.path, msg))
 
             n = i + 1
             if pb:

@@ -6,4 +6,4 @@ function inArrayTest() {
     }
     return i;
 }
-assertEq(inArrayTest(), 10);
+assertEq(inArrayTest(), 104);
