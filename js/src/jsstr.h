@@ -360,14 +360,22 @@ struct JSString {
         JS_ASSERT(isDependent() && dependentIsPrefix());
         mBase = bstr;
     }
-    
-    static inline bool isStatic(JSString *s) {
-        return (s >= unitStringTable && s < &unitStringTable[UNIT_STRING_LIMIT]) ||
-               (s >= intStringTable && s < &intStringTable[INT_STRING_LIMIT]);
+
+    static inline bool isUnitString(JSString *str) {
+        return unitStringTable <= str && str < &unitStringTable[UNIT_STRING_LIMIT];
+    }
+
+    static inline bool isIntString(JSString *str) {
+        return intStringTable <= str && str < &intStringTable[INT_STRING_LIMIT];
+    }
+
+    static inline bool isStatic(JSString *str) {
+        return isUnitString(str) || isIntString(str);
     }
 
     static JSString unitStringTable[];
     static JSString intStringTable[];
+    static const char *deflatedIntStringTable[];
 
     static JSString *unitString(jschar c);
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
