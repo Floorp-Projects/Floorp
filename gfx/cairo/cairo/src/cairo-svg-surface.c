@@ -856,7 +856,7 @@ _cairo_svg_surface_create_similar (void			*abstract_src,
 				   int			 width,
 				   int			 height)
 {
-    return cairo_meta_surface_create (content, width, height);
+    return _cairo_meta_surface_create (content, width, height);
 }
 
 static cairo_status_t
@@ -1200,9 +1200,6 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
     }
 
     meta = (cairo_meta_surface_t *) _cairo_surface_snapshot (&surface->base);
-    if (unlikely (meta->base.status))
-	return meta->base.status;
-
     paginated_surface = _cairo_svg_surface_create_for_document (document,
 								meta->content,
 								meta->width_pixels,
@@ -1217,7 +1214,7 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 					   document->owner->x_fallback_resolution,
 					   document->owner->y_fallback_resolution);
 
-    status = cairo_meta_surface_replay (&meta->base, paginated_surface);
+    status = _cairo_meta_surface_replay (&meta->base, paginated_surface);
     if (unlikely (status)) {
 	cairo_surface_destroy (&meta->base);
 	cairo_surface_destroy (paginated_surface);
@@ -1334,8 +1331,8 @@ _cairo_svg_surface_emit_composite_meta_pattern (cairo_output_stream_t	*output,
 				     "patternUnits=\"userSpaceOnUse\" "
 				     "width=\"%d\" height=\"%d\"",
 				     pattern_id,
-				     (int) ceil (meta_surface->width_pixels),
-				     (int) ceil (meta_surface->height_pixels));
+				     meta_surface->width_pixels,
+				     meta_surface->height_pixels);
 	_cairo_svg_surface_emit_transform (output, " patternTransform", &p2u, parent_matrix);
 	_cairo_output_stream_printf (output, ">\n");
     }
@@ -2658,7 +2655,6 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 
     for (i = 0; i < document->meta_snapshots.num_elements; i++) {
 	snapshot = _cairo_array_index (&document->meta_snapshots, i);
-	cairo_surface_finish (&snapshot->meta->base);
 	status2 = cairo_surface_status (&snapshot->meta->base);
 	cairo_surface_destroy (&snapshot->meta->base);
 	if (status == CAIRO_STATUS_SUCCESS)

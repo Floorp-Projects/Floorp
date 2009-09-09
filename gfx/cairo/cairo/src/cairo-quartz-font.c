@@ -749,7 +749,7 @@ _cairo_quartz_scaled_font_get_cg_font_ref (cairo_scaled_font_t *abstract_font)
     return ffont->cgFont;
 }
 
-#ifndef __LP64__
+
 /*
  * compat with old ATSUI backend
  */
@@ -789,4 +789,3 @@ cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
 {
     return cairo_quartz_font_face_create_for_atsu_font_id (font_id);
 }
-#endif
