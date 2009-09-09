@@ -39,7 +39,7 @@
 #ifndef dom_plugins_PluginInstanceChild_h
 #define dom_plugins_PluginInstanceChild_h 1
 
-#include "mozilla/plugins/PPluginInstanceProtocolChild.h"
+#include "mozilla/plugins/PPluginInstanceChild.h"
 #include "mozilla/plugins/PluginScriptableObjectChild.h"
 
 #include "npfunctions.h"
@@ -50,9 +50,10 @@
 namespace mozilla {
 namespace plugins {
 
-class PBrowserStreamProtocolChild;
+class PBrowserStreamChild;
+class BrowserStreamChild;
 
-class PluginInstanceChild : public PPluginInstanceProtocolChild
+class PluginInstanceChild : public PPluginInstanceChild
 {
 #ifdef OS_WIN
     friend LRESULT CALLBACK PluginWindowProc(HWND hWnd,
@@ -68,15 +69,15 @@ protected:
 
     virtual nsresult AnswerNPP_GetValue(const nsString& key, nsString* value);
 
-    virtual PPluginScriptableObjectProtocolChild*
+    virtual PPluginScriptableObjectChild*
     PPluginScriptableObjectConstructor(NPError* _retval);
 
     virtual nsresult
-    PPluginScriptableObjectDestructor(PPluginScriptableObjectProtocolChild* aObject,
+    PPluginScriptableObjectDestructor(PPluginScriptableObjectChild* aObject,
                                       NPError* _retval);
 
 
-    virtual PBrowserStreamProtocolChild*
+    virtual PBrowserStreamChild*
     PBrowserStreamConstructor(const nsCString& url,
                               const uint32_t& length,
                               const uint32_t& lastmodified,
@@ -87,7 +88,7 @@ protected:
                               uint16_t *stype);
 
     virtual nsresult
-    PBrowserStreamDestructor(PBrowserStreamProtocolChild* stream,
+    PBrowserStreamDestructor(PBrowserStreamChild* stream,
                              const NPError& reason,
                              const bool& artificial);
 

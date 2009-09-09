@@ -37,8 +37,8 @@
 #ifndef ipc_testshell_TestShellChild_h
 #define ipc_testshell_TestShellChild_h 1
 
-#include "mozilla/ipc/PTestShellProtocolChild.h"
-#include "mozilla/ipc/PTestShellCommandProtocolChild.h"
+#include "mozilla/ipc/PTestShellChild.h"
+#include "mozilla/ipc/PTestShellCommandChild.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 
 #include "nsAutoPtr.h"
@@ -48,7 +48,7 @@ namespace ipc {
 
 class XPCShellEnvironment;
 
-class TestShellChild : public PTestShellProtocolChild
+class TestShellChild : public PTestShellChild
 {
 public:
   TestShellChild();
@@ -56,15 +56,15 @@ public:
   nsresult
   RecvExecuteCommand(const nsString& aCommand);
 
-  PTestShellCommandProtocolChild*
+  PTestShellCommandChild*
   PTestShellCommandConstructor(const nsString& aCommand);
 
   nsresult
-  RecvPTestShellCommandConstructor(PTestShellCommandProtocolChild* aActor,
+  RecvPTestShellCommandConstructor(PTestShellCommandChild* aActor,
                                    const nsString& aCommand);
 
   nsresult
-  PTestShellCommandDestructor(PTestShellCommandProtocolChild* aCommand,
+  PTestShellCommandDestructor(PTestShellCommandChild* aCommand,
                               const nsString& aResponse);
 
   void SetXPCShell(XPCShellEnvironment* aXPCShell) {

@@ -140,27 +140,27 @@ ContentProcessParent::OnWaitableEventSignaled(base::WaitableEvent *event)
     mon.Notify();
 }
 
-PIFrameEmbeddingProtocolParent*
+PIFrameEmbeddingParent*
 ContentProcessParent::PIFrameEmbeddingConstructor(const MagicWindowHandle& parentWidget)
 {
     return new TabParent();
 }
 
 nsresult
-ContentProcessParent::PIFrameEmbeddingDestructor(PIFrameEmbeddingProtocolParent* frame)
+ContentProcessParent::PIFrameEmbeddingDestructor(PIFrameEmbeddingParent* frame)
 {
   delete frame;
   return NS_OK;
 }
 
-PTestShellProtocolParent*
+PTestShellParent*
 ContentProcessParent::PTestShellConstructor()
 {
   return new TestShellParent();
 }
 
 nsresult
-ContentProcessParent::PTestShellDestructor(PTestShellProtocolParent* shell)
+ContentProcessParent::PTestShellDestructor(PTestShellParent* shell)
 {
   delete shell;
   return NS_OK;

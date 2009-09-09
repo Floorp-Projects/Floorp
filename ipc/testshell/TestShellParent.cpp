@@ -40,16 +40,16 @@
 
 using mozilla::ipc::TestShellParent;
 using mozilla::ipc::TestShellCommandParent;
-using mozilla::ipc::PTestShellCommandProtocolParent;
+using mozilla::ipc::PTestShellCommandParent;
 
-PTestShellCommandProtocolParent*
+PTestShellCommandParent*
 TestShellParent::PTestShellCommandConstructor(const nsString& aCommand)
 {
   return new TestShellCommandParent();
 }
 
 nsresult
-TestShellParent::PTestShellCommandDestructor(PTestShellCommandProtocolParent* aActor,
+TestShellParent::PTestShellCommandDestructor(PTestShellCommandParent* aActor,
                                              const nsString& aResponse)
 {
   NS_ENSURE_ARG_POINTER(aActor);
@@ -58,7 +58,7 @@ TestShellParent::PTestShellCommandDestructor(PTestShellCommandProtocolParent* aA
 }
 
 nsresult
-TestShellParent::RecvPTestShellCommandDestructor(PTestShellCommandProtocolParent* aActor,
+TestShellParent::RecvPTestShellCommandDestructor(PTestShellCommandParent* aActor,
                                                  const nsString& aResponse)
 {
   NS_ENSURE_ARG_POINTER(aActor);

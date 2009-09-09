@@ -38,14 +38,14 @@
 #ifndef mozilla_plugins_BrowserStreamChild_h
 #define mozilla_plugins_BrowserStreamChild_h 1
 
-#include "mozilla/plugins/PBrowserStreamProtocolChild.h"
+#include "mozilla/plugins/PBrowserStreamChild.h"
 
 namespace mozilla {
 namespace plugins {
 
 class PluginInstanceChild;
 
-class BrowserStreamChild : public PBrowserStreamProtocolChild
+class BrowserStreamChild : public PBrowserStreamChild
 {
 public:
   BrowserStreamChild(PluginInstanceChild* instance,

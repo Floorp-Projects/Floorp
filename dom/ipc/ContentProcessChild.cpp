@@ -73,10 +73,10 @@ ContentProcessChild::Init(MessageLoop* aIOLoop, IPC::Channel* aChannel)
     return true;
 }
 
-PIFrameEmbeddingProtocolChild*
+PIFrameEmbeddingChild*
 ContentProcessChild::PIFrameEmbeddingConstructor(const MagicWindowHandle& hwnd)
 {
-    PIFrameEmbeddingProtocolChild* iframe = new TabChild(hwnd);
+    PIFrameEmbeddingChild* iframe = new TabChild(hwnd);
     if (iframe && mIFrames.AppendElement(iframe)) {
         return iframe;
     }
@@ -85,16 +85,16 @@ ContentProcessChild::PIFrameEmbeddingConstructor(const MagicWindowHandle& hwnd)
 }
 
 nsresult
-ContentProcessChild::PIFrameEmbeddingDestructor(PIFrameEmbeddingProtocolChild* iframe)
+ContentProcessChild::PIFrameEmbeddingDestructor(PIFrameEmbeddingChild* iframe)
 {
     mIFrames.RemoveElement(iframe);
     return NS_OK;
 }
 
-PTestShellProtocolChild*
+PTestShellChild*
 ContentProcessChild::PTestShellConstructor()
 {
-    PTestShellProtocolChild* testshell = new TestShellChild();
+    PTestShellChild* testshell = new TestShellChild();
     if (testshell && mTestShells.AppendElement(testshell)) {
         return testshell;
     }
@@ -103,7 +103,7 @@ ContentProcessChild::PTestShellConstructor()
 }
 
 nsresult
-ContentProcessChild::PTestShellDestructor(PTestShellProtocolChild* shell)
+ContentProcessChild::PTestShellDestructor(PTestShellChild* shell)
 {
     mTestShells.RemoveElement(shell);
     return NS_OK;
