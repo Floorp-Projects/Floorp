@@ -38,12 +38,6 @@
 
 #include "cairo-types-private.h"
 #include "cairo-compiler-private.h"
-#include "cairo-list-private.h"
-
-#define WATCH_PATH 0
-#if WATCH_PATH
-#include <stdio.h>
-#endif
 
 enum cairo_path_op {
     CAIRO_PATH_OP_MOVE_TO = 0,
@@ -51,16 +45,15 @@ enum cairo_path_op {
     CAIRO_PATH_OP_CURVE_TO = 2,
     CAIRO_PATH_OP_CLOSE_PATH = 3
 };
-
-/* we want to make sure a single byte is used for the enum */
+/* we want to make sure a single byte is used for thie enum */
 typedef char cairo_path_op_t;
 
-/* make _cairo_path_fixed fit into ~512 bytes -- about 50 items */
-#define CAIRO_PATH_BUF_SIZE ((512 - sizeof (cairo_path_buf_t)) \
+/* make _cairo_path_fixed fit a 512 bytes.  about 50 items */
+#define CAIRO_PATH_BUF_SIZE ((512 - 4 * sizeof (void*) - sizeof (cairo_path_buf_t)) \
 			   / (2 * sizeof (cairo_point_t) + sizeof (cairo_path_op_t)))
 
 typedef struct _cairo_path_buf {
-    cairo_list_t link;
+    struct _cairo_path_buf *next, *prev;
     unsigned int buf_size;
     unsigned int num_ops;
     unsigned int num_points;
@@ -68,7 +61,6 @@ typedef struct _cairo_path_buf {
     cairo_path_op_t *op;
     cairo_point_t *points;
 } cairo_path_buf_t;
-
 typedef struct _cairo_path_buf_fixed {
     cairo_path_buf_t base;
 
@@ -81,10 +73,9 @@ struct _cairo_path_fixed {
     cairo_point_t current_point;
     unsigned int has_current_point	: 1;
     unsigned int has_curve_to		: 1;
-    unsigned int is_box			: 1;
-    unsigned int is_region		: 1;
 
-    cairo_path_buf_fixed_t  buf;
+    cairo_path_buf_t       *buf_tail;
+    cairo_path_buf_fixed_t  buf_head;
 };
 
 cairo_private unsigned long
@@ -113,15 +104,5 @@ _cairo_path_fixed_iter_is_fill_box (cairo_path_fixed_iter_t *_iter,
 
 cairo_private cairo_bool_t
 _cairo_path_fixed_iter_at_end (const cairo_path_fixed_iter_t *iter);
-
-static inline cairo_bool_t
-_cairo_path_fixed_is_region (cairo_path_fixed_t *path)
-{
-#if WATCH_PATH
-    fprintf (stderr, "_cairo_path_fixed_is_region () = %s\n",
-	     path->is_region ? "true" : "false");
-#endif
-    return path->is_region;
-}
 
 #endif /* CAIRO_PATH_FIXED_PRIVATE_H */

@@ -58,13 +58,13 @@ cairo_status_to_string (cairo_status_t status)
 {
     switch (status) {
     case CAIRO_STATUS_SUCCESS:
-	return "no error has occurred";
+	return "success";
     case CAIRO_STATUS_NO_MEMORY:
 	return "out of memory";
     case CAIRO_STATUS_INVALID_RESTORE:
-	return "cairo_restore() without matching cairo_save()";
+	return "cairo_restore without matching cairo_save";
     case CAIRO_STATUS_INVALID_POP_GROUP:
-	return "no saved group to pop, i.e. cairo_pop_group() without matching cairo_push_group()";
+	return "cairo_pop_group without matching cairo_push_group";
     case CAIRO_STATUS_NO_CURRENT_POINT:
 	return "no current point defined";
     case CAIRO_STATUS_INVALID_MATRIX:
@@ -118,11 +118,11 @@ cairo_status_to_string (cairo_status_t status)
     case CAIRO_STATUS_INVALID_CLUSTERS:
 	return "input clusters do not represent the accompanying text and glyph arrays";
     case CAIRO_STATUS_INVALID_SLANT:
-	return "invalid value for an input cairo_font_slant_t";
+	return "invalid value for an input #cairo_font_slant_t";
     case CAIRO_STATUS_INVALID_WEIGHT:
-	return "invalid value for an input cairo_font_weight_t";
+	return "invalid value for an input #cairo_font_weight_t";
     case CAIRO_STATUS_INVALID_SIZE:
-	return "invalid value (typically too big) for the size of the input (surface, pattern, etc.)";
+	return "invalid value for the size of the input (surface, pattern, etc.)";
     case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED:
 	return "user-font method not implemented";
     default:

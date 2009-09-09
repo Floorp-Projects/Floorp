@@ -58,8 +58,6 @@ _cairo_pen_init (cairo_pen_t	*pen,
     if (CAIRO_INJECT_FAULT ())
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    VG (VALGRIND_MAKE_MEM_UNDEFINED (pen, sizeof (cairo_pen_t)));
-
     pen->radius = radius;
     pen->tolerance = tolerance;
 
@@ -105,15 +103,13 @@ _cairo_pen_fini (cairo_pen_t *pen)
     if (pen->vertices != pen->vertices_embedded)
 	free (pen->vertices);
 
-
-    VG (VALGRIND_MAKE_MEM_NOACCESS (pen, sizeof (cairo_pen_t)));
+    pen->vertices = pen->vertices_embedded;
+    pen->num_vertices = 0;
 }
 
 cairo_status_t
 _cairo_pen_init_copy (cairo_pen_t *pen, const cairo_pen_t *other)
 {
-    VG (VALGRIND_MAKE_MEM_UNDEFINED (pen, sizeof (cairo_pen_t)));
-
     *pen = *other;
 
     if (CAIRO_INJECT_FAULT ())
