@@ -711,6 +711,12 @@ JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2)
     return js_StrictlyEqual(cx, v1, v2);
 }
 
+JS_PUBLIC_API(JSBool)
+JS_SameValue(JSContext *cx, jsval v1, jsval v2)
+{
+    return js_SameValue(v1, v2, cx);
+}
+
 /************************************************************************/
 
 /*

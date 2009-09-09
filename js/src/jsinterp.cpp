@@ -1824,6 +1824,30 @@ js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval)
     return lval == rval;
 }
 
+static inline bool
+IsNegativeZero(jsval v)
+{
+    return JSVAL_IS_DOUBLE(v) && JSDOUBLE_IS_NEGZERO(*JSVAL_TO_DOUBLE(v));
+}
+
+static inline bool
+IsNaN(jsval v)
+{
+    return JSVAL_IS_DOUBLE(v) && JSDOUBLE_IS_NaN(*JSVAL_TO_DOUBLE(v));
+}
+
+JSBool
+js_SameValue(jsval v1, jsval v2, JSContext *cx)
+{
+    if (IsNegativeZero(v1))
+        return IsNegativeZero(v2);
+    if (IsNegativeZero(v2))
+        return JS_FALSE;
+    if (IsNaN(v1) && IsNaN(v2))
+        return JS_TRUE;
+    return js_StrictlyEqual(cx, v1, v2);
+}
+
 JS_REQUIRES_STACK JSBool
 js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp)
 {

@@ -528,6 +528,9 @@ JS_GetTypeName(JSContext *cx, JSType type);
 extern JS_PUBLIC_API(JSBool)
 JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2);
 
+extern JS_PUBLIC_API(JSBool)
+JS_SameValue(JSContext *cx, jsval v1, jsval v2);
+
 /************************************************************************/
 
 /*
