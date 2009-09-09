@@ -92,9 +92,9 @@ struct _cairo_scaled_font {
     cairo_matrix_t ctm;	          /* user space => device space */
     cairo_font_options_t options;
 
-    unsigned int placeholder : 1; /*  protected by fontmap mutex */
-    unsigned int holdover : 1;
-    unsigned int finished : 1;
+    cairo_bool_t placeholder; /*  protected by fontmap mutex */
+
+    cairo_bool_t finished;
 
     /* "live" scaled_font members */
     cairo_matrix_t scale;	     /* font space => device space */
