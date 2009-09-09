@@ -1294,7 +1294,7 @@ _cairo_ps_surface_create_similar (void			*abstract_surface,
 				  int			 width,
 				  int			 height)
 {
-    return _cairo_meta_surface_create (content, width, height);
+    return cairo_meta_surface_create (content, width, height);
 }
 
 static cairo_status_t
@@ -1896,6 +1896,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	return image->base.status;
 
     switch (filter) {
+    default:
     case CAIRO_FILTER_GOOD:
     case CAIRO_FILTER_BEST:
     case CAIRO_FILTER_BILINEAR:

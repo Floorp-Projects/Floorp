@@ -766,6 +766,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
     status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
 					     CAIRO_CONTENT_COLOR_ALPHA,
 					     *src_x, *src_y, width, height,
+					     CAIRO_PATTERN_ACQUIRE_NO_REFLECT,
 					     (cairo_surface_t **) &src,
 					     &src_attr);
     if (status)
