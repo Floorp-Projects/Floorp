@@ -55,7 +55,6 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIScrollableFrame.h"
 
-class nsIScrollableView;
 class nsIPresShell;
 class nsIDocShell;
 class nsIDocShellTreeNode;
