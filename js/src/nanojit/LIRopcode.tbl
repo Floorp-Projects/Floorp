@@ -156,10 +156,11 @@ OPDEF(qlo,      50, 1, Op1)     // get the low  32 bits of a 64-bit value
 OPDEF(qhi,      51, 1, Op1)     // get the high 32 bits of a 64-bit value
 
 OPDEF(unused52, 52,-1, None)
+OPDEF(unused53, 53,-1, None)
 
-OPDEF(ov,       53, 1, Op1)     // test for overflow;  value must have just been computed
-
-OPDEF(unused53, 54,-1, None)
+// This must be right before LIR_eq, so (op&~LIR64 - LIR_ov) can be indexed
+// into a convenient table.
+OPDEF(ov,       54, 1, Op1)     // test for overflow;  value must have just been computed
 
 // Integer (32 bit) relational operators.  (op ^ 1) is the op which flips the
 // left and right sides of the comparison, so (lt ^ 1) == gt, or the operator
