@@ -1021,9 +1021,39 @@ namespace nanojit
 
     using namespace avmplus;
 
-    StackFilter::StackFilter(LirFilter *in, Allocator& alloc, LirBuffer *lirbuf, LInsp sp)
-        : LirFilter(in), lirbuf(lirbuf), sp(sp), stk(alloc), top(0)
+    StackFilter::StackFilter(LirFilter *in, Allocator& alloc, LirBuffer *lirbuf, LInsp sp, LInsp rp)
+        : LirFilter(in), lirbuf(lirbuf), sp(sp), rp(rp), spStk(alloc), rpStk(alloc),
+          spTop(0), rpTop(0)
     {}
+
+    bool StackFilter::ignoreStore(LInsp ins, int top, BitSet* stk)
+    {
+        bool ignore = false;
+        int d = ins->disp() >> 2;
+        if (d >= top) {
+            ignore = true;
+        } else {
+            d = top - d;
+            if (ins->oprnd1()->isQuad()) {
+                // storing 8 bytes
+                if (stk->get(d) && stk->get(d-1)) {
+                    ignore = true;
+                } else {
+                    stk->set(d);
+                    stk->set(d-1);
+                }
+            }
+            else {
+                // storing 4 bytes
+                if (stk->get(d)) {
+                    ignore = true;
+                } else {
+                    stk->set(d);
+                }
+            }
+        }
+        return ignore;
+    }
 
     LInsp StackFilter::read()
     {
@@ -1033,31 +1063,14 @@ namespace nanojit
             if (i->isStore())
             {
                 LInsp base = i->oprnd2();
-                if (base == sp)
-                {
-                    LInsp v = i->oprnd1();
-                    int d = i->disp() >> 2;
-                    if (d >= top) {
+
+                if (base == sp) {
+                    if (ignoreStore(i, spTop, &spStk))
                         continue;
-                    } else {
-                        d = top - d;
-                        if (v->isQuad()) {
-                            // storing 8 bytes
-                            if (stk.get(d) && stk.get(d-1)) {
-                                continue;
-                            } else {
-                                stk.set(d);
-                                stk.set(d-1);
-                            }
-                        }
-                        else {
-                            // storing 4 bytes
-                            if (stk.get(d))
-                                continue;
-                            else
-                                stk.set(d);
-                        }
-                    }
+
+                } else if (base == rp) {
+                    if (ignoreStore(i, rpTop, &rpStk))
+                        continue;
                 }
             }
             /*
@@ -1067,9 +1080,13 @@ namespace nanojit
              */
             else if (i->isGuard())
             {
-                stk.reset();
-                top = getTop(i) >> 2;
+                spStk.reset();
+                rpStk.reset();
+                getTops(i, spTop, rpTop);
+                spTop >>= 2;
+                rpTop >>= 2;
             }
+            
             return i;
         }
     }
@@ -1494,12 +1511,11 @@ namespace nanojit
         LiveTable live(alloc);
         uint32_t exits = 0;
         LirReader br(frag->lastIns);
-        StackFilter sf(&br, alloc, frag->lirbuf, frag->lirbuf->sp);
-        StackFilter r(&sf, alloc, frag->lirbuf, frag->lirbuf->rp);
+        StackFilter sf(&br, alloc, frag->lirbuf, frag->lirbuf->sp, frag->lirbuf->rp);
         int total = 0;
         if (frag->lirbuf->state)
-            live.add(frag->lirbuf->state, r.pos());
-        for (LInsp i = r.read(); !i->isop(LIR_start); i = r.read())
+            live.add(frag->lirbuf->state, sf.pos());
+        for (LInsp i = sf.read(); !i->isop(LIR_start); i = sf.read())
         {
             total++;
 

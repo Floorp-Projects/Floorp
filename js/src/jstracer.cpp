@@ -375,8 +375,7 @@ InitJITLogController()
             "  ------ options for Nanojit ------\n"
             "  liveness     show LIR liveness at start of rdr pipeline\n"
             "  readlir      show LIR as it enters the reader pipeline\n"
-            "  aftersf_sp   show LIR after StackFilter(sp)\n"
-            "  aftersf_rp   show LIR after StackFilter(rp)\n"
+            "  aftersf      show LIR after StackFilter\n"
             "  regalloc     show regalloc details\n"
             "  assembly     show final aggregated assembly code\n"
             "  nocodeaddrs  don't show code addresses in assembly listings\n"
@@ -398,13 +397,12 @@ InitJITLogController()
     if (strstr(tmf, "treevis"))                         bits |= LC_TMTreeVis;
 
     /* flags for nanojit */
-    if (strstr(tmf, "liveness")   || strstr(tmf, "full")) bits |= LC_Liveness;
-    if (strstr(tmf, "readlir")    || strstr(tmf, "full")) bits |= LC_ReadLIR;
-    if (strstr(tmf, "aftersf_sp") || strstr(tmf, "full")) bits |= LC_AfterSF_SP;
-    if (strstr(tmf, "aftersf_rp") || strstr(tmf, "full")) bits |= LC_AfterSF_RP;
-    if (strstr(tmf, "regalloc")   || strstr(tmf, "full")) bits |= LC_RegAlloc;
-    if (strstr(tmf, "assembly")   || strstr(tmf, "full")) bits |= LC_Assembly;
-    if (strstr(tmf, "nocodeaddrs"))                       bits |= LC_NoCodeAddrs;
+    if (strstr(tmf, "liveness") || strstr(tmf, "full")) bits |= LC_Liveness;
+    if (strstr(tmf, "readlir")  || strstr(tmf, "full")) bits |= LC_ReadLIR;
+    if (strstr(tmf, "aftersf")  || strstr(tmf, "full")) bits |= LC_AfterSF;
+    if (strstr(tmf, "regalloc") || strstr(tmf, "full")) bits |= LC_RegAlloc;
+    if (strstr(tmf, "assembly") || strstr(tmf, "full")) bits |= LC_Assembly;
+    if (strstr(tmf, "nocodeaddrs"))                     bits |= LC_NoCodeAddrs;
 
     js_LogController.lcbits = bits;
     return;
@@ -4438,14 +4436,12 @@ TraceRecorder::hasIteratorMethod(JSObject* obj)
     return hasMethod(obj, ATOM_TO_JSID(cx->runtime->atomState.iteratorAtom));
 }
 
-int
-nanojit::StackFilter::getTop(LIns* guard)
+void
+nanojit::StackFilter::getTops(LIns* guard, int& spTop, int& rpTop)
 {
     VMSideExit* e = (VMSideExit*)guard->record()->exit;
-    if (sp == lirbuf->sp)
-        return e->sp_adj;
-    JS_ASSERT(sp == lirbuf->rp);
-    return e->rp_adj;
+    spTop = e->sp_adj;
+    rpTop = e->rp_adj;
 }
 
 #if defined NJ_VERBOSE
