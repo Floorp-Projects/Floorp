@@ -2522,6 +2522,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
 
     JSScope *scope = OBJ_SCOPE(proto);
     scope->hold();
+    JS_ASSERT(!scope->owned());
     clone->map = &scope->map;
 
     clone->classword = jsuword(&js_BlockClass);
@@ -2594,44 +2595,69 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 static JSBool
 block_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JS_ASSERT(JS_InstanceOf(cx, obj, &js_BlockClass, NULL));
+    /*
+     * Block objects are never exposed to script, and the engine handles them
+     * with care. So unlike other getters, this one can assert (rather than
+     * check) certain invariants about obj.
+     */
+    JS_ASSERT(obj->getClass() == &js_BlockClass);
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(obj));
-    if (!JSVAL_IS_INT(id))
-        return JS_TRUE;
+    uintN index = (uintN) JSVAL_TO_INT(id);
+    JS_ASSERT(index < OBJ_BLOCK_COUNT(cx, obj));
 
-    uintN index = (uint16) JSVAL_TO_INT(id);
     JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
     if (fp) {
         index += fp->script->nfixed + OBJ_BLOCK_DEPTH(cx, obj);
         JS_ASSERT(index < fp->script->nslots);
         *vp = fp->slots[index];
-        return JS_TRUE;
+        return true;
     }
 
-    /* Reserve slots start with the first slot after the private. */
-    index += JSSLOT_BLOCK_DEPTH - JSSLOT_PRIVATE;
-    return JS_GetReservedSlot(cx, obj, index, vp);
+    /* Values are in reserved slots immediately following DEPTH. */
+    uint32 slot = JSSLOT_BLOCK_DEPTH + 1 + index;
+    JS_LOCK_OBJ(cx, obj);
+    JS_ASSERT(slot < STOBJ_NSLOTS(obj));
+    *vp = STOBJ_GET_SLOT(obj, slot);
+    JS_UNLOCK_OBJ(cx, obj);
+    return true;
 }
 
 static JSBool
 block_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JS_ASSERT(JS_InstanceOf(cx, obj, &js_BlockClass, NULL));
-    if (!JSVAL_IS_INT(id))
-        return JS_TRUE;
+    JS_ASSERT(obj->getClass() == &js_BlockClass);
+    JS_ASSERT(OBJ_IS_CLONED_BLOCK(obj));
+    uintN index = (uintN) JSVAL_TO_INT(id);
+    JS_ASSERT(index < OBJ_BLOCK_COUNT(cx, obj));
 
-    uintN index = (uint16) JSVAL_TO_INT(id);
     JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
     if (fp) {
         index += fp->script->nfixed + OBJ_BLOCK_DEPTH(cx, obj);
         JS_ASSERT(index < fp->script->nslots);
         fp->slots[index] = *vp;
-        return JS_TRUE;
+        return true;
     }
 
-    /* Reserve slots start with the first slot after the private. */
-    index += JSSLOT_BLOCK_DEPTH - JSSLOT_PRIVATE;
-    return JS_SetReservedSlot(cx, obj, index, *vp);
+    /* Values are in reserved slots immediately following DEPTH. */
+    uint32 slot = JSSLOT_BLOCK_DEPTH + 1 + index;
+    JS_LOCK_OBJ(cx, obj);
+    JS_ASSERT(slot < STOBJ_NSLOTS(obj));
+    STOBJ_SET_SLOT(obj, slot, *vp);
+    JS_UNLOCK_OBJ(cx, obj);
+    return true;
+}
+
+JSBool
+js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, int16 index)
+{
+    JS_ASSERT(obj->getClass() == &js_BlockClass);
+    JS_ASSERT(!OBJ_IS_CLONED_BLOCK(obj));
+
+    /* Use JSPROP_ENUMERATE to aid the disassembler. */
+    return js_DefineNativeProperty(cx, obj, id, JSVAL_VOID,
+                                   block_getProperty, block_setProperty,
+                                   JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_SHARED,
+                                   SPROP_HAS_SHORTID, index, NULL);
 }
 
 #if JS_HAS_XDR
@@ -2739,7 +2765,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
                 sprop = sprop ? sprop->parent : OBJ_SCOPE(obj)->lastProp;
             } while (!(sprop->flags & SPROP_HAS_SHORTID));
 
-            JS_ASSERT(sprop->getter == js_BlockClass.getProperty);
+            JS_ASSERT(sprop->getter == block_getProperty);
             propid = sprop->id;
             JS_ASSERT(JSID_IS_ATOM(propid));
             atom = JSID_TO_ATOM(propid);
@@ -2755,11 +2781,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
         }
 
         if (xdr->mode == JSXDR_DECODE) {
-            if (!js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(atom),
-                                         JSVAL_VOID, NULL, NULL,
-                                         JSPROP_ENUMERATE | JSPROP_PERMANENT |
-                                         JSPROP_SHARED,
-                                         SPROP_HAS_SHORTID, shortid, NULL)) {
+            if (!js_DefineBlockVariable(cx, obj, ATOM_TO_JSID(atom), shortid)) {
                 ok = JS_FALSE;
                 break;
             }
@@ -2786,7 +2808,7 @@ block_reserveSlots(JSContext *cx, JSObject *obj)
 JSClass js_BlockClass = {
     "Block",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
-    JS_PropertyStub,  JS_PropertyStub,  block_getProperty, block_setProperty,
+    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,    NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, block_reserveSlots
 };
@@ -6078,7 +6100,6 @@ js_DumpObject(JSObject *obj)
     uint32 i, slots;
     JSClass *clasp;
     jsuint reservedEnd;
-    bool sharesScope = false;
 
     fprintf(stderr, "object %p\n", (void *) obj);
     clasp = STOBJ_GET_CLASS(obj);
@@ -6130,7 +6151,7 @@ js_DumpObject(JSObject *obj)
 
     fprintf(stderr, "slots:\n");
     reservedEnd = i + JSCLASS_RESERVED_SLOTS(clasp);
-    slots = (OBJ_IS_NATIVE(obj) && !sharesScope)
+    slots = (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->owned())
             ? OBJ_SCOPE(obj)->freeslot
             : STOBJ_NSLOTS(obj);
     for (; i < slots; i++) {
