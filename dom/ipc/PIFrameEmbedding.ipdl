@@ -1,4 +1,4 @@
-/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,10 +12,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla IPDL Test Harness.
+ * The Original Code is Mozilla Content App.
  *
  * The Initial Developer of the Original Code is
- *   Chris Jones <jones.chris.g@gmail.com>.
+ *   The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -35,33 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef ipc_test_harness_TestProcessParent_h
-#define ipc_test_harness_TestProcessParent_h 1
+include protocol "PContentProcess.ipdl";
 
-#include "mozilla/ipc/GeckoChildProcessHost.h"
+using PRUint32;
 
 namespace mozilla {
-namespace test {
-//-----------------------------------------------------------------------------
+namespace dom {
 
-class TestProcessParent : public mozilla::ipc::GeckoChildProcessHost
+async protocol PIFrameEmbedding
 {
-public:
-    TestProcessParent();
-    ~TestProcessParent();
+    manager PContentProcess;
 
-    /**
-     * Asynchronously launch the plugin process.
-     */
-    // Could override parent Launch, but don't need to here
-    //bool Launch();
+child:
+    loadURL(nsCString uri);
 
-private:
-    DISALLOW_EVIL_CONSTRUCTORS(TestProcessParent);
+    move(PRUint32 x,
+         PRUint32 y,
+         PRUint32 width,
+         PRUint32 height);
 };
 
-
-} // namespace plugins
-} // namespace mozilla
-
-#endif // ifndef ipc_test_harness_TestProcessParent_h
+}
+}

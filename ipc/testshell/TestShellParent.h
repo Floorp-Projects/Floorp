@@ -34,11 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _IPC_TESTSHELL_TESTSHELLPARENT_H_
-#define _IPC_TESTSHELL_TESTSHELLPARENT_H_
+#ifndef ipc_testshell_TestShellParent_h
+#define ipc_testshell_TestShellParent_h 1
 
-#include "mozilla/ipc/TestShellProtocolParent.h"
-#include "mozilla/ipc/TestShellCommandProtocolParent.h"
+#include "mozilla/ipc/PTestShellProtocolParent.h"
+#include "mozilla/ipc/PTestShellCommandProtocolParent.h"
 
 #include "jsapi.h"
 #include "nsAutoJSValHolder.h"
@@ -47,7 +47,7 @@
 namespace mozilla {
 namespace ipc {
 
-class TestShellCommandParent : public TestShellCommandProtocolParent
+class TestShellCommandParent : public PTestShellCommandProtocolParent
 {
 public:
   TestShellCommandParent() : mCx(NULL) { }
@@ -64,22 +64,22 @@ private:
   nsAutoJSValHolder mCallback;
 };
 
-class TestShellParent : public TestShellProtocolParent
+class TestShellParent : public PTestShellProtocolParent
 {
 public:
-  TestShellCommandProtocolParent*
-  TestShellCommandConstructor(const nsString& aCommand);
+  PTestShellCommandProtocolParent*
+  PTestShellCommandConstructor(const nsString& aCommand);
 
   nsresult
-  TestShellCommandDestructor(TestShellCommandProtocolParent* aActor,
-                             const nsString& aResponse);
+  PTestShellCommandDestructor(PTestShellCommandProtocolParent* aActor,
+                              const nsString& aResponse);
 
   nsresult
-  RecvTestShellCommandDestructor(TestShellCommandProtocolParent* aActor,
-                                 const nsString& aResponse);
+  RecvPTestShellCommandDestructor(PTestShellCommandProtocolParent* aActor,
+                                  const nsString& aResponse);
 };
 
 } /* namespace ipc */
 } /* namespace mozilla */
 
-#endif /* _IPC_TESTSHELL_TESTSHELLPARENT_H_ */
+#endif /* ipc_testshell_TestShellParent_h */

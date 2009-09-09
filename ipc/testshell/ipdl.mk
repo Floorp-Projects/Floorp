@@ -1,4 +1,4 @@
 IPDLSRCS = \
-  TestShell.ipdl \
-  TestShellCommand.ipdl \
+  PTestShell.ipdl \
+  PTestShellCommand.ipdl \
   $(NULL)

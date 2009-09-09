@@ -72,9 +72,9 @@
 #include "ScopedXREEmbed.h"
 
 #include "mozilla/plugins/PluginThreadChild.h"
-#include "ContentProcessThread.h"
-#include "ContentProcessParent.h"
-#include "ContentProcessChild.h"
+#include "mozilla/dom/ContentProcessThread.h"
+#include "mozilla/dom/ContentProcessParent.h"
+#include "mozilla/dom/ContentProcessChild.h"
 
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
@@ -465,7 +465,7 @@ XRE_SendTestShellCommand(JSContext* aCx,
     }
 
     TestShellCommandParent* callback = static_cast<TestShellCommandParent*>(
-        gTestShellParent->SendTestShellCommandConstructor(command));
+        gTestShellParent->SendPTestShellCommandConstructor(command));
     NS_ENSURE_TRUE(callback, false);
 
     jsval callbackVal = *reinterpret_cast<jsval*>(aCallback);

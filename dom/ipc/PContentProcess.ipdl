@@ -1,4 +1,4 @@
-/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,10 +12,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla IPCShell.
+ * The Original Code is Mozilla Content App.
  *
  * The Initial Developer of the Original Code is
- *   Ben Turner <bent.mozilla@gmail.com>.
+ *   The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -35,26 +35,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "ContentProcess.ipdl";
-include protocol "TestShellCommand.ipdl";
+include protocol "PIFrameEmbedding.ipdl";
+include protocol "PTestShell.ipdl";
+
+include "mozilla/TabTypes.h";
+
+using MagicWindowHandle;
 
 namespace mozilla {
-namespace ipc {
+namespace dom {
 
-protocol TestShell
+sync protocol PContentProcess
 {
-  manager ContentProcess;
-
-  manages TestShellCommand;
+    manages PIFrameEmbedding;
+    manages PTestShell;
 
 child:
-  ExecuteCommand(nsString aCommand);
+    PIFrameEmbedding(MagicWindowHandle parentWidget);
+    ~PIFrameEmbedding();
 
-  TestShellCommand(nsString aCommand);
+    PTestShell();
+    ~PTestShell();
 
-parent:
-  ~TestShellCommand(nsString aResponse);
+    Quit();
 };
 
-} // namespace ipc
-} // namespace mozilla
+}
+}

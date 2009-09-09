@@ -50,6 +50,8 @@
 namespace mozilla {
 namespace plugins {
 
+class PBrowserStreamProtocolChild;
+
 class PluginInstanceChild : public PPluginInstanceProtocolChild
 {
 #ifdef OS_WIN

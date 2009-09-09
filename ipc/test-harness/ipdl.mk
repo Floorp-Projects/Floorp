@@ -1,3 +1,3 @@
 IPDLSRCS = \
-  Test.ipdl \
+  PTest.ipdl \
   $(NULL)

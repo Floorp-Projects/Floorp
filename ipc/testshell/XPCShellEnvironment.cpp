@@ -76,7 +76,6 @@
 using mozilla::ipc::XPCShellEnvironment;
 using mozilla::ipc::TestShellChild;
 using mozilla::ipc::TestShellParent;
-using mozilla::ipc::TestShellCommandProtocolParent;
 
 namespace {
 
