@@ -77,6 +77,7 @@ js_GenerateShape(JSContext *cx, bool gcLocked)
          * have a chance to wrap around shapeGen to zero.
          */
         rt->shapeGen = SHAPE_OVERFLOW_BIT;
+        shape = SHAPE_OVERFLOW_BIT;
         js_TriggerGC(cx, gcLocked);
     }
     return shape;
