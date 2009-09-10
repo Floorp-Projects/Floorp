@@ -69,6 +69,7 @@
 #include "jsparse.h"
 #include "jsscope.h"
 #include "jsscript.h"
+#include "jsscriptinlines.h"
 #include "jsstaticcheck.h"
 #include "jsstr.h"
 #include "jstracer.h"
