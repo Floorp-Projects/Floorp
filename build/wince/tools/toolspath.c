@@ -188,7 +188,7 @@ DWORD run(char** args)
  STARTUPINFO si;
  PROCESS_INFORMATION pi;
 
- char theArgs[1024*32] = {'\0'};
+ char theCmdLine[1024*32] = {'\0'};
 
  int totalLen = 0;
  int i, j;
@@ -202,16 +202,6 @@ DWORD run(char** args)
  _putenv("INCLUDE=" SHUNT_INC ";" WM_SDK_INC ";" OGLES_SDK_INC ";" WCE_INC);
  _putenv("LIB=" WCE_LIB ";" OGLES_SDK_LIB ";" WCE_CRT);
 
- for (j=1; args[j]; j++)
- {
-   int len = strlen(args[j]);
-   strcat(&theArgs[totalLen], args[j]);
-   totalLen += len;
-
-   strcat(&theArgs[totalLen], " ");
-   totalLen++;
- }
-
  i = strlen(args[0]);
  for (j=0; j<i; j++)
  {
@@ -219,12 +209,27 @@ DWORD run(char** args)
      args[0][j] = '\\';
  }
 
+ for (j=0; args[j]; j++)
+ {
+   int len = strlen(args[j]);
+   strcat(&theCmdLine[totalLen], args[j]);
+   totalLen += len;
+
+   strcat(&theCmdLine[totalLen], " ");
+   totalLen++;
+ }
+
  ZeroMemory( &si, sizeof(si) );
  si.cb = sizeof(si);
  ZeroMemory( &pi, sizeof(pi));
 
- CreateProcess(args[0],
-               theArgs,
+ // See bug 508721.
+ // lpApplicationName (first parameter) when provided conflicts with
+ // the first token in the lpCommandLine (second parameter).
+ // So we pass the whole command line including the EXE in lpCommandLine.
+ // See http://support.microsoft.com/kb/175986 for more info.
+ CreateProcess(NULL,
+               theCmdLine,
                NULL,
                NULL,
                0,
