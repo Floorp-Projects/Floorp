@@ -127,7 +127,46 @@ public: // new functions
     static already_AddRefed<gfxFT2Font>
     GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle);
 
-private:
+    struct CachedGlyphData {
+        CachedGlyphData()
+            : glyphIndex(0xffffffffU) { }
+
+        CachedGlyphData(PRUint32 gid)
+            : glyphIndex(gid) { }
+
+        PRUint32 glyphIndex;
+        PRInt32 lsbDelta;
+        PRInt32 rsbDelta;
+        PRInt32 xAdvance;
+    };
+
+    const CachedGlyphData* GetGlyphDataForChar(PRUint32 ch) {
+        CharGlyphMapEntryType *entry = mCharGlyphCache.PutEntry(ch);
+
+        if (!entry)
+            return nsnull;
+
+        if (entry->mData.glyphIndex == 0xffffffffU) {
+            // this is a new entry, fill it
+            FillGlyphDataForChar(ch, &entry->mData);
+        }
+
+        return &entry->mData;
+    }
+
+    class FaceLock {
+    public:
+        FaceLock(gfxFT2Font *font);
+        ~FaceLock();
+
+        FT_Face Face() { return mFace; }
+
+    protected:
+        cairo_scaled_font_t *mScaledFont;
+        FT_Face mFace;
+    };
+
+protected:
     cairo_scaled_font_t *mScaledFont;
 
     PRBool mHasSpaceGlyph;
@@ -135,6 +174,12 @@ private:
     PRBool mHasMetrics;
     Metrics mMetrics;
     gfxFloat mAdjustedSize;
+
+    void FillGlyphDataForChar(PRUint32 ch, CachedGlyphData *gd);
+
+    typedef nsBaseHashtableET<nsUint32HashKey, CachedGlyphData> CharGlyphMapEntryType;
+    typedef nsTHashtable<CharGlyphMapEntryType> CharGlyphMap;
+    CharGlyphMap mCharGlyphCache;
 };
 
 class THEBES_API gfxFT2FontGroup : public gfxFontGroup {
