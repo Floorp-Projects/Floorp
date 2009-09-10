@@ -9,6 +9,7 @@ chrome.jar:
 
 chrome.jar:
 % skin browser classic/1.0 %
+  aboutCertError.css                   (aboutCertError.css)
   platform.css                         (platform.css)
   browser.css                          (browser.css)
   browser-high.css                     (browser-high.css)
@@ -65,6 +66,8 @@ chrome.jar:
   images/check-30.png                  (images/check-30.png)
   images/fullscreen-close-40.png       (images/fullscreen-close-40.png)
   images/fullscreen-up-40.png          (images/fullscreen-up-40.png)
+  images/section-expanded-16.png       (images/section-expanded-16.png)
+  images/section-collapsed-16.png      (images/section-collapsed-16.png)
   images/geo-16.png                    (images/geo-16.png)
 
   images/addons-active-36.png          (images/addons-active-36.png)
