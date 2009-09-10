@@ -645,7 +645,7 @@ static JSConstDoubleSpec number_constants[] = {
 jsdouble js_NaN;
 
 
-#if (defined __GNUC__ && defined __i486__)
+#if (defined __GNUC__ && defined __i386__)
 
 /*
  * Set the exception mask to mask all exceptions and set the FPU precision
