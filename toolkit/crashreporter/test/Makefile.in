@@ -43,8 +43,22 @@ relativesrcdir  = toolkit/crashreporter/test
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = crashreporter
+MODULE = crashreporter_test
 XPCSHELL_TESTS = unit
+
+LIBRARY_NAME = testcrasher
+IS_COMPONENT    = 1
+USE_STATIC_LIBS = 1
+
+XPIDLSRCS = nsITestCrasher.idl
+
+CPPSRCS = \
+  nsTestCrasher.cpp \
+  $(NULL)
+
+EXTRA_DSO_LIBS += xpcom
+EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(MOZ_COMPONENT_LIBS) $(XPCOM_GLUE_LDOPTS)
+LOCAL_INCLUDES += -I$(XPIDL_GEN_DIR)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -58,3 +72,6 @@ _BROWSER_FILES = \
 
 libs::  $(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/browser
+	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
+	$(INSTALL) $(SHARED_LIBRARY) \
+          $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
