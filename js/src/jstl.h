@@ -172,7 +172,7 @@ class ReentrancyGuard
     template <class T>
     ReentrancyGuard(T &obj)
 #ifdef DEBUG
-      : entered(obj.mEntered)
+      : entered(obj.entered)
 #endif
     {
 #ifdef DEBUG
@@ -235,16 +235,16 @@ PointerRangeSize(T *begin, T *end)
  */
 class ContextAllocPolicy
 {
-    JSContext *mCx;
+    JSContext *cx;
 
   public:
-    ContextAllocPolicy(JSContext *cx) : mCx(cx) {}
-    JSContext *context() const { return mCx; }
+    ContextAllocPolicy(JSContext *cx) : cx(cx) {}
+    JSContext *context() const { return cx; }
 
-    void *malloc(size_t bytes) { return mCx->malloc(bytes); }
-    void free(void *p) { mCx->free(p); }
-    void *realloc(void *p, size_t bytes) { return mCx->realloc(p, bytes); }
-    void reportAllocOverflow() const { js_ReportAllocationOverflow(mCx); }
+    void *malloc(size_t bytes) { return cx->malloc(bytes); }
+    void free(void *p) { cx->free(p); }
+    void *realloc(void *p, size_t bytes) { return cx->realloc(p, bytes); }
+    void reportAllocOverflow() const { js_ReportAllocationOverflow(cx); }
 };
 
 /* Policy for using system memory functions and doing no error reporting. */
