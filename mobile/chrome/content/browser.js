@@ -690,17 +690,9 @@ var Browser = {
     document.getElementById("tabs").selectedTab = tab.chromeTab;
 
     if (!firstTab) {
-      let webProgress = this.selectedBrowser.webProgress;
-      let securityUI = this.selectedBrowser.securityUI;
-
-      try {
-        tab._listener.onLocationChange(webProgress, null, tab.browser.currentURI);
-        if (securityUI)
-          tab._listener.onSecurityChange(webProgress, null, securityUI.state);
-      } catch (e) {
-        // don't inhibit other listeners or following code
-        Components.utils.reportError(e);
-      }
+      // Update all of our UI to reflect the new tab's location
+      BrowserUI.setURI();
+      getIdentityHandler().checkIdentity();
 
       let event = document.createEvent("Events");
       event.initEvent("TabSelect", true, false);
@@ -1355,8 +1347,7 @@ nsBrowserAccess.prototype = {
       var url = aURI ? aURI.spec : "about:blank";
       newWindow = openDialog("chrome://browser/content/browser.xul", "_blank",
                              "all,dialog=no", url, null, null, null);
-    }
-    else {
+    } else {
       if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB)
         newWindow = Browser.addTab("about:blank", true).browser.contentWindow;
       else
@@ -1566,7 +1557,7 @@ IdentityHandler.prototype = {
   /**
    * Helper to parse out the important parts of _lastStatus (of the SSL cert in
    * particular) for use in constructing identity UI strings
-  */
+   */
   getIdentityData: function() {
     var result = {};
     var status = this._lastStatus.QueryInterface(Ci.nsISSLStatus);
@@ -1598,19 +1589,26 @@ IdentityHandler.prototype = {
 
   /**
    * Determine the identity of the page being displayed by examining its SSL cert
-   * (if available) and, if necessary, update the UI to reflect this.  Intended to
-   * be called by onSecurityChange
-   *
-   * @param PRUint32 state
-   * @param JS Object location that mirrors an nsLocation (i.e. has .host and
-   *                           .hostname and .port)
+   * (if available) and, if necessary, update the UI to reflect this.
    */
-  checkIdentity: function(state, location) {
-    var currentStatus = getBrowser().securityUI
-                                .QueryInterface(Ci.nsISSLStatusProvider)
-                                .SSLStatus;
+  checkIdentity: function() {
+    // make a copy of the passed in location to avoid cycles
+    function makeLocationObject() {
+      try {
+        return { host: location.host, hostname: location.hostname, port: location.port };
+      } catch (ex) { }
+      return {};
+    }
+
+    let state = Browser.selectedTab.getIdentityState();
+    let location = getBrowser().contentWindow.location;
+    let currentStatus = getBrowser().securityUI.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
+    
     this._lastStatus = currentStatus;
-    this._lastLocation = location;
+    this._lastLocation = {};
+    try {
+      this._lastLocation = { host: location.host, hostname: location.hostname, port: location.port };
+    } catch (ex) { }
 
     if (state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
       this.setMode(this.IDENTITY_MODE_IDENTIFIED);
@@ -2154,6 +2152,10 @@ var HelperAppDialog = {
 
 function ProgressController(tab) {
   this._tab = tab;
+
+  // Properties used to cache security state used to update the UI
+  this.state = null;
+  this._hostChanged = false; // onLocationChange will flip this bit
 }
 
 ProgressController.prototype = {
@@ -2162,10 +2164,6 @@ ProgressController.prototype = {
   },
 
   onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    // ignore notification that aren't about the main document (iframes, etc)
-    if (aWebProgress.DOMWindow != this._tab.browser.contentWindow)
-      return;
-
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_START)
         this._networkStart();
@@ -2177,53 +2175,18 @@ ProgressController.prototype = {
     }
   },
 
-  // This method is called to indicate progress changes for the currently
-  // loading page.
+  /** This method is called to indicate progress changes for the currently loading page. */
   onProgressChange: function(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
   },
 
-  // This method is called to indicate a change to the current location.
+  /** This method is called to indicate a change to the current location. */
   onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
-    // XXX this code is not multiple-tab friendly.
-    var location = aLocationURI ? aLocationURI.spec : "";
+    let location = aLocationURI ? aLocationURI.spec : "";
     let selectedBrowser = Browser.selectedBrowser;
-    let lastURI = selectedBrowser.lastURI;
-
-    //don't do anything for about:blank or about:firstrun on first display
-    if (!lastURI && (location == "about:blank" || location == "about:firstrun" ))
-      return;
 
     this._hostChanged = true;
 
-    // This code here does not compare uris exactly when determining
-    // whether or not the message(s) should be hidden since the message
-    // may be prematurely hidden when an install is invoked by a click
-    // on a link that looks like this:
-    //
-    // <a href="#" onclick="return install();">Install Foo</a>
-    //
-    // - which fires a onLocationChange message to uri + '#'...
-    selectedBrowser.lastURI = aLocationURI;
-    if (lastURI) {
-      var oldSpec = lastURI.spec;
-      var oldIndexOfHash = oldSpec.indexOf("#");
-      if (oldIndexOfHash != -1)
-        oldSpec = oldSpec.substr(0, oldIndexOfHash);
-      var newSpec = location;
-      var newIndexOfHash = newSpec.indexOf("#");
-      if (newIndexOfHash != -1)
-        newSpec = newSpec.substr(0, newSpec.indexOf("#"));
-      if (newSpec != oldSpec) {
-        // Remove all the notifications, except for those which want to
-        // persist across the first location change.
-
-        // XXX
-        // var nBox = Browser.getNotificationBox();
-        // nBox.removeTransientNotifications();
-      }
-    }
-
-    if (aWebProgress.DOMWindow == selectedBrowser.contentWindow) {
+    if (this._tab == Browser.selectedTab) {
       BrowserUI.setURI();
 
       // We're about to have new page content, to scroll the content area
@@ -2232,15 +2195,40 @@ ProgressController.prototype = {
     }
   },
 
-  // This method is called to indicate a status changes for the currently
-  // loading page.  The message is already formatted for display.
+  /**
+   * This method is called to indicate a status changes for the currently
+   * loading page.  The message is already formatted for display.
+   */
   onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {
+  },
+
+  /** This method is called when the security state of the browser changes. */
+  onSecurityChange: function(aWebProgress, aRequest, aState) {
+    // Don't need to do anything if the data we use to update the UI hasn't changed
+    if (this.state == aState && !this._hostChanged)
+      return;
+
+    this._hostChanged = false;
+    this.state = aState;
+
+    if (this._tab == Browser.selectedTab) {
+      getIdentityHandler().checkIdentity();
+    }
+  },
+
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Ci.nsIWebProgressListener) ||
+        aIID.equals(Ci.nsISupportsWeakReference) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
   },
 
   _networkStart: function _networkStart() {
     this._tab.startLoading();
 
-    if (Browser.selectedBrowser == this.browser)
+    if (this._tab == Browser.selectedTab)
       BrowserUI.update(TOOLBARSTATE_LOADING);
 
     // broadcast a URLChanged message for consumption by InputHandler
@@ -2252,7 +2240,7 @@ ProgressController.prototype = {
   _networkStop: function _networkStop() {
     this._tab.endLoading();
 
-    if (Browser.selectedBrowser == this.browser) {
+    if (this._tab == Browser.selectedTab) {
       BrowserUI.update(TOOLBARSTATE_LOADED);
       this.browser.docShell.isOffScreenBrowser = true;
     }
@@ -2264,61 +2252,11 @@ ProgressController.prototype = {
     // translate any phone numbers
     Browser.translatePhoneNumbers();
 
-    if (Browser.selectedBrowser == this.browser) {
+    if (this._tab == Browser.selectedTab) {
       // focus the dom window
       if (this.browser.currentURI.spec != "about:blank")
         this.browser.contentWindow.focus();
     }
-  },
-
- // Properties used to cache security state used to update the UI
-  _state: null,
-  _host: undefined,
-  _hostChanged: false, // onLocationChange will flip this bit
-
-  // This method is called when the security state of the browser changes.
-  onSecurityChange: function(aWebProgress, aRequest, aState) {
-    // Don't need to do anything if the data we use to update the UI hasn't
-    // changed
-    if (this._state == aState && !this._hostChanged) {
-      return;
-    }
-    this._state = aState;
-
-    try {
-      this._host = getBrowser().contentWindow.location.host;
-    }
-    catch(ex) {
-      this._host = null;
-    }
-
-    this._hostChanged = false;
-
-    // Don't pass in the actual location object, since it can cause us to
-    // hold on to the window object too long.  Just pass in the fields we
-    // care about. (bug 424829)
-    var location = getBrowser().contentWindow.location;
-    var locationObj = {};
-    try {
-      locationObj.host = location.host;
-      locationObj.hostname = location.hostname;
-      locationObj.port = location.port;
-    }
-    catch (ex) {
-      // Can sometimes throw if the URL being visited has no host/hostname,
-      // e.g. about:blank. The _state for these pages means we won't need these
-      // properties anyways, though.
-    }
-    getIdentityHandler().checkIdentity(this._state, locationObj);
-  },
-
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIWebProgressListener) ||
-        aIID.equals(Ci.nsISupportsWeakReference) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
   }
 };
 
@@ -2382,6 +2320,11 @@ Tab.prototype = {
     } else {
       delete this._loadingTimeout;
     }
+  },
+
+  /** Returns tab's identity state for updating security UI. */
+  getIdentityState: function() {
+    return this._listener.state;
   },
 
   startLoading: function() {
