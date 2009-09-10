@@ -48,10 +48,6 @@ public:
 
   nsTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  NS_IMETHOD  Init(nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIFrame*        asPrevInFlow);
-
   NS_IMETHOD BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists);
@@ -63,10 +59,6 @@ public:
   virtual PRBool GetMouseThrough() const { return PR_FALSE; }
 
   virtual void MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent);
-
-protected:
-
-  NS_IMETHOD CaptureMouseEvents(nsPresContext* aPresContext,PRBool aGrabMouseEvents);
 
 protected:
 	PRBool mTrackingMouseMove;	
