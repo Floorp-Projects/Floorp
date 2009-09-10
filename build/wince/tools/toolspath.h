@@ -25,11 +25,11 @@
 #define SHUNT_INC TOPSRCDIR "/build/wince/shunt/include/"
 #endif
 
-#define ASM_PATH  WCE_BIN "armasm.exe"
-#define CL_PATH   WCE_BIN "cl.exe"
-#define LIB_PATH  WCE_BIN "lib.exe"
-#define LINK_PATH WCE_BIN "link.exe"
-#define RC_PATH   WCE_RC_BIN "rc.exe"
+#define ASM_PATH  "\"" WCE_BIN "armasm.exe\""
+#define CL_PATH   "\"" WCE_BIN "cl.exe\""
+#define LIB_PATH  "\"" WCE_BIN "lib.exe\""
+#define LINK_PATH "\"" WCE_BIN "link.exe\""
+#define RC_PATH   "\"" WCE_RC_BIN "rc.exe\""
 
 #define MAX_NOLEAK_BUFFERS 1000
 char noleak_buffers[MAX_NOLEAK_BUFFERS][1024];
