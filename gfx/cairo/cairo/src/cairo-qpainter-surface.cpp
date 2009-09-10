@@ -704,8 +704,17 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
         return CAIRO_INT_STATUS_SUCCESS;
     }
 
-    // Qt will implicity enable clipping, and will use ReplaceClip
+    // Enable clipping here and use ReplaceClip
     // instead of IntersectClip if clipping was disabled before
+    // (this is done implicitly for the X11 paint engine, but not
+    // necessarily for others, so we make it explicit)
+
+    Qt::ClipOperation clipMode = Qt::IntersectClip;
+    
+    if (!qs->p->hasClipping()) {
+      qs->p->setClipping(true);
+      clipMode = Qt::ReplaceClip;
+    }
 
     // Note: Qt is really bad at dealing with clip paths.  It doesn't
     // seem to usefully recognize rectangular paths, instead going down
@@ -736,7 +745,7 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
 
         clip_bounds = r;
 
-        qs->p->setClipRect (r, Qt::IntersectClip);
+	qs->p->setClipRect (r, clipMode);
     } else {
         // Then if it's not an integer-aligned rectangle, check
         // if we can extract a region (a set of rectangles) out.
@@ -778,7 +787,7 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
             }
             _cairo_region_fini (region);
 
-            qs->p->setClipRegion (qr, Qt::IntersectClip);
+            qs->p->setClipRegion (qr, clipMode);
         } else {
             // We weren't able to extract a region from the traps.
             // Just hand the path down to QPainter.
@@ -790,7 +799,7 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
             clip_bounds = qpath.boundingRect().toAlignedRect();
 
             // XXX Antialiasing is ignored
-            qs->p->setClipPath (qpath, Qt::IntersectClip);
+            qs->p->setClipPath (qpath, clipMode);
         }
     }
 
