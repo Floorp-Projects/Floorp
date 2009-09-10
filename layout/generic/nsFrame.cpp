@@ -2253,14 +2253,11 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   }
 
   if (scrollFrame) {
-    nsIView* capturingView = scrollFrame->GetScrollableView()->View();
-    if (capturingView) {
-      // Get the view that aEvent->point is relative to. This is disgusting.
-      nsIView* eventView = nsnull;
-      nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, this,
-                                                                    &eventView);
-      nsPoint capturePt = pt + eventView->GetOffsetTo(capturingView);
-      frameselection->StartAutoScrollTimer(capturingView, capturePt, 30);
+    nsIFrame* capturingFrame = scrollFrame->GetScrolledFrame();
+    if (capturingFrame) {
+      nsPoint pt =
+        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, capturingFrame);
+      frameselection->StartAutoScrollTimer(capturingFrame, pt, 30);
     }
   }
 

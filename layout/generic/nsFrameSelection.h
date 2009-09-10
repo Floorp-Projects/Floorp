@@ -325,16 +325,18 @@ public:
                                             PRInt32 aEndRowIndex,
                                             PRInt32 aEndColumnIndex);
 
-  /** StartAutoScrollTimer is responsible for scrolling views so that aPoint is always
-   *  visible, and for selecting any frame that contains aPoint. The timer will also reset
-   *  itself to fire again if we have not scrolled to the end of the document.
-   *  @param aView is view to use when searching for the closest frame to the point,
-   *  which is the view that is capturing the mouse
-   *  @param aPoint is relative to the view.
+  /** StartAutoScrollTimer is responsible for scrolling frames so that
+   *  aPoint is always visible, and for selecting any frame that contains
+   *  aPoint. The timer will also reset itself to fire again if we have
+   *  not scrolled to the end of the document.
+   *  @param aFrame is the outermost frame to use when searching for
+   *  the closest frame for the point, i.e. the frame that is capturing
+   *  the mouse
+   *  @param aPoint is relative to aFrame.
    *  @param aDelay is the timer's interval.
    */
   /*unsafe*/
-  nsresult StartAutoScrollTimer(nsIView *aView,
+  nsresult StartAutoScrollTimer(nsIFrame *aFrame,
                                 nsPoint aPoint,
                                 PRUint32 aDelay);
 
