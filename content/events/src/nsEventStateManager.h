@@ -411,22 +411,15 @@ protected:
   static PRInt32 sUserInputEventDepth;
 };
 
-/**
- * This class is used while processing real user input. During this time, popups
- * are allowed. For mousedown events, mouse capturing is also permitted.
- */
+
 class nsAutoHandlingUserInputStatePusher
 {
 public:
-  nsAutoHandlingUserInputStatePusher(PRBool aIsHandlingUserInput, PRBool aIsMouseDown)
-    : mIsHandlingUserInput(aIsHandlingUserInput), mIsMouseDown(aIsMouseDown)
+  nsAutoHandlingUserInputStatePusher(PRBool aIsHandlingUserInput)
+    : mIsHandlingUserInput(aIsHandlingUserInput)
   {
     if (aIsHandlingUserInput) {
       nsEventStateManager::StartHandlingUserInput();
-      if (aIsMouseDown) {
-        nsIPresShell::SetCapturingContent(nsnull, 0);
-        nsIPresShell::AllowMouseCapture(PR_TRUE);
-      }
     }
   }
 
@@ -434,15 +427,11 @@ public:
   {
     if (mIsHandlingUserInput) {
       nsEventStateManager::StopHandlingUserInput();
-      if (mIsMouseDown) {
-        nsIPresShell::AllowMouseCapture(PR_FALSE);
-      }
     }
   }
 
 protected:
   PRBool mIsHandlingUserInput;
-  PRBool mIsMouseDown;
 
 private:
   // Hide so that this class can only be stack-allocated

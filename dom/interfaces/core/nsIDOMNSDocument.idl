@@ -43,7 +43,7 @@
 interface nsIBoxObject;
 interface nsIDOMLocation;
 
-[scriptable, uuid(B7E9211B-F29F-4E2D-9762-6BCBC64E5C05)]
+[scriptable, uuid(09a439ad-4079-46d5-a050-4d7015d1a108)]
 interface nsIDOMNSDocument : nsISupports
 {
   readonly attribute DOMString      characterSet;
@@ -90,11 +90,5 @@ interface nsIDOMNSDocument : nsISupports
   * <a href="http://dev.w3.org/cvsweb/~checkout~/csswg/cssom/Overview.html?content-type=text/html;%20charset=utf-8#documentlayout-elementfrompoint">preliminary spec</a>
   */
   nsIDOMElement             elementFromPoint(in long x, in long y);
-
-  /**
-   * Release the current mouse capture if it is on an element within this
-   * document.
-   */
-  void releaseCapture();
 
 };

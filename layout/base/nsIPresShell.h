@@ -104,23 +104,6 @@ class nsDisplayListBuilder;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// Flags to pass to SetCapturingContent
-//
-// when assigning capture, ignore whether capture is allowed or not
-#define CAPTURE_IGNOREALLOWED 1
-// true if events should be targeted at the capturing content or its children
-#define CAPTURE_RETARGETTOELEMENT 2
-
-typedef struct CapturingContentInfo {
-  // capture should only be allowed during a mousedown event
-  PRPackedBool mAllowed;
-  PRPackedBool mRetargetToElement;
-  nsIContent* mContent;
-
-  CapturingContentInfo() :
-    mAllowed(PR_FALSE), mRetargetToElement(PR_FALSE), mContent(nsnull) { }
-} CapturingContentInfo;
-
 // eba51d41-68db-4dab-a57b-dc1a2704de87
 #define NS_IPRESSHELL_IID     \
 { 0xeba51d41, 0x68db, 0x4dab, \
@@ -871,42 +854,6 @@ public:
   PRBool ObservesNativeAnonMutationsForPrint()
   {
     return mObservesMutationsForPrint;
-  }
-
-  // mouse capturing
-
-  static CapturingContentInfo gCaptureInfo;
-
-  /**
-   * When capturing content is set, it traps all mouse events and retargets
-   * them at this content node. If capturing is not allowed
-   * (gCaptureInfo.mAllowed is false), then capturing is not set. However, if
-   * the CAPTURE_IGNOREALLOWED flag is set, the allowed state is ignored and
-   * capturing is set regardless. To disable capture, pass null for the value
-   * of aContent.
-   *
-   * If CAPTURE_RETARGETTOELEMENT is set, all mouse events are targeted at
-   * aContent only. Otherwise, mouse events are targeted at aContent or its
-   * descendants. That is, descendants of aContent receive mouse events as
-   * they normally would, but mouse events outside of aContent are retargeted
-   * to aContent.
-   */
-  static void SetCapturingContent(nsIContent* aContent, PRUint8 aFlags);
-
-  /**
-   * Return the active content currently capturing the mouse if any.
-   */
-  static nsIContent* GetCapturingContent()
-  {
-    return gCaptureInfo.mContent;
-  }
-
-  /**
-   * Allow or disallow mouse capturing.
-   */
-  static void AllowMouseCapture(PRBool aAllowed)
-  {
-    gCaptureInfo.mAllowed = aAllowed;
   }
 
 protected:
