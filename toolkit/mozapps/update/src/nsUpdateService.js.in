@@ -1579,6 +1579,7 @@ UpdateService.prototype = {
       var mode = (updateIncompatMode == 1) ? Ci.nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY :
                                              Ci.nsIExtensionManager.UPDATE_NOTIFY_NEWVERSION;
       em.update(currentAddons, currentAddons.length, mode, this,
+                Ci.nsIExtensionManager.UPDATE_WHEN_NEW_APP_DETECTED,
                 this._update.extensionVersion, this._update.platformVersion);
     }
     else {

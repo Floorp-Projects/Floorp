@@ -640,6 +640,7 @@ var gIncompatibleCheckPage = {
              getService(CoI.nsIExtensionManager);
     em.update(this.addons, this.addons.length,
               CoI.nsIExtensionManager.UPDATE_NOTIFY_NEWVERSION, this,
+              CoI.nsIExtensionManager.UPDATE_WHEN_NEW_APP_DETECTED,
               gUpdates.update.extensionVersion, gUpdates.update.platformVersion);
   },
 
