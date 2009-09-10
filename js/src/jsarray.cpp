@@ -101,7 +101,6 @@
 #include "jsstr.h"
 #include "jsstaticcheck.h"
 #include "jsvector.h"
-#include "jshashmap.h"
 
 #include "jsatominlines.h"
 
@@ -1468,10 +1467,17 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
 }
 #endif
 
+static JSHashNumber
+js_hash_array(const void *key)
+{
+    return (JSHashNumber)JS_PTR_TO_UINT32(key) >> JSVAL_TAGBITS;
+}
+
 bool
 js_InitContextBusyArrayTable(JSContext *cx)
 {
-    cx->busyArrayTable = cx->create<JSBusyArrayTable>(cx);
+    cx->busyArrayTable = JS_NewHashTable(4, js_hash_array, JS_CompareValues,
+                                         JS_CompareValues, NULL, NULL);
     return cx->busyArrayTable != NULL;
 }
 
@@ -1485,16 +1491,22 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
      * This hash table is shared between toString invocations and must be empty
      * after the root invocation completes.
      */
-    JSBusyArrayTable &busy = *cx->busyArrayTable;
+    JSHashTable *table = cx->busyArrayTable;
 
     /*
      * Use HashTable entry as the cycle indicator. On first visit, create the
      * entry, and, when leaving, remove the entry.
      */
-    JSBusyArrayTable::Pointer entryPtr = busy.lookup(obj);
-    if (!entryPtr) {
-        if (!busy.addAfterMiss(obj, false, entryPtr))
+    JSHashNumber hash = js_hash_array(obj);
+    JSHashEntry **hep = JS_HashTableRawLookup(table, hash, obj);
+    JSHashEntry *he = *hep;
+    if (!he) {
+        /* Not in hash table, so not a cycle. */
+        he = JS_HashTableRawAdd(table, hep, hash, obj, NULL);
+        if (!he) {
+            JS_ReportOutOfMemory(cx);
             return false;
+        }
     } else {
         /* Cycle, so return empty string. */
         *rval = ATOM_KEY(cx->runtime->atomState.emptyAtom);
@@ -1569,10 +1581,10 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
 
   out:
     /*
-     * It is possible that 'entryPtr' may have been invalidated by subsequent
-     * table operations, so use the slower non-Pointer version.
+     * It is possible that 'hep' may have been invalidated by subsequent
+     * RawAdd/Remove. Hence, 'RawRemove' must not be used.
      */
-    busy.remove(obj);
+    JS_HashTableRemove(table, obj);
     return ok;
 }
 
