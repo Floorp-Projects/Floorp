@@ -64,7 +64,7 @@ typedef enum jsvaltag {
 
 /* Type tag bitfield length and derived macros. */
 #define JSVAL_TAGBITS           3
-#define JSVAL_TAGMASK           JS_BITMASK(JSVAL_TAGBITS)
+#define JSVAL_TAGMASK           ((jsval)JS_BITMASK(JSVAL_TAGBITS))
 #define JSVAL_ALIGN             JS_BIT(JSVAL_TAGBITS)
 
 /* Not a function, because we have static asserts that use it */
