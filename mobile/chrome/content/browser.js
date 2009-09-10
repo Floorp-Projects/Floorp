@@ -1151,8 +1151,8 @@ var Browser = {
   },
 
   /**
-   * return element at client coordinates of browser, returns null if
-   * there's no active browser or if no element can be found
+   * @param x,y Browser coordinates
+   * @return Element at position, null if no active browser or no element found
    */
   elementFromPoint: function elementFromPoint(x, y) {
     //Util.dumpLn("*** elementFromPoint: page ", x, ",", y);
@@ -1160,26 +1160,23 @@ var Browser = {
     let browser = this._browserView.getBrowser();
     if (!browser) return null;
 
+    // browser's elementFromPoint expect browser-relative client coordinates.
+    // subtract browser's scroll values to adjust
     let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
-
-    let scrollX = { value: 0 }, scrollY = { value: 0 };
+    let scrollX = {}, scrollY = {};
     cwu.getScrollXY(false, scrollX, scrollY);
     x = x - scrollX.value;
     y = y - scrollY.value;
-
     let elem = cwu.elementFromPoint(x, y,
                                     true,   /* ignore root scroll frame*/
                                     false); /* don't flush layout */
 
     // step through layers of IFRAMEs and FRAMES to find innermost element
     while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
-      let frameWin = elem.ownerDocument.defaultView;
-      let frameUtils = frameWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      frameUtils.getScrollXY(false, scrollX, scrollY);
-
-      var rect = elem.getBoundingClientRect();
-      x = x - rect.left + scrollX.value;
-      y = y - rect.top + scrollY.value;
+      // adjust client coordinates' origin to be top left of iframe viewport
+      let rect = elem.getBoundingClientRect();
+      x = x - rect.left;
+      y = y - rect.top;
       elem = elem.contentDocument.elementFromPoint(x, y);
     }
 
