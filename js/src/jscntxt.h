@@ -1008,7 +1008,7 @@ struct JSContext {
 
     /* State for object and array toSource conversion. */
     JSSharpObjectMap    sharpObjectMap;
-    JSHashTable         *busyArrayTable;
+    JSBusyArrayTable    *busyArrayTable;
 
     /* Argument formatter support for JS_{Convert,Push}Arguments{,VA}. */
     JSArgumentFormatMap *argumentFormatMap;
