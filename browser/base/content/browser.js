@@ -1361,6 +1361,8 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
 function BrowserShutdown()
 {
+  gPrefService.removeObserver(ctrlTab.prefName, ctrlTab);
+  gPrefService.removeObserver(allTabs.prefName, allTabs);
   tabPreviews.uninit();
   ctrlTab.uninit();
   allTabs.uninit();
