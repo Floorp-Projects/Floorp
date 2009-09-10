@@ -503,3 +503,27 @@ colorpicker > panel {
 colorpicker > vbox {
   background-color: #36373b;
 }
+
+/* textbox ----------------------------------------------------------------- */
+
+/* high-res screens */
+@media all and (min-device-width: 401px) {
+  .textbox-search-icon {
+    list-style-image: url("chrome://browser/skin/images/search-glass-30.png");
+  }
+  
+  .textbox-search-clear {
+    list-style-image: url("chrome://browser/skin/images/search-clear-30.png");
+  }
+}
+
+/* low-res screens */
+@media all and (max-device-width: 400px) {
+  .textbox-search-icon {
+    list-style-image: url("chrome://browser/skin/images/search-glass-16.png");
+  }
+  
+  .textbox-search-clear {
+    list-style-image: url("chrome://browser/skin/images/search-clear-16.png");
+  }
+}
