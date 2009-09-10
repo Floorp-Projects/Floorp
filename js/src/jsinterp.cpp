@@ -1452,8 +1452,6 @@ JSBool
 js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
                     JSAccessMode mode, uintN argc, jsval *argv, jsval *rval)
 {
-    JSSecurityCallbacks *callbacks;
-
     js_LeaveTrace(cx);
 
     /*
@@ -1461,31 +1459,6 @@ js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
      * again, see bug 355497.
      */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
-
-    /*
-     * Check general (not object-ops/class-specific) access from the running
-     * script to obj.id only if id has a scripted getter or setter that we're
-     * about to invoke.  If we don't check this case, nothing else will -- no
-     * other native code has the chance to check.
-     *
-     * Contrast this non-native (scripted) case with native getter and setter
-     * accesses, where the native itself must do an access check, if security
-     * policies requires it.  We make a checkAccess or checkObjectAccess call
-     * back to the embedding program only in those cases where we're not going
-     * to call an embedding-defined native function, getter, setter, or class
-     * hook anyway.  Where we do call such a native, there's no need for the
-     * engine to impose a separate access check callback on all embeddings --
-     * many embeddings have no security policy at all.
-     */
-    JS_ASSERT(mode == JSACC_READ || mode == JSACC_WRITE);
-    callbacks = JS_GetSecurityCallbacks(cx);
-    if (callbacks &&
-        callbacks->checkObjectAccess &&
-        VALUE_IS_FUNCTION(cx, fval) &&
-        FUN_INTERPRETED(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval))) &&
-        !callbacks->checkObjectAccess(cx, obj, ID_TO_VALUE(id), mode, &fval)) {
-        return JS_FALSE;
-    }
 
     return js_InternalCall(cx, obj, fval, argc, argv, rval);
 }
