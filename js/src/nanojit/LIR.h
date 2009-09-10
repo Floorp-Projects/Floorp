@@ -51,8 +51,6 @@
  */
 namespace nanojit
 {
-    using namespace MMgc;
-
     enum LOpcode
 #if defined(_MSC_VER) && _MSC_VER >= 1400
 #pragma warning(disable:4480) // nonstandard extension used: specifying underlying type for enum
@@ -1012,15 +1010,14 @@ namespace nanojit
         return toLInsC()->ci;
     }
 
-    // make it a GCObject so we can explicitly delete it early
-    class LirWriter : public GCObject
+    class LirWriter
     {
     public:
         LirWriter *out;
 
-        virtual ~LirWriter() {}
         LirWriter(LirWriter* out)
             : out(out) {}
+        virtual ~LirWriter() {}
 
         virtual LInsp ins0(LOpcode v) {
             return out->ins0(v);
