@@ -1592,14 +1592,6 @@ IdentityHandler.prototype = {
    * (if available) and, if necessary, update the UI to reflect this.
    */
   checkIdentity: function() {
-    // make a copy of the passed in location to avoid cycles
-    function makeLocationObject() {
-      try {
-        return { host: location.host, hostname: location.hostname, port: location.port };
-      } catch (ex) { }
-      return {};
-    }
-
     let state = Browser.selectedTab.getIdentityState();
     let location = getBrowser().contentWindow.location;
     let currentStatus = getBrowser().securityUI.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
@@ -1607,6 +1599,7 @@ IdentityHandler.prototype = {
     this._lastStatus = currentStatus;
     this._lastLocation = {};
     try {
+      // make a copy of the passed in location to avoid cycles
       this._lastLocation = { host: location.host, hostname: location.hostname, port: location.port };
     } catch (ex) { }
 
