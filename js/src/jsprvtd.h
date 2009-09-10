@@ -154,10 +154,28 @@ template <class T,
           class AllocPolicy = ContextAllocPolicy>
 class Vector;
 
+template <class T,
+          size_t MinInlineCapacity = 0,
+          class AllocPolicy = ContextAllocPolicy>
+class Pool;
+
+template <class>
+struct DefaultHasher;
+
+template <class Key,
+          class Value = void,
+          class Hasher = DefaultHasher<Key>,
+          size_t MinInlineCapacity = 0,
+          class AllocPolicy = ContextAllocPolicy>
+class HashMap;
+
 } /* namespace js */
 
 /* Common instantiations. */
 typedef js::Vector<jschar, 32> JSCharBuffer;
+
+typedef js::HashMap<JSObject *, bool, js::DefaultHasher<JSObject *>, 4,
+                    js::ContextAllocPolicy> JSBusyArrayTable;
 
 } /* export "C++" */
 #endif  /* __cplusplus */
