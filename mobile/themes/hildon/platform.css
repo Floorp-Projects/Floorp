@@ -100,7 +100,7 @@ button {
   -moz-appearance: none !important;
 }
 
-button:not([disabled="true"]):active {
+button:not([disabled="true"]):active:hover {
   -moz-border-image: url("chrome://browser/skin/images/button-active-64.png") 8 repeat repeat;
 }
 
@@ -121,8 +121,8 @@ notification button {
   -moz-border-image: url("chrome://browser/skin/images/buttondark-default-64.png") 8 repeat repeat;
 }
 
-button.button-dark:not([disabled="true"]):active,
-notification button:not([disabled="true"]):active {
+button.button-dark:not([disabled="true"]):active:hover,
+notification button:not([disabled="true"]):active:hover {
   -moz-border-image: url("chrome://browser/skin/images/buttondark-active-64.png") 8 repeat repeat;
 }
 
@@ -163,7 +163,7 @@ toolbarbutton.button-dark {
   -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-default-64.png") 10 repeat repeat;
 }
 
-toolbarbutton.button-dark:not([disabled="true"]):active {
+toolbarbutton.button-dark:not([disabled="true"]):active:hover {
   -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-active-64.png") 10 repeat repeat;
 }
 
