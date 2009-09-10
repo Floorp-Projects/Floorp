@@ -628,10 +628,30 @@ nsThebesDeviceContext::SetDPI()
 
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
+        const char *prefName = "layout.css.devPixelsPerPx";
+        PRInt32 prefType = nsIPrefBranch::PREF_INVALID;
+        PRInt32 prefInt;
         nsXPIDLCString prefString;
-        nsresult rv = prefs->GetCharPref("layout.css.devPixelsPerPx", getter_Copies(prefString));
-        if (NS_SUCCEEDED(rv)) {
-            prefDevPixelsPerCSSPixel = static_cast<float>(atof(prefString));
+        nsresult rv;
+
+        prefs->GetPrefType(prefName, &prefType);
+
+        switch (prefType) {
+        case nsIPrefBranch::PREF_INT:
+            // Backward compatibility for applications that haven't migrated
+            // to a string yet.
+            rv = prefs->GetIntPref(prefName, &prefInt);
+            if (NS_SUCCEEDED(rv)) {
+                prefDevPixelsPerCSSPixel = static_cast<float>(prefInt);
+            }
+            break;
+
+        case nsIPrefBranch::PREF_STRING:
+            rv = prefs->GetCharPref(prefName, getter_Copies(prefString));
+            if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
+                prefDevPixelsPerCSSPixel = static_cast<float>(atof(prefString));
+            }
+            break;
         }
     }
 
