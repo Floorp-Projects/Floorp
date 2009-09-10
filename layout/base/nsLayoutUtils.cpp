@@ -901,30 +901,6 @@ nsLayoutUtils::InvertTransformsToRoot(nsIFrame *aFrame,
   return MatrixTransformPoint(aPoint, ctm.Invert(), aFrame->PresContext()->AppUnitsPerDevPixel());
 }
 
-nsPoint
-nsLayoutUtils::GetEventCoordinatesForNearestView(nsEvent* aEvent,
-                                                 nsIFrame* aFrame,
-                                                 nsIView** aView)
-{
-  if (!aEvent || (aEvent->eventStructType != NS_MOUSE_EVENT && 
-                  aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-                  aEvent->eventStructType != NS_DRAG_EVENT))
-    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-
-  nsGUIEvent* GUIEvent = static_cast<nsGUIEvent*>(aEvent);
-  if (!GUIEvent->widget)
-    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-
-  nsPoint viewToFrame;
-  nsIView* frameView;
-  aFrame->GetOffsetFromView(viewToFrame, &frameView);
-  if (aView)
-    *aView = frameView;
-
-  return TranslateWidgetToView(aFrame->PresContext(), GUIEvent->widget,
-                               GUIEvent->refPoint, frameView);
-}
-
 static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
   nsIntPoint offset(0, 0);
   nsIWidget* parent = aWidget->GetParent();
