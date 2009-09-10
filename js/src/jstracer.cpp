@@ -72,7 +72,6 @@
 #include "jsregexp.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jsscriptinlines.h"
 #include "jsstaticcheck.h"
 #include "jstracer.h"
 #include "jsxml.h"
