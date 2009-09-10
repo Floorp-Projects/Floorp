@@ -20,3 +20,10 @@ BEGIN_TEST(selfTest_negativeZeroIsNotTheSameAsZero)
     return true;
 }
 END_TEST(selfTest_negativeZeroIsNotTheSameAsZero)
+
+BEGIN_TEST(selfTest_globalHasNoParent)
+{
+    CHECK(JS_GetParent(cx, global) == NULL);
+    return true;
+}
+END_TEST(selfTest_globalHasNoParent)
