@@ -165,14 +165,7 @@ struct JSScript {
         return arr->vector[index];
     }
 
-    JSFunction *getFunction(size_t index) {
-        JSObject *funobj = getObject(index);
-        JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
-        JS_ASSERT(funobj == (JSObject *) funobj->getPrivate());
-        JSFunction *fun = (JSFunction *) funobj;
-        JS_ASSERT(FUN_INTERPRETED(fun));
-        return fun;
-    }
+    inline JSFunction *getFunction(size_t index);
 
     inline JSObject *getRegExp(size_t index);
 };
