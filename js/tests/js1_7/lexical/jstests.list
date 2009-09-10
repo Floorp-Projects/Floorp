@@ -1,4 +1,0 @@
-script regress-336376-01.js
-skip script regress-346642-03.js # obsolete test
-script regress-346642-04.js
-script regress-351515.js

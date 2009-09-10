@@ -1,8 +1,0 @@
-skip script ../../jsreftest.html?test=js1_2/Array/array_split_1.js # obsolete test
-script ../../jsreftest.html?test=js1_2/Array/general1.js
-script ../../jsreftest.html?test=js1_2/Array/general2.js
-script ../../jsreftest.html?test=js1_2/Array/slice.js
-script ../../jsreftest.html?test=js1_2/Array/splice1.js
-script ../../jsreftest.html?test=js1_2/Array/splice2.js
-skip script ../../jsreftest.html?test=js1_2/Array/tostring_1.js # obsolete test
-skip script ../../jsreftest.html?test=js1_2/Array/tostring_2.js # obsolete test

@@ -1,6 +1,0 @@
-include Boolean/jstests.list
-include extensions/jstests.list
-include inherit/jstests.list
-include misc/jstests.list
-include regress/jstests.list
-include Script/jstests.list

@@ -1,9 +1,0 @@
-script ../../jsreftest.html?test=js1_8/genexps/regress-347739.js
-script ../../jsreftest.html?test=js1_8/genexps/regress-349012-01.js
-script ../../jsreftest.html?test=js1_8/genexps/regress-349326.js
-script ../../jsreftest.html?test=js1_8/genexps/regress-349331.js
-script ../../jsreftest.html?test=js1_8/genexps/regress-380237-01.js
-script ../../jsreftest.html?test=js1_8/genexps/regress-380237-02.js
-skip script ../../jsreftest.html?test=js1_8/genexps/regress-380237-03.js # obsolete test
-skip script ../../jsreftest.html?test=js1_8/genexps/regress-380237-04.js # obsolete test
-script ../../jsreftest.html?test=js1_8/genexps/regress-384991.js
