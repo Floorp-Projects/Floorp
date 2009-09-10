@@ -2003,8 +2003,6 @@ CompileRegExpToAST(JSContext* cx, JSTokenStream* ts,
 #ifdef JS_TRACER
 typedef js::Vector<LIns *, 4, js::ContextAllocPolicy> LInsList;
 
-/* Dummy GC for nanojit placement new. */
-static GC gc;
 static avmplus::AvmCore s_core = avmplus::AvmCore();
 
 /* Return the cached fragment for the given regexp, or create one. */
@@ -3134,19 +3132,19 @@ class RegExpNativeCompiler {
         if (alloc.outOfMemory())
             goto fail;
         /* FIXME Use bug 463260 smart pointer when available. */
-        lir = lirBufWriter = new (&gc) LirBufWriter(lirbuf);
+        lir = lirBufWriter = new LirBufWriter(lirbuf);
 
         /* FIXME Use bug 463260 smart pointer when available. */
 #ifdef NJ_VERBOSE
         debug_only_stmt(
             if (js_LogController.lcbits & LC_TMRegexp) {
-                lir = verbose_filter = new (&gc) VerboseWriter(alloc, lir, lirbuf->names,
-                                                               &js_LogController);
+                lir = verbose_filter = new VerboseWriter(alloc, lir, lirbuf->names,
+                                                         &js_LogController);
             }
         )
 #endif
 #ifdef DEBUG
-        lir = sanity_filter = new (&gc) SanityFilter(lir);
+        lir = sanity_filter = new SanityFilter(lir);
 #endif
 
         /*

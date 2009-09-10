@@ -269,7 +269,6 @@ js_InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define INS_NULL()            INS_CONSTPTR(NULL)
 #define INS_VOID()            INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID))
 
-static GC gc = GC();
 static avmplus::AvmCore s_core = avmplus::AvmCore();
 static avmplus::AvmCore* core = &s_core;
 
@@ -731,7 +730,7 @@ struct Tracker::Page*
 Tracker::addPage(const void* v) {
     jsuword base = getPageBase(v);
     struct Tracker::Page* p = (struct Tracker::Page*)
-        GC::Alloc(sizeof(*p) - sizeof(p->map) + (NJ_PAGE_SIZE >> 2) * sizeof(LIns*));
+        calloc(1, sizeof(*p) - sizeof(p->map) + (NJ_PAGE_SIZE >> 2) * sizeof(LIns*));
     p->base = base;
     p->next = pagelist;
     pagelist = p;
@@ -744,7 +743,7 @@ Tracker::clear()
     while (pagelist) {
         Page* p = pagelist;
         pagelist = pagelist->next;
-        GC::Free(p);
+        free(p);
     }
 }
 
@@ -2018,26 +2017,24 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
 
 #endif
 
-    lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
+    lir = lir_buf_writer = new LirBufWriter(lirbuf);
 #ifdef DEBUG
-    lir = sanity_filter_1 = new (&gc) SanityFilter(lir);
+    lir = sanity_filter_1 = new SanityFilter(lir);
 #endif
     debug_only_stmt(
         if (js_LogController.lcbits & LC_TMRecorder) {
            lir = verbose_filter
-               = new (&gc) VerboseWriter(*traceMonitor->allocator, lir,
-                                         lirbuf->names, &js_LogController);
+               = new VerboseWriter (*JS_TRACE_MONITOR(cx).allocator, lir, lirbuf->names,
+                                    &js_LogController);
         }
     )
     if (nanojit::AvmCore::config.soft_float)
-        lir = float_filter = new (&gc) SoftFloatFilter(lir);
-    else
-        float_filter = 0;
-    lir = cse_filter = new (&gc) CseFilter(lir, *traceMonitor->allocator);
-    lir = expr_filter = new (&gc) ExprFilter(lir);
-    lir = func_filter = new (&gc) FuncFilter(lir);
+        lir = float_filter = new SoftFloatFilter(lir);
+    lir = cse_filter = new CseFilter(lir, *JS_TRACE_MONITOR(cx).allocator);
+    lir = expr_filter = new ExprFilter(lir);
+    lir = func_filter = new FuncFilter(lir);
 #ifdef DEBUG
-    lir = sanity_filter_2 = new (&gc) SanityFilter(lir);
+    lir = sanity_filter_2 = new SanityFilter(lir);
 #endif
     lir->ins0(LIR_start);
 
@@ -4946,9 +4943,9 @@ StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
     JS_ASSERT(f->root != f || !cx->fp->imacpc);
 
     /* Start recording if no exception during construction. */
-    tm->recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
-                                           stackSlots, ngslots, typeMap,
-                                           expectedInnerExit, outer, outerArgc);
+    tm->recorder = new TraceRecorder(cx, anchor, f, ti,
+                                     stackSlots, ngslots, typeMap,
+                                     expectedInnerExit, outer, outerArgc);
 
     if (cx->throwing) {
         js_AbortRecording(cx, "setting up recorder failed");
