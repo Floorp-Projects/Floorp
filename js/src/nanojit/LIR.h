@@ -378,14 +378,50 @@ namespace nanojit
 
         LOpcode opcode() const { return lastWord.opcode; }
 
-        Reservation* resv() { return &lastWord; }
+        // Reservation functions.
+        Reservation* resv() {
+            return &lastWord;
+        }
         // Like resv(), but asserts that the Reservation is used.
         Reservation* resvUsed() {
             Reservation* r = resv();
             NanoAssert(r->used);
             return r;
         }
+        void markAsUsed() {
+            lastWord.init();
+        }
+        void markAsClear() {
+            lastWord.clear();
+        }
+        bool isUsed() {
+            return lastWord.used;
+        }
+        bool hasKnownReg() {
+            NanoAssert(isUsed());
+            return getReg() != UnknownReg;
+        }
+        Register getReg() {
+            NanoAssert(isUsed());
+            return lastWord.reg;
+        }
+        void setReg(Register r) {
+            NanoAssert(isUsed());
+            lastWord.reg = r;
+        }
+        uint32_t getArIndex() {
+            NanoAssert(isUsed());
+            return lastWord.arIndex;
+        }
+        void setArIndex(uint32_t arIndex) {
+            NanoAssert(isUsed());
+            lastWord.arIndex = arIndex;
+        }
+        bool isUnusedOrHasUnknownReg() {
+            return !isUsed() || !hasKnownReg();
+        }
 
+        // For various instruction kinds.
         inline LIns*    oprnd1() const;
         inline LIns*    oprnd2() const;
         inline LIns*    oprnd3() const;

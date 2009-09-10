@@ -223,7 +223,8 @@ namespace nanojit
             Register    getBaseReg(LIns *i, int &d, RegisterMask allow);
             int         findMemFor(LIns* i);
             Register    findRegFor(LIns* i, RegisterMask allow);
-            void        findRegFor2(RegisterMask allow, LIns* ia, Reservation* &ra, LIns *ib, Reservation* &rb);
+            void        findRegFor2(RegisterMask allow, LIns* ia, Reservation* &resva, LIns *ib, Reservation* &resvb);
+            void        findRegFor2b(RegisterMask allow, LIns* ia, Register &ra, LIns *ib, Register &rb);
             Register    findSpecificRegFor(LIns* i, Register w);
             Register    prepResultReg(LIns *i, RegisterMask allow);
             void        freeRsrcOf(LIns *i, bool pop);
@@ -233,6 +234,10 @@ namespace nanojit
 
             void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip);
             bool        canRemat(LIns*);
+
+            bool isKnownReg(Register r) {
+                return r != UnknownReg;
+            }
 
             Reservation* getresv(LIns *x) {
                 Reservation* r = x->resv();
@@ -268,7 +273,7 @@ namespace nanojit
             void        asm_store64(LIns *val, int d, LIns *base);
             void        asm_restore(LInsp, Reservation*, Register);
             void        asm_load(int d, Register r);
-            void        asm_spilli(LInsp i, Reservation *resv, bool pop);
+            void        asm_spilli(LInsp i, bool pop);
             void        asm_spill(Register rr, int d, bool pop, bool quad);
             void        asm_load64(LInsp i);
             void        asm_pusharg(LInsp p);
@@ -334,6 +339,11 @@ namespace nanojit
     {
         // even on 64bit cpu's, we allocate stack area in 4byte chunks
         return stack_direction(4 * int32_t(r->arIndex));
+    }
+    inline int32_t disp(LIns* ins)
+    {
+        // even on 64bit cpu's, we allocate stack area in 4byte chunks
+        return stack_direction(4 * int32_t(ins->getArIndex()));
     }
 }
 #endif // __nanojit_Assembler__
