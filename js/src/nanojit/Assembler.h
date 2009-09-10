@@ -100,13 +100,7 @@ namespace nanojit
     enum AssmError
     {
          None = 0
-        ,OutOMem
         ,StackFull
-        ,RegionFull
-        ,MaxLength
-        ,MaxExit
-        ,MaxXJump
-        ,UnknownPrim
         ,UnknownBranch
     };
 
