@@ -3053,6 +3053,7 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing, bool demote)
 JS_REQUIRES_STACK LIns*
 TraceRecorder::get(jsval* p)
 {
+    JS_ASSERT(known(p));
     checkForGlobalObjectReallocation();
     return tracker.get(p);
 }
@@ -10758,10 +10759,9 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
     uint32 cookie = uva->vector[index];
     jsval& vr = js_GetUpvar(cx, script->staticLevel, cookie);
     v = vr;
-    LIns* upvar_ins = get(&vr);
-    if (upvar_ins) {
-        return upvar_ins;
-    }
+
+    if (known(&vr))
+        return get(&vr);
 
     /*
      * The upvar is not in the current trace, so get the upvar value exactly as
