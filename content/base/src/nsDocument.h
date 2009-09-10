@@ -1010,7 +1010,7 @@ public:
 
   virtual void MaybePreLoadImage(nsIURI* uri);
 protected:
-
+  friend class nsNodeUtils;
   void RegisterNamedItems(nsIContent *aContent);
   void UnregisterNamedItems(nsIContent *aContent);
   void UpdateNameTableEntry(nsIContent *aContent);
