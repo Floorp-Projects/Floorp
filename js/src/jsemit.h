@@ -200,7 +200,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
       : flags(0), ngvars(0), bodyid(0), blockidGen(0),
         topStmt(NULL), topScopeStmt(NULL), blockChain(NULL), blockNode(NULL),
         compiler(jsc), scopeChain(NULL), parent(NULL), staticLevel(0),
-        funbox(NULL), functionList(NULL)
+        funbox(NULL), functionList(NULL), sharpSlotBase(-1)
     {
         JS_SCOPE_DEPTH_METERING(scopeDepth = maxScopeDepth = 0);
     }
@@ -225,6 +225,13 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     /* Test whether we're in a statement of given type. */
     bool inStatement(JSStmtType type);
+
+    /* 
+     * sharpSlotBase is -1 or first slot of pair for [sharpArray, sharpDepth].
+     * The parser calls ensureSharpSlots to allocate these two stack locals.
+     */
+    int sharpSlotBase;
+    bool ensureSharpSlots();
 };
 
 /*
@@ -420,6 +427,16 @@ struct JSCodeGenerator : public JSTreeContext
      * pointer beyond the next JSCodeGenerator destructor call.
      */
     ~JSCodeGenerator();
+
+    bool hasSharps() {
+        bool rv = flags & TCF_HAS_SHARPS;
+        JS_ASSERT((sharpSlotBase >= 0) == rv);
+        return rv;
+    }
+
+    uintN sharpSlots() {
+        return hasSharps() ? 2 : 0;
+    }
 };
 
 #define CG_TS(cg)               TS((cg)->compiler)

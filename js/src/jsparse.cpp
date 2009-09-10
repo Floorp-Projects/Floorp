@@ -951,16 +951,20 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
             len = (cs->length > 0)
                   ? (uintN) cs->length
                   : js_GetVariableBytecodeLength(code);
-            if (JOF_TYPE(cs->format) == JOF_LOCAL ||
+            if ((cs->format & JOF_SHARPSLOT) ||
+                JOF_TYPE(cs->format) == JOF_LOCAL ||
                 (JOF_TYPE(cs->format) == JOF_SLOTATOM)) {
                 /*
                  * JSOP_GETARGPROP also has JOF_SLOTATOM type, but it may be
                  * emitted only for a function.
                  */
-                JS_ASSERT((JOF_TYPE(cs->format) == JOF_SLOTATOM) ==
-                          (op == JSOP_GETLOCALPROP));
+                JS_ASSERT_IF(!(cs->format & JOF_SHARPSLOT),
+                             (JOF_TYPE(cs->format) == JOF_SLOTATOM) ==
+                             (op == JSOP_GETLOCALPROP));
                 slot = GET_SLOTNO(code);
                 slot += scriptGlobals;
+                if (!(cs->format & JOF_SHARPSLOT))
+                    slot += cg.sharpSlots();
                 if (slot >= SLOTNO_LIMIT)
                     goto too_many_slots;
                 SET_SLOTNO(code, slot);
@@ -7996,7 +8000,8 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         pn->pn_kid = PrimaryExpr(cx, ts, tc, tt, JS_FALSE);
         if (!pn->pn_kid)
             return NULL;
-        tc->flags |= TCF_HAS_SHARPS;
+        if (!tc->ensureSharpSlots())
+            return NULL;
         break;
 
       case TOK_USESHARP:
@@ -8004,8 +8009,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         pn = NewParseNode(PN_NULLARY, tc);
         if (!pn)
             return NULL;
+        if (!tc->ensureSharpSlots())
+            return NULL;
         pn->pn_num = (jsint) CURRENT_TOKEN(ts).t_dval;
-        tc->flags |= TCF_HAS_SHARPS;
         break;
 #endif /* JS_HAS_SHARP_VARS */
 

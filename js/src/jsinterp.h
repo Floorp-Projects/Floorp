@@ -122,8 +122,6 @@ struct JSStackFrame {
     JSObject        *scopeChain;
     JSObject        *blockChain;
 
-    uintN           sharpDepth;     /* array/object initializer depth */
-    JSObject        *sharpArray;    /* scope for #n= initializer vars */
     uint32          flags;          /* frame flags -- see below */
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
     JSStackFrame    *displaySave;   /* previous value of display entry for

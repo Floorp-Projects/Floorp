@@ -4740,8 +4740,6 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     newifp->frame.down = fp;
     newifp->frame.annotation = NULL;
     newifp->frame.scopeChain = NULL; // will be updated in FlushNativeStackFrame
-    newifp->frame.sharpDepth = 0;
-    newifp->frame.sharpArray = NULL;
     newifp->frame.flags = constructing ? JSFRAME_CONSTRUCTING : 0;
     newifp->frame.dormantNext = NULL;
     newifp->frame.blockChain = NULL;
@@ -4825,8 +4823,6 @@ SynthesizeSlowNativeFrame(InterpState& state, JSContext *cx, VMSideExit *exit)
     JS_ASSERT(cx->fp->scopeChain);
     fp->scopeChain = cx->fp->scopeChain;
     fp->blockChain = NULL;
-    fp->sharpDepth = 0;
-    fp->sharpArray = NULL;
     fp->flags = exit->constructing() ? JSFRAME_CONSTRUCTING : 0;
     fp->dormantNext = NULL;
     fp->displaySave = NULL;
@@ -13391,6 +13387,24 @@ TraceRecorder::record_JSOP_CONCATN()
     return JSRS_CONTINUE;
 }
 
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::record_JSOP_SETMETHOD()
+{
+    return record_JSOP_SETPROP();
+}
+
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::record_JSOP_INITMETHOD()
+{
+    return record_JSOP_INITPROP();
+}
+
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::record_JSOP_SHARPINIT()
+{
+    return JSRS_STOP;
+}
+
 #define DBG_STUB(OP)                                                          \
     JS_REQUIRES_STACK JSRecordingStatus                                       \
     TraceRecorder::record_##OP()                                              \
@@ -13403,18 +13417,6 @@ DBG_STUB(JSOP_CALLUPVAR_DBG)
 DBG_STUB(JSOP_DEFFUN_DBGFC)
 DBG_STUB(JSOP_DEFLOCALFUN_DBGFC)
 DBG_STUB(JSOP_LAMBDA_DBGFC)
-
-JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::record_JSOP_SETMETHOD()
-{
-    return record_JSOP_SETPROP();
-}
-
-JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::record_JSOP_INITMETHOD()
-{
-    return record_JSOP_INITPROP();
-}
 
 #ifdef JS_JIT_SPEW
 /*

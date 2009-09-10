@@ -1793,6 +1793,22 @@ fun_finalize(JSContext *cx, JSObject *obj)
     }
 }
 
+int
+JSFunction::sharpSlotBase(JSContext *cx)
+{
+#if JS_HAS_SHARP_VARS
+    JSAtom *name = js_Atomize(cx, "#array", 6, 0);
+    if (name) {
+        uintN index;
+        JSLocalKind kind = js_LookupLocal(cx, this, name, &index);
+        if (kind == JSLOCAL_VAR)
+            return int(index);
+        JS_ASSERT(kind == JSLOCAL_NONE);
+    }
+#endif
+    return -1;
+}
+
 uint32
 JSFunction::countInterpretedReservedSlots() const
 {
