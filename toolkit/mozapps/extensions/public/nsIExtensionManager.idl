@@ -198,7 +198,7 @@ interface nsIInstallLocation : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface,
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(d514dd0c-5797-4f75-bea2-47612b49e243)]
+[scriptable, uuid(494e8302-8689-4a8a-a08d-0da17c649c7d)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -208,6 +208,24 @@ interface nsIExtensionManager : nsISupports
   const unsigned long UPDATE_CHECK_COMPATIBILITY = 1;
   const unsigned long UPDATE_SYNC_COMPATIBILITY  = 2;
   const unsigned long UPDATE_NOTIFY_NEWVERSION   = 3;
+
+  /**
+   * Constants that callers can use to indicate the reason for an add-on update
+   * check. Internal code uses other constants in nsExtensionManager.js.in.
+   *
+   * The update check is being performed at the request of the user.
+   */
+  const unsigned long UPDATE_WHEN_USER_REQUESTED    = 1;
+  /**
+   * The update check is being performed after a new version of the application
+   * has been detected.
+   */
+  const unsigned long UPDATE_WHEN_NEW_APP_DETECTED  = 2;
+  /**
+   * The update check is being performed after a new version of the application
+   * has been installed.
+   */
+  const unsigned long UPDATE_WHEN_NEW_APP_INSTALLED = 3;
 
   /**
    * Starts the Extension Manager, checking for item changes, additions and
@@ -299,6 +317,9 @@ interface nsIExtensionManager : nsISupports
    *          during the update check process. If not null, the object's
    *          onUpdateStarted() and onUpdateEnded() methods will be called even
    *          if there are no items to update.
+   * @param   updateType (optional)
+   *          The type of the update check. Should be one of the UPDATE_WHEN
+   *          values.
    * @param   appVersion (optional)
    *          The version of the application to check for compatible updates.
    *          This param is only honored when updateCheckType is equal to
@@ -316,6 +337,7 @@ interface nsIExtensionManager : nsISupports
                in unsigned long itemCount,
                in unsigned long updateCheckType,
                in nsIAddonUpdateCheckListener listener,
+               [optional] in unsigned long updateType,
                [optional] in AString appVersion,
                [optional] in AString platformVersion);
 
