@@ -81,6 +81,14 @@ static const char *sCJKLangGroup[] = {
 #define CJK_LANG_ZH_HK sCJKLangGroup[3]
 #define CJK_LANG_ZH_TW sCJKLangGroup[4]
 
+// rounding and truncation functions for a Freetype floating point number
+// (FT26Dot6) stored in a 32bit integer with high 26 bits for the integer
+// part and low 6 bits for the fractional part.
+#define MOZ_FT_ROUND(x) (((x) + 32) & ~63) // 63 = 2^6 - 1
+#define MOZ_FT_TRUNC(x) ((x) >> 6)
+#define CONVERT_DESIGN_UNITS_TO_PIXELS(v, s) \
+        MOZ_FT_TRUNC(MOZ_FT_ROUND(FT_MulFix((v) , (s))))
+
 /**
  * FontEntry
  */
@@ -107,15 +115,15 @@ FontEntry::~FontEntry()
 }
 
 /* static */
-FontEntry*  
-FontEntry::CreateFontEntry(const gfxProxyFontEntry &aProxyEntry, 
-                           nsISupports *aLoader, const PRUint8 *aFontData, 
+FontEntry*
+FontEntry::CreateFontEntry(const gfxProxyFontEntry &aProxyEntry,
+                           nsISupports *aLoader, const PRUint8 *aFontData,
                            PRUint32 aLength) {
     if (!gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength))
         return nsnull;
     FT_Face face;
     FT_Error error =
-        FT_New_Memory_Face(gfxToolkitPlatform::GetPlatform()->GetFTLibrary(), 
+        FT_New_Memory_Face(gfxToolkitPlatform::GetPlatform()->GetFTLibrary(),
                            aFontData, aLength, 0, &face);
     if (error != FT_Err_Ok)
         return nsnull;
@@ -134,7 +142,7 @@ FTFontDestroyFunc(void *data)
     FT_Done_Face(face);
 }
 
-/* static */ FontEntry*  
+/* static */ FontEntry*
 FontEntry::CreateFontEntryFromFace(FT_Face aFace) {
     static cairo_user_data_key_t key;
 
@@ -322,7 +330,7 @@ gfxFT2FontGroup::gfxFT2FontGroup(const nsAString& families,
 #elif defined(XP_WIN)
         HGDIOBJ hGDI = ::GetStockObject(SYSTEM_FONT);
         LOGFONTW logFont;
-        if (hGDI && ::GetObjectW(hGDI, sizeof(logFont), &logFont)) 
+        if (hGDI && ::GetObjectW(hGDI, sizeof(logFont), &logFont))
             familyArray.AppendElement(nsDependentString(logFont.lfFaceName));
 #else
 #error "Platform not supported"
@@ -441,10 +449,10 @@ AddFontNameToArray(const nsAString& aName,
         if (list->IndexOf(aName) == list->NoIndex)
             list->AppendElement(aName);
     }
- 
+
     return PR_TRUE;
 }
-  
+
 void
 gfxFT2FontGroup::FamilyListToArrayList(const nsString& aFamilies,
                                        const nsCString& aLangGroup,
@@ -598,7 +606,7 @@ gfxFT2FontGroup::WhichFontSupportsChar(const nsTArray<nsRefPtr<FontEntry> >& aFo
     return nsnull;
 }
 
-already_AddRefed<gfxFont> 
+already_AddRefed<gfxFont>
 gfxFT2FontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
 {
     if (aCh > 0xFFFF)
@@ -617,8 +625,9 @@ gfxFT2FontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
 
         /* special case CJK */
         if (unicodeRange == kRangeSetCJK) {
-            if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
+            if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG)) {
                 PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: CJK"));
+            }
 
             nsAutoTArray<nsRefPtr<FontEntry>, 15> fonts;
             GetCJKPrefFonts(fonts);
@@ -643,7 +652,7 @@ gfxFT2FontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
     return nsnull;
 }
 
-already_AddRefed<gfxFont> 
+already_AddRefed<gfxFont>
 gfxFT2FontGroup::WhichSystemFontSupportsChar(PRUint32 aCh)
 {
     nsRefPtr<gfxFont> selectedFont;
@@ -667,7 +676,7 @@ void gfxFT2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun)
         AddRange(aTextRun, font, mString.get(), offset, rangeLength);
         offset += rangeLength;
     }
-    
+
 }
 
 void
@@ -675,9 +684,14 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
 {
     const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     // we'll pass this in/figure it out dynamically, but at this point there can be only one face.
-    FT_Face face = cairo_ft_scaled_font_lock_face(font->CairoScaledFont());
+    gfxFT2Font::FaceLock faceLock(font);
+    FT_Face face = faceLock.Face();
 
     gfxTextRun::CompressedGlyph g;
+
+    const gfxFT2Font::CachedGlyphData *cgd = nsnull, *cgdNext = nsnull;
+
+    FT_UInt spaceGlyph = font->GetSpaceGlyph();
 
     aTextRun->AddGlyphRun(font, offset);
     for (PRUint32 i = 0; i < len; i++) {
@@ -690,12 +704,18 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
         }
 
         NS_ASSERTION(!IsInvalidChar(ch), "Invalid char detected");
-        FT_UInt gid = FT_Get_Char_Index(face, ch); // find the glyph id
+
+        if (cgdNext) {
+            cgd = cgdNext;
+            cgdNext = nsnull;
+        } else {
+            cgd = font->GetGlyphDataForChar(ch);
+        }
+
+        FT_UInt gid = cgd->glyphIndex;
         PRInt32 advance = 0;
 
-        if (gid == font->GetSpaceGlyph()) {
-            advance = (int)(font->GetMetrics().spaceWidth * appUnitsPerDevUnit);
-        } else if (gid == 0) {
+        if (gid == 0) {
             advance = -1; // trigger the missing glyphs case below
         } else {
             // find next character and its glyph -- in case they exist
@@ -707,32 +727,29 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
             if (FT_HAS_KERNING(face) && i + 1 < len) {
                 chNext = str[offset + i + 1];
                 if (chNext != 0) {
-                    gidNext = FT_Get_Char_Index(face, chNext);
-                    if (gidNext && gidNext != font->GetSpaceGlyph()) {
-                        FT_Load_Glyph(face, gidNext, FT_LOAD_DEFAULT);
-                        lsbDeltaNext = face->glyph->lsb_delta;
-                    }
+                    cgdNext = font->GetGlyphDataForChar(chNext);
+                    gidNext = cgdNext->glyphIndex;
+                    if (gidNext && gidNext != spaceGlyph)
+                        lsbDeltaNext = cgdNext->lsbDelta;
                 }
             }
 
-            // now load the current glyph
-            FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT); // load glyph into the slot
-            advance = face->glyph->advance.x;
+            advance = cgd->xAdvance;
 
             // now add kerning to the current glyph's advance
             if (chNext && gidNext) {
                 FT_Vector kerning; kerning.x = 0;
                 FT_Get_Kerning(face, gid, gidNext, FT_KERNING_DEFAULT, &kerning);
                 advance += kerning.x;
-                if (face->glyph->rsb_delta - lsbDeltaNext >= 32) {
+                if (cgd->rsbDelta - lsbDeltaNext >= 32) {
                     advance -= 64;
-                } else if (face->glyph->rsb_delta - lsbDeltaNext < -32) {
+                } else if (cgd->rsbDelta - lsbDeltaNext < -32) {
                     advance += 64;
                 }
             }
 
             // now apply unit conversion and scaling
-            advance = (advance >> 6) * appUnitsPerDevUnit;
+            advance = MOZ_FT_TRUNC(advance) * appUnitsPerDevUnit;
         }
 #ifdef DEBUG_thebes_2
         printf(" gid=%d, advance=%d (%s)\n", gid, advance,
@@ -757,8 +774,20 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
             aTextRun->SetGlyphs(offset + i, g, &details);
         }
     }
+}
 
-    cairo_ft_scaled_font_unlock_face(font->CairoScaledFont());
+/*
+ * Stack-based face lock helper
+ */
+gfxFT2Font::FaceLock::FaceLock(gfxFT2Font *font)
+{
+    mScaledFont = font->CairoScaledFont();
+    mFace = cairo_ft_scaled_font_lock_face(mScaledFont);
+}
+
+gfxFT2Font::FaceLock::~FaceLock()
+{
+    cairo_ft_scaled_font_unlock_face(mScaledFont);
 }
 
 /**
@@ -767,14 +796,16 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
 gfxFT2Font::gfxFT2Font(FontEntry *aFontEntry,
                      const gfxFontStyle *aFontStyle)
     : gfxFont(aFontEntry, aFontStyle),
-    mScaledFont(nsnull),
-    mHasSpaceGlyph(PR_FALSE),
-    mSpaceGlyph(0),
-    mHasMetrics(PR_FALSE),
-    mAdjustedSize(0)
+      mScaledFont(nsnull),
+      mHasSpaceGlyph(PR_FALSE),
+      mSpaceGlyph(0),
+      mHasMetrics(PR_FALSE),
+      mAdjustedSize(0)
 {
     mFontEntry = aFontEntry;
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
+
+    mCharGlyphCache.Init(64);
 }
 
 gfxFT2Font::~gfxFT2Font()
@@ -785,14 +816,6 @@ gfxFT2Font::~gfxFT2Font()
     }
 }
 
-// rounding and truncation functions for a Freetype floating point number 
-// (FT26Dot6) stored in a 32bit integer with high 26 bits for the integer
-// part and low 6 bits for the fractional part. 
-#define MOZ_FT_ROUND(x) (((x) + 32) & ~63) // 63 = 2^6 - 1
-#define MOZ_FT_TRUNC(x) ((x) >> 6)
-#define CONVERT_DESIGN_UNITS_TO_PIXELS(v, s) \
-        MOZ_FT_TRUNC(MOZ_FT_ROUND(FT_MulFix((v) , (s))))
-
 const gfxFont::Metrics&
 gfxFT2Font::GetMetrics()
 {
@@ -801,7 +824,8 @@ gfxFT2Font::GetMetrics()
 
     mMetrics.emHeight = GetStyle()->size;
 
-    FT_Face face = cairo_ft_scaled_font_lock_face(CairoScaledFont());
+    gfxFT2Font::FaceLock faceLock(this);
+    FT_Face face = faceLock.Face();
 
     if (!face) {
         // Abort here already, otherwise we crash in the following
@@ -818,18 +842,9 @@ gfxFT2Font::GetMetrics()
     const double xScale = face->size->metrics.x_ppem / emUnit;
     const double yScale = face->size->metrics.y_ppem / emUnit;
 
-    // properties of space
-    gid = FT_Get_Char_Index(face, ' ');
-    if (gid) {
-        FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT);
-        // face->glyph->metrics.width doesn't work for spaces, use advance.x instead
-        mMetrics.spaceWidth = face->glyph->advance.x >> 6;
-        // save the space glyph
-        mSpaceGlyph = gid;
-    } else {
-        NS_ERROR("blah");
-    }
-            
+    // cache properties of space
+    GetSpaceGlyph();
+
     // properties of 'x', also use its width as average width
     gid = FT_Get_Char_Index(face, 'x'); // select the glyph
     if (gid) {
@@ -916,7 +931,6 @@ gfxFT2Font::GetMetrics()
     */
 
     // XXX mMetrics.height needs to be set.
-    cairo_ft_scaled_font_unlock_face(CairoScaledFont());
 
     mHasMetrics = PR_TRUE;
     return mMetrics;
@@ -932,19 +946,18 @@ gfxFT2Font::GetUniqueName()
 PRUint32
 gfxFT2Font::GetSpaceGlyph()
 {
-    NS_ASSERTION (GetStyle ()->size != 0,
-    "forgot to short-circuit a text run with zero-sized font?");
+    NS_ASSERTION (GetStyle()->size != 0, "forgot to short-circuit a text run with zero-sized font?");
 
-    if(!mHasSpaceGlyph)
-    {
-        FT_UInt gid = 0; // glyph ID
-        FT_Face face = cairo_ft_scaled_font_lock_face(CairoScaledFont());
-        gid = FT_Get_Char_Index(face, ' ');
-        FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT);
-        mSpaceGlyph = gid;
+    if (!mHasSpaceGlyph) {
+        const CachedGlyphData *gdata = GetGlyphDataForChar(' ');
+
+        mSpaceGlyph = gdata->glyphIndex;
+        NS_ASSERTION(mSpaceGlyph != 0, "Font has no space glyph!");
+
+        mMetrics.spaceWidth = MOZ_FT_TRUNC(gdata->xAdvance);
         mHasSpaceGlyph = PR_TRUE;
-        cairo_ft_scaled_font_unlock_face(CairoScaledFont());
     }
+
     return mSpaceGlyph;
 }
 
@@ -1023,7 +1036,7 @@ gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
 {
     FontEntry *fe = gfxToolkitPlatform::GetPlatform()->FindFontEntry(aName, *aStyle);
     if (!fe) {
-        printf("Failed to find font entry for %s\n", NS_ConvertUTF16toUTF8(aName).get());
+        NS_WARNING("Failed to find font entry for font!");
         return nsnull;
     }
 
@@ -1046,3 +1059,33 @@ gfxFT2Font::GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
     return static_cast<gfxFT2Font *>(f);
 }
 
+void
+gfxFT2Font::FillGlyphDataForChar(PRUint32 ch, CachedGlyphData *gd)
+{
+    gfxFT2Font::FaceLock faceLock(this);
+    FT_Face face = faceLock.Face();
+
+    FT_UInt gid = FT_Get_Char_Index(face, ch);
+
+    if (gid == 0) {
+        // this font doesn't support this char!
+        NS_ASSERTION(gid != 0, "We don't have a glyph, but font indicated that it supported this char in tables?");
+        gd->glyphIndex = 0;
+        return;
+    }
+
+    FT_Error err = FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT);
+
+    if (err) {
+        // hmm, this is weird, we failed to load a glyph that we had?
+        NS_WARNING("Failed to load glyph that we got from Get_Char_index");
+
+        gd->glyphIndex = 0;
+        return;
+    }
+
+    gd->glyphIndex = gid;
+    gd->lsbDelta = face->glyph->lsb_delta;
+    gd->rsbDelta = face->glyph->rsb_delta;
+    gd->xAdvance = face->glyph->advance.x;
+}
