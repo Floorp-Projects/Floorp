@@ -102,12 +102,14 @@ private:
     // The stack is also used by the IO thread to transfer received
     // messages to the worker thread, only when the worker thread is
     // awaiting an RPC response.  Until the worker pops the top of the
-    // stack, it may (legally) contain either of
+    // stack, it may (legally) contain one of
     //
+    // - async msg
+    // - sync in-msg (msg.is_sync() && !msg.is_reply())
     // - RPC in-call (msg.is_rpc() && !msg.is_reply())
     // - RPC reply (msg.is_rpc() && msg.is_reply())
     //
-    // In both cases, the worker will pop the message off the stack
+    // In any cases, the worker will pop the message off the stack
     // and process it ASAP, returning |mPending| to a quiescent state.
     //
     std::stack<Message> mPending;
