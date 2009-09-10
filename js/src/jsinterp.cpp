@@ -1321,8 +1321,6 @@ have_fun:
     frame.regs = NULL;
     frame.imacpc = NULL;
     frame.slots = NULL;
-    frame.sharpDepth = 0;
-    frame.sharpArray = NULL;
     frame.flags = flags | rootedArgsFlag;
     frame.dormantNext = NULL;
     frame.displaySave = NULL;
@@ -1541,8 +1539,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.argc = down->argc;
         frame.argv = down->argv;
         frame.annotation = down->annotation;
-        frame.sharpArray = down->sharpArray;
-        JS_ASSERT(script->nfixed == 0);
     } else {
         frame.callobj = NULL;
         frame.argsobj = NULL;
@@ -1557,7 +1553,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.argc = 0;
         frame.argv = NULL;
         frame.annotation = NULL;
-        frame.sharpArray = NULL;
     }
 
     frame.imacpc = NULL;
@@ -1568,6 +1563,27 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
             goto out;
         }
         memset(frame.slots, 0, script->nfixed * sizeof(jsval));
+#if JS_HAS_SHARP_VARS
+        if (script->flags & JSSF_HAS_SHARPS) {
+            JS_ASSERT(script->nfixed == 2);
+            if (down && down->script && (down->script->flags & JSSF_HAS_SHARPS)) {
+                JS_ASSERT(down->script->nfixed >= 2);
+                int base = down->fun
+                           ? down->fun->sharpSlotBase(cx)
+                           : down->script->nfixed - 2;
+                if (base < 0) {
+                    ok = JS_FALSE;
+                    goto out;
+                }
+                frame.slots[0] = down->slots[base];
+                frame.slots[1] = down->slots[base + 1];
+            } else {
+                frame.slots[0] = JSVAL_VOID;
+                frame.slots[1] = JSVAL_VOID;
+            }
+        } else
+#endif
+            JS_ASSERT_IF(down, script->nfixed == 0);
     } else {
         frame.slots = NULL;
     }
@@ -1576,7 +1592,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     frame.down = down;
     frame.scopeChain = chain;
     frame.regs = NULL;
-    frame.sharpDepth = 0;
     frame.flags = flags;
     frame.dormantNext = NULL;
     frame.blockChain = NULL;

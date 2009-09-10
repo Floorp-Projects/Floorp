@@ -6352,9 +6352,6 @@ js_DumpStackFrame(JSStackFrame *fp)
         if (fp->blockChain)
             fprintf(stderr, "  blockChain: (JSObject *) %p\n", (void *) fp->blockChain);
 
-        if (fp->sharpDepth)
-            fprintf(stderr, "  sharpDepth: %u\n", (unsigned) fp->sharpDepth);
-
         if (fp->dormantNext)
             fprintf(stderr, "  dormantNext: (JSStackFrame *) %p\n", (void *) fp->dormantNext);
         if (fp->displaySave)

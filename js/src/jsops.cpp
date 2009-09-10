@@ -2133,8 +2133,6 @@
                     newifp->frame.down = fp;
                     newifp->frame.annotation = NULL;
                     newifp->frame.scopeChain = parent = OBJ_GET_PARENT(cx, obj);
-                    newifp->frame.sharpDepth = 0;
-                    newifp->frame.sharpArray = NULL;
                     newifp->frame.flags = flags;
                     newifp->frame.dormantNext = NULL;
                     newifp->frame.blockChain = NULL;
@@ -3440,14 +3438,10 @@
             }
 
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-            fp->sharpDepth++;
             CHECK_INTERRUPT_HANDLER();
           END_CASE(JSOP_NEWINIT)
 
           BEGIN_CASE(JSOP_ENDINIT)
-            if (--fp->sharpDepth == 0)
-                fp->sharpArray = NULL;
-
             /* Re-set the newborn root to the top of this object tree. */
             JS_ASSERT(regs.sp - StackBase(fp) >= 1);
             lval = FETCH_OPND(-1);
@@ -3658,15 +3652,18 @@
           END_CASE(JSOP_INITELEM)
 
 #if JS_HAS_SHARP_VARS
+
           BEGIN_CASE(JSOP_DEFSHARP)
-            obj = fp->sharpArray;
-            if (!obj) {
+            slot = GET_UINT16(regs.pc);
+            JS_ASSERT(slot + 1 < fp->script->nfixed);
+            lval = fp->slots[slot];
+            if (JSVAL_IS_VOID(lval)) {
                 obj = js_NewArrayObject(cx, 0, NULL);
                 if (!obj)
                     goto error;
-                fp->sharpArray = obj;
+                fp->slots[slot] = OBJECT_TO_JSVAL(obj);
             }
-            i = (jsint) GET_UINT16(regs.pc);
+            i = (jsint) GET_UINT16(regs.pc + UINT16_LEN);
             id = INT_TO_JSID(i);
             rval = FETCH_OPND(-1);
             if (JSVAL_IS_PRIMITIVE(rval)) {
@@ -3681,12 +3678,15 @@
           END_CASE(JSOP_DEFSHARP)
 
           BEGIN_CASE(JSOP_USESHARP)
-            i = (jsint) GET_UINT16(regs.pc);
-            id = INT_TO_JSID(i);
-            obj = fp->sharpArray;
-            if (!obj) {
+            slot = GET_UINT16(regs.pc);
+            JS_ASSERT(slot + 1 < fp->script->nfixed);
+            lval = fp->slots[slot];
+            i = (jsint) GET_UINT16(regs.pc + UINT16_LEN);
+            if (JSVAL_IS_VOID(lval)) {
                 rval = JSVAL_VOID;
             } else {
+                obj = JSVAL_TO_OBJECT(fp->slots[slot]);
+                id = INT_TO_JSID(i);
                 if (!obj->getProperty(cx, id, &rval))
                     goto error;
             }
@@ -3700,6 +3700,30 @@
             }
             PUSH_OPND(rval);
           END_CASE(JSOP_USESHARP)
+
+          BEGIN_CASE(JSOP_SHARPINIT)
+            slot = GET_UINT16(regs.pc);
+            JS_ASSERT(slot + 1 < fp->script->nfixed);
+            vp = &fp->slots[slot];
+            rval = vp[1];
+
+            /*
+             * We peek ahead safely here because empty initialisers get zero
+             * JSOP_SHARPINIT ops, and non-empty ones get two: the first comes
+             * immediately after JSOP_NEWINIT followed by one or more property
+             * initialisers; and the second comes directly before JSOP_ENDINIT.
+             */
+            if (regs.pc[JSOP_SHARPINIT_LENGTH] != JSOP_ENDINIT) {
+                rval = JSVAL_IS_VOID(rval) ? JSVAL_ONE : rval + 2;
+            } else {
+                JS_ASSERT(JSVAL_IS_INT(rval));
+                rval -= 2;
+                if (rval == JSVAL_ZERO)
+                    vp[0] = JSVAL_VOID;
+            }
+            vp[1] = rval;
+          END_CASE(JSOP_SHARPINIT)
+
 #endif /* JS_HAS_SHARP_VARS */
 
           BEGIN_CASE(JSOP_GOSUB)
@@ -4236,6 +4260,7 @@
 # if !JS_HAS_SHARP_VARS
           L_JSOP_DEFSHARP:
           L_JSOP_USESHARP:
+          L_JSOP_SHARPINIT:
 # endif
 
 # if !JS_HAS_DESTRUCTURING

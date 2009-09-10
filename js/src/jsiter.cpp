@@ -763,11 +763,9 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     gen->savedRegs.pc = fp->regs->pc;
     gen->frame.regs = &gen->savedRegs;
 
-    /* Copy remaining state (XXX sharp* and xml* should be local vars). */
-    gen->frame.sharpDepth = 0;
-    gen->frame.sharpArray = NULL;
     gen->frame.flags = (fp->flags & ~JSFRAME_ROOTED_ARGV) | JSFRAME_GENERATOR;
     gen->frame.dormantNext = NULL;
+
     /* JSOP_GENERATOR appears in the prologue, outside all blocks.  */
     JS_ASSERT(!fp->blockChain);
     gen->frame.blockChain = NULL;

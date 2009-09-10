@@ -84,6 +84,7 @@ typedef enum JSOp {
 #define JOF_REGEXP        17      /* unsigned 16-bit regexp index */
 #define JOF_INT8          18      /* int8 immediate operand */
 #define JOF_ATOMOBJECT    19      /* uint16 constant index + object index */
+#define JOF_UINT16PAIR    20      /* pair of uint16 immediates */
 #define JOF_TYPEMASK      0x001f  /* mask for above immediate types */
 
 #define JOF_NAME          (1U<<5) /* name operation */
@@ -118,6 +119,10 @@ typedef enum JSOp {
                                      besides the slots opcode uses */
 #define JOF_TMPSLOT_SHIFT 22
 #define JOF_TMPSLOT_MASK  (JS_BITMASK(2) << JOF_TMPSLOT_SHIFT)
+
+#define JOF_SHARPSLOT    (1U<<24) /* first immediate is uint16 stack slot no.
+                                     that needs fixup when in global code (see
+                                     JSCompiler::compileScript) */
 
 /* Shorthands for type from format and type from opcode. */
 #define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)

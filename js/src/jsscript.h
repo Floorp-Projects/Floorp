@@ -180,6 +180,7 @@ struct JSScript {
 #define JSSF_NO_SCRIPT_RVAL     0x01    /* no need for result value of last
                                            expression statement */
 #define JSSF_SAVED_CALLER_FUN   0x02    /* object 0 is caller function */
+#define JSSF_HAS_SHARPS         0x04    /* script uses sharp variables */
 
 static JS_INLINE uintN
 StackDepth(JSScript *script)
