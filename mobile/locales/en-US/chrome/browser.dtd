@@ -23,7 +23,7 @@
 <!ENTITY bookmarksManage.label     "Manage">
 <!ENTITY foldersHeader.label       "Folders">
 
-<!ENTITY editBookmarkEdit.label    "Edit">
+<!ENTITY editBookmarkRemove.label  "Remove">
 <!ENTITY editBookmarkMove.label    "Move">
 <!ENTITY editBookmarkDone.label    "Done">
 <!ENTITY editBookmarkTags.label    "Add tags here">

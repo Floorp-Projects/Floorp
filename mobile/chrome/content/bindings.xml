@@ -479,14 +479,18 @@
               return;
 
             this._isEditing = true;
-            if (this.control)
+            if (this.control) {
+              this.setAttribute("selected", "true");
+              this.control.scrollBoxObject.ensureElementIsVisible(this);
               this.control.activeItem = this;
+            }
 
             this.updateFields();
 
             this._nameField.focus();
             if (autoSelect)
               this._nameField.select();
+
           ]]>
         </body>
       </method>
@@ -498,8 +502,10 @@
               this.save();
 
             this._isEditing = false;
-            if (this.control)
+            if (this.control) {
+              this.control.activeItem.removeAttribute("selected");
               this.control.activeItem = null;
+            }
 
             this.updateFields();
 
@@ -533,6 +539,7 @@
                 if (tagsToRemove.length > 0)
                   PlacesUtils.tagging.untagURI(this._uri, tagsToRemove);
               }
+              this.setAttribute('tags', this.tags);
 
               // If the URI was updated change it in the bookmark, but don't
               // allow a blank URI. Revert to previous URI if blank.
@@ -541,6 +548,7 @@
                 try {
                   this._uri = this._ioService.newURI(spec, null, null);
                   PlacesUtils.bookmarks.changeBookmarkURI(this._itemId, this._uri);
+                  this.setAttribute('uri', this.spec);
                 }
                 catch (e) { }
               }
@@ -550,6 +558,7 @@
 
             // Update the name and use the URI if name is blank
             this.name = this.name || spec;
+            this.setAttribute('title', this.name);
             PlacesUtils.bookmarks.setItemTitle(this._itemId, this.name);
           ]]>
         </body>
@@ -606,84 +615,63 @@
   </binding>
 
   <binding id="place-item" extends="chrome://browser/content/bindings.xml#place-base">
-    <content>
-      <xul:image anonid="favicon" class="bookmark-item-image"/>
-      <xul:grid flex="1">
-        <xul:columns>
-          <xul:column flex="1"/>
-          <xul:column/>
-        </xul:columns>
-        <xul:rows>
-          <xul:row align="center">
-            <xul:textbox anonid="name" readonly="true" xbl:inherits="value=title"/>
-            <xul:hbox align="center" anonid="edit-controls" class="bookmark-manage-controls">
-              <xul:image anonid="close-button" class="close-button"
-                         onmousedown="document.getBindingParent(this).remove()"/>
-              <xul:button anonid="folder-button" label="&editBookmarkMove.label;"
-                          oncommand="document.getBindingParent(this).move()"/>
-              <xul:button anonid="edit-button" label="&editBookmarkEdit.label;"
-                          oncommand="document.getBindingParent(this).startEditing()"/>
-              <xul:button anonid="done-button" label="&editBookmarkDone.label;" hidden="true"
-                          oncommand="document.getBindingParent(this).stopEditing(true)"/>
-            </xul:hbox>
-          </xul:row>
-          <xul:row anonid="uri-row" align="center" hidden="true">
+    <content align="center">
+      <xul:hbox flex="1">
+        <xul:image anonid="favicon" class="bookmark-item-image"/>
+
+        <xul:vbox flex="1">
+          <xul:hbox anonid="description-box" flex="1" align="center">
+            <xul:vbox flex="1">
+              <xul:label class="bookmark-item-name" xbl:inherits="value=title"/>
+              <xul:label class="bookmark-item-uri" xbl:inherits="value=uri" crop="center"/>
+            </xul:vbox>
+            <xul:label class="bookmark-item-tags" xbl:inherits="value=tags"/>
+          </xul:hbox>
+
+          <xul:vbox flex="1" anonid="bookmark-edit-textboxes" class="bookmark-edit-textboxes" hidden="true">
+            <xul:textbox anonid="name" xbl:inherits="value=title"/>
             <xul:textbox anonid="uri" xbl:inherits="value=uri"/>
-          </xul:row>
-          <xul:row anonid="tags-row" align="center" hidden="true">
             <xul:textbox anonid="tags" xbl:inherits="value=tags" emptytext="&editBookmarkTags.label;"/>
-          </xul:row>
-        </xul:rows>
-      </xul:grid>
+          </xul:vbox>
+        
+          <xul:hbox anonid="bookmark-manage-controls" align="center" class="bookmark-manage-controls" hidden="true">
+            <xul:button anonid="close-button" class="bookmark-close-button"
+                        label="&editBookmarkRemove.label;" onmousedown="document.getBindingParent(this).remove()"/>
+            <xul:button anonid="folder-button" class="bookmark-folder-button" 
+                        label="&editBookmarkMove.label;" oncommand="document.getBindingParent(this).move()"/>
+            <xul:spacer flex="1"/>
+            <xul:button anonid="done-button" label="&editBookmarkDone.label;"
+                        oncommand="document.getBindingParent(this).stopEditing(true)"/>
+          </xul:hbox>
+        </xul:vbox>
+      </xul:hbox>
     </content>
+
     <implementation>
       <method name="updateFields">
         <body>
           <![CDATA[
-            this._nameField.readOnly = !this._isEditing;
-            document.getAnonymousElementByAttribute(this, "anonid", "edit-button").hidden = this._isEditing;
-            document.getAnonymousElementByAttribute(this, "anonid", "done-button").hidden = !this._isEditing;
+            document.getAnonymousElementByAttribute(this, "anonid", "description-box").hidden = this._isEditing;
 
-            document.getAnonymousElementByAttribute(this, "anonid", "uri-row").hidden = !this._isEditing;
-            document.getAnonymousElementByAttribute(this, "anonid", "tags-row").hidden = !this._isEditing;
+            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-edit-textboxes").hidden = !this._isEditing;
+            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-manage-controls").hidden = !this._isEditing;
           ]]>
         </body>
       </method>
     </implementation>
   </binding>
 
-  <binding id="place-folder" extends="chrome://browser/content/bindings.xml#place-base">
-    <content align="center">
-      <xul:image anonid="favicon" class="bookmark-folder-image"/>
-      <xul:grid flex="1">
-        <xul:columns>
-          <xul:column flex="1"/>
-          <xul:column/>
-        </xul:columns>
-        <xul:rows>
-          <xul:row align="center">
-            <xul:textbox anonid="name" readonly="true" xbl:inherits="value=title"/>
-            <xul:hbox align="center" anonid="edit-controls" class="bookmark-manage-controls">
-              <xul:image anonid="close-button" class="close-button"
-                         onmousedown="document.getBindingParent(this).remove()"/>
-              <xul:button anonid="folder-button" label="&editBookmarkMove.label;"
-                          oncommand="document.getBindingParent(this).move()"/>
-              <xul:button anonid="edit-button" label="&editBookmarkEdit.label;"
-                          oncommand="document.getBindingParent(this).startEditing()"/>
-              <xul:button anonid="done-button" label="&editBookmarkDone.label;" hidden="true"
-                          oncommand="document.getBindingParent(this).stopEditing(true)"/>
-            </xul:hbox>
-          </xul:row>
-        </xul:rows>
-      </xul:grid>
-    </content>
+  <binding id="place-folder" extends="chrome://browser/content/bindings.xml#place-item">
     <implementation>
       <method name="updateFields">
         <body>
           <![CDATA[
-            this._nameField.readOnly = !this._isEditing;
-            document.getAnonymousElementByAttribute(this, "anonid", "edit-button").hidden = this._isEditing;
-            document.getAnonymousElementByAttribute(this, "anonid", "done-button").hidden = !this._isEditing;
+            document.getAnonymousElementByAttribute(this, "anonid", "description-box").hidden = this._isEditing;
+
+            this._uriField.hidden = true;
+            this._tagsField.hidden = true;
+            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-edit-textboxes").hidden = !this._isEditing;
+            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-manage-controls").hidden = !this._isEditing;
           ]]>
         </body>
       </method>
@@ -920,8 +908,13 @@
         <parameter name="aItem"/>
         <body>
           <![CDATA[
-            if (aEvent.target.isEditing || aEvent.originalTarget.localName == "button")
+            if (aEvent.originalTarget.localName == "button" || this._activeItem == aItem)
               return;
+
+            if (this._manageUI) {
+              aItem.startEditing();
+              return;
+            }
 
             if (aItem.type == "folder") {
               this.openFolder(aItem.itemId);

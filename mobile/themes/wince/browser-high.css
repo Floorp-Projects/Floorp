@@ -242,7 +242,7 @@
 }
 
 /* folders have a fixed image */
-.bookmark-folder-image {
+placeitem[type=folder] .bookmark-item-image {
   list-style-image: url("chrome://browser/skin/images/folder-30.png");
 }
 

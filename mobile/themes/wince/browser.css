@@ -247,39 +247,67 @@ toolbarbutton.page-button {
 }
 
 .bookmark-folder, .bookmark-item {
-  padding: 0.25mm 0.1mm;
+  padding: 0.25mm 0.55mm;
   border-bottom: 0.05mm solid rgb(207,207,207);
   min-height: 7.2mm; /* row size */
-  -moz-box-align: center;
 }
 
-.bookmark-folder textbox[readonly="true"], .bookmark-item textbox[readonly="true"] {
-  -moz-appearance: none !important;
-  background-color: transparent;
-  border: none !important;
-  -moz-user-select: none !important;
+.bookmark-manage-controls {
+  padding-top: 0.55mm;
+  padding-bottom: 0.55mm;
+}
+
+.bookmark-edit-textboxes {
+  padding-top: 0.55mm;
+}
+
+.bookmark-item-image {
+  max-height: 16px;
+  max-width: 16px;
+  margin: 1.6mm 1.5mm 0mm 2mm;
+}
+
+placeitem[selected] .bookmark-item-image {
+  margin-top: 3mm;
+}
+
+.bookmark-item-name {
+  font-size: 9pt !important;
+}
+
+.bookmark-item-uri {
+  font-size: 8pt !important;
+  color: blue;
+}
+
+.bookmark-item-tags {
+  color: black;
+  margin-right: 1.1mm;
+  font-size: 8pt !important;
+  font-weight: lighter;
 }
 
 placelabel.bookmark-folder {
   border-bottom: 0.05mm solid rgb(255,255,255);
 }
 
-.bookmark-item-image, .bookmark-folder-image {
-  width: 24px;
-  height: 24px;
+/* hide the unuseful fields for folder */
+placeitem[type=folder] .bookmark-item-uri,
+placeitem[type=folder] .bookmark-item-tags {
+  visibility: hidden;
 }
 
 /* control the manage controls */
-.bookmark-manage-controls, .bookmark-folder-new {
+.bookmark-folder-new {
   visibility: collapse;
 }
 
-placelist[ui="manage"] .bookmark-manage-controls,
-placelist[ui="manage"] .bookmark-folder-new,
-placeitem[ui="manage"] .bookmark-manage-controls {
+placelist[ui="manage"] .bookmark-folder-new {
   visibility: visible;
 }
 
+placeitem[ui="manage"] .bookmark-close-button,
+placeitem[ui="manage"] .bookmark-folder-button,
 placeitem[ui="manage"] .bookmark-item-image {
   visibility: collapse;
 }
