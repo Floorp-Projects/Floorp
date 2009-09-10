@@ -530,7 +530,7 @@ namespace nanojit
         bool isop(LOpcode o) const {
             return opcode() == o;
         }
-        bool LIns::isQuad() const {
+        bool isQuad() const {
             LOpcode op = opcode();
 #ifdef NANOJIT_64BIT
             // callh in 64bit cpu's means a call that returns an int64 in a single register
@@ -584,7 +584,7 @@ namespace nanojit
             return opcode() == LIR_quad || opcode() == LIR_float;
         }
         // True if the instruction is a constant pointer value.
-        bool LIns::isconstp() const
+        bool isconstp() const
         {
 #ifdef NANOJIT_64BIT
             return isconstq();
