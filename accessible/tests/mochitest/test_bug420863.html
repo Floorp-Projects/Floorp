@@ -7,108 +7,75 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420863
   <title>Table indexes chrome tests</title>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/actions.js"></script>
 
   <script type="application/javascript">
-    var gAccService = null;
-
-    var gTdClickAttr = false;
-    var gTdClickEventHandler = false;
     var gClickHandler = null;
-
-    var gID = "";
-    var gNode = null;
-    var gAcc = null;
 
     function doTest()
     {
-      const nsIAccessibleRetrieval =
-        Components.interfaces.nsIAccessibleRetrieval;
-
-      gAccService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                    getService(nsIAccessibleRetrieval);
-
       // Actions should be exposed on any accessible having related DOM node
       // with registered 'click' event handler.
 
       //////////////////////////////////////////////////////////////////////////
       // generic td
-      gID = "td1";
-      gNode = document.getElementById(gID);
-      gAcc = gAccService.getAccessibleFor(gNode);
+      var td1Acc = getAccessible("td1");
+      if (!td1Acc) {
+        SimpleTest.finish();
+        return;
+      }
 
-      is(gAcc.numActions, 0, gID + ": shouldn't have actions");
-
-      //////////////////////////////////////////////////////////////////////////
-      // td with 'onclick' attribute
-      gID = "td2";
-      gNode = document.getElementById(gID);
-      gAcc = gAccService.getAccessibleFor(gNode);
-
-      is(gAcc.numActions, 1, gID + ": should have one action");
-      is(gAcc.getActionName(0), "click", gID + ": should have 'click' action");
-      gAcc.doAction(0);
-
-      // actions are performed via timeout
-      window.setTimeout(doTest2, 0);
-    }
-
-    function doTest2()
-    {
-      //////////////////////////////////////////////////////////////////////////
-      // td with 'onclick' attribute (sequel, see doTest1())
-      ok(gTdClickAttr, gID + ": 'click' action hasn't been performed");
+      is(td1Acc.numActions, 0,
+           "Simple table cell shouldn't have any actions");
 
       //////////////////////////////////////////////////////////////////////////
-      // td with registered 'click' event handler
-      gID = "td3";
-      gNode = document.getElementById(gID);
-      gAcc = gAccService.getAccessibleFor(gNode);
+      // one td with 'onclick' attribute and one with registered click handler
+      var td3Node = getNode("td3");
 
       // register 'click' event handler
       gClickHandler = {
         handleEvent: function handleEvent(aEvent)
         {
-          gTdClickEventHandler = true;
         }
       };
-      gNode.addEventListener("click", gClickHandler, false);
+      td3Node.addEventListener("click", gClickHandler, false);
 
       // check actions
-      is(gAcc.numActions, 1, gID + ": should have one action");
-      is(gAcc.getActionName(0), "click", gID + ": should have 'click' action");
-      gAcc.doAction(0);
+      var actionsArray = [
+        {
+          ID: "td2", // "onclick" attribute
+          actionName: "click",
+          actionIndex: 0,
+          events: CLICK_EVENTS
+        },
+        {
+          ID: td3Node,
+          actionName: "click",
+          actionIndex: 0,
+          events: CLICK_EVENTS,
+          checkOnClickEvent: function check(aEvent)
+          {
+            // unregister click event handler
+            this.ID.removeEventListener("click", gClickHandler, false);
 
-      // actions are performed via timeout
-      window.setTimeout(doTest3, 0);
-    }
+            // check actions
+            is(getAccessible(this.ID).numActions, 0,
+               "td3 shouldn't have actions");
+          }
+        }
+      ];
 
-    function doTest3()
-    {
-      //////////////////////////////////////////////////////////////////////////
-      // td with registered 'click' event handler (sequel, see doTest2())
-      ok(gTdClickEventHandler, gID + ": 'click' action hasn't been performed");
-
-      // unregister click event handler
-      gNode.removeEventListener("click", gClickHandler, false);
-
-      // check actions
-      // XXX see bug 456347, sometimes after removing the event listener, the
-      // accessible is no longer valid. When fixing that bug, remove the
-      // try/exception and simply test for the gAcc.numActions value directly.
-      var numActions = -1;
-      try {
-        numActions = gAcc.numActions;
-      } catch(e) {}
-
-      if (numActions == -1)
-        todo(false,
-             "gAcc.numActions should not throw after click handler was removed!");
-      else
-        is(numActions, 0, gID + ": shouldn't have actions");
-
-      SimpleTest.finish();
+      testActions(actionsArray);  // will call SimpleTest.finish()
     }
 
     SimpleTest.waitForExplicitFinish();
