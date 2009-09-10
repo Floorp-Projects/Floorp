@@ -361,16 +361,30 @@ struct JSString {
         mBase = bstr;
     }
 
-    static inline bool isUnitString(JSString *str) {
-        return unitStringTable <= str && str < &unitStringTable[UNIT_STRING_LIMIT];
+    static inline bool isUnitString(void *ptr) {
+        jsuword delta = reinterpret_cast<jsuword>(ptr) -
+                        reinterpret_cast<jsuword>(unitStringTable);
+        if (delta >= UNIT_STRING_LIMIT * sizeof(JSString))
+            return false;
+
+        /* If ptr points inside the static array, it must be well-aligned. */
+        JS_ASSERT(delta % sizeof(JSString) == 0);
+        return true;
     }
 
-    static inline bool isIntString(JSString *str) {
-        return intStringTable <= str && str < &intStringTable[INT_STRING_LIMIT];
+    static inline bool isIntString(void *ptr) {
+        jsuword delta = reinterpret_cast<jsuword>(ptr) -
+                        reinterpret_cast<jsuword>(intStringTable);
+        if (delta >= INT_STRING_LIMIT * sizeof(JSString))
+            return false;
+
+        /* If ptr points inside the static array, it must be well-aligned. */
+        JS_ASSERT(delta % sizeof(JSString) == 0);
+        return true;
     }
 
-    static inline bool isStatic(JSString *str) {
-        return isUnitString(str) || isIntString(str);
+    static inline bool isStatic(void *ptr) {
+        return isUnitString(ptr) || isIntString(ptr);
     }
 
     static JSString unitStringTable[];
