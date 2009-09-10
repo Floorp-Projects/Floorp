@@ -417,7 +417,7 @@
                       flex="1"
                       orient="horizontal">
         <image class="tool-search"/>
-        <radiogroup id="search-buttons" class="toggle-dark" onmousedown="BrowserUI.doButtonSearch(event.target);">
+        <radiogroup id="search-buttons" class="toggle-dark" onclick="BrowserUI.doButtonSearch(event.target);">
         </radiogroup>
       </arrowscrollbox>
     </vbox>
