@@ -707,6 +707,10 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LirWriter*     expr_filter;
     nanojit::LirWriter*     func_filter;
     nanojit::LirWriter*     float_filter;
+#ifdef DEBUG
+    nanojit::LirWriter*     sanity_filter_1;
+    nanojit::LirWriter*     sanity_filter_2;
+#endif
     nanojit::LIns*          cx_ins;
     nanojit::LIns*          eos_ins;
     nanojit::LIns*          eor_ins;
@@ -734,6 +738,7 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LIns* insImmFun(JSFunction* fun);
     nanojit::LIns* insImmStr(JSString* str);
     nanojit::LIns* insImmSprop(JSScopeProperty* sprop);
+    nanojit::LIns* p2i(nanojit::LIns* ins);
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;

@@ -1242,7 +1242,8 @@ namespace nanojit
             next = 0;
             TODO(unknown_patch);
         }
-        NanoAssert(((int32_t*)next)[-1] == 0);
+        // Guards can result in a valid branch being patched again later, so don't assert
+        // that the old value is poison.
         NanoAssert(isS32(target - next));
         ((int32_t*)next)[-1] = int32_t(target - next);
         if (next[0] == 0x0F && next[1] == 0x8A) {
