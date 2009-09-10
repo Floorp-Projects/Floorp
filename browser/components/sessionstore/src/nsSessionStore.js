@@ -1176,6 +1176,14 @@ SessionStoreService.prototype = {
       tabData.entries[0] = { url: browser.currentURI.spec };
       tabData.index = 1;
     }
+    else if (browser.currentURI.spec == "about:blank" &&
+             browser.userTypedValue) {
+      // This can happen if the user opens a lot of tabs simultaneously and we
+      // try to save state before all of them are properly loaded. If we crash
+      // then we get a bunch of about:blank tabs which isn't what we want.
+      tabData.entries[0] = { url: browser.userTypedValue };
+      tabData.index = 1;
+    }
     
     var disallow = [];
     for (var i = 0; i < CAPABILITIES.length; i++)
