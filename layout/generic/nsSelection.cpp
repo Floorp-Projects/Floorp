@@ -414,7 +414,7 @@ public:
        mTimer->Cancel();
   }
 
-  nsresult Start(nsPresContext *aPresContext, nsPoint &aPoint)
+  nsresult Start(nsPresContext *aPresContext, nsIView *aView, nsPoint &aPoint)
   {
     mPoint = aPoint;
 
@@ -422,7 +422,36 @@ public:
     // stopped by the selection if the prescontext is destroyed.
     mPresContext = aPresContext;
 
-    mContent = nsIPresShell::GetCapturingContent();
+    // Store the content from the nearest capturing frame. If this returns null
+    // the capturing frame is the root.
+    nsIFrame* clientFrame = static_cast<nsIFrame*>(aView->GetClientData());
+    NS_ASSERTION(clientFrame, "Missing client frame");
+
+    nsIFrame* capturingFrame = nsFrame::GetNearestCapturingFrame(clientFrame);
+    NS_ASSERTION(!capturingFrame || capturingFrame->GetMouseCapturer(),
+                 "Capturing frame should have a mouse capturer" );
+
+    NS_ASSERTION(!capturingFrame || mPresContext == capturingFrame->PresContext(),
+                 "Shouldn't have different pres contexts");
+
+    NS_ASSERTION(capturingFrame != mPresContext->PresShell()->FrameManager()->GetRootFrame(),
+                 "Capturing frame should not be the root frame");
+
+    if (capturingFrame)
+    {
+      mContent = capturingFrame->GetContent();
+      NS_ASSERTION(mContent, "Need content");
+
+      NS_ASSERTION(mContent != mPresContext->PresShell()->FrameManager()->GetRootFrame()->GetContent(),
+                 "We didn't want the root content!");
+
+      NS_ASSERTION(capturingFrame == nsFrame::GetNearestCapturingFrame(
+                   mPresContext->PresShell()->GetPrimaryFrameFor(mContent)),
+                   "Mapping of frame to content failed.");
+    }
+
+    // Check that if there was no capturing frame the content is null.
+    NS_ASSERTION(capturingFrame || !mContent, "Content not cleared correctly.");
 
     if (!mTimer)
     {
@@ -465,14 +494,46 @@ public:
   {
     if (mSelection && mPresContext)
     {
-      nsWeakFrame frame = mPresContext->PresShell()->GetPrimaryFrameFor(mContent);
+      // If the content is null the capturing frame must be the root frame.
+      nsIFrame* capturingFrame;
+      if (mContent)
+      {
+        nsIFrame* contentFrame = mPresContext->PresShell()->GetPrimaryFrameFor(mContent);
+        if (contentFrame)
+        {
+          capturingFrame = nsFrame::GetNearestCapturingFrame(contentFrame);
+        }
+        else 
+        {
+          capturingFrame = nsnull;
+        }
+        NS_ASSERTION(!capturingFrame || capturingFrame->GetMouseCapturer(),
+                     "Capturing frame should have a mouse capturer" );
+      }
+      else
+      {
+        capturingFrame = mPresContext->PresShell()->FrameManager()->GetRootFrame();
+      }
+
+      // Clear the content reference now that the frame has been found.
       mContent = nsnull;
 
-      mFrameSelection->HandleDrag(frame, mPoint);
+      // This could happen for a frame with style changed to display:none or a frame
+      // that was destroyed.
+      if (!capturingFrame) {
+        NS_WARNING("Frame destroyed or set to display:none before scroll timer fired.");
+        return NS_OK;
+      }
 
-      nsPoint pnt;
+      nsIView* captureView = capturingFrame->GetMouseCapturer();
+    
+      nsWeakFrame viewFrame = static_cast<nsIFrame*>(captureView->GetClientData());
+      NS_ASSERTION(viewFrame.GetFrame(), "View must have a client frame");
+      
+      mFrameSelection->HandleDrag(viewFrame, mPoint);
+
       mSelection->DoAutoScrollView(mPresContext,
-                                   frame.IsAlive() ? frame->GetClosestView(&pnt) : nsnull,
+                                   viewFrame.IsAlive() ? captureView : nsnull,
                                    mPoint, PR_TRUE);
     }
     return NS_OK;
@@ -4944,7 +5005,7 @@ nsTypedSelection::DoAutoScrollView(nsPresContext *aPresContext,
     NS_ENSURE_SUCCESS(result, result);
 
     nsPoint svPoint = globalPoint - globalOffset;
-    mAutoScrollTimer->Start(aPresContext, svPoint);
+    mAutoScrollTimer->Start(aPresContext, aView, svPoint);
   }
 
   return NS_OK;

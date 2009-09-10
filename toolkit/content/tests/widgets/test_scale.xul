@@ -212,17 +212,6 @@ function testtag_scale_UI_Mouse(element, testid, horiz, reverse, pinc)
   is(element.value, endval, testid + " mouse on right movetoclick=false");
 
   element.removeAttribute("movetoclick");
-
-  element.value = reverse ? element.max : element.min;
-  synthesizeMouse(element, 7, 7, { type: "mousedown" });
-  synthesizeMouse(element, 2000, 2000, { type: "mousemove" });
-  is(element.value, reverse ? element.min : element.max, testid + " move mouse too far before start");
-  synthesizeMouse(element, 2000, 2000, { type: "mouseup" });
-
-  synthesizeMouse(element, rect.width - 7, rect.height - 7, { type: "mousedown" });
-  synthesizeMouse(element, -2000, -2000, { type: "mousemove" });
-  is(element.value, reverse ? element.max : element.min, testid + " move mouse too far before end");
-  synthesizeMouse(element, -2000, -2000, { type: "mouseup" });
 }
 
 function testtag_scale_States(element, evalue, evalueattr, emin, emax, testid)

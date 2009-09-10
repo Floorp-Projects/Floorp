@@ -102,6 +102,8 @@ public:
 
   virtual void GetInitialOrientation(PRBool& aIsHorizontal); 
 
+  virtual nsIView* GetMouseCapturer() const { return GetView(); }
+
 private:
 
   friend class nsSplitterFrameInner;

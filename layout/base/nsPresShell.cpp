@@ -208,7 +208,6 @@ static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 
 PRBool nsIPresShell::gIsAccessibilityActive = PR_FALSE;
-CapturingContentInfo nsIPresShell::gCaptureInfo;
 
 // convert a color value to a string, in the CSS format #RRGGBB
 // *  - initially created for bugs 31816, 20760, 22963
@@ -798,7 +797,6 @@ public:
   NS_IMETHOD_(void) InvalidateFrameForView(nsIView *view);
   NS_IMETHOD_(void) DispatchSynthMouseMove(nsGUIEvent *aEvent,
                                            PRBool aFlushOnHoverChange);
-  NS_IMETHOD_(void) ClearMouseCapture(nsIView* aView);
 
   // caret handling
   NS_IMETHOD GetCaret(nsCaret **aOutCaret);
@@ -4372,41 +4370,6 @@ PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
   }
 }
 
-NS_IMETHODIMP_(void)
-PresShell::ClearMouseCapture(nsIView* aView)
-{
-  if (gCaptureInfo.mContent) {
-    if (aView) {
-      // if a view was specified, ensure that the captured content
-      // is within this view
-      nsIFrame* frame = GetPrimaryFrameFor(gCaptureInfo.mContent);
-      if (frame) {
-        nsIView* view = frame->GetClosestView();
-        while (view) {
-          if (view == aView) {
-            NS_RELEASE(gCaptureInfo.mContent);
-            // the view containing the captured content likely disappeared so
-            // disable capture for now.
-            gCaptureInfo.mAllowed = PR_FALSE;
-            break;
-          }
-
-          view = view->GetParent();
-        }
-        // return if the view wasn't found
-        return;
-      }
-    }
-
-    NS_RELEASE(gCaptureInfo.mContent);
-  }
-
-  // disable mouse capture until the next mousedown as a dialog has opened
-  // or a drag has started. Otherwise, someone could start capture during
-  // the modal dialog or drag.
-  gCaptureInfo.mAllowed = PR_FALSE;
-}
-
 NS_IMETHODIMP
 PresShell::DoGetContents(const nsACString& aMimeType, PRUint32 aFlags, PRBool aSelectionOnly, nsAString& aOutValue)
 {
@@ -5730,22 +5693,6 @@ PresShell::PaintDefaultBackground(nsIView*             aView,
   return NS_OK;
 }
 
-// static
-void
-nsIPresShell::SetCapturingContent(nsIContent* aContent, PRUint8 aFlags)
-{
-  NS_IF_RELEASE(gCaptureInfo.mContent);
-
-  // only set capturing content if allowed or the CAPTURE_IGNOREALLOWED flag
-  // is used
-  if ((aFlags & CAPTURE_IGNOREALLOWED) || gCaptureInfo.mAllowed) {
-    if (aContent) {
-      NS_ADDREF(gCaptureInfo.mContent = aContent);
-    }
-    gCaptureInfo.mRetargetToElement = (aFlags & CAPTURE_RETARGETTOELEMENT) != 0;
-  }
-}
-
 nsIFrame*
 PresShell::GetCurrentEventFrame()
 {
@@ -5902,49 +5849,40 @@ PresShell::HandleEvent(nsIView         *aView,
   }
 #endif
 
-  nsCOMPtr<nsIDocument> retargetEventDoc;
   // key and IME events must be targeted at the presshell for the focused frame
-  if (!sDontRetargetEvents) {
-    if (NS_IsEventTargetedAtFocusedWindow(aEvent)) {
-      nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-      if (!fm)
-         return NS_ERROR_FAILURE;
- 
-      nsCOMPtr<nsIDOMWindow> window;
-      fm->GetFocusedWindow(getter_AddRefs(window));
+  if (!sDontRetargetEvents && NS_IsEventTargetedAtFocusedWindow(aEvent)) {
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (!fm)
+      return NS_ERROR_FAILURE;
 
-      // if there is no focused frame, there isn't anything to fire a key event
-      // at so just return
-      nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(window);
-      if (!piWindow)
-        return NS_OK;
+    nsCOMPtr<nsIDOMWindow> window;
+    fm->GetFocusedWindow(getter_AddRefs(window));
 
-      retargetEventDoc = do_QueryInterface(piWindow->GetExtantDocument());
-      if (!retargetEventDoc)
-        return NS_OK;
-    } else if (NS_IS_MOUSE_EVENT(aEvent) && GetCapturingContent()) {
-      // if the mouse is being captured then retarget the mouse event at the
-      // document that is being captured.
-      retargetEventDoc = gCaptureInfo.mContent->GetCurrentDoc();
-    }
+    // if there is no focused frame, there isn't anything to fire a key event
+    // at so just return
+    nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(window);
+    if (!piWindow)
+      return NS_OK;
 
-    if (retargetEventDoc) {
-      nsIPresShell* presShell = retargetEventDoc->GetPrimaryShell();
-      if (!presShell)
-        return NS_OK;
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(piWindow->GetExtantDocument()));    
+    if (!doc)
+      return NS_OK;
 
-      if (presShell != this) {
-        nsCOMPtr<nsIViewObserver> viewObserver = do_QueryInterface(presShell);
-        if (!viewObserver)
-          return NS_ERROR_FAILURE;
+    nsIPresShell *presShell = doc->GetPrimaryShell();
+    if (!presShell)
+      return NS_OK;
 
-        nsIView *view;
-        presShell->GetViewManager()->GetRootView(view);
-        sDontRetargetEvents = PR_TRUE;
-        nsresult rv = viewObserver->HandleEvent(view, aEvent, aEventStatus);
-        sDontRetargetEvents = PR_FALSE;
-        return rv;
-      }
+    if (presShell != this) {
+      nsCOMPtr<nsIViewObserver> viewObserver = do_QueryInterface(presShell);
+      if (!viewObserver)
+        return NS_ERROR_FAILURE;
+
+      nsIView *view;
+      presShell->GetViewManager()->GetRootView(view);
+      sDontRetargetEvents = PR_TRUE;
+      nsresult rv = viewObserver->HandleEvent(view, aEvent, aEventStatus);
+      sDontRetargetEvents = PR_FALSE;
+      return rv;
     }
   }
 
@@ -5995,40 +5933,7 @@ PresShell::HandleEvent(nsIView         *aView,
     return NS_OK;
   }
 
-  PRBool getDescendantPoint = PR_TRUE;
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
-
-  if (NS_IS_MOUSE_EVENT(aEvent) && GetCapturingContent()) {
-    // if a node is capturing the mouse, get the frame for the capturing
-    // content and use that instead. However, if the content has no parent,
-    // such as the root frame, get the parent canvas frame instead. This
-    // ensures that positioned frames are included when hit-testing.
-    nsIContent* capturingContent = gCaptureInfo.mContent;
-    frame = GetPrimaryFrameFor(capturingContent);
-    if (frame) {
-      getDescendantPoint = !gCaptureInfo.mRetargetToElement;
-      if (!capturingContent->GetParent()) {
-        frame = frame->GetParent();
-      }
-      else {
-        // special case for <select> as it needs to capture on the dropdown list.
-        if (capturingContent->Tag() == nsGkAtoms::select &&
-            capturingContent->IsNodeOfType(nsINode::eHTML)) {
-          nsIFrame* childframe = frame->GetChildList(nsGkAtoms::selectPopupList).FirstChild();
-          if (childframe) {
-            frame = childframe;
-          }
-        }
-
-        // if the frame is a scrolling frame, get the inner scrolled frame instead.
-        nsIScrollableFrame* scrollFrame = do_QueryFrame(frame);
-        if (scrollFrame) {
-          frame = scrollFrame->GetScrolledFrame();
-        }
-      }
-      aView = frame->GetClosestView();
-    }
-  }
 
   PRBool dispatchUsingCoordinates = NS_IsEventUsingCoordinates(aEvent);
 
@@ -6082,19 +5987,17 @@ PresShell::HandleEvent(nsIView         *aView,
 #endif
     }
 
-    nsIFrame* targetFrame = nsnull;
-    if (getDescendantPoint) {
-      nsPoint eventPoint
-          = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
-      {
-        nsAutoDisableGetUsedXAssertions disableAssert;
-        PRBool ignoreRootScrollFrame = PR_FALSE;
-        if (aEvent->eventStructType == NS_MOUSE_EVENT) {
-          ignoreRootScrollFrame = static_cast<nsMouseEvent*>(aEvent)->ignoreRootScrollFrame;
-        }
-        targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint,
-                                                      PR_FALSE, ignoreRootScrollFrame);
+    nsPoint eventPoint
+        = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
+    nsIFrame* targetFrame;
+    {
+      nsAutoDisableGetUsedXAssertions disableAssert;
+      PRBool ignoreRootScrollFrame = PR_FALSE;
+      if (aEvent->eventStructType == NS_MOUSE_EVENT) {
+        ignoreRootScrollFrame = static_cast<nsMouseEvent*>(aEvent)->ignoreRootScrollFrame;
       }
+      targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint,
+                                                    PR_FALSE, ignoreRootScrollFrame);
     }
 
     if (targetFrame) {
@@ -6374,8 +6277,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       }
     }                                
 
-    nsAutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
-                                                          aEvent->message == NS_MOUSE_BUTTON_DOWN);
+    nsAutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput);
 
     nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
 
@@ -6420,11 +6322,6 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
                                       GetCurrentEventFrame(), aStatus,
                                       weakView.GetView());
       }
-    }
-
-    if (aEvent->message == NS_MOUSE_BUTTON_UP) {
-      // reset the capturing content now that the mouse button is up
-      SetCapturingContent(nsnull, 0);
     }
   }
   return rv;
