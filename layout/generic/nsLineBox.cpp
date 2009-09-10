@@ -326,19 +326,31 @@ nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines)
     // Delete our child frames before doing anything else. In particular
     // we do all of this before our base class releases it's hold on the
     // view.
+#ifdef DEBUG
+    PRInt32 numFrames = 0;
+#endif
     for (nsIFrame* child = aLines.front()->mFirstChild; child; ) {
       nsIFrame* nextChild = child->GetNextSibling();
       child->Destroy();
       child = nextChild;
+#ifdef DEBUG
+      numFrames++;
+#endif
     }
 
     nsIPresShell *shell = aPresContext->PresShell();
 
     do {
       nsLineBox* line = aLines.front();
+#ifdef DEBUG
+      numFrames -= line->GetChildCount();
+#endif
       aLines.pop_front();
       line->Destroy(shell);
     } while (! aLines.empty());
+#ifdef DEBUG
+    NS_ASSERTION(numFrames == 0, "number of frames deleted does not match");
+#endif
   }
 }
 
