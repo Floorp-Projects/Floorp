@@ -56,22 +56,16 @@ function test()
   expect = 'PASS';
   jit(true);
 
-  if (typeof gczeal == 'function')
+  if (typeof gczeal != 'undefined')
   {
     gczeal(2);
   }
-
   Object.prototype.q = 3;
   for each (let x in [6, 7]) { } print(actual = "PASS");
  
   jit(false);
 
   delete Object.prototype.q;
-
-  if (typeof gczeal == 'function')
-  {
-    gczeal(0);
-  }
 
   reportCompare(expect, actual, summary);
 

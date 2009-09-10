@@ -53,13 +53,7 @@ var SECT_PREFIX = 'Section ';
 var SECT_SUFFIX = ' of test - ';
 var callStack = new Array();
 
-// hack to output test path at beginning of the test
-if (typeof __defineGetter__ == 'function' && typeof __defineSetter__ == 'function')
-{
-  __defineGetter__('gTestfile', (function () { return this._gTestfile; }));
-  __defineSetter__('gTestfile', (function (v) { print('begin test: ' + gTestsuite + '/' + gTestsubsuite + '/' + v); this._gTestfile = v; }));
-}
-
+var gTestfile;
 var gTestPath;
 var gTestsuite;
 var gTestsubsuite;
@@ -160,32 +154,16 @@ function TestCase(n, d, e, a)
   gTestcases[gTc++] = this;
 }
 
-gFailureExpected = false;
-
 TestCase.prototype.dump = function () {
-  // let reftest handle error reporting, otherwise
-  // output a summary line.
-  if (!document.location.href.match(/jsreftest.html/))
-  {
-    dump('\njstest: ' + this.path + ' ' +
-         'bug: '         + this.bugnumber + ' ' +
-         'result: '      + (this.passed ? 'PASSED':'FAILED') + ' ' +
-         'type: '        + this.type + ' ' +
-         'description: ' + toPrinted(this.description) + ' ' +
+  dump('\njstest: '      + this.path + ' ' +
+       'bug: '         + this.bugnumber + ' ' +
+       'result: '      + (this.passed ? 'PASSED':'FAILED') + ' ' +
+       'type: '        + this.type + ' ' +
+       'description: ' + toPrinted(this.description) + ' ' +
 //       'expected: '    + toPrinted(this.expect) + ' ' +
 //       'actual: '      + toPrinted(this.actual) + ' ' +
-         'reason: '      + toPrinted(this.reason) + '\n');
-  }
+       'reason: '      + toPrinted(this.reason) + '\n');
 };
-
-TestCase.prototype.testPassed = (function TestCase_testPassed() { return this.passed; });
-TestCase.prototype.testFailed = (function TestCase_testFailed() { return !this.passed; });
-TestCase.prototype.testDescription = (function TestCase_testDescription() { return this.description + ' ' + this.reason; });
-
-function getTestCases()
-{
-  return gTestcases;
-}
 
 /*
  * The test driver searches for such a phrase in the test output.
