@@ -264,7 +264,7 @@ autocompleteresult.allbookmarks > .autocomplete-item-image {
 }
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
-.documenttab-close {
+box[type="documenttab"] .documenttab-close {
   width: 16px;
   height: 17px;
   list-style-image: url("chrome://browser/skin/images/close-16.png");

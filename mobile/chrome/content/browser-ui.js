@@ -303,14 +303,11 @@ var BrowserUI = {
     return this.starButton = document.getElementById("tool-star");
   },
 
-  _initControls : false,
   sizeControls : function(windowW, windowH) {
-    let tabs = document.getElementById("tabs-container");
-    let controls = document.getElementById("browser-controls");
-    if (!this._initControls) {
-      this._initControls = true;
-    }
+    // tabs
+    document.getElementById("tabs").resize();
 
+    // awesomebar
     let popup = document.getElementById("popup_autocomplete");
     popup.top = this.toolbarH;
     popup.height = windowH - this.toolbarH;

@@ -6,7 +6,7 @@
     -moz-binding: url("chrome://browser/content/tabs.xml#tablist");
 }
 
-richlistitem[type="documenttab"] {
+box[type="documenttab"] {
     -moz-binding: url("chrome://browser/content/tabs.xml#documenttab");
 }
 
