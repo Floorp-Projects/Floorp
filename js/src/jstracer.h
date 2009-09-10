@@ -690,7 +690,7 @@ enum TypeConsensus
     TypeConsensus_Bad           /* Typemaps are not compatible */
 };
 
-class TraceRecorder : public avmplus::GCObject {
+class TraceRecorder {
     JSContext*              cx;
     JSTraceMonitor*         traceMonitor;
     JSObject*               globalObj;
@@ -980,6 +980,13 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK jsatomid getFullIndex(ptrdiff_t pcoff = 0);
 
 public:
+
+    inline void*
+    operator new(size_t size)
+    {
+        return calloc(1, size);
+    }
+
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
                   unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
