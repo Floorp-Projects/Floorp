@@ -2145,6 +2145,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // Reparent floats whose placeholders are in the line.
       ReparentFloats(toMove->mFirstChild, nextInFlow, collectOverflowFloats, PR_TRUE);
 
+      NS_ASSERTION(aState.mPrevChild || mLines.empty(), "should have a prevchild here");
+
       // Add line to our line list, and set its last child as our new prev-child
       if (aState.mPrevChild) {
         aState.mPrevChild->SetNextSibling(toMove->mFirstChild);
@@ -2473,9 +2475,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
 }
 
 /**
- * Try to pull a frame out of a line pointed at by aFromLine. If
- * aUpdateGeometricParent is set then the pulled frames geometric parent
- * will be updated (e.g. when pulling from a next-in-flows line list).
+ * Try to pull a frame out of a line pointed at by aFromLine.
  *
  * Note: pulling a frame from a line that is a place-holder frame
  * doesn't automatically remove the corresponding float from the
@@ -2511,9 +2511,15 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
   else {
     // Take frame from fromLine
     nsIFrame* frame = fromLine->mFirstChild;
+    nsIFrame* newFirstChild = frame->GetNextSibling();
 
     if (aFromContainer != this) {
-      aLine->LastChild()->SetNextSibling(frame);
+      NS_ASSERTION(aState.mPrevChild == aLine->LastChild(),
+        "mPrevChild should be the LastChild of the line we are adding to");
+      // The frame is being pulled from a next-in-flow; therefore we
+      // need to add it to our sibling list.
+      frame->SetNextSibling(nsnull);
+      aState.mPrevChild->SetNextSibling(frame);
     }
     // when aFromContainer is 'this', then aLine->LastChild()'s next sibling
     // is already set correctly.
@@ -2524,7 +2530,7 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
       // Mark line dirty now that we pulled a child
       fromLine->SetChildCount(fromLineChildCount);
       fromLine->MarkDirty();
-      fromLine->mFirstChild = frame->GetNextSibling();
+      fromLine->mFirstChild = newFirstChild;
     }
     else {
       // Free up the fromLine now that it's empty
@@ -2556,13 +2562,6 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
       NS_ASSERTION(frame->GetParent() == aFromContainer, "unexpected parent frame");
 
       ReparentFrame(frame, aFromContainer, this);
-
-      // The frame is being pulled from a next-in-flow; therefore we
-      // need to add it to our sibling list.
-      frame->SetNextSibling(nsnull);
-      if (nsnull != aState.mPrevChild) {
-        aState.mPrevChild->SetNextSibling(frame);
-      }
 
       // The frame might have (or contain) floats that need to be
       // brought over too.
