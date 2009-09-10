@@ -2659,7 +2659,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     JS_ASSERT(depth <= (size_t) (fp->regs->sp - StackBase(fp)));
     JS_ASSERT(count <= (size_t) (fp->regs->sp - StackBase(fp) - depth));
 
-    /* See comments in CheckDestructuring from jsparse.c. */
+    /* See comments in CheckDestructuring from jsparse.cpp. */
     JS_ASSERT(count >= 1);
 
     depth += fp->script->nfixed;
