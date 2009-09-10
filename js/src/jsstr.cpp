@@ -2434,7 +2434,11 @@ static const jschar UnitStringData[] = {
 
 #define U(c) { 1 | JSString::ATOMIZED, {(jschar *)UnitStringData + (c) * 2} }
 
+#ifdef __SUNPRO_CC
+#pragma pack(8)
+#else
 #pragma pack(push, 8)
+#endif
 
 JSString JSString::unitStringTable[]
 #ifdef __GNUC__
@@ -2475,7 +2479,11 @@ __attribute__ ((aligned (8)))
     U(0xf8), U(0xf9), U(0xfa), U(0xfb), U(0xfc), U(0xfd), U(0xfe), U(0xff)
 };
 
+#ifdef __SUNPRO_CC
+#pragma pack(0)
+#else
 #pragma pack(pop)
+#endif
 
 #undef U
 
@@ -2535,7 +2543,11 @@ static const jschar Hundreds[] = {
 #define L2(c) { 2 | JSString::ATOMIZED, {(jschar *)Hundreds + 41 + (c - 10) * 4} } /* length 2: 10..99 */
 #define L3(c) { 3 | JSString::ATOMIZED, {(jschar *)Hundreds + (c - 100) * 4} } /* length 3: 100..255 */
 
+#ifdef __SUNPRO_CC
+#pragma pack(8)
+#else
 #pragma pack(push, 8)
+#endif
 
 JSString JSString::intStringTable[]
 #ifdef __GNUC__
@@ -2576,7 +2588,11 @@ __attribute__ ((aligned (8)))
     L3(0xf8), L3(0xf9), L3(0xfa), L3(0xfb), L3(0xfc), L3(0xfd), L3(0xfe), L3(0xff)
 };
 
+#ifdef __SUNPRO_CC
+#pragma pack(0)
+#else
 #pragma pack(pop)
+#endif
 
 #undef L1
 #undef L2
