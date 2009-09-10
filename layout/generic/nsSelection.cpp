@@ -2766,69 +2766,134 @@ nsFrameSelection::SelectBlockOfCells(nsIContent *aStartCell, nsIContent *aEndCel
   result = GetCellIndexes(aEndCell, endRowIndex, endColIndex);
   if(NS_FAILED(result)) return result;
 
-  // Check that |table| is a table.
-  if (!GetTableLayout(table)) return NS_ERROR_FAILURE;
-
-  PRInt32 curRowIndex, curColIndex;
-
   if (mDragSelectingCells)
   {
     // Drag selecting: remove selected cells outside of new block limits
-
-    PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
-    if (!mDomSelections[index])
-      return NS_ERROR_NULL_POINTER;
-
-    // Strong reference because we sometimes remove the range
-    nsCOMPtr<nsIRange> range = GetFirstCellRange();
-    nsIContent* cellNode = GetFirstSelectedContent(range);
-    NS_PRECONDITION(!range || cellNode, "Must have cellNode if had a range");
-
-    PRInt32 minRowIndex = PR_MIN(startRowIndex, endRowIndex);
-    PRInt32 maxRowIndex = PR_MAX(startRowIndex, endRowIndex);
-    PRInt32 minColIndex = PR_MIN(startColIndex, endColIndex);
-    PRInt32 maxColIndex = PR_MAX(startColIndex, endColIndex);
-
-    while (cellNode)
-    {
-      result = GetCellIndexes(cellNode, curRowIndex, curColIndex);
-      if (NS_FAILED(result)) return result;
-
-#ifdef DEBUG_TABLE_SELECTION
-if (!range)
-printf("SelectBlockOfCells -- range is null\n");
-#endif
-      if (range &&
-          (curRowIndex < minRowIndex || curRowIndex > maxRowIndex || 
-           curColIndex < minColIndex || curColIndex > maxColIndex))
-      {
-        mDomSelections[index]->RemoveRange(range);
-        // Since we've removed the range, decrement pointer to next range
-        mSelectedCellIndex--;
-      }    
-      range = GetNextCellRange();
-      cellNode = GetFirstSelectedContent(range);
-      NS_PRECONDITION(!range || cellNode, "Must have cellNode if had a range");
-    }
+    UnselectCells(table, startRowIndex, startColIndex, endRowIndex, endColIndex,
+                  PR_TRUE);
   }
-
-  nsCOMPtr<nsIDOMElement> cellElement;
-  PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan;
-  PRBool  isSelected;
 
   // Note that we select block in the direction of user's mouse dragging,
   //  which means start cell may be after the end cell in either row or column
-  PRInt32 row = startRowIndex;
+  return AddCellsToSelection(table, startRowIndex, startColIndex,
+                             endRowIndex, endColIndex);
+}
+
+nsresult
+nsFrameSelection::UnselectCells(nsIContent *aTableContent,
+                                PRInt32 aStartRowIndex,
+                                PRInt32 aStartColumnIndex,
+                                PRInt32 aEndRowIndex,
+                                PRInt32 aEndColumnIndex,
+                                PRBool aRemoveOutsideOfCellRange)
+{
+  PRInt8 index =
+    GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  if (!mDomSelections[index])
+    return NS_ERROR_NULL_POINTER;
+
+  nsITableLayout *tableLayout = GetTableLayout(aTableContent);
+  if (!tableLayout)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 minRowIndex = PR_MIN(aStartRowIndex, aEndRowIndex);
+  PRInt32 maxRowIndex = PR_MAX(aStartRowIndex, aEndRowIndex);
+  PRInt32 minColIndex = PR_MIN(aStartColumnIndex, aEndColumnIndex);
+  PRInt32 maxColIndex = PR_MAX(aStartColumnIndex, aEndColumnIndex);
+
+  // Strong reference because we sometimes remove the range
+  nsCOMPtr<nsIRange> range = GetFirstCellRange();
+  nsIContent* cellNode = GetFirstSelectedContent(range);
+  NS_PRECONDITION(!range || cellNode, "Must have cellNode if had a range");
+
+  PRInt32 curRowIndex, curColIndex;
+  while (cellNode)
+  {
+    nsresult result = GetCellIndexes(cellNode, curRowIndex, curColIndex);
+    if (NS_FAILED(result))
+      return result;
+
+#ifdef DEBUG_TABLE_SELECTION
+    if (!range)
+      printf("RemoveCellsToSelection -- range is null\n");
+#endif
+
+    if (range) {
+      if (aRemoveOutsideOfCellRange) {
+        if (curRowIndex < minRowIndex || curRowIndex > maxRowIndex || 
+            curColIndex < minColIndex || curColIndex > maxColIndex) {
+
+          mDomSelections[index]->RemoveRange(range);
+          // Since we've removed the range, decrement pointer to next range
+          mSelectedCellIndex--;
+        }
+
+      } else {
+        // Remove cell from selection if it belongs to the given cells range or
+        // it is spanned onto the cells range.
+        nsCOMPtr<nsIDOMElement> cellElement;
+        PRInt32 origRowIndex, origColIndex, rowSpan, colSpan,
+          actualRowSpan, actualColSpan;
+        PRBool isSelected;
+
+        result = tableLayout->GetCellDataAt(curRowIndex, curColIndex,
+                                            *getter_AddRefs(cellElement),
+                                            origRowIndex, origColIndex,
+                                            rowSpan, colSpan, 
+                                            actualRowSpan, actualColSpan,
+                                            isSelected);
+        if (NS_FAILED(result))
+          return result;
+
+        if (origRowIndex <= maxRowIndex &&
+            origRowIndex + actualRowSpan - 1 >= minRowIndex &&
+            origColIndex <= maxColIndex &&
+            origColIndex + actualColSpan - 1 >= minColIndex) {
+
+          mDomSelections[index]->RemoveRange(range);
+          // Since we've removed the range, decrement pointer to next range
+          mSelectedCellIndex--;
+        }
+      }
+    }
+
+    range = GetNextCellRange();
+    cellNode = GetFirstSelectedContent(range);
+    NS_PRECONDITION(!range || cellNode, "Must have cellNode if had a range");
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsFrameSelection::AddCellsToSelection(nsIContent *aTableContent,
+                                      PRInt32 aStartRowIndex,
+                                      PRInt32 aStartColumnIndex,
+                                      PRInt32 aEndRowIndex,
+                                      PRInt32 aEndColumnIndex)
+{
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  if (!mDomSelections[index])
+    return NS_ERROR_NULL_POINTER;
+
+  // Get TableLayout interface to access cell data based on cellmap location
+  // frames are not ref counted, so don't use an nsCOMPtr
+  nsITableLayout *tableLayoutObject = GetTableLayout(aTableContent);
+  if (!tableLayoutObject) // Check that |table| is a table.
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMElement> cellElement;
+  PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan,
+    curRowIndex, curColIndex;
+  PRBool isSelected;
+  nsresult result = NS_OK;
+
+  PRInt32 row = aStartRowIndex;
   while(PR_TRUE)
   {
-    PRInt32 col = startColIndex;
+    PRInt32 col = aStartColumnIndex;
     while(PR_TRUE)
     {
-      // Get TableLayout interface to access cell data based on cellmap location
-      // frames are not ref counted, so don't use an nsCOMPtr
-      nsITableLayout *tableLayoutObject = GetTableLayout(table);
-      if (!tableLayoutObject) return NS_ERROR_FAILURE;
-
       result = tableLayoutObject->GetCellDataAt(row, col, *getter_AddRefs(cellElement),
                                                 curRowIndex, curColIndex, rowSpan, colSpan, 
                                                 actualRowSpan, actualColSpan, isSelected);
@@ -2844,21 +2909,43 @@ printf("SelectBlockOfCells -- range is null\n");
         if (NS_FAILED(result)) return result;
       }
       // Done when we reach end column
-      if (col == endColIndex) break;
+      if (col == aEndColumnIndex) break;
 
-      if (startColIndex < endColIndex)
+      if (aStartColumnIndex < aEndColumnIndex)
         col ++;
       else
         col--;
     };
-    if (row == endRowIndex) break;
+    if (row == aEndRowIndex) break;
 
-    if (startRowIndex < endRowIndex)
+    if (aStartRowIndex < aEndRowIndex)
       row++;
     else
       row--;
   };
   return result;
+}
+
+nsresult
+nsFrameSelection::RemoveCellsFromSelection(nsIContent *aTable,
+                                           PRInt32 aStartRowIndex,
+                                           PRInt32 aStartColumnIndex,
+                                           PRInt32 aEndRowIndex,
+                                           PRInt32 aEndColumnIndex)
+{
+  return UnselectCells(aTable, aStartRowIndex, aStartColumnIndex,
+                       aEndRowIndex, aEndColumnIndex, PR_FALSE);
+}
+
+nsresult
+nsFrameSelection::RestrictCellsToSelection(nsIContent *aTable,
+                                           PRInt32 aStartRowIndex,
+                                           PRInt32 aStartColumnIndex,
+                                           PRInt32 aEndRowIndex,
+                                           PRInt32 aEndColumnIndex)
+{
+  return UnselectCells(aTable, aStartRowIndex, aStartColumnIndex,
+                       aEndRowIndex, aEndColumnIndex, PR_TRUE);
 }
 
 nsresult

@@ -24,59 +24,35 @@
     {
       var cellsArray =
       [
-        [false, false, false,     undefined, false, false,     false, false],
-        [false, false, false,     false,     false, false,     false, undefined],
-        [false, false, undefined, false,     false, false,     false, undefined],
-        [false, false, undefined, false,     false, undefined, false, undefined]
+        [false, false,       false,       kColSpanned, false, false,       false, false],
+        [false, false,       false,       false,       false, false,       false, kRowSpanned],
+        [false, false,       kColSpanned, false,       false, false,       false, kRowSpanned],
+        [false, kRowSpanned, kSpanned,    false,       false, kRowSpanned, false, kRowSpanned]
       ];
 
       testTableSelection("table", cellsArray);
 
-      testSelectTableRow("table", 0, cellsArray);
+      var rowsCount = 4;
+      for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++)
+        testSelectTableRow("table", rowIdx, cellsArray);
+
+      for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
+        testSelectTableRow("table", rowIdx, cellsArray);
+        testUnselectTableRow("table", rowIdx, cellsArray);
+      }
+
+      var columsCount = 8;
+      for (var colIdx = 0; colIdx < columsCount; colIdx++)
+        testSelectTableColumn("table", colIdx, cellsArray);
+
+      for (var colIdx = 0; colIdx < columsCount; colIdx++) {
+        testSelectTableColumn("table", colIdx, cellsArray);
+        testUnselectTableColumn("table", colIdx, cellsArray);
+      }
 
       var accTable = getAccessible("table", [nsIAccessibleTable]);
-      for (var i = 0; i < 4; i++) {
-        accTable.selectRow(i);
-        for (var j = 0; j < 4; j++)
-          if (i == j)
-            ok(accTable.isRowSelected(i),"row not selected");
-          else
-            todo(!accTable.isRowSelected(i),"row selected");
-      }
-      todo_is(accTable.selectedRowsCount, 1, "only one row should be selected");
-      todo_is(accTable.getSelectedRows({}).length, 1,
-             "only one row should be selected");
-
-      for (var i = 0; i < 4; i++) {
-        accTable.unselectRow(i);
-        ok(!accTable.isRowSelected(i), "row still selected");
-      }
-      todo_is(accTable.getSelectedCells({}).length, 0, "no cell selected");
-      todo_is(accTable.selectedCellsCount, 0, "no cell selected");
-      var s = window.getSelection();
-      if (s.rangeCount > 0)
-        s.removeAllRanges();
-
-      is(accTable.getSelectedCells({}).length, 0, "no cell selected");
-      is(accTable.selectedCellsCount, 0, "no cell selected");
-      for (var i = 0; i < 8; i++) {
-        accTable.selectColumn(i);
-        for (var j = 0; j < 8; j++)
-          if (i ==j)
-            ok(accTable.isColumnSelected(i),"column not selected");
-          else
-            todo(!accTable.isColumnSelected(i),"column is selected");
-      }
-      todo_is(accTable.selectedColumnsCount, 1,
-              "only one column should be selected");
-      todo_is(accTable.getSelectedColumns({}).length, 1,
-              "only one column should be selected");
-      for (var i = 0; i < 8; i++) {
-        accTable.unselectColumn(i);
-        ok(!accTable.isColumnSelected(i),"column still selected");
-      }
-      is(accTable.selectedColumnsCount, 0, "no column should be selected");
       ok(!accTable.isProbablyForLayout(), "table is not for layout");
+
       SimpleTest.finish();
     }
 
@@ -95,6 +71,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=501635"
      title="nsHTMLTableAccessible::GetSelectedCells contains index duplicates for spanned rows or columns">
     Mozilla Bug 501635
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=417929"
+     title="nsIAccessiblTable selectRows does not unselect previously selected rows">
+    Mozilla Bug 417929
   </a>
 
   <p id="display"></p>
