@@ -361,7 +361,6 @@ var Browser = {
     let controlsScrollbox = this.controlsScrollbox = document.getElementById("scrollbox");
     this.controlsScrollboxScroller = controlsScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     controlsScrollbox.customDragger = {
-      allowRealtimeDownUp: true,
       dragStart: function dragStart(cx, cy, target, scroller) {},
       dragStop: function dragStop(dx, dy, scroller) { return false; },
       dragMove: function dragMove(dx, dy, scroller) { return false; }
@@ -1217,8 +1216,6 @@ var Browser = {
 };
 
 Browser.MainDragger = function MainDragger(browserView) {
-  this.allowRealtimeDownUp = true;
-
   this.bv = browserView;
   this.draggedFrame = null;
 };

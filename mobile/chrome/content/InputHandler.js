@@ -114,7 +114,7 @@ function InputHandler(browserViewContainer) {
   this._ignoreEvents = false;
 
   /* when set to true, next click won't be dispatched */
-  this._suppressNextClick = true;
+  this._suppressNextClick = false;
 
   /* used to cancel actions with browser window changes */
   this.listenFor(window, "URLChanged");
@@ -132,7 +132,7 @@ function InputHandler(browserViewContainer) {
   this.listenFor(browserViewContainer, "DOMMouseScroll");
   this.listenFor(browserViewContainer, "MozMousePixelScroll");
 
-  this.addModule(new MouseModule(this));
+  this.addModule(new MouseModule(this, browserViewContainer));
   this.addModule(new ScrollwheelModule(this, browserViewContainer));
 }
 
@@ -357,6 +357,11 @@ InputHandler.EventInfo.prototype = {
  * redispatches the swallowed mousedown, mouseup events back to chrome, so that
  * chrome elements still get their events.
  *
+ * The mousedown and mouseup events happening in the main context are
+ * redispatched as soon as they get caught, contrary to events happening on web
+ * content which are swallowed before being redispatched as a triple at the end
+ * of the mouseup handling.
+ *
  * A custom dragger is a JS property that lives on a scrollable DOM element,
  * accessible as myElement.customDragger.  The customDragger must support the
  * following interface:  (The `scroller' argument is given for convenience, and
@@ -372,14 +377,6 @@ InputHandler.EventInfo.prototype = {
  *
  *   dragMove(dx, dy, scroller)
  *     Signals an input attempt to drag by dx, dy.
- *
- * Optionally, a custom dragger may define a boolean property
- *
- *   allowRealtimeDownUp
- *
- * that, when true, will prevent the mousedown and mouseup events corresponding
- * to the beginning and end of a drag from being swallowed (propagation stopped
- * and default prevented) by the MouseModule.
  *
  * Between mousedown and mouseup, MouseModule incrementally drags and updates
  * the dragger accordingly, and also determines whether a [double-]click occured
@@ -399,8 +396,9 @@ InputHandler.EventInfo.prototype = {
  * There is a default dragger in case a scrollable element is dragged --- see
  * the defaultDragger prototype property.  There is no default clicker.
  */
-function MouseModule(owner) {
+function MouseModule(owner, browserViewContainer) {
   this._owner = owner;
+  this._browserViewContainer = browserViewContainer;
   this._dragData = new DragData(this, 15, 200);
 
   this._dragger = null;
@@ -481,11 +479,6 @@ MouseModule.prototype = {
                                             : null;
     this._clicker = (targetClicker) ? targetClicker.customClicker : null;
 
-    if (this._dragger && !this._dragger.allowRealtimeDownUp) {
-      evInfo.event.stopPropagation();
-      evInfo.event.preventDefault();
-    }
-
     this._owner.grab(this);
 
     if (this._clicker)
@@ -510,15 +503,6 @@ MouseModule.prototype = {
   _onMouseUp: function _onMouseUp(evInfo) {
     let dragData = this._dragData;
 
-    if (this._dragger && !this._dragger.allowRealtimeDownUp) {
-      evInfo.event.stopPropagation();
-      evInfo.event.preventDefault();
-
-      // we have swallowed mousedown and mouseup, so we should swallow their
-      // potential corresponding click, too
-      this._owner.suppressNextClick();
-    }
-
     let [sX, sY] = dragData.lockAxis(evInfo.event.screenX, evInfo.event.screenY);
 
     this._movedOutOfRadius = this._movedOutOfRadius || dragData.isPointOutsideRadius(sX, sY);
@@ -531,7 +515,11 @@ MouseModule.prototype = {
     if (this._clicker)
       this._clicker.mouseUp(evInfo.event.clientX, evInfo.event.clientY);
 
-    this._doClick(this._movedOutOfRadius);
+    let targetIsContent = this._targetIsContent(evInfo.event);
+    if (targetIsContent)
+      this._doClick(this._movedOutOfRadius);
+    else if (this._dragger && this._movedOutOfRadius && evInfo.event.detail)
+      this._owner.suppressNextClick();
 
     this._owner.ungrab(this);
   },
@@ -551,6 +539,22 @@ MouseModule.prototype = {
 
     this._movedOutOfRadius = this._movedOutOfRadius || 
       dragData.isPointOutsideRadius(evInfo.event.screenX, evInfo.event.screenY);
+  },
+
+  /**
+   * Check if the event concern the browser content
+   */
+  _targetIsContent: function _targetIsContent(aEvent) {
+    let target = aEvent.target;
+    while (target) {
+      if (target === window)
+        return false;
+      if (target === this._browserViewContainer)
+        return true;
+
+      target = target.parentNode;
+    }
+    return false;
   },
 
   /**
@@ -687,7 +691,7 @@ MouseModule.prototype = {
    */
   _doClick: function _doClick(movedOutOfRadius) {
     let commitToClicker = this._clicker && !movedOutOfRadius;
-    let needToRedispatch = this._dragger && !this._dragger.allowRealtimeDownUp && !movedOutOfRadius;
+    let needToRedispatch = this._dragger && !movedOutOfRadius;
 
     if (commitToClicker) {
       this._commitAnotherClick();  // commit this click to the doubleclick timewait buffer
