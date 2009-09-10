@@ -611,15 +611,18 @@ struct InterpState
 #endif
     InterpState*   prev;
 
-    /*
-     * Used by _FAIL builtins; see jsbuiltins.h. The builtin sets the
-     * JSBUILTIN_BAILED bit if it bails off trace and the JSBUILTIN_ERROR bit
-     * if an error or exception occurred.
-     */
+    // Used by _FAIL builtins; see jsbuiltins.h. The builtin sets the
+    // JSBUILTIN_BAILED bit if it bails off trace and the JSBUILTIN_ERROR bit
+    // if an error or exception occurred.
     uint32         builtinStatus;
 
     // Used to communicate the location of the return value in case of a deep bail.
     double*        deepBailSp;
+
+
+    // Used when calling natives from trace to root the vp vector. */
+    uintN          nativeVpLen;
+    jsval         *nativeVp;
 };
 
 // Arguments objects created on trace have a private value that points to an
