@@ -88,6 +88,13 @@ public:
     NS_ASSERTION(mUnit != eStyleUnit_Null, "reading uninitialized value");
     return mUnit;
   }
+
+  // Accessor to let us verify assumptions about presence of null unit,
+  // without tripping the assertion in GetUnit().
+  PRBool IsNull() const {
+    return mUnit == eStyleUnit_Null;
+  }
+
   nscoord     GetCoordValue(void) const;
   PRInt32     GetIntValue(void) const;
   float       GetPercentValue(void) const;
