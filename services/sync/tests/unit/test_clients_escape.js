@@ -11,7 +11,7 @@ function run_test() {
   do_check_eq(record.id, "ascii");
   do_check_eq(record.payload.name, "wéävê");
 
-  let serialized = record.serialize();
+  let serialized = JSON.stringify(record);
   let checkCount = 0;
   _("Checking for all ASCII:", serialized);
   Array.forEach(serialized, function(ch) {

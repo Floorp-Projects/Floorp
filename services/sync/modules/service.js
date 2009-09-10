@@ -548,7 +548,7 @@ WeaveSvc.prototype = {
           privkey.payload.iv, newphrase);
       privkey.payload.keyData = newkey;
 
-      let resp = new Resource(privkey.uri).put(privkey.serialize());
+      let resp = new Resource(privkey.uri).put(privkey);
       if (!resp.success)
         throw resp;
 
@@ -1076,9 +1076,8 @@ WeaveSvc.prototype = {
       throw "aborting sync, failed to get collections";
 
     // Convert the response to an object and read out the modified times
-    info = JSON.parse(info);
     for each (let engine in [Clients].concat(Engines.getEnabled()))
-      engine.lastModified = info[engine.name] || 0;
+      engine.lastModified = info.obj[engine.name] || 0;
 
     this._log.debug("Refreshing client list");
     Clients.sync();
@@ -1201,7 +1200,7 @@ WeaveSvc.prototype = {
 
     this._log.debug("Setting meta payload storage version to " + WEAVE_VERSION);
     meta.payload.storageVersion = WEAVE_VERSION;
-    let resp = new Resource(meta.uri).put(meta.serialize());
+    let resp = new Resource(meta.uri).put(meta);
     if (!resp.success)
       throw resp;
   },
@@ -1214,13 +1213,9 @@ WeaveSvc.prototype = {
    */
   wipeServer: function WeaveSvc_wipeServer(engines)
     this._catch(this._notify("wipe-server", "", function() {
-      // Grab all the collections for the user
-      let res = new Resource(this.infoURL);
-      res.get();
-
-      // Get the array of collections and delete each one
-      let allCollections = JSON.parse(res.data);
-      for (let name in allCollections) {
+      // Grab all the collections for the user and delete each one
+      let info = new Resource(this.infoURL).get();
+      for (let name in info.obj) {
         try {
           // If we have a list of engines, make sure it's one we want
           if (engines && engines.indexOf(name) == -1)
