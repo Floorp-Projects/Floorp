@@ -1,0 +1,8 @@
+fails script ../../jsreftest.html?test=ecma_3/String/15.5.4.11.js
+script ../../jsreftest.html?test=ecma_3/String/15.5.4.14.js
+script ../../jsreftest.html?test=ecma_3/String/regress-104375.js
+script ../../jsreftest.html?test=ecma_3/String/regress-189898.js
+script ../../jsreftest.html?test=ecma_3/String/regress-304376.js
+script ../../jsreftest.html?test=ecma_3/String/regress-313567.js
+fails script ../../jsreftest.html?test=ecma_3/String/regress-392378.js
+script ../../jsreftest.html?test=ecma_3/String/regress-83293.js

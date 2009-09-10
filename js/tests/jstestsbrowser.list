@@ -1,0 +1,15 @@
+include e4x/jstestsbrowser.list
+include ecma/jstestsbrowser.list
+include ecma_2/jstestsbrowser.list
+include ecma_3/jstestsbrowser.list
+include ecma_3_1/jstestsbrowser.list
+include ecma_5/jstestsbrowser.list
+include js1_1/jstestsbrowser.list
+include js1_2/jstestsbrowser.list
+include js1_3/jstestsbrowser.list
+include js1_4/jstestsbrowser.list
+include js1_5/jstestsbrowser.list
+include js1_6/jstestsbrowser.list
+include js1_7/jstestsbrowser.list
+include js1_8/jstestsbrowser.list
+include js1_8_1/jstestsbrowser.list

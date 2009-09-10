@@ -1,0 +1,9 @@
+include Exceptions/jstestsbrowser.list
+include Expressions/jstestsbrowser.list
+include extensions/jstestsbrowser.list
+include FunctionObjects/jstestsbrowser.list
+include instanceof/jstestsbrowser.list
+include LexicalConventions/jstestsbrowser.list
+include RegExp/jstestsbrowser.list
+include Statements/jstestsbrowser.list
+include String/jstestsbrowser.list

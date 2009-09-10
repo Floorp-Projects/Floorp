@@ -1,0 +1,3 @@
+script ../../jsreftest.html?test=e4x/Statements/12.1.js
+script ../../jsreftest.html?test=e4x/Statements/12.2.js
+script ../../jsreftest.html?test=e4x/Statements/12.3-01.js

@@ -1,0 +1,2 @@
+script ../../jsreftest.html?test=js1_7/GC/regress-341675.js
+script ../../jsreftest.html?test=js1_7/GC/regress-381374.js

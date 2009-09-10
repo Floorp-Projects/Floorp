@@ -69,6 +69,11 @@ function test()
 
   jit(false);
 
+  if (typeof gczeal == 'function')
+  {
+    gczeal(0);
+  }
+
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

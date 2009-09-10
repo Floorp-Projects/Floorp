@@ -1,0 +1,10 @@
+script ../../jsreftest.html?test=ecma_3/Date/15.9.1.2-01.js
+script ../../jsreftest.html?test=ecma_3/Date/15.9.3.2-1.js
+script ../../jsreftest.html?test=ecma_3/Date/15.9.4.3.js
+script ../../jsreftest.html?test=ecma_3/Date/15.9.5.3.js
+script ../../jsreftest.html?test=ecma_3/Date/15.9.5.4.js
+script ../../jsreftest.html?test=ecma_3/Date/15.9.5.5-02.js
+fails-if(xulRuntime.OS=="Linux") script ../../jsreftest.html?test=ecma_3/Date/15.9.5.5.js # bug xxx
+script ../../jsreftest.html?test=ecma_3/Date/15.9.5.6.js
+script ../../jsreftest.html?test=ecma_3/Date/15.9.5.7.js
+script ../../jsreftest.html?test=ecma_3/Date/regress-452786.js

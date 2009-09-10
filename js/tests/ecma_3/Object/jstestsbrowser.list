@@ -1,0 +1,13 @@
+script ../../jsreftest.html?test=ecma_3/Object/8.6.1-01.js
+script ../../jsreftest.html?test=ecma_3/Object/8.6.2.6-001.js
+fails script ../../jsreftest.html?test=ecma_3/Object/8.6.2.6-002.js
+script ../../jsreftest.html?test=ecma_3/Object/class-001.js
+script ../../jsreftest.html?test=ecma_3/Object/class-002.js
+script ../../jsreftest.html?test=ecma_3/Object/class-003.js
+script ../../jsreftest.html?test=ecma_3/Object/class-004.js
+script ../../jsreftest.html?test=ecma_3/Object/class-005.js
+script ../../jsreftest.html?test=ecma_3/Object/regress-361274.js
+script ../../jsreftest.html?test=ecma_3/Object/regress-385393-07.js
+script ../../jsreftest.html?test=ecma_3/Object/regress-459405.js
+script ../../jsreftest.html?test=ecma_3/Object/regress-72773.js
+script ../../jsreftest.html?test=ecma_3/Object/regress-79129-001.js

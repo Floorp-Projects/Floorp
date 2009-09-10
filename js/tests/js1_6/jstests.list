@@ -1,0 +1,5 @@
+include Array/jstests.list
+include decompilation/jstests.list
+include extensions/jstests.list
+include Regress/jstests.list
+include String/jstests.list

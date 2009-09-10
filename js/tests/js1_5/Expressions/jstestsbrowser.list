@@ -1,0 +1,5 @@
+script ../../jsreftest.html?test=js1_5/Expressions/regress-192288.js
+script ../../jsreftest.html?test=js1_5/Expressions/regress-394673.js
+script ../../jsreftest.html?test=js1_5/Expressions/regress-96526-argsub.js
+script ../../jsreftest.html?test=js1_5/Expressions/regress-96526-delelem.js
+script ../../jsreftest.html?test=js1_5/Expressions/regress-96526-noargsub.js

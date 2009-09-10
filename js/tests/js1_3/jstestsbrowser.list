@@ -1,0 +1,6 @@
+include Boolean/jstestsbrowser.list
+include extensions/jstestsbrowser.list
+include inherit/jstestsbrowser.list
+include misc/jstestsbrowser.list
+include regress/jstestsbrowser.list
+include Script/jstestsbrowser.list

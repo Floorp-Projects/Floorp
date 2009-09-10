@@ -1,0 +1,3 @@
+script ../../jsreftest.html?test=js1_4/Eval/eval-001.js
+script ../../jsreftest.html?test=js1_4/Eval/eval-002.js
+script ../../jsreftest.html?test=js1_4/Eval/eval-003.js

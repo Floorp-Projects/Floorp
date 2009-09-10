@@ -1,0 +1,15 @@
+include Array/jstestsbrowser.list
+include Date/jstestsbrowser.list
+include decompilation/jstestsbrowser.list
+include Error/jstestsbrowser.list
+include Exceptions/jstestsbrowser.list
+include Expressions/jstestsbrowser.list
+include extensions/jstestsbrowser.list
+include Function/jstestsbrowser.list
+include GC/jstestsbrowser.list
+include GetSet/jstestsbrowser.list
+include LexicalConventions/jstestsbrowser.list
+include Object/jstestsbrowser.list
+include Regress/jstestsbrowser.list
+include Scope/jstestsbrowser.list
+include String/jstestsbrowser.list

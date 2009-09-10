@@ -78,7 +78,13 @@ function test()
   {
     gczeal(2); 
   }
+
   for (y in [0,1]) { this.__defineSetter__('x', function(){}); }
+
+  if (typeof gczeal == 'function')
+  {
+    gczeal(0);
+  }
 
   reportCompare(expect, actual, summary);
 
