@@ -460,44 +460,72 @@ toolbarbutton.page-button {
 }
 
 .bookmark-folder, .bookmark-item {
-  padding: 0.5mm 0.2mm;
+  padding: 0.5mm 1.1mm;
   border-bottom: 0.1mm solid rgb(207,207,207);
   min-height: 14.4mm; /* row size */
-  -moz-box-align: center;
 }
 
-.bookmark-folder textbox[readonly="true"], .bookmark-item textbox[readonly="true"] {
-  -moz-appearance: none !important;
-  background-color: transparent;
-  border: none !important;
-  -moz-user-select: none !important;
+.bookmark-manage-controls {
+  padding-top: 1.1mm;
+  padding-bottom: 1.1mm;
+}
+
+.bookmark-edit-textboxes {
+  padding-top: 1.1mm;
+}
+
+.bookmark-item-image {
+  max-height: 16px;
+  max-width: 16px;
+  margin: 1.6mm 4mm 5mm 2mm;
+}
+
+placeitem[selected] .bookmark-item-image {
+  margin-top: 4mm;
+}
+
+.bookmark-item-name {
+  font-size: 15.75pt !important;
+}
+
+.bookmark-item-uri {
+  font-size: 10pt !important;
+  color: blue;
+}
+
+.bookmark-item-tags {
+  color: black;
+  margin-right: 2.2mm;
+  font-size: 11.75pt !important;
+  font-weight: lighter;
 }
 
 placelabel.bookmark-folder {
   border-bottom: 0.1mm solid rgb(255,255,255);
 }
 
-.bookmark-item-image, .bookmark-folder-image {
-  width: 24px;
-  height: 24px;
-}
-
 /* folders have a fixed image */
-.bookmark-folder-image {
+placeitem[type=folder] .bookmark-item-image {
   list-style-image: url("chrome://browser/skin/images/folder-30.png");
 }
 
+/* hide the unuseful fields for folder */
+placeitem[type=folder] .bookmark-item-uri,
+placeitem[type=folder] .bookmark-item-tags {
+  visibility: hidden;
+}
+
 /* control the manage controls */
-.bookmark-manage-controls, .bookmark-folder-new {
+.bookmark-folder-new {
   visibility: collapse;
 }
 
-placelist[ui="manage"] .bookmark-manage-controls,
-placelist[ui="manage"] .bookmark-folder-new,
-placeitem[ui="manage"] .bookmark-manage-controls {
+placelist[ui="manage"] .bookmark-folder-new {
   visibility: visible;
 }
 
+placeitem[ui="manage"] .bookmark-close-button,
+placeitem[ui="manage"] .bookmark-folder-button,
 placeitem[ui="manage"] .bookmark-item-image {
   visibility: collapse;
 }

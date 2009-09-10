@@ -64,6 +64,10 @@ textbox {
   background-color: white;
 }
 
+textbox[isempty="true"] {
+  color: gray;
+}
+
 /* panels ------------------------------------------------------------------ */
 .panel-dark {
   color: white;
