@@ -58,6 +58,7 @@
 #include "nsIServiceManager.h"
 #include "nsITableLayout.h"
 #include "nsITableCellLayout.h"
+#include "nsFrameSelection.h"
 #include "nsLayoutErrors.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1079,117 +1080,142 @@ nsHTMLTableAccessible::IsValidRow(PRInt32 aRow)
 NS_IMETHODIMP
 nsHTMLTableAccessible::SelectRow(PRInt32 aRow)
 {
-  return SelectRowOrColumn(aRow, nsISelectionPrivate::TABLESELECTION_ROW,
-                           PR_TRUE);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsresult rv =
+    RemoveRowsOrColumnsFromSelection(aRow,
+                                     nsISelectionPrivate::TABLESELECTION_ROW,
+                                     PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return AddRowOrColumnToSelection(aRow,
+                                   nsISelectionPrivate::TABLESELECTION_ROW);
 }
 
 NS_IMETHODIMP
 nsHTMLTableAccessible::SelectColumn(PRInt32 aColumn)
 {
-  return SelectRowOrColumn(aColumn, nsISelectionPrivate::TABLESELECTION_COLUMN,
-                           PR_TRUE);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsresult rv =
+    RemoveRowsOrColumnsFromSelection(aColumn,
+                                     nsISelectionPrivate::TABLESELECTION_COLUMN,
+                                     PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return AddRowOrColumnToSelection(aColumn,
+                                   nsISelectionPrivate::TABLESELECTION_COLUMN);
 }
 
 NS_IMETHODIMP
 nsHTMLTableAccessible::UnselectRow(PRInt32 aRow)
 {
-  return SelectRowOrColumn(aRow, nsISelectionPrivate::TABLESELECTION_ROW,
-                           PR_FALSE);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  return
+    RemoveRowsOrColumnsFromSelection(aRow,
+                                     nsISelectionPrivate::TABLESELECTION_ROW,
+                                     PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsHTMLTableAccessible::UnselectColumn(PRInt32 aColumn)
 {
-  return SelectRowOrColumn(aColumn, nsISelectionPrivate::TABLESELECTION_COLUMN,
-                           PR_FALSE);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  return
+    RemoveRowsOrColumnsFromSelection(aColumn,
+                                     nsISelectionPrivate::TABLESELECTION_COLUMN,
+                                     PR_FALSE);
 }
 
 nsresult
-nsHTMLTableAccessible::SelectRowOrColumn(PRInt32 aIndex, PRUint32 aTarget,
-                                         PRBool aDoSelect)
+nsHTMLTableAccessible::AddRowOrColumnToSelection(PRInt32 aIndex,
+                                                 PRUint32 aTarget)
 {
   PRBool doSelectRow = (aTarget == nsISelectionPrivate::TABLESELECTION_ROW);
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content)
-    return NS_OK;
-
-  nsCOMPtr<nsIDocument> document = content->GetCurrentDoc();
-  NS_ENSURE_STATE(document);
-
-  nsCOMPtr<nsISelectionController> selController(
-    do_QueryInterface(document->GetPrimaryShell()));
-  NS_ENSURE_STATE(selController);
-
-  nsCOMPtr<nsISelection> selection;
-  selController->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                              getter_AddRefs(selection));
-  NS_ENSURE_STATE(selection);
-
-  PRInt32 count = 0;
-  nsresult rv = doSelectRow ? GetColumns(&count) : GetRows(&count);
+  nsITableLayout *tableLayout = nsnull;
+  nsresult rv = GetTableLayout(&tableLayout);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 index = 0; index < count; index++) {
-    nsCOMPtr<nsIDOMElement> cellElm;
-    PRInt32 column = doSelectRow ? index : aIndex;
-    PRInt32 row = doSelectRow ? aIndex : index;
+  nsCOMPtr<nsIDOMElement> cellElm;
+  PRInt32 startRowIdx, startColIdx, rowSpan, colSpan,
+    actualRowSpan, actualColSpan;
+  PRBool isSelected = PR_FALSE;
 
-    rv = GetCellAt(row, column, *getter_AddRefs(cellElm));
-    NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 count = 0;
+  if (doSelectRow)
+    rv = GetColumns(&count);
+  else
+    rv = GetRows(&count);
 
-    rv = SelectCell(selection, document, cellElm, aDoSelect);
-    NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
+  nsRefPtr<nsFrameSelection> tableSelection =
+    const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
+
+  for (PRInt32 idx = 0; idx < count; idx++) {
+    PRInt32 rowIdx = doSelectRow ? aIndex : idx;
+    PRInt32 colIdx = doSelectRow ? idx : aIndex;
+    rv = tableLayout->GetCellDataAt(rowIdx, colIdx,
+                                    *getter_AddRefs(cellElm),
+                                    startRowIdx, startColIdx,
+                                    rowSpan, colSpan,
+                                    actualRowSpan, actualColSpan,
+                                    isSelected);      
+
+    if (NS_SUCCEEDED(rv) && !isSelected) {
+      nsCOMPtr<nsIContent> cellContent(do_QueryInterface(cellElm));
+      rv = tableSelection->SelectCellElement(cellContent);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
-  
+
   return NS_OK;
 }
 
 nsresult
-nsHTMLTableAccessible::SelectCell(nsISelection *aSelection,
-                                  nsIDocument *aDocument,
-                                  nsIDOMElement *aCellElement,
-                                  PRBool aDoSelect)
+nsHTMLTableAccessible::RemoveRowsOrColumnsFromSelection(PRInt32 aIndex,
+                                                        PRUint32 aTarget,
+                                                        PRBool aIsOuter)
 {
-  if (aDoSelect) {
-    nsCOMPtr<nsIDOMDocumentRange> documentRange(do_QueryInterface(aDocument));
-    NS_ENSURE_STATE(documentRange);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
 
-    nsCOMPtr<nsIDOMRange> range;
-    documentRange->CreateRange(getter_AddRefs(range));
-
-    nsCOMPtr<nsIDOMNode> cellNode(do_QueryInterface(aCellElement));
-    NS_ENSURE_STATE(cellNode);
-
-    range->SelectNode(cellNode);
-    return aSelection->AddRange(range);
-  }
-
-  nsCOMPtr<nsIContent> cell(do_QueryInterface(aCellElement));
-  NS_ENSURE_STATE(cell);
-
-  nsCOMPtr<nsIContent> cellParent = cell->GetParent();
-  NS_ENSURE_STATE(cellParent);
-
-  PRInt32 offset = cellParent->IndexOf(cell);
-  NS_ENSURE_STATE(offset != -1);
-
-  nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(cellParent));
-  NS_ENSURE_STATE(parent);
-
-  nsCOMPtr<nsISelection2> selection2(do_QueryInterface(aSelection));
-  NS_ENSURE_STATE(selection2);
-
-  nsCOMArray<nsIDOMRange> ranges;
-  nsresult rv = selection2->GetRangesForIntervalCOMArray(parent, offset,
-                                                         parent, offset,
-                                                         PR_TRUE, &ranges);
+  nsITableLayout *tableLayout = nsnull;
+  nsresult rv = GetTableLayout(&tableLayout);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 i = 0; i < ranges.Count(); i ++)
-    aSelection->RemoveRange(ranges[i]);
+  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
+  nsRefPtr<nsFrameSelection> tableSelection =
+    const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
 
-  return NS_OK;
+  PRBool doUnselectRow = (aTarget == nsISelectionPrivate::TABLESELECTION_ROW);
+
+  PRInt32 count = 0;
+  if (doUnselectRow)
+    rv = GetColumns(&count);
+  else
+    rv = GetRows(&count);
+
+  PRInt32 startRowIdx = doUnselectRow ? aIndex : 0;
+  PRInt32 endRowIdx = doUnselectRow ? aIndex : count - 1;
+  PRInt32 startColIdx = doUnselectRow ? 0 : aIndex;
+  PRInt32 endColIdx = doUnselectRow ? count - 1 : aIndex;
+
+  if (aIsOuter)
+    return tableSelection->RestrictCellsToSelection(content,
+                                                    startRowIdx, startColIdx, 
+                                                    endRowIdx, endColIdx);
+
+  return tableSelection->RemoveCellsFromSelection(content,
+                                                  startRowIdx, startColIdx, 
+                                                  endRowIdx, endColIdx);
 }
 
 nsresult

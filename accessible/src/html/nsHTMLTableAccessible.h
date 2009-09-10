@@ -187,26 +187,26 @@ public:
 protected:
 
   /**
-   * Selects or unselects row or column.
+   * Add row or column to selection.
    *
-   * @param aIndex - index of row or column to be selected
-   * @param aTarget - indicates what should be selected, either row or column
+   * @param aIndex   [in] index of row or column to be selected
+   * @param aTarget  [in] indicates what should be selected, either row or column
    *                  (see nsISelectionPrivate)
-   * @param aDoSelect - indicates whether row or column should selected or
-   *                    unselected
    */
-  nsresult SelectRowOrColumn(PRInt32 aIndex, PRUint32 aTarget, PRBool aDoSelect);
+  nsresult AddRowOrColumnToSelection(PRInt32 aIndex, PRUint32 aTarget);
 
   /**
-   * Selects or unselects the cell.
+   * Removes rows or columns at the given index or outside it from selection.
    *
-   * @param aSelection - the selection of document
-   * @param aDocument - the document that contains the cell
-   * @param aCellElement - the cell of table
-   * @param aDoSelect - indicates whether cell should be selected or unselected
+   * @param  aIndex    [in] row or column index
+   * @param  aTarget   [in] indicates whether row or column should unselected
+   * @param  aIsOuter  [in] indicates whether all rows or column excepting
+   *                    the given one should be unselected or the given one
+   *                    should be unselected only
    */
-  nsresult SelectCell(nsISelection *aSelection, nsIDocument *aDocument,
-                      nsIDOMElement *aCellElement, PRBool aDoSelect);
+  nsresult RemoveRowsOrColumnsFromSelection(PRInt32 aIndex,
+                                            PRUint32 aTarget,
+                                            PRBool aIsOuter);
 
   virtual void CacheChildren();
   nsresult GetTableNode(nsIDOMNode **_retval);

@@ -102,11 +102,21 @@ function testTableIndexes(aIdentifier, aIdxes)
 }
 
 /**
+ * Constants used to describe cells states array. Values 0 and 1 are reserved
+ * for boolean flag indicating the cell is origin and it is whether unselected
+ * or selected.
+ */
+const kRowSpanned = 2; // Indicates the cell is not origin and row spanned 
+const kColSpanned = 4; // Indicates the cell is not origin and column spanned
+const kSpanned = kRowSpanned | kColSpanned;
+
+/**
  * Test table getters selection methods.
  *
  * @param  aIdentifier  [in] table accessible identifier
- * @param  aCellsArray  [in] two dimensional array (row X columns) of selected
- *                       cells states.
+ * @param  aCellsArray  [in] two dimensional array (row X columns) of cells
+ *                       states (either boolean (selected/unselected) if cell is
+ *                       origin, or one of constants defined above).
  * @param  aMsg         [in] text appended before every message
  */
 function testTableSelection(aIdentifier, aCellsArray, aMsg)
@@ -204,9 +214,9 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   // isCellSelected test
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
     for (var colIdx = 0; colIdx < colsCount; colIdx++) {
-      if (aCellsArray[rowIdx][colIdx] == undefined)
+      if (!isOrigCell(aCellsArray[rowIdx][colIdx]))
         continue;
-  
+
       is(acc.isCellSelected(rowIdx, colIdx), aCellsArray[rowIdx][colIdx],
          msg + "Wrong selection state of cell at " + rowIdx + " row and " +
          colIdx + " column for " + prettyName(aIdentifier));
@@ -237,7 +247,7 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   // selected states tests
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
     for (var colIdx = 0; colIdx < colsCount; colIdx++) {
-      if (aCellsArray[rowIdx][colIdx] == undefined)
+      if (!isOrigCell(aCellsArray[rowIdx][colIdx]))
         continue;
 
       var cell = acc.cellRefAt(rowIdx, colIdx);
@@ -261,8 +271,11 @@ function testUnselectTableColumn(aIdentifier, aColIdx, aCellsArray)
 
   var rowsCount = aCellsArray.length;
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
-    if (aCellsArray[rowIdx][aColIdx] != undefined)
-      aCellsArray[rowIdx][aColIdx] = false;
+    var cellState = aCellsArray[rowIdx][aColIdx];
+    // Unselect origin cell.
+    var [origRowIdx, origColIdx] =
+      getOrigRowAndColumn(aCellsArray, rowIdx, aColIdx);
+    aCellsArray[origRowIdx][origColIdx] = false;
   }
 
   acc.unselectColumn(aColIdx);
@@ -284,8 +297,42 @@ function testSelectTableColumn(aIdentifier, aColIdx, aCellsArray)
 
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
     for (var colIdx = 0; colIdx < colsCount; colIdx++) {
-      if (aCellsArray[rowIdx][colIdx] != undefined)
-        aCellsArray[rowIdx][colIdx] = (colIdx == aColIdx);
+      var cellState = aCellsArray[rowIdx][colIdx];
+
+      if (colIdx == aColIdx) { // select target column
+        if (isOrigCell(cellState)) {
+          // Select the cell if it is origin.
+          aCellsArray[rowIdx][colIdx] = true;
+
+        } else {
+          // If the cell is spanned then search origin cell and select it.
+          var [origRowIdx, origColIdx] = getOrigRowAndColumn(aCellsArray,
+                                                             rowIdx, colIdx);
+          aCellsArray[origRowIdx][origColIdx] = true;
+        }
+
+      } else if (isOrigCell(cellState)) { // unselect other columns
+        if (colIdx > aColIdx) {
+          // Unselect the cell if traversed column index is greater than column
+          // index of target cell.
+          aCellsArray[rowIdx][colIdx] = false;
+
+        } else if (!isColSpannedCell(aCellsArray[rowIdx][aColIdx])) {
+          // Unselect the cell if the target cell is not row spanned.
+          aCellsArray[rowIdx][colIdx] = false;
+
+        } else {
+          // Unselect the cell if it is not spanned to the target cell.
+          for (var spannedColIdx = colIdx + 1; spannedColIdx < aColIdx;
+               spannedColIdx++) {
+            var spannedCellState = aCellsArray[rowIdx][spannedColIdx];
+            if (!isRowSpannedCell(spannedCellState)) {
+              aCellsArray[rowIdx][colIdx] = false;
+              break;
+            }
+          }
+        }
+      }
     }
   }
 
@@ -305,8 +352,10 @@ function testUnselectTableRow(aIdentifier, aRowIdx, aCellsArray)
 
   var colsCount = aCellsArray[0].length;
   for (var colIdx = 0; colIdx < colsCount; colIdx++) {
-    if (aCellsArray[aRowIdx][colIdx] != undefined)
-      aCellsArray[aRowIdx][colIdx] = false;
+    // Unselect origin cell.
+    var [origRowIdx, origColIdx] = getOrigRowAndColumn(aCellsArray,
+                                                       aRowIdx, colIdx);
+    aCellsArray[origRowIdx][origColIdx] = false;
   }
 
   acc.unselectRow(aRowIdx);
@@ -328,12 +377,96 @@ function testSelectTableRow(aIdentifier, aRowIdx, aCellsArray)
 
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
     for (var colIdx = 0; colIdx < colsCount; colIdx++) {
-      if (aCellsArray[rowIdx][colIdx] != undefined)
-        aCellsArray[rowIdx][colIdx] = (rowIdx == aRowIdx);
+      var cellState = aCellsArray[rowIdx][colIdx];
+
+      if (rowIdx == aRowIdx) { // select the given row
+        if (isOrigCell(cellState)) {
+          // Select the cell if it is origin.
+          aCellsArray[rowIdx][colIdx] = true;
+
+        } else {
+          // If the cell is spanned then search origin cell and select it.
+          var [origRowIdx, origColIdx] = getOrigRowAndColumn(aCellsArray,
+                                                             rowIdx, colIdx);
+
+          aCellsArray[origRowIdx][origColIdx] = true;
+        }
+
+      } else if (isOrigCell(cellState)) { // unselect other rows
+        if (rowIdx > aRowIdx) {
+          // Unselect the cell if traversed row index is greater than row
+          // index of target cell.
+          aCellsArray[rowIdx][colIdx] = false;
+
+        } else if (!isRowSpannedCell(aCellsArray[aRowIdx][colIdx])) {
+          // Unselect the cell if the target cell is not row spanned.
+          aCellsArray[rowIdx][colIdx] = false;
+
+        } else {
+          // Unselect the cell if it is not spanned to the target cell.
+          for (var spannedRowIdx = rowIdx + 1; spannedRowIdx < aRowIdx;
+               spannedRowIdx++) {
+            var spannedCellState = aCellsArray[spannedRowIdx][colIdx];
+            if (!isRowSpannedCell(spannedCellState)) {
+              aCellsArray[rowIdx][colIdx] = false;
+              break;
+            }
+          }
+        }
+      }
     }
   }
 
   acc.selectRow(aRowIdx);
   testTableSelection(aIdentifier, aCellsArray,
                      "Select " + aRowIdx + " row: ");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// private implementation
+
+/**
+ * Return row and column of orig cell for the given spanned cell.
+ */
+function getOrigRowAndColumn(aCellsArray, aRowIdx, aColIdx)
+{
+  var cellState = aCellsArray[aRowIdx][aColIdx];
+
+  var origRowIdx = aRowIdx, origColIdx = aColIdx;
+  if (isRowSpannedCell(cellState)) {
+    for (var prevRowIdx = aRowIdx - 1; prevRowIdx >= 0; prevRowIdx--) {
+      var prevCellState = aCellsArray[prevRowIdx][aColIdx];
+      if (!isRowSpannedCell(prevCellState)) {
+        origRowIdx = prevRowIdx;
+        break;
+      }
+    }
+  }
+
+  if (isColSpannedCell(cellState)) {
+    for (var prevColIdx = aColIdx - 1; prevColIdx >= 0; prevColIdx--) {
+      var prevCellState = aCellsArray[aRowIdx][prevColIdx];
+      if (!isColSpannedCell(prevCellState)) {
+        origColIdx = prevColIdx;
+        break;
+      }
+    }
+  }
+
+  return [origRowIdx, origColIdx];
+}
+
+function isOrigCell(aCellState)
+{
+  return !(aCellState & (kRowSpanned | kColSpanned));
+}
+
+function isRowSpannedCell(aCellState)
+{
+  return aCellState & kRowSpanned;
+}
+
+function isColSpannedCell(aCellState)
+{
+  return aCellState & kColSpanned;
 }
