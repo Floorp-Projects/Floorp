@@ -1168,16 +1168,16 @@ _getpluginelement(NPP npp)
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getpluginelement called from the wrong thread\n"));
     return nsnull;
   }
-  nsIDOMElement *elementp = nsnull;
-  NPError nperr = _getvalue(npp, NPNVDOMElement, &elementp);
 
-  if (nperr != NPERR_NO_ERROR) {
+  nsNPAPIPluginInstance* inst = static_cast<nsNPAPIPluginInstance*>(npp->ndata);
+  if (!inst)
     return nsnull;
-  }
 
-  // Pass ownership of elementp to element
   nsCOMPtr<nsIDOMElement> element;
-  element.swap(elementp);
+  inst->GetDOMElement(getter_AddRefs(element));
+
+  if (!element)
+    return nsnull;
 
   JSContext *cx = GetJSContextFromNPP(npp);
   NS_ENSURE_TRUE(cx, nsnull);
