@@ -1,2 +1,0 @@
-skip script ../../jsreftest.html?test=js1_2/version120/boolean-001.js # obsolete test
-skip script ../../jsreftest.html?test=js1_2/version120/regress-99663.js # obsolete test

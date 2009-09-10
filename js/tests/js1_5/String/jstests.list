@@ -1,8 +1,0 @@
-script regress-107771.js
-script regress-112626.js
-script regress-157334-01.js
-script regress-179068.js
-script regress-314890.js
-script regress-322772.js
-fails-if(xulRuntime.OS=="Linux"&&!isDebugBuild) script regress-56940-01.js # bug xxx
-fails-if(xulRuntime.OS=="Linux"&&!isDebugBuild) script regress-56940-02.js # bug xxx

@@ -1,3 +1,0 @@
-script ../../jsreftest.html?test=js1_6/decompilation/regress-352084.js
-script ../../jsreftest.html?test=js1_6/decompilation/regress-352613-01.js
-skip-if(isDebugBuild) script ../../jsreftest.html?test=js1_6/decompilation/regress-352613-02.js # bug xxx - hang reftests.

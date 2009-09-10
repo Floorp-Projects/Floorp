@@ -1,2 +1,0 @@
-skip script equality.js # obsolete test
-script strictEquality.js

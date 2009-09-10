@@ -1,4 +1,0 @@
-script charCodeAt.js
-skip script concat.js # obsolete test
-script match.js
-script slice.js

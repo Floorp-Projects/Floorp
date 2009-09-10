@@ -51,12 +51,7 @@ if (typeof gczeal == 'function')
 {
   gczeal(2);
 }
-
 this.__defineSetter__("x", function(){});
 
-if (typeof gczeal == 'function')
-{
-  gczeal(0);
-}
 
 reportCompare(expect, actual, summary);

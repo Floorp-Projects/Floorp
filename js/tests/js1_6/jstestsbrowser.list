@@ -1,5 +1,0 @@
-include Array/jstestsbrowser.list
-include decompilation/jstestsbrowser.list
-include extensions/jstestsbrowser.list
-include Regress/jstestsbrowser.list
-include String/jstestsbrowser.list

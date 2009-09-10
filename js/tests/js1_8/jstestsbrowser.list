@@ -1,4 +1,0 @@
-include decompilation/jstestsbrowser.list
-include extensions/jstestsbrowser.list
-include genexps/jstestsbrowser.list
-include regress/jstestsbrowser.list
