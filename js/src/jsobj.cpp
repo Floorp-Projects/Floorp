@@ -5035,7 +5035,6 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         do {
             ENUM_CACHE_METER(nativeEnumProbes);
             shape = scope->shape;
-            JS_ASSERT(shape < SHAPE_OVERFLOW_BIT);
             cachep = &cx->runtime->
                      nativeEnumCache[NATIVE_ENUM_CACHE_HASH(shape)];
             oldcache = *cachep;
@@ -5076,8 +5075,12 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                 }
             }
             if (length == 0) {
-                /* cache the scope without enumerable properties. */
-                *cachep = ((jsuword) shape << 1) | (jsuword) 1;
+                /*
+                 * Cache the scope without enumerable properties unless its
+                 * shape overflows, see bug 440834.
+                 */
+                if (shape < SHAPE_OVERFLOW_BIT)
+                    *cachep = ((jsuword) shape << 1) | (jsuword) 1;
                 break;
             }
 
@@ -5120,7 +5123,13 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                 ne->next = cx->runtime->nativeEnumerators;
                 cx->runtime->nativeEnumerators = ne;
                 JS_ASSERT(((jsuword) ne & (jsuword) 1) == (jsuword) 0);
-                *cachep = (jsuword) ne;
+
+                /*
+                 * Do not cache enumerators for objects with with a shape
+                 * that had overflowed, see bug 440834.
+                 */
+                if (shape < SHAPE_OVERFLOW_BIT)
+                    *cachep = (jsuword) ne;
                 JS_UNLOCK_GC(cx->runtime);
             }
             *statep = PRIVATE_TO_JSVAL(ne);
