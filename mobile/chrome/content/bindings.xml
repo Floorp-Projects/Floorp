@@ -885,9 +885,9 @@
             if (aItem.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER)
               child.setAttribute("type", "folder");
 
-            // XXX make a <handler> for the mousedown
+            // XXX make a <handler>
             var self = this;
-            child.addEventListener("mouseup", function(e) { self._fireOpen(e, child); }, false);
+            child.addEventListener("click", function(e) { self._fireOpen(e, child); }, false);
 
             return child;
           ]]>
@@ -1038,9 +1038,9 @@
             child.setAttribute("title", aItem.title);
             child.setAttribute("indent", aLevel);
 
-            // XXX make a <handler> for the mouseup
+            // XXX make a <handler>
             var self = this;
-            child.addEventListener("mouseup", function(e) { self._fireSelect(e, child); }, false);
+            child.addEventListener("click", function(e) { self._fireSelect(e, child); }, false);
 
             return child;
           ]]>
