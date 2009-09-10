@@ -34,6 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 var gPageCompleted;
 var GLOBAL = this + '';
 
@@ -163,7 +164,7 @@ function jsdgc()
   }
   catch(ex)
   {
-    print('jsdgc: ' + ex);
+    print('gc: ' + ex);
   }
 }
 
@@ -199,7 +200,6 @@ function Preferences(aPrefRoot)
   }
   catch(ex)
   {
-    print('Preferences: ' + ex);
   }
 
 }
@@ -222,7 +222,6 @@ function Preferences_getPrefRoot()
   }
   catch(ex)
   {
-    print('Preferences_getPrefRoot: ' + ex);
   }
   return root;
 }
@@ -243,7 +242,6 @@ function Preferences_getPref(aPrefName)
   }
   catch(ex)
   {
-    //print('Preferences_getPref: ' + ex);
   }
   return value;
 }
@@ -264,7 +262,6 @@ function Preferences_getBoolPref(aPrefName)
   }
   catch(ex)
   {
-    //print('Preferences_getBoolPref: ' + ex);
   }
   return value;
 }
@@ -285,7 +282,6 @@ function Preferences_getIntPref(aPrefName)
   }
   catch(ex)
   {
-    //print('Preferences_getIntPref: ' + ex);
   }
   return value;
 }
@@ -306,7 +302,6 @@ function Preferences_getCharPref(aPrefName)
   }
   catch(ex)
   {
-    //print('Preferences_getCharPref: ' + ex);
   }
   return value;
 }
@@ -334,7 +329,6 @@ function Preferences_setPref(aPrefName, aPrefValue)
   }
   catch(ex)
   {
-    print('Preferences_setCharPref: ' + ex);
   }
 }
 
@@ -361,7 +355,6 @@ function Preferences_setBoolPref(aPrefName, aPrefValue)
   }
   catch(ex)
   {
-    print('Preferences_setBoolPref: ' + ex);
   }
 }
 
@@ -388,7 +381,6 @@ function Preferences_setIntPref(aPrefName, aPrefValue)
   }
   catch(ex)
   {
-    print('Preferences_setIntPref: ' + ex);
   }
 }
 
@@ -415,7 +407,6 @@ function Preferences_setCharPref(aPrefName, aPrefValue)
   }
   catch(ex)
   {
-    print('Preferences_setCharPref: ' + ex);
   }
 }
 
@@ -445,7 +436,6 @@ function Preferences_resetPref(aPrefName)
   }
   catch(ex)
   {
-    print('Preferences_resetPref: ' + ex);
   }
 }
 
@@ -470,7 +460,6 @@ function Preferences_resetAllPrefs()
   }
   catch(ex)
   {
-    print('Preferences_resetAllPrefs: ' + ex);
   }
 }
 
@@ -489,7 +478,6 @@ function Preferences_clearPref(aPrefName)
   }
   catch(ex)
   {
-    print('Preferences_clearPref: ' + ex);
   }
 }
 
@@ -608,7 +596,6 @@ var gVersion = 150;
 
 function jsTestDriverBrowserInit()
 {
-
   if (typeof dump != 'function')
   {
     dump = print;
@@ -680,14 +667,6 @@ function jsTestDriverBrowserInit()
     }
   }
 
-  // default to language=type;text/javascript. required for
-  // reftest style manifests.
-  if (!properties.language)
-  {
-    properties.language = 'type';
-    properties.mimetype = 'text/javascript';
-  }
-
   gTestPath = properties.test;
 
   gVersion = 10*parseInt(properties.version.replace(/\./g, ''));
@@ -701,13 +680,12 @@ function jsTestDriverBrowserInit()
    * since the default setting of jit changed from false to true
    * in http://hg.mozilla.org/tracemonkey/rev/685e00e68be9
    * bisections which depend upon jit settings can be thrown off.
-   * default jit(false) when not running jsreftests to make bisections 
-   * depending upon jit settings consistent over time. This is not needed 
-   * in shell tests as the default jit setting has not changed there.
+   * default jit(false) to make bisections depending upon jit settings
+   * consistent over time. This is not needed in shell tests as the default
+   * jit setting has not changed there.
    */
 
-  if (properties.jit  || !document.location.href.match(/jsreftest.html/))
-    jit(properties.jit);
+  jit(properties.jit);
 
   var testpathparts = properties.test.split(/\//);
 
@@ -831,134 +809,9 @@ function jsTestDriverEnd()
       gTestcases[i].dump();
     }
 
-    // tell reftest the test is complete.
-    document.documentElement.className = '';
     // tell Spider page is complete
     gPageCompleted = true;
   }
 }
-
-//var dlog = (function (s) { print('debug: ' + s); });
-var dlog = (function (s) {});
-
-// dialog closer from http://bclary.com/projects/spider/spider/chrome/content/spider/dialog-closer.js
-
-var gDialogCloser;
-var gDialogCloserObserver;
-
-function registerDialogCloser()
-{
-  dlog('registerDialogCloser: start');
-  try
-  {
-    netscape.security.PrivilegeManager.
-      enablePrivilege('UniversalXPConnect');
-  }
-  catch(excp)
-  {
-    print('registerDialogCloser: ' + excp);
-    return;
-  }
-
-  gDialogCloser = Components.
-    classes['@mozilla.org/embedcomp/window-watcher;1'].
-    getService(Components.interfaces.nsIWindowWatcher);
-
-  gDialogCloserObserver = {observe: dialogCloser_observe};
-
-  gDialogCloser.registerNotification(gDialogCloserObserver);
-
-  dlog('registerDialogCloser: complete');
-}
-
-function unregisterDialogCloser()
-{
-  dlog('unregisterDialogCloser: start');
-
-  if (!gDialogCloserObserver || !gDialogCloser)
-  {
-    return;
-  }
-  try
-  {
-    netscape.security.PrivilegeManager.
-      enablePrivilege('UniversalXPConnect');
-  }
-  catch(excp)
-  {
-    print('unregisterDialogCloser: ' + excp);
-    return;
-  }
-
-  gDialogCloser.unregisterNotification(gDialogCloserObserver);
-
-  gDialogCloserObserver = null;
-  gDialogCloser = null;
-
-  dlog('unregisterDialogCloser: stop');
-}
-
-// use an array to handle the case where multiple dialogs
-// appear at one time
-var gDialogCloserSubjects = [];
-
-function dialogCloser_observe(subject, topic, data)
-{
-  try
-  {
-    netscape.security.PrivilegeManager.
-      enablePrivilege('UniversalXPConnect');
-
-    dlog('dialogCloser_observe: ' +
-         'subject: ' + subject + 
-         ', topic=' + topic + 
-         ', data=' + data + 
-         ', subject.document.documentURI=' + subject.document.documentURI +
-         ', subjects pending=' + gDialogCloserSubjects.length);
-  }
-  catch(excp)
-  {
-    print('dialogCloser_observe: ' + excp);
-    return;
-  }
-
-  if (subject instanceof ChromeWindow && topic == 'domwindowopened' )
-  {
-    gDialogCloserSubjects.push(subject);
-    // timeout of 0 needed when running under reftest framework.
-    subject.setTimeout(closeDialog, 0);
-  }
-  dlog('dialogCloser_observe: subjects pending: ' + gDialogCloserSubjects.length);
-}
-
-function closeDialog()
-{
-  var subject;
-  dlog('closeDialog: subjects pending: ' + gDialogCloserSubjects.length);
-
-  while ( (subject = gDialogCloserSubjects.pop()) != null)
-  {
-    dlog('closeDialog: subject=' + subject);
-
-    dlog('closeDialog: subject.document instanceof XULDocument: ' + (subject.document instanceof XULDocument));
-    dlog('closeDialog: subject.document.documentURI: ' + subject.document.documentURI);
-
-    if (subject.document instanceof XULDocument && 
-        subject.document.documentURI == 'chrome://global/content/commonDialog.xul')
-    {
-      dlog('closeDialog: close XULDocument dialog?');
-      subject.close();
-    }
-    else
-    {
-      // alerts inside of reftest framework are not XULDocument dialogs.
-      dlog('closeDialog: close chrome dialog?');
-      subject.close();
-    }
-  }
-}
-
-registerDialogCloser();
-window.addEventListener('unload', unregisterDialogCloser, true);
 
 jsTestDriverBrowserInit();
