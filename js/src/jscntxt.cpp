@@ -69,7 +69,6 @@
 #include "jsstaticcheck.h"
 #include "jsstr.h"
 #include "jstracer.h"
-#include "jshashmap.h"
 
 static void
 FreeContext(JSContext *cx);
@@ -776,7 +775,7 @@ FreeContext(JSContext *cx)
 
     /* Destroy the busy array table. */
     if (cx->busyArrayTable) {
-        cx->destroy(cx->busyArrayTable);
+        JS_HashTableDestroy(cx->busyArrayTable);
         cx->busyArrayTable = NULL;
     }
 

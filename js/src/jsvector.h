@@ -204,15 +204,15 @@ class Vector : AllocPolicy
      * heapCapacity()) holds uninitialized memory.
      */
     struct BufferPtrs {
-        T *begin, *end;
+        T *mBegin, *mEnd;
     };
 
     /*
      * Since a vector either stores elements inline or in a heap-allocated
-     * buffer, reuse the storage. lengthOrCapacity serves as the union
-     * discriminator. In inline mode (when elements are stored in u.buf),
-     * lengthOrCapacity holds the vector's length. In heap mode (when elements
-     * are stored in [u.ptrs.begin, u.ptrs.end)), lengthOrCapacity holds the
+     * buffer, reuse the storage. mLengthOrCapacity serves as the union
+     * discriminator. In inline mode (when elements are stored in u.mBuf),
+     * mLengthOrCapacity holds the vector's length. In heap mode (when elements
+     * are stored in [u.ptrs.mBegin, u.ptrs.mEnd)), mLengthOrCapacity holds the
      * vector's capacity.
      */
     static const size_t sInlineCapacity =
@@ -225,77 +225,77 @@ class Vector : AllocPolicy
 
     /* member data */
 
-    size_t lengthOrCapacity;
-    bool usingInlineStorage() const { return lengthOrCapacity <= sInlineCapacity; }
+    size_t mLengthOrCapacity;
+    bool usingInlineStorage() const { return mLengthOrCapacity <= sInlineCapacity; }
 
     union {
         BufferPtrs ptrs;
-        char buf[sInlineBytes];
+        char mBuf[sInlineBytes];
     } u;
 
     /* Only valid when usingInlineStorage() */
     size_t &inlineLength() {
         JS_ASSERT(usingInlineStorage());
-        return lengthOrCapacity;
+        return mLengthOrCapacity;
     }
 
     size_t inlineLength() const {
         JS_ASSERT(usingInlineStorage());
-        return lengthOrCapacity;
+        return mLengthOrCapacity;
     }
 
     T *inlineBegin() const {
         JS_ASSERT(usingInlineStorage());
-        return (T *)u.buf;
+        return (T *)u.mBuf;
     }
 
     T *inlineEnd() const {
         JS_ASSERT(usingInlineStorage());
-        return ((T *)u.buf) + lengthOrCapacity;
+        return ((T *)u.mBuf) + mLengthOrCapacity;
     }
 
     /* Only valid when !usingInlineStorage() */
     size_t heapLength() const {
         JS_ASSERT(!usingInlineStorage());
         /* Guaranteed by calculateNewCapacity. */
-        JS_ASSERT(size_t(u.ptrs.end - u.ptrs.begin) ==
-                  ((size_t(u.ptrs.end) - size_t(u.ptrs.begin)) / sizeof(T)));
-        return u.ptrs.end - u.ptrs.begin;
+        JS_ASSERT(size_t(u.ptrs.mEnd - u.ptrs.mBegin) ==
+                  ((size_t(u.ptrs.mEnd) - size_t(u.ptrs.mBegin)) / sizeof(T)));
+        return u.ptrs.mEnd - u.ptrs.mBegin;
     }
 
     size_t &heapCapacity() {
         JS_ASSERT(!usingInlineStorage());
-        return lengthOrCapacity;
+        return mLengthOrCapacity;
     }
 
     T *&heapBegin() {
         JS_ASSERT(!usingInlineStorage());
-        return u.ptrs.begin;
+        return u.ptrs.mBegin;
     }
 
     T *&heapEnd() {
         JS_ASSERT(!usingInlineStorage());
-        return u.ptrs.end;
+        return u.ptrs.mEnd;
     }
 
     size_t heapCapacity() const {
         JS_ASSERT(!usingInlineStorage());
-        return lengthOrCapacity;
+        return mLengthOrCapacity;
     }
 
     T *heapBegin() const {
         JS_ASSERT(!usingInlineStorage());
-        return u.ptrs.begin;
+        return u.ptrs.mBegin;
     }
 
     T *heapEnd() const {
         JS_ASSERT(!usingInlineStorage());
-        return u.ptrs.end;
+        return u.ptrs.mEnd;
     }
 
 #ifdef DEBUG
     friend class ReentrancyGuard;
-    bool entered;
+    bool mEntered;
 #endif
 
     Vector(const Vector &);
@@ -320,42 +320,42 @@ class Vector : AllocPolicy
     }
 
     T *begin() {
-        JS_ASSERT(!entered);
+        JS_ASSERT(!mEntered);
         return usingInlineStorage() ? inlineBegin() : heapBegin();
     }
 
     const T *begin() const {
-        JS_ASSERT(!entered);
+        JS_ASSERT(!mEntered);
         return usingInlineStorage() ? inlineBegin() : heapBegin();
     }
 
     T *end() {
-        JS_ASSERT(!entered);
+        JS_ASSERT(!mEntered);
         return usingInlineStorage() ? inlineEnd() : heapEnd();
     }
 
     const T *end() const {
-        JS_ASSERT(!entered);
+        JS_ASSERT(!mEntered);
         return usingInlineStorage() ? inlineEnd() : heapEnd();
     }
 
     T &operator[](size_t i) {
-        JS_ASSERT(!entered && i < length());
+        JS_ASSERT(!mEntered && i < length());
         return begin()[i];
     }
 
     const T &operator[](size_t i) const {
-        JS_ASSERT(!entered && i < length());
+        JS_ASSERT(!mEntered && i < length());
         return begin()[i];
     }
 
     T &back() {
-        JS_ASSERT(!entered && !empty());
+        JS_ASSERT(!mEntered && !empty());
         return *(end() - 1);
     }
 
     const T &back() const {
-        JS_ASSERT(!entered && !empty());
+        JS_ASSERT(!mEntered && !empty());
         return *(end() - 1);
     }
 
@@ -424,9 +424,9 @@ js_AppendLiteral(Vector<T,N,AP> &v, const char (&array)[ArrayLength])
 template <class T, size_t N, class AP>
 inline
 Vector<T,N,AP>::Vector(AP ap)
-  : AP(ap), lengthOrCapacity(0)
+  : AP(ap), mLengthOrCapacity(0)
 #ifdef DEBUG
-    , entered(false)
+    , mEntered(false)
 #endif
 {}
 
@@ -515,7 +515,7 @@ Vector<T,N,AP>::convertToHeapStorage(size_t lengthInc)
     Impl::destroy(inlineBegin(), inlineEnd());
 
     /* Switch in heap buffer. */
-    lengthOrCapacity = newCap;  /* marks us as !usingInlineStorage() */
+    mLengthOrCapacity = newCap;  /* marks us as !usingInlineStorage() */
     heapBegin() = newBuf;
     heapEnd() = newBuf + length;
     return true;
@@ -734,7 +734,7 @@ Vector<T,N,AP>::extractRawBuffer()
     }
 
     T *ret = heapBegin();
-    lengthOrCapacity = 0;  /* marks us as !usingInlineStorage() */
+    mLengthOrCapacity = 0;  /* marks us as !usingInlineStorage() */
     return ret;
 }
 
@@ -756,15 +756,15 @@ Vector<T,N,AP>::replaceRawBuffer(T *p, size_t length)
     /* Take in the new buffer. */
     if (length <= sInlineCapacity) {
         /*
-         * (lengthOrCapacity <= sInlineCapacity) means inline storage, so we
+         * (mLengthOrCapacity <= sInlineCapacity) means inline storage, so we
          * MUST use inline storage, even though p might otherwise be acceptable.
          */
-        lengthOrCapacity = length;  /* marks us as usingInlineStorage() */
+        mLengthOrCapacity = length;  /* marks us as usingInlineStorage() */
         Impl::copyConstruct(inlineBegin(), p, p + length);
         Impl::destroy(p, p + length);
         this->free(p);
     } else {
-        lengthOrCapacity = length;  /* marks us as !usingInlineStorage() */
+        mLengthOrCapacity = length;  /* marks us as !usingInlineStorage() */
         heapBegin() = p;
         heapEnd() = heapBegin() + length;
     }
