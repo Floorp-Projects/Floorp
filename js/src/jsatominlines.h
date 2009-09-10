@@ -46,7 +46,7 @@
 /*
  * Convert v to an atomized string and wrap it as an id.
  */
-static inline JSBool
+inline JSBool
 js_ValueToStringId(JSContext *cx, jsval v, jsid *idp)
 {
     JSString *str;
@@ -78,7 +78,7 @@ js_ValueToStringId(JSContext *cx, jsval v, jsid *idp)
     return JS_TRUE;
 }
 
-static inline JSBool
+inline JSBool
 js_Int32ToId(JSContext* cx, int32 index, jsid* id)
 {
     if (INT_FITS_IN_JSVAL(index)) {
