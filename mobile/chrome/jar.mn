@@ -3,6 +3,8 @@
 chrome.jar:
 % content browser %content/
 * content/about.xhtml                  (content/about.xhtml)
+  content/aboutCertError.xhtml         (content/aboutCertError.xhtml)
+  content/aboutCertError.css           (content/aboutCertError.css)
 * content/browser.xul                  (content/browser.xul)
 * content/browser.js                   (content/browser.js)
   content/browser-ui.js                (content/browser-ui.js)

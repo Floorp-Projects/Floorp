@@ -3,6 +3,7 @@
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/@AB_CD@/browser/
   locale/@AB_CD@/browser/about.dtd                (%chrome/about.dtd)
+  locale/@AB_CD@/browser/aboutCertError.dtd       (%chrome/aboutCertError.dtd)
   locale/@AB_CD@/browser/browser.dtd              (%chrome/browser.dtd)
   locale/@AB_CD@/browser/browser.properties       (%chrome/browser.properties)
   locale/@AB_CD@/browser/firstrun.dtd             (%chrome/firstrun.dtd)

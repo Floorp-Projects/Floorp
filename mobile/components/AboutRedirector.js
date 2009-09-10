@@ -56,6 +56,10 @@ let modules = {
     uri: "chrome://global/content/aboutRights-unbranded.xhtml",
 #endif
     privileged: false
+  },
+  certerror: {
+    uri: "chrome://browser/content/aboutCertError.xhtml",
+    privileged: true
   }
 }
 
@@ -101,6 +105,7 @@ AboutFirstrun.prototype = {
   contractID: "@mozilla.org/network/protocol/about;1?what=firstrun",
   classID: Components.ID("{077ea23e-0f22-4168-a744-8e444b560197}")
 }
+
 function AboutFennec() {}
 AboutFennec.prototype = {
   __proto__: AboutGeneric.prototype,
@@ -108,6 +113,7 @@ AboutFennec.prototype = {
   contractID: "@mozilla.org/network/protocol/about;1?what=fennec",
   classID: Components.ID("{842a6d11-b369-4610-ba66-c3b5217e82be}")
 }
+
 function AboutRights() {}
 AboutRights.prototype = {
   __proto__: AboutGeneric.prototype,
@@ -116,5 +122,13 @@ AboutRights.prototype = {
   classID: Components.ID("{3b988fbf-ec97-4e1c-a5e4-573d999edc9c}")
 }
 
+function AboutCertError() {}
+AboutCertError.prototype = {
+  __proto__: AboutGeneric.prototype,
+  classDescription: "About Certificate Error",
+  contractID: "@mozilla.org/network/protocol/about;1?what=certerror",
+  classID: Components.ID("{972efe64-8ac0-4e91-bdb0-22835d987815}")
+}
+
 function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([AboutFirstrun, AboutFennec, AboutRights]);
+  XPCOMUtils.generateModule([AboutFirstrun, AboutFennec, AboutRights, AboutCertError]);

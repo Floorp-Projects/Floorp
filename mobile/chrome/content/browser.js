@@ -839,8 +839,9 @@ var Browser = {
 
     // If the event came from an ssl error page, it is probably either the "Add
     // Exception…" or "Get me out of here!" button
-    if (/^about:neterror\?e=nssBadCert/.test(errorDoc.documentURI)) {
-      if (ot == errorDoc.getElementById('exceptionDialogButton')) {
+    if (/^about:certerror\?e=nssBadCert/.test(errorDoc.documentURI)) {
+      if (ot == errorDoc.getElementById("temporaryExceptionButton") ||
+          ot == errorDoc.getElementById("permanentExceptionButton")) {
         var params = { exceptionAdded : false };
 
         try {
