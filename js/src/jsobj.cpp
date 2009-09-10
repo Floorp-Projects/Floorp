@@ -91,6 +91,7 @@
 #endif
 
 #include "jsatominlines.h"
+#include "jsscriptinlines.h"
 
 #include "jsautooplen.h"
 
