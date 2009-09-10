@@ -3614,7 +3614,7 @@ ProhibitFlush(JSContext* cx)
 }
 
 static JS_REQUIRES_STACK void
-ResetJIT(JSContext* cx)
+ResetJITImpl(JSContext* cx)
 {
     if (!TRACING_ENABLED(cx))
         return;
@@ -3636,6 +3636,17 @@ ResetJIT(JSContext* cx)
     tm->flush();
 }
 
+#ifdef MOZ_TRACEVIS
+static JS_INLINE JS_REQUIRES_STACK void
+ResetJIT(JSContext* cx, TraceVisFlushReason r)
+{
+    js_LogTraceVisEvent(cx, S_RESET, r);
+    ResetJITImpl(cx);
+}
+#else
+#define ResetJIT(cx, r) ResetJITImpl(cx)
+#endif
+
 /* Compile the current fragment. */
 JS_REQUIRES_STACK void
 TraceRecorder::compile(JSTraceMonitor* tm)
@@ -3645,7 +3656,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
 #endif
 
     if (tm->needFlush) {
-        ResetJIT(cx);
+        ResetJIT(cx, FR_DEEP_BAIL);
         return;
     }
     if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
@@ -4553,7 +4564,7 @@ DeleteRecorder(JSContext* cx)
     Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
     if (assm->error() == OutOMem ||
         js_OverfullJITCache(tm, false)) {
-        ResetJIT(cx);
+        ResetJIT(cx, FR_OOM);
         return false;
     }
 
@@ -4566,7 +4577,7 @@ CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
                        uint32 *shape = NULL, SlotList** slots = NULL)
 {
     if (tm->needFlush) {
-        ResetJIT(cx);
+        ResetJIT(cx, FR_DEEP_BAIL);
         return false;
     }
 
@@ -4587,7 +4598,7 @@ CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
                               (void*)globalObj, globalShape, (void*)root->globalObj,
                               root->globalShape);
             Backoff(cx, (jsbytecode*) root->ip);
-            ResetJIT(cx);
+            ResetJIT(cx, FR_GLOBAL_SHAPE_MISMATCH);
             return false;
         }
         if (shape)
@@ -4622,7 +4633,7 @@ CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
     debug_only_printf(LC_TMTracer,
                       "No global slotlist for global shape %u, flushing cache.\n",
                       globalShape);
-    ResetJIT(cx);
+    ResetJIT(cx, FR_GLOBALS_FULL);
     return false;
 }
 
@@ -4633,7 +4644,7 @@ StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (JS_TRACE_MONITOR(cx).needFlush) {
-        ResetJIT(cx);
+        ResetJIT(cx, FR_DEEP_BAIL);
         return false;
     }
 
@@ -4900,7 +4911,7 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, VMFragment* f, jsbytecode* outer,
         f = getAnchor(&JS_TRACE_MONITOR(cx), f->root->ip, globalObj, globalShape, argc);
 
     if (!f) {
-        ResetJIT(cx);
+        ResetJIT(cx, FR_OOM);
         return false;
     }
 
@@ -4909,7 +4920,7 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, VMFragment* f, jsbytecode* outer,
 
     if (tm->allocator->outOfMemory() || js_OverfullJITCache(tm, false)) {
         Backoff(cx, (jsbytecode*) f->root->ip);
-        ResetJIT(cx);
+        ResetJIT(cx, FR_OOM);
         debug_only_print0(LC_TMTracer,
                           "Out of memory recording new tree, flushing cache.\n");
         return false;
@@ -5020,7 +5031,7 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (tm->needFlush) {
-        ResetJIT(cx);
+        ResetJIT(cx, FR_DEEP_BAIL);
         return false;
     }
 
@@ -5065,7 +5076,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (tm->needFlush) {
-        ResetJIT(cx);
+        ResetJIT(cx, FR_DEEP_BAIL);
 #ifdef MOZ_TRACEVIS
         if (tvso) tvso->r = R_FAIL_EXTEND_FLUSH;
 #endif
@@ -5179,7 +5190,7 @@ RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 
     /* Process needFlush and deep abort requests. */
     if (tm->needFlush) {
-        ResetJIT(cx);
+        ResetJIT(cx, FR_DEEP_BAIL);
         return false;
     }
     if (r->wasDeepAborted()) {
@@ -5247,7 +5258,7 @@ RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         if (!f || f->code()) {
             f = getAnchor(tm, cx->fp->regs->pc, globalObj, globalShape, argc);
             if (!f) {
-                ResetJIT(cx);
+                ResetJIT(cx, FR_OOM);
                 return false;
             }
         }
@@ -6082,7 +6093,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
         f = getAnchor(tm, pc, globalObj, globalShape, argc);
 
     if (!f) {
-        ResetJIT(cx);
+        ResetJIT(cx, FR_OOM);
 #ifdef MOZ_TRACEVIS
         tvso.r = R_OOM_GETANCHOR;
 #endif
@@ -6215,7 +6226,7 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
 
     /* Process needFlush and deepAbort() requests now. */
     if (JS_TRACE_MONITOR(cx).needFlush) {
-        ResetJIT(cx);
+        ResetJIT(cx, FR_DEEP_BAIL);
         return JSRS_STOP;
     }
     if (tr->wasDeepAborted()) {
@@ -6296,7 +6307,7 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
     if (tr->traceMonitor->allocator->outOfMemory() ||
         js_OverfullJITCache(&JS_TRACE_MONITOR(cx), false)) {
         js_AbortRecording(cx, "no more memory");
-        ResetJIT(cx);
+        ResetJIT(cx, FR_OOM);
         return JSRS_STOP;
     }
 

@@ -9,134 +9,91 @@ import struct
 from config import *
 from acts import *
 
-def unpack(raw):
-    for i in range(0, len(raw), 8):
-        ull = struct.unpack_from('Q', raw, i)[0]
-        s = (ull >> 60) & 0xf
-        r = (ull >> 55) & 0x1f
-        t = ull & ~(0x1ff << 55)
-        yield s, r, t
+S_INTERP = 1
+assert states[S_INTERP] == 'interpret'
 
-def parse_input(filename):
-    f = open(filename)
-    raw = f.read()
-    return unpack(raw)
+REASON_COUNT = len(reasons)
 
-class TimeCount(object):
-    def __init__(self):
-        self.t = 0
-        self.t2 = 0
-        self.ta = 1e30
-        self.tz = -1e30
-        self.n = 0
+def tuple_to_reason_index(rec):
+    if rec[1]:
+        return rec[1]
+    return REASON_COUNT + rec[0]
 
-    def add(self, dt):
-        self.t += dt
-        self.t2 += dt*dt
-        self.n += 1
-        if dt < self.ta:
-            self.ta = dt
-        if dt > self.tz:
-            self.tz = dt
-
-class StackPoint(object):
-    def __init__(self, s, r, t):
-        self.s = s
-        self.r = r
-        self.t = t
-
-class TimePoint(object):
-    """Transition from state s0 to s1 at time t."""
-    def __init__(self, t, r, s0, s1):
-        self.t = t
-        self.r = r
-        self.s0 = s0
-        self.s1 = s1
+def reason_index_label(i):
+    if i == REASON_COUNT:
+        return 'start'
+    if i > REASON_COUNT:
+        return states[i - REASON_COUNT]
+    return reasons[i]
 
 class History(object):
     def __init__(self):
+        # list of (state, reason, time from start) tuples
+        self.transitions = []
+        # list of total time
         self.state_summary = [ 0 ] * len(states)
-        self.stack = None
-        self.init()
+        # list of (count, total time) tuples
+        self.reason_summary = [ [0, 0] for _ in range(len(reasons) + len(states)) ]
 
-    def init(self):
-        pass
+        self.t0 = None
+        self.stack = []
+        self.to_interp = None
 
-    def record(self, t, r, s0, s1):
-        pass
+    def write(self, state, reason, time):
+        self.transitions.append((state, reason, time - self.t0))
 
-    def goto(self, s0, t0, s1, r, t1):
-        dt = t1 - t0
-        self.state_summary[s0] += dt
-        self.record(t1, r, s0, s1)
+    def transition(self, rec0, rec1):
+        t1 = rec1[2]
+        dt = rec1[2] - rec0[2]
+        self.state_summary[rec0[0]] += dt
 
-    def enter(self, s, r, t):
-        if self.stack is None:
-            self.stack = [ StackPoint(0, 0, t) ]
-        sp = self.stack[-1]
-        self.goto(sp.s, sp.t, s, r, t)
-        self.stack.append(StackPoint(s, r, t))
-
-    def exit(self, r, t):
-        sp = self.stack.pop()
-        osp = self.stack[-1]
-        self.goto(sp.s, sp.t, osp.s, r, t)
-        osp.t = t
-        osp.r = r
-
-class FullHistory(History):
-    def init(self):
-        self.timeline = []
-
-    def record(self, t1, r, s0, s1):
-        self.timeline.append(TimePoint(t1, r, s0, s1))
+        self.write(rec0[0], 0, rec1[2])
         
-def collect(ts, full=False):
-    if full:
-        cls = FullHistory
-    else:
-        cls = History
-    h = cls()
+        # Transition to interpreter
+        if rec0[0] != S_INTERP and rec1[0] == S_INTERP:
+            self.to_interp = (rec0[0], rec1[1], rec1[2])
+        
+        # Transition from interpreter
+        if rec0[0] == S_INTERP and rec1[0] != S_INTERP:
+            rs_tup = self.reason_summary[tuple_to_reason_index(self.to_interp)]
+            rs_tup[0] += 1
+            rs_tup[1] += dt
 
-    for s, r, t in ts:
-        #if t < 1160909415950669-877953307: continue
-        #if t > 1160909415950669: break
-        if s:
-            h.enter(s, r, t)
+    def enter(self, rec):
+        if rec[0] >= event_start:
+            self.write(*rec)
         else:
-            h.exit(r, t)
+            if self.t0 is None:
+                self.t0 = rec[2]
+                self.stack.append([0, 0, rec[2]])
+            self.transition(self.stack[-1], rec)
+            self.stack.append(rec)
 
-    #assert len(h.stack) == 1
-    #assert sum(h.state_summary) == ts[-1][2] - ts[0][2]
-    return h
+    def exit(self, rec):
+        entry = self.stack.pop()
+        prior = self.stack[-1]
+        exit = rec
+        exit[0] = prior[0]
+        self.transition(entry, exit)
+        prior[1] = rec[1]
+        prior[2] = rec[2]
 
-reason_cache = {}
-
-def getreason(hist, i):
-    ans = None
+def read_history(filename):
+    h = History()
+    f = open(filename)
     while True:
-        p0 = hist.timeline[i]
-        r = p0.r
-        if r:
-            ans = reasons[r]
+        raw = f.read(8)
+        if not raw:
             break
-
-        if not p0.s0:
-            ans = 'start'
-            break
-
-        name = states[p0.s0]
-        if name != 'interpret':
-            ans = name
-            break
-
-        i -= 1
-        r = reason_cache.get(i)
-        if r:
-            ans = r
-            break
-    reason_cache[i] = ans
-    return ans
+        ull = struct.unpack_from('Q', raw, 0)[0]
+        rec = [(ull >> 60) & 0xf,
+               (ull >> 55) & 0x1f,
+               ull & ~(0x1ff << 55)]
+        if rec[0]:
+            h.enter(rec)
+        else:
+            h.exit(rec)
+    return h
 
 def summary(hist):
     ep = 0       # estimated progress
@@ -158,37 +115,26 @@ def summary(hist):
 
     print
     print 'Reasons for transitions to interpret:'
-    xd = {}
-    for i in range(len(hist.timeline)-1):
-        p0 = hist.timeline[i]
-        if states[p0.s1] == 'interpret':
-            p1 = hist.timeline[i+1]
-            name = getreason(hist, i)
-            x = xd.get(name)
-            if not x:
-                x = xd[name] = TimeCount()
-            x.add(p1.t - p0.t)
-    print '%-12s %12s %8s %12s %12s %12s'%(
-        'Reason', 'sum (ms)', 'N', 'mean (us)', 'min (us)', 'max (us)')
-    for name, x in sorted(xd.items(), key=lambda p: -p[1].t):
-        if not x.n: continue
-        print '%-12s %12.3f %8d %12.3f %12.3f %12.3f'%(
-            name, 
-            x.t/CPU_SPEED*1000, 
-            x.n, 
-            x.t/CPU_SPEED*1000000/x.n,
-            x.ta/CPU_SPEED*1000000,
-            x.tz/CPU_SPEED*1000000
+    print '%-12s %12s %8s %12s'%(
+        'Reason', 'sum (ms)', 'N', 'mean (us)')
+    rl = [ (rc[1], rc[0], reason_index_label(i))
+            for i, rc in enumerate(hist.reason_summary) ]
+    rl.sort(reverse=1)
+    for cyc, n, label in rl:
+        if cyc == 0: continue
+        print '%-12s %12.3f %8d %12.3f'%(
+            label, 
+            cyc/CPU_SPEED*1000, 
+            n, 
+            cyc/CPU_SPEED*1000000/n,
             )
-        
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1:
         print >> sys.stderr, "usage: python binlog.py infile"
         sys.exit(1);
 
-    print sys.argv[0]
-    print sys.argv[1]
-
     filename = sys.argv[1]
-    summary(collect(parse_input(filename), True))
+    history = read_history(filename)
+
+    summary(history)

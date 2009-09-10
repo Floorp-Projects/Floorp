@@ -69,6 +69,7 @@
 #include "jsparse.h"
 #include "jsscope.h"
 #include "jsscript.h"
+#include "jstracer.h"
 
 #include "prmjtime.h"
 
