@@ -1,4 +1,0 @@
-script ../../jsreftest.html?test=js1_7/lexical/regress-336376-01.js
-skip script ../../jsreftest.html?test=js1_7/lexical/regress-346642-03.js # obsolete test
-script ../../jsreftest.html?test=js1_7/lexical/regress-346642-04.js
-script ../../jsreftest.html?test=js1_7/lexical/regress-351515.js

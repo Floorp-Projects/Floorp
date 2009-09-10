@@ -1,3 +1,0 @@
-include Eval/jstestsbrowser.list
-include Functions/jstestsbrowser.list
-include Regress/jstestsbrowser.list

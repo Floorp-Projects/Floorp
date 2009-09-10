@@ -1,7 +1,0 @@
-script ../../jsreftest.html?test=js1_4/Regress/date-001-n.js
-script ../../jsreftest.html?test=js1_4/Regress/function-001.js
-script ../../jsreftest.html?test=js1_4/Regress/function-002.js
-script ../../jsreftest.html?test=js1_4/Regress/function-003.js
-script ../../jsreftest.html?test=js1_4/Regress/function-004-n.js
-script ../../jsreftest.html?test=js1_4/Regress/regress-7224.js
-script ../../jsreftest.html?test=js1_4/Regress/toString-001-n.js
