@@ -60,6 +60,7 @@
 #include "jsparse.h"
 #include "jsscope.h"
 #include "jsscript.h"
+#include "jsscriptinlines.h"
 #include "jstracer.h"
 #if JS_HAS_XDR
 #include "jsxdrapi.h"

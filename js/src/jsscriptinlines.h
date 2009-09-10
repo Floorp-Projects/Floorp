@@ -43,6 +43,7 @@
 
 #include "jsfun.h"
 #include "jsregexp.h"
+#include "jsscript.h"
 
 inline JSFunction *
 JSScript::getFunction(size_t index)
