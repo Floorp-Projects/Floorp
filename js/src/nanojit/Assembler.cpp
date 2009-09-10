@@ -157,14 +157,12 @@ namespace nanojit
         LIns* vic = findVictim(allow);
         NanoAssert(vic);
 
-        Reservation* resv = vic->resvUsed();
-
         // restore vic
-        Register r = resv->reg;
+        Register r = vic->getReg();
         regs.removeActive(r);
-        resv->reg = UnknownReg;
+        vic->setReg(UnknownReg);
 
-        asm_restore(vic, resv, r);
+        asm_restore(vic, vic->resv(), r);
         return r;
     }
 
@@ -236,14 +234,15 @@ namespace nanojit
             ins = ar.entry[i];
             if ( !ins )
                 continue;
-            Reservation *r = ins->resvUsed();
-            if (r->arIndex) {
+            Register r = ins->getReg();
+            uint32_t arIndex = ins->getArIndex();
+            if (arIndex != 0) {
                 if (ins->isop(LIR_alloc)) {
                     int j=i+1;
                     for (int n = i + (ins->size()>>2); j < n; j++) {
                         NanoAssert(ar.entry[j]==ins);
                     }
-                    NanoAssert(r->arIndex == (uint32_t)j-1);
+                    NanoAssert(arIndex == (uint32_t)j-1);
                     i = j-1;
                 }
                 else if (ins->isQuad()) {
@@ -251,10 +250,10 @@ namespace nanojit
                     i += 1; // skip high word
                 }
                 else {
-                    NanoAssertMsg(r->arIndex == i, "Stack record index mismatch");
+                    NanoAssertMsg(arIndex == i, "Stack record index mismatch");
                 }
             }
-            NanoAssertMsg( r->reg==UnknownReg || regs->isConsistent(r->reg,ins), "Register record mismatch");
+            NanoAssertMsg( !isKnownReg(r) || regs->isConsistent(r,ins), "Register record mismatch");
         }
 
         registerConsistencyCheck();
@@ -278,8 +277,8 @@ namespace nanojit
                 {
                     LIns* ins = regs->getActive(r);
                     // @todo we should be able to check across RegAlloc's somehow (to include savedGP...)
-                    Reservation *v = ins->resvUsed();
-                    NanoAssertMsg( regs->getActive(v->reg)==ins, "Register record mismatch");
+                    Register r2 = ins->getReg();
+                    NanoAssertMsg(regs->getActive(r2)==ins, "Register record mismatch");
                 }
             }
 
@@ -300,20 +299,29 @@ namespace nanojit
         else
         {
             resvb = ib->resv();
-            bool rbDone = (resvb->used && resvb->reg != UnknownReg && (allow & rmask(resvb->reg)));
+            bool rbDone = (resvb->used && isKnownReg(resvb->reg) && (allow & rmask(resvb->reg)));
             if (rbDone) {
                 // ib already assigned to an allowable reg, keep that one
                 allow &= ~rmask(resvb->reg);
             }
             Register ra = findRegFor(ia, allow);
             resva = ia->resv();
-            NanoAssert(error() || (resva->used && ra != UnknownReg));
+            NanoAssert(error() || (resva->used && isKnownReg(ra)));
             if (!rbDone) {
                 allow &= ~rmask(ra);
                 findRegFor(ib, allow);
                 resvb = ib->resvUsed();
             }
         }
+    }
+
+    // XXX: this will replace findRegFor2() once Reservations are fully removed
+    void Assembler::findRegFor2b(RegisterMask allow, LIns* ia, Register &ra, LIns* ib, Register &rb)
+    {
+        Reservation *resva, *resvb;
+        findRegFor2(allow, ia, resva, ib, resvb);
+        ra = resva->reg;
+        rb = resvb->reg;
     }
 
     Register Assembler::findSpecificRegFor(LIns* i, Register w)
@@ -346,24 +354,25 @@ namespace nanojit
             findMemFor(ins);
         }
 
-        Reservation* resv = ins->resv();
-        Register r = resv->reg;
+        Register r;
 
-        if (!resv->used) {
+        if (!ins->isUsed()) {
             // No reservation.  Create one, and do a fresh allocation.
+            ins->markAsUsed();
             RegisterMask prefer = hint(ins, allow);
-            resv->init();
-            r = resv->reg = registerAlloc(prefer);
+            r = registerAlloc(prefer);
+            ins->setReg(r);
             _allocator.addActive(r, ins);
 
-        } else if (r == UnknownReg) {
+        } else if (!ins->hasKnownReg()) {
             // Existing reservation with an unknown register.  Do a fresh
             // allocation.
             RegisterMask prefer = hint(ins, allow);
-            r = resv->reg = registerAlloc(prefer);
+            r = registerAlloc(prefer);
+            ins->setReg(r);
             _allocator.addActive(r, ins);
 
-        } else if (rmask(r) & allow) {
+        } else if (rmask(r = ins->getReg()) & allow) {
             // Existing reservation with a known register allocated, and
             // that register is allowed.  Use it.
             _allocator.useActive(r);
@@ -379,7 +388,8 @@ namespace nanojit
                 // x87 <-> xmm copy required
                 //_nvprof("fpu-evict",1);
                 evict(r, ins);
-                r = resv->reg = registerAlloc(prefer);
+                r = registerAlloc(prefer);
+                ins->setReg(r);
                 _allocator.addActive(r, ins);
             } else
 #endif
@@ -392,9 +402,10 @@ namespace nanojit
                 // instruction: mov eax, ecx
                 // post-state:  eax(ins)
                 //
+                _allocator.retire(r);
                 Register s = r;
-                _allocator.retire(s);
-                r = resv->reg = registerAlloc(prefer);
+                r = registerAlloc(prefer);
+                ins->setReg(r);
                 _allocator.addActive(r, ins);
                 if ((rmask(s) & GpRegs) && (rmask(r) & GpRegs)) {
 #ifdef NANOJIT_ARM
@@ -412,58 +423,53 @@ namespace nanojit
     }
 
 
-    int Assembler::findMemFor(LIns *i)
+    int Assembler::findMemFor(LIns *ins)
     {
-        Reservation* resv = i->resv();
-        if (!resv->used)
-            resv->init();
-        if (!resv->arIndex) {
-            resv->arIndex = arReserve(i);
-            NanoAssert(resv->arIndex <= _activation.tos);
+        if (!ins->isUsed())
+            ins->markAsUsed();
+        if (!ins->getArIndex()) {
+            ins->setArIndex(arReserve(ins));
+            NanoAssert(ins->getArIndex() <= _activation.tos);
         }
-        return disp(resv);
+        return disp(ins);
     }
 
-    Register Assembler::prepResultReg(LIns *i, RegisterMask allow)
+    Register Assembler::prepResultReg(LIns *ins, RegisterMask allow)
     {
-        Reservation* resv = i->resv();
-        const bool pop = !resv->used || resv->reg == UnknownReg;
-        Register rr = findRegFor(i, allow);
-        freeRsrcOf(i, pop);
-        return rr;
+        const bool pop = ins->isUnusedOrHasUnknownReg();
+        Register r = findRegFor(ins, allow);
+        freeRsrcOf(ins, pop);
+        return r;
     }
 
-    void Assembler::asm_spilli(LInsp i, Reservation *resv, bool pop)
+    void Assembler::asm_spilli(LInsp ins, bool pop)
     {
-        int d = disp(resv);
-        Register rr = resv->reg;
-        bool quad = i->opcode() == LIR_iparam || i->isQuad();
+        int d = disp(ins);
+        Register r = ins->getReg();
+        bool quad = ins->opcode() == LIR_iparam || ins->isQuad();
         verbose_only( if (d && (_logc->lcbits & LC_RegAlloc)) {
                          outputForEOL("  <= spill %s",
-                                      _thisfrag->lirbuf->names->formatRef(i)); } )
-        asm_spill(rr, d, pop, quad);
+                                      _thisfrag->lirbuf->names->formatRef(ins)); } )
+        asm_spill(r, d, pop, quad);
     }
 
     // NOTE: Because this function frees slots on the stack, it is not safe to
     // follow a call to this with a call to anything which might spill a
     // register, as the stack can be corrupted. Refer to bug 495239 for a more
     // detailed description.
-    void Assembler::freeRsrcOf(LIns *i, bool pop)
+    void Assembler::freeRsrcOf(LIns *ins, bool pop)
     {
-        Reservation* resv = i->resvUsed();
-        int index = resv->arIndex;
-        Register rr = resv->reg;
-
-        if (rr != UnknownReg)
-        {
-            asm_spilli(i, resv, pop);
-            _allocator.retire(rr);    // free any register associated with entry
+        Register r = ins->getReg();
+        if (isKnownReg(r)) {
+            asm_spilli(ins, pop);
+            _allocator.retire(r);   // free any register associated with entry
         }
-        if (index) {
-            NanoAssert(_activation.entry[index] == i);
-            arFree(index);            // free any stack stack space associated with entry
+        int arIndex = ins->getArIndex();
+        if (arIndex) {
+            NanoAssert(_activation.entry[arIndex] == ins);
+            arFree(arIndex);        // free any stack stack space associated with entry
         }
-        i->resv()->clear();
+        ins->markAsClear();
     }
 
     // Frees 'r' in the RegAlloc state, if it's not already free.
@@ -493,15 +499,14 @@ namespace nanojit
         // Get vic's resv, check r matches.
         NanoAssert(!_allocator.isFree(r));
         NanoAssert(vic == _allocator.getActive(r));
-        Reservation* resv = vic->resvUsed();
-        NanoAssert(r == resv->reg);
+        NanoAssert(r == vic->getReg());
 
         // Free r.
         _allocator.retire(r);
-        resv->reg = UnknownReg;
+        vic->setReg(UnknownReg);
 
         // Restore vic.
-        asm_restore(vic, resv, r);
+        asm_restore(vic, vic->resv(), r);
     }
 
     void Assembler::patch(GuardRecord *lr)
@@ -765,18 +770,17 @@ namespace nanojit
     {
         for (Register r = FirstReg; r <= LastReg; r = nextreg(r))
         {
-            LIns *i = _allocator.getActive(r);
-            if (i)
+            LIns *ins = _allocator.getActive(r);
+            if (ins)
             {
                 // clear reg allocation, preserve stack allocation.
-                Reservation* resv = i->resvUsed();
                 _allocator.retire(r);
-                if (r == resv->reg)
-                    resv->reg = UnknownReg;
+                NanoAssert(r == ins->getReg());
+                ins->setReg(UnknownReg);
 
-                if (!resv->arIndex && resv->reg == UnknownReg)
+                if (!ins->getArIndex())
                 {
-                    i->resv()->clear();
+                    ins->markAsClear();
                 }
             }
         }
@@ -891,7 +895,7 @@ namespace nanojit
               pre-state is constructed from the post-state (and these states
               are those stored in RegAlloc).
             */
-            bool required = ins->isStmt() || ins->resv()->used;
+            bool required = ins->isStmt() || ins->isUsed();
             if (!required)
                 continue;
 
@@ -935,13 +939,12 @@ namespace nanojit
                 // is the address of the stack space.
                 case LIR_alloc: {
                     countlir_alloc();
-                    Reservation *resv = ins->resvUsed();
-                    NanoAssert(resv->arIndex != 0);
-                    Register r = resv->reg;
-                    if (r != UnknownReg) {
+                    NanoAssert(ins->getArIndex() != 0);
+                    Register r = ins->getReg();
+                    if (isKnownReg(r)) {
                         _allocator.retire(r);
-                        resv->reg = UnknownReg;
-                        asm_restore(ins, resv, r);
+                        ins->setReg(UnknownReg);
+                        asm_restore(ins, ins->resv(), r);
                     }
                     freeRsrcOf(ins, 0);
                     break;
@@ -1281,8 +1284,7 @@ namespace nanojit
                     if (op == LIR_fcall)
                     {
                         // fcall
-                        Reservation* rR = getresv(ins);
-                        rr = asm_prep_fcall(rR, ins);
+                        rr = asm_prep_fcall(getresv(ins), ins);
                     }
                     else
 #endif
