@@ -78,7 +78,8 @@ SyncChannel::Send(Message* msg, Message* reply)
     // (NB: IPDL prevents the latter from occuring in actor code)
 
     // FIXME/cjones: real error handling
-    NS_ABORT_IF_FALSE(mRecvd.is_reply() && mPendingReply == mRecvd.type(),
+    NS_ABORT_IF_FALSE(mRecvd.is_sync()
+                      && mRecvd.is_reply() && mPendingReply == mRecvd.type(),
                       "unexpected sync message");
 
     mPendingReply = 0;
@@ -91,6 +92,7 @@ void
 SyncChannel::OnDispatchMessage(const Message& msg)
 {
     NS_ABORT_IF_FALSE(msg.is_sync(), "only sync messages here");
+    NS_ABORT_IF_FALSE(!msg.is_reply(), "wasn't awaiting reply");
 
     Message* reply;
 
