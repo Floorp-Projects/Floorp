@@ -392,14 +392,10 @@ nsPlacesAutoComplete.prototype = {
     }
 
     // Reset our search behavior to the default.
-    this._behavior = this._defaultBehavior;
-
-    // If we have no search terms, this is a special search that should only
-    // look for BEHAVIOR_HISTORY and BEHAVIOR_TYPED.
-    if (!this._currentSearchString) {
-      this._setBehavior("history");
-      this._setBehavior("typed");
-    }
+    if (this._currentSearchString)
+      this._behavior = this._defaultBehavior;
+    else
+      this._behavior = this._emptySearchDefaultBehavior;
 
     // For any given search, we run up to three queries:
     // 1) keywords (this._keywordQuery)
@@ -680,6 +676,10 @@ nsPlacesAutoComplete.prototype = {
     this._matchTitleToken = safeGetter("match.title", "#");
     this._matchURLToken = safeGetter("match.url", "@");
     this._defaultBehavior = safeGetter("default.behavior", 0);
+    // Further restrictions to apply for "empty searches" (i.e. searches for "").
+    // By default we use (HISTORY | TYPED) = 33.
+    this._emptySearchDefaultBehavior = this._defaultBehavior |
+                                       safeGetter("default.behavior.emptyRestriction", 33);
 
     // Validate matchBehavior; default to MATCH_BOUNDARY_ANYWHERE.
     if (this._matchBehavior != MATCH_ANYWHERE &&
