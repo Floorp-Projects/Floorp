@@ -1989,13 +1989,13 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
     JSBool ok = JS_FALSE;
     uintN attrs;
     JSAtomState &atomState = cx->runtime->atomState;
+    JSObject *desc;
     MUST_FLOW_THROUGH("drop_property");
 
     if (!pobj->getAttributes(cx, nameidr.id(), prop, &attrs))
         goto drop_property;
 
     /* We have our own property, so start creating the descriptor. */
-    JSObject *desc;
     desc = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
     if (!desc)
         goto drop_property;
