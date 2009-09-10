@@ -76,4 +76,16 @@ let gTests = [
    "foo ^ ~", [2,3]],
   ["2: Drop-down empty search matches only typed history",
    "", [2,3]],
+  ["3: Drop-down empty search matches everything",
+   "", [0,1,2,3,4,5], function () setEmptyPref(0)],
+  ["4: Drop-down empty search matches only typed",
+   "", [2,3,5], function () setEmptyPref(32)],
+  ["5: Drop-down empty search matches only typed history",
+   "", [2,3], clearEmptyPref],
 ];
+
+function setEmptyPref(aValue)
+  prefs.setIntPref("browser.urlbar.default.behavior.emptyRestriction", aValue);
+
+function clearEmptyPref()
+  prefs.clearUserPref("browser.urlbar.default.behavior.emptyRestriction");
