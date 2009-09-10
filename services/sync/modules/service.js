@@ -548,7 +548,7 @@ WeaveSvc.prototype = {
           privkey.payload.iv, newphrase);
       privkey.payload.keyData = newkey;
 
-      let resp = new Resource(privkey.uri).put(privkey.serialize());
+      let resp = new Resource(privkey.uri).put(privkey);
       if (!resp.success)
         throw resp;
 
@@ -1200,7 +1200,7 @@ WeaveSvc.prototype = {
 
     this._log.debug("Setting meta payload storage version to " + WEAVE_VERSION);
     meta.payload.storageVersion = WEAVE_VERSION;
-    let resp = new Resource(meta.uri).put(meta.serialize());
+    let resp = new Resource(meta.uri).put(meta);
     if (!resp.success)
       throw resp;
   },
