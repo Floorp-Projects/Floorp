@@ -7671,13 +7671,17 @@ ExtensionsDataSource.prototype = {
    */
   _rdfGet_iconURL: function EMDS__rdfGet_iconURL(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
-    var type = this.getItemProperty(id, "type");
+
+    var installLocation = this._em.getInstallLocation(id);
+    if (!this.isDownloadItem(id) && !installLocation)
+      return null;
 
     // Try to pick an icon from the item's install folder
     iconURL = this._getImageURL(item, "icon.png");
     if (iconURL)
       return iconURL;
 
+    var type = this.getItemProperty(id, "type");
     if (type == Ci.nsIUpdateItem.TYPE_THEME)
       return gRDF.GetResource(URI_GENERIC_ICON_THEME);
 
