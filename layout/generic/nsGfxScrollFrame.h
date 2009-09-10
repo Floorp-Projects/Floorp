@@ -309,10 +309,6 @@ public:
     return mInner.GetScrolledFrame()->GetContentInsertionFrame();
   }
 
-  virtual nsIView* GetMouseCapturer() const {
-    return mInner.GetScrolledFrame()->GetView();
-  }
-
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
                                   PRUint32 aFlags);
@@ -474,10 +470,6 @@ public:
 
   virtual nsIFrame* GetContentInsertionFrame() {
     return mInner.GetScrolledFrame()->GetContentInsertionFrame();
-  }
-
-  virtual nsIView* GetMouseCapturer() const {
-    return mInner.GetScrolledFrame()->GetView();
   }
 
   virtual void InvalidateInternal(const nsRect& aDamageRect,

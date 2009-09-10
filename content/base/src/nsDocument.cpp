@@ -2773,6 +2773,18 @@ nsDocument::DestroyClassNameArray(void* aData)
   delete info;
 }
 
+NS_IMETHODIMP
+nsDocument::ReleaseCapture()
+{
+  // only release the capture if the caller can access it. This prevents a
+  // page from stopping a scrollbar grab for example.
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(nsIPresShell::GetCapturingContent());
+  if (node && nsContentUtils::CanCallerAccess(node)) {
+    nsIPresShell::SetCapturingContent(nsnull, 0);
+  }
+  return NS_OK;
+}
+
 nsresult
 nsDocument::SetBaseURI(nsIURI* aURI)
 {

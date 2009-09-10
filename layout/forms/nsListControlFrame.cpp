@@ -1031,28 +1031,23 @@ nsListControlFrame::CaptureMouseEvents(PRBool aGrabMouseEvents)
   if (NS_UNLIKELY(!view))
     return;
 
-  nsIViewManager* viewMan = view->GetViewManager();
-  if (viewMan) {
-    PRBool result;
-    // It's not clear why we don't have the widget capture mouse events here.
-    if (aGrabMouseEvents) {
-      viewMan->GrabMouseEvents(view, result);
-    } else {
-      nsIView* curGrabber;
-      viewMan->GetMouseEventGrabber(curGrabber);
-      PRBool dropDownIsHidden = PR_FALSE;
-      if (IsInDropDownMode()) {
-        dropDownIsHidden = !mComboboxFrame->IsDroppedDown();
-      }
-      if (curGrabber == view || dropDownIsHidden) {
-        // only unset the grabber if *we* are the ones doing the grabbing
-        // (or if the dropdown is hidden, in which case NO-ONE should be
-        // grabbing anything
-        // it could be a scrollbar inside this listbox which is actually grabbing
-        // This shouldn't be necessary. We should simply ensure that events targeting
-        // scrollbars are never visible to DOM consumers.
-        viewMan->GrabMouseEvents(nsnull, result);
-      }
+  if (aGrabMouseEvents) {
+    nsIPresShell::SetCapturingContent(mContent, CAPTURE_IGNOREALLOWED);
+  } else {
+    nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
+
+    PRBool dropDownIsHidden = PR_FALSE;
+    if (IsInDropDownMode()) {
+      dropDownIsHidden = !mComboboxFrame->IsDroppedDown();
+    }
+    if (capturingContent == mContent || dropDownIsHidden) {
+      // only clear the capturing content if *we* are the ones doing the
+      // capturing (or if the dropdown is hidden, in which case NO-ONE should
+      // be capturing anything - it could be a scrollbar inside this listbox
+      // which is actually grabbing
+      // This shouldn't be necessary. We should simply ensure that events targeting
+      // scrollbars are never visible to DOM consumers.
+      nsIPresShell::SetCapturingContent(nsnull, 0);
     }
   }
 }
@@ -2120,11 +2115,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   if (IgnoreMouseEventForSelection(aMouseEvent))
     return NS_ERROR_FAILURE;
 
-  nsIView* view = GetScrolledFrame()->GetView();
-  nsIViewManager* viewMan = view->GetViewManager();
-  nsIView* curGrabber;
-  viewMan->GetMouseEventGrabber(curGrabber);
-  if (curGrabber != view) {
+  if (nsIPresShell::GetCapturingContent() != mContent) {
     // If we're not capturing, then ignore movement in the border
     nsPoint pt = nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(aMouseEvent, this);
     nsRect borderInnerEdge = GetScrollableView()->View()->GetBounds();

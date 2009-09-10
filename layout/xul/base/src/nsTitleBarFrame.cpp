@@ -48,7 +48,6 @@
 #include "nsPresContext.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsPIDOMWindow.h"
-#include "nsIViewManager.h"
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
@@ -69,20 +68,6 @@ nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aCont
 :nsBoxFrame(aPresShell, aContext, PR_FALSE)
 {
   mTrackingMouseMove = PR_FALSE;
-}
-
-
-
-NS_IMETHODIMP
-nsTitleBarFrame::Init(nsIContent*      aContent,
-                      nsIFrame*        aParent,
-                      nsIFrame*        asPrevInFlow)
-{
-  nsresult rv = nsBoxFrame::Init(aContent, aParent, asPrevInFlow);
-
-  CreateViewForFrame(PresContext(), this, GetStyleContext(), PR_TRUE);
-
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -129,7 +114,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
              mTrackingMouseMove = PR_TRUE;
 
              // start capture.
-             CaptureMouseEvents(aPresContext,PR_TRUE);
+             nsIPresShell::SetCapturingContent(GetContent(), CAPTURE_IGNOREALLOWED);
 
              // remember current mouse coordinates.
              mLastPoint = aEvent->refPoint;
@@ -152,7 +137,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
          mTrackingMouseMove = PR_FALSE;
 
          // end capture
-         CaptureMouseEvents(aPresContext,PR_FALSE);
+         nsIPresShell::SetCapturingContent(nsnull, 0);
 
          *aEventStatus = nsEventStatus_eConsumeNoDefault;
          doDefault = PR_FALSE;
@@ -209,35 +194,6 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
   else
     return NS_OK;
 }
-
-NS_IMETHODIMP
-nsTitleBarFrame::CaptureMouseEvents(nsPresContext* aPresContext,PRBool aGrabMouseEvents)
-{
-  // get its view
-  nsIView* view = GetView();
-  PRBool result;
-
-  if (view) {
-    nsIViewManager* viewMan = view->GetViewManager();
-    if (viewMan) {
-      // nsIWidget* widget = view->GetWidget();
-      if (aGrabMouseEvents) {
-        viewMan->GrabMouseEvents(view,result);
-        //mIsCapturingMouseEvents = PR_TRUE;
-        //widget->CaptureMouse(PR_TRUE);
-      } else {
-        viewMan->GrabMouseEvents(nsnull,result);
-        //mIsCapturingMouseEvents = PR_FALSE;
-        //widget->CaptureMouse(PR_FALSE);
-      }
-    }
-  }
-
-  return NS_OK;
-
-}
-
-
 
 void
 nsTitleBarFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent)
