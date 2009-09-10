@@ -201,6 +201,12 @@ namespace nanojit
         }
     };
 
+    // Array holding the 'operands' field from LIRopcode.tbl.
+    extern const int8_t operandCount[];
+
+    // Array holding the 'repkind' field from LIRopcode.tbl.
+    extern const uint8_t repKinds[];
+
     //-----------------------------------------------------------------------
     // Low-level instructions.  This is a bit complicated, because we have a
     // variable-width representation to minimise space usage.
@@ -463,33 +469,89 @@ namespace nanojit
         inline LIns*    callArgN(uint32_t n)    const;
         inline const CallInfo* callInfo()       const;
 
-        // LIns predicates.
-        bool isCse() const;
-        bool isRet() const { return nanojit::isRetOpcode(opcode()); }
-        bool isop(LOpcode o) const { return opcode() == o; }
-
         // isLInsXYZ() returns true if the instruction has the LInsXYZ form.
         // Note that there is some overlap with other predicates, eg.
         // isStore()==isLInsSti(), isCall()==isLInsC(), but that's ok;  these
-        // ones are used only to check that opcodes are appropriate for
+        // ones are used mostly to check that opcodes are appropriate for
         // instruction layouts, the others are used for non-debugging
         // purposes.
-        bool isLInsOp0() const;
-        bool isLInsOp1() const;
-        bool isLInsOp2() const;
-        bool isLInsOp3() const;
-        bool isLInsSti() const;
-        bool isLInsLd()  const;
-        bool isLInsSk()  const;
-        bool isLInsC()   const;
-        bool isLInsP()   const;
-        bool isLInsI()   const;
-        bool isLInsI64() const;
+        bool isLInsOp0() const {
+            NanoAssert(LRK_None != repKinds[opcode()]);
+            return LRK_Op0 == repKinds[opcode()];
+        }
+        bool isLInsOp1() const {
+            NanoAssert(LRK_None != repKinds[opcode()]);
+            return LRK_Op1 == repKinds[opcode()];
+        }
+        bool isLInsOp2() const {
+            NanoAssert(LRK_None != repKinds[opcode()]);
+            return LRK_Op2 == repKinds[opcode()];
+        }
+        bool isLInsOp3() const {
+            NanoAssert(LRK_None != repKinds[opcode()]);
+            return LRK_Op3 == repKinds[opcode()];
+        }
+        bool isLInsLd() const {
+            NanoAssert(LRK_None != repKinds[opcode()]);
+            return LRK_Ld == repKinds[opcode()];
+        }
+        bool isLInsSti() const {
+            NanoAssert(LRK_None != repKinds[opcode()]);
+            return LRK_Sti == repKinds[opcode()];
+        }
+        bool isLInsSk() const {
+            NanoAssert(LRK_None != repKinds[opcode()]);
+            return LRK_Sk == repKinds[opcode()];
+        }
+        bool isLInsC() const {
+            NanoAssert(LRK_None != repKinds[opcode()]);
+            return LRK_C == repKinds[opcode()];
+        }
+        bool isLInsP() const {
+            NanoAssert(LRK_None != repKinds[opcode()]);
+            return LRK_P == repKinds[opcode()];
+        }
+        bool isLInsI() const {
+            NanoAssert(LRK_None != repKinds[opcode()]);
+            return LRK_I == repKinds[opcode()];
+        }
+        bool isLInsI64() const {
+            NanoAssert(LRK_None != repKinds[opcode()]);
+            return LRK_I64 == repKinds[opcode()];
+        }
 
-        bool isQuad() const;
-        bool isCond() const;
-        bool isFloat() const;
-        bool isCmp() const;
+        // LIns predicates.
+        bool isCse() const {
+            return isCseOpcode(opcode()) || (isCall() && callInfo()->_cse);
+        }
+        bool isRet() const {
+            return isRetOpcode(opcode());
+        }
+        bool isop(LOpcode o) const {
+            return opcode() == o;
+        }
+        bool LIns::isQuad() const {
+            LOpcode op = opcode();
+#ifdef NANOJIT_64BIT
+            // callh in 64bit cpu's means a call that returns an int64 in a single register
+            return (!(op >= LIR_qeq && op <= LIR_quge) && (op & LIR64) != 0) ||
+                   op == LIR_callh;
+#else
+            // callh in 32bit cpu's means the 32bit MSW of an int64 result in 2 registers
+            return (op & LIR64) != 0;
+#endif
+        }
+        bool isCond() const {
+            LOpcode op = opcode();
+            return (op == LIR_ov) || isCmp();
+        }
+        bool isFloat() const;   // not inlined because it contains a switch
+        bool isCmp() const {
+            LOpcode op = opcode();
+            return (op >= LIR_eq && op <= LIR_uge) ||
+                   (op >= LIR_qeq && op <= LIR_quge) ||
+                   (op >= LIR_feq && op <= LIR_fge);
+        }
         bool isCall() const {
             LOpcode op = opcode();
             return (op & ~LIR64) == LIR_icall || op == LIR_qcall;
@@ -509,16 +571,32 @@ namespace nanojit
                    op == LIR_xbarrier || op == LIR_xtbl;
         }
         // True if the instruction is a 32-bit or smaller constant integer.
-        bool isconst() const { return opcode() == LIR_int; }
+        bool isconst() const {
+            return opcode() == LIR_int;
+        }
         // True if the instruction is a 32-bit or smaller constant integer and
         // has the value val when treated as a 32-bit signed integer.
-        bool isconstval(int32_t val) const;
+        bool isconstval(int32_t val) const {
+            return isconst() && imm32()==val;
+        }
         // True if the instruction is a constant quad value.
-        bool isconstq() const;
+        bool isconstq() const {
+            return opcode() == LIR_quad || opcode() == LIR_float;
+        }
         // True if the instruction is a constant pointer value.
-        bool isconstp() const;
+        bool LIns::isconstp() const
+        {
+#ifdef NANOJIT_64BIT
+            return isconstq();
+#else
+            return isconst();
+#endif
+        }
         // True if the instruction is a constant float value.
-        bool isconstf() const;
+        bool isconstf() const {
+            return opcode() == LIR_float;
+        }
+
         bool isBranch() const {
             return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j);
         }
@@ -933,8 +1011,6 @@ namespace nanojit
         NanoAssert(isCall());
         return toLInsC()->ci;
     }
-
-    extern const int8_t operandCount[];
 
     // make it a GCObject so we can explicitly delete it early
     class LirWriter : public GCObject
