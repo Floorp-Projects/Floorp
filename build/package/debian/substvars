@@ -1,1 +1,0 @@
-shlibs:Depends=libc6 (>= 2.1), libglib1.2 (>= 1.2.0), libgtk1.2 (>= 1.2.3-2), libjpeg62, libpng2, libstdc++2.9-glibc2.1, orbit (>= 0.4.3-1), xlib6g (>= 3.3.3.1-1), zlib1g (>= 1:1.1.3)
