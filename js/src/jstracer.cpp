@@ -8390,7 +8390,7 @@ TraceRecorder::box_jsval(jsval v, LIns* v_ins)
     if (isNumber(v)) {
         LIns* args[] = { v_ins, cx_ins };
         v_ins = lir->insCall(&js_BoxDouble_ci, args);
-        guard(false, lir->ins2(LIR_qeq, v_ins, INS_CONSTWORD(JSVAL_ERROR_COOKIE)),
+        guard(false, lir->ins2(LIR_peq, v_ins, INS_CONSTWORD(JSVAL_ERROR_COOKIE)),
               OOM_EXIT);
         return v_ins;
     }
