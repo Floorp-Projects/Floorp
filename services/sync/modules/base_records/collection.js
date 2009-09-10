@@ -59,7 +59,6 @@ Collection.prototype = {
 
   _Coll_init: function Coll_init(uri) {
     this._init(uri);
-    this.pushFilter(new JsonFilter());
     this._full = true;
     this._older = 0;
     this._newer = 0;

@@ -79,27 +79,24 @@ WBORecord.prototype = {
     return 0;
   },
 
-  serialize: function WBORec_serialize() {
-    // Convert the payload into a string because the server expects that
-    let payload = this.payload;
-    this.payload = this.deleted ? "" : JSON.stringify(payload);
-
-    let ret = JSON.stringify(this.data);
-
-    // Restore the original payload
-    this.payload = payload;
-
-    return ret;
-  },
-
-  deserialize: function WBORec_deserialize(json) {
-    this.data = JSON.parse(json);
+  deserialize: function deserialize(json) {
+    this.data = json.constructor.toString() == String ? JSON.parse(json) : json;
 
     // Empty string payloads are deleted records
     if (this.payload === "")
       this.deleted = true;
     else
       this.payload = JSON.parse(this.payload);
+  },
+
+  toJSON: function toJSON() {
+    // Copy fields from data to except payload which needs to be a string
+    let obj = {};
+    for (let [key, val] in Iterator(this.data))
+      if (key != "payload")
+        obj[key] = val;
+    obj.payload = this.deleted ? "" : JSON.stringify(this.payload);
+    return obj;
   },
 
   toString: function WBORec_toString() "{ " + [

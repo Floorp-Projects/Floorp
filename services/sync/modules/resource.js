@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Resource', 'JsonFilter'];
+const EXPORTED_SYMBOLS = ["Resource"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -125,29 +125,12 @@ Resource.prototype = {
     this._data = value;
   },
 
-  // ** {{{ Resource.filters }}} **
-  //
-  // Filters are used to perform pre and post processing on 
-  // requests made for resources. Use these methods to add,
-  // remove and clear filters applied to the resource.
-  _filters: null,
-  pushFilter: function Res_pushFilter(filter) {
-    this._filters.push(filter);
-  },
-  popFilter: function Res_popFilter() {
-    return this._filters.pop();
-  },
-  clearFilters: function Res_clearFilters() {
-    this._filters = [];
-  },
-
   _init: function Res__init(uri) {
     this._log = Log4Moz.repository.getLogger(this._logName);
     this._log.level =
       Log4Moz.Level[Utils.prefs.getCharPref("log.logger.network.resources")];
     this.uri = uri;
     this._headers = {'Content-type': 'text/plain'};
-    this._filters = [];
   },
 
   // ** {{{ Resource._createRequest }}} **
@@ -181,26 +164,6 @@ Resource.prototype = {
 
   _onProgress: function Res__onProgress(channel) {},
 
-  // ** {{{ Resource.filterUpload }}} **
-  //
-  // Apply pre-request filters. Currently, this is done before
-  // any PUT request.
-  filterUpload: function Resource_filterUpload() {
-    this._data = this._filters.reduce(function(data, filter) {
-      return filter.beforePUT(data);
-    }, this._data);
-  },
-
-  // ** {{{ Resource.filterDownload }}} **
-  //
-  // Apply post-request filters. Currently, this done after
-  // any GET request.
-  filterDownload: function Resource_filterDownload() {
-    this._data = this._filters.reduceRight(function(data, filter) {
-      return filter.afterGET(data);
-    }, this._data);
-  },
-
   // ** {{{ Resource._request }}} **
   //
   // Perform a particular HTTP request on the resource. This method
@@ -216,7 +179,10 @@ Resource.prototype = {
     // PUT and POST are trreated differently because 
     // they have payload data.
     if ("PUT" == action || "POST" == action) {
-      this.filterUpload();
+      // Convert non-string bodies into JSON
+      if (this._data.constructor.toString() != String)
+        this._data = JSON.stringify(this._data);
+
       this._log.debug(action + " Length: " + this._data.length);
       this._log.trace(action + " Body: " + this._data);
 
@@ -359,30 +325,6 @@ ChannelListener.prototype = {
 
     this._data += siStream.read(count);
     this._onProgress();
-  }
-};
-
-// = JsonFilter =
-//
-// Currently, the only filter used in conjunction with 
-// {{{Resource.filters}}}. It simply encodes outgoing records
-// as JSON, and decodes incoming JSON into JS objects.
-function JsonFilter() {
-  let level = "Debug";
-  try { level = Utils.prefs.getCharPref("log.logger.network.jsonFilter"); }
-  catch (e) { /* ignore unset prefs */ }
-  this._log = Log4Moz.repository.getLogger("Net.JsonFilter");
-  this._log.level = Log4Moz.Level[level];
-}
-JsonFilter.prototype = {
-  beforePUT: function JsonFilter_beforePUT(data) {
-    this._log.trace("Encoding data as JSON");
-    return JSON.stringify(data);
-  },
-
-  afterGET: function JsonFilter_afterGET(data) {
-    this._log.trace("Decoding JSON data");
-    return JSON.parse(data);
   }
 };
 

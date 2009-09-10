@@ -356,7 +356,7 @@ SyncEngine.prototype = {
       meta.generateIV();
       meta.addUnwrappedKey(pubkey, symkey);
       let res = new Resource(meta.uri);
-      let resp = res.put(meta.serialize());
+      let resp = res.put(meta);
       if (!resp.success)
         throw resp;
 
@@ -566,7 +566,7 @@ SyncEngine.prototype = {
           this._log.trace("Outgoing: " + out);
 
         out.encrypt(ID.get("WeaveCryptoID"));
-        up.pushData(JSON.parse(out.serialize())); // FIXME: inefficient
+        up.pushData(out);
 
         // Partial upload
         if ((++count % MAX_UPLOAD_RECORDS) == 0)
