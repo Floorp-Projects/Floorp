@@ -1,0 +1,20 @@
+<head>
+  <title>NPNV*NPObject accessibility tests</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<body onload="runTests()">
+  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
+
+  <script class="testbody" type="application/javascript">
+  dump('lastScript');
+
+  SimpleTest.waitForExplicitFinish();
+
+  function runTests() {
+    ok(document.getElementById('plugin1').pluginFoundElement, "plugin1.pluginFoundElement (NPNVPluginElementNPObject)", document.getElementById('plugin1').pluginFoundElement);
+    ok(window.pluginFoundWindow, "window.pluginFoundWindow (NPNVWindowNPObject)", window.pluginFoundWindow);
+
+    SimpleTest.finish();
+  }
+  </script>
