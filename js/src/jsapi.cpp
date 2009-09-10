@@ -2406,9 +2406,6 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
 JS_PUBLIC_API(void)
 JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg)
 {
-    if (JSString::isStatic((JSString *) thing))
-        return;
-
     JSTracer *trc;
 
     trc = (JSTracer *)arg;

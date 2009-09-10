@@ -441,7 +441,7 @@ JS_STATIC_ASSERT(1 <= js_gcArenasPerChunk &&
     ((GC_ARENA_SIZE - (uint32) sizeof(JSGCArenaInfo)) / ((thingSize) + 1U))
 
 #define THING_TO_ARENA(thing)                                                 \
-    (JS_ASSERT(!JSString::isStatic((JSString *) (thing))),                    \
+    (JS_ASSERT(!JSString::isStatic(thing)),                                   \
      (JSGCArenaInfo *)(((jsuword) (thing) | GC_ARENA_MASK)                    \
                        + 1 - sizeof(JSGCArenaInfo)))
 
@@ -1146,6 +1146,8 @@ GetGCThingFlagsOrNull(void *thing)
     JSGCArenaInfo *a;
     uint32 index;
 
+    if (JSString::isStatic(thing))
+        return NULL;
     a = THING_TO_ARENA(thing);
     if (!a->list)
         return NULL;
@@ -1179,6 +1181,9 @@ js_GetGCThingTraceKind(void *thing)
 {
     JSGCArenaInfo *a;
     uint32 index;
+
+    if (JSString::isStatic(thing))
+        return JSTRACE_STRING;
 
     a = THING_TO_ARENA(thing);
     if (!a->list)
@@ -2315,7 +2320,7 @@ js_LockGCThingRT(JSRuntime *rt, void *thing)
     uint8 *flagp;
     JSGCLockHashEntry *lhe;
 
-    if (!thing || JSString::isStatic((JSString *) thing))
+    if (!thing)
         return JS_TRUE;
 
     flagp = GetGCThingFlagsOrNull(thing);
@@ -2371,7 +2376,7 @@ js_UnlockGCThingRT(JSRuntime *rt, void *thing)
     JSBool shallow;
     JSGCLockHashEntry *lhe;
 
-    if (!thing || JSString::isStatic((JSString *) thing))
+    if (!thing)
         return JS_TRUE;
 
     flagp = GetGCThingFlagsOrNull(thing);
@@ -2638,7 +2643,7 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
 
       case JSTRACE_STRING:
         for (;;) {
-            if (JSString::isStatic((JSString *)thing))
+            if (JSString::isStatic(thing))
                 goto out;
             flagp = THING_TO_FLAGP(thing, sizeof(JSGCThing));
             JS_ASSERT((*flagp & GCF_FINAL) == 0);
@@ -2721,8 +2726,7 @@ js_CallValueTracerIfGCThing(JSTracer *trc, jsval v)
     if (JSVAL_IS_DOUBLE(v) || JSVAL_IS_STRING(v)) {
         thing = JSVAL_TO_TRACEABLE(v);
         kind = JSVAL_TRACE_KIND(v);
-        JS_ASSERT_IF(!JSVAL_IS_STRING(v) || !JSString::isStatic(JSVAL_TO_STRING(v)),
-                     kind == js_GetGCThingTraceKind(JSVAL_TO_GCTHING(v)));
+        JS_ASSERT(kind == js_GetGCThingTraceKind(JSVAL_TO_GCTHING(v)));
     } else if (JSVAL_IS_OBJECT(v) && v != JSVAL_NULL) {
         /* v can be an arbitrary GC thing reinterpreted as an object. */
         thing = JSVAL_TO_OBJECT(v);
@@ -2745,7 +2749,7 @@ gc_root_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
     /* Ignore null reference, scalar values, and static strings. */
     if (!JSVAL_IS_NULL(v) &&
         JSVAL_IS_GCTHING(v) &&
-        !JSString::isStatic((JSString *) JSVAL_TO_GCTHING(v))) {
+        !JSString::isStatic(JSVAL_TO_GCTHING(v))) {
 #ifdef DEBUG
         JSBool root_points_to_gcArenaList = JS_FALSE;
         jsuword thing = (jsuword) JSVAL_TO_GCTHING(v);
