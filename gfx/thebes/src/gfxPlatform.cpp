@@ -245,7 +245,7 @@ gfxPlatform::Shutdown()
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs)
         prefs->RemoveObserver(CMForceSRGBPrefName, gPlatform->overrideObserver);
-    
+
     delete gPlatform;
     gPlatform = nsnull;
 }
