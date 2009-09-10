@@ -916,6 +916,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     3,  /* JSOP_CONCATN */
     0,  /* JSOP_SETMETHOD */
     0,  /* JSOP_INITMETHOD */
+    0,  /* JSOP_SHARPINIT */
 };
 #define JSOP_IS_IMACOP(x) (0 \
  || x == JSOP_BITOR \

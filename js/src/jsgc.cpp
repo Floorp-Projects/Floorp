@@ -2882,8 +2882,6 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
     JS_CALL_VALUE_TRACER(trc, fp->rval, "rval");
     if (fp->scopeChain)
         JS_CALL_OBJECT_TRACER(trc, fp->scopeChain, "scope chain");
-    if (fp->sharpArray)
-        JS_CALL_OBJECT_TRACER(trc, fp->sharpArray, "sharp array");
 }
 
 static void

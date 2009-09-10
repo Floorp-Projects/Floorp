@@ -382,6 +382,11 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         fprintf(fp, " %s", bytes);
         break;
 
+      case JOF_UINT16PAIR:
+        i = (jsint)GET_UINT16(pc);
+        fprintf(fp, " %d", i);
+        /* FALL THROUGH */
+
       case JOF_UINT16:
         i = (jsint)GET_UINT16(pc);
         goto print_int;
@@ -4448,13 +4453,17 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = ss->sprinter.offset;
 #if JS_HAS_SHARP_VARS
                 op = (JSOp)pc[len];
+                if (op == JSOP_SHARPINIT)
+                    op = (JSOp)pc[len += JSOP_SHARPINIT_LENGTH];
                 if (op == JSOP_DEFSHARP) {
                     pc += len;
                     cs = &js_CodeSpec[op];
                     len = cs->length;
                     if (Sprint(&ss->sprinter, "#%u=",
-                               (unsigned) (jsint) GET_UINT16(pc)) < 0)
+                               (unsigned) (jsint) GET_UINT16(pc + UINT16_LEN))
+                        < 0) {
                         return NULL;
+                    }
                 }
 #endif /* JS_HAS_SHARP_VARS */
                 if (i == JSProto_Array) {
@@ -4587,13 +4596,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
 #if JS_HAS_SHARP_VARS
               case JSOP_DEFSHARP:
-                i = (jsint) GET_UINT16(pc);
+                i = (jsint) GET_UINT16(pc + UINT16_LEN);
                 rval = POP_STR();
                 todo = Sprint(&ss->sprinter, "#%u=%s", (unsigned) i, rval);
                 break;
 
               case JSOP_USESHARP:
-                i = (jsint) GET_UINT16(pc);
+                i = (jsint) GET_UINT16(pc + UINT16_LEN);
                 todo = Sprint(&ss->sprinter, "#%u#", (unsigned) i);
                 break;
 #endif /* JS_HAS_SHARP_VARS */

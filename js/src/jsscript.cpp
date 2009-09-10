@@ -1494,7 +1494,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     memcpy(script->main, CG_BASE(cg), mainLength * sizeof(jsbytecode));
     nfixed = (cg->flags & TCF_IN_FUNCTION)
              ? cg->fun->u.i.nvars
-             : cg->ngvars + cg->regexpList.length;
+             : cg->ngvars + cg->regexpList.length + cg->sharpSlots();
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = (uint16) nfixed;
     js_InitAtomMap(cx, &script->atomMap, &cg->atomList);
@@ -1527,6 +1527,8 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         cg->regexpList.finish(script->regexps());
     if (cg->flags & TCF_NO_SCRIPT_RVAL)
         script->flags |= JSSF_NO_SCRIPT_RVAL;
+    if (cg->hasSharps())
+        script->flags |= JSSF_HAS_SHARPS;
 
     if (cg->upvarList.count != 0) {
         JS_ASSERT(cg->upvarList.count <= cg->upvarMap.length);
