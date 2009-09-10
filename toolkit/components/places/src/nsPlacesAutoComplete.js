@@ -425,7 +425,10 @@ nsPlacesAutoComplete.prototype = {
   stopSearch: function PAC_stopSearch()
   {
     // We need to cancel our searches so we do not get any [more] results.
-    this._stopActiveQuery();
+    // However, it's possible we haven't actually started any searches, so this
+    // method may throw because this._pendingQuery may be undefined.
+    if (this._pendingQuery)
+      this._stopActiveQuery();
 
     this._finishSearch(false);
   },
