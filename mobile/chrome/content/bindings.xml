@@ -636,7 +636,7 @@
         
           <xul:hbox anonid="bookmark-manage-controls" align="center" class="bookmark-manage-controls" hidden="true">
             <xul:button anonid="close-button" class="bookmark-close-button"
-                        label="&editBookmarkRemove.label;" onmousedown="document.getBindingParent(this).remove()"/>
+                        label="&editBookmarkRemove.label;" oncommand="document.getBindingParent(this).remove()"/>
             <xul:button anonid="folder-button" class="bookmark-folder-button" 
                         label="&editBookmarkMove.label;" oncommand="document.getBindingParent(this).move()"/>
             <xul:spacer flex="1"/>
