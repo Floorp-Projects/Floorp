@@ -1,0 +1,10 @@
+script ../../jsreftest.html?test=js1_5/Object/regress-137000.js
+script ../../jsreftest.html?test=js1_5/Object/regress-192105.js
+script ../../jsreftest.html?test=js1_5/Object/regress-308806-01.js
+script ../../jsreftest.html?test=js1_5/Object/regress-338709.js
+script ../../jsreftest.html?test=js1_5/Object/regress-362872-01.js
+script ../../jsreftest.html?test=js1_5/Object/regress-362872-02.js
+script ../../jsreftest.html?test=js1_5/Object/regress-382503.js
+script ../../jsreftest.html?test=js1_5/Object/regress-382532.js
+script ../../jsreftest.html?test=js1_5/Object/regress-465476.js
+script ../../jsreftest.html?test=js1_5/Object/regress-90596-003.js

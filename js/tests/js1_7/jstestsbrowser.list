@@ -1,0 +1,10 @@
+include block/jstestsbrowser.list
+include decompilation/jstestsbrowser.list
+include expressions/jstestsbrowser.list
+include extensions/jstestsbrowser.list
+include GC/jstestsbrowser.list
+include geniter/jstestsbrowser.list
+include iterable/jstestsbrowser.list
+include lexical/jstestsbrowser.list
+include regexp/jstestsbrowser.list
+include regress/jstestsbrowser.list

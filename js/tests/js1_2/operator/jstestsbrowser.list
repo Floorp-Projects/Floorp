@@ -1,0 +1,2 @@
+skip script ../../jsreftest.html?test=js1_2/operator/equality.js # obsolete test
+script ../../jsreftest.html?test=js1_2/operator/strictEquality.js

@@ -52,6 +52,12 @@ if (typeof gczeal == 'function')
 {
   gczeal(2);
 }
+
 x = 1;
+
+if (typeof gczeal == 'function')
+{
+  gczeal(0);
+}
 
 reportCompare(expect, actual, summary);

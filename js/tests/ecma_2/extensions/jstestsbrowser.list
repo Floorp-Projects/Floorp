@@ -1,0 +1,8 @@
+script ../../jsreftest.html?test=ecma_2/extensions/constructor-001.js
+script ../../jsreftest.html?test=ecma_2/extensions/function-001.js
+script ../../jsreftest.html?test=ecma_2/extensions/instanceof-001.js
+script ../../jsreftest.html?test=ecma_2/extensions/instanceof-002.js
+script ../../jsreftest.html?test=ecma_2/extensions/instanceof-003-n.js
+script ../../jsreftest.html?test=ecma_2/extensions/instanceof-004-n.js
+script ../../jsreftest.html?test=ecma_2/extensions/instanceof-005-n.js
+script ../../jsreftest.html?test=ecma_2/extensions/instanceof-006.js

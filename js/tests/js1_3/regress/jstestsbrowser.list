@@ -1,0 +1,6 @@
+skip script ../../jsreftest.html?test=js1_3/regress/delete-001.js # obsolete test
+skip script ../../jsreftest.html?test=js1_3/regress/function-001-n.js # obsolete test
+script ../../jsreftest.html?test=js1_3/regress/function-002.js
+script ../../jsreftest.html?test=js1_3/regress/in-001.js
+script ../../jsreftest.html?test=js1_3/regress/new-001.js
+script ../../jsreftest.html?test=js1_3/regress/switch-001.js

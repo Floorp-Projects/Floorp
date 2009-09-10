@@ -1,0 +1,2 @@
+script ../../jsreftest.html?test=ecma_2/FunctionObjects/apply-001-n.js
+script ../../jsreftest.html?test=ecma_2/FunctionObjects/call-1.js

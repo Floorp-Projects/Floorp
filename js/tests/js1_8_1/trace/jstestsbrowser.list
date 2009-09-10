@@ -1,0 +1,22 @@
+script ../../jsreftest.html?test=js1_8_1/trace/math-trace-tests.js
+skip-if(isDebugBuild) fails-if(xulRuntime.OS=="Linux"&&XPCOMABI.match(/x86_64/)) script ../../jsreftest.html?test=js1_8_1/trace/regress-451673.js # slow
+random-if(xulRuntime.OS=="Linux"&&!isDebugBuild&&!XPCOMABI.match(/x86_64/)) fails-if(xulRuntime.OS=="Linux"&&isDebugBuild&&XPCOMABI.match(/x86_64/)) script ../../jsreftest.html?test=js1_8_1/trace/regress-451974-01.js
+random-if(xulRuntime.OS=="Linux"&&!isDebugBuild&&!XPCOMABI.match(/x86_64/)) fails-if(xulRuntime.OS=="Linux"&&isDebugBuild&&XPCOMABI.match(/x86_64/)) script ../../jsreftest.html?test=js1_8_1/trace/regress-451974-02.js
+fails script ../../jsreftest.html?test=js1_8_1/trace/regress-452498-01.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-458838.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-462459-01.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-462459-02.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-462459-03.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-462459-04.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-462459-05.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-462459-06.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-462459-07.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-462459-08.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-462459-09.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-462459-10.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-462459-11.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-462459-12.js
+fails-if(xulRuntime.OS=="Linux"&&XPCOMABI.match(/x86_64/)) script ../../jsreftest.html?test=js1_8_1/trace/regress-469927.js
+fails-if(xulRuntime.OS=="Linux"&&XPCOMABI.match(/x86_64/)) script ../../jsreftest.html?test=js1_8_1/trace/regress-470739.js
+script ../../jsreftest.html?test=js1_8_1/trace/regress-471635.js
+fails-if(xulRuntime.OS!="Linux"||(xulRuntime.OS=="Linux"&&!XPCOMABI.match(/x86_64/))) skip-if(xulRuntime.OS=="Linux"&&XPCOMABI.match(/x86_64/)) script ../../jsreftest.html?test=js1_8_1/trace/trace-test.js # uncaught exception: [Exception... "Operation is not supported"  code: "9" nsresult: "0x80530009 (NS_ERROR_DOM_NOT_SUPPORTED_ERR), times out on 64 bit linux

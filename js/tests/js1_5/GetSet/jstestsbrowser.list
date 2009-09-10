@@ -1,0 +1,3 @@
+script ../../jsreftest.html?test=js1_5/GetSet/getset-002.js
+skip script ../../jsreftest.html?test=js1_5/GetSet/regress-353264.js # obsolete test
+script ../../jsreftest.html?test=js1_5/GetSet/regress-375976.js

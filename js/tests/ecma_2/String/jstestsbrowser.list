@@ -1,0 +1,8 @@
+script ../../jsreftest.html?test=ecma_2/String/match-001.js
+script ../../jsreftest.html?test=ecma_2/String/match-002.js
+script ../../jsreftest.html?test=ecma_2/String/match-003.js
+script ../../jsreftest.html?test=ecma_2/String/match-004.js
+skip script ../../jsreftest.html?test=ecma_2/String/replace-001.js # obsolete test
+script ../../jsreftest.html?test=ecma_2/String/split-001.js
+script ../../jsreftest.html?test=ecma_2/String/split-002.js
+script ../../jsreftest.html?test=ecma_2/String/split-003.js

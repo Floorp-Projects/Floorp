@@ -1,0 +1,2 @@
+script ../../jsreftest.html?test=js1_8_1/JSON/regress-458959.js
+script ../../jsreftest.html?test=js1_8_1/JSON/regress-459293.js

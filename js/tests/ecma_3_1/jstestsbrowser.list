@@ -1,0 +1,3 @@
+include extensions/jstestsbrowser.list
+include Object/jstestsbrowser.list
+include RegExp/jstestsbrowser.list
