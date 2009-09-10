@@ -71,8 +71,6 @@ function test()
 
   delete __proto__.__iterator__;
 
-  gczeal(0);
-
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

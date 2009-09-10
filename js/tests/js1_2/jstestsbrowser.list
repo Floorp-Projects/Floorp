@@ -1,9 +1,0 @@
-include Array/jstestsbrowser.list
-include function/jstestsbrowser.list
-include Objects/jstestsbrowser.list
-include operator/jstestsbrowser.list
-include regexp/jstestsbrowser.list
-include regress/jstestsbrowser.list
-include statements/jstestsbrowser.list
-include String/jstestsbrowser.list
-include version120/jstestsbrowser.list

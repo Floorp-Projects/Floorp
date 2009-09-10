@@ -1,4 +1,0 @@
-script ../../jsreftest.html?test=js1_5/LexicalConventions/lexical-001.js
-script ../../jsreftest.html?test=js1_5/LexicalConventions/regress-177314.js
-script ../../jsreftest.html?test=js1_5/LexicalConventions/regress-343675.js
-script ../../jsreftest.html?test=js1_5/LexicalConventions/regress-469940.js

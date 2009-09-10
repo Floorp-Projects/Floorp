@@ -61,11 +61,6 @@ catch(ex)
 {
 }
 
-if (typeof gczeal == 'function')
-{
-    gczeal(0);
-}
-
 TEST(1, expect, actual);
 
 END();

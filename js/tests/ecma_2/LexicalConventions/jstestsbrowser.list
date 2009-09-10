@@ -1,3 +1,0 @@
-script ../../jsreftest.html?test=ecma_2/LexicalConventions/keywords-001.js
-script ../../jsreftest.html?test=ecma_2/LexicalConventions/regexp-literals-001.js
-script ../../jsreftest.html?test=ecma_2/LexicalConventions/regexp-literals-002.js

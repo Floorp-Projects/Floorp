@@ -1,4 +1,0 @@
-script ../../jsreftest.html?test=js1_2/String/charCodeAt.js
-skip script ../../jsreftest.html?test=js1_2/String/concat.js # obsolete test
-script ../../jsreftest.html?test=js1_2/String/match.js
-script ../../jsreftest.html?test=js1_2/String/slice.js

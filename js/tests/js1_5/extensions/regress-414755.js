@@ -62,7 +62,7 @@ function test()
     return (a*2) * ((b*2) * c); 
   }
  
-  if (typeof gczeal == 'function')
+  if (typeof gczeal != 'undefined')
   {
     expect = f();
 
@@ -73,11 +73,6 @@ function test()
   else
   {
     expect = actual = 'Test requires gczeal, skipped.';
-  }
-
-  if (typeof gczeal == 'function')
-  {
-    gczeal(0);
   }
 
   reportCompare(expect, actual, summary);
