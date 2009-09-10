@@ -65,6 +65,8 @@
 #include "jsxdrapi.h"
 #endif
 
+#include "jsscriptinlines.h"
+
 #if JS_HAS_SCRIPT_OBJECT
 
 static const char js_script_exec_str[]    = "Script.prototype.exec";
