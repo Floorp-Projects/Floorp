@@ -2295,7 +2295,8 @@ function checkUpdatesAll() {
     var listener = new UpdateCheckListener();
     gExtensionManager.update(items, items.length,
                              nsIExtensionManager.UPDATE_CHECK_NEWVERSION,
-                             listener);
+                             listener,
+                             nsIExtensionMananger.UPDATE_WHEN_USER_REQUESTED);
   }
   if (gExtensionsView.selectedItem)
     gExtensionsView.selectedItem.focus();
@@ -2666,7 +2667,8 @@ var gExtensionsViewController = {
       var listener = new UpdateCheckListener();
       gExtensionManager.update(items, items.length,
                                nsIExtensionManager.UPDATE_CHECK_NEWVERSION,
-                               listener);
+                               listener,
+                               nsIExtensionManager.UPDATE_WHEN_USER_REQUESTED);
     },
 
     cmd_installUpdate: function (aSelectedItem)

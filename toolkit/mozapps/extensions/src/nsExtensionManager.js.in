@@ -139,6 +139,20 @@ const URI_DOWNLOADS_PROPERTIES        = "chrome://mozapps/locale/downloads/downl
 const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
 const URI_EXTENSION_LIST_DIALOG       = "chrome://mozapps/content/extensions/list.xul";
 
+/**
+ * Constants that internal code can use to indicate the reason for an add-on
+ * update check. external code uses other constants in nsIExtensionManager.idl.
+ */
+const MAX_PUBLIC_UPDATE_WHEN          = 15;
+const UPDATE_WHEN_PERIODIC_UPDATE     = 16;
+const UPDATE_WHEN_ADDON_INSTALLED     = 17;
+
+/**
+ * Bitmask of the different types of update check.
+ */
+const UPDATE_TYPE_COMPATIBILITY       = 32;
+const UPDATE_TYPE_NEWVERSION          = 64;
+
 const INSTALLERROR_SUCCESS               = 0;
 const INSTALLERROR_INVALID_VERSION       = -1;
 const INSTALLERROR_INVALID_GUID          = -2;
@@ -2554,7 +2568,7 @@ ExtensionManager.prototype = {
     updater.checkForUpdates(items, items.length,
                             Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION,
                             new BackgroundUpdateCheckListener(this.datasource),
-                            null, null);
+                            UPDATE_WHEN_PERIODIC_UPDATE);
   },
 
   /**
@@ -3896,7 +3910,10 @@ ExtensionManager.prototype = {
 
         em._callInstallListeners("onCompatibilityCheckStarted", item);
         em._compatibilityCheckCount++;
-        em.update([item], 1, Ci.nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY, this);
+        var updater = new ExtensionItemUpdater(em);
+        updater.checkForUpdates([item], 1,
+                                Ci.nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY,
+                                this, UPDATE_WHEN_ADDON_INSTALLED);
       },
 
       /**
@@ -4893,7 +4910,13 @@ ExtensionManager.prototype = {
    * See nsIExtensionManager.idl
    */
   update: function EM_update(items, itemCount, updateCheckType, listener,
-                             appVersion, platformVersion) {
+                             updateType, appVersion, platformVersion) {
+
+    // Callers through the API are only allowed to use update types declared
+    // in nsIExtensionManager.idl
+    if (updateType > MAX_PUBLIC_UPDATE_WHEN)
+      throw Cr.NS_ERROR_ILLEGAL_VALUE;
+
     for (i = 0; i < itemCount; ++i) {
       var currItem = items[i];
       if (!currItem)
@@ -4905,7 +4928,7 @@ ExtensionManager.prototype = {
 
     var updater = new ExtensionItemUpdater(this);
     updater.checkForUpdates(items, items.length, updateCheckType, listener,
-                            appVersion, platformVersion);
+                            updateType, appVersion, platformVersion);
   },
 
   /**
@@ -5593,6 +5616,7 @@ ExtensionItemUpdater.prototype = {
   _emDS               : null,
   _em                 : null,
   _updateCheckType    : 0,
+  _updateType         : 0,
   _items              : [],
   _listener           : null,
 
@@ -5628,6 +5652,7 @@ ExtensionItemUpdater.prototype = {
                                                                  aItemCount,
                                                                  aUpdateCheckType,
                                                                  aListener,
+                                                                 aUpdateType,
                                                                  aAppVersion,
                                                                  aPlatformVersion) {
     if (aUpdateCheckType == Ci.nsIExtensionManager.UPDATE_NOTIFY_NEWVERSION) {
@@ -5647,6 +5672,14 @@ ExtensionItemUpdater.prototype = {
     this._updateCheckType = aUpdateCheckType;
     this._items = aItems;
     this._responseCount = aItemCount;
+
+    this._updateType = aUpdateType;
+    // All update check types look for compatibility currently
+    this._updateType |= UPDATE_TYPE_COMPATIBILITY;
+    // Only two types also look for new versions
+    if (aUpdateCheckType == Ci.nsIExtensionManager.UPDATE_NOTIFY_NEWVERSION ||
+        aUpdateCheckType == Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION)
+      this._updateType |= UPDATE_TYPE_NEWVERSION;
 
     // This is the number of extensions/themes/etc that we found updates for.
     this._updateCount = 0;
@@ -5772,6 +5805,10 @@ ExtensionItemUpdater.prototype = {
  * appropriate values.
  * @param   aItem
  *          The nsIUpdateItem representing the item
+ * @param   aAppVersion
+ *          The application version to check for updates for
+ * @param   aUpdateType
+ *          The type of the update (see nsIExtensionManager)
  * @param   aURI
  *          The uri to escape
  * @param   aDS
@@ -5779,7 +5816,7 @@ ExtensionItemUpdater.prototype = {
  *
  * @returns the appropriately escaped uri.
  */
-function escapeAddonURI(aItem, aAppVersion, aURI, aDS)
+function escapeAddonURI(aItem, aAppVersion, aUpdateType, aURI, aDS)
 {
   var itemStatus = "userEnabled";
   if (aDS.getItemProperty(aItem.id, "userDisabled") == "true" ||
@@ -5809,6 +5846,8 @@ function escapeAddonURI(aItem, aAppVersion, aURI, aDS)
   aURI = aURI.replace(/%APP_ABI%/g, gXPCOMABI);
   aURI = aURI.replace(/%APP_LOCALE%/g, gLocale);
   aURI = aURI.replace(/%CURRENT_APP_VERSION%/g, gApp.version);
+  if (aUpdateType)
+    aURI = aURI.replace(/%UPDATE_TYPE%/g, aUpdateType);
 
   // Replace custom parameters (names of custom parameters must have at
   // least 3 characters to prevent lookups for something like %D0%C8)
@@ -5904,7 +5943,8 @@ RDFItemUpdater.prototype = {
     if (!dsURI)
       dsURI = gPref.getCharPref(PREF_UPDATE_DEFAULT_URL);
 
-    dsURI = escapeAddonURI(aItem, this._updater._appVersion, dsURI, emDS);
+    dsURI = escapeAddonURI(aItem, this._updater._appVersion,
+                           this._updater._updateType, dsURI, emDS);
 
     // Verify that the URI provided is valid
     try {
@@ -7953,7 +7993,7 @@ ExtensionsDataSource.prototype = {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var uri = stringData(this._inner.GetTarget(item, EM_R("availableUpdateInfo"), true));
     if (uri) {
-      uri = escapeAddonURI(this.getItemForID(id), null, uri, this);
+      uri = escapeAddonURI(this.getItemForID(id), null, null, uri, this);
       return EM_L(uri);
     }
     return null;
