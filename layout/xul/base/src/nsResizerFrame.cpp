@@ -109,7 +109,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
            mTrackingMouseMove = PR_TRUE;
 
            // start capture.
-           nsIPresShell::SetCapturingContent(GetContent(), CAPTURE_IGNOREALLOWED);
+           aEvent->widget->CaptureMouse(PR_TRUE);
+           CaptureMouseEvents(aPresContext,PR_TRUE);
 
            // remember current mouse coordinates.
            mLastPoint = aEvent->refPoint;
@@ -133,7 +134,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
          mTrackingMouseMove = PR_FALSE;
 
          // end capture
-         nsIPresShell::SetCapturingContent(nsnull, 0);
+         aEvent->widget->CaptureMouse(PR_FALSE);
+         CaptureMouseEvents(aPresContext,PR_FALSE);
 
          *aEventStatus = nsEventStatus_eConsumeNoDefault;
          doDefault = PR_FALSE;

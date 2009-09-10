@@ -128,6 +128,10 @@ public:
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent,
       nsIView* aTargetView, nsEventStatus* aStatus);
 
+  NS_IMETHOD  GrabMouseEvents(nsIView *aView, PRBool &aResult);
+
+  NS_IMETHOD  GetMouseEventGrabber(nsIView *&aView);
+
   NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child, nsIView *sibling,
                           PRBool above);
 
@@ -301,10 +305,14 @@ private:
 
 public: // NOT in nsIViewManager, so private to the view module
   nsView* GetRootView() const { return mRootView; }
+  nsView* GetMouseEventGrabber() const {
+    return RootViewManager()->mMouseGrabber;
+  }
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   PRBool IsRootVM() const { return this == RootViewManager(); }
 
-  nsEventStatus HandleEvent(nsView* aView, nsPoint aPoint, nsGUIEvent* aEvent);
+  nsEventStatus HandleEvent(nsView* aView, nsPoint aPoint, nsGUIEvent* aEvent,
+                            PRBool aCaptured);
 
   /**
    * Called to inform the view manager that a view is about to bit-blit.
@@ -382,6 +390,8 @@ private:
   // the root view manager.  Some have accessor functions to enforce
   // this, as noted.
   
+  // Use GrabMouseEvents() and GetMouseEventGrabber() to access mMouseGrabber.
+  nsView            *mMouseGrabber;
   // Use IncrementUpdateCount(), DecrementUpdateCount(), UpdateCount(),
   // ClearUpdateCount() on the root viewmanager to access mUpdateCnt.
   PRInt32           mUpdateCnt;

@@ -103,7 +103,6 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_position.xul \
 		test_menu.xul \
 		test_menu_hide.xul \
-		test_mousecapture.xul \
 		test_focus.xul \
 		test_focus_anons.xul \
 		test_tabindex.xul \

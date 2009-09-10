@@ -39,7 +39,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(FA8D7AF8-C208-4564-A0CD-346C345711F0)]
+[scriptable, uuid(df86b1a8-02c3-47be-a76b-856620f925df)]
 interface nsIDOMNSElement : nsISupports
 {
   /*
@@ -152,20 +152,4 @@ interface nsIDOMNSElement : nsISupports
    * Returns a DOMTokenList object reflecting the class attribute.
    */
   readonly attribute nsIDOMDOMTokenList classList;
-
-  /**
-   * Set this during a mousedown event to grab and retarget all mouse events
-   * to this element until the mouse button is released or releaseCapture is
-   * called. If retargetToElement is true, then all events are targetted at
-   * this element. If false, events can also fire at descendants of this
-   * element.
-   * 
-   */
-  void setCapture([optional] in boolean retargetToElement);
-
-  /**
-   * If this element has captured the mouse, release the capture. If another
-   * element has captured the mouse, this method has no effect.
-   */
-  void releaseCapture();
 };

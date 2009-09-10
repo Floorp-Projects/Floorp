@@ -202,6 +202,14 @@ public:
                                         PRInt8 aOutSideLimit
                                         );
 
+  /**
+   * Find the nearest frame with a mouse capturer. If no
+   * parent has mouse capture this will return null.
+   * @param aFrame Frame drag began in.
+   * @return Nearest capturing frame.
+   */
+  static nsIFrame* GetNearestCapturingFrame(nsIFrame* aFrame);
+
   NS_IMETHOD  CharacterDataChanged(CharacterDataChangeInfo* aInfo);
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -393,6 +401,10 @@ public:
   // if the child does not have a overflow use the child area
   void ConsiderChildOverflow(nsRect&   aOverflowArea,
                              nsIFrame* aChildFrame);
+
+  //Mouse Capturing code used by the frames to tell the view to capture all the following events
+  NS_IMETHOD CaptureMouse(nsPresContext* aPresContext, PRBool aGrabMouseEvents);
+  PRBool   IsMouseCaptured(nsPresContext* aPresContext);
 
   virtual const void* GetStyleDataExternal(nsStyleStructID aSID) const;
 

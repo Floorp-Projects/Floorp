@@ -60,8 +60,8 @@ enum nsRectVisibility {
 }; 
 
 #define NS_IVIEWMANAGER_IID   \
-  { 0xe1f3095c, 0x65cd, 0x46e1, \
-    { 0x9d, 0x70, 0x88, 0xcf, 0x54, 0x19, 0x9d, 0x05 } }
+  { 0x739bbc2b, 0x5c45, 0x40bb, \
+    { 0xb0, 0xbc, 0xe3, 0x1c, 0xe0, 0xf2, 0x19, 0xc2 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -186,6 +186,21 @@ public:
    */
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent,
       nsIView* aViewTarget, nsEventStatus* aStatus) = 0;
+
+  /**
+   * Used to grab/capture all mouse events for a specific view,
+   * irrespective of the cursor position at which the
+   * event occurred.
+   * @param aView view to capture mouse events
+   * @result event handling status
+   */
+  NS_IMETHOD  GrabMouseEvents(nsIView *aView, PRBool& aResult) = 0;
+
+  /**
+   * Get the current view, if any, that's capturing mouse events.
+   * @result view that is capturing mouse events or nsnull
+   */
+  NS_IMETHOD  GetMouseEventGrabber(nsIView *&aView) = 0;
 
   /**
    * Given a parent view, insert another view as its child.

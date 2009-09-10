@@ -2741,9 +2741,19 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     {
       if (static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton &&
           !mNormalLMouseEventInProcess) {
-        // We got a mouseup event while a mousedown event was being processed.
-        // Make sure that the capturing content is cleared.
-        nsIPresShell::SetCapturingContent(nsnull, 0);
+        //Our state is out of whack.  We got a mouseup while still processing
+        //the mousedown.  Kill View-level mouse capture or it'll stay stuck
+        if (aView) {
+          nsIViewManager* viewMan = aView->GetViewManager();
+          if (viewMan) {
+            nsIView* grabbingView;
+            viewMan->GetMouseEventGrabber(grabbingView);
+            if (grabbingView == aView) {
+              PRBool result;
+              viewMan->GrabMouseEvents(nsnull, result);
+            }
+          }
+        }
         break;
       }
 
@@ -2848,9 +2858,17 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         ret =
           CheckForAndDispatchClick(presContext, (nsMouseEvent*)aEvent, aStatus);
       }
-
       nsIPresShell *shell = presContext->GetPresShell();
       if (shell) {
+        nsIViewManager* viewMan = shell->GetViewManager();
+        if (viewMan) {
+          nsIView* grabbingView = nsnull;
+          viewMan->GetMouseEventGrabber(grabbingView);
+          if (grabbingView == aView) {
+            PRBool result;
+            viewMan->GrabMouseEvents(nsnull, result);
+          }
+        }
         nsCOMPtr<nsFrameSelection> frameSelection = shell->FrameSelection();
         frameSelection->SetMouseDownState(PR_FALSE);
       }
