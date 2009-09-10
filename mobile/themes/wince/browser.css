@@ -431,7 +431,9 @@ autocompleteresult.allbookmarks > .autocomplete-item-tags:after {
 }
 
 #tabs {
-  -moz-appearance: none;
+   display: block;
+  -moz-column-width: 128px;
+  -moz-column-gap: 0;
   -moz-user-focus: none;
   margin: 0;
   padding: 0;
@@ -443,27 +445,17 @@ autocompleteresult.allbookmarks > .autocomplete-item-tags:after {
   -moz-box-pack: start;
 }
 
-richlistitem[type="documenttab"] {
-  -moz-appearance: none;
-  padding: 0;
-  border: none;
-}
-
-richlistitem[type="documenttab"] .documenttab-canvas {
+box[type="documenttab"] .documenttab-canvas {
   /* keep the unselected thumbnails aligned with the selected one */
   border: 1.0mm solid transparent;
 }
 
-richlistitem[type="documenttab"][selected="true"] {
-  background-color: transparent;
-}
-
-richlistitem[type="documenttab"][selected="true"] .documenttab-canvas {
+box[type="documenttab"][selected="true"] .documenttab-canvas {
   border: 1.0mm solid #262629;
   -moz-border-radius: 4px;
 }
 
-vbox:first-child > richlistitem[type="documenttab"]:only-child .documenttab-close {
+box[type="documenttab"]:only-child .documenttab-close {
   display: none;
 }
 

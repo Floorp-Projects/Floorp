@@ -659,10 +659,6 @@ var Browser = {
 
     tab.destroy();
     this._tabs.splice(tabIndex, 1);
-
-    // redraw the tabs
-    for (let t = tabIndex; t < this._tabs.length; t++)
-      this._tabs[t].updateThumbnail();
   },
 
   get selectedTab() {
@@ -692,7 +688,7 @@ var Browser = {
     bv.setBrowser(tab.browser, tab.browserViewportState, false);
     bv.forceContainerResize();
 
-    document.getElementById("tabs").selectedItem = tab.chromeTab;
+    document.getElementById("tabs").selectedTab = tab.chromeTab;
 
     if (!firstTab) {
       let webProgress = this.selectedBrowser.webProgress;
@@ -2428,13 +2424,10 @@ Tab.prototype = {
   },
 
   create: function() {
-    this._chromeTab = document.createElement("richlistitem");
-    this._chromeTab.setAttribute("type", "documenttab");
-    document.getElementById("tabs").addTab(this._chromeTab);
-
     // Initialize a viewport state for BrowserView
     this._browserViewportState = BrowserView.Util.createBrowserViewportState();
 
+    this._chromeTab = document.getElementById("tabs").addTab();
     this._createBrowser();
   },
 

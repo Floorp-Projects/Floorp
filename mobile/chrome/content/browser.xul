@@ -186,8 +186,7 @@
           <spacer class="sidebar-spacer"/>
           <!-- Left toolbar -->
           <vbox id="tabs-container" class="panel-dark" flex="1">
-            <richlistbox id="tabs" onselect="BrowserUI.selectTab(this.selectedItem);" onclick="BrowserUI.hideTabs();" onclosetab="BrowserUI.closeTab(this)"/>
-            <toolbarspring/>
+            <vbox id="tabs" onselect="BrowserUI.selectTab(this);" onclosetab="BrowserUI.closeTab(this)" flex="1"/>
             <hbox id="tabs-controls">
               <toolbarbutton id="newtab-button" class="button-image" command="cmd_newTab"/>
             </hbox>

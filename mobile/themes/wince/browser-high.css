@@ -264,7 +264,7 @@ autocompleteresult.allbookmarks > .autocomplete-item-image {
   list-style-image: url(images/bookmarks-30.png);
 }
 
-.documenttab-close {
+box[type="documenttab"] .documenttab-close {
   width: 28px;
   height: 30px;
   list-style-image: url("chrome://browser/skin/images/close-30.png");
