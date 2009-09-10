@@ -1139,7 +1139,7 @@ nsHTMLFormElement::SubmitSubmission(nsIFormSubmission* aFormSubmission)
   {
     nsAutoPopupStatePusher popupStatePusher(mSubmitPopupState);
 
-    nsAutoHandlingUserInputStatePusher userInpStatePusher(mSubmitInitiatedFromUserInput);
+    nsAutoHandlingUserInputStatePusher userInpStatePusher(mSubmitInitiatedFromUserInput, PR_FALSE);
 
     rv = aFormSubmission->SubmitTo(actionURI, target, this, linkHandler,
                                    getter_AddRefs(docShell),
