@@ -62,6 +62,11 @@ function test()
   if (uneval(a).length == 0)
     throw "Unexpected result";
  
+  if (typeof gczeal == 'function')
+  {
+    gczeal(0);
+  }
+
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

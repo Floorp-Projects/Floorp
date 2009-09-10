@@ -1,0 +1,3 @@
+script ../../jsreftest.html?test=ecma_3/FunExpr/fe-001-n.js
+script ../../jsreftest.html?test=ecma_3/FunExpr/fe-001.js
+script ../../jsreftest.html?test=ecma_3/FunExpr/fe-002.js

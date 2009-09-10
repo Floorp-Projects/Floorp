@@ -58,7 +58,7 @@ function test()
     return (-a) * ((-b) * (-c));
   }
 
-  if (typeof gczeal != 'undefined')
+  if (typeof gczeal == 'function')
   {
     expect = f(1.5, 1.25, 1.125);
     gczeal(2);
@@ -67,6 +67,11 @@ function test()
   else
   {
     expect = actual = 'Test requires gczeal, skipped.';
+  }
+
+  if (typeof gczeal == 'function')
+  {
+    gczeal(0);
   }
 
   reportCompare(expect, actual, summary);

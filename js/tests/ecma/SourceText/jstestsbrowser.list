@@ -1,0 +1,2 @@
+script ../../jsreftest.html?test=ecma/SourceText/6-1.js
+script ../../jsreftest.html?test=ecma/SourceText/6-2.js

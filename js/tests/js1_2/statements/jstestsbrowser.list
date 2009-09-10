@@ -1,0 +1,5 @@
+script ../../jsreftest.html?test=js1_2/statements/break.js
+script ../../jsreftest.html?test=js1_2/statements/continue.js
+script ../../jsreftest.html?test=js1_2/statements/do_while.js
+script ../../jsreftest.html?test=js1_2/statements/switch.js
+script ../../jsreftest.html?test=js1_2/statements/switch2.js

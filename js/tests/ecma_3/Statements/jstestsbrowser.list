@@ -1,0 +1,16 @@
+script ../../jsreftest.html?test=ecma_3/Statements/12.10-01.js
+script ../../jsreftest.html?test=ecma_3/Statements/12.6.3.js
+skip script ../../jsreftest.html?test=ecma_3/Statements/regress-121744.js # obsolete test
+script ../../jsreftest.html?test=ecma_3/Statements/regress-131348.js
+script ../../jsreftest.html?test=ecma_3/Statements/regress-157509.js
+script ../../jsreftest.html?test=ecma_3/Statements/regress-194364.js
+script ../../jsreftest.html?test=ecma_3/Statements/regress-226517.js
+script ../../jsreftest.html?test=ecma_3/Statements/regress-302439.js
+script ../../jsreftest.html?test=ecma_3/Statements/regress-324650.js
+script ../../jsreftest.html?test=ecma_3/Statements/regress-444979.js
+script ../../jsreftest.html?test=ecma_3/Statements/regress-74474-001.js
+script ../../jsreftest.html?test=ecma_3/Statements/regress-74474-002.js
+script ../../jsreftest.html?test=ecma_3/Statements/regress-74474-003.js
+script ../../jsreftest.html?test=ecma_3/Statements/regress-83532-001.js
+script ../../jsreftest.html?test=ecma_3/Statements/regress-83532-002.js
+script ../../jsreftest.html?test=ecma_3/Statements/switch-001.js

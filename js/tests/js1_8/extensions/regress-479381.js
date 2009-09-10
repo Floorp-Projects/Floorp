@@ -71,6 +71,8 @@ function test()
     }
 
     print(scatter([f, f, f, f]));
+
+    gczeal(0);
   }
 
   reportCompare(expect, actual, summary);

@@ -1,0 +1,7 @@
+script ../../jsreftest.html?test=js1_5/Date/regress-188211.js
+script ../../jsreftest.html?test=js1_5/Date/regress-301738-01.js
+script ../../jsreftest.html?test=js1_5/Date/regress-301738-02.js
+script ../../jsreftest.html?test=js1_5/Date/regress-309925-01.js
+script ../../jsreftest.html?test=js1_5/Date/regress-309925-02.js
+script ../../jsreftest.html?test=js1_5/Date/regress-346027.js
+script ../../jsreftest.html?test=js1_5/Date/regress-346363.js

@@ -1,0 +1,12 @@
+script ../../jsreftest.html?test=js1_8_1/extensions/regress-352281.js
+script ../../jsreftest.html?test=js1_8_1/extensions/regress-353214-02.js
+script ../../jsreftest.html?test=js1_8_1/extensions/regress-437288-01.js
+script ../../jsreftest.html?test=js1_8_1/extensions/regress-452498-162.js
+script ../../jsreftest.html?test=js1_8_1/extensions/regress-452498-193.js
+script ../../jsreftest.html?test=js1_8_1/extensions/regress-452498-196.js
+script ../../jsreftest.html?test=js1_8_1/extensions/regress-452498-224.js
+script ../../jsreftest.html?test=js1_8_1/extensions/regress-466905-04.js
+script ../../jsreftest.html?test=js1_8_1/extensions/regress-466905-05.js
+script ../../jsreftest.html?test=js1_8_1/extensions/regress-477158.js
+script ../../jsreftest.html?test=js1_8_1/extensions/regress-477187.js
+fails script ../../jsreftest.html?test=js1_8_1/extensions/strict-warning.js # bug 461269 does not follow required conventions

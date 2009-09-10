@@ -1,0 +1,3 @@
+script getset-002.js
+skip script regress-353264.js # obsolete test
+script regress-375976.js

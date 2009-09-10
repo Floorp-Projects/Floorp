@@ -1,0 +1,6 @@
+include decompilation/jstestsbrowser.list
+include extensions/jstestsbrowser.list
+include JSON/jstestsbrowser.list
+include regress/jstestsbrowser.list
+include String/jstestsbrowser.list
+include trace/jstestsbrowser.list

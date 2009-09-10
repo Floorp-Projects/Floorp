@@ -1,0 +1,14 @@
+script ../../jsreftest.html?test=ecma_2/RegExp/constructor-001.js
+skip script ../../jsreftest.html?test=ecma_2/RegExp/exec-001.js # obsolete test
+script ../../jsreftest.html?test=ecma_2/RegExp/exec-002.js
+script ../../jsreftest.html?test=ecma_2/RegExp/function-001.js
+script ../../jsreftest.html?test=ecma_2/RegExp/hex-001.js
+script ../../jsreftest.html?test=ecma_2/RegExp/multiline-001.js
+script ../../jsreftest.html?test=ecma_2/RegExp/octal-001.js
+script ../../jsreftest.html?test=ecma_2/RegExp/octal-002.js
+script ../../jsreftest.html?test=ecma_2/RegExp/octal-003.js
+script ../../jsreftest.html?test=ecma_2/RegExp/properties-001.js
+script ../../jsreftest.html?test=ecma_2/RegExp/properties-002.js
+script ../../jsreftest.html?test=ecma_2/RegExp/regexp-enumerate-001.js
+script ../../jsreftest.html?test=ecma_2/RegExp/regress-001.js
+script ../../jsreftest.html?test=ecma_2/RegExp/unicode-001.js

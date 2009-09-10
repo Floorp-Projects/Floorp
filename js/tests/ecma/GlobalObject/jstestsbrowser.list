@@ -1,0 +1,15 @@
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1-1-n.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1-2-n.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1.1.1.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1.1.2.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1.2.1-2.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1.2.2-1.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1.2.2-2.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1.2.3-1.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1.2.3-2.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1.2.4.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1.2.5-1.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1.2.5-2.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1.2.5-3.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1.2.6.js
+script ../../jsreftest.html?test=ecma/GlobalObject/15.1.2.7.js

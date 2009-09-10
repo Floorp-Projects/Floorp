@@ -1,0 +1,9 @@
+script ../../jsreftest.html?test=ecma_3/Unicode/regress-352044-01.js
+script ../../jsreftest.html?test=ecma_3/Unicode/regress-352044-02-n.js
+script ../../jsreftest.html?test=ecma_3/Unicode/uc-001-n.js
+skip script ../../jsreftest.html?test=ecma_3/Unicode/uc-001.js # obsolete test
+script ../../jsreftest.html?test=ecma_3/Unicode/uc-002-n.js
+script ../../jsreftest.html?test=ecma_3/Unicode/uc-002.js
+script ../../jsreftest.html?test=ecma_3/Unicode/uc-003.js
+script ../../jsreftest.html?test=ecma_3/Unicode/uc-004.js
+script ../../jsreftest.html?test=ecma_3/Unicode/uc-005.js
