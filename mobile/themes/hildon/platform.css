@@ -355,3 +355,12 @@ colorpicker > panel {
 colorpicker > vbox {
   background-color: #36373b;
 }
+
+/* textbox ----------------------------------------------------------------- */
+.textbox-search-icon {
+  list-style-image: url("chrome://browser/skin/images/search-glass-30.png");
+}
+
+.textbox-search-clear {
+  list-style-image: url("chrome://browser/skin/images/search-clear-30.png");
+}

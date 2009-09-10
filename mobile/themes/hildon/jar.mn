@@ -86,6 +86,8 @@ chrome.jar:
   images/check-30.png                  (images/check-30.png)
   images/fullscreen-close-40.png       (images/fullscreen-close-40.png)
   images/fullscreen-up-40.png          (images/fullscreen-up-40.png)
+  images/search-glass-30.png           (images/search-glass-30.png)
+  images/search-clear-30.png           (images/search-clear-30.png)
   images/section-expanded-16.png       (images/section-expanded-16.png)
   images/section-collapsed-16.png      (images/section-collapsed-16.png)
   images/geo-16.png                    (images/geo-16.png)
