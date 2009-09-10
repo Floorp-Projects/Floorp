@@ -391,24 +391,23 @@ SyncEngine.prototype = {
     newitems.sort = "index";
 
     let count = {applied: 0, reconciled: 0};
-    this._lastSyncTmp = 0;
 
     newitems.recordHandler = Utils.bind2(this, function(item) {
       try {
         item.decrypt(ID.get("WeaveCryptoID"));
         if (this._reconcile(item)) {
           count.applied++;
-          this._applyIncoming(item);
+          this._tracker.ignoreAll = true;
+          this._store.applyIncoming(item);
         } else {
           count.reconciled++;
           this._log.trace("Skipping reconciled incoming item " + item.id);
-          if (this._lastSyncTmp < item.modified)
-            this._lastSyncTmp = item.modified;
         }
-      } catch (e) {
-	this._log.error("Could not process incoming record: " +
-			Utils.exceptionStr(e));
       }
+      catch(ex) {
+        this._log.warn("Error processing record: " + Utils.exceptionStr(e));
+      }
+      this._tracker.ignoreAll = false;
       Sync.sleep(0);
     });
 
@@ -416,8 +415,8 @@ SyncEngine.prototype = {
     if (!resp.success)
       throw resp;
 
-    if (this.lastSync < this._lastSyncTmp)
-        this.lastSync = this._lastSyncTmp;
+    if (this.lastSync < this.lastModified)
+      this.lastSync = this.lastModified;
 
     this._log.info("Applied " + count.applied + " records, reconciled " +
                     count.reconciled + " records");
@@ -523,20 +522,6 @@ SyncEngine.prototype = {
 
     // Apply the incoming item (now that the dupe is the right id)
     return true;
-  },
-
-  // Apply incoming records
-  _applyIncoming: function SyncEngine__applyIncoming(item) {
-    try {
-      this._tracker.ignoreAll = true;
-      this._store.applyIncoming(item);
-      if (this._lastSyncTmp < item.modified)
-        this._lastSyncTmp = item.modified;
-    } catch (e) {
-      this._log.warn("Error while applying record: " + Utils.stackTrace(e));
-    } finally {
-      this._tracker.ignoreAll = false;
-    }
   },
 
   // Upload outgoing records
