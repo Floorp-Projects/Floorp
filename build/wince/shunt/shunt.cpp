@@ -120,18 +120,30 @@ unsigned short * _wgetcwd(unsigned short * dir, unsigned long size)
   if (tmp && tmp[0]) {
     if (wcslen(tmp) > size)
       return 0;
-    if (!dir)
-      dir = (unsigned short*)malloc(sizeof(unsigned short) * (wcslen(tmp) + 1));
+    if (!dir) {
+      dir = (unsigned short*)malloc(sizeof(unsigned short) * (wcslen(tmp) + 2));
+      if (!dir)
+        return 0;
+    }
     wcscpy(dir, tmp);
-    return dir;
-  }
-  unsigned long i;
-  if (!dir)
+  } else {
+    unsigned long i;
+    if (!dir) {
       dir = (unsigned short*)malloc(sizeof(unsigned short) * (MAX_PATH + 1));
-  GetModuleFileName(GetModuleHandle (NULL), dir, MAX_PATH);
-  for (i = _tcslen(dir); i && dir[i] != TEXT('\\'); i--) {}
-  dir[i + 1] = TCHAR('\0');
-  SetEnvironmentVariableW(L"CWD", dir);
+      if (!dir)
+        return 0;
+    }
+    if (!GetModuleFileNameW(GetModuleHandle (NULL), dir, MAX_PATH))
+      return 0;
+    for (i = wcslen(dir); i && dir[i] != '\\'; i--) {}
+    dir[i + 1] = '\0';
+    SetEnvironmentVariableW(L"CWD", dir);
+  }
+  size_t len = wcslen(dir);
+  if (dir[len - 1] != '\\' && (len + 2) < size) {
+    dir[len] = '\\';
+    dir[len + 1] = '\0';
+  }
   return dir;
 }
 
