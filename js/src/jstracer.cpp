@@ -3676,7 +3676,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
 
     Assembler *assm = tm->assembler;
     ::compile(assm, fragment, *tm->allocator verbose_only(, tm->labels));
-    if (assm->error() == nanojit::OutOMem)
+    if (tm->allocator->outOfMemory())
         return;
 
     if (assm->error() != nanojit::None) {
@@ -4566,8 +4566,8 @@ DeleteRecorder(JSContext* cx)
     tm->recorder = NULL;
 
     /* If we ran out of memory, flush the code cache. */
-    Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-    if (assm->error() == OutOMem || js_OverfullJITCache(tm)) {
+    if (tm->allocator->outOfMemory() ||
+        js_OverfullJITCache(tm)) {
         ResetJIT(cx, FR_OOM);
         return false;
     }
