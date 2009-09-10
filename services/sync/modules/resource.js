@@ -271,14 +271,8 @@ Resource.prototype = {
 
       if (success) {
         this._log.debug(action + " success: " + status);
-        switch (action) {
-          case "GET":
-          case "POST":
-            if (this._log.level <= Log4Moz.Level.Trace)
-              this._log.trace(action + " Body: " + this._data);
-            this.filterDownload();
-            break;
-        }
+        if (this._log.level <= Log4Moz.Level.Trace)
+          this._log.trace(action + " Body: " + this._data);
       }
       else
         this._log.debug(action + " fail: " + status + " " + this._data);
@@ -292,6 +286,10 @@ Resource.prototype = {
     ret.headers = headers;
     ret.status = status;
     ret.success = success;
+
+    // Make a lazy getter to convert the json response into an object
+    Utils.lazy2(ret, "obj", function() JSON.parse(ret));
+
     return ret;
   },
 
