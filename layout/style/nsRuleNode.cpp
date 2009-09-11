@@ -1874,17 +1874,14 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
 
     // If the dependent bit is set on a rule node for this struct, that
     // means its rule won't have any information to add, so skip it.
-    // XXXldb I don't understand why we need to check |detail| here, but
-    // we do.
-    if (detail == eRuleNone)
-      while (ruleNode->mDependentBits & bit) {
-        NS_ASSERTION(ruleNode->mStyleData.GetStyleData(aSID) == nsnull,
-                     "dependent bit with cached data makes no sense");
-        // Climb up to the next rule in the tree (a less specific rule).
-        rootNode = ruleNode;
-        ruleNode = ruleNode->mParent;
-        NS_ASSERTION(!(ruleNode->mNoneBits & bit), "can't have both bits set");
-      }
+    while (ruleNode->mDependentBits & bit) {
+      NS_ASSERTION(ruleNode->mStyleData.GetStyleData(aSID) == nsnull,
+                   "dependent bit with cached data makes no sense");
+      // Climb up to the next rule in the tree (a less specific rule).
+      rootNode = ruleNode;
+      ruleNode = ruleNode->mParent;
+      NS_ASSERTION(!(ruleNode->mNoneBits & bit), "can't have both bits set");
+    }
 
     // Check for cached data after the inner loop above -- otherwise
     // we'll miss it.
