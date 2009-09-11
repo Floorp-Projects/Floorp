@@ -129,6 +129,7 @@ PluginInstanceParent::PStreamNotifyDestructor(PStreamNotifyParent* notifyData,
                                               const NPReason& reason)
 {
     delete notifyData;
+    return NS_OK;
 }
 
 NPError
