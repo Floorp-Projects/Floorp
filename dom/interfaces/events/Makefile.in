@@ -81,6 +81,7 @@ XPIDLSRCS =					\
 	nsIDOMSimpleGestureEvent.idl		\
 	nsIDOMNSMouseEvent.idl			\
 	nsIDOMOrientationEvent.idl              \
+	nsIDOMScrollAreaEvent.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
