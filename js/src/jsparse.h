@@ -551,12 +551,11 @@ struct JSParseNode {
  *               pn = allocate a PN_NAME JSParseNode;
  *           } else {                                       // defining
  *               dn = lookup x in tc->lexdeps;
- *               if (dn) {                                  // use before def
+ *               if (dn)                                    // use before def
  *                   remove x from tc->lexdeps;
- *               } else {                                   // def before use
+ *               else                                       // def before use
  *                   dn = allocate a PN_NAME JSDefinition;
- *                   map x to dn via tc->decls;
- *               }
+ *               map x to dn via tc->decls;
  *               pn = dn;
  *           }
  *           insert pn into its parent TOK_VAR list;
