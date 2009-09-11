@@ -380,7 +380,8 @@ CSS2PropertiesTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // nsIDOMCSS2Properties
 // nsIDOMNSCSS2Properties
 
-#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_, stylestruct_, stylestructoffset_, animtype_) \
+#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_,   \
+                 kwtable_, stylestruct_, stylestructoffset_, animtype_)      \
   NS_IMETHODIMP                                                              \
   CSS2PropertiesTearoff::Get##method_(nsAString& aValue)                     \
   {                                                                          \
