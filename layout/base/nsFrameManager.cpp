@@ -1200,12 +1200,11 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     }
     
     // do primary context
-    // XXXbz newContext should just be an nsRefPtr
-    nsStyleContext* newContext = nsnull;
+    nsRefPtr<nsStyleContext> newContext;
     if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
       NS_ASSERTION(localContent,
                    "non pseudo-element frame without content node");
-      newContext = styleSet->ResolveStyleForNonElement(parentContext).get();
+      newContext = styleSet->ResolveStyleForNonElement(parentContext);
     }
     else if (pseudoTag) {
       // XXXldb This choice of pseudoContent seems incorrect for anon
@@ -1219,7 +1218,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
         // XXX what other pseudos do we need to treat like this?
         newContext = styleSet->ProbePseudoStyleFor(pseudoContent,
                                                    pseudoTag,
-                                                   parentContext).get();
+                                                   parentContext);
         if (!newContext) {
           // This pseudo should no longer exist; gotta reframe
           NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
@@ -1227,7 +1226,6 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                     nsChangeHint_ReconstructFrame);
           // We're reframing anyway; just keep the same context
           newContext = oldContext;
-          newContext->AddRef();
         }
       } else {
         if (pseudoTag == nsCSSPseudoElements::firstLetter) {
@@ -1240,13 +1238,13 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
         }
         newContext = styleSet->ResolvePseudoStyleFor(pseudoContent,
                                                      pseudoTag,
-                                                     parentContext).get();
+                                                     parentContext);
       }
     }
     else {
       NS_ASSERTION(localContent,
                    "non pseudo-element frame without content node");
-      newContext = styleSet->ResolveStyleFor(content, parentContext).get();
+      newContext = styleSet->ResolveStyleFor(content, parentContext);
     }
     NS_ASSERTION(newContext, "failed to get new style context");
     if (newContext) {
@@ -1257,9 +1255,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
           // we can use FindChildWithRules to keep a lot of the old
           // style contexts around.  However, we need to start from the
           // same root.
-          newContext->Release();
           newContext = oldContext;
-          newContext->AddRef();
         }
       }
 
@@ -1276,8 +1272,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     }
     else {
       NS_ERROR("resolve style context failed");
-      newContext = oldContext;  // new context failed, recover... (take ref)
-      oldContext = nsnull;
+      newContext = oldContext;  // new context failed, recover...
     }
 
     // do additional contexts 
@@ -1286,14 +1281,14 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       nsStyleContext* oldExtraContext = nsnull;
       oldExtraContext = aFrame->GetAdditionalStyleContext(++contextIndex);
       if (oldExtraContext) {
-        nsStyleContext* newExtraContext = nsnull;
+        nsRefPtr<nsStyleContext> newExtraContext;
         nsIAtom* const extraPseudoTag = oldExtraContext->GetPseudoType();
         NS_ASSERTION(extraPseudoTag &&
                      extraPseudoTag != nsCSSAnonBoxes::mozNonElement,
                      "extra style context is not pseudo element");
         newExtraContext = styleSet->ResolvePseudoStyleFor(content,
                                                           extraPseudoTag,
-                                                          newContext).get();
+                                                          newContext);
         if (newExtraContext) {
           if (oldExtraContext != newExtraContext) {
             aMinChange = CaptureChange(oldExtraContext, newExtraContext,
@@ -1303,7 +1298,6 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
               aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
             }
           }
-          newExtraContext->Release();
         }
       }
       else {
@@ -1504,7 +1498,6 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       // XXX need to do overflow frames???
     }
 
-    newContext->Release();
   }
 
   return aMinChange;
