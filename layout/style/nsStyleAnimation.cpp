@@ -340,6 +340,10 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         StyleDataAtOffset(styleStruct, ssOffset))->
           Get(animType - eStyleAnimType_Sides_Top);
       return PR_TRUE;
+    case eStyleAnimType_nscoord:
+      aComputedValue.SetCoordValue(*static_cast<const nscoord*>(
+        StyleDataAtOffset(styleStruct, ssOffset)));
+      return PR_TRUE;
     case eStyleAnimType_None:
       NS_NOTREACHED("shouldn't use on non-animatable properties");
   }
@@ -385,6 +389,20 @@ nsStyleAnimation::StoreComputedValue(nsCSSProperty aProperty,
        }
       return PR_TRUE;
     }
+    case eStyleAnimType_nscoord:
+      *static_cast<nscoord*>(StyleDataAtOffset(aStyleStruct, ssOffset)) =
+        aComputedValue.GetCoordValue();
+      if (aProperty == eCSSProperty_font) {
+        nsStyleFont *font = static_cast<nsStyleFont*>(aStyleStruct);
+        if (!aPresContext->IsChrome()) {
+          nscoord minimumFontSize =
+            aPresContext->GetCachedIntPref(kPresContext_MinimumFontSize);
+          font->mFont.size = PR_MAX(font->mSize, minimumFontSize);
+        } else {
+          font->mFont.size = font->mSize;
+        }
+      }
+      return PR_TRUE;
     case eStyleAnimType_None:
       NS_NOTREACHED("shouldn't use on non-animatable properties");
   }
