@@ -210,6 +210,8 @@ class ActorType(IPDLType):
     def fullname(self):
         return self.protocol.fullname()
 
+    def isUnionType(self): return False
+
 class UnionType(IPDLType):
     def __init__(self, qname, components):
         self.qname = qname
