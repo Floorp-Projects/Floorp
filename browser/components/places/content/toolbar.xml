@@ -305,6 +305,10 @@
               break;
 
             case "overflow":
+              // Ignore purely vertical overflows.
+              if (aEvent.detail == 0)
+                return;
+
               // Attach the popup binding to the chevron popup if it has not yet
               // been initialized.
               if (!this._chevronPopup.hasAttribute("type")) {
@@ -315,6 +319,10 @@
               break;
 
             case "underflow":
+              // Ignore purely vertical underflows.
+              if (aEvent.detail == 0)
+                return;
+
               this._chevron.collapsed = true;
               break;
           }
