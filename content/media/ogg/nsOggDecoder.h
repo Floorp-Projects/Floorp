@@ -519,9 +519,6 @@ private:
   // only.
   PRInt64 mDuration;
 
-  // True if we are registered with the observer service for shutdown.
-  PRPackedBool mNotifyOnShutdown;
-
   // True if the media resource is seekable (server supports byte range
   // requests).
   PRPackedBool mSeekable;
