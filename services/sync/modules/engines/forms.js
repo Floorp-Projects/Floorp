@@ -72,7 +72,7 @@ FormEngine.prototype = {
     this._store.clearFormCache();
     
     // Only leave 1 month's worth of form history
-    this._delete.older = this.lastSync - 2592000;
+    this._delete.older = this.lastSync - 2592000; // 60*60*24*30
     SyncEngine.prototype._syncFinish.call(this);
   },
 
