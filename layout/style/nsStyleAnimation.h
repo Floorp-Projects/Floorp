@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Daniel Holbert <dholbert@mozilla.com>, Mozilla Corporation
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,6 +48,7 @@
 
 class nsCSSDeclaration;
 class nsIContent;
+class nsPresContext;
 class nsStyleCoord;
 class nsStyleContext;
 
@@ -150,6 +152,21 @@ public:
   static PRBool ExtractComputedValue(nsCSSProperty aProperty,
                                      nsStyleContext* aStyleContext,
                                      nsStyleCoord& aComputedValue);
+
+  /**
+   * Sets the computed value for the given property in the given style
+   * struct.
+   *
+   * @param aProperty      The property whose value we're setting.
+   * @param aPresContext   The pres context associated with aStyleStruct.
+   * @param aStyleStruct   The style struct in which to set the value.
+   * @param aComputedValue The computed value.
+   * @return  PR_TRUE on success, PR_FALSE on failure.
+   */
+  static PRBool StoreComputedValue(nsCSSProperty aProperty,
+                                   nsPresContext* aPresContext,
+                                   void* aStyleStruct,
+                                   const nsStyleCoord& aComputedValue);
 };
 
 #endif

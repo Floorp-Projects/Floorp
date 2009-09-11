@@ -1119,8 +1119,8 @@ CSS_PROP_POSITION(
     mOffset.mBottom,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePosition, mOffset),
+    eStyleAnimType_Sides_Bottom)
 CSS_PROP_BORDER(
     -moz-box-shadow,
     box_shadow,
@@ -1210,8 +1210,8 @@ CSS_PROP_COLUMN(
     mColumnWidth,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleColumn, mColumnWidth),
+    eStyleAnimType_Coord)
 CSS_PROP_COLUMN(
     -moz-column-gap,
     _moz_column_gap,
@@ -1221,8 +1221,8 @@ CSS_PROP_COLUMN(
     mColumnGap,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleColumn, mColumnGap),
+    eStyleAnimType_Coord)
 CSS_PROP_SHORTHAND(
     -moz-column-rule,
     _moz_column_rule,
@@ -1494,8 +1494,8 @@ CSS_PROP_POSITION(
     mHeight,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePosition, mHeight),
+    eStyleAnimType_Coord)
 CSS_PROP_LIST(
     -moz-image-region,
     image_region,
@@ -1527,8 +1527,8 @@ CSS_PROP_POSITION(
     mOffset.mLeft,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePosition, mOffset),
+    eStyleAnimType_Sides_Left)
 CSS_PROP_TEXT(
     letter-spacing,
     letter_spacing,
@@ -1538,8 +1538,8 @@ CSS_PROP_TEXT(
     mLetterSpacing,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleText, mLetterSpacing),
+    eStyleAnimType_Coord)
 CSS_PROP_TEXT(
     line-height,
     line_height,
@@ -1549,8 +1549,8 @@ CSS_PROP_TEXT(
     mLineHeight,
     eCSSType_Value,
     kLineHeightKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleText, mLineHeight),
+    eStyleAnimType_Coord)
 CSS_PROP_SHORTHAND(
     list-style,
     list_style,
@@ -1603,8 +1603,8 @@ CSS_PROP_MARGIN(
     mMargin.mBottom,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleMargin, mMargin),
+    eStyleAnimType_Sides_Bottom)
 CSS_PROP_SHORTHAND(
     -moz-margin-end,
     margin_end,
@@ -1638,8 +1638,8 @@ CSS_PROP_MARGIN(
     mMargin.mLeft,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleMargin, mMargin),
+    eStyleAnimType_Sides_Left)
 CSS_PROP_MARGIN(
     margin-left-ltr-source,
     margin_left_ltr_source,
@@ -1680,8 +1680,8 @@ CSS_PROP_MARGIN(
     mMargin.mRight,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleMargin, mMargin),
+    eStyleAnimType_Sides_Right)
 CSS_PROP_MARGIN(
     margin-right-ltr-source,
     margin_right_ltr_source,
@@ -1734,8 +1734,8 @@ CSS_PROP_MARGIN(
     mMargin.mTop,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleMargin, mMargin),
+    eStyleAnimType_Sides_Top)
 CSS_PROP_CONTENT(
     marker-offset,
     marker_offset,
@@ -1745,8 +1745,8 @@ CSS_PROP_CONTENT(
     mMarkerOffset,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleContent, mMarkerOffset),
+    eStyleAnimType_Coord)
 CSS_PROP_BACKENDONLY(
     marks,
     marks,
@@ -1765,8 +1765,8 @@ CSS_PROP_POSITION(
     mMaxHeight,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePosition, mMaxHeight),
+    eStyleAnimType_Coord)
 CSS_PROP_POSITION(
     max-width,
     max_width,
@@ -1776,8 +1776,8 @@ CSS_PROP_POSITION(
     mMaxWidth,
     eCSSType_Value,
     kWidthKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePosition, mMaxWidth),
+    eStyleAnimType_Coord)
 CSS_PROP_POSITION(
     min-height,
     min_height,
@@ -1787,8 +1787,8 @@ CSS_PROP_POSITION(
     mMinHeight,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePosition, mMinHeight),
+    eStyleAnimType_Coord)
 CSS_PROP_POSITION(
     min-width,
     min_width,
@@ -1798,8 +1798,8 @@ CSS_PROP_POSITION(
     mMinWidth,
     eCSSType_Value,
     kWidthKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePosition, mMinWidth),
+    eStyleAnimType_Coord)
 CSS_PROP_DISPLAY(
     opacity,
     opacity,
@@ -1856,8 +1856,8 @@ CSS_PROP_OUTLINE(
     mOutlineWidth,
     eCSSType_Value,
     kBorderWidthKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleOutline, mOutlineWidth),
+    eStyleAnimType_Coord)
 CSS_PROP_OUTLINE(
     outline-offset,
     outline_offset,
@@ -1910,8 +1910,8 @@ CSS_PROP_PADDING(
     mPadding.mBottom,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePadding, mPadding),
+    eStyleAnimType_Sides_Bottom)
 CSS_PROP_SHORTHAND(
     -moz-padding-end,
     padding_end,
@@ -1945,8 +1945,8 @@ CSS_PROP_PADDING(
     mPadding.mLeft,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePadding, mPadding),
+    eStyleAnimType_Sides_Left)
 CSS_PROP_PADDING(
     padding-left-ltr-source,
     padding_left_ltr_source,
@@ -1987,8 +1987,8 @@ CSS_PROP_PADDING(
     mPadding.mRight,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePadding, mPadding),
+    eStyleAnimType_Sides_Right)
 CSS_PROP_PADDING(
     padding-right-ltr-source,
     padding_right_ltr_source,
@@ -2041,8 +2041,8 @@ CSS_PROP_PADDING(
     mPadding.mTop,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePadding, mPadding),
+    eStyleAnimType_Sides_Top)
 CSS_PROP_BACKENDONLY(
     page,
     page,
@@ -2175,8 +2175,8 @@ CSS_PROP_POSITION(
     mOffset.mRight,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePosition, mOffset),
+    eStyleAnimType_Sides_Right)
 CSS_PROP_BACKENDONLY(
     size,
     size,
@@ -2282,8 +2282,8 @@ CSS_PROP_TEXT(
     mTextIndent,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleText, mTextIndent),
+    eStyleAnimType_Coord)
 CSS_PROP_TEXT(
     text-shadow,
     text_shadow,
@@ -2339,8 +2339,8 @@ CSS_PROP_POSITION(
     mOffset.mTop,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePosition, mOffset),
+    eStyleAnimType_Sides_Top)
 CSS_PROP_SHORTHAND(
     -moz-transition,
     transition,
@@ -2457,8 +2457,8 @@ CSS_PROP_TEXTRESET(
     mVerticalAlign,
     eCSSType_Value,
     kVerticalAlignKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleTextReset, mVerticalAlign),
+    eStyleAnimType_Coord)
 CSS_PROP_VISIBILITY(
     visibility,
     visibility,
@@ -2517,8 +2517,8 @@ CSS_PROP_POSITION(
     mWidth,
     eCSSType_Value,
     kWidthKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStylePosition, mWidth),
+    eStyleAnimType_Coord)
 CSS_PROP_UIRESET(
     -moz-window-shadow,
     _moz_window_shadow,
@@ -2940,8 +2940,8 @@ CSS_PROP_SVG(
     mStrokeDashoffset,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mStrokeDashoffset),
+    eStyleAnimType_Coord)
 CSS_PROP_SVG(
     stroke-linecap,
     stroke_linecap,
@@ -2995,8 +2995,8 @@ CSS_PROP_SVG(
     mStrokeWidth,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mStrokeWidth),
+    eStyleAnimType_Coord)
 CSS_PROP_SVG(
     text-anchor,
     text_anchor,
