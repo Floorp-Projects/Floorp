@@ -168,6 +168,7 @@ reserved = set((
         'state',
         'sync',
         'transfer',
+        'union',
         'using'))
 tokens = [
     'COLONCOLON', 'ID', 'STRING'
@@ -207,15 +208,28 @@ def t_error(t):
 ##-----------------------------------------------------------------------------
 
 def p_TranslationUnit(p):
-    """TranslationUnit : Preamble NamespacedProtocolDefn"""
+    """TranslationUnit : Preamble NamespacedStuff"""
     tu = Parser.current.tu
     for stmt in p[1]:
-        if isinstance(stmt, CxxInclude):  tu.addCxxInclude(stmt)
-        elif isinstance(stmt, ProtocolInclude): tu.addProtocolInclude(stmt)
-        elif isinstance(stmt, UsingStmt): tu.addUsingStmt(stmt)
+        if isinstance(stmt, CxxInclude):
+            tu.addCxxInclude(stmt)
+        elif isinstance(stmt, ProtocolInclude):
+            tu.addProtocolInclude(stmt)
+        elif isinstance(stmt, UsingStmt):
+            tu.addUsingStmt(stmt)
         else:
             assert 0
-    tu.protocol = p[2]
+
+    for thing in p[2]:
+        if isinstance(thing, UnionDecl):
+            tu.addUnionDecl(thing)
+        elif isinstance(thing, Protocol):
+            if tu.protocol is not None:
+                _error(thing.loc, "only one protocol definition per file")
+            tu.protocol = thing
+        else:
+            assert(0)
+
     p[0] = tu
 
 ##--------------------
@@ -258,16 +272,39 @@ def p_UsingStmt(p):
     p[0] = UsingStmt(locFromTok(p, 1), p[2])
 
 ##--------------------
-## Protocol definition
-def p_NamespacedProtocolDefn(p):
-    """NamespacedProtocolDefn : NAMESPACE ID '{' NamespacedProtocolDefn '}'
-                              | ProtocolDefn"""
+## Namespaced stuff
+def p_NamespacedStuff(p):
+    """NamespacedStuff : NamespacedStuff NamespaceThing
+                       | NamespaceThing"""
     if 2 == len(p):
         p[0] = p[1]
     else:
-        protocol = p[4]
-        protocol.addOuterNamespace(Namespace(locFromTok(p, 1), p[2]))
-        p[0] = protocol
+        p[1].extend(p[2])
+        p[0] = p[1]
+
+def p_NamespaceThing(p):
+    """NamespaceThing : NAMESPACE ID '{' NamespacedStuff '}'
+                      | UnionDecl
+                      | ProtocolDefn"""
+    if 2 == len(p):
+        p[0] = [ p[1] ]
+    else:
+        for thing in p[4]:
+            thing.addOuterNamespace(Namespace(locFromTok(p, 1), p[2]))
+        p[0] = p[4]
+    
+def p_UnionDecl(p):
+    """UnionDecl : UNION ID '{' ComponentTypes  '}' ';'"""
+    p[0] = UnionDecl(locFromTok(p, 1), p[2], p[4])
+
+def p_ComponentTypes(p):
+    """ComponentTypes : ComponentTypes Type ';'
+                      | Type ';'"""
+    if 3 == len(p):
+        p[0] = [ p[1] ]
+    else:
+        p[1].append(p[2])
+        p[0] = p[1]
 
 def p_ProtocolDefn(p):
     """ProtocolDefn : OptionalSendSemanticsQual PROTOCOL ID '{' ManagerStmtOpt ManagesStmts OptionalMessageDecls TransitionStmts '}' ';'"""
