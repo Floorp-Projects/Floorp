@@ -825,7 +825,7 @@
               parents.insertBefore(parent, parents.firstChild);
 
               // XXX Fix me - use <handler>?
-              parent.addEventListener("click", function(e) { self.openFolder(e.target.itemId); }, false);
+              parent.addEventListener("click", function(e) { self.openFolder(e.target.previousSibling.itemId); }, false);
 
               folderId = PlacesUtils.bookmarks.getFolderIdForItem(folderId);
             } while (folderId != PlacesUtils.bookmarks.placesRoot)

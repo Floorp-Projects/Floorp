@@ -237,12 +237,20 @@ toolbarbutton.page-button {
 
 .place-list-parents {
   background-color: rgb(207,207,207);
-  padding: 0.25mm;
+}
+
+.place-list-parents placelabel {
+  visibility: collapse;
+}
+
+.place-list-parents placelabel:last-child:not(:only-child) {
+  visibility: visible;
 }
 
 .place-list-children {
   -moz-appearance: none;
   border: none !important;
+  margin: 0.25mm;
   padding: 0;
 }
 
@@ -289,6 +297,11 @@ placeitem[selected] .bookmark-item-image {
 
 placelabel.bookmark-folder {
   border-bottom: 0.05mm solid rgb(255,255,255);
+  background: url(chrome://browser/skin/images/arrowup-16.png) no-repeat 98% 50%;
+}
+
+placeitem[type="folder"] {
+  background: url(chrome://browser/skin/images/arrowright-16.png) no-repeat 98% 50%;
 }
 
 /* hide the unuseful fields for folder */
@@ -304,6 +317,10 @@ placeitem[type=folder] .bookmark-item-tags {
 
 placelist[ui="manage"] .bookmark-folder-new {
   visibility: visible;
+}
+
+placelist[ui="manage"] placeitem[type="folder"] {
+  background-image: none;
 }
 
 placeitem[ui="manage"] .bookmark-close-button,
