@@ -360,7 +360,7 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   }
 
   // selectedColsCount test
-  is(acc.selectedcolumnCount, selCols.length,
+  is(acc.selectedColumnCount, selCols.length,
      msg + "Wrong count of selected columns for " + prettyName(aIdentifier));
 
   // getSelectedColumns test
@@ -399,8 +399,8 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
       selRows.push(rowIdx);
   }
 
-  // selectedrowCount test
-  is(acc.selectedrowCount, selRows.length,
+  // selectedRowCount test
+  is(acc.selectedRowCount, selRows.length,
      msg + "Wrong count of selected rows for " + prettyName(aIdentifier));
 
   // getSelectedRows test

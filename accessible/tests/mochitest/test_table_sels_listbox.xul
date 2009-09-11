@@ -51,7 +51,7 @@
     }
 
     /**
-     * Helper function to test isColumnSelected(), selectedColumnCount() and
+     * Helper function to test isColumnSelected(), selectedColumnCount and
      * getSelectedColumn() methods.
      */
     function testColumnSelection(aId, aAcc, aCount, aSelCount, aSelIndexesArray)
@@ -67,8 +67,8 @@
         }
       }
 
-      // selectedcolumnCount
-      is(aAcc.selectedcolumnCount, aSelCount,
+      // selectedColumnCount
+      is(aAcc.selectedColumnCount, aSelCount,
          aId + ": wrong number of selected columns");
 
       // getSelectedColumns
@@ -106,8 +106,8 @@
         }
       }
 
-      // selectedrowCount
-      is(aAcc.selectedrowCount, aSelCount,
+      // selectedRowCount
+      is(aAcc.selectedRowCount, aSelCount,
          aId + ": wrong number of selected rows");
 
       // getSelectedRows
