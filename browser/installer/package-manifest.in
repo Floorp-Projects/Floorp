@@ -200,7 +200,6 @@
 @BINPATH@/components/migration.xpt
 #endif
 @BINPATH@/components/mimetype.xpt
-@BINPATH@/components/mozbrwsr.xpt
 @BINPATH@/components/mozfind.xpt
 @BINPATH@/components/necko_about.xpt
 @BINPATH@/components/necko_cache.xpt
