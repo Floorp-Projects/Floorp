@@ -92,6 +92,10 @@ checkbox {
 }
 
 /* richlist defaults ------------------------------------------------------- */
+richlistitem {
+  -moz-binding: url("chrome://browser/content/bindings.xml#richlistitem");
+}
+
 richlistitem[typeName="local"] {
   -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-local");
 }

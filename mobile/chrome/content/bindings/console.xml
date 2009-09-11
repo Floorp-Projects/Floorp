@@ -10,7 +10,7 @@
     xmlns:xbl="http://www.mozilla.org/xbl"
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="error" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+  <binding id="error" extends="chrome://browser/content/bindings.xml#richlistitem">
     <content orient="vertical">
       <xul:hbox class="console-row-internal-box" flex="1">
         <xul:vbox class="console-row-content" flex="1">
@@ -42,7 +42,7 @@
     </content>
   </binding>
     
-  <binding id="message" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+  <binding id="message" extends="chrome://browser/content/bindings.xml#richlistitem">
     <content>
       <xul:hbox class="console-internal-box" flex="1">
         <xul:vbox class="console-row-content" flex="1">

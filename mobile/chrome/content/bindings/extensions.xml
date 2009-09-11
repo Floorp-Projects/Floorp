@@ -12,7 +12,7 @@
     xmlns:xbl="http://www.mozilla.org/xbl"
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="extension-local" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+  <binding id="extension-local" extends="chrome://browser/content/bindings.xml#richlistitem">
     <content orient="vertical">
       <xul:hbox align="start">
         <xul:image xbl:inherits="src=iconURL"/>
@@ -108,7 +108,7 @@
     </implementation>
   </binding>
 
-  <binding id="extension-search" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+  <binding id="extension-search" extends="chrome://browser/content/bindings.xml#richlistitem">
     <content orient="vertical">
       <xul:hbox align="start">
         <xul:image xbl:inherits="src=iconURL"/>
@@ -138,7 +138,7 @@
     </content>
   </binding>
 
-  <binding id="extension-message" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+  <binding id="extension-message" extends="chrome://browser/content/bindings.xml#richlistitem">
     <content orient="vertical" align="center">
       <xul:hbox>
         <xul:image src="chrome://browser/skin/images/throbber.png" xbl:inherits="hidden=hidethrobber"/>
