@@ -272,6 +272,8 @@ toolbarbutton.page-button {
 .bookmark-item-image {
   height: 24px;
   width: 24px;
+  max-height: 24px;
+  max-width: 24px;
   margin: 1.6mm 1.5mm 0mm 2mm;
 }
 
