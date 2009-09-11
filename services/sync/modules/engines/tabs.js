@@ -309,8 +309,7 @@ TabStore.prototype = {
   create: function TabStore_create(record) {
     if (record.id == this._localClientGUID)
       return; // can't happen?
-    this._log.debug("Create called.  Adding remote client record for ");
-    this._log.debug(record.getClientName());
+    this._log.debug("Adding remote tabs from " + record.getClientName());
     this._remoteClients[record.id] = record;
     this._writeToFile();
     // TODO writing to file after every change is inefficient.  How do we
