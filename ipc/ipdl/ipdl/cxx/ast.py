@@ -60,9 +60,12 @@ class Visitor:
     def visitTypeEnum(self, enum):
         pass
 
+    def visitTypeUnion(self, union):
+        for t, name in union.components:
+            t.accept(self)
+
     def visitTypedef(self, tdef):
         tdef.fromtype.accept(self)
-        tdef.totype.accept(self)
 
     def visitForwardDecl(self, fd):
         pass
@@ -120,6 +123,11 @@ class Visitor:
         e.left.accept(self)
         e.right.accept(self)
 
+    def visitExprConditional(self, c):
+        c.cond.accept(self)
+        c.ife.accept(self)
+        c.elsee.accept(self)
+
     def visitExprAddrOf(self, eao):
         self.visitExprPrefixUnop(eao)
 
@@ -174,6 +182,9 @@ class Visitor:
     def visitStmtSwitch(self, ss):
         ss.expr.accept(self)
         self.visitBlock(ss)
+
+    def visitStmtBreak(self, sb):
+        pass
 
     def visitStmtExpr(self, se):
         se.expr.accept(self)
@@ -239,21 +250,47 @@ class Block(Node):
 # type and decl thingies
 class Namespace(Block):
     def __init__(self, name):
+        assert isinstance(name, str)
+
         Block.__init__(self)
         self.name = name
 
 class Type(Node):
-    def __init__(self, name, const=0, ptr=0, ref=0, actor=0):
+    def __init__(self, name, const=0,
+                 ptr=0, ptrconst=0, ptrptr=0, ptrconstptr=0,
+                 ref=0,
+                 actor=0):
+        """
+To avoid getting fancy with recursive types, we limit the kinds
+of pointer types that can be be constructed.
+
+  ptr            => T*
+  ptrconst       => T* const
+  ptrptr         => T**
+  ptrconstptr    => T* const*
+
+Any type, naked or pointer, can be const (const T) or ref (T&).
+
+The "actor" flag is used internally when we need to know if the C++
+type actually represents an IPDL actor type.
+"""
         Node.__init__(self)
         self.name = name
         self.const = const
         self.ptr = ptr
+        self.ptrconst = ptrconst
+        self.ptrptr = ptrptr
+        self.ptrconstptr = ptrconstptr
         self.ref = ref
         self.actor = actor
         # XXX could get serious here with recursive types, but shouldn't 
         # need that for this codegen
     def __deepcopy__(self, memo):
-        return Type(self.name, self.const, self.ptr, self.ref, self.actor)
+        return Type(self.name,
+                    const=self.const,
+                    ptr=self.ptr, ptrconst=self.ptrconst,
+                    ptrptr=self.ptrptr, ptrconstptr=self.ptrconstptr,
+                    ref=self.ref, actor=self.actor)
 
 class TypeEnum(Node):
     def __init__(self, name=None):
@@ -265,11 +302,22 @@ class TypeEnum(Node):
     def addId(self, id, num=None):
         self.idnums.append((id, num))
 
+class TypeUnion(Node):
+    def __init__(self, name=None):
+        Node.__init__(self)
+        self.name = name
+        self.components = [ ]           # pairs of (Type, name)
+
+    def addComponent(self, type, name):
+        self.components.append((type, name))
+
 class Typedef(Node):
-    def __init__(self, fromtype, totype):
+    def __init__(self, fromtype, totypename):
+        assert isinstance(totypename, str)
+        
         Node.__init__(self)
         self.fromtype = fromtype
-        self.totype = totype
+        self.totypename = totypename
 
 class ForwardDecl(Node):
     def __init__(self, pqname, cls=0, struct=0):
@@ -292,17 +340,21 @@ class Decl(Node):
 # class stuff
 class Class(Block):
     def __init__(self, name, inherits=[ ],
-                 interface=False, abstract=False, final=False):
+                 interface=0, abstract=0, final=0,
+                 specializes=None, struct=0):
         assert not (interface and abstract)
         assert not (abstract and final)
         assert not (interface and final)
+        assert not (inherits and specializes)
 
         Block.__init__(self)
         self.name = name
-        self.inherits = inherits
-        self.interface = interface
-        self.abstract = abstract
-        self.final = final
+        self.inherits = inherits        # [ Type ]
+        self.interface = interface      # bool
+        self.abstract = abstract        # bool
+        self.final = final              # bool
+        self.specializes = specializes  # Type or None
+        self.struct = struct            # bool
 
 class Inherit(Node):
     def __init__(self, name, viz='public'):
@@ -317,18 +369,24 @@ class FriendClassDecl(Node):
 
 class MethodDecl(Node):
     def __init__(self, name, params=[ ], ret=Type('void'),
-                 virtual=False, const=False, pure=False, static=False):
+                 virtual=0, const=0, pure=0, static=0, typeop=0):
         assert not (virtual and static)
-        assert not pure or virtual # pure => virtual
+        assert not pure or virtual      # pure => virtual
+        assert not (static and typeop)
+
+        if typeop:
+            ret = None
 
         Node.__init__(self)
         self.name = name
-        self.params = params
-        self.ret = ret
-        self.virtual = virtual
-        self.const = const
-        self.pure = pure
-        self.static = static
+        self.params = params            # [ Param ]
+        self.ret = ret                  # Type or None
+        self.virtual = virtual          # bool
+        self.const = const              # bool
+        self.pure = pure                # bool
+        self.static = static            # bool
+        self.typeop = typeop            # bool
+        
     def __deepcopy__(self, memo):
         return MethodDecl(self.name,
                           copy.deepcopy(self.params, memo),
@@ -343,8 +401,9 @@ class MethodDefn(Block):
         self.decl = decl
 
 class ConstructorDecl(MethodDecl):
-    def __init__(self, name, params=[ ]):
+    def __init__(self, name, params=[ ], explicit=0):
         MethodDecl.__init__(self, name, params=params, ret=None)
+        self.explicit = explicit
 
 class ConstructorDefn(MethodDefn):
     def __init__(self, decl, memberinits=[ ]):
@@ -352,7 +411,7 @@ class ConstructorDefn(MethodDefn):
         self.memberinits = memberinits
 
 class DestructorDecl(MethodDecl):
-    def __init__(self, name, virtual=False):
+    def __init__(self, name, virtual=0):
         MethodDecl.__init__(self, name, params=[ ], ret=None,
                             virtual=virtual)
 class DestructorDefn(MethodDefn):
@@ -414,10 +473,18 @@ class ExprCast(Node):
 
 class ExprBinary(Node):
     def __init__(self, left, op, right):
+        Node.__init__(self)
         self.left = left
         self.op = op
         self.right = right
 
+class ExprConditional(Node):
+    def __init__(self, cond, ife, elsee):
+        Node.__init__(self)
+        self.cond = cond
+        self.ife = ife
+        self.elsee = elsee
+ 
 class ExprSelect(Node):
     def __init__(self, obj, op, field):
         Node.__init__(self)
@@ -440,8 +507,15 @@ class ExprCall(Node):
 
 class ExprNew(ExprCall):
     # XXX taking some poetic license ...
-    def __init__(self, type, args=[ ]):
-        ExprCall.__init__(self, ExprVar(type.name), args)
+    def __init__(self, type, args=[ ], newargs=None):
+        assert not (type.const or type.ref)
+        
+        ctorname = type.name
+        if type.ptr:  ctorname += '*'
+        elif type.ptrptr:  ctorname += '**'
+        
+        ExprCall.__init__(self, ExprVar(ctorname), args)
+        self.newargs = newargs
 
 class ExprDelete(Node):
     def __init__(self, obj):
@@ -467,6 +541,9 @@ class Label(Node):
     def __init__(self, name):
         Node.__init__(self)
         self.name = name
+Label.PUBLIC = Label('public')
+Label.PROTECTED = Label('protected')
+Label.PRIVATE = Label('private')
 
 class CaseLabel(Node):
     def __init__(self, name):
@@ -500,6 +577,10 @@ class StmtSwitch(Block):
         self.addstmt(case)
         self.addstmt(block)
         self.nr_cases += 1
+
+class StmtBreak(Node):
+    def __init__(self):
+        Node.__init__(self)
 
 class StmtExpr(Node):
     def __init__(self, expr):

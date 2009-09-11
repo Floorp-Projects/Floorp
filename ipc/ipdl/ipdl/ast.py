@@ -42,6 +42,8 @@ class Visitor:
             cxxInc.accept(self)
         for protoInc in tu.protocolIncludes:
             protoInc.accept(self)
+        for union in tu.unions:
+            union.accept(self)
         for using in tu.using:
             using.accept(self)
         tu.protocol.accept(self)
@@ -53,6 +55,10 @@ class Visitor:
         # Note: we don't visit the child AST here, because that needs delicate
         # and pass-specific handling
         pass
+
+    def visitUnionDecl(self, union):
+        for t in union.components:
+            t.accept(self)
 
     def visitUsingStmt(self, using):
         pass
@@ -133,6 +139,20 @@ class Node:
         if not hasattr(self, attrsName):
             setattr(self, attrsName, _struct())
 
+
+class NamespacedNode(Node):
+    def __init__(self, loc=Loc.NONE, name=None):
+        Node.__init__(self, loc)
+        self.name = name
+        self.namespaces = [ ]  
+
+    def addOuterNamespace(self, namespace):
+        self.namespaces.insert(0, namespace)
+
+    def qname(self):
+        return QualifiedId(self.loc, self.name,
+                           [ ns.namespace for ns in self.namespaces ])
+
 class TranslationUnit(Node):
     def __init__(self):
         Node.__init__(self)
@@ -140,10 +160,12 @@ class TranslationUnit(Node):
         self.cxxIncludes = [ ]
         self.protocolIncludes = [ ]
         self.using = [ ]
+        self.unions = [ ]
         self.protocol = None
 
     def addCxxInclude(self, cxxInclude): self.cxxIncludes.append(cxxInclude)
     def addProtocolInclude(self, pInc): self.protocolIncludes.append(pInc)
+    def addUnionDecl(self, union): self.unions.append(union)
     def addUsingStmt(self, using): self.using.append(using)
 
     def setProtocol(self, protocol): self.protocol = protocol
@@ -217,19 +239,19 @@ _prettyTable = {
 }
 
 
-class Protocol(Node):
-    def __init__(self, loc):
+class Namespace(Node):
+    def __init__(self, loc, namespace):
         Node.__init__(self, loc)
-        self.name = None
-        self.namespaces = [ ]
+        self.namespace = namespace
+
+class Protocol(NamespacedNode):
+    def __init__(self, loc):
+        NamespacedNode.__init__(self, loc)
         self.sendSemantics = ASYNC
         self.managesStmts = [ ]
         self.messageDecls = [ ]
         self.transitionStmts = [ ]
         self.startStates = [ ]
-
-    def addOuterNamespace(self, namespace):
-        self.namespaces.insert(0, namespace)
 
     def addManagesStmts(self, managesStmts):
         self.managesStmts += managesStmts
@@ -240,10 +262,10 @@ class Protocol(Node):
     def addTransitionStmts(self, transStmts):
         self.transitionStmts += transStmts
 
-class Namespace(Node):
-    def __init__(self, loc, namespace):
-        Node.__init__(self, loc)
-        self.namespace = namespace
+class UnionDecl(NamespacedNode):
+    def __init__(self, loc, name, components):
+        NamespacedNode.__init__(self, loc, name)
+        self.components = components
 
 class ManagerStmt(Node):
     def __init__(self, loc, managerName):

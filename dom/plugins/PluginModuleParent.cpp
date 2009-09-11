@@ -188,6 +188,15 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType,
     printf ("[PluginModuleParent] %s: got return value %hd\n", __FUNCTION__,
             prv);
 
+
+    // FIXME/bent: demo purposes only
+    Variant v1(0);
+    Variant v2(parentInstance);
+    printf("\n[PluginModuleParent] sending Test msg\n\n");
+    parentInstance->SendTest(v1, v2);
+
+
+
     if (NPERR_NO_ERROR != prv)
         return prv;
     NS_ASSERTION(parentInstance,
