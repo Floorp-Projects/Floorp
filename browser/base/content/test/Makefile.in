@@ -91,6 +91,7 @@ _BROWSER_FILES = \
                  browser_bug424101.js \
                  browser_bug427559.js \
                  browser_bug432599.js \
+                 browser_bug435035.js \
                  browser_bug441778.js \
                  browser_bug455852.js \
                  browser_bug462673.js \
@@ -101,6 +102,7 @@ _BROWSER_FILES = \
                  browser_tabfocus.js \
                  discovery.html \
                  moz.png \
+                 test_bug435035.html \
                  test_bug462673.html \
                  browser_getshortcutoruri.js \
                  browser_page_style_menu.js \
