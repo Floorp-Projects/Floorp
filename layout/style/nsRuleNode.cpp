@@ -1944,7 +1944,8 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     detail = eRulePartialMixed; // Treat as though some data is specified to avoid
                                 // the optimizations and force data computation.
 
-  if (detail == eRuleNone && startStruct && !aRuleData->mPostResolveCallback) {
+  if (detail == eRuleNone && startStruct &&
+      aRuleData->mPostResolveCallbacks.IsEmpty()) {
     // We specified absolutely no rule information, but a parent rule in the tree
     // specified all the rule information.  We set a bit along the branch from our
     // node in the tree to the node that specified the data that tells nodes on that
@@ -1953,7 +1954,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     PropagateDependentBit(bit, ruleNode);
     return startStruct;
   }
-  // FIXME Do we need to check for mPostResolveCallback?
+  // FIXME Do we need to check for mPostResolveCallbacks?
   if ((!startStruct && !isReset &&
        (detail == eRuleNone || detail == eRulePartialInherited)) ||
       detail == eRuleFullInherited) {
@@ -2008,9 +2009,13 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
 #undef STYLE_STRUCT
 #undef STYLE_STRUCT_TEST
 
-  // If we have a post-resolve callback, handle that now.
-  if (aRuleData->mPostResolveCallback && (NS_LIKELY(res != nsnull)))
-    (*aRuleData->mPostResolveCallback)(const_cast<void*>(res), aRuleData);
+  // If we have post-resolve callbacks, handle that now.
+  if (NS_LIKELY(res != nsnull)) {
+    // Enumerate from least to most specific rule.
+    for (PRUint32 i = aRuleData->mPostResolveCallbacks.Length(); i-- != 0; ) {
+      (*aRuleData->mPostResolveCallbacks[i])(const_cast<void*>(res), aRuleData);
+    }
+  }
 
   // Now return the result.
   return res;
@@ -3003,9 +3008,11 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
                         PR_FALSE, dummy);
 
     // XXX Not sure if we need to do this here
-    // If we have a post-resolve callback, handle that now.
-    if (ruleData.mPostResolveCallback)
-      (ruleData.mPostResolveCallback)(aFont, &ruleData);
+    // If we have post-resolve callbacks, handle that now.
+    // Enumerate from least to most specific rule.
+    for (PRUint32 j = ruleData.mPostResolveCallbacks.Length(); j-- != 0; ) {
+      (*ruleData.mPostResolveCallbacks[j])(aFont, &ruleData);
+    }
 
     parentFont = *aFont;
   }
