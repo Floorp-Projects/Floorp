@@ -259,8 +259,8 @@ placeitem[type=folder] .bookmark-item-image {
 }
 
 autocompleteresult.allbookmarks > .autocomplete-item-image {
-  max-width: 44px;
-  max-height: 30px;
+  width: 44px;
+  height: 30px;
   list-style-image: url(images/bookmarks-30.png);
 }
 
