@@ -195,13 +195,10 @@ protected:
   static void PaintPrintPlugin(nsIFrame* aFrame,
                                nsIRenderingContext* aRenderingContext,
                                const nsRect& aDirtyRect, nsPoint aPt);
-  static void PaintPlugin(nsIFrame* aFrame,
-                               nsIRenderingContext* aRenderingContext,
-                               const nsRect& aDirtyRect, nsPoint aPt);
   void PrintPlugin(nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
   void PaintPlugin(nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect, const nsPoint& aFramePt);
+                   const nsRect& aDirtyRect, const nsRect& aPluginRect);
 
   /**
    * Makes sure that mInstanceOwner is valid and without a current plugin
@@ -212,9 +209,9 @@ protected:
   /**
    * Get the widget geometry for the plugin. aRegion is in some appunits
    * coordinate system whose origin is device-pixel-aligned (if possible),
-   * and aPluginOrigin gives the top-left of the plugin in that coordinate
-   * system. It doesn't matter what that coordinate system actually is,
-   * as long as aRegion and aPluginOrigin are consistent.
+   * and aPluginOrigin gives the top-left of the plugin frame's content-rect
+   * in that coordinate system. It doesn't matter what that coordinate
+   * system actually is, as long as aRegion and aPluginOrigin are consistent.
    * This will append a Configuration object to aConfigurations
    * containing the widget, its desired position, size and clip region.
    */
@@ -229,6 +226,7 @@ protected:
 
 private:
   nsRefPtr<nsPluginInstanceOwner> mInstanceOwner;
+  nsIView*                        mInnerView;
   nsCOMPtr<nsIWidget>             mWidget;
   nsIntRect                       mWindowlessRect;
 
