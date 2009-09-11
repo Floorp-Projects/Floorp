@@ -312,8 +312,17 @@ ChannelListener.prototype = {
   onStartRequest: function Channel_onStartRequest(channel) {
     // XXX Bug 482179 Some reason xpconnect makes |channel| only nsIRequest
     channel.QueryInterface(Ci.nsIHttpChannel);
-    this._log.debug(channel.requestMethod + " request for " +
-      channel.URI.spec);
+
+    let log = "trace";
+    let mesg = channel.requestMethod + " request for " + channel.URI.spec;
+    // Only log a part of the uri for logs higher than trace
+    if (this._log.level > Log4Moz.Level.Trace) {
+      log = "debug";
+      if (mesg.length > 200)
+        mesg = mesg.substr(0, 200) + "...";
+    }
+    this._log[log](mesg);
+
     this._data = '';
   },
 
