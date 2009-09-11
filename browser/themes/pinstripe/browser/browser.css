@@ -176,15 +176,18 @@
   background: url("chrome://browser/skin/bookmark_toolbar_background.png") repeat-x center center -moz-mac-chrome-active;
   border-top: 1px solid rgba(255, 255, 255, 0.4);
   border-bottom: 1px solid rgba(0, 0, 0, 0.57);
-  padding: 2px 0 3px;
 }
 
+#personal-bookmarks {
+  min-height: 21px;
+  -moz-margin-start: 1px;
+}
 
 /* ----- BOOKMARK BUTTONS ----- */	
 
 toolbarbutton.bookmark-item {
   font-weight: bold;
-  margin: 0 1px;
+  margin: 0 0 1px;
   padding: 0;
   -moz-padding-start: 7px;
   min-width: 0;
