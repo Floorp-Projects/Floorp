@@ -488,8 +488,6 @@ WeaveSvc.prototype = {
 
   _verifyLogin: function _verifyLogin()
     this._catch(this._notify("verify-login", "", function() {
-      this._log.debug("Verifying login for user " + this.username);
-
       this._setCluster();
       let res = new Resource(this.infoURL);
       try {
@@ -521,7 +519,6 @@ WeaveSvc.prototype = {
 
   _verifyPassphrase: function _verifyPassphrase()
     this._catch(this._notify("verify-passphrase", "", function() {
-      this._log.debug("Verifying passphrase");
       try {
         let pubkey = PubKeys.getDefaultKey();
         let privkey = PrivKeys.get(pubkey.privateKeyUri);
@@ -665,7 +662,7 @@ WeaveSvc.prototype = {
         this._setSyncFailure(LOGIN_FAILED_NO_PASSWORD);
         throw "No password given or found in password manager";
       }
-      this._log.debug("Logging in user " + this.username);
+      this._log.info("Logging in user " + this.username);
 
       if (!this._verifyLogin()) {
         // verifyLogin sets the failure states here
@@ -1079,7 +1076,7 @@ WeaveSvc.prototype = {
     for each (let engine in [Clients].concat(Engines.getEnabled()))
       engine.lastModified = info.obj[engine.name] || 0;
 
-    this._log.debug("Refreshing client list");
+    this._log.trace("Refreshing client list");
     Clients.sync();
 
     // Process the incoming commands if we have any
