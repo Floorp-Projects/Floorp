@@ -65,30 +65,39 @@ RPCChannel::Call(Message* msg, Message* reply)
     NS_PRECONDITION(msg->is_rpc(),
                     "can only Call() RPC messages here");
 
-    mMutex.Lock();
+    MutexAutoLock lock(mMutex);
 
     msg->set_rpc_remote_stack_depth(mRemoteStackDepth);
-    mPending.push(*msg);
+    mStack.push(*msg);
 
     // bypass |SyncChannel::Send| b/c RPCChannel implements its own
     // waiting semantics
     AsyncChannel::Send(msg);
 
     while (1) {
-        // here we're waiting for something to happen.  it may legally
-        // be either:
-        //  (1) async msg
-        //  (2) reply to an outstanding message (sync or rpc)
-        //  (3) recursive call from the other side
-        mCvar.Wait();
+        // here we're waiting for something to happen. see long
+        // comment about the queue in RPCChannel.h
+        while (mPending.empty()) {
+            mCvar.Wait();
+        }
 
-        Message recvd = mPending.top();
+        Message recvd = mPending.front();
         mPending.pop();
+
+        // async message.  process it, go back to waiting
+        if (!recvd.is_sync() && !recvd.is_rpc()) {
+            MutexAutoUnlock unlock(mMutex);
+
+            AsyncChannel::OnDispatchMessage(recvd);
+            continue;
+        }
 
         // something sync.  Let the sync dispatcher take care of it
         // (it may be an invalid message, but the sync handler will
         // check that).
         if (recvd.is_sync()) {
+            NS_ABORT_IF_FALSE(mPending.empty(),
+                              "other side is malfunctioning");
             MutexAutoUnlock unlock(mMutex);
 
             SyncChannel::OnDispatchMessage(recvd);
@@ -100,32 +109,85 @@ RPCChannel::Call(Message* msg, Message* reply)
 
         // reply message
         if (recvd.is_reply()) {
-            NS_ABORT_IF_FALSE(0 < mPending.size(), "invalid RPC stack");
+            NS_ABORT_IF_FALSE(0 < mStack.size(), "invalid RPC stack");
 
-            const Message& pending = mPending.top();
+            const Message& outcall = mStack.top();
 
-            if (recvd.type() != (pending.type()+1) && !recvd.is_reply_error()) {
+            if (recvd.type() != (outcall.type()+1) && !recvd.is_reply_error()) {
                 // FIXME/cjones: handle error
                 NS_ABORT_IF_FALSE(0, "somebody's misbehavin'");
             }
 
             // we received a reply to our most recent outstanding
             // call.  pop this frame and return the reply
-            mPending.pop();
+            mStack.pop();
 
             bool isError = recvd.is_reply_error();
             if (!isError) {
                 *reply = recvd;
             }
 
-            mMutex.Unlock();
+            if (0 == StackDepth()) {
+                // this was the last outcall we were waiting on.
+                // flush the pending queue into the "regular" event
+                // queue, checking invariants along the way.  see long
+                // comment in RPCChannel.h
+                bool seenBlocker = false;
+
+                // A<* (S< | C<)
+                while (!mPending.empty()) {
+                    Message m = mPending.front();
+                    mPending.pop();
+
+                    if (m.is_sync()) {
+                        NS_ABORT_IF_FALSE(!seenBlocker,
+                                          "other side is malfunctioning");
+                        seenBlocker = true;
+
+                        MessageLoop::current()->PostTask(
+                            FROM_HERE,
+                            NewRunnableMethod(this,
+                                              &RPCChannel::OnDelegate, m));
+                    }
+                    else if (m.is_rpc()) {
+                        NS_ABORT_IF_FALSE(!seenBlocker,
+                                          "other side is malfunctioning");
+                        seenBlocker = true;
+
+                        MessageLoop::current()->PostTask(
+                            FROM_HERE,
+                            NewRunnableMethod(this,
+                                              &RPCChannel::OnIncall,
+                                              m));
+                    }
+                    else {
+                        MessageLoop::current()->PostTask(
+                            FROM_HERE,
+                            NewRunnableMethod(this,
+                                              &RPCChannel::OnDelegate, m));
+                    }
+                }
+            }
+            else {
+                // shouldn't have queued any more messages, since
+                // the other side is now supposed to be blocked on a
+                // reply from us!
+                if (mPending.size() > 0) {
+                    NS_RUNTIMEABORT("other side should have been blocked");
+                }
+            }
+
+            // unlocks mMutex
             return !isError;
         }
-        // in-call
-        else {
-            // "snapshot" the current stack depth while we own the Mutex
-            size_t stackDepth = StackDepth();
 
+        // in-call.  process in a new stack frame
+        NS_ABORT_IF_FALSE(mPending.empty(),
+                          "other side is malfunctioning");
+
+        // "snapshot" the current stack depth while we own the Mutex
+        size_t stackDepth = StackDepth();
+        {
             MutexAutoUnlock unlock(mMutex);
             // someone called in to us from the other side.  handle the call
             ProcessIncall(recvd, stackDepth);
@@ -137,11 +199,21 @@ RPCChannel::Call(Message* msg, Message* reply)
 }
 
 void
+RPCChannel::OnDelegate(const Message& msg)
+{
+    if (msg.is_sync())
+        return SyncChannel::OnDispatchMessage(msg);
+    else if (!msg.is_rpc())
+        return AsyncChannel::OnDispatchMessage(msg);
+    NS_RUNTIMEABORT("fatal logic error");
+}
+
+void
 RPCChannel::OnIncall(const Message& call)
 {
-    // We were called from the IO thread when StackDepth() == 0, and
-    // we were "idle".  That's the "snapshot" of the state of
-    // the RPCChannel we use when processing this message.
+    // We only reach here from the "regular" event loop, when
+    // StackDepth() == 0.  That's the "snapshot" of the state of the
+    // RPCChannel we use when processing this message.
     ProcessIncall(call, 0);
 }
 
@@ -244,24 +316,32 @@ RPCChannel::OnMessageReceived(const Message& msg)
         // NB some logic here is duplicated with SyncChannel.  this is
         // to allow more local reasoning
 
-        // harmless async message, enqueue for later processing.
-        // We might have been waiting for a sync reply, but receiving
-        // an async message here is allowed.
-        if (!msg.is_sync() && !msg.is_rpc()) {
-            // unlocks mutex
-            return AsyncChannel::OnMessageReceived(msg);
-        }
+        // NBB see the second-to-last long comment in RPCChannel.h
+        // describing legal queue states
 
         // if we're waiting on a sync reply, and this message is sync,
         // dispatch it to the sync message handler. It will check that
         // it's a reply, and the right kind of reply, then do its
         // thing.
+        // 
+        // since we're waiting on an RPC answer in an older stack
+        // frame, we know we'll eventually pop back to the
+        // RPCChannel::Call frame where we're awaiting the RPC reply.
+        // so the queue won't be forgotten!
         if (AwaitingSyncReply()
             && msg.is_sync()) {
             // wake up worker thread (at SyncChannel::Send) awaiting
             // this reply
             mRecvd = msg;
             mCvar.Notify();
+            return;
+        }
+
+        // waiting on a sync reply, but got an async message.  that's OK,
+        // but we defer processing of it until the sync reply comes in.
+        if (AwaitingSyncReply()
+            && !msg.is_sync() && !msg.is_rpc()) {
+            mPending.push(msg);
             return;
         }
 
@@ -275,10 +355,10 @@ RPCChannel::OnMessageReceived(const Message& msg)
             return;             // not reached
         }
 
-        // otherwise, we (legally) either got (i) sync in-msg; (ii)
-        // re-entrant rpc in-call; (iii) rpc reply we were awaiting.
-        // Dispatch to the worker, where invariants are checked and
-        // the message processed.
+        // otherwise, we (legally) either got (i) async msg; (ii) sync
+        // in-msg; (iii) re-entrant rpc in-call; (iv) rpc reply we
+        // were awaiting.  Dispatch to the worker, where invariants
+        // are checked and the message processed.
         mPending.push(msg);
         mCvar.Notify();
     }
