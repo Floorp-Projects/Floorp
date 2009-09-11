@@ -183,11 +183,11 @@ PasswordStore.prototype = {
   },
 
   remove: function PasswordStore__remove(record) {
-    this._log.debug("Removing login " + record.id);
+    this._log.trace("Removing login " + record.id);
     
     let loginItem = this._getLoginFromGUID(record.id);
     if (!loginItem) {
-      this._log.debug("Asked to remove record that doesn't exist, ignoring");
+      this._log.trace("Asked to remove record that doesn't exist, ignoring");
       return;
     }
 
