@@ -3568,7 +3568,14 @@ void
 nsIPresShell::PostRecreateFramesFor(nsIContent* aContent)
 {
   FrameConstructor()->PostRestyleEvent(aContent, eReStyle_Self,
-          nsChangeHint_ReconstructFrame);
+                                       nsChangeHint_ReconstructFrame);
+}
+
+void
+nsIPresShell::RestyleForAnimation(nsIContent* aContent)
+{
+  FrameConstructor()->PostAnimationRestyleEvent(aContent, eReStyle_Self,
+                                                NS_STYLE_HINT_NONE);
 }
 
 NS_IMETHODIMP

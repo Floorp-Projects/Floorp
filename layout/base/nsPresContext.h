@@ -818,6 +818,16 @@ public:
     mCrossDocDirtyRegion.SetEmpty();
   }
 
+  PRBool IsProcessingAnimationStyleChange() const {
+    return mProcessingAnimationStyleChange;
+  }
+
+  void SetProcessingAnimationStyleChange(PRBool aProcessing) {
+    NS_ASSERTION(aProcessing != mProcessingAnimationStyleChange,
+                 "should never nest");
+    mProcessingAnimationStyleChange = aProcessing;
+  }
+
   /**
    * Notify the prescontext that the presshell is about to reflow a reflow root.
    * The single argument indicates whether this reflow should be interruptible.
@@ -1031,10 +1041,10 @@ protected:
   // the document rather than to change the document's dimensions
   unsigned              mSupressResizeReflow : 1;
 
-#ifdef IBMBIDI
   unsigned              mIsVisual : 1;
 
-#endif
+  unsigned              mProcessingAnimationStyleChange : 1;
+
 #ifdef DEBUG
   PRBool                mInitialized;
 #endif
