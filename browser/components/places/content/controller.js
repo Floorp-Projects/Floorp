@@ -1112,7 +1112,7 @@ PlacesController.prototype = {
    */
   setDataTransfer: function PC_setDataTransfer(aEvent) {
     var dt = aEvent.dataTransfer;
-    var doCopy = dt.effectAllowed == "copyLink" || dt.effectAllowed == "copy";
+    var doCopy = ["copyLink", "copy", "link"].indexOf(dt.effectAllowed) != -1;
 
     var result = this._view.getResult();
     var oldViewer = result.viewer;
@@ -1519,7 +1519,7 @@ var PlacesControllerDragHelper = {
    */
   onDrop: function PCDH_onDrop(insertionPoint) {
     var dt = this.currentDataTransfer;
-    var doCopy = dt.dropEffect == "copy";
+    var doCopy = ["copy", "link"].indexOf(dt.dropEffect) != -1;
 
     var transactions = [];
     var dropCount = dt.mozItemCount;
