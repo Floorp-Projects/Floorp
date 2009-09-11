@@ -4,7 +4,8 @@
  *
  *  IAccessible2 IDL Specification
  *
- *  Copyright (c) IBM Corp. 2007
+ *  Copyright (c) Linux Foundation 2007, 2008
+ *  Copyright (c) IBM Corp. 2006
  *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
  *
  *  This library is free software; you can redistribute it and/or
@@ -25,12 +26,12 @@
 
 import "objidl.idl";
 
-/** Collection of roles.
+/** Collection of roles
 
-  This enumerator defines the set of possible roles of objects implementing the
-  IAccessible2 interface. The role of an object describes its generic function
-  like 'button', 'menu', or 'text'. You can obtain an object's role by calling
-  the get_accRole method of the IAccessible interface.
+  This enumerator defines an extended set of accessible roles of objects implementing
+  the %IAccessible2 interface. These roles are in addition to the MSAA roles obtained
+  through the MSAA get_accRole method.  Examples are 'footnote', 'heading', and 
+  'label'. You obtain an object's %IAccessible2 roles by calling IAccessible2::role.
 */
 enum IA2Role {
 
@@ -73,10 +74,14 @@ enum IA2Role {
   */
   IA2_ROLE_DIRECTORY_PANE,
 
-  /// An editable text object in a toolbar.
+  /** An editable text object in a toolbar.
+   <BR><B>Note:</B> This role has been deprecated.  The edit bar role was meant
+   for a text area in a tool bar. However, to detect a text area in a tool bar
+   the AT can query the parent.
+  */
   IA2_ROLE_EDITBAR,
 
-  /// Embeded (OLE) object.
+  /// Embedded (OLE) object.
   IA2_ROLE_EMBEDDED_OBJECT,
 
   /// Text that is used as an endnote (footnote at the end of a chapter or section).
@@ -203,13 +208,11 @@ enum IA2Role {
   IA2_ROLE_SCROLL_PANE,
 
   /** A container of document content.  An example of the use of this role is to
-   represent an HTML DIV tag.
-
-   A section may be used as a region.  A region is a group of elements that 
-   together form a perceivable unit.  A region does not necessarily follow the 
-   logical structure of the content, but follows the perceivable structure of 
-   the page.  A region may have an attribute in the set of 
-   IAccessible2::attributes which indicates that it is "live".  A live region 
+   represent an HTML DIV tag.  A section may be used as a region.  A region is a 
+   group of elements that together form a perceivable unit.  A region does not 
+   necessarily follow the logical structure of the content, but follows the 
+   perceivable structure of the page.  A region may have an attribute in the set 
+   of IAccessible2::attributes which indicates that it is "live".  A live region 
    is content that is likely to change in response to a timed change, a user 
    event, or some other programmed logic or event.
   */

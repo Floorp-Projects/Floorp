@@ -88,13 +88,14 @@
 #ifdef MOZ_XUL
 #include "nsXULAlertAccessible.h"
 #include "nsXULColorPickerAccessible.h"
+#include "nsXULComboboxAccessible.h"
 #include "nsXULFormControlAccessible.h"
+#include "nsXULListboxAccessibleWrap.h"
 #include "nsXULMenuAccessibleWrap.h"
-#include "nsXULSelectAccessible.h"
 #include "nsXULSliderAccessible.h"
 #include "nsXULTabAccessible.h"
 #include "nsXULTextAccessible.h"
-#include "nsXULTreeAccessibleWrap.h"
+#include "nsXULTreeGridAccessibleWrap.h"
 #endif
 
 // For native window support for object/embed/applet tags
@@ -567,11 +568,6 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame *aFrame,
            tag == nsAccessibilityAtoms::h4 ||
            tag == nsAccessibilityAtoms::h5 ||
            tag == nsAccessibilityAtoms::h6 ||
-#ifndef MOZ_ACCESSIBILITY_ATK
-           tag == nsAccessibilityAtoms::tbody ||
-           tag == nsAccessibilityAtoms::tfoot ||
-           tag == nsAccessibilityAtoms::thead ||
-#endif
            tag == nsAccessibilityAtoms::q) {
     return CreateHyperTextAccessible(aFrame, aAccessible);
   }
@@ -580,7 +576,7 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame *aFrame,
                                             nsIAccessibleRole::ROLE_ROW);
   }
   else if (nsCoreUtils::IsHTMLTableHeader(content)) {
-    *aAccessible = new nsHTMLTableHeaderAccessible(aNode, aWeakShell);
+    *aAccessible = new nsHTMLTableHeaderCellAccessibleWrap(aNode, aWeakShell);
   }
 
   NS_IF_ADDREF(*aAccessible);
@@ -837,34 +833,8 @@ nsAccessibilityService::CreateHTMLTableAccessible(nsIFrame *aFrame, nsIAccessibl
 }
 
 NS_IMETHODIMP
-nsAccessibilityService::CreateHTMLTableHeadAccessible(nsIDOMNode *aDOMNode, nsIAccessible **_retval)
-{
-#ifndef MOZ_ACCESSIBILITY_ATK
-  *_retval = nsnull;
-  return NS_ERROR_FAILURE;
-#else
-  NS_ENSURE_ARG_POINTER(aDOMNode);
-
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIWeakReference> weakShell;
-  rv = GetShellFromNode(aDOMNode, getter_AddRefs(weakShell));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsHTMLTableHeadAccessibleWrap* accTableHead =
-    new nsHTMLTableHeadAccessibleWrap(aDOMNode, weakShell);
-
-  NS_ENSURE_TRUE(accTableHead, NS_ERROR_OUT_OF_MEMORY);
-
-  *_retval = static_cast<nsIAccessible *>(accTableHead);
-  NS_IF_ADDREF(*_retval);
-
-  return rv;
-#endif
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateHTMLTableCellAccessible(nsIFrame *aFrame, nsIAccessible **_retval)
+nsAccessibilityService::CreateHTMLTableCellAccessible(nsIFrame *aFrame,
+                                                      nsIAccessible **aAccessible)
 {
   nsCOMPtr<nsIDOMNode> node;
   nsCOMPtr<nsIWeakReference> weakShell;
@@ -872,11 +842,11 @@ nsAccessibilityService::CreateHTMLTableCellAccessible(nsIFrame *aFrame, nsIAcces
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLTableCellAccessible(node, weakShell);
-  if (! *_retval) 
+  *aAccessible = new nsHTMLTableCellAccessibleWrap(node, weakShell);
+  if (!*aAccessible) 
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(*_retval);
+  NS_ADDREF(*aAccessible);
   return NS_OK;
 }
 
@@ -1582,7 +1552,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
         } else if (roleMapEntry->role == nsIAccessibleRole::ROLE_GRID_CELL ||
             roleMapEntry->role == nsIAccessibleRole::ROLE_ROWHEADER ||
             roleMapEntry->role == nsIAccessibleRole::ROLE_COLUMNHEADER) {
-          newAcc = new nsARIAGridCellAccessible(aNode, aWeakShell);
+          newAcc = new nsARIAGridCellAccessibleWrap(aNode, aWeakShell);
         }
       }
     }
@@ -1828,10 +1798,10 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
       *aAccessible = new nsXULLinkAccessible(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XULListbox:
-      *aAccessible = new nsXULListboxAccessible(aNode, weakShell);
+      *aAccessible = new nsXULListboxAccessibleWrap(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XULListCell:
-      *aAccessible = new nsXULListCellAccessible(aNode, weakShell);
+      *aAccessible = new nsXULListCellAccessibleWrap(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XULListHead:
       *aAccessible = new nsXULColumnsAccessible(aNode, weakShell);
@@ -1909,7 +1879,7 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XULTree:
       return GetAccessibleForXULTree(aNode, weakShell, aAccessible);
     case nsIAccessibleProvider::XULTreeColumns:
-      *aAccessible = new nsXULTreeColumnsAccessibleWrap(aNode, weakShell);
+      *aAccessible = new nsXULTreeColumnsAccessible(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XULTreeColumnItem:
       *aAccessible = new nsXULColumnItemAccessible(aNode, weakShell);

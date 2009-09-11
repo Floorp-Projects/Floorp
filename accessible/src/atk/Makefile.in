@@ -66,12 +66,6 @@ CPPSRCS = \
   nsMaiInterfaceImage.cpp \
   $(NULL)
 
-ifdef MOZ_XUL
-CPPSRCS += \
-  nsXULTreeAccessibleWrap.cpp \
-  $(NULL)
-endif
-
 EXPORTS = \
   nsAccessNodeWrap.h \
   nsARIAGridAccessibleWrap.h \
@@ -80,7 +74,8 @@ EXPORTS = \
   nsRootAccessibleWrap.h \
   nsTextAccessibleWrap.h \
   nsXULMenuAccessibleWrap.h \
-  nsXULTreeAccessibleWrap.h \
+  nsXULListboxAccessibleWrap.h \
+  nsXULTreeGridAccessibleWrap.h \
   nsHyperTextAccessibleWrap.h \
   nsHTMLImageAccessibleWrap.h \
   nsHTMLTableAccessibleWrap.h \

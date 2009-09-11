@@ -50,7 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469688
            "landmarked table should have nsIAccessibleTable");
         
         if (accessibleTable)
-          is(accessibleTable.cellRefAt(0,0).firstChild.name, "hi", "no cell");
+          is(accessibleTable.getCellAt(0,0).firstChild.name, "hi", "no cell");
       }
 
       // test gEmptyRoleMap

@@ -16,16 +16,6 @@
 function doTest()
 {
   var accTable = getAccessible("table", [nsIAccessibleTable]);
-  var caption = accTable.caption;
-  is(caption.firstChild.name, "Test Table", "wrong text inside caption");
-
-  is(caption.children.queryElementAt(0, nsIAccessible).name, "Test Table",
-     "wrong text inside caption");
-
-  is(accTable.summary, "this is a test table for nsIAccessibleTable",
-     "wrong summary on table");
-  is(accTable.columns, 4, "wrong number of columns");
-  is(accTable.rows, 3, "wrong number of rows");
 
   var s = window.getSelection();
   if (s.rangeCount > 0)
@@ -36,14 +26,14 @@ function doTest()
   range.selectNode(cell);
   s.addRange(range);
 
-  is(accTable.selectedCellsCount, 1, "only one cell selected");
+  is(accTable.selectedCellCount, 1, "only one cell selected");
   cell = getNode("col2a");
   range.selectNode(cell);
   s.addRange(range);
   cell = getNode("col2c");
   range.selectNode(cell);
   s.addRange(range);
-  is(accTable.selectedColumnsCount, 1, "only one column selected");
+  is(accTable.selectedcolumnCount, 1, "only one column selected");
   cell = getNode("row2a");
   range.selectNode(cell);
   s.addRange(range);
@@ -54,30 +44,7 @@ function doTest()
   range.selectNode(cell);
   s.addRange(range);
 
-  is(accTable.selectedRowsCount, 1, "no cells selected");
-
-  var rowheader;
-  var works = true;
-  try {
-    rowheader = accTable.rowHeader;
-  }
-  catch (e) {
-    works = false;
-  }
-  todo(works, "rowHeader should not throw");
-
-  var columnHeader;
-  works = true;
-  try {
-    columnHeader = accTable.columnHeader;
-    columnHeaderIndex = columnHeader.getIndexAt(0, 2);
-    is(columnHeaderIndex, 2, "columnheaderindex is wrong");
-  }
-  catch (e) {
-    works = false;
-  }
-  if (!works)
-    todo(works, "columnHeader should not throw");
+  is(accTable.selectedrowCount, 1, "no cells selected");
 
   var columnDescription;
   works = true;

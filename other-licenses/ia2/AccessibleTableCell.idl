@@ -1,0 +1,167 @@
+/*************************************************************************
+ *
+ *  File Name (AccessibleTableCell.idl)
+ *
+ *  IAccessible2 IDL Specification
+ *
+ *  Copyright (c) Linux Foundation 2007, 2009
+ *  Copyright (c) IBM Corp. 2006
+ *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License version 2.1, as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ ************************************************************************/
+
+import "objidl.idl";
+import "oaidl.idl";
+import "oleacc.idl";
+import "Accessible2.idl";
+
+/** @brief This interface gives access to the cells of a two-dimensional table.
+
+ Please also refer to the IAccessibleTable2 interface.
+
+*/
+[object, uuid(594116B1-C99F-4847-AD06-0A7A86ECE645)]
+interface IAccessibleTableCell : IUnknown
+{
+
+  /** @brief Returns the number of columns occupied by this cell accessible.
+        
+   The result is greater than 1 if the specified cell spans multiple columns.
+   @param [out] nColumnsSpanned
+    Returns the 1 based column extent of the specified cell.
+   @retval S_OK
+  */
+  [propget] HRESULT columnExtent
+    (
+     [out, retval] long *nColumnsSpanned 
+    );
+
+  /** @brief Returns the column headers as an array of cell accessibles.
+
+   @param [out] cellAccessibles
+    Pointer to an array of references to cell accessibles.  The array is allocated
+	by the server.  Free it with CoTaskMemFree.
+   @param [out] nColumnHeaderCells
+    The number of accessibles returned; the size of the returned array.
+   @retval S_OK
+   @retval S_FALSE if there is no header, [out] values are NULL and 0 respectively 
+  */
+  [propget] HRESULT columnHeaderCells
+    (
+     [out, size_is(,*nColumnHeaderCells,)] IUnknown ***cellAccessibles,
+     [out, retval] long *nColumnHeaderCells
+    );
+
+  /** @brief Translates this cell accessible into the corresponding column index.
+
+   @param [out] columnIndex
+    Returns the 0 based column index of the cell of the specified cell or the index of 
+    the first column if the cell spans multiple columns.
+   @retval S_OK
+  */
+  [propget] HRESULT columnIndex
+    (
+     [out, retval] long *columnIndex
+    );
+
+  /** @brief Returns the number of rows occupied by this cell accessible.
+        
+   @param [out] nRowsSpanned
+    Returns the row extent of the specified cell.
+   @retval S_OK
+  */
+  [propget] HRESULT rowExtent
+    (
+     [out, retval] long *nRowsSpanned
+    );
+
+  /** @brief Returns the row headers as an array of cell accessibles.
+
+   @param [out] cellAccessibles
+    Pointer to an array of references to cell accessibles.  The array is allocated
+	by the server.  Free it with CoTaskMemFree.
+   @param [out] nRowHeaderCells
+    The number of accessibles returned; the size of the returned array.
+   @retval S_OK
+   @retval S_FALSE if there is no header, [out] values are NULL and 0 respectively 
+  */
+  [propget] HRESULT rowHeaderCells
+    (
+     [out, size_is(,*nRowHeaderCells,)] IUnknown ***cellAccessibles,
+     [out, retval] long *nRowHeaderCells
+    );
+
+  /** @brief Translates this cell accessible into the corresponding row index.
+
+   @param [out] rowIndex
+    Returns the 0 based row index of the specified cell or the index of 
+    the first row if the cell spans multiple rows.
+   @retval S_OK
+  */
+  [propget] HRESULT rowIndex
+    (
+     [out, retval] long *rowIndex 
+    );
+
+  /** @brief Returns a boolean value indicating whether this cell is selected.
+
+   @param [out] isSelected
+    Returns TRUE if the specified cell is selected and FALSE otherwise.
+   @retval S_OK
+  */
+  [propget] HRESULT isSelected
+    (
+     [out, retval] boolean *isSelected 
+    );
+  
+  /** @brief Gets the row and column indexes and extents of this cell accessible
+    and whether or not it is selected.
+
+   This is a convenience function.  It is not mandatory to implement it.
+   @param [out] row
+    0 based row index.
+   @param [out] column
+    0 based column index.
+   @param [out] rowExtents
+    Number of cells spanned by this cell in this row.
+   @param [out] columnExtents
+    Number of cells spanned by this cell in this column.
+   @param [out] isSelected
+    Indicates if the specified cell is selected.
+   @retval S_OK
+  */
+  [propget] HRESULT rowColumnExtents
+    (
+     [out] long *row,  
+     [out] long *column,
+     [out] long *rowExtents,
+     [out] long *columnExtents,
+     [out, retval] boolean *isSelected
+    );
+
+  /** @brief Returns a reference to the accessbile of the containing table.
+
+   @param [out] table
+    Returns a reference to the IUnknown of the containing table.
+   @retval S_OK
+  */
+  [propget] HRESULT table
+    (
+     [out, retval] IUnknown **table
+    );
+
+}
