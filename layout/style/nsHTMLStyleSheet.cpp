@@ -205,7 +205,7 @@ nsHTMLStyleSheet::TableTbodyRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
-    aRuleData->mPostResolveCallback = &TbodyPostResolveCallback;
+    aRuleData->mPostResolveCallbacks.AppendElement(&TbodyPostResolveCallback);
   }
   return NS_OK;
 }
@@ -224,7 +224,7 @@ nsHTMLStyleSheet::TableRowRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
-    aRuleData->mPostResolveCallback = &RowPostResolveCallback;
+    aRuleData->mPostResolveCallbacks.AppendElement(&RowPostResolveCallback);
   }
   return NS_OK;
 }
@@ -242,7 +242,7 @@ nsHTMLStyleSheet::TableColgroupRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
-    aRuleData->mPostResolveCallback = &ColgroupPostResolveCallback;
+    aRuleData->mPostResolveCallbacks.AppendElement(&ColgroupPostResolveCallback);
   }
   return NS_OK;
 }
@@ -271,7 +271,7 @@ nsHTMLStyleSheet::TableColRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
-    aRuleData->mPostResolveCallback = &ColPostResolveCallback;
+    aRuleData->mPostResolveCallbacks.AppendElement(&ColPostResolveCallback);
   }
   return NS_OK;
 }
@@ -281,7 +281,7 @@ nsHTMLStyleSheet::TableUngroupedColRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
-    aRuleData->mPostResolveCallback = &UngroupedColPostResolveCallback;
+    aRuleData->mPostResolveCallbacks.AppendElement(&UngroupedColPostResolveCallback);
   }
   return NS_OK;
 }
