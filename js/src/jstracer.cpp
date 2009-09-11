@@ -437,7 +437,7 @@ static Oracle oracle;
 
 /*
  * This confusing and mysterious expression is used for the Tracker. The
- * tracker's responsibility is to map opaque, 4-byte aligned adresses to LIns
+ * tracker's responsibility is to map opaque, 4-byte aligned addresses to LIns
  * pointers. To do this efficiently, we observe that the addresses of jsvals
  * living in the interpreter tend to be aggregated close to each other -
  * usually on the same page.
