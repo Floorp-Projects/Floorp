@@ -16,6 +16,7 @@ chrome.jar:
   browser-low.css                      (browser-low.css)
   notification.css                     (notification.css)
   images/arrowright-16.png             (images/arrowright-16.png)
+  images/arrowup-16.png                (images/arrowup-16.png)
   images/ratings-18.png                (images/ratings-18.png)
 
   images/favicon-default-30.png        (images/favicon-default-30.png)
