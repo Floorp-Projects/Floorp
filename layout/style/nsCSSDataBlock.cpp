@@ -572,7 +572,7 @@ nsCSSExpandedDataBlock::kOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
         { offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),           \
           size_t(-1),                                                         \
           size_t(-1) },
-    #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_, stylestruct_) \
+    #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_, stylestruct_, stylestructoffset_, animtype_) \
         { offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),           \
           offsetof(nsRuleData, m##datastruct_##Data),                         \
           offsetof(nsRuleData##datastruct_, member_) },
