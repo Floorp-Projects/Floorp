@@ -33,7 +33,7 @@ function doTest()
   cell = getNode("col2c");
   range.selectNode(cell);
   s.addRange(range);
-  is(accTable.selectedcolumnCount, 1, "only one column selected");
+  is(accTable.selectedColumnCount, 1, "only one column selected");
   cell = getNode("row2a");
   range.selectNode(cell);
   s.addRange(range);
@@ -44,7 +44,7 @@ function doTest()
   range.selectNode(cell);
   s.addRange(range);
 
-  is(accTable.selectedrowCount, 1, "no cells selected");
+  is(accTable.selectedRowCount, 1, "no cells selected");
 
   var columnDescription;
   works = true;
