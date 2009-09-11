@@ -151,6 +151,7 @@ pref("extensions.dss.switchPending", false);
 pref("extensions.ignoreMTimeChanges", false);
 pref("extensions.logging.enabled", false);
 pref("extensions.hideInstallButton", true);
+pref("extensions.disabledAddons.showUI", true);
 
 /* these point at AMO */
 pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");

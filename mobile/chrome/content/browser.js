@@ -55,6 +55,7 @@ const FINDSTATE_FIND_PREVIOUS = 2;
 const endl = '\n';
 
 Cu.import("resource://gre/modules/SpatialNavigation.js");
+Cu.import("resource://gre/modules/PluralForm.jsm");
 
 function getBrowser() {
   return Browser.selectedBrowser;
@@ -542,6 +543,20 @@ var Browser = {
     }
 
     bv.commitBatchOperation();
+
+    // If some add-ons were disabled during during an application update, alert user
+    if (gPrefService.prefHasUserValue("extensions.disabledAddons")) {
+      let addons = gPrefService.getCharPref("extensions.disabledAddons").split(",");
+      if (addons.length > 0) {
+        let disabledStrings = document.getElementById("bundle_browser").getString("alertAddonsDisabled");
+        let label = PluralForm.get(addons.length, disabledStrings).replace("#1", addons.length);
+  
+        let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+        alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
+                                     label, false, "", null);
+      }
+      gPrefService.clearUserPref("extensions.disabledAddons");
+    }
 
     //dump("end startup\n");
   },
