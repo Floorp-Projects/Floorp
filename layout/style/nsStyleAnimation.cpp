@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Daniel Holbert <dholbert@mozilla.com>, Mozilla Corporation
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,6 +52,7 @@
 #include "nsICSSLoader.h"
 #include "nsCSSDataBlock.h"
 #include "nsCSSDeclaration.h"
+#include "prlog.h"
 
 // HELPER METHODS
 // --------------
@@ -293,27 +295,98 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
   return ExtractComputedValue(aProperty, tmpStyleContext, aComputedValue);
 }
 
+inline const void*
+StyleDataAtOffset(const void* aStyleStruct, ptrdiff_t aOffset)
+{
+  return reinterpret_cast<const char*>(aStyleStruct) + aOffset;
+}
+
+inline void*
+StyleDataAtOffset(void* aStyleStruct, ptrdiff_t aOffset)
+{
+  return reinterpret_cast<char*>(aStyleStruct) + aOffset;
+}
+
 PRBool
 nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                                        nsStyleContext* aStyleContext,
                                        nsStyleCoord& aComputedValue)
 {
-  // XXXdholbert This is a simple implementation that only supports "font-size"
-  // and "stroke-width for now, so that we can test the rest of the
-  // functionality. A full implementation will require modifications to
-  // nsCSSPropList.h, as described in bug 504652 comment 0.
-  switch(aProperty) {
-    case eCSSProperty_font_size: {
-      const nsStyleFont* styleFont = aStyleContext->GetStyleFont();
-      aComputedValue.SetCoordValue(styleFont->mFont.size);
+  NS_ABORT_IF_FALSE(0 <= aProperty &&
+                    aProperty < eCSSProperty_COUNT_no_shorthands,
+                    "bad property");
+  const void* styleStruct =
+    aStyleContext->GetStyleData(nsCSSProps::kSIDTable[aProperty]);
+  ptrdiff_t ssOffset = nsCSSProps::kStyleStructOffsetTable[aProperty];
+  NS_ABORT_IF_FALSE(0 <= ssOffset, "must be dealing with animatable property");
+  nsStyleAnimType animType = nsCSSProps::kAnimTypeTable[aProperty];
+  switch (animType) {
+    case eStyleAnimType_Coord:
+      aComputedValue = *static_cast<const nsStyleCoord*>(
+        StyleDataAtOffset(styleStruct, ssOffset));
       return PR_TRUE;
-    }
-    case eCSSProperty_stroke_width: {
-      const nsStyleSVG* styleSVG = aStyleContext->GetStyleSVG();
-      aComputedValue = styleSVG->mStrokeWidth;
+    case eStyleAnimType_Sides_Top:
+    case eStyleAnimType_Sides_Right:
+    case eStyleAnimType_Sides_Bottom:
+    case eStyleAnimType_Sides_Left:
+      PR_STATIC_ASSERT(0 == NS_SIDE_TOP);
+      PR_STATIC_ASSERT(eStyleAnimType_Sides_Right - eStyleAnimType_Sides_Top
+                         == NS_SIDE_RIGHT);
+      PR_STATIC_ASSERT(eStyleAnimType_Sides_Bottom - eStyleAnimType_Sides_Top
+                         == NS_SIDE_BOTTOM);
+      PR_STATIC_ASSERT(eStyleAnimType_Sides_Left - eStyleAnimType_Sides_Top
+                         == NS_SIDE_LEFT);
+      aComputedValue = static_cast<const nsStyleSides*>(
+        StyleDataAtOffset(styleStruct, ssOffset))->
+          Get(animType - eStyleAnimType_Sides_Top);
       return PR_TRUE;
-    }
-    default:
-      return PR_FALSE;
+    case eStyleAnimType_None:
+      NS_NOTREACHED("shouldn't use on non-animatable properties");
   }
+  return PR_FALSE;
+}
+
+PRBool
+nsStyleAnimation::StoreComputedValue(nsCSSProperty aProperty,
+                                     nsPresContext* aPresContext,
+                                     void* aStyleStruct,
+                                     const nsStyleCoord& aComputedValue)
+{
+  NS_ABORT_IF_FALSE(0 <= aProperty &&
+                    aProperty < eCSSProperty_COUNT_no_shorthands,
+                    "bad property");
+  ptrdiff_t ssOffset = nsCSSProps::kStyleStructOffsetTable[aProperty];
+  NS_ABORT_IF_FALSE(0 <= ssOffset, "must be dealing with animatable property");
+  nsStyleAnimType animType = nsCSSProps::kAnimTypeTable[aProperty];
+  switch (animType) {
+    case eStyleAnimType_Coord:
+      *static_cast<nsStyleCoord*>(StyleDataAtOffset(aStyleStruct, ssOffset)) =
+        aComputedValue;
+      return PR_TRUE;
+    case eStyleAnimType_Sides_Top:
+    case eStyleAnimType_Sides_Right:
+    case eStyleAnimType_Sides_Bottom:
+    case eStyleAnimType_Sides_Left: {
+      PR_STATIC_ASSERT(0 == NS_SIDE_TOP);
+      PR_STATIC_ASSERT(eStyleAnimType_Sides_Right - eStyleAnimType_Sides_Top
+                         == NS_SIDE_RIGHT);
+      PR_STATIC_ASSERT(eStyleAnimType_Sides_Bottom - eStyleAnimType_Sides_Top
+                         == NS_SIDE_BOTTOM);
+      PR_STATIC_ASSERT(eStyleAnimType_Sides_Left - eStyleAnimType_Sides_Top
+                         == NS_SIDE_LEFT);
+      static_cast<nsStyleSides*>(StyleDataAtOffset(aStyleStruct, ssOffset))->
+          Set(animType - eStyleAnimType_Sides_Top, aComputedValue);
+
+       nsStyleStructID sid = nsCSSProps::kSIDTable[aProperty];
+       if (sid == eStyleStruct_Margin) {
+         static_cast<nsStyleMargin*>(aStyleStruct)->RecalcData();
+       } else if (sid == eStyleStruct_Padding) {
+         static_cast<nsStylePadding*>(aStyleStruct)->RecalcData();
+       }
+      return PR_TRUE;
+    }
+    case eStyleAnimType_None:
+      NS_NOTREACHED("shouldn't use on non-animatable properties");
+  }
+  return PR_FALSE;
 }
