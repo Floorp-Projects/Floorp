@@ -4,6 +4,7 @@
  *
  *  IAccessible2 IDL Specification
  *
+ *  Copyright (c) Linux Foundation 2007, 2008
  *  Copyright (c) IBM Corp. 2006
  *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
  *
@@ -19,19 +20,21 @@
  *
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  ************************************************************************/
 
 import "objidl.idl";
 import "oaidl.idl";
 import "oleacc.idl";
-        
-/** @brief This interface gives write access to a text representation.
+import "IA2CommonTypes.idl";
+
+/** @brief This interface provides clipboard capability to text objects.
 
  This interface is typically used in conjunction with the IAccessibleText 
-  interface and complements that interface with the additional ability to 
-  modify text.
+  interface and complements that interface with the additional capability of
+  clipboard operations.  Note that even a read only text object can support
+  the copy capability so this interface is not limited to editable objects.
 
  The substrings used with this interface are specified as follows:
   If startOffset is less than endOffset, the substring starts with the 
@@ -40,6 +43,10 @@ import "oleacc.idl";
   with the two arguments exchanged. The whole text can be defined by passing 
   the indices zero and IAccessibleText::nCharacters. If both indices have the 
   same value, an empty string is defined. 
+
+ Refer to the @ref _specialOffsets
+  "Special Offsets for use in the IAccessibleText and IAccessibleEditableText Methods" 
+  for information about a special offset constant that can be used in %IAccessibleEditableText methods.
 */
 [object, uuid(A59AA09A-7011-4b65-939D-32B1FB5547E3)]
 interface IAccessibleEditableText : IUnknown
@@ -56,6 +63,8 @@ interface IAccessibleEditableText : IUnknown
    @param [in] endOffset
     End index of the text to moved into the clipboard.
     The valid range is 0..length.
+   @retval S_OK
+   @retval E_INVALIDARG if bad [in] passed
   */
   HRESULT copyText
     (
@@ -74,6 +83,8 @@ interface IAccessibleEditableText : IUnknown
    @param [in] endOffset
     End index of the text to be deleted.
     The valid range is 0..length.
+   @retval S_OK
+   @retval E_INVALIDARG if bad [in] passed
   */
   HRESULT deleteText
     (
@@ -91,6 +102,8 @@ interface IAccessibleEditableText : IUnknown
     The valid range is 0..length.
    @param [in] text
     Text that is inserted.
+   @retval S_OK
+   @retval E_INVALIDARG if bad [in] passed
   */
   HRESULT insertText
     (
@@ -109,6 +122,8 @@ interface IAccessibleEditableText : IUnknown
    @param [in] endOffset 	
     End index of the text to be deleted.
     The valid range is 0..length.
+   @retval S_OK
+   @retval E_INVALIDARG if bad [in] passed
   */
   HRESULT cutText
     (
@@ -127,6 +142,8 @@ interface IAccessibleEditableText : IUnknown
     Index at which to insert the text from the system clipboard into
     the text represented by this object.
     The valid range is 0..length.
+   @retval S_OK
+   @retval E_INVALIDARG if bad [in] passed
   */
   HRESULT pasteText
     (
@@ -149,6 +166,8 @@ interface IAccessibleEditableText : IUnknown
     The valid range is 0..length.
    @param [in] text
     The Text that replaces the text between the given indices.
+   @retval S_OK
+   @retval E_INVALIDARG if bad [in] passed
   */
   HRESULT replaceText
     (
@@ -171,6 +190,8 @@ interface IAccessibleEditableText : IUnknown
    @param [in] attributes
     Set of attributes that replaces the old list of attributes of
     the specified text portion.
+   @retval S_OK
+   @retval E_INVALIDARG if bad [in] passed
   */
   HRESULT setAttributes
     (

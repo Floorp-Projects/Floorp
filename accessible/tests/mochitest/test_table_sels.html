@@ -32,11 +32,11 @@
 
       testTableSelection("table", cellsArray);
 
-      var rowsCount = 4;
-      for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++)
+      var rowCount = 4;
+      for (var rowIdx = 0; rowIdx < rowCount; rowIdx++)
         testSelectTableRow("table", rowIdx, cellsArray);
 
-      for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
+      for (var rowIdx = 0; rowIdx < rowCount; rowIdx++) {
         testSelectTableRow("table", rowIdx, cellsArray);
         testUnselectTableRow("table", rowIdx, cellsArray);
       }

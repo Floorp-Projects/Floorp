@@ -4,7 +4,8 @@
  *
  *  IAccessible2 IDL Specification
  *
- *  Copyright (c) IBM Corp. 2007
+ *  Copyright (c) Linux Foundation 2007, 2008
+ *  Copyright (c) IBM Corp. 2006
  *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
  *
  *  This library is free software; you can redistribute it and/or
@@ -23,7 +24,11 @@
  *
  ************************************************************************/
 
-/// These constants identify the event IDs fired by IAccessible2 objects.
+/** %IAccessible2 specific event constants 
+
+ This enum defines the event IDs fired by %IAccessible2 objects.  The event IDs
+ are in addition to those used by MSAA.
+*/
 enum IA2EventID {
 
   /** The change of the number or attributes of actions of an accessible
@@ -31,10 +36,26 @@ enum IA2EventID {
   */
   IA2_EVENT_ACTION_CHANGED = 0x101,
 
-  /** The active descendant of a component has changed.  The active descendant 
-    is used in objects with transient children.
+  /** The active descendant of a component has changed.
+	
+	Note: This event constant is misspelled and thus is deprecated and will be
+	removed in a later version. Please use the correctly spelled version which
+	follows.
   */
   IA2_EVENT_ACTIVE_DECENDENT_CHANGED,
+
+  /** The active descendant of a component has changed.  The active descendant 
+    is used in objects with transient children.  
+
+    Note: Due to the fact that MSAA's WinEvents don't allow the active child index
+	to be passed on the IA2_EVENT_ACTIVE_DESCENDANT_CHANGED event the manages
+	descendants	scheme can't be used.  Instead the active child object has to fire
+	MSAA's EVENT_OBJECT_FOCUS.  In a future release a new event mechanism may be
+	added to provide for event specific data to be passed with the event.  At that
+	time the IA2_EVENT_ACTIVE_DECENDENT_CHANGED event and
+	IA2_STATE_MANAGES_DESCENDANTS state would be useful.
+  */
+  IA2_EVENT_ACTIVE_DESCENDANT_CHANGED = IA2_EVENT_ACTIVE_DECENDENT_CHANGED,
 
   /** The document wide attributes of the document object have changed.
   */
@@ -60,7 +81,7 @@ enum IA2EventID {
   */
   IA2_EVENT_HYPERLINK_END_INDEX_CHANGED,
 
-  /** The number of anchors assoicated with this hyperlink object has changed.
+  /** The number of anchors associated with this hyperlink object has changed.
   */
   IA2_EVENT_HYPERLINK_NUMBER_OF_ANCHORS_CHANGED,
 
@@ -142,8 +163,7 @@ enum IA2EventID {
   */
   IA2_EVENT_TEXT_CARET_MOVED,
 
-  /** This event indicates general text changes, i.e. changes to text that is 
-    exposed through the IAccessibleText and IAccessibleEditableText interfaces.
+  /** <b>Deprecated.</b>  This event is equivalent to ::IA2_EVENT_TEXT_UPDATED.
   */
   IA2_EVENT_TEXT_CHANGED,
 
@@ -159,15 +179,22 @@ enum IA2EventID {
   */
   IA2_EVENT_TEXT_REMOVED,
 
-  /** Text was updated.
+  /** This event indicates general text changes, i.e. changes to text that are 
+    exposed through the IAccessibleText interface.  For compatibility with ATK/AT-SPI
+	which does not have an equivalent event, servers can alternatively fire 
+	::IA2_EVENT_TEXT_REMOVED and ::IA2_EVENT_TEXT_INSERTED.
   */
   IA2_EVENT_TEXT_UPDATED,
 
-  /** The text selection changed.
+  /** The text selection changed.  Later versions of Microsoft development environments 
+   have an equivalent event identified, EVENT_OBJECT_TEXTSELECTIONCHANGED.  Servers 
+   should use that if it is available and use IA2_EVENT_TEXT_SELECTION_CHANGED otherwise.  
+   Clients should be prepared to respond to either event.
+
   */
   IA2_EVENT_TEXT_SELECTION_CHANGED,
 
-  /** A visibile data event indicates the change of the visual appearance
+  /** A visible data event indicates the change of the visual appearance
     of an accessible object.  This includes for example most of the
     attributes available via the IAccessibleComponent interface.
   */

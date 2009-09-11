@@ -4,7 +4,7 @@
                  type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="nsIAccessibleTable interface on xul:listbox test.">
+        title="nsIAccessibleTable selection methods on xul:listbox test.">
 
   <script type="application/javascript" 
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
@@ -14,89 +14,17 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+          src="chrome://mochikit/content/a11y/accessible/table.js"></script>
 
   <script type="application/javascript">
   <![CDATA[
     function doTest()
     {
-      var id = "";
-      var listbox = null, acc = null;
+      var id = "listbox3";
+      var acc = getAccessible(id, [nsIAccessibleTable]);
 
-      //////////////////////////////////////////////////////////////////////////
-      // Simple listbox. There is no nsIAccessibleTable interface.
-
-      id = "listbox1";
-      acc = getAccessible(id);
-
-      // query nsIAccessibleTable
-      try {
-        acc.QueryInterface(nsIAccessibleTable);
-        ok(false,
-           id + " shouldn't implement nsIAccessibleTable interface.");
-      } catch(e) {
-        ok(true, id + " doesn't implement nsIAccessibleTable interface.");
-      }
-
-      // role
-      testRole(id, ROLE_LISTBOX);
-
-      //////////////////////////////////////////////////////////////////////////
-      // Multicolumn listbox.
-
-      id = "listbox2";
-      acc = getAccessible(id, [nsIAccessibleTable]);
-
-      // role
-      testRole(acc, ROLE_TABLE);
-
-      // rows count
-      var rowsCount = acc.rows;
-      is (rowsCount, 2, id + " has wrong number of rows.");
-
-      // columns count
+      var rowCount = acc.rows;
       var colsCount = acc.columns;
-      is (colsCount, 2, id + " has wrong number of columns.");
-
-      //////////////////////////////////////////////////////////////////////////
-      // Multicolumn listbox with header.
-
-      id = "listbox3";
-      acc = getAccessible(id, [nsIAccessibleTable]);
-
-      // role
-      testRole(acc, ROLE_TABLE);
-
-      // rows count
-      var rowsCount = acc.rows;
-      is (rowsCount, 3, id + " has wrong number of rows.");
-
-      // columns count
-      var colsCount = acc.columns;
-      is (colsCount, 3, id + " has wrong number of columns.");
-
-      // getCellRefAt, getIndexAt, getRowAtIndex, getColumnAtIndex,
-      // getColumnExtentAt, getRowExtentAt.
-      for (var row = 0; row < rowsCount; row++) {
-        for (var col = 0; col < colsCount; col++) {
-          var index = row * colsCount + col;
-
-          is(acc.cellRefAt(row, col).name, "cell" + index,
-             id + ": wrong cell returned for (" + row + ", " + col + ")");
-
-          is(acc.getIndexAt(row, col), index,
-             id + ": wrong index returned for (" + row + ", " + col + ")");
-          is(acc.getRowAtIndex(index), row,
-             id + ": wrong row at the index " + index);
-          is(acc.getColumnAtIndex(index), col,
-             id + ": wrong column at the index " + index);
-
-          is(acc.getColumnExtentAt(row, col), 1,
-             id + ": colspan wrong for (" + row + ", " + col + ")");
-          is(acc.getRowExtentAt(row, col), 1,
-             id + ": rowspan wrong for (" + row + ", " + col + ")");
-        }
-      }
 
       // columns selection
       testColumnSelection(id, acc, colsCount, 0, null);
@@ -104,20 +32,20 @@
       testColumnSelection(id, acc, colsCount, 0, null);
 
       // rows selection
-      testRowSelection(id, acc, rowsCount, 0, null);
+      testRowSelection(id, acc, rowCount, 0, null);
       acc.selectRow(0);
-      testRowSelection(id, acc, rowsCount, 1, [0]);
+      testRowSelection(id, acc, rowCount, 1, [0]);
       acc.selectRow(1);
-      testRowSelection(id, acc, rowsCount, 1, [1]);
+      testRowSelection(id, acc, rowCount, 1, [1]);
       acc.unselectRow(1);
-      testRowSelection(id, acc, rowsCount, 0, null);
+      testRowSelection(id, acc, rowCount, 0, null);
 
       // cells selection
-      testCellSelection(id, acc, rowsCount, colsCount, 0, null);
+      testCellSelection(id, acc, rowCount, colsCount, 0, null);
       acc.selectRow(2);
-      testCellSelection(id, acc, rowsCount, colsCount, 3, [6, 7, 8]);
+      testCellSelection(id, acc, rowCount, colsCount, 3, [6, 7, 8]);
       acc.unselectRow(2);
-      testCellSelection(id, acc, rowsCount, colsCount, 0, null);
+      testCellSelection(id, acc, rowCount, colsCount, 0, null);
 
       SimpleTest.finish();
     }
@@ -139,13 +67,13 @@
         }
       }
 
-      // selectedColumnsCount
-      is(aAcc.selectedColumnsCount, aSelCount,
+      // selectedcolumnCount
+      is(aAcc.selectedcolumnCount, aSelCount,
          aId + ": wrong number of selected columns");
 
       // getSelectedColumns
       var selColsCount = {}, selCols = {};
-      aAcc.getSelectedColumns(selColsCount, selCols);
+      aAcc.getSelectedColumnIndices(selColsCount, selCols);
 
       is(selColsCount.value, aSelCount,
          aId + ": wrong number of selected columns");
@@ -178,13 +106,13 @@
         }
       }
 
-      // selectedRowsCount
-      is(aAcc.selectedRowsCount, aSelCount,
+      // selectedrowCount
+      is(aAcc.selectedrowCount, aSelCount,
          aId + ": wrong number of selected rows");
 
       // getSelectedRows
       var selColsCount = {}, selCols = {};
-      aAcc.getSelectedRows(selColsCount, selCols);
+      aAcc.getSelectedRowIndices(selColsCount, selCols);
 
       is(selColsCount.value, aSelCount,
          aId + ": wrong number of selected rows");
@@ -222,12 +150,12 @@
       }
 
       // selectedCellCount
-      is(aAcc.selectedCellsCount, aSelCount,
+      is(aAcc.selectedCellCount, aSelCount,
          aId + ": wrong number of selected cells");
 
       // getSelectedCells
       var selColsCount = {}, selCols = {};
-      aAcc.getSelectedCells(selColsCount, selCols);
+      aAcc.getSelectedCellIndices(selColsCount, selCols);
 
       is(selColsCount.value, aSelCount,
          aId + ": wrong number of selected cells");
@@ -255,6 +183,12 @@
        title="implement the rest of methods of nsIAccessibleTable on xul:listbox">
       Mozilla Bug 418371
     </a>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=512424"
+       title="implement IAccessibleTable2">
+      Mozilla Bug 512424
+    </a>
+
     <p id="display"></p>
     <div id="content" style="display: none">
     </div>
@@ -263,11 +197,6 @@
   </body>
 
   <vbox flex="1">
-    <label control="listbox1" value="listbox: "/>
-    <listbox id="listbox1">
-      <listitem label="item1" id="item1"/>
-      <listitem label="item2" id="item2"/>
-    </listbox>
 
     <label control="listbox2" value="multicolumn listbox: "/>
     <listbox id="listbox2">

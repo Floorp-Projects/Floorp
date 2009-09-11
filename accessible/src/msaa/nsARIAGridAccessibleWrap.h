@@ -43,10 +43,11 @@
 
 #include "nsARIAGridAccessible.h"
 #include "CAccessibleTable.h"
+#include "CAccessibleTableCell.h"
 
 /**
- * Accessible for ARIA grid and treegrid implementing IAccessibleTable
- * interface.
+ * IA2 wrapper class for nsARIAGridAccessible implementing IAccessibleTable and
+ * IAccessibleTable2 interfaces.
  */
 class nsARIAGridAccessibleWrap : public nsARIAGridAccessible,
                                  public CAccessibleTable
@@ -54,6 +55,24 @@ class nsARIAGridAccessibleWrap : public nsARIAGridAccessible,
 public:
   nsARIAGridAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell) :
     nsARIAGridAccessible(aNode, aShell) {}
+
+  // IUnknown
+  DECL_IUNKNOWN_INHERITED
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+};
+
+/**
+ * IA2 wrapper class for nsARIAGridCellAccessible implementing
+ * IAccessibleTableCell interface.
+ */
+class nsARIAGridCellAccessibleWrap : public nsARIAGridCellAccessible,
+                                     public CAccessibleTableCell
+{
+public:
+  nsARIAGridCellAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell) :
+    nsARIAGridCellAccessible(aNode, aShell) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED

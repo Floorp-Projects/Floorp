@@ -112,7 +112,7 @@
         var acc = getAccessible(gTree);
 
         var tableAcc = getAccessible(acc, [nsIAccessibleTable]);
-        return tableAcc.cellRefAt(aRow, aCol);
+        return tableAcc.getCellAt(aRow, aCol);
       }
       this.getID = function getID()
       {

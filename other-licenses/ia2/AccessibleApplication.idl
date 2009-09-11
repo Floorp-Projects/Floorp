@@ -4,7 +4,8 @@
  *
  *  IAccessible2 IDL Specification
  *
- *  Copyright (c) IBM Corp. 2007
+ *  Copyright (c) Linux Foundation 2007, 2008
+ *  Copyright (c) IBM Corp. 2006
  *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
  *
  *  This library is free software; you can redistribute it and/or
@@ -33,6 +34,10 @@ import "oleacc.idl";
  this application from other applications, from other versions of this 
  application, or from other versions of this application running on different 
  versions of an accessibility bridge or accessibility toolkit.
+
+ Servers implementing IAccessible2 should provide access to the %IAccessibleApplication 
+ interface via QueryService from any object so that ATs can easily determine specific 
+ information about the application such as its name or version.
 */
 [object, uuid(D49DED83-5B25-43F4-9B95-93B44595979E)]
 interface IAccessibleApplication : IUnknown
@@ -40,6 +45,8 @@ interface IAccessibleApplication : IUnknown
   
   /** @brief Returns the application name.
    @param [out] name
+   @retval S_OK
+   @retval S_FALSE if there is nothing to return, [out] value is NULL
   */
   [propget] HRESULT appName
     (
@@ -48,6 +55,8 @@ interface IAccessibleApplication : IUnknown
 
   /** @brief Returns the application version.
    @param [out] version
+   @retval S_OK
+   @retval S_FALSE if there is nothing to return, [out] value is NULL
   */
   [propget] HRESULT appVersion
     (
@@ -56,6 +65,8 @@ interface IAccessibleApplication : IUnknown
 
   /** @brief Returns the toolkit/bridge name.
    @param [out] name
+   @retval S_OK
+   @retval S_FALSE if there is nothing to return, [out] value is NULL
   */
   [propget] HRESULT toolkitName
     (
@@ -64,6 +75,8 @@ interface IAccessibleApplication : IUnknown
 
   /** @brief Returns the toolkit/bridge version.
    @param [out] version
+   @retval S_OK
+   @retval S_FALSE if there is nothing to return, [out] value is NULL
   */
   [propget] HRESULT toolkitVersion
     (

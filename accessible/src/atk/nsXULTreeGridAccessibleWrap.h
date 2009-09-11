@@ -14,16 +14,18 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is IBM Corporation
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is
+ * Sun Microsystems, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Author: Aaron Leventhal (aleventh@us.ibm.com)
+ *   Pete Zha (pete.zha@sun.com)
+ *   Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,11 +37,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsXULTreeAccessibleWrap_h__
-#define __nsXULTreeAccessibleWrap_h__
+#ifndef __nsXULTreeGridAccessibleWrap_h__
+#define __nsXULTreeGridAccessibleWrap_h__
 
 #include "nsXULTreeGridAccessible.h"
-typedef class nsXULTreeGridAccessible       nsXULTreeGridAccessibleWrap;
-typedef class nsXULTreeColumnsAccessible    nsXULTreeColumnsAccessibleWrap;
+
+typedef class nsXULTreeGridAccessible nsXULTreeGridAccessibleWrap;
+typedef class nsXULTreeGridCellAccessible nsXULTreeGridCellAccessibleWrap;
 
 #endif
+

@@ -1140,12 +1140,12 @@
           if (!list)
             return kNoAccessible;
 
-          var listhead = list.getElementsByTagName("listhead")[0];
-          if (!listhead)
+          var listcolsElm = list.getElementsByTagName("listcols")[0];
+          if (!listcolsElm)
             return kNoAccessible;
 
-          var listheaders = listhead.getElementsByTagName("listheader");
-          if (listheaders.length <= 1)
+          var listcolElms = listcolsElm.getElementsByTagName("listcol");
+          if (listcolElms.length <= 1)
             return kNoAccessible;
 
           return kListCellAccessible;

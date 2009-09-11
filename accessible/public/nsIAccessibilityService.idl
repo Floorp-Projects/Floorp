@@ -46,7 +46,7 @@ interface nsObjectFrame;
 interface nsIContent;
 interface nsITimer;
 
-[uuid(2fb528bc-33ec-4987-bbaa-21cab013f092)]
+[uuid(6a58f7e8-587c-40dd-b684-dc3e54f1342a)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -72,7 +72,6 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createHTMLSelectOptionAccessible(in nsIDOMNode aNode, in nsIAccessible aAccParent, in nsIWeakReference aPresShell);
   nsIAccessible createHTMLTableAccessible(in nsIFrame aFrame);
   nsIAccessible createHTMLTableCellAccessible(in nsIFrame aFrame);
-  nsIAccessible createHTMLTableHeadAccessible(in nsIDOMNode aDOMNode);
   nsIAccessible createHTMLTextAccessible(in nsIFrame aFrame);
   nsIAccessible createHTMLTextFieldAccessible(in nsIFrame aFrame);
   nsIAccessible createHTMLCaptionAccessible(in nsIFrame aFrame);

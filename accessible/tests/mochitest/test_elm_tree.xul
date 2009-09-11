@@ -26,7 +26,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Accessible tree testers
 
-    function getTreeItemAccTree(aTableRole, aColumnsCount)
+    function getTreeItemAccTree(aTableRole, acolumnCount)
     {
       var treeItemRole;
       switch (aTableRole) {
@@ -47,7 +47,7 @@
       };
 
       if (aTableRole == ROLE_TABLE || aTableRole == ROLE_TREE_TABLE) {
-        for (var idx = 0; idx < aColumnsCount; idx++) {
+        for (var idx = 0; idx < acolumnCount; idx++) {
           var cellAccTree = {
             role: ROLE_GRID_CELL,
             children: []
@@ -75,15 +75,15 @@
 
       var treeBoxObject = aTree.treeBoxObject;
       var view = treeBoxObject.view;
-      var columnsCount = treeBoxObject.columns.count;
+      var columnCount = treeBoxObject.columns.count;
 
-      for (var idx = 0; idx < columnsCount; idx++)
+      for (var idx = 0; idx < columnCount; idx++)
         accTreeForColumns.children.push({ role: ROLE_COLUMNHEADER, children: []});
       if (!aTree.hasAttribute("hidecolumnpicker"))
         accTreeForColumns.children.push({ role: ROLE_PUSHBUTTON, children: []});
 
       for (var idx = 0; idx < view.rowCount; idx++)
-        accTreeForTree.children.push(getTreeItemAccTree(aRole, columnsCount));
+        accTreeForTree.children.push(getTreeItemAccTree(aRole, columnCount));
 
       testAccessibleTree(aTree, accTreeForTree);
     }
