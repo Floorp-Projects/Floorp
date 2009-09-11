@@ -6317,25 +6317,25 @@ var gIdentityHandler = {
   IDENTITY_MODE_IDENTIFIED       : "verifiedIdentity", // High-quality identity information
   IDENTITY_MODE_DOMAIN_VERIFIED  : "verifiedDomain",   // Minimal SSL CA-signed domain verification
   IDENTITY_MODE_UNKNOWN          : "unknownIdentity",  // No trusted identity information
+  IDENTITY_MODE_MIXED_CONTENT    : "unknownIdentity mixedContent",  // SSL with unauthenticated content
 
   // Cache the most recent SSLStatus and Location seen in checkIdentity
   _lastStatus : null,
   _lastLocation : null,
 
   // smart getters
-  get _staticStrings () {
-    delete this._staticStrings;
-    this._staticStrings = {};
-    this._staticStrings[this.IDENTITY_MODE_DOMAIN_VERIFIED] = {
-      encryption_label: gNavigatorBundle.getString("identity.encrypted")
-    };
-    this._staticStrings[this.IDENTITY_MODE_IDENTIFIED] = {
-      encryption_label: gNavigatorBundle.getString("identity.encrypted")
-    };
-    this._staticStrings[this.IDENTITY_MODE_UNKNOWN] = {
-      encryption_label: gNavigatorBundle.getString("identity.unencrypted")
-    };
-    return this._staticStrings;
+  get _encryptionLabel () {
+    delete this._encryptionLabel;
+    this._encryptionLabel = {};
+    this._encryptionLabel[this.IDENTITY_MODE_DOMAIN_VERIFIED] =
+      gNavigatorBundle.getString("identity.encrypted");
+    this._encryptionLabel[this.IDENTITY_MODE_IDENTIFIED] =
+      gNavigatorBundle.getString("identity.encrypted");
+    this._encryptionLabel[this.IDENTITY_MODE_UNKNOWN] =
+      gNavigatorBundle.getString("identity.unencrypted");
+    this._encryptionLabel[this.IDENTITY_MODE_MIXED_CONTENT] =
+      gNavigatorBundle.getString("identity.mixed_content");
+    return this._encryptionLabel;
   },
   get _identityPopup () {
     delete this._identityPopup;
@@ -6453,11 +6453,14 @@ var gIdentityHandler = {
                                 .SSLStatus;
     this._lastStatus = currentStatus;
     this._lastLocation = location;
-    
-    if (state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
+
+    let nsIWebProgressListener = Ci.nsIWebProgressListener;
+    if (state & nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
       this.setMode(this.IDENTITY_MODE_IDENTIFIED);
-    else if (state & Components.interfaces.nsIWebProgressListener.STATE_SECURE_HIGH)
+    else if (state & nsIWebProgressListener.STATE_SECURE_HIGH)
       this.setMode(this.IDENTITY_MODE_DOMAIN_VERIFIED);
+    else if (state & nsIWebProgressListener.STATE_IS_BROKEN)
+      this.setMode(this.IDENTITY_MODE_MIXED_CONTENT);
     else
       this.setMode(this.IDENTITY_MODE_UNKNOWN);
   },
@@ -6577,7 +6580,7 @@ var gIdentityHandler = {
     this._identityPopupContentBox.className = newMode;
     
     // Set the static strings up front
-    this._identityPopupEncLabel.textContent = this._staticStrings[newMode].encryption_label;
+    this._identityPopupEncLabel.textContent = this._encryptionLabel[newMode];
     
     // Initialize the optional strings to empty values
     var supplemental = "";
