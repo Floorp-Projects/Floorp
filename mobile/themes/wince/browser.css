@@ -262,8 +262,8 @@ toolbarbutton.page-button {
 }
 
 .bookmark-item-image {
-  max-height: 16px;
-  max-width: 16px;
+  height: 24px;
+  width: 24px;
   margin: 1.6mm 1.5mm 0mm 2mm;
 }
 
@@ -378,8 +378,8 @@ autocompleteresult {
 }
 
 .autocomplete-item-image {
-  max-height: 16px;
-  max-width: 16px;
+  height: 24px;
+  width: 24px;
   margin: 1.6mm 1.5mm 0mm 2mm;
 }
 
