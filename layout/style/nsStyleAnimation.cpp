@@ -458,6 +458,20 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
       aComputedValue.SetColorValue(*static_cast<const nscolor*>(
         StyleDataAtOffset(styleStruct, ssOffset)));
       return PR_TRUE;
+    case eStyleAnimType_PaintServer: {
+      const nsStyleSVGPaint &paint = *static_cast<const nsStyleSVGPaint*>(
+        StyleDataAtOffset(styleStruct, ssOffset));
+      // We *could* animate 'none' by treating it as rgba(0, 0, 0, 0),
+      // but since SVG doesn't have (or really get along with) rgba()
+      // colors, I think we're not supposed to.
+      // FIXME: However, at some point in the future, we should animate
+      // gradients.
+      if (paint.mType == eStyleSVGPaintType_Color) {
+        aComputedValue.SetColorValue(paint.mPaint.mColor);
+        return PR_TRUE;
+      }
+      return PR_FALSE;
+    }
     case eStyleAnimType_None:
       NS_NOTREACHED("shouldn't use on non-animatable properties");
   }
@@ -521,6 +535,13 @@ nsStyleAnimation::StoreComputedValue(nsCSSProperty aProperty,
       *static_cast<nscolor*>(StyleDataAtOffset(aStyleStruct, ssOffset)) =
         aComputedValue.GetColorValue();
       return PR_TRUE;
+    case eStyleAnimType_PaintServer: {
+      nsStyleSVGPaint &paint = *static_cast<nsStyleSVGPaint*>(
+        StyleDataAtOffset(aStyleStruct, ssOffset));
+      paint.mType = eStyleSVGPaintType_Color;
+      paint.mPaint.mColor = aComputedValue.GetColorValue();
+      return PR_TRUE;
+    }
     case eStyleAnimType_None:
       NS_NOTREACHED("shouldn't use on non-animatable properties");
   }
