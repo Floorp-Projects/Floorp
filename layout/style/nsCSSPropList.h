@@ -460,8 +460,8 @@ CSS_PROP_BACKGROUND(
     mBackColor,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleBackground, mBackgroundColor),
+    eStyleAnimType_Color)
 CSS_PROP_BACKGROUND(
     background-image,
     background_image,
@@ -565,6 +565,8 @@ CSS_PROP_BORDER(
     mBorderColor.mBottom,
     eCSSType_Value,
     kBorderColorKTable,
+    // FIXME: should be animatable (but currently involves complex split
+    // between color and an extra bit on the style, all private members)
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BORDER(
@@ -708,6 +710,8 @@ CSS_PROP_BORDER(
     mBorderColor.mLeft,
     eCSSType_Value,
     kBorderColorKTable,
+    // FIXME: should be animatable (but currently involves complex split
+    // between color and an extra bit on the style, all private members)
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BORDER(
@@ -854,6 +858,8 @@ CSS_PROP_BORDER(
     mBorderColor.mRight,
     eCSSType_Value,
     kBorderColorKTable,
+    // FIXME: should be animatable (but currently involves complex split
+    // between color and an extra bit on the style, all private members)
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BORDER(
@@ -1069,6 +1075,8 @@ CSS_PROP_BORDER(
     mBorderColor.mTop,
     eCSSType_Value,
     kBorderColorKTable,
+    // FIXME: should be animatable (but currently involves complex split
+    // between color and an extra bit on the style, all private members)
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BORDER(
@@ -1188,8 +1196,8 @@ CSS_PROP_COLOR(
     mColor,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleColor, mColor),
+    eStyleAnimType_Color)
 CSS_PROP_COLUMN(
     -moz-column-count,
     _moz_column_count,
@@ -1237,8 +1245,8 @@ CSS_PROP_COLUMN(
     mColumnRuleColor,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleColumn, mColumnRuleColor),
+    eStyleAnimType_Color)
 CSS_PROP_COLUMN(
     -moz-column-rule-style,
     _moz_column_rule_style,
@@ -1836,6 +1844,8 @@ CSS_PROP_OUTLINE(
     mOutlineColor,
     eCSSType_Value,
     kOutlineColorKTable,
+    // FIXME: should be animatable (but currently involves complex split
+    // between color and an extra bit on the style, all private members)
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_OUTLINE(
@@ -2794,8 +2804,8 @@ CSS_PROP_SVGRESET(
     mFloodColor,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVGReset, mFloodColor),
+    eStyleAnimType_Color)
 CSS_PROP_SVGRESET(
     flood-opacity,
     flood_opacity,
@@ -2827,8 +2837,8 @@ CSS_PROP_SVGRESET(
     mLightingColor,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVGReset, mLightingColor),
+    eStyleAnimType_Color)
 CSS_PROP_SHORTHAND(
     marker,
     marker,
@@ -2898,8 +2908,8 @@ CSS_PROP_SVGRESET(
     mStopColor,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVGReset, mStopColor),
+    eStyleAnimType_Color)
 CSS_PROP_SVGRESET(
     stop-opacity,
     stop_opacity,
