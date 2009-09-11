@@ -69,7 +69,18 @@
  * Types of animatable values.
  */
 enum nsStyleAnimType {
-  eStyleAnimType_None /* property not animatable */
+  // nsStyleCoord with animatable values
+  eStyleAnimType_Coord,
+
+  // same as Coord, except for one side of an nsStyleSides
+  // listed in the same order as the NS_STYLE_* constants
+  eStyleAnimType_Sides_Top,
+  eStyleAnimType_Sides_Right,
+  eStyleAnimType_Sides_Bottom,
+  eStyleAnimType_Sides_Left,
+
+  // property not animatable
+  eStyleAnimType_None
 };
 
 class nsCSSProps {
