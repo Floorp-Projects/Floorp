@@ -50,7 +50,6 @@ MODULE_NAME	= nsBrowserModule
 
 
 CPPSRCS		= \
-		nsBrowserInstance.cpp \
 		nsBrowserStatusFilter.cpp \
 		$(NULL)
 

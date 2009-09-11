@@ -47,7 +47,6 @@
 #endif
 #include "nsCURILoader.h"
 #include "nsXPFEComponentsCID.h"
-#include "nsBrowserInstance.h"
 #endif
 
 #include "nsBrowserStatusFilter.h"
@@ -58,7 +57,6 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
@@ -109,11 +107,6 @@ static const nsModuleComponentInfo components[] = {
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,
       nsHTTPIndexConstructor },
 #endif
-    { "nsBrowserInstance",
-      NS_BROWSERINSTANCE_CID,
-      NS_BROWSERINSTANCE_CONTRACTID,
-      nsBrowserInstanceConstructor
-    },
 #endif
     { NS_BROWSERSTATUSFILTER_CLASSNAME,
       NS_BROWSERSTATUSFILTER_CID,
