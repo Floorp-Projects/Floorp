@@ -58,14 +58,15 @@ function setGUID(uri, guid) {
   Utils.anno(uri, GUID_ANNO, guid, "WITH_HISTORY");
   return guid;
 }
-function GUIDForUri(uri) {
+function GUIDForUri(uri, create) {
   try {
     // Use the existing GUID if it exists
     return Utils.anno(uri, GUID_ANNO);
   }
   catch (ex) {
     // Give the uri a GUID if it doesn't have one
-    return setGUID(uri);
+    if (create)
+      return setGUID(uri);
   }
 }
 
@@ -200,14 +201,16 @@ HistoryStore.prototype = {
     let items = {};
     for (let i = 0; i < root.childCount; i++) {
       let item = root.getChild(i);
-      let guid = GUIDForUri(item.uri);
+      let guid = GUIDForUri(item.uri, true);
       items[guid] = item.uri;
     }
     return items;
   },
 
   create: function HistStore_create(record) {
+    // Add the url and set the GUID
     this.update(record);
+    setGUID(record.histUri, record.id);
   },
 
   remove: function HistStore_remove(record) {
@@ -311,7 +314,7 @@ HistoryTracker.prototype = {
     if (this.ignoreAll)
       return;
     this._log.trace("onVisit: " + uri.spec);
-    if (this.addChangedID(GUIDForUri(uri)))
+    if (this.addChangedID(GUIDForUri(uri, true)))
       this._upScore();
   },
   onPageExpired: function HT_onPageExpired(uri, time, entry) {
