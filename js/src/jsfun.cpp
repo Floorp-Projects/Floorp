@@ -1800,10 +1800,12 @@ JSFunction::sharpSlotBase(JSContext *cx)
     JSAtom *name = js_Atomize(cx, "#array", 6, 0);
     if (name) {
         uintN index;
-        JSLocalKind kind = js_LookupLocal(cx, this, name, &index);
-        if (kind == JSLOCAL_VAR)
-            return int(index);
-        JS_ASSERT(kind == JSLOCAL_NONE);
+#ifdef DEBUG
+        JSLocalKind kind =
+#endif
+            js_LookupLocal(cx, this, name, &index);
+        JS_ASSERT(kind == JSLOCAL_VAR);
+        return int(index);
     }
 #endif
     return -1;
