@@ -39,7 +39,8 @@
 #ifndef ipc_glue_RPCChannel_h
 #define ipc_glue_RPCChannel_h 1
 
-// FIXME/cjones probably shouldn't depend on this
+// FIXME/cjones probably shouldn't depend on STL
+#include <queue>
 #include <stack>
 
 #include "mozilla/ipc/SyncChannel.h"
@@ -81,37 +82,73 @@ public:
     // Override the SyncChannel handler so we can dispatch RPC messages
     virtual void OnMessageReceived(const Message& msg);
 
+protected:
+    // Only exists because we can't schedule SyncChannel::OnDispatchMessage
+    // or AsyncChannel::OnDispatchMessage from within Call() when we flush
+    // the pending queue
+    void OnDelegate(const Message& msg);
+
 private:
     void OnIncall(const Message& msg);
     void ProcessIncall(const Message& call, size_t stackDepth);
 
+    // Called from both threads
     size_t StackDepth() {
         mMutex.AssertCurrentThreadOwns();
-        NS_ABORT_IF_FALSE(
-            mPending.empty()
-            || (mPending.top().is_rpc() && !mPending.top().is_reply()),
-            "StackDepth() called from an inconsistent state");
-
-        return mPending.size();
+        return mStack.size();
     }
 
+    // 
+    // Stack of all the RPC out-calls on which this RPCChannel is
+    // awaiting a response.
     //
-    // In quiescent states, |mPending| is a stack of all the RPC
-    // out-calls on which this RPCChannel is awaiting a response.
-    //
-    // The stack is also used by the IO thread to transfer received
-    // messages to the worker thread, only when the worker thread is
-    // awaiting an RPC response.  Until the worker pops the top of the
-    // stack, it may (legally) contain one of
-    //
-    // - sync in-msg (msg.is_sync() && !msg.is_reply())
-    // - RPC in-call (msg.is_rpc() && !msg.is_reply())
-    // - RPC reply (msg.is_rpc() && msg.is_reply())
-    //
-    // In any cases, the worker will pop the message off the stack
-    // and process it ASAP, returning |mPending| to a quiescent state.
-    //
-    std::stack<Message> mPending;
+    std::stack<Message> mStack;
+
+    // 
+    // After the worker thread is blocked on an RPC out-call
+    // (i.e. awaiting a reply), the IO thread uses this queue to
+    // transfer received messages to the worker thread for processing.
+    // If both this side and the other side are functioning correctly,
+    // the queue is only allowed to have certain configurations.  Let
+    // 
+    //   |A<| be an async in-message,
+    //   |S<| be a sync in-message,
+    //   |C<| be an RPC in-call,
+    //   |R<| be an RPC reply.
+    // 
+    // After the worker thread wakes us up to process the queue,
+    // the queue can only match this configuration
+    // 
+    //  A<* (S< | C< | R< (?{mStack.size() == 1} A<* (S< | C<)))
+    // 
+    // After we send an RPC message, the other side can send as many
+    // async messages |A<*| as it wants before sending back any other
+    // message type.
+    // 
+    // The first "other message type" case is |S<|, a sync in-msg.
+    // The other side must be blocked, and thus can't send us any more
+    // messages until we process the sync in-msg.
+    // 
+    // The second case is |C<|, an RPC in-call; the other side
+    // re-entered us while processing our out-call.  It therefore must
+    // be blocked.  (There's a subtlety here: this in-call might have
+    // raced with our out-call, but we detect that with the mechanism
+    // below, |mRemoteStackDepth|, and races don't matter to the
+    // queue.)
+    // 
+    // Final case, the other side replied to our most recent out-call
+    // |R<|.  If that was the *only* out-call on our stack, |{
+    // mStack.size() == 1}|, then other side "finished with us," and
+    // went back to its own business.  That business might have
+    // included sending any number of async message |A<*| until
+    // sending a blocking message |(S< | C<)|.  We just flush these to
+    // the event loop to process in order, it will do the Right Thing,
+    // since only the last message can be a blocking message.
+    // HOWEVER, if we had more than one RPC call on our stack, the
+    // other side *better* not have sent us another blocking message,
+    // because it's blocked on a reply from us.
+    // 
+    std::queue<Message> mPending;
 
     //
     // This is what we think the RPC stack depth is on the "other
