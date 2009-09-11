@@ -104,7 +104,6 @@ private:
     // awaiting an RPC response.  Until the worker pops the top of the
     // stack, it may (legally) contain one of
     //
-    // - async msg
     // - sync in-msg (msg.is_sync() && !msg.is_reply())
     // - RPC in-call (msg.is_rpc() && !msg.is_reply())
     // - RPC reply (msg.is_rpc() && msg.is_reply())

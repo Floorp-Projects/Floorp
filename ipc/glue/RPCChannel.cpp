@@ -85,14 +85,6 @@ RPCChannel::Call(Message* msg, Message* reply)
         Message recvd = mPending.top();
         mPending.pop();
 
-        // async, take care of it and move on
-        if (!recvd.is_sync() && !recvd.is_rpc()) {
-            MutexAutoUnlock unlock(mMutex);
-
-            AsyncChannel::OnDispatchMessage(recvd);
-            continue;
-        }
-
         // something sync.  Let the sync dispatcher take care of it
         // (it may be an invalid message, but the sync handler will
         // check that).
@@ -252,6 +244,14 @@ RPCChannel::OnMessageReceived(const Message& msg)
         // NB some logic here is duplicated with SyncChannel.  this is
         // to allow more local reasoning
 
+        // harmless async message, enqueue for later processing.
+        // We might have been waiting for a sync reply, but receiving
+        // an async message here is allowed.
+        if (!msg.is_sync() && !msg.is_rpc()) {
+            // unlocks mutex
+            return AsyncChannel::OnMessageReceived(msg);
+        }
+
         // if we're waiting on a sync reply, and this message is sync,
         // dispatch it to the sync message handler. It will check that
         // it's a reply, and the right kind of reply, then do its
@@ -265,14 +265,6 @@ RPCChannel::OnMessageReceived(const Message& msg)
             return;
         }
 
-        // got an async message while waiting on a sync reply.  allowed,
-        // but we defer processing until the sync reply comes back.
-        if (AwaitingSyncReply()
-            && !msg.is_sync() && !msg.is_rpc()) {
-            // releases mMutex
-            return AsyncChannel::OnMessageReceived(msg);
-        }
-
         // if this side and the other were functioning correctly, we'd
         // never reach this case.  RPCChannel::Call explicitly checks
         // for and disallows this case.  so if we reach here, the other
@@ -283,10 +275,10 @@ RPCChannel::OnMessageReceived(const Message& msg)
             return;             // not reached
         }
 
-        // otherwise, we (legally) either got (i) async msg; (ii) sync
-        // in-msg; (iii) re-entrant rpc in-call; (iv) rpc reply we
-        // were awaiting.  Dispatch to the worker, where invariants
-        // are checked and the message processed.
+        // otherwise, we (legally) either got (i) sync in-msg; (ii)
+        // re-entrant rpc in-call; (iii) rpc reply we were awaiting.
+        // Dispatch to the worker, where invariants are checked and
+        // the message processed.
         mPending.push(msg);
         mCvar.Notify();
     }
