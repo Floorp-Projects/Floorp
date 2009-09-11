@@ -42,6 +42,7 @@ include moz-only/reftest.list
 == dynamic-rect-02.svg dynamic-rect-02-ref.svg
 == dynamic-rect-03.svg dynamic-rect-03-ref.svg
 == dynamic-rect-04.xhtml pass.svg
+== dynamic-rect-05.svg pass.svg
 == dynamic-reflow-01.svg dynamic-reflow-01-ref.svg
 == dynamic-small-object-scaled-up-01.svg pass.svg
 == dynamic-small-object-scaled-up-02.svg pass.svg
