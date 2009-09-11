@@ -15,9 +15,14 @@
 <p id="display"></p>
 <div id="content" style="display: block">
   <embed id="p1" type="application/x-test"
-         style="position:absolute; left:300px; top:10px;"></embed></div>
+         style="position:absolute; left:300px; top:10px;"></embed>
   <iframe id="f1" style="position:absolute; left:0; top:250px;"
           src="data:text/html,&lt;embed id='p2' type='application/x-test' style='position:absolute; left:10px; top:10px'&gt;"></iframe>
+  <embed id="p3" type="application/x-test"
+         style="position:absolute; left:320px; top:250px;
+                outline:5px solid blue;
+                border:solid black; border-width:4px 8px 4px 8px;
+                padding:3px 1px;"></embed>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -45,6 +50,19 @@ function doTest() {
   synthesizeMouse(p2, 15, 28, { type:"mouseup" }, f1.contentWindow);
   is(p2.getLastMouseX(), 15, "p2 mouse up X");
   is(p2.getLastMouseY(), 28, "p2 mouse up Y");
+
+  var p3 = document.getElementById("p3");
+  // The synthesized coordinates are relative to the border-box, but the plugin
+  // is at offset (9,7) relative to the border-box
+  synthesizeMouse(p3, 15, 18, { type:"mousedown" });
+  is(p3.getLastMouseX(), 6, "p3 mouse down X");
+  is(p3.getLastMouseY(), 11, "p3 mouse down Y");
+  synthesizeMouse(p3, 15, 38, { type:"mousemove" });
+  is(p3.getLastMouseX(), 6, "p3 mouse move X");
+  is(p3.getLastMouseY(), 31, "p3 mouse move Y");
+  synthesizeMouse(p3, 15, 28, { type:"mouseup" });
+  is(p3.getLastMouseX(), 6, "p3 mouse up X");
+  is(p3.getLastMouseY(), 21, "p3 mouse up Y");
 
   SimpleTest.finish();
 }
