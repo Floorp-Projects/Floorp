@@ -157,8 +157,6 @@ BookmarksEngine.prototype = {
       case "separator":
         return this._separatorPos[item.pos];
     }
-    // TODO for bookmarks, check if it exists and find guid
-    // for everything else (folders, separators) look for parent/pred?
   },
 
   _handleDupe: function _handleDupe(item, dupeId) {
