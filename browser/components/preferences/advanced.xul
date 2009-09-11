@@ -275,8 +275,8 @@
                       preference="app.update.enabled"/>
 #endif
             <checkbox id="enableAddonUpdate"
-                      label="&enableAddonsUpdate.label;"
-                      accesskey="&enableAddonsUpdate.accesskey;"
+                      label="&enableAddonsUpdate2.label;"
+                      accesskey="&enableAddonsUpdate2.accesskey;"
                       preference="extensions.update.enabled"/>
             <checkbox id="enableSearchUpdate"
                       label="&enableSearchUpdate.label;"
