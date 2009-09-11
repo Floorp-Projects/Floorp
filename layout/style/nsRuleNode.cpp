@@ -2013,7 +2013,8 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   if (NS_LIKELY(res != nsnull)) {
     // Enumerate from least to most specific rule.
     for (PRUint32 i = aRuleData->mPostResolveCallbacks.Length(); i-- != 0; ) {
-      (*aRuleData->mPostResolveCallbacks[i])(const_cast<void*>(res), aRuleData);
+      nsPostResolveCallback &prc = aRuleData->mPostResolveCallbacks[i];
+      (*prc.mFunc)(const_cast<void*>(res), aRuleData, prc.mRule);
     }
   }
 
@@ -3011,7 +3012,8 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
     // If we have post-resolve callbacks, handle that now.
     // Enumerate from least to most specific rule.
     for (PRUint32 j = ruleData.mPostResolveCallbacks.Length(); j-- != 0; ) {
-      (*ruleData.mPostResolveCallbacks[j])(aFont, &ruleData);
+      nsPostResolveCallback &prc = ruleData.mPostResolveCallbacks[j];
+      (*prc.mFunc)(aFont, &ruleData, prc.mRule);
     }
 
     parentFont = *aFont;

@@ -51,7 +51,13 @@ class nsPresContext;
 class nsStyleContext;
 
 struct nsRuleData;
-typedef void (*nsPostResolveFunc)(void* aStyleStruct, nsRuleData* aData);
+typedef void (*nsPostResolveFunc)(void* aStyleStruct, nsRuleData* aData,
+                                  nsIStyleRule* aRule);
+
+struct nsPostResolveCallback {
+  nsPostResolveFunc mFunc;
+  nsIStyleRule *mRule;
+};
 
 struct nsRuleData
 {
@@ -63,7 +69,7 @@ struct nsRuleData
   nsStyleContext* mStyleContext;
   // MapRuleInfoInto should append to this array, so it is ordered from
   // most specific to least.
-  nsTArray<nsPostResolveFunc> mPostResolveCallbacks;
+  nsTArray<nsPostResolveCallback> mPostResolveCallbacks;
   nsRuleDataFont* mFontData; // Should always be stack-allocated! We don't own these structures!
   nsRuleDataDisplay* mDisplayData;
   nsRuleDataMargin* mMarginData;
