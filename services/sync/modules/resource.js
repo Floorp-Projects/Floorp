@@ -240,8 +240,18 @@ Resource.prototype = {
         if (this._log.level <= Log4Moz.Level.Trace)
           this._log.trace(action + " Body: " + this._data);
       }
-      else
-        this._log.debug(action + " fail: " + status + " " + this._data);
+      else {
+        let log = "debug";
+        let mesg = action + " fail: " + status;
+
+        // Only log the full response body (may be HTML) when Trace logging
+        if (this._log.level <= Log4Moz.Level.Trace) {
+          log = "trace";
+          mesg += " " + this._data;
+        }
+
+        this._log[log](mesg);
+      }
     }
     // Got a response but no header; must be cached (use default values)
     catch(ex) {
