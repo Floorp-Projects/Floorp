@@ -63,14 +63,6 @@ PrefsEngine.prototype = {
   _storeObj: PrefStore,
   _trackerObj: PrefTracker,
   _recordObj: PrefRec,
-
-  _recordLike: function SyncEngine__recordLike(a, b) {
-    if (a.deleted || b.deleted)
-      return false;
-    if (a.name == b.name && a.value == b.value)
-      return true;
-    return false;
-  }
 };
 
 

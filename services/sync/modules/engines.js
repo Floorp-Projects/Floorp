@@ -290,6 +290,11 @@ SyncEngine.prototype = {
 
   _recordObj: CryptoWrapper,
 
+  _init: function _init() {
+    Engine.prototype._init.call(this);
+    this.loadToFetch();
+  },
+
   get baseURL() {
     let url = Svc.Prefs.get("clusterURL");
     if (!url)
@@ -325,22 +330,22 @@ SyncEngine.prototype = {
     Svc.Prefs.set(this.name + ".lastSync", "0");
   },
 
+  get toFetch() this._toFetch,
+  set toFetch(val) {
+    this._toFetch = val;
+    Utils.jsonSave("toFetch/" + this.name, this, val);
+  },
+
+  loadToFetch: function loadToFetch() {
+    // Initialize to empty if there's no file
+    this._toFetch = [];
+    Utils.jsonLoad("toFetch/" + this.name, this, Utils.bind2(this, function(o)
+      this._toFetch = o));
+  },
+
   // Create a new record by querying the store, and add the engine metadata
   _createRecord: function SyncEngine__createRecord(id) {
     return this._store.createRecord(id, this.cryptoMetaURL);
-  },
-
-  // Check if a record is "like" another one, even though the IDs are different,
-  // in that case, we'll change the ID of the local item to match
-  // Probably needs to be overridden in a subclass, to change which criteria
-  // make two records "the same one"
-  _recordLike: function SyncEngine__recordLike(a, b) {
-    if (a.parentid != b.parentid)
-      return false;
-    // note: sortindex ignored
-    if (a.deleted || b.deleted)
-      return false;
-    return Utils.deepEquals(a.cleartext, b.cleartext);
   },
 
   // Any setup that needs to happen at the beginning of each sync.
@@ -376,16 +381,13 @@ SyncEngine.prototype = {
 
     let outnum = [i for (i in this._tracker.changedIDs)].length;
     this._log.info(outnum + " outgoing items pre-reconciliation");
+
+    // Keep track of what to delete at the end of sync
+    this._delete = {};
   },
 
   // Generate outgoing records
   _processIncoming: function SyncEngine__processIncoming() {
-    // Only bother getting data from the server if there's new things
-    if (this.lastModified <= this.lastSync) {
-      this._log.debug("Nothing new from the server to process");
-      return;
-    }
-
     this._log.debug("Downloading & applying server changes");
 
     // enable cache, and keep only the first few items.  Otherwise (when
@@ -399,38 +401,78 @@ SyncEngine.prototype = {
     newitems.newer = this.lastSync;
     newitems.full = true;
     newitems.sort = "index";
+    newitems.limit = 300;
 
     let count = {applied: 0, reconciled: 0};
-    this._lastSyncTmp = 0;
-
+    let handled = [];
     newitems.recordHandler = Utils.bind2(this, function(item) {
+      // Remember which records were processed
+      handled.push(item.id);
+
       try {
         item.decrypt(ID.get("WeaveCryptoID"));
         if (this._reconcile(item)) {
           count.applied++;
-          this._applyIncoming(item);
+          this._tracker.ignoreAll = true;
+          this._store.applyIncoming(item);
         } else {
           count.reconciled++;
           this._log.trace("Skipping reconciled incoming item " + item.id);
-          if (this._lastSyncTmp < item.modified)
-            this._lastSyncTmp = item.modified;
         }
-      } catch (e) {
-	this._log.error("Could not process incoming record: " +
-			Utils.exceptionStr(e));
       }
+      catch(ex) {
+        this._log.warn("Error processing record: " + Utils.exceptionStr(ex));
+      }
+      this._tracker.ignoreAll = false;
       Sync.sleep(0);
     });
 
-    let resp = newitems.get();
-    if (!resp.success)
-      throw resp;
+    // Only bother getting data from the server if there's new things
+    if (this.lastModified > this.lastSync) {
+      let resp = newitems.get();
+      if (!resp.success)
+        throw resp;
+    }
 
-    if (this.lastSync < this._lastSyncTmp)
-        this.lastSync = this._lastSyncTmp;
+    // Check if we got the maximum that we requested; get the rest if so
+    if (handled.length == newitems.limit) {
+      let guidColl = new Collection(this.engineURL);
+      guidColl.newer = this.lastSync;
+      guidColl.sort = "index";
 
-    this._log.info("Applied " + count.applied + " records, reconciled " +
-                    count.reconciled + " records");
+      let guids = guidColl.get();
+      if (!guids.success)
+        throw guids;
+
+      // Figure out which guids weren't just fetched then remove any guids that
+      // were already waiting and prepend the new ones
+      let extra = Utils.arraySub(guids.obj, handled);
+      if (extra.length > 0)
+        this.toFetch = extra.concat(Utils.arraySub(this.toFetch, extra));
+    }
+
+    // Process any backlog of GUIDs if necessary
+    if (this.toFetch.length > 0) {
+      // Reuse the original query, but get rid of the restricting params
+      newitems.limit = 0;
+      newitems.newer = 0;
+
+      // Get the first bunch of records and save the rest for later, but don't
+      // get too many records as there's a maximum server URI length (HTTP 414)
+      newitems.ids = this.toFetch.slice(0, 150);
+      this.toFetch = this.toFetch.slice(150);
+
+      // Reuse the existing record handler set earlier
+      let resp = newitems.get();
+      if (!resp.success)
+        throw resp;
+    }
+
+    if (this.lastSync < this.lastModified)
+      this.lastSync = this.lastModified;
+
+    this._log.info(["Records:", count.applied, "applied,", count.reconciled,
+      "reconciled,", this.toFetch.length, "left to fetch"].join(" "));
 
     // try to free some memory
     this._store.cache.clear();
@@ -438,15 +480,13 @@ SyncEngine.prototype = {
   },
 
   /**
-   * Find a GUID that is like the incoming item
+   * Find a GUID of an item that is a duplicate of the incoming item but happens
+   * to have a different GUID
    *
-   * @return GUID of the similar record; falsy otherwise
+   * @return GUID of the similar item; falsy otherwise
    */
-  _findLikeId: function SyncEngine__findLikeId(item) {
-    // By default, only look in the outgoing queue for similar records
-    for (let id in this._tracker.changedIDs)
-      if (this._recordLike(item, this._createRecord(id)))
-        return id;
+  _findDupe: function _findDupe(item) {
+    // By default, assume there's no dupe items for the engine
   },
 
   _isEqual: function SyncEngine__isEqual(item) {
@@ -463,6 +503,32 @@ SyncEngine.prototype = {
       this._log.trace("Local record is different");
       return false;
     }
+  },
+
+  _deleteId: function _deleteId(id) {
+    this._tracker.removeChangedID(id);
+
+    // Remember this id to delete at the end of sync
+    if (this._delete.ids == null)
+      this._delete.ids = [id];
+    else
+      this._delete.ids.push(id);
+  },
+
+  _handleDupe: function _handleDupe(item, dupeId) {
+    // The local dupe is the lower id, so pretend the incoming is for it
+    if (dupeId < item.id) {
+      this._deleteId(item.id);
+      item.id = dupeId;
+      this._tracker.changedIDs[dupeId] = true;
+    }
+    // The incoming item has the lower id, so change the dupe to it
+    else {
+      this._store.changeItemID(dupeId, item.id);
+      this._deleteId(dupeId);
+    }
+
+    this._store.cache.clear(); // because parentid refs will be wrong
   },
 
   // Reconciliation has three steps:
@@ -503,34 +569,12 @@ SyncEngine.prototype = {
 
     // Step 3: Check for similar items
     this._log.trace("Reconcile step 3");
-    let likeId = this._findLikeId(item);
-    if (likeId) {
-      // Change the local item GUID to the incoming one
-      this._store.changeItemID(likeId, item.id);
+    let dupeId = this._findDupe(item);
+    if (dupeId)
+      this._handleDupe(item, dupeId);
 
-      // Remove outgoing changes of the original id any any that were just made
-      this._tracker.removeChangedID(likeId);
-      this._tracker.removeChangedID(item.id);
-
-      this._store.cache.clear(); // because parentid refs will be wrong
-      return false;
-    }
-
+    // Apply the incoming item (now that the dupe is the right id)
     return true;
-  },
-
-  // Apply incoming records
-  _applyIncoming: function SyncEngine__applyIncoming(item) {
-    try {
-      this._tracker.ignoreAll = true;
-      this._store.applyIncoming(item);
-      if (this._lastSyncTmp < item.modified)
-        this._lastSyncTmp = item.modified;
-    } catch (e) {
-      this._log.warn("Error while applying record: " + Utils.stackTrace(e));
-    } finally {
-      this._tracker.ignoreAll = false;
-    }
   },
 
   // Upload outgoing records
@@ -590,6 +634,16 @@ SyncEngine.prototype = {
   _syncFinish: function SyncEngine__syncFinish() {
     this._log.trace("Finishing up sync");
     this._tracker.resetScore();
+
+    for (let [key, val] in Iterator(this._delete)) {
+      // Remove the key for future uses
+      delete this._delete[key];
+
+      // Send a delete for the property
+      let coll = new Collection(this.engineURL, this._recordObj);
+      coll[key] = val;
+      coll.delete();
+    }
   },
 
   _sync: function SyncEngine__sync() {
@@ -614,5 +668,6 @@ SyncEngine.prototype = {
 
   _resetClient: function SyncEngine__resetClient() {
     this.resetLastSync();
+    this.toFetch = [];
   }
 };

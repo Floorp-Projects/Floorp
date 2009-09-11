@@ -58,14 +58,15 @@ function setGUID(uri, guid) {
   Utils.anno(uri, GUID_ANNO, guid, "WITH_HISTORY");
   return guid;
 }
-function GUIDForUri(uri) {
+function GUIDForUri(uri, create) {
   try {
     // Use the existing GUID if it exists
     return Utils.anno(uri, GUID_ANNO);
   }
   catch (ex) {
     // Give the uri a GUID if it doesn't have one
-    return setGUID(uri);
+    if (create)
+      return setGUID(uri);
   }
 }
 
@@ -83,43 +84,14 @@ HistoryEngine.prototype = {
 
   _sync: Utils.batchSync("History", SyncEngine),
 
-  // History reconciliation is simpler than the default one from SyncEngine,
-  // because we have the advantage that we can use the URI as a definitive
-  // check for local existence of incoming items.  The steps are as follows:
-  //
-  // 1) Check for the same item in the locally modified list.  In that case,
-  //    local trumps remote.  This step is unchanged from our superclass.
-  // 2) Check if the incoming item was deleted.  Skip if so.
-  // 3) Apply new record/update.
-  //
-  // Note that we don't attempt to equalize the IDs, the history store does that
-  // as part of update()
-  _reconcile: function HistEngine__reconcile(item) {
-    // Step 1: Check for conflicts
-    //         If same as local record, do not upload
-    if (item.id in this._tracker.changedIDs) {
-      if (this._isEqual(item))
-        this._tracker.removeChangedID(item.id);
-      return false;
-    }
-
-    // Step 2: Check if the item is deleted - we don't support that (yet?)
-    if (item.deleted)
-      return false;
-
-    // Step 3: Apply update/new record
-    return true;
+  _syncFinish: function HistEngine__syncFinish(error) {
+    // Only leave 1 week's worth of history on the server
+    this._delete.older = this.lastSync - 604800; // 60*60*24*7
+    SyncEngine.prototype._syncFinish.call(this);
   },
 
-  _syncFinish: function HistEngine__syncFinish(error) {
-    this._log.debug("Finishing up sync");
-    this._tracker.resetScore();
-
-    // Only leave 1 week's worth of history on the server
-    let coll = new Collection(this.engineURL, this._recordObj);
-    coll.older = this.lastSync - 604800; // 1 week
-    coll.full = 0;
-    coll.delete();
+  _findDupe: function _findDupe(item) {
+    return GUIDForUri(item.histUri);
   }
 };
 
@@ -229,14 +201,16 @@ HistoryStore.prototype = {
     let items = {};
     for (let i = 0; i < root.childCount; i++) {
       let item = root.getChild(i);
-      let guid = GUIDForUri(item.uri);
+      let guid = GUIDForUri(item.uri, true);
       items[guid] = item.uri;
     }
     return items;
   },
 
   create: function HistStore_create(record) {
+    // Add the url and set the GUID
     this.update(record);
+    setGUID(record.histUri, record.id);
   },
 
   remove: function HistStore_remove(record) {
@@ -262,12 +236,6 @@ HistoryStore.prototype = {
         Svc.History.addVisit(uri, date, null, type, type == 5 || type == 6, 0);
 
     this._hsvc.setPageTitle(uri, record.title);
-
-    // Equalize IDs
-    let localId = GUIDForUri(record.histUri);
-    if (localId != record.id)
-      this.changeItemID(localId, record.id);
-
   },
 
   itemExists: function HistStore_itemExists(id) {
@@ -343,7 +311,7 @@ HistoryTracker.prototype = {
     if (this.ignoreAll)
       return;
     this._log.trace("onVisit: " + uri.spec);
-    if (this.addChangedID(GUIDForUri(uri)))
+    if (this.addChangedID(GUIDForUri(uri, true)))
       this._upScore();
   },
   onPageExpired: function HT_onPageExpired(uri, time, entry) {

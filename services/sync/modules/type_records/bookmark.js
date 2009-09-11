@@ -183,3 +183,5 @@ BookmarkSeparator.prototype = {
     this.type = "separator";
   }
 };
+
+Utils.deferGetSet(BookmarkSeparator, "cleartext", "pos");
