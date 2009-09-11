@@ -8272,6 +8272,8 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
                                      JSPropCacheEntry* entry,
                                      jsuword& pcval)
 {
+    VMSideExit* exit = snapshot(BRANCH_EXIT);
+
     uint32 vshape = PCVCAP_SHAPE(entry->vcap);
 
     // Check for first-level cache hit and guard on kshape if possible.
@@ -8282,7 +8284,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
                                       "shape");
             guard(true,
                   addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard_kshape"),
-                  BRANCH_EXIT);
+                  exit);
         }
 
         if (entry->adding()) {
@@ -8315,7 +8317,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
         if (aobj != globalObj && !obj_ins->isconstp()) {
             guard(true,
                   addName(lir->ins2(LIR_peq, obj_ins, INS_CONSTWORD(entry->kshape)), "guard_kobj"),
-                  BRANCH_EXIT);
+                  exit);
         }
     }
 
@@ -8328,7 +8330,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
         if (PCVCAP_TAG(entry->vcap) == 1) {
             // Duplicate the special case in PROPERTY_CACHE_TEST.
             obj2_ins = addName(stobj_get_proto(obj_ins), "proto");
-            guard(false, lir->ins_peq0(obj2_ins), BRANCH_EXIT);
+            guard(false, lir->ins_peq0(obj2_ins), exit);
         } else {
             obj2_ins = INS_CONSTOBJ(obj2);
         }
@@ -8341,7 +8343,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
                                   "obj2_shape");
         guard(true,
               addName(lir->ins2i(LIR_eq, shape_ins, vshape), "guard_vshape"),
-              BRANCH_EXIT);
+              exit);
     }
 
     pcval = entry->vword;
@@ -9410,17 +9412,12 @@ TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[],
         // Take snapshot for js_DeepBail and store it in cx->bailExit.
         // If we are calling a slow native, add information to the side exit
         // for SynthesizeSlowNativeFrame.
-        VMSideExit* exit = snapshot(DEEP_BAIL_EXIT);
+        VMSideExit* exit = enterDeepBailCall();
         JSObject* funobj = JSVAL_TO_OBJECT(stackval(0 - (2 + argc)));
         if (FUN_SLOW_NATIVE(GET_FUNCTION_PRIVATE(cx, funobj))) {
             exit->setNativeCallee(funobj, constructing);
             treeInfo->gcthings.addUnique(OBJECT_TO_JSVAL(funobj));
         }
-        lir->insStorei(INS_CONSTPTR(exit), cx_ins, offsetof(JSContext, bailExit));
-
-        // Tell nanojit not to discard or defer stack writes before this call.
-        LIns* guardRec = createGuardRecord(exit);
-        lir->insGuard(LIR_xbarrier, NULL, guardRec);
     }
 
     LIns* res_ins = lir->insCall(sn->builtin, args);
@@ -10228,7 +10225,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     return JSRS_CONTINUE;
 }
 
-JS_REQUIRES_STACK void
+JS_REQUIRES_STACK VMSideExit*
 TraceRecorder::enterDeepBailCall()
 {
     // Take snapshot for js_DeepBail and store it in cx->bailExit.
@@ -10238,6 +10235,7 @@ TraceRecorder::enterDeepBailCall()
     // Tell nanojit not to discard or defer stack writes before this call.
     LIns* guardRec = createGuardRecord(exit);
     lir->insGuard(LIR_xbarrier, NULL, guardRec);
+    return exit;
 }
 
 JS_REQUIRES_STACK void
@@ -11998,6 +11996,7 @@ TraceRecorder::record_JSOP_POPN()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *obj2, LIns *&obj2_ins)
 {
+    VMSideExit* exit = NULL;
     for (;;) {
         if (obj != globalObj) {
             if (!js_IsCacheableNonGlobalScope(obj))
@@ -12011,9 +12010,11 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *obj2, 
                 LIns* map_ins = map(obj_ins);
                 LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
                                           "obj_shape");
+                if (!exit)
+                    exit = snapshot(BRANCH_EXIT);
                 guard(true,
                       addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SHAPE(obj)), "guard_shape"),
-                      BRANCH_EXIT);
+                      exit);
             }
         }
 
