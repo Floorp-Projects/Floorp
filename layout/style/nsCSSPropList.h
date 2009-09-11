@@ -2760,8 +2760,8 @@ CSS_PROP_SVG(
     mFill,
     eCSSType_ValuePair,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mFill),
+    eStyleAnimType_PaintServer)
 CSS_PROP_SVG(
     fill-opacity,
     fill_opacity,
@@ -2930,8 +2930,8 @@ CSS_PROP_SVG(
     mStroke,
     eCSSType_ValuePair,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mStroke),
+    eStyleAnimType_PaintServer)
 CSS_PROP_SVG(
     stroke-dasharray,
     stroke_dasharray,
