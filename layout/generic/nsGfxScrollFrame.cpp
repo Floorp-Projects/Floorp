@@ -156,6 +156,7 @@ void
 nsHTMLScrollFrame::Destroy()
 {
   mInner.Destroy();
+  mScrolledAreaEventDispatcher.Revoke();
   nsHTMLContainerFrame::Destroy();
 }
 
@@ -892,11 +893,69 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
     }
   }
 
+  if (mInner.mIsRoot && oldScrolledAreaBounds != newScrolledAreaBounds) {
+    PostScrolledAreaEvent(newScrolledAreaBounds);
+  }
+
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   mInner.PostOverflowEvent();
   return rv;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// ScrolledArea change event dispatch
+
+NS_IMETHODIMP
+nsHTMLScrollFrame::ScrolledAreaEventDispatcher::Run()
+{
+  if (mScrollFrame)
+    mScrollFrame->FireScrolledAreaEvent(mScrolledArea);
+  return NS_OK;
+}
+
+void
+nsHTMLScrollFrame::FireScrolledAreaEvent(nsRect &aScrolledArea)
+{
+  mScrolledAreaEventDispatcher.Forget();
+
+  nsScrollAreaEvent event(PR_TRUE, NS_SCROLLEDAREACHANGED, nsnull);
+  nsPresContext *prescontext = PresContext();
+  nsIContent* content = GetContent();
+
+  event.mArea = aScrolledArea;
+
+  nsIDocument *doc = content->GetCurrentDoc();
+  if (doc) {
+    nsEventDispatcher::Dispatch(doc, prescontext, &event, nsnull);
+  }
+}
+
+void
+nsHTMLScrollFrame::PostScrolledAreaEvent(nsRect &aScrolledArea)
+{
+  if (mScrolledAreaEventDispatcher.IsPending()) {
+    mScrolledAreaEventDispatcher.get()->mScrolledArea = aScrolledArea;
+    return;
+  }
+
+  nsRefPtr<ScrolledAreaEventDispatcher> dp = new ScrolledAreaEventDispatcher(this);
+  if (!dp) {
+    NS_WARNING("OOM while posting NS_SCROLLEDAREACHANGED");
+    return;
+  }
+
+  dp->mScrolledArea = aScrolledArea;
+
+  if (NS_FAILED(NS_DispatchToCurrentThread(dp))) {
+    NS_WARNING("Failed to dispatch ScrolledAreaEventDispatcher");
+  } else {
+    mScrolledAreaEventDispatcher = dp;
+  }  
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
