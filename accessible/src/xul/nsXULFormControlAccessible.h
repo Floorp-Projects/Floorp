@@ -43,7 +43,7 @@
 // NOTE: alphabetically ordered
 #include "nsAccessibleWrap.h"
 #include "nsFormControlAccessible.h"
-#include "nsXULSelectAccessible.h"
+#include "nsXULMenuAccessible.h"
 #include "nsHyperTextAccessibleWrap.h"
 
 class nsXULButtonAccessible : public nsAccessibleWrap

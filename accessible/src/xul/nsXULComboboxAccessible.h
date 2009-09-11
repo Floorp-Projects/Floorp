@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,17 +15,17 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Sun Microsystems, Inc.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Pete Zha (pete.zha@sun.com)
- *   Kyle Yuan (kyle.yuan@sun.com)
+ *   Aaron Leventhal <aaronl@netscape.com> (original author)
+ *   Alexander Surkov <surkov.alexander@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,29 +37,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsXULTreeAccessibleWrap_h__
-#define __nsXULTreeAccessibleWrap_h__
+#ifndef __nsXULComboboxAccessible_h__
+#define __nsXULComboboxAccessible_h__
 
-#include "nsXULTreeGridAccessible.h"
+#include "nsCOMPtr.h"
+#include "nsXULMenuAccessible.h"
 
-class nsXULTreeGridAccessibleWrap : public nsXULTreeGridAccessible
+/**
+ * Used for XUL comboboxes like xul:menulist and autocomplete textbox.
+ */
+class nsXULComboboxAccessible : public nsAccessibleWrap
 {
 public:
-  nsXULTreeGridAccessibleWrap(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  enum { eAction_Click = 0 };
 
-  // nsIAccessibleTable
-  NS_IMETHOD GetColumnHeader(nsIAccessibleTable **aColumnHeader);
-  NS_IMETHOD GetColumnDescription(PRInt32 aColumn, nsAString& aDescription);
-};
+  nsXULComboboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
 
-class nsXULTreeColumnsAccessibleWrap : public nsXULTreeColumnsAccessible,
-                                       public nsIAccessibleTable
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLETABLE
+  // nsIAccessible
+  NS_IMETHOD GetValue(nsAString& aValue);
+  NS_IMETHOD GetDescription(nsAString& aDescription);
+  NS_IMETHOD DoAction(PRUint8 aIndex);
+  NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
-  nsXULTreeColumnsAccessibleWrap(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  // nsAccessNode
+  virtual nsresult Init();
+
+  // nsAccessible
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual PRBool GetAllowsAnonChildAccessibles();
 };
 
 #endif

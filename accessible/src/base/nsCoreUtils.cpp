@@ -1027,7 +1027,7 @@ nsCoreUtils::GetLastSensibleColumn(nsITreeBoxObject *aTree)
 }
 
 PRUint32
-nsCoreUtils::GetSensibleColumnsCount(nsITreeBoxObject *aTree)
+nsCoreUtils::GetSensiblecolumnCount(nsITreeBoxObject *aTree)
 {
   PRUint32 count = 0;
 

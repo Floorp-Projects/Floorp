@@ -96,7 +96,7 @@ __try {
     return E_FAIL;
 
   void *instancePtr = NULL;
-  rv =  winAccessNode->QueryNativeInterface(IID_IUnknown, &instancePtr);
+  rv = winAccessNode->QueryNativeInterface(IID_IUnknown, &instancePtr);
   if (NS_FAILED(rv))
     return E_FAIL;
 

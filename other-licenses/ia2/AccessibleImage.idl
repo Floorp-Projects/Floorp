@@ -4,6 +4,7 @@
  *
  *  IAccessible2 IDL Specification
  *
+ *  Copyright (c) Linux Foundation 2007, 2008
  *  Copyright (c) IBM Corp. 2006
  *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
  *
@@ -31,7 +32,7 @@ import "IA2CommonTypes.idl";
 /** @brief This interface represents images and icons.
 
  This interface is used for a representation of images like icons on buttons.
-  IAccessibleImage only needs to be implemented in certain situations.  Some
+  %IAccessibleImage only needs to be implemented in certain situations.  Some
   examples are:
   <ol>
    <li>The accessible name and description are not enough to fully
@@ -47,6 +48,8 @@ interface IAccessibleImage : IUnknown
 {
   /** @brief Returns the localized description of the image.          
    @param [out] description
+   @retval S_OK
+   @retval S_FALSE if there is nothing to return, [out] value is NULL
   */
   [propget] HRESULT description
     (
@@ -58,6 +61,7 @@ interface IAccessibleImage : IUnknown
     Specifies whether the returned coordinates should be relative to the screen or the parent object.
    @param [out] x
    @param [out] y
+   @retval S_OK
   */
   [propget] HRESULT imagePosition
     (
@@ -69,6 +73,7 @@ interface IAccessibleImage : IUnknown
   /** @brief Returns the size of the image in units specified by parent's coordinate system.
    @param [out] height
    @param [out] width
+   @retval S_OK
   */
 
   [propget] HRESULT imageSize

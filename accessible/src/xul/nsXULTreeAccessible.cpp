@@ -801,9 +801,9 @@ nsXULTreeItemAccessibleBase::GetNextSibling(nsIAccessible **aNextSibling)
     nsAccUtils::QueryAccessibleTree(mParent);
   NS_ENSURE_STATE(treeAcc);
 
-  PRInt32 rowsCount = 0;
-  mTreeView->GetRowCount(&rowsCount);
-  if (mRow + 1 >= rowsCount)
+  PRInt32 rowCount = 0;
+  mTreeView->GetRowCount(&rowCount);
+  if (mRow + 1 >= rowCount)
     return NS_OK;
 
   treeAcc->GetTreeItemAccessible(mRow + 1, aNextSibling);

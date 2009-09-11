@@ -78,7 +78,6 @@ _TEST_FILES =\
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
 		test_aria_role_equation.html \
-		test_aria_role_grid.html \
 		test_aria_roles.html \
 		test_aria_roles.xul \
 		test_aria_token_attrs.html \
@@ -89,8 +88,8 @@ _TEST_FILES =\
 		test_cssattrs.html \
 		test_descr.html \
 		test_elm_filectrl.html \
+		test_elm_listbox.xul \
 	$(warning   test_elm_media.html temporarily disabled) \
-		test_elm_table.html \
 		test_elm_tree.xul \
 		test_elm_txtcntnr.html \
 		test_events_caretmove.html \
@@ -120,13 +119,11 @@ _TEST_FILES =\
 		test_nsIAccessibleHyperLink.xul \
 		test_nsIAccessibleHyperText.html \
 		test_nsIAccessibleImage.html \
-		$(warning test_nsIAccessibleTable_listboxes.xul temporarily disabled) \
 		test_nsIAccessNode_utils.html \
 		test_nsOuterDocAccessible.html \
  		test_objectattrs.html \
 		test_relations.html \
 		test_relations.xul \
-		test_relations_table.html \
 		test_relations_tree.xul \
 		test_role_nsHyperTextAcc.html \
 		test_role_table_cells.html \
@@ -138,15 +135,24 @@ _TEST_FILES =\
 		test_states_popup.xul \
 		test_states_tree.xul \
 		test_table_1.html \
-		test_table_2.html \
 		test_table_4.html \
+		test_table_headers.html \
+		test_table_headers_ariagrid.html \
+		test_table_headers_listbox.xul \
+		test_table_headers_tree.xul \
 		test_table_indexes.html \
 		test_table_indexes_ariagrid.html \
+		test_table_indexes_listbox.xul \
 		test_table_indexes_tree.xul \
 		test_table_layoutguess.html \
 		test_table_sels.html \
 		test_table_sels_ariagrid.html \
+		test_table_sels_listbox.xul \
 		test_table_sels_tree.xul \
+		test_table_struct.html \
+		test_table_struct_ariagrid.html \
+		test_table_struct_listbox.xul \
+		test_table_struct_tree.xul \
 		test_textattrs.html \
 		test_textboxes.html \
 		test_textboxes.xul \

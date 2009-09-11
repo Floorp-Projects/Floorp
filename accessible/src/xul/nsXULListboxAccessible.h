@@ -20,7 +20,9 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Kyle Yuan (kyle.yuan@sun.com)
+ *   Aaron Leventhal <aaronl@netscape.com> (original author)
+ *   Kyle Yuan <kyle.yuan@sun.com>
+ *   Alexander Surkov <surkov.alexander@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,8 +37,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef __nsXULSelectAccessible_h__
-#define __nsXULSelectAccessible_h__
+#ifndef __nsXULListboxAccessible_h__
+#define __nsXULListboxAccessible_h__
 
 #include "nsIAccessibleTable.h"
 
@@ -81,25 +83,6 @@ public:
   enum { eAction_Click = 0 };
 };
 
-/**
-  * Listboxes (xul:listbox) and Comboboxes (xul:menulist) are made up of a
-  * number of different widgets, some of which are shared between the two.
-  * This file contains all of the widgets for both of them, for XUL only.
-  *
-  *  Listbox:
-  *     - nsXULListboxAccessible
-  *        - nsXULSelectOptionAccessible
-  *
-  *  Comboboxes:
-  *     - nsXULComboboxAccessible      <menulist />
-  *        - nsXULMenuAccessible          <menupopup />
-  *           - nsXULMenuitemAccessible(s)   <menuitem />
-  */
-
-/** ------------------------------------------------------ */
-/**  First, the common widgets                             */
-/** ------------------------------------------------------ */
-
 /*
  * A class the represents the XUL Listbox widget.
  */
@@ -121,7 +104,7 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
 protected:
-  PRBool IsTree();
+  PRBool IsMulticolumn();
 };
 
 /**
@@ -159,44 +142,21 @@ private:
 /**
  * Class represents xul:listcell.
  */
-class nsXULListCellAccessible : public nsHyperTextAccessibleWrap
+class nsXULListCellAccessible : public nsHyperTextAccessibleWrap,
+                                public nsIAccessibleTableCell
 {
 public:
   nsXULListCellAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
 
-  // nsAccessible
-  virtual nsresult GetRoleInternal(PRUint32 *aRole);
-};
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
-/** ------------------------------------------------------ */
-/**  Finally, the Combobox widgets                         */
-/** ------------------------------------------------------ */
-
-/*
- * A class the represents the XUL Combobox widget.
- */
-class nsXULComboboxAccessible : public nsAccessibleWrap
-{
-public:
-  enum { eAction_Click = 0 };
-
-  nsXULComboboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsXULComboboxAccessible() {}
-
-  // nsIAccessible
-  NS_IMETHOD GetValue(nsAString& _retval);
-  NS_IMETHOD GetDescription(nsAString& aDescription);
-  NS_IMETHOD DoAction(PRUint8 index);
-  NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& aName);
-
-  // nsAccessNode
-  virtual nsresult Init();
+  // nsIAccessibleTableCell
+  NS_DECL_NSIACCESSIBLETABLECELL
 
   // nsAccessible
+  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
-  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
-  virtual PRBool GetAllowsAnonChildAccessibles();
 };
 
 #endif

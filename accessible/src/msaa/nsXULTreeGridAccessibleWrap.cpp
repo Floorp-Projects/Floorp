@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Pete Zha <pete.zha@sun.com> (original author)
+ *   Aaron Leventhal <aaronleventhal@moonset.net> (original author)
  *   Alexander Surkov <surkov.alexander@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,31 +37,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsXULTreeAccessibleWrap_h__
-#define __nsXULTreeAccessibleWrap_h__
+#include "nsXULTreeGridAccessibleWrap.h"
 
-#include "nsXULTreeGridAccessible.h"
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTreeGridAccessibleWrap
+////////////////////////////////////////////////////////////////////////////////
 
-#include "CAccessibleTable.h"
-
-typedef class nsXULTreeColumnsAccessible   nsXULTreeColumnsAccessibleWrap;
-
-/**
- * IA2 wrapper of nsXULTreeGridAccessible class, implements IAccessibleTable
- * interface.
- */
-class nsXULTreeGridAccessibleWrap : public nsXULTreeGridAccessible,
-                                    public CAccessibleTable
+nsXULTreeGridAccessibleWrap::
+  nsXULTreeGridAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell) :
+  nsXULTreeGridAccessible(aDOMNode, aShell)
 {
-public:
-  nsXULTreeGridAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell);
-  virtual ~nsXULTreeGridAccessibleWrap() {}
+}
 
-  // IUnknown
-  DECL_IUNKNOWN_INHERITED
+NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeGridAccessibleWrap,
+                             nsXULTreeGridAccessible)
 
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-};
+IMPL_IUNKNOWN_INHERITED1(nsXULTreeGridAccessibleWrap,
+                         nsAccessibleWrap,
+                         CAccessibleTable)
 
-#endif
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTreeGridCellAccessibleWrap
+////////////////////////////////////////////////////////////////////////////////
+
+nsXULTreeGridCellAccessibleWrap::
+  nsXULTreeGridCellAccessibleWrap(nsIDOMNode *aDOMNode,
+                                  nsIWeakReference *aShell,
+                                  nsXULTreeGridRowAccessible *aRowAcc,
+                                  nsITreeBoxObject *aTree,
+                                  nsITreeView *aTreeView,
+                                  PRInt32 aRow, nsITreeColumn* aColumn) :
+  nsXULTreeGridCellAccessible(aDOMNode, aShell, aRowAcc, aTree, aTreeView,
+                              aRow, aColumn)
+{
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeGridCellAccessibleWrap,
+                             nsXULTreeGridCellAccessible)
+
+IMPL_IUNKNOWN_INHERITED1(nsXULTreeGridCellAccessibleWrap,
+                         nsAccessibleWrap,
+                         CAccessibleTableCell)
