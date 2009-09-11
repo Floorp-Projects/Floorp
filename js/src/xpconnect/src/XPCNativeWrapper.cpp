@@ -909,6 +909,7 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (proto && STOBJ_GET_CLASS(proto) != XPCNativeWrapper::GetJSClass()) {
       // Deal with our prototype object specially.
 
+      JS_ASSERT(XPCNativeWrapper::IsNativeWrapper(obj));
       return JS_SetPrivate(cx, obj, nsnull) &&
              JS_SetReservedSlot(cx, obj, 0, JSVAL_ZERO);
     }
@@ -1235,7 +1236,7 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper,
     nsresult rv = ssm->IsSystemPrincipal(aObjectPrincipal, &isSystem);
     if (NS_SUCCEEDED(rv) && !isSystem) {
       jsval v = OBJECT_TO_JSVAL(wrapper->GetFlatJSObject());
-      if (!XPCNativeWrapperCtor(cx, JSVAL_TO_OBJECT(v), 1, &v, &v))
+      if (!XPCNativeWrapperCtor(cx, nsnull, 1, &v, &v))
         return nsnull;
       return JSVAL_TO_OBJECT(v);
     }
