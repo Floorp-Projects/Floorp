@@ -67,8 +67,8 @@
   -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
 }
 
-#PersonalToolbar {
-  min-height: 26px;
+#personal-bookmarks {
+  min-height: 24px;
 }
 
 #wrapper-search-container #searchbar html|*.textbox-input {
