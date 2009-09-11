@@ -213,7 +213,8 @@ namespace nanojit
 
             Register    registerAlloc(RegisterMask allow);
             void        registerResetAll();
-            void        evictRegs(RegisterMask regs);
+            void        evictAllActiveRegs();
+            void        evictSomeActiveRegs(RegisterMask regs);
             void        evictScratchRegs();
             void        intersectRegisterState(RegAlloc& saved);
             void        unionRegisterState(RegAlloc& saved);
