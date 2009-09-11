@@ -907,7 +907,7 @@ namespace nanojit
                     break;
 
                 case LIR_regfence:
-                    evictRegs(~_allocator.free);
+                    evictAllActiveRegs();
                     break;
 
                 case LIR_flive:
@@ -1168,7 +1168,7 @@ namespace nanojit
                         handleLoopCarriedExprs(pending_lives);
                         if (!label) {
                             // evict all registers, most conservative approach.
-                            evictRegs(~_allocator.free);
+                            evictAllActiveRegs();
                             _labels.add(to, 0, _allocator);
                         }
                         else {
@@ -1191,7 +1191,7 @@ namespace nanojit
                     else {
                         // we're at the top of a loop
                         NanoAssert(label->addr == 0);
-                        //evictRegs(~_allocator.free);
+                        //evictAllActiveRegs();
                         intersectRegisterState(label->regs);
                         label->addr = _nIns;
                     }
@@ -1594,10 +1594,19 @@ namespace nanojit
         }
 
         // now evict everything else.
-        evictRegs(~SavedRegs);
+        evictSomeActiveRegs(~SavedRegs);
     }
 
-    void Assembler::evictRegs(RegisterMask regs)
+    void Assembler::evictAllActiveRegs()
+    {
+        // generate code to restore callee saved registers
+        // @todo speed this up
+        for (Register r = FirstReg; r <= LastReg; r = nextreg(r)) {
+            evictIfActive(r);
+        }
+    }
+
+    void Assembler::evictSomeActiveRegs(RegisterMask regs)
     {
         // generate code to restore callee saved registers
         // @todo speed this up
