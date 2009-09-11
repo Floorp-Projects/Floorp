@@ -725,6 +725,13 @@ let Utils = {
     return ret;
   },
 
+  /**
+   * Create an array like the first but without elements of the second
+   */
+  arraySub: function arraySub(minuend, subtrahend) {
+    return minuend.filter(function(i) subtrahend.indexOf(i) == -1);
+  },
+
   bind2: function Async_bind2(object, method) {
     return function innerBind() { return method.apply(object, arguments); };
   },
