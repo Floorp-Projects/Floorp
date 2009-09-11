@@ -891,7 +891,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus getProp(jsval& v);
     JS_REQUIRES_STACK JSRecordingStatus getThis(nanojit::LIns*& this_ins);
 
-    JS_REQUIRES_STACK void enterDeepBailCall();
+    JS_REQUIRES_STACK VMSideExit* enterDeepBailCall();
     JS_REQUIRES_STACK void leaveDeepBailCall();
 
     JS_REQUIRES_STACK JSRecordingStatus primitiveToStringInPlace(jsval* vp);
