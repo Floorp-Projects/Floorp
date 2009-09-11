@@ -103,6 +103,57 @@ nsMathMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   return rv;
 }
 
+void
+nsMathMLElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+  if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      doc->ForgetLink(this);
+    }
+  }
+
+  nsMathMLElementBase::UnbindFromTree(aDeep, aNullParent);
+}
+
+nsresult
+nsMathMLElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                         nsIAtom* aPrefix, const nsAString& aValue,
+                         PRBool aNotify)
+{
+  if (kNameSpaceID_XLink == aNamespaceID && nsGkAtoms::href == aName) {
+    // XLink URI(s) might be changing. Drop the link from the map. If it
+    // is still style relevant it will be re-added by
+    // nsStyleUtil::IsLink. Make sure to keep the style system
+    // consistent so this remains true! In particular if the style system
+    // were to get smarter and not restyling an XLink element if the href
+    // doesn't change in a "significant" way, we'd need to do the same
+    // significance check here.
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      doc->ForgetLink(this);
+    }
+  }
+
+  return nsMathMLElementBase::SetAttr(aNamespaceID, aName, aPrefix, aValue,
+                                      aNotify);
+}
+
+nsresult
+nsMathMLElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                           PRBool aNotify)
+{
+  if (kNameSpaceID_XLink == aNamespaceID && nsGkAtoms::href == aName) {
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      // XLink URI might be changing.
+      doc->ForgetLink(this);
+    }
+  }
+
+  return nsMathMLElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
+}
+
 PRBool
 nsMathMLElement::ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
