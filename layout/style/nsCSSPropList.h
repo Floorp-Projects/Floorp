@@ -1417,8 +1417,10 @@ CSS_PROP_FONT(
     mSize,
     eCSSType_Value,
     kFontSizeKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    // Note that mSize is the correct place for *reading* the computed value,
+    // but setting it requires setting mFont.size as well.
+    offsetof(nsStyleFont, mSize),
+    eStyleAnimType_nscoord)
 CSS_PROP_FONT(
     font-size-adjust,
     font_size_adjust,
@@ -1867,8 +1869,8 @@ CSS_PROP_OUTLINE(
     mOutlineOffset,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleOutline, mOutlineOffset),
+    eStyleAnimType_nscoord)
 CSS_PROP_SHORTHAND(
     overflow,
     overflow,
@@ -2539,8 +2541,8 @@ CSS_PROP_TEXT(
     mWordSpacing,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleText, mWordSpacing),
+    eStyleAnimType_nscoord)
 CSS_PROP_TEXT(
     word-wrap,
     word_wrap,
