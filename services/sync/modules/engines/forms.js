@@ -72,19 +72,15 @@ FormEngine.prototype = {
     this._store.clearFormCache();
     
     // Only leave 1 month's worth of form history
-    this._tracker.resetScore();
-    let coll = new Collection(this.engineURL, this._recordObj);
-    coll.older = this.lastSync - 2592000; // 60*60*24*30
-    coll.full = 0;
-    coll.delete();
+    this._delete.older = this.lastSync - 2592000; // 60*60*24*30
+    SyncEngine.prototype._syncFinish.call(this);
   },
-  
-  _recordLike: function SyncEngine__recordLike(a, b) {
-    if (a.deleted || b.deleted)
-      return false;
-    if (a.name == b.name && a.value == b.value)
-      return true;
-    return false;
+
+  _findDupe: function _findDupe(item) {
+    // Search through the items to find a matching name/value
+    for (let [guid, {name, value}] in Iterator(this._store._formItems))
+      if (name == item.name && value == item.value)
+        return guid;
   }
 };
 
