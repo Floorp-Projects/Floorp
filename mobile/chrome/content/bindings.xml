@@ -331,11 +331,13 @@
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          if (aEvent.type == "blur")
-            this.closePopup();
-          else
+          if (aEvent.type == "blur") {
+            if (this._popupOpen)
+              this.close();
+          } else {
             Components.utils.reportError("autocomplete popup received " +
                                          "unexpected event: " + aEvent.type);
+          }
         ]]></body>
       </method>
 
@@ -356,17 +358,16 @@
         <![CDATA[
           let originalTarget = event.originalTarget;
           let target = originalTarget.parentNode;
-          if (originalTarget == this._allBookmarksItem ||
-              target == this._allBookmarksItem) {
-            this.closePopup();
+          if (originalTarget == this._allBookmarksItem || target == this._allBookmarksItem) {
+            this.close();
             CommandUpdater.doCommand("cmd_bookmarks");
-          } else if (target.localName == "autocompleteresult" &&
-                     target._empty != true) {
+          } else if (target.localName == "autocompleteresult" && target._empty != true) {
             let offset = this._allBookmarksItem._hidden ? 0 : 1;
             this.selectedIndex = target._index + offset;
             this.input.controller.handleEnter(true);
-          } else
-            this.closePopup();
+          } else {
+            this.close();
+          }
         ]]>
       </handler>
     </handlers>
