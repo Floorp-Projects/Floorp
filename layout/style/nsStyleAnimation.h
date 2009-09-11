@@ -141,6 +141,22 @@ public:
                              nsStyleCoord& aComputedValue);
 
   /**
+   * Creates a specified value (nsAString) for the given computed value
+   * (nsStyleCoord).
+   *
+   * @param aProperty      The property whose value we're uncomputing.
+   * @param aPresContext   The presentation context for the document in
+   *                       which we're working.
+   * @param aComputedValue The computed value to be converted.
+   * @param [out] aSpecifiedValue The resulting specified value.
+   * @return PR_TRUE on success, PR_FALSE on failure.
+   */
+  static PRBool UncomputeValue(nsCSSProperty aProperty,
+                               nsPresContext* aPresContext,
+                               const nsStyleCoord& aComputedValue,
+                               nsAString& aSpecifiedValue);
+
+  /**
    * Gets the computed value for the given property from the given style
    * context.
    *

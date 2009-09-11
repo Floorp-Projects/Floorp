@@ -405,6 +405,36 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
   return ExtractComputedValue(aProperty, tmpStyleContext, aComputedValue);
 }
 
+PRBool
+nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
+                                 nsPresContext* aPresContext,
+                                 const nsStyleCoord& aComputedValue,
+                                 nsAString& aSpecifiedValue)
+{
+  NS_ABORT_IF_FALSE(aPresContext, "null pres context");
+  aSpecifiedValue.Truncate(); // Clear outparam, if it's not already empty
+
+  nsCSSValue value;
+  switch (aComputedValue.GetUnit()) {
+    case eStyleUnit_Coord: {
+      float pxVal = aPresContext->AppUnitsToFloatCSSPixels(
+                                    aComputedValue.GetCoordValue());
+      value.SetFloatValue(pxVal, eCSSUnit_Pixel);
+      break;
+    }
+    case eStyleUnit_Percent:
+      value.SetPercentValue(aComputedValue.GetPercentValue());
+      break;
+    case eStyleUnit_Color:
+      value.SetColorValue(aComputedValue.GetColorValue());
+      break;
+    default:
+      return PR_FALSE;
+  }
+  return nsCSSDeclaration::AppendCSSValueToString(aProperty, value,
+                                                  aSpecifiedValue);
+}
+
 inline const void*
 StyleDataAtOffset(const void* aStyleStruct, ptrdiff_t aOffset)
 {
