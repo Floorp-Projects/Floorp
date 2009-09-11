@@ -234,6 +234,11 @@ public:
   virtual PRBool CachedIsEmpty();
   virtual PRBool IsSelfEmpty();
 
+  // Given that we have a bullet, does it actually draw something, i.e.,
+  // do we have either a 'list-style-type' or 'list-style-image' that is
+  // not 'none'?
+  PRBool BulletIsEmpty() const;
+
   virtual void MarkIntrinsicWidthsDirty();
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);

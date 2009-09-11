@@ -1332,8 +1332,14 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
   NS_ASSERTION(mCurrentSpan == mRootSpan, "bad linelayout user");
   NS_ASSERTION(GetFlag(LL_GOTLINEBOX), "must have line box");
 
-  SetFlag(LL_HASBULLET, PR_TRUE);
-  mLineBox->SetHasBullet();
+
+  nsIFrame *blockFrame = mBlockReflowState->frame;
+  NS_ASSERTION(blockFrame->IsFrameOfType(nsIFrame::eBlockFrame),
+               "must be for block");
+  if (!static_cast<nsBlockFrame*>(blockFrame)->BulletIsEmpty()) {
+    SetFlag(LL_HASBULLET, PR_TRUE);
+    mLineBox->SetHasBullet();
+  }
 
   PerFrameData* pfd;
   nsresult rv = NewPerFrameData(&pfd);
