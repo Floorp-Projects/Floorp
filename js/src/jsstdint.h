@@ -84,7 +84,7 @@ typedef JSUintPtr uintptr_t;
 #define INT8_MAX  127
 #define INT8_MIN  (-INT8_MAX - 1)
 #define INT16_MAX 32767
-#define INT16_MIN (-INT16_MIN - 1)
+#define INT16_MIN (-INT16_MAX - 1)
 #define INT32_MAX 2147483647
 #define INT32_MIN (-INT32_MAX - 1)
 #define INT64_MAX 9223372036854775807LL
