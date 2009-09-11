@@ -6639,6 +6639,18 @@ GeneratorExpr(JSParseNode *pn, JSParseNode *kid, JSTreeContext *tc)
             return NULL;
 
         /*
+         * We have to dance around a bit to propagate sharp variables from tc
+         * to gentc before setting TCF_HAS_SHARPS implicitly by propagating all
+         * of tc's TCF_FUN_FLAGS flags. As below, we have to be conservative by
+         * leaving TCF_HAS_SHARPS set in tc if we do propagate to gentc.
+         */
+        if (tc->flags & TCF_HAS_SHARPS) {
+            gentc.flags |= TCF_IN_FUNCTION;
+            if (!gentc.ensureSharpSlots())
+                return NULL;
+        }
+
+        /*
          * We assume conservatively that any deoptimization flag in tc->flags
          * besides TCF_FUN_PARAM_ARGUMENTS can come from the kid. So we
          * propagate these flags into genfn. For code simplicity we also do
