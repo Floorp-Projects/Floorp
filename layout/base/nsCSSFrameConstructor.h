@@ -181,6 +181,9 @@ public:
     NS_ASSERTION(mUpdateCount == 0, "Dying in the middle of our own update?");
   }
 
+  struct RestyleData;
+  friend struct RestyleData;
+
   // Maintain global objects - gXBLService
   static nsIXBLService * GetXBLService();
   static void ReleaseGlobals() { NS_IF_RELEASE(gXBLService); }
@@ -274,6 +277,9 @@ private:
   void ProcessOneRestyle(nsIContent* aContent, nsReStyleHint aRestyleHint,
                          nsChangeHint aChangeHint);
 
+  void ProcessPendingRestyleTable(
+           nsDataHashtable<nsISupportsHashKey, RestyleData>& aRestyles);
+
 public:
   // Restyling for a ContentInserted (notification after insertion) or
   // for a CharacterDataChanged.  |aContainer| must be non-null; when
@@ -303,9 +309,43 @@ public:
   // must not contain nsChangeHint_ReconstructFrame) to the root frame.
   void RebuildAllStyleData(nsChangeHint aExtraHint);
 
+  // See PostRestyleEventCommon below.
   void PostRestyleEvent(nsIContent* aContent, nsReStyleHint aRestyleHint,
-                        nsChangeHint aMinChangeHint);
+                        nsChangeHint aMinChangeHint)
+  {
+    nsPresContext *presContext = mPresShell->GetPresContext();
+    if (presContext) {
+      PostRestyleEventCommon(aContent, aRestyleHint, aMinChangeHint,
+                             presContext->IsProcessingAnimationStyleChange());
+    }
+  }
+
+  // See PostRestyleEventCommon below.
+  void PostAnimationRestyleEvent(nsIContent* aContent,
+                                 nsReStyleHint aRestyleHint,
+                                 nsChangeHint aMinChangeHint)
+  {
+    PostRestyleEventCommon(aContent, aRestyleHint, aMinChangeHint, PR_TRUE);
+  }
 private:
+  /**
+   * Notify the frame constructor that a content node needs to have its
+   * style recomputed.
+   * @param aContent: The content node to be restyled.
+   * @param aRestyleHint: Which nodes need to have selector matching run
+   *                      on them.
+   * @param aMinChangeHint: A minimum change hint for aContent and its
+   *                        descendants.
+   * @param aForAnimation: Whether the style should be computed with or
+   *                       without animation data.  Animation code
+   *                       sometimes needs to pass true; other code
+   *                       should generally pass the the pres context's
+   *                       IsProcessingAnimationStyleChange() value
+   *                       (which is the default value).
+   */
+  void PostRestyleEventCommon(nsIContent* aContent, nsReStyleHint aRestyleHint,
+                              nsChangeHint aMinChangeHint,
+                              PRBool aForAnimation);
   void PostRestyleEventInternal();
 public:
 
@@ -1707,8 +1747,6 @@ private:
   }
 
 public:
-  struct RestyleData;
-  friend struct RestyleData;
 
   struct RestyleData {
     nsReStyleHint mRestyleHint;  // What we want to restyle
@@ -1794,6 +1832,7 @@ private:
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 
   nsDataHashtable<nsISupportsHashKey, RestyleData> mPendingRestyles;
+  nsDataHashtable<nsISupportsHashKey, RestyleData> mPendingAnimationRestyles;
 
   static nsIXBLService * gXBLService;
 };
