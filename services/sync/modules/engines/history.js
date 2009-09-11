@@ -86,7 +86,7 @@ HistoryEngine.prototype = {
 
   _syncFinish: function HistEngine__syncFinish(error) {
     // Only leave 1 week's worth of history on the server
-    this._delete.older = this.lastSync - 604800;
+    this._delete.older = this.lastSync - 604800; // 60*60*24*7
     SyncEngine.prototype._syncFinish.call(this);
   },
 

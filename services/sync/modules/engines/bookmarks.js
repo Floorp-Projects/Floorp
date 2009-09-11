@@ -321,7 +321,7 @@ BookmarksStore.prototype = {
     // Do some post-processing if we have an item
     let itemId = idForGUID(record.id);
     if (itemId > 0) {
-      // Move any children that is looking for this folder as a parent
+      // Move any children that are looking for this folder as a parent
       if (record.type == "folder")
         this._reparentOrphans(itemId);
 
