@@ -1151,7 +1151,6 @@ nsWaveDecoder::nsWaveDecoder()
     mCurrentTime(0.0),
     mEndedDuration(std::numeric_limits<float>::quiet_NaN()),
     mEnded(PR_FALSE),
-    mNotifyOnShutdown(PR_FALSE),
     mSeekable(PR_TRUE),
     mResourceLoaded(PR_FALSE),
     mMetadataLoadedReported(PR_FALSE),
@@ -1163,6 +1162,21 @@ nsWaveDecoder::nsWaveDecoder()
 nsWaveDecoder::~nsWaveDecoder()
 {
   MOZ_COUNT_DTOR(nsWaveDecoder);
+}
+
+PRBool
+nsWaveDecoder::Init(nsHTMLMediaElement* aElement)
+{
+  nsMediaDecoder::Init(aElement);
+
+  RegisterShutdownObserver();
+
+  mPlaybackStateMachine = new nsWaveStateMachine(this,
+    TimeDuration::FromMilliseconds(BUFFERING_TIMEOUT),
+    mInitialVolume);
+  NS_ENSURE_TRUE(mPlaybackStateMachine, PR_FALSE);
+
+  return PR_TRUE;
 }
 
 void
@@ -1270,11 +1284,6 @@ nsWaveDecoder::Stop()
 nsresult
 nsWaveDecoder::Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStreamListener)
 {
-  // Reset progress member variables
-  mResourceLoaded = PR_FALSE;
-  mResourceLoadedReported = PR_FALSE;
-  mMetadataLoadedReported = PR_FALSE;
-
   if (aStreamListener) {
     *aStreamListener = nsnull;
   }
@@ -1290,15 +1299,6 @@ nsWaveDecoder::Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStr
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  RegisterShutdownObserver();
-
-  mPlaybackStateMachine = new nsWaveStateMachine(this,
-    TimeDuration::FromMilliseconds(BUFFERING_TIMEOUT),
-    mInitialVolume);
-  NS_ENSURE_TRUE(mPlaybackStateMachine, NS_ERROR_OUT_OF_MEMORY);
-
-  // Open the stream *after* setting mPlaybackStateMachine, to ensure
-  // that callbacks (e.g. setting stream size) will actually work
   nsresult rv = nsMediaStream::Open(this, mURI, aChannel, getter_Transfers(mStream),
                                     aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1512,30 +1512,24 @@ nsWaveDecoder::SeekingStopped()
 void
 nsWaveDecoder::RegisterShutdownObserver()
 {
-  if (!mNotifyOnShutdown) {
-    nsCOMPtr<nsIObserverService> observerService =
-      do_GetService("@mozilla.org/observer-service;1");
-    if (observerService) {
-      mNotifyOnShutdown =
-        NS_SUCCEEDED(observerService->AddObserver(this,
-                                                  NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                                  PR_FALSE));
-    } else {
-      NS_WARNING("Could not get an observer service. Audio playback may not shutdown cleanly.");
-    }
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    observerService->AddObserver(this,
+                                 NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+                                 PR_FALSE);
+  } else {
+    NS_WARNING("Could not get an observer service. Audio playback may not shutdown cleanly.");
   }
 }
 
 void
 nsWaveDecoder::UnregisterShutdownObserver()
 {
-  if (mNotifyOnShutdown) {
-    nsCOMPtr<nsIObserverService> observerService =
-      do_GetService("@mozilla.org/observer-service;1");
-    if (observerService) {
-      mNotifyOnShutdown = PR_FALSE;
-      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    }
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   }
 }
 
