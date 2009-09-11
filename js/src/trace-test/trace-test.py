@@ -228,7 +228,7 @@ if __name__ == '__main__':
                   help='Run test files listed in [FILE]')
     op.add_option('-R', '--retest', dest='retest', metavar='FILE',
                   help='Retest using test list file [FILE]')
-    op.add_option('-d', '--debug', dest='debug', action='store_true',
+    op.add_option('-g', '--debug', dest='debug', action='store_true',
                   help='Run test in gdb')
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
