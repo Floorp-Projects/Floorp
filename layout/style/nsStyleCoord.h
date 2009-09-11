@@ -42,6 +42,7 @@
 
 #include "nscore.h"
 #include "nsCoord.h"
+#include "nsColor.h"
 #include "nsCRT.h"
 #include "nsStyleConsts.h"
 class nsString;
@@ -55,12 +56,14 @@ enum nsStyleUnit {
   eStyleUnit_Factor       = 11,     // (float) a multiplier
   eStyleUnit_Coord        = 20,     // (nscoord) value is twips
   eStyleUnit_Integer      = 30,     // (int) value is simple integer
-  eStyleUnit_Enumerated   = 32      // (int) value has enumerated meaning
+  eStyleUnit_Enumerated   = 32,     // (int) value has enumerated meaning
+  eStyleUnit_Color        = 40      // (nscolor)
 };
 
 typedef union {
   PRInt32     mInt;   // nscoord is a PRInt32 for now
   float       mFloat;
+  nscolor     mColor;
 } nsStyleUnion;
 
 /**
@@ -99,6 +102,7 @@ public:
   PRInt32     GetIntValue(void) const;
   float       GetPercentValue(void) const;
   float       GetFactorValue(void) const;
+  nscolor     GetColorValue() const;
   void        GetUnionValue(nsStyleUnion& aValue) const;
 
   void  Reset(void);  // sets to null
@@ -109,6 +113,7 @@ public:
   void  SetNormalValue(void);
   void  SetAutoValue(void);
   void  SetNoneValue(void);
+  void  SetColorValue(nscolor aValue);
 
 public:
   nsStyleUnit   mUnit;
@@ -250,6 +255,15 @@ inline float nsStyleCoord::GetFactorValue(void) const
     return mValue.mFloat;
   }
   return 0.0f;
+}
+
+inline nscolor nsStyleCoord::GetColorValue() const
+{
+  NS_ASSERTION((mUnit == eStyleUnit_Color), "not a color value");
+  if (mUnit == eStyleUnit_Color) {
+    return mValue.mColor;
+  }
+  return NS_RGBA(0, 0, 0, 0);
 }
 
 inline void nsStyleCoord::GetUnionValue(nsStyleUnion& aValue) const
