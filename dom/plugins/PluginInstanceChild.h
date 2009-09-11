@@ -65,6 +65,62 @@ class PluginInstanceChild : public PPluginInstanceChild
 protected:
     friend class BrowserStreamChild;
 
+
+
+    // FIXME/bent: demo purposes only
+    virtual nsresult
+    RecvTest(const Variant& v1, const Variant& v2)
+    {
+        printf("\n[PluginInstanceChild] v1: ");
+
+        switch (v1.type()) {
+        case Variant::Tint: {
+            int i = v1;
+            printf("variant-int %d", i);
+            break;
+        }            
+        case Variant::Tdouble: {
+            double d = v1;
+            printf("variant-double %e", d);
+            break;
+        }
+        case Variant::TPPluginInstanceChild: {
+            const PPluginInstanceChild* p = v1;
+            printf("plugin instance %p", p);
+            break;
+        }
+        default:
+            NS_RUNTIMEABORT("unexpected Variant value");
+        }
+
+        printf(", v2: ");
+
+        switch (v2.type()) {
+        case Variant::Tint: {
+            int i = v2;
+            printf("variant-int %d", i);
+            break;
+        }            
+        case Variant::Tdouble: {
+            double d = v2;
+            printf("variant-double %e", d);
+            break;
+        }
+        case Variant::TPPluginInstanceChild: {
+            const PPluginInstanceChild* p = v2;
+            printf("plugin instance %p", p);
+            break;
+        }
+        default:
+            NS_RUNTIMEABORT("unexpected Variant value");
+        }
+
+        puts("\n");
+        return NS_OK;
+    }
+
+
+
     virtual nsresult AnswerNPP_SetWindow(const NPWindow& window, NPError* rv);
 
     virtual nsresult AnswerNPP_GetValue(const nsString& key, nsString* value);

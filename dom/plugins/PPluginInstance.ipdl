@@ -46,8 +46,28 @@ include "mozilla/plugins/PluginMessageUtils.h";
 using NPError;
 using NPWindow;
 
+
+// FIXME/bent: demo purposes only
+using mozilla::void_t;
+using mozilla::null_t;
+
+
 namespace mozilla {
 namespace plugins {
+
+
+
+// FIXME/bent: demo purposes only
+union Variant {
+  int;
+  double;
+  void_t;
+  null_t;
+  PPluginInstance;
+};
+
+
+
 
 rpc protocol PPluginInstance
 {
@@ -55,6 +75,15 @@ rpc protocol PPluginInstance
 
   manages PPluginScriptableObject;
   manages PBrowserStream;
+
+
+
+  // FIXME/bent: demo purposes only
+child:
+  Test(Variant v1, Variant v2);
+
+
+
 
 child:
   /* NPP_NewStream */
