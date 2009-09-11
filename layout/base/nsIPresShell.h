@@ -401,6 +401,7 @@ public:
   NS_IMETHOD RecreateFramesFor(nsIContent* aContent) = 0;
 
   void PostRecreateFramesFor(nsIContent* aContent);
+  void RestyleForAnimation(nsIContent* aContent);
   
   /**
    * Determine if it is safe to flush all pending notifications
