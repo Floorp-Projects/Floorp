@@ -111,6 +111,7 @@ public:
   // point of the first frame of data.
   // Exactly one of aURI and aChannel must be null. aListener must be
   // null if and only if aChannel is.
+  // This is called at most once per decoder, after Init().
   virtual nsresult Load(nsIURI* aURI,
                         nsIChannel* aChannel,
                         nsIStreamListener **aListener) = 0;

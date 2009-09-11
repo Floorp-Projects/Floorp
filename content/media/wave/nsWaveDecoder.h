@@ -146,6 +146,8 @@ class nsWaveDecoder : public nsMediaDecoder
   nsWaveDecoder();
   ~nsWaveDecoder();
 
+  virtual PRBool Init(nsHTMLMediaElement* aElement);
+
   virtual void GetCurrentURI(nsIURI** aURI);
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
@@ -273,9 +275,6 @@ private:
   // values after the state machine has been destroyed.
   float mEndedDuration;
   PRPackedBool mEnded;
-
-  // True if we have registered a shutdown observer.
-  PRPackedBool mNotifyOnShutdown;
 
   // True if the media resource is seekable.
   PRPackedBool mSeekable;

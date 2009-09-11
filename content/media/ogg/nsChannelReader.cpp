@@ -131,12 +131,9 @@ static ogg_int64_t oggplay_channel_reader_duration(struct _OggPlayReader *aReade
   return me->duration();
 }
 
-nsresult nsChannelReader::Init(nsMediaDecoder* aDecoder, nsIURI* aURI,
-                               nsIChannel* aChannel,
-                               nsIStreamListener** aStreamListener)
+void nsChannelReader::Init(nsMediaStream* aStream)
 {
-  return nsMediaStream::Open(aDecoder, aURI, aChannel,
-                             getter_Transfers(mStream), aStreamListener);
+  mStream = aStream;
 }
 
 nsChannelReader::~nsChannelReader()
