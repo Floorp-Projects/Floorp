@@ -1311,10 +1311,11 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   
 // platform specific printing code
 #if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
+  nsSize contentSize = GetContentRect().Size();
   window.x = 0;
   window.y = 0;
-  window.width = presContext->AppUnitsToDevPixels(mRect.width);
-  window.height = presContext->AppUnitsToDevPixels(mRect.height);
+  window.width = presContext->AppUnitsToDevPixels(contentSize.width);
+  window.height = presContext->AppUnitsToDevPixels(contentSize.height);
 
   gfxContext *ctx = aRenderingContext.ThebesContext();
   if (!ctx)
@@ -1407,47 +1408,6 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   /* XXX this just flat-out doesn't work in a thebes world --
    * RenderEPS is a no-op.  So don't bother to do any work here.
    */
-#if 0
-    /* UNIX does things completely differently:
-   * We call the plugin and it sends generated PostScript data into a
-   * file handle we provide. If the plugin returns with success we embed
-   * this PostScript code fragment into the PostScript job we send to the
-   * printer.
-   */
-
-  PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("nsObjectFrame::Paint() start for X11 platforms\n"));
-         
-  FILE *plugintmpfile = tmpfile();
-  if (!plugintmpfile) {
-    PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("error: could not open tmp. file, errno=%d\n", errno));
-    return;
-  }
- 
-    /* Send off print info to plugin */
-  NPPrintCallbackStruct npPrintInfo;
-  npPrintInfo.type = NP_PRINT;
-  npPrintInfo.fp   = plugintmpfile;
-  npprint.print.embedPrint.platformPrint = (void *)&npPrintInfo;
-  /* aDirtyRect contains the right information for ps print */
-  window.x =   aDirtyRect.x;
-  window.y =   aDirtyRect.y;
-  window.width =   aDirtyRect.width;
-  window.height =   aDirtyRect.height;
-  npprint.print.embedPrint.window        = window;
-  nsresult rv = pi->Print(&npprint);
-  if (NS_FAILED(rv)) {
-    PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("error: plugin returned failure %lx\n", (long)rv));
-    fclose(plugintmpfile);
-    return;
-  }
-
-  /* Send data to printer */
-  rv = aRenderingContext.RenderEPS(aDirtyRect, plugintmpfile);
-
-  fclose(plugintmpfile);
-
-  PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("plugin printing done, return code is %lx\n", (long)rv));
-#endif
 
 #elif defined(XP_OS2)
   void *hps = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_OS2_PS);
@@ -1476,10 +1436,11 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
    */
 
   /* we'll already be translated into the right spot by gfxWindowsNativeDrawing */
+  nsSize contentSize = GetContentRect().Size();
   window.x = 0;
   window.y = 0;
-  window.width = presContext->AppUnitsToDevPixels(mRect.width);
-  window.height = presContext->AppUnitsToDevPixels(mRect.height);
+  window.width = presContext->AppUnitsToDevPixels(contentSize.width);
+  window.height = presContext->AppUnitsToDevPixels(contentSize.height);
 
   gfxContext *ctx = aRenderingContext.ThebesContext();
 
@@ -1508,37 +1469,10 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   nativeDraw.PaintToContext();
 
   ctx->Restore();
-
-#else
-
-  // Get the offset of the DC
-  nsTransform2D* rcTransform;
-  aRenderingContext.GetCurrentTransform(rcTransform);
-  nsPoint origin;
-  rcTransform->GetTranslationCoord(&origin.x, &origin.y);
-
-  // set it all up
-  // XXX is windowless different?
-  window.x = presContext->AppUnitsToDevPixels(origin.x);
-  window.y = presContext->AppUnitsToDevPixels(origin.y);
-  window.width = presContext->AppUnitsToDevPixels(mRect.width);
-  window.height= presContext->AppUnitsToDevPixels(mRect.height);
-
-  // we need the native printer device context to pass to plugin
-  // NATIVE_WINDOWS_DC is a misnomer, it's whatever the native platform
-  // thing is.
-  void* dc;
-  dc = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
-  if (!dc)
-    return; // no dc implemented so quit
-
-  npprint.print.embedPrint.platformPrint = dc;
-  npprint.print.embedPrint.window = window;
-  // send off print info to plugin
-  pi->Print(&npprint);
 #endif
 
   // XXX Nav 4.x always sent a SetWindow call after print. Should we do the same?
+  // XXX Calling DidReflow here makes no sense!!!
   nsDidReflowStatus status = NS_FRAME_REFLOW_FINISHED; // should we use a special status?
   frame->DidReflow(presContext,
                    nsnull, status);  // DidReflow will take care of it
