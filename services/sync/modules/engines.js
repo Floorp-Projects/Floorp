@@ -421,7 +421,7 @@ SyncEngine.prototype = {
         }
       }
       catch(ex) {
-        this._log.warn("Error processing record: " + Utils.exceptionStr(e));
+        this._log.warn("Error processing record: " + Utils.exceptionStr(ex));
       }
       this._tracker.ignoreAll = false;
       Sync.sleep(0);
