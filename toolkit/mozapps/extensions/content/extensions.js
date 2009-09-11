@@ -2296,7 +2296,7 @@ function checkUpdatesAll() {
     gExtensionManager.update(items, items.length,
                              nsIExtensionManager.UPDATE_CHECK_NEWVERSION,
                              listener,
-                             nsIExtensionMananger.UPDATE_WHEN_USER_REQUESTED);
+                             nsIExtensionManager.UPDATE_WHEN_USER_REQUESTED);
   }
   if (gExtensionsView.selectedItem)
     gExtensionsView.selectedItem.focus();
