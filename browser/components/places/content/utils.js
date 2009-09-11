@@ -291,7 +291,7 @@ var PlacesUIUtils = {
     }
 
     // tag folders use tag transactions
-    if (aContainer == PlacesUtils.bookmarks.tagsFolder) {
+    if (aContainer == PlacesUtils.tagsFolderId) {
       var txns = [];
       if (aData.children) {
         aData.children.forEach(function(aChild) {
@@ -364,30 +364,24 @@ var PlacesUIUtils = {
       case PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER:
         if (copy)
           return this._getFolderCopyTransaction(data, container, index);
-        else { // Move the item
-          var id = data.folder ? data.folder.id : data.id;
-          return this.ptm.moveItem(id, container, index);
-        }
+        // Otherwise move the item.
+        return this.ptm.moveItem(data.id, container, index);
         break;
       case PlacesUtils.TYPE_X_MOZ_PLACE:
-        if (data.id <= 0) // non-bookmark item
+        if (data.id == -1) // Not bookmarked.
           return this._getURIItemCopyTransaction(data, container, index);
   
-        if (copy) {
-          // Copying a child of a live-bookmark by itself should result
-          // as a new normal bookmark item (bug 376731)
-          return this._getBookmarkItemCopyTransaction(data, container, index,
-                                                      ["livemark/bookmarkFeedURI"]);
-        }
-        else
-          return this.ptm.moveItem(data.id, container, index);
+        if (copy)
+          return this._getBookmarkItemCopyTransaction(data, container, index);
+        // Otherwise move the item.
+        return this.ptm.moveItem(data.id, container, index);
         break;
       case PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR:
         // There is no data in a separator, so copying it just amounts to
         // inserting a new separator.
         if (copy)
           return this.ptm.createSeparator(container, index);
-        // Move the separator otherwise
+        // Otherwise move the item.
         return this.ptm.moveItem(data.id, container, index);
         break;
       default:
