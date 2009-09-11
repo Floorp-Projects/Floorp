@@ -10,7 +10,7 @@
     xmlns:xbl="http://www.mozilla.org/xbl"
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="download-base" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+  <binding id="download-base" extends="chrome://browser/content/bindings.xml#richlistitem">
     <implementation>
       <field name="nsIDLMgr">Components.interfaces.nsIDownloadManager</field>
 

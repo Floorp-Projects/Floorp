@@ -1064,6 +1064,16 @@
     </implementation>
   </binding>
 
+  <binding id="richlistitem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <handlers>
+      <handler event="mousedown" phase="capturing">
+        <![CDATA[
+          event.stopPropagation();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
   <binding id="chrome-select">
     <content>
       <children />
