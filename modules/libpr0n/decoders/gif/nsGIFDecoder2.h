@@ -102,6 +102,7 @@ private:
 
   PRUint8 mCurrentPass;
   PRUint8 mLastFlushedPass;
+  PRUint8 mColorMask;        // Apply this to the pixel to keep within colormap
   PRPackedBool mGIFOpen;
   PRPackedBool mSawTransparency;
 
