@@ -56,6 +56,8 @@ NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsPlaceholderFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsPlaceholderFrame)
+
 nsPlaceholderFrame::~nsPlaceholderFrame()
 {
 }

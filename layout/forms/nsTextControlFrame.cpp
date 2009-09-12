@@ -951,12 +951,13 @@ NS_NewTextControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsTextControlFrame(aPresShell, aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsTextControlFrame)
+
 NS_QUERYFRAME_HEAD(nsTextControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
   NS_QUERYFRAME_ENTRY(nsITextControlFrame)
-  if (nsIScrollableViewProvider::kFrameIID == id && IsScrollable())
-    return static_cast<nsIScrollableViewProvider*>(this);
+  NS_QUERYFRAME_ENTRY_CONDITIONAL(nsIScrollableViewProvider, IsScrollable())
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 #ifdef ACCESSIBILITY

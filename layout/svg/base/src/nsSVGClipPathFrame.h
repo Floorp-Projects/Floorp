@@ -53,6 +53,8 @@ protected:
     mInUse(PR_FALSE) {}
 
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   // nsSVGClipPathFrame methods:
   nsresult ClipPaint(nsSVGRenderState* aContext,
                      nsIFrame* aParent,

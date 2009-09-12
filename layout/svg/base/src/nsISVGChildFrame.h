@@ -53,7 +53,7 @@ class nsSVGRenderState;
 class nsISVGChildFrame : public nsQueryFrame
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsISVGChildFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsISVGChildFrame)
 
   // Paint this frame - aDirtyRect is the area being redrawn, in frame
   // offset pixel coordinates

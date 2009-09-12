@@ -139,6 +139,8 @@ NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsSVGOuterSVGFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGOuterSVGFrame)
+
 nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
     : nsSVGOuterSVGFrameBase(aContext)
     ,  mRedrawSuspendCount(0)

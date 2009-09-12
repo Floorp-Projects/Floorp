@@ -50,6 +50,8 @@ NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsSVGMarkerFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGMarkerFrame)
+
 //----------------------------------------------------------------------
 // nsIFrame methods:
 

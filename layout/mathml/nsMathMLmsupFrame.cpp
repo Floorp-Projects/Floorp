@@ -58,6 +58,8 @@ NS_NewMathMLmsupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsMathMLmsupFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmsupFrame)
+
 nsMathMLmsupFrame::~nsMathMLmsupFrame()
 {
 }

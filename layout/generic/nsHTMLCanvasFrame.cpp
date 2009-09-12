@@ -92,6 +92,8 @@ NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsHTMLCanvasFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsHTMLCanvasFrame)
+
 nsHTMLCanvasFrame::~nsHTMLCanvasFrame()
 {
 }

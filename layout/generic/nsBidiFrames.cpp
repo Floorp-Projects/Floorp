@@ -71,4 +71,6 @@ NS_NewDirectionalFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUni
   return new (aPresShell) nsDirectionalFrame(aContext, aChar);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsDirectionalFrame)
+
 #endif /* IBMBIDI */

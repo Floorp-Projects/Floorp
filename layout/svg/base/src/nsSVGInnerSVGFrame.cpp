@@ -52,6 +52,8 @@ NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsSVGInnerSVGFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGInnerSVGFrame)
+
 //----------------------------------------------------------------------
 // nsIFrame methods
 

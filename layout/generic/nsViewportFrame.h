@@ -57,6 +57,8 @@
   */
 class ViewportFrame : public nsContainerFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   typedef nsContainerFrame Super;
 
   ViewportFrame(nsStyleContext* aContext)

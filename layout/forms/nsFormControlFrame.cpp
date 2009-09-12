@@ -66,6 +66,8 @@ NS_QUERYFRAME_HEAD(nsFormControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsLeafFrame)
 
+NS_IMPL_FRAMEARENA_HELPERS(nsFormControlFrame)
+
 nscoord
 nsFormControlFrame::GetIntrinsicWidth()
 {

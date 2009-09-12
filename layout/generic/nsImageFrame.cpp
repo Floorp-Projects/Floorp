@@ -161,6 +161,8 @@ NS_NewImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsImageFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsImageFrame)
+
 
 nsImageFrame::nsImageFrame(nsStyleContext* aContext) :
   ImageFrameSuper(aContext),

@@ -487,6 +487,8 @@ NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsTableColGroupFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsTableColGroupFrame)
+
 nsIAtom*
 nsTableColGroupFrame::GetType() const
 {

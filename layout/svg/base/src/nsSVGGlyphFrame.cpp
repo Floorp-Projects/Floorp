@@ -190,6 +190,8 @@ NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsSVGGlyphFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGGlyphFrame)
+
 //----------------------------------------------------------------------
 // nsQueryFrame methods
 

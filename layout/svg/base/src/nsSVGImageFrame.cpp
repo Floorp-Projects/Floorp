@@ -80,6 +80,8 @@ protected:
   virtual ~nsSVGImageFrame();
 
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, const nsIntRect *aDirtyRect);
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
@@ -128,6 +130,8 @@ NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsSVGImageFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGImageFrame)
 
 nsSVGImageFrame::~nsSVGImageFrame()
 {

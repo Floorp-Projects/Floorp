@@ -107,7 +107,9 @@ nsIFrame*
 NS_NewTextBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
     return new (aPresShell) nsTextBoxFrame (aPresShell, aContext);
-} // NS_NewTextFrame
+}
+
+NS_IMPL_FRAMEARENA_HELPERS(nsTextBoxFrame)
 
 
 NS_IMETHODIMP

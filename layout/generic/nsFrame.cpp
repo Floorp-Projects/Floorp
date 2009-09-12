@@ -288,30 +288,6 @@ NS_NewEmptyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsFrame(aContext);
 }
 
-// Overloaded new operator. Relies on an arena (which comes from the
-// presShell) to perform the allocation.
-void*
-nsFrame::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
-{
-  return aPresShell->AllocateFrame(sz, 0 /* dummy */);
-}
-
-// Overridden to prevent the global delete from being called, since the memory
-// came out of an nsIArena instead of the global delete operator's heap.
-void
-nsFrame::operator delete(void* aPtr, size_t sz)
-{
-  // Don't let the memory be freed, since it will be recycled
-  // instead. Don't call the global operator delete.
-
-  // Stash the size of the object in the first four bytes of the
-  // freed up memory.  The Destroy method can then use this information
-  // to recycle the object.
-  size_t* szPtr = (size_t*)aPtr;
-  *szPtr = sz;
-}
-
-
 nsFrame::nsFrame(nsStyleContext* aContext)
 {
   MOZ_COUNT_CTOR(nsFrame);
@@ -330,9 +306,19 @@ nsFrame::~nsFrame()
     mStyleContext->Release();
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsFrame)
+
+// Dummy operator delete.  Will never be called, but must be defined
+// to satisfy some C++ ABIs.
+void
+nsFrame::operator delete(void *, size_t)
+{
+  NS_RUNTIMEABORT("nsFrame::operator delete should never be called");
+}
+
 NS_QUERYFRAME_HEAD(nsFrame)
   NS_QUERYFRAME_ENTRY(nsIFrame)
-NS_QUERYFRAME_TAIL
+NS_QUERYFRAME_TAIL_INHERITANCE_ROOT
 
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
@@ -470,14 +456,20 @@ nsFrame::Destroy()
     view->Destroy();
   }
 
-  // Deleting the frame doesn't really free the memory, since we're using an
-  // arena for allocation, but we will get our destructors called.
-  delete this;
+  // Must retrieve the object size before calling destructors, so the
+  // vtable is still valid.
+  //
+  // Note to future tweakers: having the method that returns the
+  // object size call the destructor will not avoid an indirect call;
+  // the compiler cannot devirtualize the call to the destructor even
+  // if it's from a method defined in the same class.
 
-  // Now that we're totally cleaned out, we need to add ourselves to the presshell's
-  // recycler.
-  size_t* sz = (size_t*)this;
-  shell->FreeFrame(*sz, 0 /* dummy */, (void*)this);
+  size_t sz = GetAllocatedSize();
+  this->~nsFrame();
+
+  // Now that we're totally cleaned out, we need to add ourselves to
+  // the presshell's recycler.
+  shell->FreeFrame(sz, 0 /* dummy */, (void*)this);
 }
 
 NS_IMETHODIMP

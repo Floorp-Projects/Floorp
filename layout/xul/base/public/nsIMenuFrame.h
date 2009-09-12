@@ -46,7 +46,7 @@
 class nsIMenuFrame
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsIMenuFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsIMenuFrame)
 
   virtual PRBool IsOpen() = 0;
   virtual PRBool IsMenu() = 0;

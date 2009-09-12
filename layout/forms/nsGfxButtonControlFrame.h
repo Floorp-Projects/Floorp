@@ -56,6 +56,8 @@ class nsGfxButtonControlFrame : public nsHTMLButtonControlFrame,
                                 public nsIAnonymousContentCreator
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsGfxButtonControlFrame(nsStyleContext* aContext);
 
   virtual void Destroy();

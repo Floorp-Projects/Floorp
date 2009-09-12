@@ -57,6 +57,8 @@ NS_NewSVGPathGeometryFrame(nsIPresShell* aPresShell,
   return new (aPresShell) nsSVGPathGeometryFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGPathGeometryFrame)
+
 //----------------------------------------------------------------------
 // nsQueryFrame methods
 

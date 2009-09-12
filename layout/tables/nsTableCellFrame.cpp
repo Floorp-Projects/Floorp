@@ -82,7 +82,9 @@ nsTableCellFrame::~nsTableCellFrame()
 {
 }
 
-nsTableCellFrame*  
+NS_IMPL_FRAMEARENA_HELPERS(nsTableCellFrame)
+
+nsTableCellFrame*
 nsTableCellFrame::GetNextCell() const
 {
   nsIFrame* childFrame = GetNextSibling();
@@ -1023,6 +1025,8 @@ NS_NewTableCellFrame(nsIPresShell*   aPresShell,
   else
     return new (aPresShell) nsTableCellFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsBCTableCellFrame)
 
 nsMargin* 
 nsTableCellFrame::GetBorderWidth(nsMargin&  aBorder) const

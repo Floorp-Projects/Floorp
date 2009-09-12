@@ -46,6 +46,8 @@ nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell,
 class nsTreeColFrame : public nsBoxFrame
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsTreeColFrame(nsIPresShell* aPresShell,
                  nsStyleContext* aContext):
     nsBoxFrame(aPresShell, aContext) {}

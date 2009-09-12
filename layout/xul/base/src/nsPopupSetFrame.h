@@ -64,6 +64,8 @@ public:
 class nsPopupSetFrame : public nsBoxFrame
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsPopupSetFrame(nsIPresShell* aShell, nsStyleContext* aContext):
     nsBoxFrame(aShell, aContext) {}
 

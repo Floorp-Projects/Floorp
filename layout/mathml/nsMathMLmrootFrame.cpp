@@ -74,6 +74,8 @@ NS_NewMathMLmrootFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsMathMLmrootFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmrootFrame)
+
 nsMathMLmrootFrame::nsMathMLmrootFrame(nsStyleContext* aContext) :
   nsMathMLContainerFrame(aContext),
   mSqrChar(),

@@ -54,9 +54,9 @@ protected:
     nsSVGContainerFrameBase(aContext) {}
 
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsSVGContainerFrame)
-  
+  NS_DECL_QUERYFRAME_TARGET(nsSVGContainerFrame)
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   // Returns the transform to our gfxContext (to device pixels, not CSS px)
   virtual gfxMatrix GetCanvasTM() { return gfxMatrix(); }
@@ -88,9 +88,9 @@ protected:
     nsSVGContainerFrame(aContext) {}
 
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsSVGDisplayContainerFrame)
-
+  NS_DECL_QUERYFRAME_TARGET(nsSVGDisplayContainerFrame)
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame:
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,

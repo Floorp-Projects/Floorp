@@ -158,7 +158,9 @@ nsIFrame*
 NS_NewImageBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsImageBoxFrame (aPresShell, aContext);
-} // NS_NewTitledButtonFrame
+}
+
+NS_IMPL_FRAMEARENA_HELPERS(nsImageBoxFrame)
 
 NS_IMETHODIMP
 nsImageBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
