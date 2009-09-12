@@ -1618,9 +1618,9 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
     //      be patched, so the nPatchBranch function doesn't need to know where
     //      the literal pool is located.
     //          LDRcc   PC, #lit
-    //          ; #lit is in the literal pool at ++_nSlot
+    //          ; #lit is in the literal pool at _nSlot
     //
-    //  --- Long conditional branch (if !samepage(_nIns-1, _nSlot)).
+    //  --- Long conditional branch (if the slot isn't on the same page as the instruction).
     //          LDRcc   PC, #lit
     //          B       skip        ; Jump over the literal data.
     //  lit:    #target
@@ -1633,12 +1633,14 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
         if(_chk) underrunProtect(8);
         *(--_nIns) = (NIns)(_t);
         *(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | 0x4 );
-    } else if (PC_OFFSET_FROM(_nSlot, _nIns-1) > -0x1000) {
+    } else if (PC_OFFSET_FROM(_nSlot, _nIns-1) > -0x1000 /*~(NJ_PAGE_SIZE-1)*/) {
         if(_chk) underrunProtect(8);
-        *(++_nSlot) = (NIns)(_t);
-        offs = PC_OFFSET_FROM(_nSlot,_nIns-1);
+        *(_nSlot++) = (NIns)(_t);
+        offs = PC_OFFSET_FROM(_nSlot-1,_nIns-1);
         NanoAssert(offs < 0);
-        *(--_nIns) = (NIns)( ((_c)<<28) | (0x51<<20) | (PC<<16) | (PC<<12) | ((-offs) & 0xFFFFFF) );
+        *(--_nIns) = (NIns)( ((_c)<<28) | (0x51<<20) | (PC<<16) | (PC<<12) | ((-offs) & 0xFFF) );
+        asm_output("ldr%s %s, [%s, #-%d]", condNames[_c], gpn(PC), gpn(PC), -offs);
+        NanoAssert(uintptr_t(_nIns)+8+offs == uintptr_t(_nSlot-1));
     } else {
         if(_chk) underrunProtect(12);
         // Emit a pointer to the target as a literal in the instruction stream.
