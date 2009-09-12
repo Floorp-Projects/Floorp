@@ -3,6 +3,15 @@
 // Note that this is use by tests elsewhere in the source tree. When in doubt,
 // check mxr before removing or changing functionality.
 
+// Helper function to clear the image cache of content images
+function clearImageCache()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var imageCache = Components.classes["@mozilla.org/image/cache;1"]
+                             .getService(Components.interfaces.imgICache);
+  imageCache.clearCache(false); // true=chrome, false=content
+}
+
 // Helper function to determine if the frame is decoded for a given image id
 function isFrameDecoded(id)
 {
