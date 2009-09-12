@@ -639,7 +639,8 @@ nsSimplePageSequenceFrame::PrintNextPage()
                          mCurrentPageFrame->GetSize());
       nsRegion drawingRegion(drawingRect);
       nsLayoutUtils::PaintFrame(renderingContext, mCurrentPageFrame,
-                                drawingRegion, NS_RGBA(0,0,0,0));
+                                drawingRegion, NS_RGBA(0,0,0,0),
+                                nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES);
 
       if (mSelectionHeight >= 0 && selectionY < mSelectionHeight) {
         selectionY += height;
@@ -707,7 +708,8 @@ nsSimplePageSequenceFrame::PaintPageSequence(nsIRenderingContext& aRenderingCont
     aRenderingContext.PushState();
     aRenderingContext.Translate(pt.x, pt.y);
     nsLayoutUtils::PaintFrame(&aRenderingContext, child,
-                              nsRegion(rect - pt), NS_RGBA(0,0,0,0));
+                              nsRegion(rect - pt), NS_RGBA(0,0,0,0),
+                              nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES);
     aRenderingContext.PopState();
     child = child->GetNextSibling();
   }

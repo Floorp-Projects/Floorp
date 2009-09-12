@@ -127,7 +127,7 @@ public:
 
   void  PaintImage(nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
-                   nsPoint aPt);
+                   nsPoint aPt, PRUint32 aFlags);
 
 protected:
   nsImageBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext);

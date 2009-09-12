@@ -215,7 +215,8 @@ protected:
                       const nsRect&        aRect);
 
   void PaintImage(nsIRenderingContext& aRenderingContext, nsPoint aPt,
-                  const nsRect& aDirtyRect, imgIContainer* aImage);
+                  const nsRect& aDirtyRect, imgIContainer* aImage,
+                  PRUint32 aFlags);
                   
 protected:
   friend class nsImageListener;

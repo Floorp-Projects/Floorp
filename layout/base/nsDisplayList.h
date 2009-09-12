@@ -291,6 +291,20 @@ public:
   void SetInTransform(PRBool aInTransform) { mInTransform = aInTransform; }
 
   /**
+   * @return PR_TRUE if images have been set to decode synchronously.
+   */
+  PRBool ShouldSyncDecodeImages() { return mSyncDecodeImages; }
+
+  /**
+   * Indicates whether we should synchronously decode images. If true, we decode
+   * and draw whatever image data has been loaded. If false, we just draw
+   * whatever has already been decoded.
+   */
+  void SetSyncDecodeImages(PRBool aSyncDecodeImages) {
+    mSyncDecodeImages = aSyncDecodeImages;
+  }
+
+  /**
    * Subtracts aRegion from *aVisibleRegion. We avoid letting
    * aVisibleRegion become overcomplex by simplifying it if necessary ---
    * unless mAccurateVisibleRegions is set, in which case we let it
@@ -396,6 +410,7 @@ private:
   // True when we're building a display list that's directly or indirectly
   // under an nsDisplayTransform
   PRPackedBool                   mInTransform;
+  PRPackedBool                   mSyncDecodeImages;
 };
 
 class nsDisplayItem;

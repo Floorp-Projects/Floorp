@@ -64,7 +64,9 @@ imgRequestProxy::imgRequestProxy() :
   mLoadFlags(nsIRequest::LOAD_NORMAL),
   mCanceled(PR_FALSE),
   mIsInLoadGroup(PR_FALSE),
-  mListenerIsStrongRef(PR_FALSE)
+  mListenerIsStrongRef(PR_FALSE),
+  mShouldRequestDecode(PR_FALSE),
+  mLockHeld(PR_FALSE)
 {
   /* member initializers and constructor code */
 
@@ -74,6 +76,10 @@ imgRequestProxy::~imgRequestProxy()
 {
   /* destructor code */
   NS_PRECONDITION(!mListener, "Someone forgot to properly cancel this request!");
+
+  // Unlock the image if we're holding a lock on it
+  if (mLockHeld && mOwner)
+    UnlockImage();
 
   // Explicitly set mListener to null to ensure that the RemoveProxy
   // call below can't send |this| to an arbitrary listener while |this|
@@ -129,6 +135,16 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
   if (mCanceled)
     return NS_OK;
 
+  // Were we decoded before?
+  PRBool wasDecoded = PR_FALSE;
+  if (mOwner->GetImageStatus() & imgIRequest::STATUS_FRAME_COMPLETE)
+    wasDecoded = PR_TRUE;
+
+  // If we're holding a lock, unlock the old image
+  PRBool wasLocked = mLockHeld;
+  if (mLockHeld)
+    UnlockImage();
+
   // Passing false to aNotify means that mListener will still get
   // OnStopRequest, if needed.
   mOwner->RemoveProxy(this, NS_IMAGELIB_CHANGING_OWNER, PR_FALSE);
@@ -136,6 +152,14 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
   mOwner = aNewOwner;
 
   mOwner->AddProxy(this);
+
+  // If we were decoded, request a decode on the new image
+  if (wasDecoded)
+    RequestDecode();
+
+  // If we were locked, apply the lock here
+  if (wasLocked)
+    LockImage();
 
   return NS_OK;
 }
@@ -238,6 +262,74 @@ NS_IMETHODIMP imgRequestProxy::CancelAndForgetObserver(nsresult aStatus)
   mOwner->RemoveProxy(this, aStatus, PR_FALSE);
 
   NullOutListener();
+
+  return NS_OK;
+}
+
+/* void requestDecode (); */
+NS_IMETHODIMP
+imgRequestProxy::RequestDecode()
+{
+  if (!mOwner)
+    return NS_ERROR_FAILURE;
+
+  // See if we can get the image
+  nsCOMPtr<imgIContainer> container;
+  nsresult rv = mOwner->GetImage(getter_AddRefs(container));
+  if (NS_FAILED(rv))
+    return rv;
+
+  // If we've got the container, just forward along the request
+  if (container)
+    return container->RequestDecode();
+
+  // Otherwise, flag that we should do it when the container is ready
+  mShouldRequestDecode = PR_TRUE;
+  return NS_OK;
+}
+
+/* void lockImage (); */
+NS_IMETHODIMP
+imgRequestProxy::LockImage()
+{
+  if (!mOwner)
+    return NS_ERROR_FAILURE;
+
+  // Flag that we're holding a lock
+  NS_ABORT_IF_FALSE(!mLockHeld, "Only call lockImage once per imgIRequest!");
+  mLockHeld = PR_TRUE;
+
+  // If we've got the container, forward along the request. If we don't, well
+  // do it in OnStartContainer.
+  nsCOMPtr<imgIContainer> container;
+  nsresult rv = mOwner->GetImage(getter_AddRefs(container));
+  if (NS_FAILED(rv))
+    return rv;
+  if (container)
+    return container->LockImage();
+
+  return NS_OK;
+}
+
+/* void unlockImage (); */
+NS_IMETHODIMP
+imgRequestProxy::UnlockImage()
+{
+  if (!mOwner)
+    return NS_ERROR_FAILURE;
+
+  // Flag that we're not holding a lock
+  NS_ABORT_IF_FALSE(mLockHeld, "calling unlock but not locked!");
+  mLockHeld = PR_FALSE;
+
+  // If we've got the container, forward along the request. If we don't, it
+  // doesn't matter.
+  nsCOMPtr<imgIContainer> container;
+  nsresult rv = mOwner->GetImage(getter_AddRefs(container));
+  if (NS_FAILED(rv))
+    return rv;
+  if (container)
+    return container->UnlockImage();
 
   return NS_OK;
 }
@@ -458,6 +550,16 @@ void imgRequestProxy::OnStartContainer(imgIContainer *image)
     nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
     mListener->OnStartContainer(this, image);
   }
+
+  // Request a decode if we said we should
+  if (mShouldRequestDecode) {
+    image->RequestDecode();
+    mShouldRequestDecode = PR_FALSE;
+  }
+
+  // Lock if we said we should
+  if (mLockHeld)
+    image->LockImage();
 }
 
 void imgRequestProxy::OnStartFrame(PRUint32 frame)
@@ -514,6 +616,18 @@ void imgRequestProxy::OnStopDecode(nsresult status, const PRUnichar *statusArg)
     mListener->OnStopDecode(this, status, statusArg);
   }
 }
+
+void imgRequestProxy::OnDiscard()
+{
+  LOG_FUNC(gImgLog, "imgRequestProxy::OnDiscard");
+
+  if (mListener && !mCanceled) {
+    // Hold a ref to the listener while we call it, just in case.
+    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
+    mListener->OnDiscard(this);
+  }
+}
+
 
 
 

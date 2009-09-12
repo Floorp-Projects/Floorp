@@ -73,7 +73,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIsAtRootOfPseudoStackingContext(PR_FALSE),
       mPaintAllFrames(PR_FALSE),
       mAccurateVisibleRegions(PR_FALSE),
-      mInTransform(PR_FALSE) {
+      mInTransform(PR_FALSE),
+      mSyncDecodeImages(PR_FALSE) {
   PL_InitArenaPool(&mPool, "displayListArena", 1024, sizeof(void*)-1);
 
   nsPresContext* pc = aReferenceFrame->PresContext();

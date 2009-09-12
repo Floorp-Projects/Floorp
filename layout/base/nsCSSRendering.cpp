@@ -2104,7 +2104,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
     if (req)
       req->GetImageStatus(&status);
 
-    NS_ASSERTION(req && (status & imgIRequest::STATUS_FRAME_COMPLETE),
+    NS_ASSERTION(req && (status & imgIRequest::STATUS_LOAD_COMPLETE),
                  "no image to draw");
   }
 #endif
@@ -2300,7 +2300,9 @@ DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
     return;
 
   nsCOMPtr<imgIContainer> subImage;
-  if (NS_FAILED(aImage->ExtractCurrentFrame(aSrc, getter_AddRefs(subImage))))
+  if (NS_FAILED(aImage->ExtractFrame(imgIContainer::FRAME_CURRENT, aSrc,
+                                     imgIContainer::FLAG_SYNC_DECODE,
+                                     getter_AddRefs(subImage))))
     return;
 
   gfxPattern::GraphicsFilter graphicsFilter =
@@ -2314,7 +2316,7 @@ DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
        aUnitSize.height == aFill.height)) {
     nsLayoutUtils::DrawSingleImage(&aRenderingContext, subImage,
                                    graphicsFilter,
-                                   aFill, aDirtyRect);
+                                   aFill, aDirtyRect, imgIContainer::FLAG_NONE);
     return;
   }
 
@@ -2359,7 +2361,8 @@ DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
   }
 
   nsLayoutUtils::DrawImage(&aRenderingContext, subImage, graphicsFilter,
-                           tile, aFill, tile.TopLeft(), aDirtyRect);
+                           tile, aFill, tile.TopLeft(), aDirtyRect,
+                           imgIContainer::FLAG_NONE);
 }
 
 // Begin table border-collapsing section
@@ -3086,6 +3089,9 @@ PRBool
 ImageRenderer::PrepareImage()
 {
   if (mImage.IsEmpty() || !mImage.IsComplete()) {
+    // Make sure the image is actually decoding
+    mImage.RequestDecode();
+
     // We can not prepare the image for rendering if it is not fully loaded.
     return PR_FALSE;
   }
@@ -3115,8 +3121,10 @@ ImageRenderer::PrepareImage()
           mImageContainer.swap(srcImage);
         } else {
           nsCOMPtr<imgIContainer> subImage;
-          nsresult rv = srcImage->ExtractCurrentFrame(actualCropRect,
-                                                      getter_AddRefs(subImage));
+          nsresult rv = srcImage->ExtractFrame(imgIContainer::FRAME_CURRENT,
+                                               actualCropRect,
+                                               imgIContainer::FLAG_NONE,
+                                               getter_AddRefs(subImage));
           if (NS_FAILED(rv)) {
             NS_WARNING("The cropped image contains no pixels to draw; "
                        "maybe the crop rect is outside the image frame rect");
@@ -3190,7 +3198,7 @@ ImageRenderer::Draw(nsPresContext*       aPresContext,
     case eStyleImageType_Image:
       nsLayoutUtils::DrawImage(&aRenderingContext, mImageContainer,
           nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame),
-          aDest, aFill, aAnchor, aDirty);
+          aDest, aFill, aAnchor, aDirty, imgIContainer::FLAG_NONE);
       break;
     case eStyleImageType_Gradient:
       nsCSSRendering::PaintGradient(aPresContext, aRenderingContext,
