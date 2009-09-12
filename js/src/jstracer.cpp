@@ -12354,7 +12354,6 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
           addName(lir->ins2(LIR_peq, call_ins, INS_NULL()),
                   "guard(js_AllocFlatClosure)"),
           OOM_EXIT);
-    stack(0, call_ins);
 
     if (fun->u.i.nupvars) {
         JSUpvarArray *uva = fun->u.i.script->upvars();
@@ -12368,6 +12367,7 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
         }
     }
 
+    stack(0, call_ins);
     return JSRS_CONTINUE;
 }
 
