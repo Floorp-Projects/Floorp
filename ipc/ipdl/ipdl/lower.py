@@ -482,7 +482,8 @@ class GenerateProtocolHeader(Visitor):
 
         cls.addstmt(cxx.Label.PUBLIC)
         tenum = cxx.TypeEnum('Type')
-        for enumv in enumvs:
+        tenum.addId(enumvs[0], 1)
+        for enumv in enumvs[1:]:
             tenum.addId(enumv)
         tenum.addId('T__First', enumvs[0])
         tenum.addId('T__Last', enumvs[len(enumvs)-1])
