@@ -436,7 +436,8 @@ public:
     nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
                                     aDirtyRect,
                                     nsRect(offset, mFrame->GetSize()),
-                                    0, &bgClipRect);
+                                    aBuilder->GetBackgroundPaintFlags(),
+                                    &bgClipRect);
   }
 
   NS_DISPLAY_DECL_NAME("CanvasBackground")

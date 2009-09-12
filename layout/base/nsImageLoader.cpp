@@ -192,6 +192,7 @@ NS_IMETHODIMP nsImageLoader::OnStopRequest(imgIRequest *aRequest,
   if (mActions & ACTION_REDRAW_ON_LOAD) {
     DoRedraw(nsnull);
   }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,

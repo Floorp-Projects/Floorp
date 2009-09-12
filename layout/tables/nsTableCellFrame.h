@@ -129,7 +129,8 @@ public:
                               const nsDisplayListSet& aLists);
                               
   void PaintCellBackground(nsIRenderingContext& aRenderingContext,
-                           const nsRect& aDirtyRect, nsPoint aPt);
+                           const nsRect& aDirtyRect, nsPoint aPt,
+                           PRUint32 aFlags);
 
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
@@ -226,7 +227,8 @@ public:
 
   virtual void PaintBackground(nsIRenderingContext& aRenderingContext,
                                const nsRect&        aDirtyRect,
-                               nsPoint              aPt);
+                               nsPoint              aPt,
+                               PRUint32             aFlags);
 
   void DecorateForSelection(nsIRenderingContext& aRenderingContext,
                             nsPoint              aPt);
@@ -329,7 +331,8 @@ public:
 
   virtual void PaintBackground(nsIRenderingContext& aRenderingContext,
                                const nsRect&        aDirtyRect,
-                               nsPoint              aPt);
+                               nsPoint              aPt,
+                               PRUint32             aFlags);
 
 private:
   
