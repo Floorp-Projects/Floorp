@@ -266,6 +266,7 @@ class GenerateProtocolHeader(Visitor):
             else:
                 ct = cxx.Type(t.name())
                 ct._ipdl = None
+                ct._side = None
                 cxxtypes.append(ct)
                 if t.name() != t.fullname():
                     usingTypedefs.append(cxx.Typedef(cxx.Type(t.fullname()),
@@ -273,7 +274,7 @@ class GenerateProtocolHeader(Visitor):
 
         # special, opaque handle used to pack away actor types when unions
         # are sent across the wire
-        t = cxx.Type('ActorHandle');  t._ipdl = None
+        t = cxx.Type('ActorHandle');  t._ipdl = None; t._side = None
         cxxtypes.append(t)
 
         for cxxt in cxxtypes:
@@ -313,8 +314,14 @@ class GenerateProtocolHeader(Visitor):
 
             enumvs.append(enumv)
             cxxt._tag = enumv
-            
-            union.addComponent(cxxt, unionname)
+
+            cxxtstorage = cxx.TypeArray(cxx.Type('char'),
+                                        cxx.ExprSizeof(cxxt))
+            cxxtstorage._realtype = cxxt
+            cxxtstorage._tag = cxxt._tag
+            cxxtstorage._ipdl = cxxt._ipdl
+            cxxtstorage._side = cxxt._side
+            union.addComponent(cxxtstorage, unionname)
 
             ptrmethdecl = cxx.MethodDecl(name='ptr'+ cxxt.name,
                                          ret=cxxtptr)
@@ -1704,7 +1711,7 @@ class GenerateProtocolActorHeader(Visitor):
                         continue
                     switch.addstmt(cxx.CaseLabel(p.type.name +'::'+ t._tag))
                     repack = cxx.StmtBlock()
-                    repack.addstmt(cxx.StmtDecl(cxx.Decl(t, '__ua')))
+                    repack.addstmt(cxx.StmtDecl(cxx.Decl(t._realtype, '__ua')))
 
                     uavar = cxx.ExprVar('__ua')
                     # take the actor out of the union and convert it
@@ -1878,12 +1885,13 @@ class GenerateProtocolActorHeader(Visitor):
                         ifhandle.addifstmt(cxx.StmtExpr(cxx.ExprAssn(uahvar,
                                                                      rvar)))
                         # look up and verify the actor handle we got
-                        ifhandle.addifstmt(cxx.StmtDecl(cxx.Decl(t, '__ua')))
+                        ifhandle.addifstmt(cxx.StmtDecl(cxx.Decl(t._realtype,
+                                                                 '__ua')))
                         uavar = cxx.ExprVar('__ua')
                         actorid = cxx.ExprSelect(uahvar, '.', 'mId')
                         cast = cxx.ExprCast(
                             cxx.ExprCall(cxx.ExprVar('Lookup'), [ actorid ]),
-                            t,
+                            t._realtype,
                             static=1)
                         ifhandle.addifstmt(cxx.StmtExpr(
                             cxx.ExprAssn(uavar, cast)))
@@ -2039,14 +2047,15 @@ class GenerateProtocolActorHeader(Visitor):
                     ifhandle.addifstmt(cxx.StmtExpr(cxx.ExprAssn(uahvar,
                                                                  pvar)))
                     # look up and verify the actor handle we got
-                    ifhandle.addifstmt(cxx.StmtDecl(cxx.Decl(t, '__ua')))
+                    ifhandle.addifstmt(cxx.StmtDecl(cxx.Decl(t._realtype,
+                                                             '__ua')))
                     uavar = cxx.ExprVar('__ua')
 
                     ifhandle.ifb.addstmts(
                         _actorHandleToActor(
                             handle=uahvar,
                             actor=uavar,
-                            actortype=t,
+                            actortype=t._realtype,
                             failcode=cxx.ExprVar('MsgValueError')))
 
                     # finally, slam the actor back into the union
@@ -2198,7 +2207,8 @@ class GenerateProtocolActorHeader(Visitor):
                             continue
                         switch.addstmt(cxx.Label(t._tag))
                         repack = cxx.StmtBlock()
-                        repack.addstmt(cxx.StmtDecl(cxx.Decl(t, '__ua')))
+                        repack.addstmt(cxx.StmtDecl(cxx.Decl(t._realtype,
+                                                             '__ua')))
                         uavar = cxx.ExprVar('__ua')
                         repack.addstmt(cxx.StmtExpr(cxx.ExprAssn(uavar, rvar)))
                         repack.addstmt(cxx.StmtExpr(

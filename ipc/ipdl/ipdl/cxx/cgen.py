@@ -33,7 +33,7 @@
 import sys
 
 from ipdl.cgen import CodePrinter
-from ipdl.cxx.ast import Visitor
+from ipdl.cxx.ast import TypeArray, Visitor
 
 class CxxCodeGen(CodePrinter, Visitor):
     def __init__(self, outf=sys.stdout, indentCols=4):
@@ -94,10 +94,10 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.println(' {')
 
         self.indent()
-        for t, name in u.components:
+        for decl in u.componentDecls:
             self.printdent()
-            t.accept(self)
-            self.println(' '+ name +';')
+            decl.accept(self)
+            self.println(';')
         self.dedent()
 
         self.printdent('}')
@@ -115,9 +115,19 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.println(';')
 
     def visitDecl(self, d):
-        d.type.accept(self)
+        # C-syntax arrays make code generation much more annoying
+        if isinstance(d.type, TypeArray):
+            d.type.basetype.accept(self)
+        else:
+            d.type.accept(self)
+
         if d.name:
             self.write(' '+ d.name)
+
+        if isinstance(d.type, TypeArray):
+            self.write('[')
+            d.type.nmemb.accept(self)
+            self.write(']')
 
     def visitClass(self, c):
         if c.specializes is not None:
