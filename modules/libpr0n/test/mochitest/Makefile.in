@@ -47,6 +47,8 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES =   imgutils.js \
                 test_bug399925.html \
                 bug399925.gif \
+                schrep.png \
+                test_bug435296.html \
                 bug468160.sjs \
                 test_bug468160.html \
                 red.png \
