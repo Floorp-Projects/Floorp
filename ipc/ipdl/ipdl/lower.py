@@ -778,7 +778,7 @@ class GenerateProtocolHeader(Visitor):
 
         def canonicalType(t):
             cxxt = cxx.Type(t.name())
-            if t.isIPDL() and t.isUnionType():
+            if t.isIPDL() and t.isUnion():
                 cxxt._union = t._cxxunion
             else:
                 cxxt._union = None
