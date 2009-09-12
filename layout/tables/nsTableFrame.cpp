@@ -1216,7 +1216,8 @@ nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
 {
   static_cast<nsTableFrame*>(mFrame)->
     PaintTableBorderBackground(*aCtx, aDirtyRect,
-                               aBuilder->ToReferenceFrame(mFrame));
+                               aBuilder->ToReferenceFrame(mFrame),
+                               aBuilder->GetBackgroundPaintFlags());
 }
 
 static PRInt32 GetTablePartRank(nsDisplayItem* aItem)
@@ -1370,13 +1371,13 @@ nsTableFrame::GetDeflationForBackground(nsPresContext* aPresContext) const
 void
 nsTableFrame::PaintTableBorderBackground(nsIRenderingContext& aRenderingContext,
                                          const nsRect& aDirtyRect,
-                                         nsPoint aPt)
+                                         nsPoint aPt, PRUint32 aBGPaintFlags)
 {
   nsPresContext* presContext = PresContext();
 
   TableBackgroundPainter painter(this, TableBackgroundPainter::eOrigin_Table,
                                  presContext, aRenderingContext,
-                                 aDirtyRect, aPt);
+                                 aDirtyRect, aPt, aBGPaintFlags);
   nsMargin deflate = GetDeflationForBackground(presContext);
   // If 'deflate' is (0,0,0,0) then we'll paint the table background
   // in a separate display item, so don't do it here.

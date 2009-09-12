@@ -5394,7 +5394,7 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance,
   nsRefPtr<gfxASurface> currentFrame;
   if (imageContainer)
     imageContainer->GetFrame(imgIContainer::FRAME_CURRENT,
-                             imgIContainer::FLAG_NONE,
+                             imgIContainer::FLAG_SYNC_DECODE,
                              getter_AddRefs(currentFrame));
 
   // We need to wrap the surface in a pattern to have somewhere to set the

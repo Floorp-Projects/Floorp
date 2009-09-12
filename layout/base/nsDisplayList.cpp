@@ -157,6 +157,15 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
   PL_FinishArenaPool(&mPool);
 }
 
+PRUint32
+nsDisplayListBuilder::GetBackgroundPaintFlags() {
+  PRUint32 flags = 0;
+  if (mSyncDecodeImages) {
+    flags |= nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES;
+  }
+  return flags;
+}
+
 void
 nsDisplayListBuilder::SubtractFromVisibleRegion(nsRegion* aVisibleRegion,
                                                 const nsRegion& aRegion)
@@ -661,11 +670,11 @@ void
 nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
-  PRUint32 flags = 0;
+  PRUint32 flags = aBuilder->GetBackgroundPaintFlags();
   nsDisplayItem* nextItem = GetAbove();
   if (nextItem && nextItem->GetUnderlyingFrame() == mFrame &&
       nextItem->GetType() == TYPE_BORDER) {
-    flags |= nsCSSRendering::PAINT_WILL_PAINT_BORDER;
+    flags |= nsCSSRendering::PAINTBG_WILL_PAINT_BORDER;
   }
   nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
                                   aDirtyRect, nsRect(offset, mFrame->GetSize()),
