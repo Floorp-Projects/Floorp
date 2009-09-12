@@ -1126,7 +1126,7 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
     JSStackFrame *afp;
 
     if (fp->flags & JSFRAME_COMPUTED_THIS)
-        return fp->thisp;
+        return JSVAL_TO_OBJECT(fp->thisv);  /* JSVAL_COMPUTED_THIS invariant */
 
     /* js_ComputeThis gets confused if fp != cx->fp, so set it aside. */
     if (js_GetTopStackFrame(cx) != fp) {
@@ -1140,8 +1140,8 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
         afp = NULL;
     }
 
-    if (!fp->thisp && fp->argv)
-        fp->thisp = js_ComputeThis(cx, JS_TRUE, fp->argv);
+    if (JSVAL_IS_NULL(fp->thisv) && fp->argv)
+        fp->thisv = OBJECT_TO_JSVAL(js_ComputeThis(cx, JS_TRUE, fp->argv));
 
     if (afp) {
         cx->fp = afp;
@@ -1149,7 +1149,7 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
         afp->dormantNext = NULL;
     }
 
-    return fp->thisp;
+    return JSVAL_TO_OBJECT(fp->thisv);
 }
 
 JS_PUBLIC_API(JSFunction *)

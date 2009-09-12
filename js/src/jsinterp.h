@@ -76,7 +76,7 @@ struct JSStackFrame {
     JSObject        *varobj;        /* variables object, where vars go */
     JSScript        *script;        /* script being interpreted */
     JSFunction      *fun;           /* function being called or null */
-    JSObject        *thisp;         /* "this" pointer if in method */
+    jsval           thisv;          /* "this" pointer if in method */
     uintN           argc;           /* actual argument count */
     jsval           *argv;          /* base of argument stack slots */
     jsval           rval;           /* function return value */
@@ -190,7 +190,8 @@ typedef struct JSInlineFrame {
 
 /* JS stack frame flags. */
 #define JSFRAME_CONSTRUCTING   0x01 /* frame is for a constructor invocation */
-#define JSFRAME_COMPUTED_THIS  0x02 /* frame.thisp was computed already */
+#define JSFRAME_COMPUTED_THIS  0x02 /* frame.thisv was computed already and
+                                       JSVAL_IS_OBJECT(thisv) */
 #define JSFRAME_ASSIGNING      0x04 /* a complex (not simplex JOF_ASSIGNING) op
                                        is currently assigning to a property */
 #define JSFRAME_DEBUGGER       0x08 /* frame for JS_EvaluateInStackFrame */
@@ -474,11 +475,11 @@ static JS_INLINE JSObject *
 js_ComputeThisForFrame(JSContext *cx, JSStackFrame *fp)
 {
     if (fp->flags & JSFRAME_COMPUTED_THIS)
-        return fp->thisp;
+        return JSVAL_TO_OBJECT(fp->thisv);  /* JSVAL_COMPUTED_THIS invariant */
     JSObject* obj = js_ComputeThis(cx, JS_TRUE, fp->argv);
     if (!obj)
         return NULL;
-    fp->thisp = obj;
+    fp->thisv = OBJECT_TO_JSVAL(obj);
     fp->flags |= JSFRAME_COMPUTED_THIS;
     return obj;
 }

@@ -331,7 +331,7 @@ script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      * Emulate eval() by using caller's this, var object, sharp array, etc.,
      * all propagated by js_Execute via a non-null fourth (down) argument to
      * js_Execute.  If there is no scripted caller, js_Execute uses its second
-     * (chain) argument to set the exec frame's varobj, thisp, and scopeChain.
+     * (chain) argument to set the exec frame's varobj, thisv, and scopeChain.
      *
      * Unlike eval, which the compiler detects, Script.prototype.exec may be
      * called from a lightweight function, or even from native code (in which

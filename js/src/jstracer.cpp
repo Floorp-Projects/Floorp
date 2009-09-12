@@ -2705,7 +2705,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, JSTraceType* mp, double
     FlushNativeStackFrameVisitor visitor(cx, mp, np, stopAt);
     VisitStackSlots(visitor, cx, callDepth);
 
-    // Restore thisp from the now-restored argv[-1] in each pending frame.
+    // Restore thisv from the now-restored argv[-1] in each pending frame.
     // Keep in mind that we didn't restore frames at stopFrame and above!
     // Scope to keep |fp| from leaking into the macros we're using.
     {
@@ -2768,7 +2768,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, JSTraceType* mp, double
                         ((JSInlineFrame*)fp)->hookData = hookData;
                     }
                 }
-                fp->thisp = JSVAL_TO_OBJECT(fp->argv[-1]);
+                fp->thisv = fp->argv[-1];
                 if (fp->flags & JSFRAME_CONSTRUCTING) // constructors always compute 'this'
                     fp->flags |= JSFRAME_COMPUTED_THIS;
             }
@@ -4806,7 +4806,7 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     newifp->frame.dormantNext = NULL;
     newifp->frame.blockChain = NULL;
     newifp->mark = newmark;
-    newifp->frame.thisp = NULL; // will be updated in FlushNativeStackFrame
+    newifp->frame.thisv = JSVAL_NULL; // will be updated in FlushNativeStackFrame
 
     newifp->frame.regs = fp->regs;
     newifp->frame.regs->pc = script->code;
@@ -4874,8 +4874,7 @@ SynthesizeSlowNativeFrame(InterpState& state, JSContext *cx, VMSideExit *exit)
     fp->argsobj = NULL;
     fp->varobj = cx->fp->varobj;
     fp->script = NULL;
-    // fp->thisp is really a jsval, so reinterpret_cast here, not JSVAL_TO_OBJECT.
-    fp->thisp = (JSObject *) state.nativeVp[1];
+    fp->thisv = state.nativeVp[1];
     fp->argc = state.nativeVpLen - 2;
     fp->argv = state.nativeVp + 2;
     fp->fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
@@ -8773,7 +8772,7 @@ TraceRecorder::record_JSOP_RETURN()
     jsval& rval = stackval(-1);
     JSStackFrame *fp = cx->fp;
     if ((cx->fp->flags & JSFRAME_CONSTRUCTING) && JSVAL_IS_PRIMITIVE(rval)) {
-        JS_ASSERT(OBJECT_TO_JSVAL(fp->thisp) == fp->argv[-1]);
+        JS_ASSERT(fp->thisv == fp->argv[-1]);
         rval_ins = get(&fp->argv[-1]);
     } else {
         rval_ins = get(&rval);
@@ -12902,7 +12901,7 @@ TraceRecorder::record_JSOP_STOP()
      * of the last expression-statement, debugger API calls).
      */
     if (fp->flags & JSFRAME_CONSTRUCTING) {
-        JS_ASSERT(OBJECT_TO_JSVAL(fp->thisp) == fp->argv[-1]);
+        JS_ASSERT(fp->thisv == fp->argv[-1]);
         rval_ins = get(&fp->argv[-1]);
     } else {
         rval_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
@@ -13014,10 +13013,11 @@ TraceRecorder::record_JSOP_GETTHISPROP()
     CHECK_STATUS(getThis(this_ins));
 
     /*
-     * It's safe to just use cx->fp->thisp here because getThis() returns
-     * JSRS_STOP if thisp is not available.
+     * It's safe to just use cx->fp->thisv here because getThis() returns
+     * JSRS_STOP if thisv is not available.
      */
-    CHECK_STATUS(getProp(cx->fp->thisp, this_ins));
+    JS_ASSERT(cx->fp->flags & JSFRAME_COMPUTED_THIS);
+    CHECK_STATUS(getProp(JSVAL_TO_OBJECT(cx->fp->thisv), this_ins));
     return JSRS_CONTINUE;
 }
 
