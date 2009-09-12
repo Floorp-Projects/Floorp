@@ -361,15 +361,19 @@ BasicFormatter.prototype = {
   },
 
   format: function BF_format(message) {
-    let date = new Date(message.time);
-
     // Pad a string to a certain length (20) with a character (space)
     let pad = function BF__pad(str, len, chr) str +
       new Array(Math.max((len || 20) - str.length + 1, 0)).join(chr || " ");
 
-    return date.toLocaleFormat(this.dateFormat) + "\t" +
-      pad(message.loggerName) + " " + message.levelDesc + "\t" +
-      message.message + "\n";
+    // Generate a date string because toLocaleString doesn't work XXX 514803
+    let z = function(n) n < 10 ? "0" + n : n;
+    let d = new Date(message.time);
+    let dateStr = [d.getFullYear(), "-", z(d.getMonth() + 1), "-",
+      z(d.getDate()), " ", z(d.getHours()), ":", z(d.getMinutes()), ":",
+      z(d.getSeconds())].join("");
+
+    return dateStr + "\t" + pad(message.loggerName) + " " + message.levelDesc +
+      "\t" + message.message + "\n";
   }
 };
 
