@@ -6274,6 +6274,16 @@ MaybeDumpObject(const char *name, JSObject *obj)
     }
 }
 
+static void
+MaybeDumpValue(const char *name, jsval v)
+{
+    if (!JSVAL_IS_NULL(v)) {
+        fprintf(stderr, "  %s: ", name);
+        dumpValue(v);
+        fputc('\n', stderr);
+    }
+}
+
 JS_FRIEND_API(void)
 js_DumpStackFrame(JSStackFrame *fp)
 {
@@ -6328,7 +6338,7 @@ js_DumpStackFrame(JSStackFrame *fp)
         MaybeDumpObject("callobj", fp->callobj);
         MaybeDumpObject("argsobj", JSVAL_TO_OBJECT(fp->argsobj));
         MaybeDumpObject("varobj", fp->varobj);
-        MaybeDumpObject("this", fp->thisp);
+        MaybeDumpValue("this", fp->thisv);
         fprintf(stderr, "  rval: ");
         dumpValue(fp->rval);
         fputc('\n', stderr);

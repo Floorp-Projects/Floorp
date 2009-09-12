@@ -1298,12 +1298,8 @@ have_fun:
 
     /*
      * Initialize the frame.
-     *
-     * To set thisp we use an explicit cast and not JSVAL_TO_OBJECT, as vp[1]
-     * can be a primitive value here for those native functions specified with
-     * JSFUN_THISP_(NUMBER|STRING|BOOLEAN) flags.
      */
-    frame.thisp = (JSObject *)vp[1];
+    frame.thisv = vp[1];
     frame.varobj = NULL;
     frame.callobj = NULL;
     frame.argsobj = NULL;
@@ -1376,8 +1372,9 @@ have_fun:
 #ifdef DEBUG_NOT_THROWING
         JSBool alreadyThrowing = cx->throwing;
 #endif
-
-        ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
+        /* Primitive |this| should not be passed to slow natives. */
+        JSObject *thisp = JSVAL_TO_OBJECT(frame.thisv);
+        ok = native(cx, thisp, argc, frame.argv, &frame.rval);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
         if (ok && !alreadyThrowing)
@@ -1533,7 +1530,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.argsobj = down->argsobj;
         frame.varobj = down->varobj;
         frame.fun = down->fun;
-        frame.thisp = down->thisp;
+        frame.thisv = down->thisv;
         if (down->flags & JSFRAME_COMPUTED_THIS)
             flags |= JSFRAME_COMPUTED_THIS;
         frame.argc = down->argc;
@@ -1549,7 +1546,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         }
         frame.varobj = obj;
         frame.fun = NULL;
-        frame.thisp = chain;
+        frame.thisv = OBJECT_TO_JSVAL(chain);
         frame.argc = 0;
         frame.argv = NULL;
         frame.annotation = NULL;
@@ -1626,11 +1623,12 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
             return JS_FALSE;
         frame.scopeChain = chain;
 
-        frame.thisp = frame.thisp->thisObject(cx);
-        if (!frame.thisp) {
+        JSObject *thisp = JSVAL_TO_OBJECT(frame.thisv)->thisObject(cx);
+        if (!thisp) {
             ok = JS_FALSE;
             goto out2;
         }
+        frame.thisv = OBJECT_TO_JSVAL(thisp);
         frame.flags |= JSFRAME_COMPUTED_THIS;
     }
 

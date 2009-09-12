@@ -731,7 +731,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 
     /* These two references can be shared with fp until it goes away. */
     gen->frame.varobj = fp->varobj;
-    gen->frame.thisp = fp->thisp;
+    gen->frame.thisv = fp->thisv;
 
     /* Copy call-invariant script and function references. */
     gen->frame.script = fp->script;

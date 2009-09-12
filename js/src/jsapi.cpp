@@ -4457,7 +4457,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
      */
     if (!js_ComputeThis(cx, JS_TRUE, argv))
         return JS_FALSE;
-    js_GetTopStackFrame(cx)->thisp = JSVAL_TO_OBJECT(argv[-1]);
+    js_GetTopStackFrame(cx)->thisv = argv[-1];
     JS_ASSERT(cx->fp->argv == argv);
 
     /*
