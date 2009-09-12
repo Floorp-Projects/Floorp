@@ -568,11 +568,13 @@ nsAccTextChangeEvent::
              aAccessible, aIsAsynch),
   mStart(aStart), mLength(aLength), mIsInserted(aIsInserted)
 {
+#ifdef XP_WIN
   nsCOMPtr<nsIAccessibleText> textAccessible = do_QueryInterface(aAccessible);
   NS_ASSERTION(textAccessible, "Should not be firing test change event for non-text accessible!!!");
   if (textAccessible) {
     textAccessible->GetText(aStart, aStart + aLength, mModifiedText);
   }
+#endif
 }
 
 NS_IMETHODIMP
