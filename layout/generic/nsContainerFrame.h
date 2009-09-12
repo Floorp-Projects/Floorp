@@ -73,6 +73,8 @@ class nsOverflowContinuationTracker;
 class nsContainerFrame : public nsSplittableFrame
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   // nsIFrame overrides
   NS_IMETHOD Init(nsIContent* aContent,
                   nsIFrame*   aParent,

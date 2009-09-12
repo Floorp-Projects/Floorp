@@ -357,6 +357,8 @@ NS_NewMathMLmtableOuterFrame (nsIPresShell* aPresShell, nsStyleContext* aContext
   return new (aPresShell) nsMathMLmtableOuterFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtableOuterFrame)
+
 nsMathMLmtableOuterFrame::~nsMathMLmtableOuterFrame()
 {
 }
@@ -651,6 +653,8 @@ NS_NewMathMLmtableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsMathMLmtableFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtableFrame)
+
 nsMathMLmtableFrame::~nsMathMLmtableFrame()
 {
 }
@@ -684,6 +688,8 @@ NS_NewMathMLmtrFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsMathMLmtrFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtrFrame)
 
 nsMathMLmtrFrame::~nsMathMLmtrFrame()
 {
@@ -741,6 +747,8 @@ NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsMathMLmtdFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtdFrame)
 
 nsMathMLmtdFrame::~nsMathMLmtdFrame()
 {
@@ -827,6 +835,8 @@ NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsMathMLmtdInnerFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtdInnerFrame)
 
 nsMathMLmtdInnerFrame::~nsMathMLmtdInnerFrame()
 {

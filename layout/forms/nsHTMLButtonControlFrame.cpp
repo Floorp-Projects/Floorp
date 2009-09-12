@@ -74,6 +74,8 @@ NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsHTMLButtonControlFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsHTMLButtonControlFrame)
+
 nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(nsStyleContext* aContext)
   : nsHTMLContainerFrame(aContext)
 {

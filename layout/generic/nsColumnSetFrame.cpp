@@ -54,6 +54,8 @@
 
 class nsColumnSetFrame : public nsHTMLContainerFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsColumnSetFrame(nsStyleContext* aContext);
 
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
@@ -191,6 +193,8 @@ NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint3
 
   return it;
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsColumnSetFrame)
 
 nsColumnSetFrame::nsColumnSetFrame(nsStyleContext* aContext)
   : nsHTMLContainerFrame(aContext), mLastBalanceHeight(NS_INTRINSICSIZE),

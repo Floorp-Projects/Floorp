@@ -129,9 +129,11 @@ void nsFramesetDrag::UnSet()
 /*******************************************************************************
  * nsHTMLFramesetBorderFrame
  ******************************************************************************/
-class nsHTMLFramesetBorderFrame : public nsLeafFrame {
-
+class nsHTMLFramesetBorderFrame : public nsLeafFrame
+{
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
@@ -179,9 +181,11 @@ protected:
 /*******************************************************************************
  * nsHTMLFramesetBlankFrame
  ******************************************************************************/
-class nsHTMLFramesetBlankFrame : public nsLeafFrame {
-
+class nsHTMLFramesetBlankFrame : public nsLeafFrame
+{
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -1603,6 +1607,8 @@ NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsHTMLFramesetFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsHTMLFramesetFrame)
+
 /*******************************************************************************
  * nsHTMLFramesetBorderFrame
  ******************************************************************************/
@@ -1623,6 +1629,8 @@ nsHTMLFramesetBorderFrame::~nsHTMLFramesetBorderFrame()
 {
   //printf("nsHTMLFramesetBorderFrame destructor %p \n", this);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsHTMLFramesetBorderFrame)
 
 nscoord nsHTMLFramesetBorderFrame::GetIntrinsicWidth()
 {
@@ -1835,6 +1843,8 @@ NS_IMETHODIMP nsHTMLFramesetBorderFrame::GetFrameName(nsAString& aResult) const
 /*******************************************************************************
  * nsHTMLFramesetBlankFrame
  ******************************************************************************/
+
+NS_IMPL_FRAMEARENA_HELPERS(nsHTMLFramesetBlankFrame)
 
 nsHTMLFramesetBlankFrame::~nsHTMLFramesetBlankFrame()
 {

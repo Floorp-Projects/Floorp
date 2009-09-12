@@ -87,6 +87,7 @@ public:
     mAbsoluteContainer(nsGkAtoms::absoluteList) {}
 
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   // nsISupports (nsIScrollPositionListener)
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -187,8 +188,10 @@ private:
 nsIFrame*
 NS_NewCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell)CanvasFrame(aContext);
+  return new (aPresShell) CanvasFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(CanvasFrame)
 
 NS_IMPL_QUERY_INTERFACE1(CanvasFrame, nsIScrollPositionListener)
 

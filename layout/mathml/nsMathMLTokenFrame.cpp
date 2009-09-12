@@ -53,6 +53,9 @@ NS_NewMathMLTokenFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsMathMLTokenFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLTokenFrame)
+
 nsMathMLTokenFrame::~nsMathMLTokenFrame()
 {
 }

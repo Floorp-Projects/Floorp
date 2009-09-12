@@ -188,6 +188,8 @@ NS_NewTableColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsTableColFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsTableColFrame)
+
 nsTableColFrame*  
 nsTableColFrame::GetNextCol() const
 {

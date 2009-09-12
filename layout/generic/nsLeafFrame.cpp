@@ -48,6 +48,8 @@ nsLeafFrame::~nsLeafFrame()
 {
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsLeafFrame)
+
 /* virtual */ nscoord
 nsLeafFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {

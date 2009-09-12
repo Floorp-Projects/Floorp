@@ -53,6 +53,8 @@ NS_NewSVGGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsSVGGFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGGFrame)
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsSVGGFrame::Init(nsIContent* aContent,

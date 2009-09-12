@@ -90,7 +90,9 @@ nsIFrame*
 NS_NewSliderFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsSliderFrame(aPresShell, aContext);
-} // NS_NewSliderFrame
+}
+
+NS_IMPL_FRAMEARENA_HELPERS(nsSliderFrame)
 
 nsSliderFrame::nsSliderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext):
   nsBoxFrame(aPresShell, aContext),

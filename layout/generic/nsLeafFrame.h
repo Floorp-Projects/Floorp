@@ -51,6 +51,7 @@
  */
 class nsLeafFrame : public nsFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame replacements
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,

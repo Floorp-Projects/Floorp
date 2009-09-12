@@ -115,6 +115,8 @@ public:
 class nsSliderFrame : public nsBoxFrame
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend class nsSliderMediator;
 
   nsSliderFrame(nsIPresShell* aShell, nsStyleContext* aContext);

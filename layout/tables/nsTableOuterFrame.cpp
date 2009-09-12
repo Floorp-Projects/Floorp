@@ -174,6 +174,8 @@ NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsTableCaptionFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsTableCaptionFrame)
+
 /* ----------- nsTableOuterFrame ---------- */
 
 nsTableOuterFrame::nsTableOuterFrame(nsStyleContext* aContext):
@@ -1257,6 +1259,8 @@ NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsTableOuterFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsTableOuterFrame)
 
 #ifdef DEBUG
 NS_IMETHODIMP

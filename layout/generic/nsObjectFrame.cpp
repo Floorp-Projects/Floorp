@@ -2357,6 +2357,8 @@ NS_NewObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsObjectFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsObjectFrame)
+
 
 // nsPluginDOMContextMenuListener class implementation
 

@@ -49,7 +49,7 @@ class nsSVGTextPathFrame;
 class nsISVGGlyphFragmentLeaf : public nsISVGGlyphFragmentNode
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsISVGGlyphFragmentLeaf)
+  NS_DECL_QUERYFRAME_TARGET(nsISVGGlyphFragmentLeaf)
 
   NS_IMETHOD GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)=0;
   NS_IMETHOD GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)=0;

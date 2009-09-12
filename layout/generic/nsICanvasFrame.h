@@ -45,7 +45,7 @@
 class nsICanvasFrame
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsICanvasFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsICanvasFrame)
 
   /** SetHasFocus tells the CanvasFrame to draw with focus ring
    *  @param aHasFocus PR_TRUE to show focus ring, PR_FALSE to hide it

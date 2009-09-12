@@ -70,6 +70,7 @@ private:
 class nsImageBoxFrame : public nsLeafBoxFrame
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
 
   // nsIBox
   virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);

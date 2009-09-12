@@ -84,6 +84,7 @@ private:
   nsBulletFrame *mFrame;
 };
 
+NS_IMPL_FRAMEARENA_HELPERS(nsBulletFrame)
 
 nsBulletFrame::~nsBulletFrame()
 {

@@ -3470,6 +3470,8 @@ NS_NewTableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsTableFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsTableFrame)
+
 nsTableFrame*
 nsTableFrame::GetTableFrame(nsIFrame* aSourceFrame)
 {

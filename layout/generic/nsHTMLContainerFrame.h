@@ -69,6 +69,7 @@ class nsDisplayTextDecoration;
 // functionality.
 class nsHTMLContainerFrame : public nsContainerFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
 
   /**
    * Helper method to create next-in-flows if necessary. If aFrame

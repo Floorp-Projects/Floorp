@@ -46,7 +46,7 @@ class nsIScrollableView;
 class nsIScrollableViewProvider : public nsQueryFrame
 {
  public: 
-  NS_DECLARE_FRAME_ACCESSOR(nsIScrollableViewProvider)
+  NS_DECL_QUERYFRAME_TARGET(nsIScrollableViewProvider)
 
   virtual nsIScrollableView* GetScrollableView() = 0;
 };

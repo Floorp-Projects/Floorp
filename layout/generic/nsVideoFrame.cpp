@@ -70,6 +70,8 @@ NS_NewHTMLVideoFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsVideoFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsVideoFrame)
+
 nsVideoFrame::nsVideoFrame(nsStyleContext* aContext) :
   nsContainerFrame(aContext)
 {

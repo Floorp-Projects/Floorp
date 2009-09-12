@@ -113,6 +113,8 @@ class nsSubDocumentFrame : public nsLeafFrame,
                            public nsIReflowCallback
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsSubDocumentFrame(nsStyleContext* aContext);
 
 #ifdef DEBUG
@@ -756,6 +758,8 @@ NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsSubDocumentFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsSubDocumentFrame)
 
 void
 nsSubDocumentFrame::Destroy()

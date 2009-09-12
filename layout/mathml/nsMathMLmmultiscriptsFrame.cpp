@@ -59,6 +59,8 @@ NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, nsStyleContext* aContex
   return new (aPresShell) nsMathMLmmultiscriptsFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmmultiscriptsFrame)
+
 nsMathMLmmultiscriptsFrame::~nsMathMLmmultiscriptsFrame()
 {
 }

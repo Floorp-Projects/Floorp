@@ -110,6 +110,22 @@
 #define NS_FRAME_TRACE_REFLOW_OUT(_method, _status)
 #endif
 
+// Frame allocation boilerplate macros.  Every subclass of nsFrame
+// must define its own operator new and GetAllocatedSize.  If they do
+// not, the per-frame recycler lists in nsPresArena will not work
+// correctly, with potentially catastrophic consequences (not enough
+// memory is allocated for a frame object).
+
+#define NS_DECL_FRAMEARENA_HELPERS                                \
+  NS_MUST_OVERRIDE void* operator new(size_t, nsIPresShell*);     \
+  virtual NS_MUST_OVERRIDE size_t GetAllocatedSize();
+
+#define NS_IMPL_FRAMEARENA_HELPERS(class)                         \
+  void* class::operator new(size_t sz, nsIPresShell* aShell)      \
+  { return aShell->AllocateFrame(sz, nsQueryFrame::class##_id); } \
+  size_t class::GetAllocatedSize()                                \
+  { return sizeof(class); }
+
 //----------------------------------------------------------------------
 
 struct nsBoxLayoutMetrics;
@@ -130,10 +146,6 @@ public:
    */
   friend nsIFrame* NS_NewEmptyFrame(nsIPresShell* aShell,
                                     nsStyleContext* aContext);
-
-  // Overloaded new operator. Relies on an arena (which comes from the
-  // presShell) to perform the allocation.
-  void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW;
 
 private:
   // Left undefined; nsFrame objects are never allocated from the heap.
@@ -156,6 +168,7 @@ public:
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame
   NS_IMETHOD  Init(nsIContent*      aContent,

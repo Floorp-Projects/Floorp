@@ -177,6 +177,8 @@ NS_NewMenuItemFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return it;
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMenuFrame)
+
 NS_QUERYFRAME_HEAD(nsMenuFrame)
   NS_QUERYFRAME_ENTRY(nsIMenuFrame)
   NS_QUERYFRAME_ENTRY(nsIScrollableViewProvider)

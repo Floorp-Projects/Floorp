@@ -72,9 +72,9 @@ class nsTableCellFrame : public nsHTMLContainerFrame,
                          public nsIPercentHeightObserver
 {
 public:
-
-  NS_DECLARE_FRAME_ACCESSOR(nsTableCellFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsTableCellFrame)
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   // default constructor supplied by the compiler
 
@@ -302,6 +302,7 @@ inline void nsTableCellFrame::SetHasPctOverHeight(PRBool aValue)
 class nsBCTableCellFrame : public nsTableCellFrame
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
 
   nsBCTableCellFrame(nsStyleContext* aContext);
 

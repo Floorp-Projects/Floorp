@@ -111,6 +111,7 @@ public:
   nsMenuFrame(nsIPresShell* aShell, nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   // nsIBox
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);

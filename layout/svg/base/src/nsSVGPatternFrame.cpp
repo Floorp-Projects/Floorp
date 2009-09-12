@@ -67,6 +67,8 @@ nsSVGPatternFrame::nsSVGPatternFrame(nsStyleContext* aContext) :
 {
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGPatternFrame)
+
 //----------------------------------------------------------------------
 // nsIFrame methods:
 

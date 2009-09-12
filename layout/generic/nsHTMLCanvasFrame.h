@@ -51,6 +51,8 @@ nsIFrame* NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aCont
 class nsHTMLCanvasFrame : public nsSplittableFrame
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsHTMLCanvasFrame(nsStyleContext* aContext) : nsSplittableFrame(aContext) {}
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,

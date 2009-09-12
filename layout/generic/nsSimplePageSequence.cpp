@@ -110,6 +110,8 @@ NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext
   return new (aPresShell) nsSimplePageSequenceFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSimplePageSequenceFrame)
+
 nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
   nsContainerFrame(aContext),
   mTotalPages(-1),

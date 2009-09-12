@@ -51,7 +51,7 @@ class  nsPresContext;
 class nsIPercentHeightObserver
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsIPercentHeightObserver)
+  NS_DECL_QUERYFRAME_TARGET(nsIPercentHeightObserver)
 
   // Notify the observer that aReflowState has no computed height, but it has a percent height
   virtual void NotifyPercentHeight(const nsHTMLReflowState& aReflowState) = 0;

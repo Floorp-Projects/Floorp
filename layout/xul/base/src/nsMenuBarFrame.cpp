@@ -78,6 +78,8 @@ NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsMenuBarFrame (aPresShell, aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMenuBarFrame)
+
 //
 // nsMenuBarFrame cntr
 //
