@@ -5182,6 +5182,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
     }
 
     builder.SetBackgroundOnly(PR_FALSE);
+    builder.SetSyncDecodeImages(PR_TRUE);
     builder.EnterPresShell(rootFrame, rect);
 
     // Add the canvas background color.

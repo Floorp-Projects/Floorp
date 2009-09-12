@@ -1050,7 +1050,8 @@ nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
                   inner.XMost() - size : inner.x,
                   inner.y, size, size);
       nsLayoutUtils::DrawSingleImage(&aRenderingContext, imgCon,
-        nsLayoutUtils::GetGraphicsFilterForFrame(this), dest, aDirtyRect);
+        nsLayoutUtils::GetGraphicsFilterForFrame(this), dest, aDirtyRect,
+        imgIContainer::FLAG_NONE);
       iconUsed = PR_TRUE;
     }
 
@@ -1144,12 +1145,16 @@ void
 nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
   static_cast<nsImageFrame*>(mFrame)->
-    PaintImage(*aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect, mImage);
+    PaintImage(*aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect, mImage,
+               aBuilder->ShouldSyncDecodeImages()
+                 ? (PRUint32) imgIContainer::FLAG_SYNC_DECODE
+                 : (PRUint32) imgIContainer::FLAG_NONE);
 }
 
 void
 nsImageFrame::PaintImage(nsIRenderingContext& aRenderingContext, nsPoint aPt,
-                         const nsRect& aDirtyRect, imgIContainer* aImage)
+                         const nsRect& aDirtyRect, imgIContainer* aImage,
+                         PRUint32 aFlags)
 {
   // Render the image into our content area (the area inside
   // the borders and padding)
@@ -1159,7 +1164,8 @@ nsImageFrame::PaintImage(nsIRenderingContext& aRenderingContext, nsPoint aPt,
   dest.y -= GetContinuationOffset();
 
   nsLayoutUtils::DrawSingleImage(&aRenderingContext, aImage,
-    nsLayoutUtils::GetGraphicsFilterForFrame(this), dest, aDirtyRect);
+    nsLayoutUtils::GetGraphicsFilterForFrame(this), dest, aDirtyRect,
+    aFlags);
 
   nsPresContext* presContext = PresContext();
   nsImageMap* map = GetImageMap(presContext);
@@ -1845,6 +1851,12 @@ nsImageFrame::IconLoad::OnStopRequest(imgIRequest *aRequest,
     frame->Invalidate(frame->GetRect());
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::IconLoad::OnDiscard(imgIRequest *aRequest)
+{
   return NS_OK;
 }
 

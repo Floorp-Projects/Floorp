@@ -102,7 +102,7 @@ static void PrintImageDecoders()
       nsCAutoString xcs;
       ss->GetData(xcs);
 
-      NS_NAMED_LITERAL_CSTRING(decoderContract, "@mozilla.org/image/decoder;2?type=");
+      NS_NAMED_LITERAL_CSTRING(decoderContract, "@mozilla.org/image/decoder;3?type=");
 
       if (StringBeginsWith(xcs, decoderContract)) {
         printf("Have decoder for mime type: %s\n", xcs.get()+decoderContract.Length());
@@ -372,21 +372,6 @@ imgCacheEntry::~imgCacheEntry()
   LOG_FUNC(gImgLog, "imgCacheEntry::~imgCacheEntry()");
 }
 
-void imgCacheEntry::TouchWithSize(PRInt32 diff)
-{
-  LOG_SCOPE(gImgLog, "imgCacheEntry::TouchWithSize");
-
-  mTouchedTime = SecondsFromPRTime(PR_Now());
-
-  // Don't update the cache if we've been removed from it or it doesn't care
-  // about our size or usage.
-  if (!Evicted() && HasNoProxies()) {
-    nsCOMPtr<nsIURI> uri;
-    mRequest->GetKeyURI(getter_AddRefs(uri));
-    imgLoader::CacheEntriesChanged(uri, diff);
-  }
-}
-
 void imgCacheEntry::Touch(PRBool updateTime /* = PR_TRUE */)
 {
   LOG_SCOPE(gImgLog, "imgCacheEntry::Touch");
@@ -394,12 +379,17 @@ void imgCacheEntry::Touch(PRBool updateTime /* = PR_TRUE */)
   if (updateTime)
     mTouchedTime = SecondsFromPRTime(PR_Now());
 
+  UpdateCache();
+}
+
+void imgCacheEntry::UpdateCache(PRInt32 diff /* = 0 */)
+{
   // Don't update the cache if we've been removed from it or it doesn't care
   // about our size or usage.
   if (!Evicted() && HasNoProxies()) {
     nsCOMPtr<nsIURI> uri;
     mRequest->GetKeyURI(getter_AddRefs(uri));
-    imgLoader::CacheEntriesChanged(uri);
+    imgLoader::CacheEntriesChanged(uri, diff);
   }
 }
 
@@ -1641,7 +1631,7 @@ NS_IMETHODIMP imgLoader::SupportImageWithMimeType(const char* aMimeType, PRBool 
     return rv;
   nsCAutoString mimeType(aMimeType);
   ToLowerCase(mimeType);
-  nsCAutoString decoderId(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;2?type=") + mimeType);
+  nsCAutoString decoderId(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;3?type=") + mimeType);
   return reg->IsContractIDRegistered(decoderId.get(),  _retval);
 }
 

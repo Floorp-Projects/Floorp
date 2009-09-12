@@ -116,6 +116,7 @@ protected:
   void OnStopFrame     (PRUint32 aFrame);
   void OnStopContainer (imgIContainer *aContainer);
   void OnStopDecode    (nsresult status, const PRUnichar *statusArg); 
+  void OnDiscard       ();
 
   /* non-virtual imgIContainerObserver methods */
   void FrameChanged(imgIContainer *aContainer, nsIntRect * aDirtyRect);
@@ -155,4 +156,6 @@ private:
   PRPackedBool mCanceled;
   PRPackedBool mIsInLoadGroup;
   PRPackedBool mListenerIsStrongRef;
+  PRPackedBool mShouldRequestDecode;
+  PRPackedBool mLockHeld;
 };

@@ -1472,6 +1472,14 @@ nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
   return PR_TRUE;
 }
 
+nsresult
+nsStyleImage::RequestDecode()
+{
+  if ((mType == eStyleImageType_Image) && mImage)
+    return mImage->RequestDecode();
+  return NS_OK;
+}
+
 PRBool
 nsStyleImage::IsOpaque() const
 {

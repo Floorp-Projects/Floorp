@@ -3399,7 +3399,7 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
           
         // Paint the image.
         nsLayoutUtils::DrawSingleUnscaledImage(&aRenderingContext, image,
-            pt, aDirtyRect, &imageSize);
+            pt, aDirtyRect, imgIContainer::FLAG_NONE, &imageSize);
       }
     }
   }
@@ -3530,7 +3530,8 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
 
     nsLayoutUtils::DrawImage(&aRenderingContext, image,
         nsLayoutUtils::GetGraphicsFilterForFrame(this),
-        wholeImageDest, destRect, destRect.TopLeft(), aDirtyRect);
+        wholeImageDest, destRect, destRect.TopLeft(), aDirtyRect,
+        imgIContainer::FLAG_NONE);
   }
 
   // Update the aRemainingWidth and aCurrX values.
@@ -3706,7 +3707,7 @@ nsTreeBodyFrame::PaintCheckbox(PRInt32              aRowIndex,
 
     // Paint the image.
     nsLayoutUtils::DrawSingleUnscaledImage(&aRenderingContext, image,
-        pt, aDirtyRect, &imageSize);
+        pt, aDirtyRect, imgIContainer::FLAG_NONE, &imageSize);
   }
 }
 
@@ -3771,7 +3772,8 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
                   height*nsIDeviceContext::AppUnitsPerCSSPixel());
       nsLayoutUtils::DrawImage(&aRenderingContext, image,
           nsLayoutUtils::GetGraphicsFilterForFrame(this),
-          nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(), aDirtyRect);
+          nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),
+          aDirtyRect, imgIContainer::FLAG_NONE);
     } else {
       aRenderingContext.FillRect(meterRect);
     }
@@ -3791,7 +3793,8 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
                   height*nsIDeviceContext::AppUnitsPerCSSPixel());
       nsLayoutUtils::DrawImage(&aRenderingContext, image,
           nsLayoutUtils::GetGraphicsFilterForFrame(this),
-          nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(), aDirtyRect);
+          nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),
+          aDirtyRect, imgIContainer::FLAG_NONE);
     }
   }
 }

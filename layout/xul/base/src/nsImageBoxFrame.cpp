@@ -333,7 +333,10 @@ void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
   static_cast<nsImageBoxFrame*>(mFrame)->
-    PaintImage(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
+    PaintImage(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame),
+               aBuilder->ShouldSyncDecodeImages()
+                 ? (PRUint32) imgIContainer::FLAG_SYNC_DECODE
+                 : (PRUint32) imgIContainer::FLAG_NONE);
 }
 
 NS_IMETHODIMP
@@ -359,7 +362,8 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 void
 nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect, nsPoint aPt)
+                            const nsRect& aDirtyRect, nsPoint aPt,
+                            PRUint32 aFlags)
 {
   nsRect rect;
   GetClientRect(rect);
@@ -381,7 +385,7 @@ nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
     PRBool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
     nsLayoutUtils::DrawSingleImage(&aRenderingContext, imgCon,
         nsLayoutUtils::GetGraphicsFilterForFrame(this),
-        rect, dirty, hasSubRect ? &mSubRect : nsnull);
+        rect, dirty, aFlags, hasSubRect ? &mSubRect : nsnull);
   }
 }
 

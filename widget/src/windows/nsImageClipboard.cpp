@@ -149,7 +149,9 @@ nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap 
     *outBitmap = nsnull;
 
     nsRefPtr<gfxImageSurface> frame;
-    nsresult rv = inImage->CopyCurrentFrame(getter_AddRefs(frame));
+    nsresult rv = inImage->CopyFrame(imgIContainer::FRAME_CURRENT,
+                                     imgIContainer::FLAG_SYNC_DECODE,
+                                     getter_AddRefs(frame));
     if (NS_FAILED(rv))
       return rv;
 

@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Bobby Holley <bobbyholley@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,7 +47,6 @@
 
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
-#include "imgILoad.h"
 #include "nsIInputStream.h"
 #include "nsIPipe.h"
 #include "qcms.h"
@@ -90,23 +90,24 @@ public:
   nsJPEGDecoder();
   virtual ~nsJPEGDecoder();
 
-  nsresult  ProcessData(const char *data, PRUint32 count, PRUint32 *writeCount);
+  nsresult  ProcessData(const char *data, PRUint32 count);
+  void NotifyDone(PRBool aSuccess);
 
 protected:
   nsresult OutputScanlines(PRBool* suspend);
 
 public:
   nsCOMPtr<imgIContainer> mImage;
-  nsCOMPtr<imgILoad> mImageLoad;
-
   nsCOMPtr<imgIDecoderObserver> mObserver;
+
+  PRUint32 mFlags;
   PRUint8 *mImageData;
 
   struct jpeg_decompress_struct mInfo;
   struct jpeg_source_mgr mSourceMgr;
   decoder_error_mgr mErr;
   jstate mState;
-  nsresult mError;
+  PRBool mError;
 
   PRUint32 mBytesToSkip;
 
@@ -125,6 +126,7 @@ public:
   qcms_transform *mTransform;
 
   PRPackedBool mReading;
+  PRPackedBool mNotifiedDone;
 };
 
 #endif // nsJPEGDecoder_h__

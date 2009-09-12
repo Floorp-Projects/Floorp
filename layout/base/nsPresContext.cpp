@@ -1276,8 +1276,9 @@ nsPresContext::SetupBackgroundImageLoaders(nsIFrame* aFrame,
   nsRefPtr<nsImageLoader> loaders;
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, aStyleBackground) {
     if (aStyleBackground->mLayers[i].mImage.GetType() == eStyleImageType_Image) {
+      PRUint32 actions = nsImageLoader::ACTION_REDRAW_ON_DECODE;
       imgIRequest *image = aStyleBackground->mLayers[i].mImage.GetImageData();
-      loaders = nsImageLoader::Create(aFrame, image, PR_FALSE, loaders);
+      loaders = nsImageLoader::Create(aFrame, image, actions, loaders);
     }
   }
   SetImageLoaders(aFrame, BACKGROUND_IMAGE, loaders);
@@ -1287,9 +1288,12 @@ void
 nsPresContext::SetupBorderImageLoaders(nsIFrame* aFrame,
                                        const nsStyleBorder* aStyleBorder)
 {
+  PRUint32 actions = nsImageLoader::ACTION_REDRAW_ON_LOAD;
+  if (aStyleBorder->ImageBorderDiffers())
+    actions |= nsImageLoader::ACTION_REFLOW_ON_LOAD;
   nsRefPtr<nsImageLoader> loader =
     nsImageLoader::Create(aFrame, aStyleBorder->GetBorderImage(),
-                          aStyleBorder->ImageBorderDiffers(), nsnull);
+                          actions, nsnull);
   SetImageLoaders(aFrame, BORDER_IMAGE, loader);
 }
 

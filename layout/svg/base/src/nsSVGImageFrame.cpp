@@ -237,9 +237,15 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
       currentRequest->GetImage(getter_AddRefs(mImageContainer));
   }
 
+  // XXXbholley - I don't think huge images in SVGs are common enough to
+  // warrant worrying about the responsiveness impact of doing synchronous
+  // decodes. The extra code complexity of determinining when we want to
+  // force sync probably just isn't worth it, so always pass FLAG_SYNC_DECODE
   nsRefPtr<gfxASurface> currentFrame;
   if (mImageContainer)
-    mImageContainer->GetCurrentFrame(getter_AddRefs(currentFrame));
+    mImageContainer->GetFrame(imgIContainer::FRAME_CURRENT,
+                              imgIContainer::FLAG_SYNC_DECODE,
+                              getter_AddRefs(currentFrame));
 
   // We need to wrap the surface in a pattern to have somewhere to set the
   // graphics filter.

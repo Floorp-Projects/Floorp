@@ -2831,7 +2831,7 @@ function test_2d_drawImage_animated_apng() {
 deferTest();
 setTimeout(wrapFunction(function () {
     ctx108.drawImage(document.getElementById('anim-gr_1.png'), 0, 0);
-    todo_isPixel(ctx108, 50,25, 0,255,0,255, 2);
+    isPixel(ctx108, 50,25, 0,255,0,255, 2);
 	isDone_test_2d_drawImage_animated_apng = true;
 }), 5000);
 
@@ -2856,7 +2856,7 @@ function test_2d_drawImage_animated_gif() {
 deferTest();
 setTimeout(wrapFunction(function () {
     ctx109.drawImage(document.getElementById('anim-gr_1.gif'), 0, 0);
-    todo_isPixel(ctx109, 50,25, 0,255,0,255, 2);
+    isPixel(ctx109, 50,25, 0,255,0,255, 2);
 	isDone_test_2d_drawImage_animated_gif = true;
 }), 5000);
 
@@ -14490,8 +14490,8 @@ setTimeout(function () {
     ctx458.fillRect(0, 0, 50, 50);
     setTimeout(wrapFunction(function () {
         ctx458.fillRect(50, 0, 50, 50);
-        todo_isPixel(ctx458, 25,25, 0,255,0,255, 2);
-        todo_isPixel(ctx458, 75,25, 0,255,0,255, 2);
+        isPixel(ctx458, 25,25, 0,255,0,255, 2);
+        isPixel(ctx458, 75,25, 0,255,0,255, 2);
 		isDone_test_2d_pattern_animated_gif = true;
     }), 2500);
 }, 2500);

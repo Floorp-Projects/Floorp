@@ -5393,7 +5393,9 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance,
 
   nsRefPtr<gfxASurface> currentFrame;
   if (imageContainer)
-    imageContainer->GetCurrentFrame(getter_AddRefs(currentFrame));
+    imageContainer->GetFrame(imgIContainer::FRAME_CURRENT,
+                             imgIContainer::FLAG_NONE,
+                             getter_AddRefs(currentFrame));
 
   // We need to wrap the surface in a pattern to have somewhere to set the
   // graphics filter.
@@ -5482,6 +5484,12 @@ nsSVGFEImageElement::OnStartContainer(imgIRequest *aRequest,
 {
   nsresult rv =
     nsImageLoadingContent::OnStartContainer(aRequest, aContainer);
+
+  // Request a decode
+  NS_ABORT_IF_FALSE(aContainer, "who sent the notification then?");
+  aContainer->RequestDecode();
+
+  // We have a size - invalidate
   Invalidate();
   return rv;
 }

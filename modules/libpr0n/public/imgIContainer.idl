@@ -24,6 +24,7 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  *   Federico Mena-Quintero <federico@novell.com>
  *   Joe Drew <joe@drew.ca>
+ *   Bobby Holley <bobbyholley@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,7 +42,7 @@
 
 #include "nsISupports.idl"
 
-interface imgIContainerObserver;
+interface imgIDecoderObserver;
 
 %{C++
 #include "gfxImageSurface.h"
@@ -70,7 +71,7 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, uuid(1bcf7a25-1356-47a8-bf80-e284989ea38f)]
+[scriptable, uuid(74c63935-b54f-43a4-9449-2e9c815e3bef)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -95,25 +96,64 @@ interface imgIContainer : nsISupports
   readonly attribute boolean currentFrameIsOpaque;
 
   /**
-   * Get a surface for the current frame. This may be a platform-native,
-   * optimized frame, so you cannot inspect its pixel data.
+   * Flags for imgIContainer operations.
+   *
+   * Meanings:
+   *
+   * FLAG_NONE: Lack of flags
+   *
+   * FLAG_SYNC_DECODE: Forces synchronous/non-progressive decode of all
+   * available data before the call returns.
    */
-  [noscript] readonly attribute gfxASurface currentFrame;
+
+  const long FLAG_NONE            = 0x0;
+  const long FLAG_SYNC_DECODE     = 0x1;
 
   /**
-   * Create and return a new copy of the current frame that you can write to
-   * and otherwise inspect the pixels of.
+    * Constants for specifying various "special" frames.
+    *
+    * FRAME_FIRST: The first frame
+    * FRAME_CURRENT: The current frame
+    *
+    * FRAME_MAX_VALUE should be set to the value of the maximum constant above,
+    * as it is used for ensuring that a valid value was passed in.
+    */
+  const unsigned long FRAME_FIRST = 0;
+  const unsigned long FRAME_CURRENT = 1;
+  const unsigned long FRAME_MAX_VALUE = 1;
+
+  /**
+   * Get a surface for the given frame. This may be a platform-native,
+   * optimized surface, so you cannot inspect its pixel data.
+   *
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * @param aFlags Flags of the FLAG_* variety
    */
-  [noscript] gfxImageSurface copyCurrentFrame();
+  [noscript] gfxASurface getFrame(in PRUint32 aWhichFrame,
+                                  in PRUint32 aFlags);
+
+  /**
+   * Create and return a new copy of the given frame that you can write to
+   * and otherwise inspect the pixels of.
+   *
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * @param aFlags Flags of the FLAG_* variety
+   */
+  [noscript] gfxImageSurface copyFrame(in PRUint32 aWhichFrame,
+                                       in PRUint32 aFlags);
 
   /**
    * Create a new imgContainer that contains only a single frame, which itself
-   * contains a subregion of the current frame.
+   * contains a subregion of the given frame.
    *
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
    * @param aRect the area of the current frame to be duplicated in the
    *              returned imgContainer's frame.
+   * @param aFlags Flags of the FLAG_* variety
    */
-  [noscript] imgIContainer extractCurrentFrame([const] in nsIntRect aRect);
+  [noscript] imgIContainer extractFrame(in PRUint32 aWhichFrame,
+                                        [const] in nsIntRect aRect,
+                                        in PRUint32 aFlags);
 
   /**
    * Draw the current frame on to the context specified.
@@ -126,26 +166,76 @@ interface imgIContainer : nsISupports
    *              automatically tiled as necessary.
    * @param aSubimage The area of the image, in pixels, that we are allowed to
    *                  sample from.
+   * @param aFlags Flags of the FLAG_* variety
    */
   [noscript] void draw(in gfxContext aContext, in gfxGraphicsFilter aFilter,
                        in gfxMatrix aUserSpaceToImageSpace, in gfxRect aFill,
-                       in nsIntRect aSubimage);
+                       in nsIntRect aSubimage, in PRUint32 aFlags);
 
+  /*
+   * Ensures that an image is decoding. Calling this function guarantees that
+   * the image will at some point fire off decode notifications. Calling draw(),
+   * getFrame(), copyFrame(), or extractCurrentFrame() triggers the same
+   * mechanism internally. Thus, if you want to be sure that the image will be
+   * decoded but don't want to access it until then, you must call
+   * requestDecode().
+   */
+  void requestDecode();
+
+  /**
+    * Increments the lock count on the image. An image will not be discarded
+    * as long as the lock count is nonzero. Note that it is still possible for
+    * the image to be undecoded if decode-on-draw is enabled and the image
+    * was never drawn.
+    *
+    * Upon instantiation images have a lock count of zero.
+    */
+  void lockImage();
+
+  /**
+    * Decreases the lock count on the image. If the lock count drops to zero,
+    * the image is allowed to discard its frame data to save memory.
+    *
+    * Upon instantiation images have a lock count of zero. It is an error to
+    * call this method without first having made a matching lockImage() call.
+    * In other words, the lock count is not allowed to be negative.
+    */
+  void unlockImage();
 
   /************ Internal libpr0n use only below here. *****************/
 
   /**
-   * Create a new \a aWidth x \a aHeight sized image container.
+   * Flags for imgIContainer initialization.
    *
-   * @param aWidth The width of the container in which all the
-   *               frames will fit.
-   * @param aHeight The height of the container in which all the
-   *                frames will fit.
-   * @param aObserver Observer to send animation notifications to.
+   * Meanings:
+   *
+   * INIT_FLAG_NONE: Lack of flags
+   *
+   * INIT_FLAG_DISCARDABLE: The container should be discardable
+   *
+   * INIT_FLAG_DECODE_ON_DRAW: The container should decode on draw rather than
+   * decoding on load.
+   *
+   * INIT_FLAG_MULTIPART: The container will be used to display a stream of
+   * images in a multipart channel. If this flag is set, INIT_FLAG_DISCARDABLE
+   * and INIT_FLAG_DECODE_ON_DRAW must not be set.
    */
-  void init(in PRInt32 aWidth,
-            in PRInt32 aHeight,
-            in imgIContainerObserver aObserver);
+
+  const long INIT_FLAG_NONE           = 0x0;
+  const long INIT_FLAG_DISCARDABLE    = 0x1;
+  const long INIT_FLAG_DECODE_ON_DRAW = 0x2;
+  const long INIT_FLAG_MULTIPART      = 0x4;
+
+  /**
+   * Creates a new image container.
+   *
+   * @param aObserver Observer to send decoder and animation notifications to.
+   * @param aMimeType The mimetype of the image.
+   * @param aFlags Initialization flags of the INIT_FLAG_* variety.
+   */
+  void init(in imgIDecoderObserver aObserver,
+            in string aMimeType,
+            in PRUint32 aFlags);
 
   /** 
    * "Disposal" method indicates how the image should be handled before the
@@ -201,18 +291,21 @@ interface imgIContainer : nsISupports
   readonly attribute unsigned long numFrames;
 
   /**
-   * Get the size, in bytes, of a particular frame's image data.
+   * The size, in bytes, occupied by the significant data portions of the image.
+   * This includes both compressed source data and decoded frames.
    */
-  unsigned long getFrameImageDataLength(in unsigned long framenumber);
-
-  void getFrameColormap(in unsigned long framenumber, 
-                        [array, size_is(paletteLength)] out PRUint32 paletteData,
-                        out unsigned long paletteLength);
+  readonly attribute unsigned long dataSize;
 
   void setFrameDisposalMethod(in unsigned long framenumber, in PRInt32 aDisposalMethod);
   void setFrameBlendMethod(in unsigned long framenumber, in PRInt32 aBlendMethod);
   void setFrameTimeout(in unsigned long framenumber, in PRInt32 aTimeout);
   void setFrameHasNoAlpha(in unsigned long framenumber);
+
+  /**
+   * Sets the size of the container. This should only be called by the decoder. This function may be called multiple
+   * times, but will throw an error if subsequent calls do not match the first.
+   */
+  [noscript] void setSize(in long aWidth, in long aHeight);
 
   /**
    * Create or re-use a frame at index aFrameNum. It is an error to call this with aFrameNum not in the range [0, numFrames].
@@ -249,9 +342,18 @@ interface imgIContainer : nsISupports
    */
   attribute long loopCount;
 
-  /* Methods to discard uncompressed images and restore them again */
-  [noscript] void setDiscardable(in string aMimeType);
-  [noscript] void addRestoreData([array, size_is(aCount), const] in char data,
+  /* Add compressed source data to the imgContainer.
+   *
+   * The decoder will use this data, either immediately or at draw time, do
+   * decode the image.
+   */
+  [noscript] void addSourceData([array, size_is(aCount), const] in char data,
                                  in unsigned long aCount);
-  [noscript] void restoreDataDone();
+
+  /* Called after the all the source data has been added with addSourceData. */
+  [noscript] void sourceDataComplete();
+
+  /* Called for multipart images when there's a new source image to add. */
+  [noscript] void newSourceData();
+
 };
