@@ -222,7 +222,7 @@
                                          js_ValueToPrintableString(cx, rval));
                     goto error;
                 }
-                fp->rval = OBJECT_TO_JSVAL(fp->thisp);
+                fp->rval = fp->thisv;
             }
             ok = JS_TRUE;
             if (inlineCallCount)
@@ -284,7 +284,7 @@
                  */
                 if (fp->flags & JSFRAME_CONSTRUCTING) {
                     if (JSVAL_IS_PRIMITIVE(fp->rval))
-                        fp->rval = OBJECT_TO_JSVAL(fp->thisp);
+                        fp->rval = fp->thisv;
                     JS_RUNTIME_METER(cx->runtime, constructs);
                 }
 
@@ -2145,8 +2145,7 @@
 
                     /* Compute the 'this' parameter now that argv is set. */
                     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
-                    JS_ASSERT(JSVAL_IS_OBJECT(vp[1]));
-                    newifp->frame.thisp = (JSObject *)vp[1];
+                    newifp->frame.thisv = vp[1];
 
                     newifp->frame.regs = NULL;
                     newifp->frame.imacpc = NULL;
