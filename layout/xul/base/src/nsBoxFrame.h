@@ -74,6 +74,7 @@ nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
 class nsBoxFrame : public nsContainerFrame
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
 
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, 
                                   nsStyleContext* aContext,

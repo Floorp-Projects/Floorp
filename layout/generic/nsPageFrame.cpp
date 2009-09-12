@@ -71,6 +71,8 @@ NS_NewPageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsPageFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsPageFrame)
+
 nsPageFrame::nsPageFrame(nsStyleContext* aContext)
 : nsContainerFrame(aContext)
 {
@@ -605,6 +607,8 @@ NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
   return new (aPresShell) nsPageBreakFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsPageBreakFrame)
 
 nsPageBreakFrame::nsPageBreakFrame(nsStyleContext* aContext) :
   nsLeafFrame(aContext), mHaveReflowed(PR_FALSE)

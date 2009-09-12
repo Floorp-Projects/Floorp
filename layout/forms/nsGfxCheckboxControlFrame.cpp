@@ -105,6 +105,8 @@ NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell,
   return new (aPresShell) nsGfxCheckboxControlFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsGfxCheckboxControlFrame)
+
 
 //------------------------------------------------------------
 // Initialize GFX-rendered state

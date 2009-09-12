@@ -73,6 +73,8 @@ NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsMathMLmpaddedFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmpaddedFrame)
+
 nsMathMLmpaddedFrame::~nsMathMLmpaddedFrame()
 {
 }

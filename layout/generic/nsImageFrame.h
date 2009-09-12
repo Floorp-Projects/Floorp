@@ -94,6 +94,8 @@ private:
 
 class nsImageFrame : public ImageFrameSuper, public nsIImageFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsImageFrame(nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME

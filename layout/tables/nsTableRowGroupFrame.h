@@ -97,8 +97,9 @@ class nsTableRowGroupFrame
   , public nsILineIterator
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsTableRowGroupFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsTableRowGroupFrame)
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aPresShell the pres shell for this frame

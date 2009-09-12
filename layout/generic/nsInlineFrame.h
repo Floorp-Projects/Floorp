@@ -76,8 +76,9 @@ class nsAnonymousBlockFrame;
 class nsInlineFrame : public nsInlineFrameSuper
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsInlineFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsInlineFrame)
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   friend nsIFrame* NS_NewInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -213,6 +214,8 @@ protected:
  */
 class nsFirstLineFrame : public nsInlineFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewFirstLineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 #ifdef DEBUG
@@ -247,6 +250,8 @@ protected:
 class nsPositionedInlineFrame : public nsInlineFrame
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsPositionedInlineFrame(nsStyleContext* aContext)
     : nsInlineFrame(aContext)
     , mAbsoluteContainer(nsGkAtoms::absoluteList)

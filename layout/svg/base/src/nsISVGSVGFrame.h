@@ -44,7 +44,7 @@
 class nsISVGSVGFrame
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsISVGSVGFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsISVGSVGFrame)
 
   NS_IMETHOD SuspendRedraw()=0;        
   NS_IMETHOD UnsuspendRedraw()=0;      

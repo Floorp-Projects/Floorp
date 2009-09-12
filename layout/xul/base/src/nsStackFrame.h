@@ -51,6 +51,7 @@
 class nsStackFrame : public nsBoxFrame
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
 
   friend nsIFrame* NS_NewStackFrame(nsIPresShell* aPresShell,
                                     nsStyleContext* aContext);

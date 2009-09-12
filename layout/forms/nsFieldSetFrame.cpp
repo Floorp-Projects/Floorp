@@ -66,6 +66,7 @@ class nsLegendFrame;
 
 class nsFieldSetFrame : public nsHTMLContainerFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
 
   nsFieldSetFrame(nsStyleContext* aContext);
 
@@ -132,6 +133,8 @@ NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsFieldSetFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsFieldSetFrame)
 
 nsFieldSetFrame::nsFieldSetFrame(nsStyleContext* aContext)
   : nsHTMLContainerFrame(aContext)

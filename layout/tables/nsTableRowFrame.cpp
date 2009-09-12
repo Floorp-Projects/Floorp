@@ -1430,6 +1430,8 @@ NS_NewTableRowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsTableRowFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsTableRowFrame)
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsTableRowFrame::GetFrameName(nsAString& aResult) const

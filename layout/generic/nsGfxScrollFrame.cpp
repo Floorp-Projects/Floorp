@@ -90,6 +90,8 @@ NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool
   return new (aPresShell) nsHTMLScrollFrame(aPresShell, aContext, aIsRoot);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsHTMLScrollFrame)
+
 nsHTMLScrollFrame::nsHTMLScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, PRBool aIsRoot)
   : nsHTMLContainerFrame(aContext),
     mInner(this, aIsRoot, PR_FALSE)
@@ -944,6 +946,8 @@ NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool 
 {
   return new (aPresShell) nsXULScrollFrame(aPresShell, aContext, aIsRoot);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsXULScrollFrame)
 
 nsXULScrollFrame::nsXULScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, PRBool aIsRoot)
   : nsBoxFrame(aShell, aContext, aIsRoot),

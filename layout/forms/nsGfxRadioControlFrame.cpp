@@ -53,6 +53,8 @@ NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsGfxRadioControlFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsGfxRadioControlFrame)
+
 nsGfxRadioControlFrame::nsGfxRadioControlFrame(nsStyleContext* aContext):
   nsFormControlFrame(aContext)
 {

@@ -48,6 +48,8 @@ NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContex
   return new (aPresShell) nsSVGGenericContainerFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGGenericContainerFrame)
+
 //----------------------------------------------------------------------
 // nsIFrame methods
 

@@ -59,6 +59,8 @@ NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsMathMLmfencedFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmfencedFrame)
+
 nsMathMLmfencedFrame::~nsMathMLmfencedFrame()
 {
   RemoveFencesAndSeparators();

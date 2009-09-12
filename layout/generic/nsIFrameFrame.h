@@ -48,7 +48,7 @@ class nsIDocShell;
 class nsIFrameFrame
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsIFrameFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsIFrameFrame)
 
   NS_IMETHOD GetDocShell(nsIDocShell **aDocShell) = 0;
 

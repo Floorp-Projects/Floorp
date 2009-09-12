@@ -64,7 +64,7 @@ enum eMathMLFrameType {
 class nsIMathMLFrame
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsIMathMLFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsIMathMLFrame)
 
  /* SUPPORT FOR PRECISE POSITIONING */
  /*====================================================================*/

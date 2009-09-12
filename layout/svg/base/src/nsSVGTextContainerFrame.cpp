@@ -50,6 +50,8 @@ NS_QUERYFRAME_HEAD(nsSVGTextContainerFrame)
   NS_QUERYFRAME_ENTRY(nsSVGTextContainerFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGTextContainerFrame)
+
 void
 nsSVGTextContainerFrame::NotifyGlyphMetricsChange()
 {

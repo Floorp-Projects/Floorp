@@ -164,6 +164,8 @@ NS_NewListControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return it;
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsListControlFrame)
+
 //---------------------------------------------------------
 nsListControlFrame::nsListControlFrame(
   nsIPresShell* aShell, nsIDocument* aDocument, nsStyleContext* aContext)

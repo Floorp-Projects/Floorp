@@ -62,6 +62,8 @@ NS_NewMathMLmunderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsMathMLmunderFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmunderFrame)
+
 nsMathMLmunderFrame::~nsMathMLmunderFrame()
 {
 }

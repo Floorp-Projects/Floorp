@@ -76,6 +76,8 @@ NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsMathMLmfracFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmfracFrame)
+
 nsMathMLmfracFrame::~nsMathMLmfracFrame()
 {
   if (mSlashChar) {

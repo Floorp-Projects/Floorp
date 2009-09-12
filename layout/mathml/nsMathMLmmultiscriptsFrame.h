@@ -50,6 +50,8 @@
 
 class nsMathMLmmultiscriptsFrame : public nsMathMLContainerFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD

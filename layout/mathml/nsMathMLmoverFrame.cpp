@@ -62,6 +62,8 @@ NS_NewMathMLmoverFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsMathMLmoverFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmoverFrame)
+
 nsMathMLmoverFrame::~nsMathMLmoverFrame()
 {
 }

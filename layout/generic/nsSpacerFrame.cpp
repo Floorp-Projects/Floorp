@@ -50,8 +50,11 @@
 #define TYPE_LINE  1            // line-break + vertical space
 #define TYPE_IMAGE 2            // acts like a sized image with nothing to see
 
-class SpacerFrame : public nsFrame {
+class SpacerFrame : public nsFrame
+{
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewSpacerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   // nsIHTMLReflow
@@ -81,6 +84,8 @@ NS_NewSpacerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
   return new (aPresShell) SpacerFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(SpacerFrame)
 
 SpacerFrame::~SpacerFrame()
 {

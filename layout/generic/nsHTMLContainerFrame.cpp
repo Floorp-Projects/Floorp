@@ -737,3 +737,5 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
                 aFrame));
   return NS_OK;
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsHTMLContainerFrame)

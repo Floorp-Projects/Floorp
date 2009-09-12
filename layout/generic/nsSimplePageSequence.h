@@ -85,6 +85,7 @@ public:
   friend nsIFrame* NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame
   NS_IMETHOD  Reflow(nsPresContext*      aPresContext,

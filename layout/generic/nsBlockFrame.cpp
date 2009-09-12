@@ -276,6 +276,8 @@ NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aF
   return it;
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsBlockFrame)
+
 nsBlockFrame::~nsBlockFrame()
 {
 }

@@ -63,7 +63,9 @@ nsIFrame*
 NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsTitleBarFrame(aPresShell, aContext);
-} // NS_NewTitleBarFrame
+}
+
+NS_IMPL_FRAMEARENA_HELPERS(nsTitleBarFrame)
 
 nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 :nsBoxFrame(aPresShell, aContext, PR_FALSE)
