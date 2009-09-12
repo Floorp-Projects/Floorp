@@ -178,7 +178,8 @@ nsGroupBoxFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
   groupRect += aPt;
 
   nsCSSRendering::PaintBackground(presContext, aRenderingContext, this,
-                                  aDirtyRect, rect, 0);
+                                  aDirtyRect, rect,
+                                  nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES);
 
   if (groupBox) {
 

@@ -305,6 +305,13 @@ public:
   }
 
   /**
+   * Helper method to generate background painting flags based on the
+   * information available in the display list builder. Currently only
+   * accounts for mSyncDecodeImages.
+   */
+  PRUint32 GetBackgroundPaintFlags();
+
+  /**
    * Subtracts aRegion from *aVisibleRegion. We avoid letting
    * aVisibleRegion become overcomplex by simplifying it if necessary ---
    * unless mAccurateVisibleRegions is set, in which case we let it

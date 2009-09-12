@@ -94,7 +94,7 @@ public:
                               const nsDisplayListSet& aLists);
 
   void PaintBorderBackground(nsIRenderingContext& aRenderingContext,
-    nsPoint aPt, const nsRect& aDirtyRect);
+    nsPoint aPt, const nsRect& aDirtyRect, PRUint32 aBGFlags);
 
   NS_IMETHOD AppendFrames(nsIAtom*       aListName,
                           nsFrameList&   aFrameList);
@@ -207,7 +207,8 @@ nsDisplayFieldSetBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
   static_cast<nsFieldSetFrame*>(mFrame)->
-    PaintBorderBackground(*aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect);
+    PaintBorderBackground(*aCtx, aBuilder->ToReferenceFrame(mFrame),
+                          aDirtyRect, aBuilder->GetBackgroundPaintFlags());
 }
 
 NS_IMETHODIMP
@@ -266,7 +267,7 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 void
 nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
-    nsPoint aPt, const nsRect& aDirtyRect)
+    nsPoint aPt, const nsRect& aDirtyRect, PRUint32 aBGFlags)
 {
   PRIntn skipSides = GetSkipSides();
   const nsStyleBorder* borderStyle = GetStyleBorder();
@@ -283,7 +284,7 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
   nsRect rect(aPt.x, aPt.y + yoff, mRect.width, mRect.height - yoff);
 
   nsCSSRendering::PaintBackground(presContext, aRenderingContext, this,
-                                  aDirtyRect, rect, 0);
+                                  aDirtyRect, rect, aBGFlags);
 
   nsCSSRendering::PaintBoxShadowInner(presContext, aRenderingContext,
                                       this, rect, aDirtyRect);

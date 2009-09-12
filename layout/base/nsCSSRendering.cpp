@@ -91,7 +91,10 @@
  */
 class ImageRenderer {
 public:
-  ImageRenderer(nsIFrame* aForFrame, const nsStyleImage& aImage);
+  enum {
+    FLAG_SYNC_DECODE_IMAGES = 0x01
+  };
+  ImageRenderer(nsIFrame* aForFrame, const nsStyleImage& aImage, PRUint32 aFlags);
   ~ImageRenderer();
   /**
    * Populates member variables to get ready for rendering.
@@ -125,6 +128,7 @@ private:
   nsRefPtr<nsStyleGradient> mGradientData;
   PRBool                    mIsReady;
   nsSize                    mSize;
+  PRUint32                  mFlags;
 };
 
 // To avoid storing this data on nsInlineFrame (bloat) and to avoid
@@ -350,6 +354,7 @@ protected:
 static void PaintBackgroundLayer(nsPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  nsIFrame* aForFrame,
+                                 PRUint32 aFlags,
                                  const nsRect& aDirtyRect,
                                  const nsRect& aBorderArea,
                                  const nsRect& aBGClipRect,
@@ -1749,7 +1754,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     // background-clip.
     currentBackgroundClip = aBackground.BottomLayer().mClip;
     isSolidBorder =
-      (aFlags & PAINT_WILL_PAINT_BORDER) && IsSolidBorder(aBorder);
+      (aFlags & PAINTBG_WILL_PAINT_BORDER) && IsSolidBorder(aBorder);
     if (isSolidBorder)
       currentBackgroundClip = NS_STYLE_BG_CLIP_PADDING;
     SetupBackgroundClip(ctx, currentBackgroundClip, aForFrame,
@@ -1810,7 +1815,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
         }
       }
       if (!dirtyRectGfx.IsEmpty()) {
-        PaintBackgroundLayer(aPresContext, aRenderingContext, aForFrame,
+        PaintBackgroundLayer(aPresContext, aRenderingContext, aForFrame, aFlags,
                              dirtyRect, aBorderArea, bgClipArea, aBackground,
                              layer);
       }
@@ -1841,6 +1846,7 @@ static void
 PaintBackgroundLayer(nsPresContext* aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      nsIFrame* aForFrame,
+                     PRUint32 aFlags,
                      const nsRect& aDirtyRect, // intersected with aBGClipRect
                      const nsRect& aBorderArea,
                      const nsRect& aBGClipRect,
@@ -1902,7 +1908,10 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
    *   background-repeat
    */
 
-  ImageRenderer imageRenderer(aForFrame, aLayer.mImage);
+  PRUint32 irFlags = 0;
+  if (aFlags & nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES)
+    irFlags |= ImageRenderer::FLAG_SYNC_DECODE_IMAGES;
+  ImageRenderer imageRenderer(aForFrame, aLayer.mImage, irFlags);
   if (!imageRenderer.PrepareImage()) {
     // There's no image or it's not ready to be painted.
     return;
@@ -3070,7 +3079,8 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
 // ImageRenderer
 // ------------------
 ImageRenderer::ImageRenderer(nsIFrame* aForFrame,
-                                       const nsStyleImage& aImage)
+                                       const nsStyleImage& aImage,
+                                       PRUint32 aFlags)
   : mForFrame(aForFrame)
   , mImage(aImage)
   , mType(aImage.GetType())
@@ -3078,6 +3088,7 @@ ImageRenderer::ImageRenderer(nsIFrame* aForFrame,
   , mGradientData(nsnull)
   , mIsReady(PR_FALSE)
   , mSize(0, 0)
+  , mFlags(aFlags)
 {
 }
 
@@ -3093,6 +3104,13 @@ ImageRenderer::PrepareImage()
     mImage.RequestDecode();
 
     // We can not prepare the image for rendering if it is not fully loaded.
+    // 
+    // Special case: If we requested a sync decode and we have an image, push
+    // on through
+    nsCOMPtr<imgIContainer> img;
+    if (!((mFlags & FLAG_SYNC_DECODE_IMAGES) &&
+          (mType == eStyleImageType_Image) &&
+          (NS_SUCCEEDED(mImage.GetImageData()->GetImage(getter_AddRefs(img))) && img)))
     return PR_FALSE;
   }
 
@@ -3121,9 +3139,11 @@ ImageRenderer::PrepareImage()
           mImageContainer.swap(srcImage);
         } else {
           nsCOMPtr<imgIContainer> subImage;
+          PRUint32 aExtractFlags = (mFlags & FLAG_SYNC_DECODE_IMAGES)
+                                     ? (PRUint32) imgIContainer::FLAG_SYNC_DECODE
+                                     : (PRUint32) imgIContainer::FLAG_NONE;
           nsresult rv = srcImage->ExtractFrame(imgIContainer::FRAME_CURRENT,
-                                               actualCropRect,
-                                               imgIContainer::FLAG_NONE,
+                                               actualCropRect, aExtractFlags,
                                                getter_AddRefs(subImage));
           if (NS_FAILED(rv)) {
             NS_WARNING("The cropped image contains no pixels to draw; "
@@ -3196,10 +3216,15 @@ ImageRenderer::Draw(nsPresContext*       aPresContext,
 
   switch (mType) {
     case eStyleImageType_Image:
+    {
+      PRUint32 drawFlags = (mFlags & FLAG_SYNC_DECODE_IMAGES)
+                             ? (PRUint32) imgIContainer::FLAG_SYNC_DECODE
+                             : (PRUint32) imgIContainer::FLAG_NONE;
       nsLayoutUtils::DrawImage(&aRenderingContext, mImageContainer,
           nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame),
-          aDest, aFill, aAnchor, aDirty, imgIContainer::FLAG_NONE);
+          aDest, aFill, aAnchor, aDirty, drawFlags);
       break;
+    }
     case eStyleImageType_Gradient:
       nsCSSRendering::PaintGradient(aPresContext, aRenderingContext,
           mGradientData, aDirty, aDest, aFill, aRepeat);

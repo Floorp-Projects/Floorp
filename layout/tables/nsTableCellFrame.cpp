@@ -363,22 +363,24 @@ nsTableCellFrame::DecorateForSelection(nsIRenderingContext& aRenderingContext,
 void
 nsTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
                                   const nsRect&        aDirtyRect,
-                                  nsPoint              aPt)
+                                  nsPoint              aPt,
+                                  PRUint32             aFlags)
 {
   nsRect rect(aPt, GetSize());
   nsCSSRendering::PaintBackground(PresContext(), aRenderingContext, this,
-                                  aDirtyRect, rect, 0);
+                                  aDirtyRect, rect, aFlags);
 }
 
 // Called by nsTablePainter
 void
 nsTableCellFrame::PaintCellBackground(nsIRenderingContext& aRenderingContext,
-                                      const nsRect& aDirtyRect, nsPoint aPt)
+                                      const nsRect& aDirtyRect, nsPoint aPt,
+                                      PRUint32 aFlags)
 {
   if (!GetStyleVisibility()->IsVisible())
     return;
 
-  PaintBackground(aRenderingContext, aDirtyRect, aPt);
+  PaintBackground(aRenderingContext, aDirtyRect, aPt, aFlags);
 }
 
 class nsDisplayTableCellBackground : public nsDisplayTableItem {
@@ -405,7 +407,8 @@ void nsDisplayTableCellBackground::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
   static_cast<nsTableCellFrame*>(mFrame)->
-    PaintBackground(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
+    PaintBackground(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame),
+                    aBuilder->GetBackgroundPaintFlags());
 }
 
 nsRect
@@ -1153,7 +1156,8 @@ nsBCTableCellFrame::GetSelfOverflow(nsRect& aOverflowArea)
 void
 nsBCTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
                                     const nsRect&        aDirtyRect,
-                                    nsPoint              aPt)
+                                    nsPoint              aPt,
+                                    PRUint32             aFlags)
 {
   // make border-width reflect the half of the border-collapse
   // assigned border that's inside the cell
@@ -1172,5 +1176,5 @@ nsBCTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
   nsCSSRendering::PaintBackgroundWithSC(PresContext(), aRenderingContext, this,
                                         aDirtyRect, rect,
                                         *GetStyleBackground(), myBorder,
-                                        0, nsnull);
+                                        aFlags, nsnull);
 }

@@ -597,7 +597,8 @@ nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
   TableBackgroundPainter painter(tableFrame,
                                  TableBackgroundPainter::eOrigin_TableRow,
                                  mFrame->PresContext(), *aCtx,
-                                 aDirtyRect, pt);
+                                 aDirtyRect, pt,
+                                 aBuilder->GetBackgroundPaintFlags());
   painter.PaintRow(static_cast<nsTableRowFrame*>(mFrame));
 }
 

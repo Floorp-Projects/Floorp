@@ -194,7 +194,8 @@ nsDisplayTableRowGroupBackground::Paint(nsDisplayListBuilder* aBuilder,
   TableBackgroundPainter painter(tableFrame,
                                  TableBackgroundPainter::eOrigin_TableRowGroup,
                                  mFrame->PresContext(), *aCtx,
-                                 aDirtyRect, pt);
+                                 aDirtyRect, pt,
+                                 aBuilder->GetBackgroundPaintFlags());
   painter.PaintRowGroup(static_cast<nsTableRowGroupFrame*>(mFrame));
 }
 
