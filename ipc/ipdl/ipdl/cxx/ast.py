@@ -57,6 +57,10 @@ class Visitor:
     def visitType(self, type):
         pass
 
+    def visitTypeArray(self, ta):
+        ta.basetype.accept(self)
+        ta.nmemb.accept(self)
+
     def visitTypeEnum(self, enum):
         pass
 
@@ -157,6 +161,9 @@ class Visitor:
 
     def visitExprMemberInit(self, minit):
         self.visitExprCall(minit)
+
+    def visitExprSizeof(self, es):
+        self.visitExprCall(es)
 
     def visitStmtBlock(self, sb):
         self.visitBlock(sb)
@@ -292,6 +299,14 @@ type actually represents an IPDL actor type.
                     ptrptr=self.ptrptr, ptrconstptr=self.ptrconstptr,
                     ref=self.ref, actor=self.actor)
 
+class TypeArray(Node):
+    def __init__(self, basetype, nmemb):
+        '''the type |basetype DECLNAME[nmemb]|.  |nmemb| is an Expr'''
+        self.basetype = basetype
+        self.nmemb = nmemb
+    def __deepcopy__(self, memo):
+        return TypeArray(deepcopy(self.basetype, memo), nmemb)
+
 class TypeEnum(Node):
     def __init__(self, name=None):
         '''name can be None'''
@@ -307,9 +322,11 @@ class TypeUnion(Node):
         Node.__init__(self)
         self.name = name
         self.components = [ ]           # pairs of (Type, name)
+        self.componentDecls = [ ]       # [ Decl ]
 
     def addComponent(self, type, name):
         self.components.append((type, name))
+        self.componentDecls.append(Decl(type, name))
 
 class Typedef(Node):
     def __init__(self, fromtype, totypename):
@@ -525,6 +542,10 @@ class ExprDelete(Node):
 class ExprMemberInit(ExprCall):
     def __init__(self, member, args=[ ]):
         ExprCall.__init__(self, member, args)
+
+class ExprSizeof(ExprCall):
+    def __init__(self, t):
+        ExprCall.__init__(self, ExprVar('sizeof'), [ t ])
 
 ##------------------------------
 # statements etc.
