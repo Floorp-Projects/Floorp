@@ -306,6 +306,10 @@ NS_IMETHODIMP
 nsMenuItemIconX::OnStartContainer(imgIRequest*   aRequest,
                                   imgIContainer* aContainer)
 {
+  // Request a decode
+  NS_ABORT_IF_FALSE(aContainer, "who sent the notification then?");
+  aContainer->RequestDecode();
+
   return NS_OK;
 }
 
@@ -344,7 +348,9 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
     return NS_ERROR_FAILURE;
 
   nsRefPtr<gfxImageSurface> image;
-  imageContainer->CopyCurrentFrame(getter_AddRefs(image));
+  imageContainer->CopyFrame(imgIContainer::FRAME_CURRENT,
+                            imgIContainer::FLAG_NONE,
+                            getter_AddRefs(image));
 
   PRInt32 height = image->Height();
   PRInt32 stride = image->Stride();
@@ -476,5 +482,11 @@ nsMenuItemIconX::OnStopRequest(imgIRequest* aRequest,
     mIconRequest->Cancel(NS_BINDING_ABORTED);
     mIconRequest = nsnull;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuItemIconX::OnDiscard(imgIRequest* aRequest)
+{
   return NS_OK;
 }

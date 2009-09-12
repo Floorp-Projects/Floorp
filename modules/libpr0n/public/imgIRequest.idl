@@ -101,8 +101,7 @@ interface imgIRequest : nsIRequest
   //@}
 
   /**
-   * something
-   * @attention NEED DOCS
+   * Status flags of the STATUS_* variety.
    */
   readonly attribute unsigned long imageStatus;
 
@@ -140,5 +139,41 @@ interface imgIRequest : nsIRequest
    * you're the observer, you can't call cancel() from your destructor.
    */
   void cancelAndForgetObserver(in nsresult aStatus);
+
+  /**
+   * Requests a decode for the image.
+   *
+   * imgIContainer has a requestDecode() method, but callers may want to request
+   * a decode before the container has necessarily been instantiated. Calling
+   * requestDecode() on the imgIRequest simply forwards along the request if the
+   * container already exists, or calls it once it gets OnStartContainer if the
+   * container does not yet exist.
+   */
+  void requestDecode();
+
+  /**
+   * Locks an image. If the image does not exist yet, locks it once it becomes
+   * available. The lock persists for the lifetime of the imgIRequest (until
+   * unlockImage is called) even if the underlying image changes.
+   *
+   * If you don't call unlockImage() by the time this imgIRequest goes away, it
+   * will be called for you automatically.
+   *
+   * Only one lock at a time per imgIRequest is supported. That is to say, you
+   * can do foo->LockImage(); foo->UnlockImage(); foo->LockImage();
+   * foo->UnlockImage(); but not foo->LockImage(); foo->LockImage();
+   * foo->UnlockImage(); foo->UnlockImage();
+   *
+   * @see imgIContainer::lockImage for documentation of the underlying call.
+   */
+  void lockImage();
+
+  /**
+   * Unlocks an image.
+   *
+   * @see imgIContainer::unlockImage for documentation of the underlying call.
+   */
+  void unlockImage();
+
 };
 

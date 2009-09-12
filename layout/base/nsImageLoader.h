@@ -57,20 +57,33 @@ class nsIURI;
 class nsImageLoader : public nsStubImageDecoderObserver
 {
 private:
-  nsImageLoader(nsIFrame *aFrame, PRBool aReflowOnLoad,
+  nsImageLoader(nsIFrame *aFrame, PRUint32 aActions,
                 nsImageLoader *aNextLoader);
   virtual ~nsImageLoader();
 
 public:
+  /*
+   * Flags to specify actions that can be taken for the image at various
+   * times. Reflows always occur before redraws. "Decode" refers to one
+   * frame being available, whereas "load" refers to all the data being loaded
+   * from the network.
+   */
+  enum {
+    ACTION_REFLOW_ON_DECODE = 0x01,
+    ACTION_REDRAW_ON_DECODE = 0x02,
+    ACTION_REFLOW_ON_LOAD   = 0x04,
+    ACTION_REDRAW_ON_LOAD   = 0x08
+  };
   static already_AddRefed<nsImageLoader>
     Create(nsIFrame *aFrame, imgIRequest *aRequest,
-           PRBool aReflowOnLoad, nsImageLoader *aNextLoader);
+           PRUint32 aActions, nsImageLoader *aNextLoader);
 
   NS_DECL_ISUPPORTS
 
   // imgIDecoderObserver (override nsStubImageDecoderObserver)
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
   NS_IMETHOD OnStopFrame(imgIRequest *aRequest, PRUint32 aFrame);
+  NS_IMETHOD OnStopRequest(imgIRequest *aRequest, PRBool aLastPart);
   // Do not override OnDataAvailable since background images are not
   // displayed incrementally; they are displayed after the entire image
   // has been loaded.
@@ -87,10 +100,12 @@ public:
 
 private:
   nsresult Load(imgIRequest *aImage);
-  void RedrawDirtyFrame(const nsRect* aDamageRect);
+  void DoReflow();
+  /* if aDamageRect is nsnull, the whole frame is redrawn. */
+  void DoRedraw(const nsRect* aDamageRect);
 
   nsIFrame *mFrame;
   nsCOMPtr<imgIRequest> mRequest;
-  PRBool mReflowOnLoad;
+  PRUint32 mActions;
   nsRefPtr<nsImageLoader> mNextLoader;
 };

@@ -24,6 +24,7 @@
  *   Stuart Parmenter <stuart@mozilla.com>
  *   Andrew Smith
  *   Federico Mena-Quintero <federico@novell.com>
+ *   Bobby Holley <bobbyholley@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -71,13 +72,29 @@ static PRLogModuleInfo *gPNGLog = PR_NewLogModule("PNGDecoder");
 static PRLogModuleInfo *gPNGDecoderAccountingLog = PR_NewLogModule("PNGDecoderAccounting");
 #endif
 
+/* limit image dimensions (bug #251381) */
+#define MOZ_PNG_MAX_DIMENSION 1000000L
+
+// For header-only decodes
+#define WIDTH_OFFSET 16
+#define HEIGHT_OFFSET (WIDTH_OFFSET + 4)
+#define BYTES_NEEDED_FOR_DIMENSIONS (HEIGHT_OFFSET + 4)
+
+// This is defined in the PNG spec as an invariant. We use it to
+// do manual validation without libpng.
+static const PRUint8 pngSignatureBytes[] =
+               { 137, 80, 78, 71, 13, 10, 26, 10 };
+
+
 NS_IMPL_ISUPPORTS1(nsPNGDecoder, imgIDecoder)
 
 nsPNGDecoder::nsPNGDecoder() :
   mPNG(nsnull), mInfo(nsnull),
   mCMSLine(nsnull), interlacebuf(nsnull),
   mInProfile(nsnull), mTransform(nsnull),
-  mChannels(0), mError(PR_FALSE), mFrameIsHidden(PR_FALSE)
+  mHeaderBuf(nsnull), mHeaderBytesRead(0),
+  mChannels(0), mError(PR_FALSE), mFrameIsHidden(PR_FALSE),
+  mNotifiedDone(PR_FALSE)
 {
 }
 
@@ -94,6 +111,8 @@ nsPNGDecoder::~nsPNGDecoder()
     if (mTransform)
       qcms_transform_release(mTransform);
   }
+  if (mHeaderBuf)
+    nsMemory::Free(mHeaderBuf);
 }
 
 // CreateFrame() is used for both simple and animated images
@@ -191,7 +210,8 @@ void nsPNGDecoder::EndImageFrame()
     }
     PRUint32 curFrame;
     mImage->GetCurrentFrameIndex(&curFrame);
-    mObserver->OnDataAvailable(nsnull, curFrame == numFrames - 1, &mFrameRect);
+    if (mObserver)
+      mObserver->OnDataAvailable(nsnull, curFrame == numFrames - 1, &mFrameRect);
   }
 
   mImage->EndFrameDecode(numFrames - 1);
@@ -202,8 +222,12 @@ void nsPNGDecoder::EndImageFrame()
 
 /** imgIDecoder methods **/
 
-/* void init (in imgILoad aLoad); */
-NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
+/* void init (in imgIContainer aImage, 
+              imgIDecoderObserver aObserver,
+              unsigned long aFlags); */
+NS_IMETHODIMP nsPNGDecoder::Init(imgIContainer *aImage,
+                                 imgIDecoderObserver *aObserver,
+                                 PRUint32 aFlags)
 {
 #if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
   static png_byte color_chunks[]=
@@ -224,10 +248,23 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
         122,  84,  88, 116, '\0'};  /* zTXt */
 #endif
 
-  mImageLoad = aLoad;
-  mObserver = do_QueryInterface(aLoad);  // we're holding 2 strong refs to the request.
+  mImage = aImage;
+  mObserver = aObserver;
+  mFlags = aFlags;
 
-  /* do png init stuff */
+  // Fire OnStartDecode at init time to support bug 512435
+  if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
+    mObserver->OnStartDecode(nsnull);
+
+  // For header-only decodes, we only need a small buffer
+  if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) {
+    mHeaderBuf = (PRUint8 *)nsMemory::Alloc(BYTES_NEEDED_FOR_DIMENSIONS);
+    if (!mHeaderBuf)
+      return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+  }
+
+  /* For full decodes, do png init stuff */
 
   /* Initialize the container's source image header. */
   /* Always decode to 24 bit pixdepth */
@@ -258,48 +295,23 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
                               info_callback, row_callback, end_callback);
 
 
-  /* The image container may already exist if it is reloading itself from us.
-   * Check that it has the same width/height; otherwise create a new container.
-   */
-  mImageLoad->GetImage(getter_AddRefs(mImage));
-  if (!mImage) {
-    mImage = do_CreateInstance("@mozilla.org/image/container;2");
-    if (!mImage)
-      return NS_ERROR_OUT_OF_MEMORY;
-      
-    mImageLoad->SetImage(mImage);
-    if (NS_FAILED(mImage->SetDiscardable("image/png"))) {
-      PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
-             ("PNGDecoderAccounting: info_callback(): failed to set image container %p as discardable",
-              mImage.get()));
-      return NS_ERROR_FAILURE;
-    }
-  }
-
   return NS_OK;
 }
 
 /* void close (); */
-NS_IMETHODIMP nsPNGDecoder::Close()
+NS_IMETHODIMP nsPNGDecoder::Close(PRUint32 aFlags)
 {
   if (mPNG)
     png_destroy_read_struct(&mPNG, mInfo ? &mInfo : NULL, NULL);
 
-  if (mImage) { // mImage could be null in the case of an error
-    nsresult result = mImage->RestoreDataDone();
-    if (NS_FAILED(result)) {
-        PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
-            ("PNGDecoderAccounting: nsPNGDecoder::Close(): failure in RestoreDataDone() for image container %p",
-                mImage.get()));
+  // If we're a full/success decode but haven't sent stop notifications yet,
+  // we didn't get all the data we needed. Send error notifications.
+  if (!(aFlags & CLOSE_FLAG_DONTNOTIFY) &&
+      !(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+      !mNotifiedDone)
+    NotifyDone(/* aSuccess = */ PR_FALSE);
 
-        mError = PR_TRUE;
-        return result;
-    }
-
-    PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
-            ("PNGDecoderAccounting: nsPNGDecoder::Close(): image container %p is now with RestoreDataDone",
-            mImage.get()));
-  }
+  mImage = nsnull;
   return NS_OK;
 }
 
@@ -309,6 +321,99 @@ NS_IMETHODIMP nsPNGDecoder::Flush()
   return NS_OK;
 }
 
+// We make this a method to get the benefit of the 'this' parameter
+NS_METHOD
+nsPNGDecoder::ProcessData(unsigned char* aBuffer, PRUint32 aCount)
+{
+  // We use gotos, so we need to declare variables here
+  nsresult rv;
+  PRUint32 width = 0;
+  PRUint32 height = 0;
+
+  // No forgiveness if we previously hit an error
+  if (mError)
+    goto error;
+
+  // If we only want width/height, we don't need to go through libpng
+  if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) {
+
+    // Are we done?
+    if (mHeaderBytesRead == BYTES_NEEDED_FOR_DIMENSIONS)
+      return NS_OK;
+
+    // Read data into our header buffer
+    PRUint32 bytesToRead = PR_MIN(aCount, BYTES_NEEDED_FOR_DIMENSIONS - mHeaderBytesRead);
+    memcpy(mHeaderBuf + mHeaderBytesRead, aBuffer, bytesToRead);
+    mHeaderBytesRead += bytesToRead;
+
+    // If we're done now, verify the data and set up the container
+    if (mHeaderBytesRead == BYTES_NEEDED_FOR_DIMENSIONS) {
+
+      // Check that the signature bytes are right
+      if (memcmp(mHeaderBuf, pngSignatureBytes, sizeof(pngSignatureBytes)))
+        goto error;
+
+      // Grab the width and height, accounting for endianness (thanks libpng!)
+      width = png_get_uint_32(mHeaderBuf + WIDTH_OFFSET);
+      height = png_get_uint_32(mHeaderBuf + HEIGHT_OFFSET);
+
+      // Too big?
+      if ((width > MOZ_PNG_MAX_DIMENSION) || (height > MOZ_PNG_MAX_DIMENSION))
+        goto error;
+
+      // Set the size
+      rv = mImage->SetSize(width, height);
+      if (NS_FAILED(rv))
+        goto error;
+
+      // Notify the observer that the container is up
+      if (mObserver)
+        mObserver->OnStartContainer(nsnull, mImage);
+    }
+  }
+
+  // Otherwise, we're doing a standard decode
+  else {
+
+    // libpng uses setjmp/longjmp for error handling - set the buffer
+    if (setjmp(mPNG->jmpbuf)) {
+      png_destroy_read_struct(&mPNG, &mInfo, NULL);
+      goto error;
+    }
+
+    // Pass the data off to libpng
+    png_process_data(mPNG, mInfo, aBuffer, aCount);
+
+  }
+
+  return NS_OK;
+
+  // Consolidate error handling
+  error:
+  mError = PR_TRUE;
+  return NS_ERROR_FAILURE;
+}
+
+void
+nsPNGDecoder::NotifyDone(PRBool aSuccess)
+{
+  // We should only be called once
+  NS_ABORT_IF_FALSE(!mNotifiedDone, "Calling NotifyDone twice!");
+
+  // Notify
+  if (!mFrameIsHidden)
+    EndImageFrame();
+  if (aSuccess)
+    mImage->DecodingComplete();
+  if (mObserver) {
+    mObserver->OnStopContainer(nsnull, mImage);
+    mObserver->OnStopDecode(nsnull, aSuccess ? NS_OK : NS_ERROR_FAILURE,
+                            nsnull);
+  }
+
+  // Mark that we've been called
+  mNotifiedDone = PR_TRUE;
+}
 
 static NS_METHOD ReadDataOut(nsIInputStream* in,
                              void* closure,
@@ -317,60 +422,32 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
                              PRUint32 count,
                              PRUint32 *writeCount)
 {
+  // Grab the decoder
+  NS_ENSURE_ARG_POINTER(closure);
   nsPNGDecoder *decoder = static_cast<nsPNGDecoder*>(closure);
 
-  if (decoder->mError) {
-    *writeCount = 0;
-    return NS_ERROR_FAILURE;
-  }
-
-  // we force to add even erroneous data to restore halfway frame information
-  // later - bug 441563
-  nsresult result = decoder->mImage->AddRestoreData(const_cast<char *>(fromRawSegment), count);
-  if (NS_FAILED (result)) {
-    PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
-           ("PNGDecoderAccounting: ReadDataOut(): failed to add restore data to image container %p",
-            decoder->mImage.get()));
-
-    decoder->mError = PR_TRUE;
-    *writeCount = 0;
-    return result;
-  }
-
-  // we need to do the setjmp here otherwise bad things will happen
-  if (setjmp(decoder->mPNG->jmpbuf)) {
-    png_destroy_read_struct(&decoder->mPNG, &decoder->mInfo, NULL);
-
-    decoder->mError = PR_TRUE;
-    *writeCount = 0;
-    return NS_ERROR_FAILURE;
-  }
-  png_process_data(decoder->mPNG, decoder->mInfo,
-                   reinterpret_cast<unsigned char *>(const_cast<char *>(fromRawSegment)), count);
-
-  PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
-         ("PNGDecoderAccounting: ReadDataOut(): Added restore data to image container %p",
-          decoder->mImage.get()));
-
+  // We always read everything
   *writeCount = count;
-  return NS_OK;
+
+  // Twiddle the types, then process the data
+  char *unConst = const_cast<char *>(fromRawSegment);
+  unsigned char *buffer = reinterpret_cast<unsigned char *>(unConst);
+  return decoder->ProcessData(buffer, count);
 }
 
 
-/* unsigned long writeFrom (in nsIInputStream inStr, in unsigned long count); */
-NS_IMETHODIMP nsPNGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
+/* writeFrom (in nsIInputStream inStr, in unsigned long count); */
+NS_IMETHODIMP nsPNGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count)
 {
   NS_ASSERTION(inStr, "Got a null input stream!");
 
-  nsresult rv;
-
+  // Decode, watching for errors
+  nsresult rv = NS_OK;
+  PRUint32 ignored;
   if (!mError)
-    rv = inStr->ReadSegments(ReadDataOut, this, count, _retval);
-
-  if (mError) {
-    *_retval = 0;
+    rv = inStr->ReadSegments(ReadDataOut, this, count, &ignored);
+  if (mError || NS_FAILED(rv))
     rv = NS_ERROR_FAILURE;
-  }
 
   return rv;
 }
@@ -505,16 +582,23 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   int num_trans = 0;
 
   nsPNGDecoder *decoder = static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
+  nsresult rv;
 
   /* always decode to 24-bit RGB or 32-bit RGBA  */
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
                &interlace_type, &compression_type, &filter_type);
   
-  /* limit image dimensions (bug #251381) */
-#define MOZ_PNG_MAX_DIMENSION 1000000L
+  /* Are we too big? */
   if (width > MOZ_PNG_MAX_DIMENSION || height > MOZ_PNG_MAX_DIMENSION)
     longjmp(decoder->mPNG->jmpbuf, 1);
-#undef MOZ_PNG_MAX_DIMENSION
+
+  // Set the size and notify that the container is set up
+  rv = decoder->mImage->SetSize(width, height);
+  if (NS_FAILED(rv)) {
+    longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_UNEXPECTED
+  }
+  if (decoder->mObserver)
+    decoder->mObserver->OnStartContainer(nsnull, decoder->mImage);
 
   if (color_type == PNG_COLOR_TYPE_PALETTE)
     png_set_expand(png_ptr);
@@ -616,25 +700,6 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     }
   }
 
-  if (decoder->mObserver)
-    decoder->mObserver->OnStartDecode(nsnull);
-
-  /* The image container may already exist if it is reloading itself from us.
-   * Check that it has the same width/height; otherwise create a new container.
-   */
-  PRInt32 containerWidth, containerHeight;
-  decoder->mImage->GetWidth(&containerWidth);
-  decoder->mImage->GetHeight(&containerHeight);
-  if (containerWidth == 0 && containerHeight == 0) {
-    // the image hasn't been inited yet
-    decoder->mImage->Init(width, height, decoder->mObserver);
-  } else if (containerWidth != PRInt32(width) || containerHeight != PRInt32(height)) {
-    longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_UNEXPECTED
-  }
-
-  if (decoder->mObserver)
-    decoder->mObserver->OnStartContainer(nsnull, decoder->mImage);
-
   if (channels == 1 || channels == 3)
     decoder->format = gfxASurface::ImageFormatRGB24;
   else if (channels == 2 || channels == 4)
@@ -654,8 +719,9 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     PRUint32 bpp[] = { 0, 3, 4, 3, 4 };
     decoder->mCMSLine =
       (PRUint8 *)nsMemory::Alloc(bpp[channels] * width);
-    if (!decoder->mCMSLine)
+    if (!decoder->mCMSLine) {
       longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
+    }
   }
 
   if (interlace_type == PNG_INTERLACE_ADAM7) {
@@ -800,7 +866,8 @@ row_callback(png_structp png_ptr, png_bytep new_row,
       }
       PRUint32 curFrame;
       decoder->mImage->GetCurrentFrameIndex(&curFrame);
-      decoder->mObserver->OnDataAvailable(nsnull, curFrame == numFrames - 1, &r);
+      if (decoder->mObserver)
+        decoder->mObserver->OnDataAvailable(nsnull, curFrame == numFrames - 1, &r);
     }
   }
 }
@@ -844,21 +911,17 @@ end_callback(png_structp png_ptr, png_infop info_ptr)
    */
 
   nsPNGDecoder *decoder = static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
+
+  // We shouldn't get here if we've hit an error
+  NS_ABORT_IF_FALSE(!decoder->mError, "Finishing up PNG but hit error!");
   
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL)) {
     PRInt32 num_plays = png_get_num_plays(png_ptr, info_ptr);
     decoder->mImage->SetLoopCount(num_plays - 1);
   }
-  
-  if (!decoder->mFrameIsHidden)
-    decoder->EndImageFrame();
-  
-  decoder->mImage->DecodingComplete();
 
-  if (decoder->mObserver) {
-    decoder->mObserver->OnStopContainer(nsnull, decoder->mImage);
-    decoder->mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
-  }
+  // Send final notifications
+  decoder->NotifyDone(/* aSuccess = */ PR_TRUE);
 }
 
 

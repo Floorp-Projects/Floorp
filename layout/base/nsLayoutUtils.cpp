@@ -1061,6 +1061,9 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   if (aFlags & PAINT_IN_TRANSFORM) {
     builder.SetInTransform(PR_TRUE);
   }
+  if (aFlags & PAINT_SYNC_DECODE_IMAGES) {
+    builder.SetSyncDecodeImages(PR_TRUE);
+  }
   nsresult rv;
 
   builder.EnterPresShell(aFrame, dirtyRect);
@@ -2774,7 +2777,8 @@ DrawImageInternal(nsIRenderingContext* aRenderingContext,
                   const nsRect&        aFill,
                   const nsPoint&       aAnchor,
                   const nsRect&        aDirty,
-                  const nsIntSize&     aImageSize)
+                  const nsIntSize&     aImageSize,
+                  PRUint32             aImageFlags)
 {
   if (aDest.IsEmpty() || aFill.IsEmpty())
     return NS_OK;
@@ -2872,7 +2876,8 @@ DrawImageInternal(nsIRenderingContext* aRenderingContext,
   if (finalFillRect.IsEmpty())
     return NS_OK;
 
-  aImage->Draw(ctx, aGraphicsFilter, transform, finalFillRect, intSubimage);
+  aImage->Draw(ctx, aGraphicsFilter, transform, finalFillRect, intSubimage,
+               aImageFlags);
   return NS_OK;
 }
 
@@ -2881,6 +2886,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(nsIRenderingContext* aRenderingContext,
                                        imgIContainer*       aImage,
                                        const nsPoint&       aDest,
                                        const nsRect&        aDirty,
+                                       PRUint32             aImageFlags,
                                        const nsRect*        aSourceArea)
 {
   nsIntSize imageSize;
@@ -2906,7 +2912,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(nsIRenderingContext* aRenderingContext,
   // translation but we don't want to actually tile the image.
   fill.IntersectRect(fill, dest);
   return DrawImageInternal(aRenderingContext, aImage, gfxPattern::FILTER_NEAREST,
-                           dest, fill, aDest, aDirty, imageSize);
+                           dest, fill, aDest, aDirty, imageSize, aImageFlags);
 }
  
 /* static */ nsresult
@@ -2915,6 +2921,7 @@ nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
                                gfxPattern::GraphicsFilter aGraphicsFilter,
                                const nsRect&        aDest,
                                const nsRect&        aDirty,
+                               PRUint32             aImageFlags,
                                const nsRect*        aSourceArea)
 {
   nsIntSize imageSize;
@@ -2939,7 +2946,7 @@ nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
   nsRect fill;
   fill.IntersectRect(aDest, dest);
   return DrawImageInternal(aRenderingContext, aImage, aGraphicsFilter, dest, fill,
-                           fill.TopLeft(), aDirty, imageSize);
+                           fill.TopLeft(), aDirty, imageSize, aImageFlags);
 }
 
 /* static */ nsresult
@@ -2949,7 +2956,8 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
                          const nsRect&        aDest,
                          const nsRect&        aFill,
                          const nsPoint&       aAnchor,
-                         const nsRect&        aDirty)
+                         const nsRect&        aDirty,
+                         PRUint32             aImageFlags)
 {
   nsIntSize imageSize;
   aImage->GetWidth(&imageSize.width);
@@ -2958,7 +2966,7 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
 
   return DrawImageInternal(aRenderingContext, aImage, aGraphicsFilter,
                            aDest, aFill, aAnchor, aDirty,
-                           imageSize);
+                           imageSize, aImageFlags);
 }
 
 /* static */ nsRect
@@ -3364,8 +3372,13 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
   if (NS_FAILED(rv) || !imgContainer)
     return result;
 
+  PRUint32 whichFrame = (aSurfaceFlags & SFE_WANT_FIRST_FRAME)
+                        ? (PRUint32) imgIContainer::FRAME_FIRST
+                        : (PRUint32) imgIContainer::FRAME_CURRENT;
   nsRefPtr<gfxASurface> framesurf;
-  rv = imgContainer->GetCurrentFrame(getter_AddRefs(framesurf));
+  rv = imgContainer->GetFrame(whichFrame,
+                              imgIContainer::FLAG_SYNC_DECODE,
+                              getter_AddRefs(framesurf));
   if (NS_FAILED(rv))
     return result;
 

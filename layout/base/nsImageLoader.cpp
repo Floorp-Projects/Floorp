@@ -63,10 +63,10 @@
 
 NS_IMPL_ISUPPORTS2(nsImageLoader, imgIDecoderObserver, imgIContainerObserver)
 
-nsImageLoader::nsImageLoader(nsIFrame *aFrame, PRBool aReflowOnLoad, 
+nsImageLoader::nsImageLoader(nsIFrame *aFrame, PRUint32 aActions,
                              nsImageLoader *aNextLoader)
   : mFrame(aFrame),
-    mReflowOnLoad(aReflowOnLoad),
+    mActions(aActions),
     mNextLoader(aNextLoader)
 {
 }
@@ -82,10 +82,10 @@ nsImageLoader::~nsImageLoader()
 
 /* static */ already_AddRefed<nsImageLoader>
 nsImageLoader::Create(nsIFrame *aFrame, imgIRequest *aRequest, 
-                      PRBool aReflowOnLoad, nsImageLoader *aNextLoader)
+                      PRUint32 aActions, nsImageLoader *aNextLoader)
 {
   nsRefPtr<nsImageLoader> loader =
-    new nsImageLoader(aFrame, aReflowOnLoad, aNextLoader);
+    new nsImageLoader(aFrame, aActions, aNextLoader);
 
   loader->Load(aRequest);
 
@@ -139,17 +139,17 @@ nsImageLoader::Load(imgIRequest *aImage)
 NS_IMETHODIMP nsImageLoader::OnStartContainer(imgIRequest *aRequest,
                                               imgIContainer *aImage)
 {
-  if (aImage)
-  {
-    /* Get requested animation policy from the pres context:
-     *   normal = 0
-     *   one frame = 1
-     *   one loop = 2
-     */
-    aImage->SetAnimationMode(mFrame->PresContext()->ImageAnimationMode());
-    // Ensure the animation (if any) is started.
-    aImage->StartAnimation();
-  }
+  NS_ABORT_IF_FALSE(aImage, "Who's calling us then?");
+
+  /* Get requested animation policy from the pres context:
+   *   normal = 0
+   *   one frame = 1
+   *   one loop = 2
+   */
+  aImage->SetAnimationMode(mFrame->PresContext()->ImageAnimationMode());
+  // Ensure the animation (if any) is started.
+  aImage->StartAnimation();
+
   return NS_OK;
 }
 
@@ -158,27 +158,40 @@ NS_IMETHODIMP nsImageLoader::OnStopFrame(imgIRequest *aRequest,
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
-  
-#ifdef NS_DEBUG
-// Make sure the image request status's STATUS_FRAME_COMPLETE flag has been set to ensure
-// the image will be painted when invalidated
-  if (aRequest) {
-   PRUint32 status = imgIRequest::STATUS_ERROR;
-   nsresult rv = aRequest->GetImageStatus(&status);
-   if (NS_SUCCEEDED(rv)) {
-     NS_ASSERTION((status & imgIRequest::STATUS_FRAME_COMPLETE), "imgIRequest::STATUS_FRAME_COMPLETE not set");
-   }
-  }
-#endif
 
   if (!mRequest) {
     // We're in the middle of a paint anyway
     return NS_OK;
   }
-  
-  // Draw the background image
-  RedrawDirtyFrame(nsnull);
+
+  // Take requested actions
+  if (mActions & ACTION_REFLOW_ON_DECODE) {
+    DoReflow();
+  }
+  if (mActions & ACTION_REDRAW_ON_DECODE) {
+    DoRedraw(nsnull);
+  }
   return NS_OK;
+}
+
+NS_IMETHODIMP nsImageLoader::OnStopRequest(imgIRequest *aRequest,
+                                           PRBool aLastPart)
+{
+  if (!mFrame)
+    return NS_ERROR_FAILURE;
+
+  if (!mRequest) {
+    // We're in the middle of a paint anyway
+    return NS_OK;
+  }
+
+  // Take requested actions
+  if (mActions & ACTION_REFLOW_ON_LOAD) {
+    DoReflow();
+  }
+  if (mActions & ACTION_REDRAW_ON_LOAD) {
+    DoRedraw(nsnull);
+  }
 }
 
 NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
@@ -194,25 +207,25 @@ NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
   
   nsRect r = dirtyRect->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
 
-  RedrawDirtyFrame(&r);
+  DoRedraw(&r);
 
   return NS_OK;
 }
 
+void
+nsImageLoader::DoReflow()
+{
+  nsIPresShell *shell = mFrame->PresContext()->GetPresShell();
+#ifdef DEBUG
+  nsresult rv =
+#endif
+    shell->FrameNeedsReflow(mFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Could not reflow after loading border-image");
+}
 
 void
-nsImageLoader::RedrawDirtyFrame(const nsRect* aDamageRect)
+nsImageLoader::DoRedraw(const nsRect* aDamageRect)
 {
-  if (mReflowOnLoad) {
-    nsIPresShell *shell = mFrame->PresContext()->GetPresShell();
-#ifdef DEBUG
-    nsresult rv = 
-#endif
-      shell->FrameNeedsReflow(mFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Could not reflow after loading border-image");
-    // The reflow might not do all the invalidation we need, so continue
-    // on with the invalidation codepath.
-  }
   // NOTE: It is not sufficient to invalidate only the size of the image:
   //       the image may be tiled! 
   //       The best option is to call into the frame, however lacking this

@@ -97,7 +97,7 @@ public:
   {
     PRInt32 oldsize = mDataSize;
     mDataSize = aDataSize;
-    TouchWithSize(mDataSize - oldsize);
+    UpdateCache(mDataSize - oldsize);
   }
 
   PRInt32 GetTouchedTime() const
@@ -156,7 +156,7 @@ private: // methods
   friend class imgLoader;
   friend class imgCacheQueue;
   void Touch(PRBool updateTime = PR_TRUE);
-  void TouchWithSize(PRInt32 diff);
+  void UpdateCache(PRInt32 diff = 0);
   void SetEvicted(PRBool evict)
   {
     mEvicted = evict;

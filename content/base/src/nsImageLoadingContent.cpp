@@ -268,6 +268,14 @@ nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest, PRBool aLastPart)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImageLoadingContent::OnDiscard(imgIRequest *aRequest)
+{
+  LOOP_OVER_OBSERVERS(OnDiscard(aRequest));
+
+  return NS_OK;
+}
+
 /*
  * nsIImageLoadingContent impl
  */

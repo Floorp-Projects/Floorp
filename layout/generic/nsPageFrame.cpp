@@ -581,7 +581,8 @@ nsPageFrame::PaintPageContent(nsIRenderingContext& aRenderingContext,
                                   rect, backgroundRect, 0);
 
   nsLayoutUtils::PaintFrame(&aRenderingContext, pageContentFrame,
-                            nsRegion(rect), NS_RGBA(0,0,0,0));
+                            nsRegion(rect), NS_RGBA(0,0,0,0),
+                            nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES);
 
   aRenderingContext.PopState();
 }

@@ -24,6 +24,7 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  *   Chris Saari <saari@netscape.com>
  *   Federico Mena-Quintero <federico@novell.com>
+ *   Bobby Holley <bobbyholley@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,11 +56,14 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "imgIContainer.h"
+#include "imgIDecoder.h"
 #include "nsIProperties.h"
 #include "nsITimer.h"
 #include "nsWeakReference.h"
 #include "nsTArray.h"
+#include "nsIStringStream.h"
 #include "imgFrame.h"
+#include "nsThreadUtils.h"
 
 #define NS_IMGCONTAINER_CID \
 { /* c76ff2c1-9bf6-418a-b143-3340c00112f7 */         \
@@ -131,9 +135,11 @@
  * because the first two have public setters and the observer we only get
  * in Init().
  */
+class imgDecodeWorker;
 class imgContainer : public imgIContainer, 
-                     public nsITimerCallback, 
-                     public nsIProperties
+                     public nsITimerCallback,
+                     public nsIProperties,
+                     public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
@@ -144,14 +150,19 @@ public:
   imgContainer();
   virtual ~imgContainer();
 
+  static NS_METHOD WriteToContainer(nsIInputStream* in, void* closure,
+                                    const char* fromRawSegment,
+                                    PRUint32 toOffset, PRUint32 count,
+                                    PRUint32 *writeCount);
+
 private:
   struct Anim
   {
     //! Area of the first frame that needs to be redrawn on subsequent loops.
     nsIntRect                  firstFrameRefreshArea;
     // Note this doesn't hold a proper value until frame 2 finished decoding.
-    PRInt32                    currentDecodingFrameIndex; // 0 to numFrames-1
-    PRInt32                    currentAnimationFrameIndex; // 0 to numFrames-1
+    PRUint32                   currentDecodingFrameIndex; // 0 to numFrames-1
+    PRUint32                   currentAnimationFrameIndex; // 0 to numFrames-1
     //! Track the last composited frame for Optimizations (See DoComposite code)
     PRInt32                    lastCompositedFrameIndex;
     //! Whether we can assume there will be no more frames
@@ -197,11 +208,26 @@ private:
 
   imgFrame* GetImgFrame(PRUint32 framenum);
   imgFrame* GetCurrentImgFrame();
-  PRInt32 GetCurrentImgFrameIndex() const;
+  PRUint32 GetCurrentImgFrameIndex() const;
   
-  inline Anim* ensureAnimExists() {
-    if (!mAnim)
+  inline Anim* ensureAnimExists()
+  {
+    if (!mAnim) {
+
+      // Create the animation context
       mAnim = new Anim();
+
+      // We don't support discarding animated images (See bug 414259)
+      // Flag that we are no longer discardable (if we were before) 
+      // and cancel any discard timer.
+      mDiscardable = PR_FALSE;
+      if (mDiscardTimer) {
+        nsresult rv = mDiscardTimer->Cancel();
+        if (!NS_SUCCEEDED(rv))
+          NS_WARNING("Discard Timer failed to cancel!");
+        mDiscardTimer = nsnull;
+      }
+    }
     return mAnim;
   }
   
@@ -256,17 +282,19 @@ private:
 private: // data
 
   nsIntSize                  mSize;
+  PRBool                     mHasSize;
   
   //! All the frames of the image
-  // *** IMPORTANT: if you use mFrames in a method, call RestoreDiscardedData() first to ensure
-  //     that the frames actually exist (they may have been discarded to save memory).
+  // IMPORTANT: if you use mFrames in a method, call EnsureImageIsDecoded() first 
+  // to ensure that the frames actually exist (they may have been discarded to save
+  // memory, or we may be decoding on draw).
   nsTArray<imgFrame *>       mFrames;
-  int                        mNumFrames; /* stored separately from mFrames.Count() to support discarded images */
   
   nsCOMPtr<nsIProperties>    mProperties;
 
-  // *** IMPORTANT: if you use mAnim in a method, call RestoreDiscardedData() first to ensure
-  //     that the frames actually exist (they may have been discarded to save memory).
+  // IMPORTANT: if you use mAnim in a method, call EnsureImageIsDecoded() first to ensure
+  // that the frames actually exist (they may have been discarded to save memory, or
+  // we maybe decoding on draw).
   imgContainer::Anim*        mAnim;
   
   //! See imgIContainer for mode constants
@@ -275,21 +303,117 @@ private: // data
   //! # loops remaining before animation stops (-1 no stop)
   PRInt32                    mLoopCount;
   
-  //! imgIContainerObserver
+  //! imgIDecoderObserver
   nsWeakPtr                  mObserver;
 
-  PRBool                     mDiscardable;
-  PRBool                     mDiscarded;
-  nsCString                  mDiscardableMimeType;
+  // Decoding on draw?
+  PRBool                     mDecodeOnDraw;
 
-  nsTArray<char>             mRestoreData;
-  PRBool                     mRestoreDataDone;
+  // Multipart?
+  PRBool                     mMultipart;
+
+  // Have we been initalized?
+  PRBool                     mInitialized;
+
+  // Discard members
+  PRBool                     mDiscardable;
+  PRUint32                   mLockCount;
   nsCOMPtr<nsITimer>         mDiscardTimer;
 
-  nsresult ResetDiscardTimer (void);
-  nsresult RestoreDiscardedData (void);
-  nsresult ReloadImages (void);
-  static void sDiscardTimerCallback (nsITimer *aTimer, void *aClosure);
+  // Source data members
+  nsTArray<char>             mSourceData;
+  PRBool                     mHasSourceData;
+  nsCString                  mSourceDataMimeType;
+
+  // Do we have the frames in decoded form?
+  PRBool                     mDecoded;
+
+  friend class imgDecodeWorker;
+
+  // Decoder and friends
+  nsCOMPtr<imgIDecoder>          mDecoder;
+  nsRefPtr<imgDecodeWorker>      mWorker;
+  PRUint32                       mBytesDecoded;
+  nsCOMPtr<nsIStringInputStream> mDecoderInput;
+  PRUint32                       mDecoderFlags;
+  PRBool                         mWorkerPending;
+  PRBool                         mInDecoder;
+
+  // Error handling
+  PRBool                         mError;
+
+  // Discard code
+  nsresult ResetDiscardTimer();
+  static void sDiscardTimerCallback(nsITimer *aTimer, void *aClosure);
+
+  // Decoding
+  nsresult WantDecodedFrames();
+  nsresult SyncDecode();
+  nsresult InitDecoder(PRUint32 dFlags);
+  nsresult WriteToDecoder(const char *aBuffer, PRUint32 aCount);
+  nsresult DecodeSomeData(PRUint32 aMaxBytes);
+  PRBool   IsDecodeFinished();
+  nsresult EnableDiscarding();
+
+  // Decoder shutdown
+  enum eShutdownIntent {
+    eShutdownIntent_Done        = 0,
+    eShutdownIntent_Interrupted = 1,
+    eShutdownIntent_Error       = 2,
+    eShutdownIntent_AllCount    = 3
+  };
+  nsresult ShutdownDecoder(eShutdownIntent aIntent);
+
+  // Helpers
+  void DoError();
+  PRBool CanDiscard();
+  PRBool StoringSourceData();
+
 };
+
+// Decoding Helper Class
+//
+// We use this class to mimic the interactivity benefits of threading
+// in a single-threaded event loop. We want to progressively decode
+// and keep a responsive UI while we're at it, so we have a runnable
+// class that does a bit of decoding, and then "yields" by dispatching
+// itself to the end of the event queue.
+class imgDecodeWorker : public nsRunnable
+{
+  public:
+    imgDecodeWorker(imgIContainer* aContainer) {
+      mContainer = do_GetWeakReference(aContainer);
+    }
+    NS_IMETHOD Run();
+    NS_METHOD  Dispatch();
+
+  private:
+    nsWeakPtr mContainer;
+};
+
+// Asynchronous Decode Requestor
+//
+// We use this class when someone calls requestDecode() from within a decode
+// notification. Since requestDecode() involves modifying the decoder's state
+// (for example, possibly shutting down a header-only decode and starting a
+// full decode), we don't want to do this from inside a decoder.
+class imgDecodeRequestor : public nsRunnable
+{
+  public:
+    imgDecodeRequestor(imgIContainer *aContainer) {
+      mContainer = do_GetWeakReference(aContainer);
+    }
+    NS_IMETHOD Run() {
+      nsCOMPtr<imgIContainer> con = do_QueryReferent(mContainer);
+      if (con)
+        con->RequestDecode();
+      return NS_OK;
+    }
+
+  private:
+    nsWeakPtr mContainer;
+};
+
+
 
 #endif /* __imgContainer_h__ */

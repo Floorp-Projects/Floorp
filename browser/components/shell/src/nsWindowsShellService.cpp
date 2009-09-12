@@ -524,7 +524,9 @@ static nsresult
 WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
 {
   nsRefPtr<gfxImageSurface> image;
-  nsresult rv = aImage->CopyCurrentFrame(getter_AddRefs(image));
+  nsresult rv = aImage->CopyFrame(imgIContainer::FRAME_FIRST,
+                                  imgIContainer::FLAG_SYNC_DECODE,
+                                  getter_AddRefs(image));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 width = image->Width();

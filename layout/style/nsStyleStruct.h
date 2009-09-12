@@ -251,6 +251,10 @@ struct nsStyleImage {
                                PRBool* aIsEntireImage = nsnull) const;
 
   /**
+   * Requests a decode on the image.
+   */
+  nsresult RequestDecode();
+  /**
    * @return PR_TRUE if the item is definitely opaque --- i.e., paints every
    * pixel within its bounds opaquely, and the bounds contains at least a pixel.
    */
@@ -785,6 +789,7 @@ struct nsStyleBorder {
 
   // Defined in nsStyleStructInlines.h
   inline PRBool IsBorderImageLoaded() const;
+  inline nsresult RequestDecode();
 
   void GetBorderColor(PRUint8 aSide, nscolor& aColor,
                       PRBool& aForeground) const
