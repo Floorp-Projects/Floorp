@@ -1,0 +1,4 @@
+#filter emptyLines spaces
+#include ../../../xpinstall/public/xpinstall.js
+#include ../../../netwerk/base/public/security-prefs.js
+#include init/all.js
