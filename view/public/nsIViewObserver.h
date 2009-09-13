@@ -46,10 +46,10 @@
 class nsIRenderingContext;
 class nsGUIEvent;
 
-// 52b3b616-23a9-4516-a8d3-452b4126eb2b
+// 8D7AE493-1EB1-4D38-89DA-9EEEAA29FD79
 #define NS_IVIEWOBSERVER_IID  \
-{ 0x52b3b616, 0x23a9, 0x4516, \
-  { 0xa8, 0xd3, 0x45, 0x2b, 0x41, 0x26, 0xeb, 0x2b } }
+{ 0x8d7ae493, 0x1eb1, 0x4d38, \
+  { 0x89, 0xda, 0x9e, 0xee, 0xaa, 0x29, 0xfd, 0x79 } }
 
 class nsIViewObserver : public nsISupports
 {
@@ -150,6 +150,13 @@ public:
    */
   NS_IMETHOD_(void) DispatchSynthMouseMove(nsGUIEvent *aEvent,
                                            PRBool aFlushOnHoverChange) = 0;
+
+  /**
+   * If something within aView is capturing the mouse, clear the capture.
+   * if aView is null, clear the mouse capture no matter what is capturing it.
+   */
+  NS_IMETHOD_(void) ClearMouseCapture(nsIView* aView) = 0;
+
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewObserver, NS_IVIEWOBSERVER_IID)
