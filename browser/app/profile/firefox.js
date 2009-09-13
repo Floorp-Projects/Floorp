@@ -858,7 +858,7 @@ pref("geo.wifi.uri", "https://www.google.com/loc/json");
 #ifdef WINCE
 
 // tweak awesomebar -- increase the delay until a search happens.
-pref("browser.urlbar.delay", 1000);
+pref("browser.urlbar.delay", 250);
 
 // disable safe browsing, due to perf hit
 pref("browser.safebrowsing.enabled", false);
