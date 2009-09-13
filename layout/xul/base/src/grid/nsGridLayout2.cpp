@@ -63,6 +63,16 @@ nsGridLayout2::nsGridLayout2(nsIPresShell* aPresShell):nsStackLayout()
 {
 }
 
+// static
+void
+nsGridLayout2::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize)
+{
+  nsMargin offset;
+  GetOffset(aState, aChild, offset);
+  aSize.width += offset.left;
+  aSize.height += offset.top;
+}
+
 NS_IMETHODIMP
 nsGridLayout2::Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
