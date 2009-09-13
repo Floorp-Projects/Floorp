@@ -2144,9 +2144,6 @@ oom:
 void
 JSTraceMonitor::flush()
 {
-    memset(&vmfragments[0], 0,
-           FRAGMENT_TABLE_SIZE * sizeof(VMFragment*));
-
     allocator->reset();
     delete codeAlloc;
     codeAlloc = new CodeAlloc();
@@ -2158,15 +2155,18 @@ JSTraceMonitor::flush()
         globalStates[i].globalSlots = new (alloc) SlotList(allocator);
     }
 
-    assembler = new (alloc) Assembler(*codeAlloc, alloc, core,
-                                           &js_LogController);
+    assembler = new (alloc) Assembler(*codeAlloc, alloc, core, &js_LogController);
     lirbuf = new (alloc) LirBuffer(alloc);
+    reLirBuf = new (alloc) LirBuffer(alloc);
 
 #ifdef DEBUG
-    JS_ASSERT(labels);
     labels = new (alloc) LabelMap(alloc, &js_LogController);
+    reLirBuf->names =
     lirbuf->names = new (alloc) LirNameMap(alloc, labels);
 #endif
+
+    memset(&vmfragments[0], 0, FRAGMENT_TABLE_SIZE * sizeof(VMFragment*));
+    reFragments = new (alloc) REHashMap(alloc);
 
     needFlush = JS_FALSE;
 }
@@ -3647,6 +3647,12 @@ ResetJIT(JSContext* cx, TraceVisFlushReason r)
 #define ResetJIT(cx, r) ResetJITImpl(cx)
 #endif
 
+JS_REQUIRES_STACK void
+js_ResetJIT(JSContext* cx)
+{
+    ResetJIT(cx, FR_OOM);
+}
+
 /* Compile the current fragment. */
 JS_REQUIRES_STACK void
 TraceRecorder::compile(JSTraceMonitor* tm)
@@ -4562,8 +4568,7 @@ DeleteRecorder(JSContext* cx)
 
     /* If we ran out of memory, flush the code cache. */
     Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-    if (assm->error() == OutOMem ||
-        js_OverfullJITCache(tm, false)) {
+    if (assm->error() == OutOMem || js_OverfullJITCache(tm)) {
         ResetJIT(cx, FR_OOM);
         return false;
     }
@@ -4918,7 +4923,7 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, VMFragment* f, jsbytecode* outer,
     f->root = f;
     f->lirbuf = tm->lirbuf;
 
-    if (tm->allocator->outOfMemory() || js_OverfullJITCache(tm, false)) {
+    if (tm->allocator->outOfMemory() || js_OverfullJITCache(tm)) {
         Backoff(cx, (jsbytecode*) f->root->ip);
         ResetJIT(cx, FR_OOM);
         debug_only_print0(LC_TMTracer,
@@ -6304,8 +6309,7 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
         return JSRS_STOP;
     }
 
-    if (tr->traceMonitor->allocator->outOfMemory() ||
-        js_OverfullJITCache(&JS_TRACE_MONITOR(cx), false)) {
+    if (tr->traceMonitor->allocator->outOfMemory() || js_OverfullJITCache(&JS_TRACE_MONITOR(cx))) {
         js_AbortRecording(cx, "no more memory");
         ResetJIT(cx, FR_OOM);
         return JSRS_STOP;
@@ -6642,8 +6646,7 @@ void
 js_SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes)
 {
     JSTraceMonitor* tm = &JS_THREAD_DATA(cx)->traceMonitor;
-    JS_ASSERT(tm->codeAlloc && tm->reCodeAlloc &&
-              tm->allocator && tm->reAllocator);
+    JS_ASSERT(tm->codeAlloc && tm->allocator);
     if (bytes > 1 G)
         bytes = 1 G;
     if (bytes < 128 K)
@@ -6708,53 +6711,14 @@ js_InitJIT(JSTraceMonitor *tm)
                           JS_DHASH_DEFAULT_CAPACITY(PC_HASH_COUNT));
     }
 
-    if (!tm->allocator)
-        tm->allocator = new VMAllocator();
+    JS_ASSERT(!tm->allocator&& !tm->codeAlloc);
+    tm->allocator = new VMAllocator();
+    tm->codeAlloc = new CodeAlloc();
+    tm->flush();
 
-    Allocator& alloc = *tm->allocator;
+    JS_ASSERT(!tm->reservedDoublePool);
+    tm->reservedDoublePoolPtr = tm->reservedDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
 
-    if (!tm->codeAlloc)
-        tm->codeAlloc = new CodeAlloc();
-
-    if (!tm->assembler) {
-        tm->assembler = new (alloc) Assembler(*tm->codeAlloc, alloc, core,
-                                              &js_LogController);
-
-
-        JS_ASSERT(!tm->reservedDoublePool);
-        tm->lirbuf = new (alloc) LirBuffer(alloc);
-#ifdef DEBUG
-        tm->labels = new (alloc) LabelMap(alloc, &js_LogController);
-        tm->lirbuf->names = new (alloc) LirNameMap(alloc, tm->labels);
-#endif
-        for (size_t i = 0; i < MONITOR_N_GLOBAL_STATES; ++i) {
-            tm->globalStates[i].globalShape = -1;
-            JS_ASSERT(!tm->globalStates[i].globalSlots);
-            tm->globalStates[i].globalSlots = new (alloc) SlotList(tm->allocator);
-        }
-        tm->reservedDoublePoolPtr = tm->reservedDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
-        memset(tm->vmfragments, 0, sizeof(tm->vmfragments));
-    }
-
-    if (!tm->reAllocator)
-        tm->reAllocator = new VMAllocator();
-
-    Allocator& reAlloc = *tm->reAllocator;
-
-    if (!tm->reCodeAlloc)
-        tm->reCodeAlloc = new CodeAlloc();
-
-    if (!tm->reAssembler) {
-        tm->reAssembler = new (reAlloc) Assembler(*tm->reCodeAlloc, reAlloc, core,
-                                                  &js_LogController);
-
-        tm->reFragments = new (reAlloc) REHashMap(reAlloc);
-        tm->reLirBuf = new (reAlloc) LirBuffer(reAlloc);
-#ifdef DEBUG
-        tm->reLabels = new (reAlloc) LabelMap(reAlloc, &js_LogController);
-        tm->reLirBuf->names = new (reAlloc) LirNameMap(reAlloc, tm->reLabels);
-#endif
-    }
 #if !defined XP_WIN
     debug_only(memset(&jitstats, 0, sizeof(jitstats)));
 #endif
@@ -6779,28 +6743,25 @@ js_FinishJIT(JSTraceMonitor *tm)
                           jitstats.typeMapMismatchAtEntry, jitstats.globalShapeMismatchAtEntry);
     }
 #endif
-    if (tm->assembler != NULL) {
-        JS_ASSERT(tm->reservedDoublePool);
+    JS_ASSERT(tm->reservedDoublePool);
 
-        tm->lirbuf = NULL;
+    if (tm->recordAttempts.ops)
+        JS_DHashTableFinish(&tm->recordAttempts);
 
-        if (tm->recordAttempts.ops)
-            JS_DHashTableFinish(&tm->recordAttempts);
+    memset(&tm->vmfragments[0], 0, FRAGMENT_TABLE_SIZE * sizeof(VMFragment*));
 
-        memset(&tm->vmfragments[0], 0,
-               FRAGMENT_TABLE_SIZE * sizeof(VMFragment*));
+    delete[] tm->reservedDoublePool;
+    tm->reservedDoublePool = tm->reservedDoublePoolPtr = NULL;
 
-        delete[] tm->reservedDoublePool;
-        tm->reservedDoublePool = tm->reservedDoublePoolPtr = NULL;
-    }
-    if (tm->reAssembler != NULL) {
-        delete tm->reAllocator;
-        delete tm->reCodeAlloc;
-    }
-    if (tm->codeAlloc)
+    if (tm->codeAlloc) {
         delete tm->codeAlloc;
-    if (tm->allocator)
+        tm->codeAlloc = NULL;
+    }
+
+    if (tm->allocator) {
         delete tm->allocator;
+        tm->allocator = NULL;
+    }
 }
 
 void
@@ -6879,7 +6840,7 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
 }
 
 bool
-js_OverfullJITCache(JSTraceMonitor* tm, bool reCache)
+js_OverfullJITCache(JSTraceMonitor* tm)
 {
     /*
      * You might imagine the outOfMemory flag on the allocator is sufficient
@@ -6918,17 +6879,7 @@ js_OverfullJITCache(JSTraceMonitor* tm, bool reCache)
     jsuint maxsz = tm->maxCodeCacheBytes;
     VMAllocator *allocator = tm->allocator;
     CodeAlloc *codeAlloc = tm->codeAlloc;
-    if (reCache) {
-        /*
-         * At the time of making the code cache size configurable, we were using
-         * 16 MB for the main code cache and 1 MB for the regular expression code
-         * cache. We will stick to this 16:1 ratio here until we unify the two
-         * code caches.
-         */
-        maxsz /= 16;
-        allocator = tm->reAllocator;
-        codeAlloc = tm->reCodeAlloc;
-    }
+
     return (codeAlloc->size() + allocator->size() > maxsz);
 }
 
