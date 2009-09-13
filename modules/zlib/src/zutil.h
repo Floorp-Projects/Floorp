@@ -238,6 +238,11 @@ extern const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
    extern void zmemzero OF((Bytef* dest, uInt len));
 #endif
 
+/* Ignore the Mozilla build env's DEBUG unless ZLIB_DEBUG is also set */
+#ifndef ZLIB_DEBUG
+#undef DEBUG
+#endif
+
 /* Diagnostic functions */
 #ifdef DEBUG
 #  include <stdio.h>
