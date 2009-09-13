@@ -1102,7 +1102,10 @@ extern void
 js_PurgeScriptFragments(JSContext* cx, JSScript* script);
 
 extern bool
-js_OverfullJITCache(JSTraceMonitor* tm, bool reCache);
+js_OverfullJITCache(JSTraceMonitor* tm);
+
+extern void
+js_ResetJIT(JSContext* cx);
 
 extern void
 js_PurgeJITOracle();

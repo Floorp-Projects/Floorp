@@ -147,10 +147,11 @@ struct JSTraceMonitor {
      */
     JSContext               *tracecx;
 
-    CLS(nanojit::LirBuffer) lirbuf;
     CLS(VMAllocator)        allocator;   // A chunk allocator for LIR.
     CLS(nanojit::CodeAlloc) codeAlloc;   // A general allocator for native code.
     CLS(nanojit::Assembler) assembler;
+    CLS(nanojit::LirBuffer) lirbuf;
+    CLS(nanojit::LirBuffer) reLirBuf;
 #ifdef DEBUG
     CLS(nanojit::LabelMap)  labels;
 #endif
@@ -183,17 +184,10 @@ struct JSTraceMonitor {
     JSBool                  useReservedObjects;
     JSObject                *reservedObjects;
 
-    /* Parts for the regular expression compiler. This is logically
-     * a distinct compiler but needs to be managed in exactly the same
-     * way as the trace compiler. */
-    CLS(VMAllocator)        reAllocator;
-    CLS(nanojit::CodeAlloc) reCodeAlloc;
-    CLS(nanojit::Assembler) reAssembler;
-    CLS(nanojit::LirBuffer) reLirBuf;
+    /*
+     * Fragment map for the regular expression compiler.
+     */
     CLS(REHashMap)          reFragments;
-#ifdef DEBUG
-    CLS(nanojit::LabelMap)  reLabels;
-#endif
 
     /* Keep a list of recorders we need to abort on cache flush. */
     CLS(TraceRecorder)      abortStack;
