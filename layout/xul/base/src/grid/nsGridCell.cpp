@@ -45,7 +45,7 @@
 #include "nsGridCell.h"
 #include "nsFrame.h"
 #include "nsBox.h"
-#include "nsStackLayout.h"
+#include "nsGridLayout2.h"
 
 
 nsGridCell::nsGridCell():mBoxInColumn(nsnull),mBoxInRow(nsnull)
@@ -71,7 +71,7 @@ nsGridCell::GetPrefSize(nsBoxLayoutState& aState)
     nsSize pref = mBoxInColumn->GetPrefSize(aState);
 
     nsBox::AddMargin(mBoxInColumn, pref);
-    nsStackLayout::AddOffset(aState, mBoxInColumn, pref);
+    nsGridLayout2::AddOffset(aState, mBoxInColumn, pref);
 
     nsBoxLayout::AddLargestSize(sum, pref);
   }
@@ -80,7 +80,7 @@ nsGridCell::GetPrefSize(nsBoxLayoutState& aState)
     nsSize pref = mBoxInRow->GetPrefSize(aState);
 
     nsBox::AddMargin(mBoxInRow, pref);
-    nsStackLayout::AddOffset(aState, mBoxInRow, pref);
+    nsGridLayout2::AddOffset(aState, mBoxInRow, pref);
 
     nsBoxLayout::AddLargestSize(sum, pref);
   }
@@ -101,7 +101,7 @@ nsGridCell::GetMinSize(nsBoxLayoutState& aState)
     nsSize min = mBoxInColumn->GetMinSize(aState);
 
     nsBox::AddMargin(mBoxInColumn, min);
-    nsStackLayout::AddOffset(aState, mBoxInColumn, min);
+    nsGridLayout2::AddOffset(aState, mBoxInColumn, min);
 
     nsBoxLayout::AddLargestSize(sum, min);
   }
@@ -110,7 +110,7 @@ nsGridCell::GetMinSize(nsBoxLayoutState& aState)
     nsSize min = mBoxInRow->GetMinSize(aState);
 
     nsBox::AddMargin(mBoxInRow, min);
-    nsStackLayout::AddOffset(aState, mBoxInRow, min);
+    nsGridLayout2::AddOffset(aState, mBoxInRow, min);
 
     nsBoxLayout::AddLargestSize(sum, min);
   }
@@ -131,7 +131,7 @@ nsGridCell::GetMaxSize(nsBoxLayoutState& aState)
     nsSize max = mBoxInColumn->GetMaxSize(aState);
  
     nsBox::AddMargin(mBoxInColumn, max);
-    nsStackLayout::AddOffset(aState, mBoxInColumn, max);
+    nsGridLayout2::AddOffset(aState, mBoxInColumn, max);
 
     nsBoxLayout::AddSmallestSize(sum, max);
   }
@@ -140,7 +140,7 @@ nsGridCell::GetMaxSize(nsBoxLayoutState& aState)
     nsSize max = mBoxInRow->GetMaxSize(aState);
 
     nsBox::AddMargin(mBoxInRow, max);
-    nsStackLayout::AddOffset(aState, mBoxInRow, max);
+    nsGridLayout2::AddOffset(aState, mBoxInRow, max);
 
     nsBoxLayout::AddSmallestSize(sum, max);
   }

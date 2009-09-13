@@ -1,0 +1,218 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window align="start" title="XUL stack tests" onload="runTest()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/MochiKit/packed.js" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- a * before an expected value means an offset from the right or bottom edge -->
+  <stack id="stack">
+    <hbox id="left-top" left="10" top="12" width="20" height="24"
+                        expectedleft="10" expectedtop="12" expectedright="30" expectedbottom="36"
+                        stackwidth="30" stackheight="36"/>
+    <hbox id="right-bottom" right="10" bottom="12" width="20" height="24"
+                            expectedleft="*30" expectedtop="*36" expectedright="*10" expectedbottom="*12"
+                            stackwidth="30" stackheight="36"/>
+    <hbox id="left-bottom" left="18" bottom="15" width="16" height="19"
+                           expectedleft="18" expectedtop="*34" expectedright="34" expectedbottom="*15"
+                           stackwidth="34" stackheight="34"/>
+    <hbox id="right-top" right="5" top="8" width="10" height="11"
+                         expectedleft="*15" expectedtop="8" expectedright="*5" expectedbottom="19"
+                         stackwidth="15" stackheight="19"/>
+    <hbox id="left-right" left="12" right="9" width="15" height="6"
+                          expectedleft="12" expectedtop="0" expectedright="*9" expectedbottom="*0"
+                          stackwidth="36" stackheight="6"/>
+    <hbox id="top-bottom" top="20" bottom="39" width="15" height="6"
+                          expectedleft="0" expectedtop="20" expectedright="*0" expectedbottom="*39"
+                          stackwidth="15" stackheight="65"/>
+    <hbox id="left-right-top-bottom" style="left: 5px; top: 5px; right: 8px; bottom: 8px;"
+                                     left="16" top="20" right="20" bottom="35" width="7" height="8"
+                                     expectedleft="16" expectedtop="20" expectedright="*20" expectedbottom="*35"
+                                     stackwidth="43" stackheight="63"/>
+    <hbox id="left-right-top-bottom-nosize" left="16" top="20" right="20" bottom="35"
+                                            expectedleft="16" expectedtop="20" expectedright="*20" expectedbottom="*35"
+                                            stackwidth="36" stackheight="55"/>
+    <hbox id="none" width="10" height="12" expectedleft="0" expectedtop="0" expectedright="*0" expectedbottom="*0"
+                    stackwidth="10" stackheight="12"/>
+    <hbox id="none-nosize" expectedleft="0" expectedtop="0" expectedright="*0" expectedbottom="*0"
+                           stackwidth="0" stackheight="0"/>
+    <hbox id="style-left-right-top-bottom"
+          style="left: 17px; top: 20px;" right="20" bottom="35" width="7" height="8"
+          expectedleft="*27" expectedtop="*43" expectedright="*20" expectedbottom="*35"
+          stackwidth="27" stackheight="43"/>
+    <hbox id="style-left-right-top-bottom-nosize"
+          style="left: 16px; top: 20px; right: 20px; bottom: 35px;"
+          expectedleft="0" expectedtop="0" expectedright="*0" expectedbottom="*0"
+          stackwidth="0" stackheight="0"/>
+    <hbox id="left-large-right" left="20" right="1000" height="6"
+          expectedleft="20" expectedtop="0" expectedright="20" expectedbottom="*0"
+          stackwidth="1020" stackheight="6"/>
+    <hbox id="left-top-with-margin" left="8" top="17" width="20" height="24"
+          style="margin: 1px 2px 3px 4px;"
+          expectedleft="12" expectedtop="18" expectedright="32" expectedbottom="42"
+          stackwidth="34" stackheight="45"/>
+    <hbox id="right-bottom-with-margin" right="6" bottom="15" width="10" height="14"
+          style="margin: 1px 2px 3px 4px;"
+          expectedleft="*18" expectedtop="*32" expectedright="*8" expectedbottom="*18"
+          stackwidth="22" stackheight="33"/>
+    <hbox id="left-top-right-bottom-with-margin" left="14" right="6" top="8" bottom="15" width="10" height="14"
+          style="margin: 1px 2px 3px 4px;"
+          expectedleft="18" expectedtop="9" expectedright="*8" expectedbottom="*18"
+          stackwidth="36" stackheight="41"/>
+    <hbox id="none-with-margin"
+          style="margin: 1px 2px 3px 4px;"
+          expectedleft="4" expectedtop="1" expectedright="*2" expectedbottom="*3"
+          stackwidth="6" stackheight="4"/>
+  </stack>
+
+  <stack id="stack-with-size" width="12" height="14">
+    <hbox id="left-top-with-stack-size" left="10" top="12" width="20" height="24"
+                                        expectedleft="10" expectedtop="12" expectedright="30" expectedbottom="36"/>
+  </stack>
+
+  <stack id="stack-with-border"
+         style="border-left: 4px solid black; border-top: 2px solid black; border-right: 1px solid black; border-bottom: 3px solid black;">
+    <hbox id="left-top-with-border" left="10" top="14" width="20" height="24"
+                                    expectedleft="14" expectedtop="16" expectedright="34" expectedbottom="40"/>
+    <hbox id="right-bottom-with-border" right="5" bottom="8" width="6" height="10"
+                                        expectedleft="*12" expectedtop="*21" expectedright="*6" expectedbottom="*11"/>
+    <hbox id="left-top-right-bottom-with-border" left="12" right="5" top="18" bottom="8"
+          expectedleft="16" expectedtop="20" expectedright="*6" expectedbottom="*11"/>
+    <hbox id="none-with-with-border"
+          expectedleft="4" expectedtop="2" expectedright="*1" expectedbottom="*3"/>
+  </stack>
+
+  <stack id="stack-dyn"/>
+  <stack id="stack-dyn-sized" width="12" height="14"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml"/>
+
+  <script><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    var stackRect;
+    var dynStack;
+
+    function compareSide(child, actual, side, dyn)
+    {
+      var vertical = (side == "top" || side == "bottom");
+      var expectedval = child.getAttribute("expected" + side);
+      if (expectedval.indexOf("*") == 0)
+        expectedval = (vertical ? stackRect.bottom : stackRect.right) - Number(expectedval.substring(1));
+      else
+        expectedval = (vertical ? stackRect.top : stackRect.left) + Number(expectedval);
+
+      is(actual, expectedval, child.id + " " + side + (dyn ? " dynamic" : ""));
+    }
+
+    function runTest()
+    {
+      runTestForStack("stack", false);
+      runTestForStack("stack-with-size", false);
+
+      var stackWithSize = $("stack-with-size");
+
+      var sizedStackRect = stackWithSize.getBoundingClientRect();
+      is(sizedStackRect.width, 30, "stack size stretched width");
+      is(sizedStackRect.height, 36, "stack size stretched height");
+
+      // set -moz-stack-sizing: ignore and ensure that the stack does not grow
+      // to include the child
+      var item = $("left-top-with-stack-size");
+      item.style.MozStackSizing = "ignore";
+      var parent = item.parentNode;
+      parent.removeChild(item);
+      parent.appendChild(item);
+
+      sizedStackRect = stackWithSize.getBoundingClientRect();
+      is(sizedStackRect.width, 12, "stack size not stretched width");
+      is(sizedStackRect.height, 14, "stack size not stretched height");
+
+      testPositionChanges(stackWithSize, true);
+      item.style.MozStackSizing = "";
+      testPositionChanges(stackWithSize, false);
+
+      // now test adding stack children dynamically to ensure that
+      // the size of the stack adjusts accordingly
+      dynStack = $("stack-dyn");
+      runTestForStack("stack", true);
+
+      SimpleTest.finish();
+    }
+
+    function runTestForStack(stackid, dyn)
+    {
+      var stack = $(stackid);
+      if (!dyn)
+        stackRect = stack.getBoundingClientRect();
+      var children = stack.childNodes;
+      for (var c = children.length - 1; c >= 0; c--) {
+        var child = children[c];
+        if (dyn) {
+          // for dynamic tests, get the size after appending the child as the
+          // stack size will be effected by it
+          dynStack.appendChild(child);
+          stackRect = dynStack.getBoundingClientRect();
+          is(stackRect.width, child.getAttribute("stackwidth"), child.id + " stack width" + (dyn ? " dynamic" : ""));
+          is(stackRect.height, child.getAttribute("stackheight"), child.id + " stack height" + (dyn ? " dynamic" : ""));
+        }
+
+        var childrect = child.getBoundingClientRect();
+        compareSide(child, childrect.left, "left", dyn);
+        compareSide(child, childrect.top, "top", dyn);
+        compareSide(child, childrect.right, "right", dyn);
+        compareSide(child, childrect.bottom, "bottom", dyn);
+        if (dyn)
+          dynStack.removeChild(child);
+      }
+    }
+
+    function testPositionChanges(stack, ignoreStackSizing)
+    {
+      var add = ignoreStackSizing ? " ignore stack sizing" : "";
+
+      // ensure that changing left/top/right/bottom works
+      var stackchild = document.getElementById("left-top-with-stack-size");
+      stackchild.left = 18;
+      is(stackchild.getBoundingClientRect().left, stack.getBoundingClientRect().left + 18, "left changed" + add);
+      is(stack.getBoundingClientRect().width, ignoreStackSizing ? 12 : 38, "left changed stack width" + add);
+
+      stackchild.top = 22;
+      is(stackchild.getBoundingClientRect().top, stack.getBoundingClientRect().top + 22, "top changed" + add);
+      is(stack.getBoundingClientRect().height, ignoreStackSizing ? 14 : 46, "left changed stack height" + add);
+
+      stackchild.setAttribute("right", "6");
+      is(stackchild.getBoundingClientRect().right, stack.getBoundingClientRect().left + 18, "right changed" + add);
+      // the width is only 12 pixels in ignoreStackSizing mode, so don't check the offset
+      // from the right edge in this case
+      if (!ignoreStackSizing)
+        is(stackchild.getBoundingClientRect().right, stack.getBoundingClientRect().right - 6,
+           "right changed from right edge" + add);
+      is(stack.getBoundingClientRect().width, ignoreStackSizing ? 12 : 24, "right changed stack width" + add);
+
+      stackchild.setAttribute("bottom", "9");
+      is(stackchild.getBoundingClientRect().bottom, stack.getBoundingClientRect().top + 22, "bottom changed" + add);
+      is(stack.getBoundingClientRect().height, ignoreStackSizing ? 14 : 31, "bottom changed stack height" + add);
+      if (!ignoreStackSizing)
+        is(stackchild.getBoundingClientRect().bottom, stack.getBoundingClientRect().bottom - 9,
+           "right changed from bottom edge" + add);
+
+      stackchild.left = "";
+      is(stackchild.getBoundingClientRect().right, stack.getBoundingClientRect().right - 6, "right changed" + add);
+      is(stack.getBoundingClientRect().width, ignoreStackSizing ? 12 : 26, "right changed no left stack width" + add);
+
+      stackchild.removeAttribute("right");
+      is(stackchild.getBoundingClientRect().right, stack.getBoundingClientRect().right, "right cleared" + add);
+      is(stack.getBoundingClientRect().width, 12, "right cleared stack height" + add);
+
+      // reset the values
+      stackchild.removeAttribute("bottom");
+      stackchild.left = 10;
+      stackchild.top = 12;
+    }
+
+
+  ]]></script>
+</window>
