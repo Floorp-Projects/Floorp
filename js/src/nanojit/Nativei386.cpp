@@ -381,6 +381,8 @@ namespace nanojit
 
     void Assembler::asm_restore(LInsp i, Reservation *unused, Register r)
     {
+        uint32_t arg;
+        uint32_t abi_regcount;
         if (i->isop(LIR_alloc)) {
             verbose_only( if (_logc->lcbits & LC_RegAlloc) {
                             outputForEOL("  <= remat %s size %d",
@@ -392,6 +394,16 @@ namespace nanojit
                 i->markAsClear();
             }
             LDi(r, i->imm32());
+        }
+        else if (i->isop(LIR_param) && i->paramKind() == 0 &&
+            (arg = i->paramArg()) >= (abi_regcount = max_abi_regs[_thisfrag->lirbuf->abi])) {
+            // incoming arg is on stack, can restore it from there instead of spilling
+            NanoAssert(0);
+            if (!i->getArIndex()) {
+                i->markAsClear();
+            }
+            int d = (arg - abi_regcount) * sizeof(intptr_t) + 8;
+            LD(r, d, FP);
         }
         else {
             int d = findMemFor(i);
