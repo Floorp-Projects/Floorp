@@ -1034,6 +1034,8 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     }
   }
 
+  mImage->RequestDecode();
+
   // WriteToContainer always consumes everything it gets
   PRUint32 bytesRead;
   rv = inStr->ReadSegments(imgContainer::WriteToContainer,
