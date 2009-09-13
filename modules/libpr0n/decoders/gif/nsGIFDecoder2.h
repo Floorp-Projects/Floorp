@@ -114,6 +114,7 @@ private:
   PRPackedBool mGIFOpen;
   PRPackedBool mSawTransparency;
   PRPackedBool mError;
+  PRPackedBool mEnded;
 
   gif_struct mGIFStruct;
 };
