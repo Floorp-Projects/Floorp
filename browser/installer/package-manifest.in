@@ -510,3 +510,13 @@ bin/libfreebl_32int64_3.so
 #ifdef MOZ_ENABLE_GNOMEVFS
 bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #endif
+
+; [ActiveX]
+#ifdef WINCE
+#ifndef MOZ_NO_ACTIVEX_SUPPORT
+@BINPATH@/components/nsAxSecurityPolicy.js
+@BINPATH@/@PREF_DIR@/activex.js
+@BINPATH@/plugins/npmozax.dll
+@BINPATH@/plugins/nsIMozAxPlugin.xpt
+#endif
+#endif
