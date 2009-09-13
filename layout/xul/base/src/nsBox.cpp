@@ -591,7 +591,7 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
     rect = GetOverflowRect();
   }
   else {
-    if (!DoesClipChildren()) {
+    if (!DoesClipChildren() && !IsCollapsed(aState)) {
       // See if our child frames caused us to overflow after being laid
       // out. If so, store the overflow area.  This normally can't happen
       // in XUL, but it can happen with the CSS 'outline' property and
