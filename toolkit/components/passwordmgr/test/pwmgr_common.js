@@ -127,3 +127,39 @@ function doKey(aKey, modifier) {
     wutils.sendKeyEvent("keypress", key, 0, modifier);
     wutils.sendKeyEvent("keyup",    key, 0, modifier);
 }
+
+// Init with a common login
+function commonInit() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    var pwmgr = Components.classes["@mozilla.org/login-manager;1"].
+                getService(Components.interfaces.nsILoginManager);
+    ok(pwmgr != null, "Access LoginManager");
+
+
+    // Check that initial state has no logins
+    var logins = pwmgr.getAllLogins({});
+    if (logins.length) {
+        //todo(false, "Warning: wasn't expecting logins to be present.");
+        pwmgr.removeAllLogins();
+    }
+    var disabledHosts = pwmgr.getAllDisabledHosts({});
+    if (disabledHosts.length) {
+        //todo(false, "Warning: wasn't expecting disabled hosts to be present.");
+        for each (var host in disabledHosts)
+            pwmgr.setLoginSavingEnabled(host, true);
+    }
+
+    // Add a login that's used in multiple tests
+    var login = Components.classes["@mozilla.org/login-manager/loginInfo;1"].
+                createInstance(Components.interfaces.nsILoginInfo);
+    login.init("http://localhost:8888", "http://localhost:8888", null,
+               "testuser", "testpass", "uname", "pword");
+    pwmgr.addLogin(login);
+
+    // Last sanity check
+    logins = pwmgr.getAllLogins({});
+    is(logins.length, 1, "Checking for successful init login");
+    disabledHosts = pwmgr.getAllDisabledHosts({});
+    is(disabledHosts.length, 0, "Checking for no disabled hosts");
+}
