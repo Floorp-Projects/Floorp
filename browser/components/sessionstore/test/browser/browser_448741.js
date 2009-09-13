@@ -40,14 +40,13 @@ function test() {
   // test setup
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-  let tabbrowser = getBrowser();
   waitForExplicitFinish();
   
   let uniqueName = "bug 448741";
   let uniqueValue = "as good as unique: " + Date.now();
   
   // set a unique value on a new, blank tab
-  var tab = tabbrowser.addTab();
+  var tab = gBrowser.addTab();
   ss.setTabValue(tab, uniqueName, uniqueValue);
   let valueWasCleaned = false;
   
@@ -84,7 +83,7 @@ function test() {
       ok(aSubject.data.indexOf(uniqueValue) == -1, "data no longer contains our value?");
       
       // clean up
-      tabbrowser.removeTab(tab);
+      gBrowser.removeTab(tab);
       os.removeObserver(this, aTopic, false);
       gPrefService.clearUserPref("browser.sessionstore.interval");
       finish();
