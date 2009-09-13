@@ -2145,8 +2145,7 @@ void
 JSTraceMonitor::flush()
 {
     allocator->reset();
-    delete codeAlloc;
-    codeAlloc = new CodeAlloc();
+    codeAlloc->reset();
 
     Allocator& alloc = *allocator;
 
