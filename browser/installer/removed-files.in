@@ -28,10 +28,6 @@ defaults/profile/search.rdf
 defaults/profile/US/
 extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/install.rdf
 extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/
-greprefs/all.js
-greprefs/security-prefs.js
-greprefs/xpinstall.js
-greprefs/
 searchplugins/dictionary.src
 searchplugins/dictionary.png
 searchplugins/amazondotcom.src
