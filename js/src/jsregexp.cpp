@@ -2014,7 +2014,7 @@ LookupNativeRegExp(JSContext* cx, uint16 re_flags,
                    const jschar* re_chars, size_t re_length)
 {
     JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
-    VMAllocator &alloc = *tm->reAllocator;
+    VMAllocator &alloc = *tm->allocator;
     REHashMap &table = *tm->reFragments;
 
     REHashKey k(re_length, re_flags, re_chars);
@@ -2477,7 +2477,7 @@ class RegExpNativeCompiler {
 
     LIns* compileFlat(RENode *&node, LIns* pos, LInsList& fails)
     {
-        VMAllocator *alloc = JS_TRACE_MONITOR(cx).reAllocator;
+        VMAllocator *alloc = JS_TRACE_MONITOR(cx).allocator;
 #ifdef USE_DOUBLE_CHAR_MATCH
         if (node->u.flat.length == 1) {
             if (node->next && node->next->op == REOP_FLAT &&
@@ -2540,7 +2540,7 @@ class RegExpNativeCompiler {
         if (!charSet->converted && !ProcessCharSet(cx, re, charSet))
             return NULL;
         LIns* skip = lirBufWriter->insSkip(bitmapLen);
-        if (JS_TRACE_MONITOR(cx).reAllocator->outOfMemory())
+        if (JS_TRACE_MONITOR(cx).allocator->outOfMemory())
             return NULL;
         void* bitmapData = skip->payload();
         memcpy(bitmapData, charSet->u.bits, bitmapLen);
@@ -2959,7 +2959,7 @@ class RegExpNativeCompiler {
      */
     LIns *compileNode(RENode *node, LIns *pos, bool atEnd, LInsList &fails)
     {
-        VMAllocator *alloc = JS_TRACE_MONITOR(cx).reAllocator;
+        VMAllocator *alloc = JS_TRACE_MONITOR(cx).allocator;
         for (; pos && node; node = node->next) {
             if (alloc->outOfMemory())
                 return NULL;
@@ -3037,7 +3037,7 @@ class RegExpNativeCompiler {
         /* Failed to match on first character, so fail whole match. */
         lir->ins0(LIR_regfence);
         lir->ins1(LIR_ret, lir->insImm(0));
-        return !JS_TRACE_MONITOR(cx).reAllocator->outOfMemory();
+        return !JS_TRACE_MONITOR(cx).allocator->outOfMemory();
     }
 
     /* Compile normal regular expressions that can match starting at any char. */
@@ -3053,7 +3053,7 @@ class RegExpNativeCompiler {
         lir->insStorei(lir->ins2(LIR_piadd, start, lir->insImmWord(2)), state,
                        offsetof(REGlobalData, skipped));
 
-        return !JS_TRACE_MONITOR(cx).reAllocator->outOfMemory();
+        return !JS_TRACE_MONITOR(cx).allocator->outOfMemory();
     }
 
     inline LIns*
@@ -3103,9 +3103,12 @@ class RegExpNativeCompiler {
         const jschar* re_chars;
         size_t re_length;
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-        Assembler *assm = tm->reAssembler;
-        VMAllocator& alloc = *tm->reAllocator;
+        Assembler *assm = tm->assembler;
+        VMAllocator& alloc = *tm->allocator;
         LIns* loopLabel = NULL;
+
+        if (alloc.outOfMemory() || js_OverfullJITCache(tm))
+            return JS_FALSE;
 
         re->source->getCharsAndLength(re_chars, re_length);
         /*
@@ -3173,7 +3176,7 @@ class RegExpNativeCompiler {
 
         if (alloc.outOfMemory())
             goto fail;
-        ::compile(assm, fragment, alloc verbose_only(, tm->reLabels));
+        ::compile(assm, fragment, alloc verbose_only(, tm->labels));
         if (assm->error() != nanojit::None) {
             oom = assm->error() == nanojit::OutOMem;
             goto fail;
@@ -3189,22 +3192,9 @@ class RegExpNativeCompiler {
 #endif
         return JS_TRUE;
     fail:
-        if (alloc.outOfMemory() || oom ||
-            js_OverfullJITCache(tm, true)) {
+        if (alloc.outOfMemory() || oom || js_OverfullJITCache(tm)) {
             delete lirBufWriter;
-            delete tm->reCodeAlloc;
-            tm->reCodeAlloc = new CodeAlloc();
-            alloc.reset();
-            tm->reFragments = new (alloc) REHashMap(alloc);
-            tm->reLirBuf = new (alloc) LirBuffer(alloc);
-#ifdef DEBUG
-            tm->reLabels = new (alloc) LabelMap(alloc, &js_LogController);
-            tm->reLirBuf->names = new (alloc) LirNameMap(alloc, tm->reLabels);
-            tm->reAssembler = new (alloc) Assembler(*tm->reCodeAlloc, alloc, core,
-                                                    &js_LogController);
-#else
-            tm->reAssembler = new (alloc) Assembler(*tm->reCodeAlloc, alloc, core, NULL);
-#endif
+            js_ResetJIT(cx);
         } else {
             if (!guard) insertGuard(loopLabel, re_chars, re_length);
             re->flags |= JSREG_NOCOMPILE;
