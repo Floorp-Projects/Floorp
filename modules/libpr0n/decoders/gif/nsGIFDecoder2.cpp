@@ -122,6 +122,7 @@ nsGIFDecoder2::nsGIFDecoder2()
   , mGIFOpen(PR_FALSE)
   , mSawTransparency(PR_FALSE)
   , mError(PR_FALSE)
+  , mEnded(PR_FALSE)
 {
   // Clear out the structure, excluding the arrays
   memset(&mGIFStruct, 0, sizeof(mGIFStruct));
@@ -338,7 +339,7 @@ void nsGIFDecoder2::BeginGIF()
 //******************************************************************************
 void nsGIFDecoder2::EndGIF(PRBool aSuccess)
 {
-  if (!mGIFOpen)
+  if (mEnded)
     return;
 
   if (aSuccess)
@@ -353,6 +354,7 @@ void nsGIFDecoder2::EndGIF(PRBool aSuccess)
   mImageContainer->SetLoopCount(mGIFStruct.loop_count);
 
   mGIFOpen = PR_FALSE;
+  mEnded = PR_TRUE;
 }
 
 //******************************************************************************
