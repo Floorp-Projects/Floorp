@@ -39,3 +39,6 @@ Mozilla.org changes:
 
 - 24 July 2005
   Updated zlib.def with new symbols in zlib version 1.2.3
+
+- 13 September 2009
+  Don't enable zlib's debug output when the Mozilla build is in debug mode (bug 431950)
