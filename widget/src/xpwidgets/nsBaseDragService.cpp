@@ -227,20 +227,12 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   // When the mouse goes down, the selection code starts a mouse
   // capture. However, this gets in the way of determining drag
   // feedback for things like trees because the event coordinates
-  // are in the wrong coord system. Turn off mouse capture in
-  // the associated view manager.
-  nsCOMPtr<nsIContent> contentNode = do_QueryInterface(aDOMNode);
-  if (contentNode) {
-    nsIDocument* doc = contentNode->GetCurrentDoc();
-    if (doc) {
-      nsIPresShell* presShell = doc->GetPrimaryShell();
-      if (presShell) {
-        nsIViewManager* vm = presShell->GetViewManager();
-        if (vm) {
-          PRBool notUsed;
-          vm->GrabMouseEvents(nsnull, notUsed);
-        }
-      }
+  // are in the wrong coord system, so turn off mouse capture.
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mSourceDocument);
+  if (doc) {
+    nsCOMPtr<nsIViewObserver> viewObserver = do_QueryInterface(doc->GetPrimaryShell());
+    if (viewObserver) {
+      viewObserver->ClearMouseCapture(nsnull);
     }
   }
 

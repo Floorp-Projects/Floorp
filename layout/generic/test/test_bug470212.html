@@ -28,6 +28,7 @@ function doShiftDrag(){
     wu.sendMouseEvent('mousemove',  80, 500, 0, 0, 4);
 
     is(window.getSelection().rangeCount, 0, "rangeCount should be 0");
+    wu.sendMouseEvent('mouseup',  80, 500, 0, 0, 4);
 
     SimpleTest.finish();
   }, 0);

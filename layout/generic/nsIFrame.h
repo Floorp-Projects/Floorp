@@ -107,9 +107,10 @@ struct CharacterDataChangeInfo;
 
 typedef class nsIFrame nsIBox;
 
+// 87F5B42A-507D-4707-976C-46819867BC63
 #define NS_IFRAME_IID \
-  { 0x7e9018b5, 0x5405, 0x4e2b, \
-    { 0x87, 0x67, 0xe2, 0xb4, 0xb1, 0x3e, 0xc1, 0x69 } }
+  { 0x87f5b42a, 0x507d, 0x4707, \
+    { 0x97, 0x6c, 0x46, 0x81, 0x98, 0x67, 0xbc, 0x63 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1733,14 +1734,6 @@ public:
   virtual PRBool IsLeaf() const;
 
   /**
-   * Does this frame want to capture the mouse when the user clicks in
-   * it or its children? If so, return the view which should be
-   * targeted for mouse capture. The view need not be this frame's view,
-   * it could be the view on a child.
-   */
-  virtual nsIView* GetMouseCapturer() const { return nsnull; }
-
-  /**
    * @param aFlags see InvalidateInternal below
    */
   void InvalidateWithFlags(const nsRect& aDamageRect, PRUint32 aFlags);
@@ -1953,14 +1946,6 @@ public:
 
   /** EndSelection related calls
    */
-
-  /**
-   *  Call to turn on/off mouseCapture at the view level. Needed by the ESM so
-   *  it must be in the public interface.
-   *  @param aPresContext presContext associated with the frame
-   *  @param aGrabMouseEvents PR_TRUE to enable capture, PR_FALSE to disable
-   */
-  NS_IMETHOD CaptureMouse(nsPresContext* aPresContext, PRBool aGrabMouseEvents) = 0;
 
   /**
    *  called to find the previous/next character, word, or line  returns the actual 

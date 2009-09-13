@@ -55,7 +55,6 @@
 #include "nsIPresShell.h"
 #include "nsCSSRendering.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIViewManager.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDocument.h"
 #include "nsScrollbarButtonFrame.h"
@@ -124,7 +123,6 @@ nsSliderFrame::Init(nsIContent*      aContent,
 
   mCurPos = GetCurrentPosition(aContent);
 
-  CreateViewForFrame(PresContext(), this, GetStyleContext(), PR_TRUE);
   return rv;
 }
 
@@ -979,42 +977,14 @@ nsSliderFrame::DragThumb(PRBool aGrabMouseEvents)
     }
   }
 
-  // get its view
-  nsIView* view = GetView();
-
-  if (view) {
-    nsIViewManager* viewMan = view->GetViewManager();
-
-    if (viewMan) {
-      PRBool result;
-
-      if (aGrabMouseEvents) {
-        viewMan->GrabMouseEvents(view,result);
-      } else {
-        viewMan->GrabMouseEvents(nsnull,result);
-      }
-    }
-  }
+  nsIPresShell::SetCapturingContent(aGrabMouseEvents ? GetContent() : nsnull,
+                                    aGrabMouseEvents ? CAPTURE_IGNOREALLOWED : 0);
 }
 
 PRBool
 nsSliderFrame::isDraggingThumb()
 {
-  // get its view
-  nsIView* view = GetView();
-
-  if (view) {
-    nsIViewManager* viewMan = view->GetViewManager();
-
-    if (viewMan) {
-        nsIView* grabbingView;
-        viewMan->GetMouseEventGrabber(grabbingView);
-        if (grabbingView == view)
-          return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
+  return (nsIPresShell::GetCapturingContent() == GetContent());
 }
 
 void

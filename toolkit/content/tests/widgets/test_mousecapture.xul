@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Mouse Capture Tests" align="start"
+        onload="setTimeout(runTests, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/javascript" src="/MochiKit/packed.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+
+<script>
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var captureRetargetMode = false;
+var cachedMouseDown = null;
+var previousWidth = 0, originalWidth = 0;
+
+function splitterCallback(adjustment)
+{
+  var newWidth = Number($("leftbox").width); // getBoundingClientRect().width;
+  var expectedWidth = previousWidth + adjustment;
+  if (expectedWidth > $("splitterbox").getBoundingClientRect().width)
+    expectedWidth = $("splitterbox").getBoundingClientRect().width - $("splitter").getBoundingClientRect().width;
+  is(newWidth, expectedWidth, "splitter left box size (" + adjustment + ")");
+  previousWidth = newWidth;
+}
+
+function selectionCallback(adjustment)
+{
+  if (adjustment == 4000) {
+    is(frames[0].getSelection().toString(), "This is some text", "selection after drag (" + adjustment + ")");
+    ok(frames[0].scrollY > 40, "selection caused scroll down (" + adjustment + ")");
+  }
+  else {
+    if (adjustment == 0) {
+      is(frames[0].getSelection().toString(), ".", "selection after drag (" + adjustment + ")");
+    }
+    is(frames[0].scrollY, 0, "selection scrollY (" + adjustment + ")");
+  }
+}
+
+function framesetCallback(adjustment)
+{
+  var newWidth = frames[1].frames[0].document.documentElement.clientWidth;
+  var expectedWidth = originalWidth + adjustment;
+  if (adjustment == 0)
+    expectedWidth = originalWidth - 12;
+  else if (expectedWidth >= 4000)
+    expectedWidth = originalWidth * 2 - 2;
+
+  is(newWidth, expectedWidth, "frameset after drag (" + adjustment + ")");
+}
+
+function runTests()
+{
+  previousWidth = $("leftbox").getBoundingClientRect().width;
+  runCaptureTest($("splitter"), splitterCallback);
+
+  var custom = document.getElementById("custom");
+  runCaptureTest(custom);
+
+  synthesizeMouseExpectEvent($("rightbox"), 2, 2, { type: "mousemove" },
+                             $("rightbox"), "mousemove", "setCapture and releaseCapture");
+
+  custom.setCapture();
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             $("leftbox"), "mousemove", "setCapture fails on non mousedown");
+
+  var custom2 = document.getElementById("custom2");
+  synthesizeMouse(custom2, 2, 2, { type: "mousedown" });
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             $("leftbox"), "mousemove", "document.releaseCapture releases capture");
+
+  var custom3 = document.getElementById("custom3");
+  synthesizeMouse(custom3, 2, 2, { type: "mousedown" });
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             $("leftbox"), "mousemove", "element.releaseCapture releases capture");
+
+  var custom4 = document.getElementById("custom4");
+  synthesizeMouse(custom4, 2, 2, { type: "mousedown" });
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             custom4, "mousemove", "element.releaseCapture during mousemove before releaseCapture");
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             $("leftbox"), "mousemove", "element.releaseCapture during mousemove after releaseCapture");
+
+  var custom5 = document.getElementById("custom5");
+  runCaptureTest(custom5);
+  captureRetargetMode = true;
+  runCaptureTest(custom5);
+  captureRetargetMode = false;
+
+  var b = frames[0].document.getElementById("b");
+  runCaptureTest(b, selectionCallback);
+
+  previousWidth = frames[1].frames[0].document.documentElement.clientWidth;
+  originalWidth = previousWidth;
+  runCaptureTest(frames[1].document.documentElement.lastChild, framesetCallback);
+
+  SimpleTest.finish();
+}
+
+function runCaptureTest(element, callback)
+{
+  var expectedTarget = null;
+
+  var win = element.ownerDocument.defaultView;
+
+  function mouseMoved(event) {
+    is(event.originalTarget, expectedTarget,
+       expectedTarget.id + " target for point " + event.clientX + "," + event.clientY);
+  }
+  win.addEventListener("mousemove", mouseMoved, false);
+
+  expectedTarget = element;
+
+  var basepoint = element.localName == "frameset" ? 50 : 2;
+  synthesizeMouse(element, basepoint, basepoint, { type: "mousedown" }, win);
+
+  // in setCapture(true) mode, all events should fire on custom5. In
+  // setCapture(false) mode, events can fire at a descendant
+  if (expectedTarget == $("custom5") && !captureRetargetMode)
+    expectedTarget = $("custom5spacer");
+
+  // releaseCapture should do nothing for an element which isn't capturing
+  $("splitterbox").releaseCapture();
+
+  synthesizeMouse(element, basepoint + 2, basepoint + 2, { type: "mousemove" }, win);
+  if (callback)
+    callback(2);
+
+  if (expectedTarget == $("custom5spacer") && !captureRetargetMode)
+    expectedTarget = $("custom5inner");
+
+  synthesizeMouse(element, basepoint + 25, basepoint + 25, { type: "mousemove" }, win);
+  if (callback)
+    callback(25);
+
+  expectedTarget = element.localName == "b" ? win.document.documentElement : element;
+  synthesizeMouse(element, basepoint + 4000, basepoint + 4000, { type: "mousemove" }, win);
+  if (callback)
+    callback(4000);
+  synthesizeMouse(element, basepoint - 12, basepoint - 12, { type: "mousemove" }, win);
+  if (callback)
+    callback(-12);
+
+  expectedTarget = element.localName == "frameset" ? element : win.document.documentElement;
+  synthesizeMouse(element, basepoint + 30, basepoint + 30, { type: "mouseup" }, win);
+  synthesizeMouse(win.document.documentElement, 2, 2, { type: "mousemove" }, win);
+  if (callback)
+    callback(0);
+
+  win.removeEventListener("mousemove", mouseMoved, false);
+}
+
+]]>
+</script>
+
+<hbox id="splitterbox" style="margin-top: 5px;" onmousedown="this.setCapture()">
+  <hbox id="leftbox" width="100" flex="1"/>
+  <splitter id="splitter" height="5"/>
+  <hbox id="rightbox" width="100" flex="1"/>
+</hbox>
+
+<vbox id="custom" width="10" height="10" onmousedown="this.setCapture(); cachedMouseDown = event;"/>
+<vbox id="custom2" width="10" height="10" onmousedown="this.setCapture(); document.releaseCapture();"/>
+<vbox id="custom3" width="10" height="10" onmousedown="this.setCapture(); this.releaseCapture();"/>
+<vbox id="custom4" width="10" height="10" onmousedown="this.setCapture();"
+                                          onmousemove="this.releaseCapture();"/>
+<hbox id="custom5" width="40" height="40"
+      onmousedown="this.setCapture(captureRetargetMode);">
+  <spacer id="custom5spacer" width="5"/>
+  <hbox id="custom5inner" width="35" height="35"/>
+</hbox>
+
+<hbox>
+  <iframe width="100" height="100"
+          src="data:text/html,%3Cbody style%3D'font-size%3A 40pt%3B'%3E.%3Cb id%3D'b'%3EThis%3C/b%3E is some text%3C/body%3E"/>
+
+  <iframe width="100" height="100"
+          src="data:text/html,%3Cframeset cols='50%, 50%'%3E%3Cframe src='about:blank'%3E%3Cframe src='about:blank'%3E%3C/frameset%3E"/>
+</hbox>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <p id="display"/><div id="content" style="display: none"/><pre id="test"/>
+</body>
+
+</window>
