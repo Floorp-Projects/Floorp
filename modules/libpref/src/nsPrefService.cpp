@@ -448,24 +448,9 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
   return NS_OK;
 }
 
-static nsresult openPrefFile(nsIFile* aFile)
-{
-  nsCOMPtr<nsIInputStream> inStr;
-
-#if MOZ_TIMELINE
-  {
-    nsCAutoString str;
-    aFile->GetNativePath(str);
-    NS_TIMELINE_MARK_FUNCTION1("load pref file", str.get());
-  }
-#endif
-
-  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), aFile);
-  if (NS_FAILED(rv)) 
-    return rv;        
-
-  PRInt64 fileSize;
-  rv = aFile->GetFileSize(&fileSize);
+static nsresult openPrefInputStream(nsIInputStream *aInStr) {
+  PRUint32 fileSize;
+  nsresult rv = aInStr->Available(&fileSize);
   if (NS_FAILED(rv))
     return rv;
 
@@ -481,7 +466,7 @@ static nsresult openPrefFile(nsIFile* aFile)
   nsresult rv2 = NS_OK;
   for (;;) {
     PRUint32 amtRead = 0;
-    rv = inStr->Read((char*)fileBuffer, fileSize, &amtRead);
+    rv = aInStr->Read((char*)fileBuffer, fileSize, &amtRead);
     if (NS_FAILED(rv) || amtRead == 0)
       break;
     if (!PREF_ParseBuf(&ps, fileBuffer, amtRead))
@@ -491,6 +476,16 @@ static nsresult openPrefFile(nsIFile* aFile)
   PREF_FinalizeParseState(&ps);
 
   return NS_FAILED(rv) ? rv : rv2;
+}
+
+static nsresult openPrefFile(nsIFile* aFile)
+{
+  nsCOMPtr<nsIInputStream> inStr;
+
+  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), aFile);
+  if (NS_FAILED(rv)) 
+    return rv;        
+  return openPrefInputStream(inStr);
 }
 
 /*
@@ -639,24 +634,33 @@ static nsresult pref_LoadPrefsInDirList(const char *listId)
 //----------------------------------------------------------------------------------------
 static nsresult pref_InitInitialObjects()
 {
-  nsCOMPtr<nsIFile> aFile;
-  nsCOMPtr<nsIFile> defaultPrefDir;
   nsresult          rv;
+  nsCOMPtr<nsIIOService> ioservice(do_GetIOService(&rv));
+  if (NS_FAILED(rv))
+    return rv;
 
   // first we parse the GRE default prefs. This also works if we're not using a GRE, 
+  nsCOMPtr<nsIURI> uri;
+  rv = ioservice->NewURI(NS_LITERAL_CSTRING("resource://gre-resources/greprefs.js"), nsnull, nsnull,
+                         getter_AddRefs(uri));
+  if (NS_FAILED(rv)) 
+    return rv;
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), uri);
+  if (NS_FAILED(rv)) 
+    return rv;
 
-  rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(defaultPrefDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = defaultPrefDir->AppendNative(NS_LITERAL_CSTRING("greprefs"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = pref_LoadPrefsInDir(defaultPrefDir, nsnull, 0);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Error parsing GRE default preferences. Is this an old-style embedding app?");
+  nsCOMPtr<nsIInputStream> inStr;  
+  rv = channel->Open(getter_AddRefs(inStr));
+  if (NS_SUCCEEDED(rv)) {
+    rv = openPrefInputStream(inStr);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Error parsing GRE default preferences. Is this an old-style embedding app?");
+    }
   }
 
   // now parse the "application" default preferences
+  nsCOMPtr<nsIFile> defaultPrefDir;
   rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(defaultPrefDir));
   NS_ENSURE_SUCCESS(rv, rv);
 
