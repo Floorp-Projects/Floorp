@@ -1247,6 +1247,8 @@ bool
 JSTreeContext::ensureSharpSlots()
 {
 #if JS_HAS_SHARP_VARS
+    JS_STATIC_ASSERT(SHARP_NSLOTS == 2);
+
     if (sharpSlotBase >= 0) {
         JS_ASSERT(flags & TCF_HAS_SHARPS);
         return true;
