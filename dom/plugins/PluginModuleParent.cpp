@@ -104,18 +104,18 @@ PluginModuleParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
     // FIXME/cjones: /should/ dynamically allocate shim trampoline.
     // but here we just HACK
     aFuncs->newp = Shim::NPP_New;
-    aFuncs->destroy = Shim::NPP_Destroy;
-    aFuncs->setwindow = Shim::NPP_SetWindow;
-    aFuncs->newstream = Shim::NPP_NewStream;
-    aFuncs->destroystream = PluginModuleParent::NPP_DestroyStream;
-    aFuncs->asfile = PluginModuleParent::NPP_StreamAsFile;
-    aFuncs->writeready = PluginModuleParent::NPP_WriteReady;
-    aFuncs->write = PluginModuleParent::NPP_Write;
-    aFuncs->print = Shim::NPP_Print;
-    aFuncs->event = Shim::NPP_HandleEvent;
-    aFuncs->urlnotify = Shim::NPP_URLNotify;
-    aFuncs->getvalue = Shim::NPP_GetValue;
-    aFuncs->setvalue = Shim::NPP_SetValue;
+    aFuncs->destroy = NPP_Destroy;
+    aFuncs->setwindow = NPP_SetWindow;
+    aFuncs->newstream = NPP_NewStream;
+    aFuncs->destroystream = NPP_DestroyStream;
+    aFuncs->asfile = NPP_StreamAsFile;
+    aFuncs->writeready = NPP_WriteReady;
+    aFuncs->write = NPP_Write;
+    aFuncs->print = NPP_Print;
+    aFuncs->event = NPP_HandleEvent;
+    aFuncs->urlnotify = NPP_URLNotify;
+    aFuncs->getvalue = NPP_GetValue;
+    aFuncs->setvalue = NPP_SetValue;
 }
 
 #ifdef OS_LINUX
@@ -222,13 +222,94 @@ PluginModuleParent::NPP_Destroy(NPP instance,
         static_cast<PluginInstanceParent*>(instance->pdata);
 
     NPError prv;
-    if (CallPPluginInstanceDestructor(parentInstance, &prv)) {
+    if (Shim::HACK_target->CallPPluginInstanceDestructor(parentInstance, &prv)) {
         prv = NPERR_GENERIC_ERROR;
     }
     instance->pdata = nsnull;
 
     return prv;
  }
+
+NPError
+PluginModuleParent::NPP_SetWindow(NPP instance, NPWindow* window)
+{
+    return InstCast(instance)->NPP_SetWindow(window);
+}
+
+NPError
+PluginModuleParent::NPP_NewStream(NPP instance, NPMIMEType type,
+                                  NPStream* stream, NPBool seekable,
+                                  uint16_t* stype)
+{
+    return InstCast(instance)->NPP_NewStream(type, stream, seekable,
+                                             stype);
+}
+
+NPError
+PluginModuleParent::NPP_DestroyStream(NPP instance,
+                                      NPStream* stream,
+                                      NPReason reason)
+{
+    return InstCast(instance)->NPP_DestroyStream(stream, reason);
+}
+
+int32_t
+PluginModuleParent::NPP_WriteReady(NPP instance,
+                                   NPStream* stream)
+{
+    return StreamCast(instance, stream)->WriteReady();
+}
+
+int32_t
+PluginModuleParent::NPP_Write(NPP instance,
+                              NPStream* stream,
+                              int32_t offset,
+                              int32_t len,
+                              void* buffer)
+{
+    return StreamCast(instance, stream)->Write(offset, len, buffer);
+}
+
+void
+PluginModuleParent::NPP_StreamAsFile(NPP instance,
+                                     NPStream* stream,
+                                     const char* fname)
+{
+    StreamCast(instance, stream)->StreamAsFile(fname);
+}
+
+void
+PluginModuleParent::NPP_Print(NPP instance, NPPrint* platformPrint)
+{
+    InstCast(instance)->NPP_Print(platformPrint);
+}
+
+int16_t
+PluginModuleParent::NPP_HandleEvent(NPP instance, void* event)
+{
+    return InstCast(instance)->NPP_HandleEvent(event);
+}
+
+void
+PluginModuleParent::NPP_URLNotify(NPP instance, const char* url,
+                                  NPReason reason, void* notifyData)
+{
+    return InstCast(instance)->NPP_URLNotify(url, reason, notifyData);
+}
+
+NPError
+PluginModuleParent::NPP_GetValue(NPP instance,
+                                 NPPVariable variable, void *ret_value)
+{
+    return InstCast(instance)->NPP_GetValue(variable, ret_value);
+}
+
+NPError
+PluginModuleParent::NPP_SetValue(NPP instance, NPNVariable variable,
+                                 void *value)
+{
+    return InstCast(instance)->NPP_SetValue(variable, value);
+}
 
 nsresult
 PluginModuleParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
@@ -294,39 +375,6 @@ PluginModuleParent::StreamCast(NPP instance,
         NS_RUNTIMEABORT("Corrupted plugin stream data.");
     }
     return sp;
-}
-
-NPError
-PluginModuleParent::NPP_DestroyStream(NPP instance,
-                                      NPStream* stream,
-                                      NPReason reason)
-{
-    return InstCast(instance)->NPP_DestroyStream(stream, reason);
-}
-
-int32_t
-PluginModuleParent::NPP_WriteReady(NPP instance,
-                                   NPStream* stream)
-{
-    return StreamCast(instance, stream)->WriteReady();
-}
-
-int32_t
-PluginModuleParent::NPP_Write(NPP instance,
-                              NPStream* stream,
-                              int32_t offset,
-                              int32_t len,
-                              void* buffer)
-{
-    return StreamCast(instance, stream)->Write(offset, len, buffer);
-}
-
-void
-PluginModuleParent::NPP_StreamAsFile(NPP instance,
-                                     NPStream* stream,
-                                     const char* fname)
-{
-    StreamCast(instance, stream)->StreamAsFile(fname);
 }
 
 } // namespace plugins

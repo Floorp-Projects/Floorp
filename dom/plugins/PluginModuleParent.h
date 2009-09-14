@@ -178,32 +178,14 @@ private:
                     int16_t argc, char* argn[], char* argv[],
                     NPSavedData* saved);
 
-    NPError NPP_Destroy(NPP instance, NPSavedData** save);
-
-    static inline PluginInstanceParent& InstCast(void* p)
-    {
-        return *static_cast<PluginInstanceParent*>(p);
-    }
+    static NPError NPP_Destroy(NPP instance, NPSavedData** save);
 
     static PluginInstanceParent* InstCast(NPP instance);
     static BrowserStreamParent* StreamCast(NPP instance, NPStream* s);
 
-    static inline const PluginInstanceParent& InstCast(const void* p)
-    {
-        return *static_cast<const PluginInstanceParent*>(p);
-    }
-
-    NPError NPP_SetWindow(NPP instance, NPWindow* window)
-    {
-        return InstCast(instance->pdata).NPP_SetWindow(window);
-    }
-
-    NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
-                          NPBool seekable, uint16_t* stype)
-    {
-        return InstCast(instance->pdata).NPP_NewStream(type, stream, seekable, stype);
-    }
-
+    static NPError NPP_SetWindow(NPP instance, NPWindow* window);
+    static NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
+                                 NPBool seekable, uint16_t* stype);
     static NPError NPP_DestroyStream(NPP instance,
                                      NPStream* stream, NPReason reason);
     static int32_t NPP_WriteReady(NPP instance, NPStream* stream);
@@ -211,34 +193,14 @@ private:
                              int32_t offset, int32_t len, void* buffer);
     static void NPP_StreamAsFile(NPP instance,
                                  NPStream* stream, const char* fname);
-
-    void NPP_Print(NPP instance, NPPrint* platformPrint)
-    {
-        return InstCast(instance->pdata).NPP_Print(platformPrint);
-    }
-
-    int16_t NPP_HandleEvent(NPP instance, void* event)
-    {
-        return InstCast(instance->pdata).NPP_HandleEvent(event);
-    }
-
-    void NPP_URLNotify(NPP instance,
-                       const char* url, NPReason reason, void* notifyData)
-    {
-        return InstCast(instance->pdata).NPP_URLNotify(url,
-                                                       reason, notifyData);
-    }
-
-    NPError NPP_GetValue(NPP instance,
-                            NPPVariable variable, void *ret_value)
-    {
-        return InstCast(instance->pdata).NPP_GetValue(variable, ret_value);
-    }
-
-    NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value)
-    {
-        return InstCast(instance->pdata).NPP_SetValue(variable, value);
-    }
+    static void NPP_Print(NPP instance, NPPrint* platformPrint);
+    static int16_t NPP_HandleEvent(NPP instance, void* event);
+    static void NPP_URLNotify(NPP instance, const char* url,
+                              NPReason reason, void* notifyData);
+    static NPError NPP_GetValue(NPP instance,
+                                NPPVariable variable, void *ret_value);
+    static NPError NPP_SetValue(NPP instance, NPNVariable variable,
+                                void *value);
 
 #if 0
     // NPN-like API that IPC messages from the child process end up
@@ -544,45 +506,6 @@ private:
             return HACK_target->NPP_New(pluginType, instance, mode,
                                         argc, argn, argv,
                                         saved);
-        }
-        static NPError NPP_Destroy(NPP instance, NPSavedData** save)
-        {
-            return HACK_target->NPP_Destroy(instance, save);
-        }
-        static NPError NPP_SetWindow(NPP instance, NPWindow* window)
-        {
-            return HACK_target->NPP_SetWindow(instance, window);
-        }
-        static NPError NPP_NewStream(NPP instance,
-                                     NPMIMEType type, NPStream* stream,
-                                     NPBool seekable, uint16_t* stype)
-        {
-            return HACK_target->NPP_NewStream(instance, type, stream,
-                                              seekable, stype);
-        }
-        static void NPP_Print(NPP instance, NPPrint* platformPrint)
-        {
-            return HACK_target->NPP_Print(instance, platformPrint);
-        }
-        static int16_t NPP_HandleEvent(NPP instance, void* event)
-        {
-            return HACK_target->NPP_HandleEvent(instance, event);
-        }
-        static void NPP_URLNotify(NPP instance, const char* url,
-                                  NPReason reason, void* notifyData)
-        {
-            return HACK_target->NPP_URLNotify(instance, url, reason,
-                                              notifyData);
-        }
-        static NPError NPP_GetValue(NPP instance,
-                                    NPPVariable variable, void *ret_value)
-        {
-            return HACK_target->NPP_GetValue(instance, variable, ret_value);
-        }
-        static NPError NPP_SetValue(NPP instance,
-                                    NPNVariable variable, void *value)
-        {
-            return HACK_target->NPP_SetValue(instance, variable, value);
         }
 
         static PluginModuleParent* HACK_target;
