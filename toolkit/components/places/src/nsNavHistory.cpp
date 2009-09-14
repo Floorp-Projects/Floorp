@@ -4313,7 +4313,8 @@ nsNavHistory::GetCount(PRUint32 *aCount)
 // nsNavHistory::RemovePagesInternal
 //
 //    Deletes a list of placeIds from history.
-//    This is an internal method used by RemovePages and RemovePagesFromHost.
+//    This is an internal method used by RemovePages, RemovePagesFromHost and
+//    RemovePagesByTimeframe.
 //    Takes a comma separated list of place ids.
 //    This method does not do any observer notification.
 
@@ -4460,6 +4461,11 @@ nsNavHistory::RemovePages(nsIURI **aURIs, PRUint32 aLength, PRBool aDoBatchNotif
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURIs);
 
+#ifdef LAZY_ADD
+  // We must ensure to remove pages from the lazy messages queue too.
+  CommitLazyMessages();
+#endif
+
   nsresult rv;
   // build a list of place ids to delete
   nsCString deletePlaceIdsQueryString;
@@ -4528,6 +4534,11 @@ NS_IMETHODIMP
 nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+#ifdef LAZY_ADD
+  // We must ensure to remove pages from the lazy messages queue too.
+  CommitLazyMessages();
+#endif
 
   nsresult rv;
   // Local files don't have any host name. We don't want to delete all files in
@@ -4617,6 +4628,11 @@ nsNavHistory::RemovePagesByTimeframe(PRTime aBeginTime, PRTime aEndTime)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
+#ifdef LAZY_ADD
+  // We must ensure to remove pages from the lazy messages queue too.
+  CommitLazyMessages();
+#endif
+
   nsresult rv;
   // build a list of place ids to delete
   nsCString deletePlaceIdsQueryString;
@@ -4687,6 +4703,11 @@ NS_IMETHODIMP
 nsNavHistory::RemoveVisitsByTimeframe(PRTime aBeginTime, PRTime aEndTime)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+#ifdef LAZY_ADD
+  // We must ensure to remove pages from the lazy messages queue too.
+  CommitLazyMessages();
+#endif
 
   nsresult rv;
 
@@ -4774,6 +4795,11 @@ NS_IMETHODIMP
 nsNavHistory::RemoveAllPages()
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+#ifdef LAZY_ADD
+  // We must ensure to remove pages from the lazy messages queue too.
+  CommitLazyMessages();
+#endif
 
   // expire everything
   mExpire.ClearHistory();
