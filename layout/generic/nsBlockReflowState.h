@@ -240,7 +240,7 @@ public:
   }
 
   // Track child overflow continuations.
-  nsOverflowContinuationTracker mOverflowTracker;
+  nsOverflowContinuationTracker* mOverflowTracker;
 
   //----------------------------------------
 
