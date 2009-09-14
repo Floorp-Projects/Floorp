@@ -182,6 +182,45 @@ NPError OSCALL NP_Shutdown()
 NPError
 NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved)
 {
+  const char kFoo[] = "foo";
+
+  NPIdentifier ident = NPN_GetStringIdentifier(kFoo);
+  if (!ident) {
+    return NPERR_GENERIC_ERROR;
+  }
+
+  NPUTF8* buf = NPN_UTF8FromIdentifier(ident);
+  if (!(buf && !strcmp(buf, kFoo))) {
+    return NPERR_GENERIC_ERROR;
+  }
+  free(buf);
+
+  bool isString = NPN_IdentifierIsString(ident);
+  if (!isString) {
+    return NPERR_GENERIC_ERROR;
+  }
+
+  const NPUTF8* names[] = { kFoo, "bar", "baz" };
+  const int32_t count = sizeof(names) / sizeof(names[0]);
+  NPIdentifier identifiers[count] = { 0 };
+
+  NPN_GetStringIdentifiers(names, count, identifiers);
+
+  for (int32_t index = 0; index < count; index++) {
+    if (!identifiers[index]) {
+      return NPERR_GENERIC_ERROR;
+    }
+  }
+
+  if (identifiers[0] != ident) {
+    return NPERR_GENERIC_ERROR;
+  }
+
+  buf = NPN_UTF8FromIdentifier((NPIdentifier)0x7774392);
+  if (buf) {
+    return NPERR_GENERIC_ERROR;
+  }
+
   // Make sure we can render this plugin
   NPBool browserSupportsWindowless = false;
   NPN_GetValue(instance, NPNVSupportsWindowless, &browserSupportsWindowless);
@@ -356,6 +395,12 @@ int32_t
 NPN_IntFromIdentifier(NPIdentifier identifier)
 {
   return sBrowserFuncs->intfromidentifier(identifier);
+}
+
+bool
+NPN_IdentifierIsString(NPIdentifier identifier)
+{
+  return sBrowserFuncs->identifierisstring(identifier);
 }
 
 NPError
