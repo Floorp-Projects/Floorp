@@ -228,6 +228,10 @@ pref("browser.search.suggest.enabled", true);
 // enable xul error pages
 pref("browser.xul.error_pages.enabled", true);
 
+// Specify emptySearch = 0 so that bookmarks appear in the list by default
+pref("browser.urlbar.default.behavior", 0);
+pref("browser.urlbar.default.behavior.emptyRestriction", 0);
+
 // various and sundry awesomebar prefs (should remove/re-evaluate
 // these once bug 447900 is fixed)
 pref("browser.urlbar.clickSelectsAll", true);
