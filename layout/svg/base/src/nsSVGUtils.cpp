@@ -255,6 +255,9 @@ nsSVGUtils::GetParentElement(nsIContent *aContent)
 float
 nsSVGUtils::GetFontSize(nsIContent *aContent)
 {
+  if (!aContent)
+    return 1.0f;
+
   nsRefPtr<nsStyleContext> styleContext = 
     nsComputedDOMStyle::GetStyleContextForContentNoFlush(aContent, nsnull,
                                                          nsnull);
@@ -289,6 +292,9 @@ nsSVGUtils::GetFontSize(nsStyleContext *aStyleContext)
 float
 nsSVGUtils::GetFontXHeight(nsIContent *aContent)
 {
+  if (!aContent)
+    return 1.0f;
+
   nsRefPtr<nsStyleContext> styleContext = 
     nsComputedDOMStyle::GetStyleContextForContentNoFlush(aContent, nsnull,
                                                          nsnull);
