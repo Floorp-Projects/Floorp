@@ -935,17 +935,6 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     return NS_OK;
   }
 
-  // Handle paginated overflow (see nsContainerFrame.h)
-  // Note: We use a temporary reflow status, which we'll merge into the state's
-  // reflow status down below.
-  nsRect ocBounds;
-  nsReflowStatus ocStatus = NS_FRAME_COMPLETE;
-  if (GetPrevInFlow()) {
-    ReflowOverflowContainerChildren(aPresContext, aReflowState, ocBounds, 0,
-                                    ocStatus);
-  }
-
-
   PRBool marginRoot = BlockIsMarginRoot(this);
   nsBlockReflowState state(aReflowState, aPresContext, this, aMetrics,
                            marginRoot, marginRoot, needFloatManager);
@@ -965,9 +954,22 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // overflow lines hanging around; block reflow depends on the
   // overflow line lists being cleared out between reflow passes.
   DrainOverflowLines(state);
-  DrainFloatContinuations(state);
 
-  // Handle float continuations
+  // Handle paginated overflow (see nsContainerFrame.h)
+  nsRect ocBounds;
+  nsReflowStatus ocStatus = NS_FRAME_COMPLETE;
+  if (GetPrevInFlow()) {
+    ReflowOverflowContainerChildren(aPresContext, aReflowState, ocBounds, 0,
+                                    ocStatus);
+  }
+
+  // Now that we're done cleaning up our overflow container lists, we can
+  // give |state| its nsOverflowContinuationTracker.
+  nsOverflowContinuationTracker tracker(aPresContext, this, PR_FALSE);
+  state.mOverflowTracker = &tracker;
+
+  // Drain & handle float continuations
+  DrainFloatContinuations(state);
   nsRect fcBounds;
   nsReflowStatus fcStatus = NS_FRAME_COMPLETE;
   rv = ReflowFloatContinuations(state, fcBounds, fcStatus);
@@ -1947,7 +1949,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // further on the reflow before interrupting.
       aState.mPresContext->CheckForInterrupt(this);
     } else {
-      aState.mOverflowTracker.Skip(line->mFirstChild, aState.mReflowStatus);
+      aState.mOverflowTracker->Skip(line->mFirstChild, aState.mReflowStatus);
         // Nop except for blocks (we don't create overflow container
         // continuations for any inlines atm), so only checking mFirstChild
         // is enough
@@ -3164,7 +3166,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
             // If nextFrame used to be an overflow container, make it a normal block
             if (!madeContinuation &&
                 (NS_FRAME_IS_OVERFLOW_CONTAINER & nextFrame->GetStateBits())) {
-              aState.mOverflowTracker.Finish(frame);
+              aState.mOverflowTracker->Finish(frame);
               nsContainerFrame* parent =
                 static_cast<nsContainerFrame*>(nextFrame->GetParent());
               rv = parent->StealFrame(aState.mPresContext, nextFrame);
@@ -3245,7 +3247,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
             }
 
             // Put it in our overflow list
-            aState.mOverflowTracker.Insert(nextFrame, frameReflowStatus);
+            aState.mOverflowTracker->Insert(nextFrame, frameReflowStatus);
             NS_MergeReflowStatusInto(&aState.mReflowStatus, frameReflowStatus);
 
 #ifdef NOISY_VERTICAL_MARGINS

@@ -1,0 +1,32 @@
+<html>
+<head>
+  <style>
+    #colset { -moz-column-count: 3; }
+    #a { height: 0;   }
+    #x { height: 3px; }
+    #b { height: 0;   }
+    #c { height: 2px; }
+    #d { height: 2px; }
+
+    /* Following style is just for visualization -- doesn't affect assertion */
+    #colset { -moz-column-gap: 0px; width: 18px; }
+    div { width: 5px;         }
+    #a  { background: purple; }
+    #x  { background: orange; }
+    #b  { background: blue;   }
+    #c  { background: black;  }
+    #d  { background: lime;   }
+  </style>
+  <script>
+    function boom()
+    {
+      document.getElementById("a").style.height = "auto";
+      document.getElementById("c").style.height = "0";
+    }
+  </script>
+</head>
+<body onload="boom()" id="colset"
+  ><div id="a"><div id="x"></div></div
+  ><div id="b"><div id="c"></div><div id="d"></div></div
+></body>
+</html>
