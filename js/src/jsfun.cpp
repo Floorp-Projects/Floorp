@@ -1799,7 +1799,7 @@ JSFunction::sharpSlotBase(JSContext *cx)
 #if JS_HAS_SHARP_VARS
     JSAtom *name = js_Atomize(cx, "#array", 6, 0);
     if (name) {
-        uintN index;
+        uintN index = (uintN)-1;
 #ifdef DEBUG
         JSLocalKind kind =
 #endif

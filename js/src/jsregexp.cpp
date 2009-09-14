@@ -2006,7 +2006,6 @@ typedef js::Vector<LIns *, 4, js::ContextAllocPolicy> LInsList;
 /* Dummy GC for nanojit placement new. */
 static GC gc;
 static avmplus::AvmCore s_core = avmplus::AvmCore();
-static avmplus::AvmCore* core = &s_core;
 
 /* Return the cached fragment for the given regexp, or create one. */
 static Fragment*
