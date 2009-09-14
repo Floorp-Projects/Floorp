@@ -479,10 +479,11 @@ var BrowserUI = {
   },
 
   goToURI : function(aURI) {
-    this._edit.reallyClosePopup();
-
+    aURI = aURI || this._edit.value;
     if (!aURI)
-      aURI = this._edit.value;
+      return;
+
+    this._edit.reallyClosePopup();
 
     var flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     getBrowser().loadURIWithFlags(aURI, flags, null, null);
