@@ -1764,6 +1764,10 @@ IdentityHandler.prototype = {
   },
 
   show: function ih_show() {
+    // dismiss any dialog which hide the identity popup
+    while (BrowserUI.activeDialog)
+      BrowserUI.activeDialog.close();
+
     this._identityPopup.hidden = false;
     this._identityPopup.top = BrowserUI.toolbarH;
     this._identityPopup.focus();
