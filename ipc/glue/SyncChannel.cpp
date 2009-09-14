@@ -78,8 +78,8 @@ SyncChannel::Send(Message* msg, Message* reply)
     // (NB: IPDL prevents the latter from occuring in actor code)
 
     // FIXME/cjones: real error handling
-    NS_ABORT_IF_FALSE(mRecvd.is_sync()
-                      && mRecvd.is_reply() && mPendingReply == mRecvd.type(),
+    NS_ABORT_IF_FALSE(mRecvd.is_sync() && mRecvd.is_reply() &&
+                      (mPendingReply == mRecvd.type() || mRecvd.is_reply_error()),
                       "unexpected sync message");
 
     mPendingReply = 0;
@@ -103,11 +103,7 @@ SyncChannel::OnDispatchMessage(const Message& msg)
 
     switch (rv) {
     case MsgProcessed:
-        mIOLoop->PostTask(FROM_HERE,
-                          NewRunnableMethod(this,
-                                            &SyncChannel::OnSendReply,
-                                            reply));
-        return;
+        break;
 
     case MsgNotKnown:
     case MsgNotAllowed:
@@ -115,12 +111,22 @@ SyncChannel::OnDispatchMessage(const Message& msg)
     case MsgRouteError:
     case MsgValueError:
         // FIXME/cjones: error handling; OnError()?
-        return;
+        delete reply;
+        reply = new Message();
+        reply->set_sync();
+        reply->set_reply();
+        reply->set_reply_error();
+        break;
 
     default:
         NOTREACHED();
         return;
     }
+
+    mIOLoop->PostTask(FROM_HERE,
+                      NewRunnableMethod(this,
+                                        &SyncChannel::OnSendReply,
+                                        reply));
 }
 
 //
