@@ -1,3 +1,12 @@
 toolkit.jar:
         res/charsetalias.properties    (charsetalias.properties)
         res/charsetData.properties     (charsetData.properties)
+#ifdef XP_OS2
+        res/os2charset.properties     (os2charset.properties)
+#elifdef XP_WIN
+        res/wincharset.properties     (wincharset.properties)
+#elifdef XP_MACOSX
+        res/maccharset.properties     (maccharset.properties)
+#elifndef XP_BEOS
+        res/unixcharset.properties     (unixcharset.properties)
+#endif
