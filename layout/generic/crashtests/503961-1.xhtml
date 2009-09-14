@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style type="text/css">
+  #colset    { -moz-column-count: 3; }
+  #a         { height: 0px; }
+  #b         { height: 2px; }
+  #c         { height: 1px; }
+  #d         { height: 2px; }
+  #e         { height: 2px; }
+</style>
+<script type="text/javascript">
+function boom()
+{
+  document.getElementById("a").style.height = "auto";
+  document.getElementById("d").style.height = "auto";
+}
+</script>
+</head>
+<body onload="boom();"
+  ><div id="colset"
+    ><div id="a"><div id="b"/></div
+    ><div id="c"><div id="d"/><div id="e"/></div
+  ></div
+></body>
+</html>
