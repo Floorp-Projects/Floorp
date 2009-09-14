@@ -78,6 +78,7 @@
                              tooltiptext="&bookmarksToolbarChevron.tooltip;"
                              onpopupshowing="_onChevronPopupShowing(event);">
             <xul:menupopup anonid="chevronPopup"
+                           popupsinherittooltip="true"
                            xbl:inherits="tooltip"
 #ifndef XP_MACOSX
                            context="placesContext"
