@@ -422,6 +422,11 @@ class ConstructorDecl(MethodDecl):
         MethodDecl.__init__(self, name, params=params, ret=None)
         self.explicit = explicit
 
+    def __deepcopy__(self, memo):
+        return ConstructorDecl(self.name,
+                               copy.deepcopy(self.params, memo),
+                               self.explicit)
+
 class ConstructorDefn(MethodDefn):
     def __init__(self, decl, memberinits=[ ]):
         MethodDefn.__init__(self, decl)
