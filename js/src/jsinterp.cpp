@@ -1563,23 +1563,27 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
             goto out;
         }
         memset(frame.slots, 0, script->nfixed * sizeof(jsval));
+
 #if JS_HAS_SHARP_VARS
+        JS_STATIC_ASSERT(SHARP_NSLOTS == 2);
+
         if (script->flags & JSSF_HAS_SHARPS) {
-            JS_ASSERT(script->nfixed == 2);
+            JS_ASSERT(script->nfixed >= SHARP_NSLOTS);
+            jsval *sharps = &frame.slots[script->nfixed - SHARP_NSLOTS];
+
             if (down && down->script && (down->script->flags & JSSF_HAS_SHARPS)) {
                 JS_ASSERT(down->script->nfixed >= 2);
                 int base = down->fun
                            ? down->fun->sharpSlotBase(cx)
-                           : down->script->nfixed - 2;
+                           : down->script->nfixed - SHARP_NSLOTS;
                 if (base < 0) {
                     ok = JS_FALSE;
                     goto out;
                 }
-                frame.slots[0] = down->slots[base];
-                frame.slots[1] = down->slots[base + 1];
+                sharps[0] = down->slots[base];
+                sharps[1] = down->slots[base + 1];
             } else {
-                frame.slots[0] = JSVAL_VOID;
-                frame.slots[1] = JSVAL_VOID;
+                sharps[0] = sharps[1] = JSVAL_VOID;
             }
         } else
 #endif

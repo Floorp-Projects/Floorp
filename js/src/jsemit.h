@@ -435,7 +435,7 @@ struct JSCodeGenerator : public JSTreeContext
     }
 
     uintN sharpSlots() {
-        return hasSharps() ? 2 : 0;
+        return hasSharps() ? SHARP_NSLOTS : 0;
     }
 };
 
