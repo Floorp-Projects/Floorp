@@ -451,7 +451,7 @@
                onclick="BookmarksEventHandler.onClick(event);"
                oncommand="BookmarksEventHandler.onCommand(event);"
                onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"
-               tooltip="bhTooltip"/>
+               tooltip="bhTooltip" popupsinherittooltip="true"/>
       </toolbaritem>
 
         <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
