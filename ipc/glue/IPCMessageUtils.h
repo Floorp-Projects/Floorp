@@ -152,20 +152,29 @@ struct ParamTraits<nsTArray<E> >
       return false;
     }
 
-    // Check to make sure the message is valid before requesting a huge chunk
-    // of memory.
-    if (!aMsg->IteratorHasRoomFor(*aIter, length * sizeof(E))) {
-      return false;
-    }
-
-    if (!aResult->SetLength(length)) {
-      return false;
-    }
-
-    for (PRUint32 index = 0; index < length; index++) {
-      E& element = aResult->ElementAt(index);
-      if (!ReadParam(aMsg, aIter, &element)) {
+    // sizeof(E) only makes a limited amount of sense here as it may not have
+    // anything to do with the amount of data needed to serialize an object of
+    // type E. Neverheless trying to allocate a huge chunk of memory here if
+    // we receive a bad message must also be avoided and so we check before we
+    // call SetLength. If we don't have enough space in the message then we do
+    // individual allocations to be safe.
+    if (aMsg->IteratorHasRoomFor(*aIter, length * sizeof(E))) {
+      if (!aResult->SetLength(length)) {
         return false;
+      }
+      for (PRUint32 index = 0; index < length; index++) {
+        E& element = aResult->ElementAt(index);
+        if (!ReadParam(aMsg, aIter, &element)) {
+          return false;
+        }
+      }
+    }
+    else {
+      for (PRUint32 index = 0; index < length; index++) {
+        E* element = aResult->AppendElement();
+        if (!(element && ReadParam(aMsg, aIter, element))) {
+          return false;
+        }
       }
     }
 
