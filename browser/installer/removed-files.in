@@ -569,6 +569,10 @@ components/airbag.xpt
 components/nsUrlClassifierTable.js
 res/charsetalias.properties
 res/charsetData.properties
+res/os2charset.properties
+res/wincharset.properties
+res/maccharset.properties
+res/unixcharset.properties
 res/cmessage.txt
 res/html/gopher-audio.gif
 res/html/gopher-binary.gif

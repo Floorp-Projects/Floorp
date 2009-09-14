@@ -83,25 +83,17 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS			+= nsOS2Charset.cpp
-EXPORT_RESOURCE		+= os2charset.properties
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS			+= nsWinCharset.cpp
-EXPORT_RESOURCE		+= wincharset.properties
 else
 ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS			+= nsMacCharset.cpp
-EXPORT_RESOURCE		+= maccharset.properties
 else
 ifeq ($(OS_ARCH),BeOS)
 CPPSRCS			+= nsBeOSCharset.cpp
 else
 CPPSRCS			+= nsUNIXCharset.cpp
-EXPORT_RESOURCE		+= unixcharset.properties
-# add platform charset remapping properties files here if necessary
-# (see unixcharset.sample.properties for an example file)
-# eg: if we needed a charset remap for OSARCH=Linux then add the following line:
-#EXPORT_RESOURCE		+= unixcharset.Linux.properties
 endif
 endif
 endif
@@ -155,10 +147,3 @@ include $(topsrcdir)/config/rules.mk
 ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_XOPEN_SOURCE=500
 endif
-
-libs:: $(EXPORT_RESOURCE)
-	$(INSTALL) $^ $(DIST)/bin/res
-
-install:: $(EXPORT_RESOURCE)
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res 
-
