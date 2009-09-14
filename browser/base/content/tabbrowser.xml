@@ -1083,11 +1083,29 @@
         <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
+            var aRelatedToCurrent;
+            if (arguments.length == 2 &&
+                typeof arguments[1] == "object" &&
+                !(arguments[1] instanceof Ci.nsIURI)) {
+              let params = arguments[1];
+              aReferrerURI          = params.referrerURI;
+              aCharset              = params.charset;
+              aPostData             = params.postData;
+              aLoadInBackground     = params.inBackground;
+              aAllowThirdPartyFixup = params.allowThirdPartyFixup;
+              aRelatedToCurrent     = params.relatedToCurrent;
+            }
+
             var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
                          this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
             var owner = bgLoad ? null : this.selectedTab;
-            var tab = this.addTab(aURI, aReferrerURI, aCharset, aPostData, owner,
-                                  aAllowThirdPartyFixup);
+            var tab = this.addTab(aURI, {
+                                  referrerURI: aReferrerURI,
+                                  charset: aCharset,
+                                  postData: aPostData,
+                                  ownerTab: owner,
+                                  allowThirdPartyFixup: aAllowThirdPartyFixup,
+                                  relatedToCurrent: aRelatedToCurrent});
             if (!bgLoad)
               this.selectedTab = tab;
 
@@ -1156,6 +1174,19 @@
         <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
+            var aRelatedToCurrent;
+            if (arguments.length == 2 &&
+                typeof arguments[1] == "object" &&
+                !(arguments[1] instanceof Ci.nsIURI)) {
+              let params = arguments[1];
+              aReferrerURI          = params.referrerURI;
+              aCharset              = params.charset;
+              aPostData             = params.postData;
+              aOwner                = params.ownerTab;
+              aAllowThirdPartyFixup = params.allowThirdPartyFixup;
+              aRelatedToCurrent     = params.relatedToCurrent;
+            }
+
             this._browsers = null; // invalidate cache
 
             if (!this.mTabbedMode)
@@ -1300,7 +1331,8 @@
             // aReferrerURI is null or undefined if the tab is opened from
             // an external application or bookmark, i.e. somewhere other
             // than the current tab.
-            if (aReferrerURI && this.mPrefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) {
+            if ((aRelatedToCurrent == null ? aReferrerURI : aRelatedToCurrent) &&
+                this.mPrefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) {
               let newTabPos = (this._lastRelatedTab ||
                                this.selectedTab)._tPos + 1;
               this.moveTabTo(t, newTabPos);
