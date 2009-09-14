@@ -1823,6 +1823,12 @@ class GenerateProtocolActorHeader(Visitor):
             impl.addstmt(failif)
 
             if hasreply:
+                replyerror = cxx.ExprCall(
+                    cxx.ExprSelect(replyvar, '.', 'is_reply_error'))
+                failif2 = cxx.StmtIf(replyerror)
+                failif2.ifb.addstmt(cxx.StmtReturn(valueerrcode))
+                impl.addstmt(failif2)
+
                 # if this message has explicit actor returns, we need
                 # to convert them from Handle before returning to C++
                 for ret in md._cxx.returns:
