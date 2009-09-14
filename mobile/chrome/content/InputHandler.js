@@ -405,7 +405,6 @@ function MouseModule(owner, browserViewContainer) {
   this._clicker = null;
 
   this._downUpEvents = [];
-  this._downUpDispatchedIndex = 0;
   this._targetScrollInterface = null;
 
   var self = this;
@@ -488,7 +487,8 @@ MouseModule.prototype = {
       this._doDragStart(evInfo.event);
     }
 
-    this._recordEvent(evInfo);
+    if (this._targetIsContent(evInfo.event))
+      this._recordEvent(evInfo);
   },
 
   /**
@@ -510,14 +510,14 @@ MouseModule.prototype = {
     if (dragData.dragging)       // XXX same check as this._dragger but we
       this._doDragStop(sX, sY);  //  are using both, no good reason
 
-    this._recordEvent(evInfo);
 
     if (this._clicker)
       this._clicker.mouseUp(evInfo.event.clientX, evInfo.event.clientY);
 
-    let targetIsContent = this._targetIsContent(evInfo.event);
-    if (targetIsContent)
+    if (this._targetIsContent(evInfo.event)) {
+      this._recordEvent(evInfo);
       this._doClick(this._movedOutOfRadius);
+    }
     else if (this._dragger && this._movedOutOfRadius && evInfo.event.detail)
       this._owner.suppressNextClick();
 
@@ -555,69 +555,6 @@ MouseModule.prototype = {
       target = target.parentNode;
     }
     return false;
-  },
-
-  /**
-   * Record a mousedown/mouseup event for later redispatch via
-   * _redispatchDownUpEvents()
-   */
-  _recordEvent: function _recordEvent(evInfo) {
-    this._downUpEvents.push(evInfo);
-  },
-
-  /**
-   * Redispatch all pending (un-redispatched) recorded events to the Fennec
-   * global chrome window.
-   */
-  _redispatchDownUpEvents: function _redispatchDownUpEvents() {
-    let evQueue = this._downUpEvents;
-
-    this._owner.stopListening();
-
-    let len = evQueue.length;
-
-    for (let i = this._downUpDispatchedIndex; i < len; ++i)
-      this._redispatchChromeMouseEvent(evQueue[i].event);
-
-    this._downUpDispatchedIndex = len;
-
-    this._owner.startListening();
-  },
-
-  _skipAllDownUpEvents: function _skipAllDownUpEvents() {
-    this._downUpDispatchedIndex = this._downUpEvents.length;
-  },
-
-  /**
-   * Helper function to _redispatchDownUpEvents() that sends a single DOM mouse
-   * event to the Fennec global chrome window.
-   */
-  _redispatchChromeMouseEvent: function _redispatchChromeMouseEvent(aEvent) {
-    if (!(aEvent instanceof MouseEvent)) {
-      Cu.reportError("_redispatchChromeMouseEvent called with a non-mouse event");
-      return;
-    }
-
-    // we ignore the root scroll frame in this redispatch
-    Browser.windowUtils.sendMouseEvent(aEvent.type, aEvent.clientX, aEvent.clientY,
-                                       aEvent.button, aEvent.detail, 0, true);
-  },
-
-  /**
-   * Clear all recorded events.  This will *not* automagically redispatch any
-   * pending un-redispatched events.  If you desire to redispatch everything
-   * in the recorded events buffer, you should call _redispatchDownUpEvents()
-   * before calling _clearDownUpEvents().
-   *
-   * @param [optional] the number of events to remove from the front of the
-   * recorded events queue.
-   */
-  _clearDownUpEvents: function _clearDownUpEvents(howMany) {
-    if (howMany === undefined)
-      howMany = this._downUpEvents.length;
-
-    this._downUpEvents.splice(0, howMany);
-    this._downUpDispatchedIndex = Math.max(this._downUpDispatchedIndex - howMany, 0);
   },
 
   /**
@@ -686,27 +623,16 @@ MouseModule.prototype = {
   /**
    * Helper function to mouseup, called  at the point where a DOM click should
    * occur.  If movedOutOfRadius is true, then we don't call it an internal
-   * clicker-notifiable click.  In either case, we redispatch all pending
-   * recorded mousedown/mouseup events.
+   * clicker-notifiable click.  
    */
   _doClick: function _doClick(movedOutOfRadius) {
     let commitToClicker = this._clicker && !movedOutOfRadius;
-    let needToRedispatch = this._dragger && !movedOutOfRadius;
-
-    if (commitToClicker) {
+    if (commitToClicker)
       this._commitAnotherClick();  // commit this click to the doubleclick timewait buffer
-    }
-
-    if (needToRedispatch) {
-      this._redispatchDownUpEvents();
-    } else {
-      this._skipAllDownUpEvents();
-    }
-
-    if (!commitToClicker) {
+    else
       this._cleanClickBuffer();    // clean the click buffer ourselves, since there was no clicker
                                    // to commit to.  when there is one, the path taken through
-    }                              // _commitAndClick takes care of this.
+                                   // _commitAndClick takes care of this.
   },
 
   /**
@@ -761,6 +687,14 @@ MouseModule.prototype = {
   },
 
   /**
+   * Record a mousedown/mouseup event for later redispatch via
+   * _redispatchDownUpEvents()
+   */
+  _recordEvent: function _recordEvent(evInfo) {
+    this._downUpEvents.push(evInfo);
+  },
+
+  /**
    * Clean out the click buffer.  Should be called after a single, double, or
    * non-click has been processed and all relevant (re)dispatches of events in
    * the recorded down/up event queue have been issued out.
@@ -770,7 +704,11 @@ MouseModule.prototype = {
    */
   _cleanClickBuffer: function _cleanClickBuffer(howMany) {
     delete this._clickTimeout;
-    this._clearDownUpEvents(howMany);
+
+    if (howMany == undefined)
+      howMany = this._downUpEvents.length;
+
+    this._downUpEvents.splice(0, howMany);
   },
 
   /**
@@ -868,7 +806,6 @@ MouseModule.prototype = {
       + 'dragger=' + this._dragger + ', '
       + 'clicker=' + this._clicker + ', '
       + '\n\tdownUpEvents=' + this._downUpEvents + ', '
-      + '\n\tdownUpIndex=' + this._downUpDispatchedIndex + ', '
       + 'length=' + this._downUpEvents.length + ', '
       + '\n\ttargetScroller=' + this._targetScrollInterface + ', '
       + '\n\tclickTimeout=' + this._clickTimeout + '\n  }';
