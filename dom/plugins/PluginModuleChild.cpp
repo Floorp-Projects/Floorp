@@ -43,7 +43,6 @@
 #include <gtk/gtk.h>
 #endif
 
-#include "nsIFile.h"
 #include "nsILocalFile.h"
 
 #include "nsDebug.h"
@@ -52,9 +51,13 @@
 
 #include "mozilla/plugins/PluginInstanceChild.h"
 
-namespace mozilla {
-namespace plugins {
+using mozilla::ipc::NPRemoteIdentifier;
 
+using namespace mozilla::plugins;
+
+namespace {
+    PluginModuleChild* gInstance = nsnull;
+}
 
 PluginModuleChild::PluginModuleChild() :
     mLibrary(0),
@@ -65,15 +68,19 @@ PluginModuleChild::PluginModuleChild() :
 #endif
 //  ,mNextInstanceId(0)
 {
+    NS_ASSERTION(!gInstance, "Bad news bears!");
     memset(&mFunctions, 0, sizeof(mFunctions));
     memset(&mSavedData, 0, sizeof(mSavedData));
+    gInstance = this;
 }
 
 PluginModuleChild::~PluginModuleChild()
 {
+    NS_ASSERTION(gInstance == this, "Bad news bears!");
     if (mLibrary) {
         PR_UnloadLibrary(mLibrary);
     }
+    gInstance = nsnull;
 }
 
 bool
@@ -598,7 +605,15 @@ NPIdentifier NP_CALLBACK
 _getstringidentifier(const NPUTF8* aName)
 {
     _MOZ_LOG(__FUNCTION__);
-    return 0;
+    NS_ASSERTION(gInstance, "No instance!");
+
+    NPRemoteIdentifier ident;
+    nsresult rv =
+        gInstance->SendNPN_GetStringIdentifier(nsDependentCString(aName),
+                                               &ident);
+    NS_ENSURE_SUCCESS(rv, 0);
+
+    return (NPIdentifier)ident;
 }
 
 void NP_CALLBACK
@@ -607,34 +622,99 @@ _getstringidentifiers(const NPUTF8** aNames,
                       NPIdentifier* aIdentifiers)
 {
     _MOZ_LOG(__FUNCTION__);
+    NS_ASSERTION(gInstance, "No instance!");
+
+    if (!(aNames && aNameCount > 0 && aIdentifiers)) {
+        NS_RUNTIMEABORT("Bad input! Headed for a crash!");
+    }
+
+    nsAutoTArray<nsCString, 10> names;
+    nsAutoTArray<NPRemoteIdentifier, 10> ids;
+
+    PRBool ok = names.SetCapacity(aNameCount);
+    NS_WARN_IF_FALSE(ok, "Out of memory!");
+
+    if (ok) {
+        for (int32_t index = 0; index < aNameCount; index++) {
+            names.AppendElement(nsDependentCString(aNames[index]));
+        }
+        NS_ASSERTION(names.Length() == aNameCount, "Should equal here!");
+
+        nsresult rv = gInstance->SendNPN_GetStringIdentifiers(names, &ids);
+        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to send message!");
+
+        if (NS_SUCCEEDED(rv)) {
+            NS_ASSERTION(ids.Length() == aNameCount, "Bad length!");
+
+            for (int32_t index = 0; index < aNameCount; index++) {
+                aIdentifiers[index] = (NPIdentifier)ids[index];
+            }
+            return;
+        }
+    }
+
+    // Something must have failed above.
+    for (int32_t index = 0; index < aNameCount; index++) {
+        aIdentifiers[index] = 0;
+    }
 }
 
 bool NP_CALLBACK
 _identifierisstring(NPIdentifier aIdentifier)
 {
     _MOZ_LOG(__FUNCTION__);
-    return false;
+    NS_ASSERTION(gInstance, "No instance!");
+
+    bool isString;
+    nsresult rv =
+        gInstance->SendNPN_IdentifierIsString((NPRemoteIdentifier)aIdentifier,
+                                              &isString);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    return isString;
 }
 
 NPIdentifier NP_CALLBACK
 _getintidentifier(int32_t aIntId)
 {
     _MOZ_LOG(__FUNCTION__);
-    return 0;
+    NS_ASSERTION(gInstance, "No instance!");
+
+    NPRemoteIdentifier ident;
+    nsresult rv = gInstance->SendNPN_GetIntIdentifier(aIntId, &ident);
+    NS_ENSURE_SUCCESS(rv, 0);
+
+    return (NPIdentifier)ident;
 }
 
 NPUTF8* NP_CALLBACK
 _utf8fromidentifier(NPIdentifier aIdentifier)
 {
     _MOZ_LOG(__FUNCTION__);
-    return 0;
+    NS_ASSERTION(gInstance, "No instance!");
+
+    nsCAutoString val;
+    nsresult rv =
+        gInstance->SendNPN_UTF8FromIdentifier((NPRemoteIdentifier)aIdentifier,
+                                              &val);
+    NS_ENSURE_SUCCESS(rv, 0);
+
+    return val.IsVoid() ? 0 : strdup(val.get());
 }
 
 int32_t NP_CALLBACK
 _intfromidentifier(NPIdentifier aIdentifier)
 {
     _MOZ_LOG(__FUNCTION__);
-    return 0;
+    NS_ASSERTION(gInstance, "No instance!");
+
+    int32_t val;
+    nsresult rv =
+        gInstance->SendNPN_IntFromIdentifier((NPRemoteIdentifier)aIdentifier,
+                                             &val);
+    NS_ENSURE_SUCCESS(rv, 0);
+
+    return val;
 }
 
 NPObject* NP_CALLBACK
@@ -978,7 +1058,3 @@ PluginModuleChild::PPluginInstanceDestructor(PPluginInstanceChild* actor,
 
     return NS_OK;
 }
-
-
-} // namespace plugins
-} // namespace mozilla
