@@ -222,7 +222,8 @@ nsContextMenu.prototype = {
     this.showItem("context-viewsource", shouldShow);
     this.showItem("context-viewinfo", shouldShow);
 
-    this.showItem("context-sep-viewsource", shouldShow);
+    this.showItem("context-sep-properties",
+                  (shouldShow || this.isContentSelected));
 
     // Set as Desktop background depends on whether an image was clicked on,
     // and only works if we have a shell service.
@@ -260,18 +261,16 @@ nsContextMenu.prototype = {
   },
 
   initMiscItems: function CM_initMiscItems() {
-    var isTextSelected = this.isTextSelected;
-    
     // Use "Bookmark This Link" if on a link.
     this.showItem("context-bookmarkpage",
                   !(this.isContentSelected || this.onTextInput || this.onLink ||
                     this.onImage || this.onVideo || this.onAudio));
     this.showItem("context-bookmarklink", this.onLink && !this.onMailtoLink);
-    this.showItem("context-searchselect", isTextSelected);
+    this.showItem("context-searchselect", this.isTextSelected);
     this.showItem("context-keywordfield",
                   this.onTextInput && this.onKeywordField);
     this.showItem("frame", this.inFrame);
-    this.showItem("frame-sep", this.inFrame && isTextSelected);
+    this.showItem("frame-sep", this.inFrame);
 
     // Hide menu entries for images, show otherwise
     if (this.inFrame) {
