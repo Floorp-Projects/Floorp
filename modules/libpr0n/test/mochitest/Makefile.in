@@ -48,7 +48,6 @@ _TEST_FILES =   imgutils.js \
                 test_bug399925.html \
                 bug399925.gif \
                 schrep.png \
-                test_bug435296.html \
                 bug468160.sjs \
                 test_bug468160.html \
                 red.png \
@@ -58,6 +57,7 @@ _TEST_FILES =   imgutils.js \
                 test_bug490949.html \
                 bug490949-iframe.html \
                 bug490949.sjs \
+                test_bug496292.html \
                 bug496292-iframe-ref.html \
                 bug496292-iframe-1.html \
                 bug496292-iframe-2.html \
@@ -68,7 +68,7 @@ _TEST_FILES =   imgutils.js \
                 shaver.png \
 		$(NULL)
 
-#test_bug496292.html disabled until we re-enable decode-on-draw
+#test_bug435296.html disabled until we re-enable decode-on-draw
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
