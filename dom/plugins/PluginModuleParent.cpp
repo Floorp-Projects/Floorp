@@ -39,10 +39,15 @@
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/plugins/BrowserStreamParent.h"
 
+#include "nsNPAPIPlugin.h"
+
 using mozilla::SharedLibrary;
 
-namespace mozilla {
-namespace plugins {
+using mozilla::ipc::NPRemoteIdentifier;
+
+using namespace mozilla::plugins;
+
+PR_STATIC_ASSERT(sizeof(NPIdentifier) == sizeof(void*));
 
 // HACKS
 PluginModuleParent* PluginModuleParent::Shim::HACK_target;
@@ -67,6 +72,11 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath) :
     mSubprocess(aFilePath),
     ALLOW_THIS_IN_INITIALIZER_LIST(mShim(new Shim(this)))
 {
+#ifdef DEBUG
+    PRBool ok =
+#endif
+    mValidIdentifiers.Init();
+    NS_ASSERTION(ok, "Out of memory!");
 }
 
 PluginModuleParent::~PluginModuleParent()
@@ -230,10 +240,15 @@ PluginModuleParent::NPP_Destroy(NPP instance,
     return prv;
  }
 
-NPError
-PluginModuleParent::NPP_SetWindow(NPP instance, NPWindow* window)
+NPIdentifier
+PluginModuleParent::GetValidNPIdentifier(NPRemoteIdentifier aRemoteIdentifier)
 {
-    return InstCast(instance)->NPP_SetWindow(window);
+    NS_ASSERTION(mValidIdentifiers.IsInitialized(), "Not initialized!");
+    if (aRemoteIdentifier &&
+        mValidIdentifiers.GetEntry((NPIdentifier)aRemoteIdentifier)) {
+        return (NPIdentifier)aRemoteIdentifier;
+    }
+    return 0;
 }
 
 NPError
@@ -243,6 +258,12 @@ PluginModuleParent::NPP_NewStream(NPP instance, NPMIMEType type,
 {
     return InstCast(instance)->NPP_NewStream(type, stream, seekable,
                                              stype);
+}
+
+NPError
+PluginModuleParent::NPP_SetWindow(NPP instance, NPWindow* window)
+{
+     return InstCast(instance)->NPP_SetWindow(window);
 }
 
 NPError
@@ -315,42 +336,108 @@ nsresult
 PluginModuleParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
                                                 NPRemoteIdentifier* aId)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_ARG(!aString.IsVoid());
+
+    NPIdentifier ident = _getstringidentifier(aString.BeginReading());
+    NS_ENSURE_STATE(ident);
+
+    nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(ident);
+    NS_ENSURE_TRUE(newEntry, NS_ERROR_OUT_OF_MEMORY);
+
+    *aId = (NPRemoteIdentifier)ident;
+    return NS_OK;
 }
 
 nsresult
 PluginModuleParent::RecvNPN_GetIntIdentifier(const int32_t& aInt,
                                              NPRemoteIdentifier* aId)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NPIdentifier ident = _getintidentifier(aInt);
+    NS_ENSURE_STATE(ident);
+
+    nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(ident);
+    NS_ENSURE_TRUE(newEntry, NS_ERROR_OUT_OF_MEMORY);
+
+    *aId = (NPRemoteIdentifier)ident;
+    return NS_OK;
 }
 
 nsresult
 PluginModuleParent::RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
                                                nsCString* aString)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NPIdentifier ident = GetValidNPIdentifier(aId);
+    NS_ENSURE_ARG(ident);
+
+    NPUTF8* val = _utf8fromidentifier(ident);
+    NS_ENSURE_STATE(val);
+
+    aString->Assign(val);
+    return NS_OK;
 }
 
 nsresult
 PluginModuleParent::RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
                                               int32_t* aInt)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NPIdentifier ident = GetValidNPIdentifier(aId);
+    NS_ENSURE_ARG(ident);
+
+    *aInt = _intfromidentifier(ident);
+    return NS_OK;
 }
 
 nsresult
 PluginModuleParent::RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
                                                bool* aIsString)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NPIdentifier ident = GetValidNPIdentifier(aId);
+    NS_ENSURE_ARG(ident);
+
+    *aIsString = _identifierisstring(ident);
+    return NS_OK;
 }
 
 nsresult
-PluginModuleParent::RecvNPN_GetStringIdentifiers(nsTArray<nsCString>* aNames,
+PluginModuleParent::RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNames,
                                                  nsTArray<NPRemoteIdentifier>* aIds)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ASSERTION(aIds->IsEmpty(), "Non-empty array!");
+
+    PRUint32 count = aNames.Length();
+    NS_ENSURE_ARG_MIN(count, 1);
+
+    nsAutoTArray<NPUTF8*, 10> buffers;
+    PRBool ok = buffers.SetLength(count);
+    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+
+    nsAutoTArray<NPIdentifier, 10> ids;
+    ok = ids.SetLength(count);
+    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+
+    ok = aIds->SetCapacity(count);
+    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+
+    for (PRUint32 index = 0; index < count; index++) {
+        buffers[index] = const_cast<NPUTF8*>(aNames[index].BeginReading());
+        NS_ASSERTION(buffers[index], "Null pointer should be impossible!");
+    }
+
+    _getstringidentifiers(const_cast<const NPUTF8**>(buffers.Elements()),
+                          count, ids.Elements());
+
+    for (PRUint32 index = 0; index < count; index++) {
+        NPIdentifier& id = ids[index];
+
+        if (id) {
+            nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(id);
+            NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+        }
+
+        aIds->AppendElement((NPRemoteIdentifier)id);
+    }
+
+    return NS_OK;
 }
 
 PluginInstanceParent*
@@ -377,5 +464,3 @@ PluginModuleParent::StreamCast(NPP instance,
     return sp;
 }
 
-} // namespace plugins
-} // namespace mozilla

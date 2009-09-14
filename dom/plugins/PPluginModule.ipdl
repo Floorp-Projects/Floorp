@@ -83,9 +83,8 @@ parent:
   sync NPN_IdentifierIsString(NPRemoteIdentifier aId)
     returns (bool aIsString);
 
-  sync NPN_GetStringIdentifiers()
-    returns (nsTArray<nsCString> aNames,
-             nsTArray<NPRemoteIdentifier> aIds);
+  sync NPN_GetStringIdentifiers(nsTArray<nsCString> aNames)
+    returns (nsTArray<NPRemoteIdentifier> aIds);
 };
 
 } // namespace plugins

@@ -57,6 +57,8 @@
 #include "mozilla/plugins/PluginProcessParent.h"
 
 #include "nsAutoPtr.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 
 #undef _MOZ_LOG
 #define _MOZ_LOG(s) printf("[PluginModuleParent] %s\n", s)
@@ -125,7 +127,7 @@ public:
     RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
                                bool* aIsString);
     virtual nsresult
-    RecvNPN_GetStringIdentifiers(nsTArray<nsCString>* aNames,
+    RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNames,
                                  nsTArray<NPRemoteIdentifier>* aIds);
 
 private:
@@ -202,170 +204,8 @@ private:
     static NPError NPP_SetValue(NPP instance, NPNVariable variable,
                                 void *value);
 
-#if 0
-    // NPN-like API that IPC messages from the child process end up
-    // calling into.  We make the "real" calls back into Gecko from
-    // here, then wrap up the responses and send them back to the 
-    // child process.
 
-    NPIdentifier
-    NPN_GetIntIdentifier(int32_t aInt)
-    {
-        return mNPNIface->getintidentifier(aInt);
-    }
-
-    NPIdentifier
-    NPN_GetStringIdentifier(const NPUTF8* aName)
-    {
-        return mNPNIface->getstringidentifier(aName);
-    }
-
-    void
-    NPN_GetStringIdentifiers(const NPUTF8** aNames,
-                             int32_t aNamesCount,
-                             NPIdentifier* aIdentifiers)
-    {
-        return mNPNIface->getstringidentifiers(aNames,
-                                               aNamesCount,
-                                               aIdentifiers);
-    }
-
-    NPUTF8*
-    NPN_UTF8FromIdentifier(NPIdentifier aIdentifier)
-    {
-        return mNPNIface->utf8fromidentifier(aIdentifier);
-    }
-
-    int32_t
-    NPN_IntFromIdentifier(NPIdentifier aIdentifier)
-    {
-        return mNPNIface->intfromidentifier(aIdentifier);
-    }
-
-    // NPRuntime bindings from Gecko->child and child->Gecko.
-    static base::hash_map<int, PluginNPObject*> sNPObjects;
-    static int sNextNPObjectId = 0;
-
-    static NPObject*
-    ScriptableAllocate(NPP aNPP,
-                       NPClass* aClass)
-    {
-        PluginNPObject* obj = (PluginNPObject*)NPN_MemAlloc(sizeof(PluginNPObject));
-        if (obj) {
-            obj->objectId = sNextNPObjectId++;
-            obj->classId = -1;
-        }
-        sNPObjects[obj->objectId] = obj;
-        return obj;
-    }
-
-    static void
-    ScriptableDeallocate(NPObject* aNPObj)
-    {
-        PluginNPObject* obj = static_cast<PluginNPObject*>(aNPObj);
-        base::hash_map<int, PluginNPObject*>::iterator iter =
-            sNPObjects.find(obj->objectId);
-        if (iter != sNPObjects.end()) {
-            sNPObjects.erase(iter);
-        }
-        NPN_MemFree(obj);
-    }
-
-    static void
-    ScriptableInvalidate(NPObject* aNPObj)
-    {
-    }
-
-    static bool
-    ScriptableHasMethod(NPObject* aNPObj,
-                        NPIdentifier aName)
-    {
-        return false;
-    }
-
-    static bool
-    ScriptableInvoke(NPObject* aNPObj,
-                     NPIdentifier aName,
-                     const NPVariant* aArgs,
-                     uint32_t aArgsCount,
-                     NPVariant* aResult)
-    {
-        return false;
-    }
-
-    static bool
-    ScriptableInvokeDefault(NPObject* aNPObj,
-                            const NPVariant* aArgs,
-                            uint32_t aArgsCount,
-                            NPVariant* aResult)
-    {
-        return false;
-    }
-
-    static bool
-    ScriptableHasProperty(NPObject* aNPObj,
-                          NPIdentifier aName)
-    {
-        return false;
-    }
-
-    static bool
-    ScriptableGetProperty(NPObject* aNPObj,
-                          NPIdentifier aName,
-                          NPVariant* aResult)
-    {
-        return false;
-    }
-
-    static bool
-    ScriptableSetProperty(NPObject* aNPObj,
-                          NPIdentifier aName,
-                          const NPVariant* aValue)
-    {
-        return false;
-    }
-
-    static bool
-    ScriptableRemoveProperty(NPObject* aNPObj,
-                             NPIdentifier aName)
-    {
-        return false;
-    }
-
-    static bool
-    ScriptableEnumerate(NPObject* aNPObj,
-                        NPIdentifier** aIdentifier,
-                        uint32_t* aCount)
-    {
-        return false;
-    }
-
-    static bool
-    ScriptableConstruct(NPObject* aNPObj,
-                        const NPVariant* aArgs,
-                        uint32_t aArgsCount,
-                        NPVariant* aResult)
-    {
-        return false;
-    }
-
-    static NPClass sNPClass = {
-        NP_CLASS_STRUCT_VERSION,
-        ScriptableAllocate,
-        ScriptableDeallocate,
-        ScriptableInvalidate,
-        ScriptableHasMethod,
-        ScriptableInvoke,
-        ScriptableInvokeDefault,
-        ScriptableHasProperty,
-        ScriptableGetProperty,
-        ScriptableSetProperty,
-        ScriptableRemoveProperty,
-        ScriptableEnumerate,
-        ScriptableConstruct
-    };
-#endif
-
+    NPIdentifier GetValidNPIdentifier(NPRemoteIdentifier aRemoteIdentifier);
 
 private:
     const char* mFilePath;
@@ -373,14 +213,6 @@ private:
     const NPNetscapeFuncs* mNPNIface;
 
     // NPObject interface
-
-#if 0
-    struct PluginNPObject : NPObject
-    {
-        int objectId;
-        int classId;
-    };
-#endif
 
     /**
      * I look like a shared library, but return functions that trampoline
@@ -514,6 +346,8 @@ private:
 
     friend class Shim;
     Shim* mShim;
+
+    nsTHashtable<nsVoidPtrHashKey> mValidIdentifiers;
 };
 
 } // namespace plugins
