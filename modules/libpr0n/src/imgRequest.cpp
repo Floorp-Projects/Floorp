@@ -70,8 +70,8 @@
 #include "nsXPIDLString.h"
 #include "plstr.h" // PL_strcasestr(...)
 
-static PRBool gDecodeOnDraw = PR_TRUE;
-static PRBool gDiscardable = PR_TRUE;
+static PRBool gDecodeOnDraw = PR_FALSE;
+static PRBool gDiscardable = PR_FALSE;
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
