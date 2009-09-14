@@ -433,6 +433,11 @@
 @BINPATH@/res/entityTables/*
 #ifdef XP_MACOSX
 @BINPATH@/res/maccharset.properties
+@BINPATH@/res/MainMenu.nib/
+#elifdef XP_UNIX
+@BINPATH@/res/unixcharset.properties
+#elifdef XP_WIN32
+@BINPATH@/res/wincharset.properties
 #endif
 
 ; svg
