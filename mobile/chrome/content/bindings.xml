@@ -359,10 +359,17 @@
           let originalTarget = event.originalTarget;
           let target = originalTarget.parentNode;
           if (originalTarget == this._allBookmarksItem || target == this._allBookmarksItem) {
+            // XXX bug 516575
+            // select the item, since closing the popup can be slow...
+            // we should stop doing this when that isn't the case
+            this.selectedIndex = 0;
             this.close();
             CommandUpdater.doCommand("cmd_bookmarks");
           } else if (target.localName == "autocompleteresult" && target._empty != true) {
             let offset = this._allBookmarksItem._hidden ? 0 : 1;
+            // XXX bug 516575
+            // same as above - we can just set _selectedIndex directly to avoid
+            // styling the selected item when closing the popup is fast enough
             this.selectedIndex = target._index + offset;
             this.input.controller.handleEnter(true);
           } else {
