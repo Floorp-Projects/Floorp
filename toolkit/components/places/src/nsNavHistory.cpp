@@ -144,8 +144,7 @@ using namespace mozilla::places;
 #define PREF_FRECENCY_DEFAULT_VISIT_BONUS       "places.frecency.defaultVisitBonus"
 #define PREF_FRECENCY_UNVISITED_BOOKMARK_BONUS  "places.frecency.unvisitedBookmarkBonus"
 #define PREF_FRECENCY_UNVISITED_TYPED_BONUS     "places.frecency.unvisitedTypedBonus"
-
-#define PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC "places-autocomplete-feedback-updated"
+#define PREF_LAST_VACUUM                        "places.last_vacuum"
 
 // Default (integer) value of PREF_DB_CACHE_PERCENTAGE from 0-100
 // This is 6% of machine memory, giving 15MB for a user with 256MB of memory.
@@ -211,6 +210,16 @@ using namespace mozilla::places;
 // long, but we split only the last 6 months.
 #define DATE_CONT_NUM(_expireDays) \
   (ADDITIONAL_DATE_CONT_NUM + PR_MIN(6, (_expireDays/30)))
+
+// fraction of free pages in the database to force a vacuum between
+// MAX_TIME_BEFORE_VACUUM and MIN_TIME_BEFORE_VACUUM.
+#define VACUUM_FREEPAGES_THRESHOLD 0.1
+// This is the maximum time (in microseconds) that can pass between 2 VACUUM
+// operations.
+#define MAX_TIME_BEFORE_VACUUM (PRInt64)60 * 24 * 60 * 60 * 1000 * 1000
+// This is the minimum time (in microseconds) that should pass between 2 VACUUM
+// operations.
+#define MIN_TIME_BEFORE_VACUUM (PRInt64)30 * 24 * 60 * 60 * 1000 * 1000
 
 NS_IMPL_THREADSAFE_ADDREF(nsNavHistory)
 NS_IMPL_THREADSAFE_RELEASE(nsNavHistory)
@@ -468,7 +477,7 @@ nsNavHistory::Init()
   // Enqueue the notification, so if we init another service that requires
   // nsNavHistoryService we don't recursive try to get it.
   nsRefPtr<PlacesEvent> completeEvent =
-    new PlacesEvent(PLACES_INIT_COMPLETE_EVENT_TOPIC);
+    new PlacesEvent(PLACES_INIT_COMPLETE_TOPIC);
   rv = NS_DispatchToMainThread(completeEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -528,7 +537,7 @@ nsNavHistory::Init()
   // of the places infrastructure has been initialized.
   if (mDatabaseStatus == DATABASE_STATUS_CREATE ||
       mDatabaseStatus == DATABASE_STATUS_UPGRADED) {
-    (void)observerService->AddObserver(this, PLACES_INIT_COMPLETE_EVENT_TOPIC,
+    (void)observerService->AddObserver(this, PLACES_INIT_COMPLETE_TOPIC,
                                        PR_FALSE);
   }
 
@@ -606,7 +615,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
       // We can't do much at this point, so fire a locked event so that user is
       // notified that we can't ensure Places to work.
       nsRefPtr<PlacesEvent> lockedEvent =
-        new PlacesEvent(PLACES_DB_LOCKED_EVENT_TOPIC);
+        new PlacesEvent(PLACES_DB_LOCKED_TOPIC);
       (void)NS_DispatchToMainThread(lockedEvent);
     }
     NS_ENSURE_SUCCESS(rv, rv);
@@ -656,7 +665,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     // send out a notification and do not continue initialization.
     // Note: We swallow errors here, since we want service init to fail anyway.
     nsRefPtr<PlacesEvent> lockedEvent =
-      new PlacesEvent(PLACES_DB_LOCKED_EVENT_TOPIC);
+      new PlacesEvent(PLACES_DB_LOCKED_TOPIC);
     (void)NS_DispatchToMainThread(lockedEvent);
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -5528,7 +5537,7 @@ nsNavHistory::CommitPendingChanges()
     do_GetService("@mozilla.org/observer-service;1");
   NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
   nsCOMPtr<nsISimpleEnumerator> e;
-  nsresult rv = os->EnumerateObservers(PLACES_INIT_COMPLETE_EVENT_TOPIC,
+  nsresult rv = os->EnumerateObservers(PLACES_INIT_COMPLETE_TOPIC,
                                        getter_AddRefs(e));
   if (NS_SUCCEEDED(rv) && e) {
     nsCOMPtr<nsIObserver> observer;
@@ -5537,7 +5546,7 @@ nsNavHistory::CommitPendingChanges()
     {
       e->GetNext(getter_AddRefs(observer));
       rv = observer->Observe(observer,
-                             PLACES_INIT_COMPLETE_EVENT_TOPIC,
+                             PLACES_INIT_COMPLETE_TOPIC,
                              nsnull);
     }
   }
@@ -5642,58 +5651,22 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     // to errors or during normal shutdown process.
     NS_ENSURE_TRUE(mDBConn, NS_OK);
 
-    // Update frecency values
-    (void)FixInvalidFrecencies();
-
-    // Globally decay places frecency rankings to estimate reduced frecency
-    // values of pages that haven't been visited for a while, i.e., they do
-    // not get an updated frecency. We directly modify moz_places to avoid
-    // bringing the whole database into places_temp through places_view. A
-    // scaling factor of .975 results in .5 the original value after 28 days.
-    nsCOMPtr<mozIStorageStatement> decayFrecency;
-    nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_places SET frecency = ROUND(frecency * .975) "
-      "WHERE frecency > 0"),
-      getter_AddRefs(decayFrecency));
-    NS_ENSURE_SUCCESS(rv, NS_OK);
-
-    // Decay potentially unused adaptive entries (e.g. those that are at 1)
-    // to allow better chances for new entries that will start at 1
-    nsCOMPtr<mozIStorageStatement> decayAdaptive;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_inputhistory SET use_count = use_count * .975"),
-      getter_AddRefs(decayAdaptive));
-    NS_ENSURE_SUCCESS(rv, NS_OK);
-
-    // Delete any adaptive entries that won't help in ordering anymore
-    nsCOMPtr<mozIStorageStatement> deleteAdaptive;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_inputhistory WHERE use_count < .01"),
-      getter_AddRefs(deleteAdaptive));
-    NS_ENSURE_SUCCESS(rv, NS_OK);
-
-    nsCOMPtr<mozIStoragePendingStatement> ps;
-    mozIStorageStatement *stmts[] = {
-      decayFrecency,
-      decayAdaptive,
-      deleteAdaptive
-    };
-    rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), nsnull,
-                                getter_AddRefs(ps));
-    NS_ENSURE_SUCCESS(rv, NS_OK);
+    (void)DecayFrecency();
+    (void)VacuumDatabase();
   }
   else if (strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
     if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData)) {
       mInPrivateBrowsing = PR_TRUE;
-    } else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
+    }
+    else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
       mInPrivateBrowsing = PR_FALSE;
     }
   }
-  else if (strcmp(aTopic, PLACES_INIT_COMPLETE_EVENT_TOPIC) == 0) {
+  else if (strcmp(aTopic, PLACES_INIT_COMPLETE_TOPIC) == 0) {
     nsCOMPtr<nsIObserverService> os =
       do_GetService("@mozilla.org/observer-service;1");
     NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
-    (void)os->RemoveObserver(this, PLACES_INIT_COMPLETE_EVENT_TOPIC);
+    (void)os->RemoveObserver(this, PLACES_INIT_COMPLETE_TOPIC);
 
     // This code is only called if we've either imported or done a migration
     // from a pre-frecency build, so we will calculate all their frecencies.
@@ -5703,6 +5676,161 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
   return NS_OK;
 }
 
+NS_HIDDEN_(nsresult)
+nsNavHistory::VacuumDatabase()
+{
+  // SQLite cannot give us a real value for fragmentation percentage,
+  // we could analyze the database file page by page, and count fragmented
+  // space, but that would be slow and not maintainable across different SQLite
+  // versions.
+  // For this reason we just take a guess using the freelist count.
+  // This way we know how much pages are unused, but we don't know anything
+  // about fragmentation.
+  // This ratio is used in conjunction with a time pref to avoid vacuuming too
+  // often or too rarely.
+
+  PRInt32 lastVacuumPref;
+  PRInt64 lastVacuumTime = 0;
+  nsCOMPtr<nsIPrefBranch> prefSvc =
+    do_GetService("@mozilla.org/preferences-service;1");
+  NS_ENSURE_TRUE(prefSvc, NS_ERROR_OUT_OF_MEMORY);
+  if (NS_SUCCEEDED(prefSvc->GetIntPref(PREF_LAST_VACUUM, &lastVacuumPref))) {
+    // Value are seconds till epoch, convert it to microseconds.
+    lastVacuumTime = (PRInt64)lastVacuumPref * PR_USEC_PER_SEC;
+  }
+
+  nsresult rv;
+  float freePagesRatio = 0;
+  if (!lastVacuumTime ||
+      (lastVacuumTime < (PR_Now() - MIN_TIME_BEFORE_VACUUM) &&
+       lastVacuumTime > (PR_Now() - MAX_TIME_BEFORE_VACUUM))) {
+    // This is the first vacuum, or we are in the timeframe where vacuum could
+    // happen.  Calculate the vacuum ratio and vacuum if it is less then
+    // threshold.
+    nsCOMPtr<mozIStorageStatement> statement;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA page_count"),
+                                  getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool hasResult = PR_FALSE;
+    rv = statement->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(hasResult, NS_ERROR_FAILURE);
+    PRInt32 pageCount = statement->AsInt32(0);
+
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA freelist_count"),
+                                  getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    hasResult = PR_FALSE;
+    rv = statement->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(hasResult, NS_ERROR_FAILURE);
+    PRInt32 freelistCount = statement->AsInt32(0);
+
+    freePagesRatio = (float)(freelistCount / pageCount);
+  }
+  
+  if (freePagesRatio > VACUUM_FREEPAGES_THRESHOLD ||
+      lastVacuumTime < (PR_Now() - MAX_TIME_BEFORE_VACUUM)) {
+    // We vacuum in 2 cases:
+    //  - We are in the valid vacuum timeframe and vacuum ratio is high.
+    //  - Last vacuum has been executed a lot of time ago.
+
+    // Notify we are about to vacuum.  This is mostly for testability.
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService("@mozilla.org/observer-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = observerService->NotifyObservers(nsnull,
+                                          PLACES_VACUUM_STARTING_TOPIC,
+                                          nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Actually vacuuming a database is a slow operation, since it could take
+    // seconds.  Part of the time is spent in updating the journal file on disk
+    // and this is particularly bad on devices with slow I/O.  Temporary
+    // moving the journal to memory could increase a bit the possibility of
+    // corruption if we crash during this time, but makes the process really
+    // faster.
+    nsCOMPtr<mozIStorageStatement> journalToMemory;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+        "PRAGMA journal_mode = MEMORY"),
+      getter_AddRefs(journalToMemory));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<mozIStorageStatement> vacuum;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("VACUUM"),
+                                  getter_AddRefs(vacuum));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<mozIStorageStatement> journalToDefault;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+        "PRAGMA journal_mode = " DEFAULT_JOURNAL_MODE),
+      getter_AddRefs(journalToDefault));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mozIStorageStatement *stmts[] = {
+      journalToMemory,
+      vacuum,
+      journalToDefault
+    };
+    nsCOMPtr<mozIStoragePendingStatement> ps;
+    rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), nsnull,
+                               getter_AddRefs(ps));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = prefSvc->SetIntPref(PREF_LAST_VACUUM,
+                             (PRInt32)(PR_Now() / PR_USEC_PER_SEC));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+NS_HIDDEN_(nsresult)
+nsNavHistory::DecayFrecency()
+{
+  // Update frecency values.
+  nsresult rv = FixInvalidFrecencies();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Globally decay places frecency rankings to estimate reduced frecency
+  // values of pages that haven't been visited for a while, i.e., they do
+  // not get an updated frecency. We directly modify moz_places to avoid
+  // bringing the whole database into places_temp through places_view. A
+  // scaling factor of .975 results in .5 the original value after 28 days.
+  nsCOMPtr<mozIStorageStatement> decayFrecency;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_places SET frecency = ROUND(frecency * .975) "
+      "WHERE frecency > 0"),
+    getter_AddRefs(decayFrecency));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Decay potentially unused adaptive entries (e.g. those that are at 1)
+  // to allow better chances for new entries that will start at 1.
+  nsCOMPtr<mozIStorageStatement> decayAdaptive;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_inputhistory SET use_count = use_count * .975"),
+    getter_AddRefs(decayAdaptive));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Delete any adaptive entries that won't help in ordering anymore.
+  nsCOMPtr<mozIStorageStatement> deleteAdaptive;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_inputhistory WHERE use_count < .01"),
+    getter_AddRefs(deleteAdaptive));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mozIStorageStatement *stmts[] = {
+    decayFrecency,
+    decayAdaptive,
+    deleteAdaptive
+  };
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), nsnull,
+                             getter_AddRefs(ps));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
 
 // Lazy stuff ******************************************************************
 
