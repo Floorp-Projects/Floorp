@@ -930,11 +930,11 @@ var BookmarkList = {
 
   close: function() {
     BrowserUI.updateStar();
+    document.getElementById("tool-bookmarks-manage").checked = false;
 
     if (this._bookmarks.isEditing)
       this._bookmarks.stopEditing();
     this._bookmarks.blur();
-
     this._panel.hidden = true;
     BrowserUI.popDialog();
   },

@@ -310,7 +310,7 @@
 
     <box id="panel-container" hidden="true" class="panel-dark" top="0" left="0">
       <box id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
-        <toolbarbutton id="tool-panel-close" type="check" checked="true" class="page-button button-image" command="cmd_panel"/>
+        <toolbarbutton id="tool-panel-close" class="page-button button-image" command="cmd_panel"/>
         <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button button-image" linkedpanel="addons-container"/>
         <toolbarbutton id="tool-downloads" type="radio" group="1" class="panel-button button-image" linkedpanel="downloads-container"/>
         <toolbarbutton id="tool-preferences" type="radio" group="1" checked="true" class="panel-button button-image" linkedpanel="prefs-container"/>
@@ -434,10 +434,9 @@
     <vbox id="bookmarklist-container" class="panel-dark" hidden="true" top="0" left="0">
       <hbox id="bookmarklist-header">
         <description flex="1">&bookmarksHeader.label;</description>
-        <toolbarbutton id="tool-bookmarks-manage" class="urlbar-button show-text button-dark" type="check" autocheck="true" label="&bookmarksManage.label;"
-                       oncommand="BookmarkList.toggleManage();"/>
-        <toolbarbutton id="tool-bookmarks-close" class="urlbar-button button-image" type="check" checked="true"
-                       command="cmd_close"/>
+        <toolbarbutton id="tool-bookmarks-manage" class="urlbar-button show-text button-dark" type="checkbox" autocheck="true"
+                       label="&bookmarksManage.label;" oncommand="BookmarkList.toggleManage();"/>
+        <toolbarbutton id="tool-bookmarks-close" class="urlbar-button button-image" command="cmd_close"/>
       </hbox>
       <placelist id="bookmark-items" type="bookmarks" flex="1"
                  onmove="FolderPicker.show(this);"
@@ -447,8 +446,7 @@
     <vbox id="folder-container" class="panel-dark" hidden="true" top="0" left="0">
       <hbox id="folder-header">
         <description flex="1">&foldersHeader.label;</description>
-        <toolbarbutton id="tool-folders-close" class="urlbar-button button-image" type="check" checked="true"
-                       command="cmd_close"/>
+        <toolbarbutton id="tool-folders-close" class="urlbar-button button-image" command="cmd_close"/>
       </hbox>
       <placetree id="folder-items" type="bookmarks" mode="folders" flex="1" onselect="FolderPicker.moveItem();"/>
     </vbox>
