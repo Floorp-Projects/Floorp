@@ -267,7 +267,27 @@ nsDOMDataTransfer::GetFiles(nsIDOMFileList** aFileList)
 NS_IMETHODIMP
 nsDOMDataTransfer::GetTypes(nsIDOMDOMStringList** aTypes)
 {
-  return MozTypesAt(0, aTypes);
+  *aTypes = nsnull;
+
+  nsRefPtr<nsDOMStringList> types = new nsDOMStringList();
+  NS_ENSURE_TRUE(types, NS_ERROR_OUT_OF_MEMORY);
+
+  if (mItems.Length()) {
+    nsTArray<TransferItem>& item = mItems[0];
+    for (PRUint32 i = 0; i < item.Length(); i++)
+      types->Add(item[i].mFormat);
+
+    PRBool filePresent, filePromisePresent;
+    types->Contains(NS_LITERAL_STRING(kFileMime), &filePresent);
+    types->Contains(NS_LITERAL_STRING("application/x-moz-file-promise"), &filePromisePresent);
+    if (filePresent || filePromisePresent)
+      types->Add(NS_LITERAL_STRING("Files"));
+  }
+
+  *aTypes = types;
+  NS_ADDREF(*aTypes);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
