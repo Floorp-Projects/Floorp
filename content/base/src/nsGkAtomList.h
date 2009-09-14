@@ -732,6 +732,7 @@ GK_ATOM(popuplistener, "popuplistener")
 GK_ATOM(popupset, "popupset")
 GK_ATOM(popupshowing, "popupshowing")
 GK_ATOM(popupshown, "popupshown")
+GK_ATOM(popupsinherittooltip, "popupsinherittooltip")
 GK_ATOM(position, "position")
 #ifdef MOZ_MEDIA
 GK_ATOM(poster, "poster")
