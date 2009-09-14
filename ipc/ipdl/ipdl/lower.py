@@ -1773,11 +1773,10 @@ class GenerateProtocolActorHeader(Visitor):
                     uahvar = uahvars[i][1]
                     # if the union-type variable had an actor value and
                     # was unpacked, send the re-packed ActorHandle.
-                    # we rely on implicit conversion from ActorHandle
-                    # to the union type
+                    constructor = cxx.ExprCall(cxx.ExprVar(p.type.name), [uahvar])
                     msgctorargs.append(
-                        cxx.ExprConditional(wrvar, uahvar, pvar))
-                
+                        cxx.ExprConditional(wrvar, constructor, pvar))
+
             if md.decl.type.hasImplicitActorParam():
                 msgctorargs.append(ahvar)
                 
@@ -2253,8 +2252,9 @@ class GenerateProtocolActorHeader(Visitor):
                     else:
                         wrvar = wrdv[1]
                         uahvar = uahvars[i][1]
+                        constructor = cxx.ExprCall(cxx.ExprVar(r.type.name), [uahvar])
                         ctorparams.append(
-                            cxx.ExprConditional(wrvar, uahvar, rvar))
+                            cxx.ExprConditional(wrvar, constructor, rvar))
 
                 replymsgctor = cxx.ExprNew(cxx.Type(md._cxx.nsreplyid),
                                            args=ctorparams)
