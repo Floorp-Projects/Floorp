@@ -3748,7 +3748,8 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         if (sprop &&
             pobj == obj &&
             (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
-            sprop = OBJ_SCOPE(obj)->change(cx, sprop, attrs, sprop->attrs,
+            sprop = OBJ_SCOPE(obj)->change(cx, sprop, attrs,
+                                           JSPROP_GETTER | JSPROP_SETTER,
                                            (attrs & JSPROP_GETTER)
                                            ? getter
                                            : sprop->getter,
