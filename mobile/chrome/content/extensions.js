@@ -524,7 +524,7 @@ var ExtensionsView = {
     let end = this._repoItem;
 
     while (start != end) {
-      if (start.hasAttribute("updateable") && start.getAttribute("updateable") != "false")
+      if (start.getAttribute("updateable") != "false")
         items.push(this._extmgr.getItemForID(start.getAttribute("addonID")));
       start = start.nextSibling;
     }
