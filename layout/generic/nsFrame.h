@@ -118,13 +118,13 @@
 
 #define NS_DECL_FRAMEARENA_HELPERS                                \
   NS_MUST_OVERRIDE void* operator new(size_t, nsIPresShell*);     \
-  virtual NS_MUST_OVERRIDE size_t GetAllocatedSize();
+  virtual NS_MUST_OVERRIDE nsQueryFrame::FrameIID GetFrameId();
 
 #define NS_IMPL_FRAMEARENA_HELPERS(class)                         \
   void* class::operator new(size_t sz, nsIPresShell* aShell)      \
-  { return aShell->AllocateFrame(sz, nsQueryFrame::class##_id); } \
-  size_t class::GetAllocatedSize()                                \
-  { return sizeof(class); }
+  { return aShell->AllocateFrame(nsQueryFrame::class##_id, sz); } \
+  nsQueryFrame::FrameIID class::GetFrameId()                      \
+  { return nsQueryFrame::class##_id; }
 
 //----------------------------------------------------------------------
 
