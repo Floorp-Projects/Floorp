@@ -31,7 +31,7 @@
         </xul:vbox>
       </xul:hbox>
       <xul:hbox class="show-on-select buttons-box">
-        <xul:button anonid="options-button" class="addon-options" label="&addonOptions.label;"
+        <xul:button anonid="options-button" type="checkbox" class="addon-options" label="&addonOptions.label;"
                     oncommand="document.getBindingParent(this).toggleOptions();"/>
         <xul:spacer flex="1"/>
         <xul:button anonid="enable-button" class="show-on-disable hide-on-enable hide-on-uninstall addon-enable" label="&addonEnable.label;"
@@ -85,7 +85,9 @@
         <body>
           <![CDATA[
             let box = document.getAnonymousElementByAttribute(this, "anonid", "options-box");
+            let button = document.getAnonymousElementByAttribute(this, "anonid", "options-button");
             box.collapsed = !box.collapsed;
+            button.checked = !box.collapsed;
 
             if (box.hasChildNodes())
               return;
