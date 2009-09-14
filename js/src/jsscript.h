@@ -175,6 +175,9 @@ struct JSScript {
 #define JSSF_SAVED_CALLER_FUN   0x02    /* object 0 is caller function */
 #define JSSF_HAS_SHARPS         0x04    /* script uses sharp variables */
 
+#define SHARP_NSLOTS            2       /* [#array, #depth] slots if the script
+                                           uses sharp variables */
+
 static JS_INLINE uintN
 StackDepth(JSScript *script)
 {
