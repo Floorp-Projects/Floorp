@@ -1349,6 +1349,7 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar *send,
             intN j;
 
             bdr.base = base;
+            bdr.digit = 0;      // shut GCC up
             bdr.digitMask = 0;
             bdr.digits = start;
             bdr.end = s1;
