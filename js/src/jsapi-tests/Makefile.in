@@ -52,6 +52,7 @@ CPPSRCS = \
   testXDR.cpp \
   testIntString.cpp \
   testSameValue.cpp \
+  testDefineGetterSetterNonEnumerable.cpp \
   $(NULL)
 
 DEFINES         += -DEXPORT_JS_API
