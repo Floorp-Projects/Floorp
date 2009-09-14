@@ -1572,8 +1572,8 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
             jsval *sharps = &frame.slots[script->nfixed - SHARP_NSLOTS];
 
             if (down && down->script && (down->script->flags & JSSF_HAS_SHARPS)) {
-                JS_ASSERT(down->script->nfixed >= 2);
-                int base = down->fun
+                JS_ASSERT(down->script->nfixed >= SHARP_NSLOTS);
+                int base = (down->fun && !(down->flags & JSFRAME_SPECIAL))
                            ? down->fun->sharpSlotBase(cx)
                            : down->script->nfixed - SHARP_NSLOTS;
                 if (base < 0) {
