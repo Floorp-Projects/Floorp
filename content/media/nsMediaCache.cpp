@@ -159,6 +159,9 @@ public:
   // call QueueUpdate().
   void NoteBlockUsage(nsMediaCacheStream* aStream, PRInt32 aBlockIndex,
                       nsMediaCacheStream::ReadMode aMode, TimeStamp aNow);
+  // Mark aStream as having the block, adding it as an owner.
+  void AddBlockOwnerAsReadahead(PRInt32 aBlockIndex, nsMediaCacheStream* aStream,
+                                PRInt32 aStreamBlockIndex);
 
   // This queues a call to Update() on the main thread.
   void QueueUpdate();
@@ -838,6 +841,23 @@ nsMediaCache::RemoveBlockOwner(PRInt32 aBlockIndex, nsMediaCacheStream* aStream)
       return;
     }
   }
+}
+
+void
+nsMediaCache::AddBlockOwnerAsReadahead(PRInt32 aBlockIndex,
+                                       nsMediaCacheStream* aStream,
+                                       PRInt32 aStreamBlockIndex)
+{
+  Block* block = &mIndex[aBlockIndex];
+  if (block->mOwners.IsEmpty()) {
+    mFreeBlocks.RemoveBlock(aBlockIndex);
+  }
+  BlockOwner* bo = block->mOwners.AppendElement();
+  bo->mStream = aStream;
+  bo->mStreamBlock = aStreamBlockIndex;
+  aStream->mBlocks[aStreamBlockIndex] = aBlockIndex;
+  bo->mClass = READAHEAD_BLOCK;
+  InsertReadaheadBlock(bo, aBlockIndex);
 }
 
 void
@@ -1996,9 +2016,44 @@ nsMediaCacheStream::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
+  if (mInitialized)
+    return NS_OK;
+
   InitMediaCache();
   if (!gMediaCache)
     return NS_ERROR_FAILURE;
   gMediaCache->OpenStream(this);
+  mInitialized = PR_TRUE;
+  return NS_OK;
+}
+
+nsresult
+nsMediaCacheStream::InitAsClone(nsMediaCacheStream* aOriginal)
+{
+  if (mInitialized)
+    return NS_OK;
+
+  nsresult rv = Init();
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Grab cache blocks from aOriginal as readahead blocks for our stream
+  nsAutoMonitor mon(gMediaCache->Monitor());
+
+  mPrincipal = aOriginal->mPrincipal;
+  mStreamLength = aOriginal->mStreamLength;
+  mIsSeekable = aOriginal->mIsSeekable;
+
+  for (PRUint32 i = 0; i < aOriginal->mBlocks.Length(); ++i) {
+    PRInt32 cacheBlockIndex = aOriginal->mBlocks[i];
+    if (cacheBlockIndex < 0)
+      continue;
+
+    while (i >= mBlocks.Length()) {
+      mBlocks.AppendElement(-1);
+    }
+    gMediaCache->AddBlockOwnerAsReadahead(cacheBlockIndex, this, i);
+  }
+
   return NS_OK;
 }

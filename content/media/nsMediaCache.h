@@ -222,16 +222,23 @@ public:
   nsMediaCacheStream(nsMediaChannelStream* aClient)
     : mClient(aClient), mChannelOffset(0),
       mStreamOffset(0), mStreamLength(-1), mPlaybackBytesPerSecond(10000),
-      mPinCount(0), mCurrentMode(MODE_PLAYBACK), mClosed(PR_FALSE),
+      mPinCount(0), mCurrentMode(MODE_PLAYBACK),
+      mInitialized(PR_FALSE), mClosed(PR_FALSE),
       mIsSeekable(PR_FALSE), mCacheSuspended(PR_FALSE),
       mMetadataInPartialBlockBuffer(PR_FALSE),
       mUsingNullPrincipal(PR_FALSE) {}
   ~nsMediaCacheStream();
 
-  // Set up this stream with the cache. Can fail on OOM. Must be called
-  // before other methods on this object; no other methods may be called
-  // if this fails.
+  // Set up this stream with the cache. Can fail on OOM. One
+  // of InitAsClone or Init must be called before any other method on
+  // this class. Does nothing if already initialized.
   nsresult Init();
+
+  // Set up this stream with the cache, assuming it's for the same data
+  // as the aOriginal stream. Can fail on OOM. Exactly one
+  // of InitAsClone or Init must be called before any other method on
+  // this class. Does nothing if already initialized.
+  nsresult InitAsClone(nsMediaCacheStream* aOriginal);
 
   // These are called on the main thread.
   // Tell us whether the stream is seekable or not. Non-seekable streams
@@ -447,6 +454,8 @@ private:
   PRUint32          mPinCount;
   // The last reported read mode
   ReadMode          mCurrentMode;
+  // Set to true when Init or InitAsClone has been called
+  PRPackedBool      mInitialized;
   // Set to true when the stream has been closed either explicitly or
   // due to an internal cache error
   PRPackedBool      mClosed;
