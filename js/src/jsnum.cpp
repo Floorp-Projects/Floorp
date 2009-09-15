@@ -75,10 +75,6 @@
 
 
 #ifndef JS_HAVE_STDINT_H /* Native support is innocent until proven guilty. */
-#ifdef _MSC_VER /* Silence integer constant overflow warnings. */
-#pragma warning(push)
-#pragma warning(disable:4307)
-#endif
 
 JS_STATIC_ASSERT(uint8_t(-1) == UINT8_MAX);
 JS_STATIC_ASSERT(uint16_t(-1) == UINT16_MAX);
@@ -86,26 +82,23 @@ JS_STATIC_ASSERT(uint32_t(-1) == UINT32_MAX);
 JS_STATIC_ASSERT(uint64_t(-1) == UINT64_MAX);
 
 JS_STATIC_ASSERT(INT8_MAX > INT8_MIN);
-JS_STATIC_ASSERT(int8_t(INT8_MAX + 1) == INT8_MIN);
+JS_STATIC_ASSERT(uint8_t(INT8_MAX) + uint8_t(1) == uint8_t(INT8_MIN));
 JS_STATIC_ASSERT(INT16_MAX > INT16_MIN);
-JS_STATIC_ASSERT(int16_t(INT16_MAX + 1) == INT16_MIN);
+JS_STATIC_ASSERT(uint16_t(INT16_MAX) + uint16_t(1) == uint16_t(INT16_MIN));
 JS_STATIC_ASSERT(INT32_MAX > INT32_MIN);
-JS_STATIC_ASSERT(int32_t(INT32_MAX + 1) == INT32_MIN);
+JS_STATIC_ASSERT(uint32_t(INT32_MAX) + uint32_t(1) == uint32_t(INT32_MIN));
 JS_STATIC_ASSERT(INT64_MAX > INT64_MIN);
-JS_STATIC_ASSERT(int64_t(INT64_MAX + 1) == INT64_MIN);
+JS_STATIC_ASSERT(uint64_t(INT64_MAX) + uint64_t(1) == uint64_t(INT64_MIN));
 
 JS_STATIC_ASSERT(INTPTR_MAX > INTPTR_MIN);
-JS_STATIC_ASSERT(intptr_t(uintptr_t(INTPTR_MAX) + 1) == INTPTR_MIN);
+JS_STATIC_ASSERT(uintptr_t(INTPTR_MAX) + uintptr_t(1) == uintptr_t(INTPTR_MIN));
 JS_STATIC_ASSERT(uintptr_t(-1) == UINTPTR_MAX);
 JS_STATIC_ASSERT(size_t(-1) == SIZE_MAX);
 JS_STATIC_ASSERT(PTRDIFF_MAX > PTRDIFF_MIN);
 JS_STATIC_ASSERT(ptrdiff_t(PTRDIFF_MAX) == PTRDIFF_MAX);
 JS_STATIC_ASSERT(ptrdiff_t(PTRDIFF_MIN) == PTRDIFF_MIN);
-JS_STATIC_ASSERT(ptrdiff_t(PTRDIFF_MAX + 1) == PTRDIFF_MIN);
+JS_STATIC_ASSERT(uintptr_t(PTRDIFF_MAX) + uintptr_t(1) == uintptr_t(PTRDIFF_MIN));
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 #endif /* JS_HAVE_STDINT_H */
 
 static JSBool
