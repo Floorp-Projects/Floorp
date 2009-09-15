@@ -824,13 +824,6 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
 
   // Hook it up in the NSView hierarchy.
   if (mParentView) {
-    NSWindow* window = [mParentView window];
-    if (!window &&
-        [mParentView respondsToSelector:@selector(nativeWindow)])
-      window = [mParentView nativeWindow];
-
-    [mView setNativeWindow:window];
-
     [mParentView addSubview:mView];
   }
 
@@ -897,7 +890,7 @@ void nsChildView::TearDownView()
 nsCocoaWindow*
 nsChildView::GetXULWindowWidget()
 {
-  id windowDelegate = [[mView nativeWindow] delegate];
+  id windowDelegate = [[mView window] delegate];
   if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
     return [(WindowDelegate *)windowDelegate geckoWidget];
   }
@@ -982,7 +975,7 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       break;
 
     case NS_NATIVE_WINDOW:
-      retVal = [mView nativeWindow];
+      retVal = [mView window];
       break;
 
     case NS_NATIVE_GRAPHIC:
@@ -1040,7 +1033,7 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   BOOL isTransparent = aMode == eTransparencyTransparent;
-  BOOL currentTransparency = ![[mView nativeWindow] isOpaque];
+  BOOL currentTransparency = ![[mView window] isOpaque];
   if (isTransparent != currentTransparency) {
     nsCocoaWindow *widget = GetXULWindowWidget();
     if (widget) {
@@ -1097,7 +1090,7 @@ void nsChildView::UpdatePluginPort()
 {
   NS_ASSERTION(mIsPluginView, "UpdatePluginPort called on non-plugin view");
 
-  NSWindow* cocoaWindow = [mView nativeWindow];
+  NSWindow* cocoaWindow = [mView window];
 #if !defined(NP_NO_CARBON) || !defined(NP_NO_QUICKDRAW)
   WindowRef carbonWindow = cocoaWindow ? (WindowRef)[cocoaWindow windowRef] : NULL;
 #endif
@@ -1429,7 +1422,7 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
   NS_ASSERTION(mIsPluginView, "GetPluginClipRect must only be called on a plugin widget");
   if (!mIsPluginView) return NS_ERROR_FAILURE;
   
-  NSWindow* window = [mView nativeWindow];
+  NSWindow* window = [mView window];
   if (!window) return NS_ERROR_FAILURE;
   
   NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
@@ -1490,7 +1483,7 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   // See comments below about why. In 64-bit CoreGraphics mode we will not keep
   // this region up to date, plugins should not depend on it.
 #ifndef __LP64__
-  NSWindow* window = [mView nativeWindow];
+  NSWindow* window = [mView window];
   if (!window)
     return NS_ERROR_FAILURE;
 
@@ -2006,7 +1999,7 @@ nsIntPoint nsChildView::WidgetToScreenOffset()
   temp = [mView convertPoint:temp toView:nil];  
   
   // 2. We turn the window-coord rect's origin into screen (still bottom-left) coords.
-  temp = [[mView nativeWindow] convertBaseToScreen:temp];
+  temp = [[mView window] convertBaseToScreen:temp];
   
   // 3. Since we're dealing in bottom-left coords, we need to make it top-left coords
   //    before we pass it back to Gecko.
@@ -2315,7 +2308,6 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ((self = [super initWithFrame:inFrame])) {
-    mWindow = nil;
     mGeckoChild = inChild;
     mIsPluginView = NO;
 #ifndef NP_NO_CARBON
@@ -2403,7 +2395,6 @@ NSEvent* gLastDragEvent = nil;
 {
   nsTSMManager::OnDestroyView(self);
   mGeckoChild = nsnull;
-  mWindow = nil;
 
   // Just in case we're destroyed abruptly and missed the draggingExited
   // or performDragOperation message.
@@ -2414,30 +2405,6 @@ NSEvent* gLastDragEvent = nil;
 - (nsIWidget*) widget
 {
   return static_cast<nsIWidget*>(mGeckoChild);
-}
-
-// mozView method, get the window that this view is associated with
-- (NSWindow*)nativeWindow
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  NSWindow* currWin = [self window];
-  if (currWin)
-     return currWin;
-  else
-     return mWindow;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-// mozView method, set the NSWindow that this view is associated with (even when
-// not in the view hierarchy).
-- (void)setNativeWindow:(NSWindow*)aWindow
-{
-  mWindow = aWindow;
-  if (aWindow && [self isPluginView] && mGeckoChild) {
-    mGeckoChild->UpdatePluginPort();
-  }
 }
 
 - (void)systemMetricsChanged
@@ -2569,6 +2536,15 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+- (void)viewDidMoveToWindow
+{
+  if ([self window] && [self isPluginView] && mGeckoChild) {
+    mGeckoChild->UpdatePluginPort();
+  }
+
+  [super viewDidMoveToWindow];
+}
+
 // Needed to deal with the consequences of calling [NSCell
 // drawWithFrame:inView:] with a ChildView object as the inView parameter
 // (this can happen in nsNativeThemeCocoa.mm):  drawWithFrame:inView:
@@ -2628,14 +2604,15 @@ NSEvent* gLastDragEvent = nil;
 static const PRInt32 sShadowInvalidationInterval = 100;
 - (void)maybeInvalidateShadow
 {
-  if (!mWindow || [mWindow isOpaque] || ![mWindow hasShadow])
+  NSWindow* window = [self window];
+  if (!window || [window isOpaque] || ![window hasShadow])
     return;
 
   PRIntervalTime now = PR_IntervalNow();
   PRInt32 elapsed = PR_IntervalToMilliseconds(now - mLastShadowInvalidation);
   if (!mLastShadowInvalidation ||
       elapsed >= sShadowInvalidationInterval) {
-    [mWindow invalidateShadow];
+    [window invalidateShadow];
     mLastShadowInvalidation = now;
     mNeedsShadowInvalidation = NO;
   } else if (!mNeedsShadowInvalidation) {
@@ -2648,9 +2625,9 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
 - (void)invalidateShadow
 {
-  if (!mWindow || !mNeedsShadowInvalidation)
+  if (![self window] || !mNeedsShadowInvalidation)
     return;
-  [mWindow invalidateShadow];
+  [[self window] invalidateShadow];
   mNeedsShadowInvalidation = NO;
 }
 
@@ -2831,11 +2808,11 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  // Don't bother if we've been destroyed:  mWindow will now be nil, which
+  // Don't bother if we've been destroyed:  [self window] will now be nil, which
   // makes all our work here pointless, and can even cause us to resend the
-  // event to ourselves in an infinte loop (since targetWindow == mWindow no
+  // event to ourselves in an infinte loop (since targetWindow == [self window] no
   // longer tests whether targetWindow is us).
-  if (!mGeckoChild || !mWindow)
+  if (!mGeckoChild || ![self window])
     return YES;
 
   // Find the window that the event is over.
@@ -2863,7 +2840,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   // we don't return YES here.
   if (gRollupWidget) {
     NSWindow* rollupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-    if (mWindow == rollupWindow && [anEvent type] != NSMouseMoved)
+    if ([self window] == rollupWindow && [anEvent type] != NSMouseMoved)
       return YES;
 
     // If the event was not over any window, send it to the rollup window.
@@ -2873,7 +2850,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   // If there's no window that's more appropriate than our window then just return
   // yes so we handle it. No need to redirect.
-  if (!targetWindow || targetWindow == mWindow)
+  if (!targetWindow || targetWindow == [self window])
     return YES;
 
   // Send the event to its new destination.
@@ -3399,7 +3376,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!mWindow)
+  if (![self window])
     return;
 
   // Work around an Apple bug that causes the OS to continue sending
@@ -3412,7 +3389,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if ([[self window] isMiniaturized])
     return;
 
-  NSPoint windowEventLocation = nsCocoaUtils::EventLocationForWindow(theEvent, mWindow);
+  NSPoint windowEventLocation = nsCocoaUtils::EventLocationForWindow(theEvent, [self window]);
   NSPoint viewEventLocation = [self convertPoint:windowEventLocation fromView:nil];
 
   // Installing a mouseMoved handler on the EventMonitor target (in
@@ -3443,7 +3420,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
 
-  NSView* view = [[mWindow contentView] hitTest:windowEventLocation];
+  NSView* view = [[[self window] contentView] hitTest:windowEventLocation];
   if (view) {
     // we shouldn't handle this if the hit view is not us
     if (view != (NSView*)self) {
@@ -4337,7 +4314,7 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
   [self convertGenericCocoaEvent:aMouseEvent toGeckoEvent:outGeckoEvent];
 
   // convert point to view coordinate system
-  NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(aMouseEvent, mWindow);
+  NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(aMouseEvent, [self window]);
   NSPoint localPoint = [self convertPoint:locationInWindow fromView:nil];
   outGeckoEvent->refPoint.x = static_cast<nscoord>(localPoint.x);
   outGeckoEvent->refPoint.y = static_cast<nscoord>(localPoint.y);
