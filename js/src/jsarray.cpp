@@ -1228,7 +1228,7 @@ array_trace(JSTracer *trc, JSObject *obj)
 
 extern JSObjectOps js_ArrayObjectOps;
 
-static const JSObjectMap SharedArrayMap = { &js_ArrayObjectOps };
+static const JSObjectMap SharedArrayMap(&js_ArrayObjectOps, JSObjectMap::SHAPELESS);
 
 JSObjectOps js_ArrayObjectOps = {
     &SharedArrayMap,
@@ -1341,7 +1341,7 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
     obj->classword ^= (jsuword) &js_ArrayClass;
     obj->classword |= (jsuword) &js_SlowArrayClass;
 
-    obj->map = &scope->map;
+    obj->map = scope;
     return JS_TRUE;
 
   out_bad:

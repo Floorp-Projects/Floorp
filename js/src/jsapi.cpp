@@ -642,7 +642,7 @@ JS_TypeOfValue(JSContext *cx, jsval v)
 {
     JSType type;
     JSObject *obj;
-    JSObjectOps *ops;
+    const JSObjectOps *ops;
     JSClass *clasp;
 
     CHECK_REQUEST(cx);
