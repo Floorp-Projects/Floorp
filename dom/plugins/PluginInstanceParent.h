@@ -68,12 +68,7 @@ public:
     virtual ~PluginInstanceParent()
     {
     }
-
-    virtual nsresult AnswerNPN_GetValue(const nsString& in, nsString* out)
-    {
-        return NS_OK;
-    }
-
+  
     virtual PPluginScriptableObjectParent*
     PPluginScriptableObjectConstructor(NPError* _retval);
 
@@ -101,6 +96,21 @@ public:
     PBrowserStreamDestructor(PBrowserStreamParent* stream,
                              const NPError& reason,
                              const bool& artificial);
+
+    virtual nsresult
+    AnswerNPN_GetValue_NPNVjavascriptEnabledBool(bool* value, NPError* result);
+    virtual nsresult
+    AnswerNPN_GetValue_NPNVisOfflineBool(bool* value, NPError* result);
+    virtual nsresult
+    AnswerNPN_GetValue_NPNVWindowNPObject(
+                                       PPluginScriptableObjectParent** value,
+                                       NPError* result);
+    virtual nsresult
+    AnswerNPN_GetValue_NPNVPluginElementNPObject(
+                                       PPluginScriptableObjectParent** value,
+                                       NPError* result);
+    virtual nsresult
+    AnswerNPN_GetValue_NPNVprivateModeBool(bool* value, NPError* result);
 
     virtual nsresult
     AnswerNPN_GetURL(const nsCString& url, const nsCString& target,
