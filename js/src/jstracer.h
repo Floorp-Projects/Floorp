@@ -44,12 +44,12 @@
 
 #ifdef JS_TRACER
 
-#include "jscntxt.h"
 #include "jstypes.h"
+#include "jsbuiltins.h"
+#include "jscntxt.h"
+#include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
-#include "jsinterp.h"
-#include "jsbuiltins.h"
 
 #if defined(DEBUG) && !defined(JS_JIT_SPEW)
 #define JS_JIT_SPEW
@@ -835,10 +835,8 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus unary(nanojit::LOpcode op);
     JS_REQUIRES_STACK JSRecordingStatus binary(nanojit::LOpcode op);
 
-    bool ibinary(nanojit::LOpcode op);
-    bool iunary(nanojit::LOpcode op);
-    bool bbinary(nanojit::LOpcode op);
-    void demote(jsval& v, jsdouble result);
+    void guardShape(nanojit::LIns* obj_ins, JSObject* obj, uint32 shape, const char* guardName,
+                    nanojit::LIns* map_ins, VMSideExit* exit);
 
     inline nanojit::LIns* map(nanojit::LIns *obj_ins);
     JS_REQUIRES_STACK bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins,
@@ -928,6 +926,8 @@ class TraceRecorder : public avmplus::GCObject {
                                       VMSideExit* exit);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
                                            ExitType exitType = MISMATCH_EXIT);
+    JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
+                                           VMSideExit* exit);
     JS_REQUIRES_STACK bool guardHasPrototype(JSObject* obj, nanojit::LIns* obj_ins,
                                              JSObject** pobj, nanojit::LIns** pobj_ins,
                                              VMSideExit* exit);

@@ -1845,16 +1845,16 @@ TraceRecorder::~TraceRecorder()
 {
     JS_ASSERT(nextRecorderToAbort == NULL);
     JS_ASSERT(treeInfo && (fragment || wasDeepAborted()));
+
 #ifdef DEBUG
     TraceRecorder* tr = JS_TRACE_MONITOR(cx).abortStack;
-    while (tr != NULL)
-    {
+    while (tr) {
         JS_ASSERT(this != tr);
         tr = tr->nextRecorderToAbort;
     }
 #endif
-    if (fragment) {
 
+    if (fragment) {
         if (trashSelf)
             TrashTree(cx, fragment->root);
 
@@ -2196,9 +2196,10 @@ JSTraceMonitor::mark(JSTracer* trc)
                 f = f->next;
             }
         }
-    } else {
-        flush();
+        return;
     }
+
+    flush();
 }
 
 /*
@@ -6492,21 +6493,23 @@ js_arm_check_vfp() {
  * http://msdn.microsoft.com/en-us/library/ms924252.aspx
  */
 static void
-js_disable_debugger_exceptions() {
+js_disable_debugger_exceptions()
+{
     // 2 == TLSSLOT_KERNEL
     DWORD kctrl = (DWORD) TlsGetValue(2);
     // 0x12 = TLSKERN_NOFAULT | TLSKERN_NOFAULTMSG
     kctrl |= 0x12;
-    TlsSetValue(2, (LPVOID) kctrl); 
+    TlsSetValue(2, (LPVOID) kctrl);
 }
 
 static void
-js_enable_debugger_exceptions() {
+js_enable_debugger_exceptions()
+{
     // 2 == TLSSLOT_KERNEL
     DWORD kctrl = (DWORD) TlsGetValue(2);
     // 0x12 = TLSKERN_NOFAULT | TLSKERN_NOFAULTMSG
     kctrl &= ~0x12;
-    TlsSetValue(2, (LPVOID) kctrl); 
+    TlsSetValue(2, (LPVOID) kctrl);
 }
 
 #elif defined(__GNUC__) && defined(AVMPLUS_LINUX)
@@ -6814,8 +6817,8 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
 
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
-        for (VMFragment **f = &(tm->vmfragments[i]); *f; ) {
-            VMFragment* frag = *f;
+        VMFragment** fragp = &tm->vmfragments[i];
+        while (VMFragment* frag = *fragp) {
             if (JS_UPTRDIFF(frag->ip, script->code) < script->length) {
                 /* This fragment is associated with the script. */
                 debug_only_printf(LC_TMTracer,
@@ -6825,17 +6828,17 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
                                   script->code + script->length);
 
                 JS_ASSERT(frag->root == frag);
-                VMFragment* next = frag->next;
-                for (VMFragment *p = frag; p; p = p->peer)
-                    TrashTree(cx, p);
-                *f = next;
-            } else {
-                f = &((*f)->next);
+                *fragp = frag->next;
+                do {
+                    TrashTree(cx, frag);
+                } while ((frag = frag->peer) != NULL);
+                continue;
             }
+            fragp = &frag->next;
         }
     }
 
-    JS_DHashTableEnumerate(&(tm->recordAttempts), PurgeScriptRecordingAttempts, script);
+    JS_DHashTableEnumerate(&tm->recordAttempts, PurgeScriptRecordingAttempts, script);
 }
 
 bool
@@ -7029,7 +7032,7 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult&
  * Generate LIR to access a property of a Call object.
  */
 JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp, 
+TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
                         LIns*& ins, NameResult& nr)
 {
     JSScopeProperty *sprop = (JSScopeProperty*) prop;
@@ -8060,6 +8063,16 @@ TraceRecorder::binary(LOpcode op)
     return JSRS_STOP;
 }
 
+void
+TraceRecorder::guardShape(LIns* obj_ins, JSObject* obj, uint32 shape, const char* guardName,
+                          LIns* map_ins, VMSideExit* exit)
+{
+    LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
+    guard(true,
+          addName(lir->ins2i(LIR_eq, shape_ins, shape), guardName),
+          exit);
+}
+
 JS_STATIC_ASSERT(offsetof(JSObjectOps, objectMap) == 0);
 
 inline LIns*
@@ -8080,8 +8093,8 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, si
         return false;
 #undef OP
 
-    ops_ins = addName(lir->insLoad(LIR_ldp, map_ins, int(offsetof(JSObjectMap, ops))), "ops");
-    LIns* n = lir->insLoad(LIR_ldp, ops_ins, op_offset);
+    ops_ins = addName(lir->insLoad(LIR_ldcp, map_ins, int(offsetof(JSObjectMap, ops))), "ops");
+    LIns* n = lir->insLoad(LIR_ldcp, ops_ins, op_offset);
     guard(true,
           addName(lir->ins2(LIR_peq, n, INS_CONSTPTR(ptr)), "guard(native-map)"),
           BRANCH_EXIT);
@@ -8229,13 +8242,8 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
     // Check for first-level cache hit and guard on kshape if possible.
     // Otherwise guard on key object exact match.
     if (PCVCAP_TAG(entry->vcap) <= 1) {
-        if (aobj != globalObj) {
-            LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
-                                      "shape");
-            guard(true,
-                  addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard_kshape"),
-                  exit);
-        }
+        if (aobj != globalObj)
+            guardShape(obj_ins, aobj, entry->kshape, "guard_kshape", map_ins, exit);
 
         if (entry->adding()) {
             if (aobj == globalObj)
@@ -8243,7 +8251,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
 
             LIns *vshape_ins = addName(
                 lir->insLoad(LIR_ld,
-                             addName(lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, runtime)),
+                             addName(lir->insLoad(LIR_ldcp, cx_ins, offsetof(JSContext, runtime)),
                                      "runtime"),
                              offsetof(JSRuntime, protoHazardShape)),
                 "protoHazardShape");
@@ -8284,16 +8292,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
         } else {
             obj2_ins = INS_CONSTOBJ(obj2);
         }
-        map_ins = map(obj2_ins);
-        LIns* ops_ins;
-        if (!map_is_native(obj2->map, map_ins, ops_ins))
-            ABORT_TRACE("non-native map");
-
-        LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
-                                  "obj2_shape");
-        guard(true,
-              addName(lir->ins2i(LIR_eq, shape_ins, vshape), "guard_vshape"),
-              exit);
+        guardShape(obj2_ins, obj2, vshape, "guard_vshape", map(obj2_ins), exit);
     }
 
     pcval = entry->vword;
@@ -8405,10 +8404,16 @@ TraceRecorder::unbox_jsval(jsval v, LIns* v_ins, VMSideExit* exit)
                             lir->ins2(LIR_piand, v_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                             INS_CONSTWORD(JSVAL_OBJECT)),
                   exit);
+
+            /*
+             * LIR_ldcp is ok to use here even though Array classword can
+             * change, because no object's classword can ever change from
+             * &js_ArrayClass to &js_FunctionClass.
+             */
             guard(HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v)),
                   lir->ins2(LIR_peq,
                             lir->ins2(LIR_piand,
-                                      lir->insLoad(LIR_ldp, v_ins, offsetof(JSObject, classword)),
+                                      lir->insLoad(LIR_ldcp, v_ins, offsetof(JSObject, classword)),
                                       INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS)),
                             INS_CONSTPTR(&js_FunctionClass)),
                   exit);
@@ -8561,6 +8566,12 @@ TraceRecorder::guardDenseArray(JSObject* obj, LIns* obj_ins, ExitType exitType)
 }
 
 JS_REQUIRES_STACK bool
+TraceRecorder::guardDenseArray(JSObject* obj, LIns* obj_ins, VMSideExit* exit)
+{
+    return guardClass(obj, obj_ins, &js_ArrayClass, exit);
+}
+
+JS_REQUIRES_STACK bool
 TraceRecorder::guardHasPrototype(JSObject* obj, LIns* obj_ins,
                                  JSObject** pobj, LIns** pobj_ins,
                                  VMSideExit* exit)
@@ -8585,18 +8596,8 @@ TraceRecorder::guardPrototypeHasNoIndexedProperties(JSObject* obj, LIns* obj_ins
     if (js_PrototypeHasIndexedProperties(cx, obj))
         return JSRS_STOP;
 
-    while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit)) {
-        LIns* map_ins = map(obj_ins);
-        LIns* ops_ins;
-        if (!map_is_native(obj->map, map_ins, ops_ins))
-            ABORT_TRACE("non-native object involved along prototype chain");
-
-        LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
-                                  "shape");
-        guard(true,
-              addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SHAPE(obj)), "guard(shape)"),
-              exit);
-    }
+    while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit))
+        guardShape(obj_ins, obj, OBJ_SHAPE(obj), "guard(shape)", map(obj_ins), exit);
     return JSRS_CONTINUE;
 }
 
@@ -11337,13 +11338,10 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
             LIns* map_ins = map(obj_ins);
             LIns* ops_ins;
             if (map_is_native(obj->map, map_ins, ops_ins)) {
-                LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
-                                          "shape");
-                guard(true,
-                      addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SHAPE(obj)), "guard(shape)"),
-                      exit);
-            } else if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT))
+                guardShape(obj_ins, obj, OBJ_SHAPE(obj), "guard(shape)", map_ins, exit);
+            } else if (!guardDenseArray(obj, obj_ins, exit)) {
                 ABORT_TRACE("non-native object involved in undefined property access");
+            }
         } while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit));
 
         set(outp, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID)), true);

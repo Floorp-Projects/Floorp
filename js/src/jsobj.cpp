@@ -2124,12 +2124,12 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* o
             goto bad;
         }
     }
-    obj->map = &scope->map;
+    obj->map = scope;
     return true;
 
   bad:
-    /* Ensure that the map field is initialized for GC. */
-    obj->map = NULL;
+    /* The GC nulls map initially. It should still be null on error. */
+    JS_ASSERT(!obj->map);
     return false;
 }
 
@@ -2613,7 +2613,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     JSScope *scope = OBJ_SCOPE(proto);
     scope->hold();
     JS_ASSERT(!scope->owned());
-    clone->map = &scope->map;
+    clone->map = scope;
 
     clone->classword = jsuword(&js_BlockClass);
     clone->setProto(proto);
@@ -3220,10 +3220,10 @@ js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 
     JSScope *scope = OBJ_SCOPE(proto)->getEmptyScope(cx, clasp);
     if (!scope) {
-        obj->map = NULL;
+        JS_ASSERT(!obj->map);
         return NULL;
     }
-    obj->map = &scope->map;
+    obj->map = scope;
     obj->init(clasp, proto, proto->getParent(), privateSlotValue);
     return obj;
 }

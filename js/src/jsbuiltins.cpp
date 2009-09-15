@@ -395,11 +395,11 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
 
     JSScope *scope = OBJ_SCOPE(proto)->getEmptyScope(cx, &js_FunctionClass);
     if (!scope) {
-        closure->map = NULL;
+        JS_ASSERT(!closure->map);
         return NULL;
     }
 
-    closure->map = &scope->map;
+    closure->map = scope;
     closure->init(&js_FunctionClass, proto, parent,
                   reinterpret_cast<jsval>(fun));
     return closure;

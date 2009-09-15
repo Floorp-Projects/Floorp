@@ -41,6 +41,7 @@
 /*
  * JS symbol tables.
  */
+#include <new>
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
@@ -58,7 +59,7 @@
 #include "jsnum.h"
 #include "jsscope.h"
 #include "jsstr.h"
-#include "jsarray.h"
+#include "jstracer.h"
 
 uint32
 js_GenerateShape(JSContext *cx, bool gcLocked)
@@ -100,11 +101,11 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
      * birth, and runtime clone of a block objects are never mutated.
      */
     JS_ASSERT(STOBJ_GET_CLASS(obj) != &js_BlockClass);
-    newscope = JSScope::create(cx, scope->map.ops, obj->getClass(), obj, scope->shape);
+    newscope = JSScope::create(cx, scope->ops, obj->getClass(), obj, scope->shape);
     if (!newscope)
         return NULL;
     JS_LOCK_SCOPE(cx, newscope);
-    obj->map = &newscope->map;
+    obj->map = newscope;
 
     JS_ASSERT(newscope->freeslot == JSSLOT_FREE(STOBJ_GET_CLASS(obj)));
     clasp = STOBJ_GET_CLASS(obj);
@@ -184,17 +185,16 @@ JSScope::createTable(JSContext *cx, bool report)
 }
 
 JSScope *
-JSScope::create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj, uint32 shape)
+JSScope::create(JSContext *cx, const JSObjectOps *ops, JSClass *clasp,
+                JSObject *obj, uint32 shape)
 {
     JS_ASSERT(OPS_IS_NATIVE(ops));
     JS_ASSERT(obj);
 
-    JSScope *scope = (JSScope *) cx->malloc(sizeof(JSScope));
+    JSScope *scope = cx->create<JSScope>(ops, obj);
     if (!scope)
         return NULL;
 
-    scope->map.ops = ops;
-    scope->object = obj;
     scope->nrefs = 1;
     scope->freeslot = JSSLOT_FREE(clasp);
     scope->flags = cx->runtime->gcRegenShapesScopeFlag;
@@ -214,12 +214,9 @@ JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
 {
     JS_ASSERT(!emptyScope);
 
-    JSScope *scope = (JSScope *) cx->malloc(sizeof(JSScope));
+    JSScope *scope = cx->create<JSScope>(ops);
     if (!scope)
         return NULL;
-
-    scope->map.ops = map.ops;
-    scope->object = NULL;
 
     /*
      * This scope holds a reference to the new empty scope. Our only caller,

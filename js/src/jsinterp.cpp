@@ -1113,7 +1113,7 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
     JSObject *funobj, *parent;
     JSBool ok;
     JSClass *clasp;
-    JSObjectOps *ops;
+    const JSObjectOps *ops;
     JSNative native;
     JSFunction *fun;
     JSScript *script;
