@@ -1678,29 +1678,27 @@ class GenerateProtocolActorHeader(Visitor):
             # special case for IPDL union types: if a union
             # contains an actor type, we secretly convert
             # it into a serializable representation
-            uahvars = [ ]
             wasrepackedvars = [ ]
-            ruid = 0
+            newunionvars = [ ]
+            ruid = 1
             switches = [ ]
             for p in md._cxx.params:
                 if (p.type._union is None
                     or not p.type._union.hasActor):
-                    uahvars.append(None)
                     wasrepackedvars.append(None)
                     continue
 
                 pvar = cxx.ExprVar(p.name)
                 u = p.type._union
 
-                uahdecl = cxx.StmtDecl(cxx.Decl(
-                    cxx.Type('mozilla::ipc::ActorHandle'),
-                    '__uah'+ str(ruid)))
-                uahvar = cxx.ExprVar('__uah'+ str(ruid))
-                uahvars.append( (uahdecl, uahvar) )
+                newunionvar = cxx.ExprVar('__repacked_' + str(ruid))
+                newuniondecl = cxx.StmtDecl(cxx.Decl(p.type, newunionvar.name))
+                newunionvars.append( (newuniondecl, newunionvar) )
 
                 wrvar = cxx.ExprVar('__wr_'+ str(ruid))
                 wrdecl = cxx.StmtDecl(cxx.Decl(cxx.Type('bool'), wrvar.name))
                 wasrepackedvars.append( (wrdecl, wrvar) )
+
                 ruid += 1
                 # if the union currently stores an actor, unpack the
                 # pointer and repack it as an ActorHandle
@@ -1712,6 +1710,12 @@ class GenerateProtocolActorHeader(Visitor):
                         continue
                     switch.addstmt(cxx.CaseLabel(p.type.name +'::'+ t._tag))
                     repack = cxx.StmtBlock()
+
+                    uahdecl = cxx.StmtDecl(cxx.Decl(
+                        cxx.Type('mozilla::ipc::ActorHandle'),
+                        '__uah'))
+                    repack.addstmt(uahdecl)
+
                     repack.addstmt(cxx.StmtDecl(cxx.Decl(t._realtype, '__ua')))
 
                     uavar = cxx.ExprVar('__ua')
@@ -1726,10 +1730,14 @@ class GenerateProtocolActorHeader(Visitor):
                         uavar,
                         cxx.ExprCast(pvar, utype, const=1))))
 
+
+                    uahvar = cxx.ExprVar('__uah')
                     repack.addstmts(_actorToActorHandle(actor=uavar,
                                                        handle=uahvar,
                                                        failcode=valueerrcode))
 
+                    repack.addstmt(cxx.StmtExpr(cxx.ExprAssn(
+                        newunionvar, uahvar)))
                     # record that this param indeed did have an actor param
                     repack.addstmt(cxx.StmtExpr(cxx.ExprAssn(
                         wrvar, cxx.ExprVar('true'))))
@@ -1741,16 +1749,19 @@ class GenerateProtocolActorHeader(Visitor):
                 switch.addstmt(cxx.StmtBreak())
                 switches.append(switch)
 
-            for udv in uahvars:
-                if udv is None: continue
-                uahdecl, _ = udv
-                impl.addstmt(uahdecl)
+            for newunion in newunionvars:
+                decl, _ = newunion
+                impl.addstmt(decl)
+
+            impl.addstmt(cxx.Whitespace.NL)
+
             for wrdv in wasrepackedvars:
                 if wrdv is None: continue
                 wrdecl, wrvar = wrdv
                 impl.addstmt(wrdecl)
                 impl.addstmt(cxx.StmtExpr(
                     cxx.ExprAssn(wrvar, cxx.ExprVar('false'))))
+
             impl.addstmt(cxx.Whitespace.NL)
                 
             for switch in switches:
@@ -1770,12 +1781,12 @@ class GenerateProtocolActorHeader(Visitor):
                     msgctorargs.append(pvar)
                 else:
                     wrvar = wrdv[1]
-                    uahvar = uahvars[i][1]
+                    newunionvar = newunionvars[i][1]
+
                     # if the union-type variable had an actor value and
-                    # was unpacked, send the re-packed ActorHandle.
-                    constructor = cxx.ExprCall(cxx.ExprVar(p.type.name), [uahvar])
+                    # was unpacked, send the re-packed ActorHandle value.
                     msgctorargs.append(
-                        cxx.ExprConditional(wrvar, constructor, pvar))
+                        cxx.ExprConditional(wrvar, newunionvar, pvar))
 
             if md.decl.type.hasImplicitActorParam():
                 msgctorargs.append(ahvar)
