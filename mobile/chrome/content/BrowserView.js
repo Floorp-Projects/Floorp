@@ -494,8 +494,21 @@ BrowserView.prototype = {
     if (!browser)
       return;
 
-    let [w, h] = BrowserView.Util.getBrowserDimensions(browser);
-    this.setZoomLevel(BrowserView.Util.pageZoomLevel(this.getVisibleRect(), w, h));
+    var windowUtils = browser.contentWindow
+                             .QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+    var handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
+    
+    if (handheldFriendly == "true") {
+      browser.handheld = true;
+      browser.setAttribute("style", "width: " + window.screen.width + "px;");
+      this.setZoomLevel(1);
+      browser.markupDocumentViewer.textZoom = 1;
+    } else {
+      delete  browser.handheld;
+      let [w, h] = BrowserView.Util.getBrowserDimensions(browser);
+      this.setZoomLevel(BrowserView.Util.pageZoomLevel(this.getVisibleRect(), w, h));
+    }
   },
 
   zoom: function zoom(aDirection) {
@@ -683,7 +696,7 @@ BrowserView.BrowserViewportState.prototype = {
     return new BrowserView.BrowserViewportState(this.viewportRect,
                                                 this.visibleX,
                                                 this.visibleY,
-						                                    this.zoomLevel);
+                                                                                    this.zoomLevel);
   },
 
   toString: function toString() {
