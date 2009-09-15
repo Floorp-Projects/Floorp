@@ -1285,9 +1285,10 @@ nsresult
 nsWaveDecoder::Load(nsMediaStream* aStream, nsIStreamListener** aStreamListener)
 {
   NS_ASSERTION(aStream, "A stream should be provided");
-  NS_ASSERTION(aStreamListener, "A listener should be requested here");
 
-  *aStreamListener = nsnull;
+  if (aStreamListener) {
+    *aStreamListener = nsnull;
+  }
 
   mStream = aStream;
 

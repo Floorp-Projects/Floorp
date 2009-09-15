@@ -69,6 +69,9 @@ public:
   nsMediaDecoder();
   virtual ~nsMediaDecoder();
 
+  // Create a new decoder of the same type as this one.
+  virtual nsMediaDecoder* Clone() = 0;
+
   // Initialize the logging object
   static nsresult InitLogger();
 

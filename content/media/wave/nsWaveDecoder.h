@@ -146,6 +146,8 @@ class nsWaveDecoder : public nsMediaDecoder
   nsWaveDecoder();
   ~nsWaveDecoder();
 
+  virtual nsMediaDecoder* Clone() { return new nsWaveDecoder(); }
+
   virtual PRBool Init(nsHTMLMediaElement* aElement);
 
   virtual nsMediaStream* GetCurrentStream();

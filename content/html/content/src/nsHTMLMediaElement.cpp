@@ -622,6 +622,31 @@ nsresult nsHTMLMediaElement::LoadWithChannel(nsIChannel *aChannel,
 
   nsresult rv = InitializeDecoderForChannel(aChannel, aListener);
   if (NS_FAILED(rv)) {
+    ChangeDelayLoadStatus(PR_FALSE);
+    return rv;
+  }
+
+  DispatchAsyncProgressEvent(NS_LITERAL_STRING("loadstart"));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLMediaElement::MozLoadFrom(nsIDOMHTMLMediaElement* aOther)
+{
+  NS_ENSURE_ARG_POINTER(aOther);
+
+  AbortExistingLoads();
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aOther);
+  nsHTMLMediaElement* other = static_cast<nsHTMLMediaElement*>(content.get());
+  if (!other || !other->mDecoder)
+    return NS_OK;
+
+  ChangeDelayLoadStatus(PR_TRUE);
+
+  nsresult rv = InitializeDecoderAsClone(other->mDecoder);
+  if (NS_FAILED(rv)) {
+    ChangeDelayLoadStatus(PR_FALSE);
     return rv;
   }
 
@@ -1196,6 +1221,37 @@ PRBool nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
   return mDecoder != nsnull;
 }
 
+nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
+{
+  nsMediaStream* originalStream = aOriginal->GetCurrentStream();
+  if (!originalStream)
+    return NS_ERROR_FAILURE;
+  mDecoder = aOriginal->Clone();
+  if (!mDecoder)
+    return NS_ERROR_FAILURE;
+
+  if (!mDecoder->Init(this)) {
+    mDecoder = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
+  nsMediaStream* stream = originalStream->CloneData(mDecoder);
+  if (!stream) {
+    mDecoder = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
+  mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
+
+  nsresult rv = mDecoder->Load(stream, nsnull);
+  if (NS_FAILED(rv)) {
+    mDecoder = nsnull;
+    return rv;
+  }
+
+  return FinishDecoderSetup();
+}
+
 nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
                                                          nsIStreamListener **aListener)
 {
@@ -1212,12 +1268,21 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = mDecoder->Load(stream, aListener);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    mDecoder = nsnull;
     return rv;
+  }
 
   // Decoder successfully created, the decoder now owns the nsMediaStream
   // which owns the channel.
   mChannel = nsnull;
+
+  return FinishDecoderSetup();
+}
+
+nsresult nsHTMLMediaElement::FinishDecoderSetup()
+{
+  nsresult rv = NS_OK;
 
   mDecoder->SetVolume(mMuted ? 0.0 : mVolume);
 
@@ -1227,7 +1292,6 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
   }
 
   mBegun = PR_TRUE;
-
   return rv;
 }
 
