@@ -923,47 +923,25 @@ PRInt64 nsMediaFileStream::Tell()
   return offset;
 }
 
-nsresult
-nsMediaStream::Open(nsMediaDecoder* aDecoder, nsIURI* aURI,
-                    nsIChannel* aChannel, nsMediaStream** aStream,
-                    nsIStreamListener** aListener)
+nsMediaStream*
+nsMediaStream::Create(nsMediaDecoder* aDecoder, nsIChannel* aChannel)
 {
   NS_ASSERTION(NS_IsMainThread(), 
 	             "nsMediaStream::Open called on non-main thread");
 
-  *aStream = nsnull;
-
-  nsCOMPtr<nsIChannel> channel;
-  if (aChannel) {
-    channel = aChannel;
-  } else {
-    nsHTMLMediaElement* element = aDecoder->GetMediaElement();
-    NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
-    nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
-    nsresult rv = NS_NewChannel(getter_AddRefs(channel), 
-                                aURI, 
-                                nsnull,
-                                loadGroup,
-                                nsnull,
-                                nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  // If the channel was redirected, we want the post-redirect URI;
+  // but if the URI scheme was expanded, say from chrome: to jar:file:,
+  // we want the original URI.
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
   nsMediaStream* stream;
-  nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(channel);
+  nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aChannel);
   if (fc) {
-    stream = new nsMediaFileStream(aDecoder, channel, aURI);
-  } else {
-    stream = new nsMediaChannelStream(aDecoder, channel, aURI);
+    return new nsMediaFileStream(aDecoder, aChannel, uri);
   }
-  if (!stream)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult rv = stream->Open(aListener);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aStream = stream;
-  return NS_OK;
+  return new nsMediaChannelStream(aDecoder, aChannel, uri);
 }
 
 void nsMediaStream::MoveLoadsToBackground() {
