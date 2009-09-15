@@ -81,6 +81,7 @@ function PrivateBrowsingService() {
   this._obs.addObserver(this, "profile-after-change", true);
   this._obs.addObserver(this, "quit-application-granted", true);
   this._obs.addObserver(this, "private-browsing", true);
+  this._obs.addObserver(this, "command-line-startup", true);
 }
 
 PrivateBrowsingService.prototype = {
@@ -344,6 +345,11 @@ PrivateBrowsingService.prototype = {
           consoleService.logStringMessage(null); // trigger the listeners
           consoleService.reset();
         }
+        break;
+      case "command-line-startup":
+        this._obs.removeObserver(this, "command-line-startup");
+        aSubject.QueryInterface(Ci.nsICommandLine);
+        this.handle(aSubject);
         break;
     }
   },
