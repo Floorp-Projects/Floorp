@@ -656,9 +656,8 @@ public:
                   nsCompatibility aCompatMode);
   NS_IMETHOD Destroy();
 
-  virtual NS_HIDDEN_(void*) AllocateFrame(nsQueryFrame::FrameIID aCode,
-                                          size_t aSize);
-  virtual NS_HIDDEN_(void)  FreeFrame(nsQueryFrame::FrameIID aCode,
+  virtual NS_HIDDEN_(void*) AllocateFrame(size_t aSize, unsigned int aCode);
+  virtual NS_HIDDEN_(void)  FreeFrame(size_t aSize, unsigned int aCode,
                                       void* aChunk);
 
   virtual NS_HIDDEN_(void*) AllocateMisc(size_t aSize);
@@ -1273,11 +1272,6 @@ private:
    * only visible if the contents of the view as a whole are translucent.
    */
   nscolor ComputeBackstopColor(nsIView* aView);
-
-#ifdef DEBUG
-  // Ensure that every allocation from the PresArena is eventually freed.
-  PRUint32 mPresArenaAllocCount;
-#endif
 };
 
 class nsAutoCauseReflowNotifier
@@ -1611,9 +1605,6 @@ PresShell::PresShell()
 #endif
   mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES;
   mIsThemeSupportDisabled = PR_FALSE;
-#ifdef DEBUG
-  mPresArenaAllocCount = 0;
-#endif
 
   new (this) nsFrameManager();
 }
@@ -1635,12 +1626,7 @@ PresShell::~PresShell()
   NS_ASSERTION(mFirstCallbackEventRequest == nsnull &&
                mLastCallbackEventRequest == nsnull,
                "post-reflow queues not empty.  This means we're leaking");
-
-#ifdef DEBUG
-  NS_ASSERTION(mPresArenaAllocCount == 0,
-               "Some pres arena objects were not freed");
-#endif
-
+ 
   delete mStyleSet;
   delete mFrameConstructor;
 
@@ -1975,22 +1961,15 @@ PresShell::AllocateStackMemory(size_t aSize)
 }
 
 void
-PresShell::FreeFrame(nsQueryFrame::FrameIID aCode, void* aPtr)
+PresShell::FreeFrame(size_t aSize, unsigned int /*unused*/, void* aPtr)
 {
-#ifdef DEBUG
-  mPresArenaAllocCount--;
-#endif
-  if (PRESARENA_MUST_FREE_DURING_DESTROY || !mIsDestroying)
-    mFrameArena.FreeByCode(aCode, aPtr);
+  mFrameArena.Free(aSize, aPtr);
 }
 
 void*
-PresShell::AllocateFrame(nsQueryFrame::FrameIID aCode, size_t aSize)
+PresShell::AllocateFrame(size_t aSize, unsigned int /*unused*/)
 {
-#ifdef DEBUG
-  mPresArenaAllocCount++;
-#endif
-  void* result = mFrameArena.AllocateByCode(aCode, aSize);
+  void* result = mFrameArena.Allocate(aSize);
 
   if (result) {
     memset(result, 0, aSize);
@@ -2001,20 +1980,13 @@ PresShell::AllocateFrame(nsQueryFrame::FrameIID aCode, size_t aSize)
 void
 PresShell::FreeMisc(size_t aSize, void* aPtr)
 {
-#ifdef DEBUG
-  mPresArenaAllocCount--;
-#endif
-  if (PRESARENA_MUST_FREE_DURING_DESTROY || !mIsDestroying)
-    mFrameArena.FreeBySize(aSize, aPtr);
+  mFrameArena.Free(aSize, aPtr);
 }
 
 void*
 PresShell::AllocateMisc(size_t aSize)
 {
-#ifdef DEBUG
-  mPresArenaAllocCount++;
-#endif
-  return mFrameArena.AllocateBySize(aSize);
+  return mFrameArena.Allocate(aSize);
 }
 
 void
