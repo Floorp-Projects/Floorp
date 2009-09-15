@@ -310,8 +310,8 @@ class nsOggDecoder : public nsMediaDecoder
   
   virtual float GetCurrentTime();
 
-  virtual nsresult Load(nsIChannel* aChannel,
-                        nsIStreamListener **aListener);
+  virtual nsresult Load(nsMediaStream* aStream,
+                        nsIStreamListener** aListener);
 
   // Start playback of a video. 'Load' must have previously been
   // called.

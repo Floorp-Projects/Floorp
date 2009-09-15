@@ -109,11 +109,12 @@ public:
   // called.
   virtual nsresult Play() = 0;
 
-  // Start downloading the video. Decode the downloaded data up to the
+  // Start downloading the media. Decode the downloaded data up to the
   // point of the first frame of data.
-  // aChannel and aListener must not be null.
+  // aStream is the media stream to use. Ownership of aStream passes to
+  // the decoder, even if Load returns an error.
   // This is called at most once per decoder, after Init().
-  virtual nsresult Load(nsIChannel* aChannel,
+  virtual nsresult Load(nsMediaStream* aStream,
                         nsIStreamListener **aListener) = 0;
 
   // Draw the latest video data. This is done
