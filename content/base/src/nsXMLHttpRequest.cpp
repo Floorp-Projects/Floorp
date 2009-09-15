@@ -2147,13 +2147,6 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     ChangeState(XML_HTTP_REQUEST_STOPPED, PR_FALSE);
   }
 
-  if (mScriptContext) {
-    // Force a GC since we could be loading a lot of documents
-    // (especially if streaming), and not doing anything that would
-    // normally trigger a GC.
-    mScriptContext->GC();
-  }
-
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
 
   return rv;
