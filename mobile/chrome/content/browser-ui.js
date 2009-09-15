@@ -178,8 +178,15 @@ var BrowserUI = {
 
   showToolbar : function showToolbar(aEdit) {
     this.hidePanel();
+    if (this.isToolbarOpen())
+      return;
     this._editToolbar(aEdit);
   },
+
+  isToolbarOpen: function isToolbarOpen() {
+    return this._edit.popup.popupOpen;
+  },
+
 
   _toolbarLocked: 0,
   lockToolbar: function lockToolbar() {
