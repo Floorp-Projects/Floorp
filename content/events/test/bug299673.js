@@ -1,41 +1,8 @@
-<html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=299673
--->
-<head>
-  <title>Test for Bug 299673</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-</head>
-<body id="Body">
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=299673">Mozilla Bug 299673</a>
-<p id="display">
-
-		<SELECT id="Select1" onchange="log(event); OpenWindow()" onfocus="log(event); " onblur="log(event)">
-			<OPTION selected>option1</OPTION>
-			<OPTION>option2</OPTION>
-			<OPTION>option3</OPTION>
-		</SELECT>
-		 
-		<INPUT id="Text1" type="text" onfocus="log(event)" onblur="log(event)">
-		<INPUT id="Text2" type="text" onfocus="log(event)" onblur="log(event)">
-
-</p>
-<div id="content" style="display: none">
-  
-</div>
-
-<pre id="test">
-<script class="testbody" type="text/javascript">
-
-/** Test for Bug 299673 **/
-
 var popup;
 
 function OpenWindow()
 {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 log({},">>> OpenWindow");
 	popup = window.open("","Test");
 
@@ -59,7 +26,7 @@ log({},">>> OpenWindow");
 
 	var e = popup.document.getElementById('popupText1');
 	popup.focus();
-	e.focus();	
+	e.focus();
         is(popup.document.activeElement, e, "input element in popup should be focused");
 log({},"<<< OpenWindow");
 }
@@ -82,6 +49,37 @@ document.onfocus=function (event) { log(event,"top-doc") };
 document.onblur=function (event) { log(event,"top-doc") };
 document.onchange=function (event) { log(event,"top-doc") };
 
+function doTest1_rest2(expectedEventLog,focusAfterCloseId) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  try {
+    is(document.activeElement, document.getElementById(focusAfterCloseId), "wrong element is focused after popup was closed");
+    is(result, expectedEventLog, "unexpected events");
+    SimpleTest.finish();
+  } catch(e) {
+    if (popup)
+      popup.close();
+    throw e;
+  }
+}
+function doTest1_rest1(expectedEventLog,focusAfterCloseId) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  try {
+    synthesizeKey("V", {}, popup);
+    synthesizeKey("A", {}, popup);
+    synthesizeKey("L", {}, popup);
+    is(popup.document.getElementById('popupText1').value, "VAL", "input element in popup did not accept input");
+
+    var p = popup;
+    popup = null;
+    p.close();
+
+    SimpleTest.waitForFocus(function () { doTest1_rest2(expectedEventLog,focusAfterCloseId); }, window);
+  } catch(e) {
+    if (popup)
+      popup.close();
+    throw e;
+  }
+}
 
 function doTest1(expectedEventLog,focusAfterCloseId) {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -93,18 +91,7 @@ function doTest1(expectedEventLog,focusAfterCloseId) {
                   .getInterface(Components.interfaces.nsIDOMWindowUtils);
     synthesizeKey("VK_DOWN",{});
     synthesizeKey("VK_TAB", {});
-    synthesizeKey("V", {}, popup);
-    synthesizeKey("A", {}, popup);
-    synthesizeKey("L", {}, popup);
-
-    is(popup.document.getElementById('popupText1').value, "VAL", "input element in popup did not accept input");
-
-    var p = popup;
-    popup = null;
-    p.close();
-
-    is(document.activeElement, document.getElementById(focusAfterCloseId), "wrong element is focused after popup was closed");
-    is(result, expectedEventLog, "unexpected events");
+    SimpleTest.waitForFocus(function () { doTest1_rest1(expectedEventLog,focusAfterCloseId); }, popup);
 
   } catch(e) {
     if (popup)
@@ -129,45 +116,3 @@ function setPrefAndDoTest(expectedEventLog,focusAfterCloseId,prefValue) {
     prefs.setIntPref("browser.link.open_newwindow", origPrefValue);
   }
 }
-
-function doTest(expectedEventLog) {
-  var eventLogForNewTab = '\
- :  Test with browser.link.open_newwindow = 3\n\
-: focus top-doc\n\
-SELECT(Select1): focus \n\
-SELECT(Select1): change \n\
- :  >>> OpenWindow\n\
-: blur top-doc\n\
-INPUT(popupText1): focus \n\
- :  <<< OpenWindow\n\
-SELECT(Select1): blur \n\
-INPUT(popupText1): blur \n\
-: blur popup-doc\n\
-: focus top-doc\n\
-'
-  setPrefAndDoTest(eventLogForNewTab,'Body',3);  // 3 = open new window as tab
-
-  var eventLogForNewWindow = '\
- :  Test with browser.link.open_newwindow = 2\n\
-SELECT(Select1): focus \n\
-SELECT(Select1): change \n\
- :  >>> OpenWindow\n\
-: blur top-doc\n\
-: focus popup-doc\n\
-INPUT(popupText1): focus \n\
- :  <<< OpenWindow\n\
-SELECT(Select1): blur \n\
-'
-
-  setPrefAndDoTest(eventLogForNewWindow,'Body',2);  // 2 = open new window as window
-
-  SimpleTest.finish();
-}
-
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(doTest);
-
-</script>
-</pre>
-</body>
-</html>
