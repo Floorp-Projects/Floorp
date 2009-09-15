@@ -15,3 +15,4 @@ Bug 455357 - WinCE LibTheora Pre-defined Macro usage in local variable
 
 bug498815.patch: Fix for this bug from libtheora svn r16143.
 bug498824.patch: Fix for this bug from libtheora thusnelda branch.
+bug504613.patch: Fix for this bug from libtheora svn r16557.
