@@ -579,7 +579,7 @@ OPDEF(JSOP_LAMBDA_FC,     226,"lambda_fc",     NULL,  3,  0,  1, 19,  JOF_OBJECT
  */
 OPDEF(JSOP_OBJTOP,        227,"objtop",        NULL,  3,  0,  0,  0,  JOF_UINT16)
 
-OPDEF(JSOP_LOOP,          228, "loop",         NULL,  1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_TRACE,         228, "trace",         NULL,  1,  0,  0,  0,  JOF_BYTE)
 
 /*
  * Debugger versions of JSOP_{GET,CALL}UPVAR and the flat closure (_FC) ops.

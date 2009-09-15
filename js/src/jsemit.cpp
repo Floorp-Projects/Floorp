@@ -3540,6 +3540,13 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
         if (js_Emit1(cx, cg, JSOP_GENERATOR) < 0)
             return JS_FALSE;
         CG_SWITCH_TO_MAIN(cg);
+    } else {
+        /*
+         * Emit a trace hint opcode only if not in a generator, since generators
+         * are not yet traced and both want to be the first instruction.
+         */
+        if (js_Emit1(cx, cg, JSOP_TRACE) < 0)
+            return JS_FALSE;
     }
 
     return js_EmitTree(cx, cg, body) &&
@@ -4560,7 +4567,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (jmp < 0)
             return JS_FALSE;
         top = CG_OFFSET(cg);
-        if (!js_Emit1(cx, cg, JSOP_LOOP))
+        if (!js_Emit1(cx, cg, JSOP_TRACE))
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
             return JS_FALSE;
@@ -4583,7 +4590,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         /* Compile the loop body. */
         top = CG_OFFSET(cg);
-        if (!js_Emit1(cx, cg, JSOP_LOOP))
+        if (!js_Emit1(cx, cg, JSOP_TRACE))
             return JS_FALSE;
         js_PushStatement(cg, &stmtInfo, STMT_DO_LOOP, top);
         if (!js_EmitTree(cx, cg, pn->pn_left))
@@ -4682,7 +4689,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             top = CG_OFFSET(cg);
             SET_STATEMENT_TOP(&stmtInfo, top);
-            if (!js_Emit1(cx, cg, JSOP_LOOP))
+            if (!js_Emit1(cx, cg, JSOP_TRACE))
                 return JS_FALSE;
 
 #ifdef DEBUG
@@ -4909,7 +4916,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             SET_STATEMENT_TOP(&stmtInfo, top);
 
             /* Emit code for the loop body. */
-            if (!js_Emit1(cx, cg, JSOP_LOOP))
+            if (!js_Emit1(cx, cg, JSOP_TRACE))
                 return JS_FALSE;
             if (!js_EmitTree(cx, cg, pn->pn_right))
                 return JS_FALSE;
@@ -6230,7 +6237,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (jmp < 0)
             return JS_FALSE;
         top = CG_OFFSET(cg);
-        if (!js_Emit1(cx, cg, JSOP_LOOP))
+        if (!js_Emit1(cx, cg, JSOP_TRACE))
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
             return JS_FALSE;
