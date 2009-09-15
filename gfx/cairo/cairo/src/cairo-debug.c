@@ -79,8 +79,6 @@ cairo_debug_reset_static_data (void)
 }
 
 #if HAVE_VALGRIND
-#include <memcheck.h>
-
 void
 _cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface)
 {
@@ -107,7 +105,7 @@ _cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface)
 	width = image->width*4;
 	break;
     default:
-	ASSERT_NOT_REACHED;
+	/* XXX compute width from pixman bpp */
 	return;
     }
 
@@ -117,5 +115,47 @@ _cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface)
 	VALGRIND_MAKE_MEM_DEFINED (bits, width);
 	bits += image->stride;
     }
+}
+#endif
+
+
+#if 0
+void
+_cairo_image_surface_write_to_ppm (cairo_image_surface_t *isurf, const char *fn)
+{
+    char *fmt;
+    if (isurf->format == CAIRO_FORMAT_ARGB32 || isurf->format == CAIRO_FORMAT_RGB24)
+        fmt = "P6";
+    else if (isurf->format == CAIRO_FORMAT_A8)
+        fmt = "P5";
+    else
+        return;
+
+    FILE *fp = fopen(fn, "wb");
+    if (!fp)
+        return;
+
+    fprintf (fp, "%s %d %d 255\n", fmt,isurf->width, isurf->height);
+    for (int j = 0; j < isurf->height; j++) {
+        unsigned char *row = isurf->data + isurf->stride * j;
+        for (int i = 0; i < isurf->width; i++) {
+            if (isurf->format == CAIRO_FORMAT_ARGB32 || isurf->format == CAIRO_FORMAT_RGB24) {
+                unsigned char r = *row++;
+                unsigned char g = *row++;
+                unsigned char b = *row++;
+                *row++;
+                putc(r, fp);
+                putc(g, fp);
+                putc(b, fp);
+            } else {
+                unsigned char a = *row++;
+                putc(a, fp);
+            }
+        }
+    }
+
+    fclose (fp);
+
+    fprintf (stderr, "Wrote %s\n", fn);
 }
 #endif

@@ -336,17 +336,12 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
 
     if (clip->region) {
 	status = cairo_region_intersect (clip->region, region);
+	cairo_region_destroy (region);
     } else {
-	clip->region = cairo_region_copy (region);
-
-	assert (clip->region != NULL);
-	
-        if ((status = cairo_region_status (clip->region)))
-	    clip->region = NULL;
+	clip->region = region;
     }
 
     clip->serial = _cairo_surface_allocate_clip_serial (target);
-    cairo_region_destroy (region);
 
     if (!clip->region || cairo_region_is_empty (clip->region))
 	_cairo_clip_set_all_clipped (clip, target);
@@ -632,9 +627,10 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 		  cairo_surface_t    *target)
 {
     cairo_status_t status;
-    cairo_rectangle_int_t rectangle;
+    cairo_rectangle_int_t limits, extents;
     cairo_traps_t traps;
     cairo_box_t ignored_box;
+    cairo_bool_t have_limits;
 
     if (clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
@@ -668,13 +664,43 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 
     _cairo_traps_init (&traps);
 
-    /* Limit the traps to the target surface
+    /* Limit the traps to the target surface and current clip
      * - so we don't add more traps than needed. */
-    status = _cairo_surface_get_extents (target, &rectangle);
+    have_limits = FALSE;
+    if (clip->region != NULL) {
+	cairo_region_get_extents (clip->region, &limits);
+	have_limits = TRUE;
+    }
+
+    if (clip->surface != NULL) {
+	if (have_limits) {
+	    if (! _cairo_rectangle_intersect (&limits, &clip->surface_rect)) {
+		_cairo_clip_set_all_clipped (clip, target);
+		return CAIRO_STATUS_SUCCESS;
+	    }
+	} else {
+	    limits = clip->surface_rect;
+	    have_limits = TRUE;
+	}
+    }
+
+    status = _cairo_surface_get_extents (target, &extents);
     if (status == CAIRO_STATUS_SUCCESS) {
+	if (have_limits) {
+	    if (! _cairo_rectangle_intersect (&limits, &extents)) {
+		_cairo_clip_set_all_clipped (clip, target);
+		return CAIRO_STATUS_SUCCESS;
+	    }
+	} else {
+	    limits = extents;
+	    have_limits = TRUE;
+	}
+    }
+
+    if (have_limits) {
 	cairo_box_t box;
 
-	_cairo_box_from_rectangle (&box, &rectangle);
+	_cairo_box_from_rectangle (&box, &limits);
 	_cairo_traps_limit (&traps, &box);
     }
 

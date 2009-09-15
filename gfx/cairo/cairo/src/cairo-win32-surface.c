@@ -2102,7 +2102,7 @@ _cairo_win32_surface_span_renderer_finish (void *abstract_renderer)
 	cairo_pattern_t *mask_pattern = cairo_pattern_create_for_surface (&renderer->mask->base);
 	/* composite onto the image surface directly if we can */
 	if (dst->image) {
-	    GdiFlush();
+	    GdiFlush(); /* XXX: I'm not sure if this needed or not */
 
 	    status = dst->image->backend->composite (renderer->op,
 		    renderer->pattern, mask_pattern, dst->image,
