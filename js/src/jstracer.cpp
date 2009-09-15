@@ -270,6 +270,7 @@ js_InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define INS_NULL()            INS_CONSTPTR(NULL)
 #define INS_VOID()            INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID))
 
+static GC gc = GC();
 static avmplus::AvmCore s_core = avmplus::AvmCore();
 static avmplus::AvmCore* core = &s_core;
 
@@ -499,7 +500,7 @@ struct Tracker::Page*
 Tracker::addPage(const void* v) {
     jsuword base = getPageBase(v);
     struct Tracker::Page* p = (struct Tracker::Page*)
-        calloc(1, sizeof(*p) - sizeof(p->map) + (NJ_PAGE_SIZE >> 2) * sizeof(LIns*));
+        GC::Alloc(sizeof(*p) - sizeof(p->map) + (NJ_PAGE_SIZE >> 2) * sizeof(LIns*));
     p->base = base;
     p->next = pagelist;
     pagelist = p;
@@ -512,7 +513,7 @@ Tracker::clear()
     while (pagelist) {
         Page* p = pagelist;
         pagelist = pagelist->next;
-        free(p);
+        GC::Free(p);
     }
 }
 
@@ -1702,59 +1703,36 @@ TrashTree(JSContext* cx, Fragment* f);
 
 JS_REQUIRES_STACK
 TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _fragment,
-                             TreeInfo* ti, unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
-                             VMSideExit* innermostNestedGuard, jsbytecode* outer, uint32 outerArgc)
-
-    : cx(cx),
-      traceMonitor(&JS_TRACE_MONITOR(cx)),
-      alloc(*JS_TRACE_MONITOR(cx).allocator),
-      globalObj(JS_GetGlobalForObject(cx, cx->fp->scopeChain)),
-      lexicalBlock(cx->fp->blockChain),
-      entryTypeMap(NULL),
-      callDepth(_anchor ? _anchor->calldepth : 0),
-      atoms(FrameAtomBase(cx, cx->fp)),
-      anchor(_anchor),
-      fragment(_fragment),
-      treeInfo(ti),
-      lirbuf(_fragment->lirbuf),
-      lir(NULL),
-      lir_buf_writer(NULL),
-      verbose_filter(NULL),
-      cse_filter(NULL),
-      expr_filter(NULL),
-      func_filter(NULL),
-      float_filter(NULL),
-#ifdef DEBUG
-      sanity_filter_1(NULL),
-      sanity_filter_2(NULL),
-#endif
-      cx_ins(NULL),
-      eos_ins(NULL),
-      eor_ins(NULL),
-      rval_ins(NULL),
-      inner_sp_ins(NULL),
-      native_rval_ins(NULL),
-      newobj_ins(NULL),
-      deepAborted(false),
-      trashSelf(false),
-      whichTreesToTrash(&alloc),
-      cfgMerges(&alloc),
-      global_dslots(globalObj->dslots),
-      pendingSpecializedNative(NULL),
-      pendingUnboxSlot(NULL),
-      pendingGuardCondition(NULL),
-      nextRecorderToAbort(NULL),
-      wasRootFragment(_fragment == _fragment->root),
-      outer(outer),
-      outerArgc(outerArgc),
-      loop(true),
-      loopLabel(NULL)  /* default assumption is we are compiling a loop */
+        TreeInfo* ti, unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
+        VMSideExit* innermostNestedGuard, jsbytecode* outer, uint32 outerArgc)
+    : whichTreesToTrash(JS_TRACE_MONITOR(cx).allocator),
+      cfgMerges(JS_TRACE_MONITOR(cx).allocator)
 {
     JS_ASSERT(!_fragment->vmprivate && ti && cx->fp->regs->pc == (jsbytecode*)_fragment->ip);
-    memset(&generatedSpecializedNative, 0, sizeof(generatedSpecializedNative));
 
     /* Reset the fragment state we care about in case we got a recycled fragment. */
     _fragment->lastIns = NULL;
+
+    this->cx = cx;
+    this->traceMonitor = &JS_TRACE_MONITOR(cx);
+    this->globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
+    this->lexicalBlock = cx->fp->blockChain;
+    this->anchor = _anchor;
+    this->fragment = _fragment;
+    this->lirbuf = _fragment->lirbuf;
+    this->treeInfo = ti;
+    this->callDepth = _anchor ? _anchor->calldepth : 0;
+    this->atoms = FrameAtomBase(cx, cx->fp);
+    this->deepAborted = false;
+    this->trashSelf = false;
+    this->global_dslots = this->globalObj->dslots;
+    this->loop = true; /* default assumption is we are compiling a loop */
+    this->wasRootFragment = _fragment == _fragment->root;
+    this->outer = outer;
+    this->outerArgc = outerArgc;
+    this->pendingSpecializedNative = NULL;
+    this->newobj_ins = NULL;
+    this->loopLabel = NULL;
 
 #ifdef JS_JIT_SPEW
     debug_only_print0(LC_TMMinimal, "\n");
@@ -1794,24 +1772,26 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
 
 #endif
 
-    lir = lir_buf_writer = new (alloc) LirBufWriter(lirbuf);
+    lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
 #ifdef DEBUG
-    lir = sanity_filter_1 = new (alloc) SanityFilter(lir);
+    lir = sanity_filter_1 = new (&gc) SanityFilter(lir);
 #endif
     debug_only_stmt(
         if (js_LogController.lcbits & LC_TMRecorder) {
            lir = verbose_filter
-               = new (alloc) VerboseWriter (alloc, lir, lirbuf->names,
-                                            &js_LogController);
+               = new (&gc) VerboseWriter(*traceMonitor->allocator, lir,
+                                         lirbuf->names, &js_LogController);
         }
     )
     if (nanojit::AvmCore::config.soft_float)
-        lir = float_filter = new (alloc) SoftFloatFilter(lir);
-    lir = cse_filter = new (alloc) CseFilter(lir, alloc);
-    lir = expr_filter = new (alloc) ExprFilter(lir);
-    lir = func_filter = new (alloc) FuncFilter(lir);
+        lir = float_filter = new (&gc) SoftFloatFilter(lir);
+    else
+        float_filter = 0;
+    lir = cse_filter = new (&gc) CseFilter(lir, *traceMonitor->allocator);
+    lir = expr_filter = new (&gc) ExprFilter(lir);
+    lir = func_filter = new (&gc) FuncFilter(lir);
 #ifdef DEBUG
-    lir = sanity_filter_2 = new (alloc) SanityFilter(lir);
+    lir = sanity_filter_2 = new (&gc) SanityFilter(lir);
 #endif
     lir->ins0(LIR_start);
 
@@ -1861,8 +1841,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     }
 }
 
-void
-TraceRecorder::trashTrees()
+TraceRecorder::~TraceRecorder()
 {
     JS_ASSERT(nextRecorderToAbort == NULL);
     JS_ASSERT(treeInfo && (fragment || wasDeepAborted()));
@@ -1882,6 +1861,16 @@ TraceRecorder::trashTrees()
         for (unsigned int i = 0; i < whichTreesToTrash.length(); i++)
             TrashTree(cx, whichTreesToTrash[i]);
     }
+#ifdef DEBUG
+    debug_only_stmt( delete verbose_filter; )
+    delete sanity_filter_1;
+    delete sanity_filter_2;
+#endif
+    delete cse_filter;
+    delete expr_filter;
+    delete func_filter;
+    delete float_filter;
+    delete lir_buf_writer;
 }
 
 void
@@ -4575,7 +4564,7 @@ DeleteRecorder(JSContext* cx)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     /* Aborting and completing a trace end up here. */
-    tm->recorder->trashTrees();
+    delete tm->recorder;
     tm->recorder = NULL;
 
     /* If we ran out of memory, flush the code cache. */
@@ -4668,9 +4657,9 @@ StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
     JS_ASSERT(f->root != f || !cx->fp->imacpc);
 
     /* Start recording if no exception during construction. */
-    tm->recorder = new (*tm->allocator) TraceRecorder(cx, anchor, f, ti,
-                                                      stackSlots, ngslots, typeMap,
-                                                      expectedInnerExit, outer, outerArgc);
+    tm->recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
+                                           stackSlots, ngslots, typeMap,
+                                           expectedInnerExit, outer, outerArgc);
 
     if (cx->throwing) {
         js_AbortRecording(cx, "setting up recorder failed");

@@ -2003,6 +2003,8 @@ CompileRegExpToAST(JSContext* cx, JSTokenStream* ts,
 #ifdef JS_TRACER
 typedef js::Vector<LIns *, 4, js::ContextAllocPolicy> LInsList;
 
+/* Dummy GC for nanojit placement new. */
+static GC gc;
 static avmplus::AvmCore s_core = avmplus::AvmCore();
 
 /* Return the cached fragment for the given regexp, or create one. */
@@ -3122,19 +3124,19 @@ class RegExpNativeCompiler {
         if (alloc.outOfMemory())
             goto fail;
         /* FIXME Use bug 463260 smart pointer when available. */
-        lir = lirBufWriter = new (alloc) LirBufWriter(lirbuf);
+        lir = lirBufWriter = new (&gc) LirBufWriter(lirbuf);
 
         /* FIXME Use bug 463260 smart pointer when available. */
 #ifdef NJ_VERBOSE
         debug_only_stmt(
             if (js_LogController.lcbits & LC_TMRegexp) {
-                lir = verbose_filter = new (alloc) VerboseWriter(alloc, lir, lirbuf->names,
-                                                                 &js_LogController);
+                lir = verbose_filter = new (&gc) VerboseWriter(alloc, lir, lirbuf->names,
+                                                               &js_LogController);
             }
         )
 #endif
 #ifdef DEBUG
-        lir = sanity_filter = new (alloc) SanityFilter(lir);
+        lir = sanity_filter = new (&gc) SanityFilter(lir);
 #endif
 
         /*
@@ -3176,14 +3178,28 @@ class RegExpNativeCompiler {
         if (assm->error() != nanojit::None)
             goto fail;
 
+        delete lirBufWriter;
+#ifdef DEBUG
+        delete sanity_filter;
+#endif
+#ifdef NJ_VERBOSE
+        debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
+                             delete verbose_filter; )
+#endif
         return JS_TRUE;
     fail:
         if (alloc.outOfMemory() || js_OverfullJITCache(tm)) {
+            delete lirBufWriter;
             js_ResetJIT(cx);
         } else {
             if (!guard) insertGuard(loopLabel, re_chars, re_length);
             re->flags |= JSREG_NOCOMPILE;
+            delete lirBufWriter;
         }
+#ifdef NJ_VERBOSE
+        debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
+                             delete lir; )
+#endif
         return JS_FALSE;
     }
 };

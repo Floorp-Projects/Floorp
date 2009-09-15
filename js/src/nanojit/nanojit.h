@@ -60,6 +60,45 @@
 #error "unknown nanojit architecture"
 #endif
 
+/*
+    If we're using MMGC, using operator delete on a GCFinalizedObject is problematic:
+    in particular, calling it from inside a dtor is risky because the dtor for the sub-object
+    might already have been called, wrecking its vtable and ending up in the wrong version
+    of operator delete (the global version rather than the class-specific one). Calling GC::Free
+    directly is fine (since it ignores the vtable), so we macro-ize to make the distinction.
+
+    macro-ization of operator new isn't strictly necessary, but is done to bottleneck both
+    sides of the new/delete pair to forestall future needs.
+*/
+#ifdef MMGC_API
+
+    // separate overloads because GCObject and GCFinalizedObjects have different dtors
+    // (GCFinalizedObject's is virtual, GCObject's is not)
+    inline void mmgc_delete(GCObject* o)
+    {
+        GC* g = GC::GetGC(o);
+        if (g->Collecting())
+            g->Free(o);
+        else
+            delete o;
+    }
+
+    inline void mmgc_delete(GCFinalizedObject* o)
+    {
+        GC* g = GC::GetGC(o);
+        if (g->Collecting())
+            g->Free(o);
+        else
+            delete o;
+    }
+
+    #define NJ_NEW(gc, cls)            new (gc) cls
+    #define NJ_DELETE(obj)            do { mmgc_delete(obj); } while (0)
+#else
+    #define NJ_NEW(gc, cls)            new (gc) cls
+    #define NJ_DELETE(obj)            do { delete obj; } while (0)
+#endif
+
 // Embed no-op macros that let Valgrind work with the JIT.
 #ifdef MOZ_VALGRIND
 #  define JS_VALGRIND
@@ -80,6 +119,7 @@ namespace nanojit
     class Fragment;
     typedef avmplus::AvmCore AvmCore;
     typedef avmplus::OSDep OSDep;
+    typedef avmplus::GCSortedMap<const void*,Fragment*,avmplus::LIST_GCObjects> FragmentMap;
 
     const uint32_t MAXARGS = 8;
 
