@@ -249,15 +249,17 @@ public:
   virtual PRBool IsSuspendedByCache() = 0;
 
   /**
-   * Create a stream, reading data from the 
-   * media resource at the URI. Call on main thread only.
-   * @param aChannel if non-null, this channel is used and aListener
-   * is set to the listener we want for the channel. aURI must
-   * be the URI for the channel, obtained via NS_GetFinalChannelURI.
+   * Create a stream, reading data from the media resource via the
+   * channel. Call on main thread only.
+   * The caller must follow up by calling aStream->Open.
    */
-  static nsresult Open(nsMediaDecoder* aDecoder, nsIURI* aURI,
-                       nsIChannel* aChannel, nsMediaStream** aStream,
-                       nsIStreamListener** aListener);
+  static nsMediaStream* Create(nsMediaDecoder* aDecoder, nsIChannel* aChannel);
+
+  /**
+   * Open the stream. This creates a stream listener and returns it in
+   * aStreamListener; this listener needs to be notified of incoming data.
+   */
+  virtual nsresult Open(nsIStreamListener** aStreamListener) = 0;
 
 protected:
   nsMediaStream(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
@@ -268,14 +270,6 @@ protected:
   {
     MOZ_COUNT_CTOR(nsMediaStream);
   }
-
-  /**
-   * @param aStreamListener if null, the strategy should open mChannel
-   * itself. Otherwise, mChannel is already open and the strategy
-   * should just return its stream listener in aStreamListener (or set
-   * *aStreamListener to null, if it doesn't need a listener).
-   */
-  virtual nsresult Open(nsIStreamListener** aStreamListener) = 0;
 
   // This is not an nsCOMPointer to prevent a circular reference
   // between the decoder to the media stream object. The stream never
