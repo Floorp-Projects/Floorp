@@ -202,9 +202,10 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType,
     // FIXME/bent: demo purposes only
     Variant v1(0);
     Variant v2(parentInstance);
+    Variant retval;
     printf("\n[PluginModuleParent] sending Test msg\n\n");
-    parentInstance->SendTest(v1, v2);
-
+    parentInstance->CallTest(v1, v2, &retval);
+    NS_ASSERTION(retval.type() == v1.type() && retval.get_int() == v1.get_int(), "Bad!");
 
 
     if (NPERR_NO_ERROR != prv)
