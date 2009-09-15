@@ -78,12 +78,11 @@
       <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
         <menuitem id="menu_openHelp"
                   oncommand="openHelpLink('firefox-help')"
+                  label="&productHelp.label;"
+                  accesskey="&productHelp.accesskey;"
 #ifdef XP_MACOSX
-                  label="&helpContentsMac.label;"
                   key="key_openHelpMac"/>
 #else
-                  label="&helpContents.label;"
-                  accesskey="&helpContents.accesskey;"
                   key="key_openHelp"/>
 #endif
 # Show IE Users menu item on Windows only
