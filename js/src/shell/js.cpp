@@ -2550,6 +2550,13 @@ split_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     cpx = split_get_private(cx, obj);
     if (!cpx)
         return JS_TRUE;
+
+    if (JSVAL_IS_STRING(id) &&
+        !strcmp(JS_GetStringBytes(JSVAL_TO_STRING(id)), "isInner")) {
+        *vp = BOOLEAN_TO_JSVAL(cpx->isInner);
+        return JS_TRUE;
+    }
+
     if (!cpx->isInner && cpx->inner) {
         if (JSVAL_IS_STRING(id)) {
             JSString *str;
@@ -2655,6 +2662,13 @@ split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 {
     ComplexObject *cpx;
 
+    if (JSVAL_IS_STRING(id) &&
+        !strcmp(JS_GetStringBytes(JSVAL_TO_STRING(id)), "isInner")) {
+        *objp = obj;
+        return JS_DefineProperty(cx, obj, "isInner", JSVAL_VOID, NULL, NULL,
+                                 JSPROP_SHARED);
+    }
+
     cpx = split_get_private(cx, obj);
     if (!cpx)
         return JS_TRUE;
@@ -2721,6 +2735,28 @@ split_outerObject(JSContext *cx, JSObject *obj)
     return cpx->isInner ? cpx->outer : obj;
 }
 
+static JSObject *
+split_thisObject(JSContext *cx, JSObject *obj)
+{
+    OBJ_TO_OUTER_OBJECT(cx, obj);
+    if (!obj)
+        return NULL;
+    return obj;
+}
+
+static JSObjectOps split_objectops;
+
+static JSObjectOps *
+split_getObjectOps(JSContext *cx, JSClass *clasp)
+{
+    if (!split_objectops.thisObject) {
+        memcpy(&split_objectops, &js_ObjectOps, sizeof split_objectops);
+        split_objectops.thisObject = split_thisObject;
+    }
+
+    return &split_objectops;
+}
+
 static JSBool
 split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
@@ -2746,7 +2782,7 @@ static JSExtendedClass split_global_class = {
     (JSEnumerateOp)split_enumerate,
     (JSResolveOp)split_resolve,
     JS_ConvertStub, split_finalize,
-    NULL, NULL, NULL, NULL, NULL, NULL,
+    split_getObjectOps, NULL, NULL, NULL, NULL, NULL,
     split_mark, NULL},
     split_equality, split_outerObject, split_innerObject,
     NULL, NULL, NULL, NULL, NULL
