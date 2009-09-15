@@ -309,6 +309,14 @@ public:
 
   // These are called on the main thread by nsMediaCache. These must
   // not block or grab locks.
+  // Notify that data is available from the cache. This can happen even
+  // if this stream didn't read any data, since another stream might have
+  // received data for the same resource.
+  void CacheClientNotifyDataReceived();
+  // Notify that we reached the end of the stream. This can happen even
+  // if this stream didn't read any data, since another stream might have
+  // received data for the same resource.
+  void CacheClientNotifyDataEnded(nsresult aStatus);
   // Start a new load at the given aOffset. The old load is cancelled
   // and no more data from the old load will be notified via
   // nsMediaCacheStream::NotifyDataReceived/Ended.
@@ -346,7 +354,6 @@ public:
   virtual PRBool  IsDataCachedToEndOfStream(PRInt64 aOffset);
   virtual PRBool  IsSuspendedByCache();
 
-protected:
   class Listener : public nsIStreamListener,
                    public nsIInterfaceRequestor,
                    public nsIChannelEventSink
@@ -367,6 +374,7 @@ protected:
   };
   friend class Listener;
 
+protected:
   // These are called on the main thread by Listener.
   nsresult OnStartRequest(nsIRequest* aRequest);
   nsresult OnStopRequest(nsIRequest* aRequest, nsresult aStatus);
@@ -383,6 +391,8 @@ protected:
   // Closes the channel. Main thread only.
   void CloseChannel();
 
+  void DoNotifyDataReceived();
+
   static NS_METHOD CopySegmentToCache(nsIInputStream *aInStream,
                                       void *aClosure,
                                       const char *aFromSegment,
@@ -393,6 +403,9 @@ protected:
   // Main thread access only
   PRInt64            mOffset;
   nsRefPtr<Listener> mListener;
+  // A data received event for the decoder that has been dispatched but has
+  // not yet been processed.
+  nsRevocableEventPtr<nsNonOwningRunnableMethod<nsMediaChannelStream> > mDataReceivedEvent;
   PRUint32           mSuspendCount;
   // When this flag is set, if we get a network error we should silently
   // reopen the stream.
