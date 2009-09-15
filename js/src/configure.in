@@ -1768,9 +1768,6 @@ case "$target" in
     	CFLAGS="$CFLAGS -mieee"
     	CXXFLAGS="$CXXFLAGS -mieee"
     ;;
-    i*86)
-        MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS=1
-    ;;
     mips*)
         MOZ_DEBUG_FLAGS="-g" # We want inlining
     ;;
@@ -4030,17 +4027,6 @@ MOZ_ARG_ENABLE_STRING(debugger-info-modules,
     done ])
 
 dnl ========================================================
-dnl Enable garbage collector
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(boehm,
-[  --enable-boehm          Enable the Boehm Garbage Collector],
-    GC_LEAK_DETECTOR=1,
-    GC_LEAK_DETECTOR= )
-if test -n "$GC_LEAK_DETECTOR"; then
-    AC_DEFINE(GC_LEAK_DETECTOR)
-fi
-
-dnl ========================================================
 dnl Enable Narcissus
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(narcissus,
@@ -4193,17 +4179,6 @@ if test -n "$MOZ_VALGRIND"; then
 fi
 
 dnl ========================================================
-dnl = Use Electric Fence
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(efence,
-[  --enable-efence         Link with Electric Fence],
-    _ENABLE_EFENCE=1,
-    _ENABLE_EFENCE= )
-if test -n "$_ENABLE_EFENCE"; then
-    AC_CHECK_LIB(efence,malloc)
-fi
-
-dnl ========================================================
 dnl jprof
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(jprof,
@@ -4293,34 +4268,6 @@ MOZ_ARG_ENABLE_BOOL(install-strip,
     PKG_SKIP_STRIP=1)
 
 dnl ========================================================
-dnl = --enable-old-abi-compat-wrappers
-dnl ========================================================
-dnl on x86 linux, the current builds of some popular plugins (notably
-dnl flashplayer and real) expect a few builtin symbols from libgcc
-dnl which were available in some older versions of gcc.  However,
-dnl they're _NOT_ available in newer versions of gcc (eg 3.1), so if
-dnl we want those plugin to work with a gcc-3.1 built binary, we need
-dnl to provide these symbols.  MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS defaults
-dnl to true on x86 linux, and false everywhere else.
-dnl
-
-MOZ_ARG_ENABLE_BOOL(old-abi-compat-wrappers,
-[  --enable-old-abi-compat-wrappers
-                          Support old GCC ABI symbols to ease the pain 
-                          of the linux compiler change],
-    MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS=1,
-    MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS= )
-if test "$COMPILE_ENVIRONMENT"; then
-if test "$MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS"; then
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    AC_CHECK_FUNCS(__builtin_vec_new __builtin_vec_delete __builtin_new __builtin_delete __pure_virtual)
-    AC_LANG_RESTORE
-    AC_DEFINE(MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS)
-fi
-fi # COMPILE_ENVIRONMENT
-
-dnl ========================================================
 dnl = 
 dnl = Profiling and Instrumenting
 dnl = 
@@ -4339,26 +4286,6 @@ MOZ_ARG_ENABLE_BOOL(timeline,
 if test -n "$MOZ_TIMELINE"; then
     AC_DEFINE(MOZ_TIMELINE)
 fi
-
-dnl ========================================================
-dnl = Add support for Eazel profiler
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(eazel-profiler-support,
-[  --enable-eazel-profiler-support
-                          Enable Corel/Eazel profiler support],
-    ENABLE_EAZEL_PROFILER=1,
-    ENABLE_EAZEL_PROFILER= )
-if test -n "$ENABLE_EAZEL_PROFILER"; then
-    AC_DEFINE(ENABLE_EAZEL_PROFILER)
-    MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
-    EAZEL_PROFILER_CFLAGS="-g -O -gdwarf-2 -finstrument-functions -D__NO_STRING_INLINES  -D__NO_MATH_INLINES"
-    EAZEL_PROFILER_LIBS="-lprofiler -lpthread"
-fi
-
-MOZ_ARG_ENABLE_STRING(profile-modules,
-[  --enable-profile-modules
-                          Enable/disable profiling for specific modules],
-[ MOZ_PROFILE_MODULES=`echo $enableval| sed 's/,/ /g'` ] )
 
 MOZ_ARG_ENABLE_BOOL(insure,
 [  --enable-insure         Enable insure++ instrumentation (linux only)],
@@ -4884,17 +4811,12 @@ AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_MODULES)
-AC_SUBST(MOZ_PROFILE_MODULES)
 AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_DISABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_FLAGS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST(MOZ_DBGRINFO_MODULES)
-AC_SUBST(ENABLE_EAZEL_PROFILER)
-AC_SUBST(EAZEL_PROFILER_CFLAGS)
-AC_SUBST(EAZEL_PROFILER_LIBS)
-AC_SUBST(GC_LEAK_DETECTOR)
 AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
