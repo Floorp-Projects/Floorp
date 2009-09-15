@@ -917,14 +917,7 @@ case "$target" in
     elif test -z "$MACOSX_DEPLOYMENT_TARGET" ; then
         dnl No value specified on the command line or in the environment,
         dnl use architecture minimum.
-        case "${target_cpu}" in
-          x86_64)
-            export MACOSX_DEPLOYMENT_TARGET=10.5
-            ;;
-          *)
-            export MACOSX_DEPLOYMENT_TARGET=10.4
-            ;;
-        esac
+        export MACOSX_DEPLOYMENT_TARGET=10.5
     fi
     ;;
 esac
