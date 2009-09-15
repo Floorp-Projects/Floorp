@@ -50,6 +50,8 @@ public:
 
   static JSObject *GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper,
                                 nsIPrincipal *aObjectPrincipal);
+  static JSBool CreateExplicitWrapper(JSContext *cx, XPCWrappedNative *wrapper,
+                                      JSBool deep, jsval *rval);
 
   static PRBool IsNativeWrapperClass(JSClass *clazz)
   {
