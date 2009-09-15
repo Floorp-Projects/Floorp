@@ -3366,10 +3366,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
           /* Special-case services that need early access to the command
              line. */
-          nsCOMPtr<nsIObserver> chromeObserver
-            (do_GetService("@mozilla.org/chrome/chrome-registry;1"));
-          if (chromeObserver) {
-            chromeObserver->Observe(cmdLine, "command-line-startup", nsnull);
+          nsCOMPtr<nsIObserverService> obsService
+            (do_GetService("@mozilla.org/observer-service;1"));
+          if (obsService) {
+            obsService->NotifyObservers(cmdLine, "command-line-startup", nsnull);
           }
 
           NS_TIMELINE_ENTER("appStartup->CreateHiddenWindow");

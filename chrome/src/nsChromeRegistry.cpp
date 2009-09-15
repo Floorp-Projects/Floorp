@@ -554,6 +554,10 @@ nsChromeRegistry::Init()
     }
   }
 
+  nsCOMPtr<nsIObserverService> obsService (do_GetService("@mozilla.org/observer-service;1"));
+  if (obsService)
+    obsService->AddObserver(this, "command-line-startup", PR_TRUE);
+
   CheckForNewChrome();
 
   mInitialized = PR_TRUE;
