@@ -1494,7 +1494,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       frameType == nsAccessibilityAtoms::tableRowGroupFrame ||
       frameType == nsAccessibilityAtoms::tableRowFrame;
 
-    if (!roleMapEntry && partOfHTMLTable) {
+    if (partOfHTMLTable) {
       // Table-related frames don't get table-related roles
       // unless they are inside a table, but they may still get generic
       // accessibles
@@ -1503,31 +1503,45 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
         nsIFrame *tableFrame = aPresShell->GetPrimaryFrameFor(tableContent);
         if (!tableFrame)
           continue;
+
         if (tableFrame->GetType() == nsAccessibilityAtoms::tableOuterFrame) {
           nsCOMPtr<nsIDOMNode> tableNode(do_QueryInterface(tableContent));
           nsCOMPtr<nsIAccessible> tableAccessible;
-          GetAccessibleInShell(tableNode, aPresShell, getter_AddRefs(tableAccessible));
-          if (!tableAccessible && !content->IsFocusable()) {
+          GetAccessibleInShell(tableNode, aPresShell,
+                               getter_AddRefs(tableAccessible));
+
+          if (tableAccessible) {
+            if (!roleMapEntry &&
+                nsAccUtils::Role(tableAccessible) != nsIAccessibleRole::ROLE_TABLE) {
+              // No ARIA role and not in table: override role.
+              roleMapEntry = &nsARIAMap::gEmptyRoleMap;
+            }
+
+            break;
+          }
+
 #ifdef DEBUG
-            nsRoleMapEntry *tableRoleMapEntry =
-              nsAccUtils::GetRoleMapEntry(tableNode);
-            NS_ASSERTION(tableRoleMapEntry &&
-                         !nsCRT::strcmp(tableRoleMapEntry->roleString, "presentation"),
-                         "No accessible for parent table and it didn't have role of presentation");
+          nsRoleMapEntry *tableRoleMapEntry =
+            nsAccUtils::GetRoleMapEntry(tableNode);
+          NS_ASSERTION(tableRoleMapEntry &&
+                       !nsCRT::strcmp(tableRoleMapEntry->roleString, "presentation"),
+                       "No accessible for parent table and it didn't have role of presentation");
 #endif
-            // Table-related descendants of presentation table are also presentation
-            // Don't create accessibles for them unless they need to fire focus events
+
+          if (!roleMapEntry && !content->IsFocusable()) {
+            // Table-related descendants of presentation table are also
+            // presentation if they aren't focusable and have not explicit ARIA
+            // role (don't create accessibles for them unless they need to fire
+            // focus events).
             return NS_OK;
           }
-          if (tableAccessible &&
-              nsAccUtils::Role(tableAccessible) != nsIAccessibleRole::ROLE_TABLE) {
-            NS_ASSERTION(!roleMapEntry, "Should not be changing ARIA role, just overriding impl class role");
-            // Not in table: override role (roleMap entry was null).
-            roleMapEntry = &nsARIAMap::gEmptyRoleMap;
-          }
+
+          // otherwise create ARIA based accessible.
+          tryTagNameOrFrame = PR_FALSE;
           break;
         }
-        else if (tableContent->Tag() == nsAccessibilityAtoms::table) {
+
+        if (tableContent->Tag() == nsAccessibilityAtoms::table) {
           // Stop before we are fooled by any additional table ancestors
           // This table cell frameis part of a separate ancestor table.
           tryTagNameOrFrame = PR_FALSE;
