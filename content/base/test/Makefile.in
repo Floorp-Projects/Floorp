@@ -310,8 +310,6 @@ _TEST_FILES = 	test_bug5141.html \
 		bug466409-empty.css \
 		test_bug466409.html \
 		test_classList.html \
-		test_bug313646.html \
-		bug313646.txt \
 		test_bug489925.xhtml \
 		test_bug514487.html \
 		$(NULL)
