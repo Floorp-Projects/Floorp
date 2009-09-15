@@ -55,6 +55,7 @@ extern PRLogModuleInfo* gVideoDecoderLog;
 #endif
 
 class nsHTMLMediaElement;
+class nsMediaStream;
 
 // All methods of nsMediaDecoder must be called from the main thread only
 // with the exception of SetRGBData and GetStatistics, which can be
@@ -76,8 +77,9 @@ public:
   // on failure.
   virtual PRBool Init(nsHTMLMediaElement* aElement);
 
-  // Return the current URI being played or downloaded.
-  virtual void GetCurrentURI(nsIURI** aURI) = 0;
+  // Get the current nsMediaStream being used. Its URI will be returned
+  // by currentSrc.
+  virtual nsMediaStream* GetCurrentStream() = 0;
 
   // Return the principal of the current URI being played or downloaded.
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
@@ -109,11 +111,9 @@ public:
 
   // Start downloading the video. Decode the downloaded data up to the
   // point of the first frame of data.
-  // Exactly one of aURI and aChannel must be null. aListener must be
-  // null if and only if aChannel is.
+  // aChannel and aListener must not be null.
   // This is called at most once per decoder, after Init().
-  virtual nsresult Load(nsIURI* aURI,
-                        nsIChannel* aChannel,
+  virtual nsresult Load(nsIChannel* aChannel,
                         nsIStreamListener **aListener) = 0;
 
   // Draw the latest video data. This is done

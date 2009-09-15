@@ -335,10 +335,9 @@ NS_IMETHODIMP nsHTMLMediaElement::GetCurrentSrc(nsAString & aCurrentSrc)
   nsCAutoString src;
   
   if (mDecoder) {
-    nsCOMPtr<nsIURI> uri;
-    mDecoder->GetCurrentURI(getter_AddRefs(uri));
-    if (uri) {
-      uri->GetSpec(src);
+    nsMediaStream* stream = mDecoder->GetCurrentStream();
+    if (stream) {
+      stream->URI()->GetSpec(src);
     }
   }
 
@@ -1207,7 +1206,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
 
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
 
-  nsresult rv = mDecoder->Load(nsnull, aChannel, aListener);
+  nsresult rv = mDecoder->Load(aChannel, aListener);
   if (NS_FAILED(rv))
     return rv;
 
