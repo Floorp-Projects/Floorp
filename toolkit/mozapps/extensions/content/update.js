@@ -192,7 +192,7 @@ var gVersionInfoPage = {
                        .getService(nsIExtensionManager);
     // Synchronize the app compatibility info for all items.
     em.update([], 0, nsIExtensionManager.UPDATE_SYNC_COMPATIBILITY, this,
-              Ci.nsIExtensionManager.UPDATE_WHEN_NEW_APP_INSTALLED);
+              nsIExtensionManager.UPDATE_WHEN_NEW_APP_INSTALLED);
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -306,7 +306,7 @@ var gUpdatePage = {
                        .getService(nsIExtensionManager);
     em.update(gUpdateWizard.items, this._totalCount,
               nsIExtensionManager.UPDATE_CHECK_NEWVERSION, this,
-              Ci.nsIExtensionManager.UPDATE_WHEN_NEW_APP_INSTALLED);
+              nsIExtensionManager.UPDATE_WHEN_NEW_APP_INSTALLED);
   },
 
   /////////////////////////////////////////////////////////////////////////////
