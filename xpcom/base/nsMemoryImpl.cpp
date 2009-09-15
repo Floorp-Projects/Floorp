@@ -72,6 +72,9 @@ const char* kHighMark = "/sys/kernel/high_watermark";
 #define NOTIFY_LOW_MEMORY
 #endif
 
+#ifdef WINCE_WINDOWS_MOBILE
+#include "aygshell.h"
+#endif
 
 #include "nsITimer.h"
 
@@ -115,7 +118,7 @@ nsMemoryImpl::IsLowMemory(PRBool *result)
 #if defined(WINCE)
     MEMORYSTATUS stat;
     GlobalMemoryStatus(&stat);
-    *result = (stat.dwMemoryLoad >= 90);
+    *result = (stat.dwMemoryLoad >= 80);
 #elif defined(XP_WIN)
     MEMORYSTATUSEX stat;
     stat.dwLength = sizeof stat;
@@ -217,8 +220,18 @@ nsMemoryImpl::RunFlushers(const PRUnichar* aReason)
               observer->Observe(observer, "memory-pressure", aReason);
           }
         }
-        //       
     }
+
+    // Run built-in system flushers
+#ifdef WINCE_WINDOWS_MOBILE
+
+    // This function tries to free up memory for an application.
+    // If necessary, the shell closes down other applications by
+    // sending WM_CLOSE messages.  We ask for 4MB.
+
+    SHCloseApps(1024 * 1024 * 4);
+
+#endif
 
     sIsFlushing = 0;
     return NS_OK;
