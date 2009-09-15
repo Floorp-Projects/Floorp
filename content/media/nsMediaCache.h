@@ -436,6 +436,10 @@ private:
   // block is the earliest in the stream (so the last block will be the
   // least valuable).
   BlockList         mReadaheadBlocks;
+  // The list of metadata blocks; the first block is the most recently used
+  BlockList         mMetadataBlocks;
+  // The list of played-back blocks; the first block is the most recently used
+  BlockList         mPlayedBlocks;
   // The last reported estimate of the decoder's playback rate
   PRUint32          mPlaybackBytesPerSecond;
   // The number of times this stream has been Pinned without a
