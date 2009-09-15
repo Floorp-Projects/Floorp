@@ -177,8 +177,31 @@ void VMPI_setPageProtection(void *address,
 #endif // WIN32
 
 
+#ifdef WINCE
 
-#ifdef WIN32
+// We have run into OOM problems much more frequently
+// when we do not use jemalloc.  If you hit this error,
+// and really want to use the standard allocator, you
+// may try using the WIN32 code path.  You have been
+// warned.
+#ifndef MOZ_MEMORY
+#error MOZ_MEMORY required for building on WINCE
+#endif
+
+void*
+nanojit::CodeAlloc::allocCodeChunk(size_t nbytes) {
+    void * buffer;
+    posix_memalign(&buffer, 4096, nbytes);
+    return buffer;
+}
+
+void
+nanojit::CodeAlloc::freeCodeChunk(void *p, size_t nbytes) {
+    ::free(p);
+}
+
+#elif defined(WIN32)
+
 void*
 nanojit::CodeAlloc::allocCodeChunk(size_t nbytes) {
     return VirtualAlloc(NULL,
