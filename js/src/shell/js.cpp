@@ -528,7 +528,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             if (!compileOnly) {
                 ok = JS_ExecuteScript(cx, obj, script, &result);
                 if (ok && !JSVAL_IS_VOID(result)) {
-                    str = JS_ValueToString(cx, result);
+                    str = JS_ValueToSource(cx, result);
                     if (str)
                         fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
                     else
