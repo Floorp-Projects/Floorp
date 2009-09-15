@@ -83,7 +83,7 @@ rpc protocol PPluginInstance
 
   // FIXME/bent: demo purposes only
 child:
-  Test(Variant v1, Variant v2);
+  rpc Test(Variant v1, Variant v2) returns (Variant _retval);
 
 
 
