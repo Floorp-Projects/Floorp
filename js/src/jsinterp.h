@@ -391,8 +391,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
             pobj = obj;                                                       \
             JS_ASSERT(PCVCAP_TAG(entry->vcap) <= 1);                          \
             if (PCVCAP_TAG(entry->vcap) == 1 &&                               \
-                (tmp_ = OBJ_GET_PROTO(cx, pobj)) != NULL &&                   \
-                OBJ_IS_NATIVE(tmp_)) {                                        \
+                (tmp_ = OBJ_GET_PROTO(cx, pobj)) != NULL) {                   \
                 pobj = tmp_;                                                  \
             }                                                                 \
                                                                               \
