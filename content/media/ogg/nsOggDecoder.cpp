@@ -1968,9 +1968,9 @@ nsOggDecoder::~nsOggDecoder()
 nsresult nsOggDecoder::Load(nsMediaStream* aStream,
                             nsIStreamListener** aStreamListener)
 {
-  NS_ASSERTION(aStreamListener, "A listener should be requested here");
-
-  *aStreamListener = nsnull;
+  if (aStreamListener) {
+    *aStreamListener = nsnull;
+  }
 
   {
     // Hold the lock while we do this to set proper lock ordering
