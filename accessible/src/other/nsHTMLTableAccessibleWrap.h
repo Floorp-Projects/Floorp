@@ -45,7 +45,7 @@
 
 typedef class nsHTMLTableAccessible nsHTMLTableAccessibleWrap;
 typedef class nsHTMLTableCellAccessible nsHTMLTableCellAccessibleWrap;
-typedef class nsHTMLTableHeaderCellAccessible nsHTMLTableCellHeaderAccessibleWrap;
+typedef class nsHTMLTableHeaderCellAccessible nsHTMLTableHeaderCellAccessibleWrap;
 
 #endif
 
