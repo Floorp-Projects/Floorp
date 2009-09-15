@@ -1338,6 +1338,9 @@ nsWaveDecoder::PlaybackEnded()
     return;
   }
 
+  // Update ready state; now that we've finished playback, we should
+  // switch to HAVE_CURRENT_DATA.
+  UpdateReadyStateForData();
   if (mElement) {
     mElement->PlaybackEnded();
   }
