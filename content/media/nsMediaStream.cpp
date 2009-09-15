@@ -452,7 +452,7 @@ nsMediaStream* nsMediaChannelStream::CloneData(nsMediaDecoder* aDecoder)
   nsMediaChannelStream* stream = new nsMediaChannelStream(aDecoder, nsnull, mURI);
   if (stream) {
     stream->RecreateChannel();
-    // XXXroc need to clone mCacheStream's data here
+    stream->mCacheStream.InitAsClone(&mCacheStream);
   }
   return stream;
 }
@@ -614,28 +614,6 @@ nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset, PRBool aResume)
   return OpenChannel(nsnull);
 }
 
-class SuspendedStatusChanged : public nsRunnable 
-{
-public:
-  SuspendedStatusChanged(nsMediaDecoder* aDecoder) :
-    mDecoder(aDecoder)
-  {
-    MOZ_COUNT_CTOR(SuspendedStatusChanged);
-  }
-  ~SuspendedStatusChanged()
-  {
-    MOZ_COUNT_DTOR(SuspendedStatusChanged);
-  }
-
-  NS_IMETHOD Run() {
-    mDecoder->NotifySuspendedStatusChanged();
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<nsMediaDecoder> mDecoder;
-};
-
 nsresult
 nsMediaChannelStream::CacheClientSuspend()
 {
@@ -648,7 +626,8 @@ nsMediaChannelStream::CacheClientSuspend()
   // We have to spawn an event here since we're being called back from
   // a sensitive place in nsMediaCache, which doesn't want us to reenter
   // the decoder and cause deadlocks or other unpleasantness
-  nsCOMPtr<nsIRunnable> event = new SuspendedStatusChanged(mDecoder);
+  nsCOMPtr<nsIRunnable> event =
+    NS_NEW_RUNNABLE_METHOD(nsMediaDecoder, mDecoder, NotifySuspendedStatusChanged);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   return NS_OK;
 }
@@ -665,7 +644,8 @@ nsMediaChannelStream::CacheClientResume()
   // We have to spawn an event here since we're being called back from
   // a sensitive place in nsMediaCache, which doesn't want us to reenter
   // the decoder and cause deadlocks or other unpleasantness
-  nsCOMPtr<nsIRunnable> event = new SuspendedStatusChanged(mDecoder);
+  nsCOMPtr<nsIRunnable> event =
+    NS_NEW_RUNNABLE_METHOD(nsMediaDecoder, mDecoder, NotifySuspendedStatusChanged);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   return NS_OK;
 }
