@@ -377,6 +377,11 @@ namespace nanojit
 
 #define CDQ()       do { SARi(EDX, 31); MR(EDX, EAX); } while(0)
 
+#define INCLi(p)    do { count_alu(); \
+                         underrunProtect(6); \
+                         IMM32((uint32_t)(ptrdiff_t)p); *(--_nIns) = 0x05; *(--_nIns) = 0xFF; \
+                         asm_output("incl  (%p)", (void*)p); } while (0)
+
 #define SETE(r)     do { count_alu(); ALU2(0x0f94,(r),(r));         asm_output("sete %s",gpn(r)); } while(0)
 #define SETNP(r)    do { count_alu(); ALU2(0x0f9B,(r),(r));         asm_output("setnp %s",gpn(r)); } while(0)
 #define SETL(r)     do { count_alu(); ALU2(0x0f9C,(r),(r));         asm_output("setl %s",gpn(r)); } while(0)

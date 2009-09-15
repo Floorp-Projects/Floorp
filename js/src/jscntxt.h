@@ -100,8 +100,16 @@ namespace nanojit {
 #ifdef DEBUG
     class LabelMap;
 #endif
-    extern "C++" { template<typename K, typename V, typename H> class HashMap; }
+    extern "C++" {
+        template<typename K> class DefaultHash;
+        template<typename K, typename V, typename H> class HashMap;
+        template<typename T> class Seq;
+    }
 }
+#if defined(JS_JIT_SPEW) || defined(DEBUG)
+struct FragPI;
+typedef nanojit::HashMap<uint32_t, FragPI, nanojit::DefaultHash<uint32_t> > FragStatsMap;
+#endif
 class TraceRecorder;
 class VMAllocator;
 extern "C++" { template<typename T> class Queue; }
@@ -191,6 +199,18 @@ struct JSTraceMonitor {
 
     /* Keep a list of recorders we need to abort on cache flush. */
     CLS(TraceRecorder)      abortStack;
+
+#ifdef DEBUG
+    /* Fields needed for fragment/guard profiling. */
+    CLS(nanojit::Seq<nanojit::Fragment*>) branches;
+    uint32_t                lastFragID;
+    /*
+     * profAlloc has a lifetime which spans exactly from js_InitJIT to
+     * js_FinishJIT.
+     */
+    CLS(VMAllocator)        profAlloc;
+    CLS(FragStatsMap)       profTab;
+#endif
 
     /* Flush the JIT cache. */
     void flush();

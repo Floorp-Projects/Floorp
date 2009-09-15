@@ -1924,7 +1924,7 @@ namespace nanojit
     {
         verbose_only(
         LogControl *logc = assm->_logc;
-        bool anyVerb = (logc->lcbits & 0xFFFF) > 0;
+        bool anyVerb = (logc->lcbits & 0xFFFF & ~LC_FragProfile) > 0;
         bool asmVerb = (logc->lcbits & 0xFFFF & LC_Assembly) > 0;
         bool liveVerb = (logc->lcbits & 0xFFFF & LC_Liveness) > 0;
         )
@@ -2000,6 +2000,9 @@ namespace nanojit
 
         if (assm->error())
             frag->fragEntry = 0;
+
+        verbose_only( frag->nCodeBytes += assm->codeBytes; )
+        verbose_only( frag->nExitBytes += assm->exitBytes; )
 
         /* BEGIN decorative postamble */
         verbose_only( if (anyVerb) {

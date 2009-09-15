@@ -114,7 +114,7 @@ namespace nanojit
 
         return fragEntry;
     }
-
+  
     void Assembler::nFragExit(LInsp guard)
     {
         SideExit *exit = guard->record()->exit;
@@ -147,6 +147,13 @@ namespace nanojit
                 lr->jmp = _nIns;
             }
         }
+
+        // profiling for the exit
+        verbose_only(
+           if (_logc->lcbits & LC_FragProfile) {
+              INCLi( &guard->record()->profCount );
+           }
+        )
 
         // Restore ESP from EBP, undoing SUBi(SP,amt) in the prologue
         MR(SP,FP);
@@ -1636,14 +1643,25 @@ namespace nanojit
         }
     }
 
+    // Increment the 32-bit profiling counter at pCtr, without
+    // changing any registers.
+    verbose_only(
+    void Assembler::asm_inc_m32(uint32_t* pCtr)
+    {
+       INCLi(pCtr);
+    }
+    )
+
     void Assembler::nativePageReset()
     {
     }
 
     void Assembler::nativePageSetup()
     {
-        if (!_nIns) codeAlloc(codeStart, codeEnd, _nIns);
-        if (!_nExitIns) codeAlloc(exitStart, exitEnd, _nExitIns);
+        if (!_nIns)
+            codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
+        if (!_nExitIns)
+            codeAlloc(exitStart, exitEnd, _nExitIns verbose_only(, exitBytes));
     }
 
     // enough room for n bytes
@@ -1655,9 +1673,9 @@ namespace nanojit
             // We are done with the current page.  Tell Valgrind that new code
             // has been generated.
             if (_inExit)
-                codeAlloc(exitStart, exitEnd, _nIns);
+                codeAlloc(exitStart, exitEnd, _nIns verbose_only(, exitBytes));
             else
-                codeAlloc(codeStart, codeEnd, _nIns);
+                codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
             JMP(eip);
         }
     }
