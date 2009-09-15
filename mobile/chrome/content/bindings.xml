@@ -376,8 +376,6 @@
             // styling the selected item when closing the popup is fast enough
             this.selectedIndex = target._index + offset;
             this.input.controller.handleEnter(true);
-          } else {
-            this.close();
           }
         ]]>
       </handler>

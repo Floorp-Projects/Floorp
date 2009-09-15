@@ -350,6 +350,7 @@ placeitem .button-text {
 #autocomplete_navbuttons {
   padding: 1.1mm; /* core spacing */
   min-height: 7.2mm; /* row size */
+  -moz-user-focus: ignore;
 }
 
 #autocomplete_navbuttons autorepeatbutton {
@@ -453,7 +454,7 @@ autocompleteresult.allbookmarks > .autocomplete-item-tags:after {
    display: block;
   -moz-column-width: 128px;
   -moz-column-gap: 0;
-  -moz-user-focus: none;
+  -moz-user-focus: ignore;
   margin: 0;
   padding: 0;
   background-color: transparent;
@@ -541,6 +542,11 @@ findbar {
 
 #search-engine-label-add {
   font-size: 80%;
+}
+
+#search-buttons,
+.search-engine-button {
+  -moz-user-focus: ignore;
 }
 
 /* Preferences window   ---------------------------------------------------- */
