@@ -1511,10 +1511,14 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
                                getter_AddRefs(tableAccessible));
 
           if (tableAccessible) {
-            if (!roleMapEntry &&
-                nsAccUtils::Role(tableAccessible) != nsIAccessibleRole::ROLE_TABLE) {
-              // No ARIA role and not in table: override role.
-              roleMapEntry = &nsARIAMap::gEmptyRoleMap;
+            if (!roleMapEntry) {
+              PRUint32 role = nsAccUtils::Role(tableAccessible);
+              if (role != nsIAccessibleRole::ROLE_TABLE &&
+                  role != nsIAccessibleRole::ROLE_TREE_TABLE) {
+                // No ARIA role and not in table: override role. For example,
+                // <table role="label"><td>content</td></table>
+                roleMapEntry = &nsARIAMap::gEmptyRoleMap;
+              }
             }
 
             break;
