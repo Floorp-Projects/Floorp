@@ -47,9 +47,11 @@
 #include "nsPresArena.h"
 #include "nsCRT.h"
 #include "nsDebug.h"
-#include "nsTArray.h"
-#include "nsTHashtable.h"
 #include "prmem.h"
+
+// Uncomment this to disable arenas, instead forwarding to
+// malloc for every allocation.
+//#define DEBUG_TRACEMALLOC_PRESARENA 1
 
 #ifndef DEBUG_TRACEMALLOC_PRESARENA
 
@@ -61,72 +63,24 @@
 #define PL_ARENA_CONST_ALIGN_MASK ((PRUword(1) << ALIGN_SHIFT) - 1)
 #include "plarena.h"
 
+// Largest chunk size we recycle
+static const size_t MAX_RECYCLED_SIZE = 400;
+
+// Recycler array entry N (0 <= N < NUM_RECYCLERS) holds chunks of
+// size (N+1) << ALIGN_SHIFT, thus we need this many array entries.
+static const size_t NUM_RECYCLERS = MAX_RECYCLED_SIZE >> ALIGN_SHIFT;
+
 // Size to use for PLArena block allocations.
 static const size_t ARENA_PAGE_SIZE = 4096;
 
-// Freed memory is filled with a poison value, which is believed to
-// form a pointer to an always-unmapped region of the address space on
-// all platforms of interest. The low 12 bits of this number are
-// chosen to fall in the middle of the typical 4096-byte page, and
-// make the address odd.
-//
-// With the possible exception of PPC64, current 64-bit CPUs permit
-// only a subset (2^48 to 2^56, depending) of the full virtual address
-// space to be used.  x86-64 has the inaccessible region in the
-// *middle* of the address space, whereas all others are believed to
-// have it at the highest addresses.  Use an address in this region if
-// we possibly can; if the hardware doesn't let anyone use it, we
-// needn't worry about the OS.
-//
-// TODO: Confirm that this value is a pointer to an always-unmapped
-// address space region on (at least) Win32, Win64, WinCE, ARM Linux,
-// MacOSX, and add #ifdefs below as necessary. (Bug 507294.)
-
-#if defined(__x86_64__) || defined(_M_AMD64)
-const PRUword ARENA_POISON = 0x7FFFFFFFF0DEA7FF;
-#else
-// This evaluates to 0xF0DE_A7FF when PRUword is 32 bits long, but to
-// 0xFFFF_FFFF_F0DE_A7FF when it's 64 bits.
-const PRUword ARENA_POISON = (~PRUword(0x0FFFFF00) | PRUword(0x0DEA700));
-#endif
-
-// All keys to this hash table fit in 32 bits (see below) so we do not
-// bother actually hashing them.
-class FreeList : public PLDHashEntryHdr
-{
-public:
-  typedef PRUint32 KeyType;
-  nsTArray<void *> mEntries;
-  size_t mEntrySize;
-
-protected:
-  typedef const void* KeyTypePointer;
-  KeyTypePointer mKey;
-
-  FreeList(KeyTypePointer aKey) : mEntrySize(0), mKey(aKey) {}
-  // Default copy constructor and destructor are ok.
-
-  PRBool KeyEquals(KeyTypePointer const aKey) const
-  { return mKey == aKey; }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey)
-  { return NS_INT32_TO_PTR(aKey); }
-
-  static PLDHashNumber HashKey(KeyTypePointer aKey)
-  { return NS_PTR_TO_INT32(aKey); }
-
-  enum { ALLOW_MEMMOVE = PR_FALSE };
-  friend class nsTHashtable<FreeList>;
-};
-
 struct nsPresArena::State {
-  nsTHashtable<FreeList> mFreeLists;
+  void*       mRecyclers[NUM_RECYCLERS];
   PLArenaPool mPool;
 
   State()
   {
-    mFreeLists.Init();
     PL_INIT_ARENA_POOL(&mPool, "PresArena", ARENA_PAGE_SIZE);
+    memset(mRecyclers, 0, sizeof(mRecyclers));
   }
 
   ~State()
@@ -134,81 +88,65 @@ struct nsPresArena::State {
     PL_FinishArenaPool(&mPool);
   }
 
-  void* Allocate(PRUint32 aCode, size_t aSize)
+  void* Allocate(size_t aSize)
   {
-    NS_ABORT_IF_FALSE(aSize > 0, "PresArena cannot allocate zero bytes");
+    void* result = nsnull;
 
-    // We only hand out aligned sizes
+    // Recycler lists are indexed by aligned size
     aSize = PL_ARENA_ALIGN(&mPool, aSize);
 
-    // If there is no free-list entry for this type already, we have
-    // to create one now, to record its size.
-    FreeList* list = mFreeLists.PutEntry(aCode);
-    if (!list) {
-      return nsnull;
-    }
-
-    nsTArray<void*>::index_type len = list->mEntries.Length();
-    if (list->mEntrySize == 0) {
-      NS_ABORT_IF_FALSE(len == 0, "list with entries but no recorded size");
-      list->mEntrySize = aSize;
-    } else {
-      NS_ABORT_IF_FALSE(list->mEntrySize != aSize,
-                        "different sizes for same object type code");
-    }
-
-    void* result;
-    if (len > 0) {
-      // LIFO behavior for best cache utilization
-      result = list->mEntries.ElementAt(len - 1);
-      list->mEntries.RemoveElementAt(len - 1);
-#ifdef DEBUG
-      {
-        char* p = reinterpret_cast<char*>(result);
-        char* limit = p + list->mEntrySize;
-        for (; p < limit; p += sizeof(PRUword)) {
-          NS_ABORT_IF_FALSE(*reinterpret_cast<PRUword*>(p) == ARENA_POISON,
-                            "PresArena: poison overwritten");
-        }
+    // Check recyclers first
+    if (aSize <= MAX_RECYCLED_SIZE) {
+      const size_t index = (aSize >> ALIGN_SHIFT) - 1;
+      result = mRecyclers[index];
+      if (result) {
+        // Need to move to the next object
+        void* next = *((void**)result);
+        mRecyclers[index] = next;
       }
-#endif
-      return result;
     }
 
-    // Allocate a new chunk from the arena
-    PL_ARENA_ALLOCATE(result, &mPool, aSize);
+    if (!result) {
+      // Allocate a new chunk from the arena
+      PL_ARENA_ALLOCATE(result, &mPool, aSize);
+    }
+
     return result;
   }
 
-  void Free(PRUint32 aCode, void* aPtr)
+  void Free(size_t aSize, void* aPtr)
   {
-    // Try to recycle this entry.
-    FreeList* list = mFreeLists.GetEntry(aCode);
-    NS_ABORT_IF_FALSE(list, "no free list for pres arena object");
-    NS_ABORT_IF_FALSE(list->mEntrySize > 0, "PresArena cannot free zero bytes");
+    // Recycler lists are indexed by aligned size
+    aSize = PL_ARENA_ALIGN(&mPool, aSize);
 
-    char* p = reinterpret_cast<char*>(aPtr);
-    char* limit = p + list->mEntrySize;
-    for (; p < limit; p += sizeof(PRUword)) {
-      *reinterpret_cast<PRUword*>(p) = ARENA_POISON;
+    // See if it's a size that we recycle
+    if (aSize <= MAX_RECYCLED_SIZE) {
+      const size_t index = (aSize >> ALIGN_SHIFT) - 1;
+      void* currentTop = mRecyclers[index];
+      mRecyclers[index] = aPtr;
+      *((void**)aPtr) = currentTop;
     }
-
-    list->mEntries.AppendElement(aPtr);
+#if defined DEBUG_dbaron || defined DEBUG_zack
+    else {
+      fprintf(stderr,
+              "WARNING: nsPresArena::FreeFrame leaking chunk of %lu bytes.\n",
+              aSize);
+    }
+#endif
   }
 };
 
 #else
-// Stub implementation that forwards everything to malloc and does not
-// poison.
+// Stub implementation that just forwards everything to malloc.
 
 struct nsPresArena::State
 {
-  void* Allocate(PRUnit32 /* unused */, size_t aSize)
+  void* Allocate(size_t aSize)
   {
     return PR_Malloc(aSize);
   }
 
-  void Free(PRUint32 /* unused */, void* aPtr)
+  void Free(size_t /*unused*/, void* aPtr)
   {
     PR_Free(aPtr);
   }
@@ -219,36 +157,41 @@ struct nsPresArena::State
 // Public interface
 nsPresArena::nsPresArena()
   : mState(new nsPresArena::State())
+#ifdef DEBUG
+  , mAllocCount(0)
+#endif
 {}
 
 nsPresArena::~nsPresArena()
 {
+#ifdef DEBUG
+  NS_ASSERTION(mAllocCount == 0,
+               "Some PresArena objects were not freed");
+#endif
   delete mState;
 }
 
 void*
-nsPresArena::AllocateBySize(size_t aSize)
+nsPresArena::Allocate(size_t aSize)
 {
-  return mState->Allocate(PRUint32(aSize) |
-                          PRUint32(nsQueryFrame::NON_FRAME_MARKER),
-                          aSize);
+  NS_ABORT_IF_FALSE(aSize > 0, "PresArena cannot allocate zero bytes");
+  void* result = mState->Allocate(aSize);
+#ifdef DEBUG
+  if (result)
+    mAllocCount++;
+#endif
+  return result;
 }
 
 void
-nsPresArena::FreeBySize(size_t aSize, void* aPtr)
+nsPresArena::Free(size_t aSize, void* aPtr)
 {
-  mState->Free(PRUint32(aSize) |
-               PRUint32(nsQueryFrame::NON_FRAME_MARKER), aPtr);
-}
-
-void*
-nsPresArena::AllocateByCode(nsQueryFrame::FrameIID aCode, size_t aSize)
-{
-  return mState->Allocate(aCode, aSize);
-}
-
-void
-nsPresArena::FreeByCode(nsQueryFrame::FrameIID aCode, void* aPtr)
-{
-  mState->Free(aCode, aPtr);
+  NS_ABORT_IF_FALSE(aSize > 0, "PresArena cannot free zero bytes");
+#ifdef DEBUG
+  // Mark the memory with 0xdd in DEBUG builds so that there will be
+  // problems if someone tries to access memory that they've freed.
+  memset(aPtr, 0xdd, aSize);
+  mAllocCount--;
+#endif
+  mState->Free(aSize, aPtr);
 }
