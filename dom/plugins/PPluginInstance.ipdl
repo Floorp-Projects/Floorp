@@ -106,6 +106,17 @@ child:
     returns (nsString value);
 
 parent:
+  rpc NPN_GetValue_NPNVjavascriptEnabledBool()
+    returns (bool value, NPError result);
+  rpc NPN_GetValue_NPNVisOfflineBool()
+    returns (bool value, NPError result);
+  rpc NPN_GetValue_NPNVWindowNPObject()
+    returns (PPluginScriptableObject value, NPError result);
+  rpc NPN_GetValue_NPNVPluginElementNPObject()
+    returns (PPluginScriptableObject value, NPError result);
+  rpc NPN_GetValue_NPNVprivateModeBool()
+    returns (bool value, NPError result);
+
   rpc NPN_GetURL(nsCString url, nsCString target)
     returns (NPError result);
   rpc NPN_PostURL(nsCString url, nsCString target, nsCString buffer, bool file)

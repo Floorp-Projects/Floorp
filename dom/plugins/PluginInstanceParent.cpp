@@ -79,12 +79,64 @@ PluginInstanceParent::PBrowserStreamDestructor(PBrowserStreamParent* stream,
 }
 
 nsresult
+PluginInstanceParent::AnswerNPN_GetValue_NPNVjavascriptEnabledBool(
+                                                       bool* value,
+                                                       NPError* result)
+{
+    NPBool v;
+    *result = mNPNIface->getvalue(mNPP, NPNVjavascriptEnabledBool, &v);
+    *value = v;
+    return NS_OK;
+}
+
+nsresult
+PluginInstanceParent::AnswerNPN_GetValue_NPNVisOfflineBool(bool* value,
+                                                           NPError* result)
+{
+    NPBool v;
+    *result = mNPNIface->getvalue(mNPP, NPNVisOfflineBool, &v);
+    *value = v;
+    return NS_OK;
+}
+
+nsresult
+PluginInstanceParent::AnswerNPN_GetValue_NPNVWindowNPObject(
+                                        PPluginScriptableObjectParent** value,
+                                        NPError* result)
+{
+    // TODO NPRuntime
+    *value = NULL;
+    *result = NPERR_GENERIC_ERROR;
+    return NS_OK;
+}
+
+nsresult
+PluginInstanceParent::AnswerNPN_GetValue_NPNVPluginElementNPObject(
+                                        PluginInstanceParent::PPluginScriptableObjectParent** value,
+                                        NPError* result)
+{
+    // TODO NPRuntime
+    *value = NULL;
+    *result = NPERR_GENERIC_ERROR;
+    return NS_OK;
+}
+
+nsresult
+PluginInstanceParent::AnswerNPN_GetValue_NPNVprivateModeBool(bool* value,
+                                                             NPError* result)
+{
+    NPBool v;
+    *result = mNPNIface->getvalue(mNPP, NPNVprivateModeBool, &v);
+    *value = v;
+    return NS_OK;
+}
+
+nsresult
 PluginInstanceParent::AnswerNPN_GetURL(const nsCString& url,
                                        const nsCString& target,
                                        NPError* result)
 {
     *result = mNPNIface->geturl(mNPP, url.get(), target.get());
-    // TODO: what if the method fails?
     return NS_OK;
 }
 
@@ -97,7 +149,6 @@ PluginInstanceParent::AnswerNPN_PostURL(const nsCString& url,
 {
     *result = mNPNIface->posturl(mNPP, url.get(), target.get(),
                                  buffer.Length(), buffer.get(), file);
-    // TODO: what if the method fails?
     return NS_OK;
 }
 
