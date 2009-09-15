@@ -167,6 +167,10 @@ public:
   virtual void Resume() = 0;
   // Get the current principal for the channel
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
+  // Create a new stream of the same type that refers to the same URI
+  // with a new channel. Any cached data associated with the original
+  // stream should be accessible in the new stream too.
+  virtual nsMediaStream* CloneData(nsMediaDecoder* aDecoder) = 0;
 
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.
@@ -323,6 +327,7 @@ public:
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
   // Return PR_TRUE if the stream has been closed.
   PRBool IsClosed() const { return mCacheStream.IsClosed(); }
+  virtual nsMediaStream* CloneData(nsMediaDecoder* aDecoder);
 
   // Other thread
   virtual void     SetReadMode(nsMediaCacheStream::ReadMode aMode);
@@ -373,6 +378,7 @@ protected:
   // Opens the channel, using an HTTP byte range request to start at mOffset
   // if possible. Main thread only.
   nsresult OpenChannel(nsIStreamListener** aStreamListener);
+  nsresult RecreateChannel();
   void SetupChannelHeaders();
   // Closes the channel. Main thread only.
   void CloseChannel();

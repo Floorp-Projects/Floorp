@@ -445,6 +445,18 @@ already_AddRefed<nsIPrincipal> nsMediaChannelStream::GetCurrentPrincipal()
   return principal.forget();
 }
 
+nsMediaStream* nsMediaChannelStream::CloneData(nsMediaDecoder* aDecoder)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  nsMediaChannelStream* stream = new nsMediaChannelStream(aDecoder, nsnull, mURI);
+  if (stream) {
+    stream->RecreateChannel();
+    // XXXroc need to clone mCacheStream's data here
+  }
+  return stream;
+}
+
 void nsMediaChannelStream::CloseChannel()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
@@ -559,15 +571,11 @@ void nsMediaChannelStream::Resume()
 }
 
 nsresult
-nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset, PRBool aResume)
+nsMediaChannelStream::RecreateChannel()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Don't call on main thread");
-
   nsLoadFlags loadFlags =
     nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
     (mLoadInBackground ? nsIRequest::LOAD_BACKGROUND : 0);
-
-  CloseChannel();
 
   nsHTMLMediaElement* element = mDecoder->GetMediaElement();
   if (!element) {
@@ -577,21 +585,31 @@ nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset, PRBool aResume)
   nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
   NS_ENSURE_TRUE(loadGroup, NS_ERROR_NULL_POINTER);
 
+  return NS_NewChannel(getter_AddRefs(mChannel),
+                       mURI,
+                       nsnull,
+                       loadGroup,
+                       nsnull,
+                       loadFlags);
+}
+
+nsresult
+nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset, PRBool aResume)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Don't call on main thread");
+
+  CloseChannel();
+
   if (aResume) {
     NS_ASSERTION(mSuspendCount > 0, "Too many resumes!");
     // No need to mess with the channel, since we're making a new one
     --mSuspendCount;
   }
 
-  nsresult rv =
-    NS_NewChannel(getter_AddRefs(mChannel),
-                  mURI,
-                  nsnull,
-                  loadGroup,
-                  nsnull,
-                  loadFlags);
+  nsresult rv = RecreateChannel();
   if (NS_FAILED(rv))
     return rv;
+
   mOffset = aOffset;
   return OpenChannel(nsnull);
 }
@@ -735,6 +753,7 @@ public:
   virtual void     Suspend(PRBool aCloseImmediately) {}
   virtual void     Resume() {}
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
+  virtual nsMediaStream* CloneData(nsMediaDecoder* aDecoder);
 
   // These methods are called off the main thread.
 
@@ -892,6 +911,27 @@ already_AddRefed<nsIPrincipal> nsMediaFileStream::GetCurrentPrincipal()
   return principal.forget();
 }
 
+nsMediaStream* nsMediaFileStream::CloneData(nsMediaDecoder* aDecoder)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  nsHTMLMediaElement* element = aDecoder->GetMediaElement();
+  if (!element) {
+    // The decoder is being shut down, so we can't clone
+    return nsnull;
+  }
+  nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
+  NS_ENSURE_TRUE(loadGroup, nsnull);
+
+  nsCOMPtr<nsIChannel> channel;
+  nsresult rv =
+    NS_NewChannel(getter_AddRefs(channel), mURI, nsnull, loadGroup, nsnull, 0);
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  return new nsMediaFileStream(aDecoder, channel, mURI);
+}
+
 nsresult nsMediaFileStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
 {
   nsAutoLock lock(mLock);
@@ -936,7 +976,6 @@ nsMediaStream::Create(nsMediaDecoder* aDecoder, nsIChannel* aChannel)
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  nsMediaStream* stream;
   nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aChannel);
   if (fc) {
     return new nsMediaFileStream(aDecoder, aChannel, uri);

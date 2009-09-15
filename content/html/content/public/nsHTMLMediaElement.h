@@ -279,11 +279,22 @@ protected:
   PRBool CreateDecoder(const nsACString& aMIMEType);
 
   /**
+   * Initialize a decoder as a clone of an existing decoder in another
+   * element.
+   */
+  nsresult InitializeDecoderAsClone(nsMediaDecoder* aOriginal); 
+
+  /**
    * Initialize a decoder to load the given channel. The decoder's stream
    * listener is returned via aListener.
    */
   nsresult InitializeDecoderForChannel(nsIChannel *aChannel,
                                        nsIStreamListener **aListener);
+
+  /**
+   * Finish setting up the decoder after Load() has been called on it.
+   */
+  nsresult FinishDecoderSetup();
 
   /**
    * Execute the initial steps of the load algorithm that ensure existing

@@ -302,6 +302,9 @@ class nsOggDecoder : public nsMediaDecoder
 
   nsOggDecoder();
   ~nsOggDecoder();
+  
+  virtual nsMediaDecoder* Clone() { return new nsOggDecoder(); }
+
   virtual PRBool Init(nsHTMLMediaElement* aElement);
 
   // This method must be called by the owning object before that

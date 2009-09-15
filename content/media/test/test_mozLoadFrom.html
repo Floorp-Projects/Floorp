@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test mozLoadFrom API</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var testsWaiting = 0;
+
+function cloneLoaded(event) {
+  ok(true, "Clone loaded OK");
+
+  --testsWaiting;
+  if (testsWaiting == 0) {
+    SimpleTest.finish();
+  }
+}
+
+function tryClone(event) {
+  var clone = event.target.cloneNode(false);
+  clone.mozLoadFrom(event.target);
+  is(clone.currentSrc, event.target.currentSrc, "Clone source OK");
+
+  clone.addEventListener("loadeddata", cloneLoaded, false);
+}
+
+// Find something we can play
+for (var i = 0; i < gSmallTests.length; ++i) {
+  var elemType = /^audio/.test(gSmallTests[i].type) ? "audio" : "video";
+  var e = document.createElement(elemType);
+  if (e.canPlayType(gSmallTests[i].type)) {
+    e.src = gSmallTests[i].name;
+    e.addEventListener("loadeddata", tryClone, false);
+    e.load();
+    ++testsWaiting;
+  }
+}
+
+if (testsWaiting == 0) {
+  todo(false, "Can't play anything");
+} else {
+  SimpleTest.waitForExplicitFinish();
+}
+
+</script>
+</pre>
+</body>
+</html>
