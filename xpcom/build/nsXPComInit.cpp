@@ -705,9 +705,6 @@ NS_InitXPCOM3(nsIServiceManager* *result,
     // to the directory service.
     nsDirectoryService::gService->RegisterCategoryProviders();
 
-    // Initialize memory flusher
-    nsMemoryImpl::InitFlusher();
-
     // Notify observers of xpcom autoregistration start
     NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_CATEGORY, 
                                   nsnull,
