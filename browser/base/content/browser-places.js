@@ -929,7 +929,8 @@ var BookmarksEventHandler = {
       var row = {}, column = {};
       var tbo = tree.treeBoxObject;
       tbo.getCellAt(aEvent.clientX, aEvent.clientY, row, column, {});
-
+      if (row.value == -1)
+        return false;
       node = tree.view.nodeForTreeIndex(row.value);
       cropped = tbo.isCellCropped(row.value, column.value);
     }
