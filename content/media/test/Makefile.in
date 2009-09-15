@@ -125,6 +125,7 @@ _TEST_FILES += \
 		bug500311.ogv \
 		bug500311.ogv^headers^ \
 		bug501279.ogg \
+		bug504613.ogv \
 		bug504644.ogv \
 		bug506094.ogv \
 		seek.ogv \

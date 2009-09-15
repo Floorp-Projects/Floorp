@@ -34,6 +34,8 @@ var gPlayTests = [
   { name:"small-shot.ogg", type:"video/ogg" },
   // More audio in file than video.
   { name:"short-video.ogv", type:"video/ogg", duration:1.081 },
+  // First Theora data packet is zero bytes.
+  { name:"bug504613.ogv", type:"video/ogg" },
 
   { name:"bogus.duh", type:"bogus/duh" }
 ];
