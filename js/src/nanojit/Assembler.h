@@ -241,7 +241,7 @@ namespace nanojit
 
             Allocator&          alloc;
             CodeAlloc&          _codeAlloc;
-            Fragment*           _thisfrag;
+            DWB(Fragment*)      _thisfrag;
             RegAllocMap         _branchStateMap;
             NInsMap             _patches;
             LabelStateMap       _labels;

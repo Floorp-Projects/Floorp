@@ -159,6 +159,138 @@ static __inline__ unsigned long long rdtsc(void)
 
 struct JSContext;
 
+namespace MMgc {
+
+    class GC;
+
+    class GCObject
+    {
+    public:
+        inline void*
+        operator new(size_t size, GC* gc)
+        {
+            return calloc(1, size);
+        }
+
+        static void operator delete (void *gcObject)
+        {
+            free(gcObject);
+        }
+    };
+
+    #define MMGC_SUBCLASS_DECL : public avmplus::GCObject
+
+    class GCFinalizedObject : public GCObject
+    {
+    public:
+        static void operator delete (void *gcObject)
+        {
+            free(gcObject);
+        }
+    };
+
+    class GCHeap
+    {
+    public:
+        int32_t kNativePageSize;
+
+        GCHeap()
+        {
+    #if defined _SC_PAGE_SIZE
+            kNativePageSize = sysconf(_SC_PAGE_SIZE);
+    #else
+            kNativePageSize = 4096; // @todo: what is this?
+    #endif
+        }
+
+        inline void*
+        Alloc(uint32_t pages)
+        {
+    #ifdef XP_WIN
+            return VirtualAlloc(NULL,
+                                pages * kNativePageSize,
+                                MEM_COMMIT | MEM_RESERVE,
+                                PAGE_EXECUTE_READWRITE);
+    #elif defined AVMPLUS_UNIX
+            /**
+             * Don't use normal heap with mprotect+PROT_EXEC for executable code.
+             * SELinux and friends don't allow this.
+             */
+            return mmap(NULL,
+                        pages * kNativePageSize,
+                        PROT_READ | PROT_WRITE | PROT_EXEC,
+                        MAP_PRIVATE | MAP_ANON,
+                        -1,
+                        0);
+    #else
+            return valloc(pages * kNativePageSize);
+    #endif
+        }
+
+        inline void
+        Free(void* p, uint32_t pages)
+        {
+    #ifdef XP_WIN
+            VirtualFree(p, 0, MEM_RELEASE);
+    #elif defined AVMPLUS_UNIX
+            #if defined SOLARIS
+            munmap((char*)p, pages * kNativePageSize);
+            #else
+            munmap(p, pages * kNativePageSize);
+            #endif
+    #else
+            free(p);
+    #endif
+        }
+
+    };
+
+    class GC
+    {
+        static GCHeap heap;
+
+    public:
+        /**
+        * flags to be passed as second argument to alloc
+        */
+        enum AllocFlags
+        {
+            kZero=1,
+            kContainsPointers=2,
+            kFinalize=4,
+            kRCObject=8
+        };
+
+        static inline void*
+        Alloc(uint32_t bytes, int flags=kZero)
+        {
+          if (flags & kZero)
+            return calloc(1, bytes);
+          else
+            return malloc(bytes);
+        }
+
+        static inline void
+        Free(void* p)
+        {
+            free(p);
+        }
+
+        static inline GCHeap*
+        GetGCHeap()
+        {
+            return &heap;
+        }
+    };
+}
+
+#define DWB(x) x
+#define DRCWB(x) x
+#define WB(gc, container, addr, value) do { *(addr) = (value); } while(0)
+#define WBRC(gc, container, addr, value) do { *(addr) = (value); } while(0)
+
+#define MMGC_MEM_TYPE(x)
+
 #define VMPI_strlen strlen
 #define VMPI_strcat strcat
 #define VMPI_strcpy strcpy
@@ -172,9 +304,41 @@ extern void VMPI_setPageProtection(void *address,
 
 namespace avmplus {
 
+    using namespace MMgc;
+
     typedef int FunctionID;
 
     extern void AvmLog(char const *msg, ...);
+
+    class String
+    {
+    };
+
+    typedef class String AvmString;
+
+    class StringNullTerminatedUTF8
+    {
+        const char* cstr;
+
+    public:
+        StringNullTerminatedUTF8(GC* gc, String* s)
+        {
+            cstr = strdup((const char*)s);
+        }
+
+        ~StringNullTerminatedUTF8()
+        {
+            free((void*)cstr);
+        }
+
+        inline
+        const char* c_str()
+        {
+            return cstr;
+        }
+    };
+
+    typedef String* Stringp;
 
     class Config
     {
@@ -286,6 +450,8 @@ namespace avmplus {
         AvmConsole console;
 
         static Config config;
+        static GC* gc;
+        static String* k_str[];
 
 #ifdef AVMPLUS_IA32
         static inline bool
@@ -317,6 +483,19 @@ namespace avmplus {
             return config.verbose;
         }
 
+        static inline GC*
+        GetGC()
+        {
+            return gc;
+        }
+
+        static inline String* newString(const char* cstr) {
+            return (String*)strdup(cstr);
+        }
+
+        static inline void freeString(String* str) {
+            return free((char*)str);
+        }
     };
 
     class OSDep
@@ -327,6 +506,433 @@ namespace avmplus {
         {
         }
     };
+
+    /**
+     * The List<T> template implements a simple List, which can
+     * be templated to support different types.
+     *
+     * Elements can be added to the end, modified in the middle,
+     * but no holes are allowed.  That is for set(n, v) to work
+     * size() > n
+     *
+     * Note that [] operators are provided and you can violate the
+     * set properties using these operators, if you want a real
+     * list dont use the [] operators, if you want a general purpose
+     * array use the [] operators.
+     */
+
+    enum ListElementType {
+        LIST_NonGCObjects = 0,
+        LIST_GCObjects = 1,
+        LIST_RCObjects = 2
+    };
+
+    template <typename T, ListElementType kElementType>
+    class List
+    {
+    public:
+        enum { kInitialCapacity = 128 };
+
+        List(GC *_gc, uint32_t _capacity=kInitialCapacity) : data(NULL), len(0), capacity(0)
+        {
+            ensureCapacity(_capacity);
+        }
+
+        ~List()
+        {
+            //clear();
+            destroy();
+            // zero out in case we are part of an RCObject
+            len = 0;
+        }
+
+        inline void destroy()
+        {
+            if (data)
+                free(data);
+        }
+
+        const T *getData() const { return data; }
+
+        // 'this' steals the guts of 'that' and 'that' gets reset.
+        void become(List& that)
+        {
+            this->destroy();
+
+            this->data = that.data;
+            this->len = that.len;
+        this->capacity = that.capacity;
+
+            that.data = 0;
+            that.len = 0;
+        that.capacity = 0;
+        }
+        uint32_t add(T value)
+        {
+            if (len >= capacity) {
+                grow();
+            }
+            wb(len++, value);
+            return len-1;
+        }
+
+        inline bool isEmpty() const
+        {
+            return len == 0;
+        }
+
+        inline uint32_t size() const
+        {
+            return len;
+        }
+
+        inline T get(uint32_t index) const
+        {
+            AvmAssert(index < len);
+            return *(T*)(data + index);
+        }
+
+        void set(uint32_t index, T value)
+        {
+            AvmAssert(index < capacity);
+            if (index >= len)
+            {
+                len = index+1;
+            }
+            AvmAssert(len <= capacity);
+            wb(index, value);
+        }
+
+        void add(const List<T, kElementType>& l)
+        {
+            ensureCapacity(len+l.size());
+            // FIXME: make RCObject version
+            AvmAssert(kElementType != LIST_RCObjects);
+            arraycopy(l.getData(), 0, data, len, l.size());
+            len += l.size();
+        }
+
+        inline void clear()
+        {
+            zero_range(0, len);
+            len = 0;
+        }
+
+        int indexOf(T value) const
+        {
+            for(uint32_t i=0; i<len; i++)
+                if (get(i) == value)
+                    return i;
+            return -1;
+        }
+
+        int lastIndexOf(T value) const
+        {
+            for(int32_t i=len-1; i>=0; i--)
+                if (get(i) == value)
+                    return i;
+            return -1;
+        }
+
+        inline T last() const
+        {
+            return get(len-1);
+        }
+
+        T removeLast()
+        {
+            if(isEmpty())
+                return undef_list_val();
+            T t = get(len-1);
+            set(len-1, undef_list_val());
+            len--;
+            return t;
+        }
+
+        inline T operator[](uint32_t index) const
+        {
+            AvmAssert(index < capacity);
+            return get(index);
+        }
+
+        void ensureCapacity(uint32_t cap)
+        {
+            if (cap > capacity) {
+                if (data == NULL) {
+                    data = (T*)calloc(1, factor(cap));
+                } else {
+                    data = (T*)realloc(data, factor(cap));
+                    zero_range(capacity, cap - capacity);
+                }
+                capacity = cap;
+            }
+        }
+
+        void insert(uint32_t index, T value, uint32_t count = 1)
+        {
+            AvmAssert(index <= len);
+            AvmAssert(count > 0);
+            ensureCapacity(len+count);
+            memmove(data + index + count, data + index, factor(len - index));
+            wbzm(index, index+count, value);
+            len += count;
+        }
+
+        T removeAt(uint32_t index)
+        {
+            T old = get(index);
+            // dec the refcount on the one we're removing
+            wb(index, undef_list_val());
+            memmove(data + index, data + index + 1, factor(len - index - 1));
+            len--;
+            return old;
+        }
+
+    private:
+        void grow()
+        {
+            // growth is fast at first, then slows at larger list sizes.
+            uint32_t newMax = 0;
+            const uint32_t curMax = capacity;
+            if (curMax == 0)
+                newMax = kInitialCapacity;
+            else if(curMax > 15)
+                newMax = curMax * 3/2;
+            else
+                newMax = curMax * 2;
+
+            ensureCapacity(newMax);
+        }
+
+        void arraycopy(const T* src, int srcStart, T* dst, int dstStart, int nbr)
+        {
+            // we have 2 cases, either closing a gap or opening it.
+            if ((src == dst) && (srcStart > dstStart) )
+            {
+                for(int i=0; i<nbr; i++)
+                    dst[i+dstStart] = src[i+srcStart];
+            }
+            else
+            {
+                for(int i=nbr-1; i>=0; i--)
+                    dst[i+dstStart] = src[i+srcStart];
+            }
+        }
+
+        inline void do_wb_nongc(T* slot, T value)
+        {
+            *slot = value;
+        }
+
+        inline void do_wb_gc(GCObject** slot, const GCObject** value)
+        {
+            *slot = (GCObject*)*value;
+        }
+
+        void wb(uint32_t index, T value)
+        {
+            AvmAssert(index < capacity);
+            AvmAssert(data != NULL);
+            T* slot = &data[index];
+            do_wb_nongc(slot, value);
+        }
+
+        // multiple wb call with the same value, and assumption that existing value is all zero bits,
+        // like
+        //  for (uint32_t u = index; u < index_end; ++u)
+        //      wb(u, value);
+        void wbzm(uint32_t index, uint32_t index_end, T value)
+        {
+            AvmAssert(index < capacity);
+            AvmAssert(index_end <= capacity);
+            AvmAssert(index < index_end);
+            AvmAssert(data != NULL);
+            T* slot = data + index;
+            for (  ; index < index_end; ++index, ++slot)
+                do_wb_nongc(slot, value);
+        }
+
+        inline uint32_t factor(uint32_t index) const
+        {
+            return index * sizeof(T);
+        }
+
+        void zero_range(uint32_t _first, uint32_t _count)
+        {
+            memset(data + _first, 0, factor(_count));
+        }
+
+        // stuff that needs specialization based on the type
+        static inline T undef_list_val();
+
+    private:
+        List(const List& toCopy);           // unimplemented
+        void operator=(const List& that);   // unimplemented
+
+    // ------------------------ DATA SECTION BEGIN
+    private:
+        T* data;
+        uint32_t len;
+        uint32_t capacity;
+    // ------------------------ DATA SECTION END
+
+    };
+
+    // stuff that needs specialization based on the type
+    template<typename T, ListElementType kElementType>
+    /* static */ inline T List<T, kElementType>::undef_list_val() { return T(0); }
+
+    /**
+     * The SortedMap<K,T> template implements an object that
+     * maps keys to values.   The keys are sorted
+     * from smallest to largest in the map. Time of operations
+     * is as follows:
+     *   put() is O(1) if the key is higher than any existing
+     *         key; O(logN) if the key already exists,
+     *         and O(N) otherwise.
+     *   get() is an O(logN) binary search.
+     *
+     * no duplicates are allowed.
+     */
+    template <class K, class T, ListElementType valType>
+    class SortedMap : public GCObject
+    {
+    public:
+        enum { kInitialCapacity= 64 };
+
+        SortedMap(GC* gc, int _capacity=kInitialCapacity)
+          : keys(gc, _capacity), values(gc, _capacity)
+        {
+        }
+
+        bool isEmpty() const
+        {
+            return keys.size() == 0;
+        }
+
+        int size() const
+        {
+            return keys.size();
+        }
+
+        void clear()
+        {
+            keys.clear();
+            values.clear();
+        }
+
+        void destroy()
+        {
+            keys.destroy();
+            values.destroy();
+        }
+
+        T put(K k, T v)
+        {
+            if (keys.size() == 0 || k > keys.last())
+            {
+                keys.add(k);
+                values.add(v);
+                return (T)v;
+            }
+            else
+            {
+                int i = find(k);
+                if (i >= 0)
+                {
+                    T old = values[i];
+                    keys.set(i, k);
+                    values.set(i, v);
+                    return old;
+                }
+                else
+                {
+                    i = -i - 1; // recover the insertion point
+                    AvmAssert(keys.size() != (uint32_t)i);
+                    keys.insert(i, k);
+                    values.insert(i, v);
+                    return v;
+                }
+            }
+        }
+
+        T get(K k) const
+        {
+            int i = find(k);
+            return i >= 0 ? values[i] : 0;
+        }
+
+        bool get(K k, T& v) const
+        {
+            int i = find(k);
+            if (i >= 0)
+            {
+                v = values[i];
+                return true;
+            }
+            return false;
+        }
+
+        bool containsKey(K k) const
+        {
+            int i = find(k);
+            return (i >= 0) ? true : false;
+        }
+
+        T remove(K k)
+        {
+            int i = find(k);
+            return removeAt(i);
+        }
+
+        T removeAt(int i)
+        {
+            T old = values.removeAt(i);
+            keys.removeAt(i);
+            return old;
+        }
+
+        T removeFirst() { return isEmpty() ? (T)0 : removeAt(0); }
+        T removeLast()  { return isEmpty() ? (T)0 : removeAt(keys.size()-1); }
+        T first() const { return isEmpty() ? (T)0 : values[0]; }
+        T last()  const { return isEmpty() ? (T)0 : values[keys.size()-1]; }
+
+        K firstKey() const  { return isEmpty() ? 0 : keys[0]; }
+        K lastKey() const   { return isEmpty() ? 0 : keys[keys.size()-1]; }
+
+        // iterator
+        T   at(int i) const { return values[i]; }
+        K   keyAt(int i) const { return keys[i]; }
+
+        int findNear(K k) const {
+            int i = find(k);
+            return i >= 0 ? i : -i-2;
+        }
+    protected:
+        List<K, LIST_NonGCObjects> keys;
+        List<T, valType> values;
+
+        int find(K k) const
+        {
+            int lo = 0;
+            int hi = keys.size()-1;
+
+            while (lo <= hi)
+            {
+                int i = (lo + hi)/2;
+                K m = keys[i];
+                if (k > m)
+                    lo = i + 1;
+                else if (k < m)
+                    hi = i - 1;
+                else
+                    return i; // key found
+            }
+            return -(lo + 1);  // key not found, low is the insertion point
+        }
+    };
+
+    #define GCSortedMap SortedMap
 
     /**
      * Bit vectors are an efficent method of keeping True/False information
