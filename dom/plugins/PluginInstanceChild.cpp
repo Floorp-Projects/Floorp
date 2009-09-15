@@ -127,6 +127,30 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     case NPNVToolkit:
         return NPERR_GENERIC_ERROR;
 #endif
+    case NPNVjavascriptEnabledBool: {
+        bool v = false;
+        NPError result;
+        CallNPN_GetValue_NPNVjavascriptEnabledBool(&v, &result);
+        *static_cast<NPBool*>(aValue) = v;
+        return result;
+    }
+
+    case NPNVisOfflineBool: {
+        bool v = false;
+        NPError result;
+        CallNPN_GetValue_NPNVisOfflineBool(&v, &result);
+        *static_cast<NPBool*>(aValue) = v;
+        return result;
+    }
+
+    case NPNVprivateModeBool: {
+        bool v = false;
+        NPError result;
+        CallNPN_GetValue_NPNVprivateModeBool(&v, &result);
+        *static_cast<NPBool*>(aValue) = v;
+        return result;
+    }
+
     default:
         printf("  unhandled var %s\n", NPNVariableToString(aVar));
         return NPERR_GENERIC_ERROR;   
