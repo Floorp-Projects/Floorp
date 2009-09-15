@@ -55,6 +55,7 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsregexp.h"
+#include "jsstdint.h"
 #include "jsutil.h"
 #include "jsarray.h"
 #include "jstask.h"
