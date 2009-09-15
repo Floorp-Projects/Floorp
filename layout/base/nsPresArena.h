@@ -46,37 +46,22 @@
 #define nsPresArena_h___
 
 #include "nscore.h"
-#include "nsQueryFrame.h"
-
-// Uncomment this to disable arenas, instead forwarding to
-// malloc for every allocation.
-//#define DEBUG_TRACEMALLOC_PRESARENA 1
-
-// The debugging version of nsPresArena does not free all the memory it
-// allocated when the arena itself is destroyed.
-#ifdef DEBUG_TRACEMALLOC_PRESARENA
-#define PRESARENA_MUST_FREE_DURING_DESTROY PR_TRUE
-#else
-#define PRESARENA_MUST_FREE_DURING_DESTROY PR_FALSE
-#endif
 
 class nsPresArena {
 public:
   nsPresArena();
   ~nsPresArena();
 
-  // Pool allocation with recycler lists indexed by object size.
-  NS_HIDDEN_(void*) AllocateBySize(size_t aSize);
-  NS_HIDDEN_(void)  FreeBySize(size_t aSize, void* aPtr);
-
-  // Pool allocation with recycler lists indexed by object-type code.
-  // Every type code must always be used with the same object size.
-  NS_HIDDEN_(void*) AllocateByCode(nsQueryFrame::FrameIID aCode, size_t aSize);
-  NS_HIDDEN_(void)  FreeByCode(nsQueryFrame::FrameIID aCode, void* aPtr);
+  // Memory management functions
+  NS_HIDDEN_(void*) Allocate(size_t aSize);
+  NS_HIDDEN_(void)  Free(size_t aSize, void* aPtr);
 
 private:
   struct State;
   State* mState;
+#ifdef DEBUG
+  PRUint32 mAllocCount;
+#endif
 };
 
 #endif
