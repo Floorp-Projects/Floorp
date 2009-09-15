@@ -1179,10 +1179,10 @@ nsWaveDecoder::Init(nsHTMLMediaElement* aElement)
   return PR_TRUE;
 }
 
-void
-nsWaveDecoder::GetCurrentURI(nsIURI** aURI)
+nsMediaStream*
+nsWaveDecoder::GetCurrentStream()
 {
-  NS_IF_ADDREF(*aURI = mURI);
+  return mStream;
 }
 
 already_AddRefed<nsIPrincipal>
@@ -1282,25 +1282,19 @@ nsWaveDecoder::Stop()
 }
 
 nsresult
-nsWaveDecoder::Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStreamListener)
+nsWaveDecoder::Load(nsIChannel* aChannel, nsIStreamListener** aStreamListener)
 {
-  if (aStreamListener) {
-    *aStreamListener = nsnull;
-  }
+  NS_ASSERTION(aChannel, "A channel is required");
+  NS_ASSERTION(aStreamListener, "A listener should be requested here");
 
-  if (aURI) {
-    NS_ASSERTION(!aStreamListener, "No listener should be requested here");
-    mURI = aURI;
-  } else {
-    NS_ASSERTION(aChannel, "Either a URI or a channel is required");
-    NS_ASSERTION(aStreamListener, "A listener should be requested here");
+  *aStreamListener = nsnull;
 
-    nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(mURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult rv = nsMediaStream::Open(this, mURI, aChannel, getter_Transfers(mStream),
-                                    aStreamListener);
+  rv = nsMediaStream::Open(this, uri, aChannel, getter_Transfers(mStream),
+                           aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
   mPlaybackStateMachine->SetStream(mStream);
 

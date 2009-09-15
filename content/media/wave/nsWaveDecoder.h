@@ -148,7 +148,7 @@ class nsWaveDecoder : public nsMediaDecoder
 
   virtual PRBool Init(nsHTMLMediaElement* aElement);
 
-  virtual void GetCurrentURI(nsIURI** aURI);
+  virtual nsMediaStream* GetCurrentStream();
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
   // Return the current playback position in the media in seconds.
@@ -176,7 +176,7 @@ class nsWaveDecoder : public nsMediaDecoder
 
   // Start downloading the media at the specified URI.  The media's metadata
   // will be parsed and made available as the load progresses.
-  virtual nsresult Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStreamListener);
+  virtual nsresult Load(nsIChannel* aChannel, nsIStreamListener** aStreamListener);
 
   // Called by mStream (and possibly the nsChannelToPipeListener used
   // internally by mStream) when the stream has completed loading.
@@ -249,9 +249,6 @@ private:
 
   // Volume that the audio backend will be initialized with.
   float mInitialVolume;
-
-  // URI of the current resource.
-  nsCOMPtr<nsIURI> mURI;
 
   // Thread that handles audio playback, including data download.
   nsCOMPtr<nsIThread> mPlaybackThread;
