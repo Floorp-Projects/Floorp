@@ -70,6 +70,7 @@
 #include "nsHTMLMediaError.h"
 #include "nsICategoryManager.h"
 #include "nsCommaSeparatedTokenizer.h"
+#include "nsMediaStream.h"
 
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
@@ -1206,12 +1207,16 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
 
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
 
-  nsresult rv = mDecoder->Load(aChannel, aListener);
+  nsMediaStream* stream = nsMediaStream::Create(mDecoder, aChannel);
+  if (!stream)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = mDecoder->Load(stream, aListener);
   if (NS_FAILED(rv))
     return rv;
 
-  // Decoder successfully created, its nsMediaStream now has responsibility
-  // for the channel, and the owning reference.
+  // Decoder successfully created, the decoder now owns the nsMediaStream
+  // which owns the channel.
   mChannel = nsnull;
 
   mDecoder->SetVolume(mMuted ? 0.0 : mVolume);

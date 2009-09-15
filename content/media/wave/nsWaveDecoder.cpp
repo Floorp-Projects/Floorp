@@ -1282,15 +1282,14 @@ nsWaveDecoder::Stop()
 }
 
 nsresult
-nsWaveDecoder::Load(nsIChannel* aChannel, nsIStreamListener** aStreamListener)
+nsWaveDecoder::Load(nsMediaStream* aStream, nsIStreamListener** aStreamListener)
 {
-  NS_ASSERTION(aChannel, "A channel is required");
+  NS_ASSERTION(aStream, "A stream should be provided");
   NS_ASSERTION(aStreamListener, "A listener should be requested here");
 
   *aStreamListener = nsnull;
 
-  mStream = nsMediaStream::Create(this, aChannel);
-  NS_ENSURE_TRUE(mStream, NS_ERROR_OUT_OF_MEMORY);
+  mStream = aStream;
 
   nsresult rv = mStream->Open(aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
