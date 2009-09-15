@@ -3,14 +3,13 @@
 function test() {
   waitForExplicitFinish();
 
-  let newTab = gBrowser.addTab();
-  gBrowser.selectedTab = newTab;
-  let newBrowser = gBrowser.getBrowserForTab(newTab);
+  gBrowser.selectedTab = gBrowser.addTab();
+  let newBrowser = gBrowser.selectedBrowser;
   
   newBrowser.addEventListener("load", function() {
     newBrowser.removeEventListener("load", arguments.callee, true);
 
-    let doc = newBrowser.contentWindow.document;
+    let doc = newBrowser.contentDocument;
     let testInput = function(type, expected) {
       let element = doc.createElement("input");
       element.setAttribute("type", type);
