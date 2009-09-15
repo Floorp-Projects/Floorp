@@ -50,6 +50,8 @@
 #include "nsPluginsDir.h"
 
 #include "mozilla/plugins/PluginInstanceChild.h"
+#include "mozilla/plugins/StreamNotifyChild.h"
+#include "mozilla/plugins/BrowserStreamChild.h"
 
 using mozilla::ipc::NPRemoteIdentifier;
 
@@ -247,12 +249,6 @@ _getjavaenv(void);
 static void* NP_CALLBACK /* OJI type: jref */
 _getjavapeer(NPP aNPP);
 
-static NPObject* NP_CALLBACK
-_getwindowobject(NPP aNPP);
-
-static NPObject* NP_CALLBACK
-_getpluginelement(NPP aNPP);
-
 static NPIdentifier NP_CALLBACK
 _getstringidentifier(const NPUTF8* name);
 
@@ -334,18 +330,6 @@ static void NP_CALLBACK
 _pluginthreadasynccall(NPP instance, PluginThreadCallback func,
                        void *userData);
 
-static NPError NP_CALLBACK
-_getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
-                char **value, uint32_t *len);
-static NPError NP_CALLBACK
-_setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
-                const char *value, uint32_t len);
-
-static NPError NP_CALLBACK
-_getauthenticationinfo(NPP instance, const char *protocol, const char *host,
-                       int32_t port, const char *scheme, const char *realm,
-                       char **username, uint32_t *ulen, char **password,
-                       uint32_t *plen);
 #endif /* NP_VERSION_MINOR > 19 */
 
 PR_END_EXTERN_C
@@ -402,10 +386,10 @@ const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
 #endif
 };
 
-PluginInstanceChild&
+PluginInstanceChild*
 InstCast(NPP aNPP)
 {
-    return *static_cast<PluginInstanceChild*>(aNPP->ndata);
+    return static_cast<PluginInstanceChild*>(aNPP->ndata);
 }
 
 NPError NP_CALLBACK
@@ -423,7 +407,14 @@ _geturlnotify(NPP aNPP,
               void* aNotifyData)
 {
     _MOZ_LOG(__FUNCTION__);
-    return NPERR_NO_ERROR;
+
+    const nsDependentCString url(aRelativeURL);
+    NPError err;
+    InstCast(aNPP)->CallPStreamNotifyConstructor(
+        new StreamNotifyChild(url, aNotifyData),
+        url, nsDependentCString(aTarget), false, nsCString(), false, &err);
+    // TODO: what if this fails?
+    return err;
 }
 
 NPError NP_CALLBACK
@@ -432,7 +423,7 @@ _getvalue(NPP aNPP,
           void* aValue)
 {
     _MOZ_LOG(__FUNCTION__);
-    return InstCast(aNPP).NPN_GetValue(aVariable, aValue);
+    return InstCast(aNPP)->NPN_GetValue(aVariable, aValue);
 }
 
 
@@ -451,7 +442,10 @@ _geturl(NPP aNPP,
         const char* aTarget)
 {
     _MOZ_LOG(__FUNCTION__);
-    return NPERR_NO_ERROR;
+    NPError err;
+    InstCast(aNPP)->CallNPN_GetURL(nsDependentCString(aRelativeURL),
+                                   nsDependentCString(aTarget), &err);
+    return err;
 }
 
 NPError NP_CALLBACK
@@ -464,7 +458,15 @@ _posturlnotify(NPP aNPP,
                void* aNotifyData)
 {
     _MOZ_LOG(__FUNCTION__);
-    return NPERR_NO_ERROR;
+
+    const nsDependentCString url(aRelativeURL);
+    NPError err;
+    InstCast(aNPP)->CallPStreamNotifyConstructor(
+        new StreamNotifyChild(url, aNotifyData),
+        url, nsDependentCString(aTarget), true,
+        nsDependentCString(aBuffer, aLength), aIsFile, &err);
+    // TODO: what if this fails?
+    return err;
 }
 
 NPError NP_CALLBACK
@@ -476,7 +478,12 @@ _posturl(NPP aNPP,
          NPBool aIsFile)
 {
     _MOZ_LOG(__FUNCTION__);
-    return NPERR_NO_ERROR;
+    NPError err;
+    InstCast(aNPP)->CallNPN_PostURL(nsDependentCString(aRelativeURL),
+                                    nsDependentCString(aTarget),
+                                    nsDependentCString(aBuffer, aLength),
+                                    aIsFile, &err);
+    return err;
 }
 
 NPError NP_CALLBACK
@@ -501,10 +508,15 @@ _write(NPP aNPP,
 
 NPError NP_CALLBACK
 _destroystream(NPP aNPP,
-               NPStream* aSstream,
+               NPStream* aStream,
                NPError aReason)
 {
     _MOZ_LOG(__FUNCTION__);
+    BrowserStreamChild* bs = static_cast<BrowserStreamChild*>(aStream->ndata);
+    PluginInstanceChild* p = InstCast(aNPP);
+    bs->EnsureCorrectInstance(p);
+
+    p->CallPBrowserStreamDestructor(bs, aReason, false);
     return NPERR_NO_ERROR;
 }
 
@@ -582,20 +594,6 @@ _getjavaenv(void)
 
 void* NP_CALLBACK /* OJI type: jref */
 _getjavapeer(NPP aNPP)
-{
-    _MOZ_LOG(__FUNCTION__);
-    return 0;
-}
-
-NPObject* NP_CALLBACK
-_getwindowobject(NPP aNPP)
-{
-    _MOZ_LOG(__FUNCTION__);
-    return 0;
-}
-
-NPObject* NP_CALLBACK
-_getpluginelement(NPP aNPP)
 {
     _MOZ_LOG(__FUNCTION__);
     return 0;
@@ -927,44 +925,6 @@ _pluginthreadasynccall(NPP aNPP,
                        void* aUserData)
 {
     _MOZ_LOG(__FUNCTION__);
-}
-
-NPError NP_CALLBACK
-_getvalueforurl(NPP aNPP,
-                NPNURLVariable aVariable,
-                const char* aUrl,
-                char** aValue,
-                uint32_t* aLength)
-{
-    _MOZ_LOG(__FUNCTION__);
-    return NPERR_NO_ERROR;
-}
-
-NPError NP_CALLBACK
-_setvalueforurl(NPP aNPP,
-                NPNURLVariable aVariable,
-                const char* aUrl,
-                const char* aValue,
-                uint32_t aLength)
-{
-    _MOZ_LOG(__FUNCTION__);
-    return NPERR_NO_ERROR;
-}
-
-NPError NP_CALLBACK
-_getauthenticationinfo(NPP aNPP,
-                       const char* aProtocol,
-                       const char* aHost,
-                       int32_t aPortNumber,
-                       const char* aScheme,
-                       const char* aRealm,
-                       char** aUsername,
-                       uint32_t* aUsernameLength,
-                       char** aPassword,
-                       uint32_t* aPasswordLength)
-{
-    _MOZ_LOG(__FUNCTION__);
-    return NPERR_NO_ERROR;
 }
 
 #endif /* NP_VERSION_MINOR > 19 */

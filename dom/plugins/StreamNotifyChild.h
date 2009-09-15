@@ -48,6 +48,7 @@ class StreamNotifyChild : public PStreamNotifyChild
 {
   friend class PluginInstanceChild;
 
+public:
   StreamNotifyChild(const nsCString& aURL, void* aClosure)
     : mURL(aURL)
     , mClosure(aClosure)
