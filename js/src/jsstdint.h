@@ -101,7 +101,7 @@ typedef JSUintPtr uintptr_t;
  * preprocessor-correctness.
  */
 #define INTPTR_MAX  ((intptr_t) (UINTPTR_MAX >> 1))
-#define INTPTR_MIN  (INTPTR_MAX + 1)
+#define INTPTR_MIN  (intptr_t(uintptr_t(INTPTR_MAX) + uintptr_t(1)))
 #define UINTPTR_MAX ((uintptr_t) -1)
 #define SIZE_MAX UINTPTR_MAX
 #define PTRDIFF_MAX INTPTR_MAX
