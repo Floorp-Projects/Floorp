@@ -47,6 +47,8 @@ _compare_point_fixed_by_y (const void *av, const void *bv);
 void
 _cairo_traps_init (cairo_traps_t *traps)
 {
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (traps, sizeof (cairo_traps_t)));
+
     traps->status = CAIRO_STATUS_SUCCESS;
 
     traps->num_traps = 0;
@@ -91,6 +93,8 @@ _cairo_traps_fini (cairo_traps_t *traps)
 {
     if (traps->traps != traps->traps_embedded)
 	free (traps->traps);
+
+    VG (VALGRIND_MAKE_MEM_NOACCESS (traps, sizeof (cairo_traps_t)));
 }
 
 /**
@@ -615,9 +619,10 @@ cairo_int_status_t
 _cairo_traps_extract_region (const cairo_traps_t  *traps,
 			     cairo_region_t      **region)
 {
+    cairo_rectangle_int_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (cairo_rectangle_int_t)];
+    cairo_rectangle_int_t *rects = stack_rects;
     cairo_int_status_t status;
-    cairo_region_t *r;
-    int i;
+    int i, rect_count;
 
     for (i = 0; i < traps->num_traps; i++) {
 	if (traps->traps[i].left.p1.x != traps->traps[i].left.p2.x   ||
@@ -631,13 +636,15 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	}
     }
 
-    r = cairo_region_create ();
-    if (unlikely (r->status))
-	return r->status;
+    if (traps->num_traps > ARRAY_LENGTH (stack_rects)) {
+	rects = _cairo_malloc_ab (traps->num_traps, sizeof (cairo_rectangle_int_t));
 
+	if (unlikely (rects == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    rect_count = 0;
     for (i = 0; i < traps->num_traps; i++) {
-	cairo_rectangle_int_t rect;
-
 	int x1 = _cairo_fixed_integer_part (traps->traps[i].left.p1.x);
 	int y1 = _cairo_fixed_integer_part (traps->traps[i].top);
 	int x2 = _cairo_fixed_integer_part (traps->traps[i].right.p1.x);
@@ -648,21 +655,27 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	 */
 	if (x1 == x2 || y1 == y2)
 	    continue;
+	
+	rects[rect_count].x = x1;
+	rects[rect_count].y = y1;
+	rects[rect_count].width = x2 - x1;
+	rects[rect_count].height = y2 - y1;
 
-	rect.x = x1;
-	rect.y = y1;
-	rect.width = x2 - x1;
-	rect.height = y2 - y1;
-
-	status = cairo_region_union_rectangle (r, &rect);
-	if (unlikely (status)) {
-	    cairo_region_destroy (r);
-	    return status;
-	}
+	rect_count++;
     }
+ 
+    *region = cairo_region_create_rectangles (rects, rect_count);
+    status = cairo_region_status (*region);
 
-    *region = r;
-    return CAIRO_STATUS_SUCCESS;
+    if (rects != stack_rects)
+	free (rects);
+
+    if (unlikely (status)) {
+	cairo_region_destroy (*region);
+	*region = NULL;
+    }
+    
+    return status;
 }
 
 /* moves trap points such that they become the actual corners of the trapezoid */

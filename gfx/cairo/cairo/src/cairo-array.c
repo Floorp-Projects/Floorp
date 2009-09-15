@@ -352,14 +352,6 @@ _cairo_array_size (cairo_array_t *array)
     return array->size;
 }
 
-/* #cairo_user_data_array_t */
-
-typedef struct {
-    const cairo_user_data_key_t *key;
-    void *user_data;
-    cairo_destroy_func_t destroy;
-} cairo_user_data_slot_t;
-
 /**
  * _cairo_user_data_array_init:
  * @array: a #cairo_user_data_array_t
