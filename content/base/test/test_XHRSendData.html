@@ -36,12 +36,21 @@ is(testDoc2.inputEncoding, null, "wrong encoding");
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
 var testData = "blahblahblahblahblahblahblaaaaaaaah. blah.";
-testFileTxt = createFileWithDataExt(testData, ".txt");
-testFilePng = createFileWithDataExt(testData, ".png");
-testFileJpg = createFileWithDataExt(testData, ".jpg");
-testFileGif = createFileWithDataExt(testData, ".gif");
-testFileXml = createFileWithDataExt(testData, ".xml");
-testFileUnknown = createFileWithDataExt(testData, "noext");
+var extensions = [".txt",".png",".jpg",".gif",".xml", "noext"];
+var fileTypes = ["text/plain", "image/png", "image/jpeg", "image/gif", "text/xml", null];
+var testFiles = new Array;
+var testDOMFiles = new Array;
+
+extensions.forEach(
+    function (extension) {
+      var testFile = createFileWithDataExt(testData, extension);
+      testFiles.push(testFile);
+
+      var fileList = document.getElementById('fileList');
+      fileList.value = testFile.path;
+      testDOMFiles.push(fileList.files[0]);
+    }
+);
 
 function createFileWithDataExt(fileData, extension) {
   var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
@@ -52,10 +61,7 @@ function createFileWithDataExt(fileData, extension) {
   outStream.write(fileData, fileData.length);
   outStream.close();
 
-  var fileList = document.getElementById('fileList');
-  fileList.value = testFile.path;
-
-  return fileList.files[0];
+  return testFile;
 }
 
 tests = [{ body: null,
@@ -135,41 +141,19 @@ tests = [{ body: null,
            resBody: "<!-- doc 2 -->\n<res>text</res>",
            resContentType: "foo/bar; charset=uTf-8",
          },
-         { body: testFileTxt,
-           resBody: testData,
-           resContentType: "text/plain",
-           resContentLength: testData.length,
-         },
-         { body: testFilePng,
-           resBody: testData,
-           resContentType: "image/png",
-           resContentLength: testData.length,
-         },
-         { body: testFileJpg,
-           resBody: testData,
-           resContentType: "image/jpeg",
-           resContentLength: testData.length,
-         },
-         { body: testFileGif,
-           resBody: testData,
-           resContentType: "image/gif",
-           resContentLength: testData.length,
-         },
-         { body: testFileXml,
-           resBody: testData,
-           resContentType: "text/xml",
-           resContentLength: testData.length,
-         },
-         { body: testFileUnknown,
-           resBody: testData,
-           resContentType: "",
-           resContentLength: testData.length,
-         },
          { //will trigger a redirect test server-side
            body: ("TEST_REDIRECT_STR&url=" + window.location.host + window.location.pathname),
            redirect: true,
          },
          ];
+
+for (var i = 0; i < testDOMFiles.length; i++) {
+  tests.push({ body: testDOMFiles[i],
+               resBody: testData,
+               resContentType: fileTypes[i],
+               resContentLength: testData.length,
+              });
+}
 
 try {
   for each(test in tests) {
@@ -210,24 +194,14 @@ finally {
 }
 
 function cleanUpData() {
-  removeFileWithExt(".txt");
-  removeFileWithExt(".png");
-  removeFileWithExt(".jpg");
-  removeFileWithExt(".gif");
-  removeFileWithExt(".xml");
-  removeFileWithExt("noext");
+  testFiles.forEach(
+      function (testFile) {
+        try {
+          testFile.remove(false);
+        } catch (e) {}
+      }
+  );
 }
-
-function removeFileWithExt(extension)
-{
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");    
-    var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-    var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
-
-    testFile.append("testfile" + extension);
-    testFile.remove(false);
-}
-
 
 </script>
 </pre>

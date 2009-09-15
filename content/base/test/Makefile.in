@@ -154,6 +154,10 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug414796.html \
 		test_bug416317-1.html \
 		test_bug416317-2.html \
+		test_XHRSendData.html \
+		file_XHRSendData.sjs \
+		file_XHRSendData_doc.xml \
+		file_XHRSendData_doc.xml^headers^ \
 		file_bug416317.xhtml \
 		test_bug416383.html \
 		test_bug417255.html \
