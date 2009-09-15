@@ -67,6 +67,12 @@ public:
 
   virtual nsresult AnswerNPP_StreamAsFile(const nsCString& fname);
 
+  void EnsureCorrectInstance(PluginInstanceChild* i)
+  {
+    if (i != mInstance)
+      NS_RUNTIMEABORT("Incorrect stream instance");
+  }
+
 private:
   PluginInstanceChild* mInstance;
   NPStream mStream;
