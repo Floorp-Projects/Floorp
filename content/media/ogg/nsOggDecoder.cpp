@@ -2269,6 +2269,7 @@ void nsOggDecoder::NotifyBytesDownloaded()
   NS_ASSERTION(NS_IsMainThread(),
                "nsOggDecoder::NotifyBytesDownloaded called on non-main thread");   
   UpdateReadyStateForData();
+  Progress(PR_FALSE);
 }
 
 void nsOggDecoder::NotifyDownloadEnded(nsresult aStatus)

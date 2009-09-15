@@ -271,9 +271,6 @@ nsMediaChannelStream::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
 
   if (!mIgnoreClose) {
     mCacheStream.NotifyDataEnded(aStatus);
-    if (mDecoder) {
-      mDecoder->NotifyDownloadEnded(aStatus);
-    }
   }
 
   return NS_OK;
@@ -339,11 +336,7 @@ nsMediaChannelStream::OnDataAvailable(nsIRequest* aRequest,
     NS_ASSERTION(read > 0, "Read 0 bytes while data was available?");
     count -= read;
   }
-  mDecoder->NotifyBytesDownloaded();
 
-  // Fire a progress events according to the time and byte constraints outlined
-  // in the spec.
-  mDecoder->Progress(PR_FALSE);
   return NS_OK;
 }
 
@@ -591,6 +584,48 @@ nsMediaChannelStream::RecreateChannel()
                        loadGroup,
                        nsnull,
                        loadFlags);
+}
+
+void
+nsMediaChannelStream::DoNotifyDataReceived()
+{
+  mDataReceivedEvent.Revoke();
+  mDecoder->NotifyBytesDownloaded();
+}
+
+void
+nsMediaChannelStream::CacheClientNotifyDataReceived()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Don't call on main thread");
+
+  if (mDataReceivedEvent.IsPending())
+    return;
+
+  mDataReceivedEvent =
+    new nsNonOwningRunnableMethod<nsMediaChannelStream>(this, &nsMediaChannelStream::DoNotifyDataReceived);
+  NS_DispatchToMainThread(mDataReceivedEvent.get(), NS_DISPATCH_NORMAL);
+}
+
+class DataEnded : public nsRunnable {
+public:
+  DataEnded(nsMediaDecoder* aDecoder, nsresult aStatus) :
+    mDecoder(aDecoder), mStatus(aStatus) {}
+  NS_IMETHOD Run() {
+    mDecoder->NotifyDownloadEnded(mStatus);
+    return NS_OK;
+  }
+private:
+  nsRefPtr<nsMediaDecoder> mDecoder;
+  nsresult                 mStatus;
+};
+
+void
+nsMediaChannelStream::CacheClientNotifyDataEnded(nsresult aStatus)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Don't call on main thread");
+
+  nsCOMPtr<nsIRunnable> event = new DataEnded(mDecoder, aStatus);
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 
 nsresult

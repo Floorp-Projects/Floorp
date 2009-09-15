@@ -220,7 +220,7 @@ public:
   // aClient provides the underlying transport that cache will use to read
   // data for this stream.
   nsMediaCacheStream(nsMediaChannelStream* aClient)
-    : mClient(aClient), mChannelOffset(0),
+    : mClient(aClient), mResourceID(0), mChannelOffset(0),
       mStreamOffset(0), mStreamLength(-1), mPlaybackBytesPerSecond(10000),
       mPinCount(0), mCurrentMode(MODE_PLAYBACK),
       mInitialized(PR_FALSE), mClosed(PR_FALSE),
@@ -301,6 +301,8 @@ public:
   // If we've successfully read data beyond the originally reported length,
   // we return the end of the data we've read.
   PRInt64 GetLength();
+  // Returns the unique resource ID
+  PRInt64 GetResourceID() { return mResourceID; }
   // Returns the end of the bytes starting at the given offset
   // which are in cache.
   PRInt64 GetCachedDataEnd(PRInt64 aOffset);
@@ -426,6 +428,10 @@ private:
   // These fields are main-thread-only.
   nsMediaChannelStream*  mClient;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  // This is a unique ID representing the resource we're loading.
+  // All streams with the same mResourceID are loading the same
+  // underlying resource and should share data.
+  PRInt64                mResourceID;
 
   // All other fields are all protected by the cache's monitor and
   // can be accessed by by any thread.
