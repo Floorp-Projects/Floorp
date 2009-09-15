@@ -267,29 +267,20 @@ nsHTMLTableCellAccessible::IsSelected(PRBool *aIsSelected)
 already_AddRefed<nsIAccessibleTable>
 nsHTMLTableCellAccessible::GetTableAccessible()
 {
-  nsCOMPtr<nsIAccessible> childAcc(this);
-
-  nsCOMPtr<nsIAccessible> parentAcc;
-  nsresult rv = childAcc->GetParent(getter_AddRefs(parentAcc));
-  if (NS_FAILED(rv))
-    return nsnull;
+  nsCOMPtr<nsIAccessible> childAcc(this), parentAcc;
+  childAcc->GetParent(getter_AddRefs(parentAcc));
 
   while (parentAcc) {
-    if (nsAccUtils::Role(parentAcc) == nsIAccessibleRole::ROLE_TABLE) {
-      // Table accessible must implement nsIAccessibleTable interface but if
-      // it isn't happen (for example because of ARIA usage).
-      if (!parentAcc)
-        return nsnull;
-
+    PRUint32 role = nsAccUtils::Role(parentAcc);
+    if (role == nsIAccessibleRole::ROLE_TABLE ||
+        role == nsIAccessibleRole::ROLE_TREE_TABLE) {
       nsIAccessibleTable* tableAcc = nsnull;
       CallQueryInterface(parentAcc, &tableAcc);
       return tableAcc;
     }
 
     parentAcc.swap(childAcc);
-    rv = childAcc->GetParent(getter_AddRefs(parentAcc));
-    if (NS_FAILED(rv))
-      return nsnull;
+    childAcc->GetParent(getter_AddRefs(parentAcc));
   }
 
   return nsnull;
