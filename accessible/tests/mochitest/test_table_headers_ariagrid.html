@@ -53,7 +53,28 @@
           cell: "table_rh_2",
           rowHeaderCells: [],
           columnHeaderCells: [ "table_ch_1" ]
+        }
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+
+      //////////////////////////////////////////////////////////////////////////
+      // column and row headers from markup for crazy grid.
+
+      headerInfoMap = [
+        {
+          // not focusable cell (nsARIAGridCellAccessible is used)
+          cell: "table2_dc_1",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table2_ch_1" ]
         },
+        {
+          // focusable cell (nsARIAGridCellAccessible is used)
+          cell: "table2_dc_2",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table2_ch_2" ]
+        }
       ];
 
       testHeaderCells(headerInfoMap);
@@ -70,13 +91,16 @@
   <a target="_blank"
      title="implement IAccessibleTable2"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=512424">Mozilla Bug 512424</a>
+  <a target="_blank"
+     title="nsHTMLTableCellAccessible is used in dojo's crazy ARIA grid"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=513848">Mozilla Bug 513848</a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
-  <div id="table" role="grid">
+  <div role="grid">
     <div role="row">
       <span id="table_ch_1" role="columnheader">col_1</span>
       <span id="table_ch_2" role="columnheader">col_2</span>
@@ -91,6 +115,25 @@
       <span id="table_rh_2" role="rowheader">row_2</span>
       <span id="table_dc_3" role="gridcell">cell3</span>
       <span id="table_dc_4" role="gridcell">cell4</span>
+    </div>
+  </div>
+
+  <div role="grid">
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td id="table2_ch_1" role="columnheader">header1</td>
+          <td id="table2_ch_2" role="columnheader">header2</td>
+        </tr>
+      </table>
+    </div>
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td id="table2_dc_1" role="gridcell">cell1</td>
+          <td id="table2_dc_2" role="gridcell" tabindex="-1">cell2</td>
+        </tr>
+      </table>
     </div>
   </div>
 
