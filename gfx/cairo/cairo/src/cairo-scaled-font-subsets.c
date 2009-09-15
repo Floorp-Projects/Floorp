@@ -230,11 +230,13 @@ _cairo_sub_fonts_equal (const void *key_a, const void *key_b)
 {
     const cairo_sub_font_t *sub_font_a = key_a;
     const cairo_sub_font_t *sub_font_b = key_b;
+    cairo_scaled_font_t *a = sub_font_a->scaled_font;
+    cairo_scaled_font_t *b = sub_font_b->scaled_font;
 
     if (sub_font_a->is_scaled)
-        return sub_font_a->scaled_font == sub_font_b->scaled_font;
+        return a == b;
     else
-        return sub_font_a->scaled_font->font_face == sub_font_b->scaled_font->font_face;
+	return a->font_face == b->font_face || a->original_font_face == b->original_font_face;
 }
 
 static void
