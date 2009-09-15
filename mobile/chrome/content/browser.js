@@ -67,8 +67,7 @@ function debug() {
   let bv = Browser._browserView;
   let tc = bv._tileManager._tileCache;
   let scrollbox = document.getElementById("tile-container-container")
-		.boxObject
-		.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+                .boxObject.QueryInterface(Ci.nsIScrollBoxObject);
 
   let x = {};
   let y = {};
@@ -404,10 +403,13 @@ var Browser = {
       // Resize the browsers...
       let browsers = Browser.browsers;
       if (browsers) {
-        let scaledH = (kDefaultBrowserWidth * (h / w));
+        let scaledDefaultH = (kDefaultBrowserWidth * (h / w));
+        let scaledScreenH = (window.screen.width * (h / w));
         for (let i=0; i<browsers.length; i++) {
           let browserStyle = browsers[i].style;
-          browserStyle.height = scaledH + 'px';
+          browserStyle.height = ((browsers[i].hasOwnProperty("handheld") && 
+                                  browsers[i].handheld) ? 
+                                 scaledScreenH : scaledDefaultH) + "px";
         }
       }
 
@@ -1051,22 +1053,22 @@ var Browser = {
       dx: dx,
       dy: dy,
       notify: function kineticTimerCallback(timer) {
-	if (this.dx == 0 && this.dy == 0) {
-	  timer.cancel();
-	  return;
-	}
-	Browser.contentScrollbox.customDragger.dragMove(this.sx, this.sy, this.scroller);
+        if (this.dx == 0 && this.dy == 0) {
+          timer.cancel();
+          return;
+        }
+        Browser.contentScrollbox.customDragger.dragMove(this.sx, this.sy, this.scroller);
 
-	if (this.dx != 0) this.dx -= this.sx;
-	if (this.dy != 0) this.dy -= this.sy;
+        if (this.dx != 0) this.dx -= this.sx;
+        if (this.dy != 0) this.dy -= this.sy;
       }
     };
 
     this._zoomTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     //initialize our timer with updateInterval
     this._zoomTimer.initWithCallback(callback,
-				     2,
-				     this._zoomTimer.TYPE_REPEATING_PRECISE);
+                                     2,
+                                     this._zoomTimer.TYPE_REPEATING_PRECISE);
     */
 
     Browser.contentScrollbox.customDragger.dragMove(dx, dy, scroller);
