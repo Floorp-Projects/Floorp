@@ -310,8 +310,7 @@ class nsOggDecoder : public nsMediaDecoder
   
   virtual float GetCurrentTime();
 
-  virtual nsresult Load(nsIURI* aURI,
-                        nsIChannel* aChannel,
+  virtual nsresult Load(nsIChannel* aChannel,
                         nsIStreamListener **aListener);
 
   // Start playback of a video. 'Load' must have previously been
@@ -327,7 +326,7 @@ class nsOggDecoder : public nsMediaDecoder
   virtual void SetVolume(float volume);
   virtual float GetDuration();
 
-  virtual void GetCurrentURI(nsIURI** aURI);
+  virtual nsMediaStream* GetCurrentStream();
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
   virtual void NotifySuspendedStatusChanged();
@@ -488,9 +487,6 @@ private:
   // this estimate is "decode time" (where the "current time" is the
   // time of the last decoded video frame).
   nsChannelStatistics mPlaybackStatistics;
-
-  // The URI of the current resource
-  nsCOMPtr<nsIURI> mURI;
 
   // Thread to handle decoding of Ogg data.
   nsCOMPtr<nsIThread> mDecodeThread;

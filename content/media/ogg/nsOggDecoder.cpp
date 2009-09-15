@@ -1965,26 +1965,20 @@ nsOggDecoder::~nsOggDecoder()
   nsAutoMonitor::DestroyMonitor(mMonitor);
 }
 
-nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
+nsresult nsOggDecoder::Load(nsIChannel* aChannel,
                             nsIStreamListener** aStreamListener)
 {
-  if (aStreamListener) {
-    *aStreamListener = nsnull;
-  }
+  NS_ASSERTION(aChannel, "A channel is required");
+  NS_ASSERTION(aStreamListener, "A listener should be requested here");
 
-  if (aURI) {
-    NS_ASSERTION(!aStreamListener, "No listener should be requested here");
-    mURI = aURI;
-  } else {
-    NS_ASSERTION(aChannel, "Either a URI or a channel is required");
-    NS_ASSERTION(aStreamListener, "A listener should be requested here");
+  *aStreamListener = nsnull;
 
-    // If the channel was redirected, we want the post-redirect URI;
-    // but if the URI scheme was expanded, say from chrome: to jar:file:,
-    // we want the original URI.
-    nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(mURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  // If the channel was redirected, we want the post-redirect URI;
+  // but if the URI scheme was expanded, say from chrome: to jar:file:,
+  // we want the original URI.
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   {
     // Hold the lock while we do this to set proper lock ordering
@@ -1993,7 +1987,7 @@ nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
     nsAutoMonitor mon(mMonitor);
 
     nsAutoPtr<nsMediaStream> stream;
-    nsresult rv = nsMediaStream::Open(this, mURI, aChannel,
+    nsresult rv = nsMediaStream::Open(this, uri, aChannel,
                                       getter_Transfers(stream),
                                       aStreamListener);
     if (NS_FAILED(rv)) {
@@ -2002,7 +1996,7 @@ nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
     mReader->Init(stream.forget());
   }
 
-  nsresult rv = NS_NewThread(getter_AddRefs(mDecodeThread));
+  rv = NS_NewThread(getter_AddRefs(mDecodeThread));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDecodeStateMachine = new nsOggDecodeStateMachine(this);
@@ -2065,9 +2059,9 @@ float nsOggDecoder::GetCurrentTime()
   return mCurrentTime;
 }
 
-void nsOggDecoder::GetCurrentURI(nsIURI** aURI)
+nsMediaStream* nsOggDecoder::GetCurrentStream()
 {
-  NS_IF_ADDREF(*aURI = mURI);
+  return mReader ? mReader->Stream() : nsnull;
 }
 
 already_AddRefed<nsIPrincipal> nsOggDecoder::GetCurrentPrincipal()
