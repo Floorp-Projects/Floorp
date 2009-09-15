@@ -234,67 +234,6 @@ protected:
 };
 #endif
 
-// on x86 linux, the current builds of some popular plugins (notably
-// flashplayer and real) expect a few builtin symbols from libgcc
-// which were available in some older versions of gcc.  However,
-// they're _NOT_ available in newer versions of gcc (eg 3.1), so if
-// we want those plugin to work with a gcc-3.1 built binary, we need
-// to provide these symbols.  MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS defaults
-// to true on x86 linux, and false everywhere else.
-//
-// The fact that the new and free operators are mismatched 
-// mirrors the way the original functions in egcs 1.1.2 worked.
-
-#ifdef MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS
-
-extern "C" {
-
-# ifndef HAVE___BUILTIN_VEC_NEW
-  void *__builtin_vec_new(size_t aSize, const std::nothrow_t &aNoThrow) throw()
-  {
-    return ::operator new(aSize, aNoThrow);
-  }
-# endif
-
-# ifndef HAVE___BUILTIN_VEC_DELETE
-  void __builtin_vec_delete(void *aPtr, const std::nothrow_t &) throw ()
-  {
-    if (aPtr) {
-      free(aPtr);
-    }
-  }
-# endif
-
-# ifndef HAVE___BUILTIN_NEW
-	void *__builtin_new(int aSize)
-  {
-    return malloc(aSize);
-  }
-# endif
-
-# ifndef HAVE___BUILTIN_DELETE
-	void __builtin_delete(void *aPtr)
-  {
-    free(aPtr);
-  }
-# endif
-
-# ifndef HAVE___PURE_VIRTUAL
-  void __pure_virtual(void) {
-#ifdef WRAP_SYSTEM_INCLUDES
-#pragma GCC visibility push(default)
-#endif
-    extern void __cxa_pure_virtual(void);
-#ifdef WRAP_SYSTEM_INCLUDES
-#pragma GCC visibility pop
-#endif
-
-    __cxa_pure_virtual();
-  }
-# endif
-}
-#endif
-
 #if defined(XP_UNIX) || defined(XP_BEOS)
   extern void InstallUnixSignalHandlers(const char *ProgramName);
 #endif

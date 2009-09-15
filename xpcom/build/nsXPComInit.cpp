@@ -125,9 +125,6 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 
 #include "nsIOUtil.h"
 
-#ifdef GC_LEAK_DETECTOR
-#include "nsLeakDetector.h"
-#endif
 #include "nsRecyclingAllocator.h"
 
 #include "SpecialSystemDirectory.h"
@@ -641,11 +638,6 @@ NS_InitXPCOM3(nsIServiceManager* *result,
     rv = compMgr->RegisterService(kComponentManagerCID, static_cast<nsIComponentManager*>(compMgr));
     if (NS_FAILED(rv)) return rv;
 
-#ifdef GC_LEAK_DETECTOR
-    rv = NS_InitLeakDetector();
-    if (NS_FAILED(rv)) return rv;
-#endif
-
     rv = nsCycleCollector_startup();
     if (NS_FAILED(rv)) return rv;
 
@@ -912,11 +904,6 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 #endif
     
     NS_LogTerm();
-
-#ifdef GC_LEAK_DETECTOR
-    // Shutdown the Leak detector.
-    NS_ShutdownLeakDetector();
-#endif
 
     return NS_OK;
 }
