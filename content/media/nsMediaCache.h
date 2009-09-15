@@ -341,15 +341,17 @@ private:
   friend class nsMediaCache;
 
   /**
-   * A doubly-linked list of blocks. Each block can belong to at most
-   * one list at a time. Add/Remove/Get methods are all constant time.
-   * We declare this here so that a stream can contain a BlockList of its
-   * read-ahead blocks. Blocks are referred to by index into the
-   * nsMediaCache::mIndex array.
+   * A doubly-linked list of blocks. Add/Remove/Get methods are all
+   * constant time. We declare this here so that a stream can contain a
+   * BlockList of its read-ahead blocks. Blocks are referred to by index
+   * into the nsMediaCache::mIndex array.
+   * 
+   * Blocks can belong to more than one list at the same time, because
+   * the next/prev pointers are not stored in the block.
    */
   class BlockList {
   public:
-    BlockList() : mFirstBlock(-1), mCount(0) {}
+    BlockList() : mFirstBlock(-1), mCount(0) { mEntries.Init(); }
     ~BlockList() {
       NS_ASSERTION(mFirstBlock == -1 && mCount == 0,
                    "Destroying non-empty block list");
@@ -361,10 +363,15 @@ private:
     PRInt32 GetFirstBlock() const { return mFirstBlock; }
     // Returns the last block in the list, or -1 if empty
     PRInt32 GetLastBlock() const;
+    // Returns the next block in the list after aBlock or -1 if
+    // aBlock is the last block
+    PRInt32 GetNextBlock(PRInt32 aBlock) const;
+    // Returns the previous block in the list before aBlock or -1 if
+    // aBlock is the first block
+    PRInt32 GetPrevBlock(PRInt32 aBlock) const;
     PRBool IsEmpty() const { return mFirstBlock < 0; }
     PRInt32 GetCount() const { return mCount; }
-    // The contents of aBlockIndex1 and aBlockIndex2 have been swapped;
-    // update mFirstBlock if it refers to either of these
+    // The contents of aBlockIndex1 and aBlockIndex2 have been swapped
     void NotifyBlockSwapped(PRInt32 aBlockIndex1, PRInt32 aBlockIndex2);
 #ifdef DEBUG
     // Verify linked-list invariants
@@ -374,6 +381,16 @@ private:
 #endif
 
   private:
+    struct Entry : public nsUint32HashKey {
+      Entry(KeyTypePointer aKey) : nsUint32HashKey(aKey) { }
+      Entry(const Entry& toCopy) : nsUint32HashKey(&toCopy.GetKey()),
+        mNextBlock(toCopy.mNextBlock), mPrevBlock(toCopy.mPrevBlock) {}
+
+      PRInt32 mNextBlock;
+      PRInt32 mPrevBlock;
+    };
+    nsTHashtable<Entry> mEntries;
+
     // The index of the first block in the list, or -1 if the list is empty.
     PRInt32 mFirstBlock;
     // The number of blocks in the list.

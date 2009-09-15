@@ -223,8 +223,7 @@ protected:
   };
 
   struct Block {
-    Block() : mStream(nsnull), mClass(FREE_BLOCK),
-      mNextBlock(-1), mPrevBlock(-1) {}
+    Block() : mStream(nsnull), mClass(FREE_BLOCK) {}
 
     // The stream that owns this block, or null if the block is free.
     nsMediaCacheStream* mStream;
@@ -235,10 +234,6 @@ protected:
     TimeStamp           mLastUseTime;
     // The class is FREE_BLOCK if and only if mStream is null
     BlockClass          mClass;
-    // Next and previous blocks of this class (circular links, so
-    // always nonnegative)
-    PRInt32             mNextBlock;
-    PRInt32             mPrevBlock;
   };
 
   // Get the BlockList that the block should belong to given its
@@ -297,16 +292,16 @@ static nsMediaCache* gMediaCache;
 
 void nsMediaCacheStream::BlockList::AddFirstBlock(PRInt32 aBlock)
 {
-  nsMediaCache::Block* block = &gMediaCache->mIndex[aBlock];
-  NS_ASSERTION(block->mNextBlock == -1 && block->mPrevBlock == -1,
-               "Block already in list");
+  NS_ASSERTION(!mEntries.GetEntry(aBlock), "Block already in list");
+  Entry* entry = mEntries.PutEntry(aBlock);
+
   if (mFirstBlock < 0) {
-    block->mNextBlock = block->mPrevBlock = aBlock;
+    entry->mNextBlock = entry->mPrevBlock = aBlock;
   } else {
-    block->mNextBlock = mFirstBlock;
-    block->mPrevBlock = gMediaCache->mIndex[mFirstBlock].mPrevBlock;
-    gMediaCache->mIndex[block->mNextBlock].mPrevBlock = aBlock;
-    gMediaCache->mIndex[block->mPrevBlock].mNextBlock = aBlock;
+    entry->mNextBlock = mFirstBlock;
+    entry->mPrevBlock = mEntries.GetEntry(mFirstBlock)->mPrevBlock;
+    mEntries.GetEntry(entry->mNextBlock)->mPrevBlock = aBlock;
+    mEntries.GetEntry(entry->mPrevBlock)->mNextBlock = aBlock;
   }
   mFirstBlock = aBlock;
   ++mCount;
@@ -314,33 +309,36 @@ void nsMediaCacheStream::BlockList::AddFirstBlock(PRInt32 aBlock)
 
 void nsMediaCacheStream::BlockList::AddAfter(PRInt32 aBlock, PRInt32 aBefore)
 {
-  nsMediaCache::Block* block = &gMediaCache->mIndex[aBlock];
-  NS_ASSERTION(block->mNextBlock == -1 && block->mPrevBlock == -1,
-               "Block already in list");
-  NS_ASSERTION(mFirstBlock >= 0, "Can't AddAfter to an empty list");
+  NS_ASSERTION(!mEntries.GetEntry(aBlock), "Block already in list");
+  Entry* entry = mEntries.PutEntry(aBlock);
 
-  block->mNextBlock = gMediaCache->mIndex[aBefore].mNextBlock;
-  block->mPrevBlock = aBefore;
-  gMediaCache->mIndex[block->mNextBlock].mPrevBlock = aBlock;
-  gMediaCache->mIndex[block->mPrevBlock].mNextBlock = aBlock;
+  Entry* addAfter = mEntries.GetEntry(aBefore);
+  NS_ASSERTION(addAfter, "aBefore not in list");
+
+  entry->mNextBlock = addAfter->mNextBlock;
+  entry->mPrevBlock = aBefore;
+  mEntries.GetEntry(entry->mNextBlock)->mPrevBlock = aBlock;
+  mEntries.GetEntry(entry->mPrevBlock)->mNextBlock = aBlock;
   ++mCount;
 }
 
 void nsMediaCacheStream::BlockList::RemoveBlock(PRInt32 aBlock)
 {
-  nsMediaCache::Block* block = &gMediaCache->mIndex[aBlock];
-  if (block->mNextBlock == aBlock) {
-    NS_ASSERTION(block->mPrevBlock == aBlock, "Linked list inconsistency");
+  Entry* entry = mEntries.GetEntry(aBlock);
+  NS_ASSERTION(entry, "Block not in list");
+
+  if (entry->mNextBlock == aBlock) {
+    NS_ASSERTION(entry->mPrevBlock == aBlock, "Linked list inconsistency");
     NS_ASSERTION(mFirstBlock == aBlock, "Linked list inconsistency");
     mFirstBlock = -1;
   } else {
     if (mFirstBlock == aBlock) {
-      mFirstBlock = block->mNextBlock;
+      mFirstBlock = entry->mNextBlock;
     }
-    gMediaCache->mIndex[block->mNextBlock].mPrevBlock = block->mPrevBlock;
-    gMediaCache->mIndex[block->mPrevBlock].mNextBlock = block->mNextBlock;
+    mEntries.GetEntry(entry->mNextBlock)->mPrevBlock = entry->mPrevBlock;
+    mEntries.GetEntry(entry->mPrevBlock)->mNextBlock = entry->mNextBlock;
   }
-  block->mPrevBlock = block->mNextBlock = -1;
+  mEntries.RemoveEntry(aBlock);
   --mCount;
 }
 
@@ -348,7 +346,22 @@ PRInt32 nsMediaCacheStream::BlockList::GetLastBlock() const
 {
   if (mFirstBlock < 0)
     return -1;
-  return gMediaCache->mIndex[mFirstBlock].mPrevBlock;
+  return mEntries.GetEntry(mFirstBlock)->mPrevBlock;
+}
+
+PRInt32 nsMediaCacheStream::BlockList::GetNextBlock(PRInt32 aBlock) const
+{
+  PRInt32 block = mEntries.GetEntry(aBlock)->mNextBlock;
+  if (block == mFirstBlock)
+    return -1;
+  return block;
+}
+
+PRInt32 nsMediaCacheStream::BlockList::GetPrevBlock(PRInt32 aBlock) const
+{
+  if (aBlock == mFirstBlock)
+    return -1;
+  return mEntries.GetEntry(aBlock)->mPrevBlock;
 }
 
 #ifdef DEBUG
@@ -357,13 +370,13 @@ void nsMediaCacheStream::BlockList::Verify()
   PRInt32 count = 0;
   if (mFirstBlock >= 0) {
     PRInt32 block = mFirstBlock;
-    nsMediaCache::Block* elem = gMediaCache->mIndex.Elements();
     do {
-      NS_ASSERTION(elem[elem[block].mNextBlock].mPrevBlock == block,
+      Entry* entry = mEntries.GetEntry(block);
+      NS_ASSERTION(mEntries.GetEntry(entry->mNextBlock)->mPrevBlock == block,
                    "Bad prev link");
-      NS_ASSERTION(elem[elem[block].mPrevBlock].mNextBlock == block,
-                   "Bad prev link");
-      block = gMediaCache->mIndex[block].mNextBlock;
+      NS_ASSERTION(mEntries.GetEntry(entry->mPrevBlock)->mNextBlock == block,
+                   "Bad next link");
+      block = entry->mNextBlock;
       ++count;
     } while (block != mFirstBlock);
   }
@@ -386,7 +399,55 @@ void
 nsMediaCacheStream::BlockList::NotifyBlockSwapped(PRInt32 aBlockIndex1,
                                                   PRInt32 aBlockIndex2)
 {
+  Entry* e1 = mEntries.GetEntry(aBlockIndex1);
+  Entry* e2 = mEntries.GetEntry(aBlockIndex2);
+  PRInt32 e1Prev = -1, e1Next = -1, e2Prev = -1, e2Next = -1;
+
+  // Fix mFirstBlock
   UpdateSwappedBlockIndex(&mFirstBlock, aBlockIndex1, aBlockIndex2);
+
+  // Fix mNextBlock/mPrevBlock links. First capture previous/next links
+  // so we don't get confused due to aliasing.
+  if (e1) {
+    e1Prev = e1->mPrevBlock;
+    e1Next = e1->mNextBlock;
+  }
+  if (e2) {
+    e2Prev = e2->mPrevBlock;
+    e2Next = e2->mNextBlock;
+  }
+  // Update the entries.
+  if (e1) {
+    mEntries.GetEntry(e1Prev)->mNextBlock = aBlockIndex2;
+    mEntries.GetEntry(e1Next)->mPrevBlock = aBlockIndex2;
+  }
+  if (e2) {
+    mEntries.GetEntry(e2Prev)->mNextBlock = aBlockIndex1;
+    mEntries.GetEntry(e2Next)->mPrevBlock = aBlockIndex1;
+  }
+
+  // Fix hashtable keys. First remove stale entries.
+  if (e1) {
+    e1Prev = e1->mPrevBlock;
+    e1Next = e1->mNextBlock;
+    mEntries.RemoveEntry(aBlockIndex1);
+  }
+  if (e2) {
+    e2Prev = e2->mPrevBlock;
+    e2Next = e2->mNextBlock;
+    mEntries.RemoveEntry(aBlockIndex2);
+  }
+  // Put new entries back.
+  if (e1) {
+    e1 = mEntries.PutEntry(aBlockIndex2);
+    e1->mNextBlock = e1Next;
+    e1->mPrevBlock = e1Prev;
+  }
+  if (e2) {
+    e2 = mEntries.PutEntry(aBlockIndex1);
+    e2->mNextBlock = e2Next;
+    e2->mPrevBlock = e2Prev;
+  }
 }
 
 nsresult
@@ -581,10 +642,9 @@ nsMediaCache::AppendMostReusableBlock(BlockList* aBlockList,
 {
   PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mMonitor);
 
-  PRInt32 lastBlock = aBlockList->GetLastBlock();
-  if (lastBlock < 0)
+  PRInt32 blockIndex = aBlockList->GetLastBlock();
+  if (blockIndex < 0)
     return;
-  PRInt32 blockIndex = lastBlock;
   do {
     // Don't consider blocks for pinned streams, or blocks that are
     // beyond the specified limit, or the block that contains its stream's
@@ -596,8 +656,8 @@ nsMediaCache::AppendMostReusableBlock(BlockList* aBlockList,
       aResult->AppendElement(blockIndex);
       return;
     }
-    blockIndex = mIndex[blockIndex].mPrevBlock;
-  } while (blockIndex != lastBlock);
+    blockIndex = aBlockList->GetPrevBlock(blockIndex);
+  } while (blockIndex >= 0);
 }
 
 PRInt32
@@ -624,13 +684,12 @@ nsMediaCache::FindReusableBlock(TimeStamp aNow,
   }
 
   if (!mFreeBlocks.IsEmpty()) {
-    PRInt32 firstBlock = mFreeBlocks.GetFirstBlock();
-    PRInt32 blockIndex = firstBlock;
+    PRInt32 blockIndex = mFreeBlocks.GetFirstBlock();
     do {
       if (blockIndex < aMaxSearchBlockIndex)
         return blockIndex;
-      blockIndex = mIndex[blockIndex].mNextBlock;
-    } while (blockIndex != firstBlock);
+      blockIndex = mFreeBlocks.GetNextBlock(blockIndex);
+    } while (blockIndex >= 0);
   }
 
   // Build a list of the blocks we should consider for the "latest
@@ -649,15 +708,14 @@ nsMediaCache::FindReusableBlock(TimeStamp aNow,
     if (!stream->mReadaheadBlocks.IsEmpty() && stream->mIsSeekable &&
         stream->mPinCount == 0) {
       // Find a readahead block that's in the given limit
-      PRInt32 lastBlock = stream->mReadaheadBlocks.GetLastBlock();
-      PRInt32 blockIndex = lastBlock;
+      PRInt32 blockIndex = stream->mReadaheadBlocks.GetLastBlock();
       do {
         if (PRUint32(blockIndex) < length) {
           candidates.AppendElement(blockIndex);
           break;
         }
-        blockIndex = mIndex[blockIndex].mPrevBlock;
-      } while (blockIndex != lastBlock);
+        blockIndex = stream->mReadaheadBlocks.GetPrevBlock(blockIndex);
+      } while (blockIndex >= 0);
     }
   }
 
@@ -736,26 +794,6 @@ nsMediaCache::SwapBlocks(PRInt32 aBlockIndex1, PRInt32 aBlockIndex2)
   // We have to be careful we don't swap the same reference twice!
   if (list1 != list2) {
     list2->NotifyBlockSwapped(aBlockIndex1, aBlockIndex2);
-  }
-
-  // Find all the blocks that have references to the swapped blocks
-  nsAutoTArray<PRInt32,4> blocksWithReferences;
-  blocksWithReferences.AppendElement(block1->mPrevBlock);
-  blocksWithReferences.AppendElement(block1->mNextBlock);
-  blocksWithReferences.AppendElement(block2->mPrevBlock);
-  blocksWithReferences.AppendElement(block2->mNextBlock);
-  blocksWithReferences.Sort();
-  for (PRUint32 i = 0; i < 4; ++i) {
-    // We have to be careful we don't swap the same reference twice!
-    if (i == 0 || blocksWithReferences[i] != blocksWithReferences[i - 1]) {
-      PRInt32 blockIndex = blocksWithReferences[i];
-      // Note that the references we collected may belong to swapped
-      // blocks ... make sure we update the right block
-      UpdateSwappedBlockIndex(&blockIndex, aBlockIndex1, aBlockIndex2);
-      Block* block = &mIndex[blockIndex];
-      UpdateSwappedBlockIndex(&block->mNextBlock, aBlockIndex1, aBlockIndex2);
-      UpdateSwappedBlockIndex(&block->mPrevBlock, aBlockIndex1, aBlockIndex2);
-    }
   }
 
   Verify();
@@ -1114,16 +1152,15 @@ nsMediaCache::Verify()
     stream->mReadaheadBlocks.Verify();
     if (!stream->mReadaheadBlocks.IsEmpty()) {
       // Verify that the readahead blocks are listed in stream block order
-      PRInt32 firstBlock = stream->mReadaheadBlocks.GetFirstBlock();
-      PRInt32 block = firstBlock;
+      PRInt32 block = stream->mReadaheadBlocks.GetFirstBlock();
       PRInt32 lastStreamBlock = -1;
       do {
         NS_ASSERTION(mIndex[block].mStream == stream, "Bad stream");
         NS_ASSERTION(lastStreamBlock < PRInt32(mIndex[block].mStreamBlock),
                      "Blocks not increasing in readahead stream");
         lastStreamBlock = PRInt32(mIndex[block].mStreamBlock);
-        block = mIndex[block].mNextBlock;
-      } while (block != firstBlock);
+        block = stream->mReadaheadBlocks.GetNextBlock(block);
+      } while (block >= 0);
     }
   }
 }
@@ -1143,8 +1180,7 @@ nsMediaCache::InsertReadaheadBlock(PRInt32 aBlockIndex)
 
   // Find the last block whose stream block is before aBlockIndex's
   // stream block, and insert after it
-  PRInt32 lastIndex = stream->mReadaheadBlocks.GetLastBlock();
-  PRInt32 readaheadIndex = lastIndex;
+  PRInt32 readaheadIndex = stream->mReadaheadBlocks.GetLastBlock();
   do {
     if (mIndex[readaheadIndex].mStreamBlock < block->mStreamBlock) {
       stream->mReadaheadBlocks.AddAfter(aBlockIndex, readaheadIndex);
@@ -1152,8 +1188,8 @@ nsMediaCache::InsertReadaheadBlock(PRInt32 aBlockIndex)
     }
     NS_ASSERTION(mIndex[readaheadIndex].mStreamBlock > block->mStreamBlock,
                  "Duplicated blocks??");
-    readaheadIndex = mIndex[readaheadIndex].mPrevBlock;
-  } while (readaheadIndex != lastIndex);
+    readaheadIndex = stream->mReadaheadBlocks.GetPrevBlock(readaheadIndex);
+  } while (readaheadIndex >= 0);
   stream->mReadaheadBlocks.AddFirstBlock(aBlockIndex);
   Verify();
 }
