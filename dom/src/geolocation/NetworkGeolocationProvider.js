@@ -147,7 +147,10 @@ WifiGeoPositionProvider.prototype = {
     classDescription: "A component that returns a geolocation based on WIFI",
     classID:          Components.ID("{77DA64D3-7458-4920-9491-86CC9914F904}"),
     contractID:       "@mozilla.org/geolocation/provider;1",
-    QueryInterface:   XPCOMUtils.generateQI([Ci.nsIGeolocationProvider, Ci.nsIWifiListener, Ci.nsITimerCallback]),
+    QueryInterface:   XPCOMUtils.generateQI([Ci.nsIGeolocationProvider,
+                                             Ci.nsIWifiListener,
+                                             Ci.nsITimerCallback,
+                                             Ci.nsISupportsWeakReference]),
 
     prefService:     null,
 
@@ -185,7 +188,7 @@ WifiGeoPositionProvider.prototype = {
 
 
         let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-        os.addObserver(this, "private-browsing", false);
+        os.addObserver(this, "private-browsing", true);
     },
 
     watch: function(c) {
@@ -215,9 +218,6 @@ WifiGeoPositionProvider.prototype = {
         let prefBranch = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
         if (prefBranch.getIntPref("network.cookie.lifetimePolicy") != 0)
             prefBranch.deleteBranch("geo.wifi.access_token.");
-
-        let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-        os.removeObserver(this, "private-browsing");
     },
 
     getAccessTokenForURL: function(url)
