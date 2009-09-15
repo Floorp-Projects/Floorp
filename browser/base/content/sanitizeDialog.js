@@ -148,8 +148,12 @@ var gSanitizePromptDialog = {
   /**
    * If the panel that displays a warning when the duration is "Everything" is
    * not set up, sets it up.  Otherwise does nothing.
+   *
+   * @param aDontShowItemList Whether only the warning message should be updated.
+   *                          True means the item list visibility status should not
+   *                          be changed.
    */
-  prepareWarning: function () {
+  prepareWarning: function (aDontShowItemList) {
     // If the date and time-aware locale warning string is ever used again,
     // initialize it here.  Currently we use the no-visits warning string,
     // which does not include date and time.  See bug 480169 comment 48.
@@ -157,7 +161,8 @@ var gSanitizePromptDialog = {
     var warningStringID;
     if (this.hasCustomizedItemSelection()) {
       warningStringID = "sanitizeSelectedWarning";
-      this.showItemList();
+      if (!aDontShowItemList)
+        this.showItemList();
     }
     else {
       warningStringID = "sanitizeEverythingWarning2";
@@ -192,7 +197,7 @@ var gSanitizePromptDialog = {
     catch (e) { }
 
     // Update the warning prompt if needed
-    this.prepareWarning();
+    this.prepareWarning(true);
 
     return undefined;
   },
