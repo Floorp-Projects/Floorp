@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
     function doTest()
     {
       //////////////////////////////////////////////////////////////////////////
-      // table
+      // ARIA grid
       var cellsArray =
       [
         [ true, true,  false, true],
@@ -40,6 +40,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       testSelectTableColumn("table", 0, cellsArray);
       testSelectTableRow("table", 0, cellsArray);
 
+      //////////////////////////////////////////////////////////////////////////
+      // a bit crazy ARIA grid
+      cellsArray =
+      [
+        [ false, false],
+        [ false, false]
+      ];
+
+      testTableSelection("grid2", cellsArray);
+      testSelectTableColumn("grid2", 0, cellsArray);
+      testSelectTableRow("grid2", 0, cellsArray);
+      testUnselectTableColumn("grid2", 0, cellsArray);
+      testUnselectTableRow("grid2", 0, cellsArray);
+
       SimpleTest.finish();
     }
 
@@ -52,6 +66,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
   <a target="_blank"
      title="implement nsIAccessibleTable selection methods for ARIA grids"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=410052">Mozilla Bug 410052</a>
+  <a target="_blank"
+     title="nsHTMLTableCellAccessible is used in dojo's crazy ARIA grid"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=513848">Mozilla Bug 513848</a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -87,6 +105,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       <span role="gridcell" aria-selected="true">cell18</span>
       <span role="gridcell" aria-selected="true">cell19</span>
       <span role="gridcell" aria-selected="true">cell20</span>
+    </div>
+  </div>
+
+  <div role="grid" id="grid2">
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td role="columnheader">header1</td>
+          <td role="columnheader">header2</td>
+        </tr>
+      </table>
+    </div>
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td role="gridcell">cell1</td>
+          <td role="gridcell" tabindex="-1">cell2</td>
+        </tr>
+      </table>
     </div>
   </div>
 

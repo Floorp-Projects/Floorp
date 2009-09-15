@@ -33,13 +33,22 @@
 
       //////////////////////////////////////////////////////////////////////////
       // HTML table based ARIA grid
-      var cellsArray = [
+      cellsArray = [
         [kColHeaderCell, kColHeaderCell, kColHeaderCell],
         [kDataCell,      kDataCell,      kDataCell],
         [kDataCell,      kDataCell,      kDataCell]
       ];
 
       testTableStruct("grid", cellsArray);
+
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA grid with HTML table elements
+      cellsArray = [
+        [kColHeaderCell, kColHeaderCell],
+        [kDataCell,      kDataCell]
+      ];
+
+      testTableStruct("grid2", cellsArray);
 
       SimpleTest.finish();
     }
@@ -56,6 +65,9 @@
   <a target="_blank"
      title="implement IAccessibleTable2"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=512424">Mozilla Bug 512424</a>
+  <a target="_blank"
+     title="nsHTMLTableCellAccessible is used in dojo's crazy ARIA grid"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=513848">Mozilla Bug 513848</a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -99,6 +111,27 @@
       </tr>
     </tbody>
   </table>
+
+  <!-- ARIA grid containing presentational HTML:table with HTML:td used as ARIA
+    grid cells (focusable and not focusable cells) -->
+  <div role="grid" id="grid2">
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td role="columnheader">header1</td>
+          <td role="columnheader">header2</td>
+        </tr>
+      </table>
+    </div>
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td role="gridcell">cell1</td>
+          <td role="gridcell" tabindex="-1">cell2</td>
+        </tr>
+      </table>
+    </div>
+  </div>
 
 </body>
 </html>
