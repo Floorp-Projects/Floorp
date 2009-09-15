@@ -187,7 +187,6 @@ var BrowserUI = {
     return this._edit.popup.popupOpen;
   },
 
-
   _toolbarLocked: 0,
   lockToolbar: function lockToolbar() {
     this._toolbarLocked++;
@@ -504,6 +503,8 @@ var BrowserUI = {
   },
 
   showAutoComplete : function(showDefault) {
+    if (this.isToolbarOpen())
+      return;
     BrowserSearch.updateSearchButtons();
     this._edit.showHistoryPopup();
   },
