@@ -74,6 +74,12 @@
 #include "jsvector.h"
 
 
+#ifndef JS_HAVE_STDINT_H /* Native support is innocent until proven guilty. */
+#ifdef _MSC_VER /* Silence integer constant overflow warnings. */
+#pragma warning(push)
+#pragma warning(disable:4307)
+#endif
+
 JS_STATIC_ASSERT(uint8_t(-1) == UINT8_MAX);
 JS_STATIC_ASSERT(uint16_t(-1) == UINT16_MAX);
 JS_STATIC_ASSERT(uint32_t(-1) == UINT32_MAX);
@@ -97,6 +103,10 @@ JS_STATIC_ASSERT(ptrdiff_t(PTRDIFF_MAX) == PTRDIFF_MAX);
 JS_STATIC_ASSERT(ptrdiff_t(PTRDIFF_MIN) == PTRDIFF_MIN);
 JS_STATIC_ASSERT(ptrdiff_t(PTRDIFF_MAX + 1) == PTRDIFF_MIN);
 
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+#endif /* JS_HAVE_STDINT_H */
 
 static JSBool
 num_isNaN(JSContext *cx, uintN argc, jsval *vp)
