@@ -164,6 +164,8 @@ namespace nanojit
             // Log controller object.  Contains what-stuff-should-we-print
             // bits, and a sink function for debug printing
             LogControl* _logc;
+            size_t codeBytes;
+            size_t exitBytes;
             #endif
 
             Assembler(CodeAlloc& codeAlloc, Allocator& alloc, AvmCore* core, LogControl* logc);
@@ -227,7 +229,8 @@ namespace nanojit
             void        evict(Register r, LIns* vic);
             RegisterMask hint(LIns*i, RegisterMask allow);
 
-            void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip);
+            void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip
+                                  verbose_only(, size_t &nBytes));
             bool        canRemat(LIns*);
 
             bool isKnownReg(Register r) {
@@ -258,6 +261,7 @@ namespace nanojit
 
             bool        _inExit, vpad2[3];
 
+            verbose_only( void asm_inc_m32(uint32_t*); )
             void        asm_setcc(Register res, LIns *cond);
             NIns *      asm_jmpcc(bool brOnFalse, LIns *cond, NIns *target);
             void        asm_mmq(Register rd, int dd, Register rs, int ds);

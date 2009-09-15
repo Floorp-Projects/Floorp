@@ -1396,6 +1396,15 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
     }
 }
 
+// Increment the 32-bit profiling counter at pCtr, without
+// changing any registers.
+verbose_only(
+void Assembler::asm_inc_m32(uint32_t* pCtr)
+{
+    // todo: implement this
+}
+)
+
 void
 Assembler::nativePageReset()
 {
@@ -1408,9 +1417,9 @@ void
 Assembler::nativePageSetup()
 {
     if (!_nIns)
-        codeAlloc(codeStart, codeEnd, _nIns);
+        codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
     if (!_nExitIns)
-        codeAlloc(exitStart, exitEnd, _nExitIns);
+        codeAlloc(exitStart, exitEnd, _nExitIns verbose_only(, exitBytes));
 
     // constpool starts at top of page and goes down,
     // code starts at bottom of page and moves up
@@ -1433,9 +1442,9 @@ Assembler::underrunProtect(int bytes)
         verbose_only(verbose_outputf("        %p:", _nIns);)
         NIns* target = _nIns;
         if (_inExit)
-            codeAlloc(exitStart, exitEnd, _nIns);
+            codeAlloc(exitStart, exitEnd, _nIns verbose_only(, exitBytes));
         else
-            codeAlloc(codeStart, codeEnd, _nIns);
+            codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
 
         _nSlot = _inExit ? exitStart : codeStart;
 

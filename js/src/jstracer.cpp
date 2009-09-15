@@ -82,7 +82,6 @@
 #include "jsautooplen.h"        // generated headers last
 #include "imacros.c.out"
 
-using namespace avmplus;
 using namespace nanojit;
 
 #if JS_HAS_XML_SUPPORT
@@ -374,6 +373,7 @@ InitJITLogController()
             "  regexp       show compilation & entry for regexps\n"
             "  treevis      spew that tracevis/tree.py can parse\n"
             "  ------ options for Nanojit ------\n"
+            "  fragprofile  count entries and exits for each fragment\n"
             "  liveness     show LIR liveness at start of rdr pipeline\n"
             "  readlir      show LIR as it enters the reader pipeline\n"
             "  aftersf      show LIR after StackFilter\n"
@@ -398,6 +398,7 @@ InitJITLogController()
     if (strstr(tmf, "treevis"))                         bits |= LC_TMTreeVis;
 
     /* flags for nanojit */
+    if (strstr(tmf, "fragprofile"))                     bits |= LC_FragProfile;
     if (strstr(tmf, "liveness") || strstr(tmf, "full")) bits |= LC_Liveness;
     if (strstr(tmf, "readlir")  || strstr(tmf, "full")) bits |= LC_ReadLIR;
     if (strstr(tmf, "aftersf")  || strstr(tmf, "full")) bits |= LC_AfterSF;
@@ -410,6 +411,236 @@ InitJITLogController()
 
 }
 #endif
+
+/* ------------------ Frag-level profiling support ------------------ */
+
+#ifdef JS_JIT_SPEW
+
+/*
+ * All the allocations done by this profile data-collection and
+ * display machinery, are done in JSTraceMonitor::profAlloc.  That is
+ * emptied out at the end of js_FinishJIT.  It has a lifetime from
+ * js_InitJIT to js_FinishJIT, which exactly matches the span
+ * js_FragProfiling_init to js_FragProfiling_showResults.
+ */
+template<class T>
+static
+Seq<T>* reverseInPlace(Seq<T>* seq)
+{
+    Seq<T>* prev = NULL;
+    Seq<T>* curr = seq;
+    while (curr) {
+        Seq<T>* next = curr->tail;
+        curr->tail = prev;
+        prev = curr;
+        curr = next;
+    }
+    return prev;
+}
+
+// The number of top blocks to show in the profile
+#define N_TOP_BLOCKS 50
+
+// Contains profile info for a single guard
+struct GuardPI {
+    uint32_t guardID; // identifying number
+    uint32_t count;   // count.
+};
+
+struct FragPI {
+    uint32_t count;          // entry count for this Fragment
+    uint32_t nStaticExits;   // statically: the number of exits
+    size_t nCodeBytes;       // statically: the number of insn bytes in the main fragment
+    size_t nExitBytes;       // statically: the number of insn bytes in the exit paths
+    Seq<GuardPI>* guards;    // guards, each with its own count
+    uint32_t largestGuardID; // that exists in .guards
+};
+
+/* A mapping of Fragment.profFragID to FragPI */
+typedef HashMap<uint32_t,FragPI> FragStatsMap;
+
+void
+js_FragProfiling_FragFinalizer(Fragment* f, JSTraceMonitor* tm)
+{
+    // Recover profiling data from 'f', which is logically at the end
+    // of its useful lifetime.
+    if (!(js_LogController.lcbits & LC_FragProfile))
+        return;
+
+    NanoAssert(f);
+    // Valid profFragIDs start at 1
+    NanoAssert(f->profFragID >= 1);
+    // Should be called exactly once per Fragment.  This will assert if
+    // you issue the same FragID to more than one Fragment.
+    NanoAssert(!tm->profTab->containsKey(f->profFragID));
+
+    FragPI pi = { f->profCount,
+                  f->nStaticExits,
+                  f->nCodeBytes,
+                  f->nExitBytes,
+                  NULL, 0 };
+
+    // Begin sanity check on the guards
+    SeqBuilder<GuardPI> guardsBuilder(*tm->profAlloc);
+    GuardRecord* gr;
+    uint32_t nGs = 0;
+    uint32_t sumOfDynExits = 0;
+    for (gr = f->guardsForFrag; gr; gr = gr->nextInFrag) {
+         nGs++;
+         // Also copy the data into our auxiliary structure.
+         // f->guardsForFrag is in reverse order, and so this
+         // copy preserves that ordering (->add adds at end).
+         // Valid profGuardIDs start at 1.
+         NanoAssert(gr->profGuardID > 0);
+         sumOfDynExits += gr->profCount;
+         GuardPI gpi = { gr->profGuardID, gr->profCount };
+         guardsBuilder.add(gpi);
+         if (gr->profGuardID > pi.largestGuardID)
+             pi.largestGuardID = gr->profGuardID;
+    }
+    pi.guards = guardsBuilder.get();
+    // And put the guard list in forwards order
+    pi.guards = reverseInPlace(pi.guards);
+
+    // Why is this so?  Because nGs is the number of guards
+    // at the time the LIR was generated, whereas f->nStaticExits
+    // is the number of them observed by the time it makes it
+    // through to the assembler.  It can be the case that LIR
+    // optimisation removes redundant guards; hence we expect
+    // nGs to always be the same or higher.
+    NanoAssert(nGs >= f->nStaticExits);
+
+    // Also we can assert that the sum of the exit counts
+    // can't exceed the entry count.  It'd be nice to assert that
+    // they are exactly equal, but we can't because we don't know
+    // how many times we got to the end of the trace.
+    NanoAssert(f->profCount >= sumOfDynExits);
+
+    // End sanity check on guards
+
+    tm->profTab->put(f->profFragID, pi);
+}
+
+static void
+js_FragProfiling_showResults(JSTraceMonitor* tm)
+{
+    uint32_t topFragID[N_TOP_BLOCKS];
+    FragPI   topPI[N_TOP_BLOCKS];
+    uint64_t totCount = 0, cumulCount;
+    uint32_t totSE = 0;
+    size_t   totCodeB = 0, totExitB = 0;
+    memset(topFragID, 0, sizeof(topFragID));
+    memset(topPI,     0, sizeof(topPI));
+    FragStatsMap::Iter iter(*tm->profTab);
+    while (iter.next()) {
+        uint32_t fragID  = iter.key();
+        FragPI   pi      = iter.value();
+        uint32_t count   = pi.count;
+        totCount += (uint64_t)count;
+        /* Find the rank for this entry, in tops */
+        int r = N_TOP_BLOCKS-1;
+        while (true) {
+            if (r == -1)
+                break;
+            if (topFragID[r] == 0) {
+                r--;
+                continue;
+            }
+            if (count > topPI[r].count) {
+                r--;
+                continue;
+            }
+            break;
+        }
+        r++;
+        AvmAssert(r >= 0 && r <= N_TOP_BLOCKS);
+        /* This entry should be placed at topPI[r], and entries
+           at higher numbered slots moved up one. */
+        if (r < N_TOP_BLOCKS) {
+            for (int s = N_TOP_BLOCKS-1; s > r; s--) {
+                topFragID[s] = topFragID[s-1];
+                topPI[s]     = topPI[s-1];
+            }
+            topFragID[r] = fragID;
+            topPI[r]     = pi;
+        }
+    }
+
+    js_LogController.printf(
+        "\n----------------- Per-fragment execution counts ------------------\n");
+    js_LogController.printf(
+        "\nTotal count = %llu\n\n", totCount);
+
+    js_LogController.printf(
+        "           Entry counts         Entry counts       ----- Static -----\n");
+    js_LogController.printf(
+        "         ------Self------     ----Cumulative---   Exits  Cbytes Xbytes   FragID\n");
+    js_LogController.printf("\n");
+
+    if (totCount == 0)
+        totCount = 1; /* avoid division by zero */
+    cumulCount = 0;
+    int r;
+    for (r = 0; r < N_TOP_BLOCKS; r++) {
+        if (topFragID[r] == 0)
+            break;
+        cumulCount += (uint64_t)topPI[r].count;
+        js_LogController.printf("%3d:     %5.2f%% %9u     %6.2f%% %9llu"
+                                "     %3d   %5u  %5u   %06u\n",
+                                r,
+                                (double)topPI[r].count * 100.0 / (double)totCount,
+                                topPI[r].count,
+                                (double)cumulCount * 100.0 / (double)totCount,
+                                cumulCount,
+                                topPI[r].nStaticExits,
+                                topPI[r].nCodeBytes,
+                                topPI[r].nExitBytes,
+                                topFragID[r]);
+        totSE += (uint32_t)topPI[r].nStaticExits;
+        totCodeB += topPI[r].nCodeBytes;
+        totExitB += topPI[r].nExitBytes;
+    }
+    js_LogController.printf("\nTotal displayed code bytes = %u, "
+                            "exit bytes = %u\n"
+                            "Total displayed static exits = %d\n\n",
+                            totCodeB, totExitB, totSE);
+
+    js_LogController.printf("Analysis by exit counts\n\n");
+
+    for (r = 0; r < N_TOP_BLOCKS; r++) {
+        if (topFragID[r] == 0)
+            break;
+        js_LogController.printf("FragID=%06u, total count %u:\n", topFragID[r],
+                                topPI[r].count);
+        uint32_t madeItToEnd = topPI[r].count;
+        uint32_t totThisFrag = topPI[r].count;
+        if (totThisFrag == 0)
+            totThisFrag = 1;
+        GuardPI gpi;
+        // visit the guards, in forward order
+        for (Seq<GuardPI>* guards = topPI[r].guards; guards; guards = guards->tail) {
+            gpi = (*guards).head;
+            if (gpi.count == 0)
+                continue;
+            madeItToEnd -= gpi.count;
+            js_LogController.printf("   GuardID=%03u    %7u (%5.2f%%)\n",
+                                    gpi.guardID, gpi.count,
+                                    100.0 * (double)gpi.count / (double)totThisFrag);
+        }
+        js_LogController.printf("   Looped (%03u)   %7u (%5.2f%%)\n",
+                                topPI[r].largestGuardID+1,
+                                madeItToEnd,
+                                100.0 * (double)madeItToEnd /  (double)totThisFrag);
+        NanoAssert(madeItToEnd <= topPI[r].count); // else unsigned underflow
+        js_LogController.printf("\n");
+    }
+
+    tm->profTab = NULL;
+}
+
+#endif
+
+/* ----------------------------------------------------------------- */
 
 #if defined DEBUG
 static const char*
@@ -842,8 +1073,9 @@ FragmentHash(const void *ip, JSObject* globalObj, uint32 globalShape, uint32 arg
  */
 struct VMFragment : public Fragment
 {
-    VMFragment(const void* _ip, JSObject* _globalObj, uint32 _globalShape, uint32 _argc) :
-        Fragment(_ip),
+    VMFragment(const void* _ip, JSObject* _globalObj, uint32 _globalShape, uint32 _argc
+               verbose_only(, uint32_t profFragID)) :
+        Fragment(_ip verbose_only(, profFragID)),
         first(NULL),
         next(NULL),
         peer(NULL),
@@ -889,7 +1121,12 @@ getLoop(JSTraceMonitor* tm, const void *ip, JSObject* globalObj, uint32 globalSh
 static VMFragment*
 getAnchor(JSTraceMonitor* tm, const void *ip, JSObject* globalObj, uint32 globalShape, uint32 argc)
 {
-    VMFragment *f = new (*tm->allocator) VMFragment(ip, globalObj, globalShape, argc);
+    verbose_only(
+    uint32_t profFragID = (js_LogController.lcbits & LC_FragProfile)
+                          ? (++(tm->lastFragID)) : 0;
+    )
+    VMFragment *f = new (*tm->allocator) VMFragment(ip, globalObj, globalShape, argc
+                                                    verbose_only(, profFragID));
     JS_ASSERT(f);
 
     VMFragment *p = getVMFragment(tm, ip, globalObj, globalShape, argc);
@@ -1709,10 +1946,18 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
       cfgMerges(JS_TRACE_MONITOR(cx).allocator)
 {
     JS_ASSERT(!_fragment->vmprivate && ti && cx->fp->regs->pc == (jsbytecode*)_fragment->ip);
-
-    /* Reset the fragment state we care about in case we got a recycled fragment. */
+    /* Reset the fragment state we care about in case we got a recycled fragment.
+       This includes resetting any profiling data we might have accumulated. */
     _fragment->lastIns = NULL;
-
+    verbose_only( _fragment->profCount = 0; )
+    verbose_only( _fragment->nStaticExits = 0; )
+    verbose_only( _fragment->nCodeBytes = 0; )
+    verbose_only( _fragment->nExitBytes = 0; )
+    verbose_only( _fragment->guardNumberer = 1; )
+    verbose_only( _fragment->guardsForFrag = NULL; )
+    verbose_only( _fragment->loopLabel = NULL; )
+    // don't change _fragment->profFragID, though.  Once the identity of
+    // the Fragment is set up (for profiling purposes), we can't change it.
     this->cx = cx;
     this->traceMonitor = &JS_TRACE_MONITOR(cx);
     this->globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
@@ -1736,8 +1981,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
 
 #ifdef JS_JIT_SPEW
     debug_only_print0(LC_TMMinimal, "\n");
-    debug_only_printf(LC_TMMinimal, "Recording starting from %s:%u@%u\n",
-                      ti->treeFileName, ti->treeLineNumber, ti->treePCOffset);
+    debug_only_printf(LC_TMMinimal, "Recording starting from %s:%u@%u (FragID=%06u)\n",
+                      ti->treeFileName, ti->treeLineNumber, ti->treePCOffset,
+                      _fragment->profFragID);
 
     debug_only_printf(LC_TMTracer, "globalObj=%p, shape=%d\n",
                       (void*)this->globalObj, OBJ_SHAPE(this->globalObj));
@@ -1806,6 +2052,22 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
 
     if (fragment == fragment->root)
         loopLabel = lir->ins0(LIR_label);
+
+    // if profiling, drop a label, so the assembler knows to put a
+    // frag-entry-counter increment at this point.  If there's a
+    // loopLabel, use that; else we'll have to make a dummy label
+    // especially for this purpose.
+    verbose_only( if (js_LogController.lcbits & LC_FragProfile) {
+        LIns* entryLabel = NULL;
+        if (fragment == fragment->root) {
+            entryLabel = loopLabel;
+        } else {
+            entryLabel = lir->ins0(LIR_label);
+        }
+        NanoAssert(entryLabel);
+        NanoAssert(!fragment->loopLabel);
+        fragment->loopLabel = entryLabel;
+    })
 
     lirbuf->sp = addName(lir->insLoad(LIR_ldp, lirbuf->state, (int)offsetof(InterpState, sp)), "sp");
     lirbuf->rp = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, rp)), "rp");
@@ -2144,6 +2406,22 @@ oom:
 void
 JSTraceMonitor::flush()
 {
+    // recover profiling data from expiring Fragments
+    verbose_only(
+        for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
+            for (VMFragment *f = vmfragments[i]; f; f = f->next) {
+                JS_ASSERT(f->root == f);
+                for (VMFragment *p = f; p; p = p->peer)
+                    js_FragProfiling_FragFinalizer(p, this);
+            }
+        }
+    )
+
+    verbose_only(
+        for (Seq<Fragment*>* f = branches; f; f = f->tail)
+            js_FragProfiling_FragFinalizer(f->head, this);
+    )
+
     allocator->reset();
     codeAlloc->reset();
 
@@ -2157,6 +2435,7 @@ JSTraceMonitor::flush()
     assembler = new (alloc) Assembler(*codeAlloc, alloc, core, &js_LogController);
     lirbuf = new (alloc) LirBuffer(alloc);
     reLirBuf = new (alloc) LirBuffer(alloc);
+    verbose_only( branches = NULL; )
 
 #ifdef DEBUG
     labels = new (alloc) LabelMap(alloc, &js_LogController);
@@ -3510,6 +3789,13 @@ TraceRecorder::createGuardRecord(VMSideExit* exit)
     gr->exit = exit;
     exit->addGuard(gr);
 
+    // gr->profCount is memset'd to zero
+    verbose_only(
+        gr->profGuardID = fragment->guardNumberer++;
+        gr->nextInFrag = fragment->guardsForFrag;
+        fragment->guardsForFrag = gr;
+    )
+
     return guardRec;
 }
 
@@ -4090,10 +4376,11 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus& cons
         AttemptCompilation(cx, traceMonitor, globalObj, outer, outerArgc);
 #ifdef JS_JIT_SPEW
     debug_only_printf(LC_TMMinimal,
-                      "recording completed at  %s:%u@%u via closeLoop\n",
+                      "Recording completed at  %s:%u@%u via closeLoop (FragID=%06u)\n",
                       cx->fp->script->filename,
                       js_FramePCToLineNumber(cx, cx->fp),
-                      FramePCOffset(cx->fp));
+                      FramePCOffset(cx->fp),
+                      fragment->profFragID);
     debug_only_print0(LC_TMMinimal, "\n");
 #endif
 
@@ -4246,10 +4533,11 @@ TraceRecorder::endLoop(VMSideExit* exit)
         AttemptCompilation(cx, traceMonitor, globalObj, outer, outerArgc);
 #ifdef JS_JIT_SPEW
     debug_only_printf(LC_TMMinimal,
-                      "Recording completed at  %s:%u@%u via endLoop\n",
+                      "Recording completed at  %s:%u@%u via endLoop (FragID=%06u)\n",
                       cx->fp->script->filename,
                       js_FramePCToLineNumber(cx, cx->fp),
-                      FramePCOffset(cx->fp));
+                      FramePCOffset(cx->fp),
+                      fragment->profFragID);
     debug_only_print0(LC_TMTracer, "\n");
 #endif
 }
@@ -4547,14 +4835,15 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
 
     x = (VMSideExit *)i->record()->exit;
     sprintf(out,
-            "%s: %s %s -> pc=%p imacpc=%p sp%+ld rp%+ld",
+            "%s: %s %s -> pc=%p imacpc=%p sp%+ld rp%+ld (GuardID=%03d)",
             formatRef(i),
             lirNames[i->opcode()],
             i->oprnd1() ? formatRef(i->oprnd1()) : "",
             (void *)x->pc,
             (void *)x->imacpc,
             (long int)x->sp_adj,
-            (long int)x->rp_adj);
+            (long int)x->rp_adj,
+            i->record()->profGuardID);
 }
 #endif
 
@@ -4678,6 +4967,7 @@ TrashTree(JSContext* cx, Fragment* f)
     JS_ASSERT((!f->code()) == (!f->vmprivate));
     JS_ASSERT(f == f->root);
     debug_only_printf(LC_TMTreeVis, "TREEVIS TRASH FRAG=%p\n", (void*)f);
+
     if (!f->code())
         return;
     AUDIT(treesTrashed);
@@ -5105,8 +5395,13 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
 
     Fragment* c;
     if (!(c = anchor->target)) {
-        Allocator& alloc = *JS_TRACE_MONITOR(cx).allocator;
-        c = new (alloc) Fragment(cx->fp->regs->pc);
+        JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+        Allocator& alloc = *tm->allocator;
+        verbose_only(
+        uint32_t profFragID = (js_LogController.lcbits & LC_FragProfile)
+                              ? (++(tm->lastFragID)) : 0;
+        )
+        c = new (alloc) Fragment(cx->fp->regs->pc verbose_only(, profFragID));
         c->root = anchor->from->root;
         debug_only_printf(LC_TMTreeVis, "TREEVIS CREATEBRANCH ROOT=%p FRAG=%p PC=%p FILE=\"%s\""
                           " LINE=%d ANCHOR=%p OFFS=%d\n",
@@ -5115,6 +5410,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
                           FramePCOffset(cx->fp));
         anchor->target = c;
         c->root = f;
+        verbose_only( tm->branches = new (alloc) Seq<Fragment*>(c, tm->branches); )
     }
 
     /*
@@ -6660,11 +6956,18 @@ void
 js_InitJIT(JSTraceMonitor *tm)
 {
 #if defined JS_JIT_SPEW
+    tm->profAlloc = NULL;
     /* Set up debug logging. */
     if (!did_we_set_up_debug_logging) {
         InitJITLogController();
         did_we_set_up_debug_logging = true;
     }
+    /* Set up fragprofiling, if required. */
+    if (js_LogController.lcbits & LC_FragProfile) {
+        tm->profAlloc = new VMAllocator();
+        tm->profTab = new (*tm->profAlloc) FragStatsMap(*tm->profAlloc);
+    }
+    tm->lastFragID = 0;
 #else
     memset(&js_LogController, 0, sizeof(js_LogController));
 #endif
@@ -6717,6 +7020,7 @@ js_InitJIT(JSTraceMonitor *tm)
     tm->allocator = new VMAllocator();
     tm->codeAlloc = new CodeAlloc();
     tm->flush();
+    verbose_only( tm->branches = NULL; )
 
     JS_ASSERT(!tm->reservedDoublePool);
     tm->reservedDoublePoolPtr = tm->reservedDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
@@ -6749,6 +7053,35 @@ js_FinishJIT(JSTraceMonitor *tm)
 
     if (tm->recordAttempts.ops)
         JS_DHashTableFinish(&tm->recordAttempts);
+
+#ifdef DEBUG
+    // Recover profiling data from expiring Fragments, and display
+    // final results.
+    if (js_LogController.lcbits & LC_FragProfile) {
+        for (Seq<Fragment*>* f = tm->branches; f; f = f->tail) {
+            js_FragProfiling_FragFinalizer(f->head, tm);
+        }
+        for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
+            for (VMFragment *f = tm->vmfragments[i]; f; f = f->next) {
+                JS_ASSERT(f->root == f);
+                for (VMFragment *p = f; p; p = p->peer)
+                    js_FragProfiling_FragFinalizer(p, tm);
+            }
+        }
+        REHashMap::Iter iter(*(tm->reFragments));
+        while (iter.next()) {
+            nanojit::Fragment* frag = iter.value();
+            js_FragProfiling_FragFinalizer(frag, tm);
+        }
+
+        js_FragProfiling_showResults(tm);
+        delete tm->profAlloc;
+
+    } else {
+        NanoAssert(!tm->profTab);
+        NanoAssert(!tm->profAlloc);
+    }
+#endif
 
     memset(&tm->vmfragments[0], 0, FRAGMENT_TABLE_SIZE * sizeof(VMFragment*));
 
@@ -6830,6 +7163,7 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
                 JS_ASSERT(frag->root == frag);
                 *fragp = frag->next;
                 do {
+                    verbose_only( js_FragProfiling_FragFinalizer(frag, tm); )
                     TrashTree(cx, frag);
                 } while ((frag = frag->peer) != NULL);
                 continue;

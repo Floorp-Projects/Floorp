@@ -1,4 +1,4 @@
-// |trace-test| TMFLAGS: full
+// |trace-test| TMFLAGS: full,fragprofile,treevis
 
 function testSideExitInConstructor() {
     var FCKConfig = {};

@@ -209,6 +209,10 @@ static void debug_only_printf(int mask, const char *fmt, ...) {}
 // Top level logging controller object.
 extern nanojit::LogControl js_LogController;
 
+// Top level profiling hook, needed to harvest profile info from Fragments
+// whose logical lifetime is about to finish
+extern void js_FragProfiling_FragFinalizer(nanojit::Fragment* f, JSTraceMonitor*);
+
 #define debug_only_stmt(stmt) \
     stmt
 

@@ -80,6 +80,10 @@ namespace nanojit {
         void* jmp;
         GuardRecord* next;
         SideExit* exit;
+        // profiling stuff
+        verbose_only( uint32_t profCount; )
+        verbose_only( uint32_t profGuardID; )
+        verbose_only( GuardRecord* nextInFrag; )
     };
 
     struct SideExit
