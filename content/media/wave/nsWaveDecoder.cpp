@@ -1289,13 +1289,12 @@ nsWaveDecoder::Load(nsIChannel* aChannel, nsIStreamListener** aStreamListener)
 
   *aStreamListener = nsnull;
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+  mStream = nsMediaStream::Create(this, aChannel);
+  NS_ENSURE_TRUE(mStream, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = mStream->Open(aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsMediaStream::Open(this, uri, aChannel, getter_Transfers(mStream),
-                           aStreamListener);
-  NS_ENSURE_SUCCESS(rv, rv);
   mPlaybackStateMachine->SetStream(mStream);
 
   rv = NS_NewThread(getter_AddRefs(mPlaybackThread));
