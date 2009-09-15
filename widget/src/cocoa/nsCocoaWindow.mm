@@ -124,33 +124,6 @@ nsCocoaWindow::nsCocoaWindow()
 
 }
 
-// Sometimes NSViews are removed from a window or moved to a new window.
-// Since our ChildViews have their own mWindow field instead of always using
-// [view window], we need to notify them when this happens.
-static void SetNativeWindowOnSubviews(NSView *aNativeView, NSWindow *aWin)
-{
-  if (!aNativeView)
-    return;
-  if ([aNativeView respondsToSelector:@selector(setNativeWindow:)])
-    [(NSView<mozView>*)aNativeView setNativeWindow:aWin];
-  NSArray *immediateSubviews = [aNativeView subviews];
-  int count = [immediateSubviews count];
-  for (int i = 0; i < count; ++i)
-    SetNativeWindowOnSubviews((NSView *)[immediateSubviews objectAtIndex:i], aWin);
-}
-
-
-// Under unusual circumstances, an nsCocoaWindow object can be destroyed
-// before the nsChildView objects it contains are destroyed.  But this will
-// invalidate the (weak) mWindow variable in these nsChildView objects
-// before their own destructors have been called.  So we need to null-out
-// this variable in our nsChildView objects as we're destroyed.  This helps
-// resolve bmo bug 479749.
-static void TellNativeViewsGoodbye(NSView *aNativeView)
-{
-  SetNativeWindowOnSubviews(aNativeView, nil);
-}
-
 void nsCocoaWindow::DestroyNativeWindow()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -191,11 +164,8 @@ nsCocoaWindow::~nsCocoaWindow()
     }
   }
 
-  if (mWindow) {
-    TellNativeViewsGoodbye([mWindow contentView]);
-    if (mWindowMadeHere) {
-      DestroyNativeWindow();
-    }
+  if (mWindow && mWindowMadeHere) {
+    DestroyNativeWindow();
   }
 
   NS_IF_RELEASE(mPopupContentView);
@@ -1013,7 +983,6 @@ NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(PRBool aShouldHide)
   // Reparent the content view.
   [mWindow setContentView:contentView];
   [contentView release];
-  SetNativeWindowOnSubviews(contentView, mWindow);
 
   // Reparent child windows.
   enumerator = [childWindows objectEnumerator];

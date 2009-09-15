@@ -122,8 +122,6 @@ enum {
                               mozView, NSTextInput>
 {
 @private
-  NSWindow* mWindow; // shortcut to the top window, [WEAK]
-  
   // the nsChildView that created the view. It retains this NSView, so
   // the link back to it must be weak.
   nsChildView* mGeckoChild;
