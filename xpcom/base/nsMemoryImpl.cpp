@@ -178,8 +178,8 @@ nsMemoryImpl::FlushMemory(const PRUnichar* aReason, PRBool aImmediate)
         rv = RunFlushers(aReason);
     }
     else {
-        // Don't broadcast more than once every 100ms to avoid being noisy
-        if (PR_IntervalToMicroseconds(now - sLastFlushTime) > 100) {
+        // Don't broadcast more than once every 1000ms to avoid being noisy
+        if (PR_IntervalToMicroseconds(now - sLastFlushTime) > 1000) {
             sFlushEvent.mReason = aReason;
             rv = NS_DispatchToMainThread(&sFlushEvent, NS_DISPATCH_NORMAL);
         }
