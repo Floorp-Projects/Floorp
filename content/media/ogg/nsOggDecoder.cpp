@@ -1965,19 +1965,12 @@ nsOggDecoder::~nsOggDecoder()
   nsAutoMonitor::DestroyMonitor(mMonitor);
 }
 
-nsresult nsOggDecoder::Load(nsIChannel* aChannel,
+nsresult nsOggDecoder::Load(nsMediaStream* aStream,
                             nsIStreamListener** aStreamListener)
 {
-  NS_ASSERTION(aChannel, "A channel is required");
   NS_ASSERTION(aStreamListener, "A listener should be requested here");
 
   *aStreamListener = nsnull;
-
-  nsAutoPtr<nsMediaStream> stream;
-  stream = nsMediaStream::Create(this, aChannel);
-  if (!stream) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   {
     // Hold the lock while we do this to set proper lock ordering
@@ -1985,11 +1978,13 @@ nsresult nsOggDecoder::Load(nsIChannel* aChannel,
     // should be grabbed before the cache lock
     nsAutoMonitor mon(mMonitor);
 
-    nsresult rv = stream->Open(aStreamListener);
-    if (NS_FAILED(rv))
+    nsresult rv = aStream->Open(aStreamListener);
+    if (NS_FAILED(rv)) {
+      delete aStream;
       return rv;
+    }
 
-    mReader->Init(stream.forget());
+    mReader->Init(aStream);
   }
 
   nsresult rv = NS_NewThread(getter_AddRefs(mDecodeThread));
