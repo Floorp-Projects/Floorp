@@ -84,14 +84,6 @@ ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),OS2)
 CPPSRCS		+= dlldeps.cpp
 endif
 
-ifdef XPCOM_USE_LEA
-CSRCS += malloc.c
-endif
-
-ifdef GC_LEAK_DETECTOR
-EXTRA_DSO_LIBS = boehm
-endif
-
 SHARED_LIBRARY_LIBS = \
 		../ds/$(LIB_PREFIX)xpcomds_s.$(LIB_SUFFIX) \
 		../io/$(LIB_PREFIX)xpcomio_s.$(LIB_SUFFIX) \
@@ -164,10 +156,6 @@ DEFINES		+= \
 		-DEXPORT_XPTC_API
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
-
-ifdef GC_LEAK_DETECTOR
-DEFINES += -DGC_LEAK_DETECTOR
-endif
 
 ifdef TARGET_XPCOM_ABI
 DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
