@@ -46,7 +46,7 @@ DARWIN_VERSION=`uname -r`
 ac_add_app_options ppc  --target=powerpc-apple-darwin$DARWIN_VERSION
 ac_add_app_options i386 --target=i386-apple-darwin$DARWIN_VERSION
 
-ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.4u.sdk
+ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.5.sdk
 
 # $MOZ_BUILD_APP is only defined when sourced by configure.  That's not a
 # problem, because the variables it affects only need to be set for
@@ -54,7 +54,7 @@ ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.4u.sdk
 if test -n "$MOZ_BUILD_APP" ; then
 if test "$MOZ_BUILD_APP" = "i386" -o  "$MOZ_BUILD_APP" = "ppc"; then
   TARGET_CPU=$MOZ_BUILD_APP
-  GCC_VERSION=4.0
+  GCC_VERSION=4.2
 
   # It's not strictly necessary to specify -arch during native builds, but it
   # makes the merged about:buildconfig easier to follow, and it reduces
@@ -65,8 +65,8 @@ if test "$MOZ_BUILD_APP" = "i386" -o  "$MOZ_BUILD_APP" = "ppc"; then
   # $HOST_CXX is presently unused.  $HOST_CC will only be used during a cross
   # compile.  Always use the 4.0 compiler, since it will always be present and
   # will always work.
-  HOST_CC=gcc-4.0
-  HOST_CXX=g++-4.0
+  HOST_CC=gcc-4.2
+  HOST_CXX=g++-4.2
 
   # These must be set for cross builds, and don't hurt straight builds.
   RANLIB=ranlib
