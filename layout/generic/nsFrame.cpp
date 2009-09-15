@@ -457,7 +457,7 @@ nsFrame::Destroy()
     view->Destroy();
   }
 
-  // Must retrieve the object ID before calling destructors, so the
+  // Must retrieve the object size before calling destructors, so the
   // vtable is still valid.
   //
   // Note to future tweakers: having the method that returns the
@@ -465,12 +465,12 @@ nsFrame::Destroy()
   // the compiler cannot devirtualize the call to the destructor even
   // if it's from a method defined in the same class.
 
-  nsQueryFrame::FrameIID id = GetFrameId();
+  size_t sz = GetAllocatedSize();
   this->~nsFrame();
 
   // Now that we're totally cleaned out, we need to add ourselves to
   // the presshell's recycler.
-  shell->FreeFrame(id, this);
+  shell->FreeFrame(sz, 0 /* dummy */, (void*)this);
 }
 
 NS_IMETHODIMP
