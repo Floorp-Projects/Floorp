@@ -2958,7 +2958,7 @@ js_Interpret(JSContext *cx)
                 } else {                                                      \
                     op = (JSOp) *++regs.pc;                                   \
                 }                                                             \
-            } else if (op == JSOP_LOOP) {                                     \
+            } else if (op == JSOP_TRACE) {                                    \
                 MONITOR_BRANCH();                                             \
                 op = (JSOp) *regs.pc;                                         \
             }                                                                 \

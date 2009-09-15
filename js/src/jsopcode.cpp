@@ -4966,7 +4966,7 @@ js_DecompileFunction(JSPrinter *jp)
         jp->indent -= 4;
         js_printf(jp, "\t}");
     } else {
-#ifdef JS_HAS_DESTRUCTURING
+#if JS_HAS_DESTRUCTURING
         SprintStack ss;
         void *mark;
 #endif
@@ -4976,10 +4976,12 @@ js_DecompileFunction(JSPrinter *jp)
         endpc = pc + fun->u.i.script->length;
         ok = JS_TRUE;
 
-#ifdef JS_HAS_DESTRUCTURING
-        /* Skip JSOP_GENERATOR in case of destructuring parameters. */
-        if (*pc == JSOP_GENERATOR)
-            pc += JSOP_GENERATOR_LENGTH;
+#if JS_HAS_DESTRUCTURING
+        /* Skip trace hint if it appears here. */
+        if (js_GetOpcode(jp->sprinter.context, fun->u.i.script, pc) == JSOP_TRACE) {
+            JS_STATIC_ASSERT(JSOP_TRACE_LENGTH == JSOP_NOP_LENGTH);
+            pc += JSOP_TRACE_LENGTH;
+        }
 
         ss.printer = NULL;
         jp->script = fun->u.i.script;
@@ -5033,7 +5035,7 @@ js_DecompileFunction(JSPrinter *jp)
             }
         }
 
-#ifdef JS_HAS_DESTRUCTURING
+#if JS_HAS_DESTRUCTURING
         jp->script = NULL;
         JS_ARENA_RELEASE(&jp->sprinter.context->tempPool, mark);
 #endif

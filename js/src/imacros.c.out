@@ -907,7 +907,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_DEFLOCALFUN_FC */
     0,  /* JSOP_LAMBDA_FC */
     0,  /* JSOP_OBJTOP */
-    0,  /* JSOP_LOOP */
+    0,  /* JSOP_TRACE */
     0,  /* JSOP_GETUPVAR_DBG */
     0,  /* JSOP_CALLUPVAR_DBG */
     0,  /* JSOP_DEFFUN_DBGFC */

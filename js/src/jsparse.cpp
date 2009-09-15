@@ -878,6 +878,11 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     onlyXML = true;
 #endif
 
+    CG_SWITCH_TO_PROLOG(&cg);
+    if (js_Emit1(cx, &cg, JSOP_TRACE) < 0)
+        goto out;
+    CG_SWITCH_TO_MAIN(&cg);
+
     for (;;) {
         jsc.tokenStream.flags |= TSF_OPERAND;
         tt = js_PeekToken(cx, &jsc.tokenStream);
