@@ -262,6 +262,7 @@ namespace nanojit {
            and below, so that callers can use bits 16 and above for
            themselves. */
         // TODO: add entries for the writer pipeline
+        LC_FragProfile = 1<<7, // collect per-frag usage counts
         LC_Activation  = 1<<6, // enable printActivationState
         LC_Liveness    = 1<<5, // (show LIR liveness analysis)
         LC_ReadLIR     = 1<<4, // As read from LirBuffer

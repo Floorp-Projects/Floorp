@@ -1,4 +1,4 @@
-// |trace-test| TMFLAGS: full
+// |trace-test| TMFLAGS: full,fragprofile,treevis
 
 /* Test the proper operation of the left shift operator. This is especially
  * important on ARM as an explicit mask is required at the native instruction
