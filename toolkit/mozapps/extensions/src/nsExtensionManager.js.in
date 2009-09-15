@@ -61,6 +61,8 @@ const PREF_EM_ENABLED_ITEMS           = "extensions.enabledItems";
 const PREF_UPDATE_COUNT               = "extensions.update.count";
 const PREF_UPDATE_DEFAULT_URL         = "extensions.update.url";
 const PREF_EM_NEW_ADDONS_LIST         = "extensions.newAddons";
+const PREF_EM_DISABLED_ADDONS_LIST    = "extensions.disabledAddons";
+const PREF_EM_SHOW_MISMATCH_UI        = "extensions.showMismatchUI";
 const PREF_EM_IGNOREMTIMECHANGES      = "extensions.ignoreMTimeChanges";
 const PREF_EM_DISABLEDOBSOLETE        = "extensions.disabledObsolete";
 const PREF_EM_EXTENSION_FORMAT        = "extensions.%UUID%.";
@@ -3247,6 +3249,7 @@ ExtensionManager.prototype = {
     ds.endUpdateBatch();
 
     var badItems = [];
+    var disabledAddons = [];
     var allAppManaged = true;
     elements = ctr.GetElements();
     while (elements.hasMoreElements()) {
@@ -3300,6 +3303,7 @@ ExtensionManager.prototype = {
       }
       else if (!ds.getItemProperty(id, "appDisabled")) {
         properties.appDisabled = EM_L("true");
+        disabledAddons.push(id);
       }
 
       ds.setItemProperties(id, properties);
@@ -3337,10 +3341,21 @@ ExtensionManager.prototype = {
     // Update the manifests to reflect the items that were disabled / enabled.
     this._updateManifests(true);
 
-    // Always check for compatibility updates when upgrading if we have add-ons
-    // that aren't managed by the application.
-    if (!allAppManaged)
-      this._showMismatchWindow(inactiveItemIDs);
+    // Determine if we should check for compatibility updates when upgrading if
+    // we have add-ons that aren't managed by the application.
+    if (!allAppManaged && !gFirstRun && disabledAddons.length > 0) {
+      // Should we show a UI or just pass the list via a pref?
+      if (getPref("getBoolPref", PREF_EM_SHOW_MISMATCH_UI, true)) {
+        this._showMismatchWindow(inactiveItemIDs);
+      }
+      else {
+        // Remember the list of add-ons that were disabled this time around
+        gPref.setCharPref(PREF_EM_DISABLED_ADDONS_LIST, disabledAddons.join(","));
+      }
+    } else {
+      // Clear the disabled addons list
+      gPref.clearUserPref(PREF_EM_DISABLED_ADDONS_LIST);
+    }
 
     // Finish any pending upgrades from the compatibility update to avoid an
     // additional restart.
