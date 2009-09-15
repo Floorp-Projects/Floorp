@@ -84,6 +84,11 @@ using mozilla::TimeDuration;
 // #define DEBUG_VERIFY_CACHE
 #endif
 
+// There is at most one media cache (although that could quite easily be
+// relaxed if we wanted to manage multiple caches with independent
+// size limits).
+static nsMediaCache* gMediaCache;
+
 class nsMediaCache {
 public:
   friend class nsMediaCacheStream::BlockList;
@@ -92,7 +97,8 @@ public:
     BLOCK_SIZE = nsMediaCacheStream::BLOCK_SIZE
   };
 
-  nsMediaCache() : mMonitor(nsAutoMonitor::NewMonitor("media.cache")),
+  nsMediaCache() : mNextResourceID(1),
+    mMonitor(nsAutoMonitor::NewMonitor("media.cache")),
     mFD(nsnull), mFDCurrentPos(0), mUpdateQueued(PR_FALSE)
 #ifdef DEBUG
     , mInUpdate(PR_FALSE)
@@ -184,6 +190,25 @@ public:
 
   PRMonitor* Monitor() { return mMonitor; }
 
+  class ResourceStreamIterator {
+  public:
+    ResourceStreamIterator(PRInt64 aResourceID) :
+      mResourceID(aResourceID), mNext(0) {}
+    nsMediaCacheStream* Next()
+    {
+      while (mNext < gMediaCache->mStreams.Length()) {
+        nsMediaCacheStream* stream = gMediaCache->mStreams[mNext];
+        ++mNext;
+        if (stream->GetResourceID() == mResourceID)
+          return stream;
+      }
+      return nsnull;
+    }
+  private:
+    PRInt64  mResourceID;
+    PRUint32 mNext;
+  };
+
 protected:
   // Find a free or reusable block and return its index. If there are no
   // free blocks and no reusable blocks, add a new block to the cache
@@ -273,6 +298,9 @@ protected:
   // end
   void Truncate();
 
+  // This member is main-thread only. It's used to allocate unique
+  // resource IDs to streams.
+  PRInt64                       mNextResourceID;
   // This member is main-thread only. It contains all the streams.
   nsTArray<nsMediaCacheStream*> mStreams;
 
@@ -295,11 +323,6 @@ protected:
   PRPackedBool    mInUpdate;
 #endif
 };
-
-// There is at most one media cache (although that could quite easily be
-// relaxed if we wanted to manage multiple caches with independent
-// size limits).
-static nsMediaCache* gMediaCache;
 
 void nsMediaCacheStream::BlockList::AddFirstBlock(PRInt32 aBlock)
 {
@@ -999,7 +1022,7 @@ nsMediaCache::Update()
 
     Block* block = &mIndex[blockIndex];
     // Try to relocate the block close to other blocks for the first stream.
-    // There is no point in trying ot make it close to other blocks in
+    // There is no point in trying to make it close to other blocks in
     // *all* the streams it might belong to.
     PRInt32 destinationBlockIndex =
       FindReusableBlock(now, block->mOwners[0].mStream,
@@ -1150,6 +1173,20 @@ nsMediaCache::Update()
       enableReading = predictedNewDataUse < latestNextUse;
     }
 
+    if (enableReading) {
+      for (PRUint32 j = 0; j < i; ++j) {
+        nsMediaCacheStream* other = mStreams[j];
+        if (other->mResourceID == stream->mResourceID &&
+            !other->mCacheSuspended &&
+            other->mChannelOffset/BLOCK_SIZE == stream->mChannelOffset/BLOCK_SIZE) {
+          // This block is already going to be read by the other stream.
+          // So don't try to read it from this stream as well.
+          enableReading = PR_FALSE;
+          break;
+        }
+      }
+    }
+
     nsresult rv = NS_OK;
     if (stream->mChannelOffset != desiredOffset && enableReading) {
       // We need to seek now.
@@ -1281,17 +1318,23 @@ nsMediaCache::AllocateAndWriteBlock(nsMediaCacheStream* aStream, const void* aDa
   PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mMonitor);
 
   PRInt32 streamBlockIndex = aStream->mChannelOffset/BLOCK_SIZE;
+
+  // Remove all cached copies of this block
+  ResourceStreamIterator iter(aStream->mResourceID);
+  while (nsMediaCacheStream* stream = iter.Next()) {
+    while (streamBlockIndex >= PRInt32(stream->mBlocks.Length())) {
+      stream->mBlocks.AppendElement(-1);
+    }
+    if (stream->mBlocks[streamBlockIndex] >= 0) {
+      // We no longer want to own this block
+      PRInt32 globalBlockIndex = stream->mBlocks[streamBlockIndex];
+      LOG(PR_LOG_DEBUG, ("Released block %d from stream %p block %d(%lld)",
+          globalBlockIndex, stream, streamBlockIndex, (long long)streamBlockIndex*BLOCK_SIZE));
+      RemoveBlockOwner(globalBlockIndex, stream);
+    }
+  }
+
   // Extend the mBlocks array as necessary
-  while (streamBlockIndex >= PRInt32(aStream->mBlocks.Length())) {
-    aStream->mBlocks.AppendElement(-1);
-  }
-  if (aStream->mBlocks[streamBlockIndex] >= 0) {
-    // We no longer want to own this block
-    PRInt32 globalBlockIndex = aStream->mBlocks[streamBlockIndex];
-    LOG(PR_LOG_DEBUG, ("Released block %d from stream %p block %d(%lld)",
-        globalBlockIndex, aStream, streamBlockIndex, (long long)streamBlockIndex*BLOCK_SIZE));
-    RemoveBlockOwner(globalBlockIndex, aStream);
-  }
 
   TimeStamp now = TimeStamp::Now();
   PRInt32 blockIndex = FindBlockForIncomingData(now, aStream);
@@ -1301,29 +1344,35 @@ nsMediaCache::AllocateAndWriteBlock(nsMediaCacheStream* aStream, const void* aDa
     Block* block = &mIndex[blockIndex];    
     LOG(PR_LOG_DEBUG, ("Allocated block %d to stream %p block %d(%lld)",
         blockIndex, aStream, streamBlockIndex, (long long)streamBlockIndex*BLOCK_SIZE));
-    BlockOwner* bo = block->mOwners.AppendElement();
-    if (!bo)
-      return;
 
-    bo->mStream = aStream;
-    bo->mStreamBlock = streamBlockIndex;
-    bo->mLastUseTime = now;
-    aStream->mBlocks[streamBlockIndex] = blockIndex;
     mFreeBlocks.RemoveBlock(blockIndex);
-    if (streamBlockIndex*BLOCK_SIZE < aStream->mStreamOffset) {
-      bo->mClass = aMode == nsMediaCacheStream::MODE_PLAYBACK
-        ? PLAYED_BLOCK : METADATA_BLOCK;
-      // This must be the most-recently-used block, since we
-      // marked it as used now (which may be slightly bogus, but we'll
-      // treat it as used for simplicity).
-      GetListForBlock(bo)->AddFirstBlock(blockIndex);
-      Verify();
-    } else {
-      // This may not be the latest readahead block, although it usually
-      // will be. We may have to scan for the right place to insert
-      // the block in the list.
-      bo->mClass = READAHEAD_BLOCK;
-      InsertReadaheadBlock(bo, blockIndex);
+
+    // Tell each stream using this resource about the new block.
+    ResourceStreamIterator iter(aStream->mResourceID);
+    while (nsMediaCacheStream* stream = iter.Next()) {
+      BlockOwner* bo = block->mOwners.AppendElement();
+      if (!bo)
+        return;
+
+      bo->mStream = stream;
+      bo->mStreamBlock = streamBlockIndex;
+      bo->mLastUseTime = now;
+      stream->mBlocks[streamBlockIndex] = blockIndex;
+      if (streamBlockIndex*BLOCK_SIZE < stream->mStreamOffset) {
+        bo->mClass = aMode == nsMediaCacheStream::MODE_PLAYBACK
+          ? PLAYED_BLOCK : METADATA_BLOCK;
+        // This must be the most-recently-used block, since we
+        // marked it as used now (which may be slightly bogus, but we'll
+        // treat it as used for simplicity).
+        GetListForBlock(bo)->AddFirstBlock(blockIndex);
+        Verify();
+      } else {
+        // This may not be the latest readahead block, although it usually
+        // will be. We may have to scan for the right place to insert
+        // the block in the list.
+        bo->mClass = READAHEAD_BLOCK;
+        InsertReadaheadBlock(bo, blockIndex);
+      }
     }
 
     nsresult rv = WriteCacheFile(blockIndex*BLOCK_SIZE, aData, BLOCK_SIZE);
@@ -1346,6 +1395,7 @@ nsMediaCache::OpenStream(nsMediaCacheStream* aStream)
 
   nsAutoMonitor mon(mMonitor);
   mStreams.AppendElement(aStream);
+  aStream->mResourceID = mNextResourceID++;
 }
 
 void
@@ -1548,8 +1598,6 @@ nsMediaCacheStream::NotifyDataReceived(PRInt64 aSize, const char* aData,
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  UpdatePrincipal(aPrincipal);
-
   nsAutoMonitor mon(gMediaCache->Monitor());
   PRInt64 size = aSize;
   const char* data = aData;
@@ -1594,12 +1642,18 @@ nsMediaCacheStream::NotifyDataReceived(PRInt64 aSize, const char* aData,
     }
 
     mChannelOffset += chunkSize;
-    if (mStreamLength >= 0) {
-      // The stream is at least as long as what we've read
-      mStreamLength = PR_MAX(mStreamLength, mChannelOffset);
-    }
     size -= chunkSize;
     data += chunkSize;
+  }
+
+  nsMediaCache::ResourceStreamIterator iter(mResourceID);
+  while (nsMediaCacheStream* stream = iter.Next()) {
+    if (stream->mStreamLength >= 0) {
+      // The stream is at least as long as what we've read
+      stream->mStreamLength = PR_MAX(stream->mStreamLength, mChannelOffset);
+    }
+    stream->UpdatePrincipal(aPrincipal);
+    stream->mClient->CacheClientNotifyDataReceived();
   }
 
   // Notify in case there's a waiting reader
@@ -1614,10 +1668,6 @@ nsMediaCacheStream::NotifyDataEnded(nsresult aStatus)
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   nsAutoMonitor mon(gMediaCache->Monitor());
-  if (NS_SUCCEEDED(aStatus)) {
-    // We read the whole stream, so remember the true length
-    mStreamLength = mChannelOffset;
-  }
 
   PRInt32 blockOffset = PRInt32(mChannelOffset%BLOCK_SIZE);
   if (blockOffset > 0) {
@@ -1628,6 +1678,15 @@ nsMediaCacheStream::NotifyDataEnded(nsresult aStatus)
         mMetadataInPartialBlockBuffer ? MODE_METADATA : MODE_PLAYBACK);
     // Wake up readers who may be waiting for this data
     mon.NotifyAll();
+  }
+
+  nsMediaCache::ResourceStreamIterator iter(mResourceID);
+  while (nsMediaCacheStream* stream = iter.Next()) {
+    if (NS_SUCCEEDED(aStatus)) {
+      // We read the whole stream, so remember the true length
+      stream->mStreamLength = mChannelOffset;
+    }
+    stream->mClient->CacheClientNotifyDataEnded(aStatus);
   }
 }
 
@@ -2036,6 +2095,7 @@ nsMediaCacheStream::InitAsClone(nsMediaCacheStream* aOriginal)
   nsresult rv = Init();
   if (NS_FAILED(rv))
     return rv;
+  mResourceID = aOriginal->mResourceID;
 
   // Grab cache blocks from aOriginal as readahead blocks for our stream
   nsAutoMonitor mon(gMediaCache->Monitor());
