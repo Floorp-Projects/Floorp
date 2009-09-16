@@ -321,6 +321,7 @@ namespace nanojit
             DECLARE_PLATFORM_ASSEMBLER()
 
         private:
+#ifdef NANOJIT_IA32
             debug_only( int32_t _fpuStkDepth; )
             debug_only( int32_t _sv_fpuStkDepth; )
 
@@ -331,6 +332,7 @@ namespace nanojit
             inline void fpu_pop() {
                 debug_only( --_fpuStkDepth; /*char foo[8]= "FPUSTK0"; foo[6]-=_fpuStkDepth; output_asm(foo);*/ NanoAssert(_fpuStkDepth<=0); )
             }
+#endif
             avmplus::Config &config;
     };
 
