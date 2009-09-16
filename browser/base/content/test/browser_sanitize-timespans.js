@@ -47,7 +47,7 @@ function test() {
   ok(bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
   ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
   
-  if(minutesSinceMidnight > 10)
+  if (minutesSinceMidnight > 10)
     ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
   ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
@@ -58,7 +58,7 @@ function test() {
   ok(formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should still exist");
   ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
   ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
-  if(minutesSinceMidnight > 10)
+  if (minutesSinceMidnight > 10)
     ok(formhist.nameExists("today"), "today form entry should still exist");
   ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
@@ -71,7 +71,7 @@ function test() {
   ok(downloadExists(5555553), "<4 hour old download should still be present");
   ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
 
-  if(minutesSinceMidnight > 10)
+  if (minutesSinceMidnight > 10)
     ok(downloadExists(5555554), "'Today' download should still be present");
 
   // Clear 1 hour
@@ -85,7 +85,7 @@ function test() {
   ok(bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
   ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
   
-  if(hoursSinceMidnight > 1)
+  if (hoursSinceMidnight > 1)
     ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
   ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
@@ -95,7 +95,7 @@ function test() {
   ok(formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should still exist");
   ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
   ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
-  if(hoursSinceMidnight > 1)
+  if (hoursSinceMidnight > 1)
     ok(formhist.nameExists("today"), "today form entry should still exist");
   ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
@@ -107,7 +107,7 @@ function test() {
   ok(downloadExists(5555553), "<4 hour old download should still be present");
   ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
 
-  if(hoursSinceMidnight > 1)
+  if (hoursSinceMidnight > 1)
     ok(downloadExists(5555554), "'Today' download should still be present");
   
   // Clear 1 hour 10 minutes
@@ -120,7 +120,7 @@ function test() {
   ok(bhist.isVisited(makeURI("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
   ok(bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
   ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
-  if(minutesSinceMidnight > 70)
+  if (minutesSinceMidnight > 70)
     ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
   ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
@@ -129,7 +129,7 @@ function test() {
   ok(formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should still exist");
   ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
   ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
-  if(minutesSinceMidnight > 70)
+  if (minutesSinceMidnight > 70)
     ok(formhist.nameExists("today"), "today form entry should still exist");
   ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
@@ -139,7 +139,7 @@ function test() {
   ok(downloadExists(5555557), "2 hour 10 minute download should still be present");
   ok(downloadExists(5555553), "<4 hour old download should still be present");
   ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
-  if(minutesSinceMidnight > 70)
+  if (minutesSinceMidnight > 70)
     ok(downloadExists(5555554), "'Today' download should still be present");
 
   // Clear 2 hours
@@ -150,7 +150,7 @@ function test() {
   ok(bhist.isVisited(makeURI("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
   ok(bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
   ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
-  if(hoursSinceMidnight > 2)
+  if (hoursSinceMidnight > 2)
     ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
   ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
@@ -158,7 +158,7 @@ function test() {
   ok(formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should still exist");
   ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
   ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
-  if(hoursSinceMidnight > 2)
+  if (hoursSinceMidnight > 2)
     ok(formhist.nameExists("today"), "today form entry should still exist");
   ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
@@ -168,7 +168,7 @@ function test() {
   ok(downloadExists(5555557), "2 hour 10 minute download should still be present");
   ok(downloadExists(5555553), "<4 hour old download should still be present");
   ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
-  if(hoursSinceMidnight > 2)
+  if (hoursSinceMidnight > 2)
     ok(downloadExists(5555554), "'Today' download should still be present");
   
   // Clear 2 hours 10 minutes
@@ -179,14 +179,14 @@ function test() {
   ok(!bhist.isVisited(makeURI("http://2hour10minutes.com")), "Pretend visit to 2hour10minutes.com should now be deleted");
   ok(bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
   ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
-  if(minutesSinceMidnight > 130)
+  if (minutesSinceMidnight > 130)
     ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
   ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
   ok(!formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should be deleted");
   ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
   ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
-  if(minutesSinceMidnight > 130)
+  if (minutesSinceMidnight > 130)
     ok(formhist.nameExists("today"), "today form entry should still exist");
   ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
@@ -194,7 +194,7 @@ function test() {
   ok(downloadExists(5555553), "<4 hour old download should still be present");
   ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
   ok(downloadExists(5555550), "Year old download should still be present");
-  if(minutesSinceMidnight > 130)
+  if (minutesSinceMidnight > 130)
     ok(downloadExists(5555554), "'Today' download should still be present");
 
   // Clear 4 hours
@@ -203,20 +203,20 @@ function test() {
   
   ok(!bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should now be deleted");
   ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
-  if(hoursSinceMidnight > 4)
+  if (hoursSinceMidnight > 4)
     ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
   ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
   ok(!formhist.nameExists("4hour"), "4hour form entry should be deleted");
   ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
-  if(hoursSinceMidnight > 4)
+  if (hoursSinceMidnight > 4)
     ok(formhist.nameExists("today"), "today form entry should still exist");
   ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
   ok(!downloadExists(5555553), "<4 hour old download should now be deleted");
   ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
   ok(downloadExists(5555550), "Year old download should still be present");
-  if(hoursSinceMidnight > 4)
+  if (hoursSinceMidnight > 4)
     ok(downloadExists(5555554), "'Today' download should still be present");
 
   // Clear 4 hours 10 minutes
@@ -225,18 +225,18 @@ function test() {
   s.range = null;
   
   ok(!bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should now be deleted");
-  if(minutesSinceMidnight > 250)
+  if (minutesSinceMidnight > 250)
     ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
   ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
   ok(!formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should be deleted");
-  if(minutesSinceMidnight > 250)
+  if (minutesSinceMidnight > 250)
     ok(formhist.nameExists("today"), "today form entry should still exist");
   ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
   ok(!downloadExists(5555558), "4 hour 10 minute download should now be deleted");
   ok(downloadExists(5555550), "Year old download should still be present");
-  if(minutesSinceMidnight > 250)
+  if (minutesSinceMidnight > 250)
     ok(downloadExists(5555554), "'Today' download should still be present");
 
   // Clear Today
