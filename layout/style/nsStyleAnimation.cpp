@@ -128,9 +128,9 @@ nsStyleAnimation::Add(nsStyleCoord& aDest, const nsStyleCoord& aValueToAdd,
     case eStyleUnit_Color: {
       // Since nscolor doesn't allow out-of-sRGB values, by-animations
       // of colors don't make much sense in our implementation.
-      // FIXME: Animation of colors should really use floating point
-      // colors (and when it does, ClampColor and the clamping of aCount
-      // should go away).
+      // FIXME (bug 515919): Animation of colors should really use
+      // floating point colors (and when it does, ClampColor and the
+      // clamping of aCount should go away).
       // Also, given RGBA colors, it's not clear whether we want
       // premultiplication.  Probably we don't, given that's hard to
       // premultiply aValueToAdd since it's a difference rather than a
