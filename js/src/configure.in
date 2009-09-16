@@ -2455,6 +2455,10 @@ i?86-*)
     ENABLE_JIT=1
     NANOJIT_ARCH=i386
     ;;
+x86_64*-*)
+    ENABLE_JIT=1
+    NANOJIT_ARCH=X64
+    ;;
 arm*-*)
     ENABLE_JIT=1
     NANOJIT_ARCH=ARM
@@ -2478,7 +2482,9 @@ case "$target" in
 i?86-*)
     AC_DEFINE(AVMPLUS_IA32)
     ;;
-
+x86_64*-*)
+    AC_DEFINE(AVMPLUS_AMD64)
+    ;;
 arm*-*)
     AC_DEFINE(AVMPLUS_ARM)
     ;;
