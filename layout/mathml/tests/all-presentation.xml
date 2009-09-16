@@ -48,7 +48,7 @@
 </head>
 <body>
 
-
+<div>
 Testing tensor indices &lt;mmultiscripts&gt;:
 
 <!-- {3 \atop k} R {1 \atop i} {2 \atop j} -->
@@ -388,8 +388,10 @@ Testing MathML merror, mtext,
 
 <math xmlns="http://www.w3.org/1998/Math/MathML">
 <mtext>This is a text in mtext</mtext>
-<merror>This is a text in merror</merror>
+<merror><mtext>This is a text in merror</mtext></merror>
 </math>
+
+</div>
 
 </body>
 </html>

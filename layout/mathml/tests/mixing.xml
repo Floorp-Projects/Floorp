@@ -60,15 +60,15 @@
 <h2 style="text-align: center; color: blue">
 Mixing MathML markups and other markups to get special effects</h2>
 
-<br />
-
+<div>
 A fraction with the animated throbber as denominator...
 View the source...
 
 <math mode="display" xmlns="http://www.w3.org/1998/Math/MathML">
   <mfrac linethickness="3">
     <mi>a</mi>
-    <html:img src="chrome://communicator/skin/brand/throbber-anim.gif" />
+    <html:img src="chrome://communicator/skin/brand/throbber-anim.gif"
+	      alt="throbber" />
   </mfrac>
 </math>
 
@@ -177,6 +177,8 @@ And there could be more...
       </mrow>
     </math>
   </button>
+</div>
+
 </div>
 
 </body>
