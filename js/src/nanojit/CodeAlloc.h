@@ -152,6 +152,9 @@ namespace nanojit
         CodeAlloc();
         ~CodeAlloc();
 
+        /** return all the memory allocated through this allocator to the gcheap. */
+        void reset();
+
         /** allocate some memory for code, return pointers to the region. */
         void alloc(NIns* &start, NIns* &end);
 

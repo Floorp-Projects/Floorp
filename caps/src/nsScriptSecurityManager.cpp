@@ -189,24 +189,6 @@ GetPrincipalDomainOrigin(nsIPrincipal* aPrincipal,
   return GetOriginFromURI(uri, aOrigin);
 }
 
-// Inline copy of JS_GetPrivate() for better inlining and optimization
-// possibilities. Also doesn't take a cx argument as it's not
-// needed. We access the private data only on objects whose private
-// data is not expected to change during the lifetime of the object,
-// so thus we won't worry about locking and holding on to slot values
-// etc while referencing private data.
-inline void *
-caps_GetJSPrivate(JSObject *obj)
-{
-    jsval v;
-
-    JS_ASSERT(STOBJ_GET_CLASS(obj)->flags & JSCLASS_HAS_PRIVATE);
-    v = obj->fslots[JSSLOT_PRIVATE];
-    if (!JSVAL_IS_INT(v))
-        return NULL;
-    return JSVAL_TO_PRIVATE(v);
-}
-
 static nsIScriptContext *
 GetScriptContext(JSContext *cx)
 {
@@ -1681,8 +1663,7 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     {
 #ifdef DEBUG
         {
-            JSFunction *fun =
-                (JSFunction *)caps_GetJSPrivate((JSObject *)aFunObj);
+            JSFunction *fun = GET_FUNCTION_PRIVATE(cx, (JSObject *)aFunObj);
             JSScript *script = JS_GetFunctionScript(aCx, fun);
 
             NS_ASSERTION(!script, "Null principal for non-native function!");
@@ -2166,7 +2147,7 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
         return result;
     }
 
-    JSFunction *fun = (JSFunction *) caps_GetJSPrivate(obj);
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
     JSScript *script = JS_GetFunctionScript(cx, fun);
 
     *rv = NS_OK;
@@ -2235,7 +2216,7 @@ nsScriptSecurityManager::GetFramePrincipal(JSContext *cx,
 #ifdef DEBUG
     if (NS_SUCCEEDED(*rv) && !result)
     {
-        JSFunction *fun = (JSFunction *)caps_GetJSPrivate(obj);
+        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
         JSScript *script = JS_GetFunctionScript(cx, fun);
 
         NS_ASSERTION(!script, "Null principal for non-native function!");
@@ -2342,20 +2323,20 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
     // the loop.
 
     if (jsClass == &js_FunctionClass) {
-        aObj = STOBJ_GET_PARENT(aObj);
+        aObj = aObj->getParent();
 
         if (!aObj)
             return nsnull;
 
-        jsClass = STOBJ_GET_CLASS(aObj);
+        jsClass = aObj->getClass();
 
         if (jsClass == &js_CallClass) {
-            aObj = STOBJ_GET_PARENT(aObj);
+            aObj = aObj->getParent();
 
             if (!aObj)
                 return nsnull;
 
-            jsClass = STOBJ_GET_CLASS(aObj);
+            jsClass = aObj->getClass();
         }
     }
 
@@ -2384,7 +2365,7 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
             }
         } else if (!(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
                                         JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
-            nsISupports *priv = (nsISupports *)caps_GetJSPrivate(aObj);
+            nsISupports *priv = (nsISupports *) aObj->getPrivate();
 
 #ifdef DEBUG
             if (aAllowShortCircuit) {

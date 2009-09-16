@@ -41,6 +41,7 @@
 /*
  * JS execution context.
  */
+#include <new>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -390,11 +391,11 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
      * runtime list. After that it can be accessed from another thread via
      * js_ContextIterator.
      */
-    cx = (JSContext *) js_calloc(sizeof *cx);
-    if (!cx)
+    void *mem = js_calloc(sizeof *cx);
+    if (!mem)
         return NULL;
 
-    cx->runtime = rt;
+    cx = new (mem) JSContext(rt);
     cx->debugHooks = &rt->globalDebugHooks;
 #if JS_STACK_GROWTH_DIRECTION > 0
     cx->stackLimit = (jsuword) -1;

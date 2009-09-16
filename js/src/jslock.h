@@ -236,19 +236,6 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
 
 #endif /* DEBUG */
 
-#define JS_LOCK_OBJ_VOID(cx, obj, e)                                          \
-    JS_BEGIN_MACRO                                                            \
-        JS_LOCK_OBJ(cx, obj);                                                 \
-        e;                                                                    \
-        JS_UNLOCK_OBJ(cx, obj);                                               \
-    JS_END_MACRO
-
-#define JS_LOCK_VOID(cx, e)                                                   \
-    JS_BEGIN_MACRO                                                            \
-        JSRuntime *_rt = (cx)->runtime;                                       \
-        JS_LOCK_RUNTIME_VOID(_rt, e);                                         \
-    JS_END_MACRO
-
 #else  /* !JS_THREADSAFE */
 
 #define JS_ATOMIC_INCREMENT(p)      (++*(p))
@@ -284,7 +271,6 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
 #define JS_IS_RUNTIME_LOCKED(rt)        1
 #define JS_IS_OBJ_LOCKED(cx,obj)        1
 #define JS_IS_TITLE_LOCKED(cx,title)    1
-#define JS_LOCK_VOID(cx, e)             JS_LOCK_RUNTIME_VOID((cx)->runtime, e)
 
 #endif /* !JS_THREADSAFE */
 

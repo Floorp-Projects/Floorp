@@ -98,9 +98,9 @@ typedef union JSLocalNames {
  * pointer-chasing.
  */
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
-#define JSFUN_TRACEABLE     0x2000  /* can trace across calls to this native
-                                       function; use FUN_TRCINFO if set,
-                                       FUN_CLASP if unset */
+#define JSFUN_TRCINFO       0x2000  /* when set, u.n.trcinfo is non-null,
+                                       JSFunctionSpec::call points to a
+                                       JSNativeTraceInfo. */
 #define JSFUN_INTERPRETED   0x4000  /* use u.i if kind >= this value else u.n */
 #define JSFUN_FLAT_CLOSURE  0x8000  /* flag (aka "display") closure */
 #define JSFUN_NULL_CLOSURE  0xc000  /* null closure entrains no scope chain */
@@ -125,7 +125,7 @@ typedef union JSLocalNames {
 #define FUN_CLASP(fun)       (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
                               fun->u.n.clasp)
 #define FUN_TRCINFO(fun)     (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
-                              JS_ASSERT((fun)->flags & JSFUN_TRACEABLE),      \
+                              JS_ASSERT((fun)->flags & JSFUN_TRCINFO),        \
                               fun->u.n.trcinfo)
 
 struct JSFunction {
@@ -140,8 +140,7 @@ struct JSFunction {
             JSNative    native;   /* native method pointer or null */
             JSClass     *clasp;   /* class of objects constructed
                                      by this function */
-            JSTraceableNative *trcinfo;  /* tracer metadata; can be first
-                                            element of array */
+            JSNativeTraceInfo *trcinfo;
         } n;
         struct {
             uint16      nvars;    /* number of local variables */
@@ -180,18 +179,21 @@ struct JSFunction {
         return countLocalNames() != 0;
     }
 
+    int sharpSlotBase(JSContext *cx);
+
     uint32 countInterpretedReservedSlots() const;
 };
 
 /*
- * Traceable native.  This expands to a JSFunctionSpec initializer (like JS_FN
- * in jsapi.h).  fastcall is a JSFastNative; trcinfo is a JSTraceableNative *.
+ * Trace-annotated native. This expands to a JSFunctionSpec initializer (like
+ * JS_FN in jsapi.h). fastcall is a JSFastNative; trcinfo is a
+ * JSNativeTraceInfo*.
  */
 #ifdef JS_TRACER
 /* MSVC demands the intermediate (void *) cast here. */
 # define JS_TN(name,fastcall,nargs,flags,trcinfo)                             \
     JS_FN(name, JS_DATA_TO_FUNC_PTR(JSNative, trcinfo), nargs,                \
-          (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS | JSFUN_TRACEABLE)
+          (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS | JSFUN_TRCINFO)
 #else
 # define JS_TN(name,fastcall,nargs,flags,trcinfo)                             \
     JS_FN(name, fastcall, nargs, flags)
@@ -218,7 +220,17 @@ extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
  */
 #define GET_FUNCTION_PRIVATE(cx, funobj)                                      \
     (JS_ASSERT(HAS_FUNCTION_CLASS(funobj)),                                   \
-     (JSFunction *) (funobj)->getAssignedPrivate())
+     (JSFunction *) (funobj)->getPrivate())
+
+struct js_ArgsPrivateNative;
+
+inline js_ArgsPrivateNative *
+js_GetArgsPrivateNative(JSObject *argsobj)
+{
+    JS_ASSERT(STOBJ_GET_CLASS(argsobj) == &js_ArgumentsClass);
+    uintptr_t p = (uintptr_t) argsobj->getPrivate();
+    return (js_ArgsPrivateNative *) (p & 2 ? p & ~2 : NULL);
+}
 
 extern JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj);
@@ -275,6 +287,9 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp);
 
 extern void
 js_PutCallObject(JSContext *cx, JSStackFrame *fp);
+
+extern JSFunction *
+js_GetCallObjectFunction(JSObject *obj);
 
 extern JSBool
 js_GetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval *vp);

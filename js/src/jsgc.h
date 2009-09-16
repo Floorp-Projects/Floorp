@@ -112,7 +112,7 @@ js_GetGCStringRuntime(JSString *str);
 #endif
 
 extern JSBool
-js_InitGC(JSRuntime *rt, uint32 maxbytes);
+js_InitGC(JSRuntime *rt, size_t maxbytes);
 
 extern void
 js_FinishGC(JSRuntime *rt);
@@ -221,9 +221,9 @@ js_IsAboutToBeFinalized(JSContext *cx, void *thing);
 #endif
 
 /*
- * Trace jsval when JSVAL_IS_OBJECT(v) can be an arbitrary GC thing casted as
- * JSVAL_OBJECT and js_GetGCThingTraceKind has to be used to find the real
- * type behind v.
+ * Trace jsval when JSVAL_IS_OBJECT(v) can be a GC thing pointer tagged as a
+ * jsval. NB: punning an arbitrary JSString * as an untagged (object-tagged)
+ * jsval no longer works due to static int and unit strings!
  */
 extern void
 js_CallValueTracerIfGCThing(JSTracer *trc, jsval v);
@@ -286,7 +286,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind);
 
 typedef struct JSGCArenaInfo JSGCArenaInfo;
 typedef struct JSGCArenaList JSGCArenaList;
-typedef struct JSGCChunkInfo JSGCChunkInfo;
 
 struct JSGCArenaList {
     JSGCArenaInfo   *last;          /* last allocated GC arena */
@@ -325,22 +324,6 @@ struct JSWeakRoots {
 };
 
 #define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
-
-/*
- * Increase runtime->gcBytes by sz bytes to account for an allocation outside
- * the GC that will be freed only after the GC is run. The function may run
- * the last ditch GC to ensure that gcBytes does not exceed gcMaxBytes. It will
- * fail if the latter is not possible.
- *
- * This function requires that runtime->gcLock is held on entry. On successful
- * return the lock is still held and on failure it will be released with
- * the error reported.
- */
-extern JSBool
-js_AddAsGCBytes(JSContext *cx, size_t sz);
-
-extern void
-js_RemoveAsGCBytes(JSRuntime* rt, size_t sz);
 
 #ifdef JS_THREADSAFE
 class JSFreePointerListTask : public JSBackgroundTask {
@@ -413,7 +396,6 @@ typedef struct JSGCStats {
 #endif
     uint32  maxlevel;   /* maximum GC nesting (indirect recursion) level */
     uint32  poke;       /* number of potentially useful GC calls */
-    uint32  afree;      /* thing arenas freed so far */
     uint32  stackseg;   /* total extraordinary stack segments scanned */
     uint32  segslots;   /* total stack segment jsval slots scanned */
     uint32  nclose;     /* number of objects with close hooks */

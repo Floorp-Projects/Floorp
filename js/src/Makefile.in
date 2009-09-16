@@ -207,6 +207,7 @@ INSTALLED_HEADERS = \
 		jsscan.h \
 		jsscope.h \
 		jsscript.h \
+		jsscriptinlines.h \
 		jsstaticcheck.h \
 		jsstr.h \
 		jstask.h \
@@ -351,8 +352,8 @@ endif
 
 ifdef ENABLE_JIT
 check::
-	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) $(srcdir)/trace-test/trace-test.py \
-	        -x slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)
+	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/trace-test/trace-test.py \
+	        --no-slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)
 endif
 
 DIST_GARBAGE = config.cache config.log config.status \
