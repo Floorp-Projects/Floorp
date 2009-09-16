@@ -269,7 +269,7 @@ nsCaretAccessible::NormalSelectionChanged(nsIDOMDocument *aDoc,
   mLastCaretOffset = caretOffset;
   mLastTextAccessible = textAcc;
 
-  nsCOMPtr<nsIAccessibleCaretMoveEvent> event =
+  nsCOMPtr<nsIAccessibleEvent> event =
     new nsAccCaretMoveEvent(textNode);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
