@@ -411,10 +411,7 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
 
   // get chromeType first, the update enabled check for skins skips whitelisting
   if (argc >=1)
-  {
-      if (!JS_ValueToECMAUint32(cx, argv[0], &chromeType))
-          return JS_FALSE;
-  }
+      JS_ValueToECMAUint32(cx, argv[0], &chromeType);
 
   // make sure XPInstall is enabled, return if not
   nsIScriptGlobalObject *globalObject = nsnull;
