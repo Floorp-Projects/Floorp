@@ -260,8 +260,8 @@ diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/o
  {
    oggz_off_t offset_orig, offset_at, offset_end;
 @@ -813,17 +801,17 @@ oggz_seek_end (OGGZ * oggz, ogg_int64_t 
-     return -1;
-   }
+ 
+   unit_end = oggz_get_unit (oggz, serialno, granulepos);
  
  #ifdef DEBUG
    printf ("*** oggz_seek_end: found packet (%lld) at @%" PRI_OGGZ_OFF_T "d [%lld]\n",

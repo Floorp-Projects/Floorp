@@ -1,5 +1,20 @@
+Documentation files for Oggz
+----------------------------
+
+    PATCHES: Instructions for generating patches
+    README: this file
+    README.symbian: Instructions for building for Symbian
+    README.win32: Instructions for building on Win32
+
+Run:
+----
+
+    $ oggz help
+
+for documentation of the various oggz commands.
+
 About Oggz
-----------
+==========
 
 Oggz comprises liboggz and the tool oggz, which provides commands to
 inspect, edit and validate Ogg files. The oggz-chop tool can also be
@@ -43,26 +58,21 @@ README.symbian for information about building for Symbian devices.
 Source layout
 -------------
 
-The src/ directory contains the source code.
-The src/liboggz/ directory has the library source code.
-The src/tools/ directory has some command line tools for analysing
-               Ogg files.
-The src/examples/ directory contains example programs using liboggz.
-The src/tests/ directory contains unit and functional tests.
+    doc/
+    doc/liboggz        autocreated by the doxygen tool from comments
+                       contained in the public C header files
 
-The include/ directory contains the oggz include files that will
-be installed into the system include directory.
+    include/           public C header files
 
-The doc/ directory contains some documentation for oggz. The
-subdirectory liboggz is autocreated by doxygen from comments contained
-in the source code.
+    src/
+    src/liboggz/       library source code.
+    src/tools/         command line tools
+    src/examples/      example programs using liboggz
+    src/tests/         unit and functional tests
 
-The win32/ directory contains the files necessary to compile the
-library and tools for MS Windows.
-
-The symbian/ directory contains the files necessary to compile the
-library for Symbian.
-
+    symbian/           files necessary to compile the library for Symbian
+    win32/             files necessary to compile the library and tools for
+                       Microsoft Windows
 
 Programming with liboggz
 ------------------------
@@ -102,7 +112,7 @@ presenting the following API niceties:
 Full documentation of the liboggz API, customization and installation,
 and mux and demux examples can be read online at:
 
-    http://www.annodex.net/software/liboggz/html/
+    http://www.xiph.org/oggz/doc/
 
 oggz tool
 ---------
@@ -118,6 +128,7 @@ Commands:
   help          Display help for a specific subcommand (eg. "oggz help chop")
 
 Reporting:
+  codecs        Display the codecs present in an Ogg file
   diff          Hexdump the packets of two Ogg files and output differences.
   dump          Hexdump packets of an Ogg file, or revert an Ogg file from
                 such a hexdump.
@@ -173,7 +184,7 @@ Oggz is Free Software, available under a BSD style license.
 
 More information is available online at the Oggz homepage:
 
-    http://www.annodex.net/software/liboggz/
+    http://xiph.org/oggz/
 
 enjoy :)
 
