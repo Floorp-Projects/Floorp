@@ -113,6 +113,12 @@ public:
 
   nsresult GetImage(imgIContainer **aImage);
 
+  // Methods that get forwarded to the imgContainer, or deferred until it's
+  // instantiated.
+  nsresult LockImage();
+  nsresult UnlockImage();
+  nsresult RequestDecode();
+
 private:
   friend class imgCacheEntry;
   friend class imgRequestProxy;
@@ -206,6 +212,11 @@ private:
 
   imgCacheValidator *mValidator;
   nsCategoryCache<nsIContentSniffer> mImageSniffers;
+
+  // Sometimes consumers want to do things before the image is ready. Let them,
+  // and apply the action when the image becomes available.
+  PRUint32 mDeferredLocks;
+  PRPackedBool mDecodeRequested : 1;
 
   PRPackedBool mIsMultiPartChannel : 1;
   PRPackedBool mLoading : 1;

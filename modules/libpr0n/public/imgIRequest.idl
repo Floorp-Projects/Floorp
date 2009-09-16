@@ -159,11 +159,6 @@ interface imgIRequest : nsIRequest
    * If you don't call unlockImage() by the time this imgIRequest goes away, it
    * will be called for you automatically.
    *
-   * Only one lock at a time per imgIRequest is supported. That is to say, you
-   * can do foo->LockImage(); foo->UnlockImage(); foo->LockImage();
-   * foo->UnlockImage(); but not foo->LockImage(); foo->LockImage();
-   * foo->UnlockImage(); foo->UnlockImage();
-   *
    * @see imgIContainer::lockImage for documentation of the underlying call.
    */
   void lockImage();

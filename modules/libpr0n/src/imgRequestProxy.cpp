@@ -62,11 +62,11 @@ imgRequestProxy::imgRequestProxy() :
   mOwner(nsnull),
   mListener(nsnull),
   mLoadFlags(nsIRequest::LOAD_NORMAL),
+  mLocksHeld(0),
   mCanceled(PR_FALSE),
   mIsInLoadGroup(PR_FALSE),
   mListenerIsStrongRef(PR_FALSE),
-  mShouldRequestDecode(PR_FALSE),
-  mLockHeld(PR_FALSE)
+  mDecodeRequested(PR_FALSE)
 {
   /* member initializers and constructor code */
 
@@ -77,9 +77,12 @@ imgRequestProxy::~imgRequestProxy()
   /* destructor code */
   NS_PRECONDITION(!mListener, "Someone forgot to properly cancel this request!");
 
-  // Unlock the image if we're holding a lock on it
-  if (mLockHeld && mOwner)
-    UnlockImage();
+  // Unlock the image the proper number of times if we're holding locks on it.
+  // Note that UnlockImage() decrements mLocksHeld each time it's called.
+  if (mOwner) {
+    while (mLocksHeld)
+      UnlockImage();
+  }
 
   // Explicitly set mListener to null to ensure that the RemoveProxy
   // call below can't send |this| to an arbitrary listener while |this|
@@ -140,9 +143,10 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
   if (mOwner->GetImageStatus() & imgIRequest::STATUS_FRAME_COMPLETE)
     wasDecoded = PR_TRUE;
 
-  // If we're holding a lock, unlock the old image
-  PRBool wasLocked = mLockHeld;
-  if (mLockHeld)
+  // If we're holding locks, unlock the old image.
+  // Note that UnlockImage decrements mLocksHeld each time it's called.
+  PRUint32 oldLockCount = mLocksHeld;
+  while (mLocksHeld)
     UnlockImage();
 
   // Passing false to aNotify means that mListener will still get
@@ -153,12 +157,13 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
 
   mOwner->AddProxy(this);
 
-  // If we were decoded, request a decode on the new image
-  if (wasDecoded)
-    RequestDecode();
+  // If we were decoded, or if we'd previously requested a decode, request a
+  // decode on the new image
+  if (wasDecoded || mDecodeRequested)
+    mOwner->RequestDecode();
 
-  // If we were locked, apply the lock here
-  if (wasLocked)
+  // If we were locked, apply the locks here
+  for (PRUint32 i = 0; i < oldLockCount; i++)
     LockImage();
 
   return NS_OK;
@@ -273,19 +278,11 @@ imgRequestProxy::RequestDecode()
   if (!mOwner)
     return NS_ERROR_FAILURE;
 
-  // See if we can get the image
-  nsCOMPtr<imgIContainer> container;
-  nsresult rv = mOwner->GetImage(getter_AddRefs(container));
-  if (NS_FAILED(rv))
-    return rv;
+  // Flag this, so we know to transfer the request if our owner changes
+  mDecodeRequested = PR_TRUE;
 
-  // If we've got the container, just forward along the request
-  if (container)
-    return container->RequestDecode();
-
-  // Otherwise, flag that we should do it when the container is ready
-  mShouldRequestDecode = PR_TRUE;
-  return NS_OK;
+  // Forward the request
+  return mOwner->RequestDecode();
 }
 
 /* void lockImage (); */
@@ -295,22 +292,11 @@ imgRequestProxy::LockImage()
   if (!mOwner)
     return NS_ERROR_FAILURE;
 
-  // Flag that we're holding a lock
-  if (mLockHeld)
-    return NS_OK;
-  NS_ABORT_IF_FALSE(!mLockHeld, "Only call lockImage once per imgIRequest!");
-  mLockHeld = PR_TRUE;
+  // Increment our lock count
+  mLocksHeld++;
 
-  // If we've got the container, forward along the request. If we don't, well
-  // do it in OnStartContainer.
-  nsCOMPtr<imgIContainer> container;
-  nsresult rv = mOwner->GetImage(getter_AddRefs(container));
-  if (NS_FAILED(rv))
-    return rv;
-  if (container)
-    return container->LockImage();
-
-  return NS_OK;
+  // Forward the request
+  return mOwner->LockImage();
 }
 
 /* void unlockImage (); */
@@ -320,20 +306,12 @@ imgRequestProxy::UnlockImage()
   if (!mOwner)
     return NS_ERROR_FAILURE;
 
-  // Flag that we're not holding a lock
-  NS_ABORT_IF_FALSE(mLockHeld, "calling unlock but not locked!");
-  mLockHeld = PR_FALSE;
+  // Decrement our lock count
+  NS_ABORT_IF_FALSE(mLocksHeld > 0, "calling unlock but no locks!");
+  mLocksHeld--;
 
-  // If we've got the container, forward along the request. If we don't, it
-  // doesn't matter.
-  nsCOMPtr<imgIContainer> container;
-  nsresult rv = mOwner->GetImage(getter_AddRefs(container));
-  if (NS_FAILED(rv))
-    return rv;
-  if (container)
-    return container->UnlockImage();
-
-  return NS_OK;
+  // Forward the request
+  return mOwner->UnlockImage();
 }
 
 /* void suspend (); */
@@ -552,16 +530,6 @@ void imgRequestProxy::OnStartContainer(imgIContainer *image)
     nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
     mListener->OnStartContainer(this, image);
   }
-
-  // Request a decode if we said we should
-  if (mShouldRequestDecode) {
-    image->RequestDecode();
-    mShouldRequestDecode = PR_FALSE;
-  }
-
-  // Lock if we said we should
-  if (mLockHeld)
-    image->LockImage();
 }
 
 void imgRequestProxy::OnStartFrame(PRUint32 frame)
