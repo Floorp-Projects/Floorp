@@ -2358,11 +2358,12 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
              * Don't mark what has not been pushed yet, or what has been
              * popped already.
              */
-            if (fp->regs) {
+            if (fp->regs && fp->regs->sp) {
                 nslots = (uintN) (fp->regs->sp - fp->slots);
                 JS_ASSERT(nslots >= fp->script->nfixed);
             } else {
                 nslots = fp->script->nfixed;
+                JS_ASSERT_IF(!fp->regs->sp, nslots == 0);
             }
             TRACE_JSVALS(trc, nslots, fp->slots, "slot");
         }

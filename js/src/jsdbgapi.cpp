@@ -644,7 +644,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                         JS_ASSERT(script->length >= JSOP_STOP_LENGTH);
                         regs.pc = script->code + script->length
                                   - JSOP_STOP_LENGTH;
-                        regs.sp = frame.slots;
+                        regs.sp = NULL;
                         frame.regs = &regs;
                         if (fun &&
                             JSFUN_HEAVYWEIGHT_TEST(fun->flags) &&
