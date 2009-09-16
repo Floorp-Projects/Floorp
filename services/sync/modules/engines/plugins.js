@@ -45,6 +45,7 @@ PluginEngine.prototype = {
   __proto__: SyncEngine.prototype,
 
   displayName: "Plugins",
+  description: "",
   logName: "Plugins",
   name: "plugins",
 };

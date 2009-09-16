@@ -147,3 +147,8 @@ const FIREFOX_ID = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 const THUNDERBIRD_ID = "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
 const FENNEC_ID = "{a23983c0-fd0e-11dc-95ff-0800200c9a66}";
 const SEAMONKEY_ID = "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}";
+
+//UI constants
+
+// How many data types (bookmarks, history, etc) to display per row
+const UI_DATA_TYPES_PER_ROW = 3;
