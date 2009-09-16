@@ -55,7 +55,7 @@ const EXPORTED_SYMBOLS = ["WEAVE_VERSION", "COMPATIBLE_VERSION",
         'SETUP_FAILED_NO_PASSPHRASE', 'ABORT_SYNC_COMMAND',
         'kSyncWeaveDisabled', 'kSyncNotLoggedIn',
         'kSyncNetworkOffline', 'kSyncInPrivateBrowsing',
-        'kSyncNotScheduled',
+        'kSyncNotScheduled', 'kSyncBackoffNotMet',
         'FIREFOX_ID', 'THUNDERBIRD_ID', 'FENNEC_ID', 'SEAMONKEY_ID',
         'UI_DATA_TYPES_PER_ROW'];
 
