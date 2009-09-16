@@ -217,16 +217,16 @@ private:
       // Create the animation context
       mAnim = new Anim();
 
-      // We don't support discarding animated images (See bug 414259)
-      // Flag that we are no longer discardable (if we were before) 
-      // and cancel any discard timer.
-      mDiscardable = PR_FALSE;
-      if (mDiscardTimer) {
-        nsresult rv = mDiscardTimer->Cancel();
-        if (!NS_SUCCEEDED(rv))
-          NS_WARNING("Discard Timer failed to cancel!");
-        mDiscardTimer = nsnull;
-      }
+      // We don't support discarding animated images (See bug 414259).
+      // Lock the image and throw away the key.
+      // 
+      // Note that this is inefficient, since we could get rid of the source
+      // data too. However, doing this is actually hard, because we're probably
+      // calling ensureAnimExists mid-decode, and thus we're decoding out of
+      // the source buffer. Since we're going to fix this anyway later, and
+      // since we didn't kill the source data in the old world either, locking
+      // is acceptable for the moment.
+      LockImage();
     }
     return mAnim;
   }
@@ -353,7 +353,6 @@ private: // data
   nsresult WriteToDecoder(const char *aBuffer, PRUint32 aCount);
   nsresult DecodeSomeData(PRUint32 aMaxBytes);
   PRBool   IsDecodeFinished();
-  nsresult EnableDiscarding();
 
   // Decoder shutdown
   enum eShutdownIntent {
