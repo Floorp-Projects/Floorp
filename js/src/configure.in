@@ -2442,6 +2442,10 @@ i?86-*)
     ENABLE_JIT=1
     NANOJIT_ARCH=i386
     ;;
+x86_64*-*)
+    ENABLE_JIT=1
+    NANOJIT_ARCH=X64
+    ;;
 arm*-*)
     ENABLE_JIT=1
     NANOJIT_ARCH=ARM
@@ -2465,7 +2469,9 @@ case "$target" in
 i?86-*)
     AC_DEFINE(AVMPLUS_IA32)
     ;;
-
+x86_64*-*)
+    AC_DEFINE(AVMPLUS_AMD64)
+    ;;
 arm*-*)
     AC_DEFINE(AVMPLUS_ARM)
     ;;
@@ -3102,9 +3108,10 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS([fchmod flockfile getpagesize lchown localtime_r lstat64 \
-                memmove random rint sbrk snprintf stat64 statvfs statvfs64 \
-                strerror strtok_r truncate64])
+
+AC_CHECK_FUNCS([fchmod flockfile getc_unlocked _getc_nolock getpagesize \
+                lchown localtime_r lstat64 memmove random rint sbrk snprintf \
+                stat64 statvfs statvfs64 strerror strtok_r truncate64])
 
 dnl Windows functions, for mingw.
 AC_TRY_LINK([#include <windows.h>],

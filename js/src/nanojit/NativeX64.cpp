@@ -61,7 +61,6 @@ better code
 - stack based LIR_param
 
 tracing
-- asm_loop
 - asm_qjoin
 - asm_qhi
 - nFragExit
@@ -209,7 +208,7 @@ namespace nanojit
     }
 
     // disp32 modrm form when the disp must be written separately (opcode is 4+ bytes)
-    void Assembler::emitprm(uint64_t op, Register r, int32_t d, Register b) {
+    uint64_t Assembler::emit_disp32(uint64_t op, int32_t d) {
         if (isS8(d)) {
             NanoAssert(((op>>56)&0xC0) == 0x80); // make sure mod bits == 2 == disp32 mode
             underrunProtect(1+8);
@@ -221,6 +220,19 @@ namespace nanojit
             *((int32_t*)(_nIns -= 4)) = d;
             _nvprof("x64-bytes", 4);
         }
+        return op;
+    }
+
+    // disp32 modrm form when the disp must be written separately (opcode is 4+ bytes)
+    void Assembler::emitrm_wide(uint64_t op, Register r, int32_t d, Register b) {
+        op = emit_disp32(op, d);
+        emitrr(op, r, b);
+    }
+
+    // disp32 modrm form when the disp must be written separately (opcode is 4+ bytes)
+    // p = prefix -- opcode must have a 66, F2, or F3 prefix
+    void Assembler::emitprm(uint64_t op, Register r, int32_t d, Register b) {
+        op = emit_disp32(op, d);
         emitprr(op, r, b);
     }
 
@@ -244,6 +256,12 @@ namespace nanojit
         emitrr(X64_movqr, d, s);
     }
 
+    void Assembler::JMPl(NIns* target) {
+        NanoAssert(!target || isS32(target - _nIns));
+        underrunProtect(8); // must do this before calculating offset
+        emit32(X64_jmp, target ? target - _nIns : 0);
+    }
+
     void Assembler::JMP(NIns *target) {
         if (!target || isS32(target - _nIns)) {
             underrunProtect(8); // must do this before calculating offset
@@ -259,6 +277,9 @@ namespace nanojit
 
     // register allocation for 2-address style ops of the form R = R (op) B
     void Assembler::regalloc_binary(LIns *ins, RegisterMask allow, Register &rr, Register &ra, Register &rb) {
+#ifdef _DEBUG
+        RegisterMask originalAllow = allow;
+#endif
         rb = UnknownReg;
         LIns *a = ins->oprnd1();
         LIns *b = ins->oprnd2();
@@ -271,12 +292,21 @@ namespace nanojit
         // if this is last use of a in reg, we can re-use result reg
         if (rA == 0 || (ra = rA->reg) == UnknownReg) {
             ra = findSpecificRegFor(a, rr);
-        } else {
-            // rA already has a register assigned
+        } else if (!(allow & rmask(ra))) {
+            // rA already has a register assigned, but it's not valid
+            // to make sure floating point operations stay in FPU registers
+            // as much as possible, make sure that only a few opcodes are
+            // reserving GPRs.
+            NanoAssert(a->opcode() == LIR_quad || a->opcode() == LIR_ldq);
+            allow &= ~rmask(rr);
+            ra = findRegFor(a, allow);
         }
         if (a == b) {
             rb = ra;
         }
+        NanoAssert(originalAllow & rmask(rr));
+        NanoAssert(originalAllow & rmask(ra));
+        NanoAssert(originalAllow & rmask(rb));
     }
 
     void Assembler::asm_qbinop(LIns *ins) {
@@ -652,13 +682,18 @@ namespace nanojit
         // (This is true on Intel, is it true on all architectures?)
         const Register rr = prepResultReg(ins, GpRegs);
         const Register rf = findRegFor(iffalse, GpRegs & ~rmask(rr));
-        X64Opcode xop;
-        switch (cond->opcode()) {
-            default: TODO(asm_cmov);
-            case LIR_qeq:
-                xop = X64_cmovqne;
-                break;
-        }
+
+        int condop = (cond->opcode() & ~LIR64) - LIR_ov;
+        static const X64Opcode cmov[] = {
+            X64_cmovno, X64_cmovne,                       // ov, eq
+            X64_cmovge, X64_cmovle, X64_cmovg, X64_cmovl, // lt,  gt,  le,  ge
+            X64_cmovae, X64_cmovbe, X64_cmova, X64_cmovb  // ult, ugt, ule, uge
+        };
+        NanoAssert(condop >= 0 && condop < int(sizeof(cmov) / sizeof(cmov[0])));
+        NanoStaticAssert(sizeof(cmov) / sizeof(cmov[0]) == size_t(LIR_uge - LIR_ov + 1));
+        uint64_t xop = cmov[condop];
+        if (ins->opcode() == LIR_qcmov)
+            xop |= (uint64_t)X64_cmov_64;
         emitrr(xop, rr, rf);
         /*const Register rt =*/ findSpecificRegFor(iftrue, rr);
         asm_cmp(cond);
@@ -672,22 +707,26 @@ namespace nanojit
         // we must ensure there's room for the instr before calculating
         // the offset.  and the offset, determines the opcode (8bit or 32bit)
         underrunProtect(8);
+        NanoAssert((condop & ~LIR64) >= LIR_ov);
+        NanoAssert((condop & ~LIR64) <= LIR_uge);
         if (target && isS8(target - _nIns)) {
             static const X64Opcode j8[] = {
-                X64_je8, // eq
+                X64_jo8, X64_je8,                     // ov, eq
                 X64_jl8, X64_jg8, X64_jle8, X64_jge8, // lt,  gt,  le,  ge
                 X64_jb8, X64_ja8, X64_jbe8, X64_jae8  // ult, ugt, ule, uge
             };
-            uint64_t xop = j8[(condop & ~LIR64) - LIR_eq];
+            NanoStaticAssert(sizeof(j8) / sizeof(j8[0]) == LIR_uge - LIR_ov + 1);
+            uint64_t xop = j8[(condop & ~LIR64) - LIR_ov];
             xop ^= onFalse ? (uint64_t)X64_jneg8 : 0;
             emit8(xop, target - _nIns);
         } else {
             static const X64Opcode j32[] = {
-                X64_je, // eq
+                X64_jo, X64_je,                   // ov, eq
                 X64_jl, X64_jg, X64_jle, X64_jge, // lt,  gt,  le,  ge
                 X64_jb, X64_ja, X64_jbe, X64_jae  // ult, ugt, ule, uge
             };
-            uint64_t xop = j32[(condop & ~LIR64) - LIR_eq];
+            NanoStaticAssert(sizeof(j32) / sizeof(j32[0]) == LIR_uge - LIR_ov + 1);
+            uint64_t xop = j32[(condop & ~LIR64) - LIR_ov];
             xop ^= onFalse ? (uint64_t)X64_jneg : 0;
             emit32(xop, target ? target - _nIns : 0);
         }
@@ -697,6 +736,9 @@ namespace nanojit
     }
 
     void Assembler::asm_cmp(LIns *cond) {
+        // LIR_ov recycles the flags set by arithmetic ops
+        if (cond->opcode() == LIR_ov)
+            return;
         LIns *b = cond->oprnd2();
         if (isImm32(b)) {
             asm_cmp_imm(cond);
@@ -899,7 +941,11 @@ namespace nanojit
     }
 
     void Assembler::asm_ret(LIns *ins) {
-        JMP(_epilogue);
+        genEpilogue();
+
+        // Restore RSP from RBP, undoing SUB(RSP,amt) in the prologue
+        MR(RSP,FP);
+
         assignSavedRegs();
         LIns *value = ins->oprnd1();
         Register r = ins->isop(LIR_ret) ? RAX : XMM0;
@@ -951,7 +997,18 @@ namespace nanojit
         Register r, b;
         int32_t d;
         regalloc_load(ins, r, d, b);
-        emitrm(X64_movlrm, r, d, b);
+        LOpcode op = ins->opcode();
+        switch (op) {
+        case LIR_ldcb:
+            emitrm_wide(X64_movzx8m, r, d, b);
+            break;
+        case LIR_ldcs:
+            emitrm_wide(X64_movzx16m, r, d, b);
+            break;
+        default:
+            emitrm(X64_movlrm, r, d, b);
+            break;
+        }
     }
 
     void Assembler::asm_store64(LIns *value, int d, LIns *base) {
@@ -962,7 +1019,14 @@ namespace nanojit
         Reservation *resv = getresv(value);
         Register r;
         if (!resv || (r = resv->reg) == UnknownReg) {
-            r = findRegFor(value, GpRegs & ~rmask(b));
+            RegisterMask allow;
+            LOpcode op = value->opcode();
+            if ((op >= LIR_fneg && op <= LIR_fmod) || op == LIR_fcall) {
+                allow = FpRegs;
+            } else {
+                allow = GpRegs;
+            }
+            r = findRegFor(value, allow & ~rmask(b));
         }
 
         if (IsGpReg(r)) {
@@ -1078,6 +1142,7 @@ namespace nanojit
             // rA already has a register assigned.  caller must emit a copy
             // to rr once instr code is generated.  (ie  mov rr,ra ; op rr)
         }
+        NanoAssert(allow & rmask(rr));
     }
 
     static const AVMPLUS_ALIGN16(int64_t) negateMask[] = {0x8000000000000000LL,0};
@@ -1139,13 +1204,9 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_loop(LIns*, NInsList&) {
-        TODO(asm_loop);
-    }
-
     NIns* Assembler::genPrologue() {
         // activation frame is 4 bytes per entry even on 64bit machines
-        uint32_t stackNeeded = max_stk_used + _activation.highwatermark * 4;
+        uint32_t stackNeeded = max_stk_used + _activation.tos * 4;
 
         uint32_t stackPushed =
             sizeof(void*) + // returnaddr
@@ -1171,20 +1232,16 @@ namespace nanojit
     }
 
     NIns* Assembler::genEpilogue() {
-        // mov rsp, rbp
         // pop rbp
         // ret
-        max_stk_used = 0;
         emit(X64_ret);
         emitr(X64_popr, RBP);
-        MR(RSP, RBP);
         return _nIns;
     }
 
     void Assembler::nRegisterResetAll(RegAlloc &a) {
         // add scratch registers to our free list for the allocator
         a.clear();
-        a.used = 0;
 #ifdef _MSC_VER
         a.free = 0x001fffcf; // rax-rbx, rsi, rdi, r8-r15, xmm0-xmm5
 #else
@@ -1205,7 +1262,8 @@ namespace nanojit
             next = 0;
             TODO(unknown_patch);
         }
-        NanoAssert(((int32_t*)next)[-1] == 0);
+        // Guards can result in a valid branch being patched again later, so don't assert
+        // that the old value is poison.
         NanoAssert(isS32(target - next));
         ((int32_t*)next)[-1] = int32_t(target - next);
         if (next[0] == 0x0F && next[1] == 0x8A) {
@@ -1236,12 +1294,41 @@ namespace nanojit
     #endif
     }
 
-    void Assembler::nFragExit(LIns*) {
-        TODO(nFragExit);
+    void Assembler::nFragExit(LIns *guard) {
+        SideExit *exit = guard->record()->exit;
+        Fragment *frag = exit->target;
+        GuardRecord *lr = 0;
+        bool destKnown = (frag && frag->fragEntry);
+        // Generate jump to epilog and initialize lr.
+        // If the guard is LIR_xtbl, use a jump table with epilog in every entry
+        if (guard->isop(LIR_xtbl)) {
+            NanoAssert(!guard->isop(LIR_xtbl));
+        } else {
+            // If the guard already exists, use a simple jump.
+            if (destKnown) {
+                JMP(frag->fragEntry);
+                lr = 0;
+            } else {  // target doesn't exist. Use 0 jump offset and patch later
+                if (!_epilogue)
+                    _epilogue = genEpilogue();
+                lr = guard->record();
+                JMPl(_epilogue);
+                lr->jmp = _nIns;
+            }
+        }
+
+        MR(RSP, RBP);
+
+        // return value is GuardRecord*
+        emit_quad(RAX, uintptr_t(lr));
     }
 
-    void Assembler::nInit(AvmCore*)
-    {}
+    void Assembler::nInit(AvmCore*) {
+    }
+
+    void Assembler::nBeginAssembly() {
+        max_stk_used = 0;
+    }
 
     void Assembler::underrunProtect(ptrdiff_t bytes) {
         NanoAssertMsg(bytes<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small");
@@ -1261,7 +1348,10 @@ namespace nanojit
             if (pc - bytes - br_size < top) {
                 // really do need a page break
                 verbose_only(if (_logc->lcbits & LC_Assembly) outputf("newpage %p:", pc);)
-                codeAlloc();
+                if (_inExit)
+                    codeAlloc(exitStart, exitEnd, _nIns verbose_only(, exitBytes));
+                else
+                    codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
             }
             // now emit the jump, but make sure we won't need another page break.
             // we're pedantic, but not *that* pedantic.
@@ -1272,7 +1362,10 @@ namespace nanojit
     #else
         if (pc - bytes < top) {
             verbose_only(if (_logc->lcbits & LC_Assembly) outputf("newpage %p:", pc);)
-            codeAlloc();
+            if (_inExit)
+                codeAlloc(exitStart, exitEnd, _nIns verbose_only(, exitBytes));
+            else
+                codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
             // this jump will call underrunProtect again, but since we're on a new
             // page, nothing will happen.
             JMP(pc);
@@ -1286,16 +1379,24 @@ namespace nanojit
 
     void Assembler::nativePageSetup() {
         if (!_nIns) {
-            codeAlloc();
+            codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
             IF_PEDANTIC( pedanticTop = _nIns; )
         }
         if (!_nExitIns) {
-            codeAlloc(true);
+            codeAlloc(exitStart, exitEnd, _nExitIns verbose_only(, exitBytes));
         }
     }
 
     void Assembler::nativePageReset()
     {}
+
+    // Increment the 32-bit profiling counter at pCtr, without
+    // changing any registers.
+    verbose_only(
+    void Assembler::asm_inc_m32(uint32_t* pCtr)
+    {
+    }
+    )
 
 } // namespace nanojit
 

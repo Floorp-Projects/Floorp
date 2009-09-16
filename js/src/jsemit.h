@@ -200,7 +200,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
       : flags(0), ngvars(0), bodyid(0), blockidGen(0),
         topStmt(NULL), topScopeStmt(NULL), blockChain(NULL), blockNode(NULL),
         compiler(jsc), scopeChain(NULL), parent(NULL), staticLevel(0),
-        funbox(NULL), functionList(NULL)
+        funbox(NULL), functionList(NULL), sharpSlotBase(-1)
     {
         JS_SCOPE_DEPTH_METERING(scopeDepth = maxScopeDepth = 0);
     }
@@ -225,6 +225,13 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     /* Test whether we're in a statement of given type. */
     bool inStatement(JSStmtType type);
+
+    /* 
+     * sharpSlotBase is -1 or first slot of pair for [sharpArray, sharpDepth].
+     * The parser calls ensureSharpSlots to allocate these two stack locals.
+     */
+    int sharpSlotBase;
+    bool ensureSharpSlots();
 };
 
 /*
@@ -248,8 +255,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                         parameter name */
 #define TCF_FUN_HEAVYWEIGHT    0x100 /* function needs Call object per call */
 #define TCF_FUN_IS_GENERATOR   0x200 /* parsed yield statement in function */
-#define TCF_FUN_IS_FUNARG      0x400 /* function escapes as an argument, return
-                                        value, or via the heap */
+#define TCF_FUN_USES_OWN_NAME  0x400 /* named function expression that uses its
+                                        own name */
 #define TCF_HAS_FUNCTION_STMT  0x800 /* block contains a function statement */
 #define TCF_GENEXP_LAMBDA     0x1000 /* flag lambda from generator expression */
 #define TCF_COMPILE_N_GO      0x2000 /* compiler-and-go mode of script, can
@@ -267,7 +274,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                  TCF_FUN_PARAM_ARGUMENTS |                    \
                                  TCF_FUN_HEAVYWEIGHT     |                    \
                                  TCF_FUN_IS_GENERATOR    |                    \
-                                 TCF_FUN_IS_FUNARG       |                    \
+                                 TCF_FUN_USES_OWN_NAME   |                    \
                                  TCF_HAS_SHARPS)
 
 /*
@@ -420,6 +427,16 @@ struct JSCodeGenerator : public JSTreeContext
      * pointer beyond the next JSCodeGenerator destructor call.
      */
     ~JSCodeGenerator();
+
+    bool hasSharps() {
+        bool rv = flags & TCF_HAS_SHARPS;
+        JS_ASSERT((sharpSlotBase >= 0) == rv);
+        return rv;
+    }
+
+    uintN sharpSlots() {
+        return hasSharps() ? SHARP_NSLOTS : 0;
+    }
 };
 
 #define CG_TS(cg)               TS((cg)->compiler)

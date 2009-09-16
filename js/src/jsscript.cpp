@@ -65,6 +65,8 @@
 #include "jsxdrapi.h"
 #endif
 
+#include "jsscriptinlines.h"
+
 #if JS_HAS_SCRIPT_OBJECT
 
 static const char js_script_exec_str[]    = "Script.prototype.exec";
@@ -329,7 +331,7 @@ script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      * Emulate eval() by using caller's this, var object, sharp array, etc.,
      * all propagated by js_Execute via a non-null fourth (down) argument to
      * js_Execute.  If there is no scripted caller, js_Execute uses its second
-     * (chain) argument to set the exec frame's varobj, thisp, and scopeChain.
+     * (chain) argument to set the exec frame's varobj, thisv, and scopeChain.
      *
      * Unlike eval, which the compiler detects, Script.prototype.exec may be
      * called from a lightweight function, or even from native code (in which
@@ -459,20 +461,20 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         natoms = (uint32)script->atomMap.length;
 
         /* Count the srcnotes, keeping notes pointing at the first one. */
-        notes = SCRIPT_NOTES(script);
+        notes = script->notes();
         for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn))
             continue;
         nsrcnotes = sn - notes;
         nsrcnotes++;            /* room for the terminator */
 
         if (script->objectsOffset != 0)
-            nobjects = JS_SCRIPT_OBJECTS(script)->length;
+            nobjects = script->objects()->length;
         if (script->upvarsOffset != 0)
-            nupvars = JS_SCRIPT_UPVARS(script)->length;
+            nupvars = script->upvars()->length;
         if (script->regexpsOffset != 0)
-            nregexps = JS_SCRIPT_REGEXPS(script)->length;
+            nregexps = script->regexps()->length;
         if (script->trynotesOffset != 0)
-            ntrynotes = JS_SCRIPT_TRYNOTES(script)->length;
+            ntrynotes = script->trynotes()->length;
     }
 
     if (!JS_XDRUint32(xdr, &length))
@@ -510,7 +512,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         script->nfixed = uint16(version >> 16);
 
         /* If we know nsrcnotes, we allocated space for notes in script. */
-        notes = SCRIPT_NOTES(script);
+        notes = script->notes();
         *scriptp = script;
         JS_PUSH_TEMP_ROOT_SCRIPT(cx, script, &tvr);
     }
@@ -595,7 +597,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
      * to restore the parent chain.
      */
     for (i = 0; i != nobjects; ++i) {
-        JSObject **objp = &JS_SCRIPT_OBJECTS(script)->vector[i];
+        JSObject **objp = &script->objects()->vector[i];
         uint32 isBlock;
         if (xdr->mode == JSXDR_ENCODE) {
             JSClass *clasp = STOBJ_GET_CLASS(*objp);
@@ -615,11 +617,11 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         }
     }
     for (i = 0; i != nupvars; ++i) {
-        if (!JS_XDRUint32(xdr, &JS_SCRIPT_UPVARS(script)->vector[i]))
+        if (!JS_XDRUint32(xdr, &script->upvars()->vector[i]))
             goto error;
     }
     for (i = 0; i != nregexps; ++i) {
-        if (!js_XDRRegExpObject(xdr, &JS_SCRIPT_REGEXPS(script)->vector[i]))
+        if (!js_XDRRegExpObject(xdr, &script->regexps()->vector[i]))
             goto error;
     }
 
@@ -633,8 +635,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         JS_STATIC_ASSERT(sizeof(tn->kind) == sizeof(uint8));
         JS_STATIC_ASSERT(sizeof(tn->stackDepth) == sizeof(uint16));
 
-        tnfirst = JS_SCRIPT_TRYNOTES(script)->vector;
-        JS_ASSERT(JS_SCRIPT_TRYNOTES(script)->length == ntrynotes);
+        tnfirst = script->trynotes()->vector;
+        JS_ASSERT(script->trynotes()->length == ntrynotes);
         tn = tnfirst + ntrynotes;
         do {
             --tn;
@@ -1315,21 +1317,21 @@ js_SweepScriptFilenames(JSRuntime *rt)
  *
  * JSScript
  * JSObjectArray    script objects' descriptor if JSScript.objectsOffset != 0,
- *                    use JS_SCRIPT_OBJECTS(script) macro to access it.
+ *                    use script->objects() to access it.
  * JSObjectArray    script regexps' descriptor if JSScript.regexpsOffset != 0,
- *                    use JS_SCRIPT_REGEXPS(script) macro to access it.
+ *                    use script->regexps() to access it.
  * JSTryNoteArray   script try notes' descriptor if JSScript.tryNotesOffset
- *                    != 0, use JS_SCRIPT_TRYNOTES(script) macro to access it.
+ *                    != 0, use script->trynotes() to access it.
  * JSAtom *a[]      array of JSScript.atomMap.length atoms pointed by
  *                    JSScript.atomMap.vector if any.
- * JSObject *o[]    array of JS_SCRIPT_OBJECTS(script)->length objects if any
- *                    pointed by JS_SCRIPT_OBJECTS(script)->vector.
- * JSObject *r[]    array of JS_SCRIPT_REGEXPS(script)->length regexps if any
- *                    pointed by JS_SCRIPT_REGEXPS(script)->vector.
- * JSTryNote t[]    array of JS_SCRIPT_TRYNOTES(script)->length try notes if any
- *                    pointed by JS_SCRIPT_TRYNOTES(script)->vector.
+ * JSObject *o[]    array of script->objects()->length objects if any
+ *                    pointed by script->objects()->vector.
+ * JSObject *r[]    array of script->regexps()->length regexps if any
+ *                    pointed by script->regexps()->vector.
+ * JSTryNote t[]    array of script->trynotes()->length try notes if any
+ *                    pointed by script->trynotes()->vector.
  * jsbytecode b[]   script bytecode pointed by JSScript.code.
- * jssrcnote  s[]   script source notes, use SCRIPT_NOTES(script) to access it
+ * jssrcnote  s[]   script source notes, use script->notes() to access it
  *
  * The alignment avoids gaps between entries as alignment requirement for each
  * subsequent structure or array is the same or divides the alignment
@@ -1416,36 +1418,40 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
     }
 
     if (nobjects != 0) {
-        JS_SCRIPT_OBJECTS(script)->length = nobjects;
-        JS_SCRIPT_OBJECTS(script)->vector = (JSObject **)cursor;
-        vectorSize = nobjects * sizeof(JS_SCRIPT_OBJECTS(script)->vector[0]);
-        memset(cursor, 0, vectorSize);
-        cursor += vectorSize;
-    }
-
-    if (nupvars != 0) {
-        JS_SCRIPT_UPVARS(script)->length = nupvars;
-        JS_SCRIPT_UPVARS(script)->vector = (uint32 *)cursor;
-        vectorSize = nupvars * sizeof(JS_SCRIPT_UPVARS(script)->vector[0]);
+        script->objects()->length = nobjects;
+        script->objects()->vector = (JSObject **)cursor;
+        vectorSize = nobjects * sizeof(script->objects()->vector[0]);
         memset(cursor, 0, vectorSize);
         cursor += vectorSize;
     }
 
     if (nregexps != 0) {
-        JS_SCRIPT_REGEXPS(script)->length = nregexps;
-        JS_SCRIPT_REGEXPS(script)->vector = (JSObject **)cursor;
-        vectorSize = nregexps * sizeof(JS_SCRIPT_REGEXPS(script)->vector[0]);
+        script->regexps()->length = nregexps;
+        script->regexps()->vector = (JSObject **)cursor;
+        vectorSize = nregexps * sizeof(script->regexps()->vector[0]);
         memset(cursor, 0, vectorSize);
         cursor += vectorSize;
     }
 
     if (ntrynotes != 0) {
-        JS_SCRIPT_TRYNOTES(script)->length = ntrynotes;
-        JS_SCRIPT_TRYNOTES(script)->vector = (JSTryNote *)cursor;
-        vectorSize = ntrynotes * sizeof(JS_SCRIPT_TRYNOTES(script)->vector[0]);
+        script->trynotes()->length = ntrynotes;
+        script->trynotes()->vector = (JSTryNote *)cursor;
+        vectorSize = ntrynotes * sizeof(script->trynotes()->vector[0]);
 #ifdef DEBUG
         memset(cursor, 0, vectorSize);
 #endif
+        cursor += vectorSize;
+    }
+
+    /*
+     * NB: We allocate the vector of uint32 upvar cookies after all vectors of
+     * pointers, to avoid misalignment on 64-bit platforms. See bug 514645.
+     */
+    if (nupvars != 0) {
+        script->upvars()->length = nupvars;
+        script->upvars()->vector = (uint32 *)cursor;
+        vectorSize = nupvars * sizeof(script->upvars()->vector[0]);
+        memset(cursor, 0, vectorSize);
         cursor += vectorSize;
     }
 
@@ -1490,7 +1496,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     memcpy(script->main, CG_BASE(cg), mainLength * sizeof(jsbytecode));
     nfixed = (cg->flags & TCF_IN_FUNCTION)
              ? cg->fun->u.i.nvars
-             : cg->ngvars + cg->regexpList.length;
+             : cg->ngvars + cg->regexpList.length + cg->sharpSlots();
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = (uint16) nfixed;
     js_InitAtomMap(cx, &script->atomMap, &cg->atomList);
@@ -1513,20 +1519,22 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     if (script->principals)
         JSPRINCIPALS_HOLD(cx, script->principals);
 
-    if (!js_FinishTakingSrcNotes(cx, cg, SCRIPT_NOTES(script)))
+    if (!js_FinishTakingSrcNotes(cx, cg, script->notes()))
         goto bad;
     if (cg->ntrynotes != 0)
-        js_FinishTakingTryNotes(cg, JS_SCRIPT_TRYNOTES(script));
+        js_FinishTakingTryNotes(cg, script->trynotes());
     if (cg->objectList.length != 0)
-        cg->objectList.finish(JS_SCRIPT_OBJECTS(script));
+        cg->objectList.finish(script->objects());
     if (cg->regexpList.length != 0)
-        cg->regexpList.finish(JS_SCRIPT_REGEXPS(script));
+        cg->regexpList.finish(script->regexps());
     if (cg->flags & TCF_NO_SCRIPT_RVAL)
         script->flags |= JSSF_NO_SCRIPT_RVAL;
+    if (cg->hasSharps())
+        script->flags |= JSSF_HAS_SHARPS;
 
     if (cg->upvarList.count != 0) {
         JS_ASSERT(cg->upvarList.count <= cg->upvarMap.length);
-        memcpy(JS_SCRIPT_UPVARS(script)->vector, cg->upvarMap.vector,
+        memcpy(script->upvars()->vector, cg->upvarMap.vector,
                cg->upvarList.count * sizeof(uint32));
         cg->upvarList.clear();
         cx->free(cg->upvarMap.vector);
@@ -1542,7 +1550,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         fun = cg->fun;
         JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
         JS_ASSERT_IF(script->upvarsOffset != 0,
-                     JS_SCRIPT_UPVARS(script)->length == fun->u.i.nupvars);
+                     script->upvars()->length == fun->u.i.nupvars);
 
         js_FreezeLocalNames(cx, fun);
         fun->u.i.script = script;
@@ -1666,7 +1674,7 @@ js_TraceScript(JSTracer *trc, JSScript *script)
     }
 
     if (script->objectsOffset != 0) {
-        objarray = JS_SCRIPT_OBJECTS(script);
+        objarray = script->objects();
         i = objarray->length;
         do {
             --i;
@@ -1678,7 +1686,7 @@ js_TraceScript(JSTracer *trc, JSScript *script)
     }
 
     if (script->regexpsOffset != 0) {
-        objarray = JS_SCRIPT_REGEXPS(script);
+        objarray = script->regexps();
         i = objarray->length;
         do {
             --i;
@@ -1740,7 +1748,7 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 
     JS_METER_GSN_CACHE(cx, misses);
     offset = 0;
-    for (sn = SCRIPT_NOTES(script); ; sn = SN_NEXT(sn)) {
+    for (sn = script->notes(); ; sn = SN_NEXT(sn)) {
         if (SN_IS_TERMINATOR(sn)) {
             result = NULL;
             break;
@@ -1756,7 +1764,7 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
         script->length >= GSN_CACHE_THRESHOLD) {
         JS_PURGE_GSN_CACHE(cx);
         nsrcnotes = 0;
-        for (sn = SCRIPT_NOTES(script); !SN_IS_TERMINATOR(sn);
+        for (sn = script->notes(); !SN_IS_TERMINATOR(sn);
              sn = SN_NEXT(sn)) {
             if (SN_IS_GETTABLE(sn))
                 ++nsrcnotes;
@@ -1767,7 +1775,7 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
             JS_GSN_CACHE(cx).table.ops = NULL;
         } else {
             pc = script->code;
-            for (sn = SCRIPT_NOTES(script); !SN_IS_TERMINATOR(sn);
+            for (sn = script->notes(); !SN_IS_TERMINATOR(sn);
                  sn = SN_NEXT(sn)) {
                 pc += SN_DELTA(sn);
                 if (SN_IS_GETTABLE(sn)) {
@@ -1826,7 +1834,7 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
     lineno = script->lineno;
     offset = 0;
     target = pc - script->code;
-    for (sn = SCRIPT_NOTES(script); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
+    for (sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         offset += SN_DELTA(sn);
         type = (JSSrcNoteType) SN_TYPE(sn);
         if (type == SRC_SETLINE) {
@@ -1857,7 +1865,7 @@ js_LineNumberToPC(JSScript *script, uintN target)
     best = -1;
     lineno = script->lineno;
     bestdiff = SN_LINE_LIMIT;
-    for (sn = SCRIPT_NOTES(script); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
+    for (sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         /*
          * Exact-match only if offset is not in the prolog; otherwise use
          * nearest greater-or-equal line number match.
@@ -1893,7 +1901,7 @@ js_GetScriptLineExtent(JSScript *script)
     JSSrcNoteType type;
 
     lineno = script->lineno;
-    for (sn = SCRIPT_NOTES(script); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
+    for (sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         type = (JSSrcNoteType) SN_TYPE(sn);
         if (type == SRC_SETLINE) {
             lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
@@ -1903,35 +1911,3 @@ js_GetScriptLineExtent(JSScript *script)
     }
     return 1 + lineno - script->lineno;
 }
-
-#if JS_HAS_GENERATORS
-
-JSBool
-js_IsInsideTryWithFinally(JSScript *script, jsbytecode *pc)
-{
-    JSTryNoteArray *tarray;
-    JSTryNote *tn, *tnlimit;
-    uint32 off;
-
-    JS_ASSERT(script->code <= pc);
-    JS_ASSERT(pc < script->code + script->length);
-
-    if (!script->trynotesOffset != 0)
-        return JS_FALSE;
-    tarray = JS_SCRIPT_TRYNOTES(script);
-    JS_ASSERT(tarray->length != 0);
-
-    tn = tarray->vector;
-    tnlimit = tn + tarray->length;
-    off = (uint32)(pc - script->main);
-    do {
-        if (off - tn->start < tn->length) {
-            if (tn->kind == JSTRY_FINALLY)
-                return JS_TRUE;
-            JS_ASSERT(tn->kind == JSTRY_CATCH);
-        }
-    } while (++tn != tnlimit);
-    return JS_FALSE;
-}
-
-#endif

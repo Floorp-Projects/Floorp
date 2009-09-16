@@ -1,3 +1,5 @@
+// |trace-test| TMFLAGS: full,fragprofile,treevis
+
 function testRegExpTest() {
     var r = /abc/;
     var flag = false;

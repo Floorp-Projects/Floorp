@@ -58,15 +58,12 @@ JS_BEGIN_EXTERN_C
 #define JSSTRING_BIT(n)             ((size_t)1 << (n))
 #define JSSTRING_BITMASK(n)         (JSSTRING_BIT(n) - 1)
 
-#define UNIT_STRING_SPACE(sp)    ((jschar *) ((sp) + UNIT_STRING_LIMIT))
-#define UNIT_STRING_SPACE_RT(rt) UNIT_STRING_SPACE((rt)->unitStrings)
-
-#define IN_UNIT_STRING_SPACE(sp,cp)                                           \
-    ((size_t)((cp) - UNIT_STRING_SPACE(sp)) < 2 * UNIT_STRING_LIMIT)
-#define IN_UNIT_STRING_SPACE_RT(rt,cp)                                        \
-    IN_UNIT_STRING_SPACE((rt)->unitStrings, cp)
-
 class TraceRecorder;
+
+enum {
+    UNIT_STRING_LIMIT        = 256U,
+    INT_STRING_LIMIT         = 256U
+};
 
 extern jschar *
 js_GetDependentStringChars(JSString *str);
@@ -119,7 +116,6 @@ struct JSString {
     friend JSString * JS_FASTCALL
     js_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
 
-private:
     size_t          mLength;
     union {
         jschar      *mChars;
@@ -165,7 +161,7 @@ private:
         return (mLength & flag) != 0;
     }
 
-public:
+  public:
     enum
 #if defined(_MSC_VER) && defined(_WIN64)
     : size_t /* VC++ 64-bit incorrectly defaults this enum's size to int. */
@@ -364,6 +360,40 @@ public:
         JS_ASSERT(isDependent() && dependentIsPrefix());
         mBase = bstr;
     }
+
+    static inline bool isUnitString(void *ptr) {
+        jsuword delta = reinterpret_cast<jsuword>(ptr) -
+                        reinterpret_cast<jsuword>(unitStringTable);
+        if (delta >= UNIT_STRING_LIMIT * sizeof(JSString))
+            return false;
+
+        /* If ptr points inside the static array, it must be well-aligned. */
+        JS_ASSERT(delta % sizeof(JSString) == 0);
+        return true;
+    }
+
+    static inline bool isIntString(void *ptr) {
+        jsuword delta = reinterpret_cast<jsuword>(ptr) -
+                        reinterpret_cast<jsuword>(intStringTable);
+        if (delta >= INT_STRING_LIMIT * sizeof(JSString))
+            return false;
+
+        /* If ptr points inside the static array, it must be well-aligned. */
+        JS_ASSERT(delta % sizeof(JSString) == 0);
+        return true;
+    }
+
+    static inline bool isStatic(void *ptr) {
+        return isUnitString(ptr) || isIntString(ptr);
+    }
+
+    static JSString unitStringTable[];
+    static JSString intStringTable[];
+    static const char *deflatedIntStringTable[];
+
+    static JSString *unitString(jschar c);
+    static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
+    static JSString *intString(jsint i);
 };
 
 extern const jschar *
@@ -503,9 +533,17 @@ extern const bool js_alnum[];
 
 #define JS_ISDIGIT(c)   (JS_CTYPE(c) == JSCT_DECIMAL_DIGIT_NUMBER)
 
-/* XXXbe unify on A/X/Y tbls, avoid ctype.h? */
-/* XXXbe fs, etc. ? */
-#define JS_ISSPACE(c)   ((JS_CCODE(c) & 0x00070000) == 0x00040000)
+static inline bool
+JS_ISSPACE(jschar c)
+{
+    unsigned w = c;
+
+    if (w < 256)
+        return (w <= ' ' && (w == ' ' || (9 <= w && w <= 0xD))) || w == 0xA0;
+
+    return (JS_CCODE(w) & 0x00070000) == 0x00040000;
+}
+
 #define JS_ISPRINT(c)   ((c) < 128 && isprint(c))
 
 #define JS_ISUPPER(c)   (JS_CTYPE(c) == JSCT_UPPERCASE_LETTER)
@@ -534,29 +572,6 @@ js_InitRuntimeStringState(JSContext *cx);
 
 extern JSBool
 js_InitDeflatedStringCache(JSRuntime *rt);
-
-/*
- * Maximum character code for which we will create a pinned unit string on
- * demand -- see JSRuntime.unitStrings in jscntxt.h.
- */
-#define UNIT_STRING_LIMIT 256U
-
-/*
- * Get the independent string containing only character code at index in str
- * (backstopped with a zero character as usual for independent strings).
- */
-extern JSString *
-js_GetUnitString(JSContext *cx, JSString *str, size_t index);
-
-/*
- * Get the independent string containing only the character code c, which must
- * be less than UNIT_STRING_LIMIT.
- */
-extern JSString *
-js_GetUnitStringForChar(JSContext *cx, jschar c);
-
-extern void
-js_FinishUnitStrings(JSRuntime *rt);
 
 extern void
 js_FinishRuntimeStringState(JSContext *cx);
@@ -690,8 +705,14 @@ js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
 /*
  * Return s advanced past any Unicode white space characters.
  */
-extern const jschar *
-js_SkipWhiteSpace(const jschar *s, const jschar *end);
+static inline const jschar *
+js_SkipWhiteSpace(const jschar *s, const jschar *end)
+{
+    JS_ASSERT(s <= end);
+    while (s != end && JS_ISSPACE(*s))
+        s++;
+    return s;
+}
 
 /*
  * Inflate bytes to JS chars and vice versa.  Report out of memory via cx
@@ -756,10 +777,6 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 extern JSBool
 js_str_toString(JSContext *cx, uintN argc, jsval *vp);
-
-extern JSBool
-js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
-                       JSString *repstr, jsval *vp);
 
 /*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at

@@ -54,7 +54,7 @@
 #elif AVMPLUS_SPARC
 #define NANOJIT_SPARC
 #elif AVMPLUS_AMD64
-#define NANOJIT_AMD64
+#define NANOJIT_X64
 #define NANOJIT_64BIT
 #else
 #error "unknown nanojit architecture"
@@ -262,11 +262,11 @@ namespace nanojit {
            and below, so that callers can use bits 16 and above for
            themselves. */
         // TODO: add entries for the writer pipeline
-        LC_Activation  = 1<<7, // enable printActivationState
-        LC_Liveness    = 1<<6, // (show LIR liveness analysis)
-        LC_ReadLIR     = 1<<5, // As read from LirBuffer
-        LC_AfterSF_SP  = 1<<4, // After StackFilter(sp)
-        LC_AfterSF_RP  = 1<<3, // After StackFilter(rp)
+        LC_FragProfile = 1<<7, // collect per-frag usage counts
+        LC_Activation  = 1<<6, // enable printActivationState
+        LC_Liveness    = 1<<5, // (show LIR liveness analysis)
+        LC_ReadLIR     = 1<<4, // As read from LirBuffer
+        LC_AfterSF     = 1<<3, // After StackFilter
         LC_RegAlloc    = 1<<2, // stuff to do with reg alloc
         LC_Assembly    = 1<<1, // final assembly
         LC_NoCodeAddrs = 1<<0  // (don't show code addresses on asm output)

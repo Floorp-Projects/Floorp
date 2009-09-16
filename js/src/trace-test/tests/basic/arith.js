@@ -1,3 +1,5 @@
+// |trace-test| TMFLAGS: full,fragprofile,treevis
+
 function arith()
 {
   var accum = 0;

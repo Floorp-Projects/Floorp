@@ -1,11 +1,14 @@
-import sys
+import os, struct, sys
 import Image, ImageDraw, ImageFont
 
 from config import *
 from acts import *
-from binlog import parse_input, collect
+from binlog import read_history
+from progressbar import ProgressBar
+from time import clock
 
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 font = ImageFont.load_default()
 
 states = [
@@ -21,67 +24,133 @@ states = [
 timeslices_ms = [
     1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000 ]
 
-def parse(filename):
-    return collect(parse_input(filename), True)
+class Data(object):
+    def __init__(self, duration, summary, transitions):
+        self.duration = duration
+        self.summary = summary
+        self.transitions = transitions
 
-def run(filename, outfile):
+def parse_raw(filename):
+    hist = read_history(filename)
+    return Data(hist.transitions[-1][2] - hist.transitions[0][2],
+                hist.state_summary,
+                hist.transitions)
+
+def parse_cooked(filename):
+    f = open(filename)
+    header = f.read(20)
+    if header != 'TraceVis-History0001':
+        print "Invalid header"
+        sys.exit(1)
+
+    duration = struct.unpack_from('Q', f.read(8))[0]
+    summary = []
+    state_count = struct.unpack_from('I', f.read(4))[0]
+    for i in range(state_count):
+        summary.append(struct.unpack_from('Q', f.read(8))[0])
+
+    # This method is actually faster than reading it all into a buffer and decoding
+    # from there.
+    pos = f.tell()
+    f.seek(0, os.SEEK_END)
+    n = (f.tell() - pos) / 10
+    f.seek(pos)
+
+    pb = ProgressBar('read input', n)
+    blip = n / 100
+
+    transitions = []
+    for i in range(n):
+        if i % blip == 0:
+            pb.update(i)
+        raw = f.read(10)
+        s = struct.unpack_from('B', raw)[0]
+        r = struct.unpack_from('B', raw, 1)[0]
+        t = struct.unpack_from('Q', raw, 2)[0]
+        transitions.append((s, r, t))
+    pb.finish()
+    
+    return Data(duration, summary, transitions)
+
+def draw(data, outfile):
+    total, summary, ts = data.duration, data.summary, data.transitions
+
     W, H, HA, HB = 1600, 256, 64, 64
     HZ = H + 4 + HA + 4 + HB
     im = Image.new('RGBA', (W, HZ + 20))
     d = ImageDraw.Draw(im)
 
-    hist = parse(filename)
-
-    t0 = hist.timeline[0].t
-    ts = []
-    for x in hist.timeline:
-        ts.append((x.s0, x.t-t0))
-
     # Filter
     if 0:
         a, b = 10*2.2e9, 12*2.2e9
         ts = [(s, t-a) for s, t in ts if a <= t <= b ]
-    total = ts[-1][1] - ts[0][1]
     total_ms = total / CPU_SPEED * 1000
 
     pp = 1.0 * total / (W*H)
     pc_us = 1.0 * total / CPU_SPEED / W * 1e6
-    print "Parsed %d items, t=%f, t/pixel=%f, t0=%d"%(len(ts), total/CPU_SPEED, pp/CPU_SPEED*1000, hist.timeline[0].t)
+    print "Parsed %d items, t=%f, t/pixel=%f"%(len(ts), total/CPU_SPEED, pp/CPU_SPEED*1000)
 
     d.rectangle((0, H + 4, W, H + 4 + HA), (255, 255, 255))
 
     eps = []
 
-    # estimated progress
+    # estimated progress of program run 
     ep = 0
+
+    # text progress indicator for graph generation
+    pb = ProgressBar('draw main', W*H)
+    blip = W*H//50
+
+    # Flush events. We need to save them and draw them after filling the main area
+    # because otherwise they will be overwritten. Format is (x, y, r) to plot flush at,
+    # where r is reason code.
+    events = []
 
     ti = 0
     for i in range(W*H):
+        if i % blip == 0:
+            pb.update(i)
+        x, y = i/H, i%H
+
         t0 = pp * i
         t1 = t0 + pp
         color = [ 0, 0, 0 ]
         tx = t0
         while ti < len(ts):
-            q = (min(ts[ti][1], t1)-tx)/pp
-            c = states[ts[ti][0]]
+            state, reason, time = ts[ti];
+            # States past this limit are actually events rather than state transitions
+            if state >= event_start:
+                events.append((x, y, reason))
+                ti += 1
+                continue
+
+            q = (min(time, t1)-tx)/pp
+            c = states[state]
             color[0] += q * c[0]
             color[1] += q * c[1]
             color[2] += q * c[2]
-            ep += q * speedups[ts[ti][0]]
-            if ts[ti][1] > t1:
+            ep += q * speedups[state]
+            if time > t1:
                 break
-            tx = ts[ti][1]
+            tx = time
             ti += 1
         
         color[0] = int(color[0])
         color[1] = int(color[1])
         color[2] = int(color[2])
 
-        d.point((i/H, i%H), fill=tuple(color))
+        d.point((x, y), fill=tuple(color))
 
         if i % H == H - 1:
             eps.append(ep)
             ep = 0
+
+    for x, y, r in events:
+        d.ellipse((x-5, y-5, x+5, y+5), fill=(255, 222, 222), outline=(160, 10, 10))
+        ch = flush_reasons[r]
+        d.text((x-2, y-5), ch, fill=BLACK, font=font)
+
+    pb.finish()
 
     epmax = 2.5*H
 
@@ -106,20 +175,23 @@ def run(filename, outfile):
 
     t = 0
     ppt = 1.0 * W / total
-    for dt, c in zip(hist.state_summary, states):
-        x1 = int(t * ppt)
-        y1 = H + 4 + HA + 5 
-        x2 = int((t+dt) * ppt)
-        y2 = H + 4 + HA + 4 + HB
-        d.rectangle((x1, y1, x2, y2), fill=c)
-        t += dt
+    if True:
+        for dt, c in zip(summary, states):
+            x1 = int(t * ppt)
+            y1 = H + 4 + HA + 5 
+            x2 = int((t+dt) * ppt)
+            y2 = H + 4 + HA + 4 + HB
+            d.rectangle((x1, y1, x2, y2), fill=c)
+            t += dt
 
     # Time lines
     i = 0
-    while i < len(timeslices_ms):
+    while True:
         divs = total_ms / timeslices_ms[i]
         if divs < 15: break
+        if i == len(timeslices_ms) - 1: break
         i += 1
+
     timeslice = timeslices_ms[i]
     t = timeslice
     c = (128, 128, 128)
@@ -139,14 +211,23 @@ def run(filename, outfile):
     im.save(outfile, "PNG")
 
 if __name__ == '__main__':
+    from optparse import OptionParser
+    parser = OptionParser()
+    parser.add_option('-c', action='store_true', dest='cooked', default=False,
+                      help='process cooked format input file')
+    options, args = parser.parse_args()
+
     if len(sys.argv) <= 2:
         print >> sys.stderr, "usage: python vis.py infile outfile"
         sys.exit(1);
-
     filename = sys.argv[1]
     outfile  = sys.argv[2]
     if not outfile.endswith('.png'):
         print >> sys.stderr, "warning: output filename does not end with .png; output is in png format."
 
-    run(filename, outfile)
+    if options.cooked:
+        data = parse_cooked(filename)
+    else:
+        data = parse_raw(filename)
 
+    draw(data, outfile)
