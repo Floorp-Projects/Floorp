@@ -763,7 +763,7 @@ namespace nanojit
         _codeAlloc.addRemainder(codeList, exitStart, exitEnd, _nExitSlot, _nExitIns);
         _codeAlloc.addRemainder(codeList, codeStart, codeEnd, _nSlot, _nIns);
         verbose_only( exitBytes -= (_nExitIns - _nExitSlot) * sizeof(NIns); )
-        verbose_only( codeBytes -= (_nIns - _nSlot) * sizeof(Nins); )
+        verbose_only( codeBytes -= (_nIns - _nSlot) * sizeof(NIns); )
 #else
         // [codeStart ... gap ... [_nIns, codeEnd))
         _codeAlloc.addRemainder(codeList, exitStart, exitEnd, exitStart, _nExitIns);
