@@ -55,7 +55,6 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsregexp.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jsarray.h"
 #include "jstask.h"
@@ -109,7 +108,7 @@ namespace nanojit {
 }
 #if defined(JS_JIT_SPEW) || defined(DEBUG)
 struct FragPI;
-typedef nanojit::HashMap<uint32_t, FragPI, nanojit::DefaultHash<uint32_t> > FragStatsMap;
+typedef nanojit::HashMap<uint32, FragPI, nanojit::DefaultHash<uint32> > FragStatsMap;
 #endif
 class TraceRecorder;
 class VMAllocator;
@@ -204,7 +203,7 @@ struct JSTraceMonitor {
 #ifdef DEBUG
     /* Fields needed for fragment/guard profiling. */
     CLS(nanojit::Seq<nanojit::Fragment*>) branches;
-    uint32_t                lastFragID;
+    uint32                  lastFragID;
     /*
      * profAlloc has a lifetime which spans exactly from js_InitJIT to
      * js_FinishJIT.
