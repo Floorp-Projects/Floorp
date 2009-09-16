@@ -42,48 +42,36 @@
 #define _nsCacheMetaData_h_
 
 #include "nspr.h"
-#include "pldhash.h"
 #include "nscore.h"
-#include "nsString.h"
 
 class nsICacheMetaDataVisitor;
 
 class nsCacheMetaData {
 public:
-    nsCacheMetaData();
-    ~nsCacheMetaData()  { Clear(); }
+    nsCacheMetaData() : mBuffer(nsnull), mBufferSize(0), mMetaSize(0) { }
 
-    void                  Clear();
-    PRBool                IsEmpty() { return (mData == nsnull); }
+    ~nsCacheMetaData() {
+        mBufferSize = mMetaSize = 0;  
+        PR_FREEIF(mBuffer);
+    }
 
-    const char *          GetElement(const char * key);
+    const char *  GetElement(const char * key);
 
-    nsresult              SetElement(const char * key,
-                                     const char * value);
+    nsresult      SetElement(const char * key, const char * value);
 
-    PRUint32              Size(void) { return mMetaSize; }
+    PRUint32      Size(void) { return mMetaSize; }
 
-    nsresult              FlattenMetaData(char * buffer, PRUint32 bufSize);
+    nsresult      FlattenMetaData(char * buffer, PRUint32 bufSize);
 
-    nsresult              UnflattenMetaData(const char * buffer, PRUint32 bufSize);
+    nsresult      UnflattenMetaData(const char * buffer, PRUint32 bufSize);
 
-    nsresult              VisitElements(nsICacheMetaDataVisitor * visitor);
+    nsresult      VisitElements(nsICacheMetaDataVisitor * visitor);
 
 private:
+    nsresult      EnsureBuffer(PRUint32 size);
 
-    struct MetaElement
-    {
-        struct MetaElement * mNext;
-        nsCString            mKey;
-        char                 mValue[1]; // actually, bigger than 1
-
-        // MetaElement and mValue are allocated together via:
-        void *operator new(size_t size,
-                           const char *value,
-                           PRUint32 valueSize) CPP_THROW_NEW;
-    };
-
-    MetaElement * mData;
+    char *        mBuffer;
+    PRUint32      mBufferSize;
     PRUint32      mMetaSize;
 };
 
