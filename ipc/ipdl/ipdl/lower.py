@@ -1614,6 +1614,19 @@ class GenerateProtocolActorHeader(Visitor):
                                      cxx.ExprCall(cxx.ExprVar('Register'),
                                                   [ objvar ]))))
 
+                impl.addstmt(cxx.StmtExpr(cxx.ExprAssn(
+                            cxx.ExprSelect(objvar, '->', 'mManager'),
+                            cxx.ExprVar('this'))))
+                if self.p.decl.type.isManaged():
+                    channelvar = cxx.ExprVar('mChannel')
+                else:
+                    channelvar = cxx.ExprAddrOf(cxx.ExprVar('mChannel'))
+                impl.addstmt(cxx.StmtExpr(cxx.ExprAssn(
+                            cxx.ExprSelect(objvar, '->', 'mChannel'),
+                            channelvar)))
+
+                impl.addstmt(cxx.Whitespace.NL)
+
                 impl.addstmt(cxx.StmtDecl(
                         cxx.Decl(cxx.Type('mozilla::ipc::ActorHandle'),
                                  '__ah')))
@@ -1929,18 +1942,6 @@ class GenerateProtocolActorHeader(Visitor):
                                           cxx.Type(md._cxx.nsreplyid, ptr=1),
                                           static=1),
                              'got reply ')
-
-            if md.decl.type.isCtor():
-                impl.addstmt(cxx.StmtExpr(cxx.ExprAssn(
-                            cxx.ExprSelect(objvar, '->', 'mManager'),
-                            cxx.ExprVar('this'))))
-                if self.p.decl.type.isManaged():
-                    channelvar = cxx.ExprVar('mChannel')
-                else:
-                    channelvar = cxx.ExprAddrOf(cxx.ExprVar('mChannel'))
-                impl.addstmt(cxx.StmtExpr(cxx.ExprAssn(
-                            cxx.ExprSelect(objvar, '->', 'mChannel'),
-                            channelvar)))
 
             elif md.decl.type.isDtor():
                 impl.addstmt(cxx.StmtExpr(
