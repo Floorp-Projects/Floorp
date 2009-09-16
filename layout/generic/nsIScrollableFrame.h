@@ -49,7 +49,6 @@
 
 class nsBoxLayoutState;
 class nsIScrollPositionListener;
-class nsIScrollableView;
 
 /**
  * Interface for frames that are scrollable. This interface exposes
@@ -195,9 +194,6 @@ public:
    * after being restored from history.
    */
   NS_IMETHOD PostScrolledAreaEventForCurrentArea() = 0;
-
-  // OBSOLETE, will remove
-  virtual nsIScrollableView* GetScrollableView() = 0;
 };
 
 #endif
