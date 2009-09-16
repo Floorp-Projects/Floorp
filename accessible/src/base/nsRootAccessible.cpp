@@ -684,7 +684,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     PRBool isEnabled = (state & (nsIAccessibleStates::STATE_CHECKED |
                         nsIAccessibleStates::STATE_SELECTED)) != 0;
 
-    nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
+    nsCOMPtr<nsIAccessibleEvent> accEvent =
       new nsAccStateChangeEvent(accessible, nsIAccessibleStates::STATE_CHECKED,
                                 PR_FALSE, isEnabled);
     acc->FireAccessibleEvent(accEvent);
@@ -700,7 +700,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
 
     PRBool isEnabled = !!(state & nsIAccessibleStates::STATE_CHECKED);
 
-    nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
+    nsCOMPtr<nsIAccessibleEvent> accEvent =
       new nsAccStateChangeEvent(accessible,
                                 nsIAccessibleStates::STATE_CHECKED,
                                 PR_FALSE, isEnabled);
@@ -736,7 +736,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     PRUint32 state = nsAccUtils::State(accessible); // collapsed/expanded changed
     PRBool isEnabled = (state & nsIAccessibleStates::STATE_EXPANDED) != 0;
 
-    nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
+    nsCOMPtr<nsIAccessibleEvent> accEvent =
       new nsAccStateChangeEvent(accessible, nsIAccessibleStates::STATE_EXPANDED,
                                 PR_FALSE, isEnabled);
     return FireAccessibleEvent(accEvent);
@@ -1106,7 +1106,7 @@ nsRootAccessible::HandlePopupShownEvent(nsIAccessible *aAccessible)
     PRUint32 comboboxRole = nsAccUtils::Role(comboboxAcc);
     if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
         comboboxRole == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
-      nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+      nsCOMPtr<nsIAccessibleEvent> event =
         new nsAccStateChangeEvent(comboboxAcc,
                                   nsIAccessibleStates::STATE_EXPANDED,
                                   PR_FALSE, PR_TRUE);
@@ -1150,7 +1150,7 @@ nsRootAccessible::HandlePopupHidingEvent(nsIDOMNode *aNode,
   PRUint32 comboboxRole = nsAccUtils::Role(comboboxAcc);
   if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
       comboboxRole == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
-    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+    nsCOMPtr<nsIAccessibleEvent> event =
       new nsAccStateChangeEvent(comboboxAcc,
                                 nsIAccessibleStates::STATE_EXPANDED,
                                 PR_FALSE, PR_FALSE);
