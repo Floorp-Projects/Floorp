@@ -323,7 +323,7 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
             // had percentage widths.  The spec doesn't say to do this,
             // but we've always done it in the past, and so does WinIE6.
             nscoord pctUsed = NSToCoordFloor(pctTotal * float(tableWidth));
-            nscoord reduce = PR_MIN(pctUsed, -unassignedSpace);
+            nscoord reduce = NS_MIN(pctUsed, -unassignedSpace);
             float reduceRatio = float(reduce) / pctTotal;
             for (PRInt32 col = 0; col < colCount; ++col) {
                 nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);

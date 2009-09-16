@@ -1575,7 +1575,7 @@ void nsFrameSelection::BidiLevelFromMove(nsIPresShell* aPresShell,
     case nsIDOMKeyEvent::DOM_VK_UP:
     case nsIDOMKeyEvent::DOM_VK_DOWN:
       GetPrevNextBidiLevels(aContext, aNode, aContentOffset, &firstFrame, &secondFrame, &firstLevel, &secondLevel);
-      aPresShell->SetCaretBidiLevel(PR_MIN(firstLevel, secondLevel));
+      aPresShell->SetCaretBidiLevel(NS_MIN(firstLevel, secondLevel));
       break;
       */
 
@@ -2735,10 +2735,10 @@ nsFrameSelection::UnselectCells(nsIContent *aTableContent,
   if (!tableLayout)
     return NS_ERROR_FAILURE;
 
-  PRInt32 minRowIndex = PR_MIN(aStartRowIndex, aEndRowIndex);
-  PRInt32 maxRowIndex = PR_MAX(aStartRowIndex, aEndRowIndex);
-  PRInt32 minColIndex = PR_MIN(aStartColumnIndex, aEndColumnIndex);
-  PRInt32 maxColIndex = PR_MAX(aStartColumnIndex, aEndColumnIndex);
+  PRInt32 minRowIndex = NS_MIN(aStartRowIndex, aEndRowIndex);
+  PRInt32 maxRowIndex = NS_MAX(aStartRowIndex, aEndRowIndex);
+  PRInt32 minColIndex = NS_MIN(aStartColumnIndex, aEndColumnIndex);
+  PRInt32 maxColIndex = NS_MAX(aStartColumnIndex, aEndColumnIndex);
 
   // Strong reference because we sometimes remove the range
   nsCOMPtr<nsIRange> range = GetFirstCellRange();
@@ -4413,8 +4413,8 @@ nsTypedSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset,
       if (startOffset < (aContentOffset + aContentLength)  &&
           endOffset > aContentOffset) {
         // this range is totally inside the requested content range
-        start = PR_MAX(0, startOffset - aContentOffset);
-        end = PR_MIN(aContentLength, endOffset - aContentOffset);
+        start = NS_MAX(0, startOffset - aContentOffset);
+        end = NS_MIN(aContentLength, endOffset - aContentOffset);
       }
       // otherwise, range is inside the requested node, but does not intersect
       // the requested content range, so ignore it
@@ -4422,7 +4422,7 @@ nsTypedSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset,
       if (startOffset < (aContentOffset + aContentLength)) {
         // the beginning of the range is inside the requested node, but the
         // end is outside, select everything from there to the end
-        start = PR_MAX(0, startOffset - aContentOffset);
+        start = NS_MAX(0, startOffset - aContentOffset);
         end = aContentLength;
       }
     } else if (endNode == aContent) {
@@ -4430,7 +4430,7 @@ nsTypedSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset,
         // the end of the range is inside the requested node, but the beginning
         // is outside, select everything from the beginning to there
         start = 0;
-        end = PR_MIN(aContentLength, endOffset - aContentOffset);
+        end = NS_MIN(aContentLength, endOffset - aContentOffset);
       }
     } else {
       // this range does not begin or end in the requested node, but since
@@ -6350,7 +6350,7 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
     //  (if the new language corresponds to the orientation of that character) and this level plus 1
     //  (if the new language corresponds to the opposite orientation)
     if ((level != levelBefore) && (level != levelAfter))
-      level = PR_MIN(levelBefore, levelAfter);
+      level = NS_MIN(levelBefore, levelAfter);
     if ((level & 1) == aLangRTL)
       mFrameSelection->SetCaretBidiLevel(level);
     else

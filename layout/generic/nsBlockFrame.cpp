@@ -863,11 +863,11 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
       // We found a reflow state for the outermost wrapping frame, so use
       // its computed metrics if available
       if (aLastRS->ComputedWidth() != NS_UNCONSTRAINEDSIZE) {
-        cbSize.width = PR_MAX(0,
+        cbSize.width = NS_MAX(0,
           aLastRS->ComputedWidth() + aLastRS->mComputedPadding.LeftRight() - scrollbars.LeftRight());
       }
       if (aLastRS->ComputedHeight() != NS_UNCONSTRAINEDSIZE) {
-        cbSize.height = PR_MAX(0,
+        cbSize.height = NS_MAX(0,
           aLastRS->ComputedHeight() + aLastRS->mComputedPadding.TopBottom() - scrollbars.TopBottom());
       }
     }
@@ -1267,7 +1267,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     {
       // Truncate bottom margin if it doesn't fit to our available height.
       bottomEdgeOfChildren =
-        PR_MIN(bottomEdgeOfChildren + aState.mPrevBottomMargin.get(),
+        NS_MIN(bottomEdgeOfChildren + aState.mPrevBottomMargin.get(),
                aState.mReflowState.availableHeight);
     }
   }
@@ -1276,7 +1276,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     // bottom margin of any floated elements; e.g., inside a table cell.
     nscoord floatHeight =
       aState.ClearFloats(bottomEdgeOfChildren, NS_STYLE_CLEAR_LEFT_AND_RIGHT);
-    bottomEdgeOfChildren = PR_MAX(bottomEdgeOfChildren, floatHeight);
+    bottomEdgeOfChildren = NS_MAX(bottomEdgeOfChildren, floatHeight);
   }
 
   // Compute final height
@@ -1293,7 +1293,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // first frame's height. Add it back to get the content height.
       computedHeightLeftOver += aReflowState.mComputedBorderPadding.top;
       // We may have stretched the frame beyond its computed height. Oh well.
-      computedHeightLeftOver = PR_MAX(0, computedHeightLeftOver);
+      computedHeightLeftOver = NS_MAX(0, computedHeightLeftOver);
     }
     NS_ASSERTION(!( IS_TRUE_OVERFLOW_CONTAINER(this)
                     && computedHeightLeftOver ),
@@ -1316,7 +1316,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
         // break.  If our bottom border/padding straddles the break
         // point, then this will increase our height and push the
         // border/padding to the next page/column.
-        aMetrics.height = PR_MAX(aReflowState.availableHeight,
+        aMetrics.height = NS_MAX(aReflowState.availableHeight,
                                  aState.mY + nonCarriedOutVerticalMargin);
         NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
         if (!GetNextInFlow())
@@ -1328,10 +1328,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // Do extend the height to at least consume the available
       // height, otherwise our left/right borders (for example) won't
       // extend all the way to the break.
-      aMetrics.height = PR_MAX(aReflowState.availableHeight,
+      aMetrics.height = NS_MAX(aReflowState.availableHeight,
                                aState.mY + nonCarriedOutVerticalMargin);
       // ... but don't take up more height than is available
-      aMetrics.height = PR_MIN(aMetrics.height,
+      aMetrics.height = NS_MIN(aMetrics.height,
                                borderPadding.top + computedHeightLeftOver);
       // XXX It's pretty wrong that our bottom border still gets drawn on
       // on its own on the last-in-flow, even if we ran out of height
@@ -1358,7 +1358,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   else {
     NS_ASSERTION(aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE,
       "Shouldn't be incomplete if availableHeight is UNCONSTRAINED.");
-    aMetrics.height = PR_MAX(aState.mY, aReflowState.availableHeight);
+    aMetrics.height = NS_MAX(aState.mY, aReflowState.availableHeight);
     if (aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE)
       // This should never happen, but it does. See bug 414255
       aMetrics.height = aState.mY;
@@ -1373,7 +1373,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   }
 
   // Screen out negative heights --- can happen due to integer overflows :-(
-  aMetrics.height = PR_MAX(0, aMetrics.height);
+  aMetrics.height = NS_MAX(0, aMetrics.height);
   *aBottomEdgeOfChildren = bottomEdgeOfChildren;
 
 #ifdef DEBUG_blocks
@@ -1431,7 +1431,7 @@ nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
       // to the bottom edge of the children
       bottomEdgeOfContents += aReflowState.mComputedPadding.bottom;
     }
-    area.height = PR_MAX(area.YMost(), bottomEdgeOfContents) - area.y;
+    area.height = NS_MAX(area.YMost(), bottomEdgeOfContents) - area.y;
   }
 #ifdef NOISY_COMBINED_AREA
   ListTag(stdout);
@@ -2232,8 +2232,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         nsLayoutUtils::GetCenteredFontBaseline(fm, aState.mMinLineHeight);
       nscoord minDescent = aState.mMinLineHeight - minAscent;
 
-      aState.mY += PR_MAX(minAscent, metrics.ascent) +
-                   PR_MAX(minDescent, metrics.height - metrics.ascent);
+      aState.mY += NS_MAX(minAscent, metrics.ascent) +
+                   NS_MAX(minDescent, metrics.height - metrics.ascent);
 
       nscoord offset = minAscent - metrics.ascent;
       if (offset > 0) {
@@ -4078,7 +4078,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   nsRect oldFloatAvailableSpace(aFloatAvailableSpace);
   // As we redo for floats, we can't reduce the amount of height we're
   // checking.
-  aAvailableSpaceHeight = PR_MAX(aAvailableSpaceHeight, aLine->mBounds.height);
+  aAvailableSpaceHeight = NS_MAX(aAvailableSpaceHeight, aLine->mBounds.height);
   aFloatAvailableSpace = 
     aState.GetFloatAvailableSpaceForHeight(aLine->mBounds.y,
                                            aAvailableSpaceHeight,
@@ -5538,7 +5538,7 @@ nsBlockFrame::AdjustFloatAvailableSpace(nsBlockReflowState& aState,
   nscoord contentYOffset = aState.mY - aState.BorderPadding().top;
   nscoord availHeight = NS_UNCONSTRAINEDSIZE == aState.mContentArea.height
                         ? NS_UNCONSTRAINEDSIZE
-                        : PR_MAX(0, aState.mContentArea.height - contentYOffset);
+                        : NS_MAX(0, aState.mContentArea.height - contentYOffset);
 
 #ifdef DISABLE_FLOAT_BREAKING_IN_COLUMNS
   if (availHeight != NS_UNCONSTRAINEDSIZE &&
@@ -6577,7 +6577,7 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   if (rs.mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR) {
     // Note: floatAvailSpace.x is relative to the content box and never
     // less than zero.  Converting to frame coordinates and subtracting
-    // the padding and border cancel each other out, and the PR_MAX()
+    // the padding and border cancel each other out, and the NS_MAX()
     // with 0 (or with the left border+padding) is even implied in the
     // right place.
     x = floatAvailSpace.x - reflowState.mComputedMargin.right - aMetrics.width;
@@ -6586,7 +6586,7 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
     // give us offsets from the left content edge.  Then we add the left
     // border/padding to get into frame coordinates, and the right
     // border/padding and the bullet's margin to offset the position.
-    x = PR_MIN(rs.ComputedWidth(), floatAvailSpace.XMost())
+    x = NS_MIN(rs.ComputedWidth(), floatAvailSpace.XMost())
         + rs.mComputedBorderPadding.LeftRight()
         + reflowState.mComputedMargin.left;
   }
@@ -6788,8 +6788,8 @@ nsBlockFrame::WidthToClearPastFloats(nsBlockReflowState& aState,
       // FIXME:  This doesn't treat the caption and table independently,
       // since we adjust by only the smaller margin, and the table outer
       // frame doesn't know about it.
-      result.marginLeft  = PR_MIN(tableMargin.left,  captionMargin.left);
-      result.marginRight = PR_MIN(tableMargin.right, captionMargin.right);
+      result.marginLeft  = NS_MIN(tableMargin.left,  captionMargin.left);
+      result.marginRight = NS_MIN(tableMargin.right, captionMargin.right);
     } else {
       NS_ASSERTION(captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
                    captionSide == NS_STYLE_CAPTION_SIDE_RIGHT,

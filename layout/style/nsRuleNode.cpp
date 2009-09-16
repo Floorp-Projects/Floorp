@@ -2034,7 +2034,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
           mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize);
 
         if (minimumFontSize > 0 && !mPresContext->IsChrome()) {
-          fontData->mFont.size = PR_MAX(fontData->mSize, minimumFontSize);
+          fontData->mFont.size = NS_MAX(fontData->mSize, minimumFontSize);
         }
         else {
           fontData->mFont.size = fontData->mSize;
@@ -2502,12 +2502,12 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
   // Compute the size we would have had if minscriptsize had never been
   // applied, also prevent overflow (bug 413274)
   *aUnconstrainedSize =
-    NSToCoordRound(PR_MIN(aParentFont->mScriptUnconstrainedSize*scriptLevelScale,
-                          nscoord_MAX));
+    NSToCoordRound(NS_MIN(aParentFont->mScriptUnconstrainedSize*scriptLevelScale,
+                          double(nscoord_MAX)));
   // Compute the size we could get via scriptlevel change
   nscoord scriptLevelSize =
-    NSToCoordRound(PR_MIN(aParentFont->mSize*scriptLevelScale,
-                          nscoord_MAX));
+    NSToCoordRound(NS_MIN(aParentFont->mSize*scriptLevelScale,
+                          double(nscoord_MAX)));
   if (scriptLevelScale <= 1.0) {
     if (aParentFont->mSize <= minScriptSize) {
       // We can't decrease the font size at all, so just stick to no change
@@ -2516,12 +2516,12 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
       return aParentFont->mSize;
     }
     // We can decrease, so apply constraint #1
-    return PR_MAX(minScriptSize, scriptLevelSize);
+    return NS_MAX(minScriptSize, scriptLevelSize);
   } else {
     // scriptminsize can only make sizes larger than the unconstrained size
     NS_ASSERTION(*aUnconstrainedSize <= scriptLevelSize, "How can this ever happen?");
     // Apply constraint #2
-    return PR_MIN(scriptLevelSize, PR_MAX(*aUnconstrainedSize, minScriptSize));
+    return NS_MIN(scriptLevelSize, NS_MAX(*aUnconstrainedSize, minScriptSize));
   }
 }
 #endif
@@ -2724,7 +2724,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
       case eSystemFont_List:
         // Assumption: system defined font is proportional
         systemFont.size = 
-          PR_MAX(defaultVariableFont->size - aPresContext->PointsToAppUnits(2), 0);
+          NS_MAX(defaultVariableFont->size - aPresContext->PointsToAppUnits(2), 0);
         break;
     }
 #endif
@@ -5642,7 +5642,7 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   } else if (eCSSUnit_Integer == columnData.mColumnCount.GetUnit()) {
     column->mColumnCount = columnData.mColumnCount.GetIntValue();
     // Max 1000 columns - wallpaper for bug 345583.
-    column->mColumnCount = PR_MIN(column->mColumnCount, 1000);
+    column->mColumnCount = NS_MIN(column->mColumnCount, 1000U);
   } else if (eCSSUnit_Inherit == columnData.mColumnCount.GetUnit()) {
     canStoreInRuleTree = PR_FALSE;
     column->mColumnCount = parent->mColumnCount;

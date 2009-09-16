@@ -158,7 +158,7 @@ CorrectForAspectRatio(const gfxRect& aRect, const nsIntSize& aRatio)
                "Nothing to draw");
   // Choose scale factor that scales aRatio to just fit into aRect
   gfxFloat scale =
-    PR_MIN(aRect.Width()/aRatio.width, aRect.Height()/aRatio.height);
+    NS_MIN(aRect.Width()/aRatio.width, aRect.Height()/aRatio.height);
   gfxSize scaledRatio(scale*aRatio.width, scale*aRatio.height);
   gfxPoint topLeft((aRect.Width() - scaledRatio.width)/2,
                    (aRect.Height() - scaledRatio.height)/2);

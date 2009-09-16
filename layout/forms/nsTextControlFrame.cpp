@@ -655,7 +655,7 @@ nsTextInputSelectionImpl::ScrollSelectionIntoView(PRInt16 aType, PRInt16 aRegion
     const nsRect portRect = scrollableView->View()->GetBounds();
     const nsRect viewRect = view->GetBounds();
     if (viewRect.XMost() < portRect.width) {
-      return scrollableView->ScrollTo(PR_MAX(viewRect.width - portRect.width, 0), -viewRect.y, 0);
+      return scrollableView->ScrollTo(NS_MAX(viewRect.width - portRect.width, 0), -viewRect.y, 0);
     }
 
     return rv;
@@ -1265,7 +1265,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
   // this if charMaxAdvance != charWidth; if they are equal, this is almost
   // certainly a fixed-width font.
   if (charWidth != charMaxAdvance) {
-    nscoord internalPadding = PR_MAX(0, charMaxAdvance -
+    nscoord internalPadding = NS_MAX(0, charMaxAdvance -
                                         nsPresContext::CSSPixelsToAppUnits(4));
     nscoord t = nsPresContext::CSSPixelsToAppUnits(1); 
    // Round to a multiple of t

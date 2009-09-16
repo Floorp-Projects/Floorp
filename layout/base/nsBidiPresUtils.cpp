@@ -459,7 +459,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
       propTable->SetProperty(frame, nsGkAtoms::baseLevel,
                              NS_INT32_TO_PTR(paraLevel), nsnull, nsnull);
       if (isTextFrame) {
-        PRInt32 typeLimit = PR_MIN(logicalLimit, lineOffset + fragmentLength);
+        PRInt32 typeLimit = NS_MIN(logicalLimit, lineOffset + fragmentLength);
         CalculateCharType(lineOffset, typeLimit, logicalLimit, runLength,
                            runCount, charType, prevType);
         // IBMBIDI - Egypt - Start
@@ -1421,7 +1421,7 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
 
     PRInt32 subRunLength = limit - start;
     PRInt32 lineOffset = start;
-    PRInt32 typeLimit = PR_MIN(limit, aLength);
+    PRInt32 typeLimit = NS_MIN(limit, aLength);
     PRInt32 subRunCount = 1;
     PRInt32 subRunLimit = typeLimit;
 

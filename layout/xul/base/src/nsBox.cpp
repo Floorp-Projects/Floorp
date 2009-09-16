@@ -977,8 +977,8 @@ nsBox::BoundsCheck(nscoord aMin, nscoord aPref, nscoord aMax)
 nsSize
 nsBox::BoundsCheckMinMax(const nsSize& aMinSize, const nsSize& aMaxSize)
 {
-  return nsSize(PR_MAX(aMaxSize.width, aMinSize.width),
-                PR_MAX(aMaxSize.height, aMinSize.height));
+  return nsSize(NS_MAX(aMaxSize.width, aMinSize.width),
+                NS_MAX(aMaxSize.height, aMinSize.height));
 }
 
 nsSize

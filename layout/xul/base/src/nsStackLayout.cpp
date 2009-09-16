@@ -306,7 +306,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
                 nsSize min = child->GetMinSize(aState);
                 nsSize max = child->GetMaxSize(aState);
                 nscoord width = clientRect.width - offset.LeftRight() - margin.LeftRight();
-                childRect.width = PR_MAX(min.width, PR_MIN(max.width, width));
+                childRect.width = NS_MAX(min.width, NS_MIN(max.width, width));
               }
               else {
                 childRect.width = child->GetPrefSize(aState).width;
@@ -323,7 +323,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
                 nsSize min = child->GetMinSize(aState);
                 nsSize max = child->GetMaxSize(aState);
                 nscoord height = clientRect.height - offset.TopBottom() - margin.TopBottom();
-                childRect.height = PR_MAX(min.height, PR_MIN(max.height, height));
+                childRect.height = NS_MAX(min.height, NS_MIN(max.height, height));
               }
               else {
                 childRect.height = child->GetPrefSize(aState).height;

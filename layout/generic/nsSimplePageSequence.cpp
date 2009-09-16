@@ -212,10 +212,10 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
     // sanity check the values. three inches are sometimes needed
     PRInt32 inchInTwips = NS_INCHES_TO_TWIPS(3.0);
-    edgeTwips.top = PR_MIN(PR_MAX(edgeTwips.top, 0), inchInTwips);
-    edgeTwips.bottom = PR_MIN(PR_MAX(edgeTwips.bottom, 0), inchInTwips);
-    edgeTwips.left = PR_MIN(PR_MAX(edgeTwips.left, 0), inchInTwips);
-    edgeTwips.right = PR_MIN(PR_MAX(edgeTwips.right, 0), inchInTwips);
+    edgeTwips.top = NS_MIN(NS_MAX(edgeTwips.top, 0), inchInTwips);
+    edgeTwips.bottom = NS_MIN(NS_MAX(edgeTwips.bottom, 0), inchInTwips);
+    edgeTwips.left = NS_MIN(NS_MAX(edgeTwips.left, 0), inchInTwips);
+    edgeTwips.right = NS_MIN(NS_MAX(edgeTwips.right, 0), inchInTwips);
 
     mPageData->mEdgePaperMargin =
       aPresContext->TwipsToAppUnits(edgeTwips + unwriteableTwips);
@@ -239,12 +239,12 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   // Compute the size of each page and the x coordinate that each page will
   // be placed at
-  nscoord extraThreshold = PR_MAX(pageSize.width, pageSize.height)/10;
+  nscoord extraThreshold = NS_MAX(pageSize.width, pageSize.height)/10;
   PRInt32 gapInTwips = nsContentUtils::GetIntPref("print.print_extra_margin");
-  gapInTwips = PR_MAX(0, gapInTwips);
+  gapInTwips = NS_MAX(0, gapInTwips);
 
   nscoord extraGap = aPresContext->TwipsToAppUnits(gapInTwips);
-  extraGap = PR_MIN(extraGap, extraThreshold); // clamp to 1/10 of the largest dim of the page
+  extraGap = NS_MIN(extraGap, extraThreshold); // clamp to 1/10 of the largest dim of the page
 
   nscoord  deadSpaceGap = 0;
   if (isPrintPreview) {

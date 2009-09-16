@@ -1161,7 +1161,7 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
 
       // Limit the length of the text the page can inject into this
       // dialogue to 1024 characters.
-      PRInt32 len = PR_MIN(text.Length(), 1024);
+      PRInt32 len = NS_MIN(text.Length(), 1024U);
 
       nsAutoString msg;
       if (len == 0) {

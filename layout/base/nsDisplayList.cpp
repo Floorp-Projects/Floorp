@@ -578,17 +578,17 @@ static PRBool RoundedRectContainsRect(const nsRect& aRoundedRect,
   // rectFullHeight and rectFullWidth together will approximately contain
   // the total area of the frame minus the rounded corners.
   nsRect rectFullHeight = aRoundedRect;
-  nscoord xDiff = PR_MAX(aRadii[NS_CORNER_TOP_LEFT_X], aRadii[NS_CORNER_BOTTOM_LEFT_X]);
+  nscoord xDiff = NS_MAX(aRadii[NS_CORNER_TOP_LEFT_X], aRadii[NS_CORNER_BOTTOM_LEFT_X]);
   rectFullHeight.x += xDiff;
-  rectFullHeight.width -= PR_MAX(aRadii[NS_CORNER_TOP_RIGHT_X],
+  rectFullHeight.width -= NS_MAX(aRadii[NS_CORNER_TOP_RIGHT_X],
                                  aRadii[NS_CORNER_BOTTOM_RIGHT_X]) + xDiff;
   if (rectFullHeight.Contains(aContainedRect))
     return PR_TRUE;
 
   nsRect rectFullWidth = aRoundedRect;
-  nscoord yDiff = PR_MAX(aRadii[NS_CORNER_TOP_LEFT_Y], aRadii[NS_CORNER_TOP_RIGHT_Y]);
+  nscoord yDiff = NS_MAX(aRadii[NS_CORNER_TOP_LEFT_Y], aRadii[NS_CORNER_TOP_RIGHT_Y]);
   rectFullWidth.y += yDiff;
-  rectFullWidth.height -= PR_MAX(aRadii[NS_CORNER_BOTTOM_LEFT_Y],
+  rectFullWidth.height -= NS_MAX(aRadii[NS_CORNER_BOTTOM_LEFT_Y],
                                  aRadii[NS_CORNER_BOTTOM_RIGHT_Y]) + yDiff;
   if (rectFullWidth.Contains(aContainedRect))
     return PR_TRUE;

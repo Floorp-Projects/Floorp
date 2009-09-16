@@ -448,7 +448,7 @@ nsTreeBodyFrame::ReflowFinished()
       mPageLength = mInnerBox.height / mRowHeight;
     }
 
-    PRInt32 lastPageTopRow = PR_MAX(0, mRowCount - mPageLength);
+    PRInt32 lastPageTopRow = NS_MAX(0, mRowCount - mPageLength);
     if (mTopRowIndex > lastPageTopRow)
       ScrollToRowInternal(parts, lastPageTopRow);
 
@@ -1921,7 +1921,7 @@ nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
     else if (mTopRowIndex >= aIndex) {
       // This is a full-blown invalidate.
       if (mTopRowIndex + mPageLength > mRowCount - 1) {
-        mTopRowIndex = PR_MAX(0, mRowCount - 1 - mPageLength);
+        mTopRowIndex = NS_MAX(0, mRowCount - 1 - mPageLength);
       }
       needsInvalidation = PR_TRUE;
     }
@@ -1953,7 +1953,7 @@ nsTreeBodyFrame::EndUpdateBatch()
       mView->GetRowCount(&mRowCount);
       if (countBeforeUpdate != mRowCount) {
         if (mTopRowIndex + mPageLength > mRowCount - 1) {
-          mTopRowIndex = PR_MAX(0, mRowCount - 1 - mPageLength);
+          mTopRowIndex = NS_MAX(0, mRowCount - 1 - mPageLength);
         }
         FullScrollbarsUpdate(PR_FALSE);
       }
@@ -4356,8 +4356,8 @@ nsTreeBodyFrame::OffsetForHorzScroll(nsRect& rect, PRBool clip)
     return PR_FALSE;
 
   if (clip) {
-    nscoord leftEdge = PR_MAX(rect.x, mInnerBox.x);
-    nscoord rightEdge = PR_MIN(rect.XMost(), mInnerBox.XMost());
+    nscoord leftEdge = NS_MAX(rect.x, mInnerBox.x);
+    nscoord rightEdge = NS_MIN(rect.XMost(), mInnerBox.XMost());
     rect.x = leftEdge;
     rect.width = rightEdge - leftEdge;
 

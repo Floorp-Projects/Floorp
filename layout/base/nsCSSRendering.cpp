@@ -521,7 +521,7 @@ ComputePixelRadii(const nscoord *aTwipsRadii,
     gfxFloat sum = radii[hc1] + radii[hc2];
     // avoid floating point division in the normal case
     if (length < sum)
-      f = PR_MIN(f, length/sum);
+      f = NS_MIN(f, length/sum);
   }
   if (f < 1.0) {
     NS_FOR_CSS_HALF_CORNERS(corner) {
@@ -2026,9 +2026,9 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
       float scaleFitX = double(bgPositioningArea.width) / imageSize.width;
       float scaleFitY = double(bgPositioningArea.height) / imageSize.height;
       if (aLayer.mSize.mWidthType == nsStyleBackground::Size::eCover) {
-        scaleX = scaleY = PR_MAX(scaleFitX, scaleFitY);
+        scaleX = scaleY = NS_MAX(scaleFitX, scaleFitY);
       } else {
-        scaleX = scaleY = PR_MIN(scaleFitX, scaleFitY);
+        scaleX = scaleY = NS_MIN(scaleFitX, scaleFitY);
       }
       break;
     }
@@ -2551,7 +2551,7 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
       // make the min dash length for the ends 1/2 the dash length
       nscoord minDashLength = (NS_STYLE_BORDER_STYLE_DASHED == aBorderStyle) 
                               ? RoundFloatToPixel(((float)dashLength) / 2.0f, twipsPerPixel) : dashLength;
-      minDashLength = PR_MAX(minDashLength, twipsPerPixel);
+      minDashLength = NS_MAX(minDashLength, twipsPerPixel);
       nscoord numDashSpaces = 0;
       nscoord startDashLength = minDashLength;
       nscoord endDashLength   = minDashLength;
@@ -2763,7 +2763,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
     return;
   }
 
-  gfxFloat lineHeight = PR_MAX(NS_round(aLineSize.height), 1.0);
+  gfxFloat lineHeight = NS_MAX(NS_round(aLineSize.height), 1.0);
   PRBool contextIsSaved = PR_FALSE;
 
   gfxFloat oldLineWidth;
@@ -2902,7 +2902,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       gfxPoint pt(rect.pos);
       gfxFloat rightMost = pt.x + rect.Width() + lineHeight;
       gfxFloat adv = rect.Height() - lineHeight;
-      gfxFloat flatLengthAtVertex = PR_MAX((lineHeight - 1.0) * 2.0, 1.0);
+      gfxFloat flatLengthAtVertex = NS_MAX((lineHeight - 1.0) * 2.0, 1.0);
 
       pt.x -= lineHeight;
       aGfxContext->MoveTo(pt); // 1
@@ -2983,12 +2983,12 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
   r.size.width = NS_round(aLineSize.width);
 
   gfxFloat lineHeight = NS_round(aLineSize.height);
-  lineHeight = PR_MAX(lineHeight, 1.0);
+  lineHeight = NS_MAX(lineHeight, 1.0);
 
   gfxFloat ascent = NS_round(aAscent);
   gfxFloat descentLimit = NS_floor(aDescentLimit);
 
-  gfxFloat suggestedMaxRectHeight = PR_MAX(PR_MIN(ascent, descentLimit), 1.0);
+  gfxFloat suggestedMaxRectHeight = NS_MAX(NS_MIN(ascent, descentLimit), 1.0);
   r.size.height = lineHeight;
   if (aStyle == DECORATION_STYLE_DOUBLE) {
     /**
@@ -3007,13 +3007,13 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
      * +-------------------------------------------+
      */
     gfxFloat gap = NS_round(lineHeight / 2.0);
-    gap = PR_MAX(gap, 1.0);
+    gap = NS_MAX(gap, 1.0);
     r.size.height = lineHeight * 2.0 + gap;
     if (canLiftUnderline) {
       if (r.Height() > suggestedMaxRectHeight) {
         // Don't shrink the line height, because the thickness has some meaning.
         // We can just shrink the gap at this time.
-        r.size.height = PR_MAX(suggestedMaxRectHeight, lineHeight * 2.0 + 1.0);
+        r.size.height = NS_MAX(suggestedMaxRectHeight, lineHeight * 2.0 + 1.0);
       }
     }
   } else if (aStyle == DECORATION_STYLE_WAVY) {
@@ -3037,7 +3037,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
         // because the thickness has some meaning.  E.g., the 1px wavy line and
         // 2px wavy line can be used for different meaning in IME selections
         // at same time.
-        r.size.height = PR_MAX(suggestedMaxRectHeight, lineHeight * 2.0);
+        r.size.height = NS_MAX(suggestedMaxRectHeight, lineHeight * 2.0);
       }
     }
   }
@@ -3055,7 +3055,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
           // far as possible.
           gfxFloat offsetBottomAligned = -descentLimit + r.Height();
           gfxFloat offsetTopAligned = 0.0;
-          offset = PR_MIN(offsetBottomAligned, offsetTopAligned);
+          offset = NS_MIN(offsetBottomAligned, offsetTopAligned);
         }
       }
       break;
@@ -3064,7 +3064,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
       break;
     case NS_STYLE_TEXT_DECORATION_LINE_THROUGH: {
       gfxFloat extra = NS_floor(r.Height() / 2.0 + 0.5);
-      extra = PR_MAX(extra, lineHeight);
+      extra = NS_MAX(extra, lineHeight);
       offset = aOffset - lineHeight + extra;
       break;
     }
