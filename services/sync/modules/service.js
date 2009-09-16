@@ -122,21 +122,44 @@ function StatusRecord() {
 }
 StatusRecord.prototype = {
   _init: function() {
-    this.server = [];
+    this.service = null;
     this.sync = null;
+    this.login = null;
     this.engines = {};
-  },
-
-  addServerStatus: function(statusCode) {
-    this.server.push(statusCode);
+    this._resetBackoff();
   },
 
   setSyncStatus: function(statusCode) {
+    if (statusCode == SYNC_SUCCEEDED) {
+      this.service == STATUS_OK;
+      this._resetBackoff();
+    }
+    else
+      this.service = SYNC_FAILED;
+
     this.sync = statusCode;
   },
 
+  setLoginStatus: function(statusCode) {
+    this.service = statusCode == LOGIN_SUCCEEDED ? STATUS_OK : LOGIN_FAILED;
+    this.login = statusCode;
+  },
+
   setEngineStatus: function(engineName, statusCode) {
+    if (statusCode != ENGINE_SUCCEEDED)
+      this.service = this.sync = SYNC_FAILED_PARTIAL;
+
     this.engines[engineName] = statusCode;
+  },
+
+  resetEngineStatus: function() {
+    this.engines = {};
+  },
+  
+  _resetBackoff: function () {
+    this.enforceBackoff = false;
+    this.backoffInterval = 0;
+    this.minimumNextSync = 0;
   }
 };
 
@@ -159,10 +182,8 @@ WeaveSvc.prototype = {
   _syncInProgress: false,
   _keyGenEnabled: true,
 
-  // WEAVE_STATUS_OK, WEAVE_STATUS_FAILED, or WEAVE_STATUS_PARTIAL
-  _weaveStatusCode: null,
-  // More detailed status info:
-  _detailedStatus: null,
+  // the status object
+  _status: null,
 
   // object for caching public and private keys
   _keyPair: {},
@@ -231,8 +252,7 @@ WeaveSvc.prototype = {
   get enabled() { return Svc.Prefs.get("enabled"); },
   set enabled(value) { Svc.Prefs.set("enabled", value); },
 
-  get statusCode() { return this._weaveStatusCode; },
-  get detailedStatus() { return this._detailedStatus; },
+  get status() { return this._status; },
 
   get locked() { return this._locked; },
   lock: function Svc_lock() {
@@ -243,11 +263,6 @@ WeaveSvc.prototype = {
   },
   unlock: function Svc_unlock() {
     this._locked = false;
-  },
-
-  _setSyncFailure: function WeavSvc__setSyncFailure(code) {
-    this._weaveStatusCode = WEAVE_STATUS_FAILED;
-    this._detailedStatus.setSyncStatus(code);
   },
 
   _genKeyURLs: function WeaveSvc__genKeyURLs() {
@@ -281,7 +296,7 @@ WeaveSvc.prototype = {
     this._initLogs();
     this._log.info("Weave " + WEAVE_VERSION + " initializing");
     this._registerEngines();
-    this._detailedStatus = new StatusRecord();
+    this._status = new StatusRecord();
 
     // Reset our sync id if we're upgrading, so sync knows to reset local data
     if (WEAVE_VERSION != Svc.Prefs.get("lastversion")) {
@@ -305,6 +320,7 @@ WeaveSvc.prototype = {
     Svc.Observer.addObserver(this, "quit-application", true);
     Svc.Observer.addObserver(this, "weave:service:sync:finish", true);
     Svc.Observer.addObserver(this, "weave:service:sync:error", true);
+    Svc.Observer.addObserver(this, "weave:service:backoff:interval", true);
 
     if (!this.enabled)
       this._log.info("Weave Sync disabled");
@@ -417,7 +433,12 @@ WeaveSvc.prototype = {
         break;
       case "weave:service:sync:finish":
         this._scheduleNextSync();
-        this._serverErrors = 0;
+        this._syncErrors = 0;
+        break;
+      case "weave:service:backoff:interval":
+        let interval = data + Math.random() * data * 0.25; // required backoff + up to 25%
+        this.status.backoffInterval = interval;
+        this.status.minimumNextSync = Date.now() + data;
         break;
       case "idle":
         this._log.trace("Idle time hit, trying to sync");
@@ -452,7 +473,7 @@ WeaveSvc.prototype = {
       }
     } catch (e) {
       this._log.debug("Network error on findCluster");
-      this._setSyncFailure(LOGIN_FAILED_NETWORK_ERROR);
+      this.status.setLoginStatus(LOGIN_FAILED_NETWORK_ERROR);
       throw e;
     }
   },
@@ -495,24 +516,26 @@ WeaveSvc.prototype = {
         switch (test.status) {
           case 200:
             if (!this._verifyPassphrase()) {
-              this._setSyncFailure(LOGIN_FAILED_INVALID_PASSPHRASE);
+              this.status.setLoginStatus(LOGIN_FAILED_INVALID_PASSPHRASE);
               return false;
             }
+            this.status.setLoginStatus(LOGIN_SUCCEEDED);
             return true;
           case 401:
             if (this._updateCluster())
               return this._verifyLogin();
 
-            this._setSyncFailure(LOGIN_FAILED_LOGIN_REJECTED);
+            this.status.setLoginStatus(LOGIN_FAILED_LOGIN_REJECTED);
             this._log.debug("verifyLogin failed: login failed")
             return false;
           default:
+            this._checkServerError(test.status);
             throw "unexpected HTTP response: " + test.status;
         }
       } catch (e) {
         // if we get here, we have either a busted channel or a network error
         this._log.debug("verifyLogin failed: " + e)
-        this._setSyncFailure(LOGIN_FAILED_NETWORK_ERROR);
+        this.status.setLoginStatus(LOGIN_FAILED_NETWORK_ERROR);
         throw e;
       }
     }))(),
@@ -606,7 +629,7 @@ WeaveSvc.prototype = {
         return;
       }
 
-      failureReason = this.detailedStatus.sync;
+      failureReason = this.status.sync;
     }
     catch (ex) {
       failureReason = ex;
@@ -621,10 +644,9 @@ WeaveSvc.prototype = {
       }));
     this._autoConnectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
-    // back off slowly, with some random fuzz to avoid repeated collisions
-    let interval = Math.floor(Math.random() * SCHEDULED_SYNC_INTERVAL +
-                              SCHEDULED_SYNC_INTERVAL * this._autoConnectAttempts);
     this._autoConnectAttempts++;
+    let interval = this._calculateBackoff(this._autoConnectAttempts, 
+                                          SCHEDULED_SYNC_INTERVAL);
     this._autoConnectTimer.initWithCallback(listener, interval,
                                             Ci.nsITimer.TYPE_ONE_SHOT);
     this._log.debug("Scheduling next autoconnect attempt in " +
@@ -643,7 +665,6 @@ WeaveSvc.prototype = {
   login: function WeaveSvc_login(username, password, passphrase)
     this._catch(this._lock(this._notify("login", "", function() {
       this._loggedIn = false;
-      this._detailedStatus = new StatusRecord();
       if (Svc.IO.offline)
         throw "Application is offline, login should not be called";
 
@@ -655,22 +676,22 @@ WeaveSvc.prototype = {
         this.passphrase = passphrase;
 
       if (!this.username) {
-        this._setSyncFailure(LOGIN_FAILED_NO_USERNAME);
+        this.status.setLoginStatus(LOGIN_FAILED_NO_USERNAME);
         throw "No username set, login failed";
       }
       if (!this.password) {
-        this._setSyncFailure(LOGIN_FAILED_NO_PASSWORD);
+        this.status.setLoginStatus(LOGIN_FAILED_NO_PASSWORD);
         throw "No password given or found in password manager";
       }
       this._log.info("Logging in user " + this.username);
 
       if (!this._verifyLogin()) {
         // verifyLogin sets the failure states here
-        throw "Login failed: " + this.detailedStatus.sync;
+        throw "Login failed: " + this.status.login;
       }
 
-      // Try starting the sync timer now that we're logged in
       this._loggedIn = true;
+      // Try starting the sync timer now that we're logged in
       this._checkSyncStatus();
       if (this._autoConnectTimer) {
         this._autoConnectTimer.cancel();
@@ -785,7 +806,8 @@ WeaveSvc.prototype = {
       // abort the server wipe if the GET status was anything other than 404 or 200
       let status = Records.response.status;
       if (status != 200 && status != 404) {
-        this._setSyncFailure(METARECORD_DOWNLOAD_FAIL);
+        this._checkServerError(Records.response);
+        this.status.setSyncStatus(METARECORD_DOWNLOAD_FAIL);
         this._log.warn("Unknown error while downloading metadata record. " +
                        "Aborting sync.");
         return false;
@@ -801,7 +823,7 @@ WeaveSvc.prototype = {
       if (!this._keyGenEnabled) {
         this._log.info("...and key generation is disabled.  Not wiping. " +
                        "Aborting sync.");
-        this._setSyncFailure(DESKTOP_VERSION_OUT_OF_DATE);
+        this.status.setSyncStatus(DESKTOP_VERSION_OUT_OF_DATE);
         return false;
       }
       reset = true;
@@ -816,7 +838,7 @@ WeaveSvc.prototype = {
                        "upgrade (" + remoteVersion + " -> " + WEAVE_VERSION + ")");
 
     } else if (Svc.Version.compare(remoteVersion, WEAVE_VERSION) > 0) {
-      this._setSyncFailure(VERSION_OUT_OF_DATE);
+      this.status.setSyncStatus(VERSION_OUT_OF_DATE);
       this._log.warn("Server data is of a newer Weave version, this client " +
                      "needs to be upgraded.  Aborting sync.");
       return false;
@@ -856,14 +878,16 @@ WeaveSvc.prototype = {
         this._log.warn("Couldn't download keys from server, aborting sync");
         this._log.debug("PubKey HTTP status: " + PubKeys.response.status);
         this._log.debug("PrivKey HTTP status: " + PrivKeys.response.status);
-        this._setSyncFailure(KEYS_DOWNLOAD_FAIL);
+        this._checkServerError(PubKeys.response);
+        this._checkServerError(PrivKeys.response);
+        this.status.setSyncStatus(KEYS_DOWNLOAD_FAIL);
         return false;
       }
 
       if (!this._keyGenEnabled) {
         this._log.warn("Couldn't download keys from server, and key generation" +
                        "is disabled.  Aborting sync");
-        this._setSyncFailure(NO_KEYS_NO_KEYGEN);
+        this.status.setSyncStatus(NO_KEYS_NO_KEYGEN);
         return false;
       }
 
@@ -884,11 +908,11 @@ WeaveSvc.prototype = {
           PrivKeys.set(keys.privkey.uri, keys.privkey);
           return true;
         } catch (e) {
-          this._setSyncFailure(KEYS_UPLOAD_FAIL);
+          this.status.setSyncStatus(KEYS_UPLOAD_FAIL);
           this._log.error("Could not upload keys: " + Utils.exceptionStr(e));
         }
       } else {
-        this._setSyncFailure(SETUP_FAILED_NO_PASSPHRASE);
+        this.status.setSyncStatus(SETUP_FAILED_NO_PASSPHRASE);
         this._log.warn("Could not get encryption passphrase");
       }
     }
@@ -921,6 +945,8 @@ WeaveSvc.prototype = {
       reason = kSyncInPrivateBrowsing;
     else if (Svc.Prefs.get("schedule", 0) != 1)
       reason = kSyncNotScheduled;
+    else if (this.status.minimumNextSync > Date.now())
+      reason = kSyncBackoffNotMet;
 
     return reason;
   },
@@ -930,7 +956,9 @@ WeaveSvc.prototype = {
    */
   _checkSyncStatus: function WeaveSvc__checkSyncStatus() {
     // Should we be syncing now, if not, cancel any sync timers and return
-    if (this._checkSync()) {
+    // if we're in backoff, we'll schedule the next sync
+    let reason = this._checkSync();
+    if (reason && reason != kSyncBackoffNotMet) {
       if (this._syncTimer) {
         this._syncTimer.cancel();
         this._syncTimer = null;
@@ -940,6 +968,7 @@ WeaveSvc.prototype = {
         Svc.Idle.removeIdleObserver(this, IDLE_TIME);
       } catch(e) {} // this throws if there isn't an observer, but that's fine
 
+      this.status.service = STATUS_DISABLED;
       return;
     }
 
@@ -962,7 +991,7 @@ WeaveSvc.prototype = {
    */
   _scheduleNextSync: function WeaveSvc__scheduleNextSync(interval) {
     if (!interval)
-      interval = SCHEDULED_SYNC_INTERVAL;
+      interval = this.status.backoffInterval || SCHEDULED_SYNC_INTERVAL;
 
     // if there's an existing timer, cancel it and restart
     if (this._syncTimer)
@@ -980,61 +1009,28 @@ WeaveSvc.prototype = {
     this._log.debug("Next sync call in: " + this._syncTimer.delay / 1000 + " seconds.")
   },
 
-  _serverErrors: 0,
+  _syncErrors: 0,
   /**
    * Deal with sync errors appropriately
    */
   _handleSyncError: function WeaveSvc__handleSyncError() {
-    let shouldBackoff = false;
+    this._syncErrors++;
 
-    let err = Weave.Service.detailedStatus.sync;
-    // we'll assume the server is just borked a little for these
-    switch (err) {
-      case METARECORD_DOWNLOAD_FAIL:
-      case KEYS_DOWNLOAD_FAIL:
-      case KEYS_UPLOAD_FAIL:
-        shouldBackoff = true;
-    }
-
-    // specifcally handle 500, 502, 503, 504 errors
-    // xxxmpc: what else should be in this list?
-    // this is sort of pseudocode, need a way to get at the
-    if (!shouldBackoff) {
-      try {
-        shouldBackoff = Utils.checkStatus(Records.response.status, null,
-          [500, [502, 504]]);
+    // do nothing on the first couple of failures, if we're not in backoff due to 5xx errors
+    if (!this.status.enforceBackoff) {
+      if (this._syncErrors < 3) {
+        this._scheduleNextSync();
+        return;
       }
-      catch (e) {
-        // if responseStatus throws, we have a network issue in play
-        shouldBackoff = true;
-      }
+      this.status.enforceBackoff = true;
     }
 
-    // if this is a client error, do the next sync as normal and return
-    if (!shouldBackoff) {
-      this._scheduleNextSync();
-      return;
-    }
+    const MINIMUM_BACKOFF_INTERVAL = 15 * 60 * 1000;     // 15 minutes
+    let interval = this._calculateBackoff(this._syncErrors, MINIMUM_BACKOFF_INTERVAL);
 
-    // ok, something failed connecting to the server, rev the counter
-    this._serverErrors++;
+    this._scheduleNextSync(interval);
 
-    // do nothing on the first failure, if we fail again we'll back off
-    if (this._serverErrors < 2) {
-      this._scheduleNextSync();
-      return;
-    }
-
-    // 30-60 minute backoff interval, increasing each time
-    const MINIMUM_BACKOFF_INTERVAL = 15 * 60 * 1000;     // 15 minutes * >= 2
-    const MAXIMUM_BACKOFF_INTERVAL = 8 * 60 * 60 * 1000; // 8 hours
-    let backoffInterval = this._serverErrors *
-                          (Math.floor(Math.random() * MINIMUM_BACKOFF_INTERVAL) +
-                           MINIMUM_BACKOFF_INTERVAL);
-    backoffInterval = Math.min(backoffInterval, MAXIMUM_BACKOFF_INTERVAL);
-    this._scheduleNextSync(backoffInterval);
-
-    let d = new Date(Date.now() + backoffInterval);
+    let d = new Date(Date.now() + interval);
     this._log.config("Starting backoff, next sync at:" + d.toString());
   },
 
@@ -1046,7 +1042,7 @@ WeaveSvc.prototype = {
    */
   sync: function WeaveSvc_sync(fullSync)
     this._catch(this._lock(this._notify("sync", "", function() {
-
+    this.status.resetEngineStatus();
     fullSync = true; // not doing thresholds yet
 
     // Use thresholds to determine what to sync only if it's not a full sync
@@ -1058,10 +1054,14 @@ WeaveSvc.prototype = {
     let reason = this._checkSync();
     if (reason && (useThresh || reason != kSyncNotScheduled)) {
       // this is a purposeful abort rather than a failure, so don't set
-      // WEAVE_STATUS_FAILED; instead, leave it as it was.
-      this._detailedStatus.setSyncStatus(reason);
+      // any status bits
       reason = "Can't sync: " + reason;
       throw reason;
+    }
+
+    if (this._autoConnectTimer) {
+      this._autoConnectTimer.cancel();
+      this._autoConnectTimer = null;
     }
 
     if (!(this._remoteSetup()))
@@ -1083,7 +1083,7 @@ WeaveSvc.prototype = {
     if (Clients.getClients()[Clients.clientID].commands) {
       try {
         if (!(this.processCommands())) {
-          this._detailedStatus.setSyncStatus(ABORT_SYNC_COMMAND);
+          this.status.setSyncStatus(ABORT_SYNC_COMMAND);
           throw "aborting sync, process commands said so";
         }
 
@@ -1132,7 +1132,7 @@ WeaveSvc.prototype = {
         }
 
         // If there's any problems with syncing the engine, report the failure
-        if (!(this._syncEngine(engine))) {
+        if (!(this._syncEngine(engine)) || this.status.enforceBackoff) {
           this._log.info("Aborting sync");
           break;
         }
@@ -1147,7 +1147,7 @@ WeaveSvc.prototype = {
         this._log.warn("Some engines did not sync correctly");
       else {
         Svc.Prefs.set("lastSync", new Date().toString());
-        this._weaveStatusCode = WEAVE_STATUS_OK;
+        this.status.setSyncStatus(SYNC_SUCCEEDED);
         this._log.info("Sync completed successfully");
       }
     } finally {
@@ -1167,9 +1167,10 @@ WeaveSvc.prototype = {
       if (e.status == 401 && this._updateCluster())
         return this._syncEngine(engine);
 
+      this._checkServerError(e);
+
+      this.status.setEngineStatus(engine.name, e.failureCode || ENGINE_UNKNOWN_FAIL);
       this._syncError = true;
-      this._weaveStatusCode = WEAVE_STATUS_PARTIAL;
-      this._detailedStatus.setEngineStatus(engine.name, e);
       this._log.debug(Utils.exceptionStr(e));
       return true;
     }
@@ -1200,6 +1201,30 @@ WeaveSvc.prototype = {
     let resp = new Resource(meta.uri).put(meta);
     if (!resp.success)
       throw resp;
+  },
+  
+  
+  /**
+   * Check to see if this is a failure
+   *
+   */
+  _checkServerError: function WeaveSvc__checkServerError(resp) {
+    if (Utils.checkStatus(resp.status, null, [500, [502, 504]])) {
+      this.status.enforceBackoff = true;
+      if (resp.status == 503 && resp.headers["Retry-After"])
+        Observers.notify("weave:service:backoff:interval", parseInt(resp.headers["Retry-After"], 10));
+    }
+  },
+  /**
+   * Return a value for a backoff interval.  Maximum is eight hours, unless this.status.backoffInterval is higher.
+   *
+   */
+  _calculateBackoff: function WeaveSvc__calculateBackoff(attempts, base_interval) {
+    const MAXIMUM_BACKOFF_INTERVAL = 8 * 60 * 60 * 1000; // 8 hours
+    let backoffInterval = attempts *
+                          (Math.floor(Math.random() * base_interval) +
+                           base_interval);
+    return Math.max(Math.min(backoffInterval, MAXIMUM_BACKOFF_INTERVAL), this.status.backoffInterval);
   },
 
   /**
