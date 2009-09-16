@@ -179,11 +179,11 @@ void VMPI_setPageProtection(void *address,
 
 #ifdef WINCE
 
-// We have run into OOM problems much more frequently
-// when we do not use jemalloc.  If you hit this error,
-// and really want to use the standard allocator, you
-// may try using the WIN32 code path.  You have been
-// warned.
+// Due to the per-process heap slots on Windows Mobile, we can often run in to OOM
+// situations.  jemalloc has worked around this problem, and so we use it here.
+// Using posix_memalign (or other malloc)functions) here only works because the OS
+// and hardware doesn't check for the execute bit being set.
+
 #ifndef MOZ_MEMORY
 #error MOZ_MEMORY required for building on WINCE
 #endif
