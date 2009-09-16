@@ -39,8 +39,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN" 
                "http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd" [
   <!ENTITY mathml "http://www.w3.org/1998/Math/MathML">
-  <!ENTITY vec "&RightArrow;">
-  <!ENTITY partial "&PartialD;"> 
 ]>
 <html xmlns="http://www.w3.org/1999/xhtml">
 
@@ -51,7 +49,7 @@
 <body style="background-color: #ffffff">
 <h2>Maxwell's Equations</h2>
 
-<p align='center'>
+<p style="text-align:center">
 <math xmlns='&mathml;'>
   <mstyle displaystyle='true'>
     <mrow>
@@ -67,7 +65,7 @@
                   <mi>B</mi>
                 </mstyle>
                 <mrow></mrow>
-                <mo stretchy='true'>&vec;</mo>
+                <mo stretchy='true'>&RightArrow;</mo>
               </munderover>
               <mo>-</mo>
               <mfrac>
@@ -76,17 +74,17 @@
               </mfrac>
               <mfrac>
                 <mrow>
-                  <mo>&partial;</mo>
+                  <mo>&PartialD;</mo>
                   <munderover accent='true'>
                     <mstyle fontweight='bold'>
                       <mi>E</mi>
                     </mstyle>
                     <mrow></mrow>
-                    <mo stretchy='true'>&vec;</mo>
+                    <mo stretchy='true'>&RightArrow;</mo>
                   </munderover>
                 </mrow>
                 <mrow>
-                  <mo>&partial;</mo>
+                  <mo>&PartialD;</mo>
                   <mi>t</mi>
                 </mrow>
               </mfrac>
@@ -109,7 +107,7 @@
                   <mi>j</mi>
                 </mstyle>
                 <mrow></mrow>
-                <mo stretchy='true'>&vec;</mo>
+                <mo stretchy='true'>&RightArrow;</mo>
               </munderover>
             </mrow>
           </mtd>
@@ -124,7 +122,7 @@
                   <mi>E</mi>
                 </mstyle>
                 <mrow></mrow>
-                <mo stretchy='true'>&vec;</mo>
+                <mo stretchy='true'>&RightArrow;</mo>
               </munderover>
             </mrow>
           </mtd>
@@ -149,7 +147,7 @@
                   <mi>E</mi>
                 </mstyle>
                 <mrow></mrow>
-                <mo stretchy='true'>&vec;</mo>
+                <mo stretchy='true'>&RightArrow;</mo>
               </munderover>
               <mo>+</mo>
               <mfrac>
@@ -158,17 +156,17 @@
               </mfrac>
               <mfrac>
                 <mrow>
-                  <mo>&partial;</mo>
+                  <mo>&PartialD;</mo>
                   <munderover accent='true'>
                     <mstyle fontweight='bold'>
                       <mi>B</mi>
                     </mstyle>
                     <mrow></mrow>
-                    <mo stretchy='true'>&vec;</mo>
+                    <mo stretchy='true'>&RightArrow;</mo>
                   </munderover>
                 </mrow>
                 <mrow>
-                  <mo>&partial;</mo>
+                  <mo>&PartialD;</mo>
                   <mi>t</mi>
                 </mrow>
               </mfrac>
@@ -183,7 +181,7 @@
                 <mn>0</mn>
               </mstyle>
               <mrow></mrow>
-              <mo stretchy='true'>&vec;</mo>
+              <mo stretchy='true'>&RightArrow;</mo>
             </munderover>
           </mtd>
         </mtr>
@@ -197,7 +195,7 @@
                   <mi>B</mi>
                 </mstyle>
                 <mrow></mrow>
-                <mo stretchy='true'>&vec;</mo>
+                <mo stretchy='true'>&RightArrow;</mo>
               </munderover>
             </mrow>
           </mtd>
@@ -216,7 +214,7 @@
 
 <h2>Einstein's field equations</h2>
 
-<p align='center'>
+<p style="text-align:center">
 <math xmlns='&mathml;'>
   <mstyle displaystyle='true'>
     <mrow>
