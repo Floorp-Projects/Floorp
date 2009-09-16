@@ -153,9 +153,9 @@ private:
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   nsLoadFlags mLoadFlags;
+  PRUint32    mLocksHeld;
   PRPackedBool mCanceled;
   PRPackedBool mIsInLoadGroup;
   PRPackedBool mListenerIsStrongRef;
-  PRPackedBool mShouldRequestDecode;
-  PRPackedBool mLockHeld;
+  PRPackedBool mDecodeRequested;
 };
