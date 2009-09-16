@@ -1,12 +1,19 @@
-diff --git a/media/liboggz/include/oggz/config.h b/media/liboggz/include/oggz/config.h
-index d645685..19d20f5 100644
+diff --git a/media/liboggz/include/oggz/config_gcc.h b/media/liboggz/include/oggz/config_gcc.h
 --- a/media/liboggz/include/oggz/config_gcc.h
 +++ b/media/liboggz/include/oggz/config_gcc.h
-@@ -126,3 +126,8 @@
- /* Define to `unsigned int' if <sys/types.h> does not define. */
- /* #undef size_t */
-+
+@@ -121,10 +121,15 @@
+ /* #undef _XOPEN_SOURCE */
+ 
+ /* Define to empty if `const' does not conform to ANSI C. */
+ /* #undef const */
+ 
+ /* Define to `long int' if <sys/types.h> does not define. */
+ /* #undef off_t */
+ 
 +#include "prcpucfg.h"
 +#ifdef IS_BIG_ENDIAN
 +#define WORDS_BIGENDIAN
 +#endif
++
+ /* Define to `unsigned int' if <sys/types.h> does not define. */
+ /* #undef size_t */

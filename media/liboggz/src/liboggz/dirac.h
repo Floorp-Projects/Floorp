@@ -24,6 +24,10 @@ typedef struct {
   ogg_uint32_t top_field_first;
 } dirac_info;
 
-extern void dirac_parse_info (dirac_info *info, unsigned char *data, long len);
+/**
+ * \return -1 Error: parse failure, invalid size index
+ * \return 0 Success
+ */
+extern int dirac_parse_info (dirac_info *info, unsigned char *data, long len);
 
 #endif
