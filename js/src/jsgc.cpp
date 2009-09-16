@@ -843,9 +843,6 @@ js_InitGC(JSRuntime *rt, size_t maxbytes)
     rt->gcBase = jsuword(base);
     rt->gcLimit = rt->gcBase + bytes;
     rt->gcCursor = jsuword((rt->gcBase + GC_ARENA_MASK) & ~GC_ARENA_MASK);
-#ifdef __APPLE__
-    memset((void *)rt->gcBase, 0, bytes);
-#endif
 
     InitGCArenaLists(rt);
     if (!JS_DHashTableInit(&rt->gcRootsHash, JS_DHashGetStubOps(), NULL,
