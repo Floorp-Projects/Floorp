@@ -8,9 +8,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE	= thebes
 
-DIRS	= public src mochitest
+DIRS	= public src
 
 ifdef ENABLE_TESTS
+DIRS	+= mochitest
 ifndef MOZ_ENABLE_LIBXUL
 ifndef BUILD_STATIC_LIBS
 TOOL_DIRS  += test
