@@ -1699,6 +1699,7 @@ class GenerateProtocolActorHeader(Visitor):
                 if (p.type._union is None
                     or not p.type._union.hasActor):
                     wasrepackedvars.append(None)
+                    newunionvars.append(None)
                     continue
 
                 pvar = cxx.ExprVar(p.name)
@@ -1763,6 +1764,7 @@ class GenerateProtocolActorHeader(Visitor):
                 switches.append(switch)
 
             for newunion in newunionvars:
+                if newunion is None: continue
                 decl, _ = newunion
                 impl.addstmt(decl)
 
