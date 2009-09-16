@@ -34,32 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-<<<<<<< local
-const EXPORTED_SYMBOLS = ["WEAVE_VERSION", "COMPATIBLE_VERSION",
-			  "PREFS_BRANCH", "PWDMGR_HOST",
-			  'MODE_RDONLY', 'MODE_WRONLY',
-			  'MODE_CREATE', 'MODE_APPEND', 'MODE_TRUNCATE',
-			  'PERMS_FILE', 'PERMS_PASSFILE', 'PERMS_DIRECTORY',
-			  'ONE_BYTE', 'ONE_KILOBYTE', 'ONE_MEGABYTE',
-                          'CONNECTION_TIMEOUT', 'MAX_UPLOAD_RECORDS',
-                          'WEAVE_STATUS_OK', 'WEAVE_STATUS_FAILED',
-                          'WEAVE_STATUS_PARTIAL', 'SERVER_LOW_QUOTA',
-                          'SERVER_DOWNTIME', 'SERVER_UNREACHABLE',
-                          'LOGIN_FAILED_NO_USERNAME', 'LOGIN_FAILED_NO_PASSWORD',
-                          'LOGIN_FAILED_NETWORK_ERROR','LOGIN_FAILED_INVALID_PASSPHRASE',
-                          'LOGIN_FAILED_LOGIN_REJECTED', 'METARECORD_DOWNLOAD_FAIL',
-                          'VERSION_OUT_OF_DATE', 'DESKTOP_VERSION_OUT_OF_DATE',
-                          'KEYS_DOWNLOAD_FAIL', 'NO_KEYS_NO_KEYGEN', 'KEYS_UPLOAD_FAIL',
-                          'SETUP_FAILED_NO_PASSPHRASE', 'ABORT_SYNC_COMMAND',
-                          'kSyncWeaveDisabled', 'kSyncNotLoggedIn',
-                          'kSyncNetworkOffline', 'kSyncInPrivateBrowsing',
-                          'kSyncNotScheduled',
-                          'FIREFOX_ID', 'THUNDERBIRD_ID', 'FENNEC_ID', 'SEAMONKEY_ID',
-                          'UI_DATA_TYPES_PER_ROW'];
-=======
 // Process each item in the "constants hash" to add to "global" and give a name
 let EXPORTED_SYMBOLS = [((this[key] = val), key) for ([key, val] in Iterator({
->>>>>>> other
 
 WEAVE_VERSION:                         "@weave_version@",
 
@@ -132,22 +108,14 @@ kSyncNotScheduled:                     "Not scheduled to do sync",
 kSyncBackoffNotMet:                    "Trying to sync before the server said it's okay",
 
 // Application IDs
-<<<<<<< local
-const FIREFOX_ID = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
-const THUNDERBIRD_ID = "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
-const FENNEC_ID = "{a23983c0-fd0e-11dc-95ff-0800200c9a66}";
-const SEAMONKEY_ID = "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}";
-=======
 FIREFOX_ID:                            "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
 THUNDERBIRD_ID:                        "{3550f703-e582-4d05-9a08-453d09bdfdc6}",
 FENNEC_ID:                             "{a23983c0-fd0e-11dc-95ff-0800200c9a66}",
 SEAMONKEY_ID:                          "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}",
->>>>>>> other
 
-<<<<<<< local
-//UI constants
+// UI constants
 
 // How many data types (bookmarks, history, etc) to display per row
-const UI_DATA_TYPES_PER_ROW = 3;=======
+UI_DATA_TYPES_PER_ROW:                 3,
+
 }))];
->>>>>>> other
