@@ -779,7 +779,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
     aMetrics.width = GetPrevInFlow()->GetSize().width;
     nscoord y = GetContinuationOffset();
     aMetrics.height -= y + aReflowState.mComputedBorderPadding.top;
-    aMetrics.height = PR_MAX(0, aMetrics.height);
+    aMetrics.height = NS_MAX(0, aMetrics.height);
   }
 
 
@@ -802,7 +802,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
       aMetrics.height > aReflowState.availableHeight) { 
     // our desired height was greater than 0, so to avoid infinite
     // splitting, use 1 pixel as the min
-    aMetrics.height = PR_MAX(nsPresContext::CSSPixelsToAppUnits(1), aReflowState.availableHeight);
+    aMetrics.height = NS_MAX(nsPresContext::CSSPixelsToAppUnits(1), aReflowState.availableHeight);
     aStatus = NS_FRAME_NOT_COMPLETE;
   }
 

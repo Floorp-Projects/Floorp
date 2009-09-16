@@ -305,7 +305,7 @@ nsMathMLmunderFrame::Place(nsIRenderingContext& aRenderingContext,
                       dummy, bigOpSpacing2, 
                       dummy, bigOpSpacing4, 
                       bigOpSpacing5);
-    delta1 = PR_MAX(bigOpSpacing2, (bigOpSpacing4 - bmUnder.ascent));
+    delta1 = NS_MAX(bigOpSpacing2, (bigOpSpacing4 - bmUnder.ascent));
     delta2 = bigOpSpacing5;
   }
   else {
@@ -328,7 +328,7 @@ nsMathMLmunderFrame::Place(nsIRenderingContext& aRenderingContext,
     dxUnder = -bmUnder.leftBearing;
   }
 
-  nscoord maxWidth = PR_MAX(bmBase.width, underWidth);
+  nscoord maxWidth = NS_MAX(bmBase.width, underWidth);
   if (NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags)) {    
     dxUnder += (maxWidth - underWidth)/2;
   }
@@ -338,18 +338,18 @@ nsMathMLmunderFrame::Place(nsIRenderingContext& aRenderingContext,
   dxBase = (maxWidth - bmBase.width)/2;
 
   mBoundingMetrics.width =
-    PR_MAX(dxBase + bmBase.width, dxUnder + bmUnder.width);
+    NS_MAX(dxBase + bmBase.width, dxUnder + bmUnder.width);
   mBoundingMetrics.ascent = bmBase.ascent;
   mBoundingMetrics.descent = 
     bmBase.descent + delta1 + bmUnder.ascent + bmUnder.descent;
   mBoundingMetrics.leftBearing = 
-    PR_MIN(dxBase + bmBase.leftBearing, dxUnder + bmUnder.leftBearing);
+    NS_MIN(dxBase + bmBase.leftBearing, dxUnder + bmUnder.leftBearing);
   mBoundingMetrics.rightBearing = 
-    PR_MAX(dxBase + bmBase.rightBearing, dxUnder + bmUnder.rightBearing);
+    NS_MAX(dxBase + bmBase.rightBearing, dxUnder + bmUnder.rightBearing);
 
   aDesiredSize.ascent = baseSize.ascent;
   aDesiredSize.height = aDesiredSize.ascent +
-    PR_MAX(mBoundingMetrics.descent + delta2,
+    NS_MAX(mBoundingMetrics.descent + delta2,
            bmBase.descent + delta1 + bmUnder.ascent +
              underSize.height - underSize.ascent);
   aDesiredSize.width = mBoundingMetrics.width;

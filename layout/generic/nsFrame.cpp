@@ -2690,7 +2690,7 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame, nsPoint aPoint)
       if (fromLeft >= 0 && fromRight <= 0) {
         xDistance = 0;
       } else {
-        xDistance = PR_MIN(abs(fromLeft), abs(fromRight));
+        xDistance = NS_MIN(abs(fromLeft), abs(fromRight));
       }
 
       if (xDistance <= closestXDistance)
@@ -2705,7 +2705,7 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame, nsPoint aPoint)
         if (fromTop >= 0 && fromBottom <= 0)
           yDistance = 0;
         else
-          yDistance = PR_MIN(abs(fromTop), abs(fromBottom));
+          yDistance = NS_MIN(abs(fromTop), abs(fromBottom));
 
         if (yDistance < closestYDistance)
         {
@@ -2921,7 +2921,7 @@ void
 nsIFrame::InlineMinWidthData::ForceBreak(nsIRenderingContext *aRenderingContext)
 {
   currentLine -= trailingWhitespace;
-  prevLines = PR_MAX(prevLines, currentLine);
+  prevLines = NS_MAX(prevLines, currentLine);
   currentLine = trailingWhitespace = 0;
 
   for (PRUint32 i = 0, i_end = floats.Length(); i != i_end; ++i) {
@@ -2989,7 +2989,7 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsIRenderingContext *aRenderingContext
       // Negative-width floats don't change the available space so they
       // shouldn't change our intrinsic line width either.
       floats_cur =
-        NSCoordSaturatingAdd(floats_cur, PR_MAX(0, floatWidth));
+        NSCoordSaturatingAdd(floats_cur, NS_MAX(0, floatWidth));
     }
 
     nscoord floats_cur =
@@ -3004,7 +3004,7 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsIRenderingContext *aRenderingContext
 
   currentLine =
     NSCoordSaturatingSubtract(currentLine, trailingWhitespace, nscoord_MAX);
-  prevLines = PR_MAX(prevLines, currentLine);
+  prevLines = NS_MAX(prevLines, currentLine);
   currentLine = trailingWhitespace = 0;
   skipWhitespace = PR_TRUE;
 }
@@ -3865,7 +3865,7 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
       }
 
       nscoord offset = outline->mOutlineOffset;
-      nscoord inflateBy = PR_MAX(width + offset, 0);
+      nscoord inflateBy = NS_MAX(width + offset, 0);
       r.Inflate(inflateBy, inflateBy);
       *aAnyOutlineOrEffects = PR_TRUE;
     }
@@ -6455,7 +6455,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     if (aWidth != NS_INTRINSICSIZE) {
       nscoord computedWidth =
         aWidth - reflowState.mComputedBorderPadding.LeftRight();
-      computedWidth = PR_MAX(computedWidth, 0);
+      computedWidth = NS_MAX(computedWidth, 0);
       reflowState.SetComputedWidth(computedWidth);
     }
 
@@ -6468,7 +6468,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
       if (aHeight != NS_INTRINSICSIZE) {
         nscoord computedHeight =
           aHeight - reflowState.mComputedBorderPadding.TopBottom();
-        computedHeight = PR_MAX(computedHeight, 0);
+        computedHeight = NS_MAX(computedHeight, 0);
         reflowState.SetComputedHeight(computedHeight);
       } else {
         reflowState.SetComputedHeight(

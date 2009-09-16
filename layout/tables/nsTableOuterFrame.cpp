@@ -549,7 +549,7 @@ nsTableOuterFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
         nscoord capPref =
           nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mCaptionFrame,
                                                iwt);
-        maxWidth = PR_MAX(maxWidth, capPref);
+        maxWidth = NS_MAX(maxWidth, capPref);
       }
       break;
     }
@@ -679,23 +679,23 @@ nsTableOuterFrame::SetDesiredSize(PRUint8         aCaptionSide,
   }
   switch(aCaptionSide) {
     case NS_STYLE_CAPTION_SIDE_LEFT:
-      aWidth = PR_MAX(aInnerMargin.left, aCaptionMargin.left + captionWidth + aCaptionMargin.right) +
+      aWidth = NS_MAX(aInnerMargin.left, aCaptionMargin.left + captionWidth + aCaptionMargin.right) +
                innerWidth + aInnerMargin.right;
       break;
     case NS_STYLE_CAPTION_SIDE_RIGHT:
-      aWidth = PR_MAX(aInnerMargin.right, aCaptionMargin.left + captionWidth + aCaptionMargin.right) +
+      aWidth = NS_MAX(aInnerMargin.right, aCaptionMargin.left + captionWidth + aCaptionMargin.right) +
                innerWidth + aInnerMargin.left;
       break;
     default:
       aWidth = aInnerMargin.left + innerWidth + aInnerMargin.right;
-      aWidth = PR_MAX(aWidth, captionRect.XMost() + aCaptionMargin.right);
+      aWidth = NS_MAX(aWidth, captionRect.XMost() + aCaptionMargin.right);
   }
   aHeight = innerRect.YMost() + aInnerMargin.bottom;
   if (NS_STYLE_CAPTION_SIDE_BOTTOM != aCaptionSide) {
-    aHeight = PR_MAX(aHeight, captionRect.YMost() + aCaptionMargin.bottom);
+    aHeight = NS_MAX(aHeight, captionRect.YMost() + aCaptionMargin.bottom);
   }
   else {
-    aHeight = PR_MAX(aHeight, captionRect.YMost() + aCaptionMargin.bottom +
+    aHeight = NS_MAX(aHeight, captionRect.YMost() + aCaptionMargin.bottom +
                               aInnerMargin.bottom);
   }
 
@@ -827,10 +827,10 @@ nsTableOuterFrame::GetCaptionOrigin(PRUint32         aCaptionSide,
       aOrigin.y = aInnerMargin.top;
       switch (GetCaptionVerticalAlign()) {
         case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-          aOrigin.y = PR_MAX(0, aInnerMargin.top + ((aInnerSize.height - aCaptionSize.height) / 2));
+          aOrigin.y = NS_MAX(0, aInnerMargin.top + ((aInnerSize.height - aCaptionSize.height) / 2));
           break;
         case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-          aOrigin.y = PR_MAX(0, aInnerMargin.top + aInnerSize.height - aCaptionSize.height);
+          aOrigin.y = NS_MAX(0, aInnerMargin.top + aInnerSize.height - aCaptionSize.height);
           break;
         default:
           break;
@@ -893,7 +893,7 @@ nsTableOuterFrame::GetInnerOrigin(PRUint32         aCaptionSide,
     if (aInnerMargin.left < minCapWidth) {
       // shift the inner table to get some place for the caption
       aInnerMargin.right += aInnerMargin.left - minCapWidth;
-      aInnerMargin.right  = PR_MAX(0, aInnerMargin.right);
+      aInnerMargin.right  = NS_MAX(0, aInnerMargin.right);
       aInnerMargin.left   = minCapWidth;
     }
     aOrigin.x = aInnerMargin.left;
@@ -921,10 +921,10 @@ nsTableOuterFrame::GetInnerOrigin(PRUint32         aCaptionSide,
       aOrigin.y = aInnerMargin.top;
       switch (GetCaptionVerticalAlign()) {
         case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-          aOrigin.y = PR_MAX(aInnerMargin.top, (aCaptionSize.height - aInnerSize.height) / 2);
+          aOrigin.y = NS_MAX(aInnerMargin.top, (aCaptionSize.height - aInnerSize.height) / 2);
           break;
         case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-          aOrigin.y = PR_MAX(aInnerMargin.top, aCaptionSize.height - aInnerSize.height);
+          aOrigin.y = NS_MAX(aInnerMargin.top, aCaptionSize.height - aInnerSize.height);
           break;
         default:
           break;

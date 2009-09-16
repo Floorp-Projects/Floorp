@@ -65,7 +65,7 @@ nsListItemFrame::GetPrefSize(nsBoxLayoutState& aState)
 
   // guarantee that our preferred height doesn't exceed the standard
   // listbox row height
-  size.height = PR_MAX(mRect.height, size.height);
+  size.height = NS_MAX(mRect.height, size.height);
   return size;
 }
 

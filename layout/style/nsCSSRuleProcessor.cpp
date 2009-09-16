@@ -584,7 +584,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
 
   if (mEnumListSize < testCount) {
     delete [] mEnumList;
-    mEnumListSize = PR_MAX(testCount, MIN_ENUM_LIST_SIZE);
+    mEnumListSize = NS_MAX(testCount, MIN_ENUM_LIST_SIZE);
     mEnumList = new RuleValue*[mEnumListSize];
   }
 

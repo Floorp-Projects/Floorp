@@ -768,7 +768,7 @@ nsMathMLmtdFrame::GetRowSpan()
       rowspan = value.ToInteger(&error);
       if (error || rowspan < 0)
         rowspan = 1;
-      rowspan = PR_MIN(rowspan, MAX_ROWSPAN);
+      rowspan = NS_MIN(rowspan, MAX_ROWSPAN);
     }
   }
   return rowspan;

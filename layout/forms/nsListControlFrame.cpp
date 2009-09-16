@@ -489,7 +489,7 @@ GetOptGroupLabelsHeight(nsPresContext* aPresContext,
       nscoord optionsHeight = aRowHeight * numOptions;
       nsIFrame* frame = aPresContext->GetPresShell()->GetPrimaryFrameFor(child);
       nscoord totalHeight = frame ? frame->GetSize().height : 0;
-      height += PR_MAX(0, totalHeight - optionsHeight);
+      height += NS_MAX(0, totalHeight - optionsHeight);
     }
   }
   return height;
@@ -1940,7 +1940,7 @@ nsListControlFrame::CalcIntrinsicHeight(nscoord aHeightOfARow,
       if (aNumberOfOptions < 2) {
         // Add in 1 aHeightOfARow also when aNumberOfOptions == 0
         mNumDisplayRows = 1;
-        extraHeight = PR_MAX(aHeightOfARow, labelHeight);
+        extraHeight = NS_MAX(aHeightOfARow, labelHeight);
       }
       else if (aNumberOfOptions * aHeightOfARow + labelHeight >
                kMaxDropDownRows * aHeightOfARow) {

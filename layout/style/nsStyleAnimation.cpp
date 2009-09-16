@@ -555,7 +555,7 @@ nsStyleAnimation::StoreComputedValue(nsCSSProperty aProperty,
         if (!aPresContext->IsChrome()) {
           nscoord minimumFontSize =
             aPresContext->GetCachedIntPref(kPresContext_MinimumFontSize);
-          font->mFont.size = PR_MAX(font->mSize, minimumFontSize);
+          font->mFont.size = NS_MAX(font->mSize, minimumFontSize);
         } else {
           font->mFont.size = font->mSize;
         }

@@ -1435,7 +1435,7 @@ ConvertToPixelCoord(const nsStyleCoord& aCoord, PRInt32 aPercentScale)
       return 0;
   }
   NS_ABORT_IF_FALSE(pixelValue >= 0, "we ensured non-negative while parsing");
-  pixelValue = PR_MIN(pixelValue, PR_INT32_MAX); // avoid overflow
+  pixelValue = NS_MIN(pixelValue, double(PR_INT32_MAX)); // avoid overflow
   return NS_lround(pixelValue);
 }
 
@@ -1599,13 +1599,13 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
   PRUint32 count = mLayers.Length();
   if (count != aSource.mLayers.Length()) {
     NS_WARNING("truncating counts due to out-of-memory");
-    mAttachmentCount = PR_MAX(mAttachmentCount, count);
-    mClipCount = PR_MAX(mClipCount, count);
-    mOriginCount = PR_MAX(mOriginCount, count);
-    mRepeatCount = PR_MAX(mRepeatCount, count);
-    mPositionCount = PR_MAX(mPositionCount, count);
-    mImageCount = PR_MAX(mImageCount, count);
-    mSizeCount = PR_MAX(mSizeCount, count);
+    mAttachmentCount = NS_MAX(mAttachmentCount, count);
+    mClipCount = NS_MAX(mClipCount, count);
+    mOriginCount = NS_MAX(mOriginCount, count);
+    mRepeatCount = NS_MAX(mRepeatCount, count);
+    mPositionCount = NS_MAX(mPositionCount, count);
+    mImageCount = NS_MAX(mImageCount, count);
+    mSizeCount = NS_MAX(mSizeCount, count);
   }
 }
 
