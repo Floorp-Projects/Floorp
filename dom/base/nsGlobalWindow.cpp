@@ -873,11 +873,6 @@ nsGlobalWindow::CleanUp()
   }
   mChromeEventHandler = nsnull; // Forces Release
 
-  if (IsOuterWindow() && IsPopupSpamWindow()) {
-    SetPopupSpamWindow(PR_FALSE);
-    --gOpenPopupSpamCount;
-  }
-
   nsGlobalWindow *inner = GetCurrentInnerWindowInternal();
 
   if (inner) {
@@ -2073,6 +2068,15 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
   if (aDocShell == mDocShell)
     return;
+
+  if (!aDocShell && // window is closing
+      IsOuterWindow() && IsPopupSpamWindow())
+  {
+    SetPopupSpamWindow(PR_FALSE);
+    --gOpenPopupSpamCount;
+    NS_ASSERTION(gOpenPopupSpamCount >= 0,
+                 "Unbalanced decrement of gOpenPopupSpamCount");
+  }
 
   PRUint32 lang_id;
   nsIScriptContext *langCtx;
@@ -4285,7 +4289,7 @@ nsGlobalWindow::Focus()
 
   PRBool canFocus =
     CanSetProperty("dom.disable_window_flip") ||
-    CheckOpenAllow(CheckForAbusePoint()) == allowNoAbuse;
+    RevisePopupAbuseLevel(gPopupControlState) < openAbused;
 
   nsCOMPtr<nsIDOMWindow> activeWindow;
   fm->GetActiveWindow(getter_AddRefs(activeWindow));
@@ -4981,17 +4985,35 @@ nsGlobalWindow::CanSetProperty(const char *aPrefName)
   return !nsContentUtils::GetBoolPref(aPrefName, PR_TRUE);
 }
 
+PRBool
+nsGlobalWindow::PopupWhitelisted()
+{
+  if (!IsPopupBlocked(mDocument))
+    return PR_TRUE;
+
+  nsCOMPtr<nsIDOMWindow> parent;
+
+  if (NS_FAILED(GetParent(getter_AddRefs(parent))) ||
+      parent == static_cast<nsIDOMWindow*>(this))
+  {
+    return PR_FALSE;
+  }
+
+  return static_cast<nsGlobalWindow*>
+                    (static_cast<nsIDOMWindow*>
+                                (parent.get()))->PopupWhitelisted();
+}
 
 /*
  * Examine the current document state to see if we're in a way that is
  * typically abused by web designers. The window.open code uses this
  * routine to determine whether to allow the new window.
- * Returns a value from the CheckForAbusePoint enum.
+ * Returns a value from the PopupControlState enum.
  */
 PopupControlState
-nsGlobalWindow::CheckForAbusePoint()
+nsGlobalWindow::RevisePopupAbuseLevel(PopupControlState aControl)
 {
-  FORWARD_TO_OUTER(CheckForAbusePoint, (), openAbused);
+  FORWARD_TO_OUTER(RevisePopupAbuseLevel, (aControl), aControl);
 
   NS_ASSERTION(mDocShell, "Must have docshell");
   
@@ -5004,9 +5026,17 @@ nsGlobalWindow::CheckForAbusePoint()
   if (type != nsIDocShellTreeItem::typeContent)
     return openAllowed;
 
-  // level of abuse we've detected, initialized to the current popup
-  // state
-  PopupControlState abuse = gPopupControlState;
+  PopupControlState abuse = aControl;
+  switch (abuse) {
+  case openControlled:
+  case openAbused:
+  case openOverridden:
+    if (PopupWhitelisted())
+      abuse = PopupControlState(abuse - 1);
+  case openAllowed: break;
+  default:
+    NS_WARNING("Strange PopupControlState!");
+  }
 
   // limit the number of simultaneously open popups
   if (abuse == openAbused || abuse == openControlled) {
@@ -5016,41 +5046,6 @@ nsGlobalWindow::CheckForAbusePoint()
   }
 
   return abuse;
-}
-
-/* Allow or deny a window open based on whether popups are suppressed.
-   A popup generally will be allowed if it's from a white-listed domain.
-   Returns a value from the CheckOpenAllow enum. */
-OpenAllowValue
-nsGlobalWindow::CheckOpenAllow(PopupControlState aAbuseLevel)
-{
-  NS_PRECONDITION(GetDocShell(), "Must have docshell");
-
-  OpenAllowValue allowWindow = allowNoAbuse; // (also used for openControlled)
-  
-  if (aAbuseLevel >= openAbused) {
-    allowWindow = allowNot;
-
-    // However it might still not be blocked. For now we use both our
-    // location and the top window's location when determining whether
-    // a popup open request is whitelisted or not. This isn't ideal
-    // when dealing with iframe/frame documents, but it'll do for
-    // now. Getting the iframe/frame case right would require some
-    // changes to the frontend's handling of popup events etc.
-    if (aAbuseLevel == openAbused) {
-      nsCOMPtr<nsIDOMWindow> topWindow;
-      GetTop(getter_AddRefs(topWindow));
-
-      nsCOMPtr<nsPIDOMWindow> topPIWin(do_QueryInterface(topWindow));
-
-      if (topPIWin && (!IsPopupBlocked(topPIWin->GetExtantDocument()) ||
-                       !IsPopupBlocked(mDocument))) {
-        allowWindow = allowWhitelisted;
-      }
-    }
-  }
-
-  return allowWindow;
 }
 
 /* If a window open is blocked, fire the appropriate DOM events.
@@ -7503,13 +7498,10 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   if (NS_FAILED(rv))
     return rv;
 
-  // These next two variables are only accessed when checkForPopup is true
-  PopupControlState abuseLevel;
-  OpenAllowValue allowReason;
+  PopupControlState abuseLevel = gPopupControlState;
   if (checkForPopup) {
-    abuseLevel = CheckForAbusePoint();
-    allowReason = CheckOpenAllow(abuseLevel);
-    if (allowReason == allowNot) {
+    abuseLevel = RevisePopupAbuseLevel(abuseLevel);
+    if (abuseLevel >= openAbused) {
       if (aJSCallerContext) {
         // If script in some other window is doing a window.open on us and
         // it's being blocked, then it's OK to close us afterwards, probably.
