@@ -178,13 +178,7 @@ var BrowserUI = {
 
   showToolbar : function showToolbar(aEdit) {
     this.hidePanel();
-    if (this.isToolbarOpen())
-      return;
     this._editToolbar(aEdit);
-  },
-
-  isToolbarOpen: function isToolbarOpen() {
-    return this._edit.popup.popupOpen;
   },
 
   _toolbarLocked: 0,
@@ -503,8 +497,6 @@ var BrowserUI = {
   },
 
   showAutoComplete : function(showDefault) {
-    if (this.isToolbarOpen())
-      return;
     BrowserSearch.updateSearchButtons();
     this._edit.showHistoryPopup();
   },
