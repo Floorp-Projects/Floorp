@@ -17,7 +17,7 @@ static JSClass CounterClass = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-BEGIN_TEST(testPropCache_bug505798)
+BEGIN_TEST(testPropCache_bug505523)
 {
     g_counter = 0;
     EXEC("var x = {};");
@@ -25,8 +25,7 @@ BEGIN_TEST(testPropCache_bug505798)
     EXEC("var arr = [x, y];\n"
          "for (var i = 0; i < arr.length; i++)\n"
          "    arr[i].p = 1;\n");
-    knownFail = true;
     CHECK(g_counter == 1);
     return true;
 }
-END_TEST(testPropCache_bug505798)
+END_TEST(testPropCache_bug505523)

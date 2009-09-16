@@ -58,6 +58,7 @@
 #include "jsscan.h"
 #include "jsstr.h"
 #include "jsversion.h"
+#include "jsstrinlines.h"
 
 /*
  * ATOM_HASH assumes that JSHashNumber is 32-bit even on 64-bit systems.
@@ -157,6 +158,10 @@ const char *const js_common_atom_names[] = {
     js_valueOf_str,             /* valueOfAtom                  */
     js_toJSON_str,              /* toJSONAtom                   */
     "(void 0)",                 /* void0Atom                    */
+    js_enumerable_str,          /* enumerableAtom               */
+    js_configurable_str,        /* configurableAtom             */
+    js_writable_str,            /* writableAtom                 */
+    js_value_str,               /* valueAtom                    */
 
 #if JS_HAS_XML_SUPPORT
     js_etago_str,               /* etagoAtom                    */
@@ -227,6 +232,10 @@ const char js_toLocaleString_str[]  = "toLocaleString";
 const char js_undefined_str[]       = "undefined";
 const char js_valueOf_str[]         = "valueOf";
 const char js_toJSON_str[]          = "toJSON";
+const char js_enumerable_str[]      = "enumerable";
+const char js_configurable_str[]    = "configurable";
+const char js_writable_str[]        = "writable";
+const char js_value_str[]           = "value";
 
 #if JS_HAS_XML_SUPPORT
 const char js_etago_str[]           = "</";
@@ -325,11 +334,8 @@ static const JSDHashTableOps StringHashOps = {
 static JSDHashNumber
 HashDouble(JSDHashTable *table, const void *key)
 {
-    jsdouble d;
-
     JS_ASSERT(IS_DOUBLE_TABLE(table));
-    d = *(jsdouble *)key;
-    return JSDOUBLE_HI32(d) ^ JSDOUBLE_LO32(d);
+    return JS_HASH_DOUBLE(*(jsdouble *)key);
 }
 
 static JSDHashNumber
@@ -568,21 +574,6 @@ js_TraceAtomState(JSTracer *trc, JSBool allAtoms)
     } else {
         JS_DHashTableEnumerate(&state->stringAtoms, js_pinned_atom_tracer, trc);
     }
-
-    if (rt->state != JSRTS_LANDING) {
-        /*
-         * Unit strings aren't in state->stringAtoms, so we mark any that have
-         * been created on demand. This bloats more than strictly necessary but
-         * we can't help that without putting unit atoms in state->stringAtoms,
-         * which is too expensive.
-         */
-        for (uintN i = 0; i < UNIT_STRING_LIMIT; i++) {
-            if (JSString *str = rt->unitStrings[i]) {
-                JS_SET_TRACING_INDEX(trc, "unit_string_atom", i);
-                JS_CallTracer(trc, str, JSTRACE_STRING);
-            }
-        }
-    }
 }
 
 static JSDHashOperator
@@ -688,11 +679,35 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     JS_ASSERT(!(flags & ~(ATOM_PINNED|ATOM_INTERNED|ATOM_TMPSTR|ATOM_NOCOPY)));
     JS_ASSERT_IF(flags & ATOM_NOCOPY, flags & ATOM_TMPSTR);
 
-    if (str->length() == 1) {
+    if (str->isAtomized())
+        return (JSAtom *) STRING_TO_JSVAL(str);
+
+    size_t length = str->length();
+    if (length == 1) {
         jschar c = str->chars()[0];
-        if (c < UNIT_STRING_LIMIT) {
-            JSString *str = js_GetUnitStringForChar(cx, c);
-            return str ? (JSAtom *) STRING_TO_JSVAL(str) : NULL;
+        if (c < UNIT_STRING_LIMIT)
+            return (JSAtom *) STRING_TO_JSVAL(JSString::unitString(c));
+    }
+
+    /*
+     * Here we know that JSString::intStringTable covers only 256 (or at least
+     * not 1000 or more) chars. We rely on order here to resolve the unit vs.
+     * int string atom identity issue by giving priority to unit strings for
+     * '0' through '9' (see JSString::intString in jsstrinlines.h).
+     */
+    JS_STATIC_ASSERT(INT_STRING_LIMIT <= 999);
+    if (2 <= length && length <= 3) {
+        const jschar *chars = str->chars();
+
+        if ('1' <= chars[0] && chars[0] <= '9' &&
+            '0' <= chars[1] && chars[1] <= '9' &&
+            (length == 2 || ('0' <= chars[2] && chars[2] <= '9'))) {
+            jsint i = (chars[0] - '0') * 10 + chars[1] - '0';
+
+            if (length == 3)
+                i = i * 10 + chars[2] - '0'; 
+            if (jsuint(i) < INT_STRING_LIMIT)
+                return (JSAtom *) STRING_TO_JSVAL(JSString::intString(i));
         }
     }
 
@@ -825,6 +840,12 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
     JSString str, *str2;
     JSAtomState *state;
     JSDHashEntryHdr *hdr;
+
+    if (length == 1) {
+        jschar c = *chars;
+        if (c < UNIT_STRING_LIMIT)
+            return (JSAtom *) STRING_TO_JSVAL(JSString::unitString(c));
+    }
 
     str.initFlat((jschar *)chars, length);
     state = &cx->runtime->atomState;

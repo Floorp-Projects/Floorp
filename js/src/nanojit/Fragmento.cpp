@@ -51,24 +51,31 @@ namespace nanojit
     //
     // Fragment
     //
-    Fragment::Fragment(const void* _ip)
+    Fragment::Fragment(const void* _ip
+                       verbose_only(, uint32_t profFragID))
         :
-          anchor(NULL),
           root(NULL),
-          parent(NULL),
-          first(NULL),
-          peer(NULL),
           lirbuf(NULL),
           lastIns(NULL),
-          kind(LoopTrace),
           ip(_ip),
           recordAttempts(0),
           fragEntry(NULL),
-          loopEntry(NULL),
           vmprivate(NULL),
+          verbose_only( loopLabel(NULL), )
+          verbose_only( profFragID(profFragID), )
+          verbose_only( profCount(0), )
+          verbose_only( nStaticExits(0), )
+          verbose_only( nCodeBytes(0), )
+          verbose_only( nExitBytes(0), )
+          verbose_only( guardNumberer(1), )
+          verbose_only( guardsForFrag(NULL), )
           _code(NULL),
           _hits(0)
     {
+        // when frag profiling is enabled, profFragID should be >= 1,
+        // else it should be zero.  However, there's no way to assert
+        // that here since there's no way to determine whether frag
+        // profiling is enabled.
     }
     #endif /* FEATURE_NANOJIT */
 }

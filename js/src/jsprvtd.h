@@ -128,7 +128,8 @@ typedef struct JSScopeOps           JSScopeOps;
 typedef struct JSScopeProperty      JSScopeProperty;
 typedef struct JSStackHeader        JSStackHeader;
 typedef struct JSSubString          JSSubString;
-typedef struct JSTraceableNative    JSTraceableNative;
+typedef struct JSNativeTraceInfo    JSNativeTraceInfo;
+typedef struct JSSpecializedNative  JSSpecializedNative;
 typedef struct JSXML                JSXML;
 typedef struct JSXMLArray           JSXMLArray;
 typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
@@ -143,12 +144,22 @@ typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
 #ifdef __cplusplus
 extern "C++" {
 
-template <class T, size_t MinInlineCapacity = 0> class JSTempVector;
+namespace js {
 
-/* Common JSTempVector instantiations: */
-typedef JSTempVector<jschar, 32> JSCharBuffer;
+class ContextAllocPolicy;
+class SystemAllocPolicy;
 
-}
+template <class T,
+          size_t MinInlineCapacity = 0,
+          class AllocPolicy = ContextAllocPolicy>
+class Vector;
+
+} /* namespace js */
+
+/* Common instantiations. */
+typedef js::Vector<jschar, 32> JSCharBuffer;
+
+} /* export "C++" */
 #endif  /* __cplusplus */
 
 /* "Friend" types used by jscntxt.h and jsdbgapi.h. */
@@ -256,7 +267,6 @@ typedef void
 typedef union JSTempValueUnion {
     jsval               value;
     JSObject            *object;
-    JSString            *string;
     JSXML               *xml;
     JSTempValueTrace    trace;
     JSScopeProperty     *sprop;
@@ -297,20 +307,11 @@ typedef JSBool
 
 /*
  * Define obj[id], a direct property of obj named id, having the given initial
- * value, with the specified getter, setter, and attributes.  If the propp out
- * param is non-null, *propp on successful return contains an opaque property
- * pointer usable as a speedup hint with JSAttributesOp.  But note that propp
- * may be null, indicating that the caller is not interested in recovering an
- * opaque pointer to the newly-defined property.
- *
- * If propp is non-null and JSDefinePropOp succeeds, its caller must be sure
- * to drop *propp using JSObjectOps.dropProperty in short order, just as with
- * JSLookupPropOp.
+ * value, with the specified getter, setter, and attributes.
  */
 typedef JSBool
 (* JSDefinePropOp)(JSContext *cx, JSObject *obj, jsid id, jsval value,
-                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
-                   JSProperty **propp);
+                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
 
 /*
  * Get, set, or delete obj[id], returning false on error or exception, true
@@ -350,25 +351,6 @@ typedef JSBool
  */
 typedef void
 (* JSPropertyRefOp)(JSContext *cx, JSObject *obj, JSProperty *prop);
-
-/*
- * Get and set a required slot, one that should already have been allocated.
- * These operations are infallible, so required slots must be pre-allocated,
- * or implementations must suppress out-of-memory errors.  The native ops
- * (js_ObjectOps, see jsobj.c) access slots reserved by including a call to
- * the JSCLASS_HAS_RESERVED_SLOTS(n) macro in the JSClass.flags initializer.
- *
- * NB: the slot parameter is a zero-based index into obj slots, unlike the
- * index parameter to the JS_GetReservedSlot and JS_SetReservedSlot API entry
- * points, which is a zero-based index into the JSCLASS_RESERVED_SLOTS(clasp)
- * reserved slots that come after the initial well-known slots: proto, parent,
- * class, and optionally, the private data slot.
- */
-typedef jsval
-(* JSGetRequiredSlotOp)(JSContext *cx, JSObject *obj, uint32 slot);
-
-typedef JSBool
-(* JSSetRequiredSlotOp)(JSContext *cx, JSObject *obj, uint32 slot, jsval v);
 
 /*
  * The following determines whether JS_EncodeCharacters and JS_DecodeBytes

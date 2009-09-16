@@ -92,7 +92,6 @@ namespace nanojit
 {
     const int NJ_LOG2_PAGE_SIZE = 12;       // 4K
     const int NJ_MAX_REGISTERS = 24; // gpregs, x87 regs, xmm regs
-    const int NJ_STACK_OFFSET = 0;
 
     #define NJ_MAX_STACK_ENTRY 256
     #define NJ_MAX_PARAMETERS 1
@@ -134,17 +133,10 @@ namespace nanojit
 
         // X87 regs
         FST0 = 16,
-        FST1 = 17,
-        FST2 = 18,
-        FST3 = 19,
-        FST4 = 20,
-        FST5 = 21,
-        FST6 = 22,
-        FST7 = 23,
 
         FirstReg = 0,
-        LastReg = 23,
-        UnknownReg = 24
+        LastReg = 16,
+        UnknownReg = 17
     }
     Register;
 
@@ -167,7 +159,6 @@ namespace nanojit
     #define _is_gp_reg_(r)  ((_rmask_(r)&GpRegs)!=0)
 
     #define nextreg(r)      Register(r+1)
-    #define prevreg(r)      Register(r-1)
 
     verbose_only( extern const char* regNames[]; )
 
@@ -182,7 +173,9 @@ namespace nanojit
         void nativePageReset();\
         void nativePageSetup();\
         void underrunProtect(int);\
-        void asm_farg(LInsp);
+        void asm_farg(LInsp);\
+        void asm_cmp(LIns *cond);\
+        void asm_fcmp(LIns *cond);
 
     #define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
 
@@ -383,6 +376,11 @@ namespace nanojit
 #define LEAmi4(r,d,i) do { count_alu(); IMM32(d); *(--_nIns) = (2<<6)|(i<<3)|5; *(--_nIns) = (0<<6)|(r<<3)|4; *(--_nIns) = 0x8d;                    asm_output("lea %s, %p(%s*4)", gpn(r), (void*)d, gpn(i)); } while(0)
 
 #define CDQ()       do { SARi(EDX, 31); MR(EDX, EAX); } while(0)
+
+#define INCLi(p)    do { count_alu(); \
+                         underrunProtect(6); \
+                         IMM32((uint32_t)(ptrdiff_t)p); *(--_nIns) = 0x05; *(--_nIns) = 0xFF; \
+                         asm_output("incl  (%p)", (void*)p); } while (0)
 
 #define SETE(r)     do { count_alu(); ALU2(0x0f94,(r),(r));         asm_output("sete %s",gpn(r)); } while(0)
 #define SETNP(r)    do { count_alu(); ALU2(0x0f9B,(r),(r));         asm_output("setnp %s",gpn(r)); } while(0)

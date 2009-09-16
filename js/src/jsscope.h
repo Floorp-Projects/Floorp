@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -45,6 +45,7 @@
  */
 #include "jstypes.h"
 #include "jslock.h"
+#include "jsfun.h"
 #include "jsobj.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
@@ -195,15 +196,14 @@ JS_BEGIN_EXTERN_C
  * to find a given id, and save on the space overhead of a hash table.
  */
 
-struct JSScope {
-    JSObjectMap     map;                /* base class state */
+struct JSScope : public JSObjectMap
+{
 #ifdef JS_THREADSAFE
     JSTitle         title;              /* lock state */
 #endif
     JSObject        *object;            /* object that owns this scope */
     jsrefcount      nrefs;              /* count of all referencing objects */
     uint32          freeslot;           /* index of next free slot in object */
-    uint32          shape;              /* property cache shape identifier */
     JSScope         *emptyScope;        /* cache for getEmptyScope below */
     uint8           flags;              /* flags, see below */
     int8            hashShift;          /* multiplicative hash shift */
@@ -215,7 +215,7 @@ struct JSScope {
     JSScopeProperty *lastProp;          /* pointer to last property added */
 
   private:
-    void initMinimal(JSContext *cx);
+    void initMinimal(JSContext *cx, uint32 newShape);
     bool createTable(JSContext *cx, bool report);
     bool changeTable(JSContext *cx, int change);
     void reportReadOnlyScope(JSContext *cx);
@@ -225,8 +225,12 @@ struct JSScope {
     JSScope *createEmptyScope(JSContext *cx, JSClass *clasp);
 
   public:
+    explicit JSScope(const JSObjectOps *ops, JSObject *obj = NULL)
+      : JSObjectMap(ops, 0), object(obj) {}
+
     /* Create a mutable, owned, empty scope. */
-    static JSScope *create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj);
+    static JSScope *create(JSContext *cx, const JSObjectOps *ops, JSClass *clasp,
+                           JSObject *obj, uint32 shape);
 
     static void destroy(JSContext *cx, JSScope *scope);
 
@@ -235,7 +239,7 @@ struct JSScope {
      * and the same freeslot as this had when empty.
      *
      * If |this| is the scope of an object |proto|, the resulting scope can be
-     * used the scope of a new object whose prototype is |proto|.
+     * used as the scope of a new object whose prototype is |proto|.
      */
     JSScope *getEmptyScope(JSContext *cx, JSClass *clasp) {
         if (emptyScope) {
@@ -243,6 +247,19 @@ struct JSScope {
             return emptyScope;
         }
         return createEmptyScope(cx, clasp);
+    }
+
+    bool getEmptyScopeShape(JSContext *cx, JSClass *clasp, uint32 *shapep) {
+        if (emptyScope) {
+            *shapep = emptyScope->shape;
+            return true;
+        }
+        JSScope *e = getEmptyScope(cx, clasp);
+        if (!e)
+            return false;
+        *shapep = e->shape;
+        e->drop(cx, NULL);
+        return true;
     }
 
     inline void hold();
@@ -265,15 +282,30 @@ struct JSScope {
 
     void extend(JSContext *cx, JSScopeProperty *sprop);
 
+    /*
+     * Read barrier to clone a joined function object stored as a method.
+     * Defined inline further below.
+     */
+    inline bool methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, jsval *vp);
+
+    /*
+     * Write barrier to check for a method value change. Defined inline below
+     * after methodReadBarrier. Two flavors to handle JSOP_*GVAR, which deals
+     * in slots not sprops, while not deoptimizing to map slot to sprop unless
+     * flags show this is necessary. The methodShapeChange overload (directly
+     * below) parallels this.
+     */
+    inline bool methodWriteBarrier(JSContext *cx, JSScopeProperty *sprop, jsval v);
+    inline bool methodWriteBarrier(JSContext *cx, uint32 slot, jsval v);
+
     void trace(JSTracer *trc);
 
     void brandingShapeChange(JSContext *cx, uint32 slot, jsval v);
     void deletingShapeChange(JSContext *cx, JSScopeProperty *sprop);
-    void methodShapeChange(JSContext *cx, uint32 slot, jsval toval);
+    bool methodShapeChange(JSContext *cx, JSScopeProperty *sprop, jsval toval);
+    bool methodShapeChange(JSContext *cx, uint32 slot, jsval toval);
     void protoShapeChange(JSContext *cx);
-    void replacingShapeChange(JSContext *cx,
-                              JSScopeProperty *sprop,
-                              JSScopeProperty *newsprop);
+    void replacingShapeChange(JSContext *cx, JSScopeProperty *sprop, JSScopeProperty *newsprop);
     void sealingShapeChange(JSContext *cx);
     void shadowingShapeChange(JSContext *cx, JSScopeProperty *sprop);
 
@@ -286,12 +318,13 @@ struct JSScope {
         BRANDED                 = 0x0004,
         INDEXED_PROPERTIES      = 0x0008,
         OWN_SHAPE               = 0x0010,
+        METHOD_BARRIER          = 0x0020,
 
         /*
          * This flag toggles with each shape-regenerating GC cycle.
          * See JSRuntime::gcRegenShapesScopeFlag.
          */
-        SHAPE_REGEN             = 0x0020
+        SHAPE_REGEN             = 0x0040
     };
 
     bool hadMiddleDelete()      { return flags & MIDDLE_DELETE; }
@@ -322,14 +355,64 @@ struct JSScope {
 
     bool hasRegenFlag(uint8 regenFlag) { return (flags & SHAPE_REGEN) == regenFlag; }
 
+    /*
+     * A scope has a method barrier when some compiler-created "null closure"
+     * function objects (functions that do not use lexical bindings above their
+     * scope, only free variable names) that have a correct JSSLOT_PARENT value
+     * thanks to the COMPILE_N_GO optimization are stored as newly added direct
+     * property values.
+     *
+     * The de-facto standard JS language requires each evaluation of such a
+     * closure to result in a unique (according to === and observable effects)
+     * function object. ES3 tried to allow implementations to "join" such
+     * objects to a single compiler-created object, but this makes an overt
+     * mutation hazard, also an "identity hazard" against interoperation among
+     * implementations that join and do not join.
+     *
+     * To stay compatible with the de-facto standard, we store the compiler-
+     * created function object as the method value, set the METHOD_BARRIER
+     * flag, and brand the scope with a predictable shape that reflects its
+     * method values, which are cached and traced without being loaded, based
+     * on shape-qualified cache hit logic and equivalent trace guards. See
+     * BRANDED above.
+     *
+     * This means scope->hasMethodBarrier() => scope->branded(), but of course
+     * not the other way around.
+     *
+     * Then when reading from a scope for which scope->hasMethodBarrier() is
+     * true, we count on the scope's qualified/guarded shape being unique and
+     * add a read barrier that clones the compiler-created function object on
+     * demand, reshaping the scope.
+     *
+     * This read barrier is bypassed when evaluating the callee sub-expression
+     * of a call expression (see the JOF_CALLOP opcodes in jsopcode.tbl), since
+     * such ops do not present an identity or mutation hazard.
+     */
+    bool hasMethodBarrier()     { return flags & METHOD_BARRIER; }
+    void setMethodBarrier()     { flags |= METHOD_BARRIER | BRANDED; }
+
     bool owned()                { return object != NULL; }
 };
 
-#define JS_IS_SCOPE_LOCKED(cx, scope)   JS_IS_TITLE_LOCKED(cx, &(scope)->title)
+inline bool
+JS_IS_SCOPE_LOCKED(JSContext *cx, JSScope *scope)
+{
+    return JS_IS_TITLE_LOCKED(cx, &scope->title);
+}
 
-#define OBJ_SCOPE(obj)                  (JS_ASSERT(OBJ_IS_NATIVE(obj)),       \
-                                         (JSScope *) (obj)->map)
-#define OBJ_SHAPE(obj)                  (OBJ_SCOPE(obj)->shape)
+inline JSScope *
+OBJ_SCOPE(JSObject *obj)
+{
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    return (JSScope *) obj->map;
+}
+
+inline uint32
+OBJ_SHAPE(JSObject *obj)
+{
+    JS_ASSERT(obj->map->shape != JSObjectMap::SHAPELESS);
+    return obj->map->shape;
+}
 
 /*
  * A little information hiding for scope->lastProp, in case it ever becomes
@@ -342,19 +425,19 @@ struct JSScope {
  * Helpers for reinterpreting JSPropertyOp as JSObject* for scripted getters
  * and setters.
  */
-static inline JSObject *
+inline JSObject *
 js_CastAsObject(JSPropertyOp op)
 {
     return JS_FUNC_TO_DATA_PTR(JSObject *, op);
 }
 
-static inline jsval
+inline jsval
 js_CastAsObjectJSVal(JSPropertyOp op)
 {
     return OBJECT_TO_JSVAL(JS_FUNC_TO_DATA_PTR(JSObject *, op));
 }
 
-static inline JSPropertyOp
+inline JSPropertyOp
 js_CastAsPropertyOp(JSObject *object)
 {
     return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
@@ -363,7 +446,8 @@ js_CastAsPropertyOp(JSObject *object)
 struct JSScopeProperty {
     jsid            id;                 /* int-tagged jsval/untagged JSAtom* */
     JSPropertyOp    getter;             /* getter and setter hooks or objects */
-    JSPropertyOp    setter;
+    JSPropertyOp    setter;             /* getter is JSObject* and setter is 0
+                                           if sprop->isMethod() */
     uint32          slot;               /* abstract index in object slots */
     uint8           attrs;              /* attributes, see jsapi.h JSPROP_* */
     uint8           flags;              /* flags, see below for defines */
@@ -372,6 +456,52 @@ struct JSScopeProperty {
     JSScopeProperty *kids;              /* null, single child, or a tagged ptr
                                            to many-kids data structure */
     uint32          shape;              /* property cache shape identifier */
+
+/* Bits stored in sprop->flags. */
+#define SPROP_MARK                      0x01
+#define SPROP_IS_ALIAS                  0x02
+#define SPROP_HAS_SHORTID               0x04
+#define SPROP_FLAG_SHAPE_REGEN          0x08
+#define SPROP_IS_METHOD                 0x10
+
+    bool isMethod() const {
+        return flags & SPROP_IS_METHOD;
+    }
+    JSObject *methodObject() const {
+        JS_ASSERT(isMethod());
+        return js_CastAsObject(getter);
+    }
+    jsval methodValue() const {
+        JS_ASSERT(isMethod());
+        return js_CastAsObjectJSVal(getter);
+    }
+
+    bool hasGetterObject() const {
+        return attrs & JSPROP_GETTER;
+    }
+    JSObject *getterObject() const {
+        JS_ASSERT(hasGetterObject());
+        return js_CastAsObject(getter);
+    }
+    jsval getterValue() const {
+        JS_ASSERT(hasGetterObject());
+        return js_CastAsObjectJSVal(getter);
+    }
+
+    bool hasSetterObject() const {
+        return attrs & JSPROP_SETTER;
+    }
+    JSObject *setterObject() const {
+        JS_ASSERT(hasSetterObject());
+        return js_CastAsObject(setter);
+    }
+    jsval setterValue() const {
+        JS_ASSERT(hasSetterObject());
+        return js_CastAsObjectJSVal(setter);
+    }
+
+    bool get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp);
+    bool set(JSContext* cx, JSObject* obj, jsval* vp);
 
     void trace(JSTracer *trc);
 };
@@ -396,23 +526,17 @@ struct JSScopeProperty {
     (*(spp) = (JSScopeProperty *) ((jsuword)(sprop)                           \
                                    | SPROP_HAD_COLLISION(*(spp))))
 
-JS_ALWAYS_INLINE JSScopeProperty *
+inline JSScopeProperty *
 JSScope::lookup(jsid id)
 {
     return SPROP_FETCH(search(id, false));
 }
 
-JS_ALWAYS_INLINE bool
+inline bool
 JSScope::has(JSScopeProperty *sprop)
 {
     return lookup(sprop->id) == sprop;
 }
-
-/* Bits stored in sprop->flags. */
-#define SPROP_MARK                      0x01
-#define SPROP_IS_ALIAS                  0x02
-#define SPROP_HAS_SHORTID               0x04
-#define SPROP_FLAG_SHAPE_REGEN          0x08
 
 /*
  * If SPROP_HAS_SHORTID is set in sprop->flags, we use sprop->shortid rather
@@ -430,6 +554,9 @@ JSScope::has(JSScopeProperty *sprop)
 #define SPROP_HAS_STUB_GETTER(sprop)    (!(sprop)->getter)
 #define SPROP_HAS_STUB_SETTER(sprop)    (!(sprop)->setter)
 
+#define SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop)                             \
+    (SPROP_HAS_STUB_GETTER(sprop) || (sprop)->isMethod())
+
 #ifndef JS_THREADSAFE
 # define js_GenerateShape(cx, gcLocked)    js_GenerateShape (cx)
 #endif
@@ -438,6 +565,28 @@ extern uint32
 js_GenerateShape(JSContext *cx, bool gcLocked);
 
 #ifdef JS_DUMP_PROPTREE_STATS
+struct JSScopeStats {
+    jsrefcount          searches;
+    jsrefcount          hits;
+    jsrefcount          misses;
+    jsrefcount          hashes;
+    jsrefcount          steps;
+    jsrefcount          stepHits;
+    jsrefcount          stepMisses;
+    jsrefcount          adds;
+    jsrefcount          redundantAdds;
+    jsrefcount          addFailures;
+    jsrefcount          changeFailures;
+    jsrefcount          compresses;
+    jsrefcount          grows;
+    jsrefcount          removes;
+    jsrefcount          removeFrees;
+    jsrefcount          uselessRemoves;
+    jsrefcount          shrinks;
+};
+
+extern JS_FRIEND_DATA(JSScopeStats) js_scope_stats;
+
 # define METER(x)       JS_ATOMIC_INCREMENT(&js_scope_stats.x)
 #else
 # define METER(x)       /* nothing */
@@ -498,9 +647,69 @@ JSScope::extend(JSContext *cx, JSScopeProperty *sprop)
     js_LeaveTraceIfGlobalObject(cx, object);
     shape = (!lastProp || shape == lastProp->shape)
             ? sprop->shape
-            : js_GenerateShape(cx, JS_FALSE);
+            : js_GenerateShape(cx, false);
     ++entryCount;
     lastProp = sprop;
+
+    jsuint index;
+    if (js_IdIsIndex(sprop->id, &index))
+        setIndexedProperties();
+
+    if (sprop->isMethod())
+        setMethodBarrier();
+}
+
+/*
+ * Property read barrier for deferred cloning of compiler-created function
+ * objects optimized as typically non-escaping, ad-hoc methods in obj.
+ *
+ * Called only from JSScopeProperty::get when sprop->isMethod(), or JIT-
+ * equivalent code. sprop->isMethod() implies that scope->hasMethodBarrier()
+ * for the scope containing that sprop.
+ */
+inline bool
+JSScope::methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, jsval *vp)
+{
+    JS_ASSERT(hasMethodBarrier());
+    JS_ASSERT(has(sprop));
+    JS_ASSERT(sprop->isMethod());
+    JS_ASSERT(sprop->methodValue() == *vp);
+
+    JS_ASSERT(object->getClass() == &js_ObjectClass);
+
+    JSObject *funobj = JSVAL_TO_OBJECT(*vp);
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+    JS_ASSERT(FUN_OBJECT(fun) == funobj && FUN_NULL_CLOSURE(fun));
+
+    funobj = js_CloneFunctionObject(cx, fun, OBJ_GET_PARENT(cx, funobj));
+    if (!funobj)
+        return false;
+    *vp = OBJECT_TO_JSVAL(funobj);
+    return js_SetPropertyHelper(cx, object, sprop->id, 0, vp);
+}
+
+inline bool
+JSScope::methodWriteBarrier(JSContext *cx, JSScopeProperty *sprop, jsval v)
+{
+    if (branded()) {
+        jsval prev = LOCKED_OBJ_GET_SLOT(object, sprop->slot);
+
+        if (prev != v && VALUE_IS_FUNCTION(cx, prev))
+            return methodShapeChange(cx, sprop, v);
+    }
+    return true;
+}
+
+inline bool
+JSScope::methodWriteBarrier(JSContext *cx, uint32 slot, jsval v)
+{
+    if (branded()) {
+        jsval prev = LOCKED_OBJ_GET_SLOT(object, slot);
+
+        if (prev != v && VALUE_IS_FUNCTION(cx, prev))
+            return methodShapeChange(cx, slot, v);
+    }
+    return true;
 }
 
 inline void
@@ -550,16 +759,23 @@ JSScope::trace(JSTracer *trc)
     }
 }
 
-
-static JS_INLINE bool
-js_GetSprop(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, jsval* vp)
+inline bool
+JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp)
 {
-    JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
+    JS_ASSERT(!SPROP_HAS_STUB_GETTER(this));
 
-    if (sprop->attrs & JSPROP_GETTER) {
-        jsval fval = js_CastAsObjectJSVal(sprop->getter);
-        return js_InternalGetOrSet(cx, obj, sprop->id, fval, JSACC_READ,
-                                   0, 0, vp);
+    if (attrs & JSPROP_GETTER) {
+        JS_ASSERT(!isMethod());
+        jsval fval = getterValue();
+        return js_InternalGetOrSet(cx, obj, id, fval, JSACC_READ, 0, 0, vp);
+    }
+
+    if (isMethod()) {
+        *vp = methodValue();
+
+        JSScope *scope = OBJ_SCOPE(pobj);
+        JS_ASSERT(scope->object == pobj);
+        return scope->methodReadBarrier(cx, this, vp);
     }
 
     /*
@@ -570,30 +786,28 @@ js_GetSprop(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, jsval* vp)
      */
     if (STOBJ_GET_CLASS(obj) == &js_WithClass)
         obj = obj->map->ops->thisObject(cx, obj);
-    return sprop->getter(cx, obj, SPROP_USERID(sprop), vp);
+    return getter(cx, obj, SPROP_USERID(this), vp);
 }
 
-static JS_INLINE bool
-js_SetSprop(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, jsval* vp)
+inline bool
+JSScopeProperty::set(JSContext* cx, JSObject* obj, jsval* vp)
 {
-    JS_ASSERT(!(SPROP_HAS_STUB_SETTER(sprop) &&
-                !(sprop->attrs & JSPROP_GETTER)));
+    JS_ASSERT_IF(SPROP_HAS_STUB_SETTER(this), attrs & JSPROP_GETTER);
 
-    if (sprop->attrs & JSPROP_SETTER) {
-        jsval fval = js_CastAsObjectJSVal(sprop->setter);
-        return js_InternalGetOrSet(cx, obj, (sprop)->id, fval, JSACC_WRITE,
-                                   1, vp, vp);
+    if (attrs & JSPROP_SETTER) {
+        jsval fval = setterValue();
+        return js_InternalGetOrSet(cx, obj, id, fval, JSACC_WRITE, 1, vp, vp);
     }
 
-    if (sprop->attrs & JSPROP_GETTER) {
+    if (attrs & JSPROP_GETTER) {
         js_ReportGetterOnlyAssignment(cx);
-        return JS_FALSE;
+        return false;
     }
 
-    /* See the comment in js_GetSprop as to why we can check for 'with'. */
+    /* See the comment in JSScopeProperty::get as to why we can check for With. */
     if (STOBJ_GET_CLASS(obj) == &js_WithClass)
         obj = obj->map->ops->thisObject(cx, obj);
-    return sprop->setter(cx, obj, SPROP_USERID(sprop), vp);
+    return setter(cx, obj, SPROP_USERID(this), vp);
 }
 
 /* Macro for common expression to test for shared permanent attributes. */

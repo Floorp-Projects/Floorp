@@ -12,11 +12,9 @@ BEGIN_TEST(selfTest_NaNsAreSame)
 }
 END_TEST(selfTest_NaNsAreSame)
 
-BEGIN_TEST(selfTest_negativeZeroIsNotTheSameAsZero)
+BEGIN_TEST(selfTest_globalHasNoParent)
 {
-    jsvalRoot negativeZero(cx);
-    EVAL("-0", negativeZero.addr());
-    CHECK(!sameValue(negativeZero, JSVAL_ZERO));
+    CHECK(JS_GetParent(cx, global) == NULL);
     return true;
 }
-END_TEST(selfTest_negativeZeroIsNotTheSameAsZero)
+END_TEST(selfTest_globalHasNoParent)
