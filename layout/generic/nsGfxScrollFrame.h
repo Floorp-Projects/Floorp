@@ -433,9 +433,6 @@ public:
   virtual void CurPosAttributeChanged(nsIContent* aChild) {
     mInner.CurPosAttributeChanged(aChild);
   }
-  virtual nsIScrollableView* GetScrollableView() {
-    return mInner.GetScrollableView();
-  }
 
   // nsIStatefulFrame
   NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState) {
@@ -670,9 +667,6 @@ public:
   }
   virtual void CurPosAttributeChanged(nsIContent* aChild) {
     mInner.CurPosAttributeChanged(aChild);
-  }
-  virtual nsIScrollableView* GetScrollableView() {
-    return mInner.GetScrollableView();
   }
 
   // nsIStatefulFrame
