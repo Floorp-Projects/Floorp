@@ -432,7 +432,7 @@
 @BINPATH@/res/language.properties
 @BINPATH@/res/entityTables/*
 #ifdef XP_MACOSX
-@BINPATH@/res/maccharset.properties
+@BINPATH@/res/MainMenu.nib/
 #endif
 
 ; svg
