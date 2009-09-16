@@ -2404,6 +2404,8 @@ oom:
 void
 JSTraceMonitor::flush()
 {
+    AUDIT(cacheFlushed);
+
     // recover profiling data from expiring Fragments
     verbose_only(
         for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
@@ -7044,8 +7046,8 @@ js_FinishJIT(JSTraceMonitor *tm)
                           jitstats.noCompatInnerTrees, jitstats.blacklisted);
         debug_only_printf(LC_TMStats,
                           "monitor: triggered(%llu), exits(%llu), type mismatch(%llu), "
-                          "global mismatch(%llu)\n", jitstats.traceTriggered, jitstats.sideExitIntoInterpreter,
-                          jitstats.typeMapMismatchAtEntry, jitstats.globalShapeMismatchAtEntry);
+                          "global mismatch(%llu), flushed(%llu)\n", jitstats.traceTriggered, jitstats.sideExitIntoInterpreter,
+                          jitstats.typeMapMismatchAtEntry, jitstats.globalShapeMismatchAtEntry, jitstats.cacheFlushed);
     }
 #endif
     JS_ASSERT(tm->reservedDoublePool);
