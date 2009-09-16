@@ -252,6 +252,10 @@ Resource.prototype = {
 
         this._log[log](mesg);
       }
+
+      // this is a server-side safety valve to allow slowing down clients without hurting performance
+      if (headers["X-Weave-Backoff"])
+        Observers.notify("weave:service:backoff:interval", parseInt(headers["X-Weave-Backoff"], 10))
     }
     // Got a response but no header; must be cached (use default values)
     catch(ex) {

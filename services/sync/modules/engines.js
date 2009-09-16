@@ -361,9 +361,12 @@ SyncEngine.prototype = {
       meta.generateIV();
       meta.addUnwrappedKey(pubkey, symkey);
       let res = new Resource(meta.uri);
-      let resp = res.put(meta);
-      if (!resp.success)
+      let resp = res.put(meta.serialize());
+      if (!resp.success) {
+        this._log.debug("Metarecord upload fail:" + resp);
+        resp.failureCode = ENGINE_METARECORD_UPLOAD_FAIL;
         throw resp;
+      }
 
       // Cache the cryto meta that we just put on the server
       CryptoMetas.set(meta.uri, meta);
@@ -430,8 +433,10 @@ SyncEngine.prototype = {
     // Only bother getting data from the server if there's new things
     if (this.lastModified > this.lastSync) {
       let resp = newitems.get();
-      if (!resp.success)
+      if (!resp.success) {
+        resp.failureCode = ENGINE_DOWNLOAD_FAIL;
         throw resp;
+      }
     }
 
     // Check if we got the maximum that we requested; get the rest if so
@@ -464,8 +469,11 @@ SyncEngine.prototype = {
 
       // Reuse the existing record handler set earlier
       let resp = newitems.get();
-      if (!resp.success)
+      if (!resp.success) {
+        resp.failureCode = ENGINE_DOWNLOAD_FAIL;
         throw resp;
+      }
+        
     }
 
     if (this.lastSync < this.lastModified)
@@ -591,8 +599,11 @@ SyncEngine.prototype = {
       let doUpload = Utils.bind2(this, function(desc) {
         this._log.info("Uploading " + desc + " of " + outnum + " records");
         let resp = up.post();
-        if (!resp.success)
+        if (!resp.success) {
+          this._log.debug("Uploading records failed: " + resp);
+          resp.failureCode = ENGINE_UPLOAD_FAIL;
           throw resp;
+        }
 
         // Record the modified time of the upload
         let modified = resp.headers["X-Weave-Timestamp"];
