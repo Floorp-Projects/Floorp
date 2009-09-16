@@ -699,21 +699,12 @@ let Utils = {
   },
 
   getErrorString: function Utils_getErrorString(error, args) {
-    switch (error) {
-      case Weave.LOGIN_FAILED_NETWORK_ERROR:
-        errorString = "error.login.reason.network";
-        break;
-      case Weave.LOGIN_FAILED_INVALID_PASSPHRASE:
-        errorString = "error.login.reason.passphrase";
-        break;
-      case Weave.LOGIN_FAILED_LOGIN_REJECTED:
-        errorString = "error.login.reason.password";
-        break;
-      default:
-        errorString = "error.login.reason.unknown";
-        break;
-    }
-    return this._errorBundle.get(errorString, args || null);
+    try {
+      return this._errorBundle.get(error, args || null);
+    } catch (e) {}
+    
+    // basically returns "Unknown Error"
+    return this._errorBundle.get("error.reason.unknown");
   },
 
   // assumes an nsIConverterInputStream
