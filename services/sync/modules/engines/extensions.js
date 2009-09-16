@@ -45,6 +45,7 @@ ExtensionEngine.prototype = {
   __proto__: SyncEngine.prototype,
 
   displayName: "Extensions",
+  description: "",
   logName: "Extensions",
   name: "extensions",
 };

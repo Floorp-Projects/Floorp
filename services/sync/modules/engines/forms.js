@@ -57,6 +57,7 @@ FormEngine.prototype = {
   __proto__: SyncEngine.prototype,
   name: "forms",
   displayName: "Forms",
+  description: "Take advantage of form-fill convenience on all your devices",
   logName: "Forms",
   _storeObj: FormStore,
   _trackerObj: FormTracker,
