@@ -8821,36 +8821,20 @@ TraceRecorder::getThis(LIns*& this_ins)
         set(&thisv, this_ins);
         return JSRS_CONTINUE;
     }
+
     this_ins = get(&thisv);
+
+    JSObject* wrappedGlobal = globalObj->thisObject(cx);
+    if (!wrappedGlobal)
+        ABORT_TRACE_ERROR("globalObj->thisObject hook threw in getThis");
 
     /*
      * The only unwrapped object that needs to be wrapped that we can get here
      * is the global object obtained throught the scope chain.
      */
-    JSObject* obj = js_GetWrappedObject(cx, JSVAL_TO_OBJECT(thisv));
-    JSObject* inner = obj;
-    OBJ_TO_INNER_OBJECT(cx, inner);
-    if (!obj)
-        return JSRS_ERROR;
-
-    JS_ASSERT(original == thisv ||
-              original == OBJECT_TO_JSVAL(inner) ||
-              original == OBJECT_TO_JSVAL(obj));
-
-    /*
-     * If the returned this object is the unwrapped inner or outer object,
-     * then we need to use the wrapped outer object.
-     */
-    LIns* is_inner = lir->ins2(LIR_peq, this_ins, INS_CONSTOBJ(inner));
-    LIns* is_outer = lir->ins2(LIR_peq, this_ins, INS_CONSTOBJ(obj));
-    LIns* wrapper = INS_CONSTOBJ(JSVAL_TO_OBJECT(thisv));
-
-    this_ins = lir->ins_choose(is_inner,
-                               wrapper,
-                               lir->ins_choose(is_outer,
-                                               wrapper,
-                                               this_ins));
-
+    this_ins = lir->ins_choose(lir->ins_peq0(stobj_get_parent(this_ins)),
+                               INS_CONSTOBJ(wrappedGlobal),
+                               this_ins);
     return JSRS_CONTINUE;
 }
 
@@ -9970,7 +9954,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                 if (guardClass(JSVAL_TO_OBJECT(vp[1]), this_ins, &js_WithClass, snapshot(MISMATCH_EXIT)))
                     ABORT_TRACE("can't trace slow native invocation on With object");
 
-                this_ins = lir->ins_choose(lir->ins_peq0(stobj_get_fslot(this_ins, JSSLOT_PARENT)),
+                this_ins = lir->ins_choose(lir->ins_peq0(stobj_get_parent(this_ins)),
                                            INS_CONSTOBJ(globalObj),
                                            this_ins);
             }
