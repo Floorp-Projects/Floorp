@@ -118,7 +118,7 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
   """
 
   if not os.path.exists(leakLogFile):
-    log.info("WARNING refcount logging is off, so leaks can't be detected!")
+    log.info("WARNING | automationutils.processLeakLog() | refcount logging is off, so leaks can't be detected!")
     return
 
   #                  Per-Inst  Leaked      Total  Rem ...
@@ -150,7 +150,7 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
     bytesLeaked = int(matches.group("bytesLeaked"))
     numLeaked = int(matches.group("numLeaked"))
     if size < 0 or bytesLeaked < 0 or numLeaked < 0:
-      log.info("TEST-UNEXPECTED-FAIL | runtests-leaks | negative leaks caught!")
+      log.info("TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | negative leaks caught!")
       if name == "TOTAL":
         seenTotal = True
     elif name == "TOTAL":
@@ -158,13 +158,13 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
       # Check for leaks.
       if bytesLeaked < 0 or bytesLeaked > leakThreshold:
         prefix = "TEST-UNEXPECTED-FAIL"
-        leakLog = "TEST-UNEXPECTED-FAIL | runtests-leaks | leaked" \
+        leakLog = "TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked" \
                   " %d bytes during test execution" % bytesLeaked
       elif bytesLeaked > 0:
-        leakLog = "TEST-PASS | runtests-leaks | WARNING leaked" \
+        leakLog = "TEST-PASS | automationutils.processLeakLog() | WARNING leaked" \
                   " %d bytes during test execution" % bytesLeaked
       else:
-        leakLog = "TEST-PASS | runtests-leaks | no leaks detected!"
+        leakLog = "TEST-PASS | automationutils.processLeakLog() | no leaks detected!"
       # Remind the threshold if it is not 0, which is the default/goal.
       if leakThreshold != 0:
         leakLog += " (threshold set at %d bytes)" % leakThreshold
@@ -178,7 +178,7 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
         else:
           instance = "instance"
           rest = ""
-        log.info("%(prefix)s | runtests-leaks | leaked %(numLeaked)d %(instance)s of %(name)s "
+        log.info("%(prefix)s | automationutils.processLeakLog() | leaked %(numLeaked)d %(instance)s of %(name)s "
                  "with size %(size)s bytes%(rest)s" %
                  { "prefix": prefix,
                    "numLeaked": numLeaked,
@@ -187,5 +187,5 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
                    "size": matches.group("size"),
                    "rest": rest })
   if not seenTotal:
-    log.info("TEST-UNEXPECTED-FAIL | runtests-leaks | missing output line for total leaks!")
+    log.info("TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | missing output line for total leaks!")
   leaks.close()
