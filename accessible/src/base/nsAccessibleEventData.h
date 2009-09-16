@@ -263,7 +263,6 @@ public:
                         PRUint32 aState, PRBool aIsExtraState);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIACCESSIBLEEVENT(nsAccEvent::)
   NS_DECL_NSIACCESSIBLESTATECHANGEEVENT
 
 private:
@@ -280,7 +279,6 @@ public:
                        PRBool aIsInserted, PRBool aIsAsynch = PR_FALSE);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIACCESSIBLEEVENT(nsAccEvent::)
   NS_DECL_NSIACCESSIBLETEXTCHANGEEVENT
 
 private:
@@ -298,7 +296,6 @@ public:
   nsAccCaretMoveEvent(nsIDOMNode *aNode);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIACCESSIBLEEVENT(nsAccEvent::)
   NS_DECL_NSIACCESSIBLECARETMOVEEVENT
 
 private:
@@ -313,7 +310,6 @@ public:
                         PRBool aIsAsynch);
 
   NS_DECL_ISUPPORTS
-  NS_FORWARD_NSIACCESSIBLEEVENT(nsAccEvent::)
   NS_DECL_NSIACCESSIBLETABLECHANGEEVENT
 
 private:

@@ -492,8 +492,8 @@ interface nsIAccessibleEvent : nsISupports
 };
 
 
-[scriptable, uuid(444db51a-05fd-4576-8a64-32dbb2a83884)]
-interface nsIAccessibleStateChangeEvent : nsIAccessibleEvent
+[scriptable, uuid(9addd25d-8fa1-415e-94ec-6038f220d3e4)]
+interface nsIAccessibleStateChangeEvent : nsISupports
 {
   /**
    * Returns the state of accessible (see constants declared
@@ -513,8 +513,8 @@ interface nsIAccessibleStateChangeEvent : nsIAccessibleEvent
 };
 
 
-[scriptable, uuid(50a1e151-8e5f-4bcc-aaaf-a4bed1190e93)]
-interface nsIAccessibleTextChangeEvent : nsIAccessibleEvent
+[scriptable, uuid(21e0f8bd-5638-4964-870b-3c8e944ac4c4)]
+interface nsIAccessibleTextChangeEvent : nsISupports
 {
   /**
    * Returns offset of changed text in accessible.
@@ -537,8 +537,8 @@ interface nsIAccessibleTextChangeEvent : nsIAccessibleEvent
   readonly attribute DOMString modifiedText;
 };
 
-[scriptable, uuid(b9076dce-4cd3-4e3d-a7f6-7f33a7f40c31)]
-interface nsIAccessibleCaretMoveEvent: nsIAccessibleEvent
+[scriptable, uuid(5675c486-a230-4d85-a4bd-33670826d5ff)]
+interface nsIAccessibleCaretMoveEvent: nsISupports
 {
   /**
    * Return caret offset.
@@ -546,8 +546,8 @@ interface nsIAccessibleCaretMoveEvent: nsIAccessibleEvent
   readonly attribute long caretOffset;
 };
 
-[scriptable, uuid(a9485c7b-5861-4695-8441-fab0235b205d)]
-interface nsIAccessibleTableChangeEvent: nsIAccessibleEvent
+[scriptable, uuid(df517997-ed52-4ea2-b310-2f8e0fe64572)]
+interface nsIAccessibleTableChangeEvent: nsISupports
 {
   /**
    * Return the row or column index.
