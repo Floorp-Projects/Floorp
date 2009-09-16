@@ -527,6 +527,9 @@ nsWindow::DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus)
 void
 nsWindow::DispatchActivateEvent(void)
 {
+    NS_ASSERTION(mContainer || mIsDestroyed,
+                 "DispatchActivateEvent only intended for container windows");
+
     if (!mIsTopLevel)
         return;
 
@@ -1406,7 +1409,7 @@ nsWindow::SetFocus(PRBool aRaise)
 
     if (!GTK_WIDGET_HAS_FOCUS(owningWidget)) {
         LOGFOCUS(("  grabbing focus for the toplevel [%p]\n", (void *)this));
-        owningWindow->mContainerBlockFocus = PR_TRUE;
+        owningWindow->mContainerBlockFocus = PR_FALSE;
 
         // Set focus to the window
         if (gRaiseWindows && aRaise && toplevelWidget &&
@@ -1415,10 +1418,7 @@ nsWindow::SetFocus(PRBool aRaise)
           gtk_window_present(GTK_WINDOW(owningWindow->mShell));
 
         gtk_widget_grab_focus(owningWidget);
-        owningWindow->mContainerBlockFocus = PR_FALSE;
 
-        gFocusWindow = this;
-        DispatchActivateEvent();
         return NS_OK;
     }
 
@@ -2741,7 +2741,6 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 
     nsWindow *containerWindow = GetContainerWindow();
     if (!gFocusWindow && containerWindow) {
-        gFocusWindow = this;
         containerWindow->DispatchActivateEvent();
     }
 
@@ -2853,9 +2852,7 @@ void
 nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 {
     LOGFOCUS(("OnContainerFocusInEvent [%p]\n", (void *)this));
-    // Return if someone has blocked events for this widget.  This will
-    // happen if someone has called gtk_widget_grab_focus() from
-    // nsWindow::SetFocus() and will prevent recursion.
+    // Return if someone has blocked events for this widget.
     if (mContainerBlockFocus) {
         LOGFOCUS(("Container focus is blocked [%p]\n", (void *)this));
         return;
