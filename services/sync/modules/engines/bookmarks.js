@@ -89,6 +89,7 @@ BookmarksEngine.prototype = {
   __proto__: SyncEngine.prototype,
   name: "bookmarks",
   displayName: "Bookmarks",
+  description: "Keep your favorite links always at hand",
   logName: "Bookmarks",
   _recordObj: PlacesItem,
   _storeObj: BookmarksStore,

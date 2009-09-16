@@ -146,6 +146,7 @@ function Engine() { this._init(); }
 Engine.prototype = {
   name: "engine",
   displayName: "Boring Engine",
+  description: "An engine example - it doesn't actually sync anything",
   logName: "Engine",
 
   // _storeObj, and _trackerObj should to be overridden in subclasses

@@ -45,6 +45,7 @@ ThemeEngine.prototype = {
   __proto__: SyncEngine.prototype,
 
   displayName: "Themes",
+  description: "",
   logName: "Themes",
   name: "themes",
 };

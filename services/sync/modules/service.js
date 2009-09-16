@@ -647,11 +647,11 @@ WeaveSvc.prototype = {
       if (Svc.IO.offline)
         throw "Application is offline, login should not be called";
 
-      if (username != null)
+      if (username)
         this.username = username;
-      if (password != null)
+      if (password)
         this.password = password;
-      if (passphrase != null)
+      if (passphrase)
         this.passphrase = passphrase;
 
       if (!this.username) {
