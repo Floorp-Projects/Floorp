@@ -8,6 +8,10 @@
  *  * Support the Test.Simple API used by MochiKit, to be able to test MochiKit
  * itself against IE 5.5
  *
+ * NOTE: Pay attention to cross-browser compatibility in this file. For
+ * instance, do not use const or JS > 1.5 features which are not yet
+ * implemented everywhere.
+ *
 **/
 
 if (typeof(SimpleTest) == "undefined") {
@@ -549,7 +553,7 @@ var todo_is = SimpleTest.todo_is;
 var todo_isnot = SimpleTest.todo_isnot;
 var isDeeply = SimpleTest.isDeeply;
 
-const gOldOnError = window.onerror;
+var gOldOnError = window.onerror;
 window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
   var funcIdentifier = "[SimpleTest/SimpleTest.js, window.onerror] ";
 
