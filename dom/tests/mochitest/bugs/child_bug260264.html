@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <script type="application/javascript" src="utils_bug260264.js"></script>
+  </head>
+  <body>
+    <iframe id="frame"></iframe>
+    <script type="application/javascript">
+      document.getElementById("frame").src =
+        alter_file(alter_host(location.href, "localhost:8888"),
+                   "grandchild_bug260264.html");
+    </script>
+  </body>
+</html>
