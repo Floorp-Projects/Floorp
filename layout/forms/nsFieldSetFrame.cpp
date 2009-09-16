@@ -366,7 +366,7 @@ nsFieldSetFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext,
                                            aType);
   }
       
-  return PR_MAX(legendWidth, contentWidth);
+  return NS_MAX(legendWidth, contentWidth);
 }
 
 
@@ -512,15 +512,15 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     // by the amount of content-height the legend is eating up, unless our
     // height is unconstrained (in which case the child's will be too).
     if (aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE) {
-      kidReflowState.SetComputedHeight(PR_MAX(0, aReflowState.ComputedHeight() - mLegendSpace));
+      kidReflowState.SetComputedHeight(NS_MAX(0, aReflowState.ComputedHeight() - mLegendSpace));
     }
 
     kidReflowState.mComputedMinHeight =
-      PR_MAX(0, aReflowState.mComputedMinHeight - mLegendSpace);
+      NS_MAX(0, aReflowState.mComputedMinHeight - mLegendSpace);
 
     if (aReflowState.mComputedMaxHeight != NS_UNCONSTRAINEDSIZE) {
       kidReflowState.mComputedMaxHeight =
-        PR_MAX(0, aReflowState.mComputedMaxHeight - mLegendSpace);
+        NS_MAX(0, aReflowState.mComputedMaxHeight - mLegendSpace);
     }
 
     nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mFlags);

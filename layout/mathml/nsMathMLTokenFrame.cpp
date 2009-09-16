@@ -218,9 +218,9 @@ nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
 
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   aDesiredSize.width = mBoundingMetrics.width;
-  aDesiredSize.ascent = PR_MAX(mBoundingMetrics.ascent, ascent);
+  aDesiredSize.ascent = NS_MAX(mBoundingMetrics.ascent, ascent);
   aDesiredSize.height = aDesiredSize.ascent +
-                        PR_MAX(mBoundingMetrics.descent, descent);
+                        NS_MAX(mBoundingMetrics.descent, descent);
 
   if (aPlaceOrigin) {
     nscoord dy, dx = 0;

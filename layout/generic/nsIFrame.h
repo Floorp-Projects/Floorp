@@ -55,6 +55,7 @@
 #include "nsHTMLReflowMetrics.h"
 #include "gfxMatrix.h"
 #include "nsFrameList.h"
+#include "nsAlgorithm.h"
 
 /**
  * New rules of reflow:
@@ -1050,8 +1051,8 @@ public:
     PRInt32 secondaryOffset;
     // Helpers for places that need the ends of the offsets and expect them in
     // numerical order, as opposed to wanting the primary and secondary offsets
-    PRInt32 StartOffset() { return PR_MIN(offset, secondaryOffset); }
-    PRInt32 EndOffset() { return PR_MAX(offset, secondaryOffset); }
+    PRInt32 StartOffset() { return NS_MIN(offset, secondaryOffset); }
+    PRInt32 EndOffset() { return NS_MAX(offset, secondaryOffset); }
     // This boolean indicates whether the associated content is before or after
     // the offset; the most visible use is to allow the caret to know which line
     // to display on.

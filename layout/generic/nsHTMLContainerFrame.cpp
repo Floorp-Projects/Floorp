@@ -182,7 +182,7 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
                            nsIRenderingContext* aCtx,
                            const nsRect& aDirtyRect)
 {
-  mBlurRadius = PR_MAX(mBlurRadius, 0);
+  mBlurRadius = NS_MAX(mBlurRadius, 0);
 
   nsCOMPtr<nsIFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm));

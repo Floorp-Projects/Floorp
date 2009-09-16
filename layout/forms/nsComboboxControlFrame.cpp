@@ -458,7 +458,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   nscoord forcedWidth = aReflowState.ComputedWidth() +
     aReflowState.mComputedBorderPadding.LeftRight() -
     kidReflowState.mComputedBorderPadding.LeftRight();
-  kidReflowState.SetComputedWidth(PR_MAX(kidReflowState.ComputedWidth(),
+  kidReflowState.SetComputedWidth(NS_MAX(kidReflowState.ComputedWidth(),
                                          forcedWidth));
 
   // ensure we start off hidden
@@ -583,7 +583,7 @@ nsComboboxControlFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext
                                                      scrollbarWidth,
                                                      nscoord_MAX);
   
-    displayWidth = PR_MAX(dropdownContentWidth, displayWidth);
+    displayWidth = NS_MAX(dropdownContentWidth, displayWidth);
   }
 
   // add room for the dropmarker button if there is one

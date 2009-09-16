@@ -3112,7 +3112,7 @@ nsTextPaintStyle::InitCommonColors()
                  defaultWindowBackgroundColor);
 
   mSufficientContrast =
-    PR_MIN(PR_MIN(NS_SUFFICIENT_LUMINOSITY_DIFFERENCE,
+    NS_MIN(NS_MIN(NS_SUFFICIENT_LUMINOSITY_DIFFERENCE,
                   NS_LUMINOSITY_DIFFERENCE(selectionTextColor,
                                            selectionBGColor)),
                   NS_LUMINOSITY_DIFFERENCE(defaultWindowBackgroundColor,
@@ -4154,9 +4154,9 @@ ComputeSelectionUnderlineHeight(nsPresContext* aPresContext,
       // current font size.
       PRInt32 defaultFontSize =
         aPresContext->AppUnitsToDevPixels(nsStyleFont(aPresContext).mFont.size);
-      gfxFloat fontSize = PR_MIN(gfxFloat(defaultFontSize),
+      gfxFloat fontSize = NS_MIN(gfxFloat(defaultFontSize),
                                  aFontMetrics.emHeight);
-      fontSize = PR_MAX(fontSize, 1.0);
+      fontSize = NS_MAX(fontSize, 1.0);
       return NS_ceil(fontSize / 20);
     }
     default:
@@ -4433,7 +4433,7 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
                             gfxContext* aCtx, const nscolor& aForegroundColor)
 {
   gfxPoint shadowOffset(aShadowDetails->mXOffset, aShadowDetails->mYOffset);
-  nscoord blurRadius = PR_MAX(aShadowDetails->mRadius, 0);
+  nscoord blurRadius = NS_MAX(aShadowDetails->mRadius, 0);
 
   gfxTextRun::Metrics shadowMetrics =
     mTextRun->MeasureText(aOffset, aLength, gfxFont::LOOSE_INK_EXTENTS,
@@ -4513,8 +4513,8 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
   SelectionDetails *sdptr = aDetails;
   PRBool anyBackgrounds = PR_FALSE;
   while (sdptr) {
-    PRInt32 start = PR_MAX(0, sdptr->mStart - contentOffset);
-    PRInt32 end = PR_MIN(contentLength, sdptr->mEnd - contentOffset);
+    PRInt32 start = NS_MAX(0, sdptr->mStart - contentOffset);
+    PRInt32 end = NS_MIN(contentLength, sdptr->mEnd - contentOffset);
     SelectionType type = sdptr->mType;
     if (start < end) {
       allTypes |= type;
@@ -4609,8 +4609,8 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
   SelectionDetails *sdptr = aDetails;
   while (sdptr) {
     if (sdptr->mType == aSelectionType) {
-      PRInt32 start = PR_MAX(0, sdptr->mStart - contentOffset);
-      PRInt32 end = PR_MIN(contentLength, sdptr->mEnd - contentOffset);
+      PRInt32 start = NS_MAX(0, sdptr->mStart - contentOffset);
+      PRInt32 end = NS_MIN(contentLength, sdptr->mEnd - contentOffset);
       for (i = start; i < end; ++i) {
         selectedChars[i] = sdptr;
       }
@@ -4984,7 +4984,7 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
     gfxSize size(aPresContext->AppUnitsToGfxUnits(aRect.width),
                  ComputeSelectionUnderlineHeight(aPresContext,
                                                  metrics, sd->mType));
-    relativeSize = PR_MAX(relativeSize, 1.0f);
+    relativeSize = NS_MAX(relativeSize, 1.0f);
     size.height *= relativeSize;
     decorationArea =
       nsCSSRendering::GetTextDecorationRect(aPresContext, size,
@@ -5123,8 +5123,8 @@ nsTextFrame::GetPointFromOffset(PRInt32 inOffset,
   }
   PRInt32 trimmedOffset = properties.GetStart().GetOriginalOffset();
   PRInt32 trimmedEnd = trimmedOffset + properties.GetOriginalLength();
-  inOffset = PR_MAX(inOffset, trimmedOffset);
-  inOffset = PR_MIN(inOffset, trimmedEnd);
+  inOffset = NS_MAX(inOffset, trimmedOffset);
+  inOffset = NS_MIN(inOffset, trimmedEnd);
 
   iter.SetOriginalOffset(inOffset);
 
@@ -5283,7 +5283,7 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
 
   if (!aForward) {
     PRInt32 i;
-    for (i = PR_MIN(trimmed.GetEnd(), startOffset) - 1;
+    for (i = NS_MIN(trimmed.GetEnd(), startOffset) - 1;
          i >= trimmed.mStart; --i) {
       iter.SetOriginalOffset(i);
       if (IsAcceptableCaretPosition(iter, mTextRun, this)) {
@@ -6100,7 +6100,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
             FindFirstLetterRange(frag, mTextRun, offset, iter, &firstLetterLength);
           if (newLineOffset >= 0) {
             // Don't allow a preformatted newline to be part of a first-letter.
-            firstLetterLength = PR_MIN(firstLetterLength, length - 1);
+            firstLetterLength = NS_MIN(firstLetterLength, length - 1);
             if (length == 1) {
               // There is no text to be consumed by the first-letter before the
               // preformatted newline. Note that the first letter is therefore
@@ -6306,13 +6306,13 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   // first-letter frames should use the tight bounding box metrics for ascent/descent
   // for good drop-cap effects
   if (GetStateBits() & TEXT_FIRST_LETTER) {
-    textMetrics.mAscent = PR_MAX(0, -textMetrics.mBoundingBox.Y());
-    textMetrics.mDescent = PR_MAX(0, textMetrics.mBoundingBox.YMost());
+    textMetrics.mAscent = NS_MAX(gfxFloat(0.0), -textMetrics.mBoundingBox.Y());
+    textMetrics.mDescent = NS_MAX(gfxFloat(0.0), textMetrics.mBoundingBox.YMost());
   }
 
   // Setup metrics for caller
   // Disallow negative widths
-  aMetrics.width = NSToCoordCeil(PR_MAX(0, textMetrics.mAdvanceWidth));
+  aMetrics.width = NSToCoordCeil(NS_MAX(gfxFloat(0.0), textMetrics.mAdvanceWidth));
 
   if (transformedCharsFit == 0 && !usedHyphenation) {
     aMetrics.ascent = 0;
@@ -6329,8 +6329,8 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     nsIFontMetrics* fm = provider.GetFontMetrics();
     fm->GetMaxAscent(fontAscent);
     fm->GetMaxDescent(fontDescent);
-    aMetrics.ascent = PR_MAX(NSToCoordCeil(textMetrics.mAscent), fontAscent);
-    nscoord descent = PR_MAX(NSToCoordCeil(textMetrics.mDescent), fontDescent);
+    aMetrics.ascent = NS_MAX(NSToCoordCeil(textMetrics.mAscent), fontAscent);
+    nscoord descent = NS_MAX(NSToCoordCeil(textMetrics.mDescent), fontDescent);
     aMetrics.height = aMetrics.ascent + descent;
   }
 
@@ -6849,8 +6849,8 @@ nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
     // the bidi resolver can be very evil when columns/pages are involved. Don't
     // let it violate our invariants.
     PRInt32 prevOffset = prev->GetContentOffset();
-    aStart = PR_MAX(aStart, prevOffset);
-    aEnd = PR_MAX(aEnd, prevOffset);
+    aStart = NS_MAX(aStart, prevOffset);
+    aEnd = NS_MAX(aEnd, prevOffset);
     prev->ClearTextRun();
   }
 

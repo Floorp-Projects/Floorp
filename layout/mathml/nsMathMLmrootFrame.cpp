@@ -323,16 +323,16 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   // the baseline will be that of the base.
   mBoundingMetrics.ascent = bmBase.ascent + psi + ruleThickness;
   mBoundingMetrics.descent = 
-    PR_MAX(bmBase.descent,
+    NS_MAX(bmBase.descent,
            (bmSqr.ascent + bmSqr.descent - mBoundingMetrics.ascent));
   mBoundingMetrics.width = bmSqr.width + bmBase.width;
   mBoundingMetrics.leftBearing = bmSqr.leftBearing;
   mBoundingMetrics.rightBearing = bmSqr.width + 
-    PR_MAX(bmBase.width, bmBase.rightBearing); // take also care of the rule
+    NS_MAX(bmBase.width, bmBase.rightBearing); // take also care of the rule
 
   aDesiredSize.ascent = mBoundingMetrics.ascent + leading;
   aDesiredSize.height = aDesiredSize.ascent +
-    PR_MAX(baseSize.height - baseSize.ascent,
+    NS_MAX(baseSize.height - baseSize.ascent,
            mBoundingMetrics.descent + ruleThickness);
   aDesiredSize.width = mBoundingMetrics.width;
 
@@ -380,9 +380,9 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 
   mBoundingMetrics.width = dx + bmBase.width;
   mBoundingMetrics.leftBearing = 
-    PR_MIN(dxIndex + bmIndex.leftBearing, dxSqr + bmSqr.leftBearing);
+    NS_MIN(dxIndex + bmIndex.leftBearing, dxSqr + bmSqr.leftBearing);
   mBoundingMetrics.rightBearing = dx +
-    PR_MAX(bmBase.width, bmBase.rightBearing);
+    NS_MAX(bmBase.width, bmBase.rightBearing);
 
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;

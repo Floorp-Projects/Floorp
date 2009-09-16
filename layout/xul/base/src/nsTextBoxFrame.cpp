@@ -571,7 +571,7 @@ void nsTextBoxFrame::PaintOneShadow(gfxContext*      aCtx,
                                     const nsRect&    aDirtyRect) {
   nsPoint shadowOffset(aShadowDetails->mXOffset,
                        aShadowDetails->mYOffset);
-  nscoord blurRadius = PR_MAX(aShadowDetails->mRadius, 0);
+  nscoord blurRadius = NS_MAX(aShadowDetails->mRadius, 0);
 
   nsRect shadowRect(aTextRect);
   shadowRect.MoveBy(shadowOffset);

@@ -125,7 +125,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     // the bottom border and padding. The content area height doesn't
     // include either border or padding edge.
     mBottomEdge = aReflowState.availableHeight - borderPadding.bottom;
-    mContentArea.height = PR_MAX(0, mBottomEdge - borderPadding.top);
+    mContentArea.height = NS_MAX(0, mBottomEdge - borderPadding.top);
   }
   else {
     // When we are not in a paginated situation then we always use
@@ -212,16 +212,16 @@ nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
                  "unexpected aReplacedWidth");
 
     nscoord leftFloatXOffset = aFloatAvailableSpace.x;
-    leftOffset = PR_MAX(leftFloatXOffset, os.mComputedMargin.left) -
+    leftOffset = NS_MAX(leftFloatXOffset, os.mComputedMargin.left) -
                  (aReplacedWidth ? aReplacedWidth->marginLeft
                                  : os.mComputedMargin.left);
-    leftOffset = PR_MAX(leftOffset, 0); // in case of negative margin
+    leftOffset = NS_MAX(leftOffset, 0); // in case of negative margin
     nscoord rightFloatXOffset =
       mContentArea.width - aFloatAvailableSpace.XMost();
-    rightOffset = PR_MAX(rightFloatXOffset, os.mComputedMargin.right) -
+    rightOffset = NS_MAX(rightFloatXOffset, os.mComputedMargin.right) -
                   (aReplacedWidth ? aReplacedWidth->marginRight
                                   : os.mComputedMargin.right);
-    rightOffset = PR_MAX(rightOffset, 0); // in case of negative margin
+    rightOffset = NS_MAX(rightOffset, 0); // in case of negative margin
   }
   aLeftResult = leftOffset;
   aRightResult = rightOffset;
@@ -244,7 +244,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
   aResult.y = mY;
   aResult.height = GetFlag(BRS_UNCONSTRAINEDHEIGHT)
     ? NS_UNCONSTRAINEDSIZE
-    : PR_MAX(0, mReflowState.availableHeight - mY);
+    : NS_MAX(0, mReflowState.availableHeight - mY);
   // mY might be greater than mBottomEdge if the block's top margin pushes
   // it off the page/column. Negative available height can confuse other code
   // and is nonsense in principle.
@@ -920,7 +920,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame*       aFloat,
   // if the float split, then take up all of the vertical height
   if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) &&
       (NS_UNCONSTRAINEDSIZE != mContentArea.height)) {
-    region.height = PR_MAX(region.height, mContentArea.height - floatY);
+    region.height = NS_MAX(region.height, mContentArea.height - floatY);
   }
   nsresult rv =
   // spacemanager translation is inset by the border+padding.
@@ -1046,10 +1046,10 @@ nsBlockReflowState::ClearFloats(nscoord aY, PRUint8 aBreakType,
         nsBlockFrame::WidthToClearPastFloats(*this, floatAvailableSpace.mRect,
                                              aReplacedBlock);
       if (!floatAvailableSpace.mHasFloats ||
-          PR_MAX(floatAvailableSpace.mRect.x, replacedWidth.marginLeft) +
+          NS_MAX(floatAvailableSpace.mRect.x, replacedWidth.marginLeft) +
             replacedWidth.borderBoxWidth +
-            PR_MAX(mContentArea.width -
-                     PR_MIN(mContentArea.width,
+            NS_MAX(mContentArea.width -
+                     NS_MIN(mContentArea.width,
                             floatAvailableSpace.mRect.XMost()),
                    replacedWidth.marginRight) <=
           mContentArea.width) {

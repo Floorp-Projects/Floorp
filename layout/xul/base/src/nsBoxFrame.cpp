@@ -636,7 +636,7 @@ nsBoxFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   GetBorderAndPadding(bp);
 
   result = minSize.width - bp.LeftRight();
-  result = PR_MAX(result, 0);
+  result = NS_MAX(result, 0);
 
   return result;
 }
@@ -658,7 +658,7 @@ nsBoxFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   GetBorderAndPadding(bp);
 
   result = prefSize.width - bp.LeftRight();
-  result = PR_MAX(result, 0);
+  result = NS_MAX(result, 0);
 
   return result;
 }

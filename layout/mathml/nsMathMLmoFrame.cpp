@@ -674,13 +674,13 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
 
       if (isVertical && NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags)) {
         // we need to center about the axis
-        nscoord delta = PR_MAX(container.ascent - axisHeight,
+        nscoord delta = NS_MAX(container.ascent - axisHeight,
                                container.descent + axisHeight);
         container.ascent = delta + axisHeight;
         container.descent = delta - axisHeight;
 
         // get ready in case we encounter user-desired min-max size
-        delta = PR_MAX(initialSize.ascent - axisHeight,
+        delta = NS_MAX(initialSize.ascent - axisHeight,
                        initialSize.descent + axisHeight);
         initialSize.ascent = delta + axisHeight;
         initialSize.descent = delta - axisHeight;
@@ -696,21 +696,21 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
           // try to maintain the aspect ratio of the char
           float aspect = mMaxSize / float(initialSize.ascent + initialSize.descent);
           container.ascent =
-            PR_MIN(container.ascent, nscoord(initialSize.ascent * aspect));
+            NS_MIN(container.ascent, nscoord(initialSize.ascent * aspect));
           container.descent =
-            PR_MIN(container.descent, nscoord(initialSize.descent * aspect));
+            NS_MIN(container.descent, nscoord(initialSize.descent * aspect));
           // below we use a type cast instead of a conversion to avoid a VC++ bug
           // see http://support.microsoft.com/support/kb/articles/Q115/7/05.ASP
           container.width =
-            PR_MIN(container.width, (nscoord)mMaxSize);
+            NS_MIN(container.width, (nscoord)mMaxSize);
         }
         else { // multiplicative value
           container.ascent =
-            PR_MIN(container.ascent, nscoord(initialSize.ascent * mMaxSize));
+            NS_MIN(container.ascent, nscoord(initialSize.ascent * mMaxSize));
           container.descent =
-            PR_MIN(container.descent, nscoord(initialSize.descent * mMaxSize));
+            NS_MIN(container.descent, nscoord(initialSize.descent * mMaxSize));
           container.width =
-            PR_MIN(container.width, nscoord(initialSize.width * mMaxSize));
+            NS_MIN(container.width, nscoord(initialSize.width * mMaxSize));
         }
 
         if (isVertical && !NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags)) {
@@ -737,19 +737,19 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
           // try to maintain the aspect ratio of the char
           float aspect = mMinSize / float(initialSize.ascent + initialSize.descent);
           container.ascent =
-            PR_MAX(container.ascent, nscoord(initialSize.ascent * aspect));
+            NS_MAX(container.ascent, nscoord(initialSize.ascent * aspect));
           container.descent =
-            PR_MAX(container.descent, nscoord(initialSize.descent * aspect));
+            NS_MAX(container.descent, nscoord(initialSize.descent * aspect));
           container.width =
-            PR_MAX(container.width, (nscoord)mMinSize);
+            NS_MAX(container.width, (nscoord)mMinSize);
         }
         else { // multiplicative value
           container.ascent =
-            PR_MAX(container.ascent, nscoord(initialSize.ascent * mMinSize));
+            NS_MAX(container.ascent, nscoord(initialSize.ascent * mMinSize));
           container.descent =
-            PR_MAX(container.descent, nscoord(initialSize.descent * mMinSize));
+            NS_MAX(container.descent, nscoord(initialSize.descent * mMinSize));
           container.width =
-            PR_MAX(container.width, nscoord(initialSize.width * mMinSize));
+            NS_MAX(container.width, nscoord(initialSize.width * mMinSize));
         }
 
         if (isVertical && !NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags)) {
@@ -849,9 +849,9 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
     nscoord ascent, descent;
     fm->GetMaxAscent(ascent);
     fm->GetMaxDescent(descent);
-    aDesiredStretchSize.ascent = PR_MAX(mBoundingMetrics.ascent + leading, ascent);
+    aDesiredStretchSize.ascent = NS_MAX(mBoundingMetrics.ascent + leading, ascent);
     aDesiredStretchSize.height = aDesiredStretchSize.ascent +
-                                 PR_MAX(mBoundingMetrics.descent + leading, descent);
+                                 NS_MAX(mBoundingMetrics.descent + leading, descent);
   }
   aDesiredStretchSize.width = mBoundingMetrics.width;
   aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics;
