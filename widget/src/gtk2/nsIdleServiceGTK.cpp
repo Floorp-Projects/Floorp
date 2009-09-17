@@ -65,19 +65,8 @@ static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nsnull;
 
 NS_IMPL_ISUPPORTS1(nsIdleServiceGTK, nsIIdleService)
 
-nsIdleServiceGTK::nsIdleServiceGTK()
-    : mXssInfo(nsnull)
-{
-#ifdef PR_LOGGING
-    if (!sIdleLog)
-        sIdleLog = PR_NewLogModule("nsIIdleService");
-#endif
-}
-
 static void Initialize()
 {
-    sInitialized = PR_TRUE;
-
     // This will leak - See comments in ~nsIdleServiceGTK().
     PRLibrary* xsslib = PR_LoadLibrary("libXss.so.1");
     if (!xsslib) // ouch.
@@ -102,6 +91,19 @@ static void Initialize()
     if (!_XSSQueryInfo)
         PR_LOG(sIdleLog, PR_LOG_WARNING, ("Failed to get XSSQueryInfo!\n"));
 #endif
+
+    sInitialized = PR_TRUE;
+}
+
+nsIdleServiceGTK::nsIdleServiceGTK()
+    : mXssInfo(nsnull)
+{
+#ifdef PR_LOGGING
+    if (!sIdleLog)
+        sIdleLog = PR_NewLogModule("nsIIdleService");
+#endif
+
+    Initialize();
 }
 
 nsIdleServiceGTK::~nsIdleServiceGTK()
@@ -123,6 +125,23 @@ nsIdleServiceGTK::~nsIdleServiceGTK()
 NS_IMETHODIMP
 nsIdleServiceGTK::GetIdleTime(PRUint32 *aTimeDiff)
 {
+    if (!sInitialized) {
+        // For some reason, we could not find xscreensaver.  This this might be because
+        // we are on a mobile platforms (e.g. Maemo/OSSO).  In this case, fall back to
+        // using gLastInputEventTime which is 
+
+        // The last user input event time in microseconds. If there are any pending
+        // native toolkit input events it returns the current time. The value is
+        // compatible with PR_IntervalToMicroseconds(PR_IntervalNow()).
+        // DEFINED IN widget/src/gtk2/nsWindow.cpp
+        extern PRUint32 gLastInputEventTime;
+
+        PRUint32 nowTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+        *aTimeDiff = (nowTime - gLastInputEventTime) / 1000;
+        return NS_OK;
+    }
+
+
     // Ask xscreensaver about idle time:
     *aTimeDiff = 0;
 
@@ -135,9 +154,6 @@ nsIdleServiceGTK::GetIdleTime(PRUint32 *aTimeDiff)
         return NS_ERROR_FAILURE;
     }
 
-    if (!sInitialized) {
-        Initialize();
-    }
     if (!_XSSQueryExtension || !_XSSAllocInfo || !_XSSQueryInfo) {
         return NS_ERROR_FAILURE;
     }
