@@ -16,7 +16,7 @@
 # The Initial Developer of the Original Code is
 #      Dave Townsend <dtownsend@oxymoronical.com>.
 #
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,48 +35,19 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../../../..
+DEPTH = ../../../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
-ADDONSRC = $(srcdir)/addons
-TESTROOT = $(CURDIR)/$(DEPTH)/_tests/xpcshell/$(MODULE)
-TESTXPI = $(TESTROOT)/unit/addons
 relativesrcdir  = toolkit/mozapps/extensions/test
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = test_extensionmanager
-
-DIRS = \
-  browser \
-  $(NULL)
-
-XPCSHELL_TESTS = \
-  unit \
-  $(NULL)
-
-_CHROME_FILES = \
-  test_bug435743_1.xul \
-  test_bug435743_2.xul \
-  bug435743.rdf \
-  bug435743.xpi \
-  bug435743.sjs \
+_TEST_FILES = \
+  browser_bug510909.js
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-# disabled due to potentially breaking other tests
-# libs:: $(_CHROME_FILES)
-# 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
-
-libs::
-	rm -rf $(TESTXPI)
-	$(NSINSTALL) -D $(TESTXPI)
-	if [ -d $(ADDONSRC) ]; then \
-		$(EXIT_ON_ERROR) \
-		for dir in $(ADDONSRC)/*; do \
-			base=`basename $$dir` ; \
-			(cd $$dir && zip $(TESTXPI)/$$base.xpi *) \
-		done \
-	fi
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

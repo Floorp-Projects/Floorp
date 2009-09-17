@@ -52,8 +52,6 @@ var gView             = null;
 var gExtensionManager = null;
 var gExtensionsView   = null;
 var gExtensionStrings = null;
-var gCurrentTheme     = "classic/1.0";
-var gDefaultTheme     = "classic/1.0";
 var gDownloadManager  = null;
 var gObserverIndex    = -1;
 var gInSafeMode       = false;
@@ -68,6 +66,7 @@ var gPendingActions   = false;
 var gPlugins          = null;
 var gPluginsDS        = null;
 var gSearchDS         = null;
+var gLWThemeDS        = null;
 var gAddonRepository  = null;
 var gShowGetAddonsPane = false;
 var gRetrievedResults = false;
@@ -75,6 +74,20 @@ var gRecommendedAddons = null;
 var gRDF              = null;
 var gPendingInstalls  = {};
 var gNewAddons        = [];
+
+// The default heavyweight theme for the app.
+var gDefaultTheme     = null;
+// The heavyweight theme currently in use.
+var gCurrentTheme     = null;
+// The heavyweight theme to switch to after the application is restarted.
+// This will be equal to gCurrentTheme if no theme change is pending.
+var gThemeToSelect    = null;
+
+// The lightweight theme to switch to after the application is restarted.
+// This will be equal to LightweightThemeManager.currentTheme if no lightweight
+// theme change is pending or null if lightweight theme should be turned off
+// after the restart.
+var gLWThemeToSelect  = null;
 
 const PREF_EM_CHECK_COMPATIBILITY           = "extensions.checkCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY         = "extensions.checkUpdateSecurity";
@@ -85,6 +98,7 @@ const PREF_EXTENSIONS_DSS_ENABLED           = "extensions.dss.enabled";
 const PREF_EXTENSIONS_DSS_SWITCHPENDING     = "extensions.dss.switchPending";
 const PREF_EXTENSIONS_HIDE_INSTALL_BTN      = "extensions.hideInstallButton";
 const PREF_DSS_SKIN_TO_SELECT               = "extensions.lastSelectedSkin";
+const PREF_LWTHEME_TO_SELECT                = "extensions.lwThemeToSelect";
 const PREF_GENERAL_SKINS_SELECTEDSKIN       = "general.skins.selectedSkin";
 const PREF_UPDATE_NOTIFYUSER                = "extensions.update.notifyUser";
 const PREF_GETADDONS_SHOWPANE               = "extensions.getAddons.showPane";
@@ -104,6 +118,7 @@ const URI_NOTIFICATION_ICON_WARNING   = "chrome://global/skin/icons/warning-16.p
 
 const RDFURI_ITEM_ROOT    = "urn:mozilla:item:root";
 const PREFIX_ITEM_URI     = "urn:mozilla:item:";
+const PREFIX_LWTHEME_URI  = "urn:mozilla:lwtheme:";
 const PREFIX_NS_EM        = "http://www.mozilla.org/2004/em-rdf#";
 const kXULNSURI           = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml"
@@ -117,6 +132,7 @@ const OP_NEEDS_DISABLE                = "needs-disable";
 
 Components.utils.import("resource://gre/modules/PluralForm.jsm");
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
@@ -141,6 +157,12 @@ function getItemForInternalName(aInternalName) {
   if (id && id instanceof Components.interfaces.nsIRDFResource)
     return document.getElementById(id.ValueUTF8);
   return null;
+}
+
+function getActivedThemeItem() {
+  if (gLWThemeToSelect)
+    return document.getElementById(PREFIX_LWTHEME_URI + gLWThemeToSelect.id);
+  return getItemForInternalName(gThemeToSelect);
 }
 
 function isSafeURI(aURI) {
@@ -308,6 +330,7 @@ function showView(aView) {
                         ["iconURL", "?iconURL"],
                         ["internalName", "?internalName"],
                         ["locked", "?locked"],
+                        ["lwtheme", "?lwtheme"],
                         ["name", "?name"],
                         ["optionsURL", "?optionsURL"],
                         ["opType", "?opType"],
@@ -483,7 +506,7 @@ function showView(aView) {
   if (aView == "updates" || aView == "installs")
     gExtensionsView.selectedItem = gExtensionsView.children[0];
   else if (isThemes)
-    gExtensionsView.selectedItem = getItemForInternalName(gCurrentTheme);
+    gExtensionsView.selectedItem = getActivedThemeItem();
 
   if (showSkip) {
     var button = document.getElementById("installUpdatesAllButton");
@@ -528,10 +551,6 @@ function updateLastSelected(aView) {
   // extensions, themes, locales, plug-ins, etc. view.
   if (viewButton.hasAttribute("persist"))
     viewGroup.setAttribute("last-selected", aView);
-}
-
-function LOG(msg) {
-  dump("*** " + msg + "\n");
 }
 
 function getIDFromResourceURI(aURI)
@@ -868,6 +887,100 @@ function initSearchDS() {
     retrieveRepositoryAddons(document.getElementById("searchfield").value);
 }
 
+function initLWThemeDS() {
+  gLWThemeDS = Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
+                         .createInstance(Components.interfaces.nsIRDFDataSource);
+  rebuildLWThemeDS();
+}
+
+function rebuildLWThemeDS() {
+  var rdfCU = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                        .getService(Components.interfaces.nsIRDFContainerUtils);
+  var rootctr = rdfCU.MakeSeq(gLWThemeDS, gRDF.GetResource(RDFURI_ITEM_ROOT));
+  var themes = LightweightThemeManager.usedThemes;
+
+  // Running in a batch stops the template builder from running
+  gLWThemeDS.beginUpdateBatch();
+
+  cleanDataSource(gLWThemeDS, rootctr);
+
+  for (var i = 0; i < themes.length; i++) {
+    var theme = themes[i];
+
+    var themeNode = gRDF.GetResource(PREFIX_LWTHEME_URI + theme.id);
+    rootctr.AppendElement(themeNode);
+    gLWThemeDS.Assert(themeNode,
+                      gRDF.GetResource(PREFIX_NS_EM + "name"),
+                      gRDF.GetLiteral(theme.name),
+                      true);
+    gLWThemeDS.Assert(themeNode,
+                      gRDF.GetResource(PREFIX_NS_EM + "addonID"),
+                      gRDF.GetLiteral(theme.id),
+                      true);
+    gLWThemeDS.Assert(themeNode,
+                      gRDF.GetResource(PREFIX_NS_EM + "isDisabled"),
+                      gRDF.GetLiteral("false"),
+                      true);
+    gLWThemeDS.Assert(themeNode,
+                      gRDF.GetResource(PREFIX_NS_EM + "blocklisted"),
+                      gRDF.GetLiteral("false"),
+                      true);
+    gLWThemeDS.Assert(themeNode,
+                      gRDF.GetResource(PREFIX_NS_EM + "blocklistedsoft"),
+                      gRDF.GetLiteral("false"),
+                      true);
+    gLWThemeDS.Assert(themeNode,
+                      gRDF.GetResource(PREFIX_NS_EM + "compatible"),
+                      gRDF.GetLiteral("true"),
+                      true);
+    gLWThemeDS.Assert(themeNode,
+                      gRDF.GetResource(PREFIX_NS_EM + "lwtheme"),
+                      gRDF.GetLiteral("true"),
+                      true);
+    gLWThemeDS.Assert(themeNode,
+                      gRDF.GetResource(PREFIX_NS_EM + "type"),
+                      gRDF.GetIntLiteral(nsIUpdateItem.TYPE_THEME),
+                      true);
+    if (theme.author) {
+      gLWThemeDS.Assert(themeNode,
+                        gRDF.GetResource(PREFIX_NS_EM + "description"),
+                        gRDF.GetLiteral(getExtensionString("lightweightThemeDescription",
+                                                           [theme.author])),
+                        true);
+      gLWThemeDS.Assert(themeNode,
+                        gRDF.GetResource(PREFIX_NS_EM + "creator"),
+                        gRDF.GetLiteral(theme.author),
+                        true);
+    }
+    if (theme.description) {
+      gLWThemeDS.Assert(themeNode,
+                        gRDF.GetResource(PREFIX_NS_EM + "lwdescription"),
+                        gRDF.GetLiteral(theme.description),
+                        true);
+    }
+    if (theme.homepageURL) {
+      gLWThemeDS.Assert(themeNode,
+                        gRDF.GetResource(PREFIX_NS_EM + "homepageURL"),
+                        gRDF.GetLiteral(theme.homepageURL),
+                        true);
+    }
+    if (theme.previewURL) {
+      gLWThemeDS.Assert(themeNode,
+                        gRDF.GetResource(PREFIX_NS_EM + "previewImage"),
+                        gRDF.GetLiteral(theme.previewURL),
+                        true);
+    }
+    if (theme.iconURL) {
+      gLWThemeDS.Assert(themeNode,
+                        gRDF.GetResource(PREFIX_NS_EM + "iconURL"),
+                        gRDF.GetLiteral(theme.iconURL),
+                        true);
+    }
+  }
+
+  gLWThemeDS.endUpdateBatch();
+}
+
 function initPluginsDS()
 {
   gPluginsDS = Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
@@ -998,12 +1111,23 @@ function Startup()
   var defaultPref = gPref.QueryInterface(Components.interfaces.nsIPrefService)
                          .getDefaultBranch(null);
   try {
-    gCurrentTheme = gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+    gThemeToSelect = gCurrentTheme = gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
     gDefaultTheme = defaultPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
     if (gPref.getBoolPref(PREF_EXTENSIONS_DSS_SWITCHPENDING))
-      gCurrentTheme = gPref.getCharPref(PREF_DSS_SKIN_TO_SELECT);
+      gThemeToSelect = gPref.getCharPref(PREF_DSS_SKIN_TO_SELECT);
   }
   catch (e) { }
+
+  if (gPref.prefHasUserValue(PREF_LWTHEME_TO_SELECT)) {
+    var id = gPref.getCharPref(PREF_LWTHEME_TO_SELECT);
+    if (id)
+      gLWThemeToSelect = LightweightThemeManager.getUsedTheme(id);
+    else
+      gLWThemeToSelect = null;
+  }
+  else {
+    gLWThemeToSelect = LightweightThemeManager.currentTheme;
+  }
 
   gExtensionsView = document.getElementById("extensionsView");
   gExtensionManager = Components.classes["@mozilla.org/extensions/manager;1"]
@@ -1038,6 +1162,8 @@ function Startup()
 
   initPluginsDS();
   gExtensionsView.database.AddDataSource(gPluginsDS);
+  initLWThemeDS();
+  gExtensionsView.database.AddDataSource(gLWThemeDS);
   if (gShowGetAddonsPane)
     initSearchDS();
   gExtensionsView.database.AddDataSource(gExtensionManager.datasource);
@@ -1058,6 +1184,8 @@ function Startup()
   os.addObserver(gDownloadManager, "xpinstall-download-started", false);
   os.addObserver(gAddonsMsgObserver, "addons-message-notification", false);
   os.addObserver(gPluginObserver, "plugins-list-updated", false);
+  os.addObserver(gLWThemeObserver, "lightweight-theme-list-changed", false);
+  os.addObserver(gLWThemeObserver, "lightweight-theme-changed", false);
 
   gObserverIndex = gExtensionManager.addInstallListener(gDownloadManager);
 
@@ -1236,6 +1364,8 @@ function Shutdown()
   os.removeObserver(gAddonsMsgObserver, "addons-message-notification");
   os.removeObserver(gDownloadManager, "xpinstall-download-started");
   os.removeObserver(gPluginObserver, "plugins-list-updated");
+  os.removeObserver(gLWThemeObserver, "lightweight-theme-list-changed");
+  os.removeObserver(gLWThemeObserver, "lightweight-theme-changed");
   var currentNotification = document.getElementById("addonsMsg").currentNotification;
   if (currentNotification && currentNotification.value == "addons-no-updates")
     window.removeEventListener("select", noUpdatesDismiss, true);
@@ -1257,7 +1387,7 @@ var TemplateBuilderListener = {
 
     if (gView == "themes") {
       if (gPref.getBoolPref(PREF_EXTENSIONS_DSS_SWITCHPENDING)) {
-        var item = getItemForInternalName(gCurrentTheme);
+        var item = getActivedThemeItem();
         if (item)
           setRestartMessage(item);
       }
@@ -1634,6 +1764,13 @@ function onAddonSelect(aEvent)
       }
     }
   }
+}
+
+function onPreviewImageError(aEvent) {
+  var previewImageDeck = document.getElementById("previewImageDeck");
+  var previewImage = document.getElementById("previewImage");
+  previewImageDeck.selectedIndex = 1;
+  previewImage.removeAttribute("src");
 }
 
 /**
@@ -2037,14 +2174,14 @@ const gPrefObserver = {
   {
     if (aData == PREF_GENERAL_SKINS_SELECTEDSKIN) {
       // Changed as the result of a dynamic theme switch
-      gCurrentTheme = gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+      gThemeToSelect = gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
     }
     else if (aData == PREF_DSS_SKIN_TO_SELECT) {
       // Either a new skin has been selected or the switch has been cancelled
       if (gPref.getBoolPref(PREF_EXTENSIONS_DSS_SWITCHPENDING))
-        gCurrentTheme = gPref.getCharPref(PREF_DSS_SKIN_TO_SELECT);
+        gThemeToSelect = gPref.getCharPref(PREF_DSS_SKIN_TO_SELECT);
       else
-        gCurrentTheme = gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+        gThemeToSelect = gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
       updateOptionalViews();
       updateGlobalCommands();
     }
@@ -2055,6 +2192,18 @@ const gPluginObserver = {
   observe: function (aSubject, aTopic, aData)
   {
     rebuildPluginsDS();
+  }
+};
+
+const gLWThemeObserver = {
+  observe: function (aSubject, aTopic, aData) {
+    if (aTopic == "lightweight-theme-list-changed") {
+      rebuildLWThemeDS();
+    }
+    else if (aTopic == "lightweight-theme-changed") {
+      gLWThemeToSelect = LightweightThemeManager.currentTheme;
+      gPref.clearUserPref(PREF_LWTHEME_TO_SELECT);
+    }
   }
 };
 
@@ -2444,10 +2593,14 @@ var gExtensionsViewController = {
       return selectedItem.getAttribute("action") == "" ||
              selectedItem.getAttribute("action") == "failed";
     case "cmd_useTheme":
+      if (selectedItem.hasAttribute("lwtheme"))
+        return !gLWThemeToSelect ||
+               selectedItem.getAttribute("addonID") != gLWThemeToSelect.id;
       return selectedItem.type == nsIUpdateItem.TYPE_THEME &&
              !selectedItem.isDisabled &&
              selectedItem.opType != OP_NEEDS_UNINSTALL &&
-             gCurrentTheme != selectedItem.getAttribute("internalName");
+             (gLWThemeToSelect ||
+              gThemeToSelect != selectedItem.getAttribute("internalName"));
     case "cmd_options":
       return selectedItem.type == nsIUpdateItem.TYPE_EXTENSION &&
              !selectedItem.isDisabled &&
@@ -2460,6 +2613,8 @@ var gExtensionsViewController = {
     case "cmd_homepage":
       return selectedItem.getAttribute("homepageURL") != "";
     case "cmd_uninstall":
+      if (selectedItem.hasAttribute("lwtheme"))
+        return true;
       return (selectedItem.type != nsIUpdateItem.TYPE_THEME ||
              selectedItem.type == nsIUpdateItem.TYPE_THEME &&
              selectedItem.getAttribute("internalName") != gDefaultTheme) &&
@@ -2574,27 +2729,44 @@ var gExtensionsViewController = {
 
     cmd_useTheme: function (aSelectedItem)
     {
-      gCurrentTheme = aSelectedItem.getAttribute("internalName");
+      if (aSelectedItem.hasAttribute("lwtheme")) {
+        let newTheme = LightweightThemeManager.getUsedTheme(aSelectedItem.getAttribute("addonID"));
+        LightweightThemeManager.currentTheme = gLWThemeToSelect = newTheme;
 
-      // If choosing the current skin just reset the pending change
-      if (gCurrentTheme == gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN)) {
-        gPref.clearUserPref(PREF_EXTENSIONS_DSS_SWITCHPENDING);
-        gPref.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
-        clearRestartMessage();
-      }
-      else {
-        if (gPref.getBoolPref(PREF_EXTENSIONS_DSS_ENABLED)) {
-          gPref.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, gCurrentTheme);
-        }
-        else {
-          // Theme change will happen on next startup, this flag tells
-          // the Theme Manager that it needs to show "This theme will
-          // be selected after a restart" text in the selected theme
-          // item.
-          gPref.setBoolPref(PREF_EXTENSIONS_DSS_SWITCHPENDING, true);
-          gPref.setCharPref(PREF_DSS_SKIN_TO_SELECT, gCurrentTheme);
+        if (gPref.prefHasUserValue(PREF_LWTHEME_TO_SELECT)) {
           clearRestartMessage();
           setRestartMessage(aSelectedItem);
+        }
+      }
+      else {
+        gThemeToSelect = aSelectedItem.getAttribute("internalName");
+
+        // If choosing the current skin just reset the pending change
+        if (gThemeToSelect == gCurrentTheme) {
+          gPref.clearUserPref(PREF_EXTENSIONS_DSS_SWITCHPENDING);
+          gPref.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
+          gLWThemeToSelect = LightweightThemeManager.currentTheme = null;
+          clearRestartMessage();
+        }
+        else {
+          if (gPref.getBoolPref(PREF_EXTENSIONS_DSS_ENABLED)) {
+            gPref.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, gThemeToSelect);
+            gLWThemeToSelect = LightweightThemeManager.currentTheme = null;
+          }
+          else {
+            // Theme change will happen on next startup, this flag tells
+            // the Theme Manager that it needs to show "This theme will
+            // be selected after a restart" text in the selected theme
+            // item.
+            gPref.setBoolPref(PREF_EXTENSIONS_DSS_SWITCHPENDING, true);
+            gPref.setCharPref(PREF_DSS_SKIN_TO_SELECT, gThemeToSelect);
+            if (gLWThemeToSelect) {
+              gLWThemeToSelect = null;
+              gPref.setCharPref(PREF_LWTHEME_TO_SELECT, "");
+            }
+            clearRestartMessage();
+            setRestartMessage(aSelectedItem);
+          }
         }
       }
 
@@ -2698,18 +2870,31 @@ var gExtensionsViewController = {
     {
       // Confirm the uninstall
       var name = aSelectedItem.getAttribute("name");
-      var id = getIDFromResourceURI(aSelectedItem.id);
-      var dependentItems = gExtensionManager.getDependentItemListForID(id, true, { });
+      var dependentItems = [];
+      if (!aSelectedItem.hasAttribute("lwtheme")) {
+        var id = getIDFromResourceURI(aSelectedItem.id);
+        dependentItems = gExtensionManager.getDependentItemListForID(id, true, { });
+      }
       var result = confirmOperation(name, "uninstallTitle", "uninstallQueryMessage",
                                     "uninstallButton", "cancelButton",
                                     "uninstallWarnDependMsg", dependentItems);
       if (!result)
         return;
 
+      if (aSelectedItem.hasAttribute("lwtheme")) {
+        let lwid = aSelectedItem.getAttribute("addonID");
+        LightweightThemeManager.forgetUsedTheme(lwid);
+        if (gLWThemeToSelect && lwid == gLWThemeToSelect.id) {
+          gLWThemeToSelect = LightweightThemeManager.currentTheme;
+          gPref.clearUserPref(PREF_LWTHEME_TO_SELECT);
+        }
+        return;
+      }
+
       if (aSelectedItem.type == nsIUpdateItem.TYPE_THEME) {
         var theme = aSelectedItem.getAttribute("internalName");
         var selectedTheme = gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
-        if (theme == gCurrentTheme) {
+        if (theme == gThemeToSelect) {
           if (gPref.getBoolPref(PREF_EXTENSIONS_DSS_SWITCHPENDING)) {
             var item = getItemForInternalName(selectedTheme);
             if (item && item.getAttribute("opType") == OP_NEEDS_UNINSTALL) {
