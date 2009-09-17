@@ -357,7 +357,7 @@ namespace nanojit
         case LIR_rsh:       xop = X64_sari;     break;
         case LIR_lsh:       xop = X64_shli;     break;
         }
-        int shift = ins->oprnd2()->imm32() & 255;
+        int shift = ins->oprnd2()->imm32() & 63;
         emit8(rexrb(xop | uint64_t(rr&7)<<48, (Register)0, rr), shift);
         if (rr != ra)
             MR(rr, ra);
