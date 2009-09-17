@@ -94,7 +94,7 @@ SyncChannel::OnDispatchMessage(const Message& msg)
     NS_ABORT_IF_FALSE(msg.is_sync(), "only sync messages here");
     NS_ABORT_IF_FALSE(!msg.is_reply(), "wasn't awaiting reply");
 
-    Message* reply;
+    Message* reply = 0;
 
     mProcessingSyncMessage = true;
     Result rv =
