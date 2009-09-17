@@ -99,6 +99,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsITimer.h"
 #include "nsIServiceManager.h"
 #include "nsFrameManager.h"
+#include "nsIScrollableFrame.h"
 // notifications
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
@@ -470,9 +471,22 @@ public:
 
       mFrameSelection->HandleDrag(frame, mPoint);
 
+      if (!frame.IsAlive())
+        return NS_OK;
+
+      nsIFrame* checkFrame = frame;
+      nsIScrollableFrame *scrollFrame = nsnull;
+      while (checkFrame) {
+        scrollFrame = do_QueryFrame(checkFrame);
+        if (scrollFrame) {
+          break;
+        }
+        checkFrame = checkFrame->GetParent();
+      }
+      nsIView* capturingView = scrollFrame ? scrollFrame->GetScrollableView()->View() : nsnull;
+
       nsPoint pnt;
-      mSelection->DoAutoScrollView(mPresContext,
-                                   frame.IsAlive() ? frame->GetClosestView(&pnt) : nsnull,
+      mSelection->DoAutoScrollView(mPresContext, capturingView,
                                    mPoint, PR_TRUE);
     }
     return NS_OK;
