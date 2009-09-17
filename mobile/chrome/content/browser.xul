@@ -426,17 +426,7 @@
                        label="&bookmarksManage.label;" oncommand="BookmarkList.toggleManage();"/>
         <toolbarbutton id="tool-bookmarks-close" class="urlbar-button button-image" command="cmd_close"/>
       </hbox>
-      <placelist id="bookmark-items" type="bookmarks" flex="1"
-                 onmove="FolderPicker.show(this);"
-                 onopen="BookmarkList.openBookmark();"/>
-    </vbox>
-
-    <vbox id="folder-container" class="panel-dark" hidden="true" top="0" left="0">
-      <hbox id="folder-header">
-        <description flex="1">&foldersHeader.label;</description>
-        <toolbarbutton id="tool-folders-close" class="urlbar-button button-image" command="cmd_close"/>
-      </hbox>
-      <placetree id="folder-items" type="bookmarks" mode="folders" flex="1" onselect="FolderPicker.moveItem();"/>
+      <placelist id="bookmark-items" type="bookmarks" flex="1" onopen="BookmarkList.openBookmark();"/>
     </vbox>
 
     <vbox id="helperapp-container" class="dialog-dark" hidden="true" align="center" top="0" left="0">

@@ -599,21 +599,6 @@
           ]]>
         </body>
       </method>
-      <method name="move">
-        <body>
-          <![CDATA[
-            if (this.control)
-              this.control.activeItem = this;
-
-            let control = this.control || this;
-            let code = control.getAttribute("onmove");
-            if (code) {
-              let func = new Function(code);
-              func.call(control);
-            }
-          ]]>
-        </body>
-      </method>
       <method name="updateFields">
         <body>
           <![CDATA[
@@ -647,8 +632,6 @@
           <xul:hbox anonid="bookmark-manage-controls" align="center" class="bookmark-manage-controls" hidden="true">
             <xul:button anonid="close-button" class="bookmark-close-button"
                         label="&editBookmarkRemove.label;" oncommand="document.getBindingParent(this).remove()"/>
-            <xul:button anonid="folder-button" class="bookmark-folder-button" 
-                        label="&editBookmarkMove.label;" oncommand="document.getBindingParent(this).move()"/>
             <xul:spacer flex="1"/>
             <xul:button anonid="done-button" label="&editBookmarkDone.label;"
                         oncommand="document.getBindingParent(this).stopEditing(true)"/>
@@ -850,32 +833,6 @@
               let node = childItems[i];
               children.appendChild(this.createItem(node));
             }
-
-            // Add the "<new folder>" item
-            let newFolder = document.createElementNS(XULNS, "button");
-            newFolder.setAttribute("class", "bookmark-folder-new");
-            newFolder.setAttribute("label", this._bundle.GetStringFromName("editBookmarkAddFolder"));
-            children.appendChild(newFolder);
-
-            // XXX Fix me - use <handler>?
-            newFolder.addEventListener("click", function(e) { self.addFolder(); }, false);
-          ]]>
-        </body>
-      </method>
-
-      <method name="addFolder">
-        <body>
-          <![CDATA[
-            let parents = this._parents;
-            let parent = parents.lastChild;
-            if ("itemId" in parent) {
-              let children = this._children;
-              let title = this._bundle.GetStringFromName("editBookmarkNewFolder");
-              let newId = PlacesUtils.bookmarks.createFolder(parent.itemId, title, PlacesUtils.bookmarks.DEFAULT_INDEX);
-              let child = this.createItem({ itemId: newId, title: title, type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER });
-              children.insertBefore(child, children.lastChild);
-              child.startEditing(true);
-            }
           ]]>
         </body>
       </method>
@@ -941,133 +898,6 @@
               let func = new Function("event", this.getAttribute("onopen"));
               func.call(this, event);
             }
-          ]]>
-        </body>
-      </method>
-    </implementation>
-  </binding>
-
-  <binding id="place-tree">
-    <content orient="vertical" flex="1">
-      <xul:richlistbox anonid="items" class="place-tree-items" flex="1"/>
-    </content>
-    <implementation>
-      <constructor>
-        <![CDATA[
-          this._type = this.getAttribute("type");
-          this._mode = this.getAttribute("mode");
-        ]]>
-      </constructor>
-      <field name="_type"/>
-      <field name="_mode"/>
-      <field name="_items">
-        document.getAnonymousElementByAttribute(this, "anonid", "items");
-      </field>
-
-      <property name="scrollBoxObject" readonly="true" onget="return this._items.scrollBoxObject;"/>
-
-      <property name="selectedItem" readonly="true">
-        <getter>
-          <![CDATA[
-            return this._items.selectedItem;
-          ]]>
-        </getter>
-      </property>
-
-      <method name="_getChildren">
-        <parameter name="aFolder"/>
-        <body>
-          <![CDATA[
-            let items = [];
-
-            let options = PlacesUtils.history.getNewQueryOptions();
-            options.queryType = (this._type == "bookmarks" ? options.QUERY_TYPE_BOOKMARKS : options.QUERY_TYPE_HISTORY);
-            let query = PlacesUtils.history.getNewQuery();
-
-            if (aFolder)
-              query.setFolders([aFolder], 1);
-            let result = PlacesUtils.history.executeQuery(query, options);
-            let rootNode = result.root;
-            rootNode.containerOpen = true;
-            let cc = rootNode.childCount;
-
-            for (var i=0; i<cc; ++i) {
-              var node = rootNode.getChild(i);
-              if (this._mode == "folders" && node.type == node.RESULT_TYPE_FOLDER) {
-                items.push(node);
-              }
-              else if (this._mode == "") {
-                items.push(node);
-              }
-            }
-            rootNode.containerOpen = false;
-            return items;
-          ]]>
-        </body>
-      </method>
-
-      <method name="openFolder">
-        <parameter name="aRootFolder"/>
-        <parameter name="aLevel"/>
-        <body>
-          <![CDATA[
-            aRootFolder = aRootFolder || PlacesUtils.bookmarks.unfiledBookmarksFolder;
-            aLevel = aLevel || 0;
-
-            let items = this._items;
-            if (!aLevel) {
-              while (items.firstChild)
-                items.removeChild(items.firstChild);
-
-              let node = { itemId: aRootFolder, title: PlacesUtils.bookmarks.getItemTitle(aRootFolder), type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER };
-              items.appendChild(this.createItem(node, aLevel));
-              aLevel += 24;
-            }
-
-            let childItems = this._getChildren(aRootFolder);
-            for (let i=0; i<childItems.length; i++) {
-              let node = childItems[i];
-              items.appendChild(this.createItem(node, aLevel));
-
-              this.openFolder(node.itemId, aLevel + 24);
-            }
-          ]]>
-        </body>
-      </method>
-
-      <method name="createItem">
-        <parameter name="aItem"/>
-        <parameter name="aLevel"/>
-        <body>
-          <![CDATA[
-            const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-            let child = document.createElementNS(XULNS, "placelabel");
-            child.setAttribute("type", "folder");
-            child.setAttribute("itemid", aItem.itemId);
-            child.setAttribute("title", aItem.title);
-            child.setAttribute("indent", aLevel);
-
-            // XXX make a <handler>
-            var self = this;
-            child.addEventListener("click", function(e) { self._fireSelect(e, child); }, false);
-
-            return child;
-          ]]>
-        </body>
-      </method>
-
-      <method name="_fireSelect">
-        <parameter name="aEvent"/>
-        <parameter name="aItem"/>
-        <body>
-          <![CDATA[
-            // Force the item to be selected
-            this._items.selectedItem = aItem;
-
-            // the richlistbox will fire an onselect event, which will bubble to
-            // the placetree onselect handler. We don't need to explicitly fire
-            // anything here.
           ]]>
         </body>
       </method>

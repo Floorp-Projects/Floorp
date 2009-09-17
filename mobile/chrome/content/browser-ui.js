@@ -880,7 +880,6 @@ var BookmarkHelper = {
     this._editor.setAttribute("title", title);
     this._editor.setAttribute("uri", aURI.spec);
     this._editor.setAttribute("tags", tags.join(", "));
-    this._editor.setAttribute("onmove", "FolderPicker.show(this);");
     this._editor.setAttribute("onclose", "BookmarkHelper.close()");
     document.getElementById("bookmark-form").appendChild(this._editor);
 
@@ -949,41 +948,6 @@ var BookmarkList = {
       this.close();
       BrowserUI.goToURI(item.spec);
     }
-  },
-};
-
-var FolderPicker = {
-  _control: null,
-  _panel: null,
-
-  show: function(aControl) {
-    this._panel = document.getElementById("folder-container");
-    this._panel.width = window.innerWidth;
-    this._panel.height = window.innerHeight;
-    this._panel.hidden = false;
-    BrowserUI.pushDialog(this);
-
-    this._control = aControl;
-
-    let folders = document.getElementById("folder-items");
-    folders.openFolder();
-  },
-
-  close: function() {
-    this._panel.hidden = true;
-    BrowserUI.popDialog();
-  },
-
-  moveItem: function() {
-    let folders = document.getElementById("folder-items");
-    let itemId = (this._control.activeItem ? this._control.activeItem.itemId : this._control.itemId);
-    let folderId = PlacesUtils.bookmarks.getFolderIdForItem(itemId);
-    if (folders.selectedItem.itemId != folderId) {
-      PlacesUtils.bookmarks.moveItem(itemId, folders.selectedItem.itemId, PlacesUtils.bookmarks.DEFAULT_INDEX);
-      if (this._control.removeItem)
-        this._control.removeItem(this._control.activeItem);
-    }
-    this.close();
   }
 };
 
