@@ -45,6 +45,7 @@ MicroFormatEngine.prototype = {
   __proto__: SyncEngine.prototype,
 
   displayName: "MicroFormats",
+  description: "",
   logName: "MicroFormats",
   name: "microformats",
 };

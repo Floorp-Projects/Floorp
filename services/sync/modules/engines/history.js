@@ -77,6 +77,7 @@ HistoryEngine.prototype = {
   __proto__: SyncEngine.prototype,
   name: "history",
   displayName: "History",
+  description: "All the sites you've been to.  Take your awesomebar with you!",
   logName: "History",
   _recordObj: HistoryRec,
   _storeObj: HistoryStore,
