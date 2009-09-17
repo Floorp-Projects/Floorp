@@ -257,8 +257,9 @@ struct JSObject {
     }
 
     JSBool defineProperty(JSContext *cx, jsid id, jsval value,
-                          JSPropertyOp getter, JSPropertyOp setter,
-                          uintN attrs) {
+                          JSPropertyOp getter = JS_PropertyStub,
+                          JSPropertyOp setter = JS_PropertyStub,
+                          uintN attrs = JSPROP_ENUMERATE) {
         return map->ops->defineProperty(cx, this, id, value, getter, setter, attrs);
     }
 
