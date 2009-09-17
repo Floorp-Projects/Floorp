@@ -394,11 +394,8 @@ struct JSRuntime {
     uint32              protoHazardShape;
 
     /* Garbage collector state, used by jsgc.c. */
-    jsuword             gcBase;
-    jsuword             gcCursor;
-    jsuword             gcLimit;
+    JSGCChunkInfo       *gcChunkList;
     JSGCArenaList       gcArenaList[GC_NUM_FREELISTS];
-    JSGCArenaInfo       *emptyArenas;
     JSGCDoubleArenaList gcDoubleArenaList;
     JSDHashTable        gcRootsHash;
     JSDHashTable        *gcLocksHash;
@@ -415,11 +412,6 @@ struct JSRuntime {
     size_t              gcTriggerBytes;
     volatile JSBool     gcIsNeeded;
     volatile JSBool     gcFlushCodeCaches;
-
-    inline bool IsGCThing(void *thing) {
-        JS_ASSERT((jsuword(thing) & JSVAL_TAGMASK) == 0);
-        return gcBase <= jsuword(thing) && jsuword(thing) < gcLimit;
-    }
 
     /*
      * NB: do not pack another flag here by claiming gcPadding unless the new
