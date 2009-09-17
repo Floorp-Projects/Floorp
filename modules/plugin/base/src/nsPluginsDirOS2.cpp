@@ -45,7 +45,7 @@
 #include "plstr.h"
 #include "prmem.h"
 #include "prprf.h"
-#include "nsPluginDefs.h"
+#include "npapi.h"
 
 #include "nsString.h"
 

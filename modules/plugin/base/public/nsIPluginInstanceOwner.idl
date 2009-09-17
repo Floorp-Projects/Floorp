@@ -49,7 +49,7 @@ class nsPluginEvent;
 
 [ref] native nsIPluginInstanceRef(nsIPluginInstance*);
 
-[uuid(109BAD0E-7071-4907-B657-4507C834E448)]
+[uuid(0E0E465C-C081-4E43-B2DF-D4DCA6B8E8CF)]
 interface nsIPluginInstanceOwner : nsISupports
 {
   /**
@@ -66,12 +66,12 @@ interface nsIPluginInstanceOwner : nsISupports
    * Get a handle to the window structure of the owner.
    * This pointer cannot be made persistent by the caller.
    */
-  void getWindow(in nsPluginWindowStarRef aWindow);
+  void getWindow(in NPWindowStarRef aWindow);
 
   /**
    * Get the display mode for the plugin instance.
    */
-  readonly attribute nsPluginMode mode;
+  readonly attribute PRInt32 mode;
 
   /**
    * Create a place for the plugin to live in the owner's
@@ -110,12 +110,12 @@ interface nsIPluginInstanceOwner : nsISupports
   /**
    * Invalidate the rectangle
    */
-  void invalidateRect(in nsPluginRectPtr aRect);
+  void invalidateRect(in NPRectPtr aRect);
 
   /**
    * Invalidate the region
    */
-  void invalidateRegion(in nsPluginRegion aRegion);
+  void invalidateRegion(in NPRegion aRegion);
 
   /**
    * Force a redraw
@@ -131,7 +131,7 @@ interface nsIPluginInstanceOwner : nsISupports
    * Show native context menu
    */
 %{C++
-  virtual NPError ShowNativeContextMenu(NPMenu* menu, nsPluginEvent* event) = 0;
+  virtual NPError ShowNativeContextMenu(NPMenu* menu, void* event) = 0;
   virtual NPBool  ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
                                double *destX, double *destY, NPCoordinateSpace destSpace) = 0;
 %}

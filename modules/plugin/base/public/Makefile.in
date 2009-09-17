@@ -46,7 +46,6 @@ MODULE		= plugin
 GRE_MODULE	= 1
 
 EXPORTS		= \
-		nsplugindefs.h \
 		nsPluginLogging.h \
 		nsPluginError.h \
 		nsDefaultPlugin.h \

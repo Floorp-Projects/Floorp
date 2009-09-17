@@ -65,7 +65,7 @@
 #include "nsIPrefService.h"
 
 // windowless plugin support
-#include "nsplugindefs.h"
+#include "npapi.h"
 
 #include "nsITimer.h"
 #include "nsIServiceManager.h"
