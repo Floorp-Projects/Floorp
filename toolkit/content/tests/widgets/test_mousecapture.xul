@@ -54,6 +54,38 @@ function framesetCallback(adjustment)
   is(newWidth, expectedWidth, "frameset after drag (" + adjustment + ")");
 }
 
+var otherWindow = null;
+
+function selectionScrollCheck()
+{
+  var element = otherWindow.document.documentElement;
+
+  disableNonTestMouseEvents(true);
+  synthesizeMouse(element, 2, 2, { type: "mousedown" }, otherWindow);
+  synthesizeMouse(element, 4, otherWindow.innerHeight + 20, { type: "mousemove" }, otherWindow);
+
+  var count = 0;
+  function selectionScrollDone() {
+    // wait for 6 scroll events to occur
+    if (count++ < 6)
+      return;
+
+    otherWindow.removeEventListener("scroll", selectionScrollDone, false);
+
+    // should have scrolled 20 pixels from the mousemove above and six extra
+    // times from the selection scroll timer for a total of 140
+    var oldScrollY = otherWindow.scrollY;
+    is(otherWindow.scrollY, 140, "selection scroll position after timer");
+
+    synthesizeMouse(element, 4, otherWindow.innerHeight + 25, { type: "mouseup" }, otherWindow);
+    disableNonTestMouseEvents(false);
+    otherWindow.close();
+    SimpleTest.finish();
+  }
+
+  otherWindow.addEventListener("scroll", selectionScrollDone, false);
+}
+
 function runTests()
 {
   previousWidth = $("leftbox").getBoundingClientRect().width;
@@ -99,7 +131,9 @@ function runTests()
   originalWidth = previousWidth;
   runCaptureTest(frames[1].document.documentElement.lastChild, framesetCallback);
 
-  SimpleTest.finish();
+  // check to ensure that selection dragging scrolls the right scrollable area
+  otherWindow = window.open("data:text/html,<html><p style='margin-top: 4000px'>This is some text</p></html>", "_blank");
+  SimpleTest.waitForFocus(selectionScrollCheck, otherWindow);
 }
 
 function runCaptureTest(element, callback)
