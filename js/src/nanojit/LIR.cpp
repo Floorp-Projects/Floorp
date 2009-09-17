@@ -1704,19 +1704,19 @@ namespace nanojit
                 formatGuard(i, s);
                 break;
 
-            case LIR_add:
+            case LIR_add:       case LIR_qiadd:
             case LIR_iaddp:     case LIR_qaddp:
             case LIR_sub:
-             case LIR_mul:
+            case LIR_mul:
             case LIR_div:
             case LIR_fadd:
             case LIR_fsub:
-             case LIR_fmul:
+            case LIR_fmul:
             case LIR_fdiv:
-            case LIR_and:
-            case LIR_or:
+            case LIR_and:       case LIR_qiand:
+            case LIR_or:        case LIR_qior:
             case LIR_xor:       case LIR_qxor:
-            case LIR_lsh:
+            case LIR_lsh:       case LIR_qilsh:
             case LIR_rsh:       case LIR_qirsh:
             case LIR_ush:       case LIR_qursh:
             case LIR_eq:        case LIR_qeq:
@@ -1733,10 +1733,6 @@ namespace nanojit
             case LIR_fle:
             case LIR_fgt:
             case LIR_fge:
-            case LIR_qiadd:
-            case LIR_qiand:
-            case LIR_qilsh:
-            case LIR_qior:
                 VMPI_sprintf(s, "%s = %s %s, %s", formatRef(i), lirNames[op],
                     formatRef(i->oprnd1()),
                     formatRef(i->oprnd2()));
