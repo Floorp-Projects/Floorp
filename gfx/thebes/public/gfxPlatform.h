@@ -263,7 +263,7 @@ public:
      * Determines the rendering intent for color management.
      *
      * If the value in the pref gfx.color_management.rendering_intent is a
-     * valid rendering intent as defined in modules/lcms/include/lcms.h, that
+     * valid rendering intent as defined in gfx/qcms/qcms.h, that
      * value is returned. Otherwise, -1 is returned and the embedded intent
      * should be used.
      *
