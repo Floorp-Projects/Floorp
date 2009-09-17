@@ -7526,7 +7526,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
         if (r == 0.0)
             goto out;
         break;
-#ifdef NANOJIT_IA32
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
     case LIR_fdiv:
         if (v1 == 0)
             goto out;
@@ -7559,7 +7559,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
     VMSideExit* exit;
     LIns* result;
     switch (v) {
-#ifdef NANOJIT_IA32
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
       case LIR_fdiv:
         if (d0->isconst() && d1->isconst())
             return lir->ins1(LIR_i2f, lir->insImm(jsint(r)));
