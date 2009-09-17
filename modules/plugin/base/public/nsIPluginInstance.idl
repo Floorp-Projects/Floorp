@@ -42,7 +42,7 @@ interface nsIPluginInstanceOwner;
 interface nsIOutputStream;
 
 %{C++
-#include "nsplugindefs.h"
+#include "npapi.h"
 #include "nsString.h"
 struct JSContext;
 struct JSObject;
@@ -53,7 +53,7 @@ struct JSObject;
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSObjectPtr(JSObject);
 
-[uuid(67D606F4-1D6D-4FE2-A2D6-10BDA65788E1)]
+[uuid(1BDF057D-1F3F-49F6-986A-8F9593706A25)]
 interface nsIPluginInstance : nsISupports
 {
     /**
@@ -94,7 +94,7 @@ interface nsIPluginInstance : nsISupports
      * @param aWindow - the plugin window structure
      * @result        - NS_OK if this operation was successful
      */
-    void setWindow(in nsPluginWindowPtr aWindow);
+    void setWindow(in NPWindowPtr aWindow);
 
     /**
      * Called to tell the plugin that the initial src/data stream is
@@ -130,16 +130,7 @@ interface nsIPluginInstance : nsISupports
      * @param aPlatformPrint - platform-specific printing information
      * @result               - NS_OK if this operation was successful
      */
-    void print(in nsPluginPrintPtr aPlatformPrint);
-
-    /**
-     * Returns the value of a variable associated with the plugin instance.
-     *
-     * @param aVariable - the plugin instance variable to get
-     * @param aValue    - the address of where to store the resulting value
-     * @result          - NS_OK if this operation was successful
-     */
-    void getValue(in nsPluginInstanceVariable aVariable, in voidPtr aValue);
+    void print(in NPPrintPtr aPlatformPrint);
 
     /**
      * Handles an event.
@@ -156,17 +147,17 @@ interface nsIPluginInstance : nsISupports
      * @param aHandled - set to PR_TRUE if event was handled
      * @result - NS_OK if this operation was successful
      */
-    void handleEvent(in nsPluginEventPtr aEvent, out boolean aHandled);
+    void handleEvent(in voidPtr aEvent, out boolean aHandled);
 
     /** 
      * Corresponds to NPN_InvalidateRect
      */
-    void invalidateRect(in nsPluginRectPtr aRect);
+    void invalidateRect(in NPRectPtr aRect);
 
     /** 
      * Corresponds to NPN_InvalidateRegion
      */
-    void invalidateRegion(in nsPluginRegion aRegion);
+    void invalidateRegion(in NPRegion aRegion);
 
     /** 
      * Corresponds to NPN_ForceRedraw
@@ -219,4 +210,15 @@ interface nsIPluginInstance : nsISupports
     readonly attribute PRUint16 pluginAPIVersion;
 
     void defineJavaProperties();
+
+    PRBool shouldCache();
+
+    PRBool isWindowless();
+
+    PRBool isTransparent();
+
+    void getValueFromPlugin(in NPPVariable variable, in voidPtr aValue);
+
+    PRInt32 getDrawingModel();
+    PRInt32 getEventModel();
 };

@@ -39,8 +39,6 @@
 #include "nspluginroot.idl"
 
 %{C++
-#include "nsplugindefs.h"
-
 enum nsPluginTagType {
   nsPluginTagType_Unknown,
   nsPluginTagType_Embed,
