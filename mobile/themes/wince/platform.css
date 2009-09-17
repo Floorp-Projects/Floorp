@@ -57,6 +57,11 @@ textbox[isempty="true"] {
   background-color: #36373b;
 }
 
+/* sidebars spacer --------------------------------------------------------- */
+.sidebar-spacer {
+  background-color: #36373b;
+}
+
 /* dialog popups ----------------------------------------------------------- */
 .dialog-dark {
   color: #fff;
