@@ -1799,7 +1799,7 @@ function BrowserOpenTab()
                       "chrome,all,dialog=no", "about:blank");
     return;
   }
-  gBrowser.loadOneTab("about:blank", null, null, null, false, false);
+  gBrowser.loadOneTab("about:blank", {inBackground: false});
   if (gURLBar)
     gURLBar.focus();
 }
@@ -1822,7 +1822,12 @@ function delayedOpenWindow(chrome, flags, href, postData)
    the URI kicked off before becoming the active content area. */
 function delayedOpenTab(aUrl, aReferrer, aCharset, aPostData, aAllowThirdPartyFixup)
 {
-  gBrowser.loadOneTab(aUrl, aReferrer, aCharset, aPostData, false, aAllowThirdPartyFixup);
+  gBrowser.loadOneTab(aUrl, {
+                      referrerURI: aReferrer,
+                      charset: aCharset,
+                      postData: aPostData,
+                      inBackground: false,
+                      allowThirdPartyFixup: aAllowThirdPartyFixup});
 }
 
 var gLastOpenDirectory = {
@@ -4445,8 +4450,9 @@ nsBrowserAccess.prototype =
         // If this is an external load, we need to load a blank tab first,
         // because loadflags can't be passed to loadOneTab.
         let loadBlankFirst = !aURI || isExternal;
-        let tab = win.gBrowser.loadOneTab(loadBlankFirst ? "about:blank" : aURI.spec,
-                                          referrer, null, null, loadInBackground, false);
+        let tab = win.gBrowser.loadOneTab(loadBlankFirst ? "about:blank" : aURI.spec, {
+                                          referrerURI: referrer,
+                                          inBackground: loadInBackground});
         let browser = win.gBrowser.getBrowserForTab(tab);
 
         if (loadBlankFirst && aURI)
@@ -6006,7 +6012,7 @@ function blocklistInfo()
   var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                             .getService(Components.interfaces.nsIURLFormatter);
   var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
-  gBrowser.loadOneTab(url, null, null, null, false, false);
+  gBrowser.loadOneTab(url, {inBackground: false});
   return true;
 }
 

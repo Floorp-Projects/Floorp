@@ -124,8 +124,10 @@
           if (aTriggeringEvent && aTriggeringEvent.altKey) {
             this.handleRevert();
             content.focus();
-            gBrowser.loadOneTab(url, null, null, postData, false,
-                                true /* allow third party fixup */);
+            gBrowser.loadOneTab(url, {
+                                postData: postData,
+                                inBackground: false,
+                                allowThirdPartyFixup: true});
             aTriggeringEvent.preventDefault();
             aTriggeringEvent.stopPropagation();
           }

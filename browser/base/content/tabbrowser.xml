@@ -1145,7 +1145,7 @@
             }
           }
           else
-            firstTabAdded = this.addTab(aURIs[0], null, null, null, owner, false);
+            firstTabAdded = this.addTab(aURIs[0], {ownerTab: owner});
 
           var tabNum = this.mTabContainer.selectedIndex;
           for (let i = 1; i < aURIs.length; ++i) {
@@ -2160,7 +2160,7 @@
               if (document.getBindingParent(aEvent.originalTarget).localName != "tab" || dropEffect == "copy") {
                 // We're adding a new tab.
                 newIndex = this.getNewIndex(aEvent);
-                newTab = this.loadOneTab(getShortcutOrURI(url), null, null, null, bgLoad, false);
+                newTab = this.loadOneTab(getShortcutOrURI(url), {inBackground: bgLoad});
                 this.moveTabTo(newTab, newIndex);
               }
               else {
