@@ -261,6 +261,8 @@ static PRBool gdk_keyboard_get_modmap_masks(Display*  aDisplay,
 /* initialization static functions */
 static nsresult    initialize_prefs        (void);
 
+PRUint32        gLastInputEventTime = 0;
+
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::mLastDragMotionWindow = NULL;
 PRBool nsWindow::sIsDraggingOutOf = PR_FALSE;
@@ -443,6 +445,8 @@ nsWindow::nsWindow()
         gBufferPixmapUsageCount++;
     }
 
+    // Set gLastInputEventTime to some valid number
+    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
 }
 
 nsWindow::~nsWindow()
@@ -5472,6 +5476,8 @@ GetFirstNSWindowForGDKWindow(GdkWindow *aGdkWindow)
 gboolean
 motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 {
+    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
     nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
         return FALSE;
@@ -5488,6 +5494,8 @@ motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 gboolean
 button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
+    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
     nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
         return FALSE;
@@ -5501,6 +5509,8 @@ button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
 gboolean
 button_release_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
+    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
     nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
         return FALSE;
@@ -5636,6 +5646,9 @@ gboolean
 key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
 {
     LOG(("key_press_event_cb\n"));
+
+    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
     // find the window with focus and dispatch this event to that widget
     nsWindow *window = get_window_for_gtk_widget(widget);
     if (!window)
@@ -5676,6 +5689,9 @@ gboolean
 key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
 {
     LOG(("key_release_event_cb\n"));
+
+    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
     // find the window with focus and dispatch this event to that widget
     nsWindow *window = get_window_for_gtk_widget(widget);
     if (!window)
