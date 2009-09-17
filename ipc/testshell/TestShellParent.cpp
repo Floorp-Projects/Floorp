@@ -48,28 +48,25 @@ TestShellParent::PTestShellCommandConstructor(const nsString& aCommand)
   return new TestShellCommandParent();
 }
 
-nsresult
+bool
 TestShellParent::PTestShellCommandDestructor(PTestShellCommandParent* aActor,
                                              const nsString& aResponse)
 {
-  NS_ENSURE_ARG_POINTER(aActor);
   delete aActor;
-  return NS_OK;
+  return true;
 }
 
-nsresult
+bool
 TestShellParent::RecvPTestShellCommandDestructor(PTestShellCommandParent* aActor,
                                                  const nsString& aResponse)
 {
-  NS_ENSURE_ARG_POINTER(aActor);
-
   TestShellCommandParent* command =
     reinterpret_cast<TestShellCommandParent*>(aActor);
 
   JSBool ok = command->RunCallback(aResponse);
   command->ReleaseCallback();
 
-  return NS_OK;
+  return true;
 }
 
 JSBool

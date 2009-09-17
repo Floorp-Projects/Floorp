@@ -93,13 +93,13 @@ private:
 
     virtual PIFrameEmbeddingParent* PIFrameEmbeddingConstructor(
             const MagicWindowHandle& parentWidget);
-    virtual nsresult PIFrameEmbeddingDestructor(PIFrameEmbeddingParent* frame);
+    virtual bool PIFrameEmbeddingDestructor(PIFrameEmbeddingParent* frame);
 
     virtual PTestShellParent* PTestShellConstructor();
-    virtual nsresult PTestShellDestructor(PTestShellParent* shell);
+    virtual bool PTestShellDestructor(PTestShellParent* shell);
 
     virtual PNeckoParent* PNeckoConstructor();
-    virtual nsresult PNeckoDestructor(PNeckoParent* necko);
+    virtual bool PNeckoDestructor(PNeckoParent* necko);
 
     mozilla::Monitor mMonitor;
 

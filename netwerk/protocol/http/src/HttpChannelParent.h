@@ -55,7 +55,7 @@ public:
   virtual ~HttpChannelParent();
 
 protected:
-  virtual nsresult RecvasyncOpen(const nsCString& uri);
+  virtual bool RecvasyncOpen(const nsCString& uri);
 };
 
 } // namespace net

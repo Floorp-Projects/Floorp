@@ -57,7 +57,7 @@ public:
 
 protected:
   virtual PHttpChannelParent* PHttpChannelConstructor();
-  virtual nsresult PHttpChannelDestructor(PHttpChannelParent*);
+  virtual bool PHttpChannelDestructor(PHttpChannelParent*);
 };
 
 } // namespace net

@@ -100,7 +100,7 @@ class PluginModuleChild : public PPluginModuleChild
 {
 protected:
     // Implement the PPluginModuleChild interface
-    virtual nsresult AnswerNP_Initialize(NPError* rv);
+    virtual bool AnswerNP_Initialize(NPError* rv);
 
     virtual PPluginInstanceChild*
     PPluginInstanceConstructor(const nsCString& aMimeType,
@@ -109,11 +109,11 @@ protected:
                                const nsTArray<nsCString>& aValues,
                                NPError* rv);
 
-    virtual nsresult
+    virtual bool
     PPluginInstanceDestructor(PPluginInstanceChild* aActor,
                               NPError* rv);
 
-    virtual nsresult
+    virtual bool
     AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor,
                                      const nsCString& aMimeType,
                                      const uint16_t& aMode,

@@ -158,7 +158,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 
 }
 
-nsresult
+bool
 PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
                                            PPluginScriptableObjectChild** value,
                                            NPError* result)
@@ -168,22 +168,22 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
     *result = mPluginIface->getvalue(GetNPP(), NPPVpluginScriptableNPObject,
                                      &object);
     if (*result != NPERR_NO_ERROR) {
-        return NS_OK;
+        return true;
     }
 
     PluginScriptableObjectChild* actor = CreateActorForNPObject(object);
     if (!actor) {
         PluginModuleChild::sBrowserFuncs.releaseobject(object);
         *result = NPERR_GENERIC_ERROR;
-        return NS_OK;
+        return true;
     }
 
     PluginModuleChild::sBrowserFuncs.releaseobject(object);
     *value = actor;
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow,
                                          NPError* rv)
 {
@@ -248,7 +248,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow,
 #  error Implement me for your OS
 #endif
 
-    return NS_OK;
+    return true;
 }
 
 bool
@@ -418,7 +418,7 @@ PluginInstanceChild::PPluginScriptableObjectConstructor()
     return object->get();
 }
 
-nsresult
+bool
 PluginInstanceChild::PPluginScriptableObjectDestructor(PPluginScriptableObjectChild* aObject)
 {
     PluginScriptableObjectChild* object =
@@ -431,7 +431,7 @@ PluginInstanceChild::PPluginScriptableObjectDestructor(PPluginScriptableObjectCh
             break;
         }
     }
-    return NS_OK;
+    return true;
 }
 
 PBrowserStreamChild*
@@ -449,13 +449,13 @@ PluginInstanceChild::PBrowserStreamConstructor(const nsCString& url,
                                   mimeType, seekable, rv, stype);
 }
 
-nsresult
+bool
 PluginInstanceChild::PBrowserStreamDestructor(PBrowserStreamChild* stream,
                                               const NPError& reason,
                                               const bool& artificial)
 {
     delete stream;
-    return NS_OK;
+    return true;
 }
 
 PStreamNotifyChild*
@@ -470,7 +470,7 @@ PluginInstanceChild::PStreamNotifyConstructor(const nsCString& url,
     return NULL;
 }
 
-nsresult
+bool
 PluginInstanceChild::PStreamNotifyDestructor(PStreamNotifyChild* notifyData,
                                              const NPReason& reason)
 {
@@ -478,7 +478,7 @@ PluginInstanceChild::PStreamNotifyDestructor(PStreamNotifyChild* notifyData,
     mPluginIface->urlnotify(&mData, sn->mURL.get(), reason, sn->mClosure);
     delete sn;
 
-    return NS_OK;
+    return true;
 }
 
 PluginScriptableObjectChild*

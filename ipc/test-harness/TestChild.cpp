@@ -51,38 +51,38 @@ TestChild::~TestChild()
 #if 1
 //-----------------------------------------------------------------------------
 // "Hello world" example
-nsresult TestChild::RecvHello()
+bool TestChild::RecvHello()
 {
-    puts("[TestChild] Hello, ");
-    SendWorld();
-    return NS_OK;
+  puts("[TestChild] Hello, ");
+  SendWorld();
+  return true;
 }
 
 
 #elif 0
 //-----------------------------------------------------------------------------
 // Example solution to exercise
-nsresult TestChild::RecvPing()
+bool TestChild::RecvPing()
 {
-    return SendPong(42);
+  return SendPong(42);
 }
 
-nsresult TestChild::RecvPong(const int& status)
+bool TestChild::RecvPong(const int& status)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return false;
 }
 
-nsresult TestChild::RecvTellValue(
+bool TestChild::RecvTellValue(
             const String& key,
             const String& val)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return false;
 }
 
-nsresult TestChild::RecvTellValues(
+bool TestChild::RecvTellValues(
             const StringArray& keys,
             const StringArray& vals)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return false;
 }
 #endif

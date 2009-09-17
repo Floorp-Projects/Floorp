@@ -67,16 +67,16 @@ class PluginInstanceChild : public PPluginInstanceChild
 protected:
     friend class BrowserStreamChild;
 
-    virtual nsresult AnswerNPP_SetWindow(const NPWindow& window, NPError* rv);
+    virtual bool AnswerNPP_SetWindow(const NPWindow& window, NPError* rv);
 
-    virtual nsresult
+    virtual bool
     AnswerNPP_GetValue_NPPVpluginScriptableNPObject(PPluginScriptableObjectChild** value,
                                                     NPError* result);
 
     virtual PPluginScriptableObjectChild*
     PPluginScriptableObjectConstructor();
 
-    virtual nsresult
+    virtual bool
     PPluginScriptableObjectDestructor(PPluginScriptableObjectChild* aObject);
 
     virtual PBrowserStreamChild*
@@ -90,7 +90,7 @@ protected:
                               NPError* rv,
                               uint16_t *stype);
 
-    virtual nsresult
+    virtual bool
     PBrowserStreamDestructor(PBrowserStreamChild* stream,
                              const NPError& reason,
                              const bool& artificial);
@@ -101,7 +101,7 @@ protected:
                              const bool& file,
                              NPError* result);
 
-    virtual nsresult
+    virtual bool
     PStreamNotifyDestructor(PStreamNotifyChild* notifyData,
                             const NPReason& reason);
 

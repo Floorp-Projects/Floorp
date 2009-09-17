@@ -59,7 +59,7 @@ public:
   static void InitNeckoChild();
 
   virtual PHttpChannelChild* PHttpChannelConstructor();
-  virtual nsresult PHttpChannelDestructor(PHttpChannelChild*);
+  virtual bool PHttpChannelDestructor(PHttpChannelChild*);
 
 protected:
 };

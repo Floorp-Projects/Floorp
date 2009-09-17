@@ -53,17 +53,17 @@ class TestShellChild : public PTestShellChild
 public:
   TestShellChild();
 
-  nsresult
+  bool
   RecvExecuteCommand(const nsString& aCommand);
 
   PTestShellCommandChild*
   PTestShellCommandConstructor(const nsString& aCommand);
 
-  nsresult
+  bool
   RecvPTestShellCommandConstructor(PTestShellCommandChild* aActor,
                                    const nsString& aCommand);
 
-  nsresult
+  bool
   PTestShellCommandDestructor(PTestShellCommandChild* aCommand,
                               const nsString& aResponse);
 

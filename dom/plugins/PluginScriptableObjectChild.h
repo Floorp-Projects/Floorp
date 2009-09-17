@@ -54,47 +54,47 @@ public:
   PluginScriptableObjectChild();
   virtual ~PluginScriptableObjectChild();
 
-  virtual nsresult
+  virtual bool
   AnswerInvalidate();
 
-  virtual nsresult
+  virtual bool
   AnswerHasMethod(const NPRemoteIdentifier& aId,
                   bool* aHasMethod);
 
-  virtual nsresult
+  virtual bool
   AnswerInvoke(const NPRemoteIdentifier& aId,
                const nsTArray<NPRemoteVariant>& aArgs,
                NPRemoteVariant* aResult,
                bool* aSuccess);
 
-  virtual nsresult
+  virtual bool
   AnswerInvokeDefault(const nsTArray<NPRemoteVariant>& aArgs,
                       NPRemoteVariant* aResult,
                       bool* aSuccess);
 
-  virtual nsresult
+  virtual bool
   AnswerHasProperty(const NPRemoteIdentifier& aId,
                     bool* aHasProperty);
 
-  virtual nsresult
+  virtual bool
   AnswerGetProperty(const NPRemoteIdentifier& aId,
                     NPRemoteVariant* aResult,
                     bool* aSuccess);
 
-  virtual nsresult
+  virtual bool
   AnswerSetProperty(const NPRemoteIdentifier& aId,
                     const NPRemoteVariant& aValue,
                     bool* aSuccess);
 
-  virtual nsresult
+  virtual bool
   AnswerRemoveProperty(const NPRemoteIdentifier& aId,
                        bool* aSuccess);
 
-  virtual nsresult
+  virtual bool
   AnswerEnumerate(nsTArray<NPRemoteIdentifier>* aProperties,
                   bool* aSuccess);
 
-  virtual nsresult
+  virtual bool
   AnswerConstruct(const nsTArray<NPRemoteVariant>& aArgs,
                   NPRemoteVariant* aResult,
                   bool* aSuccess);
