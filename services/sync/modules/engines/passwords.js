@@ -111,7 +111,7 @@ PasswordStore.prototype = {
     
     let logins = Svc.Login.searchLogins({}, prop);
     if (logins.length > 0) {
-      this._log.debug(logins.length + " items matching " + id + " found.");
+      this._log.trace(logins.length + " items matching " + id + " found.");
       return logins[0];
     } else {
       this._log.trace("No items matching " + id + " found. Ignoring");
@@ -132,7 +132,7 @@ PasswordStore.prototype = {
   },
 
   changeItemID: function PasswordStore__changeItemID(oldID, newID) {
-    this._log.debug("Changing item ID: " + oldID + " to " + newID);
+    this._log.trace("Changing item ID: " + oldID + " to " + newID);
 
     let oldLogin = this._getLoginFromGUID(oldID);
     if (!oldLogin) {
@@ -197,11 +197,11 @@ PasswordStore.prototype = {
   update: function PasswordStore__update(record) {
     let loginItem = this._getLoginFromGUID(record.id);
     if (!loginItem) {
-      this._log.debug("Skipping update for unknown item: " + record.id);
+      this._log.debug("Skipping update for unknown item: " + record.hostname);
       return;
     }
 
-    this._log.debug("Updating " + record.id);
+    this._log.debug("Updating " + record.hostname);
     let newinfo = this._nsLoginInfoFromRecord(record);
     Svc.Login.modifyLogin(loginItem, newinfo);
   },
@@ -238,11 +238,11 @@ PasswordTracker.prototype = {
     case 'removeLogin':
       aSubject.QueryInterface(Ci.nsILoginMetaInfo);
       this._score += 15;
-      this._log.debug(aData + ": " + aSubject.guid);
+      this._log.trace(aData + ": " + aSubject.guid);
       this.addChangedID(aSubject.guid);
       break;
     case 'removeAllLogins':
-      this._log.debug(aData);
+      this._log.trace(aData);
       this._score += 50;
       break;
     }
