@@ -1356,7 +1356,8 @@ namespace nanojit
             // field in another machine instruction).
             //
             if (_logc->lcbits & LC_Assembly) {
-                outputf("    %s", _thisfrag->lirbuf->names->formatIns(ins));
+                LirNameMap* names = _thisfrag->lirbuf->names;
+                outputf("    %s", names->formatIns(ins));
                 if (ins->isGuard() && ins->oprnd1()) {
                     // Special case: code is generated for guard conditions at
                     // the same time that code is generated for the guard
@@ -1366,12 +1367,17 @@ namespace nanojit
                     // the condition *is* used again we'll end up printing it
                     // twice, but that's ok.
                     outputf("    %s       # codegen'd with the %s",
-                            _thisfrag->lirbuf->names->formatIns(ins->oprnd1()), lirNames[op]);
+                            names->formatIns(ins->oprnd1()), lirNames[op]);
 
                 } else if (ins->isop(LIR_cmov) || ins->isop(LIR_qcmov)) {
                     // Likewise for cmov conditions.
                     outputf("    %s       # codegen'd with the %s",
-                            _thisfrag->lirbuf->names->formatIns(ins->oprnd1()), lirNames[op]);
+                            names->formatIns(ins->oprnd1()), lirNames[op]);
+
+                } else if (ins->isop(LIR_mod)) {
+                    // There's a similar case when a div feeds into a mod.
+                    outputf("    %s       # codegen'd with the mod",
+                            names->formatIns(ins->oprnd1()));
                 }
             }
 #endif
