@@ -5547,7 +5547,6 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
 {
     nsresult rv;
 
-    // Update the busy cursor
     if ((~aStateFlags & (STATE_START | STATE_IS_NETWORK)) == 0) {
         nsCOMPtr<nsIWyciwygChannel>  wcwgChannel(do_QueryInterface(aRequest));
         nsCOMPtr<nsIWebProgress> webProgress =
@@ -5581,14 +5580,16 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
         // Page has begun to load
         mBusyFlags = BUSY_FLAGS_BUSY | BUSY_FLAGS_BEFORE_PAGE_LOAD;
 
-        // Show the progress cursor if the pref is set
-        PRBool tmpBool = PR_FALSE;
-        if (NS_SUCCEEDED(mPrefs->GetBoolPref("ui.use_activity_cursor", &tmpBool))
-            && tmpBool) {
-            nsCOMPtr<nsIWidget> mainWidget;
-            GetMainWidget(getter_AddRefs(mainWidget));
-            if (mainWidget) {
-                mainWidget->SetCursor(eCursor_spinning);
+        if ((aStateFlags & STATE_RESTORING) == 0) {
+            // Show the progress cursor if the pref is set
+            PRBool tmpBool = PR_FALSE;
+            if (NS_SUCCEEDED(mPrefs->GetBoolPref("ui.use_activity_cursor", &tmpBool))
+                && tmpBool) {
+                nsCOMPtr<nsIWidget> mainWidget;
+                GetMainWidget(getter_AddRefs(mainWidget));
+                if (mainWidget) {
+                    mainWidget->SetCursor(eCursor_spinning);
+                }
             }
         }
     }
