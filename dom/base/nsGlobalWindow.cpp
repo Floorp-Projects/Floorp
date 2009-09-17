@@ -411,7 +411,7 @@ public:
                     PRUint32 aPostDataLen, void *aHeadersData,
                     PRUint32 aHeadersDataLen, PRBool aIsFile = PR_FALSE);
   NS_IMETHOD ShowStatus(const PRUnichar *aStatusMsg);
-  NPError ShowNativeContextMenu(NPMenu* menu, nsPluginEvent* event);
+  NPError ShowNativeContextMenu(NPMenu* menu, void* event);
   NPBool ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
                       double *destX, double *destY, NPCoordinateSpace destSpace);
 
@@ -464,7 +464,7 @@ nsDummyJavaPluginOwner::GetInstance(nsIPluginInstance *&aInstance)
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::GetWindow(nsPluginWindow *&aWindow)
+nsDummyJavaPluginOwner::GetWindow(NPWindow *&aWindow)
 {
   aWindow = nsnull;
 
@@ -472,10 +472,10 @@ nsDummyJavaPluginOwner::GetWindow(nsPluginWindow *&aWindow)
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::GetMode(nsPluginMode *aMode)
+nsDummyJavaPluginOwner::GetMode(PRInt32 *aMode)
 {
   // This is wrong, but there's no better alternative.
-  *aMode = nsPluginMode_Embedded;
+  *aMode = NP_EMBED;
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -508,7 +508,7 @@ nsDummyJavaPluginOwner::ShowStatus(const PRUnichar *aStatusMsg)
 }
 
 NPError
-nsDummyJavaPluginOwner::ShowNativeContextMenu(NPMenu* menu, nsPluginEvent* event)
+nsDummyJavaPluginOwner::ShowNativeContextMenu(NPMenu* menu, void* event)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -529,13 +529,13 @@ nsDummyJavaPluginOwner::GetDocument(nsIDocument **aDocument)
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::InvalidateRect(nsPluginRect *invalidRect)
+nsDummyJavaPluginOwner::InvalidateRect(NPRect *invalidRect)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::InvalidateRegion(nsPluginRegion invalidRegion)
+nsDummyJavaPluginOwner::InvalidateRegion(NPRegion invalidRegion)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

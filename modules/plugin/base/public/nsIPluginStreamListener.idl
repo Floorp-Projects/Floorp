@@ -51,7 +51,7 @@
 #include "nsIInputStream.idl"
 
 %{C++
-#include "nsplugindefs.h"
+#include "npapi.h"
 %}
 
 /**
@@ -60,7 +60,7 @@
  * to determine if a plugin manager implements more specific APIs or other 
  * browser interfaces for the plugin to use (e.g. nsINetworkManager).
  */
-[uuid(df055770-5448-11d2-8164-006008119d7a)]
+[uuid(02C9DAD7-D9DD-4F36-BD5E-93CA404A31BC)]
 interface nsIPluginStreamListener : nsISupports
 {
     /**
@@ -115,5 +115,5 @@ interface nsIPluginStreamListener : nsISupports
    *
    * @param aStreamType - the type of the stream
    */
-  readonly attribute nsPluginStreamType streamType;
+  readonly attribute PRInt32 streamType;
 };

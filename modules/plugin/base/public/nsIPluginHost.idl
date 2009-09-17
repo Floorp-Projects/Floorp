@@ -44,7 +44,6 @@
 
 %{C++
 #include "nsPluginNativeWindow.h"
-#include "nsplugindefs.h"
 #ifdef MOZILLA_INTERNAL_API
 #include "nsString.h"
 #include "nsNetUtil.h"

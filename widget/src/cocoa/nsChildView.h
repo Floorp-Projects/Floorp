@@ -451,7 +451,8 @@ protected:
   PRPackedBool          mPluginDrawing;
   PRPackedBool          mPluginIsCG; // true if this is a CoreGraphics plugin
 
-  nsPluginPort          mPluginPort;
+  NP_CGContext          mPluginCGContext;
+  NP_Port               mPluginQDPort;
   nsIPluginInstanceOwner* mPluginInstanceOwner; // [WEAK]
 
   static PRUint32 sLastInputEventCount;

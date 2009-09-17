@@ -193,7 +193,7 @@
 #endif // defined(MOZ_SPLASHSCREEN)
 
 // Windowless plugin support
-#include "nsplugindefs.h"
+#include "npapi.h"
 
 #include "nsWindowDefs.h"
 
@@ -2833,7 +2833,7 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
   event.isMeta    = PR_FALSE;
   event.isAlt     = aModKeyState.mIsAltDown;
 
-  nsPluginEvent pluginEvent;
+  NPEvent pluginEvent;
   if (aMsg && PluginHasFocus()) {
     pluginEvent.event = aMsg->message;
     pluginEvent.wParam = aMsg->wParam;
@@ -2943,7 +2943,7 @@ PRBool nsWindow::DispatchPluginEvent(const MSG &aMsg)
   nsGUIEvent event(PR_TRUE, NS_PLUGIN_EVENT, this);
   nsIntPoint point(0, 0);
   InitEvent(event, &point);
-  nsPluginEvent pluginEvent;
+  NPEvent pluginEvent;
   pluginEvent.event = aMsg.message;
   pluginEvent.wParam = aMsg.wParam;
   pluginEvent.lParam = aMsg.lParam;
@@ -3064,7 +3064,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   printf("Msg Time: %d Click Count: %d\n", curMsgTime, event.clickCount);
 #endif
 
-  nsPluginEvent pluginEvent;
+  NPEvent pluginEvent;
 
   switch (aEventType)
   {
@@ -3234,7 +3234,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
     event.refPoint.x = 0;
     event.refPoint.y = 0;
 
-    nsPluginEvent pluginEvent;
+    NPEvent pluginEvent;
 
     switch (aEventType)
     {

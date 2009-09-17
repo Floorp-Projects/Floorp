@@ -50,7 +50,6 @@
 #include "nsCOMPtr.h"
 #include "nsToolkit.h"
 #include "nsCRT.h"
-#include "nsplugindefs.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
@@ -1004,7 +1003,10 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
         [(ChildView*)mView setIsPluginView:YES];
 
       UpdatePluginPort();
-      retVal = (void*)&mPluginPort;
+      if (mPluginIsCG)
+        retVal = (void*)&mPluginCGContext;
+      else
+        retVal = (void*)&mPluginQDPort;
       break;
     }
   }
@@ -1072,7 +1074,7 @@ void nsChildView::HidePlugin()
   NS_ASSERTION(mIsPluginView, "HidePlugin called on non-plugin view");
 
   if (mPluginInstanceOwner && !mPluginIsCG) {
-    nsPluginWindow* window;
+    NPWindow* window;
     mPluginInstanceOwner->GetWindow(window);
     nsCOMPtr<nsIPluginInstance> instance;
     mPluginInstanceOwner->GetInstance(*getter_AddRefs(instance));
@@ -1103,27 +1105,27 @@ void nsChildView::UpdatePluginPort()
     // (which "provides the graphics context associated with the window
     // for the current thread") seems always to return the "right"
     // graphics context.  See bug 500130.
-    mPluginPort.cgPort.context = NULL;
-    mPluginPort.cgPort.window = NULL;
+    mPluginCGContext.context = NULL;
+    mPluginCGContext.window = NULL;
 #ifndef NP_NO_CARBON
     if ([(ChildView*)mView pluginEventModel] == NPEventModelCarbon) {
       if (carbonWindow) {
-        mPluginPort.cgPort.context = (CGContextRef)[[cocoaWindow graphicsContext] graphicsPort];
-        mPluginPort.cgPort.window = carbonWindow;
+        mPluginCGContext.context = (CGContextRef)[[cocoaWindow graphicsContext] graphicsPort];
+        mPluginCGContext.window = carbonWindow;
       }
     }
 #endif
     if ([(ChildView*)mView pluginEventModel] == NPEventModelCocoa) {
       if (cocoaWindow) {
-        mPluginPort.cgPort.context = (CGContextRef)[[cocoaWindow graphicsContext] graphicsPort];
-        mPluginPort.cgPort.window = cocoaWindow;
+        mPluginCGContext.context = (CGContextRef)[[cocoaWindow graphicsContext] graphicsPort];
+        mPluginCGContext.window = cocoaWindow;
       }
     }
   }
 #ifndef NP_NO_QUICKDRAW
   else {
     if (carbonWindow) {
-      mPluginPort.qdPort.port = ::GetWindowPort(carbonWindow);
+      mPluginQDPort.port = ::GetWindowPort(carbonWindow);
 
       NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
       NSRect frame = [[cocoaWindow contentView] frame];
@@ -1131,10 +1133,10 @@ void nsChildView::UpdatePluginPort()
 
       // need to convert view's origin to window coordinates.
       // then, encode as "SetOrigin" ready values.
-      mPluginPort.qdPort.portx = (PRInt32)-viewOrigin.x;
-      mPluginPort.qdPort.porty = (PRInt32)-viewOrigin.y;
+      mPluginQDPort.portx = (PRInt32)-viewOrigin.x;
+      mPluginQDPort.porty = (PRInt32)-viewOrigin.y;
     } else {
-      mPluginPort.qdPort.port = NULL;
+      mPluginQDPort.port = NULL;
     }
   }
 #endif
@@ -1511,7 +1513,7 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   // internally (see bug #420527 for details).
   CGrafPtr port = ::GetWindowPort(WindowRef([window windowRef]));
   if (!mPluginIsCG)
-    port = mPluginPort.qdPort.port;
+    port = mPluginQDPort.port;
 
   RgnHandle pluginRegion = ::NewRgn();
   if (pluginRegion) {
