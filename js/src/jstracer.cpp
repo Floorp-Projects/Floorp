@@ -77,6 +77,7 @@
 #include "jsxml.h"
 
 #include "jsatominlines.h"
+#include "jspropcacheinlines.h"
 #include "jsscriptinlines.h"
 
 #include "jsautooplen.h"        // generated headers last
@@ -8521,8 +8522,8 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                     obj2->dropProperty(cx, prop);
                     ABORT_TRACE("property found on non-native object");
                 }
-                entry = js_FillPropertyCache(cx, aobj, 0, protoIndex, obj2,
-                                             (JSScopeProperty*) prop, false);
+                entry = JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, protoIndex, obj2,
+                                                   (JSScopeProperty*) prop, false);
                 JS_ASSERT(entry);
                 if (entry == JS_NO_PROP_CACHE_FILL)
                     entry = NULL;
