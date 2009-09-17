@@ -45,19 +45,30 @@
 
 #ifdef FEATURE_NANOJIT
 
-#ifdef AVMPLUS_IA32
-#define NANOJIT_IA32
-#elif AVMPLUS_ARM
-#define NANOJIT_ARM
-#elif AVMPLUS_PPC
-#define NANOJIT_PPC
-#elif AVMPLUS_SPARC
-#define NANOJIT_SPARC
-#elif AVMPLUS_AMD64
-#define NANOJIT_X64
-#define NANOJIT_64BIT
+#if defined AVMPLUS_IA32
+    #define NANOJIT_IA32
+#elif defined AVMPLUS_ARM
+    #define NANOJIT_ARM
+#elif defined AVMPLUS_PPC
+    #define NANOJIT_PPC
+#elif defined AVMPLUS_SPARC
+    #define NANOJIT_SPARC
+#elif defined AVMPLUS_AMD64
+    #define NANOJIT_X64
 #else
-#error "unknown nanojit architecture"
+    #error "unknown nanojit architecture"
+#endif
+
+#ifdef AVMPLUS_64BIT
+#define NANOJIT_64BIT
+#endif
+
+#if defined NANOJIT_64BIT
+    #define IF_64BIT(...) __VA_ARGS__
+    #define UNLESS_64BIT(...)
+#else
+    #define IF_64BIT(...)
+    #define UNLESS_64BIT(...) __VA_ARGS__
 #endif
 
 // Embed no-op macros that let Valgrind work with the JIT.
@@ -77,7 +88,6 @@ namespace nanojit
      * START AVM bridging definitions
      * -------------------------------------------
      */
-    class Fragment;
     typedef avmplus::AvmCore AvmCore;
     typedef avmplus::OSDep OSDep;
 
@@ -128,8 +138,12 @@ namespace nanojit
 }
 
 #ifdef AVMPLUS_VERBOSE
+#ifndef NJ_VERBOSE_DISABLED
 #define NJ_VERBOSE 1
+#endif
+#ifndef NJ_PROFILE_DISABLED
 #define NJ_PROFILE 1
+#endif
 #endif
 
 #ifdef MOZ_NO_VARADIC_MACROS
