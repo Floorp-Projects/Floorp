@@ -344,21 +344,6 @@ toolbarbutton.page-button {
   list-style-image: url("chrome://browser/skin/images/console-active-64.png");
 }
 
-/* downloads panel UI   ---------------------------------------------------- */
-@media (orientation: landscape) {
-  #downloads-subheader {
-    -moz-box-orient: horizontal;
-    -moz-box-align: center;
-  }
-}
-
-@media (orientation: portrait) {
-  #downloads-subheader {
-    -moz-box-orient: vertical;
-    -moz-box-pack: center;
-  }
-}
-
 /* addons panel UI   ------------------------------------------------------- */
 @media (orientation: landscape) {
   #addons-repo {

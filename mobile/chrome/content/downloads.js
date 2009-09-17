@@ -46,23 +46,15 @@ var DownloadsView = {
   _dlmgr: null,
   _progress: null,
 
-  _initStatement: function dv__initStatement(aMode) {
-    aMode = aMode || "date";
-
+  _initStatement: function dv__initStatement() {
     if (this._stmt)
       this._stmt.finalize();
-
-    let order = "endTime DESC, startTime DESC";
-    if (aMode == "name")
-      order = "name ASC";
-    else if (aMode == "site")
-      order = "REPLACE(REPLACE(REPLACE(source, \"http://\", \"\"), \"https://\", \"\"), \"ftp://\", \"\") ASC";
 
     this._stmt = this._dlmgr.DBConnection.createStatement(
       "SELECT id, target, name, source, state, startTime, endTime, referrer, " +
              "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) isActive " +
       "FROM moz_downloads " +
-      "ORDER BY isActive DESC, " + order);
+      "ORDER BY isActive DESC, endTime DESC, startTime DESC");
   },
 
   _getLocalFile: function dv__getLocalFile(aFileURI) {
@@ -171,10 +163,6 @@ var DownloadsView = {
     clearTimeout(this._timeoutID);
     this._stmt.reset();
 
-    // Array of space-separated lower-case search terms
-    let search = document.getElementById("downloads-search-text");
-    this._searchTerms = search.value.trim().toLowerCase().split(/\s+/);
-
     // Clear the list before adding items
     this._clearList();
 
@@ -228,17 +216,9 @@ var DownloadsView = {
       let isActive = this._stmt.getInt32(10);
       attrs.progress = isActive ? this._dlmgr.getDownload(attrs.id).percentComplete : 100;
 
-      // Make the item and add it to the end if it's active or matches the search
+      // Make the item and add it to the end
       let item = this._createItem(attrs);
-      if (item && (isActive || this._matchesSearch(item))) {
-        // Add item to the end
-        this._list.appendChild(item);
-      }
-      else {
-        // We didn't add an item, so bump up the number of items to process, but
-        // not a whole number so that we eventually do pause for a chunk break
-        aNumItems += .9;
-      }
+      this._list.appendChild(item);
     }
     catch (e) {
       // Something went wrong when stepping or getting values, so clear and quit
@@ -259,27 +239,6 @@ var DownloadsView = {
     }
   },
 
-  _matchesSearch: function dv__matchesSearch(aItem) {
-    const searchAttributes = ["target", "status", "datetime"];
-
-    // Return early if we have no search terms
-    if (this._searchTerms.length == 0)
-      return true;
-
-    // Search through the download attributes that are shown to the user and
-    // make it into one big string for easy combined searching
-    let combinedSearch = "";
-    for each (let attr in searchAttributes)
-      combinedSearch += aItem.getAttribute(attr).toLowerCase() + " ";
-
-    // Make sure each of the terms are found
-    for each (let term in this._searchTerms)
-      if (combinedSearch.search(term) == -1)
-        return false;
-
-    return true;
-  },
-
   downloadStarted: function dv_downloadStarted(aDownload) {
     let attrs = {
       id: aDownload.id,
@@ -296,28 +255,20 @@ var DownloadsView = {
 
     // Make the item and add it to the beginning
     let item = this._createItem(attrs);
-    if (item) {
-      // Add item to the beginning
-      this._list.insertBefore(item, this._list.firstChild);
-    }
+    this._list.insertBefore(item, this._list.firstChild);
   },
 
   downloadCompleted: function dv_downloadCompleted(aDownload) {
+    // Move the download below active
     let element = this.getElementForDownload(aDownload.id);
 
-    // Move the download below active if it should stay in the list
-    if (this._matchesSearch(element)) {
-      // Iterate down until we find a non-active download
-      let next = element.nextSibling;
-      while (next && next.inProgress)
-        next = next.nextSibling;
+    // Iterate down until we find a non-active download
+    let next = element.nextSibling;
+    while (next && next.inProgress)
+      next = next.nextSibling;
 
-      // Move the item
-      this._list.insertBefore(element, next);
-    }
-    else {
-      this._removeItem(element);
-    }
+    // Move the item
+    this._list.insertBefore(element, next);
   },
 
   _updateStatus: function dv__updateStatus(aItem) {
@@ -388,19 +339,6 @@ var DownloadsView = {
 
   _replaceInsert: function dv__replaceInsert(aText, aIndex, aValue) {
     return aText.replace("#" + aIndex, aValue);
-  },
-
-  toggleMode: function dv_toggleMode() {
-    let mode = document.getElementById("downloads-sort-mode");
-    if (mode.value == "search") {
-      document.getElementById("downloads-search-box").collapsed = false;
-      document.getElementById("downloads-search-text").value = "";
-    }
-    else {
-      document.getElementById("downloads-search-box").collapsed = true;
-      this._initStatement(mode.value);
-      this.getDownloads();
-    }
   },
 
   getElementForDownload: function dv_getElementFromDownload(aID) {

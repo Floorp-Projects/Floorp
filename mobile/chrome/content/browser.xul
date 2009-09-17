@@ -338,21 +338,9 @@
         </vbox>
 
         <vbox id="downloads-container" flex="1">
-          <vbox id="downloads-header" class="panel-header">
-            <box id="downloads-subheader">
-              <label value="&downloadsHeader.label;" flex="1"/>
-              <radiogroup id="downloads-sort-mode" class="toggle-dark" oncommand="DownloadsView.toggleMode();">
-                <radio label="&downloadsSortDate.label;" value="date" selected="true"/>
-                <radio label="&downloadsSortSite.label;" value="site"/>
-                <radio label="&downloadsSortName.label;" value="name"/>
-                <radio label="&downloadsSearch.label;" value="search"/>
-              </radiogroup>
-            </box>
-            <hbox id="downloads-search-box" pack="end" collapsed="true">
-              <textbox id="downloads-search-text" emptytext="&downloadsSearch2.emptytext;" type="search" searchbutton="false"
-                       oncommand="DownloadsView.getDownloads();"/>
-            </hbox>
-          </vbox>
+          <hbox id="downloads-header" class="panel-header">
+            <label value="&downloadsHeader.label;" flex="1"/>
+          </hbox>
           <richlistbox id="downloads-list" flex="1"/>
         </vbox>
 

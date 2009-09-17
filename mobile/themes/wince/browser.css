@@ -164,21 +164,6 @@ toolbarbutton.page-button {
   padding: 1.1mm; /* core spacing */
 }
 
-/* downloads panel UI   ---------------------------------------------------- */
-@media (orientation: landscape) {
-  #downloads-subheader {
-    -moz-box-orient: horizontal;
-    -moz-box-align: center;
-  }
-}
-
-@media (orientation: portrait) {
-  #downloads-subheader {
-    -moz-box-orient: vertical;
-    -moz-box-pack: center;
-  }
-}
-
 /* addons panel UI   ------------------------------------------------------- */
 @media (orientation: landscape) {
   #addons-repo {
