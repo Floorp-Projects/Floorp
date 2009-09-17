@@ -42,6 +42,7 @@
 #define __nanojit_Nativei386__
 
 #ifdef PERFM
+#define DOPROF
 #include "../vprof/vprof.h"
 #define count_instr() _nvprof("x86",1)
 #define count_ret() _nvprof("x86-ret",1); count_instr();
@@ -185,7 +186,7 @@ namespace nanojit
     *((int32_t*)_nIns) = (int32_t)(i)
 
 #define MODRMs(r,d,b,l,i) \
-        NanoAssert(unsigned(r)<8 && unsigned(b)<8 && unsigned(i)<8); \
+        NanoAssert(unsigned(i)<8 && unsigned(b)<8 && unsigned(r)<8); \
         if ((d) == 0 && (b) != EBP) { \
             _nIns -= 2; \
             _nIns[0] = (uint8_t)     ( 0<<6 |   (r)<<3 | 4); \
@@ -374,7 +375,7 @@ namespace nanojit
 #define LEA(r,d,b)  do { count_alu(); ALUm(0x8d, r,d,b);            asm_output("lea %s,%d(%s)",gpn(r),d,gpn(b)); } while(0)
 // lea %r, d(%i*4)
 // This addressing mode is not supported by the MODRMSIB macro.
-#define LEAmi4(r,d,i) do { count_alu(); IMM32(d); *(--_nIns) = (2<<6)|(i<<3)|5; *(--_nIns) = (0<<6)|(r<<3)|4; *(--_nIns) = 0x8d;                    asm_output("lea %s, %p(%s*4)", gpn(r), (void*)d, gpn(i)); } while(0)
+#define LEAmi4(r,d,i) do { count_alu(); IMM32(d); *(--_nIns) = (2<<6)|((uint8_t)i<<3)|5; *(--_nIns) = (0<<6)|((uint8_t)r<<3)|4; *(--_nIns) = 0x8d;                    asm_output("lea %s, %p(%s*4)", gpn(r), (void*)d, gpn(i)); } while(0)
 
 #define CDQ()       do { SARi(EDX, 31); MR(EDX, EAX); } while(0)
 
@@ -448,7 +449,7 @@ namespace nanojit
 // load 8-bit, zero extend
 // note, only 5-bit offsets (!) are supported for this, but that's all we need at the moment
 // (movzx actually allows larger offsets mode but 5-bit gives us advantage in Thumb mode)
-#define LD8Z(r,d,b)    do { NanoAssert((d)>=0&&(d)<=31); ALU2m(0x0fb6,r,d,b); asm_output("movzx %s,%d(%s)", gpn(r),d,gpn(b)); } while(0)
+#define LD8Z(r,d,b)    do { count_ld(); NanoAssert((d)>=0&&(d)<=31); ALU2m(0x0fb6,r,d,b); asm_output("movzx %s,%d(%s)", gpn(r),d,gpn(b)); } while(0)
 
 #define LD8Zdm(r,addr) do { \
     count_ld(); \
