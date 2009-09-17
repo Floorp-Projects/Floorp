@@ -81,12 +81,8 @@ CPPSRCS		= \
 		nsAccelerometerUnix.cpp \
 		$(NULL)
 
-ifdef NS_OSSO
-CPPSRCS         += nsIdleServiceOSSO.cpp
-else
 ifdef MOZ_X11
 CPPSRCS         += nsIdleServiceGTK.cpp
-endif
 endif
 
 ifdef NS_PRINTING
