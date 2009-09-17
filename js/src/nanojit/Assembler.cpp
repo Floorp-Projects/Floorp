@@ -1357,11 +1357,21 @@ namespace nanojit
             //
             if (_logc->lcbits & LC_Assembly) {
                 outputf("    %s", _thisfrag->lirbuf->names->formatIns(ins));
-                // Special case: a guard condition won't get printed next time
-                // around the loop, so do it now.
                 if (ins->isGuard() && ins->oprnd1()) {
-                    outputf("    %s       # handled by the guard",
-                            _thisfrag->lirbuf->names->formatIns(ins->oprnd1()));
+                    // Special case: code is generated for guard conditions at
+                    // the same time that code is generated for the guard
+                    // itself.  If the condition is only used by the guard, we
+                    // must print it now otherwise it won't get printed.  So
+                    // we do print it now, with an explanatory comment.  If
+                    // the condition *is* used again we'll end up printing it
+                    // twice, but that's ok.
+                    outputf("    %s       # codegen'd with the %s",
+                            _thisfrag->lirbuf->names->formatIns(ins->oprnd1()), lirNames[op]);
+
+                } else if (ins->isop(LIR_cmov) || ins->isop(LIR_qcmov)) {
+                    // Likewise for cmov conditions.
+                    outputf("    %s       # codegen'd with the %s",
+                            _thisfrag->lirbuf->names->formatIns(ins->oprnd1()), lirNames[op]);
                 }
             }
 #endif
