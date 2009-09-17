@@ -43,6 +43,8 @@
 #include "mozilla/plugins/PluginScriptableObjectChild.h"
 
 #include "npfunctions.h"
+#include "nsAutoPtr.h"
+#include "nsTArray.h"
 
 #undef _MOZ_LOG
 #define _MOZ_LOG(s) printf("[PluginInstanceChild] %s\n", s)
@@ -65,74 +67,17 @@ class PluginInstanceChild : public PPluginInstanceChild
 protected:
     friend class BrowserStreamChild;
 
-
-
-    // FIXME/bent: demo purposes only
-    virtual nsresult
-    AnswerTest(const Variant& v1, const Variant& v2, Variant* _retval)
-    {
-        printf("\n[PluginInstanceChild] v1: ");
-
-        switch (v1.type()) {
-        case Variant::Tint: {
-            int i = v1;
-            printf("variant-int %d", i);
-            break;
-        }            
-        case Variant::Tdouble: {
-            double d = v1;
-            printf("variant-double %e", d);
-            break;
-        }
-        case Variant::TPPluginInstanceChild: {
-            const PPluginInstanceChild* p = v1;
-            printf("plugin instance %p", p);
-            break;
-        }
-        default:
-            NS_RUNTIMEABORT("unexpected Variant value");
-        }
-
-        printf(", v2: ");
-
-        switch (v2.type()) {
-        case Variant::Tint: {
-            int i = v2;
-            printf("variant-int %d", i);
-            break;
-        }            
-        case Variant::Tdouble: {
-            double d = v2;
-            printf("variant-double %e", d);
-            break;
-        }
-        case Variant::TPPluginInstanceChild: {
-            const PPluginInstanceChild* p = v2;
-            printf("plugin instance %p", p);
-            break;
-        }
-        default:
-            NS_RUNTIMEABORT("unexpected Variant value");
-        }
-
-        puts("\n");
-        *_retval = v1;
-        return NS_OK;
-    }
-
-
-
     virtual nsresult AnswerNPP_SetWindow(const NPWindow& window, NPError* rv);
 
-    virtual nsresult AnswerNPP_GetValue(const nsString& key, nsString* value);
+    virtual nsresult
+    AnswerNPP_GetValue_NPPVpluginScriptableNPObject(PPluginScriptableObjectChild** value,
+                                                    NPError* result);
 
     virtual PPluginScriptableObjectChild*
-    PPluginScriptableObjectConstructor(NPError* _retval);
+    PPluginScriptableObjectConstructor();
 
     virtual nsresult
-    PPluginScriptableObjectDestructor(PPluginScriptableObjectChild* aObject,
-                                      NPError* _retval);
-
+    PPluginScriptableObjectDestructor(PPluginScriptableObjectChild* aObject);
 
     virtual PBrowserStreamChild*
     PBrowserStreamConstructor(const nsCString& url,
@@ -191,6 +136,9 @@ public:
     NPN_GetValue(NPNVariable aVariable,
                  void* aValue);
 
+    PluginScriptableObjectChild*
+    CreateActorForNPObject(NPObject* aObject);
+
 private:
 
 #if defined(OS_WIN)
@@ -222,6 +170,8 @@ private:
     WNDPROC mPluginWndProc;
     HWND mPluginParentHWND;
 #endif
+
+    nsTArray<nsAutoPtr<PluginScriptableObjectChild> > mScriptableObjects;
 };
 
 } // namespace plugins

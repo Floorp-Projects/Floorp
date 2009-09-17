@@ -37,8 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "PluginInstanceChild.h"
+#include "PluginModuleChild.h"
 #include "BrowserStreamChild.h"
 #include "StreamNotifyChild.h"
+
+using namespace mozilla::plugins;
 
 #if defined(OS_LINUX)
 
@@ -88,9 +91,6 @@ NPNVariableToString(NPNVariable aVar)
 }
 
 } /* anonymous namespace */
-
-namespace mozilla {
-namespace plugins {
 
 PluginInstanceChild::~PluginInstanceChild()
 {
@@ -159,10 +159,28 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 }
 
 nsresult
-PluginInstanceChild::AnswerNPP_GetValue(const nsString& key,
-                                        nsString* value)
+PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
+                                           PPluginScriptableObjectChild** value,
+                                           NPError* result)
 {
-    return NPERR_GENERIC_ERROR;
+
+    NPObject* object;
+    *result = mPluginIface->getvalue(GetNPP(), NPPVpluginScriptableNPObject,
+                                     &object);
+    if (*result != NPERR_NO_ERROR) {
+        return NS_OK;
+    }
+
+    PluginScriptableObjectChild* actor = CreateActorForNPObject(object);
+    if (!actor) {
+        PluginModuleChild::sBrowserFuncs.releaseobject(object);
+        *result = NPERR_GENERIC_ERROR;
+        return NS_OK;
+    }
+
+    PluginModuleChild::sBrowserFuncs.releaseobject(object);
+    *value = actor;
+    return NS_OK;
 }
 
 nsresult
@@ -388,18 +406,32 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
 #endif // OS_WIN
 
 PPluginScriptableObjectChild*
-PluginInstanceChild::PPluginScriptableObjectConstructor(NPError* _retval)
+PluginInstanceChild::PPluginScriptableObjectConstructor()
 {
-    NS_NOTYETIMPLEMENTED("PluginInstanceChild::NPObjectConstructor");
-    return nsnull;
+    nsAutoPtr<PluginScriptableObjectChild>* object =
+        mScriptableObjects.AppendElement();
+    NS_ENSURE_TRUE(object, nsnull);
+
+    *object = new PluginScriptableObjectChild();
+    NS_ENSURE_TRUE(*object, nsnull);
+
+    return object->get();
 }
 
 nsresult
-PluginInstanceChild::PPluginScriptableObjectDestructor(PPluginScriptableObjectChild* aObject,
-                                                       NPError* _retval)
+PluginInstanceChild::PPluginScriptableObjectDestructor(PPluginScriptableObjectChild* aObject)
 {
-    NS_NOTYETIMPLEMENTED("PluginInstanceChild::NPObjectDestructor");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    PluginScriptableObjectChild* object =
+        reinterpret_cast<PluginScriptableObjectChild*>(aObject);
+
+    PRUint32 count = mScriptableObjects.Length();
+    for (PRUint32 index = 0; index < count; index++) {
+        if (mScriptableObjects[index] == object) {
+            mScriptableObjects.RemoveElementAt(index);
+            break;
+        }
+    }
+    return NS_OK;
 }
 
 PBrowserStreamChild*
@@ -449,5 +481,23 @@ PluginInstanceChild::PStreamNotifyDestructor(PStreamNotifyChild* notifyData,
     return NS_OK;
 }
 
-} // namespace plugins
-} // namespace mozilla
+PluginScriptableObjectChild*
+PluginInstanceChild::CreateActorForNPObject(NPObject* aObject)
+{
+  NS_ASSERTION(aObject, "Null pointer!");
+
+  PluginScriptableObjectChild* actor =
+      reinterpret_cast<PluginScriptableObjectChild*>(
+          CallPPluginScriptableObjectConstructor());
+  NS_ENSURE_TRUE(actor, nsnull);
+
+  actor->Initialize(this, aObject);
+
+#ifdef DEBUG
+  bool ok =
+#endif
+  PluginModuleChild::current()->RegisterNPObject(aObject, actor);
+  NS_ASSERTION(ok, "Out of memory?");
+
+  return actor;
+}

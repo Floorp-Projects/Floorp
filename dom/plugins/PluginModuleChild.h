@@ -52,6 +52,8 @@
 #include "nsplugindefs.h"
 
 #include "nsAutoPtr.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
 
 #include "mozilla/plugins/PPluginModuleChild.h"
 #include "mozilla/plugins/PluginInstanceChild.h"
@@ -91,7 +93,8 @@ typedef NS_NPAPIPLUGIN_CALLBACK(NPError, NP_MAIN) (NPNetscapeFuncs* nCallbacks, 
 
 namespace mozilla {
 namespace plugins {
-//-----------------------------------------------------------------------------
+
+class PluginScriptableObjectChild;
 
 class PluginModuleChild : public PPluginModuleChild
 {
@@ -107,8 +110,16 @@ protected:
                                NPError* rv);
 
     virtual nsresult
-    PPluginInstanceDestructor(PPluginInstanceChild* actor,
+    PPluginInstanceDestructor(PPluginInstanceChild* aActor,
                               NPError* rv);
+
+    virtual nsresult
+    AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor,
+                                     const nsCString& aMimeType,
+                                     const uint16_t& aMode,
+                                     const nsTArray<nsCString>& aNames,
+                                     const nsTArray<nsCString>& aValues,
+                                     NPError* rv);
 
 public:
     PluginModuleChild();
@@ -121,6 +132,15 @@ public:
     void CleanUp();
 
     static const NPNetscapeFuncs sBrowserFuncs;
+
+    static PluginModuleChild* current();
+
+    bool RegisterNPObject(NPObject* aObject,
+                          PluginScriptableObjectChild* aActor);
+
+    void UnregisterNPObject(NPObject* aObject);
+
+    PluginScriptableObjectChild* GetActorForNPObject(NPObject* aObject);
 
 private:
     bool InitGraphics();
@@ -138,6 +158,8 @@ private:
     NP_PLUGINSHUTDOWN mShutdownFunc;
     NPPluginFuncs mFunctions;
     NPSavedData mSavedData;
+
+    nsDataHashtable<nsVoidPtrHashKey, PluginScriptableObjectChild*> mObjectMap;
 };
 
 } /* namespace plugins */
