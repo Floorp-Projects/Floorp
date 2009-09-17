@@ -237,6 +237,16 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->npp = instance;
   instance->pdata = instanceData;
 
+  TestNPObject* scriptableObject = (TestNPObject*)NPN_CreateObject(instance, &sNPClass);
+  if (!scriptableObject) {
+    printf("NPN_CreateObject failed to create an object, can't create a plugin instance\n");
+    free(instanceData);
+    return NPERR_GENERIC_ERROR;
+  }
+  scriptableObject->npp = instance;
+  scriptableObject->drawMode = DM_DEFAULT;
+  scriptableObject->drawColor = 0;
+
   bool requestWindow = true;
 
   if (!browserSupportsWindowless || !pluginSupportsWindowlessMode()) {
@@ -488,10 +498,10 @@ NPN_ReleaseVariantValue(NPVariant *variant)
 NPObject*
 scriptableAllocate(NPP npp, NPClass* aClass)
 {
-  NPObject* object = (NPObject*)NPN_MemAlloc(sizeof(NPObject));
+  TestNPObject* object = (TestNPObject*)NPN_MemAlloc(sizeof(TestNPObject));
   if (!object)
     return NULL;
-  memset(object, 0, sizeof(NPObject));
+  memset(object, 0, sizeof(TestNPObject));
   return object;
 }
 

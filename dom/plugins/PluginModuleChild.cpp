@@ -70,7 +70,7 @@ PluginModuleChild::PluginModuleChild() :
 #endif
 //  ,mNextInstanceId(0)
 {
-    NS_ASSERTION(!gInstance, "Bad news bears!");
+    NS_ASSERTION(!gInstance, "Something terribly wrong here!");
     memset(&mFunctions, 0, sizeof(mFunctions));
     memset(&mSavedData, 0, sizeof(mSavedData));
     gInstance = this;
@@ -78,11 +78,19 @@ PluginModuleChild::PluginModuleChild() :
 
 PluginModuleChild::~PluginModuleChild()
 {
-    NS_ASSERTION(gInstance == this, "Bad news bears!");
+    NS_ASSERTION(gInstance == this, "Something terribly wrong here!");
     if (mLibrary) {
         PR_UnloadLibrary(mLibrary);
     }
     gInstance = nsnull;
+}
+
+// static
+PluginModuleChild*
+PluginModuleChild::current()
+{
+    NS_ASSERTION(gInstance, "Null instance!");
+    return gInstance;
 }
 
 bool
@@ -93,6 +101,11 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     _MOZ_LOG(__FUNCTION__);
 
     NS_ASSERTION(aChannel, "need a channel");
+
+    if (!mObjectMap.Init()) {
+       NS_WARNING("Failed to initialize object hashtable!");
+       return false;
+    }
 
     if (!InitGraphics())
         return false;
@@ -172,6 +185,35 @@ PluginModuleChild::CleanUp()
     // FIXME/cjones: destroy all instances
 }
 
+bool
+PluginModuleChild::RegisterNPObject(NPObject* aObject,
+                                    PluginScriptableObjectChild* aActor)
+{
+    NS_ASSERTION(mObjectMap.IsInitialized(), "Not initialized!");
+    NS_ASSERTION(aObject && aActor, "Null pointer!");
+    NS_ASSERTION(!mObjectMap.Get(aObject, nsnull),
+                 "Reregistering the same object!");
+    return !!mObjectMap.Put(aObject, aActor);
+}
+
+void
+PluginModuleChild::UnregisterNPObject(NPObject* aObject)
+{
+    NS_ASSERTION(mObjectMap.IsInitialized(), "Not initialized!");
+    NS_ASSERTION(aObject, "Null pointer!");
+    NS_ASSERTION(mObjectMap.Get(aObject, nsnull),
+                 "Unregistering an object that was never added!");
+    mObjectMap.Remove(aObject);
+}
+
+PluginScriptableObjectChild*
+PluginModuleChild::GetActorForNPObject(NPObject* aObject)
+{
+    NS_ASSERTION(mObjectMap.IsInitialized(), "Not initialized!");
+    NS_ASSERTION(aObject, "Null pointer!");
+    PluginScriptableObjectChild* actor;
+    return mObjectMap.Get(aObject, &actor) ? actor : nsnull;
+}
 
 //-----------------------------------------------------------------------------
 // FIXME/cjones: just getting this out of the way for the moment ...
@@ -603,12 +645,10 @@ NPIdentifier NP_CALLBACK
 _getstringidentifier(const NPUTF8* aName)
 {
     _MOZ_LOG(__FUNCTION__);
-    NS_ASSERTION(gInstance, "No instance!");
 
     NPRemoteIdentifier ident;
-    nsresult rv =
-        gInstance->SendNPN_GetStringIdentifier(nsDependentCString(aName),
-                                               &ident);
+    nsresult rv = PluginModuleChild::current()->
+        SendNPN_GetStringIdentifier(nsDependentCString(aName), &ident);
     NS_ENSURE_SUCCESS(rv, 0);
 
     return (NPIdentifier)ident;
@@ -620,7 +660,6 @@ _getstringidentifiers(const NPUTF8** aNames,
                       NPIdentifier* aIdentifiers)
 {
     _MOZ_LOG(__FUNCTION__);
-    NS_ASSERTION(gInstance, "No instance!");
 
     if (!(aNames && aNameCount > 0 && aIdentifiers)) {
         NS_RUNTIMEABORT("Bad input! Headed for a crash!");
@@ -638,7 +677,8 @@ _getstringidentifiers(const NPUTF8** aNames,
         }
         NS_ASSERTION(names.Length() == aNameCount, "Should equal here!");
 
-        nsresult rv = gInstance->SendNPN_GetStringIdentifiers(names, &ids);
+        nsresult rv = PluginModuleChild::current()->
+            SendNPN_GetStringIdentifiers(names, &ids);
         NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to send message!");
 
         if (NS_SUCCEEDED(rv)) {
@@ -661,12 +701,10 @@ bool NP_CALLBACK
 _identifierisstring(NPIdentifier aIdentifier)
 {
     _MOZ_LOG(__FUNCTION__);
-    NS_ASSERTION(gInstance, "No instance!");
 
     bool isString;
-    nsresult rv =
-        gInstance->SendNPN_IdentifierIsString((NPRemoteIdentifier)aIdentifier,
-                                              &isString);
+    nsresult rv = PluginModuleChild::current()->
+        SendNPN_IdentifierIsString((NPRemoteIdentifier)aIdentifier, &isString);
     NS_ENSURE_SUCCESS(rv, false);
 
     return isString;
@@ -676,10 +714,10 @@ NPIdentifier NP_CALLBACK
 _getintidentifier(int32_t aIntId)
 {
     _MOZ_LOG(__FUNCTION__);
-    NS_ASSERTION(gInstance, "No instance!");
 
     NPRemoteIdentifier ident;
-    nsresult rv = gInstance->SendNPN_GetIntIdentifier(aIntId, &ident);
+    nsresult rv = PluginModuleChild::current()->
+        SendNPN_GetIntIdentifier(aIntId, &ident);
     NS_ENSURE_SUCCESS(rv, 0);
 
     return (NPIdentifier)ident;
@@ -689,12 +727,10 @@ NPUTF8* NP_CALLBACK
 _utf8fromidentifier(NPIdentifier aIdentifier)
 {
     _MOZ_LOG(__FUNCTION__);
-    NS_ASSERTION(gInstance, "No instance!");
 
     nsCAutoString val;
-    nsresult rv =
-        gInstance->SendNPN_UTF8FromIdentifier((NPRemoteIdentifier)aIdentifier,
-                                              &val);
+    nsresult rv = PluginModuleChild::current()->
+        SendNPN_UTF8FromIdentifier((NPRemoteIdentifier)aIdentifier, &val);
     NS_ENSURE_SUCCESS(rv, 0);
 
     return val.IsVoid() ? 0 : strdup(val.get());
@@ -704,12 +740,10 @@ int32_t NP_CALLBACK
 _intfromidentifier(NPIdentifier aIdentifier)
 {
     _MOZ_LOG(__FUNCTION__);
-    NS_ASSERTION(gInstance, "No instance!");
 
     int32_t val;
-    nsresult rv =
-        gInstance->SendNPN_IntFromIdentifier((NPRemoteIdentifier)aIdentifier,
-                                             &val);
+    nsresult rv = PluginModuleChild::current()->
+        SendNPN_IntFromIdentifier((NPRemoteIdentifier)aIdentifier, &val);
     NS_ENSURE_SUCCESS(rv, 0);
 
     return val;
@@ -720,72 +754,42 @@ _createobject(NPP aNPP,
               NPClass* aClass)
 {
     _MOZ_LOG(__FUNCTION__);
-#if 0
-    NS_ENSURE_TRUE(aNPP, 0);
-    NS_ENSURE_TRUE(aClass, 0);
 
-    NPObject* obj = sDelegate->GetNewScriptableObject(aNPP, aClass);
-    if (!obj) {
-        return 0;
+    NPObject* newObject;
+    if (aClass && aClass->allocate) {
+        newObject = aClass->allocate(aNPP, aClass);
+    }
+    else {
+        newObject = reinterpret_cast<NPObject*>(_memalloc(sizeof(NPObject)));
     }
 
-    int classId = sDelegate->GetClassId(aClass);
-    PluginModuleChild::Instance* instance =
-        static_cast<PluginModuleChild::Instance*>(aNPP);
-
-    int objectId = -1;
-    sDelegate->Send(new PluginHostMsg_MozCreateObject(
-                        instance->GetId(), classId, &objectId));
-    if (objectId == -1) {
-        return 0;
+    if (newObject) {
+        newObject->_class = aClass;
+        newObject->referenceCount = 1;
     }
-
-    PluginModuleChild::ScriptableObjectInfo& info =
-        sDelegate->GetScriptableObjectInfo(obj);
-    DCHECK(info.object = obj);
-    info.id = objectId;
-    info.instanceId = instance->GetId();
-
-    return obj;
-#endif
-    return 0;
+    return newObject;
 }
 
 NPObject* NP_CALLBACK
 _retainobject(NPObject* aNPObj)
 {
     _MOZ_LOG(__FUNCTION__);
-#if 0
-    PluginModuleChild::ScriptableObjectInfo& info =
-        sDelegate->GetScriptableObjectInfo(aNPObj);
-    DCHECK(info.object == aNPObj);
-    sDelegate->Send(new PluginHostMsg_MozRetainObject(info.instanceId, info.id));
-    aNPObj->referenceCount++;
+    ++aNPObj->referenceCount;
     return aNPObj;
-#endif
-
-    return 0;
 }
 
 void NP_CALLBACK
 _releaseobject(NPObject* aNPObj)
 {
     _MOZ_LOG(__FUNCTION__);
-#if 0
-    PluginModuleChild::ScriptableObjectInfo& info =
-        sDelegate->GetScriptableObjectInfo(aNPObj);
-    DCHECK(info.object == aNPObj);
-    sDelegate->Send(new PluginHostMsg_MozReleaseObject(info.instanceId, info.id));
 
     if (--aNPObj->referenceCount == 0) {
-        sDelegate->EraseScriptableObjectInfo(aNPObj);
         if (aNPObj->_class && aNPObj->_class->deallocate) {
             aNPObj->_class->deallocate(aNPObj);
         } else {
-            sBrowserFunctions.memfree(aNPObj);
+            _memfree(aNPObj);
         }
     }
-#endif
     return;
 }
 
@@ -961,13 +965,28 @@ PluginModuleChild::PPluginInstanceConstructor(const nsCString& aMimeType,
 {
     _MOZ_LOG(__FUNCTION__);
 
-    // create our wrapper instance
     nsAutoPtr<PluginInstanceChild> childInstance(
         new PluginInstanceChild(&mFunctions));
     if (!childInstance->Initialize()) {
         *rv = NPERR_GENERIC_ERROR;
         return 0;
     }
+    return childInstance.forget();
+}
+
+nsresult
+PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor,
+                                                    const nsCString& aMimeType,
+                                                    const uint16_t& aMode,
+                                                    const nsTArray<nsCString>& aNames,
+                                                    const nsTArray<nsCString>& aValues,
+                                                    NPError* rv)
+{
+    _MOZ_LOG(__FUNCTION__);
+
+    PluginInstanceChild* childInstance =
+        reinterpret_cast<PluginInstanceChild*>(aActor);
+    NS_ASSERTION(childInstance, "Null actor!");
 
     // unpack the arguments into a C format
     int argc = aNames.Length();
@@ -998,11 +1017,11 @@ PluginModuleChild::PPluginInstanceConstructor(const nsCString& aMimeType,
                           argv,
                           0);
     if (NPERR_NO_ERROR != *rv) {
-        return nsnull;
+        return NS_ERROR_FAILURE;
     }
 
     printf ("[PluginModuleChild] %s: returning %hd\n", __FUNCTION__, *rv);
-    return childInstance.forget();
+    return NS_OK;;
 }
 
 nsresult

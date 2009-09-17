@@ -46,6 +46,12 @@ typedef enum  {
   DM_SOLID_COLOR
 } DrawMode;
 
+typedef struct TestNPObject : NPObject {
+  NPP npp;
+  DrawMode drawMode;
+  PRUint32 drawColor; // 0xAARRGGBB
+} TestNPObject;
+
 typedef struct _PlatformData PlatformData;
 
 typedef struct InstanceData {
