@@ -349,7 +349,7 @@
             <label value="&prefsHeader.label;"/>
           </hbox>
           <richlistbox id="prefs-list" seltype="single" flex="1">
-            <setting title="&about.title;" type="button">
+            <setting title="&about.title;" type="control">
               &about.description;
               <button id="prefs-about-button" label="&about.button;" oncommand="Browser.addTab('about:fennec', true);"/>
             </setting>
@@ -367,7 +367,7 @@
                 &allowCookies.description;
               </setting>
               <setting pref="signon.rememberSignons" title="&rememberPasswords.title;" type="bool"/>
-              <setting title="&clearPrivateData.title;" type="button">
+              <setting title="&clearPrivateData.title;" type="control">
                 &clearPrivateData.description;
                 <button id="prefs-clear-data" label="&clearPrivateData.button;" command="cmd_sanitize"/>
               </setting>

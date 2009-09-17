@@ -376,3 +376,45 @@ colorpicker > vbox {
 .textbox-search-clear {
   list-style-image: url("chrome://browser/skin/images/search-clear-30.png");
 }
+
+/* menulist ---------------------------------------------------------------- */
+.menulist-label {
+  font-weight: bold !important;
+  font-size: 9pt !important;
+}
+
+menulist {
+  min-width: 12mm !important; /* button size */
+  min-height: 12mm !important; /* button size */
+  color: #000;
+  padding: 0.5mm;
+  border-width: 8px !important;
+  -moz-border-image: url("chrome://browser/skin/images/button-default-64.png") 8 repeat repeat;
+  -moz-appearance: none !important;
+}
+
+menulist:not([disabled="true"]):active:hover {
+  -moz-border-image: url("chrome://browser/skin/images/button-active-64.png") 8 repeat repeat;
+}
+
+menulist[disabled="true"] {
+  color: #aaa !important;
+}
+
+menulist > dropmarker {
+  width: 16px;
+  height: 16px;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  background-color: transparent;
+  padding: 1px;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  -moz-image-region: auto;
+  display: block;
+  border-left: 1px inset gray;
+}
+
+menulist > dropmarker[disabled="true"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
+  padding: 1px !important;
+}

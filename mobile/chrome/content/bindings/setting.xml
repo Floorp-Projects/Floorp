@@ -104,7 +104,7 @@
     </implementation>
   </binding>
 
-  <binding id="setting-bool" extends="chrome://browser/content/preferences/setting.xml#setting-base">
+  <binding id="setting-bool" extends="chrome://browser/content/bindings/setting.xml#setting-base">
     <content>
       <xul:box flex="1" class="prefbox">
         <xul:vbox flex="1">
@@ -127,7 +127,7 @@
     </implementation>
   </binding>
 
-  <binding id="setting-boolint" extends="chrome://browser/content/preferences/setting.xml#setting-base">
+  <binding id="setting-boolint" extends="chrome://browser/content/bindings/setting.xml#setting-base">
     <content>
       <xul:box flex="1" class="prefbox">
         <xul:vbox flex="1">
@@ -164,7 +164,7 @@
     </implementation>
   </binding>
 
-  <binding id="setting-button" extends="chrome://browser/content/preferences/setting.xml#setting-base">
+  <binding id="setting-control" extends="chrome://browser/content/bindings/setting.xml#setting-base">
     <content>
       <xul:box flex="1" class="prefbox">
         <xul:vbox flex="1">
@@ -174,7 +174,7 @@
           </xul:label>
         </xul:vbox>
         <xul:hbox anonid="input-container">
-          <children includes="button"/>
+          <children includes="button|menulist"/>
         </xul:hbox>
       </xul:box>
       <xul:preferences>
@@ -184,7 +184,7 @@
     </content>
   </binding>
   
-  <binding id="setting-string" extends="chrome://browser/content/preferences/setting.xml#setting-base">
+  <binding id="setting-string" extends="chrome://browser/content/bindings/setting.xml#setting-base">
     <content>
       <xul:box flex="1" class="prefbox">
         <xul:vbox flex="1">
@@ -194,7 +194,7 @@
           </xul:label>
         </xul:vbox>
         <xul:hbox anonid="input-container">
-          <xul:textbox xbl:inherits="disabled,type=inputtype" anonid="input" oninput="inputChanged();"/>
+          <xul:textbox xbl:inherits="disabled,emptytext,type=inputtype,min,max,increment,hidespinbuttons,wraparound,decimalplaces" anonid="input" oninput="inputChanged();"/>
         </xul:hbox>
       </xul:box>
       <xul:preferences>
