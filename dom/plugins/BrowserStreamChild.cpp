@@ -71,29 +71,29 @@ BrowserStreamChild::BrowserStreamChild(PluginInstanceChild* instance,
     mClosed = true;
 }
 
-nsresult
+bool
 BrowserStreamChild::AnswerNPP_WriteReady(const int32_t& newlength,
                                          int32_t *size)
 {
   if (mClosed) {
     *size = 0;
-    return NS_OK;
+    return true;
   }
 
   mStream.end = newlength;
 
   *size = mInstance->mPluginIface->writeready(&mInstance->mData, &mStream);
-  return NS_OK;
+  return true;
 }
 
-nsresult
+bool
 BrowserStreamChild::AnswerNPP_Write(const int32_t& offset,
                                     const Buffer& data,
                                     int32_t* consumed)
 {
   if (mClosed) {
     *consumed = -1;
-    return NS_OK;
+    return true;
   }
 
   *consumed = mInstance->mPluginIface->write(&mInstance->mData, &mStream,
@@ -102,18 +102,18 @@ BrowserStreamChild::AnswerNPP_Write(const int32_t& offset,
   if (*consumed < 0)
     mClosed = true;
 
-  return NS_OK;
+  return true;
 }
 
-nsresult
+bool
 BrowserStreamChild::AnswerNPP_StreamAsFile(const nsCString& fname)
 {
   if (mClosed)
-    return NS_OK;
+    return true;
 
   mInstance->mPluginIface->asfile(&mInstance->mData, &mStream,
                                   fname.get());
-  return NS_OK;
+  return true;
 }
 
 } /* namespace plugins */

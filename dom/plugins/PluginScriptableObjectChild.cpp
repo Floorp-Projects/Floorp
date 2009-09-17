@@ -125,6 +125,9 @@ ConvertToVariant(const NPRemoteVariant& aRemoteVariant,
       OBJECT_TO_NPVARIANT(object, aVariant);
       return true;
     }
+
+  default:
+      break;                    // break to NOTREACHED
   }
 
   NS_NOTREACHED("Shouldn't get here!");
@@ -208,19 +211,19 @@ PluginScriptableObjectChild::Initialize(PluginInstanceChild* aInstance,
   mObject = PluginModuleChild::sBrowserFuncs.retainobject(aObject);
 }
 
-nsresult
+bool
 PluginScriptableObjectChild::AnswerInvalidate()
 {
   NS_ENSURE_STATE(NS_IsMainThread());
   if (mObject) {
     PluginModuleChild::sBrowserFuncs.releaseobject(mObject);
     mObject = nsnull;
-    return NS_OK;
+    return true;
   }
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult
+bool
 PluginScriptableObjectChild::AnswerHasMethod(const NPRemoteIdentifier& aId,
                                              bool* aHasMethod)
 {
@@ -229,14 +232,14 @@ PluginScriptableObjectChild::AnswerHasMethod(const NPRemoteIdentifier& aId,
 
   if (!(mObject->_class && mObject->_class->hasMethod)) {
     *aHasMethod = false;
-    return NS_OK;
+    return true;
   }
 
   *aHasMethod = mObject->_class->hasMethod(mObject, (NPIdentifier)aId);
-  return NS_OK;
+  return true;
 }
 
-nsresult
+bool
 PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
                                           const nsTArray<NPRemoteVariant>& aArgs,
                                           NPRemoteVariant* aResult,
@@ -247,7 +250,7 @@ PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
 
   if (!(mObject->_class && mObject->_class->invoke)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   nsAutoTArray<NPVariant, 10> convertedArgs;
@@ -255,13 +258,13 @@ PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
 
   if (!convertedArgs.SetLength(argCount)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   for (PRUint32 index = 0; index < argCount; index++) {
     if (!ConvertToVariant(aArgs[index], convertedArgs[index])) {
       *aSuccess = false;
-      return NS_OK;
+      return true;
     }
   }
 
@@ -271,21 +274,21 @@ PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
                                          &result);
   if (!success) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   NPRemoteVariant convertedResult;
   if (!ConvertToRemoteVariant(result, convertedResult, mInstance)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   *aSuccess = true;
   *aResult = convertedResult;
-  return NS_OK;
+  return true;
 }
 
-nsresult
+bool
 PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<NPRemoteVariant>& aArgs,
                                                  NPRemoteVariant* aResult,
                                                  bool* aSuccess)
@@ -295,7 +298,7 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<NPRemoteVariant>
 
   if (!(mObject->_class && mObject->_class->invokeDefault)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   nsAutoTArray<NPVariant, 10> convertedArgs;
@@ -303,13 +306,13 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<NPRemoteVariant>
 
   if (!convertedArgs.SetLength(argCount)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   for (PRUint32 index = 0; index < argCount; index++) {
     if (!ConvertToVariant(aArgs[index], convertedArgs[index])) {
       *aSuccess = false;
-      return NS_OK;
+      return true;
     }
   }
 
@@ -319,21 +322,21 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<NPRemoteVariant>
                                                 argCount, &result);
   if (!success) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   NPRemoteVariant convertedResult;
   if (!ConvertToRemoteVariant(result, convertedResult, mInstance)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   *aSuccess = true;
   *aResult = convertedResult;
-  return NS_OK;
+  return true;
 }
 
-nsresult
+bool
 PluginScriptableObjectChild::AnswerHasProperty(const NPRemoteIdentifier& aId,
                                                bool* aHasProperty)
 {
@@ -342,14 +345,14 @@ PluginScriptableObjectChild::AnswerHasProperty(const NPRemoteIdentifier& aId,
 
   if (!(mObject->_class && mObject->_class->hasProperty)) {
     *aHasProperty = false;
-    return NS_OK;
+    return true;
   }
 
   *aHasProperty = mObject->_class->hasProperty(mObject, (NPIdentifier)aId);
-  return NS_OK;
+  return true;
 }
 
-nsresult
+bool
 PluginScriptableObjectChild::AnswerGetProperty(const NPRemoteIdentifier& aId,
                                                NPRemoteVariant* aResult,
                                                bool* aSuccess)
@@ -359,23 +362,23 @@ PluginScriptableObjectChild::AnswerGetProperty(const NPRemoteIdentifier& aId,
 
   if (!(mObject->_class && mObject->_class->getProperty)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   NPVariant result;
   if (!mObject->_class->getProperty(mObject, (NPIdentifier)aId, &result)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   NPRemoteVariant converted;
   if ((*aSuccess = ConvertToRemoteVariant(result, converted, mInstance))) {
     *aResult = converted;
   }
-  return NS_OK;
+  return true;
 }
 
-nsresult
+bool
 PluginScriptableObjectChild::AnswerSetProperty(const NPRemoteIdentifier& aId,
                                                const NPRemoteVariant& aValue,
                                                bool* aSuccess)
@@ -385,21 +388,21 @@ PluginScriptableObjectChild::AnswerSetProperty(const NPRemoteIdentifier& aId,
 
   if (!(mObject->_class && mObject->_class->setProperty)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   NPVariant converted;
   if (!ConvertToVariant(aValue, converted)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   *aSuccess = mObject->_class->setProperty(mObject, (NPIdentifier)aId,
                                            &converted);
-  return NS_OK;
+  return true;
 }
 
-nsresult
+bool
 PluginScriptableObjectChild::AnswerRemoveProperty(const NPRemoteIdentifier& aId,
                                                   bool* aSuccess)
 {
@@ -408,14 +411,14 @@ PluginScriptableObjectChild::AnswerRemoveProperty(const NPRemoteIdentifier& aId,
 
   if (!(mObject->_class && mObject->_class->removeProperty)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   *aSuccess = mObject->_class->removeProperty(mObject, (NPIdentifier)aId);
-  return NS_OK;
+  return true;
 }
 
-nsresult
+bool
 PluginScriptableObjectChild::AnswerEnumerate(nsTArray<NPRemoteIdentifier>* aProperties,
                                              bool* aSuccess)
 {
@@ -424,20 +427,20 @@ PluginScriptableObjectChild::AnswerEnumerate(nsTArray<NPRemoteIdentifier>* aProp
 
   if (!(mObject->_class && mObject->_class->enumerate)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   NPIdentifier* ids;
   uint32_t idCount;
   if (!mObject->_class->enumerate(mObject, &ids, &idCount)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   if (!aProperties->SetCapacity(idCount)) {
     PluginModuleChild::sBrowserFuncs.memfree(ids);
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   for (uint32_t index = 0; index < idCount; index++) {
@@ -450,10 +453,10 @@ PluginScriptableObjectChild::AnswerEnumerate(nsTArray<NPRemoteIdentifier>* aProp
 
   PluginModuleChild::sBrowserFuncs.memfree(ids);
   *aSuccess = true;
-  return NS_OK;
+  return true;
 }
 
-nsresult
+bool
 PluginScriptableObjectChild::AnswerConstruct(const nsTArray<NPRemoteVariant>& aArgs,
                                              NPRemoteVariant* aResult,
                                              bool* aSuccess)
@@ -463,7 +466,7 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<NPRemoteVariant>& aA
 
   if (!(mObject->_class && mObject->_class->construct)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   nsAutoTArray<NPVariant, 10> convertedArgs;
@@ -471,13 +474,13 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<NPRemoteVariant>& aA
 
   if (!convertedArgs.SetLength(argCount)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   for (PRUint32 index = 0; index < argCount; index++) {
     if (!ConvertToVariant(aArgs[index], convertedArgs[index])) {
       *aSuccess = false;
-      return NS_OK;
+      return true;
     }
   }
 
@@ -486,16 +489,16 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<NPRemoteVariant>& aA
                                             argCount, &result);
   if (!success) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   NPRemoteVariant convertedResult;
   if (!ConvertToRemoteVariant(result, convertedResult, mInstance)) {
     *aSuccess = false;
-    return NS_OK;
+    return true;
   }
 
   *aSuccess = true;
   *aResult = convertedResult;
-  return NS_OK;
+  return true;
 }

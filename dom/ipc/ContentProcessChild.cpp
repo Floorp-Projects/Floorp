@@ -86,11 +86,11 @@ ContentProcessChild::PIFrameEmbeddingConstructor(const MagicWindowHandle& hwnd)
     return nsnull;
 }
 
-nsresult
+bool
 ContentProcessChild::PIFrameEmbeddingDestructor(PIFrameEmbeddingChild* iframe)
 {
     mIFrames.RemoveElement(iframe);
-    return NS_OK;
+    return true;
 }
 
 PTestShellChild*
@@ -104,11 +104,11 @@ ContentProcessChild::PTestShellConstructor()
     return nsnull;
 }
 
-nsresult
+bool
 ContentProcessChild::PTestShellDestructor(PTestShellChild* shell)
 {
     mTestShells.RemoveElement(shell);
-    return NS_OK;
+    return true;
 }
 
 PNeckoChild* 
@@ -117,11 +117,11 @@ ContentProcessChild::PNeckoConstructor()
     return new NeckoChild();
 }
 
-nsresult 
+bool 
 ContentProcessChild::PNeckoDestructor(PNeckoChild* necko)
 {
     delete necko;
-    return NS_OK;
+    return true;
 }
 
 void
@@ -138,7 +138,7 @@ QuitIOLoop()
     MessageLoop::current()->Quit();
 }
 
-nsresult
+bool
 ContentProcessChild::RecvQuit()
 {
     mQuit = PR_TRUE;
@@ -148,7 +148,7 @@ ContentProcessChild::RecvQuit()
     XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                      NewRunnableFunction(&QuitIOLoop));
 
-    return NS_OK;
+    return true;
 }
 
 } // namespace dom

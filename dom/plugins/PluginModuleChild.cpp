@@ -933,24 +933,26 @@ _pluginthreadasynccall(NPP aNPP,
 
 #endif /* NP_VERSION_MINOR > 19 */
 
-nsresult
+bool
 PluginModuleChild::AnswerNP_Initialize(NPError* _retval)
 {
     _MOZ_LOG(__FUNCTION__);
 
 #if defined(OS_LINUX)
     *_retval = mInitializeFunc(&sBrowserFuncs, &mFunctions);
-    return NS_OK;
+    return true;
 
 #elif defined(OS_WIN)
     nsresult rv = mGetEntryPointsFunc(&mFunctions);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+        return false;
+    }
 
     NS_ASSERTION(HIBYTE(mFunctions.version) >= NP_VERSION_MAJOR,
                  "callback version is less than NP version");
 
     *_retval = mInitializeFunc(&sBrowserFuncs);
-    return NS_OK;
+    return true;
 #else
 #  error Please implement me for your platform
 #endif
@@ -974,7 +976,7 @@ PluginModuleChild::PPluginInstanceConstructor(const nsCString& aMimeType,
     return childInstance.forget();
 }
 
-nsresult
+bool
 PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor,
                                                     const nsCString& aMimeType,
                                                     const uint16_t& aMode,
@@ -1021,10 +1023,10 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
     }
 
     printf ("[PluginModuleChild] %s: returning %hd\n", __FUNCTION__, *rv);
-    return NS_OK;;
+    return true;;
 }
 
-nsresult
+bool
 PluginModuleChild::PPluginInstanceDestructor(PPluginInstanceChild* actor,
                                              NPError* rv)
 {
@@ -1035,5 +1037,5 @@ PluginModuleChild::PPluginInstanceDestructor(PPluginInstanceChild* actor,
     delete actor;
     inst->GetNPP()->ndata = 0;
 
-    return NS_OK;
+    return true;
 }

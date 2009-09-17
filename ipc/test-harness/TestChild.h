@@ -51,18 +51,18 @@ protected:
 #if 1
 //-----------------------------------------------------------------------------
 // "Hello world" example
-    virtual nsresult RecvHello();
+    virtual bool RecvHello();
 
 
 #elif 0
 //-----------------------------------------------------------------------------
 // Example solution to exercise
-    virtual nsresult RecvPing();
-    virtual nsresult RecvPong(const int& status);
-    virtual nsresult RecvTellValue(
+    virtual bool RecvPing();
+    virtual bool RecvPong(const int& status);
+    virtual bool RecvTellValue(
                 const String& key,
                 const String& val);
-    virtual nsresult RecvTellValues(
+    virtual bool RecvTellValues(
                 const StringArray& keys,
                 const StringArray& vals);
 #endif

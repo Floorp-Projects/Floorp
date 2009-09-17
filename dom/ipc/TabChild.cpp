@@ -91,7 +91,7 @@ TabChild::~TabChild()
     // TODObsmedberg: destroy the window!
 }
 
-nsresult
+bool
 TabChild::RecvloadURL(const nsCString& uri)
 {
     printf("loading %s, %d\n", uri.get(), NS_IsMainThread());
@@ -101,7 +101,7 @@ TabChild::RecvloadURL(const nsCString& uri)
                             NULL, NULL, NULL); 
 }
 
-nsresult
+bool
 TabChild::Recvmove(const PRUint32& x,
                      const PRUint32& y,
                      const PRUint32& width,
@@ -112,5 +112,5 @@ TabChild::Recvmove(const PRUint32& x,
 
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mWebNav);
     baseWin->SetPositionAndSize(x, y, width, height, PR_TRUE);
-    return NS_OK;
+    return true;
 }

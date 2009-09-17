@@ -96,13 +96,13 @@ PluginModuleParent::PPluginInstanceConstructor(const nsCString& aMimeType,
     return NULL;
 }
 
-nsresult
+bool
 PluginModuleParent::PPluginInstanceDestructor(PPluginInstanceParent* aActor,
                                               NPError* _retval)
 {
     _MOZ_LOG(__FUNCTION__);
     delete aActor;
-    return NS_OK;
+    return true;
 }
 
 void
@@ -323,7 +323,7 @@ PluginModuleParent::NPP_SetValue(NPP instance, NPNVariable variable,
     return InstCast(instance)->NPP_SetValue(variable, value);
 }
 
-nsresult
+bool
 PluginModuleParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
                                                 NPRemoteIdentifier* aId)
 {
@@ -336,10 +336,10 @@ PluginModuleParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
     NS_ENSURE_TRUE(newEntry, NS_ERROR_OUT_OF_MEMORY);
 
     *aId = (NPRemoteIdentifier)ident;
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginModuleParent::RecvNPN_GetIntIdentifier(const int32_t& aInt,
                                              NPRemoteIdentifier* aId)
 {
@@ -350,10 +350,10 @@ PluginModuleParent::RecvNPN_GetIntIdentifier(const int32_t& aInt,
     NS_ENSURE_TRUE(newEntry, NS_ERROR_OUT_OF_MEMORY);
 
     *aId = (NPRemoteIdentifier)ident;
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginModuleParent::RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
                                                nsCString* aString)
 {
@@ -364,10 +364,10 @@ PluginModuleParent::RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
     NS_ENSURE_STATE(val);
 
     aString->Assign(val);
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginModuleParent::RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
                                               int32_t* aInt)
 {
@@ -375,10 +375,10 @@ PluginModuleParent::RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
     NS_ENSURE_ARG(ident);
 
     *aInt = _intfromidentifier(ident);
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginModuleParent::RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
                                                bool* aIsString)
 {
@@ -386,10 +386,10 @@ PluginModuleParent::RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
     NS_ENSURE_ARG(ident);
 
     *aIsString = _identifierisstring(ident);
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginModuleParent::RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNames,
                                                  nsTArray<NPRemoteIdentifier>* aIds)
 {
@@ -428,7 +428,7 @@ PluginModuleParent::RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNam
         aIds->AppendElement((NPRemoteIdentifier)id);
     }
 
-    return NS_OK;
+    return true;
 }
 
 PluginInstanceParent*

@@ -73,11 +73,11 @@ NeckoChild::PHttpChannelConstructor()
   return new HttpChannelChild();
 }
 
-nsresult 
+bool 
 NeckoChild::PHttpChannelDestructor(PHttpChannelChild* channel)
 {
   delete channel;
-  return NS_OK;
+  return true;
 }
 
 }} // mozilla::net

@@ -62,16 +62,16 @@ public:
 
     virtual PIFrameEmbeddingChild* PIFrameEmbeddingConstructor(
             const MagicWindowHandle& hwnd);
-    virtual nsresult PIFrameEmbeddingDestructor(PIFrameEmbeddingChild*);
+    virtual bool PIFrameEmbeddingDestructor(PIFrameEmbeddingChild*);
 
     virtual PTestShellChild* PTestShellConstructor();
-    virtual nsresult PTestShellDestructor(PTestShellChild*);
+    virtual bool PTestShellDestructor(PTestShellChild*);
 
     virtual PNeckoChild* PNeckoConstructor();
-    virtual nsresult PNeckoDestructor(PNeckoChild*);
+    virtual bool PNeckoDestructor(PNeckoChild*);
 
     void Quit();
-    virtual nsresult RecvQuit();
+    virtual bool RecvQuit();
 
 private:
     static ContentProcessChild* sSingleton;
