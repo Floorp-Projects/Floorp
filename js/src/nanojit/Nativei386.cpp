@@ -801,10 +801,7 @@ namespace nanojit
         LInsp lhs = ins->oprnd1();
 
         if (op == LIR_mod) {
-            /* LIR_mod expects the LIR_div to be near (no interference from the register allocator) */
-            findSpecificRegFor(lhs, EDX);
-            prepResultReg(ins, rmask(EDX));
-            evictIfActive(EAX);
+            asm_div_mod(ins);
             return;
         }
 
@@ -816,6 +813,8 @@ namespace nanojit
 
         switch (op) {
         case LIR_div:
+            // Nb: if the div feeds into a mod it will be handled by
+            // asm_div_mod() rather than here.
             forceReg = true;
             rb = findRegFor(rhs, (GpRegs ^ (rmask(EAX)|rmask(EDX))));
             allow = rmask(EAX);
@@ -896,9 +895,8 @@ namespace nanojit
                 SHR(rr, rb);
                 break;
             case LIR_div:
-            case LIR_mod:
-                 DIV(rb);
-                 CDQ();
+                DIV(rb);
+                CDQ();
                 break;
             default:
                 NanoAssertMsg(0, "Unsupported");
@@ -945,6 +943,35 @@ namespace nanojit
 
         if ( rr != ra )
             MR(rr,ra);
+    }
+
+    // This is called when we have a mod(div(divLhs, divRhs)) sequence.
+    void Assembler::asm_div_mod(LInsp mod)
+    {
+        LInsp div = mod->oprnd1();
+
+        // LIR_mod expects the LIR_div to be near (no interference from the register allocator)
+
+        NanoAssert(mod->isop(LIR_mod));
+        NanoAssert(div->isop(LIR_div));
+
+        LInsp divLhs = div->oprnd1();
+        LInsp divRhs = div->oprnd2();
+
+        prepResultReg(mod, rmask(EDX));
+        prepResultReg(div, rmask(EAX));
+
+        Register rDivRhs = findRegFor(divRhs, (GpRegs ^ (rmask(EAX)|rmask(EDX))));
+
+        Register rDivLhs = ( divLhs->isUnusedOrHasUnknownReg()
+                           ? findSpecificRegFor(divLhs, EAX)
+                           : divLhs->getReg() );
+
+        DIV(rDivRhs);
+        CDQ();     // sign-extend EAX into EDX:EAX
+
+        if ( EAX != rDivLhs )
+            MR(EAX, rDivLhs);
     }
 
     void Assembler::asm_neg_not(LInsp ins)
