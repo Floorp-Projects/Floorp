@@ -130,8 +130,8 @@
           <xul:spacer flex="1"/>
           <xul:button anonid="open-button" label="&downloadOpen2.label;"
                       oncommand="DownloadsView.openDownload(document.getBindingParent(this));"/>
-          <xul:image anonid="remove-button" class="close-button"
-                     onclick="DownloadsView.removeDownload(document.getBindingParent(this))"/>
+          <xul:button anonid="remove-button" label="&downloadRemove.label;"
+                      oncommand="DownloadsView.removeDownload(document.getBindingParent(this));"/>
         </xul:hbox>
       </xul:vbox>
     </content>
