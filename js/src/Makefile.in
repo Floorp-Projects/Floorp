@@ -201,6 +201,8 @@ INSTALLED_HEADERS = \
 		jsotypes.h \
 		jsparse.h \
 		jsprf.h \
+		jspropcache.h \
+		jspropcacheinlines.h \
 		jsproto.tbl \
 		jsprvtd.h \
 		jspubtd.h \

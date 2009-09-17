@@ -1702,12 +1702,6 @@ js_GetTopStackFrame(JSContext *cx)
     return cx->fp;
 }
 
-static JS_INLINE JSBool
-js_IsPropertyCacheDisabled(JSContext *cx)
-{
-    return cx->runtime->shapeGen >= SHAPE_OVERFLOW_BIT;
-}
-
 static JS_INLINE uint32
 js_RegenerateShapeForGC(JSContext *cx)
 {
