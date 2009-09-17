@@ -362,7 +362,7 @@ SyncEngine.prototype = {
       meta.generateIV();
       meta.addUnwrappedKey(pubkey, symkey);
       let res = new Resource(meta.uri);
-      let resp = res.put(meta.serialize());
+      let resp = res.put(meta);
       if (!resp.success) {
         this._log.debug("Metarecord upload fail:" + resp);
         resp.failureCode = ENGINE_METARECORD_UPLOAD_FAIL;
