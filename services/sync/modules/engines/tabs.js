@@ -302,7 +302,6 @@ TabStore.prototype = {
   },
 
   wipe: function TabStore_wipe() {
-    this._log.debug("Wipe called.  Clearing cache of remote client tabs.");
     this._remoteClients = {};
   },
 
@@ -320,8 +319,7 @@ TabStore.prototype = {
   update: function TabStore_update(record) {
     if (record.id == this._localClientGUID)
       return; // can't happen?
-    this._log.debug("Update called.  Updating remote client record for");
-    this._log.debug(record.getClientName());
+    this._log.debug("Updating remote client: " + record.getClientName());
     this._remoteClients[record.id] = record;
     this._writeToFile();
   },
@@ -329,7 +327,7 @@ TabStore.prototype = {
   remove: function TabStore_remove(record) {
     if (record.id == this._localClientGUID)
       return; // can't happen?
-    this._log.debug("Remove called.  Deleting record with id " + record.id);
+    this._log.trace("Remove called.  Deleting record with id " + record.id);
     delete this._remoteClients[record.id];
     this._writeToFile();
   }

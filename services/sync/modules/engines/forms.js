@@ -132,12 +132,12 @@ FormStore.prototype = {
   },
   
   cacheFormItems: function FormStore_cacheFormItems() {
-    this._log.debug("Caching all form items");
+    this._log.trace("Caching all form items");
     this._formItems = this.getAllIDs();
   },
   
   clearFormCache: function FormStore_clearFormCache() {
-    this._log.debug("Clearing form cache");
+    this._log.trace("Clearing form cache");
     this._formItems = null;
   },
   
