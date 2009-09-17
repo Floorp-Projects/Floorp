@@ -56,6 +56,7 @@ PasswordEngine.prototype = {
   __proto__: SyncEngine.prototype,
   name: "passwords",
   displayName: "Passwords",
+  description: "Forget all your passwords, Weave will remember them for you",
   logName: "Passwords",
   _storeObj: PasswordStore,
   _trackerObj: PasswordTracker,

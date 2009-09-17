@@ -116,9 +116,9 @@ Identity.prototype = {
     log.trace("Persisting " + this.realm + " for " + this.username);
     let nsLoginInfo = new Components.Constructor(
       "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
-    let login = new nsLoginInfo(PWDMGR_HOST, null, this.realm,
+    let newLogin = new nsLoginInfo(PWDMGR_HOST, null, this.realm,
       this.username, this.password, "", "");
-    Svc.Login.addLogin(login);
+    Svc.Login.addLogin(newLogin);
   },
 
   get _logins _logins() Svc.Login.findLogins({}, PWDMGR_HOST, null, this.realm)
