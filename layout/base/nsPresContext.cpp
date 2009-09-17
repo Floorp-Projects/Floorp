@@ -1743,7 +1743,9 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
         while (i + 1 < numSrc && (val = srcArr->Item(i+1), 
                  val.GetUnit() == eCSSUnit_Font_Format)) {
           nsDependentString valueString(val.GetStringBufferValue());
-          if (valueString.LowerCaseEqualsASCII("opentype")) {
+          if (valueString.LowerCaseEqualsASCII("woff")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_WOFF; 
+          } else if (valueString.LowerCaseEqualsASCII("opentype")) {
             face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_OPENTYPE; 
           } else if (valueString.LowerCaseEqualsASCII("truetype")) {
             face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE; 

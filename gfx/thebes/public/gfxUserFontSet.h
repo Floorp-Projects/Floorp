@@ -152,9 +152,10 @@ public:
         FLAG_FORMAT_TRUETYPE_AAT   = 1 << 3,
         FLAG_FORMAT_EOT            = 1 << 4,
         FLAG_FORMAT_SVG            = 1 << 5,
-        
+        FLAG_FORMAT_WOFF           = 1 << 6,
+
         // mask of all unused bits, update when adding new formats
-        FLAG_FORMAT_NOT_USED       = ~((1 << 6)-1)
+        FLAG_FORMAT_NOT_USED       = ~((1 << 7)-1)
     };
 
     enum LoadStatus {
