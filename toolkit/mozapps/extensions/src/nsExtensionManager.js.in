@@ -2173,7 +2173,9 @@ function ExtensionManager() {
           getService(Ci.nsIPrefBranch2).
           QueryInterface(Ci.nsIPrefService);
   var defaults = gPref.getDefaultBranch("");
-  gDefaultTheme = defaults.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+  try {
+    gDefaultTheme = defaults.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+  } catch(e) {}
 
   gOS = Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService);
