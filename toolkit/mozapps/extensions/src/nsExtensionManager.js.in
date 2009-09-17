@@ -53,6 +53,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 const PREF_EM_CHECK_COMPATIBILITY     = "extensions.checkCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
@@ -72,6 +73,7 @@ const PREF_EM_ITEM_UPDATE_URL         = "extensions.%UUID%.update.url";
 const PREF_EM_DSS_ENABLED             = "extensions.dss.enabled";
 const PREF_DSS_SWITCHPENDING          = "extensions.dss.switchPending";
 const PREF_DSS_SKIN_TO_SELECT         = "extensions.lastSelectedSkin";
+const PREF_LWTHEME_TO_SELECT          = "extensions.lwThemeToSelect";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
 const PREF_EM_LOGGING_ENABLED         = "extensions.logging.enabled";
 const PREF_EM_UPDATE_INTERVAL         = "extensions.update.interval";
@@ -141,6 +143,10 @@ const URI_DOWNLOADS_PROPERTIES        = "chrome://mozapps/locale/downloads/downl
 const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
 const URI_EXTENSION_LIST_DIALOG       = "chrome://mozapps/content/extensions/list.xul";
 
+const URI_EXTENSION_MANAGER           = "chrome://mozapps/content/extensions/extensions.xul";
+const FEATURES_EXTENSION_MANAGER      = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
+const FEATURES_EXTENSION_UPDATES      = "chrome,centerscreen,extra-chrome,dialog,resizable,modal";
+
 /**
  * Constants that internal code can use to indicate the reason for an add-on
  * update check. external code uses other constants in nsIExtensionManager.idl.
@@ -198,6 +204,7 @@ var gFirstRun             = false;
 var gAllowFlush           = true;
 var gDSNeedsFlush         = false;
 var gManifestNeedsFlush   = false;
+var gDefaultTheme         = "classic/1.0";
 
 /**
  * Valid GUIDs fit this pattern.
@@ -2163,11 +2170,16 @@ function ExtensionManager() {
     gXPCOMABI = UNKNOWN_XPCOM_ABI;
   }
   gPref = Cc["@mozilla.org/preferences-service;1"].
-          getService(Ci.nsIPrefBranch2);
+          getService(Ci.nsIPrefBranch2).
+          QueryInterface(Ci.nsIPrefService);
+  var defaults = gPref.getDefaultBranch("");
+  gDefaultTheme = defaults.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
 
   gOS = Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService);
   gOS.addObserver(this, "xpcom-shutdown", false);
+  gOS.addObserver(this, "lightweight-theme-preview-requested", false);
+  gOS.addObserver(this, "lightweight-theme-change-requested", false);
 
   gConsole = Cc["@mozilla.org/consoleservice;1"].
              getService(Ci.nsIConsoleService);
@@ -2278,6 +2290,57 @@ ExtensionManager.prototype = {
     case "offline-requested":
       this._confirmCancelDownloadsOnOffline(subject);
       break;
+    case "lightweight-theme-preview-requested":
+      if (gPref.prefHasUserValue(PREF_GENERAL_SKINS_SELECTEDSKIN)) {
+        let cancel = subject.QueryInterface(Ci.nsISupportsPRBool);
+        cancel.data = true;
+      }
+      break;
+    case "lightweight-theme-change-requested":
+      let theme = JSON.parse(data);
+      if (!theme)
+        return;
+
+      if (gPref.prefHasUserValue(PREF_GENERAL_SKINS_SELECTEDSKIN)) {
+        if (getPref("getBoolPref", PREF_EM_DSS_ENABLED, false)) {
+          gPref.clearUserPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+          return;
+        }
+
+        let cancel = subject.QueryInterface(Ci.nsISupportsPRBool);
+        cancel.data = true;
+        gPref.setBoolPref(PREF_DSS_SWITCHPENDING, true);
+        gPref.setCharPref(PREF_DSS_SKIN_TO_SELECT, gDefaultTheme);
+        gPref.setCharPref(PREF_LWTHEME_TO_SELECT, theme.id);
+
+        // Open the UI so the user can see that a restart is necessary
+        var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+                 getService(Ci.nsIWindowMediator);
+        var win = wm.getMostRecentWindow("Extension:Manager");
+
+        if (win) {
+          win.showView("themes");
+          return;
+        }
+
+        var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+                 getService(Ci.nsIWindowWatcher);
+        var param = Cc["@mozilla.org/supports-array;1"].
+                    createInstance(Ci.nsISupportsArray);
+        var arg = Cc["@mozilla.org/supports-string;1"].
+                  createInstance(Ci.nsISupportsString);
+        arg.data = "themes";
+        param.AppendElement(arg);
+        ww.openWindow(null, URI_EXTENSION_MANAGER, null, FEATURES_EXTENSION_MANAGER, param);
+        return;
+      }
+      else {
+        // Cancel any pending theme change and allow the lightweight theme
+        // change to go ahead
+        gPref.clearUserPref(PREF_DSS_SWITCHPENDING);
+        gPref.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
+      }
+      break;
     case "xpcom-shutdown":
       this._shutdown();
       break;
@@ -2355,6 +2418,22 @@ ExtensionManager.prototype = {
         gPref.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, toSelect);
         gPref.clearUserPref(PREF_DSS_SWITCHPENDING);
         gPref.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
+
+        // If we've changed to a non-default theme make sure there is no
+        // lightweight theme selected
+        if (toSelect != gDefaultTheme) {
+          gPref.clearUserPref(PREF_LWTHEME_TO_SELECT);
+          LightweightThemeManager.currentTheme = null;
+        }
+      }
+
+      if (gPref.prefHasUserValue(PREF_LWTHEME_TO_SELECT)) {
+        var id = gPref.getCharPref(PREF_LWTHEME_TO_SELECT);
+        if (id)
+          LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme(id);
+        else
+          LightweightThemeManager.currentTheme = null;
+        gPref.clearUserPref(PREF_LWTHEME_TO_SELECT);
       }
     }
     catch (e) {
@@ -2389,9 +2468,6 @@ ExtensionManager.prototype = {
     if (!getPref("getBoolPref", PREF_UPDATE_NOTIFYUSER, false))
       return;
 
-    const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
-    const EMFEATURES = "chrome,centerscreen,extra-chrome,dialog,resizable,modal";
-
     var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
              getService(Ci.nsIWindowWatcher);
     var param = Cc["@mozilla.org/supports-array;1"].
@@ -2400,7 +2476,7 @@ ExtensionManager.prototype = {
               createInstance(Ci.nsISupportsString);
     arg.data = "updates-only";
     param.AppendElement(arg);
-    ww.openWindow(null, EMURL, null, EMFEATURES, param);
+    ww.openWindow(null, URI_EXTENSION_MANAGER, null, FEATURES_EXTENSION_UPDATES, param);
   },
 
   /**
@@ -2427,6 +2503,8 @@ ExtensionManager.prototype = {
     }
 
     gOS.removeObserver(this, "xpcom-shutdown");
+    gOS.removeObserver(this, "lightweight-theme-preview-requested");
+    gOS.removeObserver(this, "lightweight-theme-change-requested");
 
     // Release strongly held services.
     gOS = null;
@@ -5519,9 +5597,6 @@ BackgroundUpdateCheckListener.prototype = {
       gPref.setBoolPref(PREF_UPDATE_NOTIFYUSER, false);
     }
     else {
-      const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
-      const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
-
       var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
                getService(Ci.nsIWindowWatcher);
       var param = Cc["@mozilla.org/supports-array;1"].
@@ -5530,7 +5605,7 @@ BackgroundUpdateCheckListener.prototype = {
                 createInstance(Ci.nsISupportsString);
       arg.data = "updates";
       param.AppendElement(arg);
-      ww.openWindow(null, EMURL, null, EMFEATURES, param);
+      ww.openWindow(null, URI_EXTENSION_MANAGER, null, FEATURES_EXTENSION_MANAGER, param);
     }
   },
   

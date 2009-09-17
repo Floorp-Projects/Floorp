@@ -59,21 +59,29 @@ var LightweightThemeManager = {
   },
 
   set currentTheme (aData) {
+    let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+    cancel.data = false;
+    _observerService.notifyObservers(cancel, "lightweight-theme-change-requested",
+                                     JSON.stringify(aData));
+
+    if (aData) {
+      let usedThemes = _usedThemesExceptId(aData.id);
+      if (cancel.data && _prefs.getBoolPref("isThemeSelected"))
+        usedThemes.splice(1, 0, aData);
+      else
+        usedThemes.unshift(aData);
+      _updateUsedThemes(usedThemes);
+    }
+
+    if (cancel.data)
+      return null;
+
     if (_previewTimer) {
       _previewTimer.cancel();
       _previewTimer = null;
     }
 
-    if (aData) {
-      let usedThemes = _usedThemesExceptId(aData.id);
-      usedThemes.unshift(aData);
-      _updateUsedThemes(usedThemes);
-
-      _prefs.setBoolPref("isThemeSelected", true);
-    } else {
-      _prefs.setBoolPref("isThemeSelected", false);
-    }
-
+    _prefs.setBoolPref("isThemeSelected", aData != null);
     _notifyWindows(aData);
 
     return aData;
@@ -98,6 +106,13 @@ var LightweightThemeManager = {
 
   previewTheme: function (aData) {
     if (!aData)
+      return;
+
+    let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+    cancel.data = false;
+    _observerService.notifyObservers(cancel, "lightweight-theme-preview-requested",
+                                     JSON.stringify(aData));
+    if (cancel.data)
       return;
 
     if (_previewTimer)
