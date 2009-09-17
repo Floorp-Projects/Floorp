@@ -943,6 +943,9 @@ pref("ui.key.contentAccess", 5);
 pref("ui.key.menuAccessKeyFocuses", false); // overridden below
 pref("ui.key.saveLink.shift", true); // true = shift, false = meta
 
+// Disable page loading activity cursor by default.
+pref("ui.use_activity_cursor", false);
+
 // Middle-mouse handling
 pref("middlemouse.paste", false);
 pref("middlemouse.openNewWindow", true);
