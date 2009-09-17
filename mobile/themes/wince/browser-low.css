@@ -232,8 +232,7 @@
 }
 
 /* URL List and autocomplete navigation popup ------------------------------ */
-#tool-bookmarks-close,
-#tool-folders-close {
+#tool-bookmarks-close {
   min-height: 0 !important;
   min-width: 0 !important;
   margin-top: -18px; /* keep pixels */
@@ -241,7 +240,7 @@
 }
 
 /* folders have a fixed image */
-placeitem[type=folder] .bookmark-item-image {
+placeitem[type="folder"] .bookmark-item-image {
   list-style-image: url("chrome://browser/skin/images/folder-24.png");
 }
 

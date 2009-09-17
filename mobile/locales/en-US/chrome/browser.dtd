@@ -21,10 +21,8 @@
 
 <!ENTITY bookmarksHeader.label     "Bookmarks">
 <!ENTITY bookmarksManage.label     "Manage">
-<!ENTITY foldersHeader.label       "Folders">
 
 <!ENTITY editBookmarkRemove.label  "Remove">
-<!ENTITY editBookmarkMove.label    "Move">
 <!ENTITY editBookmarkDone.label    "Done">
 <!ENTITY editBookmarkTags.label    "Add tags here">
 

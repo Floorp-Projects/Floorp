@@ -204,17 +204,13 @@ toolbarbutton.page-button {
   padding: 0;
 }
 
-#bookmarklist-header, #folder-header {
+#bookmarklist-header {
   color: rgb(255,255,255);
   -moz-box-align: center;
   padding: 1.1mm; /* core spacing */
 }
 
-#folder-header {
-  height: 10.7mm; /* fake the height of the URLbar: 8.5mm + 1.1mm + 1.1mm */
-}
-
-#bookmark-items, #folder-items {
+#bookmark-items {
   -moz-appearance: none !important;
   background-color: rgb(255,255,255);
   padding: 0;
@@ -292,26 +288,17 @@ placeitem[type="folder"] {
 }
 
 /* hide the unuseful fields for folder */
-placeitem[type=folder] .bookmark-item-uri,
-placeitem[type=folder] .bookmark-item-tags {
+placeitem[type="folder"] .bookmark-item-uri,
+placeitem[type="folder"] .bookmark-item-tags {
   visibility: hidden;
 }
 
 /* control the manage controls */
-.bookmark-folder-new {
-  visibility: collapse;
-}
-
-placelist[ui="manage"] .bookmark-folder-new {
-  visibility: visible;
-}
-
 placelist[ui="manage"] placeitem[type="folder"] {
   background-image: none;
 }
 
 placeitem[ui="manage"] .bookmark-close-button,
-placeitem[ui="manage"] .bookmark-folder-button,
 placeitem[ui="manage"] .bookmark-item-image {
   visibility: collapse;
 }

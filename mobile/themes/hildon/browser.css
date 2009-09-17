@@ -405,8 +405,7 @@ toolbarbutton.page-button {
 }
 
 /* URL List and autocomplete navigation popup ------------------------------ */
-#tool-bookmarks-close,
-#tool-folders-close {
+#tool-bookmarks-close {
   min-height: 0 !important;
   min-width: 0 !important;
   margin-top: -40px; /* keep pixels */
@@ -417,17 +416,13 @@ toolbarbutton.page-button {
   padding: 0;
 }
 
-#bookmarklist-header, #folder-header {
+#bookmarklist-header {
   color: rgb(255,255,255);
   -moz-box-align: center;
   padding: 2.2mm; /* core spacing */
 }
 
-#folder-header {
-  height: 21.4mm; /* fake the height of the URLbar: 17mm + 2.2mm + 2.2mm */
-}
-
-#bookmark-items, #folder-items {
+#bookmark-items {
   -moz-appearance: none !important;
   background-color: rgb(255,255,255);
   padding: 0;
@@ -501,7 +496,7 @@ placelabel.bookmark-folder {
 }
 
 /* folders have a fixed image */
-placeitem[type=folder] .bookmark-item-image {
+placeitem[type="folder"] .bookmark-item-image {
   list-style-image: url("chrome://browser/skin/images/folder-30.png");
 }
 
@@ -510,26 +505,17 @@ placeitem[type="folder"] {
 }
 
 /* hide the unuseful fields for folder */
-placeitem[type=folder] .bookmark-item-uri,
-placeitem[type=folder] .bookmark-item-tags {
+placeitem[type="folder"] .bookmark-item-uri,
+placeitem[type="folder"] .bookmark-item-tags {
   visibility: hidden;
 }
 
 /* control the manage controls */
-.bookmark-folder-new {
-  visibility: collapse;
-}
-
-placelist[ui="manage"] .bookmark-folder-new {
-  visibility: visible;
-}
-
 placelist[ui="manage"] placeitem[type="folder"] {
   background-image: none;
 }
 
 placeitem[ui="manage"] .bookmark-close-button,
-placeitem[ui="manage"] .bookmark-folder-button,
 placeitem[ui="manage"] .bookmark-item-image {
   visibility: collapse;
 }

@@ -71,10 +71,6 @@ placelist {
   -moz-binding: url("chrome://browser/content/bindings.xml#place-list");
 }
 
-placetree {
-  -moz-binding: url("chrome://browser/content/bindings.xml#place-tree");
-}
-
 placelabel {
   -moz-binding: url("chrome://browser/content/bindings.xml#place-label");
 }
