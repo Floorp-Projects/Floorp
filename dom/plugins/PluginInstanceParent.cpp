@@ -112,7 +112,7 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVWindowNPObject(
 
 nsresult
 PluginInstanceParent::AnswerNPN_GetValue_NPNVPluginElementNPObject(
-                                        PluginInstanceParent::PPluginScriptableObjectParent** value,
+                                        PPluginScriptableObjectParent** value,
                                         NPError* result)
 {
     // TODO NPRuntime
@@ -208,6 +208,14 @@ PluginInstanceParent::NPP_GetValue(NPPVariable variable, void *ret_value)
         (*(PRBool*)ret_value) = PR_TRUE;
         return NPERR_NO_ERROR;
 #endif
+
+#if 0 //Coming soon!
+    case NPPVpluginScriptableNPObject:
+        PPluginScriptableObjectParent* actor;
+        NPError rv;
+        CallNPP_GetValue_NPPVpluginScriptableNPObject(&actor, &rv);
+        break;
+#endif
     default:
         return NPERR_GENERIC_ERROR;
     }
@@ -245,18 +253,16 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
 }
 
 PPluginScriptableObjectParent*
-PluginInstanceParent::PPluginScriptableObjectConstructor(NPError* _retval)
+PluginInstanceParent::PPluginScriptableObjectConstructor()
 {
-    NS_NOTYETIMPLEMENTED("PluginInstanceParent::PPluginScriptableObjectConstructor");
-    return nsnull;
+    return new PluginScriptableObjectParent();
 }
 
 nsresult
-PluginInstanceParent::PPluginScriptableObjectDestructor(PPluginScriptableObjectParent* aObject,
-                                                        NPError* _retval)
+PluginInstanceParent::PPluginScriptableObjectDestructor(PPluginScriptableObjectParent* aObject)
 {
-    NS_NOTYETIMPLEMENTED("PluginInstanceParent::PPluginScriptableObjectDestructor");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    delete aObject;
+    return NS_OK;
 }
 
 } // namespace plugins

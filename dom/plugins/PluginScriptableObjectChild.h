@@ -41,8 +41,12 @@
 
 #include "mozilla/plugins/PPluginScriptableObjectChild.h"
 
+struct NPObject;
+
 namespace mozilla {
 namespace plugins {
+
+class PluginInstanceChild;
 
 class PluginScriptableObjectChild : public PPluginScriptableObjectChild
 {
@@ -59,14 +63,13 @@ public:
 
   virtual nsresult
   AnswerInvoke(const NPRemoteIdentifier& aId,
-               const nsTArray<NPVariant>& aArgs,
-               NPVariant* aResult,
+               const nsTArray<NPRemoteVariant>& aArgs,
+               NPRemoteVariant* aResult,
                bool* aSuccess);
 
   virtual nsresult
-  AnswerInvokeDefault(const NPRemoteIdentifier& aId,
-                      const nsTArray<NPVariant>& aArgs,
-                      NPVariant* aResult,
+  AnswerInvokeDefault(const nsTArray<NPRemoteVariant>& aArgs,
+                      NPRemoteVariant* aResult,
                       bool* aSuccess);
 
   virtual nsresult
@@ -75,12 +78,12 @@ public:
 
   virtual nsresult
   AnswerGetProperty(const NPRemoteIdentifier& aId,
-                    NPVariant* aResult,
+                    NPRemoteVariant* aResult,
                     bool* aSuccess);
 
   virtual nsresult
   AnswerSetProperty(const NPRemoteIdentifier& aId,
-                    const NPVariant& aValue,
+                    const NPRemoteVariant& aValue,
                     bool* aSuccess);
 
   virtual nsresult
@@ -92,9 +95,23 @@ public:
                   bool* aSuccess);
 
   virtual nsresult
-  AnswerConstruct(const nsTArray<NPVariant>& aArgs,
-                  NPVariant* aResult,
+  AnswerConstruct(const nsTArray<NPRemoteVariant>& aArgs,
+                  NPRemoteVariant* aResult,
                   bool* aSuccess);
+
+  void
+  Initialize(PluginInstanceChild* aInstance,
+             NPObject* aObject);
+
+  NPObject*
+  GetObject()
+  {
+    return mObject;
+  }
+
+private:
+  PluginInstanceChild* mInstance;
+  NPObject* mObject;
 };
 
 } /* namespace plugins */

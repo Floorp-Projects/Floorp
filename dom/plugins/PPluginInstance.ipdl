@@ -48,28 +48,8 @@ using NPError;
 using NPWindow;
 using NPReason;
 
-
-// FIXME/bent: demo purposes only
-using mozilla::void_t;
-using mozilla::null_t;
-
-
 namespace mozilla {
 namespace plugins {
-
-
-
-// FIXME/bent: demo purposes only
-union Variant {
-  int;
-  double;
-  void_t;
-  null_t;
-  PPluginInstance;
-};
-
-
-
 
 rpc protocol PPluginInstance
 {
@@ -78,15 +58,6 @@ rpc protocol PPluginInstance
   manages PPluginScriptableObject;
   manages PBrowserStream;
   manages PStreamNotify;
-
-
-
-  // FIXME/bent: demo purposes only
-child:
-  rpc Test(Variant v1, Variant v2) returns (Variant _retval);
-
-
-
 
 child:
   /* NPP_NewStream */
@@ -102,8 +73,9 @@ child:
 
   rpc NPP_SetWindow(NPWindow window)
     returns (NPError rv);
-  rpc NPP_GetValue(nsString key)
-    returns (nsString value);
+
+  rpc NPP_GetValue_NPPVpluginScriptableNPObject()
+    returns (PPluginScriptableObject value, NPError result);
 
 parent:
   rpc NPN_GetValue_NPNVjavascriptEnabledBool()
@@ -137,11 +109,9 @@ child:
    */
   rpc ~PStreamNotify(NPReason reason);
 
-parent:
-  rpc PPluginScriptableObject()
-    returns (NPError rv);
-  rpc ~PPluginScriptableObject()
-    returns (NPError rv);
+both:
+  rpc PPluginScriptableObject();
+  rpc ~PPluginScriptableObject();
 
 both:
   /**

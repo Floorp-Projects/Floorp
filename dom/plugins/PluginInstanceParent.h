@@ -70,11 +70,10 @@ public:
     }
   
     virtual PPluginScriptableObjectParent*
-    PPluginScriptableObjectConstructor(NPError* _retval);
+    PPluginScriptableObjectConstructor();
 
     virtual nsresult
-    PPluginScriptableObjectDestructor(PPluginScriptableObjectParent* aObject,
-                                      NPError* _retval);
+    PPluginScriptableObjectDestructor(PPluginScriptableObjectParent* aObject);
 
     virtual PBrowserStreamParent*
     PBrowserStreamConstructor(const nsCString& url,
