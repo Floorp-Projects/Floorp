@@ -91,7 +91,7 @@ protected:
                                const nsTArray<nsCString>& aValues,
                                NPError* rv);
 
-    virtual nsresult
+    virtual bool
     PPluginInstanceDestructor(PPluginInstanceParent* aActor,
                               NPError* _retval);
 
@@ -111,22 +111,22 @@ public:
                                      PRLibrary* aLibrary);
 
     // NPRemoteIdentifier funcs
-    virtual nsresult
+    virtual bool
     RecvNPN_GetStringIdentifier(const nsCString& aString,
                                 NPRemoteIdentifier* aId);
-    virtual nsresult
+    virtual bool
     RecvNPN_GetIntIdentifier(const int32_t& aInt,
                              NPRemoteIdentifier* aId);
-    virtual nsresult
+    virtual bool
     RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
                                nsCString* aString);
-    virtual nsresult
+    virtual bool
     RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
                               int32_t* aInt);
-    virtual nsresult
+    virtual bool
     RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
                                bool* aIsString);
-    virtual nsresult
+    virtual bool
     RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNames,
                                  nsTArray<NPRemoteIdentifier>* aIds);
 

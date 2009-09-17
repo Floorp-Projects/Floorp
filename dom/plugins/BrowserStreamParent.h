@@ -20,7 +20,7 @@ public:
                       NPStream* stream);
   virtual ~BrowserStreamParent() { }
 
-  virtual nsresult AnswerNPN_RequestRead(const IPCByteRanges& ranges,
+  virtual bool AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                          NPError* result);
 
   int32_t WriteReady();

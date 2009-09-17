@@ -149,11 +149,11 @@ ContentProcessParent::PIFrameEmbeddingConstructor(
     return new TabParent();
 }
 
-nsresult
+bool
 ContentProcessParent::PIFrameEmbeddingDestructor(PIFrameEmbeddingParent* frame)
 {
   delete frame;
-  return NS_OK;
+  return true;
 }
 
 PTestShellParent*
@@ -162,11 +162,11 @@ ContentProcessParent::PTestShellConstructor()
   return new TestShellParent();
 }
 
-nsresult
+bool
 ContentProcessParent::PTestShellDestructor(PTestShellParent* shell)
 {
   delete shell;
-  return NS_OK;
+  return true;
 }
 
 PNeckoParent* 
@@ -175,11 +175,11 @@ ContentProcessParent::PNeckoConstructor()
     return new NeckoParent();
 }
 
-nsresult 
+bool 
 ContentProcessParent::PNeckoDestructor(PNeckoParent* necko)
 {
     delete necko;
-    return NS_OK;
+    return true;
 }
 
 } // namespace dom

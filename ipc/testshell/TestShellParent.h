@@ -70,11 +70,11 @@ public:
   PTestShellCommandParent*
   PTestShellCommandConstructor(const nsString& aCommand);
 
-  nsresult
+  bool
   PTestShellCommandDestructor(PTestShellCommandParent* aActor,
                               const nsString& aResponse);
 
-  nsresult
+  bool
   RecvPTestShellCommandDestructor(PTestShellCommandParent* aActor,
                                   const nsString& aResponse);
 };

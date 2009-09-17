@@ -54,7 +54,7 @@
 int
 main(int argc, char* argv[])
 {
-#if 1
+#if defined(XP_WIN) && defined(DEBUG_bent)
     MessageBox(NULL, L"Hi", L"Hi", MB_OK);
 #endif
 

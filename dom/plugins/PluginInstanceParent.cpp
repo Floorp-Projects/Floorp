@@ -58,7 +58,7 @@ PluginInstanceParent::PBrowserStreamConstructor(const nsCString& url,
     return NULL;
 }
 
-nsresult
+bool
 PluginInstanceParent::AnswerPBrowserStreamDestructor(PBrowserStreamParent* stream,
                                                      const NPError& reason,
                                                      const bool& artificial)
@@ -66,19 +66,19 @@ PluginInstanceParent::AnswerPBrowserStreamDestructor(PBrowserStreamParent* strea
     if (!artificial) {
         static_cast<BrowserStreamParent*>(stream)->NPN_DestroyStream(reason);
     }
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginInstanceParent::PBrowserStreamDestructor(PBrowserStreamParent* stream,
                                                const NPError& reason,
                                                const bool& artificial)
 {
     delete stream;
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginInstanceParent::AnswerNPN_GetValue_NPNVjavascriptEnabledBool(
                                                        bool* value,
                                                        NPError* result)
@@ -86,20 +86,20 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVjavascriptEnabledBool(
     NPBool v;
     *result = mNPNIface->getvalue(mNPP, NPNVjavascriptEnabledBool, &v);
     *value = v;
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginInstanceParent::AnswerNPN_GetValue_NPNVisOfflineBool(bool* value,
                                                            NPError* result)
 {
     NPBool v;
     *result = mNPNIface->getvalue(mNPP, NPNVisOfflineBool, &v);
     *value = v;
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginInstanceParent::AnswerNPN_GetValue_NPNVWindowNPObject(
                                         PPluginScriptableObjectParent** value,
                                         NPError* result)
@@ -107,10 +107,10 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVWindowNPObject(
     // TODO NPRuntime
     *value = NULL;
     *result = NPERR_GENERIC_ERROR;
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginInstanceParent::AnswerNPN_GetValue_NPNVPluginElementNPObject(
                                         PPluginScriptableObjectParent** value,
                                         NPError* result)
@@ -118,29 +118,29 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVPluginElementNPObject(
     // TODO NPRuntime
     *value = NULL;
     *result = NPERR_GENERIC_ERROR;
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginInstanceParent::AnswerNPN_GetValue_NPNVprivateModeBool(bool* value,
                                                              NPError* result)
 {
     NPBool v;
     *result = mNPNIface->getvalue(mNPP, NPNVprivateModeBool, &v);
     *value = v;
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginInstanceParent::AnswerNPN_GetURL(const nsCString& url,
                                        const nsCString& target,
                                        NPError* result)
 {
     *result = mNPNIface->geturl(mNPP, url.get(), target.get());
-    return NS_OK;
+    return true;
 }
 
-nsresult
+bool
 PluginInstanceParent::AnswerNPN_PostURL(const nsCString& url,
                                         const nsCString& target,
                                         const nsCString& buffer,
@@ -149,7 +149,7 @@ PluginInstanceParent::AnswerNPN_PostURL(const nsCString& url,
 {
     *result = mNPNIface->posturl(mNPP, url.get(), target.get(),
                                  buffer.Length(), buffer.get(), file);
-    return NS_OK;
+    return true;
 }
 
 PStreamNotifyParent*
@@ -175,12 +175,12 @@ PluginInstanceParent::PStreamNotifyConstructor(const nsCString& url,
     return notifyData;
 }
 
-nsresult
+bool
 PluginInstanceParent::PStreamNotifyDestructor(PStreamNotifyParent* notifyData,
                                               const NPReason& reason)
 {
     delete notifyData;
-    return NS_OK;
+    return true;
 }
 
 NPError
@@ -258,11 +258,11 @@ PluginInstanceParent::PPluginScriptableObjectConstructor()
     return new PluginScriptableObjectParent();
 }
 
-nsresult
+bool
 PluginInstanceParent::PPluginScriptableObjectDestructor(PPluginScriptableObjectParent* aObject)
 {
     delete aObject;
-    return NS_OK;
+    return true;
 }
 
 } // namespace plugins

@@ -59,11 +59,11 @@ NeckoParent::PHttpChannelConstructor()
   return new HttpChannelParent();
 }
 
-nsresult 
+bool 
 NeckoParent::PHttpChannelDestructor(PHttpChannelParent* channel)
 {
   delete channel;
-  return NS_OK;
+  return true;
 }
 
 

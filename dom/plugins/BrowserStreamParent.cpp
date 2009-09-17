@@ -14,12 +14,12 @@ BrowserStreamParent::BrowserStreamParent(PluginInstanceParent* npp,
   mStream->pdata = this;
 }
 
-nsresult
+bool
 BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                            NPError* result)
 {
   if (!mStream)
-    return NS_ERROR_NOT_INITIALIZED;
+    return false;
 
   if (ranges.size() > PR_INT32_MAX) {
     // TODO: abort all processing!
@@ -34,7 +34,7 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
   }
   rp[ranges.size()].next = NULL;
 
-  return mNPP->mNPNIface->requestread(mStream, rp);
+  return NPERR_NO_ERROR == mNPP->mNPNIface->requestread(mStream, rp);
 }
 
 int32_t

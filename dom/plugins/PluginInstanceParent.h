@@ -72,7 +72,7 @@ public:
     virtual PPluginScriptableObjectParent*
     PPluginScriptableObjectConstructor();
 
-    virtual nsresult
+    virtual bool
     PPluginScriptableObjectDestructor(PPluginScriptableObjectParent* aObject);
 
     virtual PBrowserStreamParent*
@@ -86,36 +86,36 @@ public:
                               NPError* rv,
                               uint16_t *stype);
 
-    virtual nsresult
+    virtual bool
     AnswerPBrowserStreamDestructor(PBrowserStreamParent* stream,
                                    const NPError& reason,
                                    const bool& artificial);
 
-    virtual nsresult
+    virtual bool
     PBrowserStreamDestructor(PBrowserStreamParent* stream,
                              const NPError& reason,
                              const bool& artificial);
 
-    virtual nsresult
+    virtual bool
     AnswerNPN_GetValue_NPNVjavascriptEnabledBool(bool* value, NPError* result);
-    virtual nsresult
+    virtual bool
     AnswerNPN_GetValue_NPNVisOfflineBool(bool* value, NPError* result);
-    virtual nsresult
+    virtual bool
     AnswerNPN_GetValue_NPNVWindowNPObject(
                                        PPluginScriptableObjectParent** value,
                                        NPError* result);
-    virtual nsresult
+    virtual bool
     AnswerNPN_GetValue_NPNVPluginElementNPObject(
                                        PPluginScriptableObjectParent** value,
                                        NPError* result);
-    virtual nsresult
+    virtual bool
     AnswerNPN_GetValue_NPNVprivateModeBool(bool* value, NPError* result);
 
-    virtual nsresult
+    virtual bool
     AnswerNPN_GetURL(const nsCString& url, const nsCString& target,
                      NPError *result);
 
-    virtual nsresult
+    virtual bool
     AnswerNPN_PostURL(const nsCString& url, const nsCString& target,
                       const nsCString& buffer, const bool& file,
                       NPError* result);
@@ -126,7 +126,7 @@ public:
                              const bool& file,
                              NPError* result);
 
-    virtual nsresult
+    virtual bool
     PStreamNotifyDestructor(PStreamNotifyParent* notifyData,
                             const NPReason& reason);
 

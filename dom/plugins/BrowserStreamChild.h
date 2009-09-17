@@ -59,13 +59,13 @@ public:
                      uint16_t* stype);
   virtual ~BrowserStreamChild() { }
 
-  virtual nsresult AnswerNPP_WriteReady(const int32_t& newlength,
+  virtual bool AnswerNPP_WriteReady(const int32_t& newlength,
                                         int32_t *size);
-  virtual nsresult AnswerNPP_Write(const int32_t& offset,
+  virtual bool AnswerNPP_Write(const int32_t& offset,
                                    const Buffer& data,
                                    int32_t* consumed);
 
-  virtual nsresult AnswerNPP_StreamAsFile(const nsCString& fname);
+  virtual bool AnswerNPP_StreamAsFile(const nsCString& fname);
 
   void EnsureCorrectInstance(PluginInstanceChild* i)
   {

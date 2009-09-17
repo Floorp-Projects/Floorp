@@ -52,11 +52,11 @@ public:
     TabChild(const MagicWindowHandle& parentWidget);
     virtual ~TabChild();
 
-    virtual nsresult RecvloadURL(const nsCString& uri);
-    virtual nsresult Recvmove(const PRUint32& x,
-                              const PRUint32& y,
-                              const PRUint32& width,
-                              const PRUint32& height);
+    virtual bool RecvloadURL(const nsCString& uri);
+    virtual bool Recvmove(const PRUint32& x,
+                          const PRUint32& y,
+                          const PRUint32& width,
+                          const PRUint32& height);
 
 private:
     nsCOMPtr<nsIWebNavigation> mWebNav;
