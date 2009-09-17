@@ -3,7 +3,6 @@
 <?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Mouse Capture Tests" align="start"
-        onload="setTimeout(runTests, 0);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/javascript" src="/MochiKit/packed.js"></script>
@@ -135,6 +134,12 @@ function runCaptureTest(element, callback)
   if (expectedTarget == $("custom5spacer") && !captureRetargetMode)
     expectedTarget = $("custom5inner");
 
+  if (element.id == "b") {
+    var tooltip = document.getElementById("tooltip");
+    tooltip.openPopup();
+    tooltip.hidePopup();
+  }
+
   synthesizeMouse(element, basepoint + 25, basepoint + 25, { type: "mousemove" }, win);
   if (callback)
     callback(25);
@@ -156,8 +161,14 @@ function runCaptureTest(element, callback)
   win.removeEventListener("mousemove", mouseMoved, false);
 }
 
+SimpleTest.waitForFocus(runTests);
+
 ]]>
 </script>
+
+<tooltip id="tooltip">
+  <label value="Test"/>
+</tooltip>
 
 <hbox id="splitterbox" style="margin-top: 5px;" onmousedown="this.setCapture()">
   <hbox id="leftbox" width="100" flex="1"/>

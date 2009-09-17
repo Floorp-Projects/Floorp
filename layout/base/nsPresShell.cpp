@@ -4412,9 +4412,18 @@ PresShell::ClearMouseCapture(nsIView* aView)
 {
   if (gCaptureInfo.mContent) {
     if (aView) {
-      // if a view was specified, ensure that the captured content
-      // is within this view
-      nsIFrame* frame = GetPrimaryFrameFor(gCaptureInfo.mContent);
+      // if a view was specified, ensure that the captured content is within
+      // this view. Get the frame for the captured content from the right
+      // presshell first.
+      nsIFrame* frame = nsnull;
+      nsIDocument* doc = gCaptureInfo.mContent->GetCurrentDoc();
+      if (doc) {
+        nsIPresShell *shell = doc->GetPrimaryShell();
+        if (shell) {
+          frame = shell->GetPrimaryFrameFor(gCaptureInfo.mContent);
+        }
+      }
+
       if (frame) {
         nsIView* view = frame->GetClosestView();
         while (view) {
@@ -6038,7 +6047,9 @@ PresShell::HandleEvent(nsIView         *aView,
     // if a node is capturing the mouse, get the frame for the capturing
     // content and use that instead. However, if the content has no parent,
     // such as the root frame, get the parent canvas frame instead. This
-    // ensures that positioned frames are included when hit-testing.
+    // ensures that positioned frames are included when hit-testing. Note
+    // that a check was already done above to ensure that capturingContent
+    // is in this presshell.
     nsIContent* capturingContent = gCaptureInfo.mContent;
     frame = GetPrimaryFrameFor(capturingContent);
     if (frame) {
