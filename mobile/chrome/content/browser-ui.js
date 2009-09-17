@@ -951,6 +951,55 @@ var BookmarkList = {
   }
 };
 
+function SelectWrapper(aControl) {
+  this._control = aControl;
+}
+
+SelectWrapper.prototype = {
+  get selectedIndex() { return this.control.selectedIndex; },
+  get multiple() { return this._control.multiple; },
+  get options() { return this._control.options; },
+  get children() { return this._control.children; },
+  
+  getText: function(aChild) { return aChild.text; },
+  isOption: function(aChild) { return aChild instanceof HTMLOptionElement; },
+  isGroup: function(aChild) { return aChild instanceof HTMLOptGroupElement; },
+  select: function(aIndex, aSelected, aClearAll) {
+    let selectElement = this._control.wrappedJSObject.selectElement;
+    selectElement.setOptionsSelectedByIndex(aIndex, aIndex, aSelected, aClearAll, false, true);
+  },
+  focus: function() { this._control.focus(); },
+  fireOnChange: function() {
+    let control = this._control.wrappedJSObject;
+    if ("onchange" in control)
+      control.onchange();
+  }
+};
+
+function MenulistWrapper(aControl) {
+  this._control = aControl;
+}
+
+MenulistWrapper.prototype = {
+  get selectedIndex() { return this.control.selectedIndex; },
+  get multiple() { return false; },
+  get options() { return this._control.menupopup.children; },
+  get children() { return this._control.menupopup.children; },
+  
+  getText: function(aChild) { return aChild.label; },
+  isOption: function(aChild) { return aChild instanceof Ci.nsIDOMXULSelectControlItemElement; },
+  isGroup: function(aChild) { return false },
+  select: function(aIndex, aSelected, aClearAll) {
+    this._control.selectedIndex = aIndex;
+  },
+  focus: function() { this._control.focus(); },
+  fireOnChange: function() {
+    let control = this._control;
+    if ("onchange" in control)
+      control.onchange();
+  }
+};
+
 var SelectHelper = {
   _panel: null,
   _list: null,
@@ -978,7 +1027,13 @@ var SelectHelper = {
     if (!aControl)
       return;
 
-    this._control = aControl;
+    if (aControl instanceof HTMLSelectElement)
+      this._control = new SelectWrapper(aControl);
+    else if (aControl instanceof Ci.nsIDOMXULMenuListElement)
+      this._control = new MenulistWrapper(aControl);
+    else
+      throw "Unknown list element";
+
     this._selectedIndexes = this._getSelectedIndexes();
 
     this._list = document.getElementById("select-list");
@@ -990,7 +1045,7 @@ var SelectHelper = {
     let children = this._control.children;
     for (let i=0; i<children.length; i++) {
       let child = children[i];
-      if (child instanceof HTMLOptGroupElement) {
+      if (this._control.isGroup(child)) {
         let group = document.createElement("option");
         group.setAttribute("label", child.label);
         this._list.appendChild(group);
@@ -1000,7 +1055,7 @@ var SelectHelper = {
         for (let ii=0; ii<subchildren.length; ii++) {
           let subchild = subchildren[ii];
           let item = document.createElement("option");
-          item.setAttribute("label", subchild.text);
+          item.setAttribute("label", this._control.getText(subchild));
           this._list.appendChild(item);
           item.className = "in-optgroup";
           item.optionIndex = optionIndex++;
@@ -1009,9 +1064,9 @@ var SelectHelper = {
             firstSelected = firstSelected ? firstSelected : item;
           }
         }
-      } else if (child instanceof HTMLOptionElement) {
+      } else if (this._control.isOption(child)) {
         let item = document.createElement("option");
-        item.setAttribute("label", child.textContent);
+        item.setAttribute("label", this._control.getText(child));
         this._list.appendChild(item);
         item.optionIndex = optionIndex++;
         if (child.selected) {
@@ -1077,11 +1132,8 @@ var SelectHelper = {
       }
     }
 
-    if (!isIdentical) {
-      let control = this._control.wrappedJSObject;
-      if ("onchange" in control)
-        control.onchange();
-    }
+    if (!isIdentical) 
+      this._control.fireOnChange();
   },
 
   close: function() {
@@ -1102,12 +1154,11 @@ var SelectHelper = {
     switch (aEvent.type) {
       case "click":
         let item = aEvent.target;
-        let selectElement = this._control.wrappedJSObject.selectElement;
         if (item && item.hasOwnProperty("optionIndex")) {
           if (this._control.multiple) {
             // Toggle the item state
             item.selected = !item.selected;
-            selectElement.setOptionsSelectedByIndex(item.optionIndex, item.optionIndex, item.selected, false, false, true);
+            this._control.select(item.optionIndex, item.selected, false);
           }
           else {
             // Unselect all options
@@ -1119,7 +1170,7 @@ var SelectHelper = {
 
             // Select the new one and update the control
             item.selected = true;
-            selectElement.setOptionsSelectedByIndex(item.optionIndex, item.optionIndex, true, true, false, true);
+            this._control.select(item.optionIndex, true, true);
           }
         }
         break;
