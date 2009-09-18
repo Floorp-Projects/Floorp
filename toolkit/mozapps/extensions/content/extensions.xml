@@ -456,10 +456,16 @@
         var image = new Image();
         var id = this.id;
         image.onload = function() {
-          document.getElementById(id)._imageLoaded(image);
+          var self = document.getElementById(id);
+          // This element might have gone away in the meantime
+          if (self)
+            self._imageLoaded(image);
         };
         image.onerror = function() {
-          document.getElementById(id)._hideImage();
+          var self = document.getElementById(id);
+          // This element might have gone away in the meantime
+          if (self)
+            self._hideImage();
         };
         image.src = this.getAttribute("thumbnailURL");
       </constructor>
