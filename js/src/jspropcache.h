@@ -46,33 +46,46 @@
  * polymorphic callsite method/get/set speedups.  For details, see
  * <https://developer.mozilla.org/en/SpiderMonkey/Internals/Property_cache>.
  */
-const int PROPERTY_CACHE_LOG2 = 12;
-const jsuword PROPERTY_CACHE_SIZE = JS_BIT(PROPERTY_CACHE_LOG2);
-const jsuword PROPERTY_CACHE_MASK = JS_BITMASK(PROPERTY_CACHE_LOG2);
+#define PROPERTY_CACHE_LOG2     12
+#define PROPERTY_CACHE_SIZE     JS_BIT(PROPERTY_CACHE_LOG2)
+#define PROPERTY_CACHE_MASK     JS_BITMASK(PROPERTY_CACHE_LOG2)
+
+/*
+ * Add kshape rather than xor it to avoid collisions between nearby bytecode
+ * that are evolving an object by setting successive properties, incrementing
+ * the object's scope->shape on each set.
+ */
+#define PROPERTY_CACHE_HASH(pc,kshape)                                        \
+    (((((jsuword)(pc) >> PROPERTY_CACHE_LOG2) ^ (jsuword)(pc)) + (kshape)) &  \
+     PROPERTY_CACHE_MASK)
+
+#define PROPERTY_CACHE_HASH_PC(pc,kshape)                                     \
+    PROPERTY_CACHE_HASH(pc, kshape)
+
+#define PROPERTY_CACHE_HASH_ATOM(atom,obj)                                    \
+    PROPERTY_CACHE_HASH((jsuword)(atom) >> 2, OBJ_SHAPE(obj))
 
 /*
  * Property cache value capability macros.
  */
-const int PCVCAP_PROTOBITS = 4;
-const jsuword PCVCAP_PROTOSIZE = JS_BIT(PCVCAP_PROTOBITS);
-const jsuword PCVCAP_PROTOMASK = JS_BITMASK(PCVCAP_PROTOBITS);
+#define PCVCAP_PROTOBITS        4
+#define PCVCAP_PROTOSIZE        JS_BIT(PCVCAP_PROTOBITS)
+#define PCVCAP_PROTOMASK        JS_BITMASK(PCVCAP_PROTOBITS)
 
-const int PCVCAP_SCOPEBITS = 4;
-const jsuword PCVCAP_SCOPESIZE = JS_BIT(PCVCAP_SCOPEBITS);
-const jsuword PCVCAP_SCOPEMASK = JS_BITMASK(PCVCAP_SCOPEBITS);
+#define PCVCAP_SCOPEBITS        4
+#define PCVCAP_SCOPESIZE        JS_BIT(PCVCAP_SCOPEBITS)
+#define PCVCAP_SCOPEMASK        JS_BITMASK(PCVCAP_SCOPEBITS)
 
-const jsuword PCVCAP_TAGBITS = PCVCAP_PROTOBITS + PCVCAP_SCOPEBITS;
-const jsuword PCVCAP_TAGMASK = JS_BITMASK(PCVCAP_TAGBITS);
-inline jsuword PCVCAP_TAG(jsuword t) { return t & PCVCAP_TAGMASK; }
+#define PCVCAP_TAGBITS          (PCVCAP_PROTOBITS + PCVCAP_SCOPEBITS)
+#define PCVCAP_TAGMASK          JS_BITMASK(PCVCAP_TAGBITS)
+#define PCVCAP_TAG(t)           ((t) & PCVCAP_TAGMASK)
 
-inline jsuword PCVCAP_MAKE(jsuword t, jsuword s, jsuword p)
-{
-    return (uint32(t) << PCVCAP_TAGBITS) | (s << PCVCAP_PROTOBITS) | p;
-}
+#define PCVCAP_MAKE(t,s,p)      ((uint32(t) << PCVCAP_TAGBITS) |              \
+                                 ((s) << PCVCAP_PROTOBITS) |                  \
+                                 (p))
+#define PCVCAP_SHAPE(t)         ((t) >> PCVCAP_TAGBITS)
 
-inline jsuword PCVCAP_SHAPE(jsuword t) { return t >> PCVCAP_TAGBITS; }
-
-const jsuword SHAPE_OVERFLOW_BIT = JS_BIT(32 - PCVCAP_TAGBITS);
+#define SHAPE_OVERFLOW_BIT      JS_BIT(32 - PCVCAP_TAGBITS)
 
 struct JSPropCacheEntry {
     jsbytecode          *kpc;           /* pc if vcap tag is <= 1, else atom */
@@ -93,62 +106,15 @@ struct JSPropCacheEntry {
  * Special value for functions returning JSPropCacheEntry * to distinguish
  * between failure and no no-cache-fill cases.
  */
-JSPropCacheEntry * const JS_NO_PROP_CACHE_FILL = (JSPropCacheEntry *) NULL + 1;
+#define JS_NO_PROP_CACHE_FILL ((JSPropCacheEntry *) NULL + 1)
 
 #if defined DEBUG_brendan || defined DEBUG_brendaneich
 #define JS_PROPERTY_CACHE_METERING 1
 #endif
 
-class JSPropertyCache {
-public:
-    JS_ALWAYS_INLINE JS_REQUIRES_STACK void
-    test(JSContext *cx, jsbytecode *pc, JSObject **objp,
-         JSObject **pobjp, JSPropCacheEntry **entryp, JSAtom **atomp);
-
-    JS_ALWAYS_INLINE JS_REQUIRES_STACK bool
-    testForSet(JSContext *cx, jsbytecode *pc, JSObject **objp,
-               JSObject **pobjp, JSPropCacheEntry **entryp, JSAtom **atomp);
-
-    JS_ALWAYS_INLINE bool
-    testForInit(JSContext *cx, jsbytecode *pc, JSObject *obj,
-                JSPropCacheEntry **entryp, JSScopeProperty **spropp);
-
-    /*
-     * Fill property cache entry for key cx->fp->pc, optimized value word
-     * computed from obj and sprop, and entry capability forged from 24-bit
-     * OBJ_SHAPE(obj), 4-bit scopeIndex, and 4-bit protoIndex.
-     *
-     * Return the filled cache entry or JS_NO_PROP_CACHE_FILL if caching was
-     * not possible.
-     */
-    JS_REQUIRES_STACK JSPropCacheEntry *
-    fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoIndex, JSObject *pobj,
-         JSScopeProperty *sprop, JSBool adding);
-
-    void purge(JSContext *cx);
-    void purgeForScript(JSContext *cx, JSScript *script);
-
-private:
-    JS_REQUIRES_STACK JSAtom *
-    fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject **pobjp,
-             JSPropCacheEntry **entryp);
-
-    inline void assertEmpty();
-
-    inline JSPropCacheEntry *fillEntry(jsuword khash, jsbytecode *pc, jsuword kshape,
-                                       jsuword vcap, jsuword vword);
-
-    inline JSPropCacheEntry *fillByPC(jsbytecode *pc, jsuword kshape,
-                                      jsuword vshape, jsuword scopeIndex, jsuword protoIndex,
-                                      jsuword vword);
-
-    inline JSPropCacheEntry *fillByAtom(JSAtom *atom, JSObject *obj,
-                                        jsuword vshape, jsuword scopeIndex, jsuword protoIndex,
-                                        jsuword vword);
-
+typedef struct JSPropertyCache {
     JSPropCacheEntry    table[PROPERTY_CACHE_SIZE];
     JSBool              empty;
-
 #ifdef JS_PROPERTY_CACHE_METERING
     JSPropCacheEntry    *pctestentry;   /* entry of the last PC-based test */
     uint32              fills;          /* number of cache entry fills */
@@ -187,43 +153,109 @@ private:
 #else
 # define PCMETER(x)     ((void)0)
 #endif
-};
+} JSPropertyCache;
 
 /*
  * Property cache value tagging/untagging macros.
  */
-const jsuword PCVAL_OBJECT = 0;
-const jsuword PCVAL_SLOT = 1;
-const jsuword PCVAL_SPROP = 2;
+#define PCVAL_OBJECT            0
+#define PCVAL_SLOT              1
+#define PCVAL_SPROP             2
 
-const int PCVAL_TAGBITS = 2;
-const jsuword PCVAL_TAGMASK = JS_BITMASK(PCVAL_TAGBITS);
+#define PCVAL_TAGBITS           2
+#define PCVAL_TAGMASK           JS_BITMASK(PCVAL_TAGBITS)
+#define PCVAL_TAG(v)            ((v) & PCVAL_TAGMASK)
+#define PCVAL_CLRTAG(v)         ((v) & ~(jsuword)PCVAL_TAGMASK)
+#define PCVAL_SETTAG(v,t)       ((jsuword)(v) | (t))
 
-inline jsuword PCVAL_TAG(jsuword v) { return v & PCVAL_TAGMASK; }
-inline jsuword PCVAL_CLRTAG(jsuword v) { return v & ~PCVAL_TAGMASK; }
-inline jsuword PCVAL_SETTAG(jsuword v, jsuword t) { return v | t; }
+#define PCVAL_NULL              0
+#define PCVAL_IS_NULL(v)        ((v) == PCVAL_NULL)
 
-const jsuword PCVAL_NULL = 0;
-inline bool PCVAL_IS_NULL(jsuword v) { return v == PCVAL_NULL; }
+#define PCVAL_IS_OBJECT(v)      (PCVAL_TAG(v) == PCVAL_OBJECT)
+#define PCVAL_TO_OBJECT(v)      ((JSObject *) (v))
+#define OBJECT_TO_PCVAL(obj)    ((jsuword) (obj))
 
-inline bool PCVAL_IS_OBJECT(jsuword v) { return PCVAL_TAG(v) == PCVAL_OBJECT; }
-inline JSObject *PCVAL_TO_OBJECT(jsuword v) { return (JSObject *) v; }
-inline jsuword OBJECT_TO_PCVAL(JSObject *obj) { return (jsuword) obj; }
+#define PCVAL_OBJECT_TO_JSVAL(v) OBJECT_TO_JSVAL(PCVAL_TO_OBJECT(v))
+#define JSVAL_OBJECT_TO_PCVAL(v) OBJECT_TO_PCVAL(JSVAL_TO_OBJECT(v))
 
-inline jsval PCVAL_OBJECT_TO_JSVAL(jsuword v) { return OBJECT_TO_JSVAL(PCVAL_TO_OBJECT(v)); }
-inline jsuword JSVAL_OBJECT_TO_PCVAL(jsval v) { return OBJECT_TO_PCVAL(JSVAL_TO_OBJECT(v)); }
+#define PCVAL_IS_SLOT(v)        ((v) & PCVAL_SLOT)
+#define PCVAL_TO_SLOT(v)        ((jsuint)(v) >> 1)
+#define SLOT_TO_PCVAL(i)        (((jsuword)(i) << 1) | PCVAL_SLOT)
 
-inline bool PCVAL_IS_SLOT(jsuword v) { return (v & PCVAL_SLOT) != 0; }
-inline jsuint PCVAL_TO_SLOT(jsuword v) { return (jsuint) v >> 1; }
-inline jsuword SLOT_TO_PCVAL(jsuint i) { return ((jsuword) i << 1) | PCVAL_SLOT; }
+#define PCVAL_IS_SPROP(v)       (PCVAL_TAG(v) == PCVAL_SPROP)
+#define PCVAL_TO_SPROP(v)       ((JSScopeProperty *) PCVAL_CLRTAG(v))
+#define SPROP_TO_PCVAL(sprop)   PCVAL_SETTAG(sprop, PCVAL_SPROP)
 
-inline bool PCVAL_IS_SPROP(jsuword v) { return PCVAL_TAG(v) == PCVAL_SPROP; }
-inline JSScopeProperty *PCVAL_TO_SPROP(jsuword v) { return (JSScopeProperty *) PCVAL_CLRTAG(v); }
+/*
+ * Fill property cache entry for key cx->fp->pc, optimized value word computed
+ * from obj and sprop, and entry capability forged from 24-bit OBJ_SHAPE(obj),
+ * 4-bit scopeIndex, and 4-bit protoIndex.
+ *
+ * Return the filled cache entry or JS_NO_PROP_CACHE_FILL if caching was not
+ * possible.
+ */
+extern JS_REQUIRES_STACK JSPropCacheEntry *
+js_FillPropertyCache(JSContext *cx, JSObject *obj,
+                     uintN scopeIndex, uintN protoIndex, JSObject *pobj,
+                     JSScopeProperty *sprop, JSBool adding);
 
-inline jsuword
-SPROP_TO_PCVAL(JSScopeProperty *sprop)
-{
-    return PCVAL_SETTAG((jsuword) sprop, PCVAL_SPROP);
-}
+/*
+ * Property cache lookup macros. PROPERTY_CACHE_TEST is designed to inline the
+ * fast path in js_Interpret, so it makes "just-so" restrictions on parameters,
+ * e.g. pobj and obj should not be the same variable, since for JOF_PROP-mode
+ * opcodes, obj must not be changed because of a cache miss.
+ *
+ * On return from PROPERTY_CACHE_TEST, if atom is null then obj points to the
+ * scope chain element in which the property was found, pobj is locked, and
+ * entry is valid. If atom is non-null then no object is locked but entry is
+ * still set correctly for use, e.g., by js_FillPropertyCache and atom should
+ * be used as the id to find.
+ *
+ * We must lock pobj on a hit in order to close races with threads that might
+ * be deleting a property from its scope, or otherwise invalidating property
+ * caches (on all threads) by re-generating scope->shape.
+ */
+#define PROPERTY_CACHE_TEST(cx, pc, obj, pobj, entry, atom)                   \
+    do {                                                                      \
+        JSPropertyCache *cache_ = &JS_PROPERTY_CACHE(cx);                     \
+        uint32 kshape_ = (JS_ASSERT(OBJ_IS_NATIVE(obj)), OBJ_SHAPE(obj));     \
+        entry = &cache_->table[PROPERTY_CACHE_HASH_PC(pc, kshape_)];          \
+        PCMETER(cache_->pctestentry = entry);                                 \
+        PCMETER(cache_->tests++);                                             \
+        JS_ASSERT(&obj != &pobj);                                             \
+        if (entry->kpc == pc && entry->kshape == kshape_) {                   \
+            JSObject *tmp_;                                                   \
+            pobj = obj;                                                       \
+            JS_ASSERT(PCVCAP_TAG(entry->vcap) <= 1);                          \
+            if (PCVCAP_TAG(entry->vcap) == 1 &&                               \
+                (tmp_ = OBJ_GET_PROTO(cx, pobj)) != NULL) {                   \
+                pobj = tmp_;                                                  \
+            }                                                                 \
+                                                                              \
+            if (JS_LOCK_OBJ_IF_SHAPE(cx, pobj, PCVCAP_SHAPE(entry->vcap))) {  \
+                PCMETER(cache_->pchits++);                                    \
+                PCMETER(!PCVCAP_TAG(entry->vcap) || cache_->protopchits++);   \
+                atom = NULL;                                                  \
+                break;                                                        \
+            }                                                                 \
+        }                                                                     \
+        atom = js_FullTestPropertyCache(cx, pc, &obj, &pobj, &entry);         \
+        if (atom)                                                             \
+            PCMETER(cache_->misses++);                                        \
+    } while (0)
+
+extern JS_REQUIRES_STACK JSAtom *
+js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
+                         JSObject **objp, JSObject **pobjp,
+                         JSPropCacheEntry **entryp);
+
+/* The property cache does not need a destructor. */
+#define js_FinishPropertyCache(cache) ((void) 0)
+
+extern void
+js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache);
+
+extern void
+js_PurgePropertyCacheForScript(JSContext *cx, JSScript *script);
 
 #endif /* jspropcache_h___ */

@@ -98,6 +98,7 @@ FinishThreadData(JSThreadData *data)
 #endif
 
     js_FinishGSNCache(&data->gsnCache);
+    js_FinishPropertyCache(&data->propertyCache);
 #if defined JS_TRACER
     js_FinishJIT(&data->traceMonitor);
 #endif
@@ -109,7 +110,7 @@ PurgeThreadData(JSContext *cx, JSThreadData *data)
     js_PurgeGSNCache(&data->gsnCache);
 
     /* FIXME: bug 506341. */
-    data->propertyCache.purge(cx);
+    js_PurgePropertyCache(cx, &data->propertyCache);
 
 # ifdef JS_TRACER
     JSTraceMonitor *tm = &data->traceMonitor;
