@@ -113,11 +113,11 @@ MAKE_SDK = $(ZIP) -r9D $(SDK) $(MOZ_APP_NAME)-sdk
 endif
 ifeq ($(MOZ_PKG_FORMAT),CAB)
 PKG_SUFFIX	= .cab
-ifdef MOZ_FASTSTART
-CABARGS += -faststart
-endif
 ifndef WINCE_WINDOWS_MOBILE
 CABARGS += -s
+endif
+ifdef MOZ_FASTSTART
+CABARGS += -faststart
 endif
 VSINSTALLDIR ?= $(error VSINSTALLDIR not set, must be set to the Visual Studio install directory)
 MAKE_PACKAGE	= $(PYTHON) $(topsrcdir)/build/package/wince/make_wince_cab.py \
