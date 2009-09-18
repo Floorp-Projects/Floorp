@@ -989,11 +989,11 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
       NS_NOTREACHED("Reparenting something that has no usable parent? "
                     "Shouldn't happen!");
     }
-    // XXX need to do something here to produce the correct style context
-    // for an IB split whose first inline part is inside a first-line frame.
-    // Currently the IB anonymous block's style context takes the first part's
-    // style context as parent, which is wrong since first-line style should
-    // not apply to the anonymous block.
+    // XXX need to do something here to produce the correct style context for
+    // an IB split whose first inline part is inside a first-line frame.
+    // Currently the first IB anonymous block's style context takes the first
+    // part's style context as parent, which is wrong since first-line style
+    // should not apply to the anonymous block.
 
 #ifdef DEBUG
     {
