@@ -4570,8 +4570,10 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                 if (!JS_HAS_STRICT_OPTION(cx)) {
                     /* Just return true per ECMA if not in strict mode. */
                     PCMETER((defineHow & JSDNP_CACHE_RESULT) && JS_PROPERTY_CACHE(cx).rofills++);
-                    if (defineHow & JSDNP_CACHE_RESULT)
+                    if (defineHow & JSDNP_CACHE_RESULT) {
+                        JS_ASSERT_NOT_ON_TRACE(cx);
                         TRACE_2(SetPropHit, JS_NO_PROP_CACHE_FILL, sprop);
+                    }
                     return JS_TRUE;
 #ifdef JS_TRACER
                 error: // TRACE_2 jumps here in case of error.
@@ -4598,6 +4600,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             /* Don't clone a shared prototype property. */
             if (attrs & JSPROP_SHARED) {
                 if (defineHow & JSDNP_CACHE_RESULT) {
+                    JS_ASSERT_NOT_ON_TRACE(cx);
                     JSPropCacheEntry *entry;
                     entry = js_FillPropertyCache(cx, obj, 0, protoIndex, pobj, sprop, false);
                     TRACE_2(SetPropHit, entry, sprop);
@@ -4700,6 +4703,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
     }
 
     if (defineHow & JSDNP_CACHE_RESULT) {
+        JS_ASSERT_NOT_ON_TRACE(cx);
         JSPropCacheEntry *entry;
         entry = js_FillPropertyCache(cx, obj, 0, 0, obj, sprop, added);
         TRACE_2(SetPropHit, entry, sprop);
