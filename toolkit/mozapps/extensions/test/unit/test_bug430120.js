@@ -61,7 +61,7 @@ var timerService = {
     while (entries.hasMoreElements()) {
       var entry = entries.getNext().QueryInterface(Components.interfaces.nsISupportsCString).data;
       var value = catMan.getCategoryEntry(CATEGORY_UPDATE_TIMER, entry);
-      var timerID = value.split(",")[3];
+      var timerID = value.split(",")[2];
       if (id == timerID) {
         return true;
       }
