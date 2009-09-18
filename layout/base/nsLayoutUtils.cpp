@@ -350,7 +350,7 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
                                      nsIContent* aContent2,
                                      PRInt32 aIf1Ancestor,
                                      PRInt32 aIf2Ancestor,
-                                     nsIContent* aCommonAncestor)
+                                     const nsIContent* aCommonAncestor)
 {
   NS_PRECONDITION(aContent1, "aContent1 must not be null");
   NS_PRECONDITION(aContent2, "aContent2 must not be null");

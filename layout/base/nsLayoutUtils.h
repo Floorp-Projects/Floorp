@@ -154,7 +154,7 @@ public:
    */
   static PRInt32 CompareTreePosition(nsIContent* aContent1,
                                      nsIContent* aContent2,
-                                     nsIContent* aCommonAncestor = nsnull)
+                                     const nsIContent* aCommonAncestor = nsnull)
   {
     return DoCompareTreePosition(aContent1, aContent2, -1, 1, aCommonAncestor);
   }
@@ -169,7 +169,7 @@ public:
                                        nsIContent* aContent2,
                                        PRInt32 aIf1Ancestor,
                                        PRInt32 aIf2Ancestor,
-                                       nsIContent* aCommonAncestor = nsnull);
+                                       const nsIContent* aCommonAncestor = nsnull);
 
   /**
    * CompareTreePosition determines whether aFrame1 comes before or
