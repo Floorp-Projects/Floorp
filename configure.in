@@ -4464,8 +4464,6 @@ MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_DBGRINFO_MODULES=
-MOZ_ENABLE_CANVAS=1
-MOZ_ENABLE_CANVAS3D=1
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
@@ -5759,24 +5757,6 @@ MOZ_ARG_DISABLE_BOOL(mathml,
 if test "$MOZ_MATHML"; then
   AC_DEFINE(MOZ_MATHML)
 fi
-
-dnl ========================================================
-dnl Canvas
-dnl ========================================================
-if test -n "$MOZ_ENABLE_CANVAS"; then
-    AC_DEFINE(MOZ_ENABLE_CANVAS)
-fi
-AC_SUBST(MOZ_ENABLE_CANVAS)
-
-MOZ_ARG_DISABLE_BOOL(webgl,
-[  --disable-webgl         Disable WebGL context (canvas 3d)],
-    MOZ_ENABLE_CANVAS3D=,
-    MOZ_ENABLE_CANVAS3D=1 )
-
-if test -n "$MOZ_ENABLE_CANVAS3D"; then
-    AC_DEFINE(MOZ_ENABLE_CANVAS3D)
-fi
-AC_SUBST(MOZ_ENABLE_CANVAS3D)
 
 dnl ========================================================
 dnl SVG

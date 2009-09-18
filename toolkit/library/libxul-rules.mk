@@ -77,9 +77,7 @@ DEFINES += \
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifneq ($(OS_ARCH),WINCE)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 oleaut32)
-ifdef MOZ_ENABLE_CANVAS3D
 OS_LIBS += $(call EXPAND_LIBNAME,opengl32)
-endif
 endif
 endif
 ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
