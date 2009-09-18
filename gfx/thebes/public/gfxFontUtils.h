@@ -62,10 +62,6 @@
 #undef max
 #endif
 
-#include <bitset>
-
-// code from gfxWindowsFonts.h
-
 class gfxSparseBitSet {
 private:
     enum { BLOCK_SIZE = 32 };   // ==> 256 codepoints per block
@@ -425,7 +421,10 @@ public:
         LANG_ID_MAC_CZECH = 38,
         LANG_ID_MAC_SLOVAK = 39,
 
-        LANG_ID_MICROSOFT_EN_US = 0x0409         // with Microsoft platformID, EN US lang code
+        LANG_ID_MICROSOFT_EN_US = 0x0409,        // with Microsoft platformID, EN US lang code
+        
+        CMAP_MAX_CODEPOINT = 0x10ffff     // maximum possible Unicode codepoint 
+                                          // contained in a cmap
     };
 
     // name table has a header, followed by name records, followed by string data
