@@ -270,7 +270,8 @@ protected:
                    (aFrame->GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling));
       if (block) {
         // The {ib} properties are only stored on first continuations
-        block = block->GetFirstContinuation();
+        NS_ASSERTION(!block->GetPrevContinuation(),
+                     "Incorrect value for IBSplitSpecialPrevSibling");
         prevCont =
           static_cast<nsIFrame*>
                      (block->GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling));

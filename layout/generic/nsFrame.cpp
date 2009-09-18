@@ -5679,17 +5679,15 @@ nsFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
 
 
 /**
- * This function takes a "special" frame and _if_ that frame is the
- * anonymous block crated by an ib split it returns the split inline
- * as aSpecialSibling.  This is needed because the split inline's
- * style context is the parent of the anonymous block's srtyle context.
+ * This function takes a "special" frame and _if_ that frame is an anonymous
+ * block created by an ib split it returns the block's preceding inline.  This
+ * is needed because the split inline's style context is the parent of the
+ * anonymous block's style context.
  *
- * If aFrame is not the anonymous block, aSpecialSibling is set to null.
+ * If aFrame is not ananonymous block, null is returned.
  */
-static nsresult
-GetIBSpecialSiblingForAnonymousBlock(nsPresContext* aPresContext,
-                                     nsIFrame* aFrame,
-                                     nsIFrame** aSpecialSibling)
+static nsIFrame*
+GetIBSpecialSiblingForAnonymousBlock(nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "Must have a non-null frame!");
   NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL,
@@ -5698,34 +5696,22 @@ GetIBSpecialSiblingForAnonymousBlock(nsPresContext* aPresContext,
   nsIAtom* type = aFrame->GetStyleContext()->GetPseudo();
   if (type != nsCSSAnonBoxes::mozAnonymousBlock &&
       type != nsCSSAnonBoxes::mozAnonymousPositionedBlock) {
-    // it's not the anonymous block
-    *aSpecialSibling = nsnull;
-    return NS_OK;
+    // it's not an anonymous block
+    return nsnull;
   }
 
-  // Find the first-in-flow of the frame.  (Ugh.  This ends up
+  // Find the first continuation of the frame.  (Ugh.  This ends up
   // being O(N^2) when it is called O(N) times.)
-  aFrame = aFrame->GetFirstInFlow();
+  aFrame = aFrame->GetFirstContinuation();
 
   /*
    * Now look up the nsGkAtoms::IBSplitSpecialPrevSibling
-   * property, which is only set on the anonymous block frames we're
-   * interested in.
+   * property.
    */
-  nsresult rv;
-  nsIFrame *specialSibling = static_cast<nsIFrame*>
-                                        (aPresContext->PropertyTable()->GetProperty(aFrame,
-                               nsGkAtoms::IBSplitSpecialPrevSibling, &rv));
-
-  if (NS_PROPTABLE_PROP_NOT_THERE == rv) {
-    *aSpecialSibling = nsnull;
-    rv = NS_OK;
-  } else if (NS_SUCCEEDED(rv)) {
-    NS_ASSERTION(specialSibling, "null special sibling");
-    *aSpecialSibling = specialSibling;
-  }
-
-  return rv;
+  nsIFrame *specialSibling =
+    static_cast<nsIFrame*>(aFrame->GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling));
+  NS_ASSERTION(specialSibling, "Broken frame tree?");
+  return specialSibling;
 }
 
 /**
@@ -5784,19 +5770,10 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
   nsIFrame* parent = aProspectiveParent;
   do {
     if (parent->GetStateBits() & NS_FRAME_IS_SPECIAL) {
-      nsIFrame* sibling;
-      nsresult rv =
-        GetIBSpecialSiblingForAnonymousBlock(parent->PresContext(), parent, &sibling);
-      if (NS_FAILED(rv)) {
-        // If GetIBSpecialSiblingForAnonymousBlock fails, then what?
-        // we used to return what is now |aProspectiveParent|, but maybe
-        // |parent| would make more sense?
-        NS_NOTREACHED("Shouldn't get here");
-        return aProspectiveParent;
-      }
+      nsIFrame* sibling = GetIBSpecialSiblingForAnonymousBlock(parent);
 
       if (sibling) {
-        // |parent| was the block in an {ib} split; use the inline as
+        // |parent| was a block in an {ib} split; use the inline as
         // |the style parent.
         parent = sibling;
       }
@@ -5846,19 +5823,12 @@ nsFrame::DoGetParentStyleContextFrame(nsPresContext* aPresContext,
   
   if (!(mState & NS_FRAME_OUT_OF_FLOW)) {
     /*
-     * If this frame is the anonymous block created when an inline
-     * with a block inside it got split, then the parent style context
-     * is on the first of the three special frames.  We can get to it
-     * using GetIBSpecialSiblingForAnonymousBlock
+     * If this frame is an anonymous block created when an inline with a block
+     * inside it got split, then the parent style context is on its preceding
+     * inline. We can get to it using GetIBSpecialSiblingForAnonymousBlock.
      */
     if (mState & NS_FRAME_IS_SPECIAL) {
-      nsresult rv =
-        GetIBSpecialSiblingForAnonymousBlock(aPresContext, this, aProviderFrame);
-      if (NS_FAILED(rv)) {
-        NS_NOTREACHED("Shouldn't get here");
-        *aProviderFrame = nsnull;
-        return rv;
-      }
+      *aProviderFrame = GetIBSpecialSiblingForAnonymousBlock(this);
 
       if (*aProviderFrame) {
         return NS_OK;
