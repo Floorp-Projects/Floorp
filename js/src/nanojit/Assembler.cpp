@@ -83,7 +83,7 @@ namespace nanojit
             LInsp i = in->read();
             const char* str = _names->formatIns(i);
             char* cpy = new (_alloc) char[strlen(str)+1];
-            strcpy(cpy, str);
+            VMPI_strcpy(cpy, str);
             _strs.insert(cpy);
             return i;
         }
@@ -1478,15 +1478,15 @@ namespace nanojit
         verbose_only(
             if (_logc->lcbits & LC_Assembly) {
                 char* s = &outline[0];
-                memset(s, ' ', 51);  s[51] = '\0';
-                s += strlen(s);
+                VMPI_memset(s, ' ', 51);  s[51] = '\0';
+                s += VMPI_strlen(s);
                 sprintf(s, " SP ");
-                s += strlen(s);
+                s += VMPI_strlen(s);
                 for(uint32_t i=_activation.lowwatermark; i<_activation.tos;i++) {
                     LInsp ins = _activation.entry[i];
                     if (ins && ins !=_activation.entry[i+1]) {
                         sprintf(s, "%d(%s) ", 4*i, _thisfrag->lirbuf->names->formatRef(ins));
-                        s += strlen(s);
+                        s += VMPI_strlen(s);
                     }
                 }
                 output(&outline[0]);
@@ -1496,16 +1496,16 @@ namespace nanojit
         verbose_only(
             char* s = &outline[0];
             if (_logc->lcbits & LC_Assembly) {
-                memset(s, ' ', 51);  s[51] = '\0';
-                s += strlen(s);
+                VMPI_memset(s, ' ', 51);  s[51] = '\0';
+                s += VMPI_strlen(s);
                 sprintf(s, " ebp ");
-                s += strlen(s);
+                s += VMPI_strlen(s);
 
                 for(uint32_t i=_activation.lowwatermark; i<_activation.tos;i++) {
                     LInsp ins = _activation.entry[i];
                     if (ins) {
                         sprintf(s, "%d(%s) ", -4*i,_thisfrag->lirbuf->names->formatRef(ins));
-                        s += strlen(s);
+                        s += VMPI_strlen(s);
                     }
                 }
                 output(&outline[0]);
@@ -1827,7 +1827,7 @@ namespace nanojit
             // Add the EOL string to the output, ensuring that we leave enough
             // space for the terminating NULL character, then reset it so it
             // doesn't repeat on the next outputf.
-            strncat(outline, outlineEOL, sizeof(outline)-(outline_len+1));
+            VMPI_strncat(outline, outlineEOL, sizeof(outline)-(outline_len+1));
             outlineEOL[0] = '\0';
 
             output(outline);
@@ -1838,7 +1838,7 @@ namespace nanojit
             if (_outputCache)
             {
                 char* str = new (alloc) char[VMPI_strlen(s)+1];
-                strcpy(str, s);
+                VMPI_strcpy(str, s);
                 _outputCache->insert(str);
             }
             else
@@ -1855,7 +1855,7 @@ namespace nanojit
             // Add the EOL string to the output, ensuring that we leave enough
             // space for the terminating NULL character, then reset it so it
             // doesn't repeat on the next outputf.
-            strncat(outline, outlineEOL, sizeof(outline)-(strlen(outline)+1));
+            VMPI_strncat(outline, outlineEOL, sizeof(outline)-(strlen(outline)+1));
             outlineEOL[0] = '\0';
 
             output(s);
@@ -1863,9 +1863,9 @@ namespace nanojit
 
         char* Assembler::outputAlign(char *s, int col)
         {
-            int len = strlen(s);
+            int len = VMPI_strlen(s);
             int add = ((col-len)>0) ? col-len : 1;
-            memset(&s[len], ' ', add);
+            VMPI_memset(&s[len], ' ', add);
             s[col] = '\0';
             return &s[col];
         }
