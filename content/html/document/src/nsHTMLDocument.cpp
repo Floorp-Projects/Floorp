@@ -925,7 +925,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   // Set the parser as the stream listener for the document loader...
   if (mParser) {
-    rv = CallQueryInterface(mParser, aDocListener);
+    rv = mParser->GetStreamListener(aDocListener);
     if (NS_FAILED(rv)) {
       return rv;
     }
