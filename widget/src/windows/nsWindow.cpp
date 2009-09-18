@@ -5632,7 +5632,9 @@ PRBool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam)
 
 void nsWindow::OnSettingsChange(WPARAM wParam, LPARAM lParam)
 {
-  nsWindowGfx::OnSettingsChangeGfx(wParam);
+  if (mWindowType == eWindowType_dialog ||
+      mWindowType == eWindowType_toplevel )
+    nsWindowGfx::OnSettingsChangeGfx(wParam);
 }
 
 // Scrolling helper function for handling plugins.  
