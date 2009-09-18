@@ -161,6 +161,7 @@ struct JSContext;
 
 #define VMPI_strlen strlen
 #define VMPI_strcat strcat
+#define VMPI_strncat strncat
 #define VMPI_strcpy strcpy
 #define VMPI_sprintf sprintf
 #define VMPI_memset memset
