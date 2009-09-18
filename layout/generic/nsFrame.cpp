@@ -4320,9 +4320,9 @@ nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aInd
 void
 nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
-  if (nsnull != mNextSibling) {
+  if (GetNextSibling()) {
     IndentBy(out, aIndent);
-    fprintf(out, "<next-sibling va=\"%ld\"/>\n", PRUptrdiff(mNextSibling));
+    fprintf(out, "<next-sibling va=\"%ld\"/>\n", PRUptrdiff(GetNextSibling()));
   }
 
   if (HasView()) {

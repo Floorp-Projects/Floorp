@@ -6780,8 +6780,8 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
           GetContentOffset(), GetContentLength(),
           isComplete ? 'T':'F');
   
-  if (nsnull != mNextSibling) {
-    fprintf(out, " next=%p", static_cast<void*>(mNextSibling));
+  if (GetNextSibling()) {
+    fprintf(out, " next=%p", static_cast<void*>(GetNextSibling()));
   }
   nsIFrame* prevContinuation = GetPrevContinuation();
   if (nsnull != prevContinuation) {

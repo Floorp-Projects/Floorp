@@ -2323,7 +2323,9 @@ protected:
   nsIContent*      mContent;
   nsStyleContext*  mStyleContext;
   nsIFrame*        mParent;
+private:
   nsIFrame*        mNextSibling;  // singly-linked list of frames
+protected:
   nsFrameState     mState;
 
   // When there is an overflow area only slightly larger than mRect,
