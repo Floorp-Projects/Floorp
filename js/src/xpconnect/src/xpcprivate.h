@@ -265,17 +265,6 @@ extern const char XPC_XPCONNECT_CONTRACTID[];
 
 #define WRAPPER_SLOTS (JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1))
 
-// NOTE!!!
-//
-// If this ever changes,
-// nsScriptSecurityManager::doGetObjectPrincipal() *must* be updated
-// also!
-//
-// NOTE!!!
-#define IS_WRAPPER_CLASS(clazz)                                               \
-          (((clazz)->flags & JSCLASS_IS_EXTENDED) &&                          \
-           reinterpret_cast<JSExtendedClass*>(clazz)->equality == XPC_WN_Equality)
-
 /***************************************************************************/
 // Auto locking support class...
 
@@ -1354,6 +1343,47 @@ xpc_InitWrappedNativeJSOps();
            (clazz) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||           \
            (clazz) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass)
 
+// NOTE!!!
+//
+// If this ever changes,
+// nsScriptSecurityManager::doGetObjectPrincipal() *must* be updated
+// also!
+//
+// NOTE!!!
+#define IS_WRAPPER_CLASS(clazz)                                               \
+    (((clazz)->flags & JSCLASS_IS_EXTENDED) &&                                \
+     reinterpret_cast<JSExtendedClass*>(clazz)->equality == XPC_WN_Equality)
+
+inline JSBool
+DebugCheckWrapperClass(JSObject* obj)
+{
+    NS_ASSERTION(IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)),
+                 "Forgot to check if this is a wrapper?");
+    return JS_TRUE;
+}
+
+// If IS_WRAPPER_CLASS for the JSClass of an object is true, the object can be
+// a slim wrapper, holding a native in its private slot, or a wrappednative
+// wrapper, holding the XPCWrappedNative in its private slot. A slim wrapper
+// also holds a pointer to its XPCWrappedNativeProto in a reserved slot, we can
+// check that slot for a non-void value to distinguish between the two.
+
+// Only use these macros if IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) is true.
+#define IS_WN_WRAPPER_OBJECT(obj)                                             \
+    (DebugCheckWrapperClass(obj) &&                                           \
+     JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, JSSLOT_START(STOBJ_GET_CLASS(obj)))))
+#define IS_SLIM_WRAPPER_OBJECT(obj)                                           \
+    (DebugCheckWrapperClass(obj) &&                                           \
+     !JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, JSSLOT_START(STOBJ_GET_CLASS(obj)))))
+
+// Use these macros if IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) might be false.
+// Avoid calling them if IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) can only be
+// true, as we'd do a redundant call to IS_WRAPPER_CLASS.
+#define IS_WN_WRAPPER(obj)                                                    \
+    (IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) && IS_WN_WRAPPER_OBJECT(obj))
+#define IS_SLIM_WRAPPER(obj)                                                  \
+    (IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) && IS_SLIM_WRAPPER_OBJECT(obj))
+
 // Comes from xpcwrappednativeops.cpp
 extern void
 xpc_TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper);
@@ -1907,14 +1937,13 @@ public:
     const XPCNativeScriptableFlags& GetFlags() const {return mFlags;}
     JSClass*                        GetJSClass() {return &mJSClass.base;}
     JSClass*                        GetSlimJSClass()
-        {return &mSlimJSClass.base;}
+        {if(mCanBeSlim) return GetJSClass(); return nsnull;}
 
     XPCNativeScriptableShared(JSUint32 aFlags = 0, char* aName = nsnull)
-        : mFlags(aFlags)
+        : mFlags(aFlags),
+          mCanBeSlim(JS_FALSE)
         {memset(&mJSClass, 0, sizeof(mJSClass));
          mJSClass.base.name = aName;  // take ownership
-         memset(&mSlimJSClass, 0, sizeof(mSlimJSClass));
-         mSlimJSClass.base.name = aName;  // take ownership
          MOZ_COUNT_CTOR(XPCNativeScriptableShared);}
 
     ~XPCNativeScriptableShared()
@@ -1934,7 +1963,7 @@ public:
 private:
     XPCNativeScriptableFlags mFlags;
     JSExtendedClass          mJSClass;
-    JSExtendedClass          mSlimJSClass;
+    JSBool                   mCanBeSlim;
 };
 
 /***************************************************************************/
@@ -2201,13 +2230,6 @@ private:
 };
 
 
-extern void XPC_SWN_Finalize(JSContext *cx, JSObject *obj);
-extern JSBool XPC_SWN_Equality(JSContext *cx, JSObject *obj, jsval v,
-                               JSBool *bp);
-
-#define IS_SLIM_WRAPPER_CLASS(clazz) ((clazz)->finalize == XPC_SWN_Finalize)
-#define IS_SLIM_WRAPPER(obj) IS_SLIM_WRAPPER_CLASS(STOBJ_GET_CLASS(obj))
-
 extern JSBool ConstructSlimWrapper(XPCCallContext &ccx, nsISupports *p,
                                    nsWrapperCache *cache,
                                    XPCWrappedNativeScope* xpcScope,
@@ -2459,6 +2481,9 @@ public:
                 XPCNativeInterface* Interface,
                 XPCWrappedNative** wrapper);
 
+    // If pobj2 is not null and *pobj2 is not null after the call and the return
+    // value is null, then *pobj2 points to an object for which
+    // IS_SLIM_WRAPPER_OBJECT is true.
     static XPCWrappedNative*
     GetWrappedNativeOfJSObject(JSContext* cx, JSObject* obj,
                                JSObject* funobj = nsnull,
