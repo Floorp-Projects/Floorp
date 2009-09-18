@@ -49,13 +49,6 @@
 
 const nsFrameList* nsFrameList::sEmptyList;
 
-nsFrameList::nsFrameList(nsIFrame* aFirstFrame)
-  : mFirstChild(aFirstFrame)
-  , mLastChild(nsLayoutUtils::GetLastSibling(aFirstFrame))
-{
-  MOZ_COUNT_CTOR(nsFrameList);
-}
-
 /* static */
 nsresult
 nsFrameList::Init()
@@ -98,6 +91,13 @@ nsFrameList::SetFrames(nsIFrame* aFrameList)
 
   mFirstChild = aFrameList;
   mLastChild = nsLayoutUtils::GetLastSibling(mFirstChild);
+}
+
+void
+nsFrameList::AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList)
+{
+  nsFrameList temp(aFrameList, nsLayoutUtils::GetLastSibling(aFrameList));
+  AppendFrames(aParent, temp);
 }
 
 void
@@ -185,6 +185,15 @@ nsFrameList::DestroyFrameIfPresent(nsIFrame* aFrame)
     return PR_TRUE;
   }
   return PR_FALSE;
+}
+
+void
+nsFrameList::InsertFrames(nsIFrame* aParent,
+                          nsIFrame* aPrevSibling,
+                          nsIFrame* aFrameList)
+{
+  nsFrameList temp(aFrameList, nsLayoutUtils::GetLastSibling(aFrameList));
+  InsertFrames(aParent, aPrevSibling, temp);
 }
 
 nsFrameList::Slice

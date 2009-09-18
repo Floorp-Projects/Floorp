@@ -614,7 +614,7 @@ inline void
 SetInitialSingleChild(nsIFrame* aParent, nsIFrame* aFrame)
 {
   NS_PRECONDITION(!aFrame->GetNextSibling(), "Should be using a frame list");
-  nsFrameList temp(aFrame);
+  nsFrameList temp(aFrame, aFrame);
   aParent->SetInitialChildList(nsnull, temp);
 }
 
@@ -1500,15 +1500,14 @@ GetChildListNameFor(nsIFrame*       aChildFrame)
   // Verify that the frame is actually in that child list or in the
   // corresponding overflow list.
   nsIFrame* parent = aChildFrame->GetParent();
-  PRBool found = nsFrameList(parent->GetFirstChild(listName))
-                   .ContainsFrame(aChildFrame);
+  PRBool found = parent->GetChildList(listName).ContainsFrame(aChildFrame);
   if (!found) {
     if (!(aChildFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-      found = nsFrameList(parent->GetFirstChild(nsGkAtoms::overflowList))
+      found = parent->GetChildList(nsGkAtoms::overflowList)
                 .ContainsFrame(aChildFrame);
     }
     else if (aChildFrame->GetStyleDisplay()->IsFloating()) {
-      found = nsFrameList(parent->GetFirstChild(nsGkAtoms::overflowOutOfFlowList))
+      found = parent->GetChildList(nsGkAtoms::overflowOutOfFlowList)
                 .ContainsFrame(aChildFrame);
     }
     // else it's positioned and should have been on the 'listName' child list.
@@ -2944,10 +2943,10 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
     mHasRootAbsPosContainingBlock = PR_TRUE;
   }
 
-  nsFrameList newFrameList(newFrame);
   if (viewportFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
-    viewportFrame->SetInitialChildList(nsnull, newFrameList);
+    SetInitialSingleChild(viewportFrame, newFrame);
   } else {
+    nsFrameList newFrameList(newFrame, newFrame);
     viewportFrame->AppendFrames(nsnull, newFrameList);
   }
 
@@ -4399,7 +4398,7 @@ void
 nsCSSFrameConstructor::FinishBuildingScrollFrame(nsIFrame* aScrollFrame,
                                                  nsIFrame* aScrolledFrame)
 {
-  nsFrameList scrolled(aScrolledFrame);
+  nsFrameList scrolled(aScrolledFrame, aScrolledFrame);
   aScrollFrame->AppendFrames(nsnull, scrolled);
 
   // force the scrolled frame to have a view. The view will be parented to
@@ -5692,9 +5691,8 @@ static nsIFrame*
 FindAppendPrevSibling(nsIFrame* aParentFrame, nsIFrame* aAfterFrame)
 {
   if (aAfterFrame) {
-    nsFrameList childList(aParentFrame->GetFirstChild(nsnull));
     NS_ASSERTION(aAfterFrame->GetParent() == aParentFrame, "Wrong parent");
-    return childList.GetPrevSiblingFor(aAfterFrame);
+    return aParentFrame->GetChildList(nsnull).GetPrevSiblingFor(aAfterFrame);
   }
 
   return aParentFrame->GetLastChild(nsnull);
@@ -10346,7 +10344,7 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   //     so just doing a linear search for the prevSibling is ok.
   // 3)  Trying to use FindPreviousSibling will fail if the first-letter is in
   //     anonymous content (eg generated content).
-  nsFrameList siblingList(parentFrame->GetFirstChild(nsnull));
+  const nsFrameList& siblingList(parentFrame->GetChildList(nsnull));
   NS_ASSERTION(siblingList.ContainsFrame(placeholderFrame),
                "Placeholder not in parent's principal child list?");
   nsIFrame* prevSibling = siblingList.GetPrevSiblingFor(placeholderFrame);
@@ -10367,7 +10365,7 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   aFrameManager->RemoveFrame(parentFrame, nsnull, placeholderFrame);
 
   // Insert text frame in its place
-  nsFrameList textList(newTextFrame);
+  nsFrameList textList(newTextFrame, newTextFrame);
   aFrameManager->InsertFrames(parentFrame, nsnull, prevSibling, textList);
 
   return NS_OK;
@@ -10413,7 +10411,7 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
       aFrameManager->RemoveFrame(aFrame, nsnull, kid);
 
       // Insert text frame in its place
-      nsFrameList textList(textFrame);
+      nsFrameList textList(textFrame, textFrame);
       aFrameManager->InsertFrames(aFrame, nsnull, prevSibling, textList);
 
       *aStopLooking = PR_TRUE;
