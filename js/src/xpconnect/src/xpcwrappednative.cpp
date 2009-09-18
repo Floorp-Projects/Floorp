@@ -465,7 +465,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             JSObject *cached = cache->GetWrapper();
             if(cached)
             {
-                if(IS_SLIM_WRAPPER(cached))
+                if(IS_SLIM_WRAPPER_OBJECT(cached))
                 {
                     nsRefPtr<XPCWrappedNative> morphed;
                     if(!XPCWrappedNative::Morph(ccx, cached, Interface, cache,
@@ -784,7 +784,7 @@ XPCWrappedNative::GetUsedOnly(XPCCallContext& ccx,
     if(cache)
     {
         JSObject *flat = cache->GetWrapper();
-        if(flat && IS_SLIM_WRAPPER(flat) && !MorphSlimWrapper(ccx, flat))
+        if(flat && IS_SLIM_WRAPPER_OBJECT(flat) && !MorphSlimWrapper(ccx, flat))
            return NS_ERROR_FAILURE;
 
         wrapper = flat ?
@@ -1144,21 +1144,12 @@ XPCWrappedNative::Init(XPCCallContext& ccx,
 JSBool
 XPCWrappedNative::Init(XPCCallContext &ccx, JSObject *existingJSObject)
 {
-    mScriptableInfo = GetProto()->GetScriptableInfo();
-    JSClass* jsclazz = mScriptableInfo->GetJSClass();
-
     // Morph the existing object.
-#ifdef DEBUG
-    JSObject* protoJSObject = GetProto()->GetJSProtoObject();
-    NS_ASSERTION(protoJSObject->map->ops == jsclazz->getObjectOps(ccx, jsclazz),
-                 "Ugh, we can't deal with that!");
-#endif
+    if(!JS_SetReservedSlot(ccx, existingJSObject, 0, JSVAL_VOID))
+        return JS_FALSE;
 
+    mScriptableInfo = GetProto()->GetScriptableInfo();
     mFlatJSObject = existingJSObject;
-
-    // Make sure we preserve any flags borrowing bits in classword.
-    mFlatJSObject->classword ^= (jsuword)OBJ_GET_CLASS(ccx, mFlatJSObject);
-    mFlatJSObject->classword |= (jsuword)jsclazz;
 
     SLIM_LOG(("----- %i morphed slim wrapper (mFlatJSObject: %p, %p)\n",
               ++sMorphedSlimWrappers, mFlatJSObject,
@@ -1461,7 +1452,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
     if(cache)
     {
         flat = cache->GetWrapper();
-        if(flat && !IS_SLIM_WRAPPER(flat))
+        if(flat && !IS_SLIM_WRAPPER_OBJECT(flat))
             wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(flat));
         
     }
@@ -1653,10 +1644,6 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
             if(proto)
                 protoClassInfo = proto->GetClassInfo();
         }
-        else if(IS_SLIM_WRAPPER_CLASS(funObjParentClass))
-        {
-            NS_ERROR("function object has slim wrapper!");
-        }
         else if(IS_WRAPPER_CLASS(funObjParentClass))
         {
             cur = funObjParent;
@@ -1681,32 +1668,25 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
         JSClass* clazz;
         clazz = STOBJ_GET_CLASS(cur);
 
-        if(IS_SLIM_WRAPPER_CLASS(clazz))
+        if(IS_WRAPPER_CLASS(clazz))
         {
+return_wrapper:
+            JSBool isWN = IS_WN_WRAPPER_OBJECT(cur);
+            XPCWrappedNative* wrapper =
+                isWN ? (XPCWrappedNative*) xpc_GetJSPrivate(cur) : nsnull;
             if(proto)
             {
                 XPCWrappedNativeProto* wrapper_proto =
-                    GetSlimWrapperProto(cur);
+                    isWN ? wrapper->GetProto() : GetSlimWrapperProto(cur);
+                XPCWrappedNativeScope* wrapper_scope =
+                    wrapper_proto ? wrapper_proto->GetScope() :
+                                    wrapper->GetScope();
                 if(proto != wrapper_proto &&
-                   (proto->GetScope() != wrapper_proto->GetScope() ||
+                   (proto->GetScope() != wrapper_scope ||
                     !protoClassInfo || !wrapper_proto ||
                     protoClassInfo != wrapper_proto->GetClassInfo()))
                     continue;
             }
-            if(pobj2)
-                *pobj2 = cur;
-            return nsnull;
-        }
-        if(IS_WRAPPER_CLASS(clazz))
-        {
-return_wrapper:
-            XPCWrappedNative* wrapper =
-                (XPCWrappedNative*) xpc_GetJSPrivate(cur);
-            if(proto && proto != wrapper->GetProto() &&
-               (proto->GetScope() != wrapper->GetScope() ||
-                !protoClassInfo || !wrapper->GetProto() ||
-                protoClassInfo != wrapper->GetProto()->GetClassInfo()))
-                continue;
             if(pobj2)
                 *pobj2 = cur;
             return wrapper;
@@ -3827,13 +3807,14 @@ ConstructSlimWrapper(XPCCallContext &ccx, nsISupports *p, nsWrapperCache *cache,
 
     XPCNativeScriptableInfo* si = xpcproto->GetScriptableInfo();
     JSClass* jsclazz = si->GetSlimJSClass();
-    if(!jsclazz->addProperty)
+    if(!jsclazz)
         return JS_FALSE;
 
     wrapper = xpc_NewSystemInheritingJSObject(ccx, jsclazz,
                                               xpcproto->GetJSProtoObject(),
                                               parent);
-    if(!JS_SetPrivate(ccx, wrapper, identityObj) ||
+    if(!wrapper ||
+       !JS_SetPrivate(ccx, wrapper, identityObj) ||
        !JS_SetReservedSlot(ccx, wrapper, 0, PRIVATE_TO_JSVAL(xpcproto.get())))
         return JS_FALSE;
 
