@@ -1733,8 +1733,8 @@
                         } else if (scope->owned()) {
                             if (sprop == scope->lastProp || scope->has(sprop)) {
                             fast_set_propcache_hit:
-                                PCMETER(JS_PROPERTY_CACHE(cx).pchits++);
-                                PCMETER(JS_PROPERTY_CACHE(cx).setpchits++);
+                                PCMETER(cache->pchits++);
+                                PCMETER(cache->setpchits++);
                                 NATIVE_SET(cx, obj, sprop, entry, &rval);
                                 JS_UNLOCK_SCOPE(cx, scope);
                                 break;
@@ -1769,8 +1769,8 @@
                             JS_ASSERT(!(obj->getClass()->flags &
                                         JSCLASS_SHARE_ALL_PROPERTIES));
 
-                            PCMETER(JS_PROPERTY_CACHE(cx).pchits++);
-                            PCMETER(JS_PROPERTY_CACHE(cx).addpchits++);
+                            PCMETER(cache->pchits++);
+                            PCMETER(cache->addpchits++);
 
                             /*
                              * Beware classes such as Function that use the
@@ -1809,7 +1809,7 @@
                                     goto error;
                                 }
                                 if (sprop2 != sprop) {
-                                    PCMETER(JS_PROPERTY_CACHE(cx).slotchanges++);
+                                    PCMETER(cache->slotchanges++);
                                     JS_ASSERT(slot != sprop->slot &&
                                               slot == sprop2->slot &&
                                               sprop2->id == sprop->id);
@@ -1840,7 +1840,7 @@
                             break;
                         }
                         JS_UNLOCK_SCOPE(cx, scope);
-                        PCMETER(JS_PROPERTY_CACHE(cx).setpcmisses++);
+                        PCMETER(cache->setpcmisses++);
                     }
 
                     if (!atom) {
@@ -3546,7 +3546,7 @@
                 }
 
               do_initprop_miss:
-                PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);
+                PCMETER(cache->inipcmisses++);
                 JS_UNLOCK_SCOPE(cx, scope);
 
                 /* Get the immediate property name into id. */
