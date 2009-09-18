@@ -256,7 +256,7 @@ nsInlineFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
   nsBlockFrame* frameBlock = nsLayoutUtils::GetAsBlock(ancestor);
   NS_ASSERTION(frameBlock, "ancestor not a block");
 
-  nsFrameList blockChildren(ancestor->GetFirstChild(nsnull));
+  const nsFrameList& blockChildren(ancestor->GetChildList(nsnull));
   PRBool isOverflow = !blockChildren.ContainsFrame(ancestorBlockChild);
 
   while (PR_TRUE) {

@@ -641,7 +641,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 
   // get our index
   nsPresContext* outerPresContext = mOuter->PresContext();
-  nsFrameList siblingList(mParentBox->GetFirstChild(nsnull));
+  const nsFrameList& siblingList(mParentBox->GetChildList(nsnull));
   PRInt32 childIndex = siblingList.IndexOf(mOuter);
   // if it's 0 (or not found) then stop right here.
   // It might be not found if we're not in the parent's primary frame list.
@@ -875,7 +875,7 @@ nsSplitterFrameInner::UpdateState()
     nsIFrame* splitterSibling;
     if (newState == CollapsedBefore || mState == CollapsedBefore) {
       splitterSibling =
-        nsFrameList(mOuter->GetParent()->GetFirstChild(nsnull)).GetPrevSiblingFor(mOuter);
+        mOuter->GetParent()->GetChildList(nsnull).GetPrevSiblingFor(mOuter);
     } else {
       splitterSibling = mOuter->GetNextSibling();
     }

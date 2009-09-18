@@ -1330,7 +1330,7 @@ nsContainerFrame::PushChildren(nsPresContext* aPresContext,
   }
   else {
     // Add the frames to our overflow list
-    SetOverflowFrames(aPresContext, aFromChild);
+    SetOverflowFrames(aPresContext, tail);
   }
 }
 

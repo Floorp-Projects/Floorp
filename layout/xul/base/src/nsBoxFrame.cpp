@@ -2050,7 +2050,8 @@ nsBoxFrame::CheckBoxOrder(nsBoxLayoutState& aState)
   if (!child)
     return;
 
-  mFrames = nsFrameList(MergeSort(aState, mFrames.FirstChild()));
+  nsIFrame* head = MergeSort(aState, mFrames.FirstChild());
+  mFrames = nsFrameList(head, nsLayoutUtils::GetLastSibling(head));
 }
 
 NS_IMETHODIMP

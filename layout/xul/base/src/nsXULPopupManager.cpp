@@ -1805,7 +1805,7 @@ nsXULPopupManager::GetPreviousMenuItem(nsIFrame* aParent,
   if (!immediateParent)
     immediateParent = aParent;
 
-  nsFrameList frames(immediateParent->GetFirstChild(nsnull));
+  const nsFrameList& frames(immediateParent->GetChildList(nsnull));
 
   nsIFrame* currFrame = nsnull;
   if (aStart)

@@ -56,9 +56,6 @@ public:
     MOZ_COUNT_CTOR(nsFrameList);
   }
 
-  // XXX We should make this explicit when we can!
-  nsFrameList(nsIFrame* aFirstFrame);
-
   nsFrameList(nsIFrame* aFirstFrame, nsIFrame* aLastFrame) :
     mFirstChild(aFirstFrame), mLastChild(aLastFrame)
   {
@@ -109,10 +106,7 @@ public:
    * Append frames from aFrameList to this list. If aParent
    * is not null, reparents the newly-added frames.
    */
-  void AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList) {
-    nsFrameList temp(aFrameList);
-    AppendFrames(aParent, temp);
-  }
+  void AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList);
 
   /**
    * Append aFrameList to this list.  If aParent is not null,
@@ -197,10 +191,7 @@ public:
    */
   void InsertFrames(nsIFrame* aParent,
                     nsIFrame* aPrevSibling,
-                    nsIFrame* aFrameList) {
-    nsFrameList temp(aFrameList);
-    InsertFrames(aParent, aPrevSibling, temp);
-  }
+                    nsIFrame* aFrameList);
 
   /**
    * Inserts aFrameList into this list after aPrevSibling (at the beginning if

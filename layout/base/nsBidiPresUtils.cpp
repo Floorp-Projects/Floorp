@@ -207,7 +207,7 @@ CreateBidiContinuation(nsIFrame*       aFrame,
   
   // The list name nsGkAtoms::nextBidi would indicate we don't want reflow
   // XXXbz this needs higher-level framelist love
-  nsFrameList temp(*aNewFrame);
+  nsFrameList temp(*aNewFrame, *aNewFrame);
   rv = parent->InsertFrames(nsGkAtoms::nextBidi, aFrame, temp);
   if (NS_FAILED(rv)) {
     return rv;
@@ -229,7 +229,12 @@ IsFrameInCurrentLine(nsBlockInFlowLineIterator* aLineIter,
   nsIFrame* endFrame = aLineIter->IsLastLineInList() ? nsnull :
     aLineIter->GetLine().next()->mFirstChild;
   nsIFrame* startFrame = aPrevFrame ? aPrevFrame : aLineIter->GetLine()->mFirstChild;
-  return nsFrameList(startFrame).ContainsFrameBefore(aFrame, endFrame);
+  for (nsIFrame* frame = startFrame; frame && frame != endFrame;
+       frame = frame->GetNextSibling()) {
+    if (frame == aFrame)
+      return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 static void

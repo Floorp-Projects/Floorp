@@ -274,16 +274,9 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     }
 
     // And then push it to our overflow list
-    if (nextInFlow) {
-      mFrames.RemoveFramesAfter(kid);
-      SetOverflowFrames(aPresContext, nextInFlow);
-    }
-    else {
-      nsIFrame* nextSib = kid->GetNextSibling();
-      if (nextSib) {
-        mFrames.RemoveFramesAfter(kid);
-        SetOverflowFrames(aPresContext, nextSib);
-      }
+    const nsFrameList& overflow = mFrames.RemoveFramesAfter(kid);
+    if (overflow.NotEmpty()) {
+      SetOverflowFrames(aPresContext, overflow);
     }
   }
 
