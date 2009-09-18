@@ -76,27 +76,27 @@ nsTableRowGroupFrame::IsContainingBlock() const
 
 PRInt32
 nsTableRowGroupFrame::GetRowCount()
-{  
-  PRInt32 count = 0; // init return
-
-  // loop through children, adding one to aCount for every legit row
-  for (nsIFrame* childFrame = mFrames.FirstChild();
-       childFrame; childFrame = childFrame->GetNextSibling()) {
-    if (NS_STYLE_DISPLAY_TABLE_ROW == childFrame->GetStyleDisplay()->mDisplay)
-      count++;
+{
+#ifdef DEBUG
+  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
+    NS_ASSERTION(e.get()->GetStyleDisplay()->mDisplay ==
+                   NS_STYLE_DISPLAY_TABLE_ROW,
+                 "Unexpected display");
+    NS_ASSERTION(e.get()->GetType() == nsGkAtoms::tableRowFrame,
+                 "Unexpected frame type");
   }
-  return count;
+#endif
+  
+  return mFrames.GetLength();
 }
 
 PRInt32 nsTableRowGroupFrame::GetStartRowIndex()
 {
   PRInt32 result = -1;
-  for (nsIFrame* childFrame = mFrames.FirstChild();
-       childFrame; childFrame = childFrame->GetNextSibling()) {
-    if (NS_STYLE_DISPLAY_TABLE_ROW == childFrame->GetStyleDisplay()->mDisplay) {
-      result = ((nsTableRowFrame *)childFrame)->GetRowIndex();
-      break;
-    }
+  if (mFrames.NotEmpty()) {
+    NS_ASSERTION(mFrames.FirstChild()->GetType() == nsGkAtoms::tableRowFrame,
+                 "Unexpected frame type");
+    result = static_cast<nsTableRowFrame*>(mFrames.FirstChild())->GetRowIndex();
   }
   // if the row group doesn't have any children, get it the hard way
   if (-1 == result) {
