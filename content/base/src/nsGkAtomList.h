@@ -405,6 +405,7 @@ GK_ATOM(h4, "h4")
 GK_ATOM(h5, "h5")
 GK_ATOM(h6, "h6")
 GK_ATOM(handheld, "handheld")
+GK_ATOM(handheldFriendly, "HandheldFriendly")
 GK_ATOM(handler, "handler")
 GK_ATOM(handlers, "handlers")
 GK_ATOM(HARD, "HARD")
@@ -732,6 +733,7 @@ GK_ATOM(popuplistener, "popuplistener")
 GK_ATOM(popupset, "popupset")
 GK_ATOM(popupshowing, "popupshowing")
 GK_ATOM(popupshown, "popupshown")
+GK_ATOM(popupsinherittooltip, "popupsinherittooltip")
 GK_ATOM(position, "position")
 #ifdef MOZ_MEDIA
 GK_ATOM(poster, "poster")
@@ -1645,6 +1647,7 @@ GK_ATOM(boxMetricsProperty, "BoxMetricsProperty") // nsBoxLayoutMetrics*
 GK_ATOM(changeListProperty, "ChangeListProperty") // void*
 GK_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")  // nsPoint*
 GK_ATOM(computedOffsetProperty, "ComputedOffsetProperty")  // nsPoint*
+GK_ATOM(floatContinuationProperty, "FloatContinuationProperty") // nsFrameList*
 GK_ATOM(floatRegionProperty, "FloatRegionProperty") // nsRect*
 GK_ATOM(generatedContent, "GeneratedContentProperty")  // nsCOMArray<nsIContent>*
 #ifdef MOZ_MATHML
@@ -1663,7 +1666,6 @@ GK_ATOM(overflowContainersProperty, "OverflowContainersProperty")             //
 GK_ATOM(excessOverflowContainersProperty, "ExcessOverflowContainersProperty") // nsFrameList*
 GK_ATOM(overflowLinesProperty, "OverflowLinesProperty")    // list of nsLineBox*
 GK_ATOM(overflowOutOfFlowsProperty, "OverflowOutOfFlowsProperty")      // nsFrameList*
-GK_ATOM(overflowPlaceholdersProperty, "OverflowPlaceholdersProperty")  // nsFrameList*
 GK_ATOM(preEffectsBBoxProperty, "PreEffectsBBoxProperty") // nsRect*
 GK_ATOM(preTransformBBoxProperty, "PreTransformBBoxProperty") // nsRect*
 GK_ATOM(rowUnpaginatedHeightProperty, "RowUnpaginatedHeightProperty")  // nscoord*

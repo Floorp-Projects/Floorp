@@ -53,8 +53,8 @@
 <!ENTITY autoCheck.label                 "Automatically check for updates to:">
 <!ENTITY enableAppUpdate.label           "&brandShortName;">
 <!ENTITY enableAppUpdate.accesskey       "F">
-<!ENTITY enableAddonsUpdate.label        "Installed Add-ons">
-<!ENTITY enableAddonsUpdate.accesskey    "n">
+<!ENTITY enableAddonsUpdate2.label       "Add-ons">
+<!ENTITY enableAddonsUpdate2.accesskey   "n">
 <!ENTITY enableSearchUpdate.label        "Search Engines">
 <!ENTITY enableSearchUpdate.accesskey    "h">
 <!ENTITY whenUpdatesFound.label          "When updates to &brandShortName; are found:">

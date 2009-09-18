@@ -49,7 +49,9 @@ _TEST_FILES = \
 		     bug226361_iframe.xhtml \
 		test_bug238987.html \
 		test_bug288392.html \
-		test_bug299673.html \
+		test_bug299673-1.html \
+		test_bug299673-2.html \
+		     bug299673.js \
 		test_bug322588.html \
 		     bug322588-popup.html \
 		test_bug328885.html \

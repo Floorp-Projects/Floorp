@@ -49,7 +49,7 @@ class nsITableCellLayout
 {
 public:
 
-  NS_DECLARE_FRAME_ACCESSOR(nsITableCellLayout)
+  NS_DECL_QUERYFRAME_TARGET(nsITableCellLayout)
 
   /** return the mapped cell's row and column indexes (starting at 0 for each) */
   NS_IMETHOD GetCellIndexes(PRInt32 &aRowIndex, PRInt32 &aColIndex)=0;

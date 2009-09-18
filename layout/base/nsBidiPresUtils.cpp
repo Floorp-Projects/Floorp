@@ -53,6 +53,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsInlineFrame.h"
 #include "nsPlaceholderFrame.h"
+#include "nsContainerFrame.h"
 
 static const PRUnichar kSpace            = 0x0020;
 static const PRUnichar kLineSeparator    = 0x2028;
@@ -117,7 +118,6 @@ SplitInlineAncestors(nsIFrame*     aFrame)
   nsIPresShell *presShell = presContext->PresShell();
   nsIFrame* frame = aFrame;
   nsIFrame* parent = aFrame->GetParent();
-  nsIFrame* newFrame = aFrame->GetNextSibling();
   nsIFrame* newParent;
 
   while (IsBidiSplittable(parent)) {
@@ -130,31 +130,29 @@ SplitInlineAncestors(nsIFrame*     aFrame)
       return rv;
     }
     
-    // The new parent adopts the new frame
-    frame->SetNextSibling(nsnull);
-    // XXXbz this thing should be rewritten on top of nsFrameList on a
-    // much higher level...
-    nsFrameList temp(newFrame);
+    // Split the child list after |frame|.
+    nsContainerFrame* container = do_QueryFrame(parent);
+    nsFrameList tail = container->StealFramesAfter(frame);
 
     // Reparent views as necessary
-    rv = nsHTMLContainerFrame::ReparentFrameViewList(presContext, temp, parent, newParent);
+    rv = nsHTMLContainerFrame::ReparentFrameViewList(presContext, tail, parent, newParent);
     if (NS_FAILED(rv)) {
       return rv;
     }
     
-    rv = newParent->InsertFrames(nsGkAtoms::nextBidi, nsnull, temp);
+    // The parent's continuation adopts the siblings after the split.
+    rv = newParent->InsertFrames(nsGkAtoms::nextBidi, nsnull, tail);
     if (NS_FAILED(rv)) {
       return rv;
     }
     // The list name nsGkAtoms::nextBidi would indicate we don't want reflow
-    nsFrameList temp2(newParent);
-    rv = grandparent->InsertFrames(nsGkAtoms::nextBidi, parent, temp2);
+    nsFrameList temp(newParent, newParent);
+    rv = grandparent->InsertFrames(nsGkAtoms::nextBidi, parent, temp);
     if (NS_FAILED(rv)) {
       return rv;
     }
     
     frame = parent;
-    newFrame = newParent;
     parent = grandparent;
   }
   
@@ -209,7 +207,7 @@ CreateBidiContinuation(nsIFrame*       aFrame,
   
   // The list name nsGkAtoms::nextBidi would indicate we don't want reflow
   // XXXbz this needs higher-level framelist love
-  nsFrameList temp(*aNewFrame);
+  nsFrameList temp(*aNewFrame, *aNewFrame);
   rv = parent->InsertFrames(nsGkAtoms::nextBidi, aFrame, temp);
   if (NS_FAILED(rv)) {
     return rv;
@@ -231,7 +229,12 @@ IsFrameInCurrentLine(nsBlockInFlowLineIterator* aLineIter,
   nsIFrame* endFrame = aLineIter->IsLastLineInList() ? nsnull :
     aLineIter->GetLine().next()->mFirstChild;
   nsIFrame* startFrame = aPrevFrame ? aPrevFrame : aLineIter->GetLine()->mFirstChild;
-  return nsFrameList(startFrame).ContainsFrameBefore(aFrame, endFrame);
+  for (nsIFrame* frame = startFrame; frame && frame != endFrame;
+       frame = frame->GetNextSibling()) {
+    if (frame == aFrame)
+      return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 static void
@@ -459,7 +462,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
       propTable->SetProperty(frame, nsGkAtoms::baseLevel,
                              NS_INT32_TO_PTR(paraLevel), nsnull, nsnull);
       if (isTextFrame) {
-        PRInt32 typeLimit = PR_MIN(logicalLimit, lineOffset + fragmentLength);
+        PRInt32 typeLimit = NS_MIN(logicalLimit, lineOffset + fragmentLength);
         CalculateCharType(lineOffset, typeLimit, logicalLimit, runLength,
                            runCount, charType, prevType);
         // IBMBIDI - Egypt - Start
@@ -1421,7 +1424,7 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
 
     PRInt32 subRunLength = limit - start;
     PRInt32 lineOffset = start;
-    PRInt32 typeLimit = PR_MIN(limit, aLength);
+    PRInt32 typeLimit = NS_MIN(limit, aLength);
     PRInt32 subRunCount = 1;
     PRInt32 subRunLimit = typeLimit;
 

@@ -130,7 +130,7 @@ new TestCase( SECTION,
 	      eval("parseInt.length = 0; parseInt.length") );
 
 new TestCase( SECTION, 
-	      "var PROPS=''; for ( var p in parseInt ) { PROPS += p; }; PROPS",   "prototype",
+	      "var PROPS=''; for ( var p in parseInt ) { PROPS += p; }; PROPS",   "",
 	      eval("var PROPS=''; for ( var p in parseInt ) { PROPS += p; }; PROPS") );
 
 new TestCase( SECTION, 

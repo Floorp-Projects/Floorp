@@ -1649,14 +1649,6 @@ nsHTMLSelectElement::GetHasOptGroups(PRBool* aHasGroups)
   return NS_OK;
 }
 
-void
-nsHTMLSelectElement::DispatchDOMEvent(const nsAString& aName)
-{
-  nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
-                                       static_cast<nsIContent*>(this),
-                                       aName, PR_TRUE, PR_TRUE);
-}
-
 void nsHTMLSelectElement::DispatchContentReset() {
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
   if (formControlFrame) {

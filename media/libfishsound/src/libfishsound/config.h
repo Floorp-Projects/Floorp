@@ -1,6 +1,9 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define if building universal (internal helper macro) */
+/* #undef AC_APPLE_UNIVERSAL_BUILD */
+
 /* Do not build decoding support */
 #define FS_DECODE 1
 
@@ -15,6 +18,12 @@
 
 /* Define to 1 if you have libFLAC */
 #define HAVE_FLAC 0
+
+/* Define to 1 if you have libFLAC 1.1.2 */
+/* #undef HAVE_FLAC_1_1_2 */
+
+/* Define to 1 if you have libFLAC 1.1.3 */
+/* #undef HAVE_FLAC_1_1_3 */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
@@ -34,6 +43,9 @@
 /* Define to 1 if you have libspeex 1.1.x */
 /* #undef HAVE_SPEEX_1_1 */
 
+/* Define to 1 if speex_lib_get_mode() exists in libspeex */
+/* #undef HAVE_SPEEX_LIB_GET_MODE */
+
 /* Define to 1 if you have the <stdint.h> header file. */
 /* #define HAVE_STDINT_H 1 */
 
@@ -52,6 +64,9 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
 
+/* Define to 1 if the system has the type `uintptr_t'. */
+/* #define HAVE_UINTPTR_T 1 */
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
 
@@ -60,6 +75,10 @@
 
 /* Define to 1 if you have libvorbisenc */
 #define HAVE_VORBISENC 0
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#define LT_OBJDIR ".libs/"
 
 /* Name of package */
 #define PACKAGE "libfishsound"
@@ -83,11 +102,19 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.9.1"
+#define VERSION "0.9.2"
 
-/* Define to 1 if your processor stores words with the most significant byte
-   first (like Motorola and SPARC, unlike Intel and VAX). */
-/* #undef WORDS_BIGENDIAN */
+/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#if defined AC_APPLE_UNIVERSAL_BUILD
+# if defined __BIG_ENDIAN__
+#  define WORDS_BIGENDIAN 1
+# endif
+#else
+# ifndef WORDS_BIGENDIAN
+/* #  undef WORDS_BIGENDIAN */
+# endif
+#endif
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */

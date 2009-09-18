@@ -485,6 +485,7 @@ class Dumper:
     def ProcessFile(self, file):
         """Dump symbols from this file into a symbol file, stored
         in the proper directory structure in  |symbol_path|."""
+        print >> sys.stderr, "Processing file: %s" % file
         result = False
         sourceFileStream = ''
         # tries to get the vcs root from the .mozconfig first - if it's not set

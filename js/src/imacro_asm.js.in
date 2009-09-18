@@ -341,6 +341,14 @@ function assemble(filename) {
         if (!imacro)
             throw new Error("opcode " + opname + " outside of .imacro");
 
+        // Blacklist ops that may or must use an atomized double immediate.
+        switch (info.opname) {
+          case "double":
+          case "lookupswitch":
+          case "lookupswitchx":
+            throw new Error(op.opname + " opcode not yet supported");
+        }
+
         if (label) {
             imacro.labeldefs[label] = imacro.offset;
             imacro.labeldef_indexes[label] = imacro.code.length;

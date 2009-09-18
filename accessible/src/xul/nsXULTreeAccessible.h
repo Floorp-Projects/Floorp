@@ -41,7 +41,7 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeView.h"
 #include "nsITreeColumns.h"
-#include "nsXULSelectAccessible.h"
+#include "nsXULListboxAccessible.h"
 
 /*
  * A class the represents the XUL Tree widget.

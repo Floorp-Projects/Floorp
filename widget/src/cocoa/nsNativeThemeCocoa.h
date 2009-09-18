@@ -50,6 +50,8 @@
 
 #include "gfxASurface.h"
 
+@class CellDrawView;
+
 class nsNativeThemeCocoa : private nsNativeTheme,
                            public nsITheme
 {
@@ -148,6 +150,7 @@ private:
   NSSearchFieldCell* mSearchFieldCell;
   NSPopUpButtonCell* mDropdownCell;
   NSComboBoxCell* mComboBoxCell;
+  CellDrawView* mCellDrawView;
 };
 
 #endif // nsNativeThemeCocoa_h_

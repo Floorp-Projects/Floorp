@@ -2,7 +2,6 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
 <window title="Popup Anchor Tests"
-        onfocus="setTimeout(runTests, 0)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script>
@@ -10,6 +9,8 @@ function runTests()
 {
   frames[0].openPopup();
 }
+
+window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTests, window);
 </script>
 
 <spacer height="13"/>

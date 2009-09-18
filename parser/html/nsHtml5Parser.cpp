@@ -424,6 +424,8 @@ nsHtml5Parser::Terminate(void)
   if (mLifeCycle == TERMINATED) {
     return NS_OK;
   }
+  mSuppressEOF = PR_TRUE;
+  
   // XXX - [ until we figure out a way to break parser-sink circularity ]
   // Hack - Hold a reference until we are completely done...
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
@@ -500,8 +502,8 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
   }
   mLifeCycle = TERMINATED;
   mTokenizer->eof();
-  mTokenizer->end();
   mTreeBuilder->Flush();
+  mTokenizer->end();
   DropParserAndPerfHint();
   return NS_OK;
 }
@@ -529,6 +531,7 @@ nsHtml5Parser::Reset()
   mFragmentMode = PR_FALSE;
   mBlocked = PR_FALSE;
   mSuspending = PR_FALSE;
+  mSuppressEOF = PR_FALSE;
   mLifeCycle = NOT_STARTED;
   mScriptElement = nsnull;
   mUninterruptibleDocWrite = PR_FALSE;
@@ -768,9 +771,11 @@ nsHtml5Parser::DidBuildModel()
 {
   NS_ASSERTION(mLifeCycle == STREAM_ENDING, "Bad life cycle.");
   mLifeCycle = TERMINATED;
-  mTokenizer->eof();
+  if (!mSuppressEOF) {
+    mTokenizer->eof();
+    mTreeBuilder->Flush();
+  }
   mTokenizer->end();
-  mTreeBuilder->Flush();
   // This is comes from nsXMLContentSink
   DidBuildModelImpl();
   mDocument->ScriptLoader()->RemoveObserver(this);

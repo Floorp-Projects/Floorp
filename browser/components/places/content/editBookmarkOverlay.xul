@@ -213,6 +213,7 @@
         </row>
 
         <row align="center" id="editBMPanel_keywordRow">
+          <observes element="additionalInfoBroadcaster" attribute="hidden"/>
           <label value="&editBookmarkOverlay.keyword.label;"
                  accesskey="&editBookmarkOverlay.keyword.accesskey;"
                  control="editBMPanel_keywordField"
@@ -223,6 +224,7 @@
         </row>
 
         <row id="editBMPanel_descriptionRow">
+          <observes element="additionalInfoBroadcaster" attribute="hidden"/>
           <label value="&editBookmarkOverlay.description.label;"
                  accesskey="&editBookmarkOverlay.description.accesskey;"
                  control="editBMPanel_descriptionField"
@@ -239,7 +241,13 @@
               label="&editBookmarkOverlay.loadInSidebar.label;"
               accesskey="&editBookmarkOverlay.loadInSidebar.accesskey;"
               oncommand="gEditItemOverlay.onLoadInSidebarCheckboxCommand();"
-              observes="paneElementsBroadcaster"/>
+              observes="paneElementsBroadcaster">
+      <observes element="additionalInfoBroadcaster" attribute="hidden"/>
+    </checkbox>
+
+    <!-- If the ids are changing or additional fields are being added, be sure
+         to sync the values in places.js -->
+    <broadcaster id="additionalInfoBroadcaster"/>
 
   </vbox>
 </overlay>

@@ -1,0 +1,87 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Update Timer Manager
+ *
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Ben Goodger <ben@mozilla.org>
+ *  Robert Strong <robert.bugzilla@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsITimerCallback;
+
+/**
+ * An interface describing a global application service that allows long
+ * duration (e.g. 1-7 or more days, weeks or months) timers to be registered
+ * and then fired.
+ */
+[scriptable, uuid(0765c92c-6145-4253-9db4-594d8023087e)]
+interface nsIUpdateTimerManager : nsISupports
+{
+  /**
+   * Register an interval with the timer manager. The timer manager
+   * periodically checks to see if the interval has expired and if it has
+   * calls the specified callback. This is persistent across application
+   * restarts and can handle intervals of long durations.
+   * @param   id
+   *          An id that identifies the interval, used for persistence
+   * @param   callback
+   *          A nsITimerCallback object that is notified when the interval
+   *          expires
+   * @param   interval
+   *          The length of time, in seconds, of the interval
+   *
+   * Note: to avoid having to instantiate a component to call registerTimer
+   * the component can intead register an update-timer category with comma
+   * separated values as a single string representing the timer as follows.
+   *
+   * _xpcom_categories: [{ category: "update-timer",
+   *                       value: "contractID," +
+   *                              "method," +
+   *                              "id," +
+   *                              "preference," +
+   *                              "interval" }],
+   * the values are as follows
+   *   contractID : the contract ID for the component.
+   *   method     : the method used to instantiate the interface. This should be
+   *                either getService or createInstance depending on your
+   *                component.
+   *   id         : the id that identifies the interval, used for persistence.
+   *   preference : the preference to for timer interval. This value can be
+   *                optional by specifying an empty string for the value.
+   *   interval   : the default interval in seconds for the timer.
+   */
+  void registerTimer(in AString id,
+                     in nsITimerCallback callback,
+                     in unsigned long interval);
+};

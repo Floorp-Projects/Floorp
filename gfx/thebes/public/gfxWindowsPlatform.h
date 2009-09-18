@@ -126,7 +126,6 @@ public:
      * Activate a platform font (needed to support @font-face src url() )
      */
     virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                           nsISupports *aLoader,
                                            const PRUint8 *aFontData,
                                            PRUint32 aLength);
 

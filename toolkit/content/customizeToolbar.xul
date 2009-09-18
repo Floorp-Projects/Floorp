@@ -86,7 +86,7 @@
       </menupopup>
     </menulist>
 
-    <checkbox id="smallicons" oncommand="updateIconSize(this.checked);" label="&useSmallIcons.label;"/>
+    <checkbox id="smallicons" oncommand="updateIconSize(this.checked ? 'small' : 'large');" label="&useSmallIcons.label;"/>
 
     <button label="&addNewToolbar.label;" oncommand="addNewToolbar();" icon="add"/>
     <button label="&restoreDefaultSet.label;" oncommand="restoreDefaultSet();" icon="revert"/>

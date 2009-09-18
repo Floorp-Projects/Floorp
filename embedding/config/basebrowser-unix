@@ -34,9 +34,6 @@ components/xpcom_ds.xpt
 components/xpcom_io.xpt
 components/xpcom_threads.xpt
 components/xpcom_xpti.xpt
-libxpcom_compat.so
-components/libxpcom_compat_c.so
-components/xpcom_obsolete.xpt
 
 ; xpconnect
 components/libxpconnect.so
@@ -205,6 +202,8 @@ chrome/pipnss.jar
 defaults/pref/security-prefs.js
 libnssutil3.so
 libnss3.so
+libnssdbm3.chk
+libnssdbm3.so
 libsmime3.so
 libsoftokn3.chk
 libsoftokn3.so

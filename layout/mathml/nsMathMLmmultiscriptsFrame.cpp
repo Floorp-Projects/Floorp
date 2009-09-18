@@ -59,6 +59,8 @@ NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, nsStyleContext* aContex
   return new (aPresShell) nsMathMLmmultiscriptsFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmmultiscriptsFrame)
+
 nsMathMLmmultiscriptsFrame::~nsMathMLmmultiscriptsFrame()
 {
 }
@@ -173,7 +175,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
   // scriptspace from TeX for extra spacing after sup/subscript (0.5pt in plain TeX)
   // forced to be at least 1 pixel here
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
-  nscoord scriptSpace = PR_MAX(PresContext()->PointsToAppUnits(0.5f), onePixel);
+  nscoord scriptSpace = NS_MAX(PresContext()->PointsToAppUnits(0.5f), onePixel);
 
   /////////////////////////////////////
   // first the shift for the subscript
@@ -189,11 +191,11 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
   if (0 < mSubScriptShift) {
     // the user has set the subscriptshift attribute
     float scaler = ((float) subScriptShift2) / subScriptShift1;
-    subScriptShift1 = PR_MAX(subScriptShift1, mSubScriptShift);
+    subScriptShift1 = NS_MAX(subScriptShift1, mSubScriptShift);
     subScriptShift2 = NSToCoordRound(scaler * subScriptShift1);
   }
   // the font dependent shift
-  nscoord subScriptShift = PR_MAX(subScriptShift1,subScriptShift2);
+  nscoord subScriptShift = NS_MAX(subScriptShift1,subScriptShift2);
 
   /////////////////////////////////////
   // next the shift for the superscript
@@ -211,7 +213,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
     // the user has set the superscriptshift attribute
     float scaler2 = ((float) supScriptShift2) / supScriptShift1;
     float scaler3 = ((float) supScriptShift3) / supScriptShift1;
-    supScriptShift1 = PR_MAX(supScriptShift1, mSupScriptShift);
+    supScriptShift1 = NS_MAX(supScriptShift1, mSupScriptShift);
     supScriptShift2 = NSToCoordRound(scaler2 * supScriptShift1);
     supScriptShift3 = NSToCoordRound(scaler3 * supScriptShift1);
   }
@@ -300,10 +302,10 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
           GetSubDropFromChild (subScriptFrame, subDrop);
           // parameter v, Rule 18a, App. G, TeXbook
           minSubScriptShift = bmBase.descent + subDrop;
-          trySubScriptShift = PR_MAX(minSubScriptShift,subScriptShift);
+          trySubScriptShift = NS_MAX(minSubScriptShift,subScriptShift);
           mBoundingMetrics.descent =
-            PR_MAX(mBoundingMetrics.descent,bmSubScript.descent);
-          descent = PR_MAX(descent,subScriptSize.height - subScriptSize.ascent);
+            NS_MAX(mBoundingMetrics.descent,bmSubScript.descent);
+          descent = NS_MAX(descent,subScriptSize.height - subScriptSize.ascent);
           width = bmSubScript.width + scriptSpace;
           rightBearing = bmSubScript.rightBearing;
         }
@@ -320,12 +322,12 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
           minShiftFromXHeight = NSToCoordRound
             ((bmSupScript.descent + (1.0f/4.0f) * xHeight));
           trySupScriptShift =
-            PR_MAX(minSupScriptShift,PR_MAX(minShiftFromXHeight,supScriptShift));
+            NS_MAX(minSupScriptShift,NS_MAX(minShiftFromXHeight,supScriptShift));
           mBoundingMetrics.ascent =
-            PR_MAX(mBoundingMetrics.ascent,bmSupScript.ascent);
-          ascent = PR_MAX(ascent,supScriptSize.ascent);
-          width = PR_MAX(width, bmSupScript.width + scriptSpace);
-          rightBearing = PR_MAX(rightBearing, bmSupScript.rightBearing);
+            NS_MAX(mBoundingMetrics.ascent,bmSupScript.ascent);
+          ascent = NS_MAX(ascent,supScriptSize.ascent);
+          width = NS_MAX(width, bmSupScript.width + scriptSpace);
+          rightBearing = NS_MAX(rightBearing, bmSupScript.rightBearing);
 
           if (!mprescriptsFrame) { // we are still looping over base & postscripts
             mBoundingMetrics.rightBearing = mBoundingMetrics.width + rightBearing;
@@ -336,7 +338,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
             if (firstPrescriptsPair) {
               firstPrescriptsPair = PR_FALSE;
               mBoundingMetrics.leftBearing =
-                PR_MIN(bmSubScript.leftBearing, bmSupScript.leftBearing);
+                NS_MIN(bmSubScript.leftBearing, bmSupScript.leftBearing);
             }
           }
           width = rightBearing = 0;
@@ -361,8 +363,8 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
             trySubScriptShift -= gap;
           }
           
-          maxSubScriptShift = PR_MAX(maxSubScriptShift, trySubScriptShift);
-          maxSupScriptShift = PR_MAX(maxSupScriptShift, trySupScriptShift);
+          maxSubScriptShift = NS_MAX(maxSubScriptShift, trySubScriptShift);
+          maxSupScriptShift = NS_MAX(maxSupScriptShift, trySupScriptShift);
 
           trySubScriptShift = subScriptShift;
           trySupScriptShift = supScriptShift;
@@ -386,15 +388,15 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
 
   // we left out the base during our bounding box updates, so ...
   mBoundingMetrics.ascent =
-    PR_MAX(mBoundingMetrics.ascent+maxSupScriptShift,bmBase.ascent);
+    NS_MAX(mBoundingMetrics.ascent+maxSupScriptShift,bmBase.ascent);
   mBoundingMetrics.descent =
-    PR_MAX(mBoundingMetrics.descent+maxSubScriptShift,bmBase.descent);
+    NS_MAX(mBoundingMetrics.descent+maxSubScriptShift,bmBase.descent);
 
   // get the reflow metrics ...
   aDesiredSize.ascent =
-    PR_MAX(ascent+maxSupScriptShift,baseSize.ascent);
+    NS_MAX(ascent+maxSupScriptShift,baseSize.ascent);
   aDesiredSize.height = aDesiredSize.ascent +
-    PR_MAX(descent+maxSubScriptShift,baseSize.height - baseSize.ascent);
+    NS_MAX(descent+maxSubScriptShift,baseSize.height - baseSize.ascent);
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
@@ -437,7 +439,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
           GetReflowAndBoundingMetricsFor(supScriptFrame, supScriptSize, bmSupScript);
 
           // center w.r.t. largest width
-          width = PR_MAX(subScriptSize.width, supScriptSize.width);
+          width = NS_MAX(subScriptSize.width, supScriptSize.width);
 
           dy = aDesiredSize.ascent - subScriptSize.ascent +
             maxSubScriptShift;

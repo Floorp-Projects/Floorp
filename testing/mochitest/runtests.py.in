@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Robert Sayre <sayrer@gmail.com>
 #   Jeff Walden <jwalden+bmo@mit.edu>
+#   Serge Gautherie <sgautherie.bz@free.fr>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,7 +53,7 @@ from urllib import quote_plus as encodeURIComponent
 import urllib2
 import commands
 import automation
-from automationutils import addCommonOptions
+from automationutils import addCommonOptions, processLeakLog
 
 # Path to the test script on the server
 TEST_SERVER_HOST = "localhost:8888"
@@ -473,7 +474,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
                              PROFILE_DIRECTORY, ["-silent"],
                              xrePath = options.xrePath,
                              symbolsPath=options.symbolsPath)
-  # We don't care to call |automation.processLeakLog()| for this step.
+  # We don't care to call |processLeakLog()| for this step.
   automation.log.info("\nINFO | runtests.py | Performing extension manager registration: end.")
 
   # Remove the leak detection file so it can't "leak" to the tests run.
@@ -496,7 +497,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   # spew to console shouldn't disrupt the leak information table we print next.
   server.stop()
 
-  automation.processLeakLog(LEAK_REPORT_FILE, options.leakThreshold)
+  processLeakLog(LEAK_REPORT_FILE, options.leakThreshold)
   automation.log.info("\nINFO | runtests.py | Running tests: end.")
 
   # delete the profile and manifest

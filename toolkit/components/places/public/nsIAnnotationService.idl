@@ -124,15 +124,17 @@ interface nsIAnnotationService : nsISupports
      * aExpiration is one of EXPIRE_* above. aFlags should be 0 for now, some
      * flags will be defined in the future.
      *
-     * NOTE: ALL ANNOTATIONS WILL GET DELETED WHEN THE PAGE IS REMOVED FROM HISTORY,
-     * UNLESS YOU USE THE EXPIRE_NEVER FLAG. This means that if you create an
-     * annotation on a random unvisited URI, it will get deleted when the
-     * browser shuts down. Otherwise, things can exist in history as
-     * annotations but the user has no way of knowing it, potentially violating
-     * their privacy expectations about actions such as "Clear history." If
-     * there is an important annotation that the user wants to keep, you should
-     * make sure that you use EXPIRE_NEVER. This will ensure the item is never
-     * completely deleted from the Places database.
+     * NOTE: ALL PAGE ANNOTATIONS WILL GET DELETED WHEN THE PAGE IS REMOVED FROM
+     * HISTORY IF THE PAGE IS NOT BOOKMARKED. This means that if you create an
+     * annotation on an unvisited URI, it will get deleted when the browser
+     * shuts down. Otherwise, URIs can exist in history as annotations but the
+     * user has no way of knowing it, potentially violating their privacy
+     * expectations about actions such as "Clear history".
+     * If there is an important annotation that the user or extension wants to
+     * keep, you should add a bookmark for the page and use an EXPIRE_NEVER
+     * annotation.  This will ensure the annotation exists until the item is
+     * removed by the user.
+     * See EXPIRE_* constants above for further information.
      *
      * The annotation "favicon" is special. Favicons are stored in the favicon
      * service, but are special cased in the protocol handler so they look like

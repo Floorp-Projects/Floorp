@@ -36,11 +36,11 @@
 # ***** END LICENSE BLOCK *****
 
 ifneq (extensions,$(MOZ_BUILD_APP))
-$(error This file shouldn't be included without --enable-application=extensions
+$(error This file shouldn't be included without --enable-application=extensions)
 endif
 
 ifndef MOZ_EXTENSIONS
-$(error You forgot to set --enable-extensions
+$(error You forgot to set --enable-extensions)
 endif
 
 TIERS += app

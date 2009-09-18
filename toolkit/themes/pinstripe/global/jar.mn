@@ -1,7 +1,6 @@
 toolkit.jar:
 % skin global classic/1.0 %skin/classic/global/
 +  skin/classic/global/10pct_transparent_grey.png
-+  skin/classic/global/20pct_transparent_pixel.png
 +  skin/classic/global/50pct_transparent_grey.png
 +  skin/classic/global/about.css                                      (../../winstripe/global/about.css)
 +  skin/classic/global/appPicker.css                                  (../../winstripe/global/appPicker.css)
@@ -17,8 +16,8 @@ toolkit.jar:
 +  skin/classic/global/dropmarker.css
 +  skin/classic/global/filefield.css
 +  skin/classic/global/filepicker.css
-+  skin/classic/global/findBar.css
-+  skin/classic/global/global.css
+*  skin/classic/global/findBar.css
+*  skin/classic/global/global.css
 +  skin/classic/global/groupbox.css
 +  skin/classic/global/linkTree.css
 +  skin/classic/global/listbox.css
@@ -72,7 +71,7 @@ toolkit.jar:
 +  skin/classic/global/checkbox/cbox-check-dis.gif                    (checkbox/cbox-check-dis.gif)
 +  skin/classic/global/console/console-error-caret.gif                (console/console-error-caret.gif)
 +  skin/classic/global/console/console-error-dash.gif                 (console/console-error-dash.gif)
-+  skin/classic/global/console/console.css                            (console/console.css)
+*  skin/classic/global/console/console.css                            (console/console.css)
 +  skin/classic/global/dirListing/dirListing.css                      (dirListing/dirListing.css)
 +  skin/classic/global/dirListing/folder.png                          (dirListing/folder.png)
 +  skin/classic/global/dirListing/local.png                           (dirListing/local.png)
@@ -83,7 +82,6 @@ toolkit.jar:
 +  skin/classic/global/icons/blacklist_favicon.png                    (icons/blacklist_favicon.png)
 +  skin/classic/global/icons/blacklist_64.png                         (icons/blacklist_64.png)
 +  skin/classic/global/icons/chevron.png                              (icons/chevron.png)
-+  skin/classic/global/icons/close.gif                                (icons/close.gif)
 +  skin/classic/global/icons/checkbox.png                             (icons/checkbox.png)
 +  skin/classic/global/icons/closetab-active.png                      (icons/closetab-active.png)
 +  skin/classic/global/icons/closetab-hover.png                       (icons/closetab-hover.png)
@@ -95,13 +93,11 @@ toolkit.jar:
 +  skin/classic/global/icons/information-large.png                    (icons/information-large.png)
 +  skin/classic/global/icons/loading_16.png                           (icons/loading_16.png)
 +  skin/classic/global/icons/menulist-dropmarker.png                  (icons/menulist-dropmarker.png)
-+  skin/classic/global/icons/minimize.gif                             (icons/minimize.gif)
 +  skin/classic/global/icons/notloading_16.png                        (icons/notloading_16.png)
 +  skin/classic/global/icons/notfound.png                             (icons/notfound.png)
 +  skin/classic/global/icons/panebutton-active.png                    (icons/panebutton-active.png)
 +  skin/classic/global/icons/panebutton-inactive.png                  (icons/panebutton-inactive.png)
 +  skin/classic/global/icons/question-mark.png                        (icons/question-mark.png)
-+  skin/classic/global/icons/restore.gif                              (icons/restore.gif)
 +  skin/classic/global/icons/search-textbox.png                       (icons/search-textbox.png)
 +  skin/classic/global/icons/searchfield-regular-cancel.png           (icons/searchfield-regular-cancel.png)
 +  skin/classic/global/icons/searchfield-small-cancel.png             (icons/searchfield-small-cancel.png)
@@ -120,12 +116,6 @@ toolkit.jar:
 +  skin/classic/global/icons/question-32.png                          (icons/question-32.png)
 +  skin/classic/global/icons/question-64.png                          (icons/question-64.png)
 +  skin/classic/global/icons/question-large.png                       (icons/question-large.png)
-+  skin/classic/global/icons/round-button-active-leftcap.png          (icons/round-button-active-leftcap.png)
-+  skin/classic/global/icons/round-button-active-middle.png           (icons/round-button-active-middle.png)
-+  skin/classic/global/icons/round-button-active-right.png            (icons/round-button-active-right.png)
-+  skin/classic/global/icons/round-button-leftcap.png                 (icons/round-button-leftcap.png)
-+  skin/classic/global/icons/round-button-middle.png                  (icons/round-button-middle.png)
-+  skin/classic/global/icons/round-button-right.png                   (icons/round-button-right.png)
 +  skin/classic/global/icons/sslWarning.png                           (icons/sslWarning.png)
 +  skin/classic/global/notification/critical-bar-background.png       (notification/critical-bar-background.png)
 +  skin/classic/global/notification/error-icon.png                    (notification/error-icon.png)

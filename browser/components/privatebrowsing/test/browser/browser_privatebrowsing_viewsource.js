@@ -45,9 +45,8 @@ function test() {
 
   waitForExplicitFinish();
 
-  let tabAbout = gBrowser.addTab();
-  gBrowser.selectedTab = tabAbout;
-  let aboutBrowser = gBrowser.getBrowserForTab(tabAbout);
+  gBrowser.selectedTab = gBrowser.addTab();
+  let aboutBrowser = gBrowser.selectedBrowser;
   aboutBrowser.addEventListener("load", function () {
     aboutBrowser.removeEventListener("load", arguments.callee, true);
 
@@ -62,7 +61,7 @@ function test() {
           win.addEventListener("load", function() {
             win.removeEventListener("load", arguments.callee, false);
 
-            let browser = win.document.defaultView.getBrowser();
+            let browser = win.getBrowser();
             browser.addEventListener("load", function() {
               browser.removeEventListener("load", arguments.callee, true);
               
@@ -134,7 +133,7 @@ function test() {
             win.addEventListener("load", function() {
               win.removeEventListener("load", arguments.callee, false);
 
-              let browser = win.document.defaultView.getBrowser();
+              let browser = win.getBrowser();
               browser.addEventListener("load", function() {
                 browser.removeEventListener("load", arguments.callee, true);
                 
@@ -169,16 +168,16 @@ function test() {
             win.addEventListener("load", function() {
               win.removeEventListener("load", arguments.callee, false);
 
-              let browser = win.document.defaultView.getBrowser();
+              let browser = win.getBrowser();
               browser.addEventListener("load", function() {
                 browser.removeEventListener("load", arguments.callee, true);
                 
-                is(browser.currentURI.spec, "view-source:about:",
+                is(win.content.location.href, "view-source:about:",
                   "The correct view source window should be restored");
 
                 // cleanup
                 win.close();
-                gBrowser.removeTab(gBrowser.selectedTab);
+                gBrowser.removeCurrentTab();
                 finish();
               }, true);
             }, false);

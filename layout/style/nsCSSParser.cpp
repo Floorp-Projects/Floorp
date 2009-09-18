@@ -5837,9 +5837,6 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HUO, nsnull);
   case eCSSProperty_mask:
     return ParseVariant(aValue, VARIANT_HUO, nsnull);
-  case eCSSProperty_pointer_events:
-    return ParseVariant(aValue, VARIANT_HOK,
-                        nsCSSProps::kPointerEventsKTable);
   case eCSSProperty_shape_rendering:
     return ParseVariant(aValue, VARIANT_AHK,
                         nsCSSProps::kShapeRenderingKTable);
@@ -6022,6 +6019,9 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HKF, nsCSSProps::kPitchKTable);
   case eCSSProperty_pitch_range:
     return ParseVariant(aValue, VARIANT_HN, nsnull);
+  case eCSSProperty_pointer_events:
+    return ParseVariant(aValue, VARIANT_HOK,
+                        nsCSSProps::kPointerEventsKTable);
   case eCSSProperty_position:
     return ParseVariant(aValue, VARIANT_HK, nsCSSProps::kPositionKTable);
   case eCSSProperty_richness:

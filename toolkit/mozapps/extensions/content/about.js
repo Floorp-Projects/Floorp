@@ -62,9 +62,13 @@ function init()
   // Version
   var versionArc = rdfs.GetResource(EM_NS("version"));
   var version = gExtensionDB.GetTarget(extension, versionArc, true);
-  version = version.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  if (version)
+    version = version.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   // Description
-  var descriptionArc = rdfs.GetResource(EM_NS("description"));
+  if (gExtensionDB.hasArcOut(extension, rdfs.GetResource(EM_NS("lwtheme"))))
+    var descriptionArc = rdfs.GetResource(EM_NS("lwdescription"));
+  else
+    descriptionArc = rdfs.GetResource(EM_NS("description"));
   var description = gExtensionDB.GetTarget(extension, descriptionArc, true);
   if (description)
     description = description.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
@@ -96,10 +100,16 @@ function init()
   var extensionName = document.getElementById("extensionName");
   extensionName.setAttribute("value", name);
   var extensionVersion = document.getElementById("extensionVersion");
-  extensionVersion.setAttribute("value", extensionsStrings.getFormattedString("aboutWindowVersionString", [version]));
+  if (version)
+    extensionVersion.setAttribute("value", extensionsStrings.getFormattedString("aboutWindowVersionString", [version]));
+  else
+    extensionVersion.hidden = true;
   
   var extensionDescription = document.getElementById("extensionDescription");
-  extensionDescription.appendChild(document.createTextNode(description));
+  if (description)
+    extensionDescription.appendChild(document.createTextNode(description));
+  else
+    extensionDescription.hidden = true;
   
   var extensionCreator = document.getElementById("extensionCreator");
   extensionCreator.setAttribute("value", creator);

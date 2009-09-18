@@ -68,6 +68,8 @@ MIDL_INTERFACES = \
   AccessibleImage.idl \
   AccessibleRelation.idl \
   AccessibleTable.idl \
+  AccessibleTable2.idl \
+  AccessibleTableCell.idl \
   AccessibleText.idl \
   AccessibleValue.idl \
   $(NULL)

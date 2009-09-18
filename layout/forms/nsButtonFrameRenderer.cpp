@@ -180,7 +180,8 @@ void nsDisplayButtonBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
   nsRect r = nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
   
   // draw the border and background inside the focus and outline borders
-  mBFR->PaintBorderAndBackground(pc, *aCtx, aDirtyRect, r);
+  mBFR->PaintBorderAndBackground(pc, *aCtx, aDirtyRect, r,
+                                 aBuilder->GetBackgroundPaintFlags());
 }
 
 void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
@@ -257,7 +258,8 @@ void
 nsButtonFrameRenderer::PaintBorderAndBackground(nsPresContext* aPresContext,
           nsIRenderingContext& aRenderingContext,
           const nsRect& aDirtyRect,
-          const nsRect& aRect)
+          const nsRect& aRect,
+          PRUint32 aBGFlags)
 
 {
   // get the button rect this is inside the focus and outline rects
@@ -269,7 +271,7 @@ nsButtonFrameRenderer::PaintBorderAndBackground(nsPresContext* aPresContext,
   const nsStyleBorder* border = context->GetStyleBorder();
 
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, mFrame,
-                                  aDirtyRect, buttonRect, 0);
+                                  aDirtyRect, buttonRect, aBGFlags);
   nsCSSRendering::PaintBoxShadowInner(aPresContext, aRenderingContext,
                                       mFrame, buttonRect, aDirtyRect);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,

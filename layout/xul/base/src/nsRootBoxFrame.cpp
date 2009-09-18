@@ -81,6 +81,7 @@ public:
   nsRootBoxFrame(nsIPresShell* aShell, nsStyleContext *aContext);
 
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   virtual nsPopupSetFrame* GetPopupSetFrame();
   virtual void SetPopupSetFrame(nsPopupSetFrame* aPopupSet);
@@ -141,6 +142,8 @@ NS_NewRootBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsRootBoxFrame (aPresShell, aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsRootBoxFrame)
 
 nsRootBoxFrame::nsRootBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
   nsBoxFrame(aShell, aContext, PR_TRUE)

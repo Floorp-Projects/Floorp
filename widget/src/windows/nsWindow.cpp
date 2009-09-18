@@ -36,6 +36,7 @@
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *   Ningjie Chen <chenn@email.uc.edu>
  *   Jim Mathies <jmathies@mozilla.com>
+ *   Kyle Huey <me@kylehuey.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -120,9 +121,7 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsITheme.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
-#include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIScreenManager.h"
 #include "imgIContainer.h"
@@ -151,9 +150,13 @@
 #include "nsWidgetsCID.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
+#include "nsString.h"
 
 #if defined(WINCE)
 #include "nsWindowCE.h"
+#endif
+
+#if defined(WINCE_WINDOWS_MOBILE)
 #define KILL_PRIORITY_ID 2444
 #endif
 
@@ -190,108 +193,13 @@
 #endif // defined(MOZ_SPLASHSCREEN)
 
 // Windowless plugin support
-#include "nsplugindefs.h"
+#include "npapi.h"
 
 #include "nsWindowDefs.h"
 
-// For scroll wheel calculations
-#include "nsITimer.h"
-
-/**************************************************************
- *
- * nsScrollPrefObserver Class for scroll acceleration prefs
- *
- **************************************************************/
-
-class nsScrollPrefObserver : public nsIObserver
-{
-public:
-  nsScrollPrefObserver();
-  int GetScrollAccelerationStart();
-  int GetScrollAccelerationFactor();
-  int GetScrollNumLines();
-  void RemoveObservers();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-private:
-  nsCOMPtr<nsIPrefBranch2> mPrefBranch;
-  int mScrollAccelerationStart;
-  int mScrollAccelerationFactor;
-  int mScrollNumLines;
-};
-
-NS_IMPL_ISUPPORTS1(nsScrollPrefObserver, nsScrollPrefObserver)
-
-nsScrollPrefObserver::nsScrollPrefObserver()
-{
-  nsresult rv;
-  mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-
-  rv = mPrefBranch->GetIntPref("mousewheel.acceleration.start",
-                               &mScrollAccelerationStart);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
-                    "Failed to get pref: mousewheel.acceleration.start");
-  rv = mPrefBranch->AddObserver("mousewheel.acceleration.start", 
-                                this, PR_FALSE);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
-                    "Failed to add pref observer: mousewheel.acceleration.start");
-                    
-  rv = mPrefBranch->GetIntPref("mousewheel.acceleration.factor",
-                               &mScrollAccelerationFactor);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
-                    "Failed to get pref: mousewheel.acceleration.factor");
-  rv = mPrefBranch->AddObserver("mousewheel.acceleration.factor", 
-                                this, PR_FALSE);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
-                    "Failed to add pref observer: mousewheel.acceleration.factor");
-                    
-  rv = mPrefBranch->GetIntPref("mousewheel.withnokey.numlines",
-                               &mScrollNumLines);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
-                    "Failed to get pref: mousewheel.withnokey.numlines");
-  rv = mPrefBranch->AddObserver("mousewheel.withnokey.numlines", 
-                                this, PR_FALSE);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
-                    "Failed to add pref observer: mousewheel.withnokey.numlines");
-}
-
-int nsScrollPrefObserver::GetScrollAccelerationStart()
-{
-  return mScrollAccelerationStart;
-}
-
-int nsScrollPrefObserver::GetScrollAccelerationFactor()
-{
-  return mScrollAccelerationFactor;
-}
-
-int nsScrollPrefObserver::GetScrollNumLines()
-{
-  return mScrollNumLines;
-}
-
-void nsScrollPrefObserver::RemoveObservers()
-{
-  mPrefBranch->RemoveObserver("mousewheel.acceleration.start", this);
-  mPrefBranch->RemoveObserver("mousewheel.acceleration.factor", this);
-  mPrefBranch->RemoveObserver("mousewheel.withnokey.numlines", this);
-}
-
-NS_IMETHODIMP nsScrollPrefObserver::Observe(nsISupports *aSubject,
-                                            const char *aTopic,
-                                            const PRUnichar *aData)
-{
-  mPrefBranch->GetIntPref("mousewheel.acceleration.start",
-                          &mScrollAccelerationStart);
-  mPrefBranch->GetIntPref("mousewheel.acceleration.factor",
-                          &mScrollAccelerationFactor);
-  mPrefBranch->GetIntPref("mousewheel.withnokey.numlines",
-                          &mScrollNumLines);
-
-  return NS_OK;
-}
+#ifdef WINCE_WINDOWS_MOBILE
+#include "nsGfxCIID.h"
+#endif
 
 /**************************************************************
  **************************************************************
@@ -375,6 +283,19 @@ PRLogModuleInfo* gWindowsLog                      = nsnull;
 static KeyboardLayout gKbdLayout;
 #endif
 
+#ifdef WINCE_WINDOWS_MOBILE
+// HTC Navigation Wheel Event
+// This is the defined value for Gesture Mode
+const int WM_HTCNAV = 0x0400 + 200;
+
+typedef int (__stdcall * HTCApiNavOpen)(HANDLE, int);
+typedef int (__stdcall * HTCApiNavSetMode)(HANDLE, unsigned int);
+
+HTCApiNavOpen    gHTCApiNavOpen = nsnull;
+HTCApiNavSetMode gHTCApiNavSetMode = nsnull;
+static PRBool    gCheckForHTCApi = PR_FALSE;
+#endif
+
 // The last user input event time in microseconds. If
 // there are any pending native toolkit input events
 // it returns the current time. The value is compatible
@@ -393,9 +314,9 @@ PRBool          gDisableNativeTheme               = PR_FALSE;
 static PRBool   gWindowsVisible                   = PR_FALSE;
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
-
-// Global scroll pref observer for scroll acceleration prefs
-static nsScrollPrefObserver* gScrollPrefObserver  = nsnull;
+#ifdef WINCE_WINDOWS_MOBILE
+static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
+#endif
 
 /**************************************************************
  **************************************************************
@@ -432,7 +353,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mIsInMouseCapture     = PR_FALSE;
   mIsPluginWindow       = PR_FALSE;
   mIsTopWidgetWindow    = PR_FALSE;
-  mInWheelProcessing    = PR_FALSE;
+  mInScrollProcessing   = PR_FALSE;
   mUnicodeWidget        = PR_TRUE;
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
@@ -458,8 +379,10 @@ nsWindow::nsWindow() : nsBaseWidget()
   mBrush                = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
   mForeground           = ::GetSysColor(COLOR_WINDOWTEXT);
 
-  // To be used for scroll acceleration
-  mScrollSeriesCounter = 0;
+#ifdef WINCE_WINDOWS_MOBILE
+  mInvalidatedRegion = do_CreateInstance(kRegionCID);
+  mInvalidatedRegion->Init();
+#endif
 
   // Global initialization
   if (!sInstanceCount) {
@@ -469,9 +392,6 @@ nsWindow::nsWindow() : nsBaseWidget()
 
   // Init IME handler
   nsIMM32Handler::Initialize();
-
-  // Init scroll pref observer for scroll acceleration
-  NS_IF_ADDREF(gScrollPrefObserver = new nsScrollPrefObserver());
 
 #ifdef NS_ENABLE_TSF
   nsTextStore::Initialize();
@@ -523,9 +443,6 @@ nsWindow::~nsWindow()
     // delete any of the IME structures that we allocated
     nsIMM32Handler::Terminate();
 #endif // !defined(WINCE)
-
-    gScrollPrefObserver->RemoveObservers();
-    NS_RELEASE(gScrollPrefObserver);
   }
 
 #if !defined(WINCE)
@@ -675,6 +592,13 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
   if (!mWnd)
     return NS_ERROR_FAILURE;
+
+  // Ugly Thinkpad Driver Hack (Bug 507222)
+  // We create an invisible scrollbar to trick the 
+  // Trackpoint driver into sending us scrolling messages
+  ::CreateWindowW(L"SCROLLBAR", L"FAKETRACKPOINTSCROLLBAR", 
+                  WS_CHILD | WS_VISIBLE, 0,0,0,0, mWnd, NULL,
+                  nsToolkit::mDllInstance, NULL);
 
   // call the event callback to notify about creation
 
@@ -2075,19 +1999,18 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
 
 /**************************************************************
  *
- * SECTION: nsIWidget::Validate, nsIWidget::Invalidate
+ * SECTION: nsIWidget::Invalidate
  *
- * Validate or invalidate an area of the client for painting.
+ * Invalidate an area of the client for painting.
  *
  **************************************************************/
 
-// Validate a visible area of a widget.
-NS_METHOD nsWindow::Validate()
+#ifdef WINCE_WINDOWS_MOBILE
+static inline void AddRECTToRegion(const RECT& aRect, nsIRegion* aRegion)
 {
-  if (mWnd)
-    VERIFY(::ValidateRect(mWnd, NULL));
-  return NS_OK;
+  aRegion->Union(aRect.left, aRect.top, aRect.right - aRect.left, aRect.bottom - aRect.top);
 }
+#endif
 
 // Invalidate this component visible area
 NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
@@ -2102,7 +2025,12 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
                          nsCAutoString("noname"),
                          (PRInt32) mWnd);
 #endif // WIDGET_DEBUG_OUTPUT
-
+#ifdef WINCE_WINDOWS_MOBILE
+    // We need to keep track of our own invalidated region for Windows CE
+    RECT r;
+    GetClientRect(mWnd, &r);
+    AddRECTToRegion(r, mInvalidatedRegion);
+#endif
     VERIFY(::InvalidateRect(mWnd, NULL, FALSE));
 
     if (aIsSynchronous) {
@@ -2133,6 +2061,10 @@ NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous)
     rect.right  = aRect.x + aRect.width;
     rect.bottom = aRect.y + aRect.height;
 
+#ifdef WINCE_WINDOWS_MOBILE
+    // We need to keep track of our own invalidated region for Windows CE
+    AddRECTToRegion(rect, mInvalidatedRegion);
+#endif
     VERIFY(::InvalidateRect(mWnd, &rect, FALSE));
 
     if (aIsSynchronous) {
@@ -2831,11 +2763,6 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
     aStatus = (*mEventCallback)(event);
   }
 
-  // Dispatch to event listener if event was not consumed
-  if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
-    aStatus = mEventListener->ProcessEvent(*event);
-  }
-
   // the window can be destroyed during processing of seemingly innocuous events like, say,
   // mousedowns due to the magic of scripting. mousedowns will return nsEventStatus_eIgnore,
   // which causes problems with the deleted window. therefore:
@@ -2906,7 +2833,7 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
   event.isMeta    = PR_FALSE;
   event.isAlt     = aModKeyState.mIsAltDown;
 
-  nsPluginEvent pluginEvent;
+  NPEvent pluginEvent;
   if (aMsg && PluginHasFocus()) {
     pluginEvent.event = aMsg->message;
     pluginEvent.wParam = aMsg->wParam;
@@ -3016,7 +2943,7 @@ PRBool nsWindow::DispatchPluginEvent(const MSG &aMsg)
   nsGUIEvent event(PR_TRUE, NS_PLUGIN_EVENT, this);
   nsIntPoint point(0, 0);
   InitEvent(event, &point);
-  nsPluginEvent pluginEvent;
+  NPEvent pluginEvent;
   pluginEvent.event = aMsg.message;
   pluginEvent.wParam = aMsg.wParam;
   pluginEvent.lParam = aMsg.lParam;
@@ -3137,7 +3064,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   printf("Msg Time: %d Click Count: %d\n", curMsgTime, event.clickCount);
 #endif
 
-  nsPluginEvent pluginEvent;
+  NPEvent pluginEvent;
 
   switch (aEventType)
   {
@@ -3307,7 +3234,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
     event.refPoint.x = 0;
     event.refPoint.y = 0;
 
-    nsPluginEvent pluginEvent;
+    NPEvent pluginEvent;
 
     switch (aEventType)
     {
@@ -3556,9 +3483,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   PRBool result = PR_FALSE;    // call the default nsWindow proc
   *aRetValue = 0;
 
-#if !defined (WINCE_WINDOWS_MOBILE)
   static PRBool getWheelInfo = PR_TRUE;
-#endif
 
 #if defined(EVENT_DEBUG_OUTPUT)
   // First param shows all events, second param indicates whether
@@ -3785,7 +3710,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     // say we've dealt with erase background if widget does
     // not need auto-erasing
     case WM_ERASEBKGND:
-      if (! AutoErase()) {
+      if (!AutoErase((HDC)wParam)) {
         *aRetValue = 1;
         result = PR_TRUE;
       }
@@ -3798,7 +3723,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
     case WM_MOUSEMOVE:
     {
-#ifdef WINCE
+#ifdef WINCE_WINDOWS_MOBILE
       // Reset the kill timer so that we can continue at this
       // priority
       SetTimer(mWnd, KILL_PRIORITY_ID, 2000 /* 2seconds */, NULL);
@@ -3822,16 +3747,16 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     }
     break;
 
+#ifdef WINCE_WINDOWS_MOBILE
     case WM_TIMER:
-#ifdef WINCE
       SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
       KillTimer(mWnd, KILL_PRIORITY_ID);
-#endif
       break;
+#endif
 
     case WM_LBUTTONDOWN:
     {
-#ifdef WINCE
+#ifdef WINCE_WINDOWS_MOBILE
       SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
       SetTimer(mWnd, KILL_PRIORITY_ID, 2000 /* 2 seconds */, NULL);
 #endif
@@ -3847,7 +3772,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
                                   PR_FALSE, nsMouseEvent::eLeftButton);
       DispatchPendingEvents();
 
-#ifdef WINCE
+#ifdef WINCE_WINDOWS_MOBILE
       SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
       KillTimer(mWnd, KILL_PRIORITY_ID);
 #endif
@@ -3967,7 +3892,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         nsWindow* scrollbar = GetNSWindowPtr((HWND)lParam);
 
         if (scrollbar) {
-          result = scrollbar->OnScroll(LOWORD(wParam), (short)HIWORD(wParam));
+          result = scrollbar->OnScroll(msg, wParam, lParam);
         }
       }
       break;
@@ -4048,8 +3973,25 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
             MakeFullScreen(TRUE);
         }
       }
-      break;
+#ifdef WINCE_WINDOWS_MOBILE
+      if (!gCheckForHTCApi && gHTCApiNavOpen == nsnull) {
+        gCheckForHTCApi = PR_TRUE;
 
+        HINSTANCE library = LoadLibrary(L"HTCAPI.dll"); 
+        gHTCApiNavOpen    = (HTCApiNavOpen)    GetProcAddress(library, "HTCNavOpen"); 
+        gHTCApiNavSetMode = (HTCApiNavSetMode) GetProcAddress(library ,"HTCNavSetMode"); 
+      }
+      
+      if (gHTCApiNavOpen != nsnull) {
+        gHTCApiNavOpen(mWnd, 1 /* undocumented value */);
+
+        if (gHTCApiNavSetMode != nsnull)
+          gHTCApiNavSetMode ( mWnd, 4);
+        // 4 is Gesture Mode. This will generate WM_HTCNAV events to the window
+      }
+#endif
+      break;
+      
 #ifndef WINCE
     case WM_MOUSEACTIVATE:
       if (mWindowType == eWindowType_popup) {
@@ -4120,6 +4062,24 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_SETTINGCHANGE:
 #if !defined (WINCE_WINDOWS_MOBILE)
       getWheelInfo = PR_TRUE;
+#else
+      switch (wParam) {
+        case SPI_SIPMOVE:
+        case SPI_SETSIPINFO:
+        case SPI_SETCURRENTIM:
+          nsWindowCE::NotifySoftKbObservers();
+          break;
+        case SETTINGCHANGE_RESET:
+          if (mWindowType == eWindowType_invisible) {
+            // The OS sees to get confused and think that the invisable window
+            // is in the foreground after an orientation change. By actually
+            // setting it to the foreground and hiding it, we set it strait.
+            // See bug 514007 for details.
+            SetForegroundWindow(mWnd);
+            ShowWindow(mWnd, SW_HIDE);
+          } 
+          break;
+      }
 #endif
       OnSettingsChange(wParam, lParam);
       break;
@@ -4180,7 +4140,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     break;
 #endif
 
-#if !defined (WINCE_WINDOWS_MOBILE)
   case WM_MOUSEWHEEL:
   case WM_MOUSEHWHEEL:
     {
@@ -4194,7 +4153,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         return result;
     }
     break;
-#endif
 
 #ifndef WINCE
   case WM_DWMCOMPOSITIONCHANGED:
@@ -4331,6 +4289,22 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       result = PR_TRUE;
     }
     break;
+#endif
+
+#ifdef WINCE_WINDOWS_MOBILE
+   //HTC NAVIGATION WHEEL EVENT
+   case WM_HTCNAV:
+   {
+     int distance = wParam & 0x000000FF;
+     if ( (wParam & 0x000000100) != 0) // Counter Clockwise
+       distance *= -1;
+     if (OnMouseWheel(WM_MOUSEWHEEL, MAKEWPARAM(0, distance), 
+                      MAKELPARAM(GetSystemMetrics(SM_CXSCREEN) / 2, 
+                                 GetSystemMetrics(SM_CYSCREEN) / 2), 
+                      getWheelInfo, result, aRetValue))
+        return result;
+   }
+   break;
 #endif
 
     default:
@@ -4875,7 +4849,6 @@ PRBool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
  * within the message case block. If returning true result should be returned
  * immediately (no more processing).
  */
-#if !defined (WINCE_WINDOWS_MOBILE)
 PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& getWheelInfo, PRBool& result, LRESULT *aRetValue)
 {
   // Handle both flavors of mouse wheel events.
@@ -4932,83 +4905,8 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
 
   // The mousewheel event will be dispatched to the toplevel
   // window.  We need to give it to the child window
-
-  POINT point;
-  point.x = GET_X_LPARAM(lParam);
-  point.y = GET_Y_LPARAM(lParam);
-  HWND destWnd = ::WindowFromPoint(point);
-
-  // Since we receive mousewheel events for as long as
-  // we are focused, it's entirely possible that there
-  // is another app's window or no window under the
-  // pointer.
-
-  if (!destWnd) {
-    // No window is under the pointer
-    return PR_FALSE; // break
-  }
-
-  // We don't care about windows belonging to other processes.
-  DWORD processId = 0;
-  GetWindowThreadProcessId(destWnd, &processId);
-  if (processId != GetCurrentProcessId())
-  {
-    // Somebody elses window
-    return PR_FALSE; // break
-  }
-
-  nsWindow* destWindow = GetNSWindowPtr(destWnd);
-  if (!destWindow || destWindow->mIsPluginWindow) {
-    // Some other app, or a plugin window.
-    // Windows directs WM_MOUSEWHEEL to the focused window.
-    // However, Mozilla does not like plugins having focus, so a
-    // Mozilla window (ie, the plugin's parent (us!) has focus.)
-    // Therefore, plugins etc _should_ get first grab at the
-    // message, but this focus vaguary means the plugin misses
-    // out. If the window is a child of ours, forward it on.
-    // Determine if a child by walking the parent list until
-    // we find a parent matching our wndproc.
-    HWND parentWnd = ::GetParent(destWnd);
-    while (parentWnd) {
-      nsWindow* parentWindow = GetNSWindowPtr(parentWnd);
-      if (parentWindow) {
-        // We have a child window - quite possibly a plugin window.
-        // However, not all plugins are created equal - some will handle this message themselves,
-        // some will forward directly back to us, while others will call DefWndProc, which
-        // itself still forwards back to us.
-        // So if we have sent it once, we need to handle it ourself.
-        if (mInWheelProcessing) {
-          destWnd = parentWnd;
-          destWindow = parentWindow;
-        } else {
-          // First time we have seen this message.
-          // Call the child - either it will consume it, or
-          // it will wind it's way back to us, triggering the destWnd case above.
-          // either way, when the call returns, we are all done with the message,
-          mInWheelProcessing = PR_TRUE;
-          if (0 == ::SendMessageW(destWnd, msg, wParam, lParam)) {
-            result = PR_TRUE; // consumed - don't call DefWndProc
-          }
-          destWnd = nsnull;
-          mInWheelProcessing = PR_FALSE;
-        }
-        return PR_FALSE; // break; // stop parent search
-      }
-      parentWnd = ::GetParent(parentWnd);
-    } // while parentWnd
-  }
-  if (destWnd == nsnull)
-    return PR_FALSE;
-  if (destWnd != mWnd) {
-    if (destWindow) {
-      result = destWindow->ProcessMessage(msg, wParam, lParam, aRetValue);
-      return PR_TRUE; // return result immediately
-    }
-  #ifdef DEBUG
-    else
-      printf("WARNING: couldn't get child window for MW event\n");
-  #endif
-  }
+  if (!HandleScrollingPlugins(msg, wParam, lParam, result))
+    return result; // return immediately if its not our window
 
   // We should cancel the surplus delta if the current window is not
   // same as previous.
@@ -5017,10 +4915,6 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
     currentHDelta = 0;
     currentWindow = mWnd;
   }
-
-  // Keep track of whether or not the scroll notification is part of a series
-  // in order to calculate appropriate acceleration effect
-  UpdateMouseWheelSeriesCounter();
 
   nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
   scrollEvent.delta = 0;
@@ -5032,10 +4926,7 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
     } else {
       currentVDelta -= (short) HIWORD (wParam);
       if (PR_ABS(currentVDelta) >= iDeltaPerLine) {
-        // Compute delta to create acceleration effect
-        scrollEvent.delta = ComputeMouseWheelDelta(currentVDelta, 
-                                                   iDeltaPerLine, 
-                                                   ulScrollLines);
+        scrollEvent.delta = currentVDelta / iDeltaPerLine;
         currentVDelta %= iDeltaPerLine;
       }
     }
@@ -5072,65 +4963,6 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
   
   return PR_FALSE; // break;
 } 
-
-// Reset scrollSeriesCounter when timer finishes (scroll series has ended)
-void nsWindow::OnMouseWheelTimeout(nsITimer* aTimer, void* aClosure) 
-{
-  nsWindow* window = (nsWindow*) aClosure;
-  window->mScrollSeriesCounter = 0;
-}
-
-// Increment scrollSeriesCount and reset timer to keep count going
-void nsWindow::UpdateMouseWheelSeriesCounter() 
-{
-  mScrollSeriesCounter++;
-
-  int scrollSeriesTimeout = 80;
-  static nsITimer* scrollTimer;
-  if (!scrollTimer) {
-    nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    if (!timer)
-      return;
-    timer.swap(scrollTimer);
-  }
-
-  scrollTimer->Cancel();
-  nsresult rv = 
-    scrollTimer->InitWithFuncCallback(OnMouseWheelTimeout, this,
-                                      scrollSeriesTimeout,
-                                      nsITimer::TYPE_ONE_SHOT);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "nsITimer::InitWithFuncCallback failed");
-}
-
-// If the scroll notification is part of a series of notifications we should
-// increase scollEvent.delta to create an acceleration effect
-int nsWindow::ComputeMouseWheelDelta(int currentVDelta,
-                                     int iDeltaPerLine,
-                                     ULONG ulScrollLines)
-{
-  // scrollAccelerationStart: click number at which acceleration starts
-  int scrollAccelerationStart = gScrollPrefObserver->GetScrollAccelerationStart();
-  // scrollNumlines: number of lines per scroll before acceleration
-  int scrollNumLines = gScrollPrefObserver->GetScrollNumLines();
-  // scrollAccelerationFactor: factor muliplied for constant acceleration
-  int scrollAccelerationFactor = gScrollPrefObserver->GetScrollAccelerationFactor();
-
-  // compute delta that obeys numlines pref
-  int ulScrollLinesInt = static_cast<int>(ulScrollLines);
-  // currentVDelta is a multiple of (iDeltaPerLine * ulScrollLinesInt)
-  int delta = scrollNumLines * currentVDelta / (iDeltaPerLine * ulScrollLinesInt);
-
-  // mScrollSeriesCounter: the index of the scroll notification in a series
-  if (mScrollSeriesCounter < scrollAccelerationStart ||
-      scrollAccelerationStart < 0 ||
-      scrollAccelerationFactor < 0)
-    return delta;
-  else
-    return int(0.5 + delta * mScrollSeriesCounter *
-           (double) scrollAccelerationFactor / 10);
-}
-
-#endif // !defined(WINCE_WINDOWS_MOBILE)
 
 static PRBool
 StringCaseInsensitiveEquals(const PRUnichar* aChars1, const PRUint32 aNumChars1,
@@ -5800,12 +5632,141 @@ PRBool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam)
 
 void nsWindow::OnSettingsChange(WPARAM wParam, LPARAM lParam)
 {
-  nsWindowGfx::OnSettingsChangeGfx(wParam);
+  if (mWindowType == eWindowType_dialog ||
+      mWindowType == eWindowType_toplevel )
+    nsWindowGfx::OnSettingsChangeGfx(wParam);
 }
 
-// Deal with scrollbar messages (actually implemented only in nsScrollbar)
-PRBool nsWindow::OnScroll(UINT scrollCode, int cPos)
+// Scrolling helper function for handling plugins.  
+// Return value indicates whether the calling function should handle this
+// result indicates whether this was handled at all
+PRBool nsWindow::HandleScrollingPlugins(UINT aMsg, WPARAM aWParam,
+                                        LPARAM aLParam, PRBool& aHandled)
 {
+  // The scroll event will be dispatched to the toplevel
+  // window.  We need to give it to the child window
+  aHandled = PR_FALSE; // default is to have not handled
+  POINT point;
+  DWORD dwPoints = GetMessagePos();
+  point.x = GET_X_LPARAM(dwPoints);
+  point.y = GET_Y_LPARAM(dwPoints);
+  HWND destWnd = ::WindowFromPoint(point);
+  // Since we receive scroll events for as long as
+  // we are focused, it's entirely possible that there
+  // is another app's window or no window under the
+  // pointer.
+
+  if (!destWnd) {
+    // No window is under the pointer
+    return PR_FALSE; // break
+  }
+  // We don't care about windows belonging to other processes.
+  DWORD processId = 0;
+  GetWindowThreadProcessId(destWnd, &processId);
+  if (processId != GetCurrentProcessId())
+  {
+    // Somebody elses window
+    return PR_FALSE; // break
+  }
+  nsWindow* destWindow = GetNSWindowPtr(destWnd);
+  if (!destWindow || destWindow->mIsPluginWindow) {
+    // Some other app, or a plugin window.
+    // Windows directs scrolling messages to the focused window.
+    // However, Mozilla does not like plugins having focus, so a
+    // Mozilla window (ie, the plugin's parent (us!) has focus.)
+    // Therefore, plugins etc _should_ get first grab at the
+    // message, but this focus vaguary means the plugin misses
+    // out. If the window is a child of ours, forward it on.
+    // Determine if a child by walking the parent list until
+    // we find a parent matching our wndproc.
+    HWND parentWnd = ::GetParent(destWnd);
+    while (parentWnd) {
+      nsWindow* parentWindow = GetNSWindowPtr(parentWnd);
+      if (parentWindow) {
+        // We have a child window - quite possibly a plugin window.
+        // However, not all plugins are created equal - some will handle this 
+        // message themselves, some will forward directly back to us, while 
+        // others will call DefWndProc, which itself still forwards back to us.
+        // So if we have sent it once, we need to handle it ourself.
+        if (mInScrollProcessing) {
+          destWnd = parentWnd;
+          destWindow = parentWindow;
+        } else {
+          // First time we have seen this message.
+          // Call the child - either it will consume it, or
+          // it will wind it's way back to us,triggering the destWnd case above
+          // either way,when the call returns,we are all done with the message,
+          mInScrollProcessing = PR_TRUE;
+          if (0 == ::SendMessageW(destWnd, aMsg, aWParam, aLParam))
+            aHandled = PR_TRUE;
+          destWnd = nsnull;
+          mInScrollProcessing = PR_FALSE;
+        }
+        return PR_FALSE; // break; // stop parent search
+      }
+      parentWnd = ::GetParent(parentWnd);
+    } // while parentWnd
+  }
+  if (destWnd == nsnull)
+    return PR_FALSE;
+  if (destWnd != mWnd) {
+    if (destWindow) {
+      LRESULT aRetValue;
+      destWindow->ProcessMessage(aMsg, aWParam, aLParam, &aRetValue);
+      aHandled = PR_TRUE;
+      return PR_FALSE; // return result immediately
+    }
+  #ifdef DEBUG
+    else
+      printf("WARNING: couldn't get child window for SCROLL event\n");
+  #endif
+  }
+  return PR_TRUE;  // caller should handle this
+}
+
+PRBool nsWindow::OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam)
+{
+  if (aLParam)
+  {
+    // Scroll message generated by Thinkpad Trackpoint Driver or similar
+    // Treat as a mousewheel message and scroll appropriately
+
+    PRBool result;
+    if (!HandleScrollingPlugins(aMsg, aWParam, aLParam, result))
+      return result;  // Return if it's not our message or has been dispatched
+
+    nsMouseScrollEvent scrollevent(PR_TRUE, NS_MOUSE_SCROLL, this);
+    scrollevent.scrollFlags = (aMsg == WM_VSCROLL) 
+                              ? nsMouseScrollEvent::kIsVertical
+                              : nsMouseScrollEvent::kIsHorizontal;
+    switch (LOWORD(aWParam))
+    {
+      case SB_PAGEDOWN:
+        scrollevent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
+      case SB_LINEDOWN:
+        scrollevent.delta = 1;
+        break;
+      case SB_PAGEUP:
+        scrollevent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
+      case SB_LINEUP:
+        scrollevent.delta = -1;
+        break;
+      default:
+        return PR_FALSE;
+    }
+    scrollevent.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
+    scrollevent.isControl = IS_VK_DOWN(NS_VK_CONTROL);
+    scrollevent.isMeta    = PR_FALSE;
+    scrollevent.isAlt     = IS_VK_DOWN(NS_VK_ALT);
+    InitEvent(scrollevent);
+    if (nsnull != mEventCallback)
+    {
+      DispatchWindowEvent(&scrollevent);
+    }
+    return PR_TRUE;
+  }
+  // Scroll message generated by external application
+  // XXX Handle by scrolling the window in the desired manner (Bug 315727)
   return PR_FALSE;
 }
 
@@ -5815,9 +5776,14 @@ HBRUSH nsWindow::OnControlColor()
   return mBrush;
 }
 
-// Can be overriden. Controls auot-erase of background.
-PRBool nsWindow::AutoErase()
+// Can be overriden. Controls auto-erase of background.
+PRBool nsWindow::AutoErase(HDC dc)
 {
+#ifdef WINCE_WINDOWS_MOBILE
+  RECT wrect;
+  GetClipBox(dc, &wrect);
+  AddRECTToRegion(wrect, mInvalidatedRegion);
+#endif
   return PR_FALSE;
 }
 

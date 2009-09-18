@@ -184,10 +184,3 @@ else
 	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(dist_bindir)
 endif
 endif
-ifeq ($(MOZ_BITS),16)
-	$(INSTALL) -m 444 $(HEADERS) $(MOZ_INCL)
-	$(INSTALL) -m 444 $(TARGETS) $(MOZ_DIST)/lib
-	$(INSTALL) -m 444 $(TARGETS) $(MOZ_DIST)/bin
-endif
-
-

@@ -52,9 +52,9 @@ protected:
     nsSVGInnerSVGFrameBase(aContext) {}
   
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsSVGInnerSVGFrame)
-
+  NS_DECL_QUERYFRAME_TARGET(nsSVGInnerSVGFrame)
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   // We don't define an AttributeChanged method since changes to the
   // 'x', 'y', 'width' and 'height' attributes of our content object

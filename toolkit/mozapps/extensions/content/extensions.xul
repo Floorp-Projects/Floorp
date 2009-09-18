@@ -195,7 +195,7 @@
       </hbox>
       
       <hbox flex="1">
-        <richlistbox id="extensionsView" flex="1" 
+        <richlistbox id="extensionsView" flex="1" sort="?name"
                      datasources="rdf:null" context="addonContextMenu"
                      ondragenter="gExtensionsDNDObserver.onDragOver(event)"
                      ondragover="gExtensionsDNDObserver.onDragOver(event)"
@@ -214,7 +214,7 @@
             </vbox>
             <vbox id="previewImageContainer" align="center" pack="center">
               <hbox>
-                <image id="previewImage"/>
+                <image id="previewImage" onerror="onPreviewImageError(event)"/>
               </hbox>
             </vbox>
             <vbox id="infoNoAddonSelected" align="center" pack="center">

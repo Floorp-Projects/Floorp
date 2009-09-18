@@ -55,6 +55,7 @@
 #define nsIPresShell_h___
 
 #include "nsISupports.h"
+#include "nsQueryFrame.h"
 #include "nsCoord.h"
 #include "nsRect.h"
 #include "nsColor.h"
@@ -104,10 +105,27 @@ class nsDisplayListBuilder;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// eba51d41-68db-4dab-a57b-dc1a2704de87
+// Flags to pass to SetCapturingContent
+//
+// when assigning capture, ignore whether capture is allowed or not
+#define CAPTURE_IGNOREALLOWED 1
+// true if events should be targeted at the capturing content or its children
+#define CAPTURE_RETARGETTOELEMENT 2
+
+typedef struct CapturingContentInfo {
+  // capture should only be allowed during a mousedown event
+  PRPackedBool mAllowed;
+  PRPackedBool mRetargetToElement;
+  nsIContent* mContent;
+
+  CapturingContentInfo() :
+    mAllowed(PR_FALSE), mRetargetToElement(PR_FALSE), mContent(nsnull) { }
+} CapturingContentInfo;
+
+// eed2ef56-133f-4696-9eee-5fc45d816be8
 #define NS_IPRESSHELL_IID     \
-{ 0xeba51d41, 0x68db, 0x4dab, \
-  { 0xa5, 0x7b, 0xdc, 0x1a, 0x27, 0x04, 0xde, 0x87 } }
+{ 0xeed2ef56, 0x133f, 0x4696, \
+  { 0x9e, 0xee, 0x5f, 0xc4, 0x5d, 0x81, 0x6b, 0xe8 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -172,10 +190,11 @@ public:
 
   // All frames owned by the shell are allocated from an arena.  They
   // are also recycled using free lists.  Separate free lists are
-  // maintained for each combination of aSize and aCode.  AllocateFrame
-  // clears the memory that it returns.
-  virtual void* AllocateFrame(size_t aSize, unsigned int aCode) = 0;
-  virtual void  FreeFrame(size_t aSize, unsigned int aCode, void* aChunk) = 0;
+  // maintained for each frame type (aCode), which must always
+  // correspond to the same aSize value. AllocateFrame clears the
+  // memory that it returns.
+  virtual void* AllocateFrame(nsQueryFrame::FrameIID aCode, size_t aSize) = 0;
+  virtual void  FreeFrame(nsQueryFrame::FrameIID aCode, void* aChunk) = 0;
 
   // Objects closely related to the frame tree, but that are not
   // actual frames (subclasses of nsFrame) are also allocated from the
@@ -401,6 +420,7 @@ public:
   NS_IMETHOD RecreateFramesFor(nsIContent* aContent) = 0;
 
   void PostRecreateFramesFor(nsIContent* aContent);
+  void RestyleForAnimation(nsIContent* aContent);
   
   /**
    * Determine if it is safe to flush all pending notifications
@@ -854,6 +874,42 @@ public:
   PRBool ObservesNativeAnonMutationsForPrint()
   {
     return mObservesMutationsForPrint;
+  }
+
+  // mouse capturing
+
+  static CapturingContentInfo gCaptureInfo;
+
+  /**
+   * When capturing content is set, it traps all mouse events and retargets
+   * them at this content node. If capturing is not allowed
+   * (gCaptureInfo.mAllowed is false), then capturing is not set. However, if
+   * the CAPTURE_IGNOREALLOWED flag is set, the allowed state is ignored and
+   * capturing is set regardless. To disable capture, pass null for the value
+   * of aContent.
+   *
+   * If CAPTURE_RETARGETTOELEMENT is set, all mouse events are targeted at
+   * aContent only. Otherwise, mouse events are targeted at aContent or its
+   * descendants. That is, descendants of aContent receive mouse events as
+   * they normally would, but mouse events outside of aContent are retargeted
+   * to aContent.
+   */
+  static void SetCapturingContent(nsIContent* aContent, PRUint8 aFlags);
+
+  /**
+   * Return the active content currently capturing the mouse if any.
+   */
+  static nsIContent* GetCapturingContent()
+  {
+    return gCaptureInfo.mContent;
+  }
+
+  /**
+   * Allow or disallow mouse capturing.
+   */
+  static void AllowMouseCapture(PRBool aAllowed)
+  {
+    gCaptureInfo.mAllowed = aAllowed;
   }
 
 protected:

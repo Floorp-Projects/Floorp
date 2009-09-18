@@ -65,7 +65,6 @@ const int NJ_LOG2_PAGE_SIZE = 12;       // 4K
 #define NJ_MAX_STACK_ENTRY              256
 #define NJ_MAX_PARAMETERS               16
 #define NJ_ALIGN_STACK                  8
-#define NJ_STACK_OFFSET                 0
 
 #define NJ_CONSTANT_POOLS
 const int NJ_MAX_CPOOL_OFFSET = 4096;
@@ -171,13 +170,6 @@ static const RegisterMask AllowableFlagRegs = 1<<R0 | 1<<R1 | 1<<R2 | 1<<R3 | 1<
 
 #define firstreg()      R0
 #define nextreg(r)      ((Register)((int)(r)+1))
-#if 0
-static Register nextreg(Register r) {
-    if (r == R10)
-        return D0;
-    return (Register)(r+1);
-}
-#endif
 // only good for normal regs
 #define imm2register(c) (Register)(c-1)
 
@@ -206,17 +198,23 @@ verbose_only( extern const char* shiftNames[]; )
                                                                                 \
     const static Register argRegs[4], retRegs[2];                               \
                                                                                 \
-    void        BranchWithLink(NIns*);                                          \
+    void        BranchWithLink(NIns* addr);                                     \
+    inline void BLX(Register addr, bool chk = true);                            \
     void        JMP_far(NIns*);                                                 \
     void        B_cond_chk(ConditionCode, NIns*, bool);                         \
     void        underrunProtect(int bytes);                                     \
     void        nativePageReset();                                              \
     void        nativePageSetup();                                              \
     void        asm_quad_nochk(Register, int32_t, int32_t);                     \
+    void        asm_regarg(ArgSize, LInsp, Register);                           \
+    void        asm_stkarg(LInsp p, int stkd);                                  \
     void        asm_cmpi(Register, int32_t imm);                                \
     void        asm_ldr_chk(Register d, Register b, int32_t off, bool chk);     \
+    void        asm_cmp(LIns *cond);                                            \
+    void        asm_fcmp(LIns *cond);                                           \
     void        asm_ld_imm(Register d, int32_t imm, bool chk = true);           \
     void        asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd);         \
+    void        asm_arg_64(LInsp arg, Register& r, int& stkd);                  \
     void        asm_add_imm(Register rd, Register rn, int32_t imm, int stat = 0);   \
     void        asm_sub_imm(Register rd, Register rn, int32_t imm, int stat = 0);   \
     void        asm_and_imm(Register rd, Register rn, int32_t imm, int stat = 0);   \
@@ -226,7 +224,8 @@ verbose_only( extern const char* shiftNames[]; )
     inline uint32_t CountLeadingZeroes(uint32_t data);                          \
     int *       _nSlot;                                                         \
     int *       _startingSlot;                                                  \
-    int *       _nExitSlot;
+    int *       _nExitSlot;                                                     \
+    int         max_out_args; /* bytes */                                      
 
 //nj_dprintf("jmp_l_n count=%d, nins=%X, %X = %X\n", (_c), nins, _nIns, ((intptr_t)(nins+(_c))-(intptr_t)_nIns - 4) );
 
@@ -679,6 +678,22 @@ enum {
 #define B_nochk(_t)                             \
     B_cond_chk(AL,_t,0)
 
+#define B(t)    B_cond(AL,t)
+#define BHI(t)  B_cond(HI,t)
+#define BLS(t)  B_cond(LS,t)
+#define BHS(t)  B_cond(HS,t)
+#define BLO(t)  B_cond(LO,t)
+#define BEQ(t)  B_cond(EQ,t)
+#define BNE(t)  B_cond(NE,t)
+#define BLT(t)  B_cond(LT,t)
+#define BGE(t)  B_cond(GE,t)
+#define BLE(t)  B_cond(LE,t)
+#define BGT(t)  B_cond(GT,t)
+#define BVS(t)  B_cond(VS,t)
+#define BVC(t)  B_cond(VC,t)
+#define BCC(t)  B_cond(CC,t)
+#define BCS(t)  B_cond(CS,t)
+
 // NB: don't use COND_AL here, we shift the condition into place!
 #define JMP(_t)                                 \
     B_cond_chk(AL,_t,1)
@@ -783,6 +798,7 @@ enum {
 
 #define FMDRR(_Dm,_Rd,_Rn) do {                                         \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(IsFpReg(_Dm) && IsGpReg(_Rd) && IsGpReg(_Rn));       \
         *(--_nIns) = (NIns)( COND_AL | (0xC4<<20) | ((_Rn)<<16) | ((_Rd)<<12) | (0xB1<<4) | (FpRegNum(_Dm)) ); \
         asm_output("fmdrr %s,%s,%s", gpn(_Dm), gpn(_Rd), gpn(_Rn));    \
@@ -790,6 +806,7 @@ enum {
 
 #define FMRRD(_Rd,_Rn,_Dm) do {                                         \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(IsGpReg(_Rd) && IsGpReg(_Rn) && IsFpReg(_Dm));       \
         *(--_nIns) = (NIns)( COND_AL | (0xC5<<20) | ((_Rn)<<16) | ((_Rd)<<12) | (0xB1<<4) | (FpRegNum(_Dm)) ); \
         asm_output("fmrrd %s,%s,%s", gpn(_Rd), gpn(_Rn), gpn(_Dm));    \
@@ -797,6 +814,7 @@ enum {
 
 #define FMRDH(_Rd,_Dn) do {                                             \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(IsGpReg(_Rd) && IsFpReg(_Dn));                       \
         *(--_nIns) = (NIns)( COND_AL | (0xE3<<20) | (FpRegNum(_Dn)<<16) | ((_Rd)<<12) | (0xB<<8) | (1<<4) ); \
         asm_output("fmrdh %s,%s", gpn(_Rd), gpn(_Dn));                  \
@@ -804,6 +822,7 @@ enum {
 
 #define FMRDL(_Rd,_Dn) do {                                             \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(IsGpReg(_Rd) && IsFpReg(_Dn));                       \
         *(--_nIns) = (NIns)( COND_AL | (0xE1<<20) | (FpRegNum(_Dn)<<16) | ((_Rd)<<12) | (0xB<<8) | (1<<4) ); \
         asm_output("fmrdh %s,%s", gpn(_Rd), gpn(_Dn));                  \
@@ -811,6 +830,7 @@ enum {
 
 #define FSTD(_Dd,_Rn,_offs) do {                                        \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert((((_offs) & 3) == 0) && isS8((_offs) >> 2));         \
         NanoAssert(IsFpReg(_Dd) && !IsFpReg(_Rn));                      \
         int negflag = 1<<23;                                            \
@@ -825,6 +845,7 @@ enum {
 
 #define FLDD_chk(_Dd,_Rn,_offs,_chk) do {                               \
         if(_chk) underrunProtect(4);                                    \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert((((_offs) & 3) == 0) && isS8((_offs) >> 2));         \
         NanoAssert(IsFpReg(_Dd) && !IsFpReg(_Rn));                      \
         int negflag = 1<<23;                                            \
@@ -840,6 +861,7 @@ enum {
 
 #define FSITOD(_Dd,_Sm) do {                                            \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(IsFpReg(_Dd) && ((_Sm) == FpSingleScratch));         \
         *(--_nIns) = (NIns)( COND_AL | (0xEB8<<16) | (FpRegNum(_Dd)<<12) | (0x2F<<6) | (0<<5) | (0x7) ); \
         asm_output("fsitod %s,%s", gpn(_Dd), gpn(_Sm));                \
@@ -848,6 +870,7 @@ enum {
 
 #define FUITOD(_Dd,_Sm) do {                                            \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(IsFpReg(_Dd) && ((_Sm) == FpSingleScratch));         \
         *(--_nIns) = (NIns)( COND_AL | (0xEB8<<16) | (FpRegNum(_Dd)<<12) | (0x2D<<6) | (0<<5) | (0x7) ); \
         asm_output("fuitod %s,%s", gpn(_Dd), gpn(_Sm));                \
@@ -855,6 +878,7 @@ enum {
 
 #define FMSR(_Sn,_Rd) do {                                              \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(((_Sn) == FpSingleScratch) && IsGpReg(_Rd));         \
         *(--_nIns) = (NIns)( COND_AL | (0xE0<<20) | (0x7<<16) | ((_Rd)<<12) | (0xA<<8) | (0<<7) | (0x1<<4) ); \
         asm_output("fmsr %s,%s", gpn(_Sn), gpn(_Rd));                  \
@@ -862,6 +886,7 @@ enum {
 
 #define FNEGD(_Dd,_Dm) do {                                             \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(IsFpReg(_Dd) && IsFpReg(_Dm));                       \
         *(--_nIns) = (NIns)( COND_AL | (0xEB1<<16) | (FpRegNum(_Dd)<<12) | (0xB4<<4) | (FpRegNum(_Dm)) ); \
         asm_output("fnegd %s,%s", gpn(_Dd), gpn(_Dm));                 \
@@ -869,6 +894,7 @@ enum {
 
 #define FADDD(_Dd,_Dn,_Dm) do {                                         \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(IsFpReg(_Dd) && IsFpReg(_Dn) && IsFpReg(_Dm));       \
         *(--_nIns) = (NIns)( COND_AL | (0xE3<<20) | (FpRegNum(_Dn)<<16) | (FpRegNum(_Dd)<<12) | (0xB0<<4) | (FpRegNum(_Dm)) ); \
         asm_output("faddd %s,%s,%s", gpn(_Dd), gpn(_Dn), gpn(_Dm));    \
@@ -876,6 +902,7 @@ enum {
 
 #define FSUBD(_Dd,_Dn,_Dm) do {                                         \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(IsFpReg(_Dd) && IsFpReg(_Dn) && IsFpReg(_Dm));       \
         *(--_nIns) = (NIns)( COND_AL | (0xE3<<20) | (FpRegNum(_Dn)<<16) | (FpRegNum(_Dd)<<12) | (0xB4<<4) | (FpRegNum(_Dm)) ); \
         asm_output("fsubd %s,%s,%s", gpn(_Dd), gpn(_Dn), gpn(_Dm));    \
@@ -883,6 +910,7 @@ enum {
 
 #define FMULD(_Dd,_Dn,_Dm) do {                                         \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(IsFpReg(_Dd) && IsFpReg(_Dn) && IsFpReg(_Dm));       \
         *(--_nIns) = (NIns)( COND_AL | (0xE2<<20) | (FpRegNum(_Dn)<<16) | (FpRegNum(_Dd)<<12) | (0xB0<<4) | (FpRegNum(_Dm)) ); \
         asm_output("fmuld %s,%s,%s", gpn(_Dd), gpn(_Dn), gpn(_Dm));    \
@@ -890,6 +918,7 @@ enum {
 
 #define FDIVD(_Dd,_Dn,_Dm) do {                                         \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(IsFpReg(_Dd) && IsFpReg(_Dn) && IsFpReg(_Dm));       \
         *(--_nIns) = (NIns)( COND_AL | (0xE8<<20) | (FpRegNum(_Dn)<<16) | (FpRegNum(_Dd)<<12) | (0xB0<<4) | (FpRegNum(_Dm)) ); \
         asm_output("fmuld %s,%s,%s", gpn(_Dd), gpn(_Dn), gpn(_Dm));    \
@@ -897,12 +926,14 @@ enum {
 
 #define FMSTAT() do {                               \
         underrunProtect(4);                         \
+        NanoAssert(AvmCore::config.vfp);            \
         *(--_nIns) = (NIns)( COND_AL | 0x0EF1FA10); \
         asm_output("fmstat");                       \
     } while (0)
 
 #define FCMPD(_Dd,_Dm) do {                                             \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(IsFpReg(_Dd) && IsFpReg(_Dm));                       \
         *(--_nIns) = (NIns)( COND_AL | (0xEB4<<16) | (FpRegNum(_Dd)<<12) | (0xB4<<4) | (FpRegNum(_Dm)) ); \
         asm_output("fcmpd %s,%s", gpn(_Dd), gpn(_Dm));                 \
@@ -910,6 +941,7 @@ enum {
 
 #define FCPYD(_Dd,_Dm) do {                                             \
         underrunProtect(4);                                             \
+        NanoAssert(AvmCore::config.vfp);                                \
         NanoAssert(IsFpReg(_Dd) && IsFpReg(_Dm));                       \
         *(--_nIns) = (NIns)( COND_AL | (0xEB0<<16) | (FpRegNum(_Dd)<<12) | (0xB4<<4) | (FpRegNum(_Dm)) ); \
         asm_output("fcpyd %s,%s", gpn(_Dd), gpn(_Dm));                 \

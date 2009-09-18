@@ -145,6 +145,12 @@ HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData)
     nsICSSStyleRule* rule = content->GetInlineStyleRule();
     if (rule)
       aData->mRuleWalker->Forward(rule);
+
+#ifdef MOZ_SMIL
+    rule = content->GetSMILOverrideStyleRule();
+    if (rule)
+      aData->mRuleWalker->Forward(rule);
+#endif // MOZ_SMIL
   }
 
   return NS_OK;

@@ -84,6 +84,8 @@ NS_NewIsIndexFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsIsIndexFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsIsIndexFrame)
+
 nsIsIndexFrame::nsIsIndexFrame(nsStyleContext* aContext) :
   nsBlockFrame(aContext)
 {

@@ -87,9 +87,9 @@ public:
   nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
   ~nsTreeBodyFrame();
 
-  NS_DECLARE_FRAME_ACCESSOR(nsTreeBodyFrame)
-
+  NS_DECL_QUERYFRAME_TARGET(nsTreeBodyFrame)
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   // non-virtual signatures like nsITreeBodyFrame
   nsresult GetColumns(nsITreeColumns **aColumns);

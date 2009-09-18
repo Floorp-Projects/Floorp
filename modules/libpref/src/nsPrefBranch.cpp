@@ -52,10 +52,6 @@
 #include "pldhash.h"
 #include "nsPrefsCID.h"
 
-#ifndef MOZ_NO_XPCOM_OBSOLETE
-#include "nsIFileSpec.h"  // this should be removed eventually
-#endif
-
 #include "plstr.h"
 #include "nsCRT.h"
 
@@ -352,29 +348,6 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     return rv;
   }
 
-  // This is deprecated and you should not be using it
-#ifndef MOZ_NO_XPCOM_OBSOLETE
-  if (aType.Equals(NS_GET_IID(nsIFileSpec))) {
-    nsCOMPtr<nsIFileSpec> file(do_CreateInstance(NS_FILESPEC_CONTRACTID, &rv));
-
-    if (NS_SUCCEEDED(rv)) {
-      nsIFileSpec *temp = file;
-      PRBool      valid;
-
-      file->SetPersistentDescriptorString(utf8String);	// only returns NS_OK
-      file->IsValid(&valid);
-      if (!valid) {
-        /* if the string wasn't a valid persistent descriptor, it might be a valid native path */
-        file->SetNativePath(utf8String);
-      }
-      NS_ADDREF(temp);
-      *_retval = (void *)temp;
-      return NS_OK;
-    }
-    return rv;
-  }
-#endif
-
   NS_WARNING("nsPrefBranch::GetComplexValue - Unsupported interface type");
   return NS_NOINTERFACE;
 }
@@ -456,22 +429,6 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
     }
     return rv;
   }
-
-#ifndef MOZ_NO_XPCOM_OBSOLETE
-  // This is deprecated and you should not be using it
-  if (aType.Equals(NS_GET_IID(nsIFileSpec))) {
-    nsCOMPtr<nsIFileSpec> file = do_QueryInterface(aValue);
-    if (!file)
-      return NS_NOINTERFACE;
-    nsXPIDLCString descriptorString;
-
-    rv = file->GetPersistentDescriptorString(getter_Copies(descriptorString));
-    if (NS_SUCCEEDED(rv)) {
-      rv = SetCharPref(aPrefName, descriptorString);
-    }
-    return rv;
-  }
-#endif
 
   NS_WARNING("nsPrefBranch::SetComplexValue - Unsupported interface type");
   return NS_NOINTERFACE;

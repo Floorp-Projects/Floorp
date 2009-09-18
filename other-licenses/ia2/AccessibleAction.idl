@@ -4,6 +4,7 @@
  *
  *  IAccessible2 IDL Specification
  *
+ *  Copyright (c) Linux Foundation 2007, 2008
  *  Copyright (c) IBM Corp. 2006
  *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
  *
@@ -19,7 +20,7 @@
  *
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  ************************************************************************/
 
@@ -29,14 +30,20 @@ import "oleacc.idl";
         
 /** @brief This interface gives access to actions that can be executed
   for accessible objects.
-        
- Every accessible object that can be manipulated beyond its methods
-  exported over the accessibility API should support this interface to
-  expose all actions that it can perform.  Each action can be performed
-  or queried for a name, description or associated key bindings.  Actions
-  are needed more for ATs that assist the mobility impaired.  By providing 
-  actions directly, the AT can present them to the user without the user having
-  to perform the extra steps to navigate a context menu.
+
+ Every accessible object that can be manipulated via the native GUI beyond the 
+  methods available either in the MSAA IAccessible interface or in the set of 
+  IAccessible2 interfaces (other than this IAccessibleAction interface) should 
+  support the IAccessibleAction interface in order to provide Assistive Technology
+  access to all the actions that can be performed by the object.  Each action can 
+  be performed or queried for a name, description or associated key bindings.  
+  Actions are needed more for ATs that assist the mobility impaired, such as
+  on-screen keyboards and voice command software.  By providing actions directly,
+  the AT can present them to the user without the user having to perform the extra
+  steps to navigate a context menu.
+
+ The first action should be equivalent to the MSAA default action.  If there is 
+  only one action, %IAccessibleAction should also be implemented.
 */
 [object, uuid(B70D9F59-3B5A-4dba-AB9E-22012F607DF5)]
 interface IAccessibleAction : IUnknown
@@ -49,6 +56,9 @@ interface IAccessibleAction : IUnknown
    @param [out] nActions
     The returned value of the number of actions is zero if there are
     no actions.
+   @retval S_OK
+   @note This method is missing a [propget] prefix in the IDL.  The result is the
+    method is named nActions in generated C++ code instead of get_nActions.
   */
   HRESULT nActions
     (
@@ -57,8 +67,10 @@ interface IAccessibleAction : IUnknown
 
   /** @brief Performs the specified Action on the object.
    @param [in] actionIndex
-    This index specifies the action to perform.  If it lies outside
+    0 based index specifying the action to perform.  If it lies outside
     the valid range no action is performed.
+   @retval S_OK
+   @retval E_INVALIDARG if bad [in] passed 
     */
   HRESULT doAction
     (
@@ -67,11 +79,13 @@ interface IAccessibleAction : IUnknown
 
   /** @brief Returns a description of the specified action of the object.
    @param [in] actionIndex
-    This index specifies the action of which to return a
-    description.  If it lies outside the valid range an empty string
-    is returned.
+    0 based index specifying which action's description to return.
+    If it lies outside the valid range an empty string is returned.
    @param [out] description
     The returned value is a localized string of the specified action.
+   @retval S_OK
+   @retval S_FALSE if there is nothing to return, [out] value is NULL 
+   @retval E_INVALIDARG if bad [in] passed, [out] value is NULL 
     */
   [propget] HRESULT description
     (
@@ -79,8 +93,20 @@ interface IAccessibleAction : IUnknown
      [out, retval] BSTR *description
     );
 
-  /** @brief Returns an array of BSTRs describing one or more key bindings, if there
-   are any, associated with the specified action.
+  /** @brief Returns an array of BSTRs describing one or more key bindings, if
+   there are any, associated with the specified action.
+
+   The returned strings are the localized human readable key sequences to be
+   used to activate each action, e.g. "Ctrl+Shift+D".  Since these key
+   sequences are to be used when the object has focus, they are like
+   mnemonics (access keys), and not like shortcut (accelerator) keys.
+
+   There is no need to implement this method for single action controls since
+   that would be redundant with the standard MSAA programming practice of
+   getting the mnemonic from get_accKeyboardShortcut.
+
+   An AT such as an On Screen Keyboard might not expose these bindings but
+   provide alternative means of activation.
 
    Note: the client allocates and passes in an array of pointers.  The server
    allocates the BSTRs and passes back one or more pointers to these BSTRs into
@@ -88,27 +114,35 @@ interface IAccessibleAction : IUnknown
    for deallocating the BSTRs.
 
    @param [in] actionIndex
-    This index specifies the action of which to return the key bindings.
-   @param [in] nMaxBinding
-    The maximum number of keybindings requested, i.e. the size of the array 
-	allocated to hold the results.
-   @param [out] keyBinding
-    An array of BSTRs, one for each key binding.
-   @param [out] nBinding
-    The actual number of key bindings returned.
-  */
+    0 based index specifying which action's key bindings should be returned.
+   @param [in] nMaxBindings
+    This parameter is ignored. Refer to @ref _arrayConsideration
+	"Special Consideration when using Arrays" for more details.
+   @param [out] keyBindings
+    An array of BSTRs, allocated by the server, one for each key binding.
+	Free it with CoTaskMemFree.
+   @param [out] nBindings
+    The number of key bindings returned; the size of the returned array.
+   @retval S_OK
+   @retval S_FALSE if there are no relations, [out] values are NULL and 0 respectively 
+   @retval E_INVALIDARG if bad [in] passed, [out] values are NULL and 0 respectively 
+	*/
   [propget] HRESULT keyBinding
     (
      [in] long actionIndex,
-     [in] long nMaxBinding,
-     [out, size_is(,nMaxBinding), length_is(,*nBinding)] BSTR **keyBinding,
-	 [out, retval] long *nBinding
+     [in] long nMaxBindings,
+     [out, size_is(,nMaxBindings), length_is(,*nBindings)] BSTR **keyBindings,
+	 [out, retval] long *nBindings
     );
 
   /** @brief Returns the non-localized name of specified action.
    @param [in] actionIndex
+    0 based index specifying which action's non-localized name should be returned.
    @param [out] name
-  */
+   @retval S_OK
+   @retval S_FALSE if there is nothing to return, [out] value is NULL 
+   @retval E_INVALIDARG if bad [in] passed, [out] value is NULL 
+   */
   [propget] HRESULT name
     (
      [in] long actionIndex,
@@ -117,8 +151,12 @@ interface IAccessibleAction : IUnknown
 
   /** @brief Returns the localized name of specified action.
    @param [in] actionIndex
+    0 based index specifying which action's localized name should be returned.
    @param [out] localizedName
-  */
+   @retval S_OK
+   @retval S_FALSE if there is nothing to return, [out] value is NULL 
+   @retval E_INVALIDARG if bad [in] passed, [out] value is NULL 
+   */
   [propget] HRESULT localizedName
     (
      [in] long actionIndex,

@@ -52,6 +52,8 @@
 
 #include "plbase64.h"
 
+#include "woff.h"
+
 #ifdef XP_MACOSX
 #include <CoreFoundation/CoreFoundation.h>
 #endif
@@ -244,25 +246,35 @@ gfxFontUtils::ReadCMAPTableFormat12(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBi
         GroupOffsetStartCode = 0,
         GroupOffsetEndCode = 4
     };
-    NS_ENSURE_TRUE(aLength >= 16, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(aLength >= 16, NS_ERROR_GFX_CMAP_MALFORMED);
 
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetFormat) == 12, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetReserved) == 0, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetFormat) == 12, 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
+    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetReserved) == 0, 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
 
     PRUint32 tablelen = ReadLongAt(aBuf, OffsetTableLength);
-    NS_ENSURE_TRUE(tablelen <= aLength, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(tablelen >= 16, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(tablelen <= aLength, NS_ERROR_GFX_CMAP_MALFORMED);
+    NS_ENSURE_TRUE(tablelen >= 16, NS_ERROR_GFX_CMAP_MALFORMED);
 
-    NS_ENSURE_TRUE(ReadLongAt(aBuf, OffsetLanguage) == 0, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(ReadLongAt(aBuf, OffsetLanguage) == 0, 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
 
     const PRUint32 numGroups  = ReadLongAt(aBuf, OffsetNumberGroups);
-    NS_ENSURE_TRUE(tablelen >= 16 + (12 * numGroups), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(tablelen >= 16 + (12 * numGroups), 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
 
     const PRUint8 *groups = aBuf + OffsetGroups;
+    PRUint32 prevEndCharCode = 0;
     for (PRUint32 i = 0; i < numGroups; i++, groups += SizeOfGroup) {
         const PRUint32 startCharCode = ReadLongAt(groups, GroupOffsetStartCode);
         const PRUint32 endCharCode = ReadLongAt(groups, GroupOffsetEndCode);
+        NS_ENSURE_TRUE((prevEndCharCode < startCharCode || i == 0) &&
+                       startCharCode <= endCharCode &&
+                       endCharCode <= CMAP_MAX_CODEPOINT, 
+                       NS_ERROR_GFX_CMAP_MALFORMED);
         aCharacterMap.SetRange(startCharCode, endCharCode);
+        prevEndCharCode = endCharCode;
     }
 
     return NS_OK;
@@ -278,18 +290,21 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
         OffsetSegCountX2 = 6
     };
 
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetFormat) == 4, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetFormat) == 4, 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
     PRUint16 tablelen = ReadShortAt(aBuf, OffsetLength);
-    NS_ENSURE_TRUE(tablelen <= aLength, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(tablelen > 16, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(tablelen <= aLength, NS_ERROR_GFX_CMAP_MALFORMED);
+    NS_ENSURE_TRUE(tablelen > 16, NS_ERROR_GFX_CMAP_MALFORMED);
     
     // some buggy fonts on Mac OS report lang = English (e.g. Arial Narrow Bold, v. 1.1 (Tiger))
 #if defined(XP_WIN)
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetLanguage) == 0, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetLanguage) == 0, 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
 #endif
 
     PRUint16 segCountX2 = ReadShortAt(aBuf, OffsetSegCountX2);
-    NS_ENSURE_TRUE(tablelen >= 16 + (segCountX2 * 4), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(tablelen >= 16 + (segCountX2 * 4), 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
 
     const PRUint16 segCount = segCountX2 / 2;
 
@@ -297,10 +312,18 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
     const PRUint16 *startCounts = endCounts + 1 /* skip one uint16 for reservedPad */ + segCount;
     const PRUint16 *idDeltas = startCounts + segCount;
     const PRUint16 *idRangeOffsets = idDeltas + segCount;
+    PRUint16 prevEndCount = 0;
     for (PRUint16 i = 0; i < segCount; i++) {
         const PRUint16 endCount = ReadShortAt16(endCounts, i);
         const PRUint16 startCount = ReadShortAt16(startCounts, i);
         const PRUint16 idRangeOffset = ReadShortAt16(idRangeOffsets, i);
+        
+        // sanity-check range
+        NS_ENSURE_TRUE((startCount > prevEndCount || i == 0) && 
+                       startCount <= endCount,
+                       NS_ERROR_GFX_CMAP_MALFORMED);
+        prevEndCount = endCount;
+        
         if (idRangeOffset == 0) {
             aCharacterMap.SetRange(startCount, endCount);
         } else {
@@ -313,7 +336,9 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
                                          + (c - startCount)
                                          + &idRangeOffsets[i]);
 
-                NS_ENSURE_TRUE((PRUint8*)gdata > aBuf && (PRUint8*)gdata < aBuf + aLength, NS_ERROR_FAILURE);
+                NS_ENSURE_TRUE((PRUint8*)gdata > aBuf && 
+                               (PRUint8*)gdata < aBuf + aLength, 
+                               NS_ERROR_GFX_CMAP_MALFORMED);
 
                 // make sure we have a glyph
                 if (*gdata != 0) {
@@ -388,7 +413,7 @@ gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCha
         const PRUint32 offset = ReadLongAt(table, TableOffsetOffset);
 
         NS_ASSERTION(offset < aBufLength, "cmap table offset is longer than table size");
-        NS_ENSURE_TRUE(offset < aBufLength, NS_ERROR_FAILURE);
+        NS_ENSURE_TRUE(offset < aBufLength, NS_ERROR_GFX_CMAP_MALFORMED);
 
         const PRUint8 *subtable = aBuf + offset;
         const PRUint16 format = ReadShortAt(subtable, SubtableOffsetFormat);
@@ -694,12 +719,38 @@ ValidateKernTable(const PRUint8 *aKernTable, PRUint32 aKernLength)
     return PR_FALSE;
 }
 
+gfxUserFontType
+gfxFontUtils::DetermineFontDataType(const PRUint8 *aFontData, PRUint32 aFontDataLength)
+{
+    // test for OpenType font data
+    // problem: EOT-Lite with 0x10000 length will look like TrueType!
+    if (aFontDataLength >= sizeof(SFNTHeader)) {
+        const SFNTHeader *sfntHeader = reinterpret_cast<const SFNTHeader*>(aFontData);
+        PRUint32 sfntVersion = sfntHeader->sfntVersion;
+        if (IsValidSFNTVersion(sfntVersion)) {
+            return GFX_USERFONT_OPENTYPE;
+        }
+    }
+    
+    // test for WOFF
+    if (aFontDataLength >= sizeof(AutoSwap_PRUint32)) {
+        const AutoSwap_PRUint32 *version = 
+            reinterpret_cast<const AutoSwap_PRUint32*>(aFontData);
+        if (PRUint32(*version) == TRUETYPE_TAG('w','O','F','F')) {
+            return GFX_USERFONT_WOFF;
+        }
+    }
+    
+    // tests for other formats here
+    
+    return GFX_USERFONT_UNKNOWN;
+}
+
 PRBool
 gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData, 
-                                  PRUint32 aFontDataLength, 
-                                  PRBool *aIsCFF)
+                                  PRUint32 aFontDataLength)
 {
-    NS_ASSERTION(aFontData && aFontDataLength != 0, "null font data");
+    NS_ASSERTION(aFontData, "null font data");
 
     PRUint64 dataLength(aFontDataLength);
     
@@ -716,9 +767,6 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
         return PR_FALSE;
     }
     
-    if (aIsCFF)
-        *aIsCFF = (sfntVersion == TRUETYPE_TAG('O','T','T','O'));
-
     // iterate through the table headers to find the head, name and OS/2 tables
     PRBool foundHead = PR_FALSE, foundOS2 = PR_FALSE, foundName = PR_FALSE;
     PRBool foundGlyphs = PR_FALSE, foundCFF = PR_FALSE, foundKern = PR_FALSE;
@@ -911,8 +959,10 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
     if (dataLength + nameTableSize > PR_UINT32_MAX)
         return NS_ERROR_FAILURE;
         
-    PRUint32 adjFontDataSize = aFontDataLength + nameTableSize;
-    
+    // bug 505386 - need to handle unpadded font length
+    PRUint32 paddedFontDataSize = (aFontDataLength + 3) & ~3;
+    PRUint32 adjFontDataSize = paddedFontDataSize + nameTableSize;
+
     // create new buffer: old font data plus new name table
     if (!aNewFont->AppendElements(adjFontDataSize))
         return NS_ERROR_OUT_OF_MEMORY;
@@ -920,13 +970,17 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
     // copy the old font data
     PRUint8 *newFontData = reinterpret_cast<PRUint8*>(aNewFont->Elements());
     
+    // null the last four bytes in case the font length is not a multiple of 4
+    memset(newFontData + aFontDataLength, 0, paddedFontDataSize - aFontDataLength);
+
+    // copy font data
     memcpy(newFontData, aFontData, aFontDataLength);
     
     // null out the last 4 bytes for checksum calculations
     memset(newFontData + adjFontDataSize - 4, 0, 4);
     
     NameHeader *nameHeader = reinterpret_cast<NameHeader*>(newFontData +
-                                                            aFontDataLength);
+                                                            paddedFontDataSize);
     
     // -- name header
     nameHeader->format = 0;
@@ -988,7 +1042,7 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
         checkSum = checkSum + *nameData++;
     
     // adjust name table entry to point to new name table
-    dirEntry->offset = aFontDataLength;
+    dirEntry->offset = paddedFontDataSize;
     dirEntry->length = nameTableSize;
     dirEntry->checkSum = checkSum;
     
@@ -1731,6 +1785,16 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
     // DumpEOTHeader(aHeader->Elements(), aHeader->Length());
 
     return NS_OK;
+}
+
+/* static */
+PRBool
+gfxFontUtils::IsCffFont(const PRUint8* aFontData)
+{
+    // this is only called after aFontData has passed basic validation,
+    // so we know there is enough data present to allow us to read the version!
+    const SFNTHeader *sfntHeader = reinterpret_cast<const SFNTHeader*>(aFontData);
+    return (sfntHeader->sfntVersion == TRUETYPE_TAG('O','T','T','O'));
 }
 
 #endif

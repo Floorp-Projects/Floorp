@@ -92,7 +92,7 @@ public:
 
 #ifdef XP_MACOSX
   void SetDrawingModel(NPDrawingModel aModel);
-  NPDrawingModel GetDrawingModel();
+  void SetEventModel(NPEventModel aModel);
 #endif
 
   nsresult NewNotifyStream(nsIPluginStreamListener** listener, 
@@ -120,18 +120,17 @@ public:
   nsNPAPITimer* TimerWithID(uint32_t id, PRUint32* index);
   uint32_t      ScheduleTimer(uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID));
   void          UnscheduleTimer(uint32_t timerID);
+  NPError       PopUpContextMenu(NPMenu* menu);
+  NPBool        ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace);
 protected:
   nsresult InitializePlugin();
-
-  // Calls NPP_GetValue
-  nsresult GetValueInternal(NPPVariable variable, void* value);
 
   nsresult GetTagType(nsPluginTagType *result);
   nsresult GetAttributes(PRUint16& n, const char*const*& names,
                          const char*const*& values);
   nsresult GetParameters(PRUint16& n, const char*const*& names,
                          const char*const*& values);
-  nsresult GetMode(nsPluginMode *result);
+  nsresult GetMode(PRInt32 *result);
 
   // A pointer to the plugin's callback functions. This information
   // is actually stored in the plugin class (<b>nsPluginClass</b>),
@@ -144,6 +143,7 @@ protected:
 
 #ifdef XP_MACOSX
   NPDrawingModel mDrawingModel;
+  NPEventModel   mEventModel;
 #endif
 
   // these are used to store the windowless properties
@@ -170,6 +170,9 @@ private:
   nsIPluginInstanceOwner *mOwner;
 
   nsTArray<nsNPAPITimer*> mTimers;
+
+  // non-null during a HandleEvent call
+  void* mCurrentPluginEvent;
 };
 
 #endif // nsNPAPIPluginInstance_h_

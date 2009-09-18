@@ -76,7 +76,6 @@ function nsContextMenu(aXulMenu, aBrowser) {
   this.onLink            = false;
   this.onMailtoLink      = false;
   this.onSaveableLink    = false;
-  this.onMetaDataItem    = false;
   this.onMathML          = false;
   this.link              = false;
   this.linkURL           = "";
@@ -131,7 +130,6 @@ nsContextMenu.prototype = {
     this.initSpellingItems();
     this.initSaveItems();
     this.initClipboardItems();
-    this.initMetadataItems();
     this.initMediaPlayerItems();
   },
 
@@ -145,9 +143,29 @@ nsContextMenu.prototype = {
                           mailtoHandler.preferredAction == Ci.nsIHandlerInfo.useHelperApp &&
                           (mailtoHandler.preferredApplicationHandler instanceof Ci.nsIWebHandlerApp));
     }
-    var shouldShow = this.onSaveableLink || isMailtoInternal;
+
+    // time to do some bad things and see if we've highlighted a URL that isn't actually linked
+    if (this.isTextSelected) {
+      // ok, we have some text, let's figure out if it looks like a URL
+      var someText = document.commandDispatcher.focusedWindow
+                             .getSelection().toString();
+      try {
+       var uri = makeURI(someText);
+      }
+      catch (ex) { }
+ 
+      var onPlainTextLink = false;
+      if (uri && /^(https?|ftp)$/i.test(uri.scheme) && uri.host) {
+        this.linkURI = uri;
+        this.linkURL = this.linkURI.spec;
+        onPlainTextLink = true;
+      }
+    }
+ 
+    var shouldShow = this.onSaveableLink || isMailtoInternal || onPlainTextLink;
     this.showItem("context-openlink", shouldShow);
     this.showItem("context-openlinkintab", shouldShow);
+    this.showItem("context-openlinkincurrent", onPlainTextLink);
     this.showItem("context-sep-open", shouldShow);
   },
 
@@ -204,10 +222,7 @@ nsContextMenu.prototype = {
     this.showItem("context-viewsource", shouldShow);
     this.showItem("context-viewinfo", shouldShow);
 
-    this.showItem("context-sep-properties",
-                  !(this.isContentSelected ||
-                    this.onTextInput || this.onCanvas ||
-                    this.onVideo || this.onAudio));
+    this.showItem("context-sep-viewsource", shouldShow);
 
     // Set as Desktop background depends on whether an image was clicked on,
     // and only works if we have a shell service.
@@ -245,16 +260,18 @@ nsContextMenu.prototype = {
   },
 
   initMiscItems: function CM_initMiscItems() {
+    var isTextSelected = this.isTextSelected;
+    
     // Use "Bookmark This Link" if on a link.
     this.showItem("context-bookmarkpage",
                   !(this.isContentSelected || this.onTextInput || this.onLink ||
                     this.onImage || this.onVideo || this.onAudio));
     this.showItem("context-bookmarklink", this.onLink && !this.onMailtoLink);
-    this.showItem("context-searchselect", this.isTextSelected);
+    this.showItem("context-searchselect", isTextSelected);
     this.showItem("context-keywordfield",
                   this.onTextInput && this.onKeywordField);
     this.showItem("frame", this.inFrame);
-    this.showItem("frame-sep", this.inFrame);
+    this.showItem("frame-sep", this.inFrame && isTextSelected);
 
     // Hide menu entries for images, show otherwise
     if (this.inFrame) {
@@ -271,6 +288,7 @@ nsContextMenu.prototype = {
     this.showItem("context-bidi-page-direction-toggle",
                   !this.onTextInput && top.gBidiUI);
 
+    var hostLabel = "";
     if (this.onImage) {
       var blockImage = document.getElementById("context-blockimage");
 
@@ -280,16 +298,14 @@ nsContextMenu.prototype = {
 
       // this throws if the image URI doesn't have a host (eg, data: image URIs)
       // see bug 293758 for details
-      var hostLabel = "";
       try {
         hostLabel = uri.host;
       } catch (ex) { }
 
       if (hostLabel) {
-        var shortenedUriHost = hostLabel.replace(/^www\./i,"");
-        if (shortenedUriHost.length > 15)
-          shortenedUriHost = shortenedUriHost.substr(0,15) + this.ellipsis;
-        blockImage.label = gNavigatorBundle.getFormattedString("blockImages", [shortenedUriHost]);
+        if (hostLabel.length > 15)
+          hostLabel = hostLabel.substr(0,15) + this.ellipsis;
+        blockImage.label = gNavigatorBundle.getFormattedString("blockImages", [hostLabel]);
 
         if (this.isImageBlocked())
           blockImage.setAttribute("checked", "true");
@@ -391,11 +407,6 @@ nsContextMenu.prototype = {
                   this.onVideo || this.onAudio);
   },
 
-  initMetadataItems: function() {
-    // Show if user clicked on something which has metadata.
-    this.showItem("context-metadata", this.onMetaDataItem);
-  },
-
   initMediaPlayerItems: function() {
     var onMedia = (this.onVideo || this.onAudio);
     // Several mutually exclusive items... play/pause, mute/unmute, show/hide
@@ -434,7 +445,6 @@ nsContextMenu.prototype = {
     this.onCanvas          = false;
     this.onVideo           = false;
     this.onAudio           = false;
-    this.onMetaDataItem    = false;
     this.onTextInput       = false;
     this.onKeywordField    = false;
     this.mediaURL          = "";
@@ -467,7 +477,6 @@ nsContextMenu.prototype = {
       if (this.target instanceof Ci.nsIImageLoadingContent &&
           this.target.currentURI) {
         this.onImage = true;
-        this.onMetaDataItem = true;
                 
         var request =
           this.target.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
@@ -538,7 +547,6 @@ nsContextMenu.prototype = {
             
           // Target is a link or a descendant of a link.
           this.onLink = true;
-          this.onMetaDataItem = true;
 
           // xxxmpc: this is kind of a hack to work around a Gecko bug (see bug 266932)
           // we're going to walk up the DOM looking for a parent link node,
@@ -563,22 +571,6 @@ nsContextMenu.prototype = {
           this.linkProtocol = this.getLinkProtocol();
           this.onMailtoLink = (this.linkProtocol == "mailto");
           this.onSaveableLink = this.isLinkSaveable( this.link );
-        }
-
-        // Metadata item?
-        if (!this.onMetaDataItem) {
-          // We display metadata on anything which fits
-          // the below test, as well as for links and images
-          // (which set this.onMetaDataItem to true elsewhere)
-          if ((elem instanceof HTMLQuoteElement && elem.cite) ||
-              (elem instanceof HTMLTableElement && elem.summary) ||
-              (elem instanceof HTMLModElement &&
-               (elem.cite || elem.dateTime)) ||
-              (elem instanceof HTMLElement &&
-               (elem.title || elem.lang)) ||
-              elem.getAttributeNS(XMLNS, "lang")) {
-            this.onMetaDataItem = true;
-          }
         }
 
         // Background image?  Don't bother if we've already found a
@@ -633,7 +625,6 @@ nsContextMenu.prototype = {
         this.onImage           = false;
         this.onLoadedImage     = false;
         this.onCompletedImage  = false;
-        this.onMetaDataItem    = false;
         this.onMathML          = false;
         this.inFrame           = false;
         this.hasBGImage        = false;
@@ -683,6 +674,12 @@ nsContextMenu.prototype = {
   // Open linked-to URL in a new tab.
   openLinkInTab: function() {
     openNewTabWith(this.linkURL, this.target.ownerDocument, null, null, false);
+  },
+
+  // open URL in current tab
+  openLinkInCurrent: function() {
+    openUILinkIn(this.linkURL, "current", null, null, 
+                 this.target.ownerDocument.documentURIObject);
   },
 
   // Open frame in a new tab.
@@ -1098,14 +1095,6 @@ nsContextMenu.prototype = {
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                     getService(Ci.nsIClipboardHelper);
     clipboard.copyString(addresses);
-  },
-
-  // Open Metadata window for node
-  showMetadata: function () {
-    window.openDialog("chrome://browser/content/metaData.xul",
-                      "_blank",
-                      "scrollbars,resizable,chrome,dialog=no",
-                      this.target);
   },
 
   ///////////////

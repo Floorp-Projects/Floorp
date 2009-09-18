@@ -51,10 +51,6 @@ MODULE_NAME	= nsPluginModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-REQUIRES	+= gtkxtbin
-endif
-
 CPPSRCS		= \
 		nsNPAPIPlugin.cpp \
 		nsNPAPIPluginInstance.cpp \
@@ -126,10 +122,6 @@ endif
 ifeq ($(OS_ARCH), OpenVMS)
 DEFINES		+= -DGENERIC_MOTIF_REDEFINES
 OS_CXXFLAGS	+= -Wc,warn=disa=NOSIMPINT
-endif
-
-ifeq ($(OS_ARCH),OS2)
-ADD_TO_DEF_FILE = cat < $(srcdir)/extradefs.os2 >> $(DEF_FILE)
 endif
 
 ifdef MOZ_ENABLE_GTK2

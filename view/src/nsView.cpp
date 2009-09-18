@@ -185,13 +185,11 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
   mDeletionObserver = nsnull;
 }
 
-void nsView::DropMouseGrabbing() {
-  // check to see if we are grabbing events
-  if (mViewManager->GetMouseEventGrabber() == this) {
-    // we are grabbing events. Move the grab to the parent if we can.
-    PRBool boolResult; //not used
-    // if GetParent() returns null, then we release the grab, which is the best we can do
-    mViewManager->GrabMouseEvents(GetParent(), boolResult);
+void nsView::DropMouseGrabbing()
+{
+  nsCOMPtr<nsIViewObserver> viewObserver = mViewManager->GetViewObserver();
+  if (viewObserver) {
+    viewObserver->ClearMouseCapture(this);
   }
 }
 
@@ -495,15 +493,6 @@ NS_IMETHODIMP nsView::SetFloating(PRBool aFloatingView)
 
 void nsView::InvalidateHierarchy(nsViewManager *aViewManagerParent)
 {
-  if (aViewManagerParent) {
-    // We're removed from the view hierarchy of aRemovalPoint, so make sure
-    // we're not still grabbing mouse events.
-    if (aViewManagerParent->GetMouseEventGrabber() == this) {
-      PRBool res;
-      aViewManagerParent->GrabMouseEvents(nsnull, res);
-    }
-  }
-
   if (mViewManager->GetRootView() == this)
     mViewManager->InvalidateHierarchy();
 

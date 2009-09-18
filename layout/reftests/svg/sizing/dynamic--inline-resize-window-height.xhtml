@@ -34,13 +34,17 @@ top.innerHeight /= 2;
 
 function handle_load(e)
 {
-  setTimeout(restore_height, 50); // allow some time for layout and rendering
+  document.addEventListener("MozReftestInvalidate", restore_height, false);
+  // in case we're not gecko
+  setTimeout(restore_height, 5000);
 }
 
 function restore_height()
 {
   top.innerHeight = initial_height;
-  setTimeout(notify_test_finished, 50); // allow some time for layout and rendering
+  document.addEventListener("MozReftestInvalidate", notify_test_finished, false);
+  // in case we're not gecko
+  setTimeout(notify_test_finished, 5000);
 }
 
 function notify_test_finished()

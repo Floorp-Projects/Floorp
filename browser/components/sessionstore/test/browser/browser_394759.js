@@ -91,7 +91,7 @@ function test() {
 
               is(newWin2.gBrowser.tabContainer.childNodes.length, 2,
                  "The window correctly restored 2 tabs");
-              is(newWin2.gBrowser.selectedBrowser.currentURI.spec, testURL,
+              is(newWin2.gBrowser.currentURI.spec, testURL,
                  "The window correctly restored the URL");
 
               let textbox = newWin2.content.document.getElementById("textbox");

@@ -27,7 +27,9 @@ var embedding_element;
 function handle_load(e)
 {
   embedding_element = e.originalTarget.defaultView.frameElement;
-  setTimeout(notify_test_finished, 50); // allow some time for layout and rendering
+  document.addEventListener("MozReftestInvalidate", notify_test_finished, false);
+  // in case we're not gecko
+  setTimeout(notify_test_finished, 5000);
 }
 
 function notify_test_finished()

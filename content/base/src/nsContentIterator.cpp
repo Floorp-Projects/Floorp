@@ -44,14 +44,9 @@
 #include "nsIDOMText.h"
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
-#include "nsIComponentManager.h"
-#include "nsContentCID.h"
-#include "nsLayoutCID.h"
 #include "nsTArray.h"
 #include "nsContentUtils.h"
 #include "nsINode.h"
-
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 // couple of utility static functs
 
@@ -1046,9 +1041,13 @@ nsContentIterator::PositionAt(nsINode* aCurNode)
     }
   }
 
-  if (!firstNode || !lastNode ||
-      !NodeIsInTraversalRange(mCurNode, mPre, firstNode, firstOffset,
-                              lastNode, lastOffset))
+  // The end positions are always in the range even if it has no parent.
+  // We need to allow that or 'iter->Init(root)' would assert in Last()
+  // or First() for example, bug 327694.
+  if (mFirst != mCurNode && mLast != mCurNode &&
+      (!firstNode || !lastNode ||
+       !NodeIsInTraversalRange(mCurNode, mPre, firstNode, firstOffset,
+                               lastNode, lastOffset)))
   {
     mIsDone = PR_TRUE;
     return NS_ERROR_FAILURE;

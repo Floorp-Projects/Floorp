@@ -80,6 +80,8 @@
         titlemodifier_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
 #endif
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
+        lightweightthemes="true"
+        lightweightthemesfooter="browser-bottombox"
         windowtype="navigator:browser"
         screenX="4" screenY="4"
         browsingmode="normal"
@@ -282,14 +284,8 @@
     </panel>
   </popupset>
 
-  <!-- bookmarks toolbar tooltip -->
-  <tooltip id="btTooltip" noautohide="true"
-           onpopupshowing="return BookmarksEventHandler.fillInBTTooltip(document.tooltipNode)">
-    <vbox id="btTooltipTextBox" flex="1">
-      <label id="btTitleText" class="tooltip-label" />
-      <label id="btUrlText" crop="center" class="tooltip-label" />
-    </vbox>
-  </tooltip>
+  <!-- Bookmarks and history tooltip -->
+  <tooltip id="bhTooltip"/>
 
   <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
 #ifdef WINCE
@@ -455,7 +451,7 @@
                onclick="BookmarksEventHandler.onClick(event);"
                oncommand="BookmarksEventHandler.onCommand(event);"
                onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"
-               tooltip="btTooltip"/>
+               tooltip="bhTooltip" popupsinherittooltip="true"/>
       </toolbaritem>
 
         <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
@@ -511,13 +507,11 @@
                        label="&pasteCmd.label;"
                        command="cmd_paste"
                        tooltiptext="&pasteButton.tooltip;"/>
-#ifndef XP_MACOSX
         <toolbarbutton id="fullscreen-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="View:FullScreen"
                        type="checkbox"
                        label="&fullScreenCmd.label;"
                        tooltiptext="&fullScreenButton.tooltip;"/>
-#endif
     </toolbarpalette>
 
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
@@ -529,17 +523,12 @@
              iconsize="large"
 #endif
              customizable="true"
-#ifdef XP_MACOSX
-             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container"
-#else
 #ifdef WINCE
              defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,navigator-throbber,fullscreenflex,window-controls"
 #else
              defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,fullscreenflex,window-controls"
 #endif
-#endif
              context="toolbar-context-menu">
-#ifndef XP_MACOSX
       <hbox id="fullscreenflex" flex="1" hidden="true" fullscreencontrol="true"/>
       <hbox id="window-controls" hidden="true" fullscreencontrol="true">
         <toolbarbutton id="minimize-button" class="toolbarbutton-1"
@@ -554,7 +543,6 @@
                        tooltiptext="&fullScreenClose.tooltip;"
                        oncommand="BrowserTryToCloseWindow();"/>
       </hbox>
-#endif
     </toolbar>
 
     <toolbarset id="customToolbars" context="toolbar-context-menu"/>

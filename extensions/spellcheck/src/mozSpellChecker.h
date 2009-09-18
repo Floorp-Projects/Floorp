@@ -88,7 +88,7 @@ protected:
   PRBool mFromStart;
   nsTArray<nsString> mIgnoreList;
 
-  nsresult SetupDoc(PRUint32 *outBlockOffset);
+  nsresult SetupDoc(PRInt32 *outBlockOffset);
 
   nsresult GetCurrentBlockIndex(nsITextServicesDocument *aDoc, PRInt32 *outBlockIndex);
 

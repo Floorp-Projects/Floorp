@@ -487,6 +487,11 @@ extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
 /* --- Time --- */
 extern void _PR_FileTimeToPRTime(const FILETIME *filetime, PRTime *prtm);
 
+#ifdef WINCE
+extern void _MD_InitTime(void);
+extern void _MD_CleanupTime(void);
+#endif
+
 /* --- Native-Thread Specific Definitions ------------------------------- */
 
 extern struct PRThread * _MD_CURRENT_THREAD(void);

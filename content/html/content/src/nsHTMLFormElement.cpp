@@ -184,6 +184,7 @@ public:
   NS_IMETHOD GetActionURL(nsIURI** aActionURL);
   NS_IMETHOD GetSortedControls(nsTArray<nsIFormControl*>& aControls) const;
   NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const;
+  NS_IMETHOD_(PRBool) IsDefaultSubmitElement(const nsIFormControl* aControl) const;
   NS_IMETHOD_(PRBool) HasSingleTextControl() const;
 
   // nsIRadioGroupContainer
@@ -240,9 +241,31 @@ public:
                                                      nsGenericHTMLElement)
 
 protected:
+  class RemoveElementRunnable;
+  friend class RemoveElementRunnable;
+
+  class RemoveElementRunnable : public nsRunnable {
+  public:
+    RemoveElementRunnable(nsHTMLFormElement* aForm, PRBool aNotify):
+      mForm(aForm), mNotify(aNotify)
+    {}
+
+    NS_IMETHOD Run() {
+      mForm->HandleDefaultSubmitRemoval(mNotify);
+      return NS_OK;
+    }
+
+  private:
+    nsRefPtr<nsHTMLFormElement> mForm;
+    PRBool mNotify;
+  };
+
   nsresult DoSubmitOrReset(nsEvent* aEvent,
                            PRInt32 aMessage);
   nsresult DoReset();
+
+  // Async callback to handle removal of our default submit
+  void HandleDefaultSubmitRemoval(PRBool aNotify);
 
   //
   // Submit Helpers
@@ -1117,7 +1140,7 @@ nsHTMLFormElement::SubmitSubmission(nsIFormSubmission* aFormSubmission)
   {
     nsAutoPopupStatePusher popupStatePusher(mSubmitPopupState);
 
-    nsAutoHandlingUserInputStatePusher userInpStatePusher(mSubmitInitiatedFromUserInput);
+    nsAutoHandlingUserInputStatePusher userInpStatePusher(mSubmitInitiatedFromUserInput, PR_FALSE);
 
     rv = aFormSubmission->SubmitTo(actionURI, target, this, linkHandler,
                                    getter_AddRefs(docShell),
@@ -1265,7 +1288,7 @@ nsHTMLFormElement::GetElementAt(PRInt32 aIndex,
  */
 static PRInt32 CompareFormControlPosition(nsIFormControl *aControl1,
                                           nsIFormControl *aControl2,
-                                          nsIContent* aForm)
+                                          const nsIContent* aForm)
 {
   NS_ASSERTION(aControl1 != aControl2, "Comparing a form control to itself");
 
@@ -1410,19 +1433,21 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild,
     if (!*firstSubmitSlot ||
         (!lastElement &&
          CompareFormControlPosition(aChild, *firstSubmitSlot, this) < 0)) {
-      NS_ASSERTION(*firstSubmitSlot == mDefaultSubmitElement ||
-                   mDefaultSubmitElement,
-                   "How can we have a null mDefaultSubmitElement but a "
-                   "first-submit slot in one of the lists?");
-      if (*firstSubmitSlot == mDefaultSubmitElement ||
-          CompareFormControlPosition(aChild,
-                                     mDefaultSubmitElement, this) < 0) {
+      // Update mDefaultSubmitElement if it's currently in a valid state.
+      // Valid state means either non-null or null because there are in fact
+      // no submit elements around.
+      if ((mDefaultSubmitElement ||
+           (!mFirstSubmitInElements && !mFirstSubmitNotInElements)) &&
+          (*firstSubmitSlot == mDefaultSubmitElement ||
+           CompareFormControlPosition(aChild,
+                                      mDefaultSubmitElement, this) < 0)) {
         mDefaultSubmitElement = aChild;
       }
       *firstSubmitSlot = aChild;
     }
     NS_POSTCONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
-                     mDefaultSubmitElement == mFirstSubmitNotInElements,
+                     mDefaultSubmitElement == mFirstSubmitNotInElements ||
+                     !mDefaultSubmitElement,
                      "What happened here?");
 
     // Notify that the state of the previous default submit element has changed
@@ -1497,43 +1522,56 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild,
   }
 
   if (aChild == mDefaultSubmitElement) {
-    // Need to reset mDefaultSubmitElement
-    if (!mFirstSubmitNotInElements) {
-      mDefaultSubmitElement = mFirstSubmitInElements;
-    } else if (!mFirstSubmitInElements) {
-      mDefaultSubmitElement = mFirstSubmitNotInElements;
-    } else {
-      NS_ASSERTION(mFirstSubmitInElements != mFirstSubmitNotInElements,
-                   "How did that happen?");
-      // Have both; use the earlier one
-      mDefaultSubmitElement =
-        CompareFormControlPosition(mFirstSubmitInElements,
-                                   mFirstSubmitNotInElements, this) < 0 ?
-          mFirstSubmitInElements : mFirstSubmitNotInElements;
-    }
+    // Need to reset mDefaultSubmitElement.  Do this asynchronously so
+    // that we're not doing it while the DOM is in flux.
+    mDefaultSubmitElement = nsnull;
+    nsContentUtils::AddScriptRunner(new RemoveElementRunnable(this, aNotify));
 
-    NS_POSTCONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
-                     mDefaultSubmitElement == mFirstSubmitNotInElements,
-                     "What happened here?");
-
-    // Notify about change.  Note that we don't notify on the old default
-    // submit (which is being removed) because it's either being removed from
-    // the DOM or changing attributes in a way that makes it responsible for
-    // sending its own notifications.
-    if (aNotify && mDefaultSubmitElement) {
-      NS_ASSERTION(mDefaultSubmitElement != aChild,
-                   "Notifying but elements haven't changed.");
-      nsIDocument* document = GetCurrentDoc();
-      if (document) {
-        MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
-        nsCOMPtr<nsIContent> newElement(do_QueryInterface(mDefaultSubmitElement));
-        document->ContentStatesChanged(newElement, nsnull,
-                                       NS_EVENT_STATE_DEFAULT);
-      }
-    }
+    // Note that we don't need to notify on the old default submit (which is
+    // being removed) because it's either being removed from the DOM or
+    // changing attributes in a way that makes it responsible for sending its
+    // own notifications.
   }
 
   return rv;
+}
+
+void
+nsHTMLFormElement::HandleDefaultSubmitRemoval(PRBool aNotify)
+{
+  if (mDefaultSubmitElement) {
+    // Already got reset somehow; nothing else to do here
+    return;
+  }
+
+  if (!mFirstSubmitNotInElements) {
+    mDefaultSubmitElement = mFirstSubmitInElements;
+  } else if (!mFirstSubmitInElements) {
+    mDefaultSubmitElement = mFirstSubmitNotInElements;
+  } else {
+    NS_ASSERTION(mFirstSubmitInElements != mFirstSubmitNotInElements,
+                 "How did that happen?");
+    // Have both; use the earlier one
+    mDefaultSubmitElement =
+      CompareFormControlPosition(mFirstSubmitInElements,
+                                 mFirstSubmitNotInElements, this) < 0 ?
+      mFirstSubmitInElements : mFirstSubmitNotInElements;
+  }
+
+  NS_POSTCONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
+                   mDefaultSubmitElement == mFirstSubmitNotInElements,
+                   "What happened here?");
+
+  // Notify about change if needed.
+  if (aNotify && mDefaultSubmitElement) {
+    nsIDocument* document = GetCurrentDoc();
+    if (document) {
+      MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsCOMPtr<nsIContent> newElement(do_QueryInterface(mDefaultSubmitElement));
+      document->ContentStatesChanged(newElement, nsnull,
+                                     NS_EVENT_STATE_DEFAULT);
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -1712,6 +1750,41 @@ nsHTMLFormElement::GetDefaultSubmitElement() const
                   "What happened here?");
   
   return mDefaultSubmitElement;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsHTMLFormElement::IsDefaultSubmitElement(const nsIFormControl* aControl) const
+{
+  NS_PRECONDITION(aControl, "Unexpected call");
+
+  if (aControl == mDefaultSubmitElement) {
+    // Yes, it is
+    return PR_TRUE;
+  }
+
+  if (mDefaultSubmitElement ||
+      (aControl != mFirstSubmitInElements &&
+       aControl != mFirstSubmitNotInElements)) {
+    // It isn't
+    return PR_FALSE;
+  }
+
+  // mDefaultSubmitElement is null, but we have a non-null submit around
+  // (aControl, in fact).  figure out whether it's in fact the default submit
+  // and just hasn't been set that way yet.  Note that we can't just call
+  // HandleDefaultSubmitRemoval because we might need to notify to handle that
+  // correctly and we don't know whether that's safe right here.
+  if (!mFirstSubmitInElements || !mFirstSubmitNotInElements) {
+    // We only have one first submit; aControl has to be it
+    return PR_TRUE;
+  }
+
+  // We have both kinds of submits.  Check which comes first.
+  nsIFormControl* defaultSubmit =
+    CompareFormControlPosition(mFirstSubmitInElements,
+                               mFirstSubmitNotInElements, this) < 0 ?
+      mFirstSubmitInElements : mFirstSubmitNotInElements;
+  return aControl == defaultSubmit;
 }
 
 NS_IMETHODIMP_(PRBool)

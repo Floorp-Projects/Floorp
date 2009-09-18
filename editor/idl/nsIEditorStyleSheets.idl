@@ -48,62 +48,63 @@ class nsICSSStyleSheet;
 
 interface nsIEditorStyleSheets : nsISupports
 {
-  /** load and apply the style sheet, specified by aURL, to the
+  /** Load and apply the style sheet, specified by aURL, to the
     * editor's document, replacing the last style sheet added (if any).
-    * This can involve asynchronous network I/O.
+    * This is always asynchronous, and may cause network I/O.
     * 
-    * @param aURL         The style sheet to be loaded and applied.
+    * @param aURL The style sheet to be loaded and applied.
     */
   void replaceStyleSheet(in AString aURL);
 
-  /** Add the given Style Sheet to the editor's document,
+  /** Add the given style sheet to the editor's document,
     * on top of any that are already there.
-    * This is always synchronous.
+    * This is always asynchronous, and may cause network I/O.
     *
-    * @param aURL  The style sheet to be  applied.
+    * @param aURL The style sheet to be loaded and applied.
     */
   void addStyleSheet(in AString aURL);
 
-  /** load and apply the style sheet, specified by aURL, to the
-    * editor's document, replacing the last style sheet added (if any).
-    * This is always synchronous.
+  /** Load and apply the override style sheet, specified by aURL, to the
+    * editor's document, replacing the last override style sheet added (if any).
+    * This is always synchronous, so aURL should be a local file with only
+    * local @imports. This action is not undoable. It is not intended for
+    * "user" style sheets, only for editor developers to add sheets to change
+    * display behavior for editing (like showing special cursors) that will
+    * not be affected by loading "document" style sheets with addStyleSheet or
+    * especially replaceStyleSheet.
     * 
-    * @param aURL         The style sheet to be loaded and applied.
+    * @param aURL The style sheet to be loaded and applied.
     */
   void replaceOverrideStyleSheet(in AString aURL);
 
-  /** load and apply an Override style sheet, specified by aURL, to
+  /** Load and apply an override style sheet, specified by aURL, to
     * the editor's document, on top of any that are already there.
-    * IMPORTANT: This is assumed to be synchronous:
-    *            URL is a local file with no @import used
-    * This action is not undoable.
-    * It is not intended for use by "user", only editor developers
-    *   to change display behavior for editing (like showing special cursors)
-    *   that will not be affected by loading other "document" style sheets
-    *   loaded using addStyleSheet or replaceStyleSheet.
+    * This is always synchronous, so the same caveats about local files and no
+    * non-local @import as replaceOverrideStyleSheet apply here, too.
     *
-    * @param aURL         The style sheet to be loaded and applied.
+    * @param aURL The style sheet to be loaded and applied.
     */
   void addOverrideStyleSheet(in AString aURL);
 
-  /** Remove the given Style Sheet from the editor's document
+  /** Remove the given style sheet from the editor's document
     * This is always synchronous
     *
-    * @param aURL  The style sheet to be removed
+    * @param aURL The style sheet to be removed
     */
   void removeStyleSheet(in AString aURL);
 
-  /** Remove the given Override Style Sheet from the editor's document
+  /** Remove the given override style sheet from the editor's document
     * This is always synchronous
     *
-    * @param aURL  The style sheet to be removed.
+    * @param aURL The style sheet to be removed.
     */
   void removeOverrideStyleSheet(in AString aURL);
 
-  /** Enable or disable the given Style Sheet from the editor's document
+  /** Enable or disable the given style sheet from the editor's document
     * This is always synchronous
     *
-    * @param aURL  The style sheet to be removed
+    * @param aURL  The style sheet to be enabled or disabled
+    * @param aEnable true to enable, or false to disable the style sheet
     */
   void enableStyleSheet(in AString aURL, in PRBool aEnable);
 

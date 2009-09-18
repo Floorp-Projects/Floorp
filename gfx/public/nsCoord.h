@@ -88,35 +88,84 @@ inline void VERIFY_COORD(nscoord aCoord) {
 #endif
 }
 
-/**
- * Returns aCoord * aVal, capping the product to nscoord_MAX.
- *
- * Note: If/when we start using floats for nscoords, this function won't be
- * necessary.  Normal float multiplication correctly handles overflowing
- * multiplications, automatically saturating to infinity.
- */
-inline nscoord NSCoordSaturatingMultiply(nscoord aCoord, float aVal) {
-  VERIFY_COORD(aCoord);
-  NS_ASSERTION(aVal >= 0.0f,
-               "negative scaling factors must be handled manually");
-#ifdef NS_COORD_IS_FLOAT
-  return floorf(aCoord * aVal);
+inline nscoord NSToCoordRound(float aValue)
+{
+#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
+  return NS_lroundup30(aValue);
 #else
-  // This one's only a warning because it's possible to trigger
-  NS_WARN_IF_FALSE(aCoord > 0
-                   ? floorf(aCoord * aVal) < nscoord_MAX
-                   : ceilf(aCoord * aVal) > nscoord_MIN,
+  return nscoord(NS_floorf(aValue + 0.5f));
+#endif /* XP_WIN32 && _M_IX86 && !__GNUC__ */
+}
+
+inline nscoord NSToCoordRoundWithClamp(float aValue)
+{
+#ifndef NS_COORD_IS_FLOAT
+  // Bounds-check before converting out of float, to avoid overflow
+  if (aValue >= nscoord_MAX) {
+    NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord");
+    return nscoord_MAX;
+  }
+  if (aValue <= nscoord_MIN) {
+    NS_WARNING("Overflowed nscoord_MIN in conversion to nscoord");
+    return nscoord_MIN;
+  }
+#endif
+  return NSToCoordRound(aValue);
+}
+
+/**
+ * Returns aCoord * aScale, capping the product to nscoord_MAX or nscoord_MIN as
+ * appropriate for the signs of aCoord and aScale.  If requireNotNegative is
+ * true, this method will enforce that aScale is not negative; use that
+ * parametrization to get a check of that fact in debug builds.
+ */
+inline nscoord _nscoordSaturatingMultiply(nscoord aCoord, float aScale,
+                                          PRBool requireNotNegative) {
+  VERIFY_COORD(aCoord);
+  if (requireNotNegative) {
+    NS_ABORT_IF_FALSE(aScale >= 0.0f,
+                      "negative scaling factors must be handled manually");
+  }
+#ifdef NS_COORD_IS_FLOAT
+  return floorf(aCoord * aScale);
+#else
+  // This one's only a warning because it may be possible to trigger it with
+  // valid inputs.
+  NS_WARN_IF_FALSE((requireNotNegative
+                    ? aCoord > 0
+                    : (aCoord > 0) == (aScale > 0))
+                   ? floorf(aCoord * aScale) < nscoord_MAX
+                   : ceilf(aCoord * aScale) > nscoord_MIN,
                    "nscoord multiplication capped");
 
-  if (aCoord > 0)
-    return PRInt32(PR_MIN(nscoord_MAX, aCoord * aVal));
-  return PRInt32(PR_MAX(nscoord_MIN, aCoord * aVal));
+  float product = aCoord * aScale;
+  if (requireNotNegative ? aCoord > 0 : (aCoord > 0) == (aScale > 0))
+    return NSToCoordRoundWithClamp(PR_MIN(nscoord_MAX, product));
+  return NSToCoordRoundWithClamp(PR_MAX(nscoord_MIN, product));
 #endif
 }
 
-inline nscoord NSCoordMultiply(nscoord aCoord, PRInt32 aVal) {
+/**
+ * Returns aCoord * aScale, capping the product to nscoord_MAX or nscoord_MIN as
+ * appropriate for the sign of aCoord.  This method requires aScale to not be
+ * negative; use this method when you know that aScale should never be
+ * negative to get a sanity check of that invariant in debug builds.
+ */
+inline nscoord NSCoordSaturatingNonnegativeMultiply(nscoord aCoord, float aScale) {
+  return _nscoordSaturatingMultiply(aCoord, aScale, PR_TRUE);
+}
+
+/**
+ * Returns aCoord * aScale, capping the product to nscoord_MAX or nscoord_MIN as
+ * appropriate for the signs of aCoord and aScale.
+ */
+inline nscoord NSCoordSaturatingMultiply(nscoord aCoord, float aScale) {
+  return _nscoordSaturatingMultiply(aCoord, aScale, PR_FALSE);
+}
+
+inline nscoord NSCoordMultiply(nscoord aCoord, PRInt32 aScale) {
   VERIFY_COORD(aCoord);
-  return aCoord*aVal;
+  return aCoord * aScale;
 }
 
 inline nscoord NSCoordDivide(nscoord aCoord, float aVal) {
@@ -337,31 +386,6 @@ inline nscoord NSToCoordCeilClamped(float aValue)
   }
 #endif
   return NSToCoordCeil(aValue);
-}
-
-inline nscoord NSToCoordRound(float aValue)
-{
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
-  return NS_lroundup30(aValue);
-#else
-  return nscoord(NS_floorf(aValue + 0.5f));
-#endif /* XP_WIN32 && _M_IX86 && !__GNUC__ */
-}
-
-inline nscoord NSToCoordRoundWithClamp(float aValue)
-{
-#ifndef NS_COORD_IS_FLOAT
-  // Bounds-check before converting out of float, to avoid overflow
-  if (aValue >= nscoord_MAX) {
-    NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord");
-    return nscoord_MAX;
-  }
-  if (aValue <= nscoord_MIN) {
-    NS_WARNING("Overflowed nscoord_MIN in conversion to nscoord");
-    return nscoord_MIN;
-  }
-#endif
-  return NSToCoordRound(aValue);
 }
 
 /*

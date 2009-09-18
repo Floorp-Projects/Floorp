@@ -72,13 +72,8 @@ MODULE = exthandler
 LIBRARY_NAME    = exthandler_s
 LIBXUL_LIBRARY  = 1
 
-ifdef MOZ_PHOENIX
-REQUIRES	+= toolkitcomps
-endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-REQUIRES		+= windowwatcher \
-	             $(NULL)
 
 CMMSRCS	= nsOSHelperAppService.mm \
 			nsMIMEInfoMac.mm \
@@ -111,7 +106,6 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 OSHELPER  += nsMIMEInfoOS2.cpp
-REQUIRES  += widget
 endif
 
 EXPORTS = \

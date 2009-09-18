@@ -53,6 +53,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 const PREF_EM_CHECK_COMPATIBILITY     = "extensions.checkCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
@@ -61,6 +62,8 @@ const PREF_EM_ENABLED_ITEMS           = "extensions.enabledItems";
 const PREF_UPDATE_COUNT               = "extensions.update.count";
 const PREF_UPDATE_DEFAULT_URL         = "extensions.update.url";
 const PREF_EM_NEW_ADDONS_LIST         = "extensions.newAddons";
+const PREF_EM_DISABLED_ADDONS_LIST    = "extensions.disabledAddons";
+const PREF_EM_SHOW_MISMATCH_UI        = "extensions.showMismatchUI";
 const PREF_EM_IGNOREMTIMECHANGES      = "extensions.ignoreMTimeChanges";
 const PREF_EM_DISABLEDOBSOLETE        = "extensions.disabledObsolete";
 const PREF_EM_EXTENSION_FORMAT        = "extensions.%UUID%.";
@@ -70,6 +73,7 @@ const PREF_EM_ITEM_UPDATE_URL         = "extensions.%UUID%.update.url";
 const PREF_EM_DSS_ENABLED             = "extensions.dss.enabled";
 const PREF_DSS_SWITCHPENDING          = "extensions.dss.switchPending";
 const PREF_DSS_SKIN_TO_SELECT         = "extensions.lastSelectedSkin";
+const PREF_LWTHEME_TO_SELECT          = "extensions.lwThemeToSelect";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
 const PREF_EM_LOGGING_ENABLED         = "extensions.logging.enabled";
 const PREF_EM_UPDATE_INTERVAL         = "extensions.update.interval";
@@ -139,6 +143,24 @@ const URI_DOWNLOADS_PROPERTIES        = "chrome://mozapps/locale/downloads/downl
 const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
 const URI_EXTENSION_LIST_DIALOG       = "chrome://mozapps/content/extensions/list.xul";
 
+const URI_EXTENSION_MANAGER           = "chrome://mozapps/content/extensions/extensions.xul";
+const FEATURES_EXTENSION_MANAGER      = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
+const FEATURES_EXTENSION_UPDATES      = "chrome,centerscreen,extra-chrome,dialog,resizable,modal";
+
+/**
+ * Constants that internal code can use to indicate the reason for an add-on
+ * update check. external code uses other constants in nsIExtensionManager.idl.
+ */
+const MAX_PUBLIC_UPDATE_WHEN          = 15;
+const UPDATE_WHEN_PERIODIC_UPDATE     = 16;
+const UPDATE_WHEN_ADDON_INSTALLED     = 17;
+
+/**
+ * Bitmask of the different types of update check.
+ */
+const UPDATE_TYPE_COMPATIBILITY       = 32;
+const UPDATE_TYPE_NEWVERSION          = 64;
+
 const INSTALLERROR_SUCCESS               = 0;
 const INSTALLERROR_INVALID_VERSION       = -1;
 const INSTALLERROR_INVALID_GUID          = -2;
@@ -182,6 +204,7 @@ var gFirstRun             = false;
 var gAllowFlush           = true;
 var gDSNeedsFlush         = false;
 var gManifestNeedsFlush   = false;
+var gDefaultTheme         = "classic/1.0";
 
 /**
  * Valid GUIDs fit this pattern.
@@ -2147,11 +2170,18 @@ function ExtensionManager() {
     gXPCOMABI = UNKNOWN_XPCOM_ABI;
   }
   gPref = Cc["@mozilla.org/preferences-service;1"].
-          getService(Ci.nsIPrefBranch2);
+          getService(Ci.nsIPrefBranch2).
+          QueryInterface(Ci.nsIPrefService);
+  var defaults = gPref.getDefaultBranch("");
+  try {
+    gDefaultTheme = defaults.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+  } catch(e) {}
 
   gOS = Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService);
   gOS.addObserver(this, "xpcom-shutdown", false);
+  gOS.addObserver(this, "lightweight-theme-preview-requested", false);
+  gOS.addObserver(this, "lightweight-theme-change-requested", false);
 
   gConsole = Cc["@mozilla.org/consoleservice;1"].
              getService(Ci.nsIConsoleService);
@@ -2262,6 +2292,57 @@ ExtensionManager.prototype = {
     case "offline-requested":
       this._confirmCancelDownloadsOnOffline(subject);
       break;
+    case "lightweight-theme-preview-requested":
+      if (gPref.prefHasUserValue(PREF_GENERAL_SKINS_SELECTEDSKIN)) {
+        let cancel = subject.QueryInterface(Ci.nsISupportsPRBool);
+        cancel.data = true;
+      }
+      break;
+    case "lightweight-theme-change-requested":
+      let theme = JSON.parse(data);
+      if (!theme)
+        return;
+
+      if (gPref.prefHasUserValue(PREF_GENERAL_SKINS_SELECTEDSKIN)) {
+        if (getPref("getBoolPref", PREF_EM_DSS_ENABLED, false)) {
+          gPref.clearUserPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+          return;
+        }
+
+        let cancel = subject.QueryInterface(Ci.nsISupportsPRBool);
+        cancel.data = true;
+        gPref.setBoolPref(PREF_DSS_SWITCHPENDING, true);
+        gPref.setCharPref(PREF_DSS_SKIN_TO_SELECT, gDefaultTheme);
+        gPref.setCharPref(PREF_LWTHEME_TO_SELECT, theme.id);
+
+        // Open the UI so the user can see that a restart is necessary
+        var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+                 getService(Ci.nsIWindowMediator);
+        var win = wm.getMostRecentWindow("Extension:Manager");
+
+        if (win) {
+          win.showView("themes");
+          return;
+        }
+
+        var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+                 getService(Ci.nsIWindowWatcher);
+        var param = Cc["@mozilla.org/supports-array;1"].
+                    createInstance(Ci.nsISupportsArray);
+        var arg = Cc["@mozilla.org/supports-string;1"].
+                  createInstance(Ci.nsISupportsString);
+        arg.data = "themes";
+        param.AppendElement(arg);
+        ww.openWindow(null, URI_EXTENSION_MANAGER, null, FEATURES_EXTENSION_MANAGER, param);
+        return;
+      }
+      else {
+        // Cancel any pending theme change and allow the lightweight theme
+        // change to go ahead
+        gPref.clearUserPref(PREF_DSS_SWITCHPENDING);
+        gPref.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
+      }
+      break;
     case "xpcom-shutdown":
       this._shutdown();
       break;
@@ -2339,6 +2420,22 @@ ExtensionManager.prototype = {
         gPref.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, toSelect);
         gPref.clearUserPref(PREF_DSS_SWITCHPENDING);
         gPref.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
+
+        // If we've changed to a non-default theme make sure there is no
+        // lightweight theme selected
+        if (toSelect != gDefaultTheme) {
+          gPref.clearUserPref(PREF_LWTHEME_TO_SELECT);
+          LightweightThemeManager.currentTheme = null;
+        }
+      }
+
+      if (gPref.prefHasUserValue(PREF_LWTHEME_TO_SELECT)) {
+        var id = gPref.getCharPref(PREF_LWTHEME_TO_SELECT);
+        if (id)
+          LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme(id);
+        else
+          LightweightThemeManager.currentTheme = null;
+        gPref.clearUserPref(PREF_LWTHEME_TO_SELECT);
       }
     }
     catch (e) {
@@ -2373,9 +2470,6 @@ ExtensionManager.prototype = {
     if (!getPref("getBoolPref", PREF_UPDATE_NOTIFYUSER, false))
       return;
 
-    const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
-    const EMFEATURES = "chrome,centerscreen,extra-chrome,dialog,resizable,modal";
-
     var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
              getService(Ci.nsIWindowWatcher);
     var param = Cc["@mozilla.org/supports-array;1"].
@@ -2384,7 +2478,7 @@ ExtensionManager.prototype = {
               createInstance(Ci.nsISupportsString);
     arg.data = "updates-only";
     param.AppendElement(arg);
-    ww.openWindow(null, EMURL, null, EMFEATURES, param);
+    ww.openWindow(null, URI_EXTENSION_MANAGER, null, FEATURES_EXTENSION_UPDATES, param);
   },
 
   /**
@@ -2411,6 +2505,8 @@ ExtensionManager.prototype = {
     }
 
     gOS.removeObserver(this, "xpcom-shutdown");
+    gOS.removeObserver(this, "lightweight-theme-preview-requested");
+    gOS.removeObserver(this, "lightweight-theme-change-requested");
 
     // Release strongly held services.
     gOS = null;
@@ -2522,21 +2618,7 @@ ExtensionManager.prototype = {
       ERROR("Error flushing caches: " + e);
     }
 
-    if (!needsRestart)
-      this._startTimers();
-
     return needsRestart;
-  },
-
-  /**
-   * Begins all background update check timers
-   */
-  _startTimers: function EM__startTimers() {
-    // Register a background update check timer
-    var tm = Cc["@mozilla.org/updates/timer-manager;1"].
-             getService(Ci.nsIUpdateTimerManager);
-    var interval = getPref("getIntPref", PREF_EM_UPDATE_INTERVAL, 86400);
-    tm.registerTimer("addon-background-update-timer", this, interval);
   },
 
   /**
@@ -2554,7 +2636,7 @@ ExtensionManager.prototype = {
     updater.checkForUpdates(items, items.length,
                             Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION,
                             new BackgroundUpdateCheckListener(this.datasource),
-                            null, null);
+                            UPDATE_WHEN_PERIODIC_UPDATE);
   },
 
   /**
@@ -3233,6 +3315,7 @@ ExtensionManager.prototype = {
     ds.endUpdateBatch();
 
     var badItems = [];
+    var disabledAddons = [];
     var allAppManaged = true;
     elements = ctr.GetElements();
     while (elements.hasMoreElements()) {
@@ -3286,6 +3369,7 @@ ExtensionManager.prototype = {
       }
       else if (!ds.getItemProperty(id, "appDisabled")) {
         properties.appDisabled = EM_L("true");
+        disabledAddons.push(id);
       }
 
       ds.setItemProperties(id, properties);
@@ -3323,10 +3407,21 @@ ExtensionManager.prototype = {
     // Update the manifests to reflect the items that were disabled / enabled.
     this._updateManifests(true);
 
-    // Always check for compatibility updates when upgrading if we have add-ons
-    // that aren't managed by the application.
-    if (!allAppManaged)
-      this._showMismatchWindow(inactiveItemIDs);
+    // Determine if we should check for compatibility updates when upgrading if
+    // we have add-ons that aren't managed by the application.
+    if (!allAppManaged && !gFirstRun && disabledAddons.length > 0) {
+      // Should we show a UI or just pass the list via a pref?
+      if (getPref("getBoolPref", PREF_EM_SHOW_MISMATCH_UI, true)) {
+        this._showMismatchWindow(inactiveItemIDs);
+      }
+      else {
+        // Remember the list of add-ons that were disabled this time around
+        gPref.setCharPref(PREF_EM_DISABLED_ADDONS_LIST, disabledAddons.join(","));
+      }
+    } else {
+      // Clear the disabled addons list
+      gPref.clearUserPref(PREF_EM_DISABLED_ADDONS_LIST);
+    }
 
     // Finish any pending upgrades from the compatibility update to avoid an
     // additional restart.
@@ -3896,7 +3991,10 @@ ExtensionManager.prototype = {
 
         em._callInstallListeners("onCompatibilityCheckStarted", item);
         em._compatibilityCheckCount++;
-        em.update([item], 1, Ci.nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY, this);
+        var updater = new ExtensionItemUpdater(em);
+        updater.checkForUpdates([item], 1,
+                                Ci.nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY,
+                                this, UPDATE_WHEN_ADDON_INSTALLED);
       },
 
       /**
@@ -4893,7 +4991,13 @@ ExtensionManager.prototype = {
    * See nsIExtensionManager.idl
    */
   update: function EM_update(items, itemCount, updateCheckType, listener,
-                             appVersion, platformVersion) {
+                             updateType, appVersion, platformVersion) {
+
+    // Callers through the API are only allowed to use update types declared
+    // in nsIExtensionManager.idl
+    if (updateType > MAX_PUBLIC_UPDATE_WHEN)
+      throw Cr.NS_ERROR_ILLEGAL_VALUE;
+
     for (i = 0; i < itemCount; ++i) {
       var currItem = items[i];
       if (!currItem)
@@ -4905,7 +5009,7 @@ ExtensionManager.prototype = {
 
     var updater = new ExtensionItemUpdater(this);
     updater.checkForUpdates(items, items.length, updateCheckType, listener,
-                            appVersion, platformVersion);
+                            updateType, appVersion, platformVersion);
   },
 
   /**
@@ -5018,32 +5122,6 @@ ExtensionManager.prototype = {
                                                         type, includeDisabled);
     countRef.value = items.length;
     return items;
-  },
-
-  /**
-   * Move an Item to the index of another item in its container.
-   * @param   movingID
-   *          The ID of the item to be moved.
-   * @param   destinationID
-   *          The ID of an item to move another item to.
-   */
-  moveToIndexOf: function EM_moveToIndexOf(movingID, destinationID) {
-    this.datasource.moveToIndexOf(movingID, destinationID);
-  },
-
-  /**
-   * Sorts addons of the specified type by the specified property starting from
-   * the top of their container. If the addons are already sorted then no action
-   * is performed.
-   * @param   type
-   *          The nsIUpdateItem type of the items to sort.
-   * @param   propertyName
-   *          The RDF property name used for sorting.
-   * @param   isAscending
-   *          true to sort ascending and false to sort descending
-   */
-  sortTypeByProperty: function EM_sortTypeByProperty(type, propertyName, isAscending) {
-    this.datasource.sortTypeByProperty(type, propertyName, isAscending);
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -5376,7 +5454,11 @@ ExtensionManager.prototype = {
   classDescription: "Extension Manager",
   contractID: "@mozilla.org/extensions/manager;1",
   classID: Components.ID("{8A115FAA-7DCB-4e8f-979B-5F53472F51CF}"),
-  _xpcom_categories: [{ category: "profile-after-change" }],
+  _xpcom_categories: [{ category: "profile-after-change" },
+                      { category: "update-timer",
+                        value: "@mozilla.org/extensions/manager;1," +
+                               "getService,addon-background-update-timer," +
+                               PREF_EM_UPDATE_INTERVAL + ",86400" }],
   _xpcom_factory: {
     createInstance: function(outer, iid) {
       if (outer != null)
@@ -5507,9 +5589,6 @@ BackgroundUpdateCheckListener.prototype = {
       gPref.setBoolPref(PREF_UPDATE_NOTIFYUSER, false);
     }
     else {
-      const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
-      const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
-
       var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
                getService(Ci.nsIWindowWatcher);
       var param = Cc["@mozilla.org/supports-array;1"].
@@ -5518,7 +5597,7 @@ BackgroundUpdateCheckListener.prototype = {
                 createInstance(Ci.nsISupportsString);
       arg.data = "updates";
       param.AppendElement(arg);
-      ww.openWindow(null, EMURL, null, EMFEATURES, param);
+      ww.openWindow(null, URI_EXTENSION_MANAGER, null, FEATURES_EXTENSION_MANAGER, param);
     }
   },
   
@@ -5619,6 +5698,7 @@ ExtensionItemUpdater.prototype = {
   _emDS               : null,
   _em                 : null,
   _updateCheckType    : 0,
+  _updateType         : 0,
   _items              : [],
   _listener           : null,
 
@@ -5654,6 +5734,7 @@ ExtensionItemUpdater.prototype = {
                                                                  aItemCount,
                                                                  aUpdateCheckType,
                                                                  aListener,
+                                                                 aUpdateType,
                                                                  aAppVersion,
                                                                  aPlatformVersion) {
     if (aUpdateCheckType == Ci.nsIExtensionManager.UPDATE_NOTIFY_NEWVERSION) {
@@ -5673,6 +5754,14 @@ ExtensionItemUpdater.prototype = {
     this._updateCheckType = aUpdateCheckType;
     this._items = aItems;
     this._responseCount = aItemCount;
+
+    this._updateType = aUpdateType;
+    // All update check types look for compatibility currently
+    this._updateType |= UPDATE_TYPE_COMPATIBILITY;
+    // Only two types also look for new versions
+    if (aUpdateCheckType == Ci.nsIExtensionManager.UPDATE_NOTIFY_NEWVERSION ||
+        aUpdateCheckType == Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION)
+      this._updateType |= UPDATE_TYPE_NEWVERSION;
 
     // This is the number of extensions/themes/etc that we found updates for.
     this._updateCount = 0;
@@ -5798,6 +5887,10 @@ ExtensionItemUpdater.prototype = {
  * appropriate values.
  * @param   aItem
  *          The nsIUpdateItem representing the item
+ * @param   aAppVersion
+ *          The application version to check for updates for
+ * @param   aUpdateType
+ *          The type of the update (see nsIExtensionManager)
  * @param   aURI
  *          The uri to escape
  * @param   aDS
@@ -5805,7 +5898,7 @@ ExtensionItemUpdater.prototype = {
  *
  * @returns the appropriately escaped uri.
  */
-function escapeAddonURI(aItem, aAppVersion, aURI, aDS)
+function escapeAddonURI(aItem, aAppVersion, aUpdateType, aURI, aDS)
 {
   var itemStatus = "userEnabled";
   if (aDS.getItemProperty(aItem.id, "userDisabled") == "true" ||
@@ -5835,6 +5928,8 @@ function escapeAddonURI(aItem, aAppVersion, aURI, aDS)
   aURI = aURI.replace(/%APP_ABI%/g, gXPCOMABI);
   aURI = aURI.replace(/%APP_LOCALE%/g, gLocale);
   aURI = aURI.replace(/%CURRENT_APP_VERSION%/g, gApp.version);
+  if (aUpdateType)
+    aURI = aURI.replace(/%UPDATE_TYPE%/g, aUpdateType);
 
   // Replace custom parameters (names of custom parameters must have at
   // least 3 characters to prevent lookups for something like %D0%C8)
@@ -5930,7 +6025,8 @@ RDFItemUpdater.prototype = {
     if (!dsURI)
       dsURI = gPref.getCharPref(PREF_UPDATE_DEFAULT_URL);
 
-    dsURI = escapeAddonURI(aItem, this._updater._appVersion, dsURI, emDS);
+    dsURI = escapeAddonURI(aItem, this._updater._appVersion,
+                           this._updater._updateType, dsURI, emDS);
 
     // Verify that the URI provided is valid
     try {
@@ -7253,9 +7349,9 @@ ExtensionsDataSource.prototype = {
                        "aboutURL", "iconURL", "internalName", "updateKey"];
 
     // Items installed into restricted Install Locations can also be locked
-    // (can't be removed or disabled), and hidden (not shown in the UI)
+    // (can't be removed or disabled)
     if (installLocation.restricted)
-      singleProps = singleProps.concat(["locked", "hidden"]);
+      singleProps = singleProps.concat(["locked"]);
     if (installLocation.name == KEY_APP_GLOBAL)
       singleProps = singleProps.concat(["appManaged"]);
     for (var i = 0; i < singleProps.length; ++i) {
@@ -7397,86 +7493,6 @@ ExtensionsDataSource.prototype = {
                                         EM_L(""));
       }
     }
-  },
-
-  /**
-   * Move an Item to the index of another item in its container.
-   * @param   movingID
-   *          The ID of the item to be moved.
-   * @param   destinationID
-   *          The ID of an item to move another item to.
-   */
-  moveToIndexOf: function EMDS_moveToIndexOf(movingID, destinationID) {
-    var extensions = gRDF.GetResource(RDFURI_ITEM_ROOT);
-    var ctr = getContainer(this._inner, extensions);
-    var item = gRDF.GetResource(movingID);
-    var index = ctr.IndexOf(gRDF.GetResource(destinationID));
-    if (index == -1)
-      index = 1; // move to the beginning if destinationID is not found
-    this._inner.beginUpdateBatch();
-    ctr.RemoveElement(item, true);
-    ctr.InsertElementAt(item, index, true);
-    this._inner.endUpdateBatch();
-    this.Flush();
-  },
-
-  /**
-   * Sorts addons of the specified type by the specified property starting from
-   * the top of their container. If the addons are already sorted then no action
-   * is performed.
-   * @param   type
-   *          The nsIUpdateItem type of the items to sort.
-   * @param   propertyName
-   *          The RDF property name used for sorting.
-   * @param   isAscending
-   *          true to sort ascending and false to sort descending
-   */
-  sortTypeByProperty: function EMDS_sortTypeByProperty(type, propertyName, isAscending) {
-    var items = [];
-    var ctr = getContainer(this._inner, this._itemRoot);
-    var elements = ctr.GetElements();
-    // Base 0 ordinal for checking against the existing order after sorting
-    var ordinal = 0;
-    while (elements.hasMoreElements()) {
-      var item = elements.getNext().QueryInterface(Ci.nsIRDFResource);
-      var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
-      var itemType = this.getItemProperty(id, "type");
-      if (itemType & type) {
-        items.push({ item   : item,
-                     ordinal: ordinal,
-                     sortkey: this.getItemProperty(id, propertyName) });
-        ordinal++;
-      }
-    }
-
-    var direction = isAscending ? 1 : -1;
-    // Locale sensitive sort
-    function compare(a, b) {
-      return String.localeCompare(a.sortkey, b.sortkey) * direction;
-    }
-    items.sort(compare);
-
-    // Check if there are any changes in the order of the items
-    var isDirty = false;
-    for (var i = 0; i < items.length; i++) {
-      if (items[i].ordinal != i) {
-        isDirty = true;
-        break;
-      }
-    }
-
-    // If there are no changes then early return to avoid the perf impact
-    if (!isDirty)
-      return;
-
-    // Reorder the items by moving them to the top of the container
-    this.beginUpdateBatch();
-    for (i = 0; i < items.length; i++) {
-      ctr.RemoveElement(items[i].item, true);
-      ctr.InsertElementAt(items[i].item, i + 1, true);
-    }
-    this.endUpdateBatch();
-    this.Flush();
   },
 
   /**
@@ -7764,7 +7780,7 @@ ExtensionsDataSource.prototype = {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var installLocation = this._em.getInstallLocation(id);
     if (!installLocation)
-      return fallbackURL;
+      return null;
     var file = installLocation.getItemFile(id, fileName)
     if (file.exists())
       return gRDF.GetResource(getURLSpecFromFile(file));
@@ -7777,13 +7793,17 @@ ExtensionsDataSource.prototype = {
    */
   _rdfGet_iconURL: function EMDS__rdfGet_iconURL(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
-    var type = this.getItemProperty(id, "type");
+
+    var installLocation = this._em.getInstallLocation(id);
+    if (!this.isDownloadItem(id) && !installLocation)
+      return null;
 
     // Try to pick an icon from the item's install folder
     iconURL = this._getImageURL(item, "icon.png");
     if (iconURL)
       return iconURL;
 
+    var type = this.getItemProperty(id, "type");
     if (type == Ci.nsIUpdateItem.TYPE_THEME)
       return gRDF.GetResource(URI_GENERIC_ICON_THEME);
 
@@ -7943,18 +7963,6 @@ ExtensionsDataSource.prototype = {
   },
 
   /**
-   * Get the em:hidden property. This prevents extensions from hiding
-   * extensions installed into locations other than restricted locations.
-   */
-  _rdfGet_hidden: function EMDS__rdfGet_hidden(item, property) {
-    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
-    var installLocation = InstallLocations.get(this.getInstallLocationKey(id));
-    if (!installLocation || !installLocation.restricted)
-      return EM_L("false");
-    return null;
-  },
-
-  /**
    * Get the em:locked property. This prevents extensions from locking
    * extensions installed into locations other than restricted locations.
    */
@@ -8055,7 +8063,7 @@ ExtensionsDataSource.prototype = {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var uri = stringData(this._inner.GetTarget(item, EM_R("availableUpdateInfo"), true));
     if (uri) {
-      uri = escapeAddonURI(this.getItemForID(id), null, uri, this);
+      uri = escapeAddonURI(this.getItemForID(id), null, null, uri, this);
       return EM_L(uri);
     }
     return null;

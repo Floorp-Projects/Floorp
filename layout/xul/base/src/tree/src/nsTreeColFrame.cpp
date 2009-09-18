@@ -62,7 +62,9 @@ nsIFrame*
 NS_NewTreeColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsTreeColFrame(aPresShell, aContext);
-} // NS_NewTreeColFrame
+}
+
+NS_IMPL_FRAMEARENA_HELPERS(nsTreeColFrame)
 
 // Destructor
 nsTreeColFrame::~nsTreeColFrame()
@@ -125,7 +127,7 @@ nsDisplayXULTreeColSplitterTarget::HitTest(nsDisplayListBuilder* aBuilder,
 
   if (left || right) {
     // We are a header. Look for the correct splitter.
-    nsFrameList frames(mFrame->GetParent()->GetFirstChild(nsnull));
+    const nsFrameList& frames(mFrame->GetParent()->GetChildList(nsnull));
     nsIFrame* child;
     if (left)
       child = frames.GetPrevSiblingFor(mFrame);

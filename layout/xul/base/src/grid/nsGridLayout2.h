@@ -88,6 +88,9 @@ public:
                              nsIBox* aChildList);
   virtual void ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState,
                          nsIBox* aChildList);
+
+  static void AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize);
+
 protected:
 
   nsGridLayout2(nsIPresShell* aShell);

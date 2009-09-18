@@ -164,11 +164,14 @@ NS_NewListControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return it;
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsListControlFrame)
+
 //---------------------------------------------------------
 nsListControlFrame::nsListControlFrame(
   nsIPresShell* aShell, nsIDocument* aDocument, nsStyleContext* aContext)
   : nsHTMLScrollFrame(aShell, aContext, PR_FALSE),
     mMightNeedSecondPass(PR_FALSE),
+    mHasPendingInterruptAtStartOfReflow(PR_FALSE),
     mLastDropdownComputedHeight(NS_UNCONSTRAINEDSIZE)
 {
   mComboboxFrame      = nsnull;
@@ -234,6 +237,8 @@ nsListControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DO_GLOBAL_REFLOW_COUNT_DSP("nsListControlFrame");
 
   if (IsInDropDownMode()) {
+    NS_ASSERTION(NS_GET_A(mLastDropdownBackstopColor) == 255,
+                 "need an opaque backstop color");
     // XXX Because we have an opaque widget and we get called to paint with
     // this frame as the root of a stacking context we need make sure to draw
     // some opaque color over the whole widget. (Bug 511323)
@@ -484,7 +489,7 @@ GetOptGroupLabelsHeight(nsPresContext* aPresContext,
       nscoord optionsHeight = aRowHeight * numOptions;
       nsIFrame* frame = aPresContext->GetPresShell()->GetPrimaryFrameFor(child);
       nscoord totalHeight = frame ? frame->GetSize().height : 0;
-      height += PR_MAX(0, totalHeight - optionsHeight);
+      height += NS_MAX(0, totalHeight - optionsHeight);
     }
   }
   return height;
@@ -551,6 +556,8 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
 {
   NS_PRECONDITION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
                   "Must have a computed width");
+
+  mHasPendingInterruptAtStartOfReflow = aPresContext->HasPendingInterrupt();
 
   // If all the content and frames are here 
   // then initialize it before reflow
@@ -1026,28 +1033,23 @@ nsListControlFrame::CaptureMouseEvents(PRBool aGrabMouseEvents)
   if (NS_UNLIKELY(!view))
     return;
 
-  nsIViewManager* viewMan = view->GetViewManager();
-  if (viewMan) {
-    PRBool result;
-    // It's not clear why we don't have the widget capture mouse events here.
-    if (aGrabMouseEvents) {
-      viewMan->GrabMouseEvents(view, result);
-    } else {
-      nsIView* curGrabber;
-      viewMan->GetMouseEventGrabber(curGrabber);
-      PRBool dropDownIsHidden = PR_FALSE;
-      if (IsInDropDownMode()) {
-        dropDownIsHidden = !mComboboxFrame->IsDroppedDown();
-      }
-      if (curGrabber == view || dropDownIsHidden) {
-        // only unset the grabber if *we* are the ones doing the grabbing
-        // (or if the dropdown is hidden, in which case NO-ONE should be
-        // grabbing anything
-        // it could be a scrollbar inside this listbox which is actually grabbing
-        // This shouldn't be necessary. We should simply ensure that events targeting
-        // scrollbars are never visible to DOM consumers.
-        viewMan->GrabMouseEvents(nsnull, result);
-      }
+  if (aGrabMouseEvents) {
+    nsIPresShell::SetCapturingContent(mContent, CAPTURE_IGNOREALLOWED);
+  } else {
+    nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
+
+    PRBool dropDownIsHidden = PR_FALSE;
+    if (IsInDropDownMode()) {
+      dropDownIsHidden = !mComboboxFrame->IsDroppedDown();
+    }
+    if (capturingContent == mContent || dropDownIsHidden) {
+      // only clear the capturing content if *we* are the ones doing the
+      // capturing (or if the dropdown is hidden, in which case NO-ONE should
+      // be capturing anything - it could be a scrollbar inside this listbox
+      // which is actually grabbing
+      // This shouldn't be necessary. We should simply ensure that events targeting
+      // scrollbars are never visible to DOM consumers.
+      nsIPresShell::SetCapturingContent(nsnull, 0);
     }
   }
 }
@@ -1174,6 +1176,8 @@ nsListControlFrame::Init(nsIContent*     aContent,
 
   mStartSelectionIndex = kNothingSelected;
   mEndSelectionIndex = kNothingSelected;
+
+  mLastDropdownBackstopColor = PresContext()->DefaultBackgroundColor();
 
   return result;
 }
@@ -1744,14 +1748,6 @@ nsListControlFrame::AboutToDropDown()
   NS_ASSERTION(IsInDropDownMode(),
     "AboutToDropDown called without being in dropdown mode");
 
-  if (mIsAllContentHere && mIsAllFramesHere && mHasBeenInitialized) {
-    ScrollToIndex(GetSelectedIndex());
-#ifdef ACCESSIBILITY
-    FireMenuItemActiveEvent(); // Inform assistive tech what got focus
-#endif
-  }
-  mItemSelectionStarted = PR_FALSE;
-
   // Our widget doesn't get invalidated on changes to the rest of the document,
   // so compute and store this color at the start of a dropdown so we don't
   // get weird painting behaviour.
@@ -1773,6 +1769,14 @@ nsListControlFrame::AboutToDropDown()
   mLastDropdownBackstopColor =
     NS_ComposeColors(PresContext()->DefaultBackgroundColor(),
                      mLastDropdownBackstopColor);
+
+  if (mIsAllContentHere && mIsAllFramesHere && mHasBeenInitialized) {
+    ScrollToIndex(GetSelectedIndex());
+#ifdef ACCESSIBILITY
+    FireMenuItemActiveEvent(); // Inform assistive tech what got focus
+#endif
+  }
+  mItemSelectionStarted = PR_FALSE;
 }
 
 // We are about to be rolledup from the outside (ComboboxFrame)
@@ -1799,7 +1803,9 @@ nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
                               nsDidReflowStatus        aStatus)
 {
   nsresult rv;
-  
+  PRBool wasInterrupted = !mHasPendingInterruptAtStartOfReflow &&
+                          aPresContext->HasPendingInterrupt();
+
   if (IsInDropDownMode()) 
   {
     //SyncViewWithFrame();
@@ -1809,7 +1815,7 @@ nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
     rv = nsHTMLScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
   }
 
-  if (mNeedToReset) {
+  if (mNeedToReset && !wasInterrupted) {
     mNeedToReset = PR_FALSE;
     // Suppress scrolling to the selected element if we restored
     // scroll history state AND the list contents have not changed
@@ -1823,6 +1829,7 @@ nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
     ResetList(!DidHistoryRestore() || mPostChildrenLoadedReset);
   }
 
+  mHasPendingInterruptAtStartOfReflow = PR_FALSE;
   return rv;
 }
 
@@ -1933,7 +1940,7 @@ nsListControlFrame::CalcIntrinsicHeight(nscoord aHeightOfARow,
       if (aNumberOfOptions < 2) {
         // Add in 1 aHeightOfARow also when aNumberOfOptions == 0
         mNumDisplayRows = 1;
-        extraHeight = PR_MAX(aHeightOfARow, labelHeight);
+        extraHeight = NS_MAX(aHeightOfARow, labelHeight);
       }
       else if (aNumberOfOptions * aHeightOfARow + labelHeight >
                kMaxDropDownRows * aHeightOfARow) {
@@ -2110,11 +2117,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   if (IgnoreMouseEventForSelection(aMouseEvent))
     return NS_ERROR_FAILURE;
 
-  nsIView* view = GetScrolledFrame()->GetView();
-  nsIViewManager* viewMan = view->GetViewManager();
-  nsIView* curGrabber;
-  viewMan->GetMouseEventGrabber(curGrabber);
-  if (curGrabber != view) {
+  if (nsIPresShell::GetCapturingContent() != mContent) {
     // If we're not capturing, then ignore movement in the border
     nsPoint pt = nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(aMouseEvent, this);
     nsRect borderInnerEdge = GetScrollableView()->View()->GetBounds();

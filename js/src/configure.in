@@ -389,7 +389,7 @@ fi
 INTEL_CC=
 INTEL_CXX=
 if test "$GCC" = yes; then
-   if test "`$CC -help 2>&1 | grep -c 'Intel(R) C Compiler'`" != "0"; then
+   if test "`$CC -help 2>&1 | grep -c 'Intel(R) C++ Compiler'`" != "0"; then
      INTEL_CC=1
    fi
 fi
@@ -839,11 +839,6 @@ if test "$COMPILE_ENVIRONMENT"; then
 
 AC_PATH_XTRA
 
-dnl Check in X11 include directory too.
-if test "$no_x" != "yes"; then
-    CPPFLAGS="$CPPFLAGS $X_CFLAGS"
-fi
-
 XCFLAGS="$X_CFLAGS"
 
 fi # COMPILE_ENVIRONMENT
@@ -877,12 +872,10 @@ MOZ_JS_LIBS='-L$(libdir) -lmozjs'
 MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(PREFIX)/lib'
 
 MOZ_COMPONENT_NSPR_LIBS='-L$(LIBXUL_DIST)/bin $(NSPR_LIBS)'
-MOZ_XPCOM_OBSOLETE_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom_compat'
 
 USE_DEPENDENT_LIBS=1
 
 _PLATFORM_DEFAULT_TOOLKIT=cairo-gtk2
-MOZ_GFX_TOOLKIT='$(MOZ_WIDGET_TOOLKIT)'
 
 MOZ_ENABLE_POSTSCRIPT=1 
 
@@ -1775,9 +1768,6 @@ case "$target" in
     	CFLAGS="$CFLAGS -mieee"
     	CXXFLAGS="$CXXFLAGS -mieee"
     ;;
-    i*86)
-        MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS=1
-    ;;
     mips*)
         MOZ_DEBUG_FLAGS="-g" # We want inlining
     ;;
@@ -1838,7 +1828,6 @@ case "$target" in
     MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
     MOZ_FIX_LINK_PATHS=
     MOZ_JS_LIBS='$(libdir)/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
-    MOZ_XPCOM_OBSOLETE_LIBS='$(LIBXUL_DIST)/lib/xpcom_compat.lib'
     OBJ_SUFFIX=obj
     RANLIB='echo not_ranlib'
     STRIP='echo not_strip'
@@ -1963,7 +1952,6 @@ case "$target" in
         XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib'
         LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
-        MOZ_XPCOM_OBSOLETE_LIBS='$(LIBXUL_DIST)/lib/xpcom_compat.lib'
         if test $_MSC_VER -ge 1400; then
             LDFLAGS="$LDFLAGS -NXCOMPAT -SAFESEH"
             dnl For profile-guided optimization
@@ -2178,7 +2166,6 @@ case "$target" in
     MOZ_DEBUG_FLAGS="-g -fno-inline"
     MOZ_OPTIMIZE_FLAGS="-O2"
     MOZ_OPTIMIZE_LDFLAGS="-s -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
-    MOZ_XPCOM_OBSOLETE_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcomct.lib'
     DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcomcor.lib'
     LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
     TARGET_MD_ARCH=os2
@@ -2455,6 +2442,10 @@ i?86-*)
     ENABLE_JIT=1
     NANOJIT_ARCH=i386
     ;;
+x86_64*-*)
+    ENABLE_JIT=1
+    NANOJIT_ARCH=X64
+    ;;
 arm*-*)
     ENABLE_JIT=1
     NANOJIT_ARCH=ARM
@@ -2478,7 +2469,9 @@ case "$target" in
 i?86-*)
     AC_DEFINE(AVMPLUS_IA32)
     ;;
-
+x86_64*-*)
+    AC_DEFINE(AVMPLUS_AMD64)
+    ;;
 arm*-*)
     AC_DEFINE(AVMPLUS_ARM)
     ;;
@@ -3115,9 +3108,10 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS([fchmod flockfile getpagesize lchown localtime_r lstat64 \
-                memmove random rint sbrk snprintf stat64 statvfs statvfs64 \
-                strerror strtok_r truncate64])
+
+AC_CHECK_FUNCS([fchmod flockfile getc_unlocked _getc_nolock getpagesize \
+                lchown localtime_r lstat64 memmove random rint sbrk snprintf \
+                stat64 statvfs statvfs64 strerror strtok_r truncate64])
 
 dnl Windows functions, for mingw.
 AC_TRY_LINK([#include <windows.h>],
@@ -4040,17 +4034,6 @@ MOZ_ARG_ENABLE_STRING(debugger-info-modules,
     done ])
 
 dnl ========================================================
-dnl Enable garbage collector
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(boehm,
-[  --enable-boehm          Enable the Boehm Garbage Collector],
-    GC_LEAK_DETECTOR=1,
-    GC_LEAK_DETECTOR= )
-if test -n "$GC_LEAK_DETECTOR"; then
-    AC_DEFINE(GC_LEAK_DETECTOR)
-fi
-
-dnl ========================================================
 dnl Enable Narcissus
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(narcissus,
@@ -4203,17 +4186,6 @@ if test -n "$MOZ_VALGRIND"; then
 fi
 
 dnl ========================================================
-dnl = Use Electric Fence
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(efence,
-[  --enable-efence         Link with Electric Fence],
-    _ENABLE_EFENCE=1,
-    _ENABLE_EFENCE= )
-if test -n "$_ENABLE_EFENCE"; then
-    AC_CHECK_LIB(efence,malloc)
-fi
-
-dnl ========================================================
 dnl jprof
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(jprof,
@@ -4303,34 +4275,6 @@ MOZ_ARG_ENABLE_BOOL(install-strip,
     PKG_SKIP_STRIP=1)
 
 dnl ========================================================
-dnl = --enable-old-abi-compat-wrappers
-dnl ========================================================
-dnl on x86 linux, the current builds of some popular plugins (notably
-dnl flashplayer and real) expect a few builtin symbols from libgcc
-dnl which were available in some older versions of gcc.  However,
-dnl they're _NOT_ available in newer versions of gcc (eg 3.1), so if
-dnl we want those plugin to work with a gcc-3.1 built binary, we need
-dnl to provide these symbols.  MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS defaults
-dnl to true on x86 linux, and false everywhere else.
-dnl
-
-MOZ_ARG_ENABLE_BOOL(old-abi-compat-wrappers,
-[  --enable-old-abi-compat-wrappers
-                          Support old GCC ABI symbols to ease the pain 
-                          of the linux compiler change],
-    MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS=1,
-    MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS= )
-if test "$COMPILE_ENVIRONMENT"; then
-if test "$MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS"; then
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    AC_CHECK_FUNCS(__builtin_vec_new __builtin_vec_delete __builtin_new __builtin_delete __pure_virtual)
-    AC_LANG_RESTORE
-    AC_DEFINE(MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS)
-fi
-fi # COMPILE_ENVIRONMENT
-
-dnl ========================================================
 dnl = 
 dnl = Profiling and Instrumenting
 dnl = 
@@ -4349,26 +4293,6 @@ MOZ_ARG_ENABLE_BOOL(timeline,
 if test -n "$MOZ_TIMELINE"; then
     AC_DEFINE(MOZ_TIMELINE)
 fi
-
-dnl ========================================================
-dnl = Add support for Eazel profiler
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(eazel-profiler-support,
-[  --enable-eazel-profiler-support
-                          Enable Corel/Eazel profiler support],
-    ENABLE_EAZEL_PROFILER=1,
-    ENABLE_EAZEL_PROFILER= )
-if test -n "$ENABLE_EAZEL_PROFILER"; then
-    AC_DEFINE(ENABLE_EAZEL_PROFILER)
-    MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
-    EAZEL_PROFILER_CFLAGS="-g -O -gdwarf-2 -finstrument-functions -D__NO_STRING_INLINES  -D__NO_MATH_INLINES"
-    EAZEL_PROFILER_LIBS="-lprofiler -lpthread"
-fi
-
-MOZ_ARG_ENABLE_STRING(profile-modules,
-[  --enable-profile-modules
-                          Enable/disable profiling for specific modules],
-[ MOZ_PROFILE_MODULES=`echo $enableval| sed 's/,/ /g'` ] )
 
 MOZ_ARG_ENABLE_BOOL(insure,
 [  --enable-insure         Enable insure++ instrumentation (linux only)],
@@ -4894,18 +4818,12 @@ AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_MODULES)
-AC_SUBST(MOZ_PROFILE_MODULES)
 AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_DISABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_FLAGS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST(MOZ_DBGRINFO_MODULES)
-AC_SUBST(ENABLE_EAZEL_PROFILER)
-AC_SUBST(EAZEL_PROFILER_CFLAGS)
-AC_SUBST(EAZEL_PROFILER_LIBS)
-AC_SUBST(MOZ_PERF_METRICS)
-AC_SUBST(GC_LEAK_DETECTOR)
 AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)

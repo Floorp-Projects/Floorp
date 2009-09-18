@@ -88,6 +88,11 @@ class nsWifiMonitor : nsIRunnable, nsIWifiMonitor, nsIObserver
 
   nsresult DoScan();
 
+#if defined(XP_MACOSX)
+  nsresult DoScanWithCoreWLAN();
+  nsresult DoScanOld();
+#endif
+
   PRBool mKeepGoing;
   nsCOMPtr<nsIThread> mThread;
 

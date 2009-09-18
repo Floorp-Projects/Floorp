@@ -4,7 +4,8 @@
  *
  *  IAccessible2 IDL Specification
  *
- *  Copyright (c) IBM Corp. 2007
+ *  Copyright (c) Linux Foundation 2007, 2009
+ *  Copyright (c) IBM Corp. 2006
  *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
  *
  *  This library is free software; you can redistribute it and/or
@@ -31,28 +32,35 @@ cpp_quote("// Type Library Definitions")
 cpp_quote("")
 
 [
-    uuid(21955A1E-5C3A-4E52-8CCB-CE587E75133E),
+    uuid(c974e070-3787-490a-87b0-e333b06ca1e2),
 	helpstring("IAccessible2 Type Library"),
-    version(1.0),
+    version(1.1),
     hidden
 ]
 
 library IAccessible2Lib
 {
-	importlib ("stdole2.tlb");
-	interface Accessible2;
+    importlib ("stdole2.tlb");
+    interface IAccessible2;
     interface IAccessibleAction;
     interface IAccessibleApplication;
     interface IAccessibleComponent;
     interface IAccessibleEditableText;
-    interface IAccessibleEventId;
     interface IAccessibleHyperlink;
     interface IAccessibleHypertext;
     interface IAccessibleImage;
     interface IAccessibleRelation;
-    interface IAccessibleRole;
-    interface IAccessibleStates;
     interface IAccessibleTable;
+    interface IAccessibleTable2;
+    interface IAccessibleTableCell;
     interface IAccessibleText;
     interface IAccessibleValue;
+	enum IA2CoordinateType;
+	enum IA2EventID;
+	enum IA2Role;
+	enum IA2ScrollType;
+	enum IA2States;
+	enum IA2TableModelChangeType;
+	enum IA2TextBoundaryType;
+	enum IA2TextSpecialOffsets;
 }

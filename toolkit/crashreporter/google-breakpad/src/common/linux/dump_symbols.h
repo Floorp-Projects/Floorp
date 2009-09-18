@@ -34,13 +34,14 @@
 #define COMMON_LINUX_DUMP_SYMBOLS_H__
 
 #include <string>
+#include <cstdio>
 
 namespace google_breakpad {
 
 class DumpSymbols {
  public:
   bool WriteSymbolFile(const std::string &obj_file,
-                       int sym_fd);
+                       FILE *sym_file);
 };
 
 }  // namespace google_breakpad

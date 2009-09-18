@@ -40,9 +40,7 @@
 
 function test() {
   // initialization
-  let prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch);
-  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+  gPrefService.setBoolPref("browser.privatebrowsing.keep_current_session", true);
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
 
@@ -80,9 +78,8 @@ function test() {
   function testTabTitle(url, insidePB, expected_title, funcNext) {
     pb.privateBrowsingEnabled = insidePB;
 
-    let tab = gBrowser.addTab();
-    gBrowser.selectedTab = tab;
-    let browser = gBrowser.getBrowserForTab(tab);
+    let tab = gBrowser.selectedTab = gBrowser.addTab();
+    let browser = gBrowser.selectedBrowser;
     browser.addEventListener("load", function() {
       browser.removeEventListener("load", arguments.callee, true);
 
@@ -117,7 +114,7 @@ function test() {
 
   function cleanup() {
     pb.privateBrowsingEnabled = false;
-    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+    gPrefService.clearUserPref("browser.privatebrowsing.keep_current_session");
     finish();
   }
 

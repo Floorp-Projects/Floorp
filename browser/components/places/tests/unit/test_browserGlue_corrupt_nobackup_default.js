@@ -67,14 +67,9 @@ var observer = {
     }
   }
 };
+os.addObserver(observer, NS_PLACES_INIT_COMPLETE_TOPIC, false);
 
 function run_test() {
-  // XXX bug 507199
-  // This test is temporarily disabled!
-  return;
-
-  os.addObserver(observer, NS_PLACES_INIT_COMPLETE_TOPIC, false);
-
   // Remove bookmarks.html from profile.
   remove_bookmarks_html();
   // Remove JSON backup from profile.

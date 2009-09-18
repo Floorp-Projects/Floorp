@@ -208,6 +208,7 @@ sub do_copyfile
   my ($srcsuffix)    = "";  # source file name suffix
   
   ($debug >= 2) && print "do_copyfile():\n";
+  ($debug >= 10) && print " cwd: " . getcwd() . "\n";
 
   # set srcname correctly depending on how called
   if ( $dirflag ) {
@@ -216,22 +217,26 @@ sub do_copyfile
     ($srcname, $srcpath, $srcsuffix) = fileparse("$srcdir/$line", '\..*?$');
   }
 
-  ($debug >= 4) && print " fileparse(src): $srcpath $srcname $srcsuffix\n";
+  ($debug >= 4) && print " fileparse(src): '$srcpath $srcname $srcsuffix'\n";
 
   # return if srcname is a directory from do_copydir
   if ( -d "$srcpath$srcname$srcsuffix" ) {
-    ($debug >= 10) && print " return: $srcpath$srcname$srcsuffix is a directory\n";
+    ($debug >= 10) && print " return: '$srcpath$srcname$srcsuffix' is a directory\n";
     return;
+  }
+  else {
+    ($debug >= 10) && print " '$srcpath$srcname$srcsuffix' is not a directory\n";
   }
 
   # set the destination path, if alternate destination given, use it.
   if ($flat) {
-    if ($srcsuffix eq ".xpt" && $srcpath =~ m|bin/components/$|) {
+    if ($srcsuffix eq ".xpt" && $srcpath =~ m|/components/$|) {
       if ($component eq "") {
         die ("XPT file was not part of a component.");
       }
 
-      $destpathcomp = "$srcdir/xpt/$component";
+      $destpathcomp = "$srcdir/xpt/$component/components";
+      $altdest = "$srcname$srcsuffix";
     }
     else {
       $destpathcomp = "$destdir";
@@ -248,7 +253,7 @@ sub do_copyfile
     if ( $dirflag ) { # directory copy to altdest
       ($destname, $destpath, $destsuffix) = fileparse("$destpathcomp/$altdest/$File::Find::name", '\..*?$');
       # Todo: add MSDOS hack
-      $destpath =~ s|$srcdir/$line/||;  # rm info added by find
+      $destpath =~ s|\Q$srcdir\E/$line/||;  # rm info added by find
       ($debug >= 5) &&
         print " dir copy to altdest: $destpath $destname $destsuffix\n";
     } else {  # single file copy to altdest
@@ -262,7 +267,7 @@ sub do_copyfile
       if ($os eq "MSDOS") {
         $destfile =~ s|\\|/|;
       }
-      $destfile =~ s|$srcdir/||;
+      $destfile =~ s|\Q$srcdir\E/||;
 
       ($destname, $destpath, $destsuffix) = fileparse("$destpathcomp/$destfile", '\..*?$');
 

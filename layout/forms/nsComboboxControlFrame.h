@@ -97,6 +97,7 @@ public:
   ~nsComboboxControlFrame();
 
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAnonymousContentCreator
@@ -253,7 +254,7 @@ protected:
    * @note This method might destroy |this|.
    * @return PR_FALSE if this frame is destroyed, PR_TRUE if still alive.
    */
-  PRBool ShowList(nsPresContext* aPresContext, PRBool aShowList);
+  PRBool ShowList(PRBool aShowList);
   void CheckFireOnChange();
   void FireValueChangeEvent();
   nsresult RedisplayText(PRInt32 aIndex);

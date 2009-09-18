@@ -221,14 +221,34 @@ function testDefaultHandling(aWin, andThen) {
   exec();
 }
 
+function initPrefs()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
+                  getService(Components.interfaces.nsIPrefBranch2);
+  // Disables the app level scroll acceleration
+  prefSvc.setIntPref("mousewheel.acceleration.start", -1);
+}
+
+function clearPrefs()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
+                  getService(Components.interfaces.nsIPrefBranch2);
+
+  prefSvc.clearUserPref("mousewheel.acceleration.start");
+}
+
 window.onload = function () {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   let win = window.open('data:application/vnd.mozilla.xul+xml,<?xml version="1.0"?><?xml-stylesheet href="chrome://global/skin" type="text/css"?><window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"><vbox style="height: 150px; background: cyan; overflow: auto;" id="scrollbox"><hbox style="height: 8000px;"><vbox style="width: 8000px;"/></hbox></vbox></window>', '_blank', 'chrome,width=400,height=200');
   win.onload = function() {
     setTimeout(function() {
+      initPrefs();
       testEventDispatching(win);
       testDefaultHandling(win, function() {
+        clearPrefs();
         win.close();
         SimpleTest.finish();
       });

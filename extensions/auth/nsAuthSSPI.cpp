@@ -412,13 +412,22 @@ nsAuthSSPI::Unwrap(const void *inToken,
                                 );
 
     if (SEC_SUCCESS(rc)) {
-        *outToken = ib[1].pvBuffer;
+        // check if ib[1].pvBuffer is really just ib[0].pvBuffer, in which
+        // case we can let the caller free it. Otherwise, we need to
+        // clone it, and free the original
+        if (ib[0].pvBuffer == ib[1].pvBuffer) {
+            *outToken = ib[1].pvBuffer;
+        }
+        else {
+            *outToken = nsMemory::Clone(ib[1].pvBuffer, ib[1].cbBuffer);
+            nsMemory::Free(ib[0].pvBuffer);
+            if (!*outToken)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
         *outTokenLen = ib[1].cbBuffer;
     }
     else
-        nsMemory::Free(ib[1].pvBuffer);
-
-    nsMemory::Free(ib[0].pvBuffer);
+        nsMemory::Free(ib[0].pvBuffer);
 
     if (!SEC_SUCCESS(rc))
         return NS_ERROR_FAILURE;

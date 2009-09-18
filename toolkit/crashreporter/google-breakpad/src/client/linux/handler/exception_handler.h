@@ -36,6 +36,7 @@
 
 #include <map>
 #include <string>
+#include <signal.h>
 #include <vector>
 
 #include "client/linux/handler/minidump_generator.h"
@@ -146,6 +147,8 @@ class ExceptionHandler {
   void SetupHandler(int signo);
   // Teardown the handler for a signal.
   void TeardownHandler(int signo);
+  // Teardown the handler for a signal.
+  void TeardownHandler(int signo, struct sigaction *old);
   // Teardown all handlers.
   void TeardownAllHandler();
 
@@ -192,10 +195,6 @@ class ExceptionHandler {
   // when created (with an install_handler parameter set to true).
   bool installed_handler_;
 
-  // Keep the previous handlers for the signal.
-  typedef void (*sighandler_t)(int);
-  std::map<int, sighandler_t> old_handlers_;
-
   // The global exception handler stack. This is need becuase there may exist
   // multiple ExceptionHandler instances in a process. Each will have itself
   // registered in this stack.
@@ -210,6 +209,16 @@ class ExceptionHandler {
   // disallow copy ctor and operator=
   explicit ExceptionHandler(const ExceptionHandler &);
   void operator=(const ExceptionHandler &);
+
+  // The sigactions structure we use for each signal
+  struct sigaction act_;
+
+
+  // Keep the previous handlers for the signal.
+  // We're wasting a bit of memory here since we only change
+  // the handler for some signals but i want to avoid allocating
+  // memory in the signal handler
+  struct sigaction old_actions_[NSIG];
 };
 
 }  // namespace google_breakpad

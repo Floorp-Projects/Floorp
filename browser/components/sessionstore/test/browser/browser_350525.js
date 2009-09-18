@@ -10,7 +10,7 @@ function test() {
   }
   
   // test setup
-  let tabbrowser = getBrowser();
+  let tabbrowser = gBrowser;
   waitForExplicitFinish();
   
   // component

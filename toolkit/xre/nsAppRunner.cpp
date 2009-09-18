@@ -238,67 +238,6 @@ protected:
 };
 #endif
 
-// on x86 linux, the current builds of some popular plugins (notably
-// flashplayer and real) expect a few builtin symbols from libgcc
-// which were available in some older versions of gcc.  However,
-// they're _NOT_ available in newer versions of gcc (eg 3.1), so if
-// we want those plugin to work with a gcc-3.1 built binary, we need
-// to provide these symbols.  MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS defaults
-// to true on x86 linux, and false everywhere else.
-//
-// The fact that the new and free operators are mismatched 
-// mirrors the way the original functions in egcs 1.1.2 worked.
-
-#ifdef MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS
-
-extern "C" {
-
-# ifndef HAVE___BUILTIN_VEC_NEW
-  void *__builtin_vec_new(size_t aSize, const std::nothrow_t &aNoThrow) throw()
-  {
-    return ::operator new(aSize, aNoThrow);
-  }
-# endif
-
-# ifndef HAVE___BUILTIN_VEC_DELETE
-  void __builtin_vec_delete(void *aPtr, const std::nothrow_t &) throw ()
-  {
-    if (aPtr) {
-      free(aPtr);
-    }
-  }
-# endif
-
-# ifndef HAVE___BUILTIN_NEW
-	void *__builtin_new(int aSize)
-  {
-    return malloc(aSize);
-  }
-# endif
-
-# ifndef HAVE___BUILTIN_DELETE
-	void __builtin_delete(void *aPtr)
-  {
-    free(aPtr);
-  }
-# endif
-
-# ifndef HAVE___PURE_VIRTUAL
-  void __pure_virtual(void) {
-#ifdef WRAP_SYSTEM_INCLUDES
-#pragma GCC visibility push(default)
-#endif
-    extern void __cxa_pure_virtual(void);
-#ifdef WRAP_SYSTEM_INCLUDES
-#pragma GCC visibility pop
-#endif
-
-    __cxa_pure_virtual();
-  }
-# endif
-}
-#endif
-
 #if defined(XP_UNIX) || defined(XP_BEOS)
   extern void InstallUnixSignalHandlers(const char *ProgramName);
 #endif
@@ -494,7 +433,7 @@ static void RemoveArg(char **argv)
  *        allocated, but rather a pointer to the argv data.
  */
 static ArgResult
-CheckArg(const char* aArg, PRBool aCheckOSInt = PR_FALSE, const char **aParam = nsnull)
+CheckArg(const char* aArg, PRBool aCheckOSInt = PR_FALSE, const char **aParam = nsnull, PRBool aRemArg = PR_TRUE)
 {
   char **curarg = gArgv + 1; // skip argv[0]
   ArgResult ar = ARG_NONE;
@@ -512,7 +451,8 @@ CheckArg(const char* aArg, PRBool aCheckOSInt = PR_FALSE, const char **aParam = 
         ++arg;
 
       if (strimatch(aArg, arg)) {
-        RemoveArg(curarg);
+        if (aRemArg)
+          RemoveArg(curarg);
         if (!aParam) {
           ar = ARG_FOUND;
           break;
@@ -527,7 +467,8 @@ CheckArg(const char* aArg, PRBool aCheckOSInt = PR_FALSE, const char **aParam = 
             return ARG_BAD;
 
           *aParam = *curarg;
-          RemoveArg(curarg);
+          if (aRemArg)
+            RemoveArg(curarg);
           ar = ARG_FOUND;
           break;
         }
@@ -2616,7 +2557,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
  * By defining the symbol here, we can avoid the wasted lookup and hopefully
  * improve startup performance.
  */
-PRBool nspr_use_zone_allocator = PR_FALSE;
+NS_VISIBILITY_DEFAULT PRBool nspr_use_zone_allocator = PR_FALSE;
 
 #ifdef MOZ_SPLASHSCREEN
 #define MOZ_SPLASHSCREEN_UPDATE(_i)  do { if (splashScreen) splashScreen->Update(_i); } while(0)
@@ -2770,8 +2711,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifdef MOZ_SPLASHSCREEN
   // check to see if we need to do a splash screen
   PRBool wantsSplash = PR_TRUE;
-  PRBool isNoSplash = (CheckArg("nosplash") == ARG_FOUND);
-  PRBool isNoRemote = (CheckArg("no-remote") == ARG_FOUND);
+  PRBool isNoSplash = (CheckArg("nosplash", PR_FALSE, NULL, PR_FALSE) == ARG_FOUND);
+  PRBool isNoRemote = (CheckArg("no-remote", PR_FALSE, NULL, PR_FALSE) == ARG_FOUND);
 
 #ifdef WINCE
   // synchronize startup; if it looks like we're going to have to
@@ -2807,7 +2748,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       wantsSplash = PR_TRUE;
     }
   }
-#endif
+#endif //WINCE
 
   if (wantsSplash && !isNoSplash)
     splashScreen = nsSplashScreen::GetOrCreate();
@@ -2820,9 +2761,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // for the startup mutex on this thread if we need to.
   if (needsMutexLock)
     winStartupMutex.Lock();
-#endif
+#endif //WINCE
 
-#endif
+#endif //MOZ_SPLASHSCREEN
 
 
   ScopedLogging log;
@@ -3254,7 +3195,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     rv = dirProvider.SetProfile(profD, profLD);
     NS_ENSURE_SUCCESS(rv, 1);
 
-#ifdef WINCE
+#if defined(WINCE) && defined(MOZ_SPLASHSCREEN)
     // give up the mutex, let other app startups happen
     winStartupMutex.Unlock();
 #endif
@@ -3416,10 +3357,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
           /* Special-case services that need early access to the command
              line. */
-          nsCOMPtr<nsIObserver> chromeObserver
-            (do_GetService("@mozilla.org/chrome/chrome-registry;1"));
-          if (chromeObserver) {
-            chromeObserver->Observe(cmdLine, "command-line-startup", nsnull);
+          nsCOMPtr<nsIObserverService> obsService
+            (do_GetService("@mozilla.org/observer-service;1"));
+          if (obsService) {
+            obsService->NotifyObservers(cmdLine, "command-line-startup", nsnull);
           }
 
           NS_TIMELINE_ENTER("appStartup->CreateHiddenWindow");

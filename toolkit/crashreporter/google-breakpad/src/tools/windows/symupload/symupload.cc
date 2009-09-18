@@ -131,12 +131,13 @@ static bool DumpSymbolsToTempFile(const wchar_t *file,
 
   FILE *temp_file = NULL;
 #if _MSC_VER >= 1400  // MSVC 2005/8
-  if (_wfopen_s(&temp_file, temp_filename, L"w") != 0) {
+  if (_wfopen_s(&temp_file, temp_filename, L"w") != 0)
 #else  // _MSC_VER >= 1400
   // _wfopen_s was introduced in MSVC8.  Use _wfopen for earlier environments.
   // Don't use it with MSVC8 and later, because it's deprecated.
-  if (!(temp_file = _wfopen(temp_filename, L"w"))) {
+  if (!(temp_file = _wfopen(temp_filename, L"w")))
 #endif  // _MSC_VER >= 1400
+  {
     return false;
   }
 
@@ -152,12 +153,33 @@ static bool DumpSymbolsToTempFile(const wchar_t *file,
   return writer.GetModuleInfo(pdb_info);
 }
 
+void printUsageAndExit() {
+  wprintf(L"Usage: symupload [--timeout NN] <file.exe|file.dll> <symbol upload URL>\n\n");
+  wprintf(L"Timeout is in milliseconds, or can be 0 to be unlimited\n\n");
+  wprintf(L"Example:\n\n\tsymupload.exe --timeout 0 chrome.dll http://no.free.symbol.server.for.you\n");
+  exit(0);
+}
 int wmain(int argc, wchar_t *argv[]) {
-  if (argc < 3) {
-    wprintf(L"Usage: %s <file.exe|file.dll> <symbol upload URL>\n", argv[0]);
-    return 0;
+  if ((argc != 3) &&
+      (argc != 5)) {
+    printUsageAndExit();
   }
-  const wchar_t *module = argv[1], *url = argv[2];
+
+  const wchar_t *module, *url;
+  int timeout = -1;
+  if (argc == 3) {
+    module = argv[1];
+    url = argv[2];
+  } else {
+    // check for timeout flag
+    if (!wcscmp(L"--timeout", argv[1])) {
+      timeout  = _wtoi(argv[2]);
+      module = argv[3];
+      url = argv[4];
+    } else {
+      printUsageAndExit();
+    }
+  }
 
   wstring symbol_file;
   PDBModuleInfo pdb_info;
@@ -186,6 +208,7 @@ int wmain(int argc, wchar_t *argv[]) {
 
   bool success = HTTPUpload::SendRequest(url, parameters,
                                          symbol_file, L"symbol_file",
+										 timeout == -1 ? NULL : &timeout,
                                          NULL, NULL);
   _wunlink(symbol_file.c_str());
 

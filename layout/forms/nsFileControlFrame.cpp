@@ -87,6 +87,8 @@ NS_NewFileControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsFileControlFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsFileControlFrame)
+
 nsFileControlFrame::nsFileControlFrame(nsStyleContext* aContext):
   nsBlockFrame(aContext),
   mTextFrame(nsnull), 

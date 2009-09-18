@@ -1,8 +1,0 @@
-#include <features.h>
-#if defined(__GLIBC__) && (__GLIBC__ >= 2) && (__GLIBC__ + __GLIBC_MINOR__ >= 3)
-  /* For IPv6 support, glibc2.1 or newer is required */
-  echo 1
-#else
-  /* Sorry, no IPv6 support */
-  echo 0
-#endif

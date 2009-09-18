@@ -1,39 +1,20 @@
 
 #app-picker {
-    width:320px !important;
-    max-width:320px !important;
+  width: 320px;
 }
 
 #content-description {
-    font-weight:bold;
+  font-weight: bold;
 }
 
-#suggested-filename {
-    font-weight:normal;
+#content-icon,
+.listcell-icon {
+  height: 32px;
+  width: 32px;
 }
 
-#file-info {
-}
-
-#app-picker-list {
-    height:225px;
-    min-height:225px;
-}
-
-#app-picker-item {
-    padding-bottom:5px;
-    padding-top:5px;
-}
-
-#app-picker-item-image {
-}
-
-#app-picker-item-cell {
-    font-weight:normal; 
-    padding-right:10px;
-    padding-left:10px;
-}
-
-#browse-button {
-    margin-top:10px;
+#content-icon,
+.listcell-icon,
+.listcell-label {
+  margin: 5px;
 }

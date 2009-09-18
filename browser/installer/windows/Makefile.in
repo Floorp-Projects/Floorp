@@ -54,10 +54,6 @@ DEFINES += -DAPP_VERSION=$(APP_VERSION)
 PRE_RELEASE_SUFFIX := $(shell $(PYTHON) $(topsrcdir)/config/printprereleasesuffix.py $(APP_VERSION))
 DEFINES += -DPRE_RELEASE_SUFFIX="$(PRE_RELEASE_SUFFIX)"
 
-PP_LOCALIZED_FILES = \
-	packages-static \
-	$(NULL)
-
 # All script and locale files used by the Unicode version of NSIS need to be
 # converted from UTF-8 to UTF-16LE
 INSTALLER_FILES_CONV = \
@@ -111,10 +107,6 @@ uninstaller::
 	    $(CONFIG_DIR)/$$i; \
 	done
 	$(INSTALL) $(addprefix $(DIST)/branding/,$(BRANDING_FILES)) $(CONFIG_DIR)
-	$(EXIT_ON_ERROR) \
-	for i in $(PP_LOCALIZED_FILES); do \
-	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(srcdir)/$$i > $(CONFIG_DIR)/$$i; \
-	done
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) \
 	  $(srcdir)/nsis/defines.nsi.in | iconv -f UTF-8 -t UTF-16LE | \
 	  cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \
@@ -137,10 +129,6 @@ $(CONFIG_DIR)/setup.exe::
 	    $(CONFIG_DIR)/$$i; \
 	done
 	$(INSTALL) $(addprefix $(DIST)/branding/,$(BRANDING_FILES)) $(CONFIG_DIR)
-	$(EXIT_ON_ERROR) \
-	for i in $(PP_LOCALIZED_FILES); do \
-	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(srcdir)/$$i > $(CONFIG_DIR)/$$i; \
-	done
 ifeq ($(CONFIG_DIR),instgen)
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/make-installremoves.pl \
 	  ../removed-files > $(CONFIG_DIR)/removed-files.log

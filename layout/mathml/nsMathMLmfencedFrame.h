@@ -49,6 +49,8 @@
 
 class nsMathMLmfencedFrame : public nsMathMLContainerFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual void

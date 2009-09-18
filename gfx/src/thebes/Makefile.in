@@ -54,9 +54,6 @@ GRE_MODULE = 1
 LIBXUL_LIBRARY = 1
 
 
-ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
-REQUIRES += uconv
-endif
 
 CPPSRCS		= \
 		nsThebesDeviceContext.cpp \
@@ -83,10 +80,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS		+= nsSystemFontsWin.cpp \
 		   $(NULL)
 
-REQUIRES	+= \
-		cairo \
-		qcms \
-		$(NULL)
 
 _OS_LIBS	= usp10
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
@@ -117,7 +110,6 @@ LOCAL_INCLUDES	= \
 EXTRA_DSO_LDOPTS += \
 		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
-		$(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_JS_LIBS) \

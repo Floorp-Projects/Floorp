@@ -75,6 +75,9 @@
 #include "nsPrintSession.h"
 #endif
 
+#include "nsAccelerometerWin.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerWin)
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
@@ -170,6 +173,11 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
 #endif
+
+  { "Accelerometer",
+    NS_ACCELEROMETER_CID,
+    NS_ACCELEROMETER_CONTRACTID,
+    nsAccelerometerWinConstructor },
 
 #ifdef NS_PRINTING
   { "nsPrintOptionsWin",

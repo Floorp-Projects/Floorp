@@ -43,6 +43,7 @@
 /* all localizable skin settings shall live here */
 @import url("chrome://global/locale/intl.css");
 
+%include shared.inc
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* ::::: XBL bindings ::::: */
@@ -163,6 +164,41 @@ statusbarpanel {
 
 /* ::::: miscellaneous formatting ::::: */
 
+:root[lwtheme="true"],
+[lwthemefooter="true"] {
+  -moz-appearance: none;
+}
+
+:root[lwthemetextcolor="dark"] {
+  text-shadow: 1px 1px 2px white;
+}
+
+:root[lwthemetextcolor="bright"] {
+  text-shadow: 1px 1px 2px black;
+}
+
+:root[lwtheme="true"] toolbar,
+:root[lwtheme="true"] findbar,
+:root[lwtheme="true"] statusbar {
+  -moz-appearance: none;
+  background: none;
+  border-style: none;
+}
+
+:root[lwtheme="true"] splitter {
+  background: none;
+}
+
+:root[lwtheme="true"] statusbar {
+  text-shadow: inherit;
+}
+
+:root[lwtheme="true"] .findbar-container > label,
+:root[lwtheme="true"] .findbar-find-status {
+  color: inherit;
+  text-shadow: inherit;
+}
+
 .inset {
   border: 1px solid ThreeDShadow;
   border-right-color: ThreeDHighlight;
@@ -277,27 +313,24 @@ notification > button {
   min-width: 60px;
   min-height: 16px;
   -moz-appearance: none;
-  border: 1px solid rgba(0, 0, 0, .4);
   -moz-border-radius: 100%;
-  background: -moz-linear-gradient(top, bottom, from(#FFF), to(#CACACA)) repeat-x;
-  text-shadow: 0 1px rgba(255, 255, 255, .4);
-  -moz-box-shadow: 0 1px 0 rgba(255, 255, 255, .4);
+  border: @roundButtonBorder@;
+  text-shadow: @loweredShadow@;
+  background: @roundButtonBackground@;
+  -moz-box-shadow: @roundButtonShadow@;
 }
 
 notification > button:active:hover {
-  background: #CCC;
-  -moz-box-shadow: inset 0 1px 4px rgba(0, 0, 0, .2),
-                   0 1px rgba(255, 255, 255, .4);
+  background: @roundButtonPressedBackground@;
+  -moz-box-shadow: @roundButtonPressedShadow@;
 }
 
 notification > button:focus {
-  -moz-box-shadow: 0 0 3px 2px -moz-mac-focusring;
+  -moz-box-shadow: @focusRingShadow@, @roundButtonShadow@;
 }
 
 notification > button:active:hover:focus {
-  -moz-box-shadow: 0 0 3px 2px -moz-mac-focusring,
-                   inset 0 1px 4px rgba(0, 0, 0, .2),
-                   0 1px rgba(255, 255, 255, .4);
+  -moz-box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
 }
 
 notification > button > .button-box > .button-text {

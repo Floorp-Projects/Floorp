@@ -46,7 +46,6 @@
 #include "nsStringAPI.h"
 #include "nsIGConfService.h"
 #include "nsIGIOService.h"
-#include "nsIGnomeVFSService.h"
 #include "nsIStringBundle.h"
 #include "nsIOutputStream.h"
 #include "nsIProcess.h"
@@ -107,16 +106,14 @@ nsGNOMEShellService::Init()
 {
   nsresult rv;
 
-  // GConf and GnomeVFS _must_ be available, or we do not allow
+  // GConf _must_ be available, or we do not allow
   // CreateInstance to succeed.
 
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
   nsCOMPtr<nsIGIOService> giovfs =
     do_GetService(NS_GIOSERVICE_CONTRACTID);
-  nsCOMPtr<nsIGnomeVFSService> gnomevfs =
-    do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
 
-  if (!gconf || (!giovfs && !gnomevfs))
+  if (!gconf)
     return NS_ERROR_NOT_AVAILABLE;
 
   // Check G_BROKEN_FILENAMES.  If it's set, then filenames in glib use
@@ -218,16 +215,11 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
 
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
 
-  nsCAutoString schemeList; /* For GnomeVFS fallback */
   nsCAutoString appKeyValue(mAppPath);
   appKeyValue.Append(" \"%s\"");
   unsigned int i;
 
   for (i = 0; i < NS_ARRAY_LENGTH(appProtocols); ++i) {
-    /* For GnomeVFS fallback */
-    schemeList.Append(nsDependentCString(appProtocols[i].name));
-    schemeList.Append(',');
-
     if (appProtocols[i].essential || aClaimAllTypes) {
       gconf->SetAppForProtocol(nsDependentCString(appProtocols[i].name),
                                appKeyValue);
@@ -238,8 +230,6 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
   if (aClaimAllTypes) {
     nsCOMPtr<nsIGIOService> giovfs =
       do_GetService(NS_GIOSERVICE_CONTRACTID);
-    nsCOMPtr<nsIGnomeVFSService> gnomevfs =
-      do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
 
     nsCOMPtr<nsIStringBundleService> bundleService =
       do_GetService(NS_STRINGBUNDLE_CONTRACTID);
@@ -268,64 +258,6 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
         appInfo->SetAsDefaultForMimeType(nsDependentCString(appTypes[i].mimeType));
         appInfo->SetAsDefaultForFileExtensions(nsDependentCString(appTypes[i].extensions));
       }
-    } else {
-       /* Fallback GnomeVFS */
-       gnomevfs->SetAppStringKey(id, nsIGnomeVFSService::APP_KEY_COMMAND, mAppPath);
-       gnomevfs->SetAppStringKey(id, nsIGnomeVFSService::APP_KEY_NAME,
-                            NS_ConvertUTF16toUTF8(brandFullName));
-
-    // We don't want to be the default handler for "file:", but we do
-    // want Nautilus to know that we support file: if the MIME type is
-    // one that we can handle.
-
-    schemeList.Append("file");
-
-       gnomevfs->SetAppStringKey(id, nsIGnomeVFSService::APP_KEY_SUPPORTED_URI_SCHEMES,
-                            schemeList);
-
-       gnomevfs->SetAppStringKey(id, nsIGnomeVFSService::APP_KEY_EXPECTS_URIS,
-                            NS_LITERAL_CSTRING("true"));
-
-       gnomevfs->SetAppBoolKey(id, nsIGnomeVFSService::APP_KEY_CAN_OPEN_MULTIPLE,
-                          PR_FALSE);
-
-       gnomevfs->SetAppBoolKey(id, nsIGnomeVFSService::APP_KEY_REQUIRES_TERMINAL,
-                          PR_FALSE);
-
-    // Copy icons/document.png to ~/.icons/firefox-document.png
-    nsCAutoString iconFilePath(mAppPath);
-    PRInt32 lastSlash = iconFilePath.RFindChar(PRUnichar('/'));
-    if (lastSlash == -1) {
-      NS_ERROR("no slash in executable path?");
-    } else {
-      iconFilePath.SetLength(lastSlash);
-      nsCOMPtr<nsILocalFile> iconFile;
-      NS_NewNativeLocalFile(iconFilePath, PR_FALSE, getter_AddRefs(iconFile));
-      if (iconFile) {
-        iconFile->AppendRelativeNativePath(NS_LITERAL_CSTRING("icons/document.png"));
-
-           nsCOMPtr<nsILocalFile> userIconPath;
-           NS_NewNativeLocalFile(nsDependentCString(PR_GetEnv("HOME")), PR_FALSE,
-                                 getter_AddRefs(userIconPath));
-           if (userIconPath) {
-             userIconPath->AppendNative(NS_LITERAL_CSTRING(".icons"));
-             iconFile->CopyToNative(userIconPath,
-                                    nsDependentCString(kDocumentIconPath));
-           }
-         }
-       }
-
-       for (i = 0; i < NS_ARRAY_LENGTH(appTypes); ++i) {
-         gnomevfs->AddMimeType(id, nsDependentCString(appTypes[i].mimeType));
-         gnomevfs->SetMimeExtensions(nsDependentCString(appTypes[i].mimeType),
-                                nsDependentCString(appTypes[i].extensions));
-         gnomevfs->SetAppForMimeType(nsDependentCString(appTypes[i].mimeType), id);
-         gnomevfs->SetIconForMimeType(nsDependentCString(appTypes[i].mimeType),
-                                 NS_LITERAL_CSTRING(kDocumentIconPath));
-       }
-
-       gnomevfs->SyncAppRegistry();
-
     }
   }
 

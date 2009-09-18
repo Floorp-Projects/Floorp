@@ -19,6 +19,7 @@
 
 :root {
   text-rendering: optimizeLegibility;
+  -moz-binding: url("chrome://global/content/bindings/general.xml#root-element");
 }
 
 :root:-moz-locale-dir(rtl) {
@@ -988,7 +989,8 @@ stringbundle {
 
 /********** dialog **********/
 
-dialog {
+dialog,
+dialog:root /* override :root from above */ {
   -moz-binding: url("chrome://global/content/bindings/dialog.xml#dialog");
   -moz-box-orient: vertical;
 }
@@ -1005,7 +1007,8 @@ page {
 
 /********** wizard **********/
 
-wizard {
+wizard,
+wizard:root /* override :root from above */ {
   -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizard");
   -moz-box-orient: vertical;
   width: 40em;
@@ -1028,7 +1031,8 @@ wizardpage {
 
 /********** preferences ********/
 
-prefwindow {
+prefwindow,
+prefwindow:root /* override :root from above */ {
   -moz-binding: url("chrome://global/content/bindings/preferences.xml#prefwindow");  
   -moz-box-orient: vertical;
 }

@@ -34,6 +34,11 @@
 #include "nptest_platform.h"
 #include <CoreServices/CoreServices.h>
 
+#ifdef __LP64__
+// 64-bit requires the Cocoa event model
+#define USE_COCOA_NPAPI 1
+#endif
+
 bool
 pluginSupportsWindowMode()
 {
@@ -50,14 +55,27 @@ NPError
 pluginInstanceInit(InstanceData* instanceData)
 {
   NPP npp = instanceData->npp;
-  // select the right drawing model if necessary
+
   NPBool supportsCoreGraphics = false;
-  if (NPN_GetValue(npp, NPNVsupportsCoreGraphicsBool, &supportsCoreGraphics) == NPERR_NO_ERROR && supportsCoreGraphics) {
+  if ((NPN_GetValue(npp, NPNVsupportsCoreGraphicsBool, &supportsCoreGraphics) == NPERR_NO_ERROR) &&
+      supportsCoreGraphics) {
     NPN_SetValue(npp, NPPVpluginDrawingModel, (void*)NPDrawingModelCoreGraphics);
   } else {
     printf("CoreGraphics drawing model not supported, can't create a plugin instance.\n");
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
   }
+
+#ifdef USE_COCOA_NPAPI
+  NPBool supportsCocoaEvents = false;
+  if ((NPN_GetValue(npp, NPNVsupportsCocoaBool, &supportsCocoaEvents) == NPERR_NO_ERROR) &&
+      supportsCocoaEvents) {
+    NPN_SetValue(npp, NPPVpluginEventModel, (void*)NPEventModelCocoa);
+  } else {
+    printf("Cocoa event model not supported, can't create a plugin instance.\n");
+    return NPERR_INCOMPATIBLE_VERSION_ERROR;
+  }
+#endif
+
   return NPERR_NO_ERROR;
 }
 
@@ -106,7 +124,11 @@ GetColorsFromRGBA(PRUint32 rgba, float* r, float* g, float* b, float* a)
 }
 
 static void
+#ifdef USE_COCOA_NPAPI
+pluginDraw(InstanceData* instanceData, NPCocoaEvent* event)
+#else
 pluginDraw(InstanceData* instanceData)
+#endif
 {
   if (!instanceData)
     return;
@@ -120,7 +142,12 @@ pluginDraw(InstanceData* instanceData)
     return;
 
   NPWindow window = instanceData->window;
+
+#ifdef USE_COCOA_NPAPI
+  CGContextRef cgContext = event->data.draw.context;
+#else
   CGContextRef cgContext = ((NP_CGContext*)(window.window))->context;
+#endif
 
   float windowWidth = window.width;
   float windowHeight = window.height;
@@ -146,7 +173,35 @@ pluginDraw(InstanceData* instanceData)
     CGContextSetLineWidth(cgContext, 6.0);
     CGContextStrokePath(cgContext);
 
-    // draw the UA string using ATSUI
+#ifdef USE_COCOA_NPAPI // draw the UA string using Core Text
+    CGContextSetTextMatrix(cgContext, CGAffineTransformIdentity);
+
+    // Initialize a rectangular path.
+    CGMutablePathRef path = CGPathCreateMutable();
+    CGRect bounds = CGRectMake(10.0, 10.0, windowWidth - 20.0, windowHeight - 20.0);
+    CGPathAddRect(path, NULL, bounds);
+
+    // Initialize an attributed string.
+    CFMutableAttributedStringRef attrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
+    CFAttributedStringReplaceString(attrString, CFRangeMake(0, 0), uaCFString);
+
+    // Create a color and add it as an attribute to the string.
+    CGColorSpaceRef rgbColorSpace = CGColorSpaceCreateDeviceRGB();
+    CGFloat components[] = { 0.0, 0.0, 0.0, 1.0 };
+    CGColorRef red = CGColorCreate(rgbColorSpace, components);    
+    CGColorSpaceRelease(rgbColorSpace);
+    CFAttributedStringSetAttribute(attrString, CFRangeMake(0, 50), kCTForegroundColorAttributeName, red);
+
+    // Create the framesetter with the attributed string.
+    CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString(attrString);
+    CFRelease(attrString);
+
+    // Create the frame and draw it into the graphics context
+    CTFrameRef frame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), path, NULL);
+    CFRelease(framesetter);
+    CTFrameDraw(frame, cgContext);
+    CFRelease(frame);
+#else // draw the UA string using ATSUI
     CGContextSetGrayFillColor(cgContext, 0.0, 1.0);
     ATSUStyle atsuStyle;
     ATSUCreateStyle(&atsuStyle);
@@ -199,13 +254,16 @@ pluginDraw(InstanceData* instanceData)
     UniCharArrayOffset currentDrawOffset = kATSUFromTextBeginning;
     unsigned int i = 0;
     while (i < softBreakCount) {
-      ATSUDrawText(atsuLayout, currentDrawOffset, softBreaks[i], FloatToFixed(5.0), FloatToFixed(windowHeight - 5.0 - (lineHeight * (i + 1.0))));
+      ATSUDrawText(atsuLayout, currentDrawOffset, softBreaks[i], FloatToFixed(5.0),
+                   FloatToFixed(windowHeight - 5.0 - (lineHeight * (i + 1.0))));
       currentDrawOffset = softBreaks[i];
       i++;
     }
-    ATSUDrawText(atsuLayout, currentDrawOffset, kATSUToTextEnd, FloatToFixed(5.0), FloatToFixed(windowHeight - 5.0 - (lineHeight * (i + 1.0))));
+    ATSUDrawText(atsuLayout, currentDrawOffset, kATSUToTextEnd, FloatToFixed(5.0),
+                 FloatToFixed(windowHeight - 5.0 - (lineHeight * (i + 1.0))));
     free(unicharBuffer);
     free(softBreaks);
+#endif
 
     // restore the cgcontext gstate
     CGContextRestoreGState(cgContext);
@@ -236,6 +294,25 @@ pluginDraw(InstanceData* instanceData)
 int16_t
 pluginHandleEvent(InstanceData* instanceData, void* event)
 {
+#ifdef USE_COCOA_NPAPI
+  NPCocoaEvent* cocoaEvent = (NPCocoaEvent*)event;
+  if (!cocoaEvent)
+    return 0;
+
+  switch (cocoaEvent->type) {
+    case NPCocoaEventDrawRect:
+      pluginDraw(instanceData, cocoaEvent);
+      return 1;
+    case NPCocoaEventMouseDown:
+    case NPCocoaEventMouseUp:
+    case NPCocoaEventMouseMoved:
+      instanceData->lastMouseX = (int32_t)cocoaEvent->data.mouse.pluginX;
+      instanceData->lastMouseY = (int32_t)cocoaEvent->data.mouse.pluginY;
+      return 1;
+    default:
+      return 0;
+  }
+#else
   EventRecord* carbonEvent = (EventRecord*)event;
   if (!carbonEvent)
     return 0;
@@ -254,6 +331,7 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
   default:
     return 0;
   }
+#endif
 }
 
 int32_t pluginGetEdge(InstanceData* instanceData, RectEdge edge)

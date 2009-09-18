@@ -172,6 +172,8 @@ NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, P
   return it;
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsComboboxControlFrame)
+
 //-----------------------------------------------------------
 // Reflow Debugging Macros
 // These let us "see" how many reflow counts are happening
@@ -393,7 +395,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
 }
 
 PRBool
-nsComboboxControlFrame::ShowList(nsPresContext* aPresContext, PRBool aShowList)
+nsComboboxControlFrame::ShowList(PRBool aShowList)
 {
   nsCOMPtr<nsIPresShell> shell = PresContext()->GetPresShell();
 
@@ -456,7 +458,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   nscoord forcedWidth = aReflowState.ComputedWidth() +
     aReflowState.mComputedBorderPadding.LeftRight() -
     kidReflowState.mComputedBorderPadding.LeftRight();
-  kidReflowState.SetComputedWidth(PR_MAX(kidReflowState.ComputedWidth(),
+  kidReflowState.SetComputedWidth(NS_MAX(kidReflowState.ComputedWidth(),
                                          forcedWidth));
 
   // ensure we start off hidden
@@ -581,7 +583,7 @@ nsComboboxControlFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext
                                                      scrollbarWidth,
                                                      nscoord_MAX);
   
-    displayWidth = PR_MAX(dropdownContentWidth, displayWidth);
+    displayWidth = NS_MAX(dropdownContentWidth, displayWidth);
   }
 
   // add room for the dropmarker button if there is one
@@ -748,9 +750,9 @@ nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown)
     if (mListControlFrame) {
       mListControlFrame->SyncViewWithFrame();
     }
-    ShowList(PresContext(), aDoDropDown); // might destroy us
+    ShowList(aDoDropDown); // might destroy us
   } else if (mDroppedDown && !aDoDropDown) {
-    ShowList(PresContext(), aDoDropDown); // might destroy us
+    ShowList(aDoDropDown); // might destroy us
   }
 }
 
@@ -1052,6 +1054,8 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 // need to revisit this.
 class nsComboboxDisplayFrame : public nsBlockFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsComboboxDisplayFrame (nsStyleContext* aContext,
                           nsComboboxControlFrame* aComboBox)
     : nsBlockFrame(aContext),
@@ -1080,6 +1084,8 @@ public:
 protected:
   nsComboboxControlFrame* mComboBox;
 };
+
+NS_IMPL_FRAMEARENA_HELPERS(nsComboboxDisplayFrame)
 
 nsIAtom*
 nsComboboxDisplayFrame::GetType() const
@@ -1191,7 +1197,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
     return nsnull;
   }
 
-  nsFrameList textList(mTextFrame);
+  nsFrameList textList(mTextFrame, mTextFrame);
   mDisplayFrame->SetInitialChildList(nsnull, textList);
   return mDisplayFrame;
 }
@@ -1302,7 +1308,7 @@ nsComboboxControlFrame::Rollup(PRUint32 aCount,
 void
 nsComboboxControlFrame::RollupFromList()
 {
-  if (ShowList(PresContext(), PR_FALSE))
+  if (ShowList(PR_FALSE))
     mListControlFrame->CaptureMouseEvents(PR_FALSE);
 }
 

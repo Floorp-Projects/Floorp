@@ -48,9 +48,11 @@ class nsGfxCheckboxControlFrame : public nsFormControlFrame,
                                   public nsICheckboxControlFrame
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsGfxCheckboxControlFrame(nsStyleContext* aContext);
   virtual ~nsGfxCheckboxControlFrame();
-  
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
     return MakeFrameName(NS_LITERAL_STRING("CheckboxControl"), aResult);

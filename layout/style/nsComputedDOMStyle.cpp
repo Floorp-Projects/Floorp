@@ -131,7 +131,7 @@ GetContainingBlockFor(nsIFrame* aFrame) {
 }
 
 nsComputedDOMStyle::nsComputedDOMStyle()
-  : mInner(this), mDocumentWeak(nsnull), mOuterFrame(nsnull),
+  : mDocumentWeak(nsnull), mOuterFrame(nsnull),
     mInnerFrame(nsnull), mPresShell(nsnull), mAppUnitsPerInch(0)
 {
 }
@@ -180,8 +180,10 @@ NS_INTERFACE_TABLE_HEAD(nsComputedDOMStyle)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsComputedDOMStyle)
-  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMCSS2Properties, &mInner)
-  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMNSCSS2Properties, &mInner)
+  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMCSS2Properties,
+                                    new CSS2PropertiesTearoff(this))
+  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMNSCSS2Properties,
+                                    new CSS2PropertiesTearoff(this))
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ComputedCSSStyleDeclaration)
 NS_INTERFACE_MAP_END
 
@@ -2632,6 +2634,24 @@ nsComputedDOMStyle::GetWordWrap(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetPointerEvents(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+  
+  const nsStyleVisibility* visibility = GetStyleVisibility();
+  
+  if (visibility->mPointerEvents != NS_STYLE_POINTER_EVENTS_NONE) {
+    val->SetIdent(nsCSSProps::ValueToKeywordEnum(visibility->mPointerEvents,
+                                                 nsCSSProps::kPointerEventsKTable));
+  } else {
+    val->SetIdent(eCSSKeyword_none);
+  }
+  
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetVisibility(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -3755,7 +3775,7 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
         if (aPercentageBaseGetter &&
             (this->*aPercentageBaseGetter)(percentageBase)) {
           nscoord val = nscoord(aCoord.GetPercentValue() * percentageBase);
-          aValue->SetAppUnits(PR_MAX(aMinAppUnits, PR_MIN(val, aMaxAppUnits)));
+          aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
         } else {
           aValue->SetPercent(aCoord.GetPercentValue());
         }
@@ -3769,7 +3789,7 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
     case eStyleUnit_Coord:
       {
         nscoord val = aCoord.GetCoordValue();
-        aValue->SetAppUnits(PR_MAX(aMinAppUnits, PR_MIN(val, aMaxAppUnits)));
+        aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
       }
       break;
       
@@ -4273,25 +4293,6 @@ nsComputedDOMStyle::GetImageRendering(nsIDOMCSSValue** aValue)
 }
 
 nsresult
-nsComputedDOMStyle::GetPointerEvents(nsIDOMCSSValue** aValue)
-{
-  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
-  const nsStyleSVG* svg = GetStyleSVG();
-
-  if (svg->mPointerEvents != NS_STYLE_POINTER_EVENTS_NONE) {
-    val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(svg->mPointerEvents,
-                                     nsCSSProps::kPointerEventsKTable));
-  } else {
-    val->SetIdent(eCSSKeyword_none);
-  }
-
-  return CallQueryInterface(val, aValue);
-}
-
-nsresult
 nsComputedDOMStyle::GetShapeRendering(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
@@ -4665,6 +4666,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     // COMPUTED_STYLE_MAP_ENTRY(pause_before,               PauseBefore),
     // COMPUTED_STYLE_MAP_ENTRY(pitch,                      Pitch),
     // COMPUTED_STYLE_MAP_ENTRY(pitch_range,                PitchRange),
+    COMPUTED_STYLE_MAP_ENTRY(pointer_events,                PointerEvents),
     COMPUTED_STYLE_MAP_ENTRY(position,                      Position),
     COMPUTED_STYLE_MAP_ENTRY(quotes,                        Quotes),
     // COMPUTED_STYLE_MAP_ENTRY(richness,                   Richness),
@@ -4768,7 +4770,6 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(marker_end,                    MarkerEnd),
     COMPUTED_STYLE_MAP_ENTRY(marker_mid,                    MarkerMid),
     COMPUTED_STYLE_MAP_ENTRY(marker_start,                  MarkerStart),
-    COMPUTED_STYLE_MAP_ENTRY(pointer_events,                PointerEvents),
     COMPUTED_STYLE_MAP_ENTRY(shape_rendering,               ShapeRendering),
     COMPUTED_STYLE_MAP_ENTRY(stop_color,                    StopColor),
     COMPUTED_STYLE_MAP_ENTRY(stop_opacity,                  StopOpacity),

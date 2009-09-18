@@ -99,9 +99,6 @@ typedef JSIntn intn;
 typedef JSInt64 int64;
 
 /* /usr/include/model.h on HP-UX defines int8, int16, and int32 */
-#ifdef HPUX
-#include <model.h>
-#else
 #if !defined(_WIN32) && !defined(XP_OS2)
 typedef JSInt32 int32;
 #else
@@ -109,7 +106,6 @@ typedef long int32;
 #endif
 typedef JSInt16 int16;
 typedef JSInt8 int8;
-#endif /* HPUX */
 #endif /* AIX && HAVE_SYS_INTTYPES_H */
 
 #endif  /* XP_BEOS */

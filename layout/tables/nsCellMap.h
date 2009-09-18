@@ -43,6 +43,7 @@
 #include "nsTPtrArray.h"
 #include "nsRect.h"
 #include "nsCOMPtr.h"
+#include "nsAlgorithm.h"
 
 #undef DEBUG_TABLE_CELLMAP
 
@@ -629,7 +630,7 @@ public:
     if (mCurMap) {
       mCurMapContentRowCount = mCurMap->GetRowCount();
       PRUint32 rowArrayLength = mCurMap->mRows.Length();
-      mCurMapRelevantRowCount = PR_MIN(mCurMapContentRowCount, rowArrayLength);
+      mCurMapRelevantRowCount = NS_MIN(mCurMapContentRowCount, rowArrayLength);
       if (mCurMapRelevantRowCount == 0 && mOrigCells > 0) {
         // This row group is useless; advance!
         AdvanceRowGroup();

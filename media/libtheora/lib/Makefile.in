@@ -76,8 +76,7 @@ CSRCS		= \
 
 ifeq ($(findstring 86,$(OS_TEST)), 86)
 ifeq ($(OS_ARCH),WINNT)
-ifeq (64,$(findstring 64,$(OS_TEST)))
-else
+ifneq (64,$(findstring 64,$(OS_TEST)))
 VPATH		+= $(srcdir)/dec/x86_vc
 
 CSRCS		+= \

@@ -29,6 +29,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include <map>
 #include <utility>
@@ -106,8 +109,12 @@ class BasicSourceLineResolver::Module {
  public:
   Module(const string &name) : name_(name) { }
 
-  // Loads the given map file, returning true on success.
+  // Loads the given map file, returning true on success.  Reads the
+  // map file into memory and calls LoadMapFromBuffer
   bool LoadMap(const string &map_file);
+
+  // Loads a map from the given buffer, returning true on success
+  bool LoadMapFromBuffer(const string &map_buffer);
 
   // Looks up the given relative address, and fills the StackFrame struct
   // with the result.  Additional debugging information, if available, is
@@ -211,6 +218,27 @@ bool BasicSourceLineResolver::LoadModule(const string &module_name,
   return true;
 }
 
+bool BasicSourceLineResolver::LoadModuleUsingMapBuffer(
+    const string &module_name,
+    const string &map_buffer) {
+  // Make sure we don't already have a module with the given name.
+  if (modules_->find(module_name) != modules_->end()) {
+    BPLOG(INFO) << "Symbols for module " << module_name << " already loaded";
+    return false;
+  }
+
+  BPLOG(INFO) << "Loading symbols for module " << module_name << " from buffer";
+
+  Module *module = new Module(module_name);
+  if (!module->LoadMapFromBuffer(map_buffer)) {
+    delete module;
+    return false;
+  }
+
+  modules_->insert(make_pair(module_name, module));
+  return true;
+}
+
 bool BasicSourceLineResolver::HasModule(const string &module_name) const {
   return modules_->find(module_name) != modules_->end();
 }
@@ -238,44 +266,61 @@ class AutoFileCloser {
   FILE *file_;
 };
 
-bool BasicSourceLineResolver::Module::LoadMap(const string &map_file) {
-  FILE *f = fopen(map_file.c_str(), "r");
-  if (!f) {
-    string error_string;
-    int error_code = ErrnoString(&error_string);
-    BPLOG(ERROR) << "Could not open " << map_file <<
-                    ", error " << error_code << ": " << error_string;
+bool BasicSourceLineResolver::Module::LoadMapFromBuffer(
+    const string &map_buffer) {
+  linked_ptr<Function> cur_func;
+  int line_number = 0;
+  const char *map_buffer_c_str = map_buffer.c_str();
+  char *save_ptr;
+
+  // set up our input buffer as a c-style string so we
+  // can we use strtok()
+  // have to copy because modifying the result of string::c_str is not
+  // permitted
+  size_t map_buffer_length = strlen(map_buffer_c_str);
+
+  // If the length is 0, we can still pretend we have a symbol file. This is
+  // for scenarios that want to test symbol lookup, but don't necessarily care if
+  // certain modules do not have any information, like system libraries.
+  if (map_buffer_length == 0) {
+    return true;
+  }
+
+  scoped_array<char> map_buffer_chars(new char[map_buffer_length]);
+  if (map_buffer_chars == NULL) {
+    BPLOG(ERROR) << "Memory allocation of " << map_buffer_length <<
+        " bytes failed";
     return false;
   }
 
-  AutoFileCloser closer(f);
+  strncpy(map_buffer_chars.get(), map_buffer_c_str, map_buffer_length);
 
-  // TODO(mmentovai): this might not be large enough to handle really long
-  // lines, which might be present for FUNC lines of highly-templatized
-  // code.
-  char buffer[8192];
-  linked_ptr<Function> cur_func;
+  if (map_buffer_chars[map_buffer_length - 1] == '\n') {
+    map_buffer_chars[map_buffer_length - 1] = '\0';
+  }
+  char *buffer;
+  buffer = strtok_r(map_buffer_chars.get(), "\r\n", &save_ptr);
 
-  int line_number = 0;
-  while (fgets(buffer, sizeof(buffer), f)) {
+  while (buffer != NULL) {
     ++line_number;
+
     if (strncmp(buffer, "FILE ", 5) == 0) {
       if (!ParseFile(buffer)) {
-        BPLOG(ERROR) << "ParseFile failed at " <<
-                        map_file << ":" << line_number;
+        BPLOG(ERROR) << "ParseFile on buffer failed at " <<
+            ":" << line_number;
         return false;
       }
     } else if (strncmp(buffer, "STACK ", 6) == 0) {
       if (!ParseStackInfo(buffer)) {
         BPLOG(ERROR) << "ParseStackInfo failed at " <<
-                        map_file << ":" << line_number;
+            ":" << line_number;
         return false;
       }
     } else if (strncmp(buffer, "FUNC ", 5) == 0) {
       cur_func.reset(ParseFunction(buffer));
       if (!cur_func.get()) {
         BPLOG(ERROR) << "ParseFunction failed at " <<
-                        map_file << ":" << line_number;
+            ":" << line_number;
         return false;
       }
       // StoreRange will fail if the function has an invalid address or size.
@@ -288,7 +333,7 @@ bool BasicSourceLineResolver::Module::LoadMap(const string &map_file) {
 
       if (!ParsePublicSymbol(buffer)) {
         BPLOG(ERROR) << "ParsePublicSymbol failed at " <<
-                        map_file << ":" << line_number;
+            ":" << line_number;
         return false;
       }
     } else if (strncmp(buffer, "MODULE ", 7) == 0) {
@@ -301,21 +346,78 @@ bool BasicSourceLineResolver::Module::LoadMap(const string &map_file) {
     } else {
       if (!cur_func.get()) {
         BPLOG(ERROR) << "Found source line data without a function at " <<
-                        map_file << ":" << line_number;
+            ":" << line_number;
         return false;
       }
       Line *line = ParseLine(buffer);
       if (!line) {
-        BPLOG(ERROR) << "ParseLine failed at " <<
-                        map_file << ":" << line_number;
+        BPLOG(ERROR) << "ParseLine failed at " << line_number << " for " <<
+            buffer;
         return false;
       }
       cur_func->lines.StoreRange(line->address, line->size,
                                  linked_ptr<Line>(line));
     }
+
+    buffer = strtok_r(NULL, "\r\n", &save_ptr);
   }
 
   return true;
+}
+
+bool BasicSourceLineResolver::Module::LoadMap(const string &map_file) {
+  struct stat buf;
+  int error_code = stat(map_file.c_str(), &buf);
+  if (error_code == -1) {
+    string error_string;
+    int error_code = ErrnoString(&error_string);
+    BPLOG(ERROR) << "Could not open " << map_file <<
+        ", error " << error_code << ": " << error_string;
+    return false;
+  }
+
+  off_t file_size = buf.st_size;
+
+  // Allocate memory for file contents, plus a null terminator
+  // since we'll use strtok() on the contents.
+  char *file_buffer = new char[sizeof(char)*file_size + 1];
+
+  if (file_buffer == NULL) {
+    BPLOG(ERROR) << "Could not allocate memory for " << map_file;
+    return false;
+  }
+
+  BPLOG(ERROR) << "Opening " << map_file;
+
+  FILE *f = fopen(map_file.c_str(), "rt");
+  if (!f) {
+    string error_string;
+    int error_code = ErrnoString(&error_string);
+    BPLOG(ERROR) << "Could not open " << map_file <<
+        ", error " << error_code << ": " << error_string;
+    delete [] file_buffer;
+    return false;
+  }
+
+  AutoFileCloser closer(f);
+
+  int items_read = 0;
+
+  items_read = fread(file_buffer, 1, file_size, f);
+
+  if (items_read != file_size) {
+    string error_string;
+    int error_code = ErrnoString(&error_string);
+    BPLOG(ERROR) << "Could not slurp " << map_file <<
+        ", error " << error_code << ": " << error_string;
+    delete [] file_buffer;
+    return false;
+  }
+  file_buffer[file_size] = '\0';
+  string map_buffer(file_buffer);
+  delete [] file_buffer;
+
+  return LoadMapFromBuffer(map_buffer);
 }
 
 StackFrameInfo* BasicSourceLineResolver::Module::LookupAddress(

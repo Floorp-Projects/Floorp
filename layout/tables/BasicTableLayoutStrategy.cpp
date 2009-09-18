@@ -137,7 +137,7 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
                                           nsGkAtoms::nowrap)) {
             minCoord = w;
         }
-        prefCoord = PR_MAX(w, minCoord);
+        prefCoord = NS_MAX(w, minCoord);
     } else if (unit == eStyleUnit_Percent) {
         prefPercent = stylePos->mWidth.GetPercentValue();
     } else if (unit == eStyleUnit_Enumerated && aIsCell) {

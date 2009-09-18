@@ -47,7 +47,7 @@ class OnDemandSymbolSupplier : public SymbolSupplier {
  public:
   // |search_dir| is the directory to search for alternative symbols with
   // the same name as the module in the minidump
-  OnDemandSymbolSupplier(const string &search_dir, 
+  OnDemandSymbolSupplier(const string &search_dir,
                          const string &symbol_search_dir);
   virtual ~OnDemandSymbolSupplier() {}
 
@@ -56,11 +56,16 @@ class OnDemandSymbolSupplier : public SymbolSupplier {
                                      const SystemInfo *system_info,
                                      string *symbol_file);
 
+  // Returns the path to the symbol file for the given module.
+  virtual SymbolResult GetSymbolFile(const CodeModule *module,
+                                     const SystemInfo *system_info,
+                                     string *symbol_file,
+                                     string *symbol_data);
  protected:
   // Search directory
   string search_dir_;
   string symbol_search_dir_;
-  
+
   // When we create a symbol file for a module, save the name of the module
   // and the path to that module's symbol file.
   map<string, string> module_file_map_;

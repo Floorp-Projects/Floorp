@@ -40,9 +40,7 @@
 
 include $(MOZILLA_DIR)/toolkit/mozapps/installer/package-name.mk
 
-# This is how we create the Unix binary packages we release to the public.
-# Currently the only format is tar.gz (TGZ), but it should be fairly easy
-# to add .rpm (RPM) and .deb (DEB) later.
+# This is how we create the binary packages we release to the public.
 
 ifndef MOZ_PKG_FORMAT
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
@@ -50,27 +48,31 @@ MOZ_PKG_FORMAT  = DMG
 else
 ifeq (,$(filter-out OS2 WINNT WINCE BeOS, $(OS_ARCH)))
 MOZ_PKG_FORMAT  = ZIP
+else
+ifeq (,$(filter-out SunOS, $(OS_ARCH)))
+   MOZ_PKG_FORMAT  = BZ2
+else
+   ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+      MOZ_PKG_FORMAT  = BZ2
+   else
+      MOZ_PKG_FORMAT  = TGZ
+   endif
+endif
+endif
+endif
+endif # MOZ_PKG_FORMAT
+
 ifeq ($(OS_ARCH),OS2)
 INSTALLER_DIR   = os2
 else
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 INSTALLER_DIR   = windows
-endif
-endif
 else
-ifeq (,$(filter-out SunOS, $(OS_ARCH)))
-MOZ_PKG_FORMAT  = BZ2
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-MOZ_PKG_FORMAT  = BZ2
-else
-MOZ_PKG_FORMAT  = TGZ
-endif
-endif
+ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 INSTALLER_DIR   = unix
 endif
 endif
-endif # MOZ_PKG_FORMAT
+endif
 
 PACKAGE       = $(PKG_PATH)$(PKG_BASENAME)$(PKG_SUFFIX)
 
@@ -108,6 +110,20 @@ PKG_SUFFIX	= .zip
 MAKE_PACKAGE	= $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_DIR)
 UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
 MAKE_SDK = $(ZIP) -r9D $(SDK) $(MOZ_APP_NAME)-sdk
+endif
+ifeq ($(MOZ_PKG_FORMAT),CAB)
+PKG_SUFFIX	= .cab
+ifndef WINCE_WINDOWS_MOBILE
+CABARGS += -s
+endif
+ifdef MOZ_FASTSTART
+CABARGS += -faststart
+endif
+VSINSTALLDIR ?= $(error VSINSTALLDIR not set, must be set to the Visual Studio install directory)
+MAKE_PACKAGE	= $(PYTHON) $(topsrcdir)/build/package/wince/make_wince_cab.py \
+	$(CABARGS) "$(VSINSTALLDIR)/SmartDevices/SDK/SDKTools/cabwiz.exe" \
+	"$(MOZ_PKG_DIR)" "$(MOZ_APP_DISPLAYNAME)" "$(PACKAGE)"
+UNMAKE_PACKAGE	= $(error Unpacking CAB files is not supported)
 endif
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 ifndef _APPNAME
@@ -197,8 +213,8 @@ endif
 endif
 
 SOFTOKN		= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)softokn3$(NSS_DLL_SUFFIX)
-FREEBL		= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl3$(NSS_DLL_SUFFIX)
 NSSDBM		= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)nssdbm3$(NSS_DLL_SUFFIX)
+FREEBL		= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl3$(NSS_DLL_SUFFIX)
 FREEBL_32FPU	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl_32fpu_3$(DLL_SUFFIX)
 FREEBL_32INT	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl_32int_3$(DLL_SUFFIX)
 FREEBL_32INT64	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl_32int64_3$(DLL_SUFFIX)
@@ -206,8 +222,8 @@ FREEBL_64FPU	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl
 FREEBL_64INT	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl_64int_3$(DLL_SUFFIX)
 
 SIGN_NSS	+= $(SIGN_CMD) $(SOFTOKN); \
+	$(SIGN_CMD) $(NSSDBM); \
 	if test -f $(FREEBL); then $(SIGN_CMD) $(FREEBL); fi; \
-	if test -f $(NSSDBM); then $(SIGN_CMD) $(NSSDBM); fi; \
 	if test -f $(FREEBL_32FPU); then $(SIGN_CMD) $(FREEBL_32FPU); fi; \
 	if test -f $(FREEBL_32INT); then $(SIGN_CMD) $(FREEBL_32INT); fi; \
 	if test -f $(FREEBL_32INT64); then $(SIGN_CMD) $(FREEBL_32INT64); fi; \
@@ -344,10 +360,10 @@ stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
 	@mkdir $(DIST)/$(MOZ_PKG_DIR)
 ifdef MOZ_PKG_MANIFEST
 	$(RM) -rf $(DIST)/xpt
-	$(call PACKAGER_COPY, "$(DIST)",\
-		 "$(DIST)/$(MOZ_PKG_DIR)", \
+	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
+		 "$(call core_abspath,$(DIST)/$(MOZ_PKG_DIR))", \
 		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1)
-	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DIST)/$(MOZ_PKG_DIR)/components -v -x "$(XPIDL_LINK)"
+	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/components -v -x "$(XPIDL_LINK)"
 else # !MOZ_PKG_MANIFEST
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 # If UNIVERSAL_BINARY, the package will be made from an already-prepared
@@ -478,6 +494,9 @@ make-sdk:
 
 ifeq ($(OS_TARGET), WINNT)
 INSTALLER_PACKAGE = $(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
+endif
+ifeq ($(OS_TARGET), WINCE)
+INSTALLER_PACKAGE = $(DIST)/$(PKG_PATH)$(PKG_BASENAME).cab
 endif
 
 # These are necessary because some of our packages/installers contain spaces

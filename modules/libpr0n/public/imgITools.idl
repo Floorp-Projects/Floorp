@@ -58,7 +58,8 @@ interface imgITools : nsISupports
      * @param aContainer
      *        An imgIContainer holding the decoded image. Specify |null| when
      *        calling to have one created, otherwise specify a container to
-     *        be reused.
+     *        be used. It is an error to pass an already-initialized container
+     *        as aContainer.
      */
     void decodeImageData(in nsIInputStream aStream,
                          in ACString aMimeType,

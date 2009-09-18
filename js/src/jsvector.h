@@ -40,116 +40,18 @@
 #ifndef jsvector_h_
 #define jsvector_h_
 
-#include <string.h>
 #include <new>
 
-#include "jsbit.h"
+#include "jstl.h"
 
-/* Library of template meta-programs for use in the C++ JS data-structures. */
-namespace JSUtils {
-
-/* Statically compute min/max. */
-template <size_t i, size_t j> struct min {
-    static const size_t result = i < j ? i : j;
-};
-template <size_t i, size_t j> struct max {
-    static const size_t result = i > j ? i : j;
-};
-
-/* Statically compute floor(log2(i)). */
-template <size_t i> struct FloorLog2 {
-    static const size_t result = 1 + FloorLog2<i / 2>::result;
-};
-template <> struct FloorLog2<0> { /* Error */ };
-template <> struct FloorLog2<1> { static const size_t result = 0; };
-
-/* Statically compute ceiling(log2(i)). */
-template <size_t i> struct CeilingLog2 {
-    static const size_t result = FloorLog2<2 * i - 1>::result;
-};
-
-/* Statically compute the number of bits in the given unsigned type. */
-template <class T> struct BitSize {
-    static const size_t result = sizeof(T) * JS_BITS_PER_BYTE;
-};
-
-/* Allow Assertions by only including the 'result' typedef if 'true'. */
-template <bool> struct StaticAssert {};
-template <> struct StaticAssert<true> { typedef int result; };
-
-/*
- * Produce an N-bit mask, where N <= BitSize<size_t>::result.  Handle the
- * language-undefined edge case when N = BitSize<size_t>::result.
- */
-template <size_t N> struct NBitMask {
-    typedef typename StaticAssert<N < BitSize<size_t>::result>::result _;
-    static const size_t result = ~((size_t(1) << N) - 1);
-};
-template <> struct NBitMask<BitSize<size_t>::result> {
-    static const size_t result = size_t(-1);
-};
-
-/*
- * For the unsigned integral type size_t, compute a mask M for N such that
- * for all X, !(X & M) implies X * N will not overflow (w.r.t size_t)
- */
-template <size_t N> struct MulOverflowMask {
-    static const size_t result =
-        NBitMask<BitSize<size_t>::result - CeilingLog2<N>::result>::result;
-};
-template <> struct MulOverflowMask<0> { /* Error */ };
-template <> struct MulOverflowMask<1> { static const size_t result = 0; };
-
-/*
- * Safely subtract two pointers when it is known that end > begin.  This avoids
- * the common compiler bug that if (size_t(end) - size_t(begin)) has the MSB
- * set, the unsigned subtraction followed by right shift will produce -1, or
- * size_t(-1), instead of the real difference.
- */
-template <class T>
-size_t JS_ALWAYS_INLINE
-PointerRangeSize(T *begin, T *end) {
-    return (size_t(end) - size_t(begin)) / sizeof(T);
-}
-
-/*
- * Generate a mask for T such that if (X & sUnsafeRangeSizeMask), an X-sized
- * array of T's is big enough to cause a ptrdiff_t overflow when subtracting
- * a pointer to the end of the array from the beginning.
- */
-template <class T> struct UnsafeRangeSizeMask {
-    /*
-     * The '2' factor means the top bit is clear, sizeof(T) converts from
-     * units of elements to bytes.
-     */
-    static const size_t result = MulOverflowMask<2 * sizeof(T)>::result;
-};
-
-/*
- * Traits class for identifying POD types. Until C++0x, there is no automatic
- * way to detect PODs, so for the moment it is done manually.
- */
-template <class T> struct IsPodType           { static const bool result = false; };
-template <> struct IsPodType<char>            { static const bool result = true; };
-template <> struct IsPodType<signed char>     { static const bool result = true; };
-template <> struct IsPodType<unsigned char>   { static const bool result = true; };
-template <> struct IsPodType<short>           { static const bool result = true; };
-template <> struct IsPodType<unsigned short>  { static const bool result = true; };
-template <> struct IsPodType<int>             { static const bool result = true; };
-template <> struct IsPodType<unsigned int>    { static const bool result = true; };
-template <> struct IsPodType<long>            { static const bool result = true; };
-template <> struct IsPodType<unsigned long>   { static const bool result = true; };
-template <> struct IsPodType<float>           { static const bool result = true; };
-template <> struct IsPodType<double>          { static const bool result = true; };
-
-} // end namespace JSUtils
+namespace js {
 
 /*
  * This template class provides a default implementation for vector operations
  * when the element type is not known to be a POD, as judged by IsPodType.
  */
-template <class T, size_t N, bool IsPod>
-struct JSTempVectorImpl
+template <class T, size_t N, class AP, bool IsPod>
+struct VectorImpl
 {
     /* Destroys constructed objects in the range [begin, end). */
     static inline void destroy(T *begin, T *end) {
@@ -189,15 +91,15 @@ struct JSTempVectorImpl
      * newcap has not overflowed, and (2) multiplying newcap by sizeof(T) will
      * not overflow.
      */
-    static inline bool growTo(JSTempVector<T,N> &v, size_t newcap) {
+    static inline bool growTo(Vector<T,N,AP> &v, size_t newcap) {
         JS_ASSERT(!v.usingInlineStorage());
-        T *newbuf = reinterpret_cast<T *>(v.mCx->malloc(newcap * sizeof(T)));
+        T *newbuf = reinterpret_cast<T *>(v.malloc(newcap * sizeof(T)));
         if (!newbuf)
             return false;
         for (T *dst = newbuf, *src = v.heapBegin(); src != v.heapEnd(); ++dst, ++src)
             new(dst) T(*src);
-        JSTempVectorImpl::destroy(v.heapBegin(), v.heapEnd());
-        v.mCx->free(v.heapBegin());
+        VectorImpl::destroy(v.heapBegin(), v.heapEnd());
+        v.free(v.heapBegin());
         v.heapEnd() = newbuf + v.heapLength();
         v.heapBegin() = newbuf;
         v.heapCapacity() = newcap;
@@ -210,8 +112,8 @@ struct JSTempVectorImpl
  * vector operations when the element type is known to be a POD, as judged by
  * IsPodType.
  */
-template <class T, size_t N>
-struct JSTempVectorImpl<T, N, true>
+template <class T, size_t N, class AP>
+struct VectorImpl<T, N, AP, true>
 {
     static inline void destroy(T *, T *) {}
 
@@ -246,10 +148,10 @@ struct JSTempVectorImpl<T, N, true>
             *dst = t;
     }
 
-    static inline bool growTo(JSTempVector<T,N> &v, size_t newcap) {
+    static inline bool growTo(Vector<T,N,AP> &v, size_t newcap) {
         JS_ASSERT(!v.usingInlineStorage());
         size_t bytes = sizeof(T) * newcap;
-        T *newbuf = reinterpret_cast<T *>(v.mCx->realloc(v.heapBegin(), bytes));
+        T *newbuf = reinterpret_cast<T *>(v.realloc(v.heapBegin(), bytes));
         if (!newbuf)
             return false;
         v.heapEnd() = newbuf + v.heapLength();
@@ -261,26 +163,30 @@ struct JSTempVectorImpl<T, N, true>
 
 /*
  * JS-friendly, STL-like container providing a short-lived, dynamic buffer.
- * JSTempVector calls the constructors/destructors of all elements stored in
+ * Vector calls the constructors/destructors of all elements stored in
  * its internal buffer, so non-PODs may be safely used. Additionally,
- * JSTempVector stores the first few elements in-place in its member data
- * before resorting to dynamic allocation. The minimum number of elements may
- * be specified by the parameter N.
+ * Vector will store the first N elements in-place before resorting to
+ * dynamic allocation.
  *
  * T requirements:
  *  - default and copy constructible, assignable, destructible
  *  - operations do not throw
+ * N requirements:
+ *  - any value, however, N is clamped to min/max values
+ * AllocPolicy:
+ *  - see "Allocation policies" in jstl.h (default ContextAllocPolicy)
  *
- * N.B: JSTempVector is not reentrant: T member functions called during
- *      JSTempVector member functions must not call back into the same object.
+ * N.B: Vector is not reentrant: T member functions called during Vector member
+ *      functions must not call back into the same object.
  */
-template <class T, size_t N>
-class JSTempVector
+template <class T, size_t N, class AllocPolicy>
+class Vector : AllocPolicy
 {
     /* utilities */
 
-    typedef JSTempVectorImpl<T, N, JSUtils::IsPodType<T>::result> Impl;
-    friend struct JSTempVectorImpl<T, N, JSUtils::IsPodType<T>::result>;
+    static const bool sElemIsPod = tl::IsPodType<T>::result;
+    typedef VectorImpl<T, N, AllocPolicy, sElemIsPod> Impl;
+    friend struct VectorImpl<T, N, AllocPolicy, sElemIsPod>;
 
     bool calculateNewCapacity(size_t curLength, size_t lengthInc, size_t &newCap);
     bool growHeapStorageBy(size_t lengthInc);
@@ -310,19 +216,21 @@ class JSTempVector
      * vector's capacity.
      */
     static const size_t sInlineCapacity =
-        JSUtils::min<JSUtils::max<N, sizeof(BufferPtrs) / sizeof(T)>::result,
-                     sMaxInlineBytes / sizeof(T)>::result;
+        tl::Clamp<N, sizeof(BufferPtrs) / sizeof(T),
+                          sMaxInlineBytes / sizeof(T)>::result;
+
+    /* Calculate inline buffer size; avoid 0-sized array. */
+    static const size_t sInlineBytes =
+        tl::Max<1, sInlineCapacity * sizeof(T)>::result;
 
     /* member data */
-
-    JSContext *mCx;
 
     size_t mLengthOrCapacity;
     bool usingInlineStorage() const { return mLengthOrCapacity <= sInlineCapacity; }
 
     union {
         BufferPtrs ptrs;
-        char mBuf[sInlineCapacity * sizeof(T)];
+        char mBuf[sInlineBytes];
     } u;
 
     /* Only valid when usingInlineStorage() */
@@ -386,39 +294,16 @@ class JSTempVector
     }
 
 #ifdef DEBUG
-    bool mInProgress;
+    friend class ReentrancyGuard;
+    bool mEntered;
 #endif
 
-    class ReentrancyGuard {
-        JSTempVector &mVec;
-      public:
-        ReentrancyGuard(JSTempVector &v)
-          : mVec(v)
-        {
-#ifdef DEBUG
-            JS_ASSERT(!mVec.mInProgress);
-            mVec.mInProgress = true;
-#endif
-        }
-        ~ReentrancyGuard()
-        {
-#ifdef DEBUG
-            mVec.mInProgress = false;
-#endif
-        }
-    };
-
-    JSTempVector(const JSTempVector &);
-    JSTempVector &operator=(const JSTempVector &);
+    Vector(const Vector &);
+    Vector &operator=(const Vector &);
 
   public:
-    JSTempVector(JSContext *cx)
-      : mCx(cx), mLengthOrCapacity(0)
-#ifdef DEBUG
-        , mInProgress(false)
-#endif
-    {}
-    ~JSTempVector();
+    Vector(AllocPolicy = AllocPolicy());
+    ~Vector();
 
     /* accessors */
 
@@ -435,42 +320,42 @@ class JSTempVector
     }
 
     T *begin() {
-        JS_ASSERT(!mInProgress);
+        JS_ASSERT(!mEntered);
         return usingInlineStorage() ? inlineBegin() : heapBegin();
     }
 
     const T *begin() const {
-        JS_ASSERT(!mInProgress);
+        JS_ASSERT(!mEntered);
         return usingInlineStorage() ? inlineBegin() : heapBegin();
     }
 
     T *end() {
-        JS_ASSERT(!mInProgress);
+        JS_ASSERT(!mEntered);
         return usingInlineStorage() ? inlineEnd() : heapEnd();
     }
 
     const T *end() const {
-        JS_ASSERT(!mInProgress);
+        JS_ASSERT(!mEntered);
         return usingInlineStorage() ? inlineEnd() : heapEnd();
     }
 
     T &operator[](size_t i) {
-        JS_ASSERT(!mInProgress && i < length());
+        JS_ASSERT(!mEntered && i < length());
         return begin()[i];
     }
 
     const T &operator[](size_t i) const {
-        JS_ASSERT(!mInProgress && i < length());
+        JS_ASSERT(!mEntered && i < length());
         return begin()[i];
     }
 
     T &back() {
-        JS_ASSERT(!mInProgress && !empty());
+        JS_ASSERT(!mEntered && !empty());
         return *(end() - 1);
     }
 
     const T &back() const {
-        JS_ASSERT(!mInProgress && !empty());
+        JS_ASSERT(!mEntered && !empty());
         return *(end() - 1);
     }
 
@@ -484,7 +369,7 @@ class JSTempVector
 
     /*
      * Grow the vector by incr elements.  If T is a POD (as judged by
-     * JSUtils::IsPodType), leave as uninitialized memory.  Otherwise, default
+     * tl::IsPodType), leave as uninitialized memory.  Otherwise, default
      * construct each element.
      */
     bool growBy(size_t incr);
@@ -502,17 +387,17 @@ class JSTempVector
     void popBack();
 
     /*
-     * Transfers ownership of the internal buffer used by JSTempVector to the
-     * caller. After this call, the JSTempVector is empty. Since the returned
-     * buffer may need to be allocated (if the elements are currently
-     * stored in-place), the call can fail, returning NULL.
+     * Transfers ownership of the internal buffer used by Vector to the caller.
+     * After this call, the Vector is empty. Since the returned buffer may need
+     * to be allocated (if the elements are currently stored in-place), the
+     * call can fail, returning NULL.
      *
      * N.B. Although a T*, only the range [0, length()) is constructed.
      */
     T *extractRawBuffer();
 
     /*
-     * Transfer ownership of an array of objects into the JSTempVector.
+     * Transfer ownership of an array of objects into the Vector.
      * N.B. This call assumes that there are no uninitialized elements in the
      *      passed array.
      */
@@ -526,26 +411,35 @@ class JSTempVector
  * literal to a vector. This could not be done generically since one must take
  * care not to append the terminating '\0'.
  */
-template <class T, size_t N, size_t ArrayLength>
+template <class T, size_t N, class AP, size_t ArrayLength>
 bool
-js_AppendLiteral(JSTempVector<T,N> &v, const char (&array)[ArrayLength])
+js_AppendLiteral(Vector<T,N,AP> &v, const char (&array)[ArrayLength])
 {
     return v.append(array, array + ArrayLength - 1);
 }
 
 
-/* JSTempVector Implementation */
+/* Vector Implementation */
 
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline
-JSTempVector<T,N>::~JSTempVector()
+Vector<T,N,AP>::Vector(AP ap)
+  : AP(ap), mLengthOrCapacity(0)
+#ifdef DEBUG
+    , mEntered(false)
+#endif
+{}
+
+template <class T, size_t N, class AP>
+inline
+Vector<T,N,AP>::~Vector()
 {
     ReentrancyGuard g(*this);
     if (usingInlineStorage()) {
         Impl::destroy(inlineBegin(), inlineEnd());
     } else {
         Impl::destroy(heapBegin(), heapEnd());
-        mCx->free(heapBegin());
+        this->free(heapBegin());
     }
 }
 
@@ -553,10 +447,10 @@ JSTempVector<T,N>::~JSTempVector()
  * Calculate a new capacity that is at least lengthInc greater than
  * curLength and check for overflow.
  */
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline bool
-JSTempVector<T,N>::calculateNewCapacity(size_t curLength, size_t lengthInc,
-                                        size_t &newCap)
+Vector<T,N,AP>::calculateNewCapacity(size_t curLength, size_t lengthInc,
+                                     size_t &newCap)
 {
     size_t newMinCap = curLength + lengthInc;
 
@@ -565,23 +459,20 @@ JSTempVector<T,N>::calculateNewCapacity(size_t curLength, size_t lengthInc,
      * multiplication by sizeof(T).
      */
     if (newMinCap < curLength ||
-        newMinCap & JSUtils::MulOverflowMask<2 * sizeof(T)>::result) {
-        js_ReportAllocationOverflow(mCx);
+        newMinCap & tl::MulOverflowMask<2 * sizeof(T)>::result) {
+        this->reportAllocOverflow();
         return false;
     }
 
     /* Round up to next power of 2. */
-    size_t newCapLog2;
-    JS_CEILING_LOG2(newCapLog2, newMinCap);
-    JS_ASSERT(newCapLog2 < JSUtils::BitSize<size_t>::result);
-    newCap = size_t(1) << newCapLog2;
+    newCap = RoundUpPow2(newMinCap);
 
     /*
      * Do not allow a buffer large enough that the expression ((char *)end() -
      * (char *)begin()) overflows ptrdiff_t. See Bug 510319.
      */
-    if (newCap & JSUtils::UnsafeRangeSizeMask<T>::result) {
-        js_ReportAllocationOverflow(mCx);
+    if (newCap & tl::UnsafeRangeSizeMask<T>::result) {
+        this->reportAllocOverflow();
         return false;
     }
     return true;
@@ -591,9 +482,9 @@ JSTempVector<T,N>::calculateNewCapacity(size_t curLength, size_t lengthInc,
  * This function will grow the current heap capacity to have capacity
  * (heapLength() + lengthInc) and fail on OOM or integer overflow.
  */
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline bool
-JSTempVector<T,N>::growHeapStorageBy(size_t lengthInc)
+Vector<T,N,AP>::growHeapStorageBy(size_t lengthInc)
 {
     size_t newCap;
     return calculateNewCapacity(heapLength(), lengthInc, newCap) &&
@@ -605,16 +496,16 @@ JSTempVector<T,N>::growHeapStorageBy(size_t lengthInc)
  * lengthInc()), move all elements in the inline buffer to this new buffer,
  * and fail on OOM or integer overflow.
  */
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline bool
-JSTempVector<T,N>::convertToHeapStorage(size_t lengthInc)
+Vector<T,N,AP>::convertToHeapStorage(size_t lengthInc)
 {
     size_t newCap;
     if (!calculateNewCapacity(inlineLength(), lengthInc, newCap))
         return false;
 
     /* Allocate buffer. */
-    T *newBuf = reinterpret_cast<T *>(mCx->malloc(newCap * sizeof(T)));
+    T *newBuf = reinterpret_cast<T *>(this->malloc(newCap * sizeof(T)));
     if (!newBuf)
         return false;
 
@@ -630,9 +521,9 @@ JSTempVector<T,N>::convertToHeapStorage(size_t lengthInc)
     return true;
 }
 
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline bool
-JSTempVector<T,N>::reserve(size_t request)
+Vector<T,N,AP>::reserve(size_t request)
 {
     ReentrancyGuard g(*this);
     if (usingInlineStorage()) {
@@ -645,9 +536,9 @@ JSTempVector<T,N>::reserve(size_t request)
     return true;
 }
 
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline void
-JSTempVector<T,N>::shrinkBy(size_t incr)
+Vector<T,N,AP>::shrinkBy(size_t incr)
 {
     ReentrancyGuard g(*this);
     JS_ASSERT(incr <= length());
@@ -660,16 +551,16 @@ JSTempVector<T,N>::shrinkBy(size_t incr)
     }
 }
 
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline bool
-JSTempVector<T,N>::growBy(size_t incr)
+Vector<T,N,AP>::growBy(size_t incr)
 {
     ReentrancyGuard g(*this);
     if (usingInlineStorage()) {
         size_t freespace = sInlineCapacity - inlineLength();
         if (incr <= freespace) {
             T *newend = inlineEnd() + incr;
-            if (!JSUtils::IsPodType<T>::result)
+            if (!tl::IsPodType<T>::result)
                 Impl::initialize(inlineEnd(), newend);
             inlineLength() += incr;
             JS_ASSERT(usingInlineStorage());
@@ -690,15 +581,15 @@ JSTempVector<T,N>::growBy(size_t incr)
     /* We are !usingInlineStorage(). Initialize new elements. */
     JS_ASSERT(heapCapacity() - heapLength() >= incr);
     T *newend = heapEnd() + incr;
-    if (!JSUtils::IsPodType<T>::result)
+    if (!tl::IsPodType<T>::result)
         Impl::initialize(heapEnd(), newend);
     heapEnd() = newend;
     return true;
 }
 
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline bool
-JSTempVector<T,N>::resize(size_t newLength)
+Vector<T,N,AP>::resize(size_t newLength)
 {
     size_t curLength = length();
     if (newLength > curLength)
@@ -707,9 +598,9 @@ JSTempVector<T,N>::resize(size_t newLength)
     return true;
 }
 
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline void
-JSTempVector<T,N>::clear()
+Vector<T,N,AP>::clear()
 {
     ReentrancyGuard g(*this);
     if (usingInlineStorage()) {
@@ -722,9 +613,9 @@ JSTempVector<T,N>::clear()
     }
 }
 
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline bool
-JSTempVector<T,N>::append(const T &t)
+Vector<T,N,AP>::append(const T &t)
 {
     ReentrancyGuard g(*this);
     if (usingInlineStorage()) {
@@ -747,9 +638,9 @@ JSTempVector<T,N>::append(const T &t)
     return true;
 }
 
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline bool
-JSTempVector<T,N>::appendN(const T &t, size_t needed)
+Vector<T,N,AP>::appendN(const T &t, size_t needed)
 {
     ReentrancyGuard g(*this);
     if (usingInlineStorage()) {
@@ -775,13 +666,13 @@ JSTempVector<T,N>::appendN(const T &t, size_t needed)
     return true;
 }
 
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 template <class U>
 inline bool
-JSTempVector<T,N>::append(const U *insBegin, const U *insEnd)
+Vector<T,N,AP>::append(const U *insBegin, const U *insEnd)
 {
     ReentrancyGuard g(*this);
-    size_t needed = JSUtils::PointerRangeSize(insBegin, insEnd);
+    size_t needed = PointerRangeSize(insBegin, insEnd);
     if (usingInlineStorage()) {
         size_t freespace = sInlineCapacity - inlineLength();
         if (needed <= freespace) {
@@ -805,17 +696,17 @@ JSTempVector<T,N>::append(const U *insBegin, const U *insEnd)
     return true;
 }
 
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 template <class U>
 inline bool
-JSTempVector<T,N>::append(const U *insBegin, size_t length)
+Vector<T,N,AP>::append(const U *insBegin, size_t length)
 {
     return this->append(insBegin, insBegin + length);
 }
 
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline void
-JSTempVector<T,N>::popBack()
+Vector<T,N,AP>::popBack()
 {
     ReentrancyGuard g(*this);
     JS_ASSERT(!empty());
@@ -828,12 +719,12 @@ JSTempVector<T,N>::popBack()
     }
 }
 
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline T *
-JSTempVector<T,N>::extractRawBuffer()
+Vector<T,N,AP>::extractRawBuffer()
 {
     if (usingInlineStorage()) {
-        T *ret = reinterpret_cast<T *>(mCx->malloc(inlineLength() * sizeof(T)));
+        T *ret = reinterpret_cast<T *>(this->malloc(inlineLength() * sizeof(T)));
         if (!ret)
             return NULL;
         Impl::copyConstruct(ret, inlineBegin(), inlineEnd());
@@ -847,9 +738,9 @@ JSTempVector<T,N>::extractRawBuffer()
     return ret;
 }
 
-template <class T, size_t N>
+template <class T, size_t N, class AP>
 inline void
-JSTempVector<T,N>::replaceRawBuffer(T *p, size_t length)
+Vector<T,N,AP>::replaceRawBuffer(T *p, size_t length)
 {
     ReentrancyGuard g(*this);
 
@@ -859,7 +750,7 @@ JSTempVector<T,N>::replaceRawBuffer(T *p, size_t length)
         inlineLength() = 0;
     } else {
         Impl::destroy(heapBegin(), heapEnd());
-        mCx->free(heapBegin());
+        this->free(heapBegin());
     }
 
     /* Take in the new buffer. */
@@ -871,12 +762,14 @@ JSTempVector<T,N>::replaceRawBuffer(T *p, size_t length)
         mLengthOrCapacity = length;  /* marks us as usingInlineStorage() */
         Impl::copyConstruct(inlineBegin(), p, p + length);
         Impl::destroy(p, p + length);
-        mCx->free(p);
+        this->free(p);
     } else {
         mLengthOrCapacity = length;  /* marks us as !usingInlineStorage() */
         heapBegin() = p;
         heapEnd() = heapBegin() + length;
     }
 }
+
+}  /* namespace js */
 
 #endif /* jsvector_h_ */

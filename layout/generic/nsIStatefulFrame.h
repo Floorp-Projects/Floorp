@@ -14,7 +14,7 @@ class nsPresState;
 class nsIStatefulFrame
 {
  public: 
-  NS_DECLARE_FRAME_ACCESSOR(nsIStatefulFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsIStatefulFrame)
 
   // If you create a special type stateful frame (e.g. scroll) that needs
   // to be captured outside of the standard pass through the frames, you'll need

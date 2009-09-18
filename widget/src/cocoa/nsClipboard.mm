@@ -432,7 +432,9 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       }
 
       nsRefPtr<gfxImageSurface> currentFrame;
-      if (NS_FAILED(image->CopyCurrentFrame(getter_AddRefs(currentFrame))))
+      if (NS_FAILED(image->CopyFrame(imgIContainer::FRAME_CURRENT,
+                                     imgIContainer::FLAG_SYNC_DECODE,
+                                     getter_AddRefs(currentFrame))))
         continue;
 
       PRInt32 height = currentFrame->Height();

@@ -98,8 +98,10 @@
 // mInPrivateBrowsing member
 #define PRIVATEBROWSING_NOTINITED (PRBool(0xffffffff))
 
-#define PLACES_INIT_COMPLETE_EVENT_TOPIC "places-init-complete"
-#define PLACES_DB_LOCKED_EVENT_TOPIC "places-database-locked"
+#define PLACES_INIT_COMPLETE_TOPIC "places-init-complete"
+#define PLACES_DB_LOCKED_TOPIC "places-database-locked"
+#define PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC "places-autocomplete-feedback-updated"
+#define PLACES_VACUUM_STARTING_TOPIC "places-vacuum-starting"
 
 class mozIAnnotationService;
 class nsNavHistory;
@@ -429,6 +431,15 @@ protected:
    * Finalize all internal statements.
    */
   nsresult FinalizeStatements();
+
+  /**
+   * Analyzes the database and VACUUM it, if needed.
+   */
+  NS_HIDDEN_(nsresult) DecayFrecency();
+  /**
+   * Decays frecency and inputhistory values.
+   */
+  NS_HIDDEN_(nsresult) VacuumDatabase();
 
   // nsICharsetResolver
   NS_DECL_NSICHARSETRESOLVER

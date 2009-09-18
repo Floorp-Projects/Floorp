@@ -51,6 +51,8 @@ protected:
     nsSVGPaintServerFrameBase(aContext) {}
 
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   /*
    * Configure paint server prior to rendering
    * @return PR_FALSE to skip rendering

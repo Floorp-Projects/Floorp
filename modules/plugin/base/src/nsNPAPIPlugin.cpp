@@ -267,6 +267,8 @@ nsNPAPIPlugin::CheckClassInitialized(void)
   CALLBACKS.getauthenticationinfo = ((NPN_GetAuthenticationInfoPtr)_getauthenticationinfo);
   CALLBACKS.scheduletimer = ((NPN_ScheduleTimerPtr)_scheduletimer);
   CALLBACKS.unscheduletimer = ((NPN_UnscheduleTimerPtr)_unscheduletimer);
+  CALLBACKS.popupcontextmenu = ((NPN_PopUpContextMenuPtr)_popupcontextmenu);
+  CALLBACKS.convertpoint = ((NPN_ConvertPointPtr)_convertpoint);
 
   if (!sPluginThreadAsyncCallLock)
     sPluginThreadAsyncCallLock = nsAutoLock::NewLock("sPluginThreadAsyncCallLock");
@@ -708,15 +710,14 @@ nsNPAPIPlugin::GetMIMEDescription(const char* *resultingDesc)
 }
 
 nsresult
-nsNPAPIPlugin::GetValue(nsPluginVariable variable, void *value)
+nsNPAPIPlugin::GetValue(NPPVariable variable, void *value)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsNPAPIPlugin::GetValue called: this=%p, variable=%d\n", this, variable));
 
   NPError rv = NPERR_NO_ERROR;;
-
-  NPError (*npGetValue)(void*, nsPluginVariable, void*) = 
-    (NPError (*)(void*, nsPluginVariable, void*))
+  NPError (*npGetValue)(void*, NPPVariable, void*) = 
+    (NPError (*)(void*, NPPVariable, void*))
     fLibrary->FindFunctionSymbol("NP_GetValue");
   if (npGetValue) {
     rv = npGetValue(nsnull, variable, value);
@@ -1115,7 +1116,7 @@ _invalidaterect(NPP npp, NPRect *invalidRect)
 
   PluginDestructionGuard guard(inst);
 
-  inst->InvalidateRect((nsPluginRect *)invalidRect);
+  inst->InvalidateRect((NPRect *)invalidRect);
 }
 
 void NP_CALLBACK
@@ -1138,7 +1139,7 @@ _invalidateregion(NPP npp, NPRegion invalidRegion)
 
   PluginDestructionGuard guard(inst);
 
-  inst->InvalidateRegion((nsPluginRegion)invalidRegion);
+  inst->InvalidateRegion((NPRegion)invalidRegion);
 }
 
 void NP_CALLBACK
@@ -1226,16 +1227,16 @@ _getpluginelement(NPP npp)
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getpluginelement called from the wrong thread\n"));
     return nsnull;
   }
-  nsIDOMElement *elementp = nsnull;
-  NPError nperr = _getvalue(npp, NPNVDOMElement, &elementp);
 
-  if (nperr != NPERR_NO_ERROR) {
+  nsNPAPIPluginInstance* inst = static_cast<nsNPAPIPluginInstance*>(npp->ndata);
+  if (!inst)
     return nsnull;
-  }
 
-  // Pass ownership of elementp to element
   nsCOMPtr<nsIDOMElement> element;
-  element.swap(elementp);
+  inst->GetDOMElement(getter_AddRefs(element));
+
+  if (!element)
+    return nsnull;
 
   JSContext *cx = GetJSContextFromNPP(npp);
   NS_ENSURE_TRUE(cx, nsnull);
@@ -1904,10 +1905,10 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     if (npp) {
       nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
       PRBool windowless = PR_FALSE;
-      inst->GetValue(nsPluginInstanceVariable_WindowlessBool, &windowless);
+      inst->IsWindowless(&windowless);
       NPBool needXEmbed = PR_FALSE;
       if (!windowless) {
-        inst->GetValue((nsPluginInstanceVariable)NPPVpluginNeedsXEmbed, &needXEmbed);
+        inst->GetValueFromPlugin(NPPVpluginNeedsXEmbed, &needXEmbed);
       }
       if (windowless || needXEmbed) {
         (*(Display **)result) = GDK_DISPLAY();
@@ -2037,7 +2038,9 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     if (npp) {
       nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance*)npp->ndata;
       if (inst) {
-        *(NPDrawingModel*)result = inst->GetDrawingModel();
+        NPDrawingModel drawingModel;
+        inst->GetDrawingModel((PRInt32*)&drawingModel);
+        *(NPDrawingModel*)result = drawingModel;
         return NPERR_NO_ERROR;
       }
     }
@@ -2057,6 +2060,19 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   case NPNVsupportsCoreGraphicsBool: {
     *(NPBool*)result = PR_TRUE;
     
+    return NPERR_NO_ERROR;
+  }
+
+#ifndef NP_NO_CARBON
+  case NPNVsupportsCarbonBool: {
+    *(NPBool*)result = PR_TRUE;
+
+    return NPERR_NO_ERROR;
+  }
+#endif
+  case NPNVsupportsCocoaBool: {
+    *(NPBool*)result = PR_TRUE;
+
     return NPERR_NO_ERROR;
   }
 #endif
@@ -2185,6 +2201,16 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
         return NPERR_GENERIC_ERROR;
       }
     }
+
+    case NPPVpluginEventModel: {
+      if (inst) {
+        inst->SetEventModel((NPEventModel)NS_PTR_TO_INT32(result));
+        return NPERR_NO_ERROR;
+      }
+      else {
+        return NPERR_GENERIC_ERROR;
+      }
+    }
 #endif
 
     default:
@@ -2216,15 +2242,15 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
 
   nsNPAPIPluginStreamListener* streamlistener = (nsNPAPIPluginStreamListener*)pstream->ndata;
 
-  nsPluginStreamType streamtype = nsPluginStreamType_Normal;
+  PRInt32 streamtype = NP_NORMAL;
 
   streamlistener->GetStreamType(&streamtype);
 
-  if (streamtype != nsPluginStreamType_Seek)
+  if (streamtype != NP_SEEK)
     return NPERR_STREAM_NOT_SEEKABLE;
 
   if (streamlistener->mStreamInfo)
-    streamlistener->mStreamInfo->RequestRead((nsByteRange *)rangeList);
+    streamlistener->mStreamInfo->RequestRead((NPByteRange *)rangeList);
 
   return NS_OK;
 }
@@ -2593,6 +2619,26 @@ _unscheduletimer(NPP instance, uint32_t timerID)
     return;
 
   inst->UnscheduleTimer(timerID);
+}
+
+NPError NP_CALLBACK
+_popupcontextmenu(NPP instance, NPMenu* menu)
+{
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+  if (!inst)
+    return NPERR_GENERIC_ERROR;
+
+  return inst->PopUpContextMenu(menu);
+}
+
+NPBool NP_CALLBACK
+_convertpoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace)
+{
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+  if (!inst)
+    return PR_FALSE;
+
+  return inst->ConvertPoint(sourceX, sourceY, sourceSpace, destX, destY, destSpace);
 }
 
 void

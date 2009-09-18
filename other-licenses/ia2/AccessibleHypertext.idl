@@ -4,6 +4,7 @@
  *
  *  IAccessible2 IDL Specification
  *
+ *  Copyright (c) Linux Foundation 2007, 2008
  *  Copyright (c) IBM Corp. 2006
  *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
  *
@@ -31,10 +32,10 @@ import "AccessibleHyperlink.idl";
 
 /** @brief This interface exposes information about hypertext in a document.
 
- The IAccessibleHypertext interface is the main interface to expose
+ The %IAccessibleHypertext interface is the main interface to expose
   hyperlinks in a document, typically a text document, that are used 
   to reference other documents.  A typical implementation is to implement 
-  this interface the smallest text object such as a paragraph of text.
+  this interface on the smallest text object such as a paragraph of text.
 */
 [object, uuid(6B4F8BBF-F1F2-418a-B35E-A195BC4103B9)]
 interface IAccessibleHypertext : IAccessibleText
@@ -45,6 +46,7 @@ interface IAccessibleHypertext : IAccessibleText
    @param [out] hyperlinkCount
     The number of links and link groups within this hypertext paragraph.  
     Returns 0 if there is no link.
+   @retval S_OK
   */
   [propget] HRESULT nHyperlinks
     (
@@ -61,6 +63,8 @@ interface IAccessibleHypertext : IAccessibleText
     If the given index is valid, i.e. lies in the interval from 0 to the number 
     of links minus one, a reference to the specified hyperlink object is returned.  
     If the index is invalid then a NULL pointer is returned.
+   @retval S_OK
+   @retval E_INVALIDARG if bad [in] passed, [out] value is NULL 
   */
   [propget] HRESULT hyperlink
     (
@@ -79,6 +83,9 @@ interface IAccessibleHypertext : IAccessibleText
    @param [out] hyperlinkIndex
     Returns the 0 based index of the hyperlink that is associated with this 
 	character index, or -1 if charIndex is not on a link.
+   @retval S_OK
+   @retval S_FALSE if there is nothing to return, [out] value is -1
+   @retval E_INVALIDARG if bad [in] passed, [out] value is NULL 
   */
   [propget] HRESULT hyperlinkIndex
     (

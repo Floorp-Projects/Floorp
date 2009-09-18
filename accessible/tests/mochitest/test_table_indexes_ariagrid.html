@@ -30,6 +30,14 @@
       ];
       testTableIndexes("grid", idxes);
 
+      //////////////////////////////////////////////////////////////////////////
+      // a bit crazy ARIA grid
+      idxes = [
+        [0, 1],
+        [2, 3]
+      ];
+      testTableIndexes("grid2", idxes);
+
       SimpleTest.finish();
     }
 
@@ -42,6 +50,10 @@
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=386813"
      title="support nsIAccessibleTable on ARIA grid/treegrid">Mozilla Bug 386813</a>
+  <a target="_blank"
+     title="nsHTMLTableCellAccessible is used in dojo's crazy ARIA grid"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=513848">Mozilla Bug 513848</a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -50,7 +62,7 @@
   <div role="grid" id="grid">
     <div role="row">
       <span role="columnheader">column1</span>
-      <span id="a" role="columnheader">column2</span>
+      <span role="columnheader">column2</span>
       <span role="columnheader">column3</span>
     </div>
     <div role="row">
@@ -67,6 +79,25 @@
       <span role="rowheader">row3</span>
       <span role="gridcell">cell5</span>
       <span role="gridcell">cell6</span>
+    </div>
+  </div>
+
+  <div role="grid" id="grid2">
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td role="columnheader">header1</td>
+          <td role="columnheader">header2</td>
+        </tr>
+      </table>
+    </div>
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td role="gridcell">cell1</td>
+          <td role="gridcell" tabindex="-1">cell2</td>
+        </tr>
+      </table>
     </div>
   </div>
 

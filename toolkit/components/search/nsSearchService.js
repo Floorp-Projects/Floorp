@@ -221,6 +221,12 @@ __defineGetter__("gPrefSvc", function() {
                          getService(Ci.nsIPrefBranch);
 });
 
+__defineGetter__("NetUtil", function() {
+  delete this.NetUtil;
+  Components.utils.import("resource://gre/modules/NetUtil.jsm");
+  return NetUtil;
+});
+
 /**
  * Prefixed to all search debug output.
  */
@@ -440,7 +446,7 @@ function closeSafeOutputStream(aFOS) {
  */
 function makeURI(aURLSpec, aCharset) {
   try {
-    return gIoSvc.newURI(aURLSpec, aCharset, null);
+    return NetUtil.newURI(aURLSpec, aCharset);
   } catch (ex) { }
 
   return null;
@@ -2466,24 +2472,26 @@ SearchService.prototype = {
       cache.directories[parent.path].engines.push(engine._serializeToJSON(true));
     }
 
-    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    let stream = Cc["@mozilla.org/network/file-output-stream;1"].
-                 createInstance(Ci.nsIFileOutputStream);
-    let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
-                    createInstance(Ci.nsIConverterOutputStream);
+    let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
+                  createInstance(Ci.nsIFileOutputStream);
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                    createInstance(Ci.nsIScriptableUnicodeConverter);
     let cacheFile = getDir(NS_APP_USER_PROFILE_50_DIR);
     cacheFile.append("search.json");
 
     try {
       LOG("_buildCache: Writing to cache file.");
-      stream.init(cacheFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), PERMS_FILE, 0);
-      converter.init(stream, "UTF-8", 0, 0x0000);
-      converter.writeString(json.encode(cache));
+      ostream.init(cacheFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), PERMS_FILE, 0);
+      converter.charset = "UTF-8";
+      let data = converter.convertToInputStream(JSON.stringify(cache));
+
+      // Write to the cache file asynchronously
+      NetUtil.asyncCopy(data, ostream, function(rv) {
+        if (!Components.isSuccessCode(rv))
+          LOG("_buildCache: failure during asyncCopy: " + rv);
+      });
     } catch (ex) {
       LOG("_buildCache: Could not write to cache file: " + ex);
-    } finally {
-      converter.close();
-      stream.close();
     }
   },
 

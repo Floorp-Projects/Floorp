@@ -502,17 +502,17 @@ function synthesizeDrop(element, dragData, effectAllowed)
   synthesizeMouse(element, 10, 10, { type: "mouseup" });
 
   var event = document.createEvent("DragEvents");
-  event.initDragEvent("dragover", true, true, window, 0, dataTransfer);
+  event.initDragEvent("dragover", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
   if (element.dispatchEvent(event))
     return "none";
 
   event = document.createEvent("DragEvents");
-  event.initDragEvent("dragexit", true, true, window, 0, dataTransfer);
+  event.initDragEvent("dragexit", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
   element.dispatchEvent(event);
 
   if (dataTransfer.dropEffect != "none") {
     event = document.createEvent("DragEvents");
-    event.initDragEvent("drop", true, true, window, 0, dataTransfer);
+    event.initDragEvent("drop", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
     element.dispatchEvent(event);
   }
 

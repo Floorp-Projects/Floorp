@@ -356,6 +356,28 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     return err;
   }
 
+  NPVariant variantTrue;
+  BOOLEAN_TO_NPVARIANT(true, variantTrue);
+
+  // Set a property on NPNVPluginElementNPObject
+  NPObject* o = NULL;
+  err = NPN_GetValue(instance, NPNVPluginElementNPObject, &o);
+  if (err == NPERR_NO_ERROR) {
+    NPN_SetProperty(instance, o,
+                    NPN_GetStringIdentifier("pluginFoundElement"), &variantTrue);
+    NPN_ReleaseObject(o);
+    o = NULL;
+  }
+  
+  // Set a property on NPNVWindowNPObject
+  err = NPN_GetValue(instance, NPNVWindowNPObject, &o);
+  if (err == NPERR_NO_ERROR) {
+    NPN_SetProperty(instance, o,
+                    NPN_GetStringIdentifier("pluginFoundWindow"), &variantTrue);
+    NPN_ReleaseObject(o);
+    o = NULL;
+  }
+
   ++sInstanceCount;
   return NPERR_NO_ERROR;
 }
@@ -366,11 +388,11 @@ NPP_Destroy(NPP instance, NPSavedData** save)
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
   pluginInstanceShutdown(instanceData);
   NPN_ReleaseObject(instanceData->scriptableObject);
-  free(instanceData);
 
   if (sCurrentInstanceCountWatchGeneration == instanceData->instanceCountWatchGeneration) {
     --sInstanceCount;
   }
+  free(instanceData);
 
   return NPERR_NO_ERROR;
 }

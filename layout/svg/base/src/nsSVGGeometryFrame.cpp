@@ -42,6 +42,8 @@
 #include "gfxContext.h"
 #include "nsSVGEffects.h"
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGGeometryFrame)
+
 //----------------------------------------------------------------------
 // nsIFrame methods
 

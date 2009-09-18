@@ -597,8 +597,8 @@ public:
                    AppUnitsToGfxUnits(aAppRect.height)); }
 
   nscoord TwipsToAppUnits(PRInt32 aTwips) const
-  { return NSToCoordRound(NS_TWIPS_TO_INCHES(aTwips) *
-                          mDeviceContext->AppUnitsPerInch()); }
+  { return NSCoordSaturatingMultiply(mDeviceContext->AppUnitsPerInch(),
+                                     NS_TWIPS_TO_INCHES(aTwips)); }
 
   // Margin-specific version, since they often need TwipsToAppUnits
   nsMargin TwipsToAppUnits(const nsIntMargin &marginInTwips) const
@@ -818,6 +818,16 @@ public:
     mCrossDocDirtyRegion.SetEmpty();
   }
 
+  PRBool IsProcessingAnimationStyleChange() const {
+    return mProcessingAnimationStyleChange;
+  }
+
+  void SetProcessingAnimationStyleChange(PRBool aProcessing) {
+    NS_ASSERTION(aProcessing != mProcessingAnimationStyleChange,
+                 "should never nest");
+    mProcessingAnimationStyleChange = aProcessing;
+  }
+
   /**
    * Notify the prescontext that the presshell is about to reflow a reflow root.
    * The single argument indicates whether this reflow should be interruptible.
@@ -870,6 +880,13 @@ public:
    */
   PRBool HasPendingInterrupt() { return mHasPendingInterrupt; }
 
+#ifdef MOZ_SMIL
+  /**
+   * Indicates that the given element's SMIL Override Style has changed,
+   * and as a result, we need to update our display.
+   */
+  void SMILOverrideStyleChanged(nsIContent* aContent);
+#endif // MOZ_SMIL
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();
@@ -1024,10 +1041,10 @@ protected:
   // the document rather than to change the document's dimensions
   unsigned              mSupressResizeReflow : 1;
 
-#ifdef IBMBIDI
   unsigned              mIsVisual : 1;
 
-#endif
+  unsigned              mProcessingAnimationStyleChange : 1;
+
 #ifdef DEBUG
   PRBool                mInitialized;
 #endif

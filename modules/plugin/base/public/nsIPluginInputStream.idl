@@ -48,5 +48,5 @@ interface nsIPluginInputStream : nsIInputStream {
    */
   void getLastModified(out unsigned long aResult);
 
-  void requestRead(out nsByteRange aRangeList);
+  void requestRead(out NPByteRange aRangeList);
 };

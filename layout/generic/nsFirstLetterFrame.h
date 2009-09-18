@@ -46,6 +46,8 @@
 
 class nsFirstLetterFrame : public nsFirstLetterFrameSuper {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsFirstLetterFrame(nsStyleContext* aContext) : nsHTMLContainerFrame(aContext) {}
 
   NS_IMETHOD Init(nsIContent*      aContent,

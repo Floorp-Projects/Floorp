@@ -44,6 +44,7 @@ let Cr = Components.results;
 
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
+const GUID_ANNO = "placesInternal/GUID";
 
 const CLASS_ID = Components.ID("c0844a84-5a12-4808-80a8-809cb002bb4f");
 const CONTRACT_ID = "@mozilla.org/browser/placesTransactionsService;1";
@@ -431,6 +432,9 @@ placesCreateFolderTransactions.prototype = {
                                                          this.childTransactions);
       aggregateTxn.doTransaction();
     }
+
+    if (this._GUID)
+      PlacesUtils.bookmarks.setItemGUID(this._id, this._GUID);
   },
 
   undoTransaction: function PCFT_undoTransaction() {
@@ -440,8 +444,12 @@ placesCreateFolderTransactions.prototype = {
       aggregateTxn.undoTransaction();
     }
 
+    // If a GUID exists for this item, preserve it before removing the item.
+    if (PlacesUtils.annotations.itemHasAnnotation(this._id, GUID_ANNO))
+      this._GUID = PlacesUtils.bookmarks.getItemGUID(this._id);
+
     // Remove item only after all child transactions have been reverted.
-    PlacesUtils.bookmarks.removeFolder(this._id);
+    PlacesUtils.bookmarks.removeItem(this._id);
   }
 };
 
@@ -482,6 +490,8 @@ placesCreateItemTransactions.prototype = {
                                                          this.childTransactions);
       aggregateTxn.doTransaction();
     }
+    if (this._GUID)
+      PlacesUtils.bookmarks.setItemGUID(this._id, this._GUID);
   },
 
   undoTransaction: function PCIT_undoTransaction() {
@@ -491,6 +501,10 @@ placesCreateItemTransactions.prototype = {
                                                          this.childTransactions);
       aggregateTxn.undoTransaction();
     }
+
+    // If a GUID exists for this item, preserve it before removing the item.
+    if (PlacesUtils.annotations.itemHasAnnotation(this._id, GUID_ANNO))
+      this._GUID = PlacesUtils.bookmarks.getItemGUID(this._id);
 
     // Remove item only after all child transactions have been reverted.
     PlacesUtils.bookmarks.removeItem(this._id);
@@ -514,9 +528,15 @@ placesCreateSeparatorTransactions.prototype = {
   doTransaction: function PCST_doTransaction() {
     this._id = PlacesUtils.bookmarks
                           .insertSeparator(this.container, this._index);
+    if (this._GUID)
+      PlacesUtils.bookmarks.setItemGUID(this._id, this._GUID);
   },
 
   undoTransaction: function PCST_undoTransaction() {
+    // If a GUID exists for this item, preserve it before removing the item.
+    if (PlacesUtils.annotations.itemHasAnnotation(this._id, GUID_ANNO))
+      this._GUID = PlacesUtils.bookmarks.getItemGUID(this._id);
+
     PlacesUtils.bookmarks.removeItem(this._id);
   }
 };
@@ -546,9 +566,15 @@ placesCreateLivemarkTransactions.prototype = {
                                                     this._index);
     if (this._annotations && this._annotations.length > 0)
       PlacesUtils.setAnnotationsForItem(this._id, this._annotations);
+    if (this._GUID)
+      PlacesUtils.bookmarks.setItemGUID(this._id, this._GUID);
   },
 
   undoTransaction: function PCLT_undoTransaction() {
+    // If a GUID exists for this item, preserve it before removing the item.
+    if (PlacesUtils.annotations.itemHasAnnotation(this._id, GUID_ANNO))
+      this._GUID = PlacesUtils.bookmarks.getItemGUID(this._id);
+
     PlacesUtils.bookmarks.removeFolder(this._id);
   }
 };
@@ -1099,12 +1125,18 @@ placesTagURITransaction.prototype = {
                                    this._uri,
                                    PlacesUtils.bookmarks.DEFAULT_INDEX,
                                    PlacesUtils.history.getPageTitle(this._uri));
+      if (this._GUID)
+        PlacesUtils.bookmarks.setItemGUID(this._unfiledItemId, this._GUID);
     }
     PlacesUtils.tagging.tagURI(this._uri, this._tags);
   },
 
   undoTransaction: function PTU_undoTransaction() {
     if (this._unfiledItemId != -1) {
+      // If a GUID exists for this item, preserve it before removing the item.
+      if (PlacesUtils.annotations.itemHasAnnotation(this._unfiledItemId, GUID_ANNO)) {
+        this._GUID = PlacesUtils.bookmarks.getItemGUID(this._unfiledItemId);
+      }
       PlacesUtils.bookmarks.removeItem(this._unfiledItemId);
       this._unfiledItemId = -1;
     }

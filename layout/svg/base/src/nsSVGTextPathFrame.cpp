@@ -52,6 +52,8 @@ NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsSVGTextPathFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGTextPathFrame)
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsSVGTextPathFrame::Init(nsIContent* aContent,

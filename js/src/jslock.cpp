@@ -52,7 +52,6 @@
 #include "jscntxt.h"
 #include "jsdtoa.h"
 #include "jsgc.h"
-#include "jsfun.h"      /* for VALUE_IS_FUNCTION from LOCKED_OBJ_WRITE_SLOT */
 #include "jslock.h"
 #include "jsscope.h"
 #include "jsstr.h"
@@ -464,19 +463,16 @@ ShareTitle(JSContext *cx, JSTitle *title)
 static void
 FinishSharingTitle(JSContext *cx, JSTitle *title)
 {
-    JSScope *scope;
-    JSObject *obj;
-    uint32 nslots, i;
-    jsval v;
-
     js_InitLock(&title->lock);
     title->u.count = 0;     /* NULL may not pun as 0 */
-    scope = TITLE_TO_SCOPE(title);
-    obj = scope->object;
+
+    JSScope *scope = TITLE_TO_SCOPE(title);
+    JSObject *obj = scope->object;
     if (obj) {
-        nslots = scope->freeslot;
-        for (i = 0; i != nslots; ++i) {
-            v = STOBJ_GET_SLOT(obj, i);
+        uint32 nslots = scope->freeslot;
+        JS_ASSERT(nslots >= JSSLOT_START(obj->getClass()));
+        for (uint32 i = JSSLOT_START(obj->getClass()); i != nslots; ++i) {
+            jsval v = STOBJ_GET_SLOT(obj, i);
             if (JSVAL_IS_STRING(v) &&
                 !js_MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
                 /*
@@ -723,18 +719,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
     jsword me;
 #endif
 
-    /*
-     * We handle non-native objects via JSObjectOps.getRequiredSlot, treating
-     * all slots starting from 0 as required slots.  A property definition or
-     * some prior arrangement must have allocated slot.
-     *
-     * Note once again (see jspubtd.h, before JSGetRequiredSlotOp's typedef)
-     * the crucial distinction between a |required slot number| that's passed
-     * to the get/setRequiredSlot JSObjectOps, and a |reserved slot index|
-     * passed to the JS_Get/SetReservedSlot APIs.
-     */
-    if (!OBJ_IS_NATIVE(obj))
-        return obj->getRequiredSlot(cx, slot);
+    OBJ_CHECK_SLOT(obj, slot);
 
     /*
      * Native object locking is inlined here to optimize the single-threaded
@@ -815,20 +800,13 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     jsword me;
 #endif
 
+    OBJ_CHECK_SLOT(obj, slot);
+
     /* Any string stored in a thread-safe object must be immutable. */
     if (JSVAL_IS_STRING(v) &&
         !js_MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
         /* FIXME bug 363059: See comments in js_FinishSharingScope. */
         v = JSVAL_NULL;
-    }
-
-    /*
-     * We handle non-native objects via JSObjectOps.setRequiredSlot, as above
-     * for the Get case.
-     */
-    if (!OBJ_IS_NATIVE(obj)) {
-        obj->setRequiredSlot(cx, slot, v);
-        return;
     }
 
     /*
@@ -849,7 +827,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
         scope->sealed() ||
         (title->ownercx && ClaimTitle(title, cx))) {
-        LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, v);
+        LOCKED_OBJ_SET_SLOT(obj, slot, v);
         return;
     }
 
@@ -859,7 +837,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (NativeCompareAndSwap(&tl->owner, 0, me)) {
         if (scope == OBJ_SCOPE(obj)) {
-            LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, v);
+            LOCKED_OBJ_SET_SLOT(obj, slot, v);
             if (!NativeCompareAndSwap(&tl->owner, me, 0)) {
                 /* Assert that scope locks never revert to flyweight. */
                 JS_ASSERT(title->ownercx != cx);
@@ -871,15 +849,14 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
         }
         if (!NativeCompareAndSwap(&tl->owner, me, 0))
             js_Dequeue(tl);
-    }
-    else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
-        LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, v);
+    } else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
+        LOCKED_OBJ_SET_SLOT(obj, slot, v);
         return;
     }
 #endif
 
     js_LockObj(cx, obj);
-    LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, v);
+    LOCKED_OBJ_SET_SLOT(obj, slot, v);
 
     /*
      * Same drill as above, in js_GetSlotThreadSafe.

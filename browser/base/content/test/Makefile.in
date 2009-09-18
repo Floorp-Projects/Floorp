@@ -86,11 +86,13 @@ _BROWSER_FILES = \
                  browser_bug405137.js \
                  browser_bug409481.js \
                  browser_bug413915.js \
+                 browser_bug417483.js \
                  browser_bug419612.js \
                  browser_bug420160.js \
                  browser_bug424101.js \
                  browser_bug427559.js \
                  browser_bug432599.js \
+                 browser_bug435035.js \
                  browser_bug441778.js \
                  browser_bug455852.js \
                  browser_bug462673.js \
@@ -101,6 +103,7 @@ _BROWSER_FILES = \
                  browser_tabfocus.js \
                  discovery.html \
                  moz.png \
+                 test_bug435035.html \
                  test_bug462673.html \
                  browser_getshortcutoruri.js \
                  browser_page_style_menu.js \
@@ -134,6 +137,7 @@ _BROWSER_FILES = \
                  browser_bug491431.js \
                  browser_bug304198.js \
                  browser_drag.js \
+                 browser_relatedTabs.js \
     $(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

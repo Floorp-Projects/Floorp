@@ -52,7 +52,7 @@ toolbox {
 
 toolbar {
   min-width: 1px;
-  min-height: 20px !important;
+  min-height: 20px;
   -moz-appearance: toolbar;
 }
 
@@ -77,7 +77,7 @@ toolbarseparator {
 }
 
 .toolbar-primary {
-	min-height: 24px !important;
+	min-height: 24px;
 }
 
 .toolbar-primary,

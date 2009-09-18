@@ -190,7 +190,7 @@ static const nsModuleComponentInfo components[] =
     imgLoaderConstructor, },
   { "image container",
     NS_IMGCONTAINER_CID,
-    "@mozilla.org/image/container;2",
+    "@mozilla.org/image/container;3",
     imgContainerConstructor, },
   { "image loader",
     NS_IMGLOADER_CID,
@@ -211,7 +211,7 @@ static const nsModuleComponentInfo components[] =
   // gif
   { "GIF Decoder",
      NS_GIFDECODER2_CID,
-     "@mozilla.org/image/decoder;2?type=image/gif",
+     "@mozilla.org/image/decoder;3?type=image/gif",
      nsGIFDecoder2Constructor, },
 #endif
 
@@ -219,15 +219,15 @@ static const nsModuleComponentInfo components[] =
   // jpeg
   { "JPEG decoder",
     NS_JPEGDECODER_CID,
-    "@mozilla.org/image/decoder;2?type=image/jpeg",
+    "@mozilla.org/image/decoder;3?type=image/jpeg",
     nsJPEGDecoderConstructor, },
   { "JPEG decoder",
     NS_JPEGDECODER_CID,
-    "@mozilla.org/image/decoder;2?type=image/pjpeg",
+    "@mozilla.org/image/decoder;3?type=image/pjpeg",
     nsJPEGDecoderConstructor, },
   { "JPEG decoder",
     NS_JPEGDECODER_CID,
-    "@mozilla.org/image/decoder;2?type=image/jpg",
+    "@mozilla.org/image/decoder;3?type=image/jpg",
     nsJPEGDecoderConstructor, },
 #endif
 #ifdef IMG_BUILD_ENCODER_jpeg
@@ -242,19 +242,19 @@ static const nsModuleComponentInfo components[] =
   // bmp
   { "ICO Decoder",
      NS_ICODECODER_CID,
-     "@mozilla.org/image/decoder;2?type=image/x-icon",
+     "@mozilla.org/image/decoder;3?type=image/x-icon",
      nsICODecoderConstructor, },
   { "ICO Decoder",
      NS_ICODECODER_CID,
-     "@mozilla.org/image/decoder;2?type=image/vnd.microsoft.icon",
+     "@mozilla.org/image/decoder;3?type=image/vnd.microsoft.icon",
      nsICODecoderConstructor, },
   { "BMP Decoder",
      NS_BMPDECODER_CID,
-     "@mozilla.org/image/decoder;2?type=image/bmp",
+     "@mozilla.org/image/decoder;3?type=image/bmp",
      nsBMPDecoderConstructor, },
   { "BMP Decoder",
      NS_BMPDECODER_CID,
-     "@mozilla.org/image/decoder;2?type=image/x-ms-bmp",
+     "@mozilla.org/image/decoder;3?type=image/x-ms-bmp",
      nsBMPDecoderConstructor, },
 #endif
 
@@ -262,11 +262,11 @@ static const nsModuleComponentInfo components[] =
   // png
   { "PNG Decoder",
     NS_PNGDECODER_CID,
-    "@mozilla.org/image/decoder;2?type=image/png",
+    "@mozilla.org/image/decoder;3?type=image/png",
     nsPNGDecoderConstructor, },
   { "PNG Decoder",
     NS_PNGDECODER_CID,
-    "@mozilla.org/image/decoder;2?type=image/x-png",
+    "@mozilla.org/image/decoder;3?type=image/x-png",
     nsPNGDecoderConstructor, },
 #endif
 #ifdef IMG_BUILD_ENCODER_png

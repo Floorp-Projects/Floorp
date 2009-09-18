@@ -39,3 +39,10 @@
 .tabs-newtab-button > .toolbarbutton-text {
   display: none;
 }
+
+%ifdef MOZ_WIDGET_GTK2
+/* Favicons override the "images-in-menus" metric in xul.css */
+.alltabs-item > .menu-iconic-left {
+  visibility: inherit;
+}
+%endif

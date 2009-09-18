@@ -52,7 +52,6 @@
 #include "nsBaseWidget.h"
 #include "nsdefs.h"
 #include "nsToolkit.h"
-#include "nsIEventListener.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "gfxWindowsSurface.h"
@@ -139,7 +138,6 @@ public:
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
   NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
-  NS_IMETHOD              Validate();
   NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD              Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous);
   NS_IMETHOD              Update();
@@ -222,7 +220,7 @@ public:
   /**
    * Misc.
    */
-  virtual PRBool          AutoErase();
+  virtual PRBool          AutoErase(HDC dc);
   nsIntPoint*             GetLastPoint() { return &mLastPoint; }
   PRInt32                 GetNewCmdMenuId() { mMenuCmdId++; return mMenuCmdId; }
   PRBool                  GetIMEEnabled() { return mIMEEnabled; }
@@ -281,6 +279,9 @@ protected:
   // Convert nsEventStatus value to a windows boolean
   static PRBool           ConvertStatus(nsEventStatus aStatus);
   static void             PostSleepWakeNotification(const char* aNotification);
+  PRBool                  HandleScrollingPlugins(UINT aMsg, WPARAM aWParam, 
+                                                 LPARAM aLParam,
+                                                 PRBool& aResult);
 
   /**
    * Event handlers
@@ -304,7 +305,7 @@ protected:
                                     PRUint32 aFlags = 0,
                                     const MSG *aMsg = nsnull,
                                     PRBool *aEventDispatched = nsnull);
-  virtual PRBool          OnScroll(UINT scrollCode, int cPos);
+  virtual PRBool          OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam);
   virtual HBRUSH          OnControlColor();
   PRBool                  OnGesture(WPARAM wParam, LPARAM lParam);
   PRBool                  OnHotKey(WPARAM wParam, LPARAM lParam);
@@ -314,17 +315,11 @@ protected:
   void                    OnWindowPosChanged(WINDOWPOS *wp, PRBool& aResult);
 #if defined(CAIRO_HAS_DDRAW_SURFACE)
   PRBool                  OnPaintImageDDraw16();
+  HRESULT                 PaintRectImageDDraw16(RECT aRect, nsPaintEvent* aEvent);
 #endif // defined(CAIRO_HAS_DDRAW_SURFACE)
-#if !defined(WINCE_WINDOWS_MOBILE)
   PRBool                  OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, 
                                        PRBool& result, PRBool& getWheelInfo,
                                        LRESULT *aRetValue);
-  static void             OnMouseWheelTimeout(nsITimer* aTimer, void* aClosure);
-  void                    UpdateMouseWheelSeriesCounter();
-  int                     ComputeMouseWheelDelta(int currentVDelta,
-                                                 int iDeltaPerLine,
-                                                 ULONG ulScrollLines);
-#endif // !defined(WINCE_WINDOWS_MOBILE)
 #if !defined(WINCE)
   void                    OnWindowPosChanging(LPWINDOWPOS& info);
 #endif // !defined(WINCE)
@@ -382,6 +377,8 @@ protected:
   static void             SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray, PRUint32 aModifiers);
   nsresult                SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
                                               PRBool aIntersectWithExisting);
+  nsCOMPtr<nsIRegion>     GetRegionToPaint(PRBool aForceFullRepaint, 
+                                           PAINTSTRUCT ps, HDC aDC);
 
 #ifdef ACCESSIBILITY
   static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc);
@@ -398,7 +395,7 @@ protected:
   PRPackedBool          mInDtor;
   PRPackedBool          mIsVisible;
   PRPackedBool          mIsInMouseCapture;
-  PRPackedBool          mInWheelProcessing;
+  PRPackedBool          mInScrollProcessing;
   PRPackedBool          mUnicodeWidget;
   PRPackedBool          mIsPluginWindow;
   PRPackedBool          mPainting;
@@ -413,10 +410,11 @@ protected:
   nsNativeDragTarget*   mNativeDragTarget;
   HKL                   mLastKeyboardLayout;
   nsPopupType           mPopupType;
-  int                   mScrollSeriesCounter;
   PRPackedBool          mDisplayPanFeedback;
   WindowHook            mWindowHook;
-
+#ifdef WINCE_WINDOWS_MOBILE
+  nsCOMPtr<nsIRegion>   mInvalidatedRegion; 
+#endif
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;
   static nsWindow*      sCurrentWindow;
