@@ -46,18 +46,18 @@
  * polymorphic callsite method/get/set speedups.  For details, see
  * <https://developer.mozilla.org/en/SpiderMonkey/Internals/Property_cache>.
  */
-const unsigned PROPERTY_CACHE_LOG2 = 12;
+const int PROPERTY_CACHE_LOG2 = 12;
 const jsuword PROPERTY_CACHE_SIZE = JS_BIT(PROPERTY_CACHE_LOG2);
 const jsuword PROPERTY_CACHE_MASK = JS_BITMASK(PROPERTY_CACHE_LOG2);
 
 /*
  * Property cache value capability macros.
  */
-const unsigned PCVCAP_PROTOBITS = 4;
+const int PCVCAP_PROTOBITS = 4;
 const jsuword PCVCAP_PROTOSIZE = JS_BIT(PCVCAP_PROTOBITS);
 const jsuword PCVCAP_PROTOMASK = JS_BITMASK(PCVCAP_PROTOBITS);
 
-const unsigned PCVCAP_SCOPEBITS = 4;
+const int PCVCAP_SCOPEBITS = 4;
 const jsuword PCVCAP_SCOPESIZE = JS_BIT(PCVCAP_SCOPEBITS);
 const jsuword PCVCAP_SCOPEMASK = JS_BITMASK(PCVCAP_SCOPEBITS);
 
@@ -197,7 +197,7 @@ const jsuword PCVAL_OBJECT = 0;
 const jsuword PCVAL_SLOT = 1;
 const jsuword PCVAL_SPROP = 2;
 
-const unsigned PCVAL_TAGBITS = 2;
+const int PCVAL_TAGBITS = 2;
 const jsuword PCVAL_TAGMASK = JS_BITMASK(PCVAL_TAGBITS);
 
 inline jsuword PCVAL_TAG(jsuword v) { return v & PCVAL_TAGMASK; }
