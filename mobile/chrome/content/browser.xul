@@ -351,7 +351,14 @@
           <richlistbox id="prefs-list" seltype="single" flex="1">
             <setting title="&about.title;" type="control">
               &about.description;
-              <button id="prefs-about-button" label="&about.button;" oncommand="Browser.addTab('about:fennec', true);"/>
+              <button id="prefs-about-button" label="&about.button;"
+#ifdef MOZ_OFFICIAL_BRANDING
+# these two point to the same page, this just matters for what shows up in the
+# URL bar
+                      oncommand="Browser.addTab('about:firefox', true);"/>
+#else
+                      oncommand="Browser.addTab('about:fennec', true);"/>
+#endif
             </setting>
             <settings id="prefs-content" label="&content.title;">
               <setting pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>

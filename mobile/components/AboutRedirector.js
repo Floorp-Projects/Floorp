@@ -45,6 +45,9 @@ let modules = {
     uri: "chrome://browser/content/about.xhtml",
     privileged: true
   },
+  // about:firefox is an alias for about:fennec
+  get firefox() this.fennec,
+
   firstrun: {
     uri: "chrome://firstrun/content/firstrun.html",
     privileged: false
@@ -114,6 +117,14 @@ AboutFennec.prototype = {
   classID: Components.ID("{842a6d11-b369-4610-ba66-c3b5217e82be}")
 }
 
+function AboutFirefox() {}
+AboutFirefox.prototype = {
+  __proto__: AboutGeneric.prototype,
+  classDescription: "About Firefox",
+  contractID: "@mozilla.org/network/protocol/about;1?what=firefox",
+  classID: Components.ID("{dd40c467-d206-4f22-9215-8fcc74c74e38}")  
+}
+
 function AboutRights() {}
 AboutRights.prototype = {
   __proto__: AboutGeneric.prototype,
@@ -131,4 +142,5 @@ AboutCertError.prototype = {
 }
 
 function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([AboutFirstrun, AboutFennec, AboutRights, AboutCertError]);
+  XPCOMUtils.generateModule([AboutFirstrun, AboutFennec, AboutRights,
+                             AboutCertError, AboutFirefox]);
