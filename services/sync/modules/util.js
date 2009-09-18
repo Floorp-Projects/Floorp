@@ -181,6 +181,20 @@ let Utils = {
     }
   },
 
+  ensureOneOpen: let (windows = {}) function ensureOneOpen(window) {
+    // Close the other window if it exists
+    let url = window.location.href;
+    let other = windows[url];
+    if (other != null)
+      other.close();
+
+    // Save the new window for future closure
+    windows[url] = window;
+
+    // Actively clean up when the window is closed
+    window.addEventListener("unload", function() windows[url] = null, false);
+  },
+
   // Returns a nsILocalFile representing a file relative to the
   // current user's profile directory.  If the argument is a string,
   // it should be a string with unix-style slashes for directory names
