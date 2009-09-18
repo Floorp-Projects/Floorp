@@ -292,6 +292,12 @@ libs::
 endif
 endif
 
+ifdef WINCE
+ifdef MOZ_FASTSTART
+libs::
+	cp -f $(DIST)/bin/faststartstub.exe $(DIST)/bin/$(MOZ_APP_NAME)faststart.exe
+endif
+endif
 
 libs::
 	touch $(DIST)/bin/.autoreg

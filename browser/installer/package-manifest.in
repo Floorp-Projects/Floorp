@@ -515,3 +515,11 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/plugins/nsIMozAxPlugin.xpt
 #endif
 #endif
+
+; [FastStart]
+#ifdef WINCE
+#ifdef MOZ_FASTSTART
+@BINPATH@/firefoxfaststart.exe
+@BINPATH@/components/FastStartup.js
+#endif
+#endif
