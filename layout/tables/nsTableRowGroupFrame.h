@@ -97,8 +97,9 @@ class nsTableRowGroupFrame
   , public nsILineIterator
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsTableRowGroupFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsTableRowGroupFrame)
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aPresShell the pres shell for this frame
@@ -444,10 +445,6 @@ private:
   BCPixelSize mLeftContBorderWidth;
 
 public:
-  virtual nsIFrame* GetFirstFrame() { return mFrames.FirstChild(); }
-  virtual nsIFrame* GetLastFrame() { return mFrames.LastChild(); }
-  virtual void GetNextFrame(nsIFrame*  aFrame, 
-                            nsIFrame** aResult) { *aResult = aFrame->GetNextSibling(); }
   PRBool IsRepeatable() const;
   void   SetRepeatable(PRBool aRepeatable);
   PRBool HasStyleHeight() const;

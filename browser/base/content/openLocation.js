@@ -49,6 +49,8 @@ try {
   // not critical, remain silent
 }
 
+Components.utils.import("resource://gre/modules/openLocationLastURL.jsm");
+
 function onLoad()
 {
   dialog.input         = document.getElementById("dialog.input");
@@ -74,8 +76,7 @@ function onLoad()
       var element = dialog.openWhereList.getElementsByAttribute("value", value)[0];
       if (element)
         dialog.openWhereList.selectedItem = element;
-      dialog.input.value = pref.getComplexValue("general.open_location.last_url",
-                                                Components.interfaces.nsISupportsString).data;
+      dialog.input.value = gOpenLocationLastURL.value;
     }
     catch(ex) {
     }
@@ -120,11 +121,7 @@ function open()
   }
 
   if (pref) {
-    var str = Components.classes["@mozilla.org/supports-string;1"]
-                        .createInstance(Components.interfaces.nsISupportsString);
-    str.data = dialog.input.value;
-    pref.setComplexValue("general.open_location.last_url",
-                         Components.interfaces.nsISupportsString, str);
+    gOpenLocationLastURL.value = dialog.input.value;
     pref.setIntPref("general.open_location.last_window_choice", dialog.openWhereList.value);
   }
 

@@ -55,6 +55,7 @@
 #include "nsBidiKeyboard.h"
 #include "nsNativeKeyBindings.h"
 #include "nsScreenManagerGtk.h"
+#include "nsAccelerometerUnix.h"
 
 #ifdef NS_PRINTING
 #include "nsPrintOptionsGTK.h"
@@ -67,9 +68,7 @@
 #include "nsImageToPixbuf.h"
 #include "nsPrintDialogGTK.h"
 
-#if defined(NS_OSSO)
-#include "nsIdleServiceOSSO.h"
-#elif defined(MOZ_X11)
+#if defined(MOZ_X11)
 #include "nsIdleServiceGTK.h"
 #endif
 
@@ -103,6 +102,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageToPixbuf)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerUnix)
 
 
 #ifdef NATIVE_THEME_SUPPORT
@@ -138,9 +138,7 @@ nsNativeThemeGTKConstructor(nsISupports *aOuter, REFNSIID aIID,
 }
 #endif
 
-#if defined(NS_OSSO)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceOSSO)
-#elif defined(MOZ_X11)
+#if defined(MOZ_X11)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceGTK)
 #endif
 
@@ -256,10 +254,15 @@ static const nsModuleComponentInfo components[] =
       NS_SOUND_CID,
       "@mozilla.org/sound;1",
       nsSoundConstructor },
-  { "Transferable",
-    NS_TRANSFERABLE_CID,
-    "@mozilla.org/widget/transferable;1",
-    nsTransferableConstructor },
+    { "Accelerometer",
+       NS_ACCELEROMETER_CID,
+       NS_ACCELEROMETER_CONTRACTID,
+       nsAccelerometerUnixConstructor },
+    { "Transferable",
+      NS_TRANSFERABLE_CID,
+      "@mozilla.org/widget/transferable;1",
+      nsTransferableConstructor },
+
 #ifdef MOZ_X11
   { "Gtk Clipboard",
     NS_CLIPBOARD_CID,
@@ -332,12 +335,7 @@ static const nsModuleComponentInfo components[] =
     NS_IMAGE_TO_PIXBUF_CID,
     "@mozilla.org/widget/image-to-gdk-pixbuf;1",
     nsImageToPixbufConstructor },
-#if defined(NS_OSSO)
-  { "User Idle Service",
-    NS_IDLE_SERVICE_CID,
-    "@mozilla.org/widget/idleservice;1",
-    nsIdleServiceOSSOConstructor },  
-#elif defined(MOZ_X11)
+#if defined(MOZ_X11)
 { "User Idle Service",
     NS_IDLE_SERVICE_CID,
     "@mozilla.org/widget/idleservice;1",

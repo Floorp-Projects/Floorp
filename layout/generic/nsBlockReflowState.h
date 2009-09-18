@@ -62,7 +62,9 @@
 // the current line
 #define BRS_LINE_LAYOUT_EMPTY     0x00000080
 #define BRS_ISOVERFLOWCONTAINER   0x00000100
-#define BRS_LASTFLAG              BRS_ISOVERFLOWCONTAINER
+// Our mFloatContinuations list is stored on the blocks' proptable
+#define BRS_PROPTABLE_FLOATCLIST  0x00000200
+#define BRS_LASTFLAG              BRS_PROPTABLE_FLOATCLIST
 
 class nsBlockReflowState {
 public:
@@ -74,13 +76,6 @@ public:
                      PRBool aBlockNeedsFloatManager);
 
   ~nsBlockReflowState();
-
-  // Set up a property on the block that points to our temporary mOverflowPlaceholders
-  // list, if that list is or could become non-empty during this reflow. Must be
-  // called after the block has done DrainOverflowLines because DrainOverflowLines
-  // can setup mOverflowPlaceholders even if the block is in unconstrained height
-  // reflow (it may have previously been reflowed with constrained height).
-  void SetupOverflowPlaceholdersProperty();
 
   /**
    * Get the available reflow space (the area not occupied by floats)
@@ -108,15 +103,17 @@ public:
    * The following functions all return PR_TRUE if they were able to
    * place the float, PR_FALSE if the float did not fit in available
    * space.
+   * aLineLayout is null when we are reflowing float continuations (because
+   * they are not associated with a line box).
    */
-  PRBool AddFloat(nsLineLayout&       aLineLayout,
-                  nsPlaceholderFrame* aPlaceholderFrame,
+  PRBool AddFloat(nsLineLayout*       aLineLayout,
+                  nsIFrame*           aFloat,
                   nscoord             aAvailableWidth,
                   nsReflowStatus&     aReflowStatus);
   PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats,
                        const nsFlowAreaRect& aFloatAvailableSpace,
                        PRBool aForceFit);
-  PRBool FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
+  PRBool FlowAndPlaceFloat(nsIFrame*       aFloat,
                            nsReflowStatus& aReflowStatus,
                            PRBool          aForceFit);
   PRBool PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats, PRBool aForceFit);
@@ -229,16 +226,21 @@ public:
   // unconstrained area.
   nsSize mContentArea;
 
-  // Placeholders for continuation out-of-flow frames that need to
-  // move to our next in flow are placed here during reflow. At the end of reflow
-  // they move to the end of the overflow lines.
-  // Their out-of-flows are not in any child list during reflow, but are added
-  // to the overflow-out-of-flow list when the placeholders are appended to
-  // the overflow lines.
-  nsFrameList mOverflowPlaceholders;
+  // Continuation out-of-flow float frames that need to move to our
+  // next in flow are placed here during reflow. At the end of reflow
+  // they move to the end of the mFloats list.
+  nsFrameList mFloatContinuations;
+  // This method makes sure float continuations are accessible to
+  // StealFrame. Call it before adding any frames to mFloatContinuations.
+  void SetupFloatContinuationList();
+  // Use this method to append to mFloatContinuations.
+  void AppendFloatContinuation(nsIFrame* aFloatCont) {
+    SetupFloatContinuationList();
+    mFloatContinuations.AppendFrame(mBlock, aFloatCont);
+  }
 
   // Track child overflow continuations.
-  nsOverflowContinuationTracker mOverflowTracker;
+  nsOverflowContinuationTracker* mOverflowTracker;
 
   //----------------------------------------
 

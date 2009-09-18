@@ -55,6 +55,17 @@ typedef double gfxFloat;
 #endif
 
 /**
+ * gfx errors
+ */
+
+/* nsIDeviceContext.h defines a set of printer errors  */
+#define NS_ERROR_GFX_GENERAL_BASE (50) 
+
+/* Font cmap is strangely structured - avoid this font! */
+#define NS_ERROR_GFX_CMAP_MALFORMED          \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_GENERAL_BASE+1)
+
+/**
  * Priority of a line break opportunity.
  *
  * eNoBreak       The line has no break opportunities

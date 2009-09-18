@@ -1,0 +1,204 @@
+<!DOCTYPE HTML PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <title>Table header information cells for HTML table</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/table.js"></script>
+
+  <script type="application/javascript">
+
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // column header from thead and row header from @scope inside of tfoot
+
+      var headerInfoMap = [
+        {
+          cell: "table1_cell_1",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table1_weekday", "table1_date" ]
+        },
+        {
+          cell: "table1_cell_2",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table1_day", "table1_date" ]
+        },
+        {
+          cell: "table1_cell_3",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table1_qty" ]
+        },
+        {
+          cell: "table1_cell_4",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table1_weekday", "table1_date" ]
+        },
+        {
+          cell: "table1_cell_5",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table1_day", "table1_date" ]
+        },
+        {
+          cell: "table1_cell_6",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table1_qty" ]
+        },
+        {
+          cell: "table1_cell_7",
+          rowHeaderCells: [ "table1_total" ],
+          columnHeaderCells: [ "table1_qty" ]
+        }
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      //////////////////////////////////////////////////////////////////////////
+      // column and row headers from thead and @scope
+
+      headerInfoMap = [
+        {
+          cell: "table2_cell_2",
+          rowHeaderCells: [ "table2_rh_1" ],
+          columnHeaderCells: [ "table2_ch_2" ]
+        },
+        {
+          cell: "table2_cell_3",
+          rowHeaderCells: [ "table2_rh_1" ],
+          columnHeaderCells: [ "table2_ch_3" ]
+        },
+        {
+          cell: "table2_cell_5",
+          rowHeaderCells: [ "table2_rh_2" ],
+          columnHeaderCells: [ "table2_ch_2" ]
+        },
+        {
+          cell: "table2_cell_6",
+          rowHeaderCells: [ "table2_rh_2" ],
+          columnHeaderCells: [ "table2_ch_3" ]
+        },
+        {
+          cell: "table2_rh_1",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table2_ch_1" ]
+        },
+        {
+          cell: "table2_rh_2",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table2_ch_1" ]
+        }
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      //////////////////////////////////////////////////////////////////////////
+      // column headers from @headers
+
+      headerInfoMap = [
+        {
+          cell: "table3_cell_1",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table3_ch_1" ]
+        },
+        {
+          cell: "table3_cell_2",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table3_ch_2" ]
+        }
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     title="implement IAccessibleTable2"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=512424">Mozilla Bug 512424</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <table id="table1" border="1">
+    <thead>
+      <tr>
+        <th id="table1_date" colspan="2">Date</th>
+        <th id="table1_qty" rowspan="2">Qty</th>
+      </tr>
+      <tr>
+        <th id="table1_weekday">Weekday</th>
+        <th id="table1_day">Day</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="table1_cell_1">Mon</td>
+        <td id="table1_cell_2">1</td>
+        <td id="table1_cell_3">20</td>
+      </tr>
+      <tr>
+        <td id="table1_cell_4">Thu</td>
+        <td id="table1_cell_5">2</td>
+        <td id="table1_cell_6">15</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <th id="table1_total" scope="row" colspan="2">Total</th>
+        <td id="table1_cell_7">35</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <table id="table2" border="1">
+    <thead>
+      <tr>
+        <th id="table2_ch_1">col1</th>
+        <th id="table2_ch_2">col2</th>
+        <td id="table2_ch_3" scope="col">col3</td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th id="table2_rh_1">row1</th>
+        <td id="table2_cell_2">cell1</td>
+        <td id="table2_cell_3">cell2</td>
+      </tr>
+      <tr>
+        <td id="table2_rh_2" scope="row">row2</td>
+        <td id="table2_cell_5">cell3</td>
+        <td id="table2_cell_6">cell4</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table id="table3" border="1">
+    <tr>
+      <td id="table3_cell_1" headers="table3_ch_1">cell1</td>
+      <td id="table3_cell_2" headers="table3_ch_2">cell2</td>
+    </tr>
+    <tr>
+      <td id="table3_ch_1" scope="col">col1</td>
+      <td id="table3_ch_2" scope="col">col2</td>
+    </tr>
+  </table>
+</body>
+</html>

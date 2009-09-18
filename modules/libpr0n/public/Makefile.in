@@ -54,7 +54,6 @@ XPIDLSRCS	= \
 		imgIDecoder.idl           \
 		imgIDecoderObserver.idl   \
 		imgIEncoder.idl           \
-		imgILoad.idl              \
 		imgILoader.idl            \
 		imgIRequest.idl           \
 		imgITools.idl             \

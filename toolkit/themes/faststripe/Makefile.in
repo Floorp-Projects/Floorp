@@ -46,8 +46,5 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = global
 #DIRS += mozapps
 
-ifdef MOZ_HELP_VIEWER
-#DIRS	+= help
-endif
 
 include $(topsrcdir)/config/rules.mk

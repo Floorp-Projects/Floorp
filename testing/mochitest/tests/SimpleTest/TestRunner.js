@@ -201,7 +201,9 @@ TestRunner.countResults = function(doc) {
 }
 
 TestRunner.updateUI = function() {
-  var results = TestRunner.countResults($('testframe').contentDocument);
+  var testFrame = $('testframe');
+  var results = TestRunner.countResults(testFrame.contentDocument ||
+                                        testFrame.contentWindow.document);
   var passCount = parseInt($("pass-count").innerHTML) + results.OK;
   var failCount = parseInt($("fail-count").innerHTML) + results.notOK;
   var todoCount = parseInt($("todo-count").innerHTML) + results.todo;
@@ -227,9 +229,9 @@ TestRunner.updateUI = function() {
   var row = $(trID);
   var tds = row.getElementsByTagName("td");
   tds[0].style.backgroundColor = "#0d0";
-  tds[0].textContent = results.OK;
+  tds[0].innerHTML = results.OK;
   tds[1].style.backgroundColor = results.notOK > 0 ? "red" : "#0d0";
-  tds[1].textContent = results.notOK;
+  tds[1].innerHTML = results.notOK;
   tds[2].style.backgroundColor = results.todo > 0 ? "orange" : "#0d0";
-  tds[2].textContent = results.todo;
+  tds[2].innerHTML = results.todo;
 }

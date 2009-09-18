@@ -128,6 +128,14 @@ richlistitem[selected="true"] .text-link {
   max-height: 32px;
 }
 
+richlistitem[plugin] .addonIcon > image {
+  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
+}
+
+richlistitem[lwtheme] .addonIcon > image {
+  list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.png");
+}
+
 .updateBadge,
 .notifyBadge {
   width: 16px;

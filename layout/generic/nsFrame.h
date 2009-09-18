@@ -110,6 +110,22 @@
 #define NS_FRAME_TRACE_REFLOW_OUT(_method, _status)
 #endif
 
+// Frame allocation boilerplate macros.  Every subclass of nsFrame
+// must define its own operator new and GetAllocatedSize.  If they do
+// not, the per-frame recycler lists in nsPresArena will not work
+// correctly, with potentially catastrophic consequences (not enough
+// memory is allocated for a frame object).
+
+#define NS_DECL_FRAMEARENA_HELPERS                                \
+  NS_MUST_OVERRIDE void* operator new(size_t, nsIPresShell*);     \
+  virtual NS_MUST_OVERRIDE nsQueryFrame::FrameIID GetFrameId();
+
+#define NS_IMPL_FRAMEARENA_HELPERS(class)                         \
+  void* class::operator new(size_t sz, nsIPresShell* aShell)      \
+  { return aShell->AllocateFrame(nsQueryFrame::class##_id, sz); } \
+  nsQueryFrame::FrameIID class::GetFrameId()                      \
+  { return nsQueryFrame::class##_id; }
+
 //----------------------------------------------------------------------
 
 struct nsBoxLayoutMetrics;
@@ -130,10 +146,6 @@ public:
    */
   friend nsIFrame* NS_NewEmptyFrame(nsIPresShell* aShell,
                                     nsStyleContext* aContext);
-
-  // Overloaded new operator. Relies on an arena (which comes from the
-  // presShell) to perform the allocation.
-  void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW;
 
 private:
   // Left undefined; nsFrame objects are never allocated from the heap.
@@ -156,6 +168,7 @@ public:
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame
   NS_IMETHOD  Init(nsIContent*      aContent,
@@ -201,14 +214,6 @@ public:
                                         PRInt32 aLineStart, 
                                         PRInt8 aOutSideLimit
                                         );
-
-  /**
-   * Find the nearest frame with a mouse capturer. If no
-   * parent has mouse capture this will return null.
-   * @param aFrame Frame drag began in.
-   * @return Nearest capturing frame.
-   */
-  static nsIFrame* GetNearestCapturingFrame(nsIFrame* aFrame);
 
   NS_IMETHOD  CharacterDataChanged(CharacterDataChangeInfo* aInfo);
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
@@ -401,10 +406,6 @@ public:
   // if the child does not have a overflow use the child area
   void ConsiderChildOverflow(nsRect&   aOverflowArea,
                              nsIFrame* aChildFrame);
-
-  //Mouse Capturing code used by the frames to tell the view to capture all the following events
-  NS_IMETHOD CaptureMouse(nsPresContext* aPresContext, PRBool aGrabMouseEvents);
-  PRBool   IsMouseCaptured(nsPresContext* aPresContext);
 
   virtual const void* GetStyleDataExternal(nsStyleStructID aSID) const;
 

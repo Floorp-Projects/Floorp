@@ -70,57 +70,22 @@ public:
   NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
 
   NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, PRBool aIsPrintPreview);
-  NS_IMETHOD ClosePrintManager(); 
   NS_IMETHOD BeginDocument(PRUnichar * aTitle, PRUnichar * aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage);
   NS_IMETHOD EndDocument();
   NS_IMETHOD BeginPage() { return NS_OK; }
   NS_IMETHOD EndPage() { return NS_OK; }
 
-  NS_IMETHOD GetToPrinter(PRBool &aToPrinter); 
-  NS_IMETHOD GetIsPrintPreview(PRBool &aIsPPreview);
-  NS_IMETHOD GetPrinterName ( const char **aPrinter );
-  NS_IMETHOD GetCopies ( int &aCopies );
-  NS_IMETHOD GetFirstPageFirst(PRBool &aFpf);     
-  NS_IMETHOD GetGrayscale(PRBool &aGrayscale);   
-  NS_IMETHOD GetTopMargin(float &value); 
-  NS_IMETHOD GetBottomMargin(float &value); 
-  NS_IMETHOD GetLeftMargin(float &value); 
-  NS_IMETHOD GetRightMargin(float &value); 
-  NS_IMETHOD GetCommand(const char **aCommand);   
   NS_IMETHOD GetPath (const char **aPath);    
-  NS_IMETHOD GetLandscape (PRBool &aLandscape);
-  NS_IMETHOD GetUserCancelled(PRBool &aCancel);      
   NS_IMETHOD GetPrintMethod(PrintMethod &aMethod);
   static nsresult GetPrintMethod(const char *aPrinter, PrintMethod &aMethod);
-  NS_IMETHOD GetPaperName(const char **aPaperName);
-  NS_IMETHOD GetPlexName(const char **aPlexName);
-  NS_IMETHOD GetResolutionName(const char **aResolutionName);
-  NS_IMETHOD GetColorspace(const char **aColorspace);
-  NS_IMETHOD GetDownloadFonts(PRBool &aDownloadFonts);   
   virtual ~nsDeviceContextSpecGTK();
   
 protected:
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   PRPackedBool mToPrinter : 1;      /* If PR_TRUE, print to printer */
   PRPackedBool mIsPPreview : 1;     /* If PR_TRUE, is print preview */
-  PRPackedBool mFpf : 1;            /* If PR_TRUE, first page first */
-  PRPackedBool mGrayscale : 1;      /* If PR_TRUE, print grayscale */
-  PRPackedBool mDownloadFonts : 1;  /* If PR_TRUE, download fonts to printer */
-  PRPackedBool mCancel : 1;         /* If PR_TRUE, user cancelled */
-  int    mOrientation;        /* Orientation e.g. Portrait */
-  char   mCommand[PATH_MAX];  /* Print command e.g., lpr */
   char   mPath[PATH_MAX];     /* If toPrinter = PR_FALSE, dest file */
   char   mPrinter[256];       /* Printer name */
-  char   mPaperName[256];     /* Printer name */
-  char   mPlexName[256];      /* Plex mode name */
-  char   mResolutionName[256];/* Resolution name */
-  char   mColorspace[256];    /* Colorspace */
-  int    mCopies;             /* number of copies */
-  float  mLeft;               /* left margin */
-  float  mRight;              /* right margin */
-  float  mTop;                /* top margin */
-  float  mBottom;             /* bottom margin */
-
   GtkPrintJob*      mPrintJob;
   GtkPrinter*       mGtkPrinter;
   GtkPrintSettings* mGtkPrintSettings;

@@ -227,6 +227,12 @@ _scheduletimer(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)
 void NP_CALLBACK
 _unscheduletimer(NPP instance, uint32_t timerID);
 
+NPError NP_CALLBACK
+_popupcontextmenu(NPP instance, NPMenu* menu);
+
+NPBool NP_CALLBACK
+_convertpoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace);
+
 PR_END_EXTERN_C
 
 const char *

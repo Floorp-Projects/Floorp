@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Table accessible tree and table interface tests for HTML tables</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/table.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // column headers from thead and tfoot
+
+      cellsArray = [
+        [kColHeaderCell, kColHeaderCell, kColSpanned],
+        [kRowSpanned,    kColHeaderCell, kColHeaderCell],
+        [kDataCell,      kDataCell,      kDataCell],
+        [kColHeaderCell, kColHeaderCell, kColHeaderCell]
+      ];
+
+      testTableStruct("table1", cellsArray);
+
+      //////////////////////////////////////////////////////////////////////////
+      // row and column headers from thead and @scope
+
+      var cellsArray = [
+        [kColHeaderCell, kColHeaderCell, kColHeaderCell],
+        [kRowHeaderCell, kDataCell, kDataCell],
+        [kRowHeaderCell, kDataCell, kDataCell]
+      ];
+
+      testTableStruct("table2", cellsArray);
+
+      //////////////////////////////////////////////////////////////////////////
+      // caption and @summary
+
+      cellsArray = [
+        [kColHeaderCell, kColHeaderCell, kColHeaderCell, kColHeaderCell],
+        [kRowHeaderCell, kDataCell,      kDataCell,      kDataCell],
+        [kRowHeaderCell, kDataCell,      kDataCell,      kDataCell]
+      ];
+
+      testTableStruct("table3", cellsArray, kNoColumnHeader,
+                      "Test Table",
+                      "this is a test table for nsIAccessibleTable");
+
+      //////////////////////////////////////////////////////////////////////////
+      // row and column spans
+
+      cellsArray = [
+        [kDataCell, kDataCell,   kDataCell,   kColSpanned, kDataCell, kDataCell,   kDataCell, kDataCell],
+        [kDataCell, kDataCell,   kDataCell,   kDataCell,   kDataCell, kDataCell,   kDataCell, kRowSpanned],
+        [kDataCell, kDataCell,   kColSpanned, kDataCell,   kDataCell, kDataCell,   kDataCell, kRowSpanned],
+        [kDataCell, kRowSpanned, kSpanned,    kDataCell,   kDataCell, kRowSpanned, kDataCell, kRowSpanned]
+      ];
+
+      testTableStruct("table4", cellsArray);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Fix our nsHTMLAccessibleTable class so GetIndexAt and GetRowAtIndex and GetColumnAtIndex behave consistently"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=410052">Mozilla Bug 410052</a>
+  <a target="_blank"
+     title="GetCellDataAt callers that expect an error if no cell is found are wrong"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=417912">Mozilla Bug 417912</a>
+  <a target="_blank"
+     title="create accessibles for HTML tr"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=493695">Mozilla Bug 493695</a>
+  <a target="_blank"
+     title="implement IAccessibleTable2"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=512424">Mozilla Bug 512424</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <table id="table1">
+    <thead>
+      <tr>
+        <th rowspan="2">col1</th><th colspan="2">col2</th>
+      </tr>
+      <tr>
+        <th>col2sub1</th><th>col2sub2</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>cell1</td><td>cell2</td><td>cell3</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <th>col1</th><th>col2</th><th>col3</th>
+      </tr>
+    </tfoot>
+  </table>
+
+  <table id="table2">
+    <thead>
+      <tr>
+        <th id="table1_0">col1</th>
+        <th id="table1_1">col2</th>
+        <td id="table1_2" scope="col">col3</td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th id="table1_3">row1</th>
+        <td id="table1_4">cell1</td>
+        <td id="table1_5">cell2</td>
+      </tr>
+      <tr>
+        <td id="table1_6" scope="row">row2</td>
+        <td id="table1_7">cell3</td>
+        <td id="table1_8">cell4</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table id="table3" border="1"
+         summary="this is a test table for nsIAccessibleTable">
+    <caption>Test Table</caption>
+    <thead>
+      <tr>
+        <th></th>
+        <th>columnHeader_1</th>
+        <th id ="col2a">columnHeader_2</th>
+        <th>columnHeader_3</th>
+      </tr>
+    </thead>
+    <tr>
+      <th id="row2a">rowHeader_1</th>
+      <td id="row2b">row1_column1</td>
+      <td id ="col2b">row1_column2</td>
+      <td id="row2c">row1_column3</td>
+    </tr>
+    <tr>
+      <th>rowHeader_2</th>
+      <td>row2_column1</td>
+      <td id ="col2c">row2_column2</td>
+      <td>row2_column3</td>
+    </tr>
+  </table>
+
+  <table id="table4" cellpadding="2" cellspacing="2" border="1" width="50%">
+    <tbody>
+      <tr>
+        <td><br></td>
+        <td><br></td>
+        <td rowspan="1" colspan="2"><br></td>
+        <td><br></td>
+        <td><br></td>
+        <td><br></td>
+        <td rowspan="4" colspan="1"><br></td>
+      </tr>
+      <tr>
+        <td><br></td>
+        <td><br></td>
+        <td><br></td>
+        <td><br></td>
+        <td><br></td>
+        <td><br></td>
+        <td><br></td>
+      </tr>
+      <tr>
+        <td><br></td>
+        <td rowspan="2" colspan="2">c1</td>
+        <td><br></td>
+        <td><br></td>
+        <td rowspan="2" colspan="1"><br></td>
+        <td><br></td>
+      </tr>
+      <tr>
+        <td><br></td>
+        <td><br></td>
+        <td><br></td>
+        <td><br></td>
+      </tr>
+    </tbody>
+  </table>
+
+</body>
+</html>

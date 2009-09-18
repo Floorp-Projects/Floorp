@@ -70,6 +70,8 @@ NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsGfxButtonControlFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsGfxButtonControlFrame)
+
 void nsGfxButtonControlFrame::Destroy()
 {
   nsContentUtils::DestroyAnonymousContent(&mTextContent);

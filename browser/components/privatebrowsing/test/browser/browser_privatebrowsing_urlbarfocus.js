@@ -42,10 +42,9 @@ function test() {
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
 
-  const kTestURL = "data:text/plain,test";
-  let tab = gBrowser.addTab();
-  gBrowser.selectedTab = tab;
-  let browser = gBrowser.getBrowserForTab(tab);
+  const TEST_URL = "data:text/plain,test";
+  gBrowser.selectedTab = gBrowser.addTab();
+  let browser = gBrowser.selectedBrowser;
   browser.addEventListener("load", function() {
     browser.removeEventListener("load", arguments.callee, true);
 
@@ -58,8 +57,7 @@ function test() {
 
     // enter private browsing mode
     pb.privateBrowsingEnabled = true;
-    tab = gBrowser.selectedTab;
-    browser = gBrowser.getBrowserForTab(tab);
+    browser = gBrowser.selectedBrowser;
     browser.addEventListener("load", function() {
       // setTimeout is needed here because the onload handler of about:privatebrowsing sets the focus
       setTimeout(function() {
@@ -71,8 +69,7 @@ function test() {
 
         // leave private browsing mode
         pb.privateBrowsingEnabled = false;
-        tab = gBrowser.selectedTab;
-        browser = gBrowser.getBrowserForTab(tab);
+        browser = gBrowser.selectedBrowser;
         browser.addEventListener("load", function() {
           // ensure that the URL bar is no longer focused after leaving the private browsing mode
           isnot(document.commandDispatcher.focusedElement, gURLBar.inputField,
@@ -80,13 +77,13 @@ function test() {
           // ensure that the URL bar is no longer empty after leaving the private browsing mode
           isnot(gURLBar.value, "", "URL Bar should no longer be empty after leaving the private browsing mode");
 
-          gBrowser.removeTab(tab);
+          gBrowser.removeCurrentTab();
           finish();
         }, true);
       }, 0);
     }, true);
   }, true);
-  browser.contentWindow.location = kTestURL;
+  content.location = TEST_URL;
 
   waitForExplicitFinish();
 }

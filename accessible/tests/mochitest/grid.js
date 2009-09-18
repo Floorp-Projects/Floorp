@@ -5,7 +5,7 @@ const nsIDOMKeyEvent = Components.interfaces.nsIDOMKeyEvent;
  */
 function grid(aTableIdentifier)
 {
-  this.getRowsCount = function getRowsCount()
+  this.getRowCount = function getRowCount()
   {
     return this.table.rows.length - (this.table.tHead ? 1 : 0);
   }
@@ -21,12 +21,12 @@ function grid(aTableIdentifier)
 
   this.getMaxIndex = function getMaxIndex()
   {
-    return this.getRowsCount() * this.getColsCount() - 1;
+    return this.getRowCount() * this.getColsCount() - 1;
   }
 
   this.getCellAtIndex = function getCellAtIndex(aIndex)
   {
-    var rowsCount = this.getRowsCount();
+    var rowCount = this.getRowCount();
     var colsCount = this.getColsCount();
 
     var rowIdx = Math.floor(aIndex / colsCount);
@@ -50,9 +50,9 @@ function grid(aTableIdentifier)
 
   this.getCurrentCell = function getCurrentCell()
   {
-    var rowsCount = this.table.rows.length;
+    var rowCount = this.table.rows.length;
     var colsCount = this.getColsCount();
-    for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
+    for (var rowIdx = 0; rowIdx < rowCount; rowIdx++) {
       for (var colIdx = 0; colIdx < colsCount; colIdx++) {
         var cell = this.table.rows[rowIdx].cells[colIdx];
         if (cell.hasAttribute("tabindex"))

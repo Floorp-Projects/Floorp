@@ -52,9 +52,6 @@ GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
 
-ifdef ACCESSIBILITY
-REQUIRES += accessibility
-endif
 
 EXPORTS = \
 		mozView.h \

@@ -81,6 +81,34 @@ extern "C" {
 - (int)_realControlTint { return [self controlTint]; }
 @end
 
+// The purpose of this class is to provide objects that can be used when drawing
+// NSCells using drawWithFrame:inView: without causing any harm. The only
+// messages that will be sent to such an object are "isFlipped" and
+// "currentEditor": isFlipped needs to return YES in order to avoid drawing bugs
+// on 10.4 (see bug 465069); currentEditor (which isn't even a method of
+// NSView) will be called when drawing search fields, and we only provide it in
+// order to prevent "unrecognized selector" exceptions.
+// There's no need to pass the actual NSView that we're drawing into to
+// drawWithFrame:inView:. What's more, doing so even causes unnecessary
+// invalidations as soon as we draw a focusring!
+@interface CellDrawView : NSView
+
+@end;
+
+@implementation CellDrawView
+
+- (BOOL)isFlipped
+{
+  return YES;
+}
+
+- (NSText*)currentEditor
+{
+  return nil;
+}
+
+@end
+
 static void DrawFocusRing(NSRect rect, float radius)
 {
   NSSetFocusRingStyle(NSFocusRingOnly);
@@ -171,18 +199,6 @@ static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize, con
   rect->size.height += buttonMargins[bottomMargin] + buttonMargins[topMargin];
 }
 
-static NSView* NativeViewForFrame(nsIFrame* aFrame)
-{
-  if (!aFrame)
-    return nil;  
-
-  nsIWidget* widget = aFrame->GetWindow();
-  if (!widget)
-    return nil;
-
-  return (NSView*)widget->GetNativeData(NS_NATIVE_WIDGET);
-}
-
 static NSWindow* NativeWindowForFrame(nsIFrame* aFrame,
                                       nsIWidget** aTopLevelWidget = NULL)
 {
@@ -249,6 +265,8 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   [mComboBoxCell setEditable:YES];
   [mComboBoxCell setFocusRingType:NSFocusRingTypeExterior];
 
+  mCellDrawView = [[CellDrawView alloc] init];
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -262,6 +280,7 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
   [mSearchFieldCell release];
   [mDropdownCell release];
   [mComboBoxCell release];
+  [mCellDrawView release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -621,9 +640,7 @@ nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, PRBool inCheckbo
 
   DrawCellWithSnapping(cell, cgContext, drawRect,
                        inCheckbox ? checkboxSettings : radioSettings,
-                       VerticalAlignFactor(aFrame),
-                       NativeViewForFrame(aFrame),
-                       NO);
+                       VerticalAlignFactor(aFrame), mCellDrawView, NO);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -664,7 +681,7 @@ nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxR
   [cell setShowsFirstResponder:IsFocused(aFrame)];
 
   DrawCellWithSnapping(cell, cgContext, inBoxRect, searchFieldSettings,
-                       VerticalAlignFactor(aFrame), NativeViewForFrame(aFrame),
+                       VerticalAlignFactor(aFrame), mCellDrawView,
                        IsFrameRTL(aFrame));
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -720,12 +737,12 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
     [mPushButtonCell setBezelStyle:NSShadowlessSquareBezelStyle];
     DrawCellWithScaling(mPushButtonCell, cgContext, inBoxRect, NSRegularControlSize,
                         NSZeroSize, NSMakeSize(14, 0), NULL,
-                        NativeViewForFrame(aFrame), IsFrameRTL(aFrame));
+                        mCellDrawView, IsFrameRTL(aFrame));
   } else {
     [mPushButtonCell setBezelStyle:NSRoundedBezelStyle];
 
     DrawCellWithSnapping(mPushButtonCell, cgContext, inBoxRect, pushButtonSettings,
-                         0.5f, NativeViewForFrame(aFrame), IsFrameRTL(aFrame), 1.0f);
+                         0.5f, mCellDrawView, IsFrameRTL(aFrame), 1.0f);
   }
 
 #if DRAW_IN_FRAME_DEBUG
@@ -882,7 +899,7 @@ nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect
 
   const CellRenderSettings& settings = isEditable ? editableMenulistSettings : dropdownSettings;
   DrawCellWithSnapping(cell, cgContext, inBoxRect, settings,
-                       0.5f, NativeViewForFrame(aFrame), IsFrameRTL(aFrame));
+                       0.5f, mCellDrawView, IsFrameRTL(aFrame));
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

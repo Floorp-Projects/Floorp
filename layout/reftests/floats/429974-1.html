@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style type="text/css">
+
+.contain {
+  background: aqua; color: black;
+  height: 10px; margin: 2px 50px;
+}
+
+.fl, .fr { height: 5px; }
+.fl { float: left; width: 56px; }
+.fr { float: right; width: 73px; }
+
+.t { overflow: hidden; background: blue; height: 5px; width: 85px;
+     border-left: 1px solid blue; padding-left: 2px;
+     padding-right: 4px; border-right: 8px solid blue; }
+
+</style>
+
+</head>
+
+<body style="width: 400px" onload="document.getElementById('p').nextSibling.data = ' ';">
+
+<div class="contain">
+	<div class="fl" id="p"></div>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+	<div class="fr"></div>
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="t"></div>
+</div>
+
+</body>
+</html>

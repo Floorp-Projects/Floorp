@@ -17,6 +17,16 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   display: none;
 }
 
+#main-window[lwtheme="true"] {
+  background-repeat: no-repeat;
+  background-position: top right;
+}
+
+#browser-bottombox[lwthemefooter="true"] {
+  background-repeat: no-repeat;
+  background-position: bottom left;
+}
+
 /* ::::: location bar ::::: */
 #urlbar {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
@@ -116,15 +126,20 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   display: none;
 }
 
-/* ::::: Fullscreen pseudo-toolbar ::::: */
+/*  Full Screen UI */
 #fullscr-toggler {
   display: none;
   min-height: 5px;
   height: 5px;
 }
 
-#navigator-toolbox[inFullscreen="true"] #fullscr-toggler {
-  display: -moz-box;
+#navigator-toolbox[inFullscreen="true"] > #fullscr-toggler,
+#nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-icon {
+ display: -moz-box;
+}
+
+#nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
+ display: none;
 }
 
 /* ::::: Keyboard UI Panel ::::: */

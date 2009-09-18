@@ -26,6 +26,7 @@
  *   Markus G. Kuhn <mkuhn@acm.org>
  *   Richard Verhoeven <river@win.tue.nl>
  *   Frank Tang <ftang@netscape.com> adopt into mozilla
+ *   Ginn Chen <ginn.chen@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -86,6 +87,7 @@ static PRLogModuleInfo *sDragLm = NULL;
 static const char gMimeListType[] = "application/x-moz-internal-item-list";
 static const char gMozUrlType[] = "_NETSCAPE_URL";
 static const char gTextUriListType[] = "text/uri-list";
+static const char gTextPlainUTF8Type[] = "text/plain;charset=utf-8";
 
 static void
 invisibleSourceDragEnd(GtkWidget        *aWidget,
@@ -602,18 +604,17 @@ nsDragService::GetData(nsITransferable * aTransferable,
                 if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
                     PR_LOG(sDragLm, PR_LOG_DEBUG,
                            ("we were looking for text/unicode... \
-                           trying again with text/plain\n"));
-                    gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
+                           trying with text/plain;charset=utf-8\n"));
+                    gdkFlavor = gdk_atom_intern(gTextPlainUTF8Type, FALSE);
                     GetTargetDragData(gdkFlavor);
                     if (mTargetDragData) {
                         PR_LOG(sDragLm, PR_LOG_DEBUG, ("Got textplain data\n"));
                         const char* castedText =
                                     reinterpret_cast<char*>(mTargetDragData);
                         PRUnichar* convertedText = nsnull;
-                        PRInt32 convertedTextLen = 0;
-                        nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(
-                                            castedText, mTargetDragDataLen,
-                                            &convertedText, &convertedTextLen);
+                        NS_ConvertUTF8toUTF16 ucs2string(castedText,
+                                                         mTargetDragDataLen);
+                        convertedText = ToNewUnicode(ucs2string);
                         if ( convertedText ) {
                             PR_LOG(sDragLm, PR_LOG_DEBUG,
                                    ("successfully converted plain text \
@@ -621,10 +622,36 @@ nsDragService::GetData(nsITransferable * aTransferable,
                             // out with the old, in with the new
                             g_free(mTargetDragData);
                             mTargetDragData = convertedText;
-                            mTargetDragDataLen = convertedTextLen * 2;
+                            mTargetDragDataLen = ucs2string.Length() * 2;
                             dataFound = PR_TRUE;
                         } // if plain text data on clipboard
-                    } // if plain text flavor present
+                    } else {
+                        PR_LOG(sDragLm, PR_LOG_DEBUG,
+                               ("we were looking for text/unicode... \
+                               trying again with text/plain\n"));
+                        gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
+                        GetTargetDragData(gdkFlavor);
+                        if (mTargetDragData) {
+                            PR_LOG(sDragLm, PR_LOG_DEBUG, ("Got textplain data\n"));
+                            const char* castedText =
+                                        reinterpret_cast<char*>(mTargetDragData);
+                            PRUnichar* convertedText = nsnull;
+                            PRInt32 convertedTextLen = 0;
+                            nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(
+                                                castedText, mTargetDragDataLen,
+                                                &convertedText, &convertedTextLen);
+                            if ( convertedText ) {
+                                PR_LOG(sDragLm, PR_LOG_DEBUG,
+                                       ("successfully converted plain text \
+                                       to unicode.\n"));
+                                // out with the old, in with the new
+                                g_free(mTargetDragData);
+                                mTargetDragData = convertedText;
+                                mTargetDragDataLen = convertedTextLen * 2;
+                                dataFound = PR_TRUE;
+                            } // if plain text data on clipboard
+                        } // if plain text flavor present
+                    } // if plain text charset=utf-8 flavor present
                 } // if looking for text/unicode
 
                 // if we are looking for text/x-moz-url and we failed to find
@@ -1115,6 +1142,20 @@ nsDragService::GetSourceList(void)
                         // if we support text/unicode.
                         if (strcmp(flavorStr, kUnicodeMime) == 0) {
                             // get the atom for the unicode string
+                            GdkAtom plainUTF8Atom =
+                              gdk_atom_intern(gTextPlainUTF8Type, FALSE);
+                            GtkTargetEntry *plainUTF8Target =
+                             (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
+                            plainUTF8Target->target = g_strdup(gTextPlainUTF8Type);
+                            plainUTF8Target->flags = 0;
+                            /* Bug 331198 */
+                            plainUTF8Target->info = NS_PTR_TO_UINT32(plainUTF8Atom);
+                            PR_LOG(sDragLm, PR_LOG_DEBUG,
+                                   ("automatically adding target %s with \
+                                   id %ld\n", plainUTF8Target->target, plainUTF8Atom));
+                            targetArray.AppendElement(plainUTF8Target);
+
+                            // get the atom for the ASCII string
                             GdkAtom plainAtom =
                               gdk_atom_intern(kTextMime, FALSE);
                             GtkTargetEntry *plainTarget =
@@ -1344,7 +1385,8 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
         // we can convert it.
         PRBool needToDoConversionToPlainText = PR_FALSE;
         const char* actualFlavor = mimeFlavor;
-        if (strcmp(mimeFlavor,kTextMime) == 0) {
+        if (strcmp(mimeFlavor, kTextMime) == 0 ||
+            strcmp(mimeFlavor, gTextPlainUTF8Type) == 0) {
             actualFlavor = kUnicodeMime;
             needToDoConversionToPlainText = PR_TRUE;
         }
@@ -1380,11 +1422,18 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
                 PRUnichar* castedUnicode = reinterpret_cast<PRUnichar*>
                                                            (tmpData);
                 PRInt32 plainTextLen = 0;
-                nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText(
-                                    castedUnicode,
-                                    tmpDataLen / 2,
-                                    &plainTextData,
-                                    &plainTextLen);
+                if (strcmp(mimeFlavor, gTextPlainUTF8Type) == 0) {
+                    plainTextData =
+                        ToNewUTF8String(
+                            nsDependentString(castedUnicode, tmpDataLen / 2),
+                            (PRUint32*)&plainTextLen);
+                } else {
+                    nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText(
+                                        castedUnicode,
+                                        tmpDataLen / 2,
+                                        &plainTextData,
+                                        &plainTextLen);
+                }
                 if (tmpData) {
                     // this was not allocated using glib
                     free(tmpData);

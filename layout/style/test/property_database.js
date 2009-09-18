@@ -1568,6 +1568,15 @@ var gCSSProperties = {
 		other_values: [ "0", "100.0", "99.7", "47", "3.2" ],
 		invalid_values: [" -0.01", "100.2", "108", "-3" ]
 	},
+	"pointer-events": {
+		domProp: "pointerEvents",
+		inherited: true,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: [ "visiblePainted", "visibleFill", "visibleStroke", "visible",
+		                "painted", "fill", "stroke", "all", "none" ],
+		invalid_values: []
+	},
 	"position": {
 		domProp: "position",
 		inherited: false,
@@ -2015,14 +2024,6 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "url(#mymask)" ],
-		invalid_values: []
-	},
-	"pointer-events": {
-		domProp: null,
-		inherited: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "visiblepainted" ],
-		other_values: [ "visibleFill", "visiblestroke", "Visible", "painted", "fill", "stroke", "all", "none" ],
 		invalid_values: []
 	},
 	"shape-rendering": {

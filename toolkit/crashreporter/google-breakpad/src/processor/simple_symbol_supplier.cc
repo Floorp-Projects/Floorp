@@ -38,6 +38,8 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iostream>
+#include <fstream>
 
 #include "processor/simple_symbol_supplier.h"
 #include "google_breakpad/processor/code_module.h"
@@ -62,15 +64,35 @@ SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFile(
 
   for (unsigned int path_index = 0; path_index < paths_.size(); ++path_index) {
     SymbolResult result;
-    if ((result = GetSymbolFileAtPath(module, system_info, paths_[path_index],
-                                      symbol_file)) != NOT_FOUND) {
+    if ((result = GetSymbolFileAtPathFromRoot(module, system_info,
+                                              paths_[path_index],
+                                              symbol_file)) != NOT_FOUND) {
       return result;
     }
   }
   return NOT_FOUND;
 }
 
-SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFileAtPath(
+SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFile(
+    const CodeModule *module,
+    const SystemInfo *system_info,
+    string *symbol_file,
+    string *symbol_data) {
+  assert(symbol_data);
+  symbol_data->clear();
+
+  SymbolSupplier::SymbolResult s = GetSymbolFile(module, system_info, symbol_file);
+
+  if (s == FOUND) {
+    std::ifstream in(symbol_file->c_str());
+    std::getline(in, *symbol_data, std::string::traits_type::to_char_type(
+                     std::string::traits_type::eof()));
+    in.close();
+  }
+  return s;
+}
+
+SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFileAtPathFromRoot(
     const CodeModule *module, const SystemInfo *system_info,
     const string &root_path, string *symbol_file) {
   BPLOG_IF(ERROR, !symbol_file) << "SimpleSymbolSupplier::GetSymbolFileAtPath "

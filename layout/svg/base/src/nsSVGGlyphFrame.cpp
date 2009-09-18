@@ -190,6 +190,8 @@ NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsSVGGlyphFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGGlyphFrame)
+
 //----------------------------------------------------------------------
 // nsQueryFrame methods
 
@@ -395,10 +397,11 @@ nsSVGGlyphFrame::GetFrameForPoint(const nsPoint &aPoint)
     return nsnull;
 
   PRBool events = PR_FALSE;
-  switch (GetStyleSVG()->mPointerEvents) {
+  switch (GetStyleVisibility()->mPointerEvents) {
     case NS_STYLE_POINTER_EVENTS_NONE:
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
+    case NS_STYLE_POINTER_EVENTS_AUTO:
       if (GetStyleVisibility()->IsVisible() &&
           (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None ||
            GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None))
@@ -1216,7 +1219,7 @@ nsSVGGlyphFrame::GetFirstGlyphFragment()
 NS_IMETHODIMP_(nsISVGGlyphFragmentLeaf *)
 nsSVGGlyphFrame::GetNextGlyphFragment()
 {
-  nsIFrame* sibling = mNextSibling;
+  nsIFrame* sibling = GetNextSibling();
   while (sibling) {
     nsISVGGlyphFragmentNode *node = do_QueryFrame(sibling);
     if (node)
@@ -1226,8 +1229,8 @@ nsSVGGlyphFrame::GetNextGlyphFragment()
 
   // no more siblings. go back up the tree.
   
-  NS_ASSERTION(mParent, "null parent");
-  nsISVGGlyphFragmentNode *node = do_QueryFrame(mParent);
+  NS_ASSERTION(GetParent(), "null parent");
+  nsISVGGlyphFragmentNode *node = do_QueryFrame(GetParent());
   return node ? node->GetNextGlyphFragment() : nsnull;
 }
 
@@ -1350,8 +1353,8 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
       textRunSize = PRECISE_SIZE;
     } else {
       textRunSize = size*contextScale;
-      textRunSize = PR_MAX(textRunSize, CLAMP_MIN_SIZE);
-      textRunSize = PR_MIN(textRunSize, CLAMP_MAX_SIZE);
+      textRunSize = NS_MAX(textRunSize, double(CLAMP_MIN_SIZE));
+      textRunSize = NS_MIN(textRunSize, double(CLAMP_MAX_SIZE));
     }
 
     const nsFont& font = fontData->mFont;

@@ -1,6 +1,0 @@
-# Automatically added by dh_installmime
-if [ -x /usr/sbin/update-mime ]; then update-mime; fi
-# End automatically added section
-# Automatically added by dh_installmenu
-if test -x /usr/bin/update-menus ; then update-menus ; fi
-# End automatically added section

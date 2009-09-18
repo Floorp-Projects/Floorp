@@ -118,7 +118,7 @@ js_UntrapScriptCode(JSContext *cx, JSScript *script)
                 size_t nbytes;
 
                 nbytes = script->length * sizeof(jsbytecode);
-                notes = SCRIPT_NOTES(script);
+                notes = script->notes();
                 for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn))
                     continue;
                 nbytes += (sn - notes + 1) * sizeof *sn;
@@ -353,7 +353,7 @@ typedef struct JSWatchPoint {
     JSScopeProperty     *sprop;
     JSPropertyOp        setter;
     JSWatchPointHandler handler;
-    void                *closure;
+    JSObject            *closure;
     uintN               flags;
 } JSWatchPoint;
 
@@ -440,7 +440,7 @@ js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
                                       "wp->setter");
             }
             JS_SET_TRACING_NAME(trc, "wp->closure");
-            js_CallValueTracerIfGCThing(trc, (jsval) wp->closure);
+            js_CallValueTracerIfGCThing(trc, OBJECT_TO_JSVAL(wp->closure));
         }
     }
 }
@@ -588,14 +588,14 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 JSStackFrame frame;
                 JSFrameRegs regs;
 
-                closure = (JSObject *) wp->closure;
+                closure = wp->closure;
                 clasp = OBJ_GET_CLASS(cx, closure);
                 if (clasp == &js_FunctionClass) {
                     fun = GET_FUNCTION_PRIVATE(cx, closure);
                     script = FUN_SCRIPT(fun);
                 } else if (clasp == &js_ScriptClass) {
                     fun = NULL;
-                    script = (JSScript *) closure->getAssignedPrivate();
+                    script = (JSScript *) closure->getPrivate();
                 } else {
                     fun = NULL;
                     script = NULL;
@@ -762,9 +762,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         sprop = js_FindWatchPoint(rt, OBJ_SCOPE(obj), propid);
         if (!sprop) {
             /* Make a new property in obj so we can watch for the first set. */
-            if (!js_DefineProperty(cx, obj, propid, JSVAL_VOID,
-                                   NULL, NULL, JSPROP_ENUMERATE,
-                                   &prop)) {
+            if (!js_DefineNativeProperty(cx, obj, propid, JSVAL_VOID, NULL, NULL,
+                                         JSPROP_ENUMERATE, 0, 0, &prop)) {
                 return JS_FALSE;
             }
             sprop = (JSScopeProperty *) prop;
@@ -856,7 +855,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         ++rt->debuggerMutations;
     }
     wp->handler = handler;
-    wp->closure = closure;
+    wp->closure = reinterpret_cast<JSObject*>(closure);
     DBG_UNLOCK(rt);
 
 out:
@@ -1127,7 +1126,7 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
     JSStackFrame *afp;
 
     if (fp->flags & JSFRAME_COMPUTED_THIS)
-        return fp->thisp;
+        return JSVAL_TO_OBJECT(fp->thisv);  /* JSVAL_COMPUTED_THIS invariant */
 
     /* js_ComputeThis gets confused if fp != cx->fp, so set it aside. */
     if (js_GetTopStackFrame(cx) != fp) {
@@ -1141,8 +1140,8 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
         afp = NULL;
     }
 
-    if (!fp->thisp && fp->argv)
-        fp->thisp = js_ComputeThis(cx, JS_TRUE, fp->argv);
+    if (JSVAL_IS_NULL(fp->thisv) && fp->argv)
+        fp->thisv = OBJECT_TO_JSVAL(js_ComputeThis(cx, JS_TRUE, fp->argv));
 
     if (afp) {
         cx->fp = afp;
@@ -1150,7 +1149,7 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
         afp->dormantNext = NULL;
     }
 
-    return fp->thisp;
+    return JSVAL_TO_OBJECT(fp->thisv);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -1166,7 +1165,7 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
         return NULL;
 
     JS_ASSERT(HAS_FUNCTION_CLASS(fp->callee()));
-    JS_ASSERT(fp->callee()->getAssignedPrivate() == fp->fun);
+    JS_ASSERT(fp->callee()->getPrivate() == fp->fun);
     return fp->callee();
 }
 
@@ -1642,13 +1641,13 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
     if (script->filename)
         nbytes += strlen(script->filename) + 1;
 
-    notes = SCRIPT_NOTES(script);
+    notes = script->notes();
     for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn))
         continue;
     nbytes += (sn - notes + 1) * sizeof *sn;
 
     if (script->objectsOffset != 0) {
-        objarray = JS_SCRIPT_OBJECTS(script);
+        objarray = script->objects();
         i = objarray->length;
         nbytes += sizeof *objarray + i * sizeof objarray->vector[0];
         do {
@@ -1657,7 +1656,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
     }
 
     if (script->regexpsOffset != 0) {
-        objarray = JS_SCRIPT_REGEXPS(script);
+        objarray = script->regexps();
         i = objarray->length;
         nbytes += sizeof *objarray + i * sizeof objarray->vector[0];
         do {
@@ -1667,7 +1666,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
 
     if (script->trynotesOffset != 0) {
         nbytes += sizeof(JSTryNoteArray) +
-            JS_SCRIPT_TRYNOTES(script)->length * sizeof(JSTryNote);
+            script->trynotes()->length * sizeof(JSTryNote);
     }
 
     principals = script->principals;
@@ -1715,7 +1714,7 @@ JS_FlagScriptFilenamePrefix(JSRuntime *rt, const char *prefix, uint32 flags)
 JS_PUBLIC_API(JSBool)
 JS_IsSystemObject(JSContext *cx, JSObject *obj)
 {
-    return STOBJ_IS_SYSTEM(obj);
+    return obj->isSystem();
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1726,7 +1725,7 @@ JS_NewSystemObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 
     obj = js_NewObject(cx, clasp, proto, parent);
     if (obj && system)
-        STOBJ_SET_SYSTEM(obj);
+        obj->setSystem();
     return obj;
 }
 

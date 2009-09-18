@@ -89,7 +89,15 @@ pref("extensions.blocklist.detailsURL", "https://www.mozilla.com/%LOCALE%/blockl
 // Dictionary download preference
 pref("browser.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/firefox/%VERSION%/dictionaries/");
 
+// Update Timer Manager preferences
+// Interval: When all registered timers should be checked (in milliseconds)
+//           default=10 minutes
+pref("app.update.timer", 600000);
+
 // App-specific update preferences
+
+// The interval to check for updates (app.update.interval) is defined in
+// firefox-branding.js
 
 // Whether or not app updates are enabled
 pref("app.update.enabled", true);
@@ -127,9 +135,6 @@ pref("app.update.url", "https://aus2.mozilla.org/update/3/%PRODUCT%/%VERSION%/%B
 //           latest download (in seconds) default=1 day
 pref("app.update.nagTimer.restart", 86400);
 
-// Interval: When all registered timers should be checked (in milliseconds)
-//           default=10 minutes
-pref("app.update.timer", 600000);
 // Give the user x seconds to react before showing the big UI. default=12 hours
 pref("app.update.promptWaitTime", 43200);
 // Show the Update Checking/Ready UI when the user was idle for x seconds
@@ -153,11 +158,10 @@ pref("app.update.incompatible.mode", 0);
 // e.g.
 //  extensions.{GUID}.update.enabled
 //  extensions.{GUID}.update.url
-//  extensions.{GUID}.update.interval
 //  .. etc ..
 //
 pref("extensions.update.enabled", true);
-pref("extensions.update.url", "https://versioncheck.addons.mozilla.org/update/VersionCheck.php?reqVersion=%REQ_VERSION%&id=%ITEM_ID%&version=%ITEM_VERSION%&maxAppVersion=%ITEM_MAXAPPVERSION%&status=%ITEM_STATUS%&appID=%APP_ID%&appVersion=%APP_VERSION%&appOS=%APP_OS%&appABI=%APP_ABI%&locale=%APP_LOCALE%&currentAppVersion=%CURRENT_APP_VERSION%");
+pref("extensions.update.url", "https://versioncheck.addons.mozilla.org/update/VersionCheck.php?reqVersion=%REQ_VERSION%&id=%ITEM_ID%&version=%ITEM_VERSION%&maxAppVersion=%ITEM_MAXAPPVERSION%&status=%ITEM_STATUS%&appID=%APP_ID%&appVersion=%APP_VERSION%&appOS=%APP_OS%&appABI=%APP_ABI%&locale=%APP_LOCALE%&currentAppVersion=%CURRENT_APP_VERSION%&updateType=%UPDATE_TYPE%");
 pref("extensions.update.interval", 86400);  // Check for updates to Extensions and 
                                             // Themes every day
 // Non-symmetric (not shared by extensions) extension-specific [update] preferences
@@ -329,6 +333,7 @@ pref("browser.tabs.autoHide", false);
 pref("browser.tabs.autoHide", true);
 #endif
 pref("browser.tabs.closeWindowWithLastTab", true);
+pref("browser.tabs.insertRelatedAfterCurrent", true);
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnOpen", true);
 pref("browser.tabs.maxOpenBeforeWarn", 15);
@@ -857,7 +862,7 @@ pref("geo.wifi.uri", "https://www.google.com/loc/json");
 #ifdef WINCE
 
 // tweak awesomebar -- increase the delay until a search happens.
-pref("browser.urlbar.delay", 1000);
+pref("browser.urlbar.delay", 250);
 
 // disable safe browsing, due to perf hit
 pref("browser.safebrowsing.enabled", false);

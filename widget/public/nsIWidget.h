@@ -59,7 +59,6 @@ class   nsIFontMetrics;
 class   nsIRenderingContext;
 class   nsIDeviceContext;
 struct  nsFont;
-class   nsIEventListener;
 class   nsIRollupListener;
 class   nsGUIEvent;
 class   imgIContainer;
@@ -666,21 +665,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD MakeFullScreen(PRBool aFullScreen) = 0;
 
     /**
-     * Validate the widget.
-     *
-     */
-    NS_IMETHOD Validate() = 0;
-
-    /**
-     * Invalidate the widget and repaint it.
-     *
-     * @param aIsSynchronous PR_TRUE then repaint synchronously. If PR_FALSE repaint later.
-     * @see #Update()
-     */
-
-    NS_IMETHOD Invalidate(PRBool aIsSynchronous) = 0;
-
-    /**
      * Invalidate a specified rect for a widget and repaints it.
      *
      * @param aIsSynchronouse PR_TRUE then repaint synchronously. If PR_FALSE repaint later.
@@ -696,15 +680,6 @@ class nsIWidget : public nsISupports {
      */
 
      NS_IMETHOD Update() = 0;
-
-    /**
-     * Adds an event listener to this widget
-     * Any existing event listener is replaced
-     *
-     * @param aListener event listener to add to this widget.
-     */
-
-    NS_IMETHOD AddEventListener(nsIEventListener * aListener) = 0;
 
     /**
      * Return the widget's toolkit

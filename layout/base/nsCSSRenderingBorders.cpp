@@ -202,17 +202,17 @@ nsCSSBorderRenderer::ComputeInnerRadii(const gfxCornerSizes& aRadii,
 {
   gfxCornerSizes& iRadii = *aInnerRadiiRet;
 
-  iRadii[C_TL].width = PR_MAX(0.0, aRadii[C_TL].width - aBorderSizes[NS_SIDE_LEFT]);
-  iRadii[C_TL].height = PR_MAX(0.0, aRadii[C_TL].height - aBorderSizes[NS_SIDE_TOP]);
+  iRadii[C_TL].width = NS_MAX(0.0, aRadii[C_TL].width - aBorderSizes[NS_SIDE_LEFT]);
+  iRadii[C_TL].height = NS_MAX(0.0, aRadii[C_TL].height - aBorderSizes[NS_SIDE_TOP]);
 
-  iRadii[C_TR].width = PR_MAX(0.0, aRadii[C_TR].width - aBorderSizes[NS_SIDE_RIGHT]);
-  iRadii[C_TR].height = PR_MAX(0.0, aRadii[C_TR].height - aBorderSizes[NS_SIDE_TOP]);
+  iRadii[C_TR].width = NS_MAX(0.0, aRadii[C_TR].width - aBorderSizes[NS_SIDE_RIGHT]);
+  iRadii[C_TR].height = NS_MAX(0.0, aRadii[C_TR].height - aBorderSizes[NS_SIDE_TOP]);
 
-  iRadii[C_BR].width = PR_MAX(0.0, aRadii[C_BR].width - aBorderSizes[NS_SIDE_RIGHT]);
-  iRadii[C_BR].height = PR_MAX(0.0, aRadii[C_BR].height - aBorderSizes[NS_SIDE_BOTTOM]);
+  iRadii[C_BR].width = NS_MAX(0.0, aRadii[C_BR].width - aBorderSizes[NS_SIDE_RIGHT]);
+  iRadii[C_BR].height = NS_MAX(0.0, aRadii[C_BR].height - aBorderSizes[NS_SIDE_BOTTOM]);
 
-  iRadii[C_BL].width = PR_MAX(0.0, aRadii[C_BL].width - aBorderSizes[NS_SIDE_LEFT]);
-  iRadii[C_BL].height = PR_MAX(0.0, aRadii[C_BL].height - aBorderSizes[NS_SIDE_BOTTOM]);
+  iRadii[C_BL].width = NS_MAX(0.0, aRadii[C_BL].width - aBorderSizes[NS_SIDE_LEFT]);
+  iRadii[C_BL].height = NS_MAX(0.0, aRadii[C_BL].height - aBorderSizes[NS_SIDE_BOTTOM]);
 }
 
 /*static*/ void
@@ -236,14 +236,14 @@ ComputeBorderCornerDimensions(const gfxRect& aOuterRect,
     // Always round up to whole pixels for the corners; it's safe to
     // make the corners bigger than necessary, and this way we ensure
     // that we avoid seams.
-    (*aDimsRet)[C_TL] = gfxSize(ceil(PR_MAX(leftWidth, aRadii[C_TL].width)),
-                                ceil(PR_MAX(topWidth, aRadii[C_TL].height)));
-    (*aDimsRet)[C_TR] = gfxSize(ceil(PR_MAX(rightWidth, aRadii[C_TR].width)),
-                                ceil(PR_MAX(topWidth, aRadii[C_TR].height)));
-    (*aDimsRet)[C_BR] = gfxSize(ceil(PR_MAX(rightWidth, aRadii[C_BR].width)),
-                                ceil(PR_MAX(bottomWidth, aRadii[C_BR].height)));
-    (*aDimsRet)[C_BL] = gfxSize(ceil(PR_MAX(leftWidth, aRadii[C_BL].width)),
-                                ceil(PR_MAX(bottomWidth, aRadii[C_BL].height)));
+    (*aDimsRet)[C_TL] = gfxSize(ceil(NS_MAX(leftWidth, aRadii[C_TL].width)),
+                                ceil(NS_MAX(topWidth, aRadii[C_TL].height)));
+    (*aDimsRet)[C_TR] = gfxSize(ceil(NS_MAX(rightWidth, aRadii[C_TR].width)),
+                                ceil(NS_MAX(topWidth, aRadii[C_TR].height)));
+    (*aDimsRet)[C_BR] = gfxSize(ceil(NS_MAX(rightWidth, aRadii[C_BR].width)),
+                                ceil(NS_MAX(bottomWidth, aRadii[C_BR].height)));
+    (*aDimsRet)[C_BL] = gfxSize(ceil(NS_MAX(leftWidth, aRadii[C_BL].width)),
+                                ceil(NS_MAX(bottomWidth, aRadii[C_BL].height)));
   }
 }
 
@@ -430,7 +430,7 @@ MaybeMoveToMidPoint(gfxPoint& aP0, gfxPoint& aP1, const gfxPoint& aMidPoint)
   gfxPoint ps = aP1 - aP0;
 
   if (ps.x != 0.0 && ps.y != 0.0) {
-    gfxFloat k = PR_MIN((aMidPoint.x - aP0.x) / ps.x,
+    gfxFloat k = NS_MIN((aMidPoint.x - aP0.x) / ps.x,
                         (aMidPoint.y - aP1.y) / ps.y);
     aP1 = aP0 + ps * k;
   }
@@ -679,7 +679,7 @@ nsCSSBorderRenderer::DrawBorderSidesCompositeColors(PRIntn aSides, const nsBorde
   gfxRect siRect;
   gfxFloat maxBorderWidth = 0;
   NS_FOR_CSS_SIDES (i) {
-    maxBorderWidth = PR_MAX(maxBorderWidth, mBorderWidths[i]);
+    maxBorderWidth = NS_MAX(maxBorderWidth, mBorderWidths[i]);
   }
 
   gfxFloat fakeBorderSizes[4];
@@ -700,11 +700,11 @@ nsCSSBorderRenderer::DrawBorderSidesCompositeColors(PRIntn aSides, const nsBorde
     tl = siRect.TopLeft();
     br = siRect.BottomRight();
 
-    tl.x = PR_MIN(tl.x, itl.x);
-    tl.y = PR_MIN(tl.y, itl.y);
+    tl.x = NS_MIN(tl.x, itl.x);
+    tl.y = NS_MIN(tl.y, itl.y);
 
-    br.x = PR_MAX(br.x, ibr.x);
-    br.y = PR_MAX(br.y, ibr.y);
+    br.x = NS_MAX(br.x, ibr.x);
+    br.y = NS_MAX(br.y, ibr.y);
 
     siRect.pos = tl;
     siRect.size.width = br.x - tl.x;

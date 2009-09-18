@@ -62,12 +62,6 @@ DEFFILE         = npmozax.def
 GRE_MODULE	= 1
 
 
-ifdef XPC_IDISPATCH_SUPPORT
-REQUIRES += \
-	caps \
-	string \
-	$(NULL)
-endif
 XPIFILE         = mozactivex.xpi
 
 FORCE_SHARED_LIB = 1

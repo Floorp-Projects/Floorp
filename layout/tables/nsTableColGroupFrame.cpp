@@ -299,17 +299,16 @@ nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
     colIndex = aChild.GetColIndex();
     nextChild = aChild.GetNextSibling();
   }
-  if (mFrames.DestroyFrame((nsIFrame*)&aChild)) {
-    mColCount--;
-    if (aResetSubsequentColIndices) {
-      if (nextChild) { // reset inside this and all following colgroups
-        ResetColIndices(this, colIndex, nextChild);
-      }
-      else {
-        nsIFrame* nextGroup = GetNextSibling();
-        if (nextGroup) // reset next and all following colgroups
-          ResetColIndices(nextGroup, colIndex);
-      }
+  mFrames.DestroyFrame(&aChild);
+  mColCount--;
+  if (aResetSubsequentColIndices) {
+    if (nextChild) { // reset inside this and all following colgroups
+      ResetColIndices(this, colIndex, nextChild);
+    }
+    else {
+      nsIFrame* nextGroup = GetNextSibling();
+      if (nextGroup) // reset next and all following colgroups
+        ResetColIndices(nextGroup, colIndex);
     }
   }
 
@@ -486,6 +485,8 @@ NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsTableColGroupFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsTableColGroupFrame)
 
 nsIAtom*
 nsTableColGroupFrame::GetType() const

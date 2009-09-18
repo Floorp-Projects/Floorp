@@ -154,9 +154,13 @@ public:
     ~FrameData()
     {
       MOZ_COUNT_DTOR(FrameData);
+      ClearVideoHeader();
+    }
 
+    void ClearVideoHeader() {
       if (mVideoHeader) {
         oggplay_callback_info_unlock_item(mVideoHeader);
+        mVideoHeader = nsnull;
       }
     }
 
@@ -228,7 +232,7 @@ public:
       return mCount == 0;
     }
 
-    PRInt32 GetCount() const
+    PRUint32 GetCount() const
     {
       return mCount;
     }
@@ -238,27 +242,27 @@ public:
       return mCount == OGGPLAY_BUFFER_SIZE;
     }
 
-    float ResetTimes(float aPeriod)
+    PRUint32 ResetTimes(float aPeriod)
     {
-      float time = 0.0;
+      PRUint32 frames = 0;
       if (mCount > 0) {
-        PRInt32 current = mHead;
+        PRUint32 current = mHead;
         do {
-          mQueue[current]->mTime = time;
-          time += aPeriod;
+          mQueue[current]->mTime = frames * aPeriod;
+          frames += 1;
           current = (current + 1) % OGGPLAY_BUFFER_SIZE;
         } while (current != mTail);
       }
-      return time;
+      return frames;
     }
 
   private:
     FrameData* mQueue[OGGPLAY_BUFFER_SIZE];
-    PRInt32 mHead;
-    PRInt32 mTail;
+    PRUint32 mHead;
+    PRUint32 mTail;
     // This isn't redundant with mHead/mTail, since when mHead == mTail
     // it's ambiguous whether the queue is full or empty
-    PRInt32 mCount;
+    PRUint32 mCount;
   };
 
   // Enumeration for the valid states
@@ -493,7 +497,7 @@ private:
 
   // Number of seconds of data video/audio data held in a frame.
   // Accessed only via the decoder thread.
-  float mCallbackPeriod;
+  double mCallbackPeriod;
 
   // Video data. These are initially set when the metadata is loaded.
   // They are only accessed from the decoder thread.
@@ -515,10 +519,9 @@ private:
   // accessed in the decoder thread.
   PRInt64 mBufferingEndOffset;
 
-  // The time value of the last decoded video frame. Used for
-  // computing the sleep period between frames for a/v sync.
-  // Read/Write from the decode thread only.
-  float mLastFrameTime;
+  // The last decoded video frame. Used for computing the sleep period
+  // between frames for a/v sync.  Read/Write from the decode thread only.
+  PRUint64 mLastFrame;
 
   // The decoder position of the end of the last decoded video frame.
   // Read/Write from the decode thread only.
@@ -702,7 +705,7 @@ nsOggDecodeStateMachine::nsOggDecodeStateMachine(nsOggDecoder* aDecoder) :
   mAudioTrack(-1),
   mBufferingStart(),
   mBufferingEndOffset(0),
-  mLastFrameTime(0),
+  mLastFrame(0),
   mLastFramePosition(-1),
   mState(DECODER_STATE_DECODING_METADATA),
   mSeekTime(0.0),
@@ -760,9 +763,9 @@ nsOggDecodeStateMachine::FrameData* nsOggDecodeStateMachine::NextFrame()
     return nsnull;
   }
 
-  frame->mTime = mLastFrameTime;
+  frame->mTime = mCallbackPeriod * mLastFrame;
   frame->mEndStreamPosition = mDecoder->mDecoderPosition;
-  mLastFrameTime += mCallbackPeriod;
+  mLastFrame += 1;
 
   if (mLastFramePosition >= 0) {
     NS_ASSERTION(frame->mEndStreamPosition >= mLastFramePosition,
@@ -777,7 +780,7 @@ nsOggDecodeStateMachine::FrameData* nsOggDecodeStateMachine::NextFrame()
         base + TimeDuration::FromMilliseconds(NS_round(frame->mTime*1000)));
     mDecoder->mPlaybackStatistics.AddBytes(frame->mEndStreamPosition - mLastFramePosition);
     mDecoder->mPlaybackStatistics.Stop(
-        base + TimeDuration::FromMilliseconds(NS_round(mLastFrameTime*1000)));
+        base + TimeDuration::FromMilliseconds(NS_round(mCallbackPeriod*mLastFrame*1000)));
     mDecoder->UpdatePlaybackRate();
   }
   mLastFramePosition = frame->mEndStreamPosition;
@@ -998,6 +1001,9 @@ void nsOggDecodeStateMachine::PlayVideo(FrameData* aFrame)
 
     mDecoder->SetRGBData(aFrame->mVideoWidth, aFrame->mVideoHeight,
                          mFramerate, mAspectRatio, buffer.forget());
+
+    // Don't play the frame's video data more than once.
+    aFrame->ClearVideoHeader();
   }
 }
 
@@ -1073,7 +1079,7 @@ void nsOggDecodeStateMachine::StartPlayback()
 void nsOggDecodeStateMachine::StopPlayback()
 {
   //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "StopPlayback() called without acquiring decoder monitor");
-  mLastFrameTime = mDecodedFrames.ResetTimes(mCallbackPeriod);
+  mLastFrame = mDecodedFrames.ResetTimes(mCallbackPeriod);
   StopAudio();
   mPlaying = PR_FALSE;
   mPauseStartTime = TimeStamp::Now();
@@ -1089,7 +1095,7 @@ void nsOggDecodeStateMachine::PausePlayback()
   mPlaying = PR_FALSE;
   mPauseStartTime = TimeStamp::Now();
   if (mAudioStream->GetPosition() < 0) {
-    mLastFrameTime = mDecodedFrames.ResetTimes(mCallbackPeriod);
+    mLastFrame = mDecodedFrames.ResetTimes(mCallbackPeriod);
   }
 }
 
@@ -1269,19 +1275,6 @@ static void GetBufferedBytes(nsMediaStream* aStream, nsTArray<ByteRange>& aRange
 nsresult nsOggDecodeStateMachine::Seek(float aTime, nsChannelReader* aReader)
 {
   LOG(PR_LOG_DEBUG, ("About to seek OggPlay to %fms", aTime));
-
-  // Get active tracks.
-  PRInt32 numTracks = 0;
-  PRInt32 tracks[2];
-  if (mVideoTrack != -1) {
-    tracks[numTracks] = mVideoTrack;
-    numTracks++;
-  }
-  if (mAudioTrack != -1) {
-    tracks[numTracks] = mAudioTrack;
-    numTracks++;
-  }
-  
   nsMediaStream* stream = aReader->Stream(); 
   nsAutoTArray<ByteRange, 16> ranges;
   stream->Pin();
@@ -1289,8 +1282,6 @@ nsresult nsOggDecodeStateMachine::Seek(float aTime, nsChannelReader* aReader)
   PRInt64 rv = -1;
   for (PRUint32 i = 0; rv < 0 && i < ranges.Length(); i++) {
     rv = oggplay_seek_to_keyframe(mPlayer,
-                                  tracks,
-                                  numTracks,
                                   ogg_int64_t(aTime * 1000),
                                   ranges[i].mStart,
                                   ranges[i].mEnd);
@@ -1301,8 +1292,6 @@ nsresult nsOggDecodeStateMachine::Seek(float aTime, nsChannelReader* aReader)
     // Could not seek in a buffered range, fall back to seeking over the
     // entire media.
     rv = oggplay_seek_to_keyframe(mPlayer,
-                                  tracks,
-                                  numTracks,
                                   ogg_int64_t(aTime * 1000),
                                   0,
                                   stream->GetLength());
@@ -1320,7 +1309,8 @@ void nsOggDecodeStateMachine::DecodeToFrame(nsAutoMonitor& aMonitor,
   float target = aTime - mCallbackPeriod / 2.0;
   FrameData* frame = nsnull;
   OggPlayErrorCode r;
-  mLastFrameTime = 0;
+  mLastFrame = 0;
+
   // Some of the audio data from previous frames actually belongs
   // to this frame and later frames. So rescue that data and stuff
   // it into the first frame.
@@ -1370,7 +1360,7 @@ void nsOggDecodeStateMachine::DecodeToFrame(nsAutoMonitor& aMonitor,
       memcpy(dst, data, numExtraSamples * sizeof(float));
     }
 
-    mLastFrameTime = 0;
+    mLastFrame = 0;
     frame->mTime = 0;
     frame->mState = OGGPLAY_STREAM_JUST_SEEKED;
     mDecodedFrames.Push(frame);
@@ -1437,7 +1427,7 @@ nsresult nsOggDecodeStateMachine::Run()
         if (mState == DECODER_STATE_SHUTDOWN)
           continue;
 
-        mLastFrameTime = 0;
+        mLastFrame = 0;
         FrameData* frame = NextFrame();
         if (frame) {
           mDecodedFrames.Push(frame);

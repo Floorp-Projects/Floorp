@@ -75,6 +75,13 @@ public:
   NS_IMETHOD LinkRemoved() { return NS_OK; }
 
   // nsIContent
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
+  virtual nsresult SetAttr(PRInt32 aNamespaceID, nsIAtom *aName,
+                           nsIAtom *aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
+                             PRBool aNotify);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
   virtual PRBool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);

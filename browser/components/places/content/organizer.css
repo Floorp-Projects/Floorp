@@ -18,11 +18,3 @@ button.commandButton {
 #searchFilter {
   width: 23em;
 }
-
-/* Edit Item Panel */
-
-#infoBox[minimal="true"] #editBMPanel_descriptionRow,
-#infoBox[minimal="true"] #editBMPanel_loadInSidebarCheckbox,
-#infoBox[minimal="true"] #editBMPanel_keywordRow {
-  visibility: collapse;
-}

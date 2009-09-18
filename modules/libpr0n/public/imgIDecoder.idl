@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Bobby Holley <bobbyholley@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,7 +41,8 @@
 #include "nsISupports.idl"
 
 interface nsIInputStream;
-interface imgILoad;
+interface imgIContainer;
+interface imgIDecoderObserver;
 
 /**
  * imgIDecoder interface
@@ -49,24 +51,47 @@ interface imgILoad;
  * @version 0.2
  * @see imagelib2
  */
-[scriptable, uuid(9eebf43a-1dd1-11b2-953e-f1782f4cbad3)]
+[scriptable, uuid(139c6f97-cd2f-4a4f-890d-8d9f4a693682)]
 interface imgIDecoder : nsISupports
 {
   /**
-   * Initialize an image decoder.
-   * @param aRequest the request that owns the decoder.
+   * Bits that can be passed to the decoder to affect decoding.
+   * @name decodeflags
    *
-   * @note The decode should QI \a aLoad to an imgIDecoderObserver
-   * and should send decoder notifications to the request.
-   * The decoder should always pass NULL as the first two parameters to
-   * all of the imgIDecoderObserver APIs.
+   * Meanings:
+   *
+   * DECODER_FLAG_NONE: No flags
+   *
+   * DECODER_FLAG_HEADERONLY: Read basic data from the image in order to 
+   * set up the image container,  but don't read any actual image data.
    */
-  void init(in imgILoad aLoad);
+  const long DECODER_FLAG_NONE       = 0x0;
+  const long DECODER_FLAG_HEADERONLY = 0x1;
+
+  /**
+   * Initialize an image decoder.
+   * @param aContainer The image container to decode to.
+   * @param aObserver The observer for decode notification events.
+   * @param aFlags Flags for the decoder
+   *
+   * @note The decoder should always pass NULL as the 
+   * first two parameters to all of the imgIDecoderObserver APIs.
+   */
+  void init(in imgIContainer aImage, in imgIDecoderObserver aObserver,
+            in unsigned long aFlags);
 
   /** 
-   * Closes the stream. 
+   * Closes the stream.
+   * @param aFlags Close flags of the CLOSE_FLAG_* Variety
+   *
+   * Resources are always freed with this call. If notifications are sent,
+   * OnStopDecode is guaranteed to be called if it hasn't been called already.
+   *
+   * CLOSE_FLAG_DONTNOTIFY - Don't send any observer notifications, and don't
+   * call imgIContainer::decodingComplete().
    */
-  void close();
+  const long CLOSE_FLAG_DONTNOTIFY = 0x01;
+  void close(in PRUint32 aFlags);
 
   /**
    * Flushes the stream.
@@ -75,6 +100,16 @@ interface imgIDecoder : nsISupports
 
   /**
    * Writes data into the stream from an input stream.
+   *
+   * For Header-Only decodes, OnStartContainer is the only notification
+   * fired.
+   *
+   * If a decoding error occurs, an internal flag is set and an error is
+   * returned. Each subsequent call to writeFrom will fail immediately
+   * for the lifetime of the decoder. Shutdown notifications of the OnStopX
+   * variety, as well as DecodingComplete(), are guaranteed not to be called
+   * if a decoding error occurs.
+   *
    * Implementer's note: This method is defined by this interface in order
    * to allow the output stream to efficiently copy the data from the input
    * stream into its internal buffer (if any). If this method was provide
@@ -82,11 +117,7 @@ interface imgIDecoder : nsISupports
    * in order to call the output stream's other Write method.
    * @param fromStream the stream from which the data is read
    * @param count the maximun number of bytes to write
-   * @return aWriteCount out parameter to hold the number of
-   *         bytes written. if an error occurs, the writecount
-   *         is undefined
    */
-  unsigned long writeFrom(in nsIInputStream inStr,
-                          in unsigned long count);
+  void writeFrom(in nsIInputStream inStr, in unsigned long count);
 
 };

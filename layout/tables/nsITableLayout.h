@@ -51,7 +51,7 @@ class nsITableLayout
 {
 public:
 
-  NS_DECLARE_FRAME_ACCESSOR(nsITableLayout)
+  NS_DECL_QUERYFRAME_TARGET(nsITableLayout)
 
   /** return all the relevant layout information about a cell.
    *  @param aRowIndex       a row which the cell intersects

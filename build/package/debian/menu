@@ -1,2 +1,0 @@
-?package(mozilla):needs="x11" section="Apps/Net" \
-	title="Mozilla Navigator" command="mozilla"

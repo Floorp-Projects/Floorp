@@ -305,7 +305,7 @@ nscoord nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePoi
     }
   }
   else { // smaller than HTML table, drop by 1px
-    smallerSize = PR_MAX(aFontSize - onePx, onePx);
+    smallerSize = NS_MAX(aFontSize - onePx, onePx);
   }
   return smallerSize;
 }

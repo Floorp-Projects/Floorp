@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<style type="text/css">
+.multicol {
+  margin: 1em;
+  border: solid silver;
+  width: 300px;
+  -moz-column-width: 100px;
+  -moz-column-gap: 0;
+  height: 100px;
+}
+
+.float {
+  float: right;
+  width: 15px;
+  background: aqua;
+  height: 250px;
+}
+.L {
+  float: left;
+}
+
+.container {
+  width: 100%;
+  background: red;
+}
+
+.clear {
+  clear: left;
+  border-bottom: solid orange;
+  background: red;
+}
+</style>
+
+<p>The orange line should be halfway down the third column
+(immediately after the end of the aqua lines).
+
+<div class="multicol">
+  <div class="container">
+    <div class="float L"></div>
+    <div class="float R"></div>
+  </div>
+  <div class="clear"></div>
+</div>

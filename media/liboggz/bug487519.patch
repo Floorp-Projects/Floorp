@@ -1,8 +1,12 @@
 diff --git a/media/liboggz/src/liboggz/oggz_dlist.c b/media/liboggz/src/liboggz/oggz_dlist.c
-index 7b26070..541563a 100644
 --- a/media/liboggz/src/liboggz/oggz_dlist.c
 +++ b/media/liboggz/src/liboggz/oggz_dlist.c
-@@ -142,17 +142,23 @@ oggz_dlist_prepend(OggzDList *dlist, void *elem) {
+@@ -133,70 +133,81 @@ oggz_dlist_prepend(OggzDList *dlist, voi
+   new_elem->prev = dlist->head;
+   new_elem->next = dlist->head->next;
+   new_elem->prev->next = new_elem;
+   new_elem->next->prev = new_elem;
+ 
    return 0;
  }
  
@@ -28,7 +32,14 @@ index 7b26070..541563a 100644
  }
  
  void
-@@ -167,13 +173,19 @@ oggz_dlist_reverse_iter(OggzDList *dlist, OggzDListIterFunc func) {
+ oggz_dlist_reverse_iter(OggzDList *dlist, OggzDListIterFunc func) {
+ 
+   OggzDListElem *p;
+ 
+   for (p = dlist->tail->prev; p != dlist->head; p = p->prev) {
+     if (func(p->data) == DLIST_ITER_CANCEL) {
+       break;
+     }
    }
  }
  
@@ -50,7 +61,9 @@ index 7b26070..541563a 100644
        break;
      }
  
-@@ -183,7 +195,7 @@ oggz_dlist_deliter(OggzDList *dlist, OggzDListIterFunc func) {
+     q = p->next;
+     p->prev->next = p->next;
+     p->next->prev = p->prev;
  
      oggz_free(p);
    }
@@ -59,7 +72,11 @@ index 7b26070..541563a 100644
  }
  
  void
-@@ -195,7 +207,6 @@ oggz_dlist_reverse_deliter(OggzDList *dlist, OggzDListIterFunc func) {
+ oggz_dlist_reverse_deliter(OggzDList *dlist, OggzDListIterFunc func) {
+ 
+   OggzDListElem *p, *q;
+ 
+   for (p = dlist->tail->prev; p != dlist->head; p = q) {
      if (func(p->data) == DLIST_ITER_CANCEL) {
        break;
      }
@@ -67,11 +84,20 @@ index 7b26070..541563a 100644
      q = p->prev;
      p->prev->next = p->next;
      p->next->prev = p->prev;
+ 
+     oggz_free(p);
+   }
+ 
+ }
 diff --git a/media/liboggz/src/liboggz/oggz_dlist.h b/media/liboggz/src/liboggz/oggz_dlist.h
-index 8913e73..8955250 100644
 --- a/media/liboggz/src/liboggz/oggz_dlist.h
 +++ b/media/liboggz/src/liboggz/oggz_dlist.h
-@@ -36,7 +36,7 @@
+@@ -31,17 +31,17 @@
+ */
+ 
+ #ifndef __OGGZ_DLIST_H__
+ #define __OGGZ_DLIST_H__
+ 
  struct _OggzDList;
  typedef struct _OggzDList OggzDList;
  
@@ -80,7 +106,17 @@ index 8913e73..8955250 100644
  
  typedef OggzDListIterResponse (*OggzDListIterFunc) (void *elem);
  
-@@ -55,13 +55,13 @@ oggz_dlist_append(OggzDList *dlist, void *elem);
+ OggzDList *
+ oggz_dlist_new (void);
+ 
+ void
+ oggz_dlist_delete(OggzDList *dlist);
+@@ -50,21 +50,21 @@ int
+ oggz_dlist_is_empty(OggzDList *dlist);
+ 
+ int
+ oggz_dlist_append(OggzDList *dlist, void *elem);
+ 
  int
  oggz_dlist_prepend(OggzDList *dlist, void *elem);
  
@@ -96,11 +132,18 @@ index 8913e73..8955250 100644
  oggz_dlist_deliter(OggzDList *dlist, OggzDListIterFunc func);
  
  void
+ oggz_dlist_reverse_deliter(OggzDList *dlist, OggzDListIterFunc func);
+ 
+ #endif
 diff --git a/media/liboggz/src/liboggz/oggz_read.c b/media/liboggz/src/liboggz/oggz_read.c
-index 81eeb9e..98e25e8 100644
 --- a/media/liboggz/src/liboggz/oggz_read.c
 +++ b/media/liboggz/src/liboggz/oggz_read.c
-@@ -295,11 +295,15 @@ oggz_read_deliver_packet(void *elem) {
+@@ -292,21 +292,25 @@ oggz_read_deliver_packet(void *elem) {
+   unit_stored = p->reader->current_unit;
+ 
+   p->reader->current_granulepos = p->calced_granulepos;
+ 
+   p->reader->current_unit =
      oggz_get_unit (p->oggz, p->serialno, p->calced_granulepos);
  
    if (p->stream->read_packet) {
@@ -120,7 +163,17 @@ index 81eeb9e..98e25e8 100644
    }
  
    p->reader->current_granulepos = gp_stored;
-@@ -455,7 +459,9 @@ oggz_read_sync (OGGZ * oggz)
+   p->reader->current_unit = unit_stored;
+ 
+   oggz_read_free_pbuffer_entry(p);
+ 
+   return DLIST_ITER_CONTINUE;
+@@ -448,17 +452,19 @@ oggz_read_sync (OGGZ * oggz)
+                * move backward through the list assigning gp values based upon
+                * the granulepos we just recieved.  Then move forward through
+                * the list delivering any packets at the beginning with valid
+                * gp values
+                */
                ogg_int64_t gp_stored = stream->last_granulepos;
                stream->last_packet = &packet;
                oggz_dlist_reverse_iter(oggz->packet_buffer, oggz_read_update_gp);
@@ -131,7 +184,17 @@ index 81eeb9e..98e25e8 100644
  
                /*
                 * fix up the stream granulepos 
-@@ -493,7 +499,10 @@ oggz_read_sync (OGGZ * oggz)
+                */
+               stream->last_granulepos = gp_stored;
+ 
+               if (!oggz_dlist_is_empty(oggz->packet_buffer)) {
+                 OggzBufferedPacket *p = oggz_read_new_pbuffer_entry(
+@@ -486,17 +492,20 @@ oggz_read_sync (OGGZ * oggz)
+           if (!op->b_o_s) stream->delivered_non_b_o_s = 1;
+         }
+         else
+           break;
+       }
      }
  
      /* If we've got a stop already, don't read more data in */
@@ -143,7 +206,17 @@ index 81eeb9e..98e25e8 100644
  
      if(oggz_read_get_next_page (oggz, &og) < 0)
        return OGGZ_READ_EMPTY; /* eof. leave uninitialized */
-@@ -595,8 +604,9 @@ oggz_read (OGGZ * oggz, long n)
+ 
+     serialno = ogg_page_serialno (&og);
+     reader->current_serialno = serialno; /* XXX: maybe not necessary */
+ 
+     stream = oggz_get_stream (oggz, serialno);
+@@ -588,18 +597,19 @@ oggz_read (OGGZ * oggz, long n)
+ 
+     if (bytes_read > 0) {
+       ogg_sync_wrote (&reader->ogg_sync, bytes_read);
+       
+       remaining -= bytes_read;
        nread += bytes_read;
        
        cb_ret = oggz_read_sync (oggz);
@@ -154,3 +227,8 @@ index 81eeb9e..98e25e8 100644
      }
    }
  
+   if (cb_ret == OGGZ_STOP_ERR) oggz_purge (oggz);
+ 
+   /* Don't return 0 unless it's actually an EOF condition */
+   if (nread == 0) {
+     switch (bytes_read) {

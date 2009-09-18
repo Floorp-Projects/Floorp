@@ -11,6 +11,8 @@ toolkit.jar:
    content/global/textbox.css                 (textbox.css)
    content/global/menulist.css                (menulist.css)
 *  content/global/about.xhtml                 (about.xhtml)
+*  content/global/aboutRights.xhtml           (aboutRights.xhtml)
+*  content/global/aboutRights-unbranded.xhtml (aboutRights-unbranded.xhtml)
    content/global/directionDetector.html
    content/global/plugins.html
    content/global/plugins.css

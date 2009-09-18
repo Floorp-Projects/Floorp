@@ -127,6 +127,12 @@ void nsStyleCoord::SetCoordValue(nscoord aValue)
   mValue.mInt = aValue;
 }
 
+void nsStyleCoord::SetColorValue(nscolor aValue)
+{
+  mUnit = eStyleUnit_Color;
+  mValue.mColor = aValue;
+}
+
 void nsStyleCoord::SetIntValue(PRInt32 aValue, nsStyleUnit aUnit)
 {
   NS_ASSERTION((aUnit == eStyleUnit_Enumerated) ||

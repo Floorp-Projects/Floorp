@@ -47,12 +47,6 @@ LIBRARY_NAME	= gkxulbase_s
 LIBXUL_LIBRARY	= 1
 
 
-ifdef MOZ_ENABLE_CANVAS
-REQUIRES        += \
-                cairo \
-                libpixman \
-                $(NULL)
-endif
 
 ifdef MOZ_XUL
 PARALLEL_DIRS = tree/public tree/src grid

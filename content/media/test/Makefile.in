@@ -38,7 +38,7 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = content/media/test
+relativesrcdir	= content/media/test
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
@@ -114,7 +114,7 @@ _TEST_FILES += \
 		320x240.allow-origin.ogv \
 		320x240.allow-origin.ogv^headers^ \
 		448636.ogv \
-    bug495129.ogv \
+		bug495129.ogv \
 		bug461281.ogg \
 		bug482461.ogv \
 		bug498855-1.ogv \
@@ -123,9 +123,9 @@ _TEST_FILES += \
 		bug499519.ogv \
 		bug500311.ogv \
 		bug500311.ogv^headers^ \
-    bug501279.ogg \
-    bug504644.ogv \
-    bug506094.ogv \
+		bug501279.ogg \
+		bug504644.ogv \
+		bug506094.ogv \
 		seek.ogv \
 		short-video.ogv \
 		small-shot.ogg \
@@ -151,6 +151,7 @@ _TEST_FILES += \
 		file_access_controls.html \
 		test_bug448534.html \
 		test_bug468190.html \
+		test_bug486646.html \
 		test_bug493187.html \
 		test_bug495145.html \
 		test_bug495300.html \

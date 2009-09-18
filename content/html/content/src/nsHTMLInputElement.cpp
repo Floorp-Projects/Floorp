@@ -1784,12 +1784,14 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm && (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD) &&
               SelectTextFieldOnFocus()) {
-            // select the text if the field was focused by the keyboard.
+            // select the text if the field was focused by the keyboard or a
+            // navigation.
             nsIDocument* document = GetCurrentDoc();
             if (document) {
               PRUint32 lastFocusMethod;
               fm->GetLastFocusMethod(document->GetWindow(), &lastFocusMethod);
-              if (lastFocusMethod & nsIFocusManager::FLAG_BYKEY) {
+              if (lastFocusMethod &
+                  (nsIFocusManager::FLAG_BYKEY | nsIFocusManager::FLAG_BYMOVEFOCUS)) {
                 nsCOMPtr<nsPresContext> presContext = GetPresContext();
                 if (DispatchSelectEvent(presContext)) {
                   SelectAll(presContext);

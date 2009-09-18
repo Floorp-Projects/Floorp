@@ -48,7 +48,6 @@
 
 #include "nsIWidget.h"
 
-#include "nsIEventListener.h"
 #include "nsString.h"
 #include "nsRegion.h"
 
@@ -152,7 +151,6 @@ public:
 	NS_IMETHOD              GetScreenBounds(nsRect &aRect);
 	NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
 	NS_IMETHOD              SetCursor(nsCursor aCursor);
-	NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
 	NS_IMETHOD              Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
 	NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion,
 	                                         PRBool aIsSynchronous);

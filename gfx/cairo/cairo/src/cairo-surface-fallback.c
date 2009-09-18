@@ -398,9 +398,6 @@ _clip_and_composite (cairo_clip_t                  *clip,
 			       extents);
     }
 
-    if (src == &solid_pattern.base)
-	_cairo_pattern_fini (&solid_pattern.base);
-
     return status;
 }
 
@@ -421,15 +418,15 @@ _composite_trap_region (cairo_clip_t            *clip,
     unsigned int clip_serial;
     cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
 
+    if (num_rects == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     if (clip_surface && op == CAIRO_OPERATOR_CLEAR) {
 	_cairo_pattern_init_solid (&solid_pattern, CAIRO_COLOR_WHITE,
 				   CAIRO_CONTENT_COLOR);
 	src = &solid_pattern.base;
 	op = CAIRO_OPERATOR_DEST_OUT;
     }
-
-    if (num_rects == 0)
-	return CAIRO_STATUS_SUCCESS;
 
     if (num_rects > 1) {
       if (_cairo_surface_get_clip_mode (dst) != CAIRO_CLIP_MODE_REGION)
@@ -466,9 +463,6 @@ _composite_trap_region (cairo_clip_t            *clip,
     if (clip_surface)
       _cairo_pattern_fini (&mask.base);
 
-    if (src == &solid_pattern.base)
-	_cairo_pattern_fini (&solid_pattern.base);
-
     return status;
 }
 
@@ -488,26 +482,23 @@ _composite_traps_draw_func (void                          *closure,
 {
     cairo_composite_traps_info_t *info = closure;
     cairo_solid_pattern_t pattern;
-    cairo_status_t status;
 
     if (dst_x != 0 || dst_y != 0)
 	_cairo_traps_translate (info->traps, - dst_x, - dst_y);
 
-    _cairo_pattern_init_solid (&pattern, CAIRO_COLOR_WHITE,
-			       CAIRO_CONTENT_COLOR);
-    if (!src)
+    if (src == NULL) {
+	_cairo_pattern_init_solid (&pattern, CAIRO_COLOR_WHITE,
+				   CAIRO_CONTENT_COLOR);
 	src = &pattern.base;
+    }
 
-    status = _cairo_surface_composite_trapezoids (op,
-						  src, dst, info->antialias,
-						  extents->x,         extents->y,
-						  extents->x - dst_x, extents->y - dst_y,
-						  extents->width,     extents->height,
-						  info->traps->traps,
-						  info->traps->num_traps);
-    _cairo_pattern_fini (&pattern.base);
-
-    return status;
+    return _cairo_surface_composite_trapezoids (op,
+						src, dst, info->antialias,
+						extents->x,         extents->y,
+						extents->x - dst_x, extents->y - dst_y,
+						extents->width,     extents->height,
+						info->traps->traps,
+						info->traps->num_traps);
 }
 
 /* Warning: This call modifies the coordinates of traps */
@@ -684,8 +675,7 @@ _composite_spans_fill_func (void                          *closure,
 {
     cairo_composite_rectangles_t rects;
     cairo_composite_spans_fill_info_t *info = closure;
-    cairo_pattern_union_t pattern;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_solid_pattern_t pattern;
 
     _cairo_composite_rectangles_init (
 	&rects, extents->x, extents->y,
@@ -699,18 +689,16 @@ _composite_spans_fill_func (void                          *closure,
 
     /* We're called without a source pattern from
      * _create_composite_mask_pattern(). */
-    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE,
-			       CAIRO_CONTENT_COLOR);
-    if (src == NULL)
+    if (src == NULL) {
+	_cairo_pattern_init_solid (&pattern, CAIRO_COLOR_WHITE,
+				   CAIRO_CONTENT_COLOR);
 	src = &pattern.base;
+    }
 
-    status = _cairo_path_fixed_fill_using_spans (
+    return _cairo_path_fixed_fill_using_spans (
 	op, src, info->path, dst,
 	info->fill_rule, info->tolerance, info->antialias,
 	&rects);
-
-    _cairo_pattern_fini (&pattern.base);
-    return status;
 }
 
 cairo_status_t
@@ -1027,10 +1015,11 @@ _cairo_surface_old_show_glyphs_draw_func (void                          *closure
 	}
     }
 
-    _cairo_pattern_init_solid (&pattern, CAIRO_COLOR_WHITE,
-			       CAIRO_CONTENT_COLOR);
-    if (!src)
+    if (src == NULL) {
+	_cairo_pattern_init_solid (&pattern, CAIRO_COLOR_WHITE,
+				   CAIRO_CONTENT_COLOR);
 	src = &pattern.base;
+    }
 
     status = _cairo_surface_old_show_glyphs (glyph_info->font, op, src,
 					     dst,
@@ -1041,24 +1030,18 @@ _cairo_surface_old_show_glyphs_draw_func (void                          *closure
 					     extents->height,
 					     glyph_info->glyphs,
 					     glyph_info->num_glyphs);
-
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
-    status = _cairo_scaled_font_show_glyphs (glyph_info->font,
-					     op,
-					     src, dst,
-					     extents->x,         extents->y,
-					     extents->x - dst_x,
-					     extents->y - dst_y,
-					     extents->width,     extents->height,
-					     glyph_info->glyphs,
-					     glyph_info->num_glyphs);
-
-    if (src == &pattern.base)
-	_cairo_pattern_fini (&pattern.base);
-
-    return status;
+    return _cairo_scaled_font_show_glyphs (glyph_info->font,
+					   op,
+					   src, dst,
+					   extents->x,         extents->y,
+					   extents->x - dst_x,
+					   extents->y - dst_y,
+					   extents->width,     extents->height,
+					   glyph_info->glyphs,
+					   glyph_info->num_glyphs);
 }
 
 cairo_status_t
@@ -1213,7 +1196,7 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
     int x1, y1, x2, y2;
     int i;
 
-    assert (! surface->is_snapshot);
+    assert (surface->snapshot_of == NULL);
 
     if (num_rects <= 0)
 	return CAIRO_STATUS_SUCCESS;

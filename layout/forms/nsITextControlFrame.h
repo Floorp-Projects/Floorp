@@ -48,7 +48,7 @@ class nsFrameSelection;
 class nsITextControlFrame : public nsIFormControlFrame
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsITextControlFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsITextControlFrame)
 
   NS_IMETHOD    GetEditor(nsIEditor **aEditor) = 0;
 

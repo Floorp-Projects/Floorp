@@ -45,6 +45,8 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSplittableFrame)
+
 NS_IMETHODIMP
 nsSplittableFrame::Init(nsIContent*      aContent,
                         nsIFrame*        aParent,

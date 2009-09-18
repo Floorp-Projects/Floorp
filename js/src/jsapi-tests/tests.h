@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -118,34 +118,6 @@ public:
     virtual const char * name() = 0;
     virtual bool run() = 0;
 
-    bool isNegativeZero(jsval v) {
-        if (!JSVAL_IS_DOUBLE(v))
-            return false;
-        union {
-            uint64   u64;
-            jsdouble d;
-        } pun;
-        pun.d = *JSVAL_TO_DOUBLE(v);
-        return pun.d == jsdouble(-0.0) && pun.u64 != uint64(0);
-    }
-
-    bool isNaN(jsval v) {
-        if (!JSVAL_IS_DOUBLE(v))
-            return false;
-        jsdouble d = *JSVAL_TO_DOUBLE(v);
-        return d != d;
-    }
-
-    bool sameValue(jsval v1, jsval v2) {
-        if ((isNegativeZero(v1) && v2 == JSVAL_ZERO) ||
-            (isNegativeZero(v2) && v1 == JSVAL_ZERO)) {
-            return false;
-        }
-        if (isNaN(v1) && isNaN(v2))
-            return true;
-        return JS_StrictlyEqual(cx, v1, v2);
-    }
-
 #define EXEC(s) do { if (!exec(s, __FILE__, __LINE__)) return false; } while (false)
 
     bool exec(const char *bytes, const char *filename, int lineno) {
@@ -179,9 +151,9 @@ public:
     bool checkSame(jsval actual, jsval expected,
                    const char *actualExpr, const char *expectedExpr,
                    const char *filename, int lineno) {
-        return sameValue(actual, expected) ||
-            fail(std::string("CHECK_SAME failed: expected sameValue(") +
-                 actualExpr + ", " + expectedExpr + "), got !sameValue(" +
+        return JS_SameValue(cx, actual, expected) ||
+            fail(std::string("CHECK_SAME failed: expected JS_SameValue(cx, ") +
+                 actualExpr + ", " + expectedExpr + "), got !JS_SameValue(cx, " +
                  toSource(actual) + ", " + toSource(expected) + ")", filename, lineno);
     }
 
@@ -223,7 +195,7 @@ protected:
         JSContext *cx = JS_NewContext(rt, 8192);
         if (!cx)
             return NULL;
-        JS_SetOptions(cx, JSOPTION_VAROBJFIX);
+        JS_SetOptions(cx, JSOPTION_VAROBJFIX | JSOPTION_JIT);
         JS_SetVersion(cx, JSVERSION_LATEST);
         JS_SetErrorReporter(cx, &reportError);
         return cx;

@@ -84,6 +84,7 @@ typedef enum JSOp {
 #define JOF_REGEXP        17      /* unsigned 16-bit regexp index */
 #define JOF_INT8          18      /* int8 immediate operand */
 #define JOF_ATOMOBJECT    19      /* uint16 constant index + object index */
+#define JOF_UINT16PAIR    20      /* pair of uint16 immediates */
 #define JOF_TYPEMASK      0x001f  /* mask for above immediate types */
 
 #define JOF_NAME          (1U<<5) /* name operation */
@@ -118,6 +119,10 @@ typedef enum JSOp {
                                      besides the slots opcode uses */
 #define JOF_TMPSLOT_SHIFT 22
 #define JOF_TMPSLOT_MASK  (JS_BITMASK(2) << JOF_TMPSLOT_SHIFT)
+
+#define JOF_SHARPSLOT    (1U<<24) /* first immediate is uint16 stack slot no.
+                                     that needs fixup when in global code (see
+                                     JSCompiler::compileScript) */
 
 /* Shorthands for type from format and type from opcode. */
 #define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)
@@ -311,26 +316,45 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
  */
 #define GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom)                       \
     JS_BEGIN_MACRO                                                            \
+        JS_ASSERT(*(pc) != JSOP_DOUBLE);                                      \
         uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
-        JS_GET_SCRIPT_ATOM((script), index_, atom);                           \
+        JS_GET_SCRIPT_ATOM(script, pc, index_, atom);                         \
+    JS_END_MACRO
+
+/*
+ * Variant for getting a double atom when we might be in an imacro. Bytecodes
+ * with literals that are only ever doubles must use this macro, and never use
+ * GET_ATOM_FROM_BYTECODE or JS_GET_SCRIPT_ATOM.
+ *
+ * Unfortunately some bytecodes such as JSOP_LOOKUPSWITCH have immediates that
+ * might be string or double atoms. Those opcodes cannot be used from imacros.
+ * See the assertions in the JSOP_DOUBLE and JSOP_LOOKUPSWTICH* opcode cases in
+ * jsops.cpp.
+ */
+#define GET_DOUBLE_FROM_BYTECODE(script, pc, pcoff, atom)                     \
+    JS_BEGIN_MACRO                                                            \
+        uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
+        JS_ASSERT(index_ < (script)->atomMap.length);                         \
+        (atom) = (script)->atomMap.vector[index_];                            \
+        JS_ASSERT(ATOM_IS_DOUBLE(atom));                                      \
     JS_END_MACRO
 
 #define GET_OBJECT_FROM_BYTECODE(script, pc, pcoff, obj)                      \
     JS_BEGIN_MACRO                                                            \
         uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
-        JS_GET_SCRIPT_OBJECT((script), index_, obj);                          \
+        obj = (script)->getObject(index_);                                    \
     JS_END_MACRO
 
 #define GET_FUNCTION_FROM_BYTECODE(script, pc, pcoff, fun)                    \
     JS_BEGIN_MACRO                                                            \
         uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
-        JS_GET_SCRIPT_FUNCTION((script), index_, fun);                        \
+        fun = (script)->getFunction(index_);                                  \
     JS_END_MACRO
 
 #define GET_REGEXP_FROM_BYTECODE(script, pc, pcoff, obj)                      \
     JS_BEGIN_MACRO                                                            \
         uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
-        JS_GET_SCRIPT_REGEXP((script), index_, obj);                          \
+        obj = (script)->getRegExp(index_);                                    \
     JS_END_MACRO
 
 /*

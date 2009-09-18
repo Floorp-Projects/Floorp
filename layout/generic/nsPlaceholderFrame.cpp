@@ -56,6 +56,8 @@ NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsPlaceholderFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsPlaceholderFrame)
+
 nsPlaceholderFrame::~nsPlaceholderFrame()
 {
 }
@@ -136,14 +138,7 @@ nsPlaceholderFrame::Destroy()
     }
   }
 
-  nsSplittableFrame::Destroy();
-}
-
-nsSplittableType
-nsPlaceholderFrame::GetSplittableType() const
-{
-  NS_ASSERTION(mOutOfFlowFrame, "GetSplittableType called at the wrong time");
-  return mOutOfFlowFrame->GetSplittableType();
+  nsFrame::Destroy();
 }
 
 nsIAtom*

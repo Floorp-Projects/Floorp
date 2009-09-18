@@ -154,7 +154,13 @@ MicrosummaryService.prototype = {
   classDescription: "Microsummary Service",
   contractID: "@mozilla.org/microsummary/service;1",
   classID: Components.ID("{460a9792-b154-4f26-a922-0f653e2c8f91}"),
+  _xpcom_categories: [{ category: "update-timer",
+                        value: "@mozilla.org/microsummary/service;1," +
+                               "getService,microsummary-generator-update-timer," +
+                               "browser.microsummary.generatorUpdateInterval," +
+                               GENERATOR_INTERVAL }],
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIMicrosummaryService, 
+                                         Ci.nsITimerCallback,
                                          Ci.nsISupportsWeakReference,
                                          Ci.nsIAnnotationObserver,
                                          Ci.nsIObserver]),
@@ -170,6 +176,11 @@ MicrosummaryService.prototype = {
           this._initTimers();
         break;
     }
+  },
+
+  // cross-session timer used to periodically check for generator updates.
+  notify: function MSS_notify(timer) {
+    this._updateGenerators();
   },
 
   _initTimers: function MSS__initTimers() {
@@ -188,18 +199,6 @@ MicrosummaryService.prototype = {
     this._timer.initWithCallback(callback,
                                  CHECK_INTERVAL,
                                  this._timer.TYPE_REPEATING_SLACK);
-
-    // Setup a cross-session timer to periodically check for generator updates.
-    var updateManager = Cc["@mozilla.org/updates/timer-manager;1"].
-                        getService(Ci.nsIUpdateTimerManager);
-    var interval = getPref("browser.microsummary.generatorUpdateInterval",
-                           GENERATOR_INTERVAL);
-    var updateCallback = {
-      _svc: this,
-      notify: function(timer) { this._svc._updateGenerators() }
-    };
-    updateManager.registerTimer("microsummary-generator-update-timer",
-                                updateCallback, interval);
   },
   
   _destroy: function MSS__destroy() {

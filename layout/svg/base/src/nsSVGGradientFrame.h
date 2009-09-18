@@ -58,6 +58,8 @@ protected:
   nsSVGGradientFrame(nsStyleContext* aContext);
 
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   // nsSVGPaintServerFrame methods:
   virtual PRBool SetupPaintServer(gfxContext *aContext,
                                   nsSVGGeometryFrame *aSource,
@@ -153,6 +155,8 @@ protected:
     nsSVGLinearGradientFrameBase(aContext) {}
 
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   // nsIFrame interface:
 #ifdef DEBUG
   NS_IMETHOD Init(nsIContent*      aContent,
@@ -193,6 +197,8 @@ protected:
     nsSVGRadialGradientFrameBase(aContext) {}
 
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   // nsIFrame interface:
 #ifdef DEBUG
   NS_IMETHOD Init(nsIContent*      aContent,

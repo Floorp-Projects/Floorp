@@ -436,6 +436,10 @@ public:
   {
     return nsnull;
   }
+  virtual nsresult GetSMILOverrideStyle(nsIDOMCSSStyleDeclaration** aStyle);
+  virtual nsICSSStyleRule* GetSMILOverrideStyleRule();
+  virtual nsresult SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
+                                            PRBool aNotify);
 #endif // MOZ_SMIL
 
 #ifdef DEBUG
@@ -928,6 +932,17 @@ public:
      * style rules)
      * @see nsGenericHTMLElement::GetStyle */
     nsRefPtr<nsDOMCSSDeclaration> mStyle;
+
+    /**
+     * SMIL Overridde style rules (for SMIL animation of CSS properties)
+     * @see nsIContent::GetSMILOverrideStyle
+     */
+    nsRefPtr<nsDOMCSSDeclaration> mSMILOverrideStyle;
+
+    /**
+     * Holds any SMIL override style rules for this element.
+     */
+    nsCOMPtr<nsICSSStyleRule> mSMILOverrideStyleRule;
 
     /**
      * An object implementing nsIDOMNamedNodeMap for this content (attributes)

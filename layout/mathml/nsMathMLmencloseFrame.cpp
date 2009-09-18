@@ -73,6 +73,8 @@ NS_NewMathMLmencloseFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsMathMLmencloseFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmencloseFrame)
+
 nsMathMLmencloseFrame::nsMathMLmencloseFrame(nsStyleContext* aContext) :
   nsMathMLContainerFrame(aContext), mNotationsToDraw(0),
   mLongDivCharIndex(-1), mRadicalCharIndex(-1), mContentWidth(0)
@@ -435,8 +437,8 @@ nsMathMLmencloseFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
       IsToDraw(NOTATION_RADICAL) ||
       IsToDraw(NOTATION_LONGDIV)) {
       // set a minimal value for the base height
-      bmBase.ascent = PR_MAX(bmOne.ascent, bmBase.ascent);
-      bmBase.descent = PR_MAX(0, bmBase.descent);
+      bmBase.ascent = NS_MAX(bmOne.ascent, bmBase.ascent);
+      bmBase.descent = NS_MAX(0, bmBase.descent);
   }
 
   mBoundingMetrics.ascent = bmBase.ascent;
@@ -467,15 +469,15 @@ nsMathMLmencloseFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
     // Update horizontal parameters
     padding2 = ratio * bmBase.width;
 
-    dx_left = PR_MAX(dx_left, padding2);
-    dx_right = PR_MAX(dx_right, padding2);
+    dx_left = NS_MAX(dx_left, padding2);
+    dx_right = NS_MAX(dx_right, padding2);
 
     // Update vertical parameters
     padding2 = ratio * (bmBase.ascent + bmBase.descent);
 
-    mBoundingMetrics.ascent = PR_MAX(mBoundingMetrics.ascent,
+    mBoundingMetrics.ascent = NS_MAX(mBoundingMetrics.ascent,
                                      bmBase.ascent + padding2);
-    mBoundingMetrics.descent = PR_MAX(mBoundingMetrics.descent,
+    mBoundingMetrics.descent = NS_MAX(mBoundingMetrics.descent,
                                       bmBase.descent + padding2);
   }
 
@@ -487,7 +489,7 @@ nsMathMLmencloseFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
           GetMaxWidth(PresContext(), aRenderingContext);
 
         // Update horizontal parameters
-        dx_left = PR_MAX(dx_left, longdiv_width);
+        dx_left = NS_MAX(dx_left, longdiv_width);
     } else {
       // Stretch the parenthesis to the appropriate height if it is not
       // big enough.
@@ -503,17 +505,17 @@ nsMathMLmencloseFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
       mMathMLChar[mLongDivCharIndex].GetBoundingMetrics(bmLongdivChar);
 
       // Update horizontal parameters
-      dx_left = PR_MAX(dx_left, bmLongdivChar.width);
+      dx_left = NS_MAX(dx_left, bmLongdivChar.width);
 
       // Update vertical parameters
       longdivAscent = bmBase.ascent + psi + mRuleThickness;
-      longdivDescent = PR_MAX(bmBase.descent,
+      longdivDescent = NS_MAX(bmBase.descent,
                               (bmLongdivChar.ascent + bmLongdivChar.descent -
                                longdivAscent));
 
-      mBoundingMetrics.ascent = PR_MAX(mBoundingMetrics.ascent,
+      mBoundingMetrics.ascent = NS_MAX(mBoundingMetrics.ascent,
                                        longdivAscent);
-      mBoundingMetrics.descent = PR_MAX(mBoundingMetrics.descent,
+      mBoundingMetrics.descent = NS_MAX(mBoundingMetrics.descent,
                                         longdivDescent);
     }
   }
@@ -526,7 +528,7 @@ nsMathMLmencloseFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
         GetMaxWidth(PresContext(), aRenderingContext);
       
       // Update horizontal parameters
-      dx_left = PR_MAX(dx_left, radical_width);
+      dx_left = NS_MAX(dx_left, radical_width);
     } else {
       // Stretch the radical symbol to the appropriate height if it is not
       // big enough.
@@ -542,17 +544,17 @@ nsMathMLmencloseFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
       mMathMLChar[mRadicalCharIndex].GetBoundingMetrics(bmRadicalChar);
 
       // Update horizontal parameters
-      dx_left = PR_MAX(dx_left, bmRadicalChar.width);
+      dx_left = NS_MAX(dx_left, bmRadicalChar.width);
 
       // Update vertical parameters
       radicalAscent = bmBase.ascent + psi + mRuleThickness;
-      radicalDescent = PR_MAX(bmBase.descent,
+      radicalDescent = NS_MAX(bmBase.descent,
                               (bmRadicalChar.ascent + bmRadicalChar.descent -
                                radicalAscent));
 
-      mBoundingMetrics.ascent = PR_MAX(mBoundingMetrics.ascent,
+      mBoundingMetrics.ascent = NS_MAX(mBoundingMetrics.ascent,
                                        radicalAscent);
-      mBoundingMetrics.descent = PR_MAX(mBoundingMetrics.descent,
+      mBoundingMetrics.descent = NS_MAX(mBoundingMetrics.descent,
                                         radicalDescent);
     }
   }
@@ -563,22 +565,22 @@ nsMathMLmencloseFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
       IsToDraw(NOTATION_ROUNDEDBOX) ||
       (IsToDraw(NOTATION_LEFT) && IsToDraw(NOTATION_RIGHT))) {
     // center the menclose around the content (horizontally)
-    dx_left = dx_right = PR_MAX(dx_left, dx_right);
+    dx_left = dx_right = NS_MAX(dx_left, dx_right);
   }
 
   ///////////////
   // The maximum size is now computed: set the remaining parameters
   mBoundingMetrics.width = dx_left + bmBase.width + dx_right;
 
-  mBoundingMetrics.leftBearing = PR_MIN(0, dx_left + bmBase.leftBearing);
+  mBoundingMetrics.leftBearing = NS_MIN(0, dx_left + bmBase.leftBearing);
   mBoundingMetrics.rightBearing =
-    PR_MAX(mBoundingMetrics.width, dx_left + bmBase.rightBearing);
+    NS_MAX(mBoundingMetrics.width, dx_left + bmBase.rightBearing);
   
   aDesiredSize.width = mBoundingMetrics.width;
 
-  aDesiredSize.ascent = PR_MAX(mBoundingMetrics.ascent, baseSize.ascent);
+  aDesiredSize.ascent = NS_MAX(mBoundingMetrics.ascent, baseSize.ascent);
   aDesiredSize.height = aDesiredSize.ascent +
-    PR_MAX(mBoundingMetrics.descent, baseSize.height - baseSize.ascent);
+    NS_MAX(mBoundingMetrics.descent, baseSize.height - baseSize.ascent);
 
   if (IsToDraw(NOTATION_LONGDIV) || IsToDraw(NOTATION_RADICAL)) {
     // get the leading to be left at the top of the resulting frame
@@ -589,16 +591,16 @@ nsMathMLmencloseFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
     nscoord desiredSizeDescent = aDesiredSize.height - aDesiredSize.ascent;
     
     if (IsToDraw(NOTATION_LONGDIV)) {
-      desiredSizeAscent = PR_MAX(desiredSizeAscent,
+      desiredSizeAscent = NS_MAX(desiredSizeAscent,
                                  longdivAscent + leading);
-      desiredSizeDescent = PR_MAX(desiredSizeDescent,
+      desiredSizeDescent = NS_MAX(desiredSizeDescent,
                                   longdivDescent + mRuleThickness);
     }
     
     if (IsToDraw(NOTATION_RADICAL)) {
-      desiredSizeAscent = PR_MAX(desiredSizeAscent,
+      desiredSizeAscent = NS_MAX(desiredSizeAscent,
                                  radicalAscent + leading);
-      desiredSizeDescent = PR_MAX(desiredSizeDescent,
+      desiredSizeDescent = NS_MAX(desiredSizeDescent,
                                   radicalDescent + mRuleThickness);
     }
 
@@ -610,7 +612,7 @@ nsMathMLmencloseFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
       IsToDraw(NOTATION_ROUNDEDBOX) ||
       (IsToDraw(NOTATION_TOP) && IsToDraw(NOTATION_BOTTOM))) {
     // center the menclose around the content (vertically)
-    nscoord dy = PR_MAX(aDesiredSize.ascent - bmBase.ascent,
+    nscoord dy = NS_MAX(aDesiredSize.ascent - bmBase.ascent,
                         aDesiredSize.height - aDesiredSize.ascent -
                         bmBase.descent);
 

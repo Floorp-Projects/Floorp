@@ -101,13 +101,15 @@ bool Stackwalker::Walk(CallStack *stack) {
         if (resolver_ &&
             !resolver_->HasModule(frame->module->code_file()) &&
             supplier_) {
-          string symbol_file;
+          string symbol_data, symbol_file;
           SymbolSupplier::SymbolResult symbol_result =
-              supplier_->GetSymbolFile(module, system_info_, &symbol_file);
+              supplier_->GetSymbolFile(module, system_info_,
+                                       &symbol_file, &symbol_data);
 
           switch (symbol_result) {
             case SymbolSupplier::FOUND:
-              resolver_->LoadModule(frame->module->code_file(), symbol_file);
+              resolver_->LoadModuleUsingMapBuffer(frame->module->code_file(),
+                                                  symbol_data);
               break;
             case SymbolSupplier::NOT_FOUND:
               break;  // nothing to do

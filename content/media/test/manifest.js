@@ -6,8 +6,8 @@
 var gSmallTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240 },
-  { name: "bug499519.ogv", type:"video/ogg", duration:0.24 },
-  { name: "bug506094.ogv", type:"video/ogg", duration:0 },
+  { name:"bug499519.ogv", type:"video/ogg", duration:0.24 },
+  { name:"bug506094.ogv", type:"video/ogg", duration:0 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
@@ -33,7 +33,7 @@ var gPlayTests = [
   // Small audio file
   { name:"small-shot.ogg", type:"video/ogg" },
   // More audio in file than video.
-  { name: "short-video.ogv", type:"video/ogg", duration:1.081 },
+  { name:"short-video.ogv", type:"video/ogg", duration:1.081 },
 
   { name:"bogus.duh", type:"bogus/duh" }
 ];
@@ -43,12 +43,12 @@ var gPlayTests = [
 // Put files of the same type together in this list so if something crashes
 // we have some idea of which backend is responsible.
 var gErrorTests = [
-  { name: "bug495129.ogv", type:"video/ogg", duration:2.52 },
-  { name: "bug498855-1.ogv", type:"video/ogg", duration:0.2 },
-  { name: "bug498855-2.ogv", type:"video/ogg", duration:0.2 },
-  { name: "bug498855-3.ogv", type:"video/ogg", duration:0.2 },
-  { name: "bug501279.ogg", type:"audio/ogg", duration:0 },
-  { name: "bug504644.ogv", type:"video/ogg", duration:1.56 },
+  { name:"bug495129.ogv", type:"video/ogg", duration:2.52 },
+  { name:"bug498855-1.ogv", type:"video/ogg", duration:0.2 },
+  { name:"bug498855-2.ogv", type:"video/ogg", duration:0.2 },
+  { name:"bug498855-3.ogv", type:"video/ogg", duration:0.2 },
+  { name:"bug501279.ogg", type:"audio/ogg", duration:0 },
+  { name:"bug504644.ogv", type:"video/ogg", duration:1.56 },
   { name:"bogus.wav", type:"audio/x-wav" },
   { name:"bogus.ogv", type:"video/ogg" },
   { name:"448636.ogv", type:"video/ogg" },

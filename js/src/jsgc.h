@@ -221,9 +221,9 @@ js_IsAboutToBeFinalized(JSContext *cx, void *thing);
 #endif
 
 /*
- * Trace jsval when JSVAL_IS_OBJECT(v) can be an arbitrary GC thing casted as
- * JSVAL_OBJECT and js_GetGCThingTraceKind has to be used to find the real
- * type behind v.
+ * Trace jsval when JSVAL_IS_OBJECT(v) can be a GC thing pointer tagged as a
+ * jsval. NB: punning an arbitrary JSString * as an untagged (object-tagged)
+ * jsval no longer works due to static int and unit strings!
  */
 extern void
 js_CallValueTracerIfGCThing(JSTracer *trc, jsval v);

@@ -50,6 +50,8 @@ protected:
   nsSVGTextPathFrame(nsStyleContext* aContext) : nsSVGTextPathFrameBase(aContext) {}
 
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   // nsIFrame:
 #ifdef DEBUG
   NS_IMETHOD Init(nsIContent*      aContent,

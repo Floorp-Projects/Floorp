@@ -310,12 +310,6 @@ MAKEFILES_libpref="
   modules/libpref/src/Makefile
 "
 
-MAKEFILES_libutil="
-  modules/libutil/Makefile
-  modules/libutil/public/Makefile
-  modules/libutil/src/Makefile
-"
-
 MAKEFILES_libvorbis="
   media/libvorbis/Makefile
   media/libvorbis/lib/Makefile
@@ -577,11 +571,6 @@ MAKEFILES_xpcom="
   xpcom/system/Makefile
 "
 
-MAKEFILES_xpcom_obsolete="
-  xpcom/obsolete/Makefile
-  xpcom/obsolete/component/Makefile
-"
-
 MAKEFILES_xpcom_tests="
   xpcom/tests/Makefile
   xpcom/tests/dynamic/Makefile
@@ -695,7 +684,6 @@ MAKEFILES_xulapp="
   toolkit/crashreporter/google-breakpad/src/tools/mac/dump_syms/Makefile
   toolkit/crashreporter/google-breakpad/src/tools/solaris/dump_syms/Makefile
   toolkit/content/Makefile
-  toolkit/obsolete/Makefile
   toolkit/components/alerts/Makefile
   toolkit/components/alerts/public/Makefile
   toolkit/components/alerts/src/Makefile
@@ -871,7 +859,6 @@ add_makefiles "
   $MAKEFILES_libjar
   $MAKEFILES_libreg
   $MAKEFILES_libpref
-  $MAKEFILES_libutil
   $MAKEFILES_plugin
   $MAKEFILES_netwerk
   $MAKEFILES_uriloader
@@ -885,7 +872,6 @@ add_makefiles "
   $MAKEFILES_webshell
   $MAKEFILES_widget
   $MAKEFILES_xpcom
-  $MAKEFILES_xpcom_obsolete
   $MAKEFILES_xpcom_tests
   $MAKEFILES_xpinstall
   $MAKEFILES_xpfe
@@ -1250,37 +1236,6 @@ if [ "$MOZ_XTF" ]; then
     content/xtf/Makefile
     content/xtf/public/Makefile
     content/xtf/src/Makefile
-  "
-fi
-
-if [ "$MOZ_XMLEXTRAS" ]; then
-  add_makefiles "
-    extensions/xmlextras/Makefile
-    extensions/xmlextras/pointers/Makefile
-    extensions/xmlextras/pointers/src/Makefile
-    extensions/xmlextras/build/Makefile
-    extensions/xmlextras/build/src/Makefile
-  "
-fi
-
-if [ "$MOZ_WEBSERVICES" ]; then
-  add_makefiles "
-    extensions/webservices/Makefile
-    extensions/webservices/build/Makefile
-    extensions/webservices/build/src/Makefile
-    extensions/webservices/interfaceinfo/Makefile
-    extensions/webservices/interfaceinfo/src/Makefile
-    extensions/webservices/proxy/Makefile
-    extensions/webservices/proxy/src/Makefile
-    extensions/webservices/public/Makefile
-    extensions/webservices/security/Makefile
-    extensions/webservices/security/src/Makefile
-    extensions/webservices/schema/Makefile
-    extensions/webservices/schema/src/Makefile
-    extensions/webservices/soap/Makefile
-    extensions/webservices/soap/src/Makefile
-    extensions/webservices/wsdl/Makefile
-    extensions/webservices/wsdl/src/Makefile
   "
 fi
 

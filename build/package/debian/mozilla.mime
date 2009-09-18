@@ -1,2 +1,0 @@
-text/html; /usr/bin/mozilla %s; description=HTML Text; nametemplate=%s.html; priority=3
-

@@ -261,6 +261,8 @@ static PRBool gdk_keyboard_get_modmap_masks(Display*  aDisplay,
 /* initialization static functions */
 static nsresult    initialize_prefs        (void);
 
+PRUint32        gLastInputEventTime = 0;
+
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::mLastDragMotionWindow = NULL;
 PRBool nsWindow::sIsDraggingOutOf = PR_FALSE;
@@ -383,6 +385,8 @@ nsWindow::nsWindow()
     mTransientParent     = nsnull;
     mWindowType          = eWindowType_child;
     mSizeState           = nsSizeMode_Normal;
+    mLastSizeMode        = nsSizeMode_Normal;
+
 #ifdef MOZ_X11
     mOldFocusWindow      = 0;
 #endif /* MOZ_X11 */
@@ -441,6 +445,8 @@ nsWindow::nsWindow()
         gBufferPixmapUsageCount++;
     }
 
+    // Set gLastInputEventTime to some valid number
+    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
 }
 
 nsWindow::~nsWindow()
@@ -525,6 +531,9 @@ nsWindow::DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus)
 void
 nsWindow::DispatchActivateEvent(void)
 {
+    NS_ASSERTION(mContainer || mIsDestroyed,
+                 "DispatchActivateEvent only intended for container windows");
+
     if (!mIsTopLevel)
         return;
 
@@ -566,10 +575,6 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus)
     // send it to the standard callback
     if (mEventCallback)
         aStatus = (* mEventCallback)(aEvent);
-
-    // dispatch to event listener if event was not consumed
-    if ((aStatus != nsEventStatus_eIgnore) && mEventListener)
-        aStatus = mEventListener->ProcessEvent(*aEvent);
 
     return NS_OK;
 }
@@ -1408,7 +1413,7 @@ nsWindow::SetFocus(PRBool aRaise)
 
     if (!GTK_WIDGET_HAS_FOCUS(owningWidget)) {
         LOGFOCUS(("  grabbing focus for the toplevel [%p]\n", (void *)this));
-        owningWindow->mContainerBlockFocus = PR_TRUE;
+        owningWindow->mContainerBlockFocus = PR_FALSE;
 
         // Set focus to the window
         if (gRaiseWindows && aRaise && toplevelWidget &&
@@ -1417,10 +1422,7 @@ nsWindow::SetFocus(PRBool aRaise)
           gtk_window_present(GTK_WINDOW(owningWindow->mShell));
 
         gtk_widget_grab_focus(owningWidget);
-        owningWindow->mContainerBlockFocus = PR_FALSE;
 
-        gFocusWindow = this;
-        DispatchActivateEvent();
         return NS_OK;
     }
 
@@ -1676,45 +1678,6 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     }
 
     return rv;
-}
-
-
-NS_IMETHODIMP
-nsWindow::Validate()
-{
-    // Get the update for this window and, well, just drop it on the
-    // floor.
-    if (!mGdkWindow)
-        return NS_OK;
-
-    GdkRegion *region = gdk_window_get_update_area(mGdkWindow);
-
-    if (region)
-        gdk_region_destroy(region);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::Invalidate(PRBool aIsSynchronous)
-{
-    if (!mGdkWindow || !CanBeSeen())
-        return NS_OK;
-
-    GdkRectangle rect;
-    rect.x = mBounds.x;
-    rect.y = mBounds.y;
-    rect.width = mBounds.width;
-    rect.height = mBounds.height;
-
-    LOGDRAW(("Invalidate (all) [%p]: %d %d %d %d\n", (void *)this,
-             rect.x, rect.y, rect.width, rect.height));
-
-    gdk_window_invalidate_rect(mGdkWindow, &rect, FALSE);
-    if (aIsSynchronous)
-        gdk_window_process_updates(mGdkWindow, FALSE);
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2782,7 +2745,6 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 
     nsWindow *containerWindow = GetContainerWindow();
     if (!gFocusWindow && containerWindow) {
-        gFocusWindow = this;
         containerWindow->DispatchActivateEvent();
     }
 
@@ -2894,9 +2856,7 @@ void
 nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 {
     LOGFOCUS(("OnContainerFocusInEvent [%p]\n", (void *)this));
-    // Return if someone has blocked events for this widget.  This will
-    // happen if someone has called gtk_widget_grab_focus() from
-    // nsWindow::SetFocus() and will prevent recursion.
+    // Return if someone has blocked events for this widget.
     if (mContainerBlockFocus) {
         LOGFOCUS(("Container focus is blocked [%p]\n", (void *)this));
         return;
@@ -5001,11 +4961,19 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
 
 #if GTK_CHECK_VERSION(2,2,0)
     if (aFullScreen) {
+        if (mSizeMode != nsSizeMode_Fullscreen)
+            mLastSizeMode = mSizeMode;
+
         mSizeMode = nsSizeMode_Fullscreen;
         gdk_window_fullscreen (mShell->window);
     }
-    else
+    else {
+        mSizeMode = mLastSizeMode;
         gdk_window_unfullscreen (mShell->window);
+    }
+
+    NS_ASSERTION(mLastSizeMode != nsSizeMode_Fullscreen,
+                 "mLastSizeMode should never be fullscreen");
     return NS_OK;
 #else
     return nsBaseWidget::MakeFullScreen(aFullScreen);
@@ -5508,6 +5476,8 @@ GetFirstNSWindowForGDKWindow(GdkWindow *aGdkWindow)
 gboolean
 motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 {
+    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
     nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
         return FALSE;
@@ -5524,6 +5494,8 @@ motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 gboolean
 button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
+    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
     nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
         return FALSE;
@@ -5537,6 +5509,8 @@ button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
 gboolean
 button_release_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
+    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
     nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
         return FALSE;
@@ -5672,6 +5646,9 @@ gboolean
 key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
 {
     LOG(("key_press_event_cb\n"));
+
+    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
     // find the window with focus and dispatch this event to that widget
     nsWindow *window = get_window_for_gtk_widget(widget);
     if (!window)
@@ -5712,6 +5689,9 @@ gboolean
 key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
 {
     LOG(("key_release_event_cb\n"));
+
+    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
     // find the window with focus and dispatch this event to that widget
     nsWindow *window = get_window_for_gtk_widget(widget);
     if (!window)

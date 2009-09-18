@@ -58,6 +58,11 @@
   <script type="application/javascript">
   <![CDATA[
 
+const DLMGR_UI_DONE = "download-manager-ui-done";
+
+let os = Cc["@mozilla.org/observer-service;1"].
+         getService(Ci.nsIObserverService);
+
 function test()
 {
   var dmui = getDMUI();
@@ -72,43 +77,6 @@ function test()
   let win = wm.getMostRecentWindow("Download:Manager");
   if (win) win.close();
 
-  let os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  const DLMGR_UI_DONE = "download-manager-ui-done";
-
-  let testObs = {
-    observe: function(aSubject, aTopic, aData)
-    {
-      if (aTopic != DLMGR_UI_DONE)
-        return;
-
-      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.focus();
-
-      // Put in a value to clear out
-      let search = win.document.getElementById("searchbox");
-      search.focus();
-      search.value = "download manager escape test";
-
-      // Send the escape key to the download manager UI window
-      let sendEscape = function() synthesizeKey("VK_ESCAPE", {}, win);
-
-      // Escape from search box
-      sendEscape();
-      is(win.closed, false,
-        "Escape doesn't close the window when in the search box");
-      is(search.value, "", "Escape correctly emptied the search box");
-
-      // Escape from list (escape from search box moves focus to list)
-      sendEscape();
-      is(win.closed, true,
-        "Previous escape moved focus to list and now escape closed the window");
-
-      os.removeObserver(testObs, DLMGR_UI_DONE);
-      SimpleTest.finish();
-    }
-  };
-
   // Register with the observer service
   os.addObserver(testObs, DLMGR_UI_DONE, false);
 
@@ -117,6 +85,41 @@ function test()
 
   SimpleTest.waitForExplicitFinish();
 }
+
+let testObs = {
+  observe: function(aSubject, aTopic, aData)
+  {
+    if (aTopic != DLMGR_UI_DONE)
+      return;
+
+    SimpleTest.waitForFocus(function () { continueTest(aSubject) }, aSubject);
+  }
+};
+
+function continueTest(win)
+{
+  // Put in a value to clear out
+  let search = win.document.getElementById("searchbox");
+  search.focus();
+  search.value = "download manager escape test";
+
+  // Send the escape key to the download manager UI window
+  let sendEscape = function() synthesizeKey("VK_ESCAPE", {}, win);
+
+  // Escape from search box
+  sendEscape();
+  is(win.closed, false,
+    "Escape doesn't close the window when in the search box");
+  is(search.value, "", "Escape correctly emptied the search box");
+
+  // Escape from list (escape from search box moves focus to list)
+  sendEscape();
+  is(win.closed, true,
+    "Previous escape moved focus to list and now escape closed the window");
+
+  os.removeObserver(testObs, DLMGR_UI_DONE);
+  SimpleTest.finish();
+};
 
   ]]>
   </script>

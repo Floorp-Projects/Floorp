@@ -99,6 +99,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsITimer.h"
 #include "nsIServiceManager.h"
 #include "nsFrameManager.h"
+#include "nsIScrollableFrame.h"
 // notifications
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
@@ -414,7 +415,7 @@ public:
        mTimer->Cancel();
   }
 
-  nsresult Start(nsPresContext *aPresContext, nsIView *aView, nsPoint &aPoint)
+  nsresult Start(nsPresContext *aPresContext, nsPoint &aPoint)
   {
     mPoint = aPoint;
 
@@ -422,36 +423,7 @@ public:
     // stopped by the selection if the prescontext is destroyed.
     mPresContext = aPresContext;
 
-    // Store the content from the nearest capturing frame. If this returns null
-    // the capturing frame is the root.
-    nsIFrame* clientFrame = static_cast<nsIFrame*>(aView->GetClientData());
-    NS_ASSERTION(clientFrame, "Missing client frame");
-
-    nsIFrame* capturingFrame = nsFrame::GetNearestCapturingFrame(clientFrame);
-    NS_ASSERTION(!capturingFrame || capturingFrame->GetMouseCapturer(),
-                 "Capturing frame should have a mouse capturer" );
-
-    NS_ASSERTION(!capturingFrame || mPresContext == capturingFrame->PresContext(),
-                 "Shouldn't have different pres contexts");
-
-    NS_ASSERTION(capturingFrame != mPresContext->PresShell()->FrameManager()->GetRootFrame(),
-                 "Capturing frame should not be the root frame");
-
-    if (capturingFrame)
-    {
-      mContent = capturingFrame->GetContent();
-      NS_ASSERTION(mContent, "Need content");
-
-      NS_ASSERTION(mContent != mPresContext->PresShell()->FrameManager()->GetRootFrame()->GetContent(),
-                 "We didn't want the root content!");
-
-      NS_ASSERTION(capturingFrame == nsFrame::GetNearestCapturingFrame(
-                   mPresContext->PresShell()->GetPrimaryFrameFor(mContent)),
-                   "Mapping of frame to content failed.");
-    }
-
-    // Check that if there was no capturing frame the content is null.
-    NS_ASSERTION(capturingFrame || !mContent, "Content not cleared correctly.");
+    mContent = nsIPresShell::GetCapturingContent();
 
     if (!mTimer)
     {
@@ -494,46 +466,27 @@ public:
   {
     if (mSelection && mPresContext)
     {
-      // If the content is null the capturing frame must be the root frame.
-      nsIFrame* capturingFrame;
-      if (mContent)
-      {
-        nsIFrame* contentFrame = mPresContext->PresShell()->GetPrimaryFrameFor(mContent);
-        if (contentFrame)
-        {
-          capturingFrame = nsFrame::GetNearestCapturingFrame(contentFrame);
-        }
-        else 
-        {
-          capturingFrame = nsnull;
-        }
-        NS_ASSERTION(!capturingFrame || capturingFrame->GetMouseCapturer(),
-                     "Capturing frame should have a mouse capturer" );
-      }
-      else
-      {
-        capturingFrame = mPresContext->PresShell()->FrameManager()->GetRootFrame();
-      }
-
-      // Clear the content reference now that the frame has been found.
+      nsWeakFrame frame = mPresContext->PresShell()->GetPrimaryFrameFor(mContent);
       mContent = nsnull;
 
-      // This could happen for a frame with style changed to display:none or a frame
-      // that was destroyed.
-      if (!capturingFrame) {
-        NS_WARNING("Frame destroyed or set to display:none before scroll timer fired.");
+      mFrameSelection->HandleDrag(frame, mPoint);
+
+      if (!frame.IsAlive())
         return NS_OK;
+
+      nsIFrame* checkFrame = frame;
+      nsIScrollableFrame *scrollFrame = nsnull;
+      while (checkFrame) {
+        scrollFrame = do_QueryFrame(checkFrame);
+        if (scrollFrame) {
+          break;
+        }
+        checkFrame = checkFrame->GetParent();
       }
+      nsIView* capturingView = scrollFrame ? scrollFrame->GetScrollableView()->View() : nsnull;
 
-      nsIView* captureView = capturingFrame->GetMouseCapturer();
-    
-      nsWeakFrame viewFrame = static_cast<nsIFrame*>(captureView->GetClientData());
-      NS_ASSERTION(viewFrame.GetFrame(), "View must have a client frame");
-      
-      mFrameSelection->HandleDrag(viewFrame, mPoint);
-
-      mSelection->DoAutoScrollView(mPresContext,
-                                   viewFrame.IsAlive() ? captureView : nsnull,
+      nsPoint pnt;
+      mSelection->DoAutoScrollView(mPresContext, capturingView,
                                    mPoint, PR_TRUE);
     }
     return NS_OK;
@@ -1636,7 +1589,7 @@ void nsFrameSelection::BidiLevelFromMove(nsIPresShell* aPresShell,
     case nsIDOMKeyEvent::DOM_VK_UP:
     case nsIDOMKeyEvent::DOM_VK_DOWN:
       GetPrevNextBidiLevels(aContext, aNode, aContentOffset, &firstFrame, &secondFrame, &firstLevel, &secondLevel);
-      aPresShell->SetCaretBidiLevel(PR_MIN(firstLevel, secondLevel));
+      aPresShell->SetCaretBidiLevel(NS_MIN(firstLevel, secondLevel));
       break;
       */
 
@@ -2766,69 +2719,134 @@ nsFrameSelection::SelectBlockOfCells(nsIContent *aStartCell, nsIContent *aEndCel
   result = GetCellIndexes(aEndCell, endRowIndex, endColIndex);
   if(NS_FAILED(result)) return result;
 
-  // Check that |table| is a table.
-  if (!GetTableLayout(table)) return NS_ERROR_FAILURE;
-
-  PRInt32 curRowIndex, curColIndex;
-
   if (mDragSelectingCells)
   {
     // Drag selecting: remove selected cells outside of new block limits
-
-    PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
-    if (!mDomSelections[index])
-      return NS_ERROR_NULL_POINTER;
-
-    // Strong reference because we sometimes remove the range
-    nsCOMPtr<nsIRange> range = GetFirstCellRange();
-    nsIContent* cellNode = GetFirstSelectedContent(range);
-    NS_PRECONDITION(!range || cellNode, "Must have cellNode if had a range");
-
-    PRInt32 minRowIndex = PR_MIN(startRowIndex, endRowIndex);
-    PRInt32 maxRowIndex = PR_MAX(startRowIndex, endRowIndex);
-    PRInt32 minColIndex = PR_MIN(startColIndex, endColIndex);
-    PRInt32 maxColIndex = PR_MAX(startColIndex, endColIndex);
-
-    while (cellNode)
-    {
-      result = GetCellIndexes(cellNode, curRowIndex, curColIndex);
-      if (NS_FAILED(result)) return result;
-
-#ifdef DEBUG_TABLE_SELECTION
-if (!range)
-printf("SelectBlockOfCells -- range is null\n");
-#endif
-      if (range &&
-          (curRowIndex < minRowIndex || curRowIndex > maxRowIndex || 
-           curColIndex < minColIndex || curColIndex > maxColIndex))
-      {
-        mDomSelections[index]->RemoveRange(range);
-        // Since we've removed the range, decrement pointer to next range
-        mSelectedCellIndex--;
-      }    
-      range = GetNextCellRange();
-      cellNode = GetFirstSelectedContent(range);
-      NS_PRECONDITION(!range || cellNode, "Must have cellNode if had a range");
-    }
+    UnselectCells(table, startRowIndex, startColIndex, endRowIndex, endColIndex,
+                  PR_TRUE);
   }
-
-  nsCOMPtr<nsIDOMElement> cellElement;
-  PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan;
-  PRBool  isSelected;
 
   // Note that we select block in the direction of user's mouse dragging,
   //  which means start cell may be after the end cell in either row or column
-  PRInt32 row = startRowIndex;
+  return AddCellsToSelection(table, startRowIndex, startColIndex,
+                             endRowIndex, endColIndex);
+}
+
+nsresult
+nsFrameSelection::UnselectCells(nsIContent *aTableContent,
+                                PRInt32 aStartRowIndex,
+                                PRInt32 aStartColumnIndex,
+                                PRInt32 aEndRowIndex,
+                                PRInt32 aEndColumnIndex,
+                                PRBool aRemoveOutsideOfCellRange)
+{
+  PRInt8 index =
+    GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  if (!mDomSelections[index])
+    return NS_ERROR_NULL_POINTER;
+
+  nsITableLayout *tableLayout = GetTableLayout(aTableContent);
+  if (!tableLayout)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 minRowIndex = NS_MIN(aStartRowIndex, aEndRowIndex);
+  PRInt32 maxRowIndex = NS_MAX(aStartRowIndex, aEndRowIndex);
+  PRInt32 minColIndex = NS_MIN(aStartColumnIndex, aEndColumnIndex);
+  PRInt32 maxColIndex = NS_MAX(aStartColumnIndex, aEndColumnIndex);
+
+  // Strong reference because we sometimes remove the range
+  nsCOMPtr<nsIRange> range = GetFirstCellRange();
+  nsIContent* cellNode = GetFirstSelectedContent(range);
+  NS_PRECONDITION(!range || cellNode, "Must have cellNode if had a range");
+
+  PRInt32 curRowIndex, curColIndex;
+  while (cellNode)
+  {
+    nsresult result = GetCellIndexes(cellNode, curRowIndex, curColIndex);
+    if (NS_FAILED(result))
+      return result;
+
+#ifdef DEBUG_TABLE_SELECTION
+    if (!range)
+      printf("RemoveCellsToSelection -- range is null\n");
+#endif
+
+    if (range) {
+      if (aRemoveOutsideOfCellRange) {
+        if (curRowIndex < minRowIndex || curRowIndex > maxRowIndex || 
+            curColIndex < minColIndex || curColIndex > maxColIndex) {
+
+          mDomSelections[index]->RemoveRange(range);
+          // Since we've removed the range, decrement pointer to next range
+          mSelectedCellIndex--;
+        }
+
+      } else {
+        // Remove cell from selection if it belongs to the given cells range or
+        // it is spanned onto the cells range.
+        nsCOMPtr<nsIDOMElement> cellElement;
+        PRInt32 origRowIndex, origColIndex, rowSpan, colSpan,
+          actualRowSpan, actualColSpan;
+        PRBool isSelected;
+
+        result = tableLayout->GetCellDataAt(curRowIndex, curColIndex,
+                                            *getter_AddRefs(cellElement),
+                                            origRowIndex, origColIndex,
+                                            rowSpan, colSpan, 
+                                            actualRowSpan, actualColSpan,
+                                            isSelected);
+        if (NS_FAILED(result))
+          return result;
+
+        if (origRowIndex <= maxRowIndex &&
+            origRowIndex + actualRowSpan - 1 >= minRowIndex &&
+            origColIndex <= maxColIndex &&
+            origColIndex + actualColSpan - 1 >= minColIndex) {
+
+          mDomSelections[index]->RemoveRange(range);
+          // Since we've removed the range, decrement pointer to next range
+          mSelectedCellIndex--;
+        }
+      }
+    }
+
+    range = GetNextCellRange();
+    cellNode = GetFirstSelectedContent(range);
+    NS_PRECONDITION(!range || cellNode, "Must have cellNode if had a range");
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsFrameSelection::AddCellsToSelection(nsIContent *aTableContent,
+                                      PRInt32 aStartRowIndex,
+                                      PRInt32 aStartColumnIndex,
+                                      PRInt32 aEndRowIndex,
+                                      PRInt32 aEndColumnIndex)
+{
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  if (!mDomSelections[index])
+    return NS_ERROR_NULL_POINTER;
+
+  // Get TableLayout interface to access cell data based on cellmap location
+  // frames are not ref counted, so don't use an nsCOMPtr
+  nsITableLayout *tableLayoutObject = GetTableLayout(aTableContent);
+  if (!tableLayoutObject) // Check that |table| is a table.
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMElement> cellElement;
+  PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan,
+    curRowIndex, curColIndex;
+  PRBool isSelected;
+  nsresult result = NS_OK;
+
+  PRInt32 row = aStartRowIndex;
   while(PR_TRUE)
   {
-    PRInt32 col = startColIndex;
+    PRInt32 col = aStartColumnIndex;
     while(PR_TRUE)
     {
-      // Get TableLayout interface to access cell data based on cellmap location
-      // frames are not ref counted, so don't use an nsCOMPtr
-      nsITableLayout *tableLayoutObject = GetTableLayout(table);
-      if (!tableLayoutObject) return NS_ERROR_FAILURE;
-
       result = tableLayoutObject->GetCellDataAt(row, col, *getter_AddRefs(cellElement),
                                                 curRowIndex, curColIndex, rowSpan, colSpan, 
                                                 actualRowSpan, actualColSpan, isSelected);
@@ -2844,21 +2862,43 @@ printf("SelectBlockOfCells -- range is null\n");
         if (NS_FAILED(result)) return result;
       }
       // Done when we reach end column
-      if (col == endColIndex) break;
+      if (col == aEndColumnIndex) break;
 
-      if (startColIndex < endColIndex)
+      if (aStartColumnIndex < aEndColumnIndex)
         col ++;
       else
         col--;
     };
-    if (row == endRowIndex) break;
+    if (row == aEndRowIndex) break;
 
-    if (startRowIndex < endRowIndex)
+    if (aStartRowIndex < aEndRowIndex)
       row++;
     else
       row--;
   };
   return result;
+}
+
+nsresult
+nsFrameSelection::RemoveCellsFromSelection(nsIContent *aTable,
+                                           PRInt32 aStartRowIndex,
+                                           PRInt32 aStartColumnIndex,
+                                           PRInt32 aEndRowIndex,
+                                           PRInt32 aEndColumnIndex)
+{
+  return UnselectCells(aTable, aStartRowIndex, aStartColumnIndex,
+                       aEndRowIndex, aEndColumnIndex, PR_FALSE);
+}
+
+nsresult
+nsFrameSelection::RestrictCellsToSelection(nsIContent *aTable,
+                                           PRInt32 aStartRowIndex,
+                                           PRInt32 aStartColumnIndex,
+                                           PRInt32 aEndRowIndex,
+                                           PRInt32 aEndColumnIndex)
+{
+  return UnselectCells(aTable, aStartRowIndex, aStartColumnIndex,
+                       aEndRowIndex, aEndColumnIndex, PR_TRUE);
 }
 
 nsresult
@@ -4387,8 +4427,8 @@ nsTypedSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset,
       if (startOffset < (aContentOffset + aContentLength)  &&
           endOffset > aContentOffset) {
         // this range is totally inside the requested content range
-        start = PR_MAX(0, startOffset - aContentOffset);
-        end = PR_MIN(aContentLength, endOffset - aContentOffset);
+        start = NS_MAX(0, startOffset - aContentOffset);
+        end = NS_MIN(aContentLength, endOffset - aContentOffset);
       }
       // otherwise, range is inside the requested node, but does not intersect
       // the requested content range, so ignore it
@@ -4396,7 +4436,7 @@ nsTypedSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset,
       if (startOffset < (aContentOffset + aContentLength)) {
         // the beginning of the range is inside the requested node, but the
         // end is outside, select everything from there to the end
-        start = PR_MAX(0, startOffset - aContentOffset);
+        start = NS_MAX(0, startOffset - aContentOffset);
         end = aContentLength;
       }
     } else if (endNode == aContent) {
@@ -4404,7 +4444,7 @@ nsTypedSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset,
         // the end of the range is inside the requested node, but the beginning
         // is outside, select everything from the beginning to there
         start = 0;
-        end = PR_MIN(aContentLength, endOffset - aContentOffset);
+        end = NS_MIN(aContentLength, endOffset - aContentOffset);
       }
     } else {
       // this range does not begin or end in the requested node, but since
@@ -4918,7 +4958,7 @@ nsTypedSelection::DoAutoScrollView(nsPresContext *aPresContext,
     NS_ENSURE_SUCCESS(result, result);
 
     nsPoint svPoint = globalPoint - globalOffset;
-    mAutoScrollTimer->Start(aPresContext, aView, svPoint);
+    mAutoScrollTimer->Start(aPresContext, svPoint);
   }
 
   return NS_OK;
@@ -6324,7 +6364,7 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
     //  (if the new language corresponds to the orientation of that character) and this level plus 1
     //  (if the new language corresponds to the opposite orientation)
     if ((level != levelBefore) && (level != levelAfter))
-      level = PR_MIN(levelBefore, levelAfter);
+      level = NS_MIN(levelBefore, levelAfter);
     if ((level & 1) == aLangRTL)
       mFrameSelection->SetCaretBidiLevel(level);
     else

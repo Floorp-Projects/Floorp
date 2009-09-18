@@ -50,6 +50,8 @@ CPPSRCS = \
   selfTest.cpp \
   testPropCache.cpp \
   testXDR.cpp \
+  testIntString.cpp \
+  testSameValue.cpp \
   $(NULL)
 
 DEFINES         += -DEXPORT_JS_API

@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *    Boris Zbarsky <bzbarsky@mit.edu> (original author)
+ *    Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,8 +46,15 @@ let EXPORTED_SYMBOLS = [
  * Necko utilities
  */
 
+////////////////////////////////////////////////////////////////////////////////
+//// Constants
+
 const Ci = Components.interfaces;
 const Cc = Components.classes;
+const Cr = Components.results;
+
+////////////////////////////////////////////////////////////////////////////////
+//// NetUtil Object
 
 const NetUtil = {
     /**
@@ -54,22 +62,29 @@ const NetUtil = {
      * to aSink (an output stream).  The copy will happen on some background
      * thread.  Both streams will be closed when the copy completes.
      *
-     * @param aSource the input stream to read from
-     * @param aSink the output stream to write to
-     * @param aCallback [optional] a function that will be called at copy
-     *        completion with a single argument: the nsresult status code for
-     *        the copy operation.
+     * @param aSource
+     *        The input stream to read from
+     * @param aSink
+     *        The output stream to write to
+     * @param aCallback [optional]
+     *        A function that will be called at copy completion with a single
+     *        argument: the nsresult status code for the copy operation.
      *
-     * @return an nsIRequest representing the copy operation (for example, this
+     * @return An nsIRequest representing the copy operation (for example, this
      *         can be used to cancel the copying).  The consumer can ignore the
      *         return value if desired.
      */
-    asyncCopy: function _asyncCopy(aSource, aSink, aCallback) {
+    asyncCopy: function NetUtil_asyncCopy(aSource, aSink, aCallback)
+    {
         if (!aSource || !aSink) {
-            throw "Must have a source and a sink";
+            let exception = new Components.Exception(
+                "Must have a source and a sink",
+                Cr.NS_ERROR_INVALID_ARG,
+                Components.stack.caller
+            );
+            throw exception;
         }
 
-        const ioUtil = Cc["@mozilla.org/io-util;1"].getService(Ci.nsIIOUtil);
         var sourceBuffered = ioUtil.inputStreamIsBuffered(aSource);
         var sinkBuffered = ioUtil.outputStreamIsBuffered(aSink);
 
@@ -108,5 +123,43 @@ const NetUtil = {
         // start the copying
         copier.asyncCopy(observer, null);
         return copier;
-    }
+    },
+
+    /**
+     * Constructs a new URI for the given spec, character set, and base URI.
+     *
+     * @param aSpec
+     *        The spec for the desired URI.
+     * @param aOriginCharset [optional]
+     *        The character set for the URI.
+     * @param aBaseURI [optional]
+     *        The base URI for the spec.
+     *
+     * @return an nsIURI object.
+     */
+    newURI: function NetUtil_newURI(aSpec, aOriginCharset, aBaseURI)
+    {
+        if (!aSpec) {
+            let exception = new Components.Exception(
+                "Must have a non-null spec",
+                Cr.NS_ERROR_INVALID_ARG,
+                Components.stack.caller
+            );
+            throw exception;
+        }
+
+        return ioService.newURI(aSpec, aOriginCharset, aBaseURI);
+    },
 };
+
+////////////////////////////////////////////////////////////////////////////////
+//// Initialization
+
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+// Define our lazy getters.
+XPCOMUtils.defineLazyServiceGetter(this, "ioUtil", "@mozilla.org/io-util;1",
+                                   "nsIIOUtil");
+XPCOMUtils.defineLazyServiceGetter(this, "ioService",
+                                   "@mozilla.org/network/io-service;1",
+                                   "nsIIOService");

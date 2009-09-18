@@ -24,6 +24,7 @@
  *   Giorgio Maone <g.maone@informaction.com>
  *   Johnathan Nightingale <johnath@mozilla.com>
  *   Drew Willcoxon <adw@mozilla.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -89,7 +90,7 @@ var gSanitizePromptDialog = {
       this.bundleBrowser.getString("sanitizeButtonOK");
 
     if (this.selectedTimespan === Sanitizer.TIMESPAN_EVERYTHING) {
-      this.ensureWarningIsInited();
+      this.prepareWarning();
       this.warningBox.hidden = false;
     }
     else
@@ -107,7 +108,7 @@ var gSanitizePromptDialog = {
 
     // If clearing everything
     if (this.selectedTimespan === Sanitizer.TIMESPAN_EVERYTHING) {
-      this.ensureWarningIsInited();
+      this.prepareWarning();
       if (warningBox.hidden) {
         warningBox.hidden = false;
         window.resizeBy(0, warningBox.boxObject.height);
@@ -147,21 +148,29 @@ var gSanitizePromptDialog = {
   /**
    * If the panel that displays a warning when the duration is "Everything" is
    * not set up, sets it up.  Otherwise does nothing.
+   *
+   * @param aDontShowItemList Whether only the warning message should be updated.
+   *                          True means the item list visibility status should not
+   *                          be changed.
    */
-  ensureWarningIsInited: function ()
-  {
-    if (this._warningIsInited)
-      return;
-
-    this._warningIsInited = true;
-
+  prepareWarning: function (aDontShowItemList) {
     // If the date and time-aware locale warning string is ever used again,
     // initialize it here.  Currently we use the no-visits warning string,
     // which does not include date and time.  See bug 480169 comment 48.
 
+    var warningStringID;
+    if (this.hasCustomizedItemSelection()) {
+      warningStringID = "sanitizeSelectedWarning";
+      if (!aDontShowItemList)
+        this.showItemList();
+    }
+    else {
+      warningStringID = "sanitizeEverythingWarning2";
+    }
+
     var warningDesc = document.getElementById("sanitizeEverythingWarning");
     warningDesc.textContent =
-      this.bundleBrowser.getString("sanitizeEverythingNoVisitsWarning");
+      this.bundleBrowser.getString(warningStringID);
   },
 
   /**
@@ -186,6 +195,10 @@ var gSanitizePromptDialog = {
       document.documentElement.getButton("accept").disabled = !found;
     }
     catch (e) { }
+
+    // Update the warning prompt if needed
+    this.prepareWarning(true);
+
     return undefined;
   },
 
@@ -216,25 +229,58 @@ var gSanitizePromptDialog = {
   },
 
   /**
+   * Check if all of the history items have been selected like the default status.
+   */
+  hasCustomizedItemSelection: function () {
+    let checkboxes = document.querySelectorAll("#itemList > [preference]");
+    for (let i = 0; i < checkboxes.length; ++i) {
+      let pref = document.getElementById(checkboxes[i].getAttribute("preference"));
+      if (pref.value != pref.defaultValue)
+        return true;
+    }
+    return false;
+  },
+
+  /**
+   * Show the history items list.
+   */
+  showItemList: function () {
+    var itemList = document.getElementById("itemList");
+    var expanderButton = document.getElementById("detailsExpander");
+
+    if (itemList.collapsed) {
+      expanderButton.className = "expander-up";
+      itemList.setAttribute("collapsed", "false");
+      if (document.documentElement.boxObject.height)
+        window.resizeBy(0, itemList.boxObject.height);
+    }
+  },
+
+  /**
+   * Hide the history items list.
+   */
+  hideItemList: function () {
+    var itemList = document.getElementById("itemList");
+    var expanderButton = document.getElementById("detailsExpander");
+
+    if (!itemList.collapsed) {
+      expanderButton.className = "expander-down";
+      window.resizeBy(0, -itemList.boxObject.height);
+      itemList.setAttribute("collapsed", "true");
+    }
+  },
+
+  /**
    * Called by the item list expander button to toggle the list's visibility.
    */
   toggleItemList: function ()
   {
     var itemList = document.getElementById("itemList");
-    var expanderButton = document.getElementById("detailsExpander");
 
-    // Showing item list
-    if (itemList.collapsed) {
-      expanderButton.className = "expander-up";
-      itemList.setAttribute("collapsed", "false");
-      window.resizeBy(0, itemList.boxObject.height);
-    }
-    // Hiding item list
-    else {
-      expanderButton.className = "expander-down";
-      window.resizeBy(0, -itemList.boxObject.height);
-      itemList.setAttribute("collapsed", "true");
-    }
+    if (itemList.collapsed)
+      this.showItemList();
+    else
+      this.hideItemList();
   }
 
 #ifdef CRH_DIALOG_TREE_VIEW
@@ -408,7 +454,7 @@ var gSanitizePromptDialog = {
 
     // If clearing everything, show the warning and change the dialog's title.
     if (durVal === Sanitizer.TIMESPAN_EVERYTHING) {
-      this.ensureWarningIsInited();
+      this.prepareWarning();
       durDeck.selectedIndex = 1;
       window.document.title =
         this.bundleBrowser.getString("sanitizeDialog2.everything.title");

@@ -57,17 +57,25 @@ public:
   /* must be called on the main thread or else */
   void AccelerationChanged(double x, double y, double z);
 
+  double mLastX;
+  double mLastY;
+  double mLastZ;
+
 private:
   nsCOMArray<nsIAccelerationListener> mListeners;
   nsCOMArray<nsIDOMWindow> mWindowListeners;
 
-  void startDisconnectTimer();
+  void StartDisconnectTimer();
 
   PRBool mStarted;
-  nsCOMPtr<nsITimer> mTimer;
+  PRBool mNewListener;
+
+  nsCOMPtr<nsITimer> mTimeoutTimer;
   static void TimeoutHandler(nsITimer *aTimer, void *aClosure);
 
-protected:
+ protected:
+
+  PRUint32 mUpdateInterval;
 
   virtual void Startup()  = 0;
   virtual void Shutdown() = 0;

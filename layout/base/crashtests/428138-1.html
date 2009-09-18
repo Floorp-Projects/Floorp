@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  var fo  = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+  fo.style.padding = "10em";
+  svg.appendChild(fo);
+  document.body.appendChild(svg);
+  document.body.offsetHeight;
+
+  var opt = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  fo.appendChild(opt);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+
+</html>

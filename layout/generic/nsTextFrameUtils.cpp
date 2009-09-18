@@ -261,7 +261,7 @@ PRBool nsSkipCharsRunIterator::NextRun() {
       return PR_FALSE;
     PRInt32 length;
     mSkipped = mIterator.IsOriginalCharSkipped(&length);
-    mRunLength = PR_MIN(length, mRemainingLength);
+    mRunLength = NS_MIN(length, mRemainingLength);
   } while (!mVisitSkipped && mSkipped);
 
   return PR_TRUE;

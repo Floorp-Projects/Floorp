@@ -14,7 +14,7 @@ WinMain(HINSTANCE hInstance,
   wchar_t modfilename[MAX_PATH];
   wchar_t execname[MAX_PATH];
   wchar_t args[MAX_PATH];
-  wcscpy(args, L"-nosplash -faststart");
+  wcscpy(args, L"-nosplash -faststart-hidden");
 
   HMODULE mod = GetModuleHandle(NULL);
   GetModuleFileNameW(mod, modfilename, sizeof(modfilename)/sizeof(modfilename[0]));

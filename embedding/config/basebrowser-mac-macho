@@ -29,9 +29,6 @@ libmozjs.dylib
 ; 
 libxpcom.dylib 
 libxpcom_core.dylib 
-libxpcom_compat.dylib
-components/libxpcom_compat_c.dylib
-components/xpcom_obsolete.xpt
 
 ; 
 ; Components: (need to trim fat)
@@ -164,6 +161,8 @@ chrome/pipnss.jar
 defaults/pref/security-prefs.js
 libnss3.dylib
 libnssutil3.dylib
+libnssdbm3.chk
+libnssdbm3.dylib
 libsmime3.dylib
 libsoftokn3.chk
 libsoftokn3.dylib

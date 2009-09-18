@@ -3,24 +3,140 @@
 <?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Menu Checkbox and Radio Tests"
-  onload="setTimeout(runTest, 0);"
+  onload="runTest()"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <title>Menu Checkbox and Radio Tests</title>
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
 
-<!--
+  <hbox>
+    <button id="menu" type="menu" label="View">
+      <menupopup id="popup" onpopupshown="popupShown()" onpopuphidden="popupHidden()">
+        <menuitem id="toolbar" label="Show Toolbar" type="checkbox"/>
+        <menuitem id="statusbar" label="Show Status Bar" type="checkbox" checked="true"/>
+        <menuitem id="bookmarks" label="Show Bookmarks" type="checkbox" autocheck="false"/>
+        <menuitem id="history" label="Show History" type="checkbox" autocheck="false" checked="true"/>
+        <menuseparator/>
+        <menuitem id="byname" label="By Name" type="radio" name="sort"/>
+        <menuitem id="bydate" label="By Date" type="radio" name="sort" checked="true"/>
+        <menuseparator/>
+        <menuitem id="ascending" label="Ascending" type="radio" name="order" checked="true"/>
+        <menuitem id="descending" label="Descending" type="radio" name="order" autocheck="false"/>
+        <menuitem id="bysubject" label="By Subject" type="radio" name="sort"/>
+      </menupopup>
+    </button>
+
+  </hbox>
+
+  <!--
   This test checks that checkbox and radio menu items work properly
   -->
-<script>
-SimpleTest.waitForExplicitFinish();
-function runTest()
-{
-  window.open("window_menuchecks.xul", "_blank", "width=600,height=600");
-}
-</script>
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+  var gTestIndex = 0;
+
+  // tests to perform
+  var tests = [
+    {
+      testname: "select unchecked checkbox",
+      item: "toolbar",
+      checked: ["toolbar", "statusbar", "history", "bydate", "ascending"]
+    },
+    {
+      testname: "select checked checkbox",
+      item: "statusbar",
+      checked: ["toolbar", "history", "bydate", "ascending"]
+    },
+    {
+      testname: "select unchecked autocheck checkbox",
+      item: "bookmarks",
+      checked: ["toolbar", "history", "bydate", "ascending"]
+    },
+    {
+      testname: "select checked autocheck checkbox",
+      item: "history",
+      checked: ["toolbar", "history", "bydate", "ascending"]
+    },
+    {
+      testname: "select unchecked radio",
+      item: "byname",
+      checked: ["toolbar", "history", "byname", "ascending"]
+    },
+    {
+      testname: "select checked radio",
+      item: "byname",
+      checked: ["toolbar", "history", "byname", "ascending"]
+    },
+    {
+      testname: "select out of order checked radio",
+      item: "bysubject",
+      checked: ["toolbar", "history", "bysubject", "ascending"]
+    },
+    {
+      testname: "select first radio again",
+      item: "byname",
+      checked: ["toolbar", "history", "byname", "ascending"]
+    },
+    {
+      testname: "select autocheck radio",
+      item: "descending",
+      checked: ["toolbar", "history", "byname", "ascending"]
+    }
+  ];
+
+  function runTest()
+  {
+    checkMenus(["statusbar", "history", "bydate", "ascending"], "initial");
+    document.getElementById("menu").open = true;
+  }
+
+  function checkMenus(checkedItems, testname)
+  {
+    var isok = true;
+    var children = document.getElementById("popup").childNodes;
+    for (var c = 0; c < children.length; c++) {
+      var child = children[c];
+      if ((checkedItems.indexOf(child.id) != -1 && child.getAttribute("checked") != "true") ||
+          (checkedItems.indexOf(child.id) == -1 && child.hasAttribute("checked"))) {
+        isok = false;
+        break;
+      }
+    }
+
+    ok(isok, testname);
+  }
+
+  function popupShown()
+  {
+    var test = tests[gTestIndex];
+    synthesizeMouse(document.getElementById(test.item), 4, 4, { });
+  }
+
+  function popupHidden()
+  {
+    if (gTestIndex < tests.length) {
+      var test = tests[gTestIndex];
+      checkMenus(test.checked, test.testname);
+      gTestIndex++;
+      if (gTestIndex < tests.length) {
+        document.getElementById("menu").open = true;
+      }
+      else {
+        // manually setting the checkbox should also update the radio state
+        document.getElementById("bydate").setAttribute("checked", "true");
+        checkMenus(["toolbar", "history", "bydate", "ascending"], "set checked attribute on radio");
+        SimpleTest.finish();
+      }
+    }
+  }
+
+  ]]>
+  </script>
 
 <body xmlns="http://www.w3.org/1999/xhtml">
 <p id="display">

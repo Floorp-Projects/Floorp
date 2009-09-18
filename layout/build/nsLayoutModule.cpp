@@ -209,7 +209,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 #ifdef MOZ_ENABLE_CANVAS
 #include "nsIDOMCanvasRenderingContext2D.h"
 #ifdef MOZ_ENABLE_CANVAS3D
-#include "nsICanvasRenderingContextGLWeb20.h"
+#include "nsICanvasRenderingContextWebGL.h"
 #endif
 #endif
 
@@ -406,7 +406,7 @@ nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 #ifdef MOZ_ENABLE_CANVAS
 nsresult NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult);
 #ifdef MOZ_ENABLE_CANVAS3D
-nsresult NS_NewCanvasRenderingContextGLWeb20(nsICanvasRenderingContextGLWeb20** aResult);
+nsresult NS_NewCanvasRenderingContextWebGL(nsICanvasRenderingContextWebGL** aResult);
 #endif
 #endif
 
@@ -543,7 +543,7 @@ MAKE_CTOR(CreateFocusManager,             nsIFocusManager,      NS_NewFocusManag
 #ifdef MOZ_ENABLE_CANVAS
 MAKE_CTOR(CreateCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D, NS_NewCanvasRenderingContext2D)
 #ifdef MOZ_ENABLE_CANVAS3D
-MAKE_CTOR(CreateCanvasRenderingContextGLWeb20, nsICanvasRenderingContextGLWeb20, NS_NewCanvasRenderingContextGLWeb20)
+MAKE_CTOR(CreateCanvasRenderingContextWebGL, nsICanvasRenderingContextWebGL, NS_NewCanvasRenderingContextWebGL)
 #endif
 #endif
 
@@ -1081,10 +1081,10 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/content/canvas-rendering-context;1?id=2d",
     CreateCanvasRenderingContext2D },
 #ifdef MOZ_ENABLE_CANVAS3D
-  { "Canvas OpenGL Web 2.0 Rendering Context",
-    NS_CANVASRENDERINGCONTEXTGLWEB20_CID,
-    "@mozilla.org/content/canvas-rendering-context;1?id=moz-glweb20",
-    CreateCanvasRenderingContextGLWeb20 },
+  { "Canvas WebGL Rendering Context",
+    NS_CANVASRENDERINGCONTEXTWEBGL_CID,
+    "@mozilla.org/content/canvas-rendering-context;1?id=moz-webgl",
+    CreateCanvasRenderingContextWebGL },
 #endif
 #endif
 

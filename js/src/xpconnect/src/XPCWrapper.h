@@ -53,7 +53,7 @@
 #define FLAG_RESOLVING 0x4
 
 #define HAS_FLAGS(_val, _flags) \
-  ((_val) != JSVAL_VOID && (PRUint32(JSVAL_TO_INT(_val)) & (_flags)) != 0)
+  ((PRUint32(JSVAL_TO_INT(_val)) & (_flags)) != 0)
 
 #define NATIVE_HAS_FLAG(_wn, _flag)                \
   ((_wn)->GetScriptableInfo() &&                   \
@@ -84,10 +84,6 @@ CanAccessWrapper(JSContext *cx, JSObject *wrappedObj);
 // Used by UnwrapSOW below.
 JSBool
 AllowedToAct(JSContext *cx, jsval idval);
-
-JSBool
-XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                     jsval *rval);
 
 inline JSBool
 XPC_XOW_ClassNeedsXOW(const char *name)

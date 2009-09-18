@@ -45,6 +45,8 @@ protected:
   nsSVGLeafFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
 
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
@@ -65,6 +67,8 @@ NS_NewSVGLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsSVGLeafFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGLeafFrame)
 
 /* virtual */ void
 nsSVGLeafFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)

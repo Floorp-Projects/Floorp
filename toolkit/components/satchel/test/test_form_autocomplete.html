@@ -95,10 +95,15 @@ fh.addEntry("field5", "12");
 fh.addEntry("field5", "123");
 fh.addEntry("field5", "1234");
 
+
+function setForm(value) {
+  input.value = value;
+  input.focus();
+}
+
 // Restore the form to the default state.
 function restoreForm() {
-    input.value = "";
-    input.focus();
+  setForm("");
 }
 
 // Check for expected form data.
@@ -293,13 +298,22 @@ function runTest(testNum) {
     case 50:
         checkMenuEntries(["value1", "value2", "value3", "value4"]);
         // Delete the first entry (of 4)
+        setForm("value");
         doKey("down");
 
         // On OS X, shift-backspace and shift-delete work, just delete does not.
         // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
-        doKey("delete", shiftModifier);
+        var osString = Components.classes["@mozilla.org/xre/app-info;1"].
+                       getService(Components.interfaces.nsIXULRuntime).OS;
+        if (osString == "Darwin")
+          doKey("back_space", shiftModifier);
+        else
+          doKey("delete", shiftModifier);
 
-        checkForm("");
+        // This tests that on OS X shift-backspace didn't delete the last character
+        // in the input (bug 480262).
+        checkForm("value");
+
         ok(!fh.entryExists("field1", "value1"), "checking that f1/v1 was deleted");
         doKey("return");
         checkForm("value2");

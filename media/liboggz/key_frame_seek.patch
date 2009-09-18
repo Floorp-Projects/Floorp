@@ -27,7 +27,7 @@ diff --git a/media/liboggz/include/oggz/oggz_seek.h b/media/liboggz/include/oggz
 diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/oggz_seek.c
 --- a/media/liboggz/src/liboggz/oggz_seek.c
 +++ b/media/liboggz/src/liboggz/oggz_seek.c
-@@ -935,8 +935,131 @@ oggz_seek_byorder (OGGZ * oggz, void * t
+@@ -931,8 +931,131 @@ oggz_seek_byorder (OGGZ * oggz, void * t
  
  long
  oggz_seek_packets (OGGZ * oggz, long serialno, long packets, int whence)

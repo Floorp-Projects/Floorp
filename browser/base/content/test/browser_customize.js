@@ -29,6 +29,7 @@ function testCustomizeFrameLoaded()
   var framedoc = document.getElementById("customizeToolbarSheetIFrame").contentDocument;
   var b = framedoc.getElementById("donebutton");
 
+  b.focus();
   framedoc.getElementById("donebutton").doCommand();
 }
   
@@ -36,5 +37,7 @@ function testCustomizePopupHidden()
 {
   var panel = document.getElementById("customizeToolbarSheetPopup");
   panel.removeEventListener("popuphidden", testCustomizePopupHidden, false);
+  is(document.activeElement, document.documentElement, "focus after customize done");
+
   finish();
 }

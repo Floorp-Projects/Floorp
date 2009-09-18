@@ -433,14 +433,12 @@
                           label="&pageSourceCmd.label;"
                           key="key_viewSource"
                           command="View:PageSource"/>
-#ifndef XP_MACOSX
                 <menuitem id="fullScreenItem"
                           accesskey="&fullScreenCmd.accesskey;"
                           label="&fullScreenCmd.label;"
                           key="key_fullScreen"
                           type="checkbox"
                           observes="View:FullScreen"/>
-#endif
                 <menuitem id="menu_showAllTabs"
                           hidden="true"
                           accesskey="&showAllTabsCmd.accesskey;"
@@ -466,7 +464,7 @@
                          onpopupshowing="HistoryMenu.onPopupShowing(event);"
                          onpopuphidden="HistoryMenu.onPopupHidden(event);"
                          place="place:redirectsMode=2&amp;sort=4&amp;maxResults=10"
-                         tooltip="btTooltip">
+                         tooltip="bhTooltip" popupsinherittooltip="true">
                 <menuitem id="historyMenuBack"
                           label="&backCmd.label;"
 #ifdef XP_MACOSX
@@ -528,7 +526,7 @@
                oncommand="BookmarksEventHandler.onCommand(event);"
                onclick="BookmarksEventHandler.onClick(event);"
                onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"
-               tooltip="btTooltip">
+               tooltip="bhTooltip" popupsinherittooltip="true">
       <menuitem id="menu_bookmarkThisPage"
                 label="&bookmarkThisPageCmd.label;"
                 command="Browser:AddBookmarkAs"

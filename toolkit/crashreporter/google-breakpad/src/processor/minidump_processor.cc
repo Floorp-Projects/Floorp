@@ -47,48 +47,45 @@ MinidumpProcessor::MinidumpProcessor(SymbolSupplier *supplier,
 MinidumpProcessor::~MinidumpProcessor() {
 }
 
-MinidumpProcessor::ProcessResult MinidumpProcessor::Process(
-    const string &minidump_file, ProcessState *process_state) {
-  BPLOG(INFO) << "Processing minidump in file " << minidump_file;
-
-  Minidump dump(minidump_file);
-  if (!dump.Read()) {
-    BPLOG(ERROR) << "Minidump " << minidump_file << " could not be read";
-    return PROCESS_ERROR;
-  }
+ProcessResult MinidumpProcessor::Process(
+    Minidump *dump, ProcessState *process_state) {
+  assert(dump);
+  assert(process_state);
 
   process_state->Clear();
 
-  const MDRawHeader *header = dump.header();
-  BPLOG_IF(ERROR, !header) << "Minidump " << minidump_file << " has no header";
-  assert(header);
+  const MDRawHeader *header = dump->header();
+  if (!header) {
+    BPLOG(ERROR) << "Minidump " << dump->path() << " has no header";
+    return PROCESS_ERROR_NO_MINIDUMP_HEADER;
+  }
   process_state->time_date_stamp_ = header->time_date_stamp;
 
-  bool has_cpu_info = GetCPUInfo(&dump, &process_state->system_info_);
-  bool has_os_info = GetOSInfo(&dump, &process_state->system_info_);
+  bool has_cpu_info = GetCPUInfo(dump, &process_state->system_info_);
+  bool has_os_info = GetOSInfo(dump, &process_state->system_info_);
 
   u_int32_t dump_thread_id = 0;
   bool has_dump_thread = false;
   u_int32_t requesting_thread_id = 0;
   bool has_requesting_thread = false;
 
-  MinidumpBreakpadInfo *breakpad_info = dump.GetBreakpadInfo();
+  MinidumpBreakpadInfo *breakpad_info = dump->GetBreakpadInfo();
   if (breakpad_info) {
     has_dump_thread = breakpad_info->GetDumpThreadID(&dump_thread_id);
     has_requesting_thread =
         breakpad_info->GetRequestingThreadID(&requesting_thread_id);
   }
 
-  MinidumpException *exception = dump.GetException();
+  MinidumpException *exception = dump->GetException();
   if (exception) {
     process_state->crashed_ = true;
     has_requesting_thread = exception->GetThreadID(&requesting_thread_id);
 
     process_state->crash_reason_ = GetCrashReason(
-        &dump, &process_state->crash_address_);
+        dump, &process_state->crash_address_);
   }
 
-  MinidumpModuleList *module_list = dump.GetModuleList();
+  MinidumpModuleList *module_list = dump->GetModuleList();
 
   // Put a copy of the module list into ProcessState object.  This is not
   // necessarily a MinidumpModuleList, but it adheres to the CodeModules
@@ -96,21 +93,21 @@ MinidumpProcessor::ProcessResult MinidumpProcessor::Process(
   if (module_list)
     process_state->modules_ = module_list->Copy();
 
-  MinidumpThreadList *threads = dump.GetThreadList();
+  MinidumpThreadList *threads = dump->GetThreadList();
   if (!threads) {
-    BPLOG(ERROR) << "Minidump " << minidump_file << " has no thread list";
-    return PROCESS_ERROR;
+    BPLOG(ERROR) << "Minidump " << dump->path() << " has no thread list";
+    return PROCESS_ERROR_NO_THREAD_LIST;
   }
 
-  BPLOG(INFO) << "Minidump " << minidump_file << " has " <<
-              (has_cpu_info           ? "" : "no ") << "CPU info, " <<
-              (has_os_info            ? "" : "no ") << "OS info, " <<
-              (breakpad_info != NULL  ? "" : "no ") << "Breakpad info, " <<
-              (exception != NULL      ? "" : "no ") << "exception, " <<
-              (module_list != NULL    ? "" : "no ") << "module list, " <<
-              (threads != NULL        ? "" : "no ") << "thread list, " <<
-              (has_dump_thread        ? "" : "no ") << "dump thread, and " <<
-              (has_requesting_thread  ? "" : "no ") << "requesting thread";
+  BPLOG(INFO) << "Minidump " << dump->path() << " has " <<
+      (has_cpu_info           ? "" : "no ") << "CPU info, " <<
+      (has_os_info            ? "" : "no ") << "OS info, " <<
+      (breakpad_info != NULL  ? "" : "no ") << "Breakpad info, " <<
+      (exception != NULL      ? "" : "no ") << "exception, " <<
+      (module_list != NULL    ? "" : "no ") << "module list, " <<
+      (threads != NULL        ? "" : "no ") << "thread list, " <<
+      (has_dump_thread        ? "" : "no ") << "dump thread, and " <<
+      (has_requesting_thread  ? "" : "no ") << "requesting thread";
 
   bool interrupted = false;
   bool found_requesting_thread = false;
@@ -121,18 +118,18 @@ MinidumpProcessor::ProcessResult MinidumpProcessor::Process(
     char thread_string_buffer[64];
     snprintf(thread_string_buffer, sizeof(thread_string_buffer), "%d/%d",
              thread_index, thread_count);
-    string thread_string = minidump_file + ":" + thread_string_buffer;
+    string thread_string = dump->path() + ":" + thread_string_buffer;
 
     MinidumpThread *thread = threads->GetThreadAtIndex(thread_index);
     if (!thread) {
       BPLOG(ERROR) << "Could not get thread for " << thread_string;
-      return PROCESS_ERROR;
+      return PROCESS_ERROR_GETTING_THREAD;
     }
 
     u_int32_t thread_id;
     if (!thread->GetThreadID(&thread_id)) {
       BPLOG(ERROR) << "Could not get thread ID for " << thread_string;
-      return PROCESS_ERROR;
+      return PROCESS_ERROR_GETTING_THREAD_ID;
     }
 
     thread_string += " id " + HexString(thread_id);
@@ -152,7 +149,7 @@ MinidumpProcessor::ProcessResult MinidumpProcessor::Process(
       if (found_requesting_thread) {
         // There can't be more than one requesting thread.
         BPLOG(ERROR) << "Duplicate requesting thread: " << thread_string;
-        return PROCESS_ERROR;
+        return PROCESS_ERROR_DUPLICATE_REQUESTING_THREADS;
       }
 
       // Use processed_state->threads_.size() instead of thread_index.
@@ -179,7 +176,7 @@ MinidumpProcessor::ProcessResult MinidumpProcessor::Process(
     MinidumpMemoryRegion *thread_memory = thread->GetMemory();
     if (!thread_memory) {
       BPLOG(ERROR) << "No memory region for " << thread_string;
-      return PROCESS_ERROR;
+      return PROCESS_ERROR_NO_MEMORY_FOR_THREAD;
     }
 
     // Use process_state->modules_ instead of module_list, because the
@@ -199,34 +196,47 @@ MinidumpProcessor::ProcessResult MinidumpProcessor::Process(
                                        resolver_));
     if (!stackwalker.get()) {
       BPLOG(ERROR) << "No stackwalker for " << thread_string;
-      return PROCESS_ERROR;
+      return PROCESS_ERROR_NO_STACKWALKER_FOR_THREAD;
     }
 
     scoped_ptr<CallStack> stack(new CallStack());
     if (!stackwalker->Walk(stack.get())) {
       BPLOG(INFO) << "Stackwalker interrupt (missing symbols?) at " <<
-                     thread_string;
+          thread_string;
       interrupted = true;
     }
     process_state->threads_.push_back(stack.release());
   }
 
   if (interrupted) {
-    BPLOG(INFO) << "Processing interrupted for " << minidump_file;
-    return PROCESS_INTERRUPTED;
+    BPLOG(INFO) << "Processing interrupted for " << dump->path();
+    return PROCESS_SYMBOL_SUPPLIER_INTERRUPTED;
   }
 
   // If a requesting thread was indicated, it must be present.
   if (has_requesting_thread && !found_requesting_thread) {
     // Don't mark as an error, but invalidate the requesting thread
     BPLOG(ERROR) << "Minidump indicated requesting thread " <<
-                    HexString(requesting_thread_id) << ", not found in " <<
-                    minidump_file;
+        HexString(requesting_thread_id) << ", not found in " <<
+        dump->path();
     process_state->requesting_thread_ = -1;
   }
 
-  BPLOG(INFO) << "Processed " << minidump_file;
+  BPLOG(INFO) << "Processed " << dump->path();
   return PROCESS_OK;
+}
+
+ProcessResult MinidumpProcessor::Process(
+    const string &minidump_file, ProcessState *process_state) {
+  BPLOG(INFO) << "Processing minidump in file " << minidump_file;
+
+  Minidump dump(minidump_file);
+  if (!dump.Read()) {
+     BPLOG(ERROR) << "Minidump " << dump.path() << " could not be read";
+     return PROCESS_ERROR_MINIDUMP_NOT_FOUND;
+   }
+
+  return Process(&dump, process_state);
 }
 
 // Returns the MDRawSystemInfo from a minidump, or NULL if system info is
@@ -260,7 +270,7 @@ bool MinidumpProcessor::GetCPUInfo(Minidump *dump, SystemInfo *info) {
   switch (raw_system_info->processor_architecture) {
     case MD_CPU_ARCHITECTURE_X86:
     case MD_CPU_ARCHITECTURE_AMD64: {
-      if (raw_system_info->processor_architecture == 
+      if (raw_system_info->processor_architecture ==
           MD_CPU_ARCHITECTURE_X86)
         info->cpu = "x86";
       else
@@ -861,118 +871,118 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
           break;
         case MD_EXCEPTION_CODE_SOL_SIGQUIT:
           reason = "SIGQUIT";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGILL:
           reason = "SIGILL";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGTRAP:
           reason = "SIGTRAP";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGIOT:
           reason = "SIGIOT | SIGABRT";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGEMT:
           reason = "SIGEMT";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGFPE:
           reason = "SIGFPE";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGKILL:
           reason = "SIGKILL";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGBUS:
           reason = "SIGBUS";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGSEGV:
           reason = "SIGSEGV";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGSYS:
           reason = "SIGSYS";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGPIPE:
           reason = "SIGPIPE";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGALRM:
           reason = "SIGALRM";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGTERM:
           reason = "SIGTERM";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGUSR1:
           reason = "SIGUSR1";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGUSR2:
           reason = "SIGUSR2";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGCLD:
           reason = "SIGCLD | SIGCHLD";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGPWR:
           reason = "SIGPWR";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGWINCH:
           reason = "SIGWINCH";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGURG:
           reason = "SIGURG";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGPOLL:
           reason = "SIGPOLL | SIGIO";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGSTOP:
           reason = "SIGSTOP";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGTSTP:
           reason = "SIGTSTP";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGCONT:
           reason = "SIGCONT";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGTTIN:
           reason = "SIGTTIN";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGTTOU:
           reason = "SIGTTOU";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGVTALRM:
           reason = "SIGVTALRM";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGPROF:
           reason = "SIGPROF";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGXCPU:
           reason = "SIGXCPU";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGXFSZ:
           reason = "SIGXFSZ";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGWAITING:
           reason = "SIGWAITING";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGLWP:
           reason = "SIGLWP";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGFREEZE:
           reason = "SIGFREEZE";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGTHAW:
           reason = "SIGTHAW";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGCANCEL:
           reason = "SIGCANCEL";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGLOST:
           reason = "SIGLOST";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGXRES:
           reason = "SIGXRES";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGJVM1:
           reason = "SIGJVM1";
-          break;  
+          break;
         case MD_EXCEPTION_CODE_SOL_SIGJVM2:
           reason = "SIGJVM2";
-          break;  
+          break;
         default:
           BPLOG(INFO) << "Unknown exception reason " << reason;
           break;

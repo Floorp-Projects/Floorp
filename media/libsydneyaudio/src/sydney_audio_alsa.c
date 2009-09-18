@@ -98,7 +98,7 @@ sa_stream_create_pcm(
   if (mode != SA_MODE_WRONLY) {
     return SA_ERROR_NOT_SUPPORTED;
   }
-  if (format != SA_PCM_FORMAT_S16_LE) {
+  if (format != SA_PCM_FORMAT_S16_NE) {
     return SA_ERROR_NOT_SUPPORTED;
   }
 
@@ -142,7 +142,11 @@ sa_stream_open(sa_stream_t *s) {
   }
   
   if (snd_pcm_set_params(s->output_unit,
+#ifdef SA_LITTLE_ENDIAN
                          SND_PCM_FORMAT_S16_LE,
+#else
+                         SND_PCM_FORMAT_S16_BE,
+#endif
                          SND_PCM_ACCESS_RW_INTERLEAVED,
                          s->n_channels,
                          s->rate,

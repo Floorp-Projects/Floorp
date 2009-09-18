@@ -78,6 +78,7 @@ public:
   friend nsIFrame* NS_NewListControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
     // nsIFrame
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
@@ -437,6 +438,12 @@ protected:
   // True if we're in the middle of a reflow and might need a second
   // pass.  This only happens for auto heights.
   PRPackedBool mMightNeedSecondPass:1;
+
+  /**
+   * Set to aPresContext->HasPendingInterrupt() at the start of Reflow.
+   * Set to PR_FALSE at the end of DidReflow.
+   */
+  PRPackedBool mHasPendingInterruptAtStartOfReflow:1;
 
   // The last computed height we reflowed at if we're a combobox dropdown.
   // XXXbz should we be using a subclass here?  Or just not worry

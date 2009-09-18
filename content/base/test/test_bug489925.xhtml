@@ -1,0 +1,87 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=489925
+-->
+<head>
+  <title>Test for Bug 489925</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="t1">
+      <content>
+        <h:span anonid="test" xmlns:h="http://www.w3.org/1999/xhtml">
+          <children/>
+        </h:span>
+      </content>
+      <implementation>
+        <constructor>
+          document.getAnonymousElementByAttribute(this, "anonid", "test").id = "test1";
+        </constructor>
+      </implementation>
+    </binding>
+
+    <binding id="t2">
+      <content>
+        <h:span anonid="test" xmlns:h="http://www.w3.org/1999/xhtml">
+          <children/>
+        </h:span>
+      </content>
+      <implementation>
+        <constructor>
+          var s = document.createElement("span");
+          s.id = "test2";
+          document.getAnonymousElementByAttribute(this, "anonid", "test").appendChild(s);
+        </constructor>
+      </implementation>
+    </binding>
+
+    <binding id="t3">
+      <content>
+        <h:span anonid="test" xmlns:h="http://www.w3.org/1999/xhtml">
+          <children/>
+        </h:span>
+      </content>
+      <implementation>
+        <constructor>
+          var s = document.createElement("span");
+          s.id = "test3";
+          var p = document.getAnonymousElementByAttribute(this, "anonid", "test");
+          p.appendChild(document.createTextNode("testing"));
+          p.insertBefore(s, p.lastChild);
+        </constructor>
+      </implementation>
+    </binding>
+  </bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=489925">Mozilla Bug 489925</a>
+<p id="display">
+  <span style="-moz-binding: url(#t1)"/>
+  <span style="-moz-binding: url(#t2)"/>
+  <span style="-moz-binding: url(#t3)"/>
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 489925 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+ is($("test1"), null, "Setting id should not add anonymous element to table");
+ is($("test2"), null, "Append should not add anonymous element to table");
+ is($("test3"), null, "Insert should not add anonymous element to table");
+ SimpleTest.finish();
+});
+
+
+
+]]>
+</script>
+</pre>
+</body>
+</html>

@@ -388,10 +388,6 @@ Blocklist.prototype = {
       gBlocklistLevel = Math.min(getPref("getIntPref", PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
                                  MAX_BLOCK_LEVEL);
       gPref.addObserver("extensions.blocklist.", this, false);
-      var tm = Cc["@mozilla.org/updates/timer-manager;1"].
-               getService(Ci.nsIUpdateTimerManager);
-      var interval = getPref("getIntPref", PREF_BLOCKLIST_INTERVAL, 86400);
-      tm.registerTimer("blocklist-background-update-timer", this, interval);
       break;
     case "xpcom-shutdown":
       gOS.removeObserver(this, "xpcom-shutdown");
@@ -928,7 +924,11 @@ Blocklist.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsIBlocklistService,
                                          Ci.nsITimerCallback]),
-  _xpcom_categories: [{ category: "profile-after-change" }]
+  _xpcom_categories: [{ category: "profile-after-change" },
+                      { category: "update-timer",
+                        value: "@mozilla.org/extensions/blocklist;1," +
+                               "getService,blocklist-background-update-timer," +
+                               PREF_BLOCKLIST_INTERVAL + ",86400" }]
 };
 
 /**

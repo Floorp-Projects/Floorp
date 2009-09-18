@@ -80,6 +80,8 @@ enum nsMencloseNotation
 
 class nsMathMLmencloseFrame : public nsMathMLContainerFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewMathMLmencloseFrame(nsIPresShell*   aPresShell,
                                              nsStyleContext* aContext);
   

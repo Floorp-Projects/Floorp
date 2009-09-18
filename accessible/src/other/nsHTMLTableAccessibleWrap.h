@@ -44,8 +44,8 @@
 #include "nsHTMLTableAccessible.h"
 
 typedef class nsHTMLTableAccessible nsHTMLTableAccessibleWrap;
-
-typedef class nsHTMLTableHeadAccessible nsHTMLTableHeadAccessibleWrap;
+typedef class nsHTMLTableCellAccessible nsHTMLTableCellAccessibleWrap;
+typedef class nsHTMLTableHeaderCellAccessible nsHTMLTableHeaderCellAccessibleWrap;
 
 #endif
 

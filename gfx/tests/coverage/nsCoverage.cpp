@@ -281,25 +281,27 @@ nsEventStatus HandleEvent(nsGUIEvent *aEvent)
               (ke->isControl?"Pressed":"Released"),
               (ke->isAlt?"Pressed":"Released"));
             printf("%s\n", str);
+            nsIntRect clientRect;
+            gWindow->GetClientBounds(clientRect);
             switch(ke->keyCode) {
                case 'U':
                  gOffsetY -= 9;
-                 gWindow->Invalidate(PR_FALSE);
+                 gWindow->Invalidate(clientRect, PR_FALSE);
                break;
 
                case 'D':
                  gOffsetY += 10;
-                 gWindow->Invalidate(PR_FALSE);
+                 gWindow->Invalidate(clientRect, PR_FALSE);
                 break;
 
                case 'R':
                  gOffsetX += 9;
-                 gWindow->Invalidate(PR_FALSE);
+                 gWindow->Invalidate(clientRect, PR_FALSE);
                break;
 
                case 'L':
                  gOffsetX -= 10;
-                 gWindow->Invalidate(PR_FALSE);
+                 gWindow->Invalidate(clientRect, PR_FALSE);
                break;
             }
             }

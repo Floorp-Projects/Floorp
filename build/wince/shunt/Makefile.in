@@ -72,7 +72,6 @@ EXPORTS_mozce_shunt = \
 DIRS += include/sys
 
 ifdef MOZ_MEMORY
-REQUIRES = jemalloc 
 CFLAGS += -DMOZ_MEMORY
 CXXFLAGS += -DMOZ_MEMORY
 EXPORTS_mozce_shunt += $(topsrcdir)/memory/jemalloc/jemalloc.h

@@ -55,6 +55,7 @@
 #include "nsIScrollPositionListener.h"
 #include "nsDisplayList.h"
 #include "nsAbsoluteContainingBlock.h"
+#include "nsCSSFrameConstructor.h"
 
 // for focus
 #include "nsIDOMWindowInternal.h"
@@ -87,6 +88,7 @@ public:
     mAbsoluteContainer(nsGkAtoms::absoluteList) {}
 
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   // nsISupports (nsIScrollPositionListener)
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -187,8 +189,10 @@ private:
 nsIFrame*
 NS_NewCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell)CanvasFrame(aContext);
+  return new (aPresShell) CanvasFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(CanvasFrame)
 
 NS_IMPL_QUERY_INTERFACE1(CanvasFrame, nsIScrollPositionListener)
 
@@ -348,8 +352,10 @@ CanvasFrame::RemoveFrame(nsIAtom*        aListName,
 {
   nsresult  rv;
 
-  if (nsGkAtoms::absoluteList == aListName)
-    return mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
+  if (nsGkAtoms::absoluteList == aListName) {
+    mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
+    return NS_OK;
+  }
 
   NS_ASSERTION(!aListName, "unexpected child list name");
   if (aListName) {
@@ -433,7 +439,8 @@ public:
     nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
                                     aDirtyRect,
                                     nsRect(offset, mFrame->GetSize()),
-                                    0, &bgClipRect);
+                                    aBuilder->GetBackgroundPaintFlags(),
+                                    &bgClipRect);
   }
 
   NS_DISPLAY_DECL_NAME("CanvasBackground")
@@ -666,12 +673,10 @@ CanvasFrame::Reflow(nsPresContext*           aPresContext,
       NS_ASSERTION(nextFrame || aStatus & NS_FRAME_REFLOW_NEXTINFLOW,
         "If it's incomplete and has no nif yet, it must flag a nif reflow.");
       if (!nextFrame) {
-        nsresult rv = nsHTMLContainerFrame::CreateNextInFlow(aPresContext,
-                                              this, kidFrame, nextFrame);
+        nsresult rv = aPresContext->PresShell()->FrameConstructor()->
+          CreateContinuingFrame(aPresContext, kidFrame, this, &nextFrame);
         NS_ENSURE_SUCCESS(rv, rv);
-        kidFrame->SetNextSibling(nextFrame->GetNextSibling());
-        nextFrame->SetNextSibling(nsnull);
-        SetOverflowFrames(aPresContext, nextFrame);
+        SetOverflowFrames(aPresContext, nsFrameList(nextFrame, nextFrame));
         // Root overflow containers will be normal children of
         // the canvas frame, but that's ok because there
         // aren't any other frames we need to isolate them from

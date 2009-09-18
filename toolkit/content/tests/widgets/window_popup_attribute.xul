@@ -2,10 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
 <window title="Popup Attribute Tests"
-  onload="window.gLoaded = true; setTimeout('maybeRunTests()', 0);"
-  onfocus="window.gFocused = true; setTimeout('maybeRunTests()', 0);"
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <title>Popup Attribute Tests</title>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
@@ -13,19 +10,7 @@
   <script type="application/javascript" src="popup_trigger.js"></script>      
 
 <script>
-<![CDATA[
-var gStarted = false;
-
-function maybeRunTests()
-{
-  if ('gLoaded' in window &&
-      'gFocused' in window &&
-      !gStarted) {
-    gStarted = true;
-    runTests();
-  }
-}
-]]>
+window.opener.SimpleTest.waitForFocus(runTests, window);
 </script>
 
 <hbox style="margin-left: 325px; margin-top: 325px;">

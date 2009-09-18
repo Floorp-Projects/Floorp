@@ -50,6 +50,7 @@ menulist {
   -moz-appearance: menulist;
   margin: 2px 4px;
   color: -moz-DialogText;
+  font: menu;
 }
 
 .menulist-label-box {

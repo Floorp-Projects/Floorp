@@ -70,6 +70,16 @@ public:
                       nsIContent* aBindingParent,
                       PRBool aCompileEventHandlers);
 
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
+
+  virtual nsresult SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
+
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                             PRBool aNotify);
+
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,

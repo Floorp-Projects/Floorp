@@ -51,13 +51,8 @@
 #include "nsIViewObserver.h"
 
 //Uncomment the following line to enable generation of viewmanager performance data.
-#ifdef MOZ_PERF_METRICS
-//#define NS_VM_PERF_METRICS 1 
-#endif
+//#define NS_VM_PERF_METRICS 1
 
-#ifdef NS_VM_PERF_METRICS
-#include "nsTimer.h"
-#endif
 
 /**
    Invalidation model:
@@ -132,10 +127,6 @@ public:
 
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent,
       nsIView* aTargetView, nsEventStatus* aStatus);
-
-  NS_IMETHOD  GrabMouseEvents(nsIView *aView, PRBool &aResult);
-
-  NS_IMETHOD  GetMouseEventGrabber(nsIView *&aView);
 
   NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child, nsIView *sibling,
                           PRBool above);
@@ -310,14 +301,10 @@ private:
 
 public: // NOT in nsIViewManager, so private to the view module
   nsView* GetRootView() const { return mRootView; }
-  nsView* GetMouseEventGrabber() const {
-    return RootViewManager()->mMouseGrabber;
-  }
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   PRBool IsRootVM() const { return this == RootViewManager(); }
 
-  nsEventStatus HandleEvent(nsView* aView, nsPoint aPoint, nsGUIEvent* aEvent,
-                            PRBool aCaptured);
+  nsEventStatus HandleEvent(nsView* aView, nsPoint aPoint, nsGUIEvent* aEvent);
 
   /**
    * Called to inform the view manager that a view is about to bit-blit.
@@ -395,8 +382,6 @@ private:
   // the root view manager.  Some have accessor functions to enforce
   // this, as noted.
   
-  // Use GrabMouseEvents() and GetMouseEventGrabber() to access mMouseGrabber.
-  nsView            *mMouseGrabber;
   // Use IncrementUpdateCount(), DecrementUpdateCount(), UpdateCount(),
   // ClearUpdateCount() on the root viewmanager to access mUpdateCnt.
   PRInt32           mUpdateCnt;
@@ -421,10 +406,6 @@ private:
   static nsVoidArray       *gViewManagers;
 
   void PostInvalidateEvent();
-
-#ifdef NS_VM_PERF_METRICS
-  MOZ_TIMER_DECLARE(mWatch) //  Measures compositing+paint time for current document
-#endif
 };
 
 //when the refresh happens, should it be double buffered?

@@ -81,7 +81,7 @@ function test() {
   var rawNode = PlacesUtils.unwrapNodes(serializedNode, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER).shift();
   ok(rawNode.type, "confirm json node was made");
 
-  // create a transaction from the serialization
+  // Create a copy transaction from the serialization.
   // this exercises the guid-filtering
   var transaction = PlacesUIUtils.makeTransaction(rawNode,
                                                   PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
@@ -97,7 +97,7 @@ function test() {
   ok(checkGUIDs(folderBNode, folderAGUIDs, false), "confirm folder A GUIDs don't match folder B GUIDs");
   var folderBGUIDs = getGUIDs(folderBNode);
   ok(checkGUIDs(folderBNode, folderBGUIDs, true), "confirm test of new GUIDs");
-  
+
   // undo the transaction, confirm the removal
   PlacesUIUtils.ptm.undoTransaction();
   is(testRootNode.childCount, 1, "confirm undo removed the copied folder");
@@ -108,12 +108,7 @@ function test() {
   is(testRootNode.childCount, 2, "confirm redo re-copied the folder");
   folderBNode = testRootNode.getChild(1);
   ok(checkGUIDs(folderBNode, folderAGUIDs, false), "folder B GUIDs after undo/redo don't match folder A GUIDs"); // sanity check
-
-  // XXXdietrich fails since GUIDs are created lazily. the anno
-  // isn't present at the time the transaction is first executed,
-  // and undo just undoes the original transaction - doesn't pull
-  // in any new changes.
-  //ok(checkGUIDs(folderBNode, folderBGUIDs, true, true), "folder B GUIDs after under/redo should match pre-undo/redo folder B GUIDs");
+  ok(checkGUIDs(folderBNode, folderBGUIDs, true), "folder B GUIDs after under/redo should match pre-undo/redo folder B GUIDs");
 
   // Close containers, cleaning up their observers.
   testRootNode.containerOpen = false;

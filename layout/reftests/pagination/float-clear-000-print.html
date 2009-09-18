@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html class="reftest-print">
+<style type="text/css">
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.float {
+  float: right;
+  width: 15px;
+  background: aqua;
+  height: 5in;
+}
+.L {
+  float: left;
+}
+
+.container {
+  width: 100%;
+  background: red;
+}
+
+.clear {
+  border-bottom: solid orange;
+}
+</style>
+
+<div class="container">
+  <div class="float L"></div>
+  <div class="float R"></div>
+</div>
+<div class="clear">
+  <br clear="all">
+</div>

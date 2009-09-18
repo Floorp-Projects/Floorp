@@ -113,6 +113,8 @@ class nsSubDocumentFrame : public nsLeafFrame,
                            public nsIReflowCallback
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsSubDocumentFrame(nsStyleContext* aContext);
 
 #ifdef DEBUG
@@ -316,6 +318,10 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsDisplayListSet& aLists)
 {
   if (!IsVisibleForPainting(aBuilder))
+    return NS_OK;
+
+  if (aBuilder->IsForEventDelivery() &&
+      GetStyleVisibility()->mPointerEvents == NS_STYLE_POINTER_EVENTS_NONE)
     return NS_OK;
 
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
@@ -632,10 +638,10 @@ nsSubDocumentFrame::ReflowFinished()
       // border and padding, so we can't trust those.  Subtracting
       // them might make things negative.
       innerSize.width  -= usedBorderPadding.LeftRight();
-      innerSize.width = PR_MAX(innerSize.width, 0);
+      innerSize.width = NS_MAX(innerSize.width, 0);
       
       innerSize.height -= usedBorderPadding.TopBottom();
-      innerSize.height = PR_MAX(innerSize.height, 0);
+      innerSize.height = NS_MAX(innerSize.height, 0);
     }  
 
     PRInt32 cx = presContext->AppUnitsToDevPixels(innerSize.width);
@@ -752,6 +758,8 @@ NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsSubDocumentFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsSubDocumentFrame)
 
 void
 nsSubDocumentFrame::Destroy()
@@ -1009,10 +1017,7 @@ nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
   nsRect viewBounds(0, 0, 0, 0); // size will be fixed during reflow
 
   nsIViewManager* viewMan = outerView->GetViewManager();
-  // Create the inner view hidden if the outer view is already hidden
-  // (it won't get hidden properly otherwise)
-  nsIView* innerView = viewMan->CreateView(viewBounds, outerView,
-                                           outerView->GetVisibility());
+  nsIView* innerView = viewMan->CreateView(viewBounds, outerView);
   if (!innerView) {
     NS_ERROR("Could not create inner view");
     return NS_ERROR_OUT_OF_MEMORY;

@@ -44,6 +44,7 @@
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cr = Components.results;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Helper Methods
@@ -146,12 +147,40 @@ function test_async_write_file_nsISafeOutputStream()
   });
 }
 
+function test_newURI_no_spec_throws()
+{
+  try {
+    NetUtil.newURI();
+    do_throw("should throw!");
+  }
+  catch (e) {
+    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
+  }
+
+  run_next_test();
+}
+
+function test_newURI()
+{
+  let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+
+  // Check that we get the same URI back from the IO service and the utility method.
+  const TEST_URI = "http://mozilla.org";
+  let iosURI = ios.newURI(TEST_URI, null, null);
+  let NetUtilURI = NetUtil.newURI(TEST_URI);
+  do_check_true(iosURI.equals(NetUtilURI));
+
+  run_next_test();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
 let tests = [
   test_async_write_file,
   test_async_write_file_nsISafeOutputStream,
+  test_newURI_no_spec_throws,
+  test_newURI,
 ];
 let index = 0;
 

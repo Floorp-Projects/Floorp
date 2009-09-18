@@ -68,6 +68,7 @@ protected:
 
 public:
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame interface:
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
@@ -112,11 +113,11 @@ protected:
 
 protected:
   virtual PRUint16 GetHittestMask();
+  void GeneratePath(gfxContext *aContext,
+                    const gfxMatrix *aOverrideTransform = nsnull);
 
 private:
   void Render(nsSVGRenderState *aContext);
-  void GeneratePath(gfxContext *aContext,
-                    const gfxMatrix *aOverrideTransform = nsnull);
 
   struct MarkerProperties {
     nsSVGMarkerProperty* mMarkerStart;

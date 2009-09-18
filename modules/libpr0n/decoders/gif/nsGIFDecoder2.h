@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Chris Saari <saari@netscape.com>
+ *   Bobby Holley <bobbyholley@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -67,15 +68,21 @@ public:
   nsGIFDecoder2();
   ~nsGIFDecoder2();
   
-  nsresult ProcessData(unsigned char *data, PRUint32 count, PRUint32 *_retval);
+  nsresult ProcessData(unsigned char *data, PRUint32 count);
+  static NS_METHOD ReadDataOut(nsIInputStream* in,
+                               void* closure,
+                               const char* fromRawSegment,
+                               PRUint32 toOffset,
+                               PRUint32 count,
+                               PRUint32 *writeCount);
 
 private:
   /* These functions will be called when the decoder has a decoded row,
    * frame size information, etc. */
 
   void      BeginGIF();
-  void      EndGIF();
-  void      BeginImageFrame(gfx_depth aDepth);
+  void      EndGIF(PRBool aSuccess);
+  nsresult  BeginImageFrame(gfx_depth aDepth);
   void      EndImageFrame();
   nsresult  FlushImageData();
   nsresult  FlushImageData(PRUint32 fromRow, PRUint32 rows);
@@ -87,7 +94,8 @@ private:
   inline int ClearCode() const { return 1 << mGIFStruct.datasize; }
 
   nsCOMPtr<imgIContainer> mImageContainer;
-  nsCOMPtr<imgIDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
+  nsCOMPtr<imgIDecoderObserver> mObserver;
+  PRUint32 mFlags;
   PRInt32 mCurrentRow;
   PRInt32 mLastFlushedRow;
 
@@ -102,8 +110,11 @@ private:
 
   PRUint8 mCurrentPass;
   PRUint8 mLastFlushedPass;
+  PRUint8 mColorMask;        // Apply this to the pixel to keep within colormap
   PRPackedBool mGIFOpen;
   PRPackedBool mSawTransparency;
+  PRPackedBool mError;
+  PRPackedBool mEnded;
 
   gif_struct mGIFStruct;
 };

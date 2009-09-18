@@ -1243,6 +1243,43 @@ JSTreeContext::inStatement(JSStmtType type)
     return false;
 }
 
+bool
+JSTreeContext::ensureSharpSlots()
+{
+#if JS_HAS_SHARP_VARS
+    JS_STATIC_ASSERT(SHARP_NSLOTS == 2);
+
+    if (sharpSlotBase >= 0) {
+        JS_ASSERT(flags & TCF_HAS_SHARPS);
+        return true;
+    }
+
+    JS_ASSERT(!(flags & TCF_HAS_SHARPS));
+    if (flags & TCF_IN_FUNCTION) {
+        JSContext *cx = compiler->context;
+        JSAtom *sharpArrayAtom = js_Atomize(cx, "#array", 6, 0);
+        JSAtom *sharpDepthAtom = js_Atomize(cx, "#depth", 6, 0);
+        if (!sharpArrayAtom || !sharpDepthAtom)
+            return false;
+
+        sharpSlotBase = fun->u.i.nvars;
+        if (!js_AddLocal(cx, fun, sharpArrayAtom, JSLOCAL_VAR))
+            return false;
+        if (!js_AddLocal(cx, fun, sharpDepthAtom, JSLOCAL_VAR))
+            return false;
+    } else {
+        /*
+         * JSCompiler::compileScript will rebase immediate operands indexing
+         * the sharp slots to come at the end of the global script's |nfixed|
+         * slots storage, after gvars and regexps.
+         */
+        sharpSlotBase = 0;
+    }
+    flags |= TCF_HAS_SHARPS;
+#endif
+    return true;
+}
+
 void
 js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
                  ptrdiff_t top)
@@ -1302,6 +1339,17 @@ EmitBackPatchOp(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t *lastp)
     JS_BEGIN_MACRO                                                            \
         if (js_Emit3(cx, cg, op, UINT16_HI(i), UINT16_LO(i)) < 0)             \
             return JS_FALSE;                                                  \
+    JS_END_MACRO
+
+#define EMIT_UINT16PAIR_IMM_OP(op, i, j)                                      \
+    JS_BEGIN_MACRO                                                            \
+        ptrdiff_t off_ = js_EmitN(cx, cg, op, 2 * UINT16_LEN);                \
+        if (off_ < 0)                                                         \
+            return JS_FALSE;                                                  \
+        jsbytecode *pc_ = CG_CODE(cg, off_);                                  \
+        SET_UINT16(pc_, i);                                                   \
+        pc_ += UINT16_LEN;                                                    \
+        SET_UINT16(pc_, j);                                                   \
     JS_END_MACRO
 
 static JSBool
@@ -1525,7 +1573,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
             continue;
 
         obj = stmt->blockObj;
-        JS_ASSERT(LOCKED_OBJ_GET_CLASS(obj) == &js_BlockClass);
+        JS_ASSERT(obj->getClass() == &js_BlockClass);
         scope = OBJ_SCOPE(obj);
         sprop = scope->lookup(ATOM_TO_JSID(atom));
         if (sprop) {
@@ -3492,6 +3540,13 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
         if (js_Emit1(cx, cg, JSOP_GENERATOR) < 0)
             return JS_FALSE;
         CG_SWITCH_TO_MAIN(cg);
+    } else {
+        /*
+         * Emit a trace hint opcode only if not in a generator, since generators
+         * are not yet traced and both want to be the first instruction.
+         */
+        if (js_Emit1(cx, cg, JSOP_TRACE) < 0)
+            return JS_FALSE;
     }
 
     return js_EmitTree(cx, cg, body) &&
@@ -4192,6 +4247,35 @@ EmitFunctionDefNop(JSContext *cx, JSCodeGenerator *cg, uintN index)
            js_Emit1(cx, cg, JSOP_NOP) >= 0;
 }
 
+static bool
+EmitNewInit(JSContext *cx, JSCodeGenerator *cg, JSProtoKey key, JSParseNode *pn, int sharpnum)
+{
+    if (js_Emit2(cx, cg, JSOP_NEWINIT, (jsbytecode) key) < 0)
+        return false;
+#if JS_HAS_SHARP_VARS
+    if (cg->hasSharps()) {
+        if (pn->pn_count != 0)
+            EMIT_UINT16_IMM_OP(JSOP_SHARPINIT, cg->sharpSlotBase);
+        if (sharpnum >= 0)
+            EMIT_UINT16PAIR_IMM_OP(JSOP_DEFSHARP, cg->sharpSlotBase, sharpnum);
+    } else {
+        JS_ASSERT(sharpnum < 0);
+    }
+#endif
+    return true;
+}
+
+static bool
+EmitEndInit(JSContext *cx, JSCodeGenerator *cg, uint32 count)
+{
+#if JS_HAS_SHARP_VARS
+    /* Emit an op for sharp array cleanup and decompilation. */
+    if (cg->hasSharps() && count != 0)
+        EMIT_UINT16_IMM_OP(JSOP_SHARPINIT, cg->sharpSlotBase);
+#endif
+    return js_Emit1(cx, cg, JSOP_ENDINIT) >= 0;
+}
+
 /* See the SRC_FOR source note offsetBias comments later in this file. */
 JS_STATIC_ASSERT(JSOP_NOP_LENGTH == 1);
 JS_STATIC_ASSERT(JSOP_POP_LENGTH == 1);
@@ -4276,6 +4360,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                                            cg->codePool, cg->notePool,
                                            pn->pn_pos.begin.lineno);
         cg2->flags = (uint16) (pn->pn_funbox->tcflags | TCF_IN_FUNCTION);
+#if JS_HAS_SHARP_VARS
+        if (cg2->flags & TCF_HAS_SHARPS) {
+            cg2->sharpSlotBase = fun->sharpSlotBase(cx);
+            if (cg2->sharpSlotBase < 0)
+                return JS_FALSE;
+        }
+#endif
         cg2->fun = fun;
         cg2->funbox = pn->pn_funbox;
         cg2->parent = cg;
@@ -4476,7 +4567,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (jmp < 0)
             return JS_FALSE;
         top = CG_OFFSET(cg);
-        if (!js_Emit1(cx, cg, JSOP_LOOP))
+        if (!js_Emit1(cx, cg, JSOP_TRACE))
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
             return JS_FALSE;
@@ -4499,7 +4590,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         /* Compile the loop body. */
         top = CG_OFFSET(cg);
-        if (!js_Emit1(cx, cg, JSOP_LOOP))
+        if (!js_Emit1(cx, cg, JSOP_TRACE))
             return JS_FALSE;
         js_PushStatement(cg, &stmtInfo, STMT_DO_LOOP, top);
         if (!js_EmitTree(cx, cg, pn->pn_left))
@@ -4598,7 +4689,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             top = CG_OFFSET(cg);
             SET_STATEMENT_TOP(&stmtInfo, top);
-            if (!js_Emit1(cx, cg, JSOP_LOOP))
+            if (!js_Emit1(cx, cg, JSOP_TRACE))
                 return JS_FALSE;
 
 #ifdef DEBUG
@@ -4825,7 +4916,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             SET_STATEMENT_TOP(&stmtInfo, top);
 
             /* Emit code for the loop body. */
-            if (!js_Emit1(cx, cg, JSOP_LOOP))
+            if (!js_Emit1(cx, cg, JSOP_TRACE))
                 return JS_FALSE;
             if (!js_EmitTree(cx, cg, pn->pn_right))
                 return JS_FALSE;
@@ -5883,6 +5974,37 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
         break;
 
+      case TOK_PLUS:
+        /* For TCF_IN_FUNCTION test, see TOK_RB concerning JSOP_NEWARRAY. */
+        if (pn->pn_arity == PN_LIST && pn->pn_count < JS_BIT(16) &&
+            (cg->flags & TCF_IN_FUNCTION)) {
+            /* Emit up to the first string literal conventionally. */
+            for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+                if (pn2->pn_type == TOK_STRING)
+                    break;
+                if (!js_EmitTree(cx, cg, pn2))
+                    return JS_FALSE;
+                if (pn2 != pn->pn_head && js_Emit1(cx, cg, JSOP_ADD) < 0)
+                    return JS_FALSE;
+            }
+
+            /* Emit remainder as a single JSOP_CONCATN. */
+            for (index = 0; pn2; pn2 = pn2->pn_next, index++) {
+                if (!js_EmitTree(cx, cg, pn2))
+                    return JS_FALSE;
+            }
+
+            if (index != 0) {
+                EMIT_UINT16_IMM_OP(JSOP_CONCATN, index);
+
+                /* If we had a prefix, we need to be added to it now. */
+                if (pn->pn_head->pn_type != TOK_STRING &&
+                    js_Emit1(cx, cg, JSOP_ADD) < 0) {
+                    return JS_FALSE;
+                }
+            }
+            break;
+        }
       case TOK_BITOR:
       case TOK_BITXOR:
       case TOK_BITAND:
@@ -5891,7 +6013,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_IN:
       case TOK_INSTANCEOF:
       case TOK_SHOP:
-      case TOK_PLUS:
       case TOK_MINUS:
       case TOK_STAR:
       case TOK_DIVOP:
@@ -6116,7 +6237,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (jmp < 0)
             return JS_FALSE;
         top = CG_OFFSET(cg);
-        if (!js_Emit1(cx, cg, JSOP_LOOP))
+        if (!js_Emit1(cx, cg, JSOP_TRACE))
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
             return JS_FALSE;
@@ -6360,19 +6481,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             op = JSOP_NEWINIT;
 #endif
 #if JS_HAS_SHARP_VARS
-        JS_ASSERT_IF(sharpnum >= 0, cg->flags & TCF_HAS_SHARPS);
-        if (cg->flags & TCF_HAS_SHARPS)
+        JS_ASSERT_IF(sharpnum >= 0, cg->hasSharps());
+        if (cg->hasSharps())
             op = JSOP_NEWINIT;
 #endif
 
-        if (op == JSOP_NEWINIT) {
-            if (js_Emit2(cx, cg, op, (jsbytecode) JSProto_Array) < 0)
-                return JS_FALSE;
-#if JS_HAS_SHARP_VARS
-            if (sharpnum >= 0)
-                EMIT_UINT16_IMM_OP(JSOP_DEFSHARP, (jsatomid) sharpnum);
-# endif
-        }
+        if (op == JSOP_NEWINIT && !EmitNewInit(cx, cg, JSProto_Array, pn, sharpnum))
+            return JS_FALSE;
 
 #if JS_HAS_GENERATORS
         if (pn->pn_type == TOK_ARRAYCOMP) {
@@ -6391,7 +6506,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             cg->arrayCompDepth = saveDepth;
 
             /* Emit the usual op needed for decompilation. */
-            if (js_Emit1(cx, cg, JSOP_ENDINIT) < 0)
+            if (!EmitEndInit(cx, cg, 1))
                 return JS_FALSE;
             break;
         }
@@ -6424,7 +6539,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * Emit an op to finish the array and, secondarily, to aid in sharp
              * array cleanup (if JS_HAS_SHARP_VARS) and decompilation.
              */
-            if (js_Emit1(cx, cg, JSOP_ENDINIT) < 0)
+            if (!EmitEndInit(cx, cg, atomIndex))
                 return JS_FALSE;
             break;
         }
@@ -6453,13 +6568,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * ignore setters and to avoid dup'ing and popping the object as each
          * property is added, as JSOP_SETELEM/JSOP_SETPROP would do.
          */
-        if (js_Emit2(cx, cg, JSOP_NEWINIT, (jsbytecode) JSProto_Object) < 0)
+        if (!EmitNewInit(cx, cg, JSProto_Object, pn, sharpnum))
             return JS_FALSE;
-
-#if JS_HAS_SHARP_VARS
-        if (sharpnum >= 0)
-            EMIT_UINT16_IMM_OP(JSOP_DEFSHARP, (jsatomid) sharpnum);
-#endif
 
         for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
             /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
@@ -6492,18 +6602,27 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 ale = cg->atomList.add(cg->compiler, pn3->pn_atom);
                 if (!ale)
                     return JS_FALSE;
-                EMIT_INDEX_OP(JSOP_INITPROP, ALE_INDEX(ale));
+
+                JSOp initOp = (PN_OP(pn2->pn_right) == JSOP_LAMBDA &&
+                               !(pn2->pn_right->pn_funbox->tcflags
+                                 & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME))
+#if JS_HAS_GETTER_SETTER
+                               && op != JSOP_GETTER && op != JSOP_SETTER
+#endif
+                               )
+                              ? JSOP_INITMETHOD
+                              : JSOP_INITPROP;
+                EMIT_INDEX_OP(initOp, ALE_INDEX(ale));
             }
         }
 
-        /* Emit an op for sharpArray cleanup and decompilation. */
-        if (js_Emit1(cx, cg, JSOP_ENDINIT) < 0)
+        if (!EmitEndInit(cx, cg, pn->pn_count))
             return JS_FALSE;
         break;
 
 #if JS_HAS_SHARP_VARS
       case TOK_DEFSHARP:
-        JS_ASSERT(cg->flags & TCF_HAS_SHARPS);
+        JS_ASSERT(cg->hasSharps());
         sharpnum = pn->pn_num;
         pn = pn->pn_kid;
         if (pn->pn_type == TOK_RB)
@@ -6517,12 +6636,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         if (!js_EmitTree(cx, cg, pn))
             return JS_FALSE;
-        EMIT_UINT16_IMM_OP(JSOP_DEFSHARP, (jsatomid) sharpnum);
+        EMIT_UINT16PAIR_IMM_OP(JSOP_DEFSHARP, cg->sharpSlotBase, (jsatomid) sharpnum);
         break;
 
       case TOK_USESHARP:
-        JS_ASSERT(cg->flags & TCF_HAS_SHARPS);
-        EMIT_UINT16_IMM_OP(JSOP_USESHARP, (jsatomid) pn->pn_num);
+        JS_ASSERT(cg->hasSharps());
+        EMIT_UINT16PAIR_IMM_OP(JSOP_USESHARP, cg->sharpSlotBase, (jsatomid) pn->pn_num);
         break;
 #endif /* JS_HAS_SHARP_VARS */
 
@@ -7183,7 +7302,7 @@ js_FinishTakingTryNotes(JSCodeGenerator *cg, JSTryNoteArray *array)
  * If the code being compiled is function code, allocate a reserved slot in
  * the cloned function object that shares its precompiled script with other
  * cloned function objects and with the compiler-created clone-parent. There
- * are nregexps = JS_SCRIPT_REGEXPS(script)->length such reserved slots in each
+ * are nregexps = script->regexps()->length such reserved slots in each
  * function object cloned from fun->object. NB: during compilation, a funobj
  * slots element must never be allocated, because js_AllocSlot could hand out
  * one of the slots that should be given to a regexp clone.

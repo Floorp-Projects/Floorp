@@ -363,8 +363,8 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
            prefSize = nsBox::BoundsCheck(minSize, prefSize, maxSize);
        
            AddMargin(child, prefSize);
-           width = PR_MIN(prefSize.width, originalClientRect.width);
-           height = PR_MIN(prefSize.height, originalClientRect.height);
+           width = NS_MIN(prefSize.width, originalClientRect.width);
+           height = NS_MIN(prefSize.height, originalClientRect.height);
         }
       }
 
@@ -907,7 +907,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
       // clamp all the flexes
       currentBox = aBoxSizes;
       while (currentBox) {
-        currentBox->flex = PR_MIN(currentBox->flex, maxAllowedFlex);
+        currentBox->flex = NS_MIN(currentBox->flex, maxAllowedFlex);
         currentBox = currentBox->next;      
       }
     }
@@ -920,7 +920,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
 
   // we specified all our children are equal size;
   if (frameState & NS_STATE_EQUAL_SIZE) {
-    smallestMaxWidth = PR_MAX(smallestMaxWidth, biggestMinWidth);
+    smallestMaxWidth = NS_MAX(smallestMaxWidth, biggestMinWidth);
     biggestPrefWidth = nsBox::BoundsCheck(biggestMinWidth, biggestPrefWidth, smallestMaxWidth);
 
     currentBox = aBoxSizes;

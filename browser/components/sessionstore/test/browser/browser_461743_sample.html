@@ -1,0 +1,43 @@
+<!-- Testcase originally by <moz_bug_r_a4@yahoo.com> -->
+
+<!DOCTYPE html>
+<title>Test for bug 461743</title>
+
+<body>
+<iframe src="data:text/html,empty"></iframe>
+<iframe></iframe>
+
+<script type="application/javascript">
+  var chromeUrl = "chrome://global/content/mozilla.xhtml";
+  var exploitUrl = "javascript:try { document.body.innerHTML = Components.utils.reportError; } catch (ex) { }";
+  
+  window.onload = function() {
+    var flip = 0;
+    MutationEvent.prototype.toString = function() {
+      return flip++ == 0 ? chromeUrl : exploitUrl;
+    };
+    
+    var href = Components.lookupMethod(frames[1].location, "href");
+    var loadChrome = { handleEvent: href };
+    var loadExploit = { handleEvent: href };
+    
+    function delay() {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", location.href, false);
+      xhr.send(null);
+    }
+    function done() {
+      var event = document.createEvent("MessageEvent");
+      event.initMessageEvent("461743", true, false, "done", location.href, "", window);
+      document.dispatchEvent(event);
+    }
+    
+    frames[0].document.addEventListener("DOMNodeInserted", loadChrome, true);
+    frames[0].document.addEventListener("DOMNodeInserted", delay, true);
+    frames[0].document.addEventListener("DOMNodeInserted", loadExploit, true);
+    frames[0].document.addEventListener("DOMNodeInserted", done, true);
+    
+    frames[0].document.designMode = "on";
+  };
+</script>
+</body>

@@ -40,6 +40,8 @@
 
 #include "nsMaiInterfaceTable.h"
 
+#include "nsArrayUtils.h"
+
 void
 tableInterfaceInitCB(AtkTableIface *aIface)
 
@@ -81,7 +83,7 @@ refAtCB(AtkTable *aTable, gint aRow, gint aColumn)
     NS_ENSURE_TRUE(accTable, nsnull);
 
     nsCOMPtr<nsIAccessible> cell;
-    nsresult rv = accTable->CellRefAt(aRow, aColumn,getter_AddRefs(cell));
+    nsresult rv = accTable->GetCellAt(aRow, aColumn,getter_AddRefs(cell));
     if (NS_FAILED(rv) || !cell)
         return nsnull;
 
@@ -105,7 +107,7 @@ getIndexAtCB(AtkTable *aTable, gint aRow, gint aColumn)
     NS_ENSURE_TRUE(accTable, -1);
 
     PRInt32 index;
-    nsresult rv = accTable->GetIndexAt(aRow, aColumn, &index);
+    nsresult rv = accTable->GetCellIndexAt(aRow, aColumn, &index);
     NS_ENSURE_SUCCESS(rv, -1);
 
     return static_cast<gint>(index);
@@ -124,7 +126,7 @@ getColumnAtIndexCB(AtkTable *aTable, gint aIndex)
     NS_ENSURE_TRUE(accTable, -1);
 
     PRInt32 col;
-    nsresult rv = accTable->GetColumnAtIndex(aIndex, &col);
+    nsresult rv = accTable->GetColumnIndexAt(aIndex, &col);
     NS_ENSURE_SUCCESS(rv, -1);
 
     return static_cast<gint>(col);
@@ -143,7 +145,7 @@ getRowAtIndexCB(AtkTable *aTable, gint aIndex)
     NS_ENSURE_TRUE(accTable, -1);
 
     PRInt32 row;
-    nsresult rv = accTable->GetRowAtIndex(aIndex, &row);
+    nsresult rv = accTable->GetRowIndexAt(aIndex, &row);
     NS_ENSURE_SUCCESS(rv, -1);
 
     return static_cast<gint>(row);
@@ -162,7 +164,7 @@ getColumnCountCB(AtkTable *aTable)
     NS_ENSURE_TRUE(accTable, -1);
 
     PRInt32 count;
-    nsresult rv = accTable->GetColumns(&count);
+    nsresult rv = accTable->GetColumnCount(&count);
     NS_ENSURE_SUCCESS(rv, -1);
 
     return static_cast<gint>(count);
@@ -181,7 +183,7 @@ getRowCountCB(AtkTable *aTable)
     NS_ENSURE_TRUE(accTable, -1);
 
     PRInt32 count;
-    nsresult rv = accTable->GetRows(&count);
+    nsresult rv = accTable->GetRowCount(&count);
     NS_ENSURE_SUCCESS(rv, -1);
 
     return static_cast<gint>(count);
@@ -278,25 +280,34 @@ getColumnHeaderCB(AtkTable *aTable, gint aColumn)
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, nsnull);
 
-    nsCOMPtr<nsIAccessibleTable> header;
-    nsresult rv = accTable->GetColumnHeader(getter_AddRefs(header));
-    NS_ENSURE_SUCCESS(rv, nsnull);
-    NS_ENSURE_TRUE(header, nsnull);
+    nsCOMPtr<nsIAccessible> accCell;
+    accTable->GetCellAt(0, aColumn, getter_AddRefs(accCell));
+    if (!accCell)
+        return nsnull;
 
-    // Note: "table column header" has different definition between atk and mai
-    //
-    // 1. "getColumnHeaderCB" defined in AtkTableIface should return object
-    // whose role is "ATK_ROLE_TABLE_COLUMN_HEADER", which is implemented
-    // by nsXULTreeColumnItemAccessible.
-    //
-    // 2. "GetColumnHeader" defined in nsIAccessibleTable returns
-    // nsXULTreeColumnsAccessibleWrap, which exports nsIAccessibleTable and is
-    // "ROLE_LIST".
-    nsCOMPtr<nsIAccessible> accHeader;
-    header->CellRefAt(0, aColumn, getter_AddRefs(accHeader));
-    NS_ENSURE_TRUE(accHeader, nsnull);
+    // If the cell at the first row is column header then assume it is column
+    // header for all rows,
+    if (nsAccUtils::Role(accCell) == nsIAccessibleRole::ROLE_COLUMNHEADER)
+        return nsAccessibleWrap::GetAtkObject(accCell);
 
-    return nsAccessibleWrap::GetAtkObject(accHeader);
+    // otherwise get column header for the data cell at the first row.
+    nsCOMPtr<nsIAccessibleTableCell> accTableCell =
+        do_QueryInterface(accCell);
+
+    if (accTableCell) {
+        nsCOMPtr<nsIArray> headerCells;
+        accTableCell->GetColumnHeaderCells(getter_AddRefs(headerCells));
+        if (headerCells) {
+            nsresult rv;
+            nsCOMPtr<nsIAccessible> accHeaderCell =
+                do_QueryElementAt(headerCells, 0, &rv);
+            NS_ENSURE_SUCCESS(rv, nsnull);
+
+            return nsAccessibleWrap::GetAtkObject(accHeaderCell);
+        }
+    }
+
+    return nsnull;
 }
 
 const gchar*
@@ -330,14 +341,34 @@ getRowHeaderCB(AtkTable *aTable, gint aRow)
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, nsnull);
 
-    nsCOMPtr<nsIAccessibleTable> header;
-    nsresult rv = accTable->GetRowHeader(getter_AddRefs(header));
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    nsCOMPtr<nsIAccessible> accCell;
+    accTable->GetCellAt(aRow, 0, getter_AddRefs(accCell));
+    if (!accCell)
+      return nsnull;
 
-    nsCOMPtr<nsIAccessible> accHeader(do_QueryInterface(header));
-    NS_ENSURE_TRUE(accHeader, nsnull);
+    // If the cell at the first column is row header then assume it is row
+    // header for all columns,
+    if (nsAccUtils::Role(accCell) == nsIAccessibleRole::ROLE_ROWHEADER)
+        return nsAccessibleWrap::GetAtkObject(accCell);
 
-    return nsAccessibleWrap::GetAtkObject(accHeader);
+    // otherwise get row header for the data cell at the first column.
+    nsCOMPtr<nsIAccessibleTableCell> accTableCell =
+        do_QueryInterface(accCell);
+
+    if (accTableCell) {
+      nsCOMPtr<nsIArray> headerCells;
+      accTableCell->GetRowHeaderCells(getter_AddRefs(headerCells));
+      if (headerCells) {
+        nsresult rv;
+        nsCOMPtr<nsIAccessible> accHeaderCell =
+            do_QueryElementAt(headerCells, 0, &rv);
+        NS_ENSURE_SUCCESS(rv, nsnull);
+
+        return nsAccessibleWrap::GetAtkObject(accHeaderCell);
+      }
+    }
+
+    return nsnull;
 }
 
 AtkObject*
@@ -364,7 +395,7 @@ getSelectedColumnsCB(AtkTable *aTable, gint **aSelected)
 
     PRUint32 size = 0;
     PRInt32 *columns = NULL;
-    nsresult rv = accTable->GetSelectedColumns(&size, &columns);
+    nsresult rv = accTable->GetSelectedColumnIndices(&size, &columns);
     if (NS_FAILED(rv) || (size == 0) || !columns) {
         *aSelected = nsnull;
         return 0;
@@ -399,7 +430,7 @@ getSelectedRowsCB(AtkTable *aTable, gint **aSelected)
 
     PRUint32 size = 0;
     PRInt32 *rows = NULL;
-    nsresult rv = accTable->GetSelectedRows(&size, &rows);
+    nsresult rv = accTable->GetSelectedRowIndices(&size, &rows);
     if (NS_FAILED(rv) || (size == 0) || !rows) {
         *aSelected = nsnull;
         return 0;

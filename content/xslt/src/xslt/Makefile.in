@@ -47,33 +47,6 @@ LIBRARY_NAME = txxslt_s
 LIBXUL_LIBRARY = 1
 
 
-ifndef MOZ_XSLT_STANDALONE
-REQUIRES += \
-		  dom \
-		  content \
-		  widget \
-		  necko \
-		  unicharutil \
-		  xpconnect \
-		  js \
-		  htmlparser \
-		  webshell \
-		  docshell \
-		  layout \
-		  uconv \
-		  caps \
-		  windowwatcher \
-		  mimetype \
-		  intl \
-		  locale \
-		  htmlparser \
-		  pref \
-		  $(NULL)
-else
-REQUIRES += \
-		  expat \
-		  $(NULL)
-endif
 
 CPPSRCS = \
         txNodeSorter.cpp \

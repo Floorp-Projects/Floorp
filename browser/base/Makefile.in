@@ -53,6 +53,10 @@ ifdef ENABLE_TESTS
 DIRS += content/test
 endif
 
+EXTRA_JS_MODULES = \
+	content/openLocationLastURL.jsm \
+	$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 PRE_RELEASE_SUFFIX := $(shell $(PYTHON) $(topsrcdir)/config/printprereleasesuffix.py \
@@ -76,8 +80,4 @@ ifneq (,$(filter windows mac cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
 ifneq ($(OS_ARCH),WINCE)
 DEFINES += -DCONTEXT_COPY_IMAGE_CONTENTS=1
 endif
-endif
-
-ifdef MOZILLA_OFFICIAL
-DEFINES += -DOFFICIAL_BUILD=1
 endif

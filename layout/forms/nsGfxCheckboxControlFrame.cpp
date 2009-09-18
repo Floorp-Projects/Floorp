@@ -65,7 +65,7 @@ PaintCheckMark(nsIFrame* aFrame,
                                     // of the 7x7 unit checkmark
 
   // Scale the checkmark based on the smallest dimension
-  nscoord paintScale = PR_MIN(rect.width, rect.height) / checkSize;
+  nscoord paintScale = NS_MIN(rect.width, rect.height) / checkSize;
   nsPoint paintCenter(rect.x + rect.width  / 2,
                       rect.y + rect.height / 2);
 
@@ -104,6 +104,8 @@ NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell,
 {
   return new (aPresShell) nsGfxCheckboxControlFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsGfxCheckboxControlFrame)
 
 
 //------------------------------------------------------------

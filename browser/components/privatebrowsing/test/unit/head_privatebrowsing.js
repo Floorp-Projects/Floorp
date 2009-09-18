@@ -110,6 +110,15 @@ function cleanUp()
 }
 cleanUp();
 
+/**
+ * Finalize Places statements during quit-application in order to prevent leaks
+ */
+function shutdownPlaces() {
+  let os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
+  os.notifyObservers(null, "quit-application", null);
+}
+
 var PRIVATEBROWSING_CONTRACT_ID;
 function run_test_on_all_services() {
   var contractIDs = [

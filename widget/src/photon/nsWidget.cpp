@@ -562,17 +562,6 @@ NS_METHOD nsWidget::SetCursor( nsCursor aCursor ) {
 	}
 
 
-NS_METHOD nsWidget::Invalidate( PRBool aIsSynchronous ) {
-
-	// mWidget will be null during printing
-	if( !mWidget || !PtWidgetIsRealized( mWidget ) ) return NS_OK;
-
-	PtWidget_t *aWidget = (PtWidget_t *)GetNativeData(NS_NATIVE_WIDGET);
-	PtDamageWidget( aWidget );
-	if( aIsSynchronous ) PtFlush();
-	return NS_OK;
-	}
-
 NS_METHOD nsWidget::Invalidate( const nsRect & aRect, PRBool aIsSynchronous ) {
 
   if( !mWidget ) return NS_OK; // mWidget will be null during printing

@@ -443,13 +443,6 @@ protected:
   nsISelectControlFrame *GetSelectFrame();
 
   /**
-   * Helper method for dispatching custom DOM events to our anonymous subcontent
-   * (for XBL form controls)
-   * @param aName the name of the event to dispatch
-   */
-  void DispatchDOMEvent(const nsAString& aName);
-
-  /**
    * Is this a combobox?
    */
   PRBool IsCombobox() {

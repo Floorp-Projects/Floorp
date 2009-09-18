@@ -2737,6 +2737,8 @@ if ($noUsername) { next STRUCTURE; }
 
 /** Test for Login Manager: simple form fill **/
 
+commonInit();
+
 function startTest() {
     var f;
 
@@ -2750,7 +2752,7 @@ function startTest() {
     for (f = 27;  f <= 30;  f++) { checkUnmodifiedForm(f); }
     for (f = 31;  f <= 42;  f++) { checkUnmodifiedForm(f); }
 
-    todo(false, "Add support for password before username");
+    // Password-before-username is not supported.
     //for (f = 43;  f <= 50;  f++) { checkForm(f, "testpass", "testuser"); }
     //for (f = 51;  f <= 54;  f++) { checkUnmodifiedForm(f); }
     //for (f = 55;  f <= 62;  f++) { checkForm(f, "testpass", "testuser"); }
@@ -2766,10 +2768,10 @@ function startTest() {
     for (f = 111; f <= 114; f++) { checkUnmodifiedForm(f); }
     for (f = 115; f <= 126; f++) { checkUnmodifiedForm(f); }
 
-    todo(false, "Ambigious username fields,");
+    // Ambigious username fields
     //for (f = 127; f <= 134; f++) { checkForm(f, "testuser", "", "testpass"); }
 
-    todo(false, "More of the same, just hard to split up...");
+    // More of the same, just hard to split up...
     //for (f = 135; f <= 138; f++) { checkUnmodifiedForm(f); }
     //for (f = 139; f <= 146; f++) { checkForm(f, "testuser", "", "testpass"); }
     //for (f = 147; f <= 162; f++) { checkUnmodifiedForm(f); }
@@ -2782,7 +2784,7 @@ function startTest() {
     for (f = 183; f <= 186; f++) { checkUnmodifiedForm(f); }
     for (f = 187; f <= 198; f++) { checkUnmodifiedForm(f); }
 
-    todo(false, "Add support for password before username");
+    // Password-before-username is not supported.
     //for (f = 199; f <= 206; f++) { checkForm(f, "testpass", "testuser", ""); }
     //for (f = 207; f <= 210; f++) { checkUnmodifiedForm(f); }
     //for (f = 211; f <= 218; f++) { checkForm(f, "testpass", "testuser", ""); }

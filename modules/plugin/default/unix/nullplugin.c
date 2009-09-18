@@ -66,8 +66,6 @@
 #include "nullplugin.h"
 #include "prprf.h"
 
-#define DIALOGID "dialog"
-
 /* Global data */
 static MimeTypeElement *head = NULL;
 
@@ -86,10 +84,7 @@ static void
 DialogOKClicked (GtkButton *button, gpointer data)
 {
     PluginInstance* This = (PluginInstance*) data;
-    GtkWidget* dialogWindow = g_object_get_data(GTK_OBJECT(button), DIALOGID);
     char *url;
-
-    g_object_set_data(GTK_OBJECT(button), DIALOGID, NULL);
 
     if (This->pluginsFileUrl != NULL)
     {
@@ -301,7 +296,6 @@ makeWidget(PluginInstance *This)
 
     okButton= AddWidget(gtk_button_new_with_label (OK_BUTTON), 
                    GTK_DIALOG(dialogWindow)->action_area);
-    g_object_set_data(GTK_OBJECT(okButton), DIALOGID, dialogWindow);
 
     GTK_WIDGET_SET_FLAGS (okButton, GTK_CAN_DEFAULT);
     gtk_widget_grab_default(okButton);

@@ -88,18 +88,15 @@ endif
 
 ifdef MOZ_XUL
 DIRS += \
-	autocomplete \
-	$(NULL)
+  autocomplete \
+  satchel \
+  $(NULL)
 endif
 
 ifndef MOZ_THUNDERBIRD
 
 ifndef MOZ_SUITE
 DIRS +=	search
-endif
-
-ifdef MOZ_XUL
-DIRS += satchel
 endif
 
 endif # MOZ_THUNDERBIRD

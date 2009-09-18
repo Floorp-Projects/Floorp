@@ -75,14 +75,14 @@ void nsTableCellReflowState::FixUp(const nsSize& aAvailSpace)
   if (NS_UNCONSTRAINEDSIZE != ComputedWidth()) {
     nscoord computedWidth =
       aAvailSpace.width - mComputedBorderPadding.LeftRight();
-    computedWidth = PR_MAX(0, computedWidth);
+    computedWidth = NS_MAX(0, computedWidth);
     SetComputedWidth(computedWidth);
   }
   if (NS_UNCONSTRAINEDSIZE != ComputedHeight() &&
       NS_UNCONSTRAINEDSIZE != aAvailSpace.height) {
     nscoord computedHeight =
       aAvailSpace.height - mComputedBorderPadding.TopBottom();
-    computedHeight = PR_MAX(0, computedHeight);
+    computedHeight = NS_MAX(0, computedHeight);
     SetComputedHeight(computedHeight);
   }
 }
@@ -109,7 +109,7 @@ nsTableRowFrame::InitChildReflowState(nsPresContext&         aPresContext,
 void 
 nsTableRowFrame::SetFixedHeight(nscoord aValue)
 {
-  nscoord height = PR_MAX(0, aValue);
+  nscoord height = NS_MAX(0, aValue);
   if (HasFixedHeight()) {
     if (height > mStyleFixedHeight) {
       mStyleFixedHeight = height;
@@ -127,7 +127,7 @@ void
 nsTableRowFrame::SetPctHeight(float  aPctValue,
                               PRBool aForce)
 {
-  nscoord height = PR_MAX(0, NSToCoordRound(aPctValue * 100.0f));
+  nscoord height = NS_MAX(0, NSToCoordRound(aPctValue * 100.0f));
   if (HasPctHeight()) {
     if ((height > mStylePctHeight) || aForce) {
       mStylePctHeight = height;
@@ -446,7 +446,7 @@ nscoord nsTableRowFrame::GetRowBaseline()
    while (childFrame) {
     if (IS_TABLE_CELL(childFrame->GetType())) {
       nsIFrame* firstKid = childFrame->GetFirstChild(nsnull);
-      ascent = PR_MAX(ascent, firstKid->GetRect().YMost());
+      ascent = NS_MAX(ascent, firstKid->GetRect().YMost());
     }
     // Get the next child
     childFrame = iter.Next();
@@ -461,9 +461,9 @@ nsTableRowFrame::GetHeight(nscoord aPctBasis) const
     height = NSToCoordRound(GetPctHeight() * (float)aPctBasis);
   }
   if (HasFixedHeight()) {
-    height = PR_MAX(height, GetFixedHeight());
+    height = NS_MAX(height, GetFixedHeight());
   }
-  return PR_MAX(height, GetContentHeight());
+  return NS_MAX(height, GetContentHeight());
 }
 
 void 
@@ -597,7 +597,8 @@ nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
   TableBackgroundPainter painter(tableFrame,
                                  TableBackgroundPainter::eOrigin_TableRow,
                                  mFrame->PresContext(), *aCtx,
-                                 aDirtyRect, pt);
+                                 aDirtyRect, pt,
+                                 aBuilder->GetBackgroundPaintFlags());
   painter.PaintRow(static_cast<nsTableRowFrame*>(mFrame));
 }
 
@@ -787,7 +788,7 @@ nscoord CalcHeightFromUnpaginatedHeight(nsPresContext*   aPresContext,
       height -= prevInFlow->GetSize().height;
     }
   }
-  return PR_MAX(height, 0);
+  return NS_MAX(height, 0);
 }
 
 NS_METHOD 
@@ -961,7 +962,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         UpdateHeight(desiredSize.height, ascent, descent, &aTableFrame, cellFrame);
       }
       else {
-        cellMaxHeight = PR_MAX(cellMaxHeight, desiredSize.height);
+        cellMaxHeight = NS_MAX(cellMaxHeight, desiredSize.height);
         PRInt32 rowSpan = aTableFrame.GetEffectiveRowSpan((nsTableCellFrame&)*kidFrame);
         if (1 == rowSpan) {
           SetContentHeight(cellMaxHeight);
@@ -1009,7 +1010,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
     aDesiredSize.height = CalcHeight(aReflowState);
     if (GetPrevInFlow()) {
       nscoord height = CalcHeightFromUnpaginatedHeight(aPresContext, *this);
-      aDesiredSize.height = PR_MAX(aDesiredSize.height, height);
+      aDesiredSize.height = NS_MAX(aDesiredSize.height, height);
     }
     else {
       if (isPaginated && HasStyleHeight()) {
@@ -1018,7 +1019,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         SetUnpaginatedHeight(aPresContext, aDesiredSize.height);
       }
       if (isPaginated && HasUnpaginatedHeight()) {
-        aDesiredSize.height = PR_MAX(aDesiredSize.height, GetUnpaginatedHeight(aPresContext));
+        aDesiredSize.height = NS_MAX(aDesiredSize.height, GetUnpaginatedHeight(aPresContext));
       }
     }
   }
@@ -1030,7 +1031,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       styleHeight = aReflowState.availableHeight;
       NS_FRAME_SET_INCOMPLETE(aStatus);
     }
-    aDesiredSize.height = PR_MAX(cellMaxHeight, styleHeight);
+    aDesiredSize.height = NS_MAX(cellMaxHeight, styleHeight);
   }
   nsRect rowRect(0, 0, aDesiredSize.width, aDesiredSize.height);
   aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, rowRect);
@@ -1309,19 +1310,11 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
   return shift;
 }
 
-
-/**
- * These 3 functions are called by the row group frame's SplitRowGroup() code when
- * it creates a continuing cell frame and wants to insert it into the row's child list
+/*
+ * The following method is called by the row group frame's SplitRowGroup()
+ * when it creates a continuing cell frame and wants to insert it into the
+ * row's child list.
  */
-void 
-nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
-                                 nsTableCellFrame* aPrevSibling)
-{
-  mFrames.InsertFrame(nsnull, aPrevSibling, aFrame);
-  aFrame->SetParent(this);
-}
-
 void 
 nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
                                  PRInt32           aColIndex)
@@ -1340,14 +1333,7 @@ nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
       else break;
     }
   }
-  InsertCellFrame(aFrame, priorCell);
-}
-
-void 
-nsTableRowFrame::RemoveCellFrame(nsTableCellFrame* aFrame)
-{
-  if (!mFrames.RemoveFrame(aFrame))
-    NS_ASSERTION(PR_FALSE, "frame not in list");
+  mFrames.InsertFrame(this, priorCell, aFrame);
 }
 
 nsIAtom*
@@ -1444,6 +1430,8 @@ NS_NewTableRowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsTableRowFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsTableRowFrame)
 
 #ifdef DEBUG
 NS_IMETHODIMP

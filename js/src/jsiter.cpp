@@ -374,7 +374,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
         *vp = OBJECT_TO_JSVAL(iterobj);
     } else {
         atom = cx->runtime->atomState.iteratorAtom;
-        if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), false, vp))
+        if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, vp))
             goto bad;
         if (JSVAL_IS_VOID(*vp)) {
           default_iter:
@@ -731,7 +731,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 
     /* These two references can be shared with fp until it goes away. */
     gen->frame.varobj = fp->varobj;
-    gen->frame.thisp = fp->thisp;
+    gen->frame.thisv = fp->thisv;
 
     /* Copy call-invariant script and function references. */
     gen->frame.script = fp->script;
@@ -763,12 +763,9 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     gen->savedRegs.pc = fp->regs->pc;
     gen->frame.regs = &gen->savedRegs;
 
-    /* Copy remaining state (XXX sharp* and xml* should be local vars). */
-    gen->frame.sharpDepth = 0;
-    gen->frame.sharpArray = NULL;
     gen->frame.flags = (fp->flags & ~JSFRAME_ROOTED_ARGV) | JSFRAME_GENERATOR;
     gen->frame.dormantNext = NULL;
-    gen->frame.xmlNamespace = NULL;
+
     /* JSOP_GENERATOR appears in the prologue, outside all blocks.  */
     JS_ASSERT(!fp->blockChain);
     gen->frame.blockChain = NULL;

@@ -64,6 +64,8 @@ NS_NewSVGForeignObjectFrame(nsIPresShell   *aPresShell,
   return new (aPresShell) nsSVGForeignObjectFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGForeignObjectFrame)
+
 nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
   : nsSVGForeignObjectFrameBase(aContext),
     mInReflow(PR_FALSE)

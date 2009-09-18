@@ -155,4 +155,6 @@ function do_test()
   // And check our data
   for (let i = 0; i < data.length; i++)
     check_active_download(data[i].source, !data[i].removed);
+
+  shutdownPlaces();
 }

@@ -47,50 +47,46 @@ function test() {
     "browser/components/privatebrowsing/test/browser/browser_privatebrowsing_geoprompt_page.html";
   waitForExplicitFinish();
 
-  let pageTab = gBrowser.addTab();
-  gBrowser.selectedTab = pageTab;
-  let pageBrowser = gBrowser.getBrowserForTab(pageTab);
-  pageBrowser.addEventListener("load", function () {
-    pageBrowser.removeEventListener("load", arguments.callee, true);
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedBrowser.addEventListener("load", function () {
+    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
     setTimeout(function() {
       // Make sure the notification is correctly displayed with a remember control
-      let notificationBox = gBrowser.getNotificationBox(pageBrowser);
+      let notificationBox = gBrowser.getNotificationBox();
       let notification = notificationBox.getNotificationWithValue("geolocation");
       ok(notification, "Notification box should be displaying outside of private browsing mode");
       is(notification.getElementsByClassName("rememberChoice").length, 1,
          "The remember control must be displayed outside of private browsing mode");
       notificationBox.currentNotification.close();
 
-      gBrowser.removeTab(pageTab);
+      gBrowser.removeCurrentTab();
 
       // enter the private browsing mode
       pb.privateBrowsingEnabled = true;
 
-      pageTab = gBrowser.addTab();
-      gBrowser.selectedTab = pageTab;
-      pageBrowser = gBrowser.getBrowserForTab(pageTab);
-      pageBrowser.addEventListener("load", function () {
-        pageBrowser.removeEventListener("load", arguments.callee, true);
+      gBrowser.selectedTab = gBrowser.addTab();
+      gBrowser.selectedBrowser.addEventListener("load", function () {
+        gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
-        setTimeout(function() {
+        setTimeout(function () {
           // Make sure the notification is correctly displayed without a remember control
-          let notificationBox = gBrowser.getNotificationBox(pageBrowser);
+          let notificationBox = gBrowser.getNotificationBox();
           let notification = notificationBox.getNotificationWithValue("geolocation");
           ok(notification, "Notification box should be displaying outside of private browsing mode");
           is(notification.getElementsByClassName("rememberChoice").length, 0,
              "The remember control must not be displayed inside of private browsing mode");
           notificationBox.currentNotification.close();
 
-          gBrowser.removeTab(pageTab);
+          gBrowser.removeCurrentTab();
 
           // cleanup
           pb.privateBrowsingEnabled = false;
           finish();
         }, 100); // remember control is added in a setTimeout(0) call
       }, true);
-      pageBrowser.contentWindow.location = testPageURL;
+      content.location = testPageURL;
     }, 100); // remember control is added in a setTimeout(0) call
   }, true);
-  pageBrowser.contentWindow.location = testPageURL;
+  content.location = testPageURL;
 }

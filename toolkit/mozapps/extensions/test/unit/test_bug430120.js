@@ -43,6 +43,7 @@ const PREF_APP_DISTRIBUTION           = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION   = "distribution.version";
 const PREF_APP_UPDATE_CHANNEL         = "app.update.channel";
 const PREF_GENERAL_USERAGENT_LOCALE   = "general.useragent.locale";
+const CATEGORY_UPDATE_TIMER           = "update-timer";
 
 // Get the HTTP server.
 do_load_httpd_js();
@@ -53,18 +54,23 @@ var gBlocklist;
 // This is a replacement for the timer service so we can trigger timers
 var timerService = {
 
-  timers: {},
-
-  registerTimer: function(id, callback, interval) {
-    this.timers[id] = callback;
-  },
-
   hasTimer: function(id) {
-    return id in this.timers;
+    var catMan = Components.classes["@mozilla.org/categorymanager;1"]
+                           .getService(Components.interfaces.nsICategoryManager);
+    var entries = catMan.enumerateCategory(CATEGORY_UPDATE_TIMER);
+    while (entries.hasMoreElements()) {
+      var entry = entries.getNext().QueryInterface(Components.interfaces.nsISupportsCString).data;
+      var value = catMan.getCategoryEntry(CATEGORY_UPDATE_TIMER, entry);
+      var timerID = value.split(",")[3];
+      if (id == timerID) {
+        return true;
+      }
+    }
+    return false;
   },
 
   fireTimer: function(id) {
-    this.timers[id].notify(null);
+    gBlocklist.QueryInterface(Components.interfaces.nsITimerCallback).notify(null);
   },
 
   QueryInterface: function(iid) {

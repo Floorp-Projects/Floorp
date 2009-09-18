@@ -71,7 +71,9 @@
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsCSSDeclaration.h"
 #include "nsDOMCSSDeclaration.h"
+#include "nsDOMCSSAttrDeclaration.h"
 #include "nsINameSpaceManager.h"
 #include "nsContentList.h"
 #include "nsDOMTokenList.h"
@@ -1079,6 +1081,29 @@ nsNSElementTearoff::GetClassList(nsIDOMDOMTokenList** aResult)
 
   NS_ADDREF(*aResult = slots->mClassList);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::SetCapture(PRBool aRetargetToElement)
+{
+  // If there is already an active capture, ignore this request. This would
+  // occur if a splitter, frame resizer, etc had already captured and we don't
+  // want to override those.
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(nsIPresShell::GetCapturingContent());
+  if (node)
+    return NS_OK;
+
+  nsIPresShell::SetCapturingContent(mContent, aRetargetToElement ? CAPTURE_RETARGETTOELEMENT : 0);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::ReleaseCapture()
+{
+  if (nsIPresShell::GetCapturingContent() == mContent) {
+    nsIPresShell::SetCapturingContent(nsnull, 0);
+  }
   return NS_OK;
 }
 
@@ -2692,10 +2717,6 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     // anonymous content that the document is changing.
     document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
 
-    if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
-      document->ForgetLink(this);
-    }
-
     document->ClearBoxObjectFor(this);
   }
 
@@ -2936,6 +2957,55 @@ nsGenericElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   return NS_OK;
 }
+
+#ifdef MOZ_SMIL
+nsresult
+nsGenericElement::GetSMILOverrideStyle(nsIDOMCSSStyleDeclaration** aStyle)
+{
+  nsGenericElement::nsDOMSlots *slots = GetDOMSlots();
+  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
+
+  if (!slots->mSMILOverrideStyle) {
+    slots->mSMILOverrideStyle = new nsDOMCSSAttributeDeclaration(this, PR_TRUE);
+    NS_ENSURE_TRUE(slots->mSMILOverrideStyle, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  // Why bother with QI?
+  NS_ADDREF(*aStyle = slots->mSMILOverrideStyle);
+  return NS_OK;
+}
+
+nsICSSStyleRule*
+nsGenericElement::GetSMILOverrideStyleRule()
+{
+  nsGenericElement::nsDOMSlots *slots = GetExistingDOMSlots();
+  return slots ? slots->mSMILOverrideStyleRule : nsnull;
+}
+
+nsresult
+nsGenericElement::SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
+                                           PRBool aNotify)
+{
+  nsGenericElement::nsDOMSlots *slots = GetDOMSlots();
+  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
+
+  slots->mSMILOverrideStyleRule = aStyleRule;
+
+  if (aNotify) {
+    nsIDocument* doc = GetCurrentDoc();
+    NS_ABORT_IF_FALSE(doc, "Shouldn't be able to animate style on a node "
+                      "unless it's in a document...");
+    nsPresShellIterator iter(doc);
+    nsCOMPtr<nsIPresShell> shell;
+    while (shell = iter.GetNextShell()) {
+      nsPresContext* presContext = shell->GetPresContext();
+      presContext->SMILOverrideStyleChanged(this);
+    }
+  }
+
+  return NS_OK;
+}
+#endif // MOZ_SMIL
 
 nsICSSStyleRule*
 nsGenericElement::GetInlineStyleRule()
@@ -3295,7 +3365,7 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
         do_GetService("@mozilla.org/accessibilityService;1");
       if (accService) {
         accService->InvalidateSubtreeFor(presShell, aKid,
-                                         nsIAccessibleEvent::EVENT_DOM_DESTROY);
+                                         nsIAccessibilityService::NODE_REMOVE);
       }
     }
   }
@@ -4033,6 +4103,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
     nsDOMSlots *slots = tmp->GetExistingDOMSlots();
     if (slots) {
       slots->mStyle = nsnull;
+#ifdef MOZ_SMIL
+      slots->mSMILOverrideStyle = nsnull;
+#endif // MOZ_SMIL
       if (slots->mAttributeMap) {
         slots->mAttributeMap->DropReference();
         slots->mAttributeMap = nsnull;
@@ -4113,6 +4186,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
     if (slots) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "slots mStyle");
       cb.NoteXPCOMChild(slots->mStyle.get());
+
+#ifdef MOZ_SMIL
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "slots mSMILOverrideStyle");
+      cb.NoteXPCOMChild(slots->mSMILOverrideStyle.get());
+#endif // MOZ_SMIL
 
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "slots mAttributeMap");
       cb.NoteXPCOMChild(slots->mAttributeMap.get());
@@ -4203,7 +4281,9 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
   GetEventListenerManagerForAttr(getter_AddRefs(manager),
                                  getter_AddRefs(target),
                                  &defer);
-  NS_ENSURE_STATE(manager);
+  if (!manager) {
+    return NS_OK;
+  }
 
   defer = defer && aDefer; // only defer if everyone agrees...
   PRUint32 lang = GetScriptTypeID();
@@ -4247,20 +4327,6 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
                "Don't call SetAttr with unknown namespace");
-
-  nsIDocument* doc = GetCurrentDoc();
-  if (kNameSpaceID_XLink == aNamespaceID && nsGkAtoms::href == aName) {
-    // XLink URI(s) might be changing. Drop the link from the map. If it
-    // is still style relevant it will be re-added by
-    // nsStyleUtil::IsLink. Make sure to keep the style system
-    // consistent so this remains true! In particular if the style system
-    // were to get smarter and not restyling an XLink element if the href
-    // doesn't change in a "significant" way, we'd need to do the same
-    // significance check here.
-    if (doc) {
-      doc->ForgetLink(this);
-    }
-  }
 
   nsAutoString oldValue;
   PRBool modification = PR_FALSE;
@@ -4574,12 +4640,6 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (aNotify) {
     nsNodeUtils::AttributeWillChange(this, aNameSpaceID, aName,
                                      nsIDOMMutationEvent::REMOVAL);
-  }
-
-  if (document && kNameSpaceID_XLink == aNameSpaceID &&
-      nsGkAtoms::href == aName) {
-    // XLink URI might be changing.
-    document->ForgetLink(this);
   }
 
   // When notifying, make sure to keep track of states whose value

@@ -634,36 +634,6 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     return rv;
 }
 
-
-NS_IMETHODIMP
-nsWindow::Validate()
-{
-    // Get the update for this window and, well, just drop it on the
-    // floor.
-    if (!mWidget)
-        return NS_OK;
-
-    qDebug("FIXME:>>>>>>Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::Invalidate(PRBool aIsSynchronous)
-{
-    LOGDRAW(("Invalidate (all) [%p]: \n", (void *)this));
-
-    if (!mWidget)
-        return NS_OK;
-
-    if (aIsSynchronous && !mWidget->paintingActive())
-        mWidget->repaint();
-    else
-        mWidget->update();
-
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsWindow::Invalidate(const nsIntRect &aRect,
                      PRBool        aIsSynchronous)
@@ -695,7 +665,7 @@ nsWindow::Update()
 
 void
 nsWindow::Scroll(const nsIntPoint& aDelta,
-                 const nsIntRect& aSource,
+                 const nsTArray<nsIntRect>& aDestRects,
                  const nsTArray<nsIWidget::Configuration>& aConfigurations)
 {
     if (!mWidget) {
@@ -722,8 +692,12 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
         }
     }
 
-    QRect rect(aSource.x, aSource.y, aSource.width, aSource.height);
-    mWidget->scroll(aDelta.x, aDelta.y, rect);
+    for ( unsigned int i = 0; i < aDestRects.Length(); ++i)
+    {
+        const nsIntRect & r = aDestRects[i];
+        QRect rect(r.x - aDelta.x, r.y - aDelta.y, r.width, r.height);
+        mWidget->scroll(aDelta.x, aDelta.y, rect);
+    }
     ConfigureChildren(aConfigurations);
 
     // Show windows again...
@@ -2191,10 +2165,6 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent,
     // send it to the standard callback
     if (mEventCallback)
         aStatus = (* mEventCallback)(aEvent);
-
-    // dispatch to event listener if event was not consumed
-    if ((aStatus != nsEventStatus_eIgnore) && mEventListener)
-        aStatus = mEventListener->ProcessEvent(*aEvent);
 
     return NS_OK;
 }

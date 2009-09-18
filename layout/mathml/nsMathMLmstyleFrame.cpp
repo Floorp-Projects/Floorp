@@ -59,6 +59,8 @@ NS_NewMathMLmstyleFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsMathMLmstyleFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmstyleFrame)
+
 nsMathMLmstyleFrame::~nsMathMLmstyleFrame()
 {
 }

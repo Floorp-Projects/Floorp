@@ -853,7 +853,7 @@ public:
     }
 
     PRBool IsDone() const { return mCur == mEnd; }
-    operator nsIContent* const () { return *mCur; }
+    operator nsIContent*() const { return *mCur; }
     void Next() { NS_PRECONDITION(mCur != mEnd, "Check IsDone"); ++mCur; }
     void Advance(PRUint32 aOffset) {
       NS_ASSERTION(mCur + aOffset <= mEnd, "Unexpected offset");

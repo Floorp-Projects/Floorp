@@ -267,7 +267,7 @@ nsresult nsFontCache::Compact()
         NS_RELEASE(fm); // this will reset fm to nsnull
         // if the font is really gone, it would have called back in
         // FontMetricsDeleted() and would have removed itself
-        if (mFontMetrics.IndexOf(oldfm) >= 0) {
+        if (mFontMetrics.IndexOf(oldfm) != mFontMetrics.NoIndex) { 
             // nope, the font is still there, so let's hold onto it too
             NS_ADDREF(oldfm);
         }
@@ -624,13 +624,34 @@ nsThebesDeviceContext::SetDPI()
     // The number of device pixels per CSS pixel. A value <= 0 means choose
     // automatically based on the DPI. A positive value is used as-is. This effectively
     // controls the size of a CSS "px".
-    PRInt32 prefDevPixelsPerCSSPixel = -1;
+    float prefDevPixelsPerCSSPixel = -1.0;
 
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
-        nsresult rv = prefs->GetIntPref("layout.css.devPixelsPerPx", &prefDevPixelsPerCSSPixel);
-        if (NS_FAILED(rv)) {
-            prefDevPixelsPerCSSPixel = -1;
+        const char *prefName = "layout.css.devPixelsPerPx";
+        PRInt32 prefType = nsIPrefBranch::PREF_INVALID;
+        PRInt32 prefInt;
+        nsXPIDLCString prefString;
+        nsresult rv;
+
+        prefs->GetPrefType(prefName, &prefType);
+
+        switch (prefType) {
+        case nsIPrefBranch::PREF_INT:
+            // Backward compatibility for applications that haven't migrated
+            // to a string yet.
+            rv = prefs->GetIntPref(prefName, &prefInt);
+            if (NS_SUCCEEDED(rv)) {
+                prefDevPixelsPerCSSPixel = static_cast<float>(prefInt);
+            }
+            break;
+
+        case nsIPrefBranch::PREF_STRING:
+            rv = prefs->GetCharPref(prefName, getter_Copies(prefString));
+            if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
+                prefDevPixelsPerCSSPixel = static_cast<float>(atof(prefString));
+            }
+            break;
         }
     }
 
@@ -738,7 +759,8 @@ nsThebesDeviceContext::SetDPI()
                 PR_MAX(1, AppUnitsPerCSSPixel() / PR_MAX(1, roundedDPIScaleFactor));
         } else {
             mAppUnitsPerDevNotScaledPixel =
-                PR_MAX(1, AppUnitsPerCSSPixel() / prefDevPixelsPerCSSPixel);
+                PR_MAX(1, static_cast<PRInt32>(AppUnitsPerCSSPixel() /
+                                               prefDevPixelsPerCSSPixel));
         }
     } else {
         /* set mAppUnitsPerDevPixel so we're using exactly 72 dpi, even

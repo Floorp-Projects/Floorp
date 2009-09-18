@@ -58,6 +58,7 @@
 #include "jsstr.h"
 #include "jsbuiltins.h"
 #include "jstracer.h"
+#include "jsvector.h"
 
 #include "jsatominlines.h"
 
@@ -190,6 +191,13 @@ js_StringToInt32(JSContext* cx, JSString* str)
     const jschar* end;
     const jschar* ep;
     jsdouble d;
+    
+    if (str->length() == 1) {
+        jschar c = str->chars()[0];
+        if ('0' <= c && c <= '9')
+            return c - '0';
+        return 0;	
+    }
 
     str->getCharsAndEnd(bp, end);
     if ((!js_strtod(cx, bp, end, &ep, &d) ||
@@ -334,17 +342,6 @@ js_HasNamedPropertyInt32(JSContext* cx, JSObject* obj, int32 index)
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_HasNamedPropertyInt32, CONTEXT, OBJECT, INT32, 0, 0)
 
-jsval FASTCALL
-js_CallGetter(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
-{
-    JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
-    jsval v;
-    if (!js_GetSprop(cx, sprop, obj, &v))
-        return JSVAL_ERROR_COOKIE;
-    return v;
-}
-JS_DEFINE_CALLINFO_3(extern, JSVAL, js_CallGetter, CONTEXT, OBJECT, SCOPEPROP, 0, 0)
-
 JSString* FASTCALL
 js_TypeOfObject(JSContext* cx, JSObject* obj)
 {
@@ -398,19 +395,52 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
 
     JSScope *scope = OBJ_SCOPE(proto)->getEmptyScope(cx, &js_FunctionClass);
     if (!scope) {
-        closure->map = NULL;
+        JS_ASSERT(!closure->map);
         return NULL;
     }
 
-    closure->map = &scope->map;
-    closure->classword = jsuword(&js_FunctionClass);
-    closure->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
-    closure->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
-    closure->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fun);
-    for (unsigned i = JSSLOT_PRIVATE + 1; i != JS_INITIAL_NSLOTS; ++i)
-        closure->fslots[i] = JSVAL_VOID;
-    closure->dslots = NULL;
+    closure->map = scope;
+    closure->init(&js_FunctionClass, proto, parent,
+                  reinterpret_cast<jsval>(fun));
     return closure;
 }
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT, OBJECT, 0, 0)
 
+JSString* FASTCALL
+js_ConcatN(JSContext *cx, JSString **strArray, uint32 size)
+{
+    /* Calculate total size. */
+    size_t numChar = 1;
+    for (uint32 i = 0; i < size; ++i) {
+        size_t before = numChar;
+        numChar += strArray[i]->length();
+        if (numChar < before)
+            return NULL;
+    }
+
+
+    /* Allocate buffer. */
+    if (numChar & js::tl::MulOverflowMask<sizeof(jschar)>::result)
+        return NULL;
+    jschar *buf = (jschar *)cx->malloc(numChar * sizeof(jschar));
+    if (!buf)
+        return NULL;
+
+    /* Fill buffer. */
+    jschar *ptr = buf;
+    for (uint32 i = 0; i < size; ++i) {
+        const jschar *chars;
+        size_t length;
+        strArray[i]->getCharsAndLength(chars, length);
+        js_strncpy(ptr, chars, length);
+        ptr += length;
+    }
+    *ptr = '\0';
+
+    /* Create string. */
+    JSString *str = js_NewString(cx, buf, numChar - 1);
+    if (!str)
+        cx->free(buf);
+    return str;
+}
+JS_DEFINE_CALLINFO_3(extern, STRING, js_ConcatN, CONTEXT, STRINGPTR, UINT32, 0, 0)

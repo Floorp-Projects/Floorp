@@ -165,13 +165,11 @@ public:
     NS_IMETHOD         GetHasTransparentBackground(PRBool& aTransparent);
     NS_IMETHOD         HideWindowChrome(PRBool aShouldHide);
     NS_IMETHOD         MakeFullScreen(PRBool aFullScreen);
-    NS_IMETHOD         Validate();
-    NS_IMETHOD         Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD         Invalidate(const nsIntRect &aRect,
                                   PRBool        aIsSynchronous);
     NS_IMETHOD         Update();
     void               Scroll(const nsIntPoint&,
-                              const nsIntRect&,
+                              const nsTArray<nsIntRect>&,
                               const nsTArray<nsIWidget::Configuration>&);
 
     NS_IMETHOD         PreCreateWidget(nsWidgetInitData *aWidgetInitData);

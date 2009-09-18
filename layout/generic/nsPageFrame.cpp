@@ -71,6 +71,8 @@ NS_NewPageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsPageFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsPageFrame)
+
 nsPageFrame::nsPageFrame(nsStyleContext* aContext)
 : nsContainerFrame(aContext)
 {
@@ -576,10 +578,12 @@ nsPageFrame::PaintPageContent(nsIRenderingContext& aRenderingContext,
 
   nsRect backgroundRect = nsRect(nsPoint(0, 0), pageContentFrame->GetSize());
   nsCSSRendering::PaintBackground(PresContext(), aRenderingContext, this,
-                                  rect, backgroundRect, 0);
+                                  rect, backgroundRect,
+                                  nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES);
 
   nsLayoutUtils::PaintFrame(&aRenderingContext, pageContentFrame,
-                            nsRegion(rect), NS_RGBA(0,0,0,0));
+                            nsRegion(rect), NS_RGBA(0,0,0,0),
+                            nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES);
 
   aRenderingContext.PopState();
 }
@@ -605,6 +609,8 @@ NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
   return new (aPresShell) nsPageBreakFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsPageBreakFrame)
 
 nsPageBreakFrame::nsPageBreakFrame(nsStyleContext* aContext) :
   nsLeafFrame(aContext), mHaveReflowed(PR_FALSE)

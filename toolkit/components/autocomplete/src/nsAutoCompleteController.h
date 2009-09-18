@@ -109,10 +109,6 @@ protected:
   nsCOMPtr<nsITreeBoxObject> mTree;
 
   nsString mSearchString;
-  // whether EnterMatch was called while a search was ongoing. Values:
-  //   0 - EnterMatch not called, 1 - called with false aIsPopupSelection
-  //   2 - called with true aIsPopupSelection
-  PRInt8 mEnterAfterSearch;
   PRPackedBool mDefaultIndexCompleted;
   PRPackedBool mBackspaced;
   PRPackedBool mPopupClosedByCompositionStart;

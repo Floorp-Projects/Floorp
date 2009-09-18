@@ -69,6 +69,7 @@ class HTTPUpload {
                           const map<wstring, wstring> &parameters,
                           const wstring &upload_file,
                           const wstring &file_part_name,
+                          int *timeout,
                           wstring *response_body,
                           int *response_code);
 

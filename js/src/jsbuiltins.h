@@ -43,7 +43,6 @@
 #ifdef JS_TRACER
 
 #include "nanojit/nanojit.h"
-#include "jstracer.h"
 
 #ifdef THIS
 #undef THIS
@@ -56,6 +55,8 @@ enum { JSTN_ERRTYPE_MASK = 0x07, JSTN_UNBOX_AFTER = 0x08, JSTN_MORE = 0x10,
 #define JSTN_ERRTYPE(jstn)  ((jstn)->flags & JSTN_ERRTYPE_MASK)
 
 /*
+ * Type describing a type specialization of a JSFastNative.
+ *
  * |prefix| and |argtypes| declare what arguments should be passed to the
  * native function.  |prefix| can contain the following characters:
  *
@@ -81,13 +82,23 @@ enum { JSTN_ERRTYPE_MASK = 0x07, JSTN_UNBOX_AFTER = 0x08, JSTN_MORE = 0x10,
  * 'f': a JSObject* argument that is of class js_FunctionClass
  * 'v': a jsval argument (boxing whatever value is actually being passed in)
  */
-struct JSTraceableNative {
-    JSFastNative            native;
+struct JSSpecializedNative {
     const nanojit::CallInfo *builtin;
     const char              *prefix;
     const char              *argtypes;
     uintN                   flags;  /* JSTNErrType | JSTN_UNBOX_AFTER | JSTN_MORE |
                                        JSTN_CONSTRUCTOR */
+};
+
+/*
+ * Type holding extra trace-specific information about a fast native.
+ *
+ * 'specializations' points to a static array of available specializations
+ * terminated by the lack of having the JSTN_MORE flag set.
+ */
+struct JSNativeTraceInfo {
+    JSFastNative            native;
+    JSSpecializedNative     *specializations;
 };
 
 /*
@@ -105,16 +116,14 @@ struct JSTraceableNative {
 #define _JS_CI_NAME(op)
 #endif
 
-#define  _JS_I32_ARGSIZE    nanojit::ARGSIZE_LO
-#define  _JS_I32_RETSIZE    nanojit::ARGSIZE_LO
-#define  _JS_F64_ARGSIZE    nanojit::ARGSIZE_F
-#define  _JS_F64_RETSIZE    nanojit::ARGSIZE_F
-#define  _JS_PTR_ARGSIZE    nanojit::ARGSIZE_LO
-#if defined AVMPLUS_64BIT
-# define _JS_PTR_RETSIZE    nanojit::ARGSIZE_Q
-#else
-# define _JS_PTR_RETSIZE    nanojit::ARGSIZE_LO
-#endif
+#define _JS_I32_ARGSIZE    nanojit::ARGSIZE_I
+#define _JS_I32_RETSIZE    nanojit::ARGSIZE_I
+#define _JS_F64_ARGSIZE    nanojit::ARGSIZE_F
+#define _JS_F64_RETSIZE    nanojit::ARGSIZE_F
+#define _JS_PTR_ARGSIZE    nanojit::ARGSIZE_P
+#define _JS_PTR_RETSIZE    nanojit::ARGSIZE_P
+
+class ClosureVarInfo;
 
 /*
  * Supported types for builtin functions.
@@ -215,6 +224,8 @@ struct JSTraceableNative {
 #define _JS_CTYPE_FRAGMENT          _JS_CTYPE(nanojit::Fragment *,    _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CLASS             _JS_CTYPE(JSClass *,              _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_DOUBLEPTR         _JS_CTYPE(double *,               _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_APNPTR            _JS_CTYPE(js_ArgsPrivateNative *, _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_CVIPTR            _JS_CTYPE(const ClosureVarInfo *, _JS_PTR, --, --, INFALLIBLE)
 
 #define _JS_EXPAND(tokens)  tokens
 
@@ -382,39 +393,43 @@ struct JSTraceableNative {
 
 #define JS_DEFINE_TRCINFO_1(name, tn0)                                                            \
     _JS_DEFINE_CALLINFO_n tn0                                                                     \
-    JSTraceableNative name##_trcinfo[] = {                                                        \
-        { (JSFastNative)name, _JS_TN_INIT_HELPER_n tn0 }                                          \
-    };
+    JSSpecializedNative name##_sns[] = {                                                          \
+        { _JS_TN_INIT_HELPER_n tn0 }                                                              \
+    };                                                                                            \
+    JSNativeTraceInfo name##_trcinfo = { (JSFastNative)name, name##_sns };
 
 #define JS_DEFINE_TRCINFO_2(name, tn0, tn1)                                                       \
     _JS_DEFINE_CALLINFO_n tn0                                                                     \
     _JS_DEFINE_CALLINFO_n tn1                                                                     \
-    JSTraceableNative name##_trcinfo[] = {                                                        \
-        { (JSFastNative)name, _JS_TN_INIT_HELPER_n tn0 | JSTN_MORE },                             \
-        { (JSFastNative)name, _JS_TN_INIT_HELPER_n tn1 }                                          \
-    };
+    JSSpecializedNative name##_sns[] = {                                                          \
+        { _JS_TN_INIT_HELPER_n tn0 | JSTN_MORE },                                                 \
+        { _JS_TN_INIT_HELPER_n tn1 }                                                              \
+    };                                                                                            \
+    JSNativeTraceInfo name##_trcinfo = { (JSFastNative)name, name##_sns };
 
 #define JS_DEFINE_TRCINFO_3(name, tn0, tn1, tn2)                                                  \
     _JS_DEFINE_CALLINFO_n tn0                                                                     \
     _JS_DEFINE_CALLINFO_n tn1                                                                     \
     _JS_DEFINE_CALLINFO_n tn2                                                                     \
-    JSTraceableNative name##_trcinfo[] = {                                                        \
-        { (JSFastNative)name, _JS_TN_INIT_HELPER_n tn0 | JSTN_MORE },                             \
-        { (JSFastNative)name, _JS_TN_INIT_HELPER_n tn1 | JSTN_MORE },                             \
-        { (JSFastNative)name, _JS_TN_INIT_HELPER_n tn2 }                                          \
-    };
+    JSSpecializedNative name##_sns[] = {                                                          \
+        { _JS_TN_INIT_HELPER_n tn0 | JSTN_MORE },                                                 \
+        { _JS_TN_INIT_HELPER_n tn1 | JSTN_MORE },                                                 \
+        { _JS_TN_INIT_HELPER_n tn2 }                                                              \
+    };                                                                                            \
+    JSNativeTraceInfo name##_trcinfo = { (JSFastNative)name, name##_sns };
 
 #define JS_DEFINE_TRCINFO_4(name, tn0, tn1, tn2, tn3)                                             \
     _JS_DEFINE_CALLINFO_n tn0                                                                     \
     _JS_DEFINE_CALLINFO_n tn1                                                                     \
     _JS_DEFINE_CALLINFO_n tn2                                                                     \
     _JS_DEFINE_CALLINFO_n tn3                                                                     \
-    JSTraceableNative name##_trcinfo[] = {                                                        \
-        { (JSFastNative)name, _JS_TN_INIT_HELPER_n tn0 | JSTN_MORE },                             \
-        { (JSFastNative)name, _JS_TN_INIT_HELPER_n tn1 | JSTN_MORE },                             \
-        { (JSFastNative)name, _JS_TN_INIT_HELPER_n tn2 | JSTN_MORE },                             \
-        { (JSFastNative)name, _JS_TN_INIT_HELPER_n tn3 }                                          \
-    };
+    JSSpecializedNative name##_sns[] = {                                                          \
+        { _JS_TN_INIT_HELPER_n tn0 | JSTN_MORE },                                                 \
+        { _JS_TN_INIT_HELPER_n tn1 | JSTN_MORE },                                                 \
+        { _JS_TN_INIT_HELPER_n tn2 | JSTN_MORE },                                                 \
+        { _JS_TN_INIT_HELPER_n tn3 }                                                              \
+    };                                                                                            \
+    JSNativeTraceInfo name##_trcinfo = { (JSFastNative)name, name##_sns };
 
 #define _JS_DEFINE_CALLINFO_n(n, args)  JS_DEFINE_CALLINFO_##n args
 
@@ -438,6 +453,7 @@ js_dmod(jsdouble a, jsdouble b);
 #define JS_DEFINE_CALLINFO_3(linkage, rt, op, at0, at1, at2, cse, fold)
 #define JS_DEFINE_CALLINFO_4(linkage, rt, op, at0, at1, at2, at3, cse, fold)
 #define JS_DEFINE_CALLINFO_5(linkage, rt, op, at0, at1, at2, at3, at4, cse, fold)
+#define JS_DEFINE_CALLINFO_6(linkage, rt, op, at0, at1, at2, at3, at4, at5, cse, fold)
 #define JS_DECLARE_CALLINFO(name)
 #define JS_DEFINE_TRCINFO_1(name, tn0)
 #define JS_DEFINE_TRCINFO_2(name, tn0, tn1)
@@ -497,12 +513,12 @@ JS_DECLARE_CALLINFO(js_CallTree)
 JS_DECLARE_CALLINFO(js_AddProperty)
 JS_DECLARE_CALLINFO(js_HasNamedProperty)
 JS_DECLARE_CALLINFO(js_HasNamedPropertyInt32)
-JS_DECLARE_CALLINFO(js_CallGetter)
 JS_DECLARE_CALLINFO(js_TypeOfObject)
 JS_DECLARE_CALLINFO(js_TypeOfBoolean)
 JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToNumber)
 JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToString)
 JS_DECLARE_CALLINFO(js_Arguments)
 JS_DECLARE_CALLINFO(js_NewNullClosure)
+JS_DECLARE_CALLINFO(js_ConcatN)
 
 #endif /* jsbuiltins_h___ */
