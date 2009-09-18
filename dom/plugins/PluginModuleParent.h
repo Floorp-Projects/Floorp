@@ -47,7 +47,6 @@
 
 #include "npapi.h"
 #include "npfunctions.h"
-#include "nsplugindefs.h"
 
 #include "base/string_util.h"
 
@@ -167,7 +166,7 @@ private:
     }
 
     NPError NP_GetValue(void *future,
-                        nsPluginVariable aVariable, void *aValue)
+                        NPPVariable aVariable, void *aValue)
     {
         _MOZ_LOG(__FUNCTION__);
         return 1;
@@ -328,7 +327,7 @@ private:
             return HACK_target->NP_GetMIMEDescription();
         }
         static NPError NP_GetValue(void *future,
-                                   nsPluginVariable aVariable, void *aValue)
+                                   NPPVariable aVariable, void *aValue)
         {
             return HACK_target->NP_GetValue(future, aVariable, aValue);
         }
