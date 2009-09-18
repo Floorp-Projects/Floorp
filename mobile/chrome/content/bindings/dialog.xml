@@ -10,7 +10,7 @@
         <xul:box xbl:inherits="orient" class="dialog-dark" align="center">
           <children/>
         </xul:box>
-        <xul:image collapsed="true" top="-10" anonid="close" class="close-button"
+        <xul:image collapsed="true" top="-10" left="0" anonid="close" class="close-button"
           onclick="document.getBindingParent(this).close()"/>
       </xul:stack>
     </content>
