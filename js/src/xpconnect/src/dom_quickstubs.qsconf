@@ -231,24 +231,8 @@ members = [
 
     # dom/public/idl/css
     'nsIDOMElementCSSInlineStyle.style',
-    'nsIDOMCSS2Properties.background',
-    'nsIDOMCSS2Properties.height',
-    'nsIDOMCSS2Properties.textAlign',
-    'nsIDOMCSS2Properties.right',
-    'nsIDOMCSS2Properties.bottom',
-    'nsIDOMCSS2Properties.fontSize',
-    'nsIDOMCSS2Properties.backgroundColor',
-    'nsIDOMCSS2Properties.letterSpacing',
-    'nsIDOMCSS2Properties.verticalAlign',
-    'nsIDOMCSS2Properties.color',
-    'nsIDOMCSS2Properties.top',
-    'nsIDOMCSS2Properties.width',
-    'nsIDOMCSS2Properties.display',
-    'nsIDOMCSS2Properties.zIndex',
-    'nsIDOMCSS2Properties.position',
-    'nsIDOMCSS2Properties.left',
-    'nsIDOMCSS2Properties.visibility',
-    'nsIDOMNSCSS2Properties.opacity',
+    'nsIDOMCSS2Properties.*',
+    'nsIDOMNSCSS2Properties.*',
     'nsIDOMRect.top',
     'nsIDOMRect.right',
     'nsIDOMRect.left',
@@ -524,7 +508,8 @@ customIncludes = [
     'nsINode.h',
     'nsIContent.h',
     'nsIDocument.h',
-    'nsINodeList.h'
+    'nsINodeList.h',
+    'nsCSSPropertiesQS.h'
     ]
 
 nsIDOMNode_GetChildNodes_customMethodCallCode = """
@@ -545,6 +530,16 @@ nsIDOMHTMLDocument_Write_customMethodCallCode = """
     rv = self->%s(arg0);
 """
 
+CSS2Properties_ = {
+    'thisType': 'nsICSSDeclaration',
+    'additionalArguments': 'const nsCSSProperty prop',
+    'additionalArgumentValues': 'QS_CSS_PROP_%s',
+    'getter_code': '    nsString result;\n' + 
+                   '    rv = self->GetPropertyValue(prop, result);',
+    'setter_code': '    rv = self->SetPropertyValue(prop, arg0);',
+    'canFail': True
+}
+
 customMethodCalls = {
     'nsIDOMNode_GetNextSibling': {
         'thisType': 'nsINode',
@@ -556,8 +551,8 @@ customMethodCalls = {
         },
     'nsIDOMNode_GetChildNodes': {
         'thisType': 'nsINode',
-        'code':      nsIDOMNode_GetChildNodes_customMethodCallCode,
-        'canFail':   True
+        'code': nsIDOMNode_GetChildNodes_customMethodCallCode,
+        'canFail': True
         },
     'nsIDOMNode_GetPreviousSibling': {
         'thisType': 'nsINode',
@@ -580,11 +575,14 @@ customMethodCalls = {
         'code': '    nsINode* result = self->GetNodeAt(arg0);'
         },
     'nsIDOMHTMLDocument_Write': {
-        'code':      nsIDOMHTMLDocument_Write_customMethodCallCode % 'Write',
-        'canFail':   True
+        'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Write',
+        'canFail': True
         },
     'nsIDOMHTMLDocument_Writeln': {
-        'code':      nsIDOMHTMLDocument_Write_customMethodCallCode % 'Writeln',
-        'canFail':   True
-        }
+        'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Writeln',
+        'canFail': True
+        },
+    'nsIDOMCSS2Properties_': CSS2Properties_,
+    'nsIDOMNSCSS2Properties_': CSS2Properties_
     }
+
