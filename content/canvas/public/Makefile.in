@@ -47,6 +47,7 @@ MODULE		= content
 EXPORTS		= \
 		nsICanvasRenderingContextInternal.h \
 		nsICanvasElement.h \
+		WebGLArray.h \
 		$(NULL)
 
 ifdef MOZ_ENABLE_CANVAS3D
