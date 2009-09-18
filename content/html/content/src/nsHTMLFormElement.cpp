@@ -184,6 +184,7 @@ public:
   NS_IMETHOD GetActionURL(nsIURI** aActionURL);
   NS_IMETHOD GetSortedControls(nsTArray<nsIFormControl*>& aControls) const;
   NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const;
+  NS_IMETHOD_(PRBool) IsDefaultSubmitElement(const nsIFormControl* aControl) const;
   NS_IMETHOD_(PRBool) HasSingleTextControl() const;
 
   // nsIRadioGroupContainer
@@ -1287,7 +1288,7 @@ nsHTMLFormElement::GetElementAt(PRInt32 aIndex,
  */
 static PRInt32 CompareFormControlPosition(nsIFormControl *aControl1,
                                           nsIFormControl *aControl2,
-                                          nsIContent* aForm)
+                                          const nsIContent* aForm)
 {
   NS_ASSERTION(aControl1 != aControl2, "Comparing a form control to itself");
 
@@ -1747,6 +1748,41 @@ nsHTMLFormElement::GetDefaultSubmitElement() const
                   "What happened here?");
   
   return mDefaultSubmitElement;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsHTMLFormElement::IsDefaultSubmitElement(const nsIFormControl* aControl) const
+{
+  NS_PRECONDITION(aControl, "Unexpected call");
+
+  if (aControl == mDefaultSubmitElement) {
+    // Yes, it is
+    return PR_TRUE;
+  }
+
+  if (mDefaultSubmitElement ||
+      (aControl != mFirstSubmitInElements &&
+       aControl != mFirstSubmitNotInElements)) {
+    // It isn't
+    return PR_FALSE;
+  }
+
+  // mDefaultSubmitElement is null, but we have a non-null submit around
+  // (aControl, in fact).  figure out whether it's in fact the default submit
+  // and just hasn't been set that way yet.  Note that we can't just call
+  // HandleDefaultSubmitRemoval because we might need to notify to handle that
+  // correctly and we don't know whether that's safe right here.
+  if (!mFirstSubmitInElements || !mFirstSubmitNotInElements) {
+    // We only have one first submit; aControl has to be it
+    return PR_TRUE;
+  }
+
+  // We have both kinds of submits.  Check which comes first.
+  nsIFormControl* defaultSubmit =
+    CompareFormControlPosition(mFirstSubmitInElements,
+                               mFirstSubmitNotInElements, this) < 0 ?
+      mFirstSubmitInElements : mFirstSubmitNotInElements;
+  return aControl == defaultSubmit;
 }
 
 NS_IMETHODIMP_(PRBool)
