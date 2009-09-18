@@ -1101,7 +1101,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
         // reparent the same frame twice because the "if (newContext !=
         // oldContext)" check will prevent us from redoing work.
         if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
-            !aFrame->GetPrevInFlow()) {
+            !aFrame->GetPrevContinuation()) {
           nsIFrame* sib = static_cast<nsIFrame*>(aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling));
           if (sib) {
             ReParentStyleContext(sib);
