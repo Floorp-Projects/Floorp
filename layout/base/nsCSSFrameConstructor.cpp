@@ -10899,7 +10899,21 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
       nsFrameList::FrameLinkEnumerator firstBlock(aChildItems);
       FindFirstBlock(firstBlock);
       nsFrameList inlineKids = aChildItems.ExtractHead(firstBlock);
-      MoveFramesToEndOfIBSplit(aState, inlineFrame, inlineKids, nsnull);
+
+      nsIFrame* newFirstChild = inlineKids.FirstChild();
+      if (inlineFrame->HasView() || aInitialInline->HasView()) {
+        // Move the frames into the new view
+        nsHTMLContainerFrame::ReparentFrameViewList(aState.mPresContext,
+                                                    inlineKids, aInitialInline,
+                                                    inlineFrame);
+      }
+
+      // Save the first frame in inlineKids for the MoveChildrenTo call, since
+      // SetInitialChildList will empty inlineKids.
+      inlineFrame->SetInitialChildList(nsnull, inlineKids);
+
+      MoveChildrenTo(aState.mFrameManager, inlineFrame, newFirstChild,
+                     nsnull, nsnull, nsnull);
     }
 
     SetFrameIsSpecial(blockFrame, inlineFrame);
@@ -10908,40 +10922,6 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
   } while (aChildItems.NotEmpty());
 
   SetFrameIsSpecial(lastNewInline, nsnull);
-}
-
-void
-nsCSSFrameConstructor::MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
-                                                nsIFrame* aExistingEndFrame,
-                                                nsFrameList& aFramesToMove,
-                                                nsFrameConstructorState* aTargetState)
-{
-  NS_PRECONDITION(aExistingEndFrame, "Must have trailing inline");
-  NS_PRECONDITION(aFramesToMove.NotEmpty(), "Must have frames to move");
-
-  nsIFrame* newFirstChild = aFramesToMove.FirstChild();
-  if (aExistingEndFrame->HasView() ||
-      newFirstChild->GetParent()->HasView()) {
-    // Move the frames into the new view
-    nsHTMLContainerFrame::ReparentFrameViewList(aState.mPresContext,
-                                                aFramesToMove,
-                                                newFirstChild->GetParent(),
-                                                aExistingEndFrame);
-  }
-
-  // Reparent (cheaply) the child frames.  Have to grab the frame pointers
-  // for MoveChildrenTo now, since aFramesToMove will get cleared when we add
-  // the frames to aExistingEndFrame.  We already have newFirstChild.
-  nsIFrame* existingFirstChild = aExistingEndFrame->GetFirstChild(nsnull);
-  if (!existingFirstChild &&
-      (aExistingEndFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-    aExistingEndFrame->SetInitialChildList(nsnull, aFramesToMove);
-  } else {
-    aExistingEndFrame->InsertFrames(nsnull, nsnull, aFramesToMove);
-  }
-  nsFrameConstructorState* startState = aTargetState ? &aState : nsnull;
-  MoveChildrenTo(aState.mFrameManager, aExistingEndFrame, newFirstChild,
-                 existingFirstChild, aTargetState, startState);
 }
 
 void
