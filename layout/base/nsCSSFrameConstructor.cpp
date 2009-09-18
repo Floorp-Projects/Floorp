@@ -2179,7 +2179,7 @@ nsCSSFrameConstructor::ConstructTableCol(nsFrameConstructorState& aState,
   nsStyleContext* const styleContext = aItem.mStyleContext;
 
   nsTableColFrame* colFrame = NS_NewTableColFrame(mPresShell, styleContext);
-  if (NS_UNLIKELY(!aNewFrame)) {
+  if (NS_UNLIKELY(!colFrame)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   InitAndRestoreFrame(aState, content, aParentFrame, nsnull, colFrame);
@@ -2187,9 +2187,11 @@ nsCSSFrameConstructor::ConstructTableCol(nsFrameConstructorState& aState,
   NS_ASSERTION(colFrame->GetStyleContext() == styleContext,
                "Unexpected style context");
 
+  aFrameItems.AddChild(colFrame);
+  *aNewFrame = colFrame;
+
   // construct additional col frames if the col frame has a span > 1
   PRInt32 span = colFrame->GetSpan();
-  nsIFrame* lastCol = colFrame;
   for (PRInt32 spanX = 1; spanX < span; spanX++) {
     nsTableColFrame* newCol = NS_NewTableColFrame(mPresShell, styleContext);
     if (NS_UNLIKELY(!newCol)) {
@@ -2197,16 +2199,12 @@ nsCSSFrameConstructor::ConstructTableCol(nsFrameConstructorState& aState,
     }
     InitAndRestoreFrame(aState, content, aParentFrame, nsnull, newCol,
                         PR_FALSE);
-    lastCol->SetNextSibling(newCol);
-    lastCol->SetNextContinuation(newCol);
-    newCol->SetPrevContinuation(lastCol);
+    aFrameItems.LastChild()->SetNextContinuation(newCol);
+    newCol->SetPrevContinuation(aFrameItems.LastChild());
+    aFrameItems.AddChild(newCol);
     newCol->SetColType(eColAnonymousCol);
-    lastCol = newCol;
   }
 
-  aFrameItems.AddChild(colFrame);
-  *aNewFrame = colFrame;
-  
   return NS_OK;
 }
 
@@ -8470,6 +8468,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     nextContinuation->SetPrevContinuation(newFrame);
     newFrame->SetNextContinuation(nextContinuation);
   }
+
+  NS_POSTCONDITION(!newFrame->GetNextSibling(), "unexpected sibling");
   return NS_OK;
 }
 
@@ -9894,10 +9894,10 @@ nsCSSFrameConstructor::InsertFirstLineFrames(
           // Oy. We have work to do. Create a list of the new frames
           // that are going into the block by stripping them away from
           // the line-frame(s).
-          nsFrameList list(nextSibling);
           if (nextSibling) {
             nsLineFrame* lineFrame = (nsLineFrame*) prevSiblingParent;
-            lineFrame->StealFramesFrom(nextSibling);
+            nsFrameList tail = lineFrame->StealFramesAfter(aPrevSibling);
+            // XXX do something with 'tail'
           }
 
           nsLineFrame* nextLineFrame = (nsLineFrame*) lineFrame;
@@ -11027,8 +11027,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
             // Try to find one after all
             nsIFrame* parentPrevCont = aFrame->GetPrevContinuation();
             while (parentPrevCont) {
-              prevSibling =
-                nsFrameList(parentPrevCont->GetFirstChild(nsnull)).LastChild();
+              prevSibling = parentPrevCont->GetLastChild(nsnull);
               if (prevSibling) {
                 break;
               }

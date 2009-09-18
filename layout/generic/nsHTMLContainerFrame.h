@@ -72,20 +72,6 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   /**
-   * Helper method to create next-in-flows if necessary. If aFrame
-   * already has a next-in-flow then this method does
-   * nothing. Otherwise, a new continuation frame is created and
-   * linked into the flow. In addition, the new frame becomes the
-   * next-sibling of aFrame. If aPlaceholderResult is not null and
-   * aFrame is a float or positioned, then *aPlaceholderResult holds
-   * a placeholder.
-   */
-  static nsresult CreateNextInFlow(nsPresContext* aPresContext,
-                                   nsIFrame*       aOuterFrame,
-                                   nsIFrame*       aFrame,
-                                   nsIFrame*&      aNextInFlowResult);
-
-  /**
    * Helper method to wrap views around frames. Used by containers
    * under special circumstances (can be used by leaf frames as well)
    */
@@ -101,6 +87,23 @@ public:
                                         const nsFrameList& aChildFrameList,
                                         nsIFrame*          aOldParentFrame,
                                         nsIFrame*          aNewParentFrame);
+
+  /**
+   * Helper method to create next-in-flows if necessary. If aFrame
+   * already has a next-in-flow then this method does
+   * nothing. Otherwise, a new continuation frame is created and
+   * linked into the flow. In addition, the new frame is inserted
+   * into the principal child list after aFrame.
+   * @note calling this method on a block frame is illegal. Use
+   * nsBlockFrame::CreateContinuationFor() instead.
+   * @param aNextInFlowResult will contain the next-in-flow
+   *        <b>if and only if</b> one is created. If a next-in-flow already
+   *        exists aNextInFlowResult is set to nsnull.
+   * @return NS_OK if a next-in-flow already exists or is successfully created.
+   */
+  nsresult CreateNextInFlow(nsPresContext* aPresContext,
+                            nsIFrame*       aFrame,
+                            nsIFrame*&      aNextInFlowResult);
 
   /**
    * Displays the standard border, background and outline for the frame

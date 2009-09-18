@@ -325,8 +325,6 @@ nsTableFrame::SetInitialChildList(nsIAtom*        aListName,
   // form for two reasons:
   // 1) Both rowgroups and column groups come in on the principal child list.
   // 2) Getting the last frame of a frame list is slow.
-  // Once #2 is fixed, it should be pretty easy to get rid of the
-  // SetNextSibling usage here, at least.
   nsIFrame *prevMainChild = nsnull;
   nsIFrame *prevColGroupChild = nsnull;
   while (aChildList.NotEmpty())
@@ -2923,29 +2921,25 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
         if (!kidNextInFlow) {
           // The child doesn't have a next-in-flow so create a continuing
           // frame. This hooks the child into the flow
-          nsIFrame*     continuingFrame;
-
           rv = presContext->PresShell()->FrameConstructor()->
-            CreateContinuingFrame(presContext, kidFrame, this,
-                                  &continuingFrame);
+            CreateContinuingFrame(presContext, kidFrame, this, &kidNextInFlow);
           if (NS_FAILED(rv)) {
             aStatus = NS_FRAME_COMPLETE;
             break;
           }
 
-          // Add the continuing frame to the sibling list
-          continuingFrame->SetNextSibling(kidFrame->GetNextSibling());
-          kidFrame->SetNextSibling(continuingFrame);
-          // Update rowGroups with the new rowgroup, just as it
-          // would have been if we had called OrderRowGroups
-          // again. Note that rowGroups doesn't get used again after
-          // we PushChildren below, anyway.
-          rowGroups.InsertElementAt(childX + 1, continuingFrame);
+          // Insert the continuing frame into the sibling list.
+          mFrames.InsertFrame(nsnull, kidFrame, kidNextInFlow);
+
+          // Fall through and update |rowGroups| with the new rowgroup, just as
+          // it would have been if we had called OrderRowGroups again.
+          // Note that rowGroups doesn't get used again after we PushChildren
+          // below, anyway.
         }
-        else {
-          // put the nextinflow so that it will get pushed
-          rowGroups.InsertElementAt(childX + 1, kidNextInFlow);
-        }
+
+        // Put the nextinflow so that it will get pushed
+        rowGroups.InsertElementAt(childX + 1, kidNextInFlow);
+
         // We've used up all of our available space so push the remaining
         // children to the next-in-flow
         nsIFrame* nextSibling = kidFrame->GetNextSibling();
