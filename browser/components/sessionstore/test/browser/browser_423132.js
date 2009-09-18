@@ -60,7 +60,7 @@ function test() {
   newWin.addEventListener("load", function (aEvent) {
     newWin.removeEventListener("load", arguments.callee, false);
 
-    newWin.gBrowser.selectedBrowser.loadURI(testURL, null, null);
+    newWin.gBrowser.loadURI(testURL, null, null);
 
     newWin.gBrowser.addEventListener("load", function (aEvent) {
       newWin.gBrowser.removeEventListener("load", arguments.callee, true);
