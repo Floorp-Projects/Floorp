@@ -943,22 +943,17 @@ nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
         NS_ASSERTION(obj, "when is an object not an object?");
 
-        nsIClassInfo* ci;
-        if(IS_SLIM_WRAPPER(obj))
-        {
-            ci = GetSlimWrapperProto(obj)->GetClassInfo();
-        }
-        else
-        {
-            // is this really a native xpcom object with a wrapper?
-            XPCWrappedNative* other_wrapper =
-               XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+        // is this really a native xpcom object with a wrapper?
+        JSObject* obj2;
+        XPCWrappedNative* other_wrapper =
+           XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, nsnull, &obj2);
 
-            if(!other_wrapper)
-                return NS_OK;
+        if(!obj2)
+            return NS_OK;
 
-            ci = other_wrapper->GetClassInfo();
-        }
+        nsIClassInfo* ci = other_wrapper ?
+                           other_wrapper->GetClassInfo() :
+                           GetSlimWrapperProto(obj2)->GetClassInfo();
 
         // We consider CID equality to be the thing that matters here.
         // This is perhaps debatable.
