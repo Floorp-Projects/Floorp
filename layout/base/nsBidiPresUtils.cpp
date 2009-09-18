@@ -918,18 +918,19 @@ nsBidiPresUtils::IsLeftOrRightMost(nsIFrame*              aFrame,
 
   if ((aIsLeftMost || aIsRightMost) &&
       (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
-    // For ib splits, don't treat the first part as endmost or the
-    // last part as startmost.
-    if (nsLayoutUtils::FrameIsInFirstPartOfIBSplit(aFrame)) {
+    // For ib splits, don't treat anything except the last part as
+    // endmost or anything except the first part as startmost.
+    // As an optimization, only get the first continuation once.
+    nsIFrame* firstContinuation = aFrame->GetFirstContinuation();
+    if (nsLayoutUtils::FrameIsNonLastInIBSplit(firstContinuation)) {
       // We are not endmost
       if (isLTR) {
         aIsRightMost = PR_FALSE;
       } else {
         aIsLeftMost = PR_FALSE;
       }
-    } else {
-      NS_ASSERTION(nsLayoutUtils::FrameIsInLastPartOfIBSplit(aFrame),
-                   "How did that happen?");
+    }
+    if (nsLayoutUtils::FrameIsNonFirstInIBSplit(firstContinuation)) {
       // We are not startmost
       if (isLTR) {
         aIsLeftMost = PR_FALSE;
@@ -1062,7 +1063,7 @@ nsBidiPresUtils::RepositionInlineFrames(nsIFrame* aFirstChild) const
   // have been reflowed, which is required for GetUsedMargin/Border/Padding
   nsMargin margin = aFirstChild->GetUsedMargin();
   if (!aFirstChild->GetPrevContinuation() &&
-      !nsLayoutUtils::FrameIsInLastPartOfIBSplit(aFirstChild))
+      !nsLayoutUtils::FrameIsNonFirstInIBSplit(aFirstChild))
     leftSpace = isLTR ? margin.left : margin.right;
 
   nscoord left = aFirstChild->GetPosition().x - leftSpace;
