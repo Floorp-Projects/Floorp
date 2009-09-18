@@ -89,7 +89,15 @@ pref("extensions.blocklist.detailsURL", "https://www.mozilla.com/%LOCALE%/blockl
 // Dictionary download preference
 pref("browser.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/firefox/%VERSION%/dictionaries/");
 
+// Update Timer Manager preferences
+// Interval: When all registered timers should be checked (in milliseconds)
+//           default=10 minutes
+pref("app.update.timer", 600000);
+
 // App-specific update preferences
+
+// The interval to check for updates (app.update.interval) is defined in
+// firefox-branding.js
 
 // Whether or not app updates are enabled
 pref("app.update.enabled", true);
@@ -127,9 +135,6 @@ pref("app.update.url", "https://aus2.mozilla.org/update/3/%PRODUCT%/%VERSION%/%B
 //           latest download (in seconds) default=1 day
 pref("app.update.nagTimer.restart", 86400);
 
-// Interval: When all registered timers should be checked (in milliseconds)
-//           default=10 minutes
-pref("app.update.timer", 600000);
 // Give the user x seconds to react before showing the big UI. default=12 hours
 pref("app.update.promptWaitTime", 43200);
 // Show the Update Checking/Ready UI when the user was idle for x seconds
@@ -153,7 +158,6 @@ pref("app.update.incompatible.mode", 0);
 // e.g.
 //  extensions.{GUID}.update.enabled
 //  extensions.{GUID}.update.url
-//  extensions.{GUID}.update.interval
 //  .. etc ..
 //
 pref("extensions.update.enabled", true);

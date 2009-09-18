@@ -49,12 +49,16 @@ const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+const PREF_APP_UPDATE_LASTUPDATETIME_FMT  = "app.update.lastUpdateTime.%ID%";
+const PREF_APP_UPDATE_TIMER               = "app.update.timer";
+const CATEGORY_UPDATE_TIMER               = "update-timer";
+
+#ifdef MOZ_UPDATER
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
 const PREF_APP_UPDATE_AUTO                = "app.update.auto";
 const PREF_APP_UPDATE_MODE                = "app.update.mode";
 const PREF_APP_UPDATE_SILENT              = "app.update.silent";
 const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
-const PREF_APP_UPDATE_TIMER               = "app.update.timer";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
 const PREF_APP_UPDATE_PROMPTWAITTIME      = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_LOG_BRANCH          = "app.update.log.";
@@ -64,7 +68,6 @@ const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
 const PREF_APP_UPDATE_CHANNEL             = "app.update.channel";
 const PREF_APP_UPDATE_BACKGROUND_INTERVAL = "app.update.download.backgroundInterval";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
-const PREF_APP_UPDATE_LASTUPDATETIME_FMT  = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
 const PREF_UPDATE_NEVER_BRANCH            = "app.update.never.";
 const PREF_PARTNER_BRANCH                 = "app.partner.";
@@ -124,17 +127,58 @@ const DOWNLOAD_FOREGROUND_INTERVAL  = 0;
 
 const UPDATE_WINDOW_NAME      = "Update:Wizard";
 
-var gApp        = null;
-var gPref       = null;
-var gABI        = null;
-var gOSVersion  = null;
 var gLocale     = null;
-var gConsole    = null;
 var gCanUpdate  = null;
-var gLogEnabled = { };
 
 // shared code for suppressing bad cert dialogs
 #include ../../shared/src/badCertHandler.js
+
+#endif /* MOZ_UPDATER */
+
+XPCOMUtils.defineLazyServiceGetter(this, "gPref",
+                                   "@mozilla.org/preferences-service;1",
+                                   "nsIPrefBranch2");
+/**
+ * Gets a preference value, handling the case where there is no default.
+ * @param   func
+ *          The name of the preference function to call, on nsIPrefBranch
+ * @param   preference
+ *          The name of the preference
+ * @param   defaultValue
+ *          The default value to return in the event the preference has
+ *          no setting
+ * @returns The value of the preference, or undefined if there was no
+ *          user or default value.
+ */
+function getPref(func, preference, defaultValue) {
+  try {
+    return gPref[func](preference);
+  }
+  catch (e) {
+  }
+  return defaultValue;
+}
+
+XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function() {
+  let logEnabled = { };
+  try {
+    let ps = Cc["@mozilla.org/preferences-service;1"].
+             getService(Ci.nsIPrefService);
+    let logBranch = ps.getBranch(PREF_APP_UPDATE_LOG_BRANCH);
+    let modules = logBranch.getChildList("", { value: 0 });
+    for (let i = 0; i < modules.length; ++i) {
+      if (logBranch.prefHasUserValue(modules[i]))
+        logEnabled[modules[i]] = logBranch.getBoolPref(modules[i]);
+    }
+  }
+  catch (e) {
+  }
+  return logEnabled;
+});
+
+XPCOMUtils.defineLazyServiceGetter(this, "gConsole",
+                                   "@mozilla.org/consoleservice;1",
+                                   "nsIConsoleService");
 
 /**
  * Logs a string to the error console.
@@ -144,11 +188,59 @@ var gLogEnabled = { };
 function LOG(module, string) {
   if (module in gLogEnabled || "all" in gLogEnabled) {
     dump("*** AUS:SVC " + module + ":" + string + "\n");
-    // On startup gConsole may not be initialized
-    if (gConsole)
-      gConsole.logStringMessage("AUS:SVC " + module + ":" + string);
+    gConsole.logStringMessage("AUS:SVC " + module + ":" + string);
   }
 }
+
+#ifdef MOZ_UPDATER
+
+XPCOMUtils.defineLazyGetter(this, "gApp", function() {
+  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).
+         QueryInterface(Ci.nsIXULRuntime);
+});
+
+XPCOMUtils.defineLazyGetter(this, "gABI", function() {
+  let abi = null;
+  try {
+    abi = gApp.XPCOMABI;
+  }
+  catch (e) {
+    LOG("General", "gABI - XPCOM ABI unknown: updates are not possible.");
+  }
+#ifdef XP_MACOSX
+  // Mac universal build should report a different ABI than either macppc
+  // or mactel.
+  let macutils = Cc["@mozilla.org/xpcom/mac-utils;1"].
+                 getService(Ci.nsIMacUtils);
+
+  if (macutils.isUniversalBinary)
+    abi = "Universal-gcc3";
+#endif
+  return abi;
+});
+
+XPCOMUtils.defineLazyGetter(this, "gOSVersion", function() {
+  let osVersion;
+  let sysInfo = Cc["@mozilla.org/system-info;1"].
+                getService(Ci.nsIPropertyBag2);
+  try {
+    osVersion = sysInfo.getProperty("name") + " " + sysInfo.getProperty("version");
+  }
+  catch (e) {
+    LOG("UpdateService", "init - OS Version unknown: updates are not possible.");
+  }
+
+  if (osVersion) {
+    try {
+      osVersion += " (" + sysInfo.getProperty("secondaryLibrary") + ")";
+    }
+    catch (e) {
+      // Not all platforms have a secondary widget library, so an error is nothing to worry about.
+    }
+    osVersion = encodeURIComponent(osVersion);
+  }
+  return osVersion;
+});
 
 /**
  * Convert a string containing binary values to hex.
@@ -502,27 +594,6 @@ function cleanupActiveUpdate(key) {
 
   // Now trash the updates directory, since we're done with it
   cleanUpUpdatesDir(key);
-}
-
-/**
- * Gets a preference value, handling the case where there is no default.
- * @param   func
- *          The name of the preference function to call, on nsIPrefBranch
- * @param   preference
- *          The name of the preference
- * @param   defaultValue
- *          The default value to return in the event the preference has
- *          no setting
- * @returns The value of the preference, or undefined if there was no
- *          user or default value.
- */
-function getPref(func, preference, defaultValue) {
-  try {
-    return gPref[func](preference);
-  }
-  catch (e) {
-  }
-  return defaultValue;
 }
 
 /**
@@ -1042,56 +1113,11 @@ const UpdateServiceFactory = {
  * @constructor
  */
 function UpdateService() {
-  gApp  = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).
-          QueryInterface(Ci.nsIXULRuntime);
-  gPref = Cc["@mozilla.org/preferences-service;1"].
-          getService(Ci.nsIPrefBranch2);
-  gConsole = Cc["@mozilla.org/consoleservice;1"].
-             getService(Ci.nsIConsoleService);
-
-  // Not all builds have a known ABI
-  try {
-    gABI = gApp.XPCOMABI;
-  }
-  catch (e) {
-    LOG("UpdateService", "init - XPCOM ABI unknown: updates are not possible.");
-  }
-
-  var osVersion;
-  var sysInfo = Cc["@mozilla.org/system-info;1"].
-                getService(Ci.nsIPropertyBag2);
-  try {
-    osVersion = sysInfo.getProperty("name") + " " + sysInfo.getProperty("version");
-  }
-  catch (e) {
-    LOG("UpdateService", "init - OS Version unknown: updates are not possible.");
-  }
-
-  if (osVersion) {
-    try {
-      osVersion += " (" + sysInfo.getProperty("secondaryLibrary") + ")";
-    }
-    catch (e) {
-      // Not all platforms have a secondary widget library, so an error is nothing to worry about.
-    }
-    gOSVersion = encodeURIComponent(osVersion);
-  }
-
-#ifdef XP_MACOSX
-  // Mac universal build should report a different ABI than either macppc
-  // or mactel.
-  var macutils = Cc["@mozilla.org/xpcom/mac-utils;1"].
-                 getService(Ci.nsIMacUtils);
-
-  if (macutils.isUniversalBinary)
-    gABI = "Universal-gcc3";
-#endif
-
   // Start the update timer only after a profile has been selected so that the
   // appropriate values for the update check are read from the user's profile.
   var os = getObserverService();
 
-  os.addObserver(this, "profile-after-change", false);
+  os.addObserver(this, "final-ui-startup", false);
 
   // Observe xpcom-shutdown to unhook pref branch observers above to avoid
   // shutdown leaks.
@@ -1123,11 +1149,6 @@ UpdateService.prototype = {
     var os = getObserverService();
 
     switch (topic) {
-    case "profile-after-change":
-      os.removeObserver(this, "profile-after-change");
-      os.addObserver(this, "final-ui-startup", false);
-      this._start();
-      break;
     case "final-ui-startup":
       os.removeObserver(this, "final-ui-startup");
       this._final_ui_start();
@@ -1137,27 +1158,8 @@ UpdateService.prototype = {
 
       // Prevent leaking the downloader (bug 454964)
       this._downloader = null;
-
-      // Release Services
-      gApp      = null;
-      gPref     = null;
-      gConsole  = null;
       break;
     }
-  },
-
-  /**
-   * Start the Update Service
-   */
-  _start: function AUS__start() {
-    // Start logging
-    this._initLoggingPrefs();
-
-    // Register a background update check timer
-    var tm = Cc["@mozilla.org/updates/timer-manager;1"].
-             getService(Ci.nsIUpdateTimerManager);
-    var interval = getPref("getIntPref", PREF_APP_UPDATE_INTERVAL, 86400);
-    tm.registerTimer("background-update-timer", this, interval);
   },
 
   /**
@@ -1304,26 +1306,6 @@ UpdateService.prototype = {
     }
     else {
       LOG("UpdateService", "_postUpdateProcessing - no status, no update");
-    }
-  },
-
-  /**
-   * Initialize Logging preferences, formatted like so:
-   *  app.update.log.<moduleName> = <true|false>
-   */
-  _initLoggingPrefs: function AUS__initLoggingPrefs() {
-    try {
-      var ps = Cc["@mozilla.org/preferences-service;1"].
-               getService(Ci.nsIPrefService);
-      var logBranch = ps.getBranch(PREF_APP_UPDATE_LOG_BRANCH);
-      var modules = logBranch.getChildList("", { value: 0 });
-
-      for (var i = 0; i < modules.length; ++i) {
-        if (logBranch.prefHasUserValue(modules[i]))
-          gLogEnabled[modules[i]] = logBranch.getBoolPref(modules[i]);
-      }
-    }
-    catch (e) {
     }
   },
 
@@ -1867,7 +1849,11 @@ UpdateService.prototype = {
   classDescription: "Update Service",
   contractID: "@mozilla.org/updates/update-service;1",
   classID: Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}"),
-  _xpcom_categories: [{ category: "app-startup", service: true }],
+  _xpcom_categories: [{ category: "app-startup", service: true },
+                      { category: CATEGORY_UPDATE_TIMER,
+                        value: "@mozilla.org/updates/update-service;1," +
+                               "getService,background-update-timer," +
+                                PREF_APP_UPDATE_INTERVAL + ",86400" }],
   _xpcom_factory: UpdateServiceFactory,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIApplicationUpdateService,
                                          Ci.nsIAddonUpdateCheckListener,
@@ -2868,100 +2854,6 @@ Downloader.prototype = {
 };
 
 /**
- * A manager for update check timers. Manages timers that fire over long
- * periods of time (e.g. days, weeks).
- * @constructor
- */
-function TimerManager() {
-  getObserverService().addObserver(this, "xpcom-shutdown", false);
-
-  this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  var timerInterval = getPref("getIntPref", PREF_APP_UPDATE_TIMER, 600000);
-  this._timer.initWithCallback(this, timerInterval,
-                               Ci.nsITimer.TYPE_REPEATING_SLACK);
-}
-TimerManager.prototype = {
-  /**
-   * See nsIObserver.idl
-   */
-  observe: function TM_observe(subject, topic, data) {
-    if (topic == "xpcom-shutdown") {
-     getObserverService().removeObserver(this, "xpcom-shutdown");
-
-      // Release everything we hold onto.
-      for (var timerID in this._timers)
-        delete this._timers[timerID];
-      this._timer = null;
-      this._timers = null;
-    }
-  },
-
-  /**
-   * The Checker Timer
-   */
-  _timer: null,
-
-  /**
-   * The set of registered timers.
-   */
-  _timers: { },
-
-  /**
-   * Called when the checking timer fires.
-   * @param   timer
-   *          The checking timer that fired.
-   */
-  notify: function TM_notify(timer) {
-    for (var timerID in this._timers) {
-      var timerData = this._timers[timerID];
-      var lastUpdateTime = timerData.lastUpdateTime;
-      var now = Math.round(Date.now() / 1000);
-
-      // Fudge the lastUpdateTime by some random increment of the update
-      // check interval (e.g. some random slice of 10 minutes) so that when
-      // the time comes to check, we offset each client request by a random
-      // amount so they don't all hit at once. app.update.timer is in milliseconds,
-      // whereas app.update.lastUpdateTime is in seconds
-      var timerInterval = getPref("getIntPref", PREF_APP_UPDATE_TIMER, 600000);
-      lastUpdateTime += Math.round(Math.random() * timerInterval / 1000);
-
-      if ((now - lastUpdateTime) > timerData.interval &&
-          timerData.callback instanceof Ci.nsITimerCallback) {
-        timerData.callback.notify(timer);
-        timerData.lastUpdateTime = now;
-        var preference = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, timerID);
-        gPref.setIntPref(preference, now);
-      }
-    }
-  },
-
-  /**
-   * See nsIUpdateService.idl
-   */
-  registerTimer: function TM_registerTimer(id, callback, interval) {
-    var preference = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, id);
-    var now = Math.round(Date.now() / 1000);
-    var lastUpdateTime = null;
-    if (gPref.prefHasUserValue(preference)) {
-      lastUpdateTime = gPref.getIntPref(preference);
-    } else {
-      gPref.setIntPref(preference, now);
-      lastUpdateTime = now;
-    }
-    this._timers[id] = { callback       : callback,
-                         interval       : interval,
-                         lastUpdateTime : lastUpdateTime };
-  },
-
-  classDescription: "Timer Manager",
-  contractID: "@mozilla.org/updates/timer-manager;1",
-  classID: Components.ID("{B322A5C0-A419-484E-96BA-D7182163899F}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateTimerManager,
-                                         Ci.nsITimerCallback,
-                                         Ci.nsIObserver])
-};
-
-/**
  * UpdatePrompt
  * An object which can prompt the user with information about updates, request
  * action, etc. Embedding clients can override this component with one that
@@ -3025,7 +2917,7 @@ UpdatePrompt.prototype = {
    */
   showUpdateInstalled: function UP_showUpdateInstalled() {
     if (!this._enabled || this._getUpdateWindow() ||
-        !getPref("getBoolPref", PREF_APP_UPDATE_SHOW_INSTALLED_UI, true))
+        !getPref("getBoolPref", PREF_APP_UPDATE_SHOW_INSTALLED_UI, false))
       return;
 
     var page = "installed";
@@ -3260,9 +3152,183 @@ UpdatePrompt.prototype = {
   classID: Components.ID("{27ABA825-35B5-4018-9FDD-F99250A0E722}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdatePrompt])
 };
+#endif /* MOZ_UPDATER */
 
+/**
+ * A manager for timers. Manages timers that fire over long periods of time
+ * (e.g. days, weeks, months).
+ * @constructor
+ */
+function TimerManager() {
+}
+TimerManager.prototype = {
+  /**
+   * The Checker Timer
+   */
+  _timer: null,
+
+  /**
+   * The Checker Timer interval as specified by the app.update.timer pref. If
+   * the app.update.timer pref doesn't exist this will default to 600000.
+   */
+   _timerInterval: null,
+
+  /**
+   * The set of registered timers.
+   */
+  _timers: { },
+
+  /**
+   * The amount to fudge the lastUpdateTime where fudge is a random increment of
+   * the update check interval (e.g. some random slice of 10 minutes). When the
+   * time comes to notify a timer or a timer is first registered the timer is
+   * offset by this amount to lessen the number of timers firing at the same
+   * time. this._timerInterval is in milliseconds, whereas the lastUpdateTime is
+   * in seconds so this._timerInterval is divided by 1000.
+   */
+  get _fudge() { return Math.round(Math.random() * this._timerInterval / 1000); },
+
+  /**
+   * See nsIObserver.idl
+   */
+  observe: function TM_observe(aSubject, aTopic, aData) {
+    var os = Cc["@mozilla.org/observer-service;1"].
+             getService(Ci.nsIObserverService);
+    switch (aTopic) {
+    case "profile-after-change":
+      os.addObserver(this, "xpcom-shutdown", false);
+      this._start();
+      break;
+    case "xpcom-shutdown":
+      os.removeObserver(this, "xpcom-shutdown");
+
+      // Release everything we hold onto.
+      this._timer.cancel();
+      this._timer = null;
+      for (var timerID in this._timers)
+        delete this._timers[timerID];
+      this._timers = null;
+      break;
+    }
+  },
+
+  _start: function TM__start() {
+    this._timerInterval = getPref("getIntPref", "app.update.timer", 600000);
+    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._timer.initWithCallback(this, this._timerInterval,
+                                 Ci.nsITimer.TYPE_REPEATING_SLACK);
+  },
+  /**
+   * Called when the checking timer fires.
+   * @param   timer
+   *          The checking timer that fired.
+   */
+  notify: function TM_notify(timer) {
+    var prefLastUpdate;
+    var lastUpdateTime;
+    var now = Math.round(Date.now() / 1000);
+    var catMan = Cc["@mozilla.org/categorymanager;1"].
+                 getService(Ci.nsICategoryManager);
+    var entries = catMan.enumerateCategory(CATEGORY_UPDATE_TIMER);
+    while (entries.hasMoreElements()) {
+      let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
+      let value = catMan.getCategoryEntry(CATEGORY_UPDATE_TIMER, entry);
+      let [cid, method, timerID, prefInterval, defaultInterval] = value.split(",");
+      defaultInterval = parseInt(defaultInterval);
+      // cid and method are validated below when calling notify.
+      if (!timerID || !defaultInterval || isNaN(defaultInterval)) {
+        LOG("TimerManager", "notify - update-timer category registered" +
+            (cid ? " for " + cid : "") + " without required parameters - " +
+             "skipping");
+        continue;
+      }
+
+      let interval = getPref("getIntPref", prefInterval, defaultInterval);
+      prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/,
+                                                                      timerID);
+      if (gPref.prefHasUserValue(prefLastUpdate)) {
+        lastUpdateTime = gPref.getIntPref(prefLastUpdate);
+      }
+      else {
+        lastUpdateTime = now + this._fudge;
+        gPref.setIntPref(prefLastUpdate, lastUpdateTime);
+        continue;
+      }
+
+      if ((now - lastUpdateTime) > interval) {
+        try {
+          Components.classes[cid][method](Ci.nsITimerCallback).notify(timer);
+          LOG("TimerManager", "notify - notified " + cid);
+        }
+        catch (e) {
+          LOG("TimerManager", "notify - error notifying component id: " +
+              cid + " ,error: " + e);
+        }
+        lastUpdateTime = now + this._fudge;
+        gPref.setIntPref(prefLastUpdate, lastUpdateTime);
+      }
+    }
+
+    for (var timerID in this._timers) {
+      var timerData = this._timers[timerID];
+
+      if ((now - timerData.lastUpdateTime) > timerData.interval) {
+        if (timerData.callback instanceof Ci.nsITimerCallback) {
+          try {
+            timerData.callback.notify(timer);
+            LOG("TimerManager", "notify - notified timerID: " + timerID);
+          }
+          catch (e) {
+            LOG("TimerManager", "notify - error notifying timerID: " + timerID +
+                ", error: " + e);
+          }
+        }
+        else {
+          LOG("TimerManager", "notify - timerID: " + timerID + " doesn't " +
+              "implement nsITimerCallback - skipping");
+        }
+        lastUpdateTime = now + this._fudge;
+        timerData.lastUpdateTime = lastUpdateTime;
+        prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, timerID);
+        gPref.setIntPref(prefLastUpdate, lastUpdateTime);
+      }
+    }
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  registerTimer: function TM_registerTimer(id, callback, interval) {
+    LOG("TimerManager", "registerTimer - id: " + id);
+    var prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, id);
+    var lastUpdateTime;
+    if (gPref.prefHasUserValue(prefLastUpdate)) {
+      lastUpdateTime = gPref.getIntPref(prefLastUpdate);
+    } else {
+      lastUpdateTime = Math.round(Date.now() / 1000) + this._fudge;
+      gPref.setIntPref(prefLastUpdate, lastUpdateTime);
+    }
+    this._timers[id] = { callback       : callback,
+                         interval       : interval,
+                         lastUpdateTime : lastUpdateTime };
+  },
+
+  classDescription: "Timer Manager",
+  contractID: "@mozilla.org/updates/timer-manager;1",
+  classID: Components.ID("{B322A5C0-A419-484E-96BA-D7182163899F}"),
+  _xpcom_categories: [{ category: "profile-after-change" }],
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateTimerManager,
+                                         Ci.nsITimerCallback,
+                                         Ci.nsIObserver])
+};
+
+#ifdef MOZ_UPDATER
 function NSGetModule(compMgr, fileSpec)
   XPCOMUtils.generateModule([UpdateService, Checker, UpdatePrompt, TimerManager, UpdateManager]);
+#else
+function NSGetModule(compMgr, fileSpec)
+  XPCOMUtils.generateModule([TimerManager]);
+#endif
 
 #if 0
 /**
