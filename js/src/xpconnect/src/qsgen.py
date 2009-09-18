@@ -650,17 +650,68 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
     assert isAttr or isMethod
     isGetter = isAttr and not isSetter
 
-    customMethodCall = customMethodCalls.get(stubName, None)
-
-    # Function prolog.
-    f.write("static JSBool\n")
+    signature = "static JSBool\n"
     if isAttr:
         # JSPropertyOp signature.
-        f.write(stubName + "(JSContext *cx, JSObject *obj, jsval id, "
-                "jsval *vp)\n")
+        signature += "%s(JSContext *cx, JSObject *obj, jsval id,%s jsval *vp)\n"
     else:
         # JSFastNative.
-        f.write(stubName + "(JSContext *cx, uintN argc, jsval *vp)\n")
+        signature += "%s(JSContext *cx, uintN argc,%s jsval *vp)\n"
+
+    customMethodCall = customMethodCalls.get(stubName, None)
+    if customMethodCall is None:
+        customMethodCall = customMethodCalls.get(member.iface.name + '_', None)
+        if customMethodCall is not None:
+            templateName = member.iface.name
+            if isGetter:
+                templateName += '_Get'
+            elif isSetter:
+                templateName += '_Set'
+
+            # Generate the code for the stub, calling the template function
+            # that's shared between the stubs. The stubs can't have additional
+            # arguments, only the template function can.
+            callTemplate = signature % (stubName, '')
+            callTemplate += "{\n"
+
+            nativeName = (member.binaryname is not None and member.binaryname
+                          or header.firstCap(member.name))
+            argumentValues = (customMethodCall['additionalArgumentValues']
+                              % nativeName)
+            if isAttr:
+                callTemplate += ("    return %s(cx, obj, id, %s, vp);\n"
+                                 % (templateName, argumentValues))
+            else:
+                callTemplate += ("    return %s(cx, argc, %s, vp);\n"
+                                 % (templateName, argumentValues))
+            callTemplate += "}\n\n"
+
+            # Fall through and create the template function stub called from the
+            # real stubs, but only generate the stub once. Otherwise, just write
+            # out the call to the template function and return.
+            templateGenerated = templateName + '_generated'
+            if templateGenerated in customMethodCall:
+                f.write(callTemplate)
+                return
+            customMethodCall[templateGenerated] = True
+
+            if isMethod:
+                code = customMethodCall['code']
+            else:
+                code = customMethodCall['getter_code' if isGetter else 'setter_code']
+            stubName = templateName
+    else:
+        callTemplate = ""
+        code = customMethodCall['code']
+
+    # Function prolog.
+
+    # Only template functions can have additional arguments.
+    if customMethodCall is None or not 'additionalArguments' in customMethodCall:
+        additionalArguments = ''
+    else:
+        additionalArguments = " %s," % customMethodCall['additionalArguments']
+    f.write(signature % (stubName, additionalArguments))
     f.write("{\n")
     f.write("    XPC_QS_ASSERT_CONTEXT_OK(cx);\n")
 
@@ -750,9 +801,9 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
         rvdeclared = True
 
     if customMethodCall is not None:
-        f.write("%s\n" % customMethodCall['code'])
+        f.write("%s\n" % code)
 
-    if customMethodCall is None or isGetter:
+    if customMethodCall is None or (isGetter and callTemplate is ""):
         if customMethodCall is not None:
             f.write("#ifdef DEBUG\n")
             f.write("    nsresult debug_rv;\n")
@@ -823,6 +874,10 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
 
     # Epilog.
     f.write("}\n\n")
+
+    # Now write out the call to the template function.
+    if customMethodCall is not None:
+        f.write(callTemplate)
 
 traceTypeMap = {
     'void':
