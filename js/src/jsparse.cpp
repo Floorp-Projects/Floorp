@@ -1316,6 +1316,7 @@ LinkUseToDef(JSParseNode *pn, JSDefinition *dn, JSTreeContext *tc)
     JS_ASSERT(pn != dn->dn_uses);
     pn->pn_link = dn->dn_uses;
     dn->dn_uses = pn;
+    dn->pn_dflags |= pn->pn_dflags & PND_USE2DEF_FLAGS;
     pn->pn_used = true;
     pn->pn_lexdef = dn;
 }
