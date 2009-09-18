@@ -383,6 +383,9 @@ class CxxCodeGen(CodePrinter, Visitor):
     def visitStmtDecl(self, sd):
         self.printdent()
         sd.decl.accept(self)
+        if sd.init is not None:
+            self.write(' = ')
+            sd.init.accept(self)
         self.println(';')
 
 

@@ -917,7 +917,8 @@ def generateMsgClass(md, clsname, params, typedefInjector):
         if len(outparams):
             # hack
             reader.addstmt(
-                cxx.StmtDecl(cxx.Decl(cxx.Type('void', ptr=True), 'iter = 0')))
+                cxx.StmtDecl(cxx.Decl(cxx.Type('void', ptr=True), 'iter'),
+                             cxx.ExprLiteral.ZERO))
             reader.addstmt(cxx.Whitespace.NL)
 
         for oparam in outparams:
@@ -1053,26 +1054,37 @@ _listenerTable = {
 }
 
 # helper functions for converting between actors and actor handles
-def _actorToActorHandle(actor, handle, failcode):
-    failifnull = cxx.StmtIf(cxx.ExprPrefixUnop(actor, '!'))
-    failifnull.addifstmt(cxx.StmtReturn(failcode))
-    convert = cxx.StmtExpr(cxx.ExprAssn(
-        cxx.ExprSelect(handle, '.', 'mId'),
-        cxx.ExprSelect(actor, '->', 'mId')))
-    return failifnull, convert
+def _actorToActorHandle(actor, handle, failcode, nullable=0):
+    handleid = cxx.ExprSelect(handle, '.', 'mId')
+    actorid = cxx.ExprSelect(actor, '->', 'mId')
+    
+    ifnull = cxx.StmtIf(cxx.ExprPrefixUnop(actor, '!'))
+    if not nullable:
+        ifnull.addifstmt(cxx.StmtReturn(failcode))
+    else:
+        ifnull.addifstmt(cxx.StmtExpr(cxx.ExprAssn(
+            handleid, cxx.ExprLiteral.ZERO)))
+    ifnull.addelsestmt(cxx.StmtExpr(cxx.ExprAssn(
+        handleid, actorid)))
 
-def _actorHandleToActor(handle, actor, actortype, failcode):
-    idvar = cxx.ExprSelect(handle, '.', 'mId')
+    return [ ifnull ]
+
+
+def _actorHandleToActor(handle, actor, actortype, failcode, nullable=0):
+    handleid = cxx.ExprSelect(handle, '.', 'mId')
+
     cast = cxx.ExprCast(
-        cxx.ExprCall(cxx.ExprVar('Lookup'), [ idvar ]),
+        cxx.ExprCall(cxx.ExprVar('Lookup'), [ handleid ]),
         actortype,
         static=1)
     caststmt = cxx.StmtExpr(cxx.ExprAssn(actor, cast))
 
-    failif = cxx.StmtIf(cxx.ExprPrefixUnop(actor, '!'))
-    failif.ifb.addstmt(cxx.StmtReturn(failcode))
+    if not nullable:
+        failif = cxx.StmtIf(cxx.ExprPrefixUnop(actor, '!'))
+        failif.ifb.addstmt(cxx.StmtReturn(failcode))
+        return [ caststmt, failif ]
 
-    return caststmt, failif
+    return [ caststmt ]
 
 
 class GenerateProtocolActorHeader(Visitor):
@@ -1265,7 +1277,15 @@ class GenerateProtocolActorHeader(Visitor):
                     cxx.ExprVar('mChannel'),
                     [ cxx.ExprCall(
                             cxx.ExprVar('ALLOW_THIS_IN_INITIALIZER_LIST'),
-                            [ cxx.ExprVar('this') ]) ]) ]
+                            [ cxx.ExprVar('this') ]) ]),
+                cxx.ExprMemberInit(
+                    cxx.ExprVar('mLastRouteId'), [ cxx.ExprLiteral.ZERO ])
+            ]
+        else:
+            ctor.memberinits = [
+                cxx.ExprMemberInit(cxx.ExprVar('mId'),
+                                   [ cxx.ExprLiteral.ZERO ]) ]
+
         ctor.addstmt(cxx.StmtExpr(cxx.ExprCall(cxx.ExprVar('MOZ_COUNT_CTOR'),
                                                [ cxx.ExprVar(self.clsname) ])))
         cls.addstmt(ctor)
@@ -1346,20 +1366,18 @@ class GenerateProtocolActorHeader(Visitor):
 
 
         def addDispatcher(mdefn, dispatchMethod, params):
-            mdefn.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type('int'), '__route')))
+            mdefn.addstmt(
+                cxx.StmtDecl(cxx.Decl(cxx.Type('int'), '__route'),
+                             cxx.ExprCall(cxx.ExprSelect(cxx.ExprVar('msg'),
+                                                         '.', 'routing_id'))))
             routevar = cxx.ExprVar('__route')
-            mdefn.addstmt(cxx.StmtExpr(cxx.ExprAssn(
-                        routevar,
-                        cxx.ExprCall(cxx.ExprSelect(cxx.ExprVar('msg'),
-                                                    '.', 'routing_id')))))
             routeif = cxx.StmtIf(cxx.ExprBinary(
                     cxx.ExprVar('MSG_ROUTING_CONTROL'), '!=', routevar))
-            routeif.ifb.addstmt(cxx.StmtDecl(cxx.Decl(
-                        cxx.Type('ChannelListener', ptr=1), '__routed')))
+            routeif.ifb.addstmt(
+                cxx.StmtDecl(
+                    cxx.Decl(cxx.Type('ChannelListener', ptr=1), '__routed'),
+                    cxx.ExprCall(cxx.ExprVar('Lookup'), [ routevar ])))
             routedvar = cxx.ExprVar('__routed')
-            routeif.ifb.addstmt(cxx.StmtExpr(cxx.ExprAssn(
-                        routedvar,
-                        cxx.ExprCall(cxx.ExprVar('Lookup'), [ routevar ]))))
 
             failif = cxx.StmtIf(cxx.ExprPrefixUnop(routedvar, '!'))
             failif.ifb.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgRouteError')))
@@ -1443,11 +1461,11 @@ class GenerateProtocolActorHeader(Visitor):
 
             idvar = cxx.ExprVar('aId')
             if p.decl.type.isToplevel():
-                register.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type('int'), 'tmp')))
+                register.addstmt(
+                    cxx.StmtDecl(cxx.Decl(cxx.Type('int'), 'tmp'),
+                                 p._cxx.nextRouteId))
                 tmpvar = cxx.ExprVar('tmp')
-                register.addstmt(cxx.StmtExpr(
-                        cxx.ExprAssn(tmpvar,
-                                     p._cxx.nextRouteId)))
+
                 register.addstmt(cxx.StmtExpr(
                         cxx.ExprCall(
                             cxx.ExprSelect(cxx.ExprVar('mActorMap'),
@@ -1508,7 +1526,6 @@ class GenerateProtocolActorHeader(Visitor):
                         cxx.Type('int'), p._cxx.routeidvar.name)))
         elif p.decl.type.isManaged():
             cls.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type('int'), 'mId')))
-            cls.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type('int'), 'mPeerId')))
             cls.addstmt(cxx.StmtDecl(cxx.Decl(
                         cxx.Type(p._cxx.managertype, ptr=1), 'mManager')))
         self.ns.addstmt(cls)
@@ -1651,13 +1668,13 @@ class GenerateProtocolActorHeader(Visitor):
                 # verify that this object indeed exists
                 objid = cxx.ExprSelect(objvar, '->', 'mId')
 
-                impl.addstmt(cxx.StmtDecl(cxx.Decl(objtype, '__b')))
-                bvar = cxx.ExprVar('__b')
-                impl.addstmt(cxx.StmtExpr(cxx.ExprAssn(
-                            bvar,
-                            cxx.ExprCast(
+                impl.addstmt(cxx.StmtDecl(
+                    cxx.Decl(objtype, '__b'),
+                    cxx.ExprCast(
                                 cxx.ExprCall(cxx.ExprVar('Lookup'), [ objid ]),
-                                objtype, static=1))))
+                                objtype, static=1)))
+                bvar = cxx.ExprVar('__b')
+
                 failif = cxx.StmtIf(cxx.ExprBinary(objvar, '!=', bvar))
                 failif.ifb.addstmt(cxx.StmtReturn(valueerrcode))
                 impl.addstmt(failif)
@@ -1701,9 +1718,11 @@ class GenerateProtocolActorHeader(Visitor):
                 pahvar = cxx.ExprVar(param.name +'__ah')
                 impl.addstmt(cxx.StmtDecl(cxx.Decl(
                     cxx.Type('mozilla::ipc::ActorHandle'), pahvar.name)))
+                # XXX should this really be nullable?
                 impl.addstmts(_actorToActorHandle(actor=pavar,
                                                   handle=pahvar,
-                                                  failcode=valueerrcode))
+                                                  failcode=valueerrcode,
+                                                  nullable=1))
             impl.addstmt(cxx.Whitespace.NL)
 
             # special case for IPDL union types: if a union
@@ -1748,9 +1767,6 @@ class GenerateProtocolActorHeader(Visitor):
                         '__uah'))
                     repack.addstmt(uahdecl)
 
-                    repack.addstmt(cxx.StmtDecl(cxx.Decl(t._realtype, '__ua')))
-
-                    uavar = cxx.ExprVar('__ua')
                     # take the actor out of the union and convert it
                     # to an ActorHandle
                     #
@@ -1758,15 +1774,17 @@ class GenerateProtocolActorHeader(Visitor):
                     # as a const&.  we promise to be gentle
                     utype = deepcopy(p.type)
                     utype.ref = 1
-                    repack.addstmt(cxx.StmtExpr(cxx.ExprAssn(
-                        uavar,
-                        cxx.ExprCast(pvar, utype, const=1))))
 
+                    repack.addstmt(cxx.StmtDecl(
+                        cxx.Decl(t._realtype, '__ua'),
+                        cxx.ExprCast(pvar, utype, const=1)))
+                    uavar = cxx.ExprVar('__ua')
 
                     uahvar = cxx.ExprVar('__uah')
                     repack.addstmts(_actorToActorHandle(actor=uavar,
                                                         handle=uahvar,
-                                                        failcode=valueerrcode))
+                                                        failcode=valueerrcode,
+                                                        nullable=1))
 
                     repack.addstmt(cxx.StmtExpr(cxx.ExprAssn(
                         newunionvar, uahvar)))
@@ -1917,7 +1935,8 @@ class GenerateProtocolActorHeader(Visitor):
                         handle=rahvar,
                         actor=cxx.ExprDeref(ravar),
                         actortype=actortype,
-                        failcode=valueerrcode))
+                        failcode=valueerrcode,
+                        nullable=1))
 
                 # see if we need to extract an actor out of a union
                 # and re-convert it into an actor pointer
@@ -1946,17 +1965,19 @@ class GenerateProtocolActorHeader(Visitor):
                         uahvar = cxx.ExprVar('__uah')
                         ifhandle.addifstmt(cxx.StmtExpr(
                             cxx.ExprAssn(uahvar, cxx.ExprDeref(rvar))))
-                        # look up and verify the actor handle we got
-                        ifhandle.addifstmt(cxx.StmtDecl(cxx.Decl(t._realtype,
-                                                                 '__ua')))
-                        uavar = cxx.ExprVar('__ua')
+
                         actorid = cxx.ExprSelect(uahvar, '.', 'mId')
-                        cast = cxx.ExprCast(
-                            cxx.ExprCall(cxx.ExprVar('Lookup'), [ actorid ]),
-                            t._realtype,
-                            static=1)
-                        ifhandle.addifstmt(cxx.StmtExpr(
-                            cxx.ExprAssn(uavar, cast)))
+                        
+                        # look up and verify the actor handle we got
+                        ifhandle.addifstmt(cxx.StmtDecl(
+                            cxx.Decl(t._realtype, '__ua'),
+                            cxx.ExprCast(
+                                cxx.ExprCall(cxx.ExprVar('Lookup'),
+                                             [ actorid ]),
+                                t._realtype,
+                                static=1)))
+                        uavar = cxx.ExprVar('__ua')
+
                         failif = cxx.StmtIf(cxx.ExprPrefixUnop(uavar, '!'))
                         failif.addifstmt(cxx.StmtReturn(
                             cxx.ExprVar('MsgValueError')))
@@ -2016,6 +2037,7 @@ class GenerateProtocolActorHeader(Visitor):
                 objid = cxx.ExprSelect(objvar, '->', 'mId')
 
             for param in md._cxx.params:
+                init = None
                 if param.type.actor:
                     param = deepcopy(param)
                     # actors need a "side", i.e., Parent/Child
@@ -2024,8 +2046,10 @@ class GenerateProtocolActorHeader(Visitor):
                     block.addstmt(cxx.StmtDecl(cxx.Decl(
                         cxx.Type('mozilla::ipc::ActorHandle'),
                         param.name +'__ah')))
-                block.addstmt(cxx.StmtDecl(param))
+                    init = cxx.ExprLiteral.NULL
+                block.addstmt(cxx.StmtDecl(param, init))
             for ret in md._cxx.returns:
+                init = None
                 if ret.type.actor:
                     ret = deepcopy(ret)
                     # actors need a "side", i.e., Parent/Child
@@ -2034,7 +2058,8 @@ class GenerateProtocolActorHeader(Visitor):
                     block.addstmt(cxx.StmtDecl(cxx.Decl(
                         cxx.Type('mozilla::ipc::ActorHandle'),
                         ret.name +'__ah')))
-                block.addstmt(cxx.StmtDecl(ret))
+                    init = cxx.ExprLiteral.NULL
+                block.addstmt(cxx.StmtDecl(ret, init))
             if hasactor:
                 block.addstmt(cxx.StmtDecl(cxx.Decl(
                             cxx.Type('mozilla::ipc::ActorHandle'), '__ah')))
@@ -2105,7 +2130,8 @@ class GenerateProtocolActorHeader(Visitor):
                             handle=uahvar,
                             actor=uavar,
                             actortype=t._realtype,
-                            failcode=cxx.ExprVar('MsgValueError')))
+                            failcode=cxx.ExprVar('MsgValueError'),
+                            nullable=1))
 
                     # finally, slam the actor back into the union
                     ifhandle.addifstmt(cxx.StmtExpr(
@@ -2126,7 +2152,8 @@ class GenerateProtocolActorHeader(Visitor):
                     _actorHandleToActor(handle=pahvar,
                                         actor=pavar,
                                         actortype=actortype,
-                                        failcode=cxx.ExprVar('MsgPayloadError')))
+                                        failcode=cxx.ExprVar('MsgPayloadError'),
+                                        nullable=1))
 
             if md.decl.type.isCtor():
                 block.addstmt(cxx.Whitespace.NL)
@@ -2224,7 +2251,8 @@ class GenerateProtocolActorHeader(Visitor):
                     retahvar = cxx.ExprVar(ret.name +'__ah')
                     block.addstmts(_actorToActorHandle(
                         actor=retavar, handle=retahvar,
-                        failcode=cxx.ExprVar('MsgValueError')))
+                        failcode=cxx.ExprVar('MsgValueError'),
+                        nullable=1))
 
                 block.addstmt(cxx.Whitespace.NL)
 
@@ -2272,7 +2300,8 @@ class GenerateProtocolActorHeader(Visitor):
                         valueerrcode = cxx.ExprVar('MsgValueError')
                         repack.addstmts(_actorToActorHandle(actor=uavar,
                                                             handle=uahvar,
-                                                            failcode=valueerrcode))
+                                                            failcode=valueerrcode,
+                                                            nullable=1))
 
                         repack.addstmt(cxx.StmtExpr(cxx.ExprAssn(rvar,
                                                                  uahvar)))
