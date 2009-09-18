@@ -115,10 +115,12 @@
       <method name="resize">
         <body>
           <![CDATA[
-            if (this._verticalOccupation == undefined) {
-              this._verticalOccupation = this.getBoundingClientRect().height / window.innerHeight;
-            }
-            this.style.height = (window.innerHeight * this._verticalOccupation) + "px";
+            let container = document.getElementById("tabs-container").getBoundingClientRect();
+            let el = this.getBoundingClientRect();
+            
+            let height = container.top + (el.top - container.top)
+                                       + ((container.top + container.height) - (el.top + el.height));
+            this.style.height = (window.innerHeight - height) + "px";
 
             this._updateWidth();
           ]]>
