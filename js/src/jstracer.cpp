@@ -12704,11 +12704,28 @@ TraceRecorder::record_JSOP_ARGSUB()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_ARGCNT()
 {
-    if (!(cx->fp->fun->flags & JSFUN_HEAVYWEIGHT)) {
-        stack(0, lir->insImmf(cx->fp->argc));
-        return JSRS_CONTINUE;
+    if (cx->fp->fun->flags & JSFUN_HEAVYWEIGHT)
+        ABORT_TRACE("can't trace heavyweight JSOP_ARGCNT");
+
+    // argc is fixed on trace, so ideally we would simply generate LIR for
+    // constant argc. But the user can mutate arguments.length in the
+    // interpreter, so we have to check for that in the trace entry frame.
+    LIns *a_ins = get(&cx->fp->argsobj);
+    if (callDepth == 0) {
+        LIns *br = lir->insBranch(LIR_jt, lir->ins_peq0(a_ins), NULL);
+
+        // The following implements IsOverriddenArgsLength on trace.
+        // The '2' bit is set set if length was overridden.
+        const uint32 JSSLOT_ARGS_LENGTH = JSSLOT_PRIVATE + 1;
+        LIns *len_ins = stobj_get_fslot(a_ins, JSSLOT_ARGS_LENGTH);
+        LIns *ovr_ins = lir->ins2(LIR_piand, len_ins, INS_CONSTWORD(2));
+
+        guard(true, lir->ins_peq0(ovr_ins), snapshot(BRANCH_EXIT));
+        LIns *label = lir->ins0(LIR_label);
+        br->setTarget(label);
     }
-    ABORT_TRACE("can't trace heavyweight JSOP_ARGCNT");
+    stack(0, lir->insImmf(cx->fp->argc));
+    return JSRS_CONTINUE;
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
