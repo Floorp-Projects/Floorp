@@ -316,7 +316,9 @@ function findChildShell(aDocument, aDocShell, aSoughtURI) {
 
 const gPopupBlockerObserver = {
   _reportButton: null,
-  _kIPM: Components.interfaces.nsIPermissionManager,
+
+  get _pm ()
+    Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager),
 
   onUpdatePageReport: function (aEvent)
   {
@@ -384,12 +386,10 @@ const gPopupBlockerObserver = {
 
   toggleAllowPopupsForSite: function (aEvent)
   {
-    var currentURI = gBrowser.selectedBrowser.webNavigation.currentURI;
-    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                       .getService(this._kIPM);
+    var pm = this._pm;
     var shouldBlock = aEvent.target.getAttribute("block") == "true";
-    var perm = shouldBlock ? this._kIPM.DENY_ACTION : this._kIPM.ALLOW_ACTION;
-    pm.add(currentURI, "popup", perm);
+    var perm = shouldBlock ? pm.DENY_ACTION : pm.ALLOW_ACTION;
+    pm.add(gBrowser.currentURI, "popup", perm);
 
     gBrowser.getNotificationBox().removeCurrentNotification();
   },
@@ -405,13 +405,13 @@ const gPopupBlockerObserver = {
     //          also back out the fix for bug 343772 where
     //          nsGlobalWindow::CheckOpenAllow() was changed to also
     //          check if the top window's location is whitelisted.
-    var uri = gBrowser.selectedBrowser.webNavigation.currentURI;
+    var uri = gBrowser.currentURI;
     var blockedPopupAllowSite = document.getElementById("blockedPopupAllowSite");
     try {
       blockedPopupAllowSite.removeAttribute("hidden");
 
-      var pm = Cc["@mozilla.org/permissionmanager;1"].getService(this._kIPM);
-      if (pm.testPermission(uri, "popup") == this._kIPM.ALLOW_ACTION) {
+      var pm = this._pm;
+      if (pm.testPermission(uri, "popup") == pm.ALLOW_ACTION) {
         // Offer an item to block popups for this site, if a whitelist entry exists
         // already for it.
         let blockString = gNavigatorBundle.getFormattedString("popupBlock", [uri.host]);
@@ -513,8 +513,7 @@ const gPopupBlockerObserver = {
   {
     var host = "";
     try {
-      var uri = gBrowser.selectedBrowser.webNavigation.currentURI;
-      host = uri.host;
+      host = gBrowser.currentURI.host;
     }
     catch (e) { }
 
@@ -942,9 +941,9 @@ function BrowserStartup() {
       // the original tab in the other window.
 
       // Stop the about:blank load
-      gBrowser.selectedBrowser.stop();
+      gBrowser.stop();
       // make sure it has a docshell
-      gBrowser.selectedBrowser.docShell;
+      gBrowser.docShell;
 
       gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, uriToLoad);
     }
@@ -2279,7 +2278,7 @@ function SetPageProxyState(aState)
     gLastValidURLStr = gURLBar.value;
     gURLBar.addEventListener("input", UpdatePageProxyState, false);
 
-    PageProxySetIcon(gBrowser.mCurrentBrowser.mIconURL);
+    PageProxySetIcon(gBrowser.selectedBrowser.mIconURL);
   } else if (aState == "invalid") {
     gURLBar.removeEventListener("input", UpdatePageProxyState, false);
     PageProxyClearIcon();
@@ -3025,7 +3024,7 @@ const BrowserSearch = {
       browser.hiddenEngines = engines;
     else {
       browser.engines = engines;
-      if (browser == gBrowser.mCurrentBrowser)
+      if (browser == gBrowser.selectedBrowser)
         this.updateSearchButton();
     }
   },
@@ -3044,7 +3043,7 @@ const BrowserSearch = {
     if (!searchBar || !searchBar.searchButton)
       return;
 
-    var engines = gBrowser.mCurrentBrowser.engines;
+    var engines = gBrowser.selectedBrowser.engines;
     if (engines && engines.length > 0)
       searchBar.searchButton.setAttribute("addengines", "true");
     else
@@ -3982,8 +3981,8 @@ var XULBrowserWindow = {
         if (aWebProgress.DOMWindow == content) {
           if (aRequest)
             this.endDocumentLoad(aRequest, aStatus);
-          if (!gBrowser.mTabbedMode && !gBrowser.mCurrentBrowser.mIconURL)
-            gBrowser.useDefaultIcon(gBrowser.mCurrentTab);
+          if (!gBrowser.mTabbedMode && !gBrowser.selectedBrowser.mIconURL)
+            gBrowser.useDefaultIcon(gBrowser.selectedTab);
         }
       }
 
@@ -4121,7 +4120,7 @@ var XULBrowserWindow = {
       }
 
       if (!gBrowser.mTabbedMode && aWebProgress.isLoadingDocument)
-        gBrowser.setIcon(gBrowser.mCurrentTab, null);
+        gBrowser.setIcon(gBrowser.selectedTab, null);
 
       if (gURLBar) {
         // Strip off "wyciwyg://" and passwords for the location bar
@@ -4284,10 +4283,10 @@ var XULBrowserWindow = {
 
   startDocumentLoad: function (aRequest) {
     // clear out feed data
-    gBrowser.mCurrentBrowser.feeds = null;
+    gBrowser.selectedBrowser.feeds = null;
 
     // clear out search-engine data
-    gBrowser.mCurrentBrowser.engines = null;    
+    gBrowser.selectedBrowser.engines = null;    
 
     var uri = aRequest.QueryInterface(Ci.nsIChannel).URI;
     var observerService = Cc["@mozilla.org/observer-service;1"]
@@ -5397,17 +5396,21 @@ var OfflineApps = {
   _getBrowserForContentWindow: function(aBrowserWindow, aContentWindow) {
     // This depends on pseudo APIs of browser.js and tabbrowser.xml
     aContentWindow = aContentWindow.top;
-    var browsers = aBrowserWindow.getBrowser().browsers;
+    var browsers = aBrowserWindow.gBrowser.browsers;
     for (var i = 0; i < browsers.length; ++i) {
       if (browsers[i].contentWindow == aContentWindow)
         return browsers[i];
     }
+    return null;
   },
 
   _getManifestURI: function(aWindow) {
-    if (!aWindow.document.documentElement) return null;
+    if (!aWindow.document.documentElement)
+      return null;
+
     var attr = aWindow.document.documentElement.getAttribute("manifest");
-    if (!attr) return null;
+    if (!attr)
+      return null;
 
     try {
       var contentURI = makeURI(aWindow.location.href, null, null);
@@ -5421,9 +5424,9 @@ var OfflineApps = {
   // the best browser in which to warn the user about space usage
   _getBrowserForCacheUpdate: function(aCacheUpdate) {
     // Prefer the current browser
-    var uri = this._getManifestURI(gBrowser.mCurrentBrowser.contentWindow);
+    var uri = this._getManifestURI(content);
     if (uri && uri.equals(aCacheUpdate.manifestURI)) {
-      return gBrowser.mCurrentBrowser;
+      return gBrowser.selectedBrowser;
     }
 
     var browsers = gBrowser.browsers;
@@ -5858,7 +5861,7 @@ function getPluginInfo(pluginElement)
     // only attempt if a pluginsPage is defined.
     if (pluginsPage) {
       var doc = pluginElement.ownerDocument;
-      var docShell = findChildShell(doc, gBrowser.selectedBrowser.docShell, null);
+      var docShell = findChildShell(doc, gBrowser.docShell, null);
       try {
         pluginsPage = makeURI(pluginsPage, doc.characterSet, docShell.currentURI).spec;
       } catch (ex) { 
@@ -6163,7 +6166,7 @@ var FeedHandler = {
     if (!this._feedMenupopup)
       this._feedMenupopup = document.getElementById("subscribeToPageMenupopup");
 
-    var feeds = gBrowser.mCurrentBrowser.feeds;
+    var feeds = gBrowser.selectedBrowser.feeds;
     if (!feeds || feeds.length == 0) {
       if (feedButton) {
         feedButton.collapsed = true;
@@ -6206,7 +6209,7 @@ var FeedHandler = {
 
     browserForLink.feeds.push({ href: link.href, title: link.title });
 
-    if (browserForLink == gBrowser.mCurrentBrowser) {
+    if (browserForLink == gBrowser.selectedBrowser) {
       var feedButton = document.getElementById("feed-button");
       if (feedButton)
         feedButton.collapsed = false;
@@ -6225,9 +6228,9 @@ function undoCloseTab(aIndex) {
   var blankTabToRemove = null;
   if (gBrowser.tabContainer.childNodes.length == 1 &&
       !gPrefService.getBoolPref("browser.tabs.autoHide") &&
-      gBrowser.selectedBrowser.sessionHistory.count < 2 &&
-      gBrowser.selectedBrowser.currentURI.spec == "about:blank" &&
-      !gBrowser.selectedBrowser.contentDocument.body.hasChildNodes() &&
+      gBrowser.sessionHistory.count < 2 &&
+      gBrowser.currentURI.spec == "about:blank" &&
+      !gBrowser.contentDocument.body.hasChildNodes() &&
       !gBrowser.selectedTab.hasAttribute("busy"))
     blankTabToRemove = gBrowser.selectedTab;
 
