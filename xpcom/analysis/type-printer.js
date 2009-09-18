@@ -74,21 +74,6 @@ function publicMembers(t)
   }
 }
 
-function signaturesMatch(m1, m2)
-{
-  let p1 = m1.type.parameters;
-  let p2 = m2.type.parameters;
-  
-  if (p1.length != p2.length)
-    return false;
-  
-  for (let i = 0; i < p1.length; ++i)
-    if (p1[i] !== p2[i])
-      return false;
-  
-  return true;
-}
-
 /**
  * Get the short name of a decl name. E.g. turn
  * "MyNamespace::MyClass::Method(int j) const" into
