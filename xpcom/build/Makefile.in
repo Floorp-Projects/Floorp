@@ -174,6 +174,9 @@ endif
 
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
+ifdef MOZ_PLATFORM_HILDON
+EXTRA_DSO_LDOPTS += $(LIBHILDONMIME_LIBS)
+endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
