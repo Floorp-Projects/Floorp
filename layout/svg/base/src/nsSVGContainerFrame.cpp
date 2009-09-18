@@ -84,7 +84,8 @@ nsSVGContainerFrame::RemoveFrame(nsIAtom* aListName,
 {
   NS_ASSERTION(!aListName, "unexpected child list");
 
-  return mFrames.DestroyFrame(aOldFrame) ? NS_OK : NS_ERROR_FAILURE;
+  mFrames.DestroyFrame(aOldFrame);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
