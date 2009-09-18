@@ -839,13 +839,6 @@ xpc_qsUnwrapThisImpl(JSContext *cx,
                      jsval *vp,
                      XPCLazyCallContext *lccx)
 {
-    if(XPCWrapper::IsSecurityWrapper(obj))
-    {
-        obj = XPCWrapper::Unwrap(cx, obj);
-        if(!obj)
-            return xpc_qsThrow(cx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
-    }
-
     JSObject *cur = obj;
     XPCWrappedNativeTearOff *tearoff;
     XPCWrappedNative *wrapper =
@@ -934,17 +927,9 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
         return NS_OK;
     }
 
-    JSObject *inner = nsnull;
-    if(XPCWrapper::IsSecurityWrapper(src))
-    {
-        inner = XPCWrapper::Unwrap(cx, src);
-        if(!inner)
-            return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
-    }
-
     // From XPCConvert::JSObject2NativeInterface
     XPCWrappedNative* wrappedNative =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, inner ? inner : src);
+        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, src);
     nsISupports *iface;
     if(wrappedNative)
     {
@@ -964,6 +949,21 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     {
         *ppArgRef = nsnull;
         return NS_ERROR_XPC_BAD_CONVERT_JS;
+    }
+
+    // Does the JSObject have 'nsISupportness'?
+    // XXX hmm, I wonder if this matters anymore with no
+    // oldstyle DOM objects around.
+    if(XPCConvert::GetISupportsFromJSObject(src, &iface))
+    {
+        if(!iface || NS_FAILED(iface->QueryInterface(iid, ppArg)))
+        {
+            *ppArgRef = nsnull;
+            return NS_ERROR_XPC_BAD_CONVERT_JS;
+        }
+
+        *ppArgRef = static_cast<nsISupports*>(*ppArg);
+        return NS_OK;
     }
 
     // Create the ccx needed for quick stubs.
