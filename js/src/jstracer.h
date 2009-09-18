@@ -810,7 +810,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
     JS_REQUIRES_STACK nanojit::LIns* stringify(jsval& v);
 
-    nanojit::LIns* newArguments();
+    JS_REQUIRES_STACK nanojit::LIns* newArguments();
 
     JS_REQUIRES_STACK JSRecordingStatus call_imacro(jsbytecode* imacro);
 
@@ -839,8 +839,9 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus unary(nanojit::LOpcode op);
     JS_REQUIRES_STACK JSRecordingStatus binary(nanojit::LOpcode op);
 
-    void guardShape(nanojit::LIns* obj_ins, JSObject* obj, uint32 shape, const char* guardName,
-                    nanojit::LIns* map_ins, VMSideExit* exit);
+    JS_REQUIRES_STACK void guardShape(nanojit::LIns* obj_ins, JSObject* obj,
+                                      uint32 shape, const char* guardName,
+                                      nanojit::LIns* map_ins, VMSideExit* exit);
 
     inline nanojit::LIns* map(nanojit::LIns *obj_ins);
     JS_REQUIRES_STACK bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins,
