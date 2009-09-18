@@ -49,7 +49,6 @@
 
 #include "npapi.h"
 #include "npfunctions.h"
-#include "nsplugindefs.h"
 
 #include "nsAutoPtr.h"
 #include "nsDataHashtable.h"
