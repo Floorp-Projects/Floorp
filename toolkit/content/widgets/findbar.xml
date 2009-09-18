@@ -1037,11 +1037,14 @@
               this._stateListeners = [];
             }
 
-            var x = this._editors.length;
-            this._editors[x] = editableNode.editor;
-            this._stateListeners[x] = this._createStateListener();
-            this._editors[x].addEditActionListener(this);
-            this._editors[x].addDocumentStateListener(this._stateListeners[x]);
+            var existingIndex = this._editors.indexOf(editableNode.editor);
+            if (existingIndex == -1) {
+              var x = this._editors.length;
+              this._editors[x] = editableNode.editor;
+              this._stateListeners[x] = this._createStateListener();
+              this._editors[x].addEditActionListener(this);
+              this._editors[x].addDocumentStateListener(this._stateListeners[x]);
+            }
           }
         ]]></body>
       </method>
