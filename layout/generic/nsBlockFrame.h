@@ -173,7 +173,6 @@ public:
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
   virtual nsFrameList GetChildList(nsIAtom* aListName) const;
-  virtual nsIFrame* GetLastChild(nsIAtom* aListName) const;
   virtual nscoord GetBaseline() const;
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   virtual void Destroy();
@@ -481,7 +480,7 @@ protected:
     */
   line_iterator RemoveFloat(nsIFrame* aFloat);
 
-  void CollectFloats(nsIFrame* aFrame, nsFrameList& aList, nsIFrame** aTail,
+  void CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
                      PRBool aFromOverflow, PRBool aCollectFromSiblings);
   // Remove a float, abs, rel positioned frame from the appropriate block's list
   static void DoRemoveOutOfFlowFrame(nsIFrame* aFrame);
@@ -674,28 +673,30 @@ protected:
    * overflow list. It gives the client direct writable access to
    * the frame list temporarily but ensures that property is only
    * written back if absolutely necessary.
+   * @note currently we can ignore mList.mLastChild being different because
+   * the overflow OOFs are stored internally as a frame pointer property
+   * (the first child of the list).
    */
   struct nsAutoOOFFrameList {
     nsFrameList mList;
 
-    nsAutoOOFFrameList(nsBlockFrame* aBlock) :
-      mList(aBlock->GetOverflowOutOfFlows().FirstChild()),
-      aOldHead(mList.FirstChild()), mBlock(aBlock) {}
+    nsAutoOOFFrameList(nsBlockFrame* aBlock)
+      : mList(aBlock->GetOverflowOutOfFlows())
+      , mOldFirstChild(mList.FirstChild())
+      , mBlock(aBlock) {}
     ~nsAutoOOFFrameList() {
-      if (mList.FirstChild() != aOldHead) {
+      if (mList.FirstChild() != mOldFirstChild) {
         mBlock->SetOverflowOutOfFlows(mList);
       }
     }
   protected:
-    nsIFrame* aOldHead;
-    nsBlockFrame* mBlock;
+    nsIFrame* const mOldFirstChild;
+    nsBlockFrame* const mBlock;
   };
   friend struct nsAutoOOFFrameList;
 
   nsFrameList GetOverflowOutOfFlows() const;
   void SetOverflowOutOfFlows(const nsFrameList& aList);
-
-  nsIFrame* LastChild();
 
 #ifdef NS_DEBUG
   void VerifyLines(PRBool aFinalCheckOK);

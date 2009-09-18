@@ -1596,15 +1596,6 @@ nsIFrame::CreateWidgetForView(nsIView* aView)
   return aView->CreateWidget(kWidgetCID);
 }
 
-nsIFrame*
-nsIFrame::GetLastChild(nsIAtom* aListName) const
-{
-  return nsLayoutUtils::GetLastSibling(GetFirstChild(aListName));
-}
-
-/**
-  *
- */
 NS_IMETHODIMP  
 nsFrame::GetContentForEvent(nsPresContext* aPresContext,
                             nsEvent* aEvent,
@@ -1629,9 +1620,6 @@ nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
   }
 }
 
-/**
-  *
- */
 NS_IMETHODIMP
 nsFrame::HandleEvent(nsPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,

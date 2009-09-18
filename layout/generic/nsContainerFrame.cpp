@@ -111,7 +111,7 @@ nsContainerFrame::SetInitialChildList(nsIAtom*     aListName,
                                       nsFrameList& aChildList)
 {
   nsresult  result;
-  if (!mFrames.IsEmpty()) {
+  if (mFrames.NotEmpty()) {
     // We already have child frames which means we've already been
     // initialized
     NS_NOTREACHED("unexpected second call to SetInitialChildList");
@@ -341,7 +341,6 @@ nsContainerFrame::GetChildList(nsIAtom* aListName) const
     nsFrameList* list = GetPropTableFrames(PresContext(),
                           nsGkAtoms::excessOverflowContainersProperty);
     return list ? *list : nsFrameList::EmptyList();
-
   }
 
   return nsFrameList::EmptyList();
@@ -939,10 +938,8 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
         prev->RemovePropTableFrames(aPresContext,
                 nsGkAtoms::excessOverflowContainersProperty);
       if (excessFrames) {
-        nsFrameList reparenter;
-        reparenter.InsertFrames(this, nsnull, excessFrames->FirstChild());
-        nsHTMLContainerFrame::ReparentFrameViewList(aPresContext,
-                                                    excessFrames->FirstChild(),
+        excessFrames->ApplySetParent(this);
+        nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, *excessFrames,
                                                     prev, this);
         overflowContainers = excessFrames;
         rv = SetPropTableFrames(aPresContext, overflowContainers,
