@@ -237,6 +237,8 @@ enum {
   // If this bit is set, the frame is "special" (lame term, I know),
   // which means that it is part of the mangled frame hierarchy that
   // results when an inline has been split because of a nested block.
+  // See the comments in nsCSSFrameConstructor::ConstructInline for
+  // more details.
   NS_FRAME_IS_SPECIAL =                         0x00008000,
 
   // If this bit is set, the frame may have a transform that it applies
