@@ -2266,7 +2266,7 @@ nsGenericHTMLFormElement::nsGenericHTMLFormElement(nsINodeInfo *aNodeInfo)
 
 nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
 {
-  // Check that this element is still not the default content
+  // Check that this element is not still the default content
   // of its parent form.
   NS_ASSERTION(!mForm || mForm->GetDefaultSubmitElement() != this,
                "Content being destroyed is the default content");
@@ -2656,10 +2656,7 @@ nsGenericHTMLFormElement::IntrinsicState() const
     }
   }
   
-  if (mForm &&
-      // XXXbz Need the cast to make VC++6 happy.
-      static_cast<const nsIFormControl*>
-                 (mForm->GetDefaultSubmitElement()) == this) {
+  if (mForm && mForm->IsDefaultSubmitElement(this)) {
       NS_ASSERTION(IsSubmitControl(),
                    "Default submit element that isn't a submit control.");
       // We are the default submit element (:default)
