@@ -75,10 +75,14 @@ parent:
   sync NPN_GetIntIdentifier(int32_t aInt)
     returns (NPRemoteIdentifier aId);
 
+  // for the following two methods, the returned value is valid iff
+  // |err == NPERR_NO_ERROR|
   sync NPN_UTF8FromIdentifier(NPRemoteIdentifier aId)
-    returns (nsCString aString);
+    returns (NPError err, nsCString aString);
+  // technically |aInt| is undefined when |aId| is invalid.  but it's
+  // nice to let the other side know that |aId| was invalid
   sync NPN_IntFromIdentifier(NPRemoteIdentifier aId)
-    returns (int32_t aInt);
+    returns (NPError err, int32_t aInt);
 
   sync NPN_IdentifierIsString(NPRemoteIdentifier aId)
     returns (bool aIsString);
