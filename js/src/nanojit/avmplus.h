@@ -58,10 +58,17 @@
 #endif
 #endif
 
-#define FASTCALL JS_FASTCALL
+#if defined(_MSC_VER) && defined(_M_IX86)
+#define FASTCALL __fastcall
+#elif defined(__GNUC__) && defined(__i386__) &&                 \
+    ((__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))
+#define FASTCALL __attribute__((fastcall))
+#else
+#define FASTCALL
+#define NO_FASTCALL
+#endif
 
-#if defined(JS_NO_FASTCALL)
-#define NJ_NO_FASTCALL
+#if defined(NO_FASTCALL)
 #if defined(AVMPLUS_IA32)
 #define SIMULATE_FASTCALL(lr, state_ptr, frag_ptr, func_addr)   \
     asm volatile(                                               \
@@ -71,7 +78,7 @@
         : "memory", "cc"                                        \
     );
 #endif /* defined(AVMPLUS_IA32) */
-#endif /* defined(JS_NO_FASTCALL) */
+#endif /* defined(NO_FASTCALL) */
 
 #ifdef WIN32
 #include <windows.h>
