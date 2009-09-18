@@ -45,16 +45,6 @@ const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer", "initWi
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function getPreferredBrowserURI() {
-  let chromeURI;
-  try {
-    let prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
-    chromeURI = prefs.getCharPref("toolkit.defaultChromeURI");
-  } catch (e) { }
-  return chromeURI;
-}
-
 function nsFastStartupObserver() {
   let _browserWindowCount = 0;
   let _memCleanupTimer = 0;
@@ -98,22 +88,13 @@ function nsFastStartupObserver() {
     // win.document.documentURI will pretty much always be about:blank.  We need
     // to attach a load handler to actually figure out which document gets loaded.
     if (topic == "domwindowopened") {
-      var loadListener = function(e) {
-        if (win.document.documentURI == getPreferredBrowserURI()) {
-          stopMemoryCleanup();
-          _browserWindowCount++;
-        }
-        win.removeEventListener("load", loadListener, false);
-        return false;
-      }
-
-      win.addEventListener("load", loadListener, false);
+      stopMemoryCleanup();
+      _browserWindowCount++;
     } else if (topic == "domwindowclosed") {
-      if (win.document.documentURI == getPreferredBrowserURI()) {
+      if (_browserWindowCount > 0)
         _browserWindowCount--;
-        if (_browserWindowCount == 0)
-          scheduleMemoryCleanup();
-      }
+      if (_browserWindowCount == 0)
+        scheduleMemoryCleanup();
     } else if (topic == "quit-application-granted") {
       let appstartup = Cc["@mozilla.org/toolkit/app-startup;1"].
                        getService(Ci.nsIAppStartup);
