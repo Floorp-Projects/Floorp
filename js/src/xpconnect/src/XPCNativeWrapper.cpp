@@ -978,8 +978,8 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     nativeObj = wrappedNative->GetFlatJSObject();
     native = OBJECT_TO_JSVAL(nativeObj);
   } else {
-    wrappedNative
-      = XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, nativeObj);
+    wrappedNative =
+      XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, nativeObj);
 
     if (!wrappedNative) {
       return ThrowException(NS_ERROR_INVALID_ARG, cx);
@@ -1285,7 +1285,6 @@ XPCNativeWrapper::CreateExplicitWrapper(JSContext *cx,
       return JS_FALSE;
 
     JS_UnlockGCThing(cx, wrapperObj);
-
   }
 
   if (!parent) {
