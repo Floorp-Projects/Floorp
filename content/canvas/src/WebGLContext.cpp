@@ -6,6 +6,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIClassInfoImpl.h"
 #include "nsContentUtils.h"
+#include "nsDOMError.h"
 
 #include "gfxContext.h"
 #include "gfxPattern.h"
@@ -362,7 +363,6 @@ NS_INTERFACE_MAP_BEGIN(WebGLContext)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasRenderingContextWebGL)
 NS_INTERFACE_MAP_END
 
-//NS_IMPL_ISUPPORTS1(WebGLBuffer, nsIWebGLBuffer)
 NS_IMPL_ADDREF(WebGLBuffer)
 NS_IMPL_RELEASE(WebGLBuffer)
 
@@ -372,7 +372,6 @@ NS_INTERFACE_MAP_BEGIN(WebGLBuffer)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLBuffer)
 NS_INTERFACE_MAP_END
 
-//NS_IMPL_ISUPPORTS1(WebGLTexture, nsIWebGLTexture)
 NS_IMPL_ADDREF(WebGLTexture)
 NS_IMPL_RELEASE(WebGLTexture)
 
@@ -382,7 +381,6 @@ NS_INTERFACE_MAP_BEGIN(WebGLTexture)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLTexture)
 NS_INTERFACE_MAP_END
 
-//NS_IMPL_ISUPPORTS1(WebGLProgram, nsIWebGLProgram)
 NS_IMPL_ADDREF(WebGLProgram)
 NS_IMPL_RELEASE(WebGLProgram)
 
@@ -392,7 +390,6 @@ NS_INTERFACE_MAP_BEGIN(WebGLProgram)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLProgram)
 NS_INTERFACE_MAP_END
 
-//NS_IMPL_ISUPPORTS1_CI(WebGLShader, nsIWebGLShader)
 NS_IMPL_ADDREF(WebGLShader)
 NS_IMPL_RELEASE(WebGLShader)
 
@@ -402,7 +399,6 @@ NS_INTERFACE_MAP_BEGIN(WebGLShader)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLShader)
 NS_INTERFACE_MAP_END
 
-//NS_IMPL_ISUPPORTS1(WebGLFramebuffer, nsIWebGLFramebuffer)
 NS_IMPL_ADDREF(WebGLFramebuffer)
 NS_IMPL_RELEASE(WebGLFramebuffer)
 
@@ -412,7 +408,6 @@ NS_INTERFACE_MAP_BEGIN(WebGLFramebuffer)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLFramebuffer)
 NS_INTERFACE_MAP_END
 
-//NS_IMPL_ISUPPORTS1(WebGLRenderbuffer, nsIWebGLRenderbuffer)
 NS_IMPL_ADDREF(WebGLRenderbuffer)
 NS_IMPL_RELEASE(WebGLRenderbuffer)
 
@@ -422,55 +417,287 @@ NS_INTERFACE_MAP_BEGIN(WebGLRenderbuffer)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLRenderbuffer)
 NS_INTERFACE_MAP_END
 
-
-//NS_IMPL_ISUPPORTS2(WebGLFloatArray, nsIWebGLNumberArray, nsIWebGLFloatArray)
 NS_IMPL_ADDREF(WebGLFloatArray)
 NS_IMPL_RELEASE(WebGLFloatArray)
 
 NS_INTERFACE_MAP_BEGIN(WebGLFloatArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLNumberArray)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLFloatArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLFloatArray)
+  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLFloatArray)
 NS_INTERFACE_MAP_END
 
-//NS_IMPL_ISUPPORTS2(WebGLShortArray, nsIWebGLNumberArray, nsIWebGLShortArray)
-NS_IMPL_ADDREF(WebGLShortArray)
-NS_IMPL_RELEASE(WebGLShortArray)
+NS_IMPL_ADDREF(WebGLByteArray)
+NS_IMPL_RELEASE(WebGLByteArray)
 
-NS_INTERFACE_MAP_BEGIN(WebGLShortArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLNumberArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLShortArray)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLShortArray)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLShortArray)
+NS_INTERFACE_MAP_BEGIN(WebGLByteArray)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLByteArray)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLByteArray)
+  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLByteArray)
 NS_INTERFACE_MAP_END
 
-//NS_IMPL_ISUPPORTS2(WebGLUnsignedShortArray, nsIWebGLNumberArray, nsIWebGLUnsignedShortArray)
-NS_IMPL_ADDREF(WebGLUnsignedShortArray)
-NS_IMPL_RELEASE(WebGLUnsignedShortArray)
-
-NS_INTERFACE_MAP_BEGIN(WebGLUnsignedShortArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLNumberArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLUnsignedShortArray)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLUnsignedShortArray)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLUnsignedShortArray)
-NS_INTERFACE_MAP_END
-
-//NS_IMPL_ISUPPORTS2(WebGLUnsignedByteArray, nsIWebGLNumberArray, nsIWebGLUnsignedByteArray)
 NS_IMPL_ADDREF(WebGLUnsignedByteArray)
 NS_IMPL_RELEASE(WebGLUnsignedByteArray)
 
 NS_INTERFACE_MAP_BEGIN(WebGLUnsignedByteArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLNumberArray)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLUnsignedByteArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLUnsignedByteArray)
+  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLUnsignedByteArray)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_ADDREF(WebGLShortArray)
+NS_IMPL_RELEASE(WebGLShortArray)
+
+NS_INTERFACE_MAP_BEGIN(WebGLShortArray)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLShortArray)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLShortArray)
+  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLShortArray)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(WebGLUnsignedShortArray)
+NS_IMPL_RELEASE(WebGLUnsignedShortArray)
+
+NS_INTERFACE_MAP_BEGIN(WebGLUnsignedShortArray)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLUnsignedShortArray)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLUnsignedShortArray)
+  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLUnsignedShortArray)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(WebGLIntArray)
+NS_IMPL_RELEASE(WebGLIntArray)
+
+NS_INTERFACE_MAP_BEGIN(WebGLIntArray)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLIntArray)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLIntArray)
+  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLIntArray)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(WebGLUnsignedIntArray)
+NS_IMPL_RELEASE(WebGLUnsignedIntArray)
+
+NS_INTERFACE_MAP_BEGIN(WebGLUnsignedIntArray)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLUnsignedIntArray)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLUnsignedIntArray)
+  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLUnsignedIntArray)
+NS_INTERFACE_MAP_END
+
+
+nsresult
+NS_NewCanvasFloatArray(nsISupports **aResult)
+{
+    nsIWebGLFloatArray *wgfa = new WebGLFloatArray();
+    if (!wgfa)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aResult = wgfa);
+    return NS_OK;
+}
+
+WebGLFloatArray::WebGLFloatArray()
+{
+}
+
+WebGLFloatArray::WebGLFloatArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+{
+    mBuffer.InitFromJSArray(LOCAL_GL_FLOAT, 1, cx, arrayObj, arrayLen);
+}
+
+NS_IMETHODIMP
+WebGLFloatArray::Initialize(nsISupports *owner,
+                            JSContext *cx,
+                            JSObject *obj,
+                            PRUint32 argc,
+                            jsval *argv)
+{
+    JSObject *arrayObj;
+    jsuint arrayLen;
+
+    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
+        arrayObj == NULL ||
+        !::JS_IsArrayObject(cx, arrayObj) ||
+        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+    {
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    mBuffer.InitFromJSArray(LOCAL_GL_FLOAT, 1, cx, arrayObj, arrayLen);
+
+    return NS_OK;
+}
+
+/* attribute unsigned long length; */
+NS_IMETHODIMP WebGLFloatArray::GetLength(PRUint32 *aLength)
+{
+    *aLength = mBuffer.length;
+    return NS_OK;
+}
+NS_IMETHODIMP WebGLFloatArray::SetLength(PRUint32 aLength)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeType()
+{
+    return mBuffer.type;
+}
+
+/* [noscript, notxpcom] voidPtr nativePointer (); */
+NS_IMETHODIMP_(void *) WebGLFloatArray::NativePointer()
+{
+    return mBuffer.data;
+}
+
+/* [noscript, notxpcom] unsigned long nativeSize (); */
+NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeSize()
+{
+    return mBuffer.capacity;
+}
+
+/* [noscript, notxpcom] unsigned long nativeElementSize (); */
+NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeElementSize()
+{
+    return mBuffer.ElementSize();
+}
+
+/* [noscript, notxpcom] unsigned long nativeCount (); */
+NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeCount()
+{
+    return mBuffer.length;
+}
+
+nsresult
+NS_NewCanvasByteArray(nsISupports **aResult)
+{
+    nsIWebGLByteArray *wgba = new WebGLByteArray();
+    if (!wgba)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aResult = wgba);
+    return NS_OK;
+}
+
+WebGLByteArray::WebGLByteArray() { }
+ 
+WebGLByteArray::WebGLByteArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+{
+    mBuffer.InitFromJSArray(LOCAL_GL_BYTE, 1, cx, arrayObj, arrayLen);
+}
+
+NS_IMETHODIMP
+WebGLByteArray::Initialize(nsISupports *owner,
+                           JSContext *cx,
+                           JSObject *obj,
+                           PRUint32 argc,
+                           jsval *argv)
+{
+    JSObject *arrayObj;
+    jsuint arrayLen;
+
+    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
+        arrayObj == NULL ||
+        !::JS_IsArrayObject(cx, arrayObj) ||
+        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+    {
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    mBuffer.InitFromJSArray(LOCAL_GL_BYTE, 1, cx, arrayObj, arrayLen);
+
+    return NS_OK;
+}
+
+/* attribute unsigned long length; */
+NS_IMETHODIMP WebGLByteArray::GetLength(PRUint32 *aLength)
+{
+    *aLength = mBuffer.length;
+    return NS_OK;
+}
+NS_IMETHODIMP WebGLByteArray::SetLength(PRUint32 aLength)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP_(PRUint32) WebGLByteArray::NativeType()
+{
+    return mBuffer.type;
+}
+
+/* [noscript, notxpcom] voidPtr nativePointer (); */
+NS_IMETHODIMP_(void *) WebGLByteArray::NativePointer()
+{
+    return mBuffer.data;
+}
+
+/* [noscript, notxpcom] unsigned long nativeSize (); */
+NS_IMETHODIMP_(PRUint32) WebGLByteArray::NativeSize()
+{
+    return mBuffer.capacity;
+}
+
+/* [noscript, notxpcom] unsigned long nativeElementSize (); */
+NS_IMETHODIMP_(PRUint32) WebGLByteArray::NativeElementSize()
+{
+    return mBuffer.ElementSize();
+}
+
+/* [noscript, notxpcom] unsigned long nativeCount (); */
+NS_IMETHODIMP_(PRUint32) WebGLByteArray::NativeCount()
+{
+    return mBuffer.length;
+}
+
+nsresult
+NS_NewCanvasUnsignedByteArray(nsISupports **aResult)
+{
+    nsIWebGLUnsignedByteArray *wguba = new WebGLUnsignedByteArray();
+    if (!wguba)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aResult = wguba);
+    return NS_OK;
+}
+
+WebGLUnsignedByteArray::WebGLUnsignedByteArray() { }
 
 WebGLUnsignedByteArray::WebGLUnsignedByteArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
 {
     mBuffer.InitFromJSArray(LOCAL_GL_UNSIGNED_BYTE, 1, cx, arrayObj, arrayLen);
+}
+
+NS_IMETHODIMP
+WebGLUnsignedByteArray::Initialize(nsISupports *owner,
+                                   JSContext *cx,
+                                   JSObject *obj,
+                                   PRUint32 argc,
+                                   jsval *argv)
+{
+    JSObject *arrayObj;
+    jsuint arrayLen;
+
+    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
+        arrayObj == NULL ||
+        !::JS_IsArrayObject(cx, arrayObj) ||
+        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+    {
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    mBuffer.InitFromJSArray(LOCAL_GL_UNSIGNED_BYTE, 1, cx, arrayObj, arrayLen);
+
+    return NS_OK;
 }
 
 /* attribute unsigned long length; */
@@ -513,54 +740,45 @@ NS_IMETHODIMP_(PRUint32) WebGLUnsignedByteArray::NativeCount()
     return mBuffer.length;
 }
 
-WebGLUnsignedShortArray::WebGLUnsignedShortArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+nsresult
+NS_NewCanvasShortArray(nsISupports **aResult)
 {
-    mBuffer.InitFromJSArray(LOCAL_GL_UNSIGNED_SHORT, 1, cx, arrayObj, arrayLen);
-}
+    nsIWebGLShortArray *wgsa = new WebGLShortArray();
+    if (!wgsa)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-/* attribute unsigned long length; */
-NS_IMETHODIMP WebGLUnsignedShortArray::GetLength(PRUint32 *aLength)
-{
-    *aLength = mBuffer.length;
+    NS_ADDREF(*aResult = wgsa);
     return NS_OK;
 }
-NS_IMETHODIMP WebGLUnsignedShortArray::SetLength(PRUint32 aLength)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
-NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeType()
-{
-    return mBuffer.type;
-}
-
-/* [noscript, notxpcom] voidPtr nativePointer (); */
-NS_IMETHODIMP_(void *) WebGLUnsignedShortArray::NativePointer()
-{
-    return mBuffer.data;
-}
-
-/* [noscript, notxpcom] unsigned long nativeSize (); */
-NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeSize()
-{
-    return mBuffer.capacity;
-}
-
-/* [noscript, notxpcom] unsigned long nativeElementSize (); */
-NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeElementSize()
-{
-    return mBuffer.ElementSize();
-}
-
-/* [noscript, notxpcom] unsigned long nativeCount (); */
-NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeCount()
-{
-    return mBuffer.length;
-}
+WebGLShortArray::WebGLShortArray() { }
 
 WebGLShortArray::WebGLShortArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
 {
     mBuffer.InitFromJSArray(LOCAL_GL_SHORT, 1, cx, arrayObj, arrayLen);
+}
+
+NS_IMETHODIMP
+WebGLShortArray::Initialize(nsISupports *owner,
+                            JSContext *cx,
+                            JSObject *obj,
+                            PRUint32 argc,
+                            jsval *argv)
+{
+    JSObject *arrayObj;
+    jsuint arrayLen;
+
+    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
+        arrayObj == NULL ||
+        !::JS_IsArrayObject(cx, arrayObj) ||
+        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+    {
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    mBuffer.InitFromJSArray(LOCAL_GL_SHORT, 1, cx, arrayObj, arrayLen);
+
+    return NS_OK;
 }
 
 /* attribute unsigned long length; */
@@ -604,52 +822,249 @@ NS_IMETHODIMP_(PRUint32) WebGLShortArray::NativeCount()
 }
 
 
-WebGLFloatArray::WebGLFloatArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+nsresult
+NS_NewCanvasUnsignedShortArray(nsISupports **aResult)
 {
-    mBuffer.InitFromJSArray(LOCAL_GL_FLOAT, 1, cx, arrayObj, arrayLen);
+    nsIWebGLUnsignedShortArray *wgusa = new WebGLUnsignedShortArray();
+    if (!wgusa)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aResult = wgusa);
+    return NS_OK;
+}
+
+WebGLUnsignedShortArray::WebGLUnsignedShortArray() { }
+
+WebGLUnsignedShortArray::WebGLUnsignedShortArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+{
+    mBuffer.InitFromJSArray(LOCAL_GL_UNSIGNED_SHORT, 1, cx, arrayObj, arrayLen);
+}
+
+NS_IMETHODIMP
+WebGLUnsignedShortArray::Initialize(nsISupports *owner,
+                                   JSContext *cx,
+                                   JSObject *obj,
+                                   PRUint32 argc,
+                                   jsval *argv)
+{
+    JSObject *arrayObj;
+    jsuint arrayLen;
+
+    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
+        arrayObj == NULL ||
+        !::JS_IsArrayObject(cx, arrayObj) ||
+        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+    {
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    mBuffer.InitFromJSArray(LOCAL_GL_UNSIGNED_SHORT, 1, cx, arrayObj, arrayLen);
+
+    return NS_OK;
 }
 
 /* attribute unsigned long length; */
-NS_IMETHODIMP WebGLFloatArray::GetLength(PRUint32 *aLength)
+NS_IMETHODIMP WebGLUnsignedShortArray::GetLength(PRUint32 *aLength)
 {
     *aLength = mBuffer.length;
     return NS_OK;
 }
-NS_IMETHODIMP WebGLFloatArray::SetLength(PRUint32 aLength)
+NS_IMETHODIMP WebGLUnsignedShortArray::SetLength(PRUint32 aLength)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeType()
+NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeType()
 {
     return mBuffer.type;
 }
 
 /* [noscript, notxpcom] voidPtr nativePointer (); */
-NS_IMETHODIMP_(void *) WebGLFloatArray::NativePointer()
+NS_IMETHODIMP_(void *) WebGLUnsignedShortArray::NativePointer()
 {
     return mBuffer.data;
 }
 
 /* [noscript, notxpcom] unsigned long nativeSize (); */
-NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeSize()
+NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeSize()
 {
     return mBuffer.capacity;
 }
 
 /* [noscript, notxpcom] unsigned long nativeElementSize (); */
-NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeElementSize()
+NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeElementSize()
 {
     return mBuffer.ElementSize();
 }
 
 /* [noscript, notxpcom] unsigned long nativeCount (); */
-NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeCount()
+NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeCount()
 {
     return mBuffer.length;
 }
 
+nsresult
+NS_NewCanvasIntArray(nsISupports **aResult)
+{
+    nsIWebGLIntArray *wgia = new WebGLIntArray();
+    if (!wgia)
+        return NS_ERROR_OUT_OF_MEMORY;
 
+    NS_ADDREF(*aResult = wgia);
+    return NS_OK;
+}
+
+WebGLIntArray::WebGLIntArray() { }
+
+WebGLIntArray::WebGLIntArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+{
+    mBuffer.InitFromJSArray(LOCAL_GL_INT, 1, cx, arrayObj, arrayLen);
+}
+
+NS_IMETHODIMP
+WebGLIntArray::Initialize(nsISupports *owner,
+                          JSContext *cx,
+                          JSObject *obj,
+                          PRUint32 argc,
+                          jsval *argv)
+{
+    JSObject *arrayObj;
+    jsuint arrayLen;
+
+    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
+        arrayObj == NULL ||
+        !::JS_IsArrayObject(cx, arrayObj) ||
+        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+    {
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    mBuffer.InitFromJSArray(LOCAL_GL_INT, 1, cx, arrayObj, arrayLen);
+
+    return NS_OK;
+}
+
+
+/* attribute unsigned long length; */
+NS_IMETHODIMP WebGLIntArray::GetLength(PRUint32 *aLength)
+{
+    *aLength = mBuffer.length;
+    return NS_OK;
+}
+NS_IMETHODIMP WebGLIntArray::SetLength(PRUint32 aLength)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP_(PRUint32) WebGLIntArray::NativeType()
+{
+    return mBuffer.type;
+}
+
+/* [noscript, notxpcom] voidPtr nativePointer (); */
+NS_IMETHODIMP_(void *) WebGLIntArray::NativePointer()
+{
+    return mBuffer.data;
+}
+
+/* [noscript, notxpcom] unsigned long nativeSize (); */
+NS_IMETHODIMP_(PRUint32) WebGLIntArray::NativeSize()
+{
+    return mBuffer.capacity;
+}
+
+/* [noscript, notxpcom] unsigned long nativeElementSize (); */
+NS_IMETHODIMP_(PRUint32) WebGLIntArray::NativeElementSize()
+{
+    return mBuffer.ElementSize();
+}
+
+/* [noscript, notxpcom] unsigned long nativeCount (); */
+NS_IMETHODIMP_(PRUint32) WebGLIntArray::NativeCount()
+{
+    return mBuffer.length;
+}
+
+nsresult
+NS_NewCanvasUnsignedIntArray(nsISupports **aResult)
+{
+    nsIWebGLUnsignedIntArray *wguia = new WebGLUnsignedIntArray();
+    if (!wguia)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aResult = wguia);
+    return NS_OK;
+}
+
+WebGLUnsignedIntArray::WebGLUnsignedIntArray() { }
+
+WebGLUnsignedIntArray::WebGLUnsignedIntArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+{
+    mBuffer.InitFromJSArray(LOCAL_GL_UNSIGNED_INT, 1, cx, arrayObj, arrayLen);
+}
+
+NS_IMETHODIMP
+WebGLUnsignedIntArray::Initialize(nsISupports *owner,
+                                  JSContext *cx,
+                                  JSObject *obj,
+                                  PRUint32 argc,
+                                  jsval *argv)
+{
+    JSObject *arrayObj;
+    jsuint arrayLen;
+
+    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
+        arrayObj == NULL ||
+        !::JS_IsArrayObject(cx, arrayObj) ||
+        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+    {
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    mBuffer.InitFromJSArray(LOCAL_GL_UNSIGNED_INT, 1, cx, arrayObj, arrayLen);
+
+    return NS_OK;
+}
+
+/* attribute unsigned long length; */
+NS_IMETHODIMP WebGLUnsignedIntArray::GetLength(PRUint32 *aLength)
+{
+    *aLength = mBuffer.length;
+    return NS_OK;
+}
+NS_IMETHODIMP WebGLUnsignedIntArray::SetLength(PRUint32 aLength)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP_(PRUint32) WebGLUnsignedIntArray::NativeType()
+{
+    return mBuffer.type;
+}
+
+/* [noscript, notxpcom] voidPtr nativePointer (); */
+NS_IMETHODIMP_(void *) WebGLUnsignedIntArray::NativePointer()
+{
+    return mBuffer.data;
+}
+
+/* [noscript, notxpcom] unsigned long nativeSize (); */
+NS_IMETHODIMP_(PRUint32) WebGLUnsignedIntArray::NativeSize()
+{
+    return mBuffer.capacity;
+}
+
+/* [noscript, notxpcom] unsigned long nativeElementSize (); */
+NS_IMETHODIMP_(PRUint32) WebGLUnsignedIntArray::NativeElementSize()
+{
+    return mBuffer.ElementSize();
+}
+
+/* [noscript, notxpcom] unsigned long nativeCount (); */
+NS_IMETHODIMP_(PRUint32) WebGLUnsignedIntArray::NativeCount()
+{
+    return mBuffer.length;
+}
 
 /* [noscript] attribute GLuint name; */
 NS_IMETHODIMP WebGLTexture::GetName(GLuint *aName)

@@ -212,6 +212,7 @@ GLES20Wrap::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &fGetProgramInfoLog, { "GetProgramInfoLog", "GetProgramInfoLogARB", NULL } },
         { (PRFuncPtr*) &fTexParameteri, { "TexParameteri", NULL } },
         { (PRFuncPtr*) &fTexParameterf, { "TexParameterf", NULL } },
+        { (PRFuncPtr*) &fGetTexParameterfv, { "GetTexParameterfv", NULL } },
         { (PRFuncPtr*) &fGetTexParameteriv, { "GetTexParameteriv", NULL } },
         { (PRFuncPtr*) &fGetUniformfv, { "GetUniformfv", "GetUniformfvARB", NULL } },
         { (PRFuncPtr*) &fGetUniformiv, { "GetUniformiv", "GetUniformivARB", NULL } },

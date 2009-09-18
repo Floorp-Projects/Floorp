@@ -473,9 +473,12 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_WebGLRenderbuffer_id,
 
   eDOMClassInfo_WebGLFloatArray_id,
+  eDOMClassInfo_WebGLByteArray_id,
+  eDOMClassInfo_WebGLUnsignedByteArray_id,
   eDOMClassInfo_WebGLShortArray_id,
   eDOMClassInfo_WebGLUnsignedShortArray_id,
-  eDOMClassInfo_WebGLUnsignedByteArray_id,
+  eDOMClassInfo_WebGLIntArray_id,
+  eDOMClassInfo_WebGLUnsignedIntArray_id,
 #endif
 
   // This one better be the last one in this list
