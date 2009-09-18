@@ -182,6 +182,10 @@ protected:
                                        gfxFloat aSize,
                                        const PRUint8 aDecoration);
 
+  virtual void AdjustForTextIndent(const nsLineBox* aLine,
+                                   nscoord& start,
+                                   nscoord& width);
+
   friend class nsDisplayTextDecoration;
   friend class nsDisplayTextShadow;
 };
