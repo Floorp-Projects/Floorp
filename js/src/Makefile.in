@@ -147,7 +147,6 @@ CPPSRCS		= \
 		jsopcode.cpp \
 		jsparse.cpp \
 		jsprf.cpp \
-		jspropcache.cpp \
 		jsregexp.cpp \
 		jsscan.cpp \
 		jsscope.cpp \
