@@ -100,10 +100,11 @@ nsFrameList::SetFrames(nsIFrame* aFrameList)
   mLastChild = nsLayoutUtils::GetLastSibling(mFirstChild);
 }
 
-PRBool
+void
 nsFrameList::RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint)
 {
   NS_PRECONDITION(aFrame, "null ptr");
+  NS_PRECONDITION(ContainsFrame(aFrame), "wrong list");
 
   nsIFrame* nextFrame = aFrame->GetNextSibling();
   if (aFrame == mFirstChild) {
@@ -112,7 +113,6 @@ nsFrameList::RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint)
     if (!nextFrame) {
       mLastChild = nsnull;
     }
-    return PR_TRUE;
   }
   else {
     nsIFrame* prevSibling = aPrevSiblingHint;
@@ -125,10 +125,21 @@ nsFrameList::RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint)
       if (!nextFrame) {
         mLastChild = prevSibling;
       }
+    }
+  }
+}
+
+PRBool
+nsFrameList::RemoveFrameIfPresent(nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "null ptr");
+
+  for (FrameLinkEnumerator iter(*this); !iter.AtEnd(); iter.Next()) {
+    if (iter.NextFrame() == aFrame) {
+      RemoveFrame(aFrame, iter.PrevFrame());
       return PR_TRUE;
     }
   }
-
   return PR_FALSE;
 }
 
@@ -156,11 +167,20 @@ nsFrameList::RemoveFirstChild()
   return PR_FALSE;
 }
 
-PRBool
+void
 nsFrameList::DestroyFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint)
 {
-  NS_PRECONDITION(nsnull != aFrame, "null ptr");
-  if (RemoveFrame(aFrame, aPrevSiblingHint)) {
+  NS_PRECONDITION(aFrame, "null ptr");
+  RemoveFrame(aFrame, aPrevSiblingHint);
+  aFrame->Destroy();
+}
+
+PRBool
+nsFrameList::DestroyFrameIfPresent(nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "null ptr");
+
+  if (RemoveFrameIfPresent(aFrame)) {
     aFrame->Destroy();
     return PR_TRUE;
   }

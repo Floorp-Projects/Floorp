@@ -134,14 +134,20 @@ public:
   }
 
   /**
-   * Take aFrame out of the frame list. This also disconnects aFrame
-   * from the sibling list. This will return PR_FALSE if aFrame is
-   * nsnull or if aFrame is not in the list. The second frame is
-   * a hint for the prev-sibling of aFrame; if the hint is correct,
-   * then this is O(1) time. If successfully removed, the child's
-   * NextSibling pointer is cleared.
+   * from the sibling list. The frame must be non-null and present on
+   * this list.
+   * The second frame is a hint for the prev-sibling of aFrame; if the
+   * hint is correct, then this is O(1) time.
    */
-  PRBool RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint = nsnull);
+  void RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint = nsnull);
+
+  /**
+   * Take aFrame out of the frame list, if present. This also disconnects
+   * aFrame from the sibling list. aFrame must be non-null but is not
+   * required to be on the list.
+   * @return PR_TRUE if aFrame was removed
+   */
+  PRBool RemoveFrameIfPresent(nsIFrame* aFrame);
 
   /**
    * Take the frames after aAfterFrame out of the frame list.
@@ -157,14 +163,19 @@ public:
   PRBool RemoveFirstChild();
 
   /**
-   * Take aFrame out of the frame list and then destroy it. This also
-   * disconnects aFrame from the sibling list. This will return
-   * PR_FALSE if aFrame is nsnull or if aFrame is not in the list. The
-   * second frame is a hint for the prev-sibling of aFrame; if the
-   * hint is correct, then the time this method takes doesn't depend
-   * on the number of previous siblings of aFrame.
+   * Take aFrame out of the frame list and then destroy it.
+   * The frame must be non-null and present on this list.
+   * The second frame is a hint for the prev-sibling of aFrame; if the
+   * hint is correct, then this is O(1) time.
    */
-  PRBool DestroyFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint = nsnull);
+  void DestroyFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint = nsnull);
+
+  /**
+   * If aFrame is present on this list then take it out of the list and
+   * then destroy it. The frame must be non-null.
+   * @return PR_TRUE if the frame was found
+   */
+  PRBool DestroyFrameIfPresent(nsIFrame* aFrame);
 
   /**
    * Insert aFrame right after aPrevSibling, or prepend it to this
