@@ -692,7 +692,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
       // Break-after
       if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
         nsIFrame* newFrame;
-        rv = CreateNextInFlow(aPresContext, this, aFrame, newFrame);
+        rv = CreateNextInFlow(aPresContext, aFrame, newFrame);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -727,7 +727,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
     }
     else {
       nsIFrame* newFrame;
-      rv = CreateNextInFlow(aPresContext, this, aFrame, newFrame);
+      rv = CreateNextInFlow(aPresContext, aFrame, newFrame);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -782,20 +782,18 @@ nsInlineFrame::PushFrames(nsPresContext* aPresContext,
                           nsIFrame* aFromChild,
                           nsIFrame* aPrevSibling)
 {
-  NS_PRECONDITION(nsnull != aFromChild, "null pointer");
-  NS_PRECONDITION(nsnull != aPrevSibling, "pushing first child");
+  NS_PRECONDITION(aFromChild, "null pointer");
+  NS_PRECONDITION(aPrevSibling, "pushing first child");
   NS_PRECONDITION(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
 
 #ifdef NOISY_PUSHING
-      printf("%p pushing aFromChild %p, disconnecting from prev sib %p\n", 
-             this, aFromChild, aPrevSibling);
+  printf("%p pushing aFromChild %p, disconnecting from prev sib %p\n", 
+         this, aFromChild, aPrevSibling);
 #endif
-  // Disconnect aFromChild from its previous sibling
-  aPrevSibling->SetNextSibling(nsnull);
 
   // Add the frames to our overflow list (let our next in flow drain
   // our overflow list when it is ready)
-  SetOverflowFrames(aPresContext, aFromChild);
+  SetOverflowFrames(aPresContext, mFrames.RemoveFramesAfter(aPrevSibling));
 }
 
 
@@ -918,18 +916,6 @@ nsIAtom*
 nsFirstLineFrame::GetType() const
 {
   return nsGkAtoms::lineFrame;
-}
-
-void
-nsFirstLineFrame::StealFramesFrom(nsIFrame* aFrame)
-{
-  nsIFrame* prevFrame = mFrames.GetPrevSiblingFor(aFrame);
-  if (prevFrame) {
-    prevFrame->SetNextSibling(nsnull);
-  }
-  else {
-    mFrames.SetFrames(nsnull);
-  }
 }
 
 nsIFrame*

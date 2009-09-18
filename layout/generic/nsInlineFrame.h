@@ -126,12 +126,6 @@ public:
 
   virtual void PullOverflowsFromPrevInFlow();
 
-  // Take all of the frames away from this frame. The caller is
-  // presumed to keep them alive.
-  void StealAllFrames() {
-    mFrames.SetFrames(nsnull);
-  }
-
   /**
    * Return true if the frame is leftmost frame or continuation.
    */
@@ -228,10 +222,6 @@ public:
                     nsReflowStatus& aStatus);
 
   virtual void PullOverflowsFromPrevInFlow();
-
-  // Take frames starting at aFrame until the end of the frame-list
-  // away from this frame. The caller is presumed to keep them alive.
-  void StealFramesFrom(nsIFrame* aFrame);
 
 protected:
   nsFirstLineFrame(nsStyleContext* aContext) : nsInlineFrame(aContext) {}

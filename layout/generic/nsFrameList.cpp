@@ -108,6 +108,17 @@ nsFrameList::RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint)
   return PR_FALSE;
 }
 
+nsFrameList
+nsFrameList::RemoveFramesAfter(nsIFrame* aAfterFrame)
+{
+  NS_PRECONDITION(NotEmpty(), "illegal operation on empty list");
+  NS_PRECONDITION(ContainsFrame(aAfterFrame), "wrong frame");
+
+  nsIFrame* tail = aAfterFrame->GetNextSibling();
+  aAfterFrame->SetNextSibling(nsnull);
+  return nsFrameList(tail);
+}
+
 PRBool
 nsFrameList::RemoveFirstChild()
 {
