@@ -915,28 +915,45 @@ class CheckStateMachine(TcheckVisitor):
 
     def visitTransitionStmt(self, ts):
         # We want to disallow "race conditions" in protocols.  These
-        # can occur when a protocol state machine has triggers of
-        # opposite direction from the same state.  That means that,
-        # e.g., the parent could send the child a message at the exact
-        # instance the child sends the parent a message.  One of those
-        # messages would (probably) violate the state machine and
-        # cause the child to be terminated.  It's obviously very nice
-        # if we can forbid this at the level of IPDL state machines,
-        # rather than resorting to static or dynamic checking of C++
-        # implementation code.
+        # can occur when a protocol state machine has a state that
+        # allows triggers of opposite direction.  That declaration
+        # allows the parent to send the child a message at the
+        # exact instance the child sends the parent a message.  One of
+        # those messages would (probably) violate the state machine
+        # and cause the child to be terminated.  It's obviously very
+        # nice if we can forbid this at the level of IPDL state
+        # machines, rather than resorting to static or dynamic
+        # checking of C++ implementation code.
         #
         # An easy way to avoid this problem in IPDL is to only allow
         # "unidirectional" protocol states; that is, from each state,
         # only send or only recv triggers are allowed.  This approach
         # is taken by the Singularity project's "contract-based
-        # message channels."  However, this is a bit of a notational
-        # burden.
+        # message channels."  However, this can be something of a
+        # notational burden for stateful protocols.
         #
-        # IPDL's solution is to allow allow the IPDL programmer to
-        # define "commutative transitions," that is, pairs of
-        # transitions (A, B) that can happen in either order: first A
-        # then B, or first B then A.  So instead of checking state
-        # unidirectionality, we instead do the following two checks.
+        # If two messages race, the effect is that the parent's and
+        # child's states get temporarily out of sync.  Informally,
+        # IPDL allows this *only if* the state machines get out of
+        # sync for only *one* step (state machine transition), then
+        # sync back up.  This is a design decision: the states could
+        # be allowd to get out of sync for any constant k number of
+        # steps.  (If k is unbounded, there's no point in presenting
+        # the abstraction of parent and child actor states being
+        # "entangled".)  The working hypothesis is that the more steps
+        # the states are allowed to be out of sync, the harder it is
+        # to reason about the protocol.
+        #
+        # Slightly less informally, two messages are allowed to race
+        # only if processing them in either order leaves the protocol
+        # in the same state.  That is, messages A and B are allowed to
+        # race only if processing A then B leaves the protocol in
+        # state S, *and* processing B then A also leaves the protocol
+        # in state S.  Technically, if this holds, then messages A and
+        # B could be called "commutative".
+        #
+        # "Formally", state machine definitions must adhere to two
+        # rules.
         #
         #   *Rule 1*: from a state S, all sync triggers must be of the same
         # "direction," i.e. only |send| or only |recv|
@@ -951,11 +968,22 @@ class CheckStateMachine(TcheckVisitor):
         #         where t1 and t2 have opposite direction,
         #         and t1 transitions to state T1 and t2 to T2,
         #       then the following must be true:
-        #         T2 allows the trigger t1, transitioning to state U
-        #         T1 allows the trigger t2, transitioning to state U
+        #         (T2 allows the trigger t1, transitioning to state U)
+        #         and
+        #         (T1 allows the trigger t2, transitioning to state U)
+        #         and
+        #         (
+        #           (
+        #             (all of T1's triggers have the same direction as t2)
+        #             and
+        #             (all of T2's triggers have the same direction as t1)
+        #           )
+        #           or
+        #           (T1, T2, and U are the same "terminal state")
+        #         )
         #
-        # This is a more formal way of expressing "it doesn't matter
-        # in which order the triggers t1 and t2 occur / are processed."
+        # A "terminal state" S is one from which all triggers
+        # transition back to S itself.
         #
         # The presence of triggers with multiple out states complicates
         # this check slightly, but doesn't fundamentally change it.
@@ -969,9 +997,21 @@ class CheckStateMachine(TcheckVisitor):
         #                 t1_out x t2_out is their Cartesian product
         #                 and t1 transitions to state T1 and t2 to T2,
         #         then the following must be true:
-        #           T2 allows the trigger t1, with out-state set { U }
-        #           T1 allows the trigger t2, with out-state set { U }
-        #
+        #           (T2 allows the trigger t1, with out-state set { U })
+        #           and
+        #           (T1 allows the trigger t2, with out-state set { U })
+        #           and
+        #           (
+        #             (
+        #               (all of T1's triggers have the same direction as t2)
+        #               and
+        #               (all of T2's triggers have the same direction as t1)
+        #             )
+        #             or
+        #             (T1, T2, and U are the same "terminal state")
+        #           )
+
+        # check Rule 1
         syncdirection = None
         syncok = True
         for trans in ts.transitions:
@@ -988,6 +1028,7 @@ class CheckStateMachine(TcheckVisitor):
         if not syncok:
             return
 
+        # helper functions
         def triggerTargets(S, t):
             '''Return the set of states transitioned to from state |S|
 upon trigger |t|, or { } if |t| is not a trigger in |S|.'''
@@ -996,7 +1037,34 @@ upon trigger |t|, or { } if |t| is not a trigger in |S|.'''
                     return trans.toStates
             return set()
 
+        def allTriggersSameDirectionAs(S, t):
+            '''Return true iff all the triggers from state |S| have the same
+direction as trigger |t|'''
+            direction = t.direction()
+            for trans in self.p.states[S].transitions:
+                if direction != trans.trigger.direction():
+                    return False
+            return True
 
+        def terminalState(S):
+            '''Return true iff |S| is a "terminal state".'''
+            for trans in self.p.states[S].transitions:
+                for S_ in trans.toStates:
+                    if S_ != S:  return False
+            return True
+
+        def sameTerminalState(S1, S2, S3):
+            '''Return true iff states |S1|, |S2|, and |S3| are all the same
+"terminal state".'''
+            if isinstance(S3, set):
+                assert len(S3) == 1
+                for S3_ in S3: pass
+                S3 = S3_
+
+            return (S1 == S2 == S3) and terminalState(S1)
+
+
+        # check the Diamond Rule
         for (t1, t2) in unique_pairs(ts.transitions):
             # if the triggers have the same direction, they can't race,
             # since only one endpoint can initiate either (and delivery
@@ -1012,8 +1080,15 @@ upon trigger |t|, or { } if |t| is not a trigger in |S|.'''
                 U2 = triggerTargets(T2, t1)
 
                 if (0 == len(U1)
+                    # check U1 = U2 = { U }
                     or 1 < len(U1) or 1 < len(U2)
-                    or U1 != U2):
+                    or U1 != U2
+                    or not (
+                        (allTriggersSameDirectionAs(T1, t2.trigger)
+                         and allTriggersSameDirectionAs(T2, t1.trigger))
+                        or
+                        sameTerminalState(T1, T2, U1)
+                    )):
                     self.error(
                         t2.loc,
                         "in protocol `%s' state `%s', trigger `%s' potentially races (does not commute) with `%s'",
