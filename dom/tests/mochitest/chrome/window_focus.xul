@@ -6,7 +6,6 @@
  This test checks focus in various ways
 -->
 <window id="outer-document" title="Focus Test" width="600" height="550"
-        onfocus="setTimeout(startTest, 0)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript"
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
@@ -40,7 +39,6 @@ var gExpectedEvents = "";
 var gEventMatched = true;
 var gShowOutput = false;
 var gChildWindow = null;
-var gRefocusCallback = null;
 
 var gOldExpectedWindow = null;
 var gNewExpectedWindow = null;
@@ -288,11 +286,6 @@ function getById(id)
 
 function startTest()
 {
-  if (gRefocusCallback) {
-    gRefocusCallback();
-    return;
-  }
-
   if (gTestStarted)
     return;
   gTestStarted = true;
@@ -748,7 +741,7 @@ function startTest()
 
   setFocusTo("t9", window);
   gLastFocusMethod = -1;
-  window.openDialog("focus_window2.xul", "_blank", "chrome", otherWindowFocused, null);
+  window.openDialog("focus_window2.xul", "_blank", "chrome", otherWindowFocused);
 }
 
 function doCommandDispatcherTests()
@@ -994,7 +987,7 @@ function otherWindowFocused(otherWindow)
 
   // next, check modal dialogs
   getById("n2").focus();
-  window.openDialog("focus_window2.xul", "_blank", "chrome,modal", modalWindowOpened, null);
+  var nextWindow = window.openDialog("focus_window2.xul", "_blank", "chrome,modal", modalWindowOpened);
 }
 
 function modalWindowOpened(modalWindow)
@@ -1007,17 +1000,16 @@ function modalWindowOpened(modalWindow)
   is(fm.activeWindow, modalWindow, "modal activeWindow");
   is(fm.focusedElement, elem, "modal focusedElement");
 
-  gRefocusCallback = modalWindowClosed;
   modalWindow.close();
+  SimpleTest.waitForFocus(modalWindowClosed);
 }
 
 function modalWindowClosed()
 {
-  gRefocusCallback = null;
   is(fm.activeWindow, window, "modal window closed activeWindow");
   is(fm.focusedElement, getById("n2"), "modal window closed focusedElement");
 
-  var framewin = window.open("focus_frameset.html", "_blank", "width=400,height=400,toolbar=no");
+  window.open("focus_frameset.html", "_blank", "width=400,height=400,toolbar=no");
 }
 
 function framesetWindowLoaded(framesetWindow)
@@ -1098,7 +1090,7 @@ function framesetWindowLoaded(framesetWindow)
   expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
                    gNewExpectedWindow, getById("f1"), true, "switch document backward with ctrl+f6");
 
-  // skip the window switching tests for now on Linux, as opening and closing
+  // skip the window switching tests for now on Linux, as raising and lowering
   // a window is asynchronous there
   if (navigator.platform.indexOf("Linux") == -1) {
     window.openDialog("focus_window2.xul", "_blank", "chrome", switchWindowTest, framesetWindow);
@@ -1106,8 +1098,8 @@ function framesetWindowLoaded(framesetWindow)
   else {
     gOldExpectedWindow = null;
     gNewExpectedWindow = null;
-    gRefocusCallback = doWindowNoRootTest;
     framesetWindow.close();
+    SimpleTest.waitForFocus(doWindowNoRootTest);
   }
 }
 
@@ -1171,7 +1163,7 @@ function switchWindowTest(otherWindow, framesetWindow)
   otherWindow.close();
   framesetWindow.close();
 
-  gRefocusCallback = doWindowNoRootTest;
+  SimpleTest.waitForFocus(doWindowNoRootTest);
 }
 
 // open a window with no root element
@@ -1185,7 +1177,7 @@ function doWindowNoRootTest()
              "document.documentElement.focus(); document.removeChild(document.documentElement);" +
              "window.opener.focus(); }, 100); }</script></window>");
 
-  gRefocusCallback = doFrameSwitchingTests;
+  addEventListener("focus", doFrameSwitchingTests, true);
   noRootWindow = window.open(data, "_blank", "chrome,width=100,height=100");
 }
 
@@ -1193,8 +1185,8 @@ function doWindowNoRootTest()
 // that the focus is in the right place at each event step.
 function doFrameSwitchingTests()
 {
+  removeEventListener("focus", doFrameSwitchingTests, true);
   noRootWindow.close();
-  gRefocusCallback = null;
 
   var framea = document.getElementById("ifa");
   var frameb = document.getElementById("ifb");
@@ -1422,6 +1414,7 @@ function frameSwitchingEventOccured(event)
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(startTest);
 
 ]]>
 </script>
