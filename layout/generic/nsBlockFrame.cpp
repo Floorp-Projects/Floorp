@@ -529,7 +529,9 @@ nsBlockFrame::GetChildList(nsIAtom* aListName) const
   }
   else if (aListName == nsGkAtoms::overflowList) {
     nsLineList* overflowLines = GetOverflowLines();
-    return overflowLines ? overflowLines->front()->mFirstChild : nsnull;
+    return overflowLines ? nsFrameList(overflowLines->front()->mFirstChild,
+                                       overflowLines->back()->LastChild())
+                         : nsFrameList::EmptyList();
   }
   else if (aListName == nsGkAtoms::overflowOutOfFlowList) {
     return GetOverflowOutOfFlows();
@@ -538,7 +540,8 @@ nsBlockFrame::GetChildList(nsIAtom* aListName) const
     return mFloats;
   }
   else if (aListName == nsGkAtoms::bulletList) {
-    return (HaveOutsideBullet()) ? mBullet : nsnull;
+    return HaveOutsideBullet() ? nsFrameList(mBullet, mBullet)
+                               : nsFrameList::EmptyList();
   }
   return nsContainerFrame::GetChildList(aListName);
 }
@@ -3950,7 +3953,8 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
   if (0 != pushCount) {
     NS_ABORT_IF_FALSE(aLine->GetChildCount() > pushCount, "bad push");
     NS_ABORT_IF_FALSE(nsnull != aFrame, "whoops");
-    NS_ASSERTION(nsFrameList(aFrame).GetLength() >= pushCount,
+    NS_ASSERTION(nsFrameList(aFrame, nsLayoutUtils::GetLastSibling(aFrame))
+                   .GetLength() >= pushCount,
                  "Not enough frames to push");
 
     // Put frames being split out into their own line
@@ -4527,7 +4531,7 @@ nsBlockFrame::GetOverflowOutOfFlows() const
   nsIFrame* result = static_cast<nsIFrame*>
                                 (GetProperty(nsGkAtoms::overflowOutOfFlowsProperty));
   NS_ASSERTION(result, "value should always be non-empty when state set");
-  return nsFrameList(result);
+  return nsFrameList(result, nsLayoutUtils::GetLastSibling(result));
 }
 
 // This takes ownership of the frames
@@ -6331,7 +6335,7 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
       // it to the flow now.
       if (NS_STYLE_LIST_STYLE_POSITION_INSIDE ==
           styleList->mListStylePosition) {
-        AddFrames(bullet, nsnull);
+        AddFrames(nsFrameList(bullet, bullet), nsnull);
         mState &= ~NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET;
       }
       else {

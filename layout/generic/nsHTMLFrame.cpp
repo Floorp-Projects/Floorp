@@ -676,7 +676,7 @@ CanvasFrame::Reflow(nsPresContext*           aPresContext,
         nsresult rv = aPresContext->PresShell()->FrameConstructor()->
           CreateContinuingFrame(aPresContext, kidFrame, this, &nextFrame);
         NS_ENSURE_SUCCESS(rv, rv);
-        SetOverflowFrames(aPresContext, nextFrame);
+        SetOverflowFrames(aPresContext, nsFrameList(nextFrame, nextFrame));
         // Root overflow containers will be normal children of
         // the canvas frame, but that's ok because there
         // aren't any other frames we need to isolate them from
