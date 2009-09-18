@@ -39,6 +39,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <stdlib.h>
 
 #if defined(AVMPLUS_UNIX) || defined(AVMPLUS_OS2)
@@ -159,12 +160,24 @@ static __inline__ unsigned long long rdtsc(void)
 
 struct JSContext;
 
+#ifdef PERFM
+# define PERFM_NVPROF(n,v) _nvprof(n,v)
+# define PERFM_NTPROF(n) _ntprof(n)
+# define PERFM_TPROF_END() _tprof_end()
+#else
+# define PERFM_NVPROF(n,v)
+# define PERFM_NTPROF(n)
+# define PERFM_TPROF_END()
+#endif
+
 #define VMPI_strlen strlen
 #define VMPI_strcat strcat
 #define VMPI_strncat strncat
 #define VMPI_strcpy strcpy
 #define VMPI_sprintf sprintf
 #define VMPI_memset memset
+#define VMPI_isdigit isdigit
+#define VMPI_getDate()
 
 extern void VMPI_setPageProtection(void *address,
                                    size_t size,
@@ -318,15 +331,6 @@ namespace avmplus {
             return config.verbose;
         }
 
-    };
-
-    class OSDep
-    {
-    public:
-        static inline void
-        getDate()
-        {
-        }
     };
 
     /**
