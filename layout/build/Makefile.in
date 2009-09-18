@@ -229,10 +229,6 @@ EXTRA_DSO_LDOPTS += $(TK_LIBS)
 OS_LIBS += -framework OpenGL
 endif
 
-ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
-OS_LIBS += opengl32.lib
-endif
-
 # Add explicit X11 dependency when building against X11 toolkits
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
