@@ -1,6 +1,5 @@
 /* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4 -*- */
 /* vi: set ts=4 sw=4 expandtab: (add to ~/.vimrc: set modeline modelines=5) */
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -68,8 +67,8 @@ namespace nanojit
     static const int kcalleeAreaSize = 80; // The max size.
     static const int NJ_PAGE_SIZE_SPARC = 8192; // Use sparc page size here.
 
-#define TODO(x) do{ verbose_only(outputf(#x);) NanoAssertMsgf(false, "%s", #x); } while(0)
 #define BIT_ROUND_UP(v,q)      ( (((uintptr_t)v)+(q)-1) & ~((q)-1) )
+#define TODO(x) do{ verbose_only(outputf(#x);) NanoAssertMsgf(false, "%s", #x); } while(0)
 
     void Assembler::nInit(AvmCore* core)
     {
@@ -97,8 +96,11 @@ namespace nanojit
             SETHI(frameSize, G1);
         }
 
-        verbose_only( verbose_outputf("        %p:",_nIns); )
-        verbose_only( asm_output("        patch entry:"); )
+        verbose_only(
+        if (_logc->lcbits & LC_Assembly) {
+            outputf("        %p:",_nIns);
+            output("        patch entry:");
+        })
         NIns *patchEntry = _nIns;
 
         // The frame size in SAVE is faked. We will still re-caculate SP later.
@@ -218,7 +220,7 @@ namespace nanojit
         a.clear();
         a.free = GpRegs | FpRegs;
         debug_only( a.managed = a.free; )
-            }
+    }
 
     void Assembler::nPatchBranch(NIns* branch, NIns* location)
     {
@@ -276,7 +278,7 @@ namespace nanojit
             verbose_only(if (_logc->lcbits & LC_RegAlloc) {
                 outputf("        remat %s size %d", _thisfrag->lirbuf->names->formatRef(i), i->size());
             })
-                }
+        }
         else if (i->isconst()) {
             if (!i->getArIndex()) {
                 i->markAsClear();
@@ -293,7 +295,7 @@ namespace nanojit
             verbose_only(if (_logc->lcbits & LC_RegAlloc) {
                 outputf("        restore %s", _thisfrag->lirbuf->names->formatRef(i));
             })
-                }
+        }
     }
 
     void Assembler::asm_store32(LIns *value, int dr, LIns *base)
@@ -521,7 +523,7 @@ namespace nanojit
         LOpcode condop = cond->opcode();
 
         // LIR_ov recycles the flags set by arithmetic ops
-        if ((condop == LIR_ov))
+        if (condop == LIR_ov)
             return;
 
         LInsp lhs = cond->oprnd1();

@@ -38,13 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nanojit.h"
-#include <stdio.h>
-#include <ctype.h>
-
-#ifdef PERFM
-#include "../vprof/vprof.h"
-#endif /* PERFM */
-
 
 namespace nanojit
 {
@@ -1531,7 +1524,7 @@ namespace nanojit
 
     void LirNameMap::copyName(LInsp i, const char *s, int suffix) {
         char s2[200];
-        if (isdigit(s[VMPI_strlen(s)-1])) {
+        if (VMPI_isdigit(s[VMPI_strlen(s)-1])) {
             // if s ends with a digit, add '_' to clarify the suffix
             VMPI_sprintf(s2,"%s_%d", s, suffix);
         } else {
