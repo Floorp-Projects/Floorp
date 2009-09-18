@@ -234,8 +234,10 @@ public:
     PFNGLTEXPARAMETERIPROC fTexParameteri;
     typedef void (GLAPIENTRY * PFNGLTEXPARAMETERFPROC) (GLenum target, GLenum pname, GLfloat param);
     PFNGLTEXPARAMETERFPROC fTexParameterf;
-    typedef void (GLAPIENTRY * PFNGLTEXPARAMETERIVPROC) (GLenum target, GLenum pname, const GLint *params);
-    PFNGLTEXPARAMETERIVPROC fGetTexParameteriv;
+    typedef void (GLAPIENTRY * PFNGLGETTEXPARAMETERFVPROC) (GLenum target, GLenum pname, const GLfloat *params);
+    PFNGLGETTEXPARAMETERFVPROC fGetTexParameterfv;
+    typedef void (GLAPIENTRY * PFNGLGETTEXPARAMETERIVPROC) (GLenum target, GLenum pname, const GLint *params);
+    PFNGLGETTEXPARAMETERIVPROC fGetTexParameteriv;
     typedef void (GLAPIENTRY * PFNGLGETUNIFORMFVPROC) (GLuint program, GLint location, GLfloat* params);
     PFNGLGETUNIFORMFVPROC fGetUniformfv;
     typedef void (GLAPIENTRY * PFNGLGETUNIFORMIVPROC) (GLuint program, GLint location, GLint* params);
