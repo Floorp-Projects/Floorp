@@ -1657,7 +1657,7 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
                                          info.dwMinorVersion);
   }
 #elif defined(XP_MACOSX)
-  long majorVersion, minorVersion;
+  SInt32 majorVersion, minorVersion;
   if ((Gestalt(gestaltSystemVersionMajor, &majorVersion) == noErr) &&
       (Gestalt(gestaltSystemVersionMinor, &minorVersion) == noErr)) {
     nsTextFormatter::ssprintf(osVersion, NS_LITERAL_STRING("%ld.%ld").get(),
