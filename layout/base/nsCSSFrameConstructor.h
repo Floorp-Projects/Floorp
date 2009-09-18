@@ -1477,22 +1477,6 @@ private:
                         nsFrameItems& aSiblings);
 
   /**
-   * Move an already-constructed framelist into the inline frame at
-   * the tail end of an {ib} split.
-   *
-   * @param aState the frame construction state we're using right now.
-   * @param aExistingEndFrame the already-existing end frame.
-   * @param aFramesToMove The frame list to move over.  Must be nonempty.
-   * @param aTargetState if non-null, the target state to pass to
-   *        MoveChildrenTo for float reparenting.
-   * XXXbz test float reparenting?
-   */
-  void MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
-                                nsIFrame* aExistingEndFrame,
-                                nsFrameList& aFramesToMove,
-                                nsFrameConstructorState* aTargetState);
-
-  /**
    * For an inline aParentItem, construct its list of child
    * FrameConstructionItems and set its mIsAllInline flag appropriately.
    */
