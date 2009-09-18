@@ -138,8 +138,8 @@ JSPropertyCache::testForSet(JSContext *cx, jsbytecode *pc, JSObject **objp,
 
     *atomp = JS_PROPERTY_CACHE(cx).fullTest(cx, pc, objp, pobjp, entryp);
     if (*atomp) {
-        PCMETER(cache->misses++);
-        PCMETER(cache->setmisses++);
+        PCMETER(misses++);
+        PCMETER(setmisses++);
     }
 
     return false;
@@ -160,8 +160,8 @@ JSPropertyCache::testForInit(JSContext *cx, jsbytecode *pc, JSObject *obj,
         PCVCAP_SHAPE(entry->vcap) == cx->runtime->protoHazardShape)
     {
         JS_ASSERT(PCVCAP_TAG(entry->vcap) == 0);
-        PCMETER(cache->pchits++);
-        PCMETER(cache->inipchits++);
+        PCMETER(pchits++);
+        PCMETER(inipchits++);
         JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
         JSScopeProperty *sprop = PCVAL_TO_SPROP(entry->vword);
         JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
