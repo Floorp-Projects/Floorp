@@ -728,12 +728,14 @@ _utf8fromidentifier(NPIdentifier aIdentifier)
 {
     _MOZ_LOG(__FUNCTION__);
 
+    NPError err;
     nsCAutoString val;
     nsresult rv = PluginModuleChild::current()->
-        SendNPN_UTF8FromIdentifier((NPRemoteIdentifier)aIdentifier, &val);
+        SendNPN_UTF8FromIdentifier((NPRemoteIdentifier)aIdentifier,
+                                   &err, &val);
     NS_ENSURE_SUCCESS(rv, 0);
 
-    return val.IsVoid() ? 0 : strdup(val.get());
+    return (NPERR_NO_ERROR == err) ? strdup(val.get()) : 0;
 }
 
 int32_t NP_CALLBACK
@@ -741,12 +743,15 @@ _intfromidentifier(NPIdentifier aIdentifier)
 {
     _MOZ_LOG(__FUNCTION__);
 
+    NPError err;
     int32_t val;
     nsresult rv = PluginModuleChild::current()->
-        SendNPN_IntFromIdentifier((NPRemoteIdentifier)aIdentifier, &val);
+        SendNPN_IntFromIdentifier((NPRemoteIdentifier)aIdentifier,
+                                  &err, &val);
     NS_ENSURE_SUCCESS(rv, 0);
 
-    return val;
+    // -1 for consistency
+    return (NPERR_NO_ERROR == err) ? val : -1;
 }
 
 NPObject* NP_CALLBACK
@@ -1019,11 +1024,11 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
                           argv,
                           0);
     if (NPERR_NO_ERROR != *rv) {
-        return NS_ERROR_FAILURE;
+        return false;
     }
 
     printf ("[PluginModuleChild] %s: returning %hd\n", __FUNCTION__, *rv);
-    return true;;
+    return true;
 }
 
 bool

@@ -119,9 +119,11 @@ public:
                              NPRemoteIdentifier* aId);
     virtual bool
     RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
+                               NPError* err,
                                nsCString* aString);
     virtual bool
     RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
+                              NPError* err,
                               int32_t* aInt);
     virtual bool
     RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
