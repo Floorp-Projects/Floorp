@@ -3838,7 +3838,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     if (defineHow & JSDNP_CACHE_RESULT) {
         JS_ASSERT_NOT_ON_TRACE(cx);
         JSPropCacheEntry *entry;
-        entry = JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, 0, obj, sprop, added);
+        entry = js_FillPropertyCache(cx, obj, 0, 0, obj, sprop, added);
         TRACE_2(SetPropHit, entry, sprop);
     }
     if (propp)
@@ -4090,8 +4090,9 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
             }
 #endif
             if (cacheResult) {
-                entry = JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, protoIndex, pobj,
-                                                   (JSScopeProperty *) prop, false);
+                entry = js_FillPropertyCache(cx, scopeChain,
+                                             scopeIndex, protoIndex, pobj,
+                                             (JSScopeProperty *) prop, false);
             }
             SCOPE_DEPTH_ACCUM(&rt->scopeSearchDepthStats, scopeIndex);
             goto out;
@@ -4172,8 +4173,9 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
 #ifdef DEBUG
             JSPropCacheEntry *entry =
 #endif
-            JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, protoIndex, pobj,
-                                       (JSScopeProperty *) prop, false);
+            js_FillPropertyCache(cx, scopeChain,
+                                 scopeIndex, protoIndex, pobj,
+                                 (JSScopeProperty *) prop, false);
             JS_ASSERT(entry);
             JS_UNLOCK_OBJ(cx, pobj);
             return obj;
@@ -4419,7 +4421,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
 
     if (getHow & JSGET_CACHE_RESULT) {
         JS_ASSERT_NOT_ON_TRACE(cx);
-        JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, protoIndex, obj2, sprop, false);
+        js_FillPropertyCache(cx, aobj, 0, protoIndex, obj2, sprop, false);
     }
 
     if (!js_NativeGet(cx, obj, obj2, sprop, getHow, vp))
@@ -4597,7 +4599,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             if (attrs & JSPROP_SHARED) {
                 if (defineHow & JSDNP_CACHE_RESULT) {
                     JSPropCacheEntry *entry;
-                    entry = JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, protoIndex, pobj, sprop, false);
+                    entry = js_FillPropertyCache(cx, obj, 0, protoIndex, pobj, sprop, false);
                     TRACE_2(SetPropHit, entry, sprop);
                 }
 
@@ -4699,7 +4701,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
 
     if (defineHow & JSDNP_CACHE_RESULT) {
         JSPropCacheEntry *entry;
-        entry = JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, 0, obj, sprop, added);
+        entry = js_FillPropertyCache(cx, obj, 0, 0, obj, sprop, added);
         TRACE_2(SetPropHit, entry, sprop);
     }
 
