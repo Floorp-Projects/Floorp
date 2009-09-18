@@ -327,13 +327,18 @@ bool
 PluginModuleParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
                                                 NPRemoteIdentifier* aId)
 {
-    NS_ENSURE_ARG(!aString.IsVoid());
+    if (aString.IsVoid())
+        return false;
 
     NPIdentifier ident = _getstringidentifier(aString.BeginReading());
-    NS_ENSURE_STATE(ident);
+    if (!ident) {
+        *aId = 0;
+        return true;
+    }
 
     nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(ident);
-    NS_ENSURE_TRUE(newEntry, NS_ERROR_OUT_OF_MEMORY);
+    if (!newEntry)
+        return false;
 
     *aId = (NPRemoteIdentifier)ident;
     return true;
@@ -344,10 +349,14 @@ PluginModuleParent::RecvNPN_GetIntIdentifier(const int32_t& aInt,
                                              NPRemoteIdentifier* aId)
 {
     NPIdentifier ident = _getintidentifier(aInt);
-    NS_ENSURE_STATE(ident);
+    if (!ident) {
+        *aId = 0;
+        return true;
+    }
 
     nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(ident);
-    NS_ENSURE_TRUE(newEntry, NS_ERROR_OUT_OF_MEMORY);
+    if (!newEntry)
+        return false;
 
     *aId = (NPRemoteIdentifier)ident;
     return true;
@@ -355,26 +364,39 @@ PluginModuleParent::RecvNPN_GetIntIdentifier(const int32_t& aInt,
 
 bool
 PluginModuleParent::RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
+                                               NPError *err,
                                                nsCString* aString)
 {
     NPIdentifier ident = GetValidNPIdentifier(aId);
-    NS_ENSURE_ARG(ident);
+    if (!ident) {
+        *err = NPERR_INVALID_PARAM;
+        return true;
+    }
 
     NPUTF8* val = _utf8fromidentifier(ident);
-    NS_ENSURE_STATE(val);
+    if (!val) {
+        *err = NPERR_INVALID_PARAM;
+        return true;
+    }
 
     aString->Assign(val);
+    *err = NPERR_NO_ERROR;
     return true;
 }
 
 bool
 PluginModuleParent::RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
+                                              NPError* err,
                                               int32_t* aInt)
 {
     NPIdentifier ident = GetValidNPIdentifier(aId);
-    NS_ENSURE_ARG(ident);
+    if (!ident) {
+        *err = NPERR_INVALID_PARAM;
+        return true;
+    }
 
     *aInt = _intfromidentifier(ident);
+    *err = NPERR_NO_ERROR;
     return true;
 }
 
@@ -383,7 +405,10 @@ PluginModuleParent::RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
                                                bool* aIsString)
 {
     NPIdentifier ident = GetValidNPIdentifier(aId);
-    NS_ENSURE_ARG(ident);
+    if (!ident) {
+        *aIsString = false;
+        return true;
+    }
 
     *aIsString = _identifierisstring(ident);
     return true;
