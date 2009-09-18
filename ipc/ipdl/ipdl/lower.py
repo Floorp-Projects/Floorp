@@ -1253,7 +1253,7 @@ class GenerateProtocolActorHeader(Visitor):
                     meth.params.insert(0, actordecl)
                     meth.virtual = True
                     dummyimpl = cxx.MethodDefn(meth)
-                    dummyimpl.addstmt(cxx.StmtReturn(cxx.ExprVar('NS_OK')))
+                    dummyimpl.addstmt(cxx.StmtReturn(cxx.ExprVar('true')))
                     cls.addstmt(dummyimpl)
                 else:
                     meth.pure = True
@@ -1585,9 +1585,9 @@ class GenerateProtocolActorHeader(Visitor):
                 objvar = cxx.ExprVar('__a')
             impl = cxx.MethodDefn(mdecl)
 
-            okcode = cxx.ExprVar('NS_OK')
-            failerrcode = cxx.ExprVar('NS_ERROR_FAILURE')
-            valueerrcode = cxx.ExprVar('NS_ERROR_ILLEGAL_VALUE')
+            okcode = cxx.ExprVar('true')
+            failerrcode = cxx.ExprVar('false')
+            valueerrcode = cxx.ExprVar('false')
 
             if md.decl.type.isCtor():
                 #
@@ -2435,7 +2435,7 @@ class GenerateSkeletonImpl(cxx.Visitor):
         if md.ret.ptr:
             impl.addstmt(cxx.StmtReturn(cxx.ExprLiteral.ZERO))
         else:
-            impl.addstmt(cxx.StmtReturn(cxx.ExprVar('NS_ERROR_NOT_IMPLEMENTED')))
+            impl.addstmt(cxx.StmtReturn(cxx.ExprVar('false')))
 
         self.cls.addstmt(cxx.StmtDecl(decl))
         self.addmethodimpl(impl)
