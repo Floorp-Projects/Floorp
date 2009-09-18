@@ -2761,6 +2761,9 @@ pref("image.cache.timeweight", 500);
 // The default Accept header sent for images loaded over HTTP(S)
 pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
 
+// WebGL global enable flag
+pref("webgl.enabled_for_all_sites", false);
+
 #ifdef XP_WIN
 #ifndef WINCE
 // The default TCP send window on Windows is too small, and autotuning only occurs on receive
