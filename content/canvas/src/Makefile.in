@@ -55,6 +55,11 @@ CPPSRCS	= \
 
 # Canvas 3D Pieces
 
+# only allow on platforms/toolkits we know are good
+ifneq (,$(NS_OSSO)$(WINCE)$(filter-out windows cocoa gtk2,$(MOZ_WIDGET_TOOLKIT)))
+MOZ_ENABLE_CANVAS3D=
+endif
+
 ifdef MOZ_ENABLE_CANVAS3D
 
 CPPSRCS += \
@@ -89,6 +94,10 @@ ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
 CPPSRCS += nsGLPbufferCGL.cpp
 DEFINES += -DUSE_CGL
 endif
+
+else
+
+CPPSRCS += WebGLContextNotSupported.cpp
 
 endif
 

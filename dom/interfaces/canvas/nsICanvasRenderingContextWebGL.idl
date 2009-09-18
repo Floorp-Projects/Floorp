@@ -670,24 +670,11 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   void cullFace (in GLenum mode);
 
-  // Modified: void glDeleteBuffers (GLsizei n, const GLuint* buffers);
-  //ZZ void deleteBuffer (in nsIWebGLBuffer buffer);
   void deleteBuffer (in nsIWebGLBuffer buffer);
-
-  // Modified: glDeleteFramebuffers (GLsizei n, const GLuint* framebuffers);
-  //ZZ void deleteFramebuffer (in nsIWebGLFramebuffer framebuffer);
-  void deleteFramebuffer (in nsIWebGLFramebuffer framebuffer);
-
   void deleteProgram (in nsIWebGLProgram program);
-
-  // Modified: void glDeleteRenderbuffers (GLsizei n, const GLuint* renderbuffers);
-  //ZZ void deleteRenderbuffer (in nsIWebGLRenderbuffer renderbuffer);
+  void deleteFramebuffer (in nsIWebGLFramebuffer framebuffer);
   void deleteRenderbuffer (in nsIWebGLRenderbuffer renderbuffer);
-
   void deleteShader (in nsIWebGLShader shader);
-
-  // Modified: void glDeleteTextures (GLsizei n, const GLuint* textures);
-  //ZZ void deleteTexture (in nsIWebGLTexture texture);
   void deleteTexture (in nsIWebGLTexture texture);
 
   void depthFunc (in GLenum func);
@@ -713,24 +700,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   void generateMipmap (in GLenum target);
 
-  //ZZ in the spec these are all createBuffer/createFramebuffer/etc.
-  // Modified: void glGenBuffers (GLsizei n, GLuint* buffers);
-  //nsIWebGLBuffer genBuffer();
-  // Modified: void glGenFramebuffers (GLsizei n, GLuint* framebuffers);
-  //nsIWebGLFramebuffer genFramebuffer();
-  // Modified: void glGenRenderbuffers (GLsizei n, GLuint* renderbuffers);
-  //nsIWebGLRenderbuffer genRenderbuffer();
-  // Modified: void glGenTextures (GLsizei n, GLuint* textures);
-  //nsIWebGLTexture genTexture();
-
-  // TBD
-  //void glGetActiveAttrib (GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, 
-  // GLenum* type, char* name);
   nsIWebGLActiveInfo getActiveAttrib(in nsIWebGLProgram program, in PRUint32 index);
-
-  // TBD
-  //void glGetActiveUniform (GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, 
-  // GLenum* type, char* name);
   nsIWebGLActiveInfo getActiveUniform(in nsIWebGLProgram program, in PRUint32 index);
 
   // TBD

@@ -103,7 +103,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/src/jsurl/$(LIB_PREFIX)jsurl_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/storage/$(LIB_PREFIX)jsdomstorage_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/offline/$(LIB_PREFIX)jsdomoffline_s.$(LIB_SUFFIX) \
- 	$(DEPTH)/dom/src/geolocation/$(LIB_PREFIX)jsdomgeolocation_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/src/geolocation/$(LIB_PREFIX)jsdomgeolocation_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/threads/$(LIB_PREFIX)domthreads_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/text/$(LIB_PREFIX)texteditor_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/base/$(LIB_PREFIX)editorbase_s.$(LIB_SUFFIX) \
@@ -228,7 +228,13 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 
 ifdef MOZ_ENABLE_CANVAS3D
-EXTRA_DSO_LDOPTS += -framework OpenGL
+OS_LIBS += -framework OpenGL
+endif
+endif
+
+ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
+ifdef MOZ_ENABLE_CANVAS3D
+OS_LIBS += opengl32.lib
 endif
 endif
 
