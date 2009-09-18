@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Vladimir Vukicevic <vladimir@pobox.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,15 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef WEBGLARRAY_H_
-#define WEBGLARRAY_H_
+#include "nsICanvasRenderingContextWebGL.h"
+#include "WebGLArray.h"
 
-nsresult NS_NewCanvasFloatArray(nsISupports **aNewObject);
-nsresult NS_NewCanvasByteArray(nsISupports **aNewObject);
-nsresult NS_NewCanvasUnsignedByteArray(nsISupports **aNewObject);
-nsresult NS_NewCanvasShortArray(nsISupports **aNewObject);
-nsresult NS_NewCanvasUnsignedShortArray(nsISupports **aNewObject);
-nsresult NS_NewCanvasIntArray(nsISupports **aNewObject);
-nsresult NS_NewCanvasUnsignedIntArray(nsISupports **aNewObject);
+#define DUMMY(func,rtype)  nsresult func (rtype ** aResult) { return NS_ERROR_FAILURE; }
 
-#endif
+DUMMY(NS_NewCanvasRenderingContextWebGL, nsICanvasRenderingContextWebGL)
+DUMMY(NS_NewCanvasFloatArray, nsISupports)
+DUMMY(NS_NewCanvasByteArray, nsISupports)
+DUMMY(NS_NewCanvasUnsignedByteArray, nsISupports)
+DUMMY(NS_NewCanvasShortArray, nsISupports)
+DUMMY(NS_NewCanvasUnsignedShortArray, nsISupports)
+DUMMY(NS_NewCanvasIntArray, nsISupports)
+DUMMY(NS_NewCanvasUnsignedIntArray, nsISupports)
