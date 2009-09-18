@@ -1296,111 +1296,55 @@ PRBool IsBorderCollapse(nsIFrame* aFrame)
 }
 
 /**
- * Utility method, called from MoveChildrenTo(), that recursively
- * descends down the frame hierarchy looking for floating frames that
- * need parent pointer adjustments to account for the containment block
- * changes that could occur as the result of the reparenting done in
- * MoveChildrenTo().
+ * Moves aFrameList from aOldParent to aNewParent.  This updates the parent
+ * pointer of the frames in the list, reparents their views as needed, and sets
+ * the NS_FRAME_HAS_VIEW bit on aNewParent and its ancestors as needed.  Then
+ * it sets the list as the initial child list on aNewParent.  Note that this
+ * method differs from ReparentFrames in that it doesn't change the kids' style
+ * contexts.
  */
+// XXXbz Since this is only used for {ib} splits, could we just copy the view
+// bits from aOldParent to aNewParent and then use the
+// nsFrameList::ApplySetParent?  That would still leave us doing two passes
+// over the list, of course; if we really wanted to we could factor out the
+// relevant part of ReparentFrameViewList, I suppose...  Or just get rid of
+// views, which would make most of this function go away.
 static void
-AdjustFloatParentPtrs(nsIFrame*                aFrame,
-                      nsFrameConstructorState& aState,
-                      nsFrameConstructorState& aOuterState)
+MoveChildrenTo(nsPresContext* aPresContext,
+               nsIFrame* aOldParent,
+               nsIFrame* aNewParent,
+               nsFrameList& aFrameList)
 {
-  NS_PRECONDITION(aFrame, "must have frame to work with");
+  NS_PRECONDITION(aOldParent->GetParent() == aNewParent->GetParent(),
+                  "Unexpected old and new parents");
+  NS_PRECONDITION(aNewParent->GetChildList(nsnull).IsEmpty(),
+                  "New parent should have no kids");
+  NS_PRECONDITION(aNewParent->GetStateBits() & NS_FRAME_FIRST_REFLOW,
+                  "New parent shouldn't have been reflowed yet");
 
-  nsIFrame *outOfFlowFrame = nsPlaceholderFrame::GetRealFrameFor(aFrame);
-  if (outOfFlowFrame != aFrame) {
-    if (outOfFlowFrame->GetStyleDisplay()->IsFloating()) {
-      // Update the parent pointer for outOfFlowFrame since its
-      // containing block has changed as the result of reparenting
-      // and move it from the outer state to the inner, bug 307277.
-      
-      nsIFrame *parent = aState.mFloatedItems.containingBlock;
-      NS_ASSERTION(parent, "Should have float containing block here!");
-      NS_ASSERTION(outOfFlowFrame->GetParent() == aOuterState.mFloatedItems.containingBlock,
-                   "expected the float to be a child of the outer CB");
-
-      aOuterState.mFloatedItems.RemoveFrame(outOfFlowFrame);
-      aState.mFloatedItems.AddChild(outOfFlowFrame);
-
-      outOfFlowFrame->SetParent(parent);
-      if (outOfFlowFrame->GetStateBits() &
-          (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
-        // We don't need to walk up the tree, since we're doing this
-        // recursively.
-        parent->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
-      }
-    }
-
-    // All out-of-flows are automatically float containing blocks, so we're
-    // done here.
-    return;
+  if (aNewParent->HasView() || aOldParent->HasView()) {
+    // Move the frames into the new view
+    nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, aFrameList,
+                                                aOldParent, aNewParent);
   }
 
-  if (aFrame->IsFloatContainingBlock()) {
-    // No need to recurse further; floats whose placeholders are
-    // inside a block already have the right parent.
-    return;
-  }
-
-  // Dive down into children to see if any of their
-  // placeholders need adjusting.
-  nsIFrame *childFrame = aFrame->GetFirstChild(nsnull);
-  while (childFrame) {
-    // XXX_kin: Do we need to prevent descent into anonymous content here?
-
-    AdjustFloatParentPtrs(childFrame, aState, aOuterState);
-    childFrame = childFrame->GetNextSibling();
-  }
-}
-
-/**
- * Moves frames to a new parent, updating the style context and propagating
- * relevant frame state bits. |aState| may be null, in which case the parent
- * pointers of out-of-flow frames will remain untouched.
- */
-// XXXbz it would be nice if this could take a framelist-like thing, but it
-// would need to take some sort of sublist, not nsFrameList, since the frames
-// get inserted into their new home before we call this method.  This could
-// easily take an nsFrameList::Slice if SetInitialChildList and InsertFrames
-// returned one from their respective underlying framelist ops....
-static void
-MoveChildrenTo(nsFrameManager*          aFrameManager,
-               nsIFrame*                aNewParent,
-               nsIFrame*                aFrameList,
-               nsIFrame*                aFrameListEnd,
-               nsFrameConstructorState* aState,
-               nsFrameConstructorState* aOuterState)
-{
   PRBool setHasChildWithView = PR_FALSE;
 
-  while (aFrameList && aFrameList != aFrameListEnd) {
+  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
     if (!setHasChildWithView
-        && (aFrameList->GetStateBits() & (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW))) {
+        && (e.get()->GetStateBits() &
+            (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW))) {
       setHasChildWithView = PR_TRUE;
     }
 
-    aFrameList->SetParent(aNewParent);
-
-    // If aState is not null, the caller expects us to make adjustments so that
-    // floats whose placeholders are descendants of frames in aFrameList point
-    // to the correct parent.
-    if (aState) {
-      NS_ASSERTION(aOuterState, "need an outer state too");
-      AdjustFloatParentPtrs(aFrameList, *aState, *aOuterState);
-    }
-
-    aFrameList = aFrameList->GetNextSibling();
+    e.get()->SetParent(aNewParent);
   }
 
   if (setHasChildWithView) {
-    do {
-      aNewParent->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
-      aNewParent = aNewParent->GetParent();
-    } while (aNewParent &&
-             !(aNewParent->GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW));
+    aNewParent->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
   }
+
+  aNewParent->SetInitialChildList(nsnull, aFrameList);
 }
 
 // -----------------------------------------------------------
@@ -10860,21 +10804,7 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
       FindFirstNonBlock(aChildItems);
     nsFrameList blockKids = aChildItems.ExtractHead(firstNonBlock);
 
-    if (blockFrame->HasView() || aInitialInline->HasView()) {
-      // Move the block's child frames into the new view
-      nsHTMLContainerFrame::ReparentFrameViewList(aState.mPresContext,
-                                                  blockKids, aInitialInline,
-                                                  blockFrame);
-    }
-
-    // Save the first frame in blockKids for the MoveChildrenTo call, since
-    // SetInitialChildList will empty blockKids.
-    nsIFrame* firstBlock = blockKids.FirstChild();
-    blockFrame->SetInitialChildList(nsnull, blockKids);
-
-    // XXXbz can we simplify MoveChildrenTo somewhat?
-    MoveChildrenTo(aState.mFrameManager, blockFrame, firstBlock, nsnull,
-                   nsnull, nsnull);
+    MoveChildrenTo(aState.mPresContext, aInitialInline, blockFrame, blockKids);
 
     SetFrameIsSpecial(lastNewInline, blockFrame);
     aSiblings.AddChild(blockFrame);
@@ -10900,20 +10830,8 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
       FindFirstBlock(firstBlock);
       nsFrameList inlineKids = aChildItems.ExtractHead(firstBlock);
 
-      nsIFrame* newFirstChild = inlineKids.FirstChild();
-      if (inlineFrame->HasView() || aInitialInline->HasView()) {
-        // Move the frames into the new view
-        nsHTMLContainerFrame::ReparentFrameViewList(aState.mPresContext,
-                                                    inlineKids, aInitialInline,
-                                                    inlineFrame);
-      }
-
-      // Save the first frame in inlineKids for the MoveChildrenTo call, since
-      // SetInitialChildList will empty inlineKids.
-      inlineFrame->SetInitialChildList(nsnull, inlineKids);
-
-      MoveChildrenTo(aState.mFrameManager, inlineFrame, newFirstChild,
-                     nsnull, nsnull, nsnull);
+      MoveChildrenTo(aState.mPresContext, aInitialInline, inlineFrame,
+                     inlineKids);
     }
 
     SetFrameIsSpecial(blockFrame, inlineFrame);
