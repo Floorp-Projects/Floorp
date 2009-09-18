@@ -176,13 +176,11 @@ namespace nanojit
             void        beginAssembly(Fragment *frag);
 
             void        releaseRegisters();
-
             void        patch(GuardRecord *lr);
             void        patch(SideExit *exit);
 #ifdef NANOJIT_IA32
             void        patch(SideExit *exit, SwitchInfo* si);
 #endif
-
             AssmError   error()    { return _err; }
             void        setError(AssmError e) { _err = e; }
 

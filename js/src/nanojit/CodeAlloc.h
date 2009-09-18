@@ -42,9 +42,9 @@
 
 namespace nanojit
 {
-    /** return true if ptr is in the range [start, end) */
+    /** return true if ptr is in the range [start, end] */
     inline bool containsPtr(const NIns* start, const NIns* end, const NIns* ptr) {
-        return ptr >= start && ptr < end;
+        return ptr >= start && ptr <= end;
     }
 
     /**

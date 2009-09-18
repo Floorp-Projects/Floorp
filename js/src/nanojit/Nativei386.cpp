@@ -38,6 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include "nanojit.h"
 
 #ifdef _MAC
 // for MakeDataExecutable
@@ -49,11 +50,10 @@
 #include <errno.h>
 #include <stdlib.h>
 #endif
-#include "nanojit.h"
 
 namespace nanojit
 {
-    #ifdef FEATURE_NANOJIT
+    #if defined FEATURE_NANOJIT && defined NANOJIT_IA32
 
     #ifdef NJ_VERBOSE
         const char *regNames[] = {
@@ -80,7 +80,7 @@ namespace nanojit
     void Assembler::nInit(AvmCore* core)
     {
         (void) core;
-        OSDep::getDate();
+        VMPI_getDate();
     }
 
     void Assembler::nBeginAssembly() {
@@ -192,8 +192,9 @@ namespace nanojit
         const int32_t pushsize = 4*istack + 8*fargs; // actual stack space used
 
 #if _MSC_VER
-        // msc is slack, and MIR doesn't do anything extra, so lets use this
-        // call-site alignment to at least have code size parity with MIR.
+        // msc only provides 4-byte alignment, anything more than 4 on windows
+        // x86-32 requires dynamic ESP alignment in prolog/epilog and static
+        // esp-alignment here.
         uint32_t align = 4;//NJ_ALIGN_STACK;
 #else
         uint32_t align = NJ_ALIGN_STACK;
@@ -409,6 +410,12 @@ namespace nanojit
             if (!i->getArIndex()) {
                 i->markAsClear();
             }
+            // compute position of argument relative to ebp.  higher argument
+            // numbers are at higher positive offsets.  the first abi_regcount
+            // arguments are in registers, rest on stack.  +8 accomodates the
+            // return address and saved ebp value.  assuming abi_regcount == 0:
+            //    low-addr  ebp
+            //    [frame...][saved-ebp][return-addr][arg0][arg1]...
             int d = (arg - abi_regcount) * sizeof(intptr_t) + 8;
             LD(r, d, FP);
         }
@@ -1394,10 +1401,9 @@ namespace nanojit
             if (lhs->isUnusedOrHasUnknownReg()) {
                 ra = findSpecificRegFor(lhs, rr);
             } else if ((rmask(lhs->getReg()) & XmmRegs) == 0) {
-                /* We need this case on AMD64, because it's possible that
-                 * an earlier instruction has done a quadword load and reserved a
-                 * GPR.  If so, ask for a new register.
-                 */
+                // We need this case on AMD64, because it's possible that
+                // an earlier instruction has done a quadword load and reserved a
+                // GPR.  If so, ask for a new register.
                 ra = findRegFor(lhs, XmmRegs);
             } else {
                 // lhs already has a register assigned but maybe not from the allow set
@@ -1710,8 +1716,7 @@ namespace nanojit
     )
 
     void Assembler::nativePageReset()
-    {
-    }
+    {}
 
     void Assembler::nativePageSetup()
     {

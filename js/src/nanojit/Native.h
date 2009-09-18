@@ -59,7 +59,7 @@
 #elif defined(NANOJIT_ARM)
 #include "NativeARM.h"
 #elif defined(NANOJIT_PPC)
-#include "NativePpc.h"
+#include "NativePPC.h"
 #elif defined(NANOJIT_SPARC)
 #include "NativeSparc.h"
 #elif defined(NANOJIT_X64)

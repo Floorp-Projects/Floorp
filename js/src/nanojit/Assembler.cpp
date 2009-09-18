@@ -95,7 +95,7 @@ namespace nanojit
      *
      *    - merging paths ( build a graph? ), possibly use external rep to drive codegen
      */
-    Assembler::Assembler(CodeAlloc& codeAlloc, Allocator& alloc, AvmCore *core, LogControl* logc)
+    Assembler::Assembler(CodeAlloc& codeAlloc, Allocator& alloc, AvmCore* core, LogControl* logc)
         : codeList(0)
         , alloc(alloc)
         , _codeAlloc(codeAlloc)
@@ -104,7 +104,9 @@ namespace nanojit
         , _labels(alloc)
         , config(core->config)
     {
+        VMPI_memset(&_stats, 0, sizeof(_stats));
         nInit(core);
+        (void)logc;
         verbose_only( _logc = logc; )
         verbose_only( _outputCache = 0; )
         verbose_only( outlineEOL[0] = '\0'; )
@@ -152,10 +154,10 @@ namespace nanojit
             Register r = nRegisterAllocFromSet(set);
             return r;
         }
+        counter_increment(steals);
 
         // nothing free, steal one
         // LSRA says pick the one with the furthest use
-        counter_increment(steals);
         LIns* vic = findVictim(allow);
         NanoAssert(vic);
 
@@ -204,7 +206,7 @@ namespace nanojit
         arReset();
     }
 
-#ifdef _DEBUG
+    #ifdef _DEBUG
     void Assembler::pageValidate()
     {
         if (error()) return;
@@ -212,10 +214,7 @@ namespace nanojit
         NanoAssertMsg(_inExit ? containsPtr(exitStart, exitEnd, _nIns) : containsPtr(codeStart, codeEnd, _nIns),
                      "Native instruction pointer overstep paging bounds; check overrideProtect for last instruction");
     }
-#endif
-
-#endif
-
+    #endif
 
     #ifdef _DEBUG
 
@@ -385,7 +384,7 @@ namespace nanojit
             // Existing reservation with a known register allocated, but
             // the register is not allowed.
             RegisterMask prefer = hint(ins, allow);
-#ifdef AVMPLUS_IA32
+#ifdef NANOJIT_IA32
             if (((rmask(r)&XmmRegs) && !(allow&XmmRegs)) ||
                 ((rmask(r)&x87Regs) && !(allow&x87Regs)))
             {
@@ -425,7 +424,6 @@ namespace nanojit
         }
         return r;
     }
-
 
     int Assembler::findMemFor(LIns *ins)
     {
@@ -783,7 +781,7 @@ namespace nanojit
         // save entry point pointers
         frag->fragEntry = fragEntry;
         frag->setCode(_nIns);
-        // PERFM_NVPROF("code", CodeAlloc::size(codeList));
+        PERFM_NVPROF("code", CodeAlloc::size(codeList));
 
 #ifdef NANOJIT_IA32
         NanoAssertMsgf(_fpuStkDepth == 0,"_fpuStkDepth %d\n",_fpuStkDepth);
@@ -876,8 +874,8 @@ namespace nanojit
                    reader->pos()->isop(LIR_ret) ||
                    reader->pos()->isop(LIR_fret) ||
                    reader->pos()->isop(LIR_xtbl) ||
-                   reader->pos()->isop(LIR_live) ||
-                   reader->pos()->isop(LIR_flive));
+                   reader->pos()->isop(LIR_flive) ||
+                   reader->pos()->isop(LIR_live));
 
         InsList pending_lives(alloc);
 
@@ -958,11 +956,12 @@ namespace nanojit
                     break;
                 }
 
-                case LIR_ret:
                 case LIR_fret:
+                case LIR_ret:  {
                     countlir_ret();
                     asm_ret(ins);
                     break;
+                }
 
                 // allocate some stack space.  the value of this instruction
                 // is the address of the stack space.
@@ -1340,7 +1339,7 @@ namespace nanojit
                     asm_call(ins);
                 }
             }
- 
+
 #ifdef NJ_VERBOSE
             // We have to do final LIR printing inside this loop.  If we do it
             // before this loop, we we end up printing a lot of dead LIR
@@ -1401,7 +1400,7 @@ namespace nanojit
         underrunProtect(si->count * sizeof(NIns*) + 20);
         _nIns = reinterpret_cast<NIns*>(uintptr_t(_nIns) & ~(sizeof(NIns*) - 1));
         for (uint32_t i = 0; i < si->count; ++i) {
-            _nIns = (NIns*) (((uint8*) _nIns) - sizeof(NIns*));
+            _nIns = (NIns*) (((intptr_t) _nIns) - sizeof(NIns*));
             *(NIns**) _nIns = target;
         }
         si->table = (NIns**) _nIns;
@@ -1453,6 +1452,9 @@ namespace nanojit
             else
                 findRegFor(op1, i->isop(LIR_flive) ? FpRegs : GpRegs);
         }
+
+        // clear this list since we have now dealt with those lifetimes.  extending
+        // their lifetimes again later (earlier in the code) serves no purpose.
         pending_lives.clear();
     }
 
@@ -1799,77 +1801,77 @@ namespace nanojit
         return a;
     }
 
-    #ifdef NJ_VERBOSE
-        // "outline" must be able to hold the output line in addition to the
-        // outlineEOL buffer, which is concatenated onto outline just before it
-        // is printed.
-        char Assembler::outline[8192];
-        char Assembler::outlineEOL[512];
+#ifdef NJ_VERBOSE
+    // "outline" must be able to hold the output line in addition to the
+    // outlineEOL buffer, which is concatenated onto outline just before it
+    // is printed.
+    char Assembler::outline[8192];
+    char Assembler::outlineEOL[512];
 
-        void Assembler::outputForEOL(const char* format, ...)
+    void Assembler::outputForEOL(const char* format, ...)
+    {
+        va_list args;
+        va_start(args, format);
+        outlineEOL[0] = '\0';
+        vsprintf(outlineEOL, format, args);
+    }
+
+    void Assembler::outputf(const char* format, ...)
+    {
+        va_list     args;
+        va_start(args, format);
+        outline[0] = '\0';
+
+        // Format the output string and remember the number of characters
+        // that were written.
+        uint32_t outline_len = vsprintf(outline, format, args);
+
+        // Add the EOL string to the output, ensuring that we leave enough
+        // space for the terminating NULL character, then reset it so it
+        // doesn't repeat on the next outputf.
+        VMPI_strncat(outline, outlineEOL, sizeof(outline)-(outline_len+1));
+        outlineEOL[0] = '\0';
+
+        output(outline);
+    }
+
+    void Assembler::output(const char* s)
+    {
+        if (_outputCache)
         {
-            va_list args;
-            va_start(args, format);
-            outlineEOL[0] = '\0';
-            vsprintf(outlineEOL, format, args);
+            char* str = new (alloc) char[VMPI_strlen(s)+1];
+            VMPI_strcpy(str, s);
+            _outputCache->insert(str);
         }
-
-        void Assembler::outputf(const char* format, ...)
+        else
         {
-            va_list     args;
-            va_start(args, format);
-            outline[0] = '\0';
-
-            // Format the output string and remember the number of characters
-            // that were written.
-            uint32_t outline_len = vsprintf(outline, format, args);
-
-            // Add the EOL string to the output, ensuring that we leave enough
-            // space for the terminating NULL character, then reset it so it
-            // doesn't repeat on the next outputf.
-            VMPI_strncat(outline, outlineEOL, sizeof(outline)-(outline_len+1));
-            outlineEOL[0] = '\0';
-
-            output(outline);
+            _logc->printf("%s\n", s);
         }
+    }
 
-        void Assembler::output(const char* s)
-        {
-            if (_outputCache)
-            {
-                char* str = new (alloc) char[VMPI_strlen(s)+1];
-                VMPI_strcpy(str, s);
-                _outputCache->insert(str);
-            }
-            else
-            {
-                _logc->printf("%s\n", s);
-            }
-        }
+    void Assembler::output_asm(const char* s)
+    {
+        if (!(_logc->lcbits & LC_Assembly))
+            return;
 
-        void Assembler::output_asm(const char* s)
-        {
-            if (!(_logc->lcbits & LC_Assembly))
-                return;
+        // Add the EOL string to the output, ensuring that we leave enough
+        // space for the terminating NULL character, then reset it so it
+        // doesn't repeat on the next outputf.
+        VMPI_strncat(outline, outlineEOL, sizeof(outline)-(strlen(outline)+1));
+        outlineEOL[0] = '\0';
 
-            // Add the EOL string to the output, ensuring that we leave enough
-            // space for the terminating NULL character, then reset it so it
-            // doesn't repeat on the next outputf.
-            VMPI_strncat(outline, outlineEOL, sizeof(outline)-(strlen(outline)+1));
-            outlineEOL[0] = '\0';
+        output(s);
+    }
 
-            output(s);
-        }
-
-        char* Assembler::outputAlign(char *s, int col)
-        {
-            int len = VMPI_strlen(s);
-            int add = ((col-len)>0) ? col-len : 1;
-            VMPI_memset(&s[len], ' ', add);
-            s[col] = '\0';
-            return &s[col];
-        }
-    #endif // verbose
+    char* Assembler::outputAlign(char *s, int col)
+    {
+        int len = (int)VMPI_strlen(s);
+        int add = ((col-len)>0) ? col-len : 1;
+        VMPI_memset(&s[len], ' ', add);
+        s[col] = '\0';
+        return &s[col];
+    }
+#endif // NJ_VERBOSE
 
     uint32_t CallInfo::_count_args(uint32_t mask) const
     {
@@ -1909,3 +1911,4 @@ namespace nanojit
         return labels.get(label);
     }
 }
+#endif /* FEATURE_NANOJIT */

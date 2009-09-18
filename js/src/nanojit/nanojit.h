@@ -40,7 +40,6 @@
 #ifndef __nanojit_h__
 #define __nanojit_h__
 
-#include <stddef.h>
 #include "avmplus.h"
 
 #ifdef FEATURE_NANOJIT
@@ -89,7 +88,6 @@ namespace nanojit
      * -------------------------------------------
      */
     typedef avmplus::AvmCore AvmCore;
-    typedef avmplus::OSDep OSDep;
 
     const uint32_t MAXARGS = 8;
 
@@ -139,10 +137,10 @@ namespace nanojit
 
 #ifdef AVMPLUS_VERBOSE
 #ifndef NJ_VERBOSE_DISABLED
-#define NJ_VERBOSE 1
+	#define NJ_VERBOSE 1
 #endif
 #ifndef NJ_PROFILE_DISABLED
-#define NJ_PROFILE 1
+	#define NJ_PROFILE 1
 #endif
 #endif
 
@@ -162,7 +160,7 @@ namespace nanojit
 #endif /*NJ_VERBOSE*/
 
 #ifdef _DEBUG
-    #define debug_only(x)            x
+    #define debug_only(x)           x
 #else
     #define debug_only(x)
 #endif /* DEBUG */
