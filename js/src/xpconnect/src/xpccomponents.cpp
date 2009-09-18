@@ -2737,7 +2737,7 @@ MethodWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
        return JS_TRUE;
 
     XPCWrappedNative *wn =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*rval));
+        XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*rval));
     if (!wn) {
         XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
         return JS_FALSE;
