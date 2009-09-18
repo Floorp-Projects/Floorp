@@ -523,7 +523,9 @@ nsBlockFrame::GetChildList(nsIAtom* aListName) const
     // XXXbz once we start using mFrames, or some other sane storage for our
     // in-flow kids, we could switch GetChildList to returning a |const
     // nsFrameList&|.
-    return (mLines.empty()) ? nsnull : mLines.front()->mFirstChild;
+    return mLines.empty() ? nsFrameList::EmptyList()
+                          : nsFrameList(mLines.front()->mFirstChild,
+                                        mLines.back()->LastChild());
   }
   else if (aListName == nsGkAtoms::overflowList) {
     nsLineList* overflowLines = GetOverflowLines();
@@ -539,20 +541,6 @@ nsBlockFrame::GetChildList(nsIAtom* aListName) const
     return (HaveOutsideBullet()) ? mBullet : nsnull;
   }
   return nsContainerFrame::GetChildList(aListName);
-}
-
-nsIFrame*
-nsBlockFrame::GetLastChild(nsIAtom* aListName) const
-{
-  if (aListName) {
-    return nsBlockFrameSuper::GetLastChild(aListName);
-  }
-
-  if (mLines.empty()) {
-    return nsnull;
-  }
-
-  return mLines.back()->LastChild();
 }
 
 #define NS_BLOCK_FRAME_OVERFLOW_OOF_LIST_INDEX  (NS_CONTAINER_LIST_COUNT_INCL_OC + 0)
@@ -1669,13 +1657,12 @@ nsBlockFrame::ReparentFloats(nsIFrame* aFirstFrame,
                              nsBlockFrame* aOldParent, PRBool aFromOverflow,
                              PRBool aReparentSiblings) {
   nsFrameList list;
-  nsIFrame* tail = nsnull;
-  aOldParent->CollectFloats(aFirstFrame, list, &tail, aFromOverflow, aReparentSiblings);
+  aOldParent->CollectFloats(aFirstFrame, list, aFromOverflow, aReparentSiblings);
   if (list.NotEmpty()) {
     for (nsIFrame* f = list.FirstChild(); f; f = f->GetNextSibling()) {
       ReparentFrame(f, aOldParent, this);
     }
-    mFloats.AppendFrames(nsnull, list.FirstChild());
+    mFloats.AppendFrames(nsnull, list);
   }
 }
 
@@ -4260,16 +4247,12 @@ nsBlockFrame::PushLines(nsBlockReflowState&  aState,
   if (overBegin != end_lines()) {
     // Remove floats in the lines from mFloats
     nsFrameList floats;
-    nsIFrame* tail = nsnull;
-    CollectFloats(overBegin->mFirstChild, floats, &tail, PR_FALSE, PR_TRUE);
+    CollectFloats(overBegin->mFirstChild, floats, PR_FALSE, PR_TRUE);
 
     if (floats.NotEmpty()) {
       // Push the floats onto the front of the overflow out-of-flows list
-      nsFrameList oofs = GetOverflowOutOfFlows();
-      if (oofs.NotEmpty()) {
-        floats.InsertFrames(nsnull, tail, oofs.FirstChild());
-      }
-      SetOverflowOutOfFlows(floats);
+      nsAutoOOFFrameList oofs(this);
+      oofs.mList.InsertFrames(nsnull, nsnull, floats);
     }
 
     // overflow lines can already exist in some cases, in particular,
@@ -4371,8 +4354,7 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
     nsAutoOOFFrameList oofs(this);
     if (oofs.mList.NotEmpty()) {
       // The overflow floats go after our regular floats
-      mFloats.AppendFrames(nsnull, oofs.mList.FirstChild());
-      oofs.mList.Clear();
+      mFloats.AppendFrames(nsnull, oofs.mList);
     }
   }
 
@@ -4572,15 +4554,6 @@ nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList)
 //////////////////////////////////////////////////////////////////////
 // Frame list manipulation routines
 
-nsIFrame*
-nsBlockFrame::LastChild()
-{
-  if (! mLines.empty()) {
-    return mLines.back()->LastChild();
-  }
-  return nsnull;
-}
-
 NS_IMETHODIMP
 nsBlockFrame::AppendFrames(nsIAtom*  aListName,
                            nsFrameList& aFrameList)
@@ -4603,11 +4576,7 @@ nsBlockFrame::AppendFrames(nsIAtom*  aListName,
   }
 
   // Find the proper last-child for where the append should go
-  nsIFrame* lastKid = nsnull;
-  nsLineBox* lastLine = mLines.empty() ? nsnull : mLines.back();
-  if (lastLine) {
-    lastKid = lastLine->LastChild();
-  }
+  nsIFrame* lastKid = mLines.empty() ? nsnull : mLines.back()->LastChild();
 
   // Add frames after the last child
 #ifdef NOISY_REFLOW_REASON
@@ -6601,10 +6570,10 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
 }
 
 // This is used to scan frames for any float placeholders, add their
-// floats to the list represented by aList and aTail, and remove the
+// floats to the list represented by aList, and remove the
 // floats from whatever list they might be in. We don't search descendants
 // that are float containing blocks. The floats must be children of 'this'.
-void nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList, nsIFrame** aTail,
+void nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
                                  PRBool aFromOverflow, PRBool aCollectSiblings) {
   while (aFrame) {
     // Don't descend into float containing blocks.
@@ -6623,17 +6592,16 @@ void nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList, nsIFrame*
         } else {
           mFloats.RemoveFrame(outOfFlowFrame);
         }
-        aList.InsertFrame(nsnull, *aTail, outOfFlowFrame);
-        *aTail = outOfFlowFrame;
+        aList.AppendFrame(nsnull, outOfFlowFrame);
       }
 
       CollectFloats(aFrame->GetFirstChild(nsnull), 
-                    aList, aTail, aFromOverflow, PR_TRUE);
+                    aList, aFromOverflow, PR_TRUE);
       // Note: Even though we're calling CollectFloats on aFrame's overflow
       // list, we'll pass down aFromOverflow unchanged because we're still
       // traversing the regular-children subtree of the 'this' frame.
       CollectFloats(aFrame->GetFirstChild(nsGkAtoms::overflowList), 
-                    aList, aTail, aFromOverflow, PR_TRUE);
+                    aList, aFromOverflow, PR_TRUE);
     }
     if (!aCollectSiblings)
       break;

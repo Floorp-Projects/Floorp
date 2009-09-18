@@ -324,26 +324,18 @@ nsTableFrame::SetInitialChildList(nsIAtom*        aListName,
   // XXXbz the below code is an icky cesspit that's only needed in its current
   // form for two reasons:
   // 1) Both rowgroups and column groups come in on the principal child list.
-  // 2) Getting the last frame of a frame list is slow.
-  nsIFrame *prevMainChild = nsnull;
-  nsIFrame *prevColGroupChild = nsnull;
-  while (aChildList.NotEmpty())
-  {
+  while (aChildList.NotEmpty()) {
     nsIFrame* childFrame = aChildList.FirstChild();
-    aChildList.RemoveFrame(childFrame);
+    aChildList.RemoveFirstChild();
     const nsStyleDisplay* childDisplay = childFrame->GetStyleDisplay();
 
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
-    {
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay) {
       NS_ASSERTION(nsGkAtoms::tableColGroupFrame == childFrame->GetType(),
                    "This is not a colgroup");
-      mColGroups.InsertFrame(nsnull, prevColGroupChild, childFrame);
-      prevColGroupChild = childFrame;
+      mColGroups.AppendFrame(nsnull, childFrame);
     }
-    else
-    { // row groups and unknown frames go on the main list for now
-      mFrames.InsertFrame(nsnull, prevMainChild, childFrame);
-      prevMainChild = childFrame;
+    else { // row groups and unknown frames go on the main list for now
+      mFrames.AppendFrame(nsnull, childFrame);
     }
   }
 
@@ -727,7 +719,7 @@ nsTableFrame::AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
   nsIPresShell *shell = PresContext()->PresShell();
 
   // Get the last col frame
-  nsFrameItems newColFrames;
+  nsFrameList newColFrames;
 
   PRInt32 startIndex = mColFrames.Length();
   PRInt32 lastIndex  = startIndex + aNumColsToAdd - 1; 
@@ -752,7 +744,7 @@ nsTableFrame::AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
     ((nsTableColFrame *) colFrame)->SetColType(aColType);
     colFrame->Init(iContent, aColGroupFrame, nsnull);
 
-    newColFrames.AddChild(colFrame);
+    newColFrames.AppendFrame(nsnull, colFrame);
   }
   nsFrameList& cols = aColGroupFrame->GetWritableChildList();
   nsIFrame* oldLastCol = cols.LastChild();
@@ -1960,7 +1952,6 @@ nsTableFrame::PushChildren(const FrameArray& aFrames,
 
   // extract the frames from the array into a sibling list
   nsFrameList frames;
-  nsIFrame* lastFrame = nsnull;
   PRUint32 childX;
   nsIFrame* prevSiblingHint = aFrames.SafeElementAt(aPushFrom - 1);
   for (childX = aPushFrom; childX < aFrames.Length(); ++childX) {
@@ -1973,8 +1964,7 @@ nsTableFrame::PushChildren(const FrameArray& aFrames,
     NS_ASSERTION(rgFrame, "Unexpected non-row-group frame");
     if (!rgFrame || !rgFrame->IsRepeatable()) {
       mFrames.RemoveFrame(f, prevSiblingHint);
-      frames.InsertFrame(nsnull, lastFrame, f);
-      lastFrame = f;
+      frames.AppendFrame(nsnull, f);
     }
   }
 

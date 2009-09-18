@@ -686,29 +686,31 @@ CleanupFrameReferences(nsFrameManager*  aFrameManager,
 
 // -----------------------------------------------------------
 
-nsFrameItems::nsFrameItems(nsIFrame* aFrame)
-  : nsFrameList(aFrame), lastChild(aFrame)
+// Structure used when constructing formatting object trees.
+struct nsFrameItems : public nsFrameList
 {
-}
+  // Appends the frame to the end of the list
+  void AddChild(nsIFrame* aChild);
+};
 
 void 
 nsFrameItems::AddChild(nsIFrame* aChild)
 {
-  // It'd be really nice if we could just InsertFrame(nsnull, lastChild,
-  // aChild) here, but some of our callers put frames that have different
+  NS_PRECONDITION(aChild, "nsFrameItems::AddChild");
+
+  // It'd be really nice if we could just AppendFrames(nsnull, aChild) here,
+  // but some of our callers put frames that have different
   // parents (caption, I'm looking at you) on the same framelist, and
   // nsFrameList asserts if you try to do that.
   if (IsEmpty()) {
-    nsFrameList::AppendFrames(nsnull, aChild);
+    SetFrames(aChild);
   }
-  else
-  {
-    NS_ASSERTION(aChild != lastChild,
+  else {
+    NS_ASSERTION(aChild != mLastChild,
                  "Same frame being added to frame list twice?");
-    lastChild->SetNextSibling(aChild);
+    mLastChild->SetNextSibling(aChild);
+    mLastChild = nsLayoutUtils::GetLastSibling(aChild);
   }
-  // if aChild has siblings, lastChild needs to be the last one
-  lastChild = nsLayoutUtils::GetLastSibling(aChild);
 }
 
 // -----------------------------------------------------------
@@ -1239,15 +1241,14 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
     // CompareTreePosition uses placeholder hierarchy for out of flow frames,
     // so this will make out-of-flows respect the ordering of placeholders,
     // which is great because it takes care of anonymous content.
-    nsIFrame* insertionPoint = nsnull;
     nsIFrame* firstNewFrame = aFrameItems.FirstChild();  
     if (!lastChild ||
         nsLayoutUtils::CompareTreePosition(lastChild, firstNewFrame, containingBlock) < 0) {
-      // no lastChild, or lastChild comes before the new children, so
-      // just insert after lastChild.
-      insertionPoint = lastChild;
+      // no lastChild, or lastChild comes before the new children, so just append
+      rv = containingBlock->AppendFrames(aChildListName, aFrameItems);
     } else {
       // try the other children
+      nsIFrame* insertionPoint = nsnull;
       for (nsIFrame* f = childList.FirstChild(); f != lastChild;
            f = f->GetNextSibling()) {
         PRInt32 compare =
@@ -1259,10 +1260,9 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
         }
         insertionPoint = f;
       }
+      rv = containingBlock->InsertFrames(aChildListName, insertionPoint,
+                                         aFrameItems);
     }
-
-    rv = containingBlock->InsertFrames(aChildListName, insertionPoint,
-                                       aFrameItems);
   }
 
   NS_POSTCONDITION(aFrameItems.IsEmpty(), "How did that happen?");
@@ -5749,10 +5749,10 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
   if (!nextSibling &&
       IsFrameSpecial(aParentFrame) &&
       !IsInlineFrame(aParentFrame) &&
-      IsInlineOutside(aFrameList.lastChild)) {
+      IsInlineOutside(aFrameList.LastChild())) {
     // We want to put some of the frames into the following inline frame.
     nsFrameList::FrameLinkEnumerator lastBlock = FindLastBlock(aFrameList);
-    nsFrameItems inlineKids = aFrameList.ExtractTail(lastBlock);
+    nsFrameList inlineKids = aFrameList.ExtractTail(lastBlock);
 
     NS_ASSERTION(inlineKids.NotEmpty(), "How did that happen?");
 
@@ -9693,7 +9693,7 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
     link.Next();
   }
 
-  nsFrameItems firstLineChildren = aFrameItems.ExtractHead(link);
+  nsFrameList firstLineChildren = aFrameItems.ExtractHead(link);
 
   if (firstLineChildren.IsEmpty()) {
     // Nothing is supposed to go into the first-line; nothing to do
@@ -10730,7 +10730,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // of the inline children that follow the final block child.
 
   // Grab the first inline's kids
-  nsFrameItems firstInlineKids = childItems.ExtractHead(firstBlockEnumerator);
+  nsFrameList firstInlineKids = childItems.ExtractHead(firstBlockEnumerator);
   newFrame->SetInitialChildList(nsnull, firstInlineKids);
                                              
   // The kids between the first and last block belong to an anonymous block
@@ -10761,7 +10761,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // Find the last block child which defines the end of our block kids and the
   // start of our trailing inline's kids
   nsFrameList::FrameLinkEnumerator lastBlock = FindLastBlock(childItems);
-  nsFrameItems blockKids = childItems.ExtractHead(lastBlock);
+  nsFrameList blockKids = childItems.ExtractHead(lastBlock);
 
   if (blockFrame->HasView() || newFrame->HasView()) {
     // Move the block's child frames into the new view
@@ -10843,7 +10843,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
 void
 nsCSSFrameConstructor::MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
                                                 nsIFrame* aExistingEndFrame,
-                                                nsFrameItems& aFramesToMove,
+                                                nsFrameList& aFramesToMove,
                                                 nsIFrame* aBlockPart,
                                                 nsFrameConstructorState* aTargetState)
 {
