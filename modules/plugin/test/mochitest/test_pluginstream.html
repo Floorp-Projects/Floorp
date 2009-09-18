@@ -1,0 +1,232 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=502091
+
+Adding a <meta> element by writing to innerHTML should work correctly.
+-->
+<head>
+  <title>NPAPI Stream Tests</title>
+  <script type="text/javascript" 
+          src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runNextTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=502091">
+  Mozilla Bug 502091</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<div id="test">
+<script class="testbody" type="text/javascript">
+function $(id) { return document.getElementById(id); }
+
+SimpleTest.waitForExplicitFinish();
+
+/**
+ * All of the following tests work on the same general principle:
+ * a stream is sent from the browser to the plugin by various means,
+ * and then the stream content is pushed back to the browser by the
+ * plugin by various other means and displayed in a frame.  The test
+ * passes if the frame content is the same as the contents of the file
+ * that was originally passed to the plugin.  Thus each test utilizes at
+ * least two streams: one from the browser to the plugin, and one from
+ * the plugin to the browser. If an error occurs in the plugin, it will 
+ * post the error message to the frame (if possible) instead of the 
+ * stream content.
+ */
+var tests = [
+  /**
+   * A stream is sent to the browser via NPP_NewStream, NP_NORMAL.
+   * The plugin reports that data can only be sent to it in 100-byte
+   * chunks.  When NPP_DestroyStream is called, the plugin sends the stream
+   * content back to the browser by passing it as a data: url to
+   * NPN_GetURL, using a frame, so that the stream content should 
+   * be displayed in the frame in the browser.
+   */
+  {
+    "src": "loremipsum.txt",
+    "streammode": "normal",
+    "streamchunksize": "100",
+    "frame": "testframe"
+  }, 
+  /**
+   * Same as above, but the plugin reports that data can only be sent to
+   * it in 1024-byte chunks, and the stream is initiated by a call to 
+   * NPN_GetURL.
+   */
+  {
+    "geturl": "loremipsum.txt",
+    "streammode": "normal",
+    "streamchunksize": "1024",
+    "frame": "testframe"
+  }, 
+  /**
+   * Similar to the above, except that the original stream is requested by
+   * the plugin using NPN_GetURLNotify, and the plugin does not send the
+   * stream back to the browser until NPP_URLNotify is called.
+   */
+  {
+    "geturlnotify": "loremipsum.txt",
+    "streammode": "normal",
+    "streamchunksize": "1024",
+    "frame": "testframe"
+  },
+  /**
+   * Similar to above, but NPP_NewStream sets to the stream mode
+   * to NP_ASFILEONLY, so the entire stream is written to a file
+   * and the file is read by the plugin when NPP_StreamAsFile is called.
+   */
+  {
+    "src": "loremipsum_file.txt",
+    "streammode": "asfileonly",
+    "frame": "testframe"
+  },
+  /**
+   * Similar to the above tests, but NPP_NewStream sets the stream mode
+   * to NP_ASFILE.  In this test, stream data is written in a series of
+   * NPP_Write calls, as per NP_NORMAL, and also written to a file whose
+   * path is passed to NPP_StreamAsFile.  The plugin compares the file
+   * and the stream to verify they're indentical, then passes the stream
+   * back to the browser via NPN_GetURL as above.
+   */
+  {
+    "src": "loremipsum_file.txt",
+    "streammode": "asfile",
+    "frame": "testframe"
+  },
+  /**
+   * In this test, a stream is sent to the plugin via NPP_NewStream, 
+   * NP_NORMAL.  When the stream is destroyed, the plugin posts the
+   * stream content to post.sjs via NPN_PostURL, with a frame specified
+   * to display the post's response.  Post.sjs just reflects
+   * the body of the post back in the HTTP response, so the original
+   * stream content should end up being displayed in the frame.   
+   */
+  {
+    "src": "loremipsum.txt",
+    "streammode": "normal",
+    "frame": "testframe",
+    "posturl": "post.sjs",
+    "postmode": "frame"
+  },
+  /**
+   * Same as above, except NULL is passed to NPN_PostURL as the frame 
+   * parameter, so the HTTP response to the post is passed to the plugin 
+   * via NPP_NewStream. Once this stream is received, it's displayed in a 
+   * frame in the browser via a call to NPN_GetURL.
+   */
+  {
+    "src": "loremipsum.txt",
+    "streammode": "normal",
+    "frame": "testframe",
+    "posturl": "post.sjs",
+    "postmode": "stream"
+  },
+  /**
+   * Tests a seekable stream.  Calls NPN_RequestRead with the specified
+   * range, and verifies that an NPP_Write call is made with the correct 
+   * parameters, including the buffer data for the byte range.  Once all 
+   * calls to NPP_Write have finished, the plugin calls NPN_DestroyStream 
+   * and then displays the entire stream's content in a browser frame via 
+   * NPN_GetURL.
+   */
+  {
+    "src": "loremipsum.txt",
+    "streammode": "seek",
+    "frame": "testframe",
+    "streamchunksize": "1024",
+    "range": "100,100",
+  },
+  /**
+   * Same as above except that the call to NPN_RequestRead contains
+   * a linked list of NPByteRange objects to specify multiple ranges.
+   */
+  /* test disabled as it current fails
+  {
+    "src": "loremipsum.txt",
+    "streammode": "seek",
+    "streamchunksize": "1024",
+    "frame": "testframe",
+    "range": "100,100;57,1054",
+  },
+  */
+];
+
+function iframeonload(evt) {
+  var contentLength = evt.target.contentDocument.body.innerHTML.length;
+  if (contentLength > 0) {
+    var req = new XMLHttpRequest();
+    ok(evt.target.getAttribute("testsrc").length > 0, 
+        "no 'testsrc' attribute on iframe");
+    req.open("GET", evt.target.getAttribute("testsrc"), false);
+    req.overrideMimeType("text/plain; charset=x-user-defined");
+    req.send(null);
+    is(req.status, 200, "bad XMLHttpRequest status");
+    var content = req.responseText.replace(/\r\n/g, "\n");
+    if (evt.target.contentDocument.body.innerHTML != content) {
+      is(evt.target.contentDocument.body.innerHTML, content, 
+          "content doesn't match");
+    }
+    gTestWindow.close();
+    setTimeout(runNextTest, 10);
+  }
+}
+
+var index = 0;
+var gTestWindow;
+function runNextTest() {
+  if (index == tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  gTestWindow = window.open("plugin_window.html", 
+                            "", 
+                            "width=620,height=320");
+}
+
+function continueTest() {
+  var test = tests[index];
+  
+  var p = gTestWindow.document.createElement("p");
+  p.innerHTML = "Plugin Stream Test " + index;
+  gTestWindow.document.getElementById("test").appendChild(p);
+  
+  if (test.frame) {
+    var iframe = gTestWindow.document.createElement("iframe");
+    iframe.name = test.frame;
+    iframe.onload = iframeonload;
+    if (test.src)
+      iframe.setAttribute("testsrc", test.src);
+    else if (test.geturl)
+      iframe.setAttribute("testsrc", test.geturl);
+    else if (test.geturlnotify)
+      iframe.setAttribute("testsrc", test.geturlnotify);
+    gTestWindow.document.getElementById("test").appendChild(iframe);
+  }
+  
+  var embed = gTestWindow.document.createElement("embed");
+  embed.setAttribute("id", "embedtest");
+  embed.setAttribute("style", "width: 400px; height: 100px;");
+  embed.setAttribute("type", "application/x-test");
+  for (var name in test) {
+    embed.setAttribute(name, test[name]);
+  }
+  gTestWindow.document.getElementById("test").appendChild(embed);
+  
+  gTestWindow.document.getElementById("test")
+                      .appendChild(document.createElement("br"));
+  
+  index++; 
+}
+
+</script>
+</div>
+</body>
+</html>
+
