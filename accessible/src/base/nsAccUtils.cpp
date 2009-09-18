@@ -56,6 +56,7 @@
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsWhitespaceTokenizer.h"
+#include "nsComponentManagerUtils.h"
 
 void
 nsAccUtils::GetAccAttr(nsIPersistentProperties *aAttributes,
@@ -478,6 +479,25 @@ nsAccUtils::GetARIATreeItemParent(nsIAccessible *aStartTreeItem,
   }
 }
 
+PRBool
+nsAccUtils::IsARIASelected(nsIAccessible *aAccessible)
+{
+  nsRefPtr<nsAccessible> acc = nsAccUtils::QueryAccessible(aAccessible);
+  nsCOMPtr<nsIDOMNode> node;
+  acc->GetDOMNode(getter_AddRefs(node));
+  NS_ASSERTION(node, "No DOM node!");
+
+  if (node) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+    if (content->AttrValueIs(kNameSpaceID_None,
+                             nsAccessibilityAtoms::aria_selected,
+                             nsAccessibilityAtoms::_true, eCaseMatters))
+      return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
 already_AddRefed<nsIAccessibleText>
 nsAccUtils::GetTextAccessibleFromSelection(nsISelection *aSelection,
                                            nsIDOMNode **aNode)
@@ -648,7 +668,10 @@ nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
 {
   nsIContent *content = nsCoreUtils::GetRoleContent(aNode);
   nsAutoString roleString;
-  if (!content || !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, roleString)) {
+  if (!content ||
+      !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, roleString) ||
+      roleString.IsEmpty()) {
+    // We treat role="" as if the role attribute is absent (per aria spec:8.1.1)
     return nsnull;
   }
 
@@ -674,7 +697,7 @@ nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
     }
   }
 
-  // Always use some entry if there is a role string
+  // Always use some entry if there is a non-empty role string
   // To ensure an accessible object is created
   return &nsARIAMap::gLandmarkRoleMap;
 }
@@ -706,17 +729,19 @@ nsAccUtils::GetAttributeCharacteristics(nsIAtom* aAtom)
     return 0;
 }
 
-void
+PRBool
 nsAccUtils::GetLiveAttrValue(PRUint32 aRule, nsAString& aValue)
 {
   switch (aRule) {
     case eOffLiveAttr:
       aValue = NS_LITERAL_STRING("off");
-      break;
+      return PR_TRUE;
     case ePoliteLiveAttr:
       aValue = NS_LITERAL_STRING("polite");
-      break;
+      return PR_TRUE;
   }
+
+  return PR_FALSE;
 }
 
 already_AddRefed<nsAccessible>
@@ -906,4 +931,59 @@ nsAccUtils::GetMultiSelectFor(nsIDOMNode *aNode)
   nsIAccessible *returnAccessible = nsnull;
   accessible.swap(returnAccessible);
   return returnAccessible;
+}
+
+nsresult
+nsAccUtils::GetHeaderCellsFor(nsIAccessibleTable *aTable,
+                              nsIAccessibleTableCell *aCell,
+                              PRInt32 aRowOrColHeaderCells, nsIArray **aCells)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMutableArray> cells = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 rowIdx = -1;
+  rv = aCell->GetRowIndex(&rowIdx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 colIdx = -1;
+  rv = aCell->GetColumnIndex(&colIdx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool moveToLeft = aRowOrColHeaderCells == eRowHeaderCells;
+
+  // Move to the left or top to find row header cells or column header cells.
+  PRInt32 index = (moveToLeft ? colIdx : rowIdx) - 1;
+  for (; index >= 0; index--) {
+    PRInt32 curRowIdx = moveToLeft ? rowIdx : index;
+    PRInt32 curColIdx = moveToLeft ? index : colIdx;
+
+    nsCOMPtr<nsIAccessible> cell;
+    rv = aTable->GetCellAt(curRowIdx, curColIdx, getter_AddRefs(cell));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIAccessibleTableCell> tableCellAcc =
+      do_QueryInterface(cell);
+
+    PRInt32 origIdx = 1;
+    if (moveToLeft)
+      rv = tableCellAcc->GetColumnIndex(&origIdx);
+    else
+      rv = tableCellAcc->GetRowIndex(&origIdx);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (origIdx == index) {
+      // Append original header cells only.
+      PRUint32 role = Role(cell);
+      PRBool isHeader = moveToLeft ?
+        role == nsIAccessibleRole::ROLE_ROWHEADER :
+        role == nsIAccessibleRole::ROLE_COLUMNHEADER;
+
+      if (isHeader)
+        cells->AppendElement(cell, PR_FALSE);
+    }
+  }
+
+  NS_ADDREF(*aCells = cells);
+  return NS_OK;
 }

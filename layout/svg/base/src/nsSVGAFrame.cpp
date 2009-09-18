@@ -60,6 +60,8 @@ protected:
     nsSVGAFrameBase(aContext) {}
 
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
 #ifdef DEBUG
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -102,6 +104,8 @@ NS_NewSVGAFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsSVGAFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGAFrame)
 
 //----------------------------------------------------------------------
 // nsIFrame methods

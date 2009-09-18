@@ -172,16 +172,19 @@ function test()
       if (aTopic != DLMGR_UI_DONE)
         return;
 
-      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.focus();
-      let doc = win.document;
-      dm.addListener(new bug413985obs(win));
-
-      let dl = addDownload();
-      // we need to focus the download as well
-      doc.getElementById("downloadView").selectedIndex = 0;
-      os.removeObserver(testObs, DLMGR_UI_DONE);
+      SimpleTest.waitForFocus(function () { continueTest(aSubject) }, aSubject);
     }
+  };
+
+  var continueTest = function(win)
+  {
+    let doc = win.document;
+    dm.addListener(new bug413985obs(win));
+
+    let dl = addDownload();
+    // we need to focus the download as well
+    doc.getElementById("downloadView").selectedIndex = 0;
+    os.removeObserver(testObs, DLMGR_UI_DONE);
   };
 
   // Register with the observer service

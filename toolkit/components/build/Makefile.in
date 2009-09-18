@@ -56,9 +56,6 @@ DEFINES += -DALERTS_SERVICE
 endif
 
 
-ifdef ALERTS_SERVICE
-REQUIRES	+= alerts
-endif
 
 EXPORTS = nsToolkitCompsCID.h
 
@@ -90,7 +87,6 @@ SHARED_LIBRARY_LIBS += ../parentalcontrols/src/$(LIB_PREFIX)parentalcontrols_s.$
 LOCAL_INCLUDES += \
 	-I$(srcdir)/../parentalcontrols/src \
 	$(NULL)
-REQUIRES += parentalcontrols
 endif
 endif
 
@@ -109,7 +105,6 @@ endif
 ifdef MOZ_URL_CLASSIFIER
 SHARED_LIBRARY_LIBS += ../url-classifier/src/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX)
 EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
-REQUIRES += url-classifier
 endif
 
 ifdef MOZ_FEEDS

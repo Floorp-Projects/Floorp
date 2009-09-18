@@ -3,6 +3,7 @@
 notification {
   background-color: InfoBackground;
   color: InfoText;
+  text-shadow: none;
 }
 
 notification[type="info"] {

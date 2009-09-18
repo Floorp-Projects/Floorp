@@ -139,8 +139,8 @@ private:
 class nsTableFrame : public nsHTMLContainerFrame, public nsITableLayout
 {
 public:
-
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   /** nsTableOuterFrame has intimate knowledge of the inner table frame */
   friend class nsTableOuterFrame;
@@ -276,7 +276,7 @@ public:
    */
   void PaintTableBorderBackground(nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect,
-                                  nsPoint aPt);
+                                  nsPoint aPt, PRUint32 aBGPaintFlags);
 
   /** Get the outer half (i.e., the part outside the height and width of
    *  the table) of the largest segment (?) of border-collapsed border on

@@ -1171,6 +1171,29 @@ nsGenericDOMDataNode::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   return NS_OK;
 }
 
+#ifdef MOZ_SMIL
+nsresult
+nsGenericDOMDataNode::GetSMILOverrideStyle(nsIDOMCSSStyleDeclaration** aStyle)
+{
+  *aStyle = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsICSSStyleRule*
+nsGenericDOMDataNode::GetSMILOverrideStyleRule()
+{
+  return nsnull;
+}
+
+nsresult
+nsGenericDOMDataNode::SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
+                                               PRBool aNotify)
+{
+  NS_NOTREACHED("How come we're setting SMILOverrideStyle on a non-element?");
+  return NS_ERROR_UNEXPECTED;
+}
+#endif // MOZ_SMIL
+
 nsICSSStyleRule*
 nsGenericDOMDataNode::GetInlineStyleRule()
 {

@@ -103,7 +103,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/src/jsurl/$(LIB_PREFIX)jsurl_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/storage/$(LIB_PREFIX)jsdomstorage_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/offline/$(LIB_PREFIX)jsdomoffline_s.$(LIB_SUFFIX) \
- 	$(DEPTH)/dom/src/geolocation/$(LIB_PREFIX)jsdomgeolocation_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/src/geolocation/$(LIB_PREFIX)jsdomgeolocation_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/threads/$(LIB_PREFIX)domthreads_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/text/$(LIB_PREFIX)texteditor_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/base/$(LIB_PREFIX)editorbase_s.$(LIB_SUFFIX) \
@@ -160,9 +160,6 @@ ifndef MOZ_NO_INSPECTOR_APIS
 LOCAL_INCLUDES  += \
       -I$(srcdir)/../inspector/src \
       $(NULL)
-REQUIRES += \
-      inspector \
-      $(NULL)
 SHARED_LIBRARY_LIBS += ../inspector/src/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX)
 else
 DEFINES += -DMOZ_NO_INSPECTOR_APIS
@@ -204,10 +201,6 @@ SHARED_LIBRARY_LIBS += \
 	$(NULL)
 endif
 
-ifdef MOZ_PERF_METRICS
-SHARED_LIBRARY_LIBS += $(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX)
-endif
-
 ifdef ENABLE_EDITOR_API_LOG
 DEFINES += -DENABLE_EDITOR_API_LOG
 endif
@@ -235,7 +228,13 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 
 ifdef MOZ_ENABLE_CANVAS3D
-EXTRA_DSO_LDOPTS += -framework OpenGL
+OS_LIBS += -framework OpenGL
+endif
+endif
+
+ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
+ifdef MOZ_ENABLE_CANVAS3D
+OS_LIBS += opengl32.lib
 endif
 endif
 

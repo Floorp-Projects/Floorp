@@ -44,7 +44,11 @@ include $(DEPTH)/config/autoconf.mk
 MODULE        = update
 XPIDL_MODULE  = update
 
-XPIDLSRCS = nsIUpdateService.idl
+XPIDLSRCS = nsIUpdateTimerManager.idl
+
+ifdef MOZ_UPDATER
+XPIDLSRCS += nsIUpdateService.idl
+endif
 
 include $(topsrcdir)/config/rules.mk
 

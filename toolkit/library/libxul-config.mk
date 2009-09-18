@@ -115,7 +115,6 @@ STATIC_LIBS += \
 	gkgfx \
 	$(NULL)
 
-#ifndef MOZ_EMBEDDING_LEVEL_DEFAULT
 ifndef WINCE
 ifdef MOZ_XPINSTALL
 STATIC_LIBS += \
@@ -123,7 +122,6 @@ STATIC_LIBS += \
 	$(NULL)
 endif
 endif
-#endif
 
 # component libraries
 COMPONENT_LIBS += \
@@ -197,10 +195,6 @@ ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 COMPONENT_LIBS += \
 	windowsproxy \
 	$(NULL)
-endif
-
-ifdef MOZ_PERF_METRICS
-EXTRA_DSO_LIBS  += mozutil_s
 endif
 
 ifdef MOZ_XPINSTALL
@@ -374,10 +368,6 @@ endif
 
 ifneq (,$(filter layout-debug,$(MOZ_EXTENSIONS)))
 COMPONENT_LIBS += gkdebug
-endif
-
-ifdef GC_LEAK_DETECTOR
-EXTRA_DSO_LIBS += boehm
 endif
 
 ifdef MOZ_ENABLE_CANVAS3D

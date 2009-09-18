@@ -44,6 +44,10 @@
   height: 16px;
 }
 
+.fileFieldIcon[disabled="true"] {
+  opacity: 0.5;
+}
+
 filefield {
   margin: 4px;
   -moz-margin-start: 27px;

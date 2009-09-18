@@ -177,8 +177,31 @@ void VMPI_setPageProtection(void *address,
 #endif // WIN32
 
 
+#ifdef WINCE
 
-#ifdef WIN32
+// Due to the per-process heap slots on Windows Mobile, we can often run in to OOM
+// situations.  jemalloc has worked around this problem, and so we use it here.
+// Using posix_memalign (or other malloc)functions) here only works because the OS
+// and hardware doesn't check for the execute bit being set.
+
+#ifndef MOZ_MEMORY
+#error MOZ_MEMORY required for building on WINCE
+#endif
+
+void*
+nanojit::CodeAlloc::allocCodeChunk(size_t nbytes) {
+    void * buffer;
+    posix_memalign(&buffer, 4096, nbytes);
+    return buffer;
+}
+
+void
+nanojit::CodeAlloc::freeCodeChunk(void *p, size_t nbytes) {
+    ::free(p);
+}
+
+#elif defined(WIN32)
+
 void*
 nanojit::CodeAlloc::allocCodeChunk(size_t nbytes) {
     return VirtualAlloc(NULL,

@@ -73,7 +73,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIsAtRootOfPseudoStackingContext(PR_FALSE),
       mPaintAllFrames(PR_FALSE),
       mAccurateVisibleRegions(PR_FALSE),
-      mInTransform(PR_FALSE) {
+      mInTransform(PR_FALSE),
+      mSyncDecodeImages(PR_FALSE) {
   PL_InitArenaPool(&mPool, "displayListArena", 1024, sizeof(void*)-1);
 
   nsPresContext* pc = aReferenceFrame->PresContext();
@@ -154,6 +155,15 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
 
   PL_FreeArenaPool(&mPool);
   PL_FinishArenaPool(&mPool);
+}
+
+PRUint32
+nsDisplayListBuilder::GetBackgroundPaintFlags() {
+  PRUint32 flags = 0;
+  if (mSyncDecodeImages) {
+    flags |= nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES;
+  }
+  return flags;
 }
 
 void
@@ -426,9 +436,10 @@ nsIFrame* nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
 
     if (item->GetBounds(aBuilder).Contains(aPt)) {
       nsIFrame* f = item->HitTest(aBuilder, aPt, aState);
-      // Handle the XUL 'mousethrough' feature.
+      // Handle the XUL 'mousethrough' feature and 'pointer-events'.
       if (f) {
-        if (!f->GetMouseThrough()) {
+        if (!f->GetMouseThrough() &&
+            f->GetStyleVisibility()->mPointerEvents != NS_STYLE_POINTER_EVENTS_NONE) {
           aState->mItemBuffer.SetLength(itemBufferStart);
           return f;
         }
@@ -567,17 +578,17 @@ static PRBool RoundedRectContainsRect(const nsRect& aRoundedRect,
   // rectFullHeight and rectFullWidth together will approximately contain
   // the total area of the frame minus the rounded corners.
   nsRect rectFullHeight = aRoundedRect;
-  nscoord xDiff = PR_MAX(aRadii[NS_CORNER_TOP_LEFT_X], aRadii[NS_CORNER_BOTTOM_LEFT_X]);
+  nscoord xDiff = NS_MAX(aRadii[NS_CORNER_TOP_LEFT_X], aRadii[NS_CORNER_BOTTOM_LEFT_X]);
   rectFullHeight.x += xDiff;
-  rectFullHeight.width -= PR_MAX(aRadii[NS_CORNER_TOP_RIGHT_X],
+  rectFullHeight.width -= NS_MAX(aRadii[NS_CORNER_TOP_RIGHT_X],
                                  aRadii[NS_CORNER_BOTTOM_RIGHT_X]) + xDiff;
   if (rectFullHeight.Contains(aContainedRect))
     return PR_TRUE;
 
   nsRect rectFullWidth = aRoundedRect;
-  nscoord yDiff = PR_MAX(aRadii[NS_CORNER_TOP_LEFT_Y], aRadii[NS_CORNER_TOP_RIGHT_Y]);
+  nscoord yDiff = NS_MAX(aRadii[NS_CORNER_TOP_LEFT_Y], aRadii[NS_CORNER_TOP_RIGHT_Y]);
   rectFullWidth.y += yDiff;
-  rectFullWidth.height -= PR_MAX(aRadii[NS_CORNER_BOTTOM_LEFT_Y],
+  rectFullWidth.height -= NS_MAX(aRadii[NS_CORNER_BOTTOM_LEFT_Y],
                                  aRadii[NS_CORNER_BOTTOM_RIGHT_Y]) + yDiff;
   if (rectFullWidth.Contains(aContainedRect))
     return PR_TRUE;
@@ -659,11 +670,11 @@ void
 nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
-  PRUint32 flags = 0;
+  PRUint32 flags = aBuilder->GetBackgroundPaintFlags();
   nsDisplayItem* nextItem = GetAbove();
   if (nextItem && nextItem->GetUnderlyingFrame() == mFrame &&
       nextItem->GetType() == TYPE_BORDER) {
-    flags |= nsCSSRendering::PAINT_WILL_PAINT_BORDER;
+    flags |= nsCSSRendering::PAINTBG_WILL_PAINT_BORDER;
   }
   nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
                                   aDirtyRect, nsRect(offset, mFrame->GetSize()),

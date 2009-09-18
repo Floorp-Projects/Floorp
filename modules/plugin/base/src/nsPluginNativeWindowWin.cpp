@@ -58,6 +58,15 @@
 #include "nsAutoPtr.h"
 #include "nsTWeakRef.h"
 
+#define NP_POPUP_API_VERSION 16
+
+#define nsMajorVersion(v)       (((PRInt32)(v) >> 16) & 0xffff)
+#define nsMinorVersion(v)       ((PRInt32)(v) & 0xffff)
+#define versionOK(suppliedV, requiredV)                   \
+  (nsMajorVersion(suppliedV) == nsMajorVersion(requiredV) \
+   && nsMinorVersion(suppliedV) >= nsMinorVersion(requiredV))
+
+
 #define NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION TEXT("MozillaPluginWindowPropertyAssociation")
 #define NS_PLUGIN_CUSTOM_MSG_ID TEXT("MozFlashUserRelay")
 #define WM_USER_FLASH WM_USER+1
@@ -345,7 +354,7 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   if (enablePopups && inst) {
     PRUint16 apiVersion;
     if (NS_SUCCEEDED(inst->GetPluginAPIVersion(&apiVersion)) &&
-        !nsVersionOK(apiVersion, NP_POPUP_API_VERSION)) {
+        !versionOK(apiVersion, NP_POPUP_API_VERSION)) {
       inst->PushPopupsEnabledState(PR_TRUE);
     }
   }
@@ -521,7 +530,7 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
 
 nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
 {
-  if (type != nsPluginWindowType_Window)
+  if (type != NPWindowTypeWindow)
     return NS_ERROR_FAILURE;
 
   HWND hWnd = (HWND)window;

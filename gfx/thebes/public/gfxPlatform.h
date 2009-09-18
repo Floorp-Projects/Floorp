@@ -211,15 +211,15 @@ public:
 
     /**
      * Activate a platform font.  (Needed to support @font-face src url().)
-     * aFontData must persist as long as a reference is held to aLoader.
+     * aFontData is a NS_Malloc'ed block that must be freed by this function
+     * (or responsibility passed on) when it is no longer needed; the caller
+     * will NOT free it.
      * Ownership of the returned gfxFontEntry is passed to the caller,
      * who must either AddRef() or delete.
      */
     virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                           nsISupports *aLoader,
                                            const PRUint8 *aFontData,
-                                           PRUint32 aLength)
-    { return nsnull; }
+                                           PRUint32 aLength);
 
     /**
      * Whether to allow downloadable fonts via @font-face rules
@@ -263,7 +263,7 @@ public:
      * Determines the rendering intent for color management.
      *
      * If the value in the pref gfx.color_management.rendering_intent is a
-     * valid rendering intent as defined in modules/lcms/include/lcms.h, that
+     * valid rendering intent as defined in gfx/qcms/qcms.h, that
      * value is returned. Otherwise, -1 is returned and the embedded intent
      * should be used.
      *

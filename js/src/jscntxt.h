@@ -59,8 +59,6 @@
 #include "jsarray.h"
 #include "jstask.h"
 
-JS_BEGIN_EXTERN_C
-
 /*
  * js_GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
  * given pc in a script. We use the script->code pointer to tag the cache,
@@ -102,8 +100,16 @@ namespace nanojit {
 #ifdef DEBUG
     class LabelMap;
 #endif
-    extern "C++" { template<typename K, typename V, typename H> class HashMap; }
+    extern "C++" {
+        template<typename K> class DefaultHash;
+        template<typename K, typename V, typename H> class HashMap;
+        template<typename T> class Seq;
+    }
 }
+#if defined(JS_JIT_SPEW) || defined(DEBUG)
+struct FragPI;
+typedef nanojit::HashMap<uint32, FragPI, nanojit::DefaultHash<uint32> > FragStatsMap;
+#endif
 class TraceRecorder;
 class VMAllocator;
 extern "C++" { template<typename T> class Queue; }
@@ -149,10 +155,11 @@ struct JSTraceMonitor {
      */
     JSContext               *tracecx;
 
-    CLS(nanojit::LirBuffer) lirbuf;
     CLS(VMAllocator)        allocator;   // A chunk allocator for LIR.
     CLS(nanojit::CodeAlloc) codeAlloc;   // A general allocator for native code.
     CLS(nanojit::Assembler) assembler;
+    CLS(nanojit::LirBuffer) lirbuf;
+    CLS(nanojit::LirBuffer) reLirBuf;
 #ifdef DEBUG
     CLS(nanojit::LabelMap)  labels;
 #endif
@@ -185,20 +192,25 @@ struct JSTraceMonitor {
     JSBool                  useReservedObjects;
     JSObject                *reservedObjects;
 
-    /* Parts for the regular expression compiler. This is logically
-     * a distinct compiler but needs to be managed in exactly the same
-     * way as the trace compiler. */
-    CLS(VMAllocator)        reAllocator;
-    CLS(nanojit::CodeAlloc) reCodeAlloc;
-    CLS(nanojit::Assembler) reAssembler;
-    CLS(nanojit::LirBuffer) reLirBuf;
+    /*
+     * Fragment map for the regular expression compiler.
+     */
     CLS(REHashMap)          reFragments;
-#ifdef DEBUG
-    CLS(nanojit::LabelMap)  reLabels;
-#endif
 
     /* Keep a list of recorders we need to abort on cache flush. */
     CLS(TraceRecorder)      abortStack;
+
+#ifdef DEBUG
+    /* Fields needed for fragment/guard profiling. */
+    CLS(nanojit::Seq<nanojit::Fragment*>) branches;
+    uint32                  lastFragID;
+    /*
+     * profAlloc has a lifetime which spans exactly from js_InitJIT to
+     * js_FinishJIT.
+     */
+    CLS(VMAllocator)        profAlloc;
+    CLS(FragStatsMap)       profTab;
+#endif
 
     /* Flush the JIT cache. */
     void flush();
@@ -487,12 +499,7 @@ struct JSRuntime {
     uint32              deflatedStringCacheBytes;
 #endif
 
-    /*
-     * Empty and unit-length strings held for use by this runtime's contexts.
-     * The unitStrings array and its elements are created on demand.
-     */
     JSString            *emptyString;
-    JSString            **unitStrings;
 
     /*
      * Builtin functions, lazily created and held for use by the trace recorder.
@@ -852,7 +859,7 @@ typedef struct JSLocalRootStack {
  * the following constants:
  */
 #define JSTVU_SINGLE        (-1)    /* u.value or u.<gcthing> is single jsval
-                                       or GC-thing */
+                                       or non-JSString GC-thing pointer */
 #define JSTVU_TRACE         (-2)    /* u.trace is a hook to trace a custom
                                      * structure */
 #define JSTVU_SPROP         (-3)    /* u.sprop roots property tree node */
@@ -861,14 +868,18 @@ typedef struct JSLocalRootStack {
 #define JSTVU_SCRIPT        (-6)    /* u.script roots JSScript* */
 
 /*
- * Here single JSTVU_SINGLE covers both jsval and pointers to any GC-thing via
- * reinterpreting the thing as JSVAL_OBJECT. It works because the GC-thing is
- * aligned on a 0 mod 8 boundary, and object has the 0 jsval tag. So any
- * GC-thing may be tagged as if it were an object and untagged, if it's then
- * used only as an opaque pointer until discriminated by other means than tag
- * bits. This is how, for example, js_GetGCThingTraceKind uses its |thing|
- * parameter -- it consults GC-thing flags stored separately from the thing to
- * decide the kind of thing.
+ * Here single JSTVU_SINGLE covers both jsval and pointers to almost (see note
+ * below) any GC-thing via reinterpreting the thing as JSVAL_OBJECT. This works
+ * because the GC-thing is aligned on a 0 mod 8 boundary, and object has the 0
+ * jsval tag. So any GC-heap-allocated thing pointer may be tagged as if it
+ * were an object and untagged, if it's then used only as an opaque pointer
+ * until discriminated by other means than tag bits. This is how, for example,
+ * js_GetGCThingTraceKind uses its |thing| parameter -- it consults GC-thing
+ * flags stored separately from the thing to decide the kind of thing.
+ *
+ * Note well that JSStrings may be statically allocated (see the intStringTable
+ * and unitStringTable static arrays), so this hack does not work for arbitrary
+ * GC-thing pointers.
  */
 #define JS_PUSH_TEMP_ROOT_COMMON(cx,x,tvr,cnt,kind)                           \
     JS_BEGIN_MACRO                                                            \
@@ -898,7 +909,7 @@ typedef struct JSLocalRootStack {
     JS_PUSH_TEMP_ROOT_COMMON(cx, obj, tvr, JSTVU_SINGLE, object)
 
 #define JS_PUSH_TEMP_ROOT_STRING(cx,str,tvr)                                  \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, str, tvr, JSTVU_SINGLE, string)
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, str ? STRING_TO_JSVAL(str) : JSVAL_NULL, tvr)
 
 #define JS_PUSH_TEMP_ROOT_XML(cx,xml_,tvr)                                    \
     JS_PUSH_TEMP_ROOT_COMMON(cx, xml_, tvr, JSTVU_SINGLE, xml)
@@ -988,7 +999,9 @@ struct JSContext {
     size_t              scriptStackQuota;
 
     /* Data shared by threads in an address space. */
-    JSRuntime           *runtime;
+    JSRuntime * const   runtime;
+
+    explicit JSContext(JSRuntime *rt) : runtime(rt) {}
 
     /* Stack arena pool and frame pointer register. */
     JS_REQUIRES_STACK
@@ -1083,10 +1096,6 @@ struct JSContext {
      */
     InterpState         *interpState;
     VMSideExit          *bailExit;
-
-    /* Used when calling natives from trace to root the vp vector. */
-    uintN               nativeVpLen;
-    jsval               *nativeVp;
 #endif
 
 #ifdef JS_THREADSAFE
@@ -1169,6 +1178,46 @@ struct JSContext {
         runtime->free(p);
     }
 #endif
+
+    /*
+     * In the common case that we'd like to allocate the memory for an object
+     * with cx->malloc/free, we cannot use overloaded C++ operators (no
+     * placement delete).  Factor the common workaround into one place.
+     */
+#define CREATE_BODY(parms)                                                    \
+    void *memory = this->malloc(sizeof(T));                                   \
+    if (!memory) {                                                            \
+        JS_ReportOutOfMemory(this);                                           \
+        return NULL;                                                          \
+    }                                                                         \
+    return new(memory) T parms;
+
+    template <class T>
+    JS_ALWAYS_INLINE T *create() {
+        CREATE_BODY(())
+    }
+
+    template <class T, class P1>
+    JS_ALWAYS_INLINE T *create(const P1 &p1) {
+        CREATE_BODY((p1))
+    }
+
+    template <class T, class P1, class P2>
+    JS_ALWAYS_INLINE T *create(const P1 &p1, const P2 &p2) {
+        CREATE_BODY((p1, p2))
+    }
+
+    template <class T, class P1, class P2, class P3>
+    JS_ALWAYS_INLINE T *create(const P1 &p1, const P2 &p2, const P3 &p3) {
+        CREATE_BODY((p1, p2, p3))
+    }
+#undef CREATE_BODY
+
+    template <class T>
+    JS_ALWAYS_INLINE void destroy(T *p) {
+        p->~T();
+        this->free(p);
+    }
 };
 
 #ifdef JS_THREADSAFE
@@ -1675,7 +1724,5 @@ js_RegenerateShapeForGC(JSContext *cx)
     cx->runtime->shapeGen = shape;
     return shape;
 }
-
-JS_END_EXTERN_C
 
 #endif /* jscntxt_h___ */

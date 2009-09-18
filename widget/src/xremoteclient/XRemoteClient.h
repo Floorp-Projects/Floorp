@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -67,6 +68,11 @@ private:
                                    const char *aUsername,
                                    const char *aProfile,
                                    PRBool aSupportsCommandLine);
+  nsresult     SendCommandInternal(const char *aProgram, const char *aUsername,
+                                   const char *aProfile, const char *aCommand,
+                                   PRInt32 argc, char **argv,
+                                   const char* aDesktopStartupID,
+                                   char **aResponse, PRBool *aWindowFound);
   nsresult       DoSendCommand    (Window aWindow,
                                    const char *aCommand,
                                    const char* aDesktopStartupID,

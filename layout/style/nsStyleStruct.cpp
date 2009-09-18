@@ -810,7 +810,6 @@ nsStyleSVG::nsStyleSVG()
     mColorInterpolationFilters = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
     mFillRule                = NS_STYLE_FILL_RULE_NONZERO;
     mImageRendering          = NS_STYLE_IMAGE_RENDERING_AUTO;
-    mPointerEvents           = NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED;
     mShapeRendering          = NS_STYLE_SHAPE_RENDERING_AUTO;
     mStrokeLinecap           = NS_STYLE_STROKE_LINECAP_BUTT;
     mStrokeLinejoin          = NS_STYLE_STROKE_LINEJOIN_MITER;
@@ -859,7 +858,6 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mColorInterpolationFilters = aSource.mColorInterpolationFilters;
   mFillRule = aSource.mFillRule;
   mImageRendering = aSource.mImageRendering;
-  mPointerEvents = aSource.mPointerEvents;
   mShapeRendering = aSource.mShapeRendering;
   mStrokeLinecap = aSource.mStrokeLinecap;
   mStrokeLinejoin = aSource.mStrokeLinejoin;
@@ -1437,7 +1435,7 @@ ConvertToPixelCoord(const nsStyleCoord& aCoord, PRInt32 aPercentScale)
       return 0;
   }
   NS_ABORT_IF_FALSE(pixelValue >= 0, "we ensured non-negative while parsing");
-  pixelValue = PR_MIN(pixelValue, PR_INT32_MAX); // avoid overflow
+  pixelValue = NS_MIN(pixelValue, double(PR_INT32_MAX)); // avoid overflow
   return NS_lround(pixelValue);
 }
 
@@ -1472,6 +1470,14 @@ nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
   if (aIsEntireImage)
     *aIsEntireImage = (aActualCropRect == imageRect);
   return PR_TRUE;
+}
+
+nsresult
+nsStyleImage::RequestDecode()
+{
+  if ((mType == eStyleImageType_Image) && mImage)
+    return mImage->RequestDecode();
+  return NS_OK;
 }
 
 PRBool
@@ -1593,13 +1599,13 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
   PRUint32 count = mLayers.Length();
   if (count != aSource.mLayers.Length()) {
     NS_WARNING("truncating counts due to out-of-memory");
-    mAttachmentCount = PR_MAX(mAttachmentCount, count);
-    mClipCount = PR_MAX(mClipCount, count);
-    mOriginCount = PR_MAX(mOriginCount, count);
-    mRepeatCount = PR_MAX(mRepeatCount, count);
-    mPositionCount = PR_MAX(mPositionCount, count);
-    mImageCount = PR_MAX(mImageCount, count);
-    mSizeCount = PR_MAX(mSizeCount, count);
+    mAttachmentCount = NS_MAX(mAttachmentCount, count);
+    mClipCount = NS_MAX(mClipCount, count);
+    mOriginCount = NS_MAX(mOriginCount, count);
+    mRepeatCount = NS_MAX(mRepeatCount, count);
+    mPositionCount = NS_MAX(mPositionCount, count);
+    mImageCount = NS_MAX(mImageCount, count);
+    mSizeCount = NS_MAX(mSizeCount, count);
   }
 }
 
@@ -1933,6 +1939,7 @@ nsStyleVisibility::nsStyleVisibility(nsPresContext* aPresContext)
 
   mLangGroup = aPresContext->GetLangGroup();
   mVisible = NS_STYLE_VISIBILITY_VISIBLE;
+  mPointerEvents = NS_STYLE_POINTER_EVENTS_AUTO;
 }
 
 nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
@@ -1941,6 +1948,7 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
   mDirection = aSource.mDirection;
   mVisible = aSource.mVisible;
   mLangGroup = aSource.mLangGroup;
+  mPointerEvents = aSource.mPointerEvents;
 } 
 
 nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const

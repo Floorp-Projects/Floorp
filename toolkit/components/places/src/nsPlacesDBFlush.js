@@ -118,30 +118,23 @@ function nsPlacesDBFlush()
   //////////////////////////////////////////////////////////////////////////////
   //// Smart Getters
 
-  this.__defineGetter__("_db", function() {
-    delete this._db;
-    return this._db = Cc["@mozilla.org/browser/nav-history-service;1"].
-                      getService(Ci.nsPIPlacesDatabase).
-                      DBConnection;
+  XPCOMUtils.defineLazyGetter(this, "_db", function() {
+    return Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsPIPlacesDatabase).
+           DBConnection;
   });
 
-  this.__defineGetter__("_ios", function() {
-    delete this._ios;
-    return this._ios = Cc["@mozilla.org/network/io-service;1"].
-                       getService(Ci.nsIIOService);
-  });
+  XPCOMUtils.defineLazyServiceGetter(this, "_ios",
+                                     "@mozilla.org/network/io-service;1",
+                                     "nsIIOService");
 
-  this.__defineGetter__("_hsn", function() {
-    delete this._hsn;
-    return this._hsn = Cc["@mozilla.org/browser/nav-history-service;1"].
-                       getService(Ci.nsPIPlacesHistoryListenersNotifier);
-  });
+  XPCOMUtils.defineLazyServiceGetter(this, "_hsn",
+                                     "@mozilla.org/browser/nav-history-service;1",
+                                     "nsPIPlacesHistoryListenersNotifier");
 
-  this.__defineGetter__("_bs", function() {
-    delete this._bs;
-    return this._bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                      getService(Ci.nsINavBookmarksService);
-  });
+  XPCOMUtils.defineLazyServiceGetter(this, "_bs",
+                                     "@mozilla.org/browser/nav-bookmarks-service;1",
+                                     "nsINavBookmarksService");
 }
 
 nsPlacesDBFlush.prototype = {
@@ -259,6 +252,7 @@ nsPlacesDBFlush.prototype = {
   //onEndUpdateBatch: function() { },
   onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID, aTransitionType) { },
   onTitleChanged: function(aURI, aPageTitle) { },
+  onBeforeDeleteURI: function(aURI) { },
   onDeleteURI: function(aURI) { },
   onClearHistory: function() { },
   onPageChanged: function(aURI, aWhat, aValue) { },

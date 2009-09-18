@@ -2374,6 +2374,11 @@ nsDocument::ContentAppended(nsIDocument* aDocument,
 {
   NS_ASSERTION(aDocument == this, "unexpected doc");
 
+  if (aContainer->GetBindingParent()) {
+    // Anonymous node; bail out
+    return;
+  }
+
   for (nsINode::ChildIterator iter(aContainer, aNewIndexInContainer);
        !iter.IsDone();
        iter.Next()) {
@@ -2391,6 +2396,11 @@ nsDocument::ContentInserted(nsIDocument* aDocument,
 
   NS_ABORT_IF_FALSE(aContent, "Null content!");
 
+  if (aContent->GetBindingParent()) {
+    // Anonymous node; bail out
+    return;
+  }
+
   RegisterNamedItems(aContent);
 }
 
@@ -2404,6 +2414,11 @@ nsDocument::ContentRemoved(nsIDocument* aDocument,
 
   NS_ABORT_IF_FALSE(aChild, "Null content!");
 
+  if (aChild->GetBindingParent()) {
+    // Anonymous node; bail out
+    return;
+  }
+
   UnregisterNamedItems(aChild);
 }
 
@@ -2414,6 +2429,11 @@ nsDocument::AttributeWillChange(nsIDocument* aDocument,
 {
   NS_ABORT_IF_FALSE(aContent, "Null content!");
   NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
+
+  if (aContent->GetBindingParent()) {
+    // Anonymous node; bail out
+    return;
+  }
 
   if (aNameSpaceID != kNameSpaceID_None)
     return;
@@ -2434,6 +2454,11 @@ nsDocument::AttributeChanged(nsIDocument* aDocument,
 
   NS_ABORT_IF_FALSE(aContent, "Null content!");
   NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
+
+  if (aContent->GetBindingParent()) {
+    // Anonymous node; bail out
+    return;
+  }
 
   if (aNameSpaceID != kNameSpaceID_None)
     return;
@@ -2746,6 +2771,18 @@ nsDocument::DestroyClassNameArray(void* aData)
 {
   ClassMatchingInfo* info = static_cast<ClassMatchingInfo*>(aData);
   delete info;
+}
+
+NS_IMETHODIMP
+nsDocument::ReleaseCapture()
+{
+  // only release the capture if the caller can access it. This prevents a
+  // page from stopping a scrollbar grab for example.
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(nsIPresShell::GetCapturingContent());
+  if (node && nsContentUtils::CanCallerAccess(node)) {
+    nsIPresShell::SetCapturingContent(nsnull, 0);
+  }
+  return NS_OK;
 }
 
 nsresult

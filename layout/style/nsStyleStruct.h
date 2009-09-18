@@ -65,6 +65,7 @@
 #include "nsIURI.h"
 #include "nsCSSValue.h"
 #include "nsStyleTransformMatrix.h"
+#include "nsAlgorithm.h"
 
 class nsIFrame;
 class imgIRequest;
@@ -250,6 +251,10 @@ struct nsStyleImage {
   PRBool ComputeActualCropRect(nsIntRect& aActualCropRect,
                                PRBool* aIsEntireImage = nsnull) const;
 
+  /**
+   * Requests a decode on the image.
+   */
+  nsresult RequestDecode();
   /**
    * @return PR_TRUE if the item is definitely opaque --- i.e., paints every
    * pixel within its bounds opaquely, and the bounds contains at least a pixel.
@@ -662,14 +667,14 @@ class nsCSSShadowArray {
 // but values between zero and one device pixels are always rounded up to
 // one device pixel.
 #define NS_ROUND_BORDER_TO_PIXELS(l,tpp) \
-  ((l) == 0) ? 0 : PR_MAX((tpp), (l) / (tpp) * (tpp))
+  ((l) == 0) ? 0 : NS_MAX((tpp), (l) / (tpp) * (tpp))
 // Outline offset is rounded to the nearest integer number of pixels, but values
 // between zero and one device pixels are always rounded up to one device pixel.
 // Note that the offset can be negative.
 #define NS_ROUND_OFFSET_TO_PIXELS(l,tpp) \
   (((l) == 0) ? 0 : \
-    ((l) > 0) ? PR_MAX( (tpp), ((l) + ((tpp) / 2)) / (tpp) * (tpp)) : \
-                PR_MIN(-(tpp), ((l) - ((tpp) / 2)) / (tpp) * (tpp)))
+    ((l) > 0) ? NS_MAX( (tpp), ((l) + ((tpp) / 2)) / (tpp) * (tpp)) : \
+                NS_MIN(-(tpp), ((l) - ((tpp) / 2)) / (tpp) * (tpp)))
 
 // Returns if the given border style type is visible or not
 static PRBool IsVisibleBorderStyle(PRUint8 aStyle)
@@ -785,6 +790,7 @@ struct nsStyleBorder {
 
   // Defined in nsStyleStructInlines.h
   inline PRBool IsBorderImageLoaded() const;
+  inline nsresult RequestDecode();
 
   void GetBorderColor(PRUint8 aSide, nscolor& aColor,
                       PRBool& aForeground) const
@@ -1113,7 +1119,8 @@ struct nsStyleVisibility {
   PRUint8 mDirection;                  // [inherited] see nsStyleConsts.h NS_STYLE_DIRECTION_*
   PRUint8   mVisible;                  // [inherited]
   nsCOMPtr<nsIAtom> mLangGroup;        // [inherited]
- 
+  PRUint8 mPointerEvents;              // [inherited] see nsStyleConsts.h
+
   PRBool IsVisible() const {
     return (mVisible == NS_STYLE_VISIBILITY_VISIBLE);
   }
@@ -1778,7 +1785,6 @@ struct nsStyleSVG {
   PRUint8          mColorInterpolationFilters; // [inherited] see nsStyleConsts.h
   PRUint8          mFillRule;         // [inherited] see nsStyleConsts.h
   PRUint8          mImageRendering;   // [inherited] see nsStyleConsts.h
-  PRUint8          mPointerEvents;    // [inherited] see nsStyleConsts.h
   PRUint8          mShapeRendering;   // [inherited] see nsStyleConsts.h
   PRUint8          mStrokeLinecap;    // [inherited] see nsStyleConsts.h
   PRUint8          mStrokeLinejoin;   // [inherited] see nsStyleConsts.h

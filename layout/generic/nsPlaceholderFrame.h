@@ -74,7 +74,7 @@
 #ifndef nsPlaceholderFrame_h___
 #define nsPlaceholderFrame_h___
 
-#include "nsSplittableFrame.h"
+#include "nsFrame.h"
 #include "nsGkAtoms.h"
 
 nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -83,18 +83,24 @@ nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aCont
  * Implementation of a frame that's used as a placeholder for a frame that
  * has been moved out of the flow
  */
-class nsPlaceholderFrame : public nsSplittableFrame {
+class nsPlaceholderFrame : public nsFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   /**
    * Create a new placeholder frame
    */
   friend nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-  nsPlaceholderFrame(nsStyleContext* aContext) : nsSplittableFrame(aContext) {}
+  nsPlaceholderFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
   virtual ~nsPlaceholderFrame();
 
   // Get/Set the associated out of flow frame
   nsIFrame*  GetOutOfFlowFrame() const {return mOutOfFlowFrame;}
-  void       SetOutOfFlowFrame(nsIFrame* aFrame) {mOutOfFlowFrame = aFrame;}
+  void       SetOutOfFlowFrame(nsIFrame* aFrame) {
+               NS_ASSERTION(!aFrame || !aFrame->GetPrevContinuation(),
+                            "OOF must be first continuation");
+               mOutOfFlowFrame = aFrame;
+             }
 
   // nsIHTMLReflow overrides
   // We need to override GetMinWidth and GetPrefWidth because XUL uses
@@ -111,7 +117,6 @@ public:
                     nsReflowStatus& aStatus);
 
   virtual void Destroy();
-  virtual nsSplittableType GetSplittableType() const;
 
   // nsIFrame overrides
 #if defined(DEBUG) || (defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF))
@@ -145,7 +150,7 @@ public:
   {
     nsIFrame *realFrame = GetRealFrameForPlaceholder(this);
     return realFrame ? realFrame->GetAccessible(aAccessible) :
-                       nsSplittableFrame::GetAccessible(aAccessible);
+                       nsFrame::GetAccessible(aAccessible);
   }
 #endif
 

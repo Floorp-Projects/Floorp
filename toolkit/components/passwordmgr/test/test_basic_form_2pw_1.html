@@ -15631,28 +15631,36 @@ print "</form>\n\n";
 
 /** Test for Login Manager: simple form fill **/
 
+commonInit();
+
 function startTest() {
     var f;
 
     for (f = 1;   f <= 32;  f++) { checkForm(f, "testuser", "testpass", null); }
     // 33-64 have the password prefilled, we skip filling the username.
     for (f = 33;  f <= 64;  f++) { checkUnmodifiedForm(f); }
-
     for (f = 65;  f <= 96;  f++) { checkUnmodifiedForm(f); }
-    todo(false, "testing forms 101-192 disabled");
-    //for (f = 97;  f <= 160; f++) { checkForm(f, "testuser", "testpass", null); }
-    //for (f = 161; f <= 192; f++) { checkUnmodifiedForm(f); }
+    for (f = 97;  f <= 160; f++) { checkForm(f, "testuser", "testpass", null); }
+    for (f = 161; f <= 192; f++) { checkUnmodifiedForm(f); }
     for (f = 193; f <= 288; f++) { checkUnmodifiedForm(f); }
 
-    todo(false, "testing forms 289-480 disabled");
-    //for (f = 289; f <= 352; f++) { checkForm(f, "testuser", null, "testpass"); }
-    //for (f = 353; f <= 384; f++) { checkUnmodifiedForm(f); }
-    //for (f = 385; f <= 448; f++) { checkForm(f, "testuser", null, "testpass"); }
-    //for (f = 449; f <= 480; f++) { checkUnmodifiedForm(f); }
-    for (f = 481; f <= 576; f++) { checkUnmodifiedForm(f); }
-
-    todo(false, "Don't clobber prefilled differing password");
-    todo(false, "Add support for password before username");
+    //for (f = 289; f <= 296; f++) { checkForm(f, "testuser", null, "testpass"); }
+    for (f = 297; f <= 320; f++) { checkUnmodifiedForm(f); }
+    for (f = 321; f <= 328; f++) { checkForm(f, "testuser", "testpass", null); }
+    for (f = 329; f <= 352; f++) { checkUnmodifiedForm(f); }
+    for (f = 353; f <= 360; f++) { checkForm(f, "testuser", "testpass", null); }
+    for (f = 361; f <= 384; f++) { checkUnmodifiedForm(f); }
+    for (f = 385; f <= 400; f++) { checkForm(f, "testuser", "testpass", null); }
+    for (f = 401; f <= 416; f++) { checkUnmodifiedForm(f); }
+    for (f = 417; f <= 432; f++) { checkForm(f, "testuser", "testpass", null); }
+    for (f = 433; f <= 448; f++) { checkUnmodifiedForm(f); }
+    for (f = 449; f <= 456; f++) { checkForm(f, "testuser", "testpass", null); }
+    for (f = 457; f <= 576; f++) { checkUnmodifiedForm(f); }
+    // should check more here...
+    for (f = 1665; f <= 1672; f++) { checkForm(f, "testpass", null, null); }
+    for (f = 1673; f <= 1696; f++) { checkUnmodifiedForm(f); }
+    for (f = 1697; f <= 1704; f++) { checkForm(f, "testpass", null, null); }
+    for (f = 1705; f <= 1728; f++) { checkUnmodifiedForm(f); }
 
     SimpleTest.finish();
 }

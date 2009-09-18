@@ -40,18 +40,15 @@
 
 function test() {
   // initialization
-  let prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch);
-  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+  gPrefService.setBoolPref("browser.privatebrowsing.keep_current_session", true);
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
 
-  const kTestURL = "https://example.com/";
+  const TEST_URL = "https://example.com/";
 
   // load an SSL site in the first tab and wait for it to finish loading
-  let tab = gBrowser.addTab();
-  gBrowser.selectedTab = tab;
-  let browser = gBrowser.getBrowserForTab(tab);
+  gBrowser.selectedTab = gBrowser.addTab();
+  let browser = gBrowser.selectedBrowser;
   browser.addEventListener("load", function() {
     browser.removeEventListener("load", arguments.callee, true);
 
@@ -62,19 +59,19 @@ function test() {
     browser.addEventListener("load", function() {
       browser.removeEventListener("load", arguments.callee, true);
 
-      is(browser.contentWindow.location, kTestURL,
+      is(content.location, TEST_URL,
         "The original SSL page should be loaded at this stage");
 
-      gBrowser.removeTab(tab);
-      prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+      gBrowser.removeCurrentTab();
+      gPrefService.clearUserPref("browser.privatebrowsing.keep_current_session");
       finish();
     }, true);
 
-    executeSoon(function(){
-      browser.contentWindow.location = kTestURL;
+    executeSoon(function () {
+      content.location = TEST_URL;
     });
   }, true);
-  browser.contentWindow.location = kTestURL;
+  content.location = TEST_URL;
 
   waitForExplicitFinish();
 }

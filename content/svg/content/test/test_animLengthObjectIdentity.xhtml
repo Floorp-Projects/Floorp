@@ -1,0 +1,87 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=508496
+-->
+<head>
+  <title>Test for object identity of SVG animated lengths</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=506856">Mozilla Bug 508496</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+  <circle cx="-100" cy="-100" r="15" fill="blue" id="circle">
+    <animate attributeName="cx" from="0" to="100" dur="4s" begin="1s; 10s"
+      fill="freeze" id="animate"/>
+  </circle>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test object identity of animated lengths **/
+
+/* Global Variables */
+const svgns="http://www.w3.org/2000/svg";
+var svg = document.getElementById("svg");
+var circle = document.getElementById('circle');
+
+SimpleTest.waitForExplicitFinish();
+
+function main() {
+  var animLength = circle.cx;
+  ok(animLength === circle.cx,
+    "Got different SVGAnimatedLength objects at startup");
+
+  var baseVal = circle.cx.baseVal;
+  ok(baseVal === circle.cx.baseVal,
+    "Got different baseVal SVGLength objects at startup");
+
+  var animVal = circle.cx.animVal;
+  ok(animVal === circle.cx.animVal,
+    "Got different animVal SVGLength objects at startup");
+
+  var animate = document.getElementById('animate');
+  if (animate && animate.targetElement) {
+    // Sample mid-way through the animation
+    svg.pauseAnimations();
+    svg.setCurrentTime(5);
+
+    ok(animLength === circle.cx,
+      "Got different SVGAnimatedLength objects during animation");
+    ok(baseVal === circle.cx.baseVal,
+      "Got different baseVal SVGLength objects during animation");
+    ok(animVal === circle.cx.animVal,
+      "Got different animVal SVGLength objects during animation");
+  }
+
+  // Drop all references to the tear off objects
+  var oldValue = circle.cx.animVal.value; // Just a float, not an object ref
+  animLength = null;
+  baseVal = null;
+  animVal = null;
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Components.interfaces.nsIDOMWindowUtils)
+        .garbageCollect();
+
+  // The tearoff objects should no longer exist and we should create new ones.
+  // If somehow, the tearoff objects have died and yet not been removed from the
+  // hashmap we'll end up in all sorts of trouble when we try to access them.
+  // So in the following, we're not really interested in the value, just that we
+  // don't crash.
+  is(circle.cx.animVal.value, oldValue,
+    "Unexpected result accessing new(?) length object.");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main, false);
+]]>
+</script>
+</pre>
+</body>
+</html>

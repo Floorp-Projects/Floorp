@@ -69,6 +69,8 @@ but can be set explicitly only on <mstyle>. (See Section 3.3.4.)
 
 class nsMathMLmsqrtFrame : public nsMathMLmencloseFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewMathMLmsqrtFrame(nsIPresShell*   aPresShell,
                                           nsStyleContext* aContext);
 

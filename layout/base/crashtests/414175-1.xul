@@ -1,0 +1,26 @@
+<xul xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="boom();">
+
+<script type="text/javascript">
+
+function boom()
+{
+  var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+  var oldListbox = document.getElementById("oldListbox");
+  var listitem = document.getElementById("listitem");
+  var newListbox = document.createElementNS(XUL_NS, "listbox");
+  var newHbox = document.createElementNS(XUL_NS, "hbox");
+
+  oldListbox.appendChild(newListbox);
+  listitem.appendChild(newHbox);
+
+  newListbox.style.display = "inline";
+  oldListbox.style.display = "block";
+  newHbox.style.display = "inline";
+}
+
+</script>
+
+<listbox id="oldListbox"><listitem id="listitem" /></listbox>
+
+</xul>

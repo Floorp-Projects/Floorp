@@ -42,15 +42,12 @@
 
 class nsTitleBarFrame : public nsBoxFrame  
 {
-
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);  
 
   nsTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-
-  NS_IMETHOD  Init(nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIFrame*        asPrevInFlow);
 
   NS_IMETHOD BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
@@ -63,10 +60,6 @@ public:
   virtual PRBool GetMouseThrough() const { return PR_FALSE; }
 
   virtual void MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent);
-
-protected:
-
-  NS_IMETHOD CaptureMouseEvents(nsPresContext* aPresContext,PRBool aGrabMouseEvents);
 
 protected:
 	PRBool mTrackingMouseMove;	

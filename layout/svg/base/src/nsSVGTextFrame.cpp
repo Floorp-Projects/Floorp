@@ -63,6 +63,8 @@ NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsSVGTextFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGTextFrame)
+
 //----------------------------------------------------------------------
 // nsIFrame methods
 #ifdef DEBUG

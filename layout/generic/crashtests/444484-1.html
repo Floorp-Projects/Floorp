@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style type="text/css">
+
+body:first-letter { float: right; }
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var t = document.body.firstChild;
+  var se = document.getElementById("se");
+  se.appendChild(t); // !!!
+  document.body.appendChild(se);
+  se.appendChild(document.createTextNode(" "));
+}
+
+</script>
+</head>
+
+<body onload="boom();">&#xFEB7;
+<div id="se" style="display: none;"></div></body>
+</html>

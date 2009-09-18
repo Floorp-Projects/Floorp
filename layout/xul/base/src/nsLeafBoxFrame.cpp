@@ -70,7 +70,9 @@ nsIFrame*
 NS_NewLeafBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsLeafBoxFrame(aPresShell, aContext);
-} // NS_NewLeafBoxFrame
+}
+
+NS_IMPL_FRAMEARENA_HELPERS(nsLeafBoxFrame)
 
 nsLeafBoxFrame::nsLeafBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext)
     : nsLeafFrame(aContext), mMouseThrough(unset)

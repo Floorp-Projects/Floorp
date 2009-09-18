@@ -80,98 +80,6 @@ typedef void (nsLazyFrameConstructionCallback)
 
 class nsFrameConstructorState;
 class nsFrameConstructorSaveState;
-  
-// Structure used when constructing formatting object trees.
-struct nsFrameItems : public nsFrameList {
-  nsIFrame* lastChild;
-  
-  nsFrameItems(nsIFrame* aFrame = nsnull);
-
-  nsFrameItems(const nsFrameList& aList, nsIFrame* aLastChild) :
-    nsFrameList(aList),
-    lastChild(aLastChild)
-  {
-    NS_ASSERTION(LastChild() == lastChild, "Bogus aLastChild");
-  }
-
-  // Appends the frame to the end of the list
-  void AddChild(nsIFrame* aChild);
-
-  void InsertFrame(nsIFrame* aParent, nsIFrame* aPrevSibling,
-                   nsIFrame* aNewFrame) {
-    nsFrameList::InsertFrame(aParent, aPrevSibling, aNewFrame);
-    if (aPrevSibling == lastChild) {
-      lastChild = aNewFrame;
-    }
-  }
-
-  void InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
-                    nsFrameItems& aFrames) {
-    nsFrameList::InsertFrames(aParent, aPrevSibling, aFrames);
-    if (aPrevSibling == lastChild) {
-      lastChild = aFrames.lastChild;
-    }
-  }
-
-  void DestroyFrame(nsIFrame* aFrameToDestroy, nsIFrame* aPrevSibling) {
-    NS_PRECONDITION((!aPrevSibling && aFrameToDestroy == FirstChild()) ||
-                    aPrevSibling->GetNextSibling() == aFrameToDestroy,
-                    "Unexpected prevsibling");
-    nsFrameList::DestroyFrame(aFrameToDestroy, aPrevSibling);
-    if (aFrameToDestroy == lastChild) {
-      lastChild = aPrevSibling;
-    }
-  }
-
-  PRBool RemoveFrame(nsIFrame* aFrameToRemove, nsIFrame* aPrevSibling) {
-    NS_PRECONDITION(!aPrevSibling ||
-                    aPrevSibling->GetNextSibling() == aFrameToRemove,
-                    "Unexpected aPrevSibling");
-    if (!aPrevSibling) {
-      aPrevSibling = GetPrevSiblingFor(aFrameToRemove);
-    }
-
-    PRBool removed = nsFrameList::RemoveFrame(aFrameToRemove, aPrevSibling);
-
-    if (aFrameToRemove == lastChild) {
-      lastChild = aPrevSibling;
-    }
-
-    return removed;
-  }
-
-  nsFrameItems ExtractHead(FrameLinkEnumerator& aLink) {
-    nsIFrame* newLastChild = aLink.PrevFrame();
-    if (lastChild && aLink.NextFrame() == lastChild) {
-      lastChild = nsnull;
-    }
-    return nsFrameItems(nsFrameList::ExtractHead(aLink),
-                        newLastChild);
-  }
-
-  nsFrameItems ExtractTail(FrameLinkEnumerator& aLink) {
-    nsIFrame* newLastChild = lastChild;
-    lastChild = aLink.PrevFrame();
-    return nsFrameItems(nsFrameList::ExtractTail(aLink),
-                        newLastChild);
-  }
-
-  void Clear() {
-    nsFrameList::Clear();
-    lastChild = nsnull;
-  }
-
-private:
-  // Not implemented; shouldn't be called
-  void SetFrames(nsIFrame* aFrameList);
-  void AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList);
-  Slice AppendFrames(nsIFrame* aParent, nsFrameList& aFrameList);
-  void AppendFrame(nsIFrame* aParent, nsIFrame* aFrame);
-  PRBool RemoveFirstChild();
-  void InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
-                    nsIFrame* aFrameList);
-  void SortByContentOrder();
-};
 
 class nsCSSFrameConstructor
 {
@@ -180,6 +88,9 @@ public:
   ~nsCSSFrameConstructor(void) {
     NS_ASSERTION(mUpdateCount == 0, "Dying in the middle of our own update?");
   }
+
+  struct RestyleData;
+  friend struct RestyleData;
 
   // Maintain global objects - gXBLService
   static nsIXBLService * GetXBLService();
@@ -274,6 +185,9 @@ private:
   void ProcessOneRestyle(nsIContent* aContent, nsReStyleHint aRestyleHint,
                          nsChangeHint aChangeHint);
 
+  void ProcessPendingRestyleTable(
+           nsDataHashtable<nsISupportsHashKey, RestyleData>& aRestyles);
+
 public:
   // Restyling for a ContentInserted (notification after insertion) or
   // for a CharacterDataChanged.  |aContainer| must be non-null; when
@@ -303,9 +217,43 @@ public:
   // must not contain nsChangeHint_ReconstructFrame) to the root frame.
   void RebuildAllStyleData(nsChangeHint aExtraHint);
 
+  // See PostRestyleEventCommon below.
   void PostRestyleEvent(nsIContent* aContent, nsReStyleHint aRestyleHint,
-                        nsChangeHint aMinChangeHint);
+                        nsChangeHint aMinChangeHint)
+  {
+    nsPresContext *presContext = mPresShell->GetPresContext();
+    if (presContext) {
+      PostRestyleEventCommon(aContent, aRestyleHint, aMinChangeHint,
+                             presContext->IsProcessingAnimationStyleChange());
+    }
+  }
+
+  // See PostRestyleEventCommon below.
+  void PostAnimationRestyleEvent(nsIContent* aContent,
+                                 nsReStyleHint aRestyleHint,
+                                 nsChangeHint aMinChangeHint)
+  {
+    PostRestyleEventCommon(aContent, aRestyleHint, aMinChangeHint, PR_TRUE);
+  }
 private:
+  /**
+   * Notify the frame constructor that a content node needs to have its
+   * style recomputed.
+   * @param aContent: The content node to be restyled.
+   * @param aRestyleHint: Which nodes need to have selector matching run
+   *                      on them.
+   * @param aMinChangeHint: A minimum change hint for aContent and its
+   *                        descendants.
+   * @param aForAnimation: Whether the style should be computed with or
+   *                       without animation data.  Animation code
+   *                       sometimes needs to pass true; other code
+   *                       should generally pass the the pres context's
+   *                       IsProcessingAnimationStyleChange() value
+   *                       (which is the default value).
+   */
+  void PostRestyleEventCommon(nsIContent* aContent, nsReStyleHint aRestyleHint,
+                              nsChangeHint aMinChangeHint,
+                              PRBool aForAnimation);
   void PostRestyleEventInternal();
 public:
 
@@ -1513,7 +1461,7 @@ private:
    */
   void MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
                                 nsIFrame* aExistingEndFrame,
-                                nsFrameItems& aFramesToMove,
+                                nsFrameList& aFramesToMove,
                                 nsIFrame* aBlockPart,
                                 nsFrameConstructorState* aTargetState);
 
@@ -1707,8 +1655,6 @@ private:
   }
 
 public:
-  struct RestyleData;
-  friend struct RestyleData;
 
   struct RestyleData {
     nsReStyleHint mRestyleHint;  // What we want to restyle
@@ -1794,6 +1740,7 @@ private:
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 
   nsDataHashtable<nsISupportsHashKey, RestyleData> mPendingRestyles;
+  nsDataHashtable<nsISupportsHashKey, RestyleData> mPendingAnimationRestyles;
 
   static nsIXBLService * gXBLService;
 };

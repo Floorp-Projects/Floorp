@@ -300,10 +300,10 @@ public:
 
 class gfxDownloadedFcFontEntry : public gfxFcFontEntry {
 public:
-    // This takes ownership of the face.
+    // This takes ownership of the face and its underlying data
     gfxDownloadedFcFontEntry(const gfxProxyFontEntry &aProxyEntry,
-                             nsISupports *aLoader, FT_Face aFace)
-        : gfxFcFontEntry(aProxyEntry), mLoader(aLoader), mFace(aFace)
+                             const PRUint8 *aData, FT_Face aFace)
+        : gfxFcFontEntry(aProxyEntry), mFontData(aData), mFace(aFace)
     {
         NS_PRECONDITION(aFace != NULL, "aFace is NULL!");
         InitPattern();
@@ -319,9 +319,13 @@ public:
 protected:
     virtual void InitPattern();
 
-    // mLoader holds a reference to memory used by mFace.
-    nsCOMPtr<nsISupports> mLoader;
+    // mFontData holds the data used to instantiate the FT_Face;
+    // this has to persist until we are finished with the face,
+    // then be released with NS_Free().
+    const PRUint8* mFontData;
+
     FT_Face mFace;
+
     // mPangoCoverage is the charset property of the pattern translated to a
     // format that Pango understands.  A reference is kept here so that it can
     // be shared by multiple PangoFonts (of different sizes).
@@ -371,6 +375,7 @@ gfxDownloadedFcFontEntry::~gfxDownloadedFcFontEntry()
         FcPatternDel(mPatterns[0], FC_FT_FACE);
     }
     FT_Done_Face(mFace);
+    NS_Free((void*)mFontData);
 }
 
 typedef FcPattern* (*QueryFaceFunction)(const FT_Face face,
@@ -2218,18 +2223,22 @@ GetFTLibrary()
 
 /* static */ gfxFontEntry *
 gfxPangoFontGroup::NewFontEntry(const gfxProxyFontEntry &aProxyEntry,
-                                nsISupports *aLoader,
                                 const PRUint8 *aFontData, PRUint32 aLength)
 {
+    // Ownership of aFontData is passed in here, and transferred to the
+    // new fontEntry, which will release it when no longer needed.
+
     // Using face_index = 0 for the first face in the font, as we have no
     // other information.  FT_New_Memory_Face checks for a NULL FT_Library.
     FT_Face face;
     FT_Error error =
         FT_New_Memory_Face(GetFTLibrary(), aFontData, aLength, 0, &face);
-    if (error != 0)
+    if (error != 0) {
+        NS_Free((void*)aFontData);
         return nsnull;
+    }
 
-    return new gfxDownloadedFcFontEntry(aProxyEntry, aLoader, face);
+    return new gfxDownloadedFcFontEntry(aProxyEntry, aFontData, face);
 }
 
 

@@ -59,6 +59,8 @@ nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext) :
 {
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGGradientFrame)
+
 //----------------------------------------------------------------------
 // nsIFrame methods:
 
@@ -616,9 +618,13 @@ NS_NewSVGLinearGradientFrame(nsIPresShell*   aPresShell,
   return new (aPresShell) nsSVGLinearGradientFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGLinearGradientFrame)
+
 nsIFrame*
 NS_NewSVGRadialGradientFrame(nsIPresShell*   aPresShell,
                              nsStyleContext* aContext)
 {
   return new (aPresShell) nsSVGRadialGradientFrame(aContext);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGRadialGradientFrame)

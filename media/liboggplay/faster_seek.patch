@@ -1,0 +1,78 @@
+diff --git a/media/liboggplay/include/oggplay/oggplay_seek.h b/media/liboggplay/include/oggplay/oggplay_seek.h
+--- a/media/liboggplay/include/oggplay/oggplay_seek.h
++++ b/media/liboggplay/include/oggplay/oggplay_seek.h
+@@ -42,15 +42,13 @@
+ OggPlayErrorCode
+ oggplay_seek(OggPlay *me, ogg_int64_t milliseconds);
+ 
+ /**
+  * Seeks to key frame before |milliseconds|.
+  */
+ OggPlayErrorCode
+ oggplay_seek_to_keyframe(OggPlay *me,
+-                         int* tracks,
+-                         int num_tracks,
+                          ogg_int64_t milliseconds,
+                          ogg_int64_t offset_begin,
+                          ogg_int64_t offset_end);
+ 
+ #endif
+diff --git a/media/liboggplay/src/liboggplay/oggplay_seek.c b/media/liboggplay/src/liboggplay/oggplay_seek.c
+--- a/media/liboggplay/src/liboggplay/oggplay_seek.c
++++ b/media/liboggplay/src/liboggplay/oggplay_seek.c
+@@ -75,54 +75,38 @@ oggplay_seek(OggPlay *me, ogg_int64_t mi
+   oggplay_seek_cleanup(me, milliseconds);
+ 
+   return E_OGGPLAY_OK;
+ 
+ }
+ 
+ OggPlayErrorCode
+ oggplay_seek_to_keyframe(OggPlay *me,
+-                         int* tracks,
+-                         int num_tracks,
+                          ogg_int64_t milliseconds,
+                          ogg_int64_t offset_begin,
+                          ogg_int64_t offset_end)
+ {
+-  long *serial_nos;
+-  int i;
+   ogg_int64_t eof, time;
+ 
+   if (me == NULL) {
+     return E_OGGPLAY_BAD_OGGPLAY;
+   }
+ 
+-  if (num_tracks > me->num_tracks || milliseconds < 0)
++  if (milliseconds < 0)
+     return E_OGGPLAY_CANT_SEEK;
+   
+   eof = oggplay_get_duration(me);
+   if (eof > -1 && milliseconds > eof) {
+     return E_OGGPLAY_CANT_SEEK;
+   }
+ 
+-  // Get the serialnos for the tracks we're seeking.
+-  serial_nos = (long*)oggplay_malloc(sizeof(long)*num_tracks);
+-  if (!serial_nos) {
+-    return E_OGGPLAY_CANT_SEEK;
+-  }
+-  for (i=0; i<num_tracks; i++) {
+-    serial_nos[i] = me->decode_data[tracks[i]]->serialno;
+-  }
+-
+   time = oggz_keyframe_seek_set(me->oggz,
+-                                serial_nos,
+-                                num_tracks,
+                                 milliseconds,
+                                 offset_begin,
+                                 offset_end);
+-  oggplay_free(serial_nos);
+ 
+   if (time == -1) {
+     return E_OGGPLAY_CANT_SEEK;
+   }
+ 
+   oggplay_seek_cleanup(me, time);
+ 
+   return E_OGGPLAY_OK;

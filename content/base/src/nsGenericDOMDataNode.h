@@ -238,6 +238,10 @@ public:
   {
     return nsnull;
   }
+  virtual nsresult GetSMILOverrideStyle(nsIDOMCSSStyleDeclaration** aStyle);
+  virtual nsICSSStyleRule* GetSMILOverrideStyleRule();
+  virtual nsresult SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
+                                            PRBool aNotify);
 #endif // MOZ_SMIL
 
 #ifdef DEBUG

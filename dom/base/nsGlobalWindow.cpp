@@ -407,11 +407,13 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIPLUGININSTANCEOWNER
 
-  // XXXjst: What's up with nsIPluginInstanceOwner and these functions?
   NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData,
                     PRUint32 aPostDataLen, void *aHeadersData,
                     PRUint32 aHeadersDataLen, PRBool aIsFile = PR_FALSE);
   NS_IMETHOD ShowStatus(const PRUnichar *aStatusMsg);
+  NPError ShowNativeContextMenu(NPMenu* menu, void* event);
+  NPBool ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
+                      double *destX, double *destY, NPCoordinateSpace destSpace);
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDummyJavaPluginOwner)
 
@@ -462,7 +464,7 @@ nsDummyJavaPluginOwner::GetInstance(nsIPluginInstance *&aInstance)
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::GetWindow(nsPluginWindow *&aWindow)
+nsDummyJavaPluginOwner::GetWindow(NPWindow *&aWindow)
 {
   aWindow = nsnull;
 
@@ -470,10 +472,10 @@ nsDummyJavaPluginOwner::GetWindow(nsPluginWindow *&aWindow)
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::GetMode(nsPluginMode *aMode)
+nsDummyJavaPluginOwner::GetMode(PRInt32 *aMode)
 {
   // This is wrong, but there's no better alternative.
-  *aMode = nsPluginMode_Embedded;
+  *aMode = NP_EMBED;
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -505,6 +507,19 @@ nsDummyJavaPluginOwner::ShowStatus(const PRUnichar *aStatusMsg)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NPError
+nsDummyJavaPluginOwner::ShowNativeContextMenu(NPMenu* menu, void* event)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NPBool
+nsDummyJavaPluginOwner::ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
+                                     double *destX, double *destY, NPCoordinateSpace destSpace)
+{
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsDummyJavaPluginOwner::GetDocument(nsIDocument **aDocument)
 {
@@ -514,13 +529,13 @@ nsDummyJavaPluginOwner::GetDocument(nsIDocument **aDocument)
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::InvalidateRect(nsPluginRect *invalidRect)
+nsDummyJavaPluginOwner::InvalidateRect(NPRect *invalidRect)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::InvalidateRegion(nsPluginRegion invalidRegion)
+nsDummyJavaPluginOwner::InvalidateRegion(NPRegion invalidRegion)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

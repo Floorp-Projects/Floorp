@@ -76,6 +76,8 @@ NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsMathMLmfracFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmfracFrame)
+
 nsMathMLmfracFrame::~nsMathMLmfracFrame()
 {
   if (mSlashChar) {
@@ -321,8 +323,8 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
   // our last visit there)
   nsEmbellishData coreData;
   GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);
-  nscoord leftSpace = PR_MAX(onePixel, coreData.leftSpace);
-  nscoord rightSpace = PR_MAX(onePixel, coreData.rightSpace);
+  nscoord leftSpace = NS_MAX(onePixel, coreData.leftSpace);
+  nscoord rightSpace = NS_MAX(onePixel, coreData.rightSpace);
 
   // see if the linethickness attribute is there 
   nsAutoString value;
@@ -404,7 +406,7 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
 
   // XXX Need revisiting the width. TeX uses the exact width
   // e.g. in $$\huge\frac{\displaystyle\int}{i}$$
-  nscoord width = PR_MAX(bmNum.width, bmDen.width);
+  nscoord width = NS_MAX(bmNum.width, bmDen.width);
   nscoord dxNum = leftSpace + (width - sizeNum.width)/2;
   nscoord dxDen = leftSpace + (width - sizeDen.width)/2;
   width += leftSpace + rightSpace;
@@ -426,11 +428,11 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
     dxDen = width - rightSpace - sizeDen.width;
 
   mBoundingMetrics.rightBearing =
-    PR_MAX(dxNum + bmNum.rightBearing, dxDen + bmDen.rightBearing);
+    NS_MAX(dxNum + bmNum.rightBearing, dxDen + bmDen.rightBearing);
   if (mBoundingMetrics.rightBearing < width - rightSpace)
     mBoundingMetrics.rightBearing = width - rightSpace;
   mBoundingMetrics.leftBearing =
-    PR_MIN(dxNum + bmNum.leftBearing, dxDen + bmDen.leftBearing);
+    NS_MIN(dxNum + bmNum.leftBearing, dxDen + bmDen.leftBearing);
   if (mBoundingMetrics.leftBearing > leftSpace)
     mBoundingMetrics.leftBearing = leftSpace;
   mBoundingMetrics.ascent = bmNum.ascent + numShift;

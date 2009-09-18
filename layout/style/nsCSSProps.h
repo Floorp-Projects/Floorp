@@ -65,6 +65,33 @@
 // properties that have this set, but that's just special-cased.
 #define CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED (1<<4)
 
+/**
+ * Types of animatable values.
+ */
+enum nsStyleAnimType {
+  // nsStyleCoord with animatable values
+  eStyleAnimType_Coord,
+
+  // same as Coord, except for one side of an nsStyleSides
+  // listed in the same order as the NS_STYLE_* constants
+  eStyleAnimType_Sides_Top,
+  eStyleAnimType_Sides_Right,
+  eStyleAnimType_Sides_Bottom,
+  eStyleAnimType_Sides_Left,
+
+  // nscoord values
+  eStyleAnimType_nscoord,
+
+  // nscolor values
+  eStyleAnimType_Color,
+
+  // nsStyleSVGPaint values
+  eStyleAnimType_PaintServer,
+
+  // property not animatable
+  eStyleAnimType_None
+};
+
 class nsCSSProps {
 public:
   static void AddRefTable(void);
@@ -109,6 +136,9 @@ public:
   static const nsCSSType       kTypeTable[eCSSProperty_COUNT_no_shorthands];
   static const nsStyleStructID kSIDTable[eCSSProperty_COUNT_no_shorthands];
   static const PRInt32* const  kKeywordTableTable[eCSSProperty_COUNT_no_shorthands];
+  static const nsStyleAnimType kAnimTypeTable[eCSSProperty_COUNT_no_shorthands];
+  static const ptrdiff_t
+    kStyleStructOffsetTable[eCSSProperty_COUNT_no_shorthands];
 
 private:
   static const PRUint32        kFlagsTable[eCSSProperty_COUNT];
@@ -185,7 +215,6 @@ public:
   static const PRInt32 kDominantBaselineKTable[];
   static const PRInt32 kFillRuleKTable[];
   static const PRInt32 kImageRenderingKTable[];
-  static const PRInt32 kPointerEventsKTable[];
   static const PRInt32 kShapeRenderingKTable[];
   static const PRInt32 kStrokeLinecapKTable[];
   static const PRInt32 kStrokeLinejoinKTable[];
@@ -226,6 +255,7 @@ public:
   static const PRInt32 kPageMarksKTable[];
   static const PRInt32 kPageSizeKTable[];
   static const PRInt32 kPitchKTable[];
+  static const PRInt32 kPointerEventsKTable[];
   static const PRInt32 kPositionKTable[];
   static const PRInt32 kSpeakKTable[];
   static const PRInt32 kSpeakHeaderKTable[];

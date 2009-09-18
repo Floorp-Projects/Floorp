@@ -7,15 +7,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=445810
   <title>Test for Bug 445810</title>
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/modules/libpr0n/test/mochitest/imgutils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=445810">Mozilla Bug 445810</a>
 <div><p id="display"></p></div>
+<div style="display: none;"><img id="currimg"></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 445810 **/
+
+// Once the border image is loaded, it isn't necessarily decoded. We need to
+// force a decode, but only have a good way of doing that for image elements,
+// not border images. However, we can take advantage of the image cache (which
+// shares images of the same url) and assign the same url to both.
+var currImageElem = document.getElementById("currimg");
 
 function new_image_url()
 {
@@ -60,12 +68,20 @@ is(divcs.width, "11px", // 3 (border-left) + 5 (width) + 3 (border-right)
 is(divcs.height, "11px", // 3 (border-top) + 5 (height) + 3 (border-bottom)
    "correct height without a border image");
 
-p.style.MozBorderImage = "url( " + new_image_url() + ") 2 2 2 2 / 7px 2px";
+currImageElem.src = new_image_url();
+p.style.MozBorderImage = "url( " + currImageElem.src + ") 2 2 2 2 / 7px 2px";
 is(divcs.width, "11px", "border image not loaded yet");
 is(divcs.height, "11px", "border image not loaded yet");
+currImageElem.onload = step2;
 
-setTimeout(step2, 0);
 function step2() {
+  // We got here through onload
+  ok(isImageLoaded("currimg"), "image loaded");
+
+  // Force a decode
+  forceDecode("currimg");
+  ok(isFrameDecoded("currimg"), "frame decoded");
+
   is(divcs.width, "9px", "border image loading caused reflow");
   is(divcs.height, "19px", "border image loading caused reflow");
 
@@ -77,24 +93,40 @@ function step2() {
   is(divcs.width, "5px", "correct width without a border");
   is(divcs.height, "5px", "correct height without a border");
 
-  p.style.MozBorderImage = "url( " + new_image_url() + ") 2 2 2 2 / 7px 2px";
+  currImageElem.src = new_image_url();
+  p.style.MozBorderImage = "url( " + currImageElem.src + ") 2 2 2 2 / 7px 2px";
   is(divcs.width, "5px", "border image not loaded yet");
   is(divcs.height, "5px", "border image not loaded yet");
-  setTimeout(step3, 0);
+  currImageElem.onload = step3;
 }
 
 function step3() {
+  // We got here through onload
+  ok(isImageLoaded("currimg"), "image loaded");
+
+  // Force a decode
+  forceDecode("currimg");
+  ok(isFrameDecoded("currimg"), "frame decoded");
+
   is(divcs.width, "9px", "border image loading caused reflow");
   is(divcs.height, "19px", "border image loading caused reflow");
 
-  p.style.MozBorderImage = "url( " + new_image_url() + ") 2 2 2 2";
+  currImageElem.src = new_image_url();
+  p.style.MozBorderImage = "url( " + currImageElem.src + ") 2 2 2 2";
   p.style.border = "3px none";
   is(divcs.width, "5px", "border image not loaded yet");
   is(divcs.height, "5px", "border image not loaded yet");
-  setTimeout(step4, 0);
+  currImageElem.onload = step4;
 }
 
 function step4() {
+  // We got here through onload
+  ok(isImageLoaded("currimg"), "image loaded");
+
+  // Force a decode
+  forceDecode("currimg");
+  ok(isFrameDecoded("currimg"), "frame decoded");
+
   is(divcs.width, "11px", "border image loading caused reflow");
   is(divcs.height, "11px", "border image loading caused reflow");
 

@@ -49,12 +49,9 @@ const PRUint32 kEVENT_LAST_ENTRY  = 0xffffffff;
 
 static const PRUint32 gWinEventMap[] = {
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent doesn't have 0 constant
-  EVENT_OBJECT_SHOW,                                 // nsIAccessibleEvent::EVENT_DOM_CREATE
-  EVENT_OBJECT_HIDE,                                 // nsIAccessibleEvent::EVENT_DOM_DESTROY
-  kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE
-  EVENT_OBJECT_SHOW,                                 // nsIAccessibleEvent::EVENT_ASYNCH_SHOW
-  EVENT_OBJECT_HIDE,                                 // nsIAccessibleEvent::EVENT_ASYNCH_HIDE
-  kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_ASYNCH_LAYOUT_CHANGE
+  EVENT_OBJECT_SHOW,                                 // nsIAccessibleEvent::EVENT_SHOW
+  EVENT_OBJECT_HIDE,                                 // nsIAccessibleEvent::EVENT_HIDE
+  EVENT_OBJECT_REORDER,                              // nsIAccessibleEvent::EVENT_REORDER
   IA2_EVENT_ACTIVE_DECENDENT_CHANGED,                // nsIAccessibleEvent::EVENT_ACTIVE_DECENDENT_CHANGED
   EVENT_OBJECT_FOCUS,                                // nsIAccessibleEvent::EVENT_FOCUS
   EVENT_OBJECT_STATECHANGE,                          // nsIAccessibleEvent::EVENT_STATE_CHANGE
@@ -140,7 +137,6 @@ static const PRUint32 gWinEventMap[] = {
   IA2_EVENT_OBJECT_ATTRIBUTE_CHANGED,                // nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED
   IA2_EVENT_PAGE_CHANGED,                            // nsIAccessibleEvent::EVENT_PAGE_CHANGED
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_INTERNAL_LOAD
-  EVENT_OBJECT_REORDER,                              // nsIAccessibleEvent::EVENT_REORDER
   kEVENT_LAST_ENTRY                                  // nsIAccessibleEvent::EVENT_LAST_ENTRY
 };
 

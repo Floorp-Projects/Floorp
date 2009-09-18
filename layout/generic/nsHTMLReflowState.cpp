@@ -1544,7 +1544,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
   }
 
   // Make sure not to return a negative height here!
-  return PR_MAX(result, 0);
+  return NS_MAX(result, 0);
 }
 // Called by InitConstraints() to compute the containing block rectangle for
 // the element. Handles the special logic for absolutely positioned elements
@@ -2249,16 +2249,16 @@ nsHTMLReflowState::ApplyMinMaxConstraints(nscoord* aFrameWidth,
 {
   if (aFrameWidth) {
     if (NS_UNCONSTRAINEDSIZE != mComputedMaxWidth) {
-      *aFrameWidth = PR_MIN(*aFrameWidth, mComputedMaxWidth);
+      *aFrameWidth = NS_MIN(*aFrameWidth, mComputedMaxWidth);
     }
-    *aFrameWidth = PR_MAX(*aFrameWidth, mComputedMinWidth);
+    *aFrameWidth = NS_MAX(*aFrameWidth, mComputedMinWidth);
   }
 
   if (aFrameHeight) {
     if (NS_UNCONSTRAINEDSIZE != mComputedMaxHeight) {
-      *aFrameHeight = PR_MIN(*aFrameHeight, mComputedMaxHeight);
+      *aFrameHeight = NS_MIN(*aFrameHeight, mComputedMaxHeight);
     }
-    *aFrameHeight = PR_MAX(*aFrameHeight, mComputedMinHeight);
+    *aFrameHeight = NS_MAX(*aFrameHeight, mComputedMinHeight);
   }
 }
 

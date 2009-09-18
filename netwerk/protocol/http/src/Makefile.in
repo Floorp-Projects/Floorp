@@ -71,6 +71,7 @@ CPPSRCS		= \
 		nsHttpHandler.cpp \
 		nsHttpChannel.cpp \
 		nsHttpPipeline.cpp \
+		nsHttpActivityDistributor.cpp \
 		HttpChannelParent.cpp \
 		HttpChannelChild.cpp  \
 		$(NULL)

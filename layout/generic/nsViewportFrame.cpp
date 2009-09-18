@@ -53,6 +53,8 @@ NS_NewViewportFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) ViewportFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(ViewportFrame)
+
 NS_IMETHODIMP
 ViewportFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
@@ -154,7 +156,8 @@ ViewportFrame::RemoveFrame(nsIAtom*        aListName,
   nsresult rv = NS_OK;
 
   if (nsGkAtoms::fixedList == aListName) {
-    rv = mFixedContainer.RemoveFrame(this, aListName, aOldFrame);
+    mFixedContainer.RemoveFrame(this, aListName, aOldFrame);
+    rv = NS_OK;
   }
   else {
     NS_ASSERTION(!aListName, "unexpected child list");

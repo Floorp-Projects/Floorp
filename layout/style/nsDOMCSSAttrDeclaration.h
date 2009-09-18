@@ -53,7 +53,11 @@ class nsDOMCSSAttributeDeclaration : public nsDOMCSSDeclaration,
                                      public nsWrapperCache
 {
 public:
-  nsDOMCSSAttributeDeclaration(nsIContent *aContent);
+  nsDOMCSSAttributeDeclaration(nsIContent *aContent
+#ifdef MOZ_SMIL
+                               , PRBool aIsSMILOverride
+#endif // MOZ_SMIL
+                               );
   ~nsDOMCSSAttributeDeclaration();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -79,6 +83,14 @@ protected:
   virtual nsresult DeclarationChanged();
   
   nsCOMPtr<nsIContent> mContent;
+
+#ifdef MOZ_SMIL
+  /* If true, this indicates that this nsDOMCSSAttributeDeclaration
+   * should interact with mContent's SMIL override style rule (rather
+   * than the inline style rule).
+   */
+  const PRBool mIsSMILOverride;
+#endif // MOZ_SMIL
 };
 
 #endif /* nsDOMCSSAttributeDeclaration_h___ */

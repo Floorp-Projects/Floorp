@@ -55,7 +55,3 @@ include $(topsrcdir)/config/rules.mk
 
 export:: $(EXPORT_HEADERS)
 	$(INSTALL) -m 444 $(EXPORT_HEADERS) $(dist_includedir)
-ifeq ($(MOZ_BITS),16)
-	$(INSTALL) -m 444 $(EXPORT_HEADERS) $(MOZ_INCL)
-endif
-

@@ -116,110 +116,112 @@ function test()
       if (aTopic != DLMGR_UI_DONE)
         return;
 
-      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.focus();
-      let $ = function(aId) win.document.getElementById(aId);
-      let downloadView = $("downloadView");
-
-      // Default test/check for invocations
-      let invokeCount = 0;
-      let counter = function() invokeCount++;
-
-      // Accessors for returning a value for various properties
-      let getItems = function() downloadView.itemCount;
-      let getSelected = function() downloadView.selectedCount;
-      let getClipboard = function() {
-        let clip = Cc["@mozilla.org/widget/clipboard;1"].
-                   getService(Ci.nsIClipboard);
-        let trans = Cc["@mozilla.org/widget/transferable;1"].
-                    createInstance(Ci.nsITransferable);
-        trans.addDataFlavor("text/unicode");
-        clip.getData(trans, clip.kGlobalClipboard);
-        let str = {};
-        let strLen = {};
-        trans.getTransferData("text/unicode", str, strLen);
-        return str.value.QueryInterface(Ci.nsISupportsString).data.
-          substring(0, strLen.value / 2);
-      };
-
-      // Array of tests that consist of the command name, download manager
-      // function to temporarily replace, method to use in its place, value to
-      // use when checking correctness
-      let commandTests = [
-        ["pause", "pauseDownload", counter, counter],
-        ["resume", "resumeDownload", counter, counter],
-        ["cancel", "cancelDownload", counter, counter],
-        ["open", "openDownload", counter, counter],
-        ["show", "showDownload", counter, counter],
-        ["retry", "retryDownload", counter, counter],
-        ["openReferrer", "openReferrer", counter, counter],
-        ["copyLocation", null, null, getClipboard],
-        ["removeFromList", null, null, getItems],
-        ["selectAll", null, null, getSelected],
-      ];
-
-      // All the expected results for both single and double selections
-      let allExpected = {
-        single: {
-          pause: [0, "Paused no downloads"],
-          resume: [0, "Resumed no downloads"],
-          cancel: [0, "Canceled no downloads"],
-          open: [0, "Opened no downloads"],
-          show: [0, "Showed no downloads"],
-          retry: [1, "Retried one download"],
-          openReferrer: [1, "Opened one referrer"],
-          copyLocation: ["http://ed.agadak.net/file", "Copied one location"],
-          removeFromList: [3, "Removed one downloads, remaining 3"],
-          selectAll: [3, "Selected all 3 remaining downloads"],
-        },
-        double: {
-          pause: [0, "Paused neither download"],
-          resume: [0, "Resumed neither download"],
-          cancel: [0, "Canceled neither download"],
-          open: [0, "Opened neither download"],
-          show: [0, "Showed neither download"],
-          retry: [2, "Retried both downloads"],
-          openReferrer: [2, "Opened both referrers"],
-          copyLocation: ["http://mozilla.org/file\nhttp://mozilla.com/file", "Copied both locations"],
-          removeFromList: [1, "Removed both downloads, remaining 1"],
-          selectAll: [1, "Selected the 1 remaining download"],
-        },
-      };
-
-      // Run two tests: single selected, double selected
-      for each (let whichTest in ["single", "double"]) {
-        let expected = allExpected[whichTest];
-
-        // Select the first download
-        downloadView.selectedIndex = 0;
-
-        // Select 2 downloads for double
-        if (whichTest == "double")
-          synthesizeKey("VK_DOWN", { shiftKey: true }, win);
-
-        for each (let [command, func, test, value] in commandTests) {
-          // Make a copy of the original function and replace it with a test
-          let copy;
-          [copy, win[func]] = [win[func], test];
-
-          // Run the command from the menu
-          $("menuitem_" + command).doCommand();
-
-          // Make sure the value is as expected
-          let [correct, message] = expected[command];
-          ok(value() == correct, message);
-
-          // Restore original values
-          invokeCount = 0;
-          win[func] = copy;
-        }
-      }
-
-      // We're done!
-      win.close();
-      obs.removeObserver(testObs, DLMGR_UI_DONE);
-      SimpleTest.finish();
+      SimpleTest.waitForFocus(function () { continueTest(aSubject) }, aSubject);
     }
+  };
+
+  function continueTest(win) {
+    let $ = function(aId) win.document.getElementById(aId);
+    let downloadView = $("downloadView");
+
+    // Default test/check for invocations
+    let invokeCount = 0;
+    let counter = function() invokeCount++;
+
+    // Accessors for returning a value for various properties
+    let getItems = function() downloadView.itemCount;
+    let getSelected = function() downloadView.selectedCount;
+    let getClipboard = function() {
+      let clip = Cc["@mozilla.org/widget/clipboard;1"].
+                 getService(Ci.nsIClipboard);
+      let trans = Cc["@mozilla.org/widget/transferable;1"].
+                  createInstance(Ci.nsITransferable);
+      trans.addDataFlavor("text/unicode");
+      clip.getData(trans, clip.kGlobalClipboard);
+      let str = {};
+      let strLen = {};
+      trans.getTransferData("text/unicode", str, strLen);
+      return str.value.QueryInterface(Ci.nsISupportsString).data.
+        substring(0, strLen.value / 2);
+    };
+
+    // Array of tests that consist of the command name, download manager
+    // function to temporarily replace, method to use in its place, value to
+    // use when checking correctness
+    let commandTests = [
+      ["pause", "pauseDownload", counter, counter],
+      ["resume", "resumeDownload", counter, counter],
+      ["cancel", "cancelDownload", counter, counter],
+      ["open", "openDownload", counter, counter],
+      ["show", "showDownload", counter, counter],
+      ["retry", "retryDownload", counter, counter],
+      ["openReferrer", "openReferrer", counter, counter],
+      ["copyLocation", null, null, getClipboard],
+      ["removeFromList", null, null, getItems],
+      ["selectAll", null, null, getSelected],
+    ];
+
+    // All the expected results for both single and double selections
+    let allExpected = {
+      single: {
+        pause: [0, "Paused no downloads"],
+        resume: [0, "Resumed no downloads"],
+        cancel: [0, "Canceled no downloads"],
+        open: [0, "Opened no downloads"],
+        show: [0, "Showed no downloads"],
+        retry: [1, "Retried one download"],
+        openReferrer: [1, "Opened one referrer"],
+        copyLocation: ["http://ed.agadak.net/file", "Copied one location"],
+        removeFromList: [3, "Removed one downloads, remaining 3"],
+        selectAll: [3, "Selected all 3 remaining downloads"],
+      },
+      double: {
+        pause: [0, "Paused neither download"],
+        resume: [0, "Resumed neither download"],
+        cancel: [0, "Canceled neither download"],
+        open: [0, "Opened neither download"],
+        show: [0, "Showed neither download"],
+        retry: [2, "Retried both downloads"],
+        openReferrer: [2, "Opened both referrers"],
+        copyLocation: ["http://mozilla.org/file\nhttp://mozilla.com/file", "Copied both locations"],
+        removeFromList: [1, "Removed both downloads, remaining 1"],
+        selectAll: [1, "Selected the 1 remaining download"],
+      },
+    };
+
+    // Run two tests: single selected, double selected
+    for each (let whichTest in ["single", "double"]) {
+      let expected = allExpected[whichTest];
+
+      // Select the first download
+      downloadView.selectedIndex = 0;
+
+      // Select 2 downloads for double
+      if (whichTest == "double")
+        synthesizeKey("VK_DOWN", { shiftKey: true }, win);
+
+      for each (let [command, func, test, value] in commandTests) {
+        // Make a copy of the original function and replace it with a test
+        let copy;
+        [copy, win[func]] = [win[func], test];
+
+        // Run the command from the menu
+        $("menuitem_" + command).doCommand();
+
+        // Make sure the value is as expected
+        let [correct, message] = expected[command];
+        ok(value() == correct, message);
+
+        // Restore original values
+        invokeCount = 0;
+        win[func] = copy;
+      }
+    }
+
+    // We're done!
+    win.close();
+    obs.removeObserver(testObs, DLMGR_UI_DONE);
+    SimpleTest.finish();
   };
   obs.addObserver(testObs, DLMGR_UI_DONE, false);
 

@@ -63,54 +63,16 @@ interface nsIGnomeVFSMimeApp : nsISupports
 };
 
 /*
- * The VFS service makes use of two distinct registries.
- *
- * The application registry holds information about applications (uniquely
- * identified by id), such as which MIME types and URI schemes they are
- * capable of handling, whether they run in a terminal, etc.
+ * The VFS service makes use of a registry for information.
  *
  * The MIME registry holds information about MIME types, such as which
  * extensions map to a given MIME type.  The MIME registry also stores the
  * id of the application selected to handle each MIME type.
  */
 
-[scriptable, uuid(dea20bf0-4e4d-48c5-b932-dc3e116dc64b)]
+[scriptable, uuid(d1ac73a6-2ceb-4164-8142-215afe7fe8a6)]
 interface nsIGnomeVFSService : nsISupports
 {
-  /*** Application registry methods ***/
-
-  /* string keys */
-  const long APP_KEY_COMMAND = 0;
-  const long APP_KEY_NAME = 1;
-  const long APP_KEY_SUPPORTED_URI_SCHEMES = 2;  /* comma-separated list */
-  const long APP_KEY_EXPECTS_URIS = 3; /* "true", "false", or "non-file" */
-
-  /* Set one of the above string keys for the given application id.
-     'id' can be an arbitrary, unique string to identify the application. */
-  void               setAppStringKey(in AUTF8String id,
-                                     in long        key,  /* see enums above */
-                                     in AUTF8String value);
-
-  /* boolean keys */
-  const long APP_KEY_CAN_OPEN_MULTIPLE = 4;
-  const long APP_KEY_REQUIRES_TERMINAL = 5;
-
-  /* Set one of the above boolean keys for the given application id.
-     'id' can be an arbitrary, unique string to identify the application. */
-  void               setAppBoolKey(in AUTF8String id,
-                                   in long        key,
-                                   in boolean     value);
-
-
-  /* Add a MIME type to the list of types that the application can handle */
-  void               addMimeType(in AUTF8String id,
-                                 in AUTF8String mimeType);
-
-  /* Commit application registry changes to disk.  This must be called
-     to save changes. */
-  void               syncAppRegistry();
-
-
   /*** MIME registry methods ***/
 
   /* Obtain the MIME type registered for an extension.  The extension
@@ -120,26 +82,8 @@ interface nsIGnomeVFSService : nsISupports
   /* Obtain the preferred application for opening a given MIME type */
   nsIGnomeVFSMimeApp getAppForMimeType(in AUTF8String mimeType);
 
-  /* Set the preferred application for opening a given MIME type */
-  void               setAppForMimeType(in AUTF8String mimeType,
-                                       in AUTF8String id);
-
   /* Obtain a description for the given MIME type */
   AUTF8String        getDescriptionForMimeType(in AUTF8String mimeType);
-
-  /* Set the icon for a MIME type, which will be searched for by the shell
-     using the icon theme search path. */
-  void               setIconForMimeType(in AUTF8String mimeType,
-                                        in AUTF8String iconPath);
-
-  /*
-   * Set the list of extensions for a given MIME type.
-   * Should be passed a space separated list of extensions with no
-   * dot, i.e. "gif jpg png".
-   */
-  void setMimeExtensions(in AUTF8String mimeType,
-                         in AUTF8String extensionsList);
-
 
   /*** Misc. methods ***/
 

@@ -65,3 +65,4 @@ patch -p3 < bug498824.patch
 patch -p3 < bug496529.patch
 patch -p3 < bug499519.patch
 patch -p3 < bug500311.patch
+patch -p3 < faster_seek.patch

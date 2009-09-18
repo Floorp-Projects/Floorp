@@ -60,6 +60,8 @@
 #ifdef XP_MACOSX
 #ifdef __LP64__
 #define NP_NO_QUICKDRAW
+#define NP_NO_CARBON
+#include <ApplicationServices/ApplicationServices.h>
 #else
 #include <Carbon/Carbon.h>
 #endif
@@ -78,7 +80,7 @@
 /*----------------------------------------------------------------------*/
 
 #define NP_VERSION_MAJOR 0
-#define NP_VERSION_MINOR 22
+#define NP_VERSION_MINOR 23
 
 
 /* The OS/2 version of Netscape uses RC_DATA to define the
@@ -246,6 +248,13 @@ typedef enum {
 #endif
   NPDrawingModelCoreGraphics = 1
 } NPDrawingModel;
+
+typedef enum {
+#ifndef NP_NO_CARBON
+  NPEventModelCarbon = 0,
+#endif
+  NPEventModelCocoa = 1
+} NPEventModel;
 #endif
 
 /*
@@ -325,6 +334,8 @@ typedef enum {
 #ifdef XP_MACOSX
   /* Used for negotiating drawing models */
   , NPPVpluginDrawingModel = 1000
+  /* Used for negotiating event models */
+  , NPPVpluginEventModel = 1001
 #endif
 } NPPVariable;
 
@@ -363,6 +374,10 @@ typedef enum {
   , NPNVsupportsQuickDrawBool = 2000
 #endif
   , NPNVsupportsCoreGraphicsBool = 2001
+#ifndef NP_NO_CARBON
+  , NPNVsupportsCarbonBool = 3000 /* TRUE if the browser supports the Carbon event model */
+#endif
+  , NPNVsupportsCocoaBool = 3001 /* TRUE if the browser supports the Cocoa event model */
 #endif
 } NPNVariable;
 
@@ -431,7 +446,9 @@ typedef struct _NPPrint
 } NPPrint;
 
 #ifdef XP_MACOSX
+#ifndef NP_NO_CARBON
 typedef EventRecord NPEvent;
+#endif
 #elif defined(XP_WIN)
 typedef struct _NPEvent
 {
@@ -450,10 +467,9 @@ typedef struct _NPEvent
 typedef XEvent NPEvent;
 #else
 typedef void*  NPEvent;
-#endif /* XP_MACOSX */
+#endif
 
 #ifdef XP_MACOSX
-
 typedef void* NPRegion;
 #ifndef NP_NO_QUICKDRAW
 typedef RgnHandle NPQDRegion;
@@ -467,7 +483,26 @@ typedef Region NPRegion;
 typedef void *NPRegion;
 #endif
 
+typedef struct _NPNSString NPNSString;
+typedef struct _NPNSWindow NPNSWindow;
+typedef struct _NPNSMenu   NPNSMenu;
+
 #ifdef XP_MACOSX
+typedef NPNSMenu NPMenu;
+#else
+typedef void *NPMenu;
+#endif
+
+typedef enum {
+  NPCoordinateSpacePlugin = 1,
+  NPCoordinateSpaceWindow,
+  NPCoordinateSpaceFlippedWindow,
+  NPCoordinateSpaceScreen,
+  NPCoordinateSpaceFlippedScreen
+} NPCoordinateSpace;
+
+#ifdef XP_MACOSX
+
 typedef struct NP_Port
 {
   CGrafPtr port;
@@ -478,9 +513,68 @@ typedef struct NP_Port
 typedef struct NP_CGContext
 {
   CGContextRef context;
-  WindowRef window;
+#ifdef NP_NO_CARBON
+  NPNSWindow *window;
+#else
+  void *window; /* A WindowRef or NULL for the Cocoa event model. */
+#endif
 } NP_CGContext;
 
+typedef enum {
+  NPCocoaEventDrawRect = 1,
+  NPCocoaEventMouseDown,
+  NPCocoaEventMouseUp,
+  NPCocoaEventMouseMoved,
+  NPCocoaEventMouseEntered,
+  NPCocoaEventMouseExited,
+  NPCocoaEventMouseDragged,
+  NPCocoaEventKeyDown,
+  NPCocoaEventKeyUp,
+  NPCocoaEventFlagsChanged,
+  NPCocoaEventFocusChanged,
+  NPCocoaEventWindowFocusChanged,
+  NPCocoaEventScrollWheel,
+  NPCocoaEventTextInput
+} NPCocoaEventType;
+
+typedef struct _NPCocoaEvent {
+  NPCocoaEventType type;
+  uint32_t version;
+  union {
+    struct {
+      uint32_t modifierFlags;
+      double   pluginX;
+      double   pluginY;           
+      int32_t  buttonNumber;
+      int32_t  clickCount;
+      double   deltaX;
+      double   deltaY;
+      double   deltaZ;
+    } mouse;
+    struct {
+      uint32_t    modifierFlags;
+      NPNSString *characters;
+      NPNSString *charactersIgnoringModifiers;
+      NPBool      isARepeat;
+      uint16_t    keyCode;
+    } key;
+    struct {
+      CGContextRef context;
+      double x;
+      double y;
+      double width;
+      double height;
+    } draw;
+    struct {
+      NPBool hasFocus;
+    } focus;
+    struct {
+      NPNSString *text;
+    } text;
+  } data;
+} NPCocoaEvent;
+
+#ifndef NP_NO_CARBON
 /* Non-standard event types that can be passed to HandleEvent */
 enum NPEventType {
   NPEventType_GetFocusEvent = (osEvt + 16),
@@ -491,12 +585,12 @@ enum NPEventType {
   NPEventType_ScrollingBeginsEvent = 1000,
   NPEventType_ScrollingEndsEvent
 };
-
 #ifdef OBSOLETE
 #define getFocusEvent     (osEvt + 16)
 #define loseFocusEvent    (osEvt + 17)
 #define adjustCursorEvent (osEvt + 18)
-#endif
+#endif /* OBSOLETE */
+#endif /* NP_NO_CARBON */
 
 #endif /* XP_MACOSX */
 
@@ -676,8 +770,10 @@ NPError     NP_LOADDS NPN_GetAuthenticationInfo(NPP instance,
                                                 char **username, uint32_t *ulen,
                                                 char **password,
                                                 uint32_t *plen);
-uint32_t    NPN_ScheduleTimer(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID));
-void        NPN_UnscheduleTimer(NPP instance, uint32_t timerID);
+uint32_t    NP_LOADDS NPN_ScheduleTimer(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID));
+void        NP_LOADDS NPN_UnscheduleTimer(NPP instance, uint32_t timerID);
+NPError     NP_LOADDS NPN_PopUpContextMenu(NPP instance, NPMenu* menu);
+NPBool      NP_LOADDS NPN_ConvertPoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace);
 
 #ifdef __cplusplus
 }  /* end extern "C" */

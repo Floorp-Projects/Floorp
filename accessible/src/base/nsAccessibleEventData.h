@@ -105,11 +105,12 @@ public:
 protected:
   already_AddRefed<nsIAccessible> GetAccessibleByNode();
 
-  void CaptureIsFromUserInput(PRBool aIsAsynch);
+  void CaptureIsFromUserInput();
   PRBool mIsFromUserInput;
 
   PRUint32 mEventType;
   EEventRule mEventRule;
+  PRPackedBool mIsAsync;
   nsCOMPtr<nsIAccessible> mAccessible;
   nsCOMPtr<nsIDOMNode> mDOMNode;
   nsCOMPtr<nsIAccessibleDocument> mDocAccessible;
@@ -127,6 +128,10 @@ public:
   static EEventRule EventRule(nsIAccessibleEvent *aAccEvent) {
     nsRefPtr<nsAccEvent> accEvent = GetAccEventPtr(aAccEvent);
     return accEvent->mEventRule;
+  }
+  static PRBool IsAsyncEvent(nsIAccessibleEvent *aAccEvent) {
+    nsRefPtr<nsAccEvent> accEvent = GetAccEventPtr(aAccEvent);
+    return accEvent->mIsAsync;
   }
   static PRBool IsFromUserInput(nsIAccessibleEvent *aAccEvent) {
     PRBool isFromUserInput;
@@ -164,7 +169,7 @@ public:
    *   Event rule of filtered events will be set to eDoNotEmit.
    *   Events with other event rule are good to emit.
    */
-  static void ApplyEventRules(nsCOMArray<nsIAccessibleEvent> &aEventsToFire);
+  static void ApplyEventRules(nsTArray<nsCOMPtr<nsIAccessibleEvent> > &aEventsToFire);
 
 private:
   static already_AddRefed<nsAccEvent> GetAccEventPtr(nsIAccessibleEvent *aAccEvent) {
@@ -183,7 +188,7 @@ private:
    * @param aEventRule       the event rule to be applied
    *                         (should be eDoNotEmit or eAllowDupes)
    */
-  static void ApplyToSiblings(nsCOMArray<nsIAccessibleEvent> &aEventsToFire,
+  static void ApplyToSiblings(nsTArray<nsCOMPtr<nsIAccessibleEvent> > &aEventsToFire,
                               PRUint32 aStart, PRUint32 aEnd,
                               PRUint32 aEventType, nsIDOMNode* aDOMNode,
                               EEventRule aEventRule);
@@ -258,7 +263,6 @@ public:
                         PRUint32 aState, PRBool aIsExtraState);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIACCESSIBLEEVENT(nsAccEvent::)
   NS_DECL_NSIACCESSIBLESTATECHANGEEVENT
 
 private:
@@ -275,7 +279,6 @@ public:
                        PRBool aIsInserted, PRBool aIsAsynch = PR_FALSE);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIACCESSIBLEEVENT(nsAccEvent::)
   NS_DECL_NSIACCESSIBLETEXTCHANGEEVENT
 
 private:
@@ -293,7 +296,6 @@ public:
   nsAccCaretMoveEvent(nsIDOMNode *aNode);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIACCESSIBLEEVENT(nsAccEvent::)
   NS_DECL_NSIACCESSIBLECARETMOVEEVENT
 
 private:
@@ -308,7 +310,6 @@ public:
                         PRBool aIsAsynch);
 
   NS_DECL_ISUPPORTS
-  NS_FORWARD_NSIACCESSIBLEEVENT(nsAccEvent::)
   NS_DECL_NSIACCESSIBLETABLECHANGEEVENT
 
 private:

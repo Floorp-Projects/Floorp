@@ -11,6 +11,9 @@ include reftest-sanity/reftest.list
 # images (if libpr0n is busted, could result in weird failures in other tests)
 include ../../modules/libpr0n/test/reftest/reftest.list
 
+# relative and absolute positioning
+include abs-pos/reftest.list
+
 # backgrounds/
 include backgrounds/reftest.list
 

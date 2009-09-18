@@ -72,6 +72,7 @@ public:
   nsMathMLContainerFrame(nsStyleContext* aContext) : nsHTMLContainerFrame(aContext) {}
 
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   // --------------------------------------------------------------------------
   // Overloaded nsMathMLFrame methods -- see documentation in nsIMathMLFrame.h
@@ -391,6 +392,8 @@ private:
 // Issues: If/when mathml becomes a pluggable component, the separation will be needed.
 class nsMathMLmathBlockFrame : public nsBlockFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell,
           nsStyleContext* aContext, PRUint32 aFlags);
 
@@ -462,6 +465,8 @@ protected:
 
 class nsMathMLmathInlineFrame : public nsInlineFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD

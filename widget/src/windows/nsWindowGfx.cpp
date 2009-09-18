@@ -240,7 +240,8 @@ void nsWindowGfx::OnSettingsChangeGfx(WPARAM wParam)
         oldSize.height * oldSize.width)
       nsWindow::sSharedSurfaceData = nsnull;
 
-    glpDD->RestoreAllSurfaces();
+    if(glpDD)
+      glpDD->RestoreAllSurfaces();
   }
 #endif
 }
@@ -250,6 +251,59 @@ void nsWindow::SetUpForPaint(HDC aHDC)
   ::SetBkColor (aHDC, NSRGB_2_COLOREF(mBackground));
   ::SetTextColor(aHDC, NSRGB_2_COLOREF(mForeground));
   ::SetBkMode (aHDC, TRANSPARENT);
+}
+
+// GetRegionToPaint returns the invalidated region that needs to be painted
+// it's abstracted out because Windows XP/Vista/7 handles this for us, but
+// we need to keep track of it our selves for Windows CE and Windows Mobile
+
+nsCOMPtr<nsIRegion> nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
+                                               PAINTSTRUCT ps, HDC aDC)
+{ 
+  HRGN paintRgn = NULL;
+  nsCOMPtr<nsIRegion> paintRgnWin;
+  if (aForceFullRepaint) {
+    RECT paintRect;
+    ::GetClientRect(mWnd, &paintRect);
+    paintRgn = ::CreateRectRgn(paintRect.left, paintRect.top, 
+                               paintRect.right, paintRect.bottom);
+    if (paintRgn) {
+      paintRgnWin = nsWindowGfx::ConvertHRGNToRegion(paintRgn);
+      ::DeleteObject(paintRgn);
+      return paintRgnWin;
+    }
+  }
+#ifndef WINCE
+  paintRgn = ::CreateRectRgn(0, 0, 0, 0);
+  if (paintRgn != NULL) {
+    int result = GetRandomRgn(aDC, paintRgn, SYSRGN);
+    if (result == 1) {
+      POINT pt = {0,0};
+      ::MapWindowPoints(NULL, mWnd, &pt, 1);
+      ::OffsetRgn(paintRgn, pt.x, pt.y);
+    }
+    paintRgnWin = nsWindowGfx::ConvertHRGNToRegion(paintRgn);
+    ::DeleteObject(paintRgn);
+  }
+#else
+# ifdef WINCE_WINDOWS_MOBILE
+  if (!mInvalidatedRegion->IsEmpty()) {  
+    // XXX: we may not recieve invalidates when an OS dialog obsures out window 
+    // and dismisses, so mInvalidatedRegion may not be complete
+    paintRgnWin = mInvalidatedRegion.forget();
+    mInvalidatedRegion = do_CreateInstance(kRegionCID);
+    mInvalidatedRegion->Init(); 
+    return paintRgnWin;
+  }
+# endif
+  paintRgn = ::CreateRectRgn(ps.rcPaint.left, ps.rcPaint.top,
+                             ps.rcPaint.right, ps.rcPaint.bottom);
+  if (paintRgn) {
+    paintRgnWin = nsWindowGfx::ConvertHRGNToRegion(paintRgn);
+    ::DeleteObject(paintRgn);
+  }
+#endif
+  return paintRgnWin;
 }
 
 PRBool nsWindow::OnPaint(HDC aDC)
@@ -296,40 +350,13 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
   HDC hDC = aDC ? aDC : (::BeginPaint(mWnd, &ps));
   mPaintDC = hDC;
-  HRGN paintRgn = NULL;
 
 #ifdef MOZ_XUL
-  if (aDC || (eTransparencyTransparent == mTransparencyMode)) {
+  PRBool forceRepaint = aDC || (eTransparencyTransparent == mTransparencyMode);
 #else
-  if (aDC) {
+  PRBool forceRepaint = NULL != aDC;
 #endif
-
-    RECT paintRect;
-    ::GetClientRect(mWnd, &paintRect);
-    paintRgn = ::CreateRectRgn(paintRect.left, paintRect.top, paintRect.right, paintRect.bottom);
-  }
-  else {
-#ifndef WINCE
-    paintRgn = ::CreateRectRgn(0, 0, 0, 0);
-    if (paintRgn != NULL) {
-      int result = GetRandomRgn(hDC, paintRgn, SYSRGN);
-      if (result == 1) {
-        POINT pt = {0,0};
-        ::MapWindowPoints(NULL, mWnd, &pt, 1);
-        ::OffsetRgn(paintRgn, pt.x, pt.y);
-      }
-    }
-#else
-    paintRgn = ::CreateRectRgn(ps.rcPaint.left, ps.rcPaint.top, 
-                               ps.rcPaint.right, ps.rcPaint.bottom);
-#endif
-  }
-
-  nsCOMPtr<nsIRegion> paintRgnWin;
-  if (paintRgn) {
-    paintRgnWin = nsWindowGfx::ConvertHRGNToRegion(paintRgn);
-    ::DeleteObject(paintRgn);
-  }
+  nsCOMPtr<nsIRegion> paintRgnWin = GetRegionToPaint(forceRepaint, ps, hDC);
 
   if (paintRgnWin &&
       !paintRgnWin->IsEmpty() &&
@@ -666,7 +693,9 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
 
   // Get the image data
   nsRefPtr<gfxImageSurface> frame;
-  aContainer->CopyCurrentFrame(getter_AddRefs(frame));
+  aContainer->CopyFrame(imgIContainer::FRAME_CURRENT,
+                        imgIContainer::FLAG_SYNC_DECODE,
+                        getter_AddRefs(frame));
   if (!frame)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -842,38 +871,140 @@ HBITMAP nsWindowGfx::DataToBitmap(PRUint8* aImageData,
 
 // Windows Mobile Special image/direct draw painting fun
 #if defined(CAIRO_HAS_DDRAW_SURFACE)
+
+HRESULT nsWindow::PaintRectImageDDraw16(RECT rcPaint, nsPaintEvent* event){
+  HRESULT hr;
+  gfxIntSize surfaceSize;
+  nsRefPtr<gfxImageSurface> targetSurfaceImage;
+  nsRefPtr<gfxContext> thebesContext;
+  nsCOMPtr<nsIRenderingContext> rc;
+  nsEventStatus eventStatus = nsEventStatus_eIgnore;
+  RECT renderArea; 
+ 
+  surfaceSize = gfxIntSize(rcPaint.right - rcPaint.left,
+                           rcPaint.bottom - rcPaint.top);
+  
+  targetSurfaceImage = new gfxImageSurface(sSharedSurfaceData.get(),
+                                           surfaceSize,
+                                           surfaceSize.width * 4,
+                                           gfxASurface::ImageFormatRGB24);
+  
+  if (!targetSurfaceImage || targetSurfaceImage->CairoStatus()) {
+    NS_ERROR("Invalid targetSurfaceImage!");
+    return E_FAIL;
+  }
+  
+  targetSurfaceImage->SetDeviceOffset(gfxPoint(-rcPaint.left, -rcPaint.top));
+
+  thebesContext = new gfxContext(targetSurfaceImage);
+  thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
+  thebesContext->SetFlag(gfxContext::FLAG_SIMPLIFY_OPERATORS);
+  
+  nsresult rv = mContext->CreateRenderingContextInstance (*getter_AddRefs(rc));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateRenderingContextInstance failed");
+    return E_FAIL;
+  }
+  
+  rv = rc->Init(mContext, thebesContext);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("RC::Init failed");
+    return E_FAIL;
+  }
+  
+  event->renderingContext = rc;
+  nsresult result = DispatchWindowEvent(event, eventStatus);
+  event->renderingContext = nsnull;
+  
+  if (!result) {
+    printf("result is null from dispatch\n");
+    return E_FAIL;
+  }
+  
+  
+  hr = glpDDSecondary->Lock(0, &gDDSDSecondary, DDLOCK_WAITNOTBUSY | DDLOCK_DISCARD, 0);  /* should we wait here? */
+  if (FAILED(hr)) {
+#ifdef DEBUG
+    DDError("Failed to lock renderer", hr);
+#endif
+    return E_FAIL;
+  }
+  
+  // Convert RGB24 -> RGB565
+  pixman_image_t *srcPixmanImage = pixman_image_create_bits(PIXMAN_x8r8g8b8,
+                                                            surfaceSize.width,
+                                                            surfaceSize.height,
+                                                            (uint32_t*) sSharedSurfaceData.get(),
+                                                            surfaceSize.width * 4);
+  
+  pixman_image_t *dstPixmanImage = pixman_image_create_bits(PIXMAN_r5g6b5,
+                                                            surfaceSize.width,
+                                                            surfaceSize.height,
+                                                            (uint32_t*) gDDSDSecondary.lpSurface,
+                                                            gDDSDSecondary.dwWidth * 2);
+  
+  pixman_image_composite(PIXMAN_OP_SRC,
+                         srcPixmanImage,
+                         NULL,
+                         dstPixmanImage,
+                         0, 0,
+                         0, 0,
+                         0, 0,
+                         surfaceSize.width,
+                         surfaceSize.height);
+  
+  pixman_image_unref(dstPixmanImage);
+  pixman_image_unref(srcPixmanImage);
+  
+  hr = glpDDSecondary->Unlock(0);
+  if (FAILED(hr)) {
+#ifdef DEBUG
+    DDError("Failed to unlock renderer", hr);
+#endif
+    return E_FAIL;
+  }
+  
+  hr = glpDDClipper->SetHWnd(0, mWnd);
+  if (FAILED(hr)) {
+#ifdef DEBUG
+    DDError("SetHWnd", hr);
+#endif
+    return E_FAIL;
+  }
+  
+  // translate the paint region to screen coordinates
+  renderArea = rcPaint;
+  MapWindowPoints(mWnd, 0, (LPPOINT)&renderArea, 2);
+  
+  // set the rect to be 0,0 based
+  rcPaint.right = surfaceSize.width;
+  rcPaint.bottom = surfaceSize.height;
+  rcPaint.left = rcPaint.top = 0;
+  
+  return glpDDPrimary->Blt(&renderArea,
+                           glpDDSecondary,
+                           &rcPaint,
+                           DDBLT_WAITNOTBUSY, /* should we really wait here? */
+                           NULL);
+  
+}
+
+
 PRBool nsWindow::OnPaintImageDDraw16()
 {
   PRBool result = PR_TRUE;
   PAINTSTRUCT ps;
-  gfxIntSize surfaceSize;
   nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-  RECT renderArea;
-
-  nsEventStatus eventStatus = nsEventStatus_eIgnore;
-  nsCOMPtr<nsIRenderingContext> rc;
-  nsRefPtr<gfxImageSurface> targetSurfaceImage;
-  nsRefPtr<gfxContext> thebesContext;
-
   mPainting = PR_TRUE;
 
   HDC hDC = ::BeginPaint(mWnd, &ps);
   mPaintDC = hDC;
-
-  HRGN paintRgn = ::CreateRectRgn(ps.rcPaint.left, ps.rcPaint.top, 
-                                  ps.rcPaint.right, ps.rcPaint.bottom);
-
-  nsCOMPtr<nsIRegion> paintRgnWin;
-  if (paintRgn) {
-    paintRgnWin = nsWindowGfx::ConvertHRGNToRegion(paintRgn);
-    ::DeleteObject(paintRgn);
-  }
+  nsCOMPtr<nsIRegion> paintRgnWin = GetRegionToPaint(PR_FALSE, ps, hDC);
 
   if (!paintRgnWin || paintRgnWin->IsEmpty() || !mEventCallback) {
     printf("nothing to paint\n");
     goto cleanup;
   }
-
   InitEvent(event);
   
   event.region = paintRgnWin;
@@ -919,117 +1050,15 @@ PRBool nsWindow::OnPaintImageDDraw16()
       goto cleanup;
     }
   }
-
-  surfaceSize = gfxIntSize(ps.rcPaint.right - ps.rcPaint.left,
-                           ps.rcPaint.bottom - ps.rcPaint.top);
-
-  targetSurfaceImage = new gfxImageSurface(sSharedSurfaceData.get(),
-					   surfaceSize,
-					   surfaceSize.width * 4,
-					   gfxASurface::ImageFormatRGB24);
-
-  if (!targetSurfaceImage || targetSurfaceImage->CairoStatus()) {
-    NS_ERROR("Invalid targetSurfaceImage!");
-    goto cleanup;
-  }
-
-  targetSurfaceImage->SetDeviceOffset(gfxPoint(-ps.rcPaint.left, -ps.rcPaint.top));
-
-  thebesContext = new gfxContext(targetSurfaceImage);
-  thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
-  thebesContext->SetFlag(gfxContext::FLAG_SIMPLIFY_OPERATORS);
-  
-  nsresult rv = mContext->CreateRenderingContextInstance (*getter_AddRefs(rc));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CreateRenderingContextInstance failed");
-    goto cleanup;
-  }
-  
-  rv = rc->Init(mContext, thebesContext);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("RC::Init failed");
-    goto cleanup;
-  }
-  
-  event.renderingContext = rc;
-  result = DispatchWindowEvent(&event, eventStatus);
-  event.renderingContext = nsnull;
-  
-  if (!result) {
-    printf("result is null from dispatch\n");
-    goto cleanup;
-  }
-    
-  HRESULT hr;  
-  hr = glpDDSecondary->Lock(0, &gDDSDSecondary, DDLOCK_WAITNOTBUSY | DDLOCK_DISCARD, 0);  /* should we wait here? */
-  if (FAILED(hr)) {
-#ifdef DEBUG
-    DDError("Failed to lock renderer", hr);
-#endif
-    goto cleanup;
-  }
-  
-  // Convert RGB24 -> RGB565
-  pixman_image_t *srcPixmanImage = pixman_image_create_bits(PIXMAN_x8r8g8b8,
-                                                            surfaceSize.width,
-                                                            surfaceSize.height,
-                                                            (uint32_t*) sSharedSurfaceData.get(),
-                                                            surfaceSize.width * 4);
-  
-  pixman_image_t *dstPixmanImage = pixman_image_create_bits(PIXMAN_r5g6b5,
-                                                            surfaceSize.width,
-                                                            surfaceSize.height,
-                                                            (uint32_t*) gDDSDSecondary.lpSurface,
-                                                            gDDSDSecondary.dwWidth * 2);
- 
-  pixman_image_composite(PIXMAN_OP_SRC,
-                         srcPixmanImage,
-                         NULL,
-                         dstPixmanImage,
-                         0, 0,
-                         0, 0,
-                         0, 0,
-                         surfaceSize.width,
-                         surfaceSize.height);
-
-  pixman_image_unref(dstPixmanImage);
-  pixman_image_unref(srcPixmanImage);
-
-  hr = glpDDSecondary->Unlock(0);
-  if (FAILED(hr)) {
-#ifdef DEBUG
-    DDError("Failed to unlock renderer", hr);
-#endif
-    goto cleanup;
-  }
-
-  hr = glpDDClipper->SetHWnd(0, mWnd);
-  if (FAILED(hr)) {
-#ifdef DEBUG
-    DDError("SetHWnd", hr);
-#endif
-    goto cleanup;
-  }
-
-  // translate the paint region to screen coordinates
-  renderArea = ps.rcPaint;
-  MapWindowPoints(mWnd, 0, (LPPOINT)&renderArea, 2);
-
-  // set the rect to be 0,0 based
-  ps.rcPaint.right = surfaceSize.width;
-  ps.rcPaint.bottom = surfaceSize.height;
-  ps.rcPaint.left = ps.rcPaint.top = 0;
-  
-  hr = glpDDPrimary->Blt(&renderArea,
-                         glpDDSecondary,
-                         &ps.rcPaint,
-                         DDBLT_WAITNOTBUSY, /* should we really wait here? */
-                         NULL);
-  if (FAILED(hr)) {
-#ifdef DEBUG
-    DDError("Blt", hr);
-#endif
-    goto cleanup;
+  nsRegionRectSet *rects = nsnull;
+  RECT r;
+  paintRgnWin->GetRects(&rects);
+  for (int i = 0; i < rects->mNumRects; i++) {
+    r.left = rects->mRects[i].x;
+    r.top = rects->mRects[i].y;
+    r.right = rects->mRects[i].width + rects->mRects[i].x;
+    r.bottom = rects->mRects[i].height + rects->mRects[i].y;
+    PaintRectImageDDraw16(r, &event);
   }
 
 cleanup:

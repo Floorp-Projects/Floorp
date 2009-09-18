@@ -63,6 +63,8 @@ class nsDisplayPlugin;
 
 class nsObjectFrame : public nsObjectFrameSuper, public nsIObjectFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
@@ -94,7 +96,6 @@ public:
     return nsObjectFrameSuper::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
   }
 
-  virtual PRBool SupportsVisibilityHidden() { return PR_FALSE; }
   virtual PRBool NeedsView() { return PR_TRUE; }
   virtual nsresult CreateWidgetForView(nsIView* aView);
 

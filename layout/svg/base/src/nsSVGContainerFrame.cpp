@@ -54,6 +54,9 @@ NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
   return new (aPresShell) nsSVGContainerFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGContainerFrame)
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGDisplayContainerFrame)
+
 NS_IMETHODIMP
 nsSVGContainerFrame::AppendFrames(nsIAtom* aListName,
                                   nsFrameList& aFrameList)
@@ -81,7 +84,8 @@ nsSVGContainerFrame::RemoveFrame(nsIAtom* aListName,
 {
   NS_ASSERTION(!aListName, "unexpected child list");
 
-  return mFrames.DestroyFrame(aOldFrame) ? NS_OK : NS_ERROR_FAILURE;
+  mFrames.DestroyFrame(aOldFrame);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

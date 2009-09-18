@@ -46,7 +46,7 @@ WindowDraggingElement.prototype = {
   mouseDownCheck: function(e) { return true; },
   dragTags: ["box", "hbox", "vbox", "spacer", "label", "statusbarpanel", "stack",
              "toolbaritem", "toolbarseparator", "toolbarspring", "toolbarspacer",
-             "radiogroup", "deck"],
+             "radiogroup", "deck", "scrollbox"],
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "mousedown":

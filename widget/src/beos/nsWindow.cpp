@@ -401,9 +401,6 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
 	if (mEventCallback)
 		aStatus = (*mEventCallback)(event);
 
-	if ((aStatus != nsEventStatus_eIgnore) && (mEventListener))
-		aStatus = mEventListener->ProcessEvent(*event);
-
 	return NS_OK;
 }
 
@@ -1418,40 +1415,6 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 		be_app->SetCursor(newCursor, true);
 	}
 	return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Invalidate this component visible area
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
-{
-	nsresult rv = NS_ERROR_FAILURE;
-	// Asynchronous painting is performed with via nsViewBeOS::Draw() call and its message queue. 
-	// All update rects are collected in nsViewBeOS member  "paintregion".
-	// Flushing of paintregion happens in nsViewBeOS::GetPaintRegion(),
-	// cleanup  - in nsViewBeOS::Validate(), called in OnPaint().
-	BRegion reg;
-	reg.MakeEmpty();
-	if (mView && mView->LockLooper())
-	{
-		if (PR_TRUE == aIsSynchronous)
-		{
-			mView->paintregion.Include(mView->Bounds());
-			reg.Include(mView->Bounds());
-		}
-		else
-		{
-			mView->Draw(mView->Bounds());
-			rv = NS_OK;
-		}
-		mView->UnlockLooper();
-	}
-	// Instant repaint.
-	if (PR_TRUE == aIsSynchronous)
-		rv = OnPaint(&reg);
-	return rv;
 }
 
 //-------------------------------------------------------------------------

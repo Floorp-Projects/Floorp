@@ -90,7 +90,7 @@ new TestCase( SECTION, "parseFloat.length",     1,              parseFloat.lengt
 new TestCase( SECTION, "parseFloat.length = null; parseFloat.length",   1,      eval("parseFloat.length = null; parseFloat.length") );
 new TestCase( SECTION, "delete parseFloat.length",                      false,  delete parseFloat.length );
 new TestCase( SECTION, "delete parseFloat.length; parseFloat.length",   1,      eval("delete parseFloat.length; parseFloat.length") );
-new TestCase( SECTION, "var MYPROPS=''; for ( var p in parseFloat ) { MYPROPS += p }; MYPROPS", "prototype", eval("var MYPROPS=''; for ( var p in parseFloat ) { MYPROPS += p }; MYPROPS") );
+new TestCase( SECTION, "var MYPROPS=''; for ( var p in parseFloat ) { MYPROPS += p }; MYPROPS", "", eval("var MYPROPS=''; for ( var p in parseFloat ) { MYPROPS += p }; MYPROPS") );
 
 new TestCase( SECTION, "parseFloat()",          Number.NaN,     parseFloat() );
 new TestCase( SECTION, "parseFloat('')",        Number.NaN,     parseFloat('') );

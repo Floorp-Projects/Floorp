@@ -43,8 +43,8 @@
 #ifndef nsLineBox_h___
 #define nsLineBox_h___
 
-#include "nsPlaceholderFrame.h"
 #include "nsILineIterator.h"
+#include "nsIFrame.h"
 
 class nsLineBox;
 class nsFloatCache;
@@ -64,7 +64,7 @@ public:
 
   nsFloatCache* Next() const { return mNext; }
 
-  nsPlaceholderFrame* mPlaceholder;     // nsPlaceholderFrame
+  nsIFrame* mFloat;                     // floating frame
 
 protected:
   nsFloatCache* mNext;
@@ -162,8 +162,8 @@ public:
   void Remove(nsFloatCache* aElement);
 
   // Remove an nsFloatCache object from this list and return it, or create
-  // a new one if this one is empty;
-  nsFloatCache* Alloc();
+  // a new one if this one is empty; Set its mFloat to aFloat.
+  nsFloatCache* Alloc(nsIFrame* aFloat);
   
 protected:
   nsFloatCache* mTail;
@@ -499,7 +499,7 @@ public:
     PRUint32 mEmptyCacheValid: 1;
     PRUint32 mEmptyCacheState: 1;
     // mHasBullet indicates that this is an inline line whose block's
-    // bullet is adjacent to this line.
+    // bullet is adjacent to this line and non-empty.
     PRUint32 mHasBullet : 1;
     PRUint32 mBreakType : 4;
 

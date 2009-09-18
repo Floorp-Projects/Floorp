@@ -518,7 +518,7 @@ def parsestream(fd, filename):
                     raise SyntaxError("unmatched 'endif' directive",
                                       d.getloc(offset))
 
-                condstack.pop()
+                condstack.pop().endloc = d.getloc(offset)
                 continue
             
             if kword == 'else':
@@ -529,14 +529,14 @@ def parsestream(fd, filename):
                 kword, offset = d.findtoken(offset, _conditionkeywordstokenlist, True)
                 if kword is None:
                     _ensureend(d, offset, "Unexpected data after 'else' directive.")
-                    condstack[-1].addcondition(d.getloc(offset), parserdata.ElseCondition())
+                    condstack[-1].addcondition(d.getloc(0), parserdata.ElseCondition())
                 else:
                     if kword not in _conditionkeywords:
                         raise SyntaxError("Unexpected condition after 'else' directive.",
                                           d.getloc(offset))
 
                     c = _conditionkeywords[kword](d, offset)
-                    condstack[-1].addcondition(d.getloc(offset), c)
+                    condstack[-1].addcondition(d.getloc(0), c)
                 continue
 
             if kword in _conditionkeywords:

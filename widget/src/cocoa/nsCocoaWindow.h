@@ -198,7 +198,6 @@ public:
 
     NS_IMETHOD              Show(PRBool aState);
     virtual nsIWidget*      GetSheetWindowParent(void);
-    NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
     NS_IMETHOD              Enable(PRBool aState);
     NS_IMETHOD              IsEnabled(PRBool *aState);
     NS_IMETHOD              SetModal(PRBool aState);
@@ -219,13 +218,11 @@ public:
     NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
-    virtual PRBool          OnPaint(nsPaintEvent &event);
     void                    ReportSizeEvent(NSRect *overrideRect = nsnull);
 
     NS_IMETHOD              SetTitle(const nsAString& aTitle);
 
     NS_IMETHOD Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous);
-    NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Update();
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
     virtual void Scroll(const nsIntPoint& aDelta,

@@ -124,33 +124,6 @@ nsCocoaWindow::nsCocoaWindow()
 
 }
 
-// Sometimes NSViews are removed from a window or moved to a new window.
-// Since our ChildViews have their own mWindow field instead of always using
-// [view window], we need to notify them when this happens.
-static void SetNativeWindowOnSubviews(NSView *aNativeView, NSWindow *aWin)
-{
-  if (!aNativeView)
-    return;
-  if ([aNativeView respondsToSelector:@selector(setNativeWindow:)])
-    [(NSView<mozView>*)aNativeView setNativeWindow:aWin];
-  NSArray *immediateSubviews = [aNativeView subviews];
-  int count = [immediateSubviews count];
-  for (int i = 0; i < count; ++i)
-    SetNativeWindowOnSubviews((NSView *)[immediateSubviews objectAtIndex:i], aWin);
-}
-
-
-// Under unusual circumstances, an nsCocoaWindow object can be destroyed
-// before the nsChildView objects it contains are destroyed.  But this will
-// invalidate the (weak) mWindow variable in these nsChildView objects
-// before their own destructors have been called.  So we need to null-out
-// this variable in our nsChildView objects as we're destroyed.  This helps
-// resolve bmo bug 479749.
-static void TellNativeViewsGoodbye(NSView *aNativeView)
-{
-  SetNativeWindowOnSubviews(aNativeView, nil);
-}
-
 void nsCocoaWindow::DestroyNativeWindow()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -191,11 +164,8 @@ nsCocoaWindow::~nsCocoaWindow()
     }
   }
 
-  if (mWindow) {
-    TellNativeViewsGoodbye([mWindow contentView]);
-    if (mWindowMadeHere) {
-      DestroyNativeWindow();
-    }
+  if (mWindow && mWindowMadeHere) {
+    DestroyNativeWindow();
   }
 
   NS_IF_RELEASE(mPopupContentView);
@@ -906,16 +876,6 @@ void nsCocoaWindow::SetTransparencyMode(nsTransparencyMode aMode)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_METHOD nsCocoaWindow::AddEventListener(nsIEventListener * aListener)
-{
-  nsBaseWidget::AddEventListener(aListener);
-
-  if (mPopupContentView)
-    mPopupContentView->AddEventListener(aListener);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsCocoaWindow::Enable(PRBool aState)
 {
   return NS_OK;
@@ -1023,7 +983,6 @@ NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(PRBool aShouldHide)
   // Reparent the content view.
   [mWindow setContentView:contentView];
   [contentView release];
-  SetNativeWindowOnSubviews(contentView, mWindow);
 
   // Reparent child windows.
   enumerator = [childWindows objectEnumerator];
@@ -1134,11 +1093,6 @@ NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsIntRect &aRect)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-PRBool nsCocoaWindow::OnPaint(nsPaintEvent &event)
-{
-  return PR_TRUE; // don't dispatch the update event
-}
-
 NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -1156,14 +1110,6 @@ NS_IMETHODIMP nsCocoaWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynch
 {
   if (mPopupContentView)
     return mPopupContentView->Invalidate(aRect, aIsSynchronous);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCocoaWindow::Invalidate(PRBool aIsSynchronous)
-{
-  if (mPopupContentView)
-    return mPopupContentView->Invalidate(aIsSynchronous);
 
   return NS_OK;
 }
@@ -1261,10 +1207,6 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 
   if (mEventCallback)
     aStatus = (*mEventCallback)(event);
-
-  // Dispatch to event listener if event was not consumed
-  if (mEventListener && aStatus != nsEventStatus_eConsumeNoDefault)
-    aStatus = mEventListener->ProcessEvent(*event);
 
   NS_IF_RELEASE(aWidget);
 

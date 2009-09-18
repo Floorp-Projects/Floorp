@@ -52,7 +52,7 @@ struct nsSize;
 class nsIFormControlFrame : public nsQueryFrame
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsIFormControlFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsIFormControlFrame)
 
   /**
    * 

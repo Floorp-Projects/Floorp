@@ -40,9 +40,7 @@
 
 function test() {
   // initialization
-  let prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch);
-  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+  gPrefService.setBoolPref("browser.privatebrowsing.keep_current_session", true);
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
   let consoleService = Cc["@mozilla.org/consoleservice;1"].
@@ -61,7 +59,7 @@ function test() {
         ok(!messageExists(), "Message should not exist after leaving the private mode");
 
         consoleService.unregisterListener(consoleObserver);
-        prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+        gPrefService.clearUserPref("browser.privatebrowsing.keep_current_session");
         finish();
       }
     },
@@ -72,16 +70,12 @@ function test() {
   function messageExists() {
     let out = {};
     consoleService.getMessageArray(out, {});
-    let messages = out.value;
-    if (!messages)
-      messages = [];
-    let found = false;
-    for (let i = 0; i < messages.length; ++i)
-      if (messages[i].message == kTestMessage) {
-        found = true;
-        break;
-      }
-    return found;
+    let messages = out.value || [];
+    for (let i = 0; i < messages.length; ++i) {
+      if (messages[i].message == kTestMessage)
+        return true;
+    }
+    return false;
   }
 
   const kTestMessage = "Test message from the private browsing test";

@@ -466,7 +466,7 @@ Section "-InstallEndCleanup"
   SetDetailsPrint none
 
   ${Unless} ${Silent}
-    ${MUI_INSTALLOPTIONS_READ} $0 "options.ini" "Field 6" "State"
+    ${MUI_INSTALLOPTIONS_READ} $0 "summary.ini" "Field 4" "State"
     ${If} "$0" == "1"
       ${LogHeader} "Setting as the default browser"
       ClearErrors
@@ -599,7 +599,7 @@ Function AddQuickLaunchShortcut
 FunctionEnd
 
 Function CheckExistingInstall
-  ; If there is a pending file copy from a previous uninstall don't allow
+  ; If there is a pending file copy from a previous upgrade don't allow
   ; installing until after the system has rebooted.
   IfFileExists "$INSTDIR\${FileMainEXE}.moz-upgrade" +1 +4
   MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(WARN_RESTART_REQUIRED_UPGRADE)" IDNO +2
@@ -840,42 +840,65 @@ Function preSummary
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" flags  "READONLY"
 
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Type   "label"
-  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Text   "$(SUMMARY_CLICK)"
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Left   "0"
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Right  "-1"
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Top    "130"
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Bottom "150"
 
-  ${If} "$TmpVal" == "true"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Type   "label"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Text   "$(SUMMARY_REBOOT_REQUIRED_INSTALL)"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Left   "0"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Top    "35"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Bottom "45"
-
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NumFields "4"
+  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Text "$(SUMMARY_UPGRADE_CLICK)"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NextButtonText "$(UPGRADE_BUTTON)"
+  ${Else}
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Text "$(SUMMARY_INSTALL_CLICK)"
+    DeleteINIStr "$PLUGINSDIR\summary.ini" "Settings" NextButtonText
   ${EndIf}
 
-  ReadINIStr $0 "$PLUGINSDIR\options.ini" "Field 6" "State"
-  ${If} "$0" == "1"
-    ${If} "$TmpVal" == "true"
-      ; To insert this control reset Top / Bottom for controls below this one
-      WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Top    "50"
-      WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Bottom "60"
+
+  ; Remove the "Field 4" ini section in case the user hits back and changes the
+  ; installation directory which could change whether the make default checkbox
+  ; should be displayed.
+  DeleteINISec "$PLUGINSDIR\summary.ini" "Field 4"
+
+  ; Check if it is possible to write to HKLM
+  ClearErrors
+  WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
+  ${Unless} ${Errors}
+    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+    ; Check if Firefox is already the handler for http. This is set on all
+    ; versions of Windows.
+    ${IsHandlerForInstallDir} "http" $R9
+    ${If} "$R9" != "true"
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NumFields "4"
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Type   "checkbox"
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Text   "$(SUMMARY_TAKE_DEFAULTS)"
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Left   "0"
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Right  "-1"
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" State  "1"
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Top    "32"
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Bottom "53"
+    ${EndIf}
+  ${EndUnless}
+
+  ${If} "$TmpVal" == "true"
+    ; If there is already a Type entry in the "Field 4" section with a value of
+    ; checkbox then the set as the default browser checkbox is displayed and
+    ; this text must be moved below it.
+    ReadINIStr $0 "$PLUGINSDIR\summary.ini" "Field 4" "Type"
+    ${If} "$0" == "checkbox"
       StrCpy $0 "5"
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Top    "53"
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Bottom "68"
     ${Else}
       StrCpy $0 "4"
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Top    "35"
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Bottom "50"
     ${EndIf}
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NumFields "$0"
 
     WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Type   "label"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Text   "$(SUMMARY_MAKE_DEFAULT)"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Text   "$(SUMMARY_REBOOT_REQUIRED_INSTALL)"
     WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Left   "0"
     WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Top    "35"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Bottom "45"
-
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NumFields "$0"
   ${EndIf}
 
   !insertmacro MUI_HEADER_TEXT "$(SUMMARY_PAGE_TITLE)" "$(SUMMARY_PAGE_SUBTITLE)"
@@ -925,29 +948,7 @@ Function .onInit
   !insertmacro InitInstallOptionsFile "shortcuts.ini"
   !insertmacro InitInstallOptionsFile "summary.ini"
 
-  ClearErrors
-  ${If} ${AtLeastWinVista}
-    WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
-  ${EndIf}
-  ${If} ${Errors}
-    ; Setup the options.ini file for the Custom Options Page without the option
-    ; to set as default for Vista and above since the installer is unable to
-    ; write to HKLM.
-    WriteINIStr "$PLUGINSDIR\options.ini" "Settings" NumFields "5"
-  ${Else}
-    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
-    ; Setup the options.ini file for the Custom Options Page with the option
-    ; to set as default
-    WriteINIStr "$PLUGINSDIR\options.ini" "Settings" NumFields "6"
-
-    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Type   "checkbox"
-    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Text   "$(OPTIONS_MAKE_DEFAULT)"
-    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Left   "0"
-    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Top    "124"
-    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Bottom "145"
-    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" State  "1"
-  ${EndIf}
+  WriteINIStr "$PLUGINSDIR\options.ini" "Settings" NumFields "5"
 
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Type   "label"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Text   "$(OPTIONS_SUMMARY)"

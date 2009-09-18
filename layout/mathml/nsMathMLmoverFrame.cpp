@@ -62,6 +62,8 @@ NS_NewMathMLmoverFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsMathMLmoverFrame(aContext);
 }
 
+NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmoverFrame)
+
 nsMathMLmoverFrame::~nsMathMLmoverFrame()
 {
 }
@@ -306,14 +308,14 @@ nsMathMLmoverFrame::Place(nsIRenderingContext& aRenderingContext,
                       bigOpSpacing1, dummy, 
                       bigOpSpacing3, dummy, 
                       bigOpSpacing5);
-    delta1 = PR_MAX(bigOpSpacing1, (bigOpSpacing3 - bmOver.descent));
+    delta1 = NS_MAX(bigOpSpacing1, (bigOpSpacing3 - bmOver.descent));
     delta2 = bigOpSpacing5;
 
     // XXX This is not a TeX rule... 
     // delta1 (as computed above) can become really big when bmOver.descent is
     // negative,  e.g., if the content is &OverBar. In such case, we use the height
     if (bmOver.descent < 0)    
-      delta1 = PR_MAX(bigOpSpacing1, (bigOpSpacing3 - (bmOver.ascent + bmOver.descent)));
+      delta1 = NS_MAX(bigOpSpacing1, (bigOpSpacing3 - (bmOver.ascent + bmOver.descent)));
   }
   else {
     // Rule 12, App. G, TeXbook
@@ -371,7 +373,7 @@ nsMathMLmoverFrame::Place(nsIRenderingContext& aRenderingContext,
     dxOver += correction + (mBoundingMetrics.width - overWidth)/2;
   }
   else {
-    mBoundingMetrics.width = PR_MAX(bmBase.width, overWidth);
+    mBoundingMetrics.width = NS_MAX(bmBase.width, overWidth);
     dxOver += correction/2 + (mBoundingMetrics.width - overWidth)/2;
   }
   dxBase = (mBoundingMetrics.width - bmBase.width) / 2;
@@ -380,12 +382,12 @@ nsMathMLmoverFrame::Place(nsIRenderingContext& aRenderingContext,
     bmOver.ascent + bmOver.descent + delta1 + bmBase.ascent;
   mBoundingMetrics.descent = bmBase.descent;
   mBoundingMetrics.leftBearing = 
-    PR_MIN(dxBase + bmBase.leftBearing, dxOver + bmOver.leftBearing);
+    NS_MIN(dxBase + bmBase.leftBearing, dxOver + bmOver.leftBearing);
   mBoundingMetrics.rightBearing = 
-    PR_MAX(dxBase + bmBase.rightBearing, dxOver + bmOver.rightBearing);
+    NS_MAX(dxBase + bmBase.rightBearing, dxOver + bmOver.rightBearing);
 
   aDesiredSize.ascent = 
-    PR_MAX(mBoundingMetrics.ascent + delta2,
+    NS_MAX(mBoundingMetrics.ascent + delta2,
            overSize.ascent + bmOver.descent + delta1 + bmBase.ascent);
   aDesiredSize.height = aDesiredSize.ascent +
     baseSize.height - baseSize.ascent;

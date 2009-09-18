@@ -44,7 +44,7 @@ from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import mkdtemp
 
-from automationutils import addCommonOptions, checkForCrashes
+from automationutils import addCommonOptions, checkForCrashes, dumpLeakLog
 
 # Init logging
 log = logging.getLogger()
@@ -106,23 +106,6 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
   # Each test will overwrite it.
   leakLogFile = os.path.join(tempfile.gettempdir(), "runxpcshelltests_leaks.log")
   env["XPCOM_MEM_LEAK_LOG"] = leakLogFile
-
-  def processLeakLog(leakLogFile):
-    """Process the leak log."""
-    # For the time being, don't warn (nor "info") if the log file is not there. (Bug 469523)
-    if not os.path.exists(leakLogFile):
-      return None
-
-    leaks = open(leakLogFile, "r")
-    leakReport = leaks.read()
-    leaks.close()
-
-    # Only check whether an actual leak was reported.
-    if "0 TOTAL " in leakReport:
-      # For the time being, simply copy the log. (Bug 469523)
-      print leakReport.rstrip("\n")
-
-    return leakReport
 
   if xrePath is None:
     xrePath = os.path.dirname(xpcshell)
@@ -249,14 +232,17 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
         print "TEST-PASS | %s | test passed" % test
         passCount += 1
 
-      leakReport = processLeakLog(leakLogFile)
+      dumpLeakLog(leakLogFile, True)
 
       if stdout is not None:
         try:
           f = open(test + '.log', 'w')
           f.write(stdout)
-          if leakReport:
-            f.write(leakReport)
+
+          if os.path.exists(leakLogFile):
+            leaks = open(leakLogFile, "r")
+            f.write(leaks.read())
+            leaks.close()
         finally:
           if f:
             f.close()

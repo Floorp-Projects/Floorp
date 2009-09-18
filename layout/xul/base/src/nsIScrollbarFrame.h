@@ -46,7 +46,7 @@ class nsIScrollbarMediator;
 class nsIScrollbarFrame : public nsQueryFrame
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsIScrollbarFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsIScrollbarFrame)
   
   // Sets the scrollbar mediator content. We will try to get its primary frame
   // and then QI that to nsIScrollbarMediator as necessary.

@@ -45,16 +45,6 @@ const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer", "initWi
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function getPreferredBrowserURI() {
-  let chromeURI;
-  try {
-    let prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
-    chromeURI = prefs.getCharPref("toolkit.defaultChromeURI");
-  } catch (e) { }
-  return chromeURI;
-}
-
 function nsFastStartupObserver() {
   let _browserWindowCount = 0;
   let _memCleanupTimer = 0;
@@ -98,27 +88,26 @@ function nsFastStartupObserver() {
     // win.document.documentURI will pretty much always be about:blank.  We need
     // to attach a load handler to actually figure out which document gets loaded.
     if (topic == "domwindowopened") {
-      var loadListener = function(e) {
-        if (win.document.documentURI == getPreferredBrowserURI()) {
-          stopMemoryCleanup();
-          _browserWindowCount++;
-        }
-        win.removeEventListener("load", loadListener, false);
-        return false;
-      }
-
-      win.addEventListener("load", loadListener, false);
+      stopMemoryCleanup();
+      _browserWindowCount++;
     } else if (topic == "domwindowclosed") {
-      if (win.document.documentURI == getPreferredBrowserURI()) {
+      if (_browserWindowCount > 0)
         _browserWindowCount--;
-        if (_browserWindowCount == 0)
-          scheduleMemoryCleanup();
-      }
+      if (_browserWindowCount == 0)
+        scheduleMemoryCleanup();
+    } else if (topic == "quit-application-granted") {
+      let appstartup = Cc["@mozilla.org/toolkit/app-startup;1"].
+                       getService(Ci.nsIAppStartup);
+      appstartup.exitLastWindowClosingSurvivalArea();
     }
   }
 
-  // QI
-  this.QueryInterface = XPCOMUtils.generateQI([Ci.nsIObserver]);
+  /*
+   * QueryInterface
+   * We expect the WindowWatcher service to retain a strong reference to us, so supporting
+   * weak references is fine.
+   */
+  this.QueryInterface = XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]);
 }
 
 function nsFastStartupCLH() { }
@@ -129,10 +118,8 @@ nsFastStartupCLH.prototype = {
   //
   handle: function fs_handle(cmdLine) {
     // the rest of this only handles -faststart here
-    if (!cmdLine.handleFlag("faststart", false))
-      return;
-
-    cmdLine.preventDefault = true;
+    if (cmdLine.handleFlag("faststart-hidden", false))
+      cmdLine.preventDefault = true;
 
     try {
       // did we already initialize faststart?  if so,
@@ -142,19 +129,24 @@ nsFastStartupCLH.prototype = {
 
       this.inited = true;
 
+      let fsobs = new nsFastStartupObserver();
       let wwatch = Cc["@mozilla.org/embedcomp/window-watcher;1"].
                    getService(Ci.nsIWindowWatcher);
-      wwatch.registerNotification(new nsFastStartupObserver());
+      wwatch.registerNotification(fsobs);
 
       let appstartup = Cc["@mozilla.org/toolkit/app-startup;1"].
                        getService(Ci.nsIAppStartup);
+
+      let obsService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+      obsService.addObserver(fsobs, "quit-application-granted", true);
+
       appstartup.enterLastWindowClosingSurvivalArea();
     } catch (e) {
       Cu.reportError(e);
     }
   },
 
-  helpInfo: "    -faststart\n",
+  helpInfo: "    -faststart-hidden\n",
 
   // QI
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),

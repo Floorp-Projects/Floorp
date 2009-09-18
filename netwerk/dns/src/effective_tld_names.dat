@@ -682,7 +682,14 @@ za.com
 coop
 
 // cr : http://en.wikipedia.org/wiki/.cr
-*.cr
+cr
+ac.cr
+co.cr
+ed.cr
+fi.cr
+go.cr
+or.cr
+sa.cr
 
 // cu : http://en.wikipedia.org/wiki/.cu
 cu

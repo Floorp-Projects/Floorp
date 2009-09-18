@@ -76,8 +76,9 @@ class nsAnonymousBlockFrame;
 class nsInlineFrame : public nsInlineFrameSuper
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsInlineFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsInlineFrame)
   NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS
 
   friend nsIFrame* NS_NewInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -124,12 +125,6 @@ public:
   virtual PRBool CanContinueTextRun() const;
 
   virtual void PullOverflowsFromPrevInFlow();
-
-  // Take all of the frames away from this frame. The caller is
-  // presumed to keep them alive.
-  void StealAllFrames() {
-    mFrames.SetFrames(nsnull);
-  }
 
   /**
    * Return true if the frame is leftmost frame or continuation.
@@ -213,6 +208,8 @@ protected:
  */
 class nsFirstLineFrame : public nsInlineFrame {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewFirstLineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 #ifdef DEBUG
@@ -225,10 +222,6 @@ public:
                     nsReflowStatus& aStatus);
 
   virtual void PullOverflowsFromPrevInFlow();
-
-  // Take frames starting at aFrame until the end of the frame-list
-  // away from this frame. The caller is presumed to keep them alive.
-  void StealFramesFrom(nsIFrame* aFrame);
 
 protected:
   nsFirstLineFrame(nsStyleContext* aContext) : nsInlineFrame(aContext) {}
@@ -247,6 +240,8 @@ protected:
 class nsPositionedInlineFrame : public nsInlineFrame
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsPositionedInlineFrame(nsStyleContext* aContext)
     : nsInlineFrame(aContext)
     , mAbsoluteContainer(nsGkAtoms::absoluteList)

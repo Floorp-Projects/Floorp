@@ -192,7 +192,7 @@ nsNPAPIPluginStreamListener::nsNPAPIPluginStreamListener(nsNPAPIPluginInstance* 
     mInst(inst),
     mStreamBufferSize(0),
     mStreamBufferByteCount(0),
-    mStreamType(nsPluginStreamType_Normal),
+    mStreamType(NP_NORMAL),
     mStreamStarted(PR_FALSE),
     mStreamCleanedUp(PR_FALSE),
     mCallNotify(PR_FALSE),
@@ -370,16 +370,16 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
   switch(streamType)
   {
     case NP_NORMAL:
-      mStreamType = nsPluginStreamType_Normal; 
+      mStreamType = NP_NORMAL; 
       break;
     case NP_ASFILEONLY:
-      mStreamType = nsPluginStreamType_AsFileOnly; 
+      mStreamType = NP_ASFILEONLY; 
       break;
     case NP_ASFILE:
-      mStreamType = nsPluginStreamType_AsFile; 
+      mStreamType = NP_ASFILE; 
       break;
     case NP_SEEK:
-      mStreamType = nsPluginStreamType_Seek; 
+      mStreamType = NP_SEEK; 
       break;
     default:
       return NS_ERROR_FAILURE;
@@ -784,7 +784,7 @@ nsNPAPIPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
   // check if the stream is of seekable type and later its destruction
   // see bug 91140    
   nsresult rv = NS_OK;
-  if (mStreamType != nsPluginStreamType_Seek) {
+  if (mStreamType != NP_SEEK) {
     NPReason reason = NPRES_DONE;
 
     if (NS_FAILED(status))
@@ -800,7 +800,7 @@ nsNPAPIPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
 }
 
 NS_IMETHODIMP
-nsNPAPIPluginStreamListener::GetStreamType(nsPluginStreamType *result)
+nsNPAPIPluginStreamListener::GetStreamType(PRInt32 *result)
 {
   *result = mStreamType;
   return NS_OK;
@@ -876,6 +876,11 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
 #else
     mDrawingModel(NPDrawingModelQuickDraw),
 #endif
+#ifdef NP_NO_CARBON
+    mEventModel(NPEventModelCocoa),
+#else
+    mEventModel(NPEventModelCarbon),
+#endif
 #endif
     mWindowless(PR_FALSE),
     mTransparent(PR_FALSE),
@@ -885,7 +890,9 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
     mInPluginInitCall(PR_FALSE),
     mLibrary(aLibrary),
     mStreams(nsnull),
-    mMIMEType(nsnull)
+    mMIMEType(nsnull),
+    mOwner(nsnull),
+    mCurrentPluginEvent(nsnull)
 {
   NS_ASSERTION(mCallbacks != NULL, "null callbacks");
 
@@ -1075,7 +1082,7 @@ nsNPAPIPluginInstance::GetParameters(PRUint16& n, const char*const*& names,
 }
 
 nsresult
-nsNPAPIPluginInstance::GetMode(nsPluginMode *result)
+nsNPAPIPluginInstance::GetMode(PRInt32 *result)
 {
   if (mOwner)
     return mOwner->GetMode(result);
@@ -1121,7 +1128,7 @@ nsNPAPIPluginInstance::InitializePlugin()
   // XXX Note that the NPPluginType_* enums were crafted to be
   // backward compatible...
   
-  nsPluginMode  mode;
+  PRInt32       mode;
   const char*   mimetype;
   NPError       error;
 
@@ -1202,22 +1209,32 @@ nsNPAPIPluginInstance::InitializePlugin()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(nsPluginWindow* window)
+NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(NPWindow* window)
 {
-  // XXX NPAPI plugins don't want a SetWindow(NULL).
+  // NPAPI plugins don't want a SetWindow(NULL).
   if (!window || !mStarted)
     return NS_OK;
 
-  NPError error;
-
-#if defined (MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK2)
   // bug 108347, flash plugin on linux doesn't like window->width <=
   // 0, but Java needs wants this call.
-  if (!nsPluginHost::IsJavaMIMEType(mMIMEType) && window->type == nsPluginWindowType_Window &&
+  if (!nsPluginHost::IsJavaMIMEType(mMIMEType) && window->type == NPWindowTypeWindow &&
       (window->width <= 0 || window->height <= 0)) {
     return NS_OK;
   }
-#endif // MOZ_WIDGET
+#elif defined(XP_MACOSX)
+  // Under the Cocoa event model the context and the window in SetWindow calls 
+  // should always be NULL. For now NULL them out here but in the future we can
+  // optimize to not set them in the first place and only make SetWindow calls
+  // when size or position changes.
+  NPEventModel eventModel;
+  GetEventModel((PRInt32*)&eventModel);
+  if (eventModel == NPEventModelCocoa) {
+    NP_CGContext* pluginPort = static_cast<NP_CGContext*>(window->window);
+    pluginPort->context = NULL;
+    pluginPort->window = NULL;
+  }
+#endif
 
   if (mCallbacks->setwindow) {
     PluginDestructionGuard guard(this);
@@ -1230,6 +1247,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(nsPluginWindow* window)
     PRBool oldVal = mInPluginInitCall;
     mInPluginInitCall = PR_TRUE;
 
+    NPError error;
     NS_TRY_SAFE_CALL_RETURN(error, (*mCallbacks->setwindow)(&mNPP, (NPWindow*)window), mLibrary, this);
 
     mInPluginInitCall = oldVal;
@@ -1238,10 +1256,6 @@ NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(nsPluginWindow* window)
     ("NPP SetWindow called: this=%p, [x=%d,y=%d,w=%d,h=%d], clip[t=%d,b=%d,l=%d,r=%d], return=%d\n",
     this, window->x, window->y, window->width, window->height,
     window->clipRect.top, window->clipRect.bottom, window->clipRect.left, window->clipRect.right, error));
-      
-    // XXX In the old code, we'd just ignore any errors coming
-    // back from the plugin's SetWindow(). Is this the correct
-    // behavior?!?
   }
   return NS_OK;
 }
@@ -1293,7 +1307,7 @@ nsresult nsNPAPIPluginInstance::NewNotifyStream(nsIPluginStreamListener** listen
   return res;
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::Print(nsPluginPrint* platformPrint)
+NS_IMETHODIMP nsNPAPIPluginInstance::Print(NPPrint* platformPrint)
 {
   NS_ENSURE_TRUE(platformPrint, NS_ERROR_NULL_POINTER);
 
@@ -1338,7 +1352,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Print(nsPluginPrint* platformPrint)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* handled)
+NS_IMETHODIMP nsNPAPIPluginInstance::HandleEvent(void* event, PRBool* handled)
 {
   if (!mStarted)
     return NS_OK;
@@ -1351,32 +1365,24 @@ NS_IMETHODIMP nsNPAPIPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* h
   PRInt16 result = 0;
   
   if (mCallbacks->event) {
-#ifdef XP_MACOSX
-    result = (*mCallbacks->event)(&mNPP, (void*)event->event);
-
-#elif defined(XP_WIN) || defined(XP_OS2)
-      NPEvent npEvent;
-      npEvent.event = event->event;
-      npEvent.wParam = event->wParam;
-      npEvent.lParam = event->lParam;
-
-      NS_TRY_SAFE_CALL_RETURN(result, (*mCallbacks->event)(&mNPP, (void*)&npEvent), mLibrary, this);
-
-#else // MOZ_X11 or other
-      result = (*mCallbacks->event)(&mNPP, (void*)&event->event);
+    mCurrentPluginEvent = event;
+#if defined(XP_WIN) || defined(XP_OS2)
+    NS_TRY_SAFE_CALL_RETURN(result, (*mCallbacks->event)(&mNPP, event), mLibrary, this);
+#else
+    result = (*mCallbacks->event)(&mNPP, event);
 #endif
+    NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
+      ("NPP HandleEvent called: this=%p, npp=%p, event=%p, return=%d\n", 
+      this, &mNPP, event, result));
 
-      NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
-      ("NPP HandleEvent called: this=%p, npp=%p, event=%d, return=%d\n", 
-      this, &mNPP, event->event, result));
-
-      *handled = result;
-    }
+    *handled = result;
+    mCurrentPluginEvent = nsnull;
+  }
 
   return NS_OK;
 }
 
-nsresult nsNPAPIPluginInstance::GetValueInternal(NPPVariable variable, void* value)
+NS_IMETHODIMP nsNPAPIPluginInstance::GetValueFromPlugin(NPPVariable variable, void* value)
 {
   nsresult  res = NS_OK;
   if (mCallbacks->getvalue && mStarted) {
@@ -1386,40 +1392,6 @@ nsresult nsNPAPIPluginInstance::GetValueInternal(NPPVariable variable, void* val
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%d, return=%d\n", 
     this, &mNPP, variable, value, res));
-  }
-
-  return res;
-}
-
-NS_IMETHODIMP nsNPAPIPluginInstance::GetValue(nsPluginInstanceVariable variable, void *value)
-{
-  nsresult  res = NS_OK;
-
-  switch (variable) {
-    case nsPluginInstanceVariable_WindowlessBool:
-      *(PRBool *)value = mWindowless;
-      break;
-
-    case nsPluginInstanceVariable_TransparentBool:
-      *(PRBool *)value = mTransparent;
-      break;
-
-    case nsPluginInstanceVariable_DoCacheBool:
-      *(PRBool *)value = mCached;
-      break;
-
-    case nsPluginInstanceVariable_CallSetWindowAfterDestroyBool:
-      *(PRBool *)value = 0;  // not supported for 4.x plugins
-      break;
-
-#ifdef XP_MACOSX
-    case nsPluginInstanceVariable_DrawingModel:
-      *(NPDrawingModel*)value = mDrawingModel;
-      break;
-#endif
-
-    default:
-      res = GetValueInternal((NPPVariable)variable, value);
   }
 
   return res;
@@ -1469,17 +1441,38 @@ void nsNPAPIPluginInstance::SetDrawingModel(NPDrawingModel aModel)
   mDrawingModel = aModel;
 }
 
-NPDrawingModel nsNPAPIPluginInstance::GetDrawingModel()
+void nsNPAPIPluginInstance::SetEventModel(NPEventModel aModel)
 {
-  return mDrawingModel;
+  mEventModel = aModel;
 }
+
 #endif
+
+NS_IMETHODIMP nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
+{
+#ifdef XP_MACOSX
+  *aModel = (PRInt32)mDrawingModel;
+  return NS_OK;
+#else
+  return NS_ERROR_FAILURE;
+#endif
+}
+
+NS_IMETHODIMP nsNPAPIPluginInstance::GetEventModel(PRInt32* aModel)
+{
+#ifdef XP_MACOSX
+  *aModel = (PRInt32)mEventModel;
+  return NS_OK;
+#else
+  return NS_ERROR_FAILURE;
+#endif
+}
 
 NS_IMETHODIMP
 nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
 {
   NPObject *npobj = nsnull;
-  nsresult rv = GetValueInternal(NPPVpluginScriptableNPObject, &npobj);
+  nsresult rv = GetValueFromPlugin(NPPVpluginScriptableNPObject, &npobj);
   if (NS_FAILED(rv) || !npobj)
     return NS_ERROR_FAILURE;
 
@@ -1500,7 +1493,7 @@ nsNPAPIPluginInstance::DefineJavaProperties()
   // exposed as window.java.
 
   // Get the scriptable plugin object.
-  nsresult rv = GetValueInternal(NPPVpluginScriptableNPObject, &plugin_obj);
+  nsresult rv = GetValueFromPlugin(NPPVpluginScriptableNPObject, &plugin_obj);
 
   if (NS_FAILED(rv) || !plugin_obj) {
     return NS_ERROR_FAILURE;
@@ -1548,12 +1541,33 @@ nsNPAPIPluginInstance::DefineJavaProperties()
 }
 
 NS_IMETHODIMP
+nsNPAPIPluginInstance::ShouldCache(PRBool* shouldCache)
+{
+  *shouldCache = mCached;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::IsWindowless(PRBool* isWindowless)
+{
+  *isWindowless = mWindowless;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::IsTransparent(PRBool* isTransparent)
+{
+  *isTransparent = mTransparent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNPAPIPluginInstance::GetFormValue(nsAString& aValue)
 {
   aValue.Truncate();
 
   char *value = nsnull;
-  nsresult rv = GetValueInternal(NPPVformValue, &value);
+  nsresult rv = GetValueFromPlugin(NPPVformValue, &value);
   if (NS_FAILED(rv) || !value)
     return NS_ERROR_FAILURE;
 
@@ -1729,6 +1743,27 @@ nsNPAPIPluginInstance::UnscheduleTimer(uint32_t timerID)
   delete t;
 }
 
+// Show the context menu at the location for the current event.
+// This can only be called from within an NPP_SendEvent call.
+NPError
+nsNPAPIPluginInstance::PopUpContextMenu(NPMenu* menu)
+{
+  if (mOwner && mCurrentPluginEvent)
+    return mOwner->ShowNativeContextMenu(menu, mCurrentPluginEvent);
+
+  return NPERR_GENERIC_ERROR;
+}
+
+NPBool
+nsNPAPIPluginInstance::ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
+                                    double *destX, double *destY, NPCoordinateSpace destSpace)
+{
+  if (mOwner)
+    return mOwner->ConvertPoint(sourceX, sourceY, sourceSpace, destX, destY, destSpace);
+
+  return PR_FALSE;
+}
+
 nsresult
 nsNPAPIPluginInstance::GetDOMElement(nsIDOMElement* *result)
 {
@@ -1745,7 +1780,7 @@ nsNPAPIPluginInstance::GetDOMElement(nsIDOMElement* *result)
 }
 
 NS_IMETHODIMP
-nsNPAPIPluginInstance::InvalidateRect(nsPluginRect *invalidRect)
+nsNPAPIPluginInstance::InvalidateRect(NPRect *invalidRect)
 {
   nsCOMPtr<nsIPluginInstanceOwner> owner;
   GetOwner(getter_AddRefs(owner));
@@ -1756,7 +1791,7 @@ nsNPAPIPluginInstance::InvalidateRect(nsPluginRect *invalidRect)
 }
 
 NS_IMETHODIMP
-nsNPAPIPluginInstance::InvalidateRegion(nsPluginRegion invalidRegion)
+nsNPAPIPluginInstance::InvalidateRegion(NPRegion invalidRegion)
 {
   nsCOMPtr<nsIPluginInstanceOwner> owner;
   GetOwner(getter_AddRefs(owner));

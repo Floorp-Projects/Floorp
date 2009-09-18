@@ -38,7 +38,7 @@ function test() {
       is(gBrowser.mTabs.length, preTabNo + 1, "Alt+Return key added new tab");
       isnot(event.originalTarget, preSelectedBrowser.contentDocument,
             "Alt+Return key loaded results in new tab");
-      is(event.originalTarget, gBrowser.selectedBrowser.contentDocument,
+      is(event.originalTarget, gBrowser.contentDocument,
          "Alt+Return key loaded results in foreground tab");
 
       //Shift key has no effect for now, so skip it
@@ -55,7 +55,7 @@ function test() {
       is(gBrowser.mTabs.length, preTabNo + 1, "Shift+Alt+Return key added new tab");
       isnot(event.originalTarget, preSelectedBrowser.contentDocument,
             "Shift+Alt+Return key loaded results in new tab");
-      isnot(event.originalTarget, gBrowser.selectedBrowser.contentDocument,
+      isnot(event.originalTarget, gBrowser.contentDocument,
             "Shift+Alt+Return key loaded results in background tab");
 
       testLeftClick();
@@ -83,7 +83,7 @@ function test() {
       is(gBrowser.mTabs.length, preTabNo + 1, "MiddleClick added new tab");
       isnot(event.originalTarget, preSelectedBrowser.contentDocument,
             "MiddleClick loaded results in new tab");
-      is(event.originalTarget, gBrowser.selectedBrowser.contentDocument,
+      is(event.originalTarget, gBrowser.contentDocument,
          "MiddleClick loaded results in foreground tab");
 
       testShiftMiddleClick();
@@ -98,7 +98,7 @@ function test() {
       is(gBrowser.mTabs.length, preTabNo + 1, "Shift+MiddleClick added new tab");
       isnot(event.originalTarget, preSelectedBrowser.contentDocument,
             "Shift+MiddleClick loaded results in new tab");
-      isnot(event.originalTarget, gBrowser.selectedBrowser.contentDocument,
+      isnot(event.originalTarget, gBrowser.contentDocument,
             "Shift+MiddleClick loaded results in background tab");
 
       testRightClick();
@@ -107,7 +107,7 @@ function test() {
 
   function testRightClick() {
     init();
-    gBrowser.selectedBrowser.contentWindow.location.href = "about:blank";
+    content.location.href = "about:blank";
     simulateClick({ button: 2 }, searchButton);
     setTimeout(function() {
 
@@ -123,7 +123,7 @@ function test() {
     while (gBrowser.mTabs.length != 1) {
       gBrowser.removeTab(gBrowser.mTabs[0]);
     }
-    gBrowser.selectedBrowser.contentWindow.location.href = "about:blank";
+    content.location.href = "about:blank";
     finish();
   }
 

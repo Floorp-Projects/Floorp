@@ -89,6 +89,7 @@ _TEST_FILES = 	findbar_window.xul \
 		test_keys.xul \
 		window_keys.xul \
 		test_showcaret.xul \
+		window_showcaret.xul \
 		test_righttoleft.xul \
 		$(NULL)
 

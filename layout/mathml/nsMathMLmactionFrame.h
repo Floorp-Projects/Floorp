@@ -57,6 +57,8 @@
 class nsMathMLmactionFrame : public nsMathMLContainerFrame,
                              public nsIDOMMouseListener {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_DECL_ISUPPORTS_INHERITED

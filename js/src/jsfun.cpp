@@ -69,6 +69,7 @@
 #include "jsstr.h"
 #include "jsexn.h"
 #include "jsstaticcheck.h"
+#include "jstracer.h"
 
 #if JS_HAS_GENERATORS
 # include "jsiter.h"
@@ -146,6 +147,14 @@ GetArgsLength(JSObject *obj)
     uint32 argc = uint32(JSVAL_TO_INT(obj->fslots[JSSLOT_ARGS_LENGTH])) >> 1;
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
     return argc;
+}
+
+static inline void 
+SetArgsPrivateNative(JSObject *argsobj, js_ArgsPrivateNative *apn)
+{
+    JS_ASSERT(STOBJ_GET_CLASS(argsobj) == &js_ArgumentsClass);
+    uintptr_t p = (uintptr_t) apn;
+    argsobj->setPrivate((void*) (p | 2));
 }
 
 JSBool
@@ -305,22 +314,27 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
 /*
  * Traced versions of js_GetArgsObject and js_PutArgsObject.
  */
+
+#ifdef JS_TRACER
 JSObject * JS_FASTCALL
 js_Arguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee,
-             JSObject* cached)
+             double *argv, js_ArgsPrivateNative *apn)
 {
-    return cached
-           ? cached
-           : NewArguments(cx, parent, argc, callee);
+    JSObject *argsobj = NewArguments(cx, parent, argc, callee);
+    apn->argv = argv;
+    SetArgsPrivateNative(argsobj, apn);
+    return argsobj;
 }
+#endif
 
-JS_DEFINE_CALLINFO_5(extern, OBJECT, js_Arguments, CONTEXT, OBJECT, UINT32, OBJECT, OBJECT, 0, 0)
+JS_DEFINE_CALLINFO_6(extern, OBJECT, js_Arguments, CONTEXT, OBJECT, UINT32, OBJECT, 
+                     DOUBLEPTR, APNPTR, 0, 0)
 
 /* FIXME change the return type to void. */
 JSBool JS_FASTCALL
 js_PutArguments(JSContext *cx, JSObject *argsobj, jsval *args)
 {
-    JS_ASSERT(!argsobj->getPrivate());
+    JS_ASSERT(js_GetArgsPrivateNative(argsobj));
     PutArguments(cx, argsobj, args);
     return true;
 }
@@ -369,7 +383,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     JSAutoTempValueRooter tvr(cx, wfunobj);
 
     JSFunction *wfun = (JSFunction *) wfunobj;
-    wfunobj->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(wfun);
+    wfunobj->setPrivate(wfun);
     wfun->nargs = 0;
     wfun->flags = fun->flags | JSFUN_HEAVYWEIGHT;
     wfun->u.i.nvars = 0;
@@ -413,7 +427,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     }
 
     JSScript *script = fun->u.i.script;
-    jssrcnote *snbase = SCRIPT_NOTES(script);
+    jssrcnote *snbase = script->notes();
     jssrcnote *sn = snbase;
     while (!SN_IS_TERMINATOR(sn))
         sn = SN_NEXT(sn);
@@ -423,14 +437,14 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     JSScript *wscript = js_NewScript(cx, script->length, nsrcnotes,
                                      script->atomMap.length,
                                      (script->objectsOffset != 0)
-                                     ? JS_SCRIPT_OBJECTS(script)->length
+                                     ? script->objects()->length
                                      : 0,
                                      fun->u.i.nupvars,
                                      (script->regexpsOffset != 0)
-                                     ? JS_SCRIPT_REGEXPS(script)->length
+                                     ? script->regexps()->length
                                      : 0,
                                      (script->trynotesOffset != 0)
-                                     ? JS_SCRIPT_TRYNOTES(script)->length
+                                     ? script->trynotes()->length
                                      : 0);
     if (!wscript)
         return NULL;
@@ -438,25 +452,25 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     memcpy(wscript->code, script->code, script->length);
     wscript->main = wscript->code + (script->main - script->code);
 
-    memcpy(SCRIPT_NOTES(wscript), snbase, nsrcnotes);
+    memcpy(wscript->notes(), snbase, nsrcnotes * sizeof(jssrcnote));
     memcpy(wscript->atomMap.vector, script->atomMap.vector,
            wscript->atomMap.length * sizeof(JSAtom *));
     if (script->objectsOffset != 0) {
-        memcpy(JS_SCRIPT_OBJECTS(wscript)->vector, JS_SCRIPT_OBJECTS(script)->vector,
-               JS_SCRIPT_OBJECTS(wscript)->length * sizeof(JSObject *));
+        memcpy(wscript->objects()->vector, script->objects()->vector,
+               wscript->objects()->length * sizeof(JSObject *));
     }
     if (script->regexpsOffset != 0) {
-        memcpy(JS_SCRIPT_REGEXPS(wscript)->vector, JS_SCRIPT_REGEXPS(script)->vector,
-               JS_SCRIPT_REGEXPS(wscript)->length * sizeof(JSObject *));
+        memcpy(wscript->regexps()->vector, script->regexps()->vector,
+               wscript->regexps()->length * sizeof(JSObject *));
     }
     if (script->trynotesOffset != 0) {
-        memcpy(JS_SCRIPT_TRYNOTES(wscript)->vector, JS_SCRIPT_TRYNOTES(script)->vector,
-               JS_SCRIPT_TRYNOTES(wscript)->length * sizeof(JSTryNote));
+        memcpy(wscript->trynotes()->vector, script->trynotes()->vector,
+               wscript->trynotes()->length * sizeof(JSTryNote));
     }
 
     if (wfun->u.i.nupvars != 0) {
-        JS_ASSERT(wfun->u.i.nupvars == JS_SCRIPT_UPVARS(wscript)->length);
-        memcpy(JS_SCRIPT_UPVARS(wscript)->vector, JS_SCRIPT_UPVARS(script)->vector,
+        JS_ASSERT(wfun->u.i.nupvars == wscript->upvars()->length);
+        memcpy(wscript->upvars()->vector, script->upvars()->vector,
                wfun->u.i.nupvars * sizeof(uint32));
     }
 
@@ -525,6 +539,16 @@ ArgGetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
          */
         uintN arg = uintN(JSVAL_TO_INT(idval));
         if (arg < GetArgsLength(obj)) {
+#ifdef JS_TRACER
+            js_ArgsPrivateNative *argp = js_GetArgsPrivateNative(obj);
+            if (argp) {
+                if (js_NativeToValue(cx, *vp, (JSTraceType) 1, &argp->argv[arg]))
+                    return true;
+                js_LeaveTrace(cx);
+                return false;
+            }
+#endif
+
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
                 *vp = fp->argv[arg];
@@ -569,6 +593,11 @@ ArgSetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
     if (JSVAL_IS_INT(idval)) {
         uintN arg = uintN(JSVAL_TO_INT(idval));
         if (arg < GetArgsLength(obj)) {
+            if (js_GetArgsPrivateNative(obj)) {
+                js_LeaveTrace(cx);
+                return false;
+            }
+
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
                 fp->argv[arg] = *vp;
@@ -623,10 +652,8 @@ args_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
          * XXX ECMA specs DontEnum even for indexed properties, contrary to
          * other array-like objects.
          */
-        if (!js_DefineProperty(cx, obj, id, JSVAL_VOID, ArgGetter, ArgSetter,
-                               JSPROP_SHARED, NULL)) {
+        if (!js_DefineProperty(cx, obj, id, JSVAL_VOID, ArgGetter, ArgSetter, JSPROP_SHARED))
             return JS_FALSE;
-        }
         *objp = obj;
     }
     return true;
@@ -671,6 +698,8 @@ args_or_call_trace(JSTracer *trc, JSObject *obj)
 {
     JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_ArgumentsClass ||
               STOBJ_GET_CLASS(obj) == &js_CallClass);
+    if (STOBJ_GET_CLASS(obj) == &js_ArgumentsClass && js_GetArgsPrivateNative(obj))
+        return;
 
     JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
     if (fp && (fp->flags & JSFRAME_GENERATOR)) {
@@ -790,7 +819,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
     /* A call object should be a frame's outermost scope chain element.  */
     JSClass *classp = OBJ_GET_CLASS(cx, fp->scopeChain);
     if (classp == &js_WithClass || classp == &js_BlockClass || classp == &js_CallClass)
-        JS_ASSERT(fp->scopeChain->getAssignedPrivate() != fp);
+        JS_ASSERT(fp->scopeChain->getPrivate() != fp);
 #endif
 
     /*
@@ -805,7 +834,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
                                                    fp->scopeChain);
         if (!env)
             return NULL;
-        env->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fp);
+        env->setPrivate(fp);
 
         /* Root env before js_DefineNativeProperty (-> JSClass.addProperty). */
         fp->scopeChain = env;
@@ -840,8 +869,8 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
     return callobj;
 }
 
-static JSFunction *
-GetCallObjectFunction(JSObject *obj)
+JSFunction *
+js_GetCallObjectFunction(JSObject *obj)
 {
     jsval v;
 
@@ -869,7 +898,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     }
 
     JSFunction *fun = fp->fun;
-    JS_ASSERT(fun == GetCallObjectFunction(callobj));
+    JS_ASSERT(fun == js_GetCallObjectFunction(callobj));
     uintN n = fun->countArgsAndVars();
 
     /*
@@ -893,7 +922,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
         JSObject *env = STOBJ_GET_PARENT(callobj);
 
         JS_ASSERT(STOBJ_GET_CLASS(env) == &js_DeclEnvClass);
-        JS_ASSERT(env->getAssignedPrivate() == fp);
+        JS_ASSERT(env->getPrivate() == fp);
         env->setPrivate(NULL);
     }
 
@@ -913,7 +942,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
     JSObject *pobj;
     JSProperty *prop;
 
-    fun = GetCallObjectFunction(obj);
+    fun = js_GetCallObjectFunction(obj);
     n = fun ? fun->countArgsAndVars() : 0;
     if (n == 0)
         return JS_TRUE;
@@ -974,7 +1003,7 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     if (STOBJ_GET_CLASS(obj) != &js_CallClass)
         return JS_TRUE;
 
-    fun = GetCallObjectFunction(obj);
+    fun = js_GetCallObjectFunction(obj);
     fp = (JSStackFrame *) obj->getPrivate();
 
     if (kind == JSCPK_ARGUMENTS) {
@@ -1205,7 +1234,7 @@ call_reserveSlots(JSContext *cx, JSObject *obj)
 {
     JSFunction *fun;
 
-    fun = GetCallObjectFunction(obj);
+    fun = js_GetCallObjectFunction(obj);
     return fun->countArgsAndVars();
 }
 
@@ -1451,11 +1480,9 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
          * set the former here in fun_resolve, but eagerly define the latter
          * in JS_InitClass, with the right attributes.
          */
-        if (!js_SetClassPrototype(cx, obj, proto,
-                                  JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
-            cx->weakRoots.newborn[GCX_OBJECT] = NULL;
+        if (!js_SetClassPrototype(cx, obj, proto, JSPROP_PERMANENT))
             return JS_FALSE;
-        }
+
         *objp = obj;
         return JS_TRUE;
     }
@@ -1766,6 +1793,24 @@ fun_finalize(JSContext *cx, JSObject *obj)
     }
 }
 
+int
+JSFunction::sharpSlotBase(JSContext *cx)
+{
+#if JS_HAS_SHARP_VARS
+    JSAtom *name = js_Atomize(cx, "#array", 6, 0);
+    if (name) {
+        uintN index = uintN(-1);
+#ifdef DEBUG
+        JSLocalKind kind =
+#endif
+            js_LookupLocal(cx, this, name, &index);
+        JS_ASSERT(kind == JSLOCAL_VAR);
+        return int(index);
+    }
+#endif
+    return -1;
+}
+
 uint32
 JSFunction::countInterpretedReservedSlots() const
 {
@@ -1773,9 +1818,9 @@ JSFunction::countInterpretedReservedSlots() const
 
     uint32 nslots = (u.i.nupvars == 0)
                     ? 0
-                    : JS_SCRIPT_UPVARS(u.i.script)->length;
+                    : u.i.script->upvars()->length;
     if (u.i.script->regexpsOffset != 0)
-        nslots += JS_SCRIPT_REGEXPS(u.i.script)->length;
+        nslots += u.i.script->regexps()->length;
     return nslots;
 }
 
@@ -2337,7 +2382,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     if (!fun->u.i.script)
         goto bad;
     fun->u.i.script->code[0] = JSOP_STOP;
-    *SCRIPT_NOTES(fun->u.i.script) = SRC_NULL;
+    *fun->u.i.script->notes() = SRC_NULL;
 #ifdef CHECK_SCRIPT_OWNER
     fun->u.i.script->owner = NULL;
 #endif
@@ -2367,7 +2412,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
 
     /* Initialize all function members. */
     fun->nargs = nargs;
-    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK | JSFUN_TRACEABLE);
+    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK | JSFUN_TRCINFO);
     if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
         JS_ASSERT(nargs == 0);
@@ -2383,10 +2428,10 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         fun->u.n.extra = 0;
         fun->u.n.spare = 0;
         fun->u.n.clasp = NULL;
-        if (flags & JSFUN_TRACEABLE) {
+        if (flags & JSFUN_TRCINFO) {
 #ifdef JS_TRACER
-            JSTraceableNative *trcinfo =
-                JS_FUNC_TO_DATA_PTR(JSTraceableNative *, native);
+            JSNativeTraceInfo *trcinfo =
+                JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, native);
             fun->u.n.native = (JSNative) trcinfo->native;
             fun->u.n.trcinfo = trcinfo;
 #else
@@ -2429,7 +2474,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 {
     JS_ASSERT(FUN_FLAT_CLOSURE(fun));
     JS_ASSERT((fun->u.i.script->upvarsOffset
-               ? JS_SCRIPT_UPVARS(fun->u.i.script)->length
+               ? fun->u.i.script->upvars()->length
                : 0) == fun->u.i.nupvars);
 
     JSObject *closure = js_CloneFunctionObject(cx, fun, scopeChain);
@@ -2455,7 +2500,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
     if (!closure || fun->u.i.nupvars == 0)
         return closure;
 
-    JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
+    JSUpvarArray *uva = fun->u.i.script->upvars();
     JS_ASSERT(uva->length <= size_t(closure->dslots[-1]));
 
     uintN level = fun->u.i.script->staticLevel;
@@ -2496,10 +2541,8 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
     fun = js_NewFunction(cx, NULL, native, nargs, attrs, obj, atom);
     if (!fun)
         return NULL;
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom),
-                             OBJECT_TO_JSVAL(FUN_OBJECT(fun)),
-                             gsop, gsop,
-                             attrs & ~JSFUN_FLAGS_MASK, NULL)) {
+    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), OBJECT_TO_JSVAL(FUN_OBJECT(fun)),
+                             gsop, gsop, attrs & ~JSFUN_FLAGS_MASK)) {
         return NULL;
     }
     return fun;
@@ -2591,13 +2634,15 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
     if (flags & JSV2F_ITERATOR) {
         error = JSMSG_BAD_ITERATOR;
         name = js_iterator_str;
-        tvr.u.string = js_ValueToSource(cx, *vp);
-        if (!tvr.u.string)
+        JSString *src = js_ValueToSource(cx, *vp);
+        if (!src)
             goto out;
-        tvr.u.string = js_QuoteString(cx, tvr.u.string, 0);
-        if (!tvr.u.string)
+        tvr.u.value = STRING_TO_JSVAL(src);
+        JSString *qsrc = js_QuoteString(cx, src, 0);
+        if (!qsrc)
             goto out;
-        source = js_GetStringBytes(cx, tvr.u.string);
+        tvr.u.value = STRING_TO_JSVAL(qsrc);
+        source = js_GetStringBytes(cx, qsrc);
         if (!source)
             goto out;
     } else if (flags & JSV2F_CONSTRUCT) {

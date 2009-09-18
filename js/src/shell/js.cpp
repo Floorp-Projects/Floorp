@@ -69,6 +69,7 @@
 #include "jsparse.h"
 #include "jsscope.h"
 #include "jsscript.h"
+#include "jstracer.h"
 
 #include "prmjtime.h"
 
@@ -527,7 +528,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             if (!compileOnly) {
                 ok = JS_ExecuteScript(cx, obj, script, &result);
                 if (ok && !JSVAL_IS_VOID(result)) {
-                    str = JS_ValueToString(cx, result);
+                    str = JS_ValueToSource(cx, result);
                     if (str)
                         fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
                     else
@@ -1077,19 +1078,28 @@ ToSource(JSContext *cx, jsval *vp)
 static JSBool
 AssertEq(JSContext *cx, uintN argc, jsval *vp)
 {
-    if (argc != 2) {
+    if (!(argc == 2 || (argc == 3 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[2])))) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                             (argc > 2) ? JSSMSG_TOO_MANY_ARGS : JSSMSG_NOT_ENOUGH_ARGS,
+                             (argc < 2)
+                             ? JSSMSG_NOT_ENOUGH_ARGS
+                             : (argc == 3)
+                             ? JSSMSG_INVALID_ARGS
+                             : JSSMSG_TOO_MANY_ARGS,
                              "assertEq");
         return JS_FALSE;
     }
 
     jsval *argv = JS_ARGV(cx, vp);
-    if (!JS_StrictlyEqual(cx, argv[0], argv[1])) {
+    if (!JS_SameValue(cx, argv[0], argv[1])) {
         const char *actual = ToSource(cx, &argv[0]);
         const char *expected = ToSource(cx, &argv[1]);
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_EQ_FAILED,
-                             actual, expected);
+        if (argc == 2) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_EQ_FAILED,
+                                 actual, expected);
+        } else {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_EQ_FAILED_MSG,
+                                 actual, expected, JS_GetStringBytes(JSVAL_TO_STRING(argv[2])));
+        }
         return JS_FALSE;
     }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -1574,7 +1584,7 @@ SrcNotes(JSContext *cx, JSScript *script)
 
     fprintf(gOutFile, "\nSource notes:\n");
     offset = 0;
-    notes = SCRIPT_NOTES(script);
+    notes = script->notes();
     switchTableEnd = switchTableStart = 0;
     for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         delta = SN_DELTA(sn);
@@ -1619,7 +1629,7 @@ SrcNotes(JSContext *cx, JSScript *script)
           case SRC_BREAK2LABEL:
           case SRC_CONT2LABEL:
             index = js_GetSrcNoteOffset(sn, 0);
-            JS_GET_SCRIPT_ATOM(script, index, atom);
+            JS_GET_SCRIPT_ATOM(script, NULL, index, atom);
             JS_ASSERT(ATOM_IS_STRING(atom));
             str = ATOM_TO_STRING(atom);
             fprintf(gOutFile, " atom %u (", index);
@@ -1632,7 +1642,7 @@ SrcNotes(JSContext *cx, JSScript *script)
             JSFunction *fun;
 
             index = js_GetSrcNoteOffset(sn, 0);
-            JS_GET_SCRIPT_OBJECT(script, index, obj);
+            obj = script->getObject(index);
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
             str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             if (str) {
@@ -1700,8 +1710,8 @@ TryNotes(JSContext *cx, JSScript *script)
     if (script->trynotesOffset == 0)
         return JS_TRUE;
 
-    tn = JS_SCRIPT_TRYNOTES(script)->vector;
-    tnlimit = tn + JS_SCRIPT_TRYNOTES(script)->length;
+    tn = script->trynotes()->vector;
+    tnlimit = tn + script->trynotes()->length;
     fprintf(gOutFile, "\nException table:\n"
             "kind      stack    start      end\n");
     do {
@@ -1736,7 +1746,7 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
             SHOW_FLAG(THISP_NUMBER);
             SHOW_FLAG(THISP_BOOLEAN);
             SHOW_FLAG(EXPR_CLOSURE);
-            SHOW_FLAG(TRACEABLE);
+            SHOW_FLAG(TRCINFO);
 
 #undef SHOW_FLAG
 
@@ -1754,7 +1764,7 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
     TryNotes(cx, script);
 
     if (recursive && script->objectsOffset != 0) {
-        JSObjectArray *objects = JS_SCRIPT_OBJECTS(script);
+        JSObjectArray *objects = script->objects();
         for (uintN i = 0; i != objects->length; ++i) {
             JSObject *obj = objects->vector[i];
             if (HAS_FUNCTION_CLASS(obj)) {
@@ -2527,7 +2537,7 @@ split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         /* Make sure to define this property on the inner object. */
         if (!JS_ValueToId(cx, *vp, &asId))
             return JS_FALSE;
-        return cpx->inner->defineProperty(cx, asId, *vp, NULL, NULL, JSPROP_ENUMERATE, NULL);
+        return JS_DefinePropertyById(cx, cpx->inner, asId, *vp, NULL, NULL, JSPROP_ENUMERATE);
     }
     return JS_TRUE;
 }
@@ -2540,6 +2550,13 @@ split_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     cpx = split_get_private(cx, obj);
     if (!cpx)
         return JS_TRUE;
+
+    if (JSVAL_IS_STRING(id) &&
+        !strcmp(JS_GetStringBytes(JSVAL_TO_STRING(id)), "isInner")) {
+        *vp = BOOLEAN_TO_JSVAL(cpx->isInner);
+        return JS_TRUE;
+    }
+
     if (!cpx->isInner && cpx->inner) {
         if (JSVAL_IS_STRING(id)) {
             JSString *str;
@@ -2645,6 +2662,13 @@ split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 {
     ComplexObject *cpx;
 
+    if (JSVAL_IS_STRING(id) &&
+        !strcmp(JS_GetStringBytes(JSVAL_TO_STRING(id)), "isInner")) {
+        *objp = obj;
+        return JS_DefineProperty(cx, obj, "isInner", JSVAL_VOID, NULL, NULL,
+                                 JSPROP_SHARED);
+    }
+
     cpx = split_get_private(cx, obj);
     if (!cpx)
         return JS_TRUE;
@@ -2711,6 +2735,28 @@ split_outerObject(JSContext *cx, JSObject *obj)
     return cpx->isInner ? cpx->outer : obj;
 }
 
+static JSObject *
+split_thisObject(JSContext *cx, JSObject *obj)
+{
+    OBJ_TO_OUTER_OBJECT(cx, obj);
+    if (!obj)
+        return NULL;
+    return obj;
+}
+
+static JSObjectOps split_objectops;
+
+static JSObjectOps *
+split_getObjectOps(JSContext *cx, JSClass *clasp)
+{
+    if (!split_objectops.thisObject) {
+        memcpy(&split_objectops, &js_ObjectOps, sizeof split_objectops);
+        split_objectops.thisObject = split_thisObject;
+    }
+
+    return &split_objectops;
+}
+
 static JSBool
 split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
@@ -2736,7 +2782,7 @@ static JSExtendedClass split_global_class = {
     (JSEnumerateOp)split_enumerate,
     (JSResolveOp)split_resolve,
     JS_ConvertStub, split_finalize,
-    NULL, NULL, NULL, NULL, NULL, NULL,
+    split_getObjectOps, NULL, NULL, NULL, NULL, NULL,
     split_mark, NULL},
     split_equality, split_outerObject, split_innerObject,
     NULL, NULL, NULL, NULL, NULL
@@ -3724,8 +3770,9 @@ static const char *const shell_help_messages[] = {
 "print([exp ...])         Evaluate and print expressions",
 "help([name ...])         Display usage and help messages",
 "quit()                   Quit the shell",
-"assertEq(actual, expected)\n"
-"                         Throw if the two arguments are not ===",
+"assertEq(actual, expected[, msg])\n"
+"  Throw if the first two arguments are not the same (both +0 or both -0,\n"
+"  both NaN, or non-zero and ===)",
 "gc()                     Run the garbage collector",
 "gcparam(name, value)\n"
 "  Wrapper for JS_SetGCParameter. The name must be either 'maxBytes' or\n"
@@ -4799,6 +4846,8 @@ main(int argc, char **argv, char **envp)
 #endif  /* JSDEBUGGER */
 
     JS_EndRequest(cx);
+
+    JS_CommenceRuntimeShutDown(rt);
 
     WITH_LOCKED_CONTEXT_LIST( 
         JS_DestroyContext(cx)

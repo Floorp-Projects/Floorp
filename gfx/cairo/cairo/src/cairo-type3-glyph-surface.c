@@ -425,8 +425,8 @@ _cairo_type3_glyph_surface_analyze_glyph (void		     *abstract_surface,
 	goto cleanup;
     }
 
-    status = _cairo_meta_surface_replay (scaled_glyph->meta_surface,
-					 &surface->base);
+    status = cairo_meta_surface_replay (scaled_glyph->meta_surface,
+					&surface->base);
     if (unlikely (status))
 	goto cleanup;
 
@@ -520,8 +520,8 @@ _cairo_type3_glyph_surface_emit_glyph (void		     *abstract_surface,
 	_cairo_type3_glyph_surface_set_stream (surface, mem_stream);
 
 	_cairo_output_stream_printf (surface->stream, "q\n");
-	status = _cairo_meta_surface_replay (scaled_glyph->meta_surface,
-					     &surface->base);
+	status = cairo_meta_surface_replay (scaled_glyph->meta_surface,
+					    &surface->base);
 
 	status2 = _cairo_pdf_operators_flush (&surface->pdf_operators);
 	if (status == CAIRO_STATUS_SUCCESS)

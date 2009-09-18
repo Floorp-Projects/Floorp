@@ -38,7 +38,7 @@
 #define nscore_h___
 
 /**
- * Make sure that we have the proper platform specific 
+ * Make sure that we have the proper platform specific
  * c++ definitions needed by nscore.h
  */
 #ifndef _XPCOM_CONFIG_H_
@@ -52,7 +52,7 @@
 
 /* Core XPCOM declarations. */
 
-/** 
+/**
  * Macros defining the target platform...
  */
 #ifdef _WIN32
@@ -145,7 +145,8 @@
  *           NS_HIDDEN_(int) NS_FASTCALL func2(char *foo);
  */
 
-#if defined(__i386__) && defined(__GNUC__) && (__GNUC__ >= 3) && !defined(XP_OS2)
+#if defined(__i386__) && defined(__GNUC__) && \
+    (__GNUC__ >= 3) && !defined(XP_OS2)
 #define NS_FASTCALL __attribute__ ((regparm (3), stdcall))
 #define NS_CONSTRUCTOR_FASTCALL __attribute__ ((regparm (3), stdcall))
 #elif defined(XP_WIN)
@@ -160,7 +161,8 @@
  * NS_DEFCALL undoes the effect of a global regparm/stdcall setting
  * so that xptcall works correctly.
  */
-#if defined(__i386__) && defined(__GNUC__) && (__GNUC__ >= 3) && !defined(XP_OS2)
+#if defined(__i386__) && defined(__GNUC__) && \
+    (__GNUC__ >= 3) && !defined(XP_OS2)
 #define NS_DEFCALL __attribute__ ((regparm (0), cdecl))
 #else
 #define NS_DEFCALL
@@ -398,8 +400,9 @@ typedef PRUint32 nsrefcnt;
 #endif
 
   /*
-    If the compiler doesn't support |explicit|, we'll just make it go away, trusting
-    that the builds under compilers that do have it will keep us on the straight and narrow.
+    If the compiler doesn't support |explicit|, we'll just make it go
+    away, trusting that the builds under compilers that do have it
+    will keep us on the straight and narrow.
   */
 #ifndef HAVE_CPP_EXPLICIT
   #define explicit
@@ -415,7 +418,7 @@ typedef PRUint32 nsrefcnt;
   #define NS_SPECIALIZE_TEMPLATE
 #endif
 
-/* 
+/*
  * Use these macros to do 64bit safe pointer conversions.
  */
 
@@ -455,9 +458,9 @@ typedef PRUint32 nsrefcnt;
 #endif
 
  /*
-  * If we're being linked as standalone glue, we don't want a dynamic dependency
-  * on NSPR libs, so we skip the debug thread-safety checks, and we cannot use
-  * the THREADSAFE_ISUPPORTS macros.
+  * If we're being linked as standalone glue, we don't want a dynamic
+  * dependency on NSPR libs, so we skip the debug thread-safety
+  * checks, and we cannot use the THREADSAFE_ISUPPORTS macros.
   */
 #if defined(XPCOM_GLUE) && !defined(XPCOM_GLUE_USE_NSPR)
 #define XPCOM_GLUE_AVOID_NSPR
@@ -468,32 +471,47 @@ typedef PRUint32 nsrefcnt;
  *
  * NS_STACK_CLASS: a class which must only be instantiated on the stack
  * NS_FINAL_CLASS: a class which may not be subclassed
+ *
+ * NS_MUST_OVERRIDE:
+ *   a method which every immediate subclass of this class must
+ *   override.  A subclass override can itself be NS_MUST_OVERRIDE, in
+ *   which case its own subclasses must override the method as well.
+ *
+ *   This is similar to, but not the same as, marking a method pure
+ *   virtual.  It has no effect on the class in which the annotation
+ *   appears, you can still provide a definition for the method, and
+ *   it objects to the mere existence of a subclass that doesn't
+ *   override the method.  See examples in analysis/must-override.js.
  */
 #ifdef NS_STATIC_CHECKING
 #define NS_STACK_CLASS __attribute__((user("NS_stack")))
 #define NS_OKONHEAP    __attribute__((user("NS_okonheap")))
 #define NS_SUPPRESS_STACK_CHECK __attribute__((user("NS_suppress_stackcheck")))
 #define NS_FINAL_CLASS __attribute__((user("NS_final")))
+#define NS_MUST_OVERRIDE __attribute__((user("NS_must_override")))
 #else
 #define NS_STACK_CLASS
 #define NS_OKONHEAP
 #define NS_SUPPRESS_STACK_CHECK
 #define NS_FINAL_CLASS
+#define NS_MUST_OVERRIDE
 #endif
 
 /**
- * Attributes defined to help Dehydra GCC analysis.	
+ * Attributes defined to help Dehydra GCC analysis.
  */
 #ifdef NS_STATIC_CHECKING
 # define NS_SCRIPTABLE __attribute__((user("NS_script")))
 # define NS_INPARAM __attribute__((user("NS_inparam")))
 # define NS_OUTPARAM  __attribute__((user("NS_outparam")))
 # define NS_INOUTPARAM __attribute__((user("NS_inoutparam")))
+# define NS_OVERRIDE __attribute__((user("NS_override")))
 #else
 # define NS_SCRIPTABLE
 # define NS_INPARAM
 # define NS_OUTPARAM
 # define NS_INOUTPARAM
+# define NS_OVERRIDE
 #endif
 
 #endif /* nscore_h___ */

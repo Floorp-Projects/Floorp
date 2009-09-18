@@ -43,6 +43,15 @@ var PlacesOrganizer = {
   _places: null,
   _content: null,
 
+  // IDs of fields from editBookmarkOverlay that should be hidden when infoBox
+  // is minimal. IDs should be kept in sync with the IDs of the elements
+  // observing additionalInfoBroadcaster.
+  _additionalInfoFields: [
+    "editBMPanel_descriptionRow",
+    "editBMPanel_loadInSidebarCheckbox",
+    "editBMPanel_keywordRow",
+  ],
+
   _initFolderTree: function() {
     var leftPaneRoot = PlacesUIUtils.leftPaneFolderId;
     this._places.place = "place:excludeItems=1&expandQueries=0&folder=" + leftPaneRoot;
@@ -605,6 +614,7 @@ var PlacesOrganizer = {
     var infoBox = document.getElementById("infoBox");
     var infoBoxExpander = document.getElementById("infoBoxExpander");
     var infoBoxExpanderWrapper = document.getElementById("infoBoxExpanderWrapper");
+    var additionalInfoBroadcaster = document.getElementById("additionalInfoBroadcaster");
 
     if (!aNode) {
       infoBoxExpanderWrapper.hidden = true;
@@ -623,8 +633,11 @@ var PlacesOrganizer = {
       if (infoBox.getAttribute("wasminimal") == "true")
         infoBox.setAttribute("minimal", "true");
       infoBox.removeAttribute("wasminimal");
-      infoBoxExpanderWrapper.hidden = false;
+      infoBoxExpanderWrapper.hidden =
+        this._additionalInfoFields.every(function (id)
+          document.getElementById(id).collapsed);
     }
+    additionalInfoBroadcaster.hidden = infoBox.getAttribute("minimal") == "true";
   },
 
   // NOT YET USED
@@ -788,18 +801,21 @@ var PlacesOrganizer = {
     var infoBox = document.getElementById("infoBox");
     var infoBoxExpander = document.getElementById("infoBoxExpander");
     var infoBoxExpanderLabel = document.getElementById("infoBoxExpanderLabel");
+    var additionalInfoBroadcaster = document.getElementById("additionalInfoBroadcaster");
 
     if (infoBox.getAttribute("minimal") == "true") {
       infoBox.removeAttribute("minimal");
       infoBoxExpanderLabel.value = infoBoxExpanderLabel.getAttribute("lesslabel");
       infoBoxExpanderLabel.accessKey = infoBoxExpanderLabel.getAttribute("lessaccesskey");
       infoBoxExpander.className = "expander-up";
+      additionalInfoBroadcaster.removeAttribute("hidden");
     }
     else {
       infoBox.setAttribute("minimal", "true");
       infoBoxExpanderLabel.value = infoBoxExpanderLabel.getAttribute("morelabel");
       infoBoxExpanderLabel.accessKey = infoBoxExpanderLabel.getAttribute("moreaccesskey");
       infoBoxExpander.className = "expander-down";
+      additionalInfoBroadcaster.setAttribute("hidden", "true");
     }
   },
 

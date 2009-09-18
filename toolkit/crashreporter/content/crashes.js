@@ -12,9 +12,14 @@ function parseKeyValuePairs(text) {
     if (lines[i] == '')
       continue;
 
-    [key, value] = lines[i].split('=', 2);
-    if (value)
-      data[key] = value.replace("\\n", "\n", "g").replace("\\\\", "\\", "g");
+    // can't just .split() because the value might contain = characters
+    let eq = lines[i].indexOf('=');
+    if (eq != -1) {
+      let [key, value] = [lines[i].substring(0, eq),
+                          lines[i].substring(eq + 1)];
+      if (key && value)
+        data[key] = value.replace("\\n", "\n", "g").replace("\\\\", "\\", "g");
+    }
   }
   return data;
 }
@@ -226,6 +231,7 @@ function createAndSubmitForm(id, link) {
   if (!dump.exists() || !extra.exists())
     return false;
   let iframe = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "iframe");
+  iframe.setAttribute("type", "content");
   iframe.onload = function() {
     if (iframe.contentWindow.location == "about:blank")
       return;

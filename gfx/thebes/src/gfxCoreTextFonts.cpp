@@ -1133,12 +1133,13 @@ gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
         }
 
         // Then we check if the clump falls outside our actual string range; if so, just go to the next.
-        if (baseCharIndex < aLayoutStart || baseCharIndex >= aLayoutStart + aLayoutLength) {
+        if (endCharIndex <= aLayoutStart || baseCharIndex >= aLayoutStart + aLayoutLength) {
             glyphStart = glyphEnd;
             charStart = charEnd;
             continue;
         }
         // Ensure we won't try to go beyond the valid length of the textRun's text
+        baseCharIndex = PR_MAX(baseCharIndex, aLayoutStart);
         endCharIndex = PR_MIN(endCharIndex, aLayoutStart + aLayoutLength);
 
         // for missing glyphs, we already recorded the info in the textRun

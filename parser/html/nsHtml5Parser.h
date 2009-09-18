@@ -40,7 +40,6 @@
 #define NS_HTML5_PARSER__
 
 #include "nsAutoPtr.h"
-#include "nsTimer.h"
 #include "nsIParser.h"
 #include "nsDeque.h"
 #include "nsIURL.h"
@@ -563,6 +562,11 @@ class nsHtml5Parser : public nsIParser,
      * The event loop will spin ASAP
      */
     PRBool                        mSuspending;
+    
+    /**
+     * Whether EOF needs to be suppressed
+     */
+    PRBool                        mSuppressEOF;
 
     /**
      * The current point on parser life cycle

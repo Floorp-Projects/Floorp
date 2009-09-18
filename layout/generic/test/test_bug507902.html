@@ -40,7 +40,8 @@ gWindowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).
 // We have a separate copy of the icons in the test directory to
 // avoid any firefox caching mechanisms that might affect the
 // behavior of the load.
-var baseURL = "http://localhost:8888/tests/layout/generic/test/";
+var us = window.location.href;
+var baseURL = us.substring(0, us.lastIndexOf('/') + 1);
 var loadIconFilename = "file_LoadingImageReference.png";
 var imageFilename = "file_Dolske.png";
 var brokenIconFilename = "file_BrokenImageReference.png";
@@ -98,6 +99,9 @@ function loadBrokenIconReference() {
 
   // Debugging - Let's see if setting onload after src is a problem
   testImageElem.onload = function(event) { dump("test_bug507902.html DEBUG - uh oh, placeholder onload 1 called\n");};
+
+  // Debug - Figure out if we're getting an onerror instead of onload
+  testImageElem.onerror = function(event) {dump("test_bug507902.html DEBUG - Got onerror for testImageElem!\n");};
 
   testImageElem.src = baseURL + brokenIconFilename;
   stageTransition();

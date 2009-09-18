@@ -94,7 +94,6 @@ nsBaseWidget::nsBaseWidget()
 , mEventCallback(nsnull)
 , mContext(nsnull)
 , mToolkit(nsnull)
-, mEventListener(nsnull)
 , mCursor(eCursor_standard)
 , mWindowType(eWindowType_child)
 , mBorderStyle(eBorderStyle_none)
@@ -214,11 +213,6 @@ NS_IMETHODIMP nsBaseWidget::CaptureMouse(PRBool aCapture)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBaseWidget::Validate()
-{
-  return NS_OK;
-}
-
 //-------------------------------------------------------------------------
 //
 // Accessor functions to get/set the client data
@@ -251,8 +245,6 @@ NS_METHOD nsBaseWidget::Destroy()
   if (parent) {
     parent->RemoveChild(this);
   }
-  // disconnect listeners.
-  NS_IF_RELEASE(mEventListener);
 
   return NS_OK;
 }
@@ -735,19 +727,6 @@ NS_METHOD nsBaseWidget::SetBorderStyle(nsBorderStyle aBorderStyle)
   return NS_OK;
 }
 
-
-/**
-* Sets the event listener for a widget
-*
-**/
-NS_METHOD nsBaseWidget::AddEventListener(nsIEventListener * aListener)
-{
-  NS_PRECONDITION(mEventListener == nsnull, "Null event listener");
-  NS_IF_RELEASE(mEventListener);
-  NS_ADDREF(aListener);
-  mEventListener = aListener;
-  return NS_OK;
-}
 
 /**
 * If the implementation of nsWindow supports borders this method MUST be overridden

@@ -190,18 +190,18 @@ struct THEBES_API gfxRGBA {
             colorType == PACKED_XBGR ||
             colorType == PACKED_ABGR_PREMULTIPLIED)
         {
-            r = ((c >> 0) & 0xff) / 255.0;
-            g = ((c >> 8) & 0xff) / 255.0;
-            b = ((c >> 16) & 0xff) / 255.0;
-            a = ((c >> 24) & 0xff) / 255.0;
+            r = ((c >> 0) & 0xff) * (1.0 / 255.0);
+            g = ((c >> 8) & 0xff) * (1.0 / 255.0);
+            b = ((c >> 16) & 0xff) * (1.0 / 255.0);
+            a = ((c >> 24) & 0xff) * (1.0 / 255.0);
         } else if (colorType == PACKED_ARGB ||
                    colorType == PACKED_XRGB ||
                    colorType == PACKED_ARGB_PREMULTIPLIED)
         {
-            b = ((c >> 0) & 0xff) / 255.0;
-            g = ((c >> 8) & 0xff) / 255.0;
-            r = ((c >> 16) & 0xff) / 255.0;
-            a = ((c >> 24) & 0xff) / 255.0;
+            b = ((c >> 0) & 0xff) * (1.0 / 255.0);
+            g = ((c >> 8) & 0xff) * (1.0 / 255.0);
+            r = ((c >> 16) & 0xff) * (1.0 / 255.0);
+            a = ((c >> 24) & 0xff) * (1.0 / 255.0);
         }
 
         if (colorType == PACKED_ABGR_PREMULTIPLIED ||

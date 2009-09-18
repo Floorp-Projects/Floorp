@@ -121,7 +121,7 @@ struct nsCounterUseNode : public nsCounterNode {
         , mCounterStyle(aCounterStyle)
         , mAllCounters(aAllCounters)
     {
-        NS_ASSERTION(aContentIndex >= 0, "out of range");
+        NS_ASSERTION(aContentIndex <= PR_INT32_MAX, "out of range");
     }
     
     virtual PRBool InitTextFrame(nsGenConList* aList,

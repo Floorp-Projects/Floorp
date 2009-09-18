@@ -50,6 +50,8 @@ protected:
   virtual ~nsDirectionalFrame();
 
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   nsDirectionalFrame(nsStyleContext* aContext, PRUnichar aChar);
 
   /**

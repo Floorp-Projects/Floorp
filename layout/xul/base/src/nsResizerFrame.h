@@ -49,6 +49,8 @@ protected:
   };
 
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);  
 
   nsResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);

@@ -69,7 +69,9 @@ GdkPixbuf*
 nsImageToPixbuf::ImageToPixbuf(imgIContainer* aImage)
 {
     nsRefPtr<gfxImageSurface> frame;
-    aImage->CopyCurrentFrame(getter_AddRefs(frame));
+    aImage->CopyFrame(imgIContainer::FRAME_CURRENT,
+                      imgIContainer::FLAG_SYNC_DECODE,
+                      getter_AddRefs(frame));
 
     return ImgSurfaceToPixbuf(frame, frame->Width(), frame->Height());
 }

@@ -59,6 +59,8 @@ typedef nsSVGPaintServerFrame  nsSVGPatternFrameBase;
 class nsSVGPatternFrame : public nsSVGPatternFrameBase
 {
 public:
+  NS_DECL_FRAMEARENA_HELPERS
+
   friend nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell,
                                          nsStyleContext* aContext);
 

@@ -198,7 +198,7 @@ interface nsIInstallLocation : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface,
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(27571455-f0d3-4293-bb9c-4af60adfe9b9)]
+[scriptable, uuid(494e8302-8689-4a8a-a08d-0da17c649c7d)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -208,6 +208,24 @@ interface nsIExtensionManager : nsISupports
   const unsigned long UPDATE_CHECK_COMPATIBILITY = 1;
   const unsigned long UPDATE_SYNC_COMPATIBILITY  = 2;
   const unsigned long UPDATE_NOTIFY_NEWVERSION   = 3;
+
+  /**
+   * Constants that callers can use to indicate the reason for an add-on update
+   * check. Internal code uses other constants in nsExtensionManager.js.in.
+   *
+   * The update check is being performed at the request of the user.
+   */
+  const unsigned long UPDATE_WHEN_USER_REQUESTED    = 1;
+  /**
+   * The update check is being performed after a new version of the application
+   * has been detected.
+   */
+  const unsigned long UPDATE_WHEN_NEW_APP_DETECTED  = 2;
+  /**
+   * The update check is being performed after a new version of the application
+   * has been installed.
+   */
+  const unsigned long UPDATE_WHEN_NEW_APP_INSTALLED = 3;
 
   /**
    * Starts the Extension Manager, checking for item changes, additions and
@@ -299,6 +317,9 @@ interface nsIExtensionManager : nsISupports
    *          during the update check process. If not null, the object's
    *          onUpdateStarted() and onUpdateEnded() methods will be called even
    *          if there are no items to update.
+   * @param   updateType (optional)
+   *          The type of the update check. Should be one of the UPDATE_WHEN
+   *          values.
    * @param   appVersion (optional)
    *          The version of the application to check for compatible updates.
    *          This param is only honored when updateCheckType is equal to
@@ -316,6 +337,7 @@ interface nsIExtensionManager : nsISupports
                in unsigned long itemCount,
                in unsigned long updateCheckType,
                in nsIAddonUpdateCheckListener listener,
+               [optional] in unsigned long updateType,
                [optional] in AString appVersion,
                [optional] in AString platformVersion);
 
@@ -413,15 +435,6 @@ interface nsIExtensionManager : nsISupports
   void removeInstallListenerAt(in long index);
 
   /**
-   * Move an Item to the index of another item in its container.
-   * @param   movingID
-   *          The ID of an item to be moved.
-   * @param   destinationID
-   *          The ID of an item to move an item to.
-   */
-  void moveToIndexOf(in AString movingID, in AString destinationID);
-
-  /**
    * Cancels a pending install or upgrade of an item. If the item does
    * not have a pending install or upgrade then this will do nothing.
    * @param   id
@@ -468,19 +481,6 @@ interface nsIExtensionManager : nsISupports
    */
   void updateAndGetNewBlocklistedItems(out unsigned long itemCount,
                                        [retval, array, size_is(itemCount)] out nsIUpdateItem items);
-
-  /**
-   * Sorts addons of the specified type by the specified property in the
-   * Extensions Datasource container starting from the top of their container.
-   * If the addons are already sorted then no action is performed.
-   * @param   type
-   *          The nsIUpdateItem type of the items to sort.
-   * @param   propertyName
-   *          The RDF property name used for sorting.
-   * @param   isAscending
-   *          true to sort ascending and false to sort descending
-   */
-  void sortTypeByProperty(in unsigned long type, in AString propertyName, in boolean isAscending);
 };
 
 /**

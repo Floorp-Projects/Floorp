@@ -43,7 +43,6 @@ interface nsIDOMWindow;
 interface nsIRequest;
 interface nsIRequestObserver;
 interface nsISimpleEnumerator;
-interface nsITimerCallback;
 interface nsIXMLHttpRequest;
 
 /**
@@ -486,30 +485,4 @@ interface nsIUpdatePrompt : nsISupports
    *          A parent window to anchor this window to. Can be null.
    */
   void showUpdateHistory(in nsIDOMWindow parent);
-};
-
-/**
- * An interface describing a global application service that allows long
- * duration (e.g. 1-7 or more days, weeks or months) timers to be registered
- * and then fired.
- */
-[scriptable, uuid(0765c92c-6145-4253-9db4-594d8023087e)]
-interface nsIUpdateTimerManager : nsISupports
-{
-  /**
-   * Register an interval with the timer manager. The timer manager
-   * periodically checks to see if the interval has expired and if it has
-   * calls the specified callback. This is persistent across application
-   * restarts and can handle intervals of long durations.
-   * @param   id
-   *          An id that identifies the interval, used for persistence
-   * @param   callback
-   *          A nsITimerCallback object that is notified when the interval
-   *          expires
-   * @param   interval
-   *          The length of time, in seconds, of the interval
-   */
-  void registerTimer(in AString id,
-                     in nsITimerCallback callback,
-                     in unsigned long interval);
 };

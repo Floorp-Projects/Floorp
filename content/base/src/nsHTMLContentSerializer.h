@@ -68,12 +68,12 @@ class nsHTMLContentSerializer : public nsXHTMLContentSerializer {
                                  nsAString& aStr);
  protected:
 
-  virtual void SerializeAttributes(nsIContent* aContent,
-                           nsIDOMElement *aOriginalElement,
-                           nsAString& aTagPrefix,
-                           const nsAString& aTagNamespaceURI,
-                           nsIAtom* aTagName,
-                           nsAString& aStr);
+  virtual void SerializeHTMLAttributes(nsIContent* aContent,
+                                       nsIDOMElement *aOriginalElement,
+                                       nsAString& aTagPrefix,
+                                       const nsAString& aTagNamespaceURI,
+                                       nsIAtom* aTagName,
+                                       nsAString& aStr);
 };
 
 nsresult

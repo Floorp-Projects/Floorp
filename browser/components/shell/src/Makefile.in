@@ -52,19 +52,12 @@ endif
 
 ifneq (,$(filter WINCE WINNT,$(OS_ARCH)))
 CPPSRCS = nsWindowsShellService.cpp
-REQUIRES	+= \
-		browsercomps \
-		$(NULL)
 else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS = nsMacShellService.cpp
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
 CPPSRCS = nsGNOMEShellService.cpp
-REQUIRES	+= \
-		mozgnome \
-		thebes \
-		$(NULL)
 endif
 endif
 endif

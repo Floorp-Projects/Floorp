@@ -45,8 +45,10 @@
 #include "private.h"
 #include "convert.h"
 
-/*#define DEBUG*/
-/*#define DEBUG_VERBOSE*/
+#define DEBUG_VERBOSE 2
+/* #define DEBUG */
+/* #define DEBUG_LEVEL DEBUG_VERBOSE */
+#include "debug.h"
 
 #if HAVE_FLAC
 
@@ -82,9 +84,7 @@ fish_sound_flac_identify (unsigned char * buf, long bytes)
   if (bytes < 8) return FISH_SOUND_UNKNOWN;
   if (buf[0] != 0x7f) return FISH_SOUND_UNKNOWN;
   if (!strncmp ((char *)buf+1, "FLAC", 4)) {
-#ifdef DEBUG
-    printf("fish_sound_flac_identify: flac found\n");
-#endif
+    debug_printf(1, "flac found");
     /* if only a short buffer was passed, do a weak identify */
     if (bytes == 8) return FISH_SOUND_FLAC;
 
@@ -111,18 +111,12 @@ fs_flac_read_callback(const FLAC__StreamDecoder *decoder,
 {
   FishSound* fsound = (FishSound*)client_data;
   FishSoundFlacInfo* fi = (FishSoundFlacInfo *)fsound->codec_data;
-#ifdef DEBUG_VERBOSE
-  printf("fs_flac_read_callback: IN\n");
-#endif
+  debug_printf(DEBUG_VERBOSE, "fs_flac_read_callback: IN");
   if (fi->bufferlength > *bytes) {
-#ifdef DEBUG
-    printf("fs_flac_read_callback: too much data\n");
-#endif
+    debug_printf(1, "too much data");
     return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
   } else if (fi->bufferlength < 1) {
-#ifdef DEBUG
-    printf("fs_flac_read_callback: no data, %ld\n",fi->bufferlength);
-#endif
+    debug_printf(1, "no data, %ld",fi->bufferlength);
     return FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM;
   }
 
@@ -146,9 +140,7 @@ fs_flac_write_callback(const FLAC__StreamDecoder *decoder,
   channels = frame->header.channels;
   blocksize = frame->header.blocksize;
 
-#ifdef DEBUG_VERBOSE
-  printf("fs_flac_write_callback: IN, blocksize %d\n", blocksize);
-#endif
+  debug_printf(DEBUG_VERBOSE, "IN, blocksize %d", blocksize);
 
   fsound->frameno += blocksize;
 
@@ -200,23 +192,18 @@ fs_flac_meta_callback(const FLAC__StreamDecoder *decoder,
 {
   FishSound* fsound = (FishSound*)client_data;
   /*  FishSoundFlacInfo* fi = (FishSoundFlacInfo *)fsound->codec_data; */
-#ifdef DEBUG
-  printf("fs_flac_meta_callback: IN\n");
-#endif
+  debug_printf(1, "IN");
+
   switch (metadata->type) {
   case FLAC__METADATA_TYPE_STREAMINFO:
-#ifdef DEBUG
-    printf("fs_flac_meta_callback: channels %d, samplerate %d\n",
+    debug_printf(1, "channels %d, samplerate %d",
            metadata->data.stream_info.channels,
            metadata->data.stream_info.sample_rate);
-#endif
     fsound->info.channels = metadata->data.stream_info.channels;
     fsound->info.samplerate = metadata->data.stream_info.sample_rate;
     break;
   default:
-#ifdef DEBUG
-    printf("fs_flac_meta_callback: not yet implemented type\n");
-#endif
+    debug_printf(1, "not yet implemented type");
     break;
   }
 }
@@ -226,9 +213,7 @@ fs_flac_error_callback(const FLAC__StreamDecoder *decoder,
                        FLAC__StreamDecoderErrorStatus status,
                        void *client_data)
 {
-#ifdef DEBUG
-  printf("fs_flac_error_callback: IN\n");
-#endif
+  debug_printf(1, "IN");
   fprintf(stderr, "FLAC ERROR: %s\n", FLAC__StreamDecoderErrorStatusString[status]);
 }
 #endif
@@ -243,20 +228,13 @@ fs_flac_decode_header (FishSound * fsound, unsigned char *buf, long bytes)
   if (strncmp((char *)buf+1, "FLAC", 4) != 0) return NULL;
   fi->version.major = buf[5];
   fi->version.minor = buf[6];
-#ifdef DEBUG
-  printf("fs_flac_decode_header : Flac Ogg Mapping Version: %d.%d\n",
+  debug_printf(1, "Flac Ogg Mapping Version: %d.%d",
          fi->version.major, fi->version.minor);
-#endif
   fi->header_packets = buf[7] << 8 | buf[8];
-#ifdef DEBUG
-  printf("fs_flac_decode_header: Number of Header packets: %d\n",
-         fi->header_packets);
-#endif
+  debug_printf(1, "Number of Header packets: %d", fi->header_packets);
 
   if ((fi->fsd = FLAC__stream_decoder_new()) == NULL) {
-#ifdef DEBUG
-    printf ("fs_flac_decode_header: unable to create new stream_decoder\n");
-#endif
+    debug_printf (1, "unable to create new stream_decoder");
     return NULL;
   }
 
@@ -293,15 +271,11 @@ fs_flac_decode (FishSound * fsound, unsigned char * buf, long bytes)
 {
   FishSoundFlacInfo *fi = fsound->codec_data;
 
-#ifdef DEBUG_VERBOSE
-  printf("fs_flac_decode: IN, fi->packetno = %ld\n", fi->packetno);
-#endif
+  debug_printf(DEBUG_VERBOSE, "IN, fi->packetno = %ld", fi->packetno);
 
   if (fi->packetno == 0) {
     if (fs_flac_decode_header (fsound, buf, bytes) == NULL) {
-#ifdef DEBUG
-      printf("fs_flac_decode: Error reading header\n");
-#endif
+      debug_printf(1, "Error reading header");
       return -1;
     }
     if ((fi->buffer = fs_malloc(sizeof(unsigned char)*bytes)) == NULL)
@@ -312,10 +286,8 @@ fs_flac_decode (FishSound * fsound, unsigned char * buf, long bytes)
   }
   else if (fi->packetno <= fi->header_packets){
     unsigned char* tmp;
-#ifdef DEBUG
-    printf("fs_flac_decode: handling header (fi->header_packets = %d)\n",
-           fi->header_packets);
-#endif
+    debug_printf(1, "handling header (fi->header_packets = %d)",
+                 fi->header_packets);
 
 #if 0
     if (fi->packetno ==  1) fish_sound_comments_decode (fsound, buf, bytes);
@@ -323,9 +295,8 @@ fs_flac_decode (FishSound * fsound, unsigned char * buf, long bytes)
 
     if ((buf[0] & 0x7) == 4) {
       int len = (buf[1]<<16) + (buf[2]<<8) + buf[3];
-#ifdef DEBUG
-      printf ("fs_flac_decode: got vorbiscomments len %d\n", len);
-#endif
+      debug_printf (1, "got vorbiscomments len %d", len);
+
       if (fish_sound_comments_decode (fsound, buf+4, len) == FISH_SOUND_ERR_OUT_OF_MEMORY) {
         fi->packetno++;
         return FISH_SOUND_ERR_OUT_OF_MEMORY;
@@ -381,10 +352,10 @@ fs_flac_enc_write_callback(const FLAC__StreamEncoder *encoder,
 {
   FishSound* fsound = (FishSound*)client_data;
   FishSoundFlacInfo *fi = fsound->codec_data;
-#ifdef DEBUG
-  printf("fs_flac_enc_write_callback: IN\n");
-  printf("fs_flac_enc_write_callback: bytes: %d, samples: %d\n", bytes, samples);
-#endif
+
+  debug_printf(1, "IN");
+  debug_printf(1, "bytes: %d, samples: %d", bytes, samples);
+
   if (fsound->callback.encoded) {
     FishSoundEncoded encoded = (FishSoundEncoded) fsound->callback.encoded;
     if (fi->packetno == 0 && fi->header <= 1) {
@@ -393,10 +364,9 @@ fs_flac_enc_write_callback(const FLAC__StreamEncoder *encoder,
          * and a STREAMINFO block. Prepend the FLAC Ogg mapping header,
          * as described in http://flac.sourceforge.net/ogg_mapping.html.
          */
-#ifdef DEBUG
-        printf("fs_flac_enc_write_callback: generating FLAC header packet: "
-               "%c%c%c%c\n", buffer[0], buffer[1], buffer[2], buffer[3]);
-#endif
+        debug_printf(1, "generating FLAC header packet: %c%c%c%c",
+                     buffer[0], buffer[1], buffer[2], buffer[3]);
+
 	if ((fi->buffer = (unsigned char*)fs_malloc(sizeof(unsigned char)*(bytes+9))) == NULL)
           return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
 
@@ -448,25 +418,20 @@ fs_flac_enc_meta_callback(const FLAC__StreamEncoder *encoder,
 {
   /* FishSound* fsound = (FishSound*)client_data; */
   /* FishSoundFlacInfo* fi = (FishSoundFlacInfo *)fsound->codec_data; */
-#ifdef DEBUG
-  printf("fs_flac_enc_meta_callback: IN\n");
-#endif
+  debug_printf(1, "IN");
+
   switch (metadata->type) {
   case FLAC__METADATA_TYPE_STREAMINFO:
-#ifdef DEBUG
-    printf("fs_flac_enc_meta_callback: channels %d, samplerate %d\n",
+    debug_printf(1, "channels %d, samplerate %d",
            metadata->data.stream_info.channels,
            metadata->data.stream_info.sample_rate);
-#endif
     /*
     fsound->info.channels = metadata->data.stream_info.channels;
     fsound->info.samplerate = metadata->data.stream_info.sample_rate;
     */
     break;
   default:
-#ifdef DEBUG
-    printf("fs_flac_enc_meta_callback: metadata type not yet implemented\n");
-#endif
+    debug_printf(1, "metadata type not yet implemented");
     break;
   }
 
@@ -658,9 +623,7 @@ fs_flac_encode_f (FishSound * fsound, float * pcm[], long frames)
   long i;
   int j, channels = fsound->info.channels;
 
-#ifdef DEBUG
-  printf("fs_flac_encode_f: IN, frames = %ld\n", frames);
-#endif
+  debug_printf("IN, frames = %ld", frames);
 
   if ((ipcm = realloc(fi->ipcm, sizeof(FLAC__int32) * channels * frames)) == NULL)
     return FISH_SOUND_ERR_OUT_OF_MEMORY;
@@ -704,9 +667,7 @@ fs_flac_encode_f_ilv (FishSound * fsound, float ** pcm, long frames)
   float * p = (float*)pcm, norm = (1 << (BITS_PER_SAMPLE - 1));
   long i, length = frames * fsound->info.channels;
 
-#ifdef DEBUG
-  printf("fs_flac_encode_f_ilv: IN, frames = %ld\n", frames);
-#endif
+  debug_printf(1, "IN, frames = %ld", frames);
 
   if ((ipcm = realloc(fi->ipcm, sizeof(FLAC__int32)*fsound->info.channels*frames)) == NULL)
     return FISH_SOUND_ERR_OUT_OF_MEMORY;
@@ -749,9 +710,7 @@ fs_flac_delete (FishSound * fsound)
   FishSoundFlacInfo * fi = (FishSoundFlacInfo *)fsound->codec_data;
   int i;
 
-#ifdef DEBUG
-  printf("fs_flac_delete: IN\n");
-#endif
+  debug_printf("IN");
 
   if (fsound->mode == FISH_SOUND_DECODE) {
     if (fi->fsd) {
@@ -810,10 +769,7 @@ fs_flac_flush (FishSound * fsound)
 {
   FishSoundFlacInfo * fi = (FishSoundFlacInfo *)fsound->codec_data;
 
-#ifdef DEBUG
-  printf("fs_flac_flush: IN (%s)\n",
-         fsound->mode == FISH_SOUND_DECODE ? "decode" : "encode");
-#endif
+  debug_printf("IN (%s)", fsound->mode == FISH_SOUND_DECODE ? "decode" : "encode");
 
   if (fsound->mode == FISH_SOUND_DECODE) {
     FLAC__stream_decoder_finish(fi->fsd);

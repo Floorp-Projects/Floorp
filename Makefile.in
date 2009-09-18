@@ -193,7 +193,6 @@ ifdef MOZ_CRASHREPORTER
 	  $(MAKE_SYM_STORE_PATH) >                                        \
 	  $(DIST)/crashreporter-symbols/$(SYMBOL_INDEX_NAME)
 	echo packing symbols
-	mkdir -p $(topsrcdir)/../$(BUILDID)
 	cd $(DIST)/crashreporter-symbols && \
           zip -r9D ../"$(SYMBOL_ARCHIVE_BASENAME).zip" .
 endif # MOZ_CRASHREPORTER
@@ -209,6 +208,7 @@ ifdef MOZILLA_OFFICIAL
 	echo signing NSS libs
 	cd $(DIST)/bin; ./shlibsign.exe -v -i softokn3.dll
 	cd $(DIST)/bin; ./shlibsign.exe -v -i freebl3.dll
+	cd $(DIST)/bin; ./shlibsign.exe -v -i nssdbm3.dll
 endif # MOZILLA_OFFICIAL
 
 deliver: rebase signnss

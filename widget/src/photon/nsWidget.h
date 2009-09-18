@@ -172,7 +172,6 @@ public:
   NS_IMETHOD CaptureMouse(PRBool aCapture) { return NS_ERROR_FAILURE; }
 
 
-  NS_IMETHOD Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
   NS_IMETHOD InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
   inline NS_IMETHOD Update(void)

@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=486646
+-->
+
+<head>
+  <title>Test for Bug 486646</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="use_large_cache.js"></script>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+function loaded() {
+  var vid = document.getElementById("vid");
+  ok(vid.networkState == vid.NETWORK_LOADED, "networkState must be == NETWORK_LOADED");
+  ok(vid.readyState >= vid.HAVE_CURRENT_DATA, "readyState must be >= HAVE_CURRENT_DATA");
+
+  var ctx = document.getElementById("can").getContext("2d");
+  try {
+    ctx.drawImage(vid, 0, 0);
+    ok(true, "No exception while drawing to canvas from video");
+  } catch (ex) {
+    ok(false, "No exception while drawing to canvas from video");
+  }
+
+  SimpleTest.finish();
+  return false;
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<!-- Ogg video obtained from Theora test suite: http://v2v.cc/~j/theora_testsuite/ -->
+<video id="vid" 
+       src="320x240.ogv"
+       style="display: none;"
+       autobuffer
+       onerror="event.stopPropagation();"
+       onload="loaded();">
+</video>
+<canvas id="can" 
+        width="320" 
+        height="240">
+</canvas>
+</body>
+</html>

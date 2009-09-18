@@ -13,6 +13,16 @@ states = [
     'native',
 ]
 
+# 'State' codes of this number or higher are actually 'instantaneous' events.
+event_start = 8;
+
+flush_reasons = [
+    'B',
+    'O',
+    'S',
+    'G'
+]
+
 # Must match C++ enum
 reasons = [
     'none',

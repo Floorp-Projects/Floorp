@@ -70,6 +70,13 @@ Class::QueryInterface(REFIID iid, void** ppv)                                 \
   if (SUCCEEDED(hr))                                                          \
     return hr;                                                                \
 
+#define IMPL_IUNKNOWN_QUERY_ENTRY_COND(Class, Cond)                           \
+  if (Cond) {                                                                 \
+    hr = Class::QueryInterface(iid, ppv);                                     \
+    if (SUCCEEDED(hr))                                                        \
+      return hr;                                                              \
+  }                                                                           \
+
 #define IMPL_IUNKNOWN_INHERITED0(Class, Super)                                \
   IMPL_IUNKNOWN_QUERY_HEAD(Class)                                             \
   IMPL_IUNKNOWN_QUERY_ENTRY(Super)                                            \

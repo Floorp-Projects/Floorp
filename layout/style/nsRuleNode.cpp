@@ -1156,7 +1156,7 @@ CheckTextCallback(const nsRuleDataStruct& aData,
 // structs but not nsCSS*
 #define CSS_PROP_INCLUDE_NOT_CSS
 
-#define CHECK_DATA_FOR_PROPERTY(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
+#define CHECK_DATA_FOR_PROPERTY(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_, stylestructoffset_, animtype_) \
   { offsetof(nsRuleData##datastruct_, member_), type_, flags_ },
 
 static const PropertyCheckData FontCheckProperties[] = {
@@ -1874,17 +1874,14 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
 
     // If the dependent bit is set on a rule node for this struct, that
     // means its rule won't have any information to add, so skip it.
-    // XXXldb I don't understand why we need to check |detail| here, but
-    // we do.
-    if (detail == eRuleNone)
-      while (ruleNode->mDependentBits & bit) {
-        NS_ASSERTION(ruleNode->mStyleData.GetStyleData(aSID) == nsnull,
-                     "dependent bit with cached data makes no sense");
-        // Climb up to the next rule in the tree (a less specific rule).
-        rootNode = ruleNode;
-        ruleNode = ruleNode->mParent;
-        NS_ASSERTION(!(ruleNode->mNoneBits & bit), "can't have both bits set");
-      }
+    while (ruleNode->mDependentBits & bit) {
+      NS_ASSERTION(ruleNode->mStyleData.GetStyleData(aSID) == nsnull,
+                   "dependent bit with cached data makes no sense");
+      // Climb up to the next rule in the tree (a less specific rule).
+      rootNode = ruleNode;
+      ruleNode = ruleNode->mParent;
+      NS_ASSERTION(!(ruleNode->mNoneBits & bit), "can't have both bits set");
+    }
 
     // Check for cached data after the inner loop above -- otherwise
     // we'll miss it.
@@ -1947,7 +1944,8 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     detail = eRulePartialMixed; // Treat as though some data is specified to avoid
                                 // the optimizations and force data computation.
 
-  if (detail == eRuleNone && startStruct && !aRuleData->mPostResolveCallback) {
+  if (detail == eRuleNone && startStruct &&
+      aRuleData->mPostResolveCallbacks.IsEmpty()) {
     // We specified absolutely no rule information, but a parent rule in the tree
     // specified all the rule information.  We set a bit along the branch from our
     // node in the tree to the node that specified the data that tells nodes on that
@@ -1956,7 +1954,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     PropagateDependentBit(bit, ruleNode);
     return startStruct;
   }
-  // FIXME Do we need to check for mPostResolveCallback?
+  // FIXME Do we need to check for mPostResolveCallbacks?
   if ((!startStruct && !isReset &&
        (detail == eRuleNone || detail == eRulePartialInherited)) ||
       detail == eRuleFullInherited) {
@@ -2011,9 +2009,14 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
 #undef STYLE_STRUCT
 #undef STYLE_STRUCT_TEST
 
-  // If we have a post-resolve callback, handle that now.
-  if (aRuleData->mPostResolveCallback && (NS_LIKELY(res != nsnull)))
-    (*aRuleData->mPostResolveCallback)(const_cast<void*>(res), aRuleData);
+  // If we have post-resolve callbacks, handle that now.
+  if (NS_LIKELY(res != nsnull)) {
+    // Enumerate from least to most specific rule.
+    for (PRUint32 i = aRuleData->mPostResolveCallbacks.Length(); i-- != 0; ) {
+      nsPostResolveCallback &prc = aRuleData->mPostResolveCallbacks[i];
+      (*prc.mFunc)(const_cast<void*>(res), aRuleData, prc.mRule);
+    }
+  }
 
   // Now return the result.
   return res;
@@ -2031,7 +2034,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
           mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize);
 
         if (minimumFontSize > 0 && !mPresContext->IsChrome()) {
-          fontData->mFont.size = PR_MAX(fontData->mSize, minimumFontSize);
+          fontData->mFont.size = NS_MAX(fontData->mSize, minimumFontSize);
         }
         else {
           fontData->mFont.size = fontData->mSize;
@@ -2499,12 +2502,12 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
   // Compute the size we would have had if minscriptsize had never been
   // applied, also prevent overflow (bug 413274)
   *aUnconstrainedSize =
-    NSToCoordRound(PR_MIN(aParentFont->mScriptUnconstrainedSize*scriptLevelScale,
-                          nscoord_MAX));
+    NSToCoordRound(NS_MIN(aParentFont->mScriptUnconstrainedSize*scriptLevelScale,
+                          double(nscoord_MAX)));
   // Compute the size we could get via scriptlevel change
   nscoord scriptLevelSize =
-    NSToCoordRound(PR_MIN(aParentFont->mSize*scriptLevelScale,
-                          nscoord_MAX));
+    NSToCoordRound(NS_MIN(aParentFont->mSize*scriptLevelScale,
+                          double(nscoord_MAX)));
   if (scriptLevelScale <= 1.0) {
     if (aParentFont->mSize <= minScriptSize) {
       // We can't decrease the font size at all, so just stick to no change
@@ -2513,12 +2516,12 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
       return aParentFont->mSize;
     }
     // We can decrease, so apply constraint #1
-    return PR_MAX(minScriptSize, scriptLevelSize);
+    return NS_MAX(minScriptSize, scriptLevelSize);
   } else {
     // scriptminsize can only make sizes larger than the unconstrained size
     NS_ASSERTION(*aUnconstrainedSize <= scriptLevelSize, "How can this ever happen?");
     // Apply constraint #2
-    return PR_MIN(scriptLevelSize, PR_MAX(*aUnconstrainedSize, minScriptSize));
+    return NS_MIN(scriptLevelSize, NS_MAX(*aUnconstrainedSize, minScriptSize));
   }
 }
 #endif
@@ -2721,7 +2724,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
       case eSystemFont_List:
         // Assumption: system defined font is proportional
         systemFont.size = 
-          PR_MAX(defaultVariableFont->size - aPresContext->PointsToAppUnits(2), 0);
+          NS_MAX(defaultVariableFont->size - aPresContext->PointsToAppUnits(2), 0);
         break;
     }
 #endif
@@ -3006,9 +3009,12 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
                         PR_FALSE, dummy);
 
     // XXX Not sure if we need to do this here
-    // If we have a post-resolve callback, handle that now.
-    if (ruleData.mPostResolveCallback)
-      (ruleData.mPostResolveCallback)(aFont, &ruleData);
+    // If we have post-resolve callbacks, handle that now.
+    // Enumerate from least to most specific rule.
+    for (PRUint32 j = ruleData.mPostResolveCallbacks.Length(); j-- != 0; ) {
+      nsPostResolveCallback &prc = ruleData.mPostResolveCallbacks[j];
+      (*prc.mFunc)(aFont, &ruleData, prc.mRule);
+    }
 
     parentFont = *aFont;
   }
@@ -4193,6 +4199,13 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
               SETDSC_ENUMERATED, parentVisibility->mVisible,
               NS_STYLE_VISIBILITY_VISIBLE, 0, 0, 0, 0);
 
+  // pointer-events: enum, none, inherit, initial
+  SetDiscrete(displayData.mPointerEvents, visibility->mPointerEvents,
+              canStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_NONE, parentVisibility->mPointerEvents,
+              NS_STYLE_POINTER_EVENTS_AUTO, 0,
+              NS_STYLE_POINTER_EVENTS_NONE, 0, 0);
+  
   // lang: string, inherit
   // this is not a real CSS property, it is a html attribute mapped to CSS struture
   if (eCSSUnit_Ident == displayData.mLang.GetUnit()) {
@@ -5629,7 +5642,7 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   } else if (eCSSUnit_Integer == columnData.mColumnCount.GetUnit()) {
     column->mColumnCount = columnData.mColumnCount.GetIntValue();
     // Max 1000 columns - wallpaper for bug 345583.
-    column->mColumnCount = PR_MIN(column->mColumnCount, 1000);
+    column->mColumnCount = NS_MIN(column->mColumnCount, 1000U);
   } else if (eCSSUnit_Inherit == columnData.mColumnCount.GetUnit()) {
     canStoreInRuleTree = PR_FALSE;
     column->mColumnCount = parent->mColumnCount;
@@ -5813,12 +5826,6 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
     canStoreInRuleTree = PR_FALSE;
     svg->mMarkerStart = parentSVG->mMarkerStart;
   }
-
-  // pointer-events: enum, none, inherit, initial
-  SetDiscrete(SVGData.mPointerEvents, svg->mPointerEvents, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NONE, parentSVG->mPointerEvents,
-              NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED, 0,
-              NS_STYLE_POINTER_EVENTS_NONE, 0, 0);
 
   // shape-rendering: enum, auto, inherit
   SetDiscrete(SVGData.mShapeRendering, svg->mShapeRendering, canStoreInRuleTree,

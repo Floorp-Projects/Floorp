@@ -88,6 +88,7 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "nsIImageLoadingContent.h"
+#include "nsCOMPtr.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -158,14 +159,8 @@ GetLastChildFrame(nsIFrame*       aFrame,
   // Get the last continuation frame that's a parent
   nsIFrame* lastParentContinuation = nsLayoutUtils::GetLastContinuationWithChild(aFrame);
 
-  // Get the last child frame
-  nsIFrame* firstChildFrame = lastParentContinuation->GetFirstChild(nsnull);
-  if (firstChildFrame) {
-    nsFrameList frameList(firstChildFrame);
-    nsIFrame*   lastChildFrame = frameList.LastChild();
-
-    NS_ASSERTION(lastChildFrame, "unexpected error");
-
+  nsIFrame* lastChildFrame = lastParentContinuation->GetLastChild(nsnull);
+  if (lastChildFrame) {
     // Get the frame's first continuation. This matters in case the frame has
     // been continued across multiple lines or split by BiDi resolution.
     lastChildFrame = lastChildFrame->GetFirstContinuation();
@@ -355,7 +350,7 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
                                      nsIContent* aContent2,
                                      PRInt32 aIf1Ancestor,
                                      PRInt32 aIf2Ancestor,
-                                     nsIContent* aCommonAncestor)
+                                     const nsIContent* aCommonAncestor)
 {
   NS_PRECONDITION(aContent1, "aContent1 must not be null");
   NS_PRECONDITION(aContent2, "aContent2 must not be null");
@@ -1060,6 +1055,9 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   if (aFlags & PAINT_IN_TRANSFORM) {
     builder.SetInTransform(PR_TRUE);
   }
+  if (aFlags & PAINT_SYNC_DECODE_IMAGES) {
+    builder.SetSyncDecodeImages(PR_TRUE);
+  }
   nsresult rv;
 
   builder.EnterPresShell(aFrame, dirtyRect);
@@ -1574,7 +1572,7 @@ nsLayoutUtils::GetParentOrPlaceholderFor(nsFrameManager* aFrameManager,
                                          nsIFrame* aFrame)
 {
   if ((aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
-      && !(aFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+      && !aFrame->GetPrevInFlow()) {
     return aFrameManager->GetPlaceholderFrameFor(aFrame);
   }
   return aFrame->GetParent();
@@ -2104,7 +2102,7 @@ nsLayoutUtils::ComputeWidthValue(
                    min = aFrame->GetMinWidth(aRenderingContext),
                   fill = aContainingBlockWidth -
                          (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
-          result = PR_MAX(min, PR_MIN(pref, fill));
+          result = NS_MAX(min, NS_MIN(pref, fill));
           NS_ASSERTION(result >= 0, "width less than zero");
         }
         break;
@@ -2773,7 +2771,8 @@ DrawImageInternal(nsIRenderingContext* aRenderingContext,
                   const nsRect&        aFill,
                   const nsPoint&       aAnchor,
                   const nsRect&        aDirty,
-                  const nsIntSize&     aImageSize)
+                  const nsIntSize&     aImageSize,
+                  PRUint32             aImageFlags)
 {
   if (aDest.IsEmpty() || aFill.IsEmpty())
     return NS_OK;
@@ -2871,7 +2870,8 @@ DrawImageInternal(nsIRenderingContext* aRenderingContext,
   if (finalFillRect.IsEmpty())
     return NS_OK;
 
-  aImage->Draw(ctx, aGraphicsFilter, transform, finalFillRect, intSubimage);
+  aImage->Draw(ctx, aGraphicsFilter, transform, finalFillRect, intSubimage,
+               aImageFlags);
   return NS_OK;
 }
 
@@ -2880,6 +2880,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(nsIRenderingContext* aRenderingContext,
                                        imgIContainer*       aImage,
                                        const nsPoint&       aDest,
                                        const nsRect&        aDirty,
+                                       PRUint32             aImageFlags,
                                        const nsRect*        aSourceArea)
 {
   nsIntSize imageSize;
@@ -2905,7 +2906,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(nsIRenderingContext* aRenderingContext,
   // translation but we don't want to actually tile the image.
   fill.IntersectRect(fill, dest);
   return DrawImageInternal(aRenderingContext, aImage, gfxPattern::FILTER_NEAREST,
-                           dest, fill, aDest, aDirty, imageSize);
+                           dest, fill, aDest, aDirty, imageSize, aImageFlags);
 }
  
 /* static */ nsresult
@@ -2914,6 +2915,7 @@ nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
                                gfxPattern::GraphicsFilter aGraphicsFilter,
                                const nsRect&        aDest,
                                const nsRect&        aDirty,
+                               PRUint32             aImageFlags,
                                const nsRect*        aSourceArea)
 {
   nsIntSize imageSize;
@@ -2938,7 +2940,7 @@ nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
   nsRect fill;
   fill.IntersectRect(aDest, dest);
   return DrawImageInternal(aRenderingContext, aImage, aGraphicsFilter, dest, fill,
-                           fill.TopLeft(), aDirty, imageSize);
+                           fill.TopLeft(), aDirty, imageSize, aImageFlags);
 }
 
 /* static */ nsresult
@@ -2948,7 +2950,8 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
                          const nsRect&        aDest,
                          const nsRect&        aFill,
                          const nsPoint&       aAnchor,
-                         const nsRect&        aDirty)
+                         const nsRect&        aDirty,
+                         PRUint32             aImageFlags)
 {
   nsIntSize imageSize;
   aImage->GetWidth(&imageSize.width);
@@ -2957,7 +2960,7 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
 
   return DrawImageInternal(aRenderingContext, aImage, aGraphicsFilter,
                            aDest, aFill, aAnchor, aDirty,
-                           imageSize);
+                           imageSize, aImageFlags);
 }
 
 /* static */ nsRect
@@ -3122,10 +3125,10 @@ nsLayoutUtils::GetRectDifferenceStrips(const nsRect& aR1, const nsRect& aR2,
                                        nsRect* aHStrip, nsRect* aVStrip) {
   NS_ASSERTION(aR1.TopLeft() == aR2.TopLeft(),
                "expected rects at the same position");
-  nsRect unionRect(aR1.x, aR1.y, PR_MAX(aR1.width, aR2.width),
-                   PR_MAX(aR1.height, aR2.height));
-  nscoord VStripStart = PR_MIN(aR1.width, aR2.width);
-  nscoord HStripStart = PR_MIN(aR1.height, aR2.height);
+  nsRect unionRect(aR1.x, aR1.y, NS_MAX(aR1.width, aR2.width),
+                   NS_MAX(aR1.height, aR2.height));
+  nscoord VStripStart = NS_MIN(aR1.width, aR2.width);
+  nscoord HStripStart = NS_MIN(aR1.height, aR2.height);
   *aVStrip = unionRect;
   aVStrip->x += VStripStart;
   aVStrip->width -= VStripStart;
@@ -3151,13 +3154,13 @@ nsLayoutUtils::GetDeviceContextForScreenInfo(nsIDocShell* aDocShell)
 
     win->EnsureSizeUpToDate();
 
-    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(docShell);
-    NS_ENSURE_TRUE(baseWindow, nsnull);
-
-    nsCOMPtr<nsIWidget> mainWidget;
-    baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
-    if (mainWidget) {
-      return mainWidget->GetDeviceContext();
+    nsRefPtr<nsPresContext> presContext;
+    docShell->GetPresContext(getter_AddRefs(presContext));
+    if (presContext) {
+      nsIDeviceContext* context = presContext->DeviceContext();
+      if (context) {
+        return context;
+      }
     }
 
     nsCOMPtr<nsIDocShellTreeItem> curItem = do_QueryInterface(docShell);
@@ -3363,8 +3366,13 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
   if (NS_FAILED(rv) || !imgContainer)
     return result;
 
+  PRUint32 whichFrame = (aSurfaceFlags & SFE_WANT_FIRST_FRAME)
+                        ? (PRUint32) imgIContainer::FRAME_FIRST
+                        : (PRUint32) imgIContainer::FRAME_CURRENT;
   nsRefPtr<gfxASurface> framesurf;
-  rv = imgContainer->GetCurrentFrame(getter_AddRefs(framesurf));
+  rv = imgContainer->GetFrame(whichFrame,
+                              imgIContainer::FLAG_SYNC_DECODE,
+                              getter_AddRefs(framesurf));
   if (NS_FAILED(rv))
     return result;
 

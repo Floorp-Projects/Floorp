@@ -4,6 +4,7 @@
  *
  *  IAccessible2 IDL Specification
  *
+ *  Copyright (c) Linux Foundation 2007, 2008
  *  Copyright (c) IBM Corp. 2006
  *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
  *
@@ -29,7 +30,7 @@ import "oleacc.idl";
 
 /** @brief This interface gives access to a single numerical value.
 
- The IAccessibleValue interface represents a single numerical value and should 
+ The %IAccessibleValue interface represents a single numerical value and should 
   be implemented by any class that supports numerical value like progress bars 
   and spin boxes.  This interface lets you access the value and its upper and 
   lower bounds.
@@ -43,7 +44,10 @@ interface IAccessibleValue : IUnknown
    The exact return type is implementation dependent.  Typical types are long and 
     double.
    @param [out] currentValue
-    Returns the current value represented by this object.
+    Returns the current value represented by this object.  See the section about 
+	@ref _variants "VARIANTs" for additional information.
+   @retval S_OK
+   @retval S_FALSE if there is nothing to return, [out] value is NULL
   */
   [propget] HRESULT currentValue
     (
@@ -61,6 +65,7 @@ interface IAccessibleValue : IUnknown
    @param [out] value
     The new value represented by this object.  The set of admissible types for 
     this argument is implementation dependent.
+   @retval S_OK
   */
   HRESULT setCurrentValue
     (
@@ -74,7 +79,9 @@ interface IAccessibleValue : IUnknown
 
    @param [out] maximumValue
     Returns the maximal value in an implementation dependent type. If this object 
-    has no upper bound then an empty object is returned.
+    has no upper bound then an empty object is returned.  See the section about 
+	@ref _variants "VARIANTs" for additional information.
+   @retval S_OK
   */
   [propget] HRESULT maximumValue
     (
@@ -88,7 +95,9 @@ interface IAccessibleValue : IUnknown
    
    @param [out] minimumValue
     Returns the minimal value in an implementation dependent type. If this object 
-    has no upper bound then an empty object is returned.
+    has no lower bound then an empty object is returned.  See the section about 
+	@ref _variants "VARIANTs" for additional information.
+   @retval S_OK
   */
   [propget] HRESULT minimumValue
     (

@@ -41,7 +41,7 @@
 
 // NOTE: alphabetically ordered
 #include "nsBaseWidgetAccessible.h"
-#include "nsXULSelectAccessible.h"
+#include "nsXULMenuAccessible.h"
 
 /**
  * An individual tab, xul:tab element

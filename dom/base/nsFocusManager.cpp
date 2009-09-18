@@ -434,6 +434,14 @@ nsFocusManager::MoveFocus(nsIDOMWindow* aWindow, nsIDOMElement* aStartElement,
   PRINTTAGF(">> $[[%s]]\n", mFocusedContent);
 #endif
 
+  // use FLAG_BYMOVEFOCUS when switching focus with MoveFocus unless one of
+  // the other focus methods is already set, or we're just moving to the root
+  // or caret position.
+  if (aType != MOVEFOCUS_ROOT && aType != MOVEFOCUS_CARET &&
+      (aFlags & FOCUSMETHOD_MASK) == 0) {
+    aFlags |= FLAG_BYMOVEFOCUS;
+  }
+
   nsCOMPtr<nsPIDOMWindow> window;
   nsCOMPtr<nsIContent> startContent;
   if (aStartElement) {
@@ -1326,7 +1334,8 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
   // This has to happen before the focus is cleared below, otherwise, the IME
   // compositionend event won't get fired at the element being blurred.
   nsIMEStateManager::OnTextStateBlur(nsnull, nsnull);
-  nsIMEStateManager::OnChangeFocus(presShell->GetPresContext(), nsnull);
+  if (mActiveWindow)
+    nsIMEStateManager::OnChangeFocus(presShell->GetPresContext(), nsnull);
 
   // now adjust the actual focus, by clearing the fields in the focus manager
   // and in the window.

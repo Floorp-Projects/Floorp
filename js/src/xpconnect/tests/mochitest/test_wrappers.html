@@ -85,14 +85,6 @@
     }
 
     try {
-        window.__proto__ = null;
-        is(window.__proto__, null,
-           "allowed to update window.__proto__ to null");
-    } catch (e) {
-        ok(false, "some crazy exception was thrown");
-    }
-
-    try {
         new XPCNativeWrapper("");
         ok(false, "How did we construct a wrapper around a primitive?");
     } catch (e) {
@@ -112,13 +104,35 @@
        "[object XPCSafeJSObjectWrapper]",
        "able to convert XPCSafeJSObjectWrapper.prototype to string");
 
+    XPCNativeWrapper.prototype = {};
+    let (w = new XPCNativeWrapper(window)) {
+        ok(window.location, "able to set XPCNativeWrapper.prototype and do stuff with it");
+    }
+
+    is(new XPCNativeWrapper(window, Window).closed, false,
+       "able to wrap a window in a window XPCNativeWrapper");
+    try {
+        new XPCNativeWrapper(document, Window);
+        ok(false, "Able to wrap a document in a Window XPCNativeWrapper?")
+    } catch (e) {
+        ok(/ILLEGAL_VALUE/(e), "not able to wrap a document in a Window XPCNativeWrapper");
+    }
+
     try {
         is((function(x) { return x+1; }).apply(this,
                                                XPCSafeJSObjectWrapper([1])),
-           2);
+           2, "able to call apply with an XPCSafeJSObjectWrapped array");
     } catch (e) {
         ok(false,
            "Unable to call apply() with a XPCSafeJSObjectWrapped array");
+    }
+
+    try {
+        window.__proto__ = null;
+        is(window.__proto__, null,
+           "allowed to update window.__proto__ to null");
+    } catch (e) {
+        ok(false, "some crazy exception was thrown");
     }
     </script>
 </body>

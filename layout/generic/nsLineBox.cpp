@@ -140,21 +140,17 @@ ListFloats(FILE* out, PRInt32 aIndent, const nsFloatCacheList& aFloats)
   nsFloatCache* fc = aFloats.Head();
   while (fc) {
     nsFrame::IndentBy(out, aIndent);
-    nsPlaceholderFrame* ph = fc->mPlaceholder;
-    if (ph) {
-      fprintf(out, "placeholder@%p ", static_cast<void*>(ph));
-      nsIFrame* frame = ph->GetOutOfFlowFrame();
-      if (frame) {
-        nsAutoString frameName;
-        frame->GetFrameName(frameName);
-        fputs(NS_LossyConvertUTF16toASCII(frameName).get(), out);
-      }
-
-      if (!frame) {
-        fputs("\n###!!! NULL out-of-flow frame", out);
-      }
-      fprintf(out, "\n");
+    nsIFrame* frame = fc->mFloat;
+    fprintf(out, "floatframe@%p ", static_cast<void*>(frame));
+    if (frame) {
+      nsAutoString frameName;
+      frame->GetFrameName(frameName);
+      fputs(NS_LossyConvertUTF16toASCII(frameName).get(), out);
     }
+    else {
+      fputs("\n###!!! NULL out-of-flow frame", out);
+    }
+    fprintf(out, "\n");
     fc = fc->Next();
   }
 }
@@ -330,19 +326,31 @@ nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines)
     // Delete our child frames before doing anything else. In particular
     // we do all of this before our base class releases it's hold on the
     // view.
+#ifdef DEBUG
+    PRInt32 numFrames = 0;
+#endif
     for (nsIFrame* child = aLines.front()->mFirstChild; child; ) {
       nsIFrame* nextChild = child->GetNextSibling();
       child->Destroy();
       child = nextChild;
+#ifdef DEBUG
+      numFrames++;
+#endif
     }
 
     nsIPresShell *shell = aPresContext->PresShell();
 
     do {
       nsLineBox* line = aLines.front();
+#ifdef DEBUG
+      numFrames -= line->GetChildCount();
+#endif
       aLines.pop_front();
       line->Destroy(shell);
     } while (! aLines.empty());
+#ifdef DEBUG
+    NS_ASSERTION(numFrames == 0, "number of frames deleted does not match");
+#endif
   }
 }
 
@@ -836,7 +844,7 @@ nsFloatCacheList::Find(nsIFrame* aOutOfFlowFrame)
 {
   nsFloatCache* fc = mHead;
   while (fc) {
-    if (fc->mPlaceholder->GetOutOfFlowFrame() == aOutOfFlowFrame) {
+    if (fc->mFloat == aOutOfFlowFrame) {
       break;
     }
     fc = fc->Next();
@@ -913,8 +921,10 @@ nsFloatCacheFreeList::DeleteAll()
 }
 
 nsFloatCache*
-nsFloatCacheFreeList::Alloc()
+nsFloatCacheFreeList::Alloc(nsIFrame* aFloat)
 {
+  NS_PRECONDITION(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
+                  "This is a float cache, why isn't the frame out-of-flow?");
   nsFloatCache* fc = mHead;
   if (mHead) {
     if (mHead == mTail) {
@@ -928,6 +938,7 @@ nsFloatCacheFreeList::Alloc()
   else {
     fc = new nsFloatCache();
   }
+  fc->mFloat = aFloat;
   return fc;
 }
 
@@ -950,7 +961,7 @@ nsFloatCacheFreeList::Append(nsFloatCache* aFloat)
 //----------------------------------------------------------------------
 
 nsFloatCache::nsFloatCache()
-  : mPlaceholder(nsnull),
+  : mFloat(nsnull),
     mNext(nsnull)
 {
   MOZ_COUNT_CTOR(nsFloatCache);

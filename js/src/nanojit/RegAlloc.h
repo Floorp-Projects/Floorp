@@ -51,45 +51,86 @@ namespace nanojit
 
     class RegAlloc
     {
-        public:
-            RegAlloc() { clear(); }
-            void    clear();
-            bool    isFree(Register r);
-            void    addFree(Register r);
-            void    addActive(Register r, LIns* ins);
-            void    useActive(Register r);
-            void    removeActive(Register r);
-            void    retire(Register r);
-            bool    isValid() {
-                return (free|used) != 0;
-            }
+    public:
+        RegAlloc()
+        {
+            clear();
+        }
 
-            int32_t getPriority(Register r) {
-                NanoAssert(r != UnknownReg && active[r]);
-                return usepri[r];
-            }
+        void clear()
+        {
+            VMPI_memset(this, 0, sizeof(*this));
+        }
 
-            LIns* getActive(Register r) {
-                NanoAssert(r != UnknownReg);
-                return active[r];
-            }
+        bool isFree(Register r)
+        {
+            NanoAssert(r != UnknownReg);
+            return (free & rmask(r)) != 0;
+        }
 
-            debug_only( uint32_t    countFree(); )
-            debug_only( uint32_t    countActive(); )
-            debug_only( void        checkCount(); )
-            debug_only( bool        isConsistent(Register r, LIns* v); )
-            debug_only( uint32_t    count; )
-            debug_only( RegisterMask managed; )    // bitfield of 0..NJ_MAX_REGISTERS denoting which are under our management
+        void addFree(Register r)
+        {
+            NanoAssert(!isFree(r));
+            free |= rmask(r);
+        }
 
-            LIns*    active[LastReg + 1];  // active[r] = OP that defines r
-            int32_t usepri[LastReg + 1]; // used priority. lower = more likely to spill.
-            RegisterMask    free;
-            RegisterMask    used;
-            int32_t         priority;
+        void addActive(Register r, LIns* v)
+        {
+            //  Count++;
+            NanoAssert(v);
+            NanoAssert(r != UnknownReg);
+            NanoAssert(active[r] == NULL);
+            active[r] = v;
+            useActive(r);
+        }
 
-            verbose_only( static void formatRegisters(RegAlloc& regs, char* s, Fragment*); )
+        void useActive(Register r)
+        {
+            NanoAssert(r != UnknownReg);
+            NanoAssert(active[r] != NULL);
+            usepri[r] = priority++;
+        }
 
-            DECLARE_PLATFORM_REGALLOC()
+        void removeActive(Register r)
+        {
+            //registerReleaseCount++;
+            NanoAssert(r != UnknownReg);
+            NanoAssert(active[r] != NULL);
+
+            // remove the given register from the active list
+            active[r] = NULL;
+        }
+
+        void retire(Register r)
+        {
+            NanoAssert(r != UnknownReg);
+            NanoAssert(active[r] != NULL);
+            active[r] = NULL;
+            free |= rmask(r);
+        }
+
+        int32_t getPriority(Register r) {
+            NanoAssert(r != UnknownReg && active[r]);
+            return usepri[r];
+        }
+
+        LIns* getActive(Register r) {
+            NanoAssert(r != UnknownReg);
+            return active[r];
+        }
+
+        debug_only( uint32_t    countActive(); )
+        debug_only( bool        isConsistent(Register r, LIns* v); )
+        debug_only( RegisterMask managed; )    // bitfield of 0..NJ_MAX_REGISTERS denoting which are under our management
+
+        LIns*           active[LastReg + 1];    // active[r] = OP that defines r
+        int32_t         usepri[LastReg + 1];    // used priority. lower = more likely to spill.
+        RegisterMask    free;
+        int32_t         priority;
+
+        verbose_only( void formatRegisters(char* s, Fragment*); )
+
+        DECLARE_PLATFORM_REGALLOC()
     };
 }
 #endif // __nanojit_RegAlloc__

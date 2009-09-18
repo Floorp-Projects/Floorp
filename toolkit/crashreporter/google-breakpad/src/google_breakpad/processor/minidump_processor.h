@@ -30,6 +30,7 @@
 #ifndef GOOGLE_BREAKPAD_PROCESSOR_MINIDUMP_PROCESSOR_H__
 #define GOOGLE_BREAKPAD_PROCESSOR_MINIDUMP_PROCESSOR_H__
 
+#include <cassert>
 #include <string>
 #include "google_breakpad/common/breakpad_types.h"
 
@@ -42,16 +43,53 @@ class ProcessState;
 class SourceLineResolverInterface;
 class SymbolSupplier;
 class SystemInfo;
+// Return type for Process()
+enum ProcessResult {
+  PROCESS_OK,                                 // The minidump was
+                                              // processed
+                                              // successfully.
+
+  PROCESS_ERROR_MINIDUMP_NOT_FOUND,           // The minidump file
+                                              // was not found.
+
+  PROCESS_ERROR_NO_MINIDUMP_HEADER,           // The minidump file
+                                              // had no header
+
+  PROCESS_ERROR_NO_THREAD_LIST,               // The minidump file
+                                              // had no thread list.
+
+  PROCESS_ERROR_GETTING_THREAD,               // There was an error
+                                              // getting one
+                                              // thread's data from
+                                              // the minidump.
+
+  PROCESS_ERROR_GETTING_THREAD_ID,            // There was an error
+                                              // getting a thread id
+                                              // from the thread's
+                                              // data.
+
+  PROCESS_ERROR_DUPLICATE_REQUESTING_THREADS, // There was more than
+                                              // one requesting
+                                              // thread.
+
+  PROCESS_ERROR_NO_MEMORY_FOR_THREAD,         // A thread had no
+                                              // memory region.
+
+  PROCESS_ERROR_NO_STACKWALKER_FOR_THREAD,    // We couldn't
+                                              // determine the
+                                              // StackWalker to walk
+                                              // the minidump's
+                                              // threads.
+
+  PROCESS_SYMBOL_SUPPLIER_INTERRUPTED         // The minidump
+                                              // processing was
+                                              // interrupted by the
+                                              // SymbolSupplier(not
+                                              // fatal)
+};
 
 class MinidumpProcessor {
  public:
-  // Return type for Process()
-  enum ProcessResult {
-    PROCESS_OK,           // the minidump was processed successfully
-    PROCESS_ERROR,        // there was an error processing the minidump
-    PROCESS_INTERRUPTED   // processing was interrupted by the SymbolSupplier
-  };
-
   // Initializes this MinidumpProcessor.  supplier should be an
   // implementation of the SymbolSupplier abstract base class.
   MinidumpProcessor(SymbolSupplier *supplier,
@@ -62,6 +100,10 @@ class MinidumpProcessor {
   ProcessResult Process(const string &minidump_file,
                         ProcessState *process_state);
 
+  // Processes the minidump structure and fills process_state with the
+  // result.
+  ProcessResult Process(Minidump *minidump,
+                        ProcessState *process_state);
   // Populates the cpu_* fields of the |info| parameter with textual
   // representations of the CPU type that the minidump in |dump| was
   // produced on.  Returns false if this information is not available in
@@ -83,6 +125,21 @@ class MinidumpProcessor {
   // instructions or divisions by zero, or a data address when the crash
   // was caused by a memory access violation.
   static string GetCrashReason(Minidump *dump, u_int64_t *address);
+
+  // This function returns true if the passed-in error code is
+  // something unrecoverable(i.e. retry should not happen).  For
+  // instance, if the minidump is corrupt, then it makes no sense to
+  // retry as we won't be able to glean additional information.
+  // However, as an example of the other case, the symbol supplier can
+  // return an error code indicating it was 'interrupted', which can
+  // happen of the symbols are fetched from a remote store, and a
+  // retry might be successful later on.
+  // You should not call this method with PROCESS_OK! Test for
+  // that separately before calling this.
+  static bool IsErrorUnrecoverable(ProcessResult p) {
+    assert(p !=  PROCESS_OK);
+    return (p != PROCESS_SYMBOL_SUPPLIER_INTERRUPTED);
+  }
 
  private:
   SymbolSupplier *supplier_;

@@ -300,6 +300,17 @@ XPCCallContext::SetArgsAndResultPtr(uintN argc,
 {
     CHECK_STATE(HAVE_OBJECT);
 
+    if(mState < HAVE_NAME)
+    {
+        mSet = nsnull;
+        mInterface = nsnull;
+        mMember = nsnull;
+#ifdef XPC_IDISPATCH_SUPPORT
+        mIDispatchMember = nsnull;
+#endif
+        mStaticMemberIsLocal = JS_FALSE;
+    }
+
     mArgc   = argc;
     mArgv   = argv;
     mRetVal = rval;

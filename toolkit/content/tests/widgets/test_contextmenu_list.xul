@@ -166,31 +166,15 @@ function nextTest()
 // mouse event is dispatched to round(110.7) == 111px. This comes back
 // with a clientY of round(111 - 100.4) == round(10.6) == 11. This is not
 // equal to round(10.3) as you might expect.
-//
-// We use getOuterFrameOffset to adjust coordinates to the correct
-// space before rounding. Another way to do this would be to use screen
-// coordinates.
-function getOuterFrameOffset(isX)
-{
-  if (!window.frameElement)
-    return 0;
-
-  var r = window.frameElement.getBoundingClientRect();
-  return isX ? r.left : r.top;
-}
 
 function isRoundedX(a, b, msg)
 {
-  var v = getOuterFrameOffset(true);
-  ok(Math.round(a + v) == Math.round(b + v),
-     msg + " - got " + a + ", expected " + b);
+  is(Math.round(a + mozInnerScreenX), Math.round(b + mozInnerScreenX), msg);
 }
 
 function isRoundedY(a, b, msg)
 {
-  var v = getOuterFrameOffset(false);
-  ok(Math.round(a + v) == Math.round(b + v),
-     msg + " - got " + a + ", expected " + b);
+  is(Math.round(a + mozInnerScreenY), Math.round(b + mozInnerScreenY), msg);
 }
 
 function checkContextMenu(event)
@@ -234,11 +218,11 @@ function checkContextMenuForMenu(event)
   gContextMenuFired = true;
 
   var popuprect = (gSelectionStep ? $("menu2") : $("menupopup")).getBoundingClientRect();
-  is(event.clientX, Math.floor(popuprect.left), "menu left " + gSelectionStep);
+  is(event.clientX, Math.round(popuprect.left), "menu left " + gSelectionStep);
   // the clientY is off by one sometimes on Windows (when loaded in the testing iframe
   // but not when loaded separately) so just check for both cases for now
-  ok(event.clientY == Math.floor(popuprect.bottom) ||
-     event.clientY - 1 == Math.floor(popuprect.bottom), "menu top " + gSelectionStep);
+  ok(event.clientY == Math.round(popuprect.bottom) ||
+     event.clientY - 1 == Math.round(popuprect.bottom), "menu top " + gSelectionStep);
 }
 
 function checkPopup()

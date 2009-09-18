@@ -30,13 +30,17 @@ html, body {
 
 function handle_load(e)
 {
-  setTimeout(resize_svg, 50); // allow some time for layout and rendering
+  document.addEventListener("MozReftestInvalidate", resize_svg, false);
+  // in case we're not gecko
+  setTimeout(resize_svg, 5000);
 }
 
 function resize_svg()
 {
   document.getElementById('svg').style.height = '100%';
-  setTimeout(notify_test_finished, 50); // allow some time for layout and rendering
+  document.addEventListener("MozReftestInvalidate", notify_test_finished, false);
+  // in case we're not gecko
+  setTimeout(notify_test_finished, 5000);
 }
 
 function notify_test_finished()

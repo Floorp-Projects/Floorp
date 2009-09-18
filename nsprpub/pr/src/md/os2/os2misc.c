@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Davide Bresolin <davide@teamos2.it>
+ *   Rich Walsh <dragtext@e-vertise.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -544,45 +545,109 @@ _PR_MD_WAKEUP_CPUS( void )
     return;
 }    
 
-
 /*
  **********************************************************************
  *
- * Memory-mapped files are not supported on OS/2 (or Win16).
+ * Memory-mapped files
+ *
+ * A credible emulation of memory-mapped i/o on OS/2 would require
+ * an exception-handler on each thread that might access the mapped
+ * memory.  In the Mozilla environment, that would be impractical.
+ * Instead, the following simulates those modes which don't modify
+ * the mapped file.  It reads the entire mapped file segment at once
+ * when MemMap is called, and frees it on MemUnmap.  CreateFileMap
+ * only does sanity-checks, while CloseFileMap does almost nothing.
  *
  **********************************************************************
  */
 
 PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
 {
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    return PR_FAILURE;
+    PRFileInfo64 info;
+
+    /* assert on PR_PROT_READWRITE which modifies the underlying file */
+    PR_ASSERT(fmap->prot == PR_PROT_READONLY ||
+              fmap->prot == PR_PROT_WRITECOPY);
+    if (fmap->prot != PR_PROT_READONLY &&
+        fmap->prot != PR_PROT_WRITECOPY) {
+        PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+        return PR_FAILURE;
+    }
+    if (PR_GetOpenFileInfo64(fmap->fd, &info) == PR_FAILURE) {
+        return PR_FAILURE;
+    }
+    /* reject zero-byte mappings & zero-byte files */
+    if (!size || !info.size) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return PR_FAILURE;
+    }
+    /* file size rounded up to the next page boundary */
+    fmap->md.maxExtent = (info.size + 0xfff) & ~(0xfff);
+
+    return PR_SUCCESS;
 }
 
 PRInt32 _MD_GetMemMapAlignment(void)
 {
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    return -1;
+    /* OS/2 pages are 4k */
+    return 0x1000;
 }
 
-void * _MD_MemMap(
-    PRFileMap *fmap,
-    PROffset64 offset,
-    PRUint32 len)
+void * _MD_MemMap(PRFileMap *fmap, PROffset64 offset, PRUint32 len)
 {
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    return NULL;
+    PRUint32 rv;
+    void *addr;
+
+    /* prevent mappings beyond EOF + remainder of page */
+    if (offset + len > fmap->md.maxExtent) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return NULL;
+    }
+    if (PR_Seek64(fmap->fd, offset, PR_SEEK_SET) == -1) {
+        return NULL;
+    }
+    /* try for high memory, fall back to low memory if hi-mem fails */
+    rv = DosAllocMem(&addr, len, OBJ_ANY | PAG_COMMIT | PAG_READ | PAG_WRITE);
+    if (rv) {
+        rv = DosAllocMem(&addr, len, PAG_COMMIT | PAG_READ | PAG_WRITE);
+        if (rv) {
+            PR_SetError(PR_OUT_OF_MEMORY_ERROR, rv);
+            return NULL;
+        }
+    }
+    if (PR_Read(fmap->fd, addr, len) == -1) {
+        DosFreeMem(addr);
+        return NULL;
+    }
+    /* don't permit writes if readonly */
+    if (fmap->prot == PR_PROT_READONLY) {
+        rv = DosSetMem(addr, len, PAG_READ);
+        if (rv) {
+            DosFreeMem(addr);
+            PR_SetError(PR_UNKNOWN_ERROR, rv);
+            return NULL;
+        }
+    }
+    return addr;
 }
 
 PRStatus _MD_MemUnmap(void *addr, PRUint32 len)
 {
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    return PR_FAILURE;
+    PRUint32 rv;
+
+    /* we just have to trust that addr & len are those used by MemMap */
+    rv = DosFreeMem(addr);
+    if (rv) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, rv);
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
 }
 
 PRStatus _MD_CloseFileMap(PRFileMap *fmap)
 {
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    return PR_FAILURE;
+    /* nothing to do except free the PRFileMap struct */
+    PR_Free(fmap);
+    return PR_SUCCESS;
 }
 

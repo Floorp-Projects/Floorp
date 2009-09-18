@@ -245,7 +245,8 @@ aggregateFunctionFinalHelper(sqlite3_context *aCtx)
 //// Connection
 
 Connection::Connection(Service *aService)
-: mDBConn(nsnull)
+: sharedAsyncExecutionMutex("Connection::sharedAsyncExecutionMutex")
+, mDBConn(nsnull)
 , mAsyncExecutionMutex(nsAutoLock::NewLock("AsyncExecutionMutex"))
 , mAsyncExecutionThreadShuttingDown(PR_FALSE)
 , mTransactionMutex(nsAutoLock::NewLock("TransactionMutex"))

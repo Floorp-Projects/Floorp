@@ -456,10 +456,16 @@
         var image = new Image();
         var id = this.id;
         image.onload = function() {
-          document.getElementById(id)._imageLoaded(image);
+          var self = document.getElementById(id);
+          // This element might have gone away in the meantime
+          if (self)
+            self._imageLoaded(image);
         };
         image.onerror = function() {
-          document.getElementById(id)._hideImage();
+          var self = document.getElementById(id);
+          // This element might have gone away in the meantime
+          if (self)
+            self._hideImage();
         };
         image.src = this.getAttribute("thumbnailURL");
       </constructor>
@@ -712,9 +718,6 @@
       <xul:stack class="addonIconStack">
         <xul:vbox pack="center" align="center" class="addonIcon">
           <xul:image xbl:inherits="src=iconURL"/>
-        </xul:vbox>
-        <xul:vbox pack="start" align="start" class="addonIcon pluginIcon">
-          <xul:image src="chrome://mozapps/skin/plugins/pluginGeneric.png"/>
         </xul:vbox>
         <xul:vbox pack="end" align="start">
           <xul:image class="notifyBadge"/>

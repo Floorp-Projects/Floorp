@@ -39,7 +39,7 @@
 #include "nspluginroot.idl"
 
 %{C++
-#include "nsplugindefs.h"
+#include "npapi.h"
 
 #define MOZ_PLUGIN_CONTRACTID \
   "@mozilla.org/plugin/plugin;1"
@@ -47,7 +47,7 @@
 
 interface nsIPluginInstance;
 
-[uuid(0937FB08-16E8-4365-BABF-88E09E4E33A4)]
+[uuid(15246FD3-29FB-4354-8811-AD8B53661B71)]
 interface nsIPlugin : nsISupports
 {
   /**
@@ -101,5 +101,5 @@ interface nsIPlugin : nsISupports
    * @param aValue    - the address of where to store the resulting value
    * @result          - NS_OK if this operation was successful
    */
-  void getValue(in nsPluginVariable aVariable, in voidPtr aValue);
+  void getValue(in NPPVariable aVariable, in voidPtr aValue);
 };

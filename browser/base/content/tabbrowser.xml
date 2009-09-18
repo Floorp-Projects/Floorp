@@ -188,6 +188,9 @@
       <field name="mCurrentTab">
         null
       </field>
+      <field name="_lastRelatedTab">
+        null
+      </field>
       <field name="mCurrentBrowser">
         null
       </field>
@@ -388,9 +391,11 @@
                   this.mBrowser.userTypedClear += 2;
 
                 if (!this.mBlank) {
-                  this.mTab.setAttribute("busy", "true");
-                  this.mTabBrowser.updateIcon(this.mTab);
-                  this.mTabBrowser.setTabTitleLoading(this.mTab);
+                  if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING)) {
+                    this.mTab.setAttribute("busy", "true");
+                    this.mTabBrowser.updateIcon(this.mTab);
+                    this.mTabBrowser.setTabTitleLoading(this.mTab);
+                  }
 
                   if (this.mTabBrowser.mCurrentTab == this.mTab)
                     this.mTabBrowser.mIsBusy = true;
@@ -804,6 +809,8 @@
             if (this.mCurrentTab != this.selectedTab)
               this.mCurrentTab.owner = null;
 
+            this._lastRelatedTab = null;
+
             var fm = Components.classes["@mozilla.org/focus-manager;1"].
                        getService(Components.interfaces.nsIFocusManager);
             var focusedChromeElement = fm.getFocusedElementForWindow(window, false, {});
@@ -863,7 +870,6 @@
             const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
             if (this.mCurrentTab.hasAttribute("busy") && !this.mIsBusy) {
               this.mIsBusy = true;
-              webProgress = this.mCurrentBrowser.webProgress;
               for (i = 0; i < this.mProgressListeners.length; i++) {
                 p = this.mProgressListeners[i];
                 if (p)
@@ -880,7 +886,6 @@
             // we need to fire a stop to all progress listeners.
             if (!this.mCurrentTab.hasAttribute("busy") && this.mIsBusy) {
               this.mIsBusy = false;
-              webProgress = this.mCurrentBrowser.webProgress;
               for (i = 0; i < this.mProgressListeners.length; i++) {
                 p = this.mProgressListeners[i];
                 if (p)
@@ -1076,11 +1081,29 @@
         <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
+            var aRelatedToCurrent;
+            if (arguments.length == 2 &&
+                typeof arguments[1] == "object" &&
+                !(arguments[1] instanceof Ci.nsIURI)) {
+              let params = arguments[1];
+              aReferrerURI          = params.referrerURI;
+              aCharset              = params.charset;
+              aPostData             = params.postData;
+              aLoadInBackground     = params.inBackground;
+              aAllowThirdPartyFixup = params.allowThirdPartyFixup;
+              aRelatedToCurrent     = params.relatedToCurrent;
+            }
+
             var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
                          this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
             var owner = bgLoad ? null : this.selectedTab;
-            var tab = this.addTab(aURI, aReferrerURI, aCharset, aPostData, owner,
-                                  aAllowThirdPartyFixup);
+            var tab = this.addTab(aURI, {
+                                  referrerURI: aReferrerURI,
+                                  charset: aCharset,
+                                  postData: aPostData,
+                                  ownerTab: owner,
+                                  allowThirdPartyFixup: aAllowThirdPartyFixup,
+                                  relatedToCurrent: aRelatedToCurrent});
             if (!bgLoad)
               this.selectedTab = tab;
 
@@ -1120,7 +1143,7 @@
             }
           }
           else
-            firstTabAdded = this.addTab(aURIs[0], null, null, null, owner, false);
+            firstTabAdded = this.addTab(aURIs[0], {ownerTab: owner});
 
           var tabNum = this.mTabContainer.selectedIndex;
           for (let i = 1; i < aURIs.length; ++i) {
@@ -1149,6 +1172,19 @@
         <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
+            var aRelatedToCurrent;
+            if (arguments.length == 2 &&
+                typeof arguments[1] == "object" &&
+                !(arguments[1] instanceof Ci.nsIURI)) {
+              let params = arguments[1];
+              aReferrerURI          = params.referrerURI;
+              aCharset              = params.charset;
+              aPostData             = params.postData;
+              aOwner                = params.ownerTab;
+              aAllowThirdPartyFixup = params.allowThirdPartyFixup;
+              aRelatedToCurrent     = params.relatedToCurrent;
+            }
+
             this._browsers = null; // invalidate cache
 
             if (!this.mTabbedMode)
@@ -1287,6 +1323,19 @@
             var evt = document.createEvent("Events");
             evt.initEvent("TabOpen", true, false);
             t.dispatchEvent(evt);
+
+            // Check if we're opening a tab related to the current tab and
+            // move it to after the current tab.
+            // aReferrerURI is null or undefined if the tab is opened from
+            // an external application or bookmark, i.e. somewhere other
+            // than the current tab.
+            if ((aRelatedToCurrent == null ? aReferrerURI : aRelatedToCurrent) &&
+                this.mPrefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) {
+              let newTabPos = (this._lastRelatedTab ||
+                               this.selectedTab)._tPos + 1;
+              this.moveTabTo(t, newTabPos);
+              this._lastRelatedTab = t;
+            }
 
             return t;
           ]]>
@@ -1472,6 +1521,8 @@
             if (!args)
               return;
             var [aTab, aCloseWindow, aNewTab] = args;
+
+            this._lastRelatedTab = null;
 
             // update the UI early for responsiveness
             aTab.collapsed = true;
@@ -2107,7 +2158,7 @@
               if (document.getBindingParent(aEvent.originalTarget).localName != "tab" || dropEffect == "copy") {
                 // We're adding a new tab.
                 newIndex = this.getNewIndex(aEvent);
-                newTab = this.loadOneTab(getShortcutOrURI(url), null, null, null, bgLoad, false);
+                newTab = this.loadOneTab(getShortcutOrURI(url), {inBackground: bgLoad});
                 this.moveTabTo(newTab, newIndex);
               }
               else {
@@ -2205,6 +2256,7 @@
         <parameter name="aIndex"/>
         <body>
         <![CDATA[
+          this._lastRelatedTab = null;
           this._browsers = null; // invalidate cache
           this.mTabFilters.splice(aIndex, 0, this.mTabFilters.splice(aTab._tPos, 1)[0]);
           this.mTabListeners.splice(aIndex, 0, this.mTabListeners.splice(aTab._tPos, 1)[0]);

@@ -433,7 +433,8 @@
 #ifdef MOZ_ENABLE_CANVAS
 #include "nsIDOMCanvasRenderingContext2D.h"
 #ifdef MOZ_ENABLE_CANVAS3D
-#include "nsICanvasRenderingContextGLWeb20.h"
+#include "nsICanvasRenderingContextWebGL.h"
+#include "WebGLArray.h"
 #endif
 #endif
 
@@ -1318,7 +1319,33 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
 #ifdef MOZ_ENABLE_CANVAS3D
-  NS_DEFINE_CLASSINFO_DATA(CanvasRenderingContextGLWeb20, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasRenderingContextWebGL, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLBuffer, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLTexture, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLProgram, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLShader, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLFramebuffer, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLRenderbuffer, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLFloatArray, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLByteArray, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLUnsignedByteArray, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLShortArray, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLUnsignedShortArray, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLIntArray, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLUnsignedIntArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 };
@@ -1355,6 +1382,15 @@ struct nsConstructorFuncMapData
 static const nsConstructorFuncMapData kConstructorFuncMap[] =
 {
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Worker, nsDOMWorker::NewWorker)
+#ifdef MOZ_ENABLE_CANVAS3D
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLFloatArray, NS_NewCanvasFloatArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLByteArray, NS_NewCanvasByteArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLUnsignedByteArray, NS_NewCanvasUnsignedByteArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLShortArray, NS_NewCanvasShortArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLUnsignedShortArray, NS_NewCanvasUnsignedShortArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLIntArray, NS_NewCanvasIntArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLUnsignedIntArray, NS_NewCanvasUnsignedIntArray)
+#endif
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -3606,9 +3642,60 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
 #ifdef MOZ_ENABLE_CANVAS3D
-  DOM_CLASSINFO_MAP_BEGIN(CanvasRenderingContextGLWeb20, nsICanvasRenderingContextGLWeb20)
-    DOM_CLASSINFO_MAP_ENTRY(nsICanvasRenderingContextGLWeb20)
-    DOM_CLASSINFO_MAP_ENTRY(nsICanvasRenderingContextGL)
+  DOM_CLASSINFO_MAP_BEGIN(CanvasRenderingContextWebGL, nsICanvasRenderingContextWebGL)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasRenderingContextWebGL)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLBuffer, nsIWebGLBuffer)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLBuffer)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLTexture, nsIWebGLTexture)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLTexture)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLProgram, nsIWebGLProgram)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLProgram)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLShader, nsIWebGLShader)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLShader)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLFramebuffer, nsIWebGLFramebuffer)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLFramebuffer)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLRenderbuffer, nsIWebGLRenderbuffer)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLRenderbuffer)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLFloatArray, nsIWebGLFloatArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLFloatArray)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLByteArray, nsIWebGLByteArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLByteArray)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLUnsignedByteArray, nsIWebGLUnsignedByteArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLUnsignedByteArray)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLShortArray, nsIWebGLShortArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLShortArray)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLUnsignedShortArray, nsIWebGLUnsignedShortArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLUnsignedShortArray)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLIntArray, nsIWebGLIntArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLIntArray)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLUnsignedIntArray, nsIWebGLUnsignedIntArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLUnsignedIntArray)
   DOM_CLASSINFO_MAP_END
 #endif
 
