@@ -352,8 +352,10 @@ CanvasFrame::RemoveFrame(nsIAtom*        aListName,
 {
   nsresult  rv;
 
-  if (nsGkAtoms::absoluteList == aListName)
-    return mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
+  if (nsGkAtoms::absoluteList == aListName) {
+    mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
+    return NS_OK;
+  }
 
   NS_ASSERTION(!aListName, "unexpected child list name");
   if (aListName) {

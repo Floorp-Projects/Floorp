@@ -228,14 +228,10 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
       //      for overflow containers once we can split abspos elements with
       //      inline containing blocks.
       if (parent == this) {
-        if (!parent->mFrames.DestroyFrame(aOldFrame)) {
+        if (!parent->mFrames.DestroyFrameIfPresent(aOldFrame)) {
           // Try to remove it from our overflow list, if we have one.
           // The simplest way is to reuse StealFrame.
-#ifdef DEBUG
-          nsresult rv =
-#endif
-            StealFrame(PresContext(), aOldFrame, PR_TRUE);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "Could not find frame to remove!");
+          StealFrame(PresContext(), aOldFrame, PR_TRUE);
           aOldFrame->Destroy();
         }
       } else {
@@ -1084,19 +1080,22 @@ nsContainerFrame::StealFrame(nsPresContext* aPresContext,
     }
   }
   else {
-    if (!mFrames.RemoveFrame(aChild)) {
+    if (!mFrames.RemoveFrameIfPresent(aChild)) {
+      removed = PR_FALSE;
       // We didn't find the child in the parent's principal child list.
       // Maybe it's on the overflow list?
       nsFrameList* frameList = GetOverflowFrames();
       if (frameList) {
-        removed = frameList->RemoveFrame(aChild);
+        removed = frameList->RemoveFrameIfPresent(aChild);
         if (frameList->IsEmpty()) {
           DestroyOverflowList(aPresContext);
         }
       }
     }
   }
-  return (removed) ? NS_OK : NS_ERROR_UNEXPECTED;
+
+  NS_POSTCONDITION(removed, "StealFrame: can't find aChild");
+  return removed ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 nsFrameList
@@ -1261,7 +1260,7 @@ nsContainerFrame::RemovePropTableFrame(nsPresContext*  aPresContext,
     // No such list
     return PR_FALSE;
   }
-  if (!frameList->RemoveFrame(aFrame)) {
+  if (!frameList->RemoveFrameIfPresent(aFrame)) {
     // Found list, but it doesn't have the frame. Put list back.
     SetPropTableFrames(aPresContext, frameList, aPropID);
     return PR_FALSE;

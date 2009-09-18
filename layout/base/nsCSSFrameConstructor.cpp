@@ -1340,11 +1340,8 @@ AdjustFloatParentPtrs(nsIFrame*                aFrame,
       NS_ASSERTION(outOfFlowFrame->GetParent() == aOuterState.mFloatedItems.containingBlock,
                    "expected the float to be a child of the outer CB");
 
-      if (aOuterState.mFloatedItems.RemoveFrame(outOfFlowFrame, nsnull)) {
-        aState.mFloatedItems.AddChild(outOfFlowFrame);
-      } else {
-        NS_NOTREACHED("float wasn't in the outer state float list");
-      }
+      aOuterState.mFloatedItems.RemoveFrame(outOfFlowFrame);
+      aState.mFloatedItems.AddChild(outOfFlowFrame);
 
       outOfFlowFrame->SetParent(parent);
       if (outOfFlowFrame->GetStateBits() &

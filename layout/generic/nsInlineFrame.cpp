@@ -1133,7 +1133,8 @@ nsPositionedInlineFrame::RemoveFrame(nsIAtom*        aListName,
   nsresult  rv;
 
   if (nsGkAtoms::absoluteList == aListName) {
-    rv = mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
+    mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
+    rv = NS_OK;
   } else {
     rv = nsInlineFrame::RemoveFrame(aListName, aOldFrame);
   }

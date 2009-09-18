@@ -109,7 +109,7 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*      aDelegatingFrame,
                      NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
-nsresult
+void
 nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
                                        nsIAtom*        aListName,
                                        nsIFrame*       aOldFrame)
@@ -121,10 +121,7 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
       ->DeleteNextInFlowChild(aOldFrame->PresContext(), nif, PR_FALSE);
   }
 
-  PRBool result = mAbsoluteFrames.DestroyFrame(aOldFrame);
-  NS_ASSERTION(result, "didn't find frame to delete");
-
-  return result ? NS_OK : NS_ERROR_FAILURE;
+  mAbsoluteFrames.DestroyFrame(aOldFrame);
 }
 
 nsresult

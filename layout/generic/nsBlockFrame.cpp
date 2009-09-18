@@ -4809,14 +4809,14 @@ nsBlockFrame::RemoveFloat(nsIFrame* aFloat) {
   }
 
   // Try to destroy if it's in mFloats.
-  if (mFloats.DestroyFrame(aFloat)) {
+  if (mFloats.DestroyFrameIfPresent(aFloat)) {
     return line;
   }
 
   // Try our overflow list
   {
     nsAutoOOFFrameList oofs(this);
-    if (oofs.mList.DestroyFrame(aFloat)) {
+    if (oofs.mList.DestroyFrameIfPresent(aFloat)) {
       return line_end;
     }
   }
@@ -4885,7 +4885,8 @@ nsBlockFrame::RemoveFrame(nsIAtom*  aListName,
     }
   }
   else if (nsGkAtoms::absoluteList == aListName) {
-    return mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
+    mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
+    return NS_OK;
   }
   else if (nsGkAtoms::floatList == aListName) {
     // Make sure to mark affected lines dirty for the float frame
@@ -5378,15 +5379,15 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
 
   if ((aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
       aChild->GetStyleDisplay()->IsFloating()) {
-    PRBool removed = mFloats.RemoveFrame(aChild);
+    PRBool removed = mFloats.RemoveFrameIfPresent(aChild);
     if (!removed) {
       nsFrameList* list = GetPropTableFrames(aPresContext,
                                           nsGkAtoms::floatContinuationProperty);
       if (list) {
-        removed = list->RemoveFrame(aChild);
+        removed = list->RemoveFrameIfPresent(aChild);
       }
     }
-    return (removed) ? NS_OK : NS_ERROR_UNEXPECTED;
+    return removed ? NS_OK : NS_ERROR_UNEXPECTED;
   }
 
   if ((aChild->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)
