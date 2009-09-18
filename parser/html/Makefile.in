@@ -68,6 +68,8 @@ CPPSRCS		= \
 		nsHtml5MetaScanner.cpp \
 		nsHtml5TreeOperation.cpp \
 		nsHtml5StateSnapshot.cpp \
+		nsHtml5TreeOpExecutor.cpp \
+		nsHtml5StreamParser.cpp \
 		$(NULL)
 
 FORCE_STATIC_LIB = 1
