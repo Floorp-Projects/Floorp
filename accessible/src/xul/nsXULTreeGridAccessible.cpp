@@ -1234,6 +1234,10 @@ nsXULTreeGridCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAtt
   mParent->GetParent(getter_AddRefs(accessible));
   nsCOMPtr<nsIAccessibleTable> tableAccessible = do_QueryInterface(accessible);
 
+  // XXX - temp fix for crash bug 516047
+  if (!tableAccessible)
+    return NS_ERROR_FAILURE;
+    
   PRInt32 colIdx = GetColumnIndex();
 
   PRInt32 cellIdx = -1;
