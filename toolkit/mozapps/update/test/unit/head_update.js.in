@@ -154,12 +154,6 @@ function setDefaultPrefs() {
   pb.setBoolPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI, false);
   // Enable Update logging
   pb.setBoolPref("app.update.log.all", true);
-  // Lessens the noise in the logs when using Update Service logging
-  pb.setBoolPref("app.update.enabled", false);
-  pb.setBoolPref("extensions.blocklist.enabled", false);
-  pb.setBoolPref("extensions.update.enabled", false);
-  pb.setBoolPref("browser.search.update", false);
-  pb.setBoolPref("browser.microsummary.updateGenerators", false);
 }
 
 /**
