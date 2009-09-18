@@ -679,13 +679,30 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
 
 /***************************************************************************/
 
+#ifdef DEBUG_slimwrappers
+static PRUint32 sFinalizedSlimWrappers;
+#endif
+
 static void
 XPC_WN_NoHelper_Finalize(JSContext *cx, JSObject *obj)
 {
-    XPCWrappedNative* p = (XPCWrappedNative*) xpc_GetJSPrivate(obj);
+    nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
     if(!p)
         return;
-    p->FlatJSObjectFinalized(cx);
+
+    if(IS_SLIM_WRAPPER_OBJECT(obj))
+    {
+        SLIM_LOG(("----- %i finalized slim wrapper (%p, %p)\n",
+                  ++sFinalizedSlimWrappers, obj, p));
+
+        nsWrapperCache* cache;
+        CallQueryInterface(p, &cache);
+        cache->ClearWrapper();
+        NS_RELEASE(p);
+        return;
+    }
+
+    static_cast<XPCWrappedNative*>(p)->FlatJSObjectFinalized(cx);
 }
 
 static void
@@ -746,11 +763,20 @@ xpc_TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper)
 static void
 XPC_WN_Shared_Trace(JSTracer *trc, JSObject *obj)
 {
+    JSObject *obj2;
     XPCWrappedNative* wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(trc->context, obj);
+        XPCWrappedNative::GetWrappedNativeOfJSObject(trc->context, obj, nsnull,
+                                                     &obj2);
 
-    if(wrapper && wrapper->IsValid())
-        xpc_TraceForValidWrapper(trc, wrapper);
+    if(wrapper)
+    {
+        if(wrapper->IsValid())
+             xpc_TraceForValidWrapper(trc, wrapper);
+    }
+    else if(obj2)
+    {
+        GetSlimWrapperProto(obj2)->TraceJS(trc);
+    }
 }
 
 static JSBool
@@ -807,8 +833,16 @@ XPC_WN_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     *bp = JS_FALSE;
 
+    JSObject *obj2;
     XPCWrappedNative *wrapper =
-        XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, obj);
+        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, nsnull, &obj2);
+    if(!wrapper && obj2)
+    {
+        *bp = !JSVAL_IS_PRIMITIVE(v) && (JSVAL_TO_OBJECT(v) == obj2);
+
+        return JS_TRUE;
+    }
+
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
     XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
@@ -1096,7 +1130,20 @@ XPC_WN_Helper_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 static void
 XPC_WN_Helper_Finalize(JSContext *cx, JSObject *obj)
 {
-    XPCWrappedNative* wrapper = (XPCWrappedNative*) xpc_GetJSPrivate(obj);
+    nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
+    if(IS_SLIM_WRAPPER(obj))
+    {
+        SLIM_LOG(("----- %i finalized slim wrapper (%p, %p)\n",
+                  ++sFinalizedSlimWrappers, obj, p));
+
+        nsWrapperCache* cache;
+        CallQueryInterface(p, &cache);
+        cache->ClearWrapper();
+        NS_RELEASE(p);
+        return;
+    }
+
+    XPCWrappedNative* wrapper = (XPCWrappedNative*)p;
     if(!wrapper)
         return;
     wrapper->GetScriptableCallback()->Finalize(wrapper, cx, obj);
@@ -1106,12 +1153,20 @@ XPC_WN_Helper_Finalize(JSContext *cx, JSObject *obj)
 static void
 XPC_WN_Helper_Trace(JSTracer *trc, JSObject *obj)
 {
+    JSObject *obj2;
     XPCWrappedNative* wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(trc->context, obj);
-    if(wrapper && wrapper->IsValid())
+        XPCWrappedNative::GetWrappedNativeOfJSObject(trc->context, obj, nsnull, &obj2);
+    if(wrapper)
     {
-        wrapper->GetScriptableCallback()->Trace(wrapper, trc, obj);
-        xpc_TraceForValidWrapper(trc, wrapper);
+        if(wrapper->IsValid())
+        {
+            wrapper->GetScriptableCallback()->Trace(wrapper, trc, obj);
+            xpc_TraceForValidWrapper(trc, wrapper);
+        }
+    }
+    else if(obj2)
+    {
+        GetSlimWrapperProto(obj2)->TraceJS(trc);
     }
 }
 
@@ -1271,8 +1326,6 @@ static JSBool
 XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                       jsval *statep, jsid *idp)
 {
-    MORPH_SLIM_WRAPPER(cx, obj);
-
     JSClass *clazz = STOBJ_GET_CLASS(obj);
     if(!IS_WRAPPER_CLASS(clazz) || clazz == &XPC_WN_NoHelper_JSClass.base)
     {
@@ -1282,6 +1335,8 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
         return js_ObjectOps.enumerate(cx, obj, enum_op, statep, idp);
     }
+
+    MORPH_SLIM_WRAPPER(cx, obj);
 
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
@@ -1511,40 +1566,6 @@ JSBool xpc_InitWrappedNativeJSOps()
 
 /***************************************************************************/
 
-static void
-XPC_SWN_Trace(JSTracer *trc, JSObject *obj)
-{
-    GetSlimWrapperProto(obj)->TraceJS(trc);
-}
-
-#ifdef DEBUG_slimwrappers
-static PRUint32 sFinalizedSlimWrappers;
-#endif
-
-void
-XPC_SWN_Finalize(JSContext *cx, JSObject *obj)
-{
-    nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
-
-    SLIM_LOG(("----- %i finalized slim wrapper (%p, %p)\n",
-              ++sFinalizedSlimWrappers, obj, p));
-
-    nsWrapperCache* cache;
-    CallQueryInterface(p, &cache);
-    cache->ClearWrapper();
-    NS_RELEASE(p);
-}
-
-JSBool
-XPC_SWN_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
-{
-    *bp = !JSVAL_IS_PRIMITIVE(v) && (JSVAL_TO_OBJECT(v) == obj);
-
-    return JS_TRUE;
-}
-
-/***************************************************************************/
-
 // static
 XPCNativeScriptableInfo*
 XPCNativeScriptableInfo::Construct(XPCCallContext& ccx,
@@ -1696,13 +1717,7 @@ XPCNativeScriptableShared::PopulateJSClass(JSBool isGlobal)
 
     if(!(mFlags & (nsIXPCScriptable::WANT_OUTER_OBJECT |
                    nsIXPCScriptable::WANT_INNER_OBJECT)))
-    {
-        memcpy(&mSlimJSClass, &mJSClass, sizeof(mJSClass));
-
-        mSlimJSClass.base.finalize = XPC_SWN_Finalize;
-        mSlimJSClass.base.mark = JS_CLASS_TRACE(XPC_SWN_Trace);
-        mSlimJSClass.equality = XPC_SWN_Equality;
-    }
+        mCanBeSlim = JS_TRUE;
 }
 
 /***************************************************************************/
