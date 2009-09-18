@@ -12710,13 +12710,17 @@ TraceRecorder::record_JSOP_ARGCNT()
     // argc is fixed on trace, so ideally we would simply generate LIR for
     // constant argc. But the user can mutate arguments.length in the
     // interpreter, so we have to check for that in the trace entry frame.
+    // We also have to check that arguments.length has not been mutated
+    // at record time, because if so we will generate incorrect constant
+    // LIR, which will assert in alu().
+    if (cx->fp->argsobj && js_IsOverriddenArgsLength(JSVAL_TO_OBJECT(cx->fp->argsobj)))
+        ABORT_TRACE("can't trace JSOP_ARGCNT if arguments.length has been modified");
     LIns *a_ins = get(&cx->fp->argsobj);
     if (callDepth == 0) {
         LIns *br = lir->insBranch(LIR_jt, lir->ins_peq0(a_ins), NULL);
 
-        // The following implements IsOverriddenArgsLength on trace.
-        // The '2' bit is set set if length was overridden.
-        const uint32 JSSLOT_ARGS_LENGTH = JSSLOT_PRIVATE + 1;
+        // The following implements js_IsOverriddenArgsLength on trace.
+        // The '2' bit is set if length was overridden.
         LIns *len_ins = stobj_get_fslot(a_ins, JSSLOT_ARGS_LENGTH);
         LIns *ovr_ins = lir->ins2(LIR_piand, len_ins, INS_CONSTWORD(2));
 
