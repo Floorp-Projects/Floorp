@@ -42,6 +42,8 @@
 
 #include "nsICSSDeclaration.h"
 #include "nsIDOMNSCSS2Properties.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsCOMPtr.h"
 
 class nsCSSDeclaration;
 class nsICSSParser;
@@ -52,7 +54,8 @@ class nsIPrincipal;
 class CSS2PropertiesTearoff : public nsIDOMNSCSS2Properties
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(CSS2PropertiesTearoff)
 
   NS_DECL_NSIDOMCSS2PROPERTIES
   NS_DECL_NSIDOMNSCSS2PROPERTIES
@@ -61,14 +64,12 @@ public:
   virtual ~CSS2PropertiesTearoff();
 
 private:
-  nsICSSDeclaration* mOuter;
+  nsCOMPtr<nsICSSDeclaration> mOuter;
 };
 
 class nsDOMCSSDeclaration : public nsICSSDeclaration
 {
 public:
-  nsDOMCSSDeclaration();
-
   // Only implement QueryInterface; subclasses have the responsibility
   // of implementing AddRef/Release.
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
@@ -122,9 +123,6 @@ protected:
   
 protected:
   virtual ~nsDOMCSSDeclaration();
-
-private:
-  CSS2PropertiesTearoff mInner;
 };
 
 #endif // nsDOMCSSDeclaration_h___
