@@ -170,6 +170,8 @@ class Visitor:
 
     def visitStmtDecl(self, sd):
         sd.decl.accept(self)
+        if sd.init is not None:
+            sd.init.accept(self)
 
     def visitLabel(self, label):
         pass
@@ -460,6 +462,8 @@ class ExprLiteral(Node):
     def __str__(self):
         return ('%'+ self.type)% (self.value)
 ExprLiteral.ZERO = ExprLiteral.Int(0)
+ExprLiteral.ONE = ExprLiteral.Int(1)
+ExprLiteral.NULL = ExprLiteral.ZERO
 
 class ExprVar(Node):
     def __init__(self, name):
@@ -559,9 +563,10 @@ class StmtBlock(Block):
         Block.__init__(self)
 
 class StmtDecl(Node):
-    def __init__(self, decl):
+    def __init__(self, decl, init=None):
         Node.__init__(self)
         self.decl = decl
+        self.init = init
 
 class Label(Node):
     def __init__(self, name):
