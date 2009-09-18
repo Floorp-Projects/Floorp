@@ -43,6 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
+XPIDL_MODULE = content_canvas
 
 EXPORTS		= \
 		nsICanvasRenderingContextInternal.h \
@@ -50,14 +51,8 @@ EXPORTS		= \
 		WebGLArray.h \
 		$(NULL)
 
-ifdef MOZ_ENABLE_CANVAS3D
-
-XPIDL_MODULE = content_canvas
-
 XPIDLSRCS	= \
 		nsICanvasGLPrivate.idl \
 		$(NULL)
-
-endif
 
 include $(topsrcdir)/config/rules.mk

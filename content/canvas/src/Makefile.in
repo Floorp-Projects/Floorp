@@ -57,10 +57,10 @@ CPPSRCS	= \
 
 # only allow on platforms/toolkits we know are good
 ifneq (,$(NS_OSSO)$(WINCE)$(filter-out windows cocoa gtk2,$(MOZ_WIDGET_TOOLKIT)))
-MOZ_ENABLE_CANVAS3D=
+DISABLE_WEBGL=1
 endif
 
-ifdef MOZ_ENABLE_CANVAS3D
+ifndef DISABLE_WEBGL
 
 CPPSRCS += \
 	WebGLContext.cpp \

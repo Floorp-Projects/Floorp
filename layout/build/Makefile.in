@@ -226,16 +226,11 @@ endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
-
-ifdef MOZ_ENABLE_CANVAS3D
 OS_LIBS += -framework OpenGL
-endif
 endif
 
 ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
-ifdef MOZ_ENABLE_CANVAS3D
 OS_LIBS += opengl32.lib
-endif
 endif
 
 # Add explicit X11 dependency when building against X11 toolkits
