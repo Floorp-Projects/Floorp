@@ -262,7 +262,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow) {
             SimpleTest.waitForFocus_focused &&
             !SimpleTest.waitForFocus_started) {
             SimpleTest.waitForFocus_started = true;
-            setTimeout(callback, 0);
+            setTimeout(callback, 0, targetWindow);
         }
     }
 
