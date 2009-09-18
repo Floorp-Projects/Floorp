@@ -465,20 +465,19 @@ IsFrameSpecial(nsIFrame* aFrame)
 
 static nsIFrame* GetSpecialSibling(nsIFrame* aFrame)
 {
+  NS_PRECONDITION(IsFrameSpecial(aFrame), "Shouldn't call this");
+
   // We only store the "special sibling" annotation with the first
   // frame in the continuation chain. Walk back to find that frame now.
-  aFrame = aFrame->GetFirstContinuation();
-
-  void* value = aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling);
-
-  return static_cast<nsIFrame*>(value);
+  return
+    static_cast<nsIFrame*>
+    (aFrame->GetFirstContinuation()->
+       GetProperty(nsGkAtoms::IBSplitSpecialSibling));
 }
 
-static nsIFrame*
-GetIBSplitSpecialPrevSiblingForAnonymousBlock(nsIFrame* aFrame)
+static nsIFrame* GetSpecialPrevSibling(nsIFrame* aFrame)
 {
-  NS_PRECONDITION(IsFrameSpecial(aFrame) && !IsInlineFrame(aFrame),
-                  "Shouldn't call this");
+  NS_PRECONDITION(IsFrameSpecial(aFrame), "Shouldn't call this");
   
   // We only store the "special sibling" annotation with the first
   // frame in the continuation chain. Walk back to find that frame now.  
@@ -506,19 +505,24 @@ SetFrameIsSpecial(nsIFrame* aFrame, nsIFrame* aSpecialSibling)
 {
   NS_PRECONDITION(aFrame, "bad args!");
 
-  // Mark the frame and all of its siblings as "special".
-  for (nsIFrame* frame = aFrame; frame != nsnull; frame = frame->GetNextContinuation()) {
-    frame->AddStateBits(NS_FRAME_IS_SPECIAL);
-  }
+  // We should be the only continuation
+  NS_ASSERTION(!aFrame->GetPrevContinuation(),
+               "assigning special sibling to other than first continuation!");
+  NS_ASSERTION(!aFrame->GetNextContinuation(),
+               "should have no continuations here");
+
+  // Mark the frame as "special".
+  aFrame->AddStateBits(NS_FRAME_IS_SPECIAL);
 
   if (aSpecialSibling) {
-    // We should be the first continuation
-    NS_ASSERTION(!aFrame->GetPrevContinuation(),
-                 "assigning special sibling to other than first continuation!");
+    NS_ASSERTION(!aSpecialSibling->GetPrevContinuation(),
+                 "assigning something other than the first continuation as the "
+                 "special sibling");
 
     // Store the "special sibling" (if we were given one) with the
     // first frame in the flow.
     aFrame->SetProperty(nsGkAtoms::IBSplitSpecialSibling, aSpecialSibling);
+    aSpecialSibling->SetProperty(nsGkAtoms::IBSplitSpecialPrevSibling, aFrame);
   }
 }
 
@@ -594,21 +598,6 @@ FindLastBlock(const nsFrameList& aList)
   }
 
   return last;
-}
-
-/*
- * The special-prev-sibling is useful for
- * finding the "special parent" of a frame (i.e., a frame from which a
- * good parent style context can be obtained), one looks at the
- * special previous sibling annotation of the real parent of the frame
- * (if the real parent has NS_FRAME_IS_SPECIAL).
- */
-inline void
-MarkIBSpecialPrevSibling(nsIFrame *aAnonymousFrame,
-                         nsIFrame *aSpecialParent)
-{
-  aAnonymousFrame->SetProperty(nsGkAtoms::IBSplitSpecialPrevSibling,
-                               aSpecialParent, nsnull, nsnull);
 }
 
 inline void
@@ -10809,8 +10798,6 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   SetFrameIsSpecial(newFrame, blockFrame);
   SetFrameIsSpecial(blockFrame, inlineFrame);
   SetFrameIsSpecial(inlineFrame, nsnull);
-  MarkIBSpecialPrevSibling(blockFrame, newFrame);
-  MarkIBSpecialPrevSibling(inlineFrame, blockFrame);
 
 #ifdef DEBUG
   if (gNoisyInlineConstruction) {
@@ -11154,8 +11141,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
         // here is to construct with the right parents to start with.
         nsIFrame* floatContainer = aFrame;
         do {
-          floatContainer = GetFloatContainingBlock(
-            GetIBSplitSpecialPrevSiblingForAnonymousBlock(floatContainer));
+          floatContainer =
+            GetFloatContainingBlock(GetSpecialPrevSibling(floatContainer));
           if (!floatContainer) {
             break;
           }
