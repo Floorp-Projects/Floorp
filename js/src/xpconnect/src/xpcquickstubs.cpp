@@ -504,8 +504,7 @@ GetMemberInfo(JSObject *obj,
     *ifaceName = "Unknown";
 
     NS_ASSERTION(IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) ||
-                 STOBJ_GET_CLASS(obj) == &XPC_WN_Tearoff_JSClass ||
-                 IS_SLIM_WRAPPER(obj),
+                 STOBJ_GET_CLASS(obj) == &XPC_WN_Tearoff_JSClass,
                  "obj must be a wrapper");
     XPCWrappedNativeProto *proto;
     if(IS_SLIM_WRAPPER(obj))
@@ -900,15 +899,6 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     }
     JSObject *src = JSVAL_TO_OBJECT(v);
 
-    if(IS_SLIM_WRAPPER(src))
-    {
-        nsISupports *iface = static_cast<nsISupports*>(xpc_GetJSPrivate(src));
-        if(NS_FAILED(getNative(iface, GetOffsetsFromSlimWrapper(src),
-                               src, iid, ppArg, ppArgRef, vp)))
-            return NS_ERROR_XPC_BAD_CONVERT_JS;
-        return NS_OK;
-    }
-
     JSObject *inner = nsnull;
     if(XPCWrapper::IsSecurityWrapper(src))
     {
@@ -918,14 +908,24 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     }
 
     // From XPCConvert::JSObject2NativeInterface
+    JSObject* obj2;
     XPCWrappedNative* wrappedNative =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, inner ? inner : src);
+        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, inner ? inner : src,
+                                                     nsnull, &obj2);
     nsISupports *iface;
     if(wrappedNative)
     {
         iface = wrappedNative->GetIdentityObject();
         if(NS_FAILED(getNativeFromWrapper(wrappedNative, iid, ppArg, ppArgRef,
                                           vp)))
+            return NS_ERROR_XPC_BAD_CONVERT_JS;
+        return NS_OK;
+    }
+    if(obj2)
+    {
+        iface = static_cast<nsISupports*>(xpc_GetJSPrivate(obj2));
+        if(NS_FAILED(getNative(iface, GetOffsetsFromSlimWrapper(obj2),
+                               obj2, iid, ppArg, ppArgRef, vp)))
             return NS_ERROR_XPC_BAD_CONVERT_JS;
         return NS_OK;
     }

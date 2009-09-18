@@ -108,7 +108,6 @@ PRBool nsScriptSecurityManager::sStrictFileOriginPolicy = PR_TRUE;
 // natives, to avoid having to QI to nsIXPConnectWrappedNative all the
 // time when doing security checks.
 static JSEqualityOp sXPCWrappedNativeEqualityOps;
-static JSEqualityOp sXPCSlimWrapperEqualityOps;
 
 
 ///////////////////////////
@@ -2408,8 +2407,7 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
             (jsClass->flags & JSCLASS_IS_EXTENDED) ?
             reinterpret_cast<const JSExtendedClass*>(jsClass)->equality :
             nsnull;
-        if (op == sXPCWrappedNativeEqualityOps ||
-            op == sXPCSlimWrapperEqualityOps) {
+        if (op == sXPCWrappedNativeEqualityOps) {
             result = sXPConnect->GetPrincipal(aObj,
 #ifdef DEBUG
                                               aAllowShortCircuit
@@ -3407,8 +3405,7 @@ nsresult nsScriptSecurityManager::Init()
     JS_SetRuntimeSecurityCallbacks(sRuntime, &securityCallbacks);
     NS_ASSERTION(!oldcallbacks, "Someone else set security callbacks!");
 
-    sXPConnect->GetXPCWrappedNativeJSClassInfo(&sXPCWrappedNativeEqualityOps,
-                                               &sXPCSlimWrapperEqualityOps);
+    sXPConnect->GetXPCWrappedNativeJSClassInfo(&sXPCWrappedNativeEqualityOps);
     return NS_OK;
 }
 

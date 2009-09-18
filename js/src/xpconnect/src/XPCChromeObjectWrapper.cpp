@@ -415,8 +415,8 @@ XPC_COW_RewrapForChrome(JSContext *cx, JSObject *wrapperObj, jsval *vp)
   }
 
   XPCWrappedNative *wn;
-  if (IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) &&
-      (wn = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj)) &&
+  if (IS_WN_WRAPPER(obj) &&
+      (wn = (XPCWrappedNative*)xpc_GetJSPrivate(obj)) &&
       !nsXPCWrappedJSClass::IsWrappedJS(wn->Native())) {
     // Return an explicit XPCNativeWrapper in case "chrome" code happens to be
     // XBL code cloned into an untrusted context.
