@@ -246,25 +246,35 @@ gfxFontUtils::ReadCMAPTableFormat12(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBi
         GroupOffsetStartCode = 0,
         GroupOffsetEndCode = 4
     };
-    NS_ENSURE_TRUE(aLength >= 16, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(aLength >= 16, NS_ERROR_GFX_CMAP_MALFORMED);
 
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetFormat) == 12, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetReserved) == 0, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetFormat) == 12, 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
+    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetReserved) == 0, 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
 
     PRUint32 tablelen = ReadLongAt(aBuf, OffsetTableLength);
-    NS_ENSURE_TRUE(tablelen <= aLength, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(tablelen >= 16, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(tablelen <= aLength, NS_ERROR_GFX_CMAP_MALFORMED);
+    NS_ENSURE_TRUE(tablelen >= 16, NS_ERROR_GFX_CMAP_MALFORMED);
 
-    NS_ENSURE_TRUE(ReadLongAt(aBuf, OffsetLanguage) == 0, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(ReadLongAt(aBuf, OffsetLanguage) == 0, 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
 
     const PRUint32 numGroups  = ReadLongAt(aBuf, OffsetNumberGroups);
-    NS_ENSURE_TRUE(tablelen >= 16 + (12 * numGroups), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(tablelen >= 16 + (12 * numGroups), 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
 
     const PRUint8 *groups = aBuf + OffsetGroups;
+    PRUint32 prevEndCharCode = 0;
     for (PRUint32 i = 0; i < numGroups; i++, groups += SizeOfGroup) {
         const PRUint32 startCharCode = ReadLongAt(groups, GroupOffsetStartCode);
         const PRUint32 endCharCode = ReadLongAt(groups, GroupOffsetEndCode);
+        NS_ENSURE_TRUE((prevEndCharCode < startCharCode || i == 0) &&
+                       startCharCode <= endCharCode &&
+                       endCharCode <= CMAP_MAX_CODEPOINT, 
+                       NS_ERROR_GFX_CMAP_MALFORMED);
         aCharacterMap.SetRange(startCharCode, endCharCode);
+        prevEndCharCode = endCharCode;
     }
 
     return NS_OK;
@@ -280,18 +290,21 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
         OffsetSegCountX2 = 6
     };
 
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetFormat) == 4, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetFormat) == 4, 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
     PRUint16 tablelen = ReadShortAt(aBuf, OffsetLength);
-    NS_ENSURE_TRUE(tablelen <= aLength, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(tablelen > 16, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(tablelen <= aLength, NS_ERROR_GFX_CMAP_MALFORMED);
+    NS_ENSURE_TRUE(tablelen > 16, NS_ERROR_GFX_CMAP_MALFORMED);
     
     // some buggy fonts on Mac OS report lang = English (e.g. Arial Narrow Bold, v. 1.1 (Tiger))
 #if defined(XP_WIN)
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetLanguage) == 0, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetLanguage) == 0, 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
 #endif
 
     PRUint16 segCountX2 = ReadShortAt(aBuf, OffsetSegCountX2);
-    NS_ENSURE_TRUE(tablelen >= 16 + (segCountX2 * 4), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(tablelen >= 16 + (segCountX2 * 4), 
+                   NS_ERROR_GFX_CMAP_MALFORMED);
 
     const PRUint16 segCount = segCountX2 / 2;
 
@@ -299,10 +312,18 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
     const PRUint16 *startCounts = endCounts + 1 /* skip one uint16 for reservedPad */ + segCount;
     const PRUint16 *idDeltas = startCounts + segCount;
     const PRUint16 *idRangeOffsets = idDeltas + segCount;
+    PRUint16 prevEndCount = 0;
     for (PRUint16 i = 0; i < segCount; i++) {
         const PRUint16 endCount = ReadShortAt16(endCounts, i);
         const PRUint16 startCount = ReadShortAt16(startCounts, i);
         const PRUint16 idRangeOffset = ReadShortAt16(idRangeOffsets, i);
+        
+        // sanity-check range
+        NS_ENSURE_TRUE((startCount > prevEndCount || i == 0) && 
+                       startCount <= endCount,
+                       NS_ERROR_GFX_CMAP_MALFORMED);
+        prevEndCount = endCount;
+        
         if (idRangeOffset == 0) {
             aCharacterMap.SetRange(startCount, endCount);
         } else {
@@ -315,7 +336,9 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
                                          + (c - startCount)
                                          + &idRangeOffsets[i]);
 
-                NS_ENSURE_TRUE((PRUint8*)gdata > aBuf && (PRUint8*)gdata < aBuf + aLength, NS_ERROR_FAILURE);
+                NS_ENSURE_TRUE((PRUint8*)gdata > aBuf && 
+                               (PRUint8*)gdata < aBuf + aLength, 
+                               NS_ERROR_GFX_CMAP_MALFORMED);
 
                 // make sure we have a glyph
                 if (*gdata != 0) {
@@ -390,7 +413,7 @@ gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCha
         const PRUint32 offset = ReadLongAt(table, TableOffsetOffset);
 
         NS_ASSERTION(offset < aBufLength, "cmap table offset is longer than table size");
-        NS_ENSURE_TRUE(offset < aBufLength, NS_ERROR_FAILURE);
+        NS_ENSURE_TRUE(offset < aBufLength, NS_ERROR_GFX_CMAP_MALFORMED);
 
         const PRUint8 *subtable = aBuf + offset;
         const PRUint16 format = ReadShortAt(subtable, SubtableOffsetFormat);

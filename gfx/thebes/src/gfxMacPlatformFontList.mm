@@ -195,6 +195,11 @@ MacOSFontEntry::ReadCMAP()
     PRPackedBool  unicodeFont, symbolFont; // currently ignored
     nsresult rv = gfxFontUtils::ReadCMAP(cmap, buffer.Length(),
                                          mCharacterMap, unicodeFont, symbolFont);
+                                         
+    if (NS_FAILED(rv)) {
+        mCharacterMap.reset();
+        return rv;
+    }
 
     // for complex scripts, check for the presence of mort/morx
     PRBool checkedForMorphTable = PR_FALSE, hasMorphTable = PR_FALSE;
@@ -798,8 +803,8 @@ gfxMacPlatformFontList::MakePlatformFont(const gfxFontEntry *aProxyEntry,
             return nsnull;
         }
 
-        // if we succeeded (which should always be the case), return the new font
-        if (newFontEntry->mIsValid)
+        // if succeeded and font cmap is good, return the new font
+        if (newFontEntry->mIsValid && NS_SUCCEEDED(newFontEntry->ReadCMAP()))
             return newFontEntry;
 
         // if something is funky about this font, delete immediately
