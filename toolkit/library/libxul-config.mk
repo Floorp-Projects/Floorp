@@ -352,9 +352,6 @@ ifneq (,$(filter layout-debug,$(MOZ_EXTENSIONS)))
 COMPONENT_LIBS += gkdebug
 endif
 
-ifdef MOZ_ENABLE_CANVAS3D
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 EXTRA_DSO_LDOPTS += -framework OpenGL
 endif
-endif
-
