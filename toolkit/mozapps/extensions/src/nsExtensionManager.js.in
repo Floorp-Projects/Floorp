@@ -2618,21 +2618,7 @@ ExtensionManager.prototype = {
       ERROR("Error flushing caches: " + e);
     }
 
-    if (!needsRestart)
-      this._startTimers();
-
     return needsRestart;
-  },
-
-  /**
-   * Begins all background update check timers
-   */
-  _startTimers: function EM__startTimers() {
-    // Register a background update check timer
-    var tm = Cc["@mozilla.org/updates/timer-manager;1"].
-             getService(Ci.nsIUpdateTimerManager);
-    var interval = getPref("getIntPref", PREF_EM_UPDATE_INTERVAL, 86400);
-    tm.registerTimer("addon-background-update-timer", this, interval);
   },
 
   /**
@@ -5468,7 +5454,11 @@ ExtensionManager.prototype = {
   classDescription: "Extension Manager",
   contractID: "@mozilla.org/extensions/manager;1",
   classID: Components.ID("{8A115FAA-7DCB-4e8f-979B-5F53472F51CF}"),
-  _xpcom_categories: [{ category: "profile-after-change" }],
+  _xpcom_categories: [{ category: "profile-after-change" },
+                      { category: "update-timer",
+                        value: "@mozilla.org/extensions/manager;1," +
+                               "getService,addon-background-update-timer," +
+                               PREF_EM_UPDATE_INTERVAL + ",86400" }],
   _xpcom_factory: {
     createInstance: function(outer, iid) {
       if (outer != null)
