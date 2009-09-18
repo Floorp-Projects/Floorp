@@ -124,16 +124,39 @@ nsInlineFrame::IsSelfEmpty()
   // XXX Top and bottom removed, since they shouldn't affect things, but this
   // doesn't really match with nsLineLayout.cpp's setting of
   // ZeroEffectiveSpanBox, anymore, so what should this really be?
-  if (border->GetActualBorderWidth(NS_SIDE_RIGHT) != 0 ||
-      border->GetActualBorderWidth(NS_SIDE_LEFT) != 0 ||
-      !IsPaddingZero(padding->mPadding.GetRightUnit(),
-                     padding->mPadding.GetRight()) ||
-      !IsPaddingZero(padding->mPadding.GetLeftUnit(),
-                     padding->mPadding.GetLeft()) ||
-      !IsMarginZero(margin->mMargin.GetRightUnit(),
-                    margin->mMargin.GetRight()) ||
-      !IsMarginZero(margin->mMargin.GetLeftUnit(),
-                    margin->mMargin.GetLeft())) {
+  PRBool haveRight =
+    border->GetActualBorderWidth(NS_SIDE_RIGHT) != 0 ||
+    !IsPaddingZero(padding->mPadding.GetRightUnit(),
+                   padding->mPadding.GetRight()) ||
+    !IsMarginZero(margin->mMargin.GetRightUnit(),
+                  margin->mMargin.GetRight());
+  PRBool haveLeft =
+    border->GetActualBorderWidth(NS_SIDE_LEFT) != 0 ||
+    !IsPaddingZero(padding->mPadding.GetLeftUnit(),
+                   padding->mPadding.GetLeft()) ||
+    !IsMarginZero(margin->mMargin.GetLeftUnit(),
+                  margin->mMargin.GetLeft());
+  if (haveLeft || haveRight) {
+    if (GetStateBits() & NS_FRAME_IS_SPECIAL) {
+      PRBool haveStart, haveEnd;
+      if (NS_STYLE_DIRECTION_LTR == GetStyleVisibility()->mDirection) {
+        haveStart = haveLeft;
+        haveEnd = haveRight;
+      } else {
+        haveStart = haveRight;
+        haveEnd = haveLeft;
+      }
+      // For special frames, ignore things we know we'll skip in GetSkipSides.
+      // XXXbz should we be doing this for non-special frames too, in a more
+      // general way?
+
+      // Get the first continuation eagerly, as a performance optimization, to
+      // avoid having to get it twice..
+      nsIFrame* firstCont = GetFirstContinuation();
+      return
+        (!haveStart || nsLayoutUtils::FrameIsNonFirstInIBSplit(firstCont)) &&
+        (!haveEnd || nsLayoutUtils::FrameIsNonLastInIBSplit(firstCont));
+    }
     return PR_FALSE;
   }
   return PR_TRUE;
