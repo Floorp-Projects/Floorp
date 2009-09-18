@@ -959,8 +959,10 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
     if (dataLength + nameTableSize > PR_UINT32_MAX)
         return NS_ERROR_FAILURE;
         
-    PRUint32 adjFontDataSize = aFontDataLength + nameTableSize;
-    
+    // bug 505386 - need to handle unpadded font length
+    PRUint32 paddedFontDataSize = (aFontDataLength + 3) & ~3;
+    PRUint32 adjFontDataSize = paddedFontDataSize + nameTableSize;
+
     // create new buffer: old font data plus new name table
     if (!aNewFont->AppendElements(adjFontDataSize))
         return NS_ERROR_OUT_OF_MEMORY;
@@ -968,13 +970,17 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
     // copy the old font data
     PRUint8 *newFontData = reinterpret_cast<PRUint8*>(aNewFont->Elements());
     
+    // null the last four bytes in case the font length is not a multiple of 4
+    memset(newFontData + aFontDataLength, 0, paddedFontDataSize - aFontDataLength);
+
+    // copy font data
     memcpy(newFontData, aFontData, aFontDataLength);
     
     // null out the last 4 bytes for checksum calculations
     memset(newFontData + adjFontDataSize - 4, 0, 4);
     
     NameHeader *nameHeader = reinterpret_cast<NameHeader*>(newFontData +
-                                                            aFontDataLength);
+                                                            paddedFontDataSize);
     
     // -- name header
     nameHeader->format = 0;
@@ -1036,7 +1042,7 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
         checkSum = checkSum + *nameData++;
     
     // adjust name table entry to point to new name table
-    dirEntry->offset = aFontDataLength;
+    dirEntry->offset = paddedFontDataSize;
     dirEntry->length = nameTableSize;
     dirEntry->checkSum = checkSum;
     
