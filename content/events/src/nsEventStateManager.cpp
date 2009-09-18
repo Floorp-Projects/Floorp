@@ -156,7 +156,7 @@
 #include "nsIController.h"
 
 #ifdef XP_MACOSX
-#include <Carbon/Carbon.h>
+#import <ApplicationServices/ApplicationServices.h>
 #endif
 
 //#define DEBUG_DOCSHELL_FOCUS
@@ -1582,10 +1582,10 @@ nsEventStateManager::FireContextClick()
     return;
 
 #ifdef XP_MACOSX
-  // hacky OS call to ensure that we don't show a context menu when the user
-  // let go of the mouse already, after a long, cpu-hogging operation prevented
+  // Hack to ensure that we don't show a context menu when the user
+  // let go of the mouse after a long cpu-hogging operation prevented
   // us from handling any OS events. See bug 117589.
-  if (!::StillDown())
+  if (!CGEventSourceButtonState(kCGEventSourceStateCombinedSessionState, kCGMouseButtonLeft))
     return;
 #endif
 
