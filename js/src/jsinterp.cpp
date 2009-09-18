@@ -84,7 +84,6 @@
 #endif
 
 #include "jsatominlines.h"
-#include "jspropcacheinlines.h"
 #include "jsscriptinlines.h"
 
 #include "jsautooplen.h"
