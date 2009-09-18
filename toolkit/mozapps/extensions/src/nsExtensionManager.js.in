@@ -7359,9 +7359,9 @@ ExtensionsDataSource.prototype = {
                        "aboutURL", "iconURL", "internalName", "updateKey"];
 
     // Items installed into restricted Install Locations can also be locked
-    // (can't be removed or disabled), and hidden (not shown in the UI)
+    // (can't be removed or disabled)
     if (installLocation.restricted)
-      singleProps = singleProps.concat(["locked", "hidden"]);
+      singleProps = singleProps.concat(["locked"]);
     if (installLocation.name == KEY_APP_GLOBAL)
       singleProps = singleProps.concat(["appManaged"]);
     for (var i = 0; i < singleProps.length; ++i) {
@@ -7968,18 +7968,6 @@ ExtensionsDataSource.prototype = {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var locationKey = this.getItemProperty(id, "installLocation");
     if (locationKey != KEY_APP_GLOBAL)
-      return EM_L("false");
-    return null;
-  },
-
-  /**
-   * Get the em:hidden property. This prevents extensions from hiding
-   * extensions installed into locations other than restricted locations.
-   */
-  _rdfGet_hidden: function EMDS__rdfGet_hidden(item, property) {
-    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
-    var installLocation = InstallLocations.get(this.getInstallLocationKey(id));
-    if (!installLocation || !installLocation.restricted)
       return EM_L("false");
     return null;
   },
