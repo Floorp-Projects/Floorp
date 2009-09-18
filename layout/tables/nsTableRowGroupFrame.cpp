@@ -936,11 +936,8 @@ nsTableRowGroupFrame::CreateContinuingRowFrame(nsPresContext& aPresContext,
   }
 
   // Add the continuing row frame to the child list
-  nsIFrame* nextRow;
-  GetNextFrame(&aRowFrame, &nextRow);
-  (*aContRowFrame)->SetNextSibling(nextRow);
-  aRowFrame.SetNextSibling(*aContRowFrame);
-          
+  mFrames.InsertFrame(nsnull, &aRowFrame, *aContRowFrame);
+
   // Push the continuing row frame and the frames that follow
   PushChildren(&aPresContext, *aContRowFrame, &aRowFrame);
 }

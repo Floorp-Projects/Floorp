@@ -68,6 +68,17 @@ public:
 #endif
   }
 
+  nsFrameList(nsIFrame* aFirstFrame, nsIFrame* aLastFrame) :
+    mFirstChild(aFirstFrame)
+  {
+    NS_ASSERTION(aLastFrame == LastChild(), "wrong last frame");
+
+    MOZ_COUNT_CTOR(nsFrameList);
+#ifdef DEBUG
+    CheckForLoops();
+#endif
+  }
+
   nsFrameList(const nsFrameList& aOther) :
     mFirstChild(aOther.mFirstChild)
   {
@@ -135,6 +146,13 @@ public:
    * NextSibling pointer is cleared.
    */
   PRBool RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint = nsnull);
+
+  /**
+   * Take the frames after aAfterFrame out of the frame list.
+   * @param aAfterFrame a frame in this list
+   * @return the removed frames, if any
+   */
+  nsFrameList RemoveFramesAfter(nsIFrame* aAfterFrame);
 
   /**
    * Remove the first child from the list. The caller is assumed to be

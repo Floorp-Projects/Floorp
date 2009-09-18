@@ -591,6 +591,15 @@ protected:
   //----------------------------------------
   // Methods for pushing/pulling lines/frames
 
+  /**
+   * Create a next-in-flow, if necessary, for aFrame. If a new frame is
+   * created, place it in aLine if aLine is not null.
+   * @param aState the block reflow state
+   * @param aLine where to put a new frame
+   * @param aFrame the frame
+   * @param aMadeNewFrame PR_TRUE if a new frame was created, PR_FALSE if not
+   * @return NS_OK if a next-in-flow already exists or is successfully created
+   */
   virtual nsresult CreateContinuationFor(nsBlockReflowState& aState,
                                          nsLineBox*          aLine,
                                          nsIFrame*           aFrame,

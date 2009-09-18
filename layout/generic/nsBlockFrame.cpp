@@ -86,6 +86,7 @@
 #include "nsDisplayList.h"
 #include "nsContentErrors.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsCSSRendering.h"
 
 #ifdef IBMBIDI
@@ -3846,10 +3847,6 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   return NS_OK;
 }
 
-/**
- * Create a continuation, if necessary, for aFrame. Place it in aLine
- * if aLine is not null. Set aMadeNewFrame to PR_TRUE if a new frame is created.
- */
 nsresult
 nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
                                     nsLineBox*          aLine,
@@ -3857,20 +3854,29 @@ nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
                                     PRBool&             aMadeNewFrame)
 {
   aMadeNewFrame = PR_FALSE;
-  nsresult rv;
-  nsIFrame* nextInFlow;
-  rv = CreateNextInFlow(aState.mPresContext, this, aFrame, nextInFlow);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (nsnull != nextInFlow) {
-    aMadeNewFrame = PR_TRUE;
+
+  if (!aFrame->GetNextInFlow()) {
+    nsIFrame* newFrame;
+    nsresult rv = aState.mPresContext->PresShell()->FrameConstructor()->
+      CreateContinuingFrame(aState.mPresContext, aFrame, this, &newFrame);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    nsIFrame* sib = aFrame->GetNextSibling();
+    aFrame->SetNextSibling(newFrame);
+    newFrame->SetNextSibling(sib);
+
     if (aLine) { 
       aLine->SetChildCount(aLine->GetChildCount() + 1);
     }
+
+    aMadeNewFrame = PR_TRUE;
   }
 #ifdef DEBUG
   VerifyLines(PR_FALSE);
 #endif
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -3878,9 +3884,12 @@ nsBlockFrame::SplitFloat(nsBlockReflowState& aState,
                          nsIFrame*           aFloat,
                          nsReflowStatus      aFloatStatus)
 {
-  nsIFrame* nextInFlow;
-  nsresult rv = CreateNextInFlow(aState.mPresContext, this, aFloat, nextInFlow);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIFrame* nextInFlow = nsnull;
+  if (!aFloat->GetNextInFlow()) {
+    nsresult rv = aState.mPresContext->PresShell()->FrameConstructor()->
+      CreateContinuingFrame(aState.mPresContext, aFloat, this, &nextInFlow);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aFloatStatus))
     aFloat->GetNextInFlow()->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
 
@@ -3889,18 +3898,10 @@ nsBlockFrame::SplitFloat(nsBlockReflowState& aState,
   // Make sure the containing block knows about the float's status
   NS_MergeReflowStatusInto(&aState.mReflowStatus, aFloatStatus);
 
-  if (!nextInFlow) {
-    // Next in flow was not created because it already exists.
-    return NS_OK;
+  if (nextInFlow) {
+    // Next in flow was created above.
+    aState.AppendFloatContinuation(nextInFlow);
   }
-
-  // put the sibling list back to what it was before the continuation was created
-  nsIFrame *contFrame = aFloat->GetNextSibling();
-  nsIFrame *next = contFrame->GetNextSibling();
-  aFloat->SetNextSibling(next);
-  contFrame->SetNextSibling(nsnull);
-
-  aState.AppendFloatContinuation(contFrame);
   return NS_OK;
 }
 

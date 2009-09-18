@@ -86,6 +86,10 @@ nsContainerFrame::~nsContainerFrame()
 {
 }
 
+NS_QUERYFRAME_HEAD(nsContainerFrame)
+  NS_QUERYFRAME_ENTRY(nsContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsSplittableFrame)
+
 NS_IMETHODIMP
 nsContainerFrame::Init(nsIContent* aContent,
                        nsIFrame*   aParent,
@@ -1020,13 +1024,11 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
         // Acquire a next-in-flow, creating it if necessary
         nsIFrame* nif = frame->GetNextInFlow();
         if (!nif) {
-          rv = nsHTMLContainerFrame::CreateNextInFlow(aPresContext, this,
-                                                      frame, nif);
-          NS_ENSURE_SUCCESS(rv, rv);
           NS_ASSERTION(frameStatus & NS_FRAME_REFLOW_NEXTINFLOW,
                        "Someone forgot a REFLOW_NEXTINFLOW flag");
-          frame->SetNextSibling(nif->GetNextSibling());
-          nif->SetNextSibling(nsnull);
+          rv = aPresContext->PresShell()->FrameConstructor()->
+                 CreateContinuingFrame(aPresContext, frame, this, &nif);
+          NS_ENSURE_SUCCESS(rv, rv);
         }
         else if (!(nif->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
           // used to be a normal next-in-flow; steal it from the child list
@@ -1098,6 +1100,43 @@ nsContainerFrame::StealFrame(nsPresContext* aPresContext,
     }
   }
   return (removed) ? NS_OK : NS_ERROR_UNEXPECTED;
+}
+
+nsFrameList
+nsContainerFrame::StealFramesAfter(nsIFrame* aChild)
+{
+  NS_ASSERTION(!aChild ||
+               !(aChild->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER),
+               "StealFramesAfter doesn't handle overflow containers");
+  NS_ASSERTION(GetType() != nsGkAtoms::blockFrame, "unexpected call");
+
+  if (!aChild) {
+    nsFrameList copy(mFrames);
+    mFrames.Clear();
+    return copy;
+  }
+
+  for (nsFrameList::FrameLinkEnumerator iter(mFrames); !iter.AtEnd();
+       iter.Next()) {
+    if (iter.PrevFrame() == aChild) {
+      return mFrames.ExtractTail(iter);
+    }
+  }
+
+  // We didn't find the child in the principal child list.
+  // Maybe it's on the overflow list?
+  nsFrameList* overflowFrames = GetOverflowFrames();
+  if (overflowFrames) {
+    for (nsFrameList::FrameLinkEnumerator iter(*overflowFrames); !iter.AtEnd();
+         iter.Next()) {
+      if (iter.PrevFrame() == aChild) {
+        return overflowFrames->ExtractTail(iter);
+      }
+    }
+  }
+
+  NS_ERROR("StealFramesAfter: can't find aChild");
+  return nsFrameList::EmptyList();
 }
 
 void
@@ -1273,24 +1312,25 @@ nsContainerFrame::PushChildren(nsPresContext* aPresContext,
                                nsIFrame*       aFromChild,
                                nsIFrame*       aPrevSibling)
 {
-  NS_PRECONDITION(nsnull != aFromChild, "null pointer");
-  NS_PRECONDITION(nsnull != aPrevSibling, "pushing first child");
+  NS_PRECONDITION(aFromChild, "null pointer");
+  NS_PRECONDITION(aPrevSibling, "pushing first child");
   NS_PRECONDITION(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
 
   // Disconnect aFromChild from its previous sibling
-  aPrevSibling->SetNextSibling(nsnull);
+  nsFrameList tail = mFrames.RemoveFramesAfter(aPrevSibling);
 
-  if (nsnull != GetNextInFlow()) {
+  nsContainerFrame* nextInFlow =
+    static_cast<nsContainerFrame*>(GetNextInFlow());
+  if (nextInFlow) {
     // XXX This is not a very good thing to do. If it gets removed
     // then remove the copy of this routine that doesn't do this from
     // nsInlineFrame.
-    nsContainerFrame* nextInFlow = (nsContainerFrame*)GetNextInFlow();
     // When pushing and pulling frames we need to check for whether any
     // views need to be reparented.
     for (nsIFrame* f = aFromChild; f; f = f->GetNextSibling()) {
       nsHTMLContainerFrame::ReparentFrameView(aPresContext, f, this, nextInFlow);
     }
-    nextInFlow->mFrames.InsertFrames(nextInFlow, nsnull, aFromChild);
+    nextInFlow->mFrames.InsertFrames(nextInFlow, nsnull, tail);
   }
   else {
     // Add the frames to our overflow list

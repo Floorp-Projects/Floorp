@@ -473,32 +473,32 @@ HasTextFrameDescendantOrInFlow(nsIFrame* aFrame)
   return PR_FALSE;
 }
 
-/**
+/*
  * Create a next-in-flow for aFrame. Will return the newly created
  * frame in aNextInFlowResult <b>if and only if</b> a new frame is
  * created; otherwise nsnull is returned in aNextInFlowResult.
  */
 nsresult
 nsHTMLContainerFrame::CreateNextInFlow(nsPresContext* aPresContext,
-                                       nsIFrame*       aOuterFrame,
                                        nsIFrame*       aFrame,
                                        nsIFrame*&      aNextInFlowResult)
 {
+  NS_PRECONDITION(GetType() != nsGkAtoms::blockFrame,
+                  "you should have called nsBlockFrame::CreateContinuationFor instead");
+  NS_PRECONDITION(mFrames.ContainsFrame(aFrame), "expected an in-flow child frame");
+
   aNextInFlowResult = nsnull;
 
   nsIFrame* nextInFlow = aFrame->GetNextInFlow();
   if (nsnull == nextInFlow) {
     // Create a continuation frame for the child frame and insert it
-    // into our lines child list.
-    nsIFrame* nextFrame = aFrame->GetNextSibling();
-
+    // into our child list.
     nsresult rv = aPresContext->PresShell()->FrameConstructor()->
-      CreateContinuingFrame(aPresContext, aFrame, aOuterFrame, &nextInFlow);
+      CreateContinuingFrame(aPresContext, aFrame, this, &nextInFlow);
     if (NS_FAILED(rv)) {
       return rv;
     }
-    aFrame->SetNextSibling(nextInFlow);
-    nextInFlow->SetNextSibling(nextFrame);
+    mFrames.InsertFrame(nsnull, aFrame, nextInFlow);
 
     NS_FRAME_LOG(NS_FRAME_TRACE_NEW_FRAMES,
        ("nsHTMLContainerFrame::CreateNextInFlow: frame=%p nextInFlow=%p",
