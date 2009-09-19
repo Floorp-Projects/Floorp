@@ -43,7 +43,7 @@ VPATH           = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
   BASEBROWSER = basebrowser-mac-macho
   CLIENTMANIFEST = client-mac-macho
   _PLATFORM = unix

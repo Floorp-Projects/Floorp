@@ -98,7 +98,7 @@ PACKAGER_NO_LIBS = 1
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/MacOS
 else
 STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)
@@ -108,7 +108,7 @@ $(STAGEDIST): AB_CD:=en-US
 $(STAGEDIST): UNPACKAGE=$(ZIP_IN)
 $(STAGEDIST): $(ZIP_IN)
 # only mac needs to remove the parent of STAGEDIST...
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	$(RM) -r -v $(DIST)/l10n-stage
 else
 # ... and windows doesn't like removing STAGEDIST itself, remove all children
@@ -133,7 +133,7 @@ repackage-zip:
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
 	  tar --exclude=install.rdf --exclude=chrome.manifest $(TAR_CREATE_FLAGS) - * | ( cd $(STAGEDIST) && tar -xf - )
 ifneq (en,$(AB))
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj
 endif
 endif
@@ -148,7 +148,7 @@ ifdef MOZ_MAKE_COMPLETE_MAR
 endif
 # packaging done, undo l10n stuff
 ifneq (en,$(AB))
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj
 endif
 endif

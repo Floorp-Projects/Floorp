@@ -66,7 +66,7 @@ ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
 

@@ -53,7 +53,7 @@ PACKAGE_BASE_DIR	= $(DIST)
 # Default output location for update archive
 STAGE_DIR	= $(DIST)/$(PKG_UPDATE_PATH)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 ifdef UNIVERSAL_BINARY
 ifneq (,$(filter %/l10n-stage,$(PACKAGE_BASE_DIR)))
 PACKAGE_DIR	= $(PACKAGE_BASE_DIR)/$(MOZ_PKG_APPNAME)/$(MOZ_APP_DISPLAYNAME).app

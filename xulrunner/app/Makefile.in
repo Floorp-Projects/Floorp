@@ -96,7 +96,7 @@ LOCAL_INCLUDES += \
         -I$(topsrcdir)/toolkit/profile/src \
         $(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 TK_LIBS := -framework Cocoa $(TK_LIBS)
 endif
 
@@ -268,7 +268,7 @@ endif
 libs::
 	touch $(DIST)/bin/.autoreg
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 
 FRAMEWORK_NAME = XUL
 FRAMEWORK_VERSION = $(MOZILLA_VERSION)
