@@ -56,7 +56,7 @@ interface nsIDOMNode;
  * by looking for "navigator:browser" windows.
  *
  * * "Tabbrowser tabs" are all the child nodes of a browser window's
- * |getBrowser().tabContainer| such as e.g. |getBrowser().selectedTab|.
+ * |gBrowser.tabContainer| such as e.g. |gBrowser.selectedTab|.
  */
 
 [scriptable, uuid(70592a0d-87d3-459c-8db7-dcb8d47af78e)]
