@@ -3,7 +3,7 @@
 // but presumably we want at least 1 flag to be set on all supported
 // platforms.
 
-if (jitstats) {
+if (HAVE_TM) {
   assertEq(jitstats.archIsIA32 ||
 	   jitstats.archIs64BIT ||
 	   jitstats.archIsARM ||
