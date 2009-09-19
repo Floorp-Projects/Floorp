@@ -68,7 +68,6 @@ _TEST_FILES =\
 		states.js \
 		table.js \
 		value.js \
-		test_accessnode_invalidation.html \
 		test_actions.xul \
 		test_actions_anchors.html \
 		test_actions_aria.html \
@@ -103,6 +102,8 @@ _TEST_FILES =\
 		test_events_valuechange.html \
 		test_groupattrs.xul \
 		test_groupattrs.html \
+		test_invalidate_accessnode.html \
+		test_invalidate_elmli.html \
 		test_name.html \
 		test_name.xul \
 		test_name_button.html \
