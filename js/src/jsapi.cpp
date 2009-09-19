@@ -850,10 +850,6 @@ JS_DestroyRuntime(JSRuntime *rt)
 {
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
-    if (rt->nativeEnumerators) {
-        fprintf(stderr,
-                "JS engine warning: leak of native enumerators is detected.\n");
-    }
     if (!JS_CLIST_IS_EMPTY(&rt->contextList)) {
         JSContext *cx, *iter = NULL;
         uintN cxcount = 0;
@@ -3956,6 +3952,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
 
     ida = NULL;
     iter_state = JSVAL_NULL;
+    JSAutoEnumStateRooter tvr(cx, obj, &iter_state);
 
     /* Get the number of properties to enumerate. */
     if (!obj->enumerate(cx, JSENUMERATE_INIT, &iter_state, &num_properties))
@@ -3996,7 +3993,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
     return SetIdArrayLength(cx, ida, i);
 
 error:
-    if (iter_state != JSVAL_NULL)
+    if (!JSVAL_IS_NULL(iter_state))
         obj->enumerate(cx, JSENUMERATE_DESTROY, &iter_state, 0);
     if (ida)
         JS_DestroyIdArray(cx, ida);
