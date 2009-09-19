@@ -136,8 +136,7 @@ PluginModuleParent::NP_Initialize(const NPNetscapeFuncs* npnIface,
     _MOZ_LOG(__FUNCTION__);
 
     NPError prv;
-    nsresult rv = CallNP_Initialize(&prv);
-    if (NS_OK != rv)
+    if (!CallNP_Initialize(&prv))
         return NPERR_GENERIC_ERROR;
     else if (NPERR_NO_ERROR != prv)
         return prv;
@@ -152,9 +151,8 @@ PluginModuleParent::NP_Initialize(const NPNetscapeFuncs* npnIface)
     _MOZ_LOG(__FUNCTION__);
 
     NPError prv;
-    nsresult rv = CallNP_Initialize(&prv);
-    if (NS_FAILED(rv))
-        return rv;
+    if (!CallNP_Initialize(&prv))
+        return NP_ERR_GENERIC_ERROR;
     return prv;
 }
 
@@ -223,7 +221,7 @@ PluginModuleParent::NPP_Destroy(NPP instance,
         static_cast<PluginInstanceParent*>(instance->pdata);
 
     NPError prv;
-    if (Shim::HACK_target->CallPPluginInstanceDestructor(parentInstance, &prv)) {
+    if (!Shim::HACK_target->CallPPluginInstanceDestructor(parentInstance, &prv)) {
         prv = NPERR_GENERIC_ERROR;
     }
     instance->pdata = nsnull;

@@ -45,6 +45,7 @@ include protocol "PStreamNotify.ipdl";
 include "mozilla/plugins/PluginMessageUtils.h";
 
 using NPError;
+using NPEvent;
 using NPWindow;
 using NPReason;
 
@@ -76,6 +77,9 @@ child:
 
   rpc NPP_GetValue_NPPVpluginScriptableNPObject()
     returns (PPluginScriptableObject value, NPError result);
+
+  rpc NPP_HandleEvent(NPEvent event)
+    returns (int16_t handled);
 
 parent:
   rpc NPN_GetValue_NPNVjavascriptEnabledBool()

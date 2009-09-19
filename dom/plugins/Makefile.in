@@ -58,19 +58,22 @@ ifdef MOZ_IPC
 EXPORTS_NAMESPACES = mozilla mozilla/plugins
 
 EXPORTS_mozilla/plugins = \
-  PluginModuleChild.h \
-  PluginModuleParent.h \
-  PluginScriptableObjectChild.h \
-  PluginScriptableObjectParent.h \
-  PluginInstanceChild.h \
-  PluginInstanceParent.h \
   BrowserStreamChild.h \
   BrowserStreamParent.h \
+  NPEventOSX.h \
+  NPEventWindows.h \
+  NPEventX11.h \
+  PluginInstanceChild.h \
+  PluginInstanceParent.h \
   PluginMessageUtils.h \
+  PluginModuleChild.h \
+  PluginModuleParent.h \
   PluginProcessParent.h \
+  PluginScriptableObjectChild.h \
+  PluginScriptableObjectParent.h \
   PluginThreadChild.h \
-  StreamNotifyParent.h \
   StreamNotifyChild.h \
+  StreamNotifyParent.h \
   $(NULL)
 
 MODULE           = dom

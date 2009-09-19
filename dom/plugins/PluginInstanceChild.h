@@ -73,6 +73,9 @@ protected:
     AnswerNPP_GetValue_NPPVpluginScriptableNPObject(PPluginScriptableObjectChild** value,
                                                     NPError* result);
 
+    virtual bool
+    AnswerNPP_HandleEvent(const NPEvent& event, int16_t* handled);
+
     virtual PPluginScriptableObjectChild*
     PPluginScriptableObjectConstructor();
 
