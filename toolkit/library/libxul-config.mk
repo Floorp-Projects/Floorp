@@ -227,7 +227,7 @@ COMPONENT_LIBS += \
 endif
 endif
 
-ifeq (,$(filter qt beos os2 mac photon cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (,$(filter qt beos os2 photon cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 ifdef MOZ_XUL
 ifdef MOZ_XPFE_COMPONENTS
 COMPONENT_LIBS += fileview
@@ -306,7 +306,7 @@ endif
 ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += wdgtos2
 endif
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += widget_mac
 endif
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))

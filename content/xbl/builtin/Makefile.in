@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
 DIRS	= win
 else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 DIRS	= mac
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)

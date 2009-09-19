@@ -74,7 +74,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 	CPPSRCS += nsPluginsDirOS2.cpp
 	CPPSRCS += nsPluginNativeWindowOS2.cpp
 else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	CPPSRCS += nsPluginsDirDarwin.cpp
 	CPPSRCS += nsPluginNativeWindow.cpp
 else
@@ -103,7 +103,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
 
