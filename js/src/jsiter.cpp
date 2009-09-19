@@ -99,7 +99,7 @@ js_CloseNativeIterator(JSContext *cx, JSObject *iterobj)
         return;
 
     /* Protect against failure to fully initialize obj. */
-    iterable = STOBJ_GET_PARENT(iterobj);
+    iterable = iterobj->getParent();
     if (iterable) {
 #if JS_HAS_XML_SUPPORT
         uintN flags = JSVAL_TO_INT(STOBJ_GET_SLOT(iterobj, JSSLOT_ITER_FLAGS));
@@ -113,13 +113,29 @@ js_CloseNativeIterator(JSContext *cx, JSObject *iterobj)
     STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_STATE, JSVAL_NULL);
 }
 
+static void
+iterator_trace(JSTracer *trc, JSObject *obj)
+{
+    /*
+     * The GC marks iter_state during the normal slot scanning if
+     * JSVAL_IS_TRACEABLE(iter_state) is true duplicating the efforts of
+     * js_MarkEnumeratorState. But this is rare so we optimize for code
+     * simplicity.
+     */
+    JSObject *iterable = obj->getParent();
+    jsval iter_state = obj->fslots[JSSLOT_ITER_STATE];
+    js_MarkEnumeratorState(trc, iterable, iter_state);
+}
+
 JSClass js_IteratorClass = {
     "Iterator",
     JSCLASS_HAS_RESERVED_SLOTS(2) | /* slots for state and flags */
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) |
+    JSCLASS_MARK_IS_TRACE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    NULL,             NULL,            NULL,            NULL,
+    NULL,             NULL,            JS_CLASS_TRACE(iterator_trace), NULL
 };
 
 static JSBool

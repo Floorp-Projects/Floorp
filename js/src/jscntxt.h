@@ -298,6 +298,20 @@ struct JSThreadData {
      */
     size_t              gcMallocBytes;
 
+    /*
+     * Cache of reusable JSNativeEnumerators mapped by shape identifiers (as
+     * stored in scope->shape). This cache is nulled by the GC and protected
+     * by gcLock.
+     */
+#define NATIVE_ENUM_CACHE_LOG2  8
+#define NATIVE_ENUM_CACHE_MASK  JS_BITMASK(NATIVE_ENUM_CACHE_LOG2)
+#define NATIVE_ENUM_CACHE_SIZE  JS_BIT(NATIVE_ENUM_CACHE_LOG2)
+
+#define NATIVE_ENUM_CACHE_HASH(shape)                                         \
+    ((((shape) >> NATIVE_ENUM_CACHE_LOG2) ^ (shape)) & NATIVE_ENUM_CACHE_MASK)
+
+    jsuword             nativeEnumCache[NATIVE_ENUM_CACHE_SIZE];
+
 #ifdef JS_THREADSAFE
     /*
      * Deallocator task for this thread.
@@ -612,12 +626,6 @@ struct JSRuntime {
     JSObject            *anynameObject;
     JSObject            *functionNamespaceObject;
 
-    /*
-     * A helper list for the GC, so it can mark native iterator states. See
-     * js_TraceNativeEnumerators for details.
-     */
-    JSNativeEnumerator  *nativeEnumerators;
-
 #ifndef JS_THREADSAFE
     JSThreadData        threadData;
 
@@ -641,20 +649,6 @@ struct JSRuntime {
 
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
-
-    /*
-     * Cache of reusable JSNativeEnumerators mapped by shape identifiers (as
-     * stored in scope->shape). This cache is nulled by the GC and protected
-     * by gcLock.
-     */
-#define NATIVE_ENUM_CACHE_LOG2  8
-#define NATIVE_ENUM_CACHE_MASK  JS_BITMASK(NATIVE_ENUM_CACHE_LOG2)
-#define NATIVE_ENUM_CACHE_SIZE  JS_BIT(NATIVE_ENUM_CACHE_LOG2)
-
-#define NATIVE_ENUM_CACHE_HASH(shape)                                         \
-    ((((shape) >> NATIVE_ENUM_CACHE_LOG2) ^ (shape)) & NATIVE_ENUM_CACHE_MASK)
-
-    jsuword             nativeEnumCache[NATIVE_ENUM_CACHE_SIZE];
 
     /*
      * Various metering fields are defined at the end of JSRuntime. In this
@@ -866,6 +860,10 @@ typedef struct JSLocalRootStack {
 #define JSTVU_WEAK_ROOTS    (-4)    /* u.weakRoots points to saved weak roots */
 #define JSTVU_COMPILER      (-5)    /* u.compiler roots JSCompiler* */
 #define JSTVU_SCRIPT        (-6)    /* u.script roots JSScript* */
+#define JSTVU_ENUMERATOR    (-7)    /* a pointer to JSTempValueRooter points
+                                       to an instance of JSAutoEnumStateRooter
+                                       with u.object storing the enumeration
+                                       object */
 
 /*
  * Here single JSTVU_SINGLE covers both jsval and pointers to almost (see note
@@ -928,7 +926,6 @@ typedef struct JSLocalRootStack {
 
 #define JS_PUSH_TEMP_ROOT_SCRIPT(cx,script_,tvr)                              \
     JS_PUSH_TEMP_ROOT_COMMON(cx, script_, tvr, JSTVU_SCRIPT, script)
-
 
 #define JSRESOLVE_INFER         0xffff  /* infer bits from current bytecode */
 
@@ -1135,6 +1132,15 @@ struct JSContext {
         return p;
     }
 
+    inline void* mallocNoReport(size_t bytes) {
+        JS_ASSERT(bytes != 0);
+        void *p = runtime->malloc(bytes);
+        if (!p)
+            return NULL;
+        updateMallocCounter(bytes);
+        return p;
+    }
+
     inline void* calloc(size_t bytes) {
         JS_ASSERT(bytes != 0);
         void *p = runtime->calloc(bytes);
@@ -1276,7 +1282,7 @@ class JSAutoTempValueRooter
 
 class JSAutoTempIdRooter
 {
-public:
+  public:
     explicit JSAutoTempIdRooter(JSContext *cx, jsid id = INT_TO_JSID(0))
         : mContext(cx) {
         JS_PUSH_SINGLE_TEMP_ROOT(mContext, ID_TO_VALUE(id), &mTvr);
@@ -1289,9 +1295,35 @@ public:
     jsid id() { return (jsid) mTvr.u.value; }
     jsid * addr() { return (jsid *) &mTvr.u.value; }
 
-private:
+  private:
     JSContext *mContext;
     JSTempValueRooter mTvr;
+};
+
+/* The auto-root for enumeration object and its state. */
+class JSAutoEnumStateRooter : public JSTempValueRooter
+{
+  public:
+    JSAutoEnumStateRooter(JSContext *cx, JSObject *obj, jsval *statep)
+        : mContext(cx), mStatep(statep)
+    {
+        JS_ASSERT(obj);
+        JS_ASSERT(statep);
+        JS_PUSH_TEMP_ROOT_COMMON(cx, obj, this, JSTVU_ENUMERATOR, object);
+    }
+
+    ~JSAutoEnumStateRooter() {
+        JS_POP_TEMP_ROOT(mContext, this);
+    }
+
+    void mark(JSTracer *trc) {
+        JS_CALL_OBJECT_TRACER(trc, u.object, "enumerator_obj");
+        js_MarkEnumeratorState(trc, u.object, *mStatep);
+    }
+
+  private:
+    JSContext   *mContext;
+    jsval       *mStatep;
 };
 
 class JSAutoResolveFlags
