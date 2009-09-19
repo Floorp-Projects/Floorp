@@ -493,19 +493,18 @@ var Browser = {
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
     /* Command line arguments/initial homepage */
+    var whereURI = "about:blank";
+    try {
+      // Check for and use a default homepage
+      whereURI = gPrefService.getCharPref("browser.startup.homepage");
+    } catch (e) {}
+
     // If this is an intial window launch (was a nsICommandLine passed via window params)
     // we execute some logic to load the initial launch page
-    if (window.arguments && window.arguments[0]) {
-      var whereURI = null;
-
+    if (window.arguments && window.arguments[0] &&
+	window.arguments[0] instanceof Ci.nsICommandLine) {
       try {
-        // Try to access the commandline
-        var cmdLine = window.arguments[0].QueryInterface(Ci.nsICommandLine);
-
-        try {
-          // Check for and use a default homepage
-          whereURI = gPrefService.getCharPref("browser.startup.homepage");
-        } catch (e) {}
+        var cmdLine = window.arguments[0];
 
         // Check for and use a single commandline parameter
         if (cmdLine.length == 1) {
@@ -526,10 +525,9 @@ var Browser = {
             whereURI = whereURI.spec;
         }
       } catch (e) {}
-
-      if (whereURI)
-        this.addTab(whereURI, true);
     }
+
+    this.addTab(whereURI, true);
 
     // JavaScript Error Console
     if (gPrefService.getBoolPref("browser.console.showInPanel")){
