@@ -89,7 +89,8 @@ var BrowserUI = {
       if (caption == "about:blank")
         caption = "";
     }
-    this._edit.value = caption;
+
+    this._setURI(caption);
   },
 
   /*
@@ -178,7 +179,7 @@ var BrowserUI = {
 
   showToolbar : function showToolbar(aEdit) {
     this.hidePanel();
-    this._editToolbar(aEdit);
+    this._editURI(aEdit);
   },
 
   _toolbarLocked: 0,
@@ -196,7 +197,14 @@ var BrowserUI = {
       document.getElementById("toolbar-moveable-container").top = "";
   },
 
-  _editToolbar : function _editToolbar(aEdit) {
+  _setURI: function _setURI(aCaption) {
+    if (this.isAutoCompleteOpen())
+      this._edit.defaultValue = aCaption;
+    else
+      this._edit.value = aCaption;
+  },
+
+  _editURI : function _editURI(aEdit) {
     var icons = document.getElementById("urlbar-icons");
     if (aEdit && icons.getAttribute("mode") != "edit") {
       icons.setAttribute("mode", "edit");
@@ -206,12 +214,9 @@ var BrowserUI = {
       if (urlString == "about:blank")
         urlString = "";
       this._edit.value = urlString;
-      this._edit.inputField.focus();
     }
     else if (!aEdit && icons.getAttribute("mode") != "view") {
       icons.setAttribute("mode", "view");
-      this._edit.inputField.blur();
-      this._edit.reallyClosePopup();
     }
   },
 
@@ -403,13 +408,9 @@ var BrowserUI = {
 
     switch (aState) {
       case TOOLBARSTATE_LOADED:
-        icons.setAttribute("mode", "view");
+        if (icons.getAttribute("mode" != "edit"))
+          icons.setAttribute("mode", "view");
         
-        // We handle showing the toolbar for new tabs in BrowserUI.newTab()
-        if (uri.spec != "about:blank") {
-          this.showToolbar(false);
-        }
-
         if (!this._faviconLink)
           this._faviconLink = uri.prePath + "/favicon.ico";
         this._setIcon(this._faviconLink);
@@ -418,11 +419,8 @@ var BrowserUI = {
         break;
 
       case TOOLBARSTATE_LOADING:
-        this.showToolbar();
-        
-        // Force the mode back to "loading" since showToolbar() changes it to "view"
-        // and that messes up the CSS rules depending on the "mode" attribute
-        icons.setAttribute("mode", "loading");
+        if (icons.getAttribute("mode" != "edit"))
+          icons.setAttribute("mode", "loading");
 
         this._favicon.src = "";
         this._faviconLink = null;
@@ -458,7 +456,7 @@ var BrowserUI = {
   },
 
   /* Set the location to the current content */
-  setURI : function() {
+  updateURI : function() {
     var browser = Browser.selectedBrowser;
 
     // FIXME: deckbrowser should not fire TabSelect on the initial tab (bug 454028)
@@ -475,7 +473,7 @@ var BrowserUI = {
     if (urlString == "about:blank")
       urlString = "";
 
-    this._edit.value = urlString;
+    this._setURI(urlString);
   },
 
   goToURI : function(aURI) {
@@ -483,7 +481,7 @@ var BrowserUI = {
     if (!aURI)
       return;
 
-    this._edit.reallyClosePopup();
+    this._edit.popup.close();
 
     var flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     getBrowser().loadURIWithFlags(aURI, flags, null, null);
@@ -496,20 +494,27 @@ var BrowserUI = {
     getBrowser().loadURI(queryURI, null, null, false);
   },
 
-  showAutoComplete : function(showDefault) {
+  showAutoComplete : function() {
+    if (this.isAutoCompleteOpen())
+      return;
     BrowserSearch.updateSearchButtons();
     this._edit.showHistoryPopup();
+  },
+
+  isAutoCompleteOpen: function isAutoCompleteOpen() {
+    return this._edit.popup.popupOpen;
   },
 
   doButtonSearch : function(button) {
     if (!("engine" in button) || !button.engine)
       return;
 
-    var urlbar = this._edit;
-    urlbar.open = false;
-    var value = urlbar.value;
+    // We don't want the button to look pressed for now
+    button.parentNode.selectedItem = null;
+    
+    this._edit.popup.closePopup();
 
-    var submission = button.engine.getSubmission(value, null);
+    var submission = button.engine.getSubmission(this._edit.value, null);
     getBrowser().loadURI(submission.uri.spec, null, submission.postData, false);
   },
 
@@ -525,7 +530,7 @@ var BrowserUI = {
       return;
 
     var list = document.getElementById("urllist-items");
-    BrowserUI.goToURI(list.selectedItem.value);
+    this.goToURI(list.selectedItem.value);
   },
 
   showHistory : function() {
@@ -540,8 +545,10 @@ var BrowserUI = {
     aURI = aURI || "about:blank";
     let tab = Browser.addTab(aURI, true);
 
-    if (aURI == "about:blank")
+    if (aURI == "about:blank") {
+      this.showToolbar(true);
       this.showAutoComplete();
+    }
     return tab;
   },
 
@@ -623,7 +630,7 @@ var BrowserUI = {
         break;
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
-          let dialog = BrowserUI.activeDialog;
+          let dialog = this.activeDialog;
           if (dialog)
             dialog.close();
         }
@@ -703,7 +710,7 @@ var BrowserUI = {
         break;
       case "cmd_openLocation":
         this.showToolbar(true);
-        BrowserUI.showAutoComplete();
+        this.showAutoComplete();
         break;
       case "cmd_star":
       {

@@ -21,15 +21,9 @@
         <body><![CDATA[
           // hack! we want to revert to the "all results" popup when the
           // controller would otherwise close us because of an empty search
-          // string, and handle closing ourselves (via reallyClosePopup).
+          // string.
           if (this.value == "")
             this.showHistoryPopup();
-        ]]></body>
-      </method>
-      <method name="reallyClosePopup">
-        <body><![CDATA[
-          this.mConsumeRollupEvent = false;
-          this.popup.closePopup();
         ]]></body>
       </method>
     </implementation>
@@ -174,7 +168,7 @@
           if (this._items.scrollTop || this._items.scrollLeft)
             this._scrollBoxObject.scrollTo(0, 0);
 
-          BrowserUI.showToolbar();
+          BrowserUI.showToolbar(false);
           BrowserUI.popDialog();
         ]]></body>
       </method>
@@ -183,6 +177,7 @@
       <method name="close">
         <body><![CDATA[
           this.input.reset();
+          this.input.blur();
           this.closePopup();
         ]]></body>
       </method>

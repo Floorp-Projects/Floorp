@@ -708,7 +708,7 @@ var Browser = {
 
     if (!firstTab) {
       // Update all of our UI to reflect the new tab's location
-      BrowserUI.setURI();
+      BrowserUI.updateURI();
       getIdentityHandler().checkIdentity();
 
       let event = document.createEvent("Events");
@@ -2208,7 +2208,7 @@ ProgressController.prototype = {
     this._hostChanged = true;
 
     if (this._tab == Browser.selectedTab) {
-      BrowserUI.setURI();
+      BrowserUI.updateURI();
 
       // We're about to have new page content, to scroll the content area
       // to the top so the new paints will draw correctly.
@@ -2273,7 +2273,7 @@ ProgressController.prototype = {
     // translate any phone numbers
     Browser.translatePhoneNumbers();
 
-    if (this._tab == Browser.selectedTab) {
+    if (this._tab == Browser.selectedTab && !BrowserUI.isAutoCompleteOpen()) {
       // focus the dom window
       if (this.browser.currentURI.spec != "about:blank")
         this.browser.contentWindow.focus();
