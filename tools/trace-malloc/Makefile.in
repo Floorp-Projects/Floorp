@@ -77,7 +77,7 @@ endif
 include $(topsrcdir)/config/config.mk
 
 ifdef MOZ_ENABLE_LIBXUL
-ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LIBS	= xul
 endif
 endif
@@ -92,7 +92,7 @@ LIBS		+= \
 		$(NULL)
 
 ifdef MOZ_ENABLE_LIBXUL
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 LIBS += $(DIST)/bin/XUL
 endif
 endif

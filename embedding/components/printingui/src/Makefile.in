@@ -54,7 +54,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 PLATFORM_DIR = win
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 PLATFORM_DIR = mac
 endif
 

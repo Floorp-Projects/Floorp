@@ -43,7 +43,7 @@ include $(MOZILLA_DIR)/toolkit/mozapps/installer/package-name.mk
 # This is how we create the binary packages we release to the public.
 
 ifndef MOZ_PKG_FORMAT
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 MOZ_PKG_FORMAT  = DMG
 else
 ifeq (,$(filter-out OS2 WINNT WINCE BeOS, $(OS_ARCH)))
