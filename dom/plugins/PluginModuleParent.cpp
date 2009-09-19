@@ -131,7 +131,7 @@ PluginModuleParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
 #ifdef OS_LINUX
 NPError
 PluginModuleParent::NP_Initialize(const NPNetscapeFuncs* npnIface,
-                                 NPPluginFuncs* nppIface)
+                                  NPPluginFuncs* nppIface)
 {
     _MOZ_LOG(__FUNCTION__);
 
@@ -152,7 +152,7 @@ PluginModuleParent::NP_Initialize(const NPNetscapeFuncs* npnIface)
 
     NPError prv;
     if (!CallNP_Initialize(&prv))
-        return NP_ERR_GENERIC_ERROR;
+        return NPERR_GENERIC_ERROR;
     return prv;
 }
 
@@ -325,8 +325,10 @@ bool
 PluginModuleParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
                                                 NPRemoteIdentifier* aId)
 {
-    if (aString.IsVoid())
+    if (aString.IsVoid()) {
+        NS_ERROR("Someone sent over a void string?!");
         return false;
+    }
 
     NPIdentifier ident = _getstringidentifier(aString.BeginReading());
     if (!ident) {
@@ -335,8 +337,10 @@ PluginModuleParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
     }
 
     nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(ident);
-    if (!newEntry)
+    if (!newEntry) {
+        NS_ERROR("Out of memory?");
         return false;
+    }
 
     *aId = (NPRemoteIdentifier)ident;
     return true;
@@ -353,8 +357,10 @@ PluginModuleParent::RecvNPN_GetIntIdentifier(const int32_t& aInt,
     }
 
     nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(ident);
-    if (!newEntry)
+    if (!newEntry) {
+        NS_ERROR("Out of memory?");
         return false;
+    }
 
     *aId = (NPRemoteIdentifier)ident;
     return true;
@@ -419,18 +425,20 @@ PluginModuleParent::RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNam
     NS_ASSERTION(aIds->IsEmpty(), "Non-empty array!");
 
     PRUint32 count = aNames.Length();
-    NS_ENSURE_ARG_MIN(count, 1);
+    if (!count) {
+        NS_ERROR("No names to get!");
+        return false;
+    }
 
     nsAutoTArray<NPUTF8*, 10> buffers;
-    PRBool ok = buffers.SetLength(count);
-    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
-
     nsAutoTArray<NPIdentifier, 10> ids;
-    ok = ids.SetLength(count);
-    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
 
-    ok = aIds->SetCapacity(count);
-    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+    if (!(buffers.SetLength(count) &&
+          ids.SetLength(count) &&
+          aIds->SetCapacity(count))) {
+        NS_ERROR("Out of memory?");
+        return false;
+    }
 
     for (PRUint32 index = 0; index < count; index++) {
         buffers[index] = const_cast<NPUTF8*>(aNames[index].BeginReading());
@@ -442,12 +450,13 @@ PluginModuleParent::RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNam
 
     for (PRUint32 index = 0; index < count; index++) {
         NPIdentifier& id = ids[index];
-
         if (id) {
             nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(id);
-            NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+            if (!newEntry) {
+                NS_ERROR("Out of memory?");
+                return false;
+            }
         }
-
         aIds->AppendElement((NPRemoteIdentifier)id);
     }
 

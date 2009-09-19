@@ -203,20 +203,19 @@ PluginInstanceParent::NPP_GetValue(NPPVariable variable, void *ret_value)
     // FIXME/cjones: HACK ALERT! should forward to child
     switch(variable) {
 #ifdef OS_LINUX
-    case NPPVpluginNeedsXEmbed:
-        (*(PRBool*)ret_value) = PR_TRUE;
-        return NPERR_NO_ERROR;
+        case NPPVpluginNeedsXEmbed:
+            (*(PRBool*)ret_value) = PR_TRUE;
+            return NPERR_NO_ERROR;
 #endif
 
-#if 0 //Coming soon!
-    case NPPVpluginScriptableNPObject:
-        PPluginScriptableObjectParent* actor;
-        NPError rv;
-        CallNPP_GetValue_NPPVpluginScriptableNPObject(&actor, &rv);
-        break;
-#endif
-    default:
-        return NPERR_GENERIC_ERROR;
+        case NPPVpluginScriptableNPObject: {
+            PPluginScriptableObjectParent* actor;
+            NPError rv;
+            if (!CallNPP_GetValue_NPPVpluginScriptableNPObject(&actor, &rv)) {
+                return NPERR_GENERIC_ERROR;
+            }
+            return rv;
+        }
     }
 
     NS_NOTREACHED("Don't get here!");
@@ -244,25 +243,31 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
     _MOZ_LOG(__FUNCTION__);
         
     NPError err;
-    CallPBrowserStreamConstructor(new BrowserStreamParent(this, stream),
-                                  nsCString(stream->url),
-                                  stream->end,
-                                  stream->lastmodified,
-                                  static_cast<PStreamNotifyParent*>(stream->notifyData),
-                                  nsCString(stream->headers),
-                                  nsCString(type), seekable, &err, stype);
+    if (!CallPBrowserStreamConstructor(new BrowserStreamParent(this, stream),
+                                       nsCString(stream->url),
+                                       stream->end,
+                                       stream->lastmodified,
+                                       static_cast<PStreamNotifyParent*>(stream->notifyData),
+                                       nsCString(stream->headers),
+                                       nsCString(type), seekable, &err, stype)) {
+        return NPERR_GENERIC_ERROR;
+    }
     return err;
-}    
+}
 
 NPError
 PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
 {
     BrowserStreamParent* sp =
         static_cast<BrowserStreamParent*>(stream->pdata);
-    if (sp->mNPP != this)
+    if (sp->mNPP != this) {
         NS_RUNTIMEABORT("Mismatched plugin data");
+    }
 
-    return CallPBrowserStreamDestructor(sp, reason, false);
+    if (!CallPBrowserStreamDestructor(sp, reason, false)) {
+        return NPERR_GENERIC_ERROR;
+    }
+    return NPERR_NO_ERROR;
 }
 
 PPluginScriptableObjectParent*
