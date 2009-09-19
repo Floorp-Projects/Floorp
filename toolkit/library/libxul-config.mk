@@ -130,12 +130,6 @@ COMPONENT_LIBS += \
 	pipnss \
 	$(NULL)
 
-ifdef MOZ_XMLEXTRAS
-COMPONENT_LIBS += \
-	xmlextras \
-	$(NULL)
-endif
-  
 ifdef MOZ_PLUGINS
 DEFINES += -DMOZ_PLUGINS
 COMPONENT_LIBS += \
@@ -197,13 +191,6 @@ ifdef MOZ_PREF_EXTENSIONS
 DEFINES += -DMOZ_PREF_EXTENSIONS
 COMPONENT_LIBS += \
 	autoconfig \
-	$(NULL)
-endif
-
-ifdef MOZ_WEBSERVICES
-DEFINES += -DMOZ_WEBSERVICES
-COMPONENT_LIBS += \
-	websrvcs \
 	$(NULL)
 endif
 
