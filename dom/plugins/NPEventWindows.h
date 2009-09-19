@@ -42,7 +42,9 @@
 
 #include "npapi.h"
 
-#warning This is only a stub implementation IMPLEMENT ME
+#pragma message(__FILE__ ":  This is only a stub implementation IMPLEMENT ME")
+
+namespace IPC {
 
 template <>
 struct ParamTraits<NPEvent>
@@ -63,5 +65,6 @@ struct ParamTraits<NPEvent>
     }
 };
 
+} // namespace IPC
 
 #endif // ifndef mozilla_dom_plugins_NPEventWindows_h

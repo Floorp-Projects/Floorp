@@ -41,7 +41,6 @@
 #include "npapi.h"
 #include "npruntime.h"
 #include "nsDebug.h"
-#include "nsThreadUtils.h"
 
 #include "PluginModuleChild.h"
 #include "PluginInstanceChild.h"
@@ -83,27 +82,27 @@ ConvertToVariant(const NPRemoteVariant& aRemoteVariant,
   switch (aRemoteVariant.type()) {
     case NPRemoteVariant::Tvoid_t: {
       VOID_TO_NPVARIANT(aVariant);
-      return true;
+      break;
     }
 
     case NPRemoteVariant::Tnull_t: {
       NULL_TO_NPVARIANT(aVariant);
-      return true;
+      break;
     }
 
     case NPRemoteVariant::Tbool: {
       BOOLEAN_TO_NPVARIANT(aRemoteVariant.get_bool(), aVariant);
-      return true;
+      break;
     }
 
     case NPRemoteVariant::Tint: {
       INT32_TO_NPVARIANT(aRemoteVariant.get_int(), aVariant);
-      return true;
+      break;
     }
 
     case NPRemoteVariant::Tdouble: {
       DOUBLE_TO_NPVARIANT(aRemoteVariant.get_double(), aVariant);
-      return true;
+      break;
     }
 
     case NPRemoteVariant::TnsCString: {
@@ -114,24 +113,25 @@ ConvertToVariant(const NPRemoteVariant& aRemoteVariant,
         return false;
       }
       STRINGN_TO_NPVARIANT(buffer, string.Length(), aVariant);
-      return true;
+      break;
     }
 
     case NPRemoteVariant::TPPluginScriptableObjectChild: {
       NPObject* object = NPObjectFromVariant(aRemoteVariant);
       if (!object) {
+        NS_ERROR("Er, this shouldn't fail!");
         return false;
       }
       OBJECT_TO_NPVARIANT(object, aVariant);
-      return true;
+      break;
     }
 
-  default:
-      break;                    // break to NOTREACHED
+    default:
+      NS_NOTREACHED("Shouldn't get here!");
+      return false;
   }
 
-  NS_NOTREACHED("Shouldn't get here!");
-  return false;
+  return true;
 }
 
 bool
@@ -141,49 +141,40 @@ ConvertToRemoteVariant(const NPVariant& aVariant,
 {
   if (NPVARIANT_IS_VOID(aVariant)) {
     aRemoteVariant = mozilla::void_t();
-    return true;
   }
-
-  if (NPVARIANT_IS_NULL(aVariant)) {
+  else if (NPVARIANT_IS_NULL(aVariant)) {
     aRemoteVariant = mozilla::null_t();
-    return true;
   }
-
-  if (NPVARIANT_IS_BOOLEAN(aVariant)) {
+  else if (NPVARIANT_IS_BOOLEAN(aVariant)) {
     aRemoteVariant = NPVARIANT_TO_BOOLEAN(aVariant);
-    return true;
   }
-
-  if (NPVARIANT_IS_INT32(aVariant)) {
+  else if (NPVARIANT_IS_INT32(aVariant)) {
     aRemoteVariant = NPVARIANT_TO_INT32(aVariant);
-    return true;
   }
-
-  if (NPVARIANT_IS_DOUBLE(aVariant)) {
+  else if (NPVARIANT_IS_DOUBLE(aVariant)) {
     aRemoteVariant = NPVARIANT_TO_DOUBLE(aVariant);
-    return true;
   }
-
-  if (NPVARIANT_IS_STRING(aVariant)) {
+  else if (NPVARIANT_IS_STRING(aVariant)) {
     NPString str = NPVARIANT_TO_STRING(aVariant);
     nsCString string(str.UTF8Characters, str.UTF8Length);
     aRemoteVariant = string;
-    return true;
   }
-
-  if (NPVARIANT_IS_OBJECT(aVariant)) {
+  else if (NPVARIANT_IS_OBJECT(aVariant)) {
     NS_ASSERTION(aInstance, "Must have an instance to wrap!");
     PluginScriptableObjectChild* actor =
       CreateActorForNPObject(aInstance, NPVARIANT_TO_OBJECT(aVariant));
     if (!actor) {
+      NS_ERROR("Failed to create actor!");
       return false;
     }
     aRemoteVariant = actor;
-    return true;
+  }
+  else {
+    NS_NOTREACHED("Shouldn't get here!");
+    return false;
   }
 
-  NS_NOTREACHED("Shouldn't get here!");
-  return false;
+  return true;
 }
 
 } // anonymous namespace
@@ -205,7 +196,6 @@ void
 PluginScriptableObjectChild::Initialize(PluginInstanceChild* aInstance,
                                         NPObject* aObject)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!(mInstance && mObject), "Calling Initialize class twice!");
   mInstance = aInstance;
   mObject = PluginModuleChild::sBrowserFuncs.retainobject(aObject);
@@ -214,21 +204,22 @@ PluginScriptableObjectChild::Initialize(PluginInstanceChild* aInstance,
 bool
 PluginScriptableObjectChild::AnswerInvalidate()
 {
-  NS_ENSURE_STATE(NS_IsMainThread());
   if (mObject) {
     PluginModuleChild::sBrowserFuncs.releaseobject(mObject);
     mObject = nsnull;
-    return true;
   }
-  return NS_ERROR_UNEXPECTED;
+  return true;
 }
 
 bool
 PluginScriptableObjectChild::AnswerHasMethod(const NPRemoteIdentifier& aId,
                                              bool* aHasMethod)
 {
-  NS_ENSURE_STATE(NS_IsMainThread());
-  NS_ENSURE_STATE(mObject);
+  if (!mObject) {
+    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    *aHasMethod = false;
+    return true;
+  }
 
   if (!(mObject->_class && mObject->_class->hasMethod)) {
     *aHasMethod = false;
@@ -245,8 +236,11 @@ PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
                                           NPRemoteVariant* aResult,
                                           bool* aSuccess)
 {
-  NS_ENSURE_STATE(NS_IsMainThread());
-  NS_ENSURE_STATE(mObject);
+  if (!mObject) {
+    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    *aSuccess = false;
+    return true;
+  }
 
   if (!(mObject->_class && mObject->_class->invoke)) {
     *aSuccess = false;
@@ -293,8 +287,11 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<NPRemoteVariant>
                                                  NPRemoteVariant* aResult,
                                                  bool* aSuccess)
 {
-  NS_ENSURE_STATE(NS_IsMainThread());
-  NS_ENSURE_STATE(mObject);
+  if (!mObject) {
+    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    *aSuccess = false;
+    return true;
+  }
 
   if (!(mObject->_class && mObject->_class->invokeDefault)) {
     *aSuccess = false;
@@ -340,8 +337,11 @@ bool
 PluginScriptableObjectChild::AnswerHasProperty(const NPRemoteIdentifier& aId,
                                                bool* aHasProperty)
 {
-  NS_ENSURE_STATE(NS_IsMainThread());
-  NS_ENSURE_STATE(mObject);
+  if (!mObject) {
+    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    *aHasProperty = false;
+    return true;
+  }
 
   if (!(mObject->_class && mObject->_class->hasProperty)) {
     *aHasProperty = false;
@@ -357,8 +357,11 @@ PluginScriptableObjectChild::AnswerGetProperty(const NPRemoteIdentifier& aId,
                                                NPRemoteVariant* aResult,
                                                bool* aSuccess)
 {
-  NS_ENSURE_STATE(NS_IsMainThread());
-  NS_ENSURE_STATE(mObject);
+  if (!mObject) {
+    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    *aSuccess = false;
+    return true;
+  }
 
   if (!(mObject->_class && mObject->_class->getProperty)) {
     *aSuccess = false;
@@ -383,8 +386,11 @@ PluginScriptableObjectChild::AnswerSetProperty(const NPRemoteIdentifier& aId,
                                                const NPRemoteVariant& aValue,
                                                bool* aSuccess)
 {
-  NS_ENSURE_STATE(NS_IsMainThread());
-  NS_ENSURE_STATE(mObject);
+  if (!mObject) {
+    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    *aSuccess = false;
+    return true;
+  }
 
   if (!(mObject->_class && mObject->_class->setProperty)) {
     *aSuccess = false;
@@ -406,8 +412,11 @@ bool
 PluginScriptableObjectChild::AnswerRemoveProperty(const NPRemoteIdentifier& aId,
                                                   bool* aSuccess)
 {
-  NS_ENSURE_STATE(NS_IsMainThread());
-  NS_ENSURE_STATE(mObject);
+  if (!mObject) {
+    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    *aSuccess = false;
+    return true;
+  }
 
   if (!(mObject->_class && mObject->_class->removeProperty)) {
     *aSuccess = false;
@@ -422,8 +431,11 @@ bool
 PluginScriptableObjectChild::AnswerEnumerate(nsTArray<NPRemoteIdentifier>* aProperties,
                                              bool* aSuccess)
 {
-  NS_ENSURE_STATE(NS_IsMainThread());
-  NS_ENSURE_STATE(mObject);
+  if (!mObject) {
+    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    *aSuccess = false;
+    return true;
+  }
 
   if (!(mObject->_class && mObject->_class->enumerate)) {
     *aSuccess = false;
@@ -461,8 +473,11 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<NPRemoteVariant>& aA
                                              NPRemoteVariant* aResult,
                                              bool* aSuccess)
 {
-  NS_ENSURE_STATE(NS_IsMainThread());
-  NS_ENSURE_STATE(mObject);
+  if (!mObject) {
+    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    *aSuccess = false;
+    return true;
+  }
 
   if (!(mObject->_class && mObject->_class->construct)) {
     *aSuccess = false;

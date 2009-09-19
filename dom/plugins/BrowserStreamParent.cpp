@@ -23,7 +23,7 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
 
   if (ranges.size() > PR_INT32_MAX) {
     // TODO: abort all processing!
-    return NS_ERROR_INVALID_ARG;
+    return false;
   }
 
   nsAutoArrayPtr<NPByteRange> rp(new NPByteRange[ranges.size()]);
@@ -41,9 +41,10 @@ int32_t
 BrowserStreamParent::WriteReady()
 {
   int32_t result;
-  nsresult rv = CallNPP_WriteReady(mStream->end, &result);
-  if (NS_FAILED(rv)) {
+  if (!CallNPP_WriteReady(mStream->end, &result)) {
     mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, NPRES_NETWORK_ERR);
+    // XXX is this right?
+    return -1;
   }
   return result;
 }
@@ -54,11 +55,11 @@ BrowserStreamParent::Write(int32_t offset,
                            void* buffer)
 {
   int32_t result;
-  nsresult rv = CallNPP_Write(offset,
-                           nsDependentCString(static_cast<char*>(buffer), len),
-                           &result);
-  if (NS_FAILED(rv))
+  if (!CallNPP_Write(offset,
+                     nsDependentCString(static_cast<char*>(buffer), len),
+                     &result)) {
     return -1;
+  }
 
   if (result == -1)
     mNPP->CallPBrowserStreamDestructor(this, NPRES_USER_BREAK, true);
