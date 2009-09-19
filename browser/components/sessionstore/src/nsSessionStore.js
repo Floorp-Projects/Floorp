@@ -948,7 +948,7 @@ SessionStoreService.prototype = {
     var sourceWindow = aTab.ownerDocument.defaultView;
     this._updateTextAndScrollDataForTab(sourceWindow, aTab.linkedBrowser, tabState, true);
     
-    var newTab = aWindow.getBrowser().addTab();
+    var newTab = aWindow.gBrowser.addTab();
     this.restoreHistoryPrecursor(aWindow, [newTab], [tabState], 0, 0, 0);
     
     return newTab;
@@ -1118,7 +1118,7 @@ SessionStoreService.prototype = {
    *        Window reference
    */
   _saveWindowHistory: function sss_saveWindowHistory(aWindow) {
-    var tabbrowser = aWindow.getBrowser();
+    var tabbrowser = aWindow.gBrowser;
     var tabs = tabbrowser.mTabs;
     var tabsData = this._windows[aWindow.__SSi].tabs = [];
     
@@ -1399,7 +1399,7 @@ SessionStoreService.prototype = {
    *        Window reference
    */
   _updateTextAndScrollData: function sss_updateTextAndScrollData(aWindow) {
-    var browsers = aWindow.getBrowser().browsers;
+    var browsers = aWindow.gBrowser.browsers;
     for (var i = 0; i < browsers.length; i++) {
       try {
         var tabData = this._windows[aWindow.__SSi].tabs[i];
@@ -1917,7 +1917,7 @@ SessionStoreService.prototype = {
    */
   restoreHistoryPrecursor:
     function sss_restoreHistoryPrecursor(aWindow, aTabs, aTabData, aSelectTab, aIx, aCount) {
-    var tabbrowser = aWindow.getBrowser();
+    var tabbrowser = aWindow.gBrowser;
     
     // make sure that all browsers and their histories are available
     // - if one's not, resume this check in 100ms (repeat at most 10 times)
@@ -2031,7 +2031,7 @@ SessionStoreService.prototype = {
     var tab = aTabs.shift();
     var tabData = aTabData.shift();
 
-    var browser = aWindow.getBrowser().getBrowserForTab(tab);
+    var browser = aWindow.gBrowser.getBrowserForTab(tab);
     var history = browser.webNavigation.sessionHistory;
     
     if (history.count > 0) {
@@ -2727,7 +2727,7 @@ SessionStoreService.prototype = {
       return;
     }
     try {
-      var currentURI = aWindow.getBrowser().currentURI.clone();
+      var currentURI = aWindow.gBrowser.currentURI.clone();
       // if the current URI contains a username/password, remove it
       try { 
         currentURI.userPass = ""; 
