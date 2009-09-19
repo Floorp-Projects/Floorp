@@ -425,6 +425,27 @@ struct ParamTraits<mozilla::plugins::IPCByteRange>
   }
 };
 
+
 } /* namespace IPC */
+
+
+// Serializing NPEvents is completely platform-specific and can be rather
+// intricate depending on the platform.  So for readability we split it
+// into separate files and have the only macro crud live here.
+// 
+// NB: these guards are based on those where struct NPEvent is defined
+// in npapi.h.  They should be kept in sync.
+#if defined(XP_MACOSX)
+#  include "mozilla/plugins/NPEventOSX.h"
+#elif defined(XP_WIN)
+#  include "mozilla/plugins/NPEventWindows.h"
+#elif defined(XP_OS2)
+#  error Sorry, OS/2 is not supported
+#elif defined(XP_UNIX) && defined(MOZ_X11)
+#  include "mozilla/plugins/NPEventX11.h"
+#else
+#  error Unsupported platform
+#endif
+
 
 #endif /* DOM_PLUGINS_PLUGINMESSAGEUTILS_H */

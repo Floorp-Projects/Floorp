@@ -190,8 +190,7 @@ PluginInstanceParent::NPP_SetWindow(NPWindow* aWindow)
     NS_ENSURE_TRUE(aWindow, NPERR_GENERIC_ERROR);
 
     NPError prv;
-    nsresult rv = CallNPP_SetWindow(*aWindow, &prv);
-    if (NS_OK != rv)
+    if (!CallNPP_SetWindow(*aWindow, &prv))
         return NPERR_GENERIC_ERROR;
     return prv;
 }
@@ -222,6 +221,20 @@ PluginInstanceParent::NPP_GetValue(NPPVariable variable, void *ret_value)
 
     NS_NOTREACHED("Don't get here!");
     return NPERR_GENERIC_ERROR;
+}
+
+int16_t
+PluginInstanceParent::NPP_HandleEvent(void* event)
+{
+    _MOZ_LOG(__FUNCTION__);
+
+    int16_t handled;
+    if (!CallNPP_HandleEvent(*reinterpret_cast<NPEvent*>(event),
+                             &handled)) {
+        return 0;               // no good way to handle errors here...
+    }
+
+    return handled;
 }
 
 NPError

@@ -184,6 +184,16 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
 }
 
 bool
+PluginInstanceChild::AnswerNPP_HandleEvent(const NPEvent& event,
+                                           int16_t* handled)
+{
+    // plugins might be fooling with these, make a copy
+    NPEvent evcopy = event;
+    *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
+    return true;
+}
+
+bool
 PluginInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow,
                                          NPError* rv)
 {
