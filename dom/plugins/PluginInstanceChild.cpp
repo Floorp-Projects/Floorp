@@ -130,7 +130,9 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     case NPNVjavascriptEnabledBool: {
         bool v = false;
         NPError result;
-        CallNPN_GetValue_NPNVjavascriptEnabledBool(&v, &result);
+        if (!CallNPN_GetValue_NPNVjavascriptEnabledBool(&v, &result)) {
+            return NPERR_GENERIC_ERROR;
+        }
         *static_cast<NPBool*>(aValue) = v;
         return result;
     }
@@ -138,7 +140,9 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     case NPNVisOfflineBool: {
         bool v = false;
         NPError result;
-        CallNPN_GetValue_NPNVisOfflineBool(&v, &result);
+        if (!CallNPN_GetValue_NPNVisOfflineBool(&v, &result)) {
+            return NPERR_GENERIC_ERROR;
+        }
         *static_cast<NPBool*>(aValue) = v;
         return result;
     }
@@ -146,7 +150,9 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     case NPNVprivateModeBool: {
         bool v = false;
         NPError result;
-        CallNPN_GetValue_NPNVprivateModeBool(&v, &result);
+        if (!CallNPN_GetValue_NPNVprivateModeBool(&v, &result)) {
+            return NPERR_GENERIC_ERROR;
+        }
         *static_cast<NPBool*>(aValue) = v;
         return result;
     }

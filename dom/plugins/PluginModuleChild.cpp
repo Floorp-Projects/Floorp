@@ -647,9 +647,11 @@ _getstringidentifier(const NPUTF8* aName)
     _MOZ_LOG(__FUNCTION__);
 
     NPRemoteIdentifier ident;
-    nsresult rv = PluginModuleChild::current()->
-        SendNPN_GetStringIdentifier(nsDependentCString(aName), &ident);
-    NS_ENSURE_SUCCESS(rv, 0);
+    if (!PluginModuleChild::current()->
+             SendNPN_GetStringIdentifier(nsDependentCString(aName), &ident)) {
+        NS_WARNING("Failed to send message!");
+        ident = 0;
+    }
 
     return (NPIdentifier)ident;
 }
@@ -668,20 +670,14 @@ _getstringidentifiers(const NPUTF8** aNames,
     nsAutoTArray<nsCString, 10> names;
     nsAutoTArray<NPRemoteIdentifier, 10> ids;
 
-    PRBool ok = names.SetCapacity(aNameCount);
-    NS_WARN_IF_FALSE(ok, "Out of memory!");
-
-    if (ok) {
+    if (names.SetCapacity(aNameCount)) {
         for (int32_t index = 0; index < aNameCount; index++) {
             names.AppendElement(nsDependentCString(aNames[index]));
         }
         NS_ASSERTION(names.Length() == aNameCount, "Should equal here!");
 
-        nsresult rv = PluginModuleChild::current()->
-            SendNPN_GetStringIdentifiers(names, &ids);
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to send message!");
-
-        if (NS_SUCCEEDED(rv)) {
+        if (PluginModuleChild::current()->
+                SendNPN_GetStringIdentifiers(names, &ids)) {
             NS_ASSERTION(ids.Length() == aNameCount, "Bad length!");
 
             for (int32_t index = 0; index < aNameCount; index++) {
@@ -689,6 +685,7 @@ _getstringidentifiers(const NPUTF8** aNames,
             }
             return;
         }
+        NS_WARNING("Failed to send message!");
     }
 
     // Something must have failed above.
@@ -703,9 +700,12 @@ _identifierisstring(NPIdentifier aIdentifier)
     _MOZ_LOG(__FUNCTION__);
 
     bool isString;
-    nsresult rv = PluginModuleChild::current()->
-        SendNPN_IdentifierIsString((NPRemoteIdentifier)aIdentifier, &isString);
-    NS_ENSURE_SUCCESS(rv, false);
+    if (!PluginModuleChild::current()->
+             SendNPN_IdentifierIsString((NPRemoteIdentifier)aIdentifier,
+                                        &isString)) {
+        NS_WARNING("Failed to send message!");
+        isString = false;
+    }
 
     return isString;
 }
@@ -716,9 +716,11 @@ _getintidentifier(int32_t aIntId)
     _MOZ_LOG(__FUNCTION__);
 
     NPRemoteIdentifier ident;
-    nsresult rv = PluginModuleChild::current()->
-        SendNPN_GetIntIdentifier(aIntId, &ident);
-    NS_ENSURE_SUCCESS(rv, 0);
+    if (!PluginModuleChild::current()->
+             SendNPN_GetIntIdentifier(aIntId, &ident)) {
+        NS_WARNING("Failed to send message!");
+        ident = 0;
+    }
 
     return (NPIdentifier)ident;
 }
@@ -730,10 +732,12 @@ _utf8fromidentifier(NPIdentifier aIdentifier)
 
     NPError err;
     nsCAutoString val;
-    nsresult rv = PluginModuleChild::current()->
-        SendNPN_UTF8FromIdentifier((NPRemoteIdentifier)aIdentifier,
-                                   &err, &val);
-    NS_ENSURE_SUCCESS(rv, 0);
+    if (!PluginModuleChild::current()->
+             SendNPN_UTF8FromIdentifier((NPRemoteIdentifier)aIdentifier,
+                                         &err, &val)) {
+        NS_WARNING("Failed to send message!");
+        return 0;
+    }
 
     return (NPERR_NO_ERROR == err) ? strdup(val.get()) : 0;
 }
@@ -745,10 +749,12 @@ _intfromidentifier(NPIdentifier aIdentifier)
 
     NPError err;
     int32_t val;
-    nsresult rv = PluginModuleChild::current()->
-        SendNPN_IntFromIdentifier((NPRemoteIdentifier)aIdentifier,
-                                  &err, &val);
-    NS_ENSURE_SUCCESS(rv, 0);
+    if (!PluginModuleChild::current()->
+             SendNPN_IntFromIdentifier((NPRemoteIdentifier)aIdentifier,
+                                       &err, &val)) {
+        NS_WARNING("Failed to send message!");
+        return -1;
+    }
 
     // -1 for consistency
     return (NPERR_NO_ERROR == err) ? val : -1;
