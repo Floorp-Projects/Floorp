@@ -37,6 +37,7 @@
 
 /* rendering object that goes directly inside the document's scrollbars */
 
+#include "nsHTMLFrame.h"
 #include "nsIServiceManager.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLContainerFrame.h"
@@ -70,121 +71,6 @@
 
 #define CANVAS_ABS_POS_CHILD_LIST NS_CONTAINER_LIST_COUNT_INCL_OC
 
-// Interface IDs
-
-/**
- * Root frame class.
- *
- * The root frame is the parent frame for the document element's frame.
- * It only supports having a single child frame which must be an area
- * frame
- */
-class CanvasFrame : public nsHTMLContainerFrame, 
-                    public nsIScrollPositionListener, 
-                    public nsICanvasFrame {
-public:
-  CanvasFrame(nsStyleContext* aContext)
-  : nsHTMLContainerFrame(aContext), mDoPaintFocus(PR_FALSE),
-    mAbsoluteContainer(nsGkAtoms::absoluteList) {}
-
-  NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
-
-  // nsISupports (nsIScrollPositionListener)
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
-  virtual void Destroy();
-
-  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsFrameList&    aChildList);
-  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
-                          nsFrameList&    aFrameList);
-  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
-                          nsIFrame*       aPrevFrame,
-                          nsFrameList&    aFrameList);
-  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
-                         nsIFrame*       aOldFrame);
-
-  virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
-
-  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
-  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
-  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-  virtual PRBool IsContainingBlock() const { return PR_TRUE; }
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
-  {
-    return nsHTMLContainerFrame::IsFrameOfType(aFlags &
-             ~(nsIFrame::eCanContainOverflowContainers));
-  }
-
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
-
-  void PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt);
-
-  // nsIScrollPositionListener
-  NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
-  virtual void ViewPositionDidChange(nsIScrollableView* aScrollable,
-                                     nsTArray<nsIWidget::Configuration>* aConfigurations) {}
-  NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
-
-  // nsICanvasFrame
-  NS_IMETHOD SetHasFocus(PRBool aHasFocus);
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::canvasFrame
-   */
-  virtual nsIAtom* GetType() const;
-
-  virtual nsresult StealFrame(nsPresContext* aPresContext,
-                              nsIFrame*      aChild,
-                              PRBool         aForceNormal)
-  {
-    NS_ASSERTION(!aForceNormal, "No-one should be passing this in here");
-
-    // CanvasFrame keeps overflow container continuations of its child
-    // frame in main child list
-    nsresult rv = nsContainerFrame::StealFrame(aPresContext, aChild, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      rv = nsContainerFrame::StealFrame(aPresContext, aChild);
-    }
-    return rv;
-  }
-
-#ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const;
-#endif
-  NS_IMETHOD GetContentForEvent(nsPresContext* aPresContext,
-                                nsEvent* aEvent,
-                                nsIContent** aContent);
-
-  nsRect CanvasArea() const;
-
-protected:
-  virtual PRIntn GetSkipSides() const;
-
-  // Data members
-  PRPackedBool              mDoPaintFocus;
-  nsCOMPtr<nsIViewManager>  mViewManager;
-  nsAbsoluteContainingBlock mAbsoluteContainer;
-
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
-};
-
-
-//----------------------------------------------------------------------
 
 nsIFrame*
 NS_NewCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -197,6 +83,7 @@ NS_IMPL_FRAMEARENA_HELPERS(CanvasFrame)
 NS_IMPL_QUERY_INTERFACE1(CanvasFrame, nsIScrollPositionListener)
 
 NS_QUERYFRAME_HEAD(CanvasFrame)
+  NS_QUERYFRAME_ENTRY(CanvasFrame)
   NS_QUERYFRAME_ENTRY(nsICanvasFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
