@@ -833,7 +833,7 @@ public:
   }
 
   void SetProcessingAnimationStyleChange(PRBool aProcessing) {
-    NS_ASSERTION(aProcessing != mProcessingAnimationStyleChange,
+    NS_ASSERTION(aProcessing != PRBool(mProcessingAnimationStyleChange),
                  "should never nest");
     mProcessingAnimationStyleChange = aProcessing;
   }
