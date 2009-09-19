@@ -873,6 +873,13 @@ function makePreview(row)
   if (!mimeType)
     mimeType = getContentTypeFromHeaders(cacheEntryDescriptor);
 
+  // if we have a data url, get the MIME type from the url
+  if (!mimeType && /^data:/.test(url)) {
+    var dataMimeType = /^data:(image\/.*);/.exec(url);
+    if (dataMimeType)
+      mimeType = dataMimeType[1];
+  }
+
   var imageType;
   if (mimeType) {
     // We found the type, try to display it nicely
