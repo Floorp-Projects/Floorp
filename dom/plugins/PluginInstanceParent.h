@@ -149,11 +149,7 @@ public:
         _MOZ_LOG(__FUNCTION__);
     }
 
-    int16_t NPP_HandleEvent(void* event)
-    {
-        _MOZ_LOG(__FUNCTION__);
-        return 0;
-    }
+    int16_t NPP_HandleEvent(void* event);
 
     void NPP_URLNotify(const char* url, NPReason reason, void* notifyData)
     {
