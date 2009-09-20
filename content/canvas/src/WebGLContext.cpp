@@ -82,7 +82,7 @@ WebGLContext::SetCanvasElement(nsICanvasElement* aParentCanvas)
     PRBool forceSoftware = PR_FALSE;
 
     nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = prefService->GetBranch("layout.canvas3d.", getter_AddRefs(prefBranch));
+    rv = prefService->GetBranch("webgl.", getter_AddRefs(prefBranch));
     if (NS_SUCCEEDED(rv)) {
         PRBool val;
 
