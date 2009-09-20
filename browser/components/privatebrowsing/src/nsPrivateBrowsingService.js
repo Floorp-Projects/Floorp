@@ -187,7 +187,7 @@ PrivateBrowsingService.prototype = {
       while (viewSrcWindowsEnum.hasMoreElements()) {
         let win = viewSrcWindowsEnum.getNext();
         if (this._inPrivateBrowsing) {
-          let plainURL = win.getBrowser().currentURI.spec;
+          let plainURL = win.gBrowser.currentURI.spec;
           if (plainURL.indexOf("view-source:") == 0) {
             plainURL = plainURL.substr(12);
             this._viewSrcURLs.push(plainURL);

@@ -197,6 +197,7 @@
 
 #endif
 #include "nsPlaceholderFrame.h"
+#include "nsHTMLFrame.h"
 
 // Content viewer interfaces
 #include "nsIContentViewer.h"
@@ -5247,12 +5248,23 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
         (aFlags & RENDER_CARET) != 0);
     nsDisplayList list;
 
+    nsRect canvasArea(
+      builder.ToReferenceFrame(rootFrame), rootFrame->GetSize());
+
     nsRect rect(aRect);
     nsIFrame* rootScrollFrame = GetRootScrollFrame();
     if ((aFlags & RENDER_IGNORE_VIEWPORT_SCROLLING) && rootScrollFrame) {
-      nsPoint pos = GetRootScrollFrameAsScrollable()->GetScrollPosition();
+      nsIScrollableFrame* rootScrollableFrame =
+        GetRootScrollFrameAsScrollable();
+      nsPoint pos = rootScrollableFrame->GetScrollPosition();
       rect.MoveBy(-pos);
       builder.SetIgnoreScrollFrame(rootScrollFrame);
+
+      CanvasFrame* canvasFrame =
+        do_QueryFrame(rootScrollableFrame->GetScrolledFrame());
+      if (canvasFrame) {
+        canvasArea = canvasFrame->CanvasArea();
+      }
     }
 
     builder.SetBackgroundOnly(PR_FALSE);
@@ -5262,7 +5274,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
     // Add the canvas background color.
     nsresult rv =
       rootFrame->PresContext()->PresShell()->AddCanvasBackgroundColorItem(
-        builder, list, rootFrame);
+        builder, list, rootFrame, &canvasArea);
 
     if (NS_SUCCEEDED(rv)) {
       rv = rootFrame->BuildDisplayListForStackingContext(&builder, rect, &list);

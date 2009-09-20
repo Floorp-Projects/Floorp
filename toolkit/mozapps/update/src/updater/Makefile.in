@@ -106,7 +106,7 @@ OS_CXXFLAGS += $(TK_CFLAGS)
 OS_LIBS += $(TK_LIBS)
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 HAVE_PROGRESSUI = 1
 CMMSRCS += progressui_osx.mm launchchild_osx.mm
 OS_LIBS += -framework Cocoa
@@ -142,7 +142,7 @@ libs:: updater.png
 	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/icons
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 libs::
 	$(NSINSTALL) -D $(DIST)/bin/updater.app
 	rsync -a -C --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/bin/updater.app 

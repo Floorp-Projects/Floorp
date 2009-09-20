@@ -153,14 +153,6 @@ tier_gecko_dirs	+= \
 		xpfe/appshell \
 		$(NULL)
 
-ifdef MOZ_XMLEXTRAS
-tier_gecko_dirs += extensions/xmlextras
-endif
-
-ifdef MOZ_WEBSERVICES
-tier_gecko_dirs += extensions/webservices
-endif
-
 ifdef MOZ_UNIVERSALCHARDET
 tier_gecko_dirs += extensions/universalchardet
 endif
