@@ -1326,19 +1326,19 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLRenderbuffer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLFloatArray, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasFloatArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLByteArray, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasByteArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLUnsignedByteArray, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasUnsignedByteArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLShortArray, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasShortArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLUnsignedShortArray, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasUnsignedShortArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLIntArray, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasIntArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLUnsignedIntArray, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasUnsignedIntArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
@@ -1376,13 +1376,13 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Worker, nsDOMWorker::NewWorker)
 
   // WebGL Array Types
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLFloatArray, NS_NewCanvasFloatArray)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLByteArray, NS_NewCanvasByteArray)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLUnsignedByteArray, NS_NewCanvasUnsignedByteArray)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLShortArray, NS_NewCanvasShortArray)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLUnsignedShortArray, NS_NewCanvasUnsignedShortArray)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLIntArray, NS_NewCanvasIntArray)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(WebGLUnsignedIntArray, NS_NewCanvasUnsignedIntArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasFloatArray, NS_NewCanvasFloatArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasByteArray, NS_NewCanvasByteArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasUnsignedByteArray, NS_NewCanvasUnsignedByteArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasShortArray, NS_NewCanvasShortArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasUnsignedShortArray, NS_NewCanvasUnsignedShortArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasIntArray, NS_NewCanvasIntArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasUnsignedIntArray, NS_NewCanvasUnsignedIntArray)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -3659,32 +3659,32 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIWebGLRenderbuffer)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(WebGLFloatArray, nsIWebGLFloatArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLFloatArray)
+  DOM_CLASSINFO_MAP_BEGIN(CanvasFloatArray, nsICanvasFloatArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasFloatArray)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(WebGLByteArray, nsIWebGLByteArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLByteArray)
+  DOM_CLASSINFO_MAP_BEGIN(CanvasByteArray, nsICanvasByteArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasByteArray)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(WebGLUnsignedByteArray, nsIWebGLUnsignedByteArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLUnsignedByteArray)
+  DOM_CLASSINFO_MAP_BEGIN(CanvasUnsignedByteArray, nsICanvasUnsignedByteArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasUnsignedByteArray)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(WebGLShortArray, nsIWebGLShortArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLShortArray)
+  DOM_CLASSINFO_MAP_BEGIN(CanvasShortArray, nsICanvasShortArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasShortArray)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(WebGLUnsignedShortArray, nsIWebGLUnsignedShortArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLUnsignedShortArray)
+  DOM_CLASSINFO_MAP_BEGIN(CanvasUnsignedShortArray, nsICanvasUnsignedShortArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasUnsignedShortArray)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(WebGLIntArray, nsIWebGLIntArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLIntArray)
+  DOM_CLASSINFO_MAP_BEGIN(CanvasIntArray, nsICanvasIntArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasIntArray)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(WebGLUnsignedIntArray, nsIWebGLUnsignedIntArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLUnsignedIntArray)
+  DOM_CLASSINFO_MAP_BEGIN(CanvasUnsignedIntArray, nsICanvasUnsignedIntArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasUnsignedIntArray)
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
