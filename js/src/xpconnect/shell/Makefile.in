@@ -49,7 +49,7 @@ PROGRAM		= xpcshell$(BIN_SUFFIX)
 
 CPPSRCS		= xpcshell.cpp
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS += xpcshellMacUtils.mm
 endif
 

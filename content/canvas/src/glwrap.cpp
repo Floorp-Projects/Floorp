@@ -51,6 +51,7 @@
 #define MAX_SYMBOL_NAMES 5
 
 #ifdef MOZ_X11
+#define GLX_GLXEXT_LEGACY
 #include <GL/glx.h>
 #endif
 

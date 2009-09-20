@@ -53,7 +53,7 @@ endif
 ifneq (,$(filter WINCE WINNT,$(OS_ARCH)))
 CPPSRCS = nsWindowsShellService.cpp
 else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS = nsMacShellService.cpp
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)

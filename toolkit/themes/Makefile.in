@@ -52,7 +52,7 @@ include $(DEPTH)/config/autoconf.mk
 #                         PMStripe overrides (toolkit/themes/pmstripe)
 # faststripe              Winstripe + faststripe (no native theme components)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 DIRS	= pinstripe
 else
 

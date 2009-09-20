@@ -53,7 +53,7 @@ NO_PKG_FILES = \
 # If we're on mac, we want to make the .pkg first, in the mac/
 # directory. Then packager.mk can put it into a DMG
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 DIRS += mac
 _APPNAME = $(PKG_BASENAME).pkg
 PKG_SKIP_STRIP = 1

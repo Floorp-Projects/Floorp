@@ -78,7 +78,7 @@ AUTOCFG_JS_EXPORTS = \
 		$(srcdir)/prefcalls.js \
 		$(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 AUTOCFG_JS_EXPORTS += $(srcdir)/mac/platform.js
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT), windows)
