@@ -107,9 +107,9 @@ NS_IMETHODIMP WebGLContext::name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6) { \
 //  WebGL API
 //
 
-/* nsIWebGLFloatArray createFloatArray (); */
+/* nsICanvasFloatArray createFloatArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateFloatArray(nsIWebGLFloatArray **retval)
+WebGLContext::CreateFloatArray(nsICanvasFloatArray **retval)
 {
     NativeJSContext js;
 
@@ -134,9 +134,9 @@ WebGLContext::CreateFloatArray(nsIWebGLFloatArray **retval)
     return NS_OK;
 }
 
-/* nsIWebGLByteArray createByteArray (); */
+/* nsICanvasByteArray createByteArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateByteArray(nsIWebGLByteArray **retval)
+WebGLContext::CreateByteArray(nsICanvasByteArray **retval)
 {
     NativeJSContext js;
 
@@ -160,9 +160,9 @@ WebGLContext::CreateByteArray(nsIWebGLByteArray **retval)
     return NS_OK;
 }
 
-/* nsIWebGLUnsignedByteArray createUnsignedByteArray (); */
+/* nsICanvasUnsignedByteArray createUnsignedByteArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateUnsignedByteArray(nsIWebGLUnsignedByteArray **retval)
+WebGLContext::CreateUnsignedByteArray(nsICanvasUnsignedByteArray **retval)
 {
     NativeJSContext js;
 
@@ -186,9 +186,9 @@ WebGLContext::CreateUnsignedByteArray(nsIWebGLUnsignedByteArray **retval)
     return NS_OK;
 }
 
-/* nsIWebGLShortArray createShortArray (); */
+/* nsICanvasShortArray createShortArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateShortArray(nsIWebGLShortArray **retval)
+WebGLContext::CreateShortArray(nsICanvasShortArray **retval)
 {
     NativeJSContext js;
 
@@ -212,9 +212,9 @@ WebGLContext::CreateShortArray(nsIWebGLShortArray **retval)
     return NS_OK;
 }
 
-/* nsIWebGLUnsignedShortArray createUnsignedShortArray (); */
+/* nsICanvasUnsignedShortArray createUnsignedShortArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateUnsignedShortArray(nsIWebGLUnsignedShortArray **retval)
+WebGLContext::CreateUnsignedShortArray(nsICanvasUnsignedShortArray **retval)
 {
     NativeJSContext js;
 
@@ -239,9 +239,9 @@ WebGLContext::CreateUnsignedShortArray(nsIWebGLUnsignedShortArray **retval)
 }
 
 
-/* nsIWebGLUnsignedByteArray createUnsignedByteArray (); */
+/* nsICanvasUnsignedIntArray createUnsignedIntArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateIntArray(nsIWebGLIntArray **retval)
+WebGLContext::CreateIntArray(nsICanvasIntArray **retval)
 {
     NativeJSContext js;
 
@@ -265,9 +265,9 @@ WebGLContext::CreateIntArray(nsIWebGLIntArray **retval)
     return NS_OK;
 }
 
-/* nsIWebGLUnsignedByteArray createUnsignedByteArray (); */
+/* nsICanvasUnsignedIntArray createUnsignedIntArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateUnsignedIntArray(nsIWebGLUnsignedIntArray **retval)
+WebGLContext::CreateUnsignedIntArray(nsICanvasUnsignedIntArray **retval)
 {
     NativeJSContext js;
 
@@ -508,7 +508,7 @@ GL_SAME_METHOD_2(BlendFunc, BlendFunc, PRUint32, PRUint32)
 GL_SAME_METHOD_4(BlendFuncSeparate, BlendFuncSeparate, PRUint32, PRUint32, PRUint32, PRUint32)
 
 NS_IMETHODIMP
-WebGLContext::BufferData(GLenum target, nsIWebGLArray *na, GLenum usage)
+WebGLContext::BufferData(GLenum target, nsICanvasArray *na, GLenum usage)
 {
     WebGLBuffer *boundBuffer = NULL;
 
@@ -537,7 +537,7 @@ WebGLContext::BufferData(GLenum target, nsIWebGLArray *na, GLenum usage)
 }
 
 NS_IMETHODIMP
-WebGLContext::BufferSubData(GLenum target, GLuint offset, nsIWebGLArray *na)
+WebGLContext::BufferSubData(GLenum target, GLuint offset, nsICanvasArray *na)
 {
     WebGLBuffer *boundBuffer = NULL;
 
@@ -1746,9 +1746,9 @@ WebGLContext::GetTexParameterf(GLenum target, GLenum pname, GLfloat *retval)
     return NS_OK;
 }
 
-/* nsIWebGLArray getTexParameterfv (in GLenum target, in GLenum pname); */
+/* nsICanvasArray getTexParameterfv (in GLenum target, in GLenum pname); */
 NS_IMETHODIMP
-WebGLContext::GetTexParameterfv(GLenum target, GLenum pname, nsIWebGLArray **retval)
+WebGLContext::GetTexParameterfv(GLenum target, GLenum pname, nsICanvasArray **retval)
 {
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -1803,9 +1803,9 @@ WebGLContext::GetTexParameteri(GLenum target, GLenum pname, GLint *retval)
     return NS_OK;
 }
 
-/* nsIWebGLArray getTexParameteriv (in GLenum target, in GLenum pname); */
+/* nsICanvasArray getTexParameteriv (in GLenum target, in GLenum pname); */
 NS_IMETHODIMP
-WebGLContext::GetTexParameteriv(GLenum target, GLenum pname, nsIWebGLArray **retval)
+WebGLContext::GetTexParameteriv(GLenum target, GLenum pname, nsICanvasArray **retval)
 {
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -1881,9 +1881,9 @@ WebGLContext::GetUniformf(nsIWebGLProgram *prog, GLint location, GLfloat *retval
 
     return NS_OK;
 }
-/* nsIWebGLArray getUniformfv (in nsIWebGLProgram program, in GLint location); */
+/* nsICanvasArray getUniformfv (in nsIWebGLProgram program, in GLint location); */
 NS_IMETHODIMP
-WebGLContext::GetUniformfv(nsIWebGLProgram *program, GLint location, nsIWebGLArray **retval)
+WebGLContext::GetUniformfv(nsIWebGLProgram *program, GLint location, nsICanvasArray **retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1894,9 +1894,9 @@ WebGLContext::GetUniformi(nsIWebGLProgram *program, GLint location, GLint *retva
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsIWebGLArray getUniformiv (in nsIWebGLProgram program, in GLint location); */
+/* nsICanvasArray getUniformiv (in nsIWebGLProgram program, in GLint location); */
 NS_IMETHODIMP
-WebGLContext::GetUniformiv(nsIWebGLProgram *program, GLint location, nsIWebGLArray **retval)
+WebGLContext::GetUniformiv(nsIWebGLProgram *program, GLint location, nsICanvasArray **retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1957,7 +1957,7 @@ WebGLContext::GetVertexAttribf(GLuint index, GLenum pname, GLfloat *retval)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetVertexAttribfv(GLuint index, GLenum pname, nsIWebGLArray **retval)
+WebGLContext::GetVertexAttribfv(GLuint index, GLenum pname, nsICanvasArray **retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -2005,7 +2005,7 @@ WebGLContext::GetVertexAttribi(GLuint index, GLenum pname, GLint *retval)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetVertexAttribiv(GLuint index, GLenum pname, nsIWebGLArray **retval)
+WebGLContext::GetVertexAttribiv(GLuint index, GLenum pname, nsICanvasArray **retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -2402,7 +2402,7 @@ GL_SAME_METHOD_5(Uniform4f, Uniform4f, GLint, GLfloat, GLfloat, GLfloat, GLfloat
 // one uint arg followed by an array of c elements of glTypeConst.
 #define GL_SIMPLE_ARRAY_METHOD(glname, name, c, glTypeConst, ptrType)             \
 NS_IMETHODIMP                                                                     \
-WebGLContext::name(GLint idx, nsIWebGLArray *v)                                   \
+WebGLContext::name(GLint idx, nsICanvasArray *v)                                   \
 {                                                                                 \
     NativeJSContext js;                                                           \
     if (NS_FAILED(js.error))                                                      \
@@ -2450,7 +2450,7 @@ WebGLContext::name(GLint idx, nsIWebGLArray *v)                                 
 
 #define GL_SIMPLE_ARRAY_METHOD_NO_COUNT(glname, name, c, glTypeConst, ptrType)    \
 NS_IMETHODIMP                                                                     \
-WebGLContext::name(GLuint idx, nsIWebGLArray *v)                                  \
+WebGLContext::name(GLuint idx, nsICanvasArray *v)                                  \
 {                                                                                 \
     NativeJSContext js;                                                           \
     if (NS_FAILED(js.error))                                                      \
@@ -2498,7 +2498,7 @@ WebGLContext::name(GLuint idx, nsIWebGLArray *v)                                
 
 #define GL_SIMPLE_MATRIX_METHOD(glname, name, c, glTypeConst, ptrType)            \
 NS_IMETHODIMP                                                                     \
-WebGLContext::name(GLint location, GLboolean transpose, nsIWebGLArray *value)     \
+WebGLContext::name(GLint location, GLboolean transpose, nsICanvasArray *value)     \
 {                                                                                 \
     NativeJSContext js;                                                           \
     if (NS_FAILED(js.error))                                                      \
@@ -2680,9 +2680,9 @@ WebGLContext::GetShaderi(nsIWebGLShader *shobj, GLenum pname, GLint *_retval)
     return NS_OK;
 }
 
-/* nsIWebGLIntArray getShaderiv (in nsIWebGLShader shader, in GLenum pname); */
+/* nsICanvasIntArray getShaderiv (in nsIWebGLShader shader, in GLenum pname); */
 NS_IMETHODIMP
-WebGLContext::GetShaderiv(nsIWebGLShader *shader, GLenum pname, nsIWebGLIntArray **retval)
+WebGLContext::GetShaderiv(nsIWebGLShader *shader, GLenum pname, nsICanvasIntArray **retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
