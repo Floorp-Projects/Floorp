@@ -7932,7 +7932,7 @@ TraceRecorder::incElem(jsint incr, bool pre)
     LIns* v_ins;
     LIns* addr_ins;
 
-    if (!JSVAL_IS_OBJECT(l) || !JSVAL_IS_INT(r) ||
+    if (JSVAL_IS_PRIMITIVE(l) || !JSVAL_IS_INT(r) ||
         !guardDenseArray(JSVAL_TO_OBJECT(l), get(&l))) {
         return JSRS_STOP;
     }
