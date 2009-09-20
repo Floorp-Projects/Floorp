@@ -421,84 +421,84 @@ NS_IMPL_ADDREF(WebGLFloatArray)
 NS_IMPL_RELEASE(WebGLFloatArray)
 
 NS_INTERFACE_MAP_BEGIN(WebGLFloatArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLFloatArray)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLFloatArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasFloatArray)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasFloatArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLFloatArray)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasFloatArray)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(WebGLByteArray)
 NS_IMPL_RELEASE(WebGLByteArray)
 
 NS_INTERFACE_MAP_BEGIN(WebGLByteArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLByteArray)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLByteArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasByteArray)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasByteArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLByteArray)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasByteArray)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(WebGLUnsignedByteArray)
 NS_IMPL_RELEASE(WebGLUnsignedByteArray)
 
 NS_INTERFACE_MAP_BEGIN(WebGLUnsignedByteArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLUnsignedByteArray)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLUnsignedByteArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasUnsignedByteArray)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasUnsignedByteArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLUnsignedByteArray)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasUnsignedByteArray)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(WebGLShortArray)
 NS_IMPL_RELEASE(WebGLShortArray)
 
 NS_INTERFACE_MAP_BEGIN(WebGLShortArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLShortArray)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLShortArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasShortArray)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasShortArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLShortArray)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasShortArray)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(WebGLUnsignedShortArray)
 NS_IMPL_RELEASE(WebGLUnsignedShortArray)
 
 NS_INTERFACE_MAP_BEGIN(WebGLUnsignedShortArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLUnsignedShortArray)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLUnsignedShortArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasUnsignedShortArray)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasUnsignedShortArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLUnsignedShortArray)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasUnsignedShortArray)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(WebGLIntArray)
 NS_IMPL_RELEASE(WebGLIntArray)
 
 NS_INTERFACE_MAP_BEGIN(WebGLIntArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLIntArray)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLIntArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasIntArray)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasIntArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLIntArray)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasIntArray)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(WebGLUnsignedIntArray)
 NS_IMPL_RELEASE(WebGLUnsignedIntArray)
 
 NS_INTERFACE_MAP_BEGIN(WebGLUnsignedIntArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLArray)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLUnsignedIntArray)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebGLUnsignedIntArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasArray)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasUnsignedIntArray)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasUnsignedIntArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLUnsignedIntArray)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasUnsignedIntArray)
 NS_INTERFACE_MAP_END
 
 
 nsresult
 NS_NewCanvasFloatArray(nsISupports **aResult)
 {
-    nsIWebGLFloatArray *wgfa = new WebGLFloatArray();
+    nsICanvasFloatArray *wgfa = new WebGLFloatArray();
     if (!wgfa)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -581,7 +581,7 @@ NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeCount()
 nsresult
 NS_NewCanvasByteArray(nsISupports **aResult)
 {
-    nsIWebGLByteArray *wgba = new WebGLByteArray();
+    nsICanvasByteArray *wgba = new WebGLByteArray();
     if (!wgba)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -662,7 +662,7 @@ NS_IMETHODIMP_(PRUint32) WebGLByteArray::NativeCount()
 nsresult
 NS_NewCanvasUnsignedByteArray(nsISupports **aResult)
 {
-    nsIWebGLUnsignedByteArray *wguba = new WebGLUnsignedByteArray();
+    nsICanvasUnsignedByteArray *wguba = new WebGLUnsignedByteArray();
     if (!wguba)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -743,7 +743,7 @@ NS_IMETHODIMP_(PRUint32) WebGLUnsignedByteArray::NativeCount()
 nsresult
 NS_NewCanvasShortArray(nsISupports **aResult)
 {
-    nsIWebGLShortArray *wgsa = new WebGLShortArray();
+    nsICanvasShortArray *wgsa = new WebGLShortArray();
     if (!wgsa)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -825,7 +825,7 @@ NS_IMETHODIMP_(PRUint32) WebGLShortArray::NativeCount()
 nsresult
 NS_NewCanvasUnsignedShortArray(nsISupports **aResult)
 {
-    nsIWebGLUnsignedShortArray *wgusa = new WebGLUnsignedShortArray();
+    nsICanvasUnsignedShortArray *wgusa = new WebGLUnsignedShortArray();
     if (!wgusa)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -906,7 +906,7 @@ NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeCount()
 nsresult
 NS_NewCanvasIntArray(nsISupports **aResult)
 {
-    nsIWebGLIntArray *wgia = new WebGLIntArray();
+    nsICanvasIntArray *wgia = new WebGLIntArray();
     if (!wgia)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -988,7 +988,7 @@ NS_IMETHODIMP_(PRUint32) WebGLIntArray::NativeCount()
 nsresult
 NS_NewCanvasUnsignedIntArray(nsISupports **aResult)
 {
-    nsIWebGLUnsignedIntArray *wguia = new WebGLUnsignedIntArray();
+    nsICanvasUnsignedIntArray *wguia = new WebGLUnsignedIntArray();
     if (!wguia)
         return NS_ERROR_OUT_OF_MEMORY;
 
