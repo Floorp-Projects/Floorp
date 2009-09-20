@@ -244,20 +244,6 @@ var gSecurityPane = {
     document.documentElement.openWindow("Toolkit:PasswordManager",
                                         "chrome://passwordmgr/content/passwordManager.xul",
                                         "", null);
-  },
-
-
-  // WARNING MESSAGES
-
-  /**
-   * Displays the security warnings dialog which allows changing the
-   * "submitting unencrypted information", "moving from secure to unsecure",
-   * etc. dialogs that every user immediately disables when he sees them.
-   */
-  showWarningMessageSettings: function ()
-  {
-    document.documentElement.openSubDialog("chrome://browser/content/preferences/securityWarnings.xul",
-                                           "", null);
   }
 
 };

@@ -697,8 +697,10 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
 
             if isMethod:
                 code = customMethodCall['code']
+            elif isGetter:
+                code = customMethodCall['getter_code']
             else:
-                code = customMethodCall['getter_code' if isGetter else 'setter_code']
+                code = customMethodCall['setter_code']
             stubName = templateName
     else:
         callTemplate = ""

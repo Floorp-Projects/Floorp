@@ -30,8 +30,6 @@ browser.jar:
 *   content/browser/preferences/sanitize.xul
 *   content/browser/preferences/security.xul
 *   content/browser/preferences/security.js
-*   content/browser/preferences/securityWarnings.xul
-*   content/browser/preferences/securityWarnings.js
 *   content/browser/preferences/selectBookmark.xul
 *   content/browser/preferences/selectBookmark.js
 *   content/browser/preferences/tabs.xul

@@ -354,12 +354,10 @@ enum nsDOMClassInfoID {
 
   // Canvas
   eDOMClassInfo_HTMLCanvasElement_id,
-#ifdef MOZ_ENABLE_CANVAS
   eDOMClassInfo_CanvasRenderingContext2D_id,
   eDOMClassInfo_CanvasGradient_id,
   eDOMClassInfo_CanvasPattern_id,
   eDOMClassInfo_TextMetrics_id,
-#endif
 
   // SmartCard Events
   eDOMClassInfo_SmartCardEvent_id,
@@ -463,7 +461,7 @@ enum nsDOMClassInfoID {
 
   eDOMClassInfo_Worker_id,
 
-#ifdef MOZ_ENABLE_CANVAS3D
+  // WebGL
   eDOMClassInfo_CanvasRenderingContextWebGL_id,
   eDOMClassInfo_WebGLBuffer_id,
   eDOMClassInfo_WebGLTexture_id,
@@ -472,6 +470,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_WebGLFramebuffer_id,
   eDOMClassInfo_WebGLRenderbuffer_id,
 
+  // WebGL Buffers
   eDOMClassInfo_WebGLFloatArray_id,
   eDOMClassInfo_WebGLByteArray_id,
   eDOMClassInfo_WebGLUnsignedByteArray_id,
@@ -479,7 +478,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_WebGLUnsignedShortArray_id,
   eDOMClassInfo_WebGLIntArray_id,
   eDOMClassInfo_WebGLUnsignedIntArray_id,
-#endif
 
   // This one better be the last one in this list
   eDOMClassInfoIDCount
