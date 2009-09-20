@@ -94,13 +94,6 @@ nsFrameList::SetFrames(nsIFrame* aFrameList)
 }
 
 void
-nsFrameList::AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList)
-{
-  nsFrameList temp(aFrameList, nsLayoutUtils::GetLastSibling(aFrameList));
-  AppendFrames(aParent, temp);
-}
-
-void
 nsFrameList::RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint)
 {
   NS_PRECONDITION(aFrame, "null ptr");
@@ -185,15 +178,6 @@ nsFrameList::DestroyFrameIfPresent(nsIFrame* aFrame)
     return PR_TRUE;
   }
   return PR_FALSE;
-}
-
-void
-nsFrameList::InsertFrames(nsIFrame* aParent,
-                          nsIFrame* aPrevSibling,
-                          nsIFrame* aFrameList)
-{
-  nsFrameList temp(aFrameList, nsLayoutUtils::GetLastSibling(aFrameList));
-  InsertFrames(aParent, aPrevSibling, temp);
 }
 
 nsFrameList::Slice
