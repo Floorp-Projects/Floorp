@@ -2400,79 +2400,138 @@ GL_SAME_METHOD_4(Uniform3f, Uniform3f, GLint, GLfloat, GLfloat, GLfloat)
 GL_SAME_METHOD_5(Uniform4f, Uniform4f, GLint, GLfloat, GLfloat, GLfloat, GLfloat)
 
 // one uint arg followed by an array of c elements of glTypeConst.
-#define GL_SIMPLE_ARRAY_METHOD(glname, name, c, glTypeConst, ptrType)   \
-NS_IMETHODIMP                                                           \
-WebGLContext::name(GLint idx, nsIWebGLArray *v)                         \
-{                                                                       \
-    NativeJSContext js;                                                 \
-    if (NS_FAILED(js.error))                                            \
-        return js.error;                                                \
-    jsuint index;                                                       \
-    JSObject *arrayObj;                                                 \
-    jsuint arrayLen;                                                    \
-    if (js.argc != 2 ||                                                 \
-        !::JS_ValueToECMAUint32(js.ctx, js.argv[0], &index) ||          \
-        !NativeJSContext::JSValToJSArrayAndLength(js.ctx, js.argv[1], &arrayObj, &arrayLen)) \
-        return NS_ERROR_INVALID_ARG;                                    \
-    if (arrayLen % c != 0) {                                            \
-        return ErrorMessage(#name ": array length not divisible by " #c); \
-    }                                                                   \
-    SimpleBuffer sbuffer(glTypeConst, c, js.ctx, arrayObj, arrayLen);   \
-    if (!sbuffer.Valid())                                               \
-        return NS_ERROR_FAILURE;                                        \
-    MakeContextCurrent();                                               \
-    gl->f##glname(index, arrayLen / c, ( ptrType *)sbuffer.data);       \
-    return NS_OK;                                                       \
+#define GL_SIMPLE_ARRAY_METHOD(glname, name, c, glTypeConst, ptrType)             \
+NS_IMETHODIMP                                                                     \
+WebGLContext::name(GLint idx, nsIWebGLArray *v)                                   \
+{                                                                                 \
+    NativeJSContext js;                                                           \
+    if (NS_FAILED(js.error))                                                      \
+        return js.error;                                                          \
+    JSObject *arrayObj;                                                           \
+    jsuint arrayLen;                                                              \
+    if (js.argc != 2)                                                             \
+        return NS_ERROR_INVALID_ARG;                                              \
+    if (NativeJSContext::JSValToJSArrayAndLength(js.ctx, js.argv[1], &arrayObj, &arrayLen)) { \
+        if (arrayLen % c != 0) {                                                  \
+            return ErrorMessage(#name ": array length not divisible by " #c);     \
+        }                                                                         \
+        SimpleBuffer sbuffer(glTypeConst, c, js.ctx, arrayObj, arrayLen);         \
+        if (!sbuffer.Valid())                                                     \
+            return NS_ERROR_FAILURE;                                              \
+        MakeContextCurrent();                                                     \
+        gl->f##glname(idx, arrayLen / c, ( ptrType *)sbuffer.data);               \
+    } else {                                                                      \
+        if (glTypeConst == LOCAL_GL_INT) {                                        \
+            if (v->NativeType() != LOCAL_GL_INT) {                                \
+                return ErrorMessage(#name ": arg not an array");                  \
+            }                                                                     \
+            WebGLIntArray *wga = static_cast<WebGLIntArray*>(v);                  \
+            if (wga->NativeCount() % c != 0) {                                    \
+                return ErrorMessage(#name ": array length not divisible by " #c); \
+            }                                                                     \
+            MakeContextCurrent();                                                 \
+            gl->f##glname(idx, wga->NativeCount() / c, ( ptrType *)wga->NativePointer()); \
+        } else if (glTypeConst == LOCAL_GL_FLOAT) {                               \
+            if (v->NativeType() != LOCAL_GL_FLOAT) {                              \
+                return ErrorMessage(#name ": arg not an array");                  \
+            }                                                                     \
+            WebGLFloatArray *wga = static_cast<WebGLFloatArray*>(v);              \
+            if (wga->NativeCount() % c != 0) {                                    \
+                return ErrorMessage(#name ": array length not divisible by " #c); \
+            }                                                                     \
+            MakeContextCurrent();                                                 \
+            gl->f##glname(idx, wga->NativeCount() / c, ( ptrType *)wga->NativePointer()); \
+        } else {                                                                  \
+            return ErrorMessage("Unhandled glTypeConst"); /* need compiler fail */\
+        }                                                                         \
+    }                                                                             \
+    return NS_OK;                                                                 \
 }
 
-#define GL_SIMPLE_ARRAY_METHOD_NO_COUNT(glname, name, c, glTypeConst, ptrType) \
-NS_IMETHODIMP                                                           \
-WebGLContext::name(GLuint idx, nsIWebGLArray *v)                        \
-{                                                                       \
-    NativeJSContext js;                                                 \
-    if (NS_FAILED(js.error))                                            \
-        return js.error;                                                \
-    jsuint index;                                                       \
-    JSObject *arrayObj;                                                 \
-    jsuint arrayLen;                                                    \
-    if (js.argc != 2 ||                                                 \
-        !::JS_ValueToECMAUint32(js.ctx, js.argv[0], &index) ||          \
-        !NativeJSContext::JSValToJSArrayAndLength(js.ctx, js.argv[1], &arrayObj, &arrayLen)) \
-        return NS_ERROR_INVALID_ARG;                                    \
-    if (arrayLen != c) {                                                \
-        return ErrorMessage(#name ": array wrong size, expected " #c);  \
-    }                                                                   \
-    SimpleBuffer sbuffer(glTypeConst, c, js.ctx, arrayObj, arrayLen);   \
-    if (!sbuffer.Valid())                                               \
-        return NS_ERROR_FAILURE;                                        \
-    MakeContextCurrent();                                               \
-    gl->f##glname(index, ( ptrType *)sbuffer.data);                     \
-    return NS_OK;                                                       \
+#define GL_SIMPLE_ARRAY_METHOD_NO_COUNT(glname, name, c, glTypeConst, ptrType)    \
+NS_IMETHODIMP                                                                     \
+WebGLContext::name(GLuint idx, nsIWebGLArray *v)                                  \
+{                                                                                 \
+    NativeJSContext js;                                                           \
+    if (NS_FAILED(js.error))                                                      \
+        return js.error;                                                          \
+    JSObject *arrayObj;                                                           \
+    jsuint arrayLen;                                                              \
+    if (js.argc != 2)                                                             \
+        return NS_ERROR_INVALID_ARG;                                              \
+    if (NativeJSContext::JSValToJSArrayAndLength(js.ctx, js.argv[1], &arrayObj, &arrayLen)) { \
+        if (arrayLen % c != 0) {                                                  \
+            return ErrorMessage(#name ": array wrong size, expected " #c);        \
+        }                                                                         \
+        SimpleBuffer sbuffer(glTypeConst, c, js.ctx, arrayObj, arrayLen);         \
+        if (!sbuffer.Valid())                                                     \
+            return NS_ERROR_FAILURE;                                              \
+        MakeContextCurrent();                                                     \
+        gl->f##glname(idx, ( ptrType *)sbuffer.data);                             \
+    } else {                                                                      \
+        if (glTypeConst == LOCAL_GL_INT) {                                        \
+            if (v->NativeType() != LOCAL_GL_INT) {                                \
+                return ErrorMessage(#name ": arg not an array");                  \
+            }                                                                     \
+            WebGLIntArray *wga = static_cast<WebGLIntArray*>(v);                  \
+            if (wga->NativeCount() % c != 0) {                                    \
+                return ErrorMessage(#name ": array wrong size %d, expected " #c, wga->NativeCount()); \
+            }                                                                     \
+            MakeContextCurrent();                                                 \
+            gl->f##glname(idx, ( ptrType *)wga->NativePointer());                 \
+        } else if (glTypeConst == LOCAL_GL_FLOAT) {                               \
+            if (v->NativeType() != LOCAL_GL_FLOAT) {                              \
+                return ErrorMessage(#name ": arg not an array");                  \
+            }                                                                     \
+            WebGLFloatArray *wga = static_cast<WebGLFloatArray*>(v);              \
+            if (wga->NativeCount() % c != 0) {                                    \
+                return ErrorMessage(#name ": array wrong size %d, expected " #c, wga->NativeCount()); \
+            }                                                                     \
+            MakeContextCurrent();                                                 \
+            gl->f##glname(idx, ( ptrType *)wga->NativePointer());                 \
+        } else {                                                                  \
+            return ErrorMessage("Unhandled glTypeConst"); /* need compiler fail */\
+        }                                                                         \
+    }                                                                             \
+    return NS_OK;                                                                 \
 }
 
-#define GL_SIMPLE_MATRIX_METHOD(glname, name, c, glTypeConst, ptrType)  \
-NS_IMETHODIMP                                                           \
-WebGLContext::name(GLint location, GLboolean transpose, nsIWebGLArray *value)   \
-{                                                                       \
-    NativeJSContext js;                                                 \
-    if (NS_FAILED(js.error))                                            \
-        return js.error;                                                \
-    jsuint index;                                                       \
-    JSObject *arrayObj;                                                 \
-    jsuint arrayLen;                                                    \
-    if (js.argc != 3 ||                                                 \
-        !::JS_ValueToECMAUint32(js.ctx, js.argv[0], &index) ||          \
-        !NativeJSContext::JSValToJSArrayAndLength(js.ctx, js.argv[2], &arrayObj, &arrayLen)) \
-        return NS_ERROR_INVALID_ARG;                                    \
-    if (arrayLen != c) {                                                \
-        return ErrorMessage(#name ": array wrong size, expected " #c);  \
-    }                                                                   \
-    SimpleBuffer sbuffer(glTypeConst, c, js.ctx, arrayObj, arrayLen);   \
-    if (!sbuffer.Valid())                                               \
-        return NS_ERROR_FAILURE;                                        \
-    MakeContextCurrent();                                               \
-    gl->f##glname(index, arrayLen / c, transpose, ( ptrType *)sbuffer.data); \
-    return NS_OK;                                                       \
+#define GL_SIMPLE_MATRIX_METHOD(glname, name, c, glTypeConst, ptrType)            \
+NS_IMETHODIMP                                                                     \
+WebGLContext::name(GLint location, GLboolean transpose, nsIWebGLArray *value)     \
+{                                                                                 \
+    NativeJSContext js;                                                           \
+    if (NS_FAILED(js.error))                                                      \
+        return js.error;                                                          \
+    JSObject *arrayObj;                                                           \
+    jsuint arrayLen;                                                              \
+    if (js.argc != 3)                                                             \
+        return NS_ERROR_INVALID_ARG;                                              \
+    if (NativeJSContext::JSValToJSArrayAndLength(js.ctx, js.argv[2], &arrayObj, &arrayLen)) { \
+        if (arrayLen % c != 0) {                                                  \
+            return ErrorMessage(#name ": array wrong size, expected " #c);        \
+        }                                                                         \
+        SimpleBuffer sbuffer(glTypeConst, c, js.ctx, arrayObj, arrayLen);         \
+        if (!sbuffer.Valid())                                                     \
+            return NS_ERROR_FAILURE;                                              \
+        MakeContextCurrent();                                                     \
+        gl->f##glname(location, arrayLen / c, transpose, ( ptrType *)sbuffer.data); \
+    } else {                                                                      \
+        if (glTypeConst == LOCAL_GL_FLOAT) {                                      \
+            if (value->NativeType() != LOCAL_GL_FLOAT) {                          \
+                return ErrorMessage(#name ": arg not an array");                  \
+            }                                                                     \
+            WebGLFloatArray *wga = static_cast<WebGLFloatArray*>(value);          \
+            if (wga->NativeCount() % c != 0) {                                    \
+                return ErrorMessage(#name ": array wrong size %d, expected " #c, wga->NativeCount());     \
+            }                                                                     \
+            MakeContextCurrent();                                                 \
+            gl->f##glname(location, wga->NativeCount() / c, transpose, ( ptrType *)wga->NativePointer()); \
+        } else {                                                                  \
+            return ErrorMessage("Unhandled glTypeConst"); /* need compiler fail */\
+        }                                                                         \
+    }                                                                             \
+    return NS_OK;                                                                 \
 }
 
 GL_SIMPLE_ARRAY_METHOD(Uniform1iv, Uniform1iv, 1, LOCAL_GL_INT, GLint)
