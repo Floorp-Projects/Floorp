@@ -76,7 +76,6 @@ class nsHtml5TreeBuilder
   protected:
     nsHtml5Tokenizer* tokenizer;
   private:
-    nsHtml5TreeBuilder* documentModeHandler;
     PRBool scriptingEnabled;
     PRBool needToDropLF;
     PRBool fragment;
@@ -184,7 +183,6 @@ class nsHtml5TreeBuilder
     nsIContent* createHtmlElementSetAsRoot(nsHtml5HtmlAttributes* attributes);
     void detachFromParent(nsIContent* element);
     PRBool hasChildren(nsIContent* element);
-    nsIContent* shallowClone(nsIContent* element);
     void appendElement(nsIContent* child, nsIContent* newParent);
     void appendChildrenToNewParent(nsIContent* oldParent, nsIContent* newParent);
     void insertFosterParentedChild(nsIContent* child, nsIContent* table, nsIContent* stackParent);
