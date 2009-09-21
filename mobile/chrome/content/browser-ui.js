@@ -408,7 +408,7 @@ var BrowserUI = {
 
     switch (aState) {
       case TOOLBARSTATE_LOADED:
-        if (icons.getAttribute("mode" != "edit"))
+        if (icons.getAttribute("mode") != "edit")
           icons.setAttribute("mode", "view");
         
         if (!this._faviconLink)
@@ -419,7 +419,7 @@ var BrowserUI = {
         break;
 
       case TOOLBARSTATE_LOADING:
-        if (icons.getAttribute("mode" != "edit"))
+        if (icons.getAttribute("mode") != "edit")
           icons.setAttribute("mode", "loading");
 
         this._favicon.src = "";
