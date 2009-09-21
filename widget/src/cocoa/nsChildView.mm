@@ -653,6 +653,57 @@ static CFArrayRef CreateAllKeyboardLayoutList()
 
 #endif // LEOPARD_AND_LATER
 
+#if defined(DEBUG) && defined(PR_LOGGING)
+
+static void DebugPrintAllKeyboardLayouts()
+{
+#ifdef LEOPARD_AND_LATER
+  CFArrayRef list = CreateAllKeyboardLayoutList();
+  PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("Keyboard layout configuration:"));
+  CFIndex idx = ::CFArrayGetCount(list);
+  nsTISInputSource tis;
+  for (CFIndex i = 0; i < idx; ++i) {
+    TISInputSourceRef inputSource = static_cast<TISInputSourceRef>(
+      const_cast<void *>(::CFArrayGetValueAtIndex(list, i)));
+    tis.InitByTISInputSourceRef(inputSource);
+    nsAutoString name;
+    tis.GetLocalizedName(name);
+    nsAutoString isid;
+    tis.GetInputSourceID(isid);
+    const UCKeyboardLayout* uchr = tis.GetUCKeyboardLayout();
+    PRBool isASCII = tis.IsASCIICapable();
+    PR_LOG(sCocoaLog, PR_LOG_ALWAYS,
+           ("  %s\t<%s>%s%s\n",
+            NS_ConvertUTF16toUTF8(name).get(),
+            NS_ConvertUTF16toUTF8(isid).get(),
+            isASCII ? "" : "\t(Isn't ASCII capable)",
+            uchr ? "" : "\t(uchr is NOT AVAILABLE)"));
+  }
+  ::CFRelease(list);
+#else
+  CFIndex idx;
+  KLGetKeyboardLayoutCount(&idx);
+  PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("Keyboard layout configuration:"));
+  for (CFIndex i = 0; i < idx; ++i) {
+    KeyboardLayoutRef curKL;
+    if (KLGetKeyboardLayoutAtIndex(i, &curKL) == noErr) {
+      CFStringRef name;
+      if (KLGetKeyboardLayoutProperty(curKL, kKLName, (const void**)&name) == noErr) {
+        int idn;
+        KLGetKeyboardLayoutProperty(curKL, kKLIdentifier, (const void**)&idn);
+        int kind;
+        KLGetKeyboardLayoutProperty(curKL, kKLKind, (const void**)&kind);
+        char buf[256];
+        CFStringGetCString(name, buf, 256, kCFStringEncodingASCII);
+        PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("  %d,%s,%d\n", idn, buf, kind));
+      }
+    }
+  }
+#endif // LEOPARD_AND_LATER
+}
+
+#endif // defined(DEBUG) && defined(PR_LOGGING)
+
 #pragma mark -
 
 nsChildView::nsChildView() : nsBaseWidget()
@@ -668,49 +719,9 @@ nsChildView::nsChildView() : nsBaseWidget()
 #ifdef PR_LOGGING
   if (!sCocoaLog) {
     sCocoaLog = PR_NewLogModule("nsCocoaWidgets");
-#ifdef LEOPARD_AND_LATER
-    CFArrayRef list = CreateAllKeyboardLayoutList();
-    PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("Keyboard layout configuration:"));
-    CFIndex idx = ::CFArrayGetCount(list);
-    nsTISInputSource tis;
-    for (CFIndex i = 0; i < idx; ++i) {
-      TISInputSourceRef inputSource = static_cast<TISInputSourceRef>(
-        const_cast<void *>(::CFArrayGetValueAtIndex(list, i)));
-      tis.InitByTISInputSourceRef(inputSource);
-      nsAutoString name;
-      tis.GetLocalizedName(name);
-      nsAutoString isid;
-      tis.GetInputSourceID(isid);
-      const UCKeyboardLayout* uchr = tis.GetUCKeyboardLayout();
-      PRBool isASCII = tis.IsASCIICapable();
-      PR_LOG(sCocoaLog, PR_LOG_ALWAYS,
-             ("  %s\t<%s>%s%s\n",
-              NS_ConvertUTF16toUTF8(name).get(),
-              NS_ConvertUTF16toUTF8(isid).get(),
-              isASCII ? "" : "\t(Isn't ASCII capable)",
-              uchr ? "" : "\t(uchr is NOT AVAILABLE)"));
-    }
-    ::CFRelease(list);
-#else
-    CFIndex idx;
-    KLGetKeyboardLayoutCount(&idx);
-    PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("Keyboard layout configuration:"));
-    for (CFIndex i = 0; i < idx; ++i) {
-      KeyboardLayoutRef curKL;
-      if (KLGetKeyboardLayoutAtIndex(i, &curKL) == noErr) {
-        CFStringRef name;
-        if (KLGetKeyboardLayoutProperty(curKL, kKLName, (const void**)&name) == noErr) {
-          int idn;
-          KLGetKeyboardLayoutProperty(curKL, kKLIdentifier, (const void**)&idn);
-          int kind;
-          KLGetKeyboardLayoutProperty(curKL, kKLKind, (const void**)&kind);
-          char buf[256];
-          CFStringGetCString(name, buf, 256, kCFStringEncodingASCII);
-          PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("  %d,%s,%d\n", idn, buf, kind));
-        }
-      }
-    }
-#endif // LEOPARD_AND_LATER
+#ifdef DEBUG
+    DebugPrintAllKeyboardLayouts();
+#endif // DEBUG
   }
 #endif // PR_LOGGING
 
