@@ -2622,6 +2622,7 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
     if (!str)
         return NULL;
     str->initFlat(chars, length);
+    cx->updateMallocCounter(length * sizeof(jschar));
     return str;
 }
 
