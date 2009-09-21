@@ -215,6 +215,9 @@ var BrowserUI = {
         urlString = "";
       this._edit.value = urlString;
     }
+    else if (!aEdit && Browser.selectedTab.isLoading() && icons.getAttribute("mode") != "loading") {
+      icons.setAttribute("mode", "loading");
+    }
     else if (!aEdit && icons.getAttribute("mode") != "view") {
       icons.setAttribute("mode", "view");
     }
