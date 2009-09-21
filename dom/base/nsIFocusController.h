@@ -45,14 +45,15 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 
+class nsPIDOMWindow;
 class nsIDOMNode;
 class nsIController;
 class nsIControllers;
 
-// 2879DB1C-47AA-46C4-B184-2590CC39F262
+// 6D733829-8AE4-43BD-BEEE-35420FE3E932
 #define NS_IFOCUSCONTROLLER_IID \
-{ 0x2879db1c, 0x47aa, 0x46c4, \
-  { 0xb1, 0x84, 0x25, 0x90, 0xcc, 0x39, 0xf2, 0x62 } }
+{ 0x6d733829, 0x8ae4, 0x43bd, \
+  { 0xbe, 0xee, 0x35, 0x42, 0x0f, 0xe3, 0xe9, 0x32 } }
 
 class nsIFocusController : public nsISupports {
 public:
@@ -61,8 +62,10 @@ public:
   NS_IMETHOD GetPopupNode(nsIDOMNode** aNode)=0;
   NS_IMETHOD SetPopupNode(nsIDOMNode* aNode)=0;
 
-  NS_IMETHOD GetControllerForCommand(const char * aCommand, nsIController** aResult)=0;
-  NS_IMETHOD GetControllers(nsIControllers** aResult)=0;
+  NS_IMETHOD GetControllerForCommand(nsPIDOMWindow* aContextWindow,
+                                     const char * aCommand,
+                                     nsIController** aResult)=0;
+  NS_IMETHOD GetControllers(nsPIDOMWindow* aContextWindow, nsIControllers** aResult)=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFocusController, NS_IFOCUSCONTROLLER_IID)

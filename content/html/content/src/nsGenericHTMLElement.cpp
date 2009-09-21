@@ -112,7 +112,6 @@
 #include "nsLayoutUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
-#include "nsIFocusController.h"
 
 class nsINodeInfo;
 class nsIDOMNodeList;
