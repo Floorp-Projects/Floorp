@@ -4417,7 +4417,7 @@ nsEventStateManager::DoContentCommandEvent(nsContentCommandEvent* aEvent)
       return NS_ERROR_NOT_IMPLEMENTED;
   }
   nsCOMPtr<nsIController> controller;
-  nsresult rv = fc->GetControllerForCommand(cmd, getter_AddRefs(controller));
+  nsresult rv = fc->GetControllerForCommand(window, cmd, getter_AddRefs(controller));
   NS_ENSURE_SUCCESS(rv, rv);
   if (!controller) {
     // When GetControllerForCommand succeeded but there is no controller, the

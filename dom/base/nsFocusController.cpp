@@ -78,6 +78,22 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFocusController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPopupNode)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+static nsIContent*
+GetRootFocusedContentAndWindow(nsPIDOMWindow* aContextWindow,
+                               nsPIDOMWindow** aWindow)
+{
+  *aWindow = nsnull;
+
+  if (aContextWindow) {
+    nsCOMPtr<nsPIDOMWindow> rootWindow = aContextWindow->GetPrivateRoot();
+    if (rootWindow) {
+      return nsFocusManager::GetFocusedDescendant(rootWindow, PR_TRUE, aWindow);
+    }
+  }
+
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsFocusController::Create(nsIFocusController** aResult)
 {
@@ -91,81 +107,58 @@ nsFocusController::Create(nsIFocusController** aResult)
 }
 
 NS_IMETHODIMP
-nsFocusController::GetControllers(nsIControllers** aResult)
+nsFocusController::GetControllers(nsPIDOMWindow* aContextWindow, nsIControllers** aResult)
 {
+  *aResult = nsnull;
+
   // XXX: we should fix this so there's a generic interface that
   // describes controllers, so this code would have no special
   // knowledge of what object might have controllers.
-  nsCOMPtr<nsIDOMElement> focusedElement;
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (!fm) {
-    *aResult = nsnull;
-    return NS_OK;
-  }
 
-  fm->GetFocusedElement(getter_AddRefs(focusedElement));
-  if (focusedElement) {
+  nsCOMPtr<nsPIDOMWindow> focusedWindow;
+  nsIContent* focusedContent =
+    GetRootFocusedContentAndWindow(aContextWindow, getter_AddRefs(focusedWindow));
+  if (focusedContent) {
 #ifdef MOZ_XUL
-    nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(focusedElement));
+    nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(focusedContent));
     if (xulElement)
       return xulElement->GetControllers(aResult);
 #endif
 
     nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea =
-      do_QueryInterface(focusedElement);
+      do_QueryInterface(focusedContent);
     if (htmlTextArea)
       return htmlTextArea->GetControllers(aResult);
 
     nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement =
-      do_QueryInterface(focusedElement);
+      do_QueryInterface(focusedContent);
     if (htmlInputElement)
       return htmlInputElement->GetControllers(aResult);
 
-    nsCOMPtr<nsIContent> content = do_QueryInterface(focusedElement);
-    if (content && content->IsEditable()) {
-      // Move up to the window.
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      focusedElement->GetOwnerDocument(getter_AddRefs(domDoc));
-      nsCOMPtr<nsIDOMWindowInternal> domWindow =
-        do_QueryInterface(GetWindowFromDocument(domDoc));
-      if (domWindow)
-        return domWindow->GetControllers(aResult);
-    }
+    if (focusedContent->IsEditable() && focusedWindow)
+      return focusedWindow->GetControllers(aResult);
   }
   else {
-    nsCOMPtr<nsIDOMWindow> focusedWindow;
-    fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
     nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(focusedWindow);
     if (domWindow)
       return domWindow->GetControllers(aResult);
   }
 
-  *aResult = nsnull;
   return NS_OK;
 }
 
-
-nsPIDOMWindow *
-nsFocusController::GetWindowFromDocument(nsIDOMDocument* aDocument)
-{
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
-  if (!doc)
-    return nsnull;
-
-  return doc->GetWindow();
-}
-
 NS_IMETHODIMP
-nsFocusController::GetControllerForCommand(const char * aCommand,
+nsFocusController::GetControllerForCommand(nsPIDOMWindow* aContextWindow,
+                                           const char * aCommand,
                                            nsIController** _retval)
 {
-  NS_ENSURE_ARG_POINTER(_retval);	
+  NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
 
   nsCOMPtr<nsIControllers> controllers;
   nsCOMPtr<nsIController> controller;
 
-  GetControllers(getter_AddRefs(controllers));
+  GetControllers(aContextWindow, getter_AddRefs(controllers));
   if(controllers) {
     controllers->GetControllerForCommand(aCommand, getter_AddRefs(controller));
     if(controller) {
@@ -174,14 +167,8 @@ nsFocusController::GetControllerForCommand(const char * aCommand,
     }
   }
 
-  nsCOMPtr<nsIDOMElement> focusedElement;
-  nsCOMPtr<nsIDOMWindow> focusedWindow;
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    fm->GetFocusedElement(getter_AddRefs(focusedElement));
-    fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
-  }
-
+  nsCOMPtr<nsPIDOMWindow> focusedWindow;
+  GetRootFocusedContentAndWindow(aContextWindow, getter_AddRefs(focusedWindow));
   while (focusedWindow) {
     nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(focusedWindow));
 

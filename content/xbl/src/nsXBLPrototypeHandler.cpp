@@ -417,6 +417,8 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsPIDOMEventTarget* aTarget, nsIDOMEve
   nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(aTarget));
   if (windowRoot) {
     windowRoot->GetFocusController(getter_AddRefs(focusController));
+    if (windowRoot)
+      privateWindow = do_QueryInterface(windowRoot->GetWindow());
   }
   else {
     privateWindow = do_QueryInterface(aTarget);
@@ -446,7 +448,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsPIDOMEventTarget* aTarget, nsIDOMEve
 
   NS_LossyConvertUTF16toASCII command(mHandlerText);
   if (focusController)
-    focusController->GetControllerForCommand(command.get(), getter_AddRefs(controller));
+    focusController->GetControllerForCommand(privateWindow, command.get(), getter_AddRefs(controller));
   else
     controller = GetController(aTarget); // We're attached to the receiver possibly.
 
