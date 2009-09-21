@@ -232,7 +232,7 @@ class nsHtml5Parser : public nsIParser {
                              PRBool aQuirks);
 
     /**
-     * Calls ParseUntilSuspend()
+     * Don't call. For interface compat only.
      */
     NS_IMETHOD BuildModel(void);
 
@@ -271,14 +271,11 @@ class nsHtml5Parser : public nsIParser {
                         nsISupports* aContainer,
                         nsIChannel* aChannel);
 
-    /**
-     * Request event loop spin as soon as the tokenizer returns
-     */
-    void Suspend();
-        
     inline nsHtml5Tokenizer* GetTokenizer() {
       return mTokenizer;
     }
+
+    void InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState);
 
     /**
      * Posts a continue event if there isn't one already
@@ -288,13 +285,21 @@ class nsHtml5Parser : public nsIParser {
     void DropStreamParser() {
       mStreamParser = nsnull;
     }
+    
+    void StartTokenizer(PRBool aScriptingEnabled);
+
+#ifdef DEBUG
+    PRBool HasStreamParser() {
+      return !!mStreamParser;
+    }
+#endif
 
   private:
 
     /**
-     * Parse until pending data is exhausted or tree builder suspends
+     * Parse until pending data is exhausted or a script end tag is seen
      */
-    void ParseUntilSuspend();
+    void ParseUntilScript();
 
     // State variables
 
@@ -312,13 +317,11 @@ class nsHtml5Parser : public nsIParser {
      * The parser is blocking on a script
      */
     PRBool                        mBlocked;
-
+    
     /**
-     * The event loop will spin ASAP
+     * True if document.close() has been called.
      */
-    PRBool                        mSuspending;
-
-    // script execution
+    PRBool                        mDocumentClosed;
 
     // Gecko integration
     void*                         mRootContextKey;
@@ -357,9 +360,9 @@ class nsHtml5Parser : public nsIParser {
     nsRefPtr<nsHtml5StreamParser>       mStreamParser;
 
     /**
-     * The scoped atom service
+     * The scoped atom table
      */
-    const nsAutoPtr<nsHtml5AtomTable>   mAtomTable;
+    nsHtml5AtomTable                    mAtomTable;
 
 };
 #endif

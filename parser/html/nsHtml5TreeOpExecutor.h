@@ -54,6 +54,8 @@
 #include "nsIScriptElement.h"
 #include "nsIParser.h"
 #include "nsCOMArray.h"
+#include "nsAHtml5TreeOpSink.h"
+#include "nsHtml5TreeOpStage.h"
 
 class nsHtml5TreeBuilder;
 class nsHtml5Tokenizer;
@@ -66,26 +68,22 @@ enum eHtml5ParserLifecycle {
   NOT_STARTED = 0,
 
   /**
-   * The parser has started the tokenizer and the stream hasn't ended yet.
+   * The parser has started the tokenizer and as far as the executor is
+   * aware, the stream hasn't ended.
    */
   PARSING = 1,
 
   /**
-   * The parser hasn't told the tokenizer to emit EOF yet, but the network
-   * stream has been exhausted or document.close() called.
+   * The parse has ended.
    */
-  STREAM_ENDING = 2,
-
-  /**
-   * The parser has told the tokenizer to emit EOF.
-   */
-  TERMINATED = 3
+  TERMINATED = 2
 };
 
 typedef nsIContent* nsIContentPtr;
 
 class nsHtml5TreeOpExecutor : public nsIContentSink,
-                              public nsContentSink
+                              public nsContentSink,
+                              public nsAHtml5TreeOpSink
 {
   public:
     NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
@@ -107,7 +105,7 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
     PRBool                               mSuppressEOF;
     
     PRBool                               mHasProcessedBase;
-    PRBool                               mNeedsFlush;
+    PRBool                               mReadingFromStage;
     nsCOMPtr<nsITimer>                   mFlushTimer;
     nsTArray<nsHtml5TreeOperation>       mOpQueue;
     nsTArray<nsIContentPtr>              mElementsSeenInThisAppendBatch;
@@ -119,16 +117,6 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
     // non-elements wouldn't use the handle setup but the text node / comment
     // / doctype operand would be remembered by the tree op executor.
     nsCOMArray<nsIContent>               mOwnedNonElements;
-
-    /**
-     * The character encoding to which to switch in a late <meta> renavigation
-     */
-    nsCString                     mPendingCharset;
-
-    /**
-     * Call to PerformCharsetSwitch() needed
-     */
-    PRBool                        mNeedsCharsetSwitch;
   
     /**
      * The current point on parser life cycle
@@ -140,7 +128,12 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
      */
     nsCOMPtr<nsIContent>          mScriptElement;
     
-    nsHtml5TreeBuilder*           mTreeBuilder;
+    nsHtml5TreeOpStage            mStage;
+    
+    /**
+     * Used for deferring DidBuildModel call out of notification batch
+     */
+    PRBool                        mCallDidBuildModel;
 
   public:
   
@@ -160,6 +153,7 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
     NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) {
       NS_ASSERTION(GetDocument()->GetScriptGlobalObject(), 
                    "Script global object not ready");
+      mDocument->AddObserver(this);
       WillBuildModelImpl();
       GetDocument()->BeginLoad();
       return NS_OK;
@@ -225,14 +219,6 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
       return IsScriptExecutingImpl();
     }
     
-    void AllowInterrupts() {
-      mCanInterruptParser = PR_TRUE;
-    }
-
-    void ProhibitInterrupts() {
-      mCanInterruptParser = PR_FALSE;
-    }
-        
     void SetBaseUriFromDocument() {
       mDocumentBaseURI = mDocument->GetBaseURI();
       mHasProcessedBase = PR_TRUE;
@@ -246,20 +232,12 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
       mStreamParser = aStreamParser;
     }
     
-    /**
-     * Renavigates to the document with a different charset
-     */
-    nsresult MaybePerformCharsetSwitch();
-
     inline void SetScriptElement(nsIContent* aScript) {
       mScriptElement = aScript;
     }
-
-    /**
-     * Runs mScriptElement
-     */
-    void ExecuteScript();
     
+    void InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState);
+
     PRBool IsScriptEnabled();
 
     void PostPendingAppendNotification(nsIContent* aParent, nsIContent* aChild) {
@@ -337,29 +315,11 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
 
     void MaybeSuspend();
 
-    void MaybeFlush() {
-      if (mNeedsFlush) {
-        Flush();
-      }
-    }
-
-    void DeferredTimerFlush();
-
     void Start();
 
-    void End();
-    
-    void NeedsCharsetSwitchTo(const nsACString& aEncoding);
-    
-    void IgnoreCharsetSwitch() {
-      mNeedsCharsetSwitch = PR_FALSE;
-    }
+    void NeedsCharsetSwitchTo(const char* aEncoding);
     
 #ifdef DEBUG
-    PRBool NeedsCharsetSwitch() {
-      return mNeedsCharsetSwitch;
-    }
-    
     PRBool HasScriptElement() {
       return !!mScriptElement;
     }
@@ -377,7 +337,7 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
       mLifeCycle = aLifeCycle;
     }
     
-    void MaybeExecuteScript();
+    void ExecuteScript();
     
     void MaybePreventExecution() {
       if (mScriptElement) {
@@ -386,10 +346,6 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
         script->PreventExecution();
         mScriptElement = nsnull;
       }    
-    }
-        
-    void SetTreeBuilder(nsHtml5TreeBuilder* aBuilder) {
-      mTreeBuilder = aBuilder;
     }
     
     void Reset();
@@ -402,12 +358,35 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
       mOwnedNonElements.AppendObject(aContent);
     }
 
+    // The following two methods are for the main-thread case
+
+    /**
+     * No-op
+     */    
+    virtual void MaybeFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
+
+    /**
+     * Flush the operations from the tree operations from the argument
+     * queue unconditionally.
+     */
+    virtual void ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
+    
+    nsAHtml5TreeOpSink* GetStage() {
+      return &mStage;
+    }
+    
+    void StartReadingFromStage() {
+      mReadingFromStage = PR_TRUE;
+    }
+
+    void StreamEnded();
+    
+    void ScheduleTimer();
+
   private:
 
     nsHtml5Tokenizer* GetTokenizer();
-    
-    void FillQueue();
-    
+        
 };
 
 #endif // nsHtml5TreeOpExecutor_h__

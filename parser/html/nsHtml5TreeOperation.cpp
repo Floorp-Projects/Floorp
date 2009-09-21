@@ -59,7 +59,9 @@
 #include "nsIDOMDocumentType.h"
 
 nsHtml5TreeOperation::nsHtml5TreeOperation()
- : mOpCode(eTreeOpAppend)
+#ifdef DEBUG
+ : mOpCode(eTreeOpUninitialized)
+#endif
 {
   MOZ_COUNT_CTOR(nsHtml5TreeOperation);
 }
@@ -67,6 +69,7 @@ nsHtml5TreeOperation::nsHtml5TreeOperation()
 nsHtml5TreeOperation::~nsHtml5TreeOperation()
 {
   MOZ_COUNT_DTOR(nsHtml5TreeOperation);
+  NS_ASSERTION(mOpCode != eTreeOpUninitialized, "Uninitialized tree op.");
   switch(mOpCode) {
     case eTreeOpAddAttributes:
       delete mTwo.attributes;
@@ -80,6 +83,13 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
     case eTreeOpCreateTextNode:
     case eTreeOpCreateComment:
       delete[] mTwo.unicharPtr;
+      break;
+    case eTreeOpSetDocumentCharset:
+    case eTreeOpNeedsCharsetSwitchTo:
+      delete[] mOne.charPtr;
+      break;
+    case eTreeOpRunScript:
+      delete mTwo.state;
       break;
     default: // keep the compiler happy
       break;
@@ -313,6 +323,10 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
     }
     case eTreeOpRunScript: {
       nsIContent* node = *(mOne.node);
+      nsAHtml5TreeBuilderState* snapshot = mTwo.state;
+      if (snapshot) {
+        aBuilder->InitializeDocWriteParserState(snapshot);
+      }
       aBuilder->SetScriptElement(node);
       return rv;
     }
@@ -325,6 +339,17 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
       nsIContent* node = *(mOne.node);
       node->DoneCreatingElement();
       return rv;
+    }
+    case eTreeOpSetDocumentCharset: {
+      char* str = mOne.charPtr;
+      nsDependentCString dependentString(str);
+      aBuilder->SetDocumentCharset(dependentString);
+      return rv;
+    }
+    case eTreeOpNeedsCharsetSwitchTo: {
+      char* str = mOne.charPtr;
+      aBuilder->NeedsCharsetSwitchTo(str);
+      return rv;    
     }
     case eTreeOpUpdateStyleSheet: {
       nsIContent* node = *(mOne.node);
@@ -353,6 +378,10 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
         // Make sure to serialize this script correctly, for nice round tripping.
         sele->SetIsMalformed();
       }
+      return rv;
+    }
+    case eTreeOpStreamEnded: {
+      aBuilder->StreamEnded();
       return rv;
     }
     case eTreeOpStartLayout: {

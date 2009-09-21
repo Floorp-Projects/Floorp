@@ -40,7 +40,7 @@
   private:
 
     nsTArray<nsHtml5TreeOperation>         mOpQueue;
-    nsHtml5TreeOpExecutor*                 mExecutor;
+    nsAHtml5TreeOpSink*                    mOpSink;
     nsAutoArrayPtr<nsIContent*>            mHandles;
     PRInt32                                mHandlesUsed;
     nsTArray<nsAutoArrayPtr<nsIContent*> > mOldHandles;              
@@ -58,21 +58,24 @@
     
   public:
 
-    nsHtml5TreeBuilder(nsHtml5TreeOpExecutor* aExec);
+    nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink);
 
     ~nsHtml5TreeBuilder();
-
-    inline PRUint32 GetOpQueueLength() {
-      return mOpQueue.Length();
-    }
-    
-    inline void SwapQueue(nsTArray<nsHtml5TreeOperation>& aOtherQueue) {
-      mOpQueue.SwapElements(aOtherQueue);
-    }
-    
-    inline void ReqSuspension() {
-      requestSuspension();
-    }
     
     PRBool HasScript();
     
+    void SetOpSink(nsAHtml5TreeOpSink* aOpSink) {
+      mOpSink = aOpSink;
+    }
+    
+    void Flush();
+    
+    void MaybeFlush();
+    
+    void SetDocumentCharset(nsACString& aCharset);
+
+    void StreamEnded();
+
+    void NeedsCharsetSwitchTo(const nsACString& aEncoding);
+
+    void AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot);

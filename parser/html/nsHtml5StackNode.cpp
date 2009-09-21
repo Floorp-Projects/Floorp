@@ -43,6 +43,7 @@
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsAHtml5TreeBuilderState.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5TreeBuilder.h"
@@ -72,7 +73,7 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 group, PRInt32 ns, nsIAtom* name, nsI
   MOZ_COUNT_CTOR(nsHtml5StackNode);
   nsHtml5Portability::retainLocal(name);
   nsHtml5Portability::retainLocal(popName);
-  nsHtml5Portability::retainElement(node);
+  ;
 }
 
 
@@ -91,7 +92,7 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
   MOZ_COUNT_CTOR(nsHtml5StackNode);
   nsHtml5Portability::retainLocal(name);
   nsHtml5Portability::retainLocal(popName);
-  nsHtml5Portability::retainElement(node);
+  ;
 }
 
 
@@ -110,7 +111,7 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
   MOZ_COUNT_CTOR(nsHtml5StackNode);
   nsHtml5Portability::retainLocal(name);
   nsHtml5Portability::retainLocal(popName);
-  nsHtml5Portability::retainElement(node);
+  ;
 }
 
 
@@ -129,7 +130,7 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
   MOZ_COUNT_CTOR(nsHtml5StackNode);
   nsHtml5Portability::retainLocal(name);
   nsHtml5Portability::retainLocal(popName);
-  nsHtml5Portability::retainElement(node);
+  ;
 }
 
 
@@ -148,7 +149,7 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
   MOZ_COUNT_CTOR(nsHtml5StackNode);
   nsHtml5Portability::retainLocal(name);
   nsHtml5Portability::retainLocal(popName);
-  nsHtml5Portability::retainElement(node);
+  ;
 }
 
 
@@ -157,7 +158,7 @@ nsHtml5StackNode::~nsHtml5StackNode()
   MOZ_COUNT_DTOR(nsHtml5StackNode);
   nsHtml5Portability::releaseLocal(name);
   nsHtml5Portability::releaseLocal(popName);
-  nsHtml5Portability::releaseElement(node);
+  ;
   delete attributes;
 }
 

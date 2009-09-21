@@ -43,8 +43,10 @@
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsAHtml5TreeBuilderState.h"
 
 class nsHtml5StreamParser;
+class nsHtml5SpeculativeLoader;
 
 class nsHtml5Tokenizer;
 class nsHtml5TreeBuilder;
@@ -88,7 +90,7 @@ class nsHtml5AttributeName
   public:
     virtual void release();
     ~nsHtml5AttributeName();
-    virtual nsHtml5AttributeName* cloneAttributeName();
+    virtual nsHtml5AttributeName* cloneAttributeName(nsHtml5AtomTable* interner);
     PRInt32 getUri(PRInt32 mode);
     nsIAtom* getLocal(PRInt32 mode);
     nsIAtom* getPrefix(PRInt32 mode);
