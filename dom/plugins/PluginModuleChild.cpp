@@ -52,6 +52,7 @@
 #include "mozilla/plugins/PluginInstanceChild.h"
 #include "mozilla/plugins/StreamNotifyChild.h"
 #include "mozilla/plugins/BrowserStreamChild.h"
+#include "mozilla/plugins/PluginStreamChild.h"
 
 using mozilla::ipc::NPRemoteIdentifier;
 
@@ -535,7 +536,7 @@ _newstream(NPP aNPP,
            NPStream** aStream)
 {
     _MOZ_LOG(__FUNCTION__);
-    return NPERR_NO_ERROR;
+    return InstCast(aNPP)->NPN_NewStream(aMIMEType, aWindow, aStream);
 }
 
 int32_t NP_CALLBACK
@@ -545,7 +546,11 @@ _write(NPP aNPP,
        void* aBuffer)
 {
     _MOZ_LOG(__FUNCTION__);
-    return 0;
+    PluginStreamChild* ps =
+        static_cast<PluginStreamChild*>(static_cast<AStream*>(aStream->ndata));
+    ps->EnsureCorrectInstance(InstCast(aNPP));
+    ps->EnsureCorrectStream(aStream);
+    return ps->NPN_Write(aLength, aBuffer);
 }
 
 NPError NP_CALLBACK
@@ -554,11 +559,18 @@ _destroystream(NPP aNPP,
                NPError aReason)
 {
     _MOZ_LOG(__FUNCTION__);
-    BrowserStreamChild* bs = static_cast<BrowserStreamChild*>(aStream->ndata);
     PluginInstanceChild* p = InstCast(aNPP);
-    bs->EnsureCorrectInstance(p);
-
-    p->CallPBrowserStreamDestructor(bs, aReason, false);
+    AStream* s = static_cast<AStream*>(aStream->ndata);
+    if (s->IsBrowserStream()) {
+        BrowserStreamChild* bs = static_cast<BrowserStreamChild*>(s);
+        bs->EnsureCorrectInstance(p);
+        p->CallPBrowserStreamDestructor(bs, aReason, false);
+    }
+    else {
+        PluginStreamChild* ps = static_cast<PluginStreamChild*>(s);
+        ps->EnsureCorrectInstance(p);
+        p->CallPPluginStreamDestructor(ps, aReason, false);
+    }
     return NPERR_NO_ERROR;
 }
 
@@ -674,11 +686,12 @@ _getstringidentifiers(const NPUTF8** aNames,
         for (int32_t index = 0; index < aNameCount; index++) {
             names.AppendElement(nsDependentCString(aNames[index]));
         }
-        NS_ASSERTION(names.Length() == aNameCount, "Should equal here!");
+        NS_ASSERTION(int32_t(names.Length()) == aNameCount,
+                     "Should equal here!");
 
         if (PluginModuleChild::current()->
                 SendNPN_GetStringIdentifiers(names, &ids)) {
-            NS_ASSERTION(ids.Length() == aNameCount, "Bad length!");
+            NS_ASSERTION(int32_t(ids.Length()) == aNameCount, "Bad length!");
 
             for (int32_t index = 0; index < aNameCount; index++) {
                 aIdentifiers[index] = (NPIdentifier)ids[index];

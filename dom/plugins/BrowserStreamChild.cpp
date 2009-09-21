@@ -116,5 +116,15 @@ BrowserStreamChild::AnswerNPP_StreamAsFile(const nsCString& fname)
   return true;
 }
 
+void
+BrowserStreamChild::NPP_DestroyStream(NPError reason)
+{
+  if (mClosed)
+    return;
+
+  mInstance->mPluginIface->destroystream(&mInstance->mData, &mStream, reason);
+  mClosed = true;
+}
+
 } /* namespace plugins */
 } /* namespace mozilla */

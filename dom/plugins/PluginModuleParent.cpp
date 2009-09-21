@@ -135,6 +135,8 @@ PluginModuleParent::NP_Initialize(const NPNetscapeFuncs* npnIface,
 {
     _MOZ_LOG(__FUNCTION__);
 
+    mNPNIface = npnIface;
+
     NPError prv;
     if (!CallNP_Initialize(&prv))
         return NPERR_GENERIC_ERROR;
@@ -149,6 +151,8 @@ NPError
 PluginModuleParent::NP_Initialize(const NPNetscapeFuncs* npnIface)
 {
     _MOZ_LOG(__FUNCTION__);
+
+    mNPNIface = npnIface;
 
     NPError prv;
     if (!CallNP_Initialize(&prv))
@@ -480,7 +484,7 @@ PluginModuleParent::StreamCast(NPP instance,
 {
     PluginInstanceParent* ip = InstCast(instance);
     BrowserStreamParent* sp =
-        static_cast<BrowserStreamParent*>(s->pdata);
+        static_cast<BrowserStreamParent*>(static_cast<AStream*>(s->pdata));
     if (sp->mNPP != ip || s != sp->mStream) {
         NS_RUNTIMEABORT("Corrupted plugin stream data.");
     }
