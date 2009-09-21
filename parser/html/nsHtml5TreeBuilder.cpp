@@ -49,6 +49,8 @@
 #include "nsHtml5PendingNotification.h"
 #include "nsHtml5StateSnapshot.h"
 #include "nsHtml5StackNode.h"
+#include "nsHtml5TreeOpExecutor.h"
+#include "nsHtml5StreamParser.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5MetaScanner.h"
@@ -2691,8 +2693,8 @@ void
 nsHtml5TreeBuilder::documentModeInternal(nsHtml5DocumentMode m, nsString* publicIdentifier, nsString* systemIdentifier, PRBool html4SpecificAdditionalErrorChecks)
 {
   quirks = (m == QUIRKS_MODE);
-  if (!!parser) {
-    parser->documentMode(m);
+  if (!!this) {
+    this->documentMode(m);
   }
 }
 

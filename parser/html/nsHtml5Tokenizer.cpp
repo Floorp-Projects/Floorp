@@ -43,6 +43,7 @@
 #include "nsHtml5NamedCharacters.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
+#include "nsIUnicodeDecoder.h"
 
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5MetaScanner.h"
@@ -3331,7 +3332,7 @@ nsHtml5Tokenizer::isInDataState()
 }
 
 void 
-nsHtml5Tokenizer::setEncodingDeclarationHandler(nsHtml5Parser* encodingDeclarationHandler)
+nsHtml5Tokenizer::setEncodingDeclarationHandler(nsHtml5StreamParser* encodingDeclarationHandler)
 {
   this->encodingDeclarationHandler = encodingDeclarationHandler;
 }

@@ -52,10 +52,14 @@ include $(topsrcdir)/config/rules.mk
 DEFINES += -D_IMPL_NS_LAYOUT
 
 _TEST_FILES =	\
+		bug369950-subframe.xml \
+		bug495648.rdf \
+		decoration_line_rendering.js \
+		region_lib.js \
+		scrolling_helper.html \
 		test_bug66619.html \
 		test_bug114649.html \
 		$(warning test_bug369950.html disabled due to random orange; see bug 492575) \
-		bug369950-subframe.xml \
 		test_bug386575.xhtml \
 		test_bug388019.html \
 		test_bug394057.html \
@@ -75,10 +79,9 @@ _TEST_FILES =	\
 		test_bug435293-scale.html \
 		test_bug435293-interaction.html \
 		test_bug435293-skew.html \
-		decoration_line_rendering.js \
 		test_bug495648.xul \
-		bug495648.rdf \
 		test_bug514127.html \
+		test_scrolling.html \
 		$(NULL)
 # test_bug396024.html is currently disabled because it interacts badly with
 # the "You can't print-preview while the page is loading" dialog.

@@ -1878,7 +1878,6 @@ nsOggDecoder::nsOggDecoder() :
   mInitialVolume(0.0),
   mRequestedSeekTime(-1.0),
   mDuration(-1),
-  mNotifyOnShutdown(PR_FALSE),
   mSeekable(PR_TRUE),
   mReader(nsnull),
   mMonitor(nsnull),
@@ -1892,8 +1891,19 @@ nsOggDecoder::nsOggDecoder() :
 
 PRBool nsOggDecoder::Init(nsHTMLMediaElement* aElement)
 {
+  if (!nsMediaDecoder::Init(aElement))
+    return PR_FALSE;
+
   mMonitor = nsAutoMonitor::NewMonitor("media.decoder");
-  return mMonitor && nsMediaDecoder::Init(aElement);
+  if (!mMonitor)
+    return PR_FALSE;
+
+  RegisterShutdownObserver();
+
+  mReader = new nsChannelReader();
+  NS_ENSURE_TRUE(mReader, PR_FALSE);
+
+  return PR_TRUE;
 }
 
 void nsOggDecoder::Stop()
@@ -1955,52 +1965,26 @@ nsOggDecoder::~nsOggDecoder()
   nsAutoMonitor::DestroyMonitor(mMonitor);
 }
 
-nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
+nsresult nsOggDecoder::Load(nsMediaStream* aStream,
                             nsIStreamListener** aStreamListener)
 {
-  // Reset progress member variables
-  mDecoderPosition = 0;
-  mPlaybackPosition = 0;
-  mResourceLoaded = PR_FALSE;
-
-  NS_ASSERTION(!mReader, "Didn't shutdown properly!");
-  NS_ASSERTION(!mDecodeStateMachine, "Didn't shutdown properly!");
-  NS_ASSERTION(!mDecodeThread, "Didn't shutdown properly!");
-
   if (aStreamListener) {
     *aStreamListener = nsnull;
   }
 
-  if (aURI) {
-    NS_ASSERTION(!aStreamListener, "No listener should be requested here");
-    mURI = aURI;
-  } else {
-    NS_ASSERTION(aChannel, "Either a URI or a channel is required");
-    NS_ASSERTION(aStreamListener, "A listener should be requested here");
-
-    // If the channel was redirected, we want the post-redirect URI;
-    // but if the URI scheme was expanded, say from chrome: to jar:file:,
-    // we want the original URI.
-    nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(mURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  RegisterShutdownObserver();
-
-  mReader = new nsChannelReader();
-  NS_ENSURE_TRUE(mReader, NS_ERROR_OUT_OF_MEMORY);
-
   {
-    nsAutoMonitor mon(mMonitor);
     // Hold the lock while we do this to set proper lock ordering
     // expectations for dynamic deadlock detectors: decoder lock(s)
     // should be grabbed before the cache lock
-    nsresult rv = mReader->Init(this, mURI, aChannel, aStreamListener);
+    nsAutoMonitor mon(mMonitor);
+
+    nsresult rv = aStream->Open(aStreamListener);
     if (NS_FAILED(rv)) {
-      // Free the failed-to-initialize reader so we don't try to use it.
-      mReader = nsnull;
+      delete aStream;
       return rv;
     }
+
+    mReader->Init(aStream);
   }
 
   nsresult rv = NS_NewThread(getter_AddRefs(mDecodeThread));
@@ -2066,9 +2050,9 @@ float nsOggDecoder::GetCurrentTime()
   return mCurrentTime;
 }
 
-void nsOggDecoder::GetCurrentURI(nsIURI** aURI)
+nsMediaStream* nsOggDecoder::GetCurrentStream()
 {
-  NS_IF_ADDREF(*aURI = mURI);
+  return mReader ? mReader->Stream() : nsnull;
 }
 
 already_AddRefed<nsIPrincipal> nsOggDecoder::GetCurrentPrincipal()
@@ -2285,6 +2269,7 @@ void nsOggDecoder::NotifyBytesDownloaded()
   NS_ASSERTION(NS_IsMainThread(),
                "nsOggDecoder::NotifyBytesDownloaded called on non-main thread");   
   UpdateReadyStateForData();
+  Progress(PR_FALSE);
 }
 
 void nsOggDecoder::NotifyDownloadEnded(nsresult aStatus)
@@ -2398,30 +2383,23 @@ void nsOggDecoder::SeekingStarted()
 
 void nsOggDecoder::RegisterShutdownObserver()
 {
-  if (!mNotifyOnShutdown) {
-    nsCOMPtr<nsIObserverService> observerService =
-      do_GetService("@mozilla.org/observer-service;1");
-    if (observerService) {
-      mNotifyOnShutdown = 
-        NS_SUCCEEDED(observerService->AddObserver(this, 
-                                                  NS_XPCOM_SHUTDOWN_OBSERVER_ID, 
-                                                  PR_FALSE));
-    }
-    else {
-      NS_WARNING("Could not get an observer service. Video decoding events may not shutdown cleanly.");
-    }
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    observerService->AddObserver(this, 
+                                 NS_XPCOM_SHUTDOWN_OBSERVER_ID, 
+                                 PR_FALSE);
+  } else {
+    NS_WARNING("Could not get an observer service. Video decoding events may not shutdown cleanly.");
   }
 }
 
 void nsOggDecoder::UnregisterShutdownObserver()
 {
-  if (mNotifyOnShutdown) {
-    nsCOMPtr<nsIObserverService> observerService =
-      do_GetService("@mozilla.org/observer-service;1");
-    if (observerService) {
-      mNotifyOnShutdown = PR_FALSE;
-      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    }
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   }
 }
 

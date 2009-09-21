@@ -311,6 +311,13 @@ class nsParser : public nsIParser,
      */
     NS_IMETHOD GetDTD(nsIDTD** aDTD);
   
+    /**
+     * Get the nsIStreamListener for this parser
+     * @param aDTD out param that will contain the result
+     * @return NS_OK if successful
+     */
+    NS_IMETHOD GetStreamListener(nsIStreamListener** aListener);
+
     /** 
      * Detects the existence of a META tag with charset information in 
      * the given buffer.
