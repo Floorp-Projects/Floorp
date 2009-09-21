@@ -155,7 +155,7 @@ StatusRecord.prototype = {
   resetEngineStatus: function() {
     this.engines = {};
   },
-  
+
   _resetBackoff: function () {
     this.enforceBackoff = false;
     this.backoffInterval = 0;
@@ -599,6 +599,8 @@ WeaveSvc.prototype = {
 
       /* Wipe */
       this.wipeServer();
+      PubKeys.clearCache();
+      PrivKeys.clearCache();
 
       /* Set remote commands before syncing */
       Clients._store.clients = clientsBackup;
@@ -645,7 +647,7 @@ WeaveSvc.prototype = {
     this._autoConnectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
     this._autoConnectAttempts++;
-    let interval = this._calculateBackoff(this._autoConnectAttempts, 
+    let interval = this._calculateBackoff(this._autoConnectAttempts,
                                           SCHEDULED_SYNC_INTERVAL);
     this._autoConnectTimer.initWithCallback(listener, interval,
                                             Ci.nsITimer.TYPE_ONE_SHOT);
@@ -1202,8 +1204,8 @@ WeaveSvc.prototype = {
     if (!resp.success)
       throw resp;
   },
-  
-  
+
+
   /**
    * Check to see if this is a failure
    *
