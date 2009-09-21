@@ -216,7 +216,7 @@ PluginScriptableObjectChild::AnswerHasMethod(const NPRemoteIdentifier& aId,
                                              bool* aHasMethod)
 {
   if (!mObject) {
-    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    NS_WARNING("Calling PluginScriptableObjectChild::AnswerHasMethod with an invalidated object!");
     *aHasMethod = false;
     return true;
   }
@@ -237,7 +237,7 @@ PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
                                           bool* aSuccess)
 {
   if (!mObject) {
-    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    NS_WARNING("Calling PluginScriptableObjectChild::AnswerInvoke with an invalidated object!");
     *aSuccess = false;
     return true;
   }
@@ -288,7 +288,7 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<NPRemoteVariant>
                                                  bool* aSuccess)
 {
   if (!mObject) {
-    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    NS_WARNING("Calling PluginScriptableObjectChild::AnswerInvokeDefault with an invalidated object!");
     *aSuccess = false;
     return true;
   }
@@ -338,7 +338,7 @@ PluginScriptableObjectChild::AnswerHasProperty(const NPRemoteIdentifier& aId,
                                                bool* aHasProperty)
 {
   if (!mObject) {
-    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    NS_WARNING("Calling PluginScriptableObjectChild::AnswerHasProperty with an invalidated object!");
     *aHasProperty = false;
     return true;
   }
@@ -358,7 +358,7 @@ PluginScriptableObjectChild::AnswerGetProperty(const NPRemoteIdentifier& aId,
                                                bool* aSuccess)
 {
   if (!mObject) {
-    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    NS_WARNING("Calling PluginScriptableObjectChild::AnswerGetProperty with an invalidated object!");
     *aSuccess = false;
     return true;
   }
@@ -387,7 +387,7 @@ PluginScriptableObjectChild::AnswerSetProperty(const NPRemoteIdentifier& aId,
                                                bool* aSuccess)
 {
   if (!mObject) {
-    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    NS_WARNING("Calling PluginScriptableObjectChild::AnswerSetProperty with an invalidated object!");
     *aSuccess = false;
     return true;
   }
@@ -413,7 +413,7 @@ PluginScriptableObjectChild::AnswerRemoveProperty(const NPRemoteIdentifier& aId,
                                                   bool* aSuccess)
 {
   if (!mObject) {
-    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    NS_WARNING("Calling PluginScriptableObjectChild::AnswerRemoveProperty with an invalidated object!");
     *aSuccess = false;
     return true;
   }
@@ -432,7 +432,7 @@ PluginScriptableObjectChild::AnswerEnumerate(nsTArray<NPRemoteIdentifier>* aProp
                                              bool* aSuccess)
 {
   if (!mObject) {
-    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    NS_WARNING("Calling PluginScriptableObjectChild::AnswerEnumerate with an invalidated object!");
     *aSuccess = false;
     return true;
   }
@@ -474,7 +474,7 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<NPRemoteVariant>& aA
                                              bool* aSuccess)
 {
   if (!mObject) {
-    NS_WARNING("Calling " __FUNCTION__ "with an invalidated object!");
+    NS_WARNING("Calling PluginScriptableObjectChild::AnswerConstruct with an invalidated object!");
     *aSuccess = false;
     return true;
   }
