@@ -556,8 +556,17 @@ void nsMediaChannelStream::Resume()
       mChannel->Resume();
       element->DownloadResumed();
     } else {
-      // Need to recreate the channel
-      CacheClientSeek(mOffset, PR_FALSE);
+      PRInt64 totalLength = mCacheStream.GetLength();
+      // If mOffset is at the end of the stream, then we shouldn't try to
+      // seek to it. The seek will fail and be wasted anyway. We can leave
+      // the channel dead; if the media cache wants to read some other data
+      // in the future, it will call CacheClientSeek itself which will reopen the
+      // channel.
+      if (totalLength < 0 || mOffset < totalLength) {
+        // There is (or may be) data to read at mOffset, so start reading it.
+        // Need to recreate the channel.
+        CacheClientSeek(mOffset, PR_FALSE);
+      }
       element->DownloadResumed();
     }
   }
