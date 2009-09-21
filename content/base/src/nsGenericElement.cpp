@@ -1462,21 +1462,18 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMClientRect** aResult)
     return NS_OK;
   }
 
-  nsPresContext* presContext = frame->PresContext();
   nsRect r = nsLayoutUtils::GetAllInFlowRectsUnion(frame,
           GetContainingBlockForClientRect(frame));
-  rect->SetLayoutRect(r, presContext);
+  rect->SetLayoutRect(r);
   return NS_OK;
 }
 
 struct RectListBuilder : public nsLayoutUtils::RectCallback {
-  nsPresContext*    mPresContext;
   nsClientRectList* mRectList;
   nsresult          mRV;
 
-  RectListBuilder(nsPresContext* aPresContext, nsClientRectList* aList) 
-    : mPresContext(aPresContext), mRectList(aList),
-      mRV(NS_OK) {}
+  RectListBuilder(nsClientRectList* aList) 
+    : mRectList(aList), mRV(NS_OK) {}
 
   virtual void AddRect(const nsRect& aRect) {
     nsRefPtr<nsClientRect> rect = new nsClientRect();
@@ -1485,7 +1482,7 @@ struct RectListBuilder : public nsLayoutUtils::RectCallback {
       return;
     }
     
-    rect->SetLayoutRect(aRect, mPresContext);
+    rect->SetLayoutRect(aRect);
     mRectList->Append(rect);
   }
 };
@@ -1506,7 +1503,7 @@ nsNSElementTearoff::GetClientRects(nsIDOMClientRectList** aResult)
     return NS_OK;
   }
 
-  RectListBuilder builder(frame->PresContext(), rectList);
+  RectListBuilder builder(rectList);
   nsLayoutUtils::GetAllInFlowRects(frame,
           GetContainingBlockForClientRect(frame), &builder);
   if (NS_FAILED(builder.mRV))

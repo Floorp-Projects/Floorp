@@ -246,8 +246,7 @@ nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
         // We don't need to propagate this any further up, though. Anyone who
         // cares about scrolled-out-of-view invalidates had better be listening
         // to our window directly.
-        PresContext()->NotifyInvalidation(damage,
-            (aFlags & INVALIDATE_CROSS_DOC) != 0);
+        PresContext()->NotifyInvalidation(damage, aFlags);
       }
       return;
     } else if (aForChild == mInner.mHScrollbarBox) {
@@ -1774,10 +1773,6 @@ nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, n
   mViewInitiatedScroll = PR_FALSE;
 
   PostScrollEvent();
-
-  // Notify that the display has changed
-  mOuter->InvalidateWithFlags(nsRect(nsPoint(0, 0), mOuter->GetSize()),
-                              nsIFrame::INVALIDATE_NOTIFY_ONLY);
 
   return NS_OK;
 }

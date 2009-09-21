@@ -47,6 +47,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsBindingManager.h"
 #include "nsXBLBinding.h"
+#include "nsHtml5DocumentMode.h"
 
 nsHtml5TreeOperation::nsHtml5TreeOperation()
  : mOpCode(eTreeOpAppend)
@@ -60,7 +61,7 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
 }
 
 nsresult
-nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
+nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
 {
   nsresult rv = NS_OK;
   switch(mOpCode) {
@@ -181,19 +182,23 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
       return rv;
     }
     case eTreeOpProcessBase: {
-      rv = aBuilder->ProcessBase(mNode);
+      rv = aBuilder->ProcessBASETag(mNode);
       return rv;
     }
     case eTreeOpProcessMeta: {
-      rv = aBuilder->ProcessMeta(mNode);
+      rv = aBuilder->ProcessMETATag(mNode);
       return rv;
     }
     case eTreeOpProcessOfflineManifest: {
-      rv = aBuilder->ProcessOfflineManifest(mNode);
+      aBuilder->ProcessOfflineManifest(mNode);
       return rv;
     }
     case eTreeOpStartLayout: {
       aBuilder->StartLayout(); // this causes a flush anyway
+      return rv;
+    }
+    case eTreeOpDocumentMode: {
+      aBuilder->DocumentMode(mMode);
       return rv;
     }
     default: {

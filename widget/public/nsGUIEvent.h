@@ -162,6 +162,8 @@ class nsHashKey;
 #define NS_DEACTIVATE                   (NS_WINDOW_START + 8)
 // top-level window z-level change request
 #define NS_SETZLEVEL                    (NS_WINDOW_START + 9)
+// Widget will need to be painted
+#define NS_WILL_PAINT                   (NS_WINDOW_START + 29)
 // Widget needs to be repainted
 #define NS_PAINT                        (NS_WINDOW_START + 30)
 // Key is pressed within a window

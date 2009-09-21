@@ -338,9 +338,12 @@ public: // NOT in nsIViewManager, so private to the view module
    * to be rerendered.
    * @param aView view to paint. should be the nsScrollPortView that
    * got scrolled.
+   * @param aBlitRegion the region that was blitted; this is just so
+   * we can notify our view observer
    * @param aUpdateRegion ensure that this part of the view is repainted
    */
-  void UpdateViewAfterScroll(nsView *aView, const nsRegion& aUpdateRegion);
+  void UpdateViewAfterScroll(nsView *aView, const nsRegion& aBlitRegion,
+                             const nsRegion& aUpdateRegion);
 
   /**
    * Given that the view aView has being moved by scrolling by aDelta

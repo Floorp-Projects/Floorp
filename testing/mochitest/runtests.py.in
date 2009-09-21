@@ -74,7 +74,10 @@ BROWSER_CHROME_URL = "chrome://browser/content/browser.xul"
 # Max time in seconds to wait for server startup before tests will fail -- if
 # this seems big, it's mostly for debug machines where cold startup
 # (particularly after a build) takes forever.
-SERVER_STARTUP_TIMEOUT = 45
+if automation.IS_DEBUG_BUILD:
+    SERVER_STARTUP_TIMEOUT = 180
+else:
+    SERVER_STARTUP_TIMEOUT = 45
 
 oldcwd = os.getcwd()
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))

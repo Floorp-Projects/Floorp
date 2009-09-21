@@ -103,12 +103,6 @@ public:
   class Slice;
 
   /**
-   * Append frames from aFrameList to this list. If aParent
-   * is not null, reparents the newly-added frames.
-   */
-  void AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList);
-
-  /**
    * Append aFrameList to this list.  If aParent is not null,
    * reparents the newly added frames.  Clears out aFrameList and
    * returns a list slice represening the newly-appended frames.
@@ -183,15 +177,6 @@ public:
     InsertFrames(aParent, aPrevSibling, temp);
   }
 
-
-  /**
-   * Insert aFrameList right after aPrevSibling, or prepend it to this
-   * list if aPrevSibling is null. If aParent is not null, also
-   * reparents newly-added frames.
-   */
-  void InsertFrames(nsIFrame* aParent,
-                    nsIFrame* aPrevSibling,
-                    nsIFrame* aFrameList);
 
   /**
    * Inserts aFrameList into this list after aPrevSibling (at the beginning if

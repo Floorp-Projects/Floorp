@@ -1765,15 +1765,19 @@ public:
    *   could cause frames to be deleted (including |this|).
    * @param aFlags INVALIDATE_CROSS_DOC: true if the invalidation
    *   originated in a subdocument
-   * @param aFlags INVALIDATE_NOTIFY_ONLY: set when this invalidation should
-   * cause MozAfterPaint listeners to be notified, but should not actually
-   * invalidate anything. This is used to notify about scrolling, where the
-   * screen has already been updated.
+   * @param aFlags INVALIDATE_REASON_SCROLL_BLIT: set if the invalidation
+   * was really just the scroll machinery copying pixels from one
+   * part of the window to another
+   * @param aFlags INVALIDATE_REASON_SCROLL_REPAINT: set if the invalidation
+   * was triggered by scrolling
    */
   enum {
-  	INVALIDATE_IMMEDIATE = 0x1,
-  	INVALIDATE_CROSS_DOC = 0x2,
-  	INVALIDATE_NOTIFY_ONLY = 0x4
+  	INVALIDATE_IMMEDIATE = 0x01,
+  	INVALIDATE_CROSS_DOC = 0x02,
+  	INVALIDATE_REASON_SCROLL_BLIT = 0x04,
+  	INVALIDATE_REASON_SCROLL_REPAINT = 0x08,
+    INVALIDATE_REASON_MASK = INVALIDATE_REASON_SCROLL_BLIT |
+                             INVALIDATE_REASON_SCROLL_REPAINT
   };
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aOffsetX, nscoord aOffsetY,

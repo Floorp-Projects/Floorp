@@ -77,22 +77,23 @@ public class CppTypes {
             "nsIDocument", "nsTraceRefcnt", "jArray", "nsHtml5DocumentMode",
             "nsHtml5ArrayCopy", "nsHtml5NamedCharacters", "nsHtml5Parser",
             "nsHtml5Atoms", "nsHtml5ByteReadable", "nsHtml5TreeOperation",
-            "nsHtml5PendingNotification", "nsHtml5StateSnapshot", "nsHtml5StackNode" };
+            "nsHtml5PendingNotification", "nsHtml5StateSnapshot", "nsHtml5StackNode", 
+            "nsHtml5TreeOpExecutor", "nsHtml5StreamParser" };
 
     private static final String[] INCLUDES = { "prtypes", "nsIAtom",
             "nsString", "nsINameSpaceManager", "nsIContent", "nsIDocument",
             "nsTraceRefcnt", "jArray", "nsHtml5DocumentMode",
             "nsHtml5ArrayCopy", "nsHtml5NamedCharacters",
-            "nsHtml5Atoms", "nsHtml5ByteReadable", };
+            "nsHtml5Atoms", "nsHtml5ByteReadable", "nsIUnicodeDecoder", };
 
     private static final String[] OTHER_DECLATIONS = {};
 
-    private static final String[] TREE_BUILDER_OTHER_DECLATIONS = { "typedef nsIContent* nsIContentPtr;" };
+    private static final String[] TREE_BUILDER_OTHER_DECLATIONS = { };
 
     private static final String[] NAMED_CHARACTERS_INCLUDES = { "prtypes",
             "jArray", "nscore" };
 
-    private static final String[] FORWARD_DECLARATIONS = { "nsHtml5Parser", };
+    private static final String[] FORWARD_DECLARATIONS = { "nsHtml5StreamParser", };
     
     private static final String[] CLASSES_THAT_NEED_SUPPLEMENT = {
         "MetaScanner",
@@ -174,7 +175,7 @@ public class CppTypes {
     }
 
     public String encodingDeclarationHandlerType() {
-        return "nsHtml5Parser*";
+        return "nsHtml5StreamParser*";
     }
 
     public String nodeType() {
@@ -275,7 +276,7 @@ public class CppTypes {
     }
 
     public String documentModeHandlerType() {
-        return "nsHtml5Parser*";
+        return "nsHtml5TreeBuilder*";
     }
 
     public String documentModeType() {

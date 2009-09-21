@@ -148,6 +148,16 @@ enum nsLayoutPhase {
 };
 #endif
 
+class nsInvalidateRequestList {
+public:
+  struct Request {
+    nsRect   mRect;
+    PRUint32 mFlags;
+  };
+
+  nsTArray<Request> mRequests;
+};
+
 /* Used by nsPresContext::HasAuthorSpecifiedRules */
 #define NS_AUTHOR_SPECIFIED_BACKGROUND      (1 << 0)
 #define NS_AUTHOR_SPECIFIED_BORDER          (1 << 1)
@@ -807,15 +817,15 @@ public:
   // user font set is changed and fonts become unavailable).
   void UserFontSetUpdated();
 
-  void NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc);
+  PRBool MayHavePaintEventListener();
+  void NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags);
   void FireDOMPaintEvent();
   PRBool IsDOMPaintEventPending() {
-    return !mSameDocDirtyRegion.IsEmpty() || !mCrossDocDirtyRegion.IsEmpty();
+    return !mInvalidateRequests.mRequests.IsEmpty();
   }
 
   void ClearMozAfterPaintEvents() {
-    mSameDocDirtyRegion.SetEmpty();
-    mCrossDocDirtyRegion.SetEmpty();
+    mInvalidateRequests.mRequests.Clear();
   }
 
   PRBool IsProcessingAnimationStyleChange() const {
@@ -823,7 +833,7 @@ public:
   }
 
   void SetProcessingAnimationStyleChange(PRBool aProcessing) {
-    NS_ASSERTION(aProcessing != mProcessingAnimationStyleChange,
+    NS_ASSERTION(aProcessing != PRBool(mProcessingAnimationStyleChange),
                  "should never nest");
     mProcessingAnimationStyleChange = aProcessing;
   }
@@ -962,8 +972,7 @@ protected:
 
   nsPropertyTable       mPropertyTable;
 
-  nsRegion              mSameDocDirtyRegion;
-  nsRegion              mCrossDocDirtyRegion;
+  nsInvalidateRequestList mInvalidateRequests;
 
   // container for per-context fonts (downloadable, SVG, etc.)
   nsUserFontSet*        mUserFontSet;
