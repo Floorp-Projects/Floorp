@@ -85,7 +85,7 @@ os.chdir(SCRIPT_DIRECTORY)
 
 PROFILE_DIRECTORY = os.path.abspath("./mochitesttestingprofile")
 
-LEAK_REPORT_FILE = PROFILE_DIRECTORY + "/" + "leaks-report.log"
+LEAK_REPORT_FILE = os.path.join(PROFILE_DIRECTORY, "runtests_leaks.log")
 
 # Map of debugging programs to information about them, like default arguments
 # and whether or not they are interactive.
@@ -420,7 +420,6 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   # builds.  We'll try to connect to the server for awhile, and if we fail,
   # we'll try to kill the server and exit with an error.
   server.ensureReady(SERVER_STARTUP_TIMEOUT)
-
 
   # URL parameters to test URL:
   #
