@@ -141,16 +141,6 @@ nsHtml5TreeBuilder::detachFromParent(nsIContent* aElement)
   treeOp->Init(eTreeOpDetach, aElement);
 }
 
-nsIContent*
-nsHtml5TreeBuilder::shallowClone(nsIContent* aElement)
-{
-  nsINode* clone;
-  aElement->Clone(aElement->NodeInfo(), &clone);
-  // XXX nsresult
-  NS_ASSERTION(clone->IsNodeOfType(nsINode::eCONTENT), "Cloning an element didn't yield a content node.");
-  return static_cast<nsIContent*>(clone);
-}
-
 void
 nsHtml5TreeBuilder::appendElement(nsIContent* aChild, nsIContent* aParent)
 {

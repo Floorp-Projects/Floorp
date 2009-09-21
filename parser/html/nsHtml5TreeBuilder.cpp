@@ -3058,8 +3058,9 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
       }
 
 
-      nsIContent* clone = shallowClone(node->node);
-      nsHtml5StackNode* newNode = new nsHtml5StackNode(node->group, node->ns, node->name, clone, node->scoping, node->special, node->fosterParenting, node->popName);
+      nsIContent* clone = createElement(kNameSpaceID_XHTML, node->name, node->attributes->cloneAttributes());
+      nsHtml5StackNode* newNode = new nsHtml5StackNode(node->group, node->ns, node->name, clone, node->scoping, node->special, node->fosterParenting, node->popName, node->attributes);
+      node->dropAttributes();
       stack[nodePos] = newNode;
       newNode->retain();
       listOfActiveFormattingElements[nodeListPos] = newNode;
@@ -3079,8 +3080,9 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
       detachFromParent(lastNode->node);
       appendElement(lastNode->node, commonAncestor->node);
     }
-    nsIContent* clone = shallowClone(formattingElt->node);
-    nsHtml5StackNode* formattingClone = new nsHtml5StackNode(formattingElt->group, formattingElt->ns, formattingElt->name, clone, formattingElt->scoping, formattingElt->special, formattingElt->fosterParenting, formattingElt->popName);
+    nsIContent* clone = createElement(kNameSpaceID_XHTML, formattingElt->name, formattingElt->attributes->cloneAttributes());
+    nsHtml5StackNode* formattingClone = new nsHtml5StackNode(formattingElt->group, formattingElt->ns, formattingElt->name, clone, formattingElt->scoping, formattingElt->special, formattingElt->fosterParenting, formattingElt->popName, formattingElt->attributes);
+    formattingElt->dropAttributes();
     appendChildrenToNewParent(furthestBlock->node, clone);
     appendElement(clone, furthestBlock->node);
     removeFromListOfActiveFormattingElements(formattingEltListPos);
@@ -3225,8 +3227,9 @@ nsHtml5TreeBuilder::reconstructTheActiveFormattingElements()
   while (entryPos < listPtr) {
     entryPos++;
     nsHtml5StackNode* entry = listOfActiveFormattingElements[entryPos];
-    nsIContent* clone = shallowClone(entry->node);
-    nsHtml5StackNode* entryClone = new nsHtml5StackNode(entry->group, entry->ns, entry->name, clone, entry->scoping, entry->special, entry->fosterParenting, entry->popName);
+    nsIContent* clone = createElement(kNameSpaceID_XHTML, entry->name, entry->attributes->cloneAttributes());
+    nsHtml5StackNode* entryClone = new nsHtml5StackNode(entry->group, entry->ns, entry->name, clone, entry->scoping, entry->special, entry->fosterParenting, entry->popName, entry->attributes);
+    entry->dropAttributes();
     nsHtml5StackNode* currentNode = stack[currentPtr];
     if (currentNode->fosterParenting) {
       insertIntoFosterParent(clone);
@@ -3358,7 +3361,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushFormattingElementMayFoster(PRInt32
   } else {
     appendElement(elt, current->node);
   }
-  nsHtml5StackNode* node = new nsHtml5StackNode(ns, elementName, elt);
+  nsHtml5StackNode* node = new nsHtml5StackNode(ns, elementName, elt, attributes->cloneAttributes());
   push(node);
   append(node);
   node->retain();

@@ -158,6 +158,12 @@ nsHtml5AttributeName::~nsHtml5AttributeName()
   delete[] local;
 }
 
+nsHtml5AttributeName* 
+nsHtml5AttributeName::cloneAttributeName()
+{
+  return this;
+}
+
 PRInt32 
 nsHtml5AttributeName::getUri(PRInt32 mode)
 {

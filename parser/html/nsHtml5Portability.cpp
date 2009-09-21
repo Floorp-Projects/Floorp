@@ -68,6 +68,13 @@ nsHtml5Portability::newStringFromLiteral(const char* literal)
   return str;
 }
 
+nsString*
+nsHtml5Portability::newStringFromString(nsString* string) {
+  nsString* newStr = new nsString();
+  newStr->Assign(*string);
+  return newStr;
+}
+
 jArray<PRUnichar,PRInt32>
 nsHtml5Portability::newCharArrayFromLocal(nsIAtom* local)
 {
