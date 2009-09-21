@@ -57,6 +57,7 @@ class PluginInstanceParent : public PPluginInstanceParent
 {
     friend class PluginModuleParent;
     friend class BrowserStreamParent;
+    friend class PluginStreamParent;
 
 public:
     PluginInstanceParent(NPP npp, const NPNetscapeFuncs* npniface)
@@ -95,6 +96,16 @@ public:
     PBrowserStreamDestructor(PBrowserStreamParent* stream,
                              const NPError& reason,
                              const bool& artificial);
+
+    virtual PPluginStreamParent*
+    PPluginStreamConstructor(const nsCString& mimeType,
+                             const nsCString& target,
+                             NPError* result);
+
+    virtual bool
+    PPluginStreamDestructor(PPluginStreamParent* stream,
+                            const NPError& reason,
+                            const bool& artificial);
 
     virtual bool
     AnswerNPN_GetValue_NPNVjavascriptEnabledBool(bool* value, NPError* result);

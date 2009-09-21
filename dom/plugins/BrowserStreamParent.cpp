@@ -11,7 +11,7 @@ BrowserStreamParent::BrowserStreamParent(PluginInstanceParent* npp,
   : mNPP(npp)
   , mStream(stream)
 {
-  mStream->pdata = this;
+  mStream->pdata = static_cast<AStream*>(this);
 }
 
 bool
@@ -56,7 +56,7 @@ BrowserStreamParent::Write(int32_t offset,
 {
   int32_t result;
   if (!CallNPP_Write(offset,
-                     nsDependentCString(static_cast<char*>(buffer), len),
+                     nsCString(static_cast<char*>(buffer), len),
                      &result)) {
     return -1;
   }

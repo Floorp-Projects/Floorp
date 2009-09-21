@@ -12,10 +12,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Plugin App.
+ * The Original Code is Mozilla Plugins.
  *
  * The Initial Developer of the Original Code is
- *   Benjamin Smedberg <benjamin@smedbergs.us>
+ *   The Mozilla Foundation <http://www.mozilla.org/>.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -35,58 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_plugins_BrowserStreamChild_h
-#define mozilla_plugins_BrowserStreamChild_h 1
-
-#include "mozilla/plugins/PBrowserStreamChild.h"
-#include "mozilla/plugins/AStream.h"
+#ifndef mozilla_plugins_AStream_h
+#define mozilla_plugins_AStream_h
 
 namespace mozilla {
 namespace plugins {
 
-class PluginInstanceChild;
-
-class BrowserStreamChild : public PBrowserStreamChild, public AStream
+/**
+ * When we are passed NPStream->{ndata,pdata} in {NPN,NPP}_DestroyStream, we
+ * don't know whether it's a plugin stream or a browser stream. This abstract
+ * class lets us cast to the right type of object and send the appropriate
+ * message.
+ */
+class AStream
 {
 public:
-  BrowserStreamChild(PluginInstanceChild* instance,
-                     const nsCString& url,
-                     const uint32_t& length,
-                     const uint32_t& lastmodified,
-                     const nsCString& headers,
-                     const nsCString& mimeType,
-                     const bool& seekable,
-                     NPError* rv,
-                     uint16_t* stype);
-  virtual ~BrowserStreamChild() { }
-
-  NS_OVERRIDE virtual bool IsBrowserStream() { return true; }
-
-  virtual bool AnswerNPP_WriteReady(const int32_t& newlength,
-                                        int32_t *size);
-  virtual bool AnswerNPP_Write(const int32_t& offset,
-                                   const Buffer& data,
-                                   int32_t* consumed);
-
-  virtual bool AnswerNPP_StreamAsFile(const nsCString& fname);
-
-  void EnsureCorrectInstance(PluginInstanceChild* i)
-  {
-    if (i != mInstance)
-      NS_RUNTIMEABORT("Incorrect stream instance");
-  }
-
-  void NPP_DestroyStream(NPError reason);
-
-private:
-  PluginInstanceChild* mInstance;
-  NPStream mStream;
-  bool mClosed;
-  nsCString mURL;
-  nsCString mHeaders;
+  virtual bool IsBrowserStream() = 0;
 };
 
 } // namespace plugins
 } // namespace mozilla
 
-#endif /* mozilla_plugins_BrowserStreamChild_h */
+#endif

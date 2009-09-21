@@ -12,10 +12,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Plugin App.
+ * The Original Code is Mozilla Plugins.
  *
  * The Initial Developer of the Original Code is
- *   Benjamin Smedberg <benjamin@smedbergs.us>
+ *   The Mozilla Foundation <http://www.mozilla.org/>.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -35,58 +35,54 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_plugins_BrowserStreamChild_h
-#define mozilla_plugins_BrowserStreamChild_h 1
-
-#include "mozilla/plugins/PBrowserStreamChild.h"
-#include "mozilla/plugins/AStream.h"
+#include "PluginStreamParent.h"
+#include "PluginInstanceParent.h"
 
 namespace mozilla {
 namespace plugins {
 
-class PluginInstanceChild;
-
-class BrowserStreamChild : public PBrowserStreamChild, public AStream
+PluginStreamParent::PluginStreamParent(PluginInstanceParent* npp,
+                                       const nsCString& mimeType,
+                                       const nsCString& target,
+                                       NPError* result)
+  : mInstance(npp)
+  , mClosed(false)
 {
-public:
-  BrowserStreamChild(PluginInstanceChild* instance,
-                     const nsCString& url,
-                     const uint32_t& length,
-                     const uint32_t& lastmodified,
-                     const nsCString& headers,
-                     const nsCString& mimeType,
-                     const bool& seekable,
-                     NPError* rv,
-                     uint16_t* stype);
-  virtual ~BrowserStreamChild() { }
+  *result = mInstance->mNPNIface->newstream(mInstance->mNPP,
+                                            const_cast<char*>(mimeType.get()),
+                                            target.get(), &mStream);
+  if (*result == NPERR_NO_ERROR)
+    mStream->pdata = static_cast<AStream*>(this);
+  else
+    mStream = NULL;
+}
 
-  NS_OVERRIDE virtual bool IsBrowserStream() { return true; }
-
-  virtual bool AnswerNPP_WriteReady(const int32_t& newlength,
-                                        int32_t *size);
-  virtual bool AnswerNPP_Write(const int32_t& offset,
-                                   const Buffer& data,
-                                   int32_t* consumed);
-
-  virtual bool AnswerNPP_StreamAsFile(const nsCString& fname);
-
-  void EnsureCorrectInstance(PluginInstanceChild* i)
-  {
-    if (i != mInstance)
-      NS_RUNTIMEABORT("Incorrect stream instance");
+bool
+PluginStreamParent::AnswerNPN_Write(const Buffer& data, int32_t* written)
+{
+  if (mClosed) {
+    *written = -1;
+    return true;
   }
 
-  void NPP_DestroyStream(NPError reason);
+  *written = mInstance->mNPNIface->write(mInstance->mNPP, mStream,
+                                         data.Length(),
+                                         const_cast<char*>(data.get()));
+  if (*written < 0)
+    mClosed = true;
 
-private:
-  PluginInstanceChild* mInstance;
-  NPStream mStream;
-  bool mClosed;
-  nsCString mURL;
-  nsCString mHeaders;
-};
+  return true;
+}
+
+void
+PluginStreamParent::NPN_DestroyStream(NPReason reason)
+{
+  if (mClosed)
+    return;
+
+  mInstance->mNPNIface->destroystream(mInstance->mNPP, mStream, reason);
+  mClosed = true;
+}
 
 } // namespace plugins
 } // namespace mozilla
-
-#endif /* mozilla_plugins_BrowserStreamChild_h */

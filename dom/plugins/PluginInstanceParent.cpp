@@ -38,6 +38,7 @@
 
 #include "PluginInstanceParent.h"
 #include "BrowserStreamParent.h"
+#include "PluginStreamParent.h"
 #include "StreamNotifyParent.h"
 
 namespace mozilla {
@@ -74,6 +75,26 @@ PluginInstanceParent::PBrowserStreamDestructor(PBrowserStreamParent* stream,
                                                const NPError& reason,
                                                const bool& artificial)
 {
+    delete stream;
+    return true;
+}
+
+PPluginStreamParent*
+PluginInstanceParent::PPluginStreamConstructor(const nsCString& mimeType,
+                                               const nsCString& target,
+                                               NPError* result)
+{
+    return new PluginStreamParent(this, mimeType, target, result);
+}
+
+bool
+PluginInstanceParent::PPluginStreamDestructor(PPluginStreamParent* stream,
+                                              const NPError& reason,
+                                              const bool& artificial)
+{
+    if (!artificial) {
+        static_cast<PluginStreamParent*>(stream)->NPN_DestroyStream(reason);
+    }
     delete stream;
     return true;
 }
@@ -242,32 +263,46 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
 {
     _MOZ_LOG(__FUNCTION__);
         
+    BrowserStreamParent* bs = new BrowserStreamParent(this, stream);
+
     NPError err;
-    if (!CallPBrowserStreamConstructor(new BrowserStreamParent(this, stream),
+    if (!CallPBrowserStreamConstructor(bs,
                                        nsCString(stream->url),
                                        stream->end,
                                        stream->lastmodified,
                                        static_cast<PStreamNotifyParent*>(stream->notifyData),
                                        nsCString(stream->headers),
-                                       nsCString(type), seekable, &err, stype)) {
+                                       nsCString(type), seekable, &err, stype))
         return NPERR_GENERIC_ERROR;
-    }
+
+    if (NPERR_NO_ERROR != err)
+        CallPBrowserStreamDestructor(bs, NPERR_GENERIC_ERROR, true);
+
     return err;
 }
 
 NPError
 PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
 {
-    BrowserStreamParent* sp =
-        static_cast<BrowserStreamParent*>(stream->pdata);
-    if (sp->mNPP != this) {
-        NS_RUNTIMEABORT("Mismatched plugin data");
-    }
+    AStream* s = static_cast<AStream*>(stream->pdata);
+    if (s->IsBrowserStream()) {
+        BrowserStreamParent* sp =
+            static_cast<BrowserStreamParent*>(s);
+        if (sp->mNPP != this)
+            NS_RUNTIMEABORT("Mismatched plugin data");
 
-    if (!CallPBrowserStreamDestructor(sp, reason, false)) {
-        return NPERR_GENERIC_ERROR;
+        CallPBrowserStreamDestructor(sp, reason, false);
+        return NPERR_NO_ERROR;
     }
-    return NPERR_NO_ERROR;
+    else {
+        PluginStreamParent* sp =
+            static_cast<PluginStreamParent*>(s);
+        if (sp->mInstance != this)
+            NS_RUNTIMEABORT("Mismatched plugin data");
+
+        CallPPluginStreamDestructor(sp, reason, false);
+        return NPERR_NO_ERROR;
+    }
 }
 
 PPluginScriptableObjectParent*
