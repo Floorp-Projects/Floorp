@@ -567,7 +567,8 @@ DumpEvalCacheMeter(JSContext *cx)
             );
     for (uintN i = 0; i < JS_ARRAY_LENGTH(table); ++i) {
         fprintf(fp, "%-8.8s  %llu\n",
-                table[i].name, *(uint64 *)((uint8 *)ecm + table[i].offset));
+                table[i].name,
+                (unsigned long long int) *(uint64 *)((uint8 *)ecm + table[i].offset));
     }
     fprintf(fp, "hit ratio %g%%\n", ecm->hit * 100. / ecm->probe);
     fprintf(fp, "avg steps %g\n", double(ecm->step) / ecm->probe);
