@@ -987,6 +987,12 @@ public:
         return calloc(1, size);
     }
 
+    inline void
+    operator delete(void *p)
+    {
+        free(p);
+    }
+
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
                   unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
