@@ -758,11 +758,12 @@ TileManager.Tile.prototype = {
     browserView.browserToViewportCanvasContext(ctx);
 
     ctx.translate(x, y);
+
     ctx.drawWindow(sourceContent,
                    rect.left, rect.top,
                    rect.right - rect.left, rect.bottom - rect.top,
                    "white",
-                   (ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET));
+                   (ctx.DRAWWINDOW_DRAW_CARET));
 
     ctx.restore();
 
