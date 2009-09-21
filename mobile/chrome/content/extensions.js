@@ -296,6 +296,7 @@ var ExtensionsView = {
     if (items.length == 0) {
       let strings = document.getElementById("bundle_browser");
       this.displaySectionMessage("local", strings.getString("addonsLocalNone.label"), null, true);
+      document.getElementById("addons-update-all").disabled = true;
     }
 
     for (let i = 0; i < items.length; i++) {
@@ -524,7 +525,7 @@ var ExtensionsView = {
     let end = this._repoItem;
 
     while (start != end) {
-      if (start.getAttribute("updateable") != "false")
+      if (start.getAttribute("updateable") == "true")
         items.push(this._extmgr.getItemForID(start.getAttribute("addonID")));
       start = start.nextSibling;
     }

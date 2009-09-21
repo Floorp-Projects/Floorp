@@ -184,6 +184,14 @@ toolbarbutton.page-button {
   }
 }
 
+#addons-update-all {
+  color: #000 !important;
+}
+
+#addons-update-all[disabled="true"] {
+  color: #aaa !important;
+}
+
 /* console panel UI   ------------------------------------------------------ */
 @media (orientation: landscape) {
   #console-filter-warnings,

@@ -326,7 +326,8 @@
               <richlistitem id="addons-local" class="section-header" align="center">
                 <label value="&addonsLocal.label;" flex="1"/>
                 <spacer flex="1"/>
-                <button class="button-dark" label="&addonsUpdate.label;" oncommand="ExtensionsView.updateAll();"/>
+                <button id="addons-update-all" class="button-dark" label="&addonsUpdate.label;"
+                        oncommand="ExtensionsView.updateAll();"/>
               </richlistitem>
               <richlistitem id="addons-repo" class="section-header">
                 <label value="&addonsRepo.label;" flex="1"/>
