@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Focus Scroll Tests"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<div id="div" style="width:500px;height:48px;overflow:auto;font-size:16px;line-height:16px;">
+aaaaaaaaa<br/>bbbbbbbb<br/>
+<a href="about:blank;" id="a">ccccccccc<br/>ddddddddd</a>
+</div>
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest()
+{
+  var fm = Components.classes["@mozilla.org/focus-manager;1"].
+             getService(Components.interfaces.nsIFocusManager);
+  var div = document.getElementById('div');
+  var a = document.getElementById('a');
+  synthesizeMouse(a, 4, 4, { type: "mousedown" }, window);
+  is(fm.focusedElement, a,
+     "The anchor element isn't set focus by the mouse down event");
+  is(div.scrollTop, 0,
+     "The div element was scrolled by the mouse down event");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTest);
+
+</script>
+
+</window>
