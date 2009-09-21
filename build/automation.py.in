@@ -269,7 +269,6 @@ user_pref("browser.safebrowsing.provider.0.gethashURL", "http://localhost:8888/s
 user_pref("browser.safebrowsing.provider.0.keyURL", "http://localhost:8888/safebrowsing-dummy/newkey");
 user_pref("browser.safebrowsing.provider.0.lookupURL", "http://localhost:8888/safebrowsing-dummy/lookup");
 user_pref("browser.safebrowsing.provider.0.updateURL", "http://localhost:8888/safebrowsing-dummy/update");
-user_pref("dom.ipc.plugins.enabled", true);
 """
   
   prefs.append(part)
