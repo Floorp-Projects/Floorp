@@ -356,6 +356,45 @@ nsresult nsMenuBarX::Paint()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+// Returns the 'key' attribute of the 'shortcutID' object (if any) in the
+// currently active menubar's DOM document.  'shortcutID' should be the id
+// (i.e. the name) of a component that defines a commonly used (and
+// localized) cmd+key shortcut, and belongs to a keyset containing similar
+// objects.  For example "key_selectAll".  Returns a value that can be
+// compared to the first character of [NSEvent charactersIgnoringModifiers]
+// when [NSEvent modifierFlags] == NSCommandKeyMask.
+char nsMenuBarX::GetLocalizedAccelKey(char *shortcutID)
+{
+  if (!sLastGeckoMenuBarPainted)
+    return 0;
+
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(sLastGeckoMenuBarPainted->mDocument));
+  if (!domDoc)
+    return 0;
+
+  NS_ConvertASCIItoUTF16 shortcutIDStr((const char *)shortcutID);
+  nsCOMPtr<nsIDOMElement> shortcutElement;
+  domDoc->GetElementById(shortcutIDStr, getter_AddRefs(shortcutElement));
+  nsCOMPtr<nsIContent> shortcutContent = do_QueryInterface(shortcutElement);
+  if (!shortcutContent)
+    return 0;
+
+  nsAutoString key;
+  shortcutContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, key);
+  NS_LossyConvertUTF16toASCII keyASC(key.get());
+  const char *keyASCPtr = keyASC.get();
+  if (!keyASCPtr)
+    return 0;
+  // If keyID's 'key' attribute isn't exactly one character long, it's not
+  // what we're looking for.
+  if (strlen(keyASCPtr) != sizeof(char))
+    return 0;
+  // Make sure retval is lower case.
+  char retval = tolower(keyASCPtr[0]);
+
+  return retval;
+}
+
 // Hide the item in the menu by setting the 'hidden' attribute. Returns it in |outHiddenNode| so
 // the caller can hang onto it if they so choose. It is acceptable to pass nsull
 // for |outHiddenNode| if the caller doesn't care about the hidden node.
