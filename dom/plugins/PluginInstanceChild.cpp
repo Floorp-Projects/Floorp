@@ -39,6 +39,7 @@
 #include "PluginInstanceChild.h"
 #include "PluginModuleChild.h"
 #include "BrowserStreamChild.h"
+#include "PluginStreamChild.h"
 #include "StreamNotifyChild.h"
 
 using namespace mozilla::plugins;
@@ -213,7 +214,6 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow,
     // some systems, in some conditions
 
     GdkNativeWindow handle = reinterpret_cast<uintptr_t>(aWindow.window);
-    GdkWindow* gdkWindow = gdk_window_lookup(handle);
 
     mWindow.window = (void*) handle;
     mWindow.width = aWindow.width;
@@ -466,9 +466,48 @@ PluginInstanceChild::PBrowserStreamConstructor(const nsCString& url,
 }
 
 bool
+PluginInstanceChild::AnswerPBrowserStreamDestructor(PBrowserStreamChild* stream,
+                                                    const NPError& reason,
+                                                    const bool& artificial)
+{
+    if (!artificial)
+        static_cast<BrowserStreamChild*>(stream)->NPP_DestroyStream(reason);
+    return true;
+}
+
+bool
 PluginInstanceChild::PBrowserStreamDestructor(PBrowserStreamChild* stream,
                                               const NPError& reason,
                                               const bool& artificial)
+{
+    delete stream;
+    return true;
+}
+
+PPluginStreamChild*
+PluginInstanceChild::PPluginStreamConstructor(const nsCString& mimeType,
+                                              const nsCString& target,
+                                              NPError* result)
+{
+    NS_RUNTIMEABORT("not callable");
+    return NULL;
+}
+
+bool
+PluginInstanceChild::AnswerPPluginStreamDestructor(PPluginStreamChild* stream,
+                                                   const NPReason& reason,
+                                                   const bool& artificial)
+{
+    if (!artificial) {
+        static_cast<PluginStreamChild*>(stream)->NPP_DestroyStream(reason);
+    }
+    return true;
+}
+
+bool
+PluginInstanceChild::PPluginStreamDestructor(PPluginStreamChild* stream,
+                                             const NPError& reason,
+                                             const bool& artificial)
 {
     delete stream;
     return true;
@@ -516,4 +555,23 @@ PluginInstanceChild::CreateActorForNPObject(NPObject* aObject)
   NS_ASSERTION(ok, "Out of memory?");
 
   return actor;
+}
+
+NPError
+PluginInstanceChild::NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
+                                   NPStream** aStream)
+{
+    PluginStreamChild* ps = new PluginStreamChild(this);
+
+    NPError result;
+    CallPPluginStreamConstructor(ps, nsDependentCString(aMIMEType),
+                                 nsDependentCString(aWindow), &result);
+    if (NPERR_NO_ERROR != result) {
+        *aStream = NULL;
+        CallPPluginStreamDestructor(ps, NPERR_GENERIC_ERROR, true);
+        return result;
+    }
+
+    *aStream = &ps->mStream;
+    return NPERR_NO_ERROR;
 }

@@ -40,6 +40,7 @@
 include protocol "PPluginModule.ipdl";
 include protocol "PPluginScriptableObject.ipdl";
 include protocol "PBrowserStream.ipdl";
+include protocol "PPluginStream.ipdl";
 include protocol "PStreamNotify.ipdl";
 
 include "mozilla/plugins/PluginMessageUtils.h";
@@ -58,20 +59,10 @@ rpc protocol PPluginInstance
 
   manages PPluginScriptableObject;
   manages PBrowserStream;
+  manages PPluginStream;
   manages PStreamNotify;
 
 child:
-  /* NPP_NewStream */
-  rpc PBrowserStream(nsCString url,
-                     uint32_t length,
-                     uint32_t lastmodified,
-                     PStreamNotify notifyData,
-                     nsCString headers,
-                     nsCString mimeType,
-                     bool seekable)
-    returns (NPError rv,
-             uint16_t stype);
-
   rpc NPP_SetWindow(NPWindow window)
     returns (NPError rv);
 
@@ -117,14 +108,40 @@ both:
   rpc PPluginScriptableObject();
   rpc ~PPluginScriptableObject();
 
+child:
+  /* NPP_NewStream */
+  rpc PBrowserStream(nsCString url,
+                     uint32_t length,
+                     uint32_t lastmodified,
+                     PStreamNotify notifyData,
+                     nsCString headers,
+                     nsCString mimeType,
+                     bool seekable)
+    returns (NPError rv,
+             uint16_t stype);
+
 both:
   /**
-   * ~BrowserStream is for both NPN_DestroyStream and NPP_DestroyStream.
+   * ~PBrowserStream is for both NPN_DestroyStream and NPP_DestroyStream.
    * @param artificial True when the stream is closed as a by-product of
    *                        some other call (such as a failure in NPP_Write).
    */
   rpc ~PBrowserStream(NPReason reason,
                       bool artificial);
+
+parent:
+  /* NPN_NewStream */
+  rpc PPluginStream(nsCString mimeType,
+                    nsCString target)
+    returns (NPError result);
+
+both:
+  /**
+   * ~PPluginStream is for both NPN_DestroyStream and NPP_DestroyStream.
+   * @param artificial True when the stream is closed as a by-product of
+   *                        some other call (such as a failure in NPN_Write).
+   */
+  rpc ~PPluginStream(NPReason reason, bool artificial);
 };
 
 } // namespace plugins

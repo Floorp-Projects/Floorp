@@ -57,6 +57,9 @@ class BrowserStreamChild;
 
 class PluginInstanceChild : public PPluginInstanceChild
 {
+    friend class BrowserStreamChild;
+    friend class PluginStreamChild;
+
 #ifdef OS_WIN
     friend LRESULT CALLBACK PluginWindowProc(HWND hWnd,
                                              UINT message,
@@ -65,8 +68,6 @@ class PluginInstanceChild : public PPluginInstanceChild
 #endif
 
 protected:
-    friend class BrowserStreamChild;
-
     virtual bool AnswerNPP_SetWindow(const NPWindow& window, NPError* rv);
 
     virtual bool
@@ -94,9 +95,29 @@ protected:
                               uint16_t *stype);
 
     virtual bool
+    AnswerPBrowserStreamDestructor(PBrowserStreamChild* stream,
+                                   const NPError& reason,
+                                   const bool& artificial);
+
+    virtual bool
     PBrowserStreamDestructor(PBrowserStreamChild* stream,
                              const NPError& reason,
                              const bool& artificial);
+
+    virtual PPluginStreamChild*
+    PPluginStreamConstructor(const nsCString& mimeType,
+                             const nsCString& target,
+                             NPError* result);
+
+    virtual bool
+    AnswerPPluginStreamDestructor(PPluginStreamChild* stream,
+                                  const NPReason& reason,
+                                  const bool& artificial);
+
+    virtual bool
+    PPluginStreamDestructor(PPluginStreamChild* stream,
+                            const NPReason& reason,
+                            const bool& artificial);
 
     virtual PStreamNotifyChild*
     PStreamNotifyConstructor(const nsCString& url, const nsCString& target,
@@ -141,6 +162,10 @@ public:
 
     PluginScriptableObjectChild*
     CreateActorForNPObject(NPObject* aObject);
+
+    NPError
+    NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
+                  NPStream** aStream);
 
 private:
 
