@@ -33,6 +33,7 @@
 
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsHtml5AtomTable.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
@@ -134,8 +135,10 @@ class nsHtml5Tokenizer
     PRBool confident;
   private:
     PRInt32 line;
+    nsHtml5AtomTable* interner;
   public:
     nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler);
+    void setInterner(nsHtml5AtomTable* interner);
     void initLocation(nsString* newPublicId, nsString* newSystemId);
     ~nsHtml5Tokenizer();
     void setContentModelFlag(PRInt32 contentModelFlag, nsIAtom* contentModelElement);

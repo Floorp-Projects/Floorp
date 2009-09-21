@@ -581,7 +581,10 @@ nsHtml5StreamParser::ParseUntilSuspend()
             return; // no more data for now but expecting more
           case STREAM_ENDING:
             mDone = PR_TRUE;
-            mExecutor->DidBuildModel(PR_FALSE);
+            {
+              nsRefPtr<nsHtml5StreamParser> kungFuDeathGrip(this);
+              mExecutor->DidBuildModel(PR_FALSE);
+            }
             return; // no more data and not expecting more
           default:
             NS_NOTREACHED("It should be impossible to reach this.");

@@ -53,6 +53,7 @@
 #include "nsITimer.h"
 #include "nsIScriptElement.h"
 #include "nsIParser.h"
+#include "nsCOMArray.h"
 
 class nsHtml5TreeBuilder;
 class nsHtml5Tokenizer;
@@ -112,6 +113,12 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
     nsTArray<nsIContentPtr>              mElementsSeenInThisAppendBatch;
     nsTArray<nsHtml5PendingNotification> mPendingNotifications;
     nsHtml5StreamParser*                 mStreamParser;
+    nsCOMArray<nsIContent>               mOwnedElements;
+    
+    // This could be optimized away by introducing more tree ops so that 
+    // non-elements wouldn't use the handle setup but the text node / comment
+    // / doctype operand would be remembered by the tree op executor.
+    nsCOMArray<nsIContent>               mOwnedNonElements;
 
     /**
      * The character encoding to which to switch in a late <meta> renavigation
@@ -243,6 +250,10 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
      * Renavigates to the document with a different charset
      */
     nsresult MaybePerformCharsetSwitch();
+
+    inline void SetScriptElement(nsIContent* aScript) {
+      mScriptElement = aScript;
+    }
 
     /**
      * Runs mScriptElement
@@ -376,19 +387,20 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
         mScriptElement = nsnull;
       }    
     }
-    
-    /**
-     * Request execution of the script element when the tokenizer returns
-     */
-    void SetScriptElement(nsIContent* aScript) { 
-      mScriptElement = aScript;
-    }
-    
+        
     void SetTreeBuilder(nsHtml5TreeBuilder* aBuilder) {
       mTreeBuilder = aBuilder;
     }
     
     void Reset();
+    
+    inline void HoldElement(nsIContent* aContent) {
+      mOwnedElements.AppendObject(aContent);
+    }
+
+    inline void HoldNonElement(nsIContent* aContent) {
+      mOwnedNonElements.AppendObject(aContent);
+    }
 
   private:
 
