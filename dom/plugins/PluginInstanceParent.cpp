@@ -216,10 +216,10 @@ PluginInstanceParent::NPP_GetValue(NPPVariable variable, void *ret_value)
             }
             return rv;
         }
+        // TODO: more values
+        default:
+            return NPERR_GENERIC_ERROR;
     }
-
-    NS_NOTREACHED("Don't get here!");
-    return NPERR_GENERIC_ERROR;
 }
 
 int16_t
