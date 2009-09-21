@@ -568,7 +568,7 @@ js_FragProfiling_showResults(JSTraceMonitor* tm)
     js_LogController.printf(
         "\n----------------- Per-fragment execution counts ------------------\n");
     js_LogController.printf(
-        "\nTotal count = %llu\n\n", totCount);
+        "\nTotal count = %llu\n\n", (unsigned long long int)totCount);
 
     js_LogController.printf(
         "           Entry counts         Entry counts       ----- Static -----\n");
@@ -590,10 +590,10 @@ js_FragProfiling_showResults(JSTraceMonitor* tm)
                                 (double)topPI[r].count * 100.0 / (double)totCount,
                                 topPI[r].count,
                                 (double)cumulCount * 100.0 / (double)totCount,
-                                cumulCount,
+                                (unsigned long long int)cumulCount,
                                 topPI[r].nStaticExits,
-                                topPI[r].nCodeBytes,
-                                topPI[r].nExitBytes,
+                                (unsigned int)topPI[r].nCodeBytes,
+                                (unsigned int)topPI[r].nExitBytes,
                                 topFragID[r]);
         totSE += (uint32_t)topPI[r].nStaticExits;
         totCodeB += topPI[r].nCodeBytes;
@@ -602,7 +602,7 @@ js_FragProfiling_showResults(JSTraceMonitor* tm)
     js_LogController.printf("\nTotal displayed code bytes = %u, "
                             "exit bytes = %u\n"
                             "Total displayed static exits = %d\n\n",
-                            totCodeB, totExitB, totSE);
+                            (unsigned int)totCodeB, (unsigned int)totExitB, totSE);
 
     js_LogController.printf("Analysis by exit counts\n\n");
 
@@ -4545,8 +4545,10 @@ TraceRecorder::prepareTreeCall(VMFragment* inner)
          * call on top of the new value for sp.
          */
         debug_only_printf(LC_TMTracer,
-                          "sp_adj=%d outer=%d inner=%d\n",
-                          sp_adj, treeInfo->nativeStackBase, ti->nativeStackBase);
+                          "sp_adj=%lld outer=%lld inner=%lld\n",
+                          (long long int)sp_adj,
+                          (long long int)treeInfo->nativeStackBase,
+                          (long long int)ti->nativeStackBase);
         ptrdiff_t sp_offset = 
                 - treeInfo->nativeStackBase /* rebase sp to beginning of outer tree's stack */
                 + sp_adj /* adjust for stack in outer frame inner tree can't see */
@@ -5482,9 +5484,9 @@ RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         AUDIT(returnToDifferentLoopHeader);
         JS_ASSERT(!cx->fp->imacpc);
         debug_only_printf(LC_TMTracer,
-                          "loop edge to %d, header %d\n",
-                          cx->fp->regs->pc - cx->fp->script->code,
-                          (jsbytecode*)r->getFragment()->root->ip - cx->fp->script->code);
+                          "loop edge to %lld, header %lld\n",
+                          (long long int)(cx->fp->regs->pc - cx->fp->script->code),
+                          (long long int)((jsbytecode*)r->getFragment()->root->ip - cx->fp->script->code));
         js_AbortRecording(cx, "Loop edge does not return to header");
         return false;
     }
@@ -6211,7 +6213,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
 #endif
 
     debug_only_printf(LC_TMTracer,
-                      "leaving trace at %s:%u@%u, op=%s, lr=%p, exitType=%s, sp=%d, "
+                      "leaving trace at %s:%u@%u, op=%s, lr=%p, exitType=%s, sp=%lld, "
                       "calldepth=%d, cycles=%llu\n",
                       fp->script->filename,
                       js_FramePCToLineNumber(cx, fp),
@@ -6219,9 +6221,9 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                       js_CodeName[fp->imacpc ? *fp->imacpc : *fp->regs->pc],
                       (void*)lr,
                       getExitName(lr->exitType),
-                      fp->regs->sp - StackBase(fp),
+                      (long long int)(fp->regs->sp - StackBase(fp)),
                       calldepth,
-                      cycles);
+                      (unsigned long long int)cycles);
 
     /*
      * If this trace is part of a tree, later branches might have added
@@ -7039,14 +7041,25 @@ js_FinishJIT(JSTraceMonitor *tm)
                           "recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
                           "trees trashed(%llu), slot promoted(%llu), unstable loop variable(%llu), "
                           "breaks(%llu), returns(%llu), unstableInnerCalls(%llu), blacklisted(%llu)\n",
-                          jitstats.recorderStarted, jitstats.recorderAborted, jitstats.traceCompleted,
-                          jitstats.returnToDifferentLoopHeader, jitstats.treesTrashed, jitstats.slotPromoted,
-                          jitstats.unstableLoopVariable, jitstats.breakLoopExits, jitstats.returnLoopExits,
-                          jitstats.noCompatInnerTrees, jitstats.blacklisted);
+                           (unsigned long long int)jitstats.recorderStarted,
+                           (unsigned long long int)jitstats.recorderAborted,
+                           (unsigned long long int)jitstats.traceCompleted,
+                           (unsigned long long int)jitstats.returnToDifferentLoopHeader,
+                           (unsigned long long int)jitstats.treesTrashed,
+                           (unsigned long long int)jitstats.slotPromoted,
+                           (unsigned long long int)jitstats.unstableLoopVariable,
+                           (unsigned long long int)jitstats.breakLoopExits,
+                           (unsigned long long int)jitstats.returnLoopExits,
+                           (unsigned long long int)jitstats.noCompatInnerTrees,
+                           (unsigned long long int)jitstats.blacklisted);
         debug_only_printf(LC_TMStats,
                           "monitor: triggered(%llu), exits(%llu), type mismatch(%llu), "
-                          "global mismatch(%llu), flushed(%llu)\n", jitstats.traceTriggered, jitstats.sideExitIntoInterpreter,
-                          jitstats.typeMapMismatchAtEntry, jitstats.globalShapeMismatchAtEntry, jitstats.cacheFlushed);
+                          "global mismatch(%llu), flushed(%llu)\n",
+                           (unsigned long long int)jitstats.traceTriggered,
+                           (unsigned long long int)jitstats.sideExitIntoInterpreter,
+                           (unsigned long long int)jitstats.typeMapMismatchAtEntry,
+                           (unsigned long long int)jitstats.globalShapeMismatchAtEntry,
+                           (unsigned long long int)jitstats.cacheFlushed);
     }
 #endif
     JS_ASSERT(tm->reservedDoublePool);
