@@ -342,7 +342,9 @@ placeitem .button-text {
 }
 
 autocompleteresult {
-  padding: 0.25mm 0.1mm;
+  color: black;
+  background-color: white;
+  padding: 1.25mm 0.5mm;
   border-bottom: 0.05mm solid rgb(207,207,207);
   min-height: 9.2mm; /* row size */
 }
@@ -352,74 +354,75 @@ autocompleteresult {
   background-color: grey !important;
 }
 
-.autocomplete-item-desc {
-  color: blue;
-  white-space: pre;
-  font-size: 8pt !important;
-}
-
-.autocomplete-item-desc:first-line {
-  color: black;
+.autocomplete-item-label {
+  margin: 0;
+  padding: 0;
   font-size: 9pt !important;
+  font-weight: normal;
+  margin-right: 2mm;
 }
 
-.autocomplete-item-tags {
-  color: black;
+.autocomplete-item-label > image {
+  width: 24px;
+  height: 24px;
+  margin: 0mm 2.5mm 0mm 2mm;
+}
+
+.autocomplete-item-label > label {
+  -moz-margin-start: 1px;
+}
+
+.autocomplete-item-label[favorite="true"] {
+  padding-right: 30px;
+  background: url(images/star-24.png) no-repeat 100%;
+}
+
+.autocomplete-item-label[favorite="true"]:after {
+  float: right;
+  content: attr(tags);
   font-size: 8pt !important;
   font-weight: lighter;
+  padding-top: 1mm;
+  margin-left: 2mm;
 }
 
-.autocomplete-item-tags[favorite=true]:after {
-  float: right;
-  position: relative;
-  top: -6pt;
-  content: url(images/star-24.png);
-  margin: 0mm 2mm 0mm 1.5mm;
-}
-
-.autocomplete-item-image {
-  height: 24px;
-  width: 24px;
-  margin: 1.6mm 1.5mm 0mm 2mm;
+.autocomplete-item-url {
+  margin: 0;
+  padding: 0;
+  color: blue;
+  font-size: 8pt !important;
+  margin-left: 11.5mm;
+  margin-right: 2mm;
 }
 
 /* special "no results" and "all bookmarks" items */
-autocompleteresult.noresults > .autocomplete-item-desc {
-  text-align: center;
-}
-
-autocompleteresult.noresults > .autocomplete-item-desc:first-line {
-  color: grey;
-}
-
-autocompleteresult.noresults > .autocomplete-item-image,
-autocompleteresult.noresults > .autocomplete-item-tags {
-  visibility: hidden;
-}
-
 autocompleteresult.noresults {
   font-style: italic;
   border-bottom: none;
 }
 
+autocompleteresult.noresults > .autocomplete-item-label {
+  text-align: center;
+  color: grey;
+}
+
+autocompleteresult.noresults > .autocomplete-item-label > image,
+autocompleteresult.noresults > .autocomplete-item-url {
+  visibility: hidden;
+}
+
 autocompleteresult.allbookmarks {
-  color: black;
-  background-color: #E9E9E9;
+  -moz-box-pack: center;
+  background: #E9E9E9 url("images/arrowright-16.png") no-repeat 98% 50%;
 }
 
-autocompleteresult.allbookmarks > .autocomplete-item-desc {
-  color: black;
+autocompleteresult.allbookmarks > .autocomplete-item-label {
   font-size: 9pt !important;
-}
-
-autocompleteresult.allbookmarks > .autocomplete-item-image {
   margin: 0 1.5mm;
 }
 
-autocompleteresult.allbookmarks > .autocomplete-item-tags:after {
-  /* this image works fine for both -high and -low */
-  content: url(images/arrowright-16.png);
-  -moz-margin-end: 1.1mm;
+autocompleteresult.allbookmarks > .autocomplete-item-url {
+  display: none;
 }
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */

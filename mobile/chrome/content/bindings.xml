@@ -40,10 +40,12 @@
   </binding>
 
   <binding id="popup_autocomplete_result">
-    <content align="center">
-      <xul:image class="autocomplete-item-image" src="" xbl:inherits="src"/>
-      <xul:description flex="1" class="autocomplete-item-desc" xbl:inherits="xbl:text=value"></xul:description>
-      <xul:label class="autocomplete-item-tags" xbl:inherits="favorite,xbl:text=tags"></xul:label>
+    <content orient="vertical">
+      <xul:hbox class="autocomplete-item-label" align="center" xbl:inherits="tags, favorite" mousethrough="always">
+        <xul:image xbl:inherits="src"/>
+        <xul:label flex="1" crop="center" xbl:inherits="value"/>
+      </xul:hbox>
+      <xul:label class="autocomplete-item-url" xbl:inherits="value=url" crop="center" mousethrough="always"/>
     </content>
   </binding>
 
@@ -221,6 +223,7 @@
             if (i > matchCount - 1) {
               // Just clear out the old item
               item.setAttribute("value", "");
+              item.removeAttribute("favorite");
               item._empty = true;
 
               continue;
@@ -237,7 +240,8 @@
             item.setAttribute("tags", tags);
 
             let url = controller.getValueAt(i);
-            item.setAttribute("value", this._truncate((title || url)) + '\n' +  this._truncate(url));
+            item.setAttribute("value", title || url);
+            item.setAttribute("url", url);
 
             let isBookmark = ((type == "bookmark") || (type == "tag"));
             item.setAttribute("favorite", isBookmark);
@@ -271,20 +275,6 @@
       
       <property name="allBookmarksItemSelected" readonly="true"
                 onget="return this._selectedItem == this._allBookmarksItem;"/>
-
-      <method name="_truncate">
-        <parameter name="aString" />
-        <body><![CDATA[
-          // Simulate a crop by replacing the end part of the string by an 
-          // ellipsis and a few remaining characters from the end of the string
-          //XXX done in hard for now but should be done depending on the width
-          let max = 60;
-          if (aString.length > max) {
-            return aString.substr(0, max-20) + '...' + aString.slice(-10);
-          }
-          return aString;
-        ]]></body>
-      </method>
 
       <method name="selectBy">
         <parameter name="aReverse"/>
@@ -352,11 +342,6 @@
       <handler event="click" button="0">
         <![CDATA[
           let target = event.originalTarget;
-          if (target.localName != "autocompleteresult")
-            target = target.parentNode;
-          if (target.localName != "autocompleteresult")
-            return;
-
           if (target == this._allBookmarksItem) {
             // XXX bug 516575
             // select the item, since closing the popup can be slow...
@@ -364,7 +349,8 @@
             this.selectedIndex = 0;
             this.close();
             CommandUpdater.doCommand("cmd_bookmarks");
-          } else if (!target._empty) {
+          }
+          else if (target.localName == "autocompleteresult" && !target._empty) {
             let offset = this._allBookmarksItem._hidden ? 0 : 1;
             // XXX bug 516575
             // same as above - we can just set _selectedIndex directly to avoid
