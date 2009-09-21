@@ -1339,7 +1339,7 @@ nsBrowserAccess.prototype = {
   openURI: function(aURI, aOpener, aWhere, aContext) {
     var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
     if (isExternal && aURI && aURI.schemeIs("chrome")) {
-      dump("use -chrome command-line option to load external chrome urls\n");
+      //dump("use -chrome command-line option to load external chrome urls\n");
       return null;
     }
 
@@ -2347,8 +2347,8 @@ Tab.prototype = {
   },
 
   startLoading: function() {
-    if (this._loading)
-      dump("!!! Already loading this tab, please file a bug\n");
+    //if (this._loading)
+    //  dump("!!! Already loading this tab, please file a bug\n");
 
     this._loading = true;
     this._browserViewportState.zoomChanged = false;
@@ -2360,8 +2360,8 @@ Tab.prototype = {
   },
 
   endLoading: function() {
-    if (!this._loading)
-      dump("!!! Already finished loading this tab, please file a bug\n");
+    //if (!this._loading)
+    //  dump("!!! Already finished loading this tab, please file a bug\n");
 
     this._loading = false;
     clearTimeout(this._loadingTimeout);

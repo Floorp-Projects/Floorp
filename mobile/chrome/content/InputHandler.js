@@ -658,11 +658,11 @@ MouseModule.prototype = {
    * Endpoint of _commitAnotherClick().  Finalize a single click and tell the clicker.
    */
   _doSingleClick: function _doSingleClick() {
-    dump('doing single click with ' + this._downUpEvents.length + '\n');
-    for (let i = 0; i < this._downUpEvents.length; ++i)
-      dump('      ' + this._downUpEvents[i].event.type
-           + " :: " + this._downUpEvents[i].event.button
-           + " :: " + this._downUpEvents[i].event.detail + '\n');/**/
+    //dump('doing single click with ' + this._downUpEvents.length + '\n');
+    //for (let i = 0; i < this._downUpEvents.length; ++i)
+    //  dump('      ' + this._downUpEvents[i].event.type
+    //       + " :: " + this._downUpEvents[i].event.button
+    //       + " :: " + this._downUpEvents[i].event.detail + '\n');/**/
 
     let ev = this._downUpEvents[1].event;
     this._cleanClickBuffer(2);
@@ -673,11 +673,11 @@ MouseModule.prototype = {
    * Endpoint of _commitAnotherClick().  Finalize a double click and tell the clicker.
    */
   _doDoubleClick: function _doDoubleClick() {
-    dump('doing double click with ' + this._downUpEvents.length + '\n');
-    for (let i = 0; i < this._downUpEvents.length; ++i)
-      dump('      ' + this._downUpEvents[i].event.type
-           + " :: " + this._downUpEvents[i].event.button
-           + " :: " + this._downUpEvents[i].event.detail + '\n');/**/
+    //dump('doing double click with ' + this._downUpEvents.length + '\n');
+    //for (let i = 0; i < this._downUpEvents.length; ++i)
+    //  dump('      ' + this._downUpEvents[i].event.type
+    //       + " :: " + this._downUpEvents[i].event.button
+    //       + " :: " + this._downUpEvents[i].event.detail + '\n');/**/
 
     let mouseUp1 = this._downUpEvents[1].event;
     let mouseUp2 = this._downUpEvents[3].event;
