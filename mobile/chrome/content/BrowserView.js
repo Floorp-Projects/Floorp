@@ -452,7 +452,7 @@ BrowserView.prototype = {
       try {
         r.restrictTo(vs.viewportRect);
         rects.push(r);
-      } catch(ex) { dump("fail\n"); }
+      } catch(ex) { /* dump("fail\n"); */ }
     }
 
     tm.dirtyRects(rects, this.isRendering());
