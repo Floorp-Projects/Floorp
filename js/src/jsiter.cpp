@@ -123,6 +123,10 @@ iterator_trace(JSTracer *trc, JSObject *obj)
      * simplicity.
      */
     JSObject *iterable = obj->getParent();
+    if (!iterable) {
+        /* for (x in null) creates an iterator object with a null parent. */
+        return;
+    }
     jsval iter_state = obj->fslots[JSSLOT_ITER_STATE];
     js_MarkEnumeratorState(trc, iterable, iter_state);
 }
