@@ -83,6 +83,7 @@ class nsHtml5HtmlAttributes
     PRBool contains(nsHtml5AttributeName* name);
     void adjustForMath();
     void adjustForSvg();
+    nsHtml5HtmlAttributes* cloneAttributes();
     static void initializeStatics();
     static void releaseStatics();
 };

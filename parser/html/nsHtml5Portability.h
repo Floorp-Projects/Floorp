@@ -62,6 +62,7 @@ class nsHtml5Portability
     static nsString* newStringFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length);
     static nsString* newEmptyString();
     static nsString* newStringFromLiteral(const char* literal);
+    static nsString* newStringFromString(nsString* string);
     static jArray<PRUnichar,PRInt32> newCharArrayFromLocal(nsIAtom* local);
     static jArray<PRUnichar,PRInt32> newCharArrayFromString(nsString* string);
     static void releaseString(nsString* str);

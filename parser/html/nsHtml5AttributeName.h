@@ -57,20 +57,23 @@ class nsHtml5Portability;
 
 class nsHtml5AttributeName
 {
-  private:
+  public:
     static PRInt32* ALL_NO_NS;
+  private:
     static PRInt32* XMLNS_NS;
     static PRInt32* XML_NS;
     static PRInt32* XLINK_NS;
+  public:
     static nsIAtom** ALL_NO_PREFIX;
+  private:
     static nsIAtom** XMLNS_PREFIX;
     static nsIAtom** XLINK_PREFIX;
     static nsIAtom** XML_PREFIX;
     static nsIAtom** SVG_DIFFERENT(nsIAtom* name, nsIAtom* camel);
     static nsIAtom** MATH_DIFFERENT(nsIAtom* name, nsIAtom* camel);
     static nsIAtom** COLONIFIED_LOCAL(nsIAtom* name, nsIAtom* suffix);
-    static nsIAtom** SAME_LOCAL(nsIAtom* name);
   public:
+    static nsIAtom** SAME_LOCAL(nsIAtom* name);
     static nsHtml5AttributeName* nameByBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length);
   private:
     static PRInt32 bufToHash(PRUnichar* buf, PRInt32 len);
@@ -84,6 +87,7 @@ class nsHtml5AttributeName
   public:
     virtual void release();
     ~nsHtml5AttributeName();
+    virtual nsHtml5AttributeName* cloneAttributeName();
     PRInt32 getUri(PRInt32 mode);
     nsIAtom* getLocal(PRInt32 mode);
     nsIAtom* getPrefix(PRInt32 mode);

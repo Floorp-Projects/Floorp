@@ -56,7 +56,7 @@
 #include "nsHtml5StackNode.h"
 
 
-nsHtml5StackNode::nsHtml5StackNode(PRInt32 group, PRInt32 ns, nsIAtom* name, nsIContent* node, PRBool scoping, PRBool special, PRBool fosterParenting, nsIAtom* popName)
+nsHtml5StackNode::nsHtml5StackNode(PRInt32 group, PRInt32 ns, nsIAtom* name, nsIContent* node, PRBool scoping, PRBool special, PRBool fosterParenting, nsIAtom* popName, nsHtml5HtmlAttributes* attributes)
   : group(group),
     name(name),
     popName(popName),
@@ -65,6 +65,7 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 group, PRInt32 ns, nsIAtom* name, nsI
     scoping(scoping),
     special(special),
     fosterParenting(fosterParenting),
+    attributes(attributes),
     refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
@@ -83,6 +84,26 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
     scoping(elementName->scoping),
     special(elementName->special),
     fosterParenting(elementName->fosterParenting),
+    attributes(nsnull),
+    refcount(1)
+{
+  MOZ_COUNT_CTOR(nsHtml5StackNode);
+  nsHtml5Portability::retainLocal(name);
+  nsHtml5Portability::retainLocal(popName);
+  nsHtml5Portability::retainElement(node);
+}
+
+
+nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent* node, nsHtml5HtmlAttributes* attributes)
+  : group(elementName->group),
+    name(elementName->name),
+    popName(elementName->name),
+    ns(ns),
+    node(node),
+    scoping(elementName->scoping),
+    special(elementName->special),
+    fosterParenting(elementName->fosterParenting),
+    attributes(attributes),
     refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
@@ -101,6 +122,7 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
     scoping(elementName->scoping),
     special(elementName->special),
     fosterParenting(elementName->fosterParenting),
+    attributes(nsnull),
     refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
@@ -119,6 +141,7 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
     scoping(scoping),
     special(PR_FALSE),
     fosterParenting(PR_FALSE),
+    attributes(nsnull),
     refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
@@ -134,6 +157,13 @@ nsHtml5StackNode::~nsHtml5StackNode()
   nsHtml5Portability::releaseLocal(name);
   nsHtml5Portability::releaseLocal(popName);
   nsHtml5Portability::releaseElement(node);
+  delete attributes;
+}
+
+void 
+nsHtml5StackNode::dropAttributes()
+{
+  attributes = nsnull;
 }
 
 void 

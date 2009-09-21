@@ -382,6 +382,7 @@ nsHtml5Tokenizer::attributeNameComplete()
 void 
 nsHtml5Tokenizer::addAttributeWithoutValue()
 {
+
   if (!!attributeName) {
     attributes->addAttribute(attributeName, nsHtml5Portability::newEmptyString());
   }
@@ -754,6 +755,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             case '&': {
               clearLongStrBuf();
               state = NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_UNQUOTED;
+
               reconsume = PR_TRUE;
               goto stateloop;
             }
@@ -779,6 +781,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             default: {
               clearLongStrBufAndAppendCurrentC(c);
               state = NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_UNQUOTED;
+
               goto stateloop;
             }
           }
