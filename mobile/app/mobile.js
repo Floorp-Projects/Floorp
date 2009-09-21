@@ -228,7 +228,7 @@ pref("browser.search.suggest.enabled", true);
 // enable xul error pages
 pref("browser.xul.error_pages.enabled", true);
 
-// Specify emptySearch = 0 so that bookmarks appear in the list by default
+// Specify emptyRestriction = 0 so that bookmarks appear in the list by default
 pref("browser.urlbar.default.behavior", 0);
 pref("browser.urlbar.default.behavior.emptyRestriction", 0);
 
