@@ -583,7 +583,6 @@ MAKEFILES_xpfe="
   toolkit/components/remote/Makefile
   xpfe/Makefile
   xpfe/browser/Makefile
-  xpfe/browser/public/Makefile
   xpfe/browser/src/Makefile
   xpfe/components/Makefile
   xpfe/components/directory/Makefile
