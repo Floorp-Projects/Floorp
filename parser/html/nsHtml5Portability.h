@@ -30,6 +30,7 @@
 
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsHtml5AtomTable.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
@@ -58,7 +59,7 @@ class nsHtml5StateSnapshot;
 class nsHtml5Portability
 {
   public:
-    static nsIAtom* newLocalNameFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length);
+    static nsIAtom* newLocalNameFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length, nsHtml5AtomTable* interner);
     static nsString* newStringFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length);
     static nsString* newEmptyString();
     static nsString* newStringFromLiteral(const char* literal);
@@ -68,8 +69,8 @@ class nsHtml5Portability
     static void releaseString(nsString* str);
     static void retainLocal(nsIAtom* local);
     static void releaseLocal(nsIAtom* local);
-    static void retainElement(nsIContent* elt);
-    static void releaseElement(nsIContent* elt);
+    static void retainElement(nsIContent** elt);
+    static void releaseElement(nsIContent** elt);
     static PRBool localEqualsBuffer(nsIAtom* local, PRUnichar* buf, PRInt32 offset, PRInt32 length);
     static PRBool lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string);
     static PRBool lowerCaseLiteralEqualsIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string);

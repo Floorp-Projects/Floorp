@@ -30,6 +30,7 @@
 
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsHtml5AtomTable.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
@@ -74,7 +75,7 @@ class nsHtml5AttributeName
     static nsIAtom** COLONIFIED_LOCAL(nsIAtom* name, nsIAtom* suffix);
   public:
     static nsIAtom** SAME_LOCAL(nsIAtom* name);
-    static nsHtml5AttributeName* nameByBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length);
+    static nsHtml5AttributeName* nameByBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length, nsHtml5AtomTable* interner);
   private:
     static PRInt32 bufToHash(PRUnichar* buf, PRInt32 len);
     PRInt32* uri;

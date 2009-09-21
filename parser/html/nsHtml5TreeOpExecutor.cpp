@@ -74,18 +74,21 @@ NS_IMPL_ADDREF_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
 NS_IMPL_RELEASE_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFlushTimer);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFlushTimer)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mOwnedElements)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mOwnedNonElements)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
   if (tmp->mFlushTimer) {
     tmp->mFlushTimer->Cancel();
   }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFlushTimer);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFlushTimer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mScriptElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mOwnedElements)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mOwnedNonElements)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
 
 nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor()
   : mSuppressEOF(PR_FALSE)
@@ -504,12 +507,14 @@ nsHtml5TreeOpExecutor::MaybeSuspend() {
 
 void
 nsHtml5TreeOpExecutor::MaybeExecuteScript() {
-  if (mScriptElement) {
-    // mUninterruptibleDocWrite = PR_FALSE;
-    ExecuteScript();
-    if (mStreamParser) {
-      mStreamParser->Suspend();
-    }
+  if (!mTreeBuilder->HasScript()) {
+    return;
+  }
+  Flush(); // Let the doc update end before we start executing the script
+  NS_ASSERTION(mScriptElement, "No script to run");
+  ExecuteScript();
+  if (mStreamParser) {
+    mStreamParser->Suspend();
   }
 }
 

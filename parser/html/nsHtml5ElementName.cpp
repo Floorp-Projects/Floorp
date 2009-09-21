@@ -29,6 +29,7 @@
 
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsHtml5AtomTable.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
@@ -56,17 +57,17 @@
 #include "nsHtml5ReleasableElementName.h"
 
 nsHtml5ElementName* 
-nsHtml5ElementName::elementNameByBuffer(jArray<PRUnichar,PRInt32> buf, PRInt32 offset, PRInt32 length)
+nsHtml5ElementName::elementNameByBuffer(jArray<PRUnichar,PRInt32> buf, PRInt32 offset, PRInt32 length, nsHtml5AtomTable* interner)
 {
   PRInt32 hash = nsHtml5ElementName::bufToHash(buf, length);
   PRInt32 index = nsHtml5ElementName::ELEMENT_HASHES.binarySearch(hash);
   if (index < 0) {
-    return new nsHtml5ReleasableElementName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length));
+    return new nsHtml5ReleasableElementName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length, interner));
   } else {
     nsHtml5ElementName* elementName = nsHtml5ElementName::ELEMENT_NAMES[index];
     nsIAtom* name = elementName->name;
     if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
-      return new nsHtml5ReleasableElementName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length));
+      return new nsHtml5ReleasableElementName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length, interner));
     }
     return elementName;
   }

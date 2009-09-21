@@ -30,6 +30,7 @@
 
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsHtml5AtomTable.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
@@ -65,7 +66,7 @@ class nsHtml5ElementName
     PRBool special;
     PRBool scoping;
     PRBool fosterParenting;
-    static nsHtml5ElementName* elementNameByBuffer(jArray<PRUnichar,PRInt32> buf, PRInt32 offset, PRInt32 length);
+    static nsHtml5ElementName* elementNameByBuffer(jArray<PRUnichar,PRInt32> buf, PRInt32 offset, PRInt32 length, nsHtml5AtomTable* interner);
   private:
     static PRInt32 bufToHash(jArray<PRUnichar,PRInt32> buf, PRInt32 len);
     nsHtml5ElementName(nsIAtom* name, nsIAtom* camelCaseName, PRInt32 group, PRBool special, PRBool scoping, PRBool fosterParenting);
