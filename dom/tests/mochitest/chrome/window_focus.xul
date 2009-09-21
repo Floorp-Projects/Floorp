@@ -1143,10 +1143,22 @@ function switchWindowTest(otherWindow, framesetWindow)
   is(exh, true, "activeWindow set to null");
   is(fm.activeWindow, otherWindow, "window not changed when activeWindow set to null");
 
-  var topwindow = getTopWindow(framesetWindow);
+  var topWindow = getTopWindow(framesetWindow);
+
+  ok(topWindow.document.commandDispatcher.getControllerForCommand("cmd_copy"),
+     "getControllerForCommand for focused window set");
+  ok(otherWindow.document.commandDispatcher.getControllerForCommand("cmd_copy"),
+     "getControllerForCommand for non-focused window set");
+  ok(topWindow.document.commandDispatcher.getControllerForCommand("cmd_copy") !=
+     otherWindow.document.commandDispatcher.getControllerForCommand("cmd_copy"),
+     "getControllerForCommand for two windows different");
+  ok(topWindow.document.commandDispatcher.getControllers() !=
+     otherWindow.document.commandDispatcher.getControllers(),
+     "getControllers for two windows different");
+
   gOldExpectedWindow = otherWindow;
   gNewExpectedWindow = framesetWindow.frames[1];
-  expectFocusShift(function () fm.activeWindow = topwindow,
+  expectFocusShift(function () fm.activeWindow = topWindow,
                    gNewExpectedWindow, getById("f4"), true, "switch to frame activeWindow");
 
   fm.clearFocus(otherWindow);
