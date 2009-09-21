@@ -1297,6 +1297,7 @@ Browser.MainDragger.prototype = {
     } else if (doffset[0] < 0 && scrollRight > rightLock) {
       amount = Math.max(doffset[0], rightLock - scrollRight);
     }
+    amount = Math.round(amount);
     doffset[0] -= amount;
     return amount;
   },
