@@ -29,6 +29,7 @@
 
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsHtml5AtomTable.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
@@ -55,7 +56,7 @@
 #include "nsHtml5StateSnapshot.h"
 
 
-nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent* formPointer)
+nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer)
   : stack(stack),
     listOfActiveFormattingElements(listOfActiveFormattingElements),
     formPointer(formPointer)

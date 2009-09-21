@@ -32,6 +32,7 @@
 
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsHtml5AtomTable.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
@@ -72,9 +73,18 @@ nsHtml5Tokenizer::nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler)
   : tokenHandler(tokenHandler),
     encodingDeclarationHandler(nsnull),
     bmpChar(jArray<PRUnichar,PRInt32>(1)),
-    astralChar(jArray<PRUnichar,PRInt32>(2))
+    astralChar(jArray<PRUnichar,PRInt32>(2)),
+    attributes(nsnull),
+    tagName(nsnull),
+    attributeName(nsnull)
 {
   MOZ_COUNT_CTOR(nsHtml5Tokenizer);
+}
+
+void 
+nsHtml5Tokenizer::setInterner(nsHtml5AtomTable* interner)
+{
+  this->interner = interner;
 }
 
 void 
@@ -100,7 +110,7 @@ nsHtml5Tokenizer::setContentModelFlag(PRInt32 contentModelFlag, nsIAtom* content
     return;
   }
   jArray<PRUnichar,PRInt32> asArray = nsHtml5Portability::newCharArrayFromLocal(contentModelElement);
-  this->contentModelElement = nsHtml5ElementName::elementNameByBuffer(asArray, 0, asArray.length);
+  this->contentModelElement = nsHtml5ElementName::elementNameByBuffer(asArray, 0, asArray.length, interner);
   asArray.release();
   contentModelElementToArray();
 }
@@ -229,7 +239,7 @@ nsHtml5Tokenizer::strBufToString()
 void 
 nsHtml5Tokenizer::strBufToDoctypeName()
 {
-  doctypeName = nsHtml5Portability::newLocalNameFromBuffer(strBuf, 0, strBufLen);
+  doctypeName = nsHtml5Portability::newLocalNameFromBuffer(strBuf, 0, strBufLen, interner);
 }
 
 void 
@@ -342,13 +352,13 @@ nsHtml5Tokenizer::flushChars(PRUnichar* buf, PRInt32 pos)
 void 
 nsHtml5Tokenizer::resetAttributes()
 {
-  attributes->clear(0);
+  attributes = nsnull;
 }
 
 void 
 nsHtml5Tokenizer::strBufToElementNameString()
 {
-  tagName = nsHtml5ElementName::elementNameByBuffer(strBuf, 0, strBufLen);
+  tagName = nsHtml5ElementName::elementNameByBuffer(strBuf, 0, strBufLen, interner);
 }
 
 PRInt32 
@@ -364,6 +374,8 @@ nsHtml5Tokenizer::emitCurrentTagToken(PRBool selfClosing, PRInt32 pos)
   } else {
     tokenHandler->startTag(tagName, attrs, selfClosing);
   }
+  tagName->release();
+  tagName = nsnull;
   resetAttributes();
   return stateSave;
 }
@@ -371,7 +383,10 @@ nsHtml5Tokenizer::emitCurrentTagToken(PRBool selfClosing, PRInt32 pos)
 void 
 nsHtml5Tokenizer::attributeNameComplete()
 {
-  attributeName = nsHtml5AttributeName::nameByBuffer(strBuf, 0, strBufLen);
+  attributeName = nsHtml5AttributeName::nameByBuffer(strBuf, 0, strBufLen, interner);
+  if (!attributes) {
+    attributes = new nsHtml5HtmlAttributes(0);
+  }
   if (attributes->contains(attributeName)) {
 
     attributeName->release();
@@ -426,7 +441,18 @@ nsHtml5Tokenizer::start()
   value = 0;
   seenDigits = PR_FALSE;
   shouldSuspend = PR_FALSE;
-  attributes = new nsHtml5HtmlAttributes(0);
+  if (!!tagName) {
+    tagName->release();
+    tagName = nsnull;
+  }
+  if (!!attributeName) {
+    attributeName->release();
+    attributeName = nsnull;
+  }
+  if (!!attributes) {
+    delete attributes;
+    attributes = nsnull;
+  }
 }
 
 PRBool 
@@ -3282,8 +3308,14 @@ nsHtml5Tokenizer::end()
   systemIdentifier = nsnull;
   publicIdentifier = nsnull;
   doctypeName = nsnull;
-  tagName = nsnull;
-  attributeName = nsnull;
+  if (!!tagName) {
+    tagName->release();
+    tagName = nsnull;
+  }
+  if (!!attributeName) {
+    attributeName->release();
+    attributeName = nsnull;
+  }
   tokenHandler->endTokenization();
   if (!!attributes) {
     attributes->clear(0);

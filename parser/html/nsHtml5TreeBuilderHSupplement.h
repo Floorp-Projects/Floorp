@@ -35,30 +35,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH 512
+
   private:
 
-    nsTArray<nsHtml5TreeOperation>       mOpQueue;
-    nsHtml5TreeOpExecutor*               mExecutor;
+    nsTArray<nsHtml5TreeOperation>         mOpQueue;
+    nsHtml5TreeOpExecutor*                 mExecutor;
+    nsAutoArrayPtr<nsIContent*>            mHandles;
+    PRInt32                                mHandlesUsed;
+    nsTArray<nsAutoArrayPtr<nsIContent*> > mOldHandles;              
 #ifdef DEBUG
-    PRBool                               mActive;
+    PRBool                                 mActive;
 #endif
-
-  public:
-
-    nsHtml5TreeBuilder(nsHtml5TreeOpExecutor* aExec);
-
-    ~nsHtml5TreeBuilder();
-
-    void DoUnlink();
-
-    void DoTraverse(nsCycleCollectionTraversalCallback &cb);
 
     // DocumentModeHandler
     /**
      * Tree builder uses this to report quirkiness of the document
      */
     void documentMode(nsHtml5DocumentMode m);
+
+    nsIContent** AllocateContentHandle();
     
+  public:
+
+    nsHtml5TreeBuilder(nsHtml5TreeOpExecutor* aExec);
+
+    ~nsHtml5TreeBuilder();
+
     inline PRUint32 GetOpQueueLength() {
       return mOpQueue.Length();
     }
@@ -70,3 +73,6 @@
     inline void ReqSuspension() {
       requestSuspension();
     }
+    
+    PRBool HasScript();
+    

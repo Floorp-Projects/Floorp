@@ -30,6 +30,7 @@
 
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsHtml5AtomTable.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
@@ -58,10 +59,10 @@ class nsHtml5Portability;
 class nsHtml5StateSnapshot
 {
   public:
-    nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent* formPointer);
+    nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer);
     jArray<nsHtml5StackNode*,PRInt32> stack;
     jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements;
-    nsIContent* formPointer;
+    nsIContent** formPointer;
     ~nsHtml5StateSnapshot();
     static void initializeStatics();
     static void releaseStatics();

@@ -60,6 +60,7 @@
 #include "nsHtml5UTF16Buffer.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5StreamParser.h"
+#include "nsHtml5AtomTable.h"
 
 class nsHtml5Parser : public nsIParser {
   public:
@@ -338,7 +339,7 @@ class nsHtml5Parser : public nsIParser {
     /**
      * The tree operation executor
      */
-    nsRefPtr<nsHtml5TreeOpExecutor> mExecutor;
+    nsRefPtr<nsHtml5TreeOpExecutor>     mExecutor;
 
     /**
      * The HTML5 tree builder
@@ -353,7 +354,12 @@ class nsHtml5Parser : public nsIParser {
     /**
      * The stream parser.
      */
-    nsRefPtr<nsHtml5StreamParser> mStreamParser;
+    nsRefPtr<nsHtml5StreamParser>       mStreamParser;
+
+    /**
+     * The scoped atom service
+     */
+    const nsAutoPtr<nsHtml5AtomTable>   mAtomTable;
 
 };
 #endif
