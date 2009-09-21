@@ -42,6 +42,7 @@
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsAHtml5TreeBuilderState.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5TreeBuilder.h"
@@ -56,12 +57,84 @@
 #include "nsHtml5StateSnapshot.h"
 
 
-nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer)
+nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer, nsIContent** headPointer, PRInt32 mode, PRInt32 originalMode, PRInt32 foreignFlag, PRBool needToDropLF, PRBool quirks)
   : stack(stack),
     listOfActiveFormattingElements(listOfActiveFormattingElements),
-    formPointer(formPointer)
+    formPointer(formPointer),
+    headPointer(headPointer),
+    mode(mode),
+    originalMode(originalMode),
+    foreignFlag(foreignFlag),
+    needToDropLF(needToDropLF),
+    quirks(quirks)
 {
   MOZ_COUNT_CTOR(nsHtml5StateSnapshot);
+}
+
+jArray<nsHtml5StackNode*,PRInt32> 
+nsHtml5StateSnapshot::getStack()
+{
+  return stack;
+}
+
+jArray<nsHtml5StackNode*,PRInt32> 
+nsHtml5StateSnapshot::getListOfActiveFormattingElements()
+{
+  return listOfActiveFormattingElements;
+}
+
+nsIContent** 
+nsHtml5StateSnapshot::getFormPointer()
+{
+  return formPointer;
+}
+
+nsIContent** 
+nsHtml5StateSnapshot::getHeadPointer()
+{
+  return headPointer;
+}
+
+PRInt32 
+nsHtml5StateSnapshot::getMode()
+{
+  return mode;
+}
+
+PRInt32 
+nsHtml5StateSnapshot::getOriginalMode()
+{
+  return originalMode;
+}
+
+PRInt32 
+nsHtml5StateSnapshot::getForeignFlag()
+{
+  return foreignFlag;
+}
+
+PRBool 
+nsHtml5StateSnapshot::isNeedToDropLF()
+{
+  return needToDropLF;
+}
+
+PRBool 
+nsHtml5StateSnapshot::isQuirks()
+{
+  return quirks;
+}
+
+PRInt32 
+nsHtml5StateSnapshot::getListLength()
+{
+  return listOfActiveFormattingElements.length;
+}
+
+PRInt32 
+nsHtml5StateSnapshot::getStackLength()
+{
+  return stack.length;
 }
 
 
@@ -78,7 +151,7 @@ nsHtml5StateSnapshot::~nsHtml5StateSnapshot()
     }
   }
   listOfActiveFormattingElements.release();
-  nsHtml5Portability::retainElement(formPointer);
+  ;
 }
 
 void

@@ -35,17 +35,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsHtml5ReleasableElementName_h__
-#define nsHtml5ReleasableElementName_h__
+#ifndef nsAHtml5TreeBuilderState_h___
+#define nsAHtml5TreeBuilderState_h___
 
-#include "nsHtml5ElementName.h"
-
-class nsHtml5ReleasableElementName : public nsHtml5ElementName
-{
+class nsAHtml5TreeBuilderState {
   public:
-    nsHtml5ReleasableElementName(nsIAtom* name);
-    virtual void release();
-    virtual nsHtml5ElementName* cloneElementName(nsHtml5AtomTable* interner);
+  
+    virtual jArray<nsHtml5StackNode*,PRInt32> getStack() = 0;
+    
+    virtual jArray<nsHtml5StackNode*,PRInt32> getListOfActiveFormattingElements() = 0;
+    
+    virtual PRInt32 getStackLength() = 0;
+
+    virtual PRInt32 getListLength() = 0;
+
+    virtual nsIContent** getFormPointer() = 0;
+    
+    virtual nsIContent** getHeadPointer() = 0;
+
+    virtual PRInt32 getMode() = 0;
+
+    virtual PRInt32 getOriginalMode() = 0;
+
+    virtual PRInt32 getForeignFlag() = 0;
+
+    virtual PRBool isNeedToDropLF() = 0;
+
+    virtual PRBool isQuirks() = 0;
+    
+    virtual ~nsAHtml5TreeBuilderState() {
+    }
 };
 
-#endif // nsHtml5ReleasableElementName_h__
+#endif /* nsAHtml5TreeBuilderState_h___ */

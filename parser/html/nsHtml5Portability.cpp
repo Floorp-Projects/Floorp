@@ -96,6 +96,19 @@ nsHtml5Portability::newCharArrayFromString(nsString* string)
   return arr;
 }
 
+nsIAtom*
+nsHtml5Portability::newLocalFromLocal(nsIAtom* local, nsHtml5AtomTable* interner)
+{
+  NS_PRECONDITION(local, "Atom was null.");
+  NS_PRECONDITION(interner, "Atom table was null");
+  if (local->IsStaticAtom()) {
+    nsAutoString str;
+    local->ToString(str);
+    local = interner->GetAtom(str);
+  }
+  return local;
+}
+
 void
 nsHtml5Portability::releaseString(nsString* str)
 {
@@ -111,18 +124,6 @@ nsHtml5Portability::retainLocal(nsIAtom* local)
 // XXX useless code
 void
 nsHtml5Portability::releaseLocal(nsIAtom* local)
-{
-}
-
-// XXX Useless code
-void
-nsHtml5Portability::retainElement(nsIContent** element)
-{
-}
-
-// XXX Useless code
-void
-nsHtml5Portability::releaseElement(nsIContent** element)
 {
 }
 

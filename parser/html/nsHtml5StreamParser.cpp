@@ -47,6 +47,8 @@
 #include "nsHtml5Tokenizer.h"
 #include "nsIHttpChannel.h"
 #include "nsHtml5Parser.h"
+#include "nsHtml5TreeBuilder.h"
+#include "nsHtml5AtomTable.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
@@ -62,19 +64,28 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_3(nsHtml5StreamParser, mObserver, mRequest, mOwner)
 
-nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5Tokenizer* aTokenizer,
-                                         nsHtml5TreeOpExecutor* aExecutor,
+nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
                                          nsHtml5Parser* aOwner)
   : mFirstBuffer(new nsHtml5UTF16Buffer(NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE))
   , mLastBuffer(mFirstBuffer)
   , mExecutor(aExecutor)
-  , mTokenizer(aTokenizer)
+  , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor->GetStage()))
+  , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder))
+  , mTokenizerMutex("nsHtml5StreamParser mTokenizerMutex")
   , mOwner(aOwner)
+  , mTerminatedMutex("nsHtml5StreamParser mTerminatedMutex")
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  mAtomTable.Init(); // we aren't checking for OOM anyway...
+  mTokenizer->setInterner(&mAtomTable);
+  mTokenizer->setEncodingDeclarationHandler(this);
+  // There's a zeroing operator new for everything else
 }
 
 nsHtml5StreamParser::~nsHtml5StreamParser()
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  mTokenizer->end();
   mRequest = nsnull;
   mObserver = nsnull;
   mUnicodeDecoder = nsnull;
@@ -94,6 +105,7 @@ nsHtml5StreamParser::~nsHtml5StreamParser()
 nsresult
 nsHtml5StreamParser::GetChannel(nsIChannel** aChannel)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   return mRequest ? CallQueryInterface(mRequest, aChannel) :
                     NS_ERROR_NOT_AVAILABLE;
 }
@@ -104,7 +116,7 @@ nsHtml5StreamParser::Notify(const char* aCharset, nsDetectionConfident aConf)
   if (aConf == eBestAnswer || aConf == eSureAnswer) {
     mCharset.Assign(aCharset);
     mCharsetSource = kCharsetFromAutoDetection;
-    mExecutor->SetDocumentCharset(mCharset);
+    mTreeBuilder->SetDocumentCharset(mCharset);
   }
   return NS_OK;
 }
@@ -122,7 +134,7 @@ nsHtml5StreamParser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const 
     mCharset.Assign("windows-1252"); // lower case is the raw form
     mCharsetSource = kCharsetFromWeakDocTypeDefault;
     rv = convManager->GetUnicodeDecoderRaw(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
-    mExecutor->SetDocumentCharset(mCharset);
+    mTreeBuilder->SetDocumentCharset(mCharset);
   }
   NS_ENSURE_SUCCESS(rv, rv);
   mUnicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Recover);
@@ -158,7 +170,7 @@ nsHtml5StreamParser::SetupDecodingFromBom(const char* aCharsetName, const char* 
   NS_ENSURE_SUCCESS(rv, rv);
   mCharset.Assign(aCharsetName);
   mCharsetSource = kCharsetFromByteOrderMark;
-  mExecutor->SetDocumentCharset(mCharset);
+  mTreeBuilder->SetDocumentCharset(mCharset);
   mSniffingBuffer = nsnull;
   mMetaScanner = nsnull;
   mBomState = BOM_SNIFFING_OVER;
@@ -205,7 +217,7 @@ nsHtml5StreamParser::FinalizeSniffing(const PRUint8* aFromSegment, // can be nul
     // Hopefully this case is never needed, but dealing with it anyway
     mCharset.Assign("windows-1252");
     mCharsetSource = kCharsetFromWeakDocTypeDefault;
-    mExecutor->SetDocumentCharset(mCharset);
+    mTreeBuilder->SetDocumentCharset(mCharset);
   }
   return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
 }
@@ -299,7 +311,7 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
       mUnicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Recover);
       // meta scan successful
       mCharsetSource = kCharsetFromMetaPrescan;
-      mExecutor->SetDocumentCharset(mCharset);
+      mTreeBuilder->SetDocumentCharset(mCharset);
       mMetaScanner = nsnull;
       return WriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
     }
@@ -312,7 +324,7 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
   if (mUnicodeDecoder) {
     // meta scan successful
     mCharsetSource = kCharsetFromMetaPrescan;
-    mExecutor->SetDocumentCharset(mCharset);
+    mTreeBuilder->SetDocumentCharset(mCharset);
     mMetaScanner = nsnull;
     return WriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
   }
@@ -382,26 +394,46 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
 nsresult
 nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
-  NS_PRECONDITION(eNone == mStreamListenerState,
-                  "Parser's nsIStreamListener API was not setup "
-                  "correctly in constructor.");
+  NS_PRECONDITION(STREAM_NOT_STARTED == mStreamState,
+                  "Got OnStartRequest when the stream had already started.");
   NS_PRECONDITION(mExecutor->GetLifeCycle() == NOT_STARTED, 
-                  "Got OnStartRequest at the wrong stage in the life cycle.");
+                  "Got OnStartRequest at the wrong stage in the executor life cycle.");
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   if (mObserver) {
     mObserver->OnStartRequest(aRequest, aContext);
   }
-#ifdef DEBUG
-  mStreamListenerState = eOnStart;
-#endif
   mRequest = aRequest;
 
+  mStreamState = STREAM_BEING_READ;
+
+  PRBool scriptingEnabled = mExecutor->IsScriptEnabled();
+  mOwner->StartTokenizer(scriptingEnabled);
+  mTreeBuilder->setScriptingEnabled(scriptingEnabled);
+  mTokenizer->start();
+  mExecutor->Start();
+  mExecutor->StartReadingFromStage();
   /*
    * If you move the following line, be very careful not to cause 
    * WillBuildModel to be called before the document has had its 
    * script global object set.
    */
-  mTokenizer->start();
-  mExecutor->SetLifeCycle(PARSING);
+  mExecutor->WillBuildModel(eDTDMode_unknown);
+  
+  nsresult rv = NS_OK;
+
+  mReparseForbidden = PR_FALSE;
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mRequest, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    nsCAutoString method;
+    httpChannel->GetRequestMethod(method);
+    // XXX does Necko have a way to renavigate POST, etc. without hitting
+    // the network?
+    if (!method.EqualsLiteral("GET")) {
+      // This is the old Gecko behavior but the HTML5 spec disagrees.
+      // Don't reparse on POST.
+      mReparseForbidden = PR_TRUE;
+    }
+  }
   
   if (mCharsetSource < kCharsetFromChannel) {
     // we aren't ready to commit to an encoding yet
@@ -409,7 +441,6 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     return NS_OK;
   }
   
-  nsresult rv = NS_OK;
   nsCOMPtr<nsICharsetConverterManager> convManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = convManager->GetUnicodeDecoder(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
@@ -423,36 +454,26 @@ nsHtml5StreamParser::OnStopRequest(nsIRequest* aRequest,
                              nsISupports* aContext,
                              nsresult status)
 {
-  mExecutor->MaybeFlush();
+  NS_PRECONDITION(STREAM_BEING_READ == mStreamState,
+                  "Stream ended without being open.");
   NS_ASSERTION(mRequest == aRequest, "Got Stop on wrong stream.");
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   nsresult rv = NS_OK;
   if (!mUnicodeDecoder) {
     PRUint32 writeCount;
     rv = FinalizeSniffing(nsnull, 0, &writeCount, 0);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  switch (mExecutor->GetLifeCycle()) {
-    case TERMINATED:
-      break;
-    case NOT_STARTED:
-      NS_NOTREACHED("OnStopRequest before calling Parse() on the owner.");
-      break;
-    case STREAM_ENDING:
-      NS_ERROR("OnStopRequest when the stream lifecycle was already ending.");
-      break;
-    default:
-      mExecutor->SetLifeCycle(STREAM_ENDING);
-      break;
-  }
-#ifdef DEBUG
-  mStreamListenerState = eOnStop;
-#endif
-  if (!mExecutor->IsScriptExecuting()) {
-    ParseUntilSuspend();
-  }
+
+  mStreamState = STREAM_ENDED;
+
   if (mObserver) {
     mObserver->OnStopRequest(aRequest, aContext, status);
   }
+  // TODO: proxy this to parser thread
+  if (!mWaitingForScripts) {
+    ParseUntilScript();
+  }  
   return NS_OK;
 }
 
@@ -486,10 +507,8 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
                                PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
-  mExecutor->MaybeFlush();
-  NS_PRECONDITION(eOnStart == mStreamListenerState ||
-                  eOnDataAvail == mStreamListenerState,
-            "Error: OnStartRequest() must be called before OnDataAvailable()");
+  NS_PRECONDITION(STREAM_BEING_READ == mStreamState,
+                  "OnDataAvailable called when stream not open.");
   NS_ASSERTION(mRequest == aRequest, "Got data on wrong stream.");
   PRUint32 totalRead;
   nsresult rv = aInStream->ReadSegments(nsHtml5StreamParser::ParserWriteFunc, 
@@ -497,8 +516,8 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
                                         aLength, 
                                         &totalRead);
   NS_ASSERTION(totalRead == aLength, "ReadSegments read the wrong number of bytes.");
-  if (!mExecutor->IsScriptExecuting()) {
-    ParseUntilSuspend();
+  if (!mWaitingForScripts) {
+    ParseUntilScript();
   }
   return rv;
 }
@@ -529,62 +548,44 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
   // XXX check HTML5 non-IANA aliases here
 
   // The encodings are different. We want to reparse.
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mRequest, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    nsCAutoString method;
-    httpChannel->GetRequestMethod(method);
-    // XXX does Necko have a way to renavigate POST, etc. without hitting
-    // the network?
-    if (!method.EqualsLiteral("GET")) {
-      // This is the old Gecko behavior but the spec disagrees.
-      // Don't reparse on POST.
-      return;
-    }
+  if (mReparseForbidden) {
+    return; // not reparsing after all
   }
   
   // we still want to reparse
-  mExecutor->NeedsCharsetSwitchTo(newEncoding);
+  mTreeBuilder->NeedsCharsetSwitchTo(newEncoding);
+  mTreeBuilder->Flush();
+  // the tree op executor will cause the stream parser to terminate
+  // if the charset switch request is accepted
 }
 
 void
-nsHtml5StreamParser::ParseUntilSuspend()
+nsHtml5StreamParser::ParseUntilScript()
 {
-  NS_PRECONDITION(!mExecutor->NeedsCharsetSwitch(), "ParseUntilSuspend called when charset switch needed.");
-
-  if (mBlocked) {
+  if (IsTerminated()) {
     return;
   }
 
-  switch (mExecutor->GetLifeCycle()) {
-    case TERMINATED:
-      return;
-    case NOT_STARTED:
-      NS_NOTREACHED("Bad life cycle!");      
-      break;
-    default:
-      break;
-  }
+  // TODO: Relax this mutex so that the parser doesn't speculate to
+  // completion when it's already known that the speculation will fail.
+  mozilla::MutexAutoLock autoLock(mTokenizerMutex);
 
-  mExecutor->WillResume();
-  mSuspending = PR_FALSE;
   for (;;) {
     if (!mFirstBuffer->hasMore()) {
       if (mFirstBuffer == mLastBuffer) {
-        switch (mExecutor->GetLifeCycle()) {
-          case TERMINATED:
-            // something like cache manisfests stopped the parse in mid-flight
-            return;
-          case PARSING:
+        switch (mStreamState) {
+          case STREAM_BEING_READ:
             // never release the last buffer. instead just zero its indeces for refill
             mFirstBuffer->setStart(0);
             mFirstBuffer->setEnd(0);
+            mTreeBuilder->Flush();
             return; // no more data for now but expecting more
-          case STREAM_ENDING:
-            mDone = PR_TRUE;
-            {
-              nsRefPtr<nsHtml5StreamParser> kungFuDeathGrip(this);
-              mExecutor->DidBuildModel(PR_FALSE);
-            }
+          case STREAM_ENDED:
+            Terminate(); // TODO Don't terminate if this is a speculation
+            mTokenizer->eof();
+            mTreeBuilder->StreamEnded();
+            mTreeBuilder->Flush();
+            TellExecutorToFlush();
             return; // no more data and not expecting more
           default:
             NS_NOTREACHED("It should be impossible to reach this.");
@@ -598,32 +599,93 @@ nsHtml5StreamParser::ParseUntilSuspend()
       }
     }
 
-    if (mBlocked || (mExecutor->GetLifeCycle() == TERMINATED)) {
-      return;
-    }
-
     // now we have a non-empty buffer
     mFirstBuffer->adjust(mLastWasCR);
     mLastWasCR = PR_FALSE;
     if (mFirstBuffer->hasMore()) {
       mLastWasCR = mTokenizer->tokenizeBuffer(mFirstBuffer);
-      NS_ASSERTION(!(mExecutor->HasScriptElement() && mExecutor->NeedsCharsetSwitch()), "Can't have both script and charset switch.");
-      mExecutor->MaybeExecuteScript();
-      if (mExecutor->MaybePerformCharsetSwitch() == NS_ERROR_HTMLPARSER_STOPPARSING) {
+      // At this point, internalEncodingDeclaration() may have called 
+      // Terminate, but that never happens together with script.
+      // Can't assert that here, though, because it's possible that the main
+      // thread has called Terminate() while this thread was parsing.
+      if (IsTerminated()) {
         return;
       }
-      if (mBlocked) {
-        mExecutor->WillInterrupt();
-        return;
+      if (mTreeBuilder->HasScript()) {
+        mTreeBuilder->AddSnapshotToScript(mTreeBuilder->newSnapshot());
+        mTreeBuilder->Flush();
+        TellExecutorToFlush();
+        // XXX start speculation
+        mWaitingForScripts = PR_TRUE;
+        return; // ContinueAfterScripts() will re-enable this parser
       }
-      // XXX we may now have document.written stuff in the other buffer 
-      // queue
-      if (mSuspending) {
-        mOwner->MaybePostContinueEvent();
-        mExecutor->WillInterrupt();
-        return;
-      }
+      mTreeBuilder->MaybeFlush();
     }
     continue;
   }
+}
+
+void
+nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer, 
+                                          nsHtml5TreeBuilder* aTreeBuilder,
+                                          PRBool aLastWasCR)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  mExecutor->StartReadingFromStage();
+  // TODO:
+  // test if the state of the argument tokenizer and tree builder match
+  // the earliest speculation.
+  // If not, rendez-vous at barrier, zaps all speculations, rewind the stream 
+  // and copy over the state.
+  // If yes:
+  // If there are multiple speculations or the stream parser has terminated.
+  // load the tree op queue from the earliest speculation into the tree op 
+  // executor and discard the stream data for that speculation. Return.
+  // Otherwise, rendez-vous at barrier, load the tree op queue from the 
+  // speculation into the tree op executor, set the tree op executor to read 
+  // from the stage, set the stream parser tree builder to write to stage,
+  // discard the stream data for the speculation.
+  
+  {
+    mozilla::MutexAutoLock autoLock(mTokenizerMutex); 
+
+    // Approximation: Copy state over for now unconditionally.
+    mLastWasCR = aLastWasCR;
+    mTokenizer->loadState(aTokenizer);
+    mTreeBuilder->loadState(aTreeBuilder, &mAtomTable);
+    
+    mWaitingForScripts = PR_FALSE;
+  }
+  // TODO: proxy the tail of this method to the parser thread
+  ParseUntilScript();
+}
+
+class nsHtml5StreamParserExecutorFlushEvent : public nsRunnable
+{
+public:
+  nsRefPtr<nsHtml5StreamParser> mStreamParser;
+  nsHtml5StreamParserExecutorFlushEvent(nsHtml5StreamParser* aStreamParser)
+    : mStreamParser(aStreamParser)
+  {}
+  NS_IMETHODIMP Run()
+  {
+    mStreamParser->DoExecFlush();
+    return NS_OK;
+  }
+};
+
+void
+nsHtml5StreamParser::DoExecFlush()
+{
+  mExecutor->Flush();
+}
+
+void
+nsHtml5StreamParser::TellExecutorToFlush()
+{
+  // TODO: Make this cross-thread
+  nsCOMPtr<nsIRunnable> event = new nsHtml5StreamParserExecutorFlushEvent(this);
+  if (NS_FAILED(NS_DispatchToMainThread(event))) {
+    NS_WARNING("failed to dispatch executor flush event");
+  }  
 }

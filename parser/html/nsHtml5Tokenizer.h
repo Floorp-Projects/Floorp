@@ -46,8 +46,10 @@
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsAHtml5TreeBuilderState.h"
 
 class nsHtml5StreamParser;
+class nsHtml5SpeculativeLoader;
 
 class nsHtml5TreeBuilder;
 class nsHtml5MetaScanner;
@@ -112,7 +114,6 @@ class nsHtml5Tokenizer
     PRInt32 strBufLen;
     jArray<PRUnichar,PRInt32> longStrBuf;
     PRInt32 longStrBufLen;
-    nsHtml5HtmlAttributes* attributes;
     jArray<PRUnichar,PRInt32> bmpChar;
     jArray<PRUnichar,PRInt32> astralChar;
   protected:
@@ -129,6 +130,7 @@ class nsHtml5Tokenizer
     nsIAtom* doctypeName;
     nsString* publicIdentifier;
     nsString* systemIdentifier;
+    nsHtml5HtmlAttributes* attributes;
     PRInt32 mappingLangToXmlLang;
     PRBool shouldSuspend;
   protected:
@@ -192,14 +194,7 @@ class nsHtml5Tokenizer
     PRBool tokenizeBuffer(nsHtml5UTF16Buffer* buffer);
   private:
     PRInt32 stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, PRBool reconsume, PRInt32 returnState, PRInt32 endPos);
-    inline void initDoctypeFields()
-    {
-      doctypeName = nsHtml5Atoms::emptystring;
-      systemIdentifier = nsnull;
-      publicIdentifier = nsnull;
-      forceQuirks = PR_FALSE;
-    }
-
+    void initDoctypeFields();
     inline void adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn()
     {
       silentCarriageReturn();
@@ -268,6 +263,9 @@ class nsHtml5Tokenizer
     PRInt32 getLine();
     PRInt32 getCol();
     PRBool isInDataState();
+    void resetToDataState();
+    void loadState(nsHtml5Tokenizer* other);
+    void initializeWithoutStarting();
     void setEncodingDeclarationHandler(nsHtml5StreamParser* encodingDeclarationHandler);
     static void initializeStatics();
     static void releaseStatics();

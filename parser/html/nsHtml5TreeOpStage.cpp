@@ -35,17 +35,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsHtml5ReleasableElementName_h__
-#define nsHtml5ReleasableElementName_h__
+#include "nsHtml5TreeOpStage.h"
 
-#include "nsHtml5ElementName.h"
-
-class nsHtml5ReleasableElementName : public nsHtml5ElementName
+nsHtml5TreeOpStage::nsHtml5TreeOpStage()
+ : mMutex("nsHtml5TreeOpStage mutex")
 {
-  public:
-    nsHtml5ReleasableElementName(nsIAtom* name);
-    virtual void release();
-    virtual nsHtml5ElementName* cloneElementName(nsHtml5AtomTable* interner);
-};
+}
+    
+nsHtml5TreeOpStage::~nsHtml5TreeOpStage()
+{
+}
 
-#endif // nsHtml5ReleasableElementName_h__
+void
+nsHtml5TreeOpStage::MaybeFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue)
+{
+  mozilla::MutexAutoLock autoLock(mMutex);
+  if (mOpQueue.IsEmpty()) {
+    mOpQueue.SwapElements(aOpQueue);
+  }  
+}
+
+void
+nsHtml5TreeOpStage::ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue)
+{
+  mozilla::MutexAutoLock autoLock(mMutex);
+  if (mOpQueue.IsEmpty()) {
+    mOpQueue.SwapElements(aOpQueue);
+    return;
+  }
+  mOpQueue.MoveElementsFrom(aOpQueue);
+}
+    
+void
+nsHtml5TreeOpStage::RetrieveOperations(nsTArray<nsHtml5TreeOperation>& aOpQueue)
+{
+  mozilla::MutexAutoLock autoLock(mMutex);
+  if (aOpQueue.IsEmpty()) {
+    mOpQueue.SwapElements(aOpQueue);
+    return;
+  }
+  aOpQueue.MoveElementsFrom(mOpQueue);
+}
