@@ -1,4 +1,4 @@
-// |trace-test| TMFLAGS: full,fragprofile,treevis
+// |trace-test| TMFLAGS: full,fragprofile,treevis; valgrind
 
 function testSideExitInConstructor() {
     var FCKConfig = {};
