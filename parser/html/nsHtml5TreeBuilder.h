@@ -33,6 +33,7 @@
 
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsHtml5AtomTable.h"
 #include "nsITimer.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
@@ -52,8 +53,10 @@
 #include "nsHtml5StackNode.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5StreamParser.h"
+#include "nsAHtml5TreeBuilderState.h"
 
 class nsHtml5StreamParser;
+class nsHtml5SpeculativeLoader;
 
 class nsHtml5Tokenizer;
 class nsHtml5MetaScanner;
@@ -65,7 +68,7 @@ class nsHtml5StateSnapshot;
 class nsHtml5Portability;
 
 
-class nsHtml5TreeBuilder
+class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 {
   private:
     static jArray<PRUnichar,PRInt32> ISINDEX_PROMPT;
@@ -205,12 +208,27 @@ class nsHtml5TreeBuilder
     PRBool isScriptingEnabled();
     void setScriptingEnabled(PRBool scriptingEnabled);
     PRBool inForeign();
-  private:
     void flushCharacters();
+  private:
     PRBool charBufferContainsNonWhitespace();
   public:
-    nsHtml5StateSnapshot* newSnapshot();
-    PRBool snapshotMatches(nsHtml5StateSnapshot* snapshot);
+    nsAHtml5TreeBuilderState* newSnapshot();
+    PRBool snapshotMatches(nsAHtml5TreeBuilderState* snapshot);
+    void loadState(nsAHtml5TreeBuilderState* snapshot, nsHtml5AtomTable* interner);
+  private:
+    PRInt32 findInArray(nsHtml5StackNode* node, jArray<nsHtml5StackNode*,PRInt32> arr);
+  public:
+    nsIContent** getFormPointer();
+    nsIContent** getHeadPointer();
+    jArray<nsHtml5StackNode*,PRInt32> getListOfActiveFormattingElements();
+    jArray<nsHtml5StackNode*,PRInt32> getStack();
+    PRInt32 getMode();
+    PRInt32 getOriginalMode();
+    PRInt32 getForeignFlag();
+    PRBool isNeedToDropLF();
+    PRBool isQuirks();
+    PRInt32 getListLength();
+    PRInt32 getStackLength();
     static void initializeStatics();
     static void releaseStatics();
 

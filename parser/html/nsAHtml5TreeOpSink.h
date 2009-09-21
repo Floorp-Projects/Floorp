@@ -35,17 +35,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsHtml5ReleasableElementName_h__
-#define nsHtml5ReleasableElementName_h__
+#ifndef nsAHtml5TreeOpSink_h___
+#define nsAHtml5TreeOpSink_h___
 
-#include "nsHtml5ElementName.h"
-
-class nsHtml5ReleasableElementName : public nsHtml5ElementName
-{
+/**
+ * The purpose of this interface is to connect a tree op executor 
+ * (main-thread case), a tree op stage (non-speculative off-the-main-thread
+ * case) or a speculation (speculative case).
+ */
+class nsAHtml5TreeOpSink {
   public:
-    nsHtml5ReleasableElementName(nsIAtom* name);
-    virtual void release();
-    virtual nsHtml5ElementName* cloneElementName(nsHtml5AtomTable* interner);
+  
+    /**
+     * Flush the operations from the tree operations from the argument
+     * queue if flushing is not expensive.
+     */
+    virtual void MaybeFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue) = 0;
+
+    /**
+     * Flush the operations from the tree operations from the argument
+     * queue unconditionally.
+     */
+    virtual void ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue) = 0;
+    
 };
 
-#endif // nsHtml5ReleasableElementName_h__
+#endif /* nsAHtml5TreeOpSink_h___ */

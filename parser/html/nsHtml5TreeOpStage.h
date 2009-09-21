@@ -35,17 +35,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsHtml5ReleasableElementName_h__
-#define nsHtml5ReleasableElementName_h__
+#ifndef nsHtml5TreeOpStage_h___
+#define nsHtml5TreeOpStage_h___
 
-#include "nsHtml5ElementName.h"
+#include "mozilla/Mutex.h"
+#include "nsHtml5TreeOperation.h"
+#include "nsTArray.h"
+#include "nsAHtml5TreeOpSink.h"
 
-class nsHtml5ReleasableElementName : public nsHtml5ElementName
-{
+class nsHtml5TreeOpStage : public nsAHtml5TreeOpSink {
   public:
-    nsHtml5ReleasableElementName(nsIAtom* name);
-    virtual void release();
-    virtual nsHtml5ElementName* cloneElementName(nsHtml5AtomTable* interner);
+  
+    nsHtml5TreeOpStage();
+    
+    ~nsHtml5TreeOpStage();
+  
+    /**
+     * Flush the operations from the tree operations from the argument
+     * queue if flushing is not expensive.
+     */
+    virtual void MaybeFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
+
+    /**
+     * Flush the operations from the tree operations from the argument
+     * queue unconditionally.
+     */
+    virtual void ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
+    
+    /**
+     * Retrieve the staged operations into the argument.
+     */
+    void RetrieveOperations(nsTArray<nsHtml5TreeOperation>& aOpQueue);
+
+  private:
+    nsTArray<nsHtml5TreeOperation> mOpQueue;
+    mozilla::Mutex                 mMutex;
+    
 };
 
-#endif // nsHtml5ReleasableElementName_h__
+#endif /* nsHtml5TreeOpStage_h___ */
