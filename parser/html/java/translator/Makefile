@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-SVN_BASE=http://svn.versiondude.net/whattf/htmlparser/trunk
+SVN_BASE=https://whattf.svn.cvsdude.com/htmlparser/trunk
 
 libs:: \
 ; mkdir -p bin && \

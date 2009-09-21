@@ -45,8 +45,13 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _MOCHITEST_FILES = \
-  test_npobject_getters.html \
-  $(NULL)
+		test_npobject_getters.html \
+		test_pluginstream.html \
+		loremipsum.txt \
+		loremipsum_file.txt \
+		plugin_window.html \
+		post.sjs \
+		$(NULL)
 
 _MOCHICHROME_FILES = \
 		test_bug479979.xul \
