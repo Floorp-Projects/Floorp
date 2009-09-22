@@ -565,7 +565,7 @@ PluginInstanceChild::NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
 
     NPError result;
     CallPPluginStreamConstructor(ps, nsDependentCString(aMIMEType),
-                                 nsDependentCString(aWindow), &result);
+                                 NullableString(aWindow), &result);
     if (NPERR_NO_ERROR != result) {
         *aStream = NULL;
         CallPPluginStreamDestructor(ps, NPERR_GENERIC_ERROR, true);

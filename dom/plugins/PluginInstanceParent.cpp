@@ -170,7 +170,7 @@ PluginInstanceParent::AnswerNPN_PostURL(const nsCString& url,
                                         const bool& file,
                                         NPError* result)
 {
-    *result = mNPNIface->posturl(mNPP, url.get(), target.get(),
+    *result = mNPNIface->posturl(mNPP, url.get(), NullableStringGet(target),
                                  buffer.Length(), buffer.get(), file);
     return true;
 }
@@ -291,6 +291,8 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
 NPError
 PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
 {
+    _MOZ_LOG(__FUNCTION__);
+
     AStream* s = static_cast<AStream*>(stream->pdata);
     if (s->IsBrowserStream()) {
         BrowserStreamParent* sp =
@@ -323,6 +325,17 @@ PluginInstanceParent::DeallocPPluginScriptableObject(PPluginScriptableObjectPare
 {
     delete aObject;
     return true;
+}
+
+void
+PluginInstanceParent::NPP_URLNotify(const char* url, NPReason reason,
+                                    void* notifyData)
+{
+    _MOZ_LOG(__FUNCTION__);
+
+    PStreamNotifyParent* streamNotify =
+        static_cast<PStreamNotifyParent*>(notifyData);
+    CallPStreamNotifyDestructor(streamNotify, reason);
 }
 
 } // namespace plugins
