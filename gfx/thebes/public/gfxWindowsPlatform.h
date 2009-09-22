@@ -163,6 +163,8 @@ private:
 #endif
 
 protected:
+    void InitDisplayCaps();
+
     RenderMode mRenderMode;
 
 private:

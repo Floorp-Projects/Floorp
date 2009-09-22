@@ -121,14 +121,6 @@ public:
     void SetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<FontEntry> >& aFontEntryList);
 #endif
 
-    static double DPI() {
-        if (sDPI < 0.0) {
-            InitDPI();
-        }
-        NS_ASSERTION(sDPI > 0.0, "Something is wrong");
-        return sDPI;
-    }
-
 #ifndef MOZ_PANGO
     FT_Library GetFTLibrary();
 #endif
@@ -138,9 +130,8 @@ public:
     GdkDrawable *GetGdkDrawable(gfxASurface *target);
 
 protected:
-    static void InitDPI();
+    void InitDisplayCaps();
 
-    static double sDPI;
     static gfxFontconfigUtils *sFontconfigUtils;
 
 private:

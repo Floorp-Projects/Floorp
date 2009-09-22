@@ -64,7 +64,6 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-PRInt32 gfxQtPlatform::sDPI = -1;
 gfxFontconfigUtils *gfxQtPlatform::sFontconfigUtils = nsnull;
 static cairo_user_data_key_t cairo_qt_pixmap_key;
 static void do_qt_pixmap_unref (void *data)
@@ -98,8 +97,6 @@ gfxQtPlatform::gfxQtPlatform()
     gPrefFonts->Init(100);
     gCodepointsWithNoFonts = new gfxSparseBitSet();
     UpdateFontList();
-
-    InitDPI();
 }
 
 gfxQtPlatform::~gfxQtPlatform()
@@ -354,22 +351,11 @@ gfxQtPlatform::CreateFontGroup(const nsAString &aFamilies,
     return new gfxFT2FontGroup(aFamilies, aStyle);
 }
 
-/* static */
-void
-gfxQtPlatform::InitDPI()
-{
-    if (sDPI <= 0) {
-        // Fall back to something sane
-        sDPI = 96;
-    }
-}
-
 qcms_profile*
 gfxQtPlatform::GetPlatformCMSOutputProfile()
 {
     return nsnull;
 }
-
 
 FT_Library
 gfxQtPlatform::GetFTLibrary()
