@@ -641,7 +641,7 @@ js_FragProfiling_showResults(JSTraceMonitor* tm)
 
 /* ----------------------------------------------------------------- */
 
-#if defined DEBUG
+#ifdef DEBUG
 static const char*
 getExitName(ExitType type)
 {
@@ -656,6 +656,174 @@ getExitName(ExitType type)
     JS_ASSERT(type < TOTAL_EXIT_TYPES);
 
     return exitNames[type];
+}
+
+static JSBool FASTCALL
+PrintOnTrace(char* format, uint32 argc, double *argv)
+{
+    union {
+        struct {
+            uint32 lo;
+            uint32 hi;
+        } i;
+        double   d;
+        char     *cstr;
+        JSObject *o;
+        JSString *s;
+    } u;
+
+#define GET_ARG() JS_BEGIN_MACRO          \
+        if (argi >= argc) { \
+        fprintf(out, "[too few args for format]"); \
+        break;       \
+} \
+    u.d = argv[argi++]; \
+    JS_END_MACRO
+
+    FILE *out = stderr;
+
+    uint32 argi = 0;
+    for (char *p = format; *p; ++p) {
+        if (*p != '%') {
+            putc(*p, out);
+            continue;
+        }
+        char ch = *++p;
+        if (!ch) {
+            fprintf(out, "[trailing %%]");
+            continue;
+        }
+
+        switch (ch) {
+        case 'a':
+            GET_ARG();
+            fprintf(out, "[%u:%u 0x%x:0x%x %lf]", u.i.lo, u.i.hi, u.i.lo, u.i.hi, u.d);
+            break;
+        case 'd':
+            GET_ARG();
+            fprintf(out, "%d", u.i.lo);
+            break;
+        case 'u':
+            GET_ARG();
+            fprintf(out, "%u", u.i.lo);
+            break;
+        case 'x':
+            GET_ARG();
+            fprintf(out, "%x", u.i.lo);
+            break;
+        case 'f':
+            GET_ARG();
+            fprintf(out, "%lf", u.d);
+            break;
+        case 'o':
+            GET_ARG();
+            js_DumpObject(u.o);
+            break;
+        case 's':
+            GET_ARG();
+            {
+                size_t length = u.s->length();
+                // protect against massive spew if u.s is a bad pointer.
+                if (length > 1 << 16)
+                    length = 1 << 16;
+                jschar *chars = u.s->chars();
+                for (unsigned i = 0; i < length; ++i) {
+                    jschar co = chars[i];
+                    if (co < 128)
+                        putc(co, out);
+                    else if (co < 256)
+                        fprintf(out, "\\u%02x", co);
+                    else
+                        fprintf(out, "\\u%04x", co);
+                }
+            }
+            break;
+        case 'S':
+            GET_ARG();
+            fprintf(out, "%s", u.cstr);
+            break;
+        default:
+            fprintf(out, "[invalid %%%c]", *p);
+        }
+    }
+
+#undef GET_ARG
+
+    return JS_TRUE;
+}
+
+JS_DEFINE_CALLINFO_3(extern, BOOL, PrintOnTrace, CHARPTR, UINT32, DOUBLEPTR, 0, 0);
+
+// This version is not intended to be called directly: usually it is easier to
+// use one of the other overloads.
+void
+TraceRecorder::tprint(const char *format, int count, nanojit::LIns *insa[])
+{
+    size_t size = strlen(format) + 1;
+    char *data = (char*) lir->insSkip(size)->payload();
+    memcpy(data, format, size);
+
+    double *args = (double*) lir->insSkip(count * sizeof(double))->payload();
+    for (int i = 0; i < count; ++i) {
+        JS_ASSERT(insa[i]);
+        lir->insStorei(insa[i], INS_CONSTPTR(args), sizeof(double) * i);
+    }
+
+    LIns* args_ins[] = { INS_CONSTPTR(args), INS_CONST(count), INS_CONSTPTR(data) };
+    LIns* call_ins = lir->insCall(&PrintOnTrace_ci, args_ins);
+    guard(false, lir->ins_eq0(call_ins), MISMATCH_EXIT);    
+}
+
+// Generate a 'printf'-type call from trace for debugging.
+void
+TraceRecorder::tprint(const char *format)
+{
+    LIns* insa[] = { NULL };
+    tprint(format, 0, insa);
+}
+
+void
+TraceRecorder::tprint(const char *format, LIns *ins)
+{
+    LIns* insa[] = { ins };
+    tprint(format, 1, insa);
+}
+
+void
+TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2)
+{
+    LIns* insa[] = { ins1, ins2 };
+    tprint(format, 2, insa);
+}
+
+void
+TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3)
+{
+    LIns* insa[] = { ins1, ins2, ins3 };
+    tprint(format, 3, insa);
+}
+
+void
+TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3, LIns *ins4)
+{
+    LIns* insa[] = { ins1, ins2, ins3, ins4 };
+    tprint(format, 4, insa);
+}
+
+void
+TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3, LIns *ins4,
+                      LIns *ins5)
+{
+    LIns* insa[] = { ins1, ins2, ins3, ins4, ins5 };
+    tprint(format, 5, insa);
+}
+
+void
+TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3, LIns *ins4, 
+                      LIns *ins5, LIns *ins6)
+{
+    LIns* insa[] = { ins1, ins2, ins3, ins4, ins5, ins6 };
+    tprint(format, 6, insa);
 }
 #endif
 
