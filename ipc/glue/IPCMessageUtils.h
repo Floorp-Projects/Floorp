@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -56,6 +58,13 @@ struct ParamTraits<nsACString>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
+    bool isVoid = aParam.IsVoid();
+    aMsg->WriteBool(isVoid);
+
+    if (isVoid)
+      // represents a NULL pointer
+      return;
+
     PRUint32 length = aParam.Length();
     WriteParam(aMsg, length);
     aMsg->WriteBytes(aParam.BeginReading(), length);
@@ -63,6 +72,15 @@ struct ParamTraits<nsACString>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
+    bool isVoid;
+    if (!aMsg->ReadBool(aIter, &isVoid))
+      return false;
+
+    if (isVoid) {
+      aResult->SetIsVoid(PR_TRUE);
+      return true;
+    }
+
     PRUint32 length;
     if (ReadParam(aMsg, aIter, &length)) {
       const char* buf;
@@ -76,7 +94,10 @@ struct ParamTraits<nsACString>
 
   static void Log(const paramType& aParam, std::wstring* aLog)
   {
-    aLog->append(UTF8ToWide(aParam.BeginReading()));
+    if (aParam.IsVoid())
+      aLog->append(L"(NULL)");
+    else
+      aLog->append(UTF8ToWide(aParam.BeginReading()));
   }
 };
 
@@ -87,6 +108,13 @@ struct ParamTraits<nsAString>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
+    bool isVoid = aParam.IsVoid();
+    aMsg->WriteBool(isVoid);
+
+    if (isVoid)
+      // represents a NULL pointer
+      return;
+
     PRUint32 length = aParam.Length();
     WriteParam(aMsg, length);
     aMsg->WriteBytes(aParam.BeginReading(), length * sizeof(PRUnichar));
@@ -94,6 +122,15 @@ struct ParamTraits<nsAString>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
+    bool isVoid;
+    if (!aMsg->ReadBool(aIter, &isVoid))
+      return false;
+
+    if (isVoid) {
+      aResult->SetIsVoid(PR_TRUE);
+      return true;
+    }
+
     PRUint32 length;
     if (ReadParam(aMsg, aIter, &length)) {
       const PRUnichar* buf;
@@ -108,14 +145,18 @@ struct ParamTraits<nsAString>
 
   static void Log(const paramType& aParam, std::wstring* aLog)
   {
+    if (aParam.IsVoid())
+      aLog->append(L"(NULL)");
+    else {
 #ifdef WCHAR_T_IS_UTF16
-    aLog->append(reinterpret_cast<const wchar_t*>(aParam.BeginReading()));
+      aLog->append(reinterpret_cast<const wchar_t*>(aParam.BeginReading()));
 #else
-    PRUint32 length = aParam.Length();
-    for (PRUint32 index = 0; index < length; index++) {
-      aLog->push_back(std::wstring::value_type(aParam[index]));
-    }
+      PRUint32 length = aParam.Length();
+      for (PRUint32 index = 0; index < length; index++) {
+        aLog->push_back(std::wstring::value_type(aParam[index]));
+      }
 #endif
+    }
   }
 };
 

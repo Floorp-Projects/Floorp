@@ -120,11 +120,15 @@ public:
     bool Send(Message* msg);
 
     // Implement the IPC::Channel::Listener interface
-    virtual void OnMessageReceived(const Message& msg);
-    virtual void OnChannelConnected(int32 peer_pid);
-    virtual void OnChannelError();
+    NS_OVERRIDE virtual void OnMessageReceived(const Message& msg);
+    NS_OVERRIDE virtual void OnChannelConnected(int32 peer_pid);
+    NS_OVERRIDE virtual void OnChannelError();
 
 protected:
+    bool Connected() {
+        return ChannelConnected == mChannelState;
+    }
+
     // Additional methods that execute on the worker thread
     void OnDispatchMessage(const Message& aMsg);
 
