@@ -24,10 +24,15 @@ var gChecked = false;
 
 function runTests()
 {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var button = document.getElementById("button");
+  var windowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                          .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  windowUtils.disableNonTestMouseEvents(true);
   synthesizeMouse(button, 2, 2, { type: "mouseover" });
   synthesizeMouse(button, 4, 4, { type: "mousemove" });
   synthesizeMouse(button, 6, 6, { type: "mousemove" });
+  windowUtils.disableNonTestMouseEvents(false);
 }
 
 function tooltipStillShown()
