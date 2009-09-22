@@ -12,6 +12,7 @@ builtin(include, build/autoconf/freetype2.m4)dnl
 builtin(include, build/autoconf/codeset.m4)dnl
 builtin(include, build/autoconf/altoptions.m4)dnl
 builtin(include, build/autoconf/mozprog.m4)dnl
+builtin(include, build/autoconf/acwinpaths.m4)dnl
 
 MOZ_PROG_CHECKMSYS()
 
