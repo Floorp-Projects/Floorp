@@ -1940,7 +1940,9 @@ void nsOggDecoder::Shutdown()
 
   // Force any outstanding seek and byterange requests to complete
   // to prevent shutdown from deadlocking.
-  mReader->Stream()->Close();
+  if (mReader) {
+    mReader->Stream()->Close();
+  }
 
   ChangeState(PLAY_STATE_SHUTDOWN);
   nsMediaDecoder::Shutdown();
@@ -2532,7 +2534,7 @@ void nsOggDecoder::StartProgressUpdates()
 
 void nsOggDecoder::MoveLoadsToBackground()
 {
-  if (mReader && mReader->Stream()) {
+  if (mReader) {
     mReader->Stream()->MoveLoadsToBackground();
   }
 }
