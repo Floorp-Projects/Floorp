@@ -291,7 +291,7 @@ private:
     FragmentAssembler(const FragmentAssembler &);
     FragmentAssembler & operator=(const FragmentAssembler &);
     LasmSideExit *createSideExit();
-    LIns *createGuardRecord(LasmSideExit *exit);
+    GuardRecord *createGuardRecord(LasmSideExit *exit);
 
     Lirasm &mParent;
     const string mFragName;
@@ -315,7 +315,6 @@ private:
     void tokenizeLine(LirTokenStream &in, LirToken &token);
     void need(size_t);
     LIns *ref(const string &);
-    LIns *do_skip(size_t);
     LIns *assemble_call(const string &);
     LIns *assemble_general();
     LIns *assemble_guard();
@@ -522,14 +521,6 @@ FragmentAssembler::ref(const string &lab)
 }
 
 LIns *
-FragmentAssembler::do_skip(size_t i)
-{
-    LIns *s = mLir->insSkip(i);
-    memset(s->payload(), 0xba, i);
-    return s;
-}
-
-LIns *
 FragmentAssembler::assemble_jump()
 {
     LIns *target = NULL;
@@ -650,8 +641,7 @@ FragmentAssembler::assemble_call(const string &op)
 LasmSideExit*
 FragmentAssembler::createSideExit()
 {
-    LIns *exitIns = do_skip(sizeof(LasmSideExit));
-    LasmSideExit* exit = (LasmSideExit*) exitIns->payload();
+    LasmSideExit* exit = new (mParent.mAlloc) LasmSideExit();
     memset(exit, 0, sizeof(LasmSideExit));
     exit->from = mFragment;
     exit->target = NULL;
@@ -659,22 +649,21 @@ FragmentAssembler::createSideExit()
     return exit;
 }
 
-LIns*
+GuardRecord*
 FragmentAssembler::createGuardRecord(LasmSideExit *exit)
 {
-    LIns *guardRec = do_skip(sizeof(GuardRecord));
-    GuardRecord *rec = (GuardRecord*) guardRec->payload();
+    GuardRecord *rec = new (mParent.mAlloc) GuardRecord();
     memset(rec, 0, sizeof(GuardRecord));
     rec->exit = exit;
     exit->addGuard(rec);
-    return guardRec;
+    return rec;
 }
 
 
 LIns *
 FragmentAssembler::assemble_guard()
 {
-    LIns* guard = createGuardRecord(createSideExit());
+    GuardRecord* guard = createGuardRecord(createSideExit());
 
     need(mOpcount);
 
@@ -911,13 +900,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             break;
 
           case LIR_skip:
-            need(1);
-            {
-                int32_t count = imm(mTokens[0]);
-                if (uint32_t(count) > LirBuffer::MAX_SKIP_PAYLOAD_SZB)
-                    bad("oversize skip");
-                ins = do_skip(count);
-            }
+            bad("skip instruction is deprecated");
             break;
 
           case LIR_xt:
