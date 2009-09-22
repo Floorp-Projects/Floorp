@@ -3092,7 +3092,7 @@ esac
 
 dnl We don't want to link with libdl even if it's present on OS X, since
 dnl it's not used and not part of the default installation.
-dnl The same goes for BeOS.
+dnl The same goes for BeOS. OS/2 has dlfcn in libc.
 dnl We don't want to link against libm or libpthread on Darwin since
 dnl they both are just symlinks to libSystem and explicitly linking
 dnl against libSystem causes issues when debugging (see bug 299601).
@@ -3100,6 +3100,8 @@ case $target in
 *-darwin*)
     ;;
 *-beos*)
+    ;;
+*-os2*)
     ;;
 *)
     AC_CHECK_LIB(m, atan)
@@ -3126,7 +3128,14 @@ if test ! "$GNU_CXX"; then
 	;;
      esac
 fi
-AC_CHECK_LIB(socket, socket)
+
+dnl OS/2 has socket in libc.
+case $target in
+*-os2*)
+    ;;
+*)
+    AC_CHECK_LIB(socket, socket)
+esac
 
 dnl ========================================================
 dnl Check whether we can compile code for Core Text
