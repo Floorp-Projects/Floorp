@@ -472,6 +472,9 @@ private:
   void RegisterShutdownObserver();
   void UnregisterShutdownObserver();
 
+  // Notifies the element that decoding has failed.
+  void DecodeError();
+
   /******
    * The following members should be accessed with the decoder lock held.
    ******/

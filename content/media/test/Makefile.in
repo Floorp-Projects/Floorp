@@ -87,6 +87,7 @@ _TEST_FILES = \
 		test_constants.html \
 		test_controls.html \
 		test_currentTime.html \
+		test_decode_error.html \
 		test_decoder_disable.html \
 		test_load.html \
 		test_media_selection.html \
@@ -115,6 +116,7 @@ _TEST_FILES += \
 		320x240.allow-origin.ogv \
 		320x240.allow-origin.ogv^headers^ \
 		448636.ogv \
+		bogus.ogv \
 		bug495129.ogv \
 		bug461281.ogg \
 		bug482461.ogv \
@@ -128,6 +130,7 @@ _TEST_FILES += \
 		bug504613.ogv \
 		bug504644.ogv \
 		bug506094.ogv \
+		dirac.ogv \
 		seek.ogv \
 		short-video.ogv \
 		small-shot.ogg \
@@ -137,11 +140,18 @@ _TEST_FILES += \
 # Wave sample files
 _TEST_FILES += \
 		big.wav \
+		bogus.wav \
+		r11025_msadpcm_c1.wav \
 		r11025_s16_c1.wav \
 		r11025_s16_c1_trailing.wav \
 		r11025_u8_c1.wav \
 		r11025_u8_c1_trunc.wav \
 		r16000_u8_c1_list.wav \
+		$(NULL)
+
+# Other files
+_TEST_FILES += \
+		bogus.duh \
 		$(NULL)
 
 # These tests need to be converted to be backend-independent. This list
