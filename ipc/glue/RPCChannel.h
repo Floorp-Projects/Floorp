@@ -89,6 +89,12 @@ protected:
     // the pending queue
     void OnDelegate(const Message& msg);
 
+    // There's a fairly subtle race condition that arises between
+    // processing an event on this side that ends up sending an RPC
+    // message, while receiving a sync message from the other side.
+    // See the long comment in RPCChannel.cpp, near line 300.
+    void OnMaybeDequeueOne();
+
 private:
     void OnIncall(const Message& msg);
     void ProcessIncall(const Message& call, size_t stackDepth);
