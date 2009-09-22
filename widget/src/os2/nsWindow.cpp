@@ -213,7 +213,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mDragHps            = 0;
     mDragStatus         = 0;
     mCssCursorHPtr      = 0;
-    mUnclippedBounds    = nsIntRect(0,0,0,0);
+    mClipWnd            = 0;
 
     mIsTopWidgetWindow = PR_FALSE;
     mThebesSurface = nsnull;
@@ -887,7 +887,6 @@ void nsWindow::RealDoCreate( HWND              hwndP,
    //     have happened!
    mBounds = aRect;
    mBounds.height = aRect.height;
-   mUnclippedBounds = mBounds;
    mEventCallback = aHandleEventFunction;
 
    if( mParent)
@@ -1951,59 +1950,154 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
 //
 //-------------------------------------------------------------------------
 
-// This is _supposed_ to set a clipping region for the child windows used
-// by plugins.  However, on OS/2, clipping regions aren't associated with
-// windows, usually aren't persistent, & have no effect on drawing done
-// into children of the clipped window (which is where OS/2 plugins paint).
-// As an alternative, this implementation uses the child windows' dimensions
-// as clipping rectangles, adjusting them to match the bounding boxes of the
-// supplied arrays of rectangles.  This should suffice in most situations.
+// This is invoked on a window that has plugin widget children
+// to resize and clip those child windows.
 
 nsresult
 nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 {
-  // for each child window
   for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
     const Configuration& configuration = aConfigurations[i];
     nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
     NS_ASSERTION(w->GetParent() == this,
                  "Configured widget is not a child");
+    w->SetPluginClipRegion(configuration);
+  }
+  return NS_OK;
+}
 
-    // create the bounding box
-    const nsTArray<nsIntRect>& rects = configuration.mClipRegion;
-    nsIntRect r;
-    for (PRUint32 j = 0; j < rects.Length(); ++j) {
-      r.UnionRect(r, rects[j]);
-    }
+//-------------------------------------------------------------------------
 
-    // resize the widget to the dimensions of the bounding rectangle;
-    // the sum of mBounds.x/y (the widget's unclipped origin) and
-    // r.x/y (the clipped rect's offset from that origin) yields the
-    // resized widget's correct position
-    w->Resize(configuration.mBounds.x + r.x, configuration.mBounds.y + r.y,
-              r.width, r.height, PR_FALSE);
+// This is invoked on a plugin window to resize it and set a persistent
+// clipping region for it.  Since the latter isn't possible on OS/2, it
+// inserts a dummy window between the plugin widget and its parent to
+// act as a clipping rectangle.  The dummy window's dimensions and the
+// plugin widget's position within the window are adjusted to correspond
+// to the bounding box of the supplied array of clipping rectangles.
+// Note: this uses PM calls rather than existing methods like Resize()
+// and Update() because none of them support the options needed here.
 
-    // reposition the widget's child (typically, a frame created by
-    // the plugin) so the correct side(s) get clipped;  also, ensure
-    // the widget's child is at its full size - some plugins may shrink
-    // their window when widget shrinks
-    HWND hwnd = WinQueryWindow( w->mWnd, QW_TOP);
-    WinSetWindowPos(hwnd, 0,
-                    -r.x, r.height + r.y - configuration.mBounds.height,
-                    configuration.mBounds.width, configuration.mBounds.height,
-                    SWP_MOVE | SWP_SIZE);
+void nsWindow::SetPluginClipRegion(const Configuration& aConfiguration)
+{
+  NS_ASSERTION((mParent && mParent->mWnd), "Child window has no parent");
 
-    // show or hide the window, then save the array of rects
-    // for future reference
-    w->Show(!configuration.mClipRegion.IsEmpty());
-    w->StoreWindowClipRegion(configuration.mClipRegion);
-
-    // mUnclippedBounds is used only by Scroll() to determine
-    // if the child is about to be scrolled
-    w->mUnclippedBounds = configuration.mBounds;
+  // If nothing has changed, exit.
+  if (!StoreWindowClipRegion(aConfiguration.mClipRegion) &&
+      mBounds == aConfiguration.mBounds) {
+    return;
   }
 
-  return NS_OK;
+  // Set the widget's x/y to its nominal unclipped value.  It doesn't
+  // affect our calculations but other code relies on it being correct.
+  mBounds.MoveTo(aConfiguration.mBounds.TopLeft());
+
+  // Get or create the PM window we use as a clipping rectangle.
+  HWND hClip = GetPluginClipWindow(mParent->mWnd);
+  NS_ASSERTION(hClip, "No clipping window for plugin");
+  if (!hClip) {
+    return;
+  }
+
+  // Create the bounding box for the clip region.
+  const nsTArray<nsIntRect>& rects = aConfiguration.mClipRegion;
+  nsIntRect r;
+  for (PRUint32 i = 0; i < rects.Length(); ++i) {
+    r.UnionRect(r, rects[i]);
+  }
+
+  // Size and position hClip to match the bounding box.
+  SWP    swp;
+  POINTL ptl;
+  WinQueryWindowPos(hClip, &swp);
+  ptl.x = aConfiguration.mBounds.x + r.x;
+  ptl.y = mParent->mBounds.height
+          - (aConfiguration.mBounds.y + r.y + r.height);
+
+  ULONG  clipFlags = 0;
+  if (swp.x != ptl.x || swp.y != ptl.y) {
+    clipFlags |= SWP_MOVE;
+  }
+  if (swp.cx != r.width || swp.cy != r.height) {
+    clipFlags |= SWP_SIZE;
+  }
+  if (clipFlags) {
+    WinSetWindowPos(hClip, 0, ptl.x, ptl.y, r.width, r.height, clipFlags);
+  }
+
+  // Reducing the size of hClip clips the right & top sides of the
+  // plugin widget.  To clip the left & bottom sides, we have to move
+  // the widget so its origin's x and/or y is negative wrt hClip.
+  WinQueryWindowPos(mWnd, &swp);
+  ptl.x = -r.x;
+  ptl.y = r.height + r.y - aConfiguration.mBounds.height;
+
+  ULONG  wndFlags = 0;
+  if (swp.x != ptl.x || swp.y != ptl.y) {
+    wndFlags |= SWP_MOVE;
+  }
+  if (mBounds.Size() != aConfiguration.mBounds.Size()) {
+    wndFlags |= SWP_SIZE;
+  }
+  if (wndFlags) {
+    WinSetWindowPos(mWnd, 0, ptl.x, ptl.y,
+                    aConfiguration.mBounds.width,
+                    aConfiguration.mBounds.height, wndFlags);
+  }
+
+  // Some plugins don't resize themselves when the plugin widget changes
+  // size, so help them out by resizing the first child (usually a frame).
+  if (wndFlags & SWP_SIZE) {
+    HWND hChild = WinQueryWindow(mWnd, QW_TOP);
+    if (hChild) {
+      WinSetWindowPos(hChild, 0, 0, 0, 
+                      aConfiguration.mBounds.width,
+                      aConfiguration.mBounds.height,
+                      SWP_MOVE | SWP_SIZE);
+    }
+  }
+
+  // When hClip is resized, mWnd and its children may not get updated
+  // automatically, so invalidate & repaint them
+  if (clipFlags & SWP_SIZE) {
+    WinInvalidateRect(mWnd, 0, TRUE);
+    WinUpdateWindow(mWnd);
+  }
+}
+
+//-------------------------------------------------------------------------
+
+// This gets or creates a window that's inserted between the main window
+// and its plugin children.  This window does nothing except act as a
+// clipping rectangle for the plugin widget.
+
+HWND nsWindow::GetPluginClipWindow(HWND aParentWnd)
+{
+  static PRBool registered = FALSE;
+
+  if (mClipWnd) {
+    return mClipWnd;
+  }
+
+  // Register our dummy window class - note the lack of a wndproc.
+  if (!registered) {
+    registered = WinRegisterClass(0, "nsClipWnd", 0, 0, 4);
+    if (!registered) {
+      return 0;
+    }
+  }
+
+  // Insert a new clip window in the hierarchy between mWnd & aParentWnd.
+  mClipWnd = WinCreateWindow(aParentWnd, "nsClipWnd", "",
+                             WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+                             0, 0, 0, 0, 0, mWnd, 0, 0, 0);
+  if (mClipWnd) {
+    if (!WinSetParent(mWnd, mClipWnd, FALSE)) {
+      WinDestroyWindow(mClipWnd);
+      mClipWnd = 0;
+    }
+  }
+
+  return mClipWnd;
 }
 
 //-------------------------------------------------------------------------
@@ -2030,9 +2124,7 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
                  const nsTArray<Configuration>& aConfigurations)
 {
   // Build the set of widgets that are to be moved by the scroll
-  // amount.  Note that we use mUnclippedBounds because that's
-  // the position the caller expects the window to be at. mBounds
-  // contains the actual position of the window after "clipping".
+  // amount.
   nsTHashtable<nsPtrHashKey<nsWindow> > scrolledWidgets;
   scrolledWidgets.Init();
   for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
@@ -2040,7 +2132,7 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
     nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
     NS_ASSERTION(w->GetParent() == this,
                  "Configured widget is not a child");
-    if (configuration.mBounds == w->mUnclippedBounds + aDelta) {
+    if (configuration.mBounds == w->mBounds + aDelta) {
       scrolledWidgets.PutEntry(w);
     }
   }
