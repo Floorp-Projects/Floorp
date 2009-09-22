@@ -232,20 +232,20 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
 
    while( ret == NO_ERROR)
    {
-      info.fName = LoadRCDATAString( hPlug, NS_INFO_ProductName);
+      info.fName = LoadRCDATAString( hPlug, NP_INFO_ProductName);
 
-      info.fVersion = LoadRCDATAVersion( hPlug, NS_INFO_ProductVersion);
+      info.fVersion = LoadRCDATAVersion( hPlug, NP_INFO_ProductVersion);
 
       // get description (doesn't matter if it's missing)...
-      info.fDescription = LoadRCDATAString( hPlug, NS_INFO_FileDescription);
+      info.fDescription = LoadRCDATAString( hPlug, NP_INFO_FileDescription);
 
-      char * mimeType = LoadRCDATAString( hPlug, NS_INFO_MIMEType);
+      char * mimeType = LoadRCDATAString( hPlug, NP_INFO_MIMEType);
       if( nsnull == mimeType) break;
 
-      char * mimeDescription = LoadRCDATAString( hPlug, NS_INFO_FileOpenName);
+      char * mimeDescription = LoadRCDATAString( hPlug, NP_INFO_FileOpenName);
       if( nsnull == mimeDescription) break;
 
-      char * extensions = LoadRCDATAString( hPlug, NS_INFO_FileExtents);
+      char * extensions = LoadRCDATAString( hPlug, NP_INFO_FileExtents);
       if( nsnull == extensions) break;
 
       info.fVariantCount = CalculateVariantCount(mimeType);

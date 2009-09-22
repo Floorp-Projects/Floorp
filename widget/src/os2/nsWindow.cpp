@@ -2999,7 +2999,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
     event.clickCount = 1;
   }
 
-  nsPluginEvent pluginEvent;
+  NPEvent pluginEvent;
 
   switch (aEventType)
   {
@@ -3089,7 +3089,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
     event.refPoint.x = 0;
     event.refPoint.y = 0;
 
-    nsPluginEvent pluginEvent;
+    NPEvent pluginEvent;
 
     switch (aEventType)
     {
