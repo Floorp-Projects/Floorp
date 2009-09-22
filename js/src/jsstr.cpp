@@ -81,6 +81,15 @@
 JS_STATIC_ASSERT(size_t(JSString::MAX_LENGTH) <= size_t(JSVAL_INT_MAX));
 JS_STATIC_ASSERT(INT_FITS_IN_JSVAL(JSString::MAX_LENGTH));
 
+static JS_ALWAYS_INLINE JSBool
+UWordInRootedValue(JSContext *cx, size_t i, jsval *vp)
+{
+    if (i >= (size_t)JSVAL_INT_MAX)
+        return js_NewNumberInRootedValue(cx, i, vp);
+    *vp = INT_TO_JSVAL(i);
+    return JS_TRUE;
+}
+
 static size_t
 MinimizeDependentStrings(JSString *str, int level, JSString **basep)
 {
@@ -1043,83 +1052,33 @@ JS_DEFINE_CALLINFO_1(extern, INT32, js_String_p_charCodeAt0_int, STRING,        
 #endif
 
 jsint
-js_BoyerMooreHorspool(const jschar *text, jsuint textlen,
-                      const jschar *pat, jsuint patlen)
+js_BoyerMooreHorspool(const jschar *text, jsint textlen,
+                      const jschar *pat, jsint patlen,
+                      jsint start)
 {
-    uint8 skip[sBMHCharSetSize];
+    jsint i, j, k, m;
+    uint8 skip[BMH_CHARSET_SIZE];
+    jschar c;
 
-    JS_ASSERT(0 < patlen && patlen <= sBMHPatLenMax);
-    for (jsuint i = 0; i < sBMHCharSetSize; i++)
+    JS_ASSERT(0 < patlen && patlen <= BMH_PATLEN_MAX);
+    for (i = 0; i < BMH_CHARSET_SIZE; i++)
         skip[i] = (uint8)patlen;
-    jsuint m = patlen - 1;
-    for (jsuint i = 0; i < m; i++) {
-        jschar c = pat[i];
-        if (c >= sBMHCharSetSize)
+    m = patlen - 1;
+    for (i = 0; i < m; i++) {
+        c = pat[i];
+        if (c >= BMH_CHARSET_SIZE)
             return BMH_BAD_PATTERN;
         skip[c] = (uint8)(m - i);
     }
-    jschar c;
-    for (jsuint k = m;
+    for (k = start + m;
          k < textlen;
-         k += ((c = text[k]) >= sBMHCharSetSize) ? patlen : skip[c]) {
-        for (jsuint i = k, j = m; ; i--, j--) {
+         k += ((c = text[k]) >= BMH_CHARSET_SIZE) ? patlen : skip[c]) {
+        for (i = k, j = m; ; i--, j--) {
+            if (j < 0)
+                return i + 1;
             if (text[i] != pat[j])
                 break;
-            if (j == 0)
-                return static_cast<jsint>(i);  /* safe: max string size */
         }
-    }
-    return -1;
-}
-
-static JS_ALWAYS_INLINE jsint
-StringMatch(const jschar *text, jsuint textlen,
-            const jschar *pat, jsuint patlen)
-{
-    if (patlen == 0)
-        return 0;
-    if (textlen < patlen)
-        return -1;
-
-    /* XXX tune the BMH threshold (512) */
-    if (textlen >= 512 && patlen <= sBMHPatLenMax) {
-        jsint index = js_BoyerMooreHorspool(text, textlen, pat, patlen);
-        if (index != BMH_BAD_PATTERN)
-            return index;
-    }
-
-    const jschar *textend = text + textlen - (patlen - 1);
-    const jschar *patend = pat + patlen;
-    const jschar p0 = *pat;
-    const jschar *t = text;
-    uint8 fixup;
-
-    /* Credit: Duff */
-    switch ((textend - text) & 7) {
-        do {
-          case 0: if (*t++ == p0) { fixup = 8; goto match; }
-          case 7: if (*t++ == p0) { fixup = 7; goto match; }
-          case 6: if (*t++ == p0) { fixup = 6; goto match; }
-          case 5: if (*t++ == p0) { fixup = 5; goto match; }
-          case 4: if (*t++ == p0) { fixup = 4; goto match; }
-          case 3: if (*t++ == p0) { fixup = 3; goto match; }
-          case 2: if (*t++ == p0) { fixup = 2; goto match; }
-          case 1: if (*t++ == p0) { fixup = 1; goto match; }
-            continue;
-            do {
-                if (*t++ == p0) {
-                  match:
-                    for (const jschar *p1 = pat + 1, *t1 = t;
-                         p1 != patend;
-                         ++p1, ++t1) {
-                        if (*p1 != *t1)
-                            goto failed_match;
-                    }
-                    return t - text - 1;
-                }
-              failed_match:;
-            } while (--fixup > 0);
-        } while(t != textend);
     }
     return -1;
 }
@@ -1127,57 +1086,74 @@ StringMatch(const jschar *text, jsuint textlen,
 static JSBool
 str_indexOf(JSContext *cx, uintN argc, jsval *vp)
 {
+    jsval t;
+    JSString *str, *str2;
+    const jschar *text, *pat;
+    jsint i, j, index, textlen, patlen;
+    jsdouble d;
 
-    JSString *str;
-    NORMALIZE_THIS(cx, vp, str);
-
-    JSString *patstr = ArgToRootedString(cx, argc, vp, 0);
-    if (!patstr)
-        return JS_FALSE;
-
-    const jschar *text = str->chars();
-    jsuint textlen = str->length();
-    const jschar *pat = patstr->chars();
-    jsuint patlen = patstr->length();
-
-    jsuint start;
-    if (argc > 1) {
-        jsval indexVal = vp[3];
-        if (JSVAL_IS_INT(indexVal)) {
-            jsint i = JSVAL_TO_INT(indexVal);
-            if (i <= 0) {
-                start = 0;
-            } else if (jsuint(i) > textlen) {
-                start = 0;
-                textlen = 0;
-            } else {
-                start = i;
-                text += start;
-                textlen -= start;
-            }
-        } else {
-            jsdouble d = js_ValueToNumber(cx, &vp[3]);
-            if (JSVAL_IS_NULL(vp[3]))
-                return JS_FALSE;
-            d = js_DoubleToInteger(d);
-            if (d <= 0) {
-                start = 0;
-            } else if (d > textlen) {
-                start = 0;
-                textlen = 0;
-            } else {
-                start = (jsint)d;
-                text += start;
-                textlen -= start;
-            }
-        }
+    t = vp[1];
+    if (JSVAL_IS_STRING(t) && argc != 0 && JSVAL_IS_STRING(vp[2])) {
+        str = JSVAL_TO_STRING(t);
+        str2 = JSVAL_TO_STRING(vp[2]);
     } else {
-        start = 0;
+        str = NormalizeThis(cx, vp);
+        if (!str)
+            return JS_FALSE;
+
+        str2 = ArgToRootedString(cx, argc, vp, 0);
+        if (!str2)
+            return JS_FALSE;
     }
 
-    jsint match = StringMatch(text, textlen, pat, patlen);
-    *vp = INT_TO_JSVAL((match == -1) ? -1 : start + match);
-    return true;
+    text = str->chars();
+    textlen = (jsint) str->length();
+    pat = str2->chars();
+    patlen = (jsint) str2->length();
+
+    if (argc > 1) {
+        d = js_ValueToNumber(cx, &vp[3]);
+        if (JSVAL_IS_NULL(vp[3]))
+            return JS_FALSE;
+        d = js_DoubleToInteger(d);
+        if (d < 0)
+            i = 0;
+        else if (d > textlen)
+            i = textlen;
+        else
+            i = (jsint)d;
+    } else {
+        i = 0;
+    }
+    if (patlen == 0) {
+        *vp = INT_TO_JSVAL(i);
+        return JS_TRUE;
+    }
+
+    /* XXX tune the BMH threshold (512) */
+    if (textlen - i >= 512 && (jsuint)(patlen - 2) <= BMH_PATLEN_MAX - 2) {
+        index = js_BoyerMooreHorspool(text, textlen, pat, patlen, i);
+        if (index != BMH_BAD_PATTERN)
+            goto out;
+    }
+
+    index = -1;
+    j = 0;
+    while (i + j < textlen) {
+        if (text[i + j] == pat[j]) {
+            if (++j == patlen) {
+                index = i;
+                break;
+            }
+        } else {
+            i++;
+            j = 0;
+        }
+    }
+
+out:
+    *vp = INT_TO_JSVAL(index);
+    return JS_TRUE;
 }
 
 static JSBool
@@ -1301,17 +1277,7 @@ str_trimRight(JSContext *cx, uintN argc, jsval *vp)
  * Perl-inspired string functions.
  */
 
-/*
- * RegExpGuard factors logic out of String regexp operations. After each
- * operation completes, RegExpGuard data members become available, according to
- * the comments below.
- *
- * Notes on parameters to RegExpGuard member functions:
- *  - 'optarg' indicates in which argument position RegExp flags will be found,
- *    if present. This is a Mozilla extension and not part of any ECMA spec.
- *  - 'flat' indicates that the given pattern string will not be interpreted as
- *    a regular expression, hence regexp meta-characters are ignored.
- */
+/* Utility to extract the re/reobj pair from vp and manage the reference count. */
 class RegExpGuard
 {
     RegExpGuard(const RegExpGuard &);
@@ -1322,89 +1288,52 @@ class RegExpGuard
     JSRegExp *mRe;
 
   public:
-    RegExpGuard(JSContext *cx) : mCx(cx), mRe(NULL) {}
+    RegExpGuard() : mRe(NULL) {}
+
+    /*
+     * 'optarg' indicates in which argument position the flags will be found,
+     * if present. This is a Mozilla extension and not part of any ECMA spec.
+     *
+     * If 'flat' is set, the first argument is to be converted to a string to
+     * match in a "flat" sense (without regular expression metachars having
+     * special meanings) UNLESS the first arg is a RegExp object. This is the
+     * case with String.prototype.replace.
+     */
+    bool
+    initFromArgs(JSContext *cx, uintN optarg, bool flat, uintN argc, jsval *vp)
+    {
+        mCx = cx;
+        if (argc != 0 && VALUE_IS_REGEXP(cx, vp[2])) {
+            mReobj = JSVAL_TO_OBJECT(vp[2]);
+            mRe = (JSRegExp *) mReobj->getPrivate();
+            HOLD_REGEXP(cx, mRe);
+        } else {
+            JSString *src = ArgToRootedString(cx, argc, vp, 0);
+            if (!src)
+                return false;
+            JSString *opt;
+            if (optarg < argc) {
+                opt = js_ValueToString(cx, vp[2 + optarg]);
+                if (!opt)
+                    return false;
+            } else {
+                opt = NULL;
+            }
+            mRe = js_NewRegExpOpt(cx, src, opt, flat);
+            if (!mRe)
+                return false;
+            mReobj = NULL;
+        }
+        return true;
+    }
 
     ~RegExpGuard() {
         if (mRe)
             DROP_REGEXP(mCx, mRe);
     }
 
-    /* init must succeed in order to call tryFlatMatch or normalizeRegExp. */
-    bool
-    init(uintN argc, jsval *vp)
-    {
-        jsval patval = vp[2];
-        if (argc != 0 && VALUE_IS_REGEXP(mCx, patval)) {
-            mReobj = JSVAL_TO_OBJECT(patval);
-            mRe = (JSRegExp *) mReobj->getPrivate();
-            HOLD_REGEXP(mCx, mRe);
-        } else {
-            patstr = ArgToRootedString(mCx, argc, vp, 0);
-            if (!patstr)
-                return false;
-        }
-        return true;
-    }
-
-    /*
-     * Upper bound on the number of characters we are willing to potentially
-     * waste on searching for RegExp meta-characters.
-     */
-    static const size_t sMaxFlatPatLen = 256;
-
-    /*
-     * Attempt to patch |patstr| with |textstr|.  Return false if flat matching
-     * could not be used.
-     */
-    bool
-    tryFlatMatch(JSString *textstr, bool flat, uintN optarg, uintN argc)
-    {
-        if (mRe)
-            return false;
-        patstr->getCharsAndLength(pat, patlen);
-        if (optarg < argc ||
-            (!flat &&
-             (patlen > sMaxFlatPatLen || js_ContainsRegExpMetaChars(pat, patlen)))) {
-            return false;
-        }
-        textstr->getCharsAndLength(text, textlen);
-        match = StringMatch(text, textlen, pat, patlen);
-        return true;
-    }
-
-    /* Data available on successful return from |tryFlatMatch|. */
-    JSString *patstr;
-    const jschar *pat;
-    size_t patlen;
-    const jschar *text;
-    size_t textlen;
-    jsint match;
-
-    /* If the pattern is not already a regular expression, make it so. */
-    bool
-    normalizeRegExp(bool flat, uintN optarg, uintN argc, jsval *vp)
-    {
-        /* If we don't have a RegExp, build RegExp from pattern string. */
-        if (mRe)
-            return true;
-        JSString *opt;
-        if (optarg < argc) {
-            opt = js_ValueToString(mCx, vp[2 + optarg]);
-            if (!opt)
-                return false;
-        } else {
-            opt = NULL;
-        }
-        mRe = js_NewRegExpOpt(mCx, patstr, opt, flat);
-        if (!mRe)
-            return false;
-        mReobj = NULL;
-        return true;
-    }
-
-    /* Data available on successful return from |normalizeRegExp|. */
-    JSObject *reobj() const { return mReobj; }  /* nullable */
-    JSRegExp *re() const { return mRe; }        /* non-null */
+    JSObject *reobj() const { return mReobj; }
+    JSRegExp *re() const { return mRe; }
 };
 
 /* js_ExecuteRegExp indicates success in two ways, based on the 'test' flag. */
@@ -1472,7 +1401,10 @@ DoMatch(JSContext *cx, jsval *vp, JSString *str, const RegExpGuard &g,
 static bool
 MatchCallback(JSContext *cx, size_t count, void *p)
 {
-    JS_ASSERT(count <= JSVAL_INT_MAX);  /* by max string length */
+    if (count >= JSVAL_INT_MAX) {
+        js_ReportAllocationOverflow(cx);
+        return false;
+    }
 
     jsval &arrayval = *static_cast<jsval *>(p);
     JSObject *arrayobj = JSVAL_TO_OBJECT(arrayval);
@@ -1497,47 +1429,21 @@ MatchCallback(JSContext *cx, size_t count, void *p)
     return arrayobj->setProperty(cx, INT_TO_JSID(count), &v);
 }
 
-static bool
-BuildFlatMatchArray(JSContext *cx, JSString *textstr, const RegExpGuard &g,
-                    jsval *vp)
-{
-    if (g.match < 0) {
-        *vp = JSVAL_NULL;
-        return true;
-    }
-
-    /* For this non-global match, produce a RegExp.exec-style array. */
-    JSObject *obj = js_NewSlowArrayObject(cx);
-    if (!obj)
-        return false;
-    *vp = OBJECT_TO_JSVAL(obj);
-
-    return obj->defineProperty(cx, INT_TO_JSID(0), STRING_TO_JSVAL(g.patstr)) &&
-           obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.indexAtom),
-                               INT_TO_JSVAL(g.match)) &&
-           obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.inputAtom),
-                               STRING_TO_JSVAL(textstr));
-}
-
 static JSBool
 str_match(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
     NORMALIZE_THIS(cx, vp, str);
 
-    RegExpGuard g(cx);
-    if (!g.init(argc, vp))
-        return false;
-    if (g.tryFlatMatch(str, false, 1, argc))
-        return BuildFlatMatchArray(cx, str, g, vp);
-    if (!g.normalizeRegExp(false, 1, argc, vp))
+    RegExpGuard g;
+    if (!g.initFromArgs(cx, 1, false, argc, vp))
         return false;
 
     JSAutoTempValueRooter array(cx, JSVAL_NULL);
     if (!DoMatch(cx, vp, str, g, MatchCallback, array.addr(), MATCH_ARGS))
         return false;
 
-    /* When not global, DoMatch will leave |RegEx.exec()| in *vp. */
+    /* When not global, DoMatch will leave the (RegEx.exec()) in *vp. */
     if (g.re()->flags & JSREG_GLOB)
         *vp = array.value();
     return true;
@@ -1549,14 +1455,8 @@ str_search(JSContext *cx, uintN argc, jsval *vp)
     JSString *str;
     NORMALIZE_THIS(cx, vp, str);
 
-    RegExpGuard g(cx);
-    if (!g.init(argc, vp))
-        return false;
-    if (g.tryFlatMatch(str, false, 1, argc)) {
-        *vp = INT_TO_JSVAL(g.match);
-        return true;
-    }
-    if (!g.normalizeRegExp(false, 1, argc, vp))
+    RegExpGuard g;
+    if (!g.initFromArgs(cx, 1, false, argc, vp))
         return false;
 
     size_t i = 0;
@@ -1564,14 +1464,13 @@ str_search(JSContext *cx, uintN argc, jsval *vp)
         return false;
 
     if (*vp == JSVAL_TRUE)
-        *vp = INT_TO_JSVAL(cx->regExpStatics.leftContext.length);
-    else
-        *vp = INT_TO_JSVAL(-1);
+        return UWordInRootedValue(cx, cx->regExpStatics.leftContext.length, vp);
+    *vp = INT_TO_JSVAL(-1);
     return true;
 }
 
 struct ReplaceData {
-    ReplaceData(JSContext *cx) : g(cx), cb(cx) {}
+    ReplaceData(JSContext *cx) : cb(cx) {}
     JSString      *str;           /* 'this' parameter object as a string */
     RegExpGuard   g;              /* regexp parameter object and private data */
     JSObject      *lambda;        /* replacement function object or null */
@@ -1834,41 +1733,16 @@ ReplaceCallback(JSContext *cx, size_t count, void *p)
     return true;
 }
 
-static bool
-BuildFlatReplacement(JSContext *cx, JSString *textstr, JSString *repstr,
-                     const RegExpGuard &g, jsval *vp)
-{
-    if (g.match == -1) {
-        *vp = STRING_TO_JSVAL(textstr);
-        return true;
-    }
-
-    const jschar *rep;
-    size_t replen;
-    repstr->getCharsAndLength(rep, replen);
-
-    JSCharBuffer cb(cx);
-    if (!cb.reserve(g.textlen - g.patlen + replen) ||
-        !cb.append(g.text, static_cast<size_t>(g.match)) ||
-        !cb.append(rep, replen) ||
-        !cb.append(g.text + g.match + g.patlen, g.text + g.textlen)) {
-        return false;
-    }
-
-    JSString *str = js_NewStringFromCharBuffer(cx, cb);
-    if (!str)
-        return false;
-    *vp = STRING_TO_JSVAL(str);
-    return true;
-}
-
 static JSBool
 str_replace(JSContext *cx, uintN argc, jsval *vp)
 {
     ReplaceData rdata(cx);
+
     NORMALIZE_THIS(cx, vp, rdata.str);
 
-    /* Extract replacement string/function. */
+    if (!rdata.g.initFromArgs(cx, 2, true, argc, vp))
+        return false;
+
     if (argc >= 2 && JS_TypeOfValue(cx, vp[3]) == JSTYPE_FUNCTION) {
         rdata.lambda = JSVAL_TO_OBJECT(vp[3]);
         rdata.repstr = NULL;
@@ -1886,15 +1760,6 @@ str_replace(JSContext *cx, uintN argc, jsval *vp)
         rdata.dollar = js_strchr_limit(rdata.repstr->chars(), '$',
                                        rdata.dollarEnd);
     }
-
-    if (!rdata.g.init(argc, vp))
-        return false;
-    if (!rdata.dollar && !rdata.lambda &&
-        rdata.g.tryFlatMatch(rdata.str, true, 2, argc)) {
-        return BuildFlatReplacement(cx, rdata.str, rdata.repstr, rdata.g, vp);
-    }
-    if (!rdata.g.normalizeRegExp(true, 2, argc, vp))
-        return false;
 
     rdata.index = 0;
     rdata.leftIndex = 0;
