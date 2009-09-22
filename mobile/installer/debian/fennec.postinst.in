@@ -17,10 +17,6 @@ case "$1" in
         # select where to install fennec menu
         if [ "$2" == "" ]; then
 
-            if [ ! -f /targets/links/scratchbox.config ]; then
-                maemo-select-menu-location fennec.desktop tana_fi_web
-            fi
-
             if [ -x /usr/bin/update-desktop-database ]; then
                 update-desktop-database /usr/share/applications
             fi
