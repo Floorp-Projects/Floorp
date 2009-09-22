@@ -1244,17 +1244,15 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   if (aShouldGetButtonStates) {
     PRInt32 buttonStates[] = {0, 0, 0, 0};
     GetScrollbarPressStates(aFrame, buttonStates);
-    ThemeScrollBarArrowStyle arrowStyle;
-    ::GetThemeScrollBarArrowStyle(&arrowStyle);
-    // If all four buttons are visible
-    if (arrowStyle == kThemeScrollBarArrowsBoth) {
+    NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
+    // It seems that unless all four buttons are showing, kThemeTopOutsideArrowPressed is the correct constant for
+    // the up scrollbar button.
+    if ([buttonPlacement isEqualToString:@"DoubleBoth"]) {
       aTdi.trackInfo.scrollbar.pressState = ConvertToPressState(buttonStates[0], kThemeTopOutsideArrowPressed) |
                                             ConvertToPressState(buttonStates[1], kThemeTopInsideArrowPressed) |
                                             ConvertToPressState(buttonStates[2], kThemeBottomInsideArrowPressed) |
                                             ConvertToPressState(buttonStates[3], kThemeBottomOutsideArrowPressed);
     } else {
-      // It seems that unless all four buttons are showing, kThemeTopOutsideArrowPressed is the correct constant for
-      // the up scrollbar button.
       aTdi.trackInfo.scrollbar.pressState = ConvertToPressState(buttonStates[0], kThemeTopOutsideArrowPressed) |
                                             ConvertToPressState(buttonStates[1], kThemeBottomOutsideArrowPressed) |
                                             ConvertToPressState(buttonStates[2], kThemeTopOutsideArrowPressed) |
@@ -1407,10 +1405,10 @@ struct GreyGradientInfo {
   float endGrey;
 };
 
-static void GreyGradientCallback(void* aInfo, const float* aIn, float* aOut)
+static void GreyGradientCallback(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
 {
   GreyGradientInfo* info = static_cast<GreyGradientInfo*>(aInfo);
-  float result = (1.0f - *aIn) * info->startGrey + *aIn * info->endGrey;
+  CGFloat result = (1.0f - *aIn) * info->startGrey + *aIn * info->endGrey;
   aOut[0] = result;
   aOut[1] = result;
   aOut[2] = result;
@@ -1984,9 +1982,8 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     {
       // There's only an endcap to worry about when both arrows are on the bottom
-      ThemeScrollBarArrowStyle arrowStyle;
-      ::GetThemeScrollBarArrowStyle(&arrowStyle);
-      if (arrowStyle == kThemeScrollBarArrowsLowerRight) {
+      NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
+      if (!buttonPlacement || [buttonPlacement isEqualToString:@"DoubleMax"]) {
         PRBool isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL);
 
         nsIFrame *scrollbarFrame = GetParentScrollbarFrame(aFrame);
