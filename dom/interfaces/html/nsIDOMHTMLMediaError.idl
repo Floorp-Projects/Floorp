@@ -53,7 +53,7 @@ interface nsIDOMHTMLMediaError : nsISupports
   const unsigned short MEDIA_ERR_DECODE  = 3;
 
   /* No suitable media resource could be found */
-  const unsigned short MEDIA_ERR_NONE_SUPPORTED = 4;
+  const unsigned short MEDIA_ERR_SRC_NOT_SUPPORTED = 4;
 
   readonly attribute unsigned short code;
 };

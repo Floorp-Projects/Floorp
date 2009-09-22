@@ -118,6 +118,10 @@ public:
   // when the resource has a network error during loading.
   void NetworkError();
 
+  // Called by the video decoder object, on the main thread, when the
+  // resource has a decode error during metadata loading or decoding.
+  void DecodeError();
+
   // Called by the video decoder object, on the main thread,
   // when the video playback has ended.
   void PlaybackEnded();
@@ -309,11 +313,11 @@ protected:
   nsresult NewURIFromString(const nsAutoString& aURISpec, nsIURI** aURI);
 
   /**
-   * Called when all postential resources are exhausted. Changes network
+   * Called when all potential resources are exhausted. Changes network
    * state to NETWORK_NO_SOURCE, and sends error event with code
-   * MEDIA_ERR_NONE_SUPPORTED.
+   * MEDIA_ERR_SRC_NOT_SUPPORTED.
    */
-  void NoSupportedMediaError();
+  void NoSupportedMediaSourceError();
 
   /**
    * Attempts to load resources from the <source> children. This is a
