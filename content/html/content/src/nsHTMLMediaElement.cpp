@@ -234,7 +234,7 @@ NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* 
     // error.
     if (NS_FAILED(rv) && !mNextListener && element) {
       // Load failed, attempt to load the next candidate resource. If there
-      // are none, this will trigger a MEDIA_ERR_NONE_SUPPORTED error.
+      // are none, this will trigger a MEDIA_ERR_SRC_NOT_SUPPORTED error.
       element->NotifyLoadError();
     }
     // If InitializeDecoderForChannel did not return a listener (but may
@@ -407,9 +407,9 @@ void nsHTMLMediaElement::AbortExistingLoads()
   mIsRunningSelectResource = PR_FALSE;
 }
 
-void nsHTMLMediaElement::NoSupportedMediaError()
+void nsHTMLMediaElement::NoSupportedMediaSourceError()
 {
-  mError = new nsHTMLMediaError(nsIDOMHTMLMediaError::MEDIA_ERR_NONE_SUPPORTED);
+  mError = new nsHTMLMediaError(nsIDOMHTMLMediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE;
   DispatchAsyncProgressEvent(NS_LITERAL_STRING("error"));
   ChangeDelayLoadStatus(PR_FALSE);
@@ -479,7 +479,7 @@ void nsHTMLMediaElement::SelectResource()
       if (NS_SUCCEEDED(rv))
         return;
     }
-    NoSupportedMediaError();
+    NoSupportedMediaSourceError();
   } else {
     // Otherwise, the source elements will be used.
     LoadFromSourceChildren();
@@ -489,7 +489,7 @@ void nsHTMLMediaElement::SelectResource()
 void nsHTMLMediaElement::NotifyLoadError()
 {
   if (mIsLoadingFromSrcAttribute) {
-    NoSupportedMediaError();
+    NoSupportedMediaSourceError();
   } else {
     QueueLoadFromSourceTask();
   }
@@ -506,7 +506,7 @@ void nsHTMLMediaElement::LoadFromSourceChildren()
       // Exhausted candidates, wait for more candidates to be appended to
       // the media element.
       mLoadWaitStatus = WAITING_FOR_SOURCE;
-      NoSupportedMediaError();
+      NoSupportedMediaSourceError();
       return;
     }
 
@@ -1363,6 +1363,16 @@ void nsHTMLMediaElement::ResourceLoaded()
 void nsHTMLMediaElement::NetworkError()
 {
   mError = new nsHTMLMediaError(nsIDOMHTMLMediaError::MEDIA_ERR_NETWORK);
+  mBegun = PR_FALSE;
+  DispatchAsyncProgressEvent(NS_LITERAL_STRING("error"));
+  mNetworkState = nsIDOMHTMLMediaElement::NETWORK_EMPTY;
+  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("emptied"));
+  ChangeDelayLoadStatus(PR_FALSE);
+}
+
+void nsHTMLMediaElement::DecodeError()
+{
+  mError = new nsHTMLMediaError(nsIDOMHTMLMediaError::MEDIA_ERR_DECODE);
   mBegun = PR_FALSE;
   DispatchAsyncProgressEvent(NS_LITERAL_STRING("error"));
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_EMPTY;

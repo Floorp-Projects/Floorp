@@ -11,10 +11,10 @@ var gSmallTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
-// These are files that we just want to make sure we can play through.
-// We can also check metadata.
-// Put files of the same type together in this list so if something crashes
-// we have some idea of which backend is responsible.
+// These are files that must fire an error during load or playback, and do not
+// cause a crash.  Put files of the same type together in this list so if
+// something crashes we have some idea of which backend is responsible.  Used
+// by test_playback_errors, which expects one error event and no ended event.
 var gPlayTests = [
   // 8-bit samples
   { name:"r11025_u8_c1.wav", type:"audio/x-wav", duration:1.0 },
@@ -69,6 +69,20 @@ var gAudioTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"sound.ogg", type:"audio/ogg" },
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
+];
+
+// These are files suitable for testing various decoder failures that are
+// expected to fire MEDIA_ERR_DECODE.  Used by test_decode_error, which expects
+// an error and emptied event, and no loadedmetadata or ended event.
+var gDecodeErrorTests = [
+  // Valid files with unsupported codecs
+  { name:"r11025_msadpcm_c1.wav", type:"audio/x-wav" },
+  { name:"dirac.ogg", type:"video/ogg" },
+  // Invalid files
+  { name:"bogus.wav", type:"audio/x-wav" },
+  { name:"bogus.ogv", type:"video/ogg" },
+
+  { name:"bogus.duh", type:"bogus/duh" }
 ];
 
 function checkMetadata(msg, e, test) {

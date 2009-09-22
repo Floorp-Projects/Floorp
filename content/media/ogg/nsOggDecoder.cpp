@@ -746,7 +746,7 @@ void nsOggDecodeStateMachine::HandleDecodeErrors(OggPlayErrorCode aErrorCode)
       aErrorCode != E_OGGPLAY_CONTINUE) {
     mState = DECODER_STATE_SHUTDOWN;
     nsCOMPtr<nsIRunnable> event =
-      NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, NetworkError);
+      NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, DecodeError);
     NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   }
 }
@@ -1764,7 +1764,7 @@ void nsOggDecodeStateMachine::LoadOggHeaders(nsChannelReader* aReader)
         LOG(PR_LOG_DEBUG, ("Frame rate: %f", mFramerate));
 
         int aspectd, aspectn;
-        // this can return E_OGGPLAY_UNINITIALIZED if the video has
+        // this can return E_OGGPLAY_UNINITIALISED if the video has
         // no aspect ratio data. We assume 1.0 in that case.
         OggPlayErrorCode r =
           oggplay_get_video_aspect_ratio(mPlayer, i, &aspectd, &aspectn);
@@ -1783,6 +1783,12 @@ void nsOggDecodeStateMachine::LoadOggHeaders(nsChannelReader* aReader)
         oggplay_get_audio_channels(mPlayer, i, &mAudioChannels);
         LOG(PR_LOG_DEBUG, ("samplerate: %d, channels: %d", mAudioRate, mAudioChannels));
       }
+    }
+
+    if (mVideoTrack == -1 && mAudioTrack == -1) {
+      nsAutoMonitor mon(mDecoder->GetMonitor());
+      HandleDecodeErrors(E_OGGPLAY_UNINITIALISED);
+      return;
     }
 
     SetTracksActive();
@@ -2158,6 +2164,17 @@ void nsOggDecoder::NetworkError()
 
   if (mElement)
     mElement->NetworkError();
+
+  Shutdown();
+}
+
+void nsOggDecoder::DecodeError()
+{
+  if (mShuttingDown)
+    return;
+
+  if (mElement)
+    mElement->DecodeError();
 
   Shutdown();
 }
