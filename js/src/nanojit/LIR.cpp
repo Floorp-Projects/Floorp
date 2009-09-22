@@ -827,6 +827,19 @@ namespace nanojit
         return out->insBranch(v, c, t);
     }
 
+    LIns* ExprFilter::insLoad(LOpcode op, LIns* base, int32_t off) {
+        if (base->isconstp() && !isS8(off)) {
+            // if the effective address is constant, then transform:
+            // ld const[bigconst] => ld (const+bigconst)[0]
+            // note: we don't do this optimization for <8bit field offsets,
+            // under the assumption that we're more likely to CSE-match the
+            // constant base address if we dont const-fold small offsets.
+            uintptr_t p = (uintptr_t)base->constvalp() + off;
+            return out->insLoad(op, insImmPtr((void*)p), 0);
+        }
+        return out->insLoad(op, base, off);
+    }
+
     LIns* LirWriter::ins_eq0(LIns* oprnd1)
     {
         return ins2i(LIR_eq, oprnd1, 0);
