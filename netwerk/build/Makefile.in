@@ -134,7 +134,7 @@ EXTRA_DSO_LDOPTS = \
 		$(ZLIB_LIBS) \
 		$(NULL)
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += \
 		-framework SystemConfiguration \
 		$(TK_LIBS) \
