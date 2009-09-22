@@ -47,7 +47,7 @@ include $(topsrcdir)/config/rules.mk
 
 # The browser chrome test for bug 415846 doesn't run on Mac because of its
 # bizarre special-and-unique snowflake of a help menu.
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _NON_MAC_BROWSER_TESTS = browser_bug415846.js
 endif
 

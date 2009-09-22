@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = public src
 
 # Use Qute for non-Mac non-Phoenix apps
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 ifndef MOZ_PHOENIX
 DIRS += skin
 endif
