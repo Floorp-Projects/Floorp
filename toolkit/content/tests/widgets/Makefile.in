@@ -44,9 +44,6 @@ relativesrcdir  = toolkit/content/tests/widgets
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-# disabled, see bug 506038
-#		test_tooltip.xul \
-
 _TEST_FILES = 	test_bug360220.xul \
 		test_bug359754.xul \
 		test_bug365773.xul \
@@ -73,7 +70,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		popup_trigger.js \
 		window_popup_button.xul \
 		window_popup_attribute.xul \
-		window_tooltip.xul \
+		test_tooltip.xul \
 		test_progressmeter.xul \
 		test_props.xul \
 		test_statusbar.xul \

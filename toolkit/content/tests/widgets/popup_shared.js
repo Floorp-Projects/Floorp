@@ -34,6 +34,7 @@ var gTestStepIndex = 0;
 var gTestEventIndex = 0;
 var gAutoHide = false;
 var gExpectedEventDetails = null;
+var gWindowUtils;
 
 function startPopupTests(tests)
 {
@@ -49,22 +50,41 @@ function startPopupTests(tests)
   document.addEventListener("DOMMenuBarInactive", eventOccured, false);
 
   gPopupTests = tests;
+  gWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                       .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
   goNext();
 }
 
 function finish()
 {
-  window.close();
-  window.opener.SimpleTest.finish();
+  if (window.opener) {
+    window.close();
+    window.opener.SimpleTest.finish();
+    return;
+  }
+  SimpleTest.finish();
+  return;
 }
 
 function ok(condition, message) {
-  window.opener.SimpleTest.ok(condition, message);
+  if (window.opener)
+    window.opener.SimpleTest.ok(condition, message);
+  else
+    SimpleTest.ok(condition, message);
 }
 
 function is(left, right, message) {
-  window.opener.SimpleTest.is(left, right, message);
+  if (window.opener)
+    window.opener.SimpleTest.is(left, right, message);
+  else
+    SimpleTest.is(left, right, message);
+}
+
+function disableNonTestMouse(aDisable) {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  gWindowUtils.disableNonTestMouseEvents(aDisable);
 }
 
 function eventOccured(event)
