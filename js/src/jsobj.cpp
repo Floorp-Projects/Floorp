@@ -41,6 +41,8 @@
 /*
  * JS object implementation.
  */
+#define __STDC_LIMIT_MACROS
+
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
@@ -71,6 +73,7 @@
 #include "jsscript.h"
 #include "jsscriptinlines.h"
 #include "jsstaticcheck.h"
+#include "jsstdint.h"
 #include "jsstr.h"
 #include "jstracer.h"
 #include "jsdbgapi.h"
@@ -2065,7 +2068,8 @@ obj_keys(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     vp[1] = OBJECT_TO_JSVAL(proto);
 
-    JSObject *aobj = js_NewArrayWithSlots(cx, proto, ida.length());
+    JS_ASSERT(ida.length() <= UINT32_MAX);
+    JSObject *aobj = js_NewArrayWithSlots(cx, proto, uint32(ida.length()));
     if (!aobj)
         return JS_FALSE;
     *vp = OBJECT_TO_JSVAL(aobj);
