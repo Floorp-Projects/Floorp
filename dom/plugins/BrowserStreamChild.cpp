@@ -56,7 +56,7 @@ BrowserStreamChild::BrowserStreamChild(PluginInstanceChild* instance,
   , mHeaders(headers)
 {
   memset(&mStream, 0, sizeof(mStream));
-  mStream.ndata = this;
+  mStream.ndata = static_cast<AStream*>(this);
   if (!mURL.IsEmpty())
     mStream.url = mURL.get();
   mStream.end = length;
@@ -108,12 +108,30 @@ BrowserStreamChild::AnswerNPP_Write(const int32_t& offset,
 bool
 BrowserStreamChild::AnswerNPP_StreamAsFile(const nsCString& fname)
 {
+  _MOZ_LOG(__FUNCTION__);
+  printf("mClosed: %i\n", mClosed);
+
   if (mClosed)
     return true;
 
   mInstance->mPluginIface->asfile(&mInstance->mData, &mStream,
                                   fname.get());
   return true;
+}
+
+NPError
+BrowserStreamChild::NPN_RequestRead(NPByteRange* aRangeList)
+{
+  IPCByteRanges ranges;
+  for (; aRangeList; aRangeList = aRangeList->next) {
+    IPCByteRange br = {aRangeList->offset, aRangeList->length};
+    ranges.push_back(br);
+  }
+
+  NPError result;
+  CallNPN_RequestRead(ranges, &result);
+  // TODO: does failure in NPN_RequestRead affect stream state at all?
+  return result;
 }
 
 void

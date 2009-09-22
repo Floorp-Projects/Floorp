@@ -437,11 +437,14 @@ InstCast(NPP aNPP)
 }
 
 NPError NP_CALLBACK
-_requestread(NPStream* aSstream,
+_requestread(NPStream* aStream,
              NPByteRange* aRangeList)
 {
     _MOZ_LOG(__FUNCTION__);
-    return NPERR_NO_ERROR;
+    BrowserStreamChild* bs =
+        static_cast<BrowserStreamChild*>(static_cast<AStream*>(aStream->ndata));
+    bs->EnsureCorrectStream(aStream);
+    return bs->NPN_RequestRead(aRangeList);
 }
 
 NPError NP_CALLBACK

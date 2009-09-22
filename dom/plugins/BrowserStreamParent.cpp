@@ -18,6 +18,8 @@ bool
 BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                            NPError* result)
 {
+  _MOZ_LOG(__FUNCTION__);
+
   if (!mStream)
     return false;
 
@@ -32,14 +34,17 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
     rp[i].length = ranges[i].length;
     rp[i].next = &rp[i + 1];
   }
-  rp[ranges.size()].next = NULL;
+  rp[ranges.size() - 1].next = NULL;
 
-  return NPERR_NO_ERROR == mNPP->mNPNIface->requestread(mStream, rp);
+  *result = mNPP->mNPNIface->requestread(mStream, rp);
+  return true;
 }
 
 int32_t
 BrowserStreamParent::WriteReady()
 {
+  _MOZ_LOG(__FUNCTION__);
+
   int32_t result;
   if (!CallNPP_WriteReady(mStream->end, &result)) {
     mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, NPRES_NETWORK_ERR);
@@ -54,6 +59,8 @@ BrowserStreamParent::Write(int32_t offset,
                            int32_t len,
                            void* buffer)
 {
+  _MOZ_LOG(__FUNCTION__);
+
   int32_t result;
   if (!CallNPP_Write(offset,
                      nsCString(static_cast<char*>(buffer), len),
@@ -69,12 +76,16 @@ BrowserStreamParent::Write(int32_t offset,
 void
 BrowserStreamParent::StreamAsFile(const char* fname)
 {
+  _MOZ_LOG(__FUNCTION__);
+
   CallNPP_StreamAsFile(nsCString(fname));
 }
 
 NPError
 BrowserStreamParent::NPN_DestroyStream(NPReason reason)
 {
+  _MOZ_LOG(__FUNCTION__);
+
   return mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, reason);
 }
 

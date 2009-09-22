@@ -50,7 +50,8 @@ PluginStreamParent::PluginStreamParent(PluginInstanceParent* npp,
 {
   *result = mInstance->mNPNIface->newstream(mInstance->mNPP,
                                             const_cast<char*>(mimeType.get()),
-                                            target.get(), &mStream);
+                                            NullableStringGet(target),
+                                            &mStream);
   if (*result == NPERR_NO_ERROR)
     mStream->pdata = static_cast<AStream*>(this);
   else

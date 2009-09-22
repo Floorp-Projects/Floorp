@@ -75,7 +75,13 @@ public:
     if (i != mInstance)
       NS_RUNTIMEABORT("Incorrect stream instance");
   }
+  void EnsureCorrectStream(NPStream* s)
+  {
+    if (s != &mStream)
+      NS_RUNTIMEABORT("Incorrect stream data");
+  }
 
+  NPError NPN_RequestRead(NPByteRange* aRangeList);
   void NPP_DestroyStream(NPError reason);
 
 private:
