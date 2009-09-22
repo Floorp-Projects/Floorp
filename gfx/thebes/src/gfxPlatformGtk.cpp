@@ -91,7 +91,13 @@
 #include FT_FREETYPE_H
 #endif
 
-double gfxPlatformGtk::sDPI = -1.0;
+#ifdef MOZ_PLATFORM_HILDON
+#include "nsCOMPtr.h"
+#include "nsILocalFile.h"
+#include "nsILineInputStream.h"
+#include "nsNetUtil.h"
+#endif
+
 gfxFontconfigUtils *gfxPlatformGtk::sFontconfigUtils = nsnull;
 
 #ifndef MOZ_PANGO
@@ -128,8 +134,6 @@ gfxPlatformGtk::gfxPlatformGtk()
     gCodepointsWithNoFonts = new gfxSparseBitSet();
     UpdateFontList();
 #endif
-
-    InitDPI();
 }
 
 gfxPlatformGtk::~gfxPlatformGtk()
@@ -523,16 +527,46 @@ gfxPlatformGtk::CreateFontGroup(const nsAString &aFamilies,
 
 #endif
 
-
-/* static */
 void
-gfxPlatformGtk::InitDPI()
+gfxPlatformGtk::InitDisplayCaps()
 {
-    sDPI = gdk_screen_get_resolution(gdk_screen_get_default());
+#if defined(MOZ_PLATFORM_HILDON)
+    // Check the cached value
+    if (gfxPlatform::sDPI == -1) {
+        nsresult rv;
+        nsCOMPtr<nsILocalFile> file;
+        rv = NS_NewLocalFile(NS_LITERAL_STRING("/proc/component_version"),
+                             PR_TRUE, getter_AddRefs(file));
+        if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIInputStream> fileStream;
+            NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);                
+            nsCOMPtr<nsILineInputStream> lineStream = do_QueryInterface(fileStream);
+            
+            // Extract the product code from the component_version file
+            nsCAutoString buffer;
+            PRBool isMore = PR_TRUE;
+            if (NS_SUCCEEDED(lineStream->ReadLine(buffer, &isMore))) {
+                if (StringEndsWith(buffer, NS_LITERAL_CSTRING("RX-51"))) {
+                    gfxPlatform::sDPI = 265; // It's an N900
+                }
+                else if (StringEndsWith(buffer, NS_LITERAL_CSTRING("RX-48"))) {
+                    gfxPlatform::sDPI = 225; // It's an N810
+                }
+            }
+        }
+    }
+#else
+    GdkScreen *screen = gdk_screen_get_default();
+    gtk_settings_get_for_screen(screen); // Make sure init is run so we have a resolution
+    gfxPlatform::sDPI = PRInt32(round(gdk_screen_get_resolution(screen)));
+#endif
 
-    if (sDPI <= 0.0) {
+    if (gfxPlatform::sDPI <= 0.0) {
         // Fall back to something sane
-        sDPI = 96.0;
+        gfxPlatform::sDPI = 96.0;
+    } else {
+        // Minimum DPI is 96
+        gfxPlatform::sDPI = PR_MAX(sDPI, 96);
     }
 }
 
