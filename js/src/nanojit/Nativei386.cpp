@@ -114,7 +114,7 @@ namespace nanojit
 
         return fragEntry;
     }
-  
+
     void Assembler::nFragExit(LInsp guard)
     {
         SideExit *exit = guard->record()->exit;
@@ -387,7 +387,7 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_restore(LInsp i, Reservation *unused, Register r)
+    void Assembler::asm_restore(LInsp i, Reservation* /*unused*/, Register r)
     {
         uint32_t arg;
         uint32_t abi_regcount;
@@ -593,7 +593,7 @@ namespace nanojit
         if (rmask(rv) & XmmRegs) {
             SSE_STQ(dr, rb, rv);
         } else {
-            FSTQ(pop, dr, rb);
+            FSTQ(pop?1:0, dr, rb);
         }
     }
 
@@ -1465,6 +1465,7 @@ namespace nanojit
             // todo support int value in memory
             Register gr = findRegFor(ins->oprnd1(), GpRegs);
             SSE_CVTSI2SD(rr, gr);
+            SSE_XORPDr(rr,rr);  // zero rr to ensure no dependency stalls
         }
         else
         {
@@ -1473,7 +1474,7 @@ namespace nanojit
         }
     }
 
-    Register Assembler::asm_prep_fcall(Reservation *unused, LInsp ins)
+    Register Assembler::asm_prep_fcall(Reservation* /*unused*/, LInsp ins)
     {
         Register rr;
         if (ins->isUsed() && (rr = ins->getReg(), isKnownReg(rr)) && (rmask(rr) & XmmRegs)) {
@@ -1514,6 +1515,7 @@ namespace nanojit
             SSE_ADDSDm(rr, &k_NEGONE);
 
             SSE_CVTSI2SD(rr, gr);
+            SSE_XORPDr(rr,rr);  // zero rr to ensure no dependency stalls
 
             LIns* op1 = ins->oprnd1();
             Register xr;
