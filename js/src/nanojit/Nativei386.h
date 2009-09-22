@@ -315,15 +315,15 @@ namespace nanojit
 #define ALUmi(c,d,b,i) \
         underrunProtect(10); \
         NanoAssert(((unsigned)b)<8); \
-         if (isS8(i)) { \
+        if (isS8(i)) { \
             *(--_nIns) = uint8_t(i); \
             MODRMm((c>>3),(d),(b)); \
             *(--_nIns) = uint8_t(0x83); \
-         } else { \
-             IMM32(i); \
+        } else { \
+            IMM32(i); \
             MODRMm((c>>3),(d),(b)); \
             *(--_nIns) = uint8_t(0x81); \
-         }
+        }
 
 #define ALU2(c,d,s) \
         underrunProtect(3); \
@@ -394,7 +394,7 @@ namespace nanojit
 #define SETBE(r)    do { count_alu(); ALU2(0x0f96,(r),(r));         asm_output("setbe %s",gpn(r)); } while(0)
 #define SETA(r)     do { count_alu(); ALU2(0x0f97,(r),(r));         asm_output("seta %s",gpn(r)); } while(0)
 #define SETAE(r)    do { count_alu(); ALU2(0x0f93,(r),(r));         asm_output("setae %s",gpn(r)); } while(0)
-#define SETO(r)     do { count_alu(); ALU2(0x0f92,(r),(r));         asm_output("seto  %s",gpn(r)); } while(0)
+#define SETO(r)     do { count_alu(); ALU2(0x0f92,(r),(r));         asm_output("seto %s",gpn(r)); } while(0)
 
 #define MREQ(dr,sr) do { count_alu(); ALU2(0x0f44,dr,sr); asm_output("cmove %s,%s", gpn(dr),gpn(sr)); } while(0)
 #define MRNE(dr,sr) do { count_alu(); ALU2(0x0f45,dr,sr); asm_output("cmovne %s,%s", gpn(dr),gpn(sr)); } while(0)
