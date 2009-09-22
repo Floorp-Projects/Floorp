@@ -376,7 +376,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
       aMetric = 3;
       break;
     case eMetric_CaretBlinkTime:
-      aMetric = ::GetCaretTime() * 1000 / 60;
+      aMetric = 567;
       break;
     case eMetric_CaretWidth:
       aMetric = 1;
