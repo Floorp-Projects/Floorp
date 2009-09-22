@@ -28,29 +28,17 @@ html, body {
     </style>
     <script type="text/javascript">
 
-function handle_load(e)
-{
-  document.addEventListener("MozReftestInvalidate", resize_svg, false);
-  // in case we're not gecko
-  setTimeout(resize_svg, 5000);
-}
-
 function resize_svg()
 {
   document.getElementById('svg').style.width = '100%';
-  document.addEventListener("MozReftestInvalidate", notify_test_finished, false);
-  // in case we're not gecko
-  setTimeout(notify_test_finished, 5000);
-}
-
-function notify_test_finished()
-{
   document.documentElement.removeAttribute('class');
 }
 
+document.addEventListener("MozReftestInvalidate", resize_svg, false);
+
     </script>
   </head>
-  <body onload="handle_load(event);">
+  <body>
 
     <svg id="svg" xmlns="http://www.w3.org/2000/svg"
          style="display:block; width:0; height:100%;" width="0" height="0">

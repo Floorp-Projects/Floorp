@@ -30,31 +30,19 @@ html, body, div {
     <script type="text/javascript">
 
 var initial_height = top.innerHeight;
-top.innerHeight /= 2;
-
-function handle_load(e)
-{
-  document.addEventListener("MozReftestInvalidate", restore_height, false);
-  // in case we're not gecko
-  setTimeout(restore_height, 5000);
-}
 
 function restore_height()
 {
   top.innerHeight = initial_height;
-  document.addEventListener("MozReftestInvalidate", notify_test_finished, false);
-  // in case we're not gecko
-  setTimeout(notify_test_finished, 5000);
+  setTimeout(function() { document.documentElement.removeAttribute('class'); }, 0);
 }
 
-function notify_test_finished()
-{
-  document.documentElement.removeAttribute('class');
-}
+top.innerHeight /= 2;
+document.addEventListener("MozReftestInvalidate", restore_height, false);
 
     </script>
   </head>
-  <body onload="handle_load(event);">
+  <body onload="restore_height()">
 
     <svg xmlns="http://www.w3.org/2000/svg" width="5000" height="100%">
       <rect width="100%" height="100%" fill="lime"/>
