@@ -215,6 +215,25 @@ RPCChannel::OnDelegate(const Message& msg)
 }
 
 void
+RPCChannel::OnMaybeDequeueOne()
+{
+    Message recvd;  
+    {
+        MutexAutoLock lock(mMutex);
+
+        if (mPending.empty())
+            return;
+
+        NS_ABORT_IF_FALSE(mPending.size() == 1, "should only have one msg");
+        NS_ABORT_IF_FALSE(mPending.front().is_sync(), "msg should be sync");
+
+        recvd = mPending.front();
+        mPending.pop();
+    }
+    return SyncChannel::OnDispatchMessage(recvd);
+}
+
+void
 RPCChannel::OnIncall(const Message& call)
 {
     // We only reach here from the "regular" event loop, when
@@ -281,35 +300,68 @@ RPCChannel::OnMessageReceived(const Message& msg)
 {
     MutexAutoLock lock(mMutex);
 
+    // regardless of the RPC stack, if we're awaiting a sync reply, we
+    // know that it needs to be immediately handled to unblock us.
+    // The SyncChannel will check that msg is a reply, and the right
+    // kind of reply, then do its thing.
+    if (AwaitingSyncReply()
+        && msg.is_sync()) {
+        // wake up worker thread (at SyncChannel::Send) awaiting
+        // this reply
+        mRecvd = msg;
+        mCvar.Notify();
+        return;
+    }
+
+    // otherwise, we handle sync/async/rpc messages differently depending
+    // on whether the RPC channel is idle
+
     if (0 == StackDepth()) {
         // we're idle wrt to the RPC layer, and this message could be
         // async, sync, or rpc.
-        // 
-        // if it's *not* an RPC message, we delegate processing to the
-        // SyncChannel.  it knows how to properly dispatch sync and
-        // async messages, and the sync channel also will do error
-        // checking wrt to its invariants
-        if (!msg.is_rpc()) {
+
+        // async message: delegate, doesn't affect anything
+        if (!msg.is_sync() && !msg.is_rpc()) {
             MutexAutoUnlock unlock(mMutex);
-            return SyncChannel::OnMessageReceived(msg);
+            return AsyncChannel::OnMessageReceived(msg);
         }
 
-        // wake up the worker, there's a new in-call to process
-
         // NB: the interaction between this and SyncChannel is rather
-        // subtle.  It's possible for us to send a sync message
-        // exactly when the other side sends an RPC in-call.  A sync
-        // handler invariant is that the sync message must be replied
-        // to before sending any other blocking message, so we know
-        // that the other side must reply ASAP to the sync message we
-        // just sent.  Thus by queuing this RPC in-call in that
-        // situation, we specify an order on the previously unordered
-        // messages and satisfy all invariants.
-        //
-        // It's not possible for us to otherwise receive an RPC
-        // in-call while awaiting a sync response in any case where
-        // both us and the other side are behaving legally.  Is it
-        // worth trying to detect this case?  (It's kinda hard.)
+        // subtle; we have to handle a fairly nasty race condition.
+        // The other side may send us a sync message at any time.  If
+        // we receive it here while the worker thread is processing an
+        // event that will eventually send an RPC message (or will
+        // send an RPC message while processing any event enqueued
+        // before the sync message was received), then if we tried to
+        // enqueue the sync message in the worker's event queue, it
+        // would get "lost": the worker would block on the RPC reply
+        // without seeing the sync request, and we'd deadlock.
+        // 
+        // So to avoid this case, when the RPC channel is idle and
+        // receives a sync request, it puts the request in the special
+        // RPC message queue, and asks the worker thread to process a
+        // task that might end up dequeuing that RPC message.  The
+        // task *might not* dequeue a sync request --- this might
+        // occur if the event the worker is currently processing sends
+        // an RPC message.  If that happens, the worker will go into
+        // its "wait loop" for the RPC response, and immediately
+        // dequeue and process the sync request.
+
+        if (msg.is_sync()) {
+            mPending.push(msg);
+
+            mWorkerLoop->PostTask(
+                FROM_HERE,
+                NewRunnableMethod(this,
+                                  &RPCChannel::OnMaybeDequeueOne));
+            return;
+        }
+
+        // OK: the RPC channel is idle, and we received an in-call.
+        // wake up the worker thread
+
+        NS_ABORT_IF_FALSE(msg.is_rpc(), "should be RPC");
+
         mWorkerLoop->PostTask(FROM_HERE,
                               NewRunnableMethod(this,
                                                 &RPCChannel::OnIncall, msg));
@@ -324,22 +376,12 @@ RPCChannel::OnMessageReceived(const Message& msg)
         // describing legal queue states
 
         // if we're waiting on a sync reply, and this message is sync,
-        // dispatch it to the sync message handler. It will check that
-        // it's a reply, and the right kind of reply, then do its
-        // thing.
+        // dispatch it to the sync message handler.
         // 
         // since we're waiting on an RPC answer in an older stack
         // frame, we know we'll eventually pop back to the
         // RPCChannel::Call frame where we're awaiting the RPC reply.
         // so the queue won't be forgotten!
-        if (AwaitingSyncReply()
-            && msg.is_sync()) {
-            // wake up worker thread (at SyncChannel::Send) awaiting
-            // this reply
-            mRecvd = msg;
-            mCvar.Notify();
-            return;
-        }
 
         // waiting on a sync reply, but got an async message.  that's OK,
         // but we defer processing of it until the sync reply comes in.
