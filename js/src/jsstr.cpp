@@ -78,6 +78,9 @@
 
 #define JSSTRDEP_RECURSION_LIMIT        100
 
+JS_STATIC_ASSERT(size_t(JSString::MAX_LENGTH) <= size_t(JSVAL_INT_MAX));
+JS_STATIC_ASSERT(INT_FITS_IN_JSVAL(JSString::MAX_LENGTH));
+
 static JS_ALWAYS_INLINE JSBool
 UWordInRootedValue(JSContext *cx, size_t i, jsval *vp)
 {

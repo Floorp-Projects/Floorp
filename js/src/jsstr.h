@@ -142,7 +142,11 @@ struct JSString {
         ATOMIZED =      JSSTRING_BIT(JS_BITS_PER_WORD - 3),
         DEFLATED =      JSSTRING_BIT(JS_BITS_PER_WORD - 4),
 
+#if JS_BITS_PER_WORD > 32
+        LENGTH_BITS =   28,
+#else
         LENGTH_BITS =   JS_BITS_PER_WORD - 4,
+#endif
         LENGTH_MASK =   JSSTRING_BITMASK(LENGTH_BITS),
 
         /*
