@@ -502,10 +502,8 @@ var ExtensionsView = {
 
   showPage: function ev_showPage(aItem) {
     let uri = aItem.getAttribute("homepageURL");
-    if (uri) {
+    if (uri)
       BrowserUI.newTab(uri);
-      BrowserUI.hidePanel();
-    }
   },
 
   resetSearch: function ev_resetSearch() {
