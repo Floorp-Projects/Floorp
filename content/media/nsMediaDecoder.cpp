@@ -53,6 +53,10 @@
 #include "nsMediaDecoder.h"
 #include "nsDOMError.h"
 
+#if defined(XP_MACOSX)
+#include "gfxQuartzImageSurface.h"
+#endif
+
 // Number of milliseconds between progress events as defined by spec
 #define PROGRESS_MS 350
 
@@ -246,15 +250,24 @@ void nsMediaDecoder::Paint(gfxContext* aContext,
   if (!mRGB)
     return;
 
-  /* Create a surface backed by the RGB */
-  nsRefPtr<gfxASurface> surface = 
-    new gfxImageSurface(mRGB,
-                        gfxIntSize(mRGBWidth, mRGBHeight), 
-                        mRGBWidth * 4,
-                        gfxASurface::ImageFormatRGB24);    
-
-  if (!surface)
+  nsRefPtr<gfxImageSurface> imgSurface =
+      new gfxImageSurface(mRGB,
+                          gfxIntSize(mRGBWidth, mRGBHeight),
+                          mRGBWidth * 4,
+                          gfxASurface::ImageFormatRGB24);
+  if (!imgSurface)
     return;
+
+  nsRefPtr<gfxASurface> surface(imgSurface);
+
+#if defined(XP_MACOSX)
+  nsRefPtr<gfxQuartzImageSurface> quartzSurface =
+    new gfxQuartzImageSurface(imgSurface);
+  if (!quartzSurface)
+    return;
+
+  surface = quartzSurface;
+#endif
 
   nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
   if (!pat)
@@ -285,20 +298,5 @@ void nsMediaDecoder::Paint(gfxContext* aContext,
   aContext->NewPath();
   aContext->PixelSnappedRectangleAndSetPattern(aRect, pat);
   aContext->Fill();
-
-#ifdef DEBUG_FRAME_RATE
-  {
-    // Output frame rate
-    static float last = double(PR_IntervalToMilliseconds(PR_IntervalNow()))/1000.0;
-    float now = double(PR_IntervalToMilliseconds(PR_IntervalNow()))/1000.0;
-    static int count = 0;
-    count++;
-    if (now-last > 10.0) {
-      LOG(PR_LOG_DEBUG, ("Paint Frame Rate = %f (should be %f)\n", (float)count / (float)(now-last), mFramerate));
-      count = 0;
-      last = double(PR_IntervalToMilliseconds(PR_IntervalNow()))/1000.0;
-    }
-  }   
-#endif
 }
 
