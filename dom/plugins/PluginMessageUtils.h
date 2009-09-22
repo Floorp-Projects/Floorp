@@ -84,6 +84,29 @@ typedef nsCString Buffer;
 
 } /* namespace mozilla */
 
+
+namespace {
+
+// in NPAPI, char* == NULL is sometimes meaningful.  the following is
+// helper code for dealing with nullable nsCString's
+nsCString
+NullableString(const char* aString)
+{
+    if (!aString) {
+        nsCString str;
+        str.SetIsVoid(PR_TRUE);
+        return str;
+    }
+    return nsCString(aString);
+}
+
+} // namespace <anon>
+
+// TODO is there any safe way for this to be a function?
+#define NullableStringGet(__string)                     \
+    ( __string.IsVoid() ? NULL : __string.get())
+
+
 namespace IPC {
 
 template <>

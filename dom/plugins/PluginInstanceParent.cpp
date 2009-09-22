@@ -157,7 +157,9 @@ PluginInstanceParent::AnswerNPN_GetURL(const nsCString& url,
                                        const nsCString& target,
                                        NPError* result)
 {
-    *result = mNPNIface->geturl(mNPP, url.get(), target.get());
+    *result = mNPNIface->geturl(mNPP,
+                                NullableStringGet(url),
+                                NullableStringGet(target));
     return true;
 }
 
@@ -184,11 +186,15 @@ PluginInstanceParent::PStreamNotifyConstructor(const nsCString& url,
     StreamNotifyParent* notifyData = new StreamNotifyParent();
 
     if (!post) {
-        *result = mNPNIface->geturlnotify(mNPP, url.get(), target.get(),
+        *result = mNPNIface->geturlnotify(mNPP,
+                                          NullableStringGet(url),
+                                          NullableStringGet(target),
                                           notifyData);
     }
     else {
-        *result = mNPNIface->posturlnotify(mNPP, url.get(), target.get(),
+        *result = mNPNIface->posturlnotify(mNPP,
+                                           NullableStringGet(url),
+                                           NullableStringGet(target),
                                            buffer.Length(), buffer.get(),
                                            file, notifyData);
     }
@@ -266,6 +272,7 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
     BrowserStreamParent* bs = new BrowserStreamParent(this, stream);
 
     NPError err;
+    // TODO are any of these strings nullable?
     if (!CallPBrowserStreamConstructor(bs,
                                        nsCString(stream->url),
                                        stream->end,

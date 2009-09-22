@@ -80,7 +80,8 @@ public:
     bool Call(Message* msg, Message* reply);
 
     // Override the SyncChannel handler so we can dispatch RPC messages
-    virtual void OnMessageReceived(const Message& msg);
+    NS_OVERRIDE virtual void OnMessageReceived(const Message& msg);
+    NS_OVERRIDE virtual void OnChannelError();
 
 protected:
     // Only exists because we can't schedule SyncChannel::OnDispatchMessage

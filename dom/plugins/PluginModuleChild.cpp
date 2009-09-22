@@ -59,8 +59,9 @@ using mozilla::ipc::NPRemoteIdentifier;
 using namespace mozilla::plugins;
 
 namespace {
-    PluginModuleChild* gInstance = nsnull;
+PluginModuleChild* gInstance = nsnull;
 }
+
 
 PluginModuleChild::PluginModuleChild() :
     mLibrary(0),
@@ -451,11 +452,11 @@ _geturlnotify(NPP aNPP,
 {
     _MOZ_LOG(__FUNCTION__);
 
-    const nsDependentCString url(aRelativeURL);
+    nsCString url = NullableString(aRelativeURL);
     NPError err;
     InstCast(aNPP)->CallPStreamNotifyConstructor(
         new StreamNotifyChild(url, aNotifyData),
-        url, nsDependentCString(aTarget), false, nsCString(), false, &err);
+        url, NullableString(aTarget), false, nsCString(), false, &err);
     // TODO: what if this fails?
     return err;
 }
@@ -486,8 +487,8 @@ _geturl(NPP aNPP,
 {
     _MOZ_LOG(__FUNCTION__);
     NPError err;
-    InstCast(aNPP)->CallNPN_GetURL(nsDependentCString(aRelativeURL),
-                                   nsDependentCString(aTarget), &err);
+    InstCast(aNPP)->CallNPN_GetURL(NullableString(aRelativeURL),
+                                   NullableString(aTarget), &err);
     return err;
 }
 
@@ -502,11 +503,12 @@ _posturlnotify(NPP aNPP,
 {
     _MOZ_LOG(__FUNCTION__);
 
-    const nsDependentCString url(aRelativeURL);
+    nsCString url = NullableString(aRelativeURL);
     NPError err;
+    // FIXME what should happen when |aBuffer| is null?
     InstCast(aNPP)->CallPStreamNotifyConstructor(
         new StreamNotifyChild(url, aNotifyData),
-        url, nsDependentCString(aTarget), true,
+        url, NullableString(aTarget), true,
         nsDependentCString(aBuffer, aLength), aIsFile, &err);
     // TODO: what if this fails?
     return err;
@@ -522,8 +524,9 @@ _posturl(NPP aNPP,
 {
     _MOZ_LOG(__FUNCTION__);
     NPError err;
-    InstCast(aNPP)->CallNPN_PostURL(nsDependentCString(aRelativeURL),
-                                    nsDependentCString(aTarget),
+    // FIXME what should happen when |aBuffer| is null?
+    InstCast(aNPP)->CallNPN_PostURL(NullableString(aRelativeURL),
+                                    NullableString(aTarget),
                                     nsDependentCString(aBuffer, aLength),
                                     aIsFile, &err);
     return err;
@@ -1026,8 +1029,8 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
 
     printf ("(plugin args: ");
     for (int i = 0; i < argc; ++i) {
-        argn[i] = const_cast<char*>(aNames[i].get());
-        argv[i] = const_cast<char*>(aValues[i].get());
+        argn[i] = const_cast<char*>(NullableStringGet(aNames[i]));
+        argv[i] = const_cast<char*>(NullableStringGet(aValues[i]));
         printf("%s=%s, ", argn[i], argv[i]);
     }
     printf(")\n");
@@ -1035,7 +1038,7 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
     NPP npp = childInstance->GetNPP();
 
     // FIXME/cjones: use SAFE_CALL stuff
-    *rv = mFunctions.newp((char*)aMimeType.get(),
+    *rv = mFunctions.newp((char*)NullableStringGet(aMimeType),
                           npp,
                           aMode,
                           argc,

@@ -60,10 +60,12 @@ RPCChannel::Call(Message* msg, Message* reply)
 {
     NS_ABORT_IF_FALSE(!ProcessingSyncMessage(),
                       "violation of sync handler invariant");
-    NS_ASSERTION(ChannelConnected == mChannelState,
-                 "trying to Send() to a channel not yet open");
-    NS_PRECONDITION(msg->is_rpc(),
-                    "can only Call() RPC messages here");
+    NS_ABORT_IF_FALSE(msg->is_rpc(),
+                      "can only Call() RPC messages here");
+
+    if (!Connected())
+        // trying to Send() to a closed or error'd channel
+        return false;
 
     MutexAutoLock lock(mMutex);
 
@@ -77,9 +79,13 @@ RPCChannel::Call(Message* msg, Message* reply)
     while (1) {
         // here we're waiting for something to happen. see long
         // comment about the queue in RPCChannel.h
-        while (mPending.empty()) {
+        while (Connected() && mPending.empty()) {
             mCvar.Wait();
         }
+
+        if (!Connected())
+            // FIXME more sophisticated error handling
+            return false;
 
         Message recvd = mPending.front();
         mPending.pop();
@@ -360,6 +366,26 @@ RPCChannel::OnMessageReceived(const Message& msg)
         mPending.push(msg);
         mCvar.Notify();
     }
+}
+
+
+void
+RPCChannel::OnChannelError()
+{
+    {
+        MutexAutoLock lock(mMutex);
+
+        mChannelState = ChannelError;
+
+        if (AwaitingSyncReply()
+            || 0 < StackDepth()) {
+            mCvar.Notify();
+        }
+    }
+
+    // skip SyncChannel::OnError(); we subsume its duties
+
+    return AsyncChannel::OnChannelError();
 }
 
 
