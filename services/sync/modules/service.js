@@ -217,7 +217,7 @@ WeaveSvc.prototype = {
   get serverURL() Svc.Prefs.get("serverURL"),
   set serverURL(value) Svc.Prefs.set("serverURL", value),
 
-  get clusterURL() Svc.Prefs.get("clusterURL"),
+  get clusterURL() Svc.Prefs.get("clusterURL", ""),
   set clusterURL(value) {
     Svc.Prefs.set("clusterURL", value);
     this._updateCachedURLs();
@@ -264,6 +264,10 @@ WeaveSvc.prototype = {
   },
 
   _updateCachedURLs: function _updateCachedURLs() {
+    // Nothing to cache yet if we don't have the building blocks
+    if (this.clusterURL == "" || this.username == "")
+      return;
+
     let storageAPI = this.clusterURL + "0.5/";
     let userBase = storageAPI + this.username + "/";
     this._log.debug("Caching URLs under storage user base: " + userBase);
@@ -513,7 +517,10 @@ WeaveSvc.prototype = {
 
   _verifyLogin: function _verifyLogin()
     this._catch(this._notify("verify-login", "", function() {
-      this._setCluster();
+      // Make sure we have a cluster to verify against
+      if (this.clusterURL == "")
+        this._setCluster();
+
       let res = new Resource(this.infoURL);
       try {
         let test = res.get();
@@ -528,7 +535,7 @@ WeaveSvc.prototype = {
           case 401:
           case 404:
             // Check that we're verifying with the correct cluster
-            if (this._updateCluster())
+            if (this._setCluster())
               return this._verifyLogin();
 
             // We must have the right cluster, but the server doesn't expect us
