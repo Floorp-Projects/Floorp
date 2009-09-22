@@ -192,20 +192,21 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType,
 
     NPError prv = NPERR_GENERIC_ERROR;
     nsAutoPtr<PluginInstanceParent> parentInstance(
-        static_cast<PluginInstanceParent*>(
-            CallPPluginInstanceConstructor(new PluginInstanceParent(instance,
-                                                                    mNPNIface),
-                                           nsDependentCString(pluginType), mode,
-                                           names,values, &prv)));
+        new PluginInstanceParent(instance, mNPNIface));
+
+    instance->pdata = parentInstance.get();
+
+    if (!CallPPluginInstanceConstructor(parentInstance,
+                                        nsDependentCString(pluginType), mode,
+                                        names,values, &prv))
+        return NPERR_GENERIC_ERROR;
+
     printf ("[PluginModuleParent] %s: got return value %hd\n", __FUNCTION__,
             prv);
 
-    if (NPERR_NO_ERROR != prv)
-        return prv;
-    NS_ASSERTION(parentInstance,
-                 "if there's no parentInstance, there should be an error");
+    if (NPERR_NO_ERROR == prv)
+        parentInstance.forget();
 
-    instance->pdata = (void*) parentInstance.forget();
     return prv;
 }
 
