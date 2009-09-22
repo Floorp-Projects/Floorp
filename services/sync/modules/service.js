@@ -215,7 +215,15 @@ WeaveSvc.prototype = {
   set passphrase passphrase(value) ID.get("WeaveCryptoID").password = value,
 
   get serverURL() Svc.Prefs.get("serverURL"),
-  set serverURL(value) Svc.Prefs.set("serverURL", value),
+  set serverURL(value) {
+    // Only do work if it's actually changing
+    if (value == this.serverURL)
+      return;
+    
+    // A new server most likely uses a different cluster, so clear that
+    Svc.Prefs.set("serverURL", value);
+    Svc.Prefs.reset("clusterURL");
+  },
 
   get clusterURL() Svc.Prefs.get("clusterURL", ""),
   set clusterURL(value) {
