@@ -2003,15 +2003,13 @@ CompileRegExpToAST(JSContext* cx, JSTokenStream* ts,
 #ifdef JS_TRACER
 typedef js::Vector<LIns *, 4, js::ContextAllocPolicy> LInsList;
 
-static avmplus::AvmCore s_core = avmplus::AvmCore();
-
 /* Return the cached fragment for the given regexp, or create one. */
 static Fragment*
 LookupNativeRegExp(JSContext* cx, uint16 re_flags,
                    const jschar* re_chars, size_t re_length)
 {
     JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
-    VMAllocator &alloc = *tm->allocator;
+    VMAllocator &alloc = *tm->dataAlloc;
     REHashMap &table = *tm->reFragments;
 
     REHashKey k(re_length, re_flags, re_chars);
@@ -2272,6 +2270,7 @@ enumerateNextChars(JSContext *cx, RENode *node, CharSet &set)
 
 class RegExpNativeCompiler {
  private:
+    VMAllocator      tempAlloc;
     JSContext*       cx;
     JSRegExp*        re;
     CompilerState*   cs;            /* RegExp to compile */
@@ -2287,6 +2286,10 @@ class RegExpNativeCompiler {
 
     LIns*            state;
     LIns*            cpend;
+
+    bool outOfMemory() {
+        return tempAlloc.outOfMemory() || JS_TRACE_MONITOR(cx).dataAlloc->outOfMemory();
+    }
 
     JSBool isCaseInsensitive() const { return (cs->flags & JSREG_FOLD) != 0; }
 
@@ -2478,7 +2481,6 @@ class RegExpNativeCompiler {
 
     LIns* compileFlat(RENode *&node, LIns* pos, LInsList& fails)
     {
-        VMAllocator *alloc = JS_TRACE_MONITOR(cx).allocator;
 #ifdef USE_DOUBLE_CHAR_MATCH
         if (node->u.flat.length == 1) {
             if (node->next && node->next->op == REOP_FLAT &&
@@ -2494,7 +2496,7 @@ class RegExpNativeCompiler {
         } else {
             size_t i;
             for (i = 0; i < node->u.flat.length - 1; i += 2) {
-                if (alloc->outOfMemory())
+                if (outOfMemory())
                     return 0;
                 pos = compileFlatDoubleChar(((jschar*) node->kid)[i],
                                             ((jschar*) node->kid)[i+1],
@@ -2512,7 +2514,7 @@ class RegExpNativeCompiler {
             return compileFlatSingleChar(node->u.flat.chr, pos, fails);
         } else {
             for (size_t i = 0; i < node->u.flat.length; i++) {
-                if (alloc->outOfMemory())
+                if (outOfMemory())
                     return 0;
                 pos = compileFlatSingleChar(((jschar*) node->kid)[i], pos, fails);
                 if (!pos)
@@ -2541,7 +2543,7 @@ class RegExpNativeCompiler {
         if (!charSet->converted && !ProcessCharSet(cx, re, charSet))
             return NULL;
         LIns* skip = lirBufWriter->insSkip(bitmapLen);
-        if (JS_TRACE_MONITOR(cx).allocator->outOfMemory())
+        if (outOfMemory())
             return NULL;
         void* bitmapData = skip->payload();
         memcpy(bitmapData, charSet->u.bits, bitmapLen);
@@ -2960,9 +2962,8 @@ class RegExpNativeCompiler {
      */
     LIns *compileNode(RENode *node, LIns *pos, bool atEnd, LInsList &fails)
     {
-        VMAllocator *alloc = JS_TRACE_MONITOR(cx).allocator;
         for (; pos && node; node = node->next) {
-            if (alloc->outOfMemory())
+            if (outOfMemory())
                 return NULL;
 
             bool childNextIsEnd = atEnd && !node->next;
@@ -3038,7 +3039,7 @@ class RegExpNativeCompiler {
         /* Failed to match on first character, so fail whole match. */
         lir->ins0(LIR_regfence);
         lir->ins1(LIR_ret, lir->insImm(0));
-        return !JS_TRACE_MONITOR(cx).allocator->outOfMemory();
+        return !outOfMemory();
     }
 
     /* Compile normal regular expressions that can match starting at any char. */
@@ -3054,7 +3055,7 @@ class RegExpNativeCompiler {
         lir->insStorei(lir->ins2(LIR_piadd, start, lir->insImmWord(2)), state,
                        offsetof(REGlobalData, skipped));
 
-        return !JS_TRACE_MONITOR(cx).allocator->outOfMemory();
+        return !outOfMemory();
     }
 
     inline LIns*
@@ -3099,10 +3100,10 @@ class RegExpNativeCompiler {
     }
 
  public:
- RegExpNativeCompiler(JSRegExp* re, CompilerState* cs, Fragment* fragment)
-        : re(re), cs(cs), fragment(fragment), lir(NULL), lirBufWriter(NULL) {  }
+    RegExpNativeCompiler(JSContext* cx, JSRegExp* re, CompilerState* cs, Fragment* fragment)
+        : cx(cx), re(re), cs(cs), fragment(fragment), lir(NULL), lirBufWriter(NULL) {  }
 
-    JSBool compile(JSContext* cx)
+    JSBool compile()
     {
         GuardRecord* guard = NULL;
         LIns* pos;
@@ -3110,10 +3111,9 @@ class RegExpNativeCompiler {
         size_t re_length;
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
         Assembler *assm = tm->assembler;
-        VMAllocator& alloc = *tm->allocator;
         LIns* loopLabel = NULL;
 
-        if (alloc.outOfMemory() || js_OverfullJITCache(tm))
+        if (outOfMemory() || js_OverfullJITCache(tm))
             return JS_FALSE;
 
         re->source->getCharsAndLength(re_chars, re_length);
@@ -3126,10 +3126,9 @@ class RegExpNativeCompiler {
             return JS_FALSE;
         }
 
-        this->cx = cx;
         /* At this point we have an empty fragment. */
         LirBuffer* lirbuf = fragment->lirbuf;
-        if (alloc.outOfMemory())
+        if (outOfMemory())
             goto fail;
         /* FIXME Use bug 463260 smart pointer when available. */
         lir = lirBufWriter = new LirBufWriter(lirbuf);
@@ -3138,7 +3137,7 @@ class RegExpNativeCompiler {
 #ifdef NJ_VERBOSE
         debug_only_stmt(
             if (js_LogController.lcbits & LC_TMRegexp) {
-                lir = verbose_filter = new VerboseWriter(alloc, lir, lirbuf->names,
+                lir = verbose_filter = new VerboseWriter(tempAlloc, lir, lirbuf->names,
                                                          &js_LogController);
             }
         )
@@ -3187,9 +3186,9 @@ class RegExpNativeCompiler {
 
         guard = insertGuard(loopLabel, re_chars, re_length);
 
-        if (alloc.outOfMemory())
+        if (outOfMemory())
             goto fail;
-        ::compile(assm, fragment, alloc verbose_only(, tm->labels));
+        ::compile(assm, fragment, tempAlloc verbose_only(, tm->labels));
         if (assm->error() != nanojit::None)
             goto fail;
 
@@ -3203,7 +3202,7 @@ class RegExpNativeCompiler {
 #endif
         return JS_TRUE;
     fail:
-        if (alloc.outOfMemory() || js_OverfullJITCache(tm)) {
+        if (outOfMemory() || js_OverfullJITCache(tm)) {
             delete lirBufWriter;
             // recover profiling data from expiring Fragments
             verbose_only(
@@ -3236,14 +3235,14 @@ CompileRegExpToNative(JSContext* cx, JSRegExp* re, Fragment* fragment)
     JSBool rv = JS_FALSE;
     void* mark;
     CompilerState state;
-    RegExpNativeCompiler rc(re, &state, fragment);
+    RegExpNativeCompiler rc(cx, re, &state, fragment);
 
     JS_ASSERT(!fragment->code());
     mark = JS_ARENA_MARK(&cx->tempPool);
     if (!CompileRegExpToAST(cx, NULL, re->source, re->flags, state)) {
         goto out;
     }
-    rv = rc.compile(cx);
+    rv = rc.compile();
  out:
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return rv;
