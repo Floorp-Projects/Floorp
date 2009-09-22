@@ -526,9 +526,12 @@ WeaveSvc.prototype = {
             this.status.setLoginStatus(LOGIN_SUCCEEDED);
             return true;
           case 401:
+          case 404:
+            // Check that we're verifying with the correct cluster
             if (this._updateCluster())
               return this._verifyLogin();
 
+            // We must have the right cluster, but the server doesn't expect us
             this.status.setLoginStatus(LOGIN_FAILED_LOGIN_REJECTED);
             this._log.debug("verifyLogin failed: login failed")
             return false;
