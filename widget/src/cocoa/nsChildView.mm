@@ -1896,15 +1896,18 @@ void nsChildView::Scroll(const nsIntPoint& aDelta,
   if (!mParentView)
     return;
 
-  BOOL viewWasDirty = NO;
+#ifndef LEOPARD_AND_LATER
+  BOOL viewWasDirty = mVisible && [mView needsDisplay];
+#endif
   if (mVisible) {
-    viewWasDirty = [mView needsDisplay];
-
     for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
       NSRect rect;
       GeckoRectToNSRect(aDestRects[i] - aDelta, rect);
       NSSize scrollVector = {aDelta.x, aDelta.y};
       [mView scrollRect:rect by:scrollVector];
+#ifdef LEOPARD_AND_LATER
+      [mView translateRectsNeedingDisplayInRect:rect by:scrollVector];
+#endif
     }
   }
 
@@ -1921,9 +1924,11 @@ void nsChildView::Scroll(const nsIntPoint& aDelta,
   if (mOnDestroyCalled)
     return;
 
-  if (mVisible) {
-    [mView setNeedsDisplay:viewWasDirty];
+#ifndef LEOPARD_AND_LATER
+  if (viewWasDirty) {
+    [mView setNeedsDisplay:YES];
   }
+#endif
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
