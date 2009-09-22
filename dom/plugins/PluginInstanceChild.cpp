@@ -422,7 +422,7 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
 #endif // OS_WIN
 
 PPluginScriptableObjectChild*
-PluginInstanceChild::PPluginScriptableObjectConstructor()
+PluginInstanceChild::AllocPPluginScriptableObject()
 {
     nsAutoPtr<PluginScriptableObjectChild>* object =
         mScriptableObjects.AppendElement();
@@ -435,7 +435,7 @@ PluginInstanceChild::PPluginScriptableObjectConstructor()
 }
 
 bool
-PluginInstanceChild::PPluginScriptableObjectDestructor(PPluginScriptableObjectChild* aObject)
+PluginInstanceChild::DeallocPPluginScriptableObject(PPluginScriptableObjectChild* aObject)
 {
     PluginScriptableObjectChild* object =
         reinterpret_cast<PluginScriptableObjectChild*>(aObject);
@@ -451,15 +451,15 @@ PluginInstanceChild::PPluginScriptableObjectDestructor(PPluginScriptableObjectCh
 }
 
 PBrowserStreamChild*
-PluginInstanceChild::PBrowserStreamConstructor(const nsCString& url,
-                                               const uint32_t& length,
-                                               const uint32_t& lastmodified,
-                                               const PStreamNotifyChild* notifyData,
-                                               const nsCString& headers,
-                                               const nsCString& mimeType,
-                                               const bool& seekable,
-                                               NPError* rv,
-                                               uint16_t *stype)
+PluginInstanceChild::AllocPBrowserStream(const nsCString& url,
+                                         const uint32_t& length,
+                                         const uint32_t& lastmodified,
+                                         const PStreamNotifyChild* notifyData,
+                                         const nsCString& headers,
+                                         const nsCString& mimeType,
+                                         const bool& seekable,
+                                         NPError* rv,
+                                         uint16_t *stype)
 {
     return new BrowserStreamChild(this, url, length, lastmodified, headers,
                                   mimeType, seekable, rv, stype);
@@ -476,18 +476,18 @@ PluginInstanceChild::AnswerPBrowserStreamDestructor(PBrowserStreamChild* stream,
 }
 
 bool
-PluginInstanceChild::PBrowserStreamDestructor(PBrowserStreamChild* stream,
-                                              const NPError& reason,
-                                              const bool& artificial)
+PluginInstanceChild::DeallocPBrowserStream(PBrowserStreamChild* stream,
+                                           const NPError& reason,
+                                           const bool& artificial)
 {
     delete stream;
     return true;
 }
 
 PPluginStreamChild*
-PluginInstanceChild::PPluginStreamConstructor(const nsCString& mimeType,
-                                              const nsCString& target,
-                                              NPError* result)
+PluginInstanceChild::AllocPPluginStream(const nsCString& mimeType,
+                                        const nsCString& target,
+                                        NPError* result)
 {
     NS_RUNTIMEABORT("not callable");
     return NULL;
@@ -505,29 +505,29 @@ PluginInstanceChild::AnswerPPluginStreamDestructor(PPluginStreamChild* stream,
 }
 
 bool
-PluginInstanceChild::PPluginStreamDestructor(PPluginStreamChild* stream,
-                                             const NPError& reason,
-                                             const bool& artificial)
+PluginInstanceChild::DeallocPPluginStream(PPluginStreamChild* stream,
+                                          const NPError& reason,
+                                          const bool& artificial)
 {
     delete stream;
     return true;
 }
 
 PStreamNotifyChild*
-PluginInstanceChild::PStreamNotifyConstructor(const nsCString& url,
-                                              const nsCString& target,
-                                              const bool& post,
-                                              const nsCString& buffer,
-                                              const bool& file,
-                                              NPError* result)
+PluginInstanceChild::AllocPStreamNotify(const nsCString& url,
+                                        const nsCString& target,
+                                        const bool& post,
+                                        const nsCString& buffer,
+                                        const bool& file,
+                                        NPError* result)
 {
     NS_RUNTIMEABORT("not reached");
     return NULL;
 }
 
 bool
-PluginInstanceChild::PStreamNotifyDestructor(PStreamNotifyChild* notifyData,
-                                             const NPReason& reason)
+PluginInstanceChild::DeallocPStreamNotify(PStreamNotifyChild* notifyData,
+                                          const NPReason& reason)
 {
     StreamNotifyChild* sn = static_cast<StreamNotifyChild*>(notifyData);
     mPluginIface->urlnotify(&mData, sn->mURL.get(), reason, sn->mClosure);

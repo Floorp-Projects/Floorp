@@ -102,15 +102,15 @@ protected:
     virtual bool AnswerNP_Initialize(NPError* rv);
 
     virtual PPluginInstanceChild*
-    PPluginInstanceConstructor(const nsCString& aMimeType,
-                               const uint16_t& aMode,
-                               const nsTArray<nsCString>& aNames,
-                               const nsTArray<nsCString>& aValues,
-                               NPError* rv);
+    AllocPPluginInstance(const nsCString& aMimeType,
+                         const uint16_t& aMode,
+                         const nsTArray<nsCString>& aNames,
+                         const nsTArray<nsCString>& aValues,
+                         NPError* rv);
 
     virtual bool
-    PPluginInstanceDestructor(PPluginInstanceChild* aActor,
-                              NPError* rv);
+    DeallocPPluginInstance(PPluginInstanceChild* aActor,
+                           NPError* rv);
 
     virtual bool
     AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor,

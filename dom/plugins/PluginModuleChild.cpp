@@ -986,11 +986,11 @@ PluginModuleChild::AnswerNP_Initialize(NPError* _retval)
 }
 
 PPluginInstanceChild*
-PluginModuleChild::PPluginInstanceConstructor(const nsCString& aMimeType,
-                                              const uint16_t& aMode,
-                                              const nsTArray<nsCString>& aNames,
-                                              const nsTArray<nsCString>& aValues,
-                                              NPError* rv)
+PluginModuleChild::AllocPPluginInstance(const nsCString& aMimeType,
+                                        const uint16_t& aMode,
+                                        const nsTArray<nsCString>& aNames,
+                                        const nsTArray<nsCString>& aValues,
+                                        NPError* rv)
 {
     _MOZ_LOG(__FUNCTION__);
 
@@ -1054,8 +1054,8 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
 }
 
 bool
-PluginModuleChild::PPluginInstanceDestructor(PPluginInstanceChild* actor,
-                                             NPError* rv)
+PluginModuleChild::DeallocPPluginInstance(PPluginInstanceChild* actor,
+                                          NPError* rv)
 {
     _MOZ_LOG(__FUNCTION__);
 

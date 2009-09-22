@@ -143,40 +143,40 @@ ContentProcessParent::OnWaitableEventSignaled(base::WaitableEvent *event)
 }
 
 PIFrameEmbeddingParent*
-ContentProcessParent::PIFrameEmbeddingConstructor(
+ContentProcessParent::AllocPIFrameEmbedding(
         const MagicWindowHandle& parentWidget)
 {
     return new TabParent();
 }
 
 bool
-ContentProcessParent::PIFrameEmbeddingDestructor(PIFrameEmbeddingParent* frame)
+ContentProcessParent::DeallocPIFrameEmbedding(PIFrameEmbeddingParent* frame)
 {
   delete frame;
   return true;
 }
 
 PTestShellParent*
-ContentProcessParent::PTestShellConstructor()
+ContentProcessParent::AllocPTestShell()
 {
   return new TestShellParent();
 }
 
 bool
-ContentProcessParent::PTestShellDestructor(PTestShellParent* shell)
+ContentProcessParent::DeallocPTestShell(PTestShellParent* shell)
 {
   delete shell;
   return true;
 }
 
 PNeckoParent* 
-ContentProcessParent::PNeckoConstructor()
+ContentProcessParent::AllocPNecko()
 {
     return new NeckoParent();
 }
 
 bool 
-ContentProcessParent::PNeckoDestructor(PNeckoParent* necko)
+ContentProcessParent::DeallocPNecko(PNeckoParent* necko)
 {
     delete necko;
     return true;

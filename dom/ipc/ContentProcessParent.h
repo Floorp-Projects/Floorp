@@ -91,15 +91,15 @@ private:
     ContentProcessParent();
     virtual ~ContentProcessParent();
 
-    virtual PIFrameEmbeddingParent* PIFrameEmbeddingConstructor(
+    virtual PIFrameEmbeddingParent* AllocPIFrameEmbedding(
             const MagicWindowHandle& parentWidget);
-    virtual bool PIFrameEmbeddingDestructor(PIFrameEmbeddingParent* frame);
+    virtual bool DeallocPIFrameEmbedding(PIFrameEmbeddingParent* frame);
 
-    virtual PTestShellParent* PTestShellConstructor();
-    virtual bool PTestShellDestructor(PTestShellParent* shell);
+    virtual PTestShellParent* AllocPTestShell();
+    virtual bool DeallocPTestShell(PTestShellParent* shell);
 
-    virtual PNeckoParent* PNeckoConstructor();
-    virtual bool PNeckoDestructor(PNeckoParent* necko);
+    virtual PNeckoParent* AllocPNecko();
+    virtual bool DeallocPNecko(PNeckoParent* necko);
 
     mozilla::Monitor mMonitor;
 

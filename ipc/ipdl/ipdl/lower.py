@@ -839,6 +839,13 @@ class GenerateProtocolHeader(Visitor):
             md._cxx.replyid = 'Reply_%s'% (md.decl.progname)
             md._cxx.nsreplyid = '%s::%s'% (self.pname, md._cxx.replyid)
 
+        # the names of the factory ctor/dtor the manager (if it exists)
+        # will implement
+        cdtype = md.decl.type.constructedType()
+        if cdtype is not None:
+            md._cxx.alloc = 'Alloc'+ cdtype.name()
+            md._cxx.dealloc = 'Dealloc'+ cdtype.name()
+
 
     def visitTransitionStmt(self, ts):
         ts.state.decl._cxxname = 'State_%s__ID'% (ts.state.decl.progname)
@@ -1224,6 +1231,14 @@ class GenerateProtocolActorHeader(Visitor):
                                self.myside),
                     ptr=1)
                 meth = deepcopy(md._cxx.method)
+
+                if md.decl.type.isCtor():
+                    meth.name = md._cxx.alloc
+                elif md.decl.type.isDtor():
+                    meth.name = md._cxx.dealloc
+                else:
+                    assert 0
+                
                 for param in meth.params:
                     if param.type.actor:
                         param.type.name = _actorName(param.type.name,
@@ -1558,7 +1573,6 @@ class GenerateProtocolActorHeader(Visitor):
             block.addstmt(cxx.CppDirective('endif', '// ifdef DEBUG'))
             block.addstmt(cxx.Whitespace.NL)
 
-
         if self.sendsMessage(md):
             pfx = None
             if md.decl.type.isRpc():
@@ -1606,7 +1620,7 @@ class GenerateProtocolActorHeader(Visitor):
                 #
 
                 # here |impl| is the first ctor interface above
-                callctor = cxx.ExprCall(cxx.ExprVar(md._cxx.method.name),
+                callctor = cxx.ExprCall(cxx.ExprVar(md._cxx.alloc),
                                         [ cxx.ExprVar(p.name) for
                                           p in md._cxx.method.params ])
                 impl.addstmt(cxx.StmtReturn(
@@ -2005,7 +2019,7 @@ class GenerateProtocolActorHeader(Visitor):
                         cxx.ExprAssn(objid, cxx.ExprLiteral.ZERO)))
 
                 calldtor = cxx.ExprCall(
-                    cxx.ExprVar(md._cxx.method.name),
+                    cxx.ExprVar(md._cxx.dealloc),
                     ([ objvar ]
                      + [ cxx.ExprVar(p.name) for p in md._cxx.params ]
                      + [ cxx.ExprVar(r.name) for r in md._cxx.returns ]))
@@ -2162,7 +2176,7 @@ class GenerateProtocolActorHeader(Visitor):
                 block.addstmt(cxx.StmtExpr(cxx.ExprAssn(
                             objvar,
                             cxx.ExprCall(
-                                cxx.ExprVar(md._cxx.method.name),
+                                cxx.ExprVar(md._cxx.alloc),
                                 ([ cxx.ExprVar(p.name) for
                                    p in md._cxx.params ]
                                  + [ cxx.ExprAddrOf(cxx.ExprVar(r.name)) for
@@ -2226,7 +2240,7 @@ class GenerateProtocolActorHeader(Visitor):
                                      cxx.ExprLiteral.ZERO)))
 
                 calldtor = cxx.ExprCall(
-                    cxx.ExprVar(md._cxx.method.name),
+                    cxx.ExprVar(md._cxx.dealloc),
                     ([ objvar ]
                      + [ cxx.ExprVar(p.name) for p in md._cxx.params ]
                      + [ cxx.ExprAddrOf(cxx.ExprVar(r.name)) for
