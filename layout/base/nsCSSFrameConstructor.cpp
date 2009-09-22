@@ -11629,7 +11629,7 @@ nsCSSFrameConstructor::ProcessPendingRestyleTable(
                         currentRestyle->mChangeHint);
     }
 
-    count = mPendingRestyles.Count();
+    count = aRestyles.Count();
   }
 
   EndUpdate();
