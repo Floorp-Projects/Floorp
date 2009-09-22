@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsHttp.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/HttpChannelParent.h"
 
@@ -56,13 +57,16 @@ NeckoParent::~NeckoParent()
 PHttpChannelParent* 
 NeckoParent::AllocPHttpChannel()
 {
-  return new HttpChannelParent();
+  HttpChannelParent *p = new HttpChannelParent();
+  p->AddRef();
+  return p;
 }
 
 bool 
 NeckoParent::DeallocPHttpChannel(PHttpChannelParent* channel)
 {
-  delete channel;
+  HttpChannelParent *p = static_cast<HttpChannelParent *>(channel);
+  p->Release();
   return true;
 }
 

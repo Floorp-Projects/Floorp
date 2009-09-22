@@ -42,8 +42,7 @@
 #define mozilla_net_NeckoChild_h
 
 #include "mozilla/net/PNeckoChild.h"
-#include "mozilla/net/HttpChannelChild.h"
-#include "nsXULAppAPI.h"
+#include "mozilla/net/NeckoCommon.h"
 
 namespace mozilla {
 namespace net {
@@ -57,11 +56,11 @@ public:
   virtual ~NeckoChild();
 
   static void InitNeckoChild();
-
-  virtual PHttpChannelChild* AllocPHttpChannel();
-  virtual bool DeallocPHttpChannel(PHttpChannelChild*);
+  static void DestroyNeckoChild();
 
 protected:
+  virtual PHttpChannelChild* AllocPHttpChannel();
+  virtual bool DeallocPHttpChannel(PHttpChannelChild*);
 };
 
 /**
@@ -69,12 +68,6 @@ protected:
  * Null if this is not a content process.
  */
 extern PNeckoChild *gNeckoChild;
-
-static inline PRBool 
-IsNeckoChild() 
-{
-  return XRE_GetProcessType() == GeckoProcessType_Content;        
-}
 
 } // namespace net
 } // namespace mozilla

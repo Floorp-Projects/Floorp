@@ -83,7 +83,10 @@ CPPSRCS += \
   $(NULL)
 endif
 
-LOCAL_INCLUDES=-I$(srcdir)/../../../base/src -I$(topsrcdir)/xpcom/ds
+LOCAL_INCLUDES +=               \
+  -I$(srcdir)/../../../base/src \
+  -I$(topsrcdir)/xpcom/ds       \
+  $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

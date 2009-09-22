@@ -77,6 +77,10 @@
 
 #include "nsIXULAppInfo.h"
 
+#ifdef MOZ_IPC
+#include "mozilla/net/NeckoChild.h"
+#endif 
+
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <sys/utsname.h>
 #endif
@@ -97,6 +101,7 @@
 //-----------------------------------------------------------------------------
 #ifdef MOZ_IPC
 using namespace mozilla::net;
+#include "mozilla/net/HttpChannelChild.h"
 #endif 
 
 #ifdef DEBUG
@@ -208,6 +213,9 @@ nsHttpHandler::~nsHttpHandler()
         NS_RELEASE(mConnMgr);
     }
 
+    // Note: don't call NeckoChild::DestroyNeckoChild() here, as it's too late
+    // and it'll segfault.  NeckoChild will get cleaned up by process exit.
+
     nsHttp::DestroyAtomTable();
 
     gHttpHandler = nsnull;
@@ -231,7 +239,7 @@ nsHttpHandler::Init()
     }
 
 #ifdef MOZ_IPC
-    if (IsNeckoChild() && !gNeckoChild)
+    if (IsNeckoChild())
         NeckoChild::InitNeckoChild();
 #endif // MOZ_IPC
 
@@ -1496,6 +1504,32 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
     nsresult rv = uri->SchemeIs("https", &https);
     if (NS_FAILED(rv))
         return rv;
+
+#if MOZ_IPC
+    if (IsNeckoChild()) {
+        LOG(("NECKO_E10S_HTTP set: using experimental interprocess HTTP\n"));
+        // TODO_JCD: 
+        // - Create a common BaseHttpChannel so can share logic?
+        HttpChannelChild *childChannel = nsnull;
+        NS_NEWXPCOM(childChannel, HttpChannelChild);
+        if (!childChannel)
+            return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(childChannel);
+        // TODO:  Just ignore HTTPS and proxying for now
+        if (https)
+            DROP_DEAD();
+        if (givenProxyInfo)
+            DROP_DEAD();
+        // TODO: Init caps, etc, as below?
+        rv = childChannel->Init(uri);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(childChannel);
+            return rv;
+        }
+        *result = childChannel;
+        return NS_OK;
+    }
+#endif
 
     NS_NEWXPCOM(httpChannel, nsHttpChannel);
     if (!httpChannel)

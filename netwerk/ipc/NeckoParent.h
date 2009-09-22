@@ -39,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/net/PNeckoParent.h"
-#include "mozilla/net/HttpChannelChild.h"
+#include "mozilla/net/NeckoCommon.h"
 
 #ifndef mozilla_net_NeckoParent_h
 #define mozilla_net_NeckoParent_h

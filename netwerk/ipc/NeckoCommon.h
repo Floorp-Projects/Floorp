@@ -38,70 +38,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsHttp.h"
-#include "mozilla/net/NeckoChild.h"
-#include "mozilla/dom/ContentProcessChild.h"
-#include "mozilla/net/HttpChannelChild.h"
+#ifndef mozilla_net_NeckoCommon_h
+#define mozilla_net_NeckoCommon_h
+
+#include "nsXULAppAPI.h"
+
+// Temporary: use while we figure out which XPCOM interfaces (from list
+// copied from nsHttpChannel) HttpChannel{Child|Parent}, etc., actually need to
+// implement.  I.e., implement interfaces as we need them, and if we never hit a
+// given interface, figure out if we can stop advertising it.
+
+#define DROP_DEAD()                                                            \
+  do {                                                                         \
+    fprintf(stderr,                                                            \
+            "*&*&*&*&*&*&*&**&*&&*& FATAL ERROR: '%s' UNIMPLEMENTED: %s +%d",  \
+            __FUNCTION__, __FILE__, __LINE__);                                 \
+    NS_ABORT();                                                                \
+    return NS_ERROR_NOT_IMPLEMENTED;                                           \
+  } while (0)
+
 
 namespace mozilla {
 namespace net {
 
-PNeckoChild *gNeckoChild = nsnull;
-
-// C++ file contents
-NeckoChild::NeckoChild()
+inline bool 
+IsNeckoChild() 
 {
-}
+  // TODO: remove env var check eventually.
+  // - For now: if unset, necko works with full stack in each process,
+  //   i.e. no IPC.
+  static bool didCheck = false;
+  static bool amChild = false;
 
-NeckoChild::~NeckoChild()
-{
-}
-
-void NeckoChild::InitNeckoChild()
-{
-  NS_ABORT_IF_FALSE(IsNeckoChild(), "InitNeckoChild called by non-child!");
-
-  if (!gNeckoChild) {
-    mozilla::dom::ContentProcessChild * cpc = 
-      mozilla::dom::ContentProcessChild::GetSingleton();
-    NS_ASSERTION(cpc, "Content Protocol is NULL!");
-    gNeckoChild = cpc->SendPNeckoConstructor(); 
-    NS_ASSERTION(gNeckoChild, "PNecko Protocol init failed!");
+  if (!didCheck) {
+    const char * e = PR_GetEnv("NECKO_E10S_HTTP");
+    if (e && *e)
+      amChild = (XRE_GetProcessType() == GeckoProcessType_Content);
+    didCheck = true;
   }
+  return amChild;
 }
 
-// Note: not actually called; has some lifespan as child process, so
-// automatically destroyed at exit.  
-void NeckoChild::DestroyNeckoChild()
-{
-  NS_ABORT_IF_FALSE(IsNeckoChild(), "DestroyNeckoChild called by non-child!");
-  static bool alreadyDestroyed = false;
-  NS_ABORT_IF_FALSE(!alreadyDestroyed, "DestroyNeckoChild already called!");
 
-  if (!alreadyDestroyed) {
-    Send__delete__(gNeckoChild); 
-    gNeckoChild = nsnull;
-    alreadyDestroyed = true;
-  }
-}
+} // namespace net
+} // namespace mozilla
 
-PHttpChannelChild* 
-NeckoChild::AllocPHttpChannel()
-{
-  // We don't allocate here: see HttpChannelChild::AsyncOpen()
-  NS_RUNTIMEABORT("AllocPHttpChannel should not be called");
-  return nsnull;
-}
-
-bool 
-NeckoChild::DeallocPHttpChannel(PHttpChannelChild* channel)
-{
-  NS_ABORT_IF_FALSE(IsNeckoChild(), "DeallocPHttpChannel called by non-child!");
-
-  HttpChannelChild *p = static_cast<HttpChannelChild*>(channel);
-  p->Release();
-  return true;
-}
-
-}} // mozilla::net
+#endif // mozilla_net_NeckoCommon_h
 
