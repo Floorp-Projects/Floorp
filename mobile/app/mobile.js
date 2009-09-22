@@ -354,5 +354,5 @@ pref("app.support.baseURL", "http://support.mozilla.com/1/%APP%/%VERSION%/%OS%/%
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
 
-// Inherit OS locale
+// Inherit locale from the OS
 pref("intl.locale.matchOS", true);
