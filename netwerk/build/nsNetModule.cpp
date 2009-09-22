@@ -38,6 +38,7 @@
 #include "necko-config.h"
 
 #ifdef MOZ_IPC
+#define ALLOW_LATE_NSHTTP_H_INCLUDE 1
 #include "base/basictypes.h"
 #endif 
 

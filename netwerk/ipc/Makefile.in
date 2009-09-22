@@ -53,11 +53,17 @@ EXPORTS_NAMESPACES = mozilla/net
 EXPORTS_mozilla/net = \
   NeckoParent.h       \
   NeckoChild.h        \
+  NeckoCommon.h       \
   $(NULL)
 
 CPPSRCS =               \
   NeckoChild.cpp        \
   NeckoParent.cpp       \
+  $(NULL)
+
+LOCAL_INCLUDES +=                  \
+  -I$(srcdir)/../protocol/http/src \
+  -I$(srcdir)/../base/src          \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk
