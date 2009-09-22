@@ -2435,6 +2435,13 @@ static const jschar UnitStringData[] = {
     C(0xf8), C(0xf9), C(0xfa), C(0xfb), C(0xfc), C(0xfd), C(0xfe), C(0xff)
 };
 
+#ifdef __SUNPRO_CC
+/* 
+ * Ugly hacking to align unitStringTable and intStringTable to 8.
+ */
+JSInt64 JSString::dummy = 0;
+#endif
+
 #define U(c) { 1 | JSString::ATOMIZED, {(jschar *)UnitStringData + (c) * 2} }
 
 #ifdef __SUNPRO_CC
