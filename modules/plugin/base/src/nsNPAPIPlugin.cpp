@@ -83,6 +83,12 @@
 #include "gtk2xtbin.h"
 #endif
 
+#ifdef XP_OS2
+#define INCL_DOS
+#define INCL_DOSERRORS
+#include <os2.h>
+#endif
+
 #include "nsJSNPRuntime.h"
 #include "nsIHttpAuthManager.h"
 #include "nsICookieService.h"
