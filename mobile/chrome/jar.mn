@@ -28,7 +28,7 @@ chrome.jar:
 * content/sanitize.xul                 (content/sanitize.xul)
 * content/sanitize.js                  (content/sanitize.js)
   content/BrowserView.js               (content/BrowserView.js)
-  content/TileManager.js               (content/TileManager.js)
+  content/TileManager.js               (TileManager.js)
 * content/InputHandler.js              (content/InputHandler.js)
   content/Util.js                      (content/Util.js)
   content/preferences.js               (content/preferences.js)
