@@ -752,7 +752,7 @@ PrintOnTrace(char* format, uint32 argc, double *argv)
     return JS_TRUE;
 }
 
-JS_DEFINE_CALLINFO_3(extern, BOOL, PrintOnTrace, CHARPTR, UINT32, DOUBLEPTR, 0, 0);
+JS_DEFINE_CALLINFO_3(extern, BOOL, PrintOnTrace, CHARPTR, UINT32, DOUBLEPTR, 0, 0)
 
 // This version is not intended to be called directly: usually it is easier to
 // use one of the other overloads.
