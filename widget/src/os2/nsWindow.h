@@ -249,7 +249,7 @@ protected:
    PRUint32  mDragStatus;     // set while this object is being dragged over
    HPOINTER  mCssCursorHPtr;  // created by SetCursor(imgIContainer*)
    nsCOMPtr<imgIContainer> mCssCursorImg;  // saved by SetCursor(imgIContainer*)
-   nsIntRect mUnclippedBounds; // full size of clipped child windows
+   HWND      mClipWnd;        // used to clip plugin windows
 
    HWND      GetParentHWND() const;
    HWND      GetHWND() const   { return mWnd; }
@@ -302,6 +302,9 @@ protected:
    HBITMAP CreateBitmapRGB(PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight);
    HBITMAP CreateTransparencyMask(gfxASurface::gfxImageFormat format,
                                   PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight);
+
+   void SetPluginClipRegion(const Configuration& aConfiguration);
+   HWND GetPluginClipWindow(HWND aParentWnd);
 
    // Enumeration of the methods which are accessible on the PM thread
    enum {
