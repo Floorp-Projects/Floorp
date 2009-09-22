@@ -1356,6 +1356,10 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
   // initialize the private browsing UI
   gPrivateBrowsingUI.init();
+
+  gBrowser.mPanelContainer.addEventListener("InstallBrowserTheme", LightWeightThemeWebInstaller, false, true);
+  gBrowser.mPanelContainer.addEventListener("PreviewBrowserTheme", LightWeightThemeWebInstaller, false, true);
+  gBrowser.mPanelContainer.addEventListener("ResetBrowserThemePreview", LightWeightThemeWebInstaller, false, true);
 }
 
 function BrowserShutdown()
@@ -7056,3 +7060,141 @@ let gURLBarEmptyText = {
     return gURLBar.getAttribute(type + "emptytext");
   }
 };
+
+var LightWeightThemeWebInstaller = {
+  handleEvent: function (event) {
+    switch (event.type) {
+      case "InstallBrowserTheme":
+        this._install(event);
+        break;
+      case "PreviewBrowserTheme":
+        this._preview(event);
+        break;
+      case "ResetBrowserThemePreview":
+        this._resetPreview(event);
+        break;
+    }
+  },
+
+  get _manager () {
+    var temp = {};
+    Cu.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
+    delete this._manager;
+    return this._manager = temp.LightweightThemeManager;
+  },
+
+  _install: function (event) {
+    var node = event.target;
+    var data = this._getThemeFromNode(node);
+    if (!data)
+      return;
+
+    if (this._isAllowed(node)) {
+      this._manager.currentTheme = data;
+      return;
+    }
+
+    var allowButtonText =
+      gNavigatorBundle.getString("lwthemeInstallRequest.allowButton");
+    var allowButtonAccesskey =
+      gNavigatorBundle.getString("lwthemeInstallRequest.allowButton.accesskey");
+    var message =
+      gNavigatorBundle.getFormattedString("lwthemeInstallRequest.message",
+                                          [node.ownerDocument.location.host]);
+    var buttons = [{
+      label: allowButtonText,
+      accessKey: allowButtonAccesskey,
+      callback: function () {
+        LightWeightThemeWebInstaller._manager.currentTheme = data;
+      }
+    }];
+    var notificationBox = gBrowser.getNotificationBox();
+    notificationBox.appendNotification(message, "lwtheme-install-request", "",
+                                       notificationBox.PRIORITY_INFO_MEDIUM,
+                                       buttons);
+  },
+
+  _preview: function (event) {
+    if (!this._isAllowed(event.target))
+      return;
+
+    var data = this._getThemeFromNode(event.target);
+    if (!data)
+      return;
+
+    this._manager.previewTheme(data);
+  },
+
+  _resetPreview: function (event) {
+    if (!this._isAllowed(event.target))
+      return;
+
+    this._manager.resetPreview();
+  },
+
+  _isAllowed: function (node) {
+    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
+
+    var prefs = [["xpinstall.whitelist.add", pm.ALLOW_ACTION],
+                 ["xpinstall.whitelist.add.36", pm.ALLOW_ACTION],
+                 ["xpinstall.blacklist.add", pm.DENY_ACTION]];
+    prefs.forEach(function ([pref, permission]) {
+      try {
+        var hosts = gPrefService.getCharPref(pref);
+      } catch (e) {}
+
+      if (hosts) {
+        hosts.split(",").forEach(function (host) {
+          pm.add(makeURI("http://" + host), "install", permission);
+        });
+
+        gPrefService.setCharPref(pref, "");
+      }
+    });
+
+    var uri = node.ownerDocument.documentURIObject;
+    return pm.testPermission(uri, "install") == pm.ALLOW_ACTION;
+  },
+
+  _getThemeFromNode: function (node) {
+    const MANDATORY = ["id", "name", "headerURL"];
+    const OPTIONAL = ["footerURL", "textcolor", "accentcolor", "iconURL",
+                      "previewURL", "author", "description", "homepageURL"];
+
+    try {
+      var data = JSON.parse(node.getAttribute("data-browsertheme"));
+    } catch (e) {
+      return null;
+    }
+
+    if (!data || typeof data != "object")
+      return null;
+
+    for (let prop in data) {
+      if (!data[prop] ||
+          typeof data[prop] != "string" ||
+          MANDATORY.indexOf(prop) == -1 && OPTIONAL.indexOf(prop) == -1) {
+        delete data[prop];
+        continue;
+      }
+
+      if (/URL$/.test(prop)) {
+        try {
+          data[prop] = makeURLAbsolute(node.baseURI, data[prop]);
+
+          if (/^https?:/.test(data[prop]))
+            continue;
+        } catch (e) {}
+
+        delete data[prop];
+      }
+    }
+
+    for (let i = 0; i < MANDATORY.length; i++) {
+      if (!(MANDATORY[i] in data)) 
+        return null;
+    }
+
+    return data;
+  }
+}
