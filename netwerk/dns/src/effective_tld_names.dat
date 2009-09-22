@@ -681,7 +681,7 @@ za.com
 // coop : http://en.wikipedia.org/wiki/.coop
 coop
 
-// cr : http://en.wikipedia.org/wiki/.cr
+// cr : http://www.nic.cr/niccr_publico/showRegistroDominiosScreen.do
 cr
 ac.cr
 co.cr
@@ -1107,11 +1107,14 @@ eu.int
 io
 com.io
 
-// iq : http://en.wikipedia.org/wiki/.iq
-// no registrar website found, but google shows .gov.iq and .edu.iq websites
+// iq : http://www.cmc.iq/english/iq/iqregister1.htm
 iq
 gov.iq
 edu.iq
+mil.iq
+com.iq
+org.iq
+net.iq
 
 // ir : http://www.nic.ir/ascii/Appendix1.htm
 ir
@@ -1401,6 +1404,7 @@ jobs
 // jp : http://en.wikipedia.org/wiki/.jp
 // http://jprs.co.jp/en/jpdomain.html
 // Submitted by registry <yone@jprs.co.jp> 2008-06-11
+// Updated by registry <yone@jprs.co.jp> 2008-12-04
 jp
 // jp organizational type names 
 ac.jp
@@ -1524,6 +1528,7 @@ or.jp
 !city.kyoto.jp
 !city.nagoya.jp
 !city.niigata.jp
+!city.okayama.jp
 !city.osaka.jp
 !city.saitama.jp
 !city.sapporo.jp
@@ -3304,33 +3309,20 @@ org
 ae.org
 
 // pa : http://www.nic.pa/
-// List with redundant entries as submitted by registry <edna.samudio@utp.ac.pa> 2008-06-18
-//*.pa
-//!nic.pa
-//!pannet.pa
-//!presidencia.pa
-//!milpolleras.pa
-//!sume911.pa
-//!root-ca.pa
-//ac.pa
-//gob.pa
-//com.pa
-//org.pa
-//sld.pa
-//edu.pa
-//net.pa
-//ing.pa
-//abo.pa
-//med.pa
-//nom.pa
-// As discussed in bug #447815 on bugzilla.mozilla.org, the list has been truncated.
-*.pa
-!nic.pa
-!pannet.pa
-!presidencia.pa
-!milpolleras.pa
-!sume911.pa
-!root-ca.pa
+// Some additional second level "domains" resolve directly as hostnames, such as
+// pannet.pa, so we add a rule for "pa".
+pa
+ac.pa
+gob.pa
+com.pa
+org.pa
+sld.pa
+edu.pa
+net.pa
+ing.pa
+abo.pa
+med.pa
+nom.pa
 
 // pe : https://www.nic.pe/InformeFinalComision.pdf
 pe
@@ -3669,15 +3661,17 @@ ac.rs
 gov.rs
 in.rs
 
-// ru : http://en.wikipedia.org/wiki/.ru
+// ru : http://www.cctld.ru/ru/docs/aktiv_8.php
+// Industry domains
 ru
 ac.ru
 com.ru
+edu.ru
+int.ru
 net.ru
 org.ru
 pp.ru
-int.ru
-// Geographic domains (http://www.ripn.net:8082/nic/dns/geo_list.html)
+// Geographical domains
 adygeya.ru
 altai.ru
 amur.ru
@@ -3723,17 +3717,17 @@ kurgan.ru
 kursk.ru
 lipetsk.ru
 magadan.ru
+mari.ru
 mari-el.ru
 marine.ru
-mari.ru
 mordovia.ru
 mosreg.ru
 msk.ru
 murmansk.ru
 nalchik.ru
 nnov.ru
-novosibirsk.ru
 nov.ru
+novosibirsk.ru
 nsk.ru
 omsk.ru
 orenburg.ru
@@ -3780,8 +3774,7 @@ yamal.ru
 yaroslavl.ru
 yekaterinburg.ru
 yuzhno-sakhalinsk.ru
-// Geographic domains registered before the adoption of the rules on the
-// second level domain registration
+// More geographical domains
 amursk.ru
 baikal.ru
 cmw.ru
@@ -3801,9 +3794,13 @@ pyatigorsk.ru
 rubtsovsk.ru
 snz.ru
 syzran.ru
-tagil.ru
 vdonsk.ru
 zgrad.ru
+// State domains
+gov.ru
+mil.ru
+// Technical domains
+test.ru
 
 // rw : http://www.nic.rw/cgi-bin/policy.pl
 rw
@@ -3817,19 +3814,15 @@ int.rw
 mil.rw
 gouv.rw
 
-// sa : http://www.saudinic.net.sa/page.php?page=1&lang=1
-// List with redundant entries as submitted by registry <sa-tld-tech-contact@nic.net.sa> 2008-06-23
-//*.sa
-//com.sa
-//net.sa
-//org.sa
-//gov.sa
-//med.sa
-//pub.sa
-//edu.sa
-//sch.sa
-// As discussed in bug #447815 on bugzilla.mozilla.org, the list has been truncated.
-*.sa
+// sa : http://www.nic.net.sa/
+com.sa
+net.sa
+org.sa
+gov.sa
+med.sa
+pub.sa
+edu.sa
+sch.sa
 
 // sb : http://www.sbnic.net.sb/
 // Submitted by registry <lee.humphries@telekom.com.sb> 2008-06-08
@@ -4269,18 +4262,10 @@ wa.us
 wi.us
 wv.us
 wy.us
-// the following rules would be only valid under the geo-name, but we can't express that
-// *.*.us          cities, counties, parishes, and townships (locality.state.us)
-// !ci.*.*.us       city government agencies (subdomain under locality)
-// !town.*.*.us     town government agencies (subdomain under locality)
-// !co.*.*.us       county government agencies (subdomain under locality)
-// k12.*.us      public school districts
-// pvt.k12.*.us  private schools
-// cc.*.us       community colleges
-// tec.*.us      technical and vocational schools
-// lib.*.us      state, regional, city, and county libraries
-// state.*.us    state government agencies
-// gen.*.us      general independent entities (groups not fitting into the above categories)
+// The registrar notes several more specific domains available in each state,
+// such as state.*.us, dst.*.us, etc., but resolution of these is somewhat
+// haphazard; in some states these domains resolve as addresses, while in others
+// only subdomains are avilable, or even nothing at all.
 
 // uy : http://www.antel.com.uy/
 *.uy
@@ -4310,12 +4295,16 @@ edu.vc
 // vg : http://en.wikipedia.org/wiki/.vg
 vg
 
-// vi : http://www.nic.vi/Domain_Rules/body_domain_rules.html
+// vi : http://www.nic.vi/newdomainform.htm
+// http://www.nic.vi/Domain_Rules/body_domain_rules.html indicates some other
+// TLDs are "reserved", such as edu.vi and gov.vi, but doesn't actually say they
+// are available for registration (which they do not seem to be).
 vi
+co.vi
 com.vi
+k12.vi
+net.vi
 org.vi
-edu.vi
-gov.vi
 
 // vn : https://www.dot.vn/vnnic/vnnic/domainregistration.jsp
 vn
