@@ -64,7 +64,8 @@ OS_LIBS += $(call EXPAND_LIBNAME,comctl32 shell32 wininet shlwapi)
 MOZ_WINCONSOLE = 0
 endif
 
-ifeq ($(OS_ARCH),Darwin)
+ifeq ($(OS_ARCH),Darwin
+CPPSRCS += crashreporter_unix.cpp
 CMMSRCS += crashreporter_osx.mm
 OS_LIBS += -framework Cocoa
 LIBS += \
@@ -76,7 +77,7 @@ LOCAL_INCLUDES += -I$(srcdir) -I$(srcdir)/../google-breakpad/src/common/mac/
 endif
 
 ifeq ($(OS_ARCH),Linux)
-CPPSRCS += crashreporter_linux.cpp
+CPPSRCS += crashreporter_linux.cpp crashreporter_unix.cpp
 LIBS += \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
   $(NULL)
@@ -88,7 +89,7 @@ FORCE_USE_PIC=1
 endif
 
 ifeq ($(OS_ARCH),SunOS)
-CPPSRCS += crashreporter_linux.cpp
+CPPSRCS += crashreporter_linux.cpp crashreporter_unix.cpp
 LIBS += \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/solaris/$(LIB_PREFIX)breakpad_solaris_common_s.$(LIB_SUFFIX) \
   $(NULL)
