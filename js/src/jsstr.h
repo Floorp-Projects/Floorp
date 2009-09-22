@@ -391,6 +391,13 @@ struct JSString {
         return isUnitString(ptr) || isIntString(ptr);
     }
 
+#ifdef __SUNPRO_CC
+    /* 
+     * Ugly hacking to align unitStringTable and intStringTable to 8.
+     */
+    static JSInt64 dummy;
+#endif
+
     static JSString unitStringTable[];
     static JSString intStringTable[];
     static const char *deflatedIntStringTable[];
