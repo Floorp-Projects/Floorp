@@ -43,7 +43,6 @@ include protocol "PNecko.ipdl";
 namespace mozilla {
 namespace net {
 
-
 //-------------------------------------------------------------------
 protocol PHttpChannel
 {
@@ -52,7 +51,29 @@ protocol PHttpChannel
 parent:
   __delete__();
 
-  asyncOpen(nsCString uri);
+  AsyncOpen(nsCString   uriSpec, 
+            nsCString   originCharset, 
+            // - TODO: unclear if any HTTP channel clients ever set
+            // originalURI != uri (about:credits?); also not clear if chrome
+            // channel would ever need to know.  Can we get rid of next two
+            // args?
+            nsCString   originalUriSpec, 
+            nsCString   originalCharset, 
+            nsCString   documentUriSpec, 
+            nsCString   documentCharset, 
+            PRUint32    loadFlags);
+
+child:
+  OnStartRequest(PRInt32    HACK_ContentLength,
+                 nsCString  HACK_ContentType,
+                 PRUint32   HACK_Status,
+                 nsCString  HACK_StatusText);
+
+  OnDataAvailable(nsCString data, 
+                  PRUint32  offset, 
+                  PRUint32  count);
+
+  OnStopRequest(nsresult statusCode);
 };
 
 
