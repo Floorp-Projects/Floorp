@@ -155,7 +155,7 @@ struct JSTraceMonitor {
      */
     JSContext               *tracecx;
 
-    CLS(VMAllocator)        allocator;   // A chunk allocator for LIR.
+    CLS(VMAllocator)        dataAlloc;   // A chunk allocator for LIR.
     CLS(nanojit::CodeAlloc) codeAlloc;   // A general allocator for native code.
     CLS(nanojit::Assembler) assembler;
     CLS(nanojit::LirBuffer) lirbuf;
