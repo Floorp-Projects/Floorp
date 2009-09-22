@@ -296,25 +296,12 @@ SyncEngine.prototype = {
     this.loadToFetch();
   },
 
-  get baseURL() {
-    let url = Svc.Prefs.get("clusterURL");
-    if (!url)
-      return null;
-    if (url[url.length-1] != '/')
-      url += '/';
-    url += "0.5/";
-    return url;
-  },
+  get storageURL() Svc.Prefs.get("clusterURL") + "0.5/" +
+    ID.get("WeaveID").username + "/storage/",
 
-  get engineURL() {
-    return this.baseURL + ID.get('WeaveID').username +
-      '/storage/' + this.name + '/';
-  },
+  get engineURL() this.storageURL + this.name,
 
-  get cryptoMetaURL() {
-    return this.baseURL + ID.get('WeaveID').username +
-      '/storage/crypto/' + this.name;
-  },
+  get cryptoMetaURL() this.storageURL + "crypto/" + this.name,
 
   get lastSync() {
     return parseFloat(Svc.Prefs.get(this.name + ".lastSync", "0"));

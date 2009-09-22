@@ -205,7 +205,7 @@ WeaveSvc.prototype = {
     ID.get('WeaveCryptoID').username = value;
 
     // FIXME: need to also call this whenever the username pref changes
-    this._genKeyURLs();
+    this._updateCachedURLs();
   },
 
   get password password() ID.get("WeaveID").password,
@@ -214,32 +214,30 @@ WeaveSvc.prototype = {
   get passphrase passphrase() ID.get("WeaveCryptoID").password,
   set passphrase passphrase(value) ID.get("WeaveCryptoID").password = value,
 
-  get baseURL() {
-    return Utils.getURLPref("serverURL");
-  },
-  set baseURL(value) {
-    Svc.Prefs.set("serverURL", value);
-  },
+  get serverURL() Svc.Prefs.get("serverURL"),
+  set serverURL(value) Svc.Prefs.set("serverURL", value),
 
-  get miscURL() {
-    return Utils.getURLPref("miscURL");
-  },
-  set miscURL(value) {
-    Svc.Prefs.set("miscURL", value);
-  },
-
-  get clusterURL() {
-    return Utils.getURLPref("clusterURL", null, "0.5/");
-  },
+  get clusterURL() Svc.Prefs.get("clusterURL"),
   set clusterURL(value) {
     Svc.Prefs.set("clusterURL", value);
-    this._genKeyURLs();
+    this._updateCachedURLs();
   },
 
-  get userURL() this.clusterURL + this.username,
-  get infoURL() this.userURL + "/info/collections",
+  get miscAPI() {
+    // Append to the serverURL if it's a relative fragment
+    let misc = Svc.Prefs.get("miscURL");
+    if (misc.indexOf(":") == -1)
+      misc = this.serverURL + misc;
+    return misc + "1/";
+  },
 
-  get userPath() { return ID.get('WeaveID').username; },
+  get userAPI() {
+    // Append to the serverURL if it's a relative fragment
+    let user = Svc.Prefs.get("userURL");
+    if (user.indexOf(":") == -1)
+      user = this.serverURL + user;
+    return user + "1/";
+  },
 
   get isLoggedIn() { return this._loggedIn; },
 
@@ -265,10 +263,17 @@ WeaveSvc.prototype = {
     this._locked = false;
   },
 
-  _genKeyURLs: function WeaveSvc__genKeyURLs() {
-    let url = this.userURL;
-    PubKeys.defaultKeyUri = url + "/storage/keys/pubkey";
-    PrivKeys.defaultKeyUri = url + "/storage/keys/privkey";
+  _updateCachedURLs: function _updateCachedURLs() {
+    let storageAPI = this.clusterURL + "0.5/";
+    let userBase = storageAPI + this.username + "/";
+    this._log.debug("Caching URLs under storage user base: " + userBase);
+
+    // Generate and cache various URLs under the storage API for this user
+    this.infoURL = userBase + "info/collections";
+    this.storageURL = userBase + "storage/";
+    this.metaURL = this.storageURL + "meta/global";
+    PubKeys.defaultKeyUri = this.storageURL + "keys/pubkey";
+    PrivKeys.defaultKeyUri = this.storageURL + "keys/privkey";
   },
 
   _checkCrypto: function WeaveSvc__checkCrypto() {
@@ -332,7 +337,7 @@ WeaveSvc.prototype = {
     ID.set('WeaveCryptoID',
            new Identity('Mozilla Services Encryption Passphrase', this.username));
 
-    this._genKeyURLs();
+    this._updateCachedURLs();
 
     if (Svc.Prefs.get("autoconnect"))
       this._autoConnect();
@@ -457,13 +462,13 @@ WeaveSvc.prototype = {
   _findCluster: function _findCluster() {
     this._log.debug("Finding cluster for user " + this.username);
 
-    let res = new Resource(this.baseURL + "1/" + this.username + "/node/weave");
+    let res = new Resource(this.userAPI + this.username + "/node/weave");
     try {
       let node = res.get();
       switch (node.status) {
         case 404:
           this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
-          return this.baseURL;
+          return this.serverURL;
         case 0:
         case 200:
           return node;
@@ -480,18 +485,17 @@ WeaveSvc.prototype = {
 
   // gets cluster from central LDAP server and sets this.clusterURL
   _setCluster: function _setCluster() {
+    // Make sure we didn't get some unexpected response for the cluster
     let cluster = this._findCluster();
-    if (cluster) {
-      if (cluster == this.clusterURL)
-        return false;
+    if (cluster == null)
+      return false;
 
-      this._log.debug("Saving cluster setting");
-      this.clusterURL = cluster;
-      return true;
-    }
+    // Don't update stuff if we already have the right cluster
+    if (cluster == this.clusterURL)
+      return false;
 
-    this._log.debug("Error setting cluster for user " + this.username);
-    return false;
+    this.clusterURL = cluster;
+    return true;
   },
 
   // update cluster if required. returns false if the update was not required
@@ -579,7 +583,7 @@ WeaveSvc.prototype = {
 
   changePassword: function WeaveSvc_changePassword(newpass)
     this._catch(this._notify("changepwd", "", function() {
-      let url = this.baseURL + '1/' + this.username + "/password";
+      let url = this.userAPI + this.username + "/password";
       let res = new Weave.Resource(url);
       let resp = res.post(newpass);
       if (resp.status != 200) {
@@ -740,7 +744,7 @@ WeaveSvc.prototype = {
   },
 
   checkUsername: function WeaveSvc_checkUsername(username) {
-    let url = this.baseURL + "1/" + username;
+    let url = this.userAPI + username;
     let res = new Resource(url);
     res.authenticator = new NoOpAuthenticator();
 
@@ -765,7 +769,7 @@ WeaveSvc.prototype = {
       "captcha-response": captchaResponse
     });
 
-    let url = this.baseURL + '1/' + username;
+    let url = this.userAPI + username;
     let res = new Resource(url);
     res.authenticator = new Weave.NoOpAuthenticator();
 
@@ -794,7 +798,7 @@ WeaveSvc.prototype = {
     let reset = false;
 
     this._log.debug("Fetching global metadata record");
-    let meta = Records.import(this.userURL + "/storage/meta/global");
+    let meta = Records.import(this.metaURL);
 
     let remoteVersion = (meta && meta.payload.storageVersion)?
       meta.payload.storageVersion : "";
@@ -1188,7 +1192,7 @@ WeaveSvc.prototype = {
     Sync.sleep(2000);
 
     this._log.debug("Uploading new metadata record");
-    meta = new WBORecord(this.userURL + "/storage/meta/global");
+    meta = new WBORecord(this.metaURL);
     meta.payload.syncID = Clients.syncID;
     this._updateRemoteVersion(meta);
   },
@@ -1245,7 +1249,7 @@ WeaveSvc.prototype = {
           if (engines && engines.indexOf(name) == -1)
             continue;
 
-          new Resource(this.userURL + "/storage/" + name).delete();
+          new Resource(this.storageURL + name).delete();
         }
         catch(ex) {
           this._log.debug("Exception on wipe of '" + name + "': " + Utils.exceptionStr(ex));

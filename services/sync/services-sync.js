@@ -1,5 +1,6 @@
 pref("extensions.weave.serverURL", "@server_url@");
-pref("extensions.weave.miscURL", "https://auth.services.mozilla.com/misc/");
+pref("extensions.weave.userURL", "user/");
+pref("extensions.weave.miscURL", "misc/");
 pref("extensions.weave.termsURL", "https://labs.mozilla.com/projects/weave/tos/");
 
 pref("extensions.weave.encryption", "aes-256-cbc");
