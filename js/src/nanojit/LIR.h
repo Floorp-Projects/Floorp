@@ -928,7 +928,7 @@ namespace nanojit
 
     GuardRecord *LIns::record() const {
         NanoAssert(isGuard());
-        return (GuardRecord*)oprnd2()->payload();
+        return (GuardRecord*)oprnd2();
     }
 
     int32_t LIns::disp() const {
@@ -1043,8 +1043,8 @@ namespace nanojit
         virtual LInsp ins3(LOpcode v, LIns* a, LIns* b, LIns* c) {
             return out->ins3(v, a, b, c);
         }
-        virtual LInsp insGuard(LOpcode v, LIns *c, LIns *x) {
-            return out->insGuard(v, c, x);
+        virtual LInsp insGuard(LOpcode v, LIns *c, GuardRecord *gr) {
+            return out->insGuard(v, c, gr);
         }
         virtual LInsp insBranch(LOpcode v, LInsp condition, LInsp to) {
             return out->insBranch(v, condition, to);
@@ -1212,8 +1212,8 @@ namespace nanojit
             }
         }
 
-        LIns* insGuard(LOpcode op, LInsp cond, LIns *x) {
-            return add_flush(out->insGuard(op,cond,x));
+        LIns* insGuard(LOpcode op, LInsp cond, GuardRecord *gr) {
+            return add_flush(out->insGuard(op,cond,gr));
         }
 
         LIns* insBranch(LOpcode v, LInsp condition, LInsp to) {
@@ -1271,7 +1271,7 @@ namespace nanojit
         LIns* ins1(LOpcode v, LIns* a);
         LIns* ins2(LOpcode v, LIns* a, LIns* b);
         LIns* ins3(LOpcode v, LIns* a, LIns* b, LIns* c);
-        LIns* insGuard(LOpcode, LIns *cond, LIns *);
+        LIns* insGuard(LOpcode, LIns *cond, GuardRecord *);
         LIns* insBranch(LOpcode, LIns *cond, LIns *target);
         LIns* insLoad(LOpcode op, LInsp base, int32_t off);
     };
@@ -1329,7 +1329,7 @@ namespace nanojit
         LIns* ins3(LOpcode v, LInsp, LInsp, LInsp);
         LIns* insLoad(LOpcode op, LInsp cond, int32_t d);
         LIns* insCall(const CallInfo *call, LInsp args[]);
-        LIns* insGuard(LOpcode op, LInsp cond, LIns *x);
+        LIns* insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
     };
 
     class LirBuffer
@@ -1405,7 +1405,7 @@ namespace nanojit
             LInsp    insImmq(uint64_t imm);
             LInsp    insImmf(double d);
             LInsp    insCall(const CallInfo *call, LInsp args[]);
-            LInsp    insGuard(LOpcode op, LInsp cond, LIns *x);
+            LInsp    insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
             LInsp    insBranch(LOpcode v, LInsp condition, LInsp to);
             LInsp   insAlloc(int32_t size);
             LInsp   insSkip(size_t);

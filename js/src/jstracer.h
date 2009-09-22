@@ -1026,7 +1026,7 @@ public:
      * The instruction is suitable for use as the final argument of a single
      * call to LirBuffer::insGuard; do not reuse the returned value.
      */
-    JS_REQUIRES_STACK nanojit::LIns* createGuardRecord(VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::GuardRecord* createGuardRecord(VMSideExit* exit);
 
     nanojit::Fragment* getFragment() const { return fragment; }
     TreeInfo* getTreeInfo() const { return treeInfo; }
