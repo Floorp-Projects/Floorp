@@ -223,6 +223,7 @@ OPDEF64(i2q,    26,      1, Op1)    // sign-extend i32 to i64
 OPDEF64(u2q,    27,      1, Op1)    // zero-extend u32 to u64
 OPDEF64(i2f,    28,      1, Op1)    // convert a signed 32-bit integer to a float
 OPDEF64(u2f,    29,      1, Op1)    // convert an unsigned 32-bit integer to a float
+
 OPDEF64(unused30_64, 30,-1, None)
 OPDEF64(unused31_64, 31,-1, None)
 OPDEF64(unused32_64, 32,-1, None)
