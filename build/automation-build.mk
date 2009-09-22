@@ -34,7 +34,7 @@ AUTOMATION_PPARGS = 	\
 			-DPROFILE_DIR=\"$(_PROFILE_DIR)\" \
 			-DCERTS_SRC_DIR=\"$(_CERTS_SRC_DIR)\" \
 			-DSYMBOLS_PATH=\"$(_SYMBOLS_PATH)\" \
-			-DPERL=\"$(PERL)\" \
+			-DPERL="\"$(PERL)\"" \
 			$(NULL)
 
 ifeq ($(OS_ARCH),Darwin)
