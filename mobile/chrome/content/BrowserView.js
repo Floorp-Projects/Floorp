@@ -234,6 +234,7 @@ BrowserView.prototype = {
     this._renderMode = 0;
     this._tileManager = new TileManager(this._appendTile, this._removeTile, this);
     this._visibleRectFactory = visibleRectFactory;
+    this._ignorePageScroll = false;
   },
 
   getVisibleRect: function getVisibleRect() {
@@ -378,26 +379,25 @@ BrowserView.prototype = {
       throw "Cannot set non-null browser with null BrowserViewportState";
     }
 
-    let currentBrowser = this._browser;
+    let browserChanged = (this._browser !== browser);
 
-    let browserChanged = (currentBrowser !== browser);
-
-    if (currentBrowser) {
-      currentBrowser.removeEventListener("MozAfterPaint", this.handleMozAfterPaint, false);
-      currentBrowser.removeEventListener("scroll", this.handlePageScroll, false);
+    if (this._browser) {
+      this._browser.removeEventListener("MozAfterPaint", this.handleMozAfterPaint, false);
+      this._browser.removeEventListener("scroll", this.handlePageScroll, false);
 
       // !!! --- RESIZE HACK BEGIN -----
       // change to the real event type and perhaps refactor the handler function name
-      currentBrowser.removeEventListener("FakeMozAfterSizeChange", this.handleMozAfterSizeChange, false);
+      this._browser.removeEventListener("FakeMozAfterSizeChange", this.handleMozAfterSizeChange, false);
       // !!! --- RESIZE HACK END -------
 
-      currentBrowser.setAttribute("type", "content");
-      currentBrowser.docShell.isOffScreenBrowser = false;
+      this._browser.setAttribute("type", "content");
+      this._browser.docShell.isOffScreenBrowser = false;
     }
 
     this._browser = browser;
     this._contentWindow = (browser) ? browser.contentWindow : null;
     this._browserViewportState = browserViewportState;
+    this._ignorePageScroll = false;
 
     if (browser) {
       browser.setAttribute("type", "content-primary");
@@ -458,14 +458,55 @@ BrowserView.prototype = {
     tm.dirtyRects(rects, this.isRendering());
   },
 
+  _scrollTo: function _scrollTo(frame, x, y) {
+    let origX = {}, origY = {}, newX = {}, newY = {};
+    let windowUtils = frame.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+
+    windowUtils.getScrollXY(false, origX, origY);
+    frame.scrollTo(x, y);
+    windowUtils.getScrollXY(false, newX, newY);
+
+    return newX.value != origX.value || newY.value != origY.value;
+  },
+  
+  /** Let current browser's scrollbox know about where content has been panned. */
+  scrollBrowserToContent: function scrollBrowserToContent() {
+    let browser = this._browser;
+    if (browser) {
+      let offsetY = document.getElementById("toolbar-container").getBoundingClientRect().height;
+      let [contentX, contentY] = Browser.getScrollboxPosition(Browser.contentScrollboxScroller);
+
+      let windowUtils = BrowserView.Util.getBrowserDOMWindowUtils(browser);
+      if (this._scrollTo(browser.contentWindow,
+          this.viewportToBrowser(contentX),
+          this.viewportToBrowser(contentY - offsetY))) {
+        this._ignorePageScroll = true;
+      }
+    }
+  },
+
+  /** Update content panning to location of browser's scrollbars. */
+  scrollContentToBrowser: function scrollContentToBrowser() {
+    let [viewportX, viewportY] = BrowserView.Util.getContentScrollValues(this._browser);
+    viewportX = this.browserToViewport(viewportX);
+    viewportY = this.browserToViewport(viewportY);
+    let offsetY = document.getElementById("toolbar-container").getBoundingClientRect().height;
+
+    Browser.contentScrollboxScroller.scrollTo(viewportX, viewportY + offsetY);
+    this.onAfterVisibleMove();
+  },
+
+  /** If browser scrolls, pan content to new scroll area. */
   handlePageScroll: function handlePageScroll(aEvent) {
     if (aEvent.target != this._browser.contentDocument)
       return;
+    if (this._ignorePageScroll) {
+      // Ignore events caused by updating browser's scrollbox to content.
+      this._ignorePageScroll = false;
+      return;
+    }
 
-    let [scrollX, scrollY] = BrowserView.Util.getContentScrollValues(this._browser);
-    Browser.contentScrollboxScroller.scrollTo(this.browserToViewport(scrollX), 
-                                              this.browserToViewport(scrollY));
-    this.onAfterVisibleMove();
+    this.scrollContentToBrowser();
   },
 
   // !!! --- RESIZE HACK BEGIN -----

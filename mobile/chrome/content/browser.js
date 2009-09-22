@@ -606,9 +606,6 @@ var Browser = {
       dx = Math.min(Math.round(containerBCR.right - window.innerWidth), 0);
 
     this.controlsScrollboxScroller.scrollBy(dx, 0);
-
-    Browser.contentScrollbox.customDragger.scrollingOuterX = false; // XXX ugh.
-
     this._browserView.onAfterVisibleMove();
   },
 
@@ -717,8 +714,8 @@ var Browser = {
     tab.lastSelected = Date.now();
 
     if (tab.scrollOffset) {
+      // XXX incorrect behavior if page was scrolled by tab in the background.
       let [scrollX, scrollY] = tab.scrollOffset;
-      // Util.dumpf('Switch tab scrolls to: %s, %s\n', scrollX, scrollY);
       Browser.contentScrollboxScroller.scrollTo(scrollX, scrollY);
     }
 
@@ -959,6 +956,11 @@ var Browser = {
     return Math.round(snappedX);
   },
 
+  floatToolbar: function floatToolbar() {
+    BrowserUI.lockToolbar();
+    this.floatedWhileDragging = true;
+  },
+
   tryFloatToolbar: function tryFloatToolbar(dx, dy) {
     if (this.floatedWhileDragging)
       return;
@@ -1041,36 +1043,8 @@ var Browser = {
     let dx = Math.round(bv.browserToViewport(elRect.left) - margin - vis.left);
     let dy = Math.round(bv.browserToViewport(elementY) - (window.innerHeight / 2) - vis.top);
 
-    /*
-     * Animation code for zooming to zoom to the correct place
-     *
-    let callback = {
-      scroller: scroller,
-      sx: (dx > 0) ? 1 : -1,
-      sy: (dy > 0) ? 1 : -1,
-      dx: dx,
-      dy: dy,
-      notify: function kineticTimerCallback(timer) {
-        if (this.dx == 0 && this.dy == 0) {
-          timer.cancel();
-          return;
-        }
-        Browser.contentScrollbox.customDragger.dragMove(this.sx, this.sy, this.scroller);
-
-        if (this.dx != 0) this.dx -= this.sx;
-        if (this.dy != 0) this.dy -= this.sy;
-      }
-    };
-
-    this._zoomTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    //initialize our timer with updateInterval
-    this._zoomTimer.initWithCallback(callback,
-                                     2,
-                                     this._zoomTimer.TYPE_REPEATING_PRECISE);
-    */
-
-    Browser.contentScrollbox.customDragger.dragMove(dx, dy, scroller);
-
+    Browser.contentScrollboxScroller.scrollBy(dx, dy);
+    bv.scrollBrowserToContent();
     bv.commitBatchOperation();
 
     return true;
@@ -1089,7 +1063,8 @@ var Browser = {
 
     let dy = Math.round(bv.browserToViewport(elementY) - (window.innerHeight / 2) - bv.getVisibleRect().top);
 
-    this.contentScrollbox.customDragger.dragMove(0, dy, this.contentScrollboxScroller);
+    Browser.contentScrollboxScroller.scrollBy(0, dy);
+    bv.scrollBrowserToContent();
 
     Browser.forceChromeReflow();
 
@@ -1242,7 +1217,8 @@ Browser.MainDragger.prototype = {
 
   dragStop: function dragStop(dx, dy, scroller) {
     this.draggedFrame = null;
-    this.dragMove(Browser.snapSidebars(), 0, scroller);
+    this.dragMove(Browser.snapSidebars(), 0);
+    this.bv.scrollBrowserToContent();
 
     Browser.tryUnfloatToolbar();
 
@@ -1324,6 +1300,7 @@ Browser.MainDragger.prototype = {
     doffset[0] -= newX.value - origX.value;
     doffset[1] -= newY.value - origY.value;
   }
+  
 };
 
 function nsBrowserAccess()
@@ -2328,6 +2305,13 @@ Tab.prototype = {
         // Only fit page if user hasn't started zooming around and this is a page that
         // isn't being restored.
         bv.zoomToPage();
+        if (this.browser.contentWindow.scrollX != 0 || this.browser.contentWindow.scrollY != 0) {
+          // XXX We want to jump to anchors but not scroll to top of page (removing urlbar)
+          bv.scrollContentToBrowser();
+          Browser.floatToolbar();
+        }
+
+        bv.onAfterVisibleMove();
       }
 
     }
@@ -2355,7 +2339,9 @@ Tab.prototype = {
     this._browserViewportState.zoomChanged = false;
 
     if (!this._loadingTimeout) {
-      Browser._browserView.beginBatchOperation();
+      if (this == Browser.selectedTab) {
+        Browser._browserView.beginBatchOperation();
+      }
       this._loadingTimeout = setTimeout(Util.bind(this._resizeAndPaint, this), 2000);
     }
   },
