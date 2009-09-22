@@ -149,6 +149,27 @@ class MochitestOptions(optparse.OptionParser):
                     help = "start running tests when the application starts")
     defaults["autorun"] = False
 
+    self.add_option("--total-chunks",
+                    type = "int", dest = "totalChunks",
+                    help = "how many chunks to split the tests up into")
+    defaults["totalChunks"] = None
+
+    self.add_option("--this-chunk",
+                    type = "int", dest = "thisChunk",
+                    help = "which chunk to run")
+    defaults["thisChunk"] = None
+
+    self.add_option("--chunk-by-dir",
+                    type = "int", dest = "chunkByDir",
+                    help = "group tests together in the same chunk that are in the same top chunkByDir directories")
+    defaults["chunkByDir"] = 0
+
+    self.add_option("--shuffle",
+                    dest = "shuffle",
+                    action = "store_true",
+                    help = "randomize test order")
+    defaults["shuffle"] = False
+
     LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "FATAL")
     LEVEL_STRING = ", ".join(LOG_LEVELS)
 
@@ -339,6 +360,13 @@ def main():
   parser = MochitestOptions()
   options, args = parser.parse_args()
 
+  if options.totalChunks is not None and options.thisChunk is None:
+    parser.error("thisChunk must be specified when totalChunks is specified")
+
+  if options.totalChunks:
+    if not 1 <= options.thisChunk <= options.totalChunks:
+       parser.error("thisChunk must be between 1 and totalChunks")
+
   if options.xrePath is None:
     # default xrePath to the app path if not provided
     # but only if an app path was explicitly provided
@@ -426,6 +454,8 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   # autorun -- kick off tests automatically
   # closeWhenDone -- runs quit.js after tests
   # logFile -- logs test run to an absolute path
+  # totalChunks -- how many chunks to split tests into
+  # thisChunk -- which chunk to run
   #
   
   # consoleLevel, fileLevel: set the logging level of the console and
@@ -460,6 +490,13 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
       urlOpts.append("fileLevel=" + encodeURIComponent(options.fileLevel))
     if options.consoleLevel:
       urlOpts.append("consoleLevel=" + encodeURIComponent(options.consoleLevel))
+    if options.totalChunks:
+        urlOpts.append("totalChunks=%d" % options.totalChunks)
+        urlOpts.append("thisChunk=%d" % options.thisChunk)
+        if options.chunkByDir:
+            urlOpts.append("chunkByDir=%d" % options.chunkByDir)
+    if options.shuffle:
+        urlOpts.append("shuffle=1")
     if len(urlOpts) > 0:
       testURL += "?" + "&".join(urlOpts)
 
