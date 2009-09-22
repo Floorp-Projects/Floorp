@@ -84,7 +84,8 @@ public:
     bool Send(Message* msg, Message* reply);
 
     // Override the AsyncChannel handler so we can dispatch sync messages
-    virtual void OnMessageReceived(const Message& msg);
+    NS_OVERRIDE virtual void OnMessageReceived(const Message& msg);
+    NS_OVERRIDE virtual void OnChannelError();
 
 protected:
     // Executed on the worker thread
