@@ -84,15 +84,15 @@ private:
 
 protected:
     PPluginInstanceParent*
-    PPluginInstanceConstructor(const nsCString& aMimeType,
-                               const uint16_t& aMode,
-                               const nsTArray<nsCString>& aNames,
-                               const nsTArray<nsCString>& aValues,
-                               NPError* rv);
+    AllocPPluginInstance(const nsCString& aMimeType,
+                         const uint16_t& aMode,
+                         const nsTArray<nsCString>& aNames,
+                         const nsTArray<nsCString>& aValues,
+                         NPError* rv);
 
     virtual bool
-    PPluginInstanceDestructor(PPluginInstanceParent* aActor,
-                              NPError* _retval);
+    DeallocPPluginInstance(PPluginInstanceParent* aActor,
+                           NPError* _retval);
 
 public:
     PluginModuleParent(const char* aFilePath);

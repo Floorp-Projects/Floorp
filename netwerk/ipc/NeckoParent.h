@@ -56,8 +56,8 @@ public:
   virtual ~NeckoParent();
 
 protected:
-  virtual PHttpChannelParent* PHttpChannelConstructor();
-  virtual bool PHttpChannelDestructor(PHttpChannelParent*);
+  virtual PHttpChannelParent* AllocPHttpChannel();
+  virtual bool DeallocPHttpChannel(PHttpChannelParent*);
 };
 
 } // namespace net

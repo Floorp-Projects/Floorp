@@ -78,21 +78,21 @@ protected:
     AnswerNPP_HandleEvent(const NPEvent& event, int16_t* handled);
 
     virtual PPluginScriptableObjectChild*
-    PPluginScriptableObjectConstructor();
+    AllocPPluginScriptableObject();
 
     virtual bool
-    PPluginScriptableObjectDestructor(PPluginScriptableObjectChild* aObject);
+    DeallocPPluginScriptableObject(PPluginScriptableObjectChild* aObject);
 
     virtual PBrowserStreamChild*
-    PBrowserStreamConstructor(const nsCString& url,
-                              const uint32_t& length,
-                              const uint32_t& lastmodified,
-                              const PStreamNotifyChild* notifyData,
-                              const nsCString& headers,
-                              const nsCString& mimeType,
-                              const bool& seekable,
-                              NPError* rv,
-                              uint16_t *stype);
+    AllocPBrowserStream(const nsCString& url,
+                        const uint32_t& length,
+                        const uint32_t& lastmodified,
+                        const PStreamNotifyChild* notifyData,
+                        const nsCString& headers,
+                        const nsCString& mimeType,
+                        const bool& seekable,
+                        NPError* rv,
+                        uint16_t *stype);
 
     virtual bool
     AnswerPBrowserStreamDestructor(PBrowserStreamChild* stream,
@@ -100,14 +100,14 @@ protected:
                                    const bool& artificial);
 
     virtual bool
-    PBrowserStreamDestructor(PBrowserStreamChild* stream,
-                             const NPError& reason,
-                             const bool& artificial);
+    DeallocPBrowserStream(PBrowserStreamChild* stream,
+                          const NPError& reason,
+                          const bool& artificial);
 
     virtual PPluginStreamChild*
-    PPluginStreamConstructor(const nsCString& mimeType,
-                             const nsCString& target,
-                             NPError* result);
+    AllocPPluginStream(const nsCString& mimeType,
+                       const nsCString& target,
+                       NPError* result);
 
     virtual bool
     AnswerPPluginStreamDestructor(PPluginStreamChild* stream,
@@ -115,19 +115,19 @@ protected:
                                   const bool& artificial);
 
     virtual bool
-    PPluginStreamDestructor(PPluginStreamChild* stream,
-                            const NPReason& reason,
-                            const bool& artificial);
+    DeallocPPluginStream(PPluginStreamChild* stream,
+                         const NPReason& reason,
+                         const bool& artificial);
 
     virtual PStreamNotifyChild*
-    PStreamNotifyConstructor(const nsCString& url, const nsCString& target,
-                             const bool& post, const nsCString& buffer,
-                             const bool& file,
-                             NPError* result);
+    AllocPStreamNotify(const nsCString& url, const nsCString& target,
+                       const bool& post, const nsCString& buffer,
+                       const bool& file,
+                       NPError* result);
 
     virtual bool
-    PStreamNotifyDestructor(PStreamNotifyChild* notifyData,
-                            const NPReason& reason);
+    DeallocPStreamNotify(PStreamNotifyChild* notifyData,
+                         const NPReason& reason);
 
 public:
     PluginInstanceChild(const NPPluginFuncs* aPluginIface) :

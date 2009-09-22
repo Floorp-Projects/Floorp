@@ -58,8 +58,8 @@ public:
 
   static void InitNeckoChild();
 
-  virtual PHttpChannelChild* PHttpChannelConstructor();
-  virtual bool PHttpChannelDestructor(PHttpChannelChild*);
+  virtual PHttpChannelChild* AllocPHttpChannel();
+  virtual bool DeallocPHttpChannel(PHttpChannelChild*);
 
 protected:
 };

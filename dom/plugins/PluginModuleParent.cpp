@@ -86,19 +86,19 @@ PluginModuleParent::~PluginModuleParent()
 }
 
 PPluginInstanceParent*
-PluginModuleParent::PPluginInstanceConstructor(const nsCString& aMimeType,
-                                               const uint16_t& aMode,
-                                               const nsTArray<nsCString>& aNames,
-                                               const nsTArray<nsCString>& aValues,
-                                               NPError* rv)
+PluginModuleParent::AllocPPluginInstance(const nsCString& aMimeType,
+                                         const uint16_t& aMode,
+                                         const nsTArray<nsCString>& aNames,
+                                         const nsTArray<nsCString>& aValues,
+                                         NPError* rv)
 {
     NS_ERROR("Not reachable!");
     return NULL;
 }
 
 bool
-PluginModuleParent::PPluginInstanceDestructor(PPluginInstanceParent* aActor,
-                                              NPError* _retval)
+PluginModuleParent::DeallocPPluginInstance(PPluginInstanceParent* aActor,
+                                           NPError* _retval)
 {
     _MOZ_LOG(__FUNCTION__);
     delete aActor;

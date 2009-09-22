@@ -60,15 +60,15 @@ public:
         return sSingleton;
     }
 
-    virtual PIFrameEmbeddingChild* PIFrameEmbeddingConstructor(
+    virtual PIFrameEmbeddingChild* AllocPIFrameEmbedding(
             const MagicWindowHandle& hwnd);
-    virtual bool PIFrameEmbeddingDestructor(PIFrameEmbeddingChild*);
+    virtual bool DeallocPIFrameEmbedding(PIFrameEmbeddingChild*);
 
-    virtual PTestShellChild* PTestShellConstructor();
-    virtual bool PTestShellDestructor(PTestShellChild*);
+    virtual PTestShellChild* AllocPTestShell();
+    virtual bool DeallocPTestShell(PTestShellChild*);
 
-    virtual PNeckoChild* PNeckoConstructor();
-    virtual bool PNeckoDestructor(PNeckoChild*);
+    virtual PNeckoChild* AllocPNecko();
+    virtual bool DeallocPNecko(PNeckoChild*);
 
     void Quit();
     virtual bool RecvQuit();

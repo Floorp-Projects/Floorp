@@ -57,14 +57,14 @@ TestShellChild::RecvExecuteCommand(const nsString& aCommand)
 }
 
 PTestShellCommandChild*
-TestShellChild::PTestShellCommandConstructor(const nsString& aCommand)
+TestShellChild::AllocPTestShellCommand(const nsString& aCommand)
 {
   return new PTestShellCommandChild();
 }
 
 bool
-TestShellChild::PTestShellCommandDestructor(PTestShellCommandChild* aCommand,
-                                            const nsString& aResponse)
+TestShellChild::DeallocPTestShellCommand(PTestShellCommandChild* aCommand,
+                                         const nsString& aResponse)
 {
   delete aCommand;
   return true;

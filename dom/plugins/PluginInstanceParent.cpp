@@ -45,15 +45,15 @@ namespace mozilla {
 namespace plugins {
 
 PBrowserStreamParent*
-PluginInstanceParent::PBrowserStreamConstructor(const nsCString& url,
-                                                const uint32_t& length,
-                                                const uint32_t& lastmodified,
-                                                const PStreamNotifyParent* notifyData,
-                                                const nsCString& headers,
-                                                const nsCString& mimeType,
-                                                const bool& seekable,
-                                                NPError* rv,
-                                                uint16_t *stype)
+PluginInstanceParent::AllocPBrowserStream(const nsCString& url,
+                                          const uint32_t& length,
+                                          const uint32_t& lastmodified,
+                                          const PStreamNotifyParent* notifyData,
+                                          const nsCString& headers,
+                                          const nsCString& mimeType,
+                                          const bool& seekable,
+                                          NPError* rv,
+                                          uint16_t *stype)
 {
     NS_RUNTIMEABORT("Not reachable");
     return NULL;
@@ -71,26 +71,26 @@ PluginInstanceParent::AnswerPBrowserStreamDestructor(PBrowserStreamParent* strea
 }
 
 bool
-PluginInstanceParent::PBrowserStreamDestructor(PBrowserStreamParent* stream,
-                                               const NPError& reason,
-                                               const bool& artificial)
+PluginInstanceParent::DeallocPBrowserStream(PBrowserStreamParent* stream,
+                                            const NPError& reason,
+                                            const bool& artificial)
 {
     delete stream;
     return true;
 }
 
 PPluginStreamParent*
-PluginInstanceParent::PPluginStreamConstructor(const nsCString& mimeType,
-                                               const nsCString& target,
-                                               NPError* result)
+PluginInstanceParent::AllocPPluginStream(const nsCString& mimeType,
+                                         const nsCString& target,
+                                         NPError* result)
 {
     return new PluginStreamParent(this, mimeType, target, result);
 }
 
 bool
-PluginInstanceParent::PPluginStreamDestructor(PPluginStreamParent* stream,
-                                              const NPError& reason,
-                                              const bool& artificial)
+PluginInstanceParent::DeallocPPluginStream(PPluginStreamParent* stream,
+                                           const NPError& reason,
+                                           const bool& artificial)
 {
     if (!artificial) {
         static_cast<PluginStreamParent*>(stream)->NPN_DestroyStream(reason);
@@ -176,12 +176,12 @@ PluginInstanceParent::AnswerNPN_PostURL(const nsCString& url,
 }
 
 PStreamNotifyParent*
-PluginInstanceParent::PStreamNotifyConstructor(const nsCString& url,
-                                               const nsCString& target,
-                                               const bool& post,
-                                               const nsCString& buffer,
-                                               const bool& file,
-                                               NPError* result)
+PluginInstanceParent::AllocPStreamNotify(const nsCString& url,
+                                         const nsCString& target,
+                                         const bool& post,
+                                         const nsCString& buffer,
+                                         const bool& file,
+                                         NPError* result)
 {
     StreamNotifyParent* notifyData = new StreamNotifyParent();
 
@@ -203,8 +203,8 @@ PluginInstanceParent::PStreamNotifyConstructor(const nsCString& url,
 }
 
 bool
-PluginInstanceParent::PStreamNotifyDestructor(PStreamNotifyParent* notifyData,
-                                              const NPReason& reason)
+PluginInstanceParent::DeallocPStreamNotify(PStreamNotifyParent* notifyData,
+                                           const NPReason& reason)
 {
     delete notifyData;
     return true;
@@ -313,13 +313,13 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
 }
 
 PPluginScriptableObjectParent*
-PluginInstanceParent::PPluginScriptableObjectConstructor()
+PluginInstanceParent::AllocPPluginScriptableObject()
 {
     return new PluginScriptableObjectParent();
 }
 
 bool
-PluginInstanceParent::PPluginScriptableObjectDestructor(PPluginScriptableObjectParent* aObject)
+PluginInstanceParent::DeallocPPluginScriptableObject(PPluginScriptableObjectParent* aObject)
 {
     delete aObject;
     return true;

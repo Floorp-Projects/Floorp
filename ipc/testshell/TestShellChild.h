@@ -57,15 +57,15 @@ public:
   RecvExecuteCommand(const nsString& aCommand);
 
   PTestShellCommandChild*
-  PTestShellCommandConstructor(const nsString& aCommand);
+  AllocPTestShellCommand(const nsString& aCommand);
 
   bool
   RecvPTestShellCommandConstructor(PTestShellCommandChild* aActor,
                                    const nsString& aCommand);
 
   bool
-  PTestShellCommandDestructor(PTestShellCommandChild* aCommand,
-                              const nsString& aResponse);
+  DeallocPTestShellCommand(PTestShellCommandChild* aCommand,
+                           const nsString& aResponse);
 
   void SetXPCShell(XPCShellEnvironment* aXPCShell) {
     mXPCShell = aXPCShell;
