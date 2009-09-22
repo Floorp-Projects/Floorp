@@ -1996,15 +1996,13 @@ class GenerateProtocolActorHeader(Visitor):
                                           static=1),
                              'got reply ')
 
-            elif md.decl.type.isDtor():
+            # TODO implement two-phase dtors for protocols with unavoidably
+            # racy dtor messages
+            if md.decl.type.isDtor():
                 impl.addstmt(cxx.StmtExpr(
                         cxx.ExprCall(cxx.ExprVar('Unregister'), [ objid ])))
                 impl.addstmt(cxx.StmtExpr(
                         cxx.ExprAssn(objid, cxx.ExprLiteral.ZERO)))
-                impl.addstmt(cxx.StmtExpr(
-                        cxx.ExprAssn(
-                            cxx.ExprSelect(objvar, '->', 'mManager'),
-                            cxx.ExprLiteral.ZERO)))
 
                 calldtor = cxx.ExprCall(
                     cxx.ExprVar(md._cxx.method.name),
@@ -2221,6 +2219,12 @@ class GenerateProtocolActorHeader(Visitor):
             block.addstmt(cxx.Whitespace.NL)
 
             if md.decl.type.isDtor():
+                block.addstmt(cxx.StmtExpr(
+                        cxx.ExprCall(cxx.ExprVar('Unregister'), [ routevar ])))
+                block.addstmt(cxx.StmtExpr(
+                        cxx.ExprAssn(cxx.ExprSelect(objvar, '->', 'mId'),
+                                     cxx.ExprLiteral.ZERO)))
+
                 calldtor = cxx.ExprCall(
                     cxx.ExprVar(md._cxx.method.name),
                     ([ objvar ]
@@ -2230,10 +2234,6 @@ class GenerateProtocolActorHeader(Visitor):
                 failif = cxx.StmtIf(cxx.ExprPrefixUnop(calldtor, '!'))
                 failif.ifb.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgValueError')))
                 block.addstmt(failif)
-                block.addstmt(cxx.StmtExpr(
-                        cxx.ExprCall(cxx.ExprVar('Unregister'), [ routevar ])))
-                block.addstmt(cxx.StmtExpr(
-                        cxx.ExprAssn(routevar, cxx.ExprLiteral.ZERO)))
 
             if md.decl.type.hasReply():
                 if not md.decl.type.hasReply():
