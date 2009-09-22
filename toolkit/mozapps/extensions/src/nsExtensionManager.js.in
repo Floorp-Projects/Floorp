@@ -5390,7 +5390,7 @@ ExtensionManager.prototype = {
 
   removeInstallListenerAt: function EM_removeInstallListenerAt(index) {
     if (index < 0 || index >= this._installListeners.length)
-      throw Cr.NS_ERROR_INVALID_ARGUMENT;
+      throw Cr.NS_ERROR_INVALID_ARG;
 
     this._installListeners[index] = null;
     while (this._installListeners[this._installListeners.length - 1] === null)
