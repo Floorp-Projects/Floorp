@@ -380,10 +380,8 @@ var DownloadsView = {
 
   showPage: function dv_showPage(aItem) {
     let uri = this._getReferrerOrSource(aItem);
-    if (uri) {
+    if (uri)
       BrowserUI.newTab(uri);
-      BrowserUI.hidePanel();
-    }
   },
 
   observe: function (aSubject, aTopic, aData) {
