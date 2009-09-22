@@ -3924,8 +3924,9 @@ TraceRecorder::snapshot(ExitType exitType)
     }
 
     /* We couldn't find a matching side exit, so create a new one. */
-    LIns* data = lir->insSkip(sizeof(VMSideExit) + (stackSlots + ngslots) * sizeof(JSTraceType));
-    VMSideExit* exit = (VMSideExit*) data->payload();
+    VMSideExit* exit = (VMSideExit*)
+        traceMonitor->dataAlloc->alloc(sizeof(VMSideExit) +
+                                       (stackSlots + ngslots) * sizeof(JSTraceType));
 
     /* Setup side exit structure. */
     memset(exit, 0, sizeof(VMSideExit));
@@ -3956,11 +3957,10 @@ TraceRecorder::snapshot(ExitType exitType)
     return exit;
 }
 
-JS_REQUIRES_STACK LIns*
+JS_REQUIRES_STACK GuardRecord*
 TraceRecorder::createGuardRecord(VMSideExit* exit)
 {
-    LIns* guardRec = lir->insSkip(sizeof(GuardRecord));
-    GuardRecord* gr = (GuardRecord*) guardRec->payload();
+    GuardRecord* gr = new (*traceMonitor->dataAlloc) GuardRecord();
 
     memset(gr, 0, sizeof(GuardRecord));
     gr->exit = exit;
@@ -3973,7 +3973,7 @@ TraceRecorder::createGuardRecord(VMSideExit* exit)
         fragment->guardsForFrag = gr;
     )
 
-    return guardRec;
+    return gr;
 }
 
 /*
@@ -3988,7 +3988,7 @@ TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit)
                       "SideExit=%p exitType=%s\n",
                       (void*)exit, getExitName(exit->exitType));
 
-    LIns* guardRec = createGuardRecord(exit);
+    GuardRecord* guardRec = createGuardRecord(exit);
 
     /*
      * BIG FAT WARNING: If compilation fails we don't reset the lirbuf, so it's
@@ -4016,8 +4016,9 @@ JS_REQUIRES_STACK VMSideExit*
 TraceRecorder::copy(VMSideExit* copy)
 {
     size_t typemap_size = copy->numGlobalSlots + copy->numStackSlots;
-    LIns* data = lir->insSkip(sizeof(VMSideExit) + typemap_size * sizeof(JSTraceType));
-    VMSideExit* exit = (VMSideExit*) data->payload();
+    VMSideExit* exit = (VMSideExit*)
+        traceMonitor->dataAlloc->alloc(sizeof(VMSideExit) +
+                                       typemap_size * sizeof(JSTraceType));
 
     /* Copy side exit structure. */
     memcpy(exit, copy, sizeof(VMSideExit) + typemap_size * sizeof(JSTraceType));
@@ -4783,7 +4784,7 @@ TraceRecorder::prepareTreeCall(VMFragment* inner)
      *
      * (The ExitType of this snapshot is nugatory. The exit can't be taken.)
      */
-    LIns* guardRec = createGuardRecord(exit);
+    GuardRecord* guardRec = createGuardRecord(exit);
     lir->insGuard(LIR_xbarrier, NULL, guardRec);
 }
 
@@ -7643,8 +7644,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
     LIns* parent_ins = stobj_get_parent(get(&cx->fp->argv[-2]));
     CHECK_STATUS(traverseScopeChain(parent, parent_ins, obj, obj_ins));
 
-    LIns* cv_ins = lir_buf_writer->insSkip(sizeof(ClosureVarInfo));
-    ClosureVarInfo* cv = (ClosureVarInfo*) cv_ins->payload();
+    ClosureVarInfo* cv = new (traceMonitor->dataAlloc) ClosureVarInfo();
     cv->id = id;
     cv->slot = slot;
     cv->callDepth = callDepth;
@@ -8020,8 +8020,7 @@ TraceRecorder::tableswitch()
         return switchop();
 
     /* Generate switch LIR. */
-    LIns* si_ins = lir_buf_writer->insSkip(sizeof(SwitchInfo));
-    SwitchInfo* si = (SwitchInfo*) si_ins->payload();
+    SwitchInfo* si = new (*traceMonitor->dataAlloc) SwitchInfo();
     si->count = high + 1 - low;
     si->table = 0;
     si->index = (uint32) -1;
@@ -9851,7 +9850,7 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
     if (setflag)
         lir->insStorei(boxed_ins, vp_ins, 0);
 
-    CallInfo* ci = (CallInfo*) lir->insSkip(sizeof(struct CallInfo))->payload();
+    CallInfo* ci = new (*traceMonitor->dataAlloc) CallInfo();
     ci->_address = uintptr_t(setflag ? sprop->setter : sprop->getter);
     ci->_argtypes = ARGSIZE_I << (0*ARGSIZE_SHIFT) |
                     ARGSIZE_P << (1*ARGSIZE_SHIFT) |
@@ -10234,7 +10233,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     // Do not use JSTN_UNBOX_AFTER for mode JSOP_NEW because
     // record_NativeCallComplete unboxes the result specially.
 
-    CallInfo* ci = (CallInfo*) lir->insSkip(sizeof(struct CallInfo))->payload();
+    CallInfo* ci = new (*traceMonitor->dataAlloc) CallInfo();
     ci->_address = uintptr_t(fun->u.n.native);
     ci->_cse = ci->_fold = 0;
     ci->_abi = ABI_CDECL;
@@ -10717,7 +10716,7 @@ TraceRecorder::enterDeepBailCall()
     lir->insStorei(INS_CONSTPTR(exit), cx_ins, offsetof(JSContext, bailExit));
 
     // Tell nanojit not to discard or defer stack writes before this call.
-    LIns* guardRec = createGuardRecord(exit);
+    GuardRecord* guardRec = createGuardRecord(exit);
     lir->insGuard(LIR_xbarrier, NULL, guardRec);
     return exit;
 }
@@ -11018,7 +11017,7 @@ TraceRecorder::record_JSOP_GETELEM()
                         unsigned stackSlots = NativeStackSlots(cx, 0 /* callDepth */);
                         if (stackSlots * sizeof(JSTraceType) > LirBuffer::MAX_SKIP_PAYLOAD_SZB)
                             ABORT_TRACE("|arguments| requires saving too much stack");
-                        JSTraceType* typemap = (JSTraceType*) lir->insSkip(stackSlots * sizeof(JSTraceType))->payload();
+                        JSTraceType* typemap = new (*traceMonitor->dataAlloc) JSTraceType[stackSlots];
                         DetermineTypesVisitor detVisitor(*this, typemap);
                         VisitStackSlots(detVisitor, cx, 0);
                         typemap_ins = INS_CONSTPTR(typemap + 2 /* callee, this */);
@@ -11501,8 +11500,9 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     unsigned stackSlots = NativeStackSlots(cx, 0 /* callDepth */);
     if (sizeof(FrameInfo) + stackSlots * sizeof(JSTraceType) > LirBuffer::MAX_SKIP_PAYLOAD_SZB)
         ABORT_TRACE("interpreted function call requires saving too much stack");
-    LIns* data = lir->insSkip(sizeof(FrameInfo) + stackSlots * sizeof(JSTraceType));
-    FrameInfo* fi = (FrameInfo*)data->payload();
+    FrameInfo* fi = (FrameInfo*)
+        traceMonitor->dataAlloc->alloc(sizeof(FrameInfo) +
+                                       stackSlots * sizeof(JSTraceType));
     JSTraceType* typemap = reinterpret_cast<JSTraceType *>(fi + 1);
 
     DetermineTypesVisitor detVisitor(*this, typemap);

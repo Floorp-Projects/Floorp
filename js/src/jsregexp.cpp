@@ -2536,16 +2536,16 @@ class RegExpNativeCompiler {
          */
         RECharSet *charSet = &re->classList[node->u.ucclass.index];
         size_t bitmapLen = (charSet->length >> 3) + 1;
-        /* insSkip() can't hold large data blocks. */
+        /* Arbitrary size limit on bitmap. */
         if (bitmapLen > 1024)
             return NULL;
+        Allocator &alloc = *JS_TRACE_MONITOR(cx).dataAlloc;
         /* The following line allocates charSet.u.bits if successful. */
         if (!charSet->converted && !ProcessCharSet(cx, re, charSet))
             return NULL;
-        LIns* skip = lirBufWriter->insSkip(bitmapLen);
+        void* bitmapData = alloc.alloc(bitmapLen);
         if (outOfMemory())
             return NULL;
-        void* bitmapData = skip->payload();
         memcpy(bitmapData, charSet->u.bits, bitmapLen);
 
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_plt, pos, cpend), 0);
@@ -3081,15 +3081,17 @@ class RegExpNativeCompiler {
             lir->ins1(LIR_live, lirbuf->param1);
         }
 
-        LIns* skip = lirBufWriter->insSkip(sizeof(GuardRecord) +
-                                           sizeof(SideExit) +
-                                           (re_length-1) * sizeof(jschar));
-        GuardRecord* guard = (GuardRecord *) skip->payload();
+        Allocator &alloc = *JS_TRACE_MONITOR(cx).dataAlloc;
+
+        GuardRecord* guard = (GuardRecord *)
+            alloc.alloc(sizeof(GuardRecord) +
+                        sizeof(SideExit) +
+                        (re_length-1) * sizeof(jschar));
         memset(guard, 0, sizeof(*guard));
         SideExit* exit = (SideExit*)(guard+1);
         guard->exit = exit;
         guard->exit->target = fragment;
-        fragment->lastIns = lir->insGuard(LIR_x, NULL, skip);
+        fragment->lastIns = lir->insGuard(LIR_x, NULL, guard);
         // guard->profCount is memset'd to zero
         verbose_only(
             guard->profGuardID = fragment->guardNumberer++;

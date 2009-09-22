@@ -246,10 +246,10 @@ namespace nanojit
         return ins;
     }
 
-    LInsp LirBufWriter::insGuard(LOpcode op, LInsp c, LInsp data)
+    LInsp LirBufWriter::insGuard(LOpcode op, LInsp c, GuardRecord *gr)
     {
         debug_only( if (LIR_x == op || LIR_xbarrier == op) NanoAssert(!c); )
-        return ins2(op, c, data);
+            return ins2(op, c, (LIns*)gr);
     }
 
     LInsp LirBufWriter::insBranch(LOpcode op, LInsp condition, LInsp toLabel)
@@ -778,7 +778,7 @@ namespace nanojit
         return out->ins3(v, oprnd1, oprnd2, oprnd3);
     }
 
-    LIns* ExprFilter::insGuard(LOpcode v, LInsp c, LInsp x)
+    LIns* ExprFilter::insGuard(LOpcode v, LInsp c, GuardRecord *gr)
     {
         if (v == LIR_xt || v == LIR_xf) {
             if (c->isconst()) {
@@ -794,7 +794,7 @@ namespace nanojit
                     // so assert in debug builds.
                     NanoAssertMsg(0, "Constantly false guard detected");
 #endif
-                    return out->insGuard(LIR_x, NULL, x);
+                    return out->insGuard(LIR_x, NULL, gr);
                 }
             }
             else {
@@ -807,7 +807,7 @@ namespace nanojit
                 }
             }
         }
-        return out->insGuard(v, c, x);
+        return out->insGuard(v, c, gr);
     }
 
     LIns* ExprFilter::insBranch(LOpcode v, LIns *c, LIns *t)
@@ -1878,7 +1878,7 @@ namespace nanojit
         return out->insLoad(v,base,disp);
     }
 
-    LInsp CseFilter::insGuard(LOpcode v, LInsp c, LInsp x)
+    LInsp CseFilter::insGuard(LOpcode v, LInsp c, GuardRecord *gr)
     {
         // LIR_xt and LIR_xf guards are CSEable.  Note that we compare the
         // opcode and condition when determining if two guards are equivalent
@@ -1904,9 +1904,9 @@ namespace nanojit
             LInsp found = exprs.find1(v, c, k);
             if (found)
                 return 0;
-            return exprs.add(out->insGuard(v,c,x), k);
+            return exprs.add(out->insGuard(v,c,gr), k);
         }
-        return out->insGuard(v, c, x);
+        return out->insGuard(v, c, gr);
     }
 
     LInsp CseFilter::insCall(const CallInfo *ci, LInsp args[])
