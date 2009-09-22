@@ -53,7 +53,7 @@ DIRS += tests
 endif
 
 # Preprocess some JS files!
-$(srcdir)/content/TileManager.js: $(srcdir)/content/TileManager.js.in
+TileManager.js: $(srcdir)/content/TileManager.js.in
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 	cl -EP -C -nologo -I$(srcdir) $< > $@
 else
@@ -62,4 +62,4 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-export:: $(srcdir)/content/TileManager.js
+export:: TileManager.js
