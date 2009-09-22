@@ -4,8 +4,8 @@ function dummy(id) {
     name: Math.random(),
     headerURL: Math.random(),
     footerURL: Math.random(),
-    textColor: Math.random(),
-    dominantColor: Math.random()
+    textcolor: Math.random(),
+    accentcolor: Math.random()
   };
 }
 
