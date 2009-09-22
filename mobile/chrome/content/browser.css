@@ -55,7 +55,8 @@ notification[type="geo"] {
   -moz-binding: url("chrome://browser/content/bindings.xml#popup_autocomplete_result");
 }
 
-/* don't hide the first child, since we need it to position the 'No results' row */
+/* visibility: hidden rather than display:none the first child, since it needs a
+   height for the 'No results' row to be properly positioned */
 autocompleteresult[value=""]:first-child {
   visibility: hidden;
 }
