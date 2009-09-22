@@ -162,7 +162,7 @@ namespace nanojit
         ArgSize sizes[MAXARGS];
         uint32_t argc = call->get_sizes(sizes);
 
-        NanoAssert(ins->isop(LIR_call) || ins->isop(LIR_fcall));
+        NanoAssert(ins->isop(LIR_pcall) || ins->isop(LIR_fcall));
         verbose_only(if (_logc->lcbits & LC_Assembly)
                      outputf("        %p:", _nIns);
                      )
@@ -997,6 +997,12 @@ namespace nanojit
         return was;
     }
  */
+    verbose_only(
+    void Assembler::asm_inc_m32(uint32_t* pCtr)
+    {
+        // TODO(asm_inc_m32);
+    }
+    )
 
     void Assembler::nativePageReset()
     {
@@ -1009,8 +1015,10 @@ namespace nanojit
 
     void Assembler::nativePageSetup()
     {
-        if (!_nIns) codeAlloc(codeStart, codeEnd, _nIns);
-        if (!_nExitIns) codeAlloc(exitStart, exitEnd, _nExitIns);
+        if (!_nIns)
+            codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
+        if (!_nExitIns)
+            codeAlloc(exitStart, exitEnd, _nExitIns verbose_only(, exitBytes));
     }
 
     void
@@ -1021,9 +1029,9 @@ namespace nanojit
             // We are done with the current page.  Tell Valgrind that new code
             // has been generated.
             if (_inExit)
-                codeAlloc(exitStart, exitEnd, _nIns);
+                codeAlloc(exitStart, exitEnd, _nIns verbose_only(, exitBytes));
             else
-                codeAlloc(codeStart, codeEnd, _nIns);
+                codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
             JMP_long_nocheck((intptr_t)eip);
         }
     }
@@ -1042,7 +1050,7 @@ namespace nanojit
 
     void Assembler::asm_promote(LIns *) {
         // i2q or u2q
-        TODO(asm_promote);
+        // TODO(asm_promote);
     }
 
 #endif /* FEATURE_NANOJIT */
