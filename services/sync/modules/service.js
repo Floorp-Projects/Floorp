@@ -631,6 +631,16 @@ WeaveSvc.prototype = {
       return true;
     }))(),
 
+  requestPasswordReset: function WeaveSvc_requestPasswordReset(username) {
+    let res = new Resource(Utils.getURLPref("pwChangeURL"));
+    res.authenticator = new NoOpAuthenticator();
+    res.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    let ret = res.post('uid=' + username);
+    if (ret.indexOf("Further instructions have been sent") >= 0)
+      return true;
+    return false;
+  },
+
   _autoConnectAttempts: 0,
   _autoConnect: function WeaveSvc__attemptAutoConnect() {
     try {
