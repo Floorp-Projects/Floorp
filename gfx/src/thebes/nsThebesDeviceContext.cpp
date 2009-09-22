@@ -51,6 +51,7 @@
 #include "nsThebesDeviceContext.h"
 #include "nsThebesRenderingContext.h"
 #include "gfxUserFontSet.h"
+#include "gfxPlatform.h"
 
 #include "nsIWidget.h"
 #include "nsIView.h"
@@ -656,11 +657,30 @@ nsThebesDeviceContext::SetDPI()
     }
 
     // PostScript, PDF and Mac (when printing) all use 72 dpi
-    if (mPrintingSurface &&
-        (mPrintingSurface->GetType() == gfxASurface::SurfaceTypePDF ||
-         mPrintingSurface->GetType() == gfxASurface::SurfaceTypePS ||
-         mPrintingSurface->GetType() == gfxASurface::SurfaceTypeQuartz)) {
-        dpi = 72;
+    // Use a printing DC to determine the other dpi values
+    if (mPrintingSurface) {
+        switch (mPrintingSurface->GetType()) {
+            case gfxASurface::SurfaceTypePDF:
+            case gfxASurface::SurfaceTypePS:
+            case gfxASurface::SurfaceTypeQuartz:
+                dpi = 72;
+                break;
+#ifdef XP_WIN
+            case gfxASurface::SurfaceTypeWin32:
+            case gfxASurface::SurfaceTypeWin32Printing:
+                PRInt32 OSVal = GetDeviceCaps(GetPrintHDC(), LOGPIXELSY);
+                dpi = 144;
+                mPrintingScale = float(OSVal) / dpi;
+                break;
+#endif
+#ifdef XP_OS2
+            case gfxASurface::SurfaceTypeOS2:
+                LONG lDPI;
+                if (DevQueryCaps(GetPrintHDC(), CAPS_VERTICAL_FONT_RES, 1, &lDPI))
+                    dpi = lDPI;
+                break;
+#endif
+        }
         dotsArePixels = PR_FALSE;
     } else {
         nsresult rv;
@@ -676,67 +696,7 @@ nsThebesDeviceContext::SetDPI()
             }
         }
 
-#if defined(MOZ_ENABLE_GTK2)
-        GdkScreen *screen = gdk_screen_get_default();
-        gtk_settings_get_for_screen(screen); // Make sure init is run so we have a resolution
-        PRInt32 OSVal = PRInt32(round(gdk_screen_get_resolution(screen)));
-
-        if (prefDPI == 0) // Force the use of the OS dpi
-            dpi = OSVal;
-        else  // Otherwise, the minimum dpi is 96dpi
-            dpi = PR_MAX(OSVal, 96);
-
-#elif defined(XP_WIN)
-        // XXX we should really look at the widget if !dc but it is currently always null
-        HDC dc = GetPrintHDC();
-        if (dc) {
-            PRInt32 OSVal = GetDeviceCaps(dc, LOGPIXELSY);
-
-            dpi = 144;
-            mPrintingScale = float(OSVal)/dpi;
-            dotsArePixels = PR_FALSE;
-        } else {
-            dc = GetDC((HWND)nsnull);
-
-            PRInt32 OSVal = GetDeviceCaps(dc, LOGPIXELSY);
-
-            ReleaseDC((HWND)nsnull, dc);
-
-            if (OSVal != 0)
-                dpi = OSVal;
-        }
-
-#elif defined(XP_OS2)
-        // get a printer DC if available, otherwise create a new (memory) DC
-        HDC dc = GetPrintHDC();
-        PRBool doCloseDC = PR_FALSE;
-        if (dc <= 0) { // test for NULLHANDLE/DEV_ERROR or HDC_ERROR
-            // create DC compatible with the screen
-            dc = DevOpenDC((HAB)1, OD_MEMORY,"*",0L, NULL, NULLHANDLE);
-            doCloseDC = PR_TRUE;
-        }
-        if (dc > 0) {
-            // we do have a DC and we can query the DPI setting from it
-            LONG lDPI;
-            if (DevQueryCaps(dc, CAPS_VERTICAL_FONT_RES, 1, &lDPI))
-                dpi = lDPI;
-            if (doCloseDC)
-                DevCloseDC(dc);
-        }
-        if (dpi < 0) // something didn't work before, fall back to hardcoded DPI value
-            dpi = 96;
-#elif defined(XP_MACOSX)
-
-        // we probably want to actually get a real DPI here?
-        dpi = 96;
-
-#elif defined(MOZ_WIDGET_QT)
-        // TODO: get real DPI here with Qt methods
-        dpi = 96;
-#else
-#error undefined platform dpi
-#endif
-
+        dpi = gfxPlatform::GetDPI();        
         if (prefDPI > 0 && !mPrintingSurface)
             dpi = prefDPI;
     }

@@ -303,9 +303,26 @@ public:
      */
     static qcms_transform* GetCMSRGBATransform();
 
+    /**
+     * Return display DPI
+     */
+    static PRInt32 GetDPI() {
+        if (sDPI < 0) {
+            gfxPlatform::GetPlatform()->InitDisplayCaps();
+        }
+        NS_ASSERTION(sDPI > 0, "Something is wrong");
+        return sDPI;
+    }
+
 protected:
     gfxPlatform() { }
     virtual ~gfxPlatform();
+
+    /**
+     * Initialize any needed display metrics (such as DPI)
+     */
+    virtual void InitDisplayCaps();
+    static PRInt32 sDPI;
 
 private:
     virtual qcms_profile* GetPlatformCMSOutputProfile();
