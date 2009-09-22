@@ -140,6 +140,7 @@
 
           BrowserUI.pushDialog(this);
 
+          this._selectedItem = null;
           this._input = aInput;
           this._input.select();
 
