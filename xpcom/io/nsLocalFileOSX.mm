@@ -864,25 +864,86 @@ NS_IMETHODIMP nsLocalFile::GetNativeTarget(nsACString& aNativeTarget)
 {
   CHECK_INIT();
 
-  PRBool isSymLink = PR_FALSE;
-  nsresult rv = IsSymlink(&isSymLink);
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (!isSymLink)
+  aNativeTarget.Truncate();
+  
+  struct STAT symStat;
+  if (LSTAT(mPath, &symStat) == -1)
+    return NSRESULT_FOR_ERRNO();
+  
+  if (!S_ISLNK(symStat.st_mode))
     return NS_ERROR_FILE_INVALID_PATH;
-
-  char resolvedPathBuf[PATH_MAX];
-  if (!realpath(mPath, resolvedPathBuf))
-    return NS_ERROR_FILE_INVALID_PATH;
-
-  unsigned int resolvedPathLength = strlen(resolvedPathBuf);
-  aNativeTarget.SetLength(resolvedPathLength);
-  if (aNativeTarget.Length() != (unsigned int)resolvedPathLength)
+  
+  PRInt32 size = (PRInt32)symStat.st_size;
+  char *target = (char *)nsMemory::Alloc(size + 1);
+  if (!target)
     return NS_ERROR_OUT_OF_MEMORY;
-  strncpy(aNativeTarget.BeginWriting(), resolvedPathBuf, resolvedPathLength);
-
-  return NS_OK;
+  
+  if (readlink(mPath, target, (size_t)size) < 0) {
+    nsMemory::Free(target);
+    return NSRESULT_FOR_ERRNO();
+  }
+  target[size] = '\0';
+  
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIFile> self(this);
+  PRInt32 maxLinks = 40;
+  while (PR_TRUE) {
+    if (maxLinks-- == 0) {
+      rv = NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
+      break;
+    }
+    
+    if (target[0] != '/') {
+      nsCOMPtr<nsIFile> parent;
+      if (NS_FAILED(rv = self->GetParent(getter_AddRefs(parent))))
+        break;
+      nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(parent, &rv));
+      if (NS_FAILED(rv))
+        break;
+      if (NS_FAILED(rv = localFile->AppendRelativeNativePath(nsDependentCString(target))))
+        break;
+      if (NS_FAILED(rv = localFile->GetNativePath(aNativeTarget)))
+        break;
+      self = parent;
+    } else {
+      aNativeTarget = target;
+    }
+    
+    const nsPromiseFlatCString &flatRetval = PromiseFlatCString(aNativeTarget);
+    
+    // Any failure in testing the current target we'll just interpret
+    // as having reached our destiny.
+    if (LSTAT(flatRetval.get(), &symStat) == -1)
+      break;
+    
+    // And of course we're done if it isn't a symlink.
+    if (!S_ISLNK(symStat.st_mode))
+      break;
+    
+    PRInt32 newSize = (PRInt32)symStat.st_size;
+    if (newSize > size) {
+      char *newTarget = (char *)nsMemory::Realloc(target, newSize + 1);
+      if (!newTarget) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        break;
+      }
+      target = newTarget;
+      size = newSize;
+    }
+    
+    PRInt32 linkLen = readlink(flatRetval.get(), target, size);
+    if (linkLen == -1) {
+      rv = NSRESULT_FOR_ERRNO();
+      break;
+    }
+    target[linkLen] = '\0';
+  }
+  
+  nsMemory::Free(target);
+  
+  if (NS_FAILED(rv))
+    aNativeTarget.Truncate();
+  return rv;  
 }
 
 NS_IMETHODIMP nsLocalFile::GetPath(nsAString& aPath)
