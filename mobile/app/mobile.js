@@ -310,7 +310,6 @@ pref("privacy.item.sessions", true);
 pref("privacy.item.geolocation", true);
 pref("privacy.item.siteSettings", true);
 
-
 pref("plugins.enabled", true);
 
 // URL to the Learn More link XXX this is the firefox one.  Bug XXX fixes this.
@@ -354,3 +353,6 @@ pref("app.support.baseURL", "http://support.mozilla.com/1/%APP%/%VERSION%/%OS%/%
 
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
+
+// Inherit OS locale
+pref("intl.locale.matchOS", true);
