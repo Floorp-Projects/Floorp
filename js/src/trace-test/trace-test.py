@@ -74,7 +74,7 @@ class Test:
                     else:
                         print('warning: unrecognized |trace-test| attribute %s'%part)
 
-        return cls(path, slow, allow_oom, tmflags, valgrind)
+        return cls(path, slow, allow_oom, tmflags, valgrind or options.valgrind_all)
 
 def find_tests(dir, substring = None):
     ans = []
@@ -115,7 +115,7 @@ def run_test(test, lib_dir):
                             '--error-exitcode=1',
                             '--leak-check=full']
         if os.uname()[0] == 'Darwin':
-            valgrind_prefix += ['--dsymutil=yes']
+            valgrind_prefix += ['--auto-run-dsymutil=yes']
         cmd = valgrind_prefix + cmd
 
     if OPTIONS.show_cmd:
@@ -250,6 +250,8 @@ if __name__ == '__main__':
                   help='Run test in gdb')
     op.add_option('--valgrind', dest='valgrind', action='store_true',
                   help='Enable the |valgrind| flag, if valgrind is in $PATH.')
+    op.add_option('--valgrind-all', dest='valgrind_all', action='store_true',
+                  help='Run all tests with valgrind, if valgrind is in $PATH.')
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
