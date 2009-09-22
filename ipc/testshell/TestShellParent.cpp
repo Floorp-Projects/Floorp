@@ -43,14 +43,14 @@ using mozilla::ipc::TestShellCommandParent;
 using mozilla::ipc::PTestShellCommandParent;
 
 PTestShellCommandParent*
-TestShellParent::PTestShellCommandConstructor(const nsString& aCommand)
+TestShellParent::AllocPTestShellCommand(const nsString& aCommand)
 {
   return new TestShellCommandParent();
 }
 
 bool
-TestShellParent::PTestShellCommandDestructor(PTestShellCommandParent* aActor,
-                                             const nsString& aResponse)
+TestShellParent::DeallocPTestShellCommand(PTestShellCommandParent* aActor,
+                                          const nsString& aResponse)
 {
   delete aActor;
   return true;

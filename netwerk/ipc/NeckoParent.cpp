@@ -54,13 +54,13 @@ NeckoParent::~NeckoParent()
 }
 
 PHttpChannelParent* 
-NeckoParent::PHttpChannelConstructor()
+NeckoParent::AllocPHttpChannel()
 {
   return new HttpChannelParent();
 }
 
 bool 
-NeckoParent::PHttpChannelDestructor(PHttpChannelParent* channel)
+NeckoParent::DeallocPHttpChannel(PHttpChannelParent* channel)
 {
   delete channel;
   return true;

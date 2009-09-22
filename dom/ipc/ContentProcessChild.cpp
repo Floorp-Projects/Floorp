@@ -76,7 +76,7 @@ ContentProcessChild::Init(MessageLoop* aIOLoop, IPC::Channel* aChannel)
 }
 
 PIFrameEmbeddingChild*
-ContentProcessChild::PIFrameEmbeddingConstructor(const MagicWindowHandle& hwnd)
+ContentProcessChild::AllocPIFrameEmbedding(const MagicWindowHandle& hwnd)
 {
     PIFrameEmbeddingChild* iframe = new TabChild(hwnd);
     if (iframe && mIFrames.AppendElement(iframe)) {
@@ -87,14 +87,14 @@ ContentProcessChild::PIFrameEmbeddingConstructor(const MagicWindowHandle& hwnd)
 }
 
 bool
-ContentProcessChild::PIFrameEmbeddingDestructor(PIFrameEmbeddingChild* iframe)
+ContentProcessChild::DeallocPIFrameEmbedding(PIFrameEmbeddingChild* iframe)
 {
     mIFrames.RemoveElement(iframe);
     return true;
 }
 
 PTestShellChild*
-ContentProcessChild::PTestShellConstructor()
+ContentProcessChild::AllocPTestShell()
 {
     PTestShellChild* testshell = new TestShellChild();
     if (testshell && mTestShells.AppendElement(testshell)) {
@@ -105,20 +105,20 @@ ContentProcessChild::PTestShellConstructor()
 }
 
 bool
-ContentProcessChild::PTestShellDestructor(PTestShellChild* shell)
+ContentProcessChild::DeallocPTestShell(PTestShellChild* shell)
 {
     mTestShells.RemoveElement(shell);
     return true;
 }
 
 PNeckoChild* 
-ContentProcessChild::PNeckoConstructor()
+ContentProcessChild::AllocPNecko()
 {
     return new NeckoChild();
 }
 
 bool 
-ContentProcessChild::PNeckoDestructor(PNeckoChild* necko)
+ContentProcessChild::DeallocPNecko(PNeckoChild* necko)
 {
     delete necko;
     return true;

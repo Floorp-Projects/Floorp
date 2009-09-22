@@ -68,11 +68,11 @@ class TestShellParent : public PTestShellParent
 {
 public:
   PTestShellCommandParent*
-  PTestShellCommandConstructor(const nsString& aCommand);
+  AllocPTestShellCommand(const nsString& aCommand);
 
   bool
-  PTestShellCommandDestructor(PTestShellCommandParent* aActor,
-                              const nsString& aResponse);
+  DeallocPTestShellCommand(PTestShellCommandParent* aActor,
+                           const nsString& aResponse);
 
   bool
   RecvPTestShellCommandDestructor(PTestShellCommandParent* aActor,
