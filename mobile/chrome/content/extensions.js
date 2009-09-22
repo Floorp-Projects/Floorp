@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
-
 const PREFIX_ITEM_URI = "urn:mozilla:item:";
 const PREFIX_NS_EM = "http://www.mozilla.org/2004/em-rdf#";
 
@@ -171,8 +169,8 @@ var ExtensionsView = {
 
     if (this._msg) {
       let strings = document.getElementById("bundle_browser");
-      this.showMessage(strings.getString("addonsRestart"), "restart-app",
-                       strings.getString("addonsRestartButton.label"), false, "addons-restart-app");
+      this.showMessage(strings.getString("notificationRestart.label"), "restart-app",
+                       strings.getString("notificationRestart.button"), false, "addons-restart-app");
     }
   },
 

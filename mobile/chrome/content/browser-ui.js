@@ -396,6 +396,7 @@ var BrowserUI = {
 
     ExtensionsView.init();
     DownloadsView.init();
+    PreferencesView.init();
   },
 
   uninit : function() {
@@ -603,7 +604,7 @@ var BrowserUI = {
     let panelUI = document.getElementById("panel-container");
     panelUI.hidden = true;
   },
-
+  
   handleEvent: function (aEvent) {
     switch (aEvent.type) {
       // Browser events
