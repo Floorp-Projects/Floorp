@@ -316,4 +316,11 @@ if __name__ == '__main__':
         call(cmd)
         sys.exit()
 
-    run_tests(test_list, test_dir, lib_dir)
+    try:
+        run_tests(test_list, test_dir, lib_dir)
+    except OSError:
+        if not os.path.exists(JS):
+            print >> sys.stderr, "JS shell argument: file does not exist: '%s'"%JS
+            sys.exit(1)
+        else:
+            raise
