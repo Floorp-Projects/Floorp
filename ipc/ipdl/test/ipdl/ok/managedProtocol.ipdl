@@ -1,0 +1,6 @@
+include protocol "managerProtocol.ipdl";
+
+protocol managedProtocol {
+    manager managerProtocol;
+    // empty
+};

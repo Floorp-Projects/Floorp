@@ -1,0 +1,7 @@
+protocol tooWeakSyncAsync {
+
+    // it's an error to declare an async protocol with a sync message
+
+parent:  sync Msg();
+
+};

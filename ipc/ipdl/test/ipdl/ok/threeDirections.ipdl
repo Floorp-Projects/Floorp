@@ -1,0 +1,13 @@
+protocol threeDirections {
+
+    // sanity check that the three direction specifiers are being accepted
+child:
+    ChildMsg();
+
+parent:
+    ParentMsg();
+
+both:
+    BothMsg();
+
+};

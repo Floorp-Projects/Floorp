@@ -1,0 +1,9 @@
+protocol trans_WrongDirection {
+
+child:
+    Msg();
+
+state S1:
+    recv Msg goto S1;
+
+};
