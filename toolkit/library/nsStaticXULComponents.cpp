@@ -297,6 +297,7 @@
     UNIXPROXY_MODULE                         \
     OSXPROXY_MODULE                          \
     WINDOWSPROXY_MODULE                      \
+    MODULE(jsctypes)                         \
     /* end of list */
 
 #define MODULE(_name) \

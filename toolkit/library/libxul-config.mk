@@ -128,6 +128,7 @@ COMPONENT_LIBS += \
 	toolkitcomps \
 	pipboot \
 	pipnss \
+	jsctypes \
 	$(NULL)
 
 ifdef MOZ_PLUGINS
