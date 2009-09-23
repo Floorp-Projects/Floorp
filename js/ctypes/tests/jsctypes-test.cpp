@@ -39,7 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "jsctypes-test.h"
-#include "nsCRT.h"
+#include "nsCRTGlue.h"
+#include <string.h>
 #include <math.h>
 
 void
@@ -130,7 +131,7 @@ test_ansi_len(const char* string)
 int
 test_wide_len(const PRUnichar* string)
 {
-  return int(nsCRT::strlen(string));
+  return int(NS_strlen(string));
 }
 
 const char *
