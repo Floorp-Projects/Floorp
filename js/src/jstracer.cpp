@@ -2140,7 +2140,8 @@ JS_REQUIRES_STACK
 TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _fragment,
         TreeInfo* ti, unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
         VMSideExit* innermostNestedGuard, jsbytecode* outer, uint32 outerArgc)
-    : whichTreesToTrash(&tempAlloc),
+    : tempAlloc(*JS_TRACE_MONITOR(cx).tempAlloc),
+      whichTreesToTrash(&tempAlloc),
       cfgMerges(&tempAlloc)
 {
     JS_ASSERT(!_fragment->vmprivate && ti && cx->fp->regs->pc == (jsbytecode*)_fragment->ip);
@@ -2292,6 +2293,10 @@ TraceRecorder::~TraceRecorder()
         for (unsigned int i = 0; i < whichTreesToTrash.length(); i++)
             TrashTree(cx, whichTreesToTrash[i]);
     }
+
+    /* Purge the tempAlloc used during recording. */
+    tempAlloc.reset();
+
 #ifdef DEBUG
     debug_only_stmt( delete verbose_filter; )
     delete sanity_filter_1;
@@ -7199,6 +7204,8 @@ js_InitJIT(JSTraceMonitor *tm)
 
     JS_ASSERT(!tm->dataAlloc && !tm->codeAlloc);
     tm->dataAlloc = new VMAllocator();
+    tm->tempAlloc = new VMAllocator();
+    tm->reTempAlloc = new VMAllocator();
     tm->codeAlloc = new CodeAlloc();
     tm->flush();
     verbose_only( tm->branches = NULL; )
@@ -7315,6 +7322,16 @@ js_FinishJIT(JSTraceMonitor *tm)
     if (tm->dataAlloc) {
         delete tm->dataAlloc;
         tm->dataAlloc = NULL;
+    }
+
+    if (tm->tempAlloc) {
+        delete tm->tempAlloc;
+        tm->tempAlloc = NULL;
+    }
+
+    if (tm->reTempAlloc) {
+        delete tm->reTempAlloc;
+        tm->reTempAlloc = NULL;
     }
 }
 
