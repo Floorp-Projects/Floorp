@@ -37,6 +37,7 @@
 
 #include "BrowserStreamChild.h"
 #include "PluginInstanceChild.h"
+#include "StreamNotifyChild.h"
 
 namespace mozilla {
 namespace plugins {
@@ -45,6 +46,7 @@ BrowserStreamChild::BrowserStreamChild(PluginInstanceChild* instance,
                                        const nsCString& url,
                                        const uint32_t& length,
                                        const uint32_t& lastmodified,
+                                       const PStreamNotifyChild* notifyData,
                                        const nsCString& headers,
                                        const nsCString& mimeType,
                                        const bool& seekable,
@@ -61,6 +63,9 @@ BrowserStreamChild::BrowserStreamChild(PluginInstanceChild* instance,
     mStream.url = mURL.get();
   mStream.end = length;
   mStream.lastmodified = lastmodified;
+  if (notifyData)
+    mStream.notifyData =
+      static_cast<const StreamNotifyChild*>(notifyData)->mClosure;
   if (!mHeaders.IsEmpty())
     mStream.headers = mHeaders.get();
 
@@ -99,9 +104,6 @@ BrowserStreamChild::AnswerNPP_Write(const int32_t& offset,
   *consumed = mInstance->mPluginIface->write(&mInstance->mData, &mStream,
                                              offset, data.Length(),
                                              const_cast<char*>(data.get()));
-  if (*consumed < 0)
-    mClosed = true;
-
   return true;
 }
 
