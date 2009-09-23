@@ -4633,9 +4633,9 @@ PresShell::UnsuppressAndInvalidate()
     // let's assume that outline on a root frame is not supported
     nsRect rect(nsPoint(0, 0), rootFrame->GetSize());
     rootFrame->Invalidate(rect);
-  }
 
-  mPresContext->RootPresContext()->UpdatePluginGeometry(rootFrame);
+    mPresContext->RootPresContext()->UpdatePluginGeometry(rootFrame);
+  }
 
   // now that painting is unsuppressed, focus may be set on the document
   nsPIDOMWindow *win = mDocument->GetWindow();
