@@ -33,8 +33,6 @@ const Ci = Components.interfaces;
 try {
   var notifier = Cc["@mozilla.org/alerts-service;1"].
                  getService(Ci.nsIAlertsService);
-  notifier.showAlertNotification(null, "Notification test", "Surprise! I'm here to test a notification without observer!",
-                                 false, "foobarcookie", null);
   notifier.showAlertNotification(null, "Notification test", "Surprise! I'm here to test notifications!",
                                  false, "foobarcookie", observer);
 
