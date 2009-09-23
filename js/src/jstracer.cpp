@@ -697,7 +697,7 @@ PrintOnTrace(char* format, uint32 argc, double *argv)
         switch (ch) {
         case 'a':
             GET_ARG();
-            fprintf(out, "[%u:%u 0x%x:0x%x %lf]", u.i.lo, u.i.hi, u.i.lo, u.i.hi, u.d);
+            fprintf(out, "[%u:%u 0x%x:0x%x %f]", u.i.lo, u.i.hi, u.i.lo, u.i.hi, u.d);
             break;
         case 'd':
             GET_ARG();
@@ -713,7 +713,7 @@ PrintOnTrace(char* format, uint32 argc, double *argv)
             break;
         case 'f':
             GET_ARG();
-            fprintf(out, "%lf", u.d);
+            fprintf(out, "%f", u.d);
             break;
         case 'o':
             GET_ARG();
