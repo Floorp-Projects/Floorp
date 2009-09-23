@@ -37,12 +37,29 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "PluginInstanceParent.h"
+
 #include "BrowserStreamParent.h"
+#include "PluginModuleParent.h"
 #include "PluginStreamParent.h"
 #include "StreamNotifyParent.h"
 
-namespace mozilla {
-namespace plugins {
+#include "npfunctions.h"
+#include "nsAutoPtr.h"
+
+using namespace mozilla::plugins;
+
+PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
+                                           NPP npp,
+                                           const NPNetscapeFuncs* npniface)
+  : mParent(parent),
+    mNPP(npp),
+    mNPNIface(npniface)
+{
+}
+
+PluginInstanceParent::~PluginInstanceParent()
+{
+}
 
 PBrowserStreamParent*
 PluginInstanceParent::AllocPBrowserStream(const nsCString& url,
@@ -223,15 +240,17 @@ PluginInstanceParent::NPP_SetWindow(NPWindow* aWindow)
 }
 
 NPError
-PluginInstanceParent::NPP_GetValue(NPPVariable variable, void *ret_value)
+PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
+                                   void* _retval)
 {
     _MOZ_LOG(__FUNCTION__);
 
-    // FIXME/cjones: HACK ALERT! should forward to child
-    switch(variable) {
+    switch (aVariable) {
+
 #ifdef OS_LINUX
+        // FIXME/cjones: HACK ALERT! should forward to child
         case NPPVpluginNeedsXEmbed:
-            (*(PRBool*)ret_value) = PR_TRUE;
+            (*(PRBool*)_retval) = PR_TRUE;
             return NPERR_NO_ERROR;
 #endif
 
@@ -241,8 +260,26 @@ PluginInstanceParent::NPP_GetValue(NPPVariable variable, void *ret_value)
             if (!CallNPP_GetValue_NPPVpluginScriptableNPObject(&actor, &rv)) {
                 return NPERR_GENERIC_ERROR;
             }
-            return rv;
+
+            if (NPERR_NO_ERROR != rv) {
+                return rv;
+            }
+
+            const NPNetscapeFuncs* npn = mParent->GetNetscapeFuncs();
+            if (!npn) {
+                NS_WARNING("No netscape functions?!");
+                return NPERR_GENERIC_ERROR;
+            }
+
+            NPObject* object =
+                reinterpret_cast<PluginScriptableObjectParent*>(actor)->
+                    GetObject();
+            NS_ASSERTION(object, "This shouldn't ever be null!");
+
+            (*(NPObject**)_retval) = npn->retainobject(object);
+            return NPERR_NO_ERROR;
         }
+
         // TODO: more values
         default:
             return NPERR_GENERIC_ERROR;
@@ -317,13 +354,52 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
 PPluginScriptableObjectParent*
 PluginInstanceParent::AllocPPluginScriptableObject()
 {
-    return new PluginScriptableObjectParent();
+    nsAutoPtr<PluginScriptableObjectParent>* object =
+        mScriptableObjects.AppendElement();
+    NS_ENSURE_TRUE(object, nsnull);
+
+    *object = new PluginScriptableObjectParent();
+    NS_ENSURE_TRUE(*object, nsnull);
+
+    return object->get();
 }
 
 bool
-PluginInstanceParent::DeallocPPluginScriptableObject(PPluginScriptableObjectParent* aObject)
+PluginInstanceParent::DeallocPPluginScriptableObject(
+                                         PPluginScriptableObjectParent* aObject)
 {
-    delete aObject;
+    PluginScriptableObjectParent* object =
+        reinterpret_cast<PluginScriptableObjectParent*>(aObject);
+
+    PRUint32 count = mScriptableObjects.Length();
+    for (PRUint32 index = 0; index < count; index++) {
+        if (mScriptableObjects[index] == object) {
+            mScriptableObjects.RemoveElementAt(index);
+            return true;
+        }
+    }
+    NS_NOTREACHED("An actor we don't know about?!");
+    return false;
+}
+
+bool
+PluginInstanceParent::AnswerPPluginScriptableObjectConstructor(
+                                          PPluginScriptableObjectParent* aActor)
+{
+    const NPNetscapeFuncs* npn = mParent->GetNetscapeFuncs();
+    if (!npn) {
+        NS_WARNING("No netscape function pointers?!");
+        return false;
+    }
+
+    ParentNPObject* object = reinterpret_cast<ParentNPObject*>(
+        npn->createobject(mNPP, PluginScriptableObjectParent::GetClass()));
+    if (!object) {
+        return false;
+    }
+
+    reinterpret_cast<PluginScriptableObjectParent*>(aActor)->Initialize(
+        const_cast<PluginInstanceParent*>(this), object);
     return true;
 }
 
@@ -337,6 +413,3 @@ PluginInstanceParent::NPP_URLNotify(const char* url, NPReason reason,
         static_cast<PStreamNotifyParent*>(notifyData);
     CallPStreamNotifyDestructor(streamNotify, reason);
 }
-
-} // namespace plugins
-} // namespace mozilla

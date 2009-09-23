@@ -131,6 +131,15 @@ public:
     RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNames,
                                  nsTArray<NPRemoteIdentifier>* aIds);
 
+    const NPNetscapeFuncs* GetNetscapeFuncs() {
+        return mNPNIface;
+    }
+
+    static PluginInstanceParent* InstCast(NPP instance);
+    static BrowserStreamParent* StreamCast(NPP instance, NPStream* s);
+
+    bool EnsureValidNPIdentifier(NPIdentifier aIdentifier);
+
 private:
     void SetPluginFuncs(NPPluginFuncs* aFuncs);
 
@@ -183,9 +192,6 @@ private:
 
     static NPError NPP_Destroy(NPP instance, NPSavedData** save);
 
-    static PluginInstanceParent* InstCast(NPP instance);
-    static BrowserStreamParent* StreamCast(NPP instance, NPStream* s);
-
     static NPError NPP_SetWindow(NPP instance, NPWindow* window);
     static NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
                                  NPBool seekable, uint16_t* stype);
@@ -204,7 +210,6 @@ private:
                                 NPPVariable variable, void *ret_value);
     static NPError NPP_SetValue(NPP instance, NPNVariable variable,
                                 void *value);
-
 
     NPIdentifier GetValidNPIdentifier(NPRemoteIdentifier aRemoteIdentifier);
 

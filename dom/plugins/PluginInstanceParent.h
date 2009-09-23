@@ -43,6 +43,8 @@
 #include "mozilla/plugins/PluginScriptableObjectParent.h"
 
 #include "npfunctions.h"
+#include "nsAutoPtr.h"
+#include "nsTArray.h"
 
 #undef _MOZ_LOG
 #define _MOZ_LOG(s) printf("[PluginInstanceParent] %s\n", s)
@@ -60,22 +62,20 @@ class PluginInstanceParent : public PPluginInstanceParent
     friend class PluginStreamParent;
 
 public:
-    PluginInstanceParent(NPP npp, const NPNetscapeFuncs* npniface)
-        : mNPP(npp)
-        , mNPNIface(npniface)
-    {
-    }
+    PluginInstanceParent(PluginModuleParent* parent,
+                         NPP npp,
+                         const NPNetscapeFuncs* npniface);
 
-    virtual ~PluginInstanceParent()
-    {
-    }
-  
+    virtual ~PluginInstanceParent();
+
     virtual PPluginScriptableObjectParent*
     AllocPPluginScriptableObject();
 
     virtual bool
-    DeallocPPluginScriptableObject(PPluginScriptableObjectParent* aObject);
+    AnswerPPluginScriptableObjectConstructor(PPluginScriptableObjectParent* aActor);
 
+    virtual bool
+    DeallocPPluginScriptableObject(PPluginScriptableObjectParent* aObject);
     virtual PBrowserStreamParent*
     AllocPBrowserStream(const nsCString& url,
                         const uint32_t& length,
@@ -164,9 +164,17 @@ public:
 
     void NPP_URLNotify(const char* url, NPReason reason, void* notifyData);
 
+    PluginModuleParent* GetModule()
+    {
+        return mParent;
+    }
+
 private:
+    PluginModuleParent* mParent;
     NPP mNPP;
     const NPNetscapeFuncs* mNPNIface;
+
+    nsTArray<nsAutoPtr<PluginScriptableObjectParent> > mScriptableObjects;
 };
 
 
