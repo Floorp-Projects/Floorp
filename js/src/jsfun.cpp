@@ -1555,7 +1555,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         nupvars = flagsword >> 16;
         fun->flags = uint16(flagsword);
         fun->u.i.skipmin = uint16(firstword >> 2);
-        fun->u.i.wrapper = (firstword >> 1) & 1;
+        fun->u.i.wrapper = JSPackedBool((firstword >> 1) & 1);
     }
 
     /* do arguments and local vars */
@@ -2920,7 +2920,7 @@ get_local_names_enumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
                   entry->localKind == JSLOCAL_CONST ||
                   entry->localKind == JSLOCAL_UPVAR);
         JS_ASSERT(entry->index < args->fun->u.i.nvars + args->fun->u.i.nupvars);
-        JS_ASSERT(args->nCopiedVars++ < args->fun->u.i.nvars + args->fun->u.i.nupvars);
+        JS_ASSERT(args->nCopiedVars++ < unsigned(args->fun->u.i.nvars + args->fun->u.i.nupvars));
         i = args->fun->nargs;
         if (entry->localKind == JSLOCAL_UPVAR)
            i += args->fun->u.i.nvars;

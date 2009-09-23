@@ -101,7 +101,7 @@ namespace nanojit {
     class LabelMap;
 #endif
     extern "C++" {
-        template<typename K> class DefaultHash;
+        template<typename K> struct DefaultHash;
         template<typename K, typename V, typename H> class HashMap;
         template<typename T> class Seq;
     }

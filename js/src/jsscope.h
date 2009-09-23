@@ -50,6 +50,11 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4800)
+#endif
+
 JS_BEGIN_EXTERN_C
 
 /*
@@ -836,5 +841,9 @@ extern void
 js_FinishPropertyTree(JSRuntime *rt);
 
 JS_END_EXTERN_C
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif /* jsscope_h___ */

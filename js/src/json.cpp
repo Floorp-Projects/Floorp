@@ -64,6 +64,11 @@
 
 #include "jsatominlines.h"
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4351)
+#endif
+
 struct JSONParser
 {
     JSONParser(JSContext *cx)
@@ -82,6 +87,10 @@ struct JSONParser
     js::Vector<jschar, 8> objectKey;
     js::Vector<jschar, 8> buffer;
 };
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 JSClass js_JSONClass = {
     js_JSON_str,
