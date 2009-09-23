@@ -237,6 +237,9 @@ public:
     NS_IMETHOD SetWindowShadowStyle(PRInt32 aStyle);
     virtual void SetShowsToolbarButton(PRBool aShow);
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive);
+    virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
+                                                PRUint32 aNativeMessage,
+                                                PRUint32 aModifierFlags);
 
     void DispatchSizeModeEvent();
 

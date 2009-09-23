@@ -209,6 +209,12 @@ enum {
 
 - (void)sendFocusEvent:(PRUint32)eventType;
 
+- (void)handleMouseMoved:(NSEvent*)aEvent;
+
+- (void)sendMouseEnterOrExitEvent:(NSEvent*)aEvent
+                            enter:(BOOL)aEnter
+                             type:(nsMouseEvent::exitType)aType;
+
 - (void) processPluginKeyEvent:(EventRef)aKeyEvent;
 
 // Simple gestures support
@@ -269,6 +275,22 @@ private:
   static NSString* sComposingString;
 
   static void KillComposing();
+};
+
+class ChildViewMouseTracker {
+
+public:
+
+  static void MouseMoved(NSEvent* aEvent);
+  static void OnDestroyView(ChildView* aView);
+  static BOOL WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent);
+
+  static ChildView* sLastMouseEventView;
+
+private:
+
+  static NSWindow* WindowForEvent(NSEvent* aEvent);
+  static ChildView* ViewForEvent(NSEvent* aEvent);
 };
 
 //-------------------------------------------------------------------------
@@ -385,6 +407,16 @@ public:
 
   virtual nsTransparencyMode GetTransparencyMode();
   virtual void                SetTransparencyMode(nsTransparencyMode aMode);
+
+  virtual nsresult SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                            PRInt32 aNativeKeyCode,
+                                            PRUint32 aModifierFlags,
+                                            const nsAString& aCharacters,
+                                            const nsAString& aUnmodifiedCharacters);
+
+  virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
+                                              PRUint32 aNativeMessage,
+                                              PRUint32 aModifierFlags);
   
   // Mac specific methods
   
@@ -423,12 +455,6 @@ protected:
   virtual NSView*   CreateCocoaView(NSRect inFrame);
   void              TearDownView();
   nsCocoaWindow*    GetXULWindowWidget();
-
-  virtual nsresult SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
-                                            PRInt32 aNativeKeyCode,
-                                            PRUint32 aModifierFlags,
-                                            const nsAString& aCharacters,
-                                            const nsAString& aUnmodifiedCharacters);
 
 protected:
 
