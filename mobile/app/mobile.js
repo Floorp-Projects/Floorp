@@ -321,9 +321,7 @@ pref("geo.wifi.uri", "https://www.google.com/loc/json");
 // enable geo
 pref("geo.enabled", true);
 
-#ifdef WINCE
 pref("layout.css.devPixelsPerPx", "1");
-#endif
 
 // content sink control -- controls responsiveness during page load
 pref("content.max.deflected.tokens", 10);
