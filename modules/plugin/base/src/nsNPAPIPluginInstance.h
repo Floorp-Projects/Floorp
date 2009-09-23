@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -50,7 +50,7 @@
 #include "nsITimer.h"
 
 #include "npfunctions.h"
-#include "prlink.h"
+#include "mozilla/SharedLibrary.h"
 
 class nsNPAPIPluginStreamListener;
 class nsPIDOMWindow;
@@ -100,7 +100,7 @@ public:
                            PRBool aCallNotify,
                            const char * aURL);
 
-  nsNPAPIPluginInstance(NPPluginFuncs* callbacks, PRLibrary* aLibrary);
+  nsNPAPIPluginInstance(NPPluginFuncs* callbacks, mozilla::SharedLibrary* aLibrary);
 
   // Use Release() to destroy this
   virtual ~nsNPAPIPluginInstance();
@@ -157,7 +157,7 @@ protected:
 public:
   // True while creating the plugin, or calling NPP_SetWindow() on it.
   PRPackedBool mInPluginInitCall;
-  PRLibrary* mLibrary;
+  mozilla::SharedLibrary* mLibrary;
   nsInstanceStream *mStreams;
 
 private:

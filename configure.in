@@ -462,11 +462,7 @@ case "$target" in
     WINVER=500
     ;;
 *)
-    if test -n "$GNU_CC"; then  
-        WINVER=501
-    else    
-        WINVER=500
-    fi
+    WINVER=502
     ;;
 esac
 
@@ -4150,7 +4146,7 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(External Packages)
 
-MOZ_ENABLE_LIBXUL=
+MOZ_ENABLE_LIBXUL=1
 
 MOZ_ARG_WITH_STRING(libxul-sdk,
 [  --with-libxul-sdk=PFX   Use the libXUL SDK at <PFX>],
@@ -5194,6 +5190,32 @@ MOZ_ARG_DISABLE_BOOL(jsd,
     MOZ_JSDEBUGGER=,
     MOZ_JSDEBUGGER=1)
 
+
+dnl ========================================================
+dnl = Disable IPC support for tabs and plugins
+dnl ========================================================
+MOZ_IPC=1
+
+case "${target}" in
+powerpc-apple-darwin*)
+    MOZ_IPC=
+    ;;
+esac
+
+MOZ_ARG_DISABLE_BOOL(ipc,
+[  --disable-ipc           Disable IPC supports for tabs and plugins],
+    MOZ_IPC=,
+    MOZ_IPC=1)
+
+if test -n "$MOZ_IPC" -a -z "$MOZ_ENABLE_LIBXUL"; then
+    AC_MSG_ERROR([--enable-ipc requires --enable-libxul])
+fi
+
+if test -n "$MOZ_IPC"; then
+    AC_DEFINE(MOZ_IPC)
+fi
+
+AC_SUBST(MOZ_IPC)
 
 dnl ========================================================
 dnl = Disable plugin support
@@ -7043,6 +7065,10 @@ dnl ========================================================
 dnl C++ rtti
 dnl Should be smarter and check that the compiler does indeed have rtti
 dnl ========================================================
+if test -n "$GNU_CC"; then
+    _MOZ_USE_RTTI=1
+fi
+
 MOZ_ARG_ENABLE_BOOL(cpp-rtti,
 [  --enable-cpp-rtti       Enable C++ RTTI ],
 [ _MOZ_USE_RTTI=1 ],
@@ -7153,11 +7179,6 @@ MOZ_ARG_ENABLE_BOOL(static,
 [  --enable-static         Enable building of internal static libs],
     BUILD_STATIC_LIBS=1,
     BUILD_STATIC_LIBS=)
-
-dnl Disable libxul in debug builds, but not for xulrunner.
-if test -n "$MOZ_DEBUG" -a "$MOZ_BUILD_APP" != "xulrunner"; then
-   MOZ_ENABLE_LIBXUL=
-fi
 
 MOZ_ARG_ENABLE_BOOL(libxul,
 [  --enable-libxul         Enable building of libxul],

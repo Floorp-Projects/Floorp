@@ -1,0 +1,9 @@
+protocol actorparam_state {
+
+child:
+    Msg(actorparam_state:S1 p);
+
+state S1:
+    send Msg goto S1;
+
+};

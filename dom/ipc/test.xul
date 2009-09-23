@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="800" height="800" onload="setTimeout(restart, 0)" orient="vertical">
+  <script>
+    function restart() {
+      var y = document.getElementById('page');
+      var p = y.parentNode;
+      p.removeChild(y);
+      p.appendChild(y);
+    }
+    
+    function loadURL(url) {
+      document.getElementById('page').setAttribute('src', url);
+    }
+  </script>
+
+  <toolbar id="controls">
+    <toolbarbutton label="Back"/>
+    <toolbarbutton label="Forward"/>
+    <textbox onchange="loadURL(this.value)" flex="1" id="URL"/>
+    <toolbarbutton onclick="restart()" label="Recover"/>
+  </toolbar>
+
+  <iframe type="content" src="http://www.google.com/" flex="1" id="page"/>
+</window>

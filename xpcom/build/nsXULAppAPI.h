@@ -45,6 +45,7 @@
 #include "xrecore.h"
 #include "nsXPCOM.h"
 #include "nsISupports.h"
+#include "prlog.h"
 
 /**
  * Application-specific data needed to start the apprunner.
@@ -417,5 +418,74 @@ XRE_API(nsresult,
  */
 XRE_API(void,
         XRE_FreeAppData, (nsXREAppData *aAppData))
+
+enum GeckoProcessType {
+  GeckoProcessType_Default = 0,
+
+  GeckoProcessType_Plugin,
+  GeckoProcessType_Content,
+
+  GeckoProcessType_TestHarness,
+
+  GeckoProcessType_End,
+  GeckoProcessType_Invalid = GeckoProcessType_End
+};
+
+static const char* const kGeckoProcessTypeString[] = {
+  "default",
+  "plugin",
+  "tab",
+  "testharness",
+};
+
+PR_STATIC_ASSERT(sizeof(kGeckoProcessTypeString) /
+                 sizeof(kGeckoProcessTypeString[0]) ==
+                 GeckoProcessType_End);
+
+
+XRE_API(const char*,
+        XRE_ChildProcessTypeToString, (GeckoProcessType aProcessType))
+
+XRE_API(GeckoProcessType,
+        XRE_StringToChildProcessType, (const char* aProcessTypeString))
+
+XRE_API(nsresult,
+        XRE_InitChildProcess, (int aArgc,
+                               char* aArgv[],
+                               GeckoProcessType aProcess))
+
+XRE_API(GeckoProcessType,
+        XRE_GetProcessType, ())
+
+typedef void (*MainFunction)(void* aData);
+
+XRE_API(nsresult,
+        XRE_InitParentProcess, (int aArgc,
+                                char* aArgv[],
+                                MainFunction aMainFunction,
+                                void* aMainFunctionExtraData))
+
+XRE_API(int,
+        XRE_RunIPCTestHarness, (int aArgc,
+                                char* aArgv[]))
+
+XRE_API(nsresult,
+        XRE_RunAppShell, ())
+
+class MessageLoop;
+
+XRE_API(void,
+        XRE_ShutdownChildProcess, (MessageLoop* aUILoop))
+
+XRE_API(MessageLoop*,
+        XRE_GetIOMessageLoop, ())
+
+struct JSContext;
+struct JSString;
+
+XRE_API(bool,
+        XRE_SendTestShellCommand, (JSContext* aCx,
+                                   JSString* aCommand,
+                                   void* aCallback))
 
 #endif // _nsXULAppAPI_h__

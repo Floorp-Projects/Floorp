@@ -1,0 +1,9 @@
+sync protocol trans_WrongName3 {
+
+parent:
+    sync Msg();
+
+state S1:
+    answer Msg goto S1;
+
+};

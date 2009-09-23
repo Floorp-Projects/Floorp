@@ -1,0 +1,17 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+
+include protocol "PPluginInstance.ipdl";
+
+namespace mozilla {
+namespace plugins {
+
+/**
+ * This empty protocol exists only to be constructed and destroyed.
+ */
+rpc protocol PStreamNotify
+{
+  manager PPluginInstance;
+};
+
+} // namespace plugins
+} // namespace mozilla

@@ -41,6 +41,10 @@
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 
+#ifdef MOZ_IPC
+#include "base/message_loop.h"
+#endif
+
 // When processing the next thread event, the appshell may process native
 // events (if not in performance mode), which can result in suppressing the
 // next thread event for at most this many ticks:
@@ -59,7 +63,7 @@ nsBaseAppShell::nsBaseAppShell()
   , mSwitchTime(0)
   , mLastNativeEventTime(0)
   , mEventloopNestingState(eEventloopNone)
-  , mRunWasCalled(PR_FALSE)
+  , mRunning(PR_FALSE)
   , mExiting(PR_FALSE)
   , mBlockNativeEvent(PR_FALSE)
 {
@@ -161,21 +165,32 @@ nsBaseAppShell::DoProcessNextNativeEvent(PRBool mayWait)
 NS_IMETHODIMP
 nsBaseAppShell::Run(void)
 {
+  NS_ENSURE_STATE(!mRunning);  // should not call Run twice
+  mRunning = PR_TRUE;
+
   nsIThread *thread = NS_GetCurrentThread();
 
-  NS_ENSURE_STATE(!mRunWasCalled);  // should not call Run twice
-  mRunWasCalled = PR_TRUE;
-
+#ifdef MOZ_IPC
+  MessageLoop::current()->Run();
+#else
   while (!mExiting)
     NS_ProcessNextEvent(thread);
+#endif
 
   NS_ProcessPendingEvents(thread);
+
+  mRunning = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBaseAppShell::Exit(void)
 {
+#ifdef MOZ_IPC
+  if (mRunning && !mExiting) {
+    MessageLoop::current()->Quit();
+  }
+#endif
   mExiting = PR_TRUE;
   return NS_OK;
 }
