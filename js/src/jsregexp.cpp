@@ -3083,12 +3083,12 @@ class RegExpNativeCompiler {
 
         Allocator &alloc = *JS_TRACE_MONITOR(cx).dataAlloc;
 
-        GuardRecord* guard = (GuardRecord *)
-            alloc.alloc(sizeof(GuardRecord) +
-                        sizeof(SideExit) +
-                        (re_length-1) * sizeof(jschar));
-        memset(guard, 0, sizeof(*guard));
-        SideExit* exit = (SideExit*)(guard+1);
+        size_t len = (sizeof(GuardRecord) +
+                      sizeof(VMSideExit) +
+                      (re_length-1) * sizeof(jschar));
+        GuardRecord* guard = (GuardRecord *) alloc.alloc(len);
+        memset(guard, 0, len);
+        VMSideExit* exit = (VMSideExit*)(guard+1);
         guard->exit = exit;
         guard->exit->target = fragment;
         fragment->lastIns = lir->insGuard(LIR_x, NULL, guard);
