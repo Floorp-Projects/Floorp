@@ -156,20 +156,18 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       aColor = GetColorFromNSColor([NSColor controlTextColor]);
       break;
     case eColor_captiontext:
-      aColor = GetColorFromNSColor([NSColor textColor]);
-      break;
     case eColor_menutext:
-    case eColor__moz_menubartext:
-      aColor = GetColorFromNSColor([NSColor textColor]);
-      break;
     case eColor_infotext:
       aColor = GetColorFromNSColor([NSColor textColor]);
-      break;    
+      break;
+    case eColor__moz_menubartext:
+      aColor = NS_RGB(0xFF,0xFF,0xFF);
+      break;
     case eColor_windowtext:
       aColor = GetColorFromNSColor([NSColor windowFrameTextColor]);
       break;
     case eColor_activecaption:
-      aColor = NS_RGB(0xCC,0xCC,0xCC);
+      aColor = GetColorFromNSColor([NSColor gridColor]);
       break;
     case eColor_activeborder:
       aColor = NS_RGB(0x00,0x00,0x00);
@@ -227,19 +225,19 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       aColor = NS_RGB(0xFF,0xFF,0xC7);
       break;
     case eColor_windowframe:
-      aColor = NS_RGB(0xCC,0xCC,0xCC);
+      aColor = GetColorFromNSColor([NSColor gridColor]);
       break;
     case eColor_window:
     case eColor__moz_field:
     case eColor__moz_combobox:
+    case eColor__moz_comboboxtext:
       aColor = NS_RGB(0xff,0xff,0xff);
       break;
     case eColor__moz_fieldtext:
-    case eColor__moz_comboboxtext:
       aColor = GetColorFromNSColor([NSColor controlTextColor]);
       break;
     case eColor__moz_dialog:
-      aColor = GetColorFromNSColor([NSColor secondarySelectedControlColor]);
+      aColor = GetColorFromNSColor([NSColor controlHighlightColor]);
       break;
     case eColor__moz_dialogtext:
     case eColor__moz_cellhighlighttext:
