@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=514660
+-->
+<window title="Mozilla Bug 504311"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="doTest()">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<body xmlns="http://www.w3.org/1999/xhtml">
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=514660"
+   target="_blank">Mozilla Bug 514660</a>
+<textarea></textarea>
+</body>
+  <!-- test code goes here -->
+<script type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+function doTest()
+{
+  var viewer = window
+                 .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                 .getInterface(Components.interfaces.nsIWebNavigation)
+                 .QueryInterface(Components.interfaces.nsIDocShell)
+                 .contentViewer
+                 .QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+  viewer.authorStyleDisabled = true;
+
+  document.documentElement.getBoundingClientRect();
+  ok(true, "Didn't crash");
+
+  viewer.authorStyleDisabled = false;
+
+  SimpleTest.finish();
+}
+]]></script>
+</window>
