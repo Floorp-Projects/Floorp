@@ -4232,13 +4232,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
           break;
         }
       }
-#ifndef NP_NO_CARBON
-      else if ((eventModel == NPEventModelCarbon) && (static_cast<EventRecord*>(event)->what == nullEvent)) {
-        Point carbonPt = { 20000, 20000 };
-        InitializeEventRecord(&synthCarbonEvent, &carbonPt);
-        event = &synthCarbonEvent;
-      }
 
+#ifndef NP_NO_CARBON
       // Work around an issue in the Flash plugin, which can cache a pointer
       // to a doomed TSM document (one that belongs to a NSTSMInputContext)
       // and try to activate it after it has been deleted. See bug 183313.
