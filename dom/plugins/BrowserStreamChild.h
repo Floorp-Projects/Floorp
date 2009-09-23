@@ -45,6 +45,7 @@ namespace mozilla {
 namespace plugins {
 
 class PluginInstanceChild;
+class PStreamNotifyChild;
 
 class BrowserStreamChild : public PBrowserStreamChild, public AStream
 {
@@ -53,6 +54,7 @@ public:
                      const nsCString& url,
                      const uint32_t& length,
                      const uint32_t& lastmodified,
+                     const PStreamNotifyChild* notifyData,
                      const nsCString& headers,
                      const nsCString& mimeType,
                      const bool& seekable,

@@ -11,8 +11,14 @@ BrowserStreamParent::BrowserStreamParent(PluginInstanceParent* npp,
   : mNPP(npp)
   , mStream(stream)
 {
+  printf("BrowserStreamParent::BrowserStreamParent<%p>\n", (void*) this);
   mStream->pdata = static_cast<AStream*>(this);
 }
+
+BrowserStreamParent::~BrowserStreamParent()
+{
+  printf("BrowserStreamParent::~BrowserStreamParent<%p>\n", (void*) this);
+}  
 
 bool
 BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
@@ -64,12 +70,9 @@ BrowserStreamParent::Write(int32_t offset,
   int32_t result;
   if (!CallNPP_Write(offset,
                      nsCString(static_cast<char*>(buffer), len),
-                     &result)) {
+                     &result))
     return -1;
-  }
 
-  if (result == -1)
-    mNPP->CallPBrowserStreamDestructor(this, NPRES_USER_BREAK, true);
   return result;
 }
 

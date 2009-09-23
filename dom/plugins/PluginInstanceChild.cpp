@@ -462,8 +462,8 @@ PluginInstanceChild::AllocPBrowserStream(const nsCString& url,
                                          NPError* rv,
                                          uint16_t *stype)
 {
-    return new BrowserStreamChild(this, url, length, lastmodified, headers,
-                                  mimeType, seekable, rv, stype);
+    return new BrowserStreamChild(this, url, length, lastmodified, notifyData,
+                                  headers, mimeType, seekable, rv, stype);
 }
 
 bool
