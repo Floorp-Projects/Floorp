@@ -1,0 +1,6 @@
+include protocol "managerNoDtor.ipdl";
+
+protocol managedNoDtor {
+    manager managerNoDtor;
+    // empty
+};

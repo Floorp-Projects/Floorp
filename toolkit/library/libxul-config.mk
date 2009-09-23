@@ -91,6 +91,24 @@ LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/os2
 endif
 
 # dependent libraries
+ifdef MOZ_IPC
+STATIC_LIBS += \
+  domipc_s \
+  domplugins_s \
+  mozipc_s \
+  chromium_s \
+  ipcshell_s \
+  ipctestharness_s \
+  $(NULL)
+
+ifeq (Linux,$(OS_ARCH))
+OS_LIBS += -lrt
+endif
+ifeq (WINNT,$(OS_ARCH))
+OS_LIBS += psapi.lib dbghelp.lib
+endif
+endif
+
 STATIC_LIBS += \
 	xpcom_core \
 	ucvutil_s \

@@ -1,0 +1,3 @@
+IPDLSRCS = \
+  PTest.ipdl \
+  $(NULL)

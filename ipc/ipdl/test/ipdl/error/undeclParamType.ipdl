@@ -1,0 +1,5 @@
+protocol undeclParamType {
+
+child:  Msg(FARGLEGARGLE p);
+
+};

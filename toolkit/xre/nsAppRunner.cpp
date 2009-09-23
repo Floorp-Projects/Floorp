@@ -207,6 +207,10 @@
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #endif
 
+#ifdef MOZ_IPC
+#include "base/command_line.h"
+#endif
+
 #ifdef WINCE
 class WindowsMutex {
 public:
@@ -709,6 +713,29 @@ NS_IMETHODIMP
 nsXULAppInfo::GetWidgetToolkit(nsACString& aResult)
 {
   aResult.AssignLiteral(MOZ_WIDGET_TOOLKIT);
+  return NS_OK;
+}
+
+// Ensure that the GeckoProcessType enum, defined in xpcom/build/nsXULAppAPI.h,
+// is synchronized with the const unsigned longs defined in
+// xpcom/system/nsIXULRuntime.idl.
+#define SYNC_ENUMS(a,b) \
+  PR_STATIC_ASSERT(nsIXULRuntime::PROCESS_TYPE_ ## a == \
+                   static_cast<int>(GeckoProcessType_ ## b));
+
+SYNC_ENUMS(DEFAULT, Default)
+SYNC_ENUMS(PLUGIN, Plugin)
+SYNC_ENUMS(CONTENT, Content)
+SYNC_ENUMS(TESTHARNESS, TestHarness)
+
+// .. and ensure that that is all of them:
+PR_STATIC_ASSERT(GeckoProcessType_TestHarness + 1 == GeckoProcessType_End);
+
+NS_IMETHODIMP
+nsXULAppInfo::GetProcessType(PRUint32* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = XRE_GetProcessType();
   return NS_OK;
 }
 
@@ -2962,6 +2989,31 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   MOZ_SPLASHSCREEN_UPDATE(20);
 
+#if defined(MOZ_IPC) && !defined(OS_WIN)
+  // FIXME: this and its constituents leak
+  char** canonArgs = new char*[gArgc];
+
+  // get the canonical version of the binary's path
+  nsCOMPtr<nsILocalFile> binFile;
+  rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(binFile));
+  NS_ENSURE_SUCCESS(rv, 2);
+
+  nsCAutoString canonBinPath;
+  rv = binFile->GetNativePath(canonBinPath);
+  NS_ENSURE_SUCCESS(rv, 2);
+
+  canonArgs[0] = strdup(canonBinPath.get());
+
+  for (int i = 1; i < gArgc; ++i) {
+    if (gArgv[i]) {
+      canonArgs[i] = strdup(gArgv[i]); // new[] zeros memory
+    }
+  }
+ 
+  NS_ASSERTION(!CommandLine::IsInitialized(), "Bad news!");
+  CommandLine::Init(gArgc, canonArgs);
+#endif
+
   {
     nsXREDirProvider dirProvider;
     rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
@@ -3413,13 +3465,14 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           }
 
           MOZ_SPLASHSCREEN_UPDATE(90);
-
-          NS_TIMELINE_ENTER("appStartup->Run");
-          rv = appStartup->Run();
-          NS_TIMELINE_LEAVE("appStartup->Run");
-          if (NS_FAILED(rv)) {
-            NS_ERROR("failed to run appstartup");
-            gLogConsoleErrors = PR_TRUE;
+          {
+            NS_TIMELINE_ENTER("appStartup->Run");
+            rv = appStartup->Run();
+            NS_TIMELINE_LEAVE("appStartup->Run");
+            if (NS_FAILED(rv)) {
+              NS_ERROR("failed to run appstartup");
+              gLogConsoleErrors = PR_TRUE;
+            }
           }
 
           // Check for an application initiated restart.  This is one that
