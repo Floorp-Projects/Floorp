@@ -10,9 +10,12 @@ chrome.jar:
 chrome.jar:
 % skin browser classic/1.0 %
   aboutCertError.css                   (aboutCertError.css)
+  aboutPage.css                        (aboutPage.css)
   platform.css                         (platform.css)
   browser.css                          (browser.css)
   notification.css                     (notification.css)
+
+  images/aboutBackground.jpg           (images/aboutBackground.jpg)
   images/arrowright-16.png             (images/arrowright-16.png)
   images/arrowup-16.png                (images/arrowup-16.png)
   images/ratings-18.png                (images/ratings-18.png)

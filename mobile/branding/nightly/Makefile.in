@@ -42,6 +42,7 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIRS = \
+	content \
 	locales \
 	$(NULL)
 

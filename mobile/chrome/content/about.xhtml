@@ -57,74 +57,57 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>&aboutPage.title;</title>
-  <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css"/>
-  <style>
-    /* XXX clean up styling */
-    #aboutLogoContainer {
-      float: left;
-    }
-    #aboutDetails {
-    }
-    #aboutLinks {
-      clear: both;
-    }
-    #aboutLinks > a {
-      display: block;
-      margin: 5px;
-      border: 1px solid black;
-      -moz-border-radius: 5px;
-      padding: 5px;
-    }
-  </style>
+  <link rel="stylesheet" href="chrome://browser/skin/aboutPage.css" type="text/css"/>
 </head>
 
 <body dir="&locale.dir;">
-  <div id="aboutLogoContainer">
-    <img src="about:logo" alt="&brandShortName;"/>
+  <div id="wrapper">
+    <div id="aboutLogoContainer">
+      <img src="about:logo" alt="&brandShortName;"/>
 #expand <p id="version">&about.version; __MOZ_APP_VERSION__</p>
+    </div>
+  
+    <ul id="aboutLinks">
+      <li><a id="faqURL">&aboutPage.faq.label;</a></li>
+      <li><a id="supportURL">&aboutPage.support.label;</a></li>
+      <li><a id="privacyURL">&aboutPage.privacyPolicy.label;</a></li>
+      <li><a href="about:rights">&aboutPage.rights.label;</a></li>
+      <li><a id="releaseNotesURL">&aboutPage.relNotes.label;</a></li>
+      <li><a id="creditsURL">&aboutPage.credits.label;</a></li>
+    </ul>
+  
+    <div id="aboutDetails">
+      <p id="copyright">&aboutPage.copyrightInfo1;<a href="about:license">&aboutPage.licenseLink;</a>&aboutPage.copyrightInfo2; &logoCopyright;</p>
+      <p id="aboutUA"/>
+    </div>
+  
+    <script type="application/javascript;version=1.8"><![CDATA[
+      // get URLs from prefs
+      try {
+        let formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                                  .getService(Components.interfaces.nsIURLFormatter);
+  
+        let links = [
+          {id: "releaseNotesURL", pref: "app.releaseNotesURL"},
+          {id: "supportURL",      pref: "app.support.baseURL"},
+          {id: "faqURL",          pref: "app.faqURL"},
+          {id: "privacyURL",      pref: "app.privacyURL"},
+          {id: "creditsURL",      pref: "app.creditsURL"},
+        ];
+        
+        links.forEach(function (link) {
+          let url = formatter.formatURLPref(link.pref);
+          let element = document.getElementById(link.id);
+          element.setAttribute("href", url);
+        });
+      } catch (ex) {}
+  
+      let ua = navigator.userAgent;
+      if (ua) {
+        let uaP = document.getElementById("aboutUA");
+        uaP.appendChild(document.createTextNode(ua));
+      }
+    ]]></script>
   </div>
-
-  <div id="aboutLinks">
-    <a id="faqURL">&aboutPage.faq.label;</a>
-    <a id="supportURL">&aboutPage.support.label;</a>
-    <a id="privacyURL">&aboutPage.privacyPolicy.label;</a>
-    <a href="about:rights">&aboutPage.rights.label;</a>
-    <a id="releaseNotesURL">&aboutPage.relNotes.label;</a>
-    <a id="creditsURL">&aboutPage.credits.label;</a>
-  </div>
-
-  <div id="aboutDetails">
-    <p id="copyright">&aboutPage.copyrightInfo1;<a href="about:license">&aboutPage.licenseLink;</a>&aboutPage.copyrightInfo2; &logoCopyright;</p>
-    <p id="aboutUA"/>
-  </div>
-
-  <script type="application/javascript;version=1.8"><![CDATA[
-    // get URLs from prefs
-    try {
-      let formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
-                                .getService(Components.interfaces.nsIURLFormatter);
-
-      let links = [
-        {id: "releaseNotesURL", pref: "app.releaseNotesURL"},
-        {id: "supportURL",      pref: "app.support.baseURL"},
-        {id: "faqURL",          pref: "app.faqURL"},
-        {id: "privacyURL",      pref: "app.privacyURL"},
-        {id: "creditsURL",      pref: "app.creditsURL"},
-      ];
-      
-      links.forEach(function (link) {
-        let url = formatter.formatURLPref(link.pref);
-        let element = document.getElementById(link.id);
-        element.setAttribute("href", url);
-      });
-    } catch (ex) {}
-
-    let ua = navigator.userAgent;
-    if (ua) {
-      let uaP = document.getElementById("aboutUA");
-      uaP.appendChild(document.createTextNode(ua));
-    }
-  ]]></script>
-
 </body>
 </html>
