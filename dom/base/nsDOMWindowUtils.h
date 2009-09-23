@@ -57,6 +57,7 @@ protected:
   // If aOffset is non-null, it gets filled in with an offset, in app
   // units, that should be added to any event offset we're given.
   nsIWidget* GetWidget(nsPoint* aOffset = nsnull);
+  nsIWidget* GetWidgetForElement(nsIDOMElement* aElement);
 
   nsPresContext* GetPresContext();
 };

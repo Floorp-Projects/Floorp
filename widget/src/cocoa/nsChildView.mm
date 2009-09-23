@@ -300,9 +300,9 @@ PRBool nsTSMManager::sIgnoreCommit = PR_FALSE;
 NSView<mozView>* nsTSMManager::sComposingView = nsnull;
 TSMDocumentID nsTSMManager::sDocumentID = nsnull;
 NSString* nsTSMManager::sComposingString = nsnull;
+ChildView* ChildViewMouseTracker::sLastMouseEventView = nil;
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
-static NSView* sLastViewEntered = nil;
 #ifdef INVALIDATE_DEBUGGING
 static void blinkRect(Rect* r);
 static void blinkRgn(RgnHandle rgn);
@@ -353,8 +353,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (void)processPendingRedraws;
 
 - (PRBool)processKeyDownEvent:(NSEvent*)theEvent keyEquiv:(BOOL)isKeyEquiv;
-
-- (BOOL)ensureCorrectMouseEventTarget:(NSEvent *)anEvent;
 
 - (void)maybeInitContextMenuTracking;
 
@@ -1684,6 +1682,40 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+nsresult nsChildView::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
+                                                 PRUint32 aNativeMessage,
+                                                 PRUint32 aModifierFlags)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // Move the mouse cursor to the requested position and reconnect it to the mouse.
+  CGWarpMouseCursorPosition(CGPointMake(aPoint.x, aPoint.y));
+  CGAssociateMouseAndMouseCursorPosition(true);
+
+  // aPoint is given with the origin on the top left, but convertScreenToBase
+  // expects a point in a coordinate system that has its origin on the bottom left.
+  NSPoint screenPoint = NSMakePoint(aPoint.x, [[NSScreen mainScreen] frame].size.height - aPoint.y);
+  NSPoint windowPoint = [[mView window] convertScreenToBase:screenPoint];
+
+  NSEvent* event = [NSEvent mouseEventWithType:aNativeMessage
+                                      location:windowPoint
+                                 modifierFlags:aModifierFlags
+                                     timestamp:[NSDate timeIntervalSinceReferenceDate]
+                                  windowNumber:[[mView window] windowNumber]
+                                       context:nil
+                                   eventNumber:0
+                                    clickCount:1
+                                      pressure:0.0];
+
+  if (!event)
+    return NS_ERROR_FAILURE;
+
+  [NSApp sendEvent:event];
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
 // First argument has to be an NSMenu representing the application's top-level
 // menu bar. The returned item is *not* retained.
 static NSMenuItem* NativeMenuItemWithLocation(NSMenu* menubar, NSString* locationString)
@@ -2393,9 +2425,6 @@ NSEvent* gLastDragEvent = nil;
   [mLastMouseDownEvent release];
   if (mPluginTSMDoc)
     ::DeleteTSMDocument(mPluginTSMDoc);
-  
-  if (sLastViewEntered == self)
-    sLastViewEntered = nil;
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
@@ -2414,6 +2443,7 @@ NSEvent* gLastDragEvent = nil;
 - (void)widgetDestroyed
 {
   nsTSMManager::OnDestroyView(self);
+  ChildViewMouseTracker::OnDestroyView(self);
   mGeckoChild = nsnull;
 
   // Just in case we're destroyed abruptly and missed the draggingExited
@@ -2798,85 +2828,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 }
 #endif
 
-// We sometimes need to reroute events when there is a rollup widget and the
-// event isn't targeted at it.
-//
-// Rerouting may be needed when the user tries to navigate a context menu while
-// keeping the mouse-button down (left or right mouse button) -- the OS thinks this
-// is a dragging operation, so it sends events (mouseMoved and mouseUp) to the
-// window where the dragging operation started (the parent of the context
-// menu window).  It also works around a bizarre Apple bug - if (while a context
-// menu is open) you move the mouse over another app's window and then back over
-// the context menu, mouseMoved events will be sent to the window underneath the
-// context menu.
-- (BOOL)ensureCorrectMouseEventTarget:(NSEvent*)anEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  // Don't bother if we've been destroyed:  [self window] will now be nil, which
-  // makes all our work here pointless, and can even cause us to resend the
-  // event to ourselves in an infinte loop (since targetWindow == [self window] no
-  // longer tests whether targetWindow is us).
-  if (!mGeckoChild || ![self window])
-    return YES;
-
-  // Find the window that the event is over.
-  BOOL isUnderMouse;
-  NSWindow* targetWindow = nsCocoaUtils::FindWindowForEvent(anEvent, &isUnderMouse);
-
-  // If this is the rollup widget and the event is not a mouse move then trust the OS routing.  
-  // The reason for this trust is complicated.
-  //
-  // There are three types of mouse events that can legitimately need to be targeted at a window
-  // that they are not over. Mouse moves, mouse drags, and mouse ups. Anything else our app wouldn't
-  // handle (if the mouse was not over any window) or it would go to the appropriate window.
-  //
-  // We need to do manual event rerouting for mouse moves because we know that in some cases, like
-  // when there is a submenu opened from a popup window, the OS will route mouse move events to the
-  // submenu even if the mouse is over the parent. Mouse move events are never tied to a particular
-  // window because of some originating action like the starting point of a drag for drag events or
-  // a mouse down event for mouse up events, so it is always safe to do our own routing on them here.
-  //
-  // As for mouse drags and mouse ups, they have originating actions that tie them to windows they
-  // may no longer be over. If there is a rollup window present when one of these events is getting
-  // processed but we are not it, we are probably the window where the action originated, and that
-  // action must have caused the rollup window to come into existence. In that case, we might need
-  // to reroute the event if it is over the rollup window. That is why if we're not the rollup window
-  // we don't return YES here.
-  if (gRollupWidget) {
-    NSWindow* rollupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-    if ([self window] == rollupWindow && [anEvent type] != NSMouseMoved)
-      return YES;
-
-    // If the event was not over any window, send it to the rollup window.
-    if (!isUnderMouse)
-      targetWindow = rollupWindow;
-  }
-
-  // If there's no window that's more appropriate than our window then just return
-  // yes so we handle it. No need to redirect.
-  if (!targetWindow || targetWindow == [self window])
-    return YES;
-
-  // Send the event to its new destination.
-  NSPoint newWindowLocation = nsCocoaUtils::EventLocationForWindow(anEvent, targetWindow);
-  NSEvent *newEvent = [NSEvent mouseEventWithType:[anEvent type]
-                                         location:newWindowLocation
-                                    modifierFlags:nsCocoaUtils::GetCocoaEventModifierFlags(anEvent)
-                                        timestamp:GetCurrentEventTime()
-                                     windowNumber:[targetWindow windowNumber]
-                                          context:nil
-                                      eventNumber:0
-                                       clickCount:1
-                                         pressure:0.0];
-  [targetWindow sendEvent:newEvent];
-
-  // Return NO because we just sent the event somewhere else.
-  return NO;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
-}
-
 // If we've just created a non-native context menu, we need to mark it as
 // such and let the OS (and other programs) know when it opens and closes
 // (this is how the OS knows to close other programs' context menus when
@@ -3190,12 +3141,10 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     mLastMouseDownEvent = [theEvent retain];
   }
 
-  if (![self ensureCorrectMouseEventTarget:theEvent])
-    return;
-
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-  if ([self maybeRollup:theEvent])
+  if ([self maybeRollup:theEvent] ||
+      !ChildViewMouseTracker::WindowAcceptsEvent([self window], theEvent))
     return;
 
 #if USE_CLICK_HOLD_CONTEXTMENU
@@ -3258,8 +3207,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (![self ensureCorrectMouseEventTarget:theEvent])
-    return;
 
   if (!mGeckoChild)
     return;
@@ -3306,39 +3253,27 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// sends a mouse enter or exit event into gecko
-static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
-                                                    PRUint32 msg,
-                                                    nsIWidget *widget,
-                                                    nsMouseEvent::reasonType aReason,
-                                                    NSPoint* localEventLocation,
-                                                    nsMouseEvent::exitType type,
-                                                    unsigned int modifierFlags,
-                                                    int buttonNumber,
-                                                    float deltaX,
-                                                    float deltaY,
-                                                    float deltaZ)
+- (void)sendMouseEnterOrExitEvent:(NSEvent*)aEvent
+                            enter:(BOOL)aEnter
+                             type:(nsMouseEvent::exitType)aType
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  if (!mGeckoChild)
+    return;
 
-  if (!widget || !localEventLocation)
-    return nsEventStatus_eIgnore;
+  NSPoint windowEventLocation = nsCocoaUtils::EventLocationForWindow(aEvent, [self window]);
+  NSPoint localEventLocation = [self convertPoint:windowEventLocation fromView:nil];
 
-  nsMouseEvent event(isTrusted, msg, widget, aReason);
-  event.refPoint.x = nscoord((PRInt32)localEventLocation->x);
-  event.refPoint.y = nscoord((PRInt32)localEventLocation->y);
+  PRUint32 msg = aEnter ? NS_MOUSE_ENTER : NS_MOUSE_EXIT;
+  nsMouseEvent event(PR_TRUE, msg, mGeckoChild, nsMouseEvent::eReal);
+  event.refPoint.x = nscoord((PRInt32)localEventLocation.x);
+  event.refPoint.y = nscoord((PRInt32)localEventLocation.y);
 
   // Create event for use by plugins.
-  // We need to know the plugin event model for the target widget.
-  nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(widget);
-  if (!pluginWidget)
-    return nsEventStatus_eIgnore;
-  int eventModel;
-  pluginWidget->GetPluginEventModel(&eventModel);
-
+  // This is going to our child view so we don't need to look up the destination
+  // event type.
 #ifndef NP_NO_CARBON
   EventRecord carbonEvent;
-  if (static_cast<NPEventModel>(eventModel) == NPEventModelCarbon) {
+  if (mPluginEventModel == NPEventModelCarbon) {
     carbonEvent.what = NPEventType_AdjustCursorEvent;
     carbonEvent.message = 0;
     carbonEvent.when = ::TickCount();
@@ -3348,141 +3283,36 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   }
 #endif
   NPCocoaEvent cocoaEvent;
-  if (static_cast<NPEventModel>(eventModel) == NPEventModelCocoa) {
+  if (mPluginEventModel == NPEventModelCocoa) {
     InitNPCocoaEvent(&cocoaEvent);
     cocoaEvent.type = ((msg == NS_MOUSE_ENTER) ? NPCocoaEventMouseEntered : NPCocoaEventMouseExited);
-    cocoaEvent.data.mouse.modifierFlags = modifierFlags;
+    cocoaEvent.data.mouse.modifierFlags = [aEvent modifierFlags];
     cocoaEvent.data.mouse.pluginX = 5;
     cocoaEvent.data.mouse.pluginY = 5;
-    cocoaEvent.data.mouse.buttonNumber = buttonNumber;
-    cocoaEvent.data.mouse.deltaX = deltaX;
-    cocoaEvent.data.mouse.deltaY = deltaY;
-    cocoaEvent.data.mouse.deltaZ = deltaZ;
+    cocoaEvent.data.mouse.buttonNumber = [aEvent buttonNumber];
+    cocoaEvent.data.mouse.deltaX = [aEvent deltaX];
+    cocoaEvent.data.mouse.deltaY = [aEvent deltaY];
+    cocoaEvent.data.mouse.deltaZ = [aEvent deltaZ];
     event.nativeMsg = &cocoaEvent;
   }
 
-  event.exit = type;
+  event.exit = aType;
 
-  nsEventStatus status;
-  widget->DispatchEvent(&event, status);
-
-  // After the cursor exits the window set it to a visible regular arrow cursor.
-  // This lets us recover from plugins that mess with it.
-  if (msg == NS_MOUSE_EXIT && type == nsMouseEvent::eTopLevel) {
-    [[nsCursorManager sharedInstance] setCursor:eCursor_standard];
-  }
-
-  return status;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsEventStatus_eIgnore);
+  nsEventStatus status; // ignored
+  mGeckoChild->DispatchEvent(&event, status);
 }
 
-- (void)mouseMoved:(NSEvent*)theEvent
+- (void)mouseMoved:(NSEvent*)aEvent
+{
+  ChildViewMouseTracker::MouseMoved(aEvent);
+}
+
+- (void)handleMouseMoved:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (![self window])
-    return;
-
-  // Work around an Apple bug that causes the OS to continue sending
-  // mouseMoved events to a window for a while after it's been miniaturized.
-  // This may be related to a similar problem with popup windows (bmo bug
-  // 378645, popup windows continue to receive mouseMoved events after having
-  // been "ordered out"), which is worked around in nsCocoaWindow::Show()
-  // (search on 378645 in nsCocoaWindow.mm).  This problem is bmo bug 410219,
-  // and exists in both OS X 10.4 and 10.5.
-  if ([[self window] isMiniaturized])
-    return;
-
-  NSPoint windowEventLocation = nsCocoaUtils::EventLocationForWindow(theEvent, [self window]);
-  NSPoint viewEventLocation = [self convertPoint:windowEventLocation fromView:nil];
-
-  // Installing a mouseMoved handler on the EventMonitor target (in
-  // nsToolkit::RegisterForAllProcessMouseEvents()) means that some of the
-  // events received here come from other processes.  For this reason we need
-  // to avoid processing them unless they're over a context menu -- otherwise
-  // tooltips and other mouse-hover effects will "work" even when our app
-  // doesn't have the focus.
-  BOOL mouseEventIsOverRollupWidget = NO;
-  if (gRollupWidget) {
-    NSWindow *popupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-    mouseEventIsOverRollupWidget = nsCocoaUtils::IsEventOverWindow(theEvent, popupWindow);
-  }
-
-  if (![NSApp isActive] && !mouseEventIsOverRollupWidget) {
-    if (sLastViewEntered) {
-      nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
-      NSPoint exitEventLocation = [sLastViewEntered convertPoint:windowEventLocation fromView:nil];
-      SendGeckoMouseEnterOrExitEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal,
-                                     &exitEventLocation, nsMouseEvent::eTopLevel,
-                                     [theEvent modifierFlags], [theEvent buttonNumber], [theEvent deltaX],
-                                     [theEvent deltaY], [theEvent deltaZ]);
-      sLastViewEntered = nil;
-    }
-    return;
-  }
-
-  if (![self ensureCorrectMouseEventTarget:theEvent])
-    return;
-
-  NSView* view = [[[self window] contentView] hitTest:windowEventLocation];
-  if (view) {
-    // we shouldn't handle this if the hit view is not us
-    if (view != (NSView*)self) {
-      [view mouseMoved:theEvent];
-      return;
-    }
-  }
-  else {
-    // If the hit test returned nil then the mouse isn't over the window. If thse mouse
-    // exited the window then send mouse exit to the last view in the window it was over.
-    if (sLastViewEntered) {
-      NSPoint exitEventLocation = [sLastViewEntered convertPoint:windowEventLocation fromView:nil];
-      // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", exitEventLocation.x, exitEventLocation.y);
-      nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
-      SendGeckoMouseEnterOrExitEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal,
-                                     &exitEventLocation, nsMouseEvent::eTopLevel,
-                                     [theEvent modifierFlags], [theEvent buttonNumber], [theEvent deltaX],
-                                     [theEvent deltaY], [theEvent deltaZ]);
-      sLastViewEntered = nil;
-    }
-    return;
-  }
-
-  // At this point we are supposed to handle this event. If we were not the last view entered, then
-  // we should send an exit event to the last view entered and an enter event to ourselves.  
   if (!mGeckoChild)
     return;
-
-  nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  if (sLastViewEntered != self) {
-    if (sLastViewEntered) {
-      NSPoint exitEventLocation = [sLastViewEntered convertPoint:windowEventLocation fromView:nil];
-      // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", exitEventLocation.x, exitEventLocation.y);
-      nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
-      SendGeckoMouseEnterOrExitEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal,
-                                     &exitEventLocation, nsMouseEvent::eChild,
-                                     [theEvent modifierFlags], [theEvent buttonNumber], [theEvent deltaX],
-                                     [theEvent deltaY], [theEvent deltaZ]);
-
-      // The mouse exit event we just sent may have destroyed this widget, bail if that happened.
-      if (!mGeckoChild)
-        return;
-    }
-
-    // NSLog(@"sending NS_MOUSE_ENTER event with point %f,%f\n", viewEventLocation.x, viewEventLocation.y);
-    SendGeckoMouseEnterOrExitEvent(PR_TRUE, NS_MOUSE_ENTER, mGeckoChild, nsMouseEvent::eReal,
-                                   &viewEventLocation, nsMouseEvent::eChild,
-                                   [theEvent modifierFlags], [theEvent buttonNumber], [theEvent deltaX],
-                                   [theEvent deltaY], [theEvent deltaZ]);
-
-    // The mouse enter event we just sent may have destroyed this widget, bail if that happened.
-    if (!mGeckoChild)
-      return;
-
-    // mark this view as the last view entered
-    sLastViewEntered = (NSView*)self;
-  }
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
@@ -3525,9 +3355,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 - (void)mouseDragged:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (![self ensureCorrectMouseEventTarget:theEvent])
-    return;
 
   if (!mGeckoChild)
     return;
@@ -3581,9 +3408,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 - (void)rightMouseDown:(NSEvent *)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (![self ensureCorrectMouseEventTarget:theEvent])
-    return;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
@@ -3639,9 +3463,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (![self ensureCorrectMouseEventTarget:theEvent])
-    return;
-
   if (!mGeckoChild)
     return;
 
@@ -3686,9 +3507,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
 - (void)rightMouseDragged:(NSEvent*)theEvent
 {
-  if (![self ensureCorrectMouseEventTarget:theEvent])
-    return;
-
   if (!mGeckoChild)
     return;
 
@@ -3705,12 +3523,10 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (![self ensureCorrectMouseEventTarget:theEvent])
-    return;
-
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-  if ([self maybeRollup:theEvent])
+  if ([self maybeRollup:theEvent] ||
+      !ChildViewMouseTracker::WindowAcceptsEvent([self window], theEvent))
     return;
 
   if (!mGeckoChild)
@@ -6773,6 +6589,128 @@ nsTSMManager::CancelIME()
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
+
+#pragma mark -
+
+void
+ChildViewMouseTracker::OnDestroyView(ChildView* aView)
+{
+  if (sLastMouseEventView == aView)
+    sLastMouseEventView = nil;
+}
+
+void
+ChildViewMouseTracker::MouseMoved(NSEvent* aEvent)
+{
+  ChildView* view = ViewForEvent(aEvent);
+  if (view != sLastMouseEventView) {
+    // Send enter and / or exit events.
+    nsMouseEvent::exitType type = [view window] == [sLastMouseEventView window] ?
+                                    nsMouseEvent::eChild : nsMouseEvent::eTopLevel;
+    [sLastMouseEventView sendMouseEnterOrExitEvent:aEvent enter:NO type:type];
+    // After the cursor exits the window set it to a visible regular arrow cursor.
+    if (type == nsMouseEvent::eTopLevel) {
+      [[nsCursorManager sharedInstance] setCursor:eCursor_standard];
+    }
+    [view sendMouseEnterOrExitEvent:aEvent enter:YES type:type];
+  }
+  sLastMouseEventView = view;
+  [view handleMouseMoved:aEvent];
+}
+
+ChildView*
+ChildViewMouseTracker::ViewForEvent(NSEvent* aEvent)
+{
+  NSWindow* window = WindowForEvent(aEvent);
+  if (!window || !WindowAcceptsEvent(window, aEvent))
+    return nil;
+
+  NSPoint windowEventLocation = nsCocoaUtils::EventLocationForWindow(aEvent, window);
+  NSView* view = [[[window contentView] superview] hitTest:windowEventLocation];
+  NS_ASSERTION(view, "How can the mouse be over a window but not over a view in that window?");
+  return [view isKindOfClass:[ChildView class]] ? (ChildView*)view : nil;
+}
+
+// Find the active window under the mouse. Returns nil if the mouse isn't over
+// any active window.
+NSWindow*
+ChildViewMouseTracker::WindowForEvent(NSEvent* anEvent)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  NSInteger windowCount;
+  NSCountWindows(&windowCount);
+  NSInteger* windowList = (NSInteger*)malloc(sizeof(NSInteger) * windowCount);
+  if (!windowList)
+    return nil;
+  // The list we get back here is in order from front to back.
+  NSWindowList(windowCount, windowList);
+
+  NSPoint screenPoint = nsCocoaUtils::ScreenLocationForEvent(anEvent);
+
+  for (NSInteger i = 0; i < windowCount; i++) {
+    NSWindow* currentWindow = [NSApp windowWithWindowNumber:windowList[i]];
+    if (currentWindow && NSMouseInRect(screenPoint, [currentWindow frame], NO)) {
+      free(windowList);
+      return currentWindow;
+    }
+  }
+
+  free(windowList);
+  return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+BOOL
+ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* anEvent)
+{
+  // Right mouse down events may get through to all windows, even to a top level
+  // window with an open sheet.
+  if (!aWindow || [anEvent type] == NSRightMouseDown)
+    return YES;
+
+  id delegate = [aWindow delegate];
+  if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]])
+    return YES;
+
+  nsIWidget *windowWidget = [(WindowDelegate *)delegate geckoWidget];
+  if (!windowWidget)
+    return YES;
+
+  nsWindowType windowType;
+  windowWidget->GetWindowType(windowType);
+
+  switch (windowType) {
+    case eWindowType_popup:
+      // If this is a context menu, it won't have a parent. So we'll always
+      // accept mouse move events on context menus even when none of our windows
+      // is active, which is the right thing to do.
+      // For panels, the parent window is the XUL window that owns the panel.
+      return WindowAcceptsEvent([aWindow parentWindow], anEvent);
+
+    case eWindowType_toplevel:
+    case eWindowType_dialog:
+      // Block all mouse events other than RightMouseDown on background windows
+      // and on windows behind sheets.
+      return [aWindow isMainWindow] && ![aWindow attachedSheet];
+
+    case eWindowType_sheet: {
+      nsIWidget* parentWidget = windowWidget->GetSheetWindowParent();
+      if (!parentWidget)
+        return YES;
+
+      // Only accept mouse events on a sheet whose containing window is active.
+      NSWindow* parentWindow = (NSWindow*)parentWidget->GetNativeData(NS_NATIVE_WINDOW);
+      return [parentWindow isMainWindow];
+    }
+
+    default:
+      return YES;
+  }
+}
+
+#pragma mark -
 
 // Target for text services events sent as the result of calls made to
 // TSMProcessRawKeyEvent() in [ChildView keyDown:] (above) when a plugin has

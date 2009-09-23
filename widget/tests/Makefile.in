@@ -66,6 +66,8 @@ _TEST_FILES =	test_bug343416.xul \
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 _TEST_FILES += native_menus_window.xul \
                test_native_menus.xul \
+               native_mouse_mac_window.xul \
+               test_native_mouse_mac.xul \
                test_bug428405.xul \
                test_bug466599.xul \
                $(NULL)
