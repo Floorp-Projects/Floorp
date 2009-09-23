@@ -42,11 +42,11 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 let ctypes = {
-  types: Ci.nsINativeTypes,
+  types: Ci.nsIForeignLibrary,
 
   open: function(name) {
     let library = Cc["@mozilla.org/jsctypes;1"]
-                  .createInstance(Ci.nsINativeTypes);
+                  .createInstance(Ci.nsIForeignLibrary);
 
     let file;
     if (name instanceof Ci.nsILocalFile) {

@@ -46,7 +46,7 @@ interface nsILocalFile;
  * callable 'method' objects from exportable functions in the library
  */
 [scriptable, uuid(352a72c1-5b99-451e-a330-c45079d8f087)]
-interface nsINativeTypes : nsISupports
+interface nsIForeignLibrary : nsISupports
 {
   /**
    * ABI constants that specify the calling convention to use.
@@ -83,7 +83,7 @@ interface nsINativeTypes : nsISupports
 
   /**
    * Unloads the currently loaded library. Any subsequent attempts to call
-   * nsINativeMethod functions will fail.
+   * functions on this interface will fail.
    */
   void close();
 
