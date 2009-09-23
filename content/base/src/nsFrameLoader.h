@@ -48,9 +48,18 @@
 #include "nsStringFwd.h"
 #include "nsIFrameLoader.h"
 #include "nsIURI.h"
+#include "nsAutoPtr.h"
 
 class nsIContent;
 class nsIURI;
+
+#ifdef MOZ_IPC
+namespace mozilla {
+  namespace dom {
+    class TabParent;
+  }
+}
+#endif
 
 class nsFrameLoader : public nsIFrameLoader
 {
@@ -62,6 +71,10 @@ protected:
     mDestroyCalled(PR_FALSE),
     mNeedsAsyncDestroy(PR_FALSE),
     mInSwap(PR_FALSE)
+#ifdef MOZ_IPC
+    , mChildProcess(nsnull)
+    , mTriedNewProcess(PR_FALSE)
+#endif
   {}
 
 public:
@@ -92,6 +105,11 @@ private:
   NS_HIDDEN_(void) GetURL(nsString& aURL);
   nsresult CheckURILoad(nsIURI* aURI);
 
+#ifdef MOZ_IPC
+  // True means new process started; nothing else to do
+  PRBool TryNewProcess();
+#endif
+
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsIContent *mOwnerContent; // WEAK
@@ -100,6 +118,12 @@ private:
   PRPackedBool mDestroyCalled : 1;
   PRPackedBool mNeedsAsyncDestroy : 1;
   PRPackedBool mInSwap : 1;
+
+#ifdef MOZ_IPC
+  // XXX leaking
+  mozilla::dom::TabParent* mChildProcess;
+  PRBool mTriedNewProcess;
+#endif
 };
 
 #endif

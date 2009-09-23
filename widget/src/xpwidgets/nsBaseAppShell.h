@@ -119,7 +119,7 @@ private:
     eEventloopOther  // innermost native event loop is a native library/plugin etc
   };
   EventloopNestingState mEventloopNestingState;
-  PRPackedBool mRunWasCalled;
+  PRPackedBool mRunning;
   PRPackedBool mExiting;
   /**
    * mBlockNativeEvent blocks the appshell from processing native events.

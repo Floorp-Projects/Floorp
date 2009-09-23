@@ -1,0 +1,11 @@
+protocol multiStartState {
+
+child: Msg();
+
+start state S1:
+    send Msg goto S1;
+
+start state S2:
+    send Msg goto S2;
+
+};

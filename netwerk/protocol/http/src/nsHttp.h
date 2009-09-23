@@ -52,6 +52,10 @@
 #include "nsURLHelper.h"
 #include "netCore.h"
 
+#ifdef MOZ_IPC
+#include "mozilla/net/NeckoChild.h"
+#endif 
+
 #if defined(PR_LOGGING)
 //
 // Log module for HTTP Protocol logging...
@@ -67,6 +71,7 @@
 extern PRLogModuleInfo *gHttpLog;
 #endif
 
+#undef LOG
 // http logging
 #define LOG1(args) PR_LOG(gHttpLog, 1, args)
 #define LOG2(args) PR_LOG(gHttpLog, 2, args)

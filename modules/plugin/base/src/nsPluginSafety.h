@@ -78,7 +78,7 @@ PR_BEGIN_MACRO                                     \
       nsresult res;                                \
       nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &res));\
       if(NS_SUCCEEDED(res) && (host != nsnull))    \
-        host->HandleBadPlugin(library, pluginInst);\
+        host->HandleBadPlugin(nsnull, pluginInst); \
       ret = (NPError)NS_ERROR_FAILURE;             \
     }                                              \
   }                                                \
@@ -101,7 +101,7 @@ PR_BEGIN_MACRO                              \
       nsresult res;                         \
       nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &res));\
       if(NS_SUCCEEDED(res) && (host != nsnull))\
-        host->HandleBadPlugin(library, pluginInst);\
+        host->HandleBadPlugin(nsnull, pluginInst);\
     }                                       \
   }                                         \
   NS_NotifyPluginCall(startTime);		   \

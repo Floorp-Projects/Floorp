@@ -45,6 +45,11 @@
 
 /* XPConnect JavaScript interactive shell. */
 
+#ifdef MOZ_IPC
+#include "mozilla/dom/ContentProcessParent.h"
+#include "mozilla/ipc/TestShellParent.h"
+#endif
+
 #include <stdio.h>
 #include "nsXULAppAPI.h"
 #include "nsServiceManagerUtils.h"
@@ -87,6 +92,9 @@
 #ifdef __SYMBIAN32__
 #include <unistd.h>
 #endif
+#if defined(MOZ_WIDGET_GTK2)
+#include <gtk/gtk.h>
+#endif
 
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
@@ -108,6 +116,9 @@
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
 #endif
+
+using mozilla::dom::ContentProcessParent;
+using mozilla::ipc::TestShellParent;
 
 class XPCShellDirProvider : public nsIDirectoryServiceProvider2
 {
@@ -650,6 +661,41 @@ Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+#ifdef MOZ_IPC
+
+static JSBool
+SendCommand(JSContext* cx,
+            JSObject* obj,
+            uintN argc,
+            jsval* argv,
+            jsval* rval)
+{
+    if (argc == 0) {
+        JS_ReportError(cx, "Function takes at least one argument!");
+        return JS_FALSE;
+    }
+
+    JSString* str = JS_ValueToString(cx, argv[0]);
+    if (!str) {
+        JS_ReportError(cx, "Could not convert argument 1 to string!");
+        return JS_FALSE;
+    }
+
+    if (argc > 1 && JS_TypeOfValue(cx, argv[1]) != JSTYPE_FUNCTION) {
+        JS_ReportError(cx, "Could not convert argument 2 to function!");
+        return JS_FALSE;
+    }
+
+    if (!XRE_SendTestShellCommand(cx, str, argc > 1 ? &argv[1] : nsnull)) {
+        JS_ReportError(cx, "Couldn't send command!");
+        return JS_FALSE;
+    }
+
+    return JS_TRUE;
+}
+
+#endif // MOZ_IPC
+
 static JSFunctionSpec glob_functions[] = {
     {"print",           Print,          0,0,0},
     {"readline",        ReadLine,       1,0,0},
@@ -663,6 +709,9 @@ static JSFunctionSpec glob_functions[] = {
     {"clear",           Clear,          1,0,0},
 #ifdef DEBUG
     {"dumpHeap",        DumpHeap,       5,0,0},
+#endif
+#ifdef MOZ_IPC
+    {"sendCommand",     SendCommand,    1,0,0},
 #endif
 #ifdef MOZ_SHARK
     {"startShark",      js_StartShark,      0,0,0},
@@ -1591,6 +1640,10 @@ main(int argc, char **argv)
     // unbuffer stdout so that output is in the correct order; note that stderr
     // is unbuffered by default
     setbuf(stdout, 0);
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+    gtk_init(0, 0);
 #endif
 
     gErrFile = stderr;
