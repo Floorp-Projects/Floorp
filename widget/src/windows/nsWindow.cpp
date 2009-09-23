@@ -5647,9 +5647,36 @@ PRBool nsWindow::HandleScrollingPlugins(UINT aMsg, WPARAM aWParam,
   // window.  We need to give it to the child window
   aHandled = PR_FALSE; // default is to have not handled
   POINT point;
-  DWORD dwPoints = GetMessagePos();
+  DWORD dwPoints = ::GetMessagePos();
   point.x = GET_X_LPARAM(dwPoints);
   point.y = GET_Y_LPARAM(dwPoints);
+
+  static PRBool sMayBeUsingLogitechMouse = PR_FALSE;
+  if (aMsg == WM_MOUSEHWHEEL) {
+    // Logitech (Logicool) mouse driver (confirmed with 4.82.11 and MX-1100)
+    // always sets 0 to the lParam of WM_MOUSEHWHEEL.  The driver SENDs one
+    // message at first time, this time, ::GetMessagePos works fine.
+    // Then, we will return 0 (0 means we process it) to the message. Then, the
+    // driver will POST the same messages continuously during the wheel tilted.
+    // But ::GetMessagePos API always returns (0, 0), even if the actual mouse
+    // cursor isn't 0,0.  Therefore, we cannot trust the result of
+    // ::GetMessagePos API if the sender is the driver.
+    if (!sMayBeUsingLogitechMouse && aLParam == 0 && aLParam != dwPoints &&
+        ::InSendMessage()) {
+      sMayBeUsingLogitechMouse = PR_TRUE;
+    } else if (sMayBeUsingLogitechMouse && aLParam != 0 && ::InSendMessage()) {
+      // The user has changed the mouse from Logitech's to another one (e.g.,
+      // the user has changed to the touchpad of the notebook.
+      sMayBeUsingLogitechMouse = PR_FALSE;
+    }
+    // If the WM_MOUSEHWHEEL comes from Logitech's mouse driver, and the
+    // ::GetMessagePos isn't correct, probably, we should use ::GetCursorPos
+    // instead.
+    if (sMayBeUsingLogitechMouse && aLParam == 0 && dwPoints == 0) {
+      ::GetCursorPos(&point);
+    }
+  }
+
   HWND destWnd = ::WindowFromPoint(point);
   // Since we receive scroll events for as long as
   // we are focused, it's entirely possible that there
