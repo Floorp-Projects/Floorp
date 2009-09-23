@@ -54,7 +54,7 @@ class BrowserStreamParent : public PBrowserStreamParent, public AStream
 public:
   BrowserStreamParent(PluginInstanceParent* npp,
                       NPStream* stream);
-  virtual ~BrowserStreamParent() { }
+  virtual ~BrowserStreamParent();
 
   NS_OVERRIDE virtual bool IsBrowserStream() { return true; }
 

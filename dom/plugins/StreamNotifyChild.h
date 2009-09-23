@@ -47,6 +47,7 @@ namespace plugins {
 class StreamNotifyChild : public PStreamNotifyChild
 {
   friend class PluginInstanceChild;
+  friend class BrowserStreamChild;
 
 public:
   StreamNotifyChild(const nsCString& aURL, void* aClosure)
