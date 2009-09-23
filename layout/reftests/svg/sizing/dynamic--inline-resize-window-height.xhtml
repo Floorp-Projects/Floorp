@@ -33,12 +33,18 @@ var initial_height = top.innerHeight;
 
 function restore_height()
 {
+  document.removeEventListener("MozReftestInvalidate", restore_height, false);
+  document.addEventListener("MozReftestInvalidate", finish_test, false);
   top.innerHeight = initial_height;
-  setTimeout(function() { document.documentElement.removeAttribute('class'); }, 0);
 }
 
-top.innerHeight /= 2;
+function finish_test()
+{
+  document.documentElement.removeAttribute('class');
+}
+
 document.addEventListener("MozReftestInvalidate", restore_height, false);
+top.innerHeight /= 2;
 
     </script>
   </head>

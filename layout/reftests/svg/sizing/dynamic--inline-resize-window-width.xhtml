@@ -33,12 +33,18 @@ var initial_width = top.innerWidth;
 
 function restore_width()
 {
+  document.removeEventListener("MozReftestInvalidate", restore_width, false);
+  document.addEventListener("MozReftestInvalidate", finish_test, false);
   top.innerWidth = initial_width;
-  setTimeout(function() { document.documentElement.removeAttribute('class'); }, 0);
 }
 
-top.innerWidth /= 2;
+function finish_test()
+{
+  document.documentElement.removeAttribute('class');
+}
+
 document.addEventListener("MozReftestInvalidate", restore_width, false);
+top.innerWidth /= 2;
 
     </script>
   </head>
