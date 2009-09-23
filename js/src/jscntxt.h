@@ -155,8 +155,9 @@ struct JSTraceMonitor {
      */
     JSContext               *tracecx;
 
-    CLS(VMAllocator)        dataAlloc;   // A chunk allocator for LIR.
-    CLS(nanojit::CodeAlloc) codeAlloc;   // A general allocator for native code.
+    CLS(VMAllocator)        dataAlloc;   /* A chunk allocator for LIR.    */
+    CLS(VMAllocator)        tempAlloc;   /* A temporary chunk allocator.  */
+    CLS(nanojit::CodeAlloc) codeAlloc;   /* An allocator for native code. */
     CLS(nanojit::Assembler) assembler;
     CLS(nanojit::LirBuffer) lirbuf;
     CLS(nanojit::LirBuffer) reLirBuf;
@@ -196,6 +197,11 @@ struct JSTraceMonitor {
      * Fragment map for the regular expression compiler.
      */
     CLS(REHashMap)          reFragments;
+
+    /*
+     * A temporary allocator for RE recording.
+     */
+    CLS(VMAllocator)        reTempAlloc;
 
     /* Keep a list of recorders we need to abort on cache flush. */
     CLS(TraceRecorder)      abortStack;
