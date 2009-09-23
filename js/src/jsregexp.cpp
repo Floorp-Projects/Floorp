@@ -2270,7 +2270,7 @@ enumerateNextChars(JSContext *cx, RENode *node, CharSet &set)
 
 class RegExpNativeCompiler {
  private:
-    VMAllocator      tempAlloc;
+    VMAllocator&     tempAlloc;
     JSContext*       cx;
     JSRegExp*        re;
     CompilerState*   cs;            /* RegExp to compile */
@@ -3103,7 +3103,13 @@ class RegExpNativeCompiler {
 
  public:
     RegExpNativeCompiler(JSContext* cx, JSRegExp* re, CompilerState* cs, Fragment* fragment)
-        : cx(cx), re(re), cs(cs), fragment(fragment), lir(NULL), lirBufWriter(NULL) {  }
+        : tempAlloc(*JS_TRACE_MONITOR(cx).reTempAlloc), cx(cx),
+          re(re), cs(cs), fragment(fragment), lir(NULL), lirBufWriter(NULL) {  }
+
+    ~RegExpNativeCompiler() {
+        /* Purge the tempAlloc used during recording. */
+        tempAlloc.reset();
+    }
 
     JSBool compile()
     {

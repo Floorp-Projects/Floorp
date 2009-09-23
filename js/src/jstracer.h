@@ -691,7 +691,7 @@ enum TypeConsensus
 };
 
 class TraceRecorder {
-    VMAllocator             tempAlloc;
+    VMAllocator&            tempAlloc;
     JSContext*              cx;
     JSTraceMonitor*         traceMonitor;
     JSObject*               globalObj;
