@@ -1,0 +1,6 @@
+sync protocol actorreturn {
+
+parent:
+    sync Msg(actorreturn p) returns (actorreturn r);
+
+};

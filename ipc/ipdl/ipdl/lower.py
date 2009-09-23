@@ -307,7 +307,7 @@ class GenerateProtocolHeader(Visitor):
             enumvar = cxx.ExprVar(enumv)
             unionname = 'V'+ cxxt.name
             caselabel = cxx.CaseLabel(enumv)
-            fullcaselabel = cxx.CaseLabel(ud.decl.fullname +'::'+ enumv)
+            fullcaselabel = cxx.CaseLabel(ud.decl.type.fullname() +'::'+ enumv)
             gettypen = 'get_'+ cxxt.name
             gettypevar = cxx.ExprVar(gettypen)
             returngettype = cxx.StmtReturn(cxx.ExprCall(cxx.ExprVar(gettypen)))

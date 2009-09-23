@@ -1,0 +1,9 @@
+rpc protocol trans_WrongDirection4 {
+
+child:
+    rpc Msg();
+
+state S1:
+    answer Msg goto S1;
+
+};

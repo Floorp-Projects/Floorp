@@ -1,0 +1,9 @@
+protocol noRedeclCrossMessage {
+
+    // each message has its own scope for param/return names
+
+child:
+    Msg1(int f);
+    Msg2(int f);
+
+};

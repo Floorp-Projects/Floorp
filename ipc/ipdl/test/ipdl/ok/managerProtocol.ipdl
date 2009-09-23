@@ -1,0 +1,12 @@
+include protocol "managedProtocol.ipdl";
+
+// sanity check of managed/manager protocols
+
+protocol managerProtocol {
+    manages managedProtocol;
+
+parent:
+    managedProtocol(int i);
+    ~managedProtocol(int i);
+
+};

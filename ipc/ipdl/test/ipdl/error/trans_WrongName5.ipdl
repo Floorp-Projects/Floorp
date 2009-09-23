@@ -1,0 +1,9 @@
+rpc protocol trans_WrongName5 {
+
+parent:
+    rpc Msg();
+
+state S1:
+    recv Msg goto S1;
+
+};

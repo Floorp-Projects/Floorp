@@ -1,0 +1,16 @@
+protocol race_Stateless {
+//    manages Child;
+
+child:
+    Msg1();
+    Msg1_();
+parent:
+    Msg2();
+    Msg2_();
+
+
+    // OK: this is trivial stateless protocol, so race-free "by definition"
+start state S5:
+    send Msg1 goto S5;
+    recv Msg2 goto S5;
+};
