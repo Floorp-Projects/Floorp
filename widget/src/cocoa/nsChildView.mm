@@ -3542,7 +3542,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 #ifndef NP_NO_CARBON
   EventRecord carbonEvent;
   if (mPluginEventModel == NPEventModelCarbon) {
-    carbonEvent.what = nullEvent;
+    carbonEvent.what = NPEventType_AdjustCursorEvent;
     carbonEvent.message = 0;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
