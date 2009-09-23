@@ -510,7 +510,7 @@ struct FrameInfo {
     void   set_argc(uint16 argc, bool constructing) {
         this->argc = uint32(argc) | (constructing ? CONSTRUCTING_FLAG: 0);
     }
-    uint16 get_argc() const { return argc & ~CONSTRUCTING_FLAG; }
+    uint16 get_argc() const { return uint16(argc & ~CONSTRUCTING_FLAG); }
     bool   is_constructing() const { return (argc & CONSTRUCTING_FLAG) != 0; }
 
     // The typemap just before the callee is called.

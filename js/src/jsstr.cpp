@@ -1452,8 +1452,8 @@ DoMatch(JSContext *cx, jsval *vp, JSString *str, const RegExpGuard &g,
         }
     } else {
         /* single match */
-        bool testSingle = flags & TEST_SINGLE_BIT,
-             callbackOnSingle = flags & CALLBACK_ON_SINGLE_BIT;
+        bool testSingle = !!(flags & TEST_SINGLE_BIT),
+             callbackOnSingle = !!(flags & CALLBACK_ON_SINGLE_BIT);
         size_t i = 0;
         if (!js_ExecuteRegExp(cx, g.re(), str, &i, testSingle, vp))
             return false;
@@ -1494,7 +1494,7 @@ MatchCallback(JSContext *cx, size_t count, void *p)
     jsval v = STRING_TO_JSVAL(matchstr);
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-    return arrayobj->setProperty(cx, INT_TO_JSID(count), &v);
+    return !!arrayobj->setProperty(cx, INT_TO_JSID(count), &v);
 }
 
 static bool

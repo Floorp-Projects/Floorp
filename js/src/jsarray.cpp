@@ -401,7 +401,7 @@ IndexToId(JSContext* cx, JSObject* obj, jsdouble index, JSBool* hole, jsid* idp,
           JSBool createAtom = JS_FALSE)
 {
     if (index <= JSVAL_INT_MAX) {
-        *idp = INT_TO_JSID(index);
+        *idp = INT_TO_JSID(int(index));
         return JS_TRUE;
     }
 
@@ -2609,7 +2609,7 @@ array_unshift(JSContext *cx, uintN argc, jsval *vp)
         argv = JS_ARGV(cx, vp);
         if (length > 0) {
             if (OBJ_IS_DENSE_ARRAY(cx, obj) && !js_PrototypeHasIndexedProperties(cx, obj) &&
-                !INDEX_TOO_SPARSE(obj, newlen + argc)) {
+                !INDEX_TOO_SPARSE(obj, unsigned(newlen + argc))) {
                 JS_ASSERT(newlen + argc == length + argc);
                 if (!EnsureCapacity(cx, obj, length + argc))
                     return JS_FALSE;
