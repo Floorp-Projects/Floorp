@@ -34,41 +34,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../..
+DEPTH = ../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS += test
+DIRS += ipdl cxx
 
 include $(topsrcdir)/config/rules.mk
-
-IPDLDIRS = \
-  dom/plugins \
-  dom/ipc \
-  netwerk/ipc \
-  netwerk/protocol/http/src \
-  ipc/test-harness \
-  ipc/testshell \
-  $(NULL)
-
-vpath %.ipdl $(topsrcdir)
-
-define ADD_IPDLDIR
-include $(topsrcdir)/$(IPDLDIR)/ipdl.mk
-ALL_IPDLSRCS += $$(IPDLSRCS:%=$(IPDLDIR)/%)
-endef
-
-ALL_IPDLSRCS :=
-
-$(foreach IPDLDIR,$(IPDLDIRS),$(eval $(ADD_IPDLDIR)))
-
-export:: $(ALL_IPDLSRCS)
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/other-licenses/ply \
-	  $(srcdir)/ipdl.py \
-	  -d _ipdlheaders \
-	  $(IPDLDIRS:%=-I$(topsrcdir)/%) \
-	  $^

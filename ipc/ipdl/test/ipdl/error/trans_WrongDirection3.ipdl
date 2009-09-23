@@ -1,0 +1,9 @@
+sync protocol trans_WrongDirection3 {
+
+parent:
+    sync Msg();
+
+state S1:
+    send Msg goto S1;
+
+};

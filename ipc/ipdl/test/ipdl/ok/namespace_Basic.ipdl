@@ -1,0 +1,12 @@
+namespace basic {
+
+// sanity check of namespaced protocols
+
+protocol namespace_Basic {
+
+child:
+    Msg();
+
+};
+
+} // namespace basic

@@ -1,0 +1,9 @@
+protocol trans_WrongDirection2 {
+
+parent:
+    Msg();
+
+state S1:
+    send Msg goto S1;
+
+};

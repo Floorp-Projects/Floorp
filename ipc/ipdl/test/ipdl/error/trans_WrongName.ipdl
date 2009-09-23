@@ -1,0 +1,9 @@
+protocol trans_WrongName {
+
+child:
+    Msg();
+
+state S1:
+    call Msg goto S1;
+
+};
