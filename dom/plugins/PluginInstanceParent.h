@@ -54,6 +54,7 @@ namespace plugins {
 
 class PBrowserStreamParent;
 class BrowserStreamParent;
+class PluginModuleParent;
 
 class PluginInstanceParent : public PPluginInstanceParent
 {
