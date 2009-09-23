@@ -3412,8 +3412,6 @@ js_Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 JS_STATIC_ASSERT(JSSLOT_PRIVATE == JSSLOT_ARRAY_LENGTH);
 JS_STATIC_ASSERT(JSSLOT_ARRAY_LENGTH + 1 == JSSLOT_ARRAY_COUNT);
 
-#ifdef JS_TRACER
-
 JSObject* FASTCALL
 js_NewEmptyArray(JSContext* cx, JSObject* proto)
 {
@@ -3436,7 +3434,9 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
     obj->dslots = NULL;
     return obj;
 }
+#ifdef JS_TRACER
 JS_DEFINE_CALLINFO_2(extern, OBJECT, js_NewEmptyArray, CONTEXT, OBJECT, 0, 0)
+#endif
 
 JSObject* FASTCALL
 js_NewArrayWithSlots(JSContext* cx, JSObject* proto, uint32 len)
@@ -3449,9 +3449,9 @@ js_NewArrayWithSlots(JSContext* cx, JSObject* proto, uint32 len)
         return NULL;
     return obj;
 }
+#ifdef JS_TRACER
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewArrayWithSlots, CONTEXT, OBJECT, UINT32, 0, 0)
-
-#endif /* JS_TRACER */
+#endif
 
 JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj)
