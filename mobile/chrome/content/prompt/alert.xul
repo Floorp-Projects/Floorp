@@ -11,7 +11,7 @@
   </scrollbox>
   <hbox id="prompt-alert-checkbox-box" collapsed="true" align="center">
     <checkbox class="toggle-dark" id="prompt-alert-checkbox"/>
-    <label id="prompt-alert-checkbox-msg"/>
+    <description id="prompt-alert-checkbox-msg"/>
   </hbox>
   <hbox pack="center">
     <button class="button-dark" label="&ok.label;"
