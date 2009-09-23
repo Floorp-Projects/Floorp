@@ -90,8 +90,7 @@
     <a id="privacyURL">&aboutPage.privacyPolicy.label;</a>
     <a href="about:rights">&aboutPage.rights.label;</a>
     <a id="releaseNotesURL">&aboutPage.relNotes.label;</a>
-    <!-- XXX wrong credits - these should point to the fennec specific ones, wherever those end up -->
-    <a href="about:credits">&aboutPage.credits.label;</a>
+    <a id="creditsURL">&aboutPage.credits.label;</a>
   </div>
 
   <div id="aboutDetails">
@@ -99,32 +98,33 @@
     <p id="aboutUA"/>
   </div>
 
-  <script type="application/javascript">
-    // get release notes URL from prefs
+  <script type="application/javascript;version=1.8"><![CDATA[
+    // get URLs from prefs
     try {
-      var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+      let formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                                 .getService(Components.interfaces.nsIURLFormatter);
 
-      var releaseNotesURL = formatter.formatURLPref("app.releaseNotesURL");
-      var relnotes = document.getElementById("releaseNotesURL");
-      relnotes.setAttribute("href", releaseNotesURL);
-
-      var supportURL = formatter.formatURLPref("app.support.baseURL");
-      var support = document.getElementById("supportURL");
-      support.setAttribute("href", supportURL);
+      let links = [
+        {id: "releaseNotesURL", pref: "app.releaseNotesURL"},
+        {id: "supportURL",      pref: "app.support.baseURL"},
+        {id: "faqURL",          pref: "app.faqURL"},
+        {id: "privacyURL",      pref: "app.privacyURL"},
+        {id: "creditsURL",      pref: "app.creditsURL"},
+      ];
       
-      //faqURL - ???
-      //privacyURL - hardcoded to http://www.mozilla.com/legal/privacy/ ?
-      //fennec-specific web credits?
-    }
-    catch (ex) { /* no release notes and vendor URL for you without bug 349985 being fixed */ }
+      links.forEach(function (link) {
+        let url = formatter.formatURLPref(link.pref);
+        let element = document.getElementById(link.id);
+        element.setAttribute("href", url);
+      });
+    } catch (ex) {}
 
-    var ua = navigator.userAgent;
+    let ua = navigator.userAgent;
     if (ua) {
-      var uaP = document.getElementById("aboutUA");
+      let uaP = document.getElementById("aboutUA");
       uaP.appendChild(document.createTextNode(ua));
     }
-  </script>
+  ]]></script>
 
 </body>
 </html>
