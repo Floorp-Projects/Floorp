@@ -1427,6 +1427,21 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActi
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+NS_IMETHODIMP nsCocoaWindow::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
+                                                        PRUint32 aNativeMessage,
+                                                        PRUint32 aModifierFlags)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if (mPopupContentView)
+    return mPopupContentView->SynthesizeNativeMouseEvent(aPoint, aNativeMessage,
+                                                         aModifierFlags);
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
 gfxASurface* nsCocoaWindow::GetThebesSurface()
 {
   if (mPopupContentView)
