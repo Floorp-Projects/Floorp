@@ -7635,6 +7635,15 @@ if test "$NECKO_COOKIES"; then
     AC_DEFINE(NECKO_COOKIES)
 fi
 
+dnl
+dnl Build jsctypes on the platforms we can.
+dnl
+AC_SUBST(BUILD_CTYPES)
+if test "$OS_TEST" != "arm"; then
+  BUILD_CTYPES=1
+  AC_DEFINE(BUILD_CTYPES)
+fi
+
 dnl NECKO_ configuration options are not global
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_"
 
@@ -8228,13 +8237,24 @@ fi
 AC_OUTPUT_SUBDIRS(js/src)
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 
-# Run the libffi 'configure' script.
-ac_configure_args="--disable-shared --enable-static --with-pic --disable-raw-api"
-if test "$MOZ_DEBUG"; then
-  ac_configure_args="$ac_configure_args --enable-debug"
+# Build jsctypes on the platforms we can.
+if test "$BUILD_CTYPES"; then
+  # Run the libffi 'configure' script on platforms that it supports.
+  if test -z "$_MSC_VER"; then
+    ac_configure_args="--disable-shared --enable-static --disable-raw-api"
+    if test "$MOZ_DEBUG"; then
+      ac_configure_args="$ac_configure_args --enable-debug"
+    fi
+    if test -n "$DSO_PIC_CFLAGS"; then
+      ac_configure_args="$ac_configure_args --with-pic"
+    fi
+    if test -n "$CROSS_COMPILE"; then
+      ac_configure_args="$ac_configure_args --build=$build --host=$target"
+    fi
+    AC_OUTPUT_SUBDIRS(js/ctypes/libffi)
+    ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+  fi
 fi
-AC_OUTPUT_SUBDIRS(js/ctypes/libffi)
-ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 
 fi # COMPILE_ENVIRONMENT && !LIBXUL_SDK_DIR
 

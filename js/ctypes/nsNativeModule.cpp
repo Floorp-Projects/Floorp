@@ -52,4 +52,4 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("jsctypes", components)
+NS_IMPL_NSGETMODULE(jsctypes, components)

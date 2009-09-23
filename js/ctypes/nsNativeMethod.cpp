@@ -53,14 +53,14 @@ jsvalToIntStrict(jsval aValue, IntegerType *aResult)
 {
   if (JSVAL_IS_INT(aValue)) {
     jsint i = JSVAL_TO_INT(aValue);
-    *aResult = i;
+    *aResult = IntegerType(i);
 
     // Make sure the integer fits in the alotted precision.
     return jsint(*aResult) == i;
   }
   if (JSVAL_IS_DOUBLE(aValue)) {
     jsdouble d = *JSVAL_TO_DOUBLE(aValue);
-    *aResult = d;
+    *aResult = IntegerType(d);
 
     // Don't silently lose bits here -- check that aValue really is an
     // integer value.
@@ -256,7 +256,7 @@ PrepareValue(JSContext* aContext, const nsNativeType& aType, jsval aValue, nsNat
     // no good way around it. Sternly requiring that the 64-bit double
     // argument be exactly representable as a 32-bit float is
     // unrealistic: it would allow 1/2 to pass but not 1/3.
-    aResult.mValue.mFloat = d;
+    aResult.mValue.mFloat = float(d);
     aResult.mData = &aResult.mValue.mFloat;
     break;
   case nsINativeTypes::DOUBLE:
@@ -370,12 +370,12 @@ ConvertReturnValue(JSContext* aContext,
     *aValue = INT_TO_JSVAL(aResultValue.mValue.mInt16);
     break;
   case nsINativeTypes::INT32:
-    if (!JS_NewNumberValue(aContext, aResultValue.mValue.mInt32, aValue))
+    if (!JS_NewNumberValue(aContext, jsdouble(aResultValue.mValue.mInt32), aValue))
       return NS_ERROR_OUT_OF_MEMORY;
     break;
   case nsINativeTypes::INT64:
     // Implicit conversion with loss of bits.  :-[
-    if (!JS_NewNumberValue(aContext, aResultValue.mValue.mInt64, aValue))
+    if (!JS_NewNumberValue(aContext, jsdouble(aResultValue.mValue.mInt64), aValue))
       return NS_ERROR_OUT_OF_MEMORY;
     break;
   case nsINativeTypes::UINT8:
@@ -385,20 +385,20 @@ ConvertReturnValue(JSContext* aContext,
     *aValue = INT_TO_JSVAL(aResultValue.mValue.mUint16);
     break;
   case nsINativeTypes::UINT32:
-    if (!JS_NewNumberValue(aContext, aResultValue.mValue.mUint32, aValue))
+    if (!JS_NewNumberValue(aContext, jsdouble(aResultValue.mValue.mUint32), aValue))
       return NS_ERROR_OUT_OF_MEMORY;
     break;
   case nsINativeTypes::UINT64:
     // Implicit conversion with loss of bits.  :-[
-    if (!JS_NewNumberValue(aContext, aResultValue.mValue.mUint64, aValue))
+    if (!JS_NewNumberValue(aContext, jsdouble(aResultValue.mValue.mUint64), aValue))
       return NS_ERROR_OUT_OF_MEMORY;
     break;
   case nsINativeTypes::FLOAT:
-    if (!JS_NewNumberValue(aContext, aResultValue.mValue.mFloat, aValue))
+    if (!JS_NewNumberValue(aContext, jsdouble(aResultValue.mValue.mFloat), aValue))
       return NS_ERROR_OUT_OF_MEMORY;
     break;
   case nsINativeTypes::DOUBLE:
-    if (!JS_NewNumberValue(aContext, aResultValue.mValue.mDouble, aValue))
+    if (!JS_NewNumberValue(aContext, jsdouble(aResultValue.mValue.mDouble), aValue))
       return NS_ERROR_OUT_OF_MEMORY;
     break;
   case nsINativeTypes::STRING: {
