@@ -68,13 +68,6 @@ NPObjectFromVariant(const NPVariant& aVariant) {
   return NPVARIANT_TO_OBJECT(aVariant);
 }
 
-inline PluginScriptableObjectChild*
-CreateActorForNPObject(PluginInstanceChild* aInstance,
-                       NPObject* aObject)
-{
-  return aInstance->CreateActorForNPObject(aObject);
-}
-
 bool
 ConvertToVariant(const NPRemoteVariant& aRemoteVariant,
                  NPVariant& aVariant)
@@ -162,7 +155,7 @@ ConvertToRemoteVariant(const NPVariant& aVariant,
   else if (NPVARIANT_IS_OBJECT(aVariant)) {
     NS_ASSERTION(aInstance, "Must have an instance to wrap!");
     PluginScriptableObjectChild* actor =
-      CreateActorForNPObject(aInstance, NPVARIANT_TO_OBJECT(aVariant));
+      aInstance->GetActorForNPObject(NPVARIANT_TO_OBJECT(aVariant));
     if (!actor) {
       NS_ERROR("Failed to create actor!");
       return false;

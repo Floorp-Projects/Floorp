@@ -178,7 +178,7 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
         return true;
     }
 
-    PluginScriptableObjectChild* actor = CreateActorForNPObject(object);
+    PluginScriptableObjectChild* actor = GetActorForNPObject(object);
     if (!actor) {
         PluginModuleChild::sBrowserFuncs.releaseobject(object);
         *result = NPERR_GENERIC_ERROR;
@@ -444,10 +444,11 @@ PluginInstanceChild::DeallocPPluginScriptableObject(PPluginScriptableObjectChild
     for (PRUint32 index = 0; index < count; index++) {
         if (mScriptableObjects[index] == object) {
             mScriptableObjects.RemoveElementAt(index);
-            break;
+            return true;
         }
     }
-    return true;
+    NS_NOTREACHED("An actor we don't know about?!");
+    return false;
 }
 
 PBrowserStreamChild*
@@ -537,13 +538,20 @@ PluginInstanceChild::DeallocPStreamNotify(PStreamNotifyChild* notifyData,
 }
 
 PluginScriptableObjectChild*
-PluginInstanceChild::CreateActorForNPObject(NPObject* aObject)
+PluginInstanceChild::GetActorForNPObject(NPObject* aObject)
 {
   NS_ASSERTION(aObject, "Null pointer!");
 
+
   PluginScriptableObjectChild* actor =
-      reinterpret_cast<PluginScriptableObjectChild*>(
-          CallPPluginScriptableObjectConstructor());
+      PluginModuleChild::current()->GetActorForNPObject(aObject);
+  if (actor) {
+    PluginModuleChild::sBrowserFuncs.retainobject(aObject);
+    return actor;
+  }
+
+  actor = reinterpret_cast<PluginScriptableObjectChild*>(
+      CallPPluginScriptableObjectConstructor());
   NS_ENSURE_TRUE(actor, nsnull);
 
   actor->Initialize(this, aObject);

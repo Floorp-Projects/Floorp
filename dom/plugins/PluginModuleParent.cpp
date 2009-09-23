@@ -192,7 +192,7 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType,
 
     NPError prv = NPERR_GENERIC_ERROR;
     nsAutoPtr<PluginInstanceParent> parentInstance(
-        new PluginInstanceParent(instance, mNPNIface));
+        new PluginInstanceParent(this, instance, mNPNIface));
 
     instance->pdata = parentInstance.get();
 
@@ -233,6 +233,19 @@ PluginModuleParent::NPP_Destroy(NPP instance,
 
     return prv;
  }
+
+bool
+PluginModuleParent::EnsureValidNPIdentifier(NPIdentifier aIdentifier)
+{
+    if (!mValidIdentifiers.GetEntry(aIdentifier)) {
+        nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(aIdentifier);
+        if (!newEntry) {
+            NS_ERROR("Out of memory?");
+            return false;
+        }
+    }
+    return true;
+}
 
 NPIdentifier
 PluginModuleParent::GetValidNPIdentifier(NPRemoteIdentifier aRemoteIdentifier)
@@ -341,8 +354,7 @@ PluginModuleParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
         return true;
     }
 
-    nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(ident);
-    if (!newEntry) {
+    if (!EnsureValidNPIdentifier(ident)) {
         NS_ERROR("Out of memory?");
         return false;
     }
@@ -361,8 +373,7 @@ PluginModuleParent::RecvNPN_GetIntIdentifier(const int32_t& aInt,
         return true;
     }
 
-    nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(ident);
-    if (!newEntry) {
+    if (!EnsureValidNPIdentifier(ident)) {
         NS_ERROR("Out of memory?");
         return false;
     }
@@ -456,8 +467,7 @@ PluginModuleParent::RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNam
     for (PRUint32 index = 0; index < count; index++) {
         NPIdentifier& id = ids[index];
         if (id) {
-            nsVoidPtrHashKey* newEntry = mValidIdentifiers.PutEntry(id);
-            if (!newEntry) {
+            if (!EnsureValidNPIdentifier(id)) {
                 NS_ERROR("Out of memory?");
                 return false;
             }

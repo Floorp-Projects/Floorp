@@ -161,7 +161,7 @@ public:
                  void* aValue);
 
     PluginScriptableObjectChild*
-    CreateActorForNPObject(NPObject* aObject);
+    GetActorForNPObject(NPObject* aObject);
 
     NPError
     NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
