@@ -2440,13 +2440,6 @@ Tab.prototype = {
     browser.setAttribute("style", "overflow: -moz-hidden-unscrollable; visibility: hidden; width: " + kDefaultBrowserWidth + "px; height: " + scaledHeight + "px;");
     browser.setAttribute("type", "content");
 
-    // Attach the popup contextmenu
-    let container = document.getElementById("tile-container");
-    browser.setAttribute("contextmenu", container.getAttribute("contextmenu"));
-    let autocompletepopup = container.getAttribute("autocompletepopup");
-    if (autocompletepopup)
-      browser.setAttribute("autocompletepopup", autocompletepopup);
-
     // Append the browser to the document, which should start the page load
     document.getElementById("browsers").appendChild(browser);
 
