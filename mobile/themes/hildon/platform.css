@@ -41,7 +41,7 @@
 /* general stuff ------------------------------------------------------------ */
 :root {
   font-family: "Nokia Sans", Tahoma, sans-serif !important;
-  font-size: 16.75pt !important;
+  font-size: 2.4mm !important;
 }
 
 menu,
@@ -83,23 +83,22 @@ textbox[isempty="true"] {
 .dialog-dark {
   color: #fff;
   background-color: #36373b;
-  -moz-border-radius: 0 0 2mm 2mm;
+  -moz-border-radius: 0 0 1mm 1mm;
   padding: 8px;
-  -moz-box-shadow: black 0 0.5mm 0.5mm;
+  -moz-box-shadow: black 0 0.25mm 0.25mm;
 }
 
 /* buttons ----------------------------------------------------------------- */
 .button-text,
 .toolbarbutton-text {
-  font-weight: bold !important;
-  font-size: 9pt !important;
+  font-size: 2.4mm !important;
 }
 
 button {
-  min-width: 12mm !important; /* button size */
-  min-height: 12mm !important; /* button size */
+  min-width: 6mm !important; /* button size */
+  min-height: 6mm !important; /* button size */
   color: #000;
-  padding: 0.5mm 1mm;
+  padding: 0.25mm 0.5mm;
   border-width: 8px !important;
   -moz-border-image: url("chrome://browser/skin/images/button-default-64.png") 8 repeat repeat;
   -moz-appearance: none !important;
@@ -139,11 +138,11 @@ button.button-dark[disabled="true"] {
 
 /* toolbar buttons --------------------------------------------------------- */
 toolbarbutton {
-  min-width: 17mm !important; /* primary button size */
-  min-height: 17mm !important; /* primary button size */
+  min-width: 7mm !important; /* primary button size */
+  min-height: 7mm !important; /* primary button size */
   -moz-appearance: none !important;
   margin: 0;
-  padding: 0.5mm;
+  padding: 0.25mm;
 }
 
 toolbarbutton:not(.show-text) .toolbarbutton-text {
@@ -165,7 +164,7 @@ toolbarbutton[open="true"] {
 /* dark buttons ------------------------------------------------------------ */
 toolbarbutton.button-dark {
   color: #fff;
-  padding: 0.5mm 1mm;
+  padding: 0.25mm 0.5mm;
   border-width: 10px;
   -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-default-64.png") 10 repeat repeat;
 }
@@ -184,7 +183,7 @@ toolbarbutton.button-dark[type="checkbox"][checked="true"] {
   border: 10px solid transparent !important;
   color: #fff !important;
   background: none !important;
-  padding: 0.5mm 1mm !important;
+  padding: 0.25mm 0.5mm !important;
 }
 
 /* image buttons ----------------------------------------------------------- */
@@ -192,6 +191,8 @@ toolbarbutton.button-dark[type="checkbox"][checked="true"] {
   padding: 0 !important;
   background: #36373b !important;
   border: none !important;
+  min-width: 0 !important; /* the image drives the size */
+  min-height: 0 !important; /* the image drives the size */
 }
 
 /* radio buttons ----------------------------------------------------------- */
@@ -200,15 +201,14 @@ radiogroup {
 }
 
 .radio-label {
-  font-weight: bold !important;
-  font-size: 9pt !important;
+  font-size: 2.4mm !important;
 }
 
 radio {
   color: #36373b;
-  min-width: 12mm !important; /* button size */
+  min-width: 6mm !important; /* button size */
   min-height: 6mm !important;
-  padding: 1mm !important;
+  padding: 0.5mm !important;
   margin: 0;
   border-width: 8px;
   -moz-box-align: center;
@@ -303,27 +303,27 @@ richlistbox {
 }
 
 richlistitem {
-  min-height: 14.4mm; /* row size */
+  min-height: 7mm; /* row size */
   padding: 5px;
   border-bottom: 1px solid rgb(207,207,207);
 }
 
 richlistitem label.title,
 richlistitem description.title {
-  font-size: 80% !important;
+  font-size: 2.4mm !important;
 }
 
 richlistitem label.normal,
 richlistitem description.normal {
   color: gray;
-  font-size: 60% !important;
+  font-size: 1.8mm !important;
   white-space: pre-wrap;
 }
 
 richlistitem label.normal-bold,
 richlistitem description.normal-bold {
   font-weight: bold;
-  font-size: 60% !important;
+  font-size: 1.8mm !important;
   white-space: pre-wrap;
 }
 
@@ -379,15 +379,14 @@ colorpicker > vbox {
 
 /* menulist ---------------------------------------------------------------- */
 .menulist-label {
-  font-weight: bold !important;
-  font-size: 9pt !important;
+  font-size: 2.4mm !important;
 }
 
 menulist {
-  min-width: 12mm !important; /* button size */
-  min-height: 12mm !important; /* button size */
+  min-width: 6mm !important; /* button size */
+  min-height: 6mm !important; /* button size */
   color: #000;
-  padding: 0.5mm;
+  padding: 0.25mm;
   border-width: 8px !important;
   -moz-border-image: url("chrome://browser/skin/images/button-default-64.png") 8 repeat repeat;
   -moz-appearance: none !important;
