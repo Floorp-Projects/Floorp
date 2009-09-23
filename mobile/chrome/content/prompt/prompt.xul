@@ -12,7 +12,7 @@
   <textbox id="prompt-prompt-textbox"/>
   <hbox id="prompt-prompt-checkbox-box" collapsed="true" align="center">
     <checkbox class="toggle-dark" id="prompt-prompt-checkbox"/>
-    <label id="prompt-prompt-checkbox-msg"/>
+    <description id="prompt-prompt-checkbox-msg"/>
   </hbox>
   <hbox pack="center" id="prompt-prompt-button-box">
     <button class="button-dark" label="&ok.label;"

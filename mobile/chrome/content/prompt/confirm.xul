@@ -10,7 +10,7 @@
   </scrollbox>
   <hbox id="prompt-confirm-checkbox-box" collapsed="true" align="center">
     <checkbox class="toggle-dark" id="prompt-confirm-checkbox"/>
-    <label id="prompt-confirm-checkbox-msg"/>
+    <description id="prompt-confirm-checkbox-msg"/>
   </hbox>
   <hbox pack="center" id="prompt-confirm-button-box">
     <button class="button-dark" label="&ok.label;"
