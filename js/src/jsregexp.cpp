@@ -5826,3 +5826,19 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent)
     return clone;
 }
 
+bool
+js_ContainsRegExpMetaChars(const jschar *chars, size_t length)
+{
+    for (size_t i = 0; i < length; ++i) {
+        char c = chars[i];
+        switch (c) {
+          /* Taken from the PatternCharacter production in 15.10.1. */
+          case '^': case '$': case '\\': case '.': case '*': case '+':
+          case '?': case '(': case ')': case '[': case ']': case '{':
+          case '}': case '|':
+            return true;
+          default:;
+        }
+    }
+    return false;
+}
