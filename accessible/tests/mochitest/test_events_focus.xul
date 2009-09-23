@@ -49,7 +49,7 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    addLoadEvent(doTests);
+    addA11yLoadEvent(doTests);
   </script>
 
   <hbox flex="1" style="overflow: auto;">
