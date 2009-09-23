@@ -1,0 +1,64 @@
+diff -r -p -U 8 Python-3.1.1/Modules/_ctypes/libffi_msvc/ffi.c mozilla/mozilla-jsctypes/js/ctypes/libffi_msvc/ffi.c
+--- Python-3.1.1/Modules/_ctypes/libffi_msvc/ffi.c	2009-02-03 11:34:18.000000000 -0800
++++ mozilla/mozilla-jsctypes/js/ctypes/libffi_msvc/ffi.c	2009-09-18 15:25:13.680640778 -0700
+@@ -29,18 +29,16 @@
+ #include <ffi.h>
+ #include <ffi_common.h>
+ 
+ #include <stdlib.h>
+ 
+ /* ffi_prep_args is called by the assembly routine once stack space
+    has been allocated for the function's arguments */
+ 
+-extern void Py_FatalError(const char *msg);
+-
+ /*@-exportheader@*/
+ void ffi_prep_args(char *stack, extended_cif *ecif)
+ /*@=exportheader@*/
+ {
+   register unsigned int i;
+   register void **p_argv;
+   register char *argp;
+   register ffi_type **p_arg;
+@@ -105,20 +103,18 @@ void ffi_prep_args(char *stack, extended
+       else
+ 	{
+ 	  memcpy(argp, *p_argv, z);
+ 	}
+       p_argv++;
+       argp += z;
+     }
+ 
+-  if (argp - stack > ecif->cif->bytes) 
+-    {
+-      Py_FatalError("FFI BUG: not enough stack space for arguments");
+-    }
++  FFI_ASSERT(argp - stack <= ecif->cif->bytes);
++
+   return;
+ }
+ 
+ /* Perform machine dependent cif processing */
+ ffi_status ffi_prep_cif_machdep(ffi_cif *cif)
+ {
+   /* Set the return type flag */
+   switch (cif->rtype->type)
+@@ -441,17 +437,16 @@ ffi_prep_closure (ffi_closure* closure,
+   BYTES("\xe8"); POINTER((char*)&ffi_closure_SYSV - (tramp + 4));
+ 
+   /* ret bytes */
+   BYTES("\xc2");
+   SHORT(bytes);
+   
+ #endif
+ 
+-  if (tramp - &closure->tramp[0] > FFI_TRAMPOLINE_SIZE)
+-    Py_FatalError("FFI_TRAMPOLINE_SIZE too small in " __FILE__);
++  FFI_ASSERT(tramp - &closure->tramp[0] <= FFI_TRAMPOLINE_SIZE);
+ 
+   closure->cif  = cif;
+   closure->user_data = user_data;
+   closure->fun  = fun;
+ 
+   return FFI_OK;
+ }
