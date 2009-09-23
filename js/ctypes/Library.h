@@ -37,69 +37,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSNATIVEMETHOD_H
-#define NSNATIVEMETHOD_H
+#ifndef LIBRARY_H
+#define LIBRARY_H
 
-#include "nsNativeTypes.h"
-#include "nsIXPCScriptable.h"
-#include "nsString.h"
-#include "nsTArray.h"
-#include "nsAutoPtr.h"
-#include "prlink.h"
-#include "jsapi.h"
-#include "ffi.h"
+#include "nsIForeignLibrary.h"
 
-struct nsNativeType
-{
-  ffi_type mType;
-  PRUint16 mNativeType;
-};
+#define FOREIGNLIBRARY_CONTRACTID \
+  "@mozilla.org/jsctypes;1"
 
-struct nsNativeValue
-{
-  void* mData;
-  union {
-    PRInt8   mInt8;
-    PRInt16  mInt16;
-    PRInt32  mInt32;
-    PRInt64  mInt64;
-    PRUint8  mUint8;
-    PRUint16 mUint16;
-    PRUint32 mUint32;
-    PRUint64 mUint64;
-    float    mFloat;
-    double   mDouble;
-    void*    mPointer;
-  } mValue;
-};
+#define FOREIGNLIBRARY_CID \
+{ 0xc797702, 0x1c60, 0x4051, { 0x9d, 0xd7, 0x4d, 0x74, 0x5, 0x60, 0x56, 0x42 } }
 
-class nsNativeMethod : public nsIXPCScriptable
+struct PRLibrary;
+
+namespace mozilla {
+namespace ctypes {
+
+class Library : public nsIForeignLibrary
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCSCRIPTABLE
+  NS_DECL_NSIFOREIGNLIBRARY
 
-  nsNativeMethod();
+  Library();
 
-  nsresult Init(JSContext* aContext, nsNativeTypes* aLibrary, PRFuncPtr aFunc, PRUint16 aCallType, jsval aResultType, const nsTArray<jsval>& aArgTypes);
+  PRBool IsOpen() { return mLibrary != nsnull; }
 
 private:
-  ~nsNativeMethod();
+  ~Library();
 
-  PRBool Execute(JSContext* aContext, PRUint32 aArgc, jsval* aArgv, jsval* aValue);
-
-protected:
-  // reference to the library our function is in
-  nsRefPtr<nsNativeTypes> mLibrary;
-
-  PRFuncPtr mFunc;
-
-  ffi_abi mCallType;
-  nsNativeType mResultType;
-  nsAutoTArray<nsNativeType, 16> mArgTypes;
-  nsAutoTArray<ffi_type*, 16> mFFITypes;
-
-  ffi_cif mCIF;
+  PRLibrary* mLibrary;
 };
+
+}
+}
 
 #endif

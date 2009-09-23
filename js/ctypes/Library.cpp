@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
+ *  Fredrik Larsson <nossralf@gmail.com>
  *  Dan Witte <dwitte@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,13 +38,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsNativeTypes.h"
-#include "nsNativeMethod.h"
+#include "Library.h"
+#include "Function.h"
 #include "nsServiceManagerUtils.h"
 #include "nsAutoPtr.h"
 #include "nsILocalFile.h"
 #include "prlink.h"
 #include "jsapi.h"
+
+namespace mozilla {
+namespace ctypes {
 
 static inline nsresult
 jsvalToUint16(JSContext* aContext, jsval aVal, PRUint16& aResult)
@@ -72,20 +76,20 @@ jsvalToCString(JSContext* aContext, jsval aVal, const char*& aResult)
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMPL_ISUPPORTS1(nsNativeTypes, nsINativeTypes)
+NS_IMPL_ISUPPORTS1(Library, nsIForeignLibrary)
 
-nsNativeTypes::nsNativeTypes()
+Library::Library()
   : mLibrary(nsnull)
 {
 }
 
-nsNativeTypes::~nsNativeTypes()
+Library::~Library()
 {
   Close();
 }
 
 NS_IMETHODIMP
-nsNativeTypes::Open(nsILocalFile* aFile)
+Library::Open(nsILocalFile* aFile)
 {
   NS_ENSURE_ARG(aFile);
   NS_ENSURE_TRUE(!mLibrary, NS_ERROR_ALREADY_INITIALIZED);
@@ -94,7 +98,7 @@ nsNativeTypes::Open(nsILocalFile* aFile)
 }
 
 NS_IMETHODIMP
-nsNativeTypes::Close()
+Library::Close()
 {
   if (mLibrary) {
     PR_UnloadLibrary(mLibrary);
@@ -105,7 +109,7 @@ nsNativeTypes::Close()
 }
 
 NS_IMETHODIMP
-nsNativeTypes::Declare(nsISupports** aResult)
+Library::Declare(nsISupports** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   NS_ENSURE_TRUE(mLibrary, NS_ERROR_NOT_INITIALIZED);
@@ -154,11 +158,14 @@ nsNativeTypes::Declare(nsISupports** aResult)
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<nsNativeMethod> call = new nsNativeMethod;
+  nsRefPtr<Function> call = new Function;
   rv = call->Init(ctx, this, func, callType, argv[2], argTypes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   call.forget(aResult);
   return rv;
+}
+
+}
 }
 

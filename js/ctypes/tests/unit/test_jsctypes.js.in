@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Fredrik Larsson <nossralf@gmail.com>
  *  Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
  *  Dan Witte <dwitte@mozilla.com>
  *
@@ -43,38 +44,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 const Types = ctypes.types;
-
-function POINT(x, y) {
-  this.x = x; this.y = y;
-}
-
-POINT.prototype = {
-  _fields_ : [{"x" : Types.INT32}, {"y" : Types.INT32}]
-}
-
-function RECT(top, left, bottom, right) {
-  this.top = top; this.left = left; this.bottom = bottom; this.right = right;
-}
-
-RECT.prototype = {
-  _fields_ : [{"top" : Types.INT32}, {"left" : Types.INT32}, {"bottom" : Types.INT32}, {"right" : Types.INT32}]
-}
-
-function INNER(i1, i2, i3) {
-  this.i1 = i1; this.i2 = i2; this.i3 = i3;
-}
-
-INNER.prototype = {
-  _fields_ : [{"i1" : Types.INT8}, {"i2" : Types.INT64}, {"i3" : Types.INT8}]
-}
-
-function NESTED(n1, n2, inner, n3, n4) {
-  this.n1 = n1; this.n2 = n2; this.inner = inner; this.n3 = n3; this.n4 = n4;
-}
-
-NESTED.prototype = {
-  _fields_ : [{"n1" : Types.INT32}, {"n2" : Types.INT16}, {"inner" : INNER}, {"n3" : Types.INT64}, {"n4" : Types.INT32}]
-}
 
 function do_check_throws(f, type, stack)
 {
@@ -119,9 +88,6 @@ function run_test()
   var libpath = libfile.path;
   library = ctypes.open(libpath);
   run_void_tests(library);
-
-  // structs not supported yet
-  //run_struct_tests(library);
 }
 
 function run_void_tests(library) {
@@ -141,7 +107,6 @@ function run_short_tests(library) {
   do_check_eq(1/test_s_s(-0), 1/0);  // that is, test_s_s(-0) is +0
   do_check_eq(test_s_s(true), 1);
   do_check_eq(test_s_s(false), 0);
-  do_check_eq(test_s_s(Number(16)), 16);
 
   // don't convert anything else to an int16
   var vals = [0x8000, -0x8001, 0x100000000, Infinity, -Infinity, NaN,
@@ -159,7 +124,7 @@ function run_short_tests(library) {
   var test_us_us = library.declare("test_s_s", Types.DEFAULT, Types.UINT16, Types.UINT16);
   do_check_eq(test_us_us(0xffff), 0xffff);
   do_check_throws(function () { test_us_us(0x10000); }, Error);
-
+  do_check_throws(function () { test_us_us(-1); }, Error);
 }
 
 function run_int_tests(library) {
@@ -174,7 +139,6 @@ function run_int_tests(library) {
   do_check_eq(1/test_i_i(-0), 1/0);  // that is, test_i_i(-0) is +0
   do_check_eq(test_i_i(true), 1);
   do_check_eq(test_i_i(false), 0);
-  do_check_eq(test_i_i(Number(16)), 16);
 
   // don't convert anything else to an int
   var vals = [0x80000000, -0x80000001, Infinity, -Infinity, NaN,
@@ -192,6 +156,7 @@ function run_int_tests(library) {
   var test_ui_ui = library.declare("test_i_i", Types.DEFAULT, Types.UINT32, Types.UINT32);
   do_check_eq(test_ui_ui(0xffffffff), 0xffffffff);
   do_check_throws(function () { test_ui_ui(0x100000000); }, Error);
+  do_check_throws(function () { test_ui_ui(-1); }, Error);
 }
 
 function run_float_tests(library) {
@@ -205,7 +170,6 @@ function run_float_tests(library) {
   do_check_eq(test_f_f(-Infinity), -Infinity);
   do_check_eq(isNaN(test_f_f(NaN)), true);
   do_check_eq(1/test_f_f(-0), 1/-0); // that is, test_f_f(-0) is -0
-  do_check_eq(test_f_f(Number(16.5)), 16.5);
 
   // allow values that can't be represented precisely as a float
   do_check_eq(test_f_f(1 + 1/0x80000000), 1);
@@ -233,7 +197,6 @@ function run_double_tests(library) {
   do_check_eq(test_d_d(-Infinity), -Infinity);
   do_check_eq(isNaN(test_d_d(NaN)), true);
   do_check_eq(1/test_d_d(-0), 1/-0); // that is, test_d_d(-0) is -0
-  do_check_eq(test_d_d(Number(16.5)), 16.5);
 
   // don't convert anything else to a double
   var vals = [true, false, null, undefined, "", "0", {}, [], new Number(16),
@@ -275,30 +238,5 @@ function run_mixed_tests(library) {
   var test_i_if_floor = library.declare("test_i_if_floor", Types.DEFAULT, Types.INT32, Types.INT32, Types.FLOAT);
   do_check_eq(test_i_if_floor(5, 5.5), 10);
   do_check_throws(function() { test_i_if_floor(5.5, 5); }, Error);
-}
-
-function run_struct_tests(library) {
-  var test_pt_in_rect = library.declare("test_pt_in_rect", Types.DEFAULT, Types.INT32, RECT, POINT);
-  var rect = new RECT(10, 5, 5, 10);
-  var pt1 = new POINT(6, 6);
-  do_check_eq(test_pt_in_rect(rect, pt1), 1);
-  var pt2 = new POINT(2, 2);
-  do_check_eq(test_pt_in_rect(rect, pt2), 0);
-
-  // don't allow 0 or null when passing by value
-  do_check_throws(function () { test_pt_in_rect(rect, 0); }, Error);
-  do_check_throws(function () { test_pt_in_rect(rect, null); }, Error);
-  do_check_throws(function () { test_pt_in_rect(rect, undefined); }, Error);
-
-  var test_nested_struct = library.declare("test_nested_struct", Types.DEFAULT, Types.INT32, NESTED);
-  var inner = new INNER(161, 523412, 43);
-  var nested = new NESTED(13155, 1241, inner, 24512115, 1234111);
-  // add up all the numbers and make sure the C function agrees
-  do_check_eq(test_nested_struct(nested), 26284238);
-
-  var test_struct_return = library.declare("test_struct_return", Types.DEFAULT, POINT, RECT);
-  var ret = test_struct_return(rect);
-  do_check_eq(ret.x, rect.left);
-  do_check_eq(ret.y, rect.top);
 }
 

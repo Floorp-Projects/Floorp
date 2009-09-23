@@ -38,18 +38,25 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIGenericFactory.h"
-#include "nsNativeTypes.h"
+#include "Library.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeTypes)
+namespace mozilla {
+namespace ctypes {
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(Library)
+
+}
+}
 
 static nsModuleComponentInfo components[] =
 {
   {
     "jsctypes",
-    NATIVETYPES_CID,
-    NATIVETYPES_CONTRACTID,
-    nsNativeTypesConstructor,
+    FOREIGNLIBRARY_CID,
+    FOREIGNLIBRARY_CONTRACTID,
+    mozilla::ctypes::LibraryConstructor,
   }
 };
 
 NS_IMPL_NSGETMODULE(jsctypes, components)
+
