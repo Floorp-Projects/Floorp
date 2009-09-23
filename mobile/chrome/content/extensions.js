@@ -55,6 +55,7 @@ var ExtensionsView = {
   _repoItem: null,
   _msg: null,
   _dloadmgr: null,
+  _search: null,
   _restartCount: 0,
   _observerIndex: -1,
 
@@ -246,6 +247,7 @@ var ExtensionsView = {
 
     this._pref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
     this._rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
+    this._search = Cc["@mozilla.org/browser/search-service;1"].getService(Ci.nsIBrowserSearchService);
 
     let repository = "@mozilla.org/extensions/addon-repository;1";
     try {
@@ -272,6 +274,7 @@ var ExtensionsView = {
     this._strings["addonType.2"] = strings.getString("addonType.2");
     this._strings["addonType.4"] = strings.getString("addonType.4");
     this._strings["addonType.8"] = strings.getString("addonType.8");
+    this._strings["addonType.1024"] = strings.getString("addonType.1024");
 
     let self = this;
     setTimeout(function() {
@@ -291,11 +294,6 @@ var ExtensionsView = {
     this.clearSection("local");
 
     let items = this._extmgr.getItemList(Ci.nsIUpdateItem.TYPE_ANY, {});
-    if (items.length == 0) {
-      let strings = document.getElementById("bundle_browser");
-      this.displaySectionMessage("local", strings.getString("addonsLocalNone.label"), null, true);
-      document.getElementById("addons-update-all").disabled = true;
-    }
 
     for (let i = 0; i < items.length; i++) {
       let addon = items[i];
@@ -303,6 +301,7 @@ var ExtensionsView = {
       // Some information is not directly accessible from the extmgr
       let isDisabled = this._getRDFProperty(addon.id, "isDisabled") == "true";
       let appDisabled = this._getRDFProperty(addon.id, "appDisabled");
+      let appManaged = this._getRDFProperty(addon.id, "appManaged");
       let desc = this._getRDFProperty(addon.id, "description");
       let optionsURL = this._getRDFProperty(addon.id, "optionsURL");
       let opType = this._getRDFProperty(addon.id, "opType");
@@ -311,46 +310,101 @@ var ExtensionsView = {
       let listitem = this._createItem(addon, "local");
       listitem.setAttribute("isDisabled", isDisabled);
       listitem.setAttribute("appDisabled", appDisabled);
+      listitem.setAttribute("appManaged", appManaged);
       listitem.setAttribute("description", desc);
       listitem.setAttribute("optionsURL", optionsURL);
       listitem.setAttribute("opType", opType);
       listitem.setAttribute("updateable", updateable);
       this._list.insertBefore(listitem, this._repoItem);
     }
+    
+    // Load the search engines
+    let defaults = this._search.getDefaultEngines({ }).map(function (e) e.name);
+    function isDefault(aEngine)
+      defaults.indexOf(aEngine.name) != -1
+
+    let engines = this._search.getEngines({ });
+    for (let e = 0; e < engines.length; e++) {
+      let engine = engines[e];
+      let addon = {};
+      addon.id = engine.name;
+      addon.type = 1024;
+      addon.name = engine.name;
+      addon.version = "";
+      addon.iconURL = engine.iconURI ? engine.iconURI.spec : "";
+
+      let listitem = this._createItem(addon, "searchplugin");
+      listitem._engine = engine;
+      listitem.setAttribute("isDisabled", engine.hidden ? "true" : "false");
+      listitem.setAttribute("appDisabled", "false");
+      listitem.setAttribute("appManaged", isDefault(engine));
+      listitem.setAttribute("description", engine.description);
+      listitem.setAttribute("optionsURL", "");
+      listitem.setAttribute("opType", engine.hidden ? "needs-disable" : "");
+      listitem.setAttribute("updateable", "false");
+      this._list.insertBefore(listitem, this._repoItem);
+    }
+
+    if (engines.length + items.length == 0) {
+      let strings = document.getElementById("bundle_browser");
+      this.displaySectionMessage("local", strings.getString("addonsLocalNone.label"), null, true);
+      document.getElementById("addons-update-all").disabled = true;
+    }
   },
 
   enable: function ev_enable(aItem) {
-    let id = this._getIDFromURI(aItem.id);
-    this._extmgr.enableItem(id);
+    let opType;
+    if (aItem.getAttribute("type") == "1024") {
+      aItem._engine.hidden = false;
+      opType = "needs-enable";
+    } else {
+      let id = this._getIDFromURI(aItem.id);
+      this._extmgr.enableItem(id);
+      opType = this._getRDFProperty(id, "opType");
 
-    let opType = this._getRDFProperty(id, "opType");
-    if (opType == "needs-enable")
-      this.showRestart();
-    else
-      this.hideRestart();
+      if (opType == "needs-enable")
+        this.showRestart();
+      else
+        this.hideRestart();
+    }
+
     aItem.setAttribute("opType", opType);
   },
 
   disable: function ev_disable(aItem) {
-    let id = this._getIDFromURI(aItem.id);
-    this._extmgr.disableItem(id);
+    let opType;
+    if (aItem.getAttribute("type") == "1024") {
+      aItem._engine.hidden = true;
+      opType = "needs-disable";
+    } else {
+      let id = this._getIDFromURI(aItem.id);
+      this._extmgr.disableItem(id);
+      opType = this._getRDFProperty(id, "opType");
 
-    let opType = this._getRDFProperty(id, "opType");
-    if (opType == "needs-disable")
-      this.showRestart();
-    else
-      this.hideRestart();
+      if (opType == "needs-disable")
+        this.showRestart();
+      else
+        this.hideRestart();
+    }
+    
     aItem.setAttribute("opType", opType);
   },
 
   uninstall: function ev_uninstall(aItem) {
-    let id = this._getIDFromURI(aItem.id);
-    this._extmgr.uninstallItem(id);
+    let opType;
+    if (aItem.getAttribute("type") == "1024") {
+      this._search.removeEngine(aItem._engine);
+      // the search-engine-modified observer in browser.js will take care of
+      // updating the list
+    } else {
+      let id = this._getIDFromURI(aItem.id);
+      this._extmgr.uninstallItem(id);
+      opType = this._getRDFProperty(id, "opType");
 
-    let opType = this._getRDFProperty(id, "opType");
-    if (opType == "needs-uninstall")
-      this.showRestart();
-    aItem.setAttribute("opType", opType);
+      if (opType == "needs-uninstall")
+        this.showRestart();
+      aItem.setAttribute("opType", opType);
+    }
   },
 
   cancelUninstall: function ev_cancelUninstall(aItem) {

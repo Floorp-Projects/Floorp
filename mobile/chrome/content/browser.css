@@ -106,6 +106,10 @@ richlistitem[typeName="local"] {
   -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-local");
 }
 
+richlistitem[typeName="searchplugin"] {
+  -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-searchplugin");
+}
+
 richlistitem[typeName="search"] {
   -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-search");
 }

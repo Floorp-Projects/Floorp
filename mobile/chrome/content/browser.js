@@ -471,6 +471,9 @@ var Browser = {
     // clear out tabs the user hasn't touched lately on memory crunch
     os.addObserver(MemoryObserver, "memory-pressure", false);
 
+    // search engine changes
+    os.addObserver(BrowserSearch, "browser-search-engine-modified", false);
+
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
     let browsers = document.getElementById("browsers");
@@ -573,6 +576,7 @@ var Browser = {
 #ifdef WINCE
     os.removeObserver(SoftKeyboardObserver, "softkb-change");
 #endif
+    os.removeObserver(BrowserSearch, "browser-search-engine-modified");
 
     window.controllers.removeController(this);
     window.controllers.removeController(BrowserUI);
@@ -1374,9 +1378,47 @@ const BrowserSearch = {
   engines: null,
   _allEngines: [],
 
+  observe: function (aSubject, aTopic, aData) {
+    if (aTopic != "browser-search-engine-modified")
+      return;
+
+    switch (aData) {
+      case "engine-added":
+      case "engine-removed":
+	// force a rebuild of the prefs list, if needed
+	// XXX this is inefficient, shouldn't have to rebuild the entire list
+	if (ExtensionsView._list)
+	  ExtensionsView.getAddonsFromLocal();
+
+	// fall through
+      case "engine-changed":
+	// XXX we should probably also update the ExtensionsView list here once
+	// that's efficient, since the icon can change (happen during an async
+	// installs from the web)
+
+	// blow away our cache
+	this._engines = null;
+	break;
+      case "engine-current":
+	// Not relevant
+	break;
+    }
+  },
+
   get _currentEngines() {
     let doc = getBrowser().contentDocument;
     return this._allEngines.filter(function(element) element.doc === doc, this);
+  },
+
+  get searchService() {
+    delete this.searchService;
+    return this.searchService = Cc["@mozilla.org/browser/search-service;1"].getService(Ci.nsIBrowserSearchService);
+  },
+
+  get engines() {
+    if (this._engines)
+      return this._engines;
+    return this._engines = this.searchService.getVisibleEngines({ });    
   },
 
   addPageSearchEngine: function (aEngine, aDocument) {
@@ -1427,26 +1469,22 @@ const BrowserSearch = {
   },
 
   addPermanentSearchEngine: function (aEngine) {
-    var searchService = Cc["@mozilla.org/browser/search-service;1"].getService(Ci.nsIBrowserSearchService);
     let iconURL = BrowserUI._favicon.src;
-    searchService.addEngine(aEngine.href, Ci.nsISearchEngine.DATA_XML, iconURL, false);
+    this.searchService.addEngine(aEngine.href, Ci.nsISearchEngine.DATA_XML, iconURL, false);
 
-    this.engines = null;
+    this._engines = null;
   },
 
   updateSearchButtons: function() {
-    if (this.engines)
+    if (this._engines)
       return;
-
-    var searchService = Cc["@mozilla.org/browser/search-service;1"].getService(Ci.nsIBrowserSearchService);
-    var engines = searchService.getVisibleEngines({ });
-    this.engines = engines;
 
     // Clean the previous search engines button
     var container = document.getElementById("search-buttons");
     while (container.hasChildNodes())
       container.removeChild(container.lastChild);
 
+    let engines = this.engines;
     for (var e = 0; e < engines.length; e++) {
       var button = document.createElement("radio");
       var engine = engines[e];
