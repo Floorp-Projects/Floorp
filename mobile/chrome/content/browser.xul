@@ -201,6 +201,9 @@
           <box id="toolbar-container" class="panel-dark">
             <box id="toolbar-moveable-container">
               <toolbar id="toolbar-main" class="panel-dark">
+#ifdef MOZ_PLATFORM_HILDON
+                <toolbarbutton id="tool-app-switch" class="button-image" oncommand="BrowserUI.switchTask();"/>
+#endif
                 <hbox id="urlbar-container" flex="1">
                   <box id="identity-box"
                        onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
