@@ -37,33 +37,75 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSNATIVETYPES_H
-#define NSNATIVETYPES_H
+#ifndef FUNCTION_H
+#define FUNCTION_H
 
-#include "nsINativeTypes.h"
+#include "Library.h"
+#include "nsIXPCScriptable.h"
+#include "nsString.h"
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
+#include "prlink.h"
+#include "jsapi.h"
+#include "ffi.h"
 
-#define NATIVETYPES_CONTRACTID \
-  "@mozilla.org/jsctypes;1"
+namespace mozilla {
+namespace ctypes {
 
-#define NATIVETYPES_CID \
-{ 0xc797702, 0x1c60, 0x4051, { 0x9d, 0xd7, 0x4d, 0x74, 0x5, 0x60, 0x56, 0x42 } }
+struct Type
+{
+  ffi_type mFFIType;
+  PRUint16 mType;
+};
 
-struct PRLibrary;
+struct Value
+{
+  void* mData;
+  union {
+    int8_t   mInt8;
+    int16_t  mInt16;
+    int32_t  mInt32;
+    int64_t  mInt64;
+    uint8_t  mUint8;
+    uint16_t mUint16;
+    uint32_t mUint32;
+    uint64_t mUint64;
+    float    mFloat;
+    double   mDouble;
+    void*    mPointer;
+  } mValue;
+};
 
-class nsNativeTypes : public nsINativeTypes
+class Function : public nsIXPCScriptable
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSINATIVETYPES
+  NS_DECL_NSIXPCSCRIPTABLE
 
-  nsNativeTypes();
+  Function();
 
-  PRBool IsOpen() { return mLibrary != nsnull; }
+  nsresult Init(JSContext* aContext, Library* aLibrary, PRFuncPtr aFunc, PRUint16 aCallType, jsval aResultType, const nsTArray<jsval>& aArgTypes);
 
 private:
-  ~nsNativeTypes();
+  ~Function();
 
-  PRLibrary* mLibrary;
+  PRBool Execute(JSContext* aContext, PRUint32 aArgc, jsval* aArgv, jsval* aValue);
+
+protected:
+  // reference to the library our function is in
+  nsRefPtr<Library> mLibrary;
+
+  PRFuncPtr mFunc;
+
+  ffi_abi mCallType;
+  Type mResultType;
+  nsAutoTArray<Type, 16> mArgTypes;
+  nsAutoTArray<ffi_type*, 16> mFFITypes;
+
+  ffi_cif mCIF;
 };
+
+}
+}
 
 #endif

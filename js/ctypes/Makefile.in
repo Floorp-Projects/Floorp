@@ -54,7 +54,7 @@ EXTRA_JS_MODULES = \
     $(NULL)
 
 XPIDLSRCS = \
-    nsINativeTypes.idl \
+    nsIForeignLibrary.idl \
     $(NULL)
 
 ifdef BUILD_CTYPES
@@ -65,9 +65,9 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 
 CPPSRCS = \
-    nsNativeMethod.cpp \
-    nsNativeTypes.cpp \
-    nsNativeModule.cpp \
+    Function.cpp \
+    Library.cpp \
+    Module.cpp \
     $(NULL)
 
 ifdef _MSC_VER

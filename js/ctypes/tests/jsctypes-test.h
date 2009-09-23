@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Fredrik Larsson <nossralf@gmail.com>
  *  Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
  *  Dan Witte <dwitte@mozilla.com>
  *
