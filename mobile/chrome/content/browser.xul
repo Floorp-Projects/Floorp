@@ -237,10 +237,9 @@
           <notificationbox id="notifications"/>
 
           <!-- Content viewport -->
-	        <box>
-	          <html:div id="tile-container" style="width: 800px; height: 480px; overflow: hidden;"
-                      onnewtab="CommandUpdater.doCommand('cmd_newTab');"/> <!-- do we want this new tab thing? -->
-	        </box>
+          <box>
+            <html:div id="tile-container" style="width: 800px; height: 480px; overflow: hidden;"/>
+          </box>
         </scrollbox>
 
         <!-- Right toolbar -->

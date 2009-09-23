@@ -10,11 +10,6 @@ box[type="documenttab"] {
     -moz-binding: url("chrome://browser/content/tabs.xml#documenttab");
 }
 
-#prefs-container > scrollbox
-{
-    overflow: auto;
-}
-
 settings {
   -moz-binding: url("chrome://browser/content/bindings/setting.xml#settings");
 }
