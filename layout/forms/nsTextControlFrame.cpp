@@ -1608,22 +1608,14 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   nsresult rv = NS_NewHTMLElement(getter_AddRefs(mAnonymousDiv), nodeInfo, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Set the div native anonymous, so CSS will be its style language
-  // no matter what. We need to do this before we set the 'style' attribute.
-  mAnonymousDiv->SetNativeAnonymous();
-
-  // Set the necessary style attributes on the text control.
-
-  rv = mAnonymousDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                              NS_LITERAL_STRING("anonymous-div"), PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString styleValue;
+  // Set the necessary classes on the text control. We use class values
+  // instead of a 'style' attribute so that the style comes from a user-agent
+  // style sheet and is still applied even if author styles are disabled.
+  nsAutoString classValue;
+  classValue.AppendLiteral("anonymous-div");
   PRInt32 wrapCols = GetWrapCols();
   if (wrapCols >= 0) {
-    styleValue.AppendLiteral("white-space:pre-wrap");
-  } else {
-    styleValue.AppendLiteral("white-space:pre");
+    classValue.AppendLiteral(" wrap");
   }
   if (!IsSingleLineTextControl()) {
     // We can't just inherit the overflow because setting visible overflow will
@@ -1633,11 +1625,11 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     const nsStyleDisplay* disp = GetStyleDisplay();
     if (disp->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE &&
         disp->mOverflowX != NS_STYLE_OVERFLOW_CLIP) {
-      styleValue.AppendLiteral(";overflow:inherit");
+      classValue.AppendLiteral(" inherit-overflow");
     }
   }
-  rv = mAnonymousDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
-                              styleValue, PR_FALSE);
+  rv = mAnonymousDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                              classValue, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aElements.AppendElement(mAnonymousDiv))

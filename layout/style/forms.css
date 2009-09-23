@@ -109,7 +109,6 @@ input {
 }
 
 input > .anonymous-div {
-  white-space: pre;
   word-wrap: normal !important;
   /* Make the line-height equal to the available height */
   line-height: -moz-block-height;
@@ -142,6 +141,7 @@ textarea > scrollbar {
 
 textarea > .anonymous-div,
 input > .anonymous-div {
+  white-space: pre;
   overflow: auto;
   border: 0px !important;
   /* The 1px horizontal padding is for parity with Win/IE */
@@ -151,6 +151,15 @@ input > .anonymous-div {
      but it's needed to make 'text-decoration' "work" on text inputs. */
   text-decoration: inherit;
   ime-mode: inherit;
+}
+
+textarea > .anonymous-div.wrap,
+input > .anonymous-div.wrap {
+  white-space: pre-wrap;
+}
+textarea > .anonymous-div.inherit-overflow,
+input > .anonymous-div.inherit-overflow {
+  overflow: inherit;
 }
 
 input:-moz-read-write,
