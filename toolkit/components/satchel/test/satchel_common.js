@@ -87,6 +87,24 @@ function doKey(aKey, modifier) {
     wutils.sendKeyEvent("keyup",    key, 0, modifier);
 }
 
+
+function getAutocompletePopup() {
+    var Ci = Components.interfaces;
+    chromeWin = window
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindow)
+                    .QueryInterface(Ci.nsIDOMChromeWindow);
+    autocompleteMenu = chromeWin.document.getElementById("PopupAutoComplete");
+    ok(autocompleteMenu, "Got autocomplete popup");
+
+    return autocompleteMenu;
+}
+
+
 function cleanUpFormHist() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var formhist = Components.classes["@mozilla.org/satchel/form-history;1"].
