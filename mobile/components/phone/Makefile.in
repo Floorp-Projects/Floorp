@@ -59,10 +59,16 @@ REQUIRES	= \
 CPPSRCS   = nsPhoneSupport.cpp
 XPIDLSRCS = nsIPhoneSupport.idl
 
+
 EXTRA_DSO_LDOPTS += \
 	$(XPCOM_GLUE_LDOPTS) \
 	$(NSPR_LIBS) \
 	$(NULL)
+
+ifdef MOZ_PLATFORM_HILDON
+LOCAL_INCLUDES   += $(MOZ_DBUS_GLIB_CFLAGS)
+EXTRA_DSO_LDOPTS += $(MOZ_DBUS_GLIB_LIBS)
+endif
 
 ifdef WINCE
 OS_LIBS += $(call EXPAND_LIBNAME, aygshell cellcore)
