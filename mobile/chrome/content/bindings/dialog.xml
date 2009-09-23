@@ -15,7 +15,7 @@
       </xul:stack>
     </content>
     
-    <implementation>
+    <implementation implements="nsIDOMEventListener">
       <field name="arguments"/>
       
       <constructor><![CDATA[
@@ -33,8 +33,17 @@
             throw("Dialog : Unable to load script : " + this.getAttribute("script") + "\n");
           }
         }
+        window.addEventListener("unload", this, true);
         ]]>
       </constructor>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body>
+          if (aEvent.type == "unload")
+            this._closed = true;
+        </body>
+      </method>
       
       <method name="close">
         <body>
@@ -49,11 +58,11 @@
       
       <method name="waitForClose">
         <body>
-        let thread = Components.classes["@mozilla.org/thread-manager;1"]
-                        .getService(Components.interfaces.nsIThreadManager)
-                        .currentThread;
-        while (!this._closed)
-          thread.processNextEvent(true);
+          let thread = Components.classes["@mozilla.org/thread-manager;1"]
+                          .getService(Components.interfaces.nsIThreadManager)
+                          .currentThread;
+          while (!this._closed)
+            thread.processNextEvent(true);
         </body>
       </method>
     </implementation>
