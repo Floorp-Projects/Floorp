@@ -603,6 +603,13 @@ var BrowserUI = {
     panelUI.hidden = true;
   },
   
+  switchTask: function switchTask() {
+    try {
+      let phone = Cc["@mozilla.org/phone/support;1"].createInstance(Ci.nsIPhoneSupport);
+      phone.switchTask();
+    } catch(e) { }
+  },
+  
   handleEvent: function (aEvent) {
     switch (aEvent.type) {
       // Browser events
