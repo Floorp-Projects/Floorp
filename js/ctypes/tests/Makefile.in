@@ -51,7 +51,7 @@ NO_DIST_INSTALL = 1
 CPPSRCS = jsctypes-test.cpp
 
 EXTRA_DSO_LDOPTS += \
-    $(XPCOM_GLUE_LDOPTS) \
+    $(XPCOM_STANDALONE_GLUE_LDOPTS) \
     $(NSPR_LIBS) \
     $(NULL)
 

@@ -1,0 +1,11 @@
+The sources in this directory are imported from the Python 3.1.1 release,
+from Python-3.1.1/Modules/_ctypes/libffi_msvc. The purpose of these sources,
+as explained in README.ctypes, is to make libffi work with MSVC on x86. If
+a time comes when libffi natively supports this platform, these sources will
+no longer be necessary.
+
+The checkout was done using the command:
+svn export http://svn.python.org/projects/python/tags/r311/Modules/_ctypes/libffi_msvc libffi_msvc
+
+The Python sources were minimally patched to compile with Mozilla. See
+mozilla.patch for details.

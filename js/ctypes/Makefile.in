@@ -46,19 +46,23 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = jsctypes
 XPIDL_MODULE = jsctypes
 MODULE_NAME = jsctypes
-LIBRARY_NAME = jsctypes
 GRE_MODULE = 1
+
+# package the interface whether ctypes is enabled or not.
+EXTRA_JS_MODULES = \
+    ctypes.jsm \
+    $(NULL)
+
+XPIDLSRCS = \
+    nsINativeTypes.idl \
+    $(NULL)
+
+ifdef BUILD_CTYPES
+
+LIBRARY_NAME = jsctypes
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
-
-XPIDLSRCS	= \
-		nsINativeTypes.idl \
-		$(NULL)
-
-LOCAL_INCLUDES = \
-    -Ilibffi/include \
-    $(NULL)
 
 CPPSRCS = \
     nsNativeMethod.cpp \
@@ -66,13 +70,45 @@ CPPSRCS = \
     nsNativeModule.cpp \
     $(NULL)
 
-EXTRA_JS_MODULES = \
-    ctypes.jsm \
+ifdef _MSC_VER
+
+# build and link sources directly from libffi_msvc
+VPATH += \
+    $(srcdir)/libffi_msvc \
+    $(NULL)
+
+LOCAL_INCLUDES = \
+    -I$(srcdir)/libffi_msvc \
+    $(NULL)
+
+CSRCS = \
+    ffi.c \
+    prep_cif.c \
+    types.c \
+    $(NULL)
+
+ifndef HAVE_64BIT_OS
+CSRCS += \
+    win32.c \
+    $(NULL)
+else
+ASFILES = \
+    win64.asm \
+    $(NULL)
+endif
+
+else # _MSVC_VER
+
+# build libffi proper
+LOCAL_INCLUDES = \
+    -Ilibffi/include \
     $(NULL)
 
 SHARED_LIBRARY_LIBS = \
     libffi/.libs/$(LIB_PREFIX)ffi.$(LIB_SUFFIX) \
     $(NULL)
+
+endif # _MSVC_VER
 
 EXTRA_DSO_LDOPTS += \
     $(MOZ_COMPONENT_LIBS) \
@@ -81,6 +117,8 @@ EXTRA_DSO_LDOPTS += \
 
 ifdef ENABLE_TESTS
 DIRS += tests
+endif
+
 endif
 
 include $(topsrcdir)/config/rules.mk
