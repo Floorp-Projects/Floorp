@@ -123,7 +123,7 @@ struct JSNativeTraceInfo {
 #define _JS_PTR_ARGSIZE    nanojit::ARGSIZE_P
 #define _JS_PTR_RETSIZE    nanojit::ARGSIZE_P
 
-class ClosureVarInfo;
+struct ClosureVarInfo;
 
 /*
  * Supported types for builtin functions.

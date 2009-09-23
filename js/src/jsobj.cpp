@@ -1951,7 +1951,7 @@ obj_getPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
     }
 
     if (JSVAL_IS_PRIMITIVE(vp[2])) {
-        char *bytes = js_DecompileValueGenerator(cx, -argc, vp[2], NULL);
+        char *bytes = js_DecompileValueGenerator(cx, 0 - argc, vp[2], NULL);
         if (!bytes)
             return JS_FALSE;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -2792,7 +2792,7 @@ block_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 JSBool
-js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, int16 index)
+js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index)
 {
     JS_ASSERT(obj->getClass() == &js_BlockClass);
     JS_ASSERT(!OBJ_IS_CLONED_BLOCK(obj));

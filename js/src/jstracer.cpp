@@ -222,7 +222,7 @@ jitstats_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
 
     if (result < JSVAL_INT_MAX) {
-        *vp = INT_TO_JSVAL(result);
+        *vp = INT_TO_JSVAL(jsint(result));
         return JS_TRUE;
     }
     char retstr[64];
@@ -967,7 +967,7 @@ isInt32(jsval v)
         return false;
     jsdouble d = asNumber(v);
     jsint i;
-    return JSDOUBLE_IS_INT(d, i);
+    return !!JSDOUBLE_IS_INT(d, i);
 }
 
 static inline jsint
@@ -4905,7 +4905,7 @@ TraceRecorder::emitIf(jsbytecode* pc, bool cond, LIns* x)
          * here, so we later know whether to emit a loop edge or a loop end.
          */
         if (x->isconst()) {
-            loop = (x->imm32() == cond);
+            loop = (x->imm32() == int32(cond));
             return;
         }
     } else {
@@ -8193,7 +8193,7 @@ static bool
 EvalCmp(LOpcode op, JSString* l, JSString* r)
 {
     if (op == LIR_feq)
-        return js_EqualStrings(l, r);
+        return !!js_EqualStrings(l, r);
     return EvalCmp(op, js_CompareStrings(l, r), 0);
 }
 
@@ -8214,7 +8214,7 @@ TraceRecorder::strictEquality(bool equal, bool cmpCase)
     } else if (ltag == TT_STRING) {
         LIns* args[] = { r_ins, l_ins };
         x = lir->ins2i(LIR_eq, lir->insCall(&js_EqualStrings_ci, args), equal);
-        cond = js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
+        cond = !!js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
     } else {
         LOpcode op;
         if (ltag == TT_DOUBLE)
@@ -8282,7 +8282,7 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
             args[0] = r_ins, args[1] = l_ins;
             l_ins = lir->insCall(&js_EqualStrings_ci, args);
             r_ins = lir->insImm(1);
-            cond = js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
+            cond = !!js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
         } else {
             JS_ASSERT(isNumber(l) && isNumber(r));
             cond = (asNumber(l) == asNumber(r));
@@ -8306,7 +8306,7 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
         op = LIR_feq;
     } else {
         if (JSVAL_IS_SPECIAL(l)) {
-            bool isVoid = JSVAL_IS_VOID(l);
+            bool isVoid = !!JSVAL_IS_VOID(l);
             guard(isVoid,
                   lir->ins2(LIR_eq, l_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID))),
                   BRANCH_EXIT);
@@ -8320,7 +8320,7 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
                                       tryBranchAfterCond, rval);
             }
         } else if (JSVAL_IS_SPECIAL(r)) {
-            bool isVoid = JSVAL_IS_VOID(r);
+            bool isVoid = !!JSVAL_IS_VOID(r);
             guard(isVoid,
                   lir->ins2(LIR_eq, r_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID))),
                   BRANCH_EXIT);
@@ -9886,7 +9886,7 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[], bool rooted)
 {
-    bool constructing = sn->flags & JSTN_CONSTRUCTOR;
+    bool constructing = !!(sn->flags & JSTN_CONSTRUCTOR);
 
     if (JSTN_ERRTYPE(sn) == FAIL_STATUS) {
         // This needs to capture the pre-call state of the stack. So do not set
@@ -10114,7 +10114,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         ABORT_TRACE("trying to call native apply or call");
 
     // Allocate the vp vector and emit code to root it.
-    uintN vplen = 2 + JS_MAX(argc, FUN_MINARGS(fun)) + fun->u.n.extra;
+    uintN vplen = 2 + JS_MAX(argc, unsigned(FUN_MINARGS(fun))) + fun->u.n.extra;
     if (!(fun->flags & JSFUN_FAST_NATIVE))
         vplen++; // slow native return value slot
     LIns* invokevp_ins = lir->insAlloc(vplen * sizeof(jsval));

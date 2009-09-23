@@ -2554,7 +2554,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
 
     JSObject *obj, *pobj;
     JSProperty *prop;
-    bool ok;
+    JSBool ok;
 
     if (JOF_OPMODE(*regs.pc) == JOF_NAME) {
         ok = js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &pobj, &prop);
