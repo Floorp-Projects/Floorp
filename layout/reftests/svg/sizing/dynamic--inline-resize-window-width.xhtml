@@ -30,21 +30,15 @@ html, body, div {
     <script type="text/javascript">
 
 var initial_width = top.innerWidth;
+top.innerWidth /= 2;
 
 function restore_width()
 {
-  document.removeEventListener("MozReftestInvalidate", restore_width, false);
-  document.addEventListener("MozReftestInvalidate", finish_test, false);
   top.innerWidth = initial_width;
-}
-
-function finish_test()
-{
   document.documentElement.removeAttribute('class');
 }
 
 document.addEventListener("MozReftestInvalidate", restore_width, false);
-top.innerWidth /= 2;
 
     </script>
   </head>
