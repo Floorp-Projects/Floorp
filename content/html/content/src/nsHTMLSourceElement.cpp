@@ -145,7 +145,7 @@ nsHTMLSourceElement::BindToTree(nsIDocument *aDocument,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aParent->IsNodeOfType(nsINode::eMEDIA))
+  if (!aParent || !aParent->IsNodeOfType(nsINode::eMEDIA))
     return NS_OK;
 
   nsHTMLMediaElement* media = static_cast<nsHTMLMediaElement*>(aParent);
