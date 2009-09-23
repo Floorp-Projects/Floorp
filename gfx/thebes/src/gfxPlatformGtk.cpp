@@ -549,8 +549,10 @@ gfxPlatformGtk::InitDisplayCaps()
                 if (StringEndsWith(buffer, NS_LITERAL_CSTRING("RX-51"))) {
                     gfxPlatform::sDPI = 265; // It's an N900
                 }
-                else if (StringEndsWith(buffer, NS_LITERAL_CSTRING("RX-48"))) {
-                    gfxPlatform::sDPI = 225; // It's an N810
+                else if (StringEndsWith(buffer, NS_LITERAL_CSTRING("RX-44")) ||
+                         StringEndsWith(buffer, NS_LITERAL_CSTRING("RX-48")) ||
+                         StringEndsWith(buffer, NS_LITERAL_CSTRING("RX-34"))) {
+                    gfxPlatform::sDPI = 225; // It's an N810/N800
                 }
             }
         }
