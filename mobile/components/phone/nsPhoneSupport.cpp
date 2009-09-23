@@ -38,8 +38,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef WINCE_WINDOWS_MOBILE
 #include <windows.h>
 #include <phone.h>
+#endif
+
+#ifdef MOZ_PLATFORM_HILDON
+#include <dbus/dbus.h>
+#endif
+
 #include "nsStringAPI.h"
 #include "nsIPhoneSupport.h"
 #include "nsIGenericFactory.h"
@@ -63,15 +70,14 @@ nsPhoneSupport::MakeCall(const PRUnichar *telephoneNumber, const PRUnichar *tele
 {
   long result = -1;
 
+#ifdef WINCE_WINDOWS_MOBILE
   typedef LONG (*__PhoneMakeCall)(PHONEMAKECALLINFO *ppmci);
 
   HMODULE hPhoneDLL = LoadLibraryW(L"phone.dll");
-  if(hPhoneDLL)
-  {
-    __PhoneMakeCall MakeCall = (__PhoneMakeCall) GetProcAddress( hPhoneDLL,
-                                                                 "PhoneMakeCall");
-    if(MakeCall)
-    {
+  if (hPhoneDLL) {
+    __PhoneMakeCall MakeCall = (__PhoneMakeCall) GetProcAddress(hPhoneDLL,
+                                                                "PhoneMakeCall");
+    if (MakeCall) {
       PHONEMAKECALLINFO callInfo;
       callInfo.cbSize          = sizeof(PHONEMAKECALLINFO);
       callInfo.dwFlags         = aPrompt ? PMCF_PROMPTBEFORECALLING : PMCF_DEFAULT;
@@ -83,7 +89,33 @@ nsPhoneSupport::MakeCall(const PRUnichar *telephoneNumber, const PRUnichar *tele
     }
     FreeLibrary(hPhoneDLL);
   }
+#endif
+
   return (result == 0) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsPhoneSupport::SwitchTask()
+{
+#ifdef MOZ_PLATFORM_HILDON
+  DBusError error;
+  dbus_error_init(&error);
+
+  DBusConnection *conn = dbus_bus_get(DBUS_BUS_SESSION, &error);
+
+  DBusMessage *msg = dbus_message_new_signal("/com/nokia/hildon_desktop",
+                                             "com.nokia.hildon_desktop",
+                                             "exit_app_view");
+
+  if (msg) {
+      dbus_connection_send(conn, msg, NULL);
+      dbus_message_unref(msg);
+      dbus_connection_flush(conn);
+  }
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 //------------------------------------------------------------------------------

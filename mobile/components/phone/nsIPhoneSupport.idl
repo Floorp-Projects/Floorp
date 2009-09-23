@@ -53,4 +53,9 @@ interface nsIPhoneSupport : nsISupports
    * before dialing   
    */
   void makeCall(in wstring telephoneNumber, in wstring telephoneDescription, in boolean aPrompt);
+  
+  /**
+   * This method displays a UI to switch to (or launch) a different task
+   */
+  void switchTask();
 };
