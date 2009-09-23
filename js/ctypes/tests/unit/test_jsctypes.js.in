@@ -1,0 +1,304 @@
+/* -*-  Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is js-ctypes.
+ *
+ * The Initial Developer of the Original Code is
+ * The Mozilla Foundation <http://www.mozilla.org/>.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
+ *  Dan Witte <dwitte@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+Components.utils.import("resource://gre/modules/ctypes.jsm");
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+const Types = ctypes.types;
+
+function POINT(x, y) {
+  this.x = x; this.y = y;
+}
+
+POINT.prototype = {
+  _fields_ : [{"x" : Types.INT32}, {"y" : Types.INT32}]
+}
+
+function RECT(top, left, bottom, right) {
+  this.top = top; this.left = left; this.bottom = bottom; this.right = right;
+}
+
+RECT.prototype = {
+  _fields_ : [{"top" : Types.INT32}, {"left" : Types.INT32}, {"bottom" : Types.INT32}, {"right" : Types.INT32}]
+}
+
+function INNER(i1, i2, i3) {
+  this.i1 = i1; this.i2 = i2; this.i3 = i3;
+}
+
+INNER.prototype = {
+  _fields_ : [{"i1" : Types.INT8}, {"i2" : Types.INT64}, {"i3" : Types.INT8}]
+}
+
+function NESTED(n1, n2, inner, n3, n4) {
+  this.n1 = n1; this.n2 = n2; this.inner = inner; this.n3 = n3; this.n4 = n4;
+}
+
+NESTED.prototype = {
+  _fields_ : [{"n1" : Types.INT32}, {"n2" : Types.INT16}, {"inner" : INNER}, {"n3" : Types.INT64}, {"n4" : Types.INT32}]
+}
+
+function do_check_throws(f, type, stack)
+{
+  if (!stack)
+    stack = Components.stack.caller;
+
+  try {
+    f();
+  } catch (exc) {
+    if (exc instanceof type)
+      return;
+    do_throw("expected " + type.name + " exception, caught " + exc, stack);
+  }
+  do_throw("expected " + type.name + " exception, none thrown", stack);
+}
+
+function run_test()
+{
+#ifdef XP_WIN
+  var libfile = do_get_file("jsctypes-test.dll");
+#elifdef XP_MACOSX
+  var libfile = do_get_file("libjsctypes-test.dylib");
+#elifdef XP_UNIX
+  var libfile = do_get_file("libjsctypes-test.so");
+#else
+  // unsupported OS - don't run the test
+  return;
+#endif
+
+  // open the library with an nsILocalFile
+  var library = ctypes.open(libfile);
+
+  run_void_tests(library);
+  run_short_tests(library);
+  run_int_tests(library);
+  run_float_tests(library);
+  run_double_tests(library);
+  run_string_tests(library);
+  run_mixed_tests(library);
+
+  // test the string version of ctypes.open() as well
+  var libpath = libfile.path;
+  library = ctypes.open(libpath);
+  run_void_tests(library);
+
+  // structs not supported yet
+  //run_struct_tests(library);
+}
+
+function run_void_tests(library) {
+  var test_v = library.declare("test_v", Types.DEFAULT, Types.VOID);
+  do_check_eq(test_v(), undefined);
+}
+
+function run_short_tests(library) {
+  var test_s = library.declare("test_s", Types.DEFAULT, Types.INT16);
+  do_check_eq(test_s(), 12345);
+
+  var test_s_s = library.declare("test_s_s", Types.DEFAULT, Types.INT16, Types.INT16);
+  do_check_eq(test_s_s(5), 5);
+  do_check_eq(test_s_s(0), 0);
+  do_check_eq(test_s_s(0x7fff), 0x7fff);
+  do_check_eq(test_s_s(-0x8000), -0x8000);
+  do_check_eq(1/test_s_s(-0), 1/0);  // that is, test_s_s(-0) is +0
+  do_check_eq(test_s_s(true), 1);
+  do_check_eq(test_s_s(false), 0);
+  do_check_eq(test_s_s(Number(16)), 16);
+
+  // don't convert anything else to an int16
+  var vals = [0x8000, -0x8001, 0x100000000, Infinity, -Infinity, NaN,
+              null, undefined, "", "0", {}, [], new Number(16),
+              {toString: function () { return 7; }},
+              {valueOf: function () { return 7; }}];
+  for (var i = 0; i < vals.length; i++)
+    do_check_throws(function () { test_s_s(vals[i]); }, Error);
+
+  var test_s_ss = library.declare("test_s_ss", Types.DEFAULT, Types.INT16, Types.INT16, Types.INT16);
+  do_check_eq(test_s_ss(5, 5), 10);
+
+  // test the range of unsigned. (we can reuse the signed C function
+  // here, since it's binary-compatible.)
+  var test_us_us = library.declare("test_s_s", Types.DEFAULT, Types.UINT16, Types.UINT16);
+  do_check_eq(test_us_us(0xffff), 0xffff);
+  do_check_throws(function () { test_us_us(0x10000); }, Error);
+
+}
+
+function run_int_tests(library) {
+  var test_i = library.declare("test_i", Types.DEFAULT, Types.INT32);
+  do_check_eq(test_i(), 123456789);
+
+  var test_i_i = library.declare("test_i_i", Types.DEFAULT, Types.INT32, Types.INT32);
+  do_check_eq(test_i_i(5), 5);
+  do_check_eq(test_i_i(0), 0);
+  do_check_eq(test_i_i(0x7fffffff), 0x7fffffff);
+  do_check_eq(test_i_i(-0x80000000), -0x80000000);
+  do_check_eq(1/test_i_i(-0), 1/0);  // that is, test_i_i(-0) is +0
+  do_check_eq(test_i_i(true), 1);
+  do_check_eq(test_i_i(false), 0);
+  do_check_eq(test_i_i(Number(16)), 16);
+
+  // don't convert anything else to an int
+  var vals = [0x80000000, -0x80000001, Infinity, -Infinity, NaN,
+              null, undefined, "", "0", {}, [], new Number(16),
+              {toString: function () { return 7; }},
+              {valueOf: function () { return 7; }}];
+  for (var i = 0; i < vals.length; i++)
+    do_check_throws(function () { test_i_i(vals[i]); }, Error);
+
+  var test_i_ii = library.declare("test_i_ii", Types.DEFAULT, Types.INT32, Types.INT32, Types.INT32);
+  do_check_eq(test_i_ii(5, 5), 10);
+
+  // test the range of unsigned. (we can reuse the signed C function
+  // here, since it's binary-compatible.)
+  var test_ui_ui = library.declare("test_i_i", Types.DEFAULT, Types.UINT32, Types.UINT32);
+  do_check_eq(test_ui_ui(0xffffffff), 0xffffffff);
+  do_check_throws(function () { test_ui_ui(0x100000000); }, Error);
+}
+
+function run_float_tests(library) {
+  var test_f = library.declare("test_f", Types.DEFAULT, Types.FLOAT);
+  do_check_eq(test_f(), 123456.5);
+
+  var test_f_f = library.declare("test_f_f", Types.DEFAULT, Types.FLOAT, Types.FLOAT);
+  do_check_eq(test_f_f(5), 5);
+  do_check_eq(test_f_f(5.25), 5.25);
+  do_check_eq(test_f_f(Infinity), Infinity);
+  do_check_eq(test_f_f(-Infinity), -Infinity);
+  do_check_eq(isNaN(test_f_f(NaN)), true);
+  do_check_eq(1/test_f_f(-0), 1/-0); // that is, test_f_f(-0) is -0
+  do_check_eq(test_f_f(Number(16.5)), 16.5);
+
+  // allow values that can't be represented precisely as a float
+  do_check_eq(test_f_f(1 + 1/0x80000000), 1);
+
+  // don't convert anything else to a float
+  var vals = [true, false, null, undefined, "", "0", {}, [], new Number(16),
+              {toString: function () { return 7; }},
+              {valueOf: function () { return 7; }}];
+  for (var i = 0; i < vals.length; i++)
+    do_check_throws(function () { test_d_d(vals[i]); }, Error);
+
+  var test_f_ff = library.declare("test_f_ff", Types.DEFAULT, Types.FLOAT, Types.FLOAT, Types.FLOAT);
+  do_check_eq(test_f_ff(5, 5), 10);
+  do_check_eq(test_f_ff(5.5, 5.5), 11);
+}
+
+function run_double_tests(library) {
+  var test_d = library.declare("test_d", Types.DEFAULT, Types.DOUBLE);
+  do_check_eq(test_d(), 123456789.5);
+
+  var test_d_d = library.declare("test_d_d", Types.DEFAULT, Types.DOUBLE, Types.DOUBLE);
+  do_check_eq(test_d_d(5), 5);
+  do_check_eq(test_d_d(5.25), 5.25);
+  do_check_eq(test_d_d(Infinity), Infinity);
+  do_check_eq(test_d_d(-Infinity), -Infinity);
+  do_check_eq(isNaN(test_d_d(NaN)), true);
+  do_check_eq(1/test_d_d(-0), 1/-0); // that is, test_d_d(-0) is -0
+  do_check_eq(test_d_d(Number(16.5)), 16.5);
+
+  // don't convert anything else to a double
+  var vals = [true, false, null, undefined, "", "0", {}, [], new Number(16),
+              {toString: function () { return 7; }},
+              {valueOf: function () { return 7; }}];
+  for (var i = 0; i < vals.length; i++)
+    do_check_throws(function () { test_d_d(vals[i]); }, Error);
+
+  var test_d_dd = library.declare("test_d_dd", Types.DEFAULT, Types.DOUBLE, Types.DOUBLE, Types.DOUBLE);
+  do_check_eq(test_d_dd(5, 5), 10);
+  do_check_eq(test_d_dd(5.5, 5.5), 11);
+}
+
+function run_string_tests(library) {
+  var test_ansi_len = library.declare("test_ansi_len", Types.DEFAULT, Types.INT32, Types.STRING);
+  do_check_eq(test_ansi_len(""), 0);
+  do_check_eq(test_ansi_len("hello world"), 11);
+
+  // don't convert anything else to a string
+  var vals = [true, 0, 1/3, undefined, {}, {toString: function () { return "bad"; }}, []];
+  for (var i = 0; i < vals.length; i++)
+    do_check_throws(function() { test_ansi_len(vals[i]); }, Error);
+
+  var test_wide_len = library.declare("test_wide_len", Types.DEFAULT, Types.INT32, Types.USTRING);
+  do_check_eq(test_wide_len("hello world"), 11);
+
+  var test_ansi_ret = library.declare("test_ansi_ret", Types.DEFAULT, Types.STRING);
+  do_check_eq(test_ansi_ret(), "success");
+
+  var test_wide_ret = library.declare("test_wide_ret", Types.DEFAULT, Types.USTRING);
+  do_check_eq(test_wide_ret(), "success");
+
+  var test_ansi_echo = library.declare("test_ansi_echo", Types.DEFAULT, Types.STRING, Types.STRING);
+  do_check_eq(test_ansi_echo("anybody in there?"), "anybody in there?");
+  do_check_eq(test_ansi_echo(null), null);
+}
+
+function run_mixed_tests(library) {
+  var test_i_if_floor = library.declare("test_i_if_floor", Types.DEFAULT, Types.INT32, Types.INT32, Types.FLOAT);
+  do_check_eq(test_i_if_floor(5, 5.5), 10);
+  do_check_throws(function() { test_i_if_floor(5.5, 5); }, Error);
+}
+
+function run_struct_tests(library) {
+  var test_pt_in_rect = library.declare("test_pt_in_rect", Types.DEFAULT, Types.INT32, RECT, POINT);
+  var rect = new RECT(10, 5, 5, 10);
+  var pt1 = new POINT(6, 6);
+  do_check_eq(test_pt_in_rect(rect, pt1), 1);
+  var pt2 = new POINT(2, 2);
+  do_check_eq(test_pt_in_rect(rect, pt2), 0);
+
+  // don't allow 0 or null when passing by value
+  do_check_throws(function () { test_pt_in_rect(rect, 0); }, Error);
+  do_check_throws(function () { test_pt_in_rect(rect, null); }, Error);
+  do_check_throws(function () { test_pt_in_rect(rect, undefined); }, Error);
+
+  var test_nested_struct = library.declare("test_nested_struct", Types.DEFAULT, Types.INT32, NESTED);
+  var inner = new INNER(161, 523412, 43);
+  var nested = new NESTED(13155, 1241, inner, 24512115, 1234111);
+  // add up all the numbers and make sure the C function agrees
+  do_check_eq(test_nested_struct(nested), 26284238);
+
+  var test_struct_return = library.declare("test_struct_return", Types.DEFAULT, POINT, RECT);
+  var ret = test_struct_return(rect);
+  do_check_eq(ret.x, rect.left);
+  do_check_eq(ret.y, rect.top);
+}
+

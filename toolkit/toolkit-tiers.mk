@@ -78,7 +78,12 @@ tier_external_dirs	+= gfx/qcms
 
 tier_gecko_dirs += \
 		js/src/xpconnect \
+		js/ctypes \
 		intl/chardet \
+		$(NULL)
+
+tier_gecko_staticdirs += \
+		js/ctypes/libffi \
 		$(NULL)
 
 ifdef MOZ_ENABLE_GTK2

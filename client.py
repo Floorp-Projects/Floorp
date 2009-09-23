@@ -1,10 +1,14 @@
 #!/usr/bin/python
 
-NSPR_DIRS = ('nsprpub',)
-NSS_DIRS  = ('dbm',
-             'security/nss',
-             'security/coreconf',
-             'security/dbm')
+NSPR_DIRS = (('nsprpub', 'mozilla/nsprpub'),)
+NSS_DIRS  = (('dbm', 'mozilla/dbm'),
+             ('security/nss', 'mozilla/security/nss'),
+             ('security/coreconf', 'mozilla/security/coreconf'),
+             ('security/dbm', 'mozilla/security/dbm'))
+LIBFFI_DIRS = (('js/ctypes/libffi', 'libffi'),)
+
+CVSROOT_MOZILLA = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'
+CVSROOT_LIBFFI = ':pserver:anoncvs@sources.redhat.com:/cvs/libffi'
 
 import os
 import sys
@@ -37,9 +41,12 @@ def do_hg_pull(dir, repository, hg):
 
 def do_cvs_export(modules, tag, cvsroot, cvs):
     """Check out a CVS directory without CVS metadata, using "export"
-    modules is a list of directories to check out, e.g. ['nsprpub']
+    modules is a list of directories to check out and the corresponding
+    cvs module, e.g. (('nsprpub', 'mozilla/nsprpub'))
     """
-    for module in modules:
+    for module_tuple in modules:
+        module = module_tuple[0]
+        cvs_module = module_tuple[1]
         fullpath = os.path.join(topsrcdir, module)
         if os.path.exists(fullpath):
             print "Removing '%s'" % fullpath
@@ -48,12 +55,11 @@ def do_cvs_export(modules, tag, cvsroot, cvs):
         (parent, leaf) = os.path.split(module)
         print "CVS export begin: " + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
         check_call_noisy([cvs, '-d', cvsroot,
-                          'export', '-r', tag, '-d', leaf,
-                          'mozilla/%s' % module],
+                          'export', '-r', tag, '-d', leaf, cvs_module],
                          cwd=os.path.join(topsrcdir, parent))
         print "CVS export end: " + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
 
-o = OptionParser(usage="client.py [options] update_nspr tagname | update_nss tagname")
+o = OptionParser(usage="client.py [options] update_nspr tagname | update_nss tagname | update_libffi tagname")
 o.add_option("--skip-mozilla", dest="skip_mozilla",
              action="store_true", default=False,
              help="Obsolete")
@@ -61,8 +67,7 @@ o.add_option("--skip-mozilla", dest="skip_mozilla",
 o.add_option("--cvs", dest="cvs", default=os.environ.get('CVS', 'cvs'),
              help="The location of the cvs binary")
 o.add_option("--cvsroot", dest="cvsroot",
-             default=os.environ.get('CVSROOT', ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'),
-             help="The CVSROOT (default: :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot")
+             help="The CVSROOT (default for mozilla checkouts: %s)" % CVSROOT_MOZILLA)
 
 try:
     options, args = o.parse_args()
@@ -76,10 +81,19 @@ if action in ('checkout', 'co'):
     pass
 elif action in ('update_nspr'):
     tag, = args[1:]
+    if not options.cvsroot:
+        options.cvsroot = os.environ.get('CVSROOT', CVSROOT_MOZILLA)
     do_cvs_export(NSPR_DIRS, tag, options.cvsroot, options.cvs)
 elif action in ('update_nss'):
     tag, = args[1:]
+    if not options.cvsroot:
+        options.cvsroot = os.environ.get('CVSROOT', CVSROOT_MOZILLA)
     do_cvs_export(NSS_DIRS, tag, options.cvsroot, options.cvs)
+elif action in ('update_libffi'):
+    tag, = args[1:]
+    if not options.cvsroot:
+        options.cvsroot = CVSROOT_LIBFFI
+    do_cvs_export(LIBFFI_DIRS, tag, options.cvsroot, options.cvs)
 else:
     o.print_help()
     sys.exit(2)
