@@ -42,7 +42,6 @@
 
 #include "Library.h"
 #include "nsIXPCScriptable.h"
-#include "nsString.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "prlink.h"
@@ -62,14 +61,14 @@ struct Value
 {
   void* mData;
   union {
-    int8_t   mInt8;
-    int16_t  mInt16;
-    int32_t  mInt32;
-    int64_t  mInt64;
-    uint8_t  mUint8;
-    uint16_t mUint16;
-    uint32_t mUint32;
-    uint64_t mUint64;
+    PRInt8   mInt8;
+    PRInt16  mInt16;
+    PRInt32  mInt32;
+    PRInt64  mInt64;
+    PRUint8  mUint8;
+    PRUint16 mUint16;
+    PRUint32 mUint32;
+    PRUint64 mUint64;
     float    mFloat;
     double   mDouble;
     void*    mPointer;
