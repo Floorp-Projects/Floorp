@@ -95,10 +95,10 @@ textbox[isempty="true"] {
 }
 
 button {
-  min-width: 6mm !important; /* button size */
-  min-height: 6mm !important; /* button size */
+  min-width: 4mm !important; /* button size */
+  min-height: 4mm !important; /* button size */
   color: #000;
-  padding: 0.25mm 0.5mm;
+  padding: 0.2mm 0.5mm;
   border-width: 8px !important;
   -moz-border-image: url("chrome://browser/skin/images/button-default-64.png") 8 repeat repeat;
   -moz-appearance: none !important;
@@ -138,8 +138,8 @@ button.button-dark[disabled="true"] {
 
 /* toolbar buttons --------------------------------------------------------- */
 toolbarbutton {
-  min-width: 7mm !important; /* primary button size */
-  min-height: 7mm !important; /* primary button size */
+  min-width: 5mm !important; /* primary button size */
+  min-height: 5mm !important; /* primary button size */
   -moz-appearance: none !important;
   margin: 0;
   padding: 0.25mm;
@@ -206,9 +206,9 @@ radiogroup {
 
 radio {
   color: #36373b;
-  min-width: 6mm !important; /* button size */
-  min-height: 6mm !important;
-  padding: 0.5mm !important;
+  min-width: 4mm !important; /* button size */
+  min-height: 4mm !important;
+  padding: 0.2mm !important;
   margin: 0;
   border-width: 8px;
   -moz-box-align: center;
@@ -303,7 +303,7 @@ richlistbox {
 }
 
 richlistitem {
-  min-height: 7mm; /* row size */
+  min-height: 6mm; /* row size */
   padding: 5px;
   border-bottom: 1px solid rgb(207,207,207);
 }
@@ -383,10 +383,10 @@ colorpicker > vbox {
 }
 
 menulist {
-  min-width: 6mm !important; /* button size */
-  min-height: 6mm !important; /* button size */
+  min-width: 4mm !important; /* button size */
+  min-height: 4mm !important; /* button size */
   color: #000;
-  padding: 0.25mm;
+  padding: 0.2mm;
   border-width: 8px !important;
   -moz-border-image: url("chrome://browser/skin/images/button-default-64.png") 8 repeat repeat;
   -moz-appearance: none !important;
