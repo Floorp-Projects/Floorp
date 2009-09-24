@@ -451,12 +451,23 @@ private:
                       // Compute*Data functions don't initialize from
                       // inherited data.
 
+  // Reference count.  This just counts the style contexts that
+  // reference this rulenode.  When this goes to 0 or stops being 0,
+  // we notify the style set.
+  PRUint32 mRefCnt;
+
 public:
   // Overloaded new operator. Initializes the memory to 0 and relies on an arena
   // (which comes from the presShell) to perform the allocation.
   NS_HIDDEN_(void*) operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
   NS_HIDDEN_(void) Destroy() { DestroyInternal(nsnull); }
   static NS_HIDDEN_(nsILanguageAtomService*) gLangService;
+
+  // Implemented in nsStyleSet.h, since it needs to know about nsStyleSet.
+  inline NS_HIDDEN_(void) AddRef();
+
+  // Implemented in nsStyleSet.h, since it needs to know about nsStyleSet.
+  inline NS_HIDDEN_(void) Release();
 
 protected:
   NS_HIDDEN_(void) DestroyInternal(nsRuleNode ***aDestroyQueueTail);
