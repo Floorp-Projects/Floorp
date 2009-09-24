@@ -91,3 +91,7 @@ int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData,
   // XXX nothing here yet since we don't support windowed plugins
   return NPTEST_INT32_ERROR;
 }
+
+void pluginDoInternalConsistencyCheck(InstanceData* instanceData, string& error)
+{
+}
