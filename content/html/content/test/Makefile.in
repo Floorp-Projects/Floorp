@@ -71,10 +71,6 @@ _TEST_FILES = 	test_bug589.html \
 		bug277890_load.html \
 		test_bug277890.html \
 		test_bug287465.html \
-		test_bug209275.xhtml \
-		file_bug209275_1.html \
-		file_bug209275_2.html \
-		file_bug209275_3.html \
 		test_bug295561.html \
 		test_bug300691-1.html \
 		test_bug300691-2.html \

@@ -105,8 +105,8 @@ class nsIBoxObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-  {0x1666cc78, 0x54ad, 0x4672, \
-      {0x93, 0x79, 0x9b, 0x6a, 0x61, 0x78, 0x94, 0x1a } }
+{ 0xe0ca6723, 0x1efa, 0x4819, \
+  { 0x84, 0xbb, 0xfa, 0x48, 0x39, 0xe8, 0xef, 0x19 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1164,24 +1164,6 @@ public:
    * or right-to-left.
    */
   virtual PRBool IsDocumentRightToLeft() { return PR_FALSE; }
-
-  /**
-   * Gets the document's cached pointer to the first <base> element in this
-   * document which has an href attribute.  If the document doesn't contain any
-   * <base> elements with an href, returns null.
-   */
-  virtual nsIContent* GetFirstBaseNodeWithHref() = 0;
-
-  /**
-   * Sets the document's cached pointer to the first <base> element with an
-   * href attribute in this document and updates the document's base URI
-   * according to the element's href.
-   *
-   * If the given node is the same as the current first base node, this
-   * function still updates the document's base URI according to the node's
-   * href, if it changed.
-   */
-  virtual nsresult SetFirstBaseNodeWithHref(nsIContent *node) = 0;
 
 protected:
   ~nsIDocument()
