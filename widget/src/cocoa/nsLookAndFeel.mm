@@ -158,10 +158,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor_captiontext:
     case eColor_menutext:
     case eColor_infotext:
-      aColor = GetColorFromNSColor([NSColor textColor]);
-      break;
     case eColor__moz_menubartext:
-      aColor = NS_RGB(0xFF,0xFF,0xFF);
+      aColor = GetColorFromNSColor([NSColor textColor]);
       break;
     case eColor_windowtext:
       aColor = GetColorFromNSColor([NSColor windowFrameTextColor]);
@@ -230,10 +228,10 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor_window:
     case eColor__moz_field:
     case eColor__moz_combobox:
-    case eColor__moz_comboboxtext:
       aColor = NS_RGB(0xff,0xff,0xff);
       break;
     case eColor__moz_fieldtext:
+    case eColor__moz_comboboxtext:
       aColor = GetColorFromNSColor([NSColor controlTextColor]);
       break;
     case eColor__moz_dialog:
