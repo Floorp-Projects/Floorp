@@ -1,0 +1,15 @@
+diff --git a/media/liboggplay/src/liboggplay/oggplay_callback.c b/media/liboggplay/src/liboggplay/oggplay_callback.c
+--- a/media/liboggplay/src/liboggplay/oggplay_callback.c
++++ b/media/liboggplay/src/liboggplay/oggplay_callback.c
+@@ -977,10 +982,10 @@ oggplay_callback_predetected (OGGZ *oggz
+       }
+     }
+     
+     /* disable the callback for unforeseen streams */
+     oggz_set_read_callback (me->oggz, -1, NULL, NULL);
+   }
+   
+   /* read the header part of the ogg content in a packet-by-packet manner */
+-  return ((ret < 0) ? ret : OGGZ_STOP_OK);
++  return ((ret < 0) ? ret : OGGZ_CONTINUE);
+ }

@@ -72,10 +72,17 @@ OggPlayErrorCode
 oggplay_file_reader_destroy(OggPlayReader * opr) {
 
   OggPlayFileReader * me;
-
+  
+  if (opr == NULL) {
+    return E_OGGPLAY_BAD_READER;
+  }
+  
   me = (OggPlayFileReader *)opr;
 
-  fclose(me->file);
+  if (me->file != NULL) {
+    fclose(me->file);
+  }
+  
   oggplay_free(me);
 
   return E_OGGPLAY_OK;
@@ -83,9 +90,14 @@ oggplay_file_reader_destroy(OggPlayReader * opr) {
 
 int
 oggplay_file_reader_available(OggPlayReader * opr, ogg_int64_t current_bytes,
-    ogg_int64_t current_time) {
+                              ogg_int64_t current_time) {
 
   OggPlayFileReader *me = (OggPlayFileReader *)opr;
+  
+  if (me == NULL) {
+    return -1;
+  }
+
   return me->size;
 
 }
@@ -103,6 +115,11 @@ oggplay_file_reader_io_read(void * user_handle, void * buf, size_t n) {
 
   OggPlayFileReader *me = (OggPlayFileReader *)user_handle;
   int r;
+  
+  if (me == NULL) {
+    return -1;
+  }
+  
   r = fread(buf, 1, n, me->file);
   if (r > 0) {
     me->current_position += r;
@@ -117,6 +134,10 @@ oggplay_file_reader_io_seek(void * user_handle, long offset, int whence) {
   OggPlayFileReader * me = (OggPlayFileReader *)user_handle;
   int                 r;
 
+  if (me == NULL) {
+    return -1;
+  }
+  
   r = fseek(me->file, offset, whence);
   me->current_position = ftell(me->file);
   return r;
@@ -128,12 +149,16 @@ oggplay_file_reader_io_tell(void * user_handle) {
 
   OggPlayFileReader * me = (OggPlayFileReader *)user_handle;
 
+  if (me == NULL) {
+    return -1;
+  }
+  
   return ftell(me->file);
 
 }
 
 OggPlayReader *
-oggplay_file_reader_new(char *file_name) {
+oggplay_file_reader_new(const char *file_name) {
 
   OggPlayFileReader * me = oggplay_malloc (sizeof (OggPlayFileReader));
 
