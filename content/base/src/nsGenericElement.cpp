@@ -2976,7 +2976,7 @@ nsICSSStyleRule*
 nsGenericElement::GetSMILOverrideStyleRule()
 {
   nsGenericElement::nsDOMSlots *slots = GetExistingDOMSlots();
-  return slots ? slots->mSMILOverrideStyleRule : nsnull;
+  return slots ? slots->mSMILOverrideStyleRule.get() : nsnull;
 }
 
 nsresult
