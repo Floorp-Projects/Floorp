@@ -1,0 +1,58 @@
+<html>
+<head>
+  <title>Test for plugin child widgets not being messed up by scrolling</title>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body onload="setTimeout(runTests, 0)">
+<p id="display">
+  <div style="overflow:hidden; height:100px;" id="scroll">
+    <embed type="application/x-test" wmode="window" width="100" height="800" id="plugin"></object>
+    <div style="height:1000px;"></div>
+  </div>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var plugin = document.getElementById("plugin");
+
+function consistencyCheck(state) {
+  var s = plugin.doInternalConsistencyCheck();
+  ok(s == "", "Consistency check: " + state + ": " + s);
+}
+
+consistencyCheck("Initial state");
+
+function runTests()
+{
+  var scroll = document.getElementById("scroll");
+  scroll.scrollTop = 10;
+  consistencyCheck("Scrolled down a bit");
+
+  setTimeout(function() {
+    consistencyCheck("Before scrolling back to top");
+    scroll.scrollTop = 0;
+    consistencyCheck("Scrolled to top");
+  
+    setTimeout(function() {
+      consistencyCheck("After scrolling to top");
+
+      SimpleTest.finish();
+    }, 0);
+  }, 0);
+}
+
+</script>
+</body>
+
+</html>
