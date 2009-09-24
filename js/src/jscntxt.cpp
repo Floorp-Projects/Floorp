@@ -119,13 +119,11 @@ PurgeThreadData(JSContext *cx, JSThreadData *data)
     tm->reservedDoublePoolPtr = tm->reservedDoublePool;
 
     /*
-     * If we are about to regenerate shapes, we have to flush the JIT cache, too.
+     * If we are about to regenerate shapes, we have to flush the JIT cache,
+     * which will eventually abort any current recording.
      */
     if (cx->runtime->gcRegenShapes)
         tm->needFlush = JS_TRUE;
-
-    if (tm->recorder)
-        tm->recorder->deepAbort();
 
     /*
      * We want to keep tm->reservedObjects after the GC. So, unless we are

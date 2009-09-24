@@ -2167,11 +2167,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     this->treeInfo = ti;
     this->callDepth = _anchor ? _anchor->calldepth : 0;
     this->atoms = FrameAtomBase(cx, cx->fp);
-    this->deepAborted = false;
     this->trashSelf = false;
     this->global_dslots = this->globalObj->dslots;
     this->loop = true; /* default assumption is we are compiling a loop */
-    this->wasRootFragment = _fragment == _fragment->root;
     this->outer = outer;
     this->outerArgc = outerArgc;
     this->pendingSpecializedNative = NULL;
@@ -2275,24 +2273,13 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
 
 TraceRecorder::~TraceRecorder()
 {
-    JS_ASSERT(nextRecorderToAbort == NULL);
-    JS_ASSERT(treeInfo && (fragment || wasDeepAborted()));
+     JS_ASSERT(treeInfo && fragment);
 
-#ifdef DEBUG
-    TraceRecorder* tr = JS_TRACE_MONITOR(cx).abortStack;
-    while (tr) {
-        JS_ASSERT(this != tr);
-        tr = tr->nextRecorderToAbort;
-    }
-#endif
+     if (trashSelf)
+         TrashTree(cx, fragment->root);
 
-    if (fragment) {
-        if (trashSelf)
-            TrashTree(cx, fragment->root);
-
-        for (unsigned int i = 0; i < whichTreesToTrash.length(); i++)
-            TrashTree(cx, whichTreesToTrash[i]);
-    }
+     for (unsigned int i = 0; i < whichTreesToTrash.length(); i++)
+         TrashTree(cx, whichTreesToTrash[i]);
 
     /* Purge the tempAlloc used during recording. */
     tempAlloc.reset();
@@ -2313,19 +2300,6 @@ bool
 TraceRecorder::outOfMemory()
 {
     return traceMonitor->dataAlloc->outOfMemory() || tempAlloc.outOfMemory();
-}
-
-void
-TraceRecorder::removeFragmentReferences()
-{
-    fragment = NULL;
-}
-
-void
-TraceRecorder::deepAbort()
-{
-    debug_only_print0(LC_TMTracer|LC_TMAbort, "deep abort");
-    deepAborted = true;
 }
 
 /* Add debug information to a LIR instruction as we emit it. */
@@ -4091,12 +4065,6 @@ ResetJITImpl(JSContext* cx)
     debug_only_print0(LC_TMTracer, "Flushing cache.\n");
     if (tm->recorder)
         js_AbortRecording(cx, "flush cache");
-    TraceRecorder* tr;
-    while ((tr = tm->abortStack) != NULL) {
-        tr->removeFragmentReferences();
-        tr->deepAbort();
-        tr->popAbortStack();
-    }
     if (ProhibitFlush(cx)) {
         debug_only_print0(LC_TMTracer, "Deferring JIT flush due to deep bail.\n");
         tm->needFlush = JS_TRUE;
@@ -4123,7 +4091,7 @@ js_ResetJIT(JSContext* cx)
 }
 
 /* Compile the current fragment. */
-JS_REQUIRES_STACK void
+JS_REQUIRES_STACK bool
 TraceRecorder::compile(JSTraceMonitor* tm)
 {
 #ifdef MOZ_TRACEVIS
@@ -4132,27 +4100,27 @@ TraceRecorder::compile(JSTraceMonitor* tm)
 
     if (tm->needFlush) {
         ResetJIT(cx, FR_DEEP_BAIL);
-        return;
+        return true;
     }
     if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
         debug_only_print0(LC_TMTracer, "Blacklist: excessive stack use.\n");
         Blacklist((jsbytecode*) fragment->root->ip);
-        return;
+        return true;
     }
     if (anchor && anchor->exitType != CASE_EXIT)
         ++treeInfo->branchCount;
     if (outOfMemory())
-        return;
+        return true;
 
     Assembler *assm = tm->assembler;
-    ::compile(assm, fragment verbose_only(, tempAlloc, tm->labels));
+    nanojit::compile(assm, fragment verbose_only(, tempAlloc, tm->labels));
     if (outOfMemory())
-        return;
+        return true;
 
     if (assm->error() != nanojit::None) {
         debug_only_print0(LC_TMTracer, "Blacklisted: error during compilation\n");
         Blacklist((jsbytecode*) fragment->root->ip);
-        return;
+        return true;
     }
     ResetRecordingAttempts(cx, (jsbytecode*) fragment->ip);
     ResetRecordingAttempts(cx, (jsbytecode*) fragment->root->ip);
@@ -4179,6 +4147,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
     js_free(label);
 #endif
     AUDIT(traceCompleted);
+    return true;
 }
 
 static void
@@ -4531,10 +4500,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus& cons
         exit->target = fragment->root;
         fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
     }
-    compile(traceMonitor);
-
-    Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-    if (assm->error() != nanojit::None)
+    if (!compile(traceMonitor))
         return false;
 
     debug_only_printf(LC_TMTreeVis, "TREEVIS CLOSELOOP EXIT=%p PEER=%p\n", (void*)exit, (void*)peer);
@@ -4682,10 +4648,7 @@ TraceRecorder::endLoop(VMSideExit* exit)
 
     fragment->lastIns =
         lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
-    compile(traceMonitor);
-
-    Assembler *assm = traceMonitor->assembler;
-    if (assm->error() != nanojit::None)
+    if (!compile(traceMonitor))
         return;
 
     debug_only_printf(LC_TMTreeVis, "TREEVIS ENDLOOP EXIT=%p\n", (void*)exit);
@@ -5679,10 +5642,6 @@ RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         ResetJIT(cx, FR_DEEP_BAIL);
         return false;
     }
-    if (r->wasDeepAborted()) {
-        js_AbortRecording(cx, "deep abort requested");
-        return false;
-    }
 
     JS_ASSERT(r->getFragment() && !r->getFragment()->lastIns);
     VMFragment* root = (VMFragment*)r->getFragment()->root;
@@ -5753,11 +5712,16 @@ RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 
     r->adjustCallerTypes(f);
     r->prepareTreeCall(f);
+
     VMSideExit* innermostNestedGuard = NULL;
     VMSideExit* lr = ExecuteTree(cx, f, inlineCallCount, &innermostNestedGuard);
-    if (!lr || r->wasDeepAborted()) {
-        if (!lr)
-            js_AbortRecording(cx, "Couldn't call inner tree");
+
+    /* ExecuteTree can reenter the interpreter and kill |this|. */
+    if (!TRACE_RECORDER(cx))
+        return false;
+
+    if (!lr) {
+        js_AbortRecording(cx, "Couldn't call inner tree");
         return false;
     }
 
@@ -6709,14 +6673,11 @@ JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
 {
     Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
+    JSTraceMonitor &localtm = JS_TRACE_MONITOR(cx);
 
-    /* Process needFlush and deepAbort() requests now. */
-    if (JS_TRACE_MONITOR(cx).needFlush) {
+    /* Process needFlush requests now. */
+    if (localtm.needFlush) {
         ResetJIT(cx, FR_DEEP_BAIL);
-        return JSRS_STOP;
-    }
-    if (tr->wasDeepAborted()) {
-        js_AbortRecording(cx, "deep abort requested");
         return JSRS_STOP;
     }
     JS_ASSERT(!tr->fragment->lastIns);
@@ -6776,27 +6737,29 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
 # undef OPDEF
     }
 
+    /* record_JSOP_X can reenter the interpreter and kill |tr|. */
+    if (!localtm.recorder)
+        return JSRS_STOP;
+
     JS_ASSERT(status != JSRS_IMACRO);
     JS_ASSERT_IF(!wasInImacro, cx->fp->imacpc == NULL);
-
-    /* Process deepAbort() requests now. */
-    if (tr->wasDeepAborted()) {
-        js_AbortRecording(cx, "deep abort requested");
-        return JSRS_STOP;
-    }
 
     if (assm->error()) {
         js_AbortRecording(cx, "error during recording");
         return JSRS_STOP;
     }
 
-    if (tr->outOfMemory() || js_OverfullJITCache(&JS_TRACE_MONITOR(cx))) {
+    if (tr->outOfMemory() || js_OverfullJITCache(&localtm)) {
         js_AbortRecording(cx, "no more memory");
         ResetJIT(cx, FR_OOM);
         return JSRS_STOP;
     }
 
   imacro:
+    /* record_JSOP_X can reenter the interpreter and kill |tr|. */
+    if (!localtm.recorder)
+        return JSRS_STOP;
+
     if (!STATUS_ABORTS_RECORDING(status))
         return status;
 
@@ -7336,28 +7299,6 @@ js_FinishJIT(JSTraceMonitor *tm)
 }
 
 void
-TraceRecorder::pushAbortStack()
-{
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-
-    JS_ASSERT(tm->abortStack != this);
-
-    nextRecorderToAbort = tm->abortStack;
-    tm->abortStack = this;
-}
-
-void
-TraceRecorder::popAbortStack()
-{
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-
-    JS_ASSERT(tm->abortStack == this);
-
-    tm->abortStack = nextRecorderToAbort;
-    nextRecorderToAbort = NULL;
-}
-
-void
 js_PurgeJITOracle()
 {
     oracle.clear();
@@ -7548,11 +7489,20 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult&
 {
     JS_ASSERT(obj != globalObj);
 
+    JSTraceMonitor &localtm = *traceMonitor;
+
     JSAtom* atom = atoms[GET_INDEX(cx->fp->regs->pc)];
     JSObject* obj2;
     JSProperty* prop;
-    if (!js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop))
+    bool ok = js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop);
+
+    /* js_FindProperty can reenter the interpreter and kill |this|. */
+    if (!localtm.recorder)
+        return JSRS_STOP;
+
+    if (!ok)
         ABORT_TRACE_ERROR("error in js_FindProperty");
+
     if (!prop)
         ABORT_TRACE("failed to find name in non-global scope chain");
 
@@ -7587,9 +7537,6 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult&
         nr.tracked = true;
         return JSRS_CONTINUE;
     }
-
-    if (wasDeepAborted())
-        ABORT_TRACE("deep abort from property lookup");
 
     if (obj == obj2 && OBJ_GET_CLASS(cx, obj) == &js_CallClass)
         return callProp(obj, prop, ATOM_TO_JSID(atom), vp, ins, nr);
@@ -8738,16 +8685,31 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         JSProperty* prop;
         if (JOF_OPMODE(*pc) == JOF_NAME) {
             JS_ASSERT(aobj == obj);
+
+            JSTraceMonitor &localtm = *traceMonitor;
             entry = js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop);
+
+            /* js_FindPropertyHelper can reenter the interpreter and kill |this|. */
+            if (!localtm.recorder)
+                return JSRS_STOP;
 
             if (!entry)
                 ABORT_TRACE_ERROR("error in js_FindPropertyHelper");
             if (entry == JS_NO_PROP_CACHE_FILL)
                 ABORT_TRACE("cannot cache name");
         } else {
+            JSTraceMonitor &localtm = *traceMonitor;
+            JSContext *localcx = cx;
             int protoIndex = js_LookupPropertyWithFlags(cx, aobj, id,
                                                         cx->resolveFlags,
                                                         &obj2, &prop);
+
+            /* js_LookupPropertyWithFlags can reenter the interpreter and kill |this|. */
+            if (!localtm.recorder) {
+                if (prop)
+                    obj2->dropProperty(localcx, prop);
+                return JSRS_STOP;
+            }
 
             if (protoIndex < 0)
                 ABORT_TRACE_ERROR("error in js_LookupPropertyWithFlags");
@@ -8763,6 +8725,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                 if (entry == JS_NO_PROP_CACHE_FILL)
                     entry = NULL;
             }
+
         }
 
         if (!prop) {
@@ -8780,9 +8743,6 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         if (!entry)
             ABORT_TRACE("failed to fill property cache");
     }
-
-    if (wasDeepAborted())
-        ABORT_TRACE("deep abort from property lookup");
 
 #ifdef JS_THREADSAFE
     // There's a potential race in any JS_THREADSAFE embedding that's nuts
@@ -12651,15 +12611,25 @@ TraceRecorder::record_JSOP_IN()
     guard(false, lir->ins2i(LIR_eq, x, JSVAL_TO_SPECIAL(JSVAL_VOID)), OOM_EXIT);
     x = lir->ins2i(LIR_eq, x, 1);
 
+    JSTraceMonitor &localtm = *traceMonitor;
+    JSContext *localcx = cx;
+
     JSObject* obj2;
     JSProperty* prop;
-    if (!obj->lookupProperty(cx, id, &obj2, &prop))
+    bool ok = obj->lookupProperty(cx, id, &obj2, &prop);
+
+    /* lookupProperty can reenter the interpreter and kill |this|. */
+    if (!localtm.recorder) {
+        if (prop)
+            obj2->dropProperty(localcx, prop);
+        return JSRS_STOP;
+    }
+
+    if (!ok)
         ABORT_TRACE_ERROR("obj->lookupProperty failed in JSOP_IN");
     bool cond = prop != NULL;
     if (prop)
         obj2->dropProperty(cx, prop);
-    if (wasDeepAborted())
-        ABORT_TRACE("deep abort from property lookup");
 
     /*
      * The interpreter fuses comparisons and the following branch, so we have
