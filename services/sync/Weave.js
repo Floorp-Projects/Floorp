@@ -62,7 +62,7 @@ WeaveService.prototype = {
     */
     case "sessionstore-windows-restored":
       Cu.import("resource://weave/service.js");
-      Weave.Service.onStartup();
+      Weave.Utils.makeTimerForCall(function() Weave.Service.onStartup());
       break;
     }
   }
