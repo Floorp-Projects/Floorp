@@ -91,6 +91,8 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   NS_ASSERTION(NS_STYLE_INHERIT_MASK & NS_STYLE_INHERIT_BIT(LastItem),
                "NS_STYLE_INHERIT_MASK must be bigger, and other bits shifted");
   #undef eStyleStruct_LastItem
+
+  mRuleNode->AddRef();
 }
 
 nsStyleContext::~nsStyleContext()
@@ -98,6 +100,8 @@ nsStyleContext::~nsStyleContext()
   NS_ASSERTION((nsnull == mChild) && (nsnull == mEmptyChild), "destructing context with children");
 
   nsPresContext *presContext = mRuleNode->GetPresContext();
+
+  mRuleNode->Release();
 
   presContext->PresShell()->StyleSet()->
     NotifyStyleContextDestroyed(presContext, this);
