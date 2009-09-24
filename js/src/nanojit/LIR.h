@@ -1446,7 +1446,7 @@ namespace nanojit
 
     class Assembler;
 
-    void compile(Assembler *assm, Fragment *frag, Allocator& alloc verbose_only(, LabelMap*));
+    void compile(Assembler *assm, Fragment *frag verbose_only(, Allocator& alloc, LabelMap*));
     verbose_only(void live(Allocator& alloc, Fragment *frag, LirBuffer *lirbuf);)
 
     class StackFilter: public LirFilter

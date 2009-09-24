@@ -4145,7 +4145,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
         return;
 
     Assembler *assm = tm->assembler;
-    ::compile(assm, fragment, tempAlloc verbose_only(, tm->labels));
+    ::compile(assm, fragment verbose_only(, tempAlloc, tm->labels));
     if (outOfMemory())
         return;
 
