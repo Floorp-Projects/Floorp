@@ -197,8 +197,18 @@ NS_IMETHODIMP nsAccelerometer::RemoveWindowListener(nsIDOMWindow *aWindow)
 void 
 nsAccelerometer::AccelerationChanged(double x, double y, double z)
 {
-  if (x > 1 || y > 1 || z > 1 || x < -1 || y < -1 || z < -1)
-    return;
+  if (x > 1)
+    x = 1;
+  if (y > 1)
+    y = 1;
+  if (z > 1)
+    z = 1;
+  if (x < -1)
+    x = -1;
+  if (y < -1)
+    y = -1;
+  if (z < -1)
+    z = -1;
 
   if (!mNewListener) {
     if (PR_ABS(mLastX - x) < .01 &&
