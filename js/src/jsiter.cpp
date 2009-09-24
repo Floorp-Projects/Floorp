@@ -167,20 +167,40 @@ IdToIteratorValue(JSContext *cx, JSObject *obj, jsid id, uintN flags, jsval *vp)
 
 static inline bool
 Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
-          bool enumerable, uintN flags, HashSet<jsid>& ht,
+          bool enumerable, bool sharedPermanent, uintN flags, HashSet<jsid>& ht,
           AutoValueVector& vec)
 {
     JS_ASSERT(JSVAL_IS_INT(id) || JSVAL_IS_STRING(id));
 
-    if (JS_LIKELY(!(flags & JSITER_OWNONLY))) {
-        HashSet<jsid>::AddPtr p = ht.lookupForAdd(id);
-        /* property already encountered, done. */
-        if (JS_UNLIKELY(!!p))
+    HashSet<jsid>::AddPtr p = ht.lookupForAdd(id);
+    JS_ASSERT_IF(obj == pobj, !p);
+
+    /* If we've already seen this, we definitely won't add it. */
+    if (JS_UNLIKELY(!!p))
+        return true;
+
+    /*
+     * It's not necessary to add properties to the hash table at the end of the
+     * prototype chain.
+     */
+    if (pobj->getProto() && !ht.add(p, id))
+        return false;
+
+    if (JS_UNLIKELY(flags & JSITER_OWNONLY)) {
+        /*
+         * Shared-permanent hack: If this property is shared permanent
+         * and pobj and obj have the same class, then treat it as an own
+         * property of obj, even if pobj != obj. (But see bug 575997.)
+         *
+         * Omit the magic __proto__ property so that JS code can use
+         * Object.getOwnPropertyNames without worrying about it.
+         */
+        if (!pobj->getProto() && id == ATOM_TO_JSID(cx->runtime->atomState.protoAtom))
             return true;
-        /* no need to add properties to the hash table at the end of the prototype chain */
-        if (pobj->getProto() && !ht.add(p, id))
-            return false;
+        if (pobj != obj && !(sharedPermanent && pobj->getClass() == obj->getClass()))
+            return true;
     }
+
     if (enumerable || (flags & JSITER_HIDDEN)) {
         if (!vec.append(JSVAL_VOID))
             return false;
@@ -203,7 +223,9 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
     for (JSScopeProperty *sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
         if (sprop->id != JSVAL_VOID &&
             !sprop->isAlias() &&
-            !Enumerate(cx, obj, pobj, sprop->id, sprop->enumerable(), flags, ht, sprops)) {
+            !Enumerate(cx, obj, pobj, sprop->id, sprop->enumerable(), sprop->isSharedPermanent(),
+                       flags, ht, sprops))
+        {
             return false;
         }
     }
@@ -223,19 +245,23 @@ static bool
 EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags,
                               HashSet<jsid> &ht, AutoValueVector& props)
 {
-    size_t count = pobj->getDenseArrayCount();
+    if (!Enumerate(cx, obj, pobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), false, true,
+                   flags, ht, props)) {
+        return false;
+    }
 
-    if (count) {
+    if (pobj->getDenseArrayCount() > 0) {
         size_t capacity = pobj->getDenseArrayCapacity();
         jsval *vp = pobj->dslots;
         for (size_t i = 0; i < capacity; ++i, ++vp) {
             if (*vp != JSVAL_HOLE) {
                 /* Dense arrays never get so large that i would not fit into an integer id. */
-                if (!Enumerate(cx, obj, pobj, INT_TO_JSVAL(i), true, flags, ht, props))
+                if (!Enumerate(cx, obj, pobj, INT_TO_JSVAL(i), true, false, flags, ht, props))
                     return false;
             }
         }
     }
+
     return true;
 }
 
@@ -265,8 +291,13 @@ NativeIterator::allocate(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarr
 static bool
 Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props)
 {
+    /*
+     * FIXME: Bug 575997 - We won't need to initialize this hash table if
+     *        (flags & JSITER_OWNONLY) when we eliminate inheritance of
+     *        shared-permanent properties as own properties.
+     */
     HashSet<jsid> ht(cx);
-    if (!(flags & JSITER_OWNONLY) && !ht.init(32))
+    if (!ht.init(32))
         return false;
 
     JSObject *pobj = obj;
@@ -293,14 +324,15 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props)
                         return false;
                 }
                 for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
-                    if (!Enumerate(cx, obj, pobj, (jsid) proxyProps[n], true, flags, ht, props))
+                    if (!Enumerate(cx, obj, pobj, (jsid) proxyProps[n], true, false, flags, ht, props))
                         return false;
                 }
                 /* Proxy objects enumerate the prototype on their own, so we are done here. */
                 break;
             }
             jsval state;
-            if (!pobj->enumerate(cx, JSENUMERATE_INIT, &state, NULL))
+            JSIterateOp op = (flags & JSITER_HIDDEN) ? JSENUMERATE_INIT_ALL : JSENUMERATE_INIT;
+            if (!pobj->enumerate(cx, op, &state, NULL))
                 return false;
             if (state == JSVAL_NATIVE_ENUMERATE_COOKIE) {
                 if (!EnumerateNativeProperties(cx, obj, pobj, flags, ht, props))
@@ -312,13 +344,13 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props)
                         return false;
                     if (state == JSVAL_NULL)
                         break;
-                    if (!Enumerate(cx, obj, pobj, id, true, flags, ht, props))
+                    if (!Enumerate(cx, obj, pobj, id, true, false, flags, ht, props))
                         return false;
                 }
             }
         }
 
-        if (JS_UNLIKELY(pobj->isXML() || (flags & JSITER_OWNONLY)))
+        if (JS_UNLIKELY(pobj->isXML()))
             break;
     } while ((pobj = pobj->getProto()) != NULL);
 

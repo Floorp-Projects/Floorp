@@ -7118,6 +7118,8 @@ nsWindowSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          jsid *idp, PRBool *_retval)
 {
   switch ((JSIterateOp)enum_op) {
+    /* FIXME bug 576449: non-enumerable property support */
+    case JSENUMERATE_INIT_ALL:
     case JSENUMERATE_INIT:
     {
       // First, do the security check that nsDOMClassInfo does to see
@@ -9371,7 +9373,8 @@ nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
       JSAutoRequest ar(cx);
       *_retval = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                        ::JS_GetStringLength(str),
-                                       JSVAL_VOID, nsnull, nsnull, 0);
+                                       JSVAL_VOID, nsnull, nsnull,
+                                       JSPROP_ENUMERATE);
 
       *objp = obj;
 
@@ -9429,6 +9432,7 @@ nsHTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
 {
   switch (enum_op) {
   case JSENUMERATE_INIT:
+  case JSENUMERATE_INIT_ALL:
     {
       nsCOMPtr<nsIForm> form(do_QueryWrappedNative(wrapper, obj));
 
@@ -10349,7 +10353,7 @@ nsStorageSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   if (item) {
     if (!::JS_DefineUCProperty(cx, realObj, ::JS_GetStringChars(jsstr),
                                ::JS_GetStringLength(jsstr), JSVAL_VOID, nsnull,
-                               nsnull, 0)) {
+                               nsnull, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -10421,6 +10425,7 @@ nsStorageSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   switch (enum_op) {
     case JSENUMERATE_INIT:
+    case JSENUMERATE_INIT_ALL:
     {
       nsCOMPtr<nsPIDOMStorage> storage(do_QueryWrappedNative(wrapper));
 
@@ -10518,7 +10523,7 @@ nsStorage2SH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   if (!DOMStringIsNull(data)) {
     if (!::JS_DefineUCProperty(cx, realObj, ::JS_GetStringChars(jsstr),
                                ::JS_GetStringLength(jsstr), JSVAL_VOID, nsnull,
-                               nsnull, 0)) {
+                               nsnull, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -10624,6 +10629,7 @@ nsStorage2SH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   switch (enum_op) {
     case JSENUMERATE_INIT:
+    case JSENUMERATE_INIT_ALL:
     {
       nsCOMPtr<nsPIDOMStorage> storage(do_QueryWrappedNative(wrapper));
 
