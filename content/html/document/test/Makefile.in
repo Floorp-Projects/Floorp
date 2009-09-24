@@ -90,6 +90,7 @@ _TEST_FILES = 	test_bug1682.html \
 		bug448564-iframe-3.html \
 		bug448564-echo.sjs \
 		bug448564-submit.js \
+		test_bug478251.html \
 		test_bug481440.html \
 		test_bug481647.html \
 		test_bug482659.html \
