@@ -510,7 +510,6 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mParentWidget(nsnull)
 , mVisible(PR_FALSE)
 , mDrawing(PR_FALSE)
-, mIsPluginView(PR_FALSE)
 , mPluginDrawing(PR_FALSE)
 , mPluginIsCG(PR_FALSE)
 {
@@ -786,7 +785,6 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       aDataType = NS_NATIVE_PLUGIN_PORT_CG;
 #endif
       mPluginIsCG = (aDataType == NS_NATIVE_PLUGIN_PORT_CG);
-      mIsPluginView = PR_TRUE;
       if ([mView isKindOfClass:[ChildView class]])
         [(ChildView*)mView setIsPluginView:YES];
 
@@ -859,7 +857,8 @@ NS_IMETHODIMP nsChildView::IsVisible(PRBool& outState)
 
 void nsChildView::HidePlugin()
 {
-  NS_ASSERTION(mIsPluginView, "HidePlugin called on non-plugin view");
+  NS_ASSERTION(mWindowType == eWindowType_plugin,
+               "HidePlugin called on non-plugin view");
 
   if (mPluginInstanceOwner && !mPluginIsCG) {
     NPWindow* window;
@@ -878,7 +877,8 @@ void nsChildView::HidePlugin()
 
 void nsChildView::UpdatePluginPort()
 {
-  NS_ASSERTION(mIsPluginView, "UpdatePluginPort called on non-plugin view");
+  NS_ASSERTION(mWindowType == eWindowType_plugin,
+               "UpdatePluginPort called on non-plugin view");
 
   NSWindow* cocoaWindow = [mView window];
 #if !defined(NP_NO_CARBON) || !defined(NP_NO_QUICKDRAW)
@@ -1209,8 +1209,9 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NS_ASSERTION(mIsPluginView, "GetPluginClipRect must only be called on a plugin widget");
-  if (!mIsPluginView) return NS_ERROR_FAILURE;
+  NS_ASSERTION(mWindowType == eWindowType_plugin,
+               "GetPluginClipRect must only be called on a plugin widget");
+  if (mWindowType != eWindowType_plugin) return NS_ERROR_FAILURE;
   
   NSWindow* window = [mView window];
   if (!window) return NS_ERROR_FAILURE;
@@ -1266,8 +1267,9 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NS_ASSERTION(mIsPluginView, "StartDrawPlugin must only be called on a plugin widget");
-  if (!mIsPluginView) return NS_ERROR_FAILURE;
+  NS_ASSERTION(mWindowType == eWindowType_plugin,
+               "StartDrawPlugin must only be called on a plugin widget");
+  if (mWindowType != eWindowType_plugin) return NS_ERROR_FAILURE;
 
   // This code is necessary for both Quickdraw and CoreGraphics in 32-bit builds.
   // See comments below about why. In 64-bit CoreGraphics mode we will not keep
@@ -1347,8 +1349,9 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
 
 NS_IMETHODIMP nsChildView::EndDrawPlugin()
 {
-  NS_ASSERTION(mIsPluginView, "EndDrawPlugin must only be called on a plugin widget");
-  if (!mIsPluginView) return NS_ERROR_FAILURE;
+  NS_ASSERTION(mWindowType == eWindowType_plugin,
+               "EndDrawPlugin must only be called on a plugin widget");
+  if (mWindowType != eWindowType_plugin) return NS_ERROR_FAILURE;
 
   mPluginDrawing = PR_FALSE;
   return NS_OK;
@@ -1675,8 +1678,8 @@ void nsChildView::ApplyConfiguration(nsIWidget* aExpectedParent,
   nsWindowType kidType;
   aConfiguration.mChild->GetWindowType(kidType);
 #endif
-  NS_ASSERTION(kidType == eWindowType_child,
-               "Configured widget is not a child type");
+  NS_ASSERTION(kidType == eWindowType_plugin || kidType == eWindowType_child,
+               "Configured widget is not a child or plugin type");
   NS_ASSERTION(aConfiguration.mChild->GetParent() == aExpectedParent,
                "Configured widget is not a child of the right widget");
   aConfiguration.mChild->Resize(

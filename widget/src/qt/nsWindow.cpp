@@ -713,12 +713,6 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 }
 
 NS_IMETHODIMP
-nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsWindow::SetTitle(const nsAString& aTitle)
 {
     if (mWidget) {
@@ -784,17 +778,6 @@ nsWindow::EnableDragDrop(PRBool aEnable)
 {
     mWidget->setAcceptDrops(aEnable);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::PreCreateWidget(nsWidgetInitData *aWidgetInitData)
-{
-    if (nsnull != aWidgetInitData) {
-        mWindowType = aWidgetInitData->mWindowType;
-        mBorderStyle = aWidgetInitData->mBorderStyle;
-        return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1990,7 +1973,8 @@ nsWindow::createQWidget(QWidget *parent, nsWidgetInitData *aInitData)
         windowName = "topLevelInvisible";
         break;
     case eWindowType_child:
-    default: // plugin, java, sheet
+    case eWindowType_plugin:
+    default: // sheet
         windowName = "paintArea";
         break;
     }
