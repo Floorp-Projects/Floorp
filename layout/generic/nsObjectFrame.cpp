@@ -720,7 +720,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     // allow the view to attach its event handler to mWidget even though
     // mWidget isn't the view's designated widget.
     EVENT_CALLBACK eventHandler = view->AttachWidgetEventHandler(mWidget);
-    mWidget->Create(parentWidget, nsIntRect(0,0,0,0),
+    mWidget->Create(parentWidget, nsnull, nsIntRect(0,0,0,0),
                     eventHandler, dx, nsnull, nsnull, &initData);
 
     mWidget->EnableDragDrop(PR_TRUE);
