@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
  *  Dan Witte <dwitte@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,86 +36,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef FUNCTION_H
-#define FUNCTION_H
+/*
+ * This is the jsctypes error message file.
+ *
+ * For syntax details, see js/src/js.msg.
+ */
 
-#include "Library.h"
-#include "nsIXPCScriptable.h"
-#include "nsTArray.h"
-#include "nsAutoPtr.h"
-#include "prlink.h"
-#include "jsapi.h"
-#include "ffi.h"
+MSG_DEF(CTYPESMSG_PLACEHOLDER_0, 0, 0, JSEXN_NONE, NULL)
+MSG_DEF(CTYPESMSG_PLACEHOLDER_1, 1, 0, JSEXN_NONE, NULL)
+MSG_DEF(CTYPESMSG_PLACEHOLDER_2, 2, 0, JSEXN_NONE, NULL)
 
-namespace mozilla {
-namespace ctypes {
+// This error has to be number 3 in order to be a TypeError,
+// due to a bug in the js engine.
+MSG_DEF(CTYPESMSG_TYPE_ERROR,    3, 2, JSEXN_TYPEERR, "expected type {0}, got {1}")
 
-// for JS error reporting
-enum ErrorNum {
-#define MSG_DEF(name, number, count, exception, format) \
-  name = number,
-#include "ctypes.msg"
-#undef MSG_DEF
-  CTYPESERR_LIMIT
-};
-
-const JSErrorFormatString*
-GetErrorMessage(void* userRef, const char* locale, const uintN errorNumber);
-
-struct Type
-{
-  ffi_type mFFIType;
-  PRUint16 mType;
-};
-
-struct Value
-{
-  void* mData;
-  union {
-    PRInt8   mInt8;
-    PRInt16  mInt16;
-    PRInt32  mInt32;
-    PRInt64  mInt64;
-    PRUint8  mUint8;
-    PRUint16 mUint16;
-    PRUint32 mUint32;
-    PRUint64 mUint64;
-    float    mFloat;
-    double   mDouble;
-    void*    mPointer;
-  } mValue;
-};
-
-class Function : public nsIXPCScriptable
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCSCRIPTABLE
-
-  Function();
-
-  nsresult Init(JSContext* aContext, Library* aLibrary, PRFuncPtr aFunc, PRUint16 aCallType, jsval aResultType, const nsTArray<jsval>& aArgTypes);
-
-private:
-  ~Function();
-
-  PRBool Execute(JSContext* aContext, PRUint32 aArgc, jsval* aArgv, jsval* aValue);
-
-protected:
-  // reference to the library our function is in
-  nsRefPtr<Library> mLibrary;
-
-  PRFuncPtr mFunc;
-
-  ffi_abi mCallType;
-  Type mResultType;
-  nsAutoTArray<Type, 16> mArgTypes;
-  nsAutoTArray<ffi_type*, 16> mFFITypes;
-
-  ffi_cif mCIF;
-};
-
-}
-}
-
-#endif
