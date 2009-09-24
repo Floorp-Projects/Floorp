@@ -211,3 +211,11 @@ The attributes which control stream tests are:
   is sent via calls to NPN_NewStream and NPN_Write.  Doing so will cause 
   the browser to store the stream data in a file, and set the frame's
   location to the corresponding file:// url.
+
+== Internal consistency ==
+
+* doInternalConsistencyCheck()
+Does internal consistency checking, returning an empty string if everything is
+OK, otherwise returning some kind of error string. On Windows, in windowed
+mode, this checks that the position of the plugin's internal child
+window has not been disturbed relative to the plugin window.
