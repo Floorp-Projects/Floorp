@@ -98,10 +98,38 @@ jsvalToDoubleStrict(jsval aValue, jsdouble *dp)
   return false;
 }
 
-static nsresult
-TypeError(JSContext *cx, const char *message)
+JSErrorFormatString ErrorFormatString[CTYPESERR_LIMIT] = {
+#define MSG_DEF(name, number, count, exception, format) \
+  { format, count, exception } ,
+#include "ctypes.msg"
+#undef MSG_DEF
+};
+
+const JSErrorFormatString*
+GetErrorMessage(void* userRef, const char* locale, const uintN errorNumber)
 {
-  JS_ReportError(cx, "%s", message);
+  if (0 < errorNumber && errorNumber < CTYPESERR_LIMIT)
+    return &ErrorFormatString[errorNumber];
+  return NULL;
+}
+
+static const char*
+ToSource(JSContext* cx, jsval vp)
+{
+  JSString* str = JS_ValueToSource(cx, vp);
+  if (str)
+    return JS_GetStringBytes(str);
+
+  JS_ClearPendingException(cx);
+  return "<<error converting value to string>>";
+}
+
+static nsresult
+TypeError(JSContext* cx, const char* expected, jsval actual)
+{
+  const char* src = ToSource(cx, actual);
+  JS_ReportErrorNumber(cx, GetErrorMessage, NULL,
+                       CTYPESMSG_TYPE_ERROR, expected, src);
   return NS_ERROR_FAILURE;
 }
 
@@ -196,67 +224,67 @@ PrepareValue(JSContext* aContext, const Type& aType, jsval aValue, Value& aResul
     // Programs can convert explicitly, if needed, using `Boolean(v)` or `!!v`.
     if (!jsvalToIntStrict(aValue, &aResult.mValue.mUint8) ||
         aResult.mValue.mUint8 > 1)
-      return TypeError(aContext, "Expected boolean value");
+      return TypeError(aContext, "boolean", aValue);
 
     aResult.mData = &aResult.mValue.mUint8;
     break;
   case nsIForeignLibrary::INT8:
     // Do not implicitly lose bits.
     if (!jsvalToIntStrict(aValue, &aResult.mValue.mInt8))
-      return TypeError(aContext, "Expected int8 value");
+      return TypeError(aContext, "int8", aValue);
 
     aResult.mData = &aResult.mValue.mInt8;
     break;
   case nsIForeignLibrary::INT16:
     // Do not implicitly lose bits.
     if (!jsvalToIntStrict(aValue, &aResult.mValue.mInt16))
-      return TypeError(aContext, "Expected int16 value");
+      return TypeError(aContext, "int16", aValue);
 
     aResult.mData = &aResult.mValue.mInt16;
     break;
   case nsIForeignLibrary::INT32:
     // Do not implicitly lose bits.
     if (!jsvalToIntStrict(aValue, &aResult.mValue.mInt32))
-      return TypeError(aContext, "Expected int32 value");
+      return TypeError(aContext, "int32", aValue);
 
     aResult.mData = &aResult.mValue.mInt32;
   case nsIForeignLibrary::INT64:
     // Do not implicitly lose bits.
     if (!jsvalToIntStrict(aValue, &aResult.mValue.mInt64))
-      return TypeError(aContext, "Expected int64 value");
+      return TypeError(aContext, "int64", aValue);
 
     aResult.mData = &aResult.mValue.mInt64;
     break;
   case nsIForeignLibrary::UINT8:
     // Do not implicitly lose bits.
     if (!jsvalToIntStrict(aValue, &aResult.mValue.mUint8))
-      return TypeError(aContext, "Expected uint8 value");
+      return TypeError(aContext, "uint8", aValue);
 
     aResult.mData = &aResult.mValue.mUint8;
     break;
   case nsIForeignLibrary::UINT16:
     // Do not implicitly lose bits.
     if (!jsvalToIntStrict(aValue, &aResult.mValue.mUint16))
-      return TypeError(aContext, "Expected uint16 value");
+      return TypeError(aContext, "uint16", aValue);
 
     aResult.mData = &aResult.mValue.mUint16;
     break;
   case nsIForeignLibrary::UINT32:
     // Do not implicitly lose bits.
     if (!jsvalToIntStrict(aValue, &aResult.mValue.mUint32))
-      return TypeError(aContext, "Expected uint32 value");
+      return TypeError(aContext, "uint32", aValue);
 
     aResult.mData = &aResult.mValue.mUint32;
   case nsIForeignLibrary::UINT64:
     // Do not implicitly lose bits.
     if (!jsvalToIntStrict(aValue, &aResult.mValue.mUint64))
-      return TypeError(aContext, "Expected uint64 value");
+      return TypeError(aContext, "uint64", aValue);
 
     aResult.mData = &aResult.mValue.mUint64;
     break;
   case nsIForeignLibrary::FLOAT:
     if (!jsvalToDoubleStrict(aValue, &d))
-      return TypeError(aContext, "Expected number");
+      return TypeError(aContext, "float", aValue);
 
     // The following cast silently throws away some bits, but there's
     // no good way around it. Sternly requiring that the 64-bit double
@@ -267,7 +295,7 @@ PrepareValue(JSContext* aContext, const Type& aType, jsval aValue, Value& aResul
     break;
   case nsIForeignLibrary::DOUBLE:
     if (!jsvalToDoubleStrict(aValue, &d))
-      return TypeError(aContext, "Expected number");
+      return TypeError(aContext, "double", aValue);
 
     aResult.mValue.mDouble = d;
     aResult.mData = &aResult.mValue.mDouble;
@@ -281,7 +309,7 @@ PrepareValue(JSContext* aContext, const Type& aType, jsval aValue, Value& aResul
     } else {
       // Don't implicitly convert to string. Users can implicitly convert
       // with `String(x)` or `""+x`.
-      return TypeError(aContext, "Expected string");
+      return TypeError(aContext, "string", aValue);
     }
 
     aResult.mData = &aResult.mValue.mPointer;
@@ -295,7 +323,7 @@ PrepareValue(JSContext* aContext, const Type& aType, jsval aValue, Value& aResul
     } else {
       // Don't implicitly convert to string. Users can implicitly convert
       // with `String(x)` or `""+x`.
-      return TypeError(aContext, "Expected string");
+      return TypeError(aContext, "ustring", aValue);
     }
 
     aResult.mData = &aResult.mValue.mPointer;
@@ -488,8 +516,10 @@ Function::Init(JSContext* aContext,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // disallow void argument types
-    if (mArgTypes[i].mType == nsIForeignLibrary::VOID)
-      return TypeError(aContext, "Cannot have void argument type");
+    if (mArgTypes[i].mType == nsIForeignLibrary::VOID) {
+      JS_ReportError(aContext, "Cannot have void argument type");
+      return NS_ERROR_INVALID_ARG;
+    }
 
     // ffi_prep_cif requires an array of ffi_types; prepare it separately.
     mFFITypes.AppendElement(&mArgTypes[i].mFFIType);
