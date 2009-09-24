@@ -1,3 +1,4 @@
 chrome.jar:
 % content branding %content/branding/
   content/branding/about.png                     (about.png)
+  content/branding/favicon.png                   (favicon.png)

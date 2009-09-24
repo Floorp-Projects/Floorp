@@ -1,22 +1,19 @@
 #filter substitution
 
 chrome.jar:
-% content firstrun %content/ contentaccessible=yes
-  content/firstrun_splash.gif           (firstrun/firstrun_splash.gif)
-  content/firstrun_background.gif       (firstrun/firstrun_background.gif)
-  content/firstrun.html                 (firstrun/firstrun.html)
-  content/favicon-fennec-30.png         (firstrun/favicon-fennec-30.png)
-
-chrome.jar:
 % skin browser classic/1.0 %
   aboutCertError.css                   (aboutCertError.css)
   aboutPage.css                        (aboutPage.css)
+  firstRun.css                         (firstRun.css)
+  header.css                           (header.css)
   platform.css                         (platform.css)
   browser.css                          (browser.css)
   browser-high.css                     (browser-high.css)
   browser-low.css                      (browser-low.css)
   notification.css                     (notification.css)
 
+  images/addons.png                    (images/addons.png)
+  images/weave.png                     (images/weave.png)
   images/aboutBackground.jpg           (images/aboutBackground.jpg)
   images/arrowright-16.png             (images/arrowright-16.png)
   images/arrowup-16.png                (images/arrowup-16.png)

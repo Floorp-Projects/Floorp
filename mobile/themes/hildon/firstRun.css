@@ -35,38 +35,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#aboutLogoContainer {
-  width: 300px;
+p.intro {
+  text-align: center;
 }
 
-#version {
-  font-weight: bold;
-  color: #909090;
-  margin: -24px 20px 0 118px;
+body {
+  color: #4b4742;
 }
 
-#aboutLinks {
-  padding: 5px;
-  border: 2px solid #e6e5e3;
-  font-size: 15px;
+h1 {
+  margin: 1em 0;
 }
-#aboutLinks li {
-  clear: both;
-  padding: 5px 10px;
-  border-bottom: 2px solid #e6e5e3;
-  list-style: none;
+
+h2 {
+  margin: 0 0 6px;
 }
-#aboutLinks li:last-child {
-  border-bottom: 0;
+
+h3 {
+  margin: 0 0 4px;
 }
-#aboutLinks li a {
+
+a {
+  color: #0489b7;
+  text-decoration: none;
   display: block;
-  color: #3a3834;
+  padding: 5px 40px 5px 0;
   background: url("images/arrowright-16.png") right center no-repeat;
-  padding: 10px 40px 10px 5px;
 }
 
-#aboutDetails {
-  margin-top: 15px;
-  font-size: x-small;
+hr {
+  color: #bdcdcf;
+  height: 3px;
+  border: 0;
+  padding: 0;
+  background: #bdcdcf;
+}
+
+.go {
+  position: relative;
+  padding-left: 100px;
+}
+
+.go img {
+  position: absolute;
+  left: 0;
+  top: 0;
 }
