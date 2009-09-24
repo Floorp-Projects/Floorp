@@ -309,7 +309,7 @@ class Message : public Pickle {
 
 enum SpecialRoutingIDs {
   // indicates that we don't have a routing ID yet.
-  MSG_ROUTING_NONE = -2,
+  MSG_ROUTING_NONE = kint32min,
 
   // indicates a general message not sent to a particular tab.
   MSG_ROUTING_CONTROL = kint32max,
