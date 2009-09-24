@@ -910,55 +910,31 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Create(nsIWidget *aParent,
-                      const nsIntRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+                           nsNativeWidget aNativeParent,
+                           const nsIntRect &aRect,
+                           EVENT_CALLBACK aHandleEventFunction,
+                           nsIDeviceContext *aContext,
+                           nsIAppShell *aAppShell,
+                           nsIToolkit *aToolkit,
+                           nsWidgetInitData *aInitData)
 {
-   HWND hwndP = aParent ? (HWND)aParent->GetNativeData( NS_NATIVE_WINDOW)
-                        : HWND_DESKTOP;
+  HWND hwndP = (HWND)aNativeParent;
+  if (!hwndP) {
+    HWND hwndP = aParent ? (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW) :
+                           HWND_DESKTOP;
+  }
 
-   DoCreate( hwndP, (nsWindow*) aParent, aRect, aHandleEventFunction,
-             aContext, aAppShell, aToolkit, aInitData);
+  // We need to find the nsWindow that goes with the native window, or controls
+  // all get the ID of 0, and a zillion toolkits get created.
+  nsWindow *pParent = (nsWindow*)aParent;
+  if (!pParent && hwndP && hwndP != HWND_DESKTOP) {
+    pParent = GetNSWindowPtr(hwndP);
+  }
 
-   return NS_OK;
-}
+  DoCreate(hwndP, pParent, aRect, aHandleEventFunction,
+           aContext, aAppShell, aToolkit, aInitData);
 
-
-//-------------------------------------------------------------------------
-//
-// create with a native parent
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsWindow::Create(nsNativeWidget aParent,
-                         const nsIntRect &aRect,
-                         EVENT_CALLBACK aHandleEventFunction,
-                         nsIDeviceContext *aContext,
-                         nsIAppShell *aAppShell,
-                         nsIToolkit *aToolkit,
-                         nsWidgetInitData *aInitData)
-{
-   // We need to find the nsWindow that goes with the native window, or controls
-   // all get the ID of 0, and a zillion toolkits get created.
-   //
-   nsWindow *pParent = nsnull;
-   HWND      hwndP = (HWND) aParent;
-
-   if( hwndP && hwndP != HWND_DESKTOP)
-      pParent = GetNSWindowPtr(hwndP);
-
-   // XXX WC_MOZILLA will probably need a change here
-   //
-   if( !hwndP)
-     hwndP = HWND_DESKTOP;
-
-   DoCreate( hwndP, pParent, aRect, aHandleEventFunction, aContext,
-             aAppShell, aToolkit, aInitData);
-
-   return NS_OK;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

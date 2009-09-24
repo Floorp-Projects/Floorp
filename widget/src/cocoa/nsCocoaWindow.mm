@@ -214,16 +214,14 @@ static PRBool UseNativePopupWindows()
   return (NS_SUCCEEDED(rv) && useNativePopupWindows);
 }
 
-// Utility method for implementing both Create(nsIWidget ...) and
-// Create(nsNativeWidget...)
-nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
-                        const nsIntRect &aRect,
-                        EVENT_CALLBACK aHandleEventFunction,
-                        nsIDeviceContext *aContext,
-                        nsIAppShell *aAppShell,
-                        nsIToolkit *aToolkit,
-                        nsWidgetInitData *aInitData,
-                        nsNativeWidget aNativeWindow)
+nsresult nsCocoaWindow::Create(nsIWidget *aParent,
+                               nsNativeWidget aNativeParent,
+                               const nsIntRect &aRect,
+                               EVENT_CALLBACK aHandleEventFunction,
+                               nsIDeviceContext *aContext,
+                               nsIAppShell *aAppShell,
+                               nsIToolkit *aToolkit,
+                               nsWidgetInitData *aInitData)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -237,20 +235,16 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
   SetWindowType(aInitData ? aInitData->mWindowType : eWindowType_toplevel);
   SetBorderStyle(aInitData ? aInitData->mBorderStyle : eBorderStyle_default);
 
-  // Create a window if we aren't given one, or if this should be a non-native popup.
-  if ((mWindowType == eWindowType_popup) ? !UseNativePopupWindows() : !aNativeWindow) {
-    nsresult rv = CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(aRect),
-                                     mBorderStyle, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
+  // Applications that use native popups don't want us to create popup windows.
+  if ((mWindowType == eWindowType_popup) && UseNativePopupWindows())
+    return NS_OK;
 
-    if (mWindowType == eWindowType_popup) {
-      rv = CreatePopupContentView(aRect, aHandleEventFunction, aContext, aAppShell, aToolkit);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  } else {
-    mWindow = (NSWindow*)aNativeWindow;
-    [[WindowDataMap sharedWindowDataMap] ensureDataForWindow:mWindow];
-  }
+  nsresult rv = CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(aRect),
+                                   mBorderStyle, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mWindowType == eWindowType_popup)
+    return CreatePopupContentView(aRect, aHandleEventFunction, aContext, aAppShell, aToolkit);
 
   return NS_OK;
 
@@ -423,8 +417,8 @@ NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
   NS_ADDREF(mPopupContentView);
 
   nsIWidget* thisAsWidget = static_cast<nsIWidget*>(this);
-  mPopupContentView->StandardCreate(thisAsWidget, aRect, aHandleEventFunction,
-                                    aContext, aAppShell, aToolkit, nsnull, nsnull);
+  mPopupContentView->Create(thisAsWidget, nsnull, aRect, aHandleEventFunction,
+                            aContext, aAppShell, aToolkit, nsnull);
 
   ChildView* newContentView = (ChildView*)mPopupContentView->GetNativeData(NS_NATIVE_WIDGET);
   [mWindow setContentView:newContentView];
@@ -432,31 +426,6 @@ NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-// Create a nsCocoaWindow using a native window provided by the application
-NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeWindow,
-                      const nsIntRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return(StandardCreate(nsnull, aRect, aHandleEventFunction, aContext,
-                        aAppShell, aToolkit, aInitData, aNativeWindow));
-}
-
-NS_IMETHODIMP nsCocoaWindow::Create(nsIWidget* aParent,
-                      const nsIntRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return(StandardCreate(aParent, aRect, aHandleEventFunction, aContext,
-                        aAppShell, aToolkit, aInitData, nsnull));
 }
 
 NS_IMETHODIMP nsCocoaWindow::Destroy()

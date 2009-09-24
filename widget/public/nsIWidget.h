@@ -188,9 +188,6 @@ class nsIWidget : public nsISupports {
     /**
      * Create and initialize a widget. 
      *
-     * The widget represents a window that can be drawn into. It also is the 
-     * base class for user-interface widgets such as buttons and text boxes.
-     *
      * All the arguments can be NULL in which case a top level window
      * with size 0 is created. The event callback function has to be
      * provided only if the caller wants to deal with the events this
@@ -203,54 +200,29 @@ class nsIWidget : public nsISupports {
      * calling code must handle paint messages and clear the background 
      * itself. 
      *
-     * aInitData cannot be eWindowType_popup here; popups cannot be
-     * hooked into the nsIWidget hierarchy.
+     * In practice at least one of aParent and aNativeParent will be null. If
+     * both are null the widget isn't parented (e.g. context menus or
+     * independent top level windows).
      *
-     * @param     parent or null if it's a top level window
-     * @param     aRect     the widget dimension
+     * @param     aParent       parent nsIWidget
+     * @param     aNativeParent native parent widget
+     * @param     aRect         the widget dimension
      * @param     aHandleEventFunction the event handler callback function
      * @param     aContext
-     * @param     aAppShell the parent application shell. If nsnull,
-     *                      the parent window's application shell will be used.
+     * @param     aAppShell     the parent application shell. If nsnull,
+     *                          the parent window's application shell will be used.
      * @param     aToolkit
-     * @param     aInitData data that is used for widget initialization
+     * @param     aInitData     data that is used for widget initialization
      *
      */
     NS_IMETHOD Create(nsIWidget        *aParent,
-                        const nsIntRect  &aRect,
-                        EVENT_CALLBACK   aHandleEventFunction,
-                        nsIDeviceContext *aContext,
-                        nsIAppShell      *aAppShell = nsnull,
-                        nsIToolkit       *aToolkit = nsnull,
-                        nsWidgetInitData *aInitData = nsnull) = 0;
-
-    /**
-     * Create and initialize a widget with a native window parent
-     *
-     * The widget represents a window that can be drawn into. It also is the 
-     * base class for user-interface widgets such as buttons and text boxes.
-     *
-     * All the arguments can be NULL in which case a top level window
-     * with size 0 is created. The event callback function has to be
-     * provided only if the caller wants to deal with the events this
-     * widget receives.  The event callback is basically a preprocess
-     * hook called synchronously. The return value determines whether
-     * the event goes to the default window procedure or it is hidden
-     * to the os. The assumption is that if the event handler returns
-     * false the widget does not see the event.
-     *
-     * @param     aParent   native window.
-     * @param     aRect     the widget dimension
-     * @param     aHandleEventFunction the event handler callback function
-     */
-    NS_IMETHOD Create(nsNativeWidget aParent,
-                        const nsIntRect  &aRect,
-                        EVENT_CALLBACK   aHandleEventFunction,
-                        nsIDeviceContext *aContext,
-                        nsIAppShell      *aAppShell = nsnull,
-                        nsIToolkit       *aToolkit = nsnull,
-                        nsWidgetInitData *aInitData = nsnull) = 0;
-
+                      nsNativeWidget   aNativeParent,
+                      const nsIntRect  &aRect,
+                      EVENT_CALLBACK   aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell      *aAppShell = nsnull,
+                      nsIToolkit       *aToolkit = nsnull,
+                      nsWidgetInitData *aInitData = nsnull) = 0;
 
     /**
      * Accessor functions to get and set the client data associated with the
