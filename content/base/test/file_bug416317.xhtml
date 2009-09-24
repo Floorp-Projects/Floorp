@@ -360,7 +360,7 @@
       try {
         root.querySelectorAll(undefined);
       } catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
-      assert_todo( pass, type + ".querySelectorAll undefined" );
+      assert( pass, type + ".querySelectorAll undefined" );
 
       pass = false;
       try {
@@ -385,7 +385,7 @@
       try {
         root.querySelector(undefined);
       } catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
-      assert_todo( pass, type + ".querySelector undefined" );
+      assert( pass, type + ".querySelector undefined" );
 
       pass = false;
       try {
@@ -484,14 +484,6 @@
       } else {
         results.push([ (!pass ? "FAIL" : "PASS"), title ]);
         tests++;
-      }
-    }
-
-    function assert_todo(pass, title) {
-      if (window.parent && window.parent.SimpleTest) {
-        window.parent.SimpleTest.todo(pass, title);
-      } else {
-        assert(pass, title);
       }
     }
 
