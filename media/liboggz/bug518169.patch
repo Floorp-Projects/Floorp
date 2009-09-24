@@ -1,0 +1,56 @@
+diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/oggz_seek.c
+--- a/media/liboggz/src/liboggz/oggz_seek.c
++++ b/media/liboggz/src/liboggz/oggz_seek.c
+@@ -614,6 +614,12 @@ oggz_offset_end (OGGZ * oggz)
+   return offset_end;
+ }
+ 
++static int
++is_header_page(ogg_page* page)
++{
++  return page && page->header[5] & 0x2;
++}
++
+ ogg_int64_t
+ oggz_bounded_seek_set (OGGZ * oggz,
+                        ogg_int64_t unit_target,
+@@ -683,8 +689,18 @@ oggz_bounded_seek_set (OGGZ * oggz,
+   if (unit_begin == -1 && oggz_seek_raw (oggz, offset_begin, SEEK_SET) >= 0) {
+     ogg_int64_t granulepos = 0;
+     unit_begin = 0;
+-    // Start time needs to be the end time of the first non-header page.
+-    while (oggz_get_next_start_page (oggz, og) >= 0 && unit_begin <= 0) {
++    
++    // Take the start time of the range as the end time of the next page. Note
++    // that if unit_target lies inside that page, its timestamp will be less
++    // than the page's end time, and it will be considered outside of the range.
++    // If the next page is a header page, we're at the start of the media,
++    // and in such a case we can't take the next content-page's granulepos's
++    // timestamp as unit_begin, as if the target lies inside this page, we'll
++    // miss it. Assume unit_begin is 0 in that case. See Mozilla bug 518169.
++    while (oggz_get_next_start_page (oggz, og) >= 0 &&
++           !is_header_page(og) &&
++           unit_begin <= 0)
++    {
+       serialno = ogg_page_serialno (og);
+       granulepos = ogg_page_granulepos (og);
+       unit_begin = oggz_get_unit (oggz, serialno, granulepos);
+@@ -693,6 +709,7 @@ oggz_bounded_seek_set (OGGZ * oggz,
+ 
+   /* Fail if target isn't in specified range. */
+   if (unit_target < unit_begin || unit_target > unit_end) {
++    oggz_reset (oggz, offset_orig, unit_at, SEEK_SET);
+     return -1;
+   }
+ 
+@@ -773,6 +790,10 @@ oggz_bounded_seek_set (OGGZ * oggz,
+ 
+    /* Reader is now approximately at the seek target. */
+ 
++  offset_at = oggz_reset (oggz, offset_at, unit_at, SEEK_SET);
++  if (offset_at == -1)
++    return -1;
++
+   return (long)reader->current_unit;
+ }
+ 
