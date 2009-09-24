@@ -149,9 +149,28 @@ let Utils = {
 
   // Generates a brand-new globally unique identifier (GUID).
   makeGUID: function makeGUID() {
-    let uuidgen = Cc["@mozilla.org/uuid-generator;1"].
-                  getService(Ci.nsIUUIDGenerator);
-    return uuidgen.generateUUID().toString().replace(/[{}]/g, '');
+    // 70 characters that are not-escaped URL-friendly
+    const code =
+      "!()*-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~";
+
+    let guid = "";
+    let num = 0;
+    let val;
+
+    // Generate ten 70-value characters for a 70^10 (~61.29-bit) GUID
+    for (let i = 0; i < 10; i++) {
+      // Refresh the number source after using it a few times
+      if (i == 0 || i == 5)
+        num = Math.random();
+
+      // Figure out which code to use for the next GUID character
+      num *= 70;
+      val = Math.floor(num);
+      guid += code[val];
+      num -= val;
+    }
+
+    return guid;
   },
 
   anno: function anno(id, anno, val, expire) {
