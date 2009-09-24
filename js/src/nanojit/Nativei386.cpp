@@ -406,7 +406,6 @@ namespace nanojit
         else if (i->isop(LIR_param) && i->paramKind() == 0 &&
             (arg = i->paramArg()) >= (abi_regcount = max_abi_regs[_thisfrag->lirbuf->abi])) {
             // incoming arg is on stack, can restore it from there instead of spilling
-            NanoAssert(0);
             if (!i->getArIndex()) {
                 i->markAsClear();
             }
@@ -840,7 +839,7 @@ namespace nanojit
             }
             break;
         case LIR_add:
-        case LIR_iaddp:
+        case LIR_addp:
             if (lhs->isop(LIR_alloc) && rhs->isconst()) {
                 // add alloc+const, use lea
                 Register rr = prepResultReg(ins, allow);
@@ -1169,6 +1168,13 @@ namespace nanojit
                     // 1.0 is extremely frequent and worth special-casing!
                     static const double k_ONE = 1.0;
                     LDSDm(rr, &k_ONE);
+                } else if (d && d == (int)d) {
+                    // can fit in 32bits? then use cvt which is faster
+                    Register gr = registerAlloc(GpRegs);
+                    SSE_CVTSI2SD(rr, gr);
+                    SSE_XORPDr(rr,rr);  // zero rr to ensure no dependency stalls
+                    LDi(gr, (int)d);
+                    _allocator.addFree(gr);
                 } else {
                     findMemFor(ins);
                     const int d = disp(ins);
