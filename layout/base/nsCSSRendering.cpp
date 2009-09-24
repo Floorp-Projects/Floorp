@@ -1226,10 +1226,28 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     if (hasBorderRadius) {
       gfxCornerSizes clipRectRadii;
       gfxFloat spreadDistance = -shadowItem->mSpread / twipsPerPixel;
-      gfxFloat borderSizes[4] = {
-        spreadDistance, spreadDistance,
-        spreadDistance, spreadDistance
-      };
+      gfxFloat borderSizes[4] = {0, 0, 0, 0};
+
+      // We only give the spread radius to corners with a radius on them, otherwise we'll
+      // give a rounded shadow corner to a frame corner with 0 border radius, should
+      // the author use non-uniform border radii sizes (-moz-border-radius-topleft etc)
+      // (bug 514670)
+      if (borderRadii[C_TL].width > 0 || borderRadii[C_BL].width > 0) {
+        borderSizes[NS_SIDE_LEFT] = spreadDistance;
+      }
+
+      if (borderRadii[C_TL].height > 0 || borderRadii[C_TR].height > 0) {
+        borderSizes[NS_SIDE_TOP] = spreadDistance;
+      }
+
+      if (borderRadii[C_TR].width > 0 || borderRadii[C_BR].width > 0) {
+        borderSizes[NS_SIDE_RIGHT] = spreadDistance;
+      }
+
+      if (borderRadii[C_BL].height > 0 || borderRadii[C_BR].height > 0) {
+        borderSizes[NS_SIDE_BOTTOM] = spreadDistance;
+      }
+
       nsCSSBorderRenderer::ComputeInnerRadii(borderRadii, borderSizes,
                                              &clipRectRadii);
       shadowContext->RoundedRectangle(shadowGfxRect, clipRectRadii);
@@ -1342,10 +1360,25 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
       // Calculate the radii the inner clipping rect will have
       gfxCornerSizes clipRectRadii;
       gfxFloat spreadDistance = shadowItem->mSpread / twipsPerPixel;
-      gfxFloat borderSizes[4] = {
-        spreadDistance, spreadDistance,
-        spreadDistance, spreadDistance
-      };
+      gfxFloat borderSizes[4] = {0, 0, 0, 0};
+
+      // See PaintBoxShadowOuter and bug 514670
+      if (innerRadii[C_TL].width > 0 || innerRadii[C_BL].width > 0) {
+        borderSizes[NS_SIDE_LEFT] = spreadDistance;
+      }
+
+      if (innerRadii[C_TL].height > 0 || innerRadii[C_TR].height > 0) {
+        borderSizes[NS_SIDE_TOP] = spreadDistance;
+      }
+
+      if (innerRadii[C_TR].width > 0 || innerRadii[C_BR].width > 0) {
+        borderSizes[NS_SIDE_RIGHT] = spreadDistance;
+      }
+
+      if (innerRadii[C_BL].height > 0 || innerRadii[C_BR].height > 0) {
+        borderSizes[NS_SIDE_BOTTOM] = spreadDistance;
+      }
+
       nsCSSBorderRenderer::ComputeInnerRadii(innerRadii, borderSizes,
                                              &clipRectRadii);
       shadowContext->RoundedRectangle(shadowClipGfxRect, clipRectRadii, PR_FALSE);
