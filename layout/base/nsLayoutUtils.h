@@ -51,6 +51,7 @@ class nsIDOMEvent;
 class nsRegion;
 class nsDisplayListBuilder;
 class nsIFontMetrics;
+class nsClientRectList;
 
 #include "prtypes.h"
 #include "nsStyleContext.h"
@@ -599,6 +600,27 @@ public:
   public:
     virtual void AddRect(const nsRect& aRect) = 0;
   };
+
+  struct RectAccumulator : public RectCallback {
+    nsRect       mResultRect;
+    nsRect       mFirstRect;
+    PRPackedBool mSeenFirstRect;
+
+    RectAccumulator();
+
+    virtual void AddRect(const nsRect& aRect);
+  };
+
+  struct RectListBuilder : public RectCallback {
+    nsClientRectList* mRectList;
+    nsresult          mRV;
+
+    RectListBuilder(nsClientRectList* aList);
+     virtual void AddRect(const nsRect& aRect);
+  };
+
+  static nsIFrame* GetContainingBlockForClientRect(nsIFrame* aFrame);
+
   /**
    * Collect all CSS border-boxes associated with aFrame and its
    * continuations, "drilling down" through outer table frames and
