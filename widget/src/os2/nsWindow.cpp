@@ -730,8 +730,8 @@ void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent,
     mIsTopWidgetWindow = PR_FALSE;
 
    if( aInitData != nsnull) {
-     SetWindowType(aInitData->mWindowType);
-     SetBorderStyle(aInitData->mBorderStyle);
+     mWindowType = aInitData->mWindowType;
+     mBorerStyle = aInitData->mBorderStyle;
    }
 
    // Must ensure toolkit before attempting to thread-switch!
@@ -1276,7 +1276,8 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
    // For mWnd & eWindowType_child set the cached values upfront, see bug 286555.
    // For other mWnd types we defer transfer of values to mBounds to
    // WinSetWindowPos(), see bug 391421.
-   if( !mWnd || mWindowType == eWindowType_child) 
+   if( !mWnd || mWindowType == eWindowType_child ||
+       mWindowType == eWindowType_plugin ) 
    {
       // Set cached value for lightweight and printing
       mBounds.x      = aX ;

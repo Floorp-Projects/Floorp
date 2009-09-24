@@ -55,7 +55,6 @@ enum nsWindowType {
                          // desktop (has no border))
   eWindowType_invisible, // windows that are invisible or offscreen
   eWindowType_plugin,    // plugin window
-  eWindowType_java,      // java plugin window
   eWindowType_sheet      // MacOSX sheet (special dialog class)
 };
 
