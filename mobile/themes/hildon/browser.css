@@ -44,7 +44,7 @@
 #toolbar-main {
   -moz-appearance: none;
   -moz-box-align: center;
-  padding: 1mm; /* core spacing */
+  padding: 0.5mm 1mm; /* half core spacing & core spacing */
   border: none;
 }
 
@@ -460,9 +460,9 @@ toolbarbutton.page-button {
 }
 
 .bookmark-folder, .bookmark-item {
-  padding: 0.25mm 0.5mm;
+  padding: 0.2mm 0.5mm;
   border-bottom: 0.1mm solid rgb(207,207,207);
-  min-height: 7mm; /* row size */
+  min-height: 6mm; /* row size */
 }
 
 .bookmark-manage-controls {
@@ -534,7 +534,7 @@ placeitem[ui="manage"] .bookmark-item-image {
 
 /* be consistent with the size of placeitem */
 placelabel {
-  min-height: 7mm; /* row size */
+  min-height: 6mm; /* row size */
   -moz-box-align: center;
 }
 
@@ -566,8 +566,8 @@ placeitem .button-text {
 }
 
 #autocomplete_navbuttons {
-  padding: 1mm; /* core spacing */
-  min-height: 7mm; /* row size */
+  padding: 0.5mm 1mm; /* half core spacing & core spacing */
+  min-height: 6mm; /* row size */
   -moz-user-focus: ignore;
 }
 
@@ -582,9 +582,9 @@ placeitem .button-text {
 autocompleteresult {
   color: black;
   background-color: white;
-  padding: 0.75mm 0.5mm;
+  padding: 0.2mm 0.5mm;
   border-bottom: 0.1mm solid rgb(207,207,207);
-  min-height: 7mm; /* row size */
+  min-height: 6mm; /* row size */
 }
 
 .autocompleteresult-selected {
@@ -842,9 +842,9 @@ settings .settings-title {
 
 /* XXX should be a richlistitem */
 .prefbox {
-  padding: 0.25mm;
+  padding: 0.2mm 0.25mm;
   border-bottom: 0.1mm solid rgb(207,207,207);
-  min-height: 7mm; /* row size */
+  min-height: 6mm; /* row size */
   -moz-box-align: center;
 }
 
@@ -892,7 +892,7 @@ settings .settings-title {
 
 /* select popup ------------------------------------------------------------ */
 #select-container {
-  padding: 3.5mm; /* half row size */
+  padding: 3mm; /* half row size */
 }
 
 #select-container-inner {
@@ -910,7 +910,7 @@ settings .settings-title {
   background-color: #fff;
   padding: 5px;
   border-bottom: 1px solid rgb(207,207,207);
-  min-height: 7mm; /* row size */
+  min-height: 6mm; /* row size */
   -moz-box-align: center;
 }
 
