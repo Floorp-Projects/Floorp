@@ -60,7 +60,7 @@ jsvalToUint16(JSContext* aContext, jsval aVal, PRUint16& aResult)
     }
   }
 
-  JS_ReportError(aContext, "Parameter must be an integer");
+  JS_ReportError(aContext, "Parameter must be a valid ABI constant");
   return NS_ERROR_INVALID_ARG;
 }
 
