@@ -2160,11 +2160,7 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr,
                                               attr->GetStringValue(),
                                             GetOwnerDoc(), baseURI);
 
-  // We may have to re-resolve all our cached hrefs when the document's base
-  // URI changes.  The base URI depends on the owner document, but it's the
-  // current document that keeps track of links.  If the two documents don't
-  // match, we shouldn't cache.
-  if (isURIAttr && GetOwnerDoc() == GetCurrentDoc()) {
+  if (isURIAttr) {
     const_cast<nsAttrValue*>(attr)->CacheURIValue(*aURI);
   }
   return PR_TRUE;
