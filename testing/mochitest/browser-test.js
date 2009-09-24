@@ -74,13 +74,15 @@ Tester.prototype = {
 
     if (this.tests.length) {
       this.dumper.dump("\nBrowser Chrome Test Summary\n");
-  
+
       function sum(a,b) a+b;
       var passCount = this.tests.map(function (f) f.passCount).reduce(sum);
       var failCount = this.tests.map(function (f) f.failCount).reduce(sum);
       var todoCount = this.tests.map(function (f) f.todoCount).reduce(sum);
-  
-      this.dumper.dump("\tPass: " + passCount + "\n\tFail: " + failCount + "\n\tTodo: " + todoCount + "\n");  
+
+      this.dumper.dump("\tPassed: " + passCount + "\n" +
+                       "\tFailed: " + failCount + "\n" +
+                       "\tTodo: " + todoCount + "\n");
     } else {
       this.dumper.dump("TEST-UNEXPECTED-FAIL | (browser-test.js) | " +
                        "No tests to run. Did you pass an invalid --test-path?");
