@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Mac platform colors"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test for Mac platform colors</title>
+  <script type="application/javascript" 
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=518395">Mozilla Bug 518395</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+<box id="colorbox"></box>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+var colors = {
+  "activeborder": ["rgb(0, 0, 0)"],
+  "activecaption": ["rgb(204, 204, 204)"],
+  "appworkspace": ["rgb(255, 255, 255)"],
+  "background": ["rgb(99, 99, 206)"],
+  "buttonface": ["rgb(240, 240, 240)"],
+  "buttonhighlight": ["rgb(255, 255, 255)"],
+  "buttonshadow": ["rgb(220, 220, 220)"],
+  "buttontext": ["rgb(0, 0, 0)"],
+  "captiontext": ["rgb(0, 0, 0)"],
+  "graytext": ["rgb(127, 127, 127)"],
+  "highlight": ["rgb(115, 132, 153)", "rgb(127, 127, 127)", "rgb(56, 117, 215)", "rgb(255, 193, 31)", "rgb(243, 70, 72)", "rgb(255, 138, 34)", "rgb(102, 197, 71)", "rgb(140, 78, 184)"],
+  "highlighttext": ["rgb(255, 255, 255)", "rgb(255, 254, 254)"],
+  "inactiveborder": ["rgb(255, 255, 255)"],
+  "inactivecaption": ["rgb(255, 255, 255)"],
+  "inactivecaptiontext": ["rgb(69, 69, 69)"],
+  "infobackground": ["rgb(255, 255, 199)"],
+  "infotext": ["rgb(0, 0, 0)"],
+  "menu": ["rgb(255, 255, 255)"],
+  "menutext": ["rgb(0, 0, 0)"],
+  "scrollbar": ["rgb(170, 170, 170)"],
+  "threeddarkshadow": ["rgb(220, 220, 220)"],
+  "threedface": ["rgb(240, 240, 240)"],
+  "threedhighlight": ["rgb(255, 255, 255)"],
+  "threedlightshadow": ["rgb(218, 218, 218)"],
+  "threedshadow": ["rgb(224, 224, 224)"],
+  "window": ["rgb(255, 255, 255)"],
+  "windowframe": ["rgb(204, 204, 204)"],
+  "windowtext": ["rgb(0, 0, 0)"],
+  "-moz-activehyperlinktext": ["rgb(238, 0, 0)"],
+  "-moz-buttondefault": ["rgb(220, 220, 220)"],
+  "-moz-buttonhoverface": ["rgb(240, 240, 240)"],
+  "-moz-buttonhovertext": ["rgb(0, 0, 0)"],
+  "-moz-cellhighlight": ["rgb(212, 212, 212)"],
+  "-moz-cellhighlighttext": ["rgb(0, 0, 0)"],
+  "-moz-eventreerow": ["rgb(255, 255, 255)"],
+  "-moz-field": ["rgb(255, 255, 255)"],
+  "-moz-fieldtext": ["rgb(0, 0, 0)"],
+  "-moz-dialog": ["rgb(232, 232, 232)"],
+  "-moz-dialogtext": ["rgb(0, 0, 0)"],
+  "-moz-dragtargetzone": ["rgb(199, 208, 218)", "rgb(198, 198, 198)", "rgb(180, 213, 255)", "rgb(250, 236, 115)", "rgb(255, 176, 139)", "rgb(255, 209, 129)", "rgb(194, 249, 144)", "rgb(232, 184, 255)"],
+  "-moz-hyperlinktext": ["rgb(0, 0, 238)"],
+  "-moz-html-cellhighlight": ["rgb(212, 212, 212)"],
+  "-moz-html-cellhighlighttext": ["rgb(0, 0, 0)"],
+  "-moz-mac-chrome-active": ["rgb(150, 150, 150)", "rgb(167, 167, 167)"],
+  "-moz-mac-chrome-inactive": ["rgb(202, 202, 202)", "rgb(216, 216, 216)"],
+  "-moz-mac-focusring": ["rgb(83, 144, 210)", "rgb(95, 112, 130)", "rgb(63, 152, 221)", "rgb(108, 126, 141)"],
+  "-moz-mac-menuselect": ["rgb(115, 132, 153)", "rgb(127, 127, 127)", "rgb(56, 117, 215)", "rgb(255, 193, 31)", "rgb(243, 70, 72)", "rgb(255, 138, 34)", "rgb(102, 197, 71)", "rgb(140, 78, 184)"],
+  "-moz-mac-menushadow": ["rgb(163, 163, 163)"],
+  "-moz-mac-menutextdisable": ["rgb(127, 127, 127)"],
+  "-moz-mac-menutextselect": ["rgb(255, 255, 255)"],
+  "-moz-mac-disabledtoolbartext": ["rgb(63, 63, 63)"],
+  "-moz-mac-alternateprimaryhighlight": ["rgb(115, 132, 153)", "rgb(127, 127, 127)", "rgb(56, 117, 215)", "rgb(255, 193, 31)", "rgb(243, 70, 72)", "rgb(255, 138, 34)", "rgb(102, 197, 71)", "rgb(140, 78, 184)"],
+  "-moz-mac-secondaryhighlight": ["rgb(212, 212, 212)"],
+  "-moz-menuhover": ["rgb(115, 132, 153)", "rgb(127, 127, 127)", "rgb(56, 117, 215)", "rgb(255, 193, 31)", "rgb(243, 70, 72)", "rgb(255, 138, 34)", "rgb(102, 197, 71)", "rgb(140, 78, 184)"],
+  "-moz-menuhovertext": ["rgb(255, 255, 255)", "rgb(255, 254, 254)"],
+  "-moz-menubartext": ["rgb(0, 0, 0)"],
+  //"-moz-menubarhovertext": ["rgb(255, 255, 255)"],
+  "-moz-oddtreerow": ["rgb(236, 242, 254)", "rgb(240, 240, 240)"],
+  "-moz-visitedhyperlinktext": ["rgb(85, 26, 139)"],
+  "currentcolor": ["rgb(0, 0, 0)"],
+  //"-moz-win-mediatext": ["rgb(255, 255, 255)"],
+  //"-moz-win-communicationstext": ["rgb(255, 255, 255)"],
+  "-moz-nativehyperlinktext": ["rgb(20, 79, 174)"],
+  "-moz-comboboxtext": ["rgb(0, 0, 0)"],
+  "-moz-combobox": ["rgb(255, 255, 255)"]
+};
+
+var colorbox = document.getElementById('colorbox');
+
+for (var c in colors) {
+  dump("testing color " + c + "\n");
+  colorbox.style.backgroundColor = c;
+  var rgb = document.defaultView.getComputedStyle(colorbox, null).getPropertyValue('background-color');
+  ok(colors[c].indexOf(rgb) != -1 || colors[c].length == 8, 'platform color ' + c + ' is wrong: ' + rgb);
+}
+
+
+]]>
+</script>
+
+</window>
