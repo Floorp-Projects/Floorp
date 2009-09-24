@@ -16,3 +16,6 @@
 
 # more serious tests, using SVG reference
 == border-circle-2.html border-circle-2-ref.xhtml
+
+== invalidate-1a.html invalidate-1-ref.html
+== invalidate-1b.html invalidate-1-ref.html
