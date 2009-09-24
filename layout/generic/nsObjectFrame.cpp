@@ -4230,6 +4230,9 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
             synthCocoaEvent.data.mouse.pluginY = static_cast<double>(ptPx.y);
           }
           break;
+        default:
+          pluginWidget->EndDrawPlugin();
+          return nsEventStatus_eIgnore;
         }
       }
 
@@ -4247,11 +4250,11 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
         mInstance->HandleEvent(event, &eventHandled);
       }
 
-      if (eventHandled && !(anEvent.eventStructType == NS_MOUSE_EVENT &&
-                            anEvent.message == NS_MOUSE_BUTTON_DOWN &&
-                            static_cast<const nsMouseEvent&>(anEvent).button ==
-                              nsMouseEvent::eLeftButton &&
-                            !mContentFocused))
+      if (eventHandled &&
+          !(anEvent.eventStructType == NS_MOUSE_EVENT &&
+            anEvent.message == NS_MOUSE_BUTTON_DOWN &&
+            static_cast<const nsMouseEvent&>(anEvent).button == nsMouseEvent::eLeftButton &&
+            !mContentFocused))
         rv = nsEventStatus_eConsumeNoDefault;
 
       pluginWidget->EndDrawPlugin();
