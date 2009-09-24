@@ -151,6 +151,8 @@ public:
   virtual PRBool          HasPendingInputEvent();
   gfxASurface             *GetThebesSurface();
   NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect);
+  NS_IMETHOD              OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta, PRBool aIsHorizontal, PRInt32 &aOverriddenDelta);
+
   virtual nsresult        SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
                                                    PRInt32 aNativeKeyCode,
                                                    PRUint32 aModifierFlags,
