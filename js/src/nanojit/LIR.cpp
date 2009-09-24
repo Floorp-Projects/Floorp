@@ -107,7 +107,7 @@ namespace nanojit
           names(NULL),
 #endif
           abi(ABI_FASTCALL), state(NULL), param1(NULL), sp(NULL), rp(NULL),
-          _allocator(alloc), _bytesAllocated(0)
+          _allocator(alloc)
     {
         clear();
     }
@@ -249,7 +249,7 @@ namespace nanojit
     LInsp LirBufWriter::insGuard(LOpcode op, LInsp c, GuardRecord *gr)
     {
         debug_only( if (LIR_x == op || LIR_xbarrier == op) NanoAssert(!c); )
-            return ins2(op, c, (LIns*)gr);
+        return ins2(op, c, (LIns*)gr);
     }
 
     LInsp LirBufWriter::insBranch(LOpcode op, LInsp condition, LInsp toLabel)
@@ -1152,7 +1152,6 @@ namespace nanojit
             NanoAssert(i->isLInsOp3());
             return hash3(op, i->oprnd1(), i->oprnd2(), i->oprnd3());
         }
-        NanoAssert(0);
     }
 
     inline bool LInsHashSet::equals(LInsp a, LInsp b)
@@ -1194,7 +1193,6 @@ namespace nanojit
             NanoAssert(a->isLInsOp3());
             return a->oprnd1() == b->oprnd1() && a->oprnd2() == b->oprnd2() && a->oprnd3() == b->oprnd3();
         }
-        NanoAssert(0);
     }
 
     void LInsHashSet::grow()
@@ -1450,7 +1448,7 @@ namespace nanojit
             total++;
 
             // first handle side-effect instructions
-            if (!i->isCse())
+            if (i->isStmt())
             {
                 live.add(i,0);
                 if (i->isGuard())
@@ -1922,7 +1920,7 @@ namespace nanojit
         return out->insCall(ci, args);
     }
 
-    void compile(Assembler* assm, Fragment* frag, Allocator& alloc verbose_only(, LabelMap* labels))
+    void compile(Assembler* assm, Fragment* frag verbose_only(, Allocator& alloc, LabelMap* labels))
     {
         verbose_only(
         LogControl *logc = assm->_logc;
