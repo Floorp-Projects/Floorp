@@ -148,8 +148,7 @@ struct JSTraceMonitor {
      * last-ditch GC and suppress calls to JS_ReportOutOfMemory.
      *
      * !tracecx && !recorder: not on trace
-     * !tracecx && recorder && !recorder->deepAborted: recording
-     * !tracecx && recorder && recorder->deepAborted: deep aborted
+     * !tracecx && recorder: recording
      * tracecx && !recorder: executing a trace
      * tracecx && recorder: executing inner loop, recording outer loop
      */
