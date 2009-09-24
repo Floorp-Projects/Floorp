@@ -106,7 +106,7 @@ js_json_parse(JSContext *cx, uintN argc, jsval *vp)
     JSString *s = NULL;
     jsval *argv = vp + 2;
     jsval reviver = JSVAL_NULL;
-    JSAutoTempValueRooter(cx, 1, &reviver);
+    JSAutoTempValueRooter tvr(cx, 1, &reviver);
 
     if (!JS_ConvertArguments(cx, argc, argv, "S / v", &s, &reviver))
         return JS_FALSE;
@@ -130,8 +130,8 @@ js_json_stringify(JSContext *cx, uintN argc, jsval *vp)
     jsval *argv = vp + 2;
     JSObject *replacer = NULL;
     jsval space = JSVAL_NULL;
-    JSAutoTempValueRooter(cx, replacer);
-    JSAutoTempValueRooter(cx, 1, &space);
+    JSAutoTempValueRooter tvr(cx, replacer);
+    JSAutoTempValueRooter tvr2(cx, 1, &space);
 
     // Must throw an Error if there isn't a first arg
     if (!JS_ConvertArguments(cx, argc, argv, "v / o v", vp, &replacer, &space))

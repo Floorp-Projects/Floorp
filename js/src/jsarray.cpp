@@ -1718,7 +1718,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, jsva
     if (!dp)
         return JS_FALSE;
     tmp[0] = DOUBLE_TO_JSVAL(dp);
-    JSAutoTempValueRooter(cx, JS_ARRAY_LENGTH(tmp), tmp);
+    JSAutoTempValueRooter tvr(cx, JS_ARRAY_LENGTH(tmp), tmp);
     JSAutoTempIdRooter idr(cx);
     do {
         tmp[1] = *vector++;
