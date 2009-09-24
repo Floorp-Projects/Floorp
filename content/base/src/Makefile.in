@@ -146,7 +146,7 @@ include $(topsrcdir)/config/rules.mk
 INCLUDES	+= \
 		-I$(srcdir)/../../events/src \
 		-I$(srcdir)/../../xml/content/src \
-		-I$(srcdir)/../../xul/base/src \
+		-I$(srcdir)/../../../layout/xul/base/src \
 		-I$(srcdir)/../../xul/content/src \
 		-I$(srcdir)/../../html/content/src \
 		-I$(srcdir)/../../base/src \
