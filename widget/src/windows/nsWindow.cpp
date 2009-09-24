@@ -2105,6 +2105,37 @@ ClipRegionContainedInRect(const nsTArray<nsIntRect>& aClipRects,
   return PR_TRUE;
 }
 
+// This function determines whether the given window has a descendant that
+// does not intersect the given aScreenRect. If we encounter a window owned
+// by another thread (which includes another process, since thread IDs
+// are unique system-wide), then we give up and conservatively return true.
+static PRBool
+HasDescendantWindowOutsideRect(DWORD aThisThreadID, HWND aWnd,
+                               const RECT& aScreenRect)
+{
+  // If the window is owned by another thread, give up now, don't try to
+  // look at its children since they could change asynchronously.
+  // XXX should we try harder here for out-of-process plugins?
+  if (GetWindowThreadProcessId(aWnd, NULL) != aThisThreadID) {
+    return PR_TRUE;
+  }
+  for (HWND child = ::GetWindow(aWnd, GW_CHILD); child;
+       child = ::GetWindow(child, GW_HWNDNEXT)) {
+    RECT childScreenRect;
+    ::GetWindowRect(child, &childScreenRect);
+    RECT result;
+    if (!::IntersectRect(&result, &childScreenRect, &aScreenRect)) {
+      return PR_TRUE;
+    }
+
+    if (HasDescendantWindowOutsideRect(aThisThreadID, child, aScreenRect)) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 void
 nsWindow::Scroll(const nsIntPoint& aDelta,
                  const nsTArray<nsIntRect>& aDestRects,
@@ -2129,6 +2160,8 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
     w->SetWindowClipRegion(configuration.mClipRegion, PR_TRUE);
   }
 
+  DWORD ourThreadID = GetWindowThreadProcessId(mWnd, NULL);
+
   for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
     nsIntRect affectedRect;
     affectedRect.UnionRect(aDestRects[i], aDestRects[i] - aDelta);
@@ -2148,6 +2181,24 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
           // used on it again by a later rectangle in aDestRects, we
           // don't want it to move twice!
           scrolledWidgets.RawRemoveEntry(entry);
+
+          nsIntPoint screenOffset = WidgetToScreenOffset();
+          RECT screenAffectedRect = {
+            screenOffset.x + affectedRect.x,
+            screenOffset.y + affectedRect.y,
+            screenOffset.x + affectedRect.XMost(),
+            screenOffset.y + affectedRect.YMost()
+          };
+          if (HasDescendantWindowOutsideRect(ourThreadID, w->mWnd,
+                                             screenAffectedRect)) {
+            // SW_SCROLLCHILDREN seems to not move descendant windows
+            // that don't intersect the scrolled rectangle, *even if* the
+            // immediate child window of the scrolled window *does* intersect
+            // the scrolled window. So if w has a descendant window
+            // that would not be moved, SW_SCROLLCHILDREN will hopelessly mess
+            // things up and we must not use it.
+            flags &= ~SW_SCROLLCHILDREN;
+          }
         } else {
           flags &= ~SW_SCROLLCHILDREN;
           // We may have removed some children from scrolledWidgets even
