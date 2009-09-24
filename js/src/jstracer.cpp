@@ -4100,27 +4100,27 @@ TraceRecorder::compile(JSTraceMonitor* tm)
 
     if (tm->needFlush) {
         ResetJIT(cx, FR_DEEP_BAIL);
-        return true;
+        return false;
     }
     if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
         debug_only_print0(LC_TMTracer, "Blacklist: excessive stack use.\n");
         Blacklist((jsbytecode*) fragment->root->ip);
-        return true;
+        return false;
     }
     if (anchor && anchor->exitType != CASE_EXIT)
         ++treeInfo->branchCount;
     if (outOfMemory())
-        return true;
+        return false;
 
     Assembler *assm = tm->assembler;
     nanojit::compile(assm, fragment verbose_only(, tempAlloc, tm->labels));
     if (outOfMemory())
-        return true;
+        return false;
 
     if (assm->error() != nanojit::None) {
         debug_only_print0(LC_TMTracer, "Blacklisted: error during compilation\n");
         Blacklist((jsbytecode*) fragment->root->ip);
-        return true;
+        return false;
     }
     ResetRecordingAttempts(cx, (jsbytecode*) fragment->ip);
     ResetRecordingAttempts(cx, (jsbytecode*) fragment->root->ip);
