@@ -1823,14 +1823,36 @@ js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
                                           vp);
 }
 
+static bool
+GetFirstArgumentAsObject(JSContext *cx, uintN argc, jsval *vp, const char *method, JSObject **objp)
+{
+    if (argc == 0) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
+                             method, "0", "s");
+        return false;
+    }
+
+    jsval v = vp[2];
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        char *bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
+        if (!bytes)
+            return false;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
+                             bytes, "not an object");
+        JS_free(cx, bytes);
+        return false;
+    }
+
+    *objp = JSVAL_TO_OBJECT(v);
+    return true;
+}
+
 static JSBool
 obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
 {
-    if (argc == 0 || JSVAL_IS_PRIMITIVE(vp[2])) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
-        return false;
-    }
-    JSObject *obj = JSVAL_TO_OBJECT(vp[2]);
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.getOwnPropertyDescriptor", &obj))
+        return JS_FALSE;
     AutoIdRooter nameidr(cx);
     if (!JS_ValueToId(cx, argc >= 2 ? vp[3] : JSVAL_VOID, nameidr.addr()))
         return JS_FALSE;
@@ -1840,13 +1862,9 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 obj_keys(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval v = argc == 0 ? JSVAL_VOID : vp[2];
-    if (JSVAL_IS_PRIMITIVE(v)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.keys", &obj))
         return JS_FALSE;
-    }
-
-    JSObject *obj = JSVAL_TO_OBJECT(v);
 
     AutoIdArray ida(cx, JS_Enumerate(cx, obj));
     if (!ida)
@@ -2411,13 +2429,10 @@ static JSBool
 obj_defineProperty(JSContext* cx, uintN argc, jsval* vp)
 {
     /* 15.2.3.6 steps 1 and 5. */
-    jsval v = (argc == 0) ? JSVAL_VOID : vp[2];
-    if (JSVAL_IS_PRIMITIVE(v)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.defineProperty", &obj))
         return JS_FALSE;
-    }
-    *vp = vp[2];
-    JSObject* obj = JSVAL_TO_OBJECT(*vp);
+    *vp = OBJECT_TO_JSVAL(obj);
 
     /* 15.2.3.6 step 2. */
     AutoIdRooter nameidr(cx);
@@ -2472,15 +2487,14 @@ static JSBool
 obj_defineProperties(JSContext* cx, uintN argc, jsval* vp)
 {
     /* 15.2.3.6 steps 1 and 5. */
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.defineProperties", &obj))
+        return false;
+    *vp = OBJECT_TO_JSVAL(obj);
+
     if (argc < 2) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "Object.defineProperties", "0", "s");
-        return false;
-    }
-
-    *vp = vp[2];
-    if (JSVAL_IS_PRIMITIVE(vp[2])) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
         return false;
     }
 
@@ -2488,8 +2502,6 @@ obj_defineProperties(JSContext* cx, uintN argc, jsval* vp)
     if (!props)
         return false;
     vp[3] = OBJECT_TO_JSVAL(props);
-
-    JSObject *obj = JSVAL_TO_OBJECT(*vp);
 
     return DefineProperties(cx, obj, props);
 }
@@ -2559,6 +2571,35 @@ obj_create(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
+static JSBool
+obj_getOwnPropertyNames(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.getOwnPropertyNames", &obj))
+        return false;
+
+    AutoValueVector props(cx);
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, props))
+        return false;
+
+    for (size_t i = 0, len = props.length(); i < len; i++) {
+         jsval v = props[i];
+         if (JSVAL_IS_INT(v)) {
+             JSString *str = js_ValueToString(cx, v);
+             if (!str)
+                 return false;
+             props[i] = STRING_TO_JSVAL(str);
+         }
+    }
+
+    JSObject *aobj = js_NewArrayObject(cx, props.length(), props.begin());
+    if (!aobj)
+        return false;
+
+    *vp = OBJECT_TO_JSVAL(aobj);
+    return true;
+}
+
 
 #if JS_HAS_OBJ_WATCHPOINT
 const char js_watch_str[] = "watch";
@@ -2598,6 +2639,7 @@ static JSFunctionSpec object_static_methods[] = {
     JS_FN("defineProperty",            obj_defineProperty,          3,0),
     JS_FN("defineProperties",          obj_defineProperties,        2,0),
     JS_FN("create",                    obj_create,                  2,0),
+    JS_FN("getOwnPropertyNames",       obj_getOwnPropertyNames,     1,0),
     JS_FS_END
 };
 
@@ -5415,7 +5457,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, jsval *statep, j
         return false;
 
     /* Tell InitNativeIterator to treat us like a native object. */
-    JS_ASSERT(enum_op == JSENUMERATE_INIT);
+    JS_ASSERT(enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL);
     *statep = JSVAL_NATIVE_ENUMERATE_COOKIE;
     return true;
 }

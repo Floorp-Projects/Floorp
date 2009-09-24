@@ -2626,6 +2626,7 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     switch (enum_op) {
       case JSENUMERATE_INIT:
+      case JSENUMERATE_INIT_ALL:
         cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
 
         if (!cpx->isInner && cpx->inner)
@@ -4376,6 +4377,7 @@ its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     switch (enum_op) {
       case JSENUMERATE_INIT:
+      case JSENUMERATE_INIT_ALL:
         if (its_noisy)
             fprintf(gOutFile, "enumerate its properties\n");
 
