@@ -52,24 +52,57 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>&welcome.title;</title>
-<!--  <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css"/> -->
+  <link rel="icon" type="image/png" href="chrome://branding/content/favicon.png" />
+  <link rel="stylesheet" href="chrome://browser/skin/header.css" type="text/css"/>
+  <link rel="stylesheet" href="chrome://browser/skin/firstRun.css" type="text/css"/>
+  <script><![CDATA[
+    function goToAddons(aSearchString) {
+      var Ci = Components.interfaces, Cc = Components.classes;
+      var chromeWin = window
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShellTreeItem)
+                         .rootTreeItem
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindow)
+                         .QueryInterface(Ci.nsIDOMChromeWindow);
+      var BrowserUI = chromeWin.BrowserUI;
+      BrowserUI.showPanel("addons-container");
+      if (aSearchString) {
+        // ExtensionsView initialization is delayed, so need to delay triggering
+        // the search as well
+        setTimeout(function () { chromeWin.ExtensionsView.getAddonsFromRepo(aSearchString); }, 0);
+      }
+    }
+  ]]></script>
 </head>
 
 <body>
-  <h1>&welcome.title;</h1>
-  <p>&overview.description;</p>
+  <div id="wrapper">
+    <p class="intro"><h1>&welcome.title;</h1></p>
+    <p class="intro"><img src="chrome://browser/content/firstRunAnimation.gif"/></p>
+    <hr/>
+    <p>&overview.description;</p>
 
-  <h1>&nextSteps.title;</h1>
-  
-  <h2>&sync.title;</h2>
-  <p>&sync.description;</p>
-  <p><a id="sync" href="">&sync.link;</a></p>
+    <h2>&nextSteps.title;</h2>
+    <hr/>
 
-  <h2>&getPersonal.title;</h2>
-  <p>&getPersonal.description;</p>
-  <p><a id="getPersonal" href="">&getPersonal.link;</a></p>
+    <div class="go" id="weave">
+      <h3>&sync.title;</h3>
+      <p>&sync.description;</p>
+      <p><a id="sync" onclick="goToAddons('weave');"><img src="chrome://browser/skin/images/weave.png"/> &sync.link;</a></p>
+    </div>
 
-  <hr/>
-  <p><a id="skip" href="">&skip.link;</a></p>
+    <div class="go" id="addons">
+      <h3>&getPersonal.title;</h3>
+      <p>&getPersonal.description;</p>
+      <p><a id="getPersonal" onclick="goToAddons();"><img src="chrome://browser/skin/images/addons.png"/> &getPersonal.link;</a></p>
+    </div>
+
+    <!--
+    <hr/>
+    <p><a id="skip" href="">&skip.link;</a></p>
+    -->
+  </div>
 </body>
 </html>

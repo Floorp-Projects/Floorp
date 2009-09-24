@@ -49,8 +49,8 @@ let modules = {
   get firefox() this.fennec,
 
   firstrun: {
-    uri: "chrome://firstrun/content/firstrun.html",
-    privileged: false
+    uri: "chrome://browser/content/firstrun.xhtml",
+    privileged: true
   },
   rights: {
 #ifdef MOZ_OFFICIAL_BRANDING

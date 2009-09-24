@@ -12,6 +12,7 @@ chrome.jar:
   content/commandUtil.js               (content/commandUtil.js)
   content/bindings.xml                 (content/bindings.xml)
   content/firstrun.xhtml               (content/firstrun.xhtml)
+  content/firstRunAnimation.gif        (content/firstRunAnimation.gif)
   content/tabs.xml                     (content/tabs.xml)
   content/bindings/checkbox.xml        (content/bindings/checkbox.xml)
   content/notification.xml             (content/notification.xml)
