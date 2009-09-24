@@ -203,9 +203,6 @@ struct JSTraceMonitor {
      */
     CLS(VMAllocator)        reTempAlloc;
 
-    /* Keep a list of recorders we need to abort on cache flush. */
-    CLS(TraceRecorder)      abortStack;
-
 #ifdef DEBUG
     /* Fields needed for fragment/guard profiling. */
     CLS(nanojit::Seq<nanojit::Fragment*>) branches;

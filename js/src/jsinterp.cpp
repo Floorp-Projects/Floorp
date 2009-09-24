@@ -2805,18 +2805,9 @@ js_Interpret(JSContext *cx)
 #endif /* !JS_THREADED_INTERP */
 
 #ifdef JS_TRACER
-    /* We had better not be entering the interpreter from JIT-compiled code. */
-    TraceRecorder *tr = TRACE_RECORDER(cx);
-    SET_TRACE_RECORDER(cx, NULL);
-
-    /* If a recorder is pending and we try to re-enter the interpreter, flag
-       the recorder to be destroyed when we return. */
-    if (tr) {
-        if (tr->wasDeepAborted())
-            tr->removeFragmentReferences();
-        else
-            tr->pushAbortStack();
-    }
+    /* We cannot reenter the interpreter while recording. */
+    if (TRACE_RECORDER(cx))
+        js_AbortRecording(cx, "attempt to reenter interpreter while recording");
 #endif
 
     /* Check for too deep of a native thread stack. */
@@ -3308,15 +3299,6 @@ js_Interpret(JSContext *cx)
         js_SetVersion(cx, originalVersion);
     --cx->interpLevel;
 
-#ifdef JS_TRACER
-    if (tr) {
-        SET_TRACE_RECORDER(cx, tr);
-        if (!tr->wasDeepAborted()) {
-            tr->popAbortStack();
-            tr->deepAbort();
-        }
-    }
-#endif
     return ok;
 
   atom_not_defined:

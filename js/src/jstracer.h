@@ -698,7 +698,6 @@ class TraceRecorder {
     JSObject*               lexicalBlock;
     Tracker                 tracker;
     Tracker                 nativeFrameTracker;
-    char*                   entryTypeMap;
     unsigned                callDepth;
     JSAtom**                atoms;
     VMSideExit*             anchor;
@@ -723,7 +722,6 @@ class TraceRecorder {
     nanojit::LIns*          inner_sp_ins;
     nanojit::LIns*          native_rval_ins;
     nanojit::LIns*          newobj_ins;
-    bool                    deepAborted;
     bool                    trashSelf;
     Queue<nanojit::Fragment*> whichTreesToTrash;
     Queue<jsbytecode*>      cfgMerges;
@@ -732,8 +730,6 @@ class TraceRecorder {
     JSSpecializedNative*    pendingSpecializedNative;
     jsval*                  pendingUnboxSlot;
     nanojit::LIns*          pendingGuardCondition;
-    TraceRecorder*          nextRecorderToAbort;
-    bool                    wasRootFragment;
     jsbytecode*             outer;     /* outer trace header PC */
     uint32                  outerArgc; /* outer trace deepest frame argc */
     bool                    loop;
@@ -1030,7 +1026,7 @@ public:
 
     nanojit::Fragment* getFragment() const { return fragment; }
     TreeInfo* getTreeInfo() const { return treeInfo; }
-    JS_REQUIRES_STACK void compile(JSTraceMonitor* tm);
+    JS_REQUIRES_STACK bool compile(JSTraceMonitor* tm);
     JS_REQUIRES_STACK bool closeLoop(TypeConsensus &consensus);
     JS_REQUIRES_STACK bool closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus &consensus);
     JS_REQUIRES_STACK void endLoop();
@@ -1041,10 +1037,6 @@ public:
     JS_REQUIRES_STACK void prepareTreeCall(VMFragment* inner);
     JS_REQUIRES_STACK void emitTreeCall(VMFragment* inner, VMSideExit* exit);
     unsigned getCallDepth() const;
-    void pushAbortStack();
-    void popAbortStack();
-    void removeFragmentReferences();
-    void deepAbort();
 
     JS_REQUIRES_STACK JSRecordingStatus record_EnterFrame();
     JS_REQUIRES_STACK JSRecordingStatus record_LeaveFrame();
@@ -1053,7 +1045,6 @@ public:
     JS_REQUIRES_STACK JSRecordingStatus record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
     JS_REQUIRES_STACK JSRecordingStatus record_NativeCallComplete();
 
-    bool wasDeepAborted() { return deepAborted; }
     TreeInfo* getTreeInfo() { return treeInfo; }
 
 #ifdef DEBUG
@@ -1097,11 +1088,11 @@ public:
 
 #define TRACE_ARGS_(x,args)                                                   \
     JS_BEGIN_MACRO                                                            \
-        TraceRecorder* tr_ = TRACE_RECORDER(cx);                              \
-        if (tr_ && !tr_->wasDeepAborted()) {                                  \
+        if (TraceRecorder* tr_ = TRACE_RECORDER(cx)) {                        \
             JSRecordingStatus status = tr_->record_##x args;                  \
             if (STATUS_ABORTS_RECORDING(status)) {                            \
-                js_AbortRecording(cx, #x);                                    \
+                if (TRACE_RECORDER(cx))                                       \
+                    js_AbortRecording(cx, #x);                                \
                 if (status == JSRS_ERROR)                                     \
                     goto error;                                               \
             }                                                                 \
