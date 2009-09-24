@@ -1385,23 +1385,23 @@ const BrowserSearch = {
     switch (aData) {
       case "engine-added":
       case "engine-removed":
-	// force a rebuild of the prefs list, if needed
-	// XXX this is inefficient, shouldn't have to rebuild the entire list
-	if (ExtensionsView._list)
-	  ExtensionsView.getAddonsFromLocal();
+        // force a rebuild of the prefs list, if needed
+        // XXX this is inefficient, shouldn't have to rebuild the entire list
+        if (ExtensionsView._list)
+          ExtensionsView.getAddonsFromLocal();
 
-	// fall through
+        // fall through
       case "engine-changed":
-	// XXX we should probably also update the ExtensionsView list here once
-	// that's efficient, since the icon can change (happen during an async
-	// installs from the web)
+        // XXX we should probably also update the ExtensionsView list here once
+        // that's efficient, since the icon can change (happen during an async
+        // installs from the web)
 
-	// blow away our cache
-	this._engines = null;
-	break;
+        // blow away our cache
+        this._engines = null;
+        break;
       case "engine-current":
-	// Not relevant
-	break;
+        // Not relevant
+        break;
     }
   },
 
