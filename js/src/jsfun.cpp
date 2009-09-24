@@ -1414,6 +1414,29 @@ static LazyFunctionProp lazy_function_props[] = {
 };
 
 static JSBool
+fun_enumerate(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj->isFunction());
+
+    jsval v;
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
+    if (!JS_LookupPropertyById(cx, obj, id, &v))
+        return false;
+    id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
+    if (!JS_LookupPropertyById(cx, obj, id, &v))
+        return false;
+
+    for (uintN i = 0; i < JS_ARRAY_LENGTH(lazy_function_props); i++) {
+        LazyFunctionProp &lfp = lazy_function_props[i];
+        id = ATOM_TO_JSID(OFFSET_TO_ATOM(cx->runtime, lfp.atomOffset));
+        if (!JS_LookupPropertyById(cx, obj, id, &v))
+            return false;
+    }
+
+    return true;
+}
+
+static JSBool
 fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             JSObject **objp)
 {
@@ -1809,7 +1832,7 @@ JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, (JSResolveOp)fun_resolve,
+    fun_enumerate,    (JSResolveOp)fun_resolve,
     JS_ConvertStub,   fun_finalize,
     NULL,             NULL,
     NULL,             NULL,

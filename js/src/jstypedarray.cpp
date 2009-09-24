@@ -672,8 +672,18 @@ class TypedArrayTemplate
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
         JS_ASSERT(tarray);
 
-        jsint curVal;
+        /*
+         * Iteration is "length" (if JSENUMERATE_INIT_ALL), then [0, length).
+         * *statep is JSVAL_TRUE if enumerating "length" and
+         * JSVAL_TO_INT(index) when enumerating index.
+         */
         switch (enum_op) {
+          case JSENUMERATE_INIT_ALL:
+            *statep = JSVAL_TRUE;
+            if (idp)
+                *idp = INT_TO_JSID(tarray->length + 1);
+            break;
+
           case JSENUMERATE_INIT:
             *statep = JSVAL_ZERO;
             if (idp)
@@ -681,11 +691,19 @@ class TypedArrayTemplate
             break;
 
           case JSENUMERATE_NEXT:
-            curVal = JSVAL_TO_INT(*statep);
-            *idp = INT_TO_JSID(curVal);
-            *statep = (curVal == int32(tarray->length))
-                      ? JSVAL_NULL
-                      : INT_TO_JSVAL(curVal+1);
+            if (*statep == JSVAL_TRUE) {
+                *idp = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
+                *statep = JSVAL_ZERO;
+            } else {
+                uint32 index = JSVAL_TO_INT(*statep);
+                if (index < uint32(tarray->length)) {
+                    *idp = *statep;
+                    *statep = INT_TO_JSID(JSVAL_TO_INT(*statep) + 1);
+                } else {
+                    JS_ASSERT(index == tarray->length);
+                    *statep = JSVAL_NULL;
+                }
+            }
             break;
 
           case JSENUMERATE_DESTROY:
