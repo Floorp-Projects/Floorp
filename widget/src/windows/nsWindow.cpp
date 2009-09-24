@@ -2640,6 +2640,69 @@ nsWindow::OnDefaultButtonLoaded(const nsIntRect &aButtonRect)
 #endif
 }
 
+NS_IMETHODIMP
+nsWindow::OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
+                                         PRBool aIsHorizontal,
+                                         PRInt32 &aOverriddenDelta)
+{
+  // The default vertical and horizontal scrolling speed is 3, this is defined
+  // on the document of SystemParametersInfo in MSDN.
+  const PRInt32 kSystemDefaultScrollingSpeed = 3;
+
+  // Compute the simple overridden speed.
+  PRInt32 computedOverriddenDelta;
+  nsresult rv =
+    nsBaseWidget::OverrideSystemMouseScrollSpeed(aOriginalDelta, aIsHorizontal,
+                                                 computedOverriddenDelta);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aOverriddenDelta = aOriginalDelta;
+
+  if (computedOverriddenDelta == aOriginalDelta) {
+    // We don't override now.
+    return NS_OK;
+  }
+
+  // Otherwise, we should check whether the user customized the system settings
+  // or not.  If the user did it, we should respect the will.
+  UINT systemSpeed;
+  if (!::SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &systemSpeed, 0)) {
+    return NS_ERROR_FAILURE;
+  }
+  // The default vertical scrolling speed is 3, this is defined on the document
+  // of SystemParametersInfo in MSDN.
+  if (systemSpeed != kSystemDefaultScrollingSpeed) {
+    return NS_OK;
+  }
+
+  // Only Vista and later, Windows has the system setting of horizontal
+  // scrolling by the mouse wheel.
+  if (GetWindowsVersion() >= VISTA_VERSION) {
+    if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0, &systemSpeed, 0)) {
+      return NS_ERROR_FAILURE;
+    }
+    // The default horizontal scrolling speed is 3, this is defined on the
+    // document of SystemParametersInfo in MSDN.
+    if (systemSpeed != kSystemDefaultScrollingSpeed) {
+      return NS_OK;
+    }
+  }
+
+  // Limit the overridden delta value from the system settings.  The mouse
+  // driver might accelerate the scrolling speed already.  If so, we shouldn't
+  // override the scrolling speed for preventing the unexpected high speed
+  // scrolling.
+  PRInt32 deltaLimit;
+  rv =
+    nsBaseWidget::OverrideSystemMouseScrollSpeed(kSystemDefaultScrollingSpeed,
+                                                 aIsHorizontal, deltaLimit);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aOverriddenDelta = PR_MIN(computedOverriddenDelta, deltaLimit);
+
+  return NS_OK;
+}
+
 /**************************************************************
  **************************************************************
  **
