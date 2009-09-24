@@ -22,3 +22,5 @@ bug496063.patch: Fix for infinite loop during seek while shutting down.
 faster_seek.patch: Fix for bug 501031, make seeking faster over HTTP.
 
 bug516847.patch: Fix for bug 516847 (duplicate frame handling).
+
+bug518169.patch: Fix bug 518169, fix faster_seek.patch.
