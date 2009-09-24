@@ -712,6 +712,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
       rpc->PresShell()->FrameManager()->GetRootFrame()->GetWindow();
 
     nsWidgetInitData initData;
+    initData.mWindowType = eWindowType_plugin;
     initData.mUnicode = PR_FALSE;
     initData.clipChildren = PR_TRUE;
     initData.clipSiblings = PR_TRUE;

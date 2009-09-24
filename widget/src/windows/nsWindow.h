@@ -385,7 +385,6 @@ protected:
   PRPackedBool          mIsInMouseCapture;
   PRPackedBool          mInScrollProcessing;
   PRPackedBool          mUnicodeWidget;
-  PRPackedBool          mIsPluginWindow;
   PRPackedBool          mPainting;
   char                  mLeadByte;
   PRUint32              mBlurSuppressLevel;
