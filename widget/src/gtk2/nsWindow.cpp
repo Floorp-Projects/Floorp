@@ -2750,6 +2750,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
             event.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
             event.refPoint.x = nscoord(aEvent->x);
             event.refPoint.y = nscoord(aEvent->y);
+            // XXX Why is this delta value different from the scroll event?
             event.delta = (aEvent->button == 6) ? -2 : 2;
 
             event.isShift   = (aEvent->state & GDK_SHIFT_MASK) != 0;

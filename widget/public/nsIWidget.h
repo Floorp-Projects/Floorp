@@ -102,8 +102,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x5c55f106, 0xb7ab, 0x4f54, \
-    { 0x89, 0xf3, 0xd3, 0xcf, 0x91, 0xf9, 0x63, 0x95 } }
+  { 0x155c4b, 0x78da, 0x4607, \
+    { 0x92, 0x87, 0xd6, 0xcf, 0x32, 0xcd, 0x42, 0xb5 } }
 
 /*
  * Window shadow styles
@@ -1067,6 +1067,29 @@ class nsIWidget : public nsISupports {
      * The button's rectangle should be supplied in aButtonRect.
      */ 
     NS_IMETHOD OnDefaultButtonLoaded(const nsIntRect &aButtonRect) = 0;
+
+    /**
+     * Compute the overridden system mouse scroll speed on the root content of
+     * web pages.  The widget may set the same value as aOriginalDelta.  E.g.,
+     * when the system scrolling settings were customized, widget can respect
+     * the will of the user.
+     *
+     * This is called only when the mouse wheel event scrolls the root content
+     * of the web pages by line.  In other words, this isn't called when the
+     * mouse wheel event is used for zoom, page scroll and other special
+     * actions.  And also this isn't called when the user doesn't use the
+     * system wheel speed settings.
+     *
+     * @param aOriginalDelta   The delta value of the current mouse wheel
+     *                         scrolling event.
+     * @param aIsHorizontal    If TRUE, the scrolling direction is horizontal.
+     *                         Otherwise, it's vertical.
+     * @param aOverriddenDelta The overridden mouse scrolling speed.  This value
+     *                         may be same as aOriginalDelta.
+     */
+    NS_IMETHOD OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
+                                              PRBool aIsHorizontal,
+                                              PRInt32 &aOverriddenDelta) = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.
