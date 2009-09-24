@@ -2290,6 +2290,7 @@ TraceRecorder::~TraceRecorder()
 
     /* Purge the tempAlloc used during recording. */
     tempAlloc.reset();
+    traceMonitor->lirbuf->clear();
 
 #ifdef DEBUG
     debug_only_stmt( delete verbose_filter; )
@@ -2598,8 +2599,8 @@ JSTraceMonitor::flush()
     }
 
     assembler = new (alloc) Assembler(*codeAlloc, alloc, core, &js_LogController);
-    lirbuf = new (alloc) LirBuffer(alloc);
-    reLirBuf = new (alloc) LirBuffer(alloc);
+    lirbuf = new (alloc) LirBuffer(*tempAlloc);
+    reLirBuf = new (alloc) LirBuffer(*reTempAlloc);
     verbose_only( branches = NULL; )
 
 #ifdef DEBUG

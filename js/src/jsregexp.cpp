@@ -3109,6 +3109,7 @@ class RegExpNativeCompiler {
     ~RegExpNativeCompiler() {
         /* Purge the tempAlloc used during recording. */
         tempAlloc.reset();
+        JS_TRACE_MONITOR(cx).reLirBuf->clear();
     }
 
     JSBool compile()
