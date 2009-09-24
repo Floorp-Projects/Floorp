@@ -70,29 +70,14 @@ public:
 
   // nsIWidget
 
-	// create with nsIWidget parent
   inline NS_IMETHOD            Create(nsIWidget *aParent,
+                               nsNativeWidget aNativeParent,
                                const nsRect &aRect,
                                EVENT_CALLBACK aHandleEventFunction,
                                nsIDeviceContext *aContext,
                                nsIAppShell *aAppShell = nsnull,
                                nsIToolkit *aToolkit = nsnull,
-                               nsWidgetInitData *aInitData = nsnull)
-		{
-		return(CreateWidget(aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData, nsnull));
-		}
-
-	// create with a native parent
-  inline NS_IMETHOD            Create(nsNativeWidget aParent,
-                               const nsRect &aRect,
-                               EVENT_CALLBACK aHandleEventFunction,
-                               nsIDeviceContext *aContext,
-                               nsIAppShell *aAppShell = nsnull,
-                               nsIToolkit *aToolkit = nsnull,
-                               nsWidgetInitData *aInitData = nsnull)
-		{
-		return(CreateWidget(nsnull, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData,aParent));
-		}
+                               nsWidgetInitData *aInitData = nsnull);
 
   NS_IMETHOD Destroy(void);
   inline nsIWidget* GetParent(void)
@@ -228,15 +213,6 @@ public:
 
 protected:
   NS_IMETHOD CreateNative(PtWidget_t *parentWindow) { return NS_OK; }
-
-  nsresult CreateWidget(nsIWidget *aParent,
-                        const nsRect &aRect,
-                        EVENT_CALLBACK aHandleEventFunction,
-                        nsIDeviceContext *aContext,
-                        nsIAppShell *aAppShell,
-                        nsIToolkit *aToolkit,
-                        nsWidgetInitData *aInitData,
-                        nsNativeWidget aNativeParent = nsnull);
 
   inline PRBool DispatchWindowEvent(nsGUIEvent* event)
 		{

@@ -47,18 +47,5 @@ public:
 	
 	NS_IMETHOD              Show(PRBool bState);
 	NS_IMETHOD              SetTitle(const nsAString& aTitle);
-
-protected:
-
-	virtual nsresult        StandardWindowCreate(nsIWidget *aParent,
-	                                             const nsRect &aRect,
-	                                             EVENT_CALLBACK aHandleEventFunction,
-	                                             nsIDeviceContext *aContext,
-	                                             nsIAppShell *aAppShell,
-	                                             nsIToolkit *aToolkit,
-	                                             nsWidgetInitData *aInitData,
-	                                             nsNativeWidget aNativeParent = nsnull);
-
-	
 };
 #endif //nsChildView_h__

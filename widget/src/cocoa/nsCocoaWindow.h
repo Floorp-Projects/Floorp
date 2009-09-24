@@ -178,15 +178,8 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSPIWIDGETCOCOA
       
-    NS_IMETHOD              Create(nsNativeWidget aParent,
-                                   const nsIntRect &aRect,
-                                   EVENT_CALLBACK aHandleEventFunction,
-                                   nsIDeviceContext *aContext,
-                                   nsIAppShell *aAppShell = nsnull,
-                                   nsIToolkit *aToolkit = nsnull,
-                                   nsWidgetInitData *aInitData = nsnull);
-
     NS_IMETHOD              Create(nsIWidget* aParent,
+                                   nsNativeWidget aNativeParent,
                                    const nsIntRect &aRect,
                                    EVENT_CALLBACK aHandleEventFunction,
                                    nsIDeviceContext *aContext,
@@ -271,16 +264,6 @@ public:
 
 protected:
 
-  // Utility method for implementing both Create(nsIWidget ...) and
-  // Create(nsNativeWidget...)
-  nsresult             StandardCreate(nsIWidget *aParent,
-                                      const nsIntRect &aRect,
-                                      EVENT_CALLBACK aHandleEventFunction,
-                                      nsIDeviceContext *aContext,
-                                      nsIAppShell *aAppShell,
-                                      nsIToolkit *aToolkit,
-                                      nsWidgetInitData *aInitData,
-                                      nsNativeWidget aNativeWindow = nsnull);
   nsresult             CreateNativeWindow(const NSRect &aRect,
                                           nsBorderStyle aBorderStyle,
                                           PRBool aRectIsFrameRect);

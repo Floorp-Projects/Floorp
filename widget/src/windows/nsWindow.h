@@ -101,13 +101,7 @@ public:
    * nsIWidget interface
    */
   NS_IMETHOD              Create(nsIWidget *aParent,
-                                 const nsIntRect &aRect,
-                                 EVENT_CALLBACK aHandleEventFunction,
-                                 nsIDeviceContext *aContext,
-                                 nsIAppShell *aAppShell = nsnull,
-                                 nsIToolkit *aToolkit = nsnull,
-                                 nsWidgetInitData *aInitData = nsnull);
-  NS_IMETHOD              Create(nsNativeWidget aParent,
+                                 nsNativeWidget aNativeParent,
                                  const nsIntRect &aRect,
                                  EVENT_CALLBACK aHandleEventFunction,
                                  nsIDeviceContext *aContext,
@@ -332,14 +326,6 @@ protected:
   virtual LPCWSTR         WindowPopupClass();
   virtual DWORD           WindowStyle();
   virtual DWORD           WindowExStyle();
-  virtual nsresult        StandardWindowCreate(nsIWidget *aParent,
-                                               const nsIntRect &aRect,
-                                               EVENT_CALLBACK aHandleEventFunction,
-                                               nsIDeviceContext *aContext,
-                                               nsIAppShell *aAppShell,
-                                               nsIToolkit *aToolkit,
-                                               nsWidgetInitData *aInitData,
-                                               nsNativeWidget aNativeParent = nsnull);
 
   /**
    * XP and Vista theming support for windows with rounded edges

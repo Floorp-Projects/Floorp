@@ -116,14 +116,8 @@ public:
     NS_IMETHOD         ConfigureChildren(const nsTArray<nsIWidget::Configuration>&);
 
     NS_IMETHOD         Create(nsIWidget        *aParent,
-                              const nsIntRect     &aRect,
-                              EVENT_CALLBACK   aHandleEventFunction,
-                              nsIDeviceContext *aContext,
-                              nsIAppShell      *aAppShell,
-                              nsIToolkit       *aToolkit,
-                              nsWidgetInitData *aInitData);
-    NS_IMETHOD         Create(nsNativeWidget aParent,
-                              const nsIntRect     &aRect,
+                              nsNativeWidget   aNativeParent,
+                              const nsIntRect  &aRect,
                               EVENT_CALLBACK   aHandleEventFunction,
                               nsIDeviceContext *aContext,
                               nsIAppShell      *aAppShell,
@@ -275,15 +269,6 @@ protected:
     virtual nsEventStatus hideEvent(QHideEvent *);
 
     nsEventStatus         OnWindowStateEvent(QEvent *aEvent);
-
-    nsresult           NativeCreate(nsIWidget        *aParent,
-                                    nsNativeWidget    aNativeParent,
-                                    const nsIntRect     &aRect,
-                                    EVENT_CALLBACK    aHandleEventFunction,
-                                    nsIDeviceContext *aContext,
-                                    nsIAppShell      *aAppShell,
-                                    nsIToolkit       *aToolkit,
-                                    nsWidgetInitData *aInitData);
 
     void               NativeResize(PRInt32 aWidth,
                                     PRInt32 aHeight,
