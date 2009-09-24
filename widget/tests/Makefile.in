@@ -61,6 +61,7 @@ _TEST_FILES =	test_bug343416.xul \
 		test_wheeltransaction.xul \
 		window_wheeltransaction.xul \
 		test_imestate.html \
+		test_plugin_scroll_consistency.html \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
