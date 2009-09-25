@@ -157,7 +157,7 @@ namespace nanojit
             void output_asm(const char* s);
 
             bool outputAddr, vpad[3];  // if outputAddr=true then next asm instr. will include address in output
-            void printActivationState();
+            void printActivationState(const char* what);
 
             StringList* _outputCache;
 
