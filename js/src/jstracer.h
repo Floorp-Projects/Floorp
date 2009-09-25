@@ -157,19 +157,20 @@ public:
 
 /*
  * Tracker is used to keep track of values being manipulated by the interpreter
- * during trace recording.
+ * during trace recording.  Note that tracker pages aren't necessarily the
+ * same size as OS pages, they just are a moderate-sized chunk of memory.
  */
 class Tracker {
-    struct Page {
-        struct Page*    next;
-        jsuword         base;
-        nanojit::LIns*  map[1];
+    struct TrackerPage {
+        struct TrackerPage* next;
+        jsuword             base;
+        nanojit::LIns*      map[1];
     };
-    struct Page* pagelist;
+    struct TrackerPage* pagelist;
 
-    jsuword         getPageBase(const void* v) const;
-    struct Page*    findPage(const void* v) const;
-    struct Page*    addPage(const void* v);
+    jsuword             getTrackerPageBase(const void* v) const;
+    struct TrackerPage* findTrackerPage(const void* v) const;
+    struct TrackerPage* addTrackerPage(const void* v);
 public:
     Tracker();
     ~Tracker();

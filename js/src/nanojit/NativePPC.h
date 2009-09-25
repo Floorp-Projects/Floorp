@@ -54,8 +54,6 @@
 
 namespace nanojit
 {
-    const int NJ_LOG2_PAGE_SIZE = 12;       // 4K
-
 #define NJ_MAX_STACK_ENTRY              256
 #define NJ_ALIGN_STACK                  16
 

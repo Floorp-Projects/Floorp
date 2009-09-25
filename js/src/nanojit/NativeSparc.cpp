@@ -65,7 +65,6 @@ namespace nanojit
 
     static const int kLinkageAreaSize = 68;
     static const int kcalleeAreaSize = 80; // The max size.
-    static const int NJ_PAGE_SIZE_SPARC = 8192; // Use sparc page size here.
 
 #define BIT_ROUND_UP(v,q)      ( (((uintptr_t)v)+(q)-1) & ~((q)-1) )
 #define TODO(x) do{ verbose_only(outputf(#x);) NanoAssertMsgf(false, "%s", #x); } while(0)
