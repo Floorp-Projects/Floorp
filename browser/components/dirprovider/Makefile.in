@@ -44,9 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE               = browsercomps
 LIBRARY_NAME         = browserdirprovider
-ifeq (,$(filter WINNT WINCE,$(OS_ARCH)))
 SHORT_LIBNAME        = brwsrdir
-endif
 IS_COMPONENT         = 1
 MODULE_NAME          = BrowserDirProvider
 FORCE_SHARED_LIB     = 1
@@ -56,7 +54,6 @@ FORCE_SHARED_LIB     = 1
 ifndef MOZ_MEMORY
 USE_STATIC_LIBS      = 1
 endif
-
 
 CPPSRCS = nsBrowserDirectoryProvider.cpp
 

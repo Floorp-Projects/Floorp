@@ -58,8 +58,8 @@ XPIDL_MODULE	= xpcomsample
 # i.e. dist/bin/components/libxpcomsample.so
 LIBRARY_NAME	= xpcomsample
 
-# On MS Windows and OS/2, SHORT_LIBNAME is used to generate a library
-# with an 8.3 filename, e.g. dist/bin/components/xpcomsmp.dll
+# On OS/2, SHORT_LIBNAME is used to generate a library with an 8.3 filename,
+# e.g. dist/bin/components/xpcomsmp.dll
 SHORT_LIBNAME	= xpcomsmp
 
 # IS_COMPONENT indicates that this makefile builds a component shared library.
