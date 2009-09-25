@@ -59,7 +59,6 @@
 #include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIFocusController.h"
 #include "nsISelectionController.h"
 #include "nsISelection.h"
 #include "nsIFrame.h"
@@ -82,7 +81,7 @@
 #include "nsXPIDLString.h"
 #endif
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && !defined(__LP64__)
 #include "nsAutoPtr.h"
 #include <Carbon/Carbon.h>
 #endif
@@ -281,7 +280,7 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 NS_IMETHODIMP nsWebBrowserFind::GetSearchString(PRUnichar * *aSearchString)
 {
     NS_ENSURE_ARG_POINTER(aSearchString);
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && !defined(__LP64__)
     OSStatus err;
     ScrapRef scrap;
     err = ::GetScrapByName(kScrapFindScrap, kScrapGetNamedScrap, &scrap);
@@ -307,7 +306,7 @@ NS_IMETHODIMP nsWebBrowserFind::GetSearchString(PRUnichar * *aSearchString)
 NS_IMETHODIMP nsWebBrowserFind::SetSearchString(const PRUnichar * aSearchString)
 {
     mSearchString.Assign(aSearchString);
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && !defined(__LP64__)
     OSStatus err;
     ScrapRef scrap;
     err = ::GetScrapByName(kScrapFindScrap, kScrapClearNamedScrap, &scrap);

@@ -43,7 +43,7 @@ function test() {
   function tabOpenDance() {
     let tabs = [];
     function addTab(aURL,aReferrer)
-      tabs.push(gBrowser.addTab(aURL, aReferrer));
+      tabs.push(gBrowser.addTab(aURL, {referrerURI: aReferrer}));
 
     addTab("http://localhost:8888/#0");
     gBrowser.selectedTab = tabs[0];

@@ -1114,11 +1114,9 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
       return NS_STYLE_HINT_NONE;
     } else {
       // Offset changes only affect positioned content, and can't affect any
-      // intrinsic widths (except, XXXbz, stacks!  So for now have to clear
-      // ancestor intrinsic widths).  They also don't need to force reflow of
+      // intrinsic widths.  They also don't need to force reflow of
       // descendants.
-      return NS_CombineHint(nsChangeHint_NeedReflow,
-                            nsChangeHint_ClearAncestorIntrinsics);;
+      return nsChangeHint_NeedReflow;
     }
   }
 

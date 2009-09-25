@@ -83,6 +83,12 @@
 #include "gtk2xtbin.h"
 #endif
 
+#ifdef XP_OS2
+#define INCL_DOS
+#define INCL_DOSERRORS
+#include <os2.h>
+#endif
+
 #include "nsJSNPRuntime.h"
 #include "nsIHttpAuthManager.h"
 #include "nsICookieService.h"
@@ -650,13 +656,13 @@ nsNPAPIPlugin::GetMIMEDescription(const char* *resultingDesc)
 }
 
 nsresult
-nsNPAPIPlugin::GetValue(nsPluginVariable variable, void *value)
+nsNPAPIPlugin::GetValue(NPPVariable variable, void *value)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsNPAPIPlugin::GetValue called: this=%p, variable=%d\n", this, variable));
 
-  NPError (*npGetValue)(void*, nsPluginVariable, void*) =
-    (NPError (*)(void*, nsPluginVariable, void*)) PR_FindFunctionSymbol(fLibrary,
+  NPError (*npGetValue)(void*, NPPVariable, void*) =
+    (NPError (*)(void*, NPPVariable, void*)) PR_FindFunctionSymbol(fLibrary,
                                                                 "NP_GetValue");
 
   if (npGetValue && NPERR_NO_ERROR == npGetValue(nsnull, variable, value)) {
@@ -1057,7 +1063,7 @@ _invalidaterect(NPP npp, NPRect *invalidRect)
 
   PluginDestructionGuard guard(inst);
 
-  inst->InvalidateRect((nsPluginRect *)invalidRect);
+  inst->InvalidateRect((NPRect *)invalidRect);
 }
 
 void NP_CALLBACK
@@ -1080,7 +1086,7 @@ _invalidateregion(NPP npp, NPRegion invalidRegion)
 
   PluginDestructionGuard guard(inst);
 
-  inst->InvalidateRegion((nsPluginRegion)invalidRegion);
+  inst->InvalidateRegion((NPRegion)invalidRegion);
 }
 
 void NP_CALLBACK
@@ -1846,10 +1852,10 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     if (npp) {
       nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
       PRBool windowless = PR_FALSE;
-      inst->GetValue(nsPluginInstanceVariable_WindowlessBool, &windowless);
+      inst->IsWindowless(&windowless);
       NPBool needXEmbed = PR_FALSE;
       if (!windowless) {
-        inst->GetValue((nsPluginInstanceVariable)NPPVpluginNeedsXEmbed, &needXEmbed);
+        inst->GetValueFromPlugin(NPPVpluginNeedsXEmbed, &needXEmbed);
       }
       if (windowless || needXEmbed) {
         (*(Display **)result) = GDK_DISPLAY();
@@ -1979,7 +1985,9 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     if (npp) {
       nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance*)npp->ndata;
       if (inst) {
-        *(NPDrawingModel*)result = inst->GetDrawingModel();
+        NPDrawingModel drawingModel;
+        inst->GetDrawingModel((PRInt32*)&drawingModel);
+        *(NPDrawingModel*)result = drawingModel;
         return NPERR_NO_ERROR;
       }
     }
@@ -2181,15 +2189,15 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
 
   nsNPAPIPluginStreamListener* streamlistener = (nsNPAPIPluginStreamListener*)pstream->ndata;
 
-  nsPluginStreamType streamtype = nsPluginStreamType_Normal;
+  PRInt32 streamtype = NP_NORMAL;
 
   streamlistener->GetStreamType(&streamtype);
 
-  if (streamtype != nsPluginStreamType_Seek)
+  if (streamtype != NP_SEEK)
     return NPERR_STREAM_NOT_SEEKABLE;
 
   if (streamlistener->mStreamInfo)
-    streamlistener->mStreamInfo->RequestRead((nsByteRange *)rangeList);
+    streamlistener->mStreamInfo->RequestRead((NPByteRange *)rangeList);
 
   return NS_OK;
 }

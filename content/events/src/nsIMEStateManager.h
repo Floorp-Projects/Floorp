@@ -45,7 +45,6 @@ class nsIContent;
 class nsPIDOMWindow;
 class nsPresContext;
 class nsIWidget;
-class nsIFocusController;
 class nsTextStateManager;
 class nsISelection;
 

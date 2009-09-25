@@ -214,7 +214,7 @@
             </vbox>
             <vbox id="previewImageContainer" align="center" pack="center">
               <hbox>
-                <image id="previewImage"/>
+                <image id="previewImage" onerror="onPreviewImageError(event)"/>
               </hbox>
             </vbox>
             <vbox id="infoNoAddonSelected" align="center" pack="center">

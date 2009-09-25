@@ -73,6 +73,8 @@
 
 gfxPlatform *gPlatform = nsnull;
 
+PRInt32 gfxPlatform::sDPI = -1;
+
 // These two may point to the same profile
 static qcms_profile *gCMSOutputProfile = nsnull;
 static qcms_profile *gCMSsRGBProfile = nsnull;
@@ -327,6 +329,21 @@ gfxPlatform::DownloadableFontsEnabled()
     return allowDownloadableFonts;
 }
 
+gfxFontEntry*
+gfxPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
+                              const PRUint8 *aFontData,
+                              PRUint32 aLength)
+{
+    // Default implementation does not handle activating downloaded fonts;
+    // just free the data and return.
+    // Platforms that support @font-face must override this,
+    // using the data to instantiate the font, and taking responsibility
+    // for freeing it when no longer required.
+    if (aFontData) {
+        NS_Free((void*)aFontData);
+    }
+    return nsnull;
+}
 
 static void
 AppendGenericFontFromPref(nsString& aFonts, const char *aLangGroup, const char *aGenericName)
@@ -628,7 +645,7 @@ gfxPlatform::GetCMSsRGBProfile()
 {
     if (!gCMSsRGBProfile) {
 
-        /* Create the profile using lcms. */
+        /* Create the profile using qcms. */
         gCMSsRGBProfile = qcms_profile_sRGB();
     }
     return gCMSsRGBProfile;
@@ -748,4 +765,11 @@ static void MigratePrefs()
         prefs->ClearUserPref(CMPrefNameOld);
     }
 
+}
+
+void
+gfxPlatform::InitDisplayCaps()
+{
+    // Fall back to something sane
+    gfxPlatform::sDPI = 96;
 }

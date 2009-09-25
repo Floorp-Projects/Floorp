@@ -44,9 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= embedcomponents
 LIBRARY_NAME	= embedcomponents
 EXPORT_LIBRARY = 1
-ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME	= embedcmp
-endif
 IS_COMPONENT	= 1
 MODULE_NAME	= embedcomponents
 GRE_MODULE	= 1
@@ -95,7 +93,7 @@ OS_LIBS	+= $(call EXPAND_LIBNAME,winspool comdlg32)
 endif
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/mac
 endif
 
@@ -109,7 +107,7 @@ EXTRA_DSO_LDOPTS = \
 	$(MOZ_JS_LIBS) \
 	$(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += \
         $(TK_LIBS) \
         $(NULL)

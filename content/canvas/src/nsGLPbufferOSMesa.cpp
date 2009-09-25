@@ -80,12 +80,14 @@ nsGLPbufferOSMESA::Init(WebGLContext *priv)
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
     nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = prefService->GetBranch("extensions.canvas3d.", getter_AddRefs(prefBranch));
+    rv = prefService->GetBranch("webgl.", getter_AddRefs(prefBranch));
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
     nsCString osmesalib;
 
     rv = prefBranch->GetCharPref("osmesalib", getter_Copies(osmesalib));
+
+#if 0
     if (NS_FAILED(rv)) {
         osmesalib.Truncate();
 
@@ -134,9 +136,12 @@ nsGLPbufferOSMESA::Init(WebGLContext *priv)
             return PR_FALSE;
         }
     }
-
-    if (!gMesaWrap.OpenLibrary(osmesalib.get())) {
-        LogMessage("Canvas 3D: Couldn't open OSMesa lib -- either default or extension.canvas3d.osmesalib path is incorrect, or not a valid shared library");
+#endif
+    if (NS_FAILED(rv) ||
+        osmesalib.Length() == 0 ||
+        !gMesaWrap.OpenLibrary(osmesalib.get()))
+    {
+        LogMessage("Canvas 3D: Couldn't open OSMesa lib -- webgl.osmesalib path is incorrect, or not a valid shared library");
         return PR_FALSE;
     }
 

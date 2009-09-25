@@ -3,7 +3,7 @@ subversion repository using the update.sh script. The only changes
 made were those applied by update.sh and the addition/upate of
 Makefile.in files for the Mozilla build system.
 
-The svn revision number used was r16183.
+The svn revision number used was r16335.
 
 Some files are renamed during the copy to prevent clashes with object
 file names with other Mozilla libraries.

@@ -182,7 +182,7 @@ CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
 EXPORTS_cairo += $(PDF_EXPORTS)
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CSRCS   += cairo-quartz-surface.c cairo-quartz-image-surface.c cairo-quartz-font.c
 EXPORTS_cairo += cairo-quartz.h cairo-quartz-image.h
 endif

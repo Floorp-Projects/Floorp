@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: unknown/invalid formats raise decode error</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="use_large_cache.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var testsWaiting = 0;
+
+gDecodeErrorTests.forEach(function (test, index) {
+  var v1 = document.createElement("video");
+  if (!v1.canPlayType(test.type)) {
+    return;
+  }
+
+  v1.addEventListener("error", function (event) {
+    event.stopPropagation();
+    var el = event.currentTarget;
+    is(event.type, "error", "Expected event of type 'error'");
+    ok(el.error, "Element 'error' attr expected to have a value");
+    ok(el.error instanceof HTMLMediaError, "Element 'error' attr expected to be HTMLMediaError");
+    is(el.error.code, HTMLMediaError.MEDIA_ERR_DECODE, "Expected a decode error");
+    is(el.networkState, HTMLMediaElement.NETWORK_EMPTY, "networkState should be EMPTY");
+    el._sawError = true;
+  }, false);
+
+  v1.addEventListener("emptied", function (event) {
+    var el = event.currentTarget;
+    is(el.networkState, HTMLMediaElement.NETWORK_EMPTY, "networkState should be EMPTY");
+    ok(el._sawError, "Expected error event");
+    testsWaiting -= 1;
+    if (testsWaiting == 0) {
+      SimpleTest.finish();
+    }
+  }, false);
+
+  v1.addEventListener("loadedmetadata", function () {
+    ok(false, "Unexpected loadedmetadata event");
+  }, false);
+
+  v1.autoplay = true;
+  v1.addEventListener("ended", function () {
+    ok(false, "Unexpected ended event");
+  }, false);
+
+  v1.src = test.name;
+  testsWaiting += 1;
+  v1.load();
+});
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

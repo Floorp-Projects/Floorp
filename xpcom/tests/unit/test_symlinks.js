@@ -141,8 +141,7 @@ function testSymLinks(testDir, relative) {
 
 function run_test() {
   // Skip this test on Windows
-  // Also skip this test on Mac OS X for now, not working with 10.5 SDK
-  if (isWin || isOS2 || isMac)
+  if (isWin || isOS2)
     return;
 
   var testDir = CWD;

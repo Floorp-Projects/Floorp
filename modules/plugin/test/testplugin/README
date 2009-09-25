@@ -137,3 +137,73 @@ Stops watching. Throws an exception if there is no watch.
 * unscheduleAllTimers()
 Instructs the plugin instance to cancel all timers created via
 NPN_ScheduleTimer.
+
+== Stream Functionality ==
+
+The test plugin enables a variety of NPAPI streaming tests, which are
+initiated by passing a variety of attributes to the <embed> element which
+causes the plugin to be initialized.  The plugin stream test code is 
+designed to receive a stream from the browser (by specifying a "src",
+"geturl", or "geturlnotify" attribute), and then (if a "frame" attribute
+is specified) send the data from that stream back to the browser in another
+stream, whereupon it will be displayed in the specified frame.  If some
+error occurs during stream processing, an error message will appear in the
+frame instead of the stream data. If no "frame" attribute is present, a 
+stream can still be received by the plugin, but the plugin will do nothing
+with it.
+
+The attributes which control stream tests are:
+
+"streammode": one of "normal", "asfile", "asfileonly", "seek". Sets the
+  stream mode to the specified mode in any call to NPP_NewStream.
+  Defaults to "asfileonly".
+
+"streamchunksize": the number of bytes the plugin reports it can accept
+  in calls to NPP_WriteReady.  Defaults to 1,024.
+
+"src": a url.  If specified, the browser will call NPP_NewStream for
+  this url as soon as the plugin is initialized.
+
+"geturl": a url.  If specified, the plugin will request this url
+  from the browser when the plugin is initialized, via a call to
+  NPN_GetURL.
+
+"geturlnotify": a url.  If specified, the plugin will request this url
+  from the browser when the plugin is initialized, via a call to
+  NPN_GetURLNotify. The plugin passes some "notifyData" to 
+  NPN_GetURLNotify, which it verifies is present in the call to
+  NPP_URLNotify.  If the "notifyData" does not match, an error
+  will be displayed in the test frame (if any), instead of the stream 
+  data.
+
+"frame": the name of a frame in the same HTML document as the <embed>
+  element which instantiated the plugin. For any of the preceding three
+  attributes, a stream is received by the plugin via calls to NPP_NewStream,
+  NPP_WriteReady, NPP_Write, and NPP_DestroyStream.  When NPP_DestroyStream
+  is called (or NPP_UrlNotify, in the case of "geturlnotify"), and a 
+  "frame" attribute is present, the data from the stream is converted into a
+  data: url, and sent back to the browser in another stream via a call to
+  NPN_GetURL, whereupon it should be displayed in the specified frame.
+
+"range": one or more byte ranges, in the format "offset,length;offset,length".
+  Only valid when "streammode" = "seek".  When "range" is present, the plugin
+  will request the specified byte ranges from the stream via a call to
+  NPN_RequestRead, which it makes after the browser makes its final call to
+  NPP_Write.  The plugin verifies that the browser makes additional calls
+  to NPP_Write according to the requested byte ranges, and that the data
+  received is correct.  Any errors will appear in the test "frame", if
+  specified.
+
+"posturl": a url.  After the plugin receives a stream, and NPP_DestroyStream
+  is called, if "posturl" is specified, the plugin will post the contents
+  of the stream to the specified url via NPN_PostURL.  See "postmode" for
+  additional details.
+
+"postmode": either "frame" or "stream".  If "frame", and a "frame" attribute
+  is present, the plugin will pass the frame name to calls to NPN_PostURL,
+  so that the HTTP response from that operation will be displayed in the
+  specified frame.  If "stream", the HTTP response is delivered to the plugin
+  via calls to NPP_NewStream etc, and if a "frame" attribute is present, the
+  contents of that stream will be passed back to the browser and displayed
+  in the specified frame via NPN_GetURL.
+

@@ -268,22 +268,15 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     // Create a continuation for the child frame if it doesn't already
     // have one.
     nsIFrame* nextInFlow;
-    rv = CreateNextInFlow(aPresContext, this, kid, nextInFlow);
+    rv = CreateNextInFlow(aPresContext, kid, nextInFlow);
     if (NS_FAILED(rv)) {
       return rv;
     }
 
     // And then push it to our overflow list
-    if (nextInFlow) {
-      kid->SetNextSibling(nsnull);
-      SetOverflowFrames(aPresContext, nextInFlow);
-    }
-    else {
-      nsIFrame* nextSib = kid->GetNextSibling();
-      if (nextSib) {
-        kid->SetNextSibling(nsnull);
-        SetOverflowFrames(aPresContext, nextSib);
-      }
+    const nsFrameList& overflow = mFrames.RemoveFramesAfter(kid);
+    if (overflow.NotEmpty()) {
+      SetOverflowFrames(aPresContext, overflow);
     }
   }
 

@@ -90,8 +90,8 @@ function test() {
     info("new load count is " + loadCount);
 
     if (loadCount == 3) {
-      window.getBrowser().removeEventListener("DOMContentLoaded", handleLoad, true);
-      window.content.document.location.href = "about:blank";
+      gBrowser.removeEventListener("DOMContentLoaded", handleLoad, true);
+      content.location.href = "about:blank";
       executeSoon(check_next_uri);
     }
   }
@@ -100,8 +100,8 @@ function test() {
     if (URIs.length) {
       let uri = URIs.shift();
       loadCount = 0;
-      window.getBrowser().addEventListener("DOMContentLoaded", handleLoad, true);
-      window.content.document.location.href = uri;
+      gBrowser.addEventListener("DOMContentLoaded", handleLoad, true);
+      content.location.href = uri;
     }
     else {
       setTimeout(confirm_results, LAZY_ADD_TIMER * 2);

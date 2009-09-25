@@ -85,7 +85,7 @@ static const nsStyleSet::sheetType gCSSSheetTypes[] = {
 nsStyleSet::nsStyleSet()
   : mRuleTree(nsnull),
     mRuleWalker(nsnull),
-    mDestroyedCount(0),
+    mUnusedRuleNodeCount(0),
     mBatching(0),
     mInShutdown(PR_FALSE),
     mAuthorStyleDisabled(PR_FALSE),
@@ -905,7 +905,7 @@ nsStyleSet::Shutdown(nsPresContext* aPresContext)
   mDefaultStyleData.Destroy(0, aPresContext);
 }
 
-static const PRInt32 kGCInterval = 1000;
+static const PRInt32 kGCInterval = 300;
 
 void
 nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
@@ -925,7 +925,7 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
   if (mInReconstruct)
     return;
 
-  if (++mDestroyedCount == kGCInterval) {
+  if (mUnusedRuleNodeCount == kGCInterval) {
     GCRuleTrees();
   }
 }
@@ -933,7 +933,7 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
 void
 nsStyleSet::GCRuleTrees()
 {
-  mDestroyedCount = 0;
+  mUnusedRuleNodeCount = 0;
 
   // Mark the style context tree by marking all style contexts which
   // have no parent, which will mark all descendants.  This will reach

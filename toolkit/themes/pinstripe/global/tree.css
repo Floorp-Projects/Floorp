@@ -310,14 +310,10 @@ treechildren::-moz-tree-column(insertafter) {
 treechildren::-moz-tree-twisty {
   -moz-appearance: treetwisty;
   -moz-padding-end: 2px;
-  width: 10px; /* The image's width is 10 pixels */
-  list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
 }
 
 treechildren::-moz-tree-twisty(open) {
   -moz-appearance: treetwistyopen;
-  width: 10px; /* The image's width is 10 pixels */
-  list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
 }
 
 treechildren::-moz-tree-twisty(Name, separator) {

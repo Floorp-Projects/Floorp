@@ -1,19 +1,30 @@
 diff --git a/media/liboggplay/src/liboggplay/oggplay_callback.c b/media/liboggplay/src/liboggplay/oggplay_callback.c
-index 428faee..344599a 100644
 --- a/media/liboggplay/src/liboggplay/oggplay_callback.c
 +++ b/media/liboggplay/src/liboggplay/oggplay_callback.c
-@@ -388,7 +388,13 @@ oggplay_callback_audio (OGGZ * oggz, ogg_packet * op, long serialno,
+@@ -543,16 +543,26 @@ oggplay_callback_audio (OGGZ * oggz, ogg
+     }
+     
+     default:
+       /* there was no problem with decoding */
+       if (!common->num_header_packets) common->initialised |= 1;
+       break;
+   }
  
-   fish_sound_prepare_truncation (decoder->sound_handle, op->granulepos,
-                                                                 op->e_o_s);
--  fish_sound_decode (decoder->sound_handle, op->packet, op->bytes);
-+  if (fish_sound_decode (decoder->sound_handle, op->packet, op->bytes) != 0) {
++  if (bytes_read < 0) {
++    printf("\nERROR HADNLING MISMATCH BETWEEN liboggplay AND mozilla\n\n");
 +    // Unrecoverable error, disable track
 +    op->e_o_s = 1;
 +    common->active = 0;
 +    common->player->active_tracks--;
 +    return OGGZ_ERR_HOLE_IN_DATA;
 +  }
- 
++
++
    if (decoder->sound_info.channels == 0) {
      fish_sound_command(decoder->sound_handle, FISH_SOUND_GET_INFO,
+                        &(decoder->sound_info), sizeof(FishSoundInfo));
+   }
+ 
+   if (op->e_o_s) {
+     common->active = 0;
+     common->player->active_tracks--;

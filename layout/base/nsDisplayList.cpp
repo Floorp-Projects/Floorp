@@ -170,9 +170,12 @@ void
 nsDisplayListBuilder::SubtractFromVisibleRegion(nsRegion* aVisibleRegion,
                                                 const nsRegion& aRegion)
 {
-  aVisibleRegion->Sub(*aVisibleRegion, aRegion);
-  if (!GetAccurateVisibleRegions()) {
-    aVisibleRegion->SimplifyOutward(15);
+  nsRegion tmp;
+  tmp.Sub(*aVisibleRegion, aRegion);
+  // Don't let *aVisibleRegion get too complex, but don't let it fluff out
+  // to its bounds either, which can be very bad (see bug 516740).
+  if (GetAccurateVisibleRegions() || tmp.GetNumRects() <= 15) {
+    *aVisibleRegion = tmp;
   }
 }
 
@@ -364,8 +367,11 @@ nsDisplayList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
         // the first one we see is a sound overapproximation
         movingContentVisibleRegion = *aVisibleRegion;
       }
+      nscoord appUnitsPerPixel = f->PresContext()->AppUnitsPerDevPixel();
+      nsRect bounds = item->GetBounds(aBuilder).
+          ToOutsidePixels(appUnitsPerPixel).ToAppUnits(appUnitsPerPixel);
       movingContentAccumulatedBounds.UnionRect(movingContentAccumulatedBounds,
-                                               item->GetBounds(aBuilder));
+                                               bounds);
     }
     if (item->OptimizeVisibility(aBuilder, aVisibleRegion)) {
       AppendToBottom(item);

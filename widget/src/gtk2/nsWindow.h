@@ -133,13 +133,7 @@ public:
 
     // nsIWidget
     NS_IMETHOD         Create(nsIWidget        *aParent,
-                              const nsIntRect  &aRect,
-                              EVENT_CALLBACK   aHandleEventFunction,
-                              nsIDeviceContext *aContext,
-                              nsIAppShell      *aAppShell,
-                              nsIToolkit       *aToolkit,
-                              nsWidgetInitData *aInitData);
-    NS_IMETHOD         Create(nsNativeWidget aParent,
+                              nsNativeWidget   aNativeParent,
                               const nsIntRect  &aRect,
                               EVENT_CALLBACK   aHandleEventFunction,
                               nsIDeviceContext *aContext,
@@ -269,16 +263,6 @@ public:
                                                gpointer         aData);
     void               OnDragLeave(void);
     void               OnDragEnter(nscoord aX, nscoord aY);
-
-
-    nsresult           NativeCreate(nsIWidget        *aParent,
-                                    nsNativeWidget    aNativeParent,
-                                    const nsIntRect   &aRect,
-                                    EVENT_CALLBACK    aHandleEventFunction,
-                                    nsIDeviceContext *aContext,
-                                    nsIAppShell      *aAppShell,
-                                    nsIToolkit       *aToolkit,
-                                    nsWidgetInitData *aInitData);
 
     virtual void       NativeResize(PRInt32 aWidth,
                                     PRInt32 aHeight,

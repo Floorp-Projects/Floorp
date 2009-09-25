@@ -3162,3 +3162,12 @@ nsParser::GetDTD(nsIDTD** aDTD)
   return NS_OK;
 }
 
+/**
+ * Get this as nsIStreamListener
+ */
+NS_IMETHODIMP
+nsParser::GetStreamListener(nsIStreamListener** aListener)
+{
+  NS_ADDREF(*aListener = this);
+  return NS_OK;
+}

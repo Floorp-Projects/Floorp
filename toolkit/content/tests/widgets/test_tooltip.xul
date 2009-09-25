@@ -3,21 +3,220 @@
 <?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Tooltip Tests"
-  onload="setTimeout(runTest, 0);"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <title>Tooltip Tests</title>
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="popup_shared.js"></script>
 
-<script>
+<tooltip id="thetooltip">
+  <label id="label" value="This is a tooltip"/>
+</tooltip>
+
+<box tooltiptext="Box Tooltip">
+  <button id="withtext" label="Tooltip Text" tooltiptext="Button Tooltip"
+          style="-moz-appearance: none; padding: 0;"/>
+  <button id="without" label="No Tooltip" style="-moz-appearance: none; padding: 0;"/>
+  <!-- remove the native theme and borders to avoid some platform
+       specific sizing differences -->
+  <button id="withtooltip" label="Tooltip Element" tooltip="thetooltip"
+          class="plain" style="-moz-appearance: none; padding: 0;"/>
+</box>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
 SimpleTest.waitForExplicitFinish();
+var gOriginalWidth = -1;
+var gOriginalHeight = -1;
+var gButton = null;
+
 function runTest()
 {
-  window.open("window_tooltip.xul", "_blank", "width=600,height=600");
+  startPopupTests(popupTests);
 }
+
+function checkCoords(event)
+{
+  // all but one test open the tooltip at the button location offset by 6
+  // in each direction. Test 5 opens it at 4 in each direction.
+  var mod = (gTestIndex == 5) ? 4 : 6;
+
+  var rect = gButton.getBoundingClientRect();
+  var popupstyle = window.getComputedStyle(gButton, "");
+  is(event.clientX, Math.round(rect.left + mod),
+     "step " + (gTestIndex + 1) + " clientX");
+  is(event.clientY, Math.round(rect.top + mod),
+     "step " + (gTestIndex + 1) + " clientY");
+  ok(event.screenX > 0, "step " + (gTestIndex + 1) + " screenX");
+  ok(event.screenY > 0, "step " + (gTestIndex + 1) + " screenY");
+}
+
+var popupTests = [
+{
+  testname: "hover tooltiptext attribute",
+  events: [ "popupshowing #tooltip", "popupshown #tooltip" ],
+  test: function() {
+    gButton = document.getElementById("withtext");
+    disableNonTestMouse(true);
+    synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
+    synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
+    synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
+    disableNonTestMouse(false);
+  }
+},
+{
+  testname: "close tooltip",
+  events: [ "popuphiding #tooltip", "popuphidden #tooltip",
+            "DOMMenuInactive #tooltip" ],
+  test: function() {
+    disableNonTestMouse(true);
+    synthesizeMouse(document.documentElement, 2, 2, { type: "mousemove" });
+    disableNonTestMouse(false);
+  },
+},
+{
+  testname: "hover inherited tooltip",
+  events: [ "popupshowing #tooltip", "popupshown #tooltip" ],
+  test: function() {
+    gButton = document.getElementById("without");
+    disableNonTestMouse(true);
+    synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
+    synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
+    synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
+    disableNonTestMouse(false);
+  }
+},
+{
+  testname: "hover tooltip attribute",
+  events: [ "popuphiding #tooltip", "popuphidden #tooltip",
+            "DOMMenuInactive #tooltip",
+            "popupshowing thetooltip", "popupshown thetooltip" ],
+  test: function() {
+    gButton = document.getElementById("withtooltip");
+    disableNonTestMouse(true);
+    synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
+    synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
+    synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
+    disableNonTestMouse(false);
+  },
+  result: function(testname) {
+    var buttonrect = document.getElementById("withtooltip").getBoundingClientRect();
+    var rect = document.getElementById("thetooltip").getBoundingClientRect();
+    var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"), "");
+
+    is(Math.round(rect.left),
+       Math.round(buttonrect.left + parseFloat(popupstyle.marginLeft) + 6),
+       testname + " top position of tooltip");
+    is(Math.round(rect.top),
+       Math.round(buttonrect.top + parseFloat(popupstyle.marginTop) + 6),
+       testname + " top position of tooltip");
+
+    var labelrect = document.getElementById("label").getBoundingClientRect();
+    ok(labelrect.right < rect.right, testname + " tooltip width");
+    ok(labelrect.bottom < rect.bottom, testname + " tooltip height");
+
+    gOriginalWidth = rect.right - rect.left;
+    gOriginalHeight = rect.bottom - rect.top;
+  }
+},
+{
+  testname: "click to close tooltip",
+  events: [ "popuphiding thetooltip", "popuphidden thetooltip",
+            "command withtooltip", "DOMMenuInactive thetooltip" ],
+  test: function() {
+    gButton = document.getElementById("withtooltip");
+    synthesizeMouse(gButton, 2, 2, { });
+  },
+},
+{
+  testname: "hover tooltip after size increased",
+  events: [ "popupshowing thetooltip", "popupshown thetooltip" ],
+  test: function() {
+    var label = document.getElementById("label");
+    label.removeAttribute("value");
+    label.textContent = "This is a longer tooltip than before\nIt has multiple lines\nIt is testing tooltip sizing\n";
+    gButton = document.getElementById("withtooltip");
+    disableNonTestMouse(true);
+    synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
+    synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
+    synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
+    disableNonTestMouse(false);
+  },
+  result: function(testname) {
+    var buttonrect = document.getElementById("withtooltip").getBoundingClientRect();
+    var rect = document.getElementById("thetooltip").getBoundingClientRect();
+    var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"), "");
+    var buttonstyle = window.getComputedStyle(document.getElementById("withtooltip"), "");
+
+    is(Math.round(rect.left),
+       Math.round(buttonrect.left + parseFloat(popupstyle.marginLeft) + 4),
+       testname + " top position of tooltip");
+    is(Math.round(rect.top),
+       Math.round(buttonrect.top + parseFloat(popupstyle.marginTop) + 4),
+       testname + " top position of tooltip");
+
+    var labelrect = document.getElementById("label").getBoundingClientRect();
+    ok(labelrect.right < rect.right, testname + " tooltip width");
+    ok(labelrect.bottom < rect.bottom, testname + " tooltip height");
+
+    // make sure that the tooltip is larger than it was before by just
+    // checking against the original height plus an arbitrary 15 pixels
+    ok(gOriginalWidth + 15 < rect.right - rect.left, testname + " tooltip is wider");
+    ok(gOriginalHeight + 15 < rect.bottom - rect.top, testname + " tooltip is taller");
+  }
+},
+{
+  testname: "close tooltip with hidePopup",
+  events: [ "popuphiding thetooltip", "popuphidden thetooltip",
+            "DOMMenuInactive thetooltip" ],
+  test: function() {
+    document.getElementById("thetooltip").hidePopup();
+  },
+},
+{
+  testname: "hover tooltip after size decreased",
+  events: [ "popupshowing thetooltip", "popupshown thetooltip" ],
+  autohide: "thetooltip",
+  test: function() {
+    var label = document.getElementById("label");
+    label.value = "This is a tooltip";
+    gButton = document.getElementById("withtooltip");
+    disableNonTestMouse(true);
+    synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
+    synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
+    synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
+    disableNonTestMouse(false);
+  },
+  result: function(testname) {
+    var buttonrect = document.getElementById("withtooltip").getBoundingClientRect();
+    var rect = document.getElementById("thetooltip").getBoundingClientRect();
+    var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"), "");
+    var buttonstyle = window.getComputedStyle(document.getElementById("withtooltip"), "");
+
+    is(Math.round(rect.left),
+       Math.round(buttonrect.left + parseFloat(popupstyle.marginLeft) + 6),
+       testname + " top position of tooltip");
+    is(Math.round(rect.top),
+       Math.round(buttonrect.top + parseFloat(popupstyle.marginTop) + 6),
+       testname + " top position of tooltip");
+
+    var labelrect = document.getElementById("label").getBoundingClientRect();
+    ok(labelrect.right < rect.right, testname + " tooltip width");
+    ok(labelrect.bottom < rect.bottom, testname + " tooltip height");
+
+    is(gOriginalWidth, rect.right - rect.left, testname + " tooltip is original width");
+    is(gOriginalHeight, rect.bottom - rect.top, testname + " tooltip is original height");
+  }
+},
+
+];
+
+SimpleTest.waitForFocus(runTest);
+]]>
 </script>
 
 <body xmlns="http://www.w3.org/1999/xhtml">

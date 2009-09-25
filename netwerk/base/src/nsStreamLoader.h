@@ -51,8 +51,8 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  nsStreamLoader() { }
-  ~nsStreamLoader() {}
+  nsStreamLoader();
+  ~nsStreamLoader();
 
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -63,8 +63,11 @@ protected:
 
   nsCOMPtr<nsIStreamLoaderObserver> mObserver;
   nsCOMPtr<nsISupports>             mContext;  // the observer's context
-  nsCString                         mData;
   nsCOMPtr<nsIRequest>              mRequest;
+
+  PRUint8  *mData;
+  PRUint32  mAllocated;
+  PRUint32  mLength;
 };
 
 #endif // nsStreamLoader_h__

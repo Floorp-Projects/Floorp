@@ -95,9 +95,9 @@ const WIN = (navigator.platform.indexOf("Win") != -1)? true : false;
 var gAccRetrieval = null;
 
 /**
- * Invokes the given function when document is loaded. Preferable to mochitests
- * 'addLoadEvent' function -- additionally ensures state of the document
- * accessible is not busy.
+ * Invokes the given function when document is loaded and focused. Preferable
+ * to mochitests 'addLoadEvent' function -- additionally ensures state of the
+ * document accessible is not busy.
  *
  * @param aFunc  the function to invoke
  */
@@ -120,7 +120,7 @@ function addA11yLoadEvent(aFunc)
     );
   }
 
-  addLoadEvent(waitForDocLoad);
+  SimpleTest.waitForFocus(waitForDocLoad);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

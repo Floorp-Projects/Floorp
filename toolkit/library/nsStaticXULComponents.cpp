@@ -148,13 +148,6 @@
 #define PLUGINS_MODULES
 #endif
 
-#ifdef MOZ_WEBSERVICES
-#define WEBSERVICES_MODULES \
-    MODULE(nsWebServicesModule)
-#else
-#define WEBSERVICES_MODULES
-#endif
-
 #ifdef MOZ_XPFE_COMPONENTS
 #ifdef MOZ_RDF
 #define RDFAPP_MODULES \
@@ -230,12 +223,6 @@
 #define SPELLCHECK_MODULE
 #endif
 
-#ifdef MOZ_XMLEXTRAS
-#define XMLEXTRAS_MODULE MODULE(nsXMLExtrasModule)
-#else
-#define XMLEXTRAS_MODULE
-#endif
-
 #ifdef MOZ_XUL
 #ifdef MOZ_ENABLE_GTK2
 #define UNIXPROXY_MODULE MODULE(nsUnixProxyModule)
@@ -258,6 +245,12 @@
 #define WINDOWSPROXY_MODULE MODULE(nsWindowsProxyModule)
 #else
 #define WINDOWSPROXY_MODULE
+#endif
+
+#if defined(BUILD_CTYPES)
+#define JSCTYPES_MODULE MODULE(jsctypes)
+#else
+#define JSCTYPES_MODULE
 #endif
 
 #define XUL_MODULES                          \
@@ -283,7 +276,6 @@
     ICON_MODULE                              \
     PLUGINS_MODULES                          \
     MODULE(nsLayoutModule)                   \
-    WEBSERVICES_MODULES                      \
     MODULE(docshell_provider)                \
     MODULE(embedcomponents)                  \
     MODULE(Browser_Embedding_Module)         \
@@ -307,11 +299,11 @@
     MODULE(NSS)                              \
     SYSTEMPREF_MODULES                       \
     SPELLCHECK_MODULE                        \
-    XMLEXTRAS_MODULE                         \
     LAYOUT_DEBUG_MODULE                      \
     UNIXPROXY_MODULE                         \
     OSXPROXY_MODULE                          \
     WINDOWSPROXY_MODULE                      \
+    JSCTYPES_MODULE                          \
     /* end of list */
 
 #define MODULE(_name) \

@@ -41,6 +41,7 @@
 #include "nsHtml5NamedCharacters.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
+#include "nsIUnicodeDecoder.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5TreeBuilder.h"
@@ -220,6 +221,17 @@ void
 nsHtml5HtmlAttributes::adjustForSvg()
 {
   mode = NS_HTML5ATTRIBUTE_NAME_SVG;
+}
+
+nsHtml5HtmlAttributes* 
+nsHtml5HtmlAttributes::cloneAttributes()
+{
+
+  nsHtml5HtmlAttributes* clone = new nsHtml5HtmlAttributes(0);
+  for (PRInt32 i = 0; i < length; i++) {
+    clone->addAttribute(names[i]->cloneAttributeName(), nsHtml5Portability::newStringFromString(values[i]));
+  }
+  return clone;
 }
 
 void

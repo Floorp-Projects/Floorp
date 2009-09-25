@@ -48,6 +48,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = test_extensionmanager
 
+DIRS = \
+  browser \
+  $(NULL)
+
 XPCSHELL_TESTS = \
   unit \
   $(NULL)

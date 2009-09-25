@@ -58,6 +58,14 @@
 #define WM_FOCUSCHANGED 0x000E
 #endif
 
+#define NP_POPUP_API_VERSION 16
+
+#define nsMajorVersion(v)       (((PRInt32)(v) >> 16) & 0xffff)
+#define nsMinorVersion(v)       ((PRInt32)(v) & 0xffff)
+#define versionOK(suppliedV, requiredV)                   \
+  (nsMajorVersion(suppliedV) == nsMajorVersion(requiredV) \
+   && nsMinorVersion(suppliedV) >= nsMinorVersion(requiredV))
+
 typedef nsTWeakRef<class nsPluginNativeWindowOS2> PluginWindowWeakRef;
 
 extern "C" {
@@ -315,7 +323,7 @@ static MRESULT EXPENTRY PluginWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM m
   if (enablePopups && inst) {
     PRUint16 apiVersion;
     if (NS_SUCCEEDED(inst->GetPluginAPIVersion(&apiVersion)) &&
-        !nsVersionOK(apiVersion, NP_POPUP_API_VERSION))
+        !versionOK(apiVersion, NP_POPUP_API_VERSION))
       inst->PushPopupsEnabledState(PR_TRUE);
   }
 
@@ -480,7 +488,7 @@ nsresult nsPluginNativeWindowOS2::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
 
 nsresult nsPluginNativeWindowOS2::SubclassAndAssociateWindow()
 {
-  if (type != nsPluginWindowType_Window)
+  if (type != NPWindowTypeWindow)
     return NS_ERROR_FAILURE;
 
   HWND hWnd = (HWND)window;

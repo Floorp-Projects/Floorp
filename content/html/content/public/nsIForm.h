@@ -53,8 +53,8 @@ template<class T> class nsTArray;
 
 // IID for the nsIForm interface
 #define NS_IFORM_IID    \
-{ 0xbe97c0a6, 0xb590, 0x4154, \
-  {0xb4, 0xc3, 0xb0, 0x1c, 0x8f, 0x4a, 0x93, 0x98} }
+{ 0x6e8456c2, 0xcf49, 0x4b6d, \
+ { 0xb5, 0xfe, 0x80, 0x0d, 0x03, 0x4f, 0x55, 0x33 } }
 
 /**
  * This interface provides a complete set of methods dealing with
@@ -193,6 +193,15 @@ public:
    * return null.
    */
    NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const = 0;
+
+  /**
+   * Check whether a given nsIFormControl is the default submit
+   * element.  This is different from just comparing to
+   * GetDefaultSubmitElement() in certain situations inside an update
+   * when GetDefaultSubmitElement() might not be up to date.  aControl
+   * is expected to not be null.
+   */
+  NS_IMETHOD_(PRBool) IsDefaultSubmitElement(const nsIFormControl* aControl) const = 0;
 
    /**
     * Return whether there is one and only one input text control.

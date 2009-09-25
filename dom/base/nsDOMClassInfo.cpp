@@ -232,7 +232,9 @@
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMPageTransitionEvent.h"
 #include "nsIDOMMessageEvent.h"
+#include "nsPaintRequest.h"
 #include "nsIDOMNotifyPaintEvent.h"
+#include "nsIDOMScrollAreaEvent.h"
 #include "nsIDOMNSDocumentStyle.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMDocumentTraversal.h"
@@ -430,12 +432,9 @@
 #include "nsIDOMSVGZoomEvent.h"
 #endif // MOZ_SVG
 
-#ifdef MOZ_ENABLE_CANVAS
 #include "nsIDOMCanvasRenderingContext2D.h"
-#ifdef MOZ_ENABLE_CANVAS3D
 #include "nsICanvasRenderingContextWebGL.h"
-#endif
-#endif
+#include "WebGLArray.h"
 
 #include "nsIImageDocument.h"
 
@@ -1147,7 +1146,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(HTMLCanvasElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-#ifdef MOZ_ENABLE_CANVAS
   NS_DEFINE_CLASSINFO_DATA(CanvasRenderingContext2D, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CanvasGradient, nsDOMGenericSH,
@@ -1156,7 +1154,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TextMetrics, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-#endif // MOZ_ENABLE_CANVAS
 
   NS_DEFINE_CLASSINFO_DATA(SmartCardEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1317,7 +1314,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(Worker, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-#ifdef MOZ_ENABLE_CANVAS3D
   NS_DEFINE_CLASSINFO_DATA(CanvasRenderingContextWebGL, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLBuffer, nsDOMGenericSH,
@@ -1332,15 +1328,28 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLRenderbuffer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLFloatArray, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasFloatArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLShortArray, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasByteArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLUnsignedShortArray, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasUnsignedByteArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLUnsignedByteArray, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasShortArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-#endif
+  NS_DEFINE_CLASSINFO_DATA(CanvasUnsignedShortArray, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CanvasIntArray, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CanvasUnsignedIntArray, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(PaintRequest, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(PaintRequestList, nsPaintRequestListSH,
+                           ARRAY_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(ScrollAreaEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
 // Objects that shuld be constructable through |new Name();|
@@ -1375,6 +1384,15 @@ struct nsConstructorFuncMapData
 static const nsConstructorFuncMapData kConstructorFuncMap[] =
 {
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Worker, nsDOMWorker::NewWorker)
+
+  // WebGL Array Types
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasFloatArray, NS_NewCanvasFloatArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasByteArray, NS_NewCanvasByteArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasUnsignedByteArray, NS_NewCanvasUnsignedByteArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasShortArray, NS_NewCanvasShortArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasUnsignedShortArray, NS_NewCanvasUnsignedShortArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasIntArray, NS_NewCanvasIntArray)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasUnsignedIntArray, NS_NewCanvasUnsignedIntArray)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -3375,7 +3393,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-#ifdef MOZ_ENABLE_CANVAS
   DOM_CLASSINFO_MAP_BEGIN(CanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCanvasRenderingContext2D)
   DOM_CLASSINFO_MAP_END
@@ -3391,7 +3408,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(TextMetrics, nsIDOMTextMetrics)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTextMetrics)
   DOM_CLASSINFO_MAP_END
-#endif // MOZ_ENABLE_CANVAS
 
   DOM_CLASSINFO_MAP_BEGIN(XSLTProcessor, nsIXSLTProcessor)
     DOM_CLASSINFO_MAP_ENTRY(nsIXSLTProcessor)
@@ -3625,7 +3641,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
-#ifdef MOZ_ENABLE_CANVAS3D
   DOM_CLASSINFO_MAP_BEGIN(CanvasRenderingContextWebGL, nsICanvasRenderingContextWebGL)
     DOM_CLASSINFO_MAP_ENTRY(nsICanvasRenderingContextWebGL)
   DOM_CLASSINFO_MAP_END
@@ -3654,22 +3669,46 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIWebGLRenderbuffer)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(WebGLFloatArray, nsIWebGLFloatArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLFloatArray)
+  DOM_CLASSINFO_MAP_BEGIN(CanvasFloatArray, nsICanvasFloatArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasFloatArray)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(WebGLShortArray, nsIWebGLShortArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLShortArray)
+  DOM_CLASSINFO_MAP_BEGIN(CanvasByteArray, nsICanvasByteArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasByteArray)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(WebGLUnsignedShortArray, nsIWebGLUnsignedShortArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLUnsignedShortArray)
+  DOM_CLASSINFO_MAP_BEGIN(CanvasUnsignedByteArray, nsICanvasUnsignedByteArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasUnsignedByteArray)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(WebGLUnsignedByteArray, nsIWebGLUnsignedByteArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLUnsignedByteArray)
+  DOM_CLASSINFO_MAP_BEGIN(CanvasShortArray, nsICanvasShortArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasShortArray)
   DOM_CLASSINFO_MAP_END
-#endif
+
+  DOM_CLASSINFO_MAP_BEGIN(CanvasUnsignedShortArray, nsICanvasUnsignedShortArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasUnsignedShortArray)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CanvasIntArray, nsICanvasIntArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasIntArray)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CanvasUnsignedIntArray, nsICanvasUnsignedIntArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasUnsignedIntArray)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(PaintRequest, nsIDOMPaintRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPaintRequest)
+   DOM_CLASSINFO_MAP_END
+ 
+  DOM_CLASSINFO_MAP_BEGIN(PaintRequestList, nsIDOMPaintRequestList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPaintRequestList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(ScrollAreaEvent, nsIDOMScrollAreaEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMScrollAreaEvent)
+    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
   {
@@ -10073,6 +10112,17 @@ nsClientRectListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
                               nsresult *aResult)
 {
   nsClientRectList* list = nsClientRectList::FromSupports(aNative);
+
+  return list->GetItemAt(aIndex);
+}
+
+// PaintRequestList scriptable helper
+
+nsISupports*
+nsPaintRequestListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                                nsresult *aResult)
+{
+  nsPaintRequestList* list = nsPaintRequestList::FromSupports(aNative);
 
   return list->GetItemAt(aIndex);
 }

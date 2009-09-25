@@ -127,7 +127,7 @@ nsDisplayXULTreeColSplitterTarget::HitTest(nsDisplayListBuilder* aBuilder,
 
   if (left || right) {
     // We are a header. Look for the correct splitter.
-    nsFrameList frames(mFrame->GetParent()->GetFirstChild(nsnull));
+    const nsFrameList& frames(mFrame->GetParent()->GetChildList(nsnull));
     nsIFrame* child;
     if (left)
       child = frames.GetPrevSiblingFor(mFrame);

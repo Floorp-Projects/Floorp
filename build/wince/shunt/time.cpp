@@ -40,7 +40,7 @@
 #include "include/mozce_shunt.h"
 #include "time_conversions.h"
 #include <stdlib.h>
-#include "Windows.h"
+#include <Windows.h>
 
 ////////////////////////////////////////////////////////
 //  Time Stuff
@@ -75,9 +75,15 @@ static const int sDaysOfYear[12] = {
 };
 static struct tm tmStorage;
 
-size_t strftime(char *, size_t, const char *, const struct tm *)
+size_t strftime(char *out, size_t maxsize, const char *pat, const struct tm *time)
 {
-  return 0;
+  WCHAR* tmpBuf = (WCHAR*)malloc(sizeof(WCHAR) * maxsize);
+  if (!tmpBuf)
+    return 0;
+  wcsftime(tmpBuf, maxsize, pat, time);
+  size_t ret = ::WideCharToMultiByte(CP_ACP, 0, tmpBuf, -1, out, maxsize, 0, 0);
+  free(tmpBuf);
+  return ret;
 }
 
 struct tm* gmtime_r(const time_t* inTimeT, struct tm* outRetval)

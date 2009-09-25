@@ -958,6 +958,37 @@ function initTestList()
           isForward: true, isVertical: false, expectedView: gRootView,
           description: "Timeout test even with many wheel events (h-3)" }
       ]
+    },
+
+
+    /**************************************************************************
+     * Very large scrolling wheel event
+     *   If the delta value is larger than the scrolling page size, it should be
+     *   scrolled only one page instead of the delta value.
+     **************************************************************************/
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gSubView1,
+          delta: 5000,
+          description: "Very large delta scrolling (v-1)" },
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gSubView1,
+          delta: 5000,
+          description: "Very large delta scrolling (v-2)" },
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: false, expectedView: gSubView1,
+          delta: 5000,
+          description: "Very large delta scrolling (h-1)" },
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: false, expectedView: gSubView1,
+          delta: 5000,
+          description: "Very large delta scrolling (h-2)" }
+      ]
     }
   ];
 }
@@ -1052,10 +1083,10 @@ function _fireMouseMoveEvent(aOffset)
   synthesizeMouse(gRootView, aOffset.x, aOffset.y, { type:"mousemove" }, window);
 }
 
-function _fireWheelScrollEvent(aOffset, aIsVertical, aForward)
+function _fireWheelScrollEvent(aOffset, aIsVertical, aForward, aDelta)
 {
   var event = { axis: aIsVertical ? "vertical" : "horizontal",
-                delta: aForward ? 4 : -4, type: "DOMMouseScroll" };
+                delta: aForward ? aDelta : -aDelta, type: "DOMMouseScroll" };
   synthesizeMouseScroll(gRootView, aOffset.x, aOffset.y, event, window);
 }
 
@@ -1179,8 +1210,9 @@ function testContinuousScroll()
                   gCurrentTest.isVertical, gCurrentTest.isForward)) {
     gCurrentTest.expectedView = null;
   }
+  var delta = gCurrentTest.delta ? gCurrentTest.delta : 4;
   _fireWheelScrollEvent(gCurrentTest.offset,
-                        gCurrentTest.isVertical, gCurrentTest.isForward);
+                        gCurrentTest.isVertical, gCurrentTest.isForward, delta);
 }
 
 function testOneTimeScroll()
@@ -1208,8 +1240,9 @@ function testOneTimeScroll()
   gCurrentTest.repeatTest = false;
   gCurrentTest.autoRepeatDelay = 0;
 
+  var delta = gCurrentTest.delta ? gCurrentTest.delta : 4;
   _fireWheelScrollEvent(gCurrentTest.offset,
-                        gCurrentTest.isVertical, gCurrentTest.isForward);
+                        gCurrentTest.isVertical, gCurrentTest.isForward, delta);
 }
 
 function testRestartScroll()
@@ -1251,8 +1284,9 @@ function testRestartScroll()
     gCurrentTest.expectedView = gCurrentTest.expectedViewAfterTimeout;
   }
 
+  var delta = gCurrentTest.delta ? gCurrentTest.delta : 4;
   _fireWheelScrollEvent(gCurrentTest.offset,
-                        gCurrentTest.isVertical, gCurrentTest.isForward);
+                        gCurrentTest.isVertical, gCurrentTest.isForward, delta);
 }
 
 /******************************************************************************

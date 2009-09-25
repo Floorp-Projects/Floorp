@@ -347,6 +347,6 @@ nsCommandManager::GetControllerForCommand(const char *aCommand,
     return NS_ERROR_FAILURE;
 
   // no target window; send command to focus controller
-  return focusController->GetControllerForCommand(aCommand, outController);
+  return focusController->GetControllerForCommand(window, aCommand, outController);
 }
 

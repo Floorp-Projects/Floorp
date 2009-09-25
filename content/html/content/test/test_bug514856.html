@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=514856
+-->
+<head>
+  <title>Test for Bug 514856</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=514856">Mozilla Bug 514856</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 514856 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var timer;
+
+function runTest() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var ifr = document.getElementById("testFrame");
+  ifr.setAttribute("onload", "testDone();");
+  // Retry until everything in the iframe is ready for the click. 
+  timer = setTimeout("runTest()", 10);
+  var wu = ifr.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                            .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  wu.sendMouseEvent("mousemove", 10, 10, 0, 0, 0);
+  wu.sendMouseEvent("mousemove", 12, 12, 0, 0, 0);
+  wu.sendMouseEvent("mousemove", 14, 14, 0, 0, 0);
+  wu.sendMouseEvent("mousedown", 16, 16, 0, 1, 0);
+  wu.sendMouseEvent("mouseup", 16, 16, 0, 1, 0);
+}
+
+function testDone() {
+  var ifr = document.getElementById("testFrame");
+  var url = new String(ifr.contentWindow.location);
+  is(url.indexOf("?10,10"), -1, "Shouldn't have ?10,10 in the URL!");
+  is(url.indexOf("?12,12"), -1, "Shouldn't have ?12,12 in the URL!");
+  is(url.indexOf("?14,14"), -1, "Shouldn't have ?14,14 in the URL!");
+  isnot(url.indexOf("?16,16"), -1, "Should have ?16,16 in the URL!");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+<iframe id="testFrame" src="bug514856_iframe.html"></iframe>
+</body>
+</html>

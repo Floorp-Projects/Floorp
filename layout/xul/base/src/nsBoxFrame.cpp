@@ -2050,7 +2050,8 @@ nsBoxFrame::CheckBoxOrder(nsBoxLayoutState& aState)
   if (!child)
     return;
 
-  mFrames.SetFrames(MergeSort(aState, mFrames.FirstChild()));
+  nsIFrame* head = MergeSort(aState, mFrames.FirstChild());
+  mFrames = nsFrameList(head, nsLayoutUtils::GetLastSibling(head));
 }
 
 NS_IMETHODIMP
@@ -2118,24 +2119,11 @@ nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
     return NS_OK;
   }
 
-  // Take aChild out of its old position in the child list.
-  if (curPrevSib)
-    curPrevSib->SetNextSibling(aChild->GetNextSibling());
-  else
-    mFrames.SetFrames(aChild->GetNextSibling());
+  // Take |aChild| out of its old position in the child list.
+  mFrames.RemoveFrame(aChild, curPrevSib);
 
-  nsIBox* newNextSib;
-  if (newPrevSib) {
-    // insert |aChild| between |newPrevSib| and its next sibling
-    newNextSib = newPrevSib->GetNextSibling();
-    newPrevSib->SetNextSibling(aChild);
-  } else {
-    // no |newPrevSib| found, so this box will become |mFirstChild|
-    newNextSib = mFrames.FirstChild();
-    mFrames.SetFrames(aChild);
-  }
-
-  aChild->SetNextSibling(newNextSib);
+  // Insert it after |newPrevSib| or at the start if it's null.
+  mFrames.InsertFrame(nsnull, newPrevSib, aChild);
 
   return NS_OK;
 }

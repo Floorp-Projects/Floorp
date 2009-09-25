@@ -193,7 +193,7 @@
 #endif // defined(MOZ_SPLASHSCREEN)
 
 // Windowless plugin support
-#include "nsplugindefs.h"
+#include "npapi.h"
 
 #include "nsWindowDefs.h"
 
@@ -460,39 +460,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
  *
  **************************************************************/
 
-// Create the proper widget
-NS_METHOD nsWindow::Create(nsIWidget *aParent,
-                           const nsIntRect &aRect,
-                           EVENT_CALLBACK aHandleEventFunction,
-                           nsIDeviceContext *aContext,
-                           nsIAppShell *aAppShell,
-                           nsIToolkit *aToolkit,
-                           nsWidgetInitData *aInitData)
-{
-  if (aInitData)
-    mUnicodeWidget = aInitData->mUnicode;
-  return(StandardWindowCreate(aParent, aRect, aHandleEventFunction,
-                              aContext, aAppShell, aToolkit, aInitData,
-                              nsnull));
-}
-
-
-// Create with a native parent
-NS_METHOD nsWindow::Create(nsNativeWidget aParent,
-                           const nsIntRect &aRect,
-                           EVENT_CALLBACK aHandleEventFunction,
-                           nsIDeviceContext *aContext,
-                           nsIAppShell *aAppShell,
-                           nsIToolkit *aToolkit,
-                           nsWidgetInitData *aInitData)
-{
-  if (aInitData)
-    mUnicodeWidget = aInitData->mUnicode;
-  return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
-                              aContext, aAppShell, aToolkit, aInitData,
-                              aParent));
-}
-
 // Allow Derived classes to modify the height that is passed
 // when the window is created or resized. Also add extra height
 // if needed (on Windows CE)
@@ -510,17 +477,20 @@ PRInt32 nsWindow::GetHeight(PRInt32 aProposedHeight)
   return aProposedHeight + extra;
 }
 
-// Utility methods for creating windows.
+// Create the proper widget
 nsresult
-nsWindow::StandardWindowCreate(nsIWidget *aParent,
-                               const nsIntRect &aRect,
-                               EVENT_CALLBACK aHandleEventFunction,
-                               nsIDeviceContext *aContext,
-                               nsIAppShell *aAppShell,
-                               nsIToolkit *aToolkit,
-                               nsWidgetInitData *aInitData,
-                               nsNativeWidget aNativeParent)
+nsWindow::Create(nsIWidget *aParent,
+                 nsNativeWidget aNativeParent,
+                 const nsIntRect &aRect,
+                 EVENT_CALLBACK aHandleEventFunction,
+                 nsIDeviceContext *aContext,
+                 nsIAppShell *aAppShell,
+                 nsIToolkit *aToolkit,
+                 nsWidgetInitData *aInitData)
 {
+  if (aInitData)
+    mUnicodeWidget = aInitData->mUnicode;
+
   nsIWidget *baseParent = aInitData &&
                          (aInitData->mWindowType == eWindowType_dialog ||
                           aInitData->mWindowType == eWindowType_toplevel ||
@@ -2670,6 +2640,69 @@ nsWindow::OnDefaultButtonLoaded(const nsIntRect &aButtonRect)
 #endif
 }
 
+NS_IMETHODIMP
+nsWindow::OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
+                                         PRBool aIsHorizontal,
+                                         PRInt32 &aOverriddenDelta)
+{
+  // The default vertical and horizontal scrolling speed is 3, this is defined
+  // on the document of SystemParametersInfo in MSDN.
+  const PRInt32 kSystemDefaultScrollingSpeed = 3;
+
+  // Compute the simple overridden speed.
+  PRInt32 computedOverriddenDelta;
+  nsresult rv =
+    nsBaseWidget::OverrideSystemMouseScrollSpeed(aOriginalDelta, aIsHorizontal,
+                                                 computedOverriddenDelta);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aOverriddenDelta = aOriginalDelta;
+
+  if (computedOverriddenDelta == aOriginalDelta) {
+    // We don't override now.
+    return NS_OK;
+  }
+
+  // Otherwise, we should check whether the user customized the system settings
+  // or not.  If the user did it, we should respect the will.
+  UINT systemSpeed;
+  if (!::SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &systemSpeed, 0)) {
+    return NS_ERROR_FAILURE;
+  }
+  // The default vertical scrolling speed is 3, this is defined on the document
+  // of SystemParametersInfo in MSDN.
+  if (systemSpeed != kSystemDefaultScrollingSpeed) {
+    return NS_OK;
+  }
+
+  // Only Vista and later, Windows has the system setting of horizontal
+  // scrolling by the mouse wheel.
+  if (GetWindowsVersion() >= VISTA_VERSION) {
+    if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0, &systemSpeed, 0)) {
+      return NS_ERROR_FAILURE;
+    }
+    // The default horizontal scrolling speed is 3, this is defined on the
+    // document of SystemParametersInfo in MSDN.
+    if (systemSpeed != kSystemDefaultScrollingSpeed) {
+      return NS_OK;
+    }
+  }
+
+  // Limit the overridden delta value from the system settings.  The mouse
+  // driver might accelerate the scrolling speed already.  If so, we shouldn't
+  // override the scrolling speed for preventing the unexpected high speed
+  // scrolling.
+  PRInt32 deltaLimit;
+  rv =
+    nsBaseWidget::OverrideSystemMouseScrollSpeed(kSystemDefaultScrollingSpeed,
+                                                 aIsHorizontal, deltaLimit);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aOverriddenDelta = PR_MIN(computedOverriddenDelta, deltaLimit);
+
+  return NS_OK;
+}
+
 /**************************************************************
  **************************************************************
  **
@@ -2833,7 +2866,7 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
   event.isMeta    = PR_FALSE;
   event.isAlt     = aModKeyState.mIsAltDown;
 
-  nsPluginEvent pluginEvent;
+  NPEvent pluginEvent;
   if (aMsg && PluginHasFocus()) {
     pluginEvent.event = aMsg->message;
     pluginEvent.wParam = aMsg->wParam;
@@ -2943,7 +2976,7 @@ PRBool nsWindow::DispatchPluginEvent(const MSG &aMsg)
   nsGUIEvent event(PR_TRUE, NS_PLUGIN_EVENT, this);
   nsIntPoint point(0, 0);
   InitEvent(event, &point);
-  nsPluginEvent pluginEvent;
+  NPEvent pluginEvent;
   pluginEvent.event = aMsg.message;
   pluginEvent.wParam = aMsg.wParam;
   pluginEvent.lParam = aMsg.lParam;
@@ -3064,7 +3097,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   printf("Msg Time: %d Click Count: %d\n", curMsgTime, event.clickCount);
 #endif
 
-  nsPluginEvent pluginEvent;
+  NPEvent pluginEvent;
 
   switch (aEventType)
   {
@@ -3234,7 +3267,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
     event.refPoint.x = 0;
     event.refPoint.y = 0;
 
-    nsPluginEvent pluginEvent;
+    NPEvent pluginEvent;
 
     switch (aEventType)
     {
@@ -5632,7 +5665,9 @@ PRBool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam)
 
 void nsWindow::OnSettingsChange(WPARAM wParam, LPARAM lParam)
 {
-  nsWindowGfx::OnSettingsChangeGfx(wParam);
+  if (mWindowType == eWindowType_dialog ||
+      mWindowType == eWindowType_toplevel )
+    nsWindowGfx::OnSettingsChangeGfx(wParam);
 }
 
 // Scrolling helper function for handling plugins.  
@@ -5645,9 +5680,36 @@ PRBool nsWindow::HandleScrollingPlugins(UINT aMsg, WPARAM aWParam,
   // window.  We need to give it to the child window
   aHandled = PR_FALSE; // default is to have not handled
   POINT point;
-  DWORD dwPoints = GetMessagePos();
+  DWORD dwPoints = ::GetMessagePos();
   point.x = GET_X_LPARAM(dwPoints);
   point.y = GET_Y_LPARAM(dwPoints);
+
+  static PRBool sMayBeUsingLogitechMouse = PR_FALSE;
+  if (aMsg == WM_MOUSEHWHEEL) {
+    // Logitech (Logicool) mouse driver (confirmed with 4.82.11 and MX-1100)
+    // always sets 0 to the lParam of WM_MOUSEHWHEEL.  The driver SENDs one
+    // message at first time, this time, ::GetMessagePos works fine.
+    // Then, we will return 0 (0 means we process it) to the message. Then, the
+    // driver will POST the same messages continuously during the wheel tilted.
+    // But ::GetMessagePos API always returns (0, 0), even if the actual mouse
+    // cursor isn't 0,0.  Therefore, we cannot trust the result of
+    // ::GetMessagePos API if the sender is the driver.
+    if (!sMayBeUsingLogitechMouse && aLParam == 0 && aLParam != dwPoints &&
+        ::InSendMessage()) {
+      sMayBeUsingLogitechMouse = PR_TRUE;
+    } else if (sMayBeUsingLogitechMouse && aLParam != 0 && ::InSendMessage()) {
+      // The user has changed the mouse from Logitech's to another one (e.g.,
+      // the user has changed to the touchpad of the notebook.
+      sMayBeUsingLogitechMouse = PR_FALSE;
+    }
+    // If the WM_MOUSEHWHEEL comes from Logitech's mouse driver, and the
+    // ::GetMessagePos isn't correct, probably, we should use ::GetCursorPos
+    // instead.
+    if (sMayBeUsingLogitechMouse && aLParam == 0 && dwPoints == 0) {
+      ::GetCursorPos(&point);
+    }
+  }
+
   HWND destWnd = ::WindowFromPoint(point);
   // Since we receive scroll events for as long as
   // we are focused, it's entirely possible that there

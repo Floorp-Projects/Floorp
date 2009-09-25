@@ -130,12 +130,12 @@ COMPONENT_LIBS += \
 	pipnss \
 	$(NULL)
 
-ifdef MOZ_XMLEXTRAS
+ifdef BUILD_CTYPES
 COMPONENT_LIBS += \
-	xmlextras \
+	jsctypes \
 	$(NULL)
 endif
-  
+
 ifdef MOZ_PLUGINS
 DEFINES += -DMOZ_PLUGINS
 COMPONENT_LIBS += \
@@ -200,13 +200,6 @@ COMPONENT_LIBS += \
 	$(NULL)
 endif
 
-ifdef MOZ_WEBSERVICES
-DEFINES += -DMOZ_WEBSERVICES
-COMPONENT_LIBS += \
-	websrvcs \
-	$(NULL)
-endif
-
 ifdef MOZ_AUTH_EXTENSION
 COMPONENT_LIBS += auth
 DEFINES += -DMOZ_AUTH_EXTENSION
@@ -240,7 +233,7 @@ COMPONENT_LIBS += \
 endif
 endif
 
-ifeq (,$(filter qt beos os2 mac photon cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (,$(filter qt beos os2 photon cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 ifdef MOZ_XUL
 ifdef MOZ_XPFE_COMPONENTS
 COMPONENT_LIBS += fileview
@@ -319,7 +312,7 @@ endif
 ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += wdgtos2
 endif
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += widget_mac
 endif
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
@@ -352,9 +345,6 @@ ifneq (,$(filter layout-debug,$(MOZ_EXTENSIONS)))
 COMPONENT_LIBS += gkdebug
 endif
 
-ifdef MOZ_ENABLE_CANVAS3D
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 EXTRA_DSO_LDOPTS += -framework OpenGL
 endif
-endif
-

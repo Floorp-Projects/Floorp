@@ -66,7 +66,7 @@ typedef struct _nsCocoaWindowList {
 // (and put it back in the "window cache").  One way to do this, which Apple
 // often uses, is to set the "window number" to '-1' and then back to its
 // original value.
-- (void)_setWindowNumber:(int)aNumber;
+- (void)_setWindowNumber:(NSInteger)aNumber;
 
 // If we set the window's stylemask to be textured, the corners on the bottom of
 // the window are rounded by default. We use this private method to make
@@ -178,15 +178,8 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSPIWIDGETCOCOA
       
-    NS_IMETHOD              Create(nsNativeWidget aParent,
-                                   const nsIntRect &aRect,
-                                   EVENT_CALLBACK aHandleEventFunction,
-                                   nsIDeviceContext *aContext,
-                                   nsIAppShell *aAppShell = nsnull,
-                                   nsIToolkit *aToolkit = nsnull,
-                                   nsWidgetInitData *aInitData = nsnull);
-
     NS_IMETHOD              Create(nsIWidget* aParent,
+                                   nsNativeWidget aNativeParent,
                                    const nsIntRect &aRect,
                                    EVENT_CALLBACK aHandleEventFunction,
                                    nsIDeviceContext *aContext,
@@ -237,6 +230,9 @@ public:
     NS_IMETHOD SetWindowShadowStyle(PRInt32 aStyle);
     virtual void SetShowsToolbarButton(PRBool aShow);
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive);
+    virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
+                                                PRUint32 aNativeMessage,
+                                                PRUint32 aModifierFlags);
 
     void DispatchSizeModeEvent();
 
@@ -268,16 +264,6 @@ public:
 
 protected:
 
-  // Utility method for implementing both Create(nsIWidget ...) and
-  // Create(nsNativeWidget...)
-  nsresult             StandardCreate(nsIWidget *aParent,
-                                      const nsIntRect &aRect,
-                                      EVENT_CALLBACK aHandleEventFunction,
-                                      nsIDeviceContext *aContext,
-                                      nsIAppShell *aAppShell,
-                                      nsIToolkit *aToolkit,
-                                      nsWidgetInitData *aInitData,
-                                      nsNativeWidget aNativeWindow = nsnull);
   nsresult             CreateNativeWindow(const NSRect &aRect,
                                           nsBorderStyle aBorderStyle,
                                           PRBool aRectIsFrameRect);

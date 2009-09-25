@@ -48,12 +48,12 @@
 set -e
 
 : ${SYMBOL_SERVER_HOST?} ${SYMBOL_SERVER_USER?} ${SYMBOL_SERVER_PATH?} ${1?"You must specify a symbol archive to upload"}
-hash=`openssl dgst -sha1 "$1" | cut -f2 -d' '`
-archive="${hash}-"`basename "$1"`
+hash=`openssl dgst -sha1 "$1" | sed 's/^.*)=//' | sed 's/\ //g'`
+archive="${hash}-"`basename "$1" | sed 's/\ /\\\ /g'`
 echo "Transferring symbols... $1"
 scp ${SYMBOL_SERVER_PORT:+-P $SYMBOL_SERVER_PORT} \
   ${SYMBOL_SERVER_SSH_KEY:+-i "$SYMBOL_SERVER_SSH_KEY"} "$1" \
-  ${SYMBOL_SERVER_USER}@${SYMBOL_SERVER_HOST}:${SYMBOL_SERVER_PATH}/"${archive}"
+  ${SYMBOL_SERVER_USER}@${SYMBOL_SERVER_HOST}:"${SYMBOL_SERVER_PATH}/${archive}"
 echo "Unpacking symbols on remote host..."
 ssh -2 ${SYMBOL_SERVER_PORT:+-p $SYMBOL_SERVER_PORT} \
   ${SYMBOL_SERVER_SSH_KEY:+-i "$SYMBOL_SERVER_SSH_KEY"} \

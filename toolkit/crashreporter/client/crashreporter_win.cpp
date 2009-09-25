@@ -51,6 +51,7 @@
 #include <shlwapi.h>
 #include <math.h>
 #include <set>
+#include <algorithm>
 #include "resource.h"
 #include "client/windows/sender/crash_report_sender.h"
 #include "common/windows/string_utils-inl.h"
@@ -1419,4 +1420,47 @@ ofstream* UIOpenWrite(const string& filename, bool append) // append=false
 #endif  // _MSC_VER >= 1400
 
   return file;
+}
+
+struct FileData
+{
+  FILETIME timestamp;
+  wstring path;
+};
+
+static bool CompareFDTime(const FileData& fd1, const FileData& fd2)
+{
+  return CompareFileTime(&fd1.timestamp, &fd2.timestamp) > 0;
+}
+
+void UIPruneSavedDumps(const std::string& directory)
+{
+  wstring wdirectory = UTF8ToWide(directory);
+
+  WIN32_FIND_DATA fdata;
+  wstring findpath = wdirectory + L"\\*.dmp";
+  HANDLE dirlist = FindFirstFile(findpath.c_str(), &fdata);
+  if (dirlist == INVALID_HANDLE_VALUE)
+    return;
+
+  vector<FileData> dumpfiles;
+
+  for (BOOL ok = true; ok; ok = FindNextFile(dirlist, &fdata)) {
+    FileData fd = {fdata.ftLastWriteTime, wdirectory + L"\\" + fdata.cFileName};
+    dumpfiles.push_back(fd);
+  }
+
+  sort(dumpfiles.begin(), dumpfiles.end(), CompareFDTime);
+
+  while (dumpfiles.size() > kSaveCount) {
+    // get the path of the oldest file
+    wstring path = (--dumpfiles.end())->path;
+    DeleteFile(path.c_str());
+
+    // s/.dmp/.extra/
+    path.replace(path.size() - 4, 4, L".extra");
+    DeleteFile(path.c_str());
+
+    dumpfiles.pop_back();
+  }
 }

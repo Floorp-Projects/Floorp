@@ -43,11 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
-XPIDL_MODULE	= xpcom_thread
-else
 XPIDL_MODULE	= xpcom_threads
-endif
 LIBRARY_NAME	= xpcomthreads_s
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API = 1
