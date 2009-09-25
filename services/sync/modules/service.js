@@ -168,7 +168,6 @@ WeaveSvc.prototype = {
   _loggedIn: false,
   _syncInProgress: false,
   _keyGenEnabled: true,
-  _syncInterval: SINGLE_USER_SYNC,
 
   // the status object
   _status: null,
@@ -246,6 +245,9 @@ WeaveSvc.prototype = {
   // nextSync is in milliseconds, but prefs can't hold that much
   get nextSync() Svc.Prefs.get("nextSync", 0) * 1000,
   set nextSync(value) Svc.Prefs.set("nextSync", Math.floor(value / 1000)),
+
+  get syncInterval() Svc.Prefs.get("syncInterval", SINGLE_USER_SYNC),
+  set syncInterval(value) Svc.Prefs.set("syncInterval", value),
 
   get numClients() Svc.Prefs.get("numClients", 0),
   set numClients(value) Svc.Prefs.set("numClients", value),
@@ -1033,7 +1035,7 @@ WeaveSvc.prototype = {
         interval = this.nextSync - Date.now();
       // Use the default sync interval
       else 
-        interval = this._syncInterval;
+        interval = this.syncInterval;
     }
 
     // Start the sync right away if we're already late
@@ -1219,14 +1221,14 @@ WeaveSvc.prototype = {
 
     let tabEngine = Engines.get("tabs");
     if (numClients == 1) {
-      this._syncInterval = SINGLE_USER_SYNC;
+      this.syncInterval = SINGLE_USER_SYNC;
 
       // Disable tabs sync for single client, but store the original value
       Svc.Prefs.set("engine.tabs.backup", tabEngine.enabled);
       tabEngine.enabled = false;
     }
     else {
-      this._syncInterval = hasMobile ? MULTI_MOBILE_SYNC : MULTI_DESKTOP_SYNC;
+      this.syncInterval = hasMobile ? MULTI_MOBILE_SYNC : MULTI_DESKTOP_SYNC;
 
       // Restore the original tab enabled value
       tabEngine.enabled = Svc.Prefs.get("engine.tabs.backup", true);
