@@ -95,12 +95,12 @@ public:
 
   Function();
 
-  nsresult Init(JSContext* aContext, Library* aLibrary, PRFuncPtr aFunc, PRUint16 aCallType, jsval aResultType, const nsTArray<jsval>& aArgTypes);
+  bool Init(JSContext* aContext, Library* aLibrary, PRFuncPtr aFunc, PRUint16 aCallType, jsval aResultType, const nsTArray<jsval>& aArgTypes);
 
 private:
   ~Function();
 
-  PRBool Execute(JSContext* aContext, PRUint32 aArgc, jsval* aArgv, jsval* aValue);
+  bool Execute(JSContext* aContext, PRUint32 aArgc, jsval* aArgv, jsval* aValue);
 
 protected:
   // reference to the library our function is in

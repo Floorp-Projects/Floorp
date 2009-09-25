@@ -49,31 +49,31 @@
 namespace mozilla {
 namespace ctypes {
 
-static inline nsresult
+static inline bool
 jsvalToUint16(JSContext* aContext, jsval aVal, PRUint16& aResult)
 {
   if (JSVAL_IS_INT(aVal)) {
     PRUint32 i = JSVAL_TO_INT(aVal);
     if (i <= PR_UINT16_MAX) {
       aResult = i;
-      return NS_OK;
+      return true;
     }
   }
 
   JS_ReportError(aContext, "Parameter must be a valid ABI constant");
-  return NS_ERROR_INVALID_ARG;
+  return false;
 }
 
-static inline nsresult
+static inline bool
 jsvalToCString(JSContext* aContext, jsval aVal, const char*& aResult)
 {
   if (JSVAL_IS_STRING(aVal)) {
     aResult = JS_GetStringBytes(JSVAL_TO_STRING(aVal));
-    return NS_OK;
+    return true;
   }
 
   JS_ReportError(aContext, "Parameter must be a string");
-  return NS_ERROR_INVALID_ARG;
+  return false;
 }
 
 NS_IMPL_ISUPPORTS1(Library, nsIForeignLibrary)
@@ -136,16 +136,16 @@ Library::Declare(nsISupports** aResult)
   // we always need at least a method name, a call type and a return type
   if (argc < 3) {
     JS_ReportError(ctx, "Insufficient number of arguments");
-    return NS_ERROR_INVALID_ARG;
+    return NS_OK;
   }
 
   const char* name;
-  rv = jsvalToCString(ctx, argv[0], name);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!jsvalToCString(ctx, argv[0], name))
+    return NS_OK;
 
   PRUint16 callType;
-  rv = jsvalToUint16(ctx, argv[1], callType);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!jsvalToUint16(ctx, argv[1], callType))
+    return NS_OK;
 
   nsAutoTArray<jsval, 16> argTypes;
   for (PRUint32 i = 3; i < argc; ++i) {
@@ -155,15 +155,15 @@ Library::Declare(nsISupports** aResult)
   PRFuncPtr func = PR_FindFunctionSymbol(mLibrary, name);
   if (!func) {
     JS_ReportError(ctx, "Couldn't find function symbol in library");
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   nsRefPtr<Function> call = new Function;
-  rv = call->Init(ctx, this, func, callType, argv[2], argTypes);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!call->Init(ctx, this, func, callType, argv[2], argTypes))
+    return NS_OK;
 
   call.forget(aResult);
-  return rv;
+  return NS_OK;
 }
 
 }
