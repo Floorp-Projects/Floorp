@@ -417,3 +417,14 @@ menulist > dropmarker[disabled="true"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
   padding: 1px !important;
 }
+
+/* progressmeter ----------------------------------------------------------- */
+progressmeter {
+  background-color: #fff;
+}
+
+.progress-bar 
+{
+  background-color: #4483d8;
+}
+
