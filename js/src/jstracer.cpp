@@ -279,7 +279,7 @@ nanojit::Allocator::allocChunk(size_t nbytes)
 {
     VMAllocator *vma = (VMAllocator*)this;
     JS_ASSERT(!vma->outOfMemory());
-    void *p = malloc(nbytes);
+    void *p = calloc(1, nbytes);
     if (!p) {
         JS_ASSERT(nbytes < sizeof(vma->mReserve));
         vma->mOutOfMemory = true;
@@ -2195,24 +2195,24 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
                       (void*)anchor);
 #endif
 
-    lir = lir_buf_writer = new LirBufWriter(lirbuf);
+    lir = lir_buf_writer = new (tempAlloc) LirBufWriter(lirbuf);
 #ifdef DEBUG
-    lir = sanity_filter_1 = new SanityFilter(lir);
+    lir = sanity_filter_1 = new (tempAlloc) SanityFilter(lir);
 #endif
     debug_only_stmt(
         if (js_LogController.lcbits & LC_TMRecorder) {
            lir = verbose_filter
-               = new VerboseWriter (tempAlloc, lir, lirbuf->names,
-                                    &js_LogController);
+               = new (tempAlloc) VerboseWriter (tempAlloc, lir, lirbuf->names,
+                                                &js_LogController);
         }
     )
     if (nanojit::AvmCore::config.soft_float)
-        lir = float_filter = new SoftFloatFilter(lir);
-    lir = cse_filter = new CseFilter(lir, tempAlloc);
-    lir = expr_filter = new ExprFilter(lir);
-    lir = func_filter = new FuncFilter(lir);
+        lir = float_filter = new (tempAlloc) SoftFloatFilter(lir);
+    lir = cse_filter = new (tempAlloc) CseFilter(lir, tempAlloc);
+    lir = expr_filter = new (tempAlloc) ExprFilter(lir);
+    lir = func_filter = new (tempAlloc) FuncFilter(lir);
 #ifdef DEBUG
-    lir = sanity_filter_2 = new SanityFilter(lir);
+    lir = sanity_filter_2 = new (tempAlloc) SanityFilter(lir);
 #endif
     lir->ins0(LIR_start);
 
@@ -2291,18 +2291,6 @@ TraceRecorder::~TraceRecorder()
     /* Purge the tempAlloc used during recording. */
     tempAlloc.reset();
     traceMonitor->lirbuf->clear();
-
-#ifdef DEBUG
-    debug_only_stmt( delete verbose_filter; )
-    delete sanity_filter_1;
-    delete sanity_filter_2;
-#endif
-    delete cse_filter;
-    delete expr_filter;
-    delete func_filter;
-    delete float_filter;
-    delete lir_buf_writer;
-
     forgetGuardedShapes();
 }
 
@@ -3918,7 +3906,6 @@ TraceRecorder::snapshot(ExitType exitType)
                                        (stackSlots + ngslots) * sizeof(JSTraceType));
 
     /* Setup side exit structure. */
-    memset(exit, 0, sizeof(VMSideExit));
     exit->from = fragment;
     exit->calldepth = callDepth;
     exit->numGlobalSlots = ngslots;
@@ -3951,11 +3938,10 @@ TraceRecorder::createGuardRecord(VMSideExit* exit)
 {
     GuardRecord* gr = new (*traceMonitor->dataAlloc) GuardRecord();
 
-    memset(gr, 0, sizeof(GuardRecord));
     gr->exit = exit;
     exit->addGuard(gr);
 
-    // gr->profCount is memset'd to zero
+    // gr->profCount is calloc'd to zero
     verbose_only(
         gr->profGuardID = fragment->guardNumberer++;
         gr->nextInFrag = fragment->guardsForFrag;
