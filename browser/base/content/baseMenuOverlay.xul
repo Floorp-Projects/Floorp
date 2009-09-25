@@ -91,6 +91,11 @@
                   accesskey="&helpForIEUsers.accesskey;"
                   oncommand="openHelpLink('ieusers');"/>
 #endif
+        <menuitem id="troubleShooting"
+                  accesskey="&helpTroubleshooting.accesskey;"
+                  label="&helpTroubleshooting.label;"
+                  oncommand="openTroubleshootingPage()"
+                  onclick="checkForMiddleClick(this, event);"/>
         <menuitem id="releaseNotes"
                   accesskey="&helpReleaseNotes.accesskey;"
                   label="&helpReleaseNotes.label;"

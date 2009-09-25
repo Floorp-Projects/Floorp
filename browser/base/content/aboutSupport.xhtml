@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is aboutSupport.xhtml.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Corporation
+# Portions created by the Initial Developer are Copyright (C) 2009
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Curtis Bartley <cbartley@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> %brandDTD;
+  <!ENTITY % aboutSupportDTD SYSTEM "chrome://browser/locale/aboutSupport.dtd"> %aboutSupportDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&aboutSupport.pageTitle;</title>
+
+    <style type="text/css"><![CDATA[
+
+html {
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  font: message-box;
+}
+
+body {
+  text-align: justify;
+  width: 90%;
+  margin-left: 5%;
+  margin-right: 5%;
+}
+
+.page-subtitle {
+  margin-bottom: 3em; 
+}
+
+.major-section {
+  margin-top: 2em;
+  margin-bottom: 1em;
+  font-size: large;
+  text-align: start;
+  font-weight: bold;
+}
+
+table {
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+  font: message-box;
+  text-align: start;
+  width: 100%;
+  border: 1px solid ThreeDShadow;
+  border-spacing: 0px;
+}
+
+th, td {
+  border: 1px dotted ThreeDShadow;
+  padding: 3px;
+}
+
+thead th {
+  text-align: center;
+}
+
+th {
+  text-align: start;
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+th.column {
+  white-space: nowrap;
+  width: 0px; 
+}
+
+td {
+  text-align: start;
+  border-top: 1px dotted ThreeDShadow;
+}
+
+.prefs-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.pref-name {
+  width: 70%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.pref-value {
+  width: 30%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+    ]]></style>
+
+    <script type="application/javascript;version=1.7"><![CDATA[
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+window.onload = function () {
+  // Get the FUEL Application object.
+  let Application = Cc["@mozilla.org/fuel/application;1"]
+                      .getService(Ci.fuelIApplication);
+
+  // Get the support URL.
+  let urlFormatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
+                       .getService(Ci.nsIURLFormatter);
+  let supportUrl = urlFormatter.formatURLPref("app.support.baseURL");
+
+  // Get the profile directory.
+  let propertiesService = Cc["@mozilla.org/file/directory_service;1"]
+                            .getService(Ci.nsIProperties);
+  let currProfD = propertiesService.get("ProfD", Ci.nsIFile);
+  let profileDir = currProfD.path;
+
+  // Update the application basics section.
+  document.getElementById("application-box").textContent = Application.name;
+  document.getElementById("version-box").textContent = Application.version;
+  document.getElementById("profile-box").textContent = profileDir;
+  document.getElementById("supportLink").href = supportUrl;
+
+  // Update the other sections.
+  populateExtensionsSection();
+  populatePreferencesSection();
+}
+
+function populateExtensionsSection() {
+  let extensions = Application.extensions.all;
+  let trExtensions = [];
+  for (let i = 0; i < extensions.length; i++) {
+    let extension = extensions[i];
+    let tr = createParentElement("tr", [
+      createElement("td", extension.name),
+      createElement("td", extension.version),
+      createElement("td", extension.enabled),
+      createElement("td", extension.id),
+    ]);
+    trExtensions.push(tr);
+  }
+  appendChildren(document.getElementById("extensions-tbody"), trExtensions);
+}
+
+function populatePreferencesSection() {
+  let modifiedPrefs = getModifiedPrefs();
+
+  function comparePrefs(pref1, pref2) {
+    if (pref1.name < pref2.name)
+      return -1;
+    if (pref1.name > pref2.name)
+      return 1;
+    return 0;
+  }
+
+  let sortedPrefs = modifiedPrefs.sort(comparePrefs);
+
+  let trPrefs = [];
+  for each (let pref in sortedPrefs) {
+    let tdName = createElement("td", pref.name, "pref-name");
+    let tdValue = createElement("td", pref.value, "pref-value");
+    let tr = createParentElement("tr", [tdName, tdValue]);
+    trPrefs.push(tr);
+  }
+
+  appendChildren(document.getElementById("prefs-tbody"), trPrefs);
+}
+
+function getModifiedPrefs() {
+  // We use the low-level prefs API to identify prefs that have been
+  // modified, rather that Application.prefs.all since the latter is
+  // much, much slower.  Application.prefs.all also gets slower each
+  // time it's called.  See bug 517312.
+  let prefService = Cc["@mozilla.org/preferences-service;1"]
+                      .getService(Ci.nsIPrefService);
+  let prefRootBranch = prefService.getBranch("");
+  let prefNames = prefRootBranch.getChildList("", { value: 0 });
+  let prefs = [Application.prefs.get(prefName)
+                      for each (prefName in prefNames)
+                          if (prefRootBranch.prefHasUserValue(prefName))];        
+  return prefs;
+}
+
+function createParentElement(tagName, childElems) {
+  let elem = document.createElement(tagName);
+  appendChildren(elem, childElems);
+  return elem;
+}
+
+function createElement(tagName, textContent, opt_class) {
+  let elem = document.createElement(tagName);
+  elem.textContent = textContent;
+  elem.className = opt_class || "";
+  return elem; 
+}
+
+function appendChildren(parentElem, childNodes) {
+  for (let i = 0; i < childNodes.length; i++)
+    parentElem.appendChild(childNodes[i]);
+}
+
+function copyContentsToClipboard() {
+  // Get the HTML and text representations for the important part of the page.
+  let contentsDiv = document.getElementById("contents");
+  let dataHtml = contentsDiv.innerHTML;
+  let dataText = createTextForElement(contentsDiv);
+
+  // We can't use plain strings, we have to use nsSupportsString.
+  let supportsStringClass = Cc["@mozilla.org/supports-string;1"];
+  let ssHtml = supportsStringClass.createInstance(Ci.nsISupportsString);
+  let ssText = supportsStringClass.createInstance(Ci.nsISupportsString);
+
+  let transferable = Cc["@mozilla.org/widget/transferable;1"]
+                       .createInstance(Ci.nsITransferable);  
+
+  // Add the HTML flavor.
+  transferable.addDataFlavor("text/html");
+  ssHtml.data = dataHtml;
+  transferable.setTransferData("text/html", ssHtml, dataHtml.length * 2);
+
+  // Add the plain text flavor.
+  transferable.addDataFlavor("text/unicode");
+  ssText.data = dataText;
+  transferable.setTransferData("text/unicode", ssText, dataText.length * 2);
+
+  // Store the data into the clipboard.
+  let clipboard = Cc["@mozilla.org/widget/clipboard;1"]
+                    .getService(Ci.nsIClipboard);
+  clipboard.setData(transferable, null, clipboard.kGlobalClipboard);        
+}
+
+// Return the plain text representation of an element.  Do a little bit
+// of pretty-printing to make it human-readable.
+function createTextForElement(elem) {
+  // Generate the initial text.
+  let textFragmentAccumulator = [];
+  generateTextForElement(elem, "", textFragmentAccumulator);
+  let text = textFragmentAccumulator.join("");
+
+  // Trim extraneous whitespace before newlines, then squash extraneous
+  // blank lines.
+  text = text.replace(/[ \t]+\n/g, "\n");
+  text = text.replace(/\n\n\n*/g, "\n\n");
+
+  return text;
+}
+
+function generateTextForElement(elem, indent, textFragmentAccumulator) {
+  // Add a little extra spacing around most elements.
+  if (elem.tagName != "td")
+    textFragmentAccumulator.push("\n"); 
+
+  // Generate the text representation for each child node.
+  let node = elem.firstChild;
+  while (node) {
+
+    if (node.nodeType == Node.TEXT_NODE) {
+      // Text belonging to this element uses its indentation level.
+      generateTextForTextNode(node, indent, textFragmentAccumulator);
+    }
+    else if (node.nodeType == Node.ELEMENT_NODE) {
+      // Recurse on the child element with an extra level of indentation.
+      generateTextForElement(node, indent + "  ", textFragmentAccumulator); 
+    }
+
+    // Advance!
+    node = node.nextSibling;
+  }
+}
+
+function generateTextForTextNode(node, indent, textFragmentAccumulator) {
+  // If the text node is the first of a run of text nodes, then start
+  // a new line and add the initial indentation.
+  let prevNode = node.previousSibling;
+  if (!prevNode || prevNode.nodeType == Node.TEXT_NODE)
+    textFragmentAccumulator.push("\n" + indent);
+
+  // Trim the text node's text content and add proper indentation after 
+  // any internal line breaks.  
+  let text = node.textContent.trim().replace("\n[ \t]*", "\n" + indent);
+  textFragmentAccumulator.push(text);
+}
+
+    ]]></script>
+
+  </head>
+
+  <body dir="&locale.dir;">
+
+    <h1>
+      &aboutSupport.pageTitle;
+    </h1>
+
+    <div class="page-subtitle">
+        &aboutSupport.pageSubtitle;
+    </div>
+
+    <div>
+      <button onclick="copyContentsToClipboard()">
+        &aboutSupport.copyToClipboard.label;
+      </button>
+    </div>
+
+    <div id="contents">
+
+      <!-- - - - - - - - - - - - - - - - - - - - - -->
+
+      <h2 class="major-section">
+        &aboutSupport.appBasicsTitle;
+      </h2>
+      
+      <table>
+        <tbody>
+          <tr>
+            <th class="column">
+              &aboutSupport.appBasicsName;
+            </th>
+
+            <td id="application-box">
+            </td>
+          </tr>
+            
+          <tr>
+            <th class="column">
+              &aboutSupport.appBasicsVersion;
+            </th>
+
+            <td id="version-box">
+            </td>
+          </tr>
+            
+          <tr>
+            <th class="column">
+              &aboutSupport.appBasicsProfileDir;
+            </th>
+
+            <td id="profile-box">
+            </td>
+          </tr>
+            
+          <tr>
+            <th class="column">
+              &aboutSupport.appBasicsPlugins;
+            </th>
+
+            <td>
+              <a href="about:plugins">about:plugins</a>
+            </td>
+          </tr>
+            
+          <tr>
+            <th class="column">
+              &aboutSupport.appBasicsBuildConfig;
+            </th>
+
+            <td>
+              <a href="about:buildconfig">about:buildconfig</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- - - - - - - - - - - - - - - - - - - - - -->
+
+      <h2 class="major-section">
+        &aboutSupport.extensionsTitle;
+      </h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>
+              &aboutSupport.extensionName;
+            </th>
+            <th>
+              &aboutSupport.extensionVersion;
+            </th>
+            <th>
+              &aboutSupport.extensionEnabled;
+            </th>
+            <th>
+              &aboutSupport.extensionId;
+            </th>
+          </tr>
+        </thead>
+        <tbody id="extensions-tbody">
+        </tbody>
+      </table>
+
+      <!-- - - - - - - - - - - - - - - - - - - - - -->
+
+      <h2 class="major-section">
+        &aboutSupport.modifiedPrefsTitle;
+      </h2>
+
+      <table class="prefs-table">
+        <thead>
+          <th class="name">
+            &aboutSupport.modifiedPrefsName;
+          </th>
+          
+          <th class="value">
+            &aboutSupport.modifiedPrefsValue;
+          </th>
+        </thead>
+
+        <tbody id="prefs-tbody">
+        </tbody>
+      </table>
+
+      <!-- - - - - - - - - - - - - - - - - - - - - -->
+
+    </div>
+
+  </body>
+
+</html>
