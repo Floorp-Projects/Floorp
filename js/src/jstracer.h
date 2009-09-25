@@ -47,6 +47,7 @@
 #include "jstypes.h"
 #include "jsbuiltins.h"
 #include "jscntxt.h"
+#include "jsdhash.h"
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -837,9 +838,17 @@ class TraceRecorder {
     JS_REQUIRES_STACK JSRecordingStatus unary(nanojit::LOpcode op);
     JS_REQUIRES_STACK JSRecordingStatus binary(nanojit::LOpcode op);
 
-    JS_REQUIRES_STACK void guardShape(nanojit::LIns* obj_ins, JSObject* obj,
-                                      uint32 shape, const char* guardName,
-                                      nanojit::LIns* map_ins, VMSideExit* exit);
+    JS_REQUIRES_STACK JSRecordingStatus guardShape(nanojit::LIns* obj_ins, JSObject* obj,
+                                                   uint32 shape, const char* name,
+                                                   nanojit::LIns* map_ins, VMSideExit* exit);
+
+    JSDHashTable guardedShapeTable;
+
+#ifdef DEBUG
+    void dumpGuardedShapes(const char* prefix);
+#endif
+
+    void forgetGuardedShapes();
 
     inline nanojit::LIns* map(nanojit::LIns *obj_ins);
     JS_REQUIRES_STACK bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins,
@@ -1047,7 +1056,7 @@ public:
     JS_REQUIRES_STACK JSRecordingStatus record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
     JS_REQUIRES_STACK JSRecordingStatus record_NativeCallComplete();
 
-    TreeInfo* getTreeInfo() { return treeInfo; }
+    void forgetGuardedShapesForObject(JSObject* obj);
 
 #ifdef DEBUG
     void tprint(const char *format, int count, nanojit::LIns *insa[]);
