@@ -40,19 +40,20 @@
 
 
 html {
-  background: -moz-Dialog;
+  background: #f0f0f0;
 }
 
 body {
   margin: 0;
   padding: 0 1em;
-  color: -moz-FieldText;
-  font: message-box;
+  color: black;
+  font-family: "Nokia Sans", Tahoma, sans-serif !important;
+  font-size: 100% !important;
 }
 
 h1 {
   margin: 0 0 .6em 0;
-  border-bottom: 1px solid ThreeDLightShadow;
+  border-bottom: 1px solid lightgray;
   font-size: 160%;
 }
 
@@ -64,12 +65,12 @@ h2 {
   position: relative;
   min-width: 13em;
   max-width: 52em;
-  margin: 4em auto;
+  margin: 1em auto;
   border: 1px solid #FFBD09; /* pale yellow extracted from yellow passport icon */
   -moz-border-radius: 10px;
   padding: 3em;
   -moz-padding-start: 30px;
-  background: url("chrome://global/skin/icons/sslWarning.png") left 0 no-repeat -moz-Field;
+  background: url("chrome://global/skin/icons/sslWarning.png") left 0 no-repeat white;
   -moz-background-origin: content;
 }
 
@@ -90,6 +91,6 @@ body[dir="rtl"] #errorPageContainer {
 }
 
 #technicalContent[collapsed] > h2,
-#expertContent[collapsed] > h2{
+#expertContent[collapsed] > h2 {
   background-image: url("chrome://browser/skin/images/section-collapsed-16.png");
 }
