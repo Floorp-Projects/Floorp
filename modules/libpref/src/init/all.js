@@ -2813,3 +2813,5 @@ pref("geo.enabled", true);
 
 // Enable/Disable HTML5 parser
 pref("html5.enable", false);
+// Toggle which thread the HTML5 parser uses for streama parsing
+pref("html5.offmainthread", true);

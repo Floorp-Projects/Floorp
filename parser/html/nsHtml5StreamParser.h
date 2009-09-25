@@ -101,6 +101,11 @@ enum eHtml5StreamState {
 
 class nsHtml5StreamParser : public nsIStreamListener,
                             public nsICharsetDetectionObserver {
+
+  friend class nsHtml5RequestStopper;
+  friend class nsHtml5DataAvailable;
+  friend class nsHtml5ContinueAfterScript;
+
   public:
     NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -152,8 +157,6 @@ class nsHtml5StreamParser : public nsIStreamListener,
     
     nsresult GetChannel(nsIChannel** aChannel);
 
-    void ParseUntilScript();
-    
     /**
      * The owner parser must call this after script execution
      * when no scripts are executing and the document.written 
@@ -170,23 +173,26 @@ class nsHtml5StreamParser : public nsIStreamListener,
       // in-flight runnables coming this way
     }
     
-    void DoExecFlush();
-
   private:
+
+#ifdef DEBUG
+    PRBool IsParserThread() {
+      PRBool ret;
+      mThread->IsOnCurrentThread(&ret);
+      return ret;
+    }
+#endif
+
+    void ParseUntilScript();
+    
+    void DoStopRequest();
+    
+    void DoDataAvailable(PRUint8* aBuffer, PRUint32 aLength);
 
     PRBool IsTerminated() {
       mozilla::MutexAutoLock autoLock(mTerminatedMutex);
       return mTerminated;    
     }
-
-    void TellExecutorToFlush();
-
-    static NS_METHOD ParserWriteFunc(nsIInputStream* aInStream,
-                                     void* aHtml5StreamParser,
-                                     const char* aFromSegment,
-                                     PRUint32 aToOffset,
-                                     PRUint32 aCount,
-                                     PRUint32* aWriteCount);
 
     /**
      * True when there is a Unicode decoder already
@@ -377,7 +383,13 @@ class nsHtml5StreamParser : public nsIStreamListener,
      */
     PRBool                        mTerminated;
     mozilla::Mutex                mTerminatedMutex;
-
+    
+    /**
+     * The thread this stream parser runs on.
+     */
+    nsCOMPtr<nsIThread>           mThread;
+    
+    nsCOMPtr<nsIRunnable>         mExecutorFlusher;
 };
 
 #endif // nsHtml5StreamParser_h__
