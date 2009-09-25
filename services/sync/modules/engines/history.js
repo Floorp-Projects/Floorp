@@ -87,6 +87,19 @@ HistoryEngine.prototype = {
 
   _findDupe: function _findDupe(item) {
     return GUIDForUri(item.histUri);
+  },
+
+  _makeUploadColl: function _makeUploadColl() {
+    let coll = SyncEngine.prototype._makeUploadColl.call(this);
+    let origPush = coll.pushData;
+
+    // Only push the data for upload if it has more than 1 visit
+    coll.pushData = function(data) {
+      if (data._visitCount > 1)
+        origPush.call(coll, data);
+    };
+
+    return coll;
   }
 };
 
@@ -255,6 +268,10 @@ HistoryStore.prototype = {
       record.title = foo.title;
       record.visits = this._getVisits(record.histUri);
       record.encryption = cryptoMetaURL;
+
+      // XXX Add a value to the object so that pushData can read out, but we end
+      // up encrypting the data before calling pushData :(
+      record._visitCount = record.visits.length;
     }
     else
       record.deleted = true;
