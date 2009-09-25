@@ -2218,7 +2218,7 @@ NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
-  PRUint32 modifierFlags = ::GetCurrentEventKeyModifiers();
+  PRUint32 modifierFlags = ::GetCurrentKeyModifiers();
   *aLEDState = (modifierFlags & key) != 0;
   return NS_OK;
 
@@ -3151,7 +3151,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.message = 0;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = ::GetCurrentEventKeyModifiers();
+    carbonEvent.modifiers = ::GetCurrentKeyModifiers();
     geckoEvent.nativeMsg = &carbonEvent;
   }
 #endif
@@ -3203,7 +3203,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.message = 0;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = ::GetCurrentEventKeyModifiers();
+    carbonEvent.modifiers = ::GetCurrentKeyModifiers();
     geckoEvent.nativeMsg = &carbonEvent;
   }
 #endif
@@ -3253,7 +3253,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.message = 0;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = ::GetCurrentEventKeyModifiers();
+    carbonEvent.modifiers = ::GetCurrentKeyModifiers();
     event.nativeMsg = &carbonEvent;
   }
 #endif
@@ -3302,7 +3302,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.message = 0;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = ::GetCurrentEventKeyModifiers();
+    carbonEvent.modifiers = ::GetCurrentKeyModifiers();
     geckoEvent.nativeMsg = &carbonEvent;
   }
 #endif
@@ -3348,7 +3348,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.message = 0;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = btnState | ::GetCurrentEventKeyModifiers();
+    carbonEvent.modifiers = btnState | ::GetCurrentKeyModifiers();
     geckoEvent.nativeMsg = &carbonEvent;
   }
 #endif
@@ -3844,7 +3844,7 @@ static void ConvertCocoaKeyEventToCarbonEvent(NSEvent* cocoaEvent, EventRecord& 
     pluginEvent.message = (charCode & 0x00FF) | (nsCocoaUtils::GetCocoaEventKeyCode(cocoaEvent) << 8);
     pluginEvent.when = ::TickCount();
     ::GetGlobalMouse(&pluginEvent.where);
-    pluginEvent.modifiers = ::GetCurrentEventKeyModifiers();
+    pluginEvent.modifiers = ::GetCurrentKeyModifiers();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

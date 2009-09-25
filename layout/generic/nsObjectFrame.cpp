@@ -3360,7 +3360,7 @@ static void InitializeEventRecord(EventRecord* event, Point* aMousePosition)
     ::GetGlobalMouse(&event->where);
   }
   event->when = ::TickCount();
-  event->modifiers = ::GetCurrentEventKeyModifiers();
+  event->modifiers = ::GetCurrentKeyModifiers();
 }
 #endif
 
