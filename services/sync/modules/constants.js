@@ -43,6 +43,8 @@ WEAVE_VERSION:                         "@weave_version@",
 // version, this client will wipe the data on the server first.
 COMPATIBLE_VERSION:                    "@compatible_version@",
 
+DEFAULT_SERVER:                        "@server_url@",
+
 PREFS_BRANCH:                          "extensions.weave.",
 
 // Host "key" to access Weave Identity in the password manager
