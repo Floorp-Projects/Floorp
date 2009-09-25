@@ -203,6 +203,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
         return NS_ERROR_FAILURE;
 
     // Add all the flavors to this widget's supported type.
+    gint nImageTargets = 0;
     PRUint32 count;
     flavors->Count(&count);
     for (PRUint32 i=0; i < count; i++) {
@@ -227,30 +228,21 @@ nsClipboard::SetData(nsITransferable *aTransferable,
                 continue;
             }
 
-            // very special case for this one. since our selection mechanism doesn't work for images,
-            // we must use GTK's clipboard utility functions
-            if (!strcmp(flavorStr, kNativeImageMime) || !strcmp(flavorStr, kPNGImageMime) ||
-                !strcmp(flavorStr, kJPEGImageMime) || !strcmp(flavorStr, kGIFImageMime)) {
-                nsCOMPtr<nsISupports> item;
-                PRUint32 len;
-                rv = aTransferable->GetTransferData(flavorStr, getter_AddRefs(item), &len);
-                nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive(do_QueryInterface(item));
-                if (!ptrPrimitive)
-                    continue;
-
-                nsCOMPtr<nsISupports> primitiveData;
-                ptrPrimitive->GetData(getter_AddRefs(primitiveData));
-                nsCOMPtr<imgIContainer> image(do_QueryInterface(primitiveData));
-                if (!image) // Not getting an image for an image mime type!?
-                    continue;
-
-                GdkPixbuf* pixbuf = nsImageToPixbuf::ImageToPixbuf(image);
-                if (!pixbuf)
-                    continue;
-
-                GtkClipboard *aClipboard = gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
-                gtk_clipboard_set_image(aClipboard, pixbuf);
-                g_object_unref(pixbuf);
+            if (flavorStr.EqualsLiteral(kNativeImageMime) ||
+                flavorStr.EqualsLiteral(kPNGImageMime) ||
+                flavorStr.EqualsLiteral(kJPEGImageMime) ||
+                flavorStr.EqualsLiteral(kGIFImageMime)) {
+                // don't bother adding image targets twice
+                if (!nImageTargets) {
+                    // accept any writable image type
+                    GtkTargetList *list = gtk_target_list_new(NULL, 0);
+                    gtk_target_list_add_image_targets(list, 0, TRUE);
+                    GtkTargetEntry *targets = gtk_target_table_new_from_list(list, &nImageTargets);
+                    gtk_selection_add_targets(mWidget, selectionAtom, targets, nImageTargets);
+                    gtk_target_table_free(targets, nImageTargets);
+                    gtk_target_list_unref(list);
+                }
+                // next loop iteration
                 continue;
             }
 
@@ -557,6 +549,36 @@ nsClipboard::SelectionGetEvent (GtkWidget        *aWidget,
                                      strlen(utf8string));
 
         nsMemory::Free(utf8string);
+        return;
+    }
+
+    // Check to see if the selection data is an image type
+    if (gtk_targets_include_image(&aSelectionData->target, 1, TRUE)) {
+        // Look through our transfer data for the image
+        static const char* const imageMimeTypes[] = {
+            kNativeImageMime, kPNGImageMime, kJPEGImageMime, kGIFImageMime };
+        nsCOMPtr<nsISupports> item;
+        PRUint32 len;
+        nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive;
+        for (PRUint32 i = 0; !ptrPrimitive && i < NS_ARRAY_LENGTH(imageMimeTypes); i++) {
+            rv = trans->GetTransferData(imageMimeTypes[i], getter_AddRefs(item), &len);
+            ptrPrimitive = do_QueryInterface(item);
+        }
+        if (!ptrPrimitive)
+            return;
+
+        nsCOMPtr<nsISupports> primitiveData;
+        ptrPrimitive->GetData(getter_AddRefs(primitiveData));
+        nsCOMPtr<imgIContainer> image(do_QueryInterface(primitiveData));
+        if (!image) // Not getting an image for an image mime type!?
+            return;
+
+        GdkPixbuf* pixbuf = nsImageToPixbuf::ImageToPixbuf(image);
+        if (!pixbuf)
+            return;
+
+        gtk_selection_data_set_pixbuf(aSelectionData, pixbuf);
+        g_object_unref(pixbuf);
         return;
     }
 
