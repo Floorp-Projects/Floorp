@@ -71,7 +71,10 @@
       if (aSearchString) {
         // ExtensionsView initialization is delayed, so need to delay triggering
         // the search as well
-        setTimeout(function () { chromeWin.ExtensionsView.getAddonsFromRepo(aSearchString); }, 0);
+        setTimeout(function () {
+          // do the search
+          chromeWin.ExtensionsView.doSearch(aSearchString);
+        }, 0);
       }
     }
   ]]></script>

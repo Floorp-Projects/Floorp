@@ -487,10 +487,12 @@ var ExtensionsView = {
     if (aSection == "repo")
       this._list.appendChild(item);
     else
-      this._list.insertBefore(item, this._repoItem)
+      this._list.insertBefore(item, this._repoItem);
+
+    return item;
   },
 
-  getAddonsFromRepo: function ev_getAddonsFromRepo(aTerms) {
+  getAddonsFromRepo: function ev_getAddonsFromRepo(aTerms, aSelectFirstResult) {
     this.clearSection("repo");
 
     if (this._repo.isSearching)
@@ -498,6 +500,7 @@ var ExtensionsView = {
 
     let strings = document.getElementById("bundle_browser");
     if (aTerms) {
+      AddonSearchResults.selectFirstResult = aSelectFirstResult;
       this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"),
                                 strings.getString("addonsSearchStart.button"), false);
       this._repo.searchAddons(aTerms, this._pref.getIntPref(PREF_GETADDONS_MAXRESULTS), AddonSearchResults);
@@ -514,12 +517,17 @@ var ExtensionsView = {
     }
   },
 
-  displaySearchResults: function ev_displaySearchResults(aAddons, aTotalResults, aIsRecommended) {
+  displaySearchResults: function ev_displaySearchResults(aAddons, aTotalResults, aIsRecommended, aSelectFirstResult) {
     this.clearSection("repo");
 
     let strings = document.getElementById("bundle_browser");
     if (aAddons.length == 0) {
-      this.displaySectionMessage("repo", strings.getString("addonsSearchNone.label"), strings.getString("addonsSearchSuccess.button"), true);
+      let item = this.displaySectionMessage("repo",
+                                            strings.getString("addonsSearchNone.label"),
+                                            strings.getString("addonsSearchSuccess.button"),
+                                            true);
+      if (aSelectFirstResult)
+        this._list.scrollBoxObject.scrollToElement(item);
       return;
     }
 
@@ -533,6 +541,7 @@ var ExtensionsView = {
 
     var urlproperties = [ "iconURL", "homepageURL", "thumbnailURL", "xpiURL" ];
     var properties = [ "name", "eula", "iconURL", "homepageURL", "thumbnailURL", "xpiURL", "xpiHash" ];
+    var foundItem = false;
     for (let i = 0; i < aAddons.length; i++) {
       let addon = aAddons[i];
 
@@ -547,7 +556,13 @@ var ExtensionsView = {
       listitem.setAttribute("xpiHash", addon.xpiHash);
       if (!aIsRecommended)
         listitem.setAttribute("rating", addon.rating);
-      this._list.appendChild(listitem);
+      let item = this._list.appendChild(listitem);
+
+      if (aSelectFirstResult && !foundItem) {
+        foundItem = true;
+        this._list.selectItem(item);
+        this._list.scrollBoxObject.scrollToElement(item);
+      }
     }
 
     if (!aIsRecommended)
@@ -560,8 +575,18 @@ var ExtensionsView = {
       BrowserUI.newTab(uri);
   },
 
+  get searchBox() {
+    delete this.searchBox;
+    return this.searchBox = document.getElementById("addons-search-text");
+  },
+
+  doSearch: function ev_doSearch(aTerms) {
+    this.searchBox.value = aTerms;
+    this.getAddonsFromRepo(aTerms, true);
+  },
+
   resetSearch: function ev_resetSearch() {
-    document.getElementById("addons-search-text").value = "";
+    this.searchBox.value = "";
     this.getAddonsFromRepo("");
   },
   
@@ -615,8 +640,11 @@ var RecommendedSearchResults = {
 ///////////////////////////////////////////////////////////////////////////////
 // nsIAddonSearchResultsCallback for a standard search
 var AddonSearchResults = {
+  // set by ExtensionsView
+  selectFirstResult: false,
+
   searchSucceeded: function(aAddons, aAddonCount, aTotalResults) {
-    ExtensionsView.displaySearchResults(aAddons, aTotalResults, false);
+    ExtensionsView.displaySearchResults(aAddons, aTotalResults, false, this.selectFirstResult);
   },
 
   searchFailed: function() {
