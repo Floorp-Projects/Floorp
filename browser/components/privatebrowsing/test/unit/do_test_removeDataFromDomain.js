@@ -197,7 +197,7 @@ function check_downloaded(aURIString, aIsDownloaded)
 
   let checker = aIsDownloaded ? do_check_true : do_check_false;
   try {
-    checker(stmt.step());
+    checker(stmt.executeStep());
   }
   finally {
     stmt.finalize();
