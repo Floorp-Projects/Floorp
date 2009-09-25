@@ -124,6 +124,12 @@ public:
     AnswerNPN_GetValue_NPNVprivateModeBool(bool* value, NPError* result);
 
     virtual bool
+    AnswerNPN_SetValue_NPPVpluginWindow(const bool& windowed, NPError* result);
+    virtual bool
+    AnswerNPN_SetValue_NPPVpluginTransparent(const bool& transparent,
+                                             NPError* result);
+
+    virtual bool
     AnswerNPN_GetURL(const nsCString& url, const nsCString& target,
                      NPError *result);
 
@@ -143,14 +149,13 @@ public:
                          const NPReason& reason);
 
     NPError NPP_SetWindow(NPWindow* aWindow);
-    NPError NPP_GetValue(NPPVariable variable, void *ret_value);
 
+    NPError NPP_GetValue(NPPVariable variable, void *ret_value);
     NPError NPP_SetValue(NPNVariable variable, void *value)
     {
         _MOZ_LOG(__FUNCTION__);
         return 1;
     }
-
 
     NPError NPP_NewStream(NPMIMEType type, NPStream* stream,
                           NPBool seekable, uint16_t* stype);

@@ -57,42 +57,6 @@ using namespace mozilla::plugins;
 
 #endif
 
-namespace {
-
-static const char*
-NPNVariableToString(NPNVariable aVar)
-{
-#define VARSTR(v_)  case v_: return #v_
-
-    switch(aVar) {
-        VARSTR(NPNVxDisplay);
-        VARSTR(NPNVxtAppContext);
-        VARSTR(NPNVnetscapeWindow);
-        VARSTR(NPNVjavascriptEnabledBool);
-        VARSTR(NPNVasdEnabledBool);
-        VARSTR(NPNVisOfflineBool);
-
-        VARSTR(NPNVserviceManager);
-        VARSTR(NPNVDOMElement);
-        VARSTR(NPNVDOMWindow);
-        VARSTR(NPNVToolkit);
-        VARSTR(NPNVSupportsXEmbedBool);
-
-        VARSTR(NPNVWindowNPObject);
-
-        VARSTR(NPNVPluginElementNPObject);
-
-        VARSTR(NPNVSupportsWindowless);
-
-        VARSTR(NPNVprivateModeBool);
-
-    default: return "???";
-    }
-#undef VARSTR
-}
-
-} /* anonymous namespace */
-
 PluginInstanceChild::~PluginInstanceChild()
 {
 #if defined(OS_WIN)
@@ -110,9 +74,11 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     switch(aVar) {
 
     case NPNVSupportsWindowless:
-        // FIXME/cjones report true here and use XComposite + child
-        // surface to implement windowless plugins
+#if defined(OS_LINUX)
+        *((NPBool*)aValue) = true;
+#else
         *((NPBool*)aValue) = false;
+#endif
         return NPERR_NO_ERROR;
 
 #if defined(OS_LINUX)
@@ -160,9 +126,85 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 
     default:
         printf("  unhandled var %s\n", NPNVariableToString(aVar));
-        return NPERR_GENERIC_ERROR;   
+        return NPERR_GENERIC_ERROR;
     }
 
+}
+
+
+NPError
+PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
+{
+    printf ("[PluginInstanceChild] NPN_SetValue(%s, %ld)\n",
+            NPPVariableToString(aVar), reinterpret_cast<intptr_t>(aValue));
+
+    switch (aVar) {
+    case NPPVpluginWindowBool: {
+        NPError rv;
+        bool windowed = (NPBool) (intptr_t) aValue;
+
+        if (!CallNPN_SetValue_NPPVpluginWindow(windowed, &rv))
+            return NPERR_GENERIC_ERROR;
+
+        return rv;
+    }
+
+    case NPPVpluginTransparentBool: {
+        NPError rv;
+        bool transparent = (NPBool) (intptr_t) aValue;
+
+        if (!CallNPN_SetValue_NPPVpluginTransparent(transparent, &rv))
+            return NPERR_GENERIC_ERROR;
+
+        return rv;
+    }
+
+    default:
+        printf("  unhandled var %s\n", NPPVariableToString(aVar));
+        return NPERR_GENERIC_ERROR;
+    }
+}
+
+
+bool
+PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginWindow(
+    bool* windowed, NPError* rv)
+{
+    NPBool isWindowed;
+    *rv = mPluginIface->getvalue(GetNPP(), NPPVpluginWindowBool,
+                                 reinterpret_cast<void*>(&isWindowed));
+    *windowed = isWindowed;
+    return true;
+}
+
+bool
+PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginTransparent(
+    bool* transparent, NPError* rv)
+{
+    NPBool isTransparent;
+    *rv = mPluginIface->getvalue(GetNPP(), NPPVpluginTransparentBool,
+                                 reinterpret_cast<void*>(&isTransparent));
+    *transparent = isTransparent;
+    return true;
+}
+
+bool
+PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(
+    bool* needs, NPError* rv)
+{
+#ifdef OS_LINUX
+
+    NPBool needsXEmbed;
+    *rv = mPluginIface->getvalue(GetNPP(), NPPVpluginNeedsXEmbed,
+                                 reinterpret_cast<void*>(&needsXEmbed));
+    *needs = needsXEmbed;
+    return true;
+
+#else
+
+    NS_RUNTIMEABORT("shouldn't be called on non-linux platforms");
+
+#endif
 }
 
 bool
@@ -194,6 +236,14 @@ bool
 PluginInstanceChild::AnswerNPP_HandleEvent(const NPEvent& event,
                                            int16_t* handled)
 {
+    _MOZ_LOG(__FUNCTION__);
+
+#if defined(OS_LINUX) && defined(DEBUG_cjones)
+    if (GraphicsExpose == event.type)
+        printf("  received drawable 0x%lx\n",
+               event.xgraphicsexpose.drawable);
+#endif
+
     // plugins might be fooling with these, make a copy
     NPEvent evcopy = event;
     *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
@@ -218,7 +268,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow,
     mWindow.window = (void*) handle;
     mWindow.width = aWindow.width;
     mWindow.height = aWindow.height;
-    mWindow.type = NPWindowTypeWindow;
+    mWindow.type = aWindow.type;
 
     mWsInfo.display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
 
