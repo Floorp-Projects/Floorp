@@ -11,9 +11,11 @@ chrome.jar:
 % skin browser classic/1.0 %
   aboutCertError.css                   (aboutCertError.css)
   aboutPage.css                        (aboutPage.css)
+  about.css                            (about.css)
   platform.css                         (platform.css)
   browser.css                          (browser.css)
   notification.css                     (notification.css)
+% override chrome://global/skin/about.css chrome://browser/skin/about.css
 
   images/aboutBackground.jpg           (images/aboutBackground.jpg)
   images/arrowright-16.png             (images/arrowright-16.png)
