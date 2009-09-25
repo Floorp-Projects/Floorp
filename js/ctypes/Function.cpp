@@ -124,16 +124,16 @@ ToSource(JSContext* cx, jsval vp)
   return "<<error converting value to string>>";
 }
 
-static nsresult
+static bool
 TypeError(JSContext* cx, const char* expected, jsval actual)
 {
   const char* src = ToSource(cx, actual);
   JS_ReportErrorNumber(cx, GetErrorMessage, NULL,
                        CTYPESMSG_TYPE_ERROR, expected, src);
-  return NS_ERROR_FAILURE;
+  return false;
 }
 
-static nsresult
+static bool
 GetABI(PRUint16 aCallType, ffi_abi& aResult)
 {
   // determine the ABI from the subset of those available on the
@@ -142,24 +142,24 @@ GetABI(PRUint16 aCallType, ffi_abi& aResult)
   switch (aCallType) {
   case nsIForeignLibrary::DEFAULT:
     aResult = FFI_DEFAULT_ABI;
-    return NS_OK;
+    return true;
 #if defined(XP_WIN32)
   case nsIForeignLibrary::STDCALL:
     aResult = FFI_STDCALL;
-    return NS_OK;
+    return true;
 #endif
   default:
-    return NS_ERROR_INVALID_ARG;
+    return false;
   }
 }
 
-static nsresult
+static bool
 PrepareType(JSContext* aContext, jsval aType, Type& aResult)
 {
   // for now, the only types we accept are integer values.
   if (!JSVAL_IS_INT(aType)) {
     JS_ReportError(aContext, "Invalid type specification");
-    return NS_ERROR_FAILURE;
+    return false;
   }
 
   PRInt32 type = JSVAL_TO_INT(aType);
@@ -205,15 +205,15 @@ PrepareType(JSContext* aContext, jsval aType, Type& aResult)
     break;
   default:
     JS_ReportError(aContext, "Invalid type specification");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return false;
   }
 
   aResult.mType = type;
 
-  return NS_OK;
+  return true;
 }
 
-static nsresult
+static bool
 PrepareValue(JSContext* aContext, const Type& aType, jsval aValue, Value& aResult)
 {
   jsdouble d;
@@ -330,10 +330,10 @@ PrepareValue(JSContext* aContext, const Type& aType, jsval aValue, Value& aResul
     break;
   default:
     NS_NOTREACHED("invalid type");
-    return NS_ERROR_FAILURE;
+    return false;
   }
 
-  return NS_OK;
+  return true;
 }
 
 static void
@@ -384,7 +384,7 @@ PrepareReturnValue(const Type& aType, Value& aResult)
   }
 }
 
-static nsresult
+static bool
 ConvertReturnValue(JSContext* aContext,
                    const Type& aResultType,
                    const Value& aResultValue,
@@ -405,12 +405,12 @@ ConvertReturnValue(JSContext* aContext,
     break;
   case nsIForeignLibrary::INT32:
     if (!JS_NewNumberValue(aContext, jsdouble(aResultValue.mValue.mInt32), aValue))
-      return NS_ERROR_OUT_OF_MEMORY;
+      return false;
     break;
   case nsIForeignLibrary::INT64:
     // Implicit conversion with loss of bits.  :-[
     if (!JS_NewNumberValue(aContext, jsdouble(aResultValue.mValue.mInt64), aValue))
-      return NS_ERROR_OUT_OF_MEMORY;
+      return false;
     break;
   case nsIForeignLibrary::UINT8:
     *aValue = INT_TO_JSVAL(aResultValue.mValue.mUint8);
@@ -420,20 +420,20 @@ ConvertReturnValue(JSContext* aContext,
     break;
   case nsIForeignLibrary::UINT32:
     if (!JS_NewNumberValue(aContext, jsdouble(aResultValue.mValue.mUint32), aValue))
-      return NS_ERROR_OUT_OF_MEMORY;
+      return false;
     break;
   case nsIForeignLibrary::UINT64:
     // Implicit conversion with loss of bits.  :-[
     if (!JS_NewNumberValue(aContext, jsdouble(aResultValue.mValue.mUint64), aValue))
-      return NS_ERROR_OUT_OF_MEMORY;
+      return false;
     break;
   case nsIForeignLibrary::FLOAT:
     if (!JS_NewNumberValue(aContext, jsdouble(aResultValue.mValue.mFloat), aValue))
-      return NS_ERROR_OUT_OF_MEMORY;
+      return false;
     break;
   case nsIForeignLibrary::DOUBLE:
     if (!JS_NewNumberValue(aContext, jsdouble(aResultValue.mValue.mDouble), aValue))
-      return NS_ERROR_OUT_OF_MEMORY;
+      return false;
     break;
   case nsIForeignLibrary::STRING: {
     if (!aResultValue.mValue.mPointer) {
@@ -443,7 +443,7 @@ ConvertReturnValue(JSContext* aContext,
       JSString *jsstring = JS_NewStringCopyZ(aContext,
                              reinterpret_cast<const char*>(aResultValue.mValue.mPointer));
       if (!jsstring)
-        return NS_ERROR_OUT_OF_MEMORY;
+        return false;
 
       *aValue = STRING_TO_JSVAL(jsstring);
     }
@@ -457,7 +457,7 @@ ConvertReturnValue(JSContext* aContext,
       JSString *jsstring = JS_NewUCStringCopyZ(aContext,
                              reinterpret_cast<const jschar*>(aResultValue.mValue.mPointer));
       if (!jsstring)
-        return NS_ERROR_OUT_OF_MEMORY;
+        return false;
 
       *aValue = STRING_TO_JSVAL(jsstring);
     }
@@ -465,10 +465,10 @@ ConvertReturnValue(JSContext* aContext,
   }
   default:
     NS_NOTREACHED("invalid type");
-    return NS_ERROR_FAILURE;
+    return false;
   }
 
-  return NS_OK;
+  return true;
 }
 
 /*******************************************************************************
@@ -486,7 +486,7 @@ Function::~Function()
 {
 }
 
-nsresult
+bool
 Function::Init(JSContext* aContext,
                Library* aLibrary,
                PRFuncPtr aFunc,
@@ -494,31 +494,28 @@ Function::Init(JSContext* aContext,
                jsval aResultType,
                const nsTArray<jsval>& aArgTypes)
 {
-  nsresult rv;
-
   mLibrary = aLibrary;
   mFunc = aFunc;
 
   // determine the ABI
-  rv = GetABI(aCallType, mCallType);
-  if (NS_FAILED(rv)) {
+  if (!GetABI(aCallType, mCallType)) {
     JS_ReportError(aContext, "Invalid ABI specification");
-    return rv;
+    return false;
   }
 
   // prepare the result type
-  rv = PrepareType(aContext, aResultType, mResultType);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!PrepareType(aContext, aResultType, mResultType))
+    return false;
 
   // prepare the argument types
   for (PRUint32 i = 0; i < aArgTypes.Length(); ++i) {
-    rv = PrepareType(aContext, aArgTypes[i], *mArgTypes.AppendElement());
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!PrepareType(aContext, aArgTypes[i], *mArgTypes.AppendElement()))
+      return false;
 
     // disallow void argument types
     if (mArgTypes[i].mType == nsIForeignLibrary::VOID) {
       JS_ReportError(aContext, "Cannot have void argument type");
-      return NS_ERROR_INVALID_ARG;
+      return false;
     }
 
     // ffi_prep_cif requires an array of ffi_types; prepare it separately.
@@ -529,29 +526,27 @@ Function::Init(JSContext* aContext,
                                    &mResultType.mFFIType, mFFITypes.Elements());
   switch (status) {
   case FFI_OK:
-    return NS_OK;
+    return true;
   case FFI_BAD_ABI:
     JS_ReportError(aContext, "Invalid ABI specification");
-    return NS_ERROR_INVALID_ARG;
+    return false;
   case FFI_BAD_TYPEDEF:
     JS_ReportError(aContext, "Invalid type specification");
-    return NS_ERROR_INVALID_ARG;
+    return false;
   default:
     JS_ReportError(aContext, "Unknown libffi error");
-    return NS_ERROR_FAILURE;
+    return false;
   }
 }
 
-PRBool
+bool
 Function::Execute(JSContext* aContext, PRUint32 aArgc, jsval* aArgv, jsval* aValue)
 {
-  nsresult rv;
-
   // prepare the values for each argument
   nsAutoTArray<Value, 16> values;
   for (PRUint32 i = 0; i < mArgTypes.Length(); ++i) {
-    rv = PrepareValue(aContext, mArgTypes[i], aArgv[i], *values.AppendElement());
-    if (NS_FAILED(rv)) return PR_FALSE;
+    if (!PrepareValue(aContext, mArgTypes[i], aArgv[i], *values.AppendElement()))
+      return false;
   }
 
   // create an array of pointers to each value, for passing to ffi_call
@@ -573,10 +568,7 @@ Function::Execute(JSContext* aContext, PRUint32 aArgc, jsval* aArgv, jsval* aVal
   JS_ResumeRequest(aContext, rc);
 
   // prepare a JS object from the result
-  rv = ConvertReturnValue(aContext, mResultType, resultValue, aValue);
-  if (NS_FAILED(rv)) return PR_FALSE;
-
-  return PR_TRUE;
+  return ConvertReturnValue(aContext, mResultType, resultValue, aValue);
 }
 
 /*******************************************************************************
@@ -602,19 +594,16 @@ Function::Call(nsIXPConnectWrappedNative* wrapper,
   if (!mLibrary->IsOpen()) {
     JS_ReportError(cx, "Library is not open");
     *_retval = PR_FALSE;
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   if (argc != mArgTypes.Length()) {
     JS_ReportError(cx, "Number of arguments does not match declaration");
     *_retval = PR_FALSE;
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   *_retval = Execute(cx, argc, argv, vp);
-  if (!*_retval)
-    return NS_ERROR_FAILURE;
-
   return NS_OK;
 }
 
