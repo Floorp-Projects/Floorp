@@ -61,7 +61,7 @@ public:
 
   Library();
 
-  PRBool IsOpen() { return mLibrary != nsnull; }
+  bool IsOpen() { return mLibrary != nsnull; }
 
 private:
   ~Library();
