@@ -431,7 +431,7 @@ toolbarbutton.page-button {
 #bookmarklist-header {
   color: rgb(255,255,255);
   -moz-box-align: center;
-  padding: 1mm; /* core spacing */
+  padding: 0.5mm 1mm; /* half core spacing & core spacing */
 }
 
 #bookmark-items {
