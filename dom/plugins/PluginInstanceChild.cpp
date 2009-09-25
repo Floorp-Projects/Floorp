@@ -203,6 +203,7 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(
 #else
 
     NS_RUNTIMEABORT("shouldn't be called on non-linux platforms");
+    return false;               // not reached
 
 #endif
 }
