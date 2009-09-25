@@ -127,6 +127,8 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual void DropCachedHref();
+
 protected:
   void ResetLinkCacheState();
   
@@ -484,6 +486,18 @@ nsHTMLAnchorElement::ParseAttribute(PRInt32 aNamespaceID,
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
                                               aResult);
+}
+
+void
+nsHTMLAnchorElement::DropCachedHref()
+{
+  nsAttrValue* attr =
+    const_cast<nsAttrValue*>(mAttrsAndChildren.GetAttr(nsGkAtoms::href));
+
+  if (!attr || attr->Type() != nsAttrValue::eLazyURIValue)
+    return;
+
+  attr->DropCachedURI();
 }
 
 void
