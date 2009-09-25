@@ -1345,6 +1345,10 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
 NS_IMETHODIMP
 nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical)
 {
+#ifdef WINCE
+  // Return what base widget would return.
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
   NS_ENSURE_ARG_POINTER(aEvent);
 
   if (aEvent->eventStructType != NS_MOUSE_EVENT) {
@@ -1397,6 +1401,7 @@ nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVert
                 POINTTOPOINTS(aEvent->refPoint));
 
   return NS_OK;
+#endif // WINCE
 }
 
 /**************************************************************
