@@ -2570,7 +2570,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     }
 #ifdef DEBUG
     else {
-      NS_ASSERTION(aAllowScrollSpeedOverride,
+      NS_ASSERTION(!aAllowScrollSpeedOverride,
         "aAllowScrollSpeedOverride is true but the quantity isn't by-line scrolling.");
     }
 #endif
