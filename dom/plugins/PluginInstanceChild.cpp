@@ -271,7 +271,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow,
     mWindow.height = aWindow.height;
     mWindow.type = aWindow.type;
 
-    mWsInfo.display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
+    mWsInfo.display = GDK_DISPLAY();
 
     // FIXME/cjones: the code below is correct, but apparently to get
     // a valid GdkWindow*, one needs to create the gtk_plug.  but if we
