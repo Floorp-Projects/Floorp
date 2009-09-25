@@ -43,19 +43,6 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-// The following constants determine when Weave will automatically sync data.
-
-// An interval of one minute, initial threshold of 100, and step of 5 means
-// that we'll try to sync each engine 21 times, once per minute, at
-// consecutively lower thresholds (from 100 down to 5 in steps of 5 and then
-// one more time with the threshold set to the minimum 1) before resetting
-// the engine's threshold to the initial value and repeating the cycle
-// until at some point the engine's score exceeds the threshold, at which point
-// we'll sync it, reset its threshold to the initial value, rinse, and repeat.
-
-// How long we wait between sync checks.
-const SCHEDULED_SYNC_INTERVAL = 60 * 1000 * 5; // five minutes
-
 // how long we should wait before actually syncing on idle
 const IDLE_TIME = 5; // xxxmpc: in seconds, should be preffable
 
@@ -69,7 +56,7 @@ const INITIAL_THRESHOLD = 75;
 const THRESHOLD_DECREMENT_STEP = 25;
 
 // How long before refreshing the cluster
-const CLUSTER_BACKOFF = SCHEDULED_SYNC_INTERVAL;
+const CLUSTER_BACKOFF = 5 * 60 * 1000; // 5 minutes
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/ext/Sync.js");
@@ -181,6 +168,7 @@ WeaveSvc.prototype = {
   _loggedIn: false,
   _syncInProgress: false,
   _keyGenEnabled: true,
+  _syncInterval: SINGLE_USER_SYNC,
 
   // the status object
   _status: null,
@@ -258,6 +246,9 @@ WeaveSvc.prototype = {
   // nextSync is in milliseconds, but prefs can't hold that much
   get nextSync() Svc.Prefs.get("nextSync", 0) * 1000,
   set nextSync(value) Svc.Prefs.set("nextSync", Math.floor(value / 1000)),
+
+  get numClients() Svc.Prefs.get("numClients", 0),
+  set numClients(value) Svc.Prefs.set("numClients", value),
 
   get status() { return this._status; },
 
@@ -1042,7 +1033,7 @@ WeaveSvc.prototype = {
         interval = this.nextSync - Date.now();
       // Use the default sync interval
       else 
-        interval = SCHEDULED_SYNC_INTERVAL;
+        interval = this._syncInterval;
     }
 
     // Start the sync right away if we're already late
@@ -1145,6 +1136,9 @@ WeaveSvc.prototype = {
       }
     }
 
+    // Update the client mode now because it might change what we sync
+    this._updateClientMode();
+
     try {
       for each (let engine in Engines.getAll()) {
         let name = engine.name;
@@ -1202,6 +1196,43 @@ WeaveSvc.prototype = {
       this._syncError = false;
     }
   })))(),
+
+  /**
+   * Process the locally stored clients list to figure out what mode to be in
+   */
+  _updateClientMode: function _updateClientMode() {
+    let numClients = 0;
+    let hasMobile = false;
+
+    // Check how many and what type of clients we have
+    for each (let {type} in Clients.getClients()) {
+      numClients++;
+      hasMobile = hasMobile || type == "mobile";
+    }
+
+    // Nothing to do if it's the same amount
+    if (this.numClients == numClients)
+      return;
+
+    this._log.debug("Client count: " + this.numClients + " -> " + numClients);
+    this.numClients = numClients;
+
+    let tabEngine = Engines.get("tabs");
+    if (numClients == 1) {
+      this._syncInterval = SINGLE_USER_SYNC;
+
+      // Disable tabs sync for single client, but store the original value
+      Svc.Prefs.set("engine.tabs.backup", tabEngine.enabled);
+      tabEngine.enabled = false;
+    }
+    else {
+      this._syncInterval = hasMobile ? MULTI_MOBILE_SYNC : MULTI_DESKTOP_SYNC;
+
+      // Restore the original tab enabled value
+      tabEngine.enabled = Svc.Prefs.get("engine.tabs.backup", true);
+      Svc.Prefs.reset("engine.tabs.backup");
+    }
+  },
 
   // returns true if sync should proceed
   // false / no return value means sync should be aborted
