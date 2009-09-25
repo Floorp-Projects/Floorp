@@ -62,12 +62,12 @@ nsBasicDecoderSupport::~nsBasicDecoderSupport()
 //----------------------------------------------------------------------
 // Interface nsISupports [implementation]
 
-NS_IMPL_ADDREF(nsBasicDecoderSupport)
-NS_IMPL_RELEASE(nsBasicDecoderSupport)
 #ifdef NS_DEBUG
-NS_IMPL_QUERY_INTERFACE2(nsBasicDecoderSupport, nsIUnicodeDecoder, nsIBasicDecoder)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsBasicDecoderSupport,
+                              nsIUnicodeDecoder,
+                              nsIBasicDecoder)
 #else
-NS_IMPL_QUERY_INTERFACE1(nsBasicDecoderSupport, nsIUnicodeDecoder)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsBasicDecoderSupport, nsIUnicodeDecoder)
 #endif
 
 //----------------------------------------------------------------------
@@ -308,10 +308,11 @@ NS_IMETHODIMP nsMultiTableDecoderSupport::ConvertNoBuff(const char * aSrc,
 
 nsOneByteDecoderSupport::nsOneByteDecoderSupport(
                          uMappingTable  * aMappingTable)
-: nsBasicDecoderSupport()
+  : nsBasicDecoderSupport()
+  , mMappingTable(aMappingTable)
+  , mFastTableCreated(PR_FALSE)
+  , mFastTableMutex("nsOneByteDecoderSupport mFastTableMutex")
 {
-  mMappingTable = aMappingTable;
-  mFastTableCreated = PR_FALSE;
 }
 
 nsOneByteDecoderSupport::~nsOneByteDecoderSupport()
@@ -327,10 +328,14 @@ NS_IMETHODIMP nsOneByteDecoderSupport::Convert(const char * aSrc,
                                               PRInt32 * aDestLength)
 {
   if (!mFastTableCreated) {
-    nsresult res = nsUnicodeDecodeHelper::CreateFastTable(
-                       mMappingTable, mFastTable, ONE_BYTE_TABLE_SIZE);
-    if (NS_FAILED(res)) return res;
-    mFastTableCreated = PR_TRUE;
+    // Probably better to make this non-lazy and get rid of the mutex
+    mozilla::MutexAutoLock autoLock(mFastTableMutex);
+    if (!mFastTableCreated) {
+      nsresult res = nsUnicodeDecodeHelper::CreateFastTable(
+                         mMappingTable, mFastTable, ONE_BYTE_TABLE_SIZE);
+      if (NS_FAILED(res)) return res;
+      mFastTableCreated = PR_TRUE;
+    }
   }
 
   return nsUnicodeDecodeHelper::ConvertByFastTable(aSrc, aSrcLength,

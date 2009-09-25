@@ -81,8 +81,8 @@ enum eHtml5ParserLifecycle {
 
 typedef nsIContent* nsIContentPtr;
 
-class nsHtml5TreeOpExecutor : public nsIContentSink,
-                              public nsContentSink,
+class nsHtml5TreeOpExecutor : public nsContentSink,
+                              public nsIContentSink,
                               public nsAHtml5TreeOpSink
 {
   public:
