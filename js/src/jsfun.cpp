@@ -2342,20 +2342,16 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
         return NULL;
     fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
     if (!fun)
-        goto bad;
+        return NULL;
     fun->u.i.script = js_NewScript(cx, 1, 1, 0, 0, 0, 0, 0);
     if (!fun->u.i.script)
-        goto bad;
+        return NULL;
     fun->u.i.script->code[0] = JSOP_STOP;
     *fun->u.i.script->notes() = SRC_NULL;
 #ifdef CHECK_SCRIPT_OWNER
     fun->u.i.script->owner = NULL;
 #endif
     return proto;
-
-bad:
-    cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-    return NULL;
 }
 
 JSFunction *

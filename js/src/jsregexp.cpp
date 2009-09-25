@@ -4906,17 +4906,13 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
     ok = js_DefineProperty(cx, obj, id, val,                                  \
                            JS_PropertyStub, JS_PropertyStub,                  \
                            JSPROP_ENUMERATE);                                 \
-    if (!ok) {                                                                \
-        cx->weakRoots.newborn[GCX_OBJECT] = NULL;                             \
-        cx->weakRoots.newborn[GCX_STRING] = NULL;                             \
+    if (!ok)                                                                  \
         goto out;                                                             \
-    }                                                                         \
 }
 
         matchstr = js_NewDependentString(cx, str, cp - str->chars(),
                                          matchlen);
         if (!matchstr) {
-            cx->weakRoots.newborn[GCX_OBJECT] = NULL;
             ok = JS_FALSE;
             goto out;
         }
@@ -4953,8 +4949,6 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
                                     res->moreLength * sizeof(JSSubString));
                 }
                 if (!morepar) {
-                    cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-                    cx->weakRoots.newborn[GCX_STRING] = NULL;
                     ok = JS_FALSE;
                     goto out;
                 }
@@ -4978,19 +4972,14 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
                                                str->chars(),
                                                parsub->length);
                 if (!parstr) {
-                    cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-                    cx->weakRoots.newborn[GCX_STRING] = NULL;
                     ok = JS_FALSE;
                     goto out;
                 }
                 ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1), STRING_TO_JSVAL(parstr),
                                        NULL, NULL, JSPROP_ENUMERATE);
             }
-            if (!ok) {
-                cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-                cx->weakRoots.newborn[GCX_STRING] = NULL;
+            if (!ok)
                 goto out;
-            }
         }
         if (parsub->index == -1) {
             res->lastParen = js_EmptySubString;

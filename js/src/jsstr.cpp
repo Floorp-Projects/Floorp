@@ -3272,9 +3272,6 @@ js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
 JS_FRIEND_API(JSString *)
 js_ValueToSource(JSContext *cx, jsval v)
 {
-    JSTempValueRooter tvr;
-    JSString *str;
-
     if (JSVAL_IS_VOID(v))
         return ATOM_TO_STRING(cx->runtime->atomState.void0Atom);
     if (JSVAL_IS_STRING(v))
@@ -3290,16 +3287,11 @@ js_ValueToSource(JSContext *cx, jsval v)
         return js_ValueToString(cx, v);
     }
 
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
-    if (!js_TryMethod(cx, JSVAL_TO_OBJECT(v),
-                      cx->runtime->atomState.toSourceAtom,
-                      0, NULL, &tvr.u.value)) {
-        str = NULL;
-    } else {
-        str = js_ValueToString(cx, tvr.u.value);
-    }
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    return str;
+    JSAtom *atom = cx->runtime->atomState.toSourceAtom;
+    JSAutoTempValueRooter tvr(cx, JSVAL_NULL);
+    if (!js_TryMethod(cx, JSVAL_TO_OBJECT(v), atom, 0, NULL, tvr.addr()))
+        return NULL;
+    return js_ValueToString(cx, tvr.value());
 }
 
 /*
