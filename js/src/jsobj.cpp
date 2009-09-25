@@ -2094,6 +2094,9 @@ obj_keys(JSContext *cx, uintN argc, jsval *vp)
         }
     }
 
+    JS_ASSERT(len <= UINT32_MAX);
+    aobj->fslots[JSSLOT_ARRAY_COUNT] = len;
+
     return JS_TRUE;
 }
 
