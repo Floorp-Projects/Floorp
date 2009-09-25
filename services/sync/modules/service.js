@@ -188,9 +188,6 @@ WeaveSvc.prototype = {
   // object for caching public and private keys
   _keyPair: {},
 
-  // Timer object for automagically syncing
-  _syncTimer: null,
-
   get username() {
     return Svc.Prefs.get("username", "");
   },
@@ -669,22 +666,12 @@ WeaveSvc.prototype = {
       failureReason = ex;
     }
 
-    this._log.debug("Autoconnect failed: " + failureReason);
-
-    let listener = new Utils.EventListener(Utils.bind2(this,
-      function WeaveSvc__autoConnectCallback(timer) {
-        this._autoConnectTimer = null;
-        this._autoConnect();
-      }));
-    this._autoConnectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
     this._autoConnectAttempts++;
     let interval = this._calculateBackoff(this._autoConnectAttempts,
                                           SCHEDULED_SYNC_INTERVAL);
-    this._autoConnectTimer.initWithCallback(listener, interval,
-                                            Ci.nsITimer.TYPE_ONE_SHOT);
-    this._log.debug("Scheduling next autoconnect attempt in " +
-                    interval / 1000 + " seconds.");
+    this._log.debug("Autoconnect failed: " + failureReason + "; retrying in " +
+      Math.ceil(interval / 1000) + " sec.");
+    Utils.delay(function() this._autoConnect(), interval, this, "_autoTimer");
   },
 
   persistLogin: function persistLogin() {
@@ -724,13 +711,13 @@ WeaveSvc.prototype = {
         throw "Login failed: " + this.status.login;
       }
 
+      // No need to try automatically connecting after a successful login
+      if (this._autoTimer)
+        this._autoTimer.clear();
+
       this._loggedIn = true;
       // Try starting the sync timer now that we're logged in
       this._checkSyncStatus();
-      if (this._autoConnectTimer) {
-        this._autoConnectTimer.cancel();
-        this._autoConnectTimer = null;
-      }
 
       return true;
     })))(),
@@ -990,10 +977,8 @@ WeaveSvc.prototype = {
    */
   _clearSyncTriggers: function _clearSyncTriggers() {
     // Clear out any scheduled syncs
-    if (this._syncTimer) {
-      this._syncTimer.cancel();
-      this._syncTimer = null;
-    }
+    if (this._syncTimer)
+      this._syncTimer.clear();
 
     // Clear out a sync that's just waiting for idle if we happen to have one
     try {
@@ -1036,20 +1021,8 @@ WeaveSvc.prototype = {
     if (!interval)
       interval = this.status.backoffInterval || SCHEDULED_SYNC_INTERVAL;
 
-    // if there's an existing timer, cancel it and restart
-    if (this._syncTimer)
-      this._syncTimer.cancel();
-    else
-      this._syncTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
-    let listener = new Utils.EventListener(Utils.bind2(this,
-      function WeaveSvc__scheduleNextSyncCallback(timer) {
-        this._syncTimer = null;
-        this.syncOnIdle();
-      }));
-    this._syncTimer.initWithCallback(listener, interval,
-                                     Ci.nsITimer.TYPE_ONE_SHOT);
-    this._log.debug("Next sync call in: " + this._syncTimer.delay / 1000 + " seconds.")
+    this._log.debug("Next sync in " + Math.ceil(interval / 1000) + " sec.");
+    Utils.delay(function() this.syncOnIdle(), interval, this, "_syncTimer");
   },
 
   _syncErrors: 0,
