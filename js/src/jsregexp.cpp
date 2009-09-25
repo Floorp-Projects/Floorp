@@ -3087,12 +3087,11 @@ class RegExpNativeCompiler {
                       sizeof(VMSideExit) +
                       (re_length-1) * sizeof(jschar));
         GuardRecord* guard = (GuardRecord *) alloc.alloc(len);
-        memset(guard, 0, len);
         VMSideExit* exit = (VMSideExit*)(guard+1);
         guard->exit = exit;
         guard->exit->target = fragment;
         fragment->lastIns = lir->insGuard(LIR_x, NULL, guard);
-        // guard->profCount is memset'd to zero
+        // guard->profCount is calloc'd to zero
         verbose_only(
             guard->profGuardID = fragment->guardNumberer++;
             guard->nextInFrag = fragment->guardsForFrag;
