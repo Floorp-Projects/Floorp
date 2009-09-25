@@ -6730,6 +6730,9 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
             else if (mIMEData->mEnabled == nsIWidget::IME_STATUS_PASSWORD)
                mode |= HILDON_GTK_INPUT_MODE_INVISIBLE;
 
+            // Turn off auto-capitalization for editboxes
+            mode &= ~HILDON_GTK_INPUT_MODE_AUTOCAP;
+
             g_object_set (G_OBJECT(IMEGetContext()), "hildon-input-mode", (HildonGtkInputMode)mode, NULL);
             gIMEVirtualKeyboardOpened = PR_TRUE;
             hildon_gtk_im_context_show (IMEGetContext());
