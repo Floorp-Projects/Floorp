@@ -281,7 +281,7 @@ ContentPrefService.prototype = {
       selectGroupsStmt.params.setting = settingID;
     
       var groups = [];
-      while (selectGroupsStmt.step()) {
+      while (selectGroupsStmt.executeStep()) {
         groups.push(selectGroupsStmt.row["groupName"]);
       }
     }
@@ -426,7 +426,7 @@ ContentPrefService.prototype = {
       this._stmtSelectPref.params.group = aGroup;
       this._stmtSelectPref.params.setting = aSetting;
 
-      if (this._stmtSelectPref.step())
+      if (this._stmtSelectPref.executeStep())
         value = this._stmtSelectPref.row["value"];
     }
     finally {
@@ -456,7 +456,7 @@ ContentPrefService.prototype = {
     try {
       this._stmtSelectGlobalPref.params.name = aName;
 
-      if (this._stmtSelectGlobalPref.step())
+      if (this._stmtSelectGlobalPref.executeStep())
         value = this._stmtSelectGlobalPref.row["value"];
     }
     finally {
@@ -484,7 +484,7 @@ ContentPrefService.prototype = {
     try {
       this._stmtSelectGroupID.params.name = aName;
 
-      if (this._stmtSelectGroupID.step())
+      if (this._stmtSelectGroupID.executeStep())
         id = this._stmtSelectGroupID.row["id"];
     }
     finally {
@@ -526,7 +526,7 @@ ContentPrefService.prototype = {
     try {
       this._stmtSelectSettingID.params.name = aName;
 
-      if (this._stmtSelectSettingID.step())
+      if (this._stmtSelectSettingID.executeStep())
         id = this._stmtSelectSettingID.row["id"];
     }
     finally {
@@ -569,7 +569,7 @@ ContentPrefService.prototype = {
       this._stmtSelectPrefID.params.groupID = aGroupID;
       this._stmtSelectPrefID.params.settingID = aSettingID;
 
-      if (this._stmtSelectPrefID.step())
+      if (this._stmtSelectPrefID.executeStep())
         id = this._stmtSelectPrefID.row["id"];
     }
     finally {
@@ -595,7 +595,7 @@ ContentPrefService.prototype = {
     try {
       this._stmtSelectGlobalPrefID.params.settingID = aSettingID;
 
-      if (this._stmtSelectGlobalPrefID.step())
+      if (this._stmtSelectGlobalPrefID.executeStep())
         id = this._stmtSelectGlobalPrefID.row["id"];
     }
     finally {
@@ -708,7 +708,7 @@ ContentPrefService.prototype = {
     try {
       this._stmtSelectPrefs.params.group = aGroup;
 
-      while (this._stmtSelectPrefs.step())
+      while (this._stmtSelectPrefs.executeStep())
         prefs.setProperty(this._stmtSelectPrefs.row["name"],
                           this._stmtSelectPrefs.row["value"]);
     }
@@ -737,7 +737,7 @@ ContentPrefService.prototype = {
                 createInstance(Ci.nsIWritablePropertyBag);
 
     try {
-      while (this._stmtSelectGlobalPrefs.step())
+      while (this._stmtSelectGlobalPrefs.executeStep())
         prefs.setProperty(this._stmtSelectGlobalPrefs.row["name"],
                           this._stmtSelectGlobalPrefs.row["value"]);
     }
@@ -769,7 +769,7 @@ ContentPrefService.prototype = {
     try {
       this._stmtSelectPrefsByName.params.setting = aName;
 
-      while (this._stmtSelectPrefsByName.step())
+      while (this._stmtSelectPrefsByName.executeStep())
         prefs.setProperty(this._stmtSelectPrefsByName.row["groupName"],
                           this._stmtSelectPrefsByName.row["value"]);
     }
@@ -833,10 +833,7 @@ ContentPrefService.prototype = {
       throw ex;
     }
 
-    var wrappedStatement = Cc["@mozilla.org/storage/statement-wrapper;1"].
-                           createInstance(Ci.mozIStorageStatementWrapper);
-    wrappedStatement.initialize(statement);
-    return wrappedStatement;
+    return statement;
   },
 
   // _dbInit and the methods it calls (_dbCreate, _dbMigrate, and version-
