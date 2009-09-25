@@ -267,25 +267,28 @@ struct ParamTraits<NPWindow>
     unsigned long window;
     int32_t x, y;
     uint32_t width, height;
+    NPRect clipRect;
     NPWindowType type;
-    if (aMsg->ReadULong(aIter, &window) &&
-        ReadParam(aMsg, aIter, &x) &&
-        ReadParam(aMsg, aIter, &y) &&
-        ReadParam(aMsg, aIter, &width) &&
-        ReadParam(aMsg, aIter, &height) &&
-        ReadParam(aMsg, aIter, &type)) {
-      aResult->window = (void*)window;
-      aResult->x = x;
-      aResult->y = y;
-      aResult->width = width;
-      aResult->height = height;
+    if (!(aMsg->ReadULong(aIter, &window) &&
+          ReadParam(aMsg, aIter, &x) &&
+          ReadParam(aMsg, aIter, &y) &&
+          ReadParam(aMsg, aIter, &width) &&
+          ReadParam(aMsg, aIter, &height) &&
+          ReadParam(aMsg, aIter, &clipRect) &&
+          ReadParam(aMsg, aIter, &type)))
+      return false;
+
+    aResult->window = (void*)window;
+    aResult->x = x;
+    aResult->y = y;
+    aResult->width = width;
+    aResult->height = height;
+    aResult->clipRect = clipRect;
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
-      aResult->ws_info = 0;     // graphics code fills this in
+    aResult->ws_info = 0;     // graphics code fills this in
 #endif
-      aResult->type = type;
-      return true;
-    }
-    return false;
+    aResult->type = type;
+    return true;
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog)
