@@ -6804,6 +6804,9 @@ js_arm_check_arch() {
 
 static bool
 js_arm_check_vfp() {
+#ifdef WINCE_WINDOWS_MOBILE
+    return false;
+#else
     bool ret = false;
     __try {
         js_arm_try_vfp_op();
@@ -6812,6 +6815,7 @@ js_arm_check_vfp() {
         ret = false;
     }
     return ret;
+#endif
 }
 
 #define HAVE_ENABLE_DISABLE_DEBUGGER_EXCEPTIONS 1
