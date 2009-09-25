@@ -2836,7 +2836,6 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
     JSObject *obj, *parent;
     uint16 depth, count, i;
     uint32 tmp;
-    JSTempValueRooter tvr;
     JSScopeProperty *sprop;
     jsid propid;
     JSAtom *atom;
@@ -2884,12 +2883,10 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
         STOBJ_SET_PARENT(obj, parent);
     }
 
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(obj), &tvr);
+    JSAutoTempValueRooter tvr(cx, obj);
 
-    if (!JS_XDRUint32(xdr, &tmp)) {
-        JS_POP_TEMP_ROOT(cx, &tvr);
-        return JS_FALSE;
-    }
+    if (!JS_XDRUint32(xdr, &tmp))
+        return false;
 
     if (xdr->mode == JSXDR_DECODE) {
         depth = (uint16)(tmp >> 16);
@@ -2923,15 +2920,12 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
         /* XDR the real id, then the shortid. */
         if (!js_XDRStringAtom(xdr, &atom) ||
             !JS_XDRUint16(xdr, (uint16 *)&shortid)) {
-            ok = JS_FALSE;
-            break;
+            return false;
         }
 
         if (xdr->mode == JSXDR_DECODE) {
-            if (!js_DefineBlockVariable(cx, obj, ATOM_TO_JSID(atom), shortid)) {
-                ok = JS_FALSE;
-                break;
-            }
+            if (!js_DefineBlockVariable(cx, obj, ATOM_TO_JSID(atom), shortid))
+                return false;
         }
     }
 
@@ -2939,9 +2933,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
         /* Do as the parser does and make this block scope shareable. */
         OBJ_SCOPE(obj)->object = NULL;
     }
-
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    return ok;
+    return true;
 }
 
 #endif
@@ -3447,29 +3439,22 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 {
     jsid id;
     jsval cval, rval;
-    JSTempValueRooter argtvr, tvr;
     JSObject *obj, *ctor;
 
-    JS_PUSH_TEMP_ROOT(cx, argc, argv, &argtvr);
+    JSAutoTempValueRooter argtvr(cx, argc, argv);
 
     if (!js_GetClassId(cx, clasp, &id) ||
         !js_FindClassObject(cx, parent, id, &cval)) {
-        JS_POP_TEMP_ROOT(cx, &argtvr);
         return NULL;
     }
 
     if (JSVAL_IS_PRIMITIVE(cval)) {
         js_ReportIsNotFunction(cx, &cval, JSV2F_CONSTRUCT | JSV2F_SEARCH_STACK);
-        JS_POP_TEMP_ROOT(cx, &argtvr);
         return NULL;
     }
 
-    /*
-     * Protect cval in case a crazy getter for .prototype uproots it.  After
-     * this point, all control flow must exit through label out with obj set.
-     */
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, cval, &tvr);
-    MUST_FLOW_THROUGH("out");
+    /* Protect cval in case a crazy getter for .prototype uproots it. */
+    JSAutoTempValueRooter tvr(cx, cval);
 
     /*
      * If proto or parent are NULL, set them to Constructor.prototype and/or
@@ -3481,8 +3466,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     if (!proto) {
         if (!ctor->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
                                &rval)) {
-            obj = NULL;
-            goto out;
+            return NULL;
         }
         if (JSVAL_IS_OBJECT(rval))
             proto = JSVAL_TO_OBJECT(rval);
@@ -3490,14 +3474,13 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 
     obj = js_NewObject(cx, clasp, proto, parent);
     if (!obj)
-        goto out;
+        return NULL;
 
     if (!js_InternalConstruct(cx, obj, cval, argc, argv, &rval))
-        goto bad;
+        return NULL;
 
     if (JSVAL_IS_PRIMITIVE(rval))
-        goto out;
-    obj = JSVAL_TO_OBJECT(rval);
+        return obj;
 
     /*
      * If the instance's class differs from what was requested, throw a type
@@ -3506,24 +3489,16 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
      * private data set at this point, then the constructor was replaced and
      * we should throw a type error.
      */
+    obj = JSVAL_TO_OBJECT(rval);
     if (OBJ_GET_CLASS(cx, obj) != clasp ||
         (!(~clasp->flags & (JSCLASS_HAS_PRIVATE |
                             JSCLASS_CONSTRUCT_PROTOTYPE)) &&
          !obj->getPrivate())) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_WRONG_CONSTRUCTOR, clasp->name);
-        goto bad;
+        return NULL;
     }
-
-out:
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    JS_POP_TEMP_ROOT(cx, &argtvr);
     return obj;
-
-bad:
-    cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-    obj = NULL;
-    goto out;
 }
 
 /* XXXbe if one adds props, deletes earlier props, adds more, the last added

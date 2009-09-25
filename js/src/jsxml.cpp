@@ -5466,20 +5466,14 @@ xml_attribute(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 xml_attributes(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval name;
-    JSObject *qn;
-    JSTempValueRooter tvr;
-    JSBool ok;
-
-    name = ATOM_KEY(cx->runtime->atomState.starAtom);
-    qn = ToAttributeName(cx, name);
+    jsval name = ATOM_KEY(cx->runtime->atomState.starAtom);
+    JSObject *qn = ToAttributeName(cx, name);
     if (!qn)
         return JS_FALSE;
     name = OBJECT_TO_JSVAL(qn);
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, name, &tvr);
-    ok = GetProperty(cx, JS_THIS_OBJECT(cx, vp), name, vp);
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    return ok;
+
+    JSAutoTempValueRooter tvr(cx, name);
+    return GetProperty(cx, JS_THIS_OBJECT(cx, vp), name, vp);
 }
 
 static JSXML *
