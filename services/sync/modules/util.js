@@ -588,13 +588,44 @@ let Utils = {
     fos.close();
   },
 
-  // Returns a timer that is scheduled to call the given callback as
-  // soon as possible.
-  makeTimerForCall: function makeTimerForCall(cb) {
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.initWithCallback(new Utils.EventListener(cb),
-                           0, timer.TYPE_ONE_SHOT);
-    return timer;
+  /**
+   * Return a timer that is scheduled to call the callback after waiting the
+   * provided time or as soon as possible. The timer will be set as a property
+   * of the provided object with the given timer name.
+   */
+  delay: function delay(callback, wait, thisObj, name) {
+    // Default to running right away
+    wait = wait || 0;
+
+    // Use a dummy object if one wasn't provided
+    thisObj = thisObj || {};
+
+    // Delay an existing timer if it exists
+    if (thisObj[name] instanceof Ci.nsITimer) {
+      thisObj[name].delay = wait;
+      return;
+    }
+
+    // Create a special timer that we can add extra properties
+    let timer = {};
+    timer.__proto__ = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
+    // Provide an easy way to clear out the timer
+    timer.clear = function() {
+      thisObj[name] = null;
+      timer.cancel();
+    };
+
+    // Initialize the timer with a smart callback
+    timer.initWithCallback({
+      notify: function notify() {
+        // Clear out the timer once it's been triggered
+        timer.clear();
+        callback.call(thisObj, timer);
+      }
+    }, wait, timer.TYPE_ONE_SHOT);
+
+    return thisObj[name] = timer;
   },
 
   open: function open(pathOrFile, mode, perms) {
@@ -742,35 +773,6 @@ let Utils = {
       this.__prefs.QueryInterface(Ci.nsIPrefBranch2);
     }
     return this.__prefs;
-  },
-
-  /*
-   * Event listener object
-   * Used to handle XMLHttpRequest and nsITimer callbacks
-   */
-
-  EventListener: function Weave_EventListener(handler, eventName) {
-    this._handler = handler;
-    this._eventName = eventName;
-    this._log = Log4Moz.repository.getLogger("Async.EventHandler");
-    this._log.level =
-      Log4Moz.Level[Utils.prefs.getCharPref("log.logger.async")];
-  }
-};
-
-Utils.EventListener.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback, Ci.nsISupports]),
-
-  // DOM event listener
-  handleEvent: function EL_handleEvent(event) {
-    this._log.trace("Handling event " + this._eventName);
-    this._handler(event);
-  },
-
-  // nsITimerCallback
-  notify: function EL_notify(timer) {
-    //this._log.trace("Timer fired");
-    this._handler(timer);
   }
 };
 
