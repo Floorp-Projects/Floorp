@@ -91,6 +91,7 @@ textbox[isempty="true"] {
 /* buttons ----------------------------------------------------------------- */
 .button-text,
 .toolbarbutton-text {
+  font-weight: normal;
   font-size: 2.4mm !important;
 }
 
@@ -201,6 +202,7 @@ radiogroup {
 }
 
 .radio-label {
+  font-weight: normal;
   font-size: 2.4mm !important;
 }
 
@@ -379,6 +381,7 @@ colorpicker > vbox {
 
 /* menulist ---------------------------------------------------------------- */
 .menulist-label {
+  font-weight: normal;
   font-size: 2.4mm !important;
 }
 
