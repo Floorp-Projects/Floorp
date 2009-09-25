@@ -66,6 +66,13 @@ child:
   rpc NPP_SetWindow(NPWindow window)
     returns (NPError rv);
 
+  rpc NPP_GetValue_NPPVpluginWindow()
+    returns (bool value, NPError result);
+  rpc NPP_GetValue_NPPVpluginTransparent()
+    returns (bool value, NPError result);
+  // this message is not used on non-X platforms
+  rpc NPP_GetValue_NPPVpluginNeedsXEmbed()
+    returns (bool value, NPError result);
   rpc NPP_GetValue_NPPVpluginScriptableNPObject()
     returns (PPluginScriptableObject value, NPError result);
 
@@ -83,6 +90,11 @@ parent:
     returns (PPluginScriptableObject value, NPError result);
   rpc NPN_GetValue_NPNVprivateModeBool()
     returns (bool value, NPError result);
+
+  rpc NPN_SetValue_NPPVpluginWindow(bool windowed)
+    returns (NPError result);
+  rpc NPN_SetValue_NPPVpluginTransparent(bool transparent)
+    returns (NPError result);
 
   rpc NPN_GetURL(nsCString url, nsCString target)
     returns (NPError result);

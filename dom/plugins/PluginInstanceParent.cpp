@@ -169,6 +169,28 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVprivateModeBool(bool* value,
     return true;
 }
 
+
+bool
+PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginWindow(
+    const bool& windowed, NPError* result)
+{
+    NPBool isWindowed = windowed;
+    *result = mNPNIface->setvalue(mNPP, NPPVpluginWindowBool,
+                                  (void*)isWindowed);
+    return true;
+}
+
+bool
+PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginTransparent(
+    const bool& transparent, NPError* result)
+{
+    NPBool isTransparent = transparent;
+    *result = mNPNIface->setvalue(mNPP, NPPVpluginTransparentBool,
+                                  (void*)isTransparent);
+    return true;
+}
+
+
 bool
 PluginInstanceParent::AnswerNPN_GetURL(const nsCString& url,
                                        const nsCString& target,
@@ -243,46 +265,90 @@ NPError
 PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
                                    void* _retval)
 {
-    _MOZ_LOG(__FUNCTION__);
+    printf("[PluginInstanceParent] NPP_GetValue(%s)\n",
+           NPPVariableToString(aVariable));
 
     switch (aVariable) {
 
-#ifdef OS_LINUX
-        // FIXME/cjones: HACK ALERT! should forward to child
-        case NPPVpluginNeedsXEmbed:
-            (*(PRBool*)_retval) = PR_TRUE;
-            return NPERR_NO_ERROR;
-#endif
+    case NPPVpluginWindowBool: {
+        bool windowed;
+        NPError rv;
 
-        case NPPVpluginScriptableNPObject: {
-            PPluginScriptableObjectParent* actor;
-            NPError rv;
-            if (!CallNPP_GetValue_NPPVpluginScriptableNPObject(&actor, &rv)) {
-                return NPERR_GENERIC_ERROR;
-            }
-
-            if (NPERR_NO_ERROR != rv) {
-                return rv;
-            }
-
-            const NPNetscapeFuncs* npn = mParent->GetNetscapeFuncs();
-            if (!npn) {
-                NS_WARNING("No netscape functions?!");
-                return NPERR_GENERIC_ERROR;
-            }
-
-            NPObject* object =
-                reinterpret_cast<PluginScriptableObjectParent*>(actor)->
-                    GetObject();
-            NS_ASSERTION(object, "This shouldn't ever be null!");
-
-            (*(NPObject**)_retval) = npn->retainobject(object);
-            return NPERR_NO_ERROR;
+        if (!CallNPP_GetValue_NPPVpluginWindow(&windowed, &rv)) {
+            return NPERR_GENERIC_ERROR;
         }
 
-        // TODO: more values
-        default:
+        if (NPERR_NO_ERROR != rv) {
+            return rv;
+        }
+
+        (*(NPBool*)_retval) = windowed;
+        return NPERR_NO_ERROR;
+    }
+
+    case NPPVpluginTransparentBool: {
+        bool transparent;
+        NPError rv;
+
+        if (!CallNPP_GetValue_NPPVpluginTransparent(&transparent, &rv)) {
             return NPERR_GENERIC_ERROR;
+        }
+
+        if (NPERR_NO_ERROR != rv) {
+            return rv;
+        }
+
+        (*(NPBool*)_retval) = transparent;
+        return NPERR_NO_ERROR;
+    }
+
+#ifdef OS_LINUX
+    case NPPVpluginNeedsXEmbed: {
+        bool needsXEmbed;
+        NPError rv;
+
+        if (!CallNPP_GetValue_NPPVpluginNeedsXEmbed(&needsXEmbed, &rv)) {
+            return NPERR_GENERIC_ERROR;
+        }
+
+        if (NPERR_NO_ERROR != rv) {
+            return rv;
+        }
+
+        (*(NPBool*)_retval) = needsXEmbed;
+        return NPERR_NO_ERROR;
+    }
+#endif
+
+    case NPPVpluginScriptableNPObject: {
+        PPluginScriptableObjectParent* actor;
+        NPError rv;
+        if (!CallNPP_GetValue_NPPVpluginScriptableNPObject(&actor, &rv)) {
+            return NPERR_GENERIC_ERROR;
+        }
+
+        if (NPERR_NO_ERROR != rv) {
+            return rv;
+        }
+
+        const NPNetscapeFuncs* npn = mParent->GetNetscapeFuncs();
+        if (!npn) {
+            NS_WARNING("No netscape functions?!");
+            return NPERR_GENERIC_ERROR;
+        }
+
+        NPObject* object =
+            reinterpret_cast<PluginScriptableObjectParent*>(actor)->
+            GetObject();
+        NS_ASSERTION(object, "This shouldn't ever be null!");
+
+        (*(NPObject**)_retval) = npn->retainobject(object);
+        return NPERR_NO_ERROR;
+    }
+
+    default:
+        printf("  unhandled var %s\n", NPPVariableToString(aVariable));
+        return NPERR_GENERIC_ERROR;
     }
 }
 
@@ -291,9 +357,22 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
 {
     _MOZ_LOG(__FUNCTION__);
 
+    NPEvent* npevent = reinterpret_cast<NPEvent*>(event);
+
+#if defined(OS_LINUX)
+    if (GraphicsExpose == npevent->type) {
+        printf("  schlepping drawable 0x%lx across the pipe\n",
+               npevent->xgraphicsexpose.drawable);
+
+        // FIXME: this is probably rather expensive, should only do it
+        // when necessary.  which raises the question: when is it
+        // necessary?
+        XSync(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), False);
+    }
+#endif
+
     int16_t handled;
-    if (!CallNPP_HandleEvent(*reinterpret_cast<NPEvent*>(event),
-                             &handled)) {
+    if (!CallNPP_HandleEvent(*npevent, &handled)) {
         return 0;               // no good way to handle errors here...
     }
 
