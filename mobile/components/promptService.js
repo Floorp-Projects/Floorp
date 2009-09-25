@@ -159,8 +159,10 @@ promptService.prototype = {
   
     // Note that if you change the following code, see the comment of
     // nsTextBoxFrame::UpdateAccessTitle.
-    
-     
+ 
+    if (!aLabel)
+      return;
+
     var accessKey = null;
     if (/ *\(\&([^&])\)(:)?$/.test(aLabel)) {
       aLabel = RegExp.leftContext + RegExp.$2;
