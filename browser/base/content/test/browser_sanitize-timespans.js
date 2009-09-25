@@ -591,7 +591,7 @@ function downloadExists(aID)
     "WHERE id = :id"
   );
   stmt.params.id = aID;
-  var rows = stmt.step();
+  var rows = stmt.executeStep();
   stmt.finalize();
   return rows;
 }
