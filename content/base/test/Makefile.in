@@ -314,6 +314,10 @@ _TEST_FILES = 	test_bug5141.html \
 		test_range_bounds.html \
 		test_bug514487.html \
 		$(NULL)
+
+# Disabled; see bug 396392: fails on MacOSX, Windows.
+#		test_range_bounds.html \
+
 # Disabled; see bug 492181
 #		test_plugin_freezing.html
 
