@@ -986,6 +986,23 @@ WeaveSvc.prototype = {
   },
 
   /**
+   * Remove any timers/observers that might trigger a sync
+   */
+  _clearSyncTriggers: function _clearSyncTriggers() {
+    // Clear out any scheduled syncs
+    if (this._syncTimer) {
+      this._syncTimer.cancel();
+      this._syncTimer = null;
+    }
+
+    // Clear out a sync that's just waiting for idle if we happen to have one
+    try {
+      Svc.Idle.removeIdleObserver(this, IDLE_TIME);
+    }
+    catch(ex) {}
+  },
+
+  /**
    * Check if we should be syncing and schedule the next sync, if it's not scheduled
    */
   _checkSyncStatus: function WeaveSvc__checkSyncStatus() {
@@ -993,15 +1010,7 @@ WeaveSvc.prototype = {
     // if we're in backoff, we'll schedule the next sync
     let reason = this._checkSync();
     if (reason && reason != kSyncBackoffNotMet) {
-      if (this._syncTimer) {
-        this._syncTimer.cancel();
-        this._syncTimer = null;
-      }
-
-      try {
-        Svc.Idle.removeIdleObserver(this, IDLE_TIME);
-      } catch(e) {} // this throws if there isn't an observer, but that's fine
-
+      this._clearSyncTriggers();
       this.status.service = STATUS_DISABLED;
       return;
     }
@@ -1093,10 +1102,8 @@ WeaveSvc.prototype = {
       throw reason;
     }
 
-    if (this._autoConnectTimer) {
-      this._autoConnectTimer.cancel();
-      this._autoConnectTimer = null;
-    }
+    // Clear out any potentially pending syncs now that we're syncing
+    this._clearSyncTriggers();
 
     if (!(this._remoteSetup()))
       throw "aborting sync, remote setup failed";
