@@ -42,17 +42,11 @@
 
 struct sa_stream {
   snd_pcm_t*        output_unit;
-  char              playing;
-  int64_t           bytes_played;
   int64_t           bytes_written;
 
   /* audio format info */
   unsigned int      rate;
   unsigned int      n_channels;
-  snd_pcm_uframes_t buffer_size;
-  snd_pcm_uframes_t period_size;
-  unsigned int      buffer_bytes;
-  unsigned int      period_bytes;
 };
 
 /*
@@ -110,8 +104,6 @@ sa_stream_create_pcm(
   }
 
   s->output_unit  = NULL;
-  s->playing      = 0;
-  s->bytes_played = 0;
   s->bytes_written = 0;
   s->rate         = rate;
   s->n_channels   = n_channels;
@@ -157,14 +149,6 @@ sa_stream_open(sa_stream_t *s) {
     return SA_ERROR_NOT_SUPPORTED;
   }
   
-  if (snd_pcm_get_params(s->output_unit, &s->buffer_size, &s->period_size) < 0) {
-    snd_pcm_close(s->output_unit);
-    s->output_unit = NULL;
-    return SA_ERROR_NOT_SUPPORTED;
-  }
-  s->period_bytes = (unsigned int)snd_pcm_frames_to_bytes(s->output_unit, s->period_size);
-  s->buffer_bytes = (unsigned int)snd_pcm_frames_to_bytes(s->output_unit, s->buffer_size);
-
   return SA_SUCCESS;
 }
 
@@ -174,16 +158,17 @@ sa_stream_destroy(sa_stream_t *s) {
   int result = SA_SUCCESS;
 
   if (s == NULL) {
-    return SA_SUCCESS;
+    return result;
   }
   /*
    * Shut down the audio output device.
    */
   if (s->output_unit != NULL) {
-    if (s->playing && snd_pcm_close(s->output_unit) < 0) {
+    if (snd_pcm_close(s->output_unit) < 0) {
       result = SA_ERROR_SYSTEM;
     }
   }
+  free(s);
   return result;
 }
 
@@ -197,7 +182,6 @@ sa_stream_destroy(sa_stream_t *s) {
 
 int
 sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
-  int result = SA_SUCCESS;
   snd_pcm_sframes_t frames, nframes;
 
   if (s == NULL || s->output_unit == NULL) {
@@ -210,34 +194,21 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
   nframes = snd_pcm_bytes_to_frames(s->output_unit, nbytes);
 
   while(nframes>0) {
-    snd_pcm_sframes_t len = s->period_size;
-    if(nframes < s->period_size)
-      len = nframes;
-    frames = snd_pcm_writei(s->output_unit, data, len);
-    if (frames == -EAGAIN || frames == -EINTR)
-      continue;
-
+    frames = snd_pcm_writei(s->output_unit, data, nframes);
     if (frames < 0) {
-      frames = snd_pcm_recover(s->output_unit, frames, 1);
-      if (frames < 0) {
-        printf("snc_pcm_recover error: %s\n", snd_strerror(frames));
+      int r = snd_pcm_recover(s->output_unit, frames, 1);
+      if (r < 0) {
         return SA_ERROR_SYSTEM;
       }
-      if(frames > 0 && frames < len)
-        printf("short write (expected %d, wrote %d)\n", (int)len, (int)frames);
+    } else {
+      nframes -= frames;
+      data = ((unsigned char *)data) + snd_pcm_frames_to_bytes(s->output_unit, frames);
     }
-    nframes -= len;
-
-    data = ((unsigned char *)data) + (unsigned int)snd_pcm_frames_to_bytes(s->output_unit, len);
   }
 
   s->bytes_written += nbytes;
 
-  if (!s->playing) {
-    s->playing = 1;
-  }
-
-  return result;
+  return SA_SUCCESS;
 }
 
 /*
@@ -248,20 +219,24 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
 
 int
 sa_stream_get_write_size(sa_stream_t *s, size_t *size) {
-  snd_pcm_status_t *status;
-  snd_pcm_uframes_t avail;
-  int r = 0;
+  snd_pcm_sframes_t avail;
+
   if (s == NULL || s->output_unit == NULL) {
     return SA_ERROR_NO_INIT;
   }
 
-  snd_pcm_status_alloca(&status);
-  if ((r = snd_pcm_status(s->output_unit, status)) < 0) {
-    *size = 0;
-    return SA_ERROR_SYSTEM;
-  }
+  do {
+    avail = snd_pcm_avail_update(s->output_unit);
+    if (avail < 0) {
+      int r = snd_pcm_recover(s->output_unit, avail, 1);
+      if (r < 0) {
+        return SA_ERROR_SYSTEM;
+      }
+      continue;
+    }
+    break;
+  } while (1);
 
-  avail = snd_pcm_status_get_avail(status);
   *size = snd_pcm_frames_to_bytes(s->output_unit, avail);
 
   return SA_SUCCESS;
@@ -269,7 +244,7 @@ sa_stream_get_write_size(sa_stream_t *s, size_t *size) {
 
 int
 sa_stream_get_position(sa_stream_t *s, sa_position_t position, int64_t *pos) {
-  int err;
+  snd_pcm_state_t state;
   snd_pcm_sframes_t delay;
   
   if (s == NULL || s->output_unit == NULL) {
@@ -280,26 +255,33 @@ sa_stream_get_position(sa_stream_t *s, sa_position_t position, int64_t *pos) {
     return SA_ERROR_NOT_SUPPORTED;
   }
 
-  if (snd_pcm_state(s->output_unit) != SND_PCM_STATE_RUNNING) {
-    delay = 0;
-  }
-  else if (snd_pcm_delay (s->output_unit, &delay) != 0) {
-    delay = 0;
-  }
-  if (delay < 0) {
-    snd_pcm_forward(s->output_unit, -delay);
-    delay = 0;
-  }
-  if (delay > s->buffer_size) {
-    delay = s->buffer_size;
+  state = snd_pcm_state(s->output_unit);
+  if (state == SND_PCM_STATE_XRUN) {
+    if (snd_pcm_recover(s->output_unit, -EPIPE, 1) < 0) {
+      return SA_ERROR_SYSTEM;
+    }
+    state = snd_pcm_state(s->output_unit);
   }
 
-  snd_pcm_avail_update(s->output_unit);
-  // delay means audio is 'x' frames behind what we've written. We need to
-  // subtract the delay from the data written to return the actual bytes played.
-  s->bytes_played = s->bytes_written - snd_pcm_frames_to_bytes(s->output_unit, delay);
+  if (state == SND_PCM_STATE_RUNNING) {
+    if (snd_pcm_delay(s->output_unit, &delay) != 0) {
+      return SA_ERROR_SYSTEM;
+    }
+  } else {
+    delay = 0;
+  }
 
-  *pos = s->bytes_played;
+  /* delay means audio is 'x' frames behind what we've written. We need to
+     subtract the delay from the data written to return the actual bytes played.
+
+     due to buffering, the delay can be larger than the amount we've
+     written--in this case, report position as zero. */
+  *pos = s->bytes_written;
+  if (*pos >= snd_pcm_frames_to_bytes(s->output_unit, delay)) {
+    *pos -= snd_pcm_frames_to_bytes(s->output_unit, delay);
+  } else {
+    *pos = 0;
+  }
 
   return SA_SUCCESS;
 }

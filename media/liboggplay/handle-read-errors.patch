@@ -1,0 +1,26 @@
+diff --git a/media/liboggplay/src/liboggplay/oggplay.c b/media/liboggplay/src/liboggplay/oggplay.c
+--- a/media/liboggplay/src/liboggplay/oggplay.c
++++ b/media/liboggplay/src/liboggplay/oggplay.c
+@@ -136,16 +136,22 @@ oggplay_initialise(OggPlay *me, int bloc
+       
+       case OGGZ_ERR_OUT_OF_MEMORY:
+         /* ran out of memory during decoding! */
+         return E_OGGPLAY_OUT_OF_MEMORY;
+       
+       case OGGZ_ERR_STOP_ERR:
+         /* */
+         return E_OGGPLAY_BAD_OGGPLAY;
++
++      default:
++        /* If the read otherwise failed, bail out. */
++        if (i < 0)
++          return E_OGGPLAY_BAD_INPUT;
++        break;
+     }
+ 
+     if (me->all_tracks_initialised) {
+       break;
+     }
+   }
+ 
+   /*

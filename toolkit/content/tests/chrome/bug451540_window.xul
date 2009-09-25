@@ -54,6 +54,13 @@
     var gFindBar = null;
     var gBrowser;
 
+    var sendCtrl = true;
+    var sendMeta = false;
+    if (navigator.platform.indexOf("Mac") >= 0) {
+      sendCtrl = false;
+      sendMeta = true;
+    }
+
     var imports = [ "SimpleTest", "ok", "finish"];
       for each (var import in imports) {
         window[import] = window.opener.wrappedJSObject[import];
@@ -97,7 +104,13 @@
       // Perform search and turn on highlighting
       gFindBar._find();
       highlightButton.click();
+
+      // Move caret to start of element
       aElement.focus();
+      synthesizeKey(aElement, true, KeyEvent.DOM_VK_UP,
+                    sendCtrl, false, sendMeta);
+      synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
+                    sendCtrl, false, sendMeta);
     }
 
     function synthesizeKey(target, isKeyCode, key, ctlKey, shiftKey, metaKey) {
@@ -120,13 +133,6 @@
       if (matchCase.checked)
         matchCase.doCommand();
 
-      var sendCtrl = true;
-      var sendMeta = false;
-      if (navigator.platform.indexOf("Mac") >= 0) {
-        sendCtrl = false;
-        sendMeta = true;
-      }
-
       // First check match has been correctly highlighted
       resetForNextTest(aElement);
       if (aElement instanceof Ci.nsIDOMNSEditableElement) {
@@ -136,10 +142,6 @@
              " correctly highlighted match");
 
         // Test 2: check highlight removed when text added within the highlight
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_UP,
-                      sendCtrl, false, sendMeta);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
-                      sendCtrl, false, sendMeta);
         synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
                       false, false, false);
         synthesizeKey(aElement, false, KeyEvent.DOM_VK_A,
@@ -149,10 +151,6 @@
 
         // Test 3: check highlighting remains when text added before highlight
         resetForNextTest(aElement);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_UP,
-                      sendCtrl, false, sendMeta);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
-                      sendCtrl, false, sendMeta);
         synthesizeKey(aElement, false, KeyEvent.DOM_VK_A,
                       false, false, false);
         ok(selection.rangeCount == 1, aTestTypeText +
@@ -160,10 +158,6 @@
 
         //  Test 4: check highlighting remains when text added after highlight
         resetForNextTest(aElement);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_UP,
-                      sendCtrl, false, sendMeta);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
-                      sendCtrl, false, sendMeta);
         for (var x = 0; x < SEARCH_TEXT.length; x++)
           synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
                         false, false, false);
@@ -174,10 +168,6 @@
 
         // Test 5: deleting text within the highlight
         resetForNextTest(aElement);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_UP,
-                      sendCtrl, false, sendMeta);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
-                      sendCtrl, false, sendMeta);
         synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
                       false, false, false);
         synthesizeKey(aElement, true, KeyEvent.DOM_VK_BACK_SPACE,
@@ -187,10 +177,6 @@
         
         // Test 6: deleting text at end of highlight
         resetForNextTest(aElement, SEARCH_TEXT+"A");
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_UP,
-                      sendCtrl, false, sendMeta);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
-                      sendCtrl, false, sendMeta);
         for (var x = 0; x < aElement.value.length; x++)
           synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
                         false, false, false);
@@ -201,10 +187,6 @@
 
         // Test 7: deleting text at start of highlight
         resetForNextTest(aElement, "A"+SEARCH_TEXT);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_UP,
-                      sendCtrl, false, sendMeta);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
-                      sendCtrl, false, sendMeta);
         synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
                       false, false, false);
         synthesizeKey(aElement, true, KeyEvent.DOM_VK_BACK_SPACE,
@@ -214,10 +196,80 @@
 
         // Test 8: deleting selection
         resetForNextTest(aElement);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_UP,
-                      sendCtrl, false, sendMeta);
         synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
+                      false, true, false);
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
+                      false, true, false);
+        synthesizeKey(aElement, false, KeyEvent.DOM_VK_X,
                       sendCtrl, false, sendMeta);
+        ok(selection.rangeCount == 0, aTestTypeText +
+             " correctly removed highlight on selection deletion");
+
+        // Test 9: Multiple matches within one editor (part 1)
+        // Check second match remains highlighted after inserting text into
+        // first match, and that its highlighting gets removed when the
+        // second match is edited
+        resetForNextTest(aElement, SEARCH_TEXT + " " + SEARCH_TEXT);
+        ok(selection.rangeCount == 2, aTestTypeText +
+             " correctly highlighted both matches");
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
+                      false, false, false);
+        synthesizeKey(aElement, false, KeyEvent.DOM_VK_A,
+                      false, false, false);
+        ok(selection.rangeCount == 1, aTestTypeText +
+             " correctly removed only the first highlight on text insertion");
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
+                    sendCtrl, false, sendMeta);
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
+                    sendCtrl, false, sendMeta);
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
+                      false, false, false);
+        synthesizeKey(aElement, false, KeyEvent.DOM_VK_A,
+                      false, false, false);
+        ok(selection.rangeCount == 0, aTestTypeText +
+             " correctly removed second highlight on text insertion");
+
+        // Test 10: Multiple matches within one editor (part 2)
+        // Check second match remains highlighted after deleting text in
+        // first match, and that its highlighting gets removed when the
+        // second match is edited
+        resetForNextTest(aElement, SEARCH_TEXT + " " + SEARCH_TEXT);
+        ok(selection.rangeCount == 2, aTestTypeText +
+             " correctly highlighted both matches");
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
+                      false, false, false);
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_BACK_SPACE,
+                      false, false, false);
+        ok(selection.rangeCount == 1, aTestTypeText +
+             " correctly removed only the first highlight on text deletion");
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
+                    sendCtrl, false, sendMeta);
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
+                    sendCtrl, false, sendMeta);
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
+                      false, false, false);
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_BACK_SPACE,
+                      false, false, false);
+        ok(selection.rangeCount == 0, aTestTypeText +
+             " correctly removed second highlight on text deletion");
+
+        // Test 11: Multiple matches within one editor (part 3)
+        // Check second match remains highlighted after deleting selection
+        // in first match, and that second match highlighting gets correctly
+        // removed when it has a selection deleted from it
+        resetForNextTest(aElement, SEARCH_TEXT + " " + SEARCH_TEXT);
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
+                      false, true, false);
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
+                      false, true, false);
+        synthesizeKey(aElement, false, KeyEvent.DOM_VK_X,
+                      sendCtrl, false, sendMeta);
+        ok(selection.rangeCount == 1, aTestTypeText +
+             " correctly removed only first highlight on selection deletion");
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
+                    sendCtrl, false, sendMeta);
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
+                    sendCtrl, false, sendMeta);
         synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
                       false, true, false);
         synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
@@ -225,7 +277,7 @@
         synthesizeKey(aElement, false, KeyEvent.DOM_VK_X,
                       sendCtrl, false, sendMeta);
         ok(selection.rangeCount == 0, aTestTypeText +
-             " correctly removed highlight on selection deletion");
+             " correctly removed second highlight on selection deletion");
       }
     }
 

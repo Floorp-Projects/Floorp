@@ -74,6 +74,8 @@ class nsContainerFrame : public nsSplittableFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_QUERYFRAME_TARGET(nsContainerFrame)
+  NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
   NS_IMETHOD Init(nsIContent* aContent,
@@ -296,6 +298,17 @@ public:
   virtual nsresult StealFrame(nsPresContext* aPresContext,
                               nsIFrame*      aChild,
                               PRBool         aForceNormal = PR_FALSE);
+
+  /**
+   * Removes the next-siblings of aChild without destroying them and without
+   * requesting reflow. Checks the principal and overflow lists (not
+   * overflow containers / excess overflow containers). Does not check any
+   * other auxiliary lists.
+   * @param aChild a child frame or nsnull
+   * @return If aChild is non-null, the next-siblings of aChild, if any.
+   *         If aChild is null, all child frames on the principal list, if any.
+   */
+  nsFrameList StealFramesAfter(nsIFrame* aChild);
 
   /**
    * Add overflow containers to the display list

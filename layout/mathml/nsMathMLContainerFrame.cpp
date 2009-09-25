@@ -1342,7 +1342,7 @@ static ForceReflow gForceReflow;
 void
 nsMathMLContainerFrame::SetIncrementScriptLevel(PRInt32 aChildIndex, PRBool aIncrement)
 {
-  nsIFrame* child = nsFrameList(GetFirstChild(nsnull)).FrameAt(aChildIndex);
+  nsIFrame* child = GetChildList(nsnull).FrameAt(aChildIndex);
   if (!child)
     return;
   nsIContent* content = child->GetContent();

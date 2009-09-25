@@ -108,6 +108,7 @@ public:
                                           const nsAString& aFontName) = 0;
 
     // create a new platform font from downloaded data (@font-face)
+    // this method is responsible to ensure aFontData is NS_Free()'d
     virtual gfxFontEntry* MakePlatformFont(const gfxFontEntry *aProxyEntry,
                                            const PRUint8 *aFontData,
                                            PRUint32 aLength) = 0;

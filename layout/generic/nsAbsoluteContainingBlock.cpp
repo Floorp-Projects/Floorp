@@ -47,6 +47,8 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsHTMLParts.h"
 #include "nsPresContext.h"
+#include "nsFrameManager.h"
+#include "nsCSSFrameConstructor.h"
 
 #ifdef DEBUG
 #include "nsBlockFrame.h"
@@ -107,7 +109,7 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*      aDelegatingFrame,
                      NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
-nsresult
+void
 nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
                                        nsIAtom*        aListName,
                                        nsIFrame*       aOldFrame)
@@ -119,10 +121,7 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
       ->DeleteNextInFlowChild(aOldFrame->PresContext(), nif, PR_FALSE);
   }
 
-  PRBool result = mAbsoluteFrames.DestroyFrame(aOldFrame);
-  NS_ASSERTION(result, "didn't find frame to delete");
-
-  return result ? NS_OK : NS_ERROR_FAILURE;
+  mAbsoluteFrames.DestroyFrame(aOldFrame);
 }
 
 nsresult
@@ -159,11 +158,9 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
       if (!NS_FRAME_IS_FULLY_COMPLETE(kidStatus)) {
         // Need a continuation
         if (!nextFrame) {
-          nsresult rv = nsHTMLContainerFrame::CreateNextInFlow(aPresContext,
-                          aDelegatingFrame, kidFrame, nextFrame);
+          nsresult rv = aPresContext->PresShell()->FrameConstructor()->
+            CreateContinuingFrame(aPresContext, kidFrame, aDelegatingFrame, &nextFrame);
           NS_ENSURE_SUCCESS(rv, rv);
-          kidFrame->SetNextSibling(nextFrame->GetNextSibling());
-          nextFrame->SetNextSibling(nsnull);
         }
         // Add it as an overflow container.
         //XXXfr This is a hack to fix some of our printing dataloss.
@@ -549,7 +546,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
       aKidFrame->GetFrameName(name);
       printf("%s ", NS_LossyConvertUTF16toASCII(name).get());
     }
-    printf("%p rect=%d,%d,%d,%d\n", (void*)aKidFrame,
+    printf("%p rect=%d,%d,%d,%d\n", static_cast<void*>(aKidFrame),
            rect.x, rect.y, rect.width, rect.height);
   }
 #endif

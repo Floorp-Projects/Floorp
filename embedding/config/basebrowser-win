@@ -51,7 +51,7 @@ components\xpcom_components.xpt
 components\xpcom_ds.xpt
 components\xpcom_io.xpt
 components\xpcom_nativeapp.xpt
-components\xpcom_thread.xpt
+components\xpcom_threads.xpt
 components\xpcom_xpti.xpt
 components\mozreg.dll
 ;components\mozreg.xpt
@@ -113,7 +113,7 @@ components\cookie.dll
 components\appshell.dll                 
 components\appshell.xpt                 
 components\docshell.dll                 
-components\docshell_base.xpt            
+components\docshell.xpt
 components\uriloader.xpt
 components\chrome.dll                   
 components\chrome.xpt                   

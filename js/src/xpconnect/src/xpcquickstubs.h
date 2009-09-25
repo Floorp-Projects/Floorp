@@ -257,17 +257,41 @@ protected:
 class xpc_qsDOMString : public xpc_qsBasicString<nsAString, nsDependentString>
 {
 public:
-    xpc_qsDOMString(JSContext *cx, jsval v, jsval *pval);
+    /* Enum that defines how JS |null| and |undefined| should be treated.  See
+     * the WebIDL specification.  eStringify means convert to the string "null"
+     * or "undefined" respectively, via the standard JS ToString() operation;
+     * eEmpty means convert to the string ""; eNull means convert to an empty
+     * string with the void bit set.
+     *
+     * Per webidl the default behavior of an unannotated interface is
+     * eStringify, but our de-facto behavior has been eNull for |null| and
+     * eStringify for |undefined|, so leaving it that way for now.  If we ever
+     * get to a point where we go through and annotate our interfaces as
+     * needed, we can change that.
+     */
+    enum StringificationBehavior {
+        eStringify,
+        eEmpty,
+        eNull,
+        eDefaultNullBehavior = eNull,
+        eDefaultUndefinedBehavior = eStringify
+    };
+
+    xpc_qsDOMString(JSContext *cx, jsval v, jsval *pval,
+                    StringificationBehavior nullBehavior,
+                    StringificationBehavior undefinedBehavior);
 };
 
 /**
  * The same as xpc_qsDOMString, but with slightly different conversion behavior,
  * corresponding to the [astring] magic XPIDL annotation rather than [domstring].
  */
-class xpc_qsAString : public xpc_qsBasicString<nsAString, nsDependentString>
+class xpc_qsAString : public xpc_qsDOMString
 {
 public:
-    xpc_qsAString(JSContext *cx, jsval v, jsval *pval);
+    xpc_qsAString(JSContext *cx, jsval v, jsval *pval)
+        : xpc_qsDOMString(cx, v, pval, eNull, eNull)
+    {}
 };
 
 /**

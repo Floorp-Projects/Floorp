@@ -1033,11 +1033,17 @@ protected:
   static PRBool TryChannelCharset(nsIChannel *aChannel,
                                   PRInt32& aCharsetSource,
                                   nsACString& aCharset);
-  
+
   void UpdateLinkMap();
   // Call this before the document does something that will unbind all content.
   // That will stop us from resolving URIs for all links as they are removed.
   void DestroyLinkMap();
+
+  // Refreshes the hrefs of all the links in the document.
+  void RefreshLinkHrefs();
+
+  nsIContent* GetFirstBaseNodeWithHref();
+  nsresult SetFirstBaseNodeWithHref(nsIContent *node);
 
   // Get the root <html> element, or return null if there isn't one (e.g.
   // if the root isn't <html>)
@@ -1212,6 +1218,8 @@ protected:
   // The application cache that this document is associated with, if
   // any.  This can change during the lifetime of the document.
   nsCOMPtr<nsIApplicationCache> mApplicationCache;
+
+  nsCOMPtr<nsIContent> mFirstBaseNodeWithHref;
 
 private:
   friend class nsUnblockOnloadEvent;

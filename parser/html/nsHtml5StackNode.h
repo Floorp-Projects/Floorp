@@ -42,8 +42,9 @@
 #include "nsHtml5NamedCharacters.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
+#include "nsIUnicodeDecoder.h"
 
-class nsHtml5Parser;
+class nsHtml5StreamParser;
 
 class nsHtml5Tokenizer;
 class nsHtml5TreeBuilder;
@@ -67,14 +68,17 @@ class nsHtml5StackNode
     PRBool scoping;
     PRBool special;
     PRBool fosterParenting;
+    nsHtml5HtmlAttributes* attributes;
   private:
     PRInt32 refcount;
   public:
-    nsHtml5StackNode(PRInt32 group, PRInt32 ns, nsIAtom* name, nsIContent* node, PRBool scoping, PRBool special, PRBool fosterParenting, nsIAtom* popName);
+    nsHtml5StackNode(PRInt32 group, PRInt32 ns, nsIAtom* name, nsIContent* node, PRBool scoping, PRBool special, PRBool fosterParenting, nsIAtom* popName, nsHtml5HtmlAttributes* attributes);
     nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent* node);
+    nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent* node, nsHtml5HtmlAttributes* attributes);
     nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent* node, nsIAtom* popName);
     nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent* node, nsIAtom* popName, PRBool scoping);
     ~nsHtml5StackNode();
+    void dropAttributes();
     void retain();
     void release();
     static void initializeStatics();

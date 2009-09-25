@@ -808,3 +808,6 @@ xpicleanup@BIN_SUFFIX@
 chrome.manifest
 install.rdf
 @DLL_PREFIX@jsj@DLL_SUFFIX@
+#ifdef XP_WIN
+components/brwsrcmp.dll
+#endif

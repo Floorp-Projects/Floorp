@@ -78,8 +78,17 @@ tier_external_dirs	+= gfx/qcms
 
 tier_gecko_dirs += \
 		js/src/xpconnect \
+		js/ctypes \
 		intl/chardet \
 		$(NULL)
+
+ifdef BUILD_CTYPES
+ifndef _MSC_VER
+tier_gecko_staticdirs += \
+		js/ctypes/libffi \
+		$(NULL)
+endif
+endif
 
 ifdef MOZ_ENABLE_GTK2
 ifdef MOZ_X11
@@ -147,14 +156,6 @@ tier_gecko_dirs	+= \
 		embedding \
 		xpfe/appshell \
 		$(NULL)
-
-ifdef MOZ_XMLEXTRAS
-tier_gecko_dirs += extensions/xmlextras
-endif
-
-ifdef MOZ_WEBSERVICES
-tier_gecko_dirs += extensions/webservices
-endif
 
 ifdef MOZ_UNIVERSALCHARDET
 tier_gecko_dirs += extensions/universalchardet

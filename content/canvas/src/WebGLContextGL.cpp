@@ -1,4 +1,42 @@
 /* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir@pobox.com> (original author)
+ *   Mark Steele <mwsteele@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 #include "WebGLContext.h"
 
 #include "nsString.h"
@@ -69,9 +107,9 @@ NS_IMETHODIMP WebGLContext::name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6) { \
 //  WebGL API
 //
 
-/* nsIWebGLFloatArray createFloatArray (); */
+/* nsICanvasFloatArray createFloatArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateFloatArray(nsIWebGLFloatArray **retval)
+WebGLContext::CreateFloatArray(nsICanvasFloatArray **retval)
 {
     NativeJSContext js;
 
@@ -88,8 +126,6 @@ WebGLContext::CreateFloatArray(nsIWebGLFloatArray **retval)
     {
             return NS_ERROR_DOM_SYNTAX_ERR;
     }
-
-    SimpleBuffer sbuffer(LOCAL_GL_FLOAT, 1, js.ctx, arrayObj, arrayLen);
 
     WebGLFloatArray *wgfa = new WebGLFloatArray(js.ctx, arrayObj, arrayLen);
     if (wgfa)
@@ -98,9 +134,9 @@ WebGLContext::CreateFloatArray(nsIWebGLFloatArray **retval)
     return NS_OK;
 }
 
-/* nsIWebGLShortArray createShortArray (); */
+/* nsICanvasByteArray createByteArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateShortArray(nsIWebGLShortArray **retval)
+WebGLContext::CreateByteArray(nsICanvasByteArray **retval)
 {
     NativeJSContext js;
 
@@ -118,44 +154,15 @@ WebGLContext::CreateShortArray(nsIWebGLShortArray **retval)
             return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
-    SimpleBuffer sbuffer(LOCAL_GL_SHORT, 1, js.ctx, arrayObj, arrayLen);
-
-    WebGLShortArray *wgsa = new WebGLShortArray(js.ctx, arrayObj, arrayLen);
-    if (wgsa)
-        NS_ADDREF(*retval = wgsa);
+    WebGLByteArray *wgba = new WebGLByteArray(js.ctx, arrayObj, arrayLen);
+    if (wgba)
+        NS_ADDREF(*retval = wgba);
     return NS_OK;
 }
 
-/* nsIWebGLUnsignedShortArray createUnsignedShortArray (); */
-NS_IMETHODIMP WebGLContext::CreateUnsignedShortArray(nsIWebGLUnsignedShortArray **retval)
-{
-    NativeJSContext js;
-
-    if (js.argc != 1)
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
-    JSObject *arrayObj;
-    jsuint arrayLen;
-
-    if (!::JS_ConvertArguments(js.ctx, js.argc, js.argv, "o", &arrayObj) ||
-        arrayObj == NULL ||
-        !::JS_IsArrayObject(js.ctx, arrayObj) ||
-        !::JS_GetArrayLength(js.ctx, arrayObj, &arrayLen))
-    {
-            return NS_ERROR_DOM_SYNTAX_ERR;
-    }
-
-    SimpleBuffer sbuffer(LOCAL_GL_UNSIGNED_SHORT, 1, js.ctx, arrayObj, arrayLen);
-
-    WebGLUnsignedShortArray *wgusa = new WebGLUnsignedShortArray(js.ctx, arrayObj, arrayLen);
-    if (wgusa)
-        NS_ADDREF(*retval = wgusa);
-    return NS_OK;
-}
-
-/* nsIWebGLUnsignedByteArray createUnsignedByteArray (); */
+/* nsICanvasUnsignedByteArray createUnsignedByteArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateUnsignedByteArray(nsIWebGLUnsignedByteArray **retval)
+WebGLContext::CreateUnsignedByteArray(nsICanvasUnsignedByteArray **retval)
 {
     NativeJSContext js;
 
@@ -172,8 +179,6 @@ WebGLContext::CreateUnsignedByteArray(nsIWebGLUnsignedByteArray **retval)
     {
             return NS_ERROR_DOM_SYNTAX_ERR;
     }
-
-    SimpleBuffer sbuffer(LOCAL_GL_UNSIGNED_SHORT, 1, js.ctx, arrayObj, arrayLen);
 
     WebGLUnsignedByteArray *wguba = new WebGLUnsignedByteArray(js.ctx, arrayObj, arrayLen);
     if (wguba)
@@ -181,12 +186,174 @@ WebGLContext::CreateUnsignedByteArray(nsIWebGLUnsignedByteArray **retval)
     return NS_OK;
 }
 
+/* nsICanvasShortArray createShortArray (); */
+NS_IMETHODIMP
+WebGLContext::CreateShortArray(nsICanvasShortArray **retval)
+{
+    NativeJSContext js;
+
+    if (js.argc != 1)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    JSObject *arrayObj;
+    jsuint arrayLen;
+
+    if (!::JS_ConvertArguments(js.ctx, js.argc, js.argv, "o", &arrayObj) ||
+        arrayObj == NULL ||
+        !::JS_IsArrayObject(js.ctx, arrayObj) ||
+        !::JS_GetArrayLength(js.ctx, arrayObj, &arrayLen))
+    {
+            return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    WebGLShortArray *wgsa = new WebGLShortArray(js.ctx, arrayObj, arrayLen);
+    if (wgsa)
+        NS_ADDREF(*retval = wgsa);
+    return NS_OK;
+}
+
+/* nsICanvasUnsignedShortArray createUnsignedShortArray (); */
+NS_IMETHODIMP
+WebGLContext::CreateUnsignedShortArray(nsICanvasUnsignedShortArray **retval)
+{
+    NativeJSContext js;
+
+    if (js.argc != 1)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    JSObject *arrayObj;
+    jsuint arrayLen;
+
+    if (!::JS_ConvertArguments(js.ctx, js.argc, js.argv, "o", &arrayObj) ||
+        arrayObj == NULL ||
+        !::JS_IsArrayObject(js.ctx, arrayObj) ||
+        !::JS_GetArrayLength(js.ctx, arrayObj, &arrayLen))
+    {
+            return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    WebGLUnsignedShortArray *wgusa = new WebGLUnsignedShortArray(js.ctx, arrayObj, arrayLen);
+    if (wgusa)
+        NS_ADDREF(*retval = wgusa);
+    return NS_OK;
+}
+
+
+/* nsICanvasUnsignedIntArray createUnsignedIntArray (); */
+NS_IMETHODIMP
+WebGLContext::CreateIntArray(nsICanvasIntArray **retval)
+{
+    NativeJSContext js;
+
+    if (js.argc != 1)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    JSObject *arrayObj;
+    jsuint arrayLen;
+
+    if (!::JS_ConvertArguments(js.ctx, js.argc, js.argv, "o", &arrayObj) ||
+        arrayObj == NULL ||
+        !::JS_IsArrayObject(js.ctx, arrayObj) ||
+        !::JS_GetArrayLength(js.ctx, arrayObj, &arrayLen))
+    {
+            return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    WebGLIntArray *wgia = new WebGLIntArray(js.ctx, arrayObj, arrayLen);
+    if (wgia)
+        NS_ADDREF(*retval = wgia);
+    return NS_OK;
+}
+
+/* nsICanvasUnsignedIntArray createUnsignedIntArray (); */
+NS_IMETHODIMP
+WebGLContext::CreateUnsignedIntArray(nsICanvasUnsignedIntArray **retval)
+{
+    NativeJSContext js;
+
+    if (js.argc != 1)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    JSObject *arrayObj;
+    jsuint arrayLen;
+
+    if (!::JS_ConvertArguments(js.ctx, js.argc, js.argv, "o", &arrayObj) ||
+        arrayObj == NULL ||
+        !::JS_IsArrayObject(js.ctx, arrayObj) ||
+        !::JS_GetArrayLength(js.ctx, arrayObj, &arrayLen))
+    {
+            return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    WebGLUnsignedIntArray *wguia = new WebGLUnsignedIntArray(js.ctx, arrayObj, arrayLen);
+    if (wguia)
+        NS_ADDREF(*retval = wguia);
+    return NS_OK;
+}
+
 /* readonly attribute nsIDOMHTMLCanvasElement canvas; */
 NS_IMETHODIMP
-WebGLContext::GetCanvas(nsIDOMHTMLCanvasElement * *aCanvas)
+WebGLContext::GetCanvas(nsIDOMHTMLCanvasElement **aCanvas)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+/* readonly attribute nsIWebGLBuffer currentArrayBufferBinding; */
+NS_IMETHODIMP
+WebGLContext::GetCurrentArrayBufferBinding(nsIWebGLBuffer **aCurrentArrayBufferBinding)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsIWebGLBuffer currentElementArrayBufferBinding; */
+NS_IMETHODIMP
+WebGLContext::GetCurrentElementArrayBufferBinding(nsIWebGLBuffer **aCurrentElementArrayBufferBinding)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsIWebGLFramebuffer currentFramebufferBinding; */
+NS_IMETHODIMP
+WebGLContext::GetCurrentFramebufferBinding(nsIWebGLFramebuffer **aCurrentFramebufferBinding)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsIWebGLRenderbuffer currentRenderbufferBinding; */
+NS_IMETHODIMP
+WebGLContext::GetCurrentRenderbufferBinding(nsIWebGLRenderbuffer **aCurrentRenderbufferBinding)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsIWebGLTexture currentTextureBinding2D; */
+NS_IMETHODIMP
+WebGLContext::GetCurrentTextureBinding2D(nsIWebGLTexture **aCurrentTextureBinding2D)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsIWebGLTexture currentTextureBindingCubeMap; */
+NS_IMETHODIMP
+WebGLContext::GetCurrentTextureBindingCubeMap(nsIWebGLTexture **aCurrentTextureBindingCubeMap)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsIWebGLProgram currentProgram; */
+NS_IMETHODIMP
+WebGLContext::GetCurrentProgram(nsIWebGLProgram **aCurrentProgram)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void present (); */
+NS_IMETHODIMP
+WebGLContext::Present()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 /* void GlActiveTexture (in PRUint32 texture); */
 NS_IMETHODIMP
@@ -341,7 +508,7 @@ GL_SAME_METHOD_2(BlendFunc, BlendFunc, PRUint32, PRUint32)
 GL_SAME_METHOD_4(BlendFuncSeparate, BlendFuncSeparate, PRUint32, PRUint32, PRUint32, PRUint32)
 
 NS_IMETHODIMP
-WebGLContext::BufferData(GLenum target, nsIWebGLNumberArray *na, GLenum usage)
+WebGLContext::BufferData(GLenum target, nsICanvasArray *na, GLenum usage)
 {
     WebGLBuffer *boundBuffer = NULL;
 
@@ -349,7 +516,7 @@ WebGLContext::BufferData(GLenum target, nsIWebGLNumberArray *na, GLenum usage)
         boundBuffer = mBoundArrayBuffer;
     } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
         if (na->NativeType() != LOCAL_GL_UNSIGNED_SHORT)
-            return ErrorMessage("glBufferDatA: GL_ELEMENT_ARRAY_BUFFER target must be used with UnsignedShortBuffer");
+            return ErrorMessage("glBufferData: %x - GL_ELEMENT_ARRAY_BUFFER target must be used with UnsignedShortBuffer", na->NativeType());
 
         boundBuffer = mBoundElementArrayBuffer;
     } else {
@@ -370,7 +537,7 @@ WebGLContext::BufferData(GLenum target, nsIWebGLNumberArray *na, GLenum usage)
 }
 
 NS_IMETHODIMP
-WebGLContext::BufferSubData(GLenum target, GLuint offset, nsIWebGLNumberArray *na)
+WebGLContext::BufferSubData(GLenum target, GLuint offset, nsICanvasArray *na)
 {
     WebGLBuffer *boundBuffer = NULL;
 
@@ -752,9 +919,8 @@ WebGLContext::DrawArrays(GLenum mode, GLint offset, GLsizei count)
     return NS_OK;
 }
 
-// XXX why are count & type swapped?
 NS_IMETHODIMP
-WebGLContext::DrawElements(GLenum mode, GLenum type, GLuint count, GLuint offset)
+WebGLContext::DrawElements(GLenum mode, GLuint count, GLenum type, GLuint offset)
 {
     switch (mode) {
         case LOCAL_GL_TRIANGLES:
@@ -904,7 +1070,7 @@ GL_SAME_METHOD_1(GenerateMipmap, GenerateMipmap, GLenum)
 
 // returns an object: { size: ..., type: ..., name: ... }
 NS_IMETHODIMP
-WebGLContext::GetActiveAttrib(nsIWebGLProgram *prog, PRUint32 index)
+WebGLContext::GetActiveAttrib(nsIWebGLProgram *prog, PRUint32 index, nsIWebGLActiveInfo **retval)
 {
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
@@ -941,7 +1107,7 @@ WebGLContext::GetActiveAttrib(nsIWebGLProgram *prog, PRUint32 index)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetActiveUniform(nsIWebGLProgram *prog, PRUint32 index)
+WebGLContext::GetActiveUniform(nsIWebGLProgram *prog, PRUint32 index, nsIWebGLActiveInfo **retval)
 {
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
@@ -1199,7 +1365,7 @@ WebGLContext::GetParameter(PRUint32 pname)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetBufferParameter(GLenum target, GLenum pname)
+WebGLContext::GetBufferParameteri(GLenum target, GLenum pname, GLint *retval)
 {
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -1227,7 +1393,7 @@ WebGLContext::GetBufferParameter(GLenum target, GLenum pname)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetFramebufferAttachmentParameter(GLenum target, GLenum attachment, GLenum pname)
+WebGLContext::GetFramebufferAttachmentParameteri(GLenum target, GLenum attachment, GLenum pname, GLint *retval)
 {
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -1264,7 +1430,7 @@ WebGLContext::GetFramebufferAttachmentParameter(GLenum target, GLenum attachment
 }
 
 NS_IMETHODIMP
-WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname)
+WebGLContext::GetRenderbufferParameteri(GLenum target, GLenum pname, GLint *retval)
 {
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -1297,7 +1463,7 @@ WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname)
 }
 
 NS_IMETHODIMP
-WebGLContext::GenBuffer(nsIWebGLBuffer **retval)
+WebGLContext::CreateBuffer(nsIWebGLBuffer **retval)
 {
     MakeContextCurrent();
 
@@ -1316,7 +1482,7 @@ WebGLContext::GenBuffer(nsIWebGLBuffer **retval)
 }
 
 NS_IMETHODIMP
-WebGLContext::GenTexture(nsIWebGLTexture **retval)
+WebGLContext::CreateTexture(nsIWebGLTexture **retval)
 {
     MakeContextCurrent();
 
@@ -1343,7 +1509,7 @@ WebGLContext::GetError(GLenum *_retval)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetProgramParameter(nsIWebGLProgram *prog, PRUint32 pname)
+WebGLContext::GetProgrami(nsIWebGLProgram *prog, PRUint32 pname, GLint *retval)
 {
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
@@ -1422,6 +1588,40 @@ WebGLContext::GetString(GLenum name, nsAString & _retval NS_OUTPARAM)
 
 /* XXX fix */
 /* void texParameter (); */
+NS_IMETHODIMP
+WebGLContext::TexParameterf(GLenum target, GLenum pname, GLfloat param)
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    if (js.argc != 3)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    MakeContextCurrent();
+
+    gl->fTexParameterf (target, pname, param);
+
+    return NS_OK;
+}
+NS_IMETHODIMP
+WebGLContext::TexParameteri(GLenum target, GLenum pname, GLint param)
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    if (js.argc != 3)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    MakeContextCurrent();
+
+    gl->fTexParameteri (target, pname, param);
+
+    return NS_OK;
+}
+
+#if 0
 NS_IMETHODIMP
 WebGLContext::TexParameter()
 {
@@ -1512,11 +1712,71 @@ WebGLContext::TexParameter()
 
     return NS_OK;
 }
+#endif
 
 /* XXX fix */
 /* void getTexParameter (); */
+
+/* GLfloat getTexParameterf (in GLenum target, in GLenum pname); */
 NS_IMETHODIMP
-WebGLContext::GetTexParameter(GLenum target, GLenum pname)
+WebGLContext::GetTexParameterf(GLenum target, GLenum pname, GLfloat *retval)
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    MakeContextCurrent();
+
+    switch (pname) {
+        case LOCAL_GL_TEXTURE_MIN_FILTER:
+        case LOCAL_GL_TEXTURE_MAG_FILTER:
+        case LOCAL_GL_TEXTURE_WRAP_S:
+        case LOCAL_GL_TEXTURE_WRAP_T:
+        {
+            float fv = 0;
+            gl->fGetTexParameterfv(target, pname, (GLfloat*) &fv);
+            js.SetRetVal(fv);
+        }
+            break;
+
+        default:
+            return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
+}
+
+/* nsICanvasArray getTexParameterfv (in GLenum target, in GLenum pname); */
+NS_IMETHODIMP
+WebGLContext::GetTexParameterfv(GLenum target, GLenum pname, nsICanvasArray **retval)
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    MakeContextCurrent();
+
+    switch (pname) {
+        case LOCAL_GL_TEXTURE_MIN_FILTER:
+        case LOCAL_GL_TEXTURE_MAG_FILTER:
+        case LOCAL_GL_TEXTURE_WRAP_S:
+        case LOCAL_GL_TEXTURE_WRAP_T:
+        {
+            float fv = 0;
+            gl->fGetTexParameterfv(target, pname, (GLfloat*) &fv);
+            js.SetRetVal(&fv, 1);
+        }
+            break;
+
+        default:
+            return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+WebGLContext::GetTexParameteri(GLenum target, GLenum pname, GLint *retval)
 {
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -1543,9 +1803,38 @@ WebGLContext::GetTexParameter(GLenum target, GLenum pname)
     return NS_OK;
 }
 
+/* nsICanvasArray getTexParameteriv (in GLenum target, in GLenum pname); */
+NS_IMETHODIMP
+WebGLContext::GetTexParameteriv(GLenum target, GLenum pname, nsICanvasArray **retval)
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    MakeContextCurrent();
+
+    switch (pname) {
+        case LOCAL_GL_TEXTURE_MIN_FILTER:
+        case LOCAL_GL_TEXTURE_MAG_FILTER:
+        case LOCAL_GL_TEXTURE_WRAP_S:
+        case LOCAL_GL_TEXTURE_WRAP_T:
+        {
+            PRInt32 iv = 0;
+            gl->fGetTexParameteriv(target, pname, (GLint*) &iv);
+            js.SetRetVal(&iv, 1);
+        }
+            break;
+
+        default:
+            return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
+}
+
 /* XXX fix */
 NS_IMETHODIMP
-WebGLContext::GetUniform(nsIWebGLProgram *prog, GLint location)
+WebGLContext::GetUniformf(nsIWebGLProgram *prog, GLint location, GLfloat *retval)
 {
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
@@ -1592,6 +1881,25 @@ WebGLContext::GetUniform(nsIWebGLProgram *prog, GLint location)
 
     return NS_OK;
 }
+/* nsICanvasArray getUniformfv (in nsIWebGLProgram program, in GLint location); */
+NS_IMETHODIMP
+WebGLContext::GetUniformfv(nsIWebGLProgram *program, GLint location, nsICanvasArray **retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+/* GLint getUniformi (in nsIWebGLProgram program, in GLint location); */
+NS_IMETHODIMP
+WebGLContext::GetUniformi(nsIWebGLProgram *program, GLint location, GLint *retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsICanvasArray getUniformiv (in nsIWebGLProgram program, in GLint location); */
+NS_IMETHODIMP
+WebGLContext::GetUniformiv(nsIWebGLProgram *program, GLint location, nsICanvasArray **retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 WebGLContext::GetUniformLocation(nsIWebGLProgram *prog, const nsAString& name, GLint *retval)
@@ -1607,7 +1915,55 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *prog, const nsAString& name, G
 }
 
 NS_IMETHODIMP
-WebGLContext::GetVertexAttrib(GLuint index, GLenum pname)
+WebGLContext::GetVertexAttribf(GLuint index, GLenum pname, GLfloat *retval)
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    MakeContextCurrent();
+
+    switch (pname) {
+        // int
+        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
+        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:
+        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE:
+        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:
+        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
+        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
+        {
+            PRInt32 iv = 0;
+            gl->fGetVertexAttribiv(index, pname, (GLint*) &iv);
+            *retval = (GLfloat) iv;
+        }
+            break;
+
+        case LOCAL_GL_CURRENT_VERTEX_ATTRIB:
+        {
+            GLfloat fv[4] = { 0 };
+            gl->fGetVertexAttribfv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, &fv[0]);
+            js.SetRetVal(fv, 4);
+        }
+            break;
+
+        // not supported; doesn't make sense to return a pointer unless we have some kind of buffer object abstraction
+        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_POINTER:
+        default:
+            return NS_ERROR_NOT_IMPLEMENTED;
+
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+WebGLContext::GetVertexAttribfv(GLuint index, GLenum pname, nsICanvasArray **retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WebGLContext::GetVertexAttribi(GLuint index, GLenum pname, GLint *retval)
 {
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -1646,6 +2002,19 @@ WebGLContext::GetVertexAttrib(GLuint index, GLenum pname)
     }
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+WebGLContext::GetVertexAttribiv(GLuint index, GLenum pname, nsICanvasArray **retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* GLuint getVertexAttribOffset (in GLuint index, in GLenum pname); */
+NS_IMETHODIMP
+WebGLContext::GetVertexAttribOffset(GLuint index, GLenum pname, GLuint *retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -2031,79 +2400,138 @@ GL_SAME_METHOD_4(Uniform3f, Uniform3f, GLint, GLfloat, GLfloat, GLfloat)
 GL_SAME_METHOD_5(Uniform4f, Uniform4f, GLint, GLfloat, GLfloat, GLfloat, GLfloat)
 
 // one uint arg followed by an array of c elements of glTypeConst.
-#define GL_SIMPLE_ARRAY_METHOD(glname, name, c, glTypeConst, ptrType)   \
-NS_IMETHODIMP                                                           \
-WebGLContext::name()                                                    \
-{                                                                       \
-    NativeJSContext js;                                                 \
-    if (NS_FAILED(js.error))                                            \
-        return js.error;                                                \
-    jsuint index;                                                       \
-    JSObject *arrayObj;                                                 \
-    jsuint arrayLen;                                                    \
-    if (js.argc != 2 ||                                                 \
-        !::JS_ValueToECMAUint32(js.ctx, js.argv[0], &index) ||          \
-        !NativeJSContext::JSValToJSArrayAndLength(js.ctx, js.argv[1], &arrayObj, &arrayLen)) \
-        return NS_ERROR_INVALID_ARG;                                    \
-    if (arrayLen % c != 0) {                                            \
-        return ErrorMessage(#name ": array length not divisible by " #c); \
-    }                                                                   \
-    SimpleBuffer sbuffer(glTypeConst, c, js.ctx, arrayObj, arrayLen);   \
-    if (!sbuffer.Valid())                                               \
-        return NS_ERROR_FAILURE;                                        \
-    MakeContextCurrent();                                               \
-    gl->f##glname(index, arrayLen / c, ( ptrType *)sbuffer.data);       \
-    return NS_OK;                                                       \
+#define GL_SIMPLE_ARRAY_METHOD(glname, name, c, glTypeConst, ptrType)             \
+NS_IMETHODIMP                                                                     \
+WebGLContext::name(GLint idx, nsICanvasArray *v)                                   \
+{                                                                                 \
+    NativeJSContext js;                                                           \
+    if (NS_FAILED(js.error))                                                      \
+        return js.error;                                                          \
+    JSObject *arrayObj;                                                           \
+    jsuint arrayLen;                                                              \
+    if (js.argc != 2)                                                             \
+        return NS_ERROR_INVALID_ARG;                                              \
+    if (NativeJSContext::JSValToJSArrayAndLength(js.ctx, js.argv[1], &arrayObj, &arrayLen)) { \
+        if (arrayLen % c != 0) {                                                  \
+            return ErrorMessage(#name ": array length not divisible by " #c);     \
+        }                                                                         \
+        SimpleBuffer sbuffer(glTypeConst, c, js.ctx, arrayObj, arrayLen);         \
+        if (!sbuffer.Valid())                                                     \
+            return NS_ERROR_FAILURE;                                              \
+        MakeContextCurrent();                                                     \
+        gl->f##glname(idx, arrayLen / c, ( ptrType *)sbuffer.data);               \
+    } else {                                                                      \
+        if (glTypeConst == LOCAL_GL_INT) {                                        \
+            if (v->NativeType() != LOCAL_GL_INT) {                                \
+                return ErrorMessage(#name ": arg not an array");                  \
+            }                                                                     \
+            WebGLIntArray *wga = static_cast<WebGLIntArray*>(v);                  \
+            if (wga->NativeCount() % c != 0) {                                    \
+                return ErrorMessage(#name ": array length not divisible by " #c); \
+            }                                                                     \
+            MakeContextCurrent();                                                 \
+            gl->f##glname(idx, wga->NativeCount() / c, ( ptrType *)wga->NativePointer()); \
+        } else if (glTypeConst == LOCAL_GL_FLOAT) {                               \
+            if (v->NativeType() != LOCAL_GL_FLOAT) {                              \
+                return ErrorMessage(#name ": arg not an array");                  \
+            }                                                                     \
+            WebGLFloatArray *wga = static_cast<WebGLFloatArray*>(v);              \
+            if (wga->NativeCount() % c != 0) {                                    \
+                return ErrorMessage(#name ": array length not divisible by " #c); \
+            }                                                                     \
+            MakeContextCurrent();                                                 \
+            gl->f##glname(idx, wga->NativeCount() / c, ( ptrType *)wga->NativePointer()); \
+        } else {                                                                  \
+            return ErrorMessage("Unhandled glTypeConst"); /* need compiler fail */\
+        }                                                                         \
+    }                                                                             \
+    return NS_OK;                                                                 \
 }
 
-#define GL_SIMPLE_ARRAY_METHOD_NO_COUNT(glname, name, c, glTypeConst, ptrType) \
-NS_IMETHODIMP                                                           \
-WebGLContext::name()                                                    \
-{                                                                       \
-    NativeJSContext js;                                                 \
-    if (NS_FAILED(js.error))                                            \
-        return js.error;                                                \
-    jsuint index;                                                       \
-    JSObject *arrayObj;                                                 \
-    jsuint arrayLen;                                                    \
-    if (js.argc != 2 ||                                                 \
-        !::JS_ValueToECMAUint32(js.ctx, js.argv[0], &index) ||          \
-        !NativeJSContext::JSValToJSArrayAndLength(js.ctx, js.argv[1], &arrayObj, &arrayLen)) \
-        return NS_ERROR_INVALID_ARG;                                    \
-    if (arrayLen != c) {                                                \
-        return ErrorMessage(#name ": array wrong size, expected " #c);  \
-    }                                                                   \
-    SimpleBuffer sbuffer(glTypeConst, c, js.ctx, arrayObj, arrayLen);   \
-    if (!sbuffer.Valid())                                               \
-        return NS_ERROR_FAILURE;                                        \
-    MakeContextCurrent();                                               \
-    gl->f##glname(index, ( ptrType *)sbuffer.data);                     \
-    return NS_OK;                                                       \
+#define GL_SIMPLE_ARRAY_METHOD_NO_COUNT(glname, name, c, glTypeConst, ptrType)    \
+NS_IMETHODIMP                                                                     \
+WebGLContext::name(GLuint idx, nsICanvasArray *v)                                  \
+{                                                                                 \
+    NativeJSContext js;                                                           \
+    if (NS_FAILED(js.error))                                                      \
+        return js.error;                                                          \
+    JSObject *arrayObj;                                                           \
+    jsuint arrayLen;                                                              \
+    if (js.argc != 2)                                                             \
+        return NS_ERROR_INVALID_ARG;                                              \
+    if (NativeJSContext::JSValToJSArrayAndLength(js.ctx, js.argv[1], &arrayObj, &arrayLen)) { \
+        if (arrayLen % c != 0) {                                                  \
+            return ErrorMessage(#name ": array wrong size, expected " #c);        \
+        }                                                                         \
+        SimpleBuffer sbuffer(glTypeConst, c, js.ctx, arrayObj, arrayLen);         \
+        if (!sbuffer.Valid())                                                     \
+            return NS_ERROR_FAILURE;                                              \
+        MakeContextCurrent();                                                     \
+        gl->f##glname(idx, ( ptrType *)sbuffer.data);                             \
+    } else {                                                                      \
+        if (glTypeConst == LOCAL_GL_INT) {                                        \
+            if (v->NativeType() != LOCAL_GL_INT) {                                \
+                return ErrorMessage(#name ": arg not an array");                  \
+            }                                                                     \
+            WebGLIntArray *wga = static_cast<WebGLIntArray*>(v);                  \
+            if (wga->NativeCount() % c != 0) {                                    \
+                return ErrorMessage(#name ": array wrong size %d, expected " #c, wga->NativeCount()); \
+            }                                                                     \
+            MakeContextCurrent();                                                 \
+            gl->f##glname(idx, ( ptrType *)wga->NativePointer());                 \
+        } else if (glTypeConst == LOCAL_GL_FLOAT) {                               \
+            if (v->NativeType() != LOCAL_GL_FLOAT) {                              \
+                return ErrorMessage(#name ": arg not an array");                  \
+            }                                                                     \
+            WebGLFloatArray *wga = static_cast<WebGLFloatArray*>(v);              \
+            if (wga->NativeCount() % c != 0) {                                    \
+                return ErrorMessage(#name ": array wrong size %d, expected " #c, wga->NativeCount()); \
+            }                                                                     \
+            MakeContextCurrent();                                                 \
+            gl->f##glname(idx, ( ptrType *)wga->NativePointer());                 \
+        } else {                                                                  \
+            return ErrorMessage("Unhandled glTypeConst"); /* need compiler fail */\
+        }                                                                         \
+    }                                                                             \
+    return NS_OK;                                                                 \
 }
 
-#define GL_SIMPLE_MATRIX_METHOD(glname, name, c, glTypeConst, ptrType)  \
-NS_IMETHODIMP                                                           \
-WebGLContext::name()                                                    \
-{                                                                       \
-    NativeJSContext js;                                                 \
-    if (NS_FAILED(js.error))                                            \
-        return js.error;                                                \
-    jsuint index;                                                       \
-    JSObject *arrayObj;                                                 \
-    jsuint arrayLen;                                                    \
-    if (js.argc != 2 ||                                                 \
-        !::JS_ValueToECMAUint32(js.ctx, js.argv[0], &index) ||          \
-        !NativeJSContext::JSValToJSArrayAndLength(js.ctx, js.argv[1], &arrayObj, &arrayLen)) \
-        return NS_ERROR_INVALID_ARG;                                    \
-    if (arrayLen != c) {                                                \
-        return ErrorMessage(#name ": array wrong size, expected " #c);  \
-    }                                                                   \
-    SimpleBuffer sbuffer(glTypeConst, c, js.ctx, arrayObj, arrayLen);   \
-    if (!sbuffer.Valid())                                               \
-        return NS_ERROR_FAILURE;                                        \
-    MakeContextCurrent();                                               \
-    gl->f##glname(index, arrayLen / c, LOCAL_GL_FALSE, ( ptrType *)sbuffer.data); \
-    return NS_OK;                                                       \
+#define GL_SIMPLE_MATRIX_METHOD(glname, name, c, glTypeConst, ptrType)            \
+NS_IMETHODIMP                                                                     \
+WebGLContext::name(GLint location, GLboolean transpose, nsICanvasArray *value)     \
+{                                                                                 \
+    NativeJSContext js;                                                           \
+    if (NS_FAILED(js.error))                                                      \
+        return js.error;                                                          \
+    JSObject *arrayObj;                                                           \
+    jsuint arrayLen;                                                              \
+    if (js.argc != 3)                                                             \
+        return NS_ERROR_INVALID_ARG;                                              \
+    if (NativeJSContext::JSValToJSArrayAndLength(js.ctx, js.argv[2], &arrayObj, &arrayLen)) { \
+        if (arrayLen % c != 0) {                                                  \
+            return ErrorMessage(#name ": array wrong size, expected " #c);        \
+        }                                                                         \
+        SimpleBuffer sbuffer(glTypeConst, c, js.ctx, arrayObj, arrayLen);         \
+        if (!sbuffer.Valid())                                                     \
+            return NS_ERROR_FAILURE;                                              \
+        MakeContextCurrent();                                                     \
+        gl->f##glname(location, arrayLen / c, transpose, ( ptrType *)sbuffer.data); \
+    } else {                                                                      \
+        if (glTypeConst == LOCAL_GL_FLOAT) {                                      \
+            if (value->NativeType() != LOCAL_GL_FLOAT) {                          \
+                return ErrorMessage(#name ": arg not an array");                  \
+            }                                                                     \
+            WebGLFloatArray *wga = static_cast<WebGLFloatArray*>(value);          \
+            if (wga->NativeCount() % c != 0) {                                    \
+                return ErrorMessage(#name ": array wrong size %d, expected " #c, wga->NativeCount());     \
+            }                                                                     \
+            MakeContextCurrent();                                                 \
+            gl->f##glname(location, wga->NativeCount() / c, transpose, ( ptrType *)wga->NativePointer()); \
+        } else {                                                                  \
+            return ErrorMessage("Unhandled glTypeConst"); /* need compiler fail */\
+        }                                                                         \
+    }                                                                             \
+    return NS_OK;                                                                 \
 }
 
 GL_SIMPLE_ARRAY_METHOD(Uniform1iv, Uniform1iv, 1, LOCAL_GL_INT, GLint)
@@ -2163,7 +2591,7 @@ GL_SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib3fv, VertexAttrib3fv, 3, LOCAL_GL_FL
 GL_SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib4fv, VertexAttrib4fv, 4, LOCAL_GL_FLOAT, GLfloat)
 
 NS_IMETHODIMP
-WebGLContext::GenFramebuffer(nsIWebGLFramebuffer **retval)
+WebGLContext::CreateFramebuffer(nsIWebGLFramebuffer **retval)
 {
     MakeContextCurrent();
 
@@ -2182,7 +2610,7 @@ WebGLContext::GenFramebuffer(nsIWebGLFramebuffer **retval)
 }
 
 NS_IMETHODIMP
-WebGLContext::GenRenderbuffer(nsIWebGLRenderbuffer **retval)
+WebGLContext::CreateRenderbuffer(nsIWebGLRenderbuffer **retval)
 {
     MakeContextCurrent();
 
@@ -2219,7 +2647,7 @@ WebGLContext::CompileShader(nsIWebGLShader *shobj)
 
 
 NS_IMETHODIMP
-WebGLContext::GetShaderParameter(nsIWebGLShader *shobj, GLenum pname)
+WebGLContext::GetShaderi(nsIWebGLShader *shobj, GLenum pname, GLint *_retval)
 {
     if (!shobj || static_cast<WebGLShader*>(shobj)->Deleted())
         return ErrorMessage("%s: shader is null or deleted!", __FUNCTION__);
@@ -2250,6 +2678,13 @@ WebGLContext::GetShaderParameter(nsIWebGLShader *shobj, GLenum pname)
     }
 
     return NS_OK;
+}
+
+/* nsICanvasIntArray getShaderiv (in nsIWebGLShader shader, in GLenum pname); */
+NS_IMETHODIMP
+WebGLContext::GetShaderiv(nsIWebGLShader *shader, GLenum pname, nsICanvasIntArray **retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

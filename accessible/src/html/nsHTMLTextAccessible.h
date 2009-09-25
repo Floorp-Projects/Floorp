@@ -109,11 +109,7 @@ public:
 
   // nsIAccessible
   NS_IMETHOD GetName(nsAString& aName);
-
-  // Don't cache via unique ID -- bullet accessible shares the same dom node as
-  // this LI accessible. Also, don't cache via mParent/SetParent(), prevent
-  // circular reference since li holds onto us.
-  NS_IMETHOD GetParent(nsIAccessible **aParentAccessible);
+  NS_IMETHOD GetParent(nsIAccessible **aParent);
 
   // nsAccessNode
   virtual nsresult Shutdown();
@@ -121,7 +117,6 @@ public:
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
-  virtual void SetParent(nsIAccessible *aParent);
   virtual nsresult AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
                                 PRUint32 aLength);
 
@@ -132,7 +127,6 @@ protected:
   // nsIAnonymousFrame::GetText() ? However, in practice storing the bullet text
   // here should not be a problem if we invalidate the right parts of
   // the accessibility cache when mutation events occur.
-  nsIAccessible *mWeakParent;
   nsString mBulletText;
 };
 

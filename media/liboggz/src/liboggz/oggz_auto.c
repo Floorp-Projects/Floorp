@@ -568,7 +568,7 @@ auto_calc_theora(ogg_int64_t now, oggz_stream_t *stream, ogg_packet *op) {
   unsigned char first_byte;
   auto_calc_theora_info_t *info;
 
-  first_byte = op->packet[0];
+  first_byte = op->bytes == 0 ? 0x40 : op->packet[0];
 
   info = (auto_calc_theora_info_t *)stream->calculate_data;
 

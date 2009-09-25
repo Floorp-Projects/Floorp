@@ -71,9 +71,23 @@ NS_SerializeToString(nsISerializable* obj, nsCSubstring& str)
 nsresult
 NS_DeserializeObject(const nsCSubstring& str, nsISupports** obj)
 {
-  // Base64 maps 3 binary bytes -> 4 ASCII bytes, so this calculation gives us
-  // the right size. Compare also the comment in plbase64.h.
-  PRUint32 size = (str.Length() * 3) / 4;
+  // Base64 maps 3 binary bytes -> 4 ASCII bytes.  If the original byte array
+  // does not have length 0 mod 3, the input is padded with zeros and the
+  // output is padded with a corresponding number of trailing '=' (which are
+  // then sometimes dropped).  To compute the correct length of the original
+  // byte array, we have to subtract the number of trailing '=' and then
+  // multiply by 3 and then divide by 4 (making sure this is an integer
+  // division).
+
+  PRUint32 size = str.Length();
+  if (size > 0 && str[size-1] == '=') {
+    if (size > 1 && str[size-2] == '=') {
+      size -= 2;
+    } else {
+      size -= 1;
+    }
+  }
+  size = (size * 3) / 4;
   char* buf = PL_Base64Decode(str.BeginReading(), str.Length(), nsnull);
   if (!buf)
     return NS_ERROR_OUT_OF_MEMORY;

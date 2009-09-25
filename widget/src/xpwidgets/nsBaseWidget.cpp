@@ -46,11 +46,11 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIContent.h"
-
-#ifdef DEBUG
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
+
+#ifdef DEBUG
 #include "nsIObserver.h"
 
 static void debug_RegisterPrefCallbacks();
@@ -827,6 +827,49 @@ PRBool
 nsBaseWidget::ShowsResizeIndicator(nsIntRect* aResizerRect)
 {
   return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsBaseWidget::OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
+                                             PRBool aIsHorizontal,
+                                             PRInt32 &aOverriddenDelta)
+{
+  aOverriddenDelta = aOriginalDelta;
+
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(prefs, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  nsresult rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(prefBranch, NS_ERROR_FAILURE);
+
+  PRBool isOverrideEnabled;
+  const char* kPrefNameOverrideEnabled =
+    "mousewheel.system_scroll_override_on_root_content.enabled";
+  rv = prefBranch->GetBoolPref(kPrefNameOverrideEnabled, &isOverrideEnabled);
+  if (NS_FAILED(rv) || !isOverrideEnabled) {
+    return NS_OK;
+  }
+
+  PRInt32 iFactor;
+  nsCAutoString factorPrefName(
+    "mousewheel.system_scroll_override_on_root_content.");
+  if (aIsHorizontal) {
+    factorPrefName.AppendLiteral("horizontal.");
+  } else {
+    factorPrefName.AppendLiteral("vertical.");
+  }
+  factorPrefName.AppendLiteral("factor");
+  rv = prefBranch->GetIntPref(factorPrefName.get(), &iFactor);
+  // The pref value must be larger than 100, otherwise, we don't override the
+  // delta value.
+  if (NS_FAILED(rv) || iFactor <= 100) {
+    return NS_OK;
+  }
+  double factor = (double)iFactor / 100;
+  aOverriddenDelta = PRInt32(NS_round((double)aOriginalDelta * factor));
+
+  return NS_OK;
 }
 
 

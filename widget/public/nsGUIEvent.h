@@ -88,6 +88,7 @@ class nsHashKey;
 #define NS_FORM_EVENT                     21
 #define NS_POPUP_EVENT                    23
 #define NS_COMMAND_EVENT                  24
+#define NS_SCROLLAREA_EVENT               25
 
 
 #define NS_UI_EVENT                       27
@@ -435,6 +436,10 @@ class nsHashKey;
 
 #define NS_ORIENTATION_EVENT         4000
 
+#define NS_SCROLLAREA_EVENT_START    4100
+#define NS_SCROLLEDAREACHANGED       (NS_SCROLLAREA_EVENT_START)
+
+
 /**
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.
@@ -663,6 +668,17 @@ public:
   }
 
   orientType orient;
+};
+
+class nsScrollAreaEvent : public nsGUIEvent
+{
+public:
+  nsScrollAreaEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
+    : nsGUIEvent(isTrusted, msg, w, NS_SCROLLAREA_EVENT)
+  {
+  }
+
+  nsRect mArea;
 };
 
 class nsInputEvent : public nsGUIEvent

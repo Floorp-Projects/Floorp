@@ -49,10 +49,10 @@
 #include "nspluginroot.idl"
 
 %{C++
-#include "nsplugindefs.h"
+#include "npapi.h"
 %}
 
-[uuid(ed7d4ca0-b005-11d2-adaa-00805f6dec49)]
+[uuid(A700845F-0E26-44EA-84F5-3BE5381F98D5)]
 interface nsIPluginStreamInfo : nsISupports
 {
   readonly attribute string contentType;
@@ -65,7 +65,7 @@ interface nsIPluginStreamInfo : nsISupports
 
   void getURL(out constCharPtr aURL);
 
-  void requestRead(in nsByteRangePtr aRangeList);
+  void requestRead(in NPByteRangePtr aRangeList);
 
   attribute long streamOffset;
 };

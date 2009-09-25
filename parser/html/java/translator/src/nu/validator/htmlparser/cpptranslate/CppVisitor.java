@@ -303,7 +303,7 @@ public class CppVisitor extends AnnotationHelperVisitor<LocalSymbolTable> {
         } else if ("HTML_LOCAL".equals(n.getName())) {
             printer.print(cppTypes.localForLiteral("html"));
         } else if ("documentModeHandler".equals(n.getName())) {
-            printer.print("parser");
+            printer.print("this");
         } else {
             String prefixedName = javaClassName + "." + n.getName();
             String constant = symbolTable.cppDefinesByJavaNames.get(prefixedName);
@@ -718,12 +718,7 @@ public class CppVisitor extends AnnotationHelperVisitor<LocalSymbolTable> {
     }
 
     public void visit(VariableDeclaratorId n, LocalSymbolTable arg) {
-        String name = n.getName();
-        if ("documentModeHandler".equals(name)) {
-            printer.print("parser");
-        } else {
-            printer.print(n.getName());
-        }
+        printer.print(n.getName());
         if (noLength()) {
             for (int i = 0; i < currentArrayCount; i++) {
                 if (inPrimitiveNoLengthFieldDeclarator) {

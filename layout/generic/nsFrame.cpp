@@ -1596,15 +1596,6 @@ nsIFrame::CreateWidgetForView(nsIView* aView)
   return aView->CreateWidget(kWidgetCID);
 }
 
-nsIFrame*
-nsIFrame::GetLastChild(nsIAtom* aListName) const
-{
-  return nsLayoutUtils::GetLastSibling(GetFirstChild(aListName));
-}
-
-/**
-  *
- */
 NS_IMETHODIMP  
 nsFrame::GetContentForEvent(nsPresContext* aPresContext,
                             nsEvent* aEvent,
@@ -1629,9 +1620,6 @@ nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
   }
 }
 
-/**
-  *
- */
 NS_IMETHODIMP
 nsFrame::HandleEvent(nsPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,
@@ -3788,9 +3776,6 @@ nsIFrame::InvalidateOverflowRect()
 void
 nsIFrame::InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags)
 {
-  if (aFlags & INVALIDATE_NOTIFY_ONLY)
-    return;
-
   PRUint32 flags =
     (aFlags & INVALIDATE_IMMEDIATE) ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
   nsIView* view = GetView();
@@ -4332,9 +4317,9 @@ nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aInd
 void
 nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
-  if (nsnull != mNextSibling) {
+  if (GetNextSibling()) {
     IndentBy(out, aIndent);
-    fprintf(out, "<next-sibling va=\"%ld\"/>\n", PRUptrdiff(mNextSibling));
+    fprintf(out, "<next-sibling va=\"%ld\"/>\n", PRUptrdiff(GetNextSibling()));
   }
 
   if (HasView()) {
@@ -4781,7 +4766,7 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
 
   // Iterate over children and call ourselves recursively
   if (aDirection == eDirPrevious) {
-    nsFrameList children(aFrame->GetFirstChild(nsnull));
+    const nsFrameList& children(aFrame->GetChildList(nsnull));
     nsIFrame* child = children.LastChild();
     while(child && !result.mContent) {
       result = FindBlockFrameOrBR(child, aDirection);
@@ -4818,7 +4803,7 @@ nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct *aPos)
         reachedBlockAncestor = PR_TRUE;
         break;
       }
-      nsFrameList siblings(parent->GetFirstChild(nsnull));
+      const nsFrameList& siblings(parent->GetChildList(nsnull));
       nsIFrame* sibling = siblings.GetPrevSiblingFor(frame);
       while (sibling && !blockFrameOrBR.mContent) {
         blockFrameOrBR = FindBlockFrameOrBR(sibling, eDirPrevious);

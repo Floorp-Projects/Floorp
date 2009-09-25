@@ -2215,7 +2215,16 @@ imgContainer::RequestDecode()
   if (mDecoded)
     return NS_OK;
 
-  // If we're within the decoder, request asynchronously
+  // If we've already got a full decoder running, we have nothing to do
+  if (mDecoder && !(mDecoderFlags & imgIDecoder::DECODER_FLAG_HEADERONLY))
+    return NS_OK;
+
+  // If our callstack goes through a header-only decoder, we have a problem.
+  // We need to shutdown the header-only decoder and replace it with  a full
+  // decoder, but can't do that from within the decoder itself. Thus, we post
+  // an asynchronous event to the event loop to do it later. Since
+  // RequestDecode() is an asynchronous function this works fine (though it's
+  // a little slower).
   if (mInDecoder) {
     nsRefPtr<imgDecodeRequestor> requestor = new imgDecodeRequestor(this);
     if (!requestor)

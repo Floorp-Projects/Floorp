@@ -841,13 +841,18 @@ gfxWindowsPlatform::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
 
 gfxFontEntry* 
 gfxWindowsPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                     nsISupports *aLoader,
                                      const PRUint8 *aFontData, PRUint32 aLength)
 {
 #ifdef MOZ_FT2_FONTS
-    return FontEntry::CreateFontEntry(*aProxyEntry, aLoader, aFontData, aLength);
+    // The FT2 font needs the font data to persist, so we do NOT free it here
+    // but instead pass ownership to the font entry.
+    // Deallocation will happen later, when the font face is destroyed.
+    return FontEntry::CreateFontEntry(*aProxyEntry, aFontData, aLength);
 #else
-    return FontEntry::LoadFont(*aProxyEntry, aLoader, aFontData, aLength);
+    // With GDI, we can free the downloaded data after activating the font
+    gfxFontEntry *fe = FontEntry::LoadFont(*aProxyEntry, aFontData, aLength);
+    NS_Free((void*)aFontData);
+    return fe;
 #endif    
 }
 
@@ -859,7 +864,8 @@ gfxWindowsPlatform::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlag
                  "strange font format hint set");
 
     // accept supported formats
-    if (aFormatFlags & (gfxUserFontSet::FLAG_FORMAT_OPENTYPE | 
+    if (aFormatFlags & (gfxUserFontSet::FLAG_FORMAT_WOFF     |
+                        gfxUserFontSet::FLAG_FORMAT_OPENTYPE | 
                         gfxUserFontSet::FLAG_FORMAT_TRUETYPE)) {
         return PR_TRUE;
     }
@@ -975,3 +981,14 @@ gfxWindowsPlatform::GetFTLibrary()
     return gPlatformFTLibrary;
 }
 #endif
+
+void
+gfxWindowsPlatform::InitDisplayCaps()
+{
+    HDC dc = GetDC((HWND)nsnull);
+
+    gfxPlatform::sDPI = GetDeviceCaps(dc, LOGPIXELSY);
+
+    ReleaseDC((HWND)nsnull, dc);
+}
+

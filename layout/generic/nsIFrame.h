@@ -108,10 +108,10 @@ struct CharacterDataChangeInfo;
 
 typedef class nsIFrame nsIBox;
 
-// 87F5B42A-507D-4707-976C-46819867BC63
+// f34d7229-f179-40d9-a952-8fcfa9bc3647
 #define NS_IFRAME_IID \
-  { 0x87f5b42a, 0x507d, 0x4707, \
-    { 0x97, 0x6c, 0x46, 0x81, 0x98, 0x67, 0xbc, 0x63 } }
+  { 0xf34d7229, 0xf179, 0x40d9, \
+    { 0xa9, 0x52, 0x8f, 0xcf, 0xa9, 0xbc, 0x36, 0x47 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -872,16 +872,10 @@ public:
   nsIFrame* GetFirstChild(nsIAtom* aListName) const {
     return GetChildList(aListName).FirstChild();
   }
-
-  /**
-   * Get the last child frame from the specified child list.
-   *
-   * @param   aListName the name of the child list. A NULL pointer for the atom
-   *            name means the unnamed principal child list
-   * @return  the child frame, or NULL if there is no such child
-   * @see     #GetAdditionalListName()
-   */
-  virtual nsIFrame* GetLastChild(nsIAtom* aListName) const;
+  // XXXmats this method should also go away then
+  nsIFrame* GetLastChild(nsIAtom* aListName) const {
+    return GetChildList(aListName).LastChild();
+  }
 
   /**
    * Child frames are linked together in a singly-linked list
@@ -1771,15 +1765,19 @@ public:
    *   could cause frames to be deleted (including |this|).
    * @param aFlags INVALIDATE_CROSS_DOC: true if the invalidation
    *   originated in a subdocument
-   * @param aFlags INVALIDATE_NOTIFY_ONLY: set when this invalidation should
-   * cause MozAfterPaint listeners to be notified, but should not actually
-   * invalidate anything. This is used to notify about scrolling, where the
-   * screen has already been updated.
+   * @param aFlags INVALIDATE_REASON_SCROLL_BLIT: set if the invalidation
+   * was really just the scroll machinery copying pixels from one
+   * part of the window to another
+   * @param aFlags INVALIDATE_REASON_SCROLL_REPAINT: set if the invalidation
+   * was triggered by scrolling
    */
   enum {
-  	INVALIDATE_IMMEDIATE = 0x1,
-  	INVALIDATE_CROSS_DOC = 0x2,
-  	INVALIDATE_NOTIFY_ONLY = 0x4
+  	INVALIDATE_IMMEDIATE = 0x01,
+  	INVALIDATE_CROSS_DOC = 0x02,
+  	INVALIDATE_REASON_SCROLL_BLIT = 0x04,
+  	INVALIDATE_REASON_SCROLL_REPAINT = 0x08,
+    INVALIDATE_REASON_MASK = INVALIDATE_REASON_SCROLL_BLIT |
+                             INVALIDATE_REASON_SCROLL_REPAINT
   };
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aOffsetX, nscoord aOffsetY,
@@ -2329,7 +2327,9 @@ protected:
   nsIContent*      mContent;
   nsStyleContext*  mStyleContext;
   nsIFrame*        mParent;
+private:
   nsIFrame*        mNextSibling;  // singly-linked list of frames
+protected:
   nsFrameState     mState;
 
   // When there is an overflow area only slightly larger than mRect,
@@ -2537,37 +2537,10 @@ private:
 };
 
 inline void
-nsFrameList::Enumerator::Next() {
+nsFrameList::Enumerator::Next()
+{
   NS_ASSERTION(!AtEnd(), "Should have checked AtEnd()!");
   mFrame = mFrame->GetNextSibling();
 }
 
-inline nsFrameList::Slice
-nsFrameList::InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
-                          nsFrameList& aFrameList) {
-  NS_PRECONDITION(!aFrameList.IsEmpty(), "Unexpected empty list");
-  nsIFrame* firstNewFrame = aFrameList.FirstChild();
-  nsIFrame* nextSibling =
-    aPrevSibling ? aPrevSibling->GetNextSibling() : FirstChild();
-  InsertFrames(aParent, aPrevSibling, firstNewFrame);
-  aFrameList.Clear();
-  return Slice(*this, firstNewFrame, nextSibling);
-}
-
-inline void
-nsFrameList::AppendFrame(nsIFrame* aParent, nsIFrame* aFrame)
-{
-  NS_PRECONDITION(aFrame && !aFrame->GetNextSibling(),
-                  "Shouldn't be appending more than one frame");
-  AppendFrames(aParent, aFrame);
-}
-
-inline void
-nsFrameList::InsertFrame(nsIFrame* aParent,
-                         nsIFrame* aPrevSibling,
-                         nsIFrame* aNewFrame) {
-  NS_PRECONDITION(aNewFrame && !aNewFrame->GetNextSibling(),
-                  "Shouldn't be inserting more than one frame");
-  InsertFrames(aParent, aPrevSibling, aNewFrame);
-}
 #endif /* nsIFrame_h___ */

@@ -49,11 +49,8 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsUConvModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
-ifneq ($(OS_ARCH),WINNT)
 # To avoid conflict with OS/2 system uconv.dll
 SHORT_LIBNAME  = mozuconv
-endif
-
 
 CPPSRCS		= \
 		nsUConvModule.cpp \
@@ -87,7 +84,7 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS			+= nsWinCharset.cpp
 else
-ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS			+= nsMacCharset.cpp
 else
 ifeq ($(OS_ARCH),BeOS)
@@ -108,7 +105,7 @@ EXTRA_DSO_LDOPTS = \
 
 LOCAL_INCLUDES	= -I$(srcdir)/../util
 
-ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
 

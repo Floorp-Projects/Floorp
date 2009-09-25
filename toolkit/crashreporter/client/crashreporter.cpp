@@ -366,8 +366,17 @@ void DeleteDump()
 void SendCompleted(bool success, const string& serverResponse)
 {
   if (success) {
-    if (AddSubmittedReport(serverResponse))
+    if (AddSubmittedReport(serverResponse)) {
       DeleteDump();
+    }
+    else {
+      string directory = gDumpFile;
+      int slashpos = directory.find_last_of("/\\");
+      if (slashpos < 2)
+        return;
+      directory.resize(slashpos);
+      UIPruneSavedDumps(directory);
+    }
   }
 }
 

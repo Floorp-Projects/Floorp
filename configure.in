@@ -1623,6 +1623,7 @@ case "$host" in
     case "$host" in
     *mingw*)
     dnl MinGW/MSYS does not need CYGWIN_WRAPPER
+        PERL="/bin/sh ${srcdir}/build/msys-perl-wrapper"
         ;;
     *)
         CYGWIN_WRAPPER="${srcdir}/build/cygwin-wrapper"
@@ -2052,7 +2053,6 @@ case "$target" in
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
-    USE_SHORT_LIBNAME=1
     MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 
@@ -2170,7 +2170,6 @@ case "$target" in
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
-    USE_SHORT_LIBNAME=1
     MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 
@@ -2413,7 +2412,6 @@ case "$target" in
     AC_DEFINE(XP_OS2)
     AC_DEFINE(OS2EMX_PLAIN_CHAR)
     AC_DEFINE(TCPV40HDRS)
-    USE_SHORT_LIBNAME=1
     DLL_PREFIX=
     LIB_PREFIX=
     LIB_SUFFIX=lib
@@ -3091,7 +3089,7 @@ esac
 
 dnl We don't want to link with libdl even if it's present on OS X, since
 dnl it's not used and not part of the default installation.
-dnl The same goes for BeOS.
+dnl The same goes for BeOS. OS/2 has dlfcn in libc.
 dnl We don't want to link against libm or libpthread on Darwin since
 dnl they both are just symlinks to libSystem and explicitly linking
 dnl against libSystem causes issues when debugging (see bug 299601).
@@ -3099,6 +3097,8 @@ case $target in
 *-darwin*)
     ;;
 *-beos*)
+    ;;
+*-os2*)
     ;;
 *)
     AC_CHECK_LIB(m, atan)
@@ -3125,7 +3125,14 @@ if test ! "$GNU_CXX"; then
 	;;
      esac
 fi
-AC_CHECK_LIB(socket, socket)
+
+dnl OS/2 has socket in libc.
+case $target in
+*-os2*)
+    ;;
+*)
+    AC_CHECK_LIB(socket, socket)
+esac
 
 dnl ========================================================
 dnl Check whether we can compile code for Core Text
@@ -4464,8 +4471,6 @@ MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_DBGRINFO_MODULES=
-MOZ_ENABLE_CANVAS=1
-MOZ_ENABLE_CANVAS3D=
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
@@ -5761,23 +5766,6 @@ if test "$MOZ_MATHML"; then
 fi
 
 dnl ========================================================
-dnl Canvas
-dnl ========================================================
-if test -n "$MOZ_ENABLE_CANVAS"; then
-    AC_DEFINE(MOZ_ENABLE_CANVAS)
-fi
-AC_SUBST(MOZ_ENABLE_CANVAS)
-
-MOZ_ARG_ENABLE_BOOL(canvas3d,
-[  --enable-canvas3d        Enable canvas 3D context],
-    MOZ_ENABLE_CANVAS3D=1,
-    MOZ_ENABLE_CANVAS3D= )
-if test -n "$MOZ_ENABLE_CANVAS3D"; then
-    AC_DEFINE(MOZ_ENABLE_CANVAS3D)
-fi
-AC_SUBST(MOZ_ENABLE_CANVAS3D)
-
-dnl ========================================================
 dnl SVG
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(svg,
@@ -6442,8 +6430,8 @@ if test "$MOZ_MEMORY"; then
   msvc*|mks*|cygwin*|mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     dnl This is sort of awful. Will revisit if we add support for more versions
-    if test "$CC_VERSION" != "14.00.50727.762"; then
-        AC_MSG_ERROR([Building jemalloc requires exactly Visual C++ 2005 SP1 currently.])
+    if test "$CC_VERSION" != "14.00.50727.762" -a "$CC_VERSION" != "15.00.30729.01"; then
+        AC_MSG_ERROR([Building jemalloc requires exactly Visual C++ 2005 SP1 or 2008 SP1 currently.])
     fi
     if test -z "$WIN32_CRT_SRC_DIR"; then
       if test -z "$VCINSTALLDIR" -o ! -d "$VCINSTALLDIR"; then
@@ -7377,7 +7365,7 @@ if test "$MOZ_TREE_CAIRO"; then
     if test "$MOZ_WIDGET_TOOLKIT" = "qt"; then
         QPAINTER_SURFACE_FEATURE="#define CAIRO_HAS_QPAINTER_SURFACE 1"
     fi
-    if test "$MOZ_WIDGET_TOOLKIT" = "mac" -o "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
+    if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
         QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
         QUARTZ_IMAGE_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_IMAGE_SURFACE 1"
         QUARTZ_FONT_FEATURE="#define CAIRO_HAS_QUARTZ_FONT 1"
@@ -7644,6 +7632,15 @@ if test "$NECKO_COOKIES"; then
     AC_DEFINE(NECKO_COOKIES)
 fi
 
+dnl
+dnl Build jsctypes on the platforms we can.
+dnl
+AC_SUBST(BUILD_CTYPES)
+if test "$OS_TEST" != "arm"; then
+  BUILD_CTYPES=1
+  AC_DEFINE(BUILD_CTYPES)
+fi
+
 dnl NECKO_ configuration options are not global
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_"
 
@@ -7682,7 +7679,6 @@ AC_SUBST(LD)
 AC_SUBST(RC)
 AC_SUBST(RCFLAGS)
 AC_SUBST(WINDRES)
-AC_SUBST(USE_SHORT_LIBNAME)
 AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
 AC_SUBST(BIN_FLAGS)
@@ -8236,6 +8232,25 @@ if test "$MOZ_MEMORY"; then
 fi
 AC_OUTPUT_SUBDIRS(js/src)
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+
+# Build jsctypes on the platforms we can.
+if test "$BUILD_CTYPES"; then
+  # Run the libffi 'configure' script on platforms that it supports.
+  if test -z "$_MSC_VER"; then
+    ac_configure_args="--disable-shared --enable-static --disable-raw-api"
+    if test "$MOZ_DEBUG"; then
+      ac_configure_args="$ac_configure_args --enable-debug"
+    fi
+    if test -n "$DSO_PIC_CFLAGS"; then
+      ac_configure_args="$ac_configure_args --with-pic"
+    fi
+    if test -n "$CROSS_COMPILE"; then
+      ac_configure_args="$ac_configure_args --build=$build --host=$target"
+    fi
+    AC_OUTPUT_SUBDIRS(js/ctypes/libffi)
+    ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+  fi
+fi
 
 fi # COMPILE_ENVIRONMENT && !LIBXUL_SDK_DIR
 

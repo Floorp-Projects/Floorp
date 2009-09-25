@@ -48,7 +48,7 @@
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 
-[scriptable, uuid(99d904c0-3b9e-44b7-b1e0-372766d18308)]
+[scriptable, uuid(c1b779af-7297-4e2e-9fc4-a6f22038770f)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -197,6 +197,20 @@ interface nsIDOMWindowUtils : nsISupports {
                           in long aModifierFlags,
                           in AString aCharacters,
                           in AString aUnmodifiedCharacters);
+
+  /**
+   * See nsIWidget::SynthesizeNativeMouseEvent
+   *
+   * Will be called on the widget that contains aElement.
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   */
+  void sendNativeMouseEvent(in long aScreenX,
+                            in long aScreenY,
+                            in long aNativeMessage,
+                            in long aModifierFlags,
+                            in nsIDOMElement aElement);
 
   /**
    * See nsIWidget::ActivateNativeMenuItemAt

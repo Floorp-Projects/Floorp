@@ -18,6 +18,7 @@ browser.jar:
         content/browser/aboutRobots-icon-rtl.png      (content/aboutRobots-icon-rtl.png)
         content/browser/aboutRobots-widget-left.png   (content/aboutRobots-widget-left.png)
         content/browser/aboutRobots-widget-right.png  (content/aboutRobots-widget-right.png)
+*       content/browser/aboutSupport.xhtml            (content/aboutSupport.xhtml)
 *       content/browser/browser.css                   (content/browser.css)
 *       content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xul                   (content/browser.xul)

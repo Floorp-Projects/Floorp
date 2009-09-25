@@ -49,8 +49,6 @@
 #include "nsWeakReference.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsIDOMElement;
-class nsIDOMWindow;
 class nsPIDOMWindow;
 class nsIController;
 class nsIControllers;
@@ -67,14 +65,13 @@ public:
   NS_IMETHOD GetPopupNode(nsIDOMNode** aNode);
   NS_IMETHOD SetPopupNode(nsIDOMNode* aNode);
 
-  NS_IMETHOD GetControllerForCommand(const char *aCommand, nsIController** aResult);
-  NS_IMETHOD GetControllers(nsIControllers** aResult);
+  NS_IMETHOD GetControllerForCommand(nsPIDOMWindow* aContextWindow,
+                                     const char *aCommand,
+                                     nsIController** aResult);
+  NS_IMETHOD GetControllers(nsPIDOMWindow* aContextWindow, nsIControllers** aResult);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFocusController,
                                            nsIFocusController)
-
-public:
-  static nsPIDOMWindow *GetWindowFromDocument(nsIDOMDocument* aElement);
 
 // Members
 protected:

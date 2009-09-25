@@ -206,6 +206,10 @@ MAKEFILES_jsdebugger="
   js/jsd/idl/Makefile
 "
 
+MAKEFILES_jsctypes="
+  js/ctypes/Makefile
+"
+
 MAKEFILES_content="
   content/Makefile
   content/base/Makefile
@@ -583,7 +587,6 @@ MAKEFILES_xpfe="
   toolkit/components/remote/Makefile
   xpfe/Makefile
   xpfe/browser/Makefile
-  xpfe/browser/public/Makefile
   xpfe/browser/src/Makefile
   xpfe/components/Makefile
   xpfe/components/directory/Makefile
@@ -846,6 +849,7 @@ add_makefiles "
   $MAKEFILES_intl
   $MAKEFILES_xpconnect
   $MAKEFILES_jsdebugger
+  $MAKEFILES_jsctypes
   $MAKEFILES_content
   $MAKEFILES_layout
   $MAKEFILES_libimg
@@ -958,6 +962,7 @@ if [ "$ENABLE_TESTS" ]; then
     extensions/pref/Makefile
     intl/locale/tests_multilocale/Makefile
     js/src/xpconnect/tests/mochitest/Makefile
+    js/ctypes/tests/Makefile
     layout/forms/test/Makefile
     layout/generic/test/Makefile
     layout/inspector/tests/Makefile

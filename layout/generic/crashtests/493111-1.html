@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script type="application/javascript">
+      function onLoad() {
+        var text = document.getElementById("text").firstChild;
+        var sel = window.getSelection();
+        var r1 = document.createRange();
+        r1.setStart(text, 0);
+        r1.setEnd(text, 5);
+        sel.addRange(r1);
+        var r2 = document.createRange();
+        r2.setStart(text, 4);
+        r2.setEnd(text, 9);
+        sel.addRange(r2);
+     }
+   </script>
+ </head>
+ <body onload="onLoad();">
+   <p id="text">Adding overlapping ranges to a selection shouldn't assert</p>
+ </body>
+</html>

@@ -56,7 +56,7 @@
 #endif
 %}
 
-[scriptable, uuid(23fb201a-556d-4054-9885-6437e8910296)]
+[scriptable, uuid(505b523e-4a27-4151-b0eb-750b7258760e)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -98,4 +98,12 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
            attribute boolean controls;
            attribute float volume;
            attribute boolean muted;
+
+  // Mozilla extension: load data from another media element. This is like
+  // load() but we don't run the resource selection algorithm; instead
+  // we just set our source to other's currentSrc. This is optimized
+  // so that this element will get access to all of other's cached/
+  // buffered data. In fact any future data downloaded by this element or
+  // other will be sharable by both elements.
+  void mozLoadFrom(in nsIDOMHTMLMediaElement other);
 };

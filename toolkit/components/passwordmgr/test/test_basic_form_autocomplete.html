@@ -183,6 +183,12 @@ function checkACForm(expectedUsername, expectedPassword) {
 }
 
 
+function sendFakeAutocompleteEvent(element) {
+    var acEvent = document.createEvent("HTMLEvents");
+    acEvent.initEvent("DOMAutoComplete", true, false);
+    element.dispatchEvent(acEvent);
+}
+
 
 /*
  * Main section of test...
@@ -194,7 +200,11 @@ function checkACForm(expectedUsername, expectedPassword) {
  */
 function runTest(testNum) {
   // Seems we need to enable this again, or sendKeyEvent() complaints.
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  // But don't for test 14, or else dispatchEvent will send it as a trusted
+  // event (we're testing to see if we ignore untrusted events, so don't want
+  // that).
+  if (testNum != 14)
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   ok(true, "Starting test #" + testNum);
 
   switch(testNum) {
@@ -356,24 +366,24 @@ function runTest(testNum) {
         doKey("page_down");
         doKey("return");
         checkACForm("zzzuser4", "zzzpass4");
+        restoreForm();
+        break;
+
+    case 14:
+        // Send a fake (untrusted) event.
+        checkACForm("", "");
+        uname.value = "zzzuser4";
+        sendFakeAutocompleteEvent(uname);
+        checkACForm("zzzuser4", "");
+        break;
+
+    case 15:
+        checkACForm("zzzuser4", "");
 
         // Trigger autocomplete popup
         restoreForm();
         doKey("down");
         testNum = 49;
-        break;
-
-    case 14:
-        // Abort with ESC
-// XXX This isn't working in the test suite, seems to fubar any later tests.
-//        doKey("down");
-//        doKey("down");
-//        doKey("escape");
-//        checkACForm("", "");
-
-        // Trigger autocomplete popup
-//        restoreForm();
-//        doKey("down");
         break;
 
     // XXX tried sending character "t" before/during dropdown to test

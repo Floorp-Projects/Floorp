@@ -48,11 +48,7 @@ EXTRA_DEPS += $(srcdir)/../glue/objs.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xpcom_core
-
-ifneq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 SHORT_LIBNAME	= xpcomcor
-endif
-
 LIBXUL_LIBRARY = 1
 
 # This is only a static library in libxul builds
@@ -62,8 +58,6 @@ endif
 
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API = 1
-
-
 
 CSRCS		= \
 		$(XPCOM_GLUE_SRC_LCSRCS) \
@@ -174,6 +168,9 @@ endif
 
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
+ifdef MOZ_PLATFORM_HILDON
+EXTRA_DSO_LDOPTS += $(LIBHILDONMIME_LIBS)
+endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)

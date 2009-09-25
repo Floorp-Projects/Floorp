@@ -248,6 +248,17 @@ class nsStyleSet
   PRBool HasCachedStyleData() const {
     return (mRuleTree && mRuleTree->TreeHasCachedData()) || !mRoots.IsEmpty();
   }
+
+  // Notify the style set that a rulenode is no longer in use, or was
+  // just created and is not in use yet.
+  void RuleNodeUnused() {
+    ++mUnusedRuleNodeCount;
+  }
+
+  // Notify the style set that a rulenode that wasn't in use now is
+  void RuleNodeInUse() {
+    --mUnusedRuleNodeCount;
+  }
   
  private:
   // Not to be implemented
@@ -322,7 +333,7 @@ class nsStyleSet
   nsRuleWalker* mRuleWalker; // This is an instance of a rule walker that can
                              // be used to navigate through our tree.
 
-  PRInt32 mDestroyedCount; // used to batch style context GC
+  PRUint32 mUnusedRuleNodeCount; // used to batch rule node GC
   nsTArray<nsStyleContext*> mRoots; // style contexts with no parent
 
   // Empty style rules to force things that restrict which properties
@@ -343,4 +354,19 @@ class nsStyleSet
 
 };
 
+inline
+NS_HIDDEN_(void) nsRuleNode::AddRef()
+{
+  if (mRefCnt++ == 0 && !IsRoot()) {
+    mPresContext->StyleSet()->RuleNodeInUse();
+  }
+}
+
+inline
+NS_HIDDEN_(void) nsRuleNode::Release()
+{
+  if (--mRefCnt == 0 && !IsRoot()) {
+    mPresContext->StyleSet()->RuleNodeUnused();
+  }
+}
 #endif

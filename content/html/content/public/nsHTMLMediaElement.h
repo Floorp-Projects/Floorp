@@ -118,6 +118,10 @@ public:
   // when the resource has a network error during loading.
   void NetworkError();
 
+  // Called by the video decoder object, on the main thread, when the
+  // resource has a decode error during metadata loading or decoding.
+  void DecodeError();
+
   // Called by the video decoder object, on the main thread,
   // when the video playback has ended.
   void PlaybackEnded();
@@ -279,11 +283,22 @@ protected:
   PRBool CreateDecoder(const nsACString& aMIMEType);
 
   /**
+   * Initialize a decoder as a clone of an existing decoder in another
+   * element.
+   */
+  nsresult InitializeDecoderAsClone(nsMediaDecoder* aOriginal); 
+
+  /**
    * Initialize a decoder to load the given channel. The decoder's stream
    * listener is returned via aListener.
    */
   nsresult InitializeDecoderForChannel(nsIChannel *aChannel,
                                        nsIStreamListener **aListener);
+
+  /**
+   * Finish setting up the decoder after Load() has been called on it.
+   */
+  nsresult FinishDecoderSetup();
 
   /**
    * Execute the initial steps of the load algorithm that ensure existing
@@ -298,11 +313,11 @@ protected:
   nsresult NewURIFromString(const nsAutoString& aURISpec, nsIURI** aURI);
 
   /**
-   * Called when all postential resources are exhausted. Changes network
+   * Called when all potential resources are exhausted. Changes network
    * state to NETWORK_NO_SOURCE, and sends error event with code
-   * MEDIA_ERR_NONE_SUPPORTED.
+   * MEDIA_ERR_SRC_NOT_SUPPORTED.
    */
-  void NoSupportedMediaError();
+  void NoSupportedMediaSourceError();
 
   /**
    * Attempts to load resources from the <source> children. This is a

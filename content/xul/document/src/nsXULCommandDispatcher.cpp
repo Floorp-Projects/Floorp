@@ -489,7 +489,7 @@ nsXULCommandDispatcher::GetControllers(nsIControllers** aResult)
   nsIFocusController* fc = GetFocusController();
   NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
 
-  return fc->GetControllers(aResult);
+  return fc->GetControllers(mDocument->GetWindow(), aResult);
 }
 
 NS_IMETHODIMP
@@ -498,7 +498,7 @@ nsXULCommandDispatcher::GetControllerForCommand(const char *aCommand, nsIControl
   nsIFocusController* fc = GetFocusController();
   NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
 
-  return fc->GetControllerForCommand(aCommand, _retval);
+  return fc->GetControllerForCommand(mDocument->GetWindow(), aCommand, _retval);
 }
 
 NS_IMETHODIMP

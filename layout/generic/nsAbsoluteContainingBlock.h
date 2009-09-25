@@ -96,9 +96,9 @@ public:
                         nsIAtom*       aListName,
                         nsIFrame*      aPrevFrame,
                         nsFrameList&   aFrameList);
-  nsresult RemoveFrame(nsIFrame*      aDelegatingFrame,
-                       nsIAtom*       aListName,
-                       nsIFrame*      aOldFrame);
+  void RemoveFrame(nsIFrame*      aDelegatingFrame,
+                   nsIAtom*       aListName,
+                   nsIFrame*      aOldFrame);
 
   // Called by the delegating frame after it has done its reflow first. This
   // function will reflow any absolutely positioned child frames that need to

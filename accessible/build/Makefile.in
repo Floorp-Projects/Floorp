@@ -46,14 +46,11 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= accessibility
 LIBRARY_NAME	= accessibility
 EXPORT_LIBRARY = 1
-ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME	= access
-endif
 IS_COMPONENT	= 1
 MODULE_NAME	= nsAccessibilityModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
-
 
 CPPSRCS		= nsAccessibilityFactory.cpp
 

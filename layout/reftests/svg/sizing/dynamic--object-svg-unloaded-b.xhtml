@@ -2,7 +2,7 @@
      Any copyright is dedicated to the Public Domain.
      http://creativecommons.org/licenses/publicdomain/
 -->
-<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
 
     <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=294086 -->
@@ -27,13 +27,6 @@ var embedding_element;
 function handle_load(e)
 {
   embedding_element = e.originalTarget.defaultView.frameElement;
-  document.addEventListener("MozReftestInvalidate", notify_test_finished, false);
-  // in case we're not gecko
-  setTimeout(notify_test_finished, 5000);
-}
-
-function notify_test_finished()
-{
   embedding_element.ownerDocument.documentElement.removeAttribute('class');
 }
 

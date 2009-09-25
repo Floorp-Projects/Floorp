@@ -1,0 +1,50 @@
+commit 199a8cea6c4fd6d765254e7a384ac9df21ee2656
+Author: Viktor Gal <viktor.gal@maeth.com>
+Date:   Fri May 8 15:44:51 2009 +1000
+
+    In the commit of 34c82de a bug was introduced in 'oggplay_data_handle_audio_data' function:
+    the number of samples in the record was not the correct value! The value of it
+    was incorrectly the size of the samples in the record.
+
+diff --git a/src/liboggplay/oggplay_data.c b/src/liboggplay/oggplay_data.c
+index 4df5275..9376938 100644
+--- a/src/liboggplay/oggplay_data.c
++++ b/src/liboggplay/oggplay_data.c
+@@ -301,6 +301,7 @@ oggplay_data_handle_audio_data (OggPlayDecode *decode, void *data,
+ 
+   int                   num_channels, ret;
+   size_t                record_size = sizeof(OggPlayAudioRecord);
++  long                  samples_size;
+   OggPlayAudioRecord  * record = NULL;
+ 
+   num_channels = ((OggPlayAudioDecode *)decode)->sound_info.channels;
+@@ -310,17 +311,17 @@ oggplay_data_handle_audio_data (OggPlayDecode *decode, void *data,
+     return E_OGGPLAY_TYPE_OVERFLOW;
+   }
+ 
+-  ret = oggplay_mul_signed_overflow (samples, num_channels, &samples);
++  ret = oggplay_mul_signed_overflow (samples, num_channels, &samples_size);
+   if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
+     return ret;
+   }
+ 
+-  ret = oggplay_mul_signed_overflow (samples, samplesize, &samples);
++  ret = oggplay_mul_signed_overflow (samples_size, samplesize, &samples_size);
+   if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
+     return ret;
+   }
+ 
+-  ret = oggplay_check_add_overflow (record_size, samples, &record_size);
++  ret = oggplay_check_add_overflow (record_size, samples_size, &record_size);
+   if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
+     return ret;
+   }
+@@ -339,7 +340,7 @@ oggplay_data_handle_audio_data (OggPlayDecode *decode, void *data,
+   record->data = (void *)(record + 1);
+   
+   /* copy the received data - the header has been initialised! */
+-  memcpy (record->data, data, samples);
++  memcpy (record->data, data, samples_size);
+   /*
+   printf("[%f%f%f]\n", ((float *)record->data)[0], ((float *)record->data)[1],
+                     ((float *)record->data)[2]);

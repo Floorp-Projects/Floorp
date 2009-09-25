@@ -59,7 +59,6 @@ class nsIPresShell;
 class nsIDocShell;
 class nsIDocShellTreeNode;
 class nsIDocShellTreeItem;
-class nsIFocusController;
 class imgIContainer;
 class nsDOMDataTransfer;
 
@@ -79,6 +78,7 @@ class nsEventStateManager : public nsSupportsWeakReference,
                             public nsIEventStateManager,
                             public nsIObserver
 {
+  friend class nsMouseWheelTransaction;
 public:
   nsEventStateManager();
   virtual ~nsEventStateManager();
@@ -271,7 +271,8 @@ protected:
   nsresult DoScrollText(nsPresContext* aPresContext,
                         nsIFrame* aTargetFrame,
                         nsMouseScrollEvent* aMouseEvent,
-                        ScrollQuantity aScrollQuantity);
+                        ScrollQuantity aScrollQuantity,
+                        PRBool aAllowScrollSpeedOverride);
   void DoScrollHistory(PRInt32 direction);
   void DoScrollZoom(nsIFrame *aTargetFrame, PRInt32 adjustment);
   nsresult GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv);

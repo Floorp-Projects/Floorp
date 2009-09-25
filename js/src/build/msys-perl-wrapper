@@ -1,0 +1,16 @@
+#!/bin/sh
+
+args=""
+
+for i in "${@}"
+do
+    case "$i" in
+    -I?:/*)
+        i="$(echo "${i}" | sed -e 's|^-I\(.\):/|-I/\1/|')"
+	;;
+    esac
+
+    args="${args} '${i}'"
+done
+
+eval "exec perl $args"

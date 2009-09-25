@@ -101,6 +101,8 @@ function setForm(value) {
   input.focus();
 }
 
+var autocompleteMenu = getAutocompletePopup();
+
 // Restore the form to the default state.
 function restoreForm() {
   setForm("");
@@ -647,7 +649,6 @@ function checkMenuEntries(expectedValues) {
         is(actualValues[i], expectedValues[i], "Checking menu entry #"+i);
 }
 
-var autocompleteMenu;
 function getMenuEntries() {
     var entries = [];
 
@@ -662,18 +663,6 @@ function getMenuEntries() {
 }
 
 function startTest() {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    var Ci = Components.interfaces;
-    chromeWin = window
-                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShellTreeItem)
-                    .rootTreeItem
-                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindow)
-                    .QueryInterface(Ci.nsIDOMChromeWindow);
-    autocompleteMenu = chromeWin.document.getElementById("PopupAutoComplete");
-    ok(autocompleteMenu, "Got autocomplete popup");
     runTest(1);
 }
 

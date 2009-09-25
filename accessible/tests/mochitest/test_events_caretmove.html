@@ -167,9 +167,10 @@
 
     function doTests()
     {
+      todo(false, "enable commented tests Bug 510128 is fixed");
       // test no focused accessibles
-      testCaretOffset("textbox", -1);
-      testCaretOffset("textarea", -1);
+      //testCaretOffset("textbox", -1);
+      //testCaretOffset("textarea", -1);
       testCaretOffset("p", -1);
 
       // test caret move events and caret offsets
@@ -201,7 +202,7 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    addLoadEvent(doTests);
+    addA11yLoadEvent(doTests);
   </script>
 </head>
 

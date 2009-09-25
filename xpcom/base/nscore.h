@@ -505,11 +505,13 @@ typedef PRUint32 nsrefcnt;
 # define NS_INPARAM __attribute__((user("NS_inparam")))
 # define NS_OUTPARAM  __attribute__((user("NS_outparam")))
 # define NS_INOUTPARAM __attribute__((user("NS_inoutparam")))
+# define NS_OVERRIDE __attribute__((user("NS_override")))
 #else
 # define NS_SCRIPTABLE
 # define NS_INPARAM
 # define NS_OUTPARAM
 # define NS_INOUTPARAM
+# define NS_OVERRIDE
 #endif
 
 #endif /* nscore_h___ */

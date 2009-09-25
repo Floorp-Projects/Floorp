@@ -943,6 +943,9 @@ pref("ui.key.contentAccess", 5);
 pref("ui.key.menuAccessKeyFocuses", false); // overridden below
 pref("ui.key.saveLink.shift", true); // true = shift, false = meta
 
+// Disable page loading activity cursor by default.
+pref("ui.use_activity_cursor", false);
+
 // Middle-mouse handling
 pref("middlemouse.paste", false);
 pref("middlemouse.openNewWindow", true);
@@ -960,12 +963,24 @@ pref("mousewheel.transaction.ignoremovedelay", 100);
 // Macbook touchpad two finger pixel scrolling
 pref("mousewheel.enable_pixel_scrolling", true);
 
-// prefs for improved windows scrolling model
+// prefs for app level mouse wheel scrolling acceleration.
 // number of mousewheel clicks when acceleration starts
 // acceleration can be turned off if pref is set to -1
-pref("mousewheel.acceleration.start", 3);
-// factor to be muliplied for constant acceleration
+pref("mousewheel.acceleration.start", -1);
+// factor to be multiplied for constant acceleration
 pref("mousewheel.acceleration.factor", 10);
+
+// Prefs for override the system mouse wheel scrolling speed on the root
+// content of the web pages.  When
+// "mousewheel.system_scroll_override_on_root_content.enabled" is true and the system
+// scrolling speed isn't customized by the user, the root content scrolling
+// speed is multiplied by the following factors.  The value will be used as
+// 1/100.  E.g., 200 means 2.00.
+// NOTE: Even if "mousewheel.system_scroll_override_on_root_content.enabled" is
+// true, when Gecko detects the user customized the system scrolling speed
+// settings, the override isn't executed.
+pref("mousewheel.system_scroll_override_on_root_content.vertical.factor", 200);
+pref("mousewheel.system_scroll_override_on_root_content.horizontal.factor", 200);
 
 // 0=lines, 1=pages, 2=history , 3=text size
 pref("mousewheel.withnokey.action",0);
@@ -1608,6 +1623,8 @@ pref("intl.tsf.on_layout_change_interval", 100);
 // See bug 448927, on topmost panel, some IMEs are not usable on Windows.
 pref("ui.panel.default_level_parent", false);
 
+pref("mousewheel.system_scroll_override_on_root_content.enabled", true);
+
 # WINNT
 #endif
 
@@ -2030,6 +2047,8 @@ pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 // See bug 404131, topmost <panel> element wins to Dashboard on MacOSX.
 pref("ui.panel.default_level_parent", false);
 
+pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
+
 # XP_MACOSX
 #endif
 
@@ -2231,6 +2250,8 @@ pref("network.dns.disableIPv6", true);
 // change this value.
 pref("ui.panel.default_level_parent", false);
 
+pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
+
 # OS2
 #endif
 
@@ -2324,6 +2345,8 @@ pref("browser.download.dir", "/boot/home/Downloads");
 // see bug 451015. If there are other problems by this value, we may need to
 // change this value.
 pref("ui.panel.default_level_parent", false);
+
+pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 
 # BeOS
 #endif
@@ -2597,6 +2620,8 @@ pref("print.postscript.print_command", "lpr ${MOZ_PRINTER_NAME:+-P\"$MOZ_PRINTER
 // So, we have no reasons we should use non-toplevel window for popup.
 pref("ui.panel.default_level_parent", true);
 
+pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
+
 # XP_UNIX
 #endif
 #endif
@@ -2725,7 +2750,6 @@ pref("print.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+-d\"$MOZ_PRINTER_NAME\
 
 // Login Manager prefs
 pref("signon.rememberSignons",              true);
-pref("signon.expireMasterPassword",         false);
 pref("signon.SignonFileName",               "signons.txt"); // obsolete 
 pref("signon.SignonFileName2",              "signons2.txt"); // obsolete
 pref("signon.SignonFileName3",              "signons3.txt"); // obsolete
@@ -2757,6 +2781,11 @@ pref("image.cache.timeweight", 500);
 
 // The default Accept header sent for images loaded over HTTP(S)
 pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
+
+// WebGL prefs
+pref("webgl.enabled_for_all_sites", false);
+pref("webgl.software_render", false);
+pref("webgl.osmesalib", "");
 
 #ifdef XP_WIN
 #ifndef WINCE

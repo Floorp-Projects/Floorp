@@ -43,6 +43,7 @@
 #include "nsString.h"
 #include "nsIMIMEInfo.h"
 #include "nsIFile.h"
+#include "nsTArray.h"
 
 class nsLocalHandlerApp : public nsILocalHandlerApp
 {
@@ -62,6 +63,8 @@ public:
 
 protected:
   nsString mName;
+  nsString mDetailedDescription;
+  nsTArray<nsString> mParameters;
   nsCOMPtr<nsIFile> mExecutable;
   
   /**
@@ -72,8 +75,7 @@ protected:
    * @param aApp The application to launch (may not be null)
    * @param aArg The argument to pass on the command line
    */
-   NS_HIDDEN_(nsresult) LaunchWithIProcess(const nsCString &aArg);
-
+  NS_HIDDEN_(nsresult) LaunchWithIProcess(const nsCString &aArg);
 };
 
 // any platforms that need a platform-specific class instead of just 

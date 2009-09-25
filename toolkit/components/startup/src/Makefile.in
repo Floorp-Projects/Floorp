@@ -57,7 +57,7 @@ else
 ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
 CPPSRCS += nsUserInfoWin.cpp
 else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS += nsUserInfoMac.mm
 else
 CPPSRCS += nsUserInfoUnix.cpp

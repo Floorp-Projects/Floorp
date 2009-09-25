@@ -362,4 +362,17 @@
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 81)
 
 
+/******************************************************************************
+ * StreamLoader specific result codes:
+ */
+
+/**
+ * Result code returned by nsIStreamLoaderObserver to indicate that
+ * the observer is taking over responsibility for the data buffer,
+ * and the loader should NOT free it.
+ */
+#define NS_SUCCESS_ADOPTED_DATA \
+    NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_NETWORK, 90)
+
+
 #endif // !nsNetError_h__

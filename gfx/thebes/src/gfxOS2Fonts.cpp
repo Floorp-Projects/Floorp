@@ -341,9 +341,9 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         FcPattern *fcPattern = FcPatternCreate();
 
         // add (family) name to pattern
-        // (the conversion should work, font names don't contain high bit chars)
+        // convert name because FC stores it in UTF8 while we have it in UTF16
         FcPatternAddString(fcPattern, FC_FAMILY,
-                           (FcChar8 *)NS_LossyConvertUTF16toASCII(GetName()).get());
+                           (FcChar8 *)NS_ConvertUTF16toUTF8(GetName()).get());
 
         // adjust font weight using the offset
         // The requirements outlined in gfxFont.h are difficult to meet without

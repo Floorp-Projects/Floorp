@@ -227,8 +227,11 @@ function openUILinkIn( url, where, allowThirdPartyFixup, postData, referrerUrl )
     // fall through
   case "tab":
     let browser = w.getBrowser();
-    browser.loadOneTab(url, referrerUrl, null, postData, loadInBackground,
-                       allowThirdPartyFixup || false);
+    browser.loadOneTab(url, {
+                       referrerURI: referrerUrl,
+                       postData: postData,
+                       inBackground: loadInBackground,
+                       allowThirdPartyFixup: allowThirdPartyFixup});
     break;
   }
 
@@ -428,6 +431,15 @@ function openReleaseNotes()
   openUILinkIn(relnotesURL, "tab");
 }
 
+/**
+ * Opens the troubleshooting information (about:support) page for this version
+ * of the application.
+ */
+function openTroubleshootingPage()
+{
+  openUILinkIn("about:support", "tab");
+}
+
 #ifdef MOZ_UPDATER
 /**
  * Opens the update manager and checks for updates to the application.
@@ -586,8 +598,12 @@ function openNewTabWith(aURL, aDocument, aPostData, aEvent,
   // open link in new tab
   var referrerURI = aDocument ? aDocument.documentURIObject : aReferrer;
   var browser = top.document.getElementById("content");
-  return browser.loadOneTab(aURL, referrerURI, originCharset, aPostData,
-                            loadInBackground, aAllowThirdPartyFixup || false);
+  return browser.loadOneTab(aURL, {
+                            referrerURI: referrerURI,
+                            charset: originCharset,
+                            postData: aPostData,
+                            inBackground: loadInBackground,
+                            allowThirdPartyFixup: aAllowThirdPartyFixup});
 }
 
 function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup,

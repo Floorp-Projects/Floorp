@@ -228,6 +228,7 @@ function initPrefs()
                   getService(Components.interfaces.nsIPrefBranch2);
   // Disables the app level scroll acceleration
   prefSvc.setIntPref("mousewheel.acceleration.start", -1);
+  prefSvc.setBoolPref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 }
 
 function clearPrefs()
@@ -237,6 +238,7 @@ function clearPrefs()
                   getService(Components.interfaces.nsIPrefBranch2);
 
   prefSvc.clearUserPref("mousewheel.acceleration.start");
+  prefSvc.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");
 }
 
 window.onload = function () {

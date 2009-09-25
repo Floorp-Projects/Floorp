@@ -38,6 +38,7 @@ const ROLE_ROW = nsIAccessibleRole.ROLE_ROW;
 const ROLE_ROWHEADER = nsIAccessibleRole.ROLE_ROWHEADER;
 const ROLE_SECTION = nsIAccessibleRole.ROLE_SECTION;
 const ROLE_SLIDER = nsIAccessibleRole.ROLE_SLIDER;
+const ROLE_STATICTEXT = nsIAccessibleRole.ROLE_STATICTEXT;
 const ROLE_TABLE = nsIAccessibleRole.ROLE_TABLE;
 const ROLE_TEXT_CONTAINER = nsIAccessibleRole.ROLE_TEXT_CONTAINER;
 const ROLE_TEXT_LEAF = nsIAccessibleRole.ROLE_TEXT_LEAF;

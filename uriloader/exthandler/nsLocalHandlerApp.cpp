@@ -70,24 +70,62 @@ NS_IMETHODIMP nsLocalHandlerApp::SetName(const nsAString & aName)
 }
 
 NS_IMETHODIMP
+nsLocalHandlerApp::SetDetailedDescription(const nsAString & aDescription)
+{
+  mDetailedDescription.Assign(aDescription);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLocalHandlerApp::GetDetailedDescription(nsAString& aDescription)
+{
+  aDescription.Assign(mDetailedDescription);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsLocalHandlerApp::Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(aHandlerApp);
 
+  *_retval = PR_FALSE;
+
   // If the handler app isn't a local handler app, then it's not the same app.
   nsCOMPtr <nsILocalHandlerApp> localHandlerApp = do_QueryInterface(aHandlerApp);
-  if (!localHandlerApp) {
-    *_retval = PR_FALSE;
+  if (!localHandlerApp)
     return NS_OK;
-  }
 
   // If either handler app doesn't have an executable, then they aren't
   // the same app.
   nsCOMPtr<nsIFile> executable;
   nsresult rv = localHandlerApp->GetExecutable(getter_AddRefs(executable));
-  if (NS_FAILED(rv) || !executable || !mExecutable) {
-    *_retval = PR_FALSE;
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Equality for two empty nsIHandlerApp
+  if (!executable && !mExecutable) {
+    *_retval = PR_TRUE;
     return NS_OK;
+  }
+
+  // At least one is set so they are not equal
+  if (!mExecutable || !executable)
+    return NS_OK;
+
+  // Check the command line parameter list lengths
+  PRUint32 len;
+  localHandlerApp->GetParameterCount(&len);
+  if (mParameters.Length() != len)
+    return NS_OK;
+
+  // Check the command line params lists
+  for (PRUint32 idx = 0; idx < mParameters.Length(); idx++) {
+    nsAutoString param;
+    if (NS_FAILED(localHandlerApp->GetParameter(idx, param)) ||
+        !param.Equals(mParameters[idx]))
+      return NS_OK;
   }
 
   return executable->Equals(mExecutable, _retval);
@@ -122,15 +160,60 @@ nsLocalHandlerApp::LaunchWithIProcess(const nsCString& aArg)
 ////////////////////////////////////////////////////////////////////////////////
 //// nsILocalHandlerApp
 
-NS_IMETHODIMP nsLocalHandlerApp::GetExecutable(nsIFile **aExecutable)
+/* attribute nsIFile executable; */
+NS_IMETHODIMP
+nsLocalHandlerApp::GetExecutable(nsIFile **aExecutable)
 {
   NS_IF_ADDREF(*aExecutable = mExecutable);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsLocalHandlerApp::SetExecutable(nsIFile *aExecutable)
+NS_IMETHODIMP
+nsLocalHandlerApp::SetExecutable(nsIFile *aExecutable)
 {
   mExecutable = aExecutable;
   return NS_OK;
 }
 
+/* readonly attribute unsigned long parameterCount; */
+NS_IMETHODIMP
+nsLocalHandlerApp::GetParameterCount(PRUint32 *aParameterCount)
+{
+  *aParameterCount = mParameters.Length();
+  return NS_OK;
+}
+
+/* void clearParameters (); */
+NS_IMETHODIMP
+nsLocalHandlerApp::ClearParameters()
+{
+  mParameters.Clear();
+  return NS_OK;
+}
+
+/* void appendParameter (in AString param); */
+NS_IMETHODIMP
+nsLocalHandlerApp::AppendParameter(const nsAString & aParam)
+{
+  mParameters.AppendElement(aParam);
+  return NS_OK;
+}
+
+/* AString getParameter (in unsigned long parameterIndex); */
+NS_IMETHODIMP
+nsLocalHandlerApp::GetParameter(PRUint32 parameterIndex, nsAString & _retval)
+{
+  if (mParameters.Length() <= parameterIndex)
+    return NS_ERROR_INVALID_ARG;
+
+  _retval.Assign(mParameters[parameterIndex]);
+  return NS_OK;
+}
+
+/* boolean parameterExists (in AString param); */
+NS_IMETHODIMP
+nsLocalHandlerApp::ParameterExists(const nsAString & aParam, PRBool *_retval)
+{
+  *_retval = mParameters.Contains(aParam);
+  return NS_OK;
+}
