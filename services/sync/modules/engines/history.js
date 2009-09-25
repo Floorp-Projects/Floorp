@@ -85,12 +85,6 @@ HistoryEngine.prototype = {
 
   _sync: Utils.batchSync("History", SyncEngine),
 
-  _syncFinish: function HistEngine__syncFinish(error) {
-    // Only leave 1 week's worth of history on the server
-    this._delete.older = this.lastSync - 604800; // 60*60*24*7
-    SyncEngine.prototype._syncFinish.call(this);
-  },
-
   _findDupe: function _findDupe(item) {
     return GUIDForUri(item.histUri);
   }
