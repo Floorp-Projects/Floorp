@@ -81,6 +81,7 @@
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
 #include "nsGfxCIID.h"
+#include "nsIObserverService.h"
 
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -104,6 +105,7 @@ static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility"
 
 /* SetCursor(imgIContainer*) */
 #include <gdk/gdk.h>
+#include <wchar.h>
 #include "imgIContainer.h"
 #include "nsGfxCIID.h"
 #include "nsImageToPixbuf.h"
@@ -6740,6 +6742,24 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
             gIMEVirtualKeyboardOpened = PR_FALSE;
             hildon_gtk_im_context_hide (IMEGetContext());
         }
+        nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+        if (observerService) {
+            nsAutoString rectBuf;
+            PRInt32 x, y, w, h;
+            gdk_window_get_position(mGdkWindow, &x, &y);
+            gdk_window_get_size(mGdkWindow, &w, &h);
+            rectBuf.Assign(NS_LITERAL_STRING("{\"left\": "));
+            rectBuf.AppendInt(x);
+            rectBuf.Append(NS_LITERAL_STRING(" \"top\": "));
+            rectBuf.AppendInt(y);
+            rectBuf.Append(NS_LITERAL_STRING(", \"right\": "));
+            rectBuf.AppendInt(w);
+            rectBuf.Append(NS_LITERAL_STRING(", \"bottom\": "));
+            rectBuf.AppendInt(h);
+            rectBuf.Append(NS_LITERAL_STRING("}"));
+            observerService->NotifyObservers(nsnull, "softkb-change", rectBuf.get());
+        }
+
 #endif
 
     } else {
