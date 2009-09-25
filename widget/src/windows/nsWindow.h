@@ -101,13 +101,7 @@ public:
    * nsIWidget interface
    */
   NS_IMETHOD              Create(nsIWidget *aParent,
-                                 const nsIntRect &aRect,
-                                 EVENT_CALLBACK aHandleEventFunction,
-                                 nsIDeviceContext *aContext,
-                                 nsIAppShell *aAppShell = nsnull,
-                                 nsIToolkit *aToolkit = nsnull,
-                                 nsWidgetInitData *aInitData = nsnull);
-  NS_IMETHOD              Create(nsNativeWidget aParent,
+                                 nsNativeWidget aNativeParent,
                                  const nsIntRect &aRect,
                                  EVENT_CALLBACK aHandleEventFunction,
                                  nsIDeviceContext *aContext,
@@ -157,6 +151,8 @@ public:
   virtual PRBool          HasPendingInputEvent();
   gfxASurface             *GetThebesSurface();
   NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect);
+  NS_IMETHOD              OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta, PRBool aIsHorizontal, PRInt32 &aOverriddenDelta);
+
   virtual nsresult        SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
                                                    PRInt32 aNativeKeyCode,
                                                    PRUint32 aModifierFlags,
@@ -332,14 +328,6 @@ protected:
   virtual LPCWSTR         WindowPopupClass();
   virtual DWORD           WindowStyle();
   virtual DWORD           WindowExStyle();
-  virtual nsresult        StandardWindowCreate(nsIWidget *aParent,
-                                               const nsIntRect &aRect,
-                                               EVENT_CALLBACK aHandleEventFunction,
-                                               nsIDeviceContext *aContext,
-                                               nsIAppShell *aAppShell,
-                                               nsIToolkit *aToolkit,
-                                               nsWidgetInitData *aInitData,
-                                               nsNativeWidget aNativeParent = nsnull);
 
   /**
    * XP and Vista theming support for windows with rounded edges

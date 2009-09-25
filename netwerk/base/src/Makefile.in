@@ -101,7 +101,7 @@ else
 	CPPSRCS += nsAutodialWinCE.cpp
 endif
 else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	CPPSRCS += nsURLHelperOSX.cpp
 else
 	CPPSRCS += nsURLHelperUnix.cpp

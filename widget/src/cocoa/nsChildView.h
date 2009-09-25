@@ -209,6 +209,12 @@ enum {
 
 - (void)sendFocusEvent:(PRUint32)eventType;
 
+- (void)handleMouseMoved:(NSEvent*)aEvent;
+
+- (void)sendMouseEnterOrExitEvent:(NSEvent*)aEvent
+                            enter:(BOOL)aEnter
+                             type:(nsMouseEvent::exitType)aType;
+
 - (void) processPluginKeyEvent:(EventRef)aKeyEvent;
 
 // Simple gestures support
@@ -271,6 +277,22 @@ private:
   static void KillComposing();
 };
 
+class ChildViewMouseTracker {
+
+public:
+
+  static void MouseMoved(NSEvent* aEvent);
+  static void OnDestroyView(ChildView* aView);
+  static BOOL WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent);
+
+  static ChildView* sLastMouseEventView;
+
+private:
+
+  static NSWindow* WindowForEvent(NSEvent* aEvent);
+  static ChildView* ViewForEvent(NSEvent* aEvent);
+};
+
 //-------------------------------------------------------------------------
 //
 // nsChildView
@@ -291,31 +313,13 @@ public:
 
   // nsIWidget interface
   NS_IMETHOD              Create(nsIWidget *aParent,
+                                 nsNativeWidget aNativeParent,
                                  const nsIntRect &aRect,
                                  EVENT_CALLBACK aHandleEventFunction,
                                  nsIDeviceContext *aContext,
                                  nsIAppShell *aAppShell = nsnull,
                                  nsIToolkit *aToolkit = nsnull,
                                  nsWidgetInitData *aInitData = nsnull);
-  NS_IMETHOD              Create(nsNativeWidget aNativeParent,
-                                 const nsIntRect &aRect,
-                                 EVENT_CALLBACK aHandleEventFunction,
-                                 nsIDeviceContext *aContext,
-                                 nsIAppShell *aAppShell = nsnull,
-                                 nsIToolkit *aToolkit = nsnull,
-                                 nsWidgetInitData *aInitData = nsnull);
-
-   // Utility method for implementing both Create(nsIWidget ...) and
-   // Create(nsNativeWidget...)
-
-  virtual nsresult        StandardCreate(nsIWidget *aParent,
-                              const nsIntRect &aRect,
-                              EVENT_CALLBACK aHandleEventFunction,
-                              nsIDeviceContext *aContext,
-                              nsIAppShell *aAppShell,
-                              nsIToolkit *aToolkit,
-                              nsWidgetInitData *aInitData,
-                              nsNativeWidget aNativeParent = nsnull);
 
   NS_IMETHOD              Destroy();
 
@@ -385,6 +389,16 @@ public:
 
   virtual nsTransparencyMode GetTransparencyMode();
   virtual void                SetTransparencyMode(nsTransparencyMode aMode);
+
+  virtual nsresult SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                            PRInt32 aNativeKeyCode,
+                                            PRUint32 aModifierFlags,
+                                            const nsAString& aCharacters,
+                                            const nsAString& aUnmodifiedCharacters);
+
+  virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
+                                              PRUint32 aNativeMessage,
+                                              PRUint32 aModifierFlags);
   
   // Mac specific methods
   
@@ -424,12 +438,6 @@ protected:
   void              TearDownView();
   nsCocoaWindow*    GetXULWindowWidget();
 
-  virtual nsresult SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
-                                            PRInt32 aNativeKeyCode,
-                                            PRUint32 aModifierFlags,
-                                            const nsAString& aCharacters,
-                                            const nsAString& aUnmodifiedCharacters);
-
 protected:
 
   NSView<mozView>*      mView;      // my parallel cocoa view (ChildView or NativeScrollbarView), [STRONG]
@@ -451,7 +459,8 @@ protected:
   PRPackedBool          mPluginDrawing;
   PRPackedBool          mPluginIsCG; // true if this is a CoreGraphics plugin
 
-  nsPluginPort          mPluginPort;
+  NP_CGContext          mPluginCGContext;
+  NP_Port               mPluginQDPort;
   nsIPluginInstanceOwner* mPluginInstanceOwner; // [WEAK]
 
   static PRUint32 sLastInputEventCount;

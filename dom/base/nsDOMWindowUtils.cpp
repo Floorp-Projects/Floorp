@@ -392,6 +392,27 @@ nsDOMWindowUtils::SendNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SendNativeMouseEvent(PRInt32 aScreenX,
+                                       PRInt32 aScreenY,
+                                       PRInt32 aNativeMessage,
+                                       PRInt32 aModifierFlags,
+                                       nsIDOMElement* aElement)
+{
+  PRBool hasCap = PR_FALSE;
+  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
+      || !hasCap)
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  // get the widget to send the event to
+  nsCOMPtr<nsIWidget> widget = GetWidgetForElement(aElement);
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  return widget->SynthesizeNativeMouseEvent(nsIntPoint(aScreenX, aScreenY),
+                                            aNativeMessage, aModifierFlags);
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::ActivateNativeMenuItemAt(const nsAString& indexString)
 {
   PRBool hasCap = PR_FALSE;
@@ -437,6 +458,28 @@ nsDOMWindowUtils::GetWidget(nsPoint* aOffset)
           return frame->GetView()->GetNearestWidget(aOffset);
       }
     }
+  }
+
+  return nsnull;
+}
+
+nsIWidget*
+nsDOMWindowUtils::GetWidgetForElement(nsIDOMElement* aElement)
+{
+  if (!aElement)
+    return GetWidget();
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  nsIDocument* doc = content->GetCurrentDoc();
+  nsIPresShell* presShell = doc ? doc->GetPrimaryShell() : nsnull;
+
+  if (presShell) {
+    nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+    if (!frame) {
+      frame = presShell->GetRootFrame();
+    }
+    if (frame)
+      return frame->GetWindow();
   }
 
   return nsnull;

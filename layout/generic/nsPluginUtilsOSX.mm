@@ -42,6 +42,7 @@
 #import <Cocoa/Cocoa.h>
 #include "nsObjCExceptions.h"
 
+#ifndef __LP64__
 void NS_NPAPI_CarbonWindowFrame(WindowRef aWindow, nsRect& outRect)
 {
   if (!aWindow)
@@ -54,6 +55,7 @@ void NS_NPAPI_CarbonWindowFrame(WindowRef aWindow, nsRect& outRect)
   outRect.width = windowRect.right - windowRect.left;
   outRect.height = windowRect.bottom - windowRect.top;
 }
+#endif
 
 void NS_NPAPI_CocoaWindowFrame(void* aWindow, nsRect& outRect)
 {

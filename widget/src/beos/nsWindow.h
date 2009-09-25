@@ -94,33 +94,15 @@ public:
 
 	// nsIWidget interface
 	NS_IMETHOD              Create(nsIWidget *aParent,
+	                               nsNativeWidget aNativeParent,
 	                               const nsRect &aRect,
 	                               EVENT_CALLBACK aHandleEventFunction,
 	                               nsIDeviceContext *aContext,
 	                               nsIAppShell *aAppShell = nsnull,
 	                               nsIToolkit *aToolkit = nsnull,
 	                               nsWidgetInitData *aInitData = nsnull);
-	NS_IMETHOD              Create(nsNativeWidget aParent,
-	                               const nsRect &aRect,
-	                               EVENT_CALLBACK aHandleEventFunction,
-	                               nsIDeviceContext *aContext,
-	                               nsIAppShell *aAppShell = nsnull,
-	                               nsIToolkit *aToolkit = nsnull,
-	                               nsWidgetInitData *aInitData = nsnull);
 
-	// Utility method for implementing both Create(nsIWidget ...) and
-	// Create(nsNativeWidget...)
-
-	NS_IMETHOD          PreCreateWidget(nsWidgetInitData *aWidgetInitData);
-
-	virtual nsresult        StandardWindowCreate(nsIWidget *aParent,
-	                                             const nsRect &aRect,
-	                                             EVENT_CALLBACK aHandleEventFunction,
-	                                             nsIDeviceContext *aContext,
-	                                             nsIAppShell *aAppShell,
-	                                             nsIToolkit *aToolkit,
-	                                             nsWidgetInitData *aInitData,
-	                                             nsNativeWidget aNativeParent = nsnull);
+	NS_IMETHOD              PreCreateWidget(nsWidgetInitData *aWidgetInitData);
 
 	gfxASurface*            GetThebesSurface();
 

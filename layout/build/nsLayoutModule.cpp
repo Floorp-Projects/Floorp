@@ -206,12 +206,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 
 #include "nsHTMLCanvasFrame.h"
 
-#ifdef MOZ_ENABLE_CANVAS
 #include "nsIDOMCanvasRenderingContext2D.h"
-#ifdef MOZ_ENABLE_CANVAS3D
 #include "nsICanvasRenderingContextWebGL.h"
-#endif
-#endif
 
 class nsIDocumentLoaderFactory;
 
@@ -403,12 +399,8 @@ nsresult NS_NewContainerBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 #endif
 
-#ifdef MOZ_ENABLE_CANVAS
 nsresult NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult);
-#ifdef MOZ_ENABLE_CANVAS3D
 nsresult NS_NewCanvasRenderingContextWebGL(nsICanvasRenderingContextWebGL** aResult);
-#endif
-#endif
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
@@ -540,12 +532,8 @@ MAKE_CTOR(CreateVideoDocument,            nsIDocument,                 NS_NewVid
 #endif
 MAKE_CTOR(CreateFocusManager,             nsIFocusManager,      NS_NewFocusManager)
 
-#ifdef MOZ_ENABLE_CANVAS
 MAKE_CTOR(CreateCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D, NS_NewCanvasRenderingContext2D)
-#ifdef MOZ_ENABLE_CANVAS3D
 MAKE_CTOR(CreateCanvasRenderingContextWebGL, nsICanvasRenderingContextWebGL, NS_NewCanvasRenderingContextWebGL)
-#endif
-#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStyleSheetService, Init)
 
@@ -1075,18 +1063,14 @@ static const nsModuleComponentInfo gComponents[] = {
     UnregisterHTMLAudioElement },
 #endif
 
-#ifdef MOZ_ENABLE_CANVAS
   { "Canvas 2D Rendering Context",
     NS_CANVASRENDERINGCONTEXT2D_CID,
     "@mozilla.org/content/canvas-rendering-context;1?id=2d",
     CreateCanvasRenderingContext2D },
-#ifdef MOZ_ENABLE_CANVAS3D
   { "Canvas WebGL Rendering Context",
     NS_CANVASRENDERINGCONTEXTWEBGL_CID,
     "@mozilla.org/content/canvas-rendering-context;1?id=moz-webgl",
     CreateCanvasRenderingContextWebGL },
-#endif
-#endif
 
   { "XML document encoder",
     NS_TEXT_ENCODER_CID,

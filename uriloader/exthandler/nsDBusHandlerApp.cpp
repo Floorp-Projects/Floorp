@@ -73,6 +73,20 @@ NS_IMETHODIMP nsDBusHandlerApp::SetName(const nsAString & aName)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDBusHandlerApp::SetDetailedDescription(const nsAString & aDescription)
+{
+  mDetailedDescription.Assign(aDescription);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDBusHandlerApp::GetDetailedDescription(nsAString& aDescription)
+{
+  aDescription.Assign(mDetailedDescription);
+  
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDBusHandlerApp::Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval)
 {

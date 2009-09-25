@@ -57,18 +57,15 @@ def getFullPath(path):
   return os.path.normpath(os.path.join(oldcwd, os.path.expanduser(path)))
 
 def createReftestProfile(options, profileDir):
-  "Sets up a clean profile for reftest."
+  "Sets up a profile for reftest."
 
-  # Start with a clean slate.
-  shutil.rmtree(profileDir, True)
-  os.mkdir(profileDir)
-  # reftest should only need the dump pref set
+  # Set preferences.
   prefsFile = open(os.path.join(profileDir, "user.js"), "w")
   prefsFile.write("""user_pref("browser.dom.window.dump.enabled", true);
 """)
   prefsFile.write('user_pref("reftest.timeout", %d);' % options.timeout)
-
   prefsFile.close()
+
   # install the reftest extension bits into the profile
   profileExtensionsPath = os.path.join(profileDir, "extensions")
   os.mkdir(profileExtensionsPath)
@@ -170,7 +167,7 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
     processLeakLog(leakLogFile, options.leakThreshold)
     automation.log.info("\nREFTEST INFO | runreftest.py | Running tests: end.")
   finally:
-    if profileDir is not None:
+    if profileDir:
       shutil.rmtree(profileDir)
   sys.exit(status)
 

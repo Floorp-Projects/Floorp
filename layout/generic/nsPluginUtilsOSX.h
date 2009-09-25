@@ -39,7 +39,9 @@
 
 // We can use Carbon in this header but not Cocoa. Cocoa pointers must be void.
 
+#ifndef __LP64__
 #import <Carbon/Carbon.h>
+#endif
 
 #include "nsRect.h"
 #include "nsIWidget.h"
@@ -47,8 +49,10 @@
 
 // We use void pointers to avoid exporting native event types to cross-platform code.
 
+#ifndef __LP64__
 // Get the rect for an entire top-level Carbon window in screen coords.
 void NS_NPAPI_CarbonWindowFrame(WindowRef aWindow, nsRect& outRect);
+#endif
 
 // Get the rect for an entire top-level Cocoa window in screen coords.
 void NS_NPAPI_CocoaWindowFrame(void* aWindow, nsRect& outRect);

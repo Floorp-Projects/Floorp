@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+body > div {
+  height:200px;
+  width:200px;
+  overflow:hidden;
+  position:absolute;
+  left:0;
+  top:0;
+}
+</style>
+<script src="region_lib.js"></script>
+</head>
+<body style="margin:0">
+<!-- We use gradients here to fill elements with an unpredictable image. Since
+     our scrolling optimizations take account of areas of an element which
+     are blank or filled with a solid color, it's fragile to use those in
+     tests which expect to observe scrolling happening. -->
+
+<!-- Each of the DIV children of the BODY is one test. We scroll that DIV's
+     scrollTop from 0 to 20 and then call the function given by the DIV's id,
+     passing the blit region and the paint region as a parameters. -->
+
+<div id="testSimpleScroll">
+  <div style="height:300px; background:-moz-linear-gradient(top, bottom, from(red), to(black));"></div>
+</div>
+
+<div id="testFixedBackground">
+  <div style="height:300px; margin-bottom:-300px; background:-moz-linear-gradient(left, right, from(red), to(black)) fixed;"></div>
+  <div style="height:300px; background:-moz-linear-gradient(top, bottom, from(rgba(0,0,0,0.7)), to(rgba(255,0,0,0.7)));"></div>
+</div>
+
+<div id="testFixedPosOverlay">
+  <div style="position:fixed; left:0; top:50px; width:100px; height:45px; background:yellow;"></div>
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+  <p>Hello
+</div>
+
+<script>
+var tests = document.querySelectorAll("body>div");
+var currentTest = -1;
+
+function ok(a, msg) {
+  window.opener.ok(a, tests[currentTest].id + ": " + msg);
+};
+function todo(a, msg) {
+  window.opener.todo(a, tests[currentTest].id + ": " + msg);
+};
+function finish() {
+  window.opener.SimpleTest.finish();
+  window.close();
+}
+window.onerror = function (event) { window.opener.onerror(event); window.close(); };
+
+// Simple sanity check that scrolling a window with moving content in it does
+// the obvious thing: blit the content that was already visible, and repaint
+// the content that has scrolled into view.
+function testSimpleScroll(blitRegion, paintRegion) {
+  ok(blitRegion.equalsRegion(new Region([[0,0,200,180]])),
+     "Should blit everything that was already visible");
+  ok(paintRegion.equalsRegion(new Region([[0,180,200,200]])),
+     "Should repaint area that was scrolled into view");
+}
+
+// Check that scrolling visible content over background-attachment:fixed
+// content repaints everything
+function testFixedBackground(blitRegion, paintRegion) {
+  ok(blitRegion.isEmpty(),
+     "Shouldn't blit anything");
+  ok(paintRegion.equalsRegion(new Region([[0,0,200,200]])),
+     "Should repaint everything");
+}
+
+// Check that we optimize scrolling in a reasonable way in the presence of a
+// non-moving opaque overlay
+function testFixedPosOverlay(blitRegion, paintRegion) {
+  // The area of the fixed element should not be repainted or blitted at all
+  var fixedElemRect = [0,50,100,95]
+  ok(!blitRegion.intersectsRect(fixedElemRect),
+     "blit region should not intersect fixed-pos element area");
+  ok(!paintRegion.intersectsRect(fixedElemRect),
+     "paint region should not intersect fixed-pos element area");
+
+  // The area to the right of the fixed element that we can fill with blitting
+  // existing content should not be repainted (but may be blitted, although
+  // it doesn't all need to be blitted either, since most of it is blank)
+  var noPaintRect = [100,0,200,180];
+  ok(!paintRegion.intersectsRect(noPaintRect),
+     "paint region should not intersect blittable area");
+}
+
+function clientRectToRect(cr)
+{
+  return [cr.left, cr.top, cr.right, cr.bottom];
+}
+
+function regionForReason(requests, reason)
+{
+  var rects = [];
+  for (var i = 0; i < requests.length; ++i) {
+    var r = requests[i];
+    if (r.reason == reason) {
+      rects.push(clientRectToRect(r.clientRect));
+    }
+  }
+  return new Region(rects);
+}
+
+function afterPaint(event) {
+  var requests = event.paintRequests;
+
+  if (!requests) {
+    todo(false, "cannot run tests since paintRequests not supported");
+    finish();
+    return;
+  }
+
+  var blitRegion = regionForReason(requests, "scroll copy");
+  var paintRegion = regionForReason(requests, "scroll repaint");
+
+  if (blitRegion.isEmpty() && paintRegion.isEmpty())
+    return;
+
+  window[tests[currentTest].id](blitRegion, paintRegion);
+  tests[currentTest].style.display = 'none';
+
+  nextTest();
+}
+
+for (var i = 0; i < tests.length; ++i) {
+  var e = tests[i];
+  e.style.display = "none";
+  // Make sure we don't remember a scroll position from history
+  e.scrollTop = 0;
+}
+
+function nextTest() {
+  ++currentTest;
+  if (currentTest >= tests.length) {
+    finish();
+    return;
+  }
+
+  var e = tests[currentTest];
+  e.style.display = "";
+  setTimeout(function() { e.scrollTop = 20; }, 0);
+}
+
+function runTests() {
+  window.addEventListener("MozAfterPaint", afterPaint, false);
+  nextTest();
+}
+window.onload = function() { setTimeout(runTests, 0); };
+</script>
+</body>
+</html>

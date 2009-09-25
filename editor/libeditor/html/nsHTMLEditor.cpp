@@ -3523,7 +3523,7 @@ nsHTMLEditor::EnableStyleSheet(const nsAString &aURL, PRBool aEnable)
   NS_ASSERTION(domSheet, "Sheet not implementing nsIDOMStyleSheet!");
 
   // Ensure the style sheet is owned by our document.
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocWeak);
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
   rv = sheet->SetOwningDocument(doc);
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -3542,7 +3542,7 @@ nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
   if (sheet)
   {
     // Ensure the style sheet is owned by our document.
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocWeak);
+    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
     rv = sheet->SetOwningDocument(doc);
     if (NS_FAILED(rv))
       return PR_FALSE;

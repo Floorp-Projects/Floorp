@@ -102,8 +102,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xb681539f, 0x5dac, 0x45af, \
-    { 0x8a, 0x25, 0xdf, 0xd7, 0x14, 0xe0, 0x9f, 0x43 } }
+  { 0x155c4b, 0x78da, 0x4607, \
+    { 0x92, 0x87, 0xd6, 0xcf, 0x32, 0xcd, 0x42, 0xb5 } }
 
 /*
  * Window shadow styles
@@ -188,9 +188,6 @@ class nsIWidget : public nsISupports {
     /**
      * Create and initialize a widget. 
      *
-     * The widget represents a window that can be drawn into. It also is the 
-     * base class for user-interface widgets such as buttons and text boxes.
-     *
      * All the arguments can be NULL in which case a top level window
      * with size 0 is created. The event callback function has to be
      * provided only if the caller wants to deal with the events this
@@ -203,54 +200,29 @@ class nsIWidget : public nsISupports {
      * calling code must handle paint messages and clear the background 
      * itself. 
      *
-     * aInitData cannot be eWindowType_popup here; popups cannot be
-     * hooked into the nsIWidget hierarchy.
+     * In practice at least one of aParent and aNativeParent will be null. If
+     * both are null the widget isn't parented (e.g. context menus or
+     * independent top level windows).
      *
-     * @param     parent or null if it's a top level window
-     * @param     aRect     the widget dimension
+     * @param     aParent       parent nsIWidget
+     * @param     aNativeParent native parent widget
+     * @param     aRect         the widget dimension
      * @param     aHandleEventFunction the event handler callback function
      * @param     aContext
-     * @param     aAppShell the parent application shell. If nsnull,
-     *                      the parent window's application shell will be used.
+     * @param     aAppShell     the parent application shell. If nsnull,
+     *                          the parent window's application shell will be used.
      * @param     aToolkit
-     * @param     aInitData data that is used for widget initialization
+     * @param     aInitData     data that is used for widget initialization
      *
      */
     NS_IMETHOD Create(nsIWidget        *aParent,
-                        const nsIntRect  &aRect,
-                        EVENT_CALLBACK   aHandleEventFunction,
-                        nsIDeviceContext *aContext,
-                        nsIAppShell      *aAppShell = nsnull,
-                        nsIToolkit       *aToolkit = nsnull,
-                        nsWidgetInitData *aInitData = nsnull) = 0;
-
-    /**
-     * Create and initialize a widget with a native window parent
-     *
-     * The widget represents a window that can be drawn into. It also is the 
-     * base class for user-interface widgets such as buttons and text boxes.
-     *
-     * All the arguments can be NULL in which case a top level window
-     * with size 0 is created. The event callback function has to be
-     * provided only if the caller wants to deal with the events this
-     * widget receives.  The event callback is basically a preprocess
-     * hook called synchronously. The return value determines whether
-     * the event goes to the default window procedure or it is hidden
-     * to the os. The assumption is that if the event handler returns
-     * false the widget does not see the event.
-     *
-     * @param     aParent   native window.
-     * @param     aRect     the widget dimension
-     * @param     aHandleEventFunction the event handler callback function
-     */
-    NS_IMETHOD Create(nsNativeWidget aParent,
-                        const nsIntRect  &aRect,
-                        EVENT_CALLBACK   aHandleEventFunction,
-                        nsIDeviceContext *aContext,
-                        nsIAppShell      *aAppShell = nsnull,
-                        nsIToolkit       *aToolkit = nsnull,
-                        nsWidgetInitData *aInitData = nsnull) = 0;
-
+                      nsNativeWidget   aNativeParent,
+                      const nsIntRect  &aRect,
+                      EVENT_CALLBACK   aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell      *aAppShell = nsnull,
+                      nsIToolkit       *aToolkit = nsnull,
+                      nsWidgetInitData *aInitData = nsnull) = 0;
 
     /**
      * Accessor functions to get and set the client data associated with the
@@ -931,6 +903,18 @@ class nsIWidget : public nsISupports {
                                               const nsAString& aUnmodifiedCharacters) = 0;
 
     /**
+     * Utility method intended for testing. Dispatches native mouse events
+     * to this widget and may even move the mouse cursor.
+     * @param aPoint screen location of the mouse, in pixels, with origin at
+     * the top left
+     * @param aNativeMessage *platform-specific* event type (e.g. NSMouseMoved)
+     * @param aModifierFlags *platform-specific* modifier flags
+     */
+    virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
+                                                PRUint32 aNativeMessage,
+                                                PRUint32 aModifierFlags) = 0;
+
+    /**
      * Activates a native menu item at the position specified by the index
      * string. The index string is a string of positive integers separated
      * by the "|" (pipe) character. The last integer in the string represents
@@ -1083,6 +1067,29 @@ class nsIWidget : public nsISupports {
      * The button's rectangle should be supplied in aButtonRect.
      */ 
     NS_IMETHOD OnDefaultButtonLoaded(const nsIntRect &aButtonRect) = 0;
+
+    /**
+     * Compute the overridden system mouse scroll speed on the root content of
+     * web pages.  The widget may set the same value as aOriginalDelta.  E.g.,
+     * when the system scrolling settings were customized, widget can respect
+     * the will of the user.
+     *
+     * This is called only when the mouse wheel event scrolls the root content
+     * of the web pages by line.  In other words, this isn't called when the
+     * mouse wheel event is used for zoom, page scroll and other special
+     * actions.  And also this isn't called when the user doesn't use the
+     * system wheel speed settings.
+     *
+     * @param aOriginalDelta   The delta value of the current mouse wheel
+     *                         scrolling event.
+     * @param aIsHorizontal    If TRUE, the scrolling direction is horizontal.
+     *                         Otherwise, it's vertical.
+     * @param aOverriddenDelta The overridden mouse scrolling speed.  This value
+     *                         may be same as aOriginalDelta.
+     */
+    NS_IMETHOD OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
+                                              PRBool aIsHorizontal,
+                                              PRInt32 &aOverriddenDelta) = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.

@@ -164,8 +164,8 @@ function checkState() {
   test_is(gMedia.autoplay, false, "Autoplay leaked");
   test_is(gMedia.controls, false, "Controls leaked");
   test_is(gMedia.muted, false, "muted leaked");
-  test_ok(gMedia.error==null || gMedia.error.code==HTMLMediaError.MEDIA_ERR_NONE_SUPPORTED,
-          "Error code should not exist or be NONE_SUPPORTED. gMedia.error=" +
+  test_ok(gMedia.error==null || gMedia.error.code==HTMLMediaError.MEDIA_ERR_SRC_NOT_SUPPORTED,
+          "Error code should not exist or be SRC_NOT_SUPPORTED. gMedia.error=" +
           (gMedia.error ? gMedia.error.code : "null"));
   test_is(gMedia.currentSrc, "", "Leaked currentSrc");
 

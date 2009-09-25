@@ -197,6 +197,7 @@
 
 #endif
 #include "nsPlaceholderFrame.h"
+#include "nsHTMLFrame.h"
 
 // Content viewer interfaces
 #include "nsIContentViewer.h"
@@ -796,7 +797,9 @@ public:
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD_(PRBool) IsVisible();
   NS_IMETHOD_(void) WillPaint();
-  NS_IMETHOD_(void) InvalidateFrameForView(nsIView *view);
+  NS_IMETHOD_(void) InvalidateFrameForScrolledView(nsIView *view);
+  NS_IMETHOD_(void) NotifyInvalidateForScrolledView(const nsRegion& aBlitRegion,
+                                                    const nsRegion& aInvalidateRegion);
   NS_IMETHOD_(void) DispatchSynthMouseMove(nsGUIEvent *aEvent,
                                            PRBool aFlushOnHoverChange);
   NS_IMETHOD_(void) ClearMouseCapture(nsIView* aView);
@@ -4381,13 +4384,52 @@ PresShell::GetSelectionForCopy(nsISelection** outSelection)
   return rv;
 }
 
-/* Just hook this call into InvalidateOverflowRect */
 void
-PresShell::InvalidateFrameForView(nsIView *aView)
+PresShell::InvalidateFrameForScrolledView(nsIView *aView)
 {
   nsIFrame* frame = nsLayoutUtils::GetFrameFor(aView);
-  if (frame)
-    frame->InvalidateOverflowRect();
+  if (!frame)
+    return;
+  frame->InvalidateWithFlags(frame->GetOverflowRect(),
+                             nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT);
+}
+
+static void
+NotifyInvalidateRegion(nsPresContext* aPresContext, const nsRegion& aRegion,
+                       nsPoint aOffset, PRUint32 aFlags)
+{
+  const nsRect* r;
+  for (nsRegionRectIterator iter(aRegion); (r = iter.Next());) {
+    aPresContext->NotifyInvalidation(*r + aOffset, aFlags);
+  }
+}
+
+void
+PresShell::NotifyInvalidateForScrolledView(const nsRegion& aBlitRegion,
+                                           const nsRegion& aInvalidateRegion)
+{
+  nsPresContext* pc = GetPresContext();
+  PRUint32 crossDocFlags = 0;
+  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
+  nsPoint offset(0,0);
+  while (pc) {
+    if (pc->MayHavePaintEventListener()) {
+      NotifyInvalidateRegion(pc, aBlitRegion, offset,
+                             nsIFrame::INVALIDATE_REASON_SCROLL_BLIT | crossDocFlags);
+      NotifyInvalidateRegion(pc, aInvalidateRegion, offset,
+                             nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT | crossDocFlags);
+    }
+    crossDocFlags = nsIFrame::INVALIDATE_CROSS_DOC;
+
+    nsIFrame* rootParentFrame = nsLayoutUtils::GetCrossDocParentFrame(rootFrame);
+    if (!rootParentFrame)
+      break;
+
+    pc = rootParentFrame->PresContext();
+    nsIFrame* nextRootFrame = pc->PresShell()->FrameManager()->GetRootFrame();
+    offset += rootFrame->GetOffsetTo(nextRootFrame);
+    rootFrame = nextRootFrame;
+  }
 }
 
 NS_IMETHODIMP_(void)
@@ -4412,9 +4454,18 @@ PresShell::ClearMouseCapture(nsIView* aView)
 {
   if (gCaptureInfo.mContent) {
     if (aView) {
-      // if a view was specified, ensure that the captured content
-      // is within this view
-      nsIFrame* frame = GetPrimaryFrameFor(gCaptureInfo.mContent);
+      // if a view was specified, ensure that the captured content is within
+      // this view. Get the frame for the captured content from the right
+      // presshell first.
+      nsIFrame* frame = nsnull;
+      nsIDocument* doc = gCaptureInfo.mContent->GetCurrentDoc();
+      if (doc) {
+        nsIPresShell *shell = doc->GetPrimaryShell();
+        if (shell) {
+          frame = shell->GetPrimaryFrameFor(gCaptureInfo.mContent);
+        }
+      }
+
       if (frame) {
         nsIView* view = frame->GetClosestView();
         while (view) {
@@ -4582,9 +4633,9 @@ PresShell::UnsuppressAndInvalidate()
     // let's assume that outline on a root frame is not supported
     nsRect rect(nsPoint(0, 0), rootFrame->GetSize());
     rootFrame->Invalidate(rect);
-  }
 
-  mPresContext->RootPresContext()->UpdatePluginGeometry(rootFrame);
+    mPresContext->RootPresContext()->UpdatePluginGeometry(rootFrame);
+  }
 
   // now that painting is unsuppressed, focus may be set on the document
   nsPIDOMWindow *win = mDocument->GetWindow();
@@ -5238,12 +5289,23 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
         (aFlags & RENDER_CARET) != 0);
     nsDisplayList list;
 
+    nsRect canvasArea(
+      builder.ToReferenceFrame(rootFrame), rootFrame->GetSize());
+
     nsRect rect(aRect);
     nsIFrame* rootScrollFrame = GetRootScrollFrame();
     if ((aFlags & RENDER_IGNORE_VIEWPORT_SCROLLING) && rootScrollFrame) {
-      nsPoint pos = GetRootScrollFrameAsScrollable()->GetScrollPosition();
+      nsIScrollableFrame* rootScrollableFrame =
+        GetRootScrollFrameAsScrollable();
+      nsPoint pos = rootScrollableFrame->GetScrollPosition();
       rect.MoveBy(-pos);
       builder.SetIgnoreScrollFrame(rootScrollFrame);
+
+      CanvasFrame* canvasFrame =
+        do_QueryFrame(rootScrollableFrame->GetScrolledFrame());
+      if (canvasFrame) {
+        canvasArea = canvasFrame->CanvasArea();
+      }
     }
 
     builder.SetBackgroundOnly(PR_FALSE);
@@ -5253,7 +5315,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
     // Add the canvas background color.
     nsresult rv =
       rootFrame->PresContext()->PresShell()->AddCanvasBackgroundColorItem(
-        builder, list, rootFrame);
+        builder, list, rootFrame, &canvasArea);
 
     if (NS_SUCCEEDED(rv)) {
       rv = rootFrame->BuildDisplayListForStackingContext(&builder, rect, &list);
@@ -6038,7 +6100,9 @@ PresShell::HandleEvent(nsIView         *aView,
     // if a node is capturing the mouse, get the frame for the capturing
     // content and use that instead. However, if the content has no parent,
     // such as the root frame, get the parent canvas frame instead. This
-    // ensures that positioned frames are included when hit-testing.
+    // ensures that positioned frames are included when hit-testing. Note
+    // that a check was already done above to ensure that capturingContent
+    // is in this presshell.
     nsIContent* capturingContent = gCaptureInfo.mContent;
     frame = GetPrimaryFrameFor(capturingContent);
     if (frame) {

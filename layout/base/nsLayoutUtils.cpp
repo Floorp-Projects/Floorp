@@ -82,6 +82,7 @@
 #include "nsICanvasElement.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "gfxPlatform.h"
+#include "nsClientRect.h"
 #ifdef MOZ_MEDIA
 #include "nsHTMLVideoElement.h"
 #endif
@@ -159,14 +160,8 @@ GetLastChildFrame(nsIFrame*       aFrame,
   // Get the last continuation frame that's a parent
   nsIFrame* lastParentContinuation = nsLayoutUtils::GetLastContinuationWithChild(aFrame);
 
-  // Get the last child frame
-  nsIFrame* firstChildFrame = lastParentContinuation->GetFirstChild(nsnull);
-  if (firstChildFrame) {
-    nsFrameList frameList(firstChildFrame);
-    nsIFrame*   lastChildFrame = frameList.LastChild();
-
-    NS_ASSERTION(lastChildFrame, "unexpected error");
-
+  nsIFrame* lastChildFrame = lastParentContinuation->GetLastChild(nsnull);
+  if (lastChildFrame) {
     // Get the frame's first continuation. This matters in case the frame has
     // been continued across multiple lines or split by BiDi resolution.
     lastChildFrame = lastChildFrame->GetFirstContinuation();
@@ -356,7 +351,7 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
                                      nsIContent* aContent2,
                                      PRInt32 aIf1Ancestor,
                                      PRInt32 aIf2Ancestor,
-                                     nsIContent* aCommonAncestor)
+                                     const nsIContent* aCommonAncestor)
 {
   NS_PRECONDITION(aContent1, "aContent1 must not be null");
   NS_PRECONDITION(aContent2, "aContent2 must not be null");
@@ -1455,21 +1450,40 @@ nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
   GetAllInFlowBoxes(aFrame, &converter);
 }
 
-struct RectAccumulator : public nsLayoutUtils::RectCallback {
-  nsRect       mResultRect;
-  nsRect       mFirstRect;
-  PRPackedBool mSeenFirstRect;
+nsLayoutUtils::RectAccumulator::RectAccumulator() : mSeenFirstRect(PR_FALSE) {}
 
-  RectAccumulator() : mSeenFirstRect(PR_FALSE) {}
-
-  virtual void AddRect(const nsRect& aRect) {
-    mResultRect.UnionRect(mResultRect, aRect);
-    if (!mSeenFirstRect) {
-      mSeenFirstRect = PR_TRUE;
-      mFirstRect = aRect;
-    }
+void nsLayoutUtils::RectAccumulator::AddRect(const nsRect& aRect) {
+  mResultRect.UnionRect(mResultRect, aRect);
+  if (!mSeenFirstRect) {
+    mSeenFirstRect = PR_TRUE;
+    mFirstRect = aRect;
   }
-};
+}
+
+nsLayoutUtils::RectListBuilder::RectListBuilder(nsClientRectList* aList)
+  : mRectList(aList), mRV(NS_OK) {}
+
+void nsLayoutUtils::RectListBuilder::AddRect(const nsRect& aRect) {
+  nsRefPtr<nsClientRect> rect = new nsClientRect();
+  if (!rect) {
+    mRV = NS_ERROR_OUT_OF_MEMORY;
+    return;
+  }
+
+  rect->SetLayoutRect(aRect);
+  mRectList->Append(rect);
+}
+
+nsIFrame* nsLayoutUtils::GetContainingBlockForClientRect(nsIFrame* aFrame)
+{
+  // get the nearest enclosing SVG foreign object frame or the root frame
+  while (aFrame->GetParent() &&
+         !aFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)) {
+    aFrame = aFrame->GetParent();
+  }
+
+  return aFrame;
+}
 
 nsRect
 nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo) {

@@ -60,6 +60,7 @@ nsWebHandlerApp.prototype = {
   contractID: "@mozilla.org/uriloader/web-handler-app;1",
 
   _name: null,
+  _detailedDescription: null,
   _uriTemplate: null,
 
   //////////////////////////////////////////////////////////////////////////////
@@ -71,6 +72,14 @@ nsWebHandlerApp.prototype = {
 
   set name(aName) {
     this._name = aName;
+  },
+
+  get detailedDescription() {
+    return this._detailedDescription;
+  },
+
+  set detailedDescription(aDesc) {
+    this._detailedDescription = aDesc;
   },
 
   equals: function(aHandlerApp) {

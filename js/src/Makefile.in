@@ -417,7 +417,7 @@ LIBS +=  C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 endif
 
 # BeOS and HP-UX do not require the extra linking of "-lm"
-ifeq (,$(filter BeOS HP-UX WINNT WINCE OpenVMS,$(OS_ARCH)))
+ifeq (,$(filter BeOS HP-UX WINNT WINCE OpenVMS OS2,$(OS_ARCH)))
 EXTRA_LIBS	+= -lm
 endif
 
@@ -450,8 +450,6 @@ ifeq ($(TARGET_CPU),sparc)
 ifdef GNU_CC
 CFLAGS   += -mcpu=v9
 CXXFLAGS += -mcpu=v9
-else
-ASFLAGS  += -xarch=v8plus -P -L -D_ASM -D__STDC__=0 -K PIC
 endif # GNU_CC
 
 endif
@@ -468,17 +466,25 @@ LDFLAGS += -ljemalloc
 endif
 endif
 
+ifdef SOLARIS_SUNPRO_CXX
 # Sun Studio x86 has an optimization bug with LIR.cpp, use -xO2 instead.
-ifeq ($(OS_ARCH),SunOS)
 ifeq (86,$(findstring 86,$(OS_TEST)))
-ifndef GNU_CC
 LIR.o: LIR.cpp Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(CXX) -o $@ -c $(patsubst -xO%,-xO2,$(COMPILE_CFLAGS)) $<
-endif
-endif
-endif
+else
+# Sun Studio SPARC doesn't work well with gcc inline asm, use lock_SunOS_sparc*.il
+jslock.o: jslock.cpp Makefile.in lock_sparcv8plus.il lock_sparcv9.il
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO_CXX)
+ifeq (sparcv9,$(findstring sparcv9,$(OS_TEST)))
+	$(CXX) -o $@ -c $(COMPILE_CFLAGS) $(srcdir)/lock_sparcv9.il $<
+else
+	$(CXX) -o $@ -c $(COMPILE_CFLAGS) $(srcdir)/lock_sparcv8plus.il $<
+endif # sparcv9
+endif # x86
+endif # SOLARIS_SUNPRO_CXX
 
 # Allow building jsinterp.c with special optimization flags
 ifdef INTERP_OPTIMIZER

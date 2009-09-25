@@ -51,6 +51,7 @@ class nsIDOMEvent;
 class nsRegion;
 class nsDisplayListBuilder;
 class nsIFontMetrics;
+class nsClientRectList;
 
 #include "prtypes.h"
 #include "nsStyleContext.h"
@@ -154,7 +155,7 @@ public:
    */
   static PRInt32 CompareTreePosition(nsIContent* aContent1,
                                      nsIContent* aContent2,
-                                     nsIContent* aCommonAncestor = nsnull)
+                                     const nsIContent* aCommonAncestor = nsnull)
   {
     return DoCompareTreePosition(aContent1, aContent2, -1, 1, aCommonAncestor);
   }
@@ -169,7 +170,7 @@ public:
                                        nsIContent* aContent2,
                                        PRInt32 aIf1Ancestor,
                                        PRInt32 aIf2Ancestor,
-                                       nsIContent* aCommonAncestor = nsnull);
+                                       const nsIContent* aCommonAncestor = nsnull);
 
   /**
    * CompareTreePosition determines whether aFrame1 comes before or
@@ -599,6 +600,27 @@ public:
   public:
     virtual void AddRect(const nsRect& aRect) = 0;
   };
+
+  struct RectAccumulator : public RectCallback {
+    nsRect       mResultRect;
+    nsRect       mFirstRect;
+    PRPackedBool mSeenFirstRect;
+
+    RectAccumulator();
+
+    virtual void AddRect(const nsRect& aRect);
+  };
+
+  struct RectListBuilder : public RectCallback {
+    nsClientRectList* mRectList;
+    nsresult          mRV;
+
+    RectListBuilder(nsClientRectList* aList);
+     virtual void AddRect(const nsRect& aRect);
+  };
+
+  static nsIFrame* GetContainingBlockForClientRect(nsIFrame* aFrame);
+
   /**
    * Collect all CSS border-boxes associated with aFrame and its
    * continuations, "drilling down" through outer table frames and

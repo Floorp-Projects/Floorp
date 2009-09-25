@@ -97,3 +97,19 @@ HTTP(..) == load-badchecksum.html load-badchecksum-ref.html
 # t2embed lib on windows is picky about fullname
 HTTP(..) == load-badfullname.html load-badfullname-ref.html
 
+# 507960-1-* : a collection of tests using DeLarge from openfontlibrary.org
+# check that the original DeLarge face (ttf) loads; if this fails,
+# none of the following tests are meaningful
+HTTP(..) != 507960-1-nofont.html 507960-1-ref.html
+# check that the WOFF version loads, with and without a format hint
+HTTP(..) == 507960-1-woff.html 507960-1-ref.html
+HTTP(..) == 507960-1-woff-hint.html 507960-1-ref.html
+# try damaged fonts that should still load (bad checksums)
+HTTP(..) == 507960-1-bad-checksums-ttf.html 507960-1-ref.html
+HTTP(..) == 507960-1-bad-checksums-woff.html 507960-1-ref.html
+# try versions that should NOT load (bad offsets, signatures, hint)
+HTTP(..) != 507960-1-bad-sfnt-version-ttf.html 507960-1-ref.html
+HTTP(..) != 507960-1-bad-sfnt-version-woff.html 507960-1-ref.html
+HTTP(..) != 507960-1-bad-woff-sig.html 507960-1-ref.html
+HTTP(..) != 507960-1-bad-offset-woff.html 507960-1-ref.html
+HTTP(..) != 507960-1-woff-bad-hint.html 507960-1-ref.html

@@ -45,9 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE           = autoconfig
 LIBRARY_NAME     = autoconfig
-ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME    = autocfg
-endif
 EXPORT_LIBRARY   = 1
 IS_COMPONENT     = 1
 MODULE_NAME      = nsAutoConfigModule
@@ -78,7 +76,7 @@ AUTOCFG_JS_EXPORTS = \
 		$(srcdir)/prefcalls.js \
 		$(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 AUTOCFG_JS_EXPORTS += $(srcdir)/mac/platform.js
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT), windows)

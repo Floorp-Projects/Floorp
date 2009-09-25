@@ -1,5 +1,4 @@
-
-ifeq ($(USE_SHORT_LIBNAME), 1)
+ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
 PROGRAM = $(MOZ_APP_NAME)$(BIN_SUFFIX)
 else
 PROGRAM = $(MOZ_APP_NAME)-bin$(BIN_SUFFIX)
@@ -34,7 +33,7 @@ AUTOMATION_PPARGS = 	\
 			-DPROFILE_DIR=\"$(_PROFILE_DIR)\" \
 			-DCERTS_SRC_DIR=\"$(_CERTS_SRC_DIR)\" \
 			-DSYMBOLS_PATH=\"$(_SYMBOLS_PATH)\" \
-			-DPERL=\"$(PERL)\" \
+			-DPERL="\"$(PERL)\"" \
 			$(NULL)
 
 ifeq ($(OS_ARCH),Darwin)

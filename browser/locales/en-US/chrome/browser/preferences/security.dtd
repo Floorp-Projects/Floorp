@@ -32,11 +32,3 @@
 
 <!ENTITY  savedPasswords.label            "Saved Passwords…">
 <!ENTITY  savedPasswords.accesskey        "P">
-
-
-<!ENTITY  warnings.label                "Warning Messages">
-
-<!ENTITY  chooseWarnings.label          "Choose which warning messages you want to see while browsing the web">
-
-<!ENTITY  warningSettings.label         "Settings…">
-<!ENTITY  warningSettings.accesskey     "S">

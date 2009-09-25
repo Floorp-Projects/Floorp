@@ -2256,6 +2256,45 @@ js_ReserveObjects(JSContext *cx, size_t nobjects)
 }
 #endif
 
+JSBool
+js_AddAsGCBytes(JSContext *cx, size_t sz)
+{
+    JSRuntime *rt;
+
+    rt = cx->runtime;
+    if (rt->gcBytes >= rt->gcMaxBytes ||
+        sz > (size_t) (rt->gcMaxBytes - rt->gcBytes) ||
+        IsGCThresholdReached(rt)) {
+        if (JS_ON_TRACE(cx)) {
+            /*
+             * If we can't leave the trace, signal OOM condition, otherwise
+             * exit from trace and proceed with GC.
+             */
+            if (!js_CanLeaveTrace(cx)) {
+                JS_UNLOCK_GC(rt);
+                return JS_FALSE;
+            }
+            js_LeaveTrace(cx);
+        }
+        js_GC(cx, GC_LAST_DITCH);
+        if (rt->gcBytes >= rt->gcMaxBytes ||
+            sz > (size_t) (rt->gcMaxBytes - rt->gcBytes)) {
+            JS_UNLOCK_GC(rt);
+            JS_ReportOutOfMemory(cx);
+            return JS_FALSE;
+        }
+    }
+    rt->gcBytes += (uint32) sz;
+    return JS_TRUE;
+}
+
+void
+js_RemoveAsGCBytes(JSRuntime *rt, size_t sz)
+{
+    JS_ASSERT((size_t) rt->gcBytes >= sz);
+    rt->gcBytes -= (uint32) sz;
+}
+
 /*
  * Shallow GC-things can be locked just by setting the GCF_LOCK bit, because
  * they have no descendants to mark during the GC. Currently the optimization

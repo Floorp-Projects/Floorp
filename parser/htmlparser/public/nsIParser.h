@@ -194,6 +194,13 @@ class nsIParser : public nsISupports {
      * @return NS_OK if successful, NS_ERROR_FAILURE for runtime error
      */
     NS_IMETHOD GetDTD(nsIDTD** aDTD) = 0;
+    
+    /**
+     * Get the nsIStreamListener for this parser
+     * @param aDTD out param that will contain the result
+     * @return NS_OK if successful
+     */
+    NS_IMETHOD GetStreamListener(nsIStreamListener** aListener) = 0;
 
     /**************************************************************************
      *  Parse methods always begin with an input source, and perform

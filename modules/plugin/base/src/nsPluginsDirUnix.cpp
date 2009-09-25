@@ -364,14 +364,14 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
         info.fFileName = PL_strdup(fileName.get());
 
         const char *name = NULL;
-        plugin->GetValue(nsPluginVariable_NameString, &name);
+        plugin->GetValue(NPPVpluginNameString, &name);
         if (name)
           info.fName = PL_strdup(name);
         else
           info.fName = PL_strdup(fileName.get());
 
         const char *description = NULL;
-        plugin->GetValue(nsPluginVariable_DescriptionString, &description);
+        plugin->GetValue(NPPVpluginDescriptionString, &description);
         if (!description)
             description = "";
         info.fDescription = PL_strdup(description);

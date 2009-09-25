@@ -8,7 +8,7 @@ function test() {
 
 function onPageShow() {
     gBrowser.removeEventListener("pageshow", onPageShow, false);
-    var frame = gBrowser.contentWindow.frames[0];
+    var frame = content.frames[0];
     var sel = frame.getSelection();
     var range = frame.document.createRange();
     var tn = frame.document.body.childNodes[0];

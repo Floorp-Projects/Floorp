@@ -48,6 +48,6 @@
 [scriptable, uuid(7cebc153-168a-416c-ba5a-56a8c2ddb2ec)]
 interface nsIDOMNodeSelector : nsISupports
 {
-  nsIDOMElement querySelector(in DOMString selectors);
-  nsIDOMNodeList querySelectorAll(in DOMString selectors);
+  nsIDOMElement querySelector([Null(Empty), Undefined(Empty)] in DOMString selectors);
+  nsIDOMNodeList querySelectorAll([Null(Empty), Undefined(Empty)] in DOMString selectors);
 };

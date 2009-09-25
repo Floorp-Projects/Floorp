@@ -58,7 +58,7 @@ endif
 ifeq ($(OS_ARCH),BeOS)
 DIRS = icon/beos icon
 endif
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 DIRS = icon/mac icon
 endif
 endif # icon

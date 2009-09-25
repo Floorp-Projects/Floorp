@@ -106,7 +106,7 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(PRBool *_retval)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  long response = 0;
+  SInt32 response = 0;
   OSErr err = ::Gestalt (gestaltSystemVersion, &response);
   response &= 0xFFFF; // The system version is in the low order word
 

@@ -76,7 +76,7 @@ endif
 
 ifdef MOZ_CRASHREPORTER
 libs:: crashreporter.ini
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/crashreporter.app/Contents/MacOS
 else
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)

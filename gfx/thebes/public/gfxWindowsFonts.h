@@ -53,6 +53,10 @@
 #include <usp10.h>
 #include <cairo-win32.h>
 
+// xxx - used in FontEntry.  should be trimmed, moz code doesn't use
+//       exceptions.  use gfxSparseBitSet instead?
+#include <bitset>
+
 /**
  * List of different types of fonts we support on Windows.
  * These can generally be lumped in to 3 categories where we have to
@@ -140,7 +144,6 @@ public:
 
     // create a font entry from downloaded font data
     static FontEntry* LoadFont(const gfxProxyFontEntry &aProxyEntry,
-                               nsISupports *aLoader,
                                const PRUint8 *aFontData,
                                PRUint32 aLength);
 
