@@ -69,8 +69,6 @@
 #endif
 
 namespace nanojit {
-    const size_t NJ_PAGE_SIZE = 1 << NJ_LOG2_PAGE_SIZE;
-
     class Fragment;
     struct SideExit;
     struct SwitchInfo;
