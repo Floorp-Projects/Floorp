@@ -445,20 +445,10 @@ TabTracker.prototype = {
   // TODO: Also listen for tabs loading new content?
 
   get changedIDs() {
-    // The record for my own client is always the only changed record.
+    // Only mark the current client as changed if we tracked changes
     let obj = {};
-    obj[Clients.clientID] = true;
+    if (this._score > 0)
+      obj[Clients.clientID] = true;
     return obj;
-  },
-
-  /* Score is pegged to 100, which means tabs are always synced.
-   * Is this the right thing to do?  Or should we be using the score
-   * calculated from tab open/close/select events (see above)?  Note that
-   * we should definitely listen for tabs loading new content if we want to
-   * go that way.  But tabs loading new content happens so often that it
-   * might be easier to just always sync.
-   */
-  get score() {
-    return 100;
   }
 }
