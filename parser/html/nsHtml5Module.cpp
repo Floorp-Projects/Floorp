@@ -49,12 +49,18 @@
 
 // static
 PRBool nsHtml5Module::sEnabled = PR_FALSE;
+PRBool nsHtml5Module::sOffMainThread = PR_TRUE;
+nsIThread* nsHtml5Module::sStreamParserThread = nsnull;
+nsIThread* nsHtml5Module::sMainThread = nsnull;
 
 // static
 void
 nsHtml5Module::InitializeStatics()
 {
   nsContentUtils::AddBoolPrefVarCache("html5.enable", &sEnabled);
+  nsContentUtils::AddBoolPrefVarCache("html5.offmainthread", &sOffMainThread);
+  NS_NewThread(&sStreamParserThread);
+  NS_GetMainThread(&sMainThread);
   nsHtml5Atoms::AddRefAtoms();
   nsHtml5AttributeName::initializeStatics();
   nsHtml5ElementName::initializeStatics();
@@ -86,6 +92,9 @@ nsHtml5Module::ReleaseStatics()
   nsHtml5Tokenizer::releaseStatics();
   nsHtml5TreeBuilder::releaseStatics();
   nsHtml5UTF16Buffer::releaseStatics();
+  sStreamParserThread->Shutdown();
+  NS_IF_RELEASE(sStreamParserThread);
+  NS_IF_RELEASE(sMainThread);
 }
 
 // static
@@ -105,6 +114,13 @@ nsHtml5Module::Initialize(nsIParser* aParser, nsIDocument* aDoc, nsIURI* aURI, n
   NS_ABORT_IF_FALSE(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");
   nsHtml5Parser* parser = static_cast<nsHtml5Parser*> (aParser);
   return parser->Initialize(aDoc, aURI, aContainer, aChannel);
+}
+
+// static 
+nsIThread*
+nsHtml5Module::GetStreamParserThread()
+{
+  return sOffMainThread ? sStreamParserThread : sMainThread;
 }
 
 #ifdef DEBUG
