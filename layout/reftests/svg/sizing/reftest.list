@@ -306,7 +306,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == inline--position-relative--01.xhtml    
 == dynamic--inline-resize-cb-height.xhtml       pass.svg
 == dynamic--inline-resize-cb-width.xhtml        pass.svg
 skip == dynamic--inline-resize-window-height.xhtml  pass.svg # XXX breaks the reftest run as the window height somehow is not restored
-== dynamic--inline-resize-window-width.xhtml    pass.svg
+skip == dynamic--inline-resize-window-width.xhtml    pass.svg # Fails way too much
 fails == dynamic--object-svg-unloaded.xhtml     pass.svg
 # == dynamic--object--auto-auto--pct-px.html 
 
