@@ -115,7 +115,7 @@ def run_test(test, lib_dir):
                             '--error-exitcode=1',
                             '--leak-check=full']
         if os.uname()[0] == 'Darwin':
-            valgrind_prefix += ['--auto-run-dsymutil=yes']
+            valgrind_prefix += ['--dsymutil=yes']
         cmd = valgrind_prefix + cmd
 
     if OPTIONS.show_cmd:
