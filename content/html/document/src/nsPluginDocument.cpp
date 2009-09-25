@@ -266,7 +266,7 @@ nsPluginDocument::StartDocumentLoad(const char*         aCommand,
 nsresult
 nsPluginDocument::CreateSyntheticPluginDocument()
 {
-  NS_ASSERTION(!GetPrimaryShell() || !GetPrimaryShell->DidInitialReflow(),
+  NS_ASSERTION(!GetPrimaryShell() || !GetPrimaryShell()->DidInitialReflow(),
                "Creating synthetic plugin document content too late");
 
   // make our generic document
