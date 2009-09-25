@@ -166,7 +166,15 @@ namespace nanojit
         verbose_only(if (_logc->lcbits & LC_Assembly)
                      outputf("        %p:", _nIns);
                      )
-        CALL(call);
+        bool indirect = call->isIndirect();
+        if (!indirect) {
+            CALL(call);
+        }
+        else {
+            argc--;
+            Register r = findSpecificRegFor(ins->arg(argc), I0);
+            JMPL(G0, I0, 15);
+        }
 
         uint32_t GPRIndex = O0;
         uint32_t offset = kLinkageAreaSize; // start of parameters stack postion.
@@ -985,18 +993,6 @@ namespace nanojit
         FCMPD(rLhs, rRhs);
     }
 
-/** no longer called by patch/unpatch
-    NIns* Assembler::asm_adjustBranch(NIns* at, NIns* target)
-    {
-        NIns* was;
-        was = (NIns*)(((*(uint32_t*)&at[0] & 0x3FFFFF) << 10) | (*(uint32_t*)&at[1] & 0x3FF ));
-        *(uint32_t*)&at[0] &= 0xFFC00000;
-        *(uint32_t*)&at[0] |= ((intptr_t)target >> 10) & 0x3FFFFF;
-        *(uint32_t*)&at[1] &= 0xFFFFFC00;
-        *(uint32_t*)&at[1] |= (intptr_t)target & 0x3FF;
-        return was;
-    }
- */
     verbose_only(
     void Assembler::asm_inc_m32(uint32_t* pCtr)
     {
@@ -1050,7 +1046,7 @@ namespace nanojit
 
     void Assembler::asm_promote(LIns *) {
         // i2q or u2q
-        // TODO(asm_promote);
+        TODO(asm_promote);
     }
 
 #endif /* FEATURE_NANOJIT */
