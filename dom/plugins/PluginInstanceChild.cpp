@@ -255,8 +255,9 @@ bool
 PluginInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow,
                                          NPError* rv)
 {
-    printf("[PluginInstanceChild] NPP_SetWindow(%lx, %d, %d)\n",
+    printf("[PluginInstanceChild] NPP_SetWindow(%lx, %d, %d, %d x %d)\n",
            reinterpret_cast<unsigned long>(aWindow.window),
+           aWindow.x, aWindow.y,
            aWindow.width, aWindow.height);
 
 #if defined(OS_LINUX)
@@ -266,11 +267,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow,
 
     GdkNativeWindow handle = reinterpret_cast<uintptr_t>(aWindow.window);
 
-    mWindow.window = (void*) handle;
-    mWindow.width = aWindow.width;
-    mWindow.height = aWindow.height;
-    mWindow.type = aWindow.type;
-
+    mWindow = aWindow;
     mWsInfo.display = GDK_DISPLAY();
 
     // FIXME/cjones: the code below is correct, but apparently to get
@@ -296,6 +293,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow,
     SizePluginWindow(aWindow.width, aWindow.height);
 
     mWindow.window = (void*)mPluginWindowHWND;
+    mWindow.x = aWindow.x;
+    mWindow.y = aWindow.y;
     mWindow.width = aWindow.width;
     mWindow.height = aWindow.height;
     mWindow.type = NPWindowTypeWindow;
