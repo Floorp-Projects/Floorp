@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=421640
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=396392">Mozilla Bug Range getClientRects and getBoundingClientRect</a>
 <div id="content" style="font-face:monospace;font-size:12px;width:100px">
-<p>000000</p><div>00000</div><p>0000<span>0000</span>0000</p>
+<p>000000<span>0</span></p><div>00000<span>0</span></div><p>0000<span>0000</span>0000</p>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -77,26 +77,29 @@ function runATest(obj) {
 /** Test for Bug 396392 **/
 function test() {
   var root = document.getElementById('content');
-  var firstP = root.firstElementChild, firstDiv = root.childNodes[2], 
+  var firstP = root.firstElementChild, spanInFirstP = firstP.childNodes[1],
+    firstDiv = root.childNodes[2], spanInFirstDiv = firstDiv.childNodes[1],
     secondP = root.childNodes[3], spanInSecondP = secondP.childNodes[1];
-  var firstPRect = firstP.getBoundingClientRect(), 
+  var firstPRect = firstP.getBoundingClientRect(),
+    spanInFirstPRect = spanInFirstP.getBoundingClientRect(),
     firstDivRect = firstDiv.getBoundingClientRect(),
+    spanInFirstDivRect = spanInFirstDiv.getBoundingClientRect(),
     secondPRect = secondP.getBoundingClientRect(),
     spanInSecondPRect = spanInSecondP.getBoundingClientRect();
   var widthPerchar = spanInSecondPRect.width / spanInSecondP.firstChild.length;
   var testcases = [
     {name:'nodesNotInDocument', range:[document.createTextNode('abc'), 1], 
       rect:null},
-    {name:'collapsedInBlockNode', range:[firstP, 1], rect:null},
+    {name:'collapsedInBlockNode', range:[firstP, 2], rect:null},
     {name:'collapsedAtBeginningOfTextNode', range:[firstP.firstChild, 0],
-      rect:[firstPRect.left, firstPRect.left, firstPRect.top, 
-      firstPRect.bottom, 0, firstPRect.height]},
+      rect:[firstPRect.left, firstPRect.left, spanInFirstPRect.top, 
+      spanInFirstPRect.bottom, 0, spanInFirstPRect.height]},
     {name:'collapsedWithinTextNode', range:[firstP.firstChild, 1], 
       rect:[firstPRect.left+widthPerchar, firstPRect.left+widthPerchar,
-        firstPRect.top, firstPRect.bottom, 0, firstPRect.height]},
+        spanInFirstPRect.top, spanInFirstPRect.bottom, 0, spanInFirstPRect.height]},
     {name:'collapsedAtEndOfTextNode', range:[firstP.firstChild, 6], 
       rect:[firstPRect.left + 6*widthPerchar, firstPRect.left + 6*widthPerchar,
-        firstPRect.top, firstPRect.bottom, 0, firstPRect.height]},
+        spanInFirstPRect.top, spanInFirstPRect.bottom, 0, spanInFirstPRect.height]},
     {name:'singleBlockNode', range:[root, 1, root, 2], rect:firstPRect},
     {name:'twoBlockNodes', range:[root, 1, root, 3],
       rect:[firstPRect.left, firstPRect.right, firstPRect.top,
@@ -104,26 +107,26 @@ function test() {
         firstDivRect.bottom - firstPRect.top],
       rectList:[firstPRect, firstDivRect]},
     {name:'endOfTextNodeToEndOfAnotherTextNodeInAnotherBlock',
-      range:[firstP.firstChild, 6, firstDiv.firstChild, 5],
+      range:[spanInFirstP.firstChild, 1, firstDiv.firstChild, 5],
       rect:[firstDivRect.left, firstDivRect.left + 5*widthPerchar,
-        firstDivRect.top, firstDivRect.bottom, 5 * widthPerchar, 
-        firstDivRect.height]},
+        spanInFirstDivRect.top, spanInFirstDivRect.bottom, 5 * widthPerchar, 
+        spanInFirstDivRect.height]},
     {name:'startOfTextNodeToStartOfAnotherTextNodeInAnotherBlock', 
-      range:[firstP.firstChild, 0, firstDiv.firstChild, 0],
-      rect:[firstPRect.left, firstPRect.left + 6*widthPerchar, firstPRect.top,
-        firstPRect.bottom, 6 * widthPerchar, firstPRect.height]},
+      range:[spanInFirstP.firstChild, 0, firstDiv.firstChild, 0],
+      rect:[spanInFirstPRect.left, spanInFirstPRect.left + widthPerchar, spanInFirstPRect.top,
+        spanInFirstPRect.bottom, widthPerchar, spanInFirstPRect.height]},
     {name:'endPortionOfATextNode', range:[firstP.firstChild, 3, 
         firstP.firstChild, 6],
       rect:[firstPRect.left + 3*widthPerchar, firstPRect.left + 6*widthPerchar,
-        firstPRect.top, firstPRect.bottom, 3*widthPerchar, firstPRect.height]},
+        spanInFirstPRect.top, spanInFirstPRect.bottom, 3*widthPerchar, spanInFirstPRect.height]},
     {name:'startPortionOfATextNode', range:[firstP.firstChild, 0, 
         firstP.firstChild, 3],
-      rect:[firstPRect.left, firstPRect.left + 3*widthPerchar, firstPRect.top,
-        firstPRect.bottom, 3 * widthPerchar, firstPRect.height]},
+      rect:[firstPRect.left, firstPRect.left + 3*widthPerchar, spanInFirstPRect.top,
+        spanInFirstPRect.bottom, 3 * widthPerchar, spanInFirstPRect.height]},
     {name:'spanTextNodes', range:[secondP.firstChild, 1, secondP.lastChild, 1],
       rect:[secondPRect.left + widthPerchar, spanInSecondPRect.right + 
         widthPerchar, spanInSecondPRect.top, spanInSecondPRect.bottom,
-        spanInSecondPRect.width + 4*widthPerchar, secondPRect.height],
+        spanInSecondPRect.width + 4*widthPerchar, spanInSecondPRect.height],
       rectList:[[secondPRect.left + widthPerchar, spanInSecondPRect.left,
         spanInSecondPRect.top, spanInSecondPRect.bottom, 3 * widthPerchar,
         spanInSecondPRect.height],
