@@ -1,2 +1,0 @@
-Main-Class: nu.validator.htmlparser.cpptranslate.Main
-Class-Path: javaparser.jar
