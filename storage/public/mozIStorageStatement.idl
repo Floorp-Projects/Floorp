@@ -150,7 +150,7 @@ interface mozIStorageStatement : mozIStorageValueArray {
 
   /**
    * Execute the query, ignoring any results.  This is accomplished by
-   * calling step() once, and then calling reset().
+   * calling executeStep() once, and then calling reset().
    *
    * Error and last insert info, etc. are available from
    * the mozStorageConnection.
@@ -174,9 +174,11 @@ interface mozIStorageStatement : mozIStorageValueArray {
    * when no more data is returned.  This method is only available to JavaScript
    * consumers.
    *
+   * @deprecated As of Mozilla 1.9.2 in favor of executeStep().
+   *
    * @returns a boolean indicating whether there are more rows or not.
    *
-   * boolean step();
+   * [deprecated] boolean step();
    */
 
   /**
