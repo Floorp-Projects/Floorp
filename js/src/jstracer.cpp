@@ -6694,7 +6694,7 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
     tr->pendingSpecializedNative = NULL;
     tr->newobj_ins = NULL;
 
-    /* Handle one-shot request from finishGetProp to snapshot post-op state and guard. */
+    /* Handle one-shot request from finishGetProp or INSTANCEOF to snapshot post-op state and guard. */
     if (tr->pendingGuardCondition) {
         tr->guard(true, tr->pendingGuardCondition, STATUS_EXIT);
         tr->pendingGuardCondition = NULL;
@@ -12679,7 +12679,7 @@ TraceRecorder::record_JSOP_INSTANCEOF()
     LIns* status_ins = lir->insLoad(LIR_ld,
                                     lirbuf->state,
                                     (int) offsetof(InterpState, builtinStatus));
-    guard(true, lir->ins_eq0(status_ins), STATUS_EXIT);
+    pendingGuardCondition = lir->ins_eq0(status_ins);
     leaveDeepBailCall();
 
     return JSRS_CONTINUE;
