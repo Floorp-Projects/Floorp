@@ -174,6 +174,9 @@ PluginModuleChild::InitGraphics()
     // FIXME/cjones: is this the place for this?
 #if defined(OS_LINUX)
     gtk_init(0, 0);
+
+    XSynchronize(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
+                 True);
 #else
     // may not be necessary on all platforms
 #endif
@@ -480,7 +483,7 @@ _setvalue(NPP aNPP,
           void* aValue)
 {
     _MOZ_LOG(__FUNCTION__);
-    return NPERR_NO_ERROR;
+    return InstCast(aNPP)->NPN_SetValue(aVariable, aValue);
 }
 
 NPError NP_CALLBACK

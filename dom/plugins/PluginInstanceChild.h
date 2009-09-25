@@ -70,6 +70,13 @@ class PluginInstanceChild : public PPluginInstanceChild
 protected:
     virtual bool AnswerNPP_SetWindow(const NPWindow& window, NPError* rv);
 
+
+    virtual bool
+    AnswerNPP_GetValue_NPPVpluginWindow(bool* windowed, NPError* rv);
+    virtual bool
+    AnswerNPP_GetValue_NPPVpluginTransparent(bool* transparent, NPError* rv);
+    virtual bool
+    AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(bool* needs, NPError* rv);
     virtual bool
     AnswerNPP_GetValue_NPPVpluginScriptableNPObject(PPluginScriptableObjectChild** value,
                                                     NPError* result);
@@ -157,8 +164,10 @@ public:
     }
 
     NPError
-    NPN_GetValue(NPNVariable aVariable,
-                 void* aValue);
+    NPN_GetValue(NPNVariable aVariable, void* aValue);
+
+    NPError
+    NPN_SetValue(NPPVariable aVariable, void* aValue);
 
     PluginScriptableObjectChild*
     GetActorForNPObject(NPObject* aObject);

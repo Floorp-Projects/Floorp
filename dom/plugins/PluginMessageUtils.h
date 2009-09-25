@@ -80,6 +80,78 @@ typedef std::vector<IPCByteRange> IPCByteRanges;
 
 typedef nsCString Buffer;
 
+
+// XXX maybe not the best place for these. better one?
+
+#define VARSTR(v_)  case v_: return #v_
+inline const char* const
+NPPVariableToString(NPPVariable aVar)
+{
+    switch (aVar) {
+        VARSTR(NPPVpluginNameString);
+        VARSTR(NPPVpluginDescriptionString);
+        VARSTR(NPPVpluginWindowBool);
+        VARSTR(NPPVpluginTransparentBool);
+        VARSTR(NPPVjavaClass);
+        VARSTR(NPPVpluginWindowSize);
+        VARSTR(NPPVpluginTimerInterval);
+
+        VARSTR(NPPVpluginScriptableInstance);
+        VARSTR(NPPVpluginScriptableIID);
+
+        VARSTR(NPPVjavascriptPushCallerBool);
+
+        VARSTR(NPPVpluginKeepLibraryInMemory);
+        VARSTR(NPPVpluginNeedsXEmbed);
+
+        VARSTR(NPPVpluginScriptableNPObject);
+
+        VARSTR(NPPVformValue);
+  
+        VARSTR(NPPVpluginUrlRequestsDisplayedBool);
+  
+        VARSTR(NPPVpluginWantsAllNetworkStreams);
+
+#ifdef XP_MACOSX
+        VARSTR(NPPVpluginDrawingModel);
+        VARSTR(NPPVpluginEventModel);
+#endif
+
+    default: return "???";
+    }
+}
+
+inline const char*
+NPNVariableToString(NPNVariable aVar)
+{
+    switch(aVar) {
+        VARSTR(NPNVxDisplay);
+        VARSTR(NPNVxtAppContext);
+        VARSTR(NPNVnetscapeWindow);
+        VARSTR(NPNVjavascriptEnabledBool);
+        VARSTR(NPNVasdEnabledBool);
+        VARSTR(NPNVisOfflineBool);
+
+        VARSTR(NPNVserviceManager);
+        VARSTR(NPNVDOMElement);
+        VARSTR(NPNVDOMWindow);
+        VARSTR(NPNVToolkit);
+        VARSTR(NPNVSupportsXEmbedBool);
+
+        VARSTR(NPNVWindowNPObject);
+
+        VARSTR(NPNVPluginElementNPObject);
+
+        VARSTR(NPNVSupportsWindowless);
+
+        VARSTR(NPNVprivateModeBool);
+
+    default: return "???";
+    }
+}
+#undef VARSTR
+
+
 } /* namespace plugins */
 
 } /* namespace mozilla */
