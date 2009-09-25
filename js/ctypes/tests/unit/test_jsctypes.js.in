@@ -222,7 +222,7 @@ function run_int64_tests(library) {
   // test the range of unsigned. (we can reuse the signed C function
   // here, since it's binary-compatible.)
   var test_ui64_ui64 = library.declare("test_i64_i64", Types.DEFAULT, Types.UINT64, Types.UINT64);
-  do_check_eq(test_ui64_ui64(0xfffffffffffff000), 0xfffffffffffff000);
+  do_check_eq(test_ui64_ui64(0xffffffffffff0000), 0xffffffffffff0000);
   do_check_throws(function () { test_ui64_ui64(0x10000000000000000); }, TypeError);
   do_check_throws(function () { test_ui64_ui64(-1); }, TypeError);
 }
