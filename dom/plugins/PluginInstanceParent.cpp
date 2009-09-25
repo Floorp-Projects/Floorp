@@ -367,7 +367,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
         // FIXME: this is probably rather expensive, should only do it
         // when necessary.  which raises the question: when is it
         // necessary?
-        XSync(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), False);
+        XSync(GDK_DISPLAY(), False);
     }
 #endif
 
