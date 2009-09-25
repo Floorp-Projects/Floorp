@@ -66,7 +66,7 @@ typedef struct _nsCocoaWindowList {
 // (and put it back in the "window cache").  One way to do this, which Apple
 // often uses, is to set the "window number" to '-1' and then back to its
 // original value.
-- (void)_setWindowNumber:(int)aNumber;
+- (void)_setWindowNumber:(NSInteger)aNumber;
 
 // If we set the window's stylemask to be textured, the corners on the bottom of
 // the window are rounded by default. We use this private method to make
