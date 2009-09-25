@@ -373,6 +373,7 @@ InitJITLogController()
             "  treevis      spew that tracevis/tree.py can parse\n"
             "  ------ options for Nanojit ------\n"
             "  fragprofile  count entries and exits for each fragment\n"
+            "  activation   show activation info\n"
             "  liveness     show LIR liveness at start of rdr pipeline\n"
             "  readlir      show LIR as it enters the reader pipeline\n"
             "  aftersf      show LIR after StackFilter\n"
@@ -397,13 +398,14 @@ InitJITLogController()
     if (strstr(tmf, "treevis"))                         bits |= LC_TMTreeVis;
 
     /* flags for nanojit */
-    if (strstr(tmf, "fragprofile"))                     bits |= LC_FragProfile;
-    if (strstr(tmf, "liveness") || strstr(tmf, "full")) bits |= LC_Liveness;
-    if (strstr(tmf, "readlir")  || strstr(tmf, "full")) bits |= LC_ReadLIR;
-    if (strstr(tmf, "aftersf")  || strstr(tmf, "full")) bits |= LC_AfterSF;
-    if (strstr(tmf, "regalloc") || strstr(tmf, "full")) bits |= LC_RegAlloc;
-    if (strstr(tmf, "assembly") || strstr(tmf, "full")) bits |= LC_Assembly;
-    if (strstr(tmf, "nocodeaddrs"))                     bits |= LC_NoCodeAddrs;
+    if (strstr(tmf, "fragprofile"))                       bits |= LC_FragProfile;
+    if (strstr(tmf, "liveness")   || strstr(tmf, "full")) bits |= LC_Liveness;
+    if (strstr(tmf, "activation") || strstr(tmf, "full")) bits |= LC_Activation;
+    if (strstr(tmf, "readlir")    || strstr(tmf, "full")) bits |= LC_ReadLIR;
+    if (strstr(tmf, "aftersf")    || strstr(tmf, "full")) bits |= LC_AfterSF;
+    if (strstr(tmf, "regalloc")   || strstr(tmf, "full")) bits |= LC_RegAlloc;
+    if (strstr(tmf, "assembly")   || strstr(tmf, "full")) bits |= LC_Assembly;
+    if (strstr(tmf, "nocodeaddrs"))                       bits |= LC_NoCodeAddrs;
 
     js_LogController.lcbits = bits;
     return;
