@@ -49,7 +49,11 @@ interface mozIStorageStatementParams : nsISupports {
   // magic interface for parameter setting that implements nsIXPCScriptable.
 };
 
-[scriptable, uuid(eee6f7c9-5586-4eaf-b35c-dca987c4ffd1)]
+/**
+ * @deprecated As of Mozilla 1.9.2.  Methods are already provided on
+ *             mozIStorageStatement.
+ */
+[scriptable, deprecated, uuid(eee6f7c9-5586-4eaf-b35c-dca987c4ffd1)]
 interface mozIStorageStatementWrapper : nsISupports {
   /**
    * Initialize this wrapper with aStatement.
@@ -65,7 +69,7 @@ interface mozIStorageStatementWrapper : nsISupports {
    * Step, reset, and execute the wrapped statement.
    */
   void reset();
-  boolean step();
+  [deprecated] boolean step();
   void execute();
 
   /**
