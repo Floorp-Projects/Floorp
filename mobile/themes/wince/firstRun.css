@@ -63,6 +63,17 @@ a {
   background: url("images/arrowright-16.png") right center no-repeat;
 }
 
+p.rightalign {
+  text-align: right;
+  padding: 0;
+  margin: 0;
+}
+
+input[type="button"] {
+  font-size: 8pt;
+  margin-bottom: 20px;
+}
+
 hr {
   color: #bdcdcf;
   height: 3px;

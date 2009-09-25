@@ -94,13 +94,15 @@
     <div class="go" id="weave">
       <h3>&sync.title;</h3>
       <p>&sync.description;</p>
-      <p><a id="sync" onclick="goToAddons('weave');"><img src="chrome://browser/skin/images/weave.png"/> &sync.link;</a></p>
+      <img src="chrome://browser/skin/images/weave.png"/>
+      <p class="rightalign"><input type="button" id="sync" onclick="goToAddons('weave');" value="&sync.link;"/></p>
     </div>
 
     <div class="go" id="addons">
       <h3>&getPersonal.title;</h3>
       <p>&getPersonal.description;</p>
-      <p><a id="getPersonal" onclick="goToAddons();"><img src="chrome://browser/skin/images/addons.png"/> &getPersonal.link;</a></p>
+      <img src="chrome://browser/skin/images/addons.png"/>
+      <p class="rightalign"><input type="button" id="getPersonal" onclick="goToAddons();" value="&getPersonal.link;"/></p>
     </div>
 
     <!--
