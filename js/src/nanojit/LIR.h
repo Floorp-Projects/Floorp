@@ -1013,18 +1013,6 @@ namespace nanojit
     class LirWriter
     {
     public:
-        inline void*
-        operator new(size_t size)
-        {
-            return calloc(1, size);
-        }
-
-        inline void
-        operator delete(void *p)
-        {
-            free(p);
-        }
-
         LirWriter *out;
 
         LirWriter(LirWriter* out)
