@@ -175,8 +175,7 @@ PluginModuleChild::InitGraphics()
 #if defined(OS_LINUX)
     gtk_init(0, 0);
 
-    XSynchronize(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
-                 True);
+    XSynchronize(GDK_DISPLAY(), True);
 #else
     // may not be necessary on all platforms
 #endif
