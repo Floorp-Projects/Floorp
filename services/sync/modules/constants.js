@@ -70,6 +70,7 @@ SYNC_FAILED:                           "error.sync.failed",
 LOGIN_FAILED:                          "error.login.failed",
 SYNC_FAILED_PARTIAL:                   "error.sync.failed_partial",
 STATUS_DISABLED:                       "service.disabled",
+STATUS_DELAYED:                        "service.startup.delayed",
 
 // success states
 LOGIN_SUCCEEDED:                       "success.login",
