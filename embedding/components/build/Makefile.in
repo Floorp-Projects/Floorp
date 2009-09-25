@@ -44,9 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= embedcomponents
 LIBRARY_NAME	= embedcomponents
 EXPORT_LIBRARY = 1
-ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME	= embedcmp
-endif
 IS_COMPONENT	= 1
 MODULE_NAME	= embedcomponents
 GRE_MODULE	= 1

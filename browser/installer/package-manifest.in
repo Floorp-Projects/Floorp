@@ -135,12 +135,7 @@
 @BINPATH@/components/contentprefs.xpt
 @BINPATH@/components/cookie.xpt
 @BINPATH@/components/directory.xpt
-#ifdef XP_WIN32
-;XXX: this is stupid. fix this.
-@BINPATH@/components/docshell_base.xpt
-#else
 @BINPATH@/components/docshell.xpt
-#endif
 @BINPATH@/components/dom.xpt
 @BINPATH@/components/dom_base.xpt
 @BINPATH@/components/dom_canvas.xpt
@@ -222,12 +217,7 @@
 @BINPATH@/components/pref.xpt
 @BINPATH@/components/prefetch.xpt
 @BINPATH@/components/profile.xpt
-;XXX: stupid, fix this!
-#ifdef XP_WIN32
 @BINPATH@/components/proxyObject.xpt
-#else
-@BINPATH@/components/proxyObjInst.xpt
-#endif
 @BINPATH@/components/rdf.xpt
 @BINPATH@/components/satchel.xpt
 @BINPATH@/components/saxparser.xpt
@@ -262,12 +252,7 @@
 @BINPATH@/components/xpcom_components.xpt
 @BINPATH@/components/xpcom_ds.xpt
 @BINPATH@/components/xpcom_io.xpt
-;XXX: stupid, fix this!
-#ifdef XP_WIN32
-@BINPATH@/components/xpcom_thread.xpt
-#else
 @BINPATH@/components/xpcom_threads.xpt
-#endif
 @BINPATH@/components/xpcom_xpti.xpt
 @BINPATH@/components/xpconnect.xpt
 @BINPATH@/components/xpinstall.xpt
@@ -315,12 +300,7 @@
 @BINPATH@/components/nsSessionStore.js
 @BINPATH@/components/nsURLFormatter.js
 @BINPATH@/components/@DLL_PREFIX@browserdirprovider@DLL_SUFFIX@
-#ifdef XP_WIN32
-;XXX: lame, kill use_short_libname
-@BINPATH@/components/brwsrcmp.dll
-#else
 @BINPATH@/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
-#endif
 @BINPATH@/components/txEXSLTRegExFunctions.js
 @BINPATH@/components/nsLivemarkService.js
 @BINPATH@/components/nsTaggingService.js

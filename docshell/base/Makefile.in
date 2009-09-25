@@ -44,9 +44,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= docshell
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
-XPIDL_MODULE	= docshell_base
-endif
 LIBRARY_NAME	= basedocshell_s
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
