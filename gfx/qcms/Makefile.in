@@ -15,17 +15,6 @@ EXPORTS      = qcms.h qcmstypes.h
 
 CSRCS = iccread.c transform.c
 
-ifeq (86,$(findstring 86,$(OS_TEST)))
-	CSRCS += transform-sse2.c transform-sse1.c
-ifdef GNU_CC
-	SSE1_FLAGS=-msse
-	SSE2_FLAGS=-msse2
-else
-	SSE1_FLAGS=
-	SSE2_FLAGS=
-endif
-endif
-
 FORCE_STATIC_LIB = 1
 # This library is used by other shared libs
 FORCE_USE_PIC = 1
@@ -33,15 +22,3 @@ FORCE_USE_PIC = 1
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS          += -DMOZ_QCMS
-
-
-# special rules for transform-sse*.c to get the right cflags. (taken from pixman/src/Makefile.in)
-transform-sse1.$(OBJ_SUFFIX): transform-sse1.c Makefile Makefile.in
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CC)
-	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(SSE1_FLAGS) $(_VPATH_SRCS)
-
-transform-sse2.$(OBJ_SUFFIX): transform-sse2.c Makefile Makefile.in
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CC)
-	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(SSE2_FLAGS) $(_VPATH_SRCS)
