@@ -50,38 +50,78 @@ test_v()
   return;
 }
 
-short
-test_s()
+PRInt8
+test_i8()
 {
-  return 12345;
+  return 123;
 }
 
-short
-test_s_s(short number)
+PRInt8
+test_i8_i8(PRInt8 number)
 {
   return number;
 }
 
-short
-test_s_ss(short number1, short number2)
+PRInt8
+test_i8_i8_sum(PRInt8 number1, PRInt8 number2)
 {
   return number1 + number2;
 }
 
-int
-test_i()
+PRInt16
+test_i16()
 {
-  return 123456789;
+  return 12345;
 }
 
-int
-test_i_i(int number)
+PRInt16
+test_i16_i16(PRInt16 number)
 {
   return number;
 }
 
-int
-test_i_ii(int number1, int number2)
+PRInt16
+test_i16_i16_sum(PRInt16 number1, PRInt16 number2)
+{
+  return number1 + number2;
+}
+
+PRInt32
+test_i32()
+{
+  return 123456789;
+}
+
+PRInt32
+test_i32_i32(PRInt32 number)
+{
+  return number;
+}
+
+PRInt32
+test_i32_i32_sum(PRInt32 number1, PRInt32 number2)
+{
+  return number1 + number2;
+}
+
+PRInt64
+test_i64()
+{
+#if defined(WIN32) && !defined(__GNUC__)
+  return 0x28590a1c921de000i64;
+#else
+  return 0x28590a1c921de000LL;
+#endif
+}
+
+PRInt64
+test_i64_i64(PRInt64 number)
+{
+  return number;
+}
+
+PRInt64
+test_i64_i64_sum(PRInt64 number1, PRInt64 number2)
 {
   return number1 + number2;
 }
@@ -99,7 +139,7 @@ test_f_f(float number)
 }
 
 float
-test_f_ff(float number1, float number2)
+test_f_f_sum(float number1, float number2)
 {
   return (number1 + number2);
 }
@@ -107,7 +147,7 @@ test_f_ff(float number1, float number2)
 double
 test_d()
 {
-  return 123456789.5;
+  return 1234567890123456789.5;
 }
 
 double
@@ -117,21 +157,21 @@ test_d_d(double number)
 }
 
 double
-test_d_dd(double number1, double number2)
+test_d_d_sum(double number1, double number2)
 {
   return (number1 + number2);
 }
 
-int
+PRInt32
 test_ansi_len(const char* string)
 {
-  return int(strlen(string));
+  return PRInt32(strlen(string));
 }
 
-int
+PRInt32
 test_wide_len(const PRUnichar* string)
 {
-  return int(NS_strlen(string));
+  return PRInt32(NS_strlen(string));
 }
 
 const char *
@@ -153,9 +193,9 @@ test_ansi_echo(const char* string)
   return (char*)string;
 }
 
-int
-test_i_if_floor(int number1, float number2)
+PRInt32
+test_floor(PRInt32 number1, float number2)
 {
-  return int(floor(float(number1) + number2));
+  return PRInt32(floor(float(number1) + number2));
 }
 
