@@ -476,7 +476,7 @@ WeaveSvc.prototype = {
       case "idle":
         this._log.trace("Idle time hit, trying to sync");
         Svc.Idle.removeIdleObserver(this, IDLE_TIME);
-        this.sync(false);
+        Utils.delay(function() this.sync(false), 0, this);
         break;
     }
   },
