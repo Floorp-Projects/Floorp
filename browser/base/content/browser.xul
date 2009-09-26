@@ -296,6 +296,7 @@
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
              defaultset="menubar-items"
              mode="icons" iconsize="small" defaulticonsize="small"
+             lockiconsize="true"
 #ifdef XP_WIN
              toolbarname="&menubarCmd.label;"
              accesskey="&menubarCmd.accesskey;"
@@ -549,6 +550,7 @@
 
     <toolbar id="PersonalToolbar"
              mode="icons" iconsize="small" defaulticonsize="small"
+             lockiconsize="true"
              class="chromeclass-directories"
              context="toolbar-context-menu"
              defaultset="personal-bookmarks"
