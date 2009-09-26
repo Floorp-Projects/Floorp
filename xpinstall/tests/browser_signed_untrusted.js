@@ -28,7 +28,7 @@ function confirm_install(window) {
   is(items.length, 1, "Should only be 1 item listed in the confirmation dialog");
   is(items[0].name, "Untrusted Signed XPI", "Should have seen the name from the trigger list");
   is(items[0].url, TESTROOT + "signed-untrusted.xpi", "Should have listed the correct url for the item");
-  is(items[0].cert, "(Unknown Organisation)", "Should have seen the supposed signer");
+  is(items[0].cert, "(Unknown Signer)", "Should have seen the supposed signer");
   is(items[0].signed, "true", "Should have listed the item as signed");
   return true;
 }

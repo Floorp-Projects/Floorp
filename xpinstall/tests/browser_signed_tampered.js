@@ -27,7 +27,7 @@ function confirm_install(window) {
   is(items.length, 1, "Should only be 1 item listed in the confirmation dialog");
   is(items[0].name, "Tampered Signed XPI", "Should have seen the name from the trigger list");
   is(items[0].url, TESTROOT + "signed-tampered.xpi", "Should have listed the correct url for the item");
-  is(items[0].cert, "(Mozilla Testing)", "Should have seen the signer");
+  is(items[0].cert, "(Object Signer)", "Should have seen the signer");
   is(items[0].signed, "true", "Should have listed the item as signed");
   return true;
 }
