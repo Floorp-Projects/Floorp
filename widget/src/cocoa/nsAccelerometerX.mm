@@ -50,14 +50,19 @@ nsAccelerometerX::~nsAccelerometerX()
 // I am not sure what the other bits in this structure are,
 // or if there are any, but this has to be 40 bytes long or
 // the call to read fails.
-
+//
+// Since we make the SmsData struct larger than any members we plan to access we
+// keep track of the the size of the part of the struct we plan to access for
+// use in bounds checking.
+#define SMSDATA_PADDING_SIZE 34
 typedef struct
 {
   PRInt16 x;
   PRInt16 y;
   PRInt16 z;
-  PRInt8  unknown[34];
+  PRInt8  unknown[SMSDATA_PADDING_SIZE];
 } SmsData;
+#define SMSDATA_USED_SIZE (sizeof(SmsData) - SMSDATA_PADDING_SIZE)
 
 void
 nsAccelerometerX::UpdateHandler(nsITimer *aTimer, void *aClosure)
@@ -68,7 +73,7 @@ nsAccelerometerX::UpdateHandler(nsITimer *aTimer, void *aClosure)
     return;
   }
 
-  const int bufferLen = sizeof(SmsData);
+  size_t bufferLen = sizeof(SmsData);
 
   void * input = malloc(bufferLen);
   void * output = malloc(bufferLen);
@@ -79,14 +84,24 @@ nsAccelerometerX::UpdateHandler(nsITimer *aTimer, void *aClosure)
   memset(input, 0, bufferLen);
   memset(output, 0, bufferLen);
 
-  IOByteCount structureOutputSize = bufferLen;
+  size_t structureOutputSize = bufferLen;
+#if (MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4)
   kern_return_t result = ::IOConnectMethodStructureIStructureO(self->mSmsConnection,
                                                                5, /* Magic number for SMCMotionSensor */
                                                                bufferLen,
-                                                               &structureOutputSize,
+                                                               (IOByteCount*)&structureOutputSize,
                                                                input,
                                                                output);
-  if (result != kIOReturnSuccess) {
+#else
+  kern_return_t result = ::IOConnectCallStructMethod((mach_port_t)self->mSmsConnection,
+                                                     5, /* Magic number for SMCMotionSensor */
+                                                     input,
+                                                     bufferLen,
+                                                     output,
+                                                     &structureOutputSize);
+#endif
+
+  if ((result != kIOReturnSuccess) || (structureOutputSize < SMSDATA_USED_SIZE)) {
     free(input);
     free(output);
     return;
