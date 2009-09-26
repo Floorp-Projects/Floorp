@@ -1027,15 +1027,12 @@ WeaveSvc.prototype = {
   _scheduleNextSync: function WeaveSvc__scheduleNextSync(interval) {
     // Figure out when to sync next if not given a interval to wait
     if (interval == null) {
-      // Make sure we backoff we we need to
-      if (this.status.backoffInterval != 0)
-        interval = this.status.backoffInterval;
       // Check if we had a pending sync from last time
-      else if (this.nextSync != 0)
+      if (this.nextSync != 0)
         interval = this.nextSync - Date.now();
-      // Use the default sync interval
+      // Use the bigger of default sync interval and backoff
       else 
-        interval = this.syncInterval;
+        interval = Math.max(this.syncInterval, this.status.backoffInterval);
     }
 
     // Start the sync right away if we're already late
