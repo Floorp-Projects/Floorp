@@ -66,6 +66,10 @@ DIRS += jsapi-tests
 endif
 endif
 
+ifdef ENABLE_TESTS
+DIRS += tests
+endif
+
 MODULE		    = js
 LIBRARY_NAME	    = mozjs
 STATIC_LIBRARY_NAME = js_static

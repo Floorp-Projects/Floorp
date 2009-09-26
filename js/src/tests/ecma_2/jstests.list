@@ -1,0 +1,9 @@
+include Exceptions/jstests.list
+include Expressions/jstests.list
+include extensions/jstests.list
+include FunctionObjects/jstests.list
+include instanceof/jstests.list
+include LexicalConventions/jstests.list
+include RegExp/jstests.list
+include Statements/jstests.list
+include String/jstests.list

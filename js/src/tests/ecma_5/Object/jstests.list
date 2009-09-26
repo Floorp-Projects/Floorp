@@ -1,0 +1,3 @@
+url-prefix ../../jsreftest.html?test=ecma_5/Object/
+skip script 15.2.3.3-01.js # does not use reportCompare
+skip script 15.2.3.14-01.js # does not use reportCompare
