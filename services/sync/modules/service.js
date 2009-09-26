@@ -246,7 +246,7 @@ WeaveSvc.prototype = {
   get nextSync() Svc.Prefs.get("nextSync", 0) * 1000,
   set nextSync(value) Svc.Prefs.set("nextSync", Math.floor(value / 1000)),
 
-  get syncInterval() Svc.Prefs.get("syncInterval", SINGLE_USER_SYNC),
+  get syncInterval() Svc.Prefs.get("syncInterval", MULTI_MOBILE_SYNC),
   set syncInterval(value) Svc.Prefs.set("syncInterval", value),
 
   get numClients() Svc.Prefs.get("numClients", 0),
