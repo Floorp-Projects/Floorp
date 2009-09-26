@@ -2312,26 +2312,23 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JS_ASSERT(op != JSOP_CALLEE);
             JS_ASSERT((cg->fun->flags & JSFUN_LAMBDA) && atom == cg->fun->atom);
 
-            switch (op) {
-              default:
-                /*
-                 * Leave pn->pn_op == JSOP_NAME if cg->fun is heavyweight, as
-                 * we cannot be sure cg->fun is not something of the form:
-                 *
-                 *   var ff = (function f(s) { eval(s); return f; });
-                 *
-                 * where a caller invokes ff("var f = 42"). The result returned
-                 * for such an invocation must be 42, since the callee name is
-                 * lexically bound in an outer declarative environment from the
-                 * function's activation. See jsfun.cpp:call_resolve.
-                 */
-                JS_ASSERT(op != JSOP_DELNAME);
-                if (!(cg->flags & TCF_FUN_HEAVYWEIGHT)) {
-                    op = JSOP_CALLEE;
-                    pn->pn_dflags |= PND_CONST;
-                }
-                break;
+            /*
+             * Leave pn->pn_op == JSOP_NAME if cg->fun is heavyweight, as we
+             * cannot be sure cg->fun is not something of the form:
+             *
+             *   var ff = (function f(s) { eval(s); return f; });
+             *
+             * where a caller invokes ff("var f = 42"). The result returned for
+             * such an invocation must be 42, since the callee name is
+             * lexically bound in an outer declarative environment from the
+             * function's activation. See jsfun.cpp:call_resolve.
+             */
+            JS_ASSERT(op != JSOP_DELNAME);
+            if (!(cg->flags & TCF_FUN_HEAVYWEIGHT)) {
+                op = JSOP_CALLEE;
+                pn->pn_dflags |= PND_CONST;
             }
+
             pn->pn_op = op;
             pn->pn_dflags |= PND_BOUND;
             return JS_TRUE;

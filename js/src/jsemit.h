@@ -429,7 +429,7 @@ struct JSCodeGenerator : public JSTreeContext
     ~JSCodeGenerator();
 
     bool hasSharps() {
-        bool rv = flags & TCF_HAS_SHARPS;
+        bool rv = !!(flags & TCF_HAS_SHARPS);
         JS_ASSERT((sharpSlotBase >= 0) == rv);
         return rv;
     }

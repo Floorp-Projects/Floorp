@@ -340,7 +340,7 @@ function execute(n, x) {
             } catch (e if e == BREAK && x.target == n) {
                 break;
             } catch (e if e == CONTINUE && x.target == n) {
-                continue;
+                // Must run the update expression.
             }
             n.update && getValue(execute(n.update, x));
         }

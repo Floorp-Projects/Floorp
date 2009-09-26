@@ -51,8 +51,6 @@
  */
 namespace nanojit
 {
-    using namespace MMgc;
-
     enum LOpcode
 #if defined(_MSC_VER) && _MSC_VER >= 1400
 #pragma warning(disable:4480) // nonstandard extension used: specifying underlying type for enum
@@ -930,7 +928,7 @@ namespace nanojit
 
     GuardRecord *LIns::record() const {
         NanoAssert(isGuard());
-        return (GuardRecord*)oprnd2()->payload();
+        return (GuardRecord*)oprnd2();
     }
 
     int32_t LIns::disp() const {
@@ -1012,15 +1010,14 @@ namespace nanojit
         return toLInsC()->ci;
     }
 
-    // make it a GCObject so we can explicitly delete it early
-    class LirWriter : public GCObject
+    class LirWriter
     {
     public:
         LirWriter *out;
 
-        virtual ~LirWriter() {}
         LirWriter(LirWriter* out)
             : out(out) {}
+        virtual ~LirWriter() {}
 
         virtual LInsp ins0(LOpcode v) {
             return out->ins0(v);
@@ -1034,8 +1031,8 @@ namespace nanojit
         virtual LInsp ins3(LOpcode v, LIns* a, LIns* b, LIns* c) {
             return out->ins3(v, a, b, c);
         }
-        virtual LInsp insGuard(LOpcode v, LIns *c, LIns *x) {
-            return out->insGuard(v, c, x);
+        virtual LInsp insGuard(LOpcode v, LIns *c, GuardRecord *gr) {
+            return out->insGuard(v, c, gr);
         }
         virtual LInsp insBranch(LOpcode v, LInsp condition, LInsp to) {
             return out->insBranch(v, condition, to);
@@ -1069,6 +1066,13 @@ namespace nanojit
         }
         virtual LInsp insSkip(size_t size) {
             return out->insSkip(size);
+        }
+        void insAssert(LIns* expr) {
+            #if defined DEBUG
+            LIns* branch = insBranch(LIR_jt, expr, NULL);
+            ins0(LIR_dbreak);
+            branch->setTarget(ins0(LIR_label));
+            #endif
         }
 
         // convenience functions
@@ -1203,8 +1207,8 @@ namespace nanojit
             }
         }
 
-        LIns* insGuard(LOpcode op, LInsp cond, LIns *x) {
-            return add_flush(out->insGuard(op,cond,x));
+        LIns* insGuard(LOpcode op, LInsp cond, GuardRecord *gr) {
+            return add_flush(out->insGuard(op,cond,gr));
         }
 
         LIns* insBranch(LOpcode v, LInsp condition, LInsp to) {
@@ -1262,8 +1266,9 @@ namespace nanojit
         LIns* ins1(LOpcode v, LIns* a);
         LIns* ins2(LOpcode v, LIns* a, LIns* b);
         LIns* ins3(LOpcode v, LIns* a, LIns* b, LIns* c);
-        LIns* insGuard(LOpcode, LIns *cond, LIns *);
+        LIns* insGuard(LOpcode, LIns *cond, GuardRecord *);
         LIns* insBranch(LOpcode, LIns *cond, LIns *target);
+        LIns* insLoad(LOpcode op, LInsp base, int32_t off);
     };
 
     // @todo, this could be replaced by a generic HashMap or HashSet, if we had one
@@ -1319,7 +1324,7 @@ namespace nanojit
         LIns* ins3(LOpcode v, LInsp, LInsp, LInsp);
         LIns* insLoad(LOpcode op, LInsp cond, int32_t d);
         LIns* insCall(const CallInfo *call, LInsp args[]);
-        LIns* insGuard(LOpcode op, LInsp cond, LIns *x);
+        LIns* insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
     };
 
     class LirBuffer
@@ -1395,7 +1400,7 @@ namespace nanojit
             LInsp    insImmq(uint64_t imm);
             LInsp    insImmf(double d);
             LInsp    insCall(const CallInfo *call, LInsp args[]);
-            LInsp    insGuard(LOpcode op, LInsp cond, LIns *x);
+            LInsp    insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
             LInsp    insBranch(LOpcode v, LInsp condition, LInsp to);
             LInsp   insAlloc(int32_t size);
             LInsp   insSkip(size_t);
@@ -1432,14 +1437,11 @@ namespace nanojit
         LInsp pos() {
             return _i;
         }
-        void setpos(LIns *i) {
-            _i = i;
-        }
     };
 
     class Assembler;
 
-    void compile(Assembler *assm, Fragment *frag, Allocator& alloc verbose_only(, LabelMap*));
+    void compile(Assembler *assm, Fragment *frag verbose_only(, Allocator& alloc, LabelMap*));
     verbose_only(void live(Allocator& alloc, Fragment *frag, LirBuffer *lirbuf);)
 
     class StackFilter: public LirFilter

@@ -555,18 +555,6 @@ Assembler::genEpilogue()
 }
 
 /*
- * This should never be called; ARM only uses the longer form.
- * TODO: We should delete this as it is never called from outside this file. It
- * should be declared in the DECLARE_PLATFORM_ASSEMBLER block of each native
- * back-end where required.
- */
-void
-Assembler::asm_arg(ArgSize sz, LInsp p, Register r)
-{
-    NanoAssert(0);
-}
-
-/*
  * asm_arg will encode the specified argument according to the current ABI, and
  * will update r and stkd as appropriate so that the next argument can be
  * encoded.

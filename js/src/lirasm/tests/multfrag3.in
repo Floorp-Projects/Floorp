@@ -10,6 +10,6 @@ ret avg
 .begin main
 oneh = int 100
 twoh = int 200
-res = call avg fastcall twoh oneh
+res = icall avg fastcall twoh oneh
 ret res
 .end

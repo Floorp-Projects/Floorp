@@ -42,6 +42,7 @@
 #define __nanojit_Nativei386__
 
 #ifdef PERFM
+#define DOPROF
 #include "../vprof/vprof.h"
 #define count_instr() _nvprof("x86",1)
 #define count_ret() _nvprof("x86-ret",1); count_instr();
@@ -90,7 +91,6 @@
 
 namespace nanojit
 {
-    const int NJ_LOG2_PAGE_SIZE = 12;       // 4K
     const int NJ_MAX_REGISTERS = 24; // gpregs, x87 regs, xmm regs
 
     #define NJ_MAX_STACK_ENTRY 256
@@ -174,8 +174,11 @@ namespace nanojit
         void nativePageSetup();\
         void underrunProtect(int);\
         void asm_farg(LInsp);\
-        void asm_cmp(LIns *cond);\
-        void asm_fcmp(LIns *cond);
+        void asm_arg(ArgSize, LIns*, Register);\
+        void asm_pusharg(LInsp);\
+        void asm_fcmp(LIns *cond); \
+        void asm_cmp(LIns *cond); \
+        void asm_div_mod(LIns *cond);
 
     #define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
 
@@ -184,7 +187,7 @@ namespace nanojit
     *((int32_t*)_nIns) = (int32_t)(i)
 
 #define MODRMs(r,d,b,l,i) \
-        NanoAssert(unsigned(r)<8 && unsigned(b)<8 && unsigned(i)<8); \
+        NanoAssert(unsigned(i)<8 && unsigned(b)<8 && unsigned(r)<8); \
         if ((d) == 0 && (b) != EBP) { \
             _nIns -= 2; \
             _nIns[0] = (uint8_t)     ( 0<<6 |   (r)<<3 | 4); \
@@ -313,15 +316,15 @@ namespace nanojit
 #define ALUmi(c,d,b,i) \
         underrunProtect(10); \
         NanoAssert(((unsigned)b)<8); \
-         if (isS8(i)) { \
+        if (isS8(i)) { \
             *(--_nIns) = uint8_t(i); \
             MODRMm((c>>3),(d),(b)); \
             *(--_nIns) = uint8_t(0x83); \
-         } else { \
-             IMM32(i); \
+        } else { \
+            IMM32(i); \
             MODRMm((c>>3),(d),(b)); \
             *(--_nIns) = uint8_t(0x81); \
-         }
+        }
 
 #define ALU2(c,d,s) \
         underrunProtect(3); \
@@ -373,7 +376,7 @@ namespace nanojit
 #define LEA(r,d,b)  do { count_alu(); ALUm(0x8d, r,d,b);            asm_output("lea %s,%d(%s)",gpn(r),d,gpn(b)); } while(0)
 // lea %r, d(%i*4)
 // This addressing mode is not supported by the MODRMSIB macro.
-#define LEAmi4(r,d,i) do { count_alu(); IMM32(d); *(--_nIns) = (2<<6)|(i<<3)|5; *(--_nIns) = (0<<6)|(r<<3)|4; *(--_nIns) = 0x8d;                    asm_output("lea %s, %p(%s*4)", gpn(r), (void*)d, gpn(i)); } while(0)
+#define LEAmi4(r,d,i) do { count_alu(); IMM32(d); *(--_nIns) = (2<<6)|((uint8_t)i<<3)|5; *(--_nIns) = (0<<6)|((uint8_t)r<<3)|4; *(--_nIns) = 0x8d;                    asm_output("lea %s, %p(%s*4)", gpn(r), (void*)d, gpn(i)); } while(0)
 
 #define CDQ()       do { SARi(EDX, 31); MR(EDX, EAX); } while(0)
 
@@ -392,7 +395,7 @@ namespace nanojit
 #define SETBE(r)    do { count_alu(); ALU2(0x0f96,(r),(r));         asm_output("setbe %s",gpn(r)); } while(0)
 #define SETA(r)     do { count_alu(); ALU2(0x0f97,(r),(r));         asm_output("seta %s",gpn(r)); } while(0)
 #define SETAE(r)    do { count_alu(); ALU2(0x0f93,(r),(r));         asm_output("setae %s",gpn(r)); } while(0)
-#define SETO(r)     do { count_alu(); ALU2(0x0f92,(r),(r));         asm_output("seto  %s",gpn(r)); } while(0)
+#define SETO(r)     do { count_alu(); ALU2(0x0f92,(r),(r));         asm_output("seto %s",gpn(r)); } while(0)
 
 #define MREQ(dr,sr) do { count_alu(); ALU2(0x0f44,dr,sr); asm_output("cmove %s,%s", gpn(dr),gpn(sr)); } while(0)
 #define MRNE(dr,sr) do { count_alu(); ALU2(0x0f45,dr,sr); asm_output("cmovne %s,%s", gpn(dr),gpn(sr)); } while(0)
@@ -447,7 +450,7 @@ namespace nanojit
 // load 8-bit, zero extend
 // note, only 5-bit offsets (!) are supported for this, but that's all we need at the moment
 // (movzx actually allows larger offsets mode but 5-bit gives us advantage in Thumb mode)
-#define LD8Z(r,d,b)    do { NanoAssert((d)>=0&&(d)<=31); ALU2m(0x0fb6,r,d,b); asm_output("movzx %s,%d(%s)", gpn(r),d,gpn(b)); } while(0)
+#define LD8Z(r,d,b)    do { count_ld(); NanoAssert((d)>=0&&(d)<=31); ALU2m(0x0fb6,r,d,b); asm_output("movzx %s,%d(%s)", gpn(r),d,gpn(b)); } while(0)
 
 #define LD8Zdm(r,addr) do { \
     count_ld(); \

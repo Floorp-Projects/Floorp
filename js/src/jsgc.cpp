@@ -2852,7 +2852,6 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
                 JS_ASSERT(nslots >= fp->script->nfixed);
             } else {
                 nslots = fp->script->nfixed;
-                JS_ASSERT_IF(!fp->regs->sp, nslots == 0);
             }
             TRACE_JSVALS(trc, nslots, fp->slots, "slot");
         }
@@ -3036,6 +3035,9 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
           case JSTVU_SCRIPT:
             js_TraceScript(trc, tvr->u.script);
             break;
+          case JSTVU_ENUMERATOR:
+            static_cast<JSAutoEnumStateRooter *>(tvr)->mark(trc);
+            break;
           default:
             JS_ASSERT(tvr->count >= 0);
             TRACE_JSVALS(trc, tvr->count, tvr->u.array, "tvr->u.array");
@@ -3095,7 +3097,6 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
     if (rt->gcLocksHash)
         JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_traversal, trc);
     js_TraceAtomState(trc, allAtoms);
-    js_TraceNativeEnumerators(trc);
     js_TraceRuntimeNumberState(trc);
 
     iter = NULL;

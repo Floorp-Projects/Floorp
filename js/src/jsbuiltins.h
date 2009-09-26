@@ -123,7 +123,7 @@ struct JSNativeTraceInfo {
 #define _JS_PTR_ARGSIZE    nanojit::ARGSIZE_P
 #define _JS_PTR_RETSIZE    nanojit::ARGSIZE_P
 
-class ClosureVarInfo;
+struct ClosureVarInfo;
 
 /*
  * Supported types for builtin functions.
@@ -224,6 +224,7 @@ class ClosureVarInfo;
 #define _JS_CTYPE_FRAGMENT          _JS_CTYPE(nanojit::Fragment *,    _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CLASS             _JS_CTYPE(JSClass *,              _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_DOUBLEPTR         _JS_CTYPE(double *,               _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_CHARPTR           _JS_CTYPE(char *,                 _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_APNPTR            _JS_CTYPE(js_ArgsPrivateNative *, _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CVIPTR            _JS_CTYPE(const ClosureVarInfo *, _JS_PTR, --, --, INFALLIBLE)
 
@@ -471,7 +472,7 @@ JS_DECLARE_CALLINFO(js_Array_dense_setelem)
 JS_DECLARE_CALLINFO(js_Array_dense_setelem_int)
 JS_DECLARE_CALLINFO(js_Array_dense_setelem_double)
 JS_DECLARE_CALLINFO(js_NewEmptyArray)
-JS_DECLARE_CALLINFO(js_NewUninitializedArray)
+JS_DECLARE_CALLINFO(js_NewArrayWithSlots)
 JS_DECLARE_CALLINFO(js_ArrayCompPush)
 
 /* Defined in jsfun.cpp. */
