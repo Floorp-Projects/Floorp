@@ -251,7 +251,16 @@ Engine.prototype = {
           if (stat.sum != null)
             sums.push(name.replace(/^_/, "") + " " + stat.sum);
 
-        return "Total (ms): " + sums.sort().join(", ");
+        // Order certain functions first before any other random ones
+        let nameOrder = ["sync", "processIncoming", "uploadOutgoing",
+          "syncStartup", "syncFinish"];
+        let getPos = function(str) {
+          let pos = nameOrder.indexOf(str.split(" ")[0]);
+          return pos != -1 ? pos : Infinity;
+        };
+        let order = function(a, b) getPos(a) > getPos(b);
+
+        return "Total (ms): " + sums.sort(order).join(", ");
       };
 
       this._log.info(stats);
