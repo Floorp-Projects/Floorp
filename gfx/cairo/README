@@ -30,8 +30,6 @@ cairo-version-fixes.patch: fix up cairo-version.c/cairo-version.h for in-place b
 
 win32-ddb-dib.patch: fix for bug 455513; not upstream yet pending feebdack
 
-qpainter-type.patch: add SURFACE_TYPE_QPAINTER to cairo.h
-
 wince-fixes.patch: stubs out win32 functions we use but are not supported on win32.  Also implements ExtSelectClipRgn in terms of other functions available on wince.
 
 win32-vertically-offset-glyph.patch: bug 454098; vertical positioning errors when drawing glyph runs including delta-y offsets on screen via GDI

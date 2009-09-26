@@ -2534,7 +2534,7 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern);
 
 enum {
     CAIRO_PATTERN_ACQUIRE_NONE = 0x0,
-    CAIRO_PATTERN_ACQUIRE_NO_REFLECT = 0x1,
+    CAIRO_PATTERN_ACQUIRE_NO_REFLECT = 0x1
 };
 cairo_private cairo_int_status_t
 _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
