@@ -485,7 +485,6 @@ SyncEngine.prototype = {
 
     // try to free some memory
     this._store.cache.clear();
-    Cu.forceGC();
   },
 
   /**
