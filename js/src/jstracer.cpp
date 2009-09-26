@@ -2161,6 +2161,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
         TreeInfo* ti, unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
         VMSideExit* innermostNestedGuard, jsbytecode* outer, uint32 outerArgc)
     : tempAlloc(*JS_TRACE_MONITOR(cx).tempAlloc),
+      mark(*JS_TRACE_MONITOR(cx).traceAlloc),
       whichTreesToTrash(&tempAlloc),
       cfgMerges(&tempAlloc)
 {
@@ -2309,7 +2310,9 @@ TraceRecorder::~TraceRecorder()
 bool
 TraceRecorder::outOfMemory()
 {
-    return traceMonitor->dataAlloc->outOfMemory() || tempAlloc.outOfMemory();
+    return traceMonitor->dataAlloc->outOfMemory() ||
+        traceMonitor->traceAlloc->outOfMemory() ||
+        tempAlloc.outOfMemory();
 }
 
 /* Add debug information to a LIR instruction as we emit it. */
@@ -2589,6 +2592,7 @@ JSTraceMonitor::flush()
     )
 
     dataAlloc->reset();
+    traceAlloc->reset();
     codeAlloc->reset();
 
     Allocator& alloc = *dataAlloc;
@@ -3914,8 +3918,8 @@ TraceRecorder::snapshot(ExitType exitType)
 
     /* We couldn't find a matching side exit, so create a new one. */
     VMSideExit* exit = (VMSideExit*)
-        traceMonitor->dataAlloc->alloc(sizeof(VMSideExit) +
-                                       (stackSlots + ngslots) * sizeof(JSTraceType));
+        traceMonitor->traceAlloc->alloc(sizeof(VMSideExit) +
+                                        (stackSlots + ngslots) * sizeof(JSTraceType));
 
     /* Setup side exit structure. */
     exit->from = fragment;
@@ -3948,7 +3952,7 @@ TraceRecorder::snapshot(ExitType exitType)
 JS_REQUIRES_STACK GuardRecord*
 TraceRecorder::createGuardRecord(VMSideExit* exit)
 {
-    GuardRecord* gr = new (*traceMonitor->dataAlloc) GuardRecord();
+    GuardRecord* gr = new (*traceMonitor->traceAlloc) GuardRecord();
 
     gr->exit = exit;
     exit->addGuard(gr);
@@ -4004,8 +4008,8 @@ TraceRecorder::copy(VMSideExit* copy)
 {
     size_t typemap_size = copy->numGlobalSlots + copy->numStackSlots;
     VMSideExit* exit = (VMSideExit*)
-        traceMonitor->dataAlloc->alloc(sizeof(VMSideExit) +
-                                       typemap_size * sizeof(JSTraceType));
+        traceMonitor->traceAlloc->alloc(sizeof(VMSideExit) +
+                                        typemap_size * sizeof(JSTraceType));
 
     /* Copy side exit structure. */
     memcpy(exit, copy, sizeof(VMSideExit) + typemap_size * sizeof(JSTraceType));
@@ -4155,6 +4159,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
     js_free(label);
 #endif
     AUDIT(traceCompleted);
+    mark.commit();
     return ARECORD_CONTINUE;
 }
 
@@ -4482,7 +4487,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus& cons
             debug_only_print0(LC_TMTracer,
                               "Trace has unstable loop variable with no stable peer, "
                               "compiling anyway.\n");
-            UnstableExit* uexit = new (*traceMonitor->dataAlloc) UnstableExit;
+            UnstableExit* uexit = new (*traceMonitor->traceAlloc) UnstableExit;
             uexit->fragment = fragment;
             uexit->exit = exit;
             uexit->next = treeInfo->unstableExits;
@@ -5020,6 +5025,7 @@ DeleteRecorder(JSContext* cx)
 
     /* If we ran out of memory, flush the code cache. */
     if (tm->dataAlloc->outOfMemory() ||
+        tm->traceAlloc->outOfMemory() ||
         js_OverfullJITCache(tm)) {
         ResetJIT(cx, FR_OOM);
         return false;
@@ -5375,7 +5381,9 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, VMFragment* f, jsbytecode* outer,
     f->root = f;
     f->lirbuf = tm->lirbuf;
 
-    if (tm->dataAlloc->outOfMemory() || js_OverfullJITCache(tm)) {
+    if (tm->dataAlloc->outOfMemory() ||
+        tm->traceAlloc->outOfMemory() ||
+        js_OverfullJITCache(tm)) {
         Backoff(cx, (jsbytecode*) f->root->ip);
         ResetJIT(cx, FR_OOM);
         debug_only_print0(LC_TMTracer,
@@ -5386,7 +5394,7 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, VMFragment* f, jsbytecode* outer,
     JS_ASSERT(!f->code() && !f->vmprivate);
 
     /* Set up the VM-private treeInfo structure for this fragment. */
-    TreeInfo* ti = new (*tm->dataAlloc) TreeInfo(tm->dataAlloc, f, globalSlots);
+    TreeInfo* ti = new (*tm->traceAlloc) TreeInfo(tm->dataAlloc, f, globalSlots);
 
     /* Capture the coerced type of each active slot in the type map. */
     ti->typeMap.captureTypes(cx, globalObj, *globalSlots, 0 /* callDepth */);
@@ -7119,7 +7127,7 @@ void
 js_SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes)
 {
     JSTraceMonitor* tm = &JS_THREAD_DATA(cx)->traceMonitor;
-    JS_ASSERT(tm->codeAlloc && tm->dataAlloc);
+    JS_ASSERT(tm->codeAlloc && tm->dataAlloc && tm->traceAlloc);
     if (bytes > 1 G)
         bytes = 1 G;
     if (bytes < 128 K)
@@ -7191,8 +7199,9 @@ js_InitJIT(JSTraceMonitor *tm)
                           JS_DHASH_DEFAULT_CAPACITY(PC_HASH_COUNT));
     }
 
-    JS_ASSERT(!tm->dataAlloc && !tm->codeAlloc);
+    JS_ASSERT(!tm->dataAlloc && !tm->traceAlloc && !tm->codeAlloc);
     tm->dataAlloc = new VMAllocator();
+    tm->traceAlloc = new VMAllocator();
     tm->tempAlloc = new VMAllocator();
     tm->reTempAlloc = new VMAllocator();
     tm->codeAlloc = new CodeAlloc();
@@ -7313,6 +7322,11 @@ js_FinishJIT(JSTraceMonitor *tm)
         tm->dataAlloc = NULL;
     }
 
+    if (tm->traceAlloc) {
+        delete tm->traceAlloc;
+        tm->traceAlloc = NULL;
+    }
+
     if (tm->tempAlloc) {
         delete tm->tempAlloc;
         tm->tempAlloc = NULL;
@@ -7417,9 +7431,10 @@ js_OverfullJITCache(JSTraceMonitor* tm)
      */
     jsuint maxsz = tm->maxCodeCacheBytes;
     VMAllocator *dataAlloc = tm->dataAlloc;
+    VMAllocator *traceAlloc = tm->traceAlloc;
     CodeAlloc *codeAlloc = tm->codeAlloc;
 
-    return (codeAlloc->size() + dataAlloc->size() > maxsz);
+    return (codeAlloc->size() + dataAlloc->size() + traceAlloc->size() > maxsz);
 }
 
 JS_FORCES_STACK JS_FRIEND_API(void)
@@ -7634,7 +7649,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
     LIns* parent_ins = stobj_get_parent(get(&cx->fp->argv[-2]));
     CHECK_STATUS(traverseScopeChain(parent, parent_ins, obj, obj_ins));
 
-    ClosureVarInfo* cv = new (traceMonitor->dataAlloc) ClosureVarInfo();
+    ClosureVarInfo* cv = new (traceMonitor->traceAlloc) ClosureVarInfo();
     cv->id = id;
     cv->slot = slot;
     cv->callDepth = callDepth;
@@ -8010,7 +8025,7 @@ TraceRecorder::tableswitch()
         return InjectStatus(switchop());
 
     /* Generate switch LIR. */
-    SwitchInfo* si = new (*traceMonitor->dataAlloc) SwitchInfo();
+    SwitchInfo* si = new (*traceMonitor->traceAlloc) SwitchInfo();
     si->count = high + 1 - low;
     si->table = 0;
     si->index = (uint32) -1;
@@ -9364,7 +9379,7 @@ TraceRecorder::newArguments()
         ? lir->ins2(LIR_piadd, lirbuf->sp, 
                     lir->insImmWord(-treeInfo->nativeStackBase + nativeStackOffset(&cx->fp->argv[0])))
         : INS_CONSTPTR((void *) 2);
-    js_ArgsPrivateNative *apn = js_ArgsPrivateNative::create(*traceMonitor->dataAlloc, cx->fp->argc);
+    js_ArgsPrivateNative *apn = js_ArgsPrivateNative::create(*traceMonitor->traceAlloc, cx->fp->argc);
     for (uintN i = 0; i < cx->fp->argc; ++i) {
         apn->typemap()[i] = determineSlotType(&cx->fp->argv[i]);
     }
@@ -9866,7 +9881,7 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
     if (setflag)
         lir->insStorei(boxed_ins, vp_ins, 0);
 
-    CallInfo* ci = new (*traceMonitor->dataAlloc) CallInfo();
+    CallInfo* ci = new (*traceMonitor->traceAlloc) CallInfo();
     ci->_address = uintptr_t(setflag ? sprop->setter : sprop->getter);
     ci->_argtypes = ARGSIZE_I << (0*ARGSIZE_SHIFT) |
                     ARGSIZE_P << (1*ARGSIZE_SHIFT) |
@@ -10249,7 +10264,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     // Do not use JSTN_UNBOX_AFTER for mode JSOP_NEW because
     // record_NativeCallComplete unboxes the result specially.
 
-    CallInfo* ci = new (*traceMonitor->dataAlloc) CallInfo();
+    CallInfo* ci = new (*traceMonitor->traceAlloc) CallInfo();
     ci->_address = uintptr_t(fun->u.n.native);
     ci->_cse = ci->_fold = 0;
     ci->_abi = ABI_CDECL;
@@ -11033,7 +11048,7 @@ TraceRecorder::record_JSOP_GETELEM()
                         unsigned stackSlots = NativeStackSlots(cx, 0 /* callDepth */);
                         if (stackSlots * sizeof(JSTraceType) > LirBuffer::MAX_SKIP_PAYLOAD_SZB)
                             RETURN_STOP_A("|arguments| requires saving too much stack");
-                        JSTraceType* typemap = new (*traceMonitor->dataAlloc) JSTraceType[stackSlots];
+                        JSTraceType* typemap = new (*traceMonitor->traceAlloc) JSTraceType[stackSlots];
                         DetermineTypesVisitor detVisitor(*this, typemap);
                         VisitStackSlots(detVisitor, cx, 0);
                         typemap_ins = INS_CONSTPTR(typemap + 2 /* callee, this */);
@@ -11517,8 +11532,8 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     if (sizeof(FrameInfo) + stackSlots * sizeof(JSTraceType) > LirBuffer::MAX_SKIP_PAYLOAD_SZB)
         RETURN_STOP("interpreted function call requires saving too much stack");
     FrameInfo* fi = (FrameInfo*)
-        traceMonitor->dataAlloc->alloc(sizeof(FrameInfo) +
-                                       stackSlots * sizeof(JSTraceType));
+        traceMonitor->traceAlloc->alloc(sizeof(FrameInfo) +
+                                        stackSlots * sizeof(JSTraceType));
     JSTraceType* typemap = reinterpret_cast<JSTraceType *>(fi + 1);
 
     DetermineTypesVisitor detVisitor(*this, typemap);

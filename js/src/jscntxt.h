@@ -154,7 +154,24 @@ struct JSTraceMonitor {
      */
     JSContext               *tracecx;
 
-    CLS(VMAllocator)        dataAlloc;   /* A chunk allocator for LIR.    */
+    /*
+     * There are 3 allocators here. This might seem like overkill, but they
+     * have different lifecycles, and by keeping them separate we keep the
+     * amount of retained memory down significantly.
+     *
+     * The dataAlloc has the lifecycle of the monitor. It's flushed only
+     * when the monitor is flushed.
+     *
+     * The traceAlloc has the same flush lifecycle as the dataAlloc, but
+     * it is also *marked* when a recording starts and rewinds to the mark
+     * point if recording aborts. So you can put things in it that are only
+     * reachable on a successful record/compile cycle.
+     *
+     * The tempAlloc is flushed after each recording, successful or not.
+     */
+
+    CLS(VMAllocator)        dataAlloc;   /* A chunk allocator for fragments. */
+    CLS(VMAllocator)        traceAlloc;  /* An allocator for trace metadata. */
     CLS(VMAllocator)        tempAlloc;   /* A temporary chunk allocator.  */
     CLS(nanojit::CodeAlloc) codeAlloc;   /* An allocator for native code. */
     CLS(nanojit::Assembler) assembler;
