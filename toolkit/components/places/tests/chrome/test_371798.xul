@@ -59,15 +59,16 @@ var observer =
   // nsINavBookmarkObserver
   onBeginUpdateBatch: function(){},
   onEndUpdateBatch: function(){},
-  onItemAdded: function(bookmarkId, bookmark, folder, index) {},
-  onBeforeItemRemoved: function(bookmarkId){},
-  onItemRemoved: function(bookmarkId, bookmark, folder, index){},
-  onItemChanged: function(bookmarkId, property, isAnnotationProperty, value){
+  onItemAdded: function(){},
+  onBeforeItemRemoved: function(){},
+  onItemRemoved: function(){},
+  onItemChanged: function(bookmarkId, property, isAnnotationProperty, value,
+                          lastModified, itemType){
     runTest();
     bmsvc.removeObserver(this);
   },
-  onItemVisited: function(bookmarkId, bookmark, aVisitID, time){},
-  onItemMoved: function(itemId, oldParent, oldIndex, newParent, newIndex){}
+  onItemVisited: function(){},
+  onItemMoved: function(){}
 };
 bmsvc.addObserver(observer, false);
 

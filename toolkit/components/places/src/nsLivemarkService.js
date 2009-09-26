@@ -478,7 +478,7 @@ LivemarkService.prototype = {
   onItemMoved: function() { },
   onBeforeItemRemoved: function() { },
 
-  onItemRemoved: function(aItemId, aParentId, aIndex) {
+  onItemRemoved: function(aItemId, aParentId, aIndex, aItemType) {
     // we don't need to remove annotations since itemAnnotations
     // are already removed with the bookmark
     try {

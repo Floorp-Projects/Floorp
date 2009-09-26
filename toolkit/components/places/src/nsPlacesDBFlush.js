@@ -218,17 +218,18 @@ nsPlacesDBFlush.prototype = {
     this._flushWithQueries([kQuerySyncPlacesId, kQuerySyncHistoryVisitsId]);
   },
 
-  onItemAdded: function(aItemId, aParentId, aIndex)
+  onItemAdded: function(aItemId, aParentId, aIndex, aItemType)
   {
     // Sync only if we added a TYPE_BOOKMARK item.  Note, we want to run the
     // least amount of queries as possible here for performance reasons.
-    if (!this._inBatchMode &&
-        this._bs.getItemType(aItemId) == this._bs.TYPE_BOOKMARK)
+    if (!this._inBatchMode && aItemType == this._bs.TYPE_BOOKMARK)
       this._flushWithQueries([kQuerySyncPlacesId]);
   },
 
   onItemChanged: function DBFlush_onItemChanged(aItemId, aProperty,
-                                                aIsAnnotationProperty, aValue)
+                                                aIsAnnotationProperty,
+                                                aNewValue, aLastModified,
+                                                aItemType)
   {
     if (!this._inBatchMode && aProperty == "uri")
       this._flushWithQueries([kQuerySyncPlacesId]);

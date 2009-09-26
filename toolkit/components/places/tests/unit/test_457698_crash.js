@@ -51,7 +51,7 @@
 var observer = {
   onBeginUpdateBatch: function() {},
   onEndUpdateBatch: function() {},
-  onItemAdded: function(id, folder, index) {
+  onItemAdded: function(id, folder, index, itemType) {
     do_check_true(id > 0);
   },
   onBeforeItemRemoved: function() {},

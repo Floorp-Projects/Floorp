@@ -21,6 +21,9 @@
  *
  * Contributor(s):
  *   Brett Wilson <brett@gmail.com>
+ *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Marco Bonardo <mak77@bonardo.net>
+ *   Asaf Romano <mano@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,9 +58,8 @@ interface nsINavHistoryQueryOptions;
 interface nsINavHistoryResult;
 interface nsINavHistoryBatchCallback;
 interface nsITreeColumn;
-interface nsIWritablePropertyBag;
 
-[scriptable, uuid(47cf89e3-4777-46bf-9677-21793870ce62)]
+[scriptable, uuid(464ae28f-3a9c-4483-afb2-bb0fb0ddb893)]
 interface nsINavHistoryResultNode : nsISupports
 {
   /**
@@ -133,7 +135,7 @@ interface nsINavHistoryResultNode : nsISupports
    * default favicon. If the favicon originally lived in chrome, this will
    * be the original chrome URI of the icon.
    */
-  readonly attribute nsIURI icon;
+  readonly attribute AUTF8String icon;
 
   /**
    * This is the number of levels between this node and the top of the
@@ -142,25 +144,6 @@ interface nsINavHistoryResultNode : nsISupports
    * set to -1.
    */
   readonly attribute long indentLevel;
-
-  /**
-   * Value with undefined meaning for use by the view. Its initial value will
-   * be -1. The result implementation treats nodes with this property set to
-   * -1 as invisible!
-   *
-   * View-implementations may use this value to track the node index in the
-   * view, e.g. the tree view uses this value to indicate the row in the
-   * tree that this node is at. Other views may choose not to use this, but
-   * should inititalize this value to anything but -1 for visible nodes.
-   */
-  attribute long viewIndex;
-
-  /**
-   * You can use this to associate temporary information with the result node.
-   * This property bag is associated with the result node and is not persisted
-   * in any way.
-   */
-  readonly attribute nsIWritablePropertyBag propertyBag;
 
   /**
    * When this item is in a bookmark folder (parent is of type folder), this is
@@ -441,8 +424,8 @@ interface nsINavHistoryResultViewer : nsISupports
    * The item previously at index (if any) and everything below it will have
    * been shifted down by one. The item may be a container or a leaf.
    */
-  void itemInserted(in nsINavHistoryContainerResultNode aParent,
-                    in nsINavHistoryResultNode aItem,
+  void nodeInserted(in nsINavHistoryContainerResultNode aParent,
+                    in nsINavHistoryResultNode aNode,
                     in unsigned long aNewIndex);
 
   /**
@@ -451,7 +434,7 @@ interface nsINavHistoryResultViewer : nsISupports
    * has been removed from its parent list, but before anything else (including
    * NULLing out the item's parent) has happened.
    */
-  void itemRemoved(in nsINavHistoryContainerResultNode aParent,
+  void nodeRemoved(in nsINavHistoryContainerResultNode aParent,
                    in nsINavHistoryResultNode aItem,
                    in unsigned long aOldIndex);
 
@@ -464,53 +447,158 @@ interface nsINavHistoryResultViewer : nsISupports
    * a new node is created for the item, and the itemRemoved/itemAdded methods
    * are used.
    */
-  void itemMoved(in nsINavHistoryResultNode aItem,
+  void nodeMoved(in nsINavHistoryResultNode aNode,
                  in nsINavHistoryContainerResultNode aOldParent,
                  in unsigned long aOldIndex,
                  in nsINavHistoryContainerResultNode aNewParent,
                  in unsigned long aNewIndex);
 
   /**
-   * Called when an item has been changed and should be repainted. This only
-   * refers to the specific item. If it is a container, getting this message
-   * does not imply anything happened to the children. You'll get separate
-   * messages for those. Also, this may be called for container nodes at times
-   * when the result thinks it's possible that a twisty mey need to bw redrawn.
+   * Called right after aNode's title has changed.
+   * 
+   * @param aNode
+   *        a result node
+   * @param aNewTitle
+   *        the new title
    */
-  void itemChanged(in nsINavHistoryResultNode item);
+  void nodeTitleChanged(in nsINavHistoryResultNode aNode,
+                        in AUTF8String aNewTitle);
+
+  /**
+   * Called right after aNode's uri property has changed.
+   * 
+   * @param aNode
+   *        a result node
+   * @param aNewURI
+   *        the new uri
+   */
+  void nodeURIChanged(in nsINavHistoryResultNode aNode,
+                      in AUTF8String aNewURI);
+
+  /**
+   * Called right after aNode's icon property has changed.
+   *
+   * @param aNode
+   *        a result node
+   *
+   * @note: The new icon is accessible through aNode.icon.
+   */
+  void nodeIconChanged(in nsINavHistoryResultNode aNode);
+
+  /**
+   * Called right after aNode's time property or accessCount property, or both,
+   * have changed.
+   *
+   * @param aNode
+   *        a uri result node
+   * @param aNewVisitDate
+   *        the new visit date
+   * @param aNewAccessCount
+   *        the new access-count
+   */
+  void nodeHistoryDetailsChanged(in nsINavHistoryResultNode aNode,
+                                 in PRTime aNewVisitDate,
+                                 in unsigned long aNewAccessCount);
+
+  /**
+   * Called when the tags set on the uri represented by aNode have changed.
+   *
+   * @param aNode
+   *        a uri result node
+   *
+   * @note: The new tags list is accessible through aNode.tags.
+   */
+  void nodeTagsChanged(in nsINavHistoryResultNode aNode);
+
+  /**
+   * Called right after the aNode's keyword property has changed.
+   * 
+   * @param aNode
+   *        a uri result node
+   * @param aNewKeyword
+   *        the new keyword
+   */
+  void nodeKeywordChanged(in nsINavHistoryResultNode aNode,
+                          in AUTF8String aNewKeyword);
+
+  /**
+   * Called right after an annotation of aNode's has changed (set, altered, or
+   * unset).
+   * 
+   * @param aNode
+   *        a result node
+   * @param aAnnoName
+   *        the name of the annotation that changed
+   */
+  void nodeAnnotationChanged(in nsINavHistoryResultNode aNode,
+                             in AUTF8String aAnnoName);
+
+  /**
+   * Called right after aNode's dateAdded property has changed.
+   *
+   * @param aNode
+   *        a result node
+   * @param aNewValue
+   *        the new value of the dateAdded property
+   */
+  void nodeDateAddedChanged(in nsINavHistoryResultNode aNode,
+                            in PRTime aNewValue);
+
+  /**
+   * Called right after aNode's dateModified property has changed.
+   *
+   * @param aNode
+   *        a result node
+   * @param aNewValue
+   *        the new value of the dateModified property
+   */
+  void nodeLastModifiedChanged(in nsINavHistoryResultNode aNode,
+                               in PRTime aNewValue);
 
   /**
    * Called when an item is being replaced with another item at the exact
    * same position.
+   *
+   * @param aParentNode
+   *        the parent node of the node which is being replaced
+   * @param aOldNode
+   *        the node which is being replaced
+   * @param aNewNode
+   *        the new node
+   * @param aParentNode
+   *        the index in aParentNode, at which a node is being replaced
    */
-  void itemReplaced(in nsINavHistoryContainerResultNode parent,
-                    in nsINavHistoryResultNode oldItem,
-                    in nsINavHistoryResultNode newItem,
-                    in unsigned long index);
+  void nodeReplaced(in nsINavHistoryContainerResultNode aParentNode,
+                    in nsINavHistoryResultNode aOldNode,
+                    in nsINavHistoryResultNode aNewNode,
+                    in unsigned long aIndex);
 
   /**
    * Called after a container node went from closed to opened.
+   *
+   * @param aContainerNode
+   *        the container node which was opened
    */
-  void containerOpened(in nsINavHistoryContainerResultNode item);
+  void containerOpened(in nsINavHistoryContainerResultNode aContainerNode);
 
   /**
    * Called after a container node went from opened to closed. This will be
    * called for the topmost container that is closing, and implies that any
    * child containers have closed as well.
+   *
+   * @param aContainerNode
+   *        the container node which was closed
    */
-  void containerClosed(in nsINavHistoryContainerResultNode item);
+  void containerClosed(in nsINavHistoryContainerResultNode aContainerNode);
 
   /**
    * Called when something significant has happened within the container. The
    * contents of the container should be re-built.
+   *
+   * @param aContainerNode
+   *        the container node to invalidate
    */
-  void invalidateContainer(in nsINavHistoryContainerResultNode item);
-
-  /**
-   * Called when something significant is changing that requires everything
-   * to be recomputed. For example, changing sorting can affect every row.
-   */
-  void invalidateAll();
+  void invalidateContainer(in nsINavHistoryContainerResultNode aContainerNode);
 
   /**
    * This is called to indicate to the UI that the sort has changed to the
@@ -536,6 +624,8 @@ interface nsINavHistoryResultViewer : nsISupports
 
 
 /**
+ * TODO: Bug 517719.
+ *
  * A predefined view adaptor for interfacing results with an nsITree. This
  * object will remove itself from its associated result when the tree has been
  * detached. This prevents circular references. Users should be aware of this,
@@ -904,7 +994,7 @@ interface nsINavHistoryQuery : nsISupports
 /**
  * This object represents the global options for executing a query.
  */
-[scriptable, uuid(b3d5de06-f8ef-4433-84c2-b8b237403b2a)]
+[scriptable, uuid(c6831388-fd4c-46a8-85f3-952917b66d72)]
 interface nsINavHistoryQueryOptions : nsISupports
 {
   /**
@@ -1103,12 +1193,6 @@ interface nsINavHistoryQueryOptions : nsISupports
    * Note: this option is effective only on QUERY_TYPE_HISTORY.
    */
   attribute unsigned short redirectsMode;
-
-  /**
-   * Separate/group history items based on session information.  Only
-   * matters when sorting by date.
-   */
-  attribute boolean showSessions;
 
   /**
    * This is the maximum number of results that you want. The query is exeucted,

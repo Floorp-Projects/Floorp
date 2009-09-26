@@ -225,7 +225,7 @@ TaggingService.prototype = {
     var cc = node.childCount;
     node.containerOpen = false;
     if (cc == 0)
-      this._bms.removeFolder(node.itemId);
+      this._bms.removeItem(node.itemId);
   },
 
   // nsITaggingService
@@ -397,46 +397,21 @@ TaggingService.prototype = {
     this._inBatch = false;
   },
 
-  onItemAdded: function(aItemId, aFolderId, aIndex) {
+  onItemAdded: function(aItemId, aFolderId, aIndex, aItemType) {
     // Nothing to do if this is not a tag.
-    if (aFolderId != this._bms.tagsFolder)
+    if (aFolderId != this._bms.tagsFolder ||
+        aItemType != this._bms.TYPE_FOLDER)
       return;
 
-    // If we are correctly called through createTag the itemId will be added
-    // to _tagFolders just after onItemAdded is called.  To avoid an useless
-    // call to getItemType we enqueue this check, so that when it runs the hash
-    // has already been updated.
-    // TODO: once bug 494380 is fixed, this 'workaround' can go away.
-    var self = this;
-    var tm = Cc["@mozilla.org/thread-manager;1"].
-             getService(Ci.nsIThreadManager);
-    tm.mainThread.dispatch({
-      run: function() {
-        try {
-          if (!self._tagFolders[aItemId] &&
-              self._bms.getItemType(aItemId) == self._bms.TYPE_FOLDER)
-            self._tagFolders[aItemId] = self._bms.getItemTitle(aItemId);
-        }
-        catch(ex) {
-          // Could happen that the tag is removed just after it is added, for
-          // example with transactions.  in such a case getting item type
-          // will fail and there's no reason to register the addition.
-        }
-      }
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    this._tagFolders[aItemId] = this._bms.getItemTitle(aItemId);
   },
 
-  onBeforeItemRemoved: function(aItemId) {
-    // Remember the bookmark's URI, because it will be gone by the time
-    // onItemRemoved() is called.  getBookmarkURI() will throw if the item is
-    // not a bookmark, which is fine.
-    try {
+  onBeforeItemRemoved: function(aItemId, aItemType) {
+    if (aItemType == this._bms.TYPE_BOOKMARK)
       this._itemsInRemoval[aItemId] = this._bms.getBookmarkURI(aItemId);
-    }
-    catch (e) {}
   },
 
-  onItemRemoved: function(aItemId, aFolderId, aIndex) {
+  onItemRemoved: function(aItemId, aFolderId, aIndex, aItemType) {
     var itemURI = this._itemsInRemoval[aItemId];
     delete this._itemsInRemoval[aItemId];
 
@@ -456,14 +431,16 @@ TaggingService.prototype = {
     }
   },
 
-  onItemChanged: function(aItemId, aProperty, aIsAnnotationProperty, aValue) {
+  onItemChanged: function(aItemId, aProperty, aIsAnnotationProperty, aNewValue,
+                          aLastModified, aItemType) {
     if (aProperty == "title" && this._tagFolders[aItemId])
       this._tagFolders[aItemId] = this._bms.getItemTitle(aItemId);
   },
 
   onItemVisited: function(aItemId, aVisitID, time) {},
 
-  onItemMoved: function(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
+  onItemMoved: function(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex,
+                        aItemType) {
     if (this._tagFolders[aItemId] && this._bms.tagFolder == aOldParent &&
         this._bms.tagFolder != aNewParent)
       delete this._tagFolders[aItemId];
