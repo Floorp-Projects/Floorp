@@ -1,0 +1,14 @@
+url-prefix ../../jsreftest.html?test=ecma_3/Object/
+script 8.6.1-01.js
+script 8.6.2.6-001.js
+fails script 8.6.2.6-002.js
+script class-001.js
+script class-002.js
+script class-003.js
+script class-004.js
+script class-005.js
+script regress-361274.js
+script regress-385393-07.js
+script regress-459405.js
+script regress-72773.js
+script regress-79129-001.js

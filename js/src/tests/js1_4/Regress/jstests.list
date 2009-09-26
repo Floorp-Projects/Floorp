@@ -1,0 +1,8 @@
+url-prefix ../../jsreftest.html?test=js1_4/Regress/
+script date-001-n.js
+script function-001.js
+script function-002.js
+script function-003.js
+script function-004-n.js
+script regress-7224.js
+script toString-001-n.js
