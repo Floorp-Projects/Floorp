@@ -118,6 +118,8 @@ const EXPECTED_FAIL = 1;
 const EXPECTED_RANDOM = 2;
 const EXPECTED_DEATH = 3;  // test must be skipped to avoid e.g. crash/hang
 
+const gProtocolRE = /^\w+:/;
+
 var HTTP_SERVER_PORT = 4444;
 const HTTP_SERVER_PORTS_TO_TRY = 50;
 
@@ -302,6 +304,7 @@ function ReadManifest(aURL)
 
     var line = {value:null};
     var lineNo = 0;
+    var urlprefix = "";
     do {
         var more = lis.readLine(line);
         ++lineNo;
@@ -316,6 +319,13 @@ function ReadManifest(aURL)
         if (!str || str == "")
             continue;
         var items = str.split(/\s+/); // split on whitespace
+
+        if (items[0] == "url-prefix") {
+            if (items.length != 2)
+                throw "url-prefix requires one url in manifest file " + aURL.spec + " line " + lineNo;
+            urlprefix = items[1];
+            continue;
+        }
 
         var expected_status = EXPECTED_PASS;
         var minAsserts = 0;
@@ -375,6 +385,17 @@ function ReadManifest(aURL)
             runHttp = true;
             httpDepth = (items[0].length - 5) / 3;
             items.shift();
+        }
+
+        // do not prefix the url for include commands or urls specifying
+        // a protocol
+        if (urlprefix && items[0] != "include") {
+            if (items.length > 1 && !items[1].match(gProtocolRE)) {
+                items[1] = urlprefix + items[1];
+            }
+            if (items.length > 2 && !items[2].match(gProtocolRE)) {
+                items[2] = urlprefix + items[2];
+            }
         }
 
         if (items[0] == "include") {

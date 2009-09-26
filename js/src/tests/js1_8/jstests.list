@@ -1,0 +1,4 @@
+include decompilation/jstests.list
+include extensions/jstests.list
+include genexps/jstests.list
+include regress/jstests.list
