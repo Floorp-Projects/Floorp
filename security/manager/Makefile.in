@@ -458,10 +458,3 @@ ifndef SKIP_CHK
 	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS) clean
 endif
 endif
-
-echo-requires-recursive::
-	$(MAKE) -C boot $@
-	$(MAKE) -C ssl $@
-	$(MAKE) -C pki $@
-	$(MAKE) -C locales $@
-
