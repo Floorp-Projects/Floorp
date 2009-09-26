@@ -478,9 +478,11 @@ function Statement(t, x) {
             } while (ss[i].label != label);
 
             /*
-             * Break and continue statements need to be handled specially
-             * within loops, so they should target the loop. Otherwise, they
-             * should target themselves. Note that labels can be nested.
+             * Both break and continue to label need to be handled specially
+             * within a labeled loop, so that they target that loop. If not in
+             * a loop, then break targets its labeled statement. Labels can be
+             * nested so we skip all labels immediately enclosing the nearest
+             * non-label statement.
              */
             while (i < ss.length - 1 && ss[i+1].type == LABEL)
                 i++;
