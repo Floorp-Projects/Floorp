@@ -658,6 +658,9 @@
 #define NS_STYLE_VISIBILITY_COLLAPSE            2
 
 // See nsStyleText
+#define NS_STYLE_TABSIZE_INITIAL                8
+
+// See nsStyleText
 #define NS_STYLE_WHITESPACE_NORMAL              0
 #define NS_STYLE_WHITESPACE_PRE                 1
 #define NS_STYLE_WHITESPACE_NOWRAP              2

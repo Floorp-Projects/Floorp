@@ -3222,7 +3222,12 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
 {
   COMPUTE_START_INHERITED(Text, (), text, parentText, Text, textData)
 
-    // letter-spacing: normal, length, inherit
+  // tab-size: integer, inherit
+  SetDiscrete(textData.mTabSize, text->mTabSize, canStoreInRuleTree,
+              SETDSC_INTEGER, parentText->mTabSize,
+              NS_STYLE_TABSIZE_INITIAL, 0, 0, 0, 0);
+  
+  // letter-spacing: normal, length, inherit
   SetCoord(textData.mLetterSpacing, text->mLetterSpacing, parentText->mLetterSpacing,
            SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
            aContext, mPresContext, canStoreInRuleTree);
