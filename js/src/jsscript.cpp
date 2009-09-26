@@ -1021,6 +1021,21 @@ static JSHashAllocOps sftbl_alloc_ops = {
     js_alloc_sftbl_entry,   js_free_sftbl_entry
 };
 
+static void
+FinishRuntimeScriptState(JSRuntime *rt)
+{
+    if (rt->scriptFilenameTable) {
+        JS_HashTableDestroy(rt->scriptFilenameTable);
+        rt->scriptFilenameTable = NULL;
+    }
+#ifdef JS_THREADSAFE
+    if (rt->scriptFilenameTableLock) {
+        JS_DESTROY_LOCK(rt->scriptFilenameTableLock);
+        rt->scriptFilenameTableLock = NULL;
+    }
+#endif
+}
+
 JSBool
 js_InitRuntimeScriptState(JSRuntime *rt)
 {
@@ -1035,7 +1050,7 @@ js_InitRuntimeScriptState(JSRuntime *rt)
         JS_NewHashTable(16, JS_HashString, js_compare_strings, NULL,
                         &sftbl_alloc_ops, NULL);
     if (!rt->scriptFilenameTable) {
-        js_FinishRuntimeScriptState(rt);    /* free lock if threadsafe */
+        FinishRuntimeScriptState(rt);       /* free lock if threadsafe */
         return JS_FALSE;
     }
     JS_INIT_CLIST(&rt->scriptFilenamePrefixes);
@@ -1050,34 +1065,18 @@ typedef struct ScriptFilenamePrefix {
 } ScriptFilenamePrefix;
 
 void
-js_FinishRuntimeScriptState(JSRuntime *rt)
-{
-    if (rt->scriptFilenameTable) {
-        JS_HashTableDestroy(rt->scriptFilenameTable);
-        rt->scriptFilenameTable = NULL;
-    }
-#ifdef JS_THREADSAFE
-    if (rt->scriptFilenameTableLock) {
-        JS_DESTROY_LOCK(rt->scriptFilenameTableLock);
-        rt->scriptFilenameTableLock = NULL;
-    }
-#endif
-}
-
-void
 js_FreeRuntimeScriptState(JSRuntime *rt)
 {
-    ScriptFilenamePrefix *sfp;
-
     if (!rt->scriptFilenameTable)
         return;
 
     while (!JS_CLIST_IS_EMPTY(&rt->scriptFilenamePrefixes)) {
-        sfp = (ScriptFilenamePrefix *) rt->scriptFilenamePrefixes.next;
+        ScriptFilenamePrefix *sfp = (ScriptFilenamePrefix *)
+                                    rt->scriptFilenamePrefixes.next;
         JS_REMOVE_LINK(&sfp->links);
         js_free(sfp);
     }
-    js_FinishRuntimeScriptState(rt);
+    FinishRuntimeScriptState(rt);
 }
 
 #ifdef DEBUG_brendan
@@ -1302,6 +1301,10 @@ js_SweepScriptFilenames(JSRuntime *rt)
     if (!rt->scriptFilenameTable)
         return;
 
+    /*
+     * JS_HashTableEnumerateEntries shrinks the table if many entries are
+     * removed preventing wasting memory on a too sparse table.
+     */
     JS_HashTableEnumerateEntries(rt->scriptFilenameTable,
                                  js_script_filename_sweeper,
                                  rt);
