@@ -50,6 +50,11 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4800)
+#endif
+
 JS_BEGIN_EXTERN_C
 
 /*
@@ -418,9 +423,14 @@ OBJ_SHAPE(JSObject *obj)
  * A little information hiding for scope->lastProp, in case it ever becomes
  * a tagged pointer again.
  */
-#define SCOPE_LAST_PROP(scope)          ((scope)->lastProp)
-#define SCOPE_REMOVE_LAST_PROP(scope)   ((scope)->lastProp =                  \
-                                         (scope)->lastProp->parent)
+#define SCOPE_LAST_PROP(scope)                                                \
+    (JS_ASSERT_IF((scope)->lastProp, !JSVAL_IS_NULL((scope)->lastProp->id)),  \
+     (scope)->lastProp)
+#define SCOPE_REMOVE_LAST_PROP(scope)                                         \
+    (JS_ASSERT_IF((scope)->lastProp->parent,                                  \
+                  !JSVAL_IS_NULL((scope)->lastProp->parent->id)),             \
+     (scope)->lastProp = (scope)->lastProp->parent)
+
 /*
  * Helpers for reinterpreting JSPropertyOp as JSObject* for scripted getters
  * and setters.
@@ -763,6 +773,7 @@ inline bool
 JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp)
 {
     JS_ASSERT(!SPROP_HAS_STUB_GETTER(this));
+    JS_ASSERT(!JSVAL_IS_NULL(this->id));
 
     if (attrs & JSPROP_GETTER) {
         JS_ASSERT(!isMethod());
@@ -830,5 +841,9 @@ extern void
 js_FinishPropertyTree(JSRuntime *rt);
 
 JS_END_EXTERN_C
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif /* jsscope_h___ */

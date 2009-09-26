@@ -229,7 +229,7 @@ static intN
 DaysInMonth(jsint year, jsint month)
 {
     JSBool leap = (DaysInYear(year) == 366);
-    intN result = DayFromMonth(month, leap) - DayFromMonth(month-1, leap);
+    intN result = intN(DayFromMonth(month, leap) - DayFromMonth(month-1, leap));
     return result;
 }
 

@@ -56,9 +56,6 @@
 
 namespace nanojit
 {
-
-const int NJ_LOG2_PAGE_SIZE = 12;       // 4K
-
 // only d0-d6 are actually used; we'll use d7 as s14-s15 for i2f/u2f/etc.
 #define NJ_VFP_MAX_REGISTERS            8
 #define NJ_MAX_REGISTERS                (11 + NJ_VFP_MAX_REGISTERS)
@@ -93,7 +90,7 @@ typedef enum {
     LR  = 14,
     PC  = 15,
 
-    // FP regs
+    // VFP regs (we currently only use D0-D6 and S14)
     D0 = 16,
     D1 = 17,
     D2 = 18,
@@ -105,8 +102,8 @@ typedef enum {
     // D7 is still listed here for completeness and to facilitate assertions.
     D7 = 23,
 
-    FirstFloatReg = 16,
-    LastFloatReg = 22,
+    FirstFloatReg = D0,
+    LastFloatReg = D6,
 
     FirstReg = 0,
     LastReg = 22,   // This excludes D7 from the register allocator.
@@ -461,6 +458,7 @@ enum {
 // _d = 0 - _r
 #define RSBS(_d,_r) ALUi(AL, rsb, 1, _d, _r, 0)
 
+// MVN
 // _d = ~_r (one's compliment)
 #define MVN(_d,_r)                          ALUr(AL, mvn, 0, _d, 0, _r)
 #define MVNis_chk(_d,_op2imm,_stat,_chk)    ALUi_chk(AL, mvn, _stat, _d, 0, op2imm, _chk)
