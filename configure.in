@@ -7363,7 +7363,7 @@ if test "$MOZ_TREE_CAIRO"; then
         CAIRO_FT_CFLAGS="$FT2_CFLAGS"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "qt"; then
-        QPAINTER_SURFACE_FEATURE="#define CAIRO_HAS_QPAINTER_SURFACE 1"
+        QT_SURFACE_FEATURE="#define CAIRO_HAS_QT_SURFACE 1"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
         QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
@@ -7452,7 +7452,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(WIN32_FONT_FEATURE)
     AC_SUBST(QUARTZ_FONT_FEATURE)
     AC_SUBST(PNG_FUNCTIONS_FEATURE)
-    AC_SUBST(QPAINTER_SURFACE_FEATURE)
+    AC_SUBST(QT_SURFACE_FEATURE)
 
     if test "$_WIN32_MSVC"; then
         MOZ_CAIRO_LIBS='$(DEPTH)/gfx/cairo/cairo/src/mozcairo.lib $(DEPTH)/gfx/cairo/libpixman/src/mozlibpixman.lib'
