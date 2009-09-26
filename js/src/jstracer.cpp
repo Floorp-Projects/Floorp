@@ -6267,10 +6267,21 @@ LeaveTree(InterpState& state, VMSideExit* lr)
             regs->sp -= (cs.format & JOF_INVOKE) ? GET_ARGC(regs->pc) + 2 : cs.nuses;
             regs->sp += cs.ndefs;
             regs->pc += cs.length;
+            /*
+             * JSOP_SETELEM can be coalesced with a JSOP_POP in the interpeter.
+             * Since this doesn't re-enter the recorder, the post-state snapshot
+             * is invalid. Fix it up here.
+             */
+            if (op == JSOP_SETELEM && (JSOp)*regs->pc == JSOP_POP) {
+                regs->pc += JSOP_POP_LENGTH;
+                JS_ASSERT(js_CodeSpec[JSOP_POP].ndefs == 0 && js_CodeSpec[JSOP_POP].nuses == 1);
+                regs->sp -= 1;
+            }
             JS_ASSERT_IF(!cx->fp->imacpc,
                          cx->fp->slots + cx->fp->script->nfixed +
                          js_ReconstructStackDepth(cx, cx->fp->script, regs->pc) ==
                          regs->sp);
+            JS_ASSERT(regs->pc == innermost->pc);
 
             /*
              * If there's a tree call around the point that we deep exited at,
@@ -11228,7 +11239,7 @@ TraceRecorder::initOrSetPropertyByName(LIns* obj_ins, jsval* idvalp, jsval* rval
         LIns* args[] = {vp_ins, idvalp_ins, obj_ins, cx_ins};
         ok_ins = lir->insCall(&SetPropertyByName_ci, args);
     }
-    guard(true, ok_ins, STATUS_EXIT);
+    pendingGuardCondition = ok_ins;
 
     leaveDeepBailCall();
     return JSRS_CONTINUE;
@@ -11283,7 +11294,7 @@ TraceRecorder::initOrSetPropertyByIndex(LIns* obj_ins, LIns* index_ins, jsval* r
         LIns* args[] = {vp_ins, index_ins, obj_ins, cx_ins};
         ok_ins = lir->insCall(&SetPropertyByIndex_ci, args);
     }
-    guard(true, ok_ins, STATUS_EXIT);
+    pendingGuardCondition = ok_ins;
 
     leaveDeepBailCall();
     return JSRS_CONTINUE;
