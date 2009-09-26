@@ -24,6 +24,7 @@
 #   Ben Goodger <beng@google.com>
 #   Myk Melez <myk@mozilla.org>
 #   Marco Bonardo <mak77@bonardo.net>
+#   Asaf Romano <mano@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +38,7 @@
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
-# ***** END LICENSE BLOCK ***** 
+# ***** END LICENSE BLOCK *****
 
 
 <!DOCTYPE bindings [
@@ -99,6 +100,8 @@
         window.removeEventListener("resize", this, false);
 
         if (this._result) {
+          this._resultNode.containerOpen = false;
+          this._resultNode = null;
           this._result.viewer = null;
           this._result = null;
         }
@@ -110,17 +113,48 @@
 
       <method name="_init">
         <body><![CDATA[
-        this._controller = new PlacesController(this);
-        this.controllers.appendController(this._controller);
+          // XBL bug is in the middle...
+          // When toolbar customization is opened, this binding is attached
+          // again, as a result of adding the item under the wrapper.  However,
+          // the binding isn't detached from the "original" hbox element due
+          // to bug 83635.
+          //
+          // Then, when the customization dialog is closed, the binding is
+          // attached the third time, as a result of adding our element back to
+          // the toolbar.
+          //
+          // So, We'll just continue using the original binding, which was
+          // never removed, and avoid using the new bindings.  This means that
+          // this workaround will work just until bug 83635 is fixed.
+          //
+          // However, when the binding is "reconstructed", we do need to add
+          // back the event listeners and the places controller.
+          //
+          // Note: we could avoid part of this mess by moving the "Bookmark
+          // Toolbar Items" placeholder out of this binding.
 
-        this._scrollbox.addEventListener("overflow", this, false);
-        this._scrollbox.addEventListener("underflow", this, false);
-        window.addEventListener("resize", this, false);
+          // We also need to avoid initializing _result and _resultNode and
+          // _controller as XBL fields.  Otherwise, they'll be unset when the
+          // "extra" bindings are applied.
 
-        if (this.hasAttribute("place")) {
-          // Do the initial build.
-          this.place = this.place;
-        }
+          this._scrollbox.addEventListener("overflow", this, false);
+          this._scrollbox.addEventListener("underflow", this, false);
+          window.addEventListener("resize", this, false);
+
+          if (this._result === undefined) {
+            this._result = null;
+            this._resultNode = null;
+            if (this.hasAttribute("place")) {
+              // Do the initial build.
+              this.place = this.place;
+            }
+          }
+
+          // Attach the places controller.
+          if (!this._controller) 
+            this._controller = new PlacesController(this);
+
+          this.controllers.appendController(this._controller);
         ]]></body>
       </method>
 
@@ -142,9 +176,6 @@
       <field name="_openedMenuButton">null</field>
       <field name="_allowPopupShowing">true</field>
 
-      <field name="_result">null</field>
-      <field name="_resultNode">null</field>
-
       <field name="_isRTL">
         document.defaultView.getComputedStyle(this.parentNode, "")
                             .direction == "rtl"
@@ -160,7 +191,7 @@
       <!-- nsIPlacesView -->
       <method name="getResultNode">
         <body><![CDATA[
-          return this._result.root;
+          return this._resultNode;
         ]]></body>
       </method>
 
@@ -175,10 +206,9 @@
           while (this.hasChildNodes())
             this.removeChild(this.firstChild);
 
-          var rootNode = this._result.root;
-          var cc = rootNode.childCount;
+          let cc = this._resultNode.childCount;
           for (let i = 0; i < cc; ++i)
-            this.insertNewItem(rootNode.getChild(i), null);
+            this.insertNewItem(this._resultNode.getChild(i), null);
 
           if (this._chevronPopup.hasAttribute("type")) {
             // Chevron has already been initialized, but since we are forcing
@@ -186,9 +216,6 @@
             // Otherwise, it will be initialized when the toolbar overflows.
             this._chevronPopup.place = this.place;
           }
-
-          while (chevronPopup.hasChildNodes())
-            this._chevronPopup.removeChild(this._chevronPopup.lastChild);
         ]]></body>
       </method>
 
@@ -204,12 +231,9 @@
             button = document.createElement("toolbarbutton");
             button.className = "bookmark-item";
             button.setAttribute("label", aChild.title);
-            var iconURI = aChild.icon;
-            var iconURISpec = "";
-            if (iconURI) {
-              iconURISpec = iconURI.spec;
-              button.setAttribute("image", iconURISpec);
-            }
+            var icon = aChild.icon;
+            if (icon)
+              button.setAttribute("image", icon);
 
             if (PlacesUtils.containerTypes.indexOf(type) != -1) {
               button.setAttribute("type", "menu");
@@ -226,21 +250,17 @@
               var popup = document.createElement("menupopup");
               popup.setAttribute("placespopup", "true");
               button.appendChild(popup);
-              popup._result = this._result;
               popup._resultNode = asContainer(aChild);
 #ifndef XP_MACOSX
               popup.setAttribute("context", "placesContext");
 #endif
-              this._containerNodesMap.push({ resultNode: aChild,
-                                             domNode: popup });
             }
-            else if (PlacesUtils.nodeIsURI(aChild)) {
+            else if (PlacesUtils.nodeIsURI(aChild))
               button.setAttribute("scheme", PlacesUIUtils.guessUrlSchemeForUI(aChild.uri));
-            }
           }
 
           button.node = aChild;
-          button.node.viewIndex = 0;
+          aChild._DOMElement = button;
           if (aBefore)
             this.insertBefore(button, aBefore);
           else
@@ -251,20 +271,12 @@
       <method name="removeItem">
         <parameter name="child"/>
         <body><![CDATA[
-          if (PlacesUtils.nodeIsContainer(child.node)) {
-            for (let i = 0; i < this._containerNodesMap.length; i++) {
-              if (this._containerNodesMap[i].resultNode == child.node) {
-                this._containerNodesMap.splice(i, 1);
-                break;
-              }
-            }
-          }
-
           // if document.popupNode pointed to this child, null it out,
           // otherwise controller's command-updating may rely on the removed
           // item still being "selected".
           if (document.popupNode == child)
             document.popupNode = null;
+
           child.parentNode.removeChild(child);
         ]]></body>
       </method>
@@ -378,13 +390,13 @@
         <getter><![CDATA[
           return this.getAttribute("place");
         ]]></getter>
-        <setter><![CDATA[ 
+        <setter><![CDATA[
           this.setAttribute("place", val);
 
           var history = PlacesUtils.history;
           var queries = { }, options = { };
           history.queryStringToQueries(val, queries, { }, options);
-          if (!queries.value.length) 
+          if (!queries.value.length)
             queries.value = [history.getNewQuery()];
           try {
             var result =
@@ -394,7 +406,7 @@
           }
           catch(ex) {
             // Invalid query, or had no results.
-            // This is valid, eg: user deletes their bookmarks toolbar folder. 
+            // This is valid, eg: user deletes his bookmarks toolbar folder.
           }
           return val;
         ]]></setter>
@@ -402,7 +414,7 @@
 
       <!-- nsIPlacesView -->
       <property name="hasSelection">
-        <getter><![CDATA[ 
+        <getter><![CDATA[
           return this.selectedNode != null;
         ]]></getter>
       </property>
@@ -453,9 +465,9 @@
       <!-- nsIPlacesView -->
       <property name="insertionPoint">
         <getter><![CDATA[
-          // By default, the insertion point is at the top level, at the end. 
+          // By default, the insertion point is at the top level, at the end.
           var index = PlacesUtils.bookmarks.DEFAULT_INDEX;
-          var container = this._result.root;
+          var container = this._resultNode;
           var orientation = Ci.nsITreeView.DROP_BEFORE;
           var isTag = false;
 
@@ -486,7 +498,7 @@
 
       <!-- nsIPlacesView -->
       <method name="selectAll">
-        <body><![CDATA[ 
+        <body><![CDATA[
           // Nothing
         ]]></body>
       </method>
@@ -501,18 +513,6 @@
       <field name="_viewer"><![CDATA[({
         _self: this,
 
-        _getPopupForContainer:
-        function PMV__getPopupForContainer(aNode) {
-          if (this._self._resultNode == aNode)
-            return this._self;
-
-          for (let i = 0; i < this._self._containerNodesMap.length; i++) {
-            if (this._self._containerNodesMap[i].resultNode == aNode)
-              return this._self._containerNodesMap[i].domNode;
-          }
-          throw("Container view not found");
-        },
-
         get result() {
           return this._self._result;
         },
@@ -525,242 +525,235 @@
           // we should do nothing.
           if (this._self._result != val) {
             if (this._self._result)
-              this._self._result.root.containerOpen = false;
-            this._self._containerNodesMap = [];
+              this._self._resultNode.containerOpen = false;
+
             this._self._result = val;
-            if (val) // this calls _rebuild through invalidateContainer
-              val.root.containerOpen = true;
+            if (val) {
+              this._self._resultNode = val.root;
+              this._self._resultNode._DOMElement = this._self;
+              // This calls _rebuild through invalidateContainer.
+              this._self._resultNode.containerOpen = true;
+            }
+            else
+              this._self._resultNode = null;
           }
           return val;
         },
 
-        itemInserted: function TV_V_itemInserted(aParentNode, aNode, aIndex) {
-          // don't insert new items into the toolbar
-          // if the parent is not the root 
-          if (aParentNode == this._self.getResultNode()) {
-            var children = this._self.childNodes;
+        nodeInserted: function TV_V_nodeInserted(aParentNode, aNode, aIndex) {
+          let parentElt = aParentNode._DOMElement;
+          NS_ASSERT(parentElt, "parent node must have _DOMElement set");
+
+          if (parentElt == this._self) {
+            // Node is on the toolbar.
+            let children = this._self.childNodes;
             this._self.insertNewItem(aNode,
               aIndex < children.length ? children[aIndex] : null);
             this._self.updateChevron();
           }
-          else {
-            var popup = this._getPopupForContainer(aParentNode);
-            if (!popup._built)
-              return;
-
-            var before = popup.childNodes[aIndex] || null;
+          else if (parentElt._built) {
+            // Node is within a built menu.
+            let popup = parentElt.firstChild;
+            let before = popup.childNodes[aIndex] || null;
             this._self.insertNewItemToPopup(aNode, popup, before);
             if (popup._emptyMenuItem)
               popup._emptyMenuItem.hidden = true;
           }
         },
 
-        itemRemoved: function TV_V_itemRemoved(aParentNode, aNode, aIndex) {
-          if (aParentNode == this._self.getResultNode()) {
-            var children = this._self.childNodes;
-            for (let i = 0; i < children.length; i++) {
-              if (children[i].node == aNode) {
-                this._self.removeItem(children[i]);
-                this._self.updateChevron();
-                return;
-              }
-            }
-          }
-          else {
-            var popup = this._getPopupForContainer(aParentNode);
-            if (!popup._built)
-              return;
+        nodeRemoved: function TV_V_nodeRemoved(aParentNode, aNode, aIndex) {
+          let parentElt = aParentNode._DOMElement;
+          let nodeElt = aNode._DOMElement;
 
-            var children = popup.childNodes;
-            for (let i = popup._startMarker + 1; i < children.length; i++) {
-              if (children[i].node == aNode) {
-                this._self.removeItem(children[i]);
-                if (!popup.hasChildNodes() ||
-                    (popup.childNodes.length == 1 &&
-                     popup.firstChild == popup._emptyMenuItem)) {
-                  this._self._showEmptyMenuItem(popup);
-                }
-                if (popup._endMarker != -1)
-                  popup._endMarker--;
-                return;
-              }
-            }
+          NS_ASSERT(parentElt, "parent node must have _DOMElement set");
+          NS_ASSERT(nodeElt, "node must have _DOMElement set");
+
+          if (parentElt == this._self) {
+            // Node is on the toolbar.
+            this._self.removeChild(nodeElt);
+            this._self.updateChevron();
+          }
+          else if (parentElt._built) {
+            // Node is within a built menu.
+            var popup = parentElt.firstChild;
+            popup.removeChild(nodeElt);
+            if (!popup.hasChildNodes() ||
+                (popup.childNodes.length == 1 &&
+                popup.firstChild == popup._emptyMenuItem))
+              this._self._showEmptyMenuItem(popup);
+
+            if (popup._endMarker != -1)
+              popup._endMarker--;
           }
         },
 
-        itemMoved:
-        function TV_V_itemMoved(aItem, aOldParent, aOldIndex, aNewParent,
-                                aNewIndex) {
-          // This cannot actually happen yet (see IDL)
-          if (aNewParent != aOldParent)
+        nodeMoved:
+        function TV_V_nodeMoved(aNode,
+                                aOldParent, aOldIndex,
+                                aNewParent, aNewIndex) {
+          // Note: the current implementation of moveItem does not actually
+          // use this notification when the item in question is moved from one
+          // folder to another.  Instead, it calls nodeRemoved and nodeInserted
+          // for the two folders.  Thus, we can assume aOldParent == aNewParent.
+
+          let nodeElt = aNode._DOMElement;
+          NS_ASSERT(nodeElt, "node must have _DOMElement set");
+
+          // If our root node is a folder, it might be moved. There's nothing
+          // we need to do in that case.
+          if (nodeElt == this._self)
             return;
 
-          if (aNewParent == this._self.getResultNode()) {
-            var children = this._self.childNodes;
-            for (let i = 0; i < children.length; i++) {
-              var button = children[i];
-              if (button.node == aItem) {
-                this._self.removeChild(button);
-                this._self.insertBefore(button, children[aNewIndex]);
-                // If the chevron popup is open, keep it in sync.
-                if (this._self._chevron.open) {
-                  var chevronPopup = this._self._chevronPopup;
-                  var menuitem = chevronPopup.childNodes[i];
-                  chevronPopup.removeChild(menuitem);
-                  chevronPopup.insertBefore(menuitem,
-                                            chevronPopup.childNodes[aNewIndex]);
-                }
-                this._self.updateChevron();
-                return;
-              }
+          let parentElt = aNewParent._DOMElement;
+          NS_ASSERT(parentElt, "parent node must have _DOMElement set");
+
+          if (parentElt == this._self) {
+            // Container is on the toolbar.
+
+            // Move the node.
+            this._self.removeChild(nodeElt);
+            this._self.insertBefore(nodeElt, this._self.childNodes[aNewIndex]);
+
+            // If the chevron popup is open, keep it in sync.
+            if (this._self._chevron.open) {
+              let chevronPopup = this._self._chevronPopup;
+              let menuitem = chevronPopup.childNodes[aOldIndex];
+              chevronPopup.removeChild(menuitem);
+              chevronPopup.insertBefore(menuitem,
+                                        chevronPopup.childNodes[aNewIndex]);
             }
+            this._self.updateChevron();
           }
-          else {
-            var popup = this._getPopupForContainer(aNewParent);
-            var children = popup.childNodes;
-            for (let i = popup._startMarker + 1; i < children.length; i++) {
-              var menuItem = children[i];
-              if (menuItem.node == aItem) {
-                popup.removeChild(menuItem);
-                popup.insertBefore(menuItem, children[aNewIndex]);
-                return;
-              }
-            }
+          else if (parentElt._built) {
+            // Container is within a built menu.
+
+            // parentElt is the <menu> element for the container,
+            // we need the <menupopup>.
+            var popup = parentElt.firstChild;
+
+            // Move the node.
+            popup.removeChild(nodeElt);
+            popup.insertBefore(nodeElt, popup.childNodes[aNewIndex]);
           }
         },
 
-        itemChanged: function TV_V_itemChanged(aNode) {
-          // this check can be removed once we fix bug #382397
-          var parentNode = aNode.parent;
-          if (!parentNode)
+        nodeTitleChanged: function TV_V_nodeTitleChanged(aNode, aNewTitle) {
+          let nodeElt = aNode._DOMElement;
+          NS_ASSERT(nodeElt, "node must have _DOMElement set");
+
+          // There's no UI representation for the root node, thus there's
+          // nothing to be done when the title changes.
+          if (nodeElt == this._self)
             return;
 
-          if (PlacesUtils.nodeIsSeparator(aNode)) {
-            // nothing to do when a separator changes
-            return;
-          }
-
-          var element;
-          var onToolbar = false;
-          if (parentNode == this._self.getResultNode()) {
-            onToolbar = true;
-            var children = this._self.childNodes;
-            for (let i = 0; i < children.length; i++) {
-              if (children[i].node == aNode) {
-                element = children[i];
-                break;
-              }
-            }
-            // Don't replace title on toolbarbuttons
-            var title = aNode.title;
+          if (nodeElt.parentNode == this._self) {
+            // Node is on the toolbar
+            nodeElt.label = aNewTitle;
+            this._self.updateChevron();
           }
           else {
-            var popup = this._getPopupForContainer(parentNode);
-            if (!popup._built)
-              return;
-
-            var children = popup.childNodes;
-            for (let i = popup._startMarker + 1; i < children.length; i++) {
-              if (children[i].node == aNode) {
-                element = children[i];
-                break;
-              }
-            }
-            var title = PlacesUIUtils.getBestTitle(aNode);
+            // Node is within a built menu.
+            nodeElt.label = aNewTitle || PlacesUIUtils.getBestTitle(aNode);
           }
+        },
 
-          var iconURI = aNode.icon;
-          if (iconURI) {
-            var spec = iconURI.spec;
-            if (element.getAttribute("image") != spec)
-              element.setAttribute("image", spec);
+        nodeURIChanged: function TV_V_nodeURIChanged(aNode, aURIString) {
+          let nodeElt = aNode._DOMElement;
+          NS_ASSERT(nodeElt, "node must have _DOMElement set");
+
+          nodeElt.setAttribute("scheme",
+                               PlacesUIUtils.guessUrlSchemeForUI(aURIString));
+        },
+
+        nodeIconChanged: function TV_V_nodeIconChanged(aNode) {
+          let nodeElt = aNode._DOMElement;
+          NS_ASSERT(nodeElt, "node must have _DOMElement set");
+
+          // There's no UI representation for the root node, thus there's
+          // nothing to be done when the icon changes.
+          if (nodeElt == this._self)
+            return;
+
+          let icon = aNode.icon;
+          if (icon) {
+            if (nodeElt.getAttribute("image") != icon)
+              nodeElt.setAttribute("image", icon);
           }
           else
-            element.removeAttribute("image");
+            nodeElt.removeAttribute("image");
+        },
 
-          if (element.getAttribute("label") != title) {
-            element.setAttribute("label", title);
-            if (onToolbar)
-              this._self.updateChevron();
-          }
+        nodeAnnotationChanged:
+        function TV_V_nodeAnnotationChanged(aNode, aAnno) {
+          // Ensure the changed annotation is a livemark one.
+          if (/^livemark\//.test(aAnno) &&
+              PlacesUtils.nodeIsLivemarkContainer(aNode)) {
+            let nodeElt = aNode._DOMElement;
+            NS_ASSERT(nodeElt, "node must have _DOMElement set");
 
-          if (PlacesUtils.nodeIsLivemarkContainer(aNode)) {
-            if (!element.hasAttribute("livemark"))
-              element.setAttribute("livemark", "true");
-            // If this is a livemark container check if the status menuitem has
-            // to be added or removed.
-            PlacesUIUtils.ensureLivemarkStatusMenuItem(element.firstChild);
-          }
-          else if (PlacesUtils.nodeIsURI(aNode)) {
-            element.setAttribute("scheme", PlacesUIUtils.guessUrlSchemeForUI(aNode.uri));
+            if (!nodeElt.hasAttribute("livemark"))
+              nodeElt.setAttribute("livemark", "true");
+
+            // Add or remove the livemark status menuitem.
+            PlacesUIUtils.ensureLivemarkStatusMenuItem(nodeElt.firstChild);
           }
         },
 
-        itemReplaced:
-        function TV_V_itemReplaced(aParentNode, aOldNode, aNewNode, aIndex) {
-          if (aParentNode == this._self.getResultNode()) {
-            var children = this._self.childNodes;
-            for (let i = 0; i < children.length; i++) {
-              if (children[i].node == aOldNode) {
-                var next = children[i].nextSibling;
-                this._self.removeItem(children[i]);
-                this._self.insertNewItem(aNewNode, next);
-                this._self.updateChevron();
-                return;
-              }
-            }
+        nodeHistoryDetailsChanged: function() { },
+        nodeTagsChanged: function() { },
+        nodeDateAddedChanged: function() { },
+        nodeLastModifiedChanged: function() { },
+        nodeKeywordChanged: function() { },
+
+        nodeReplaced:
+        function TV_V_nodeReplaced(aParentNode, aOldNode, aNewNode, aIndex) {
+          let nodeElt = aOldNode._DOMElement;
+          NS_ASSERT(nodeElt, "node must have _DOMElement set");
+
+          // No worries: If nodeElt is the last item (i.e. no nextSibling),
+          // insertNewItem/insertNewItemToPopup will insert the new element as
+          // the last item.
+          let next = nodeElt.nextSibling;
+
+          let parentElt = aParentNode._DOMElement;
+          NS_ASSERT(parentElt, "parent node must have _DOMElement set");
+          if (parentElt == this._self) {
+            // Node is on the toolbar.
+            this._self.removeItem(nodeElt);
+            this._self.insertNewItem(aNewNode, next);
+            this._self.updateChevron();
+          }
+          else if (parentElt._built) {
+            // Node is within a built menu.
+            let popup = parentElt.firstChild;
+            popup.removeItem(nodeElt);
+            this._self.insertNewItemToPopup(aNewNode, popup, next);
           }
         },
 
-        containerOpened: function TV_V_containerOpened(aNode) {
-          this.invalidateContainer(aNode);
+        containerOpened: function TV_V_containerOpened(aContainer) {
+          this.invalidateContainer(aContainer);
         },
 
-        containerClosed: function TV_V_containerClosed(aNode) {
-          this.invalidateContainer(aNode);
+        containerClosed: function TV_V_containerClosed(aContainer) {
+          this.invalidateContainer(aContainer);
         },
 
         invalidateContainer: function TV_V_invalidateContainer(aContainer) {
-          if (aContainer == this._self.getResultNode()) {
-            this._self._containerNodesMap.splice(0);
+          let containerNodeElt = aContainer._DOMElement;
+          NS_ASSERT(containerNodeElt, "node must have _DOMElement set");
+
+          if (containerNodeElt == this._self) {
+            // Container is the toolbar itself.
             this._self._rebuild();
-            return;
           }
-
-          function isChildOf(node, container) {
-            var parent = node.parent;
-            while (parent) {
-              if (parent == container)
-                return true;
-              parent = parent.parent;
-            }
-            return false;
+          else if (containerNodeElt._built) {
+            // Container is a built menu.
+            containerNodeElt._built = false;
+            // If the menupopup is open we should live-update it.
+            if (containerNodeElt.open)
+              this._self._rebuildPopup(containerNodeElt.firstChild);
           }
-
-          var popupToRebuild = null;
-          for (let i = 0; i < this._self._containerNodesMap.length; i++) {
-            var node = this._self._containerNodesMap[i].resultNode;
-            
-            if (node == aContainer)
-              popupToRebuild = this._self._containerNodesMap[i].domNode;
-            if (isChildOf(node, aContainer)) {
-              this._self._containerNodesMap.splice(i,1);
-              i--;
-            }
-          }
-
-          if (popupToRebuild) {
-            popupToRebuild._built = false;
-
-            // if the menupopup is open we should live-update it
-            if (popupToRebuild.parentNode.open)
-              this._self._rebuildPopup(popupToRebuild);
-          }
-        },
-
-        invalidateAll: function TV_V_invalidateAll() {
-          this._self._containerNodesMap.splice(0);
-          this._self._rebuild();
         },
 
         sortingChanged: function TV_V_sortingChanged(aSortingMode) {
@@ -808,8 +801,7 @@
         <parameter name="aParentPopup"/>
         <parameter name="aBefore"/>
         <body><![CDATA[
-          var element =
-            PlacesUIUtils.createMenuItemForNode(aChild, this._containerNodesMap);
+          var element = PlacesUIUtils.createMenuItemForNode(aChild);
 
           if (aBefore)
             aParentPopup.insertBefore(element, aBefore);
@@ -833,7 +825,7 @@
       <method name="_containerPopupShowing">
         <parameter name="aPopup"/>
         <body><![CDATA[
-          if (!aPopup._built)
+          if (!aPopup.parentNode._built)
             this._rebuildPopup(aPopup);
         ]]></body>
       </method>
@@ -868,7 +860,7 @@
             if (aPopup._startMarker == -1 && aPopup._endMarker == -1)
               this._showEmptyMenuItem(aPopup);
           }
-          aPopup._built = true;
+          aPopup.parentNode._built = true;
         ]]></body>
       </method>
 
@@ -914,7 +906,7 @@
           // - beforeIndex: child index to drop before, for the drop indicator.
           // - folderNode: the folder to drop into, if applicable.
           var result = this.getResult();
-          if (!PlacesUtils.nodeIsFolder(result.root))
+          if (!PlacesUtils.nodeIsFolder(this._resultNode))
             return null;
 
           var dropPoint = { ip: null, beforeIndex: null, folderNode: null };
@@ -932,7 +924,7 @@
                               : (aEvent.clientX < nodeRect.left + threshold)) {
                 // Drop before this folder.
                 dropPoint.ip =
-                  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+                  new InsertionPoint(PlacesUtils.getConcreteItemId(this._resultNode),
                                      nodeIndex, Ci.nsITreeView.DROP_BEFORE);
                 dropPoint.beforeIndex = nodeIndex;
               }
@@ -951,7 +943,7 @@
                 let beforeIndex =
                   (nodeIndex == this.childNodes.length - 1) ? -1 : nodeIndex + 1;
                 dropPoint.ip =
-                  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+                  new InsertionPoint(PlacesUtils.getConcreteItemId(this._resultNode),
                                      beforeIndex, Ci.nsITreeView.DROP_BEFORE);
                 dropPoint.beforeIndex = beforeIndex;
               }
@@ -964,7 +956,7 @@
                               : (aEvent.clientX < nodeRect.left + threshold)) {
                 // Drop before this bookmark.
                 dropPoint.ip =
-	                new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+	                new InsertionPoint(PlacesUtils.getConcreteItemId(this._resultNode),
 	                                   nodeIndex, Ci.nsITreeView.DROP_BEFORE);
                 dropPoint.beforeIndex = nodeIndex;
               }
@@ -973,7 +965,7 @@
                 let beforeIndex =
                   nodeIndex == this.childNodes.length - 1 ? -1 : nodeIndex + 1;
                 dropPoint.ip =
-                  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+                  new InsertionPoint(PlacesUtils.getConcreteItemId(this._resultNode),
                                      beforeIndex, Ci.nsITreeView.DROP_BEFORE);
                 dropPoint.beforeIndex = beforeIndex;
               }
@@ -983,7 +975,7 @@
             // We are most likely dragging on the empty area of the
             // toolbar, we should drop after the last node.
             dropPoint.ip =
-              new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+              new InsertionPoint(PlacesUtils.getConcreteItemId(this._resultNode),
                                  -1, Ci.nsITreeView.DROP_BEFORE);
             dropPoint.beforeIndex = -1;
           }
@@ -1216,7 +1208,7 @@
         this._draggedNode = null;
       ]]></handler>
 
-      <handler event="popupshowing" phase="capturing"><![CDATA[      
+      <handler event="popupshowing" phase="capturing"><![CDATA[
         if (!this._allowPopupShowing) {
           this._allowPopupShowing = true;
           event.preventDefault();

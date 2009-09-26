@@ -78,8 +78,6 @@
       <!-- This is the view that manage the popup -->
       <field name="_rootView">PlacesUIUtils.getViewForNode(this);</field>
 
-      <field name="_built">false</field>
-
       <method name="onDragOver">
         <parameter name="aEvent"/>
         <parameter name="aFlavour"/>
@@ -536,9 +534,9 @@
            extends="chrome://browser/content/places/menu.xml#places-popup-base">
     <implementation>
       <destructor><![CDATA[
-        this._resultNode = null;
         if (this._result) {
-          this._result.root.containerOpen = false;
+          this._resultNode.containerOpen = false;
+          this._resultNode = null;
           this._result.viewer = null;
           this._result = null;
         }
@@ -574,12 +572,13 @@
           var resultNode = popup._resultNode;
           if (!resultNode.containerOpen)
             resultNode.containerOpen = true;
-          if (!popup._built)
+          if (!popup.parentNode._built)
             this._rebuild(popup);
         ]]></body>
       </method>
 
       <field name="_result">null</field>
+      <field name="_resultNode">null</field>
 
       <!-- nsIPlacesView -->
       <method name="getResult">
@@ -599,20 +598,12 @@
       <method name="removeItem">
         <parameter name="child"/>
         <body><![CDATA[
-          if (PlacesUtils.nodeIsContainer(child.node)) {
-            for (var i=0; i < this._containerNodesMap.length; i++) {
-              if (this._containerNodesMap[i].resultNode == child.node) {
-                this._containerNodesMap.splice(i, 1);
-                break;
-              }
-            }
-          }
-
           // if document.popupNode pointed to this child, null it out,
           // otherwise controller's command-updating may rely on the removed
           // item still being "selected".
           if (document.popupNode == child)
             document.popupNode = null;
+
           child.parentNode.removeChild(child);
 
           if (this._endMarker != -1)
@@ -625,8 +616,7 @@
         <parameter name="aParentPopup"/>
         <parameter name="aBefore"/>
         <body><![CDATA[
-          var element =
-            PlacesUIUtils.createMenuItemForNode(aChild, this._containerNodesMap);
+          var element = PlacesUIUtils.createMenuItemForNode(aChild);
 
           if (aBefore)
             aParentPopup.insertBefore(element, aBefore);
@@ -689,25 +679,13 @@
             if (aPopup._startMarker == -1 && aPopup._endMarker == -1)
               this._showEmptyMenuItem(aPopup);
           }
-          aPopup._built = true;
+          aPopup.parentNode._built = true;
         ]]></body>
       </method>
 
       <!-- nsINavHistoryResultViewer -->
       <field name="_viewer"><![CDATA[({
         _self: this,
-
-        _getPopupForContainer:
-        function PMV__getPopupForContainer(aNode) {
-          if (this._self._resultNode == aNode)
-            return this._self;
-
-          for (var i=0; i < this._self._containerNodesMap.length; i++) {
-            if (this._self._containerNodesMap[i].resultNode == aNode)
-              return this._self._containerNodesMap[i].domNode;
-          }
-          throw("Container view not found");
-        },
 
         get result() {
           return this._self._result;
@@ -721,130 +699,168 @@
           // we should do nothing.
           if (this._self._result != val) {
             if (this._self._result)
-              this._self._result.root.containerOpen = false;
-            this._built = false;
-            this._self._containerNodesMap = [];
-            this._self._resultNode = val.root;
+              this._self._resultNode.containerOpen = false;
+
+            this._self.parentNode._built = false;
             this._self._result = val;
+            if (val) {
+              this._self._resultNode = val.root;
+              this._self._resultNode._DOMElement = this._self.parentNode;
+            }
+            else
+              this._self._resultNode = null;
           }
           return val;
         },
 
-        itemInserted: function PMV_itemInserted(aParentNode, aNode, aIndex) {
-          var popup = this._getPopupForContainer(aParentNode);
-          if (!popup._built)
+        nodeInserted: function PMV_nodeInserted(aParentNode, aNode, aIndex) {
+          let parentElt = aParentNode._DOMElement;
+          NS_ASSERT(parentElt, "parent node must have _DOMElement set");
+
+          if (!parentElt._built)
             return;
 
-          var index = popup._startMarker + 1 + aIndex;
-          var before = popup.childNodes[index] || null;
+          // parentElt is the <menu> element for the container,
+          // we need the <menupopup>
+          let popup = parentElt.firstChild;
+
+          let index = popup._startMarker + 1 + aIndex;
+          let before = popup.childNodes[index] || null;
           this._self.insertNewItem(aNode, popup, before);
           if (popup._emptyMenuItem)
             popup._emptyMenuItem.hidden = true;
         },
 
-        itemRemoved: function PMV_itemRemoved(aParentNode, aNode, aIndex) {
-          var popup = this._getPopupForContainer(aParentNode);
-          if (!popup._built)
+        nodeRemoved: function PMV_nodeRemoved(aParentNode, aNode, aIndex) {
+          let parentElt = aParentNode._DOMElement;
+          NS_ASSERT(parentElt, "parent node must have _DOMElement set");
+
+          if (!parentElt._built)
             return;
 
-          var children = popup.childNodes;
-          for (var i = popup._startMarker + 1; i < children.length; i++) {
-            if (children[i].node == aNode) {
-              this._self.removeItem(children[i]);
-              if (!popup.hasChildNodes() ||
-                  (popup.childNodes.length == 1 &&
-                   popup.firstChild == popup._emptyMenuItem)) {
-                this._self._showEmptyMenuItem(popup);
-              }
-              return;
-            }
-          }
+          // parentElt is the <menu> element for the container,
+          // we need the <menupopup>
+          let popup = parentElt.firstChild;
+
+          let nodeElt = aNode._DOMElement;
+          NS_ASSERT(nodeElt, "node must have _DOMElement set");
+          popup.removeChild(nodeElt);
+
+          // Figure out if we need to show the "<Empty>" menu-item.
+          // TODO Bug 517701: This doesn't seem to handle the case of an empty
+          // root (parentElt == this._self.parentNode).
+          if (!popup.hasChildNodes() ||
+              (popup.childNodes.length == 1 &&
+              popup.firstChild == popup._emptyMenuItem))
+            this._self._showEmptyMenuItem(popup);
+
+          if (popup._endMarker != -1)
+            popup._endMarker--;
         },
 
-        itemMoved:
-        function PMV_itemMoved(aItem, aOldParent, aOldIndex, aNewParent,
-                               aNewIndex) {
-          // This cannot actually happen yet (see IDL)
-          if (aNewParent != aOldParent)
+        nodeMoved:
+        function PMV_nodeMoved(aNode,
+                               aOldParent, aOldIndex,
+                               aNewParent, aNewIndex) {
+          // Note: the current implementation of moveItem does not actually
+          // use this notification when the item in question is moved from one
+          // folder to another.  Instead, it calls nodeRemoved and nodeInserted
+          // for the two folders.  Thus, we can assume aOldParent == aNewParent.
+
+          let nodeElt = aNode._DOMElement;
+          NS_ASSERT(nodeElt, "node must have _DOMElement set");
+
+          // If our root node is a folder, it might be moved. There's nothing
+          // we need to do in that case.
+          if (nodeElt == this._self.parentNode)
             return;
 
-          var popup = this._getPopupForContainer(aNewParent);
-          var index = popup._startMarker + 1 + aNewIndex;
-          var children = popup.childNodes;
-          for (var i = popup._startMarker + 1; i < children.length; i++) {
-            var menuItem = children[i];
-            if (menuItem.node == aItem) {
-              popup.removeChild(menuItem);
-              popup.insertBefore(menuItem, children[index]);
-              return;
-            }
-          }
+          // Move the node.
+          let popup = nodeElt.parentNode;
+          popup.removeChild(nodeElt);
+          popup.insertBefore(nodeElt, popup.childNodes[aNewIndex]);
         },
 
-        itemChanged: function PMV_itemChanged(aNode) {
-          // this check can be removed once we fix bug #382397
-          var parentNode = aNode.parent;
-          if (!parentNode)
+        nodeTitleChanged: function PMV__nodeTitleChanged(aNode, aNewTitle) {
+          let nodeElt = aNode._DOMElement;
+          NS_ASSERT(nodeElt, "node must have _DOMElement set");
+
+          // There's no UI representation for the root node, thus there's
+          // nothing to be done when the title changes.
+          if (nodeElt == this._self.parentNode)
             return;
 
-          if (PlacesUtils.nodeIsSeparator(aNode)) {
-            // nothing to do when a separator changes
+          nodeElt.label = aNewTitle || PlacesUIUtils.getBestTitle(aNode);
+        },
+
+        nodeURIChanged: function PMV_nodeURIChanged(aNode, aURIString) {
+          let nodeElt = aNode._DOMElement;
+          NS_ASSERT(nodeElt, "node must have _DOMElement set");
+
+          nodeElt.setAttribute("scheme",
+                               PlacesUIUtils.guessUrlSchemeForUI(aURIString));
+        },
+
+        nodeIconChanged: function PMV_nodeIconChanged(aNode) {
+          let nodeElt = aNode._DOMElement;
+          NS_ASSERT(nodeElt, "node must have _DOMElement set");
+
+          // There's no UI representation for the root node, thus there's
+          // nothing to be done when the icon changes.
+          if (nodeElt == this._self.parentNode)
             return;
-          }
 
-          var popup = this._getPopupForContainer(parentNode);
-          if (!popup._built)
-            return;
-
-          var children = popup.childNodes;
-          var menuitem;
-          for (var i = popup._startMarker + 1; i < children.length; i++) {
-            if (children[i].node == aNode) {
-              menuitem = children[i];
-              break;
-            }
-          }
-
-          var iconURI = aNode.icon;
-          if (iconURI) {
-            var spec = iconURI.spec;
-            if (menuitem.getAttribute("image") != spec)
-              menuitem.setAttribute("image", spec);
+          var icon = aNode.icon;
+          if (icon) {
+            if (nodeElt.getAttribute("image") != icon)
+              nodeElt.setAttribute("image", icon);
           }
           else
-            menuitem.removeAttribute("image");
+            nodeElt.removeAttribute("image");
+        },
 
-          var title = PlacesUIUtils.getBestTitle(aNode);
-          if (menuitem.getAttribute("label") != title)
-            menuitem.setAttribute("label", title);
+        nodeAnnotationChanged:
+        function PMV_nodeAnnotationChanged(aNode, aAnno) {
+          // Ensure the changed annotation is a livemark one.
+          if (/^livemark\//.test(aAnno) &&
+              PlacesUtils.nodeIsLivemarkContainer(aNode)) {
+            let nodeElt = aNode._DOMElement;
+            NS_ASSERT(nodeElt, "node must have _DOMElement set");
 
-          if (PlacesUtils.nodeIsLivemarkContainer(aNode)) {
-            if (!menuitem.hasAttribute("livemark"))
-              menuitem.setAttribute("livemark", "true");
-            // If this is a livemark container check if the status menuitem has
-            // to be added or removed.
-            PlacesUIUtils.ensureLivemarkStatusMenuItem(menuitem.firstChild);
-          }
-          else if (PlacesUtils.nodeIsURI(aNode)) {
-              menuitem.setAttribute("scheme", PlacesUIUtils.guessUrlSchemeForUI(aNode.uri));
+            if (!nodeElt.hasAttribute("livemark"))
+              nodeElt.setAttribute("livemark", "true");
+
+            // Add or remove the livemark status menuitem.
+            PlacesUIUtils.ensureLivemarkStatusMenuItem(nodeElt.firstChild);
           }
         },
 
-        itemReplaced:
-        function PMV_itemReplaced(aParentNode, aOldNode, aNewNode, aIndex) {
-          var popup = this._getPopupForContainer(aParentNode);
-          if (!popup._built)
+        nodeHistoryDetailsChanged: function() { },
+        nodeTagsChanged: function() { },
+        nodeDateAddedChanged: function() { },
+        nodeLastModifiedChanged: function() { },
+        nodeKeywordChanged: function() { },
+
+        nodeReplaced:
+        function PMV_nodeReplaced(aParentNode, aOldNode, aNewNode, aIndex) {
+          let parentElt = aParentNode._DOMElement;
+          NS_ASSERT(parentElt, "parent node must have _DOMElement set");
+
+          if (!parentElt._built)
             return;
 
-          var children = popup.childNodes;
-          for (var i = popup._startMarker + 1; i < children.length; i++) {
-            if (children[i].node == aOldNode) {
-              var next = children[i].nextSibling;
-              this._self.removeItem(children[i]);
-              this._self.insertNewItem(aNewNode, popup, next);
-              return;
-            }
-          }
+          // parentElt is the <menu> element for the container,
+          // we need the <menupopup>.
+          let popup = parentElt.firstChild;
+
+          let nodeElt = aOldNode._DOMElement;
+          NS_ASSERT(nodeElt, "node must have _DOMElement set");
+
+          // No worries: If nodeElt is the last item (i.e. no nextSibling),
+          // insertNewItem will insert the new element as the last item.
+          let next = nodeElt.nextSibling;
+          this._self.removeItem(nodeElt);
+          this._self.insertNewItem(aNewNode, popup, next);
         },
 
         containerOpened: function PMV_containerOpened(aNode) {
@@ -854,45 +870,19 @@
         containerClosed: function PMV_containerClosed(aNode) {
           this.invalidateContainer(aNode);
         },
- 
+
         invalidateContainer: function PMV_invalidateContainer(aContainer) {
-          if (!this._self._built)
+          // Do nothing if the entire view is already marked un-built.
+          if (!this._self.parentNode._built)
             return;
 
-          function isChildOf(node, container) {
-            var parent = node.parent;
-            while (parent) {
-              if (parent == container)
-                return true;
-              parent = parent.parent;
-            }
-            return false;
-          }
+          let containerNodeElt = aContainer._DOMElement;
+          NS_ASSERT(containerNodeElt, "node must have _DOMElement set");
+          containerNodeElt._built = false;
 
-          var popupToRebuild = null;
-          for (var i=0; i < this._self._containerNodesMap.length; i++) {
-            var node = this._self._containerNodesMap[i].resultNode;
-
-            if (node == aContainer)
-              popupToRebuild = this._self._containerNodesMap[i].domNode;
-            if (isChildOf(node, aContainer)) {
-              this._self._containerNodesMap.splice(i,1);
-              i--;
-            }
-          }
-
-          if (!popupToRebuild)
-            popupToRebuild = this._self;
-          popupToRebuild._built = false;
-
-          // if the menupopup is open we should live-update it
-          if (popupToRebuild.parentNode.open)
-            this._self._rebuild(popupToRebuild);
-        },
-
-        invalidateAll: function PMV_invalidateAll() {
-          this._self._containerNodesMap.splice(0);
-          this._self._built = false;
+          // If the menupopup is open we should live-update it.
+          if (containerNodeElt.open)
+            this._self._rebuild(containerNodeElt.firstChild);
         },
 
         sortingChanged: function PMV_sortingChanged(aSortingMode) {
@@ -914,6 +904,7 @@
             PlacesUtils.history.executeQueries(queries.value,
                                                queries.value.length,
                                                options.value);
+
           result.viewer = this._viewer;
           return val;
         ]]></setter>

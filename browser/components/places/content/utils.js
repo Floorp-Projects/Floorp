@@ -1002,17 +1002,12 @@ var PlacesUIUtils = {
    * Helper for the toolbar and menu views
    */
   createMenuItemForNode:
-  function PUU_createMenuItemForNode(aNode, aContainersMap) {
+  function PUU_createMenuItemForNode(aNode) {
     var element;
     var type = aNode.type;
     if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
       element = document.createElement("menuseparator");
     else {
-      var iconURI = aNode.icon;
-      var iconURISpec = "";
-      if (iconURI)
-        iconURISpec = iconURI.spec;
-
       if (PlacesUtils.uriTypes.indexOf(type) != -1) {
         element = document.createElement("menuitem");
         element.className = "menuitem-iconic bookmark-item";
@@ -1051,8 +1046,6 @@ var PlacesUIUtils = {
         popup.setAttribute("context", "placesContext");
 #endif
         element.appendChild(popup);
-        if (aContainersMap)
-          aContainersMap.push({ resultNode: aNode, domNode: popup });
         element.className = "menu-iconic bookmark-item";
       }
       else
@@ -1060,11 +1053,12 @@ var PlacesUIUtils = {
 
       element.setAttribute("label", this.getBestTitle(aNode));
 
-      if (iconURISpec)
-        element.setAttribute("image", iconURISpec);
+      var icon = aNode.icon;
+      if (icon)
+        element.setAttribute("image", icon);
     }
     element.node = aNode;
-    element.node.viewIndex = 0;
+    element.node._DOMElement = element;
 
     return element;
   },
