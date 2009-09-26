@@ -438,6 +438,45 @@ public:
         return mOutOfMemory;
     }
 
+    struct Mark
+    {
+        VMAllocator& vma;
+        bool committed;
+        nanojit::Allocator::Chunk* saved_chunk;
+        char* saved_top;
+        char* saved_limit;
+        size_t saved_size;
+
+        Mark(VMAllocator& vma) :
+            vma(vma),
+            committed(false),
+            saved_chunk(vma.current_chunk),
+            saved_top(vma.current_top),
+            saved_limit(vma.current_limit),
+            saved_size(vma.mSize)
+        {}
+
+        ~Mark()
+        {
+            if (!committed)
+                vma.rewind(*this);
+        }
+
+        void commit() { committed = true; }
+    };
+
+    void rewind(const Mark& m) {
+        while (current_chunk != m.saved_chunk) {
+            Chunk *prev = current_chunk->prev;
+            freeChunk(current_chunk);
+            current_chunk = prev;
+        }
+        current_top = m.saved_top;
+        current_limit = m.saved_limit;
+        mSize = m.saved_size;
+        memset(current_top, 0, current_limit - current_top);
+    }
+
     bool mOutOfMemory;
     size_t mSize;
 
@@ -777,6 +816,7 @@ enum TypeConsensus
 
 class TraceRecorder {
     VMAllocator&            tempAlloc;
+    VMAllocator::Mark       mark;
     JSContext*              cx;
     JSTraceMonitor*         traceMonitor;
     JSObject*               globalObj;
