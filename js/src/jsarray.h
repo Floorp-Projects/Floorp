@@ -97,6 +97,13 @@ js_InitArrayClass(JSContext *cx, JSObject *obj);
 extern bool
 js_InitContextBusyArrayTable(JSContext *cx);
 
+/*
+ * Creates a new array with the given length and proto (NB: NULL is not
+ * translated to Array.prototype), with len slots preallocated.
+ */
+extern JSObject * JS_FASTCALL
+js_NewArrayWithSlots(JSContext* cx, JSObject* proto, uint32 len);
+
 extern JSObject *
 js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector,
                   JSBool holey = JS_FALSE);

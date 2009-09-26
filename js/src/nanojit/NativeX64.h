@@ -58,7 +58,6 @@
 
 namespace nanojit
 {
-    const int NJ_LOG2_PAGE_SIZE = 12;       // 4K
 #define NJ_MAX_STACK_ENTRY              256
 #define NJ_ALIGN_STACK                  16
 
@@ -194,6 +193,7 @@ namespace nanojit
         X64_divsd   = 0xC05E0F40F2000005LL, // divide scalar double r /= b
         X64_mulsd   = 0xC0590F40F2000005LL, // multiply scalar double r *= b
         X64_addsd   = 0xC0580F40F2000005LL, // add scalar double r += b
+        X64_idiv    = 0xF8F7400000000003LL, // 32bit signed div (rax = rdx:rax/r, rdx=rdx:rax%r)
         X64_imul    = 0xC0AF0F4000000004LL, // 32bit signed mul r *= b
         X64_imuli   = 0xC069400000000003LL, // 32bit signed mul r = b * imm32
         X64_imul8   = 0x00C06B4000000004LL, // 32bit signed mul r = b * imm8
@@ -371,6 +371,7 @@ namespace nanojit
         void asm_cmp_imm(LIns*);\
         void fcmp(LIns*, LIns*);\
         NIns* asm_fbranch(bool, LIns*, NIns*);\
+        void asm_div_mod(LIns *i);\
         int max_stk_used;
 
     #define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }

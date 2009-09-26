@@ -38,13 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nanojit.h"
-#include <stdio.h>
-#include <ctype.h>
-
-#ifdef PERFM
-#include "../vprof/vprof.h"
-#endif /* PERFM */
-
 
 namespace nanojit
 {
@@ -114,7 +107,7 @@ namespace nanojit
           names(NULL),
 #endif
           abi(ABI_FASTCALL), state(NULL), param1(NULL), sp(NULL), rp(NULL),
-          _allocator(alloc), _bytesAllocated(0)
+          _allocator(alloc)
     {
         clear();
     }
@@ -253,10 +246,10 @@ namespace nanojit
         return ins;
     }
 
-    LInsp LirBufWriter::insGuard(LOpcode op, LInsp c, LInsp data)
+    LInsp LirBufWriter::insGuard(LOpcode op, LInsp c, GuardRecord *gr)
     {
         debug_only( if (LIR_x == op || LIR_xbarrier == op) NanoAssert(!c); )
-        return ins2(op, c, data);
+        return ins2(op, c, (LIns*)gr);
     }
 
     LInsp LirBufWriter::insBranch(LOpcode op, LInsp condition, LInsp toLabel)
@@ -785,7 +778,7 @@ namespace nanojit
         return out->ins3(v, oprnd1, oprnd2, oprnd3);
     }
 
-    LIns* ExprFilter::insGuard(LOpcode v, LInsp c, LInsp x)
+    LIns* ExprFilter::insGuard(LOpcode v, LInsp c, GuardRecord *gr)
     {
         if (v == LIR_xt || v == LIR_xf) {
             if (c->isconst()) {
@@ -801,7 +794,7 @@ namespace nanojit
                     // so assert in debug builds.
                     NanoAssertMsg(0, "Constantly false guard detected");
 #endif
-                    return out->insGuard(LIR_x, NULL, x);
+                    return out->insGuard(LIR_x, NULL, gr);
                 }
             }
             else {
@@ -814,7 +807,7 @@ namespace nanojit
                 }
             }
         }
-        return out->insGuard(v, c, x);
+        return out->insGuard(v, c, gr);
     }
 
     LIns* ExprFilter::insBranch(LOpcode v, LIns *c, LIns *t)
@@ -832,6 +825,19 @@ namespace nanojit
             ;
         }
         return out->insBranch(v, c, t);
+    }
+
+    LIns* ExprFilter::insLoad(LOpcode op, LIns* base, int32_t off) {
+        if (base->isconstp() && !isS8(off)) {
+            // if the effective address is constant, then transform:
+            // ld const[bigconst] => ld (const+bigconst)[0]
+            // note: we don't do this optimization for <8bit field offsets,
+            // under the assumption that we're more likely to CSE-match the
+            // constant base address if we dont const-fold small offsets.
+            uintptr_t p = (uintptr_t)base->constvalp() + off;
+            return out->insLoad(op, insImmPtr((void*)p), 0);
+        }
+        return out->insLoad(op, base, off);
     }
 
     LIns* LirWriter::ins_eq0(LIns* oprnd1)
@@ -1146,7 +1152,6 @@ namespace nanojit
             NanoAssert(i->isLInsOp3());
             return hash3(op, i->oprnd1(), i->oprnd2(), i->oprnd3());
         }
-        NanoAssert(0);
     }
 
     inline bool LInsHashSet::equals(LInsp a, LInsp b)
@@ -1188,7 +1193,6 @@ namespace nanojit
             NanoAssert(a->isLInsOp3());
             return a->oprnd1() == b->oprnd1() && a->oprnd2() == b->oprnd2() && a->oprnd3() == b->oprnd3();
         }
-        NanoAssert(0);
     }
 
     void LInsHashSet::grow()
@@ -1444,7 +1448,7 @@ namespace nanojit
             total++;
 
             // first handle side-effect instructions
-            if (!i->isCse())
+            if (i->isStmt())
             {
                 live.add(i,0);
                 if (i->isGuard())
@@ -1531,7 +1535,7 @@ namespace nanojit
 
     void LirNameMap::copyName(LInsp i, const char *s, int suffix) {
         char s2[200];
-        if (isdigit(s[VMPI_strlen(s)-1])) {
+        if (VMPI_isdigit(s[VMPI_strlen(s)-1])) {
             // if s ends with a digit, add '_' to clarify the suffix
             VMPI_sprintf(s2,"%s_%d", s, suffix);
         } else {
@@ -1704,19 +1708,19 @@ namespace nanojit
                 formatGuard(i, s);
                 break;
 
-            case LIR_add:
+            case LIR_add:       case LIR_qiadd:
             case LIR_iaddp:     case LIR_qaddp:
             case LIR_sub:
-             case LIR_mul:
+            case LIR_mul:
             case LIR_div:
             case LIR_fadd:
             case LIR_fsub:
-             case LIR_fmul:
+            case LIR_fmul:
             case LIR_fdiv:
-            case LIR_and:
-            case LIR_or:
+            case LIR_and:       case LIR_qiand:
+            case LIR_or:        case LIR_qior:
             case LIR_xor:       case LIR_qxor:
-            case LIR_lsh:
+            case LIR_lsh:       case LIR_qilsh:
             case LIR_rsh:       case LIR_qirsh:
             case LIR_ush:       case LIR_qursh:
             case LIR_eq:        case LIR_qeq:
@@ -1733,10 +1737,6 @@ namespace nanojit
             case LIR_fle:
             case LIR_fgt:
             case LIR_fge:
-            case LIR_qiadd:
-            case LIR_qiand:
-            case LIR_qilsh:
-            case LIR_qior:
                 VMPI_sprintf(s, "%s = %s %s, %s", formatRef(i), lirNames[op],
                     formatRef(i->oprnd1()),
                     formatRef(i->oprnd2()));
@@ -1876,7 +1876,7 @@ namespace nanojit
         return out->insLoad(v,base,disp);
     }
 
-    LInsp CseFilter::insGuard(LOpcode v, LInsp c, LInsp x)
+    LInsp CseFilter::insGuard(LOpcode v, LInsp c, GuardRecord *gr)
     {
         // LIR_xt and LIR_xf guards are CSEable.  Note that we compare the
         // opcode and condition when determining if two guards are equivalent
@@ -1902,9 +1902,9 @@ namespace nanojit
             LInsp found = exprs.find1(v, c, k);
             if (found)
                 return 0;
-            return exprs.add(out->insGuard(v,c,x), k);
+            return exprs.add(out->insGuard(v,c,gr), k);
         }
-        return out->insGuard(v, c, x);
+        return out->insGuard(v, c, gr);
     }
 
     LInsp CseFilter::insCall(const CallInfo *ci, LInsp args[])
@@ -1920,7 +1920,7 @@ namespace nanojit
         return out->insCall(ci, args);
     }
 
-    void compile(Assembler* assm, Fragment* frag, Allocator& alloc verbose_only(, LabelMap* labels))
+    void compile(Assembler* assm, Fragment* frag verbose_only(, Allocator& alloc, LabelMap* labels))
     {
         verbose_only(
         LogControl *logc = assm->_logc;

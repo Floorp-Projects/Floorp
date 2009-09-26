@@ -297,6 +297,7 @@ JSScope::searchTable(jsid id, bool adding)
     uint32 sizeMask;
 
     JS_ASSERT(table);
+    JS_ASSERT(!JSVAL_IS_NULL(id));
 
     /* Compute the primary hash address. */
     METER(hashes);
@@ -448,7 +449,8 @@ js_HashScopeProperty(JSDHashTable *table, const void *key)
 
 #define SPROP_MATCH_PARAMS(sprop, aid, agetter, asetter, aslot, aattrs,       \
                            aflags, ashortid)                                  \
-    ((sprop)->id == (aid) &&                                                  \
+    (JS_ASSERT(!JSVAL_IS_NULL((sprop)->id)), JS_ASSERT(!JSVAL_IS_NULL(aid)),  \
+     (sprop)->id == (aid) &&                                                  \
      SPROP_MATCH_PARAMS_AFTER_ID(sprop, agetter, asetter, aslot, aattrs,      \
                                  aflags, ashortid))
 
@@ -585,6 +587,7 @@ InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
     uintN i;
 
     JS_ASSERT(!parent || child->parent != parent);
+    JS_ASSERT(!JSVAL_IS_NULL(child->id));
 
     if (!parent) {
         table = &rt->propertyTreeHash;
@@ -617,6 +620,7 @@ InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
             JS_RUNTIME_METER(rt, duplicatePropTreeNodes);
         }
     } else {
+        JS_ASSERT(!JSVAL_IS_NULL(parent->id));
         childp = &parent->kids;
         kids = *childp;
         if (kids) {
@@ -729,6 +733,7 @@ RemovePropertyTreeChild(JSRuntime *rt, JSScopeProperty *child)
          */
         table = &rt->propertyTreeHash;
     } else {
+        JS_ASSERT(!JSVAL_IS_NULL(parent->id));
         kids = parent->kids;
         if (KIDS_IS_CHUNKY(kids)) {
             list = chunk = KIDS_TO_CHUNK(kids);
@@ -832,6 +837,8 @@ GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
     PropTreeKidsChunk *chunk;
     uintN i, n;
 
+    JS_ASSERT(!JSVAL_IS_NULL(child->id));
+
     rt = cx->runtime;
     if (!parent) {
         JS_LOCK_GC(rt);
@@ -846,6 +853,8 @@ GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
         if (sprop)
             goto out;
     } else {
+        JS_ASSERT(!JSVAL_IS_NULL(parent->id));
+
         /*
          * Because chunks are appended at the end and never deleted except by
          * the GC, we can search without taking the runtime's GC lock.  We may
@@ -1013,8 +1022,27 @@ JSScope::reportReadOnlyScope(JSContext *cx)
 void
 JSScope::generateOwnShape(JSContext *cx)
 {
-    if (object)
-        js_LeaveTraceIfGlobalObject(cx, object);
+#ifdef JS_TRACER
+    if (object) {
+         js_LeaveTraceIfGlobalObject(cx, object);
+
+        /*
+         * The JIT must have arranged to re-guard after any unpredictable shape
+         * change, so if we are on trace here, we should already be prepared to
+         * bail off trace.
+         */
+        JS_ASSERT_IF(JS_ON_TRACE(cx), cx->bailExit);
+
+        /*
+         * If we are recording, here is where we forget already-guarded shapes.
+         * Any subsequent property operation upon object on the trace currently
+         * being recorded will re-guard (and re-memoize).
+         */
+        JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+        if (TraceRecorder *tr = tm->recorder)
+            tr->forgetGuardedShapesForObject(object);
+    }
+#endif
 
     shape = js_GenerateShape(cx, false);
     setOwnShape();
@@ -1036,6 +1064,8 @@ JSScope::add(JSContext *cx, jsid id,
 
     JS_ASSERT_IF(attrs & JSPROP_GETTER, getter);
     JS_ASSERT_IF(attrs & JSPROP_SETTER, setter);
+
+    JS_ASSERT(!JSVAL_IS_NULL(id));
 
     /*
      * You can't add properties to a sealed scope.  But note well that you can
@@ -1391,6 +1421,8 @@ JSScope::change(JSContext *cx, JSScopeProperty *sprop,
 
     CHECK_ANCESTOR_LINE(this, true);
 
+    JS_ASSERT(!JSVAL_IS_NULL(sprop->id));
+
     /* Allow only shared (slot-less) => unshared (slot-full) transition. */
     attrs |= sprop->attrs & mask;
     JS_ASSERT(!((attrs ^ sprop->attrs) & JSPROP_SHARED) ||
@@ -1571,12 +1603,14 @@ JSScope::brandingShapeChange(JSContext *cx, uint32 slot, jsval v)
 void
 JSScope::deletingShapeChange(JSContext *cx, JSScopeProperty *sprop)
 {
+    JS_ASSERT(!JSVAL_IS_NULL(sprop->id));
     generateOwnShape(cx);
 }
 
 bool
 JSScope::methodShapeChange(JSContext *cx, JSScopeProperty *sprop, jsval toval)
 {
+    JS_ASSERT(!JSVAL_IS_NULL(sprop->id));
     if (sprop->isMethod()) {
 #ifdef DEBUG
         jsval prev = LOCKED_OBJ_GET_SLOT(object, sprop->slot);
@@ -1610,6 +1644,7 @@ JSScope::methodShapeChange(JSContext *cx, uint32 slot, jsval toval)
         generateOwnShape(cx);
     } else {
         for (JSScopeProperty *sprop = lastProp; sprop; sprop = sprop->parent) {
+            JS_ASSERT(!JSVAL_IS_NULL(sprop->id));
             if (sprop->slot == slot && (!hadMiddleDelete() || has(sprop)))
                 return methodShapeChange(cx, sprop, toval);
         }
@@ -1626,6 +1661,7 @@ JSScope::protoShapeChange(JSContext *cx)
 void
 JSScope::replacingShapeChange(JSContext *cx, JSScopeProperty *sprop, JSScopeProperty *newsprop)
 {
+    JS_ASSERT(!JSVAL_IS_NULL(sprop->id));
     if (shape == sprop->shape)
         shape = newsprop->shape;
     else
@@ -1641,6 +1677,7 @@ JSScope::sealingShapeChange(JSContext *cx)
 void
 JSScope::shadowingShapeChange(JSContext *cx, JSScopeProperty *sprop)
 {
+    JS_ASSERT(!JSVAL_IS_NULL(sprop->id));
     generateOwnShape(cx);
 }
 
@@ -1665,6 +1702,7 @@ PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
     JS_ASSERT(trc->debugPrinter == PrintPropertyGetterOrSetter);
     sprop = (JSScopeProperty *)trc->debugPrintArg;
     id = sprop->id;
+    JS_ASSERT(!JSVAL_IS_NULL(id));
     name = trc->debugPrintIndex ? js_setter_str : js_getter_str;
 
     if (JSID_IS_ATOM(id)) {
@@ -1689,6 +1727,7 @@ PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
     JS_ASSERT(trc->debugPrinter == PrintPropertyMethod);
     sprop = (JSScopeProperty *)trc->debugPrintArg;
     id = sprop->id;
+    JS_ASSERT(!JSVAL_IS_NULL(id));
 
     JS_ASSERT(JSID_IS_ATOM(id));
     n = js_PutEscapedString(buf, bufsize - 1, ATOM_TO_STRING(JSID_TO_ATOM(id)), 0);
@@ -1785,6 +1824,7 @@ DumpSubtree(JSContext *cx, JSScopeProperty *sprop, int level, FILE *fp)
 
     fprintf(fp, "%*sid ", level, "");
     v = ID_TO_VALUE(sprop->id);
+    JS_ASSERT(!JSVAL_IS_NULL(v));
     if (JSID_IS_INT(sprop->id)) {
         fprintf(fp, "%d", JSVAL_TO_INT(v));
     } else {

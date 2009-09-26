@@ -57,20 +57,65 @@
 #include <assert.h>
 
 #include "nanojit/nanojit.h"
-#include "jstracer.h"
 
 using namespace nanojit;
 using namespace std;
 
-static avmplus::GC gc;
+/* Allocator SPI implementation. */
+
+void*
+nanojit::Allocator::allocChunk(size_t nbytes)
+{
+    void *p = malloc(nbytes);
+    if (!p)
+        exit(1);
+    return p;
+}
+
+void
+nanojit::Allocator::freeChunk(void *p) {
+    free(p);
+}
+
+void
+nanojit::Allocator::postReset() {
+}
+
 
 struct LasmSideExit : public SideExit {
     size_t line;
 };
 
-typedef JS_FASTCALL int32_t (*RetInt)();
-typedef JS_FASTCALL double (*RetFloat)();
-typedef JS_FASTCALL GuardRecord* (*RetGuard)();
+
+/* LIR SPI implementation */
+
+void
+nanojit::StackFilter::getTops(LIns* guard, int& spTop, int& rpTop)
+{
+    spTop = 0;
+    rpTop = 0;
+}
+
+#if defined NJ_VERBOSE
+void
+nanojit::LirNameMap::formatGuard(LIns *i, char *out)
+{
+    LasmSideExit *x;
+
+    x = (LasmSideExit *)i->record()->exit;
+    sprintf(out,
+            "%s: %s %s -> line=%d (GuardID=%03d)",
+            formatRef(i),
+            lirNames[i->opcode()],
+            i->oprnd1() ? formatRef(i->oprnd1()) : "",
+            x->line,
+            i->record()->profGuardID);
+}
+#endif
+
+typedef FASTCALL int32_t (*RetInt)();
+typedef FASTCALL double (*RetFloat)();
+typedef FASTCALL GuardRecord* (*RetGuard)();
 
 struct Function {
     const char *name;
@@ -211,11 +256,15 @@ public:
     void assemble(istream &in);
     void lookupFunction(const string &name, CallInfo *&ci);
 
-    Fragmento *mFragmento;
     LirBuffer *mLirbuf;
+    verbose_only( LabelMap *mLabelMap; )
     LogControl mLogc;
+    avmplus::AvmCore mCore;
+    Allocator mAlloc;
+    CodeAlloc mCodeAlloc;
     bool mVerbose;
     Fragments mFragments;
+    Assembler mAssm;
     map<string, pair<LOpcode, size_t> > mOpMap;
 
     void bad(const string &msg) {
@@ -225,8 +274,6 @@ public:
 
 private:
     void handlePatch(LirTokenStream &in);
-
-    avmplus::AvmCore mCore;
 };
 
 class FragmentAssembler {
@@ -234,14 +281,19 @@ public:
     FragmentAssembler(Lirasm &parent, const string &fragmentName);
     ~FragmentAssembler();
 
-    void assembleFragment(LirTokenStream &in, bool implicitBegin, const LirToken *firstToken);
+    void assembleFragment(LirTokenStream &in,
+                          bool implicitBegin,
+                          const LirToken *firstToken);
 
 private:
+    static uint32_t sProfId;
     // Prohibit copying.
     FragmentAssembler(const FragmentAssembler &);
     FragmentAssembler & operator=(const FragmentAssembler &);
+    LasmSideExit *createSideExit();
+    GuardRecord *createGuardRecord(LasmSideExit *exit);
 
-    Lirasm *mParent;
+    Lirasm &mParent;
     const string mFragName;
     Fragment *mFragment;
     vector<CallInfo*> mCallInfos;
@@ -263,7 +315,6 @@ private:
     void tokenizeLine(LirTokenStream &in, LirToken &token);
     void need(size_t);
     LIns *ref(const string &);
-    LIns *do_skip(size_t);
     LIns *assemble_call(const string &);
     LIns *assemble_general();
     LIns *assemble_guard();
@@ -353,6 +404,9 @@ dep_u32(char *&buf, uint32_t word, uint32_t &cksum)
 void
 dump_srecords(ostream &out, Fragment *frag)
 {
+    // FIXME: Disabled until we work out a sane way to walk through
+    // code chunks under the new CodeAlloc regime.
+/*
     // Write S-records. Can only do 4-byte addresses at the moment.
 
     // FIXME: this presently dumps out the entire set of code pages
@@ -395,26 +449,34 @@ dump_srecords(ostream &out, Fragment *frag)
             out << string(buf) << endl;
         }
     }
+*/
 }
 
-FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
-    : mParent(&parent), mFragName(fragmentName)
-{
-    mFragment = new (&gc) Fragment(NULL);
-    mFragment->lirbuf = mParent->mLirbuf;
-    mFragment->anchor = mFragment;
-    mFragment->root = mFragment;
-    mParent->mFragments[mFragName].fragptr = mFragment;
 
-    mBufWriter = new (&gc) LirBufWriter(mParent->mLirbuf);
-    mCseFilter = new (&gc) CseFilter(mBufWriter, &gc);
-    mExprFilter = new (&gc) ExprFilter(mCseFilter);
+
+uint32_t
+FragmentAssembler::sProfId = 0;
+
+FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
+    : mParent(parent), mFragName(fragmentName)
+{
+    mFragment = new Fragment(NULL verbose_only(, sProfId++));
+    mFragment->lirbuf = mParent.mLirbuf;
+    mFragment->root = mFragment;
+    mParent.mFragments[mFragName].fragptr = mFragment;
+
+    mBufWriter = new LirBufWriter(mParent.mLirbuf);
+    mCseFilter = new CseFilter(mBufWriter, mParent.mAlloc);
+    mExprFilter = new ExprFilter(mCseFilter);
     mVerboseWriter = NULL;
     mLir = mExprFilter;
 
 #ifdef DEBUG
-    if (mParent->mVerbose) {
-        mVerboseWriter = new (&gc) VerboseWriter(&gc, mExprFilter, mParent->mLirbuf->names, &mParent->mLogc);
+    if (mParent.mVerbose) {
+        mVerboseWriter = new VerboseWriter(mParent.mAlloc,
+                                           mExprFilter,
+                                           mParent.mLirbuf->names,
+                                           &mParent.mLogc);
         mLir = mVerboseWriter;
     }
 #endif
@@ -431,10 +493,8 @@ FragmentAssembler::~FragmentAssembler()
     delete mExprFilter;
     delete mCseFilter;
     delete mBufWriter;
-
-    for (size_t i = 0; i < mCallInfos.size(); ++i)
-        delete mCallInfos[i];
 }
+
 
 void
 FragmentAssembler::bad(const string &msg)
@@ -458,14 +518,6 @@ FragmentAssembler::ref(const string &lab)
     if (mLabels.find(lab) == mLabels.end())
         bad("unknown label '" + lab + "'");
     return mLabels.find(lab)->second;
-}
-
-LIns *
-FragmentAssembler::do_skip(size_t i)
-{
-    LIns *s = mLir->insSkip(i);
-    memset(s->payload(), 0xba, i);
-    return s;
 }
 
 LIns *
@@ -513,7 +565,7 @@ FragmentAssembler::assemble_load()
 LIns *
 FragmentAssembler::assemble_call(const string &op)
 {
-    CallInfo *ci = new CallInfo();
+    CallInfo *ci = new (mParent.mAlloc) CallInfo();
     mCallInfos.push_back(ci);
     LIns *args[MAXARGS];
 
@@ -530,9 +582,13 @@ FragmentAssembler::assemble_call(const string &op)
     string func = pop_front(mTokens);
     string abi = pop_front(mTokens);
 
-    AbiKind _abi;
-    if (abi == "fastcall")
+    AbiKind _abi = ABI_CDECL;
+    if (abi == "fastcall") {
+#ifdef NO_FASTCALL
+        bad("no fastcall support");
+#endif
         _abi = ABI_FASTCALL;
+    }
     else if (abi == "stdcall")
         _abi = ABI_STDCALL;
     else if (abi == "thiscall")
@@ -556,7 +612,7 @@ FragmentAssembler::assemble_call(const string &op)
         ci->_name = "fn";
 #endif
     } else {
-        mParent->lookupFunction(func, ci);
+        mParent.lookupFunction(func, ci);
         if (ci == NULL)
             bad("invalid function reference " + func);
         if (_abi != ci->_abi)
@@ -574,7 +630,7 @@ FragmentAssembler::assemble_call(const string &op)
     // Select return type from opcode.
     // FIXME: callh needs special treatment currently
     // missing from here.
-    if (mOpcode == LIR_call)
+    if (mOpcode == LIR_icall)
         ci->_argtypes |= ARGSIZE_LO;
     else
         ci->_argtypes |= ARGSIZE_F;
@@ -582,26 +638,36 @@ FragmentAssembler::assemble_call(const string &op)
     return mLir->insCall(ci, args);
 }
 
-LIns *
-FragmentAssembler::assemble_guard()
+LasmSideExit*
+FragmentAssembler::createSideExit()
 {
-    LIns *exitIns = do_skip(sizeof(LasmSideExit));
-    LasmSideExit* exit = (LasmSideExit*) exitIns->payload();
+    LasmSideExit* exit = new (mParent.mAlloc) LasmSideExit();
     memset(exit, 0, sizeof(LasmSideExit));
     exit->from = mFragment;
     exit->target = NULL;
     exit->line = mLineno;
+    return exit;
+}
 
-    LIns *guardRec = do_skip(sizeof(GuardRecord));
-    GuardRecord *rec = (GuardRecord*) guardRec->payload();
+GuardRecord*
+FragmentAssembler::createGuardRecord(LasmSideExit *exit)
+{
+    GuardRecord *rec = new (mParent.mAlloc) GuardRecord();
     memset(rec, 0, sizeof(GuardRecord));
     rec->exit = exit;
     exit->addGuard(rec);
+    return rec;
+}
+
+
+LIns *
+FragmentAssembler::assemble_guard()
+{
+    GuardRecord* guard = createGuardRecord(createSideExit());
 
     need(mOpcount);
 
-    if (mOpcode != LIR_loop)
-        mReturnTypeBits |= RT_GUARD;
+    mReturnTypeBits |= RT_GUARD;
 
     LIns *ins_cond;
     if (mOpcode == LIR_xt || mOpcode == LIR_xf)
@@ -612,7 +678,7 @@ FragmentAssembler::assemble_guard()
     if (!mTokens.empty())
         bad("too many arguments");
 
-    return mLir->insGuard(mOpcode, ins_cond, guardRec);
+    return mLir->insGuard(mOpcode, ins_cond, guard);
 }
 
 LIns *
@@ -662,25 +728,17 @@ FragmentAssembler::endFragment()
         cerr << "warning: multiple return types in fragment '"
              << mFragName << "'" << endl;
     }
-    LIns *exitIns = do_skip(sizeof(SideExit));
-    SideExit* exit = (SideExit*) exitIns->payload();
-    memset(exit, 0, sizeof(SideExit));
-    exit->guards = NULL;
-    exit->from = exit->target = mFragment;
-    mFragment->lastIns = mLir->insGuard(LIR_loop, NULL, exitIns);
 
-    ::compile(mParent->mFragmento->assm(), mFragment);
+    mFragment->lastIns =
+        mLir->insGuard(LIR_x, NULL, createGuardRecord(createSideExit()));
 
-    if (mParent->mFragmento->assm()->error() != nanojit::None) {
+    ::compile(&mParent.mAssm, mFragment, mParent.mAlloc
+              verbose_only(, mParent.mLabelMap));
+
+    if (mParent.mAssm.error() != nanojit::None) {
         cerr << "error during assembly: ";
-        switch (mParent->mFragmento->assm()->error()) {
-          case nanojit::OutOMem: cerr << "OutOMem"; break;
+        switch (mParent.mAssm.error()) {
           case nanojit::StackFull: cerr << "StackFull"; break;
-          case nanojit::RegionFull: cerr << "RegionFull"; break;
-          case nanojit::MaxLength: cerr << "MaxLength"; break;
-          case nanojit::MaxExit: cerr << "MaxExit"; break;
-          case nanojit::MaxXJump: cerr << "MaxXJump"; break;
-          case nanojit::UnknownPrim: cerr << "UnknownPrim"; break;
           case nanojit::UnknownBranch: cerr << "UnknownBranch"; break;
           case nanojit::None: cerr << "None"; break;
         }
@@ -689,24 +747,24 @@ FragmentAssembler::endFragment()
     }
 
     LirasmFragment *f;
-    f = &mParent->mFragments[mFragName];
+    f = &mParent.mFragments[mFragName];
 
     switch (mReturnTypeBits) {
-      case RT_GUARD:
-        f->rguard = reinterpret_cast<RetGuard>(mFragment->code());
+    case RT_GUARD:
+        f->rguard = (RetGuard)((uintptr_t)mFragment->code());
         f->mReturnType = RT_GUARD;
         break;
-      case RT_FLOAT:
-        f->rfloat = reinterpret_cast<RetFloat>(mFragment->code());
+    case RT_FLOAT:
+        f->rfloat = (RetFloat)((uintptr_t)mFragment->code());
         f->mReturnType = RT_FLOAT;
         break;
-      default:
-        f->rint = reinterpret_cast<RetInt>(mFragment->code());
+    default:
+        f->rint = (RetInt)((uintptr_t)mFragment->code());
         f->mReturnType = RT_INT32;
         break;
     }
 
-    mParent->mFragments[mFragName].mLabels = mLabels;
+    mParent.mFragments[mFragName].mLabels = mLabels;
 }
 
 void
@@ -731,7 +789,7 @@ FragmentAssembler::extract_any_label(string &lab, char lab_delim)
 
         if (mLabels.find(lab) != mLabels.end())
             bad("duplicate label");
-    }            
+    }
 }
 
 void
@@ -786,10 +844,10 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
 
         assert(!mTokens.empty());
         op = pop_front(mTokens);
-        if (mParent->mOpMap.find(op) == mParent->mOpMap.end())
+        if (mParent.mOpMap.find(op) == mParent.mOpMap.end())
             bad("unknown instruction '" + op + "'");
 
-        pair<LOpcode, size_t> entry = mParent->mOpMap[op];
+        pair<LOpcode, size_t> entry = mParent.mOpMap[op];
         mOpcode = entry.first;
         mOpcount = entry.second;
 
@@ -842,24 +900,17 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             break;
 
           case LIR_skip:
-            need(1);
-            {
-                int32_t count = imm(mTokens[0]);
-                if (uint32_t(count) > NJ_MAX_SKIP_PAYLOAD_SZB)
-                    bad("oversize skip");
-                ins = do_skip(count);
-            }
+            bad("skip instruction is deprecated");
             break;
 
           case LIR_xt:
           case LIR_xf:
           case LIR_x:
           case LIR_xbarrier:
-          case LIR_loop:
             ins = assemble_guard();
             break;
 
-          case LIR_call:
+          case LIR_icall:
           case LIR_callh:
           case LIR_fcall:
             ins = assemble_call(op);
@@ -874,27 +925,23 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
         if (!lab.empty())
             mLabels.insert(make_pair(lab, ins));
 
-        if (mParent->mLirbuf->outOMem()) {
-            cerr << "lirbuf out of memory" << endl;
-            exit(1);
-        }
     }
     endFragment();
 }
 
-Lirasm::Lirasm(bool verbose)
+Lirasm::Lirasm(bool verbose) :
+    mAssm(mCodeAlloc, mAlloc, &mCore, &mLogc)
 {
     mVerbose = verbose;
     nanojit::AvmCore::config.tree_opt = true;
     mLogc.lcbits = 0;
-    mFragmento = new (&gc) Fragmento(&mCore, &mLogc, 32);
-    mFragmento->labels = NULL;
-    mLirbuf = new (&gc) LirBuffer(mFragmento);
+
+    mLirbuf = new (mAlloc) LirBuffer(mAlloc);
 #ifdef DEBUG
     if (mVerbose) {
         mLogc.lcbits = LC_Assembly;
-        mFragmento->labels = new (&gc) LabelMap(&mCore);
-        mLirbuf->names = new (&gc) LirNameMap(&gc, mFragmento->labels);
+        mLabelMap = new (mAlloc) LabelMap(mAlloc, &mLogc);
+        mLirbuf->names = new (mAlloc) LirNameMap(mAlloc, mLabelMap);
     }
 #endif
 
@@ -916,13 +963,10 @@ Lirasm::~Lirasm()
 {
     Fragments::iterator i;
     for (i = mFragments.begin(); i != mFragments.end(); ++i) {
-        i->second.fragptr->releaseCode(mFragmento);
         delete i->second.fragptr;
     }
-    delete mLirbuf;
-    delete mFragmento->labels;
-    delete mFragmento;
 }
+
 
 void
 Lirasm::lookupFunction(const string &name, CallInfo *&ci)
@@ -938,13 +982,17 @@ Lirasm::lookupFunction(const string &name, CallInfo *&ci)
     Fragments::const_iterator func = mFragments.find(name);
     if (func != mFragments.end()) {
         if (func->second.mReturnType == RT_FLOAT) {
-            CallInfo target = {(uintptr_t) func->second.rfloat, ARGSIZE_F, 0,
-                               0, nanojit::ABI_FASTCALL, func->first.c_str()};
+            CallInfo target = {(uintptr_t) func->second.rfloat,
+                               ARGSIZE_F, 0, 0,
+                               nanojit::ABI_FASTCALL
+                               verbose_only(, func->first.c_str()) };
             *ci = target;
 
         } else {
-            CallInfo target = {(uintptr_t) func->second.rint, ARGSIZE_LO, 0,
-                               0, nanojit::ABI_FASTCALL, func->first.c_str()};
+            CallInfo target = {(uintptr_t) func->second.rint,
+                               ARGSIZE_LO, 0, 0,
+                               nanojit::ABI_FASTCALL
+                               verbose_only(, func->first.c_str()) };
             *ci = target;
         }
     } else {
@@ -960,10 +1008,7 @@ Lirasm::assemble(istream &in)
 
     LirToken token;
     while (ts.get(token)) {
-        if (mLirbuf->outOMem()) {
-            cerr << "lirbuf out of memory" << endl;
-            exit(1);
-        }
+
         if (token.type == NEWLINE)
             continue;
         if (token.type != NAME)
@@ -991,11 +1036,6 @@ Lirasm::assemble(istream &in)
         } else {
             bad("unexpected stray opcode '" + op + "'");
         }
-    }
-
-    if (mLirbuf->outOMem()) {
-        cerr << "lirbuf out of memory" << endl;
-        exit(1);
     }
 }
 
@@ -1025,7 +1065,7 @@ Lirasm::handlePatch(LirTokenStream &in)
         bad("invalid guard reference");
     ins->record()->exit->target = i->second.fragptr;
 
-    mFragmento->assm()->patch(ins->record()->exit);
+    mAssm.patch(ins->record()->exit);
 }
 
 bool

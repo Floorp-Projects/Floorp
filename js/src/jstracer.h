@@ -47,6 +47,7 @@
 #include "jstypes.h"
 #include "jsbuiltins.h"
 #include "jscntxt.h"
+#include "jsdhash.h"
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -157,19 +158,20 @@ public:
 
 /*
  * Tracker is used to keep track of values being manipulated by the interpreter
- * during trace recording.
+ * during trace recording.  Note that tracker pages aren't necessarily the
+ * same size as OS pages, they just are a moderate-sized chunk of memory.
  */
 class Tracker {
-    struct Page {
-        struct Page*    next;
-        jsuword         base;
-        nanojit::LIns*  map[1];
+    struct TrackerPage {
+        struct TrackerPage* next;
+        jsuword             base;
+        nanojit::LIns*      map[1];
     };
-    struct Page* pagelist;
+    struct TrackerPage* pagelist;
 
-    jsuword         getPageBase(const void* v) const;
-    struct Page*    findPage(const void* v) const;
-    struct Page*    addPage(const void* v);
+    jsuword             getTrackerPageBase(const void* v) const;
+    struct TrackerPage* findTrackerPage(const void* v) const;
+    struct TrackerPage* addTrackerPage(const void* v);
 public:
     Tracker();
     ~Tracker();
@@ -510,7 +512,7 @@ struct FrameInfo {
     void   set_argc(uint16 argc, bool constructing) {
         this->argc = uint32(argc) | (constructing ? CONSTRUCTING_FLAG: 0);
     }
-    uint16 get_argc() const { return argc & ~CONSTRUCTING_FLAG; }
+    uint16 get_argc() const { return uint16(argc & ~CONSTRUCTING_FLAG); }
     bool   is_constructing() const { return (argc & CONSTRUCTING_FLAG) != 0; }
 
     // The typemap just before the callee is called.
@@ -690,14 +692,14 @@ enum TypeConsensus
     TypeConsensus_Bad           /* Typemaps are not compatible */
 };
 
-class TraceRecorder : public avmplus::GCObject {
+class TraceRecorder {
+    VMAllocator&            tempAlloc;
     JSContext*              cx;
     JSTraceMonitor*         traceMonitor;
     JSObject*               globalObj;
     JSObject*               lexicalBlock;
     Tracker                 tracker;
     Tracker                 nativeFrameTracker;
-    char*                   entryTypeMap;
     unsigned                callDepth;
     JSAtom**                atoms;
     VMSideExit*             anchor;
@@ -722,7 +724,6 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LIns*          inner_sp_ins;
     nanojit::LIns*          native_rval_ins;
     nanojit::LIns*          newobj_ins;
-    bool                    deepAborted;
     bool                    trashSelf;
     Queue<nanojit::Fragment*> whichTreesToTrash;
     Queue<jsbytecode*>      cfgMerges;
@@ -731,8 +732,6 @@ class TraceRecorder : public avmplus::GCObject {
     JSSpecializedNative*    pendingSpecializedNative;
     jsval*                  pendingUnboxSlot;
     nanojit::LIns*          pendingGuardCondition;
-    TraceRecorder*          nextRecorderToAbort;
-    bool                    wasRootFragment;
     jsbytecode*             outer;     /* outer trace header PC */
     uint32                  outerArgc; /* outer trace deepest frame argc */
     bool                    loop;
@@ -839,9 +838,17 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus unary(nanojit::LOpcode op);
     JS_REQUIRES_STACK JSRecordingStatus binary(nanojit::LOpcode op);
 
-    JS_REQUIRES_STACK void guardShape(nanojit::LIns* obj_ins, JSObject* obj,
-                                      uint32 shape, const char* guardName,
-                                      nanojit::LIns* map_ins, VMSideExit* exit);
+    JS_REQUIRES_STACK JSRecordingStatus guardShape(nanojit::LIns* obj_ins, JSObject* obj,
+                                                   uint32 shape, const char* name,
+                                                   nanojit::LIns* map_ins, VMSideExit* exit);
+
+    JSDHashTable guardedShapeTable;
+
+#ifdef DEBUG
+    void dumpGuardedShapes(const char* prefix);
+#endif
+
+    void forgetGuardedShapes();
 
     inline nanojit::LIns* map(nanojit::LIns *obj_ins);
     JS_REQUIRES_STACK bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins,
@@ -981,12 +988,27 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK jsatomid getFullIndex(ptrdiff_t pcoff = 0);
 
 public:
+
+    inline void*
+    operator new(size_t size)
+    {
+        return calloc(1, size);
+    }
+
+    inline void
+    operator delete(void *p)
+    {
+        free(p);
+    }
+
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
                   unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
                   VMSideExit* expectedInnerExit, jsbytecode* outerTree,
                   uint32 outerArgc);
     ~TraceRecorder();
+
+    bool outOfMemory();
 
     static JS_REQUIRES_STACK JSRecordingStatus monitorRecording(JSContext* cx, TraceRecorder* tr,
                                                                 JSOp op);
@@ -1011,11 +1033,11 @@ public:
      * The instruction is suitable for use as the final argument of a single
      * call to LirBuffer::insGuard; do not reuse the returned value.
      */
-    JS_REQUIRES_STACK nanojit::LIns* createGuardRecord(VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::GuardRecord* createGuardRecord(VMSideExit* exit);
 
     nanojit::Fragment* getFragment() const { return fragment; }
     TreeInfo* getTreeInfo() const { return treeInfo; }
-    JS_REQUIRES_STACK void compile(JSTraceMonitor* tm);
+    JS_REQUIRES_STACK bool compile(JSTraceMonitor* tm);
     JS_REQUIRES_STACK bool closeLoop(TypeConsensus &consensus);
     JS_REQUIRES_STACK bool closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus &consensus);
     JS_REQUIRES_STACK void endLoop();
@@ -1026,10 +1048,6 @@ public:
     JS_REQUIRES_STACK void prepareTreeCall(VMFragment* inner);
     JS_REQUIRES_STACK void emitTreeCall(VMFragment* inner, VMSideExit* exit);
     unsigned getCallDepth() const;
-    void pushAbortStack();
-    void popAbortStack();
-    void removeFragmentReferences();
-    void deepAbort();
 
     JS_REQUIRES_STACK JSRecordingStatus record_EnterFrame();
     JS_REQUIRES_STACK JSRecordingStatus record_LeaveFrame();
@@ -1038,8 +1056,21 @@ public:
     JS_REQUIRES_STACK JSRecordingStatus record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
     JS_REQUIRES_STACK JSRecordingStatus record_NativeCallComplete();
 
-    bool wasDeepAborted() { return deepAborted; }
-    TreeInfo* getTreeInfo() { return treeInfo; }
+    void forgetGuardedShapesForObject(JSObject* obj);
+
+#ifdef DEBUG
+    void tprint(const char *format, int count, nanojit::LIns *insa[]);
+    void tprint(const char *format);
+    void tprint(const char *format, nanojit::LIns *ins);
+    void tprint(const char *format, nanojit::LIns *ins1, nanojit::LIns *ins2);
+    void tprint(const char *format, nanojit::LIns *ins1, nanojit::LIns *ins2, nanojit::LIns *ins3);
+    void tprint(const char *format, nanojit::LIns *ins1, nanojit::LIns *ins2, nanojit::LIns *ins3,
+                nanojit::LIns *ins4);
+    void tprint(const char *format, nanojit::LIns *ins1, nanojit::LIns *ins2, nanojit::LIns *ins3,
+                nanojit::LIns *ins4, nanojit::LIns *ins5);
+    void tprint(const char *format, nanojit::LIns *ins1, nanojit::LIns *ins2, nanojit::LIns *ins3,
+                nanojit::LIns *ins4, nanojit::LIns *ins5, nanojit::LIns *ins6);
+#endif
 
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
     JS_REQUIRES_STACK JSRecordingStatus record_##op();
@@ -1068,11 +1099,11 @@ public:
 
 #define TRACE_ARGS_(x,args)                                                   \
     JS_BEGIN_MACRO                                                            \
-        TraceRecorder* tr_ = TRACE_RECORDER(cx);                              \
-        if (tr_ && !tr_->wasDeepAborted()) {                                  \
+        if (TraceRecorder* tr_ = TRACE_RECORDER(cx)) {                        \
             JSRecordingStatus status = tr_->record_##x args;                  \
             if (STATUS_ABORTS_RECORDING(status)) {                            \
-                js_AbortRecording(cx, #x);                                    \
+                if (TRACE_RECORDER(cx))                                       \
+                    js_AbortRecording(cx, #x);                                \
                 if (status == JSRS_ERROR)                                     \
                     goto error;                                               \
             }                                                                 \

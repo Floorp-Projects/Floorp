@@ -40,63 +40,34 @@
 #ifndef __nanojit_h__
 #define __nanojit_h__
 
-#include <stddef.h>
 #include "avmplus.h"
 
 #ifdef FEATURE_NANOJIT
 
-#ifdef AVMPLUS_IA32
-#define NANOJIT_IA32
-#elif AVMPLUS_ARM
-#define NANOJIT_ARM
-#elif AVMPLUS_PPC
-#define NANOJIT_PPC
-#elif AVMPLUS_SPARC
-#define NANOJIT_SPARC
-#elif AVMPLUS_AMD64
-#define NANOJIT_X64
-#define NANOJIT_64BIT
+#if defined AVMPLUS_IA32
+    #define NANOJIT_IA32
+#elif defined AVMPLUS_ARM
+    #define NANOJIT_ARM
+#elif defined AVMPLUS_PPC
+    #define NANOJIT_PPC
+#elif defined AVMPLUS_SPARC
+    #define NANOJIT_SPARC
+#elif defined AVMPLUS_AMD64
+    #define NANOJIT_X64
 #else
-#error "unknown nanojit architecture"
+    #error "unknown nanojit architecture"
 #endif
 
-/*
-    If we're using MMGC, using operator delete on a GCFinalizedObject is problematic:
-    in particular, calling it from inside a dtor is risky because the dtor for the sub-object
-    might already have been called, wrecking its vtable and ending up in the wrong version
-    of operator delete (the global version rather than the class-specific one). Calling GC::Free
-    directly is fine (since it ignores the vtable), so we macro-ize to make the distinction.
+#ifdef AVMPLUS_64BIT
+#define NANOJIT_64BIT
+#endif
 
-    macro-ization of operator new isn't strictly necessary, but is done to bottleneck both
-    sides of the new/delete pair to forestall future needs.
-*/
-#ifdef MMGC_API
-
-    // separate overloads because GCObject and GCFinalizedObjects have different dtors
-    // (GCFinalizedObject's is virtual, GCObject's is not)
-    inline void mmgc_delete(GCObject* o)
-    {
-        GC* g = GC::GetGC(o);
-        if (g->Collecting())
-            g->Free(o);
-        else
-            delete o;
-    }
-
-    inline void mmgc_delete(GCFinalizedObject* o)
-    {
-        GC* g = GC::GetGC(o);
-        if (g->Collecting())
-            g->Free(o);
-        else
-            delete o;
-    }
-
-    #define NJ_NEW(gc, cls)            new (gc) cls
-    #define NJ_DELETE(obj)            do { mmgc_delete(obj); } while (0)
+#if defined NANOJIT_64BIT
+    #define IF_64BIT(...) __VA_ARGS__
+    #define UNLESS_64BIT(...)
 #else
-    #define NJ_NEW(gc, cls)            new (gc) cls
-    #define NJ_DELETE(obj)            do { delete obj; } while (0)
+    #define IF_64BIT(...)
+    #define UNLESS_64BIT(...) __VA_ARGS__
 #endif
 
 // Embed no-op macros that let Valgrind work with the JIT.
@@ -116,10 +87,7 @@ namespace nanojit
      * START AVM bridging definitions
      * -------------------------------------------
      */
-    class Fragment;
     typedef avmplus::AvmCore AvmCore;
-    typedef avmplus::OSDep OSDep;
-    typedef avmplus::GCSortedMap<const void*,Fragment*,avmplus::LIST_GCObjects> FragmentMap;
 
     const uint32_t MAXARGS = 8;
 
@@ -168,8 +136,12 @@ namespace nanojit
 }
 
 #ifdef AVMPLUS_VERBOSE
-#define NJ_VERBOSE 1
-#define NJ_PROFILE 1
+#ifndef NJ_VERBOSE_DISABLED
+	#define NJ_VERBOSE 1
+#endif
+#ifndef NJ_PROFILE_DISABLED
+	#define NJ_PROFILE 1
+#endif
 #endif
 
 #ifdef MOZ_NO_VARADIC_MACROS
@@ -188,7 +160,7 @@ namespace nanojit
 #endif /*NJ_VERBOSE*/
 
 #ifdef _DEBUG
-    #define debug_only(x)            x
+    #define debug_only(x)           x
 #else
     #define debug_only(x)
 #endif /* DEBUG */

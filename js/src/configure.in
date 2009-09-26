@@ -2481,6 +2481,7 @@ i?86-*)
     ;;
 x86_64*-*)
     AC_DEFINE(AVMPLUS_AMD64)
+    AC_DEFINE(AVMPLUS_64BIT)
     ;;
 arm*-*)
     AC_DEFINE(AVMPLUS_ARM)
