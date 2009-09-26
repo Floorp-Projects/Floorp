@@ -476,6 +476,18 @@ function Statement(t, x) {
                 if (--i < 0)
                     throw t.newSyntaxError("Label not found");
             } while (ss[i].label != label);
+
+            /*
+             * Break and continue statements need to be handled specially
+             * within loops, so they should target the loop. Otherwise, they
+             * should target themselves. Note that labels can be nested.
+             */
+            while (i < ss.length - 1 && ss[i+1].type == LABEL)
+                i++;
+            if (i < ss.length - 1 && ss[i+1].isLoop)
+                i++;
+            else if (tt == CONTINUE)
+                throw t.newSyntaxError("Invalid continue");
         } else {
             do {
                 if (--i < 0) {
