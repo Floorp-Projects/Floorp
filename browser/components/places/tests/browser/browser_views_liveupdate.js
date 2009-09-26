@@ -188,7 +188,8 @@ var bookmarksObserver = {
   },
 
   // nsINavBookmarkObserver
-  onItemAdded: function PSB_onItemAdded(aItemId, aFolderId, aIndex) {
+  onItemAdded: function PSB_onItemAdded(aItemId, aFolderId, aIndex,
+                                        aItemType) {
     var views = getViewsForFolder(aFolderId);
     ok(views.length > 0, "Found affected views: " + views);
 
@@ -202,7 +203,8 @@ var bookmarksObserver = {
     }
   },
 
-  onItemRemoved: function PSB_onItemRemoved(aItemId, aFolder, aIndex) {
+  onItemRemoved: function PSB_onItemRemoved(aItemId, aFolder, aIndex,
+                                            aItemType) {
     var views = getViewsForFolder(aFolderId);
     ok(views.length > 0, "Found affected views: " + views);
     // Check that item has been removed.
@@ -216,7 +218,8 @@ var bookmarksObserver = {
 
   onItemMoved: function(aItemId,
                         aOldFolderId, aOldIndex,
-                        aNewFolderId, aNewIndex) {
+                        aNewFolderId, aNewIndex,
+                        aItemType) {
     var views = getViewsForFolder(aNewFolderId);
     ok(views.length > 0, "Found affected views: " + views);
 
@@ -234,8 +237,7 @@ var bookmarksObserver = {
   onEndUpdateBatch: function PSB_onEndUpdateBatch() {},
   onBeforeItemRemoved: function PSB_onBeforeItemRemoved(aItemId) {},
   onItemVisited: function() {},
-  onItemChanged: function PSB_onItemChanged(aItemId, aProperty,
-                                            aIsAnnotationProperty, aValue) {}
+  onItemChanged: function PSB_onItemChanged() {}
 };
 
 /**
@@ -291,7 +293,7 @@ function getNodeForToolbarItem(aItemId) {
       if (PlacesUtils.nodeIsFolder(child.node)) {
         var popup = child.lastChild;
         popup.showPopup(popup);
-        foundNode = findNode(popup);
+        var foundNode = findNode(popup);
         popup.hidePopup();
         if (foundNode[0] != null)
           return foundNode;
@@ -334,7 +336,7 @@ function getNodeForMenuItem(aItemId) {
         // XXX Why is this needed on Linux and Mac?
         popup.showPopup(popup);
         child.open = true;
-        foundNode = findNode(popup);
+        var foundNode = findNode(popup);
         popup.hidePopup();
         child.open = false;
         if (foundNode[0] != null)

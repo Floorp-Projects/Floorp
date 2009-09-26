@@ -66,19 +66,19 @@ var observer = {
   onEndUpdateBatch: function() {
     this._endUpdateBatch = true;
   },
-  onItemAdded: function(id, folder, index) {
+  onItemAdded: function(id, folder, index, itemType) {
     this._itemAddedId = id;
     this._itemAddedParent = folder;
     this._itemAddedIndex = index;
   },
-  onBeforeItemRemoved: function(id) {
-  },
-  onItemRemoved: function(id, folder, index) {
+  onBeforeItemRemoved: function(){},
+  onItemRemoved: function(id, folder, index, itemType) {
     this._itemRemovedId = id;
     this._itemRemovedFolder = folder;
     this._itemRemovedIndex = index;
   },
-  onItemChanged: function(id, property, isAnnotationProperty, value) {
+  onItemChanged: function(id, property, isAnnotationProperty, value,
+                          lastModified, itemType) {
     this._itemChangedId = id;
     this._itemChangedProperty = property;
     this._itemChanged_isAnnotationProperty = isAnnotationProperty;
@@ -89,7 +89,8 @@ var observer = {
     this._itemVisitedVistId = visitID;
     this._itemVisitedTime = time;
   },
-  onItemMoved: function(id, oldParent, oldIndex, newParent, newIndex) {
+  onItemMoved: function(id, oldParent, oldIndex, newParent, newIndex,
+                        itemType) {
     this._itemMovedId = id
     this._itemMovedOldParent = oldParent;
     this._itemMovedOldIndex = oldIndex;
@@ -339,27 +340,6 @@ function run_test() {
   do_check_eq(observer._itemMovedOldIndex, 0);
   do_check_eq(observer._itemMovedNewParent, testRoot);
   do_check_eq(observer._itemMovedNewIndex, 3);
-
-  // test insertSeparator and removeChildAt
-  // XXX - this should also query bookmarks for the folder children
-  // and then test the node type at our index
-  try {
-    bmsvc.insertSeparator(testRoot, 1);
-    bmsvc.removeChildAt(testRoot, 1);
-  } catch(ex) {
-    do_throw("insertSeparator: " + ex);
-  }
-
-  // XXX test getItemType for separators 
-  // add when 379952 is fixed
-
-  // removeChildAt w/ folder
-  bmsvc.createFolder(testRoot, "tmp", 1);
-  bmsvc.removeChildAt(testRoot, 1);
-
-  // removeChildAt w/ bookmark
-  bmsvc.insertBookmark(root, uri("http://blah.com"), 1, "");
-  bmsvc.removeChildAt(root, 1);
 
   // test get folder's index 
   var tmpFolder = bmsvc.createFolder(testRoot, "tmp", 2);

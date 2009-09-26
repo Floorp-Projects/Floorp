@@ -47,22 +47,23 @@ try {
 var observer = {
   onBeginUpdateBatch: function() {},
   onEndUpdateBatch: function() {},
-  onItemAdded: function(id, folder, index) {
+  onItemAdded: function(id, folder, index, itemType) {
     this._itemAddedId = id;
     this._itemAddedParent = folder;
     this._itemAddedIndex = index;
   },
-  onBeforeItemRemoved: function(id) {},
-  onItemRemoved: function(id, folder, index) {},
+  onBeforeItemRemoved: function() {},
+  onItemRemoved: function() {},
   _itemChangedProperty: null,
-  onItemChanged: function(id, property, isAnnotationProperty, value) {
+  onItemChanged: function(id, property, isAnnotationProperty, value,
+                          lastModified, itemType) {
     this._itemChangedId = id;
     this._itemChangedProperty = property;
     this._itemChanged_isAnnotationProperty = isAnnotationProperty;
     this._itemChangedValue = value;
   },
-  onItemVisited: function(id, visitID, time) {},
-  onItemMoved: function(id, oldParent, oldIndex, newParent, newIndex) {},
+  onItemVisited: function() {},
+  onItemMoved: function() {},
   QueryInterface: function(iid) {
     if (iid.equals(Ci.nsINavBookmarkObserver) ||
         iid.equals(Ci.nsISupports)) {
