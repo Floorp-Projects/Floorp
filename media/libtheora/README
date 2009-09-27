@@ -1,15 +1,21 @@
 -------------------------------------------------------------------------
-             The Xiph.org Foundation's libtheora 1.0 release
+             The Xiph.org Foundation's libtheora 1.1 beta release
 -------------------------------------------------------------------------
 
 *** What is Theora?
 
 Theora is Xiph.Org's first publicly released video codec, intended
 for use within the Foundation's Ogg multimedia streaming system.
-Theora is derived directly from On2's VP3 codec; Currently the 
-encoders are nearly identical, but Theora will make use of new
-features supported by the decoder to improve on what is possible
-with VP3.
+Theora is derived directly from On2's VP3 codec, adds new features
+while allow it a longer useful lifetime as an competitive codec.
+
+The 1.0 release decoder supports all the new features, but the
+encoder is nearly identical to the VP3 code.
+
+The 1.1 release features a completely rewritten encoder, offering
+better performance and compression, and making more complete use
+of the format's feature set. Files produced by both encoders can
+be decoded by either release.
 
 *** Where is Theora?
 
@@ -58,7 +64,7 @@ considered a bug; please report problems to theora-dev@xiph.org.
 
 Windows build support is included in the win32 directory.
 
-Project files for Apple XCode is included in the macosx directory.
+Project files for Apple XCode are included in the macosx directory.
 
 There is also an experimental scons build.
 

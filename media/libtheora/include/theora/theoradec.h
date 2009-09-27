@@ -5,7 +5,7 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2007                *
+ * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2009                *
  * by the Xiph.Org Foundation http://www.xiph.org/                  *
  *                                                                  *
  ********************************************************************
@@ -38,6 +38,10 @@ extern "C" {
  * Keep any experimental or vendor-specific values above \c 0x8000.*/
 /*@{*/
 /**Gets the maximum post-processing level.
+ * The decoder supports a post-processing filter that can improve
+ * the appearance of the decoded images. This returns the highest
+ * level setting for this post-processor, corresponding to maximum
+ * improvement and computational expense.
  *
  * \param[out] _buf int: The maximum post-processing level.
  * \retval TH_EFAULT  \a _dec_ctx or \a _buf is <tt>NULL</tt>.
@@ -46,6 +50,10 @@ extern "C" {
 #define TH_DECCTL_GET_PPLEVEL_MAX (1)
 /**Sets the post-processing level.
  * By default, post-processing is disabled.
+ *
+ * Sets the level of post-processing to use when decoding the
+ * compressed stream. This must be a value between zero (off)
+ * and the maximum returned by TH_DECCTL_GET_PPLEVEL_MAX.
  *
  * \param[in] _buf int: The new post-processing level.
  *                      0 to disable; larger values use more CPU.
@@ -83,6 +91,15 @@ extern "C" {
  * \retval TH_EINVAL  \a _buf_sz is not
  *                     <tt>sizeof(th_stripe_callback)</tt>.*/
 #define TH_DECCTL_SET_STRIPE_CB (7)
+
+/**Enables telemetry and sets the macroblock display mode */
+#define TH_DECCTL_SET_TELEMETRY_MBMODE (9)
+/**Enables telemetry and sets the motion vector display mode */
+#define TH_DECCTL_SET_TELEMETRY_MV (11)
+/**Enables telemetry and sets the adaptive quantization display mode */
+#define TH_DECCTL_SET_TELEMETRY_QI (13)
+/**Enables telemetry and sets the bitstream breakdown visualization mode */
+#define TH_DECCTL_SET_TELEMETRY_BITS (15)
 /*@}*/
 
 
@@ -289,6 +306,7 @@ extern int th_decode_packetin(th_dec_ctx *_dec,const ogg_packet *_op,
  *               It may be freed or overwritten without notification when
  *                subsequent frames are decoded.
  * \retval 0 Success
+ * \retval TH_EFAULT     \a _dec or \a _ycbcr was <tt>NULL</tt>.
  */
 extern int th_decode_ycbcr_out(th_dec_ctx *_dec,
  th_ycbcr_buffer _ycbcr);
