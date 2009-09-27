@@ -1967,7 +1967,7 @@ nsresult nsLocalFile::SetBaseURL(CFURLRef aCFURLRef)
     ::CFRelease(mBaseURL);
   mBaseURL = aCFURLRef;
 
-  if (!::CFURLGetFileSystemRepresentation(mBaseURL, NO, (UInt8*)mPath, PATH_MAX))
+  if (!::CFURLGetFileSystemRepresentation(mBaseURL, false, (UInt8*)mPath, PATH_MAX))
     return NS_ERROR_FAILURE;
 
   return NS_OK;
