@@ -957,7 +957,7 @@ nsFocusManager::EnsureCurrentWidgetFocused()
         nsCOMPtr<nsIWidget> widget;
         vm->GetRootWidget(getter_AddRefs(widget));
         if (widget)
-          widget->SetFocus(PR_TRUE);
+          widget->SetFocus(PR_FALSE);
       }
     }
   }
@@ -1371,7 +1371,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
           nsCOMPtr<nsIWidget> widget;
           vm->GetRootWidget(getter_AddRefs(widget));
           if (widget)
-            widget->SetFocus(PR_TRUE);
+            widget->SetFocus(PR_FALSE);
         }
       }
     }
@@ -1518,7 +1518,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
     nsCOMPtr<nsIWidget> widget;
     vm->GetRootWidget(getter_AddRefs(widget));
     if (widget)
-      widget->SetFocus(PR_TRUE);
+      widget->SetFocus(PR_FALSE);
   }
 
   // if switching to a new document, first fire the focus event on the
@@ -1560,7 +1560,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
       if (objectFrame) {
         nsIWidget* widget = objectFrame->GetWidget();
         if (widget)
-          widget->SetFocus(PR_TRUE);
+          widget->SetFocus(PR_FALSE);
       }
 
       nsIMEStateManager::OnChangeFocus(presContext, aContent);
