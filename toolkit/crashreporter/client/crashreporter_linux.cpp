@@ -267,7 +267,7 @@ static void LoadProxyinfo()
 
   g_object_unref(conf);
 
-  dlclose(gconfLib);
+  // Don't dlclose gconfLib as libORBit-2 uses atexit().
 }
 #endif
 
@@ -637,10 +637,9 @@ bool UIInit()
 
 void UIShutdown()
 {
-  if (gnomeLib)
-    dlclose(gnomeLib);
   if (gnomeuiLib)
     dlclose(gnomeuiLib);
+  // Don't dlclose gnomeLib as libgnomevfs and libORBit-2 use atexit().
 }
 
 void UIShowDefaultUI()
