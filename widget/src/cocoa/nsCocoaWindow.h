@@ -212,6 +212,8 @@ public:
     NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
     void                    ReportSizeEvent(NSRect *overrideRect = nsnull);
+    NS_IMETHOD              SetCursor(nsCursor aCursor);
+    NS_IMETHOD              SetCursor(imgIContainer* aCursor, PRUint32 aHotspotX, PRUint32 aHotspotY);
 
     NS_IMETHOD              SetTitle(const nsAString& aTitle);
 
