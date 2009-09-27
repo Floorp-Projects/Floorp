@@ -1195,7 +1195,7 @@ nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, PRInt32 aButtonSta
 
 void
 nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *aFrame, 
-                                         const HIRect& aRect, PRBool aShouldGetButtonStates)
+                                         const CGSize& aSize, PRBool aShouldGetButtonStates)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1210,7 +1210,8 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
 
   aTdi.version = 0;
   aTdi.kind = isSmall ? kThemeSmallScrollBar : kThemeMediumScrollBar;
-  aTdi.bounds = aRect;
+  aTdi.bounds.origin = CGPointZero;
+  aTdi.bounds.size = aSize;
   aTdi.min = minpos;
   aTdi.max = maxpos;
   aTdi.value = curpos;
@@ -1228,7 +1229,7 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   /* Only display features if we have enough room for them.
    * Gecko still maintains the scrollbar info; this is just a visual issue (bug 380185).
    */
-  PRInt32 longSideLength = (PRInt32)(isHorizontal ? (aRect.size.width) : (aRect.size.height));
+  PRInt32 longSideLength = (PRInt32)(isHorizontal ? (aSize.width) : (aSize.height));
   if (longSideLength >= (isSmall ? MIN_SMALL_SCROLLBAR_SIZE_WITH_THUMB : MIN_SCROLLBAR_SIZE_WITH_THUMB)) {
     aTdi.attributes |= kThemeTrackShowThumb;
   }
@@ -1263,37 +1264,32 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void
-nsNativeThemeCocoa::DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame)
+typedef void (*RenderHIThemeControlFunction)(CGContextRef cgContext, void* aData);
+
+static void
+RenderTransformedHIThemeControl(CGContextRef aCGContext, const HIRect& aRect,
+                                RenderHIThemeControlFunction aFunc, void* aData,
+                                BOOL mirrorHorizontally = NO)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  // HIThemeDrawTrack is buggy with rotations and scaling
   CGAffineTransform savedCTM = CGContextGetCTM(aCGContext);
-  PRBool drawDirect;
-  HIRect drawRect = aBoxRect;
+  CGContextTranslateCTM(aCGContext, aRect.origin.x, aRect.origin.y);
 
-  if (savedCTM.a == 1.0f && savedCTM.b == 0.0f &&
-      savedCTM.c == 0.0f && (savedCTM.d == 1.0f || savedCTM.d == -1.0f))
-  {
+  PRBool drawDirect;
+  HIRect drawRect = aRect;
+  drawRect.origin = CGPointZero;
+
+  if (!mirrorHorizontally && savedCTM.a == 1.0f && savedCTM.b == 0.0f &&
+      savedCTM.c == 0.0f && (savedCTM.d == 1.0f || savedCTM.d == -1.0f)) {
     drawDirect = TRUE;
   } else {
-    drawRect.origin.x = drawRect.origin.y = 0.0f;
     drawDirect = FALSE;
   }
 
-  HIThemeTrackDrawInfo tdi;
-  GetScrollbarDrawInfo(tdi, aFrame, drawRect, PR_TRUE); //True means we want the press states
-
-  // Fall back to no bitmap buffer if the area of our scrollbar (in pixels^2)
+  // Fall back to no bitmap buffer if the area of our control (in pixels^2)
   // is too large.
-  if (drawDirect || (aBoxRect.size.width * aBoxRect.size.height > BITMAP_MAX_AREA)) {
-    ::HIThemeDrawTrack(&tdi, NULL, aCGContext, HITHEME_ORIENTATION);
+  if (drawDirect || (aRect.size.width * aRect.size.height > BITMAP_MAX_AREA)) {
+    aFunc(aCGContext, aData);
   } else {
-    // Note that NSScroller can draw transformed just fine, but HITheme can't.
-    // However, we can't make NSScroller's parts light up easily (depressed buttons, etc.)
-    // This is very frustrating.
-
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     CGContextRef bitmapctx = CGBitmapContextCreate(NULL,
                                                    (size_t) ceil(drawRect.size.width),
@@ -1306,26 +1302,52 @@ nsNativeThemeCocoa::DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRec
 
     // HITheme always wants to draw into a flipped context, or things
     // get confused.
-    CGContextTranslateCTM(bitmapctx, 0.0f, aBoxRect.size.height);
+    CGContextTranslateCTM(bitmapctx, 0.0f, aRect.size.height);
     CGContextScaleCTM(bitmapctx, 1.0f, -1.0f);
+    CGContextSetRGBFillColor(bitmapctx, 1.0f, 0, 0, 1.0f);
+    CGContextFillRect(bitmapctx, drawRect);
 
-    HIThemeDrawTrack(&tdi, NULL, bitmapctx, HITHEME_ORIENTATION);
+    aFunc(bitmapctx, aData);
 
     CGImageRef bitmap = CGBitmapContextCreateImage(bitmapctx);
 
     CGAffineTransform ctm = CGContextGetCTM(aCGContext);
 
     // We need to unflip, so that we can do a DrawImage without getting a flipped image.
-    CGContextTranslateCTM(aCGContext, 0.0f, aBoxRect.size.height);
+    CGContextTranslateCTM(aCGContext, 0.0f, aRect.size.height);
     CGContextScaleCTM(aCGContext, 1.0f, -1.0f);
 
-    CGContextDrawImage(aCGContext, aBoxRect, bitmap);
+    if (mirrorHorizontally) {
+      CGContextTranslateCTM(aCGContext, aRect.size.width, 0);
+      CGContextScaleCTM(aCGContext, -1.0f, 1.0f);
+    }
+
+    CGContextDrawImage(aCGContext, drawRect, bitmap);
 
     CGContextSetCTM(aCGContext, ctm);
 
     CGImageRelease(bitmap);
     CGContextRelease(bitmapctx);
   }
+
+  CGContextSetCTM(aCGContext, savedCTM);
+}
+
+static void
+RenderScrollbar(CGContextRef cgContext, void* aData)
+{
+  HIThemeTrackDrawInfo* tdi = (HIThemeTrackDrawInfo*)aData;
+  HIThemeDrawTrack(tdi, NULL, cgContext, HITHEME_ORIENTATION);
+}
+
+void
+nsNativeThemeCocoa::DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  HIThemeTrackDrawInfo tdi;
+  GetScrollbarDrawInfo(tdi, aFrame, aBoxRect.size, PR_TRUE); // True means we want the press states
+  RenderTransformedHIThemeControl(aCGContext, aBoxRect, RenderScrollbar, &tdi);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2209,7 +2231,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
 
       // False here means not to get scrollbar button state information.
       HIThemeTrackDrawInfo tdi;
-      GetScrollbarDrawInfo(tdi, scrollbarFrame, macRect, PR_FALSE);
+      GetScrollbarDrawInfo(tdi, scrollbarFrame, macRect.size, PR_FALSE);
 
       HIRect thumbRect;
       ::HIThemeGetTrackPartBounds(&tdi, kControlIndicatorPart, &thumbRect);
