@@ -363,9 +363,6 @@ gfxQtPlatform::GetFTLibrary()
     return gPlatformFTLibrary;
 }
 
-void gfxQtPlatform::InitDisplayCaps()
-{ }
-
 FontFamily *
 gfxQtPlatform::FindFontFamily(const nsAString& aName)
 {
