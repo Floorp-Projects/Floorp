@@ -74,7 +74,7 @@
 OPDEF(start,     0, 0, Op0)     // start of a fragment
 OPDEF(regfence,  1, 0, Op0)     // register fence, no register allocation is allowed across this meta instruction
 OPDEF(skip,      2, 1, Sk)      // holds blobs ("payloads") of data;  also links pages
-OPDEF(dbreak,    3, 0, Op0)
+OPDEF(unused3,   3,-1, None)
 OPDEF(unused4,   4,-1, None)
 OPDEF(unused5,   5,-1, None)
 OPDEF(unused6,   6,-1, None)
