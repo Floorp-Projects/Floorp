@@ -48,6 +48,11 @@ skip-if(MOZ_WIDGET_TOOLKIT!="windows") != 403458-winmenu-ltr.xul 403458-winmenu-
 skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == menulist-mirrored-when-rtl.xul menulist-mirrored-when-rtl-ref.xul
 skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == searchfield-mirrored-when-rtl.xul searchfield-mirrored-when-rtl-ref.xul
 skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == select-mirrored-when-rtl.html select-mirrored-when-rtl-ref.html
+!= resizer-bottomend.xul blank-window.xul
+== resizer-bottomend.xul resizer-bottomright.xul
+!= resizer-bottomend.xul resizer-bottomend-rtl.xul
+!= resizer-bottomend-rtl.xul blank-window.xul
+== resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul
 
 # Windows-only, depends on native scrollbar metrics
 skip-if(MOZ_WIDGET_TOOLKIT!="windows") == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme-ref.html
