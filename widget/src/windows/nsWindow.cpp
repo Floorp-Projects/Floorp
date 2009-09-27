@@ -1553,8 +1553,9 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
   if (mWnd) {
     // Uniconify, if necessary
     HWND toplevelWnd = GetTopLevelHWND(mWnd);
-    if (::IsIconic(toplevelWnd))
+    if (aRaise && ::IsIconic(toplevelWnd)) {
       ::ShowWindow(toplevelWnd, SW_RESTORE);
+    }
     ::SetFocus(mWnd);
   }
   return NS_OK;
