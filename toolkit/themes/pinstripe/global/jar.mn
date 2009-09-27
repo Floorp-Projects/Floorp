@@ -45,7 +45,7 @@ toolkit.jar:
 +  skin/classic/global/toolbar.css
 +  skin/classic/global/toolbarbutton.css
 +  skin/classic/global/tree.css
-+  skin/classic/global/viewbuttons.css
+*  skin/classic/global/viewbuttons.css
 +  skin/classic/global/wizard.css
 +  skin/classic/global/wizardOverlay.css
 +  skin/classic/global/globalBindings.xml
