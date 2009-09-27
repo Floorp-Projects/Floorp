@@ -1067,13 +1067,6 @@ namespace nanojit
         virtual LInsp insSkip(size_t size) {
             return out->insSkip(size);
         }
-        void insAssert(LIns* expr) {
-            #if defined DEBUG
-            LIns* branch = insBranch(LIR_jt, expr, NULL);
-            ins0(LIR_dbreak);
-            branch->setTarget(ins0(LIR_label));
-            #endif
-        }
 
         // convenience functions
 
