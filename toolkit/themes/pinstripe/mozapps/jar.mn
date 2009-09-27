@@ -3,7 +3,7 @@ toolkit.jar:
   skin/classic/mozapps/downloads/buttons.png                      (downloads/buttons.png)
   skin/classic/mozapps/downloads/downloadIcon.png                 (downloads/downloadIcon.png)
   skin/classic/mozapps/downloads/downloadStatusIcon.png           (downloads/downloadStatusIcon.png)
-  skin/classic/mozapps/downloads/downloads.css                    (downloads/downloads.css)
+* skin/classic/mozapps/downloads/downloads.css                    (downloads/downloads.css)
   skin/classic/mozapps/downloads/unknownContentType.css           (downloads/unknownContentType.css)
   skin/classic/mozapps/extensions/extensionItem.png               (extensions/extensionItem.png)
   skin/classic/mozapps/extensions/itemDisabledFader.png           (extensions/itemDisabledFader.png)
