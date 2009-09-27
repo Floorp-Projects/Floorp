@@ -1487,6 +1487,32 @@ nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRec
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+static void
+RenderResizer(CGContextRef cgContext, void* aData)
+{
+  HIThemeGrowBoxDrawInfo* drawInfo = (HIThemeGrowBoxDrawInfo*)aData;
+  HIThemeDrawGrowBox(&CGPointZero, drawInfo, cgContext, kHIThemeOrientationNormal);
+}
+
+void
+nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
+                                nsIFrame *aFrame)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  HIThemeGrowBoxDrawInfo drawInfo;
+  drawInfo.version = 0;
+  drawInfo.state = kThemeStateActive;
+  drawInfo.kind = kHIThemeGrowBoxKindNormal;
+  drawInfo.direction = kThemeGrowRight | kThemeGrowDown;
+  drawInfo.size = kHIThemeGrowBoxSizeNormal;
+
+  RenderTransformedHIThemeControl(cgContext, aRect, RenderResizer, &drawInfo,
+                                  IsFrameRTL(aFrame));
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 NS_IMETHODIMP
 nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                          PRUint8 aWidgetType, const nsRect& aRect,
@@ -1901,13 +1927,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_RESIZER:
-      HIThemeGrowBoxDrawInfo drawInfo;
-      drawInfo.version = 0;
-      drawInfo.state = kThemeStateActive;
-      drawInfo.kind = kHIThemeGrowBoxKindNormal;
-      drawInfo.direction = kThemeGrowRight | kThemeGrowDown;
-      drawInfo.size = kHIThemeGrowBoxSizeNormal;
-      HIThemeDrawGrowBox(&macRect.origin, &drawInfo, cgContext, kHIThemeOrientationNormal);
+      DrawResizer(cgContext, macRect, aFrame);
       break;
   }
 
