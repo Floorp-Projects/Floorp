@@ -67,6 +67,7 @@
 #include <sys/statvfs.h>
 #include <stdlib.h>
 #include <utime.h>
+#include <dirent.h>
 
 #define CHECK_INIT()                            \
     PR_BEGIN_MACRO                              \
@@ -78,17 +79,7 @@ static nsresult MacErrorMapper(OSErr inErr);
 static void CopyUTF8toUTF16NFC(const nsACString& aSrc, nsAString& aResult);
 static nsresult CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr);
 
-#pragma mark -
-#pragma mark [FSRef operator==]
-
-bool operator==(const FSRef& lhs, const FSRef& rhs)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  return (::FSCompareFSRefs(&lhs, &rhs) == noErr);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
-}
+const char kPathSepChar = '/';
 
 #pragma mark -
 #pragma mark [StFollowLinksState]
@@ -122,167 +113,136 @@ class StFollowLinksState
 #pragma mark -
 #pragma mark [nsDirEnumerator]
 
-class nsDirEnumerator : public nsISimpleEnumerator,
-                        public nsIDirectoryEnumerator
+class NS_COM
+nsDirEnumerator : public nsISimpleEnumerator,
+                  public nsIDirectoryEnumerator
 {
-    public:
+public:
+  nsDirEnumerator();
 
-        NS_DECL_ISUPPORTS
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
 
-        nsDirEnumerator() :
-          mIterator(nsnull),
-          mFSRefsArray(nsnull),
-          mArrayCnt(0), mArrayIndex(0)
-        {
-        }
+  // nsISimpleEnumerator interface
+  NS_DECL_NSISIMPLEENUMERATOR
 
-        nsresult Init(nsILocalFileMac* parent) 
-        {
-          NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  // nsIDirectoryEnumerator interface
+  NS_DECL_NSIDIRECTORYENUMERATOR
 
-          NS_ENSURE_ARG(parent);
-          
-          OSErr err;
-          nsresult rv;
-          FSRef parentRef;
-          
-          rv = parent->GetFSRef(&parentRef);
-          if (NS_FAILED(rv))
-            return rv;
-          
-          mFSRefsArray = (FSRef *)nsMemory::Alloc(sizeof(FSRef)
-                                                  * kRequestCountPerIteration);
-          if (!mFSRefsArray)
-            return NS_ERROR_OUT_OF_MEMORY;
-          
-          err = ::FSOpenIterator(&parentRef, kFSIterateFlat, &mIterator);
-          if (err != noErr)
-            return MacErrorMapper(err);
-                              
-          return NS_OK;
+  NS_IMETHOD Init(nsLocalFile *parent);
 
-          NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-        }
+private:
+  ~nsDirEnumerator();
 
-        NS_IMETHOD HasMoreElements(PRBool *result) 
-        {
-          NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+protected:
+  NS_IMETHOD GetNextEntry();
 
-          if (!mIterator || !mFSRefsArray) {
-            *result = PR_FALSE;
-            return NS_OK;
-          }
-
-          if (mNext == nsnull) {
-            if (mArrayIndex >= mArrayCnt) {
-              ItemCount actualCnt;
-              OSErr err = ::FSGetCatalogInfoBulk(mIterator,
-                                           kRequestCountPerIteration,
-                                           &actualCnt,
-                                           nsnull,
-                                           kFSCatInfoNone,
-                                           nsnull,
-                                           mFSRefsArray,
-                                           nsnull,
-                                           nsnull);
-            
-              if (err == noErr || err == errFSNoMoreItems) {
-                mArrayCnt = actualCnt;
-                mArrayIndex = 0;
-              }
-            }
-
-            if (mArrayIndex < mArrayCnt) {
-              nsRefPtr<nsLocalFile> newFile = new nsLocalFile;
-              if (!newFile)
-                return NS_ERROR_OUT_OF_MEMORY;
-              FSRef fsRef = mFSRefsArray[mArrayIndex];
-              if (NS_FAILED(newFile->InitWithFSRef(&fsRef)))
-                return NS_ERROR_FAILURE;
-              mArrayIndex++;
-              mNext = newFile;
-            } 
-          }
-
-          *result = mNext != nsnull;
-          if (!*result)
-            Close();
-
-          return NS_OK;
-
-          NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-        }
-
-        NS_IMETHOD GetNext(nsISupports **result) 
-        {
-            NS_ENSURE_ARG_POINTER(result);
-            *result = nsnull;
-
-            nsresult rv;
-            PRBool hasMore;
-            rv = HasMoreElements(&hasMore);
-            if (NS_FAILED(rv)) return rv;
-
-            *result = mNext; // might return nsnull
-            NS_IF_ADDREF(*result);
-
-            mNext = nsnull;
-            return NS_OK;
-        }
-
-        NS_IMETHOD GetNextFile(nsIFile **result)
-        {
-            *result = nsnull;
-            PRBool hasMore = PR_FALSE;
-            nsresult rv = HasMoreElements(&hasMore);
-            if (NS_FAILED(rv) || !hasMore)
-                return rv;
-            *result = mNext;
-            NS_IF_ADDREF(*result);
-            mNext = nsnull;
-            return NS_OK;
-        }
-
-        NS_IMETHOD Close()
-        {
-          NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-          if (mIterator) {
-            ::FSCloseIterator(mIterator);
-            mIterator = nsnull;
-          }
-          if (mFSRefsArray) {
-            nsMemory::Free(mFSRefsArray);
-            mFSRefsArray = nsnull;
-          }
-          return NS_OK;
-
-          NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-        }
-
-    private:
-        ~nsDirEnumerator() 
-        {
-          Close();
-        }
-
-    protected:
-        // According to Apple doc, request the number of objects
-        // per call that will fit in 4 VM pages.
-        enum {
-          kRequestCountPerIteration = ((4096 * 4) / sizeof(FSRef))
-        };
-        
-        nsCOMPtr<nsILocalFileMac>   mNext;
-        
-        FSIterator              mIterator;
-        FSRef                   *mFSRefsArray;
-        PRInt32                 mArrayCnt, mArrayIndex;
+  DIR           *mDir;
+  struct dirent *mEntry;
+  nsCString      mParentPath;
 };
+
+nsDirEnumerator::nsDirEnumerator() :
+mDir(nsnull), 
+mEntry(nsnull)
+{
+}
+
+nsDirEnumerator::~nsDirEnumerator()
+{
+  Close();
+}
 
 NS_IMPL_ISUPPORTS2(nsDirEnumerator, nsISimpleEnumerator, nsIDirectoryEnumerator)
 
-const char kPathSepChar = '/';
+NS_IMETHODIMP
+nsDirEnumerator::Init(nsLocalFile *parent)
+{
+  nsCAutoString dirPath;
+  if (NS_FAILED(parent->GetNativePath(dirPath)) ||
+      dirPath.IsEmpty()) {
+    return NS_ERROR_FILE_INVALID_PATH;
+  }
+
+  if (NS_FAILED(parent->GetNativePath(mParentPath)))
+    return NS_ERROR_FAILURE;
+
+  mDir = opendir(dirPath.get());
+  if (!mDir)
+    return NSRESULT_FOR_ERRNO();
+  return GetNextEntry();
+}
+
+NS_IMETHODIMP
+nsDirEnumerator::HasMoreElements(PRBool *result)
+{
+  *result = mDir && mEntry;
+  if (!*result)
+    Close();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDirEnumerator::GetNext(nsISupports **_retval)
+{
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = GetNextFile(getter_AddRefs(file));
+  if (NS_FAILED(rv))
+    return rv;
+  NS_IF_ADDREF(*_retval = file);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDirEnumerator::GetNextEntry()
+{
+  do {
+    errno = 0;
+    mEntry = readdir(mDir);
+
+    // end of dir or error
+    if (!mEntry)
+      return NSRESULT_FOR_ERRNO();
+
+    // keep going past "." and ".."
+  } while (mEntry->d_name[0] == '.'     &&
+           (mEntry->d_name[1] == '\0'    ||   // .\0
+            (mEntry->d_name[1] == '.'     &&
+             mEntry->d_name[2] == '\0')));      // ..\0
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDirEnumerator::GetNextFile(nsIFile **_retval)
+{
+  nsresult rv;
+  if (!mDir || !mEntry) {
+    *_retval = nsnull;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsILocalFile> file = new nsLocalFile();
+  if (!file)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (NS_FAILED(rv = file->InitWithNativePath(mParentPath)) ||
+      NS_FAILED(rv = file->AppendNative(nsDependentCString(mEntry->d_name))))
+    return rv;
+
+  *_retval = file;
+  NS_ADDREF(*_retval);
+  return GetNextEntry();
+}
+
+NS_IMETHODIMP 
+nsDirEnumerator::Close()
+{
+  if (mDir) {
+    closedir(mDir);
+    mDir = nsnull;
+  }
+  return NS_OK;
+}
 
 #pragma mark -
 #pragma mark [CTORs/DTOR]
