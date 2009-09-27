@@ -9,26 +9,19 @@
  * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
- function:
-    last mod: $Id: cpu.h 16503 2009-08-22 18:14:02Z giles $
+
+  function:
+    last mod: $Id: dequant.h 16503 2009-08-22 18:14:02Z giles $
 
  ********************************************************************/
 
-#if !defined(_x86_cpu_H)
-# define _x86_cpu_H (1)
-#include "internal.h"
+#if !defined(_dequant_H)
+# define _dequant_H (1)
+# include "quant.h"
+# include "bitpack.h"
 
-#define OC_CPU_X86_MMX      (1<<0)
-#define OC_CPU_X86_3DNOW    (1<<1)
-#define OC_CPU_X86_3DNOWEXT (1<<2)
-#define OC_CPU_X86_MMXEXT   (1<<3)
-#define OC_CPU_X86_SSE      (1<<4)
-#define OC_CPU_X86_SSE2     (1<<5)
-#define OC_CPU_X86_PNI      (1<<6)
-#define OC_CPU_X86_SSSE3    (1<<7)
-#define OC_CPU_X86_SSE4_1   (1<<8)
-#define OC_CPU_X86_SSE4_2   (1<<9)
-#define OC_CPU_X86_SSE4A    (1<<10)
-#define OC_CPU_X86_SSE5     (1<<11)
+int oc_quant_params_unpack(oc_pack_buf *_opb,
+ th_quant_info *_qinfo);
+void oc_quant_params_clear(th_quant_info *_qinfo);
 
 #endif

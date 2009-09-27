@@ -50,51 +50,50 @@ DEFINES += -DTHEORA_DISABLE_ENCODE
 ifeq ($(findstring 86,$(OS_TEST)), 86)
 ifneq ($(OS_ARCH),SunOS)
 ifneq ($(OS_ARCH)$(OS_TEST),WINNTx86_64)
-DEFINES += -DOC_X86ASM -DUSE_ASM
+DEFINES += -DOC_X86_ASM -DUSE_ASM
 endif
 endif
 endif
 
-VPATH		:= $(srcdir) $(srcdir)/dec
+VPATH		:= $(srcdir)
 
 CSRCS		= \
-		cpu.c \
-		huffdec.c \
-		quant.c \
-		dequant.c \
-		bitpack.c \
-		internal.c \
-		decinfo.c \
-		decapiwrapper.c \
-		idct.c \
-		state.c \
-		info.c \
-		fragment.c \
 		apiwrapper.c \
+		bitpack.c \
+		decapiwrapper.c \
+		decinfo.c \
 		decode.c \
+		dequant.c \
+		encoder_disabled.c \
+		fragment.c \
+		huffdec.c \
+		idct.c \
+		info.c \
+		internal.c \
+		quant.c \
+		state.c \
 		$(NULL)
 
 ifeq ($(findstring 86,$(OS_TEST)), 86)
 ifeq ($(OS_ARCH),WINNT)
 ifneq (64,$(findstring 64,$(OS_TEST)))
-VPATH		+= $(srcdir)/dec/x86_vc
+VPATH		+= $(srcdir)/x86_vc
 
 CSRCS		+= \
-		mmxfrag.c \
-		mmxloopfilter.c \
-		x86state.c \
-		mmxstate.c \
 		mmxidct.c \
+		mmxfrag.c \
+		mmxstate.c \
+		x86state.c \
 		$(NULL)
 endif
 else
-VPATH		+= $(srcdir)/dec/x86
+VPATH		+= $(srcdir)/x86
 
 CSRCS		+= \
-		mmxfrag.c \
-		x86state.c \
-		mmxstate.c \
 		mmxidct.c \
+		mmxfrag.c \
+		mmxstate.c \
+		x86state.c \
 		$(NULL)
 endif
 endif

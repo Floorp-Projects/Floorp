@@ -9,26 +9,23 @@
  * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
- function:
-    last mod: $Id: cpu.h 16503 2009-08-22 18:14:02Z giles $
+
+  function:
+  last mod: $Id: dct.h 16503 2009-08-22 18:14:02Z giles $
 
  ********************************************************************/
 
-#if !defined(_x86_cpu_H)
-# define _x86_cpu_H (1)
-#include "internal.h"
+/*Definitions shared by the forward and inverse DCT transforms.*/
+#if !defined(_dct_H)
+# define _dct_H (1)
 
-#define OC_CPU_X86_MMX      (1<<0)
-#define OC_CPU_X86_3DNOW    (1<<1)
-#define OC_CPU_X86_3DNOWEXT (1<<2)
-#define OC_CPU_X86_MMXEXT   (1<<3)
-#define OC_CPU_X86_SSE      (1<<4)
-#define OC_CPU_X86_SSE2     (1<<5)
-#define OC_CPU_X86_PNI      (1<<6)
-#define OC_CPU_X86_SSSE3    (1<<7)
-#define OC_CPU_X86_SSE4_1   (1<<8)
-#define OC_CPU_X86_SSE4_2   (1<<9)
-#define OC_CPU_X86_SSE4A    (1<<10)
-#define OC_CPU_X86_SSE5     (1<<11)
+/*cos(n*pi/16) (resp. sin(m*pi/16)) scaled by 65536.*/
+#define OC_C1S7 ((ogg_int32_t)64277)
+#define OC_C2S6 ((ogg_int32_t)60547)
+#define OC_C3S5 ((ogg_int32_t)54491)
+#define OC_C4S4 ((ogg_int32_t)46341)
+#define OC_C5S3 ((ogg_int32_t)36410)
+#define OC_C6S2 ((ogg_int32_t)25080)
+#define OC_C7S1 ((ogg_int32_t)12785)
 
 #endif
