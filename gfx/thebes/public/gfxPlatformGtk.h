@@ -129,9 +129,18 @@ public:
                         GdkDrawable *drawable);
     GdkDrawable *GetGdkDrawable(gfxASurface *target);
 
+    static PRInt32 GetPlatformDPI() {
+        if (sPlatformDPI < 0) {
+            gfxPlatformGtk::GetPlatform()->InitDisplayCaps();
+        }
+        NS_ASSERTION(sPlatformDPI > 0, "Something is wrong");
+        return sPlatformDPI;
+    }
+
 protected:
     void InitDisplayCaps();
 
+    static PRInt32 sPlatformDPI;
     static gfxFontconfigUtils *sFontconfigUtils;
 
 private:
