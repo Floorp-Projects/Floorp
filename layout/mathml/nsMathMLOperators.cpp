@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
+ *   Frederic Wang <fred.wang@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -86,7 +87,6 @@ static nsTArray<nsString>*      gInvariantCharArray    = nsnull;
 
 static const PRUnichar kNullCh  = PRUnichar('\0');
 static const PRUnichar kDashCh  = PRUnichar('#');
-static const PRUnichar kEqualCh = PRUnichar('=');
 static const PRUnichar kColonCh = PRUnichar(':');
 
 static const char* const kMathVariant_name[] = {
@@ -106,12 +106,39 @@ static const char* const kMathVariant_name[] = {
   "double-struck"
 };
 
-void
+static void
+SetBooleanProperty(OperatorData* aOperatorData,
+                   nsString      aName)
+{
+  if (aName.IsEmpty())
+    return;
+
+  if (aName.EqualsLiteral("stretchy") && (1 == aOperatorData->mStr.Length())) {
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_STRETCHY;
+    if (kNotFound ==
+        nsMathMLOperators::FindStretchyOperator(aOperatorData->mStr[0])) {
+      gStretchyOperatorArray->AppendElement(aOperatorData);
+    }
+  } else if (aName.EqualsLiteral("fence"))
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_FENCE;
+  else if (aName.EqualsLiteral("accent"))
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_ACCENT;
+  else if (aName.EqualsLiteral("largeop"))
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_LARGEOP;
+  else if (aName.EqualsLiteral("separator"))
+    aOperatorData->mFlags |=  NS_MATHML_OPERATOR_SEPARATOR;
+  else if (aName.EqualsLiteral("movablelimits"))
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_MOVABLELIMITS;
+  else if (aName.EqualsLiteral("symmetric"))
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_SYMMETRIC;
+}
+
+static void
 SetProperty(OperatorData* aOperatorData,
             nsString      aName,
             nsString      aValue)
 {
-  if (!aName.Length() || !aValue.Length())
+  if (aName.IsEmpty() || aValue.IsEmpty())
     return;
 
   // XXX These ones are not kept in the dictionary
@@ -119,38 +146,13 @@ SetProperty(OperatorData* aOperatorData,
   // maxsize (default: infinity)
   // minsize (default: 1)
 
-  if (aValue.EqualsLiteral("true")) {
-    // see if we should enable flags with default value=false
-    if (aName.EqualsLiteral("fence"))
-      aOperatorData->mFlags |= NS_MATHML_OPERATOR_FENCE;
-    else if (aName.EqualsLiteral("accent"))
-      aOperatorData->mFlags |= NS_MATHML_OPERATOR_ACCENT;
-    else if (aName.EqualsLiteral("largeop"))
-      aOperatorData->mFlags |= NS_MATHML_OPERATOR_LARGEOP;
-    else if (aName.EqualsLiteral("separator"))
-      aOperatorData->mFlags |=  NS_MATHML_OPERATOR_SEPARATOR;
-    else if (aName.EqualsLiteral("movablelimits"))
-      aOperatorData->mFlags |= NS_MATHML_OPERATOR_MOVABLELIMITS;
-  }
-  else if (aValue.EqualsLiteral("false")) {
-    // see if we should disable flags with default value=true
-    if (aName.EqualsLiteral("symmetric"))
-      aOperatorData->mFlags &= ~NS_MATHML_OPERATOR_SYMMETRIC;
-  }
-  else if (aName.EqualsLiteral("stretchy") &&
-          (1 == aOperatorData->mStr.Length())) {
+  if (aName.EqualsLiteral("direction")) {
     if (aValue.EqualsLiteral("vertical"))
-      aOperatorData->mFlags |= NS_MATHML_OPERATOR_STRETCHY_VERT;
+      aOperatorData->mFlags |= NS_MATHML_OPERATOR_DIRECTION_VERTICAL;
     else if (aValue.EqualsLiteral("horizontal"))
-      aOperatorData->mFlags |= NS_MATHML_OPERATOR_STRETCHY_HORIZ;
+      aOperatorData->mFlags |= NS_MATHML_OPERATOR_DIRECTION_HORIZONTAL;
     else return; // invalid value
-    if (kNotFound == nsMathMLOperators::FindStretchyOperator(aOperatorData->mStr[0])) {
-      gStretchyOperatorArray->AppendElement(aOperatorData);
-    }
-  }
-  else {
-    PRInt32 i = 0;
-    float space = 0.0f;
+  } else {
     PRBool isLeftSpace;
     if (aName.EqualsLiteral("lspace"))
       isLeftSpace = PR_TRUE;
@@ -158,23 +160,10 @@ SetProperty(OperatorData* aOperatorData,
       isLeftSpace = PR_FALSE;
     else return;  // input is not applicable
 
-    // See if it is a numeric value (unit is assumed to be 'em')
-    if (nsCRT::IsAsciiDigit(aValue[0])) {
-      PRInt32 error = 0;
-      space = aValue.ToFloat(&error);
-      if (error) return;
-    }
-    // See if it is one of the 'namedspace' (ranging 1/18em...7/18em)
-    else if (aValue.EqualsLiteral("veryverythinmathspace"))  i = 1;
-    else if (aValue.EqualsLiteral("verythinmathspace"))      i = 2;
-    else if (aValue.EqualsLiteral("thinmathspace"))          i = 3;
-    else if (aValue.EqualsLiteral("mediummathspace"))        i = 4;
-    else if (aValue.EqualsLiteral("thickmathspace"))         i = 5;
-    else if (aValue.EqualsLiteral("verythickmathspace"))     i = 6;
-    else if (aValue.EqualsLiteral("veryverythickmathspace")) i = 7;
-
-    if (0 != i) // it was a namedspace value
-      space = float(i)/float(18);
+    // aValue is assumed to be a digit from 0 to 7
+    PRInt32 error = 0;
+    float space = aValue.ToFloat(&error) / 18.0;
+    if (error) return;
 
     if (isLeftSpace)
       aOperatorData->mLeftSpace = space;
@@ -183,7 +172,7 @@ SetProperty(OperatorData* aOperatorData,
   }
 }
 
-PRBool
+static PRBool
 SetOperator(OperatorData*   aOperatorData,
             nsOperatorFlags aForm,
             const nsCString& aOperator,
@@ -238,8 +227,8 @@ SetOperator(OperatorData*   aOperatorData,
   // parsing of the dictionary in InitOperators())
   if (!aForm) return PR_TRUE;
 
-  // Add operator to hash table (symmetric="true" by default for all operators)
-  aOperatorData->mFlags |= aForm | NS_MATHML_OPERATOR_SYMMETRIC;
+  // Add operator to hash table
+  aOperatorData->mFlags |= aForm;
   aOperatorData->mStr.Assign(value);
   value.AppendInt(aForm, 10);
   nsStringKey key(value);
@@ -260,38 +249,40 @@ SetOperator(OperatorData*   aOperatorData,
       ++start;
     }
     end = start;
-    // look for ':' or '='
-    while ((kNullCh!=*end) && (kDashCh!=*end) && (kColonCh!=*end) && (kEqualCh!=*end)) {
+    // look for ':'
+    while ((kNullCh!=*end) && (kDashCh!=*end) && !nsCRT::IsAsciiSpace(*end) &&
+           (kColonCh!=*end)) {
       ++end;
     }
-    if ((kColonCh!=*end) && (kEqualCh!=*end)) {
-#ifdef NS_DEBUG
-      printf("Bad MathML operator: %s\n", str.get());
-#endif
-      return PR_TRUE;
-    }
+    // If ':' is not found, then it's a boolean property
+    PRBool IsBooleanProperty = (kColonCh != *end);
     *end = kNullCh; // end segment here
     // this segment is the name
     if (start < end) {
       name.Assign(start);
     }
-    start = ++end;
-    // look for space or end of line
-    while ((kNullCh!=*end) && (kDashCh!=*start) && !nsCRT::IsAsciiSpace(*end)) {
-      ++end;
+    if (IsBooleanProperty) {
+      SetBooleanProperty(aOperatorData, name);
+    } else {
+      start = ++end;
+      // look for space or end of line
+      while ((kNullCh!=*end) && (kDashCh!=*end) &&
+             !nsCRT::IsAsciiSpace(*end)) {
+        ++end;
+      }
+      *end = kNullCh; // end segment here
+      if (start < end) {
+        // this segment is the value
+        value.Assign(start);
+      }
+      SetProperty(aOperatorData, name, value);
     }
-    *end = kNullCh; // end segment here
-    // this segment is the value
-    if (start < end) {
-      value.Assign(start);
-    }
-    SetProperty(aOperatorData, name, value);
     start = ++end;
   }
   return PR_TRUE;
 }
 
-nsresult
+static nsresult
 InitOperators(void)
 {
   // Load the property file containing the Operator Dictionary
@@ -371,7 +362,7 @@ InitOperators(void)
   return NS_OK;
 }
 
-nsresult
+static nsresult
 InitGlobals()
 {
   gInitialized = PR_TRUE;
@@ -594,9 +585,9 @@ nsMathMLOperators::GetStretchyDirectionAt(PRInt32 aIndex)
                  "invalid call");
     OperatorData* data = gStretchyOperatorArray->ElementAt(aIndex);
     if (data) {
-      if (NS_MATHML_OPERATOR_IS_STRETCHY_VERT(data->mFlags))
+      if (NS_MATHML_OPERATOR_IS_DIRECTION_VERTICAL(data->mFlags))
         return NS_STRETCH_DIRECTION_VERTICAL;
-      else if (NS_MATHML_OPERATOR_IS_STRETCHY_HORIZ(data->mFlags))
+      else if (NS_MATHML_OPERATOR_IS_DIRECTION_HORIZONTAL(data->mFlags))
         return NS_STRETCH_DIRECTION_HORIZONTAL;
       NS_ASSERTION(PR_FALSE, "*** bad setup ***");
     }
