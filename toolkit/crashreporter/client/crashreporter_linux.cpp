@@ -275,10 +275,6 @@ static gpointer SendThread(gpointer args)
 {
   string response, error;
 
-#ifdef MOZ_ENABLE_GCONF
-  LoadProxyinfo();
-#endif
-
   bool success = google_breakpad::HTTPUpload::SendRequest
     (gSendURL,
      gQueryParameters,
@@ -297,7 +293,7 @@ static gpointer SendThread(gpointer args)
   SendCompleted(success, response);
   // Apparently glib is threadsafe, and will schedule this
   // on the main thread, see:
-  // http://library.gnome.org/devel/gtk-faq/stable/x500.html
+  // http://library.gnome.org/devel/gtk-faq/stable/x499.html
   g_idle_add(ReportCompleted, (gpointer)success);
 
   return NULL;
@@ -319,6 +315,10 @@ static void SendReport()
   gtk_widget_show_all(gThrobber);
   gtk_label_set_text(GTK_LABEL(gProgressLabel),
                      gStrings[ST_REPORTDURINGSUBMIT].c_str());
+
+#ifdef MOZ_ENABLE_GCONF
+  LoadProxyinfo();
+#endif
 
   // and spawn a thread to do the sending
   GError* err;
