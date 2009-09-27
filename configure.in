@@ -3147,16 +3147,12 @@ case "$target" in
                   ac_cv_have_core_text="no")
   AC_MSG_RESULT([$ac_cv_have_core_text])
 
-  case "${target_cpu}" in
-  x86_64)
-    MOZ_CORETEXT=1
-    ;;
-  esac
+  MOZ_CORETEXT=1
 
-  MOZ_ARG_ENABLE_BOOL(coretext,
-[  --enable-coretext      Use CoreText instead of ATSUI for text rendering],
-    MOZ_CORETEXT=1,
-    MOZ_CORETEXT=)
+  MOZ_ARG_DISABLE_BOOL(coretext,
+[  --disable-coretext      Use ATSUI instead of Core Text for text rendering],
+    MOZ_CORETEXT=,
+    MOZ_CORETEXT=1)
 
   if test -n "$MOZ_CORETEXT"; then
     if test "$ac_cv_have_core_text" = "no"; then
