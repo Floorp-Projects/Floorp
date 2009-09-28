@@ -650,6 +650,104 @@ Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+/*
+ * JSContext option name to flag map. The option names are in alphabetical
+ * order for better reporting.
+ */
+static const struct {
+    const char  *name;
+    uint32      flag;
+} js_options[] = {
+    {"anonfunfix",      JSOPTION_ANONFUNFIX},
+    {"atline",          JSOPTION_ATLINE},
+    {"jit",             JSOPTION_JIT},
+    {"relimit",         JSOPTION_RELIMIT},
+    {"strict",          JSOPTION_STRICT},
+    {"werror",          JSOPTION_WERROR},
+    {"xml",             JSOPTION_XML},
+};
+
+static uint32
+MapContextOptionNameToFlag(JSContext* cx, const char* name)
+{
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); ++i) {
+        if (strcmp(name, js_options[i].name) == 0)
+            return js_options[i].flag;
+    }
+
+    char* msg = JS_sprintf_append(NULL,
+                                  "unknown option name '%s'."
+                                  " The valid names are ", name);
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); ++i) {
+        if (!msg)
+            break;
+        msg = JS_sprintf_append(msg, "%s%s", js_options[i].name,
+                                (i + 2 < JS_ARRAY_LENGTH(js_options)
+                                 ? ", "
+                                 : i + 2 == JS_ARRAY_LENGTH(js_options)
+                                 ? " and "
+                                 : "."));
+    }
+    if (!msg) {
+        JS_ReportOutOfMemory(cx);
+    } else {
+        JS_ReportError(cx, msg);
+        free(msg);
+    }
+    return 0;
+}
+
+static JSBool
+Options(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    uint32 optset, flag;
+    JSString *str;
+    const char *opt;
+    char *names;
+    JSBool found;
+
+    optset = 0;
+    for (uintN i = 0; i < argc; i++) {
+        str = JS_ValueToString(cx, argv[i]);
+        if (!str)
+            return JS_FALSE;
+        argv[i] = STRING_TO_JSVAL(str);
+        opt = JS_GetStringBytes(str);
+        if (!opt)
+            return JS_FALSE;
+        flag = MapContextOptionNameToFlag(cx,  opt);
+        if (!flag)
+            return JS_FALSE;
+        optset |= flag;
+    }
+    optset = JS_ToggleOptions(cx, optset);
+
+    names = NULL;
+    found = JS_FALSE;
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); i++) {
+        if (js_options[i].flag & optset) {
+            found = JS_TRUE;
+            names = JS_sprintf_append(names, "%s%s",
+                                      names ? "," : "", js_options[i].name);
+            if (!names)
+                break;
+        }
+    }
+    if (!found)
+        names = strdup("");
+    if (!names) {
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
+    }
+    str = JS_NewString(cx, names, strlen(names));
+    if (!str) {
+        free(names);
+        return JS_FALSE;
+    }
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
 static JSFunctionSpec glob_functions[] = {
     {"print",           Print,          0,0,0},
     {"readline",        ReadLine,       1,0,0},
@@ -661,6 +759,7 @@ static JSFunctionSpec glob_functions[] = {
     {"dump",            Dump,           1,0,0},
     {"gc",              GC,             0,0,0},
     {"clear",           Clear,          1,0,0},
+    {"options",         Options,        0,0,0},
 #ifdef DEBUG
     {"dumpHeap",        DumpHeap,       5,0,0},
 #endif
@@ -956,7 +1055,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-PswWxCij] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-PsSwWxCij] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -1043,6 +1142,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'w':
             reportWarnings = JS_TRUE;
             break;
+        case 'S':
+            JS_ToggleOptions(cx, JSOPTION_WERROR);
         case 's':
             JS_ToggleOptions(cx, JSOPTION_STRICT);
             break;
