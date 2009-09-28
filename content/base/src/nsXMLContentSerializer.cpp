@@ -107,7 +107,7 @@ NS_IMPL_ISUPPORTS1(nsXMLContentSerializer, nsIContentSerializer)
 NS_IMETHODIMP 
 nsXMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
                              const char* aCharSet, PRBool aIsCopying,
-                             PRBool aIsWholeDocument)
+                             PRBool aRewriteEncodingDeclaration)
 {
   mCharset = aCharSet;
   mFlags = aFlags;

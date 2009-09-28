@@ -79,7 +79,7 @@ SetUpEncoder(nsIDOMNode *aRoot, const nsACString& aCharset,
    
   nsresult rv;
   nsCOMPtr<nsIDocumentEncoder> encoder =
-    do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", &rv);
+    do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "application/xhtml+xml", &rv);
   if (NS_FAILED(rv))
     return rv;
 
@@ -93,8 +93,10 @@ SetUpEncoder(nsIDOMNode *aRoot, const nsACString& aCharset,
   }
 
   // This method will fail if no document
-  rv = encoder->Init(domDoc, NS_LITERAL_STRING("text/xml"),
-                     nsIDocumentEncoder::OutputEncodeBasicEntities);
+  rv = encoder->Init(domDoc, NS_LITERAL_STRING("application/xhtml+xml"),
+                     nsIDocumentEncoder::OutputRaw |
+                     nsIDocumentEncoder::OutputDontRewriteEncodingDeclaration);
+
   if (NS_FAILED(rv))
     return rv;
 

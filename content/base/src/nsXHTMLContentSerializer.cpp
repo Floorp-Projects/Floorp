@@ -99,7 +99,7 @@ nsXHTMLContentSerializer::~nsXHTMLContentSerializer()
 NS_IMETHODIMP
 nsXHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
                               const char* aCharSet, PRBool aIsCopying,
-                              PRBool aIsWholeDocument)
+                              PRBool aRewriteEncodingDeclaration)
 {
   // The previous version of the HTML serializer did implicit wrapping
   // when there is no flags, so we keep wrapping in order to keep
@@ -113,10 +113,10 @@ nsXHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   }
 
   nsresult rv;
-  rv = nsXMLContentSerializer::Init(aFlags, aWrapColumn, aCharSet, aIsCopying, aIsWholeDocument);
+  rv = nsXMLContentSerializer::Init(aFlags, aWrapColumn, aCharSet, aIsCopying, aRewriteEncodingDeclaration);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mIsWholeDocument = aIsWholeDocument;
+  mRewriteEncodingDeclaration = aRewriteEncodingDeclaration;
   mIsCopying = aIsCopying;
   mIsFirstChildOfOL = PR_FALSE;
   mInBody = 0;
@@ -420,7 +420,7 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
           valueStr = tempURI;
       }
 
-      if (mIsWholeDocument && aTagName == nsGkAtoms::meta &&
+      if (mRewriteEncodingDeclaration && aTagName == nsGkAtoms::meta &&
           attrName == nsGkAtoms::content) {
         // If we're serializing a <meta http-equiv="content-type">,
         // use the proper value, rather than what's in the document.
@@ -493,7 +493,7 @@ nsXHTMLContentSerializer::AfterElementStart(nsIContent * aContent,
 {
   nsIAtom *name = aContent->Tag();
   if (aContent->GetNameSpaceID() == kNameSpaceID_XHTML &&
-      mIsWholeDocument &&
+      mRewriteEncodingDeclaration &&
       name == nsGkAtoms::head) {
 
     // Check if there already are any content-type meta children.

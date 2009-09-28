@@ -44,7 +44,7 @@ interface nsISelection;
 interface nsIDOMNode;
 interface nsIOutputStream;
 
-[scriptable, uuid(3c556e41-0f73-4e1d-b724-1474884fe2e3)]
+[scriptable, uuid(c0da5b87-0ba7-4d7c-8cb3-fcb02af4253d)]
 interface nsIDocumentEncoderNodeFixup : nsISupports
 {
   /**
@@ -207,6 +207,13 @@ interface nsIDocumentEncoder : nsISupports
    * Plaintext output only.
    */
   const unsigned long OutputPersistNBSP = (1 << 17);
+
+  /**
+   * Normally when serializing the whole document using the HTML or 
+   * XHTML serializer, the encoding declaration is rewritten to match.
+   * This flag suppresses that behavior.
+   */
+  const unsigned long OutputDontRewriteEncodingDeclaration = (1 << 18);
   
   /**
    * Initialize with a pointer to the document and the mime type.
