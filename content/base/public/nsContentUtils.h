@@ -57,7 +57,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentList.h"
 #include "nsDOMClassInfoID.h"
-#include "nsIClassInfo.h"
+#include "nsIXPCScriptable.h"
 #include "nsIDOM3Node.h"
 #include "nsDataHashtable.h"
 #include "nsIScriptRuntime.h"

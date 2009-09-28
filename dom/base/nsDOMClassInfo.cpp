@@ -1743,20 +1743,17 @@ nsDOMClassInfo::~nsDOMClassInfo()
   }
 }
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMClassInfo, NS_DOMCLASSINFO_IID)
-
 NS_IMPL_ADDREF(nsDOMClassInfo)
 NS_IMPL_RELEASE(nsDOMClassInfo)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMClassInfo)
+  if (aIID.Equals(NS_GET_IID(nsXPCClassInfo)))
+    foundInterface = static_cast<nsIClassInfo*>(
+                                    static_cast<nsXPCClassInfo*>(this));
+  else
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCScriptable)
-  if (aIID.Equals(NS_GET_IID(nsDOMClassInfo))) {
-    *aInstancePtr = static_cast<nsIXPCScriptable*>(this);
-    return NS_OK;
-  }
-  else
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIClassInfo)
 NS_INTERFACE_MAP_END
 
 
@@ -4423,20 +4420,6 @@ nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoData* aData)
   }
 
   return GET_CLEAN_CI_PTR(aData->mCachedClassInfo);
-}
-
-// static
-void
-nsDOMClassInfo::PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper)
-{
-  nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(aWrapper->Native());
-  if (ci) {
-    nsDOMClassInfo* domci = nsnull;
-    CallQueryInterface(ci, &domci);
-    if (domci) {
-      domci->PreserveWrapper(aWrapper->Native());
-    }
-  }
 }
 
 
