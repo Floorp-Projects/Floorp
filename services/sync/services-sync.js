@@ -50,28 +50,20 @@ pref("extensions.weave.authenticator.enabled", true);
 // Preferences to be synced by default
 pref("extensions.weave.prefs.sync.browser.download.manager.scanWhenDone", true);
 
-pref("extensions.weave.prefs.sync.browser.search.openintab", true);
 pref("extensions.weave.prefs.sync.browser.search.selectedEngine", true);
 
-pref("extensions.weave.prefs.sync.browser.sessionstore.resume_from_crash", true);
-pref("extensions.weave.prefs.sync.browser.sessionstore.resume_session_once", true);
-pref("extensions.weave.prefs.sync.browser.sessionstore.interval", true);
-
 pref("extensions.weave.prefs.sync.browser.startup.homepage", true);
-pref("extensions.weave.prefs.sync.startup.homepage_override_url", true);
 
 pref("extensions.weave.prefs.sync.browser.tabs.tabMinWidth", true);
+pref("extensions.weave.prefs.sync.browser.tabs.tabMaxWidth", true);
 pref("extensions.weave.prefs.sync.browser.tabs.warnOnClose", true);
 pref("extensions.weave.prefs.sync.browser.tabs.closeButtons", true);
 
 pref("extensions.weave.prefs.sync.browser.urlbar.autoFill", true);
 pref("extensions.weave.prefs.sync.browser.urlbar.maxRichResults", true);
-pref("extensions.weave.prefs.sync.browser.urlbar.clickSelectsAll", true);
-pref("extensions.weave.prefs.sync.browser.urlbar.doubleClickSelectsAll", true);
 
 pref("extensions.weave.prefs.sync.extensions.personas.current", true);
 
 pref("extensions.weave.prefs.sync.layout.spellcheckDefault", true);
-pref("extensions.weave.prefs.sync.security.dialog_enable_delay", true);
 pref("extensions.weave.prefs.sync.signon.rememberSignons", true);
 pref("extensions.weave.prefs.sync.spellchecker.dictionary", true);
