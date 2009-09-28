@@ -338,4 +338,6 @@ expectDescriptor(pd, expected);
 
 /******************************************************************************/
 
+reportCompare(expect, actual, "Object.getOwnPropertyDescriptor");
+
 printStatus("All tests passed");
