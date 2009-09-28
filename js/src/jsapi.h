@@ -584,7 +584,9 @@ JS_END_EXTERN_C
 
 class JSAutoRequest {
   public:
-    JSAutoRequest(JSContext *cx) : mContext(cx), mSaveDepth(0) {
+    JSAutoRequest(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mContext(cx), mSaveDepth(0) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_BeginRequest(mContext);
     }
     ~JSAutoRequest() {
@@ -601,6 +603,7 @@ class JSAutoRequest {
   protected:
     JSContext *mContext;
     jsrefcount mSaveDepth;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
 #if 0
   private:
@@ -611,7 +614,9 @@ class JSAutoRequest {
 
 class JSAutoSuspendRequest {
   public:
-    JSAutoSuspendRequest(JSContext *cx) : mContext(cx), mSaveDepth(0) {
+    JSAutoSuspendRequest(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mContext(cx), mSaveDepth(0) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         if (mContext) {
             mSaveDepth = JS_SuspendRequest(mContext);
         }
@@ -630,6 +635,7 @@ class JSAutoSuspendRequest {
   protected:
     JSContext *mContext;
     jsrefcount mSaveDepth;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
 #if 0
   private:
@@ -989,7 +995,9 @@ JS_END_EXTERN_C
 
 class JSAutoLocalRootScope {
   public:
-    JSAutoLocalRootScope(JSContext *cx) : mContext(cx) {
+    JSAutoLocalRootScope(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_EnterLocalRootScope(mContext);
     }
     ~JSAutoLocalRootScope() {
@@ -1002,6 +1010,7 @@ class JSAutoLocalRootScope {
 
   protected:
     JSContext *mContext;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
 #if 0
   private:
