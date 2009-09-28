@@ -1495,32 +1495,22 @@ const BrowserSearch = {
 /** Watches for mouse events in chrome and sends them to content. */
 function ContentCustomClicker(browserView) {
   this._browserView = browserView;
-  this._fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
 }
 
 ContentCustomClicker.prototype = {
     /** Dispatch a mouse event with chrome client coordinates. */
     _dispatchMouseEvent: function _dispatchMouseEvent(name, cX, cY) {
       let browser = this._browserView.getBrowser();
-      let [x, y] = Browser.transformClientToBrowser(cX, cY);
-      let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
-      let scrollX = {}, scrollY = {};
       if (browser) {
+        let [x, y] = Browser.transformClientToBrowser(cX, cY);
+        let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
+        let scrollX = {}, scrollY = {};
         cwu.getScrollXY(false, scrollX, scrollY);
         cwu.sendMouseEvent(name, x - scrollX.value, y - scrollY.value, 0, 1, 0, true);
       }
     },
 
     mouseDown: function mouseDown(cX, cY) {
-      // if something is targeted by the mousedown, focus it and re-render
-      // the canvas now
-      let [x, y] = Browser.transformClientToBrowser(cX, cY);
-      let element = Browser.elementFromPoint(x, y);
-      if (!element)
-        return;
-
-      this._fm.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
-      Util.executeSoon(this._browserView.renderNow);
     },
 
     mouseUp: function mouseUp(cX, cY) {

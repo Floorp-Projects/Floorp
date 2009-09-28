@@ -510,7 +510,6 @@ MouseModule.prototype = {
     if (dragData.dragging)       // XXX same check as this._dragger but we
       this._doDragStop(sX, sY);  //  are using both, no good reason
 
-
     if (this._clicker)
       this._clicker.mouseUp(evInfo.event.clientX, evInfo.event.clientY);
 
