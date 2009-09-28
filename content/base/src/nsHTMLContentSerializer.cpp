@@ -195,7 +195,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
         valueStr = tempURI;
     }
 
-    if (mIsWholeDocument && aTagName == nsGkAtoms::meta &&
+    if (mRewriteEncodingDeclaration && aTagName == nsGkAtoms::meta &&
         attrName == nsGkAtoms::content) {
       // If we're serializing a <meta http-equiv="content-type">,
       // use the proper value, rather than what's in the document.

@@ -127,21 +127,18 @@ function test()
 
   // First, we populate the database with some fake data
   db.executeSimpleSQL("DELETE FROM moz_downloads");
-  var rawStmt = db.createStatement(
+  var stmt = db.createStatement(
     "INSERT INTO moz_downloads (name, source, target, startTime, endTime, " +
       "state, currBytes, maxBytes, preferredAction, autoResume) " +
     "VALUES (:name, :source, :target, :startTime, :endTime, :state, " +
       ":currBytes, :maxBytes, :preferredAction, :autoResume)");
-  var stmt = Cc["@mozilla.org/storage/statement-wrapper;1"].
-             createInstance(Ci.mozIStorageStatementWrapper)
-  stmt.initialize(rawStmt);
   for each (var dl in DownloadData) {
     for (var prop in dl)
       stmt.params[prop] = dl[prop];
 
     stmt.execute();
   }
-  stmt.statement.finalize();
+  stmt.finalize();
 
   // See if the DM is already open, and if it is, close it!
   var wm = Cc["@mozilla.org/appshell/window-mediator;1"].

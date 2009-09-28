@@ -105,7 +105,7 @@ function check_existance(aIDs, aExpected)
   let checkFunc = aExpected ? do_check_true : do_check_false;
   for (let i = 0; i < aIDs.length; i++) {
     stmt.params.id = aIDs[i];
-    checkFunc(stmt.step());
+    checkFunc(stmt.executeStep());
     stmt.reset();
   }
 }

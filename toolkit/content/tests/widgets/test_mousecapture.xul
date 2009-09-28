@@ -124,8 +124,26 @@ function runTests()
   runCaptureTest(custom5);
   captureRetargetMode = false;
 
+  var custom6 = document.getElementById("custom6");
+  synthesizeMouse(custom6, 2, 2, { type: "mousedown" });
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             $("leftbox"), "mousemove", "setCapture only works on elements in documents");
+  synthesizeMouse(custom6, 2, 2, { type: "mouseup" });
+
   var b = frames[0].document.getElementById("b");
   runCaptureTest(b, selectionCallback);
+
+  frames[0].getSelection().collapseToStart();
+
+  var body = frames[0].document.body;
+  var fixed = frames[0].document.getElementById("fixed");
+  function captureOnBody() { body.setCapture() }
+  body.addEventListener("mousedown", captureOnBody, true);
+  synthesizeMouse(body, 8, 8, { type: "mousedown" }, frames[0]);
+  body.removeEventListener("mousedown", captureOnBody, true);
+  synthesizeMouseExpectEvent(fixed, 2, 2, { type: "mousemove" },
+                             fixed, "mousemove", "setCapture on body retargets to root node", frames[0]);
+  synthesizeMouse(body, 8, 8, { type: "mouseup" }, frames[0]);
 
   previousWidth = frames[1].frames[0].document.documentElement.clientWidth;
   originalWidth = previousWidth;
@@ -220,16 +238,18 @@ SimpleTest.waitForFocus(runTests);
   <spacer id="custom5spacer" width="5"/>
   <hbox id="custom5inner" width="35" height="35"/>
 </hbox>
+<vbox id="custom6" width="10" height="10"
+      onmousedown="document.createElement('hbox').setCapture();"/>
 
 <hbox>
   <iframe width="100" height="100"
-          src="data:text/html,%3Cbody style%3D'font-size%3A 40pt%3B'%3E.%3Cb id%3D'b'%3EThis%3C/b%3E is some text%3C/body%3E"/>
+          src="data:text/html,%3Cbody style%3D'font-size%3A 40pt%3B'%3E.%3Cb id%3D'b'%3EThis%3C/b%3E is some text%3Cdiv id='fixed' style='position: fixed; left: 55px; top: 5px; width: 10px; height: 10px'%3E.%3C/div%3E%3C/body%3E"/>
 
   <iframe width="100" height="100"
           src="data:text/html,%3Cframeset cols='50%, 50%'%3E%3Cframe src='about:blank'%3E%3Cframe src='about:blank'%3E%3C/frameset%3E"/>
 </hbox>
 
-<body xmlns="http://www.w3.org/1999/xhtml">
+<body id="body" xmlns="http://www.w3.org/1999/xhtml">
   <p id="display"/><div id="content" style="display: none"/><pre id="test"/>
 </body>
 

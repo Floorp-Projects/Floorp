@@ -2218,7 +2218,7 @@ NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
-  PRUint32 modifierFlags = ::GetCurrentEventKeyModifiers();
+  PRUint32 modifierFlags = ::GetCurrentKeyModifiers();
   *aLEDState = (modifierFlags & key) != 0;
   return NS_OK;
 
@@ -3151,7 +3151,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.message = 0;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = ::GetCurrentEventKeyModifiers();
+    carbonEvent.modifiers = ::GetCurrentKeyModifiers();
     geckoEvent.nativeMsg = &carbonEvent;
   }
 #endif
@@ -3203,7 +3203,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.message = 0;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = ::GetCurrentEventKeyModifiers();
+    carbonEvent.modifiers = ::GetCurrentKeyModifiers();
     geckoEvent.nativeMsg = &carbonEvent;
   }
 #endif
@@ -3253,7 +3253,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.message = 0;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = ::GetCurrentEventKeyModifiers();
+    carbonEvent.modifiers = ::GetCurrentKeyModifiers();
     event.nativeMsg = &carbonEvent;
   }
 #endif
@@ -3302,7 +3302,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.message = 0;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = ::GetCurrentEventKeyModifiers();
+    carbonEvent.modifiers = ::GetCurrentKeyModifiers();
     geckoEvent.nativeMsg = &carbonEvent;
   }
 #endif
@@ -3348,7 +3348,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.message = 0;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = btnState | ::GetCurrentEventKeyModifiers();
+    carbonEvent.modifiers = btnState | ::GetCurrentKeyModifiers();
     geckoEvent.nativeMsg = &carbonEvent;
   }
 #endif
@@ -3543,8 +3543,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
 
-//XXXTODO handle scroll wheel events in 64-bit builds
-#ifndef __LP64__
 // Handle an NSScrollWheel event for a single axis only.
 -(void)scrollWheel:(NSEvent*)theEvent forAxis:(enum nsMouseScrollEvent::nsMouseScrollFlags)inAxis
 {
@@ -3561,15 +3559,18 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   if (prefs)
     prefs->GetBoolPref("mousewheel.enable_pixel_scrolling", &checkPixels);
 
-  EventRef theCarbonEvent = [theEvent _eventRef];
-  UInt32 carbonEventKind = theCarbonEvent ? ::GetEventKind(theCarbonEvent) : 0;
   // Calling deviceDeltaX or deviceDeltaY on theEvent will trigger a Cocoa
   // assertion and an Objective-C NSInternalInconsistencyException if the
   // underlying "Carbon" event doesn't contain pixel scrolling information.
   // For these events, carbonEventKind is kEventMouseWheelMoved instead of
   // kEventMouseScroll.
-  if (carbonEventKind != mozkEventMouseScroll)
-    checkPixels = PR_FALSE;
+  if (checkPixels) {
+    EventRef theCarbonEvent = [theEvent _eventRef];
+    UInt32 carbonEventKind = theCarbonEvent ? ::GetEventKind(theCarbonEvent) : 0;
+    if (carbonEventKind != mozkEventMouseScroll)
+      checkPixels = PR_FALSE;
+  }
+
   // Some scrolling devices supports pixel scrolling, e.g. a Macbook
   // touchpad or a Mighty Mouse. On those devices, [event deviceDeltaX/Y]
   // contains the amount of pixels to scroll. 
@@ -3615,8 +3616,9 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     if (!mGeckoChild)
       return;
 
+#ifndef NP_NO_CARBON
     // dispatch scroll wheel carbon event for plugins
-    {
+    if (mPluginEventModel == NPEventModelCarbon) {
       EventRef theEvent;
       OSStatus err = ::CreateEvent(NULL,
                                    kEventClassMouse,
@@ -3656,6 +3658,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
         ReleaseEvent(theEvent);
       }
     }
+#endif
   }
 
   if (hasPixels) {
@@ -3694,7 +3697,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-#endif
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
 {
@@ -3844,7 +3846,7 @@ static void ConvertCocoaKeyEventToCarbonEvent(NSEvent* cocoaEvent, EventRecord& 
     pluginEvent.message = (charCode & 0x00FF) | (nsCocoaUtils::GetCocoaEventKeyCode(cocoaEvent) << 8);
     pluginEvent.when = ::TickCount();
     ::GetGlobalMouse(&pluginEvent.where);
-    pluginEvent.modifiers = ::GetCurrentEventKeyModifiers();
+    pluginEvent.modifiers = ::GetCurrentKeyModifiers();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

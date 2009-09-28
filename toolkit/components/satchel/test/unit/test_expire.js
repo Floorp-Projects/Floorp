@@ -40,7 +40,7 @@ var fh, prefs;
 
 function countAllEntries() {
     let stmt = fh.DBConnection.createStatement("SELECT COUNT(*) as numEntries FROM moz_formhistory");
-    do_check_true(stmt.step());
+    do_check_true(stmt.executeStep());
     let numEntries = stmt.row.numEntries;
     stmt.finalize();
     return numEntries;

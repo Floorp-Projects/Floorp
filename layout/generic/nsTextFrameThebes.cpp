@@ -2434,6 +2434,10 @@ PropertyProvider::GetSpacingInternal(PRUint32 aStart, PRUint32 aLength,
     }
   }
 
+  // Ignore tab spacing rather than computing it, if the tab size is 0
+  if (!aIgnoreTabs)
+    aIgnoreTabs = mFrame->GetStyleText()->mTabSize == 0;
+
   // Now add tab spacing, if there is any
   if (!aIgnoreTabs) {
     gfxFloat* tabs = GetTabWidths(aStart, aLength);
@@ -2485,24 +2489,27 @@ static void TabWidthDestructor(void* aObject, nsIAtom* aProp, void* aValue,
 }
 
 static gfxFloat
-ComputeTabWidthAppUnits(nsIFrame* aLineContainer, gfxTextRun* aTextRun)
+ComputeTabWidthAppUnits(nsIFrame* aFrame, gfxTextRun* aTextRun)
 {
+  // Get the number of spaces from CSS -moz-tab-size
+  const nsStyleText* textStyle = aFrame->GetStyleText();
+  
   // Round the space width when converting to appunits the same way
   // textruns do
   gfxFloat spaceWidthAppUnits =
     NS_roundf(GetFirstFontMetrics(
-                GetFontGroupForFrame(aLineContainer)).spaceWidth *
+                GetFontGroupForFrame(aFrame)).spaceWidth *
               aTextRun->GetAppUnitsPerDevUnit());
-  return 8*spaceWidthAppUnits;
+  return textStyle->mTabSize * spaceWidthAppUnits;
 }
 
 // aX and the result are in whole appunits.
 static gfxFloat
-AdvanceToNextTab(gfxFloat aX, nsIFrame* aLineContainer,
+AdvanceToNextTab(gfxFloat aX, nsIFrame* aFrame,
                  gfxTextRun* aTextRun, gfxFloat* aCachedTabWidth)
 {
   if (*aCachedTabWidth < 0) {
-    *aCachedTabWidth = ComputeTabWidthAppUnits(aLineContainer, aTextRun);
+    *aCachedTabWidth = ComputeTabWidthAppUnits(aFrame, aTextRun);
   }
 
   // Advance aX to the next multiple of *aCachedTabWidth. We must advance
@@ -2570,7 +2577,7 @@ PropertyProvider::GetTabWidths(PRUint32 aStart, PRUint32 aLength)
         }
       } else {
         double nextTab = AdvanceToNextTab(mOffsetFromBlockOriginForTabs,
-                mLineContainer, mTextRun, &tabWidth);
+                mFrame, mTextRun, &tabWidth);
         (*mTabWidths)[i - startOffset] = nextTab - mOffsetFromBlockOriginForTabs;
         mOffsetFromBlockOriginForTabs = nextTab;
       }
@@ -5690,7 +5697,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
       provider.GetSpacing(i, 1, &spacing);
       aData->currentLine += nscoord(spacing.mBefore);
       gfxFloat afterTab =
-        AdvanceToNextTab(aData->currentLine, FindLineContainer(this),
+        AdvanceToNextTab(aData->currentLine, this,
                          mTextRun, &tabWidth);
       aData->currentLine = nscoord(afterTab + spacing.mAfter);
       wordStart = i + 1;
@@ -5820,7 +5827,7 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
       provider.GetSpacing(i, 1, &spacing);
       aData->currentLine += nscoord(spacing.mBefore);
       gfxFloat afterTab =
-        AdvanceToNextTab(aData->currentLine, FindLineContainer(this),
+        AdvanceToNextTab(aData->currentLine, this,
                          mTextRun, &tabWidth);
       aData->currentLine = nscoord(afterTab + spacing.mAfter);
       lineStart = i + 1;

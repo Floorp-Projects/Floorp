@@ -399,6 +399,17 @@ CSS_PROP_OUTLINE(
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+CSS_PROP_TEXT(
+    -moz-tab-size,
+    _moz_tab_size,
+    MozTabSize,
+    0,
+    Text,
+    mTabSize,
+    eCSSType_Value,
+    nsnull,
+    offsetof(nsStyleText, mTabSize),
+    eStyleAnimType_None)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_FONT(
     -x-system-font,

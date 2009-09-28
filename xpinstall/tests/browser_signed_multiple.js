@@ -29,11 +29,11 @@ function confirm_install(window) {
   is(items.length, 2, "Should be 2 items listed in the confirmation dialog");
   is(items[0].name, "Signed XPI", "Should have seen the name from the trigger list");
   is(items[0].url, TESTROOT + "signed.xpi", "Should have listed the correct url for the item");
-  is(items[0].cert, "(Mozilla Testing)", "Should have seen the signer");
+  is(items[0].cert, "(Object Signer)", "Should have seen the signer");
   is(items[0].signed, "true", "Should have listed the item as signed");
   is(items[1].name, "Signed XPI 2", "Should have seen the name from the trigger list");
   is(items[1].url, TESTROOT + "signed2.xpi", "Should have listed the correct url for the item");
-  is(items[1].cert, "(Mozilla Testing)", "Should have seen the signer");
+  is(items[1].cert, "(Object Signer)", "Should have seen the signer");
   is(items[1].signed, "true", "Should have listed the item as signed");
   return true;
 }

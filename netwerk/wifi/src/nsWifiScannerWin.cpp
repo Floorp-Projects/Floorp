@@ -410,6 +410,7 @@ nsWifiMonitor::DoScan()
 #endif
           
           if (result == ERROR_GEN_FAILURE ||  // Returned by some Intel cards.
+              result == ERROR_INVALID_USER_BUFFER || // Returned on the Samsung Omnia II.
               result == ERROR_INSUFFICIENT_BUFFER ||
               result == ERROR_MORE_DATA ||
               result == NDIS_STATUS_INVALID_LENGTH ||
