@@ -488,15 +488,17 @@ enum nsDOMClassInfoID {
  * nsIClassInfo helper macros
  */
 
-class nsIClassInfo;
-
 #ifdef _IMPL_NS_LAYOUT
+
+class nsIClassInfo;
+class nsXPCClassInfo;
 
 extern nsIClassInfo*
 NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
 
 #define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(_class)                          \
-  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \
+  if (aIID.Equals(NS_GET_IID(nsIClassInfo)) ||                                \
+      aIID.Equals(NS_GET_IID(nsXPCClassInfo))) {                              \
     foundInterface = NS_GetDOMClassInfoInstance(eDOMClassInfo_##_class##_id); \
     if (!foundInterface) {                                                    \
       *aInstancePtr = nsnull;                                                 \
