@@ -622,18 +622,26 @@ WeaveSvc.prototype = {
     }))(),
 
   changePassword: function WeaveSvc_changePassword(newpass)
-    this._catch(this._notify("changepwd", "", function() {
+    this._notify("changepwd", "", function() {
       let url = this.userAPI + this.username + "/password";
-      let res = new Weave.Resource(url);
-      let resp = res.post(newpass);
-      if (resp.status != 200) {
-        this._log.info("Password change failed: " + resp);
-        throw "Could not change password";
+      try {
+        let resp = new Resource(url).post(newpass);
+        if (resp.status != 200) {
+          this._log.debug("Password change failed: " + resp);
+          return false;
+        }
+      }
+      catch(ex) {
+        // Must have failed on some network issue
+        this._log.debug("changePassword failed: " + Utils.exceptionStr(ex));
+        return false;
       }
 
+      // Save the new password for requests and login manager
       this.password = newpass;
+      this.persistLogin();
       return true;
-    }))(),
+    })(),
 
   resetPassphrase: function WeaveSvc_resetPassphrase(newphrase)
     this._catch(this._notify("resetpph", "", function() {
