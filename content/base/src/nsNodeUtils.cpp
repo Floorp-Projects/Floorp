@@ -464,8 +464,9 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, PRBool aDeep, nsIDOMNode **aResult)
 
 class AdoptFuncData {
 public:
-  AdoptFuncData(nsIDOMElement *aElement, nsNodeInfoManager *aNewNodeInfoManager,
-                JSContext *aCx, JSObject *aOldScope, JSObject *aNewScope,
+  AdoptFuncData(nsGenericElement *aElement,
+                nsNodeInfoManager *aNewNodeInfoManager, JSContext *aCx,
+                JSObject *aOldScope, JSObject *aNewScope,
                 nsCOMArray<nsINode> &aNodesWithProperties)
     : mElement(aElement),
       mNewNodeInfoManager(aNewNodeInfoManager),
@@ -476,7 +477,7 @@ public:
   {
   }
 
-  nsIDOMElement *mElement;
+  nsGenericElement *mElement;
   nsNodeInfoManager *mNewNodeInfoManager;
   JSContext *mCx;
   JSObject *mOldScope;
@@ -495,13 +496,13 @@ AdoptFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg)
   // If we were passed an element we need to clone the attribute nodes and
   // insert them into the element.
   PRBool clone = data->mElement != nsnull;
-  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsINode> node;
   nsresult rv = nsNodeUtils::CloneAndAdopt(attr, clone, PR_TRUE,
                                            data->mNewNodeInfoManager,
                                            data->mCx, data->mOldScope,
                                            data->mNewScope,
                                            data->mNodesWithProperties,
-                                           getter_AddRefs(node));
+                                           nsnull, getter_AddRefs(node));
 
   if (NS_SUCCEEDED(rv) && clone) {
     nsCOMPtr<nsIDOMAttr> dummy, attribute = do_QueryInterface(node, &rv);
@@ -642,16 +643,13 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     // aNode's attributes.
     const nsDOMAttributeMap *map = elem->GetAttributeMap();
     if (map) {
-      nsCOMPtr<nsIDOMElement> element;
-      if (aClone) {
-        // If we're cloning we need to insert the cloned attribute nodes into
-        // the cloned element.
-        element = do_QueryInterface(clone, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      AdoptFuncData data(element, nodeInfoManager, aCx, aOldScope,
-                         aNewScope, aNodesWithProperties);
+      // If we're cloning we need to insert the cloned attribute nodes into the
+      // cloned element. We assume that the clone of an nsGenericElement is also
+      // an nsGenericElement.
+      nsGenericElement* elemClone =
+        aClone ? static_cast<nsGenericElement*>(clone.get()) : nsnull;
+      AdoptFuncData data(elemClone, nodeInfoManager, aCx, aOldScope, aNewScope,
+                         aNodesWithProperties);
 
       PRUint32 count = map->Enumerate(AdoptFunc, &data);
       NS_ENSURE_TRUE(count == map->Count(), NS_ERROR_FAILURE);
