@@ -88,6 +88,7 @@ ENGINE_SUCCEEDED:                      "success.engine",
 LOGIN_FAILED_NO_USERNAME:              "error.login.reason.no_username",
 LOGIN_FAILED_NO_PASSWORD:              "error.login.reason.no_password",
 LOGIN_FAILED_NETWORK_ERROR:            "error.login.reason.network",
+LOGIN_FAILED_SERVER_ERROR:             "error.login.reason.server",
 LOGIN_FAILED_INVALID_PASSPHRASE:       "error.login.reason.passphrase",
 LOGIN_FAILED_LOGIN_REJECTED:           "error.login.reason.password",
 

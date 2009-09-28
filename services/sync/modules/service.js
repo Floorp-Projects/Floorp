@@ -540,22 +540,25 @@ WeaveSvc.prototype = {
   },
 
   _verifyLogin: function _verifyLogin()
-    this._catch(this._notify("verify-login", "", function() {
+    this._notify("verify-login", "", function() {
       // Make sure we have a cluster to verify against
       if (this.clusterURL == "")
         this._setCluster();
 
-      let res = new Resource(this.infoURL);
       try {
-        let test = res.get();
+        let test = new Resource(this.infoURL).get();
         switch (test.status) {
           case 200:
+            // The user is authenticated, so check the passphrase now
             if (!this._verifyPassphrase()) {
               this.status.setLoginStatus(LOGIN_FAILED_INVALID_PASSPHRASE);
               return false;
             }
+
+            // Username/password and passphrase all verified
             this.status.setLoginStatus(LOGIN_SUCCEEDED);
             return true;
+
           case 401:
           case 404:
             // Check that we're verifying with the correct cluster
@@ -564,19 +567,22 @@ WeaveSvc.prototype = {
 
             // We must have the right cluster, but the server doesn't expect us
             this.status.setLoginStatus(LOGIN_FAILED_LOGIN_REJECTED);
-            this._log.debug("verifyLogin failed: login failed")
             return false;
+
           default:
-            this._checkServerError(test.status);
-            throw "unexpected HTTP response: " + test.status;
+            // Server didn't respond with something that we expected
+            this._checkServerError(test);
+            this.status.setLoginStatus(LOGIN_FAILED_SERVER_ERROR);
+            return false;
         }
-      } catch (e) {
-        // if we get here, we have either a busted channel or a network error
-        this._log.debug("verifyLogin failed: " + e)
-        this.status.setLoginStatus(LOGIN_FAILED_NETWORK_ERROR);
-        throw e;
       }
-    }))(),
+      catch (ex) {
+        // Must have failed on some network issue
+        this._log.debug("verifyLogin failed: " + Utils.exceptionStr(ex));
+        this.status.setLoginStatus(LOGIN_FAILED_NETWORK_ERROR);
+        return false;
+      }
+    })(),
 
   _verifyPassphrase: function _verifyPassphrase()
     this._catch(this._notify("verify-passphrase", "", function() {
