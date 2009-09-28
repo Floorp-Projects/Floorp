@@ -277,6 +277,7 @@ _TEST_FILES = 	test_bug5141.html \
 		file_xhtmlserializer_2_enthtml.xhtml \
 		file_xhtmlserializer_2_entw3c.xhtml \
 		file_xhtmlserializer_2_latin1.xhtml \
+		test_bug500937.html \
 		test_htmlcopyencoder.html \
 		test_htmlcopyencoder.xhtml \
 		test_bug270145.xhtml \
