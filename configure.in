@@ -7630,10 +7630,14 @@ dnl
 dnl Build jsctypes on the platforms we can.
 dnl
 AC_SUBST(BUILD_CTYPES)
-if test "$OS_TEST" != "arm"; then
+case "$OS_TEST" in
+arm*)
+  ;;
+*)
   BUILD_CTYPES=1
   AC_DEFINE(BUILD_CTYPES)
-fi
+  ;;
+esac
 
 dnl NECKO_ configuration options are not global
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_"
