@@ -739,6 +739,15 @@ function startTest()
   expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
                    null, textbox1.inputField, true, "shift+tab on textbox with tabindex set");
 
+  // ---- test to check that refocusing an element during a blur event doesn't succeed
+
+  var t1 = getById("t1");
+  t1.addEventListener("blur", function() t1.focus(), true);
+  t1.focus();
+  var t2 = getById("t2");
+  synthesizeMouse(t2, 2, 2, { });
+  is(fm.focusedElement, t2, "focus during blur");
+
   setFocusTo("t9", window);
   gLastFocusMethod = -1;
   window.openDialog("focus_window2.xul", "_blank", "chrome", otherWindowFocused);
