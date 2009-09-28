@@ -656,7 +656,7 @@ WeaveSvc.prototype = {
     }))(),
 
   requestPasswordReset: function WeaveSvc_requestPasswordReset(username) {
-    let res = new Resource(Utils.getURLPref("pwChangeURL"));
+    let res = new Resource(Svc.Prefs.get("pwChangeURL"));
     res.authenticator = new NoOpAuthenticator();
     res.headers['Content-Type'] = 'application/x-www-form-urlencoded';
     let ret = res.post('uid=' + username);
