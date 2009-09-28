@@ -610,6 +610,7 @@ var Browser = {
       dx = Math.min(Math.round(containerBCR.right - window.innerWidth), 0);
 
     this.controlsScrollboxScroller.scrollBy(dx, 0);
+    Browser.contentScrollbox.customDragger.scrollingOuterX = false; // XXX ugh.
     this._browserView.onAfterVisibleMove();
   },
 
@@ -960,11 +961,6 @@ var Browser = {
     return Math.round(snappedX);
   },
 
-  floatToolbar: function floatToolbar() {
-    BrowserUI.lockToolbar();
-    this.floatedWhileDragging = true;
-  },
-
   tryFloatToolbar: function tryFloatToolbar(dx, dy) {
     if (this.floatedWhileDragging)
       return;
@@ -1047,8 +1043,7 @@ var Browser = {
     let dx = Math.round(bv.browserToViewport(elRect.left) - margin - vis.left);
     let dy = Math.round(bv.browserToViewport(elementY) - (window.innerHeight / 2) - vis.top);
 
-    Browser.contentScrollboxScroller.scrollBy(dx, dy);
-    bv.scrollBrowserToContent();
+    Browser.contentScrollbox.customDragger.dragMove(dx, dy, scroller);
     bv.commitBatchOperation();
 
     return true;
@@ -1067,8 +1062,7 @@ var Browser = {
 
     let dy = Math.round(bv.browserToViewport(elementY) - (window.innerHeight / 2) - bv.getVisibleRect().top);
 
-    Browser.contentScrollboxScroller.scrollBy(0, dy);
-    bv.scrollBrowserToContent();
+    this.contentScrollbox.customDragger.dragMove(0, dy, this.contentScrollboxScroller);
 
     Browser.forceChromeReflow();
 
@@ -1221,8 +1215,7 @@ Browser.MainDragger.prototype = {
 
   dragStop: function dragStop(dx, dy, scroller) {
     this.draggedFrame = null;
-    this.dragMove(Browser.snapSidebars(), 0);
-    this.bv.scrollBrowserToContent();
+    this.dragMove(Browser.snapSidebars(), 0, scroller);
 
     Browser.tryUnfloatToolbar();
 
@@ -2343,13 +2336,6 @@ Tab.prototype = {
         // Only fit page if user hasn't started zooming around and this is a page that
         // isn't being restored.
         bv.zoomToPage();
-        if (this.browser.contentWindow.scrollX != 0 || this.browser.contentWindow.scrollY != 0) {
-          // XXX We want to jump to anchors but not scroll to top of page (removing urlbar)
-          bv.scrollContentToBrowser();
-          Browser.floatToolbar();
-        }
-
-        bv.onAfterVisibleMove();
       }
 
     }
