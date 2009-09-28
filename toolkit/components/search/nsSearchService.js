@@ -742,9 +742,8 @@ function QueryParameter(aName, aValue) {
  *        aParamValue as the value of the OS_PARAM_USER_DEFINED parameter.
  *        This value must already be escaped appropriately - it is inserted
  *        as-is.
- * @param aQueryEncoding
- *        The value to use for the OS_PARAM_INPUT_ENCODING parameter. See
- *        definition in the OpenSearch spec.
+ * @param aEngine
+ *        The engine which owns the string being acted on.
  *
  * @see http://opensearch.a9.com/spec/1.1/querysyntax/#core
  */
@@ -2288,7 +2287,7 @@ Engine.prototype = {
       this._searchForm = makeURI(htmlUrl.template).prePath;
     }
 
-    return this._searchForm;
+    return ParamSubstitution(this._searchForm, "", this);
   },
 
   get queryCharset() {
