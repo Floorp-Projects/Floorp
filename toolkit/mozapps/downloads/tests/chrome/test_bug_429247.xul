@@ -92,19 +92,16 @@ function test()
   // Empty any old downloads
   db.executeSimpleSQL("DELETE FROM moz_downloads");
 
-  let rawStmt = db.createStatement(
+  let stmt = db.createStatement(
     "INSERT INTO moz_downloads (name, source, target, startTime, endTime, " +
       "state, currBytes, maxBytes, preferredAction, autoResume) " +
     "VALUES (:name, :source, :target, :startTime, :endTime, :state, " +
       ":currBytes, :maxBytes, :preferredAction, :autoResume)");
-  let stmt = Cc["@mozilla.org/storage/statement-wrapper;1"].
-             createInstance(Ci.mozIStorageStatementWrapper)
-  stmt.initialize(rawStmt);
   for (let prop in DownloadData)
     stmt.params[prop] = DownloadData[prop];
 
   stmt.execute();
-  stmt.statement.finalize();
+  stmt.finalize();
 
   // Close the UI if necessary
   let wm = Cc["@mozilla.org/appshell/window-mediator;1"].

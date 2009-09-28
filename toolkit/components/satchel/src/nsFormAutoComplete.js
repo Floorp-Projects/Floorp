@@ -317,7 +317,7 @@ FormAutoComplete.prototype = {
                 // length is zero or one
             }
 
-            while (stmt.step()) {
+            while (stmt.executeStep()) {
                 let entry = {
                     text:           stmt.row.value,
                     textLowerCase:  stmt.row.value.toLowerCase(),

@@ -5,7 +5,10 @@
 
 <marquee scrollamount="0" behavior="alternate" direction="right" style="background-color: lime; width: 600px;">
 <div>
-  <div style="margin: 100px 0px;">text</div>
+<!-- padding-left used to avoid risk of an antialiasing pixel that may
+     project to the left of the origin, causing a spurious test failure
+     (see bugs 476927, 475968) -->
+  <div style="margin: 100px 0px; padding-left: 2px;">text</div>
 </div>
 </marquee>
       

@@ -547,7 +547,7 @@ BookmarkFolder.prototype = {
   },
 
   remove : function bmf_remove() {
-    Utilities.bookmarks.removeFolder(this._id);
+    Utilities.bookmarks.removeItem(this._id);
   },
 
   // observer

@@ -601,7 +601,7 @@ LoginManagerStorage_mozStorage.prototype = {
         try {
             stmt = this._dbCreateStatement(query, params);
             // We can't execute as usual here, since we're iterating over rows
-            while (stmt.step()) {
+            while (stmt.executeStep()) {
                 // Create the new nsLoginInfo object, push to array
                 let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
                             createInstance(Ci.nsILoginInfo);
@@ -759,7 +759,7 @@ LoginManagerStorage_mozStorage.prototype = {
         let stmt, numLogins;
         try {
             stmt = this._dbCreateStatement(query, params);
-            stmt.step();
+            stmt.executeStep();
             numLogins = stmt.row.numLogins;
         } catch (e) {
             this.log("_countLogins failed: " + e.name + " : " + e.message);
@@ -855,7 +855,7 @@ LoginManagerStorage_mozStorage.prototype = {
         let stmt;
         try {
             stmt = this._dbCreateStatement(query, params);
-            while (stmt.step())
+            while (stmt.executeStep())
                 disabledHosts.push(stmt.row.hostname);
         } catch (e) {
             this.log("_queryDisabledHosts failed: " + e.name + " : " + e.message);
@@ -978,7 +978,7 @@ LoginManagerStorage_mozStorage.prototype = {
         let stmt, numLogins;
         try {
             stmt = this._dbCreateStatement(query, params);
-            stmt.step();
+            stmt.executeStep();
             numLogins = stmt.row.numLogins;
         } catch (e) {
             this.log("_isGuidUnique failed: " + e.name + " : " + e.message);
@@ -1410,7 +1410,7 @@ LoginManagerStorage_mozStorage.prototype = {
         let stmt;
         try {
             stmt = this._dbCreateStatement(query);
-            while (stmt.step())
+            while (stmt.executeStep())
                 ids.push(stmt.row.id);
         } catch (e) {
             this.log("Failed getting IDs: " + e);
@@ -1474,7 +1474,7 @@ LoginManagerStorage_mozStorage.prototype = {
                     "FROM moz_logins WHERE encType isnull";
         try {
             stmt = this._dbCreateStatement(query);
-            while (stmt.step()) {
+            while (stmt.executeStep()) {
                 let params = { id: stmt.row.id };
                 if (stmt.row.encryptedUsername.charAt(0) == '~' ||
                     stmt.row.encryptedPassword.charAt(0) == '~')

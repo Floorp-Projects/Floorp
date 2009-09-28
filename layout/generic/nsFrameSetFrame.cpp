@@ -1458,6 +1458,13 @@ void
 nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext, 
                                nsGUIEvent*     aEvent)
 {
+  // if the capture ended, reset the drag state
+  if (nsIPresShell::GetCapturingContent() != GetContent()) {
+    mDragger = nsnull;
+    gDragInProgress = PR_FALSE;
+    return;
+  }
+
   PRInt32 change; // measured positive from left-to-right or top-to-bottom
   nsWeakFrame weakFrame(this);
   if (mDragger->mVertical) {

@@ -85,9 +85,11 @@ public:
 
     FT_Library GetFTLibrary();
 
-protected:
-    void InitDisplayCaps();
+    static PRInt32 GetPlatformDPI() {
+        return 96;
+    }
 
+protected:
     static gfxFontconfigUtils *sFontconfigUtils;
 
 private:

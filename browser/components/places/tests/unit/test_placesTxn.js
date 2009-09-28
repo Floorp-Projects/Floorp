@@ -91,30 +91,33 @@ var observer = {
   onEndUpdateBatch: function() {
     this._endUpdateBatch = true;
   },
-  onItemAdded: function(id, folder, index) {
+  onItemAdded: function(id, folder, index, itemType) {
     this._itemAddedId = id;
     this._itemAddedParent = folder;
     this._itemAddedIndex = index;
+    this._itemAddedType = itemType;
   },
   onBeforeItemRemoved: function(id) {
   },
-  onItemRemoved: function(id, folder, index) {
+  onItemRemoved: function(id, folder, index, itemType) {
     this._itemRemovedId = id;
     this._itemRemovedFolder = folder;
     this._itemRemovedIndex = index;
   },
-  onItemChanged: function(id, property, isAnnotationProperty, value) {
+  onItemChanged: function(id, property, isAnnotationProperty, newValue,
+                          lastModified, itemType) {
     this._itemChangedId = id;
     this._itemChangedProperty = property;
     this._itemChanged_isAnnotationProperty = isAnnotationProperty;
-    this._itemChangedValue = value;
+    this._itemChangedValue = newValue;
   },
   onItemVisited: function(id, visitID, time) {
     this._itemVisitedId = id;
     this._itemVisitedVistId = visitID;
     this._itemVisitedTime = time;
   },
-  onItemMoved: function(id, oldParent, oldIndex, newParent, newIndex) {
+  onItemMoved: function(id, oldParent, oldIndex, newParent, newIndex,
+                        itemType) {
     this._itemMovedId = id
     this._itemMovedOldParent = oldParent;
     this._itemMovedOldIndex = oldIndex;
@@ -150,18 +153,20 @@ function run_test() {
   var txn1 = ptSvc.createFolder("Testing folder", root, bmStartIndex, annos);
   ptSvc.doTransaction(txn1);
 
-  // the check check that calling undoTransaction on an "empty batch" doesn't undo
-  // the previous transaction
+  // This checks that calling undoTransaction on an "empty batch" doesn't
+  // undo the previous transaction (getItemTitle will fail)
   ptSvc.beginBatch();
   ptSvc.endBatch();
   ptSvc.undoTransaction();
 
-  var folderId = bmsvc.getChildFolder(root, "Testing folder");
-  do_check_eq(TEST_DESCRIPTION, 
-              annosvc.getItemAnnotation(folderId, DESCRIPTION_ANNO));
+  var folderId = observer._itemAddedId;
+  do_check_eq(bmsvc.getItemTitle(folderId), "Testing folder");
   do_check_eq(observer._itemAddedIndex, bmStartIndex);
   do_check_eq(observer._itemAddedParent, root);
   do_check_eq(observer._itemAddedId, folderId);
+  do_check_eq(TEST_DESCRIPTION, 
+              annosvc.getItemAnnotation(folderId, DESCRIPTION_ANNO));
+
   txn1.undoTransaction();
   do_check_eq(observer._itemRemovedId, folderId);
   do_check_eq(observer._itemRemovedFolder, root);
@@ -201,7 +206,9 @@ function run_test() {
   // Create item to a folder
   var txn2a = ptSvc.createFolder("Folder", root, bmStartIndex);
   ptSvc.doTransaction(txn2a);
-  var fldrId = bmsvc.getChildFolder(root, "Folder");
+  var fldrId = observer._itemAddedId;
+  do_check_eq(bmsvc.getItemTitle(fldrId), "Folder");
+
   var txn2b = ptSvc.createItem(uri("http://www.example2.com"), fldrId, bmStartIndex, "Testing1b");
   ptSvc.doTransaction(txn2b);
   var b2 = (bmsvc.getBookmarkIdsForURI(uri("http://www.example2.com"), {}))[0];
@@ -287,7 +294,9 @@ function run_test() {
 
   // Test Removing a Folder
   ptSvc.doTransaction(ptSvc.createFolder("Folder2", root, -1));
-  var fldrId2 = bmsvc.getChildFolder(root, "Folder2");
+  var fldrId2 = observer._itemAddedId;
+  do_check_eq(bmsvc.getItemTitle(fldrId2), "Folder2");
+
   var txn4 = ptSvc.removeItem(fldrId2);
   txn4.doTransaction();
   do_check_eq(observer._itemRemovedId, fldrId2);
@@ -549,7 +558,8 @@ function run_test() {
 
   // sortFolderByName
   ptSvc.doTransaction(ptSvc.createFolder("Sorting folder", root, bmStartIndex, [], null));
-  var srtFldId = bmsvc.getChildFolder(root, "Sorting folder");
+  var srtFldId = observer._itemAddedId;
+  do_check_eq(bmsvc.getItemTitle(srtFldId), "Sorting folder");
   ptSvc.doTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "c"));
   ptSvc.doTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "b"));   
   ptSvc.doTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "a"));

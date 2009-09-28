@@ -1362,10 +1362,6 @@ d2b
 		    b->wds = (x[1] = z) ? 2 : 1;
 		}
 	else {
-#ifdef DEBUG
-		if (!z)
-			Bug("Zero passed to d2b");
-#endif
 		k = lo0bits(&z);
 		x[0] = z;
 #ifndef Sudden_Underflow
@@ -1643,6 +1639,13 @@ PR_strtod
 #endif
 
 	if (!_pr_initialized) _PR_ImplicitInitialization();
+
+	for(s = s00, i = 0; *s && i < 64 * 1024; s++, i++)
+		;
+	if (*s) {
+		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+		return 0.0;
+		}
 
 	sign = nz0 = nz = 0;
 	dval(rv) = 0.;

@@ -405,9 +405,10 @@ NS_IMETHODIMP nsPK11Token::ChangePassword(const PRUnichar *oldPassword, const PR
   SECStatus rv;
   NS_ConvertUTF16toUTF8 aUtf8OldPassword(oldPassword);
   NS_ConvertUTF16toUTF8 aUtf8NewPassword(newPassword);
+
   rv = PK11_ChangePW(mSlot, 
-               const_cast<char *>(aUtf8OldPassword.get()), 
-               const_cast<char *>(aUtf8NewPassword.get()));
+         (oldPassword != NULL ? const_cast<char *>(aUtf8OldPassword.get()) : NULL), 
+         (newPassword != NULL ? const_cast<char *>(aUtf8NewPassword.get()) : NULL));
   return (rv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
 }
 

@@ -36,20 +36,53 @@
 #
 # ***** END LICENSE BLOCK *****
 
-libs:: clean \
-; cd javaparser && make libs && mv javaparser.jar ../ && cd .. && \
-  cd translator && make libs && mv translator.jar ../ && cd ..
+libs:: translator
 
-sync:: clean \
-; cd javaparser ; make sync ; cd .. ; \
-  cd translator ; make sync ; cd .. ; \
-  cd htmlparser ; make sync ; cd ..
+translator:: javaparser \
+; mkdir -p htmlparser/bin && \
+  find htmlparser/translator-src/nu/validator/htmlparser -name "*.java" | \
+    xargs javac -cp javaparser.jar -g -d htmlparser/bin && \
+  jar cfm translator.jar manifest.txt -C htmlparser/bin .
 
-translate:: \
+javaparser:: \
+; mkdir -p javaparser/bin && \
+  find javaparser/src -name "*.java" | \
+    xargs javac -g -d javaparser/bin && \
+  jar cf javaparser.jar -C javaparser/bin .
+
+sync_javaparser:: \
+; if [ -d javaparser/.svn ] ; \
+  then cd javaparser ; svn up ; cd .. ; \
+  else \
+    rm -rf javaparser ; \
+    svn co http://javaparser.googlecode.com/svn/trunk/JavaParser javaparser ; \
+  fi
+
+sync_htmlparser:: \
+; if [ -d htmlparser/.hg ] ; \
+  then cd htmlparser ; hg pull --rebase ; cd .. ; \
+  else \
+    rm -rf htmlparser ; \
+    hg clone https://hg.mozilla.org/projects/htmlparser ; \
+  fi
+
+sync:: sync_javaparser sync_htmlparser
+
+translate:: translator \
 ; mkdir -p ../javasrc ; \
-  java -jar translator.jar htmlparser/src .. ../nsHtml5AtomList.h
+  java -jar translator.jar \
+    htmlparser/src/nu/validator/htmlparser/impl \
+    .. ../nsHtml5AtomList.h
 
-clean:: \
-; cd javaparser ; make clean ; cd .. ; \
-  cd translator ; make clean ; cd .. ; \
-  rm -rf *.jar
+named_characters:: translator \
+; java -cp translator.jar \
+    nu.validator.htmlparser.generator.GenerateNamedCharactersCpp \
+      named-character-references.html ../
+
+clean_javaparser:: \
+; rm -rf javaparser/bin javaparser.jar
+
+clean_htmlparser:: \
+; rm -rf htmlparser/bin translator.jar
+
+clean:: clean_javaparser clean_htmlparser
