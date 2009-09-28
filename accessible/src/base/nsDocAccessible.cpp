@@ -383,8 +383,7 @@ NS_IMETHODIMP nsDocAccessible::TakeFocus()
 
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   if (fm) {
-    nsCOMPtr<nsIDOMDocument> domDocument;
-    mDOMNode->GetOwnerDocument(getter_AddRefs(domDocument));
+    nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(mDOMNode));
     nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
     if (document) {
       // focus the document

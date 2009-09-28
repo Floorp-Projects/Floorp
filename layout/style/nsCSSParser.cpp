@@ -5944,6 +5944,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_ime_mode:
     return ParseVariant(aValue, VARIANT_AHK | VARIANT_NORMAL,
                         nsCSSProps::kIMEModeKTable);
+  case eCSSProperty__moz_tab_size:
+    return ParseNonNegativeVariant(aValue, VARIANT_HI, nsnull);
   case eCSSProperty_letter_spacing:
   case eCSSProperty_word_spacing:
     return ParseVariant(aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);

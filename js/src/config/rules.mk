@@ -2162,15 +2162,6 @@ echo-module:
 echo-requires:
 	@echo $(REQUIRES)
 
-echo-requires-recursive::
-ifdef _REPORT_ALL_DIRS
-	@echo $(subst $(topsrcdir)/,,$(srcdir)): $(MODULE): $(REQUIRES)
-else
-	@$(if $(REQUIRES),echo $(subst $(topsrcdir)/,,$(srcdir)): $(MODULE): $(REQUIRES))
-endif
-	$(LOOP_OVER_PARALLEL_DIRS)
-	$(LOOP_OVER_DIRS)
-
 echo-depth-path:
 	@$(topsrcdir)/build/unix/print-depth-path.sh
 

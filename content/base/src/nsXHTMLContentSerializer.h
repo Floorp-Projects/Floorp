@@ -60,7 +60,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
 
   NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
                   const char* aCharSet, PRBool aIsCopying,
-                  PRBool aIsWholeDocument);
+                  PRBool aRewriteEncodingDeclaration);
 
   NS_IMETHOD AppendText(nsIDOMText* aText,
                         PRInt32 aStartOffset,
@@ -170,7 +170,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
 
   // This is to ensure that we only do meta tag fixups when dealing with
   // whole documents.
-  PRPackedBool  mIsWholeDocument;
+  PRPackedBool  mRewriteEncodingDeclaration;
 
   // To keep track of First LI child of OL in selected range 
   PRPackedBool  mIsFirstChildOfOL;

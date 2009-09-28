@@ -40,7 +40,7 @@
 
 #include "nsIDOMCSS2Properties.idl"
 
-[scriptable, uuid(8C31E4A6-8F3A-4BB9-B180-8385AC2A4080)]
+[scriptable, uuid(cc0a6325-770b-476d-8cb8-c2a02a43c348)]
 interface nsIDOMNSCSS2Properties : nsIDOMCSS2Properties
 {
            /* Non-DOM 2 extensions */
@@ -277,5 +277,8 @@ interface nsIDOMNSCSS2Properties : nsIDOMCSS2Properties
                                         // raises(DOMException) on setting
 
            attribute DOMString        pointerEvents;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozTabSize;
                                         // raises(DOMException) on setting
 };

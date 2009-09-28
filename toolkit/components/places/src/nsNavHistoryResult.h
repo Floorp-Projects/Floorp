@@ -51,7 +51,6 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsNavHistory;
-class nsIWritablePropertyBag;
 class nsNavHistoryQuery;
 class nsNavHistoryQueryOptions;
 
@@ -107,10 +106,6 @@ private:
   NS_IMETHOD OnPageExpired(nsIURI* aURI, PRTime aVisitTime,             \
                            PRBool aWholeEntry);
 
-#define NS_DECL_EXTENDED_BOOKMARK_OBSERVER                              \
-  NS_IMETHOD OnItemAdded(PRInt64 aItemId, PRInt64 aFolder,              \
-                         PRInt32 aIndex, PRUint16 aItemType);
-
 // nsNavHistoryResult
 //
 //    nsNavHistory creates this object and fills in mChildren (by getting
@@ -140,9 +135,6 @@ public:
   friend class nsNavHistoryResultTreeViewer;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULT_IID)
-
-  nsresult PropertyBagFor(nsISupports* aObject,
-                          nsIWritablePropertyBag** aBag);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSINAVHISTORYRESULT
@@ -186,9 +178,6 @@ public:
   nsCString mSortingAnnotation;
 
   nsCOMPtr<nsINavHistoryResultViewer> mView;
-
-  // property bags for all result nodes, see PropertyBagFor
-  nsInterfaceHashtable<nsISupportsHashKey, nsIWritablePropertyBag> mPropertyBags;
 
   // node observers
   PRBool mIsHistoryObserver;
@@ -235,10 +224,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
     { *aTime = mTime; return NS_OK; } \
   NS_IMETHOD GetIndentLevel(PRInt32* aIndentLevel) \
     { *aIndentLevel = mIndentLevel; return NS_OK; } \
-  NS_IMETHOD GetViewIndex(PRInt32* aViewIndex) \
-    { *aViewIndex = mViewIndex; return NS_OK; } \
-  NS_IMETHOD SetViewIndex(PRInt32 aViewIndex) \
-    { mViewIndex = aViewIndex; return NS_OK; } \
   NS_IMETHOD GetBookmarkIndex(PRInt32* aIndex) \
     { *aIndex = mBookmarkIndex; return NS_OK; } \
   NS_IMETHOD GetDateAdded(PRTime* aDateAdded) \
@@ -262,16 +247,14 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
 // buffer.)
 #define NS_FORWARD_COMMON_RESULTNODE_TO_BASE_NO_GETITEMMID \
   NS_IMPLEMENT_SIMPLE_RESULTNODE_NO_GETITEMMID \
-  NS_IMETHOD GetIcon(nsIURI** aIcon) \
+  NS_IMETHOD GetIcon(nsACString& aIcon) \
     { return nsNavHistoryResultNode::GetIcon(aIcon); } \
   NS_IMETHOD GetParent(nsINavHistoryContainerResultNode** aParent) \
     { return nsNavHistoryResultNode::GetParent(aParent); } \
   NS_IMETHOD GetParentResult(nsINavHistoryResult** aResult) \
     { return nsNavHistoryResultNode::GetParentResult(aResult); } \
-  NS_IMETHOD GetPropertyBag(nsIWritablePropertyBag** aBag) \
-    { return nsNavHistoryResultNode::GetPropertyBag(aBag); } \
   NS_IMETHOD GetTags(nsAString& aTags) \
-    { return nsNavHistoryResultNode::GetTags(aTags); } \
+    { return nsNavHistoryResultNode::GetTags(aTags); }
 
 #define NS_FORWARD_COMMON_RESULTNODE_TO_BASE \
   NS_FORWARD_COMMON_RESULTNODE_TO_BASE_NO_GETITEMMID \
@@ -292,10 +275,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsNavHistoryResultNode)
 
   NS_IMPLEMENT_SIMPLE_RESULTNODE
-  NS_IMETHOD GetIcon(nsIURI** aIcon);
+  NS_IMETHOD GetIcon(nsACString& aIcon);
   NS_IMETHOD GetParent(nsINavHistoryContainerResultNode** aParent);
   NS_IMETHOD GetParentResult(nsINavHistoryResult** aResult);
-  NS_IMETHOD GetPropertyBag(nsIWritablePropertyBag** aBag);
   NS_IMETHOD GetType(PRUint32* type)
     { *type = nsNavHistoryResultNode::RESULT_TYPE_URI; return NS_OK; }
   NS_IMETHOD GetUri(nsACString& aURI)
@@ -309,7 +291,9 @@ public:
   NS_IMETHOD OnItemChanged(PRInt64 aItemId,
                            const nsACString &aProperty,
                            PRBool aIsAnnotationProperty,
-                           const nsACString &aValue);
+                           const nsACString &aValue,
+                           PRTime aNewLastModified,
+                           PRUint16 aItemType);
 
 public:
 
@@ -408,14 +392,6 @@ public:
   // The indent level of this node. The root node will have a value of -1.  The
   // root's children will have a value of 0, and so on.
   PRInt32 mIndentLevel;
-
-  // Value used by the view for whatever it wants. For the built-in tree view,
-  // this is the index into the result's mVisibleElements list of this element.
-  // This is -1 if it is invalid. For items, >= 0 can be used to determine if
-  // the node is visible in the list or not. For folders, call IsVisible, since
-  // they can be the root node which is not itself visible, but its children
-  // are.
-  PRInt32 mViewIndex;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResultNode, NS_NAVHISTORYRESULTNODE_IID)
@@ -650,8 +626,6 @@ public:
   }
   nsNavHistoryResultNode* FindChildURI(const nsACString& aSpec,
                                        PRUint32* aNodeIndex);
-  nsNavHistoryFolderResultNode* FindChildFolder(PRInt64 aFolderId,
-                                                PRUint32* aNodeIndex);
   nsNavHistoryContainerResultNode* FindChildContainerByName(const nsACString& aTitle,
                                                             PRUint32* aNodeIndex);
   // returns the index of the given node, -1 if not found
@@ -674,7 +648,7 @@ public:
                          nsCOMArray<nsNavHistoryResultNode>* aMatches);
   void UpdateURIs(PRBool aRecursive, PRBool aOnlyOne, PRBool aUpdateSort,
                   const nsCString& aSpec,
-                  void (*aCallback)(nsNavHistoryResultNode*,void*),
+                  void (*aCallback)(nsNavHistoryResultNode*,void*, nsNavHistoryResult*),
                   void* aClosure);
   nsresult ChangeTitles(nsIURI* aURI, const nsACString& aNewTitle,
                         PRBool aRecursive, PRBool aOnlyOne);
@@ -725,7 +699,6 @@ public:
   virtual nsresult OpenContainer();
 
   NS_DECL_BOOKMARK_HISTORY_OBSERVER
-  NS_DECL_EXTENDED_BOOKMARK_OBSERVER
   virtual void OnRemoving();
 
 public:
@@ -799,7 +772,6 @@ public:
   // the bookmark observers. This is called from the result's actual observer
   // and it knows all observers are FolderResultNodes
   NS_DECL_NSINAVBOOKMARKOBSERVER
-  NS_DECL_EXTENDED_BOOKMARK_OBSERVER
 
   virtual void OnRemoving();
 public:

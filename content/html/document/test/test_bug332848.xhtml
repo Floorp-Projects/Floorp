@@ -28,7 +28,7 @@ function test() {
     document.open();
     is(0, 1, "document.open succeeded");
   } catch (e) {
-    is (e.code, DOMException.NOT_SUPPORTED_ERR,
+    is (e.code, DOMException.INVALID_ACCESS_ERR,
         "Wrong exception from document.open");
   }
 
@@ -36,7 +36,7 @@ function test() {
     document.write("aaa");
     is(0, 1, "document.write succeeded");
   } catch (e) {
-    is (e.code, DOMException.NOT_SUPPORTED_ERR,
+    is (e.code, DOMException.INVALID_ACCESS_ERR,
         "Wrong exception from document.write");
   }
 
@@ -44,7 +44,7 @@ function test() {
     document.close();
     is(0, 1, "document.close succeeded");
   } catch (e) {
-    is (e.code, DOMException.NOT_SUPPORTED_ERR,
+    is (e.code, DOMException.INVALID_ACCESS_ERR,
         "Wrong exception from document.close");
   }
 }

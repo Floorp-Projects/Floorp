@@ -261,7 +261,7 @@ function test7() {
 
   doc = ParseXML('<root xmlns="http://www.w3.org/1999/xhtml">' +
                  '<child1 xmlns="">' +
-                 '<child2 xmlns="http://www.w3.org/1999/xhtml"/>' +
+                 '<child2 xmlns="http://www.w3.org/1999/xhtml"></child2>' +
                  '</child1></root>')
   root = doc.documentElement;
   // No interface flattening in xpcshell
@@ -273,7 +273,7 @@ function test7() {
   do_check_serialize(doc);
   do_check_eq(SerializeXML(doc),
               '<root xmlns="http://www.w3.org/1999/xhtml"><child1 xmlns="">' +
-              '<a0:child2 xmlns:a0="http://www.w3.org/1999/xhtml" xmlns=""/></child1></root>');
+              '<a0:child2 xmlns:a0="http://www.w3.org/1999/xhtml" xmlns=""></a0:child2></child1></root>');
 }
 
 function test8() {

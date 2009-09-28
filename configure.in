@@ -3147,16 +3147,12 @@ case "$target" in
                   ac_cv_have_core_text="no")
   AC_MSG_RESULT([$ac_cv_have_core_text])
 
-  case "${target_cpu}" in
-  x86_64)
-    MOZ_CORETEXT=1
-    ;;
-  esac
+  MOZ_CORETEXT=1
 
-  MOZ_ARG_ENABLE_BOOL(coretext,
-[  --enable-coretext      Use CoreText instead of ATSUI for text rendering],
-    MOZ_CORETEXT=1,
-    MOZ_CORETEXT=)
+  MOZ_ARG_DISABLE_BOOL(coretext,
+[  --disable-coretext      Use ATSUI instead of Core Text for text rendering],
+    MOZ_CORETEXT=,
+    MOZ_CORETEXT=1)
 
   if test -n "$MOZ_CORETEXT"; then
     if test "$ac_cv_have_core_text" = "no"; then
@@ -4756,8 +4752,6 @@ cairo-cocoa)
     AC_DEFINE(MOZ_WIDGET_COCOA)
     MOZ_USER_DIR="Mozilla"
     AC_DEFINE(XP_MACOSX)
-    AC_DEFINE(TARGET_CARBON)
-    AC_DEFINE(TARGET_API_MAC_CARBON)
     TK_LIBS='-framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook'
     TK_CFLAGS="-DNO_X11"
     LDFLAGS="$LDFLAGS -framework Cocoa"
@@ -7363,7 +7357,7 @@ if test "$MOZ_TREE_CAIRO"; then
         CAIRO_FT_CFLAGS="$FT2_CFLAGS"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "qt"; then
-        QPAINTER_SURFACE_FEATURE="#define CAIRO_HAS_QPAINTER_SURFACE 1"
+        QT_SURFACE_FEATURE="#define CAIRO_HAS_QT_SURFACE 1"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
         QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
@@ -7452,7 +7446,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(WIN32_FONT_FEATURE)
     AC_SUBST(QUARTZ_FONT_FEATURE)
     AC_SUBST(PNG_FUNCTIONS_FEATURE)
-    AC_SUBST(QPAINTER_SURFACE_FEATURE)
+    AC_SUBST(QT_SURFACE_FEATURE)
 
     if test "$_WIN32_MSVC"; then
         MOZ_CAIRO_LIBS='$(DEPTH)/gfx/cairo/cairo/src/mozcairo.lib $(DEPTH)/gfx/cairo/libpixman/src/mozlibpixman.lib'
@@ -7636,10 +7630,14 @@ dnl
 dnl Build jsctypes on the platforms we can.
 dnl
 AC_SUBST(BUILD_CTYPES)
-if test "$OS_TEST" != "arm"; then
+case "$OS_TEST" in
+arm*)
+  ;;
+*)
   BUILD_CTYPES=1
   AC_DEFINE(BUILD_CTYPES)
-fi
+  ;;
+esac
 
 dnl NECKO_ configuration options are not global
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_"

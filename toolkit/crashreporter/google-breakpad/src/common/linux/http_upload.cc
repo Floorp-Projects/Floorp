@@ -69,7 +69,14 @@ bool HTTPUpload::SendRequest(const string &url,
 
   void *curl_lib = dlopen("libcurl.so", RTLD_NOW);
   if (!curl_lib) {
+    if (error_description != NULL)
+      *error_description = dlerror();
     curl_lib = dlopen("libcurl.so.4", RTLD_NOW);
+  }
+  if (!curl_lib) {
+    // Debian gives libcurl a different name when it is built against GnuTLS
+    // instead of OpenSSL.
+    curl_lib = dlopen("libcurl-gnutls.so.4", RTLD_NOW);
   }
   if (!curl_lib) {
     curl_lib = dlopen("libcurl.so.3", RTLD_NOW);
