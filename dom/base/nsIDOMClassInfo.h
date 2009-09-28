@@ -74,7 +74,8 @@
 #else
 
 #define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(_class)                       \
-  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                             \
+  if (aIID.Equals(NS_GET_IID(nsIClassInfo)) ||                             \
+      aIID.Equals(NS_GET_IID(nsXPCClassInfo))) {                           \
     static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);   \
                                                                            \
     nsresult rv;                                                           \
@@ -95,7 +96,8 @@
 // nsScriptNamespaceManager. Remember to release NS_CLASSINFO_NAME(_class)
 // (eg. when your module unloads).
 #define NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(_class)              \
-  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                             \
+  if (aIID.Equals(NS_GET_IID(nsIClassInfo)) ||                             \
+      aIID.Equals(NS_GET_IID(nsXPCClassInfo))) {                           \
     extern nsISupports *NS_CLASSINFO_NAME(_class);                         \
     if (NS_CLASSINFO_NAME(_class)) {                                       \
       foundInterface = NS_CLASSINFO_NAME(_class);                          \

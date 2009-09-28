@@ -2027,16 +2027,20 @@ private:
 // it abstracts out the scriptable interface pointer and the flags. After
 // creation these are factored differently using XPCNativeScriptableInfo.
 
-class XPCNativeScriptableCreateInfo
+class NS_STACK_CLASS XPCNativeScriptableCreateInfo
 {
 public:
 
     XPCNativeScriptableCreateInfo(const XPCNativeScriptableInfo& si)
         : mCallback(si.GetCallback()), mFlags(si.GetFlags()) {}
 
-    XPCNativeScriptableCreateInfo(nsIXPCScriptable* callback = nsnull,
-                                  XPCNativeScriptableFlags flags = 0)
+    XPCNativeScriptableCreateInfo(already_AddRefed<nsIXPCScriptable> callback,
+                                  XPCNativeScriptableFlags flags)
         : mCallback(callback), mFlags(flags) {}
+
+    XPCNativeScriptableCreateInfo()
+        : mFlags(0) {}
+
 
     nsIXPCScriptable*
     GetCallback() const {return mCallback;}
@@ -2044,8 +2048,6 @@ public:
     const XPCNativeScriptableFlags&
     GetFlags() const      {return mFlags;}
 
-    void
-    SetCallback(nsIXPCScriptable* callback) {mCallback = callback;}
     void
     SetCallback(already_AddRefed<nsIXPCScriptable> callback)
       {mCallback = callback;}
@@ -2609,9 +2611,9 @@ public:
     char* ToString(XPCCallContext& ccx,
                    XPCWrappedNativeTearOff* to = nsnull) const;
 
-    static nsresult GatherProtoScriptableCreateInfo(
+    static void GatherProtoScriptableCreateInfo(
                         nsIClassInfo* classInfo,
-                        XPCNativeScriptableCreateInfo* sciProto);
+                        XPCNativeScriptableCreateInfo& sciProto);
 
     JSBool HasExternalReference() const {return mRefCnt > 1;}
 
@@ -2683,11 +2685,11 @@ private:
                                 XPCWrappedNativeTearOff* to);
 
 public:
-    static nsresult GatherScriptableCreateInfo(
+    static const XPCNativeScriptableCreateInfo& GatherScriptableCreateInfo(
                         nsISupports* obj,
                         nsIClassInfo* classInfo,
-                        XPCNativeScriptableCreateInfo* sciProto,
-                        XPCNativeScriptableCreateInfo* sciWrapper);
+                        XPCNativeScriptableCreateInfo& sciProto,
+                        XPCNativeScriptableCreateInfo& sciWrapper);
 
 private:
     union
