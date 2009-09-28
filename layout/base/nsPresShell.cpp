@@ -6000,6 +6000,9 @@ PresShell::HandleEvent(nsIView         *aView,
   }
 #endif
 
+  nsIContent* capturingContent =
+    NS_IS_MOUSE_EVENT(aEvent) ? GetCapturingContent() : nsnull;
+
   nsCOMPtr<nsIDocument> retargetEventDoc;
   // key and IME events must be targeted at the presshell for the focused frame
   if (!sDontRetargetEvents) {
@@ -6020,10 +6023,10 @@ PresShell::HandleEvent(nsIView         *aView,
       retargetEventDoc = do_QueryInterface(piWindow->GetExtantDocument());
       if (!retargetEventDoc)
         return NS_OK;
-    } else if (NS_IS_MOUSE_EVENT(aEvent) && GetCapturingContent()) {
+    } else if (capturingContent) {
       // if the mouse is being captured then retarget the mouse event at the
       // document that is being captured.
-      retargetEventDoc = gCaptureInfo.mContent->GetCurrentDoc();
+      retargetEventDoc = capturingContent->GetCurrentDoc();
     }
 
     if (retargetEventDoc) {
@@ -6093,43 +6096,7 @@ PresShell::HandleEvent(nsIView         *aView,
     return NS_OK;
   }
 
-  PRBool getDescendantPoint = PR_TRUE;
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
-
-  if (NS_IS_MOUSE_EVENT(aEvent) && GetCapturingContent()) {
-    // if a node is capturing the mouse, get the frame for the capturing
-    // content and use that instead. However, if the content has no parent,
-    // such as the root frame, get the parent canvas frame instead. This
-    // ensures that positioned frames are included when hit-testing. Note
-    // that a check was already done above to ensure that capturingContent
-    // is in this presshell.
-    nsIContent* capturingContent = gCaptureInfo.mContent;
-    frame = GetPrimaryFrameFor(capturingContent);
-    if (frame) {
-      getDescendantPoint = !gCaptureInfo.mRetargetToElement;
-      if (!capturingContent->GetParent()) {
-        frame = frame->GetParent();
-      }
-      else {
-        // special case for <select> as it needs to capture on the dropdown list.
-        if (capturingContent->Tag() == nsGkAtoms::select &&
-            capturingContent->IsNodeOfType(nsINode::eHTML)) {
-          nsIFrame* childframe = frame->GetChildList(nsGkAtoms::selectPopupList).FirstChild();
-          if (childframe) {
-            frame = childframe;
-          }
-        }
-
-        // if the frame is a scrolling frame, get the inner scrolled frame instead.
-        nsIScrollableFrame* scrollFrame = do_QueryFrame(frame);
-        if (scrollFrame) {
-          frame = scrollFrame->GetScrolledFrame();
-        }
-      }
-      aView = frame->GetClosestView();
-    }
-  }
-
   PRBool dispatchUsingCoordinates = NS_IsEventUsingCoordinates(aEvent);
 
   // if this event has no frame, we need to retarget it at a parent
@@ -6182,8 +6149,28 @@ PresShell::HandleEvent(nsIView         *aView,
 #endif
     }
 
+    PRBool captureRetarget = PR_FALSE;
+    if (capturingContent) {
+      captureRetarget = gCaptureInfo.mRetargetToElement;
+      // special case for <select> as it needs to capture on the dropdown list,
+      // so get the frame for the dropdown list instead.
+      if (!captureRetarget && capturingContent->Tag() == nsGkAtoms::select &&
+          capturingContent->IsNodeOfType(nsINode::eHTML)) {
+        nsIFrame* selectFrame = GetPrimaryFrameFor(capturingContent);
+        if (selectFrame) {
+          nsIFrame* childframe = selectFrame->GetChildList(nsGkAtoms::selectPopupList).FirstChild();
+          if (childframe) {
+            frame = childframe;
+          }
+        }
+      }
+    }
+
+    // Get the frame at the event point. However, don't do this if we're
+    // capturing and retargeting the event because the captured frame will
+    // be used instead below.
     nsIFrame* targetFrame = nsnull;
-    if (getDescendantPoint) {
+    if (!captureRetarget) {
       nsPoint eventPoint
           = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
       {
@@ -6194,6 +6181,24 @@ PresShell::HandleEvent(nsIView         *aView,
         }
         targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint,
                                                       PR_FALSE, ignoreRootScrollFrame);
+      }
+    }
+
+    // if a node is capturing the mouse, check if the event needs to be
+    // retargeted at the capturing content instead. This will be the case when
+    // capture retargeting is being used, no frame was found or the frame's
+    // content is not a descendant of the capturing content.
+    if (capturingContent &&
+        (gCaptureInfo.mRetargetToElement ||
+         !targetFrame || !targetFrame->GetContent() ||
+         !nsContentUtils::ContentIsCrossDocDescendantOf(targetFrame->GetContent(),
+                                                        capturingContent))) {
+      // A check was already done above to ensure that capturingContent is
+      // in this presshell, so GetPrimaryFrameFor can just be called directly.
+      nsIFrame* capturingFrame = GetPrimaryFrameFor(capturingContent);
+      if (capturingFrame) {
+        targetFrame = capturingFrame;
+        aView = targetFrame->GetClosestView();
       }
     }
 
