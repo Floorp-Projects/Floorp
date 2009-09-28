@@ -2787,12 +2787,6 @@ js_Interpret(JSContext *cx)
 
 #endif /* !JS_THREADED_INTERP */
 
-#ifdef JS_TRACER
-    /* We cannot reenter the interpreter while recording. */
-    if (TRACE_RECORDER(cx))
-        js_AbortRecording(cx, "attempt to reenter interpreter while recording");
-#endif
-
     /* Check for too deep of a native thread stack. */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
@@ -2988,6 +2982,15 @@ js_Interpret(JSContext *cx)
         }
     }
 #endif /* JS_HAS_GENERATORS */
+
+#ifdef JS_TRACER
+    /*
+     * We cannot reenter the interpreter while recording; wait to abort until
+     * after cx->fp->regs is set.
+     */
+    if (TRACE_RECORDER(cx))
+        js_AbortRecording(cx, "attempt to reenter interpreter while recording");
+#endif
 
     /*
      * It is important that "op" be initialized before calling DO_OP because
