@@ -1246,20 +1246,28 @@ FrameAtomBase(JSContext *cx, JSStackFrame *fp)
 class JSAutoTempValueRooter
 {
   public:
-    JSAutoTempValueRooter(JSContext *cx, size_t len, jsval *vec)
+    JSAutoTempValueRooter(JSContext *cx, size_t len, jsval *vec
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_PUSH_TEMP_ROOT(mContext, len, vec, &mTvr);
     }
-    explicit JSAutoTempValueRooter(JSContext *cx, jsval v = JSVAL_NULL)
+    explicit JSAutoTempValueRooter(JSContext *cx, jsval v = JSVAL_NULL
+                                   JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_PUSH_SINGLE_TEMP_ROOT(mContext, v, &mTvr);
     }
-    JSAutoTempValueRooter(JSContext *cx, JSString *str)
+    JSAutoTempValueRooter(JSContext *cx, JSString *str
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_PUSH_TEMP_ROOT_STRING(mContext, str, &mTvr);
     }
-    JSAutoTempValueRooter(JSContext *cx, JSObject *obj)
+    JSAutoTempValueRooter(JSContext *cx, JSObject *obj
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_PUSH_TEMP_ROOT_OBJECT(mContext, obj, &mTvr);
     }
 
@@ -1280,13 +1288,16 @@ class JSAutoTempValueRooter
 #endif
 
     JSTempValueRooter mTvr;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class JSAutoTempIdRooter
 {
   public:
-    explicit JSAutoTempIdRooter(JSContext *cx, jsid id = INT_TO_JSID(0))
+    explicit JSAutoTempIdRooter(JSContext *cx, jsid id = INT_TO_JSID(0)
+                                JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_PUSH_SINGLE_TEMP_ROOT(mContext, ID_TO_VALUE(id), &mTvr);
     }
 
@@ -1300,11 +1311,15 @@ class JSAutoTempIdRooter
   private:
     JSContext *mContext;
     JSTempValueRooter mTvr;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class JSAutoIdArray {
   public:
-    JSAutoIdArray(JSContext *cx, JSIdArray *ida) : cx(cx), idArray(ida) {
+    JSAutoIdArray(JSContext *cx, JSIdArray *ida
+                  JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : cx(cx), idArray(ida) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         if (ida)
             JS_PUSH_TEMP_ROOT(cx, ida->length, ida->vector, &tvr);
     }
@@ -1329,15 +1344,18 @@ class JSAutoIdArray {
     JSContext * const cx;
     JSIdArray * const idArray;
     JSTempValueRooter tvr;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /* The auto-root for enumeration object and its state. */
 class JSAutoEnumStateRooter : public JSTempValueRooter
 {
   public:
-    JSAutoEnumStateRooter(JSContext *cx, JSObject *obj, jsval *statep)
+    JSAutoEnumStateRooter(JSContext *cx, JSObject *obj, jsval *statep
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx), mStatep(statep)
     {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(obj);
         JS_ASSERT(statep);
         JS_PUSH_TEMP_ROOT_COMMON(cx, obj, this, JSTVU_ENUMERATOR, object);
@@ -1355,13 +1373,16 @@ class JSAutoEnumStateRooter : public JSTempValueRooter
   private:
     JSContext   *mContext;
     jsval       *mStatep;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class JSAutoResolveFlags
 {
   public:
-    JSAutoResolveFlags(JSContext *cx, uintN flags)
+    JSAutoResolveFlags(JSContext *cx, uintN flags
+                       JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx), mSaved(cx->resolveFlags) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         cx->resolveFlags = flags;
     }
 
@@ -1370,6 +1391,7 @@ class JSAutoResolveFlags
   private:
     JSContext *mContext;
     uintN mSaved;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 #endif /* __cpluscplus */
