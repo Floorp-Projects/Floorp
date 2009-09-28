@@ -165,7 +165,8 @@ gFailureExpected = false;
 TestCase.prototype.dump = function () {
   // let reftest handle error reporting, otherwise
   // output a summary line.
-  if (!document.location.href.match(/jsreftest.html/))
+  if (typeof document != "object" ||
+      !document.location.href.match(/jsreftest.html/))
   {
     dump('\njstest: ' + this.path + ' ' +
          'bug: '         + this.bugnumber + ' ' +
