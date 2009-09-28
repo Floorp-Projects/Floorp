@@ -154,6 +154,10 @@ struct JSObject {
         return (JSClass *) (classword & ~JSSLOT_CLASS_MASK_BITS);
     }
 
+    bool hasClass(const JSClass *clasp) const {
+        return clasp == getClass();
+    }
+
     bool isDelegate() const {
         return (classword & jsuword(1)) != jsuword(0);
     }

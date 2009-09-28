@@ -1973,6 +1973,12 @@ VisitFrameSlots(Visitor &visitor, unsigned depth, JSStackFrame *fp,
         visitor.setStackSlotKind("arguments");
         if (!visitor.visitStackSlots(&fp->argsobj, 1, fp))
             return false;
+        // We want to import and track |JSObject *scopeChain|, but the tracker
+        // requires type |jsval|. But the bits are the same, so we can import
+        // it with a cast and the (identity function) unboxing will be OK.
+        visitor.setStackSlotKind("scopeChain");
+        if (!visitor.visitStackSlots((jsval*) &fp->scopeChain, 1, fp))
+            return false;
         visitor.setStackSlotKind("var");
         if (!visitor.visitStackSlots(fp->slots, fp->script->nfixed, fp))
             return false;
@@ -1994,6 +2000,10 @@ VisitFrameSlots(Visitor &visitor, unsigned depth, JSStackFrame *fp,
     }
     return true;
 }
+
+// Number of native frame slots used for 'special' values between args and vars.
+// Currently the two values are |arguments| (args object) and |scopeChain|.
+const int SPECIAL_FRAME_SLOTS = 2;
 
 template <typename Visitor>
 static JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
@@ -2130,7 +2140,7 @@ NativeStackSlots(JSContext *cx, unsigned callDepth)
         unsigned operands = fp->regs->sp - StackBase(fp);
         slots += operands;
         if (fp->argv)
-            slots += fp->script->nfixed + 1 /*argsobj*/;
+            slots += fp->script->nfixed + SPECIAL_FRAME_SLOTS;
         if (depth-- == 0) {
             if (fp->argv)
                 slots += 2/*callee,this*/ + argSlots(fp);
@@ -3207,10 +3217,16 @@ GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* 
     InterpState* state = cx->interpState;
 
 #ifdef DEBUG
-    int32 stackOffset = StackDepthFromCallStack(state, cv->callDepth);
     FrameInfo** fip = state->rp + cv->callDepth;
+    int32 stackOffset = StackDepthFromCallStack(state, cv->callDepth);
     while (--fip > state->callstackBase) {
         FrameInfo* fi = *fip;
+
+        /*
+         * The loop starts aligned to the top of the stack, so move down to the first meaningful
+         * callee. Then read the callee directly from the frame.
+         */
+        stackOffset -= fi->callerHeight;
         JSObject* callee = *(JSObject**)(&state->stackBase[stackOffset]);
         if (callee == call) {
             // This is not reachable as long as JSOP_LAMBDA is not traced:
@@ -3343,33 +3359,14 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSTraceType* mp, 
                           GET_FUNCTION_PRIVATE(cx, fp->callee()));
                 JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee()) == fp->fun);
 
-                /*
-                 * SynthesizeFrame sets scopeChain to NULL, because we can't calculate the
-                 * correct scope chain until we have the final callee. Calculate the real
-                 * scope object here.
-                 */
-                if (!fp->scopeChain) {
-                    fp->scopeChain = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
-                    if (fp->fun->flags & JSFUN_HEAVYWEIGHT) {
-                        /*
-                         * Set hookData to null because the failure case for js_GetCallObject
-                         * involves it calling the debugger hook.
-                         *
-                         * Allocating the Call object must not fail, so use an object
-                         * previously reserved by ExecuteTree if needed.
-                         */
-                        void* hookData = ((JSInlineFrame*)fp)->hookData;
-                        ((JSInlineFrame*)fp)->hookData = NULL;
-                        JS_ASSERT(!JS_TRACE_MONITOR(cx).useReservedObjects);
-                        JS_TRACE_MONITOR(cx).useReservedObjects = JS_TRUE;
-#ifdef DEBUG
-                        JSObject *obj =
-#endif
-                            js_GetCallObject(cx, fp);
-                        JS_ASSERT(obj);
-                        JS_TRACE_MONITOR(cx).useReservedObjects = JS_FALSE;
-                        ((JSInlineFrame*)fp)->hookData = hookData;
-                    }
+                if (fp->fun->flags & JSFUN_HEAVYWEIGHT) {
+                    // If fp is the trace entry frame, then these variables
+                    // have already been created and should not be changed.
+                    if (!fp->callobj)
+                        fp->callobj = fp->scopeChain;
+                    if (!fp->varobj)
+                        fp->varobj = fp->scopeChain;
+                    fp->scopeChain->setPrivate(fp);
                 }
                 fp->thisv = fp->argv[-1];
                 if (fp->flags & JSFRAME_CONSTRUCTING) // constructors always compute 'this'
@@ -3413,7 +3410,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, JSTraceType t,
 
 #ifdef DEBUG
     char name[64];
-    JS_ASSERT(strlen(prefix) < 10);
+    JS_ASSERT(strlen(prefix) < 11);
     void* mark = NULL;
     jsuword* localNames = NULL;
     const char* funName = NULL;
@@ -5477,7 +5474,7 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
      */
     return (fi.spdist - fp->down->script->nfixed) +
            ((fun->nargs > fp->argc) ? fun->nargs - fp->argc : 0) +
-           script->nfixed + 1/*argsobj*/;
+           script->nfixed + SPECIAL_FRAME_SLOTS;
 }
 
 static void
@@ -7788,8 +7785,24 @@ TraceRecorder::stackval(int n) const
     return sp[n];
 }
 
+/*
+ * Generate LIR to compute the scope chain.
+ */
 JS_REQUIRES_STACK LIns*
-TraceRecorder::scopeChain() const
+TraceRecorder::scopeChain()
+{
+    return cx->fp->callee()
+           ? get((jsval*) &cx->fp->scopeChain)
+           : entryScopeChain();
+}
+
+/*
+ * Generate LIR to compute the scope chain on entry to the trace. This is
+ * generally useful only for getting to the global object, because only
+ * the global object is guaranteed to be present.
+ */
+JS_REQUIRES_STACK LIns*
+TraceRecorder::entryScopeChain() const
 {
     return lir->insLoad(LIR_ldp,
                         lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp)),
@@ -9615,6 +9628,7 @@ TraceRecorder::clearFrameSlotsFromCache()
         while (vp < vpstop)
             nativeFrameTracker.set(vp++, (LIns*)0);
         nativeFrameTracker.set(&fp->argsobj, (LIns*)0);
+        nativeFrameTracker.set(&fp->scopeChain, (LIns*)0);
     }
     vp = &fp->slots[0];
     vpstop = &fp->slots[fp->script->nslots];
@@ -9628,17 +9642,49 @@ TraceRecorder::clearFrameSlotsFromCache()
  * this frame returns.
  */
 JS_REQUIRES_STACK void
-TraceRecorder::putArguments()
+TraceRecorder::putActivationObjects()
 {
-    if (cx->fp->argsobj && cx->fp->argc) {
-        LIns* argsobj_ins = get(&cx->fp->argsobj);
-        LIns* args_ins = lir->insAlloc(sizeof(jsval) * cx->fp->argc);
-        for (uintN i = 0; i < cx->fp->argc; ++i) {
+    bool have_args = cx->fp->argsobj && cx->fp->argc;
+    bool have_call = cx->fp->fun && JSFUN_HEAVYWEIGHT_TEST(cx->fp->fun->flags) && cx->fp->fun->countArgsAndVars();
+
+    if (!have_args && !have_call)
+        return;
+
+    int nargs = have_args ? cx->fp->argc : cx->fp->fun->nargs;
+
+    LIns* args_ins;
+    if (nargs) {
+        args_ins = lir->insAlloc(sizeof(jsval) * nargs);
+        for (int i = 0; i < nargs; ++i) {
             LIns* arg_ins = box_jsval(cx->fp->argv[i], get(&cx->fp->argv[i]));
             lir->insStorei(arg_ins, args_ins, i * sizeof(jsval));
         }
+    } else {
+        args_ins = INS_CONSTPTR(0);
+    }
+
+    if (have_args) {
+        LIns* argsobj_ins = get(&cx->fp->argsobj);
         LIns* args[] = { args_ins, argsobj_ins, cx_ins };
         lir->insCall(&js_PutArguments_ci, args);
+    }
+
+    if (have_call) {
+        int nslots = cx->fp->fun->countVars();
+        LIns* slots_ins;
+        if (nslots) {
+            slots_ins = lir->insAlloc(sizeof(jsval) * nslots);
+            for (int i = 0; i < nslots; ++i) {
+                LIns* slot_ins = box_jsval(cx->fp->slots[i], get(&cx->fp->slots[i]));
+                lir->insStorei(slot_ins, slots_ins, i * sizeof(jsval));
+            }
+        } else {
+            slots_ins = INS_CONSTPTR(0);
+        }
+
+        LIns* scopeChain_ins = get((jsval*) &cx->fp->scopeChain);
+        LIns* args[] = { slots_ins, INS_CONST(nslots), args_ins, INS_CONST(nargs), scopeChain_ins, cx_ins };
+        lir->insCall(&js_PutCallObjectOnTrace_ci, args);
     }
 }
 
@@ -9697,6 +9743,30 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
     while (vp < vpstop)
         set(vp++, void_ins, true);
     set(&fp->argsobj, INS_NULL(), true);
+
+    LIns* callee_ins = get(&cx->fp->argv[-2]);
+    LIns* scopeChain_ins = stobj_get_parent(callee_ins);
+
+    if (cx->fp->fun && JSFUN_HEAVYWEIGHT_TEST(cx->fp->fun->flags)) {
+        // We need to make sure every part of the frame is known to the tracker
+        // before taking a snapshot.
+        set((jsval *) &fp->scopeChain, INS_NULL(), true);
+
+        if (js_IsNamedLambda(cx->fp->fun))
+            RETURN_STOP_A("can't call named lambda heavyweight on trace");
+
+        LIns* fun_ins = INS_CONSTPTR(cx->fp->fun);
+
+        LIns* args[] = { scopeChain_ins, callee_ins, fun_ins, cx_ins };
+        LIns* call_ins = lir->insCall(&js_CreateCallObjectOnTrace_ci, args);
+        guard(false, lir->ins_peq0(call_ins), snapshot(OOM_EXIT));
+
+        set((jsval *) &fp->scopeChain, call_ins);
+    } else {
+        set((jsval *) &fp->scopeChain, scopeChain_ins, true);
+    }
+
+   return ARECORD_CONTINUE;
 
     /*
      * Check for recursion. This is a special check for recursive cases that can be
@@ -9844,7 +9914,7 @@ TraceRecorder::record_JSOP_RETURN()
         }
     }
 
-    putArguments();
+    putActivationObjects();
 
     /* If we inlined this function call, make the return value available to the caller code. */
     jsval& rval = stackval(-1);
@@ -11571,7 +11641,7 @@ TraceRecorder::record_JSOP_GETELEM()
 
                     // Guard that the argument has the same type on trace as during recording.
                     LIns* typemap_ins;
-                    if (callDepth == depth) {
+                    if (depth == 0) {
                         // In this case, we are in the same frame where the arguments object was created.
                         // The entry type map is not necessarily up-to-date, so we capture a new type map
                         // for this point in the code.
@@ -11830,7 +11900,7 @@ TraceRecorder::record_JSOP_CALLNAME()
         return ARECORD_CONTINUE;
     }
 
-    LIns* obj_ins = scopeChain();
+    LIns* obj_ins = INS_CONSTOBJ(globalObj);
     JSObject* obj2;
     jsuword pcval;
 
@@ -12328,7 +12398,7 @@ TraceRecorder::name(jsval*& vp, LIns*& ins, NameResult& nr)
         return scopeChainProp(obj, vp, ins, nr);
 
     /* Can't use prop here, because we don't want unboxing from global slots. */
-    LIns* obj_ins = scopeChain();
+    LIns* obj_ins = INS_CONSTOBJ(globalObj);
     uint32 slot;
 
     JSObject* obj2;
@@ -13390,7 +13460,9 @@ TraceRecorder::record_JSOP_LAMBDA()
      * JSOP_SETMETHOD or JSOP_INITMETHOD, since we optimize away the clone for
      * these combinations and clone only if the "method value" escapes.
      */
-    if (FUN_NULL_CLOSURE(fun) && OBJ_GET_PARENT(cx, FUN_OBJECT(fun)) == globalObj) {
+    if (FUN_NULL_CLOSURE(fun)) {
+        if (OBJ_GET_PARENT(cx, FUN_OBJECT(fun)) != globalObj)
+            RETURN_STOP_A("Null closure function object parent must be global object");
         JSOp op2 = JSOp(cx->fp->regs->pc[JSOP_LAMBDA_LENGTH]);
 
         if (op2 == JSOP_SETMETHOD || op2 == JSOP_INITMETHOD) {
@@ -13406,7 +13478,17 @@ TraceRecorder::record_JSOP_LAMBDA()
         stack(0, x);
         return ARECORD_CONTINUE;
     }
-    return ARECORD_STOP;
+
+    LIns* scopeChain_ins = scopeChain();
+    JS_ASSERT(scopeChain_ins);
+    LIns* args[] = { scopeChain_ins, INS_CONSTPTR(fun), cx_ins };
+    LIns* call_ins = lir->insCall(&js_CloneFunctionObject_ci, args);
+    guard(false,
+          addName(lir->ins_peq0(call_ins), "guard(js_CloneFunctionObject)"),
+          OOM_EXIT);
+    stack(0, call_ins);
+
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -13415,11 +13497,8 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
     JSFunction* fun;
     fun = cx->fp->script->getFunction(getFullIndex());
 
-    LIns* scopeChain_ins = get(&cx->fp->argv[-2]);
-    JS_ASSERT(scopeChain_ins);
-
     LIns* args[] = {
-        scopeChain_ins,
+        scopeChain(),
         INS_CONSTFUN(fun),
         cx_ins
     };
@@ -14036,7 +14115,7 @@ TraceRecorder::record_JSOP_STOP()
         return ARECORD_CONTINUE;
     }
 
-    putArguments();
+    putActivationObjects();
 
     /*
      * We know falling off the end of a constructor returns the new object that
