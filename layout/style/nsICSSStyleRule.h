@@ -121,7 +121,8 @@ public:
   nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr);
   nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunction, 
                  const nsString& aValue, PRBool aCaseSensitive);
-  nsAttrSelector(PRInt32 aNameSpace, nsIAtom* aAttr, PRUint8 aFunction, 
+  nsAttrSelector(PRInt32 aNameSpace, nsIAtom* aLowercaseAttr, 
+                 nsIAtom* aCasedAttr, PRUint8 aFunction, 
                  const nsString& aValue, PRBool aCaseSensitive);
   ~nsAttrSelector(void);
 
@@ -130,10 +131,12 @@ public:
 
   nsString        mValue;
   nsAttrSelector* mNext;
-  nsCOMPtr<nsIAtom> mAttr;
+  nsCOMPtr<nsIAtom> mLowercaseAttr;
+  nsCOMPtr<nsIAtom> mCasedAttr;
   PRInt32         mNameSpace;
   PRUint8         mFunction;
-  PRPackedBool    mCaseSensitive;
+  PRPackedBool    mCaseSensitive; // If we are in an HTML document,
+                                  // is the value case sensitive?
 private: 
   nsAttrSelector* Clone(PRBool aDeep) const;
 
@@ -152,7 +155,7 @@ public:
 
   void Reset(void);
   void SetNameSpace(PRInt32 aNameSpace);
-  void SetTag(const nsString& aTag, PRBool aCaseSensitive);
+  void SetTag(const nsString& aTag);
   void AddID(const nsString& aID);
   void AddClass(const nsString& aClass);
   void AddPseudoClass(nsIAtom* aPseudoClass);

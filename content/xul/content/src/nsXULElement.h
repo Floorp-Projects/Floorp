@@ -313,7 +313,6 @@ protected:
         if (!sCSSParser) {
             CallCreateInstance(kCSSParserCID, &sCSSParser);
             if (sCSSParser) {
-                sCSSParser->SetCaseSensitive(PR_TRUE);
                 sCSSParser->SetQuirkMode(PR_FALSE);
             }
         }
