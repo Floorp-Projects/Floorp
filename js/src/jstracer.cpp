@@ -3875,22 +3875,6 @@ TraceRecorder::snapshot(ExitType exitType)
         }
     }
 
-    if (sizeof(VMSideExit) + (stackSlots + ngslots) * sizeof(JSTraceType) >
-        LirBuffer::MAX_SKIP_PAYLOAD_SZB) {
-        /*
-         * ::snapshot() is infallible in the sense that callers don't
-         * expect errors; but this is a trace-aborting error condition. So
-         * mangle the request to consume zero slots, and mark the tree as
-         * to-be-trashed. This should be safe as the trace will be aborted
-         * before assembly or execution due to the call to
-         * trackNativeStackUse above.
-         */
-        stackSlots = 0;
-        ngslots = 0;
-        typemap_size = 0;
-        trashSelf = true;
-    }
-
     /* We couldn't find a matching side exit, so create a new one. */
     VMSideExit* exit = (VMSideExit*)
         traceMonitor->traceAlloc->alloc(sizeof(VMSideExit) +
@@ -11148,8 +11132,6 @@ TraceRecorder::record_JSOP_GETELEM()
                         // The entry type map is not necessarily up-to-date, so we capture a new type map
                         // for this point in the code.
                         unsigned stackSlots = NativeStackSlots(cx, 0 /* callDepth */);
-                        if (stackSlots * sizeof(JSTraceType) > LirBuffer::MAX_SKIP_PAYLOAD_SZB)
-                            RETURN_STOP_A("|arguments| requires saving too much stack");
                         JSTraceType* typemap = new (*traceMonitor->traceAlloc) JSTraceType[stackSlots];
                         DetermineTypesVisitor detVisitor(*this, typemap);
                         VisitStackSlots(detVisitor, cx, 0);
@@ -11631,8 +11613,6 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
 
     // Generate a type map for the outgoing frame and stash it in the LIR
     unsigned stackSlots = NativeStackSlots(cx, 0 /* callDepth */);
-    if (sizeof(FrameInfo) + stackSlots * sizeof(JSTraceType) > LirBuffer::MAX_SKIP_PAYLOAD_SZB)
-        RETURN_STOP("interpreted function call requires saving too much stack");
     FrameInfo* fi = (FrameInfo*)
         traceMonitor->traceAlloc->alloc(sizeof(FrameInfo) +
                                         stackSlots * sizeof(JSTraceType));

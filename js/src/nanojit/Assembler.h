@@ -177,7 +177,6 @@ namespace nanojit
             #endif
 
             Assembler(CodeAlloc& codeAlloc, Allocator& alloc, AvmCore* core, LogControl* logc);
-            ~Assembler() {}
 
             void        endAssembly(Fragment* frag);
             void        assemble(Fragment* frag);
