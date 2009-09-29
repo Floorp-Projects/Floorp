@@ -1167,7 +1167,7 @@ IsSignificantChild(nsIContent* aChild, PRBool aTextIsSignificant,
 // whose namespace and name match those of aAttrSelector.  This function
 // performs comparisons on the value only, based on aAttrSelector->mFunction.
 static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
-                               const nsString& aValue)
+                               const nsString& aValue, PRBool isHTML)
 {
   NS_PRECONDITION(aAttrSelector, "Must have an attribute selector");
 
@@ -1183,9 +1183,11 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
 
   const nsDefaultStringComparator defaultComparator;
   const nsCaseInsensitiveStringComparator ciComparator;
-  const nsStringComparator& comparator = aAttrSelector->mCaseSensitive
+  const nsStringComparator& comparator =
+      (aAttrSelector->mCaseSensitive || !isHTML)
                 ? static_cast<const nsStringComparator&>(defaultComparator)
                 : static_cast<const nsStringComparator&>(ciComparator);
+
   switch (aAttrSelector->mFunction) {
     case NS_ATTR_FUNC_EQUALS: 
       return aValue.Equals(aAttrSelector->mValue, comparator);
@@ -1234,18 +1236,13 @@ static PRBool SelectorMatches(RuleProcessorData &data,
        data.mNameSpaceID != aSelector->mNameSpace))
     return PR_FALSE;
 
-  if (aSelector->mLowercaseTag) {
-    //If we tested that this is an HTML node in a text/html document and
-    //had some tweaks in RuleHash, we could remove case-sensitivity from
-    //style sheets.
-    if (data.mIsHTMLContent) {
-      if (data.mContentTag != aSelector->mLowercaseTag)
-        return PR_FALSE;
-    }
-    else {
-      if (data.mContentTag != aSelector->mCasedTag)
-        return PR_FALSE;
-    }
+  const PRBool isHTML =
+    data.mIsHTMLContent && data.mContent->GetOwnerDoc()->IsHTML();
+
+  if (aSelector->mLowercaseTag && 
+      (isHTML ? aSelector->mLowercaseTag : aSelector->mCasedTag) !=
+        data.mContentTag) {
+    return PR_FALSE;
   }
 
   PRBool result = PR_TRUE;
@@ -1679,8 +1676,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                    "aAttribute is set!");
       result = PR_TRUE;
       nsAttrSelector* attr = aSelector->mAttrList;
+      nsIAtom* matchAttribute;
+
       do {
-        if (attr->mAttr == aAttribute) {
+        matchAttribute = isHTML ? attr->mLowercaseAttr : attr->mCasedAttr;
+        if (matchAttribute == aAttribute) {
           // XXX we should really have a namespace, not just an attr
           // name, in HasAttributeDependentStyle!
           result = PR_TRUE;
@@ -1701,7 +1701,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
             const nsAttrName* attrName =
               data.mContent->GetAttrNameAt(i);
             NS_ASSERTION(attrName, "GetAttrCount lied or GetAttrNameAt failed");
-            if (attrName->LocalName() != attr->mAttr) {
+            if (attrName->LocalName() != matchAttribute) {
               continue;
             }
             if (attr->mFunction == NS_ATTR_FUNC_SET) {
@@ -1714,7 +1714,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                 data.mContent->GetAttr(attrName->NamespaceID(),
                                        attrName->LocalName(), value);
               NS_ASSERTION(hasAttr, "GetAttrNameAt lied");
-              result = AttrMatchesValue(attr, value);
+              result = AttrMatchesValue(attr, value, isHTML);
             }
 
             // At this point |result| has been set by us
@@ -1730,10 +1730,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         else if (attr->mFunction == NS_ATTR_FUNC_EQUALS) {
           result =
             data.mContent->
-              AttrValueIs(attr->mNameSpace, attr->mAttr, attr->mValue,
-                          attr->mCaseSensitive ? eCaseMatters : eIgnoreCase);
+              AttrValueIs(attr->mNameSpace, matchAttribute, attr->mValue,
+                          (!isHTML || attr->mCaseSensitive) ? eCaseMatters
+                                                            : eIgnoreCase);
         }
-        else if (!data.mContent->HasAttr(attr->mNameSpace, attr->mAttr)) {
+        else if (!data.mContent->HasAttr(attr->mNameSpace, matchAttribute)) {
           result = PR_FALSE;
         }
         else if (attr->mFunction != NS_ATTR_FUNC_SET) {
@@ -1741,9 +1742,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 #ifdef DEBUG
           PRBool hasAttr =
 #endif
-              data.mContent->GetAttr(attr->mNameSpace, attr->mAttr, value);
+              data.mContent->GetAttr(attr->mNameSpace, matchAttribute, value);
           NS_ASSERTION(hasAttr, "HasAttr lied");
-          result = AttrMatchesValue(attr, value);
+          result = AttrMatchesValue(attr, value, isHTML);
         }
         
         attr = attr->mNext;
@@ -2326,7 +2327,8 @@ AddRule(RuleValue* aRuleInfo, void* aCascade)
       // Build mAttributeSelectors.
       for (nsAttrSelector *attr = negation->mAttrList; attr;
            attr = attr->mNext) {
-        nsTArray<nsCSSSelector*> *array = cascade->AttributeListFor(attr->mAttr);
+        nsTArray<nsCSSSelector*> *array =
+          cascade->AttributeListFor(attr->mCasedAttr);
         if (!array)
           return PR_FALSE;
         array->AppendElement(selector);

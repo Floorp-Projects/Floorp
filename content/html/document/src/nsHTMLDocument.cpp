@@ -274,10 +274,8 @@ nsHTMLDocument::Init()
   nsresult rv = nsDocument::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Now reset the case-sensitivity of the CSSLoader, since we default
-  // to being HTML, not XHTML.  Also, reset the compatibility mode to
-  // match our compat mode.
-  CSSLoader()->SetCaseSensitive(!IsHTML());
+  // Now reset the compatibility mode of the CSSLoader
+  // to match our compat mode.
   CSSLoader()->SetCompatibilityMode(mCompatMode);
 
   PrePopulateIdentifierMap();
@@ -682,7 +680,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 #endif
 
-  CSSLoader()->SetCaseSensitive(!IsHTML());
   CSSLoader()->SetCompatibilityMode(mCompatMode);
   
   PRBool needsParser = PR_TRUE;
