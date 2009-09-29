@@ -1241,7 +1241,7 @@ EvalCacheHash(JSContext *cx, JSString *str)
 static JSBool
 obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSStackFrame *fp, *caller;
+    JSStackFrame *fp, *caller, *callerFrame;
     JSBool indirectCall;
     uint32 tcflags;
     JSPrincipals *principals;
@@ -1477,8 +1477,8 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
     }
 
+    callerFrame = (staticLevel != 0) ? caller : NULL;
     if (!script) {
-        JSStackFrame *callerFrame = (staticLevel != 0) ? caller : NULL;
         script = JSCompiler::compileScript(cx, scopeobj, callerFrame,
                                            principals, tcflags,
                                            str->chars(), str->length(),
@@ -1501,7 +1501,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     ok = js_CheckPrincipalsAccess(cx, scopeobj, principals,
                                   cx->runtime->atomState.evalAtom);
     if (ok)
-        ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
+        ok = js_Execute(cx, scopeobj, script, callerFrame, JSFRAME_EVAL, rval);
 
     script->u.nextToGC = *bucket;
     *bucket = script;
