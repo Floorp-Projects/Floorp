@@ -97,7 +97,6 @@ public:
   }
 
   virtual PRBool NeedsView() { return PR_TRUE; }
-  virtual nsresult CreateWidgetForView(nsIView* aView);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
