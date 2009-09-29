@@ -1477,6 +1477,11 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
     }
 
+    /*
+     * We can't have a callerFrame (down in js_Execute's terms) if we're in
+     * global code. This includes indirect eval and direct eval called with a
+     * scope object parameter.
+     */
     callerFrame = (staticLevel != 0) ? caller : NULL;
     if (!script) {
         script = JSCompiler::compileScript(cx, scopeobj, callerFrame,
