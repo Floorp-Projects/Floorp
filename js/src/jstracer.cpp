@@ -1142,92 +1142,6 @@ IsSlotUndemotable(JSContext* cx, TreeInfo* ti, unsigned slot)
     return oracle.isGlobalSlotUndemotable(cx, gslots[slot - ti->nStackTypes]);
 }
 
-class FrameInfoCache
-{
-    struct Entry : public JSDHashEntryHdr
-    {
-        FrameInfo *fi;
-    };
-
-    static JSBool
-    MatchFrameInfo(JSDHashTable *table, const JSDHashEntryHdr *entry, const void *key) {
-        const FrameInfo* fi1 = ((const Entry*)entry)->fi;
-        const FrameInfo* fi2 = (const FrameInfo*)key;
-        if (memcmp(fi1, fi2, sizeof(FrameInfo)) != 0)
-            return JS_FALSE;
-        return memcmp(fi1->get_typemap(), fi2->get_typemap(),
-                      fi1->callerHeight * sizeof(JSTraceType)) == 0;
-    }
-
-    static JSDHashNumber
-    HashFrameInfo(JSDHashTable *table, const void *key) {
-        FrameInfo* fi = (FrameInfo*)key;
-        size_t len = sizeof(FrameInfo) + fi->callerHeight * sizeof(JSTraceType);
-
-        JSDHashNumber h = 0;
-        const unsigned char *s = (const unsigned char*)fi;
-        for (size_t i = 0; i < len; i++, s++)
-            h = JS_ROTATE_LEFT32(h, 4) ^ *s;
-        return h;
-    }
-
-    static const JSDHashTableOps FrameCacheOps;
-
-    JSDHashTable *table;
-  public:
-    FrameInfoCache() {
-        init();
-    }
-
-    ~FrameInfoCache() {
-        clear();
-    }
-
-    void clear() {
-        if (table) {
-            JS_DHashTableDestroy(table);
-            table = NULL;
-        }
-    }
-
-    bool reset() {
-        clear();
-        return init();
-    }
-
-    bool init() {
-        table = JS_NewDHashTable(&FrameCacheOps, NULL, sizeof(Entry),
-                                 JS_DHASH_DEFAULT_CAPACITY(32));
-        return table != NULL;
-    }
-
-    FrameInfo *memoize(const FrameInfo *fi, VMAllocator *allocator) {
-        Entry *entry = (Entry*)JS_DHashTableOperate(table, fi, JS_DHASH_ADD);
-        if (!entry)
-            return NULL;
-        if (!entry->fi) {
-            FrameInfo* n = (FrameInfo*)
-                allocator->alloc(sizeof(FrameInfo) + fi->callerHeight * sizeof(JSTraceType));
-            memcpy(n, fi, sizeof(FrameInfo) + fi->callerHeight * sizeof(JSTraceType));
-            entry->fi = n;
-        }
-        return entry->fi;
-    }
-};
-
-const JSDHashTableOps FrameInfoCache::FrameCacheOps =
-{
-    JS_DHashAllocTable,
-    JS_DHashFreeTable,
-    FrameInfoCache::HashFrameInfo,
-    FrameInfoCache::MatchFrameInfo,
-    JS_DHashMoveEntryStub,
-    JS_DHashClearEntryStub,
-    JS_DHashFinalizeStub,
-    NULL
-};
-
-
 struct PCHashEntry : public JSDHashEntryStub {
     size_t          count;
 };
@@ -2648,7 +2562,6 @@ JSTraceMonitor::flush()
             js_FragProfiling_FragFinalizer(f->head, this);
     )
 
-    frameCache->reset();
     dataAlloc->reset();
     traceAlloc->reset();
     codeAlloc->reset();
@@ -2900,12 +2813,12 @@ public:
 class FlushNativeStackFrameVisitor : public SlotVisitorBase
 {
     JSContext *mCx;
-    const JSTraceType *mTypeMap;
+    JSTraceType *mTypeMap;
     double *mStack;
     jsval *mStop;
 public:
     FlushNativeStackFrameVisitor(JSContext *cx,
-                                 const JSTraceType *typeMap,
+                                 JSTraceType *typeMap,
                                  double *stack,
                                  jsval *stop) :
         mCx(cx),
@@ -2914,7 +2827,7 @@ public:
         mStop(stop)
     {}
 
-    const JSTraceType* getTypeMap()
+    JSTraceType* getTypeMap()
     {
         return mTypeMap;
     }
@@ -3204,7 +3117,7 @@ GetClosureVar(JSContext* cx, JSObject* callee, const ClosureVarInfo* cv, double*
  * @return the number of things we popped off of np.
  */
 static JS_REQUIRES_STACK int
-FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSTraceType* mp, double* np,
+FlushNativeStackFrame(JSContext* cx, unsigned callDepth, JSTraceType* mp, double* np,
                       JSStackFrame* stopFrame)
 {
     jsval* stopAt = stopFrame ? &stopFrame->argv[-2] : NULL;
@@ -6400,7 +6313,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
          * type map pointer on the native call stack.
          */
         SynthesizeFrame(cx, *fi, callee);
-        int slots = FlushNativeStackFrame(cx, 1 /* callDepth */, (*callstack)->get_typemap(),
+        int slots = FlushNativeStackFrame(cx, 1 /* callDepth */, (JSTraceType*)(fi + 1),
                                           stack, cx->fp);
 #ifdef DEBUG
         JSStackFrame* fp = cx->fp;
@@ -7263,7 +7176,6 @@ js_InitJIT(JSTraceMonitor *tm)
     tm->tempAlloc = new VMAllocator();
     tm->reTempAlloc = new VMAllocator();
     tm->codeAlloc = new CodeAlloc();
-    tm->frameCache = new FrameInfoCache();
     tm->flush();
     verbose_only( tm->branches = NULL; )
 
@@ -7370,11 +7282,6 @@ js_FinishJIT(JSTraceMonitor *tm)
 
     delete[] tm->reservedDoublePool;
     tm->reservedDoublePool = tm->reservedDoublePoolPtr = NULL;
-
-    if (tm->frameCache) {
-        delete tm->frameCache;
-        tm->frameCache = NULL;
-    }
 
     if (tm->codeAlloc) {
         delete tm->codeAlloc;
@@ -11596,8 +11503,9 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     if (sizeof(FrameInfo) + stackSlots * sizeof(JSTraceType) > LirBuffer::MAX_SKIP_PAYLOAD_SZB)
         RETURN_STOP("interpreted function call requires saving too much stack");
     FrameInfo* fi = (FrameInfo*)
-        traceMonitor->tempAlloc->alloc(sizeof(FrameInfo) + stackSlots * sizeof(JSTraceType));
-    JSTraceType* typemap = (JSTraceType*)(fi + 1);
+        traceMonitor->traceAlloc->alloc(sizeof(FrameInfo) +
+                                        stackSlots * sizeof(JSTraceType));
+    JSTraceType* typemap = reinterpret_cast<JSTraceType *>(fi + 1);
 
     DetermineTypesVisitor detVisitor(*this, typemap);
     VisitStackSlots(detVisitor, cx, 0);
@@ -11619,9 +11527,6 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     if (callDepth >= treeInfo->maxCallDepth)
         treeInfo->maxCallDepth = callDepth + 1;
 
-    fi = traceMonitor->frameCache->memoize(fi, traceMonitor->traceAlloc);
-    if (!fi)
-        RETURN_STOP("out of memory");
     lir->insStorei(INS_CONSTPTR(fi), lirbuf->rp, callDepth * sizeof(FrameInfo*));
 
     atoms = fun->u.i.script->atomMap.vector;
