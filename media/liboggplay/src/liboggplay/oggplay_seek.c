@@ -166,6 +166,20 @@ oggplay_seek_cleanup(OggPlay* me, ogg_int64_t milliseconds)
 
   *p = trash;
   
+  if (milliseconds == 0) {
+    for (i = 0; i < me->num_tracks; i++) {
+      OggPlayDecode *track = me->decode_data[i];
+      FishSound *sound_handle;
+      OggPlayAudioDecode *audio_decode;
+      if (track->content_type != OGGZ_CONTENT_VORBIS) {
+        continue;
+      }
+      audio_decode = (OggPlayAudioDecode*)track;
+      sound_handle = audio_decode->sound_handle;
+      fish_sound_reset(sound_handle);
+    }
+  }
+  
   return E_OGGPLAY_OK;
 }
 
