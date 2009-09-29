@@ -218,11 +218,10 @@ def runTests(xpcshell, xrePath=None, symbolsPath=None,
         leakLogFile = os.path.join(profileDir, "runxpcshelltests_leaks.log")
         env["XPCOM_MEM_LEAK_LOG"] = leakLogFile
 
-        proc = Popen(['valgrind', '--leak-check=full', '--dsymutil=yes'] + cmdH + cmdT + xpcsRunArgs,
+        proc = Popen(cmdH + cmdT + xpcsRunArgs,
                      stdout=pStdout, stderr=pStderr, env=env, cwd=testdir)
         # |stderr == None| as |pStderr| was either |None| or redirected to |stdout|.
         stdout, stderr = proc.communicate()
-        print stdout
 
         if interactive:
           # Not sure what else to do here...
