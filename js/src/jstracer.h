@@ -1050,17 +1050,23 @@ public:
     TreeInfo* getTreeInfo() { return treeInfo; }
 
 #ifdef DEBUG
-    void tprint(const char *format, int count, nanojit::LIns *insa[]);
-    void tprint(const char *format);
-    void tprint(const char *format, nanojit::LIns *ins);
-    void tprint(const char *format, nanojit::LIns *ins1, nanojit::LIns *ins2);
-    void tprint(const char *format, nanojit::LIns *ins1, nanojit::LIns *ins2, nanojit::LIns *ins3);
-    void tprint(const char *format, nanojit::LIns *ins1, nanojit::LIns *ins2, nanojit::LIns *ins3,
-                nanojit::LIns *ins4);
-    void tprint(const char *format, nanojit::LIns *ins1, nanojit::LIns *ins2, nanojit::LIns *ins3,
-                nanojit::LIns *ins4, nanojit::LIns *ins5);
-    void tprint(const char *format, nanojit::LIns *ins1, nanojit::LIns *ins2, nanojit::LIns *ins3,
-                nanojit::LIns *ins4, nanojit::LIns *ins5, nanojit::LIns *ins6);
+    JS_REQUIRES_STACK void tprint(const char *format, int count, nanojit::LIns *insa[]);
+    JS_REQUIRES_STACK void tprint(const char *format);
+    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins);
+    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
+                                  nanojit::LIns *ins2);
+    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
+                                  nanojit::LIns *ins2, nanojit::LIns *ins3);
+    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
+                                  nanojit::LIns *ins2, nanojit::LIns *ins3,
+                                  nanojit::LIns *ins4);
+    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
+                                  nanojit::LIns *ins2, nanojit::LIns *ins3,
+                                  nanojit::LIns *ins4, nanojit::LIns *ins5);
+    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
+                                  nanojit::LIns *ins2, nanojit::LIns *ins3,
+                                  nanojit::LIns *ins4, nanojit::LIns *ins5,
+                                  nanojit::LIns *ins6);
 #endif
 
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
