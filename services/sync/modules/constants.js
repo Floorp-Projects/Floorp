@@ -113,7 +113,6 @@ kSyncWeaveDisabled:                    "Weave is disabled",
 kSyncNotLoggedIn:                      "User is not logged in",
 kSyncNetworkOffline:                   "Network is offline",
 kSyncInPrivateBrowsing:                "Private browsing is enabled",
-kSyncNotScheduled:                     "Not scheduled to do sync",
 kSyncBackoffNotMet:                    "Trying to sync before the server said it's okay",
 
 // Application IDs

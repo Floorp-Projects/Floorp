@@ -11,7 +11,6 @@ pref("extensions.weave.lastversion", "firstrun");
 pref("extensions.weave.rememberpassword", true);
 pref("extensions.weave.autoconnect", true);
 pref("extensions.weave.enabled", true);
-pref("extensions.weave.schedule", 1);
 
 pref("extensions.weave.syncOnQuit.enabled", true);
 

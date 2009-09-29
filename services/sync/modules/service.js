@@ -46,15 +46,6 @@ const Cu = Components.utils;
 // how long we should wait before actually syncing on idle
 const IDLE_TIME = 5; // xxxmpc: in seconds, should be preffable
 
-// INITIAL_THRESHOLD represents the value an engine's score has to exceed
-// in order for us to sync it the first time we start up (and the first time
-// we do a sync check after having synced the engine or reset the threshold).
-const INITIAL_THRESHOLD = 75;
-
-// THRESHOLD_DECREMENT_STEP is the amount by which we decrement an engine's
-// threshold each time we do a sync check and don't sync that engine.
-const THRESHOLD_DECREMENT_STEP = 25;
-
 // How long before refreshing the cluster
 const CLUSTER_BACKOFF = 5 * 60 * 1000; // 5 minutes
 
@@ -442,7 +433,6 @@ WeaveSvc.prototype = {
       case "nsPref:changed":
         switch (data) {
           case "enabled":
-          case "schedule":
             // Potentially we'll want to reschedule syncs
             this._checkSyncStatus();
             break;
@@ -963,13 +953,6 @@ WeaveSvc.prototype = {
   },
 
   /**
-   * Engine scores must meet or exceed this value before we sync them when
-   * using thresholds. These are engine-specific, as different kinds of data
-   * change at different rates, so we store them in a hash by engine name.
-   */
-  _syncThresh: {},
-
-  /**
    * Determine if a sync should run.
    *
    * @return Reason for not syncing; not-truthy if sync should run
@@ -985,8 +968,6 @@ WeaveSvc.prototype = {
     else if (Svc.Private && Svc.Private.privateBrowsingEnabled)
       // Svc.Private doesn't exist on Fennec -- don't assume it's there.
       reason = kSyncInPrivateBrowsing;
-    else if (Svc.Prefs.get("schedule", 0) != 1)
-      reason = kSyncNotScheduled;
     else if (this.status.minimumNextSync > Date.now())
       reason = kSyncBackoffNotMet;
 
@@ -1089,23 +1070,14 @@ WeaveSvc.prototype = {
 
   /**
    * Sync up engines with the server.
-   *
-   * @param fullSync
-   *        True to unconditionally sync all engines
    */
-  sync: function WeaveSvc_sync(fullSync)
+  sync: function sync()
     this._catch(this._lock(this._notify("sync", "", function() {
     this.status.resetEngineStatus();
-    fullSync = true; // not doing thresholds yet
 
-    // Use thresholds to determine what to sync only if it's not a full sync
-    let useThresh = !fullSync;
-
-    // Make sure we should sync or record why we shouldn't. We always obey the
-    // reason if we're using thresholds (not a full sync); otherwise, allow
-    // "not scheduled" as future syncs have already been canceled by checkSync.
+    // Make sure we should sync or record why we shouldn't
     let reason = this._checkSync();
-    if (reason && (useThresh || reason != kSyncNotScheduled)) {
+    if (reason) {
       // this is a purposeful abort rather than a failure, so don't set
       // any status bits
       reason = "Can't sync: " + reason;
@@ -1160,42 +1132,11 @@ WeaveSvc.prototype = {
         if (!engine.enabled)
           continue;
 
-        // Conditionally reset the threshold for the current engine
-        let resetThresh = Utils.bind2(this, function WeaveSvc__resetThresh(cond)
-          cond ? this._syncThresh[name] = INITIAL_THRESHOLD : undefined);
-
-        // Initialize the threshold if it doesn't exist yet
-        resetThresh(!(name in this._syncThresh));
-
-        // Determine if we should sync if using thresholds
-        if (useThresh) {
-          let score = engine.score;
-          let thresh = this._syncThresh[name];
-          if (score >= thresh)
-            this._log.debug("Syncing " + name + "; " +
-                            "score " + score + " >= thresh " + thresh);
-          else {
-            this._log.debug("Not syncing " + name + "; " +
-                            "score " + score + " < thresh " + thresh);
-
-            // Decrement the threshold by a standard amount with a lower bound of 1
-            this._syncThresh[name] = Math.max(thresh - THRESHOLD_DECREMENT_STEP, 1);
-
-            // No need to sync this engine for now
-            continue;
-          }
-        }
-
         // If there's any problems with syncing the engine, report the failure
         if (!(this._syncEngine(engine)) || this.status.enforceBackoff) {
           this._log.info("Aborting sync");
           break;
         }
-
-        // We've successfully synced, so reset the threshold. We do this after
-        // a successful sync so failures can try again on next sync, but this
-        // could trigger too many syncs if the server is having problems.
-        resetThresh(useThresh);
       }
 
       if (this._syncError)
