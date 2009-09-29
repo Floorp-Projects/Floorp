@@ -113,6 +113,7 @@ include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 PKG_STAGE = $(DIST)/test-package-stage
 
 package-tests: stage-mochitest stage-reftest stage-xpcshell
+	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	@(cd $(PKG_STAGE) && tar $(TAR_CREATE_FLAGS) - *) | bzip2 -f > $(DIST)/$(PKG_PATH)$(TEST_PACKAGE)
 
 make-stage-dir:
