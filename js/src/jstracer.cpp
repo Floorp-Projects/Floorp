@@ -849,43 +849,9 @@ TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3, LI
  */
 static Oracle oracle;
 
-/*
- * This confusing and mysterious expression is used for the Tracker. The
- * tracker's responsibility is to map opaque, 4-byte aligned addresses to LIns
- * pointers. To do this efficiently, we observe that the addresses of jsvals
- * living in the interpreter tend to be aggregated close to each other -
- * usually on the same page (where a tracker page doesn't have to be the same
- * size as the OS page size, but it's typically similar).
- *
- * For every address, we split it into two values: upper bits which represent
- * the "base", and lower bits which represent an offset against the base. We
- * create a list of:
- *   struct TrackerPage {
- *      void* base;
- *      LIns* map;
- *   };
- * The mapping then becomes:
- *   page = page such that Base(address) == page->base,
- *   page->map[Index(address)]
- *
- * The size of the map is allocated as N * sizeof(LIns*), where N is
- * (TRACKER_PAGE_SIZE >> 2).  Since the lower two bits are 0, they are always
- * discounted.
- *
- * TRACKER_PAGE_MASK is the "reverse" expression, with a |- 1| to get a mask
- * which separates an address into the Base and Index bits. It is necessary to
- * do all this work rather than use TRACKER_PAGE_SIZE - 1, because on 64-bit
- * platforms the pointer width is twice as large, and only half as many
- * indexes can fit into TrackerPage::map. So the "Base" grows by one bit, and
- * the "Index" shrinks by one bit.
- */
-#define TRACKER_PAGE_MASK (((TRACKER_PAGE_SIZE / sizeof(void*)) << 2) - 1)
-
-#define TRACKER_PAGE_SIZE   4096
-
 Tracker::Tracker()
 {
-    pagelist = 0;
+    pagelist = NULL;
 }
 
 Tracker::~Tracker()
@@ -893,10 +859,16 @@ Tracker::~Tracker()
     clear();
 }
 
-jsuword
+inline jsuword
 Tracker::getTrackerPageBase(const void* v) const
 {
-    return jsuword(v) & ~jsuword(TRACKER_PAGE_MASK);
+    return jsuword(v) & ~TRACKER_PAGE_MASK;
+}
+
+inline jsuword
+Tracker::getTrackerPageOffset(const void* v) const
+{
+    return (jsuword(v) & TRACKER_PAGE_MASK) >> 2;
 }
 
 struct Tracker::TrackerPage*
@@ -905,19 +877,18 @@ Tracker::findTrackerPage(const void* v) const
     jsuword base = getTrackerPageBase(v);
     struct Tracker::TrackerPage* p = pagelist;
     while (p) {
-        if (p->base == base) {
+        if (p->base == base)
             return p;
-        }
         p = p->next;
     }
-    return 0;
+    return NULL;
 }
 
 struct Tracker::TrackerPage*
-Tracker::addTrackerPage(const void* v) {
+Tracker::addTrackerPage(const void* v)
+{
     jsuword base = getTrackerPageBase(v);
-    struct Tracker::TrackerPage* p = (struct Tracker::TrackerPage*)
-        calloc(1, sizeof(*p) - sizeof(p->map) + (TRACKER_PAGE_SIZE >> 2) * sizeof(LIns*));
+    struct TrackerPage* p = (struct TrackerPage*) calloc(1, sizeof(*p));
     p->base = base;
     p->next = pagelist;
     pagelist = p;
@@ -946,7 +917,7 @@ Tracker::get(const void* v) const
     struct Tracker::TrackerPage* p = findTrackerPage(v);
     if (!p)
         return NULL;
-    return p->map[(jsuword(v) & TRACKER_PAGE_MASK) >> 2];
+    return p->map[getTrackerPageOffset(v)];
 }
 
 void
@@ -955,7 +926,7 @@ Tracker::set(const void* v, LIns* i)
     struct Tracker::TrackerPage* p = findTrackerPage(v);
     if (!p)
         p = addTrackerPage(v);
-    p->map[(jsuword(v) & TRACKER_PAGE_MASK) >> 2] = i;
+    p->map[getTrackerPageOffset(v)] = i;
 }
 
 static inline jsuint
