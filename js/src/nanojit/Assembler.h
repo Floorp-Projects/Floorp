@@ -253,6 +253,9 @@ namespace nanojit
             NIns*       _nExitIns;      // current instruction in exit fragment page
             NIns*       _epilogue;
             AssmError   _err;           // 0 = means assemble() appears ok, otherwise it failed
+        #if PEDANTIC
+            NIns*       pedanticTop;
+        #endif
 
             AR          _activation;
             RegAlloc    _allocator;
