@@ -352,6 +352,9 @@ function nsPlacesAutoComplete()
   //// Initialization
 
   // load preferences
+  this._prefs = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefService).
+                getBranch(kBrowserUrlbarBranch);
   this._loadPrefs(true);
 
   // register observers
@@ -498,11 +501,8 @@ nsPlacesAutoComplete.prototype = {
       this._os.removeObserver(this, kQuitApplication);
 
       // Remove our preference observer.
-      let prefs = Cc["@mozilla.org/preferences-service;1"].
-                  getService(Ci.nsIPrefService).
-                  getBranch(kBrowserUrlbarBranch).
-                  QueryInterface(Ci.nsIPrefBranch2);
-      prefs.removeObserver("", this);
+      this._prefs.removeObserver("", this);
+      delete this._prefs;
 
       // Finalize the statements that we have used.
       let stmts = [
@@ -643,9 +643,7 @@ nsPlacesAutoComplete.prototype = {
    */
   _loadPrefs: function PAC_loadPrefs(aRegisterObserver)
   {
-    let prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefService).
-                getBranch(kBrowserUrlbarBranch);
+    let self = this;
     function safeGetter(aName, aDefault) {
       let types = {
         boolean: "Bool",
@@ -658,7 +656,7 @@ nsPlacesAutoComplete.prototype = {
 
       // If the pref isn't set, we want to use the default.
       try {
-        return prefs["get" + type + "Pref"](aName);
+        return self._prefs["get" + type + "Pref"](aName);
       }
       catch (e) {
         return aDefault;
@@ -689,7 +687,7 @@ nsPlacesAutoComplete.prototype = {
 
     // register observer
     if (aRegisterObserver) {
-      let pb = prefs.QueryInterface(Ci.nsIPrefBranch2);
+      let pb = this._prefs.QueryInterface(Ci.nsIPrefBranch2);
       pb.addObserver("", this, false);
     }
   },
