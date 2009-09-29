@@ -657,17 +657,6 @@ nsObjectFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 nsresult
-nsObjectFrame::CreateWidgetForView(nsIView* aView)
-{
-  // Bug 179822: Create widget and allow non-unicode SubClass
-  nsWidgetInitData initData;
-  initData.mUnicode = PR_FALSE;
-  initData.clipChildren = PR_TRUE;
-  initData.clipSiblings = PR_TRUE;
-  return aView->CreateWidget(kWidgetCID, &initData);
-}
-
-nsresult
 nsObjectFrame::CreateWidget(nscoord aWidth,
                             nscoord aHeight,
                             PRBool  aViewOnly)

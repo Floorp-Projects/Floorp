@@ -188,7 +188,7 @@ public:
 
   void EnsureWidget();
 
-  virtual nsresult CreateWidgetForView(nsIView* aView);
+  nsresult CreateWidgetForView(nsIView* aView);
 
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsFrameList&    aChildList);
