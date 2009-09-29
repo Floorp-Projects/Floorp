@@ -69,8 +69,8 @@
       <xul:toolbarbutton class="left-arrow tabbable"
         oncommand="parentNode.navigate(-1, 0, 0);" tooltiptext="&leftarrow.tooltip;"/>
       <xul:hbox align="center" pack="center">
-        <xul:textbox id="pageNumber" size="3" value="1" lastvalid="1"
-          onchange="navigate(0, this.value, 0);"/>
+        <xul:textbox id="pageNumber" size="3" value="1" min="1" type="number"
+          hidespinbuttons="true" onchange="navigate(0, this.valueNumber, 0);"/>
         <xul:label value="&of.label;"/>
         <xul:label value="1"/>
       </xul:hbox>
@@ -163,6 +163,7 @@
       <![CDATA[
         var print = PrintUtils.getWebBrowserPrint();
         this.mTotalPages.value = print.printPreviewNumPages;
+        this.mPageTextBox.max = print.printPreviewNumPages;
 
         this.updateToolbar();
 
@@ -236,8 +237,6 @@
         <body>
         <![CDATA[          
           var print = PrintUtils.getWebBrowserPrint();
-          var validInput = false;
-          var total;
 
           // we use only one of aHomeOrEnd, aDirection, or aPageNum
           if (aHomeOrEnd)
@@ -255,48 +254,18 @@
             }
             
             print.printPreviewNavigate(homeOrEnd, 0);
-            validInput = true;
           }
           else if (aDirection)
           {
-            var textBoxStr  = this.mPageTextBox.value;
-            var newPageNum  = parseInt(textBoxStr) + aDirection;
-            total = print.printPreviewNumPages;
-
-            // bounds check potentially user-entered number
-            if (newPageNum > 0 && newPageNum <= total) 
-            {
-              this.mPageTextBox.value = newPageNum;
-              print.printPreviewNavigate(
-                print.PRINTPREVIEW_GOTO_PAGENUM, newPageNum);
-              validInput = true;
-            }
+            this.mPageTextBox.valueNumber += aDirection;
+            print.printPreviewNavigate(
+              print.PRINTPREVIEW_GOTO_PAGENUM,
+              this.mPageTextBox.valueNumber);
           }
           else 
           {
-            total = print.printPreviewNumPages;
-
-            // bounds check potentially user-entered number
-            if (aPageNum > 0 && aPageNum <= total) 
-            {
-              print.printPreviewNavigate(
-                print.PRINTPREVIEW_GOTO_PAGENUM, aPageNum);
-              validInput = true;
-            }
-          }
-
-          if (validInput)          
-          {
-            // store the valid page number for future use to replace 
-            // the textbox value if erroneous input made it in
-            this.mPageTextBox.setAttribute(
-              "lastvalid", this.mPageTextBox.value);
-          }
-          else
-          { 
-            // restore last known valid value in place of erroneous input
-            this.mPageTextBox.value = 
-              this.mPageTextBox.getAttribute("lastvalid");
+            print.printPreviewNavigate(
+              print.PRINTPREVIEW_GOTO_PAGENUM, aPageNum);
           }
         ]]>
         </body>
@@ -413,6 +382,7 @@
           }
 
           this.mTotalPages.value = print.printPreviewNumPages;
+          this.mPageTextBox.max = print.printPreviewNumPages;
           this.mPageTextBox.value = 1;
         ]]>
         </body>
