@@ -54,6 +54,13 @@
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gWaveDecoderLog;
+#define LOG(type, msg) PR_LOG(gWaveDecoderLog, type, msg)
+#else
+#define LOG(type, msg)
+#endif
+
 // Maximum number of seconds to wait when buffering.
 #define BUFFERING_TIMEOUT 3
 
@@ -1160,6 +1167,12 @@ nsWaveDecoder::nsWaveDecoder()
     mResourceLoadedReported(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsWaveDecoder);
+
+#ifdef PR_LOGGING
+  if (!gWaveDecoderLog) {
+    gWaveDecoderLog = PR_NewLogModule("nsWaveDecoder");
+  }
+#endif
 }
 
 nsWaveDecoder::~nsWaveDecoder()
