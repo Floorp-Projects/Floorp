@@ -53,7 +53,7 @@ namespace nanojit
     class Allocator {
     public:
         Allocator();
-        virtual ~Allocator();
+        ~Allocator();
         void reset();
 
         /** alloc memory, never return null. */
