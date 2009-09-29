@@ -441,6 +441,9 @@ nsStyleSet::GetContext(nsPresContext* aPresContext,
 {
   nsStyleContext* result = nsnull;
   nsRuleNode* ruleNode = mRuleWalker->GetCurrentNode();
+  // Must reset before NS_NewStyleContext, since that could cause more
+  // rule matching (see stack in bug 513741).
+  mRuleWalker->Reset();
       
   if (aParentContext)
     result = aParentContext->FindChildWithRules(aPseudoTag, ruleNode).get();
@@ -721,9 +724,7 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
       mRuleWalker->Forward(aRules.ObjectAt(i));
     }
     result = GetContext(presContext, aParentContext, aPseudoTag).get();
-
-    // Now reset the walker back to the root of the tree.
-    mRuleWalker->Reset();
+    NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
   }
   return result;
 }
@@ -796,9 +797,7 @@ nsStyleSet::ResolvePseudoStyleFor(nsIContent* aParentContent,
     FileRules(EnumPseudoRulesMatching, &data);
 
     result = GetContext(presContext, aParentContext, aPseudoTag).get();
-
-    // Now reset the walker back to the root of the tree.
-    mRuleWalker->Reset();
+    NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
   }
 
   return result;
@@ -838,9 +837,10 @@ nsStyleSet::ProbePseudoStyleFor(nsIContent* aParentContent,
 
     if (mRuleWalker->GetCurrentNode() != adjustedRoot)
       result = GetContext(presContext, aParentContext, aPseudoTag).get();
+    else
+      mRuleWalker->Reset();
 
-    // Now reset the walker back to the root of the tree.
-    mRuleWalker->Reset();
+    NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
   }
 
   // For :before and :after pseudo-elements, having display: none or no
@@ -905,7 +905,7 @@ nsStyleSet::Shutdown(nsPresContext* aPresContext)
   mDefaultStyleData.Destroy(0, aPresContext);
 }
 
-static const PRInt32 kGCInterval = 300;
+static const PRUint32 kGCInterval = 300;
 
 void
 nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
@@ -983,7 +983,7 @@ nsStyleSet::ReParentStyleContext(nsPresContext* aPresContext,
 
       already_AddRefed<nsStyleContext> result =
           GetContext(aPresContext, aNewParentContext, pseudoTag);
-      mRuleWalker->Reset();
+      NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
       return result;
     }
   }
