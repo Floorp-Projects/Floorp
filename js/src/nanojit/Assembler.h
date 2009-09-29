@@ -107,6 +107,10 @@ namespace nanojit
     typedef SeqBuilder<NIns*> NInsList;
     typedef HashMap<NIns*, LIns*> NInsMap;
 
+#ifdef VTUNE
+    class avmplus::CodegenLIR;
+#endif
+
     class LabelState
     {
     public:
@@ -166,6 +170,10 @@ namespace nanojit
             LogControl* _logc;
             size_t codeBytes;
             size_t exitBytes;
+            #endif // NJ_VERBOSE
+
+            #ifdef VTUNE
+            avmplus::CodegenLIR *cgen;
             #endif
 
             Assembler(CodeAlloc& codeAlloc, Allocator& alloc, AvmCore* core, LogControl* logc);
