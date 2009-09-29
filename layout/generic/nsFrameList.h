@@ -416,6 +416,11 @@ public:
       mPrev(aOther.mPrev)
     {}
 
+    /* This constructor needs to know about nsIFrame, and nsIFrame will need to
+       know about nsFrameList methods, so in order to inline this put
+       the implementation in nsIFrame.h */
+    inline FrameLinkEnumerator(const nsFrameList& aList, nsIFrame* aPrevFrame);
+
     void operator=(const FrameLinkEnumerator& aOther) {
       NS_PRECONDITION(&List() == &aOther.List(), "Different lists?");
       mFrame = aOther.mFrame;
