@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+@namespace url(test);
+div {
+background-color: green;
+}
+div[dir=RTL ] 
+{background-color: red !important;
+}
+</style>
+<script>
+function f() {
+var elem = document.createElementNS("test","div");
+elem.setAttribute("dir","rtl");
+elem.appendChild(document.createTextNode("text"));
+document.getElementsByTagName("body")[0].appendChild(elem); }
+</script>
+</head>
+<body onload="f();">
+</body>
+</html>

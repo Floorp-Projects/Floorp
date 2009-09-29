@@ -685,8 +685,15 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, PRBool aScreen, PRBoo
       }
     }
   }
-  if (!aRelative)
-    screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
+  if (!aRelative) {
+    if (!mOpenerScreenRect.IsEmpty()) {
+      screenmgr->ScreenForRect(mOpenerScreenRect.x, mOpenerScreenRect.y,
+                               mOpenerScreenRect.width, mOpenerScreenRect.height,
+                               getter_AddRefs(screen));
+    } else {
+      screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
+    }
+  }
 
   if (aScreen && screen) {
     screen->GetAvailRect(&left, &top, &width, &height);
@@ -1691,13 +1698,9 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
   NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
 
   // Just do a normal create of a window and return.
-  //XXXTAB remove this when appshell talks in terms of nsIXULWindow
-  nsCOMPtr<nsIXULWindow> parent;
-  if (aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT)
-    parent = this;
 
   nsCOMPtr<nsIXULWindow> newWindow;
-  appShell->CreateTopLevelWindow(parent, nsnull, aChromeFlags,
+  appShell->CreateTopLevelWindow(this, nsnull, aChromeFlags,
                                  nsIAppShellService::SIZE_TO_CONTENT,
                                  nsIAppShellService::SIZE_TO_CONTENT,
                                  aAppShell, getter_AddRefs(newWindow));
@@ -1718,10 +1721,6 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
 
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
   NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIXULWindow> parent;
-  if (aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT)
-    parent = this;
 
   // We need to create a new top level window and then enter a nested
   // loop. Eventually the new window will be told that it has loaded,
@@ -1747,9 +1746,9 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIXULWindow> newWindow;
-  appShell->CreateTopLevelWindow(parent, uri,
-                                aChromeFlags, 615, 480, aAppShell,
-                                getter_AddRefs(newWindow));
+  appShell->CreateTopLevelWindow(this, uri,
+                                 aChromeFlags, 615, 480, aAppShell,
+                                 getter_AddRefs(newWindow));
 
   NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
 

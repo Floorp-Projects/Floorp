@@ -1146,8 +1146,10 @@ LoginManagerStorage_mozStorage.prototype = {
         this._base64checked = true;
         // Ignore failures, will try again next session...
 
+        this.log("Reencrypting Base64 logins");
+        this._dbConnection.beginTransaction();
         try {
-            let [logins, ids] = this._searchLogins({ encType: 0 });
+            let [logins, ids] = this._searchLogins({ encType: ENCTYPE_BASE64 });
 
             if (!logins.length)
                 return;
@@ -1157,10 +1159,37 @@ LoginManagerStorage_mozStorage.prototype = {
             if (userCanceled)
                 return;
 
-            for each (let login in logins)
-                this.modifyLogin(login, login);
+            let encUsername, encPassword, stmt;
+            for each (let login in logins) {
+                [encUsername, encPassword, userCanceled] = this._encryptLogin(login);
+                if (userCanceled)
+                    throw "User canceled master password entry, login not modified.";
+                let query =
+                    "UPDATE moz_logins " +
+                    "SET encryptedUsername = :encryptedUsername, " +
+                        "encryptedPassword = :encryptedPassword, " +
+                        "encType = :encType " +
+                    "WHERE guid = :guid";
+                let params = {
+                    encryptedUsername: encUsername,
+                    encryptedPassword: encPassword,
+                    encType:           ENCTYPE_SDR,
+                    guid:              login.guid
+                };
+                try {
+                    stmt = this._dbCreateStatement(query, params);
+                    stmt.execute();
+                } catch (e) {
+                    // Ignore singular errors, continue trying to update others.
+                    this.log("_reencryptBase64Logins caught error: " + e);
+                } finally {
+                    stmt.reset();
+                }
+            }
         } catch (e) {
-            this.log("_reencryptBase64Logins caught error: " + e);
+            this.log("_reencryptBase64Logins failed: " + e);
+        } finally {
+            this._dbConnection.commitTransaction();
         }
     },
 
