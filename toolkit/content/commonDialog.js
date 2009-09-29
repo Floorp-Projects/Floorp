@@ -166,8 +166,9 @@ function commonDialogOnLoad()
   // set the icon
   var iconElement = document.getElementById("info.icon");
   var iconClass = gCommonDialogParam.GetString(2);
-  if (iconClass)
-    iconElement.classList.add(iconClass);
+  if (!iconClass)
+    iconClass = "message-icon";
+  iconElement.setAttribute("class", iconElement.getAttribute("class") + " " + iconClass);
 
   switch (nButtons) {
     case 4:
