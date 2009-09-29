@@ -2357,8 +2357,8 @@ nsRootPresContext::UpdatePluginGeometry(nsIFrame* aChangedSubtree)
   GetPluginGeometryUpdates(aChangedSubtree, &configurations);
   if (configurations.IsEmpty())
     return;
-  nsIWidget* widget = configurations[0].mChild->GetParent();
-  NS_ASSERTION(widget, "Plugin must have a parent");
+  nsIWidget* widget = FrameManager()->GetRootFrame()->GetWindow();
+  NS_ASSERTION(widget, "Plugins must have a parent window");
   widget->ConfigureChildren(configurations);
   DidApplyPluginGeometryUpdates();
 }

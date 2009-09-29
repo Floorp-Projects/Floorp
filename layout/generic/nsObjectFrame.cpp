@@ -725,7 +725,14 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     rpc->RegisterPluginForGeometryUpdates(this);
     rpc->UpdatePluginGeometry(this);
 
-    mWidget->Show(PR_TRUE);
+    // If this frame has an ancestor with a widget which is not
+    // the root prescontext's widget, then this plugin should not be
+    // displayed, so don't show the widget. If we show the widget, the
+    // plugin may appear in the main window. In Web content this would
+    // only happen with a plugin in a XUL popup.
+    if (parentWidget == GetWindow()) {
+      mWidget->Show(PR_TRUE);
+    }
   }
 
   if (mWidget) {
