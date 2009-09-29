@@ -36,3 +36,4 @@ handle-read-errors.patch: Make oggplay_initialise() handle closing of stream
                           while reading. Prevents infinite loop. Further fix
                           to 17ef4ca82df28.
 
+fishsound_reset.patch: Fixes bug 516323.

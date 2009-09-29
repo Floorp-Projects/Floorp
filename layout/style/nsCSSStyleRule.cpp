@@ -199,36 +199,47 @@ nsPseudoClassList::~nsPseudoClassList(void)
 nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr)
   : mValue(),
     mNext(nsnull),
-    mAttr(nsnull),
+    mLowercaseAttr(nsnull),
+    mCasedAttr(nsnull),
     mNameSpace(aNameSpace),
     mFunction(NS_ATTR_FUNC_SET),
     mCaseSensitive(1)
 {
   MOZ_COUNT_CTOR(nsAttrSelector);
 
-  mAttr = do_GetAtom(aAttr);
+  nsAutoString lowercase;
+  ToLowerCase(aAttr, lowercase);
+  
+  mCasedAttr = do_GetAtom(aAttr);
+  mLowercaseAttr = do_GetAtom(lowercase);
 }
 
 nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunction, 
                                const nsString& aValue, PRBool aCaseSensitive)
   : mValue(aValue),
     mNext(nsnull),
-    mAttr(nsnull),
+    mLowercaseAttr(nsnull),
+    mCasedAttr(nsnull),
     mNameSpace(aNameSpace),
     mFunction(aFunction),
     mCaseSensitive(aCaseSensitive)
 {
   MOZ_COUNT_CTOR(nsAttrSelector);
 
-  mAttr = do_GetAtom(aAttr);
+  nsAutoString lowercase;
+  ToLowerCase(aAttr, lowercase);
+  
+  mCasedAttr = do_GetAtom(aAttr);
+  mLowercaseAttr = do_GetAtom(lowercase);
 }
 
-nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, nsIAtom* aAttr,
-                               PRUint8 aFunction, const nsString& aValue,
-                               PRBool aCaseSensitive)
+nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace,  nsIAtom* aLowercaseAttr,
+                               nsIAtom* aCasedAttr, PRUint8 aFunction, 
+                               const nsString& aValue, PRBool aCaseSensitive)
   : mValue(aValue),
     mNext(nsnull),
-    mAttr(aAttr),
+    mLowercaseAttr(aLowercaseAttr),
+    mCasedAttr(aCasedAttr),
     mNameSpace(aNameSpace),
     mFunction(aFunction),
     mCaseSensitive(aCaseSensitive)
@@ -240,7 +251,8 @@ nsAttrSelector*
 nsAttrSelector::Clone(PRBool aDeep) const
 {
   nsAttrSelector *result =
-    new nsAttrSelector(mNameSpace, mAttr, mFunction, mValue, mCaseSensitive);
+    new nsAttrSelector(mNameSpace, mLowercaseAttr, mCasedAttr, 
+                       mFunction, mValue, mCaseSensitive);
 
   if (aDeep)
     NS_CSS_CLONE_LIST_MEMBER(nsAttrSelector, this, mNext, result, (PR_FALSE));
@@ -337,7 +349,7 @@ void nsCSSSelector::SetNameSpace(PRInt32 aNameSpace)
   mNameSpace = aNameSpace;
 }
 
-void nsCSSSelector::SetTag(const nsString& aTag, PRBool aCaseMatters)
+void nsCSSSelector::SetTag(const nsString& aTag)
 {
   if (aTag.IsEmpty()) {
     mLowercaseTag = mCasedTag =  nsnull;
@@ -346,14 +358,9 @@ void nsCSSSelector::SetTag(const nsString& aTag, PRBool aCaseMatters)
 
   mCasedTag = do_GetAtom(aTag);
  
-  if (aCaseMatters) {
-    mLowercaseTag = mCasedTag;
-  } 
-  else {
-    nsAutoString lowercase(aTag);
-    ToLowerCase(lowercase);
-    mLowercaseTag = do_GetAtom(lowercase);
-  }
+  nsAutoString lowercase;
+  ToLowerCase(aTag, lowercase);
+  mLowercaseTag = do_GetAtom(lowercase);
 }
 
 void nsCSSSelector::AddID(const nsString& aID)
@@ -657,7 +664,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
         }
       }
       // Append the attribute name
-      list->mAttr->ToString(temp);
+      list->mCasedAttr->ToString(temp);
       aString.Append(temp);
 
       if (list->mFunction != NS_ATTR_FUNC_SET) {

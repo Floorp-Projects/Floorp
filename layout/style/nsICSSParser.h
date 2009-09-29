@@ -74,9 +74,6 @@ public:
   // out an existing stylesheet reference.
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet) = 0;
 
-  // Set whether or not tags & classes are case sensitive or uppercased
-  NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive) = 0;
-
   // Set whether or not to emulate Nav quirks
   NS_IMETHOD SetQuirkMode(PRBool aQuirkMode) = 0;
 

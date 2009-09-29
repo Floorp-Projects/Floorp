@@ -460,9 +460,7 @@ gfxMacPlatformFontList::InitSingleFaceList()
         gfxFontEntry *fontEntry = LookupLocalFont(nsnull, singleFaceFonts[i]);
         if (fontEntry) {
             nsAutoString familyName, key;
-            if (!GetStandardFamilyName(singleFaceFonts[i], familyName)) {
-                familyName = singleFaceFonts[i];
-            }
+            familyName = singleFaceFonts[i];
             GenerateFontListKey(familyName, key);
             PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontlist-singleface) family name: %s, key: %s\n",
                    NS_ConvertUTF16toUTF8(familyName).get(), NS_ConvertUTF16toUTF8(key).get()));
