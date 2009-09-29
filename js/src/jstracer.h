@@ -157,18 +157,37 @@ public:
 
 /*
  * Tracker is used to keep track of values being manipulated by the interpreter
- * during trace recording.  Note that tracker pages aren't necessarily the
- * same size as OS pages, they just are a moderate-sized chunk of memory.
+ * during trace recording.  It maps opaque, 4-byte aligned address to LIns pointers.
+ * pointers. To do this efficiently, we observe that the addresses of jsvals
+ * living in the interpreter tend to be aggregated close to each other -
+ * usually on the same page (where a tracker page doesn't have to be the same
+ * size as the OS page size, but it's typically similar).  The Tracker
+ * consists of a linked-list of structures representing a memory page, which
+ * are created on-demand as memory locations are used.
+ *
+ * For every address, first we split it into two parts: upper bits which
+ * represent the "base", and lower bits which represent an offset against the
+ * base.  For the offset, we then right-shift it by two because the bottom two
+ * bits of a 4-byte aligned address are always zero.  The mapping then
+ * becomes:
+ *
+ *   page = page in pagelist such that Base(address) == page->base,
+ *   page->map[Offset(address)]
  */
 class Tracker {
+    #define TRACKER_PAGE_SZB        4096
+    #define TRACKER_PAGE_ENTRIES    (TRACKER_PAGE_SZB >> 2)    // each slot is 4 bytes
+    #define TRACKER_PAGE_MASK       jsuword(TRACKER_PAGE_SZB - 1)
+
     struct TrackerPage {
         struct TrackerPage* next;
         jsuword             base;
-        nanojit::LIns*      map[1];
+        nanojit::LIns*      map[TRACKER_PAGE_ENTRIES];
     };
     struct TrackerPage* pagelist;
 
     jsuword             getTrackerPageBase(const void* v) const;
+    jsuword             getTrackerPageOffset(const void* v) const;
     struct TrackerPage* findTrackerPage(const void* v) const;
     struct TrackerPage* addTrackerPage(const void* v);
 public:
