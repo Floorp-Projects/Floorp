@@ -1865,8 +1865,7 @@ nsDocument::Init()
   
   NS_NewCSSLoader(this, &mCSSLoader);
   NS_ENSURE_TRUE(mCSSLoader, NS_ERROR_OUT_OF_MEMORY);
-  // Assume we're not HTML and not quirky, until we know otherwise
-  mCSSLoader->SetCaseSensitive(PR_TRUE);
+  // Assume we're not quirky, until we know otherwise
   mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
 
   mNodeInfoManager = new nsNodeInfoManager();

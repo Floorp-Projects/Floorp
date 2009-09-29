@@ -63,6 +63,7 @@
 #include "nsIDOMHTMLTableCaptionElem.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
+#include "nsUnicharUtils.h"
 #include "nsStyleSet.h"
 #include "nsIViewManager.h"
 #include "nsIEventStateManager.h"
@@ -1712,6 +1713,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
       nsCOMPtr<nsIAtom> attrName;
       PRInt32 attrNameSpace = kNameSpaceID_None;
       nsAutoString contentString(data.mContent.mString);
+      
       PRInt32 barIndex = contentString.FindChar('|'); // CSS namespace delimiter
       if (-1 != barIndex) {
         nsAutoString  nameSpaceVal;
@@ -1720,10 +1722,16 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
         attrNameSpace = nameSpaceVal.ToInteger(&error, 10);
         contentString.Cut(0, barIndex + 1);
         if (contentString.Length()) {
+          if (mDocument->IsHTML() && aParentContent->IsNodeOfType(nsINode::eHTML)) {
+            ToLowerCase(contentString);
+          }
           attrName = do_GetAtom(contentString);
         }
       }
       else {
+        if (mDocument->IsHTML() && aParentContent->IsNodeOfType(nsINode::eHTML)) {
+          ToLowerCase(contentString);
+        }
         attrName = do_GetAtom(contentString);
       }
 
@@ -1736,7 +1744,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
                              attrNameSpace, attrName, getter_AddRefs(content));
       return content.forget();
     }
-  
+
   case eStyleContentType_Counter:
   case eStyleContentType_Counters:
     {
