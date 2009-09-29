@@ -511,6 +511,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   # Don't care about this |status|: |runApp()| reporting it should be enough.
   status = automation.runApp(None, browserEnv, options.app,
                              PROFILE_DIRECTORY, ["-silent"],
+                             utilityPath = options.utilityPath,
                              xrePath = options.xrePath,
                              symbolsPath=options.symbolsPath)
   # We don't care to call |processLeakLog()| for this step.
