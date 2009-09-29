@@ -75,16 +75,16 @@ tests.push({
     do_check_eq(bs.getIdForItemAt(bs.toolbarFolder, 0), -1);
     // Sanity check: we should not have any bookmark on the menu.
     do_check_eq(bs.getIdForItemAt(bs.bookmarksMenuFolder, 0), -1);
-    
+
     // Set preferences.
     ps.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 0);
     // Force nsBrowserGlue::_initPlaces().
     os.notifyObservers(null, TOPIC_PLACES_INIT_COMPLETE, null);
 
     // Count items on toolbar.
-    do_check_eq(countFolderChildren(bs.toolbarFolder), SMART_BOOKMARKS_ON_TOOLBAR);
+    do_check_eq(countFolderChildren(bs.toolbarFolder), SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
     // Count items on menu (+1 for the separator).
-    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder), SMART_BOOKMARKS_ON_MENU + 1);
+    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder), SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
     // Check version has been updated.
     do_check_eq(ps.getIntPref(PREF_SMART_BOOKMARKS_VERSION), SMART_BOOKMARKS_VERSION);
@@ -113,9 +113,9 @@ tests.push({
     os.notifyObservers(null, TOPIC_PLACES_INIT_COMPLETE, null);
 
     // Count items on toolbar.
-    do_check_eq(countFolderChildren(bs.toolbarFolder), SMART_BOOKMARKS_ON_TOOLBAR);
+    do_check_eq(countFolderChildren(bs.toolbarFolder), SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
     // Count items on menu (+1 for the separator).
-    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder), SMART_BOOKMARKS_ON_MENU + 1);
+    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder), SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
     // check smart bookmark has been replaced, itemId has changed.
     itemId = bs.getIdForItemAt(bs.toolbarFolder, 0);
@@ -138,15 +138,15 @@ tests.push({
     // Set preferences.
     ps.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
     // Remove toolbar's smart bookmarks
-    bs.removeFolderChildren(bs.toolbarFolder);
+    bs.removeItem(bs.getIdForItemAt(bs.toolbarFolder, 0));
 
     // Force nsBrowserGlue::_initPlaces().
     os.notifyObservers(null, TOPIC_PLACES_INIT_COMPLETE, null);
 
     // Count items on toolbar, we should not have recreated the smart bookmark.
-    do_check_eq(countFolderChildren(bs.toolbarFolder), 0);
+    do_check_eq(countFolderChildren(bs.toolbarFolder),  DEFAULT_BOOKMARKS_ON_TOOLBAR);
     // Count items on menu (+1 for the separator).
-    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder), SMART_BOOKMARKS_ON_MENU + 1);
+    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder), SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
     // Check version has been updated.
     do_check_eq(ps.getIntPref(PREF_SMART_BOOKMARKS_VERSION), SMART_BOOKMARKS_VERSION);
@@ -167,9 +167,9 @@ tests.push({
     os.notifyObservers(null, TOPIC_PLACES_INIT_COMPLETE, null);
 
     // Count items on toolbar, we should not have recreated the smart bookmark.
-    do_check_eq(countFolderChildren(bs.toolbarFolder), SMART_BOOKMARKS_ON_TOOLBAR);
+    do_check_eq(countFolderChildren(bs.toolbarFolder), SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
     // Count items on menu (+1 for the separator).
-    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder), SMART_BOOKMARKS_ON_MENU + 1);
+    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder), SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
     // Check version has been updated.
     do_check_eq(ps.getIntPref(PREF_SMART_BOOKMARKS_VERSION), SMART_BOOKMARKS_VERSION);
@@ -193,23 +193,19 @@ function countFolderChildren(aFolderItemId) {
 function finish_test() {
   // Clean up database from all bookmarks.
   remove_all_bookmarks();
-  // Simulate application closing to remove the idle observer and avoid leaks.
-  os.notifyObservers(null, "quit-application-granted", null);
+
   do_test_finished();
 }
 
 var testIndex = 0;
 function next_test() {
-  // Simulate application closing to remove the idle observer and avoid leaks.
-  os.notifyObservers(null, "quit-application-granted", null);
-
   // nsBrowserGlue stops observing topics after first notification,
   // so we add back the observer to test additional runs.
   os.addObserver(bg, TOPIC_PLACES_INIT_COMPLETE, false);
 
   // Execute next test.
-  var test = tests.shift();
-  dump("\nTEST " + (++testIndex) + ": " + test.description);
+  let test = tests.shift();
+  print("\nTEST " + (++testIndex) + ": " + test.description);
   test.exec();
 }
 
