@@ -1108,6 +1108,7 @@ namespace nanojit
         class Entry
         {
         public:
+            Entry(int) : name(0), size(0), align(0) {}
             Entry(char *n, size_t s, size_t a) : name(n),size(s),align(a) {}
             char* name;
             size_t size:29, align:3;
@@ -1146,6 +1147,7 @@ namespace nanojit
         class Entry
         {
         public:
+            Entry(int) : name(0) {}
             Entry(char* n) : name(n) {}
             char* name;
         };
@@ -1351,6 +1353,9 @@ namespace nanojit
             LInsp state,param1,sp,rp;
             LInsp savedRegs[NumSavedRegs];
 
+        protected:
+            friend class LirBufWriter;
+
             /** each chunk is just a raw area of LIns instances, with no header
                 and no more than 8-byte alignment.  The chunk size is somewhat arbitrary
                 as long as it's well larger than 2*sizeof(LInsSk) */
@@ -1365,9 +1370,6 @@ namespace nanojit
              *  size.  We require that a skip's payload be adjacent to the skip LIns
              *  itself. */
             static const size_t MAX_SKIP_PAYLOAD_SZB = MAX_LINS_SZB - sizeof(LInsSk);
-
-        protected:
-            friend class LirBufWriter;
 
             /** get CHUNK_SZB more memory for LIR instructions */
             void        chunkAlloc();
