@@ -15,7 +15,8 @@
  *
  * The Original Code is Bug 466303 code.
  *
- * The Initial Developer of the Original Code is Mozilla Corp.
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
@@ -38,46 +39,43 @@
 
 Components.utils.import("resource://gre/modules/utils.js");
 
-const NUMBER_OF_BACKUPS = 1;
-
 function run_test() {
-  // Get bookmarkBackups directory
-  var bookmarksBackupDir = PlacesUtils.backups.folder;
+  let bookmarksBackupDir = PlacesUtils.backups.folder;
+  // Remove all files from backups folder.
+  let files = bookmarksBackupDir.directoryEntries;
+  while (files.hasMoreElements()) {
+    let entry = files.getNext().QueryInterface(Ci.nsIFile);
+    entry.remove(false);
+  }
 
-  // Create an html dummy backup in the past
-  var htmlBackupFile = bookmarksBackupDir.clone();
-  htmlBackupFile.append("bookmarks-2008-01-01.html");
-  if (htmlBackupFile.exists())
-    htmlBackupFile.remove(false);
-  do_check_false(htmlBackupFile.exists());
-  htmlBackupFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0600);
-  do_check_true(htmlBackupFile.exists());
+  // Create a json dummy backup in the future.
+  let dateObj = new Date();
+  dateObj.setYear(dateObj.getFullYear() + 1);
+  let name = PlacesUtils.backups.getFilenameForDate(dateObj);
+  do_check_eq(name, "bookmarks-" + dateObj.toLocaleFormat("%Y-%m-%d") + ".json");
+  let futureBackupFile = bookmarksBackupDir.clone();
+  futureBackupFile.append(name);
+  if (futureBackupFile.exists())
+    futureBackupFile.remove(false);
+  do_check_false(futureBackupFile.exists());
+  futureBackupFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0600);
+  do_check_true(futureBackupFile.exists());
 
-  // Create a json dummy backup in the past
-  var jsonBackupFile = bookmarksBackupDir.clone();
-  jsonBackupFile.append("bookmarks-2008-01-31.json");
-  if (jsonBackupFile.exists())
-    jsonBackupFile.remove(false);
-  do_check_false(jsonBackupFile.exists());
-  jsonBackupFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0600);
-  do_check_true(jsonBackupFile.exists());
+  do_check_eq(PlacesUtils.backups.entries.length, 0);
 
-  // Export bookmarks to JSON.
-  var backupFilename = PlacesUtils.backups.getFilenameForDate();
-  var lastBackupFile = bookmarksBackupDir.clone();
-  lastBackupFile.append(backupFilename);
-  if (lastBackupFile.exists())
-    lastBackupFile.remove(false);
-  do_check_false(lastBackupFile.exists());
-  PlacesUtils.backups.create(NUMBER_OF_BACKUPS);
-  do_check_true(lastBackupFile.exists());
+  PlacesUtils.backups.create();
 
-  // Check that last backup has been retained
-  do_check_false(htmlBackupFile.exists());
-  do_check_false(jsonBackupFile.exists());
-  do_check_true(lastBackupFile.exists());
+  // Check that a backup for today has been created.
+  do_check_eq(PlacesUtils.backups.entries.length, 1);
+  let mostRecentBackupFile = PlacesUtils.backups.getMostRecent();
+  do_check_neq(mostRecentBackupFile, null);
+  let todayName = PlacesUtils.backups.getFilenameForDate();
+  do_check_eq(mostRecentBackupFile.leafName, todayName);
 
-  // cleanup
-  lastBackupFile.remove(false);
-  do_check_false(lastBackupFile.exists());
+  // Check that future backup has been removed.
+  do_check_false(futureBackupFile.exists());
+
+  // Cleanup.
+  mostRecentBackupFile.remove(false);
+  do_check_false(mostRecentBackupFile.exists());
 }

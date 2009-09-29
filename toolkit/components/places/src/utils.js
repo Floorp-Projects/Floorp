@@ -159,6 +159,12 @@ var PlacesUtils = {
                           getService(Ci.nsITaggingService);
   },
 
+  get observerSvc() {
+    delete this.observerSvc;
+    return this.observerSvc = Cc["@mozilla.org/observer-service;1"].
+                              getService(Ci.nsIObserverService);
+  },
+
   /**
    * Makes a URI from a spec.
    * @param   aSpec
@@ -278,9 +284,7 @@ var PlacesUtils = {
     this.annotations.addObserver(this, false);
 
     // observe shutdown, so we can remove the anno observer
-    const os = Cc["@mozilla.org/observer-service;1"].
-               getService(Ci.nsIObserverService);
-    os.addObserver(this, "xpcom-shutdown", false);
+    this.observerSvc.addObserver(this, "xpcom-shutdown", false);
 
     var readOnly = this.annotations.getItemsWithAnnotation(READ_ONLY_ANNO, {});
     this.__defineGetter__("_readOnly", function() readOnly);
@@ -294,9 +298,7 @@ var PlacesUtils = {
   observe: function PU_observe(aSubject, aTopic, aData) {
     if (aTopic == "xpcom-shutdown") {
       this.annotations.removeObserver(this);
-      const os = Cc["@mozilla.org/observer-service;1"].
-                 getService(Ci.nsIObserverService);
-      os.removeObserver(this, "xpcom-shutdown");
+      this.observerSvc.removeObserver(this, "xpcom-shutdown");
     }
   },
 
@@ -1171,62 +1173,6 @@ var PlacesUtils = {
   },
 
   /**
-   * Restores bookmarks/tags from a JSON file.
-   * WARNING: This method *removes* any bookmarks in the collection before
-   * restoring from the file.
-   *
-   * @param aFile
-   *        nsIFile of bookmarks in JSON format to be restored.
-   */
-  restoreBookmarksFromJSONFile:
-  function PU_restoreBookmarksFromJSONFile(aFile) {
-    var failed = false;
-    var obsServ = Cc["@mozilla.org/observer-service;1"].
-                  getService(Ci.nsIObserverService);
-    obsServ.notifyObservers(null,
-                            RESTORE_BEGIN_NSIOBSERVER_TOPIC,
-                            RESTORE_NSIOBSERVER_DATA);
-
-    try {
-      // open file stream
-      var stream = Cc["@mozilla.org/network/file-input-stream;1"].
-                   createInstance(Ci.nsIFileInputStream);
-      stream.init(aFile, 0x01, 0, 0);
-      var converted = Cc["@mozilla.org/intl/converter-input-stream;1"].
-                      createInstance(Ci.nsIConverterInputStream);
-      converted.init(stream, "UTF-8", 8192,
-                     Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-
-      // read in contents
-      var str = {};
-      var jsonStr = "";
-      while (converted.readString(8192, str) != 0)
-        jsonStr += str.value;
-      converted.close();
-
-      if (jsonStr.length == 0)
-        return; // empty file
-
-      this.restoreBookmarksFromJSONString(jsonStr, true);
-    }
-    catch (exc) {
-      failed = true;
-      obsServ.notifyObservers(null,
-                              RESTORE_FAILED_NSIOBSERVER_TOPIC,
-                              RESTORE_NSIOBSERVER_DATA);
-      Components.utils.reportError("Bookmarks JSON restore failed: " + exc);
-      throw exc;
-    }
-    finally {
-      if (!failed) {
-        obsServ.notifyObservers(null,
-                                RESTORE_SUCCESS_NSIOBSERVER_TOPIC,
-                                RESTORE_NSIOBSERVER_DATA);
-      }
-    }
-  },
-
-  /**
    * Import bookmarks from a JSON string.
    * Note: any item annotated with "places/excludeFromBackup" won't be removed
    *       before executing the restore.
@@ -1702,197 +1648,318 @@ var PlacesUtils = {
   },
 
   /**
-   * backupBookmarksToFile()
-   *
-   * Serializes bookmarks using JSON, and writes to the supplied file.
-   * Note: any item that should not be backed up must be annotated with
-   *       "places/excludeFromBackup".
-   *
-   * @param aFile
-   *        nsIFile where to save JSON backup.
+   * Helper to create and manage backups.
    */
-  backupBookmarksToFile: function PU_backupBookmarksToFile(aFile) {
-    if (aFile.exists() && !aFile.isWritable())
-      return; // XXX
+  backups: {
 
-    // init stream
-    var stream = Cc["@mozilla.org/network/file-output-stream;1"].
-                 createInstance(Ci.nsIFileOutputStream);
-    stream.init(aFile, 0x02 | 0x08 | 0x20, 0600, 0);
-
-    // utf-8 converter stream
-    var converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
-                 createInstance(Ci.nsIConverterOutputStream);
-    converter.init(stream, "UTF-8", 0, 0x0000);
-
-    // weep over stream interface variance
-    var streamProxy = {
-      converter: converter,
-      write: function(aData, aLen) {
-        this.converter.writeString(aData);
-      }
-    };
-
-    // Get itemIds to be exluded from the backup
-    var excludeItems = this.annotations
-                           .getItemsWithAnnotation(EXCLUDE_FROM_BACKUP_ANNO, {});
-
-    // query places root
-    var options = this.history.getNewQueryOptions();
-    options.expandQueries = false;
-    var query = this.history.getNewQuery();
-    query.setFolders([this.placesRootId], 1);
-    var result = this.history.executeQuery(query, options);
-    result.root.containerOpen = true;
-    // serialize as JSON, write to stream
-    this.serializeNodeAsJSONToOutputStream(result.root, streamProxy,
-                                           false, false, excludeItems);
-    result.root.containerOpen = false;
-
-    // close converter and stream
-    converter.close();
-    stream.close();
-  },
-
-  /**
-   * Creates a filename for bookmarks backup files.
-   *
-   * @param [optional] aDateObj Date object used to build the filename.
-   *                            Will use current date if empty.
-   * @return A bookmarks backup filename.
-   */
-  getBackupFilename:
-  function PU_getBackupFilename(aDateObj) {
-    if (!aDateObj)
-      aDateObj = new Date();
-    // Use YYYY-MM-DD (ISO 8601) as it doesn't contain illegal characters
-    // and makes the alphabetical order of multiple backup files more useful.
-    var date = aDateObj.toLocaleFormat("%Y-%m-%d");
-    return "bookmarks-" + date + ".json";
-  },
-
-  /**
-   * ArchiveBookmarksFile()
-   *
-   * Creates a dated backup once a day in <profile>/bookmarkbackups.
-   * Stores the bookmarks using JSON.
-   * Note: any item that should not be backed up must be annotated with
-   *       "places/excludeFromBackup".
-   *
-   * @param int aNumberOfBackups - the maximum number of backups to keep
-   *
-   * @param bool aForceArchive - forces creating an archive even if one was 
-   *                             already created that day (overwrites)
-   */
-  archiveBookmarksFile:
-  function PU_archiveBookmarksFile(aNumberOfBackups, aForceArchive) {
-    // get/create backups directory
-    var dirService = Cc["@mozilla.org/file/directory_service;1"].
-                     getService(Ci.nsIProperties);
-    var bookmarksBackupDir = dirService.get("ProfD", Ci.nsILocalFile);
-    bookmarksBackupDir.append("bookmarkbackups");
-    if (!bookmarksBackupDir.exists()) {
-      bookmarksBackupDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
-      if (!bookmarksBackupDir.exists())
-        return; // unable to create directory!
-    }
-
-    // Construct the new leafname.
-    var date = new Date();
-    var backupFilename = this.getBackupFilename(date);
-    var backupFile = null;
-    if (!aForceArchive) {
-      var backupFileNames = [];
-      var backupFilenamePrefix = backupFilename.substr(0, backupFilename.indexOf("-"));
-
-      // Get the localized backup filename, to clear out
+    get _filenamesRegex() {
+      // Get the localized backup filename, will be used to clear out
       // old backups with a localized name (bug 445704).
-      var localizedFilename = this.getFormattedString("bookmarksArchiveFilename", [date]);
-      var localizedFilenamePrefix = localizedFilename.substr(0, localizedFilename.indexOf("-"));
-      var rx = new RegExp("^(bookmarks|" + localizedFilenamePrefix + ")-([0-9-]+)\.(json|html)");
+      let localizedFilename =
+        PlacesUtils.getFormattedString("bookmarksArchiveFilename", [new Date()]);
+      let localizedFilenamePrefix =
+        localizedFilename.substr(0, localizedFilename.indexOf("-"));
+      delete this._filenamesRegex;
+      return this._filenamesRegex =
+        new RegExp("^(bookmarks|" + localizedFilenamePrefix + ")-([0-9-]+)\.(json|html)");
+    },
 
-      var entries = bookmarksBackupDir.directoryEntries;
-      while (entries.hasMoreElements()) {
-        var entry = entries.getNext().QueryInterface(Ci.nsIFile);
-        var backupName = entry.leafName;
+    get folder() {
+      let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+                   getService(Ci.nsIProperties);
+      let bookmarksBackupDir = dirSvc.get("ProfD", Ci.nsILocalFile);
+      bookmarksBackupDir.append("bookmarkbackups");
+      if (!bookmarksBackupDir.exists()) {
+        bookmarksBackupDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
+        if (!bookmarksBackupDir.exists())
+          throw("Unable to create bookmarks backup folder");
+      }
+      delete this.folder;
+      return this.folder = bookmarksBackupDir;
+    },
+
+    /**
+     * Cache current backups in a sorted (by date DESC) array.
+     */
+    get entries() {
+      delete this.entries;
+      this.entries = [];
+      let files = this.folder.directoryEntries;
+      while (files.hasMoreElements()) {
+        let entry = files.getNext().QueryInterface(Ci.nsIFile);
         // A valid backup is any file that matches either the localized or
         // not-localized filename (bug 445704).
-        var matches = backupName.match(rx);
-        if (matches) {
-          if (backupName == backupFilename)
-            backupFile = entry;
-          backupFileNames.push({ filename: backupName, date: matches[2] });
+        let matches = entry.leafName.match(this._filenamesRegex);
+        if (!entry.isHidden() && matches) {
+          // Remove bogus backups in future dates.
+          if (this.getDateForFile(entry) > new Date()) {
+            entry.remove(false);
+            continue;
+          }
+          this.entries.push(entry);
         }
       }
+      this.entries.sort(function compare(a, b) {
+        aDate = PlacesUtils.backups.getDateForFile(a);
+        bDate = PlacesUtils.backups.getDateForFile(b);
+        return aDate < bDate ? 1 : aDate > bDate ? -1 : 0;
+      });
+      return this.entries;
+    },
 
-      var numberOfBackupsToDelete = 0;
-      if (aNumberOfBackups > -1)
-        numberOfBackupsToDelete = backupFileNames.length - aNumberOfBackups;
+    /**
+     * Creates a filename for bookmarks backup files.
+     *
+     * @param [optional] aDateObj
+     *                   Date object used to build the filename.
+     *                   Will use current date if empty.
+     * @return A bookmarks backup filename.
+     */
+    getFilenameForDate:
+    function PU_B_getFilenameForDate(aDateObj) {
+      let dateObj = aDateObj || new Date();
+      // Use YYYY-MM-DD (ISO 8601) as it doesn't contain illegal characters
+      // and makes the alphabetical order of multiple backup files more useful.
+      return "bookmarks-" + dateObj.toLocaleFormat("%Y-%m-%d") + ".json";
+    },
 
-      if (numberOfBackupsToDelete > 0) {
-        // If we don't have today's backup, remove one more so that
-        // the total backups after this operation does not exceed the
-        // number specified in the pref.
-        if (!backupFile)
-          numberOfBackupsToDelete++;
-        backupFileNames.sort(function compare(a, b) {
-          return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
-        });
-        while (numberOfBackupsToDelete--) {
-          let backupFile = bookmarksBackupDir.clone();
-          backupFile.append(backupFileNames[0].filename);
-          backupFile.remove(false);
-          backupFileNames.shift();
-        }
+    /**
+     * Creates a Date object from a backup file.  The date is the backup
+     * creation date.
+     *
+     * @param aBackupFile
+     *        nsIFile of the backup.
+     * @return A Date object for the backup's creation time.
+     */
+    getDateForFile:
+    function PU_B_getDateForFile(aBackupFile) {
+      let filename = aBackupFile.leafName;
+      let matches = filename.match(this._filenamesRegex);
+      if (!matches)
+        do_throw("Invalid backup file name: " + filename);
+      return new Date(matches[2].replace(/-/g, "/"));
+    },
+
+    /**
+     * Get the most recent backup file.
+     *
+     * @param [optional] aFileExt
+     *                   Force file extension.  Either "html" or "json".
+     *                   Will check for both if not defined.
+     * @returns nsIFile backup file
+     */
+    getMostRecent:
+    function PU__B_getMostRecent(aFileExt) {
+      let fileExt = aFileExt || "(json|html)";
+      for (let i = 0; i < this.entries.length; i++) {
+        let rx = new RegExp("\." + fileExt + "$");
+        if (this.entries[i].leafName.match(rx))
+          return this.entries[i];
       }
+      return null;
+    },
 
-      // do nothing if we either have today's backup already
-      // or the user has set the pref to zero.
-      if (backupFile || aNumberOfBackups == 0)
+    /**
+     * saveBookmarksToJSONFile()
+     *
+     * Serializes bookmarks using JSON, and writes to the supplied file.
+     * Note: any item that should not be backed up must be annotated with
+     *       "places/excludeFromBackup".
+     *
+     * @param aFile
+     *        nsIFile where to save JSON backup.
+     */
+    saveBookmarksToJSONFile:
+    function PU_B_saveBookmarksToFile(aFile) {
+      if (!aFile.exists())
+        aFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+      if (!aFile.exists() || !aFile.isWritable()) {
+        Cu.reportError("Unable to create bookmarks backup file: " + aFile.leafName);
         return;
+      }
+
+      this._writeBackupFile(aFile);
+
+      if (aFile.parent.equals(this.folder)) {
+        // Update internal cache.
+        this.entries.push(aFile);
+      }
+      else {
+        // If we are saving to a folder different than our backups folder, then
+        // we also want to copy this new backup to it.
+        // This way we ensure the latest valid backup is the same saved by the
+        // user.  See bug 424389.
+        var latestBackup = this.getMostRecent("json");
+        if (!latestBackup || latestBackup != aFile) {
+          let name = this.getFilenameForDate();
+          let file = this.folder.clone();
+          file.append(name);
+          if (file.exists())
+            file.remove(false);
+          else {
+            // Update internal cache if we are not replacing an existing
+            // backup file.
+            this.entries.push(file);
+          }
+          aFile.copyTo(this.folder, name);
+        }
+      }
+    },
+
+    _writeBackupFile:
+    function PU_B__writeBackupFile(aFile) {
+      // Init stream.
+      let stream = Cc["@mozilla.org/network/file-output-stream;1"].
+                   createInstance(Ci.nsIFileOutputStream);
+      stream.init(aFile, 0x02 | 0x08 | 0x20, 0600, 0);
+
+      // UTF-8 converter stream.
+      let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
+                   createInstance(Ci.nsIConverterOutputStream);
+      converter.init(stream, "UTF-8", 0, 0x0000);
+
+      // Weep over stream interface variance.
+      let streamProxy = {
+        converter: converter,
+        write: function(aData, aLen) {
+          this.converter.writeString(aData);
+        }
+      };
+
+      // Get list of itemIds that must be exluded from the backup.
+      let excludeItems =
+        PlacesUtils.annotations.getItemsWithAnnotation(EXCLUDE_FROM_BACKUP_ANNO, {});
+
+      // Query the Places root.
+      let options = PlacesUtils.history.getNewQueryOptions();
+      options.expandQueries = false;
+      let query = PlacesUtils.history.getNewQuery();
+      query.setFolders([PlacesUtils.placesRootId], 1);
+      let root = PlacesUtils.history.executeQuery(query, options).root;
+      root.containerOpen = true;
+      // Serialize to JSON and write to stream.
+      PlacesUtils.serializeNodeAsJSONToOutputStream(root, streamProxy,
+                                                    false, false, excludeItems);
+      root.containerOpen = false;
+
+      // Close converter and stream.
+      converter.close();
+      stream.close();
+    },
+
+    /**
+     * create()
+     *
+     * Creates a dated backup in <profile>/bookmarkbackups.
+     * Stores the bookmarks using JSON.
+     * Note: any item that should not be backed up must be annotated with
+     *       "places/excludeFromBackup".
+     *
+     * @param [optional] int aMaxBackups
+     *                       The maximum number of backups to keep.
+     *
+     * @param [optional] bool aForceBackup
+     *                        Forces creating a backup even if one was already
+     *                        created that day (overwrites).
+     */
+    create:
+    function PU_B_create(aMaxBackups, aForceBackup) {
+      // Construct the new leafname.
+      let newBackupFilename = this.getFilenameForDate();
+      let mostRecentBackupFile = this.getMostRecent();
+
+      if (!aForceBackup) {
+        let numberOfBackupsToDelete = 0;
+        if (aMaxBackups !== undefined && aMaxBackups > -1)
+          numberOfBackupsToDelete = this.entries.length - aMaxBackups;
+
+        if (numberOfBackupsToDelete > 0) {
+          // If we don't have today's backup, remove one more so that
+          // the total backups after this operation does not exceed the
+          // number specified in the pref.
+          if (!mostRecentBackupFile ||
+              mostRecentBackupFile.leafName != newBackupFilename)
+            numberOfBackupsToDelete++;
+
+          while (numberOfBackupsToDelete--) {
+            let oldestBackup = this.entries.pop();
+            oldestBackup.remove(false);
+          }
+        }
+
+        // Do nothing if we already have this backup or we don't want backups.
+        if (aMaxBackups === 0 ||
+            (mostRecentBackupFile &&
+             mostRecentBackupFile.leafName == newBackupFilename))
+          return;
+      }
+
+      let newBackupFile = this.folder.clone();
+      newBackupFile.append(newBackupFilename);
+
+      if (aForceBackup && newBackupFile.exists())
+        newBackupFile.remove(false);
+
+      if (newBackupFile.exists())
+        return;
+
+      this.saveBookmarksToJSONFile(newBackupFile);
+    },
+
+    /**
+     * Restores bookmarks and tags from a JSON file.
+     * WARNING: This method *removes* any bookmarks in the collection before
+     * restoring from the file.
+     *
+     * @param aFile
+     *        nsIFile of bookmarks in JSON format to be restored.
+     */
+    restoreBookmarksFromJSONFile:
+    function PU_B_restoreBookmarksFromJSONFile(aFile) {
+      let failed = false;
+      PlacesUtils.observerSvc.notifyObservers(null,
+                                              RESTORE_BEGIN_NSIOBSERVER_TOPIC,
+                                              RESTORE_NSIOBSERVER_DATA);
+
+      try {
+        // open file stream
+        var stream = Cc["@mozilla.org/network/file-input-stream;1"].
+                     createInstance(Ci.nsIFileInputStream);
+        stream.init(aFile, 0x01, 0, 0);
+        var converted = Cc["@mozilla.org/intl/converter-input-stream;1"].
+                        createInstance(Ci.nsIConverterInputStream);
+        converted.init(stream, "UTF-8", 8192,
+                       Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+
+        // read in contents
+        var str = {};
+        var jsonStr = "";
+        while (converted.readString(8192, str) != 0)
+          jsonStr += str.value;
+        converted.close();
+
+        if (jsonStr.length == 0)
+          return; // empty file
+
+        PlacesUtils.restoreBookmarksFromJSONString(jsonStr, true);
+      }
+      catch (exc) {
+        failed = true;
+        PlacesUtils.observerSvc.notifyObservers(null,
+                                                RESTORE_FAILED_NSIOBSERVER_TOPIC,
+                                                RESTORE_NSIOBSERVER_DATA);
+        Components.utils.reportError("Bookmarks JSON restore failed: " + exc);
+        throw exc;
+      }
+      finally {
+        if (!failed) {
+          PlacesUtils.observerSvc.notifyObservers(null,
+                                                  RESTORE_SUCCESS_NSIOBSERVER_TOPIC,
+                                                  RESTORE_NSIOBSERVER_DATA);
+        }
+      }
     }
 
-    backupFile = bookmarksBackupDir.clone();
-    backupFile.append(backupFilename);
-
-    if (aForceArchive && backupFile.exists())
-        backupFile.remove(false);
-
-    if (!backupFile.exists())
-      backupFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
-
-    this.backupBookmarksToFile(backupFile);
-  },
-
-  /**
-   * Get the most recent backup file.
-   * @returns nsIFile backup file
-   */
-  getMostRecentBackup: function PU_getMostRecentBackup() {
-    var dirService = Cc["@mozilla.org/file/directory_service;1"].
-                     getService(Ci.nsIProperties);
-    var bookmarksBackupDir = dirService.get("ProfD", Ci.nsILocalFile);
-    bookmarksBackupDir.append("bookmarkbackups");
-    if (!bookmarksBackupDir.exists())
-      return null;
-
-    var backups = [];
-    var entries = bookmarksBackupDir.directoryEntries;
-    while (entries.hasMoreElements()) {
-      var entry = entries.getNext().QueryInterface(Ci.nsIFile);
-      if (!entry.isHidden() && entry.leafName.match(/^bookmarks-.+(html|json)?$/))
-        backups.push(entry.leafName);
-    }
-
-    if (backups.length ==  0)
-      return null;
-
-    backups.sort();
-    var filename = backups.pop();
-
-    var backupFile = bookmarksBackupDir.clone();
-    backupFile.append(filename);
-    return backupFile;
   },
 
   /**
@@ -1900,6 +1967,6 @@ var PlacesUtils = {
    * this method is called by browser.js in delayed startup.
    */
   startPlacesDBUtils: function PU_startPlacesDBUtils() {
-    Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
+    Cu.import("resource://gre/modules/PlacesDBUtils.jsm");
   }
 };
