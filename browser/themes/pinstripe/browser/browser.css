@@ -387,26 +387,6 @@ menubutton:not([disabled="true"]):hover:active {
   color: ButtonText !important;
 }
 
-toolbar:not([mode="text"]) #back-button .toolbarbutton-menubutton-button,
-toolbar:not([mode="text"]) #forward-button .toolbarbutton-menubutton-button {
-  margin: 0;
-  padding: 0;
-  border-left: 0;
-  border-right: 0;
-}
-
-toolbar:not([mode="text"]) #back-button .toolbarbutton-menubutton-dropmarker,
-toolbar:not([mode="text"]) #forward-button .toolbarbutton-menubutton-dropmarker {
-  margin-top: 1px;
-}
-
-toolbar[mode="icons"] #back-button .toolbarbutton-text-box,
-toolbar[mode="icons"] #forward-button .toolbarbutton-text-box,
-#back-button > dropmarker,
-#forward-button > dropmarker {
-  display: none;
-}
-
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #back-forward-dropmarker:-moz-locale-dir(rtl) > .toolbarbutton-icon {
