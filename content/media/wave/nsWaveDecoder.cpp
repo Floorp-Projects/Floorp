@@ -461,7 +461,12 @@ nsWaveStateMachine::GetNextFrameStatus()
   nsAutoMonitor monitor(mMonitor);
   if (mState == STATE_BUFFERING)
     return nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING;
-  if (mPlaybackPosition < mStream->GetCachedDataEnd(mPlaybackPosition))
+  // If mMetadataValid is false then we can't call GetDataLength because
+  // we haven't got the length from the Wave header yet. But we know that
+  // if we haven't read the metadata then we don't have playable data.
+  if (mMetadataValid &&
+      mPlaybackPosition < mStream->GetCachedDataEnd(mPlaybackPosition) &&
+      mPlaybackPosition < mWavePCMOffset + GetDataLength())
     return nsHTMLMediaElement::NEXT_FRAME_AVAILABLE;
   return nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE;
 }
