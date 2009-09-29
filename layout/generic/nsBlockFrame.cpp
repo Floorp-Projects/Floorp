@@ -304,6 +304,7 @@ nsBlockFrame::Destroy()
   nsLineList* overflowLines = RemoveOverflowLines();
   if (overflowLines) {
     nsLineBox::DeleteLineList(presContext, *overflowLines);
+    delete overflowLines;
   }
 
   {
@@ -2117,6 +2118,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
           // stored in the property (because the property has the
           // invariant that the list is never empty).
           nextInFlow->SetOverflowLines(overflowLines);
+        } else {
+          delete overflowLines;
         }
         collectOverflowFloats = PR_TRUE;
       }
@@ -2552,8 +2555,12 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
       aState.FreeLineBox(fromLine);
 
       // Put any remaining overflow lines back.
-      if (aFromOverflowLine && !fromLineList->empty()) {
-        aFromContainer->SetOverflowLines(fromLineList);
+      if (aFromOverflowLine) {
+        if (!fromLineList->empty()) {
+          aFromContainer->SetOverflowLines(fromLineList);
+        } else {
+          delete fromLineList;
+        }
       }
     }
 
@@ -5312,6 +5319,8 @@ found_frame:;
         line = lineList->erase(line);
         if (!lineList->empty()) {
           SetOverflowLines(lineList);
+        } else {
+          delete lineList;
         }
       }
       cur->Destroy(presShell);
@@ -5448,6 +5457,8 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
             if (!lineList->empty()) {
               nsresult rv = SetOverflowLines(lineList);
               NS_ENSURE_SUCCESS(rv, rv);
+            } else {
+              delete lineList;
             }
           }
           else {
