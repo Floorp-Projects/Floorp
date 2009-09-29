@@ -359,7 +359,6 @@ static bool NP_CALLBACK
 _construct(NPP aNPP, NPObject* npobj, const NPVariant *args,
            uint32_t argCount, NPVariant *result);
 
-#if NP_VERSION_MINOR > 19
 static void NP_CALLBACK
 _releasevariantvalue(NPVariant *variant);
 
@@ -376,7 +375,35 @@ static void NP_CALLBACK
 _pluginthreadasynccall(NPP instance, PluginThreadCallback func,
                        void *userData);
 
-#endif /* NP_VERSION_MINOR > 19 */
+static NPError NP_CALLBACK
+_getvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
+                char **value, uint32_t *len);
+
+static NPError NP_CALLBACK
+_setvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
+                const char *value, uint32_t len);
+
+static NPError NP_CALLBACK
+_getauthenticationinfo(NPP npp, const char *protocol,
+                       const char *host, int32_t port,
+                       const char *scheme, const char *realm,
+                       char **username, uint32_t *ulen,
+                       char **password, uint32_t *plen);
+
+static uint32_t NP_CALLBACK
+_scheduletimer(NPP instance, uint32_t interval, NPBool repeat,
+               void (*timerFunc)(NPP npp, uint32_t timerID));
+
+static void NP_CALLBACK
+_unscheduletimer(NPP instance, uint32_t timerID);
+
+static NPError NP_CALLBACK
+_popupcontextmenu(NPP instance, NPMenu* menu);
+
+static NPBool NP_CALLBACK
+_convertpoint(NPP instance, 
+              double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
+              double *destX, double *destY, NPCoordinateSpace destSpace);
 
 PR_END_EXTERN_C
 
@@ -420,16 +447,21 @@ const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
     _setproperty,
     _removeproperty,
     _hasproperty,
-    _hasmethod
-#if NP_VERSION_MINOR > 19
-    , _releasevariantvalue
-    , _setexception
-    , _pushpopupsenabledstate
-    , _poppopupsenabledstate
-    , _enumerate
-    , _pluginthreadasynccall
-    , _construct
-#endif
+    _hasmethod,
+    _releasevariantvalue,
+    _setexception,
+    _pushpopupsenabledstate,
+    _poppopupsenabledstate,
+    _enumerate,
+    _pluginthreadasynccall,
+    _construct,
+    _getvalueforurl,
+    _setvalueforurl,
+    _getauthenticationinfo,
+    _scheduletimer,
+    _unscheduletimer,
+    _popupcontextmenu,
+    _convertpoint
 };
 
 PluginInstanceChild*
@@ -926,7 +958,6 @@ _construct(NPP aNPP,
     return false;
 }
 
-#if NP_VERSION_MINOR > 19
 void NP_CALLBACK
 _releasevariantvalue(NPVariant* aVariant)
 {
@@ -963,7 +994,64 @@ _pluginthreadasynccall(NPP aNPP,
     _MOZ_LOG(__FUNCTION__);
 }
 
-#endif /* NP_VERSION_MINOR > 19 */
+NPError NP_CALLBACK
+_getvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
+                char **value, uint32_t *len)
+{
+    _MOZ_LOG(__FUNCTION__);
+    return NPERR_GENERIC_ERROR;
+}
+
+NPError NP_CALLBACK
+_setvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
+                const char *value, uint32_t len)
+{
+    _MOZ_LOG(__FUNCTION__);
+    return NPERR_GENERIC_ERROR;
+}
+
+NPError NP_CALLBACK
+_getauthenticationinfo(NPP npp, const char *protocol,
+                       const char *host, int32_t port,
+                       const char *scheme, const char *realm,
+                       char **username, uint32_t *ulen,
+                       char **password, uint32_t *plen)
+{
+    _MOZ_LOG(__FUNCTION__);
+    return NPERR_GENERIC_ERROR;
+}
+
+uint32_t NP_CALLBACK
+_scheduletimer(NPP instance, uint32_t interval, NPBool repeat,
+               void (*timerFunc)(NPP npp, uint32_t timerID))
+{
+    _MOZ_LOG(__FUNCTION__);
+    return 0;
+}
+
+void NP_CALLBACK
+_unscheduletimer(NPP instance, uint32_t timerID)
+{
+    _MOZ_LOG(__FUNCTION__);
+}
+
+NPError NP_CALLBACK
+_popupcontextmenu(NPP instance, NPMenu* menu)
+{
+    _MOZ_LOG(__FUNCTION__);
+    return NPERR_GENERIC_ERROR;
+}
+
+NPBool NP_CALLBACK
+_convertpoint(NPP instance, 
+              double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
+              double *destX, double *destY, NPCoordinateSpace destSpace)
+{
+    _MOZ_LOG(__FUNCTION__);
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
 
 bool
 PluginModuleChild::AnswerNP_Initialize(NPError* _retval)
