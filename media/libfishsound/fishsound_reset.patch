@@ -1,0 +1,12 @@
+diff --git a/media/libfishsound/src/libfishsound/fishsound_vorbis.c b/media/libfishsound/src/libfishsound/fishsound_vorbis.c
+--- a/media/libfishsound/src/libfishsound/fishsound_vorbis.c
++++ b/media/libfishsound/src/libfishsound/fishsound_vorbis.c
+@@ -412,7 +412,7 @@
+   FishSoundVorbisInfo * fsv = (FishSoundVorbisInfo *)fsound->codec_data;
+ 
+   vorbis_block_init (&fsv->vd, &fsv->vb);
+-
++  fsv->packetno = 0;
+   return 0;
+ }
+ 

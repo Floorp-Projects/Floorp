@@ -41,6 +41,8 @@ var gPlayTests = [
   { name:"short-video.ogv", type:"video/ogg", duration:1.081 },
   // First Theora data packet is zero bytes.
   { name:"bug504613.ogv", type:"video/ogg" },
+  // Multiple audio streams.
+  { name:"bug516323.ogv", type:"video/ogg", duration:4.424 },
 
   { name:"bogus.duh", type:"bogus/duh" }
 ];
