@@ -400,9 +400,9 @@ protected:
     * knows nothing about lines at all. So we need to find the line that
     * contains aPrevSibling and add aFrameList after aPrevSibling on that line.
     * new lines are created as necessary to handle block data in aFrameList.
+    * This function will clear aFrameList.
     */
-  virtual nsresult AddFrames(const nsFrameList& aFrameList,
-                             nsIFrame* aPrevSibling);
+  virtual nsresult AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling);
 
 #ifdef IBMBIDI
   /**
