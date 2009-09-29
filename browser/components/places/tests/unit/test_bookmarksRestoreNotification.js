@@ -80,10 +80,10 @@ var tests = [
     run:        function () {
       this.file = createFile("bookmarks-test_restoreNotification.json");
       addBookmarks();
-      PlacesUtils.backupBookmarksToFile(this.file);
+      PlacesUtils.backups.saveBookmarksToJSONFile(this.file);
       remove_all_bookmarks();
       try {
-        PlacesUtils.restoreBookmarksFromJSONFile(this.file);
+        PlacesUtils.backups.restoreBookmarksFromJSONFile(this.file);
       }
       catch (e) {
         do_throw("  Restore should not have failed");
@@ -100,7 +100,7 @@ var tests = [
     run:        function () {
       this.file = createFile("bookmarks-test_restoreNotification.json");
       try {
-        PlacesUtils.restoreBookmarksFromJSONFile(this.file);
+        PlacesUtils.backups.restoreBookmarksFromJSONFile(this.file);
       }
       catch (e) {
         do_throw("  Restore should not have failed");
@@ -118,7 +118,7 @@ var tests = [
       this.file = dirSvc.get("ProfD", Ci.nsILocalFile);
       this.file.append("this file doesn't exist because nobody created it");
       try {
-        PlacesUtils.restoreBookmarksFromJSONFile(this.file);
+        PlacesUtils.backups.restoreBookmarksFromJSONFile(this.file);
         do_throw("  Restore should have failed");
       }
       catch (e) {}

@@ -5304,7 +5304,8 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
       CanvasFrame* canvasFrame =
         do_QueryFrame(rootScrollableFrame->GetScrolledFrame());
       if (canvasFrame) {
-        canvasArea = canvasFrame->CanvasArea();
+        canvasArea =
+          canvasFrame->CanvasArea() + builder.ToReferenceFrame(canvasFrame);
       }
     }
 
