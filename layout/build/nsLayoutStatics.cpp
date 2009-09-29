@@ -271,12 +271,6 @@ nsLayoutStatics::Initialize()
   }
 
 #ifdef MOZ_MEDIA
-  rv = nsMediaDecoder::InitLogger();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsMediaDecoder");
-    return rv;
-  }
-  
   nsHTMLMediaElement::InitMediaTypes();
 #endif
 

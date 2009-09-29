@@ -1401,6 +1401,7 @@ nsMediaCache::OpenStream(nsMediaCacheStream* aStream)
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   nsAutoMonitor mon(mMonitor);
+  LOG(PR_LOG_DEBUG, ("Stream %p opened", aStream));
   mStreams.AppendElement(aStream);
   aStream->mResourceID = mNextResourceID++;
 }
@@ -1411,6 +1412,7 @@ nsMediaCache::ReleaseStream(nsMediaCacheStream* aStream)
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   nsAutoMonitor mon(mMonitor);
+  LOG(PR_LOG_DEBUG, ("Stream %p closed", aStream));
   mStreams.RemoveElement(aStream);
 }
 
