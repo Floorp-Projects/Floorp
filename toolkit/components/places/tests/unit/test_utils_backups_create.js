@@ -66,15 +66,7 @@ function run_test() {
   dates.sort();
 
   // Get and cleanup the backups folder.
-  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-               getService(Ci.nsIProperties);
-  var bookmarksBackupDir = dirSvc.get("ProfD", Ci.nsILocalFile);
-  bookmarksBackupDir.append("bookmarkbackups");
-  if (bookmarksBackupDir.exists()) {
-    bookmarksBackupDir.remove(true);
-    do_check_false(bookmarksBackupDir.exists());
-  }
-  bookmarksBackupDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
+  var bookmarksBackupDir = PlacesUtils.backups.folder;
 
   // Fake backups are created backwards to ensure we won't consider file
   // creation time.
@@ -98,7 +90,7 @@ function run_test() {
     return LOCALIZED_PREFIX + aValue;
   }
 
-  PlacesUtils.archiveBookmarksFile(Math.floor(dates.length/2));
+  PlacesUtils.backups.create(Math.floor(dates.length/2));
   // Add today's backup.
   dates.push(dateObj.toLocaleFormat("%Y-%m-%d"));
 
@@ -123,5 +115,6 @@ function run_test() {
   // Cleanup backups folder.
   bookmarksBackupDir.remove(true);
   do_check_false(bookmarksBackupDir.exists());
-  bookmarksBackupDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
+  // Recreate the folder.
+  PlacesUtils.backups.folder;
 }

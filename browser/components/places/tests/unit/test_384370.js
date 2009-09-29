@@ -99,11 +99,11 @@ function run_test() {
   // 3. import bookmarks.exported.json
   // 4. run the test-suite
   try {
-    PlacesUtils.backupBookmarksToFile(jsonFile);
+    PlacesUtils.backups.saveBookmarksToJSONFile(jsonFile);
   } catch(ex) { do_throw("couldn't export to file: " + ex); }
   LOG("exported json"); 
   try {
-    PlacesUtils.restoreBookmarksFromJSONFile(jsonFile);
+    PlacesUtils.backups.restoreBookmarksFromJSONFile(jsonFile);
   } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
   LOG("imported json"); 
   validate();
