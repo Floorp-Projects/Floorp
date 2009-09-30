@@ -167,7 +167,7 @@ js_TryUnboxInt32(jsval v, int32* i32p)
     *i32p = i;
     return JS_TRUE;
 }
-JS_DEFINE_CALLINFO_2(extern, BOOL, js_TryUnboxInt32, JSVAL, INT32PTR, 1, 1);
+JS_DEFINE_CALLINFO_2(extern, BOOL, js_TryUnboxInt32, JSVAL, INT32PTR, 1, 1)
 
 int32 FASTCALL
 js_DoubleToInt32(jsdouble d)
