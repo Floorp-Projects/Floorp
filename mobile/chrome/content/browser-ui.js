@@ -78,6 +78,21 @@ var BrowserUI = {
   _faviconLink : null,
   _dialogs: [],
 
+  _domWillOpenModalDialog: function(e) {
+    if (!e.isTrusted)
+      return;
+
+    // We're about to open a modal dialog, make sure the opening
+    // tab is brought to the front.
+
+    let aWindow = e.target.top;
+    for (let i = 0; i <= Browser._tabs.length; i++) {
+      if (Browser._tabs[i].browser.contentWindow == aWindow) {
+        Browser.selectedTab = Browser._tabs[i];
+      }
+    }
+  },
+
   _titleChanged : function(aDocument) {
     var browser = Browser.selectedBrowser;
     if (browser && aDocument != browser.contentDocument)
@@ -387,6 +402,7 @@ var BrowserUI = {
     // XXX these really want to listen to only the current browser
     browsers.addEventListener("DOMTitleChanged", this, true);
     browsers.addEventListener("DOMLinkAdded", this, true);
+    browsers.addEventListener("DOMWillOpenModalDialog", this, true);
     
     // listening mousedown for automatically dismiss some popups (e.g. larry)
     window.addEventListener("mousedown", this, true);
@@ -613,6 +629,9 @@ var BrowserUI = {
   handleEvent: function (aEvent) {
     switch (aEvent.type) {
       // Browser events
+      case "DOMWillOpenModalDialog":
+        this._domWillOpenModalDialog(aEvent);
+        break;
       case "DOMTitleChanged":
         this._titleChanged(aEvent.target);
         break;
