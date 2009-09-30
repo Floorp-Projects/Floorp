@@ -3047,6 +3047,9 @@ AC_CHECK_HEADERS(io.h)
 dnl These are all the places some variant of statfs can be hiding.
 AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
+dnl Quota support
+AC_CHECK_HEADERS(sys/quota.h)
+
 dnl Try for MMX support
 dnl NB - later gcc versions require -mmmx for this header to be successfully
 dnl included (or another option which implies it, such as -march=pentium-mmx)
