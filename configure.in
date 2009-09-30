@@ -182,7 +182,7 @@ then
 fi
 MOZ_BUILD_ROOT=`pwd`
 
-dnl Default to MSVC for win32
+dnl Default to MSVC for win32 and gcc-4.2 for darwin
 dnl ==============================================================
 if test -z "$CROSS_COMPILE"; then
 case "$target" in
@@ -194,6 +194,10 @@ case "$target" in
     if test -z "$LD"; then LD=link; fi
     if test -z "$AS"; then AS=ml; fi
     if test -z "$MIDL"; then MIDL=midl; fi
+    ;;
+*-darwin*)
+    if test -z "$CC"; then CC=gcc-4.2; fi
+    if test -z "$CXX"; then CXX=g++-4.2; fi
     ;;
 esac
 fi
