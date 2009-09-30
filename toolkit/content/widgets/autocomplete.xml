@@ -64,7 +64,7 @@
           <children/>
           <html:input anonid="input" class="autocomplete-textbox textbox-input"
                       flex="1" allowevents="true"
-                      xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
+                      xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
         </xul:hbox>
         <children includes="hbox"/>
       </xul:hbox>
