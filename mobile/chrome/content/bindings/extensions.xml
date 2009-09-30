@@ -182,7 +182,7 @@
 
   <binding id="extension-message" extends="chrome://browser/content/bindings.xml#richlistitem">
     <content orient="vertical" align="center">
-      <xul:hbox>
+      <xul:hbox align="center">
         <xul:image src="chrome://browser/skin/images/throbber.png" xbl:inherits="hidden=hidethrobber"/>
         <xul:label class="normal" xbl:inherits="value=message"/>
       </xul:hbox>
