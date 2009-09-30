@@ -1154,7 +1154,7 @@ namespace nanojit
         if (kind == 0) {
             // ordinary param
             // first four or six args always in registers for x86_64 ABI
-            if (a < NumArgRegs) {
+            if (a < (uint32_t)NumArgRegs) {
                 // incoming arg in register
                 prepResultReg(ins, rmask(argRegs[a]));
             } else {
