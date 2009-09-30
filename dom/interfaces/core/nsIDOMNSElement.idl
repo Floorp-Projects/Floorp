@@ -39,7 +39,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(FA8D7AF8-C208-4564-A0CD-346C345711F0)]
+[scriptable, uuid(D894B5D4-44F3-422A-A220-7763C12D4A94)]
 interface nsIDOMNSElement : nsISupports
 {
   /*
@@ -168,4 +168,9 @@ interface nsIDOMNSElement : nsISupports
    * element has captured the mouse, this method has no effect.
    */
   void releaseCapture();
+
+  /**
+   * Returns whether this element would be selected by the given selector string.
+   */
+  boolean mozMatchesSelector(in DOMString selector);
 };
