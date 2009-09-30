@@ -279,6 +279,7 @@ TraceRecorder::upRecursion()
 
 class SlurpInfo
 {
+public:
     unsigned curSlot;
     JSTraceType* typeMap;
     VMSideExit* exit;
