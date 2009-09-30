@@ -56,7 +56,7 @@ function TestBody()
   this.dbFile = new Array();
 
   for (var curConn in CONN_LIST) {
-    var db = dirSvc.get("CurProcD", Ci.nsIFile);
+    var db = dirSvc.get("ProfD", Ci.nsIFile);
     db.append("test_storage_" + curConn + ".sqlite");
     this.dbFile[curConn] = db;
   }
