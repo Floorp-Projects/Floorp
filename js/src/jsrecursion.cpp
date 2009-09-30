@@ -91,12 +91,6 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
     exitTypeMap[downPostSlots] = determineSlotType(&stackval(-1));
     determineGlobalTypes(&exitTypeMap[downPostSlots + 1]);
 
-    /* Otherwise, construct a new SideExit. */
-    if (sizeof(VMSideExit) + sizeof(JSTraceType) * exitTypeMapLen >=
-        LirBuffer::MAX_SKIP_PAYLOAD_SZB) {
-        return NULL;
-    }
-
     VMSideExit* exit = (VMSideExit*)
         traceMonitor->traceAlloc->alloc(sizeof(VMSideExit) + sizeof(JSTraceType) * exitTypeMapLen);
 
@@ -283,7 +277,7 @@ TraceRecorder::upRecursion()
     return closeLoop(slotMap, exit);
 }
 
-struct SlurpInfo
+class SlurpInfo
 {
     unsigned curSlot;
     JSTraceType* typeMap;
