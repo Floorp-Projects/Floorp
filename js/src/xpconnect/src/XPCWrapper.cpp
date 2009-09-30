@@ -211,6 +211,21 @@ XPCWrapper::CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
     return nsnull;
   }
 
+  if (XPCNativeWrapper::IsNativeWrapper(wrapperObj)) {
+    // For native wrappers, expandos on the wrapper itself aren't propagated
+    // to the wrapped object, so we have to actually iterate the wrapper here.
+    // In order to do so, we set the prototype of the iter to the wrapper,
+    // call enumerate, and then re-set the prototype. As we do this, we have
+    // to protec the temporary wrapper from garbage collection.
+
+    JSAutoTempValueRooter tvr(cx, tempWrapper);
+    if (!JS_SetPrototype(cx, iterObj, wrapperObj) ||
+        !XPCWrapper::Enumerate(cx, iterObj, wrapperObj) ||
+        !JS_SetPrototype(cx, iterObj, tempWrapper)) {
+      return nsnull;
+    }
+  }
+
   // Start enumerating over all of our properties.
   do {
     if (!XPCWrapper::Enumerate(cx, iterObj, innerObj)) {
