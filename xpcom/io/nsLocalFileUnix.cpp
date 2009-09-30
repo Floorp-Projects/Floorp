@@ -67,6 +67,11 @@
     #include <fabdef.h>
 #endif
 
+#if defined(HAVE_SYS_QUOTA_H)
+#include <sys/sysmacros.h>
+#include <sys/quota.h>
+#endif
+
 #include "nsDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
@@ -1125,6 +1130,56 @@ nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSize)
     return NS_OK;
 }
 
+/*
+ * Searches /proc/self/mountinfo for given device (Major:Minor), 
+ * returns exported name from /dev
+ *
+ * Fails when /proc/self/mountinfo or diven device don't exist.
+ */
+static PRBool
+GetDeviceName(int deviceMajor, int deviceMinor, nsACString &deviceName)
+{
+    PRBool ret = false;
+    
+    const int kMountInfoLineLength = 200;
+    const int kMountInfoDevPosition = 6;
+
+    char mountinfo_line[kMountInfoLineLength];
+    char device_num[kMountInfoLineLength];
+    
+    snprintf(device_num,kMountInfoLineLength,"%d:%d", deviceMajor, deviceMinor);
+    
+    FILE *f = fopen("/proc/self/mountinfo","rt");
+    if(!f)
+        return ret;
+
+    // Expects /proc/self/mountinfo in format:
+    // 'ID ID major:minor root mountpoint flags - type devicename flags'
+    while(fgets(mountinfo_line,kMountInfoLineLength,f)) {
+        char *p_dev = strstr(mountinfo_line,device_num);
+    
+        int i;
+        for(i = 0; i < kMountInfoDevPosition && p_dev != NULL; i++) {
+            p_dev = strchr(p_dev,' ');
+            if(p_dev)
+              p_dev++;
+        }
+    
+        if(p_dev) {
+            char *p_dev_end = strchr(p_dev,' ');
+            if(p_dev_end) {
+                *p_dev_end = '\0';
+                deviceName.Assign(p_dev);
+                ret = true;
+                break;
+            }
+        }
+    }
+    
+    fclose(f);
+    return ret; 
+}
+
 NS_IMETHODIMP
 nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 {
@@ -1164,6 +1219,28 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
      * of the aforementioned blocks.
      */
     *aDiskSpaceAvailable = (PRInt64)fs_buf.f_bsize * (fs_buf.f_bavail - 1);
+
+#if defined(HAVE_SYS_STAT_H) || defined(HAVE_SYS_QUOTA_H)
+
+    if(!FillStatCache()) {
+        // Return available size from statfs
+        return NS_OK;
+    }
+
+    nsCString deviceName;
+    if(!GetDeviceName(major(mCachedStat.st_dev), minor(mCachedStat.st_dev), deviceName)) {
+        return NS_OK;
+    }
+
+    struct dqblk dq;
+    if(!quotactl(QCMD(Q_GETQUOTA, USRQUOTA), deviceName.get(), getuid(), (caddr_t)&dq)) {
+        PRInt64 QuotaSpaceAvailable = PRInt64(fs_buf.f_bsize * dq.dqb_bhardlimit);
+        if(QuotaSpaceAvailable < *aDiskSpaceAvailable) {
+            *aDiskSpaceAvailable = QuotaSpaceAvailable;
+        }
+    }
+
+#endif
 
     return NS_OK;
 
