@@ -298,6 +298,8 @@
                 regs.sp -= 1 + (size_t) ifp->frame.argc;
                 regs.sp[-1] = fp->rval;
 
+                bool recursive = fp->script == fp->down->script;
+
                 /* Restore cx->fp and release the inline frame's space. */
                 cx->fp = fp = fp->down;
                 JS_ASSERT(fp->regs == &ifp->callerRegs);
@@ -311,10 +313,31 @@
                 /* Resume execution in the calling frame. */
                 inlineCallCount--;
                 if (JS_LIKELY(ok)) {
-                    TRACE_0(LeaveFrame);
                     JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, script, regs.pc)].length
                               == JSOP_CALL_LENGTH);
-                    len = JSOP_CALL_LENGTH;
+#ifdef DEBUG
+                    JSOp traceOp = js_GetOpcode(cx, script, regs.pc +
+                                                JSOP_CALL_LENGTH);
+                    JS_ASSERT_IF(*regs.pc == JSOP_CALL && !fp->imacpc,
+                                 traceOp == JSOP_TRACE || traceOp == JSOP_NOP);
+#endif
+                    TRACE_0(LeaveFrame);
+                    if (!TRACE_RECORDER(cx) && recursive) {
+                        if (*(regs.pc + JSOP_CALL_LENGTH) == JSOP_TRACE) {
+                            regs.pc += JSOP_CALL_LENGTH;
+                            MONITOR_BRANCH(Monitor_LeaveFrame);
+                            op = (JSOp)*regs.pc;
+                            DO_OP();
+                        }
+                    }
+                    if (*(regs.pc + JSOP_CALL_LENGTH) == JSOP_TRACE ||
+                        *(regs.pc + JSOP_CALL_LENGTH) == JSOP_NOP) {
+                        JS_STATIC_ASSERT(JSOP_TRACE_LENGTH == JSOP_NOP_LENGTH);
+                        regs.pc += JSOP_CALL_LENGTH;
+                        len = JSOP_TRACE_LENGTH;
+                    } else {
+                        len = JSOP_CALL_LENGTH;
+                    }
                     DO_NEXT_OP(len);
                 }
                 goto error;
@@ -2191,8 +2214,6 @@
                         newifp->hookData = NULL;
                     }
 
-                    TRACE_0(EnterFrame);
-
                     inlineCallCount++;
                     JS_RUNTIME_METER(rt, inlineCalls);
 
@@ -2204,6 +2225,23 @@
                         jsdtrace_function_info(cx, fp, fp->down, fun);
                     if (JAVASCRIPT_FUNCTION_ARGS_ENABLED())
                         jsdtrace_function_args(cx, fp, fun, fp->argc, fp->argv);
+#endif
+
+#ifdef JS_TRACER
+                    if (TRACE_RECORDER(cx)) {
+                        TRACE_1(EnterFrame, inlineCallCount);
+                        RESTORE_INTERP_VARS();
+                    } else if (fp->script == fp->down->script &&
+                               *fp->down->regs->pc == JSOP_CALL) {
+#ifdef DEBUG
+                        JSOp traceOp = js_GetOpcode(cx, fp->script,
+                                                    fp->regs->pc);
+                        JS_ASSERT_IF(!fp->imacpc, traceOp == JSOP_TRACE ||
+                                     traceOp == JSOP_NOP);
+#endif
+                        if (*fp->regs->pc == JSOP_TRACE)
+                            MONITOR_BRANCH(Monitor_EnterFrame);
+                    }
 #endif
 
                     /* Load first op and dispatch it (safe since JSOP_STOP). */
@@ -2253,7 +2291,8 @@
                         if (fp->imacpc && *fp->imacpc == JSOP_NEXTITER &&
                             cx->throwing && js_ValueIsStopIteration(cx->exception)) {
                             // pc may point to JSOP_DUP here due to bug 474854.
-                            JS_ASSERT(*regs.pc == JSOP_CALL || *regs.pc == JSOP_DUP);
+                            JS_ASSERT(*regs.pc == JSOP_CALL ||
+                                      *regs.pc == JSOP_DUP);
                             cx->throwing = JS_FALSE;
                             cx->exception = JSVAL_VOID;
                             regs.sp[-1] = JSVAL_HOLE;
