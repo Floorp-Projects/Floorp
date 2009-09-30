@@ -47,7 +47,7 @@ include "mozilla/plugins/PluginMessageUtils.h";
 
 using NPError;
 using NPEvent;
-using NPWindow;
+using NPRemoteWindow;
 using NPReason;
 
 namespace mozilla {
@@ -63,7 +63,7 @@ rpc protocol PPluginInstance
   manages PStreamNotify;
 
 child:
-  rpc NPP_SetWindow(NPWindow window)
+  rpc NPP_SetWindow(NPRemoteWindow window)
     returns (NPError rv);
 
   rpc NPP_GetValue_NPPVpluginWindow()
