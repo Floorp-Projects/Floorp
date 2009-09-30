@@ -68,7 +68,7 @@ class PluginInstanceChild : public PPluginInstanceChild
 #endif
 
 protected:
-    virtual bool AnswerNPP_SetWindow(const NPWindow& window, NPError* rv);
+    virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window, NPError* rv);
 
 
     virtual bool
@@ -139,7 +139,7 @@ protected:
 public:
     PluginInstanceChild(const NPPluginFuncs* aPluginIface) :
         mPluginIface(aPluginIface)
-#if defined(OS_LINUX)
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
         , mPlug(0)
 #elif defined(OS_WIN)
         , mPluginWindowHWND(0)
@@ -149,7 +149,8 @@ public:
     {
         memset(&mWindow, 0, sizeof(mWindow));
         mData.ndata = (void*) this;
-#if defined(OS_LINUX)
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+        mWindow.ws_info = &mWsInfo;
         memset(&mWsInfo, 0, sizeof(mWsInfo));
 #endif
     }

@@ -44,7 +44,7 @@
 
 using namespace mozilla::plugins;
 
-#if defined(OS_LINUX)
+#ifdef MOZ_WIDGET_GTK2
 
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
@@ -251,40 +251,64 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPEvent& event,
     return true;
 }
 
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+static bool
+XVisualIDToInfo(Display* aDisplay, VisualID aVisualID,
+                Visual** aVisual, unsigned int* aDepth)
+{
+    if (aVisualID == None) {
+        *aVisual = NULL;
+        *aDepth = 0;
+        return true;
+    }
+
+    const Screen* screen = DefaultScreenOfDisplay(aDisplay);
+
+    for (int d = 0; d < screen->ndepths; d++) {
+        Depth *d_info = &screen->depths[d];
+        for (int v = 0; v < d_info->nvisuals; v++) {
+            Visual* visual = &d_info->visuals[v];
+            if (visual->visualid == aVisualID) {
+                *aVisual = visual;
+                *aDepth = d_info->depth;
+                return true;
+            }
+        }
+    }
+
+    NS_ERROR("VisualID not on Screen.");
+    return false;
+}
+#endif
+
 bool
-PluginInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow,
+PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
                                          NPError* rv)
 {
-    printf("[PluginInstanceChild] NPP_SetWindow(%lx, %d, %d, %d x %d)\n",
-           reinterpret_cast<unsigned long>(aWindow.window),
+    printf("[PluginInstanceChild] NPP_SetWindow(0x%lx, %d, %d, %d x %d)\n",
+           aWindow.window,
            aWindow.x, aWindow.y,
            aWindow.width, aWindow.height);
 
-#if defined(OS_LINUX)
-    // XXX/cjones: the minimum info is sent over IPC to allow this
-    // code to determine the rest.  this code is possibly wrong on
-    // some systems, in some conditions
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+    // The minimum info is sent over IPC to allow this
+    // code to determine the rest.
 
-    GdkNativeWindow handle = reinterpret_cast<uintptr_t>(aWindow.window);
+    mWindow.window = reinterpret_cast<void*>(aWindow.window);
+    mWindow.x = aWindow.x;
+    mWindow.y = aWindow.y;
+    mWindow.width = aWindow.width;
+    mWindow.height = aWindow.height;
+    mWindow.clipRect = aWindow.clipRect;
+    mWindow.type = aWindow.type;
 
-    mWindow = aWindow;
+#ifdef MOZ_WIDGET_GTK2
     mWsInfo.display = GDK_DISPLAY();
-
-    // FIXME/cjones: the code below is correct, but apparently to get
-    // a valid GdkWindow*, one needs to create the gtk_plug.  but if we
-    // do that, then the plugin can't plug in to plug.  a hacky solution
-    // may be to create the plug, then create another socket within that
-    // plug.  yuck.
-#if 0
-    mWsInfo.display = GDK_WINDOW_XDISPLAY(gdkWindow);
-    mWsInfo.colormap =
-        GDK_COLORMAP_XCOLORMAP(gdk_drawable_get_colormap(gdkWindow));
-    GdkVisual* gdkVisual = gdk_drawable_get_visual(gdkWindow);
-    mWsInfo.visual = GDK_VISUAL_XVISUAL(gdkVisual);
-    mWsInfo.depth = gdkVisual->depth;
 #endif
-
-    mWindow.ws_info = (void*) &mWsInfo;
+    mWsInfo.colormap = aWindow.colormap;
+    if (!XVisualIDToInfo(mWsInfo.display, aWindow.visualID,
+                         &mWsInfo.visual, &mWsInfo.depth))
+        return false;
 
     *rv = mPluginIface->setwindow(&mData, &mWindow);
 

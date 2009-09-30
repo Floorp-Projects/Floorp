@@ -80,6 +80,21 @@ typedef std::vector<IPCByteRange> IPCByteRanges;
 
 typedef nsCString Buffer;
 
+struct NPRemoteWindow
+{
+  unsigned long window;
+  int32_t x;
+  int32_t y;
+  uint32_t width;
+  uint32_t height;
+  NPRect clipRect;
+  NPWindowType type;
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+  VisualID visualID;
+  Colormap colormap;
+#endif /* XP_UNIX */
+};
+
 
 // XXX maybe not the best place for these. better one?
 
@@ -244,22 +259,23 @@ struct ParamTraits<NPWindowType>
 };
 
 template <>
-struct ParamTraits<NPWindow>
+struct ParamTraits<mozilla::plugins::NPRemoteWindow>
 {
-  typedef NPWindow paramType;
+  typedef mozilla::plugins::NPRemoteWindow paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    aMsg->WriteULong(reinterpret_cast<unsigned long>(aParam.window));
+    aMsg->WriteULong(aParam.window);
     WriteParam(aMsg, aParam.x);
     WriteParam(aMsg, aParam.y);
     WriteParam(aMsg, aParam.width);
     WriteParam(aMsg, aParam.height);
     WriteParam(aMsg, aParam.clipRect);
-    // we don't serialize ws_info because it stores pointers to this
-    // process's address space.  it is reconstructed for each process
-    // using the window ID
     WriteParam(aMsg, aParam.type);
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+    aMsg->WriteULong(aParam.visualID);
+    aMsg->WriteULong(aParam.colormap);
+#endif
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -278,16 +294,25 @@ struct ParamTraits<NPWindow>
           ReadParam(aMsg, aIter, &type)))
       return false;
 
-    aResult->window = (void*)window;
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+    unsigned long visualID;
+    unsigned long colormap;
+    if (!(aMsg->ReadULong(aIter, &visualID) &&
+          aMsg->ReadULong(aIter, &colormap)))
+      return false;
+#endif
+
+    aResult->window = window;
     aResult->x = x;
     aResult->y = y;
     aResult->width = width;
     aResult->height = height;
     aResult->clipRect = clipRect;
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-    aResult->ws_info = 0;     // graphics code fills this in
-#endif
     aResult->type = type;
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+    aResult->visualID = visualID;
+    aResult->colormap = colormap;
+#endif
     return true;
   }
 
