@@ -207,3 +207,7 @@ The attributes which control stream tests are:
   contents of that stream will be passed back to the browser and displayed
   in the specified frame via NPN_GetURL.
 
+"newstream": if "true", then any stream which is sent to a frame in the browser
+  is sent via calls to NPN_NewStream and NPN_Write.  Doing so will cause 
+  the browser to store the stream data in a file, and set the frame's
+  location to the corresponding file:// url.
