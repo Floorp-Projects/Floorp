@@ -213,7 +213,7 @@ TraceRecorder::upRecursion()
               exit);
     }
 
-    debug_only_printf(LC_TMRecorder, "guardUpRecursive fragment->root=%p fi=%p\n", fragment->root, fi);
+    debug_only_printf(LC_TMRecorder, "guardUpRecursive fragment->root=%p fi=%p\n", (void*)fragment->root, (void*)fi);
 
     /* Guard that the FrameInfo above is the same FrameInfo pointer. */
     VMSideExit* exit = snapshot(RECURSIVE_MISMATCH_EXIT);
@@ -486,7 +486,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
         exit->exitType = UNSTABLE_LOOP_EXIT;
     else
         exit->exitType = RECURSIVE_UNLINKED_EXIT;
-    debug_only_printf(LC_TMTreeVis, "TREEVIS CHANGEEXIT EXIT=%p TYPE=%s\n", exit,
+    debug_only_printf(LC_TMTreeVis, "TREEVIS CHANGEEXIT EXIT=%p TYPE=%s\n", (void*)exit,
                       getExitName(exit->exitType));
     JS_ASSERT(treeInfo->recursion >= Recursion_Unwinds);
     return closeLoop(slotMap, exit);

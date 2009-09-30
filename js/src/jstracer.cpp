@@ -6627,7 +6627,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                           js_FramePCToLineNumber(cx, fp),
                           FramePCOffset(fp),
                           slots,
-                          *callstack);
+                          (void*)*callstack);
 #endif
         /*
          * Keep track of the additional frames we put on the interpreter stack
@@ -12078,7 +12078,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     lir->insStorei(INS_CONSTPTR(fi), lirbuf->rp, callDepth * sizeof(FrameInfo*));
 
 #if defined JS_JIT_SPEW
-    debug_only_printf(LC_TMTracer, "iFC frameinfo=%p, stack=%d, map=", fi,
+    debug_only_printf(LC_TMTracer, "iFC frameinfo=%p, stack=%d, map=", (void*)fi,
                       fi->callerHeight);
     for (unsigned i = 0; i < fi->callerHeight; i++)
         debug_only_printf(LC_TMTracer, "%c", typeChar[fi->get_typemap()[i]]);
