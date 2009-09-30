@@ -101,6 +101,7 @@ NO_KEYS_NO_KEYGEN:                     "error.sync.reason.no_keys_no_keygen",
 KEYS_UPLOAD_FAIL:                      "error.sync.reason.keys_upload_fail",
 SETUP_FAILED_NO_PASSPHRASE:            "error.sync.reason.setup_failed_no_passphrase",
 ABORT_SYNC_COMMAND:                    "aborting sync, process commands said so",
+NO_SYNC_NODE_FOUND:                    "error.sync.reason.no_node_found",
 
 // engine failure status codes
 ENGINE_UPLOAD_FAIL:                    "error.engine.reason.record_upload_fail",
