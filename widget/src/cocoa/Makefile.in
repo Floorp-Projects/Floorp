@@ -85,10 +85,15 @@ CMMSRCS = \
 		nsDeviceContextSpecX.mm \
 		nsPrintOptionsX.mm \
 		nsPrintSettingsX.mm \
-		nsPrintSessionX.mm \
 		nsIdleServiceX.mm \
 		nsAccelerometerX.mm \
 		$(NULL)
+
+ifdef MOZ_COCOA_PRINTING
+CMMSRCS	+= nsPrintDialogX.mm
+else
+CMMSRCS	+= nsPrintSessionX.mm
+endif
 
 XPIDLSRCS	+= \
 		nsPIWidgetCocoa.idl \

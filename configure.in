@@ -3139,7 +3139,8 @@ case $target in
 esac
 
 dnl ========================================================
-dnl Check whether we can compile code for Core Text
+dnl Check whether we can compile code for Core Text and
+dnl Cocoa printing
 dnl (Mac OS X 10.5 or later)
 dnl ========================================================
 case "$target" in
@@ -3147,9 +3148,9 @@ case "$target" in
   AC_MSG_CHECKING([for Core Text])
   AC_TRY_COMPILE([#include <ApplicationServices/ApplicationServices.h>],
                  [CTLineRef lineRef;],
-                  ac_cv_have_core_text="yes",
-                  ac_cv_have_core_text="no")
-  AC_MSG_RESULT([$ac_cv_have_core_text])
+                  ac_cv_have_leopard="yes",
+                  ac_cv_have_leopard="no")
+  AC_MSG_RESULT([$ac_cv_have_leopard])
 
   MOZ_CORETEXT=1
 
@@ -3159,15 +3160,30 @@ case "$target" in
     MOZ_CORETEXT=1)
 
   if test -n "$MOZ_CORETEXT"; then
-    if test "$ac_cv_have_core_text" = "no"; then
+    if test "$ac_cv_have_leopard" = "no"; then
       AC_MSG_ERROR([--enable-coretext requires MacOS SDK 10.5 or newer])
      fi
      AC_DEFINE(MOZ_CORETEXT)
   fi
+
+  MOZ_COCOA_PRINTING=1
+
+  MOZ_ARG_DISABLE_BOOL(cocoa-printing,
+[  --disable-cocoa-printing
+                          Use a Carbon print dialog instead of a Cocoa one],
+    MOZ_COCOA_PRINTING=,
+    MOZ_COCOA_PRINTING=1)
+
+  if test -n "$MOZ_COCOA_PRINTING"; then
+    if test "$ac_cv_have_leopard" = "no"; then
+        AC_MSG_ERROR([--enable-cocoa-printing requires MacOS SDK 10.5 or newer])
+    fi
+    AC_DEFINE(MOZ_COCOA_PRINTING)
+  fi
   ;;
 esac
 
-AC_SUBST(MOZ_CORETEXT)
+AC_SUBST(MOZ_COCOA_PRINTING)
 
 XLDFLAGS="$X_LIBS"
 XLIBS="$X_EXTRA_LIBS"
