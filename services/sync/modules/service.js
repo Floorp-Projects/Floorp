@@ -1089,8 +1089,6 @@ WeaveSvc.prototype = {
       return;
     }
 
-    fullSync = true; // not doing thresholds yet
-
     // Make sure we should sync or record why we shouldn't
     let reason = this._checkSync();
     if (reason) {
