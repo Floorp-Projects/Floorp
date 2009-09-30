@@ -1132,7 +1132,13 @@ class nsLineList {
 
     nsLineList()
     {
+      MOZ_COUNT_CTOR(nsLineList);
       clear();
+    }
+
+    ~nsLineList()
+    {
+      MOZ_COUNT_DTOR(nsLineList);
     }
 
     const_iterator begin() const
