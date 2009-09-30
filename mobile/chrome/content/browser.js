@@ -2088,9 +2088,8 @@ function importDialog(src, arguments) {
   return dialog;
 }
 
-function showDownloadsManager(aWindowContext, aID, aReason) {
-  BrowserUI.show(UIMODE_PANEL);
-  BrowserUI.switchPane("downloads-container");
+function showDownloadManager(aWindowContext, aID, aReason) {
+  BrowserUI.showPanel("downloads-container");
   // TODO: select the download with aID
 }
 
