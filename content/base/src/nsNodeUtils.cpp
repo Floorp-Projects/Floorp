@@ -55,6 +55,7 @@
 #include "nsXULElement.h"
 #endif
 #include "nsBindingManager.h"
+#include "nsGenericHTMLElement.h"
 
 // This macro expects the ownerDocument of content_ to be in scope as
 // |nsIDocument* doc|
@@ -222,12 +223,23 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     // the properties may want to use the owner document of the nsINode.
     static_cast<nsIDocument*>(aNode)->PropertyTable()->DeleteAllProperties();
   }
-  else if (aNode->HasProperties()) {
-    // Strong reference to the document so that deleting properties can't
-    // delete the document.
-    nsCOMPtr<nsIDocument> document = aNode->GetOwnerDoc();
-    if (document) {
-      document->PropertyTable()->DeleteAllPropertiesFor(aNode);
+  else {
+    if (aNode->HasProperties()) {
+      // Strong reference to the document so that deleting properties can't
+      // delete the document.
+      nsCOMPtr<nsIDocument> document = aNode->GetOwnerDoc();
+      if (document) {
+        document->PropertyTable()->DeleteAllPropertiesFor(aNode);
+      }
+    }
+
+    // I wonder whether it's faster to do the HasFlag check first....
+    if (aNode->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) &&
+        aNode->HasFlag(ADDED_TO_FORM)) {
+      // Tell the form (if any) this node is going away.  Don't
+      // notify, since we're being destroyed in any case.
+      static_cast<nsGenericHTMLFormElement*>(aNode)->ClearForm(PR_TRUE,
+                                                               PR_FALSE);
     }
   }
   aNode->UnsetFlags(NODE_HAS_PROPERTIES);
