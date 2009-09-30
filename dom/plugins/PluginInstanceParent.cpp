@@ -250,13 +250,28 @@ PluginInstanceParent::DeallocPStreamNotify(PStreamNotifyParent* notifyData,
 }
 
 NPError
-PluginInstanceParent::NPP_SetWindow(NPWindow* aWindow)
+PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
 {
     _MOZ_LOG(__FUNCTION__);
     NS_ENSURE_TRUE(aWindow, NPERR_GENERIC_ERROR);
 
+    NPRemoteWindow window;
+    window.window = reinterpret_cast<unsigned long>(aWindow->window);
+    window.x = aWindow->x;
+    window.y = aWindow->y;
+    window.width = aWindow->width;
+    window.height = aWindow->height;
+    window.clipRect = aWindow->clipRect;
+    window.type = aWindow->type;
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+    const NPSetWindowCallbackStruct* ws_info =
+      static_cast<NPSetWindowCallbackStruct*>(aWindow->ws_info);
+    window.visualID = ws_info->visual ? ws_info->visual->visualid : None;
+    window.colormap = ws_info->colormap;
+#endif
+
     NPError prv;
-    if (!CallNPP_SetWindow(*aWindow, &prv))
+    if (!CallNPP_SetWindow(window, &prv))
         return NPERR_GENERIC_ERROR;
     return prv;
 }

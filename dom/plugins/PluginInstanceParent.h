@@ -148,7 +148,7 @@ public:
     DeallocPStreamNotify(PStreamNotifyParent* notifyData,
                          const NPReason& reason);
 
-    NPError NPP_SetWindow(NPWindow* aWindow);
+    NPError NPP_SetWindow(const NPWindow* aWindow);
 
     NPError NPP_GetValue(NPPVariable variable, void *ret_value);
     NPError NPP_SetValue(NPNVariable variable, void *value)
