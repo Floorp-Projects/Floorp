@@ -868,17 +868,6 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return ThrowException(NS_ERROR_FAILURE, cx);
   }
 
-  if (STOBJ_GET_CLASS(objToWrap) == &sXPC_XOW_JSClass.base) {
-    // We're being asked to wrap a XOW. By using XPCWrapper::Unwrap,
-    // we guarantee that the wrapped object is same-origin to us. If
-    // it isn't, then just wrap the XOW for an added layer of wrapping.
-
-    JSObject *maybeInner = XPCWrapper::Unwrap(cx, objToWrap);
-    if (maybeInner) {
-      objToWrap = maybeInner;
-    }
-  }
-
   // Check that the caller can access the unsafe object.
   if (!CanCallerAccess(cx, objToWrap)) {
     // CanCallerAccess() already threw for us.
@@ -982,6 +971,18 @@ XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
   if (!CanCallerAccess(cx, unsafeObj)) {
     // CanCallerAccess() already threw for us.
     return nsnull;
+  }
+
+  JSObject *tmp = XPCWrapper::UnwrapGeneric(cx, &sXPC_XOW_JSClass, unsafeObj);
+  if (tmp) {
+    unsafeObj = tmp;
+
+    // Repeat the CanCallerAccess check because the XOW is parented to our
+    // scope's global object which makes the above CanCallerAccess call lie.
+    if (!CanCallerAccess(cx, unsafeObj)) {
+      // CanCallerAccess() already threw for us.
+      return nsnull;
+    }
   }
 
   // Create our dummy SJOW.
