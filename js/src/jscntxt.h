@@ -126,6 +126,7 @@ struct VMFragment;
 #ifdef __cplusplus
 struct REHashKey;
 struct REHashFn;
+class FrameInfoCache;
 typedef nanojit::HashMap<REHashKey, nanojit::Fragment*, REHashFn> REHashMap;
 #endif
 
@@ -177,6 +178,7 @@ struct JSTraceMonitor {
     CLS(nanojit::Assembler) assembler;
     CLS(nanojit::LirBuffer) lirbuf;
     CLS(nanojit::LirBuffer) reLirBuf;
+    CLS(FrameInfoCache)     frameCache;
 #ifdef DEBUG
     CLS(nanojit::LabelMap)  labels;
 #endif
