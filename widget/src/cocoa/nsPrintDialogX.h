@@ -12,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is the Mozilla OS X print dialog interface.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Markus Stange <mstange@themasta.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,43 +36,62 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsPrintingPromptService_h
-#define __nsPrintingPromptService_h
+#ifndef nsPrintDialogX_h__
+#define nsPrintDialogX_h__
 
-// {E042570C-62DE-4bb6-A6E0-798E3C07B4DF}
-#define NS_PRINTINGPROMPTSERVICE_CID \
- {0xe042570c, 0x62de, 0x4bb6, { 0xa6, 0xe0, 0x79, 0x8e, 0x3c, 0x7, 0xb4, 0xdf}}
-#define NS_PRINTINGPROMPTSERVICE_CONTRACTID \
- "@mozilla.org/embedcomp/printingprompt-service;1"
-
+#include "nsIPrintDialogService.h"
 #include "nsCOMPtr.h"
-#include "nsIPrintingPromptService.h"
-#include "nsPIPromptService.h"
-#include "nsIWindowWatcher.h"
 
-// Printing Progress Includes
-#include "nsPrintProgress.h"
-#include "nsIWebProgressListener.h"
+#import <Cocoa/Cocoa.h>
 
+class nsIPrintSettings;
+class nsIStringBundle;
 
-class nsIDOMWindow;
-class nsIDialogParamBlock;
-
-class nsPrintingPromptService: public nsIPrintingPromptService,
-                               public nsIWebProgressListener
+class nsPrintDialogServiceX : public nsIPrintDialogService
 {
 public:
-  nsPrintingPromptService();
-  virtual ~nsPrintingPromptService();
+  nsPrintDialogServiceX();
+  virtual ~nsPrintDialogServiceX();
 
-  nsresult Init();
-
-  NS_DECL_NSIPRINTINGPROMPTSERVICE
-  NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_ISUPPORTS
 
-private:
-  nsCOMPtr<nsIPrintProgress> mPrintProgress;
+  NS_IMETHODIMP Init();
+  NS_IMETHODIMP Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings);
+  NS_IMETHODIMP ShowPageSetup(nsIDOMWindow *aParent,
+                              nsIPrintSettings *aSettings);
 };
+
+@interface PrintPanelAccessoryView : NSView
+{
+  nsIPrintSettings* mSettings;
+  nsIStringBundle* mPrintBundle;
+  NSButton* mPrintSelectionOnlyCheckbox;
+  NSButton* mShrinkToFitCheckbox;
+  NSButton* mPrintBGColorsCheckbox;
+  NSButton* mPrintBGImagesCheckbox;
+  NSButtonCell* mAsLaidOutRadio;
+  NSButtonCell* mSelectedFrameRadio;
+  NSButtonCell* mSeparateFramesRadio;
+  NSPopUpButton* mHeaderLeftList;
+  NSPopUpButton* mHeaderCenterList;
+  NSPopUpButton* mHeaderRightList;
+  NSPopUpButton* mFooterLeftList;
+  NSPopUpButton* mFooterCenterList;
+  NSPopUpButton* mFooterRightList;
+}
+
+- (id)initWithSettings:(nsIPrintSettings*)aSettings;
+
+- (void)exportSettings;
+
+@end
+
+@interface PrintPanelAccessoryController : NSViewController <NSPrintPanelAccessorizing>
+
+- (id)initWithSettings:(nsIPrintSettings*)aSettings;
+
+- (void)exportSettings;
+
+@end
 
 #endif
