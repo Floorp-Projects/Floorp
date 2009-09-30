@@ -5322,3 +5322,30 @@ nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
                                AppendAllMatchingElements, contentList);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsNSElementTearoff::MozMatchesSelector(const nsAString& aSelector, PRBool* aReturn)
+{
+  NS_PRECONDITION(aReturn, "Null out param?");
+  *aReturn = nsGenericElement::doMatchesSelector(mContent, aSelector);
+  return NS_OK;
+}
+
+/* static */
+PRBool
+nsGenericElement::doMatchesSelector(nsIContent* aNode, const nsAString& aSelector)
+{
+  nsAutoPtr<nsCSSSelectorList> selectorList;
+  nsPresContext* presContext;
+  PRBool matches = PR_FALSE;
+
+  if (NS_SUCCEEDED(ParseSelectorList(aNode, aSelector,
+                                     getter_Transfers(selectorList),
+                                     &presContext)))
+  {
+    RuleProcessorData data(presContext, aNode, nsnull);
+    matches = nsCSSRuleProcessor::SelectorListMatches(data, selectorList);
+  }
+
+  return matches;
+}

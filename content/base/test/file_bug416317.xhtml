@@ -499,6 +499,36 @@
         }
       }
 
+      var all = query("*");
+
+      function checkMatchesSelector(results, q) {
+        var key = +new Date + ":" + Math.random();
+
+        function report(item, shouldMatch) {
+          assert( item.mozMatchesSelector(q) === shouldMatch,
+                  item + (shouldMatch ? "does not match" : "matches")
+                       + " selector '" + q + "'" );
+        }
+
+        for (var i = 0; i < results.length; i++) {
+          var item = results.item(i);
+          item[key] = true;
+          report( item, true );
+        }
+
+        for (var stride = 15, // reduce test spam
+                 i = Math.round(Math.random() * stride);
+             i < all.length; i += stride)
+        {
+          var item = all.item(i),
+              shouldMatch = !!item[key];
+          report( item, shouldMatch );
+        }
+
+        for (var i = 0; i < results.length; i++)
+          delete results.item(i)[key];
+      }
+
       function t( name, q, ids, restrict, ids2 ) {
         var pass = true;
 
@@ -535,6 +565,9 @@
   
           assert( pass, type + ": " + name + " (" + nq + ")" +
             (pass ? "" : " Expected: " + extra(ids) + " Received: " + extra(results)) );
+
+          if (results)
+            checkMatchesSelector( results, q );
         }
 
         function hasPassed(results, ids){
@@ -587,7 +620,6 @@
       t( "Adjacent", "xHTML|a + a", ["groups"] );
       t( "Nth-child", "xHTML|*#form xHTML|*#select1 xHTML|option:nth-child(3)", ["option1c"] );
 
-      var all = query("*");
       assert( all && all.length > 30, type + ": Select all" );
       var good = all && all.length;
       for ( var i = 0; all && i < all.length; i++ )
