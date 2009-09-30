@@ -132,6 +132,7 @@ StatusRecord.prototype = {
 
   resetEngineStatus: function() {
     this.engines = {};
+    this.partial = false;
   },
 
   _resetBackoff: function () {
@@ -1220,6 +1221,11 @@ WeaveSvc.prototype = {
       this._syncError = true;
       this._log.debug(Utils.exceptionStr(e));
       return true;
+    }
+    finally {
+      // If this engine has more to fetch, remember that globally
+      if (engine.toFetch != null && engine.toFetch.length > 0)
+        this.status.partial = true;
     }
   },
 
