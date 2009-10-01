@@ -169,6 +169,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsIPropertyBag2.h"
 #include "nsIDOMPageTransitionEvent.h"
 #include "nsFrameLoader.h"
+#include "nsHTMLMediaElement.h"
 
 #include "mozAutoDocUpdate.h"
 
@@ -3574,6 +3575,25 @@ nsDocument::GetScopeObject()
   return scope;
 }
 
+static void
+NotifyActivityChanged(nsIContent *aContent, void *aUnused)
+{
+#ifdef MOZ_MEDIA
+  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aContent));
+  if (domMediaElem) {
+    nsHTMLMediaElement* mediaElem = static_cast<nsHTMLMediaElement*>(aContent);
+    mediaElem->NotifyOwnerDocumentActivityChanged();
+  }
+#endif
+}
+
+void
+nsIDocument::SetContainer(nsISupports* aContainer)
+{
+  mDocumentContainer = do_GetWeakReference(aContainer);
+  EnumerateFreezableElements(NotifyActivityChanged, nsnull);
+}
+
 void
 nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 {
@@ -6972,6 +6992,7 @@ nsDocument::RemovedFromDocShell()
     return;
 
   mRemovedFromDocShell = PR_TRUE;
+  EnumerateFreezableElements(NotifyActivityChanged, nsnull); 
 
   PRUint32 i, count = mChildren.ChildCount();
   for (i = 0; i < count; ++i) {
@@ -7156,6 +7177,8 @@ void
 nsDocument::OnPageShow(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarget)
 {
   mVisible = PR_TRUE;
+
+  EnumerateFreezableElements(NotifyActivityChanged, nsnull); 
   UpdateLinkMap();
   
   nsIContent* root = GetRootContent();
@@ -7236,6 +7259,7 @@ nsDocument::OnPageHide(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarge
   DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"), aPersisted);
 
   mVisible = PR_FALSE;
+  EnumerateFreezableElements(NotifyActivityChanged, nsnull);
 }
 
 void
