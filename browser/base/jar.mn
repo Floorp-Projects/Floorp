@@ -24,6 +24,7 @@ browser.jar:
 *       content/browser/browser.xul                   (content/browser.xul)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
 *       content/browser/credits.xhtml                 (content/credits.xhtml)
+*       content/browser/fullscreen-video.xhtml        (content/fullscreen-video.xhtml)
 *       content/browser/pageinfo/pageInfo.xul         (content/pageinfo/pageInfo.xul)
 *       content/browser/pageinfo/pageInfo.js          (content/pageinfo/pageInfo.js)
 *       content/browser/pageinfo/pageInfo.css         (content/pageinfo/pageInfo.css)
