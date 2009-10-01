@@ -1148,14 +1148,14 @@
         <xul:hbox anonid="title-box" class="ac-title" flex="1"
                   onunderflow="_doUnderflow('_title');">
           <xul:description anonid="title" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
-          <xul:hbox anonid="extra-box" class="ac-extra" align="center" hidden="true">
-            <xul:image class="ac-result-type-tag"/>
-            <xul:label class="ac-normal-text ac-comment" xbl:inherits="selected" value=":"/>
-            <xul:description anonid="extra" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
-          </xul:hbox>
         </xul:hbox>
         <xul:label anonid="title-overflow-ellipsis" xbl:inherits="selected"
                    class="ac-ellipsis-after ac-comment" hidden="true"/>
+        <xul:hbox anonid="extra-box" class="ac-extra" align="center" hidden="true">
+          <xul:image class="ac-result-type-tag"/>
+          <xul:label class="ac-normal-text ac-comment" xbl:inherits="selected" value=":"/>
+          <xul:description anonid="extra" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
+        </xul:hbox>
         <xul:image anonid="type-image" class="ac-type-icon"/>
       </xul:hbox>
       <xul:hbox align="center" class="ac-url-box">
@@ -1386,7 +1386,6 @@
             this._extraBox.hidden = false;
             this._extraBox.childNodes[0].hidden = false;
             this._extraBox.childNodes[1].hidden = true;
-            this._extraBox.flex = 1;
             this._extraBox.pack = "end";
 
             // The title is separated from the tags by an endash
@@ -1406,7 +1405,6 @@
             this._extraBox.hidden = false;
             this._extraBox.childNodes[0].hidden = true;
             this._extraBox.childNodes[1].hidden = false;
-            this._extraBox.flex = 0;
             this._extraBox.pack = "start";
             
             // Put the parameters next to the title if we have any
