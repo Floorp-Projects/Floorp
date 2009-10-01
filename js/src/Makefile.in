@@ -239,6 +239,7 @@ INSTALLED_HEADERS += \
 		Native$(NANOJIT_ARCH).h \
 		RegAlloc.h	\
 		nanojit.h	\
+		VMPI.h		\
 		$(NULL)
 
 CPPSRCS += \
@@ -253,6 +254,7 @@ CPPSRCS += \
 		avmplus.cpp    \
 		Native$(NANOJIT_ARCH).cpp \
 		jsbuiltins.cpp         \
+		VMPI.cpp       \
 		$(NULL)
 
 ifdef WINCE
