@@ -6279,7 +6279,7 @@ PresShell::HandleEvent(nsIView         *aView,
 #endif
     PopCurrentEventInfo();
   } else {
-    // Focus events need to be dispatched even if no frame was found, since
+    // Activation events need to be dispatched even if no frame was found, since
     // we don't want the focus to be out of sync.
 
     if (!NS_EVENT_NEEDS_FRAME(aEvent)) {

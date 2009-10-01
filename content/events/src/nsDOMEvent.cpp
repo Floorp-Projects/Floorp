@@ -521,10 +521,6 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
   } else if (mEvent->eventStructType == NS_EVENT) {
     if (atom == nsGkAtoms::onMozAfterPaint)
       mEvent->message = NS_AFTERPAINT;
-    if (atom == nsGkAtoms::onfocus)
-      mEvent->message = NS_FOCUS_CONTENT;
-    else if (atom == nsGkAtoms::onblur)
-      mEvent->message = NS_BLUR_CONTENT;
     else if (atom == nsGkAtoms::onsubmit)
       mEvent->message = NS_FORM_SUBMIT;
     else if (atom == nsGkAtoms::onreset)
@@ -559,6 +555,11 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_PAGE_HIDE;
     else if (atom == nsGkAtoms::onhashchange)
       mEvent->message = NS_HASHCHANGE;
+  } else if (mEvent->eventStructType == NS_FOCUS_EVENT) {
+    if (atom == nsGkAtoms::onfocus)
+      mEvent->message = NS_FOCUS_CONTENT;
+    else if (atom == nsGkAtoms::onblur)
+      mEvent->message = NS_BLUR_CONTENT;
   } else if (mEvent->eventStructType == NS_MUTATION_EVENT) {
     if (atom == nsGkAtoms::onDOMAttrModified)
       mEvent->message = NS_MUTATION_ATTRMODIFIED;
@@ -929,6 +930,15 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent = new nsFormEvent(PR_FALSE, msg);
       break;
     }
+    case NS_FOCUS_EVENT:
+    {
+      newEvent = new nsFocusEvent(PR_FALSE, msg);
+      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
+      static_cast<nsFocusEvent*>(newEvent)->fromRaise =
+        static_cast<nsFocusEvent*>(mEvent)->fromRaise;
+      break;
+    }
+
     case NS_POPUP_EVENT:
     {
       newEvent = new nsInputEvent(PR_FALSE, msg, nsnull);

@@ -1179,12 +1179,47 @@ function switchWindowTest(otherWindow, framesetWindow)
   getTopWindow(framesetWindow).document.commandDispatcher.focusedWindow = gOldExpectedWindow;
   is(fm.activeWindow, gNewExpectedWindow, "setting commandDispatcher focusedWindow doesn't raise window");
 
-  gOldExpectedWindow = null;
-  gNewExpectedWindow = null;
-  otherWindow.close();
-  framesetWindow.close();
+  fm.moveFocus(otherWindow, null, fm.MOVEFOCUS_FORWARD, 0);
+  var otherTextbox = otherWindow.document.getElementById("other-textbox");
+  otherTextbox.setSelectionRange(2, 3);
+  fm.activeWindow = topWindow;
+  fm.activeWindow = otherWindow;
+  is(otherTextbox.selectionStart, 2, "selectionStart after textbox focus and window raise");
+  is(otherTextbox.selectionEnd, 3, "selectionEnd after textbox focus and window raise");
+  is(fm.getLastFocusMethod(null), fm.FLAG_BYMOVEFOCUS, "last focus method after textbox focus and window raise");
 
-  SimpleTest.waitForFocus(doWindowNoRootTest);
+  fm.clearFocus(otherWindow);
+
+  // test to ensure that a synthetic event works
+  var synevent = document.createEvent("Event");
+  synevent.initEvent("focus", false, false);
+  otherTextbox.inputField.dispatchEvent(synevent);
+  is(synevent.type, "focus", "event.type after synthetic focus event");
+  is(synevent.target, otherTextbox, "event.target after synthetic focus event");
+  is(fm.focusedElement, null, "focusedElement after synthetic focus event");
+  is(otherWindow.document.activeElement, otherWindow.document.documentElement,
+     "document.activeElement after synthetic focus event");
+
+  // check accessing a focus event after the event has finishing firing
+  function continueTest(event) {
+    is(event.type, "focus", "event.type after accessing focus event in timeout");
+    is(event.target, otherTextbox, "event.target after accessing focus event in timeout");
+
+    gOldExpectedWindow = null;
+    gNewExpectedWindow = null;
+    otherWindow.close();
+    framesetWindow.close();
+
+    SimpleTest.waitForFocus(doWindowNoRootTest);
+  }
+
+  function textboxFocused(event) {
+    otherTextbox.removeEventListener("focus", textboxFocused, true);
+    setTimeout(continueTest, 0, event);
+  }
+
+  otherTextbox.addEventListener("focus", textboxFocused, true);
+  otherTextbox.focus();
 }
 
 // open a window with no root element
