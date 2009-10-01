@@ -414,10 +414,10 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * Whether we are about to call instantiate on our frame. If we aren't,
      * SetFrame needs to asynchronously call Instantiate.
      */
-    PRBool                      mInstantiating : 1;
+    PRPackedBool                mInstantiating : 1;
     // Blocking status from content policy
-    PRBool                      mUserDisabled  : 1;
-    PRBool                      mSuppressed    : 1;
+    PRPackedBool                mUserDisabled  : 1;
+    PRPackedBool                mSuppressed    : 1;
     // A specific state that caused us to fallback
     PluginSupportState          mPluginState;
 
