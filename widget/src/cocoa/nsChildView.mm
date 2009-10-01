@@ -906,7 +906,7 @@ void nsChildView::UpdatePluginPort()
     if ([(ChildView*)mView pluginEventModel] == NPEventModelCocoa) {
       if (cocoaWindow) {
         mPluginCGContext.context = (CGContextRef)[[cocoaWindow graphicsContext] graphicsPort];
-        mPluginCGContext.window = cocoaWindow;
+        mPluginCGContext.window = (NPNSWindow*)cocoaWindow;
       }
     }
   }
@@ -2231,8 +2231,10 @@ NSEvent* gLastDragEvent = nil;
 
   [mPendingDirtyRects release];
   [mLastMouseDownEvent release];
+#ifndef NP_NO_CARBON
   if (mPluginTSMDoc)
     ::DeleteTSMDocument(mPluginTSMDoc);
+#endif
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
@@ -3582,6 +3584,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+#ifndef NP_NO_CARBON
 static PRBool ConvertUnicodeToCharCode(PRUnichar inUniChar, unsigned char* outChar)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -3611,6 +3614,7 @@ static PRBool ConvertUnicodeToCharCode(PRUnichar inUniChar, unsigned char* outCh
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
 }
+#endif // NP_NO_CARBON
 
 static void ConvertCocoaKeyEventToNPCocoaEvent(NSEvent* cocoaEvent, NPCocoaEvent& pluginEvent, PRUint32 keyType = 0)
 {
@@ -3638,6 +3642,7 @@ static void ConvertCocoaKeyEventToNPCocoaEvent(NSEvent* cocoaEvent, NPCocoaEvent
   }
 }
 
+#ifndef NP_NO_CARBON
 static void ConvertCocoaKeyEventToCarbonEvent(NSEvent* cocoaEvent, EventRecord& pluginEvent, PRUint32 keyType = 0)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -3683,6 +3688,7 @@ static void ConvertCocoaKeyEventToCarbonEvent(NSEvent* cocoaEvent, EventRecord& 
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
+#endif // NP_NO_CARBON
 
 static PRBool IsPrintableChar(PRUnichar aChar)
 {
@@ -4478,6 +4484,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+#ifndef NP_NO_CARBON
 // Called from PluginKeyEventsHandler() (a handler for Carbon TSM events) to
 // process a Carbon key event for the currently focused plugin.  Both Unicode
 // characters and "Mac encoding characters" (in the MBCS or "multibyte
@@ -4502,7 +4509,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   nsAutoTArray<unsigned char, 3> charCodes;
   charCodes.SetLength(numCharCodes);
   status = ::GetEventParameter(aKeyEvent, kEventParamKeyMacCharCodes,
-                              typeChar, NULL, numCharCodes, NULL, charCodes.Elements());
+                               typeChar, NULL, numCharCodes, NULL, charCodes.Elements());
   if (status != noErr)
     return;
 
@@ -4554,6 +4561,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
+#endif // NP_NO_CARBON
 
 - (nsIntRect)sendCompositionEvent:(PRInt32) aEventType
 {
@@ -5230,6 +5238,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 #endif // NS_LEOPARD_AND_LATER
 }
 
+#ifndef NP_NO_CARBON
 // Create a TSM document for use with plugins, so that we can support IME in
 // them.  Once it's created, if need be (re)activate it.  Some plugins (e.g.
 // the Flash plugin running in Camino) don't create their own TSM document --
@@ -5259,6 +5268,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     ::ActivateTSMDocument(mPluginTSMDoc);
   }
 }
+#endif // NP_NO_CARBON
 
 - (void)keyDown:(NSEvent*)theEvent
 {
@@ -6533,6 +6543,8 @@ ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* anEvent)
 
 #pragma mark -
 
+#ifndef NP_NO_CARBON
+
 // Target for text services events sent as the result of calls made to
 // TSMProcessRawKeyEvent() in [ChildView keyDown:] (above) when a plugin has
 // the focus.  The calls to TSMProcessRawKeyEvent() short-circuit Cocoa-based
@@ -6600,6 +6612,8 @@ void NS_RemovePluginKeyEventsHandler()
   ::RemoveEventHandler(gPluginKeyEventsHandler);
   gPluginKeyEventsHandler = NULL;
 }
+
+#endif // NP_NO_CARBON
 
 @interface NSView (MethodSwizzling)
 - (BOOL)nsChildView_NSView_mouseDownCanMoveWindow;
