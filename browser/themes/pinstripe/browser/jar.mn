@@ -12,6 +12,7 @@ browser.jar:
 * skin/classic/browser/browser.css                          (browser.css)
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/feed-icons.png
+  skin/classic/browser/fullscreen-video.css
   skin/classic/browser/Geo.png
   skin/classic/browser/Go-arrow.png
   skin/classic/browser/home.png
