@@ -56,6 +56,7 @@
 #endif
 #include "nsBindingManager.h"
 #include "nsGenericHTMLElement.h"
+#include "nsHTMLMediaElement.h"
 
 // This macro expects the ownerDocument of content_ to be in scope as
 // |nsIDocument* doc|
@@ -604,6 +605,8 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
 
     nsIDocument* newDoc = aNode->GetOwnerDoc();
     if (newDoc) {
+      // XXX what if oldDoc is null, we don't know if this should be
+      // registered or not! Can that really happen?
       if (wasRegistered) {
         newDoc->RegisterFreezableElement(static_cast<nsIContent*>(aNode));
       }
@@ -619,6 +622,16 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
         }
       }
     }
+
+#ifdef MOZ_MEDIA
+    if (wasRegistered && oldDoc != newDoc) {
+      nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aNode));
+      if (domMediaElem) {
+        nsHTMLMediaElement* mediaElem = static_cast<nsHTMLMediaElement*>(aNode);
+        mediaElem->NotifyOwnerDocumentActivityChanged();
+      }
+    }
+#endif
 
     if (elem) {
       elem->RecompileScriptEventListeners();
