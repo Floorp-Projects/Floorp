@@ -9648,6 +9648,8 @@ IsTraceableRecursion(JSContext *cx)
         return false;
     if (down->argc != fp->argc)
         return false;
+    if (fp->argc != fp->fun->nargs)
+        return false;
     if (fp->imacpc || down->imacpc)
         return false;
     if ((fp->flags & JSFRAME_CONSTRUCTING) || (down->flags & JSFRAME_CONSTRUCTING))
