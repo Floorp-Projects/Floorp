@@ -734,6 +734,7 @@ sys/procfs.h
 sys/pstat.h
 sys/ptrace.h
 sys/queue.h
+sys/quota.h
 sys/reg.h
 sys/regset.h
 sys/resource.h
