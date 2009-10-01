@@ -1065,8 +1065,7 @@ var gEditItemOverlay = {
 
   // nsINavBookmarkObserver
   onItemChanged: function EIO_onItemChanged(aItemId, aProperty,
-                                            aIsAnnotationProperty, aValue,
-                                            aLastModified, aItemType) {
+                                            aIsAnnotationProperty, aValue) {
     if (this._itemId != aItemId) {
       if (aProperty == "title") {
         // If the title of a folder which is listed within the folders
@@ -1146,7 +1145,7 @@ var gEditItemOverlay = {
   },
 
   onItemMoved: function EIO_onItemMoved(aItemId, aOldParent, aOldIndex,
-                                        aNewParent, aNewIndex, aItemType) {
+                                        aNewParent, aNewIndex) {
     if (aItemId != this._itemId ||
         aNewParent == this._getFolderIdFromMenuList())
       return;
@@ -1158,7 +1157,7 @@ var gEditItemOverlay = {
     this._folderMenuList.selectedItem = folderItem;
   },
 
-  onItemAdded: function EIO_onItemAdded(aItemId, aFolder, aIndex, aItemType) {
+  onItemAdded: function EIO_onItemAdded(aItemId, aFolder, aIndex) {
     this._lastNewItem = aItemId;
   },
 
