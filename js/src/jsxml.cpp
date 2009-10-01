@@ -3385,9 +3385,9 @@ Descendants(JSContext *cx, JSXML *xml, jsval id)
 
     /*
      * Protect nameqn's object and strings from GC by linking list to it
-     * temporarily.  The cx->newborn[GCX_OBJECT] GC root protects listobj,
-     * which protects list.  Any other object allocations occuring beneath
-     * DescendantsHelper use local roots.
+     * temporarily.  The newborn GC root for the last allocated object
+     * protects listobj, which protects list. Any other object allocations
+     * occurring beneath DescendantsHelper use local roots.
      */
     list->name = nameqn;
     if (!js_EnterLocalRootScope(cx))
@@ -7182,9 +7182,7 @@ uint32  xml_serial;
 JSXML *
 js_NewXML(JSContext *cx, JSXMLClass xml_class)
 {
-    JSXML *xml;
-
-    xml = (JSXML *) js_NewGCXML(cx, GCX_XML);
+    JSXML *xml = js_NewGCXML(cx);
     if (!xml)
         return NULL;
 

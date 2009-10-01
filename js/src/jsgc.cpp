@@ -1765,8 +1765,9 @@ IsGCThresholdReached(JSRuntime *rt)
            rt->gcBytes >= rt->gcTriggerBytes;
 }
 
-template <class T> static JS_INLINE T*
-NewGCThing(JSContext *cx, uintN flags)
+template <typename T, typename NewbornType>
+static JS_INLINE T*
+NewGCThing(JSContext *cx, uintN flags, NewbornType** newbornRoot)
 {
     JSRuntime *rt;
     bool doGC;
@@ -1995,7 +1996,7 @@ testReservedObjects:
          * No local root scope, so we're stuck with the old, fragile model of
          * depending on a pigeon-hole newborn per type per context.
          */
-        cx->weakRoots.newborn[flags & GCF_TYPEMASK] = thing;
+        *newbornRoot = (T *) thing;
     }
 
     /* We can't fail now, so update flags. */
@@ -2027,25 +2028,39 @@ fail:
     return NULL;
 }
 
-extern JSObject* js_NewGCObject(JSContext *cx, uintN flags)
+JSObject *
+js_NewGCObject(JSContext *cx)
 {
-    return NewGCThing<JSObject>(cx, flags);
+    return NewGCThing<JSObject>(cx, GCX_OBJECT, &cx->weakRoots.newbornObject);
 }
 
-extern JSString* js_NewGCString(JSContext *cx, uintN flags)
+JSString *
+js_NewGCString(JSContext *cx)
 {
-    return NewGCThing<JSString>(cx, flags);
+    return NewGCThing<JSString>(cx, GCX_STRING, &cx->weakRoots.newbornString);
 }
 
-extern JSFunction* js_NewGCFunction(JSContext *cx, uintN flags)
+JSString *
+js_NewGCExternalString(JSContext *cx, uintN type)
 {
-    return NewGCThing<JSFunction>(cx, flags);
+    JS_ASSERT(type < JS_EXTERNAL_STRING_LIMIT);
+    return NewGCThing<JSString>(cx, GCX_EXTERNAL_STRING + type,
+                                &cx->weakRoots.newbornExternalString[type]);
 }
 
-extern JSXML* js_NewGCXML(JSContext *cx, uintN flags)
+JSFunction *
+js_NewGCFunction(JSContext *cx)
 {
-    return NewGCThing<JSXML>(cx, flags);
+    return NewGCThing<JSFunction>(cx, GCX_OBJECT, &cx->weakRoots.newbornObject);
 }
+
+#if JS_HAS_XML_SUPPORT
+JSXML *
+js_NewGCXML(JSContext *cx)
+{
+    return NewGCThing<JSXML>(cx, GCX_XML, &cx->weakRoots.newbornXML);
+}
+#endif
 
 static JSGCDoubleCell *
 RefillDoubleFreeList(JSContext *cx)
@@ -2224,7 +2239,7 @@ js_NewWeaklyRootedDouble(JSContext *cx, jsdouble d)
         if (js_PushLocalRoot(cx, cx->localRootStack, v) < 0)
             return NULL;
     } else {
-        cx->weakRoots.newborn[GCX_DOUBLE] = dp;
+        cx->weakRoots.newbornDouble = dp;
     }
     return dp;
 }
@@ -2240,7 +2255,7 @@ js_ReserveObjects(JSContext *cx, size_t nobjects)
     JSObject *&head = JS_TRACE_MONITOR(cx).reservedObjects;
     size_t i = head ? JSVAL_TO_INT(head->fslots[1]) : 0;
     while (i < nobjects) {
-        JSObject *obj = js_NewGCObject(cx, GCX_OBJECT);
+        JSObject *obj = js_NewGCObject(cx);
         if (!obj)
             return JS_FALSE;
         memset(obj, 0, sizeof(JSObject));
@@ -2889,33 +2904,21 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 static void
 TraceWeakRoots(JSTracer *trc, JSWeakRoots *wr)
 {
-    uint32 i;
-    void *thing;
-
-#ifdef DEBUG
-    static const char *weakRootNames[JSTRACE_LIMIT] = {
-        "newborn object",
-        "newborn double",
-        "newborn string",
-        "newborn xml"
-    };
+    if (wr->newbornObject)
+        JS_CALL_OBJECT_TRACER(trc, wr->newbornObject, "newborn_object");
+    if (wr->newbornString)
+        JS_CALL_STRING_TRACER(trc, wr->newbornString, "newborn_string");
+    if (wr->newbornDouble)
+        JS_CALL_DOUBLE_TRACER(trc, wr->newbornDouble, "newborn_double");
+#if JS_HAS_XML_SUPPORT
+    if (wr->newbornXML)
+        JS_CALL_TRACER(trc, wr->newbornXML, JSTRACE_XML, "newborn_xml");
 #endif
-
-    for (i = 0; i != JSTRACE_LIMIT; i++) {
-        thing = wr->newborn[i];
-        if (thing)
-            JS_CALL_TRACER(trc, thing, i, weakRootNames[i]);
+    for (uint32 i = 0; i != JS_EXTERNAL_STRING_LIMIT; i++) {
+        JSString *str = wr->newbornExternalString[i];
+        if (str)
+            JS_CALL_STRING_TRACER(trc, str, "newborn_external_string");
     }
-    JS_ASSERT(i == GCX_EXTERNAL_STRING);
-    for (; i != GCX_NTYPES; ++i) {
-        thing = wr->newborn[i];
-        if (thing) {
-            JS_SET_TRACING_INDEX(trc, "newborn external string",
-                                 i - GCX_EXTERNAL_STRING);
-            JS_CallTracer(trc, thing, JSTRACE_STRING);
-        }
-    }
-
     JS_CALL_VALUE_TRACER(trc, wr->lastAtom, "lastAtom");
     JS_SET_TRACING_NAME(trc, "lastInternalResult");
     js_CallValueTracerIfGCThing(trc, wr->lastInternalResult);
@@ -3213,7 +3216,8 @@ FinalizeObject(JSContext *cx, JSObject *obj)
     js_FreeSlots(cx, obj);
 }
 
-static JSStringFinalizeOp str_finalizers[GCX_NTYPES - GCX_EXTERNAL_STRING] = {
+JS_STATIC_ASSERT(JS_EXTERNAL_STRING_LIMIT == 8);
+static JSStringFinalizeOp str_finalizers[JS_EXTERNAL_STRING_LIMIT] = {
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
@@ -3221,12 +3225,10 @@ intN
 js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
                                  JSStringFinalizeOp newop)
 {
-    uintN i;
-
-    for (i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
+    for (uintN i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
         if (str_finalizers[i] == oldop) {
             str_finalizers[i] = newop;
-            return (intN) i;
+            return intN(i);
         }
     }
     return -1;
