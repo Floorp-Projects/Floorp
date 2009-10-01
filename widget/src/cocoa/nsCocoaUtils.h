@@ -43,6 +43,10 @@
 
 #import <Cocoa/Cocoa.h>
 
+#if defined(MAC_OS_X_VERSION_10_5) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5)
+#define NS_LEOPARD_AND_LATER 1
+#endif
+
 #include "nsRect.h"
 #include "nsObjCExceptions.h"
 

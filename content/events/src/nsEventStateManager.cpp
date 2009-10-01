@@ -1383,7 +1383,7 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
 
   nsCOMPtr<nsIDOMXULDocument> xulDoc =
     do_QueryInterface(aContent->GetOwnerDoc());
-  if (!xulDoc && !aContent->IsNodeOfType(nsINode::eXUL))
+  if (!xulDoc && !aContent->IsXUL())
     return PR_TRUE;
 
     // For XUL we do visibility checks.
@@ -1404,7 +1404,7 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
   if (control)
     return PR_TRUE;
 
-  if (aContent->IsNodeOfType(nsINode::eHTML)) {
+  if (aContent->IsHTML()) {
     nsIAtom* tag = aContent->Tag();
 
     // HTML area, label and legend elements are never focusable, so
@@ -1414,7 +1414,7 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
         tag == nsGkAtoms::legend)
       return PR_TRUE;
 
-  } else if (aContent->IsNodeOfType(nsINode::eXUL)) {
+  } else if (aContent->IsXUL()) {
     // XUL label elements are never focusable, so we need to check for them
     // explicitly before giving up.
     if (aContent->Tag() == nsGkAtoms::label)
@@ -1697,7 +1697,7 @@ nsEventStateManager::FireContextClick()
       nsIAtom *tag = mGestureDownContent->Tag();
       PRBool allowedToDispatch = PR_TRUE;
 
-      if (mGestureDownContent->IsNodeOfType(nsINode::eXUL)) {
+      if (mGestureDownContent->IsXUL()) {
         if (tag == nsGkAtoms::scrollbar ||
             tag == nsGkAtoms::scrollbarbutton ||
             tag == nsGkAtoms::button)
@@ -1718,7 +1718,7 @@ nsEventStateManager::FireContextClick()
           }
         }
       }
-      else if (mGestureDownContent->IsNodeOfType(nsINode::eHTML)) {
+      else if (mGestureDownContent->IsHTML()) {
         nsCOMPtr<nsIFormControl> formCtrl(do_QueryInterface(mGestureDownContent));
 
         if (formCtrl) {
@@ -2347,7 +2347,7 @@ nsEventStateManager::DoScrollZoom(nsIFrame *aTargetFrame,
   nsIContent *content = aTargetFrame->GetContent();
   if (content &&
       !content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) &&
-      !content->IsNodeOfType(nsINode::eXUL))
+      !content->IsXUL())
     {
       // positive adjustment to decrease zoom, negative to increase
       PRInt32 change = (adjustment > 0) ? -1 : 1;

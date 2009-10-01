@@ -75,7 +75,7 @@ nsAccessibleTreeWalker::~nsAccessibleTreeWalker()
 void nsAccessibleTreeWalker::GetKids(nsIDOMNode *aParentNode)
 {
   nsCOMPtr<nsIContent> parentContent(do_QueryInterface(aParentNode));
-  if (!parentContent || !parentContent->IsNodeOfType(nsINode::eHTML)) {
+  if (!parentContent || !parentContent->IsHTML()) {
     mState.frame = nsnull;  // Don't walk frames in non-HTML content, just walk the DOM.
   }
 

@@ -1127,6 +1127,21 @@ void nsCaret::DrawCaret(PRBool aInvalidate)
   ToggleDrawnStatus();
 }
 
+static PRBool
+FramesOnSameLineHaveZeroHeight(nsIFrame* aFrame)
+{
+  nsLineBox* line = FindContainingLine(aFrame);
+  if (!line)
+    return aFrame->GetRect().height == 0;
+  PRInt32 count = line->GetChildCount();
+  for (nsIFrame* f = line->mFirstChild; count > 0; --count, f = f->GetNextSibling())
+  {
+   if (f->GetRect().height != 0)
+     return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
 {
   NS_ASSERTION(aFrame, "Should have a frame here");
@@ -1137,8 +1152,6 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
 
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (!presShell) return NS_ERROR_FAILURE;
-
-  nsPresContext *presContext = presShell->GetPresContext();
 
   // If we got a zero-height frame we should figure out a height. We have to do
   // this after we've got an RC.
@@ -1154,11 +1167,12 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
       fm->GetMaxDescent(descent);
       frameRect.height = ascent + descent;
 
-      // If it's a BR frame then it's probably at the end of a non-empty line
-      // (see BRFrame::Reflow). BR frames sit on the baseline of the text, so we
-      // need to subtract the ascent to account for the frame height.
-      if (aFrame->GetType() == nsGkAtoms::brFrame)
-          frameRect.y -= ascent;
+      // Place the caret on the baseline for inline frames, except when there is
+      // a frame on the line with non-zero height.  XXXmats why the exception? --
+      // I don't know but it seems to be necessary, see bug 503531.
+      if (aFrame->GetStyleDisplay()->IsInlineOutside() &&
+          !FramesOnSameLineHaveZeroHeight(aFrame))
+        frameRect.y -= ascent;
     }
   }
 
@@ -1213,7 +1227,7 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   if (NS_STYLE_DIRECTION_RTL == vis->mDirection)
     mCaretRect.x -= mCaretRect.width;
 
-  return UpdateHookRect(presContext, metrics);
+  return UpdateHookRect(presShell->GetPresContext(), metrics);
 }
 
 nsresult nsCaret::UpdateHookRect(nsPresContext* aPresContext,

@@ -1024,6 +1024,7 @@ nsresult nsScanner::ReadUntil(nsScannerIterator& aStart,
   }
   
   while (current != mEndPosition) {
+    theChar = *current;
     if (theChar == '\0') {
       ReplaceCharacter(current, sInvalid);
       theChar = sInvalid;
@@ -1047,9 +1048,8 @@ nsresult nsScanner::ReadUntil(nsScannerIterator& aStart,
         ++setcurrent;
       }
     }
-    
+
     ++current;
-    theChar = *current;
   }
 
   // If we are here, we didn't find any terminator in the string and
@@ -1088,6 +1088,7 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
   }
 
   while (current != mEndPosition) {
+    theChar = *current;
     if (theChar == '\0') {
       ReplaceCharacter(current, sInvalid);
       theChar = sInvalid;
@@ -1101,7 +1102,6 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
       return NS_OK;
     }
     ++current;
-    theChar = *current;
   }
 
   // If we are here, we didn't find any terminator in the string and

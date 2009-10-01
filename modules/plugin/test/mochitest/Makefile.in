@@ -49,7 +49,7 @@ _MOCHITEST_FILES = \
 		loremipsum.txt \
 		loremipsum_file.txt \
 		post.sjs \
-    pluginstream.js \
+		pluginstream.js \
 		test_pluginstream_src.html \
 		test_pluginstream_geturl.html \
 		test_pluginstream_geturlnotify.html \
@@ -58,6 +58,7 @@ _MOCHITEST_FILES = \
 		test_pluginstream_post.html \
 		test_pluginstream_poststream.html \
 		test_pluginstream_seek.html \
+		test_pluginstream_newstream.html \
 		$(NULL)
 
 _MOCHICHROME_FILES = \

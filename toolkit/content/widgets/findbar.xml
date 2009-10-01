@@ -457,7 +457,7 @@
       </method>
 
       <!--
-        - Gets the selection controller for the current browser 
+        - Gets the selection controller for the current browser
         -->
       <method name="_getSelectionController">
         <parameter name="aWindow"/>
@@ -496,7 +496,7 @@
             }
             aNode = aNode.parentNode;
           }
-          return null;           
+          return null;
         ]]></body>
       </method>
 
@@ -525,7 +525,7 @@
       <!--
         - Remove ourselves as an nsIEditActionListener and
         - nsIDocumentStateListener from a given cached editor
-        - 
+        -
         - @param aEditor the editor we no longer wish to listen to
         -->
       <method name="_removeEditorListeners">
@@ -544,7 +544,7 @@
 
       <!--
         - nsIEditActionListener logic follows
-        - 
+        -
         - We implement this interface to allow us to catch the case where
         - the findbar found a match in a HTML <input> or <textarea>. If the
         - user adjusts the text in some way, it will no longer match, so we
@@ -617,7 +617,7 @@
 
           if (foundContainingRange)
             return range;
-          
+
           return null;
         ]]></body>
       </method>
@@ -944,7 +944,7 @@
           if (!controller) {
             // Without the selection controller,
             // we are unable to (un)highlight any matches
-            return false;
+            return textFound;
           }
 
           var doc = win.document;
@@ -952,20 +952,14 @@
             return textFound;
 
           if (aHighlight) {
-            var body = doc.body;
-
-            var count = body.childNodes.length;
             this._searchRange = doc.createRange();
-            this._startPt = doc.createRange();
-            this._endPt = doc.createRange();
+            this._searchRange.selectNodeContents(doc.body);
 
-            this._searchRange.setStart(body, 0);
-            this._searchRange.setEnd(body, count);
+            this._startPt = this._searchRange.cloneRange();
+            this._startPt.collapse(true);
 
-            this._startPt.setStart(body, 0);
-            this._startPt.setEnd(body, 0);
-            this._endPt.setStart(body, count);
-            this._endPt.setEnd(body, count);
+            this._endPt = this._searchRange.cloneRange();
+            this._endPt.collapse(false);
 
             var retRange = null;
             var finder = Components.classes["@mozilla.org/embedcomp/rangefind;1"]
@@ -977,9 +971,8 @@
             while ((retRange = finder.Find(aWord, this._searchRange,
                                           this._startPt, this._endPt))) {
               this._highlight(retRange, controller);
-              this._startPt = retRange.endContainer.ownerDocument.createRange();
-              this._startPt.setStart(retRange.endContainer, retRange.endOffset);
-              this._startPt.setEnd(retRange.endContainer, retRange.endOffset);
+              this._startPt = retRange.cloneRange();
+              this._startPt.collapse(false);
 
               textFound = true;
             }
@@ -1003,7 +996,7 @@
             }
             return true;
           }
-  
+
           return textFound;
         ]]></body>
       </method>
@@ -1387,7 +1380,7 @@
             catch (e) {
               // If someone built with composer disabled, we can't get an editing session.
             }
-          }  
+         }
 
           return true;
         ]]></body>
@@ -1703,7 +1696,7 @@
           }
 
           if (this.prefillWithSelection)
-            userWantsPrefill = 
+            userWantsPrefill =
               prefsvc.getBoolPref("accessibility.typeaheadfind.prefillwithselection");
 
           var initialString = (this.prefillWithSelection && userWantsPrefill) ?

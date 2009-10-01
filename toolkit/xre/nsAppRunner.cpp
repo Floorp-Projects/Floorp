@@ -2814,7 +2814,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   if ((appData.flags & NS_XRE_ENABLE_CRASH_REPORTER) &&
       NS_SUCCEEDED(
          CrashReporter::SetExceptionHandler(appData.xreDirectory))) {
-    CrashReporter::SetServerURL(nsDependentCString(appData.crashReporterURL));
+    if (appData.crashReporterURL)
+      CrashReporter::SetServerURL(nsDependentCString(appData.crashReporterURL));
+
     // pass some basic info from the app data
     if (appData.vendor)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Vendor"),
