@@ -86,6 +86,7 @@ class nsHashKey;
 #define NS_MUTATION_EVENT                 19 // |nsMutationEvent| in content
 #define NS_ACCESSIBLE_EVENT               20
 #define NS_FORM_EVENT                     21
+#define NS_FOCUS_EVENT                    22
 #define NS_POPUP_EVENT                    23
 #define NS_COMMAND_EVENT                  24
 #define NS_SCROLLAREA_EVENT               25
@@ -1183,6 +1184,18 @@ public:
   };
 };
 
+class nsFocusEvent : public nsEvent
+{
+public:
+  nsFocusEvent(PRBool isTrusted, PRUint32 msg)
+    : nsEvent(isTrusted, msg, NS_FOCUS_EVENT),
+      fromRaise(PR_FALSE)
+  {
+  }
+
+  PRPackedBool fromRaise;
+};
+
 class nsSelectionEvent : public nsGUIEvent
 {
 public:
@@ -1364,7 +1377,7 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_COMPOSITION_END) || \
         ((evnt)->message == NS_COMPOSITION_QUERY))
 
-#define NS_IS_FOCUS_EVENT(evnt) \
+#define NS_IS_ACTIVATION_EVENT(evnt) \
        (((evnt)->message == NS_ACTIVATE) || \
         ((evnt)->message == NS_DEACTIVATE) || \
         ((evnt)->message == NS_PLUGIN_ACTIVATE))
@@ -1583,7 +1596,7 @@ inline PRBool NS_TargetUnfocusedEventToLastFocusedContent(nsEvent* aEvent)
 inline PRBool NS_IsEventUsingCoordinates(nsEvent* aEvent)
 {
   return !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_EVENT(aEvent) &&
-         !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_FOCUS_EVENT(aEvent) &&
+         !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_ACTIVATION_EVENT(aEvent) &&
          !NS_IS_QUERY_CONTENT_EVENT(aEvent) && !NS_IS_PLUGIN_EVENT(aEvent) &&
          !NS_IS_SELECTION_EVENT(aEvent) &&
          !NS_IS_CONTENT_COMMAND_EVENT(aEvent) &&
