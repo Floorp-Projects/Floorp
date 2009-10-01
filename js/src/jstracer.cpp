@@ -5722,6 +5722,8 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
         if (exit->recursive_pc != cx->fp->regs->pc)
             return false;
         from = getLoop(tm, exit->recursive_pc, from->globalObj, from->globalShape, cx->fp->argc);
+        if (!from)
+            return false;
         /* use stale TI for RecordTree - since from might not have one anymore. */
     }
 
