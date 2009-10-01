@@ -53,12 +53,12 @@ var observer =
     setTimeout(runTest, 1000);
     bmsvc.removeObserver(this);
   },
-  onItemAdded: function(itemId, folder, index) {},
-  onBeforeItemRemoved: function(itemId){},
-  onItemRemoved: function(itemId, folder, index){},
-  onItemChanged: function(itemId, property, isAnnotationProperty, value){},
-  onItemVisited: function(itemId, aVisitID, time){},
-  onItemMoved: function(itemId, oldParent, oldIndex, newParent, newIndex){},
+  onItemAdded: function(){}.
+  onBeforeItemRemoved: function(){},
+  onItemRemoved: function(){},
+  onItemChanged: function(){},
+  onItemVisited: function(){},
+  onItemMoved: function(){},
 
 };
 
@@ -79,7 +79,7 @@ function runTest() {
   }
 
   rootNode.containerOpen = false;
-  bmsvc.removeFolder(gLivemarkId);
+  bmsvc.removeItem(gLivemarkId);
   SimpleTest.finish();
 }
 
