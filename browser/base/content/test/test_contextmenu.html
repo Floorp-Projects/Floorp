@@ -28,7 +28,7 @@ function openContextMenuFor(element) {
     // Context menu should be closed before we open it again.
     is(contextMenu.state, "closed", "checking if popup is closed");
 
-    var eventDetails = { type : "contextmenu", button : 2 }
+    var eventDetails = { type : "contextmenu", button : 2 };
     synthesizeMouse(element, 2, 2, eventDetails, element.ownerDocument.defaultView);
 }
 
@@ -54,7 +54,7 @@ function getVisibleMenuItems(aMenu) {
             if (accessKeys[key])
                 ok(false, "menuitem " + item.id + " has same accesskey as " + accessKeys[key]);
             else
-                accessKeys[key] = item.id
+                accessKeys[key] = item.id;
             items.push(item.id);
             items.push(!item.disabled);
         } else if (item.nodeName == "menuseparator") {
@@ -67,7 +67,7 @@ function getVisibleMenuItems(aMenu) {
             if (accessKeys[key])
                 ok(false, "menu " + item.id + " has same accesskey as " + accessKeys[key]);
             else
-                accessKeys[key] = item.id
+                accessKeys[key] = item.id;
             items.push(item.id);
             items.push(!item.disabled);
             // Add a dummy item to that the indexes in checkMenu are the same
@@ -161,7 +161,7 @@ function runTest(testNum) {
                           "---",                  null,
                           "context-viewsource",   true,
                           "context-viewinfo",     true]);
-        closeContextMenu()
+        closeContextMenu();
         openContextMenuFor(link); // Invoke context menu for next test.
         break;
 
@@ -174,14 +174,14 @@ function runTest(testNum) {
                           "context-savelink",      true,
                           "context-sendlink",      true,
                           "context-copylink",      true]);
-        closeContextMenu()
+        closeContextMenu();
         openContextMenuFor(mailto); // Invoke context menu for next test.
         break;
 
     case 4:
         // Context menu for text mailto-link
         checkContextMenu(["context-copyemail", true]);
-        closeContextMenu()
+        closeContextMenu();
         openContextMenuFor(input); // Invoke context menu for next test.
         break;
 
@@ -197,7 +197,7 @@ function runTest(testNum) {
                           "context-selectall",   true,
                           "---",                 null,
                           "spell-check-enabled", true]);
-        closeContextMenu()
+        closeContextMenu();
         openContextMenuFor(img); // Invoke context menu for next test.
         break;
 
