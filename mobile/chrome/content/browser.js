@@ -538,13 +538,6 @@ var Browser = {
       tool_console.hidden = false;
     }
 
-    // Re-enable plugins if we had previously disabled them. We should get rid of
-    // this code eventually...
-    if (gPrefService.prefHasUserValue("temporary.disablePlugins")) {
-      gPrefService.clearUserPref("temporary.disablePlugins");
-      this.setPluginState(true);
-    }
-
     bv.commitBatchOperation();
 
     // If some add-ons were disabled during during an application update, alert user
@@ -559,6 +552,19 @@ var Browser = {
                                      label, false, "", null);
       }
       gPrefService.clearUserPref("extensions.disabledAddons");
+    }
+
+    // Re-enable plugins if we had previously disabled them. We should get rid of
+    // this code eventually...
+    if (gPrefService.prefHasUserValue("temporary.disablePlugins")) {
+      gPrefService.clearUserPref("temporary.disablePlugins");
+      this.setPluginState(true);
+    }
+
+    // XXX temporarily disable flash
+    if (!gPrefService.prefHasUserValue("temporary.disabledFlash")) {
+      this.setPluginState(false, /flash/i);
+      gPrefService.setBoolPref("temporary.disabledFlash", true);
     }
 
     //dump("end startup\n");
@@ -582,12 +588,18 @@ var Browser = {
     window.controllers.removeController(BrowserUI);
   },
 
-  setPluginState: function(enabled)
-  {
+  setPluginState: function(enabled, nameMatch) {
+    // XXX clear this out so that we always disable flash on startup, even
+    // after the user has disabled/re-enabled plugins
+    gPrefService.clearUserPref("temporary.disabledFlash");
+
     var phs = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
     var plugins = phs.getPluginTags({ });
-    for (var i = 0; i < plugins.length; ++i)
+    for (var i = 0; i < plugins.length; ++i) {
+      if (nameMatch && !nameMatch.test(plugins[i].name))
+        continue;
       plugins[i].disabled = !enabled;
+    }
   },
 
   get browsers() {
