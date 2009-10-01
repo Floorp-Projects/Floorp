@@ -1380,17 +1380,11 @@ nsContextMenu.prototype = {
     if (itemId == -1) {
       var title = doc.title;
       var description = PlacesUIUtils.getDescriptionFromDocument(doc);
-
-      var descAnno = { name: DESCRIPTION_ANNO, value: description };
-      var txn = PlacesUIUtils.ptm.createItem(uri, 
-                                           PlacesUtils.bookmarksMenuFolderId,
-                                           -1, title, null, [descAnno]);
-      PlacesUIUtils.ptm.doTransaction(txn);
-      itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
-      StarUI.beginBatch();
+      PlacesUIUtils.showMinimalAddBookmarkUI(uri, title, description);
     }
-
-    window.top.StarUI.showEditBookmarkPopup(itemId, this.browser, "overlap");
+    else
+      PlacesUIUtils.showItemProperties(itemId,
+                                       PlacesUtils.bookmarks.TYPE_BOOKMARK);
   },
 
   savePageAs: function CM_savePageAs() {
