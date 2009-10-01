@@ -3025,7 +3025,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
         return NULL;
     }
 
-    str = js_NewGCString(cx);
+    str = js_NewGCString(cx, GCX_STRING);
     if (!str)
         return NULL;
     str->initFlat(chars, length);
@@ -3095,7 +3095,7 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
         return js_NewStringCopyN(cx, base->chars() + start, length);
     }
 
-    ds = js_NewGCString(cx);
+    ds = js_NewGCString(cx, GCX_STRING);
     if (!ds)
         return NULL;
     if (start == 0)
