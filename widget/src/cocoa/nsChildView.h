@@ -217,7 +217,9 @@ enum {
                             enter:(BOOL)aEnter
                              type:(nsMouseEvent::exitType)aType;
 
+#ifndef NP_NO_CARBON
 - (void) processPluginKeyEvent:(EventRef)aKeyEvent;
+#endif
 
 // Simple gestures support
 //
