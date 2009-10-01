@@ -639,9 +639,9 @@
 
             _startStalledTimer: function () {
               this._cancelStalledTimer();
-              this._stalledTimer = setTimeout(function (self) { 
-                self.mTab.setAttribute("stalled", "true");
-              }, 700, this);
+//              this._stalledTimer = setTimeout(function (self) { 
+//                self.mTab.setAttribute("stalled", "true");
+//              }, 700, this);
             },
 
             _cancelStalledTimer: function () {
