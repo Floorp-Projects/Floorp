@@ -64,12 +64,12 @@ DummyObserver.prototype = {
   // bookmark observer
   //onBeginUpdateBatch: function() {},
   //onEndUpdateBatch: function() {},
-  onItemAdded: function(aItemId, aParentId, aIndex, aItemType) {
+  onItemAdded: function(aItemId, aParentId, aIndex) {
     let os = Cc["@mozilla.org/observer-service;1"].
              getService(Ci.nsIObserverService);
     os.notifyObservers(null, "dummy-observer-item-added", null);
   },
-  onItemChanged: function () {},
+  onItemChanged: function (aItemId, aProperty, aIsAnnotationProperty, aValue) {},
   onBeforeItemRemoved: function() {},
   onItemRemoved: function() {},
   onItemVisited: function() {},
