@@ -49,6 +49,7 @@ using NPError;
 using NPEvent;
 using NPRemoteWindow;
 using NPReason;
+using NPRect;
 
 namespace mozilla {
 namespace plugins {
@@ -109,6 +110,8 @@ parent:
   rpc PStreamNotify(nsCString url, nsCString target, bool post,
                     nsCString buffer, bool file)
     returns (NPError result);
+
+  async NPN_InvalidateRect(NPRect rect);
 
 child:
   /**
