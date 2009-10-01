@@ -143,6 +143,11 @@ function run_test()
   // ===== 4 =====
   testnum++;
 
+  // Set formfill pref to 30 days for SeaMonkey and Thunderbird as they
+  // both include a default value of 180 days whereas other apps fall back
+  // to using the history_expire_days value.
+  if ("nsIMsgFolder" in Ci)
+    prefs.setIntPref("browser.formfill.expire_days", 30);
   // Set pref to 30 days and expire.
   prefs.setIntPref("browser.history_expire_days", 30);
   do_check_true(fh.entryExists("179DaysOld", "foo"));

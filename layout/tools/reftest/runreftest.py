@@ -98,6 +98,11 @@ def main():
                            "refcounted objects (or bytes in classes with "
                            "MOZ_COUNT_CTOR and MOZ_COUNT_DTOR) is greater "
                            "than the given number")
+  parser.add_option("--utility-path",
+                    action = "store", type = "string", dest = "utilityPath",
+                    default = automation.DIST_BIN,
+                    help = "absolute path to directory containing utility "
+                           "programs (xpcshell, ssltunnel, certutil)")
 
   options, args = parser.parse_args()
 
@@ -147,6 +152,7 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
     # Don't care about this |status|: |runApp()| reporting it should be enough.
     status = automation.runApp(None, browserEnv, options.app, profileDir,
                                ["-silent"],
+                               utilityPath = options.utilityPath,
                                xrePath=options.xrePath,
                                symbolsPath=options.symbolsPath)
     # We don't care to call |processLeakLog()| for this step.
@@ -162,6 +168,7 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
     reftestlist = getFullPath(args[0])
     status = automation.runApp(None, browserEnv, options.app, profileDir,
                                ["-reftest", reftestlist],
+                               utilityPath = options.utilityPath,
                                xrePath=options.xrePath,
                                symbolsPath=options.symbolsPath)
     processLeakLog(leakLogFile, options.leakThreshold)

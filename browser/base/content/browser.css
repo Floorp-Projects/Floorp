@@ -71,6 +71,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
 }
 
 /* ::::: Unified Back-/Forward Button ::::: */
+#back-button > dropmarker,
+#forward-button > dropmarker,
 #back-forward-dropmarker > image ,
 #back-forward-dropmarker > label {
   display: none;

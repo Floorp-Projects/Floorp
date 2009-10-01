@@ -169,7 +169,7 @@ void nsMenuBarX::ConstructNativeMenus()
     nsIContent *menuContent = mContent->GetChildAt(i);
     if (menuContent &&
         menuContent->Tag() == nsWidgetAtoms::menu &&
-        menuContent->IsNodeOfType(nsINode::eXUL)) {
+        menuContent->IsXUL()) {
       nsMenuX* newMenu = new nsMenuX();
       if (newMenu) {
         nsresult rv = newMenu->Create(this, this, menuContent);
@@ -363,7 +363,7 @@ nsresult nsMenuBarX::Paint()
 // objects.  For example "key_selectAll".  Returns a value that can be
 // compared to the first character of [NSEvent charactersIgnoringModifiers]
 // when [NSEvent modifierFlags] == NSCommandKeyMask.
-char nsMenuBarX::GetLocalizedAccelKey(char *shortcutID)
+char nsMenuBarX::GetLocalizedAccelKey(const char *shortcutID)
 {
   if (!sLastGeckoMenuBarPainted)
     return 0;

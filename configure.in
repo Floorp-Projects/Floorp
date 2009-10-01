@@ -131,7 +131,7 @@ LIBGNOME_VERSION=2.0
 GIO_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.6.16
+SQLITE_VERSION=3.6.18
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -182,7 +182,7 @@ then
 fi
 MOZ_BUILD_ROOT=`pwd`
 
-dnl Default to MSVC for win32
+dnl Default to MSVC for win32 and gcc-4.2 for darwin
 dnl ==============================================================
 if test -z "$CROSS_COMPILE"; then
 case "$target" in
@@ -194,6 +194,10 @@ case "$target" in
     if test -z "$LD"; then LD=link; fi
     if test -z "$AS"; then AS=ml; fi
     if test -z "$MIDL"; then MIDL=midl; fi
+    ;;
+*-darwin*)
+    if test -z "$CC"; then CC=gcc-4.2; fi
+    if test -z "$CXX"; then CXX=g++-4.2; fi
     ;;
 esac
 fi
@@ -1623,7 +1627,7 @@ case "$host" in
     case "$host" in
     *mingw*)
     dnl MinGW/MSYS does not need CYGWIN_WRAPPER
-        PERL="/bin/sh ${srcdir}/build/msys-perl-wrapper"
+        PERL="/bin/sh ${_topsrcdir}/build/msys-perl-wrapper"
         ;;
     *)
         CYGWIN_WRAPPER="${srcdir}/build/cygwin-wrapper"
@@ -3043,6 +3047,9 @@ AC_CHECK_HEADERS(io.h)
 dnl These are all the places some variant of statfs can be hiding.
 AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
+dnl Quota support
+AC_CHECK_HEADERS(sys/quota.h)
+
 dnl Try for MMX support
 dnl NB - later gcc versions require -mmmx for this header to be successfully
 dnl included (or another option which implies it, such as -march=pentium-mmx)
@@ -3135,7 +3142,8 @@ case $target in
 esac
 
 dnl ========================================================
-dnl Check whether we can compile code for Core Text
+dnl Check whether we can compile code for Core Text and
+dnl Cocoa printing
 dnl (Mac OS X 10.5 or later)
 dnl ========================================================
 case "$target" in
@@ -3143,9 +3151,9 @@ case "$target" in
   AC_MSG_CHECKING([for Core Text])
   AC_TRY_COMPILE([#include <ApplicationServices/ApplicationServices.h>],
                  [CTLineRef lineRef;],
-                  ac_cv_have_core_text="yes",
-                  ac_cv_have_core_text="no")
-  AC_MSG_RESULT([$ac_cv_have_core_text])
+                  ac_cv_have_leopard="yes",
+                  ac_cv_have_leopard="no")
+  AC_MSG_RESULT([$ac_cv_have_leopard])
 
   MOZ_CORETEXT=1
 
@@ -3155,15 +3163,30 @@ case "$target" in
     MOZ_CORETEXT=1)
 
   if test -n "$MOZ_CORETEXT"; then
-    if test "$ac_cv_have_core_text" = "no"; then
+    if test "$ac_cv_have_leopard" = "no"; then
       AC_MSG_ERROR([--enable-coretext requires MacOS SDK 10.5 or newer])
      fi
      AC_DEFINE(MOZ_CORETEXT)
   fi
+
+  MOZ_COCOA_PRINTING=1
+
+  MOZ_ARG_DISABLE_BOOL(cocoa-printing,
+[  --disable-cocoa-printing
+                          Use a Carbon print dialog instead of a Cocoa one],
+    MOZ_COCOA_PRINTING=,
+    MOZ_COCOA_PRINTING=1)
+
+  if test -n "$MOZ_COCOA_PRINTING"; then
+    if test "$ac_cv_have_leopard" = "no"; then
+        AC_MSG_ERROR([--enable-cocoa-printing requires MacOS SDK 10.5 or newer])
+    fi
+    AC_DEFINE(MOZ_COCOA_PRINTING)
+  fi
   ;;
 esac
 
-AC_SUBST(MOZ_CORETEXT)
+AC_SUBST(MOZ_COCOA_PRINTING)
 
 XLDFLAGS="$X_LIBS"
 XLIBS="$X_EXTRA_LIBS"

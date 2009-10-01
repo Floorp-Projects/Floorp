@@ -64,6 +64,12 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 EXPORTS		+= nsINativeMenuService.h
 endif
 
+ifdef MOZ_COCOA_PRINTING
+EXPORTS		+= \
+		nsIPrintDialogService.h \
+		$(NULL)
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORTS		+= nsIDragSessionOS2.h
 endif
@@ -111,8 +117,10 @@ XPIDLSRCS	+= nsIPrintSettingsWin.idl
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+ifndef MOZ_COCOA_PRINTING
 XPIDLSRCS	+= nsIPrintSettingsX.idl \
 		nsIPrintSessionX.idl
+endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

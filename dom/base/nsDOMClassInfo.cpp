@@ -1906,6 +1906,35 @@ nsDOMClassInfo::RegisterExternalClasses()
   return nameSpaceManager->RegisterExternalInterfaces(PR_TRUE);
 }
 
+// static
+inline nsresult
+nsDOMClassInfo::WrapNativeParent(JSContext *cx, JSObject *scope,
+                                 nsISupports *native, JSObject **parentObj)
+{
+  // In the common case, |native| is a wrapper cache with an existing wrapper
+  nsWrapperCache* cache = nsnull;
+  CallQueryInterface(native, &cache);
+  if (cache) {
+    JSObject* obj = cache->GetWrapper();
+    if (obj) {
+#ifdef DEBUG
+      jsval debugVal;
+      nsresult rv = WrapNative(cx, scope, native, PR_FALSE, &debugVal);
+      NS_ASSERTION(NS_SUCCEEDED(rv) && JSVAL_TO_OBJECT(debugVal) == obj,
+                   "Unexpected object in nsWrapperCache");
+#endif
+      *parentObj = obj;
+      return NS_OK;
+    }
+  }
+
+  jsval v;
+  nsresult rv = WrapNative(cx, scope, native, PR_FALSE, &v);
+  NS_ENSURE_SUCCESS(rv, rv);
+  *parentObj = JSVAL_TO_OBJECT(v);
+  return NS_OK;
+}
+
 #define _DOM_CLASSINFO_MAP_BEGIN(_class, _ifptr, _has_class_if)               \
   {                                                                           \
     nsDOMClassInfoData &d = sClassInfoData[eDOMClassInfo_##_class##_id];      \
@@ -7077,7 +7106,8 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   nsISupports *native_parent;
 
   PRBool slimWrappers = PR_TRUE;
-  if (node->IsNodeOfType(nsINode::eELEMENT | nsINode::eXUL)) {
+  PRBool nodeIsElement = node->IsNodeOfType(nsINode::eELEMENT);
+  if (nodeIsElement && static_cast<nsIContent*>(node)->IsXUL()) {
     // For XUL elements, use the parent, if any.
     native_parent = node->GetParent();
 
@@ -7093,9 +7123,8 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     native_parent = doc;
 
     // But for HTML form controls, use the form as scope parent.
-    if (node->IsNodeOfType(nsINode::eELEMENT |
-                           nsIContent::eHTML |
-                           nsIContent::eHTML_FORM_CONTROL)) {
+    if (nodeIsElement &&
+        node->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
       nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(node));
 
       if (form_control) {
@@ -7962,11 +7991,8 @@ nsNodeListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
     return NS_ERROR_FAILURE;
   }
 
-  jsval v;
-  nsresult rv = WrapNative(cx, globalObj, native_parent, PR_FALSE, &v);
+  nsresult rv = WrapNativeParent(cx, globalObj, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  *parentObj = JSVAL_TO_OBJECT(v);
 
   return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
 }
@@ -10061,11 +10087,8 @@ nsCSSStyleDeclSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
     return NS_ERROR_FAILURE;
   }
 
-  jsval v;
-  nsresult rv = WrapNative(cx, globalObj, native_parent, PR_FALSE, &v);
+  nsresult rv = WrapNativeParent(cx, globalObj, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  *parentObj = JSVAL_TO_OBJECT(v);
 
   return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
 }

@@ -89,6 +89,9 @@ XPC_NW_Trace(JSTracer *trc, JSObject *obj);
 static JSBool
 XPC_NW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
+static JSObject *
+XPC_NW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
+
 static JSBool
 XPC_NW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                        jsval *rval);
@@ -112,8 +115,14 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
     nsnull,             XPC_NW_HasInstance,
     JS_CLASS_TRACE(XPC_NW_Trace), nsnull
   },
+
   // JSExtendedClass initialization
-  XPC_NW_Equality
+  XPC_NW_Equality,
+  nsnull,             // outerObject
+  nsnull,             // innerObject
+  XPC_NW_Iterator,
+  nsnull,             // wrappedObject
+  JSCLASS_NO_RESERVED_MEMBERS
 };
 
 // If one of our class hooks is ever called from a non-system script, bypass
@@ -1084,6 +1093,36 @@ XPC_NW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   }
 
   return JS_TRUE;
+}
+
+static JSObject *
+XPC_NW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
+{
+  XPCCallContext ccx(JS_CALLER, cx);
+  if (!ccx.IsValid()) {
+    ThrowException(NS_ERROR_FAILURE, cx);
+    return nsnull;
+  }
+
+  JSObject *wrapperIter =
+    JS_NewObjectWithGivenProto(cx, XPCNativeWrapper::GetJSClass(), nsnull,
+                               STOBJ_GET_PARENT(obj));
+  if (!wrapperIter) {
+    return nsnull;
+  }
+
+  JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
+
+  // Initialize our native wrapper.
+  XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(JS_GetPrivate(cx, obj));
+  JS_SetPrivate(cx, wrapperIter, wn);
+  if (!JS_SetReservedSlot(cx, wrapperIter, 0,
+                          INT_TO_JSVAL(FLAG_DEEP | FLAG_EXPLICIT))) {
+    return nsnull;
+  }
+
+  return XPCWrapper::CreateIteratorObj(cx, wrapperIter, obj,
+                                       wn->GetFlatJSObject(), keysonly);
 }
 
 static JSBool

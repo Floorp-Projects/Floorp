@@ -335,6 +335,8 @@
 <!ENTITY mediaShowControls.accesskey "C">
 <!ENTITY mediaHideControls.label     "Hide Controls">
 <!ENTITY mediaHideControls.accesskey "C">
+<!ENTITY videoFullScreen.label       "Full Screen">
+<!ENTITY videoFullScreen.accesskey   "F">
 
 
 <!-- LOCALIZATION NOTE :
