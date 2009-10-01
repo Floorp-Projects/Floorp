@@ -305,6 +305,10 @@
             // count of open requests (should always be 0 or 1)
             mRequestCount: 0,
 
+            destroy: function () {
+              this._cancelStalledTimer();
+            },
+
             onProgressChange : function (aWebProgress, aRequest,
                                          aCurSelfProgress, aMaxSelfProgress,
                                          aCurTotalProgress, aMaxTotalProgress)
@@ -313,6 +317,16 @@
 
               if (this.mBlank)
                 return;
+
+              if (this.mTotalProgress) {
+                const STATES = 8;
+                let state = Math.ceil(STATES * this.mTotalProgress);
+                if (state != this.mTab.getAttribute("progress")) {
+                  this.mTab.setAttribute("progress", state);
+                  this.mTab.removeAttribute("stalled");
+                  this._startStalledTimer();
+                }
+              }
 
               if (this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (let i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
@@ -393,6 +407,7 @@
                 if (!this.mBlank) {
                   if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING)) {
                     this.mTab.setAttribute("busy", "true");
+                    this._startStalledTimer();
                     this.mTabBrowser.updateIcon(this.mTab);
                     this.mTabBrowser.setTabTitleLoading(this.mTab);
                   }
@@ -419,6 +434,9 @@
                   this.mBlank = false;
 
                 this.mTab.removeAttribute("busy");
+                this.mTab.removeAttribute("progress");
+                this.mTab.removeAttribute("stalled");
+                this._cancelStalledTimer();
                 this.mTabBrowser.updateIcon(this.mTab);
 
                 var location = aRequest.QueryInterface(nsIChannel).URI;
@@ -613,6 +631,20 @@
                   aIID.equals(Components.interfaces.nsISupports))
                 return this;
               throw Components.results.NS_NOINTERFACE;
+            },
+
+            _startStalledTimer: function () {
+              this._cancelStalledTimer();
+              this._stalledTimer = setTimeout(function (self) { 
+                self.mTab.setAttribute("stalled", "true");
+              }, 700, this);
+            },
+
+            _cancelStalledTimer: function () {
+              if (this._stalledTimer) {
+                clearTimeout(this._stalledTimer);
+                this._stalledTimer = 0;
+              }
             }
           });
         ]]>
@@ -1496,6 +1528,7 @@
             const filter = this.mTabFilters[aTab._tPos];
             browser.webProgress.removeProgressListener(filter);
             filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
+            this.mTabListeners[aTab._tPos].destroy();
 
             // Remove our title change and blocking listeners
             browser.removeEventListener("DOMTitleChanged", this.onTitleChanged, true);
@@ -2736,6 +2769,7 @@
             this.getBrowserAtIndex(i).webProgress.removeProgressListener(this.mTabFilters[i]);
             this.mTabFilters[i].removeProgressListener(this.mTabListeners[i]);
             this.mTabFilters[i] = null;
+            this.mTabListeners[i].destroy();
             this.mTabListeners[i] = null;
             this.getBrowserAtIndex(i).removeEventListener("DOMTitleChanged", this.onTitleChanged, true);
           }
