@@ -2543,4 +2543,12 @@ nsFrameList::Enumerator::Next()
   mFrame = mFrame->GetNextSibling();
 }
 
+inline
+nsFrameList::FrameLinkEnumerator::
+FrameLinkEnumerator(const nsFrameList& aList, nsIFrame* aPrevFrame)
+  : Enumerator(aList)
+{
+  mPrev = aPrevFrame;
+  mFrame = aPrevFrame ? aPrevFrame->GetNextSibling() : aList.FirstChild();
+}
 #endif /* nsIFrame_h___ */

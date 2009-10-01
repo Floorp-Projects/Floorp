@@ -83,10 +83,6 @@ var gContextMenu = null;
 var gAutoHideTabbarPrefListener = null;
 var gBookmarkAllTabsHandler = null;
 
-#ifdef XP_MACOSX
-var gClickAndHoldTimer = null;
-#endif
-
 #ifndef XP_MACOSX
 var gEditUIVisible = true;
 #endif
@@ -195,50 +191,47 @@ function UpdateBackForwardCommands(aWebNavigation) {
  * Click-and-Hold implementation for the Back and Forward buttons
  * XXXmano: should this live in toolbarbutton.xml?
  */
-function ClickAndHoldMouseDownCallback(aButton) {
-  aButton.open = true;
-  gClickAndHoldTimer = null;
-}
-
-function ClickAndHoldMouseDown(aEvent) {
-  /**
-   * 1. Only left click starts the click and hold timer.
-   * 2. Exclude the dropmarker area. This is done by excluding
-   *    elements which target their events directly to the toolbarbutton
-   *    element, i.e. when the nearest-parent-element which allows-events
-   *    is the toolbarbutton element itself.
-   * 3. Do not start the click-and-hold timer if the toolbarbutton is disabled.
-   */
-  if (aEvent.button != 0 ||
-      aEvent.originalTarget == aEvent.currentTarget ||
-      aEvent.currentTarget.disabled)
-    return;
-
-  gClickAndHoldTimer =
-    setTimeout(ClickAndHoldMouseDownCallback, 500, aEvent.currentTarget);
-}
-
-function MayStopClickAndHoldTimer(aEvent) {
-  // Note passing null here is a no-op
-  clearTimeout(gClickAndHoldTimer);
-}
-
-function ClickAndHoldStopEvent(aEvent) {
-  if (aEvent.originalTarget.localName != "menuitem" &&
-      aEvent.currentTarget.open)
-    aEvent.stopPropagation();
-}
-
 function SetClickAndHoldHandlers() {
-  function _addClickAndHoldListenersOnElement(aElm) {
-    aElm.addEventListener("mousedown", ClickAndHoldMouseDown, false);
-    aElm.addEventListener("mouseup", MayStopClickAndHoldTimer, false);
-    aElm.addEventListener("mouseout", MayStopClickAndHoldTimer, false);
+  var timer;
 
-    // don't propagate onclick and oncommand events after
-    // click-and-hold opened the drop-down menu
-    aElm.addEventListener("command", ClickAndHoldStopEvent, true);
-    aElm.addEventListener("click", ClickAndHoldStopEvent, true);
+  function timerCallback(aButton) {
+    aButton.firstChild.hidden = false;
+    aButton.open = true;
+    timer = null;
+  }
+
+  function mousedownHandler(aEvent) {
+    if (aEvent.button != 0 ||
+        aEvent.currentTarget.open ||
+        aEvent.currentTarget.disabled)
+      return;
+
+    // Prevent the menupopup from opening immediately
+    aEvent.currentTarget.firstChild.hidden = true;
+
+    timer = setTimeout(timerCallback, 500, aEvent.currentTarget);
+  }
+
+  function clickHandler(aEvent) {
+    if (aEvent.button == 0 &&
+        aEvent.target == aEvent.currentTarget &&
+        !aEvent.currentTarget.open &&
+        !aEvent.currentTarget.disabled)
+      aEvent.currentTarget.doCommand();
+  }
+
+  function stopTimer(aEvent) {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  }
+
+  function _addClickAndHoldListenersOnElement(aElm) {
+    aElm.addEventListener("mousedown", mousedownHandler, true);
+    aElm.addEventListener("mouseup", stopTimer, false);
+    aElm.addEventListener("mouseout", stopTimer, false);
+    aElm.addEventListener("click", clickHandler, true);
   }
 
   // Bug 414797: Clone the dropmarker's menu into both the back and
@@ -248,12 +241,12 @@ function SetClickAndHoldHandlers() {
     var popup = document.getElementById("back-forward-dropmarker")
                         .firstChild.cloneNode(true);
     var backButton = document.getElementById("back-button");
-    backButton.setAttribute("type", "menu-button");
+    backButton.setAttribute("type", "menu");
     backButton.appendChild(popup);
     _addClickAndHoldListenersOnElement(backButton);
     var forwardButton = document.getElementById("forward-button");
     popup = popup.cloneNode(true);
-    forwardButton.setAttribute("type", "menu-button");
+    forwardButton.setAttribute("type", "menu");
     forwardButton.appendChild(popup);    
     _addClickAndHoldListenersOnElement(forwardButton);
     unifiedButton._clickHandlersAttached = true;

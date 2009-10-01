@@ -517,7 +517,7 @@ nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
     return;
 
   nsIContent* rootContent = aPresContext->Document()->GetRootContent();
-  if (!rootContent || !rootContent->IsNodeOfType(nsINode::eXUL)) {
+  if (!rootContent || !rootContent->IsXUL()) {
     // Scrollframes use native widgets which don't work well with
     // translucent windows, at least in Windows XP. So if the document
     // has a root scrollrame it's useless to try to make it transparent,

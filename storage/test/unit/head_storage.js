@@ -39,12 +39,13 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
+do_get_profile();
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties);
 
 function getTestDB()
 {
-  var db = dirSvc.get("CurProcD", Ci.nsIFile);
+  var db = dirSvc.get("ProfD", Ci.nsIFile);
   db.append("test_storage.sqlite");
   return db;
 }

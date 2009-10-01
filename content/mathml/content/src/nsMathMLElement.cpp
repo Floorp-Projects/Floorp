@@ -410,7 +410,7 @@ nsMathMLElement::IntrinsicState() const
 PRBool
 nsMathMLElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eELEMENT | eMATHML));
+  return !(aFlags & ~(eCONTENT | eELEMENT));
 }
 
 void

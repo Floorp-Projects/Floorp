@@ -1346,7 +1346,7 @@ nsMathMLContainerFrame::SetIncrementScriptLevel(PRInt32 aChildIndex, PRBool aInc
   if (!child)
     return;
   nsIContent* content = child->GetContent();
-  if (!content->IsNodeOfType(nsINode::eMATHML))
+  if (!content->IsMathML())
     return;
   nsMathMLElement* element = static_cast<nsMathMLElement*>(content);
 

@@ -144,6 +144,12 @@ public:
                                       aAllowWrapping);
   }
 
+  // Used for cases where PreCreate needs to wrap the native parent,
+  // and the native parent is likely to have been wrapped already.
+  static inline nsresult WrapNativeParent(JSContext *cx, JSObject *scope,
+                                          nsISupports *native,
+                                          JSObject **parentObj);
+
   // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
                              nsISupports *native, PRBool aAllowWrapping,

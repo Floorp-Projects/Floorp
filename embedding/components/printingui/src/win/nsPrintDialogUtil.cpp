@@ -463,10 +463,10 @@ typedef struct {
 // These are the control ids used in the dialog and 
 // defined by MS-Windows in commdlg.h
 static PropKeyInfo gAllPropKeys[] = {
-    {"PrintFrames", grp3},
-    {"Aslaid", rad4},
-    {"selectedframe", rad5},
-    {"Eachframe", rad6},
+    {"printFramesTitleWindows", grp3},
+    {"asLaidOutWindows", rad4},
+    {"selectedFrameWindows", rad5},
+    {"separateFramesWindows", rad6},
     {NULL, NULL}};
 
 //--------------------------------------------------------
@@ -1280,7 +1280,7 @@ ShowNativePrintDialogEx(HWND              aHWnd,
     // lLcalize the Property Sheet (Tab) title
     nsCAutoString title;
     nsString optionsStr;
-    if (NS_SUCCEEDED(GetLocalizedString(strBundle, "options", optionsStr))) {
+    if (NS_SUCCEEDED(GetLocalizedString(strBundle, "optionsTitleWindows", optionsStr))) {
       // Failure here just means a blank string
       NS_CopyUnicodeToNative(optionsStr, title);
     }

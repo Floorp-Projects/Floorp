@@ -2320,7 +2320,7 @@ static PRBool IsCell(nsIContent *aContent)
 {
   return ((aContent->Tag() == nsGkAtoms::td ||
            aContent->Tag() == nsGkAtoms::th) &&
-          aContent->IsNodeOfType(nsINode::eHTML));
+          aContent->IsHTML());
 }
 
 nsITableCellLayout* 
@@ -3115,7 +3115,7 @@ nsFrameSelection::GetParentTable(nsIContent *aCell) const
   for (nsIContent* parent = aCell->GetParent(); parent;
        parent = parent->GetParent()) {
     if (parent->Tag() == nsGkAtoms::table &&
-        parent->IsNodeOfType(nsINode::eHTML)) {
+        parent->IsHTML()) {
       return parent;
     }
   }
@@ -3253,13 +3253,14 @@ nsTypedSelection::GetTableSelectionType(nsIRange* aRange,
   if ((endOffset - startOffset) != 1)
     return NS_OK;
 
-  if (!startNode->IsNodeOfType(nsINode::eHTML)) {
+  nsIContent* startContent = static_cast<nsIContent*>(startNode);
+  if (!(startNode->IsNodeOfType(nsINode::eELEMENT) && startContent->IsHTML())) {
     // Implies a check for being an element; if we ever make this work
     // for non-HTML, need to keep checking for elements.
     return NS_OK;
   }
 
-  nsIAtom *tag = static_cast<nsIContent*>(startNode)->Tag();
+  nsIAtom *tag = startContent->Tag();
 
   if (tag == nsGkAtoms::tr)
   {

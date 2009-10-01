@@ -53,6 +53,8 @@
 #include "nsIPluginWidget.h"
 #include "nsIScrollableView.h"
 #include "nsWeakPtr.h"
+#include "nsCocoaTextInputHandler.h"
+#include "nsCocoaUtils.h"
 
 #include "nsIAppShell.h"
 
@@ -215,7 +217,9 @@ enum {
                             enter:(BOOL)aEnter
                              type:(nsMouseEvent::exitType)aType;
 
+#ifndef NP_NO_CARBON
 - (void) processPluginKeyEvent:(EventRef)aKeyEvent;
+#endif
 
 // Simple gestures support
 //
@@ -236,6 +240,7 @@ enum {
 
 
 
+#ifndef NS_LEOPARD_AND_LATER
 //-------------------------------------------------------------------------
 //
 // nsTSMManager
@@ -276,6 +281,7 @@ private:
 
   static void KillComposing();
 };
+#endif // NS_LEOPARD_AND_LATER
 
 class ChildViewMouseTracker {
 
@@ -377,6 +383,7 @@ public:
   NS_IMETHOD        CancelIMEComposition();
   NS_IMETHOD        GetToggledKeyState(PRUint32 aKeyCode,
                                        PRBool* aLEDState);
+  NS_IMETHOD        OnIMEFocusChange(PRBool aFocus);
 
   // nsIPluginWidget
   NS_IMETHOD        GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint& outOrigin, PRBool& outWidgetVisible);
@@ -426,6 +433,138 @@ public:
                                  const nsIWidget::Configuration& aConfiguration,
                                  PRBool aRepaint);
 
+#ifdef NS_LEOPARD_AND_LATER
+  nsCocoaTextInputHandler* TextInputHandler() { return &mTextInputHandler; }
+  NSView<mozView>* GetEditorView();
+#endif
+
+  // Wrapper methods of nsIMEManager and nsTSMManager
+  void IME_OnDestroyView(NSView<mozView> *aDestroyingView)
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    mTextInputHandler.OnDestroyView(aDestroyingView);
+#else
+    nsTSMManager::OnDestroyView(aDestroyingView);
+#endif
+  }
+
+  void IME_OnStartComposition(NSView<mozView>* aComposingView)
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    mTextInputHandler.OnStartIMEComposition(aComposingView);
+#else
+    nsTSMManager::StartComposing(aComposingView);
+#endif
+  }
+
+  void IME_OnUpdateComposition(NSString* aCompositionString)
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    mTextInputHandler.OnUpdateIMEComposition(aCompositionString);
+#else
+    nsTSMManager::UpdateComposing(aCompositionString);
+#endif
+  }
+
+  void IME_OnEndComposition()
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    mTextInputHandler.OnEndIMEComposition();
+#else
+    nsTSMManager::EndComposing();
+#endif
+  }
+
+  PRBool IME_IsComposing()
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    return mTextInputHandler.IsIMEComposing();
+#else
+    return nsTSMManager::IsComposing();
+#endif
+  }
+
+  PRBool IME_IsASCIICapableOnly()
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    return mTextInputHandler.IsASCIICapableOnly();
+#else
+    return nsTSMManager::IsRomanKeyboardsOnly();
+#endif
+  }
+
+  PRBool IME_IsOpened()
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    return mTextInputHandler.IsIMEOpened();
+#else
+    return nsTSMManager::GetIMEOpenState();
+#endif
+  }
+
+  PRBool IME_IsEnabled()
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    return mTextInputHandler.IsIMEEnabled();
+#else
+    return nsTSMManager::IsIMEEnabled();
+#endif
+  }
+
+  PRBool IME_IgnoreCommit()
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    return mTextInputHandler.IgnoreIMECommit();
+#else
+    return nsTSMManager::IgnoreCommit();
+#endif
+  }
+
+  void IME_CommitComposition()
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    mTextInputHandler.CommitIMEComposition();
+#else
+    nsTSMManager::CommitIME();
+#endif
+  }
+
+  void IME_CancelComposition()
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    mTextInputHandler.CancelIMEComposition();
+#else
+    nsTSMManager::CancelIME();
+#endif
+  }
+
+  void IME_SetASCIICapableOnly(PRBool aASCIICapableOnly)
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    mTextInputHandler.SetASCIICapableOnly(aASCIICapableOnly);
+#else
+    nsTSMManager::SetRomanKeyboardsOnly(aASCIICapableOnly);
+#endif
+  }
+
+  void IME_SetOpenState(PRBool aOpen)
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    mTextInputHandler.SetIMEOpenState(aOpen);
+#else
+    nsTSMManager::SetIMEOpenState(aOpen);
+#endif
+  }
+
+  void IME_Enable(PRBool aEnable)
+  {
+#ifdef NS_LEOPARD_AND_LATER
+    mTextInputHandler.EnableIME(aEnable);
+#else
+    nsTSMManager::EnableIME(aEnable);
+#endif
+  }
+
 protected:
 
   PRBool            ReportDestroyEvent();
@@ -441,6 +580,9 @@ protected:
 protected:
 
   NSView<mozView>*      mView;      // my parallel cocoa view (ChildView or NativeScrollbarView), [STRONG]
+#ifdef NS_LEOPARD_AND_LATER
+  nsCocoaTextInputHandler mTextInputHandler;
+#endif
 
   NSView<mozView>*      mParentView;
   nsIWidget*            mParentWidget;

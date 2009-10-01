@@ -101,10 +101,47 @@ libs:: bloatcycle.html
 ifeq ($(OS_ARCH),Darwin)
 libs:: $(topsrcdir)/tools/rb/fix-macosx-stack.pl
 	$(INSTALL) $< $(DIST)/bin
+
+# Basic unit tests for some stuff in the unify script
+check::
+# build ppc/i386 binaries, and unify them
+	rm -f unify-test-ppc unify-test-i386 unify-test-universal
+	$(HOST_CC) -arch ppc $(srcdir)/unify-test.c -o unify-test-ppc
+	$(HOST_CC) -arch i386 $(srcdir)/unify-test.c -o unify-test-i386
+	@if ! $(srcdir)/macosx/universal/unify ./unify-test-ppc ./unify-test-i386 \
+          ./unify-test-universal; then \
+          echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to produce a universal binary!"; \
+          false; \
+        fi
+	@if ! test -f ./unify-test-universal; then \
+          echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to produce a universal binary!"; \
+          false; \
+        fi
+	@if ! file -b ./unify-test-universal | head -n1 | grep -q "^Mach-O universal binary"; then \
+          echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to produce a universal binary!"; \
+          false; \
+        fi
+# try unifying two identical Java class files
+	rm -f unifytesta.class unifytestb.class unifytestc.class
+	cp $(srcdir)/unifytest.class ./unifytesta.class
+	cp $(srcdir)/unifytest.class ./unifytestb.class
+	@if ! $(srcdir)/macosx/universal/unify ./unifytesta.class ./unifytestb.class \
+          ./unifytestc.class; then \
+          echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to unify a Java class file!"; \
+          false; \
+        fi
+	@if ! test -f ./unifytestc.class; then \
+          echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to unify a Java class file!"; \
+          false; \
+        fi
+	@if ! diff -q ./unifytesta.class ./unifytestc.class; then \
+          echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to unify a Java class file!"; \
+          false; \
+        fi
 endif
 
 ifeq ($(OS_ARCH),Linux)
 libs:: $(topsrcdir)/tools/rb/fix-linux-stack.pl
 	$(INSTALL) $< $(DIST)/bin
 endif
-endif
+endif # ENABLE_TESTS
