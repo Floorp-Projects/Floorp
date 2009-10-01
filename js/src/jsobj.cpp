@@ -2211,14 +2211,14 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
      */
     JSObject* obj;
     if (clasp == &js_FunctionClass && !objectSize) {
-        obj = (JSObject*) js_NewGCFunction(cx);
+        obj = (JSObject*) js_NewGCFunction(cx, GCX_OBJECT);
 #ifdef DEBUG
         memset((uint8 *) obj + sizeof(JSObject), JS_FREE_PATTERN,
                sizeof(JSFunction) - sizeof(JSObject));
 #endif
     } else {
         JS_ASSERT(!objectSize || objectSize == sizeof(JSObject));
-        obj = js_NewGCObject(cx);
+        obj = js_NewGCObject(cx, GCX_OBJECT);
     }
     if (!obj)
         goto out;
@@ -2243,7 +2243,7 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     }
 
     /* Check that the newborn root still holds the object. */
-    JS_ASSERT_IF(!cx->localRootStack, cx->weakRoots.newbornObject == obj);
+    JS_ASSERT_IF(!cx->localRootStack, cx->weakRoots.newborn[GCX_OBJECT] == obj);
 
     /*
      * Do not call debug hooks on trace, because we might be in a non-_FAIL
@@ -2255,7 +2255,7 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
         cx->debugHooks->objectHook(cx, obj, JS_TRUE,
                                    cx->debugHooks->objectHookData);
         JS_UNKEEP_ATOMS(cx->runtime);
-        cx->weakRoots.newbornObject = obj;
+        cx->weakRoots.newborn[GCX_OBJECT] = obj;
     }
 
 out:
@@ -2320,7 +2320,7 @@ NewNativeObject(JSContext* cx, JSClass* clasp, JSObject* proto,
                 JSObject *parent, jsval privateSlotValue)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
-    JSObject* obj = js_NewGCObject(cx);
+    JSObject* obj = js_NewGCObject(cx, GCX_OBJECT);
     if (!obj)
         return NULL;
 
@@ -2659,7 +2659,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     JS_ASSERT(!OBJ_IS_CLONED_BLOCK(proto));
     JS_ASSERT(STOBJ_GET_CLASS(proto) == &js_BlockClass);
 
-    JSObject *clone = js_NewGCObject(cx);
+    JSObject *clone = js_NewGCObject(cx, GCX_OBJECT);
     if (!clone)
         return NULL;
 
@@ -3259,7 +3259,7 @@ js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     JS_ASSERT(proto->map->ops == &js_ObjectOps);
     JS_ASSERT(OBJ_GET_CLASS(cx, proto) == clasp);
 
-    JSObject* obj = js_NewGCObject(cx);
+    JSObject* obj = js_NewGCObject(cx, GCX_OBJECT);
     if (!obj)
         return NULL;
 
@@ -5508,7 +5508,7 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, jsid id,
              * instance that delegates to this object, or just query the
              * prototype for its class.
              */
-            cx->weakRoots.newbornObject = JSVAL_TO_OBJECT(v);
+            cx->weakRoots.newborn[GCX_OBJECT] = JSVAL_TO_GCTHING(v);
         }
     }
     *protop = JSVAL_IS_OBJECT(v) ? JSVAL_TO_OBJECT(v) : NULL;

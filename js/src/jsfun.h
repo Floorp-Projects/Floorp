@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -107,7 +107,7 @@ typedef union JSLocalNames {
 #define JSFUN_KINDMASK      0xc000  /* encode interp vs. native and closure
                                        optimization level -- see above */
 
-#define FUN_OBJECT(fun)      (static_cast<JSObject *>(fun))
+#define FUN_OBJECT(fun)      (&(fun)->object)
 #define FUN_KIND(fun)        ((fun)->flags & JSFUN_KINDMASK)
 #define FUN_SET_KIND(fun,k)  ((fun)->flags = ((fun)->flags & ~JSFUN_KINDMASK) | (k))
 #define FUN_INTERPRETED(fun) (FUN_KIND(fun) >= JSFUN_INTERPRETED)
@@ -128,7 +128,8 @@ typedef union JSLocalNames {
                               JS_ASSERT((fun)->flags & JSFUN_TRCINFO),        \
                               fun->u.n.trcinfo)
 
-struct JSFunction : public JSObject {
+struct JSFunction {
+    JSObject        object;       /* GC'ed object header */
     uint16          nargs;        /* maximum number of specified arguments,
                                      reflected as f.length/f.arity */
     uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
