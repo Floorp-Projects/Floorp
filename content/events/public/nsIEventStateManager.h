@@ -58,7 +58,7 @@ class imgIContainer;
 { 0xc224a806, 0xa99f, 0x4056, \
   { 0x85, 0xc2, 0x3b, 0x19, 0x70, 0xf9, 0x4d, 0xb2 } }
 
-#define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_FOCUS_EVENT(event))
+#define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_ACTIVATION_EVENT(event))
 
 class nsIEventStateManager : public nsISupports {
 

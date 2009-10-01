@@ -24,6 +24,6 @@ SimpleTest.waitForFocus(focused);
 </script>
 
 <button id="other" label="OK"/>
-<button id="other2" label="Cancel"/>
+<textbox id="other-textbox" value="test"/>
 
 </window>
