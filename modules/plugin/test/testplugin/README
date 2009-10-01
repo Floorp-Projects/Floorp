@@ -27,21 +27,11 @@ returns true if it succeeds and false if it doesn't. It should never succeed.
 
 == NPRuntime testing ==
 
-The test plugin object supports the following scriptable methods:
+The test plugin object supports the following scriptable method:
 
 * identifierToStringTest(ident)
 Converts a string, int32 or double parameter 'ident' to an NPIdentifier and
 then to a string, which is returned.
-
-* npnInvokeTest(method, expected, args...)
-Causes the plugin to call the specified script method using NPN_Invoke, 
-passing it 1 or more arguments specified in args.  The return value of this 
-call is compared against 'expected', and if they match, npnInvokeTest will 
-return true.  Otherwise, it will return false.
-
-* getError()
-If an error has occurred during the last stream or npruntime function,
-this will return a string error message, otherwise it returns "pass".
 
 == Private browsing ==
 
