@@ -307,6 +307,10 @@
 
             destroy: function () {
               this._cancelStalledTimer();
+              this.mTab.removeAttribute("stalled");
+              delete this.mTab;
+              delete this.mBrowser;
+              delete this.mTabBrowser;
             },
 
             onProgressChange : function (aWebProgress, aRequest,
