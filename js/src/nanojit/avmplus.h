@@ -36,19 +36,11 @@
 #ifndef avm_h___
 #define avm_h___
 
-#include <assert.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
-
-#if defined(AVMPLUS_UNIX) || defined(AVMPLUS_OS2)
-#include <unistd.h>
-#include <sys/mman.h>
+#if defined(HAVE_CONFIG_H) && defined(NANOJIT_CENTRAL)
+#include "config.h"
 #endif
 
-#include "jstypes.h"
-#include "jsstdint.h"
+#include "VMPI.h"
 
 #if !defined(AVMPLUS_LITTLE_ENDIAN) && !defined(AVMPLUS_BIG_ENDIAN)
 #ifdef IS_BIG_ENDIAN
@@ -174,20 +166,6 @@ struct JSContext;
 # define PERFM_NTPROF(n)
 # define PERFM_TPROF_END()
 #endif
-
-#define VMPI_strlen strlen
-#define VMPI_strcat strcat
-#define VMPI_strncat strncat
-#define VMPI_strcpy strcpy
-#define VMPI_sprintf sprintf
-#define VMPI_memset memset
-#define VMPI_isdigit isdigit
-#define VMPI_getDate()
-
-extern void VMPI_setPageProtection(void *address,
-                                   size_t size,
-                                   bool executableFlag,
-                                   bool writeableFlag);
 
 namespace avmplus {
 
