@@ -58,7 +58,32 @@ JS_BEGIN_EXTERN_C
  */
 #define JSTRACE_LIMIT       4
 
+/*
+ * We use the trace kinds as the types for all GC things except external
+ * strings.
+ */
+#define GCX_OBJECT              JSTRACE_OBJECT      /* JSObject */
+#define GCX_DOUBLE              JSTRACE_DOUBLE      /* jsdouble */
+#define GCX_STRING              JSTRACE_STRING      /* JSString */
+#define GCX_XML                 JSTRACE_XML         /* JSXML */
+#define GCX_EXTERNAL_STRING     JSTRACE_LIMIT       /* JSString with external
+                                                       chars */
 const uintN JS_EXTERNAL_STRING_LIMIT = 8;
+
+/*
+ * The number of defined GC types and the maximum limit for the number of
+ * possible GC types.
+ */
+#define GCX_NTYPES              (GCX_EXTERNAL_STRING + JS_EXTERNAL_STRING_LIMIT)
+#define GCX_LIMIT_LOG2         4           /* type index bits */
+#define GCX_LIMIT              JS_BIT(GCX_LIMIT_LOG2)
+
+/* GC flag definitions, must fit in 8 bits (type index goes in the low bits). */
+#define GCF_TYPEMASK    JS_BITMASK(GCX_LIMIT_LOG2)
+#define GCF_MARK        JS_BIT(GCX_LIMIT_LOG2)
+#define GCF_FINAL       JS_BIT(GCX_LIMIT_LOG2 + 1)
+#define GCF_LOCKSHIFT   (GCX_LIMIT_LOG2 + 2)   /* lock bit shift */
+#define GCF_LOCK        JS_BIT(GCF_LOCKSHIFT)   /* lock request bit in API */
 
 /*
  * Get the type of the external string or -1 if the string was not created
@@ -125,6 +150,19 @@ typedef struct JSPtrTable {
 
 extern JSBool
 js_RegisterCloseableIterator(JSContext *cx, JSObject *obj);
+
+/*
+ * The private JSGCThing struct, which describes a gcFreeList element.
+ */
+struct JSGCThing {
+    JSGCThing   *next;
+    uint8       *flagp;
+};
+
+#define GC_NBYTES_MAX           (10 * sizeof(JSGCThing))
+#define GC_NUM_FREELISTS        (GC_NBYTES_MAX / sizeof(JSGCThing))
+#define GC_FREELIST_NBYTES(i)   (((i) + 1) * sizeof(JSGCThing))
+#define GC_FREELIST_INDEX(n)    (((n) / sizeof(JSGCThing)) - 1)
 
 /*
  * Allocates a new GC thing of the given size. After a successful allocation
@@ -251,36 +289,6 @@ typedef enum JSGCInvocationKind {
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
 
-/*
- * The kind of GC thing with a finalizer. The external strings follow the
- * ordinary string to simplify js_GetExternalStringGCType.
- */
-enum JSFinalizeGCThingKind {
-    FINALIZE_OBJECT,
-    FINALIZE_FUNCTION,
-#if JS_HAS_XML_SUPPORT
-    FINALIZE_XML,
-#endif
-    FINALIZE_STRING,
-    FINALIZE_EXTERNAL_STRING0,
-    FINALIZE_EXTERNAL_STRING1,
-    FINALIZE_EXTERNAL_STRING2,
-    FINALIZE_EXTERNAL_STRING3,
-    FINALIZE_EXTERNAL_STRING4,
-    FINALIZE_EXTERNAL_STRING5,
-    FINALIZE_EXTERNAL_STRING6,
-    FINALIZE_EXTERNAL_STRING7,
-    FINALIZE_EXTERNAL_STRING_LAST = FINALIZE_EXTERNAL_STRING7,
-    FINALIZE_LIMIT
-};
-
-static inline bool
-IsFinalizableStringKind(unsigned thingKind)
-{
-    return unsigned(FINALIZE_STRING) <= thingKind &&
-           thingKind <= unsigned(FINALIZE_EXTERNAL_STRING_LAST);
-}
-
 typedef struct JSGCArenaInfo JSGCArenaInfo;
 typedef struct JSGCArenaList JSGCArenaList;
 typedef struct JSGCChunkInfo JSGCChunkInfo;
@@ -289,7 +297,6 @@ struct JSGCArenaList {
     JSGCArenaInfo   *last;          /* last allocated GC arena */
     uint32          lastCount;      /* number of allocated things in the last
                                        arena */
-    uint32          thingKind;      /* one of JSFinalizeGCThingKind */
     uint32          thingSize;      /* size of things to allocate on this list
                                      */
     JSGCThing       *freeList;      /* list of free GC things */
@@ -352,8 +359,15 @@ class JSFreePointerListTask : public JSBackgroundTask {
 };
 #endif
 
+/*
+ * Free the chars held by str when it is finalized by the GC. When type is
+ * less then zero, it denotes an internal string. Otherwise it denotes the
+ * type of the external string allocated with JS_NewExternalString.
+ *
+ * This function always needs rt but can live with null cx.
+ */
 extern void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str);
+js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx);
 
 #ifdef DEBUG_notme
 #define JS_GCMETER 1
@@ -402,7 +416,7 @@ typedef struct JSGCStats {
     uint32  closelater; /* number of close hooks scheduled to run */
     uint32  maxcloselater; /* max number of close hooks scheduled to run */
 
-    JSGCArenaStats  arenaStats[FINALIZE_LIST_LIMIT];
+    JSGCArenaStats  arenaStats[GC_NUM_FREELISTS];
     JSGCArenaStats  doubleArenaStats;
 } JSGCStats;
 
