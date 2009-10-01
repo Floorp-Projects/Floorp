@@ -1239,7 +1239,6 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
             *aDiskSpaceAvailable = QuotaSpaceAvailable;
         }
     }
-
 #endif
 
     return NS_OK;
