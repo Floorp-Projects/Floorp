@@ -1477,7 +1477,35 @@ tabbrowser > tabbox {
 }
 
 .tabbrowser-tab[busy] > .tab-icon-image {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png") !important;
+  list-style-image: url("chrome://browser/skin/tabbrowser/progress.png") !important;
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+.tabbrowser-tab[busy][stalled] > .tab-icon-image {
+  list-style-image: url("chrome://browser/skin/tabbrowser/progress-pulsing.png") !important;
+}
+.tabbrowser-tab[busy][progress="1"] > .tab-icon-image {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+.tabbrowser-tab[busy][progress="2"] > .tab-icon-image {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+.tabbrowser-tab[busy][progress="3"] > .tab-icon-image {
+  -moz-image-region: rect(0, 64px, 16px, 48px);
+}
+.tabbrowser-tab[busy][progress="4"] > .tab-icon-image {
+  -moz-image-region: rect(0, 80px, 16px, 64px);
+}
+.tabbrowser-tab[busy][progress="5"] > .tab-icon-image {
+  -moz-image-region: rect(0, 96px, 16px, 80px);
+}
+.tabbrowser-tab[busy][progress="6"] > .tab-icon-image {
+  -moz-image-region: rect(0, 112px, 16px, 96px);
+}
+.tabbrowser-tab[busy][progress="7"] > .tab-icon-image {
+  -moz-image-region: rect(0, 128px, 16px, 112px);
+}
+.tabbrowser-tab[busy][progress="8"] > .tab-icon-image {
+  -moz-image-region: rect(0, 144px, 16px, 128px);
 }
 
 .tabbrowser-tab:not(:hover):not([selected="true"]) > .tab-icon-image {
