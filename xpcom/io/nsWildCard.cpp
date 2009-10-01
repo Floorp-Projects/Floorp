@@ -422,6 +422,7 @@ ns_WildCardMatch(const T *str, const T *xp, PRBool case_insensitive)
         return _shexp_match(str, xp, case_insensitive, 0);
 
     expr = (T *) NS_Alloc((nsCharTraits<T>::length(xp) + 1) * sizeof(T));
+    memcpy(expr, xp, (nsCharTraits<T>::length(xp) + 1) * sizeof(T));
     if(!expr)
         return NOMATCH;
 
