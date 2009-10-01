@@ -3483,7 +3483,7 @@
             JS_ASSERT(regs.sp - StackBase(fp) >= 1);
             lval = FETCH_OPND(-1);
             JS_ASSERT(JSVAL_IS_OBJECT(lval));
-            cx->weakRoots.newborn[GCX_OBJECT] = JSVAL_TO_GCTHING(lval);
+            cx->weakRoots.newbornObject = JSVAL_TO_OBJECT(lval);
           END_CASE(JSOP_ENDINIT)
 
           BEGIN_CASE(JSOP_INITPROP)
