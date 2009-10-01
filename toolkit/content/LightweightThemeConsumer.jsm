@@ -96,17 +96,14 @@ LightweightThemeConsumer.prototype = {
         footer.removeAttribute("lwthemefooter");
     }
 
-    if (root.hasAttribute("activetitlebarcolor")) {
-      if (!root.hasAttribute("originalactivetitlebarcolor")) {
-        root.setAttribute("originalactivetitlebarcolor",
-                          root.getAttribute("activetitlebarcolor"));
-        root.setAttribute("originalinactivetitlebarcolor",
-                          root.getAttribute("inactivetitlebarcolor"));
+    if (/^Mac/.test(this._doc.defaultView.navigator.platform)) {
+      if (active && aData.accentcolor) {
+        root.setAttribute("activetitlebarcolor", aData.accentcolor);
+        root.setAttribute("inactivetitlebarcolor", aData.accentcolor);
+      } else {
+        root.removeAttribute("activetitlebarcolor");
+        root.removeAttribute("inactivetitlebarcolor");
       }
-      root.setAttribute("activetitlebarcolor", (active && aData.accentcolor)
-                          || root.getAttribute("originalactivetitlebarcolor"));
-      root.setAttribute("inactivetitlebarcolor", (active && aData.accentcolor)
-                          || root.getAttribute("originalinactivetitlebarcolor"));
     }
   }
 }
