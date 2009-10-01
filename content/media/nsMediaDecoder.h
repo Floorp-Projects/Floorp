@@ -251,9 +251,9 @@ protected:
   // Timer used for updating progress events 
   nsCOMPtr<nsITimer> mProgressTimer;
 
-  // The element is not reference counted. Instead the decoder is
-  // notified when it is able to be used. It should only ever be
-  // accessed from the main thread.
+  // This should only ever be accessed from the main thread.
+  // It is set in Init and cleared in Shutdown when the element goes away.
+  // The decoder does not add a reference the element.
   nsHTMLMediaElement* mElement;
 
   // RGB data for last decoded frame of video data.

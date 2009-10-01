@@ -71,6 +71,7 @@ _TEST_FILES = \
 		can_play_type_wave.js \
 		cancellable_request.sjs \
 		manifest.js \
+		reactivate_helper.html \
 		seek1.js \
 		seek2.js \
 		seek3.js \
@@ -99,6 +100,7 @@ _TEST_FILES = \
 		test_paused.html \
 		test_playback.html \
 		test_playback_errors.html \
+		test_reactivate.html \
 		test_readyState.html \
 		test_seek2.html \
 		test_volume.html \
