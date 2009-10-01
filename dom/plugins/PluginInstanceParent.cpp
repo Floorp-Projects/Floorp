@@ -249,6 +249,13 @@ PluginInstanceParent::DeallocPStreamNotify(PStreamNotifyParent* notifyData,
     return true;
 }
 
+bool
+PluginInstanceParent::RecvNPN_InvalidateRect(const NPRect& rect)
+{
+    mNPNIface->invalidaterect(mNPP, const_cast<NPRect*>(&rect));
+    return true;
+}
+
 NPError
 PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
 {
