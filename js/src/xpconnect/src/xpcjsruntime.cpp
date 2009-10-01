@@ -62,7 +62,8 @@ const char* XPCJSRuntime::mStrings[] = {
     "item",                 // IDX_ITEM
     "__proto__",            // IDX_PROTO
     "__iterator__",         // IDX_ITERATOR
-    "__parent__"            // IDX_PARENT
+    "__parent__",           // IDX_PARENT
+    "__exposedProps__"      // IDX_EXPOSEDPROPS
 };
 
 /***************************************************************************/
