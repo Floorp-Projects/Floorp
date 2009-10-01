@@ -3391,7 +3391,7 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
 {
     JS_ASSERT(OBJ_IS_ARRAY(cx, proto));
 
-    JSObject* obj = js_NewGCObject(cx);
+    JSObject* obj = js_NewGCObject(cx, GCX_OBJECT);
     if (!obj)
         return NULL;
 
@@ -3463,7 +3463,7 @@ js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector, JSBool holey)
     JS_POP_TEMP_ROOT(cx, &tvr);
 
     /* Set/clear newborn root, in case we lost it.  */
-    cx->weakRoots.newbornObject = obj;
+    cx->weakRoots.newborn[GCX_OBJECT] = obj;
     return obj;
 }
 
