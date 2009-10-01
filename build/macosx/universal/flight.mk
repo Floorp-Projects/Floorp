@@ -119,6 +119,7 @@ postflight_all:
            $(DIST_X86)/test-package-stage/mochitest/
 	cp $(DIST_PPC)/test-package-stage/reftest/automation.py \
            $(DIST_X86)/test-package-stage/reftest/
+	rm -rf $(DIST_UNI)/test-package-stage
 	if test -d $(DIST_PPC)/test-package-stage -a \
                 -d $(DIST_X86)/test-package-stage; then \
            $(TOPSRCDIR)/build/macosx/universal/unify \
