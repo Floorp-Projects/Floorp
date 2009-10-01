@@ -575,7 +575,7 @@ placesCreateLivemarkTransactions.prototype = {
     if (PlacesUtils.annotations.itemHasAnnotation(this._id, GUID_ANNO))
       this._GUID = PlacesUtils.bookmarks.getItemGUID(this._id);
 
-    PlacesUtils.bookmarks.removeItem(this._id);
+    PlacesUtils.bookmarks.removeFolder(this._id);
   }
 };
 

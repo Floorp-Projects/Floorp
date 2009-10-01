@@ -463,6 +463,17 @@ const queryOptionSwitches = [
       }
     ]
   },
+  // showSessions
+  {
+    property: "showSessions",
+    desc:     "nsINavHistoryQueryOptions.showSessions",
+    matches:  simplePropertyMatches,
+    runs:     [
+      function (aQuery, aQueryOptions) {
+        aQueryOptions.showSessions = true;
+      }
+    ]
+  },
   // maxResults
   {
     property: "maxResults",

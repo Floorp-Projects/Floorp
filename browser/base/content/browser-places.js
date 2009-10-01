@@ -1196,22 +1196,21 @@ var PlacesStarButton = {
     this._batching = false;
   },
   
-  onItemAdded: function PSB_onItemAdded(aItemId, aFolder, aIndex, aItemType) {
+  onItemAdded: function PSB_onItemAdded(aItemId, aFolder, aIndex) {
     if (!this._batching && !this._starred)
       this.updateState();
   },
 
-  onBeforeItemRemoved: function() {},
+  onBeforeItemRemoved: function PSB_onBeforeItemRemoved(aItemId) {
+  },
 
-  onItemRemoved: function PSB_onItemRemoved(aItemId, aFolder, aIndex,
-                                            aItemType) {
+  onItemRemoved: function PSB_onItemRemoved(aItemId, aFolder, aIndex) {
     if (!this._batching)
       this.updateState();
   },
 
   onItemChanged: function PSB_onItemChanged(aItemId, aProperty,
-                                            aIsAnnotationProperty, aNewValue,
-                                            aLastModified, aItemType) {
+                                            aIsAnnotationProperty, aValue) {
     if (!this._batching && aProperty == "uri")
       this.updateState();
   },

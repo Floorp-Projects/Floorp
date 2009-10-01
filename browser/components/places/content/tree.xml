@@ -136,7 +136,7 @@
               callback = new Function("aContainer", onOpenFlatContainer);
           }
 
-          var treeView = new PlacesTreeView(this.flatList, callback);
+          var treeView = new PlacesTreeView(this.showRoot, this.flatList, callback);
           result.viewer = treeView;
           this.view = treeView;
           if (!this._controller) {
@@ -146,6 +146,21 @@
           this._cachedInsertionPoint = undefined;
         ]]></body>
       </method>
+
+      <property name="showRoot">
+        <getter><![CDATA[
+          return this.getAttribute("showRoot") == "true";
+        ]]></getter>
+        <setter><![CDATA[
+          if (this.showRoot != val) {
+            this.setAttribute("showRoot", val);
+            // reload with the last place set
+            if (this.place)
+              this.place = this.place;
+          }
+          return val;
+        ]]></setter>
+      </property>
 
       <property name="flatList">
         <getter><![CDATA[
@@ -244,7 +259,7 @@
       <method name="selectNode">
         <parameter name="node"/>
         <body><![CDATA[ 
-          var view = this.view;
+          var view = this.getResultView();
 
           var parent = node.parent;
           if (parent && !parent.containerOpen) {
@@ -293,6 +308,17 @@
         ]]></body>
       </method>
 
+      <method name="getResultView">
+        <body><![CDATA[
+          try {
+            return this.view.QueryInterface(Ci.nsINavHistoryResultTreeViewer);
+          }
+          catch (e) {
+          }
+          return null;
+        ]]></body>
+      </method>
+
       <!-- nsIPlacesView -->
       <property name="place">
         <getter><![CDATA[
@@ -329,7 +355,7 @@
           var selection = this.view.selection;
           var rc = selection.getRangeCount();
           var nodes = [];
-          var resultview = this.view;
+          var resultview = this.getResultView();
           for (var i = 0; i < rc; ++i) {
             var min = { }, max = { };
             selection.getRangeAt(i, min, max);
@@ -370,7 +396,7 @@
           var selection = this.view.selection;
           var rc = selection.getRangeCount();
           var nodes = [];
-          var resultview = this.view;
+          var resultview = this.getResultView();
           // This list is kept independently of the range selected (i.e. OUTSIDE
           // the for loop) since the row index of a container is unique for the
           // entire view, and we could have some really wacky selection and we
@@ -411,7 +437,7 @@
           var min = { }, max = { };
           selection.getRangeAt(0, min, max);
 
-          return this.view.nodeForTreeIndex(min.value);
+          return this.getResultView().nodeForTreeIndex(min.value);
         ]]></getter>
       </property>
 
@@ -452,7 +478,7 @@
           //          then use getIndexOfNode to find your absolute index in
           //          the parent container instead. 
           //
-          var resultView = this.view;
+          var resultView = this.getResultView();
           var selection = resultView.selection;
           var rc = selection.getRangeCount();
           var min = { }, max = { };
@@ -483,7 +509,7 @@
         <parameter name="orientation"/>
         <body><![CDATA[ 
           var result = this.getResult();
-          var resultview = this.view;
+          var resultview = this.getResultView();
           var container = result.root;
           var dropNearItemId = -1;
           NS_ASSERT(container, "null container");
@@ -647,7 +673,7 @@
 
           // For all the nodes we've found, highlight the corresponding
           // index in the tree.
-          var resultview = this.view;
+          var resultview = this.getResultView();
           var selection = this.view.selection;
           selection.selectEventsSuppressed = true;
           selection.clearSelection();
@@ -703,7 +729,7 @@
           this.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY,
                                        row, col, child);
           var node = row.value != -1 ?
-                     this.view.nodeForTreeIndex(row.value) :
+                     this.getResultView().nodeForTreeIndex(row.value) :
                      this.getResultNode();
           // cache the dropTarget for the view
           PlacesControllerDragHelper.currentDropTarget = node;

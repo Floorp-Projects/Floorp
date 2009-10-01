@@ -174,6 +174,7 @@ function run_test() {
   // The next two options should be ignored
   // can't use this one, breaks test - bug 419779
   // options.excludeItems = true;
+  options.showSessions = true;
 
   // Results
   var result = histsvc.executeQuery(query, options);
