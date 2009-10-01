@@ -46,7 +46,6 @@ include $(topsrcdir)/config/rules.mk
 
 _MOCHITEST_FILES = \
 		test_npobject_getters.html \
-		test_npruntime_npninvoke.html \
 		loremipsum.txt \
 		loremipsum_file.txt \
 		post.sjs \
