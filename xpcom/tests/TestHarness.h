@@ -49,12 +49,6 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsStringGlue.h"
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsDirectoryServiceUtils.h"
-#include "nsIDirectoryService.h"
-#include "nsIFile.h"
-#include "nsIProperties.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -120,7 +114,7 @@ static PRBool _PlatformDeinitProfiler();
  * @return PR_TRUE if profiling was available and successfully started.
  * @see StopProfiling
  */
-inline PRBool
+static PRBool
 StartProfiling(const char* profileName)
 {
     if (!gProfilerTriedInit) {
@@ -149,7 +143,7 @@ StartProfiling(const char* profileName)
  * @return PR_TRUE if profiling was successfully stopped.
  * @see StartProfiling
  */
-inline PRBool
+static PRBool
 StopProfiling()
 {
     NS_ASSERTION(gProfilerTriedInit, "tried to stop profile before starting one");
@@ -157,7 +151,7 @@ StopProfiling()
         return PR_FALSE;
 
     NS_PRECONDITION(gCurrentProfile, "tried to stop profile before starting one");
-
+    
     const char* profileName = gCurrentProfile;
     gCurrentProfile = 0;
     return _PlatformStopProfile(profileName);
@@ -235,19 +229,16 @@ _PlatformDeinitProfiler()
 
 //-----------------------------------------------------------------------------
 
-class ScopedXPCOM : public nsIDirectoryServiceProvider
+class ScopedXPCOM
 {
   public:
-    NS_DECL_ISUPPORTS
-
     ScopedXPCOM(const char* testName,
                 nsIDirectoryServiceProvider *dirSvcProvider = NULL)
-    : mDirSvcProvider(dirSvcProvider)
     {
       mTestName = testName;
       printf("Running %s tests...\n", mTestName);
 
-      nsresult rv = NS_InitXPCOM2(&mServMgr, NULL, this);
+      nsresult rv = NS_InitXPCOM2(&mServMgr, NULL, dirSvcProvider);
       if (NS_FAILED(rv))
       {
         fail("NS_InitXPCOM2 returned failure code 0x%x", rv);
@@ -260,14 +251,6 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider
       if (gProfilerInited)
         if (!_PlatformDeinitProfiler())
           NS_WARNING("Problem shutting down profiler");
-
-      // If we created a profile directory, we need to remove it.
-      if (mProfD) {
-        if (NS_FAILED(mProfD->Remove(PR_TRUE)))
-          NS_WARNING("Problem removing profile direrctory");
-
-        mProfD = nsnull;
-      }
 
       if (mServMgr)
       {
@@ -288,82 +271,9 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider
       return mServMgr == NULL;
     }
 
-    already_AddRefed<nsIFile> GetProfileDirectory()
-    {
-      if (mProfD) {
-        NS_ADDREF(mProfD);
-        return mProfD.get();
-      }
-
-      // Create a unique temporary folder to use for this test.
-      nsCOMPtr<nsIFile> profD;
-      nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
-                                           getter_AddRefs(profD));
-      NS_ENSURE_SUCCESS(rv, nsnull);
-
-      rv = profD->Append(NS_LITERAL_STRING("cpp-unit-profd"));
-      NS_ENSURE_SUCCESS(rv, nsnull);
-
-      rv = profD->CreateUnique(nsIFile::DIRECTORY_TYPE, 0755);
-      NS_ENSURE_SUCCESS(rv, nsnull);
-
-      mProfD = profD;
-      return profD.forget();
-    }
-
-    ////////////////////////////////////////////////////////////////////////////
-    //// nsIDirectoryServiceProvider
-
-    NS_IMETHODIMP GetFile(const char *aProperty, PRBool *_persistent,
-                          nsIFile **_result)
-    {
-      // If we were supplied a directory service provider, ask it first.
-      if (mDirSvcProvider &&
-          NS_SUCCEEDED(mDirSvcProvider->GetFile(aProperty, _persistent,
-                                                _result))) {
-        return NS_OK;
-      }
-
-      // Otherwise, the test harness provides some directories automatically.
-      if (0 == strcmp(aProperty, NS_APP_USER_PROFILE_50_DIR) ||
-          0 == strcmp(aProperty, NS_APP_USER_PROFILE_LOCAL_50_DIR)) {
-        nsCOMPtr<nsIFile> profD = GetProfileDirectory();
-        NS_ENSURE_TRUE(profD, NS_ERROR_FAILURE);
-
-        nsCOMPtr<nsIFile> clone;
-        nsresult rv = profD->Clone(getter_AddRefs(clone));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        *_persistent = PR_TRUE;
-        clone.forget(_result);
-        return NS_OK;
-      }
-
-      return NS_ERROR_FAILURE;
-    }
-
   private:
     const char* mTestName;
     nsIServiceManager* mServMgr;
-    nsCOMPtr<nsIDirectoryServiceProvider> mDirSvcProvider;
-    nsCOMPtr<nsIFile> mProfD;
 };
-
-NS_IMPL_QUERY_INTERFACE1(
-  ScopedXPCOM,
-  nsIDirectoryServiceProvider
-)
-
-NS_IMETHODIMP_(nsrefcnt)
-ScopedXPCOM::AddRef()
-{
-  return 2;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-ScopedXPCOM::Release()
-{
-  return 1;
-}
 
 #endif  // TestHarness_h__
