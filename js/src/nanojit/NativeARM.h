@@ -307,13 +307,14 @@ enum {
         NanoAssert(IsGpReg(rd) && IsGpReg(rl));\
         NanoAssert(isOp2Imm(op2imm));\
         *(--_nIns) = (NIns) ((cond)<<28 | OP_IMM | (ARM_##op)<<21 | (S)<<20 | (rl)<<16 | (rd)<<12 | (op2imm));\
-        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn)\
+        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn) {               \
             asm_output("%s%s%s %s, #0x%X", #op, condNames[cond], (S)?"s":"", gpn(rd), decOp2Imm(op2imm));\
-        else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {\
+        } else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {         \
             NanoAssert(S==1);\
             asm_output("%s%s %s, #0x%X", #op, condNames[cond], gpn(rl), decOp2Imm(op2imm));\
-        } else\
+        } else {                                                        \
             asm_output("%s%s%s %s, %s, #0x%X", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rl), decOp2Imm(op2imm));\
+        }\
     } while (0)
 
 // ALU operation with two register arguments
@@ -329,13 +330,14 @@ enum {
         NanoAssert(((S)==0) || ((S)==1));\
         NanoAssert(IsGpReg(rd) && IsGpReg(rl) && IsGpReg(rr));\
         *(--_nIns) = (NIns) ((cond)<<28 |(ARM_##op)<<21 | (S)<<20 | (rl)<<16 | (rd)<<12 | (rr));\
-        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn)\
+        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn) {               \
             asm_output("%s%s%s %s, %s", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rr));\
-        else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {\
+        } else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {         \
             NanoAssert(S==1);\
             asm_output("%s%s  %s, %s", #op, condNames[cond], gpn(rl), gpn(rr));\
-        } else\
+        } else {                                                        \
             asm_output("%s%s%s %s, %s, %s", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rl), gpn(rr));\
+        }\
     } while (0)
 
 // ALU operation with two register arguments, with rr operated on by a shift and shift immediate
@@ -354,13 +356,14 @@ enum {
         NanoAssert(IsShift(sh));\
         NanoAssert((imm)>=0 && (imm)<32);\
         *(--_nIns) = (NIns) ((cond)<<28 |(ARM_##op)<<21 | (S)<<20 | (rl)<<16 | (rd)<<12 | (imm)<<7 | (sh)<<4 | (rr));\
-        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn)\
+        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn) {               \
             asm_output("%s%s%s %s, %s, %s #%d", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rr), shiftNames[sh], (imm));\
-        else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {\
+        } else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {         \
             NanoAssert(S==1);\
             asm_output("%s%s  %s, %s, %s #%d", #op, condNames[cond], gpn(rl), gpn(rr), shiftNames[sh], (imm));\
-        } else\
+        } else {                                                        \
             asm_output("%s%s%s %s, %s, %s, %s #%d", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rl), gpn(rr), shiftNames[sh], (imm));\
+        }\
     } while (0)
 
 // ALU operation with two register arguments, with rr operated on by a shift and shift register
@@ -378,13 +381,14 @@ enum {
         NanoAssert(IsGpReg(rd) && IsGpReg(rl) && IsGpReg(rr) && IsGpReg(rs));\
         NanoAssert(IsShift(sh));\
         *(--_nIns) = (NIns) ((cond)<<28 |(ARM_##op)<<21 | (S)<<20 | (rl)<<16 | (rd)<<12 | (rs)<<8 | (sh)<<4 | (rr));\
-        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn)\
+        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn) {               \
             asm_output("%s%s%s %s, %s, %s %s", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rr), shiftNames[sh], gpn(rs));\
-        else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {\
+        } else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {         \
             NanoAssert(S==1);\
             asm_output("%s%s  %s, %s, %s %s", #op, condNames[cond], gpn(rl), gpn(rr), shiftNames[sh], gpn(rs));\
-        } else\
+        } else {                                                        \
             asm_output("%s%s%s %s, %s, %s, %s %s", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rl), gpn(rr), shiftNames[sh], gpn(rs));\
+        }\
     } while (0)
 
 // --------
