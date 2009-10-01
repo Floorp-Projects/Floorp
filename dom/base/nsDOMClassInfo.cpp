@@ -7656,11 +7656,14 @@ static PRBool
 GetBindingURL(nsIContent *aContent, nsIDocument *aDocument,
               nsCSSValue::URL **aResult)
 {
-  // If we have a frame the frame has already loaded the binding.
+  // If we have a frame the frame has already loaded the binding.  And
+  // otherwise, don't do anything else here unless we're dealing with
+  // XUL.
   nsIPresShell *shell = aDocument->GetPrimaryShell();
   nsIFrame *frame;
   if (!shell ||
-      (frame = shell->GetPrimaryFrameFor(aContent))) {
+      (frame = shell->GetPrimaryFrameFor(aContent)) ||
+      !aContent->IsXUL()) {
     *aResult = nsnull;
 
     return PR_TRUE;
