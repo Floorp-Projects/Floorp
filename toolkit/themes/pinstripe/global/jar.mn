@@ -48,7 +48,6 @@ toolkit.jar:
 *  skin/classic/global/viewbuttons.css
 +  skin/classic/global/wizard.css
 +  skin/classic/global/wizardOverlay.css
-+  skin/classic/global/globalBindings.xml
 +  skin/classic/global/arrow/arrow-dn-dis.gif                         (arrow/arrow-dn-dis.gif)
 +  skin/classic/global/arrow/arrow-dn-dis.png                         (arrow/arrow-dn-dis.png)
 +  skin/classic/global/arrow/arrow-dn-sharp.gif                       (arrow/arrow-dn-sharp.gif)
