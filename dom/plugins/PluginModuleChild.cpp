@@ -646,6 +646,7 @@ _invalidaterect(NPP aNPP,
                 NPRect* aInvalidRect)
 {
     _MOZ_LOG(__FUNCTION__);
+    InstCast(aNPP)->SendNPN_InvalidateRect(*aInvalidRect);
 }
 
 void NP_CALLBACK
@@ -653,6 +654,7 @@ _invalidateregion(NPP aNPP,
                   NPRegion aInvalidRegion)
 {
     _MOZ_LOG(__FUNCTION__);
+    // Not implemented in Mozilla.
 }
 
 void NP_CALLBACK
