@@ -3261,7 +3261,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
               NS_ENSURE_SUCCESS(rv, rv);
             }
             else if (madeContinuation) {
-              mFrames.RemoveFrame(nextFrame, frame);
+              mFrames.RemoveFrame(nextFrame);
             }
 
             // Put it in our overflow list
@@ -5203,30 +5203,22 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
 
   nsIPresShell* presShell = presContext->PresShell();
 
-  // Find the line and the previous sibling that contains
-  // deletedFrame; we also find the pointer to the line.
+  // Find the line that contains deletedFrame
   nsLineList::iterator line_start = mLines.begin(),
                        line_end = mLines.end();
   nsLineList::iterator line = line_start;
   PRBool searchingOverflowList = PR_FALSE;
-  nsIFrame* prevSibling = nsnull;
   // Make sure we look in the overflow lines even if the normal line
   // list is empty
   TryAllLines(&line, &line_start, &line_end, &searchingOverflowList);
   while (line != line_end) {
-    nsIFrame* frame = line->mFirstChild;
-    PRInt32 n = line->GetChildCount();
-    while (--n >= 0) {
-      if (frame == aDeletedFrame) {
-        goto found_frame;
-      }
-      prevSibling = frame;
-      frame = frame->GetNextSibling();
+    if (line->Contains(aDeletedFrame)) {
+      break;
     }
     ++line;
     TryAllLines(&line, &line_start, &line_end, &searchingOverflowList);
   }
-found_frame:;
+
   if (line == line_end) {
     NS_ERROR("can't find deleted frame in lines");
     return NS_ERROR_FAILURE;
@@ -5242,13 +5234,6 @@ found_frame:;
       mLines.back()->SetInvalidateTextRuns(PR_TRUE);
     }
   }
-
-  if (prevSibling && !prevSibling->GetNextSibling()) {
-    // We must have found the first frame in the overflow line list. So
-    // there is no prevSibling
-    prevSibling = nsnull;
-  }
-  NS_ASSERTION(!prevSibling || prevSibling->GetNextSibling() == aDeletedFrame, "bad prevSibling");
 
   while ((line != line_end) && (nsnull != aDeletedFrame)) {
     NS_ASSERTION(this == aDeletedFrame->GetParent(), "messed up delete code");
@@ -5287,13 +5272,14 @@ found_frame:;
     // prevSibling will only be nsnull when we are deleting the very
     // first frame in the main or overflow list.
     if (searchingOverflowList) {
+      nsIFrame* prevSibling = aDeletedFrame->GetPrevSibling();
       if (prevSibling) {
         // XXXbz If we switch overflow lines to nsFrameList, we should
         // change this SetNextSibling call.
         prevSibling->SetNextSibling(nextFrame);
       }
     } else {
-      mFrames.RemoveFrame(aDeletedFrame, prevSibling);
+      mFrames.RemoveFrame(aDeletedFrame);
     }
 
     // Update the child count of the line to be accurate
@@ -5385,20 +5371,10 @@ found_frame:;
           line = line_end;
         }
 
-        PRBool wasSearchingOverflowList = searchingOverflowList;
         TryAllLines(&line, &line_start, &line_end, &searchingOverflowList);
-        if (NS_UNLIKELY(searchingOverflowList && !wasSearchingOverflowList &&
-                        prevSibling)) {
-          // We switched to the overflow line list and we have a prev sibling
-          // (in the main list), in this case we don't want to pick up any
-          // sibling list from the deceased frames (bug 344557).
-          NS_ASSERTION(!prevSibling->GetNextSibling(), "Unexpected next sibling");
-          prevSibling = nsnull;
-        }
 #ifdef NOISY_REMOVE_FRAME
-        printf("DoRemoveFrame: now on %s line=%p prevSibling=%p\n",
-               searchingOverflowList?"overflow":"normal", line.get(),
-               prevSibling);
+        printf("DoRemoveFrame: now on %s line=%p\n",
+               searchingOverflowList?"overflow":"normal", line.get());
 #endif
       }
     }
@@ -5467,7 +5443,7 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
             prevSibling->SetNextSibling(frame->GetNextSibling());
           frame->SetNextSibling(nsnull);
         } else {
-          mFrames.RemoveFrame(frame, prevSibling);
+          mFrames.RemoveFrame(frame);
         }
 
         // Register removal with the line boxes

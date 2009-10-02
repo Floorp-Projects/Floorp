@@ -352,11 +352,10 @@ nsMathMLmoFrame::ProcessOperatorData()
       mFlags &= ~NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR;
 
     // find the position of our outermost embellished container w.r.t
-    // its siblings (frames are singly-linked together).
-    const nsFrameList& frameList(parentAncestor->GetChildList(nsnull));
+    // its siblings.
 
     nsIFrame* nextSibling = embellishAncestor->GetNextSibling();
-    nsIFrame* prevSibling = frameList.GetPrevSiblingFor(embellishAncestor);
+    nsIFrame* prevSibling = embellishAncestor->GetPrevSibling();
 
     // flag to distinguish from a real infix
     if (!prevSibling && !nextSibling)
