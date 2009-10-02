@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="go()">
+  <!-- This is a series of snapshots of a color animation, starting at  -->
+  <!-- YellowGreen (#9ACD32 == rgb(154,205,50)) and increasing each     -->
+  <!-- channel beyond its maximum. (which should clamp it to 255)       -->
+  <style>
+    rect { fill: yellowgreen; stroke: black; }
+  </style>
+  <script xlink:href="../smil-grid.js" type="text/javascript"/>
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <script>
+    function go() {
+      var animAttrHash = { "attributeName" : "fill",
+                           "from"          : "yellowgreen",
+                           "by"            : "rgb(200, 100, 250)" };
+      testAnimatedRectGrid("animate", [animAttrHash]);
+    }
+  </script>
+</svg>

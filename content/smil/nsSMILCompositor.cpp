@@ -36,6 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSMILCompositor.h"
+#include "nsSMILCSSProperty.h"
+#include "nsCSSProps.h"
 #include "nsHashKeys.h"
 
 // nsSMILCompositorKey methods
@@ -89,9 +91,12 @@ nsISMILAttr*
 nsSMILCompositor::CreateSMILAttr()
 {
   if (mKey.mIsCSS) {
-    // XXX Look up style system for the CSS property. The set of CSS properties
-    // should be the same for all elements so we don't need to query the element
-    // itself.
+    nsAutoString name;
+    mKey.mAttributeName->ToString(name);
+    nsCSSProperty propId = nsCSSProps::LookupProperty(name);
+    if (nsSMILCSSProperty::IsPropertyAnimatable(propId)) {
+      return new nsSMILCSSProperty(propId, mKey.mElement.get());
+    }
   } else {
     return mKey.mElement->GetAnimatedAttr(mKey.mAttributeName);
   }
@@ -108,7 +113,7 @@ nsSMILCompositor::ComposeAttribute()
   // give animated value to)
   nsAutoPtr<nsISMILAttr> smilAttr(CreateSMILAttr());
   if (!smilAttr) {
-    // Target attribute not found
+    // Target attribute not found (or, out of memory)
     return;
   }
 
