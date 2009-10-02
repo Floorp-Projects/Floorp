@@ -677,6 +677,11 @@ function run() {
     test_balanced_unparseable(":-moz-locale-dir(ltr, other)");
     test_balanced_unparseable(":-moz-locale-dir");
 
+    // Test -moz-lwtheme and -moz-lwtheme-[darktext|brighttext]
+    test_parseable(":-moz-lwtheme");
+    test_parseable(":-moz-lwtheme-brighttext");
+    test_parseable(":-moz-lwtheme-darktext");
+
     run_deferred_tests();
 }
 

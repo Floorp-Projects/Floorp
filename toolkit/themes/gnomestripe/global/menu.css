@@ -77,6 +77,15 @@ menubar > menu {
   color: -moz-menubartext;
 }
 
+menubar:-moz-lwtheme > menu {
+  text-shadow: none;
+}
+
+menubar:-moz-lwtheme > menu:not([open="true"]) {
+  color: inherit;
+  text-shadow: inherit;
+}
+
 menubar > menu[_moz-menuactive="true"] {
   color: -moz-menubartext;
 }

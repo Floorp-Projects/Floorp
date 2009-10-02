@@ -225,7 +225,8 @@ nsXULDocument::nsXULDocument(void)
     : nsXMLDocument("application/vnd.mozilla.xul+xml"),
       mDocDirection(Direction_Uninitialized),
       mState(eState_Master),
-      mResolutionPhase(nsForwardReference::eStart)
+      mResolutionPhase(nsForwardReference::eStart),
+      mDocLWTheme(Doc_Theme_Uninitialized)
 {
 
     // NOTE! nsDocument::operator new() zeroes out all members, so don't
@@ -4740,6 +4741,31 @@ nsXULDocument::DirectionChanged(const char* aPrefName, void* aData)
   }
 
   return 0;
+}
+
+int
+nsXULDocument::GetDocumentLWTheme()
+{
+    if (mDocLWTheme == Doc_Theme_Uninitialized) {
+        mDocLWTheme = Doc_Theme_None; // No lightweight theme by default
+
+        nsIContent* content = GetRootContent();
+        nsAutoString hasLWTheme;
+        if (content &&
+            content->GetAttr(kNameSpaceID_None, nsGkAtoms::lwtheme, hasLWTheme) &&
+            !(hasLWTheme.IsEmpty()) &&
+            hasLWTheme.EqualsLiteral("true")) {
+            nsAutoString lwTheme;
+            content->GetAttr(kNameSpaceID_None, nsGkAtoms::lwthemetextcolor, lwTheme);
+            if (!(lwTheme.IsEmpty())) {
+                if (lwTheme.EqualsLiteral("dark"))
+                    mDocLWTheme = Doc_Theme_Dark;
+                else if (lwTheme.EqualsLiteral("bright"))
+                    mDocLWTheme = Doc_Theme_Bright;
+            }
+        }
+    }
+    return mDocLWTheme;
 }
 
 NS_IMETHODIMP

@@ -46,16 +46,22 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-#main-window[lwtheme="true"] #urlbar:not([focused="true"]),
-#main-window[lwtheme="true"] #searchbar > textbox:not([focused="true"]) {
+#urlbar:-moz-lwtheme:not([focused="true"]),
+#searchbar:-moz-lwtheme > textbox:not([focused="true"]) {
   opacity: .85;
 }
 
-#main-window[lwtheme="true"] .tabbrowser-tab[selected="true"] {
+.tabbrowser-tab[selected="true"]:-moz-lwtheme {
   text-shadow: none;
 }
 
-#main-window[lwtheme="true"] .tabbrowser-tab:not([selected="true"]) {
+.tabbrowser-tabs:-moz-lwtheme {
+  -moz-appearance: none;
+  background: none;
+  border-style: none;
+}
+
+.tabbrowser-tab:-moz-lwtheme:not([selected="true"]) {
   color: inherit;
 }
 
