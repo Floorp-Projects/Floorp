@@ -3852,11 +3852,11 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
             }
         }
 
+        added = !scope->lookup(id);
         sprop = scope->add(cx, id, getter, setter, SPROP_INVALID_SLOT, attrs,
                            flags, shortid);
         if (!sprop)
             goto error;
-        added = true;
     }
 
     /* Store value before calling addProperty, in case the latter GC's. */
