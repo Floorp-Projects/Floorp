@@ -147,19 +147,6 @@ function pageShowEventHandlers(event) {
   }
 }
 
-/**
- * Determine whether or not the content area is displaying a page with frames,
- * and if so, toggle the display of the 'save frame as' menu item.
- **/
-function getContentAreaFrameCount()
-{
-  var saveFrameItem = document.getElementById("menu_saveFrame");
-  if (!content || !content.frames.length || !isContentFrame(document.commandDispatcher.focusedWindow))
-    saveFrameItem.setAttribute("hidden", "true");
-  else
-    saveFrameItem.removeAttribute("hidden");
-}
-
 function UpdateBackForwardCommands(aWebNavigation) {
   var backBroadcaster = document.getElementById("Browser:Back");
   var forwardBroadcaster = document.getElementById("Browser:Forward");
