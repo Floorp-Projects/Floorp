@@ -56,9 +56,9 @@ endif
 ifdef WINCE
 # We need jemalloc built before the shunt
 ifdef MOZ_MEMORY
-DIRS += wince/tools $(DEPTH)/memory/jemalloc wince/shunt
+DIRS += wince/tools $(DEPTH)/memory/jemalloc $(DEPTH)/memory/mozalloc wince/shunt
 else
-DIRS += wince/tools wince/shunt
+DIRS += wince/tools $(DEPTH)/memory/mozalloc wince/shunt
 endif
 endif
 

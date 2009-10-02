@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "jscntxt.h"
 #include "nsJSEnvironment.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -76,7 +77,6 @@
 #include "nsITimer.h"
 #include "nsIAtom.h"
 #include "nsContentUtils.h"
-#include "jscntxt.h"
 #include "nsEventDispatcher.h"
 #include "nsIContent.h"
 #include "nsCycleCollector.h"

@@ -37,6 +37,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// JavaScript includes
+#include "jsapi.h"
+#include "jsprvtd.h"    // we are using private JS typedefs...
+#include "jscntxt.h"
+#include "jsdbgapi.h"
+#include "jsnum.h"
+
 #include "nscore.h"
 #include "nsDOMClassInfo.h"
 #include "nsCRT.h"
@@ -61,13 +68,6 @@
 #include "nsCSSValue.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
-
-// JavaScript includes
-#include "jsapi.h"
-#include "jsprvtd.h"    // we are using private JS typedefs...
-#include "jscntxt.h"
-#include "jsdbgapi.h"
-#include "jsnum.h"
 
 // General helper includes
 #include "nsGlobalWindow.h"

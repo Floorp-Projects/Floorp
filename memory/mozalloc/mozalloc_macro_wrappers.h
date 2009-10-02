@@ -1,4 +1,6 @@
-/* -*- Mode: C;  c-basic-offset: 2; tab-width: 4; indent-tabs-mode: nil; -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 et :
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,19 +14,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is MOZCE Lib.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Doug Turner <dougt@meer.net>.
- 
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  John Wolfe <wolfe@lobo.us>
+ *  Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,41 +38,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "include/mozce_shunt.h"
-#include <stdlib.h>
-
-#include "mozilla/mozalloc_macro_wrappers.h" /* infallible malloc */
-
-#ifdef MOZ_MEMORY
-
-// declare the nothrow object
-const std::nothrow_t std::nothrow;
-
-char*
-_strndup(const char *src, size_t len) {
-  char* dst = (char*)malloc(len + 1);
-  strncpy(dst, src, len + 1);
-  return dst;
-}
+#ifndef mozilla_mozalloc_macro_wrappers_h
+#define mozilla_mozalloc_macro_wrappers_h
 
 
-char*
-_strdup(const char *src) {
-  size_t len = strlen(src);
-  return _strndup(src, len );
-}
+/*
+ * Make libc "allocating functions" never fail (return NULL).
+ *
+ * FIXME: use infallible allocators by default after 
+ *   http://bugzilla.mozilla.org/show_bug.cgi?id=507249
+ * lands.
+ */
+#define malloc(_) moz_malloc(_)
 
-wchar_t * 
-_wcsndup(const wchar_t *src, size_t len) {
-  wchar_t* dst = (wchar_t*)malloc(sizeof(wchar_t) * (len + 1));
-  wcsncpy(dst, src, len + 1);
-  return dst;
-}
+#define calloc(_, __) moz_calloc(_, __)
 
-wchar_t * 
-_wcsdup(const wchar_t *src) {
-  size_t len = wcslen(src);
-  return _wcsndup(src, len);
-}
+#define realloc(_, __) moz_realloc(_, __)
+
+#define strdup(_) moz_strdup(_)
+
+#if defined(HAVE_STRNDUP)
+#define strndup(_, __) moz_strndup(_, __)
 #endif
 
+#if defined(HAVE_POSIX_MEMALIGN)
+#define posix_memalign(_, __, ___) moz_posix_memalign(_, __, ___)
+#endif
+
+#if defined(HAVE_MEMALIGN)
+#define memalign(_, __) moz_memalign(_, __)
+#endif
+
+#if defined(HAVE_VALLOC)
+#define valloc(_) moz_valloc(_)
+#endif
+
+
+#endif /* ifndef mozilla_mozalloc_macro_wrappers_h */

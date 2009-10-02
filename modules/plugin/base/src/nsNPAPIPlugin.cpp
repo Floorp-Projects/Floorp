@@ -39,6 +39,9 @@
 #include "prtypes.h"
 #include "prmem.h"
 #include "prclist.h"
+
+#include "jscntxt.h"
+
 #include "nsAutoLock.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginInstance.h"
@@ -64,8 +67,6 @@
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h"
 #include "nsIPrincipal.h"
-
-#include "jscntxt.h"
 
 #include "nsIXPConnect.h"
 

@@ -1,4 +1,6 @@
-/* -*- Mode: C;  c-basic-offset: 2; tab-width: 4; indent-tabs-mode: nil; -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 et :
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,19 +14,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is MOZCE Lib.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Doug Turner <dougt@meer.net>.
- 
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  John Wolfe <wolfe@lobo.us>
+ *  Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,41 +38,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "include/mozce_shunt.h"
-#include <stdlib.h>
-
-#include "mozilla/mozalloc_macro_wrappers.h" /* infallible malloc */
-
-#ifdef MOZ_MEMORY
-
-// declare the nothrow object
-const std::nothrow_t std::nothrow;
-
-char*
-_strndup(const char *src, size_t len) {
-  char* dst = (char*)malloc(len + 1);
-  strncpy(dst, src, len + 1);
-  return dst;
-}
+#ifndef mozilla_mozalloc_oom_h
+#define mozilla_mozalloc_oom_h
 
 
-char*
-_strdup(const char *src) {
-  size_t len = strlen(src);
-  return _strndup(src, len );
-}
-
-wchar_t * 
-_wcsndup(const wchar_t *src, size_t len) {
-  wchar_t* dst = (wchar_t*)malloc(sizeof(wchar_t) * (len + 1));
-  wcsncpy(dst, src, len + 1);
-  return dst;
-}
-
-wchar_t * 
-_wcsdup(const wchar_t *src) {
-  size_t len = wcslen(src);
-  return _wcsndup(src, len);
-}
+#if defined(XP_WIN) || (defined(XP_OS2) && defined(__declspec))
+#  define MOZALLOC_EXPORT __declspec(dllexport)
+#elif defined(HAVE_VISIBILITY_ATTRIBUTE)
+/* Make sure symbols are still exported even if we're wrapped in a
+ * |visibility push(hidden)| blanket. */
+#  define MOZALLOC_EXPORT __attribute__ ((visibility ("default")))
+#else
+#  define MOZALLOC_EXPORT
 #endif
 
+
+/**
+ * Called when memory is critically low.  Returns iff it was able to 
+ * remedy the critical memory situation; if not, it will abort().
+ * 
+ * We have to re-#define MOZALLOC_EXPORT because this header can be
+ * used indepedently of mozalloc.h.
+ */
+MOZALLOC_EXPORT void mozalloc_handle_oom();
+
+
+/* TODO: functions to query system memory usage and register
+ * critical-memory handlers. */
+
+
+#endif /* ifndef mozilla_mozalloc_oom_h */
