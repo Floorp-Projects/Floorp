@@ -98,7 +98,7 @@ nsSAXXMLReader::WillBuildModel(nsDTDMode)
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::DidBuildModel()
+nsSAXXMLReader::DidBuildModel(PRBool aTerminated)
 {
   if (mContentHandler)
     return mContentHandler->EndDocument();

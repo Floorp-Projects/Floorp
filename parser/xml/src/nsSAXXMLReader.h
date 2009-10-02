@@ -78,7 +78,7 @@ public:
   }
 
   NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
-  NS_IMETHOD DidBuildModel();
+  NS_IMETHOD DidBuildModel(PRBool aTerminated);
   NS_IMETHOD SetParser(nsIParser* aParser);
   
   NS_IMETHOD WillInterrupt()
