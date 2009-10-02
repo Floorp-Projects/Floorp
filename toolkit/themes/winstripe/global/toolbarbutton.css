@@ -111,6 +111,15 @@ toolbarbutton[disabled="true"][checked="true"]:-moz-system-metric(windows-classi
   text-shadow: 1px 1px ThreeDHighlight;
 }
 
+toolbarbutton:-moz-lwtheme {
+  text-shadow: none;
+}
+
+toolbarbutton:-moz-lwtheme:not(:hover):not([checked="true"]):not([open="true"]):not([disabled="true"]) {
+  color: inherit;
+  text-shadow: inherit;
+}
+
 /* ..... checked state ..... */
 
 toolbarbutton[checked="true"] {

@@ -17,7 +17,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   display: none;
 }
 
-#main-window[lwtheme="true"] {
+#main-window:-moz-lwtheme {
   background-repeat: no-repeat;
   background-position: top right;
 }

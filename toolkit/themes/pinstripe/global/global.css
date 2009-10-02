@@ -164,38 +164,23 @@ statusbarpanel {
 
 /* ::::: miscellaneous formatting ::::: */
 
-:root[lwtheme="true"],
+:root:-moz-lwtheme,
 [lwthemefooter="true"] {
   -moz-appearance: none;
 }
 
-:root[lwthemetextcolor="dark"] {
+:root:-moz-lwtheme-darktext {
   text-shadow: 1px 1px 2px white;
 }
 
-:root[lwthemetextcolor="bright"] {
+:root:-moz-lwtheme-brighttext {
   text-shadow: 1px 1px 2px black;
 }
 
-:root[lwtheme="true"] toolbar,
-:root[lwtheme="true"] findbar,
-:root[lwtheme="true"] statusbar {
+statusbar:-moz-lwtheme {
   -moz-appearance: none;
   background: none;
   border-style: none;
-}
-
-:root[lwtheme="true"] splitter {
-  background: none;
-}
-
-:root[lwtheme="true"] statusbar {
-  text-shadow: inherit;
-}
-
-:root[lwtheme="true"] .findbar-container > label,
-:root[lwtheme="true"] .findbar-find-status {
-  color: inherit;
   text-shadow: inherit;
 }
 

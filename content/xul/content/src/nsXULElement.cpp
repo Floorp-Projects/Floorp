@@ -1077,7 +1077,7 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                            const nsAString* aValue, PRBool aNotify)
 {
     if (aNamespaceID == kNameSpaceID_None) {
-        // XXX UnsetAttr handles more attributes then we do. See bug 233642.
+        // XXX UnsetAttr handles more attributes than we do. See bug 233642.
 
         // Add popup and event listeners. We can't call AddListenerFor since
         // the attribute isn't set yet.
@@ -1125,6 +1125,16 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
             nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(document);
             if (xuldoc) {
                 xuldoc->ResetDocumentDirection();
+            }
+        }
+
+        // if the lwtheme changed, make sure to reset the document lwtheme cache
+        if ((aName == nsGkAtoms::lwtheme ||
+             aName == nsGkAtoms::lwthemetextcolor) &&
+            document && document->GetRootContent() == this) {
+            nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(document);
+            if (xuldoc) {
+                xuldoc->ResetDocumentLWTheme();
             }
         }
 
@@ -1380,6 +1390,16 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
             nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
             if (xuldoc) {
                 xuldoc->ResetDocumentDirection();
+            }
+        }
+
+        // if the lwtheme changed, make sure to restyle appropriately
+        if ((aName == nsGkAtoms::lwtheme ||
+             aName == nsGkAtoms::lwthemetextcolor) &&
+            doc && doc->GetRootContent() == this) {
+            nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
+            if (xuldoc) {
+                xuldoc->ResetDocumentLWTheme();
             }
         }
 
