@@ -47,10 +47,10 @@ class nsIContent;
 class nsIScriptGlobalObjectOwner;
 
 
-// {AF676EDD-1FB9-4C75-9B1F-CB4E02E1C779}
+// {E486EA2A-5B37-4107-905F-EE062FB4FF97}
 #define NS_IXULDOCUMENT_IID \
-{ 0xaf676edd, 0x1fb9, 0x4c75, \
-  { 0x9b, 0x1f, 0xcb, 0x4e, 0x02, 0xe1, 0xc7, 0x79 } }
+{ 0xe486ea2a, 0x5b37, 0x4107, \
+  { 0x90, 0x5f, 0xee, 0x06, 0x2f, 0xb4, 0xff, 0x97 }}
 
 
 /*
@@ -127,6 +127,8 @@ public:
    * Reset the document direction so that it is recomputed.
    */
   virtual void ResetDocumentDirection() = 0;
+
+  virtual void ResetDocumentLWTheme() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULDocument, NS_IXULDOCUMENT_IID)
