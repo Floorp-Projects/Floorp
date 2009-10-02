@@ -1110,7 +1110,7 @@ nsListBoxBodyFrame::ReverseDestroyRows(PRInt32& aRowsToLose)
     --aRowsToLose;
     
     nsIFrame* prevFrame;
-    prevFrame = mFrames.GetPrevSiblingFor(childFrame);
+    prevFrame = childFrame->GetPrevSibling();
     RemoveChildFrame(state, childFrame);
 
     mBottomFrame = childFrame = prevFrame;
