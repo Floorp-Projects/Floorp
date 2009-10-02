@@ -407,7 +407,7 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     JSFunction *fun = (JSFunction*) funobj;
     JS_ASSERT(GET_FUNCTION_PRIVATE(cx, funobj) == fun);
 
-    JSObject* closure = js_NewGCObject(cx, GCX_OBJECT);
+    JSObject* closure = js_NewGCObject(cx);
     if (!closure)
         return NULL;
 
