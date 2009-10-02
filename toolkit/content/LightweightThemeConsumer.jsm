@@ -76,8 +76,8 @@ LightweightThemeConsumer.prototype = {
       root.style.color = aData.textcolor || "black";
       root.style.backgroundColor = aData.accentcolor || "white";
       let [r, g, b] = _parseRGB(this._doc.defaultView.getComputedStyle(root, "").color);
-      let brightness = (r + g + b) / 3;
-      root.setAttribute("lwthemetextcolor", brightness <= 127 ? "dark" : "bright");
+      let luminance = 0.2125 * r + 0.7154 * g + 0.0721 * b;
+      root.setAttribute("lwthemetextcolor", luminance <= 110 ? "dark" : "bright");
       root.setAttribute("lwtheme", "true");
     } else {
       root.style.color = "";
