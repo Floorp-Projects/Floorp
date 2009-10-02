@@ -37,10 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsd_xpc.h"
 #include "jsdbgapi.h"
 #include "jscntxt.h"
 #include "jsfun.h"
+#include "jsd_xpc.h"
 
 #include "nsIXPConnect.h"
 #include "nsIGenericFactory.h"
