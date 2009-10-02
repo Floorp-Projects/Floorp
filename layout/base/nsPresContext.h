@@ -71,6 +71,7 @@
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 #include "nsIWidget.h"
+#include "mozilla/TimeStamp.h"
 
 class nsImageLoader;
 #ifdef IBMBIDI
@@ -1014,6 +1015,8 @@ protected:
   nscoord               mBorderWidthTable[3];
 
   PRUint32              mInterruptChecksToSkip;
+
+  mozilla::TimeStamp    mReflowStartTime;
 
   unsigned              mHasPendingInterrupt : 1;
   unsigned              mInterruptsEnabled : 1;

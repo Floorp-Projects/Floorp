@@ -4375,10 +4375,14 @@ nsDocShell::GetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
 {
     // We should really consider just getting this information from
     // our window instead of duplicating the storage and code...
-    nsCOMPtr<nsIDOMDocument> document(do_GetInterface(GetAsSupports(mParent)));
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
-    if (doc) {
-        doc->FlushPendingNotifications(Flush_Layout);
+    if (cx || cy) {
+        // Caller wants to know our size; make sure to give them up to
+        // date information.
+        nsCOMPtr<nsIDOMDocument> document(do_GetInterface(GetAsSupports(mParent)));
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
+        if (doc) {
+            doc->FlushPendingNotifications(Flush_Layout);
+        }
     }
     
     DoGetPositionAndSize(x, y, cx, cy);
