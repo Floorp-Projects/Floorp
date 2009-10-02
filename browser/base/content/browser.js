@@ -5910,10 +5910,8 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   let hideBarPrefName = aEvent.type == "PluginOutdated" ?
                   "plugins.hide_infobar_for_outdated_plugin" :
                   "plugins.hide_infobar_for_missing_plugin";
-  try {
-    if (gPrefService.getBoolPref(hideBarPrefName))
-      return;
-  } catch (ex) {} // if the pref is missing, treat it as false, which shows the infobar
+  if (gPrefService.getBoolPref(hideBarPrefName))
+    return;
 
   var browser = gBrowser.getBrowserForDocument(aEvent.target.ownerDocument
                                                      .defaultView.top.document);
@@ -5935,7 +5933,7 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   var blockedNotification = notificationBox.getNotificationWithValue("blocked-plugins");
   var missingNotification = notificationBox.getNotificationWithValue("missing-plugins");
   var priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-  
+
   function showBlocklistInfo() {
     var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
                     getService(Ci.nsIURLFormatter);
@@ -5943,7 +5941,7 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
     gBrowser.loadOneTab(url, {inBackground: false});
     return true;
   }
-  
+
   function showOutdatedPluginsInfo() {
     var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
                     getService(Ci.nsIURLFormatter);
@@ -5951,7 +5949,7 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
     gBrowser.loadOneTab(url, {inBackground: false});
     return true;
   }
-  
+
   function showPluginsMissing() {
     // get the urls of missing plugins
     var missingPluginsArray = gBrowser.selectedBrowser.missingPlugins;
