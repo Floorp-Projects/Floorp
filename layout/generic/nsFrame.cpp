@@ -4770,11 +4770,10 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
 
   // Iterate over children and call ourselves recursively
   if (aDirection == eDirPrevious) {
-    const nsFrameList& children(aFrame->GetChildList(nsnull));
-    nsIFrame* child = children.LastChild();
+    nsIFrame* child = aFrame->GetChildList(nsnull).LastChild();
     while(child && !result.mContent) {
       result = FindBlockFrameOrBR(child, aDirection);
-      child = children.GetPrevSiblingFor(child);
+      child = child->GetPrevSibling();
     }
   } else { // eDirNext
     nsIFrame* child = aFrame->GetFirstChild(nsnull);
@@ -4807,11 +4806,10 @@ nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct *aPos)
         reachedBlockAncestor = PR_TRUE;
         break;
       }
-      const nsFrameList& siblings(parent->GetChildList(nsnull));
-      nsIFrame* sibling = siblings.GetPrevSiblingFor(frame);
+      nsIFrame* sibling = frame->GetPrevSibling();
       while (sibling && !blockFrameOrBR.mContent) {
         blockFrameOrBR = FindBlockFrameOrBR(sibling, eDirPrevious);
-        sibling = siblings.GetPrevSiblingFor(sibling);
+        sibling = sibling->GetPrevSibling();
       }
       if (blockFrameOrBR.mContent) {
         aPos->mResultContent = blockFrameOrBR.mContent;

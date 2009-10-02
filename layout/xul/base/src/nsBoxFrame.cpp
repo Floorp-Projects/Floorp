@@ -2093,34 +2093,28 @@ nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
 
   PRUint32 ord = aChild->GetOrdinal(aState);
   
-  nsIFrame *child = mFrames.FirstChild();
-  nsIFrame *curPrevSib = nsnull, *newPrevSib = nsnull;
-  PRBool foundPrevSib = PR_FALSE, foundNewPrevSib = PR_FALSE;
+  nsIFrame* child = mFrames.FirstChild();
+  nsIFrame* newPrevSib = nsnull;
 
   while (child) {
-    if (child == aChild)
-      foundPrevSib = PR_TRUE;
-    else if (!foundPrevSib)
-      curPrevSib = child;
+    if (ord < child->GetOrdinal(aState)) {
+      break;
+    }
 
-    PRUint32 ordCmp = child->GetOrdinal(aState);
-    if (ord < ordCmp)
-      foundNewPrevSib = PR_TRUE;
-    else if (!foundNewPrevSib && child != aChild)
+    if (child != aChild) {
       newPrevSib = child;
+    }
 
     child = child->GetNextBox();
   }
 
-  NS_ASSERTION(foundPrevSib, "aChild not in frame list?");
-
-  if (curPrevSib == newPrevSib) {
+  if (aChild->GetPrevSibling() == newPrevSib) {
     // This box is not moving.
     return NS_OK;
   }
 
   // Take |aChild| out of its old position in the child list.
-  mFrames.RemoveFrame(aChild, curPrevSib);
+  mFrames.RemoveFrame(aChild);
 
   // Insert it after |newPrevSib| or at the start if it's null.
   mFrames.InsertFrame(nsnull, newPrevSib, aChild);

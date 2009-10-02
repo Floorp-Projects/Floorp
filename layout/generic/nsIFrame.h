@@ -877,13 +877,21 @@ public:
   }
 
   /**
-   * Child frames are linked together in a singly-linked list
+   * Child frames are linked together in a doubly-linked list
    */
   nsIFrame* GetNextSibling() const { return mNextSibling; }
   void SetNextSibling(nsIFrame* aNextSibling) {
-    NS_ASSERTION(this != aNextSibling, "Creating a circular frame list, this is very bad."); 
+    NS_ASSERTION(this != aNextSibling, "Creating a circular frame list, this is very bad.");
+    if (mNextSibling && mNextSibling->GetPrevSibling() == this) {
+      mNextSibling->mPrevSibling = nsnull;
+    }
     mNextSibling = aNextSibling;
+    if (mNextSibling) {
+      mNextSibling->mPrevSibling = this;
+    }
   }
+
+  nsIFrame* GetPrevSibling() const { return mPrevSibling; }
 
   /**
    * Builds the display lists for the content represented by this frame
@@ -2319,7 +2327,8 @@ protected:
   nsStyleContext*  mStyleContext;
   nsIFrame*        mParent;
 private:
-  nsIFrame*        mNextSibling;  // singly-linked list of frames
+  nsIFrame*        mNextSibling;  // doubly-linked list of frames
+  nsIFrame*        mPrevSibling;  // Do not touch outside SetNextSibling!
 protected:
   nsFrameState     mState;
 
