@@ -16,19 +16,19 @@
   list-style-image: url("moz-icon://stock/gtk-goto-last-rtl?size=menu");
 }
 
-.left-arrow {
+.previous-arrow {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu");
 }
 
-.left-arrow:-moz-locale-dir(rtl) {
+.previous-arrow:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
 }
 
-.right-arrow {
+.next-arrow {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu");
 }
 
-.right-arrow:-moz-locale-dir(rtl) {
+.next-arrow:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
 }
 
