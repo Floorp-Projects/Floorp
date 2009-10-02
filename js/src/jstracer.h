@@ -731,7 +731,7 @@ struct InterpState
     double*        deepBailSp;
 
 
-    // Used when calling natives from trace to root the vp vector. */
+    // Used when calling natives from trace to root the vp vector.
     uintN          nativeVpLen;
     jsval         *nativeVp;
 };
