@@ -342,6 +342,7 @@ script regress-483103.js
 script regress-501124.js
 fails script regress-504078.js
 script regress-506567.js
+script regress-511859.js
 script regress-57043.js
 script regress-58116.js
 script regress-68498-001.js
