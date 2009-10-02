@@ -5367,6 +5367,18 @@ JS_GetStringLength(JSString *str)
     return str->length();
 }
 
+JS_PUBLIC_API(const char *)
+JS_GetStringBytesZ(JSContext *cx, JSString *str)
+{
+    return js_GetStringBytes(cx, str);
+}
+
+JS_PUBLIC_API(const jschar *)
+JS_GetStringCharsZ(JSContext *cx, JSString *str)
+{
+    return js_UndependString(cx, str);
+}
+
 JS_PUBLIC_API(intN)
 JS_CompareStrings(JSString *str1, JSString *str2)
 {
