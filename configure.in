@@ -1055,9 +1055,9 @@ MOZ_PNG_CFLAGS=
 MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/modules/libimg/png)'
 
 MOZ_JS_LIBS='-L$(LIBXUL_DIST)/bin -lmozjs'
-DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/bin -lxpcom -lxpcom_core'
+DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/bin -lxpcom -lxpcom_core -lmozalloc'
 MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(prefix)/lib'
-XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/bin -lxpcom'
+XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/bin -lxpcom -lmozalloc'
 LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) -lxul'
 XPCOM_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) $(XPCOM_FROZEN_LDOPTS)'
 XPCOM_STANDALONE_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX)'
@@ -2013,11 +2013,11 @@ case "$target" in
     DLL_PREFIX=
     DOXYGEN=:
     DSO_LDOPTS=-SUBSYSTEM:WINDOWSCE
-    DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib'
+    DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     GARBAGE=
     IMPORT_LIB_SUFFIX=lib
     LIBS="$LIBS"
-    LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
+    LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     LIB_PREFIX=
     LIB_SUFFIX=lib 
     MKCSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ $(DSO_LDOPTS)'
@@ -2036,7 +2036,7 @@ case "$target" in
     TARGET_NSPR_MDCPUCFG='\"md/_wince.cfg\"'
     UNZIP=unzip
     XARGS=xargs
-    XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib'
+    XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     ZIP=zip
     LIBIDL_CFLAGS="-I$MOZ_TOOLS_DIR/include ${GLIB_CFLAGS}"
     LIBIDL_LIBS="$MOZ_TOOLS_DIR/lib/libidl-0.6_s.lib $MOZ_TOOLS_DIR/lib/glib-1.2_s.lib"
@@ -2095,8 +2095,8 @@ case "$target" in
         LIBS="$LIBS -lgdi32 -lwinmm -lwsock32"
         MOZ_JS_LIBS='-L$(LIBXUL_DIST)/lib -ljs$(MOZ_BITS)$(VERSION_NUMBER)'
         MOZ_FIX_LINK_PATHS=
-        DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom -lxpcom_core'
-        XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom'
+        DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom -lxpcom_core -lmozalloc'
+        XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom -lmozalloc'
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
     else
@@ -2135,9 +2135,9 @@ case "$target" in
     	MOZ_OPTIMIZE_FLAGS='-O1'
         MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
         MOZ_FIX_LINK_PATHS=
-        DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib'
-        XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib'
-        LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
+        DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
+        XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
+        LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         if test $_MSC_VER -ge 1400; then
             LDFLAGS="$LDFLAGS -NXCOMPAT -SAFESEH"
@@ -2436,8 +2436,8 @@ case "$target" in
     MOZ_DEBUG_FLAGS="-g -fno-inline"
     MOZ_OPTIMIZE_FLAGS="-O2"
     MOZ_OPTIMIZE_LDFLAGS="-s -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
-    DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcomcor.lib'
-    LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
+    DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcomcor.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
+    LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     TARGET_MD_ARCH=os2
     _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"
     MOZ_ENABLE_POSTSCRIPT=
@@ -4122,7 +4122,52 @@ if test "$ac_cv_trouble_comparing_to_zero" = yes ; then
   AC_DEFINE(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)
 fi
 
+dnl Check for the existence of various allocation headers/functions
 
+MALLOC_H=
+AC_CHECK_HEADER(malloc.h,        [MALLOC_H=malloc.h])
+if test "$MALLOC_H" = ""; then
+  AC_CHECK_HEADER(malloc/malloc.h, [MALLOC_H=malloc/malloc.h])
+  if test "$MALLOC_H" = ""; then
+    AC_CHECK_HEADER(sys/malloc.h,    [MALLOC_H=sys/malloc.h])
+  fi
+fi
+if test "$MALLOC_H" != ""; then
+   AC_DEFINE_UNQUOTED(MALLOC_H, <$MALLOC_H>)
+fi
+
+MOZ_ALLOCATING_FUNCS="strndup posix_memalign memalign valloc"
+AC_CHECK_FUNCS(strndup posix_memalign memalign valloc)
+
+dnl See if compiler supports some gcc-style attributes
+
+AC_CACHE_CHECK(for __attribute__((always_inline)),
+               ac_cv_attribute_always_inline,
+               [AC_TRY_COMPILE([],
+                               [inline void f(void) __attribute__((always_inline));],
+                               ac_cv_attribute_always_inline=yes,
+                               ac_cv_attribute_always_inline=no)])
+
+AC_CACHE_CHECK(for __attribute__((malloc)),
+               ac_cv_attribute_malloc,
+               [AC_TRY_COMPILE([],
+                               [void* f(int) __attribute__((malloc));],
+                               ac_cv_attribute_malloc=yes,
+                               ac_cv_attribute_malloc=no)])
+
+AC_CACHE_CHECK(for __attribute__((warn_unused_result)),
+               ac_cv_attribute_warn_unused,
+               [AC_TRY_COMPILE([],
+                               [int f(void) __attribute__((warn_unused_result));],
+                               ac_cv_attribute_warn_unused=yes,
+                               ac_cv_attribute_warn_unused=no)])
+
+AC_CACHE_CHECK(for __attribute__((noreturn)),
+               ac_cv_attribute_noreturn,
+               [AC_TRY_COMPILE([],
+                               [void f(void) __attribute__((noreturn));],
+                               ac_cv_attribute_noreturn=yes,
+                               ac_cv_attribute_noreturn=no)])
 
 dnl End of C++ language/feature checks
 AC_LANG_C
@@ -4158,6 +4203,40 @@ dnl ========================================================
 dnl The macros used for command line options
 dnl are defined in build/autoconf/altoptions.m4.
 
+dnl If the compiler supports these attributes, define them as
+dnl convenience macros.
+if test "$ac_cv_attribute_always_inline" = yes ; then
+  AC_DEFINE(NS_ALWAYS_INLINE, [__attribute__((always_inline))])
+else
+  AC_DEFINE(NS_ALWAYS_INLINE,)
+fi
+
+if test "$ac_cv_attribute_malloc" = yes ; then
+  AC_DEFINE(NS_ATTR_MALLOC, [__attribute__((malloc))])
+else
+  AC_DEFINE(NS_ATTR_MALLOC,)
+fi
+
+if test "$ac_cv_attribute_warn_unused" = yes ; then
+  AC_DEFINE(NS_WARN_UNUSED_RESULT, [__attribute__((warn_unused_result))])
+else
+  AC_DEFINE(NS_WARN_UNUSED_RESULT,)
+fi
+
+if test "$ac_cv_attribute_noreturn" = yes ; then
+  AC_DEFINE(NS_NORETURN, [__attribute__((noreturn))])
+else
+  AC_DEFINE(NS_NORETURN,)
+fi
+
+dnl We can't run TRY_COMPILE tests on Windows, so hard-code some
+dnl features that Windows actually does support.
+
+if test -n "$SKIP_COMPILER_CHECKS"; then
+   dnl Windows has malloc.h
+   AC_DEFINE(MALLOC_H, [<malloc.h>])
+   AC_DEFINE(HAVE_FORCEINLINE)
+fi # SKIP_COMPILER_CHECKS
 
 dnl ========================================================
 dnl =
@@ -6480,6 +6559,13 @@ if test "$MOZ_MEMORY"; then
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
     ;;
   esac
+
+  if test "$OS_ARCH" != "Darwin"; then
+    dnl NB: this must be kept in sync with jemalloc.h
+    AC_DEFINE(HAVE_JEMALLOC_VALLOC)
+    AC_DEFINE(HAVE_JEMALLOC_POSIX_MEMALIGN)
+    AC_DEFINE(HAVE_JEMALLOC_MEMALIGN)
+  fi
 fi
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_MEMORY_LDFLAGS)
