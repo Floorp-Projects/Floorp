@@ -118,8 +118,7 @@ function Sync(func, thisArg, callback) {
     // Keep waiting until our callback is triggered
     let callbackData = instanceCallback._(SECRET);
     while (callbackData.state == CB_READY)
-      // XXX Work around bug 518220 until jit.chrome doesn't crash Fennec
-      eval(), thread.processNextEvent(true);
+      thread.processNextEvent(true);
 
     // Reset the state of the callback to prepare for another call
     let state = callbackData.state;
