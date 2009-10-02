@@ -225,7 +225,6 @@ else
   endif
 endif
 
-MOZALLOC_LIB = $(call EXPAND_MOZLIBNAME,mozalloc)
 
 # append debug flags 
 # (these might have been above when processing MOZ_DBGRINFO_MODULES)
