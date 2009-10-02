@@ -52,7 +52,6 @@ CPPSRCS = jsctypes-test.cpp
 
 EXTRA_DSO_LDOPTS += \
     $(XPCOM_STANDALONE_GLUE_LDOPTS) \
-    $(MOZALLOC_LIB) \
     $(NSPR_LIBS) \
     $(NULL)
 

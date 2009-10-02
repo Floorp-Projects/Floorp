@@ -78,7 +78,6 @@ DEPENDENT_LIBS_LIST += \
 	$(LIB_PREFIX)nspr4$(DLL_SUFFIX) \
 	$(LIB_PREFIX)plc4$(DLL_SUFFIX) \
 	$(LIB_PREFIX)plds4$(DLL_SUFFIX) \
-	$(LIB_PREFIX)mozalloc$(DLL_SUFFIX) \
 	$(NULL)
 
 ifdef MOZ_ENABLE_LIBXUL
@@ -116,13 +115,9 @@ EXTRA_DSO_LIBS = xpcom_core
 DEPENDENT_LIBS_LIST += $(LIB_PREFIX)xpcom_core$(DLL_SUFFIX)
 endif
 
-endif #ifdef MOZ_ENABLE_LIBXUL
+endif
 
-EXTRA_DSO_LDOPTS +=				\
-	$(EXTRA_DSO_LIBS)			\
-	$(NSPR_LIBS)				\
-	$(MOZALLOC_LIB)				\
-	$(NULL)
+EXTRA_DSO_LDOPTS += $(EXTRA_DSO_LIBS) $(NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
