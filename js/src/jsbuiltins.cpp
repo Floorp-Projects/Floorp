@@ -452,7 +452,9 @@ js_PopInterpFrame(JSContext* cx, InterpState* state)
     cx->fp = cx->fp->down;
     JS_ASSERT(cx->fp->regs == &ifp->callerRegs);
     cx->fp->regs = ifp->frame.regs;
-    JS_ARENA_RELEASE(&cx->stackPool, ifp->mark);
+
+    /* Don't release |ifp->mark| yet, since ExecuteTree uses |cx->stackPool|. */
+    state->stackMark = ifp->mark;
 
     /* Update the inline call count. */
     *state->inlineCallCountp = *state->inlineCallCountp - 1;
