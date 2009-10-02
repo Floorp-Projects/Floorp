@@ -55,16 +55,23 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 
-/*
- * The patch for http://bugzilla.mozilla.org/show_bug.cgi?id=172699
- * defined this value to be the result of an overlong UTF-8 sequence -
- */
-var INVALID_CHAR = 0xFFFD;
-
 
 status = inSection(1);
-actual = decodeURI("%C0%AF").charCodeAt(0);
-expect = INVALID_CHAR;
+expect = "URIError thrown";
+try
+{
+  decodeURI("%C0%AF");
+  actual = "no error thrown";
+}
+catch (e)
+{
+  if (e instanceof URIError)
+    actual = "URIError thrown";
+  else if (e instanceof Error)
+    actual = "wrong error thrown: " + e.name;
+  else
+    actual = "non-error thrown: " + e;
+}
 addThis();
 
 
