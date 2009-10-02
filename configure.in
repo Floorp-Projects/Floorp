@@ -474,8 +474,8 @@ case "$target" in
     ;;
 esac
 
-dnl Target the Windows Vista SDK by default
-WINSDK_TARGETVER=600
+dnl Target the Windows 7 SDK by default
+WINSDK_TARGETVER=601
 
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
