@@ -236,6 +236,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug450160.html \
 		test_bug453736.html \
 		test_bug454326.html \
+		test_bug505783.html \
 		test_bug457746.html \
 		bug457746.sjs \
 		test_CrossSiteXHR.html \
