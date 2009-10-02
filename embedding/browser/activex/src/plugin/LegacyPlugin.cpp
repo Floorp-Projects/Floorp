@@ -39,9 +39,6 @@
 
 #include "npapi.h"
 
-#include "jsapi.h"
-#include "jscntxt.h"
-
 #include "nsISupports.h"
 
 #ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
@@ -61,6 +58,8 @@
 #include "nsIScriptContext.h"
 #include "nsIURI.h"
 #include "nsIJSContextStack.h"
+#include "jsapi.h"
+#include "jscntxt.h"
 #include "nsIScriptSecurityManager.h"
 #endif
 
