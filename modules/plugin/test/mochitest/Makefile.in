@@ -50,6 +50,8 @@ _MOCHITEST_FILES = \
 		loremipsum_file.txt \
 		post.sjs \
 		pluginstream.js \
+		plugin_window.html \
+		test_pluginstream_err.html \
 		test_pluginstream_src.html \
 		test_pluginstream_geturl.html \
 		test_pluginstream_geturlnotify.html \

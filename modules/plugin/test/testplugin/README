@@ -212,6 +212,14 @@ The attributes which control stream tests are:
   the browser to store the stream data in a file, and set the frame's
   location to the corresponding file:// url.
 
+"functiontofail": one of "npp_newstream", "npp_write", "npp_destroystream".
+  When specified, the given function will return an error code (-1 for
+  NPP_Write, or else the value of the "failurecode" attribute) the first time
+  it is called by the browser.
+
+"failurecode": one of the NPError constants.  Used to specify the error
+  that will be returned by the "functiontofail".
+
 == Internal consistency ==
 
 * doInternalConsistencyCheck()
@@ -219,3 +227,4 @@ Does internal consistency checking, returning an empty string if everything is
 OK, otherwise returning some kind of error string. On Windows, in windowed
 mode, this checks that the position of the plugin's internal child
 window has not been disturbed relative to the plugin window.
+
