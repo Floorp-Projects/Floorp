@@ -79,6 +79,11 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
       # eat minidump_stackwalk errors
       subprocess.call([stackwalkPath, d, symbolsPath], stderr=nullfd)
       nullfd.close()
+    else:
+      if not symbolsPath:
+        print "No symbols path given, can't process dump."
+      if not stackwalkPath:
+        print "MINIDUMP_STACKWALK not set, can't process dump."
     os.remove(d)
     extra = os.path.splitext(d)[0] + ".extra"
     if os.path.exists(extra):
