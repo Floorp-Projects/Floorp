@@ -389,6 +389,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
 
   options.utilityPath = getFullPath(options.utilityPath)
   options.certPath = getFullPath(options.certPath)
+  options.symbolsPath = getFullPath(options.symbolsPath)
 
   debuggerInfo = None
 
