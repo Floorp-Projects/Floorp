@@ -36,9 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// FIXME(bug 332648): Give me a real API please!
-#include "jscntxt.h"
-
 #include "nsJSNPRuntime.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginInstance.h"
@@ -52,6 +49,9 @@
 #include "nsIDOMElement.h"
 #include "prmem.h"
 #include "nsIContent.h"
+
+// FIXME(bug 332648): Give me a real API please!
+#include "jscntxt.h"
 
 // Hash of JSObject wrappers that wraps JSObjects as NPObjects. There
 // will be one wrapper per JSObject per plugin instance, i.e. if two
