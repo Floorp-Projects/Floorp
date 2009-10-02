@@ -141,6 +141,7 @@ var gViewSourceUtils = {
           // at all correctly; if somehow the view-source stuff managed to
           // execute script we'd be in big trouble here, I suspect.
           var webShell = Components.classes["@mozilla.org/docshell;1"].createInstance();
+          webShell.QueryInterface(Components.interfaces.nsIBaseWindow).create();
           this.viewSourceProgressListener.webShell = webShell;
           var progress = webShell.QueryInterface(this.mnsIWebProgress);
           progress.addProgressListener(this.viewSourceProgressListener,
@@ -214,11 +215,12 @@ var gViewSourceUtils = {
     },
 
     destroy: function() {
-        this.webShell = null;
-        this.editor = null;
-        this.callBack = null;
-        this.data = null;
-        this.file = null;
+      this.webShell.QueryInterface(Components.interfaces.nsIBaseWindow).destroy();
+      this.webShell = null;
+      this.editor = null;
+      this.callBack = null;
+      this.data = null;
+      this.file = null;
     },
 
     onStateChange: function(aProgress, aRequest, aFlag, aStatus) {
