@@ -47,6 +47,8 @@ const nsIIOService           = Components.interfaces.nsIIOService;
 const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
 const nsIURL                 = Components.interfaces.nsIURL;
 const nsIAppStartup          = Components.interfaces.nsIAppStartup;
+const nsIBlocklistService    = Components.interfaces.nsIBlocklistService;
+const nsIPrefBranch2         = Components.interfaces.nsIPrefBranch2;
 
 var gView             = null;
 var gExtensionManager = null;
@@ -58,6 +60,7 @@ var gInSafeMode       = false;
 var gCheckCompat      = true;
 var gCheckUpdateSecurity = true;
 var gUpdatesOnly      = false;
+var gPluginUpdateUrl  = null;
 var gAppID            = "";
 var gPref             = null;
 var gPriorityCount    = 0;
@@ -104,6 +107,7 @@ const PREF_UPDATE_NOTIFYUSER                = "extensions.update.notifyUser";
 const PREF_GETADDONS_SHOWPANE               = "extensions.getAddons.showPane";
 const PREF_GETADDONS_REPOSITORY             = "extensions.getAddons.repository";
 const PREF_GETADDONS_MAXRESULTS             = "extensions.getAddons.maxResults";
+const PREF_PLUGINS_UPDATEURL                = "plugins.update.url";
 
 const URI_GENERIC_ICON_XPINSTALL      = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
 const URI_GENERIC_ICON_THEME          = "chrome://mozapps/skin/extensions/themeGeneric.png";
@@ -321,6 +325,7 @@ function showView(aView) {
                         ["availableUpdateVersion", "?availableUpdateVersion"],
                         ["blocklisted", "?blocklisted"],
                         ["blocklistedsoft", "?blocklistedsoft"],
+                        ["outdated", "?outdated"],
                         ["compatible", "?compatible"],
                         ["description", "?description"],
                         ["downloadURL", "?downloadURL"],
@@ -395,7 +400,8 @@ function showView(aView) {
     case "plugins":
       prefURL = PREF_EXTENSIONS_GETMOREPLUGINSURL;
       types = [ [ ["plugin", "true", null] ] ];
-      showCheckUpdatesAll = false;
+      if (!gPluginUpdateUrl)
+        showCheckUpdatesAll = false;
       break;
     case "updates":
       document.getElementById("updates-view").hidden = false;
@@ -479,13 +485,19 @@ function showView(aView) {
 
   var isThemes = aView == "themes";
 
-  if (aView == "themes" || aView == "extensions") {
-    var el = document.getElementById("installFileButton");
-    el.setAttribute("tooltiptext", el.getAttribute(isThemes ? "tooltiptextthemes" :
-                                                              "tooltiptextaddons"));
-    el = document.getElementById("checkUpdatesAllButton");
-    el.setAttribute("tooltiptext", el.getAttribute(isThemes ? "tooltiptextthemes" :
-                                                              "tooltiptextaddons"));
+  if (aView == "themes" || aView == "extensions" || aView == "plugins") {
+    var tooltipAttr = "";
+    if (aView == "extensions")
+      tooltipAttr = "tooltiptextaddons";
+    else
+      tooltipAttr = "tooltiptext" + aView;
+
+    var el = document.getElementById("checkUpdatesAllButton");
+    el.setAttribute("tooltiptext", el.getAttribute(tooltipAttr));
+    if (aView != "plugins") {
+      el = document.getElementById("installFileButton");
+      el.setAttribute("tooltiptext", el.getAttribute(tooltipAttr));
+    }
   }
 
   document.getElementById("installFileButton").hidden = !showInstallFile;
@@ -988,6 +1000,8 @@ function initPluginsDS()
 
 function rebuildPluginsDS()
 {
+  var blocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
+                            .getService(nsIBlocklistService);
   var phs = Components.classes["@mozilla.org/plugin/host;1"]
                       .getService(Components.interfaces.nsIPluginHost);
   var plugins = phs.getPluginTags({ });
@@ -1017,18 +1031,17 @@ function rebuildPluginsDS()
       if (/<A\s+HREF=[^>]*>/i.test(plugin.description))
         homepageURL = /<A\s+HREF=["']?([^>"'\s]*)/i.exec(plugin.description)[1];
 
-      gPlugins[name][desc] = { filename    : plugin.filename,
-                               version     : plugin.version,
-                               homepageURL : homepageURL,
-                               disabled    : plugin.disabled,
-                               blocklisted : plugin.blocklisted,
-                               plugins     : [] };
+      gPlugins[name][desc] = { filename       : plugin.filename,
+                               version        : plugin.version,
+                               homepageURL    : homepageURL,
+                               blocklistState : blocklist.getPluginBlocklistState(plugin),
+                               disabled       : plugin.disabled,
+                               blocklisted    : plugin.blocklisted,
+                               plugins        : [] };
     }
     gPlugins[name][desc].plugins.push(plugin);
   }
 
-  var blocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
-                            .getService(Components.interfaces.nsIBlocklistService);
   for (var pluginName in gPlugins) {
     for (var pluginDesc in gPlugins[pluginName]) {
       plugin = gPlugins[pluginName][pluginDesc];
@@ -1064,11 +1077,15 @@ function rebuildPluginsDS()
                         gRDF.GetResource(PREFIX_NS_EM + "blocklisted"),
                         gRDF.GetLiteral(plugin.blocklisted ? "true" : "false"),
                         true);
-      var softblocked = blocklist.getPluginBlocklistState(plugin) == 
-                        Components.interfaces.nsIBlocklistService.STATE_SOFTBLOCKED;
+      var softblocked = plugin.blocklistState == nsIBlocklistService.STATE_SOFTBLOCKED;
       gPluginsDS.Assert(pluginNode,
                         gRDF.GetResource(PREFIX_NS_EM + "blocklistedsoft"),
                         gRDF.GetLiteral(softblocked ? "true" : "false"),
+                        true);
+      var outdated = plugin.blocklistState == nsIBlocklistService.STATE_OUTDATED;
+      gPluginsDS.Assert(pluginNode,
+                        gRDF.GetResource(PREFIX_NS_EM + "outdated"),
+                        gRDF.GetLiteral((outdated && gPluginUpdateUrl) ? "true" : "false"),
                         true);
       gPluginsDS.Assert(pluginNode,
                         gRDF.GetResource(PREFIX_NS_EM + "compatible"),
@@ -1105,7 +1122,7 @@ function Startup()
 {
   gExtensionStrings = document.getElementById("extensionsStrings");
   gPref = Components.classes["@mozilla.org/preferences-service;1"]
-                    .getService(Components.interfaces.nsIPrefBranch2);
+                    .getService(nsIPrefBranch2);
   var defaultPref = gPref.QueryInterface(Components.interfaces.nsIPrefService)
                          .getDefaultBranch(null);
   try {
@@ -1142,6 +1159,10 @@ function Startup()
 
   try {
     gCheckUpdateSecurity = gPref.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY);
+  } catch(e) { }
+
+  try {
+    gPluginUpdateUrl = gPref.getCharPref(PREF_PLUGINS_UPDATEURL);
   } catch(e) { }
 
   gPref.addObserver(PREF_DSS_SKIN_TO_SELECT, gPrefObserver, false);
@@ -2383,6 +2404,10 @@ function updateGlobalCommands() {
     disableInstallUpdate = false;
     disableRestartButton();
   }
+  else if (gView == "plugins") {
+    if (gPluginUpdateUrl)
+      disableUpdateCheck = false;
+  }
   else {
     var children = gExtensionsView.children;
     for (var i = 0; i < children.length; ++i) {
@@ -2425,6 +2450,11 @@ function hideUpdateInfo()
 function checkUpdatesAll() {
   if (isOffline("offlineUpdateMsg2"))
     return;
+  
+  if (gView == "plugins") {
+    openURL(gPluginUpdateUrl);
+    return;
+  }
 
   if (!isXPInstallEnabled())
     return;

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
+  <pluginItems>
+    <pluginItem>
+      <match name="name" exp="^test_bug514327_1"/>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug514327_2"/>
+      <versionRange severity="0"/>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug514327_3"/>
+      <versionRange severity="0"/>
+    </pluginItem>
+  </pluginItems>
+</blocklist>
