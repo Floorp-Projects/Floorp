@@ -127,10 +127,10 @@ class nsHashKey;
 #define NS_EVENT_DISPATCHED               0x0400
 #define NS_EVENT_FLAG_DISPATCHING         0x0800
 // When an event is synthesized for testing, this flag will be set.
-// Note that this is currently used only with mouse events.  Because this flag
-// is not needed on other events now.  Therfore, if you need this flag on other
-// events, you can do it.
-#define NS_EVENT_FLAG_SYNTETIC_TEST_EVENT 0x1000
+// Note that this is currently used only with mouse events, because this
+// flag is not needed on other events now.  It could be added to other
+// events.
+#define NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT 0x1000
 
 #define NS_PRIV_EVENT_UNTRUSTED_PERMITTED 0x8000
 
