@@ -2362,14 +2362,12 @@ function BrowserOnCommand(event) {
         // This is the "Why is this site blocked" button.  For malware,
         // we can fetch a site-specific report, for phishing, we redirect
         // to the generic page describing phishing protection.
-        var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
-                       .getService(Components.interfaces.nsIURLFormatter);
-        
+
         if (isMalware) {
           // Get the stop badware "why is this blocked" report url,
           // append the current url, and go there.
           try {
-            var reportURL = formatter.formatURLPref("browser.safebrowsing.malware.reportURL");
+            let reportURL = formatURL("browser.safebrowsing.malware.reportURL", true);
             reportURL += errorDoc.location.href;
             content.location = reportURL;
           } catch (e) {
@@ -2378,7 +2376,7 @@ function BrowserOnCommand(event) {
         }
         else { // It's a phishing site, not malware
           try {
-            content.location = formatter.formatURLPref("browser.safebrowsing.warning.infoURL");
+            content.location = formatURL("browser.safebrowsing.warning.infoURL", true);
           } catch (e) {
             Components.utils.reportError("Couldn't get phishing info URL: " + e);
           }
@@ -5935,17 +5933,13 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   var priority = notificationBox.PRIORITY_WARNING_MEDIUM;
 
   function showBlocklistInfo() {
-    var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-                    getService(Ci.nsIURLFormatter);
-    var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
+    var url = formatURL("extensions.blocklist.detailsURL", true);
     gBrowser.loadOneTab(url, {inBackground: false});
     return true;
   }
 
   function showOutdatedPluginsInfo() {
-    var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-                    getService(Ci.nsIURLFormatter);
-    var url = formatter.formatURLPref("plugins.update.url");
+    var url = formatURL("plugins.update.url", true);
     gBrowser.loadOneTab(url, {inBackground: false});
     return true;
   }
