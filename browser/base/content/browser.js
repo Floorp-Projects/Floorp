@@ -1074,6 +1074,7 @@ function prepareForStartup() {
   // binding can't fire trusted ones (runs with page privileges).
   gBrowser.addEventListener("PluginNotFound", gMissingPluginInstaller.newMissingPlugin, true, true);
   gBrowser.addEventListener("PluginBlocklisted", gMissingPluginInstaller.newMissingPlugin, true, true);
+  gBrowser.addEventListener("PluginOutdated", gMissingPluginInstaller.newMissingPlugin, true, true);
   gBrowser.addEventListener("PluginDisabled", gMissingPluginInstaller.newDisabledPlugin, true, true);
   gBrowser.addEventListener("NewPluginInstalled", gMissingPluginInstaller.refreshBrowser, false);
   gBrowser.addEventListener("NewTab", BrowserOpenTab, false);
@@ -5899,14 +5900,18 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   // so don't stomp on the page developers toes.
 
   if (aEvent.type != "PluginBlocklisted" &&
+      aEvent.type != "PluginOutdated" &&
       !(aEvent.target instanceof HTMLObjectElement)) {
     aEvent.target.addEventListener("click",
                                    gMissingPluginInstaller.installSinglePlugin,
                                    true);
   }
 
+  let hideBarPrefName = aEvent.type == "PluginOutdated" ?
+                  "plugins.hide_infobar_for_outdated_plugin" :
+                  "plugins.hide_infobar_for_missing_plugin";
   try {
-    if (gPrefService.getBoolPref("plugins.hide_infobar_for_missing_plugin"))
+    if (gPrefService.getBoolPref(hideBarPrefName))
       return;
   } catch (ex) {} // if the pref is missing, treat it as false, which shows the infobar
 
@@ -5921,14 +5926,44 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
 
   var notificationBox = gBrowser.getNotificationBox(browser);
 
-  // If there is already a missing plugin notification then do nothing
-  if (notificationBox.getNotificationWithValue("missing-plugins"))
+  // Should only display one of these warnings per page.
+  // In order of priority, they are: outdated > missing > blocklisted
+
+  // If there is already an outdated plugin notification then do nothing
+  if (notificationBox.getNotificationWithValue("outdated-plugins"))
     return;
   var blockedNotification = notificationBox.getNotificationWithValue("blocked-plugins");
+  var missingNotification = notificationBox.getNotificationWithValue("missing-plugins");
   var priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+  
+  function showBlocklistInfo() {
+    var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
+                    getService(Ci.nsIURLFormatter);
+    var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
+    gBrowser.loadOneTab(url, {inBackground: false});
+    return true;
+  }
+  
+  function showOutdatedPluginsInfo() {
+    var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
+                    getService(Ci.nsIURLFormatter);
+    var url = formatter.formatURLPref("plugins.update.url");
+    gBrowser.loadOneTab(url, {inBackground: false});
+    return true;
+  }
+  
+  function showPluginsMissing() {
+    // get the urls of missing plugins
+    var missingPluginsArray = gBrowser.selectedBrowser.missingPlugins;
+    if (missingPluginsArray) {
+      window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
+                        "PFSWindow", "chrome,centerscreen,resizable=yes",
+                        {plugins: missingPluginsArray, browser: gBrowser.selectedBrowser});
+    }
+  }
 
   if (aEvent.type == "PluginBlocklisted") {
-    if (blockedNotification)
+    if (blockedNotification || missingNotification)
       return;
 
     let iconURL = "chrome://mozapps/skin/plugins/pluginBlocked-16.png";
@@ -5937,19 +5972,41 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
       label: gNavigatorBundle.getString("blockedpluginsMessage.infoButton.label"),
       accessKey: gNavigatorBundle.getString("blockedpluginsMessage.infoButton.accesskey"),
       popup: null,
-      callback: blocklistInfo
+      callback: showBlocklistInfo
     }, {
       label: gNavigatorBundle.getString("blockedpluginsMessage.searchButton.label"),
       accessKey: gNavigatorBundle.getString("blockedpluginsMessage.searchButton.accesskey"),
       popup: null,
-      callback: pluginsMissing
+      callback: showOutdatedPluginsInfo
     }];
 
     notificationBox.appendNotification(messageString, "blocked-plugins",
                                        iconURL, priority, buttons);
   }
+  else if (aEvent.type == "PluginOutdated") {
+    // Cancel any notification about blocklisting/missing plugins
+    if (blockedNotification)
+      blockedNotification.close();
+    if (missingNotification)
+      missingNotification.close();
+
+    let iconURL = "chrome://mozapps/skin/plugins/pluginOutdated-16.png";
+    let messageString = gNavigatorBundle.getString("outdatedpluginsMessage.title");
+    let buttons = [{
+      label: gNavigatorBundle.getString("outdatedpluginsMessage.updateButton.label"),
+      accessKey: gNavigatorBundle.getString("outdatedpluginsMessage.updateButton.accesskey"),
+      popup: null,
+      callback: showOutdatedPluginsInfo
+    }];
+
+    notificationBox.appendNotification(messageString, "outdated-plugins",
+                                       iconURL, priority, buttons);
+  }
   else if (aEvent.type == "PluginNotFound") {
-    // Cancel any notification about blocklisting
+    if (missingNotification)
+      return;
+
+    // Cancel any notification about blocklisting plugins
     if (blockedNotification)
       blockedNotification.close();
 
@@ -5959,7 +6016,7 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
       label: gNavigatorBundle.getString("missingpluginsMessage.button.label"),
       accessKey: gNavigatorBundle.getString("missingpluginsMessage.button.accesskey"),
       popup: null,
-      callback: pluginsMissing
+      callback: showPluginsMissing
     }];
   
     notificationBox.appendNotification(messageString, "missing-plugins",
@@ -5992,26 +6049,6 @@ missingPluginInstaller.prototype.refreshBrowser = function(aEvent) {
   }
   // reload the browser to make the new plugin show.
   browser.reload();
-}
-
-function blocklistInfo()
-{
-  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
-                            .getService(Components.interfaces.nsIURLFormatter);
-  var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
-  gBrowser.loadOneTab(url, {inBackground: false});
-  return true;
-}
-
-function pluginsMissing()
-{
-  // get the urls of missing plugins
-  var missingPluginsArray = gBrowser.selectedBrowser.missingPlugins;
-  if (missingPluginsArray) {
-    window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                      "PFSWindow", "chrome,centerscreen,resizable=yes",
-                      {plugins: missingPluginsArray, browser: gBrowser.selectedBrowser});
-  }
 }
 
 var gMissingPluginInstaller = new missingPluginInstaller();
