@@ -22,25 +22,25 @@
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
-.left-arrow,
-.right-arrow:-moz-locale-dir(rtl) {
+.previous-arrow,
+.next-arrow:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://global/skin/printpreview/arrow-left.png");
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-.left-arrow:hover,
-.right-arrow:-moz-locale-dir(rtl):hover {
+.previous-arrow:hover,
+.next-arrow:-moz-locale-dir(rtl):hover {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
-.right-arrow,
-.left-arrow:-moz-locale-dir(rtl) {
+.next-arrow,
+.previous-arrow:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://global/skin/printpreview/arrow-right.png");
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-.right-arrow:hover,
-.left-arrow:-moz-locale-dir(rtl):hover {
+.next-arrow:hover,
+.previous-arrow:-moz-locale-dir(rtl):hover {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 

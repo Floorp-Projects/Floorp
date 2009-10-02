@@ -66,16 +66,16 @@
       </xul:vbox>
       <xul:toolbarbutton class="home-arrow tabbable"
         oncommand="parentNode.navigate(0, 0, 'home');" tooltiptext="&homearrow.tooltip;"/>
-      <xul:toolbarbutton class="left-arrow tabbable"
-        oncommand="parentNode.navigate(-1, 0, 0);" tooltiptext="&leftarrow.tooltip;"/>
+      <xul:toolbarbutton class="previous-arrow tabbable"
+        oncommand="parentNode.navigate(-1, 0, 0);" tooltiptext="&previousarrow.tooltip;"/>
       <xul:hbox align="center" pack="center">
         <xul:textbox id="pageNumber" size="3" value="1" min="1" type="number"
           hidespinbuttons="true" onchange="navigate(0, this.valueNumber, 0);"/>
         <xul:label value="&of.label;"/>
         <xul:label value="1"/>
       </xul:hbox>
-      <xul:toolbarbutton class="right-arrow tabbable"
-        oncommand="parentNode.navigate(1, 0, 0);" tooltiptext="&rightarrow.tooltip;"/>
+      <xul:toolbarbutton class="next-arrow tabbable"
+        oncommand="parentNode.navigate(1, 0, 0);" tooltiptext="&nextarrow.tooltip;"/>
       <xul:toolbarbutton class="end-arrow tabbable"
         oncommand="parentNode.navigate(0, 0, 'end');" tooltiptext="&endarrow.tooltip;"/>
 
