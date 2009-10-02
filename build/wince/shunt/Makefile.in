@@ -81,8 +81,6 @@ EXPORTS_mozce_shunt += $(topsrcdir)/memory/jemalloc/jemalloc.h
 EXTRA_LIBS += $(OBJDIR)/memory/jemalloc/jemalloc.obj
 endif
 
-EXTRA_DSO_LDOPTS += $(MOZALLOC_LIB)
-
 DEFFILE = mozce_shunt.def
 
 OS_LIBS += $(call EXPAND_LIBNAME, libcmt)

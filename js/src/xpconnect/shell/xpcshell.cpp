@@ -46,10 +46,6 @@
 /* XPConnect JavaScript interactive shell. */
 
 #include <stdio.h>
-#include "jsapi.h"
-#include "jscntxt.h"
-#include "jsdbgapi.h"
-#include "jsprf.h"
 #include "nsXULAppAPI.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -68,6 +64,9 @@
 #include "nsILocalFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "jsapi.h"
+#include "jsdbgapi.h"
+#include "jsprf.h"
 #include "nscore.h"
 #include "nsArrayEnumerator.h"
 #include "nsCOMArray.h"
@@ -529,6 +528,9 @@ DumpXPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         xpc->DebugDump((int16)depth);
     return JS_TRUE;
 }
+
+/* XXX needed only by GC() */
+#include "jscntxt.h"
 
 static JSBool
 GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
