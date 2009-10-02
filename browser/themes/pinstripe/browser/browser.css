@@ -1477,6 +1477,8 @@ tabbrowser > tabbox {
 }
 
 .tabbrowser-tab[busy] > .tab-icon-image {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+/*
   list-style-image: url("chrome://browser/skin/tabbrowser/progress.png") !important;
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
@@ -1506,6 +1508,7 @@ tabbrowser > tabbox {
 }
 .tabbrowser-tab[busy][progress="8"] > .tab-icon-image {
   -moz-image-region: rect(0, 144px, 16px, 128px);
+*/
 }
 
 .tabbrowser-tab:not(:hover):not([selected="true"]) > .tab-icon-image {
