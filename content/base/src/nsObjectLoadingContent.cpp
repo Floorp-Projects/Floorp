@@ -526,6 +526,13 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
         // bug 300540; when that's fixed, this if statement can be removed.
         mType = newType;
         notifier.Notify();
+
+        if (!mFrameLoader) {
+          // mFrameLoader got nulled out when we notified, which most
+          // likely means the node was removed from the
+          // document. Abort the load that just started.
+          return NS_BINDING_ABORTED;
+        }
       }
 
       // We're loading a document, so we have to set LOAD_DOCUMENT_URI
