@@ -55,8 +55,17 @@ typedef enum {
   FUNCTION_NPP_GETURL,
   FUNCTION_NPP_GETURLNOTIFY,
   FUNCTION_NPP_POSTURL,
-  FUNCTION_NPP_POSTURLNOTIFY
+  FUNCTION_NPP_POSTURLNOTIFY,
+  FUNCTION_NPP_NEWSTREAM,
+  FUNCTION_NPP_WRITEREADY,
+  FUNCTION_NPP_WRITE,
+  FUNCTION_NPP_DESTROYSTREAM
 } TestFunction;
+
+typedef struct FunctionTable {
+  TestFunction funcId;
+  char* funcName;
+} FunctionTable;
 
 typedef enum {
   POSTMODE_FRAME,
@@ -88,7 +97,11 @@ typedef struct InstanceData {
   uint32_t timerID2;
   int32_t lastMouseX;
   int32_t lastMouseY;
+  int32_t writeCount;
+  int32_t writeReadyCount;
   TestFunction testFunction;
+  TestFunction functionToFail;
+  NPError failureCode;
   PostMode postMode;
   string testUrl;
   string frame;

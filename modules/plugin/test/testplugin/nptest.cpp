@@ -123,6 +123,8 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
 
 static char* NPN_GetURLNotifyCookie = "NPN_GetURLNotify_Cookie";
 
+static char* SUCCESS_STRING = "pass";
+
 static bool sIdentifiersInitialized = false;
 
 /**
@@ -257,6 +259,25 @@ static void sendBufferToFrame(NPP instance)
       instanceData->err << "NPN_GetURL returned " << err;
     }
   }
+}
+
+TestFunction
+getFuncFromString(const char* funcname)
+{
+  FunctionTable funcTable[] = 
+    {
+      FUNCTION_NPP_NEWSTREAM, "npp_newstream",
+      FUNCTION_NPP_WRITEREADY, "npp_writeready",
+      FUNCTION_NPP_WRITE, "npp_write",
+      FUNCTION_NPP_DESTROYSTREAM, "npp_destroystream",
+      FUNCTION_NONE, NULL
+    };
+  int32_t i = 0;
+  while(funcTable[i].funcName) {
+    if (!strcmp(funcname, funcTable[i].funcName)) return funcTable[i].funcId;
+    i++;
+  }
+  return FUNCTION_NONE;
 }
 
 //
@@ -409,6 +430,8 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->npp = instance;
   instanceData->streamMode = NP_ASFILEONLY;
   instanceData->testFunction = FUNCTION_NONE;
+  instanceData->functionToFail = FUNCTION_NONE;
+  instanceData->failureCode = 0;
   instanceData->streamChunkSize = 1024;
   instanceData->streamBuf = NULL;
   instanceData->streamBufSize = 0;
@@ -417,6 +440,8 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->testrange = NULL;
   instanceData->hasWidget = false;
   instanceData->npnNewStream = false;
+  instanceData->writeCount = 0;
+  instanceData->writeReadyCount = 0;
   memset(&instanceData->window, 0, sizeof(instanceData->window));
   instance->pdata = instanceData;
 
@@ -466,6 +491,12 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
 	  }
     if (strcmp(argn[i], "streamchunksize") == 0) {
       instanceData->streamChunkSize = atoi(argv[i]);
+    }
+    if (strcmp(argn[i], "failurecode") == 0) {
+      instanceData->failureCode = atoi(argv[i]);
+    }
+    if (strcmp(argn[i], "functiontofail") == 0) {
+      instanceData->functionToFail = getFuncFromString(argv[i]);
     }
     if (strcmp(argn[i], "geturl") == 0) {
       instanceData->testUrl = argv[i];
@@ -583,6 +614,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
 NPError
 NPP_Destroy(NPP instance, NPSavedData** save)
 {
+  printf("NPP_Destroy\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
 
   if (instanceData->streamBuf) {
@@ -628,6 +660,16 @@ NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, 
 {
   printf("NPP_NewStream\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+  
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM &&
+      instanceData->failureCode) {
+    instanceData->err << SUCCESS_STRING;
+    if (instanceData->frame.length() > 0) {
+      sendBufferToFrame(instance);
+    }
+    return instanceData->failureCode;
+  }
+  
   *stype = instanceData->streamMode;
 
   if (instanceData->streamBufSize) {
@@ -646,7 +688,29 @@ NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
 {
   printf("NPP_DestroyStream\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
-  if (instanceData->streamMode == NP_ASFILE) {
+
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM) {
+    instanceData->err << "NPP_DestroyStream called";
+  }
+
+  if (instanceData->functionToFail == FUNCTION_NPP_WRITE) {
+    if (instanceData->writeCount == 1)
+      instanceData->err << SUCCESS_STRING;
+    else
+      instanceData->err << "NPP_Write called after returning -1";
+  }
+
+  if (instanceData->functionToFail == FUNCTION_NPP_DESTROYSTREAM &&
+      instanceData->failureCode) {
+    instanceData->err << SUCCESS_STRING;
+    if (instanceData->frame.length() > 0) {
+      sendBufferToFrame(instance);
+    }
+    return instanceData->failureCode;
+  }
+
+  if (instanceData->streamMode == NP_ASFILE &&
+      instanceData->functionToFail == FUNCTION_NONE) {
     if (strcmp(reinterpret_cast<char *>(instanceData->fileBuf), 
       reinterpret_cast<char *>(instanceData->streamBuf)) != 0) {
       instanceData->err <<
@@ -672,7 +736,18 @@ NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
 int32_t
 NPP_WriteReady(NPP instance, NPStream* stream)
 {
+  printf("NPP_WriteReady\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+  instanceData->writeReadyCount++;
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM) {
+    instanceData->err << "NPP_WriteReady called";
+  }
+  
+  // temporarily disabled per bug 519870
+  //if (instanceData->writeReadyCount == 1) {
+  //  return 0;
+  //}
+
   return instanceData->streamChunkSize;
 }
 
@@ -681,6 +756,21 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
 {
   printf("NPP_Write, offset=%d, len=%d, end=%d\n", offset, len, stream->end);
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+  instanceData->writeCount++;
+
+  // temporarily disabled per bug 519870
+  //if (instanceData->writeReadyCount == 1) {
+  //  instanceData->err << "NPP_Write called even though NPP_WriteReady " <<
+  //      "returned 0";
+  //}
+  
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM) {
+    instanceData->err << "NPP_Write called";
+  }
+
+  if (instanceData->functionToFail == FUNCTION_NPP_WRITE) {
+    return -1;
+  }
 
   // If the complete stream has been written, and we're doing a seek test,
   // then call NPN_RequestRead.
@@ -753,6 +843,11 @@ NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
   size_t size;
 
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM ||
+      instanceData->functionToFail == FUNCTION_NPP_WRITE) {
+    instanceData->err << "NPP_StreamAsFile called";
+  }
 
   if (!fname)
     return;
@@ -1342,7 +1437,7 @@ getError(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* r
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
   if (id->err.str().length() == 0)
-    STRINGZ_TO_NPVARIANT(strdup("pass"), *result);
+    STRINGZ_TO_NPVARIANT(strdup(SUCCESS_STRING), *result);
   else
     STRINGZ_TO_NPVARIANT(strdup(id->err.str().c_str()), *result);
   return true;
