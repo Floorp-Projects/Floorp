@@ -38,6 +38,8 @@
 
 #include "nsSMILAnimationController.h"
 #include "nsSMILCompositor.h"
+#include "nsSMILCSSProperty.h"
+#include "nsCSSProps.h"
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
 #include "nsIContent.h"
@@ -294,6 +296,7 @@ nsSMILAnimationController::DoSample()
   DoSample(PR_TRUE); // Skip unchanged time containers
 }
 
+
 void
 nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
 {
@@ -360,6 +363,10 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
   }
 
   // STEP 4: Compose currently-animated attributes.
+  // XXXdholbert: This step traverses our animation targets in an effectively
+  // random order. For animation from/to 'inherit' values to work correctly
+  // when the inherited value is *also* being animated, we really should be
+  // traversing our animated nodes in an ancestors-first order (bug 501183)
   currentCompositorTable->EnumerateEntries(DoComposeAttribute, nsnull);
 
   // Update last compositor table
@@ -483,15 +490,15 @@ nsSMILAnimationController::GetCompositorKeyForAnimation(
   // Check if an 'auto' attributeType refers to a CSS property or XML attribute.
   // Note that SMIL requires we search for CSS properties first. So if they
   // overlap, 'auto' = 'CSS'. (SMILANIM 3.1)
-  //
-  // XXX This doesn't really work for CSS properties that aren't mapped
-  // attributes
+  PRBool isCSS;
   if (attributeType == eSMILTargetAttrType_auto) {
-    attributeType = (targetElem->IsAttributeMapped(attributeName))
-                  ? eSMILTargetAttrType_CSS
-                  : eSMILTargetAttrType_XML;
+    nsAutoString attributeNameStr;
+    attributeName->ToString(attributeNameStr);
+    nsCSSProperty prop = nsCSSProps::LookupProperty(attributeNameStr);
+    isCSS = nsSMILCSSProperty::IsPropertyAnimatable(prop);
+  } else {
+    isCSS = (attributeType == eSMILTargetAttrType_CSS);
   }
-  PRBool isCSS = (attributeType == eSMILTargetAttrType_CSS);
 
   // Construct the key
   aResult.mElement = targetElem;

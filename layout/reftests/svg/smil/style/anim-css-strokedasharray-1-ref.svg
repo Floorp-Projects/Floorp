@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style>
+    rect { stroke: blue; stroke-width: 5px; }
+  </style>
+  <rect x="20pt" y="20pt" width="15pt" height="15pt"
+        style="stroke-dasharray: 20px, 5px">
+  </rect>
+  <rect x="70pt" y="20pt" width="15pt" height="15pt"
+        style="stroke-dasharray: 20px, 5px">
+  </rect>
+  <rect x="120pt" y="20pt" width="15pt" height="15pt"
+        style="stroke-dasharray: 18.5px, 6.5px">
+  </rect>
+  <rect x="20pt" y="70pt" width="15pt" height="15pt"
+        style="stroke-dasharray: 16.25px, 8.75px">
+  </rect>
+  <rect x="70pt" y="70pt" width="15pt" height="15pt"
+        style="stroke-dasharray: 15.05px, 9.95px">
+  </rect>
+  <rect x="120pt" y="70pt" width="15pt" height="15pt"
+        style="stroke-dasharray: 12.5px, 12.5px">
+  </rect>
+  <rect x="20pt" y="120pt" width="15pt" height="15pt"
+        style="stroke-dasharray: 12px, 13px">
+  </rect>
+  <rect x="70pt" y="120pt" width="15pt" height="15pt"
+        style="stroke-dasharray: 10px, 15px">
+  </rect>
+  <rect x="120pt" y="120pt" width="15pt" height="15pt"
+        style="stroke-dasharray: 10px, 15px">
+  </rect>
+</svg>

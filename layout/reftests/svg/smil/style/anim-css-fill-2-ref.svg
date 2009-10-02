@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style>
+    rect { stroke: black; }
+  </style>
+  <rect x="20pt" y="20pt" width="15pt" height="15pt"
+        style="fill: yellow">
+  </rect>
+  <rect x="70pt" y="20pt" width="15pt" height="15pt"
+        style="fill: rgb(0, 10, 20)">
+  </rect>
+  <rect x="120pt" y="20pt" width="15pt" height="15pt"
+        style="fill: rgb(9, 28, 47)">
+  </rect>
+  <rect x="20pt" y="70pt" width="15pt" height="15pt"
+        style="fill: rgb(28, 55, 83)">
+  </rect>
+  <rect x="70pt" y="70pt" width="15pt" height="15pt"
+        style="fill: rgb(49, 69, 90)">
+  </rect>
+  <rect x="120pt" y="70pt" width="15pt" height="15pt"
+        style="fill: rgb(95, 100, 105)">
+  </rect>
+  <rect x="20pt" y="120pt" width="15pt" height="15pt"
+        style="fill: rgb(104, 106, 108)">
+  </rect>
+  <rect x="70pt" y="120pt" width="15pt" height="15pt"
+        style="fill: rgb(140, 130, 120)">
+  </rect>
+  <rect x="120pt" y="120pt" width="15pt" height="15pt"
+        style="fill: rgb(140, 130, 120)">
+  </rect>
+</svg>
