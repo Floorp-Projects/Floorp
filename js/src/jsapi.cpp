@@ -2603,12 +2603,10 @@ JS_RemoveExternalStringFinalizer(JSStringFinalizeOp finalizer)
 JS_PUBLIC_API(JSString *)
 JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
 {
-    JSString *str;
-
     CHECK_REQUEST(cx);
-    JS_ASSERT((uintN) type < (uintN) (GCX_NTYPES - GCX_EXTERNAL_STRING));
+    JS_ASSERT(uintN(type) < JS_EXTERNAL_STRING_LIMIT);
 
-    str = js_NewGCString(cx, (uintN) type + GCX_EXTERNAL_STRING);
+    JSString *str = js_NewGCExternalString(cx, uintN(type));
     if (!str)
         return NULL;
     str->initFlat(chars, length);
@@ -4869,7 +4867,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
 #endif
 
   out:
-    cx->weakRoots.newborn[JSTRACE_OBJECT] = FUN_OBJECT(fun);
+    cx->weakRoots.newbornObject = FUN_OBJECT(fun);
     JS_POP_TEMP_ROOT(cx, &tvr);
 
   out2:
