@@ -2427,6 +2427,12 @@ JS_GetStringChars(JSString *str);
 extern JS_PUBLIC_API(size_t)
 JS_GetStringLength(JSString *str);
 
+extern JS_PUBLIC_API(const char *)
+JS_GetStringBytesZ(JSContext *cx, JSString *str);
+
+extern JS_PUBLIC_API(const jschar *)
+JS_GetStringCharsZ(JSContext *cx, JSString *str);
+
 extern JS_PUBLIC_API(intN)
 JS_CompareStrings(JSString *str1, JSString *str2);
 
