@@ -109,7 +109,7 @@ public:
 
     // nsIContentSink
     NS_IMETHOD WillParse(void) { return NS_OK; }
-    NS_IMETHOD DidBuildModel();
+    NS_IMETHOD DidBuildModel(PRBool aTerminated);
     NS_IMETHOD WillInterrupt(void) { return NS_OK; }
     NS_IMETHOD WillResume(void) { return NS_OK; }
     NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
@@ -244,7 +244,7 @@ txStylesheetSink::ReportError(const PRUnichar *aErrorText,
 }
 
 NS_IMETHODIMP 
-txStylesheetSink::DidBuildModel()
+txStylesheetSink::DidBuildModel(PRBool aTerminated)
 {  
     return mCompiler->doneLoading();
 }

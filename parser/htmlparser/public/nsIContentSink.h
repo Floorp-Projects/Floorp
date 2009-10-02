@@ -56,10 +56,10 @@
 
 class nsIParser;
 
-// 5530ebaf-f9fd-44bf-b6b5-e46f3b67eb3d
+// 57b395ad-4276-408c-9f98-7044b5025c3d
 #define NS_ICONTENT_SINK_IID \
-{ 0x5530ebaf, 0xf9fd, 0x44bf, \
-  { 0xb6, 0xb5, 0xe4, 0x6f, 0x3b, 0x67, 0xeb, 0x3d } }
+{ 0x57b395ad, 0x4276, 0x408c, \
+  { 0x9f, 0x98, 0x70, 0x44, 0xb5, 0x02, 0x5c, 0x3d } }
 
 class nsIContentSink : public nsISupports {
 public:
@@ -96,20 +96,9 @@ public:
    *
    * @update 5/7/98 gess
    */
-  NS_IMETHOD DidBuildModel() {
+  NS_IMETHOD DidBuildModel(PRBool aTerminated) {
     return NS_OK;
   }
-
-  /**
-   * Thie method gets caller right before DidBuildModel is called.
-   * If false, the parser won't call DidBuildModel yet.
-   *
-   * If aTerminated is true, the parser has been terminated.
-   */
-  virtual PRBool ReadyToCallDidBuildModel(PRBool aTerminated)
-  {
-    return PR_TRUE;
-  };
 
   /**
    * This method gets called when the parser gets i/o blocked,

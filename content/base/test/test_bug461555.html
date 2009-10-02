@@ -23,24 +23,9 @@ function writeIt(n) {
   document.write("<span>" + n + "</span>");
 }
 
-var recur = 0;
-function externalScript() {
-  if (++recur == 3) {
-    return;
-  }
-
-  base = (recur-1) * 4
-
-  writeIt(6 + base);
-  s = document.createElement("script");
-  s.src = "data:text/plain,writeIt(" + (8+base) + ");writeIt(" + (9+base) + ");externalScript();";
-  document.body.appendChild(s);
-  writeIt(7 + base);
-}
-
 function done() {
   nodes = document.getElementsByTagName('span');
-  is(nodes.length, 13, "wrong length");
+  is(nodes.length, 3, "wrong length");
   for (i = 0; i < nodes.length; ++i) {
     is(nodes[i].textContent, i+1, "wrong order");
   }
@@ -55,10 +40,8 @@ writeIt(1);
 
 </script>
 <script defer>
-writeIt(3);
-</script>
-<script>
 writeIt(2);
 </script>
-<script defer src="data:text/plain,writeIt(4);writeIt(5);"></script>
-<script defer src="data:text/plain,externalScript();"></script>
+<script>
+writeIt(3);
+</script>

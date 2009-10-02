@@ -113,7 +113,7 @@ nsLoggingSink::WillBuildModel(nsDTDMode aDTDMode) {
 }
 
 NS_IMETHODIMP
-nsLoggingSink::DidBuildModel() {
+nsLoggingSink::DidBuildModel(PRBool aTerminated) {
   
   WriteTabs(mOutput,--mLevel);
   PR_fprintf(mOutput, "</begin>\n");
@@ -121,7 +121,7 @@ nsLoggingSink::DidBuildModel() {
   //proxy the call to the real sink if you have one.
   nsresult theResult=NS_OK;
   if(mSink) {
-    theResult=mSink->DidBuildModel();
+    theResult=mSink->DidBuildModel(aTerminated);
   }
 
   return theResult;
