@@ -132,6 +132,7 @@ _TEST_FILES += \
 		bug504843.ogv \
 		bug506094.ogv \
 		bug516323.ogv \
+		chain.ogv \
 		dirac.ogg \
 		seek.ogv \
 		short-video.ogv \
