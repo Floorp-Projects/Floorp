@@ -1012,6 +1012,13 @@ namespace nanojit
 
     class LirWriter
     {
+        LInsp insDisp(LInsp base, int32_t& d) {
+            if (!isValidDisplacement(d)) {
+                base = ins2i(LIR_piadd, base, d);
+                d = 0;
+            }
+            return base;
+        }
     public:
         LirWriter *out;
 
@@ -1052,9 +1059,11 @@ namespace nanojit
             return out->insImmf(d);
         }
         virtual LInsp insLoad(LOpcode op, LIns* base, int32_t d) {
+            base = insDisp(base, d);
             return out->insLoad(op, base, d);
         }
         virtual LInsp insStorei(LIns* value, LIns* base, int32_t d) {
+            base = insDisp(base, d);
             return out->insStorei(value, base, d);
         }
         virtual LInsp insCall(const CallInfo *call, LInsp args[]) {
