@@ -56,8 +56,20 @@
   <link rel="stylesheet" href="chrome://browser/skin/header.css" type="text/css"/>
   <link rel="stylesheet" href="chrome://browser/skin/firstRun.css" type="text/css"/>
   <script><![CDATA[
+    var Ci = Components.interfaces, Cc = Components.classes;
+    function reloadIfDone(aImg) {
+      if (!(aImg instanceof Ci.nsIImageLoadingContent))
+         return;
+
+      var request = aImg.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+      var imgIContainer = request.image;
+
+      if (imgIContainer.currentFrameIndex == imgIContainer.numFrames - 1) {
+        imgIContainer.resetAnimation();
+        imgIContainer.startAnimation();
+      }
+    }
     function goToAddons(aSearchString) {
-      var Ci = Components.interfaces, Cc = Components.classes;
       var chromeWin = window
                          .QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebNavigation)
@@ -84,7 +96,7 @@
   <div id="wrapper">
 <!--    <p class="intro"><h1>&welcome.title;</h1></p> -->
     <p class="intro"><img src="chrome://branding/content/welcome.png"/></p>
-    <p class="intro"><img src="chrome://browser/content/firstRunAnimation.gif"/></p>
+    <p class="intro"><img onclick="reloadIfDone(this);" src="chrome://browser/content/firstRunAnimation.gif"/></p>
     <hr/>
     <p>&overview.description;</p>
 
