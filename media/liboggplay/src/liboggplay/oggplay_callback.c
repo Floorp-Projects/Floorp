@@ -88,6 +88,32 @@ oggplay_shutdown_theora(void *user_data) {
   theora_comment_clear(&(decoder->video_comment));
 }
 
+/**
+ * Returns 1 if the video as described by |info| requires more than
+ * max_video_pixels pixels per frame, otherwise returns 0.
+ */
+static int
+frame_is_too_large(theora_info *info, long max_video_pixels) {
+  int overflow = 0;
+  long frame_pixels = 0;
+  long display_pixels = 0;
+  if (!info) {
+    return 1;
+  }
+  overflow |= oggplay_mul_signed_overflow(info->frame_width,
+                                          info->frame_height,
+                                          &frame_pixels);
+  overflow |= oggplay_mul_signed_overflow(info->width,
+                                          info->height,
+                                          &display_pixels);
+  if (overflow ||
+      frame_pixels > max_video_pixels ||
+      display_pixels > max_video_pixels) {
+    return 1;
+  }
+  return 0;
+}
+
 int
 oggplay_callback_theora (OGGZ * oggz, ogg_packet * op, long serialno,
                          void * user_data) {
@@ -189,7 +215,14 @@ oggplay_callback_theora (OGGZ * oggz, ogg_packet * op, long serialno,
         common->initialised |= -1;
         return OGGZ_CONTINUE;
       }
-      
+
+      /* Ensure the video frames don't require more pixels than our
+       * allowed maximum. */
+      if (frame_is_too_large(&decoder->video_info,
+                             common->player->max_video_frame_pixels)) {
+        return OGGZ_ERR_OUT_OF_MEMORY;
+      }
+
       if (theora_decode_init(&(decoder->video_handle), &(decoder->video_info))) {
         common->initialised |= -1;
         return OGGZ_CONTINUE;
