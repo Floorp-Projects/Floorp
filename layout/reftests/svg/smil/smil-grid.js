@@ -45,13 +45,13 @@ const START_TIMES = [ "4.0s",  "3.0s",  "2.7s",
                       "2.25s", "2.01s", "1.5s",
                       "1.4s",  "1.0s",  "0.5s" ];
 
-const X_POSNS = [ "20pt",  "70pt",  "120pt",
-                  "20pt",  "70pt",  "120pt",
-                  "20pt",  "70pt",  "120pt" ];
+const X_POSNS = [ "20px",  "70px",  "120px",
+                  "20px",  "70px",  "120px",
+                  "20px",  "70px",  "120px" ];
 
-const Y_POSNS = [ "20pt",  "20pt",  "20pt",
-                  "70pt",  "70pt",  "70pt",
-                 "120pt", "120pt", "120pt"  ];
+const Y_POSNS = [ "20px",  "20px",  "20px",
+                  "70px",  "70px",  "70px",
+                 "120px", "120px", "120px"  ];
 
 const DURATION = "2s";
 const SNAPSHOT_TIME ="3";
@@ -60,8 +60,8 @@ const SVGNS = "http://www.w3.org/2000/svg";
 // Convenience wrapper using testAnimatedGrid to make 15pt-by-15pt rects
 function testAnimatedRectGrid(animationTagName, animationAttrHashList) {
   var targetTagName = "rect";
-  var targetAttrHash = {"width"  : "15pt",
-                        "height" : "15pt" };
+  var targetAttrHash = {"width"  : "15px",
+                        "height" : "15px" };
   testAnimatedGrid(targetTagName,    targetAttrHash,
                    animationTagName, animationAttrHashList);
 }
