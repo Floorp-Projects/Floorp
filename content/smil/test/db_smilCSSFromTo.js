@@ -77,6 +77,8 @@ var _fromToTestLists = {
                            midComp: "rgb(230, 230, 230)" }),
   ],
   paintServer: [
+    new AnimTestcaseFromTo("none", "blue", { toComp : "rgb(0, 0, 255)" }),
+    new AnimTestcaseFromTo("rgb(50, 50, 50)", "none"),
     new AnimTestcaseFromTo("url(#gradA)", "url(#gradB) currentColor",
                            { fromComp: "url(\"" + document.URL +
                                        "#gradA\") rgb(0, 0, 0)",
@@ -347,10 +349,9 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.stroke,
                      [].concat(_fromToTestLists.color,
                                _fromToTestLists.paintServer, [
-     // Note: inherited value is rgb(0, 0, 0) (default)
+     // Note: inherited value is "none" (the default for "stroke" property)
      new AnimTestcaseFromTo("inherit", "rgb(200, 200, 200)",
-                            { fromComp: "none"})]),
-                     "need support for 'none' value"),
+                            { fromComp: "none"})])),
   new TestcaseBundle(gPropList.stroke_dasharray,
                      [].concat(_fromToTestLists.lengthPx,
                                _fromToTestLists.lengthPxPctSVG,
