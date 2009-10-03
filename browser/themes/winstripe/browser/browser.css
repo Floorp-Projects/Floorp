@@ -2004,6 +2004,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 .allTabs-preview:hover,
 .allTabs-preview[closebuttonhover] {
   color: white;
+  text-shadow: none;
   background-color: rgba(0,0,0,.4);
   -moz-border-radius: .5em;
 }
