@@ -98,6 +98,11 @@
 #define NS_IOUTIL_CONTRACTID "@mozilla.org/io-util;1"
 
 /**
+ * Memory reporter service CID
+ */
+#define NS_MEMORY_REPORTER_MANAGER_CONTRACTID "@mozilla.org/memory-reporter-manager;1"
+
+/**
  * The following are the CIDs and Contract IDs of the nsISupports wrappers for 
  * primative types.  
  */
