@@ -9636,7 +9636,7 @@ TraceRecorder::putArguments()
     }
 }
 
-static inline bool
+static JS_REQUIRES_STACK inline bool
 IsTraceableRecursion(JSContext *cx)
 {
     JSStackFrame *fp = cx->fp;
