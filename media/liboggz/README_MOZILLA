@@ -26,3 +26,5 @@ bug516847.patch: Fix for bug 516847 (duplicate frame handling).
 bug518169.patch: Fix bug 518169, fix faster_seek.patch.
 
 bug504843.patch: Propogate read errors from oggz_read_sync().
+
+bug519155.patch: Fix oggz seek's reset so that it can rollback on fail correctly.
