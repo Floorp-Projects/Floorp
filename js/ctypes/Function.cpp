@@ -163,7 +163,7 @@ GetABI(PRUint16 aCallType, ffi_abi& aResult)
   case nsIForeignLibrary::DEFAULT:
     aResult = FFI_DEFAULT_ABI;
     return true;
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(_WIN64)
   case nsIForeignLibrary::STDCALL:
     aResult = FFI_STDCALL;
     return true;
