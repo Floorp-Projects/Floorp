@@ -2,31 +2,31 @@
   <style>
     rect { stroke: blue; stroke-width: 5px; }
   </style>
-  <rect x="20pt" y="20pt" width="15pt" height="15pt"
+  <rect x="20px" y="20px" width="15px" height="15px"
         style="stroke-dasharray: 20px, 5px">
   </rect>
-  <rect x="70pt" y="20pt" width="15pt" height="15pt"
+  <rect x="70px" y="20px" width="15px" height="15px"
         style="stroke-dasharray: 20px, 5px">
   </rect>
-  <rect x="120pt" y="20pt" width="15pt" height="15pt"
+  <rect x="120px" y="20px" width="15px" height="15px"
         style="stroke-dasharray: 18.5px, 6.5px">
   </rect>
-  <rect x="20pt" y="70pt" width="15pt" height="15pt"
+  <rect x="20px" y="70px" width="15px" height="15px"
         style="stroke-dasharray: 16.25px, 8.75px">
   </rect>
-  <rect x="70pt" y="70pt" width="15pt" height="15pt"
+  <rect x="70px" y="70px" width="15px" height="15px"
         style="stroke-dasharray: 15.05px, 9.95px">
   </rect>
-  <rect x="120pt" y="70pt" width="15pt" height="15pt"
+  <rect x="120px" y="70px" width="15px" height="15px"
         style="stroke-dasharray: 12.5px, 12.5px">
   </rect>
-  <rect x="20pt" y="120pt" width="15pt" height="15pt"
+  <rect x="20px" y="120px" width="15px" height="15px"
         style="stroke-dasharray: 12px, 13px">
   </rect>
-  <rect x="70pt" y="120pt" width="15pt" height="15pt"
+  <rect x="70px" y="120px" width="15px" height="15px"
         style="stroke-dasharray: 10px, 15px">
   </rect>
-  <rect x="120pt" y="120pt" width="15pt" height="15pt"
+  <rect x="120px" y="120px" width="15px" height="15px"
         style="stroke-dasharray: 10px, 15px">
   </rect>
 </svg>
