@@ -13,6 +13,7 @@ var gSmallTests = [
   { name:"bug498855-2.ogv", type:"video/ogg", duration:0.2 },
   { name:"bug498855-3.ogv", type:"video/ogg", duration:0.2 },
   { name:"bug504644.ogv", type:"video/ogg", duration:1.56 },
+  { name:"chain.ogv", type:"video/ogg", duration:Number.NaN },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
