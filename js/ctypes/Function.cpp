@@ -565,7 +565,7 @@ Function::Execute(JSContext* aContext, PRUint32 aArgc, jsval* aArgv, jsval* aVal
   // may block or otherwise take a long time to return.
   jsrefcount rc = JS_SuspendRequest(aContext);
 
-  ffi_call(&mCIF, mFunc, resultValue.mData, ffiValues.Elements());
+  ffi_call(&mCIF, FFI_FN(mFunc), resultValue.mData, ffiValues.Elements());
 
   JS_ResumeRequest(aContext, rc);
 
