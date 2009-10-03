@@ -73,6 +73,7 @@ oggplay_new_with_reader(OggPlayReader *reader) {
   me->oggz = NULL;
   me->pt_update_valid = 1;
   me->duration = -1;
+  me->max_video_frame_pixels = OGGPLAY_TYPE_MAX_SIGNED(int);
 
   return me;
 
@@ -963,3 +964,11 @@ oggplay_media_finished_retrieving(OggPlay *me) {
 
 }
 
+int
+oggplay_set_max_video_frame_pixels(OggPlay *player,
+                                   int max_frame_pixels) {
+  if (!player)
+    return E_OGGPLAY_BAD_OGGPLAY;
+  player->max_video_frame_pixels = max_frame_pixels;
+  return E_OGGPLAY_OK;
+}

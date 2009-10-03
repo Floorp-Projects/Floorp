@@ -1,0 +1,24 @@
+diff --git a/media/liboggz/src/liboggz/oggz_read.c b/media/liboggz/src/liboggz/oggz_read.c
+--- a/media/liboggz/src/liboggz/oggz_read.c
++++ b/media/liboggz/src/liboggz/oggz_read.c
+@@ -492,19 +492,17 @@ oggz_read_sync (OGGZ * oggz)
+           if (!op->b_o_s) stream->delivered_non_b_o_s = 1;
+         }
+         else
+           break;
+       }
+     }
+ 
+     /* If we've got a stop already, don't read more data in */
+-    if (cb_ret == OGGZ_STOP_OK || 
+-	cb_ret == OGGZ_STOP_ERR || 
+-	cb_ret == OGGZ_ERR_HOLE_IN_DATA) 
++    if (cb_ret < 0 || cb_ret == OGGZ_STOP_OK) 
+       return cb_ret;
+ 
+     if(oggz_read_get_next_page (oggz, &og) < 0)
+       return OGGZ_READ_EMPTY; /* eof. leave uninitialized */
+ 
+     serialno = ogg_page_serialno (&og);
+     reader->current_serialno = serialno; /* XXX: maybe not necessary */
+ 

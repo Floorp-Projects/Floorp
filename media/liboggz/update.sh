@@ -58,4 +58,4 @@ patch -p3 <bug496063.patch
 patch -p3 <faster_seek.patch
 patch -p3 <bug516847.patch
 patch -p3 <bug518169.patch
-
+patch -p3 <bug504843.patch
