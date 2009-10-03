@@ -92,7 +92,7 @@ const CACHE_INVALIDATION_DELAY = 1000;
 
 // Current cache version. This should be incremented if the format of the cache
 // file is modified.
-const CACHE_VERSION = 5;
+const CACHE_VERSION = 6;
 
 const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
 
@@ -1979,7 +1979,7 @@ Engine.prototype = {
       this._hasPreferredIcon = true;
     else
       this._hasPreferredIcon = false;
-    this._hidden = aJson.hidden || null;
+    this._hidden = aJson._hidden;
     this._type = aJson.type || SEARCH_TYPE_MOZSEARCH;
     this._queryCharset = aJson.queryCharset || DEFAULT_QUERY_CHARSET;
     this.__searchForm = aJson.__searchForm;
@@ -2012,6 +2012,7 @@ Engine.prototype = {
     var json = {
       _id: this._id,
       _name: this._name,
+      _hidden: this.hidden,
       description: this.description,
       filePath: this._file.QueryInterface(Ci.nsILocalFile).persistentDescriptor,
       __searchForm: this.__searchForm,
@@ -2029,8 +2030,6 @@ Engine.prototype = {
       json._iconUpdateURL = this._iconUpdateURL;
     if (!this._hasPreferredIcon || !aFilter)
       json._hasPreferredIcon = this._hasPreferredIcon;
-    if (this.hidden || !aFilter)
-      json.hidden = this.hidden;
     if (this.type != SEARCH_TYPE_MOZSEARCH || !aFilter)
       json.type = this.type;
     if (this.queryCharset != DEFAULT_QUERY_CHARSET || !aFilter)
@@ -2178,7 +2177,7 @@ Engine.prototype = {
 
   get hidden() {
     if (this._hidden === null)
-      this._hidden = engineMetadataService.getAttr(this, "hidden");
+      this._hidden = engineMetadataService.getAttr(this, "hidden") || false;
     return this._hidden;
   },
   set hidden(val) {
@@ -2397,7 +2396,13 @@ function SearchService() {
 }
 SearchService.prototype = {
   _engines: { },
-  _sortedEngines: null,
+  __sortedEngines: null,
+  get _sortedEngines() {
+    if (!this.__sortedEngines)
+      return this._buildSortedEngineList();
+    return this.__sortedEngines;
+  },
+
   // Whether or not we need to write the order of engines on shutdown. This
   // needs to happen anytime _sortedEngines is modified after initial startup. 
   _needToSetOrderPrefs: false,
@@ -2407,14 +2412,10 @@ SearchService.prototype = {
     if (getBoolPref(BROWSER_SEARCH_PREF + "log", false))
       LOG = DO_LOG;
 
-    engineMetadataService.init();
     engineUpdateService.init();
 
     this._loadEngines();
     this._addObservers();
-
-    // Now that all engines are loaded, build the sorted engine list
-    this._buildSortedEngineList();
 
     let selectedEngineName = getLocalizedPref(BROWSER_SEARCH_PREF +
                                               "selectedEngine");
@@ -2605,11 +2606,11 @@ SearchService.prototype = {
       // Not an update, just add the new engine.
       this._engines[aEngine.name] = aEngine;
       // Only add the engine to the list of sorted engines if the initial list
-      // has already been built (i.e. if this._sortedEngines is non-null). If
-      // it hasn't, we're still loading engines from disk, and will build the
-      // sorted engine list when that initial loading is done.
-      if (this._sortedEngines) {
-        this._sortedEngines.push(aEngine);
+      // has already been built (i.e. if this.__sortedEngines is non-null). If
+      // it hasn't, we're loading engines from disk and the sorted engine list
+      // will be built once we need it.
+      if (this.__sortedEngines) {
+        this.__sortedEngines.push(aEngine);
         this._needToSetOrderPrefs = true;
       }
       notifyAction(aEngine, SEARCH_ENGINE_ADDED);
@@ -2735,8 +2736,9 @@ SearchService.prototype = {
   },
 
   _buildSortedEngineList: function SRCH_SVC_buildSortedEngineList() {
+    LOG("_buildSortedEngineList: building list");
     var addedEngines = { };
-    this._sortedEngines = [];
+    this.__sortedEngines = [];
     var engine;
 
     // If the user has specified a custom engine order, read the order
@@ -2751,8 +2753,8 @@ SearchService.prototype = {
         // that happens, we just skip it - it will be added later on as an
         // unsorted engine. This problem will sort itself out when we call
         // _saveSortedEngineList at shutdown.
-        if (orderNumber && !this._sortedEngines[orderNumber-1]) {
-          this._sortedEngines[orderNumber-1] = engine;
+        if (orderNumber && !this.__sortedEngines[orderNumber-1]) {
+          this.__sortedEngines[orderNumber-1] = engine;
           addedEngines[engine.name] = engine;
         } else {
           // We need to call _saveSortedEngines so this gets sorted out.
@@ -2761,10 +2763,10 @@ SearchService.prototype = {
       }
 
       // Filter out any nulls for engines that may have been removed
-      var filteredEngines = this._sortedEngines.filter(function(a) { return !!a; });
-      if (this._sortedEngines.length != filteredEngines.length)
+      var filteredEngines = this.__sortedEngines.filter(function(a) { return !!a; });
+      if (this.__sortedEngines.length != filteredEngines.length)
         this._needToSetOrderPrefs = true;
-      this._sortedEngines = filteredEngines;
+      this.__sortedEngines = filteredEngines;
 
     } else {
       // The DB isn't being used, so just read the engine order from the prefs
@@ -2783,7 +2785,7 @@ SearchService.prototype = {
           if (!engine || engine.name in addedEngines)
             continue;
 
-          this._sortedEngines.push(engine);
+          this.__sortedEngines.push(engine);
           addedEngines[engine.name] = engine;
         }
       }
@@ -2798,7 +2800,7 @@ SearchService.prototype = {
         if (!engine || engine.name in addedEngines)
           continue;
         
-        this._sortedEngines.push(engine);
+        this.__sortedEngines.push(engine);
         addedEngines[engine.name] = engine;
       }
     }
@@ -2813,7 +2815,7 @@ SearchService.prototype = {
     alphaEngines = alphaEngines.sort(function (a, b) {
                                        return a.name.localeCompare(b.name);
                                      });
-    this._sortedEngines = this._sortedEngines.concat(alphaEngines);
+    return this.__sortedEngines = this.__sortedEngines.concat(alphaEngines);
   },
 
   /**
@@ -3094,7 +3096,7 @@ SearchService.prototype = {
       var index = this._sortedEngines.indexOf(engineToRemove);
       if (index == -1)
         FAIL("Can't find engine to remove in _sortedEngines!", Cr.NS_ERROR_FAILURE);
-      this._sortedEngines.splice(index, 1);
+      this.__sortedEngines.splice(index, 1);
 
       // Remove the engine from the internal store
       delete this._engines[engineToRemove.name];
@@ -3146,8 +3148,8 @@ SearchService.prototype = {
       return; // nothing to do!
 
     // Move the engine
-    var movedEngine = this._sortedEngines.splice(currentIndex, 1)[0];
-    this._sortedEngines.splice(aNewIndex, 0, movedEngine);
+    var movedEngine = this.__sortedEngines.splice(currentIndex, 1)[0];
+    this.__sortedEngines.splice(aNewIndex, 0, movedEngine);
 
     notifyAction(engine, SEARCH_ENGINE_CHANGED);
 
@@ -3255,41 +3257,55 @@ SearchService.prototype = {
 };
 
 var engineMetadataService = {
-  init: function epsInit() {
+  get mDB() {
     var engineDataTable = "id INTEGER PRIMARY KEY, engineid STRING, name STRING, value STRING";
     var file = getDir(NS_APP_USER_PROFILE_50_DIR);
     file.append("search.sqlite");
     var dbService = Cc["@mozilla.org/storage/service;1"].
                     getService(Ci.mozIStorageService);
+    var db;
     try {
-        this.mDB = dbService.openDatabase(file);
+      db = dbService.openDatabase(file);
     } catch (ex) {
-        if (ex.result == 0x8052000b) { /* NS_ERROR_FILE_CORRUPTED */
-            // delete and try again
-            file.remove(false);
-            this.mDB = dbService.openDatabase(file);
-        } else {
-            throw ex;
-        }
+      if (ex.result == 0x8052000b) { /* NS_ERROR_FILE_CORRUPTED */
+        // delete and try again
+        file.remove(false);
+        db = dbService.openDatabase(file);
+      } else {
+        throw ex;
+      }
     }
 
     try {
-      this.mDB.createTable("engine_data", engineDataTable);
+      db.createTable("engine_data", engineDataTable);
     } catch (ex) {
       // Fails if the table already exists, which is fine
     }
 
-    this.mGetData = this.mDB.createStatement (
+    delete this.mDB;
+    return this.mDB = db;
+  },
+
+  get mGetData() {
+    delete this.mGetData;
+    return this.mGetData = this.mDB.createStatement(
       "SELECT value FROM engine_data WHERE engineid = :engineid AND name = :name");
-    this.mDeleteData = this.mDB.createStatement (
+  },
+  get mDeleteData() {
+    delete this.mDeleteData;
+    return this.mDeleteData = this.mDB.createStatement(
       "DELETE FROM engine_data WHERE engineid = :engineid AND name = :name");
-    this.mInsertData = this.mDB.createStatement (
+  },
+  get mInsertData() {
+    delete this.mInsertData;
+    return this.mInsertData = this.mDB.createStatement(
       "INSERT INTO engine_data (engineid, name, value) " +
       "VALUES (:engineid, :name, :value)");
   },
+
   getAttr: function epsGetAttr(engine, name) {
-     // attr names must be lower case
-     name = name.toLowerCase();
+    // attr names must be lower case
+    name = name.toLowerCase();
 
     var stmt = this.mGetData;
     stmt.reset();
