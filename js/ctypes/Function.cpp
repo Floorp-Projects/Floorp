@@ -248,6 +248,7 @@ PrepareValue(JSContext* aContext, const Type& aType, jsval aValue, Value& aResul
       return TypeError(aContext, "int32", aValue);
 
     aResult.mData = &aResult.mValue.mInt32;
+    break;
   case nsIForeignLibrary::INT64:
     // Do not implicitly lose bits.
     if (!jsvalToIntStrict(aValue, &aResult.mValue.mInt64))
@@ -275,6 +276,7 @@ PrepareValue(JSContext* aContext, const Type& aType, jsval aValue, Value& aResul
       return TypeError(aContext, "uint32", aValue);
 
     aResult.mData = &aResult.mValue.mUint32;
+    break;
   case nsIForeignLibrary::UINT64:
     // Do not implicitly lose bits.
     if (!jsvalToIntStrict(aValue, &aResult.mValue.mUint64))
