@@ -58,7 +58,6 @@
 <window id="viewSource"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoadViewSource();"
-        onunload="onUnloadViewSource();"
         contenttitlesetting="true"
         title="&mainWindow.title;" 
         titlemodifier="&mainWindow.titlemodifier;" 
