@@ -5749,14 +5749,6 @@ function BrowserOpenAddonsMgr(aPane)
     window.openDialog(EMURL, "", EMFEATURES);
 }
 
-function escapeNameValuePair(aName, aValue, aIsFormUrlEncoded)
-{
-  if (aIsFormUrlEncoded)
-    return escape(aName + "=" + aValue);
-  else
-    return escape(aName) + "=" + escape(aValue);
-}
-
 function AddKeywordForSearchField()
 {
   var node = document.popupNode;
@@ -5783,6 +5775,13 @@ function AddKeywordForSearchField()
 
   var el, type;
   var formData = [];
+
+  function escapeNameValuePair(aName, aValue, aIsFormUrlEncoded) {
+    if (aIsFormUrlEncoded)
+      return escape(aName + "=" + aValue);
+    else
+      return escape(aName) + "=" + escape(aValue);
+  }
 
   for (var i=0; i < node.form.elements.length; i++) {
     el = node.form.elements[i];
