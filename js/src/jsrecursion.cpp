@@ -545,7 +545,7 @@ TraceRecorder::downRecursion()
     return closeLoop(exit);
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpInt32Slot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true,
@@ -565,7 +565,7 @@ TraceRecorder::slurpInt32Slot(LIns* val_ins, jsval* vp, VMSideExit* exit)
     return int32_ins;
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpDoubleSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true,
@@ -582,7 +582,7 @@ TraceRecorder::slurpDoubleSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
     return dbl_ins;
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpBoolSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true,
@@ -595,7 +595,7 @@ TraceRecorder::slurpBoolSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
     return bool_ins;
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpStringSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true,
@@ -607,14 +607,14 @@ TraceRecorder::slurpStringSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
     return str_ins;
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpNullSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true, lir->ins_peq0(val_ins), exit);
     return val_ins;
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpObjectSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     /* Must not be NULL */
@@ -636,7 +636,7 @@ TraceRecorder::slurpObjectSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
     return val_ins;
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpFunctionSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     /* Must not be NULL */

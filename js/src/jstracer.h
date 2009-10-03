@@ -949,15 +949,23 @@ class TraceRecorder {
 
     JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, ExitType exitType);
     JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, VMSideExit* exit);
-    nanojit::LIns* slurpInt32Slot(nanojit::LIns* val_ins, jsval* vp, VMSideExit* exit);
-    nanojit::LIns* slurpDoubleSlot(nanojit::LIns* val_ins, jsval* vp, VMSideExit* exit);
-    nanojit::LIns* slurpStringSlot(nanojit::LIns* val_ins, jsval* vp, VMSideExit* exit);
-    nanojit::LIns* slurpObjectSlot(nanojit::LIns* val_ins, jsval* vp, VMSideExit* exit);
-    nanojit::LIns* slurpFunctionSlot(nanojit::LIns* val_ins, jsval* vp, VMSideExit* exit);
-    nanojit::LIns* slurpNullSlot(nanojit::LIns* val_ins, jsval* vp, VMSideExit* exit);
-    nanojit::LIns* slurpBoolSlot(nanojit::LIns* val_ins, jsval* vp, VMSideExit* exit);
-    nanojit::LIns* slurpSlot(nanojit::LIns* val_ins, jsval* vp, VMSideExit* exit);
-    void slurpSlot(nanojit::LIns* val_ins, jsval* vp, SlurpInfo* info);
+    JS_REQUIRES_STACK nanojit::LIns* slurpInt32Slot(nanojit::LIns* val_ins, jsval* vp,
+                                                    VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* slurpDoubleSlot(nanojit::LIns* val_ins, jsval* vp,
+                                                     VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* slurpStringSlot(nanojit::LIns* val_ins, jsval* vp,
+                                                     VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* slurpObjectSlot(nanojit::LIns* val_ins, jsval* vp,
+                                                     VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* slurpFunctionSlot(nanojit::LIns* val_ins, jsval* vp,
+                                                       VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* slurpNullSlot(nanojit::LIns* val_ins, jsval* vp,
+                                                   VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* slurpBoolSlot(nanojit::LIns* val_ins, jsval* vp,
+                                                   VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* slurpSlot(nanojit::LIns* val_ins, jsval* vp,
+                                               VMSideExit* exit);
+    JS_REQUIRES_STACK void slurpSlot(nanojit::LIns* val_ins, jsval* vp, SlurpInfo* info);
     JS_REQUIRES_STACK AbortableRecordingStatus slurpDownFrames(jsbytecode* return_pc);
 
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
