@@ -83,6 +83,8 @@ static RedirEntry kRedirMap[] = {
       nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT },
     { "neterror", "chrome://global/content/netError.xhtml",
       nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+      nsIAboutModule::ALLOW_SCRIPT },
+    { "memory", "chrome://global/content/aboutMemory.xhtml",
       nsIAboutModule::ALLOW_SCRIPT }
 };
 static const int kRedirTotal = NS_ARRAY_LENGTH(kRedirMap);
