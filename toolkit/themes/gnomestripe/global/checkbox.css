@@ -113,6 +113,7 @@ checkbox[disabled="true"] {
 
 checkbox:not([disabled="true"]):hover {
   color: -moz-buttonhovertext;
+  text-shadow: none;
 }
 
 checkbox:hover:active > .checkbox-spacer-box > .checkbox-check {
