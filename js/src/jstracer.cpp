@@ -2788,8 +2788,6 @@ JSTraceMonitor::mark(JSTracer* trc)
         }
         return;
     }
-
-    flush();
 }
 
 /*
