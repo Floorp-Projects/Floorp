@@ -209,12 +209,6 @@ __defineGetter__("gObsSvc", function() {
                         getService(Ci.nsIObserverService);
 });
 
-__defineGetter__("gIoSvc", function() {
-  delete this.gIoSvc;
-  return this.gIoSvc = Cc["@mozilla.org/network/io-service;1"].
-                       getService(Ci.nsIIOService);
-});
-
 __defineGetter__("gPrefSvc", function() {
   delete this.gPrefSvc;
   return this.gPrefSvc = Cc["@mozilla.org/preferences-service;1"].
@@ -1141,7 +1135,7 @@ Engine.prototype = {
 
     LOG("_initFromURI: Downloading engine from: \"" + this._uri.spec + "\".");
 
-    var chan = gIoSvc.newChannelFromURI(this._uri);
+    var chan = NetUtil.ioService.newChannelFromURI(this._uri);
 
     if (this._engineToUpdate && (chan instanceof Ci.nsIHttpChannel)) {
       var lastModified = engineMetadataService.getAttr(this._engineToUpdate,
@@ -1401,7 +1395,7 @@ Engine.prototype = {
         if (!this._readOnly) {
           LOG("_setIcon: Downloading icon: \"" + uri.spec +
               "\" for engine: \"" + this.name + "\"");
-          var chan = gIoSvc.newChannelFromURI(uri);
+          var chan = NetUtil.ioService.newChannelFromURI(uri);
 
           function iconLoadCallback(aByteArray, aEngine) {
             // This callback may run after we've already set a preferred icon,
@@ -2661,7 +2655,7 @@ SearchService.prototype = {
       if (!file.isFile() || file.fileSize == 0 || file.isHidden())
         continue;
 
-      var fileURL = gIoSvc.newFileURI(file).QueryInterface(Ci.nsIURL);
+      var fileURL = NetUtil.ioService.newFileURI(file).QueryInterface(Ci.nsIURL);
       var fileExtension = fileURL.fileExtension.toLowerCase();
       var isWritable = isInProfile && file.isWritable();
 
@@ -2704,7 +2698,7 @@ SearchService.prototype = {
         if (!addedEngine._iconURI) {
           var icon = this._findSherlockIcon(file, fileURL.fileBaseName);
           if (icon)
-            addedEngine._iconURI = gIoSvc.newFileURI(icon);
+            addedEngine._iconURI = NetUtil.ioService.newFileURI(icon);
         }
       }
 
