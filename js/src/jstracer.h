@@ -689,7 +689,7 @@ public:
     UnstableExit* removeUnstableExit(VMSideExit* exit);
 };
 
-#if defined(JS_JIT_SPEW) && (defined(NANOJIT_IA32) || (defined(NANOJIT_AMD64) && defined(__GNUC__)))
+#if defined(JS_JIT_SPEW) && (defined(NANOJIT_IA32) || defined(NANOJIT_X64))
 # define EXECUTE_TREE_TIMER
 #endif
 
