@@ -73,9 +73,11 @@ static PRLogModuleInfo* gOggDecoderLog;
 #define MAX_VIDEO_WIDTH  4000
 #define MAX_VIDEO_HEIGHT 3000
 
-// The number of entries in oggplay buffer list. This value
-// is the one used by the oggplay examples.
-#define OGGPLAY_BUFFER_SIZE 20
+// The number of entries in oggplay buffer list.  This value is totally
+// arbitrary.  Note that the actual number of video/audio frames buffered is
+// twice this, because the current implementation frees OggPlay's buffer
+// entries and stores copies of the underlying data in the FrameQueue.
+#define OGGPLAY_BUFFER_SIZE 5
 
 // The number of frames to read before audio callback is called.
 // This value is the one used by the oggplay examples.
