@@ -146,8 +146,6 @@ EXPORTS		= \
 		nsASocketHandler.h \
 		$(NULL)
 
-PREF_JS_EXPORTS = $(srcdir)/security-prefs.js
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DIMPL_NS_NET
