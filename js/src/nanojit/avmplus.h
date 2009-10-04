@@ -104,17 +104,15 @@ void NanoAssertFail();
 #define AvmAssertMsg(x, y)
 #define AvmDebugLog(x) printf x
 
-#if defined(AVMPLUS_IA32)
-#if defined(_MSC_VER)
-__declspec(naked) static inline __int64 rdtsc()
+#if defined(_M_IX86) || defined(_M_AMD64)
+// Visual C++ for x86 and x64 uses compiler intrinsics
+static inline unsigned __int64 rdtsc(void)
 {
-    __asm
-    {
-        rdtsc;
-        ret;
-    }
+    return __rdtsc();
 }
-#elif defined(SOLARIS)
+
+#elif defined(AVMPLUS_IA32)
+#if defined(SOLARIS)
 static inline unsigned long long rdtsc(void)
 {
     unsigned long long int x;
