@@ -780,9 +780,6 @@ components/xuldoc.xpt
 components/xultmpl.xpt
 components/zipwriter.xpt
 components/firefox.xpt
-greprefs/all.js
-greprefs/security-prefs.js
-greprefs/xpinstall.js
 run-mozilla.sh
 firefox
 dependentlibs.list

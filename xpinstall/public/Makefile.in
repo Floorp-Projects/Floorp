@@ -62,4 +62,6 @@ EXPORTS		= \
 		nsSoftwareUpdateIIDs.h \
 		$(NULL)
 
+PREF_JS_EXPORTS	= $(srcdir)/xpinstall.js
+
 include $(topsrcdir)/config/rules.mk

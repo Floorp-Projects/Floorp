@@ -363,7 +363,9 @@
 @BINPATH@/@PREF_DIR@/firefox.js
 @BINPATH@/@PREF_DIR@/firefox-branding.js
 @BINPATH@/@PREF_DIR@/channel-prefs.js
-@BINPATH@/greprefs.js
+@BINPATH@/greprefs/all.js
+@BINPATH@/greprefs/security-prefs.js
+@BINPATH@/greprefs/xpinstall.js
 @BINPATH@/defaults/autoconfig/platform.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
 
