@@ -2760,6 +2760,24 @@ JSTraceMonitor::flush()
     needFlush = JS_FALSE;
 }
 
+static inline void
+MarkTreeInfo(JSTracer* trc, TreeInfo *ti)
+{
+    jsval* vp = ti->gcthings.data();
+    unsigned len = ti->gcthings.length();
+    while (len--) {
+        jsval v = *vp++;
+        JS_SET_TRACING_NAME(trc, "jitgcthing");
+        JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
+    }
+    JSScopeProperty** spropp = ti->sprops.data();
+    len = ti->sprops.length();
+    while (len--) {
+        JSScopeProperty* sprop = *spropp++;
+        sprop->trace(trc);
+    }
+}
+
 void
 JSTraceMonitor::mark(JSTracer* trc)
 {
@@ -2767,26 +2785,13 @@ JSTraceMonitor::mark(JSTracer* trc)
         for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
             VMFragment* f = vmfragments[i];
             while (f) {
-                TreeInfo* ti = (TreeInfo*)f->vmprivate;
-                if (ti) {
-                    jsval* vp = ti->gcthings.data();
-                    unsigned len = ti->gcthings.length();
-                    while (len--) {
-                        jsval v = *vp++;
-                        JS_SET_TRACING_NAME(trc, "jitgcthing");
-                        JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
-                    }
-                    JSScopeProperty** spropp = ti->sprops.data();
-                    len = ti->sprops.length();
-                    while (len--) {
-                        JSScopeProperty* sprop = *spropp++;
-                        sprop->trace(trc);
-                    }
-                }
+                if (TreeInfo* ti = (TreeInfo*)f->vmprivate)
+                    MarkTreeInfo(trc, ti);
                 f = f->next;
             }
         }
-        return;
+        if (recorder)
+            MarkTreeInfo(trc, recorder->getTreeInfo());
     }
 }
 
