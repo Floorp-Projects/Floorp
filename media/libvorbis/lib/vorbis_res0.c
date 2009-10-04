@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: residue backend 0, 1 and 2 implementation
- last mod: $Id: res0.c 16327 2009-07-24 00:49:25Z xiphmont $
+ last mod: $Id: res0.c 16552 2009-09-12 02:09:04Z xiphmont $
 
  ********************************************************************/
 
@@ -238,6 +238,10 @@ vorbis_info_residue *res0_unpack(vorbis_info *vi,oggpack_buffer *opb){
 
   /* verify the phrasebook is not specifying an impossible or
      inconsistent partitioning scheme. */
+  /* modify the phrasebook ranging check from r16327; an early beta
+     encoder had a bug where it used an oversized phrasebook by
+     accident.  These files should continue to be playable, but don't
+     allow an exploit */
   {
     int entries = ci->book_param[info->groupbook]->entries;
     int dim = ci->book_param[info->groupbook]->dim;
@@ -247,7 +251,7 @@ vorbis_info_residue *res0_unpack(vorbis_info *vi,oggpack_buffer *opb){
       if(partvals > entries) goto errout;
       dim--;
     }
-    if(partvals < entries) goto errout;
+    info->partvals = partvals;
   }
 
   return(info);
@@ -668,7 +672,7 @@ static int _01inverse(vorbis_block *vb,vorbis_look_residue *vl,
           for(j=0;j<ch;j++){
             int temp=vorbis_book_decode(look->phrasebook,&vb->opb);
 
-            if(temp==-1)goto eopbreak;
+            if(temp==-1 || temp>=info->partvals)goto eopbreak;
             partword[j][l]=look->decodemap[temp];
             if(partword[j][l]==NULL)goto errout;
           }
@@ -884,7 +888,7 @@ int res2_inverse(vorbis_block *vb,vorbis_look_residue *vl,
         if(s==0){
           /* fetch the partition word */
           int temp=vorbis_book_decode(look->phrasebook,&vb->opb);
-          if(temp==-1)goto eopbreak;
+          if(temp==-1 || temp>info->partvals)goto eopbreak;
           partword[l]=look->decodemap[temp];
           if(partword[l]==NULL)goto errout;
         }

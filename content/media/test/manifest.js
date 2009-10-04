@@ -17,10 +17,9 @@ var gSmallTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
-// These are files that must fire an error during load or playback, and do not
-// cause a crash.  Put files of the same type together in this list so if
-// something crashes we have some idea of which backend is responsible.  Used
-// by test_playback_errors, which expects one error event and no ended event.
+// These are files that we just want to make sure we can play through.  We can
+// also check metadata.  Put files of the same type together in this list so if
+// something crashes we have some idea of which backend is responsible.
 var gPlayTests = [
   // 8-bit samples
   { name:"r11025_u8_c1.wav", type:"audio/x-wav", duration:1.0 },
@@ -44,12 +43,16 @@ var gPlayTests = [
   { name:"bug504613.ogv", type:"video/ogg" },
   // Multiple audio streams.
   { name:"bug516323.ogv", type:"video/ogg", duration:4.424 },
+  // Encoded with vorbis beta1, includes unusually sized codebooks
+  { name:"beta-phrasebook.ogg", type:"audio/ogg", duration:4 },
 
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
-// These are files that should refuse to play and report an error,
-// without crashing of course.
+// These are files that must fire an error during load or playback, and do not
+// cause a crash.  Put files of the same type together in this list so if
+// something crashes we have some idea of which backend is responsible.  Used
+// by test_playback_errors, which expects one error event and no ended event.
 // Put files of the same type together in this list so if something crashes
 // we have some idea of which backend is responsible.
 var gErrorTests = [
