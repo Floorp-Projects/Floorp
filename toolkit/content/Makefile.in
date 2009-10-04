@@ -79,11 +79,12 @@ DIRS += tests
 endif
 
 EXTRA_JS_MODULES = \
-  debug.js \
-  LightweightThemeConsumer.jsm \
   WindowDraggingUtils.jsm \
   $(NULL)
 
-EXTRA_PP_JS_MODULES = debug.js
+EXTRA_PP_JS_MODULES = \
+  debug.js \
+  LightweightThemeConsumer.jsm \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
