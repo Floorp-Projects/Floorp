@@ -464,8 +464,8 @@ static nsresult openPrefFile(nsIFile* aFile)
   if (NS_FAILED(rv)) 
     return rv;        
 
-  PRUint32 fileSize;
-  rv = inStr->Available(&fileSize);
+  PRInt64 fileSize;
+  rv = aFile->GetFileSize(&fileSize);
   if (NS_FAILED(rv))
     return rv;
 
@@ -640,19 +640,18 @@ static nsresult pref_LoadPrefsInDirList(const char *listId)
 static nsresult pref_InitInitialObjects()
 {
   nsCOMPtr<nsIFile> aFile;
-  nsCOMPtr<nsIFile> greprefsFile;
   nsCOMPtr<nsIFile> defaultPrefDir;
   nsresult          rv;
 
   // first we parse the GRE default prefs. This also works if we're not using a GRE, 
 
-  rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greprefsFile));
+  rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(defaultPrefDir));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = greprefsFile->AppendNative(NS_LITERAL_CSTRING("greprefs.js"));
+  rv = defaultPrefDir->AppendNative(NS_LITERAL_CSTRING("greprefs"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = openPrefFile(greprefsFile);
+  rv = pref_LoadPrefsInDir(defaultPrefDir, nsnull, 0);
   if (NS_FAILED(rv)) {
     NS_WARNING("Error parsing GRE default preferences. Is this an old-style embedding app?");
   }
