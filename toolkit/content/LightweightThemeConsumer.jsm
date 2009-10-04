@@ -96,15 +96,15 @@ LightweightThemeConsumer.prototype = {
         footer.removeAttribute("lwthemefooter");
     }
 
-    if (/^Mac/.test(this._doc.defaultView.navigator.platform)) {
-      if (active && aData.accentcolor) {
-        root.setAttribute("activetitlebarcolor", aData.accentcolor);
-        root.setAttribute("inactivetitlebarcolor", aData.accentcolor);
-      } else {
-        root.removeAttribute("activetitlebarcolor");
-        root.removeAttribute("inactivetitlebarcolor");
-      }
+#ifdef XP_MACOSX
+    if (active && aData.accentcolor) {
+      root.setAttribute("activetitlebarcolor", aData.accentcolor);
+      root.setAttribute("inactivetitlebarcolor", aData.accentcolor);
+    } else {
+      root.removeAttribute("activetitlebarcolor");
+      root.removeAttribute("inactivetitlebarcolor");
     }
+#endif
   }
 }
 
