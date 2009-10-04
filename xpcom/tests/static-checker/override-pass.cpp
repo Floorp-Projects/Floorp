@@ -2,6 +2,7 @@ class A
 {
   int a(int, char*);
   void c(char);
+  virtual void d(int) = 0;
 };
 
 class B : A
@@ -12,4 +13,9 @@ class B : A
 class C : B
 {
   __attribute__((user("NS_override"))) void c(char);
+};
+
+class D : A
+{
+  __attribute__((user("NS_override"))) void d(int);
 };
