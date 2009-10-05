@@ -2,26 +2,18 @@
 // be ignored. To make sure tests respect that, we include a file of type
 // "bogus/duh" in each list.
 
-// These are small test files, good for just seeing if something loads.
+// These are small test files, good for just seeing if something loads. We
+// really only need one test file per backend here.
 var gSmallTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240 },
-  { name:"bug499519.ogv", type:"video/ogg", duration:0.24 },
-  { name:"bug506094.ogv", type:"video/ogg", duration:0 },
-  { name:"bug501279.ogg", type:"audio/ogg", duration:0 },
-  { name:"bug498855-1.ogv", type:"video/ogg", duration:0.2 },
-  { name:"bug498855-2.ogv", type:"video/ogg", duration:0.2 },
-  { name:"bug498855-3.ogv", type:"video/ogg", duration:0.2 },
-  { name:"bug504644.ogv", type:"video/ogg", duration:1.56 },
-  { name:"chain.ogv", type:"video/ogg", duration:Number.NaN },
-  // Actual duration is ~200ms, we have X-Content-Duration lie about it.
-  { name:"bug520908.ogv", type:"video/ogg", duration:9000 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
-// These are files that we just want to make sure we can play through.  We can
+// These are files that we want to make sure we can play through.  We can
 // also check metadata.  Put files of the same type together in this list so if
 // something crashes we have some idea of which backend is responsible.
+// Used by test_playback, which expects no error event and one ended event.
 var gPlayTests = [
   // 8-bit samples
   { name:"r11025_u8_c1.wav", type:"audio/x-wav", duration:1.0 },
@@ -31,6 +23,7 @@ var gPlayTests = [
   { name:"r11025_s16_c1_trailing.wav", type:"audio/x-wav", duration:1.0 },
   // file with list chunk
   { name:"r16000_u8_c1_list.wav", type:"audio/x-wav", duration:4.2 },
+
   // Ogg stream with eof marker
   { name:"bug461281.ogg", type:"application/ogg" },
   // oggz-chop stream
@@ -52,6 +45,18 @@ var gPlayTests = [
   // Small file with vorbis comments with 0 length values and names.
   { name:"bug520500.ogg", type:"audio/ogg", duration:0.123 },
 
+  // Various weirdly formed Ogg files
+  { name:"bug499519.ogv", type:"video/ogg", duration:0.24 },
+  { name:"bug506094.ogv", type:"video/ogg", duration:0 },
+  { name:"bug501279.ogg", type:"audio/ogg", duration:0 },
+  { name:"bug498855-1.ogv", type:"video/ogg", duration:0.2 },
+  { name:"bug498855-2.ogv", type:"video/ogg", duration:0.2 },
+  { name:"bug498855-3.ogv", type:"video/ogg", duration:0.2 },
+  { name:"bug504644.ogv", type:"video/ogg", duration:1.56 },
+  { name:"chain.ogv", type:"video/ogg", duration:Number.NaN },
+  // Actual duration is ~200ms, we have X-Content-Duration lie about it.
+  { name:"bug520908.ogv", type:"video/ogg", duration:9000 },
+
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
@@ -61,6 +66,7 @@ var gPlayTests = [
 // by test_playback_errors, which expects one error event and no ended event.
 // Put files of the same type together in this list so if something crashes
 // we have some idea of which backend is responsible.
+// Used by test_playback_errors, which expects one error event and no ended event.
 var gErrorTests = [
   { name:"bogus.wav", type:"audio/x-wav" },
   { name:"bogus.ogv", type:"video/ogg" },
