@@ -33,7 +33,7 @@ script 15.9.5.10-10.js
 script 15.9.5.10-11.js
 script 15.9.5.10-12.js
 script 15.9.5.10-13.js
-skip script 15.9.5.10-2.js # bug xxx
+script 15.9.5.10-2.js
 script 15.9.5.10-3.js
 script 15.9.5.10-4.js
 script 15.9.5.10-5.js
@@ -146,6 +146,6 @@ script 15.9.5.4-2-n.js
 script 15.9.5.5.js
 script 15.9.5.6.js
 script 15.9.5.7.js
-skip-if(isDebugBuild) script 15.9.5.8.js # slow
+script 15.9.5.8.js
 script 15.9.5.9.js
 script 15.9.5.js
