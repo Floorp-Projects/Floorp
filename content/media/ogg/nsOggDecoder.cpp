@@ -1473,8 +1473,13 @@ nsresult nsOggDecodeStateMachine::Run()
         NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
 
         if (mState == DECODER_STATE_DECODING_METADATA) {
-          LOG(PR_LOG_DEBUG, ("%p Changed state from DECODING_METADATA to DECODING", mDecoder));
-          mState = DECODER_STATE_DECODING;
+          if (r == E_OGGPLAY_OK) {
+            LOG(PR_LOG_DEBUG, ("%p Changed state from DECODING_METADATA to COMPLETED", mDecoder));
+            mState = DECODER_STATE_COMPLETED;
+          } else {
+            LOG(PR_LOG_DEBUG, ("%p Changed state from DECODING_METADATA to DECODING", mDecoder));
+            mState = DECODER_STATE_DECODING;
+          }
         }
       }
       break;
