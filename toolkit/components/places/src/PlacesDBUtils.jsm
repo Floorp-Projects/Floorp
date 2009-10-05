@@ -123,7 +123,6 @@ nsPlacesDBUtils.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsITimerCallback,
-    Ci.nsIObserver,
   ]),
 
   //////////////////////////////////////////////////////////////////////////////
@@ -570,6 +569,116 @@ nsPlacesDBUtils.prototype = {
         aStatement.finalize();
       }, this);
   },
+
+  /**
+   * This method is only for support purposes, it will run sync and will take
+   * lot of time on big databases, but can be manually triggered to help
+   * debugging common issues.
+   */
+  checkAndFixDatabase: function PDBU_checkAndFixDatabase() {
+    let log = [];
+    let self = this;
+    let sep = "- - -";
+
+    function integrity() {
+      let integrityCheckStmt =
+        self._dbConn.createStatement("PRAGMA integrity_check");
+      log.push("INTEGRITY");
+      let logIndex = log.length;
+      while (integrityCheckStmt.executeStep()) {
+        log.push(integrityCheckStmt.getString(0));
+      }
+      integrityCheckStmt.finalize();
+      log.push(sep);
+      return log[logIndex] == "ok";
+    }
+
+    function vacuum() {
+      log.push("VACUUM");
+      let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+                   getService(Ci.nsIProperties);
+      let placesDBFile = dirSvc.get("ProfD", Ci.nsILocalFile);
+      placesDBFile.append("places.sqlite");
+      log.push("places.sqlite: " + placesDBFile.fileSize + " byte");
+      self._dbConn.executeSimpleSQL("VACUUM");
+      log.push(sep);
+    }
+
+    function backup() {
+      log.push("BACKUP");
+      let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+                   getService(Ci.nsIProperties);
+      let profD = dirSvc.get("ProfD", Ci.nsILocalFile);
+      let placesDBFile = profD.clone();
+      placesDBFile.append("places.sqlite");
+      let backupDBFile = profD.clone();
+      backupDBFile.append("places.sqlite.corrupt");
+      backupDBFile.createUnique(backupDBFile.NORMAL_FILE_TYPE, 0666);
+      let backupName = backupDBFile.leafName;
+      backupDBFile.remove(false);
+      placesDBFile.copyTo(profD, backupName);
+      log.push(backupName);
+      log.push(sep);
+    }
+
+    function reindex() {
+      log.push("REINDEX");
+      self._dbConn.executeSimpleSQL("REINDEX");
+      log.push(sep);
+    }
+
+    function cleanup() {
+      log.push("CLEANUP");
+      self.maintenanceOnIdle()
+      log.push(sep);
+    }
+
+    function stats() {
+      log.push("STATS");
+      let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+                   getService(Ci.nsIProperties);
+      let placesDBFile = dirSvc.get("ProfD", Ci.nsILocalFile);
+      placesDBFile.append("places.sqlite");
+      log.push("places.sqlite: " + placesDBFile.fileSize + " byte");
+      let stmt = self._dbConn.createStatement(
+        "SELECT name FROM sqlite_master WHERE type = :DBType");
+      stmt.params["DBType"] = "table";
+      while (stmt.executeStep()) {
+        let tableName = stmt.getString(0);
+        let countStmt = self._dbConn.createStatement(
+        "SELECT count(*) FROM " + tableName);
+        countStmt.executeStep();
+        log.push(tableName + ": " + countStmt.getInt32(0));
+        countStmt.finalize();
+      }
+      stmt.finalize();
+      log.push(sep);
+    }
+
+    // First of all execute an integrity check.
+    let integrityIsGood = integrity();
+
+    // If integrity check did fail, we can try to fix the database through
+    // a reindex.
+    if (!integrityIsGood) {
+      // Backup current database.
+      backup();
+      // Execute a reindex.
+      reindex();
+      // Now check again the integrity.
+      integrityIsGood = integrity();
+    }
+
+    // If integrity is fine, let's force a maintenance, execute a vacuum and
+    // get some stats.
+    if (integrityIsGood) {
+      cleanup();
+      vacuum();
+      stats();
+    }
+
+    return log.join('\n');
+  }
 };
 
 __defineGetter__("PlacesDBUtils", function() {
