@@ -88,12 +88,10 @@ public:
                     PRBool aPersist,
                     PRBool aReplace,
                     char** _retval,
-                    PLArenaPool* aArena,
-                    PRBool* aDirty);
+                    PLArenaPool* aArena);
 
   NS_METHOD DeleteLeaf(const char* aEntryName,
-                       PRBool aDontPersist,
-                       PRBool* aDirty);
+                       PRBool aDontPersist);
 
   void Clear() {
     mozilla::MutexAutoLock lock(mLock);
@@ -152,16 +150,9 @@ public:
    */
   NS_METHOD SuppressNotifications(PRBool aSuppress);
 
-  /**
-   * Do we have persistable category changes?
-   * This is to be used by nsComponentManagerImpl::Shutdown ONLY.
-   */
-  inline PRBool IsDirty() { return mDirty; }
-
   nsCategoryManager()
     : mLock("nsCategoryManager")
     , mSuppressNotifications(PR_FALSE)
-    , mDirty(PR_FALSE)
   { }
 
 private:
@@ -179,7 +170,6 @@ private:
   nsClassHashtable<nsDepCharHashKey, CategoryNode> mTable;
   mozilla::Mutex mLock;
   PRBool mSuppressNotifications;
-  PRBool mDirty;
 };
 
 #endif
