@@ -572,9 +572,17 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_DWMCompositor:
     case eMetric_WindowsClassic:
     case eMetric_WindowsDefaultTheme:
-    case eMetric_TouchEnabled:
         aMetric = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;
+        break;
+    case eMetric_TouchEnabled:
+#ifdef MOZ_PLATFORM_HILDON
+        // All Hildon devices are touch-enabled
+        aMetric = 1;
+#else
+        aMetric = 0;
+        res = NS_ERROR_NOT_IMPLEMENTED;
+#endif
         break;
     case eMetric_MacGraphiteTheme:
         aMetric = 0;
