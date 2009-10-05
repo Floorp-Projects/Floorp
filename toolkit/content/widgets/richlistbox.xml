@@ -591,15 +591,9 @@
           <![CDATA[
             const XULNS =
               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-            var labelText = "";
-            var startEl = document.getAnonymousNodes(this);
-            if (!startEl.length)
-              startEl = [this];
-            var labels = startEl[0].getElementsByTagNameNS(XULNS, "label");
-            for (var count = 0; count < labels.length; count++)
-              labelText += labels[count].value + " ";
-            return labelText;
+            return Array.map(this.getElementsByTagNameNS(XULNS, "label"),
+                             function (label) label.value)
+                        .join(" ");
           ]]>
         </getter>
       </property>

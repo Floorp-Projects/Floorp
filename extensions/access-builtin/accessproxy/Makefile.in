@@ -45,9 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = accessproxy
 XPIDL_MODULE = accessproxy
 LIBRARY_NAME = accessproxy
-ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME = accproxy
-endif
 MOZILLA_INTERNAL_API = 1
 
 EXPORT_LIBRARY = 1

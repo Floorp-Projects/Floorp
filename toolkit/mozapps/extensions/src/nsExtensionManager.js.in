@@ -2919,10 +2919,12 @@ ExtensionManager.prototype = {
               zipReader.QueryInterface(Ci.nsIJAR);
               var principal = zipReader.getCertificatePrincipal(null);
               if (principal && principal.hasCertificate) {
-                if (principal.hasCertificate && verifyZipSigning(zipReader, principal)) {
-                  // XXX Bug 372980 This string could be empty. This needs
-                  // better UI to present principal.value.certificate's subject.
-                  prettyName = principal.prettyName;
+                if (verifyZipSigning(zipReader, principal)) {
+                  x509 = principal.certificate;
+                  if (x509 instanceof Ci.nsIX509Cert && x509.commonName.length > 0)
+                    prettyName = x509.commonName;
+                  else
+                    prettyName = principal.prettyName;
                 }
                 else {
                   // The xpi isn't correctly signed, don't offer to install.

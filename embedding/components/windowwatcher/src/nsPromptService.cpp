@@ -58,7 +58,6 @@ static const char kPromptURL[] = "chrome://global/content/commonDialog.xul";
 static const char kSelectPromptURL[] = "chrome://global/content/selectDialog.xul";
 static const char kQuestionIconClass[] = "question-icon";
 static const char kAlertIconClass[] = "alert-icon";
-static const char kWarningIconClass[] = "message-icon";
 // We include question-icon for backwards compatibility
 static const char kAuthenticationIconClass[] = "authentication-icon question-icon";
 

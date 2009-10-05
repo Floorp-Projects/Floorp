@@ -1281,7 +1281,7 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
         n++;
         add_utf = PR_TRUE;
     }
-    if (PL_strstr(acceptable, "*") == NULL) {
+    if (PL_strchr(acceptable, '*') == NULL) {
         n++;
         add_asterisk = PR_TRUE;
     }

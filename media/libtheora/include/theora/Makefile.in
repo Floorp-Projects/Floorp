@@ -46,6 +46,7 @@ EXPORTS_NAMESPACES = theora
 EXPORTS_theora = \
 		theora.h \
 		theoradec.h \
+		theoraenc.h \
 		codec.h \
 		$(NULL)
 

@@ -238,7 +238,10 @@ nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
   if (NS_SUCCEEDED(rv)) {
     // the addref resulting from this is the owning addref for this window
     RegisterTopLevelWindow(*aResult);
-    (*aResult)->SetZLevel(CalculateWindowZLevel(aParent, aChromeMask));
+    nsCOMPtr<nsIXULWindow> parent;
+    if (aChromeMask & nsIWebBrowserChrome::CHROME_DEPENDENT)
+      parent = aParent;
+    (*aResult)->SetZLevel(CalculateWindowZLevel(parent, aChromeMask));
   }
 
   return rv;
@@ -295,6 +298,10 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
 {
   *aResult = nsnull;
 
+  nsCOMPtr<nsIXULWindow> parent;
+  if (aChromeMask & nsIWebBrowserChrome::CHROME_DEPENDENT)
+    parent = aParent;
+
   nsRefPtr<nsWebShellWindow> window = new nsWebShellWindow(aChromeMask);
   NS_ENSURE_TRUE(window, NS_ERROR_OUT_OF_MEMORY);
 
@@ -319,7 +326,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   PRUint32 sheetMask = nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
                        nsIWebBrowserChrome::CHROME_MODAL |
                        nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
-  if (aParent && ((aChromeMask & sheetMask) == sheetMask))
+  if (parent && ((aChromeMask & sheetMask) == sheetMask))
     widgetInitData.mWindowType = eWindowType_sheet;
 #endif
 
@@ -361,18 +368,21 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     window->SetIntrinsicallySized(PR_TRUE);
   }
 
-  nsresult rv = window->Initialize(aParent, aAppShell, aUrl,
+  PRBool center = aChromeMask & nsIWebBrowserChrome::CHROME_CENTER_SCREEN;
+
+  nsresult rv = window->Initialize(parent, center ? aParent : nsnull,
+                                   aAppShell, aUrl,
                                    aInitialWidth, aInitialHeight,
                                    aIsHiddenWindow, widgetInitData);
       
   NS_ENSURE_SUCCESS(rv, rv);
 
   window.swap(*aResult); // transfer reference
-  if (aParent)
-    aParent->AddChildWindow(*aResult);
+  if (parent)
+    parent->AddChildWindow(*aResult);
 
-  if (aChromeMask & nsIWebBrowserChrome::CHROME_CENTER_SCREEN)
-    rv = (*aResult)->Center(aParent, aParent ? PR_FALSE : PR_TRUE, PR_FALSE);
+  if (center)
+    rv = (*aResult)->Center(parent, parent ? PR_FALSE : PR_TRUE, PR_FALSE);
 
   return rv;
 }

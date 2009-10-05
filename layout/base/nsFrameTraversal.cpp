@@ -504,10 +504,7 @@ nsFrameIterator::GetNextSiblingInner(nsIFrame* aFrame) {
 
 nsIFrame*
 nsFrameIterator::GetPrevSiblingInner(nsIFrame* aFrame) {
-  nsIFrame* parent = GetParentFrame(aFrame);
-  if (!parent)
-    return nsnull;
-  return parent->GetChildList(nsnull).GetPrevSiblingFor(aFrame);
+  return aFrame->GetPrevSibling();
 }
 
 

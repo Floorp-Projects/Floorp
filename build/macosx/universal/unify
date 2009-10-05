@@ -214,6 +214,7 @@ sub readZipCRCs($);
   sub lstatMode($);
   sub lstatType($);
   sub magic($);
+  sub magic2($);
   sub path($);
   sub stat($);
   sub statSize($);
@@ -1053,6 +1054,7 @@ sub readZipCRCs($) {
       'lstatErrno'  => 0,
       'lstatInit'   => 0,
       'magic'       => undef,
+      'magic2'       => undef,
       'magicErrno'  => 0,
       'magicErrMsg' => undef,
       'magicInit'   => 0,
@@ -1069,7 +1071,7 @@ sub readZipCRCs($) {
   # Returns true if the file is a fat Mach-O file, false if it's not, and
   # undef if an error occurs.  See /usr/include/mach-o/fat.h.
   sub isFat($) {
-    my ($magic, $this);
+    my ($magic, $magic2, $this);
     ($this) = @_;
 
     # magic() caches, there's no separate cache because isFat() doesn't hit
@@ -1078,8 +1080,16 @@ sub readZipCRCs($) {
     if (!defined($magic = $this->magic())) {
       return undef;
     }
+    $magic2 = $this->magic2();
 
-    if ($magic == 0xcafebabe) {
+    # We have to sanity check the second four bytes, because Java class
+    # files use the same magic number as Mach-O fat binaries.
+    # This logic is adapted from file(1), which says that Mach-O uses
+    # these bytes to count the number of architectures within, while
+    # Java uses it for a version number. Conveniently, there are only
+    # 18 labelled Mach-O architectures, and Java's first released
+    # class format used the version 43.0.
+    if ($magic == 0xcafebabe && $magic2 < 20) {
       return 1;
     }
 
@@ -1105,7 +1115,7 @@ sub readZipCRCs($) {
     # Accept Mach-O fat files or Mach-O thin files of either endianness.
     if ($magic == 0xfeedface ||
         $magic == 0xcefaedfe ||
-        $magic == 0xcafebabe) {
+        $this->isFat()) {
       return 1;
     }
 
@@ -1292,7 +1302,7 @@ sub readZipCRCs($) {
     }
 
     $! = 0;
-    my ($bytes, $magic);
+    my ($bytes, $magic, $bytes2, $magic2);
     if (!defined($bytes = sysread($fh, $magic, 4))) {
       $$this{'magicErrno'} = $!;
       $$this{'magicErrMsg'} = 'read "'.$$this{'path'}.'": '.$!;
@@ -1301,6 +1311,9 @@ sub readZipCRCs($) {
       close($fh);
       return undef;
     }
+    else {
+      $bytes2 = sysread($fh, $magic2, 4);
+    }
 
     close($fh);
 
@@ -1308,11 +1321,33 @@ sub readZipCRCs($) {
       # The file is too short, didn't read a magic number.  This isn't really
       # an error.  Return an unlikely value.
       $$this{'magic'} = -1;
+      $$this{'magic2'} = -1;
       return -1;
+    }
+    if ($bytes2 != 4) {
+      # File is too short to read a second 4 bytes.
+      $magic2 = -1;
     }
 
     $$this{'magic'} = unpack('N', $magic);
+    $$this{'magic2'} = unpack('N', $magic2);
     return $$this{'magic'};
+  }
+
+  # $FileAttrCache->magic2()
+  #
+  # Returns the second four bytes of the file as a 32-bit little endian number.
+  # See magic(), above for more info.
+  sub magic2($) {
+    my ($this);
+    ($this) = @_;
+
+    # we do the actual work (and cache it) in magic().
+    if (!$$this{'magicInit'}) {
+      my $magic = $$this->magic();
+    }
+
+    return $$this{'magic2'};
   }
 
   # $FileAttrCache->path()

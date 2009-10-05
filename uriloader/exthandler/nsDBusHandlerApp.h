@@ -56,6 +56,7 @@ public:
 
 protected:
   nsString mName;
+  nsString mDetailedDescription;
   nsCString mService;
   nsCString mMethod;
   nsCString mInterface;

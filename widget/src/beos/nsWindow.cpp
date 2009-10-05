@@ -432,29 +432,14 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 	return result;
 }
 
-NS_IMETHODIMP nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
-{
-	if ( nsnull == aInitData)
-		return NS_ERROR_FAILURE;
-	
-	SetWindowType(aInitData->mWindowType);
-	SetBorderStyle(aInitData->mBorderStyle);
-	return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Utility method for implementing both Create(nsIWidget ...) and
-// Create(nsNativeWidget...)
-//-------------------------------------------------------------------------
-nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
-                                        const nsRect &aRect,
-                                        EVENT_CALLBACK aHandleEventFunction,
-                                        nsIDeviceContext *aContext,
-                                        nsIAppShell *aAppShell,
-                                        nsIToolkit *aToolkit,
-                                        nsWidgetInitData *aInitData,
-                                        nsNativeWidget aNativeParent)
+nsresult nsWindow::Create(nsIWidget *aParent,
+                          nsNativeWidget aNativeParent,
+                          const nsRect &aRect,
+                          EVENT_CALLBACK aHandleEventFunction,
+                          nsIDeviceContext *aContext,
+                          nsIAppShell *aAppShell,
+                          nsIToolkit *aToolkit,
+                          nsWidgetInitData *aInitData)
 {
 
 	//Do as little as possible for invisible windows, why are these needed?
@@ -556,80 +541,6 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 	return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// Create the proper widget
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::Create(nsIWidget *aParent,
-                           const nsRect &aRect,
-                           EVENT_CALLBACK aHandleEventFunction,
-                           nsIDeviceContext *aContext,
-                           nsIAppShell *aAppShell,
-                           nsIToolkit *aToolkit,
-                           nsWidgetInitData *aInitData)
-{
-	// Switch to the "main gui thread" if necessary... This method must
-	// be executed on the "gui thread"...
-
-	nsToolkit* toolkit = (nsToolkit *)mToolkit;
-	if (toolkit && !toolkit->IsGuiThread())
-	{
-		nsCOMPtr<nsIWidget> widgetProxy;
-		nsresult rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-										NS_GET_IID(nsIWidget),
-										this, 
-										NS_PROXY_SYNC | NS_PROXY_ALWAYS, 
-										getter_AddRefs(widgetProxy));
-	
-		if (NS_FAILED(rv))
-			return rv;
-		return widgetProxy->Create(aParent, aRect, aHandleEventFunction, aContext,
-                           			aAppShell, aToolkit, aInitData);
-	}
-	return(StandardWindowCreate(aParent, aRect, aHandleEventFunction,
-	                            aContext, aAppShell, aToolkit, aInitData,
-	                            nsnull));
-}
-
-
-//-------------------------------------------------------------------------
-//
-// create with a native parent
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsWindow::Create(nsNativeWidget aParent,
-                           const nsRect &aRect,
-                           EVENT_CALLBACK aHandleEventFunction,
-                           nsIDeviceContext *aContext,
-                           nsIAppShell *aAppShell,
-                           nsIToolkit *aToolkit,
-                           nsWidgetInitData *aInitData)
-{
-	// Switch to the "main gui thread" if necessary... This method must
-	// be executed on the "gui thread"...
-
-	nsToolkit* toolkit = (nsToolkit *)mToolkit;
-	if (toolkit && !toolkit->IsGuiThread())
-	{
-		nsCOMPtr<nsIWidget> widgetProxy;
-		nsresult rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-										NS_GET_IID(nsIWidget),
-										this, 
-										NS_PROXY_SYNC | NS_PROXY_ALWAYS, 
-										getter_AddRefs(widgetProxy));
-	
-		if (NS_FAILED(rv))
-			return rv;
-		return widgetProxy->Create(aParent, aRect, aHandleEventFunction, aContext,
-                           			aAppShell, aToolkit, aInitData);
-	}
-	return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
-	                            aContext, aAppShell, aToolkit, aInitData,
-	                            aParent));
-}
-
 gfxASurface*
 nsWindow::GetThebesSurface()
 {
@@ -697,7 +608,8 @@ NS_METHOD nsWindow::Destroy()
 				if (mView->Parent())
 				{
 					mView->Parent()->RemoveChild(mView);
-					if (eWindowType_child != mWindowType)
+					if (eWindowType_child != mWindowType &&
+					    eWindowType_plugin != mWindowType)
 						w->Quit();
 					else
 					w->Unlock();
@@ -915,7 +827,8 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::HideWindowChrome(PRBool aShouldHide)
 {
-	if(mWindowType == eWindowType_child || mView == 0 || mView->Window() == 0)
+	if(mWindowType == eWindowType_child || mWindowType == eWindowType_plugin ||
+	   mView == 0 || mView->Window() == 0)
 		return NS_ERROR_FAILURE;
 	// B_BORDERED 
 	if (aShouldHide)
@@ -1510,7 +1423,7 @@ NS_IMETHODIMP nsWindow::Update()
 	nsresult rv = NS_ERROR_FAILURE;
 	//Switching scrolling trigger off
 	mIsScrolling = PR_FALSE;
-	if (mWindowType == eWindowType_child)
+	if (mWindowType == eWindowType_child || mWindowType == eWindowType_plugin)
 		return NS_OK;
 	BRegion reg;
 	reg.MakeEmpty();
@@ -1694,7 +1607,8 @@ bool nsWindow::CallMethod(MethodInfo *info)
 	case nsSwitchToUIThread::CLOSEWINDOW :
 		{
 			NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-			if (eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
+			if (eWindowType_popup != mWindowType && eWindowType_child != mWindowType &&
+			    eWindowType_plugin != mWindowType)
 				DealWithPopups(nsSwitchToUIThread::CLOSEWINDOW,nsPoint(0,0));
 
 			// Bit more Kung-fu. We do care ourselves about children destroy notofication.
@@ -1845,7 +1759,8 @@ bool nsWindow::CallMethod(MethodInfo *info)
 	case nsSwitchToUIThread::ONRESIZE :
 		{
 			NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-			if (eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
+			if (eWindowType_popup != mWindowType && eWindowType_child != mWindowType &&
+			    eWindowType_plugin != mWindowType)
 				DealWithPopups(nsSwitchToUIThread::ONRESIZE,nsPoint(0,0));
 			// This should be called only from BWindow::FrameResized()
 			if (!mIsTopWidgetWindow  || !mView  || !mView->Window())
@@ -1929,7 +1844,8 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			return false;
 		if ((BWindow *)info->args[1] != mView->Window())
 			return false;
-		if (mEventCallback || eWindowType_child == mWindowType )
+		if (mEventCallback || eWindowType_child == mWindowType ||
+		    eWindowType_plugin == mWindowType)
 		{
 			bool active = (bool)info->args[0];
 			if (!active) 
@@ -1975,7 +1891,8 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			nsRect r;
 			// We use this only for tracking whole window moves
 			GetScreenBounds(r);		
-			if (eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
+			if (eWindowType_popup != mWindowType && eWindowType_child != mWindowType &&
+			    eWindowType_plugin != mWindowType)
 				DealWithPopups(nsSwitchToUIThread::ONMOVE,nsPoint(0,0));
 			OnMove(r.x, r.y);
 		}
@@ -1984,7 +1901,8 @@ bool nsWindow::CallMethod(MethodInfo *info)
 	case nsSwitchToUIThread::ONWORKSPACE:
 		{
 			NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod");
-			if (eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
+			if (eWindowType_popup != mWindowType && eWindowType_child != mWindowType &&
+			    eWindowType_plugin != mWindowType)
 				DealWithPopups(nsSwitchToUIThread::ONWORKSPACE,nsPoint(0,0));
 		}
 		break;
@@ -2470,7 +2388,9 @@ nsresult nsWindow::OnPaint(BRegion *breg)
 	else
 		return rv;
 	BRect br = breg->Frame();
-	if (!br.IsValid() || !mEventCallback || !mView  || (eWindowType_child != mWindowType && eWindowType_popup != mWindowType))
+	if (!br.IsValid() || !mEventCallback || !mView  ||
+	    (eWindowType_child != mWindowType && eWindowType_popup != mWindowType &&
+	     eWindowType_plugin != mWindowType))
 		return rv;
 	nsRect nsr(nscoord(br.left), nscoord(br.top), 
 			nscoord(br.IntegerWidth() + 1), nscoord(br.IntegerHeight() + 1));

@@ -53,8 +53,10 @@ include pause/reftest.list
 == anim-discrete-to-3.svg          anim-standard-ref.svg
 == anim-discrete-to-4.svg          anim-standard-ref.svg
 
-fails == anim-fillcolor-1.svg      anim-standard-ref.svg # color support
-fails == anim-fillopacity-1.svg anim-standard-ref.svg    # non-length-numeric values support
+fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
+fails == anim-fillopacity-1none.svg anim-standard-ref.svg # XXXdholbert float support in nsStyleAnimation (bug 504652 or a followup)
+fails == anim-fillopacity-1css.svg  anim-standard-ref.svg # XXXdholbert float support in nsStyleAnimation (bug 504652 or a followup)
+fails == anim-fillopacity-1xml.svg  anim-standard-ref.svg # bug 436276
 
 == anim-height-done-1a.svg anim-standard-ref.svg
 == anim-height-done-1b.svg anim-standard-ref.svg
@@ -81,8 +83,8 @@ fails == anim-fillopacity-1.svg anim-standard-ref.svg    # non-length-numeric va
 == anim-retarget-7.svg anim-standard-ref.svg
 == anim-retarget-8.svg anim-standard-ref.svg
 
-fails == anim-strokecolor-1.svg anim-standard-ref.svg # color support
-fails == anim-strokewidth-1.svg anim-standard-ref.svg # color support
+fails == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
+fails == anim-strokewidth-1xml.svg anim-standard-ref.svg # bug 436267
 
 == anim-targethref-1.svg anim-standard-ref.svg
 == anim-targethref-2.svg anim-standard-ref.svg

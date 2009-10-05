@@ -535,6 +535,14 @@ var gCSSProperties = {
 		other_values: [ "1px", "3em" ],
 		invalid_values: []
 	},
+	"-moz-tab-size": {
+		domProp: "MozTabSize",
+		inherited: true,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "8" ],
+		other_values: [ "0", "3", "99", "12000" ],
+		invalid_values: [ "-1", "-808", "3.0", "17.5" ]
+	},
 	"-moz-transform": {
 		domProp: "MozTransform",
 		inherited: false,

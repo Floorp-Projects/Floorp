@@ -340,7 +340,8 @@ nsINode::GetTextEditorRootContent(nsIEditor** aEditor)
   if (aEditor)
     *aEditor = nsnull;
   for (nsINode* node = this; node; node = node->GetNodeParent()) {
-    if (!node->IsNodeOfType(eHTML))
+    if (!node->IsNodeOfType(eELEMENT) ||
+        !static_cast<nsIContent*>(node)->IsHTML())
       continue;
 
     nsCOMPtr<nsIEditor> editor;
@@ -1168,7 +1169,7 @@ nsNSElementTearoff::GetScrollInfo(nsIScrollableView **aScrollableView,
   *aScrollableView = nsnull;
 
   // it isn't clear what to return for SVG nodes, so just return nothing
-  if (mContent->IsNodeOfType(nsINode::eSVG)) {
+  if (mContent->IsSVG()) {
     if (aFrame)
       *aFrame = nsnull;
     return;
@@ -1320,7 +1321,7 @@ nsNSElementTearoff::GetScrollHeight(PRInt32* aScrollHeight)
   NS_ENSURE_ARG_POINTER(aScrollHeight);
   *aScrollHeight = 0;
 
-  if (mContent->IsNodeOfType(nsINode::eSVG))
+  if (mContent->IsSVG())
     return NS_OK;
 
   nsIScrollableView *scrollView;
@@ -1351,7 +1352,7 @@ nsNSElementTearoff::GetScrollWidth(PRInt32* aScrollWidth)
   NS_ENSURE_ARG_POINTER(aScrollWidth);
   *aScrollWidth = 0;
 
-  if (mContent->IsNodeOfType(nsINode::eSVG))
+  if (mContent->IsSVG())
     return NS_OK;
 
   nsIScrollableView *scrollView;
@@ -1382,7 +1383,7 @@ nsNSElementTearoff::GetClientAreaRect()
   nsIFrame *frame;
 
   // it isn't clear what to return for SVG nodes, so just return 0
-  if (mContent->IsNodeOfType(nsINode::eSVG))
+  if (mContent->IsSVG())
     return nsRect(0, 0, 0, 0);
 
   GetScrollInfo(&scrollView, &frame);
@@ -1434,18 +1435,6 @@ nsNSElementTearoff::GetClientWidth(PRInt32* aLength)
   return NS_OK;
 }
 
-static nsIFrame*
-GetContainingBlockForClientRect(nsIFrame* aFrame)
-{
-  // get the nearest enclosing SVG foreign object frame or the root frame
-  while (aFrame->GetParent() &&
-         !aFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)) {
-    aFrame = aFrame->GetParent();
-  }
-
-  return aFrame;
-}
-
 NS_IMETHODIMP
 nsNSElementTearoff::GetBoundingClientRect(nsIDOMClientRect** aResult)
 {
@@ -1463,29 +1452,10 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMClientRect** aResult)
   }
 
   nsRect r = nsLayoutUtils::GetAllInFlowRectsUnion(frame,
-          GetContainingBlockForClientRect(frame));
+          nsLayoutUtils::GetContainingBlockForClientRect(frame));
   rect->SetLayoutRect(r);
   return NS_OK;
 }
-
-struct RectListBuilder : public nsLayoutUtils::RectCallback {
-  nsClientRectList* mRectList;
-  nsresult          mRV;
-
-  RectListBuilder(nsClientRectList* aList) 
-    : mRectList(aList), mRV(NS_OK) {}
-
-  virtual void AddRect(const nsRect& aRect) {
-    nsRefPtr<nsClientRect> rect = new nsClientRect();
-    if (!rect) {
-      mRV = NS_ERROR_OUT_OF_MEMORY;
-      return;
-    }
-    
-    rect->SetLayoutRect(aRect);
-    mRectList->Append(rect);
-  }
-};
 
 NS_IMETHODIMP
 nsNSElementTearoff::GetClientRects(nsIDOMClientRectList** aResult)
@@ -1503,9 +1473,9 @@ nsNSElementTearoff::GetClientRects(nsIDOMClientRectList** aResult)
     return NS_OK;
   }
 
-  RectListBuilder builder(rectList);
+  nsLayoutUtils::RectListBuilder builder(rectList);
   nsLayoutUtils::GetAllInFlowRects(frame,
-          GetContainingBlockForClientRect(frame), &builder);
+          nsLayoutUtils::GetContainingBlockForClientRect(frame), &builder);
   if (NS_FAILED(builder.mRV))
     return builder.mRV;
   *aResult = rectList.forget().get();
@@ -2714,6 +2684,10 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     // anonymous content that the document is changing.
     document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
 
+    if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
+      document->ForgetLink(this);
+    }
+
     document->ClearBoxObjectFor(this);
   }
 
@@ -2976,7 +2950,7 @@ nsICSSStyleRule*
 nsGenericElement::GetSMILOverrideStyleRule()
 {
   nsGenericElement::nsDOMSlots *slots = GetExistingDOMSlots();
-  return slots ? slots->mSMILOverrideStyleRule : nsnull;
+  return slots ? slots->mSMILOverrideStyleRule.get() : nsnull;
 }
 
 nsresult
@@ -4015,7 +3989,7 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
       }
     }
 
-    if (!newContent->IsNodeOfType(eXUL)) {
+    if (!newContent->IsXUL()) {
       nsContentUtils::ReparentContentWrapper(newContent, aParent,
                                              container->GetOwnerDoc(),
                                              container->GetOwnerDoc());
@@ -4074,7 +4048,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
-  if (tmp->HasProperties() && tmp->IsNodeOfType(nsINode::eXUL)) {
+  if (tmp->HasProperties() && tmp->IsXUL()) {
     tmp->DeleteProperty(nsGkAtoms::contextmenulistener);
     tmp->DeleteProperty(nsGkAtoms::popuplistener);
   }
@@ -4107,7 +4081,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
         slots->mAttributeMap->DropReference();
         slots->mAttributeMap = nsnull;
       }
-      if (tmp->IsNodeOfType(nsINode::eXUL))
+      if (tmp->IsXUL())
         NS_IF_RELEASE(slots->mControllers);
       slots->mChildrenList = nsnull;
     }
@@ -4145,7 +4119,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
 
-  if (tmp->HasProperties() && tmp->IsNodeOfType(nsINode::eXUL)) {
+  if (tmp->HasProperties() && tmp->IsXUL()) {
     nsISupports* property =
       static_cast<nsISupports*>
                  (tmp->GetProperty(nsGkAtoms::contextmenulistener));
@@ -4192,7 +4166,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "slots mAttributeMap");
       cb.NoteXPCOMChild(slots->mAttributeMap.get());
 
-      if (tmp->IsNodeOfType(nsINode::eXUL))
+      if (tmp->IsXUL())
         cb.NoteXPCOMChild(slots->mControllers);
       cb.NoteXPCOMChild(
         static_cast<nsIDOMNodeList*>(slots->mChildrenList.get()));
@@ -4324,6 +4298,20 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
                "Don't call SetAttr with unknown namespace");
+
+  nsIDocument* doc = GetCurrentDoc();
+  if (kNameSpaceID_XLink == aNamespaceID && nsGkAtoms::href == aName) {
+    // XLink URI(s) might be changing. Drop the link from the map. If it
+    // is still style relevant it will be re-added by
+    // nsStyleUtil::IsLink. Make sure to keep the style system
+    // consistent so this remains true! In particular if the style system
+    // were to get smarter and not restyling an XLink element if the href
+    // doesn't change in a "significant" way, we'd need to do the same
+    // significance check here.
+    if (doc) {
+      doc->ForgetLink(this);
+    }
+  }
 
   nsAutoString oldValue;
   PRBool modification = PR_FALSE;
@@ -4637,6 +4625,12 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (aNotify) {
     nsNodeUtils::AttributeWillChange(this, aNameSpaceID, aName,
                                      nsIDOMMutationEvent::REMOVAL);
+  }
+
+  if (document && kNameSpaceID_XLink == aNameSpaceID &&
+      nsGkAtoms::href == aName) {
+    // XLink URI might be changing.
+    document->ForgetLink(this);
   }
 
   // When notifying, make sure to keep track of states whose value
@@ -5327,4 +5321,31 @@ nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
   TryMatchingElementsInSubtree(aRoot, nsnull, presContext, selectorList,
                                AppendAllMatchingElements, contentList);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::MozMatchesSelector(const nsAString& aSelector, PRBool* aReturn)
+{
+  NS_PRECONDITION(aReturn, "Null out param?");
+  *aReturn = nsGenericElement::doMatchesSelector(mContent, aSelector);
+  return NS_OK;
+}
+
+/* static */
+PRBool
+nsGenericElement::doMatchesSelector(nsIContent* aNode, const nsAString& aSelector)
+{
+  nsAutoPtr<nsCSSSelectorList> selectorList;
+  nsPresContext* presContext;
+  PRBool matches = PR_FALSE;
+
+  if (NS_SUCCEEDED(ParseSelectorList(aNode, aSelector,
+                                     getter_Transfers(selectorList),
+                                     &presContext)))
+  {
+    RuleProcessorData data(presContext, aNode, nsnull);
+    matches = nsCSSRuleProcessor::SelectorListMatches(data, selectorList);
+  }
+
+  return matches;
 }

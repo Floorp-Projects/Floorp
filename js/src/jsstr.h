@@ -142,7 +142,11 @@ struct JSString {
         ATOMIZED =      JSSTRING_BIT(JS_BITS_PER_WORD - 3),
         DEFLATED =      JSSTRING_BIT(JS_BITS_PER_WORD - 4),
 
+#if JS_BITS_PER_WORD > 32
+        LENGTH_BITS =   28,
+#else
         LENGTH_BITS =   JS_BITS_PER_WORD - 4,
+#endif
         LENGTH_MASK =   JSSTRING_BITMASK(LENGTH_BITS),
 
         /*
@@ -676,20 +680,17 @@ js_CompareStrings(JSString *str1, JSString *str2);
 
 /*
  * Boyer-Moore-Horspool superlinear search for pat:patlen in text:textlen.
- * The patlen argument must be positive and no greater than BMH_PATLEN_MAX.
- * The start argument tells where in text to begin the search.
+ * The patlen argument must be positive and no greater than sBMHPatLenMax.
  *
  * Return the index of pat in text, or -1 if not found.
  */
-#define BMH_CHARSET_SIZE 256    /* ISO-Latin-1 */
-#define BMH_PATLEN_MAX   255    /* skip table element is uint8 */
-
-#define BMH_BAD_PATTERN  (-2)   /* return value if pat is not ISO-Latin-1 */
+static const jsuint sBMHCharSetSize = 256; /* ISO-Latin-1 */
+static const jsuint sBMHPatLenMax   = 255; /* skip table element is uint8 */
+static const jsint  sBMHBadPattern  = -2;  /* return value if pat is not ISO-Latin-1 */
 
 extern jsint
-js_BoyerMooreHorspool(const jschar *text, jsint textlen,
-                      const jschar *pat, jsint patlen,
-                      jsint start);
+js_BoyerMooreHorspool(const jschar *text, jsuint textlen,
+                      const jschar *pat, jsuint patlen);
 
 extern size_t
 js_strlen(const jschar *s);

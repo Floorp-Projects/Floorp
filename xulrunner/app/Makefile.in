@@ -54,14 +54,10 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/,xulrunner.js)
 
 DEFINES += -DAB_CD=$(AB_CD)
 
-ifeq ($(USE_SHORT_LIBNAME), 1)
-PROGRAM = xulrunner$(BIN_SUFFIX)
-else
-ifeq ($(OS_ARCH), BeOS)
+ifneq (,$(filter BeOS OS2 WINCE WINNT,$(OS_ARCH)))
 PROGRAM = xulrunner$(BIN_SUFFIX)
 else
 PROGRAM = xulrunner-bin$(BIN_SUFFIX)
-endif
 endif
 
 DEFINES += -DXULRUNNER_PROGNAME=\"xulrunner\"

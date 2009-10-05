@@ -88,6 +88,7 @@ _TEST_FILES = \
 		test_bug470212.html \
 		test_bug503813.html \
 		test_bug507902.html \
+		test_bug514732.html \
 		test_movement_by_characters.html \
 		test_movement_by_words.html \
 		test_plugin_clipping.xhtml \
@@ -101,6 +102,8 @@ _TEST_FILES = \
 		file_Dolske.png \
 		file_IconTestServer.sjs \
 		file_LoadingImageReference.png \
+		file_bug514732_1.html \
+		file_bug514732_helper.html \
 		$(NULL)
 # disabled temporarily
 #		test_bug488417.html \

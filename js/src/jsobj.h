@@ -257,8 +257,9 @@ struct JSObject {
     }
 
     JSBool defineProperty(JSContext *cx, jsid id, jsval value,
-                          JSPropertyOp getter, JSPropertyOp setter,
-                          uintN attrs) {
+                          JSPropertyOp getter = JS_PropertyStub,
+                          JSPropertyOp setter = JS_PropertyStub,
+                          uintN attrs = JSPROP_ENUMERATE) {
         return map->ops->defineProperty(cx, this, id, value, getter, setter, attrs);
     }
 
@@ -350,17 +351,25 @@ struct JSObject {
 #define STOBJ_NSLOTS(obj)                                                     \
     ((obj)->dslots ? (uint32)(obj)->dslots[-1] : (uint32)JS_INITIAL_NSLOTS)
 
-#define STOBJ_GET_SLOT(obj,slot)                                              \
-    ((slot) < JS_INITIAL_NSLOTS                                               \
-     ? (obj)->fslots[(slot)]                                                  \
-     : (JS_ASSERT((slot) < (uint32)(obj)->dslots[-1]),                        \
-        (obj)->dslots[(slot) - JS_INITIAL_NSLOTS]))
+inline jsval&
+STOBJ_GET_SLOT(JSObject *obj, uintN slot)
+{
+    return (slot < JS_INITIAL_NSLOTS)
+           ? obj->fslots[slot]
+           : (JS_ASSERT(slot < (uint32)obj->dslots[-1]),
+              obj->dslots[slot - JS_INITIAL_NSLOTS]);
+}
 
-#define STOBJ_SET_SLOT(obj,slot,value)                                        \
-    ((slot) < JS_INITIAL_NSLOTS                                               \
-     ? (obj)->fslots[(slot)] = (value)                                        \
-     : (JS_ASSERT((slot) < (uint32)(obj)->dslots[-1]),                        \
-        (obj)->dslots[(slot) - JS_INITIAL_NSLOTS] = (value)))
+inline void
+STOBJ_SET_SLOT(JSObject *obj, uintN slot, jsval value)
+{
+    if (slot < JS_INITIAL_NSLOTS) {
+        obj->fslots[slot] = value;
+    } else {
+        JS_ASSERT(slot < (uint32)obj->dslots[-1]);
+        obj->dslots[slot - JS_INITIAL_NSLOTS] = value;
+    }
+}
 
 inline JSClass*
 STOBJ_GET_CLASS(const JSObject* obj)
@@ -492,7 +501,7 @@ OBJ_IS_CLONED_BLOCK(JSObject *obj)
 }
 
 extern JSBool
-js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, int16 index);
+js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index);
 
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
     (OBJ_SCOPE(obj)->entryCount)
@@ -872,7 +881,10 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              jsval *statep, jsid *idp);
 
 extern void
-js_TraceNativeEnumerators(JSTracer *trc);
+js_MarkEnumeratorState(JSTracer *trc, JSObject *obj, jsval state);
+
+extern void
+js_PurgeCachedNativeEnumerators(JSContext *cx, JSThreadData *data);
 
 extern JSBool
 js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,

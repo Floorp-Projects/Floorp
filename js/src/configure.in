@@ -170,7 +170,7 @@ MOZ_ARG_WITH_STRING(dist-dir,
     TOP_DIST=dist)
 AC_SUBST(TOP_DIST)
 
-dnl Default to MSVC for win32
+dnl Default to MSVC for win32 and gcc-4.2 for darwin
 dnl ==============================================================
 if test -z "$CROSS_COMPILE"; then
 case "$target" in
@@ -181,6 +181,11 @@ case "$target" in
     if test -z "$CXXCPP"; then CXXCPP="cl -TP -E -nologo"; ac_cv_prog_CXXCPP="$CXXCPP"; fi
     if test -z "$LD"; then LD=link; fi
     if test -z "$AS"; then AS=ml; fi
+    if test -z "$MIDL"; then MIDL=midl; fi
+    ;;
+*-darwin*)
+    if test -z "$CC"; then CC=gcc-4.2; fi
+    if test -z "$CXX"; then CXX=g++-4.2; fi
     ;;
 esac
 fi
@@ -1851,9 +1856,21 @@ case "$target" in
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='windows'
     BIN_SUFFIX='.exe'
-    USE_SHORT_LIBNAME=1
     MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
+
+    dnl Default to Windows Mobile components enabled
+    WINCE_WINDOWS_MOBILE=1
+
+    MOZ_ARG_DISABLE_BOOL(windows-mobile-components,
+    [  --disable-windows-mobile-components
+         Disable Windows Mobile specific components from CE build],
+    WINCE_WINDOWS_MOBILE=,
+    WINCE_WINDOWS_MOBILE=1)
+ 
+    if test "$WINCE_WINDOWS_MOBILE"; then
+        AC_DEFINE(WINCE_WINDOWS_MOBILE)
+    fi
 ;;
 
 *-symbian*)
@@ -1985,7 +2002,6 @@ case "$target" in
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
-    USE_SHORT_LIBNAME=1
     MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 
@@ -2145,7 +2161,6 @@ case "$target" in
     AC_DEFINE(XP_OS2)
     AC_DEFINE(OS2EMX_PLAIN_CHAR)
     AC_DEFINE(TCPV40HDRS)
-    USE_SHORT_LIBNAME=1
     DLL_PREFIX=
     LIB_PREFIX=
     LIB_SUFFIX=lib
@@ -2471,6 +2486,7 @@ i?86-*)
     ;;
 x86_64*-*)
     AC_DEFINE(AVMPLUS_AMD64)
+    AC_DEFINE(AVMPLUS_64BIT)
     ;;
 arm*-*)
     AC_DEFINE(AVMPLUS_ARM)
@@ -4818,7 +4834,6 @@ AC_SUBST(LD)
 AC_SUBST(RC)
 AC_SUBST(RCFLAGS)
 AC_SUBST(WINDRES)
-AC_SUBST(USE_SHORT_LIBNAME)
 AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
 AC_SUBST(BIN_FLAGS)
@@ -4868,6 +4883,7 @@ AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_TIMELINE)
 AC_SUBST(WINCE)
+AC_SUBST(WINCE_WINDOWS_MOBILE)
 
 AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_DISPLAYNAME)

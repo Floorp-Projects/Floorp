@@ -23,3 +23,12 @@
 %define sidebarItemGraphiteFocusedBackground -moz-linear-gradient(top, bottom, from(#8293A6), to(#425972)) repeat-x
 %define sidebarItemInactiveBorderTop 1px solid #979797
 %define sidebarItemInactiveBackground -moz-linear-gradient(top, bottom, from(#B4B4B4), to(#8A8A8A)) repeat-x
+
+%define toolbarbuttonBorderColor rgba(59, 59, 59, 0.9)
+%define toolbarbuttonCornerRadius 3px
+%define toolbarbuttonBackground -moz-linear-gradient(top, bottom, from(#FFF), to(#ADADAD)) repeat-x
+%define toolbarbuttonPressedInnerShadow inset rgba(0, 0, 0, 0.3) 0 -6px 14px, inset #000 0 1px 4px, inset rgba(0, 0, 0, 0.2) 0 1px 4px
+%define toolbarbuttonPressedBackgroundColor #B5B5B5
+%define toolbarbuttonInactiveBorderColor rgba(146, 146, 146, 0.84)
+%define toolbarbuttonInactiveFontColor #7C7C7C
+%define toolbarbuttonInactiveBackgroundImage -moz-linear-gradient(top, bottom, from(#FFF), to(#CCC))

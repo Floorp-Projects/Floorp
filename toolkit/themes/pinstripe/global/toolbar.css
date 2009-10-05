@@ -56,6 +56,12 @@ toolbar {
   -moz-appearance: toolbar;
 }
 
+toolbar:-moz-lwtheme {
+  -moz-appearance: none;
+  background: none;
+  border-style: none;
+}
+
 menubar {
   -moz-appearance: dialog; /* For content menubars, "toolbar" is too dark, so we use "dialog". */
   min-width: 1px;

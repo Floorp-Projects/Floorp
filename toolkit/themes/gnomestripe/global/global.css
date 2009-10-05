@@ -188,34 +188,22 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 /* ::::: miscellaneous formatting ::::: */
 
-:root[lwtheme="true"],
+:root:-moz-lwtheme,
 [lwthemefooter="true"],
-:root[lwtheme="true"] toolbar,
-:root[lwtheme="true"] statusbarpanel {
+statusbarpanel:-moz-lwtheme {
   -moz-appearance: none;
 }
 
-:root[lwtheme="true"] sidebarheader {
+sidebarheader:-moz-lwtheme {
   background: none;
 }
 
-:root[lwthemetextcolor="dark"] {
+:root:-moz-lwtheme-darktext {
   text-shadow: 1px 1px 2px white;
 }
 
-:root[lwthemetextcolor="bright"] {
+:root:-moz-lwtheme-brighttext {
   text-shadow: 1px 1px 2px black;
-}
-
-:root[lwtheme="true"] menubar > menu,
-:root[lwtheme="true"] toolbarbutton {
-  text-shadow: none;
-}
-
-:root[lwtheme="true"] menubar > menu:not([open="true"]),
-:root[lwtheme="true"] toolbarbutton:not(:hover):not([checked="true"]):not([open="true"]):not([disabled="true"]) {
-  color: inherit;
-  text-shadow: inherit;
 }
 
 .inset {

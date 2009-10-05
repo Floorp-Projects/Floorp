@@ -273,10 +273,10 @@ nsViewManager::CreateView(const nsRect& aBounds,
 {
   nsView *v = new nsView(this, aVisibilityFlag);
   if (v) {
+    v->SetParent(static_cast<nsView*>(const_cast<nsIView*>(aParent)));
     v->SetPosition(aBounds.x, aBounds.y);
     nsRect dim(0, 0, aBounds.width, aBounds.height);
     v->SetDimensions(dim, PR_FALSE);
-    v->SetParent(static_cast<nsView*>(const_cast<nsIView*>(aParent)));
   }
   return v;
 }

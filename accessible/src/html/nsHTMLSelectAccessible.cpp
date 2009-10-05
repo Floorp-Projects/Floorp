@@ -408,7 +408,7 @@ nsHTMLSelectListAccessible::CacheOptSiblings(nsIAccessibilityService *aAccServic
 
   for (PRUint32 count = 0; count < numChildren; count ++) {
     nsIContent *childContent = aParentContent->GetChildAt(count);
-    if (!childContent->IsNodeOfType(nsINode::eHTML)) {
+    if (!childContent->IsHTML()) {
       continue;
     }
     nsCOMPtr<nsIAtom> tag = childContent->Tag();
@@ -835,7 +835,7 @@ nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIDOMNode *aListNod
 void nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibleOption)
 {
   if (!aPossibleOption || aPossibleOption->Tag() != nsAccessibilityAtoms::option ||
-      !aPossibleOption->IsNodeOfType(nsINode::eHTML)) {
+      !aPossibleOption->IsHTML()) {
     return;
   }
 

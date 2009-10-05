@@ -30,20 +30,22 @@ def _relpath(path, start=None):
 os.path.relpath = _relpath
 
 class Test:
-    def __init__(self, path, slow, allow_oom, tmflags):
+    def __init__(self, path, slow, allow_oom, tmflags, valgrind):
         """  path        path to test file
              slow        True means the test is slow-running
-             allow_oom   True means OOM should not be considered a failure """
+             allow_oom   True means OOM should not be considered a failure
+             valgrind    True means test should run under valgrind """
         self.path = path
         self.slow = slow
         self.allow_oom = allow_oom
         self.tmflags = tmflags
+        self.valgrind = valgrind
 
     COOKIE = '|trace-test|'
 
     @classmethod
-    def from_file(cls, path):
-        slow = allow_oom = False
+    def from_file(cls, path, options):
+        slow = allow_oom = valgrind = False
         tmflags = ''
 
         line = open(path).readline()
@@ -67,10 +69,12 @@ class Test:
                         slow = True
                     elif name == 'allow-oom':
                         allow_oom = True
+                    elif name == 'valgrind':
+                        valgrind = options.valgrind
                     else:
                         print('warning: unrecognized |trace-test| attribute %s'%part)
 
-        return cls(path, slow, allow_oom, tmflags)
+        return cls(path, slow, allow_oom, tmflags, valgrind or options.valgrind_all)
 
 def find_tests(dir, substring = None):
     ans = []
@@ -102,6 +106,18 @@ def run_test(test, lib_dir):
     else:
         env = None
     cmd = get_test_cmd(test.path, lib_dir)
+
+    if (test.valgrind and
+        any([os.path.exists(os.path.join(d, 'valgrind'))
+             for d in os.environ['PATH'].split(os.pathsep)])):
+        valgrind_prefix = [ 'valgrind',
+                            '--smc-check=all',
+                            '--error-exitcode=1',
+                            '--leak-check=full']
+        if os.uname()[0] == 'Darwin':
+            valgrind_prefix += ['--dsymutil=yes']
+        cmd = valgrind_prefix + cmd
+
     if OPTIONS.show_cmd:
         print(cmd)
     # close_fds is not supported on Windows and will cause a ValueError.
@@ -111,6 +127,8 @@ def run_test(test, lib_dir):
     out, err = out.decode(), err.decode()
     if OPTIONS.show_output:
         sys.stdout.write(out)
+        sys.stdout.write(err)
+    if test.valgrind:
         sys.stdout.write(err)
     return (check_output(out, err, p.returncode, test.allow_oom), out, err)
 
@@ -126,7 +144,7 @@ def check_output(out, err, rc, allow_oom):
     if rc != 0:
         # Allow a non-zero exit code if we want to allow OOM, but only if we
         # actually got OOM.
-        return allow_oom and ': out of memory\n' in err
+        return allow_oom and ': out of memory' in err
 
     return True
 
@@ -172,7 +190,7 @@ def run_tests(tests, test_dir, lib_dir):
     except KeyboardInterrupt:
         pass
 
-    if pb: 
+    if pb:
         pb.finish()
 
     if failures:
@@ -230,6 +248,10 @@ if __name__ == '__main__':
                   help='Retest using test list file [FILE]')
     op.add_option('-g', '--debug', dest='debug', action='store_true',
                   help='Run test in gdb')
+    op.add_option('--valgrind', dest='valgrind', action='store_true',
+                  help='Enable the |valgrind| flag, if valgrind is in $PATH.')
+    op.add_option('--valgrind-all', dest='valgrind_all', action='store_true',
+                  help='Run all tests with valgrind, if valgrind is in $PATH.')
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
@@ -276,8 +298,9 @@ if __name__ == '__main__':
     if not test_list:
         print >> sys.stderr, "No tests found matching command line arguments."
         sys.exit(0)
-        
-    test_list = [ Test.from_file(_) for _ in test_list ]
+
+    test_list = [ Test.from_file(_, OPTIONS) for _ in test_list ]
+
     if not OPTIONS.run_slow:
         test_list = [ _ for _ in test_list if not _.slow ]
 
@@ -293,4 +316,11 @@ if __name__ == '__main__':
         call(cmd)
         sys.exit()
 
-    run_tests(test_list, test_dir, lib_dir)
+    try:
+        run_tests(test_list, test_dir, lib_dir)
+    except OSError:
+        if not os.path.exists(JS):
+            print >> sys.stderr, "JS shell argument: file does not exist: '%s'"%JS
+            sys.exit(1)
+        else:
+            raise

@@ -360,7 +360,7 @@
       try {
         root.querySelectorAll(undefined);
       } catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
-      assert_todo( pass, type + ".querySelectorAll undefined" );
+      assert( pass, type + ".querySelectorAll undefined" );
 
       pass = false;
       try {
@@ -385,7 +385,7 @@
       try {
         root.querySelector(undefined);
       } catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
-      assert_todo( pass, type + ".querySelector undefined" );
+      assert( pass, type + ".querySelector undefined" );
 
       pass = false;
       try {
@@ -487,14 +487,6 @@
       }
     }
 
-    function assert_todo(pass, title) {
-      if (window.parent && window.parent.SimpleTest) {
-        window.parent.SimpleTest.todo(pass, title);
-      } else {
-        assert(pass, title);
-      }
-    }
-
     function jqTests(type, root, select) {
 
       function query(q, resolver){
@@ -505,6 +497,36 @@
               e.code == DOMException.SYNTAX_ERR)
             throw e;
         }
+      }
+
+      var all = query("*");
+
+      function checkMatchesSelector(results, q) {
+        var key = +new Date + ":" + Math.random();
+
+        function report(item, shouldMatch) {
+          assert( item.mozMatchesSelector(q) === shouldMatch,
+                  item + (shouldMatch ? "does not match" : "matches")
+                       + " selector '" + q + "'" );
+        }
+
+        for (var i = 0; i < results.length; i++) {
+          var item = results.item(i);
+          item[key] = true;
+          report( item, true );
+        }
+
+        for (var stride = 15, // reduce test spam
+                 i = Math.round(Math.random() * stride);
+             i < all.length; i += stride)
+        {
+          var item = all.item(i),
+              shouldMatch = !!item[key];
+          report( item, shouldMatch );
+        }
+
+        for (var i = 0; i < results.length; i++)
+          delete results.item(i)[key];
       }
 
       function t( name, q, ids, restrict, ids2 ) {
@@ -543,6 +565,9 @@
   
           assert( pass, type + ": " + name + " (" + nq + ")" +
             (pass ? "" : " Expected: " + extra(ids) + " Received: " + extra(results)) );
+
+          if (results)
+            checkMatchesSelector( results, q );
         }
 
         function hasPassed(results, ids){
@@ -595,7 +620,6 @@
       t( "Adjacent", "xHTML|a + a", ["groups"] );
       t( "Nth-child", "xHTML|*#form xHTML|*#select1 xHTML|option:nth-child(3)", ["option1c"] );
 
-      var all = query("*");
       assert( all && all.length > 30, type + ": Select all" );
       var good = all && all.length;
       for ( var i = 0; all && i < all.length; i++ )

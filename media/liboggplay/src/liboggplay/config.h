@@ -17,7 +17,7 @@
 #define HAVE_FISHSOUND /**/
 
 /* Define if we have GLUT. */
-#define HAVE_GLUT /**/
+/* #undef HAVE_GLUT */
 
 /* Define if have Imlib2 */
 /* #undef HAVE_IMLIB2 */
@@ -29,7 +29,7 @@
 /* #undef HAVE_KATE */
 
 /* Define if have libsndfile */
-#define HAVE_LIBSNDFILE1 /**/
+/* #undef HAVE_LIBSNDFILE1 */
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
@@ -90,7 +90,7 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.0.1"
+#define VERSION "0.2.0"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

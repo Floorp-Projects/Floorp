@@ -412,7 +412,7 @@ fs_vorbis_reset (FishSound * fsound)
   FishSoundVorbisInfo * fsv = (FishSoundVorbisInfo *)fsound->codec_data;
 
   vorbis_block_init (&fsv->vd, &fsv->vb);
-
+  fsv->packetno = 0;
   return 0;
 }
 

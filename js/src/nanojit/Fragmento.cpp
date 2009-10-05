@@ -40,7 +40,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nanojit.h"
-#undef MEMORY_INFO
 
 namespace nanojit
 {

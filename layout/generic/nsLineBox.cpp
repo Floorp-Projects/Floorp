@@ -378,15 +378,23 @@ PRBool
 nsLineBox::RFindLineContaining(nsIFrame* aFrame,
                                const nsLineList::iterator& aBegin,
                                nsLineList::iterator& aEnd,
+                               nsIFrame* aLastFrameBeforeEnd,
                                PRInt32* aFrameIndexInLine)
 {
   NS_PRECONDITION(aFrame, "null ptr");
+  nsIFrame* curFrame = aLastFrameBeforeEnd;
   while (aBegin != aEnd) {
     --aEnd;
-    PRInt32 ix = aEnd->IndexOf(aFrame);
-    if (ix >= 0) {
-      *aFrameIndexInLine = ix;
-      return PR_TRUE;
+    NS_ASSERTION(aEnd->IsLastChild(curFrame), "Unexpected curFrame");
+    // i is the index of curFrame in aEnd
+    PRInt32 i = aEnd->GetChildCount() - 1;
+    while (i >= 0) {
+      if (curFrame == aFrame) {
+        *aFrameIndexInLine = i;
+        return PR_TRUE;
+      }
+      --i;
+      curFrame = curFrame->GetPrevSibling();
     }
   }
   *aFrameIndexInLine = -1;

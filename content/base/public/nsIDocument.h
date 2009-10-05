@@ -105,8 +105,8 @@ class nsIBoxObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xe0ca6723, 0x1efa, 0x4819, \
-  { 0x84, 0xbb, 0xfa, 0x48, 0x39, 0xe8, 0xef, 0x19 } }
+  { 0x2ca82a51, 0x4a6a, 0x4dfa, \
+      { 0xa6, 0x5f, 0x49, 0x52, 0xa3, 0xaa, 0x02, 0xef } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1164,6 +1164,38 @@ public:
    * or right-to-left.
    */
   virtual PRBool IsDocumentRightToLeft() { return PR_FALSE; }
+
+  enum DocumentTheme {
+    Doc_Theme_Uninitialized, // not determined yet
+    Doc_Theme_None,
+    Doc_Theme_Dark,
+    Doc_Theme_Bright
+  };
+
+  /**
+   * Returns Doc_Theme_None if there is no lightweight theme specified, Doc_Theme_Dark
+   * for a dark theme and Doc_Theme_Bright for a light theme. This is used to
+   * determine the state of the pseudoclasses :-moz-lwtheme and :-moz-lwtheme-text.
+   */
+  virtual int GetDocumentLWTheme() { return Doc_Theme_None; }
+
+  /**
+   * Gets the document's cached pointer to the first <base> element in this
+   * document which has an href attribute.  If the document doesn't contain any
+   * <base> elements with an href, returns null.
+   */
+  virtual nsIContent* GetFirstBaseNodeWithHref() = 0;
+
+  /**
+   * Sets the document's cached pointer to the first <base> element with an
+   * href attribute in this document and updates the document's base URI
+   * according to the element's href.
+   *
+   * If the given node is the same as the current first base node, this
+   * function still updates the document's base URI according to the node's
+   * href, if it changed.
+   */
+  virtual nsresult SetFirstBaseNodeWithHref(nsIContent *node) = 0;
 
 protected:
   ~nsIDocument()

@@ -899,6 +899,13 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     NS_ConvertUTF16toUTF8 utf8UnEscapeSpec(unEscapeSpec);
 
+    // Adding trailing slash helps to recognize whether the URL points to a file
+    // or a directory (bug #214405).
+    if ((type == nsIDirIndex::TYPE_DIRECTORY) &&
+        (utf8UnEscapeSpec.Last() != '/')) {
+        utf8UnEscapeSpec.Append('/');
+    }
+
     // now minimally re-escape the location...
     PRUint32 escFlags;
     // for some protocols, like gopher, we expect the location to be absolute.
@@ -911,10 +918,9 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     }
     else {
         // escape as relative
-        // esc_Directory is needed for protocols which allow the same name for
-        // both a directory and a file and distinguish between the two by a
-        // trailing '/' -- without it, the trailing '/' will be escaped, and
-        // links from within that directory will be incorrect
+        // esc_Directory is needed because directories have a trailing slash.
+        // Without it, the trailing '/' will be escaped, and links from within
+        // that directory will be incorrect
         escFlags = esc_Forced | esc_OnlyASCII | esc_AlwaysCopy | esc_FileBaseName | esc_Colon | esc_Directory;
     }
     NS_EscapeURL(utf8UnEscapeSpec.get(), utf8UnEscapeSpec.Length(), escFlags, escapeBuf);

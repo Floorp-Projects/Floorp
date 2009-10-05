@@ -601,3 +601,26 @@ nsSMILParserUtils::ParseMetricMultiplicand(nsACString::const_iterator& aSpec,
 
   return result;
 }
+
+PRInt32
+nsSMILParserUtils::CheckForNegativeNumber(const nsAString& aStr)
+{
+  PRInt32 absValLocation = -1;
+
+  nsAString::const_iterator start, end;
+  aStr.BeginReading(start);
+  aStr.EndReading(end);
+
+  // Skip initial whitespace
+  SkipWsp(start, end);
+
+  // Check for dash
+  if (start != end && *start == '-') {
+    ++start;
+    // Check for numeric character
+    if (start != end && NS_IS_DIGIT(*start)) {
+      absValLocation = start.get() - start.start();
+    }
+  }
+  return absValLocation;
+}

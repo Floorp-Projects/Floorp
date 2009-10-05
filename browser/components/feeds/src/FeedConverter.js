@@ -37,6 +37,8 @@
 #
 # ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/debug.js");
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
@@ -684,5 +686,4 @@ function NSGetModule(cm, file) {
   return Module;
 }
 
-#include ../../../../toolkit/content/debug.js
 #include GenericFactory.js

@@ -63,8 +63,7 @@
   z-index: 10;
 }
 
-/*XXX Bug 473152 - Aero Glass clips panel content
-#allTabs-panel:-moz-system-metric(windows-compositor),*/
+#allTabs-panel:-moz-system-metric(windows-compositor),
 #ctrlTab-panel:-moz-system-metric(windows-compositor) {
   background: transparent;
   -moz-appearance: -moz-win-glass;

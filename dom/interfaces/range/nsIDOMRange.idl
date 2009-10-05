@@ -48,7 +48,7 @@
  * @status FROZEN
  */
 
-[scriptable, uuid(a6cf90ce-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(fed93d11-f24d-41d8-ae55-4197927999bb)]
 interface nsIDOMRange : nsISupports
 {
   readonly attribute nsIDOMNode       startContainer;
@@ -113,4 +113,7 @@ interface nsIDOMRange : nsISupports
                                         raises(DOMException);
   void               detach()
                                         raises(DOMException);
+
+  nsIDOMClientRectList getClientRects();
+  nsIDOMClientRect getBoundingClientRect();
 };

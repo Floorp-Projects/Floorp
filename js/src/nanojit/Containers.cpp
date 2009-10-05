@@ -39,6 +39,8 @@
 
 #include "nanojit.h"
 
+#ifdef FEATURE_NANOJIT
+
 namespace nanojit
 {
     BitSet::BitSet(Allocator& allocator, int nbits)
@@ -89,3 +91,5 @@ namespace nanojit
         bits = bits2;
     }
 }
+
+#endif // FEATURE_NANOJIT

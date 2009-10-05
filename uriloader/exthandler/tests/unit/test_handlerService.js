@@ -342,6 +342,70 @@ function run_test() {
   do_check_eq(webPossibleHandler.name, webHandler.name);
   do_check_true(webPossibleHandler.equals(webHandler));
 
+  //////////////////////////////////////////////////////
+  // handler info command line parameters and equality
+  var localApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
+                 createInstance(Ci.nsILocalHandlerApp);
+  var handlerApp = localApp.QueryInterface(Ci.nsIHandlerApp);
+
+  do_check_true(handlerApp.equals(localApp));
+
+  localApp.executable = executable;
+
+  do_check_eq(0, localApp.parameterCount);
+  localApp.appendParameter("-test1");
+  do_check_eq(1, localApp.parameterCount);
+  localApp.appendParameter("-test2");
+  do_check_eq(2, localApp.parameterCount);
+  do_check_true(localApp.parameterExists("-test1"));
+  do_check_true(localApp.parameterExists("-test2"));
+  do_check_false(localApp.parameterExists("-false"));
+  localApp.clearParameters();
+  do_check_eq(0, localApp.parameterCount);
+
+  var localApp2 = Cc["@mozilla.org/uriloader/local-handler-app;1"].
+                  createInstance(Ci.nsILocalHandlerApp);
+  
+  localApp2.executable = executable;
+
+  localApp.clearParameters();
+  do_check_true(localApp.equals(localApp2));
+
+  // equal:
+  // cut -d 1 -f 2
+  // cut -d 1 -f 2
+
+  localApp.appendParameter("-test1");
+  localApp.appendParameter("-test2");
+  localApp.appendParameter("-test3");
+  localApp2.appendParameter("-test1");
+  localApp2.appendParameter("-test2");
+  localApp2.appendParameter("-test3");
+  do_check_true(localApp.equals(localApp2));
+
+  // not equal:
+  // cut -d 1 -f 2
+  // cut -f 1 -d 2
+
+  localApp.clearParameters();
+  localApp2.clearParameters();
+
+  localApp.appendParameter("-test1");
+  localApp.appendParameter("-test2");
+  localApp.appendParameter("-test3");
+  localApp2.appendParameter("-test2");
+  localApp2.appendParameter("-test1");
+  localApp2.appendParameter("-test3");
+  do_check_false(localApp2.equals(localApp));
+
+  var str;
+  str = localApp.getParameter(0)
+  do_check_eq(str, "-test1");
+  str = localApp.getParameter(1)
+  do_check_eq(str, "-test2");
+  str = localApp.getParameter(2)
+  do_check_eq(str, "-test3");
+
   // FIXME: test round trip integrity for a protocol.
   // FIXME: test round trip integrity for a handler info with a web handler.
 

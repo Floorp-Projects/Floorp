@@ -335,6 +335,7 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSText(void);
   ~nsCSSText(void);
 
+  nsCSSValue mTabSize;
   nsCSSValue mWordSpacing;
   nsCSSValue mLetterSpacing;
   nsCSSValue mVerticalAlign;

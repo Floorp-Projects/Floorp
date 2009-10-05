@@ -60,6 +60,7 @@ _BROWSER_FILES = harness.js \
                  browser_signed_untrusted.js \
                  browser_signed_tampered.js \
                  browser_signed_multiple.js \
+                 browser_signed_naming.js \
                  browser_empty.js \
                  browser_corrupt.js \
                  browser_cookies.js \
@@ -85,6 +86,8 @@ _BROWSER_FILES = harness.js \
                  unsigned.xpi \
                  signed.xpi \
                  signed2.xpi \
+                 signed-no-o.xpi \
+                 signed-no-cn.xpi \
                  signed-untrusted.xpi \
                  signed-tampered.xpi \
                  empty.xpi \
