@@ -6571,7 +6571,6 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                          cx->fp->slots + cx->fp->script->nfixed +
                          js_ReconstructStackDepth(cx, cx->fp->script, regs->pc) ==
                          regs->sp);
-            JS_ASSERT(regs->pc == innermost->pc);
 
             /*
              * If there's a tree call around the point that we deep exited at,
