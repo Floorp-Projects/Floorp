@@ -1456,7 +1456,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
      * script or embedding code and then be mutated.
      */
     if (flags & JSRESOLVE_ASSIGNING) {
-        JS_ASSERT(!js_InternalFunctionObject(obj));
+        JS_ASSERT(!js_IsInternalFunctionObject(obj));
         return JS_TRUE;
     }
 
@@ -1466,7 +1466,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
      */
     atom = cx->runtime->atomState.classPrototypeAtom;
     if (id == ATOM_KEY(atom)) {
-        JS_ASSERT(!js_InternalFunctionObject(obj));
+        JS_ASSERT(!js_IsInternalFunctionObject(obj));
 
         /*
          * Beware of the wacky case of a user function named Object -- trying
@@ -1503,7 +1503,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
         atom = OFFSET_TO_ATOM(cx->runtime, lfp->atomOffset);
         if (id == ATOM_KEY(atom)) {
-            JS_ASSERT(!js_InternalFunctionObject(obj));
+            JS_ASSERT(!js_IsInternalFunctionObject(obj));
 
             if (!js_DefineNativeProperty(cx, obj,
                                          ATOM_TO_JSID(atom), JSVAL_VOID,

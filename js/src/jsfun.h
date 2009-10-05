@@ -232,7 +232,7 @@ extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
  * or embedding code.
  */
 inline bool
-js_InternalFunctionObject(JSObject *funobj)
+js_IsInternalFunctionObject(JSObject *funobj)
 {
     JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
     JSFunction *fun = (JSFunction *) funobj->getPrivate();
