@@ -1327,12 +1327,24 @@ case "$OS_TEST" in
     CPU_ARCH=x86
     ;;
 
-powerpc* | ppc | rs6000)
+powerpc64 | ppc64)
+    CPU_ARCH=ppc64
+    ;;
+
+powerpc | ppc | rs6000)
     CPU_ARCH=ppc
     ;;
 
 Alpha | alpha | ALPHA)
     CPU_ARCH=Alpha
+    ;;
+
+s390)
+    CPU_ARCH=s390
+    ;;
+
+s390x)
+    CPU_ARCH=s390x
     ;;
 
 hppa* | parisc)
