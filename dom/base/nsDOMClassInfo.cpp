@@ -1909,23 +1909,28 @@ nsDOMClassInfo::RegisterExternalClasses()
 // static
 inline nsresult
 nsDOMClassInfo::WrapNativeParent(JSContext *cx, JSObject *scope,
-                                 nsISupports *native, JSObject **parentObj)
+                                 nsISupports *native,
+                                 nsWrapperCache *nativeWrapperCache,
+                                 JSObject **parentObj)
 {
   // In the common case, |native| is a wrapper cache with an existing wrapper
+#ifdef DEBUG
   nsWrapperCache* cache = nsnull;
   CallQueryInterface(native, &cache);
-  if (cache) {
-    JSObject* obj = cache->GetWrapper();
-    if (obj) {
-#ifdef DEBUG
-      jsval debugVal;
-      nsresult rv = WrapNative(cx, scope, native, PR_FALSE, &debugVal);
-      NS_ASSERTION(NS_SUCCEEDED(rv) && JSVAL_TO_OBJECT(debugVal) == obj,
-                   "Unexpected object in nsWrapperCache");
+  NS_PRECONDITION(nativeWrapperCache &&
+                  cache == nativeWrapperCache, "What happened here?");
 #endif
-      *parentObj = obj;
-      return NS_OK;
-    }
+  
+  JSObject* obj = nativeWrapperCache->GetWrapper();
+  if (obj) {
+#ifdef DEBUG
+    jsval debugVal;
+    nsresult rv = WrapNative(cx, scope, native, PR_FALSE, &debugVal);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && JSVAL_TO_OBJECT(debugVal) == obj,
+                 "Unexpected object in nsWrapperCache");
+#endif
+    *parentObj = obj;
+    return NS_OK;
   }
 
   jsval v;
@@ -7989,12 +7994,13 @@ nsNodeListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   // nsChildContentList is the only class that uses nsNodeListSH and has a
   // cached wrapper.
   nsChildContentList *list = nsChildContentList::FromSupports(nativeObj);
-  nsISupports *native_parent = list->GetParentObject();
+  nsINode *native_parent = list->GetParentObject();
   if (!native_parent) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = WrapNativeParent(cx, globalObj, native_parent, parentObj);
+  nsresult rv =
+    WrapNativeParent(cx, globalObj, native_parent, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
@@ -8184,17 +8190,15 @@ nsContentListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                            JSObject *globalObj, JSObject **parentObj)
 {
   nsContentList *contentList = nsContentList::FromSupports(nativeObj);
-  nsISupports *native_parent = contentList->GetParentObject();
+  nsINode *native_parent = contentList->GetParentObject();
 
   if (!native_parent) {
     return NS_ERROR_FAILURE;
   }
 
-  jsval v;
-  nsresult rv = WrapNative(cx, globalObj, native_parent, PR_FALSE, &v);
+  nsresult rv =
+    WrapNativeParent(cx, globalObj, native_parent, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  *parentObj = JSVAL_TO_OBJECT(v);
 
   return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
 }
@@ -10085,12 +10089,13 @@ nsCSSStyleDeclSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   }
 
   nsICSSDeclaration *declaration = static_cast<nsICSSDeclaration*>(nativeObj);
-  nsISupports *native_parent = declaration->GetParentObject();
+  nsINode *native_parent = declaration->GetParentObject();
   if (!native_parent) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = WrapNativeParent(cx, globalObj, native_parent, parentObj);
+  nsresult rv =
+    WrapNativeParent(cx, globalObj, native_parent, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;

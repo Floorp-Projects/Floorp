@@ -269,7 +269,7 @@ public:
   virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult);
 
   // nsContentList public methods
-  NS_HIDDEN_(nsISupports*) GetParentObject();
+  NS_HIDDEN_(nsINode*) GetParentObject() { return mRootNode; }
   NS_HIDDEN_(PRUint32) Length(PRBool aDoFlush);
   NS_HIDDEN_(nsIContent*) Item(PRUint32 aIndex, PRBool aDoFlush);
   NS_HIDDEN_(nsIContent*) NamedItem(const nsAString& aName, PRBool aDoFlush);
