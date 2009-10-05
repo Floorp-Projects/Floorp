@@ -55,11 +55,13 @@ let os = Cc["@mozilla.org/observer-service;1"].
 
 let observer = {
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == TOPIC_CUSTOMIZATION_COMPLETE)
+    if (aTopic == TOPIC_CUSTOMIZATION_COMPLETE) {
+      os.removeObserver(this, TOPIC_CUSTOMIZATION_COMPLETE);
       do_timeout(0, "continue_test();");
+    }
   }
 }
-os.addObserver(observer, TOPIC_CUSTOMIZATION_COMPLETE, false)
+os.addObserver(observer, TOPIC_CUSTOMIZATION_COMPLETE, false);
 
 function run_test() {
   // Copy distribution.ini file to our app dir.
