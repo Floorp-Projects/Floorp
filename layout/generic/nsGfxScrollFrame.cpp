@@ -2555,7 +2555,7 @@ static void AdjustScrollbarRect(nsIView* aView, nsPresContext* aPresContext,
              aPresContext->DevPixelsToAppUnits(widgetRect.width),
              aPresContext->DevPixelsToAppUnits(widgetRect.height));
 
-  if (!aRect.Intersects(resizerRect))
+  if (!resizerRect.Contains(aRect.BottomRight() - nsPoint(1, 1)))
     return;
 
   if (aVertical)
