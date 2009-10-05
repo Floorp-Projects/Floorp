@@ -310,10 +310,11 @@ private:
   nsresult     getTableCellLocationFromRange(nsIRange *aRange, PRInt32 *aSelectionType, PRInt32 *aRow, PRInt32 *aCol);
   nsresult     addTableCellRange(nsIRange *aRange, PRBool *aDidAddRange, PRInt32 *aOutIndex);
 
-  PRInt32 FindInsertionPoint(
+  nsresult FindInsertionPoint(
       nsTArray<RangeData>* aElementArray,
       nsINode* aPointNode, PRInt32 aPointOffset,
-      PRInt32 (*aComparator)(nsINode*,PRInt32,nsIRange*));
+      nsresult (*aComparator)(nsINode*,PRInt32,nsIRange*,PRInt32*),
+      PRInt32* aPoint);
   PRBool EqualsRangeAtPoint(nsINode* aBeginNode, PRInt32 aBeginOffset,
                             nsINode* aEndNode, PRInt32 aEndOffset,
                             PRInt32 aRangeIndex);
@@ -3605,22 +3606,26 @@ nsTypedSelection::GetFocusOffset()
   return mAnchorFocusRange->StartOffset();
 }
 
-static PRInt32
+static nsresult
 CompareToRangeStart(nsINode* aCompareNode, PRInt32 aCompareOffset,
-                    nsIRange* aRange)
+                    nsIRange* aRange, PRInt32* aCmp)
 {
-  return nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
-                                       aRange->GetStartParent(),
-                                       aRange->StartOffset());
+  nsINode* start = aRange->GetStartParent();
+  NS_ENSURE_STATE(aCompareNode && start);
+  *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
+                                        start, aRange->StartOffset());
+  return NS_OK;
 }
 
-static PRInt32
+static nsresult
 CompareToRangeEnd(nsINode* aCompareNode, PRInt32 aCompareOffset,
-                  nsIRange* aRange)
+                  nsIRange* aRange, PRInt32* aCmp)
 {
-  return nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
-                                       aRange->GetEndParent(),
-                                       aRange->EndOffset());
+  nsINode* end = aRange->GetEndParent();
+  NS_ENSURE_STATE(aCompareNode && end);
+  *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
+                                        end, aRange->EndOffset());
+  return NS_OK;
 }
 
 // nsTypedSelection::FindInsertionPoint
@@ -3632,12 +3637,14 @@ CompareToRangeEnd(nsINode* aCompareNode, PRInt32 aCompareOffset,
 //    If there is an item in the array equal to the input point, we will return
 //    the index of this item.
 
-PRInt32
+nsresult
 nsTypedSelection::FindInsertionPoint(
     nsTArray<RangeData>* aElementArray,
     nsINode* aPointNode, PRInt32 aPointOffset,
-    PRInt32 (*aComparator)(nsINode*,PRInt32,nsIRange*))
+    nsresult (*aComparator)(nsINode*,PRInt32,nsIRange*,PRInt32*),
+    PRInt32* aPoint)
 {
+  *aPoint = 0;
   PRInt32 beginSearch = 0;
   PRInt32 endSearch = aElementArray->Length(); // one beyond what to check
   while (endSearch - beginSearch > 0) {
@@ -3645,7 +3652,9 @@ nsTypedSelection::FindInsertionPoint(
 
     nsIRange* range = (*aElementArray)[center].mRange;
 
-    PRInt32 cmp = aComparator(aPointNode, aPointOffset, range);
+    PRInt32 cmp;
+    nsresult rv = aComparator(aPointNode, aPointOffset, range, &cmp);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (cmp < 0) {        // point < cur
       endSearch = center;
@@ -3656,7 +3665,8 @@ nsTypedSelection::FindInsertionPoint(
       break;
     }
   }
-  return beginSearch;
+  *aPoint = beginSearch;
+  return NS_OK;
 }
 
 // nsTypedSelection::SubtractRange
@@ -3673,14 +3683,18 @@ nsTypedSelection::SubtractRange(RangeData* aRange, nsIRange* aSubtract,
   nsIRange* range = aRange->mRange;
 
   // First we want to compare to the range start
-  PRInt32 cmp = CompareToRangeStart(range->GetStartParent(),
+  PRInt32 cmp;
+  nsresult rv = CompareToRangeStart(range->GetStartParent(),
                                     range->StartOffset(),
-                                    aSubtract);
-  
+                                    aSubtract, &cmp);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Also, make a comparison to the range end
-  PRInt32 cmp2 = CompareToRangeEnd(range->GetEndParent(),
-                                   range->EndOffset(),
-                                   aSubtract);
+  PRInt32 cmp2;
+  rv = CompareToRangeEnd(range->GetEndParent(),
+                         range->EndOffset(),
+                         aSubtract, &cmp2);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // If the existing range left overlaps the new range (aSubtract) then
   // cmp < 0, and cmp2 < 0
@@ -3694,7 +3708,7 @@ nsTypedSelection::SubtractRange(RangeData* aRange, nsIRange* aSubtract,
     if (!postOverlap)
       return NS_ERROR_OUT_OF_MEMORY;
     
-    nsresult rv =
+    rv =
       postOverlap->SetStart(aSubtract->GetEndParent(), aSubtract->EndOffset());
     NS_ENSURE_SUCCESS(rv, rv);
     rv =
@@ -3812,9 +3826,12 @@ nsTypedSelection::AddItem(nsIRange *aItem, PRInt32 *aOutIndex)
   }
 
   // Insert the new element into our "leftovers" array
-  PRInt32 insertionPoint = FindInsertionPoint(&temp, aItem->GetStartParent(),
-                                              aItem->StartOffset(),
-                                              CompareToRangeStart);
+  PRInt32 insertionPoint;
+  nsresult rv = FindInsertionPoint(&temp, aItem->GetStartParent(),
+                                   aItem->StartOffset(),
+                                   CompareToRangeStart,
+                                   &insertionPoint);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!temp.InsertElementAt(insertionPoint, RangeData(aItem)))
     return NS_ERROR_OUT_OF_MEMORY;
@@ -4068,8 +4085,12 @@ nsTypedSelection::GetIndicesForInterval(nsINode* aBeginNode,
 
   // Ranges that end before the given interval and begin after the given
   // interval can be discarded
-  PRInt32 endsBeforeIndex =
-    FindInsertionPoint(&mRanges, aEndNode, aEndOffset, &CompareToRangeStart);
+  PRInt32 endsBeforeIndex;
+  if (NS_FAILED(FindInsertionPoint(&mRanges, aEndNode, aEndOffset,
+                                   &CompareToRangeStart,
+                                   &endsBeforeIndex))) {
+    return;
+  }
 
   if (endsBeforeIndex == 0) {
     nsIRange* endRange = mRanges[endsBeforeIndex].mRange;
@@ -4089,8 +4110,12 @@ nsTypedSelection::GetIndicesForInterval(nsINode* aBeginNode,
   }
   *aEndIndex = endsBeforeIndex;
 
-  PRInt32 beginsAfterIndex =
-    FindInsertionPoint(&mRanges, aBeginNode, aBeginOffset, &CompareToRangeEnd);
+  PRInt32 beginsAfterIndex;
+  if (NS_FAILED(FindInsertionPoint(&mRanges, aBeginNode, aBeginOffset,
+                                   &CompareToRangeEnd,
+                                   &beginsAfterIndex))) {
+    return;
+  }
   if (beginsAfterIndex == (PRInt32) mRanges.Length())
     return; // optimization: all ranges are strictly before us
 
