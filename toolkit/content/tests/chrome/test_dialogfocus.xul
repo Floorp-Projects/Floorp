@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window width="500" height="600"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/javascript"
+        src="chrome://mochikit/content/MochiKit/packed.js"/>
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<button id="test" label="Test"/>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script>
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var expected = [ "one", "_extra2", "tab", "one", "tabbutton2", "tabbutton", "two" ];
+// non-Mac will always focus the default button if any of the dialog buttons
+// would be focused
+if (navigator.platform.indexOf("Mac") == -1)
+  expected[1] = "_accept";
+
+var step = 0;
+var fullKeyboardAccess = false;
+
+function startTest()
+{
+  var testButton = document.getElementById("test");
+  synthesizeKey("VK_TAB", { });
+  fullKeyboardAccess = (document.activeElement == testButton);
+  runTest();
+}
+
+function runTest()
+{
+  step++;
+  if (step > expected.length || (!fullKeyboardAccess && step == 2)) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var expectedFocus = expected[step - 1];
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalBrowserWrite');
+  var win = window.openDialog("dialog_dialogfocus.xul", "_new", "chrome,dialog", step);
+
+  function checkDialogFocus(event)
+  {
+    // if full keyboard access is not on, just skip the tests
+    var match = false;
+    if (fullKeyboardAccess) {
+      if (!(event.target instanceof Element))
+        return;
+
+      if (expectedFocus[0] == "_")
+        match = (win.document.activeElement.dlgType == expectedFocus.substring(1));
+      else
+        match = (win.document.activeElement.id == expectedFocus);
+      if (!match)
+        return;
+    }
+    else {
+      match = (win.document.activeElement == win.document.documentElement);
+    }
+
+    win.removeEventListener("focus", checkDialogFocus, true);
+    ok(match, "focus step " + step);
+
+    win.close();
+    SimpleTest.waitForFocus(runTest, window);
+  }
+
+  win.addEventListener("focus", checkDialogFocus, true);
+}
+
+SimpleTest.waitForFocus(startTest, window);
+
+]]>
+
+</script>
+
+</window>
