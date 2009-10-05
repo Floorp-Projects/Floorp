@@ -386,6 +386,7 @@ public:
   nsCString mFaviconURI;
   PRInt32 mBookmarkIndex;
   PRInt64 mItemId;
+  PRInt64 mFolderId;
   PRTime mDateAdded;
   PRTime mLastModified;
 
