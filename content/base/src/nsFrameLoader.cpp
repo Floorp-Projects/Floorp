@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Johnny Stenback <jst@netscape.com> (original author)
  *   Boris Zbarsky <bzbarsky@mit.edu>
+ *   Frederic Plourde <frederic.plourde@polymtl.ca>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1049,6 +1050,62 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::UpdatePositionAndSize(nsIFrame *aIFrame)
+{
+#ifdef MOZ_IPC
+  if (mChildProcess) {
+    nsIntSize size = GetSubDocumentSize(aIFrame);
+    mChildProcess->Move(0, 0, size.width, size.height);
+    return NS_OK;
+  }
+#endif
+  return UpdateBaseWindowPositionAndSize(aIFrame);
+}
+
+nsresult
+nsFrameLoader::UpdateBaseWindowPositionAndSize(nsIFrame *aIFrame)
+{
+  nsCOMPtr<nsIDocShell> docShell;
+  GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell));
+
+  // resize the sub document
+  if (baseWindow) {
+    PRInt32 x = 0;
+    PRInt32 y = 0;
+
+    nsWeakFrame weakFrame(aIFrame);
+
+    baseWindow->GetPositionAndSize(&x, &y, nsnull, nsnull);
+
+    if (!weakFrame.IsAlive()) {
+      // GetPositionAndSize() killed us
+      return NS_OK;
+    }
+
+    nsIntSize size = GetSubDocumentSize(aIFrame);
+
+    baseWindow->SetPositionAndSize(x, y, size.width, size.height, PR_FALSE);
+  }
+}
+
+nsIntSize
+nsFrameLoader::GetSubDocumentSize(const nsIFrame *aIFrame)
+{
+  nsSize docSizeAppUnits;
+  nsPresContext* presContext = aIFrame->PresContext();
+  nsCOMPtr<nsIDOMHTMLFrameElement> frameElem = 
+    do_QueryInterface(aIFrame->GetContent());
+  if (frameElem) {
+    docSizeAppUnits = aIFrame->GetSize();
+  } else {
+    docSizeAppUnits = aIFrame->GetContentRect().Size();
+  }
+  return nsIntSize(presContext->AppUnitsToDevPixels(docSizeAppUnits.width),
+                   presContext->AppUnitsToDevPixels(docSizeAppUnits.height));
 }
 
 #ifdef MOZ_IPC

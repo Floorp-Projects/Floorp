@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        width="800" height="800" onload="setTimeout(restart, 0)" orient="vertical">
+        width="800" height="800" orient="vertical">
   <script>
     function restart() {
       var y = document.getElementById('page');
