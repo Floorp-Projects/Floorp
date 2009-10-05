@@ -64,10 +64,10 @@
 # 
 # ------------------------------------------------------------------
 
-FROMTOP=/share/builds/components/nspr20/v4.8.1
-TOTOP=./v4.8.1
-NSPRDIR=nspr-4.8.1
-SOURCETAG=NSPR_4_8_1_RTM
+FROMTOP=/share/builds/components/nspr20/v4.8.2
+TOTOP=./v4.8.2
+NSPRDIR=nspr-4.8.2
+SOURCETAG=NSPR_4_8_2_RTM
 
 #
 # enumerate Unix object directories on /s/b/c
