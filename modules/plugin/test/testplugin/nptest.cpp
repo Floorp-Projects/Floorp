@@ -84,6 +84,7 @@ static bool getLastMouseX(NPObject* npobj, const NPVariant* args, uint32_t argCo
 static bool getLastMouseY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getError(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool doInternalConsistencyCheck(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool setColor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnInvokeTest",
@@ -105,6 +106,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getLastMouseY",
   "getError",
   "doInternalConsistencyCheck",
+  "setColor",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
@@ -127,6 +129,7 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   getLastMouseY,
   getError,
   doInternalConsistencyCheck,
+  setColor,
 };
 
 static const char* NPN_GetURLNotifyCookie = "NPN_GetURLNotify_Cookie";
@@ -475,7 +478,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
         scriptableObject->drawMode = DM_SOLID_COLOR;    
     }
     else if (strcmp(argn[i], "color") == 0) {
-      scriptableObject->drawColor = parseHexColor(argv[i]);
+      scriptableObject->drawColor = parseHexColor(argv[i], strlen(argv[i]));
     }
     else if (strcmp(argn[i], "wmode") == 0) {
       if (strcmp(argv[i], "window") == 0) {
@@ -984,6 +987,12 @@ NPError
 NPN_SetValue(NPP instance, NPPVariable variable, void* value)
 {
   return sBrowserFuncs->setvalue(instance, variable, value);
+}
+
+void
+NPN_InvalidateRect(NPP instance, NPRect* rect)
+{
+  sBrowserFuncs->invalidaterect(instance, rect);
 }
 
 bool
@@ -1666,5 +1675,30 @@ doInternalConsistencyCheck(NPObject* npobj, const NPVariant* args, uint32_t argC
   }
   memcpy(utf8String, error.c_str(), error.length() + 1);
   STRINGZ_TO_NPVARIANT(utf8String, *result);
+  return true;
+}
+
+static bool
+setColor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 1)
+    return false;
+  if (!NPVARIANT_IS_STRING(args[0]))
+    return false;
+  const NPString* str = &NPVARIANT_TO_STRING(args[0]);
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+
+  id->scriptableObject->drawColor =
+    parseHexColor(str->UTF8Characters, str->UTF8Length);
+
+  NPRect r;
+  r.left = 0;
+  r.top = 0;
+  r.right = id->window.width;
+  r.bottom = id->window.height;
+  NPN_InvalidateRect(npp, &r);
+
   return true;
 }
