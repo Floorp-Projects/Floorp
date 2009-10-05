@@ -41,8 +41,9 @@
 
 interface nsIDocShell;
 interface nsIURI;
+interface nsIFrame;
 
-[scriptable, uuid(d675c531-6bdc-417c-b176-635060105f07)]
+[scriptable, uuid(fe5f43b1-6b9d-4639-be08-03f0de1a22f9)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -74,6 +75,13 @@ interface nsIFrameLoader : nsISupports
    * or may not be allowed on the loader's docshell.
    */
   readonly attribute boolean depthTooGreat;
+
+  /**
+   * Updates the position and size of the subdocument loaded by this frameloader.
+   *
+   *  @param aIFrame The nsIFrame for the content node that owns this frameloader
+   */
+  [noscript] void updatePositionAndSize(in nsIFrame aIFrame);
 };
 
 [scriptable, uuid(641c2d90-4ada-4367-bdb1-80831614161d)]
