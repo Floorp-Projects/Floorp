@@ -47,6 +47,7 @@
 #include "nsIDocShell.h"
 #include "nsStringFwd.h"
 #include "nsIFrameLoader.h"
+#include "nsSize.h"
 #include "nsIURI.h"
 #include "nsAutoPtr.h"
 
@@ -103,6 +104,13 @@ private:
 
   NS_HIDDEN_(nsresult) EnsureDocShell();
   NS_HIDDEN_(void) GetURL(nsString& aURL);
+
+  // Properly retrieves documentSize of any subdocument type.
+  NS_HIDDEN_(nsIntSize) GetSubDocumentSize(const nsIFrame *aIFrame);
+
+  // Updates the subdocument position and size. This gets called only
+  // when we have our own in-process DocShell.
+  NS_HIDDEN_(nsresult) UpdateBaseWindowPositionAndSize(nsIFrame *aIFrame);
   nsresult CheckURILoad(nsIURI* aURI);
 
 #ifdef MOZ_IPC
