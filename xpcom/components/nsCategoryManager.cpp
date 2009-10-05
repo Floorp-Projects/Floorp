@@ -283,8 +283,10 @@ CategoryNode::AddLeaf(const char* aEntryName,
                       PRBool aPersist,
                       PRBool aReplace,
                       char** _retval,
-                      PLArenaPool* aArena)
+                      PLArenaPool* aArena,
+                      PRBool* aDirty)
 {
+  NS_ABORT_IF_FALSE(aDirty, "CategoryNode::AddLeaf: aDirty is null");
   MutexAutoLock lock(mLock);
   CategoryLeaf* leaf = 
     mTable.GetEntry(aEntryName);
@@ -323,25 +325,29 @@ CategoryNode::AddLeaf(const char* aEntryName,
       }
 
       leaf->nonpValue = arenaValue;
-      if (aPersist)
+      if (aPersist) {
         leaf->pValue = arenaValue;
+        *aDirty = PR_TRUE;
+      }
     }
   }
-    
   return rv;
 }
 
 NS_METHOD
 CategoryNode::DeleteLeaf(const char* aEntryName,
-                         PRBool aDontPersist)
+                         PRBool aDontPersistAnymore,
+                         PRBool* aDirty)
 {
+  NS_ABORT_IF_FALSE(aDirty, "CategoryNode::DeleteLeaf: aDirty is null");
   // we don't throw any errors, because it normally doesn't matter
   // and it makes JS a lot cleaner
   MutexAutoLock lock(mLock);
 
-  if (aDontPersist) {
+  if (aDontPersistAnymore) {
     // we can just remove the entire hash entry without introspection
     mTable.RemoveEntry(aEntryName);
+    *aDirty = PR_TRUE;
   } else {
     // if we are keeping the persistent value, we need to look at
     // the contents of the current entry
@@ -597,7 +603,6 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
     if (!category) {
       // That category doesn't exist yet; let's make it.
       category = CategoryNode::Create(&mArena);
-        
       char* categoryName = ArenaStrdup(aCategoryName, &mArena);
       mTable.Put(categoryName, category);
     }
@@ -608,13 +613,13 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
 
   // We will need the return value of AddLeaf even if the called doesn't want it
   char *oldEntry = nsnull;
-
   nsresult rv = category->AddLeaf(aEntryName,
                                   aValue,
                                   aPersist,
                                   aReplace,
                                   &oldEntry,
-                                  &mArena);
+                                  &mArena,
+                                  &mDirty);
 
   if (NS_SUCCEEDED(rv)) {
     if (oldEntry) {
@@ -636,7 +641,7 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
 NS_IMETHODIMP
 nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
                                         const char *aEntryName,
-                                        PRBool aDontPersist)
+                                        PRBool aDontPersistAnymore)
 {
   NS_ENSURE_ARG_POINTER(aCategoryName);
   NS_ENSURE_ARG_POINTER(aEntryName);
@@ -657,7 +662,8 @@ nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
     return NS_OK;
 
   nsresult rv = category->DeleteLeaf(aEntryName,
-                                     aDontPersist);
+                                     aDontPersistAnymore,
+                                     &mDirty);
 
   if (NS_SUCCEEDED(rv)) {
     NotifyObservers(NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID,
@@ -762,6 +768,7 @@ nsCategoryManager::WriteCategoryManagerToRegistry(PRFileDesc* fd)
     return NS_ERROR_UNEXPECTED;
   }
 
+  mDirty = PR_FALSE;
   return NS_OK;
 }
 
