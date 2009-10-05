@@ -45,7 +45,11 @@
  using namespace std;
 
 struct _PlatformData {
+#ifdef MOZ_X11
   Display* display;
+  Visual* visual;
+  Colormap colormap;
+#endif
   GtkWidget* plug;
 };
 
@@ -70,8 +74,10 @@ pluginInstanceInit(InstanceData* instanceData)
   if (!instanceData->platformData)
     return NPERR_OUT_OF_MEMORY_ERROR;
 
-  instanceData->platformData->display = 0;
-  instanceData->platformData->plug = 0;
+  instanceData->platformData->display = NULL;
+  instanceData->platformData->visual = NULL;
+  instanceData->platformData->colormap = None;  
+  instanceData->platformData->plug = NULL;
 
   return NPERR_NO_ERROR;
 #else
@@ -245,9 +251,13 @@ pluginDoSetWindow(InstanceData* instanceData, NPWindow* newWindow)
 {
   instanceData->window = *newWindow;
 
+#ifdef MOZ_X11
   NPSetWindowCallbackStruct *ws_info =
     static_cast<NPSetWindowCallbackStruct*>(newWindow->ws_info);
   instanceData->platformData->display = ws_info->display;
+  instanceData->platformData->visual = ws_info->visual;
+  instanceData->platformData->colormap = ws_info->colormap;
+#endif
 }
 
 void
@@ -301,9 +311,53 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
 
     GdkNativeWindow nativeWinId =
       reinterpret_cast<XID>(instanceData->window.window);
-    GdkDrawable* gdkWindow = GDK_DRAWABLE(gdk_window_foreign_new(nativeWinId));  
-    pluginDrawWindow(instanceData, gdkWindow);
-    g_object_unref(gdkWindow);
+
+    GdkDisplay* gdkDisplay = gdk_x11_lookup_xdisplay(expose->display);
+    if (!gdkDisplay) {
+      g_warning("Display not opened by GDK");
+      return 0;
+    }
+    // gdk_pixmap_foreign_new() doesn't check whether a GdkPixmap already
+    // exists, so check first.
+    // https://bugzilla.gnome.org/show_bug.cgi?id=590690
+    GdkPixmap* gdkDrawable =
+      GDK_DRAWABLE(gdk_pixmap_lookup_for_display(gdkDisplay, nativeWinId));
+    // If there is no existing GdkPixmap or it doesn't have a colormap then
+    // create our own.
+    if (gdkDrawable) {
+      GdkColormap* gdkColormap = gdk_drawable_get_colormap(gdkDrawable);
+      if (!gdkColormap) {
+        g_warning("No GdkColormap on GdkPixmap");
+        return 0;
+      }
+      if (gdk_x11_colormap_get_xcolormap(gdkColormap)
+          != instanceData->platformData->colormap) {
+        g_warning("wrong Colormap");
+        return 0;
+      }
+      if (gdk_x11_visual_get_xvisual(gdk_colormap_get_visual(gdkColormap))
+          != instanceData->platformData->visual) {
+        g_warning("wrong Visual");
+        return 0;
+      }
+      g_object_ref(gdkDrawable);
+    } else {
+      gdkDrawable =
+        GDK_DRAWABLE(gdk_pixmap_foreign_new_for_display(gdkDisplay,
+                                                        nativeWinId));
+      VisualID visualID = instanceData->platformData->visual->visualid;
+      GdkVisual* gdkVisual =
+        gdk_x11_screen_lookup_visual(gdk_drawable_get_screen(gdkDrawable),
+                                     visualID);
+      GdkColormap* gdkColormap =
+        gdk_x11_colormap_foreign_new(gdkVisual,
+                                     instanceData->platformData->colormap);
+      gdk_drawable_set_colormap(gdkDrawable, gdkColormap);
+      g_object_unref(G_OBJECT(gdkColormap));
+    }
+
+    pluginDrawWindow(instanceData, gdkDrawable);
+    g_object_unref(gdkDrawable);
     break;
   }
   case MotionNotify: {
