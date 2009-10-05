@@ -48,22 +48,25 @@
 #aboutLinks {
   padding: 5px;
   border: 2px solid #e6e5e3;
-  font-size: 15px;
+  font-size: 2.4mm;
 }
-#aboutLinks li {
+
+#aboutLinks > li {
   clear: both;
-  padding: 5px 10px;
   border-bottom: 2px solid #e6e5e3;
   list-style: none;
+  -moz-padding-end: 2mm;
 }
-#aboutLinks li:last-child {
+
+#aboutLinks > li:last-child {
   border-bottom: 0;
 }
-#aboutLinks li a {
+
+#aboutLinks > li > a {
+  padding: 2mm;
   display: block;
   color: #3a3834;
   background: url("images/arrowright-16.png") right center no-repeat;
-  padding: 10px 40px 10px 5px;
 }
 
 #aboutDetails {
