@@ -201,6 +201,8 @@ BrowserGlue.prototype = {
           this._backupBookmarks();
         break;
       case "distribution-customization-complete":
+        this._observerService
+            .removeObserver(this, "distribution-customization-complete");
         // Customization has finished, we don't need the customizer anymore.
         delete this._distributionCustomizer;
         break;
