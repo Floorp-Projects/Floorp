@@ -18,7 +18,7 @@ script 10.1.5-4.js
 script 10.1.8-2.js
 script 10.1.8-3.js
 script 10.2.1.js
-fails script 10.2.2-1.js
-fails script 10.2.2-2.js
+skip-if(!xulRuntime.shell) script 10.2.2-1.js # bug - NS_ERROR_DOM_NOT_SUPPORTED_ERR Line 91
+skip-if(!xulRuntime.shell) script 10.2.2-2.js # bug - NS_ERROR_DOM_NOT_SUPPORTED_ERR Line 177
 script 10.2.3-1.js
 script 10.2.3-2.js

@@ -41,7 +41,7 @@ script regress-191633.js
 script regress-191668.js
 script regress-192414.js
 script regress-193418.js
-skip-if(xulRuntime.OS=="Darwin") script regress-203278-1.js # slow
+skip-if(!xulRuntime.shell&&xulRuntime.OS=="Darwin"||xulRuntime.shell&&xulRuntime.OS=="Linux"&&xulRuntime.XPCOMABI.match(/x86_64/)) script regress-203278-1.js # slow
 script regress-203402.js
 script regress-203841.js
 script regress-204210.js
@@ -81,7 +81,7 @@ script regress-254974.js
 script regress-256501.js
 script regress-256617.js
 script regress-256798.js
-script regress-259935.js
+skip-if(xulRuntime.shell) script regress-259935.js # browser only
 script regress-260541.js
 script regress-261886.js
 script regress-261887.js
@@ -205,7 +205,7 @@ script regress-360969-02.js
 script regress-360969-03.js
 script regress-360969-04.js
 script regress-360969-05.js
-skip-if(isDebugBuild) script regress-360969-06.js # slow
+script regress-360969-06.js
 script regress-361467.js
 script regress-361617.js
 skip script regress-362583.js # obsolete test
@@ -325,7 +325,7 @@ script regress-470061.js
 script regress-470187-01.js
 script regress-470187-02.js
 script regress-470758-01.js
-skip script regress-470758-02.js
+script regress-470758-02.js
 script regress-475645-01.js
 script regress-475645-02.js
 script regress-476049.js

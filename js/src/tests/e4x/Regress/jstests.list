@@ -18,7 +18,7 @@ script regress-301553.js
 script regress-301573.js
 script regress-301596.js
 script regress-301692.js
-skip-if(isDebugBuild) script regress-308111.js # slow
+skip-if(!xulRuntime.shell&&isDebugBuild) script regress-308111.js # slow
 script regress-309897.js
 script regress-311580.js
 script regress-313799.js
@@ -41,7 +41,7 @@ script regress-344455.js
 script regress-347155.js
 script regress-350206-1.js
 script regress-350206.js
-skip script regress-350238.js # slow
+skip-if(!xulRuntime.shell) script regress-350238.js # slow
 script regress-350629.js
 script regress-352097.js
 script regress-352103.js
