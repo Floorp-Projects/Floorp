@@ -1640,13 +1640,6 @@ PR_strtod
 
 	if (!_pr_initialized) _PR_ImplicitInitialization();
 
-	for(s = s00, i = 0; *s && i < 64 * 1024; s++, i++)
-		;
-	if (*s) {
-		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-		return 0.0;
-		}
-
 	sign = nz0 = nz = 0;
 	dval(rv) = 0.;
 	for(s = s00;;s++) switch(*s) {
