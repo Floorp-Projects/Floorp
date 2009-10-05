@@ -3,7 +3,7 @@ script 11.1.4.js
 script array-001.js
 script regress-101964.js
 script regress-107138.js
-fails script regress-108440.js
+fails-if(!xulRuntime.shell) script regress-108440.js # bug - NS_ERROR_DOM_NOT_SUPPORTED_ERR line 74
 script regress-154338.js
 skip-if(xulRuntime.OS=="Linux"&&xulRuntime.XPCOMABI.match(/x86_64/)) script regress-157652.js # No test results
 script regress-178722.js

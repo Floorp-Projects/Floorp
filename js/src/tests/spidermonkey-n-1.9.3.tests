@@ -125,7 +125,6 @@ js1_7/decompilation/regress-349605.js
 # decompilation change in spidermonkey 1.8.1
 js1_7/decompilation/regress-351070-01.js
 js1_8/decompilation/regress-443074.js
-js1_8/genexps/regress-380237-03.js
 js1_8/genexps/regress-380237-04.js
 # decompilation change in spidermonkey 1.8.1 (bug 460501)
 js1_7/decompilation/regress-352026.js
