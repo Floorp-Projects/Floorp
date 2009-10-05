@@ -170,7 +170,10 @@ interface nsIDOMNSElement : nsISupports
   void releaseCapture();
 
   /**
-   * Returns whether this element would be selected by the given selector string.
+   * Returns whether this element would be selected by the given selector
+   * string.
+   *
+   * See <http://dev.w3.org/2006/webapi/selectors-api2/>
    */
-  boolean mozMatchesSelector(in DOMString selector);
+  boolean mozMatchesSelector([Null(Stringify)] in DOMString selector);
 };
