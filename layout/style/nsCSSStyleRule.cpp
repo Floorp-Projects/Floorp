@@ -882,7 +882,7 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  virtual nsISupports *GetParentObject()
+  virtual nsINode *GetParentObject()
   {
     return nsnull;
   }
