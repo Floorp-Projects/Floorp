@@ -124,8 +124,18 @@ libs:: $(UPDATER_INI)
 	  $(FINAL_TARGET)/updater.ini
 endif
 
+# When we unpack fennec on MacOS X the platform.ini and application.ini are in slightly
+# different locations that on all other platforms
+ifeq (Darwin, $(OS_ARCH))
+GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/../Frameworks/XUL.framework/Versions/$(MOZILLA_VERSION)/platform.ini"
+FENNEC_APPLICATION_INI_PATH="$(STAGEDIST)/../Resources/application.ini"
+else
+GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/xulrunner/platform.ini"
+FENNEC_APPLICATION_INI_PATH="$(STAGEDIST)/application.ini"
+endif
+    
 ident:
-	@echo -n "gecko_revision "
-	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(STAGEDIST)/xulrunner/platform.ini Build SourceStamp
-	@echo -n "fennec_revision "
-	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(STAGEDIST)/application.ini App SourceStamp
+	@printf "gecko_revision "
+	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(GECKO_PLATFORM_INI_PATH) Build SourceStamp
+	@printf "fennec_revision "
+	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App SourceStamp
