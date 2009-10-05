@@ -161,6 +161,9 @@ static const RegisterMask FpRegs = 1<<D0 | 1<<D1 | 1<<D2 | 1<<D3 | 1<<D4 | 1<<D5
 static const RegisterMask GpRegs = 0xFFFF;
 static const RegisterMask AllowableFlagRegs = 1<<R0 | 1<<R1 | 1<<R2 | 1<<R3 | 1<<R4 | 1<<R5 | 1<<R6 | 1<<R7 | 1<<R8 | 1<<R9 | 1<<R10;
 
+#define isS12(offs) ((-(1<<12)) <= (offs) && (offs) < (1<<12))
+#define isU12(offs) (((offs) & 0xfff) == (offs))
+
 static inline bool isValidDisplacement(int32_t d) {
     return isS12(d);
 }
@@ -675,8 +678,6 @@ enum {
 // PC always points to current instruction + 8, so when calculating pc-relative
 // offsets, use PC+8.
 #define PC_OFFSET_FROM(target,frompc) ((intptr_t)(target) - ((intptr_t)(frompc) + 8))
-#define isS12(offs) ((-(1<<12)) <= (offs) && (offs) < (1<<12))
-#define isU12(offs) (((offs) & 0xfff) == (offs))
 
 #define B_cond(_c,_t)                           \
     B_cond_chk(_c,_t,1)
