@@ -1576,8 +1576,8 @@
               while (this._removingTabs.length)
                 this._endRemoveTab([this._removingTabs[0], false]);
             } else if (!this._windowIsClosing) {
-              if (aNewTab && gURLBar)
-                gURLBar.focus();
+              if (aNewTab)
+                focusAndSelectUrlBar();
 
               // workaround for bug 345399
               this.tabContainer.mTabstrip._updateScrollButtonsDisabledState();
