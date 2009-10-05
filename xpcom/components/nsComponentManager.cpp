@@ -715,8 +715,8 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     // Shutdown the component manager
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsComponentManager: Beginning Shutdown."));
 
-    // Write out our component data file, if dirty.
-    if (mRegistryDirty || mCategoryManager->IsDirty()) {
+    // Write out our component data file.
+    if (mRegistryDirty) {
         nsresult rv = WritePersistentRegistry();
         if (NS_FAILED(rv)) {
             PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, ("nsComponentManager: Could not write out persistent registry."));
