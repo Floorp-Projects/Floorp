@@ -12,6 +12,7 @@ browser.jar:
 * skin/classic/browser/browser.css                          (browser.css)
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/feed-icons.png
+  skin/classic/browser/fullscreen-video.css
   skin/classic/browser/Geo.png
   skin/classic/browser/Go-arrow.png
   skin/classic/browser/home.png
@@ -68,24 +69,12 @@ browser.jar:
   skin/classic/browser/places/bookmarksMenu.png             (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png          (places/bookmarksToolbar.png)
   skin/classic/browser/places/history.png                   (places/history.png)
-  skin/classic/browser/places/menubutton-end-pressed.png    (places/menubutton-end-pressed.png)
-  skin/classic/browser/places/menubutton-end-pressed-rtl.png (places/menubutton-end-pressed-rtl.png)
-  skin/classic/browser/places/menubutton-mid-pressed.png    (places/menubutton-mid-pressed.png)
-  skin/classic/browser/places/menubutton-start-pressed.png  (places/menubutton-start-pressed.png)
-  skin/classic/browser/places/menubutton-start-pressed-rtl.png (places/menubutton-start-pressed-rtl.png)
   skin/classic/browser/places/star-icons.png                (places/star-icons.png)
-  skin/classic/browser/places/toolbar-button-backup.png     (places/toolbar-button-backup.png)
-  skin/classic/browser/places/toolbar-button-organize.png   (places/toolbar-button-organize.png)
-  skin/classic/browser/places/toolbar-button-view.png       (places/toolbar-button-view.png)
+  skin/classic/browser/places/toolbar.png                   (places/toolbar.png)
   skin/classic/browser/places/toolbarDropMarker.png         (places/toolbarDropMarker.png)
   skin/classic/browser/places/folderDropArrow.png           (places/folderDropArrow.png)
   skin/classic/browser/places/livemarkFolder.png            (places/livemarkFolder.png)
-  skin/classic/browser/places/back-forward.png              (places/back-forward.png)
   skin/classic/browser/places/editBookmarkOverlay.css       (places/editBookmarkOverlay.css)
-  skin/classic/browser/places/menubutton-start.png          (places/menubutton-start.png)
-  skin/classic/browser/places/menubutton-start-rtl.png      (places/menubutton-start-rtl.png)
-  skin/classic/browser/places/menubutton-end.png            (places/menubutton-end.png)
-  skin/classic/browser/places/menubutton-end-rtl.png        (places/menubutton-end-rtl.png)
   skin/classic/browser/places/minus.png                     (places/minus.png)
   skin/classic/browser/places/minus-active.png              (places/minus-active.png)
   skin/classic/browser/places/plus.png                      (places/plus.png)
@@ -112,6 +101,8 @@ browser.jar:
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
   skin/classic/browser/tabbrowser/alltabs-box-overflow-bkgnd-animate.png (tabbrowser/alltabs-box-overflow-bkgnd-animate.png)
   skin/classic/browser/tabbrowser/newtab.png                             (tabbrowser/newtab.png)
+  skin/classic/browser/tabbrowser/progress.png                           (tabbrowser/progress.png)
+  skin/classic/browser/tabbrowser/progress-pulsing.png                   (tabbrowser/progress-pulsing.png)
   skin/classic/browser/tabbrowser/tab-arrow-left.png                     (tabbrowser/tab-arrow-left.png)
   skin/classic/browser/tabbrowser/tab-arrow-right.png                    (tabbrowser/tab-arrow-right.png)
   skin/classic/browser/tabbrowser/tabbrowser-tabs-bkgnd.png              (tabbrowser/tabbrowser-tabs-bkgnd.png)

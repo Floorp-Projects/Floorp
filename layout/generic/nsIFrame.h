@@ -108,10 +108,9 @@ struct CharacterDataChangeInfo;
 
 typedef class nsIFrame nsIBox;
 
-// f34d7229-f179-40d9-a952-8fcfa9bc3647
 #define NS_IFRAME_IID \
-  { 0xf34d7229, 0xf179, 0x40d9, \
-    { 0xa9, 0x52, 0x8f, 0xcf, 0xa9, 0xbc, 0x36, 0x47 } }
+  { 0x8bee3c3f, 0x0b4a, 0x4453, \
+    { 0xa6, 0x77, 0xf3, 0xd2, 0x56, 0xd1, 0x0e, 0xdc } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -878,13 +877,21 @@ public:
   }
 
   /**
-   * Child frames are linked together in a singly-linked list
+   * Child frames are linked together in a doubly-linked list
    */
   nsIFrame* GetNextSibling() const { return mNextSibling; }
   void SetNextSibling(nsIFrame* aNextSibling) {
-    NS_ASSERTION(this != aNextSibling, "Creating a circular frame list, this is very bad."); 
+    NS_ASSERTION(this != aNextSibling, "Creating a circular frame list, this is very bad.");
+    if (mNextSibling && mNextSibling->GetPrevSibling() == this) {
+      mNextSibling->mPrevSibling = nsnull;
+    }
     mNextSibling = aNextSibling;
+    if (mNextSibling) {
+      mNextSibling->mPrevSibling = this;
+    }
   }
+
+  nsIFrame* GetPrevSibling() const { return mPrevSibling; }
 
   /**
    * Builds the display lists for the content represented by this frame
@@ -995,14 +1002,6 @@ public:
    * if we have the -moz-transform property or if we're an SVGForeignObjectFrame.
    */
   virtual PRBool IsTransformed() const;
-
-  /**
-   * This frame needs a view with a widget (e.g. because it's fixed
-   * positioned), so we call this to create the widget. If widgets for
-   * this frame type need to be of a certain type or require special
-   * initialization, that can be done here.
-   */
-  virtual nsresult CreateWidgetForView(nsIView* aView);
 
   /**
    * Event handling of GUI events.
@@ -2328,7 +2327,8 @@ protected:
   nsStyleContext*  mStyleContext;
   nsIFrame*        mParent;
 private:
-  nsIFrame*        mNextSibling;  // singly-linked list of frames
+  nsIFrame*        mNextSibling;  // doubly-linked list of frames
+  nsIFrame*        mPrevSibling;  // Do not touch outside SetNextSibling!
 protected:
   nsFrameState     mState;
 
@@ -2543,4 +2543,12 @@ nsFrameList::Enumerator::Next()
   mFrame = mFrame->GetNextSibling();
 }
 
+inline
+nsFrameList::FrameLinkEnumerator::
+FrameLinkEnumerator(const nsFrameList& aList, nsIFrame* aPrevFrame)
+  : Enumerator(aList)
+{
+  mPrev = aPrevFrame;
+  mFrame = aPrevFrame ? aPrevFrame->GetNextSibling() : aList.FirstChild();
+}
 #endif /* nsIFrame_h___ */

@@ -15,6 +15,7 @@ toolkit.jar:
 + skin/classic/mozapps/plugins/pluginBlocked.png           (plugins/pluginBlocked.png)
 + skin/classic/mozapps/plugins/pluginGeneric-16.png        (plugins/pluginGeneric-16.png)
 + skin/classic/mozapps/plugins/pluginBlocked-16.png        (plugins/pluginBlocked-16.png)
++ skin/classic/mozapps/plugins/pluginOutdated-16.png       (plugins/pluginOutdated-16.png)
 + skin/classic/mozapps/profile/profileicon.png             (profile/profileicon.png)
 + skin/classic/mozapps/viewsource/viewsource.css           (viewsource/viewsource.css)
 + skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png  (xpinstall/xpinstallItemGeneric.png)

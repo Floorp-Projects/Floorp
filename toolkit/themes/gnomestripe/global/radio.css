@@ -125,6 +125,7 @@ radio[disabled="true"] {
 
 radio:not([disabled="true"]):hover {
   color: -moz-buttonhovertext;
+  text-shadow: none;
 }
 
 radio:hover:active > .radio-spacer-box > .radio-check-box1 {

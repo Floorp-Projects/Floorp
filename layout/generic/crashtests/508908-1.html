@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+
+
+function boom()
+{
+  var sel = document.createElementNS("http://www.w3.org/1999/xhtml", "select");
+  var opt;
+  for (var i = 0; i < 43; ++i) {
+    opt = document.createElementNS("http://www.w3.org/1999/xhtml", "option");
+    opt.appendChild(document.createTextNode(i));
+    sel.appendChild(opt);
+  }
+  opt.selected = "selected";
+  document.getElementById("div").appendChild(sel);
+}
+
+</script>
+</head>
+
+<body onload="boom();"><div id="div"></div><embed src="http://zombo.com/inrozxa.swf"></embed></body>
+</html>

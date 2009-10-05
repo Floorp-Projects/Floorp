@@ -1426,7 +1426,7 @@ public:
        nsIContent* root = aContent->GetCurrentDoc()->GetRootContent();
        while (aContent && aContent->IsInNativeAnonymousSubtree()) {
          nsIContent* parent = aContent->GetParent();
-         if (parent == root && aContent->IsNodeOfType(nsINode::eXUL)) {
+         if (parent == root && aContent->IsXUL()) {
            nsIAtom* tag = aContent->Tag();
            return tag == nsGkAtoms::scrollbar || tag == nsGkAtoms::scrollcorner;
          }
@@ -3747,8 +3747,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
         // Ensure it's an anchor element
         content = do_QueryInterface(node);
         if (content) {
-          if (content->Tag() == nsGkAtoms::a &&
-              content->IsNodeOfType(nsINode::eHTML)) {
+          if (content->Tag() == nsGkAtoms::a && content->IsHTML()) {
             break;
           }
           content = nsnull;
@@ -4438,9 +4437,9 @@ PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
 {
   PRUint32 hoverGenerationBefore = mFrameConstructor->GetHoverGeneration();
   nsEventStatus status;
-  nsIView* rootView;
-  mViewManager->GetRootView(rootView);
-  mViewManager->DispatchEvent(aEvent, rootView, &status);
+  nsIView* targetView;
+  targetView = nsIView::GetViewFor(aEvent->widget);
+  mViewManager->DispatchEvent(aEvent, targetView, &status);
   if (aFlushOnHoverChange &&
       hoverGenerationBefore != mFrameConstructor->GetHoverGeneration()) {
     // Flush so that the resulting reflow happens now so that our caller
@@ -4462,25 +4461,33 @@ PresShell::ClearMouseCapture(nsIView* aView)
       if (doc) {
         nsIPresShell *shell = doc->GetPrimaryShell();
         if (shell) {
+          // not much can happen if frames are being destroyed so just return.
+          if (shell->FrameManager()->IsDestroyingFrames())
+            return;
+
           frame = shell->GetPrimaryFrameFor(gCaptureInfo.mContent);
         }
       }
 
       if (frame) {
         nsIView* view = frame->GetClosestView();
-        while (view) {
-          if (view == aView) {
-            NS_RELEASE(gCaptureInfo.mContent);
-            // the view containing the captured content likely disappeared so
-            // disable capture for now.
-            gCaptureInfo.mAllowed = PR_FALSE;
-            break;
-          }
+        // if there is no view, capturing won't be handled any more, so
+        // just release the capture.
+        if (view) {
+          do {
+            if (view == aView) {
+              NS_RELEASE(gCaptureInfo.mContent);
+              // the view containing the captured content likely disappeared so
+              // disable capture for now.
+              gCaptureInfo.mAllowed = PR_FALSE;
+              break;
+            }
 
-          view = view->GetParent();
+            view = view->GetParent();
+          } while (view);
+          // return if the view wasn't found
+          return;
         }
-        // return if the view wasn't found
-        return;
       }
     }
 
@@ -5304,7 +5311,8 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
       CanvasFrame* canvasFrame =
         do_QueryFrame(rootScrollableFrame->GetScrolledFrame());
       if (canvasFrame) {
-        canvasArea = canvasFrame->CanvasArea();
+        canvasArea =
+          canvasFrame->CanvasArea() + builder.ToReferenceFrame(canvasFrame);
       }
     }
 
@@ -5338,8 +5346,8 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
       rc->Init(devCtx, aThebesContext);
 
       nsRegion region(rect);
-      list.OptimizeVisibility(&builder, &region);
-      list.Paint(&builder, rc, rect);
+      list.ComputeVisibility(&builder, &region);
+      list.Paint(&builder, rc);
       // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
       list.DeleteAll();
 
@@ -5627,7 +5635,9 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
       translate(rc, rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
 
     aArea.MoveBy(-rangeInfo->mRootOffset.x, -rangeInfo->mRootOffset.y);
-    rangeInfo->mList.Paint(&rangeInfo->mBuilder, rc, aArea);
+    nsRegion visible(aArea);
+    rangeInfo->mList.ComputeVisibility(&rangeInfo->mBuilder, &visible);
+    rangeInfo->mList.Paint(&rangeInfo->mBuilder, rc);
     aArea.MoveBy(rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
   }
 
@@ -5988,7 +5998,7 @@ PresShell::HandleEvent(nsIView         *aView,
 
   if (mIsDestroying || !nsContentUtils::IsSafeToRunScript() ||
       (sDisableNonTestMouseEvents && NS_IS_MOUSE_EVENT(aEvent) &&
-       !(aEvent->flags & NS_EVENT_FLAG_SYNTETIC_TEST_EVENT))) {
+       !(aEvent->flags & NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT))) {
     return NS_OK;
   }
 
@@ -5999,6 +6009,9 @@ PresShell::HandleEvent(nsIView         *aView,
     return HandleEventInternal(aEvent, aView, aEventStatus);
   }
 #endif
+
+  nsIContent* capturingContent =
+    NS_IS_MOUSE_EVENT(aEvent) ? GetCapturingContent() : nsnull;
 
   nsCOMPtr<nsIDocument> retargetEventDoc;
   // key and IME events must be targeted at the presshell for the focused frame
@@ -6020,10 +6033,10 @@ PresShell::HandleEvent(nsIView         *aView,
       retargetEventDoc = do_QueryInterface(piWindow->GetExtantDocument());
       if (!retargetEventDoc)
         return NS_OK;
-    } else if (NS_IS_MOUSE_EVENT(aEvent) && GetCapturingContent()) {
+    } else if (capturingContent) {
       // if the mouse is being captured then retarget the mouse event at the
       // document that is being captured.
-      retargetEventDoc = gCaptureInfo.mContent->GetCurrentDoc();
+      retargetEventDoc = capturingContent->GetCurrentDoc();
     }
 
     if (retargetEventDoc) {
@@ -6093,43 +6106,7 @@ PresShell::HandleEvent(nsIView         *aView,
     return NS_OK;
   }
 
-  PRBool getDescendantPoint = PR_TRUE;
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
-
-  if (NS_IS_MOUSE_EVENT(aEvent) && GetCapturingContent()) {
-    // if a node is capturing the mouse, get the frame for the capturing
-    // content and use that instead. However, if the content has no parent,
-    // such as the root frame, get the parent canvas frame instead. This
-    // ensures that positioned frames are included when hit-testing. Note
-    // that a check was already done above to ensure that capturingContent
-    // is in this presshell.
-    nsIContent* capturingContent = gCaptureInfo.mContent;
-    frame = GetPrimaryFrameFor(capturingContent);
-    if (frame) {
-      getDescendantPoint = !gCaptureInfo.mRetargetToElement;
-      if (!capturingContent->GetParent()) {
-        frame = frame->GetParent();
-      }
-      else {
-        // special case for <select> as it needs to capture on the dropdown list.
-        if (capturingContent->Tag() == nsGkAtoms::select &&
-            capturingContent->IsNodeOfType(nsINode::eHTML)) {
-          nsIFrame* childframe = frame->GetChildList(nsGkAtoms::selectPopupList).FirstChild();
-          if (childframe) {
-            frame = childframe;
-          }
-        }
-
-        // if the frame is a scrolling frame, get the inner scrolled frame instead.
-        nsIScrollableFrame* scrollFrame = do_QueryFrame(frame);
-        if (scrollFrame) {
-          frame = scrollFrame->GetScrolledFrame();
-        }
-      }
-      aView = frame->GetClosestView();
-    }
-  }
-
   PRBool dispatchUsingCoordinates = NS_IsEventUsingCoordinates(aEvent);
 
   // if this event has no frame, we need to retarget it at a parent
@@ -6182,8 +6159,28 @@ PresShell::HandleEvent(nsIView         *aView,
 #endif
     }
 
+    PRBool captureRetarget = PR_FALSE;
+    if (capturingContent) {
+      captureRetarget = gCaptureInfo.mRetargetToElement;
+      // special case for <select> as it needs to capture on the dropdown list,
+      // so get the frame for the dropdown list instead.
+      if (!captureRetarget && capturingContent->Tag() == nsGkAtoms::select &&
+          capturingContent->IsHTML()) {
+        nsIFrame* selectFrame = GetPrimaryFrameFor(capturingContent);
+        if (selectFrame) {
+          nsIFrame* childframe = selectFrame->GetChildList(nsGkAtoms::selectPopupList).FirstChild();
+          if (childframe) {
+            frame = childframe;
+          }
+        }
+      }
+    }
+
+    // Get the frame at the event point. However, don't do this if we're
+    // capturing and retargeting the event because the captured frame will
+    // be used instead below.
     nsIFrame* targetFrame = nsnull;
-    if (getDescendantPoint) {
+    if (!captureRetarget) {
       nsPoint eventPoint
           = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
       {
@@ -6194,6 +6191,24 @@ PresShell::HandleEvent(nsIView         *aView,
         }
         targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint,
                                                       PR_FALSE, ignoreRootScrollFrame);
+      }
+    }
+
+    // if a node is capturing the mouse, check if the event needs to be
+    // retargeted at the capturing content instead. This will be the case when
+    // capture retargeting is being used, no frame was found or the frame's
+    // content is not a descendant of the capturing content.
+    if (capturingContent &&
+        (gCaptureInfo.mRetargetToElement ||
+         !targetFrame || !targetFrame->GetContent() ||
+         !nsContentUtils::ContentIsCrossDocDescendantOf(targetFrame->GetContent(),
+                                                        capturingContent))) {
+      // A check was already done above to ensure that capturingContent is
+      // in this presshell, so GetPrimaryFrameFor can just be called directly.
+      nsIFrame* capturingFrame = GetPrimaryFrameFor(capturingContent);
+      if (capturingFrame) {
+        targetFrame = capturingFrame;
+        aView = targetFrame->GetClosestView();
       }
     }
 
@@ -6274,7 +6289,7 @@ PresShell::HandleEvent(nsIView         *aView,
 #endif
     PopCurrentEventInfo();
   } else {
-    // Focus events need to be dispatched even if no frame was found, since
+    // Activation events need to be dispatched even if no frame was found, since
     // we don't want the focus to be out of sync.
 
     if (!NS_EVENT_NEEDS_FRAME(aEvent)) {
@@ -7211,7 +7226,7 @@ PresShell::PostReflowEventOffTimer()
     mReflowContinueTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (!mReflowContinueTimer ||
         NS_FAILED(mReflowContinueTimer->
-                    InitWithFuncCallback(sReflowContinueCallback, this, 0,
+                    InitWithFuncCallback(sReflowContinueCallback, this, 30,
                                          nsITimer::TYPE_ONE_SHOT))) {
       return PR_FALSE;
     }
@@ -7222,6 +7237,11 @@ PresShell::PostReflowEventOffTimer()
 PRBool
 PresShell::DoReflow(nsIFrame* target, PRBool aInterruptible)
 {
+  if (mReflowContinueTimer) {
+    mReflowContinueTimer->Cancel();
+    mReflowContinueTimer = nsnull;
+  }
+
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
 
   nsCOMPtr<nsIRenderingContext> rcx;

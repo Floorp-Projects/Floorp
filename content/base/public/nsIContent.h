@@ -70,10 +70,10 @@ enum nsLinkState {
 };
 
 // IID for the nsIContent interface
-// b877753c-316a-422d-9aec-a1d0cf0928b0
+// d510382f-f5eb-48bb-9ad9-b3dc4806faaf
 #define NS_ICONTENT_IID       \
-{ 0xb877753c, 0x316a, 0x422d, \
-  { 0x9a, 0xec, 0xa1, 0xd0, 0xcf, 0x09, 0x28, 0xb0 } }
+{ 0xd510382f, 0xf5eb, 0x48bb, \
+  { 0x9a, 0xd9, 0xb3, 0xdc, 0x48, 0x06, 0xfa, 0xaf } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -247,6 +247,27 @@ public:
   nsINodeInfo *NodeInfo() const
   {
     return mNodeInfo;
+  }
+
+  inline PRBool IsInNamespace(PRInt32 aNamespace) const {
+    return mNodeInfo->NamespaceID() == aNamespace;
+  }
+
+  inline PRBool IsHTML() const {
+    return IsInNamespace(kNameSpaceID_XHTML);
+  }
+
+  inline PRBool IsSVG() const {
+    /* Some things in the SVG namespace are not in fact SVG elements */
+    return IsNodeOfType(eSVG);
+  }
+
+  inline PRBool IsXUL() const {
+    return IsInNamespace(kNameSpaceID_XUL);
+  }
+
+  inline PRBool IsMathML() const {
+    return IsInNamespace(kNameSpaceID_MathML);
   }
 
   /**
@@ -606,6 +627,17 @@ public:
    * XXXjwatt: IMO IsInteractiveLink would be a better name.
    */
   virtual PRBool IsLink(nsIURI** aURI) const = 0;
+
+   /**
+   * If the implementing element is a link, calling this method forces it to
+   * clear its cached href, if it has one.
+   *
+   * This function does not notify the document that it may need to restyle the
+   * link.
+   */
+  virtual void DropCachedHref()
+  {
+  }
 
   /**
    * Get the cached state of the link.  If the state is unknown, 

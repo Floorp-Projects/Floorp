@@ -1333,13 +1333,13 @@ public:
   }
 #endif
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("ComboboxFocus")
 };
 
 void nsDisplayComboboxFocus::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+                                   nsIRenderingContext* aCtx)
 {
   static_cast<nsComboboxControlFrame*>(mFrame)
     ->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(mFrame));

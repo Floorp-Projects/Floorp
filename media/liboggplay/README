@@ -22,8 +22,8 @@ For the core library (liboggplay), you need
 
   * liboggz and libfishsound -- from svn.annodex.net:
 
-    svn co http://svn.annodex.net/liboggz/trunk liboggz
-    svn co http://svn.annodex.net/libfishsound/trunk libfishsound
+    git clone git://git.xiph.org/liboggz.git
+    git clone git://git.xiph.org/libfishsound.git
 
 Optionally, for Kate stream support, you need
 

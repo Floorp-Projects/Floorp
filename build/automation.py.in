@@ -436,6 +436,9 @@ def runApp(testURL, env, app, profileDir, extraArgs,
            debuggerInfo = None, symbolsPath = SYMBOLS_PATH):
   "Run the app, log the duration it took to execute, return the status code."
 
+  # copy env so we don't munge the caller's environment
+  env = dict(env);
+
   if IS_TEST_BUILD and runSSLTunnel:
     # create certificate database for the profile
     certificateStatus = fillCertificateDB(profileDir, certPath, utilityPath, xrePath)

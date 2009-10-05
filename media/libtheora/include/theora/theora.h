@@ -5,7 +5,7 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2007                *
+ * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2009                *
  * by the Xiph.Org Foundation http://www.xiph.org/                  *
  *                                                                  *
  ********************************************************************
@@ -27,11 +27,11 @@ extern "C"
 
 #include <ogg/ogg.h>
 
-/** \defgroup oldfuncs Legacy pre-1.0 C API */
-/*  @{ */
-
-/** \mainpage
- * 
+/** \file
+ * The libtheora pre-1.0 legacy C API.
+ *
+ * \ingroup oldfuncs
+ *
  * \section intro Introduction
  *
  * This is the documentation for the libtheora legacy C API, declared in 
@@ -42,7 +42,7 @@ extern "C"
  *
  * libtheora is the reference implementation for
  * <a href="http://www.theora.org/">Theora</a>, a free video codec.
- * Theora is derived from On2's VP3 codec with improved integration for
+ * Theora is derived from On2's VP3 codec with improved integration with
  * Ogg multimedia formats by <a href="http://www.xiph.org/">Xiph.Org</a>.
  * 
  * \section overview Overview
@@ -114,21 +114,11 @@ extern "C"
  * checking beyond whether a header bit is present.  Instead, use the
  * theora_decode_header() function and check the return value; or examine the
  * header bytes at the beginning of the Ogg page.
- *
- * \subsection example Example Decoder 
- *
- * See <a href="http://svn.xiph.org/trunk/theora/examples/dump_video.c">
- * examples/dump_video.c</a> for a simple decoder implementation.
- *
- * \section encoding Encoding Process
- *
- * See <a href="http://svn.xiph.org/trunk/theora/examples/encoder_example.c">
- * examples/encoder_example.c</a> for a simple encoder implementation.
  */
 
-/** \file
- * The libtheora pre-1.0 legacy C API.
- */
+
+/** \defgroup oldfuncs Legacy pre-1.0 C API */
+/*  @{ */
 
 /**
  * A YUV buffer for passing uncompressed frames to and from the codec.
@@ -292,13 +282,20 @@ typedef struct theora_comment{
 
 
 /**\name theora_control() codes */
-
-/**\anchor decctlcodes
+/* \anchor decctlcodes_old
  * These are the available request codes for theora_control()
  * when called with a decoder instance.
- * By convention, these are odd, to distinguish them from the
- *  \ref encctlcodes "encoder control codes".
+ * By convention decoder control codes are odd, to distinguish 
+ * them from \ref encctlcodes_old "encoder control codes" which
+ * are even.
+ *
+ * Note that since the 1.0 release, both the legacy and the final
+ * implementation accept all the same control codes, but only the
+ * final API declares the newer codes.
+ *
  * Keep any experimental or vendor-specific values above \c 0x8000.*/
+
+/*@{*/
 
 /**Get the maximum post-processing level.
  * The decoder supports a post-processing filter that can improve
@@ -324,9 +321,9 @@ typedef struct theora_comment{
  * \param[in]  buf <tt>ogg_uint32_t</tt>: The maximum distance between key
  *                   frames.
  * \param[out] buf <tt>ogg_uint32_t</tt>: The actual maximum distance set.
- * \retval TH_FAULT  \a theora_state or \a buf is <tt>NULL</tt>.
- * \retval TH_EINVAL \a buf_sz is not <tt>sizeof(ogg_uint32_t)</tt>.
- * \retval TH_IMPL   Not supported by this implementation.*/
+ * \retval OC_FAULT  \a theora_state or \a buf is <tt>NULL</tt>.
+ * \retval OC_EINVAL \a buf_sz is not <tt>sizeof(ogg_uint32_t)</tt>.
+ * \retval OC_IMPL   Not supported by this implementation.*/
 #define TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE (4)
 
 /**Set the granule position.
@@ -338,33 +335,23 @@ typedef struct theora_comment{
  */
 #define TH_DECCTL_SET_GRANPOS (5)
 
+/**\anchor encctlcodes_old */
 
-/**\anchor encctlcodes
- * These are the available request codes for theora_control()
- * when called with an encoder instance.
- * By convention, these are even, to distinguish them from the
- *  \ref decctlcodes "decoder control codes".
- * Keep any experimental or vendor-specific values above \c 0x8000.*/
-/*@{*/
 /**Sets the quantization parameters to use.
  * The parameters are copied, not stored by reference, so they can be freed
  *  after this call.
  * <tt>NULL</tt> may be specified to revert to the default parameters.
- * For the current encoder, <tt>scale[ci!=0][qi]</tt> must be no greater than
- *  <tt>scale[ci!=0][qi-1]</tt> and <tt>base[qti][pli][qi][ci]</tt> must be no
- *  greater than <tt>base[qti][pli][qi-1][ci]</tt>.
- * These two conditions ensure that the actual quantizer for a given \a qti,
- *  \a pli, and \a ci does not increase as \a qi increases.
  *
  * \param[in] buf #th_quant_info
- * \retval TH_FAULT  \a theora_state is <tt>NULL</tt>.
- * \retval TH_EINVAL Encoding has already begun, the quantization parameters
- *                    do not meet one of the above stated conditions, \a buf
- *                    is <tt>NULL</tt> and \a buf_sz is not zero, or \a buf
- *                    is non-<tt>NULL</tt> and \a buf_sz is not
- *                    <tt>sizeof(#th_quant_info)</tt>.
- * \retval TH_IMPL   Not supported by this implementation.*/
+ * \retval OC_FAULT  \a theora_state is <tt>NULL</tt>.
+ * \retval OC_EINVAL Encoding has already begun, the quantization parameters
+ *                    are not acceptable to this version of the encoder, 
+ *                    \a buf is <tt>NULL</tt> and \a buf_sz is not zero, 
+ *                    or \a buf is non-<tt>NULL</tt> and \a buf_sz is 
+ *                    not <tt>sizeof(#th_quant_info)</tt>.
+ * \retval OC_IMPL   Not supported by this implementation.*/
 #define TH_ENCCTL_SET_QUANT_PARAMS (2)
+
 /**Disables any encoder features that would prevent lossless transcoding back
  *  to VP3.
  * This primarily means disabling block-level QI values and not using 4MV mode
@@ -389,10 +376,11 @@ typedef struct theora_comment{
  *                   4:2:0, the picture region is smaller than the full frame,
  *                   or if encoding has begun, preventing the quantization
  *                   tables and codebooks from being set.
- * \retval TH_FAULT  \a theora_state or \a buf is <tt>NULL</tt>.
- * \retval TH_EINVAL \a buf_sz is not <tt>sizeof(int)</tt>.
- * \retval TH_IMPL   Not supported by this implementation.*/
+ * \retval OC_FAULT  \a theora_state or \a buf is <tt>NULL</tt>.
+ * \retval OC_EINVAL \a buf_sz is not <tt>sizeof(int)</tt>.
+ * \retval OC_IMPL   Not supported by this implementation.*/
 #define TH_ENCCTL_SET_VP3_COMPATIBLE (10)
+
 /**Gets the maximum speed level.
  * Higher speed levels favor quicker encoding over better quality per bit.
  * Depending on the encoding mode, and the internal algorithms used, quality
@@ -402,25 +390,27 @@ typedef struct theora_comment{
  *  the current encoding mode (VBR vs. CQI, etc.).
  *
  * \param[out] buf int: The maximum encoding speed level.
- * \retval TH_FAULT  \a theora_state or \a buf is <tt>NULL</tt>.
- * \retval TH_EINVAL \a buf_sz is not <tt>sizeof(int)</tt>.
- * \retval TH_IMPL   Not supported by this implementation in the current
+ * \retval OC_FAULT  \a theora_state or \a buf is <tt>NULL</tt>.
+ * \retval OC_EINVAL \a buf_sz is not <tt>sizeof(int)</tt>.
+ * \retval OC_IMPL   Not supported by this implementation in the current
  *                    encoding mode.*/
 #define TH_ENCCTL_GET_SPLEVEL_MAX (12)
+
 /**Sets the speed level.
  * By default a speed value of 1 is used.
  *
  * \param[in] buf int: The new encoding speed level.
  *                      0 is slowest, larger values use less CPU.
- * \retval TH_FAULT  \a theora_state or \a buf is <tt>NULL</tt>.
- * \retval TH_EINVAL \a buf_sz is not <tt>sizeof(int)</tt>, or the
+ * \retval OC_FAULT  \a theora_state or \a buf is <tt>NULL</tt>.
+ * \retval OC_EINVAL \a buf_sz is not <tt>sizeof(int)</tt>, or the
  *                    encoding speed level is out of bounds.
  *                   The maximum encoding speed level may be
  *                    implementation- and encoding mode-specific, and can be
  *                    obtained via #TH_ENCCTL_GET_SPLEVEL_MAX.
- * \retval TH_IMPL   Not supported by this implementation in the current
+ * \retval OC_IMPL   Not supported by this implementation in the current
  *                    encoding mode.*/
 #define TH_ENCCTL_SET_SPLEVEL (14)
+
 /*@}*/
 
 #define OC_FAULT       -1       /**< General failure */
@@ -779,8 +769,8 @@ extern void  theora_comment_clear(theora_comment *tc);
  * This is used to provide advanced control the encoding process.
  * \param th     A #theora_state handle.
  * \param req    The control code to process.
- *                See \ref encctlcodes "the list of available control codes"
- *                 for details.
+ *                See \ref encctlcodes_old "the list of available 
+ *			control codes" for details.
  * \param buf    The parameters for this control code.
  * \param buf_sz The size of the parameter buffer.*/
 extern int theora_control(theora_state *th,int req,void *buf,size_t buf_sz);

@@ -389,7 +389,7 @@ nsFastLoadFileReader::HasMuxedDocument(const char* aURISpec, PRBool *aResult)
     nsDocumentMapReadEntry* docMapEntry =
         static_cast<nsDocumentMapReadEntry*>
                    (PL_DHashTableOperate(&mFooter.mDocumentMap, aURISpec,
-                                            PL_DHASH_LOOKUP));
+                                         PL_DHASH_LOOKUP));
 
     *aResult = PL_DHASH_ENTRY_IS_BUSY(docMapEntry);
     return NS_OK;
@@ -401,7 +401,7 @@ nsFastLoadFileReader::StartMuxedDocument(nsISupports* aURI, const char* aURISpec
     nsDocumentMapReadEntry* docMapEntry =
         static_cast<nsDocumentMapReadEntry*>
                    (PL_DHashTableOperate(&mFooter.mDocumentMap, aURISpec,
-                                            PL_DHASH_LOOKUP));
+                                         PL_DHASH_LOOKUP));
 
     // If the spec isn't in the map, return NS_ERROR_NOT_AVAILABLE so the
     // FastLoad service can try for a file update.
@@ -412,7 +412,7 @@ nsFastLoadFileReader::StartMuxedDocument(nsISupports* aURI, const char* aURISpec
     nsURIMapReadEntry* uriMapEntry =
         static_cast<nsURIMapReadEntry*>
                    (PL_DHashTableOperate(&mFooter.mURIMap, key,
-                                            PL_DHASH_ADD));
+                                         PL_DHASH_ADD));
     if (!uriMapEntry)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -441,7 +441,7 @@ nsFastLoadFileReader::SelectMuxedDocument(nsISupports* aURI,
     nsURIMapReadEntry* uriMapEntry =
         static_cast<nsURIMapReadEntry*>
                    (PL_DHashTableOperate(&mFooter.mURIMap, key,
-                                            PL_DHASH_LOOKUP));
+                                         PL_DHASH_LOOKUP));
 
     // If the URI isn't in the map, return NS_ERROR_NOT_AVAILABLE so the
     // FastLoad service can try selecting the file updater.
@@ -504,7 +504,7 @@ nsFastLoadFileReader::EndMuxedDocument(nsISupports* aURI)
     nsURIMapReadEntry* uriMapEntry =
         static_cast<nsURIMapReadEntry*>
                    (PL_DHashTableOperate(&mFooter.mURIMap, key,
-                                            PL_DHASH_LOOKUP));
+                                         PL_DHASH_LOOKUP));
 
     // If the URI isn't in the map, return NS_ERROR_NOT_AVAILABLE so the
     // FastLoad service can try to end a select on its file updater.
@@ -771,8 +771,8 @@ nsFastLoadFileReader::ReadFooter(nsFastLoadFooter *aFooter)
         nsDocumentMapReadEntry* entry =
             static_cast<nsDocumentMapReadEntry*>
                        (PL_DHashTableOperate(&aFooter->mDocumentMap,
-                                                info.mURISpec,
-                                                PL_DHASH_ADD));
+                                             info.mURISpec,
+                                             PL_DHASH_ADD));
         if (!entry) {
             nsMemory::Free((void*) info.mURISpec);
             return NS_ERROR_OUT_OF_MEMORY;
@@ -1363,7 +1363,7 @@ nsFastLoadFileWriter::HasMuxedDocument(const char* aURISpec, PRBool *aResult)
     nsDocumentMapWriteEntry* docMapEntry =
         static_cast<nsDocumentMapWriteEntry*>
                    (PL_DHashTableOperate(&mDocumentMap, aURISpec,
-                                            PL_DHASH_LOOKUP));
+                                         PL_DHASH_LOOKUP));
 
     *aResult = PL_DHASH_ENTRY_IS_BUSY(docMapEntry);
     return NS_OK;
@@ -1383,7 +1383,7 @@ nsFastLoadFileWriter::StartMuxedDocument(nsISupports* aURI,
     nsDocumentMapWriteEntry* docMapEntry =
         static_cast<nsDocumentMapWriteEntry*>
                    (PL_DHashTableOperate(&mDocumentMap, aURISpec,
-                                            PL_DHASH_ADD));
+                                         PL_DHASH_ADD));
     if (!docMapEntry)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1392,7 +1392,7 @@ nsFastLoadFileWriter::StartMuxedDocument(nsISupports* aURI,
         mCurrentDocumentMapEntry =
             static_cast<nsDocumentMapWriteEntry*>
                        (PL_DHashTableOperate(&mDocumentMap, saveURISpec,
-                                                PL_DHASH_LOOKUP));
+                                             PL_DHASH_LOOKUP));
         NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(mCurrentDocumentMapEntry),
                      "mCurrentDocumentMapEntry lost during table growth?!");
 
@@ -1465,8 +1465,8 @@ nsFastLoadFileWriter::SelectMuxedDocument(nsISupports* aURI,
         docMapEntry =
             static_cast<nsDocumentMapWriteEntry*>
                        (PL_DHashTableOperate(&mDocumentMap,
-                                                uriMapEntry->mURISpec,
-                                                PL_DHASH_LOOKUP));
+                                             uriMapEntry->mURISpec,
+                                             PL_DHASH_LOOKUP));
         NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(docMapEntry), "lost mDocMapEntry!?");
         uriMapEntry->mDocMapEntry = docMapEntry;
         uriMapEntry->mGeneration = mDocumentMap.generation;
@@ -1600,7 +1600,7 @@ nsFastLoadFileWriter::AddDependency(nsIFile* aFile)
     nsDependencyMapEntry* entry =
         static_cast<nsDependencyMapEntry*>
                    (PL_DHashTableOperate(&mDependencyMap, path.get(),
-                                            PL_DHASH_ADD));
+                                         PL_DHASH_ADD));
     if (!entry)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2097,7 +2097,7 @@ nsFastLoadFileWriter::WriteObjectCommon(nsISupports* aObject,
         nsSharpObjectMapEntry* entry =
             static_cast<nsSharpObjectMapEntry*>
                        (PL_DHashTableOperate(&mObjectMap, aObject,
-                                                PL_DHASH_ADD));
+                                             PL_DHASH_ADD));
         if (!entry) {
             aObject->Release();
             return NS_ERROR_OUT_OF_MEMORY;
@@ -2355,7 +2355,7 @@ nsFastLoadFileUpdater::CopyReadDocumentMapEntryToUpdater(PLDHashTable *aTable,
     nsDocumentMapWriteEntry* writeEntry =
         static_cast<nsDocumentMapWriteEntry*>
                    (PL_DHashTableOperate(&updater->mDocumentMap, spec,
-                                            PL_DHASH_ADD));
+                                         PL_DHASH_ADD));
     if (!writeEntry) {
         nsMemory::Free(spec);
         return PL_DHASH_STOP;
@@ -2463,7 +2463,7 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
         nsSharpObjectMapEntry* writeEntry =
             static_cast<nsSharpObjectMapEntry*>
                        (PL_DHashTableOperate(&mObjectMap, key,
-                                                PL_DHASH_ADD));
+                                             PL_DHASH_ADD));
         if (!writeEntry)
             return NS_ERROR_OUT_OF_MEMORY;
 

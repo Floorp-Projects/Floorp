@@ -89,21 +89,18 @@ function test()
     };
     let db = Cc["@mozilla.org/download-manager;1"].
              getService(Ci.nsIDownloadManager).DBConnection;
-    let rawStmt = db.createStatement(
+    let stmt = db.createStatement(
       "INSERT INTO moz_downloads (name, source, target, startTime, endTime, " +
         "state, currBytes, maxBytes, preferredAction, autoResume) " +
       "VALUES (:name, :source, :target, :startTime, :endTime, :state, " +
         ":currBytes, :maxBytes, :preferredAction, :autoResume)");
-    let stmt = Cc["@mozilla.org/storage/statement-wrapper;1"].
-               createInstance(Ci.mozIStorageStatementWrapper);
-    stmt.initialize(rawStmt);
     try {
       for (let prop in data)
         stmt.params[prop] = data[prop];
       stmt.execute();
     }
     finally {
-      stmt.statement.finalize();
+      stmt.finalize();
     }
 
     // Toggle history to get everything to update

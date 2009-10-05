@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "nsMediaDecoder.h"
+
 #include "prlog.h"
 #include "prmem.h"
 #include "nsIFrame.h"
@@ -50,7 +53,6 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "nsPresContext.h"
-#include "nsMediaDecoder.h"
 #include "nsDOMError.h"
 
 #if defined(XP_MACOSX)
@@ -62,11 +64,6 @@
 
 // Number of milliseconds of no data before a stall event is fired as defined by spec
 #define STALL_MS 3000
-
-#ifdef PR_LOGGING
-// Logging object for decoder
-PRLogModuleInfo* gVideoDecoderLog = nsnull;
-#endif
 
 nsMediaDecoder::nsMediaDecoder() :
   mElement(0),
@@ -109,13 +106,6 @@ void nsMediaDecoder::Shutdown()
 nsHTMLMediaElement* nsMediaDecoder::GetMediaElement()
 {
   return mElement;
-}
-nsresult nsMediaDecoder::InitLogger() 
-{
-#ifdef PR_LOGGING
-  gVideoDecoderLog = PR_NewLogModule("nsMediaDecoder");
-#endif
-  return NS_OK;
 }
 
 static PRInt32 ConditionDimension(float aValue, PRInt32 aDefault)

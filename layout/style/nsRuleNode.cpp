@@ -876,7 +876,8 @@ nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
     mRule(aRule),
     mDependentBits((PRUint32(aLevel) << NS_RULE_NODE_LEVEL_SHIFT) |
                    (aIsImportant ? NS_RULE_NODE_IS_IMPORTANT : 0)),
-    mNoneBits(0)
+    mNoneBits(0),
+    mRefCnt(0)
 {
   mChildren.asVoid = nsnull;
   MOZ_COUNT_CTOR(nsRuleNode);
@@ -884,6 +885,13 @@ nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
 
   NS_ASSERTION(IsRoot() || GetLevel() == aLevel, "not enough bits");
   NS_ASSERTION(IsRoot() || IsImportantRule() == aIsImportant, "yikes");
+  /* If IsRoot(), then aContext->StyleSet() is typically null at this
+     point.  In any case, we don't want to treat the root rulenode as
+     unused.  */
+  if (!IsRoot()) {
+    mParent->AddRef();
+    aContext->StyleSet()->RuleNodeUnused();
+  }
 }
 
 nsRuleNode::~nsRuleNode()
@@ -3214,7 +3222,12 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
 {
   COMPUTE_START_INHERITED(Text, (), text, parentText, Text, textData)
 
-    // letter-spacing: normal, length, inherit
+  // tab-size: integer, inherit
+  SetDiscrete(textData.mTabSize, text->mTabSize, canStoreInRuleTree,
+              SETDSC_INTEGER, parentText->mTabSize,
+              NS_STYLE_TABSIZE_INITIAL, 0, 0, 0, 0);
+  
+  // letter-spacing: normal, length, inherit
   SetCoord(textData.mLetterSpacing, text->mLetterSpacing, parentText->mLetterSpacing,
            SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
            aContext, mPresContext, canStoreInRuleTree);
@@ -6192,22 +6205,32 @@ nsRuleNode::Sweep()
   // Call sweep on the children, since some may not be marked, and
   // remove any deleted children from the child lists.
   if (HaveChildren()) {
+    PRUint32 childrenDestroyed;
     if (ChildrenAreHashed()) {
       PLDHashTable *children = ChildrenHash();
+      PRUint32 oldChildCount = children->entryCount;
       PL_DHashTableEnumerate(children, SweepRuleNodeChildren, nsnull);
+      childrenDestroyed = children->entryCount - oldChildCount;
     } else {
+      childrenDestroyed = 0;
       for (nsRuleNode **children = ChildrenListPtr(); *children; ) {
         nsRuleNode *next = (*children)->mNextSibling;
         if ((*children)->Sweep()) {
           // This rule node was destroyed, so implicitly advance by
           // making *children point to the next entry.
           *children = next;
+          ++childrenDestroyed;
         } else {
           // Advance.
           children = &(*children)->mNextSibling;
         }
       }
     }
+    mRefCnt -= childrenDestroyed;
+    NS_POSTCONDITION(IsRoot() || mRefCnt > 0,
+                     "We didn't get swept, so we'd better have style contexts "
+                     "pointing to us or to one of our descendants, which means "
+                     "we'd better have a nonzero mRefCnt here!");
   }
   return PR_FALSE;
 }

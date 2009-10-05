@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink"
->
-  <!-- Test interaction of specified CSS style and animated values -->
-  <text y="40" style="font-size: 30pt">
-    This text should be large.
-  </text>
-</svg>

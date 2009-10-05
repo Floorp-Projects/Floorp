@@ -247,6 +247,12 @@
 #define WINDOWSPROXY_MODULE
 #endif
 
+#if defined(BUILD_CTYPES)
+#define JSCTYPES_MODULE MODULE(jsctypes)
+#else
+#define JSCTYPES_MODULE
+#endif
+
 #define XUL_MODULES                          \
     MODULE(xpconnect)                        \
     MATHML_MODULES                           \
@@ -297,6 +303,7 @@
     UNIXPROXY_MODULE                         \
     OSXPROXY_MODULE                          \
     WINDOWSPROXY_MODULE                      \
+    JSCTYPES_MODULE                          \
     /* end of list */
 
 #define MODULE(_name) \

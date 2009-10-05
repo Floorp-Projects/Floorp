@@ -56,7 +56,7 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.0.1.svn"
+#define VERSION "0.2.0"
 
 /* Request Winsock 2.2 */
 #define HAVE_WINSOCK2 1
@@ -75,4 +75,4 @@
 /* #undef const */
 
 /* Maximum supported data alignment */
-/* #undef ATTRIBUTE_ALIGNED_MAX */
+#define ATTRIBUTE_ALIGNED_MAX 16

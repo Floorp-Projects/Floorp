@@ -49,6 +49,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_bug365773.xul \
 		test_bug382990.xul \
 		test_bug457632.xul \
+		test_bug460942.xul \
 		test_button.xul \
 		test_closemenu_attribute.xul \
 		test_colorpicker_popup.xul \

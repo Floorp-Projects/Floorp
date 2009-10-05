@@ -357,7 +357,7 @@ namespace nanojit
         case LIR_rsh:       xop = X64_sari;     break;
         case LIR_lsh:       xop = X64_shli;     break;
         }
-        int shift = ins->oprnd2()->imm32() & 255;
+        int shift = ins->oprnd2()->imm32() & 63;
         emit8(rexrb(xop | uint64_t(rr&7)<<48, (Register)0, rr), shift);
         if (rr != ra)
             MR(rr, ra);
@@ -423,14 +423,53 @@ namespace nanojit
             MR(rr, ra);
     }
 
+    void Assembler::asm_div_mod(LIns *ins) {
+        LIns *div;
+        if (ins->opcode() == LIR_mod) {
+            // LIR_mod expects the LIR_div to be near
+            div = ins->oprnd1();
+            prepResultReg(ins, rmask(RDX));
+        } else {
+            div = ins;
+            evictIfActive(RDX);
+        }
+
+        NanoAssert(div->isop(LIR_div));
+
+        LIns *lhs = div->oprnd1();
+        LIns *rhs = div->oprnd2();
+
+        prepResultReg(div, rmask(RAX));
+
+        Register rhsReg = findRegFor(rhs, (GpRegs ^ (rmask(RAX)|rmask(RDX))));
+        Register lhsReg = lhs->isUnusedOrHasUnknownReg()
+                          ? findSpecificRegFor(lhs, RAX)
+                          : lhs->getReg();
+        emitr(X64_idiv, rhsReg);
+        emit8(rexrb(X64_sari | uint64_t(RDX&7)<<48, (Register)0, RDX), 31);
+        MR(RDX, RAX);
+        if (RAX != lhsReg)
+            MR(RAX, lhsReg);
+    }
+
     // binary op with integer registers
     void Assembler::asm_arith(LIns *ins) {
         Register rr, ra, rb;
-        LOpcode op = ins->opcode();
-        if ((op & ~LIR64) >= LIR_lsh && (op & ~LIR64) <= LIR_ush) {
+
+        switch (ins->opcode() & ~LIR64) {
+        case LIR_lsh:
+        case LIR_rsh:
+        case LIR_ush:
             asm_shift(ins);
             return;
+        case LIR_mod:
+        case LIR_div:
+            asm_div_mod(ins);
+            return;
+        default:
+            break;
         }
+
         LIns *b = ins->oprnd2();
         if (isImm32(b)) {
             asm_arith_imm(ins);

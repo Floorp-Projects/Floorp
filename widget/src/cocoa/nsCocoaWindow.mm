@@ -147,13 +147,13 @@ nsCocoaWindow::~nsCocoaWindow()
 
   // Notify the children that we're gone.  Popup windows (e.g. tooltips) can
   // have nsChildView children.  'kid' is an nsChildView object if and only if
-  // its 'type' is 'eWindowType_child'.  childView->ResetParent() can change
-  // our list of children while it's being iterated, so the way we iterate the
-  // list must allow for this.
+  // its 'type' is 'eWindowType_child' or 'eWindowType_plugin'.
+  // childView->ResetParent() can change our list of children while it's
+  // being iterated, so the way we iterate the list must allow for this.
   for (nsIWidget* kid = mLastChild; kid;) {
     nsWindowType kidType;
     kid->GetWindowType(kidType);
-    if (kidType == eWindowType_child) {
+    if (kidType == eWindowType_child || kidType == eWindowType_plugin) {
       nsChildView* childView = static_cast<nsChildView*>(kid);
       kid = kid->GetPrevSibling();
       childView->ResetParent();
@@ -214,43 +214,39 @@ static PRBool UseNativePopupWindows()
   return (NS_SUCCEEDED(rv) && useNativePopupWindows);
 }
 
-// Utility method for implementing both Create(nsIWidget ...) and
-// Create(nsNativeWidget...)
-nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
-                        const nsIntRect &aRect,
-                        EVENT_CALLBACK aHandleEventFunction,
-                        nsIDeviceContext *aContext,
-                        nsIAppShell *aAppShell,
-                        nsIToolkit *aToolkit,
-                        nsWidgetInitData *aInitData,
-                        nsNativeWidget aNativeWindow)
+nsresult nsCocoaWindow::Create(nsIWidget *aParent,
+                               nsNativeWidget aNativeParent,
+                               const nsIntRect &aRect,
+                               EVENT_CALLBACK aHandleEventFunction,
+                               nsIDeviceContext *aContext,
+                               nsIAppShell *aAppShell,
+                               nsIToolkit *aToolkit,
+                               nsWidgetInitData *aInitData)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   if (!WindowSizeAllowed(aRect.width, aRect.height))
     return NS_ERROR_FAILURE;
 
+  // Set defaults which can be overriden from aInitData in BaseCreate
+  mWindowType = eWindowType_toplevel;
+  mBorderStyle = eBorderStyle_default;
+
   Inherited::BaseCreate(aParent, aRect, aHandleEventFunction, aContext, aAppShell,
                         aToolkit, aInitData);
 
   mParent = aParent;
-  SetWindowType(aInitData ? aInitData->mWindowType : eWindowType_toplevel);
-  SetBorderStyle(aInitData ? aInitData->mBorderStyle : eBorderStyle_default);
 
-  // Create a window if we aren't given one, or if this should be a non-native popup.
-  if ((mWindowType == eWindowType_popup) ? !UseNativePopupWindows() : !aNativeWindow) {
-    nsresult rv = CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(aRect),
-                                     mBorderStyle, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
+  // Applications that use native popups don't want us to create popup windows.
+  if ((mWindowType == eWindowType_popup) && UseNativePopupWindows())
+    return NS_OK;
 
-    if (mWindowType == eWindowType_popup) {
-      rv = CreatePopupContentView(aRect, aHandleEventFunction, aContext, aAppShell, aToolkit);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  } else {
-    mWindow = (NSWindow*)aNativeWindow;
-    [[WindowDataMap sharedWindowDataMap] ensureDataForWindow:mWindow];
-  }
+  nsresult rv = CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(aRect),
+                                   mBorderStyle, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mWindowType == eWindowType_popup)
+    return CreatePopupContentView(aRect, aHandleEventFunction, aContext, aAppShell, aToolkit);
 
   return NS_OK;
 
@@ -297,6 +293,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   {
     case eWindowType_invisible:
     case eWindowType_child:
+    case eWindowType_plugin:
     case eWindowType_popup:
       break;
     case eWindowType_toplevel:
@@ -423,8 +420,8 @@ NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
   NS_ADDREF(mPopupContentView);
 
   nsIWidget* thisAsWidget = static_cast<nsIWidget*>(this);
-  mPopupContentView->StandardCreate(thisAsWidget, aRect, aHandleEventFunction,
-                                    aContext, aAppShell, aToolkit, nsnull, nsnull);
+  mPopupContentView->Create(thisAsWidget, nsnull, aRect, aHandleEventFunction,
+                            aContext, aAppShell, aToolkit, nsnull);
 
   ChildView* newContentView = (ChildView*)mPopupContentView->GetNativeData(NS_NATIVE_WIDGET);
   [mWindow setContentView:newContentView];
@@ -432,31 +429,6 @@ NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-// Create a nsCocoaWindow using a native window provided by the application
-NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeWindow,
-                      const nsIntRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return(StandardCreate(nsnull, aRect, aHandleEventFunction, aContext,
-                        aAppShell, aToolkit, aInitData, aNativeWindow));
-}
-
-NS_IMETHODIMP nsCocoaWindow::Create(nsIWidget* aParent,
-                      const nsIntRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return(StandardCreate(aParent, aRect, aHandleEventFunction, aContext,
-                        aAppShell, aToolkit, aInitData, nsnull));
 }
 
 NS_IMETHODIMP nsCocoaWindow::Destroy()
@@ -660,7 +632,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       // -- see below).  Setting the window number to -1 and then back to its
       // original value seems to accomplish this.  The idea was "borrowed"
       // from the Java Embedding Plugin.
-      int windowNumber = [mWindow windowNumber];
+      NSInteger windowNumber = [mWindow windowNumber];
       [mWindow _setWindowNumber:-1];
       [mWindow _setWindowNumber:windowNumber];
       [mWindow setAcceptsMouseMovedEvents:YES];
@@ -1091,6 +1063,23 @@ NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsIntRect &aRect)
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP nsCocoaWindow::SetCursor(nsCursor aCursor)
+{
+  if (mPopupContentView)
+    return mPopupContentView->SetCursor(aCursor);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCocoaWindow::SetCursor(imgIContainer* aCursor,
+                                       PRUint32 aHotspotX, PRUint32 aHotspotY)
+{
+  if (mPopupContentView)
+    return mPopupContentView->SetCursor(aCursor, aHotspotX, aHotspotY);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)

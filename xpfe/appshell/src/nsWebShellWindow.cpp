@@ -150,7 +150,8 @@ NS_INTERFACE_MAP_BEGIN(nsWebShellWindow)
 NS_INTERFACE_MAP_END_INHERITING(nsXULWindow)
 
 nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
-                                      nsIAppShell* aShell, nsIURI* aUrl, 
+                                      nsIXULWindow* aOpener,
+                                      nsIAppShell* aShell, nsIURI* aUrl,
                                       PRInt32 aInitialWidth,
                                       PRInt32 aInitialHeight,
                                       PRBool aIsHiddenWindow,
@@ -160,7 +161,18 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   nsCOMPtr<nsIWidget> parentWidget;
 
   mIsHiddenWindow = aIsHiddenWindow;
-  
+
+  nsCOMPtr<nsIBaseWindow> base(do_QueryInterface(aOpener));
+  if (base) {
+    rv = base->GetPositionAndSize(&mOpenerScreenRect.x,
+                                  &mOpenerScreenRect.y,
+                                  &mOpenerScreenRect.width,
+                                  &mOpenerScreenRect.height);
+    if (NS_FAILED(rv)) {
+      mOpenerScreenRect.Empty();
+    }
+  }
+
   // XXX: need to get the default window size from prefs...
   // Doesn't come from prefs... will come from CSS/XUL/RDF
   nsIntRect r(0, 0, aInitialWidth, aInitialHeight);
@@ -190,6 +202,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
 
   mWindow->SetClientData(this);
   mWindow->Create((nsIWidget *)parentWidget,          // Parent nsIWidget
+                  nsnull,                             // Native parent widget
                   r,                                  // Widget dimensions
                   nsWebShellWindow::HandleEvent,      // Event handler function
                   nsnull,                             // Device context

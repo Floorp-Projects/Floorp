@@ -299,11 +299,14 @@ nsBlockFrame::Destroy()
   nsPresContext* presContext = PresContext();
 
   nsLineBox::DeleteLineList(presContext, mLines);
+  // Now clear mFrames, since we've destroyed all the frames in it.
+  mFrames.Clear();
 
   // destroy overflow lines now
   nsLineList* overflowLines = RemoveOverflowLines();
   if (overflowLines) {
     nsLineBox::DeleteLineList(presContext, *overflowLines);
+    delete overflowLines;
   }
 
   {
@@ -520,21 +523,19 @@ nsBlockFrame::GetChildList(nsIAtom* aListName) const
     return mAbsoluteContainer.GetChildList();
   }
   else if (nsnull == aListName) {
-    // XXXbz once we start using mFrames, or some other sane storage for our
-    // in-flow kids, we could switch GetChildList to returning a |const
-    // nsFrameList&|.
-    return mLines.empty() ? nsFrameList::EmptyList()
-                          : nsFrameList(mLines.front()->mFirstChild,
-                                        mLines.back()->LastChild());
+    return mFrames;
   }
   else if (aListName == nsGkAtoms::overflowList) {
+    // XXXbz once we start using nsFrameList for our overflow list, we
+    // could switch GetChildList to returning a |const nsFrameList&|.
     nsLineList* overflowLines = GetOverflowLines();
     return overflowLines ? nsFrameList(overflowLines->front()->mFirstChild,
                                        overflowLines->back()->LastChild())
                          : nsFrameList::EmptyList();
   }
   else if (aListName == nsGkAtoms::overflowOutOfFlowList) {
-    return GetOverflowOutOfFlows();
+    const nsFrameList* list = GetOverflowOutOfFlows();
+    return list ? *list : nsFrameList::EmptyList();
   }
   else if (aListName == nsGkAtoms::floatList) {
     return mFloats;
@@ -2091,11 +2092,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       nsBlockFrame* nextInFlow = aState.mNextInFlow;
       line_iterator nifLine = nextInFlow->begin_lines();
       nsLineBox *toMove;
-      PRBool collectOverflowFloats;
+      PRBool toMoveIsOverflowLine;
       if (nifLine != nextInFlow->end_lines()) {
         toMove = nifLine;
         nextInFlow->mLines.erase(nifLine);
-        collectOverflowFloats = PR_FALSE;
+        toMoveIsOverflowLine = PR_FALSE;
       } else {
         // Grab an overflow line if there are any
         nsLineList* overflowLines = nextInFlow->GetOverflowLines();
@@ -2116,8 +2117,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
           // stored in the property (because the property has the
           // invariant that the list is never empty).
           nextInFlow->SetOverflowLines(overflowLines);
+        } else {
+          delete overflowLines;
         }
-        collectOverflowFloats = PR_TRUE;
+        toMoveIsOverflowLine = PR_TRUE;
       }
 
       if (0 == toMove->GetChildCount()) {
@@ -2137,20 +2140,37 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         lastFrame = frame;
         frame = frame->GetNextSibling();
       }
-      lastFrame->SetNextSibling(nsnull);
 
-      // Reparent floats whose placeholders are in the line.
-      ReparentFloats(toMove->mFirstChild, nextInFlow, collectOverflowFloats, PR_TRUE);
+      NS_ASSERTION(lastFrame == toMove->LastChild(), "Unexpected lastFrame");
 
       NS_ASSERTION(aState.mPrevChild || mLines.empty(), "should have a prevchild here");
 
-      // Add line to our line list, and set its last child as our new prev-child
-      if (aState.mPrevChild) {
-        aState.mPrevChild->SetNextSibling(toMove->mFirstChild);
-      }
-      aState.mPrevChild = toMove->LastChild();
+      NS_ASSERTION(aState.mPrevChild == mFrames.LastChild(),
+                   "Incorrect aState.mPrevChild before inserting line at end");
 
+      // Shift toMove's frames into our mFrames list.
+      if (toMoveIsOverflowLine) {
+        // Pulling from an overflow list
+        // XXXbz If we switch overflow lines to nsFrameList, we should
+        // change this SetNextSibling call.
+        lastFrame->SetNextSibling(nsnull);
+      } else {
+        // Pulling from nextInFlow->mFrames
+        nsFrameList::FrameLinkEnumerator linkToBreak(nextInFlow->mFrames, lastFrame);
+        nextInFlow->mFrames.ExtractHead(linkToBreak);
+      }
+      nsFrameList newFrames(toMove->mFirstChild, lastFrame);
+      mFrames.AppendFrames(nsnull, newFrames);
+
+      // Add line to our line list, and set its last child as our new prev-child
       line = mLines.before_insert(end_lines(), toMove);
+      aState.mPrevChild = lastFrame;
+
+      NS_ASSERTION(aState.mPrevChild == mFrames.LastChild(),
+                   "Incorrect aState.mPrevChild after inserting line at end");
+
+      // Reparent floats whose placeholders are in the line.
+      ReparentFloats(toMove->mFirstChild, nextInFlow, toMoveIsOverflowLine, PR_TRUE);
 
       DumpLine(aState, toMove, deltaY, 0);
 #ifdef DEBUG
@@ -2519,8 +2539,26 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
         "mPrevChild should be the LastChild of the line we are adding to");
       // The frame is being pulled from a next-in-flow; therefore we
       // need to add it to our sibling list.
-      frame->SetNextSibling(nsnull);
-      aState.mPrevChild->SetNextSibling(frame);
+      if (fromLine == aFromContainer->mLines.begin()) {
+        // Pulling from the next-in-flow's normal line list
+        aFromContainer->mFrames.RemoveFrame(frame);
+      } else {
+        // Pulling from the next-in-flow's overflow list
+        // XXXbz If we switch overflow lines to nsFrameList, we should
+        // change this SetNextSibling call.
+        frame->SetNextSibling(nsnull);
+      }
+
+      // When pushing and pulling frames we need to check for whether any
+      // views need to be reparented
+      NS_ASSERTION(frame->GetParent() == aFromContainer, "unexpected parent frame");
+
+      ReparentFrame(frame, aFromContainer, this);
+      mFrames.InsertFrame(nsnull, aState.mPrevChild, frame);
+
+      // The frame might have (or contain) floats that need to be
+      // brought over too.
+      ReparentFloats(frame, aFromContainer, aFromOverflowLine, PR_TRUE);
     }
     // when aFromContainer is 'this', then aLine->LastChild()'s next sibling
     // is already set correctly.
@@ -2551,22 +2589,13 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
       aState.FreeLineBox(fromLine);
 
       // Put any remaining overflow lines back.
-      if (aFromOverflowLine && !fromLineList->empty()) {
-        aFromContainer->SetOverflowLines(fromLineList);
+      if (aFromOverflowLine) {
+        if (!fromLineList->empty()) {
+          aFromContainer->SetOverflowLines(fromLineList);
+        } else {
+          delete fromLineList;
+        }
       }
-    }
-
-    // Change geometric parents
-    if (aFromContainer != this) {
-      // When pushing and pulling frames we need to check for whether any
-      // views need to be reparented
-      NS_ASSERTION(frame->GetParent() == aFromContainer, "unexpected parent frame");
-
-      ReparentFrame(frame, aFromContainer, this);
-
-      // The frame might have (or contain) floats that need to be
-      // brought over too.
-      ReparentFloats(frame, aFromContainer, aFromOverflowLine, PR_TRUE);
     }
 
     // Stop pulling because we found a frame to pull
@@ -3164,8 +3193,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
               NS_ENSURE_SUCCESS(rv, rv);
               if (parent != this)
                 ReparentFrame(nextFrame, parent, this);
-              nextFrame->SetNextSibling(frame->GetNextSibling());
-              frame->SetNextSibling(nextFrame);
+              mFrames.InsertFrame(nsnull, frame, nextFrame);
               madeContinuation = PR_TRUE; // needs to be added to mLines
               nextFrame->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
               frameReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
@@ -3233,8 +3261,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
               NS_ENSURE_SUCCESS(rv, rv);
             }
             else if (madeContinuation) {
-              frame->SetNextSibling(nextFrame->GetNextSibling());
-              nextFrame->SetNextSibling(nsnull);
+              mFrames.RemoveFrame(nextFrame);
             }
 
             // Put it in our overflow list
@@ -3853,9 +3880,7 @@ nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
       return rv;
     }
 
-    nsIFrame* sib = aFrame->GetNextSibling();
-    aFrame->SetNextSibling(newFrame);
-    newFrame->SetNextSibling(sib);
+    mFrames.InsertFrame(nsnull, aFrame, newFrame);
 
     if (aLine) { 
       aLine->SetChildCount(aLine->GetChildCount() + 1);
@@ -4270,8 +4295,17 @@ nsBlockFrame::PushLines(nsBlockReflowState&  aState,
       overflowLines = new nsLineList();
     }
     if (overflowLines) {
+      // First, remove the frames we're pushing from mFrames
+      nsIFrame* oldLastChild = mFrames.LastChild();
+      if (firstLine) {
+        mFrames.Clear();
+      } else {
+        mFrames.RemoveFramesAfter(aLineBefore->LastChild());
+      }
       if (!overflowLines->empty()) {
-        mLines.back()->LastChild()->SetNextSibling(overflowLines->front()->mFirstChild);
+        // XXXbz If we switch overflow lines to nsFrameList, we should
+        // change this SetNextSibling call.
+        oldLastChild->SetNextSibling(overflowLines->front()->mFirstChild);
       }
       overflowLines->splice(overflowLines->begin(), mLines, overBegin,
                             end_lines());
@@ -4298,10 +4332,6 @@ nsBlockFrame::PushLines(nsBlockReflowState&  aState,
         }
     }
   }
-
-  // Break frame sibling list
-  if (!firstLine)
-    aLineBefore->LastChild()->SetNextSibling(nsnull);
 
 #ifdef DEBUG
   VerifyOverflowSituation();
@@ -4371,15 +4401,18 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
   if (overflowLines) {
     if (!overflowLines->empty()) {
       // Join the line lists
-      if (! mLines.empty()) 
-        {
+      if (!mLines.empty()) {
           // Remember to recompute the margins on the first line. This will
           // also recompute the correct deltaY if necessary.
           mLines.front()->MarkPreviousMarginDirty();
-          // Join the sibling lists together
-          nsIFrame* lastFrame = overflowLines->back()->LastChild();
-          lastFrame->SetNextSibling(mLines.front()->mFirstChild);
-        }
+      }
+      
+      // Join the sibling lists together
+      nsIFrame* firstFrame = overflowLines->front()->mFirstChild;
+      nsIFrame* lastFrame = overflowLines->back()->LastChild();
+      nsFrameList framesToInsert(firstFrame, lastFrame);
+      mFrames.InsertFrames(nsnull, nsnull, framesToInsert);
+
       // Place overflow lines at the front of our line list
       mLines.splice(mLines.begin(), *overflowLines);
       NS_ASSERTION(overflowLines->empty(), "splice should empty list");
@@ -4388,10 +4421,11 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
   }
   if (ourOverflowLines) {
     if (!ourOverflowLines->empty()) {
-      if (!mLines.empty()) {
-        mLines.back()->LastChild()->
-          SetNextSibling(ourOverflowLines->front()->mFirstChild);
-      }
+      nsIFrame* firstFrame = ourOverflowLines->front()->mFirstChild;
+      nsIFrame* lastFrame = ourOverflowLines->back()->LastChild();
+      nsFrameList framesToAppend(firstFrame, lastFrame);
+      mFrames.AppendFrames(nsnull, framesToAppend);
+
       // append the overflow to mLines
       mLines.splice(mLines.end(), *ourOverflowLines);
     }
@@ -4522,35 +4556,46 @@ nsBlockFrame::SetOverflowLines(nsLineList* aOverflowLines)
   return rv;
 }
 
-nsFrameList
+nsFrameList*
 nsBlockFrame::GetOverflowOutOfFlows() const
 {
   if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS)) {
-    return nsFrameList();
+    return nsnull;
   }
-  nsIFrame* result = static_cast<nsIFrame*>
-                                (GetProperty(nsGkAtoms::overflowOutOfFlowsProperty));
+  nsFrameList* result =
+    GetPropTableFrames(PresContext(), nsGkAtoms::overflowOutOfFlowsProperty);
   NS_ASSERTION(result, "value should always be non-empty when state set");
-  return nsFrameList(result, nsLayoutUtils::GetLastSibling(result));
+  return result;
 }
 
 // This takes ownership of the frames
 void
-nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList)
+nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList,
+                                    nsFrameList* aPropValue)
 {
+  NS_PRECONDITION(!!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS) ==
+                  !!aPropValue, "state does not match value");
+
   if (aList.IsEmpty()) {
     if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS)) {
       return;
     }
-#ifdef DEBUG
-    nsIFrame* result = static_cast<nsIFrame*>
-#endif
-      (UnsetProperty(nsGkAtoms::overflowOutOfFlowsProperty));
-    NS_ASSERTION(result, "value should always be non-empty when state set");
+    nsFrameList* list =
+      RemovePropTableFrames(PresContext(),
+                            nsGkAtoms::overflowOutOfFlowsProperty);
+    NS_ASSERTION(aPropValue == list, "prop value mismatch");
+    delete list;
     RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
-  } else {
-    SetProperty(nsGkAtoms::overflowOutOfFlowsProperty,
-                aList.FirstChild(), nsnull);
+  }
+  else if (GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS) {
+    NS_ASSERTION(aPropValue == GetPropTableFrames(PresContext(),
+                                 nsGkAtoms::overflowOutOfFlowsProperty),
+                 "prop value mismatch");
+    *aPropValue = aList;
+  }
+  else {
+    SetPropTableFrames(PresContext(), new nsFrameList(aList),
+                       nsGkAtoms::overflowOutOfFlowsProperty);
     AddStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   }
 }
@@ -4645,7 +4690,6 @@ nsBlockFrame::InsertFrames(nsIAtom*  aListName,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  aFrameList.Clear();
 #ifdef IBMBIDI
   if (aListName != nsGkAtoms::nextBidi)
 #endif // IBMBIDI
@@ -4668,8 +4712,7 @@ ShouldPutNextSiblingOnNewLine(nsIFrame* aLastFrame)
 }
 
 nsresult
-nsBlockFrame::AddFrames(const nsFrameList& aFrameList,
-                        nsIFrame* aPrevSibling)
+nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
 {
   // Clear our line cursor, since our lines may change.
   ClearLineCursor();
@@ -4699,6 +4742,7 @@ nsBlockFrame::AddFrames(const nsFrameList& aFrameList,
     // Find the line that contains the previous sibling
     if (! nsLineBox::RFindLineContaining(aPrevSibling,
                                          begin_lines(), prevSibLine,
+                                         mFrames.LastChild(),
                                          &prevSiblingIndex)) {
       // Note: defensive code! RFindLineContaining must not return
       // false in this case, so if it does...
@@ -4710,16 +4754,13 @@ nsBlockFrame::AddFrames(const nsFrameList& aFrameList,
 
   // Find the frame following aPrevSibling so that we can join up the
   // two lists of frames.
-  nsIFrame* prevSiblingNextFrame = nsnull;
   if (aPrevSibling) {
-    prevSiblingNextFrame = aPrevSibling->GetNextSibling();
-
     // Split line containing aPrevSibling in two if the insertion
     // point is somewhere in the middle of the line.
     PRInt32 rem = prevSibLine->GetChildCount() - prevSiblingIndex - 1;
     if (rem) {
       // Split the line in two where the frame(s) are being inserted.
-      nsLineBox* line = NS_NewLineBox(presShell, prevSiblingNextFrame, rem, PR_FALSE);
+      nsLineBox* line = NS_NewLineBox(presShell, aPrevSibling->GetNextSibling(), rem, PR_FALSE);
       if (!line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -4734,20 +4775,20 @@ nsBlockFrame::AddFrames(const nsFrameList& aFrameList,
       line->MarkDirty();
       line->SetInvalidateTextRuns(PR_TRUE);
     }
-
-    // Now (partially) join the sibling lists together
-    aPrevSibling->SetNextSibling(aFrameList.FirstChild());
   }
   else if (! mLines.empty()) {
-    prevSiblingNextFrame = mLines.front()->mFirstChild;
     mLines.front()->MarkDirty();
     mLines.front()->SetInvalidateTextRuns(PR_TRUE);
   }
+  const nsFrameList::Slice& newFrames =
+    mFrames.InsertFrames(nsnull, aPrevSibling, aFrameList);
 
   // Walk through the new frames being added and update the line data
   // structures to fit.
-  nsIFrame* newFrame = aFrameList.FirstChild();
-  while (newFrame) {
+  for (nsFrameList::Enumerator e(newFrames); !e.AtEnd(); e.Next()) {
+    nsIFrame* newFrame = e.get();
+    NS_ASSERTION(!aPrevSibling || aPrevSibling->GetNextSibling() == newFrame,
+                 "Unexpected aPrevSibling");
     NS_ASSERTION(newFrame->GetType() != nsGkAtoms::placeholderFrame ||
                  (!newFrame->GetStyleDisplay()->IsAbsolutelyPositioned() &&
                   !newFrame->GetStyleDisplay()->IsFloating()),
@@ -4788,11 +4829,6 @@ nsBlockFrame::AddFrames(const nsFrameList& aFrameList,
     }
 
     aPrevSibling = newFrame;
-    newFrame = newFrame->GetNextSibling();
-  }
-  if (prevSiblingNextFrame) {
-    // Connect the last new frame to the remainder of the sibling list
-    aPrevSibling->SetNextSibling(prevSiblingNextFrame);
   }
 
 #ifdef DEBUG
@@ -5168,30 +5204,22 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
 
   nsIPresShell* presShell = presContext->PresShell();
 
-  // Find the line and the previous sibling that contains
-  // deletedFrame; we also find the pointer to the line.
+  // Find the line that contains deletedFrame
   nsLineList::iterator line_start = mLines.begin(),
                        line_end = mLines.end();
   nsLineList::iterator line = line_start;
   PRBool searchingOverflowList = PR_FALSE;
-  nsIFrame* prevSibling = nsnull;
   // Make sure we look in the overflow lines even if the normal line
   // list is empty
   TryAllLines(&line, &line_start, &line_end, &searchingOverflowList);
   while (line != line_end) {
-    nsIFrame* frame = line->mFirstChild;
-    PRInt32 n = line->GetChildCount();
-    while (--n >= 0) {
-      if (frame == aDeletedFrame) {
-        goto found_frame;
-      }
-      prevSibling = frame;
-      frame = frame->GetNextSibling();
+    if (line->Contains(aDeletedFrame)) {
+      break;
     }
     ++line;
     TryAllLines(&line, &line_start, &line_end, &searchingOverflowList);
   }
-found_frame:;
+
   if (line == line_end) {
     NS_ERROR("can't find deleted frame in lines");
     return NS_ERROR_FAILURE;
@@ -5207,13 +5235,6 @@ found_frame:;
       mLines.back()->SetInvalidateTextRuns(PR_TRUE);
     }
   }
-
-  if (prevSibling && !prevSibling->GetNextSibling()) {
-    // We must have found the first frame in the overflow line list. So
-    // there is no prevSibling
-    prevSibling = nsnull;
-  }
-  NS_ASSERTION(!prevSibling || prevSibling->GetNextSibling() == aDeletedFrame, "bad prevSibling");
 
   while ((line != line_end) && (nsnull != aDeletedFrame)) {
     NS_ASSERTION(this == aDeletedFrame->GetParent(), "messed up delete code");
@@ -5251,8 +5272,15 @@ found_frame:;
     // Take aDeletedFrame out of the sibling list. Note that
     // prevSibling will only be nsnull when we are deleting the very
     // first frame in the main or overflow list.
-    if (prevSibling) {
-      prevSibling->SetNextSibling(nextFrame);
+    if (searchingOverflowList) {
+      nsIFrame* prevSibling = aDeletedFrame->GetPrevSibling();
+      if (prevSibling) {
+        // XXXbz If we switch overflow lines to nsFrameList, we should
+        // change this SetNextSibling call.
+        prevSibling->SetNextSibling(nextFrame);
+      }
+    } else {
+      mFrames.RemoveFrame(aDeletedFrame);
     }
 
     // Update the child count of the line to be accurate
@@ -5300,6 +5328,8 @@ found_frame:;
         line = lineList->erase(line);
         if (!lineList->empty()) {
           SetOverflowLines(lineList);
+        } else {
+          delete lineList;
         }
       }
       cur->Destroy(presShell);
@@ -5342,20 +5372,10 @@ found_frame:;
           line = line_end;
         }
 
-        PRBool wasSearchingOverflowList = searchingOverflowList;
         TryAllLines(&line, &line_start, &line_end, &searchingOverflowList);
-        if (NS_UNLIKELY(searchingOverflowList && !wasSearchingOverflowList &&
-                        prevSibling)) {
-          // We switched to the overflow line list and we have a prev sibling
-          // (in the main list), in this case we don't want to pick up any
-          // sibling list from the deceased frames (bug 344557).
-          prevSibling->SetNextSibling(nsnull);
-          prevSibling = nsnull;
-        }
 #ifdef NOISY_REMOVE_FRAME
-        printf("DoRemoveFrame: now on %s line=%p prevSibling=%p\n",
-               searchingOverflowList?"overflow":"normal", line.get(),
-               prevSibling);
+        printf("DoRemoveFrame: now on %s line=%p\n",
+               searchingOverflowList?"overflow":"normal", line.get());
 #endif
       }
     }
@@ -5414,11 +5434,18 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
     while (--n >= 0) {
       if (frame == aChild) {
         // Disconnect from sibling list
-        if (prevSibling)
-          prevSibling->SetNextSibling(frame->GetNextSibling());
-        else
+        if (frame == line->mFirstChild) {
           line->mFirstChild = frame->GetNextSibling();
-        frame->SetNextSibling(nsnull);
+        }
+        if (searchingOverflowList) {
+          // XXXbz If we switch overflow lines to nsFrameList, we should
+          // change this SetNextSibling call.
+          if (prevSibling)
+            prevSibling->SetNextSibling(frame->GetNextSibling());
+          frame->SetNextSibling(nsnull);
+        } else {
+          mFrames.RemoveFrame(frame);
+        }
 
         // Register removal with the line boxes
         PRInt32 count = line->GetChildCount();
@@ -5436,6 +5463,8 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
             if (!lineList->empty()) {
               nsresult rv = SetOverflowLines(lineList);
               NS_ENSURE_SUCCESS(rv, rv);
+            } else {
+              delete lineList;
             }
           }
           else {
@@ -5456,6 +5485,10 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
     }
     ++line;
     TryAllLines(&line, &line_start, &line_end, &searchingOverflowList);
+    if (prevSibling && !prevSibling->GetNextSibling()) {
+      // We just switched to the overflow list.  Null out prevSibling
+      prevSibling = nsnull;
+    }
   }
   return NS_ERROR_UNEXPECTED;
 }
@@ -6302,7 +6335,6 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
     if (NS_FAILED(rv)) {
       return rv;
     }
-    aChildList.Clear();
 
     // Create list bullet if this is a list-item. Note that this is done
     // here so that RenumberLists will work (it needs the bullets to
@@ -6343,7 +6375,8 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
       // it to the flow now.
       if (NS_STYLE_LIST_STYLE_POSITION_INSIDE ==
           styleList->mListStylePosition) {
-        AddFrames(nsFrameList(bullet, bullet), nsnull);
+        nsFrameList bulletList(bullet, bullet);
+        AddFrames(bulletList, nsnull);
         mState &= ~NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET;
       }
       else {
@@ -6373,7 +6406,7 @@ PRBool
 nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
 {
   nsIContent* content = aFrame->GetContent();
-  if (!content || !content->IsNodeOfType(nsINode::eHTML))
+  if (!content || !content->IsHTML())
     return PR_FALSE;
 
   nsIAtom *localName = content->NodeInfo()->NameAtom();
@@ -6674,8 +6707,8 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
   }
 #endif
 
-  nsFrameList oofs = GetOverflowOutOfFlows();
-  if (oofs.NotEmpty()) {
+  const nsFrameList* oofs = GetOverflowOutOfFlows();
+  if (oofs && oofs->NotEmpty()) {
     // Floats that were pushed should be removed from our float
     // manager.  Otherwise the float manager's YMost or XMost might
     // be larger than necessary, causing this block to get an
@@ -6686,7 +6719,7 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
     // because we know from here on the float manager will only be
     // used for its XMost and YMost, not to place new floats and
     // lines.
-    aState.mFloatManager->RemoveTrailingRegions(oofs.FirstChild());
+    aState.mFloatManager->RemoveTrailingRegions(oofs->FirstChild());
   }
 }
 

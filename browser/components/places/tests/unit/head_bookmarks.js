@@ -157,10 +157,14 @@ const FILENAME_BOOKMARKS_HTML = "bookmarks.html";
 let backup_date = new Date().toLocaleFormat("%Y-%m-%d");
 const FILENAME_BOOKMARKS_JSON = "bookmarks-" + backup_date + ".json";
 
-// Smart bookmarks constants
+// Smart bookmarks constants.
 const SMART_BOOKMARKS_VERSION = 2;
 const SMART_BOOKMARKS_ON_TOOLBAR = 1;
-const SMART_BOOKMARKS_ON_MENU = 2;
+const SMART_BOOKMARKS_ON_MENU = 3; // Takes in count the additional separator.
+
+// Default bookmarks constants.
+const DEFAULT_BOOKMARKS_ON_TOOLBAR = 2;
+const DEFAULT_BOOKMARKS_ON_MENU = 3;
 
 /**
  * Creates a bookmarks.html file in the profile folder from a given source file.

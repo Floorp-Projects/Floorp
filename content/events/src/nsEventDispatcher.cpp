@@ -625,6 +625,9 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_SCROLLPORT_EVENT:
       return NS_NewDOMUIEvent(aDOMEvent, aPresContext,
                               static_cast<nsGUIEvent*>(aEvent));
+    case NS_SCROLLAREA_EVENT:
+      return NS_NewDOMScrollAreaEvent(aDOMEvent, aPresContext,
+                                      static_cast<nsScrollAreaEvent *>(aEvent));
     case NS_KEY_EVENT:
       return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext,
                                     static_cast<nsKeyEvent*>(aEvent));
@@ -722,6 +725,8 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMBeforeUnloadEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("pagetransition"))
     return NS_NewDOMPageTransitionEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("scrollareaevent"))
+    return NS_NewDOMScrollAreaEvent(aDOMEvent, aPresContext, nsnull);
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }

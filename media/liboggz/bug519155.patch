@@ -1,0 +1,73 @@
+diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/oggz_seek.c
+--- a/media/liboggz/src/liboggz/oggz_seek.c
++++ b/media/liboggz/src/liboggz/oggz_seek.c
+@@ -154,17 +154,17 @@ oggz_reset_seek (OGGZ * oggz, oggz_off_t
+   if (offset_at == -1) return -1;
+ 
+   oggz->offset = offset_at;
+ 
+ #ifdef DEBUG
+   printf ("reset to %" PRI_OGGZ_OFF_T "d\n", offset_at);
+ #endif
+ 
+-  if (unit != -1) reader->current_unit = unit;
++  reader->current_unit = unit;
+ 
+   return offset_at;
+ }
+ 
+ static long
+ oggz_reset (OGGZ * oggz, oggz_off_t offset, ogg_int64_t unit, int whence)
+ {
+   oggz_reset_streams (oggz);
+@@ -800,38 +800,49 @@ oggz_bounded_seek_set (OGGZ * oggz,
+ static ogg_int64_t
+ oggz_seek_end (OGGZ * oggz, ogg_int64_t unit_offset)
+ {
+   oggz_off_t offset_orig, offset_at, offset_end;
+   ogg_int64_t granulepos;
+   ogg_int64_t unit_end;
+   long serialno;
+   ogg_page * og;
++  OggzReader * reader = &oggz->x.reader;
+ 
+   og = &oggz->current_page;
+ 
+   offset_orig = oggz->offset;
+ 
+   offset_at = oggz_seek_raw (oggz, 0, SEEK_END);
+   if (offset_at == -1) return -1;
+ 
+   offset_end = oggz_get_prev_start_page (oggz, og, &granulepos, &serialno);
+ 
+   if (offset_end < 0) {
+     oggz_reset (oggz, offset_orig, -1, SEEK_SET);
+     return -1;
+   }
+ 
+   unit_end = oggz_get_unit (oggz, serialno, granulepos);
+-
++  
+ #ifdef DEBUG
+   printf ("*** oggz_seek_end: found packet (%lld) at @%" PRI_OGGZ_OFF_T "d [%lld]\n",
+ 	  unit_end, offset_end, granulepos);
+ #endif
+ 
++  if (unit_end == -1) {
++    /* Failed to get time at the end, reset and fail. */
++    oggz_reset (oggz, offset_orig, -1, SEEK_SET);
++    return -1;
++  }
++
++  reader->current_unit = unit_end;
++  if (unit_offset == 0) {
++    return unit_end;
++  }
+   return oggz_bounded_seek_set (oggz, unit_end + unit_offset, 0, -1, 0);
+ }
+ 
+ off_t
+ oggz_seek (OGGZ * oggz, oggz_off_t offset, int whence)
+ {
+   OggzReader * reader;
+   ogg_int64_t units = -1;

@@ -5,7 +5,7 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2008                *
+ * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2009                *
  * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
@@ -14,13 +14,13 @@
   Originally written by Rudolf Marek.
 
  function:
-  last mod: $Id: cpu.c 15427 2008-10-21 02:36:19Z xiphmont $
+  last mod: $Id: cpu.c 16503 2009-08-22 18:14:02Z giles $
 
  ********************************************************************/
 
 #include "cpu.h"
 
-#if !defined(USE_ASM)
+#if !defined(OC_X86_ASM)
 static ogg_uint32_t oc_cpu_flags_get(void){
   return 0;
 }
@@ -166,7 +166,7 @@ static ogg_uint32_t oc_cpu_flags_get(void){
   /*              D M A c          i t n e          h t u A*/
   else if(ecx==0x444D4163&&edx==0x69746E65&&ebx==0x68747541||
    /*      C S N            y b   e          d o e G*/
-   ecx==0x43534E20&&edx==0x79622065&&ebx==0x646F6547){
+   ecx==0x43534e20&&edx==0x79622065&&ebx==0x646f6547){
     /*AMD, Geode:*/
     cpuid(0x80000000,eax,ebx,ecx,edx);
     if(eax<0x80000001)flags=0;
@@ -192,7 +192,6 @@ static ogg_uint32_t oc_cpu_flags_get(void){
       The C3-2 (Nehemiah) cores appear to, as well.*/
     cpuid(1,eax,ebx,ecx,edx);
     flags=oc_parse_intel_flags(edx,ecx);
-    cpuid(0x80000000,eax,ebx,ecx,edx);
     if(eax>=0x80000001){
       /*The (non-Nehemiah) C3 processors support AMD-like cpuid info.
         We need to check this even if the Intel test succeeds to pick up 3DNow!

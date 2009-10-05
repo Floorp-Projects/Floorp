@@ -515,6 +515,8 @@ GK_ATOM(lowerFirst, "lower-first")
 GK_ATOM(lowest, "lowest")
 GK_ATOM(lowsrc, "lowsrc")
 GK_ATOM(ltr, "ltr")
+GK_ATOM(lwtheme, "lwtheme")
+GK_ATOM(lwthemetextcolor, "lwthemetextcolor")
 GK_ATOM(map, "map")
 GK_ATOM(manifest, "manifest")
 GK_ATOM(marginheight, "marginheight")
@@ -654,6 +656,7 @@ GK_ATOM(onmouseover, "onmouseover")
 GK_ATOM(onmouseup, "onmouseup")
 GK_ATOM(onMozAfterPaint, "onMozAfterPaint")
 GK_ATOM(onMozMousePixelScroll, "onMozMousePixelScroll")
+GK_ATOM(onMozScrolledAreaChanged, "onMozScrolledAreaChanged")
 GK_ATOM(ononline, "ononline")
 GK_ATOM(onoffline, "onoffline")
 GK_ATOM(onoverflow, "onoverflow")
@@ -1661,7 +1664,7 @@ GK_ATOM(maxElementWidthProperty, "MaxElementWidthProperty")  // nscoord*
 GK_ATOM(outlineInnerRectProperty, "OutlineInnerRectProperty") // nsRect*
 GK_ATOM(outOfFlowDirtyRectProperty, "OutOfFlowDirtyRectProperty") // nsRect*
 GK_ATOM(overflowAreaProperty, "OverflowArea")              // nsRect*
-GK_ATOM(overflowProperty, "OverflowProperty")              // list of nsIFrame*
+GK_ATOM(overflowProperty, "OverflowProperty")              // nsFrameList*
 GK_ATOM(overflowContainersProperty, "OverflowContainersProperty")             // nsFrameList*
 GK_ATOM(excessOverflowContainersProperty, "ExcessOverflowContainersProperty") // nsFrameList*
 GK_ATOM(overflowLinesProperty, "OverflowLinesProperty")    // list of nsLineBox*

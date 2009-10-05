@@ -1768,6 +1768,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mXPathEvaluatorTearoff)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLayoutHistoryState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnloadBlocker)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstBaseNodeWithHref)
 
   // An element will only be in the linkmap as long as it's in the
   // document, so we'll traverse the table here instead of from the element.
@@ -1819,6 +1820,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedRootContent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDisplayDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBaseNodeWithHref)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
@@ -1863,8 +1865,7 @@ nsDocument::Init()
   
   NS_NewCSSLoader(this, &mCSSLoader);
   NS_ENSURE_TRUE(mCSSLoader, NS_ERROR_OUT_OF_MEMORY);
-  // Assume we're not HTML and not quirky, until we know otherwise
-  mCSSLoader->SetCaseSensitive(PR_TRUE);
+  // Assume we're not quirky, until we know otherwise
   mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
 
   mNodeInfoManager = new nsNodeInfoManager();
@@ -1971,12 +1972,9 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
     for (PRInt32 i = PRInt32(count) - 1; i >= 0; i--) {
       nsCOMPtr<nsIContent> content = mChildren.ChildAt(i);
 
-      // XXXbz this is backwards from how ContentRemoved normally works.  That
-      // is, usually it's dispatched after the content has been removed from
-      // the tree.
+      mChildren.RemoveChildAt(i);
       nsNodeUtils::ContentRemoved(this, content, i);
       content->UnbindFromTree();
-      mChildren.RemoveChildAt(i);
     }
   }
   mCachedRootContent = nsnull;
@@ -1994,7 +1992,9 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   mDOMStyleSheets = nsnull;
 
   SetDocumentURI(aURI);
-  mDocumentBaseURI = mDocumentURI;
+  // If mDocumentBaseURI is null, nsIDocument::GetBaseURI() returns
+  // mDocumentURI.
+  mDocumentBaseURI = nsnull;
 
   if (aLoadGroup) {
     mDocumentLoadGroup = do_GetWeakReference(aLoadGroup);
@@ -2249,7 +2249,23 @@ nsDocument::StopDocumentLoad()
 void
 nsDocument::SetDocumentURI(nsIURI* aURI)
 {
+  nsCOMPtr<nsIURI> oldBase = nsIDocument::GetBaseURI();
   mDocumentURI = NS_TryToMakeImmutable(aURI);
+  nsIURI* newBase = nsIDocument::GetBaseURI();
+
+  PRBool equalBases = PR_FALSE;
+  if (oldBase && newBase) {
+    oldBase->Equals(newBase, &equalBases);
+  }
+  else {
+    equalBases = !oldBase && !newBase;
+  }
+
+  // If changing the document's URI changed the base URI of the document, we
+  // need to refresh the hrefs of all the links on the page.
+  if (!equalBases) {
+    RefreshLinkHrefs();
+  }
 }
 
 NS_IMETHODIMP
@@ -2789,6 +2805,7 @@ nsDocument::SetBaseURI(nsIURI* aURI)
 {
   nsresult rv = NS_OK;
 
+  nsCOMPtr<nsIURI> oldBase = nsIDocument::GetBaseURI();
   if (aURI) {
     rv = nsContentUtils::GetSecurityManager()->
       CheckLoadURIWithPrincipal(NodePrincipal(), aURI,
@@ -2798,6 +2815,21 @@ nsDocument::SetBaseURI(nsIURI* aURI)
     }
   } else {
     mDocumentBaseURI = nsnull;
+  }
+
+  nsIURI* newBase = nsIDocument::GetBaseURI();
+  PRBool equalBases = PR_FALSE;
+  if (oldBase && newBase) {
+    oldBase->Equals(newBase, &equalBases);
+  }
+  else {
+    equalBases = !oldBase && !newBase;
+  }
+
+  // If the document's base URI has changed, we need to re-resolve all the
+  // cached link hrefs relative to the new base.
+  if (!equalBases) {
+    RefreshLinkHrefs();
   }
 
   return rv;
@@ -4861,7 +4893,7 @@ nsDocument::GetHtmlContent()
 {
   nsIContent* rootContent = GetRootContent();
   if (rootContent && rootContent->Tag() == nsGkAtoms::html &&
-      rootContent->IsNodeOfType(nsINode::eHTML))
+      rootContent->IsHTML())
     return rootContent;
   return nsnull;
 }
@@ -4877,14 +4909,14 @@ nsDocument::GetHtmlChildContent(nsIAtom* aTag)
   // forwards to find the first such element.
   for (PRUint32 i = 0; i < html->GetChildCount(); ++i) {
     nsIContent* result = html->GetChildAt(i);
-    if (result->Tag() == aTag && result->IsNodeOfType(nsINode::eHTML))
+    if (result->Tag() == aTag && result->IsHTML())
       return result;
   }
   return nsnull;
 }
 
 nsIContent*
-nsDocument::GetTitleContent(PRUint32 aNodeType)
+nsDocument::GetTitleContent(PRUint32 aNamespace)
 {
   // mMayHaveTitleElement will have been set to true if any HTML or SVG
   // <title> element has been bound to this document. So if it's false,
@@ -4906,15 +4938,15 @@ nsDocument::GetTitleContent(PRUint32 aNodeType)
     nsIContent* elem = list->Item(i, PR_FALSE);
     if (!elem)
       return nsnull;
-    if (elem->IsNodeOfType(aNodeType))
+    if (elem->IsInNamespace(aNamespace))
       return elem;
   }
 }
 
 void
-nsDocument::GetTitleFromElement(PRUint32 aNodeType, nsAString& aTitle)
+nsDocument::GetTitleFromElement(PRUint32 aNamespace, nsAString& aTitle)
 {
-  nsIContent* title = GetTitleContent(aNodeType);
+  nsIContent* title = GetTitleContent(aNamespace);
   if (!title)
     return;
   nsContentUtils::GetNodeTextContent(title, PR_FALSE, aTitle);
@@ -4940,12 +4972,12 @@ nsDocument::GetTitle(nsAString& aTitle)
 #ifdef MOZ_SVG
     case kNameSpaceID_SVG:
       if (rootContent->Tag() == nsGkAtoms::svg) {
-        GetTitleFromElement(nsINode::eSVG, tmp);
+        GetTitleFromElement(kNameSpaceID_SVG, tmp);
         break;
       } // else fall through
 #endif
     default:
-      GetTitleFromElement(nsINode::eHTML, tmp);
+      GetTitleFromElement(kNameSpaceID_XHTML, tmp);
       break;
   }
 
@@ -4977,7 +5009,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
   // element" under us
   mozAutoDocUpdate updateBatch(this, UPDATE_CONTENT_MODEL, PR_TRUE);
 
-  nsIContent* title = GetTitleContent(nsINode::eHTML);
+  nsIContent* title = GetTitleContent(kNameSpaceID_XHTML);
   if (!title) {
     nsIContent *head = GetHeadContent();
     if (!head)
@@ -4986,7 +5018,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
     {
       nsCOMPtr<nsINodeInfo> titleInfo;
       titleInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nsnull,
-                                                kNameSpaceID_None);
+                                                kNameSpaceID_XHTML);
       if (!titleInfo)
         return NS_OK;
       title = NS_NewHTMLTitleElement(titleInfo);
@@ -5056,7 +5088,7 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
   nsIDocument* doc = content->GetOwnerDoc();
   NS_ENSURE_TRUE(doc == this, NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
 
-  if (!mHasWarnedAboutBoxObjects && !content->IsNodeOfType(eXUL)) {
+  if (!mHasWarnedAboutBoxObjects && !content->IsXUL()) {
     mHasWarnedAboutBoxObjects = PR_TRUE;
     nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
                                     "UseOfGetBoxObjectForWarning",
@@ -5578,8 +5610,8 @@ NS_IMETHODIMP
 nsDocument::GetBaseURI(nsAString &aURI)
 {
   nsCAutoString spec;
-  if (mDocumentBaseURI) {
-    mDocumentBaseURI->GetSpec(spec);
+  if (nsIDocument::GetBaseURI()) {
+    nsIDocument::GetBaseURI()->GetSpec(spec);
   }
 
   CopyUTF8toUTF16(spec, aURI);
@@ -7342,7 +7374,9 @@ public:
       return;
 
     // Throw away the cached link state so it gets refetched by the style
-    // system      
+    // system.  We can't call ContentStatesChanged here, because that might
+    // modify the hashtable.  Instead, we'll just insert into this array and
+    // leave it to our caller to call ContentStatesChanged.
     aContent->SetLinkState(eLinkState_Unknown);
     contentVisited.AppendObject(aContent);
   }
@@ -7359,10 +7393,12 @@ nsDocument::NotifyURIVisitednessChanged(nsIURI* aURI)
   nsUint32ToContentHashEntry* entry = mLinkMap.GetEntry(GetURIHash(aURI));
   if (!entry)
     return;
-  
+
   URIVisitNotifier visitor;
   aURI->GetSpec(visitor.matchURISpec);
   entry->VisitContent(&visitor);
+
+  MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_STATE, PR_TRUE);
   for (PRUint32 count = visitor.contentVisited.Count(), i = 0; i < count; ++i) {
     ContentStatesChanged(visitor.contentVisited[i],
                          nsnull, NS_EVENT_STATE_VISITED);
@@ -7383,12 +7419,119 @@ nsDocument::UpdateLinkMap()
                "Should only be updating the link map in visible documents");
   if (!mVisible)
     return;
-    
+
   PRInt32 count = mVisitednessChangedURIs.Count();
   for (PRInt32 i = 0; i < count; ++i) {
     NotifyURIVisitednessChanged(mVisitednessChangedURIs[i]);
   }
   mVisitednessChangedURIs.Clear();
+}
+
+class RefreshLinkStateVisitor : public nsUint32ToContentHashEntry::Visitor
+{
+public:
+  nsCOMArray<nsIContent> contentVisited;
+
+  virtual void Visit(nsIContent* aContent) {
+    // We can't call ContentStatesChanged here, because that may modify the link
+    // map.  Instead, we just add to an array and call ContentStatesChanged
+    // later.
+    aContent->SetLinkState(eLinkState_Unknown);
+    contentVisited.AppendObject(aContent);
+  }
+};
+
+static PLDHashOperator
+RefreshLinkStateTraverser(nsUint32ToContentHashEntry* aEntry,
+                               void* userArg)
+{
+  RefreshLinkStateVisitor *visitor =
+    static_cast<RefreshLinkStateVisitor*>(userArg);
+
+  aEntry->VisitContent(visitor);
+  return PL_DHASH_NEXT;
+}
+
+
+// Helper function for nsDocument::RefreshLinkHrefs
+static void
+DropCachedHrefsRecursive(nsIContent * const elem)
+{
+  // Drop the element's cached href, if it has one.  (If it doesn't have
+  // one, this call does nothing.)  We could check first that elem is an <a>
+  // tag to avoid making a virtual call, but it turns out not to make a
+  // substantial perf difference either way.  This doesn't restyle the link,
+  // but we do that later.
+  elem->DropCachedHref();
+
+  PRUint32 childCount;
+  nsIContent * const * child = elem->GetChildArray(&childCount);
+  nsIContent * const * end = child + childCount;
+  for ( ; child != end; ++child) {
+    DropCachedHrefsRecursive(*child);
+  }
+}
+
+void
+nsDocument::RefreshLinkHrefs()
+{
+  if (!GetRootContent())
+    return;
+
+  // First, walk the DOM and clear the cached hrefs of all the <a> tags.
+  DropCachedHrefsRecursive(GetRootContent());
+
+  // Now update the styles of everything in the linkmap.
+  RefreshLinkStateVisitor visitor;
+  mLinkMap.EnumerateEntries(RefreshLinkStateTraverser, &visitor);
+
+  MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_STATE, PR_TRUE);
+  for (PRUint32 count = visitor.contentVisited.Count(), i = 0; i < count; i++) {
+    ContentStatesChanged(visitor.contentVisited[i],
+                         nsnull, NS_EVENT_STATE_VISITED);
+  }
+}
+
+nsIContent*
+nsDocument::GetFirstBaseNodeWithHref()
+{
+  return mFirstBaseNodeWithHref;
+}
+
+nsresult
+nsDocument::SetFirstBaseNodeWithHref(nsIContent *elem)
+{
+  mFirstBaseNodeWithHref = elem;
+
+  if (!elem) {
+    SetBaseURI(nsnull);
+    return NS_OK;
+  }
+
+  NS_ASSERTION(elem->Tag() == nsGkAtoms::base,
+               "Setting base node to a non <base> element?");
+  NS_ASSERTION(elem->GetNameSpaceID() == kNameSpaceID_XHTML,
+               "Setting base node to a non XHTML element?");
+
+  nsIDocument* doc = elem->GetOwnerDoc();
+  nsIURI* currentURI = nsIDocument::GetDocumentURI();
+
+  // Resolve the <base> element's href relative to our current URI
+  nsAutoString href;
+  PRBool hasHref = elem->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
+  NS_ASSERTION(hasHref,
+               "Setting first base node to a node with no href attr?");
+
+  nsCOMPtr<nsIURI> newBaseURI;
+  nsContentUtils::NewURIWithDocumentCharset(
+    getter_AddRefs(newBaseURI), href, doc, currentURI);
+
+  // Try to set our base URI.  If that fails, try to set our base URI to null.
+  nsresult rv =  SetBaseURI(newBaseURI);
+  if (NS_FAILED(rv)) {
+    return SetBaseURI(nsnull);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -173,22 +173,22 @@ public:
   }
 #endif
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
 
   NS_DISPLAY_DECL_NAME("TableRowGroupBackground")
 };
 
 void
 nsDisplayTableRowGroupBackground::Paint(nsDisplayListBuilder* aBuilder,
-    nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+                                        nsIRenderingContext* aCtx) {
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(mFrame);
 
   nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
   TableBackgroundPainter painter(tableFrame,
                                  TableBackgroundPainter::eOrigin_TableRowGroup,
                                  mFrame->PresContext(), *aCtx,
-                                 aDirtyRect, pt,
+                                 mVisibleRect, pt,
                                  aBuilder->GetBackgroundPaintFlags());
   painter.PaintRowGroup(static_cast<nsTableRowGroupFrame*>(mFrame));
 }

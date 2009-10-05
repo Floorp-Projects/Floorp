@@ -351,7 +351,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mIsVisible            = PR_FALSE;
   mHas3DBorder          = PR_FALSE;
   mIsInMouseCapture     = PR_FALSE;
-  mIsPluginWindow       = PR_FALSE;
   mIsTopWidgetWindow    = PR_FALSE;
   mInScrollProcessing   = PR_FALSE;
   mUnicodeWidget        = PR_TRUE;
@@ -460,39 +459,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
  *
  **************************************************************/
 
-// Create the proper widget
-NS_METHOD nsWindow::Create(nsIWidget *aParent,
-                           const nsIntRect &aRect,
-                           EVENT_CALLBACK aHandleEventFunction,
-                           nsIDeviceContext *aContext,
-                           nsIAppShell *aAppShell,
-                           nsIToolkit *aToolkit,
-                           nsWidgetInitData *aInitData)
-{
-  if (aInitData)
-    mUnicodeWidget = aInitData->mUnicode;
-  return(StandardWindowCreate(aParent, aRect, aHandleEventFunction,
-                              aContext, aAppShell, aToolkit, aInitData,
-                              nsnull));
-}
-
-
-// Create with a native parent
-NS_METHOD nsWindow::Create(nsNativeWidget aParent,
-                           const nsIntRect &aRect,
-                           EVENT_CALLBACK aHandleEventFunction,
-                           nsIDeviceContext *aContext,
-                           nsIAppShell *aAppShell,
-                           nsIToolkit *aToolkit,
-                           nsWidgetInitData *aInitData)
-{
-  if (aInitData)
-    mUnicodeWidget = aInitData->mUnicode;
-  return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
-                              aContext, aAppShell, aToolkit, aInitData,
-                              aParent));
-}
-
 // Allow Derived classes to modify the height that is passed
 // when the window is created or resized. Also add extra height
 // if needed (on Windows CE)
@@ -510,17 +476,20 @@ PRInt32 nsWindow::GetHeight(PRInt32 aProposedHeight)
   return aProposedHeight + extra;
 }
 
-// Utility methods for creating windows.
+// Create the proper widget
 nsresult
-nsWindow::StandardWindowCreate(nsIWidget *aParent,
-                               const nsIntRect &aRect,
-                               EVENT_CALLBACK aHandleEventFunction,
-                               nsIDeviceContext *aContext,
-                               nsIAppShell *aAppShell,
-                               nsIToolkit *aToolkit,
-                               nsWidgetInitData *aInitData,
-                               nsNativeWidget aNativeParent)
+nsWindow::Create(nsIWidget *aParent,
+                 nsNativeWidget aNativeParent,
+                 const nsIntRect &aRect,
+                 EVENT_CALLBACK aHandleEventFunction,
+                 nsIDeviceContext *aContext,
+                 nsIAppShell *aAppShell,
+                 nsIToolkit *aToolkit,
+                 nsWidgetInitData *aInitData)
 {
+  if (aInitData)
+    mUnicodeWidget = aInitData->mUnicode;
+
   nsIWidget *baseParent = aInitData &&
                          (aInitData->mWindowType == eWindowType_dialog ||
                           aInitData->mWindowType == eWindowType_toplevel ||
@@ -542,8 +511,6 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
   }
 
   if (nsnull != aInitData) {
-    SetWindowType(aInitData->mWindowType);
-    SetBorderStyle(aInitData->mBorderStyle);
     mPopupType = aInitData->mPopupHint;
   }
 
@@ -593,12 +560,15 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
   if (!mWnd)
     return NS_ERROR_FAILURE;
 
-  // Ugly Thinkpad Driver Hack (Bug 507222)
-  // We create an invisible scrollbar to trick the 
-  // Trackpoint driver into sending us scrolling messages
-  ::CreateWindowW(L"SCROLLBAR", L"FAKETRACKPOINTSCROLLBAR", 
-                  WS_CHILD | WS_VISIBLE, 0,0,0,0, mWnd, NULL,
-                  nsToolkit::mDllInstance, NULL);
+  if (mWindowType != eWindowType_plugin &&
+      mWindowType != eWindowType_invisible) {
+    // Ugly Thinkpad Driver Hack (Bug 507222)
+    // We create an invisible scrollbar to trick the 
+    // Trackpoint driver into sending us scrolling messages
+    ::CreateWindowW(L"SCROLLBAR", L"FAKETRACKPOINTSCROLLBAR", 
+                    WS_CHILD | WS_VISIBLE, 0,0,0,0, mWnd, NULL,
+                    nsToolkit::mDllInstance, NULL);
+  }
 
   // call the event callback to notify about creation
 
@@ -803,6 +773,7 @@ DWORD nsWindow::WindowStyle()
   DWORD style;
 
   switch (mWindowType) {
+    case eWindowType_plugin:
     case eWindowType_child:
       style = WS_OVERLAPPED;
       break;
@@ -815,11 +786,7 @@ DWORD nsWindow::WindowStyle()
 
     case eWindowType_popup:
       style = WS_POPUP;
-      if (mTransparencyMode == eTransparencyGlass) {
-        /* Glass seems to need WS_CAPTION or WS_THICKFRAME to work.
-           WS_THICKFRAME has issues with autohiding popups but looks better */
-        style |= WS_THICKFRAME;
-      } else {
+      if (mTransparencyMode != eTransparencyGlass) {
         style |= WS_OVERLAPPED;
       }
       break;
@@ -877,6 +844,7 @@ DWORD nsWindow::WindowExStyle()
 {
   switch (mWindowType)
   {
+    case eWindowType_plugin:
     case eWindowType_child:
       return 0;
 
@@ -1587,8 +1555,9 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
   if (mWnd) {
     // Uniconify, if necessary
     HWND toplevelWnd = GetTopLevelHWND(mWnd);
-    if (::IsIconic(toplevelWnd))
+    if (aRaise && ::IsIconic(toplevelWnd)) {
       ::ShowWindow(toplevelWnd, SW_RESTORE);
+    }
     ::SetFocus(mWnd);
   }
   return NS_OK;
@@ -2136,6 +2105,37 @@ ClipRegionContainedInRect(const nsTArray<nsIntRect>& aClipRects,
   return PR_TRUE;
 }
 
+// This function determines whether the given window has a descendant that
+// does not intersect the given aScreenRect. If we encounter a window owned
+// by another thread (which includes another process, since thread IDs
+// are unique system-wide), then we give up and conservatively return true.
+static PRBool
+HasDescendantWindowOutsideRect(DWORD aThisThreadID, HWND aWnd,
+                               const RECT& aScreenRect)
+{
+  // If the window is owned by another thread, give up now, don't try to
+  // look at its children since they could change asynchronously.
+  // XXX should we try harder here for out-of-process plugins?
+  if (GetWindowThreadProcessId(aWnd, NULL) != aThisThreadID) {
+    return PR_TRUE;
+  }
+  for (HWND child = ::GetWindow(aWnd, GW_CHILD); child;
+       child = ::GetWindow(child, GW_HWNDNEXT)) {
+    RECT childScreenRect;
+    ::GetWindowRect(child, &childScreenRect);
+    RECT result;
+    if (!::IntersectRect(&result, &childScreenRect, &aScreenRect)) {
+      return PR_TRUE;
+    }
+
+    if (HasDescendantWindowOutsideRect(aThisThreadID, child, aScreenRect)) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 void
 nsWindow::Scroll(const nsIntPoint& aDelta,
                  const nsTArray<nsIntRect>& aDestRects,
@@ -2160,6 +2160,8 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
     w->SetWindowClipRegion(configuration.mClipRegion, PR_TRUE);
   }
 
+  DWORD ourThreadID = GetWindowThreadProcessId(mWnd, NULL);
+
   for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
     nsIntRect affectedRect;
     affectedRect.UnionRect(aDestRects[i], aDestRects[i] - aDelta);
@@ -2179,6 +2181,24 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
           // used on it again by a later rectangle in aDestRects, we
           // don't want it to move twice!
           scrolledWidgets.RawRemoveEntry(entry);
+
+          nsIntPoint screenOffset = WidgetToScreenOffset();
+          RECT screenAffectedRect = {
+            screenOffset.x + affectedRect.x,
+            screenOffset.y + affectedRect.y,
+            screenOffset.x + affectedRect.XMost(),
+            screenOffset.y + affectedRect.YMost()
+          };
+          if (HasDescendantWindowOutsideRect(ourThreadID, w->mWnd,
+                                             screenAffectedRect)) {
+            // SW_SCROLLCHILDREN seems to not move descendant windows
+            // that don't intersect the scrolled rectangle, *even if* the
+            // immediate child window of the scrolled window *does* intersect
+            // the scrolled window. So if w has a descendant window
+            // that would not be moved, SW_SCROLLCHILDREN will hopelessly mess
+            // things up and we must not use it.
+            flags &= ~SW_SCROLLCHILDREN;
+          }
         } else {
           flags &= ~SW_SCROLLCHILDREN;
           // We may have removed some children from scrolledWidgets even
@@ -2246,7 +2266,6 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
   switch (aDataType) {
     case NS_NATIVE_PLUGIN_PORT:
-      mIsPluginWindow = 1;
     case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
       return (void*)mWnd;
@@ -2668,6 +2687,69 @@ nsWindow::OnDefaultButtonLoaded(const nsIntRect &aButtonRect)
   }
   return NS_OK;
 #endif
+}
+
+NS_IMETHODIMP
+nsWindow::OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
+                                         PRBool aIsHorizontal,
+                                         PRInt32 &aOverriddenDelta)
+{
+  // The default vertical and horizontal scrolling speed is 3, this is defined
+  // on the document of SystemParametersInfo in MSDN.
+  const PRInt32 kSystemDefaultScrollingSpeed = 3;
+
+  // Compute the simple overridden speed.
+  PRInt32 computedOverriddenDelta;
+  nsresult rv =
+    nsBaseWidget::OverrideSystemMouseScrollSpeed(aOriginalDelta, aIsHorizontal,
+                                                 computedOverriddenDelta);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aOverriddenDelta = aOriginalDelta;
+
+  if (computedOverriddenDelta == aOriginalDelta) {
+    // We don't override now.
+    return NS_OK;
+  }
+
+  // Otherwise, we should check whether the user customized the system settings
+  // or not.  If the user did it, we should respect the will.
+  UINT systemSpeed;
+  if (!::SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &systemSpeed, 0)) {
+    return NS_ERROR_FAILURE;
+  }
+  // The default vertical scrolling speed is 3, this is defined on the document
+  // of SystemParametersInfo in MSDN.
+  if (systemSpeed != kSystemDefaultScrollingSpeed) {
+    return NS_OK;
+  }
+
+  // Only Vista and later, Windows has the system setting of horizontal
+  // scrolling by the mouse wheel.
+  if (GetWindowsVersion() >= VISTA_VERSION) {
+    if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0, &systemSpeed, 0)) {
+      return NS_ERROR_FAILURE;
+    }
+    // The default horizontal scrolling speed is 3, this is defined on the
+    // document of SystemParametersInfo in MSDN.
+    if (systemSpeed != kSystemDefaultScrollingSpeed) {
+      return NS_OK;
+    }
+  }
+
+  // Limit the overridden delta value from the system settings.  The mouse
+  // driver might accelerate the scrolling speed already.  If so, we shouldn't
+  // override the scrolling speed for preventing the unexpected high speed
+  // scrolling.
+  PRInt32 deltaLimit;
+  rv =
+    nsBaseWidget::OverrideSystemMouseScrollSpeed(kSystemDefaultScrollingSpeed,
+                                                 aIsHorizontal, deltaLimit);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aOverriddenDelta = PR_MIN(computedOverriddenDelta, deltaLimit);
+
+  return NS_OK;
 }
 
 /**************************************************************
@@ -4155,6 +4237,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     break;
 
 #ifndef WINCE
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   case WM_DWMCOMPOSITIONCHANGED:
     BroadcastMsg(mWnd, WM_DWMCOMPOSITIONCHANGED);
     DispatchStandardEvent(NS_THEMECHANGED);
@@ -4166,7 +4249,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     break;
 #endif
 
-#if !defined(WINCE)
   /* Gesture support events */
   case WM_TABLET_QUERYSYSTEMGESTURESTATUS:
     // According to MS samples, this must be handled to enable
@@ -4183,7 +4265,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     {
       if (mWindowType != eWindowType_invisible &&
           mWindowType != eWindowType_plugin &&
-          mWindowType != eWindowType_java &&
           mWindowType != eWindowType_toplevel) {
         // eWindowType_toplevel is the top level main frame window. Gesture support
         // there prevents the user from interacting with the title bar or nc
@@ -5696,7 +5777,7 @@ PRBool nsWindow::HandleScrollingPlugins(UINT aMsg, WPARAM aWParam,
     return PR_FALSE; // break
   }
   nsWindow* destWindow = GetNSWindowPtr(destWnd);
-  if (!destWindow || destWindow->mIsPluginWindow) {
+  if (!destWindow || destWindow->mWindowType == eWindowType_plugin) {
     // Some other app, or a plugin window.
     // Windows directs scrolling messages to the focused window.
     // However, Mozilla does not like plugins having focus, so a
@@ -5947,7 +6028,7 @@ nsWindow::OnIMEFocusChange(PRBool aFocus)
 {
   nsresult rv = nsTextStore::OnFocusChange(aFocus, this, mIMEEnabled);
   if (rv == NS_ERROR_NOT_AVAILABLE)
-    rv = NS_OK; // TSF is not enabled, maybe.
+    rv = NS_ERROR_NOT_IMPLEMENTED; // TSF is not enabled, maybe.
   return rv;
 }
 
@@ -6085,12 +6166,19 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
   mTransparencyMode = aMode;
 
   SetupTranslucentWindowMemoryBitmap(aMode);
-  MARGINS margins = { 0, 0, 0, 0 };
-  if(eTransparencyGlass == aMode)
-    margins.cxLeftWidth = -1;
-  if(nsUXThemeData::sHaveCompositor)
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+   MARGINS margins = { 0, 0, 0, 0 };
+  DWMNCRENDERINGPOLICY policy = DWMNCRP_USEWINDOWSTYLE;
+  if(eTransparencyGlass == aMode) {
+     margins.cxLeftWidth = -1;
+    policy = DWMNCRP_ENABLED;
+  }
+  if(nsUXThemeData::sHaveCompositor) {
     nsUXThemeData::dwmExtendFrameIntoClientAreaPtr(hWnd, &margins);
-#endif
+    nsUXThemeData::dwmSetWindowAttributePtr(hWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
+  }
+#endif // #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+#endif // #ifndef WINCE
 }
 
 void nsWindow::SetupTranslucentWindowMemoryBitmap(nsTransparencyMode aMode)
@@ -6212,7 +6300,7 @@ LRESULT CALLBACK nsWindow::MozSpecialMouseProc(int code, WPARAM wParam, LPARAM l
         if (mozWin) {
           // If this window is windowed plugin window, the mouse events are not
           // sent to us.
-          if (static_cast<nsWindow*>(mozWin)->mIsPluginWindow)
+          if (static_cast<nsWindow*>(mozWin)->mWindowType == eWindowType_plugin)
             ScheduleHookTimer(ms->hwnd, (UINT)wParam);
         } else {
           ScheduleHookTimer(ms->hwnd, (UINT)wParam);

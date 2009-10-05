@@ -112,6 +112,9 @@
 //needed for resetting of image service color
 #include "nsLayoutCID.h"
 
+using mozilla::TimeDuration;
+using mozilla::TimeStamp;
+
 static nscolor
 MakeColorPref(const char *colstr)
 {
@@ -2062,18 +2065,33 @@ nsPresContext::HasCachedStyleData()
   return mShell && mShell->StyleSet()->HasCachedStyleData();
 }
 
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 static PRBool sGotInterruptEnv = PR_FALSE;
-static PRUint32 sInterruptSeed = 1;
-static PRUint32 sInterruptChecksToSkip = 200;
 enum InterruptMode {
   ModeRandom,
   ModeCounter,
   ModeEvent
 };
+// Controlled by the GECKO_REFLOW_INTERRUPT_MODE env var; allowed values are
+// "random" (except on Windows) or "counter".  If neither is used, the mode is
+// ModeEvent.
 static InterruptMode sInterruptMode = ModeEvent;
-static PRUint32 sInterruptCounter;
+// Used for the "random" mode.  Controlled by the GECKO_REFLOW_INTERRUPT_SEED
+// env var.
+static PRUint32 sInterruptSeed = 1;
+// Used for the "counter" mode.  This is the number of unskipped interrupt
+// checks that have to happen before we interrupt.  Controlled by the
+// GECKO_REFLOW_INTERRUPT_FREQUENCY env var.
 static PRUint32 sInterruptMaxCounter = 10;
+// Used for the "counter" mode.  This counts up to sInterruptMaxCounter and is
+// then reset to 0.
+static PRUint32 sInterruptCounter;
+// Number of interrupt checks to skip before really trying to interrupt.
+// Controlled by the GECKO_REFLOW_INTERRUPT_CHECKS_TO_SKIP env var.
+static PRUint32 sInterruptChecksToSkip = 200;
+// Number of milliseconds that a reflow should be allowed to run for before we
+// actually allow interruption.  Controlled by the
+// GECKO_REFLOW_MIN_NOINTERRUPT_DURATION env var.
+static TimeDuration sInterruptTimeout = TimeDuration::FromMilliseconds(100);
 
 static void GetInterruptEnv()
 {
@@ -2101,6 +2119,11 @@ static void GetInterruptEnv()
   ev = PR_GetEnv("GECKO_REFLOW_INTERRUPT_CHECKS_TO_SKIP");
   if (ev) {
     sInterruptChecksToSkip = atoi(ev);
+  }
+
+  ev = PR_GetEnv("GECKO_REFLOW_MIN_NOINTERRUPT_DURATION");
+  if (ev) {
+    sInterruptTimeout = TimeDuration::FromMilliseconds(atoi(ev));
   }
 }
 
@@ -2136,6 +2159,11 @@ nsPresContext::HavePendingInputEvent()
 void
 nsPresContext::ReflowStarted(PRBool aInterruptible)
 {
+#ifdef NOISY_INTERRUPTIBLE_REFLOW
+  if (!aInterruptible) {
+    printf("STARTING NONINTERRUPTIBLE REFLOW\n");
+  }
+#endif
   // We don't support interrupting in paginated contexts, since page
   // sequences only handle initial reflow
   mInterruptsEnabled = aInterruptible && !IsPaginated();
@@ -2149,6 +2177,10 @@ nsPresContext::ReflowStarted(PRBool aInterruptible)
   mHasPendingInterrupt = PR_FALSE;
 
   mInterruptChecksToSkip = sInterruptChecksToSkip;
+
+  if (mInterruptsEnabled) {
+    mReflowStartTime = TimeStamp::Now();
+  }
 }
 
 PRBool
@@ -2174,7 +2206,12 @@ nsPresContext::CheckForInterrupt(nsIFrame* aFrame)
   }
   mInterruptChecksToSkip = sInterruptChecksToSkip;
 
-  mHasPendingInterrupt = HavePendingInputEvent();
+  // Don't interrupt if it's been less than sInterruptTimeout since we started
+  // the reflow.
+  mHasPendingInterrupt =
+    TimeStamp::Now() - mReflowStartTime > sInterruptTimeout &&
+    HavePendingInputEvent() &&
+    !IsChrome();
   if (mHasPendingInterrupt) {
 #ifdef NOISY_INTERRUPTIBLE_REFLOW
     printf("*** DETECTED pending interrupt (time=%lld)\n", PR_Now());
@@ -2333,7 +2370,7 @@ nsRootPresContext::GetPluginGeometryUpdates(nsIFrame* aChangedSubtree,
 #endif
 
     nsRegion visibleRegion(bounds);
-    list.OptimizeVisibility(&builder, &visibleRegion);
+    list.ComputeVisibility(&builder, &visibleRegion);
 
 #ifdef DEBUG
     if (gDumpPluginList) {
@@ -2357,8 +2394,8 @@ nsRootPresContext::UpdatePluginGeometry(nsIFrame* aChangedSubtree)
   GetPluginGeometryUpdates(aChangedSubtree, &configurations);
   if (configurations.IsEmpty())
     return;
-  nsIWidget* widget = configurations[0].mChild->GetParent();
-  NS_ASSERTION(widget, "Plugin must have a parent");
+  nsIWidget* widget = FrameManager()->GetRootFrame()->GetWindow();
+  NS_ASSERTION(widget, "Plugins must have a parent window");
   widget->ConfigureChildren(configurations);
   DidApplyPluginGeometryUpdates();
 }

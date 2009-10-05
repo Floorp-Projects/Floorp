@@ -81,6 +81,7 @@
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
 #include "nsGfxCIID.h"
+#include "nsIObserverService.h"
 
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -104,6 +105,7 @@ static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility"
 
 /* SetCursor(imgIContainer*) */
 #include <gdk/gdk.h>
+#include <wchar.h>
 #include "imgIContainer.h"
 #include "nsGfxCIID.h"
 #include "nsImageToPixbuf.h"
@@ -607,34 +609,6 @@ nsWindow::AreBoundsSane(void)
         return PR_TRUE;
 
     return PR_FALSE;
-}
-
-NS_IMETHODIMP
-nsWindow::Create(nsIWidget        *aParent,
-                 const nsIntRect  &aRect,
-                 EVENT_CALLBACK   aHandleEventFunction,
-                 nsIDeviceContext *aContext,
-                 nsIAppShell      *aAppShell,
-                 nsIToolkit       *aToolkit,
-                 nsWidgetInitData *aInitData)
-{
-    nsresult rv = NativeCreate(aParent, nsnull, aRect, aHandleEventFunction,
-                               aContext, aAppShell, aToolkit, aInitData);
-    return rv;
-}
-
-NS_IMETHODIMP
-nsWindow::Create(nsNativeWidget aParent,
-                 const nsIntRect  &aRect,
-                 EVENT_CALLBACK   aHandleEventFunction,
-                 nsIDeviceContext *aContext,
-                 nsIAppShell      *aAppShell,
-                 nsIToolkit       *aToolkit,
-                 nsWidgetInitData *aInitData)
-{
-    nsresult rv = NativeCreate(nsnull, aParent, aRect, aHandleEventFunction,
-                               aContext, aAppShell, aToolkit, aInitData);
-    return rv;
 }
 
 static GtkWidget*
@@ -1803,12 +1777,6 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 }
 
 NS_IMETHODIMP
-nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsWindow::SetTitle(const nsAString& aTitle)
 {
     if (!mShell)
@@ -1891,17 +1859,6 @@ NS_IMETHODIMP
 nsWindow::EnableDragDrop(PRBool aEnable)
 {
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::PreCreateWidget(nsWidgetInitData *aWidgetInitData)
-{
-    if (nsnull != aWidgetInitData) {
-        mWindowType = aWidgetInitData->mWindowType;
-        mBorderStyle = aWidgetInitData->mBorderStyle;
-        return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -2778,6 +2735,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
             event.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
             event.refPoint.x = nscoord(aEvent->x);
             event.refPoint.y = nscoord(aEvent->y);
+            // XXX Why is this delta value different from the scroll event?
             event.delta = (aEvent->button == 6) ? -2 : 2;
 
             event.isShift   = (aEvent->state & GDK_SHIFT_MASK) != 0;
@@ -3753,14 +3711,14 @@ CreateGdkWindow(GdkWindow *parent, GtkWidget *widget)
 }
 
 nsresult
-nsWindow::NativeCreate(nsIWidget        *aParent,
-                       nsNativeWidget    aNativeParent,
-                       const nsIntRect  &aRect,
-                       EVENT_CALLBACK    aHandleEventFunction,
-                       nsIDeviceContext *aContext,
-                       nsIAppShell      *aAppShell,
-                       nsIToolkit       *aToolkit,
-                       nsWidgetInitData *aInitData)
+nsWindow::Create(nsIWidget        *aParent,
+                 nsNativeWidget    aNativeParent,
+                 const nsIntRect  &aRect,
+                 EVENT_CALLBACK    aHandleEventFunction,
+                 nsIDeviceContext *aContext,
+                 nsIAppShell      *aAppShell,
+                 nsIToolkit       *aToolkit,
+                 nsWidgetInitData *aInitData)
 {
     // only set the base parent if we're going to be a dialog or a
     // toplevel
@@ -3786,7 +3744,8 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 
     // save our bounds
     mBounds = aRect;
-    if (mWindowType != eWindowType_child) {
+    if (mWindowType != eWindowType_child &&
+        mWindowType != eWindowType_plugin) {
         // The window manager might place us. Indicate that if we're
         // shown, we want to go through
         // nsWindow::NativeResize(x,y,w,h) to maybe set our own
@@ -3943,6 +3902,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         }
     }
         break;
+    case eWindowType_plugin:
     case eWindowType_child: {
         if (parentMozContainer) {
             mGdkWindow = CreateGdkWindow(parentGdkWindow, parentMozContainer);
@@ -6757,6 +6717,9 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
             else if (mIMEData->mEnabled == nsIWidget::IME_STATUS_PASSWORD)
                mode |= HILDON_GTK_INPUT_MODE_INVISIBLE;
 
+            // Turn off auto-capitalization for editboxes
+            mode &= ~HILDON_GTK_INPUT_MODE_AUTOCAP;
+
             g_object_set (G_OBJECT(IMEGetContext()), "hildon-input-mode", (HildonGtkInputMode)mode, NULL);
             gIMEVirtualKeyboardOpened = PR_TRUE;
             hildon_gtk_im_context_show (IMEGetContext());
@@ -6764,6 +6727,24 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
             gIMEVirtualKeyboardOpened = PR_FALSE;
             hildon_gtk_im_context_hide (IMEGetContext());
         }
+        nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+        if (observerService) {
+            nsAutoString rectBuf;
+            PRInt32 x, y, w, h;
+            gdk_window_get_position(mGdkWindow, &x, &y);
+            gdk_window_get_size(mGdkWindow, &w, &h);
+            rectBuf.Assign(NS_LITERAL_STRING("{\"left\": "));
+            rectBuf.AppendInt(x);
+            rectBuf.Append(NS_LITERAL_STRING(" \"top\": "));
+            rectBuf.AppendInt(y);
+            rectBuf.Append(NS_LITERAL_STRING(", \"right\": "));
+            rectBuf.AppendInt(w);
+            rectBuf.Append(NS_LITERAL_STRING(", \"bottom\": "));
+            rectBuf.AppendInt(h);
+            rectBuf.Append(NS_LITERAL_STRING("}"));
+            observerService->NotifyObservers(nsnull, "softkb-change", rectBuf.get());
+        }
+
 #endif
 
     } else {

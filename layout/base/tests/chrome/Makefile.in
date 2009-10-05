@@ -49,6 +49,7 @@ _CHROME_FILES = \
 	test_bug482976.xul \
 	bug482976_helper.xul \
 	test_bug504311.xul \
+	test_bug514660.xul \
 	test_printpreview.xul \
 	printpreview_helper.xul \
     $(NULL)

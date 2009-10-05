@@ -261,6 +261,7 @@
               accesskey="&cmd.checkUpdatesAll.accesskey;"
               tooltiptextaddons="&cmd.checkUpdatesAllAddon.tooltip;"
               tooltiptextthemes="&cmd.checkUpdatesAllTheme.tooltip;"
+              tooltiptextplugins="&cmd.checkUpdatesAllPlugin.tooltip;"
               command="cmd_checkUpdatesAll"/>
       <spacer flex="1"/>
       <button id="skipDialogButton" label="&cmd.skip.label;"

@@ -95,6 +95,8 @@ FinishThreadData(JSThreadData *data)
     /* All GC-related things must be already removed at this point. */
     for (size_t i = 0; i != JS_ARRAY_LENGTH(data->scriptsToGC); ++i)
         JS_ASSERT(!data->scriptsToGC[i]);
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(data->nativeEnumCache); ++i)
+        JS_ASSERT(!data->nativeEnumCache[i]);
 #endif
 
     js_FinishGSNCache(&data->gsnCache);
@@ -117,13 +119,11 @@ PurgeThreadData(JSContext *cx, JSThreadData *data)
     tm->reservedDoublePoolPtr = tm->reservedDoublePool;
 
     /*
-     * If we are about to regenerate shapes, we have to flush the JIT cache, too.
+     * If we are about to regenerate shapes, we have to flush the JIT cache,
+     * which will eventually abort any current recording.
      */
     if (cx->runtime->gcRegenShapes)
         tm->needFlush = JS_TRUE;
-
-    if (tm->recorder)
-        tm->recorder->deepAbort();
 
     /*
      * We want to keep tm->reservedObjects after the GC. So, unless we are
@@ -136,6 +136,8 @@ PurgeThreadData(JSContext *cx, JSThreadData *data)
 
     /* Destroy eval'ed scripts. */
     js_DestroyScriptsToGC(cx, data);
+
+    js_PurgeCachedNativeEnumerators(cx, data);
 }
 
 #ifdef JS_THREADSAFE
@@ -261,6 +263,12 @@ thread_purger(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
     if (JS_CLIST_IS_EMPTY(&thread->contextList)) {
         JS_ASSERT(cx->thread != thread);
         js_DestroyScriptsToGC(cx, &thread->data);
+
+        /*
+         * The following is potentially suboptimal as it also zeros the cache
+         * in data, but the code simplicity wins here.
+         */
+        js_PurgeCachedNativeEnumerators(cx, &thread->data);
         DestroyThread(thread);
         return JS_DHASH_REMOVE;
     }
@@ -557,7 +565,8 @@ DumpEvalCacheMeter(JSContext *cx)
             );
     for (uintN i = 0; i < JS_ARRAY_LENGTH(table); ++i) {
         fprintf(fp, "%-8.8s  %llu\n",
-                table[i].name, *(uint64 *)((uint8 *)ecm + table[i].offset));
+                table[i].name,
+                (unsigned long long int) *(uint64 *)((uint8 *)ecm + table[i].offset));
     }
     fprintf(fp, "hit ratio %g%%\n", ecm->hit * 100. / ecm->probe);
     fprintf(fp, "avg steps %g\n", double(ecm->step) / ecm->probe);

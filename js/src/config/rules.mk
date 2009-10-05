@@ -229,11 +229,9 @@ endif # ENABLE_TESTS
 
 ifndef LIBRARY
 ifdef STATIC_LIBRARY_NAME
-ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
-ifdef SHORT_LIBNAME
+ifeq (OS2,$(OS_ARCH))
 STATIC_LIBRARY_NAME	:= $(SHORT_LIBNAME)
 SHARED_LIBRARY_NAME	:= $(SHORT_LIBNAME)
-endif
 endif
 LIBRARY			:= $(LIB_PREFIX)$(STATIC_LIBRARY_NAME).$(LIB_SUFFIX)
 endif # STATIC_LIBRARY_NAME
@@ -926,19 +924,20 @@ endif # !NO_DIST_INSTALL
 ##############################################
 
 ifndef NO_PROFILE_GUIDED_OPTIMIZE
-ifneq (,$(MOZ_PROFILE_GENERATE)$(MOZ_PROFILE_USE))
+ifdef MOZ_PROFILE_USE
 ifeq ($(OS_ARCH)_$(GNU_CC)$(INTERNAL_TOOLS), WINNT_)
-# Force re-linking when building with PGO, since
-# the MSVC linker does all the work.  We force re-link
-# in both stages so you can do depend builds with PGO.
+# When building with PGO, we have to make sure to re-link
+# in the MOZ_PROFILE_USE phase if we linked in the
+# MOZ_PROFILE_GENERATE phase. We'll touch this pgo.relink
+# file in the link rule in the GENERATE phase to indicate
+# that we need a relink.
 ifdef SHARED_LIBRARY
-$(SHARED_LIBRARY): FORCE
+$(SHARED_LIBRARY): pgo.relink
 endif
 ifdef PROGRAM
-$(PROGRAM): FORCE
+$(PROGRAM): pgo.relink
 endif
 
-ifdef MOZ_PROFILE_USE
 # In the second pass, we need to merge the pgc files into the pgd file.
 # The compiler would do this for us automatically if they were in the right
 # place, but they're in dist/bin.
@@ -952,8 +951,7 @@ ifdef SHARED_LIBRARY
 	$(PYTHON) $(topsrcdir)/build/win32/pgomerge.py \
 	  $(SHARED_LIBRARY_NAME) $(DIST)/bin
 endif
-endif
-endif # MOZ_PROFILE_USE
+endif # SHARED_LIBRARY || PROGRAM
 endif # WINNT_
 endif # MOZ_PROFILE_GENERATE || MOZ_PROFILE_USE
 endif # NO_PROFILE_GUIDED_OPTIMIZE
@@ -1004,7 +1002,12 @@ ifdef MSMANIFEST_TOOL
 		rm -f $@.manifest; \
 	fi
 endif	# MSVC with manifest tool
-else
+ifdef MOZ_PROFILE_GENERATE
+# touch it a few seconds into the future to work around FAT's
+# 2-second granularity
+	touch -t `date +%Y%m%d%H%M.%S -d "now+5seconds"` pgo.relink
+endif
+else # !WINNT || GNU_CC
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(SOLARIS_JEMALLOC_LDFLAGS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(WRAP_MALLOC_LIB) $(EXE_DEF_FILE)
 else # ! CPP_PROG_LINK
@@ -1295,6 +1298,9 @@ ifdef EMBED_MANIFEST_AT
 	fi
 endif   # EMBED_MANIFEST_AT
 endif	# MSVC with manifest tool
+ifdef MOZ_PROFILE_GENERATE
+	touch -t `date +%Y%m%d%H%M.%S -d "now+5seconds"` pgo.relink
+endif
 endif	# WINNT && !GCC
 ifneq ($(OS_ARCH),Darwin)
 	@rm -f $(SUB_SHLOBJS)
@@ -2155,15 +2161,6 @@ echo-module:
 
 echo-requires:
 	@echo $(REQUIRES)
-
-echo-requires-recursive::
-ifdef _REPORT_ALL_DIRS
-	@echo $(subst $(topsrcdir)/,,$(srcdir)): $(MODULE): $(REQUIRES)
-else
-	@$(if $(REQUIRES),echo $(subst $(topsrcdir)/,,$(srcdir)): $(MODULE): $(REQUIRES))
-endif
-	$(LOOP_OVER_PARALLEL_DIRS)
-	$(LOOP_OVER_DIRS)
 
 echo-depth-path:
 	@$(topsrcdir)/build/unix/print-depth-path.sh

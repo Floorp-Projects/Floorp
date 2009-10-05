@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: basic codebook pack/unpack/code/decode operations
- last mod: $Id: codebook.c 16227 2009-07-08 06:58:46Z xiphmont $
+ last mod: $Id: codebook.c 16597 2009-10-01 02:54:22Z tterribe $
 
  ********************************************************************/
 
@@ -198,6 +198,7 @@ int vorbis_staticbook_unpack(oggpack_buffer *opb,static_codebook *s){
       for(i=0;i<s->entries;){
         long num=oggpack_read(opb,_ilog(s->entries-i));
         if(num==-1)goto _eofout;
+        if(length>32)goto _errout;
         for(j=0;j<num && i<s->entries;j++,i++)
           s->lengthlist[i]=length;
         length++;

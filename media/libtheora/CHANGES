@@ -1,3 +1,61 @@
+libtheora 1.1.1 (unreleased snapshot)
+
+ - No changes have been recorded
+
+libtheora 1.1.0 (2009 September 24)
+
+ - Fix various small issues with the example and telemetry code
+ - Fix handing a zero-byte packet as the first frame
+ - Documentation cleanup
+ - Two minor build fixes
+
+libtheora 1.1beta3 (2009 August 22)
+
+ - Rate control fixes to smooth quality
+ - MSVC build now exports all of the 1.0 api
+ - Assorted small bug fixes
+
+libtheora 1.1beta2 (2009 August 12)
+
+ - Fix a rate control problem with difficult input
+ - Build fixes for OpenBSD and Apple Xcode
+ - Examples now all use the 1.0 api
+ - TH_ENCCTL_SET_SPLEVEL works again
+ - Various bug fixes and source tree rearrangement
+
+libtheora 1.1beta1 (2009 August 5)
+
+ - Support for two-pass encoding
+ - Performance optimization of both encoder and decoder
+ - Encoder supports dynamic adjustment of quality and 
+   bitrate targets
+ - Encoder is generally more configurable, and all
+   rate control modes perform better
+ - Encoder now accepts 4:2:2 and 4:4:4 chroma sampling
+ - Decoder telemetry output shows quantization choice
+   and a breakdown of bitrate usage in the frame
+ - MSVC assembly optimizations up to date and functional
+
+libtheora 1.1alpha2 (2009 May 26)
+
+ - Reduce lambda for small quantizers.
+ - New encoder fDCT does better on smooth gradients
+ - Use SATD for mode decisions (1-2% bitrate reduction)
+ - Assembly rewrite for new features and general speed up
+ - Share code between the encoder and decoder for performance
+ - Fix 4:2:2 decoding and telemetry
+ - MSVC project files updated, but assembly is disabled.
+ - New configure option --disable-spec to work around toolchain
+   detection failures.
+ - Limit symbol exports on MacOS X.
+ - Port remaining unit tests from the 1.0 release.
+
+libtheora 1.1alpha1 (2009 March 27)
+
+ - Encoder rewrite with much improved vbr quality/bitrate and
+   better tracking of the target rate in cbr mode.
+ - MSVC project files do not work in this release.
+
 libtheora 1.0 (2008 November 3)
 
  - Merge x86 assembly for forward DCT from Thusnelda branch.

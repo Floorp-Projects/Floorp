@@ -90,6 +90,12 @@ nsStyleCoord::nsStyleCoord(float aValue, nsStyleUnit aUnit)
   }
 }
 
+nsStyleCoord::nsStyleCoord(nscolor aValue)
+  : mUnit(eStyleUnit_Color)
+{
+  mValue.mColor = aValue;
+}
+
 nsStyleCoord& nsStyleCoord::operator=(const nsStyleCoord& aCopy)
 {
   mUnit = aCopy.mUnit;

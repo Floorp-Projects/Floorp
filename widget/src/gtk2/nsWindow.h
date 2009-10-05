@@ -133,13 +133,7 @@ public:
 
     // nsIWidget
     NS_IMETHOD         Create(nsIWidget        *aParent,
-                              const nsIntRect  &aRect,
-                              EVENT_CALLBACK   aHandleEventFunction,
-                              nsIDeviceContext *aContext,
-                              nsIAppShell      *aAppShell,
-                              nsIToolkit       *aToolkit,
-                              nsWidgetInitData *aInitData);
-    NS_IMETHOD         Create(nsNativeWidget aParent,
+                              nsNativeWidget   aNativeParent,
                               const nsIntRect  &aRect,
                               EVENT_CALLBACK   aHandleEventFunction,
                               nsIDeviceContext *aContext,
@@ -188,13 +182,11 @@ public:
                               const nsTArray<nsIntRect>& aDestRects,
                               const nsTArray<Configuration>& aReconfigureChildren);
     virtual void*      GetNativeData(PRUint32 aDataType);
-    NS_IMETHOD         SetBorderStyle(nsBorderStyle aBorderStyle);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
     NS_IMETHOD         SetWindowClass(const nsAString& xulWinType);
     virtual nsIntPoint WidgetToScreenOffset();
     NS_IMETHOD         EnableDragDrop(PRBool aEnable);
-    NS_IMETHOD         PreCreateWidget(nsWidgetInitData *aWidgetInitData);
     NS_IMETHOD         CaptureMouse(PRBool aCapture);
     NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
                                            PRBool aDoCapture,
@@ -269,16 +261,6 @@ public:
                                                gpointer         aData);
     void               OnDragLeave(void);
     void               OnDragEnter(nscoord aX, nscoord aY);
-
-
-    nsresult           NativeCreate(nsIWidget        *aParent,
-                                    nsNativeWidget    aNativeParent,
-                                    const nsIntRect   &aRect,
-                                    EVENT_CALLBACK    aHandleEventFunction,
-                                    nsIDeviceContext *aContext,
-                                    nsIAppShell      *aAppShell,
-                                    nsIToolkit       *aToolkit,
-                                    nsWidgetInitData *aInitData);
 
     virtual void       NativeResize(PRInt32 aWidth,
                                     PRInt32 aHeight,

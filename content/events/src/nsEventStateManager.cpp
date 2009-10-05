@@ -373,7 +373,9 @@ public:
   static void OnEvent(nsEvent* aEvent);
   static void Shutdown();
   static PRUint32 GetTimeoutTime();
-  static void AccelerateWheelDelta(PRInt32 &aScrollX, PRInt32 &aScrollY);
+  static PRInt32 AccelerateWheelDelta(PRInt32 aScrollLines,
+                   PRBool aIsHorizontal, PRBool aAllowScrollSpeedOverride,
+                   nsEventStateManager::ScrollQuantity *aScrollQuantity);
 
   enum {
     kScrollSeriesTimeout = 80
@@ -386,7 +388,12 @@ protected:
   static PRUint32 GetIgnoreMoveDelayTime();
   static PRInt32 GetAccelerationStart();
   static PRInt32 GetAccelerationFactor();
-  static PRInt32 ComputeWheelDelta(PRInt32 aDelta, PRInt32 aFactor);
+  static PRInt32 OverrideSystemScrollSpeed(PRInt32 aScrollLines,
+                                           PRBool aIsHorizontal);
+  static PRInt32 ComputeAcceleratedWheelDelta(PRInt32 aDelta, PRInt32 aFactor);
+  static PRInt32 LimitToOnePageScroll(PRInt32 aScrollLines,
+                   PRBool aIsHorizontal,
+                   nsEventStateManager::ScrollQuantity *aScrollQuantity);
 
   static nsWeakFrame sTargetFrame;
   static PRUint32    sTime;        // in milliseconds
@@ -621,29 +628,39 @@ nsMouseWheelTransaction::GetIgnoreMoveDelayTime()
     nsContentUtils::GetIntPref("mousewheel.transaction.ignoremovedelay", 100);
 }
 
-void
-nsMouseWheelTransaction::AccelerateWheelDelta(PRInt32 &aScrollX,
-                                              PRInt32 &aScrollY)
+PRInt32
+nsMouseWheelTransaction::AccelerateWheelDelta(PRInt32 aScrollLines,
+                           PRBool aIsHorizontal,
+                           PRBool aAllowScrollSpeedOverride,
+                           nsEventStateManager::ScrollQuantity *aScrollQuantity)
 {
+  if (aAllowScrollSpeedOverride) {
+    aScrollLines = OverrideSystemScrollSpeed(aScrollLines, aIsHorizontal);
+  }
+
+  // Accelerate by the sScrollSeriesCounter
   PRInt32 start = GetAccelerationStart();
-  if (start < 0 || sScrollSeriesCounter < start)
-    return;
+  if (start >= 0 && sScrollSeriesCounter >= start) {
+    PRInt32 factor = GetAccelerationFactor();
+    if (factor > 0) {
+      aScrollLines = ComputeAcceleratedWheelDelta(aScrollLines, factor);
+    }
+  }
 
-  PRInt32 factor = GetAccelerationFactor();
-  if (factor < 0)
-    return;
-
-  aScrollX = ComputeWheelDelta(aScrollX, factor);
-  aScrollY = ComputeWheelDelta(aScrollY, factor);
+  // If the computed delta is larger than the page, we should limit
+  // the delta value to the one page size.
+  return LimitToOnePageScroll(aScrollLines, aIsHorizontal, aScrollQuantity);
 }
 
 PRInt32
-nsMouseWheelTransaction::ComputeWheelDelta(PRInt32 aDelta, PRInt32 aFactor)
+nsMouseWheelTransaction::ComputeAcceleratedWheelDelta(PRInt32 aDelta,
+                                                      PRInt32 aFactor)
 {
   if (aDelta == 0)
     return 0;
 
-  return PRInt32(0.5 + (aDelta * sScrollSeriesCounter * (double)aFactor / 10));
+  return PRInt32(NS_round(aDelta * sScrollSeriesCounter *
+                          (double)aFactor / 10));
 }
 
 PRInt32
@@ -656,6 +673,75 @@ PRInt32
 nsMouseWheelTransaction::GetAccelerationFactor()
 {
   return nsContentUtils::GetIntPref("mousewheel.acceleration.factor", -1);
+}
+
+PRInt32
+nsMouseWheelTransaction::OverrideSystemScrollSpeed(PRInt32 aScrollLines,
+                                                   PRBool aIsHorizontal)
+{
+  NS_PRECONDITION(sTargetFrame, "We don't have mouse scrolling transaction");
+
+  if (aScrollLines == 0) {
+    return 0;
+  }
+
+  // We shouldn't override the scrolling speed on non root scroll frame.
+  if (sTargetFrame !=
+        sTargetFrame->PresContext()->PresShell()->GetRootScrollFrame()) {
+    return aScrollLines;
+  }
+
+  // Compute the overridden speed to nsIWidget.  The widget can check the
+  // conditions (e.g., checking the prefs, and also whether the user customized
+  // the system settings of the mouse wheel scrolling or not), and can limit
+  // the speed for preventing the unexpected high speed scrolling.
+  nsCOMPtr<nsIWidget> widget(sTargetFrame->GetWindow());
+  NS_ENSURE_TRUE(widget, aScrollLines);
+  PRInt32 overriddenDelta;
+  nsresult rv = widget->OverrideSystemMouseScrollSpeed(aScrollLines,
+                                                       aIsHorizontal,
+                                                       overriddenDelta);
+  NS_ENSURE_SUCCESS(rv, aScrollLines);
+  return overriddenDelta;
+}
+
+PRInt32
+nsMouseWheelTransaction::LimitToOnePageScroll(PRInt32 aScrollLines,
+                           PRBool aIsHorizontal,
+                           nsEventStateManager::ScrollQuantity *aScrollQuantity)
+{
+  NS_ENSURE_TRUE(aScrollQuantity, aScrollLines);
+  NS_PRECONDITION(*aScrollQuantity == nsEventStateManager::eScrollByLine,
+                  "aScrollQuantity isn't by line");
+
+  NS_ENSURE_TRUE(sTargetFrame, aScrollLines);
+  nsIScrollableViewProvider* svp = do_QueryFrame(sTargetFrame);
+  NS_ENSURE_TRUE(svp, aScrollLines);
+  nsIScrollableView *scrollView = svp->GetScrollableView();
+  NS_ENSURE_TRUE(scrollView, aScrollLines);
+
+  // Limit scrolling to be at most one page, but if possible, try to
+  // just adjust the number of scrolled lines.
+  nscoord lineHeight = 0;
+  scrollView->GetLineHeight(&lineHeight);
+
+  if (lineHeight == 0)
+    return aScrollLines;
+
+  nsSize pageScrollDistances(0, 0);
+  scrollView->GetPageScrollDistances(&pageScrollDistances);
+  nscoord pageScroll = aIsHorizontal ?
+    pageScrollDistances.width : pageScrollDistances.height;
+
+  if (PR_ABS(aScrollLines) * lineHeight < pageScroll)
+    return aScrollLines;
+
+  nscoord maxLines = (pageScroll / lineHeight);
+  if (maxLines >= 1)
+    return ((aScrollLines < 0) ? -1 : 1) * maxLines;
+
+  *aScrollQuantity = nsEventStateManager::eScrollByPage;
+  return (aScrollLines < 0) ? -1 : 1;
 }
 
 /******************************************************************/
@@ -1297,7 +1383,7 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
 
   nsCOMPtr<nsIDOMXULDocument> xulDoc =
     do_QueryInterface(aContent->GetOwnerDoc());
-  if (!xulDoc && !aContent->IsNodeOfType(nsINode::eXUL))
+  if (!xulDoc && !aContent->IsXUL())
     return PR_TRUE;
 
     // For XUL we do visibility checks.
@@ -1318,7 +1404,7 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
   if (control)
     return PR_TRUE;
 
-  if (aContent->IsNodeOfType(nsINode::eHTML)) {
+  if (aContent->IsHTML()) {
     nsIAtom* tag = aContent->Tag();
 
     // HTML area, label and legend elements are never focusable, so
@@ -1328,7 +1414,7 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
         tag == nsGkAtoms::legend)
       return PR_TRUE;
 
-  } else if (aContent->IsNodeOfType(nsINode::eXUL)) {
+  } else if (aContent->IsXUL()) {
     // XUL label elements are never focusable, so we need to check for them
     // explicitly before giving up.
     if (aContent->Tag() == nsGkAtoms::label)
@@ -1611,7 +1697,7 @@ nsEventStateManager::FireContextClick()
       nsIAtom *tag = mGestureDownContent->Tag();
       PRBool allowedToDispatch = PR_TRUE;
 
-      if (mGestureDownContent->IsNodeOfType(nsINode::eXUL)) {
+      if (mGestureDownContent->IsXUL()) {
         if (tag == nsGkAtoms::scrollbar ||
             tag == nsGkAtoms::scrollbarbutton ||
             tag == nsGkAtoms::button)
@@ -1632,7 +1718,7 @@ nsEventStateManager::FireContextClick()
           }
         }
       }
-      else if (mGestureDownContent->IsNodeOfType(nsINode::eHTML)) {
+      else if (mGestureDownContent->IsHTML()) {
         nsCOMPtr<nsIFormControl> formCtrl(do_QueryInterface(mGestureDownContent));
 
         if (formCtrl) {
@@ -2261,7 +2347,7 @@ nsEventStateManager::DoScrollZoom(nsIFrame *aTargetFrame,
   nsIContent *content = aTargetFrame->GetContent();
   if (content &&
       !content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) &&
-      !content->IsNodeOfType(nsINode::eXUL))
+      !content->IsXUL())
     {
       // positive adjustment to decrease zoom, negative to increase
       PRInt32 change = (adjustment > 0) ? -1 : 1;
@@ -2389,7 +2475,8 @@ nsresult
 nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
                                   nsIFrame* aTargetFrame,
                                   nsMouseScrollEvent* aMouseEvent,
-                                  ScrollQuantity aScrollQuantity)
+                                  ScrollQuantity aScrollQuantity,
+                                  PRBool aAllowScrollSpeedOverride)
 {
   nsIScrollableView* scrollView = nsnull;
   nsIFrame* scrollFrame = aTargetFrame;
@@ -2476,26 +2563,17 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
 
   if (!passToParent && scrollView) {
     if (aScrollQuantity == eScrollByLine) {
-      // Limit scrolling to be at most one page, but if possible, try to
-      // just adjust the number of scrolled lines.
-      nscoord lineHeight = 0;
-      scrollView->GetLineHeight(&lineHeight);
-      if (lineHeight) {
-        nsSize pageScrollDistances(0, 0);
-        scrollView->GetPageScrollDistances(&pageScrollDistances);
-        nscoord pageScroll = isHorizontal ?
-          pageScrollDistances.width : pageScrollDistances.height;
-
-        if (PR_ABS(numLines) * lineHeight > pageScroll) {
-          nscoord maxLines = (pageScroll / lineHeight);
-          if (maxLines >= 1) {
-            numLines = ((numLines < 0) ? -1 : 1) * maxLines;
-          } else {
-            aScrollQuantity = eScrollByPage;
-          }
-        }
-      }
+      numLines =
+        nsMouseWheelTransaction::AccelerateWheelDelta(numLines, isHorizontal,
+                                                      aAllowScrollSpeedOverride,
+                                                      &aScrollQuantity);
     }
+#ifdef DEBUG
+    else {
+      NS_ASSERTION(!aAllowScrollSpeedOverride,
+        "aAllowScrollSpeedOverride is true but the quantity isn't by-line scrolling.");
+    }
+#endif
 
     PRInt32 scrollX = 0;
     PRInt32 scrollY = numLines;
@@ -2520,7 +2598,6 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
         (noDefer ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_DEFERRED));
     }
     else {
-      nsMouseWheelTransaction::AccelerateWheelDelta(scrollX, scrollY);
       scrollView->ScrollByLinesWithOverflow(scrollX, scrollY, overflowX, overflowY,
         (noDefer ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_SMOOTHSCROLL));
     }
@@ -2540,7 +2617,8 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     rv = GetParentScrollingView(aMouseEvent, aPresContext, newFrame,
                                 *getter_AddRefs(newPresContext));
     if (NS_SUCCEEDED(rv) && newFrame)
-      return DoScrollText(newPresContext, newFrame, aMouseEvent, aScrollQuantity);
+      return DoScrollText(newPresContext, newFrame, aMouseEvent,
+                          aScrollQuantity, aAllowScrollSpeedOverride);
   }
 
   aMouseEvent->scrollOverflow = numLines;
@@ -2918,15 +2996,18 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
         switch (action) {
         case MOUSE_SCROLL_N_LINES:
-          DoScrollText(presContext, aTargetFrame, msEvent, eScrollByLine);
+          DoScrollText(presContext, aTargetFrame, msEvent, eScrollByLine,
+                       useSysNumLines);
           break;
 
         case MOUSE_SCROLL_PAGE:
-          DoScrollText(presContext, aTargetFrame, msEvent, eScrollByPage);
+          DoScrollText(presContext, aTargetFrame, msEvent, eScrollByPage,
+                       PR_FALSE);
           break;
 
         case MOUSE_SCROLL_PIXELS:
-          DoScrollText(presContext, aTargetFrame, msEvent, eScrollByPixel);
+          DoScrollText(presContext, aTargetFrame, msEvent, eScrollByPixel,
+                       PR_FALSE);
           break;
 
         case MOUSE_SCROLL_HISTORY:

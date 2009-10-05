@@ -102,8 +102,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x5c55f106, 0xb7ab, 0x4f54, \
-    { 0x89, 0xf3, 0xd3, 0xcf, 0x91, 0xf9, 0x63, 0x95 } }
+{ 0x6bdb96ba, 0x1727, 0x40ae, \
+  { 0x85, 0x55, 0x9c, 0x53, 0x4b, 0x95, 0x23, 0x98 } }
 
 /*
  * Window shadow styles
@@ -188,9 +188,6 @@ class nsIWidget : public nsISupports {
     /**
      * Create and initialize a widget. 
      *
-     * The widget represents a window that can be drawn into. It also is the 
-     * base class for user-interface widgets such as buttons and text boxes.
-     *
      * All the arguments can be NULL in which case a top level window
      * with size 0 is created. The event callback function has to be
      * provided only if the caller wants to deal with the events this
@@ -203,54 +200,29 @@ class nsIWidget : public nsISupports {
      * calling code must handle paint messages and clear the background 
      * itself. 
      *
-     * aInitData cannot be eWindowType_popup here; popups cannot be
-     * hooked into the nsIWidget hierarchy.
+     * In practice at least one of aParent and aNativeParent will be null. If
+     * both are null the widget isn't parented (e.g. context menus or
+     * independent top level windows).
      *
-     * @param     parent or null if it's a top level window
-     * @param     aRect     the widget dimension
+     * @param     aParent       parent nsIWidget
+     * @param     aNativeParent native parent widget
+     * @param     aRect         the widget dimension
      * @param     aHandleEventFunction the event handler callback function
      * @param     aContext
-     * @param     aAppShell the parent application shell. If nsnull,
-     *                      the parent window's application shell will be used.
+     * @param     aAppShell     the parent application shell. If nsnull,
+     *                          the parent window's application shell will be used.
      * @param     aToolkit
-     * @param     aInitData data that is used for widget initialization
+     * @param     aInitData     data that is used for widget initialization
      *
      */
     NS_IMETHOD Create(nsIWidget        *aParent,
-                        const nsIntRect  &aRect,
-                        EVENT_CALLBACK   aHandleEventFunction,
-                        nsIDeviceContext *aContext,
-                        nsIAppShell      *aAppShell = nsnull,
-                        nsIToolkit       *aToolkit = nsnull,
-                        nsWidgetInitData *aInitData = nsnull) = 0;
-
-    /**
-     * Create and initialize a widget with a native window parent
-     *
-     * The widget represents a window that can be drawn into. It also is the 
-     * base class for user-interface widgets such as buttons and text boxes.
-     *
-     * All the arguments can be NULL in which case a top level window
-     * with size 0 is created. The event callback function has to be
-     * provided only if the caller wants to deal with the events this
-     * widget receives.  The event callback is basically a preprocess
-     * hook called synchronously. The return value determines whether
-     * the event goes to the default window procedure or it is hidden
-     * to the os. The assumption is that if the event handler returns
-     * false the widget does not see the event.
-     *
-     * @param     aParent   native window.
-     * @param     aRect     the widget dimension
-     * @param     aHandleEventFunction the event handler callback function
-     */
-    NS_IMETHOD Create(nsNativeWidget aParent,
-                        const nsIntRect  &aRect,
-                        EVENT_CALLBACK   aHandleEventFunction,
-                        nsIDeviceContext *aContext,
-                        nsIAppShell      *aAppShell = nsnull,
-                        nsIToolkit       *aToolkit = nsnull,
-                        nsWidgetInitData *aInitData = nsnull) = 0;
-
+                      nsNativeWidget   aNativeParent,
+                      const nsIntRect  &aRect,
+                      EVENT_CALLBACK   aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell      *aAppShell = nsnull,
+                      nsIToolkit       *aToolkit = nsnull,
+                      nsWidgetInitData *aInitData = nsnull) = 0;
 
     /**
      * Accessor functions to get and set the client data associated with the
@@ -736,14 +708,6 @@ class nsIWidget : public nsISupports {
     //@}
 
     /**
-     * Set border style
-     * Must be called before Create.
-     * @param aBorderStyle @see nsBorderStyle
-     */
-
-    NS_IMETHOD SetBorderStyle(nsBorderStyle aBorderStyle) = 0;
-
-    /**
      * Set the widget's title.
      * Must be called after Create.
      *
@@ -1095,6 +1059,29 @@ class nsIWidget : public nsISupports {
      * The button's rectangle should be supplied in aButtonRect.
      */ 
     NS_IMETHOD OnDefaultButtonLoaded(const nsIntRect &aButtonRect) = 0;
+
+    /**
+     * Compute the overridden system mouse scroll speed on the root content of
+     * web pages.  The widget may set the same value as aOriginalDelta.  E.g.,
+     * when the system scrolling settings were customized, widget can respect
+     * the will of the user.
+     *
+     * This is called only when the mouse wheel event scrolls the root content
+     * of the web pages by line.  In other words, this isn't called when the
+     * mouse wheel event is used for zoom, page scroll and other special
+     * actions.  And also this isn't called when the user doesn't use the
+     * system wheel speed settings.
+     *
+     * @param aOriginalDelta   The delta value of the current mouse wheel
+     *                         scrolling event.
+     * @param aIsHorizontal    If TRUE, the scrolling direction is horizontal.
+     *                         Otherwise, it's vertical.
+     * @param aOverriddenDelta The overridden mouse scrolling speed.  This value
+     *                         may be same as aOriginalDelta.
+     */
+    NS_IMETHOD OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
+                                              PRBool aIsHorizontal,
+                                              PRInt32 &aOverriddenDelta) = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.

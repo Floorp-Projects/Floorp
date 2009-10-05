@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is the Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Dão Gottwald <dao@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <style type="text/css"><![CDATA[
+
+html,
+body,
+video {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: black;
+  overflow: -moz-hidden-unscrollable;
+}
+body.userIdle {
+  cursor: none;
+}
+video {
+  width: 100%;
+  max-height: 100%;
+}
+body.loadingdata > video,
+body.loadingdata > #close,
+body.userIdle > #close {
+  visibility: hidden;
+}
+
+  ]]></style>
+  <link href="chrome://browser/skin/fullscreen-video.css"
+        rel="stylesheet" type="text/css"/>
+  <script type="application/javascript"><![CDATA[
+
+var contentVideo = window.arguments[0];
+var video;
+
+var title = (contentVideo.currentSrc || contentVideo.src).replace(/^.*\//, "");
+try {
+  title = decodeURI(title);
+} catch (e) {}
+document.title = title;
+
+window.addEventListener("focus", function () {
+  window.removeEventListener("focus", arguments.callee, false);
+
+  window.fullScreen = true;
+
+  video = document.querySelector("video");
+
+  video.addEventListener("loadeddata", function () {
+    video.removeEventListener("loadeddata", arguments.callee, false);
+    video.volume = contentVideo.volume;
+    video.muted = contentVideo.muted;
+    video.poster = contentVideo.poster;
+
+    if (contentVideo.currentTime && !contentVideo.ended) {
+      video.addEventListener("seeked", function () {
+        video.removeEventListener("seeked", arguments.callee, false);
+        playbackStarts();
+      }, false);
+
+      video.currentTime = contentVideo.currentTime;
+    } else {
+      playbackStarts();
+    }
+
+    video.controls = true;
+    video.play();
+  }, false);
+
+  // Automatically close this window when the playback ended, unless the user
+  // interacted with it.
+  video.addEventListener("ended", autoClose, false);
+  window.addEventListener("click", cancelAutoClose, false);
+  window.addEventListener("keypress", cancelAutoClose, false);
+
+  video.addEventListener("playing", hideUI, false);
+  video.addEventListener("seeked", hideUI, false);
+  video.addEventListener("seeking", showUI, false);
+  video.addEventListener("pause", showUI, false);
+  video.addEventListener("ended", showUI, false);
+
+  window.addEventListener("mousemove", function () {
+    showUI();
+    resetIdleTimer();
+  }, false);
+
+  video.mozLoadFrom(contentVideo);
+}, false);
+
+window.addEventListener("unload", function () {
+  if (video.currentSrc) {
+    contentVideo.currentTime = video.currentTime;
+    contentVideo.volume = video.volume;
+    contentVideo.muted = video.muted;
+    if (!video.paused && !video.ended) {
+      video.pause();
+      contentVideo.play();
+    }
+  }
+}, false);
+
+window.addEventListener("keypress", function (event) {
+  if (event.keyCode == event.DOM_VK_ESCAPE) {
+    window.close();
+    return;
+  }
+
+  resetIdleTimer();
+
+  if (!video.controls &&
+      String.fromCharCode(event.charCode) == " ")
+    video.pause();
+}, false);
+
+function playbackStarts() {
+  // Loading the data from the content video may take a second or two. We hide
+  // the video during that period.
+  document.body.classList.remove("loadingdata");
+  video.focus();
+}
+
+function autoClose() {
+  window.close();
+}
+
+function cancelAutoClose() {
+  video.removeEventListener("ended", autoClose, false);
+  window.removeEventListener("click", cancelAutoClose, false);
+  window.removeEventListener("keypress", cancelAutoClose, false);
+}
+
+var idleTimer;
+function resetIdleTimer() {
+  if (idleTimer) {
+    clearTimeout(idleTimer);
+    idleTimer = 0;
+  }
+  idleTimer = setTimeout(function () {
+    idleTimer = 0;
+    hideUI();
+  }, 2000);
+}
+
+function showUI() {
+  if (!video.controls) {
+    document.body.classList.remove("userIdle");
+    video.controls = true;
+  }
+}
+
+function hideUI() {
+  if (!video.paused && !video.ended && !video.seeking && !video.error) {
+    document.body.classList.add("userIdle");
+    video.controls = false;
+  }
+}
+
+  ]]></script>
+</head>
+<body class="loadingdata">
+  <span id="close" onclick="window.close();"/>
+  <video/>
+</body>
+</html>

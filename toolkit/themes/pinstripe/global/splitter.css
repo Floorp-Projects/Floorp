@@ -53,6 +53,10 @@ splitter {
   background: url("chrome://global/skin/splitter/dimple.png") transparent no-repeat center;  
 }
 
+splitter:-moz-lwtheme {
+  background: none;
+}
+
 /* ::::: splitter (horizontal) ::::: */
 
 splitter[orient="vertical"] {

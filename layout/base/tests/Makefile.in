@@ -81,6 +81,7 @@ _TEST_FILES =	\
 		test_bug435293-skew.html \
 		test_bug495648.xul \
 		test_bug514127.html \
+		test_bug518777.html \
 		test_scrolling.html \
 		$(NULL)
 # test_bug396024.html is currently disabled because it interacts badly with

@@ -46,6 +46,7 @@ function startTests() {
         ok(Math.abs(v.currentTime - test.duration) < 0.1,
            test.name + " current time at end: " + v.currentTime);
       }
+      is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
       ok(v.ended, test.name + " checking playback has ended");
       --testsWaiting;
       if (testsWaiting == 0) {

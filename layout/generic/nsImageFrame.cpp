@@ -1134,8 +1134,8 @@ public:
   virtual ~nsDisplayImage() {
     MOZ_COUNT_DTOR(nsDisplayImage);
   }
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Image")
 private:
   nsCOMPtr<imgIContainer> mImage;
@@ -1143,9 +1143,9 @@ private:
 
 void
 nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+                      nsIRenderingContext* aCtx) {
   static_cast<nsImageFrame*>(mFrame)->
-    PaintImage(*aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect, mImage,
+    PaintImage(*aCtx, aBuilder->ToReferenceFrame(mFrame), mVisibleRect, mImage,
                aBuilder->ShouldSyncDecodeImages()
                  ? (PRUint32) imgIContainer::FLAG_SYNC_DECODE
                  : (PRUint32) imgIContainer::FLAG_NONE);

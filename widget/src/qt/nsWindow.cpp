@@ -236,38 +236,6 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& aConfigura
 }
 
 NS_IMETHODIMP
-nsWindow::Create(nsIWidget        *aParent,
-                 const nsIntRect     &aRect,
-                 EVENT_CALLBACK   aHandleEventFunction,
-                 nsIDeviceContext *aContext,
-                 nsIAppShell      *aAppShell,
-                 nsIToolkit       *aToolkit,
-                 nsWidgetInitData *aInitData)
-{
-    LOG(("%s [%p]\n", __PRETTY_FUNCTION__, (void *)this));
-
-    nsresult rv = NativeCreate(aParent, nsnull, aRect, aHandleEventFunction,
-                               aContext, aAppShell, aToolkit, aInitData);
-    return rv;
-}
-
-NS_IMETHODIMP
-nsWindow::Create(nsNativeWidget aParent,
-                 const nsIntRect     &aRect,
-                 EVENT_CALLBACK   aHandleEventFunction,
-                 nsIDeviceContext *aContext,
-                 nsIAppShell      *aAppShell,
-                 nsIToolkit       *aToolkit,
-                 nsWidgetInitData *aInitData)
-{
-    LOG(("%s [%p]\n", __PRETTY_FUNCTION__, (void *)this));
-
-    nsresult rv = NativeCreate(nsnull, aParent, aRect, aHandleEventFunction,
-                               aContext, aAppShell, aToolkit, aInitData);
-    return rv;
-}
-
-NS_IMETHODIMP
 nsWindow::Destroy(void)
 {
     if (mIsDestroyed || !mWidget)
@@ -745,12 +713,6 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 }
 
 NS_IMETHODIMP
-nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsWindow::SetTitle(const nsAString& aTitle)
 {
     if (mWidget) {
@@ -816,17 +778,6 @@ nsWindow::EnableDragDrop(PRBool aEnable)
 {
     mWidget->setAcceptDrops(aEnable);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::PreCreateWidget(nsWidgetInitData *aWidgetInitData)
-{
-    if (nsnull != aWidgetInitData) {
-        mWindowType = aWidgetInitData->mWindowType;
-        mBorderStyle = aWidgetInitData->mBorderStyle;
-        return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1594,14 +1545,14 @@ GetBrandName(nsXPIDLString& brandName)
 
 
 nsresult
-nsWindow::NativeCreate(nsIWidget        *aParent,
-                       nsNativeWidget    aNativeParent,
-                       const nsIntRect     &aRect,
-                       EVENT_CALLBACK    aHandleEventFunction,
-                       nsIDeviceContext *aContext,
-                       nsIAppShell      *aAppShell,
-                       nsIToolkit       *aToolkit,
-                       nsWidgetInitData *aInitData)
+nsWindow::Create(nsIWidget        *aParent,
+                 nsNativeWidget    aNativeParent,
+                 const nsIntRect  &aRect,
+                 EVENT_CALLBACK    aHandleEventFunction,
+                 nsIDeviceContext *aContext,
+                 nsIAppShell      *aAppShell,
+                 nsIToolkit       *aToolkit,
+                 nsWidgetInitData *aInitData)
 {
     // only set the base parent if we're going to be a dialog or a
     // toplevel
@@ -2022,7 +1973,8 @@ nsWindow::createQWidget(QWidget *parent, nsWidgetInitData *aInitData)
         windowName = "topLevelInvisible";
         break;
     case eWindowType_child:
-    default: // plugin, java, sheet
+    case eWindowType_plugin:
+    default: // sheet
         windowName = "paintArea";
         break;
     }

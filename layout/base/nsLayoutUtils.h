@@ -51,6 +51,7 @@ class nsIDOMEvent;
 class nsRegion;
 class nsDisplayListBuilder;
 class nsIFontMetrics;
+class nsClientRectList;
 
 #include "prtypes.h"
 #include "nsStyleContext.h"
@@ -526,9 +527,9 @@ public:
    * efficient), so we use some unfortunately tricky techniques to get by
    * with just the after-list.
    * 
-   * We compute the "visible moving area": aUpdateRect minus any opaque
-   * areas of non-moving content that are above all moving content in
-   * z-order.
+   * We compute the "visible moving area", a region that contains all
+   * moving content that is visible, either before or after scrolling,
+   * intersected with aUpdateRect.
    *
    * The aRepaintRegion region consists of the visible moving area
    * intersected with the union of the following areas:
@@ -599,6 +600,27 @@ public:
   public:
     virtual void AddRect(const nsRect& aRect) = 0;
   };
+
+  struct RectAccumulator : public RectCallback {
+    nsRect       mResultRect;
+    nsRect       mFirstRect;
+    PRPackedBool mSeenFirstRect;
+
+    RectAccumulator();
+
+    virtual void AddRect(const nsRect& aRect);
+  };
+
+  struct RectListBuilder : public RectCallback {
+    nsClientRectList* mRectList;
+    nsresult          mRV;
+
+    RectListBuilder(nsClientRectList* aList);
+     virtual void AddRect(const nsRect& aRect);
+  };
+
+  static nsIFrame* GetContainingBlockForClientRect(nsIFrame* aFrame);
+
   /**
    * Collect all CSS border-boxes associated with aFrame and its
    * continuations, "drilling down" through outer table frames and

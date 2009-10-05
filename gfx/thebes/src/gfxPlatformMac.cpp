@@ -401,20 +401,49 @@ gfxPlatformMac::ReadAntiAliasingThreshold()
 qcms_profile *
 gfxPlatformMac::GetPlatformCMSOutputProfile()
 {
-    CMProfileLocation device;
-    CMError err = CMGetDeviceProfile(cmDisplayDeviceClass,
-                                     cmDefaultDeviceID,
-                                     cmDefaultProfileID,
-                                     &device);
+    qcms_profile *profile = nsnull;
+    CMProfileRef cmProfile;
+    CMProfileLocation *location;
+    UInt32 locationSize;
+
+    /* There a number of different ways that we could try to get a color
+       profile to use.  On 10.5 all of these methods seem to give the same
+       results. On 10.6, the results are different and the following method,
+       using CGMainDisplayID() seems to best match what we are looking for.
+       Currently, both Google Chrome and Qt4 use a similar method.
+
+       CMTypes.h describes CMDisplayIDType:
+       "Data type for ColorSync DisplayID reference
+        On 8 & 9 this is a AVIDType
+	On X this is a CGSDisplayID"
+
+       CGMainDisplayID gives us a CGDirectDisplayID which presumeably
+       corresponds directly to a CGSDisplayID */
+    CGDirectDisplayID displayID = CGMainDisplayID();
+
+    CMError err = CMGetProfileByAVID(static_cast<CMDisplayIDType>(displayID), &cmProfile);
     if (err != noErr)
         return nsnull;
 
-    qcms_profile *profile = nsnull;
-    switch (device.locType) {
+    // get the size of location
+    err = NCMGetProfileLocation(cmProfile, NULL, &locationSize);
+    if (err != noErr)
+        return nsnull;
+
+    // allocate enough room for location
+    location = static_cast<CMProfileLocation*>(malloc(locationSize));
+    if (!location)
+        goto fail_close;
+
+    err = NCMGetProfileLocation(cmProfile, location, &locationSize);
+    if (err != noErr)
+        goto fail_location;
+
+    switch (location->locType) {
 #ifndef __LP64__
     case cmFileBasedProfile: {
         FSRef fsRef;
-        if (!FSpMakeFSRef(&device.u.fileLoc.spec, &fsRef)) {
+        if (!FSpMakeFSRef(&location->u.fileLoc.spec, &fsRef)) {
             char path[512];
             if (!FSRefMakePath(&fsRef, reinterpret_cast<UInt8*>(path), sizeof(path))) {
                 profile = qcms_profile_from_path(path);
@@ -429,7 +458,7 @@ gfxPlatformMac::GetPlatformCMSOutputProfile()
     }
 #endif
     case cmPathBasedProfile:
-        profile = qcms_profile_from_path(device.u.pathLoc.path);
+        profile = qcms_profile_from_path(location->u.pathLoc.path);
 #ifdef DEBUG_tor
         if (profile)
             fprintf(stderr,
@@ -444,6 +473,10 @@ gfxPlatformMac::GetPlatformCMSOutputProfile()
         break;
     }
 
+fail_location:
+    free(location);
+fail_close:
+    CMCloseProfile(cmProfile);
     return profile;
 }
 

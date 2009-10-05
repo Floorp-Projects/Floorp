@@ -1,0 +1,99 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for SMIL Animation Behavior with textZoom</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="smilTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <svg xmlns="http://www.w3.org/2000/svg" width="300px" height="200px">
+    <text y="100px" x="0px" style="font-size: 5px">
+      abc
+      <animate attributeName="font-size" attributeType="CSS" fill="freeze"
+               from="20px" to="40px" begin="1s" dur="1s"/>
+    </text>
+    <rect y="100px" x="50px" style="stroke-width: 5px">
+      <animate attributeName="stroke-width" attributeType="CSS" fill="freeze"
+               from="20px" to="40px" begin="1s" dur="1s"/>
+    </rect>
+  </svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+// Helper function
+function verifyStyle(aNode, aPropertyName, aExpectedVal)
+{
+  var computedVal = SMILUtil.getComputedStyleSimple(aNode, aPropertyName);
+  is(computedVal, aExpectedVal, "computed value of " + aPropertyName);
+}
+
+function main()
+{
+  if (!SMILUtil.isSMILEnabled()) {
+    ok(false, "SMIL dosn't seem to be enabled");
+    SimpleTest.finish();
+    return;
+  }
+
+  // Start out paused
+  var svg = SMILUtil.getSVGRoot();
+  svg.pauseAnimations();
+
+  // Get handle on nsIMarkupDocumentViewer
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  const CI = Components.interfaces;
+  var docshell = window.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIWebNavigation).QueryInterface(CI.nsIDocShell);
+  var mudv = docshell.contentViewer.QueryInterface(CI.nsIMarkupDocumentViewer);
+
+  // Set text zoom to 2x
+  var origTextZoom = mudv.textZoom;
+  mudv.textZoom = 2;
+
+  try {
+    // Verify computed style values at various points during animation.
+    // * Correct behavior is for the computed values of 'font-size' to be
+    // exactly twice as large as their corresponding specified values.
+    // (Mozilla's SVG code divides out the textZoom factor from these computed
+    // values when rendering, to obtain the correct font-size.)
+    // * I also include tests for an identical animation of the "stroke-width"
+    // property, which should _not_ be affected by textZoom.
+    var text = document.getElementsByTagName("text")[0];
+    var rect = document.getElementsByTagName("rect")[0];
+    verifyStyle(text, "font-size",    "10px");
+    verifyStyle(rect, "stroke-width", "5px");
+    svg.setCurrentTime(1);
+    verifyStyle(text, "font-size",    "40px");
+    verifyStyle(rect, "stroke-width", "20px");
+    svg.setCurrentTime(1.5);
+    verifyStyle(text, "font-size",    "60px");
+    verifyStyle(rect, "stroke-width", "30px");
+    svg.setCurrentTime(2);
+    verifyStyle(text, "font-size",    "80px");
+    verifyStyle(rect, "stroke-width", "40px");
+    svg.setCurrentTime(3);
+    verifyStyle(text, "font-size",    "80px");
+    verifyStyle(rect, "stroke-width", "40px");
+  } catch (e) {
+    // If anything goes wrong, make sure we restore textZoom before bubbling
+    // the exception upwards, so that we don't mess up subsequent tests.
+    mudv.textZoom = origTextZoom;
+    throw e;
+  }
+
+  // We're done! Restore original text-zoom before finishing
+  mudv.textZoom = origTextZoom;
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main, false);
+]]>
+</script>
+</pre>
+</body>
+</html>

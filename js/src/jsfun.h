@@ -334,6 +334,43 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp);
 extern void
 js_PutArgsObject(JSContext *cx, JSStackFrame *fp);
 
+/*
+ * Reserved slot structure for Arguments objects:
+ *
+ * JSSLOT_PRIVATE       - the corresponding frame until the frame exits.
+ * JSSLOT_ARGS_LENGTH   - the number of actual arguments and a flag indicating
+ *                        whether arguments.length was overwritten.
+ * JSSLOT_ARGS_CALLEE   - the arguments.callee value or JSVAL_HOLE if that was
+ *                        overwritten.
+ * JSSLOT_ARGS_COPY_START .. - room to store the corresponding arguments after
+ *                        the frame exists. The slot's value will be JSVAL_HOLE
+ *                        if arguments[i] was deleted or overwritten.
+ */
+const uint32 JSSLOT_ARGS_LENGTH =               JSSLOT_PRIVATE + 1;
+const uint32 JSSLOT_ARGS_CALLEE =               JSSLOT_PRIVATE + 2;
+const uint32 JSSLOT_ARGS_COPY_START =           JSSLOT_PRIVATE + 3;
+
+/* Number of extra fixed slots besides JSSLOT_PRIVATE. */
+const uint32 ARGS_CLASS_FIXED_RESERVED_SLOTS =  JSSLOT_ARGS_COPY_START -
+                                                JSSLOT_ARGS_LENGTH;
+
+/*
+ * JSSLOT_ARGS_LENGTH stores ((argc << 1) | overwritten_flag) as int jsval.
+ * Thus (JS_ARGS_LENGTH_MAX << 1) | 1 must fit JSVAL_INT_MAX. To assert that
+ * we check first that the shift does not overflow uint32.
+ */
+JS_STATIC_ASSERT(JS_ARGS_LENGTH_MAX <= JS_BIT(30));
+JS_STATIC_ASSERT(jsval((JS_ARGS_LENGTH_MAX << 1) | 1) <= JSVAL_INT_MAX);
+
+JS_INLINE bool
+js_IsOverriddenArgsLength(JSObject *obj)
+{
+    JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_ArgumentsClass);
+
+    jsval v = obj->fslots[JSSLOT_ARGS_LENGTH];
+    return (JSVAL_TO_INT(v) & 1) != 0;
+}
+
 extern JSBool
 js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp);
 

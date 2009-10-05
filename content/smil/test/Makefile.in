@@ -44,13 +44,24 @@ relativesrcdir  = content/smil/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_smilRestart.xhtml \
+_TEST_FILES = \
+	  db_smilCSSFromBy.js \
+	  db_smilCSSFromTo.js \
+	  db_smilCSSPaced.js \
+	  db_smilCSSPropertyList.js \
+	  smilTestUtils.js \
+	  test_smilCSSFromBy.xhtml \
+	  test_smilCSSFromTo.xhtml \
+	  test_smilCSSInherit.xhtml \
+	  test_smilCSSPaced.xhtml \
+	  test_smilRestart.xhtml \
 	  test_smilGetStartTime.xhtml \
 	  test_smilGetSimpleDuration.xhtml \
 	  test_smilKeySplines.xhtml \
 	  test_smilSetCurrentTime.xhtml \
 	  test_smilSync.xhtml \
 	  test_smilSyncTransform.xhtml \
+	  test_smilTextZoom.xhtml \
 	  test_smilTiming.xhtml \
 	  test_smilTimingZeroIntervals.xhtml \
 		$(NULL)

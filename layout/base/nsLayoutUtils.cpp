@@ -82,6 +82,7 @@
 #include "nsICanvasElement.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "gfxPlatform.h"
+#include "nsClientRect.h"
 #ifdef MOZ_MEDIA
 #include "nsHTMLVideoElement.h"
 #endif
@@ -1117,7 +1118,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 #endif
 
   nsRegion visibleRegion = aDirtyRegion;
-  list.OptimizeVisibility(&builder, &visibleRegion);
+  list.ComputeVisibility(&builder, &visibleRegion);
 
 #ifdef DEBUG
   if (gDumpPaintList) {
@@ -1126,7 +1127,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   }
 #endif
 
-  list.Paint(&builder, aRenderingContext, aDirtyRegion.GetBounds());
+  list.Paint(&builder, aRenderingContext);
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
   return NS_OK;
@@ -1250,33 +1251,33 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   // are the same ones we would have gotten if we had constructed the
   // 'before' display list. So opaque moving items are only considered to
   // cover the intersection of their old and new bounds (see
-  // nsDisplayItem::OptimizeVisibility). A moving clip item is not allowed
+  // nsDisplayItem::ComputeVisibility). A moving clip item is not allowed
   // to clip non-moving items --- this is enforced by the code that sets
   // up nsDisplayClip items, in particular see ApplyAbsPosClipping.
   // XXX but currently a non-moving clip item can incorrectly clip
   // moving items! See bug 428156.
-  nsRect rect;
-  rect.UnionRect(aUpdateRect, aUpdateRect - aDelta);
   nsDisplayListBuilder builder(aRootFrame, PR_FALSE, PR_TRUE);
-  // Retrieve the area of the moving content that's visible. This is the
+  // Retrieve the area of the moving content (considered in both its
+  // before- and after-movement positions) that's visible. This is the
   // only area that needs to be blitted or repainted.
   nsRegion visibleRegionOfMovingContent;
   builder.SetMovingFrame(aMovingFrame, aDelta, &visibleRegionOfMovingContent);
   nsDisplayList list;
 
-  builder.EnterPresShell(aRootFrame, rect);
+  builder.EnterPresShell(aRootFrame, aUpdateRect);
 
   nsresult rv =
-    aRootFrame->BuildDisplayListForStackingContext(&builder, rect, &list);
+    aRootFrame->BuildDisplayListForStackingContext(&builder, aUpdateRect, &list);
 
-  builder.LeavePresShell(aRootFrame, rect);
+  builder.LeavePresShell(aRootFrame, aUpdateRect);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
   if (gDumpRepaintRegionForCopy) {
     fprintf(stderr,
             "Repaint region for copy --- before optimization (area %d,%d,%d,%d, frame %p):\n",
-            rect.x, rect.y, rect.width, rect.height, (void*)aMovingFrame);
+            aUpdateRect.x, aUpdateRect.y, aUpdateRect.width, aUpdateRect.height,
+            (void*)aMovingFrame);
     nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
@@ -1284,8 +1285,7 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   // Optimize for visibility, but frames under aMovingFrame will not be
   // considered opaque, so they don't cover non-moving frames.
   nsRegion visibleRegion(aUpdateRect);
-  visibleRegion.Or(visibleRegion, aUpdateRect - aDelta);
-  list.OptimizeVisibility(&builder, &visibleRegion);
+  list.ComputeVisibility(&builder, &visibleRegion);
 
 #ifdef DEBUG
   if (gDumpRepaintRegionForCopy) {
@@ -1293,6 +1293,17 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
     nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
+
+  // It's possible that there was moving content which was visible but
+  // has now been scrolled out of view so it does not intersect aUpdateRect,
+  // so it's not in our display list. So compute the region that that content
+  // could have occupied --- the complete region that has been scrolled out
+  // of view --- and add it to visibleRegionOfMovingContent.
+  // Note that aRepaintRegion does not depend on moving content which has
+  // been scrolled out of view.
+  nsRegion scrolledOutOfView;
+  scrolledOutOfView.Sub(aUpdateRect, aUpdateRect - aDelta);
+  visibleRegionOfMovingContent.Or(visibleRegionOfMovingContent, scrolledOutOfView);
 
   aRepaintRegion->SetEmpty();
   // Any visible non-moving display items get added to the repaint region
@@ -1304,7 +1315,7 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   // with the moving items taken into account, either on the before-list
   // or the after-list, or even both if we cloned the display lists ... but
   // it's probably not worth it.
-  AddItemsToRegion(&builder, &list, aUpdateRect, rect, aDelta, aRepaintRegion);
+  AddItemsToRegion(&builder, &list, aUpdateRect, aUpdateRect, aDelta, aRepaintRegion);
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
 
@@ -1449,21 +1460,40 @@ nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
   GetAllInFlowBoxes(aFrame, &converter);
 }
 
-struct RectAccumulator : public nsLayoutUtils::RectCallback {
-  nsRect       mResultRect;
-  nsRect       mFirstRect;
-  PRPackedBool mSeenFirstRect;
+nsLayoutUtils::RectAccumulator::RectAccumulator() : mSeenFirstRect(PR_FALSE) {}
 
-  RectAccumulator() : mSeenFirstRect(PR_FALSE) {}
-
-  virtual void AddRect(const nsRect& aRect) {
-    mResultRect.UnionRect(mResultRect, aRect);
-    if (!mSeenFirstRect) {
-      mSeenFirstRect = PR_TRUE;
-      mFirstRect = aRect;
-    }
+void nsLayoutUtils::RectAccumulator::AddRect(const nsRect& aRect) {
+  mResultRect.UnionRect(mResultRect, aRect);
+  if (!mSeenFirstRect) {
+    mSeenFirstRect = PR_TRUE;
+    mFirstRect = aRect;
   }
-};
+}
+
+nsLayoutUtils::RectListBuilder::RectListBuilder(nsClientRectList* aList)
+  : mRectList(aList), mRV(NS_OK) {}
+
+void nsLayoutUtils::RectListBuilder::AddRect(const nsRect& aRect) {
+  nsRefPtr<nsClientRect> rect = new nsClientRect();
+  if (!rect) {
+    mRV = NS_ERROR_OUT_OF_MEMORY;
+    return;
+  }
+
+  rect->SetLayoutRect(aRect);
+  mRectList->Append(rect);
+}
+
+nsIFrame* nsLayoutUtils::GetContainingBlockForClientRect(nsIFrame* aFrame)
+{
+  // get the nearest enclosing SVG foreign object frame or the root frame
+  while (aFrame->GetParent() &&
+         !aFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)) {
+    aFrame = aFrame->GetParent();
+  }
+
+  return aFrame;
+}
 
 nsRect
 nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo) {

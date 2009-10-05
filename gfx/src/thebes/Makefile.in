@@ -44,9 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = gfx
 LIBRARY_NAME = gkgfxthebes
-ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME = gkgfxthb
-endif
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME = nsGfxModule

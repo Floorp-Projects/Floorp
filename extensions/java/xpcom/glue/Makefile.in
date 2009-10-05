@@ -44,9 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= javaxpcomglue
 LIBRARY_NAME	= javaxpcomglue
-ifeq ($(OS_ARCH),OS2)
 SHORT_LIBNAME	= jxpcmglu
-endif
 
 # On Mac OS X, JNI libraries must end with a '.jnilib' extension
 ifeq ($(OS_ARCH),Darwin)

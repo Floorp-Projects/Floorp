@@ -71,6 +71,7 @@
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 #include "nsIWidget.h"
+#include "mozilla/TimeStamp.h"
 
 class nsImageLoader;
 #ifdef IBMBIDI
@@ -1015,6 +1016,8 @@ protected:
 
   PRUint32              mInterruptChecksToSkip;
 
+  mozilla::TimeStamp    mReflowStartTime;
+
   unsigned              mHasPendingInterrupt : 1;
   unsigned              mInterruptsEnabled : 1;
   unsigned              mUseDocumentFonts : 1;
@@ -1174,9 +1177,8 @@ struct nsAutoLayoutPhase {
                      "constructing frames in the middle of a paint");
         NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
                      "constructing frames in the middle of reflow");
-        // Once bug 337957 is fixed this should become an NS_ASSERTION
-        NS_WARN_IF_FALSE(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
-                         "recurring into frame construction");
+        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
+                     "recurring into frame construction");
         NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                      "constructing frames and scripts are not blocked");
         break;

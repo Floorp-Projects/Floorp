@@ -118,7 +118,7 @@ GetViewportOrgEx(HDC hdc, LPPOINT lpPoint)
 static inline bool IsHTMLContent(nsIFrame *frame)
 {
   nsIContent* content = frame->GetContent();
-  return content && content->IsNodeOfType(nsINode::eHTML);
+  return content && content->IsHTML();
 }
 
 nsNativeThemeWin::nsNativeThemeWin() {
@@ -390,7 +390,7 @@ PRBool
 nsNativeThemeWin::IsMenuActive(nsIFrame *aFrame, PRUint8 aWidgetType)
 {
   nsIContent* content = aFrame->GetContent();
-  if (content->IsNodeOfType(nsINode::eXUL) &&
+  if (content->IsXUL() &&
       content->NodeInfo()->Equals(nsWidgetAtoms::richlistitem))
     return CheckBooleanAttr(aFrame, nsWidgetAtoms::selected);
 
@@ -497,7 +497,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
           /* XUL textboxes don't get focused themselves, because they have child
            * html:input.. but we can check the XUL focused attributes on them
            */
-          if (content && content->IsNodeOfType(nsINode::eXUL) && IsFocused(aFrame))
+          if (content && content->IsXUL() && IsFocused(aFrame))
             aState = TFS_EDITBORDER_FOCUSED;
           else if (eventState & NS_EVENT_STATE_ACTIVE || eventState & NS_EVENT_STATE_FOCUS)
             aState = TFS_EDITBORDER_FOCUSED;
@@ -778,7 +778,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     }
     case NS_THEME_DROPDOWN: {
       nsIContent* content = aFrame->GetContent();
-      PRBool isHTML = content && content->IsNodeOfType(nsINode::eHTML);
+      PRBool isHTML = content && content->IsHTML();
 
       /* On vista, in HTML, we use CBP_DROPBORDER instead of DROPFRAME for HTML content;
        * this gives us the thin outline in HTML content, instead of the gradient-filled
@@ -1187,7 +1187,7 @@ RENDER_AGAIN:
   // Draw focus rectangles for XP HTML checkboxes and radio buttons
   // XXX it'd be nice to draw these outside of the frame
   if ((aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO) &&
-      aFrame->GetContent()->IsNodeOfType(nsINode::eHTML) ||
+      aFrame->GetContent()->IsHTML() ||
       aWidgetType == NS_THEME_SCALE_HORIZONTAL ||
       aWidgetType == NS_THEME_SCALE_VERTICAL) {
       PRInt32 contentState;
@@ -1350,7 +1350,7 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
 
   if (aFrame && (aWidgetType == NS_THEME_TEXTFIELD || aWidgetType == NS_THEME_TEXTFIELD_MULTILINE)) {
     nsIContent* content = aFrame->GetContent();
-    if (content && content->IsNodeOfType(nsINode::eHTML)) {
+    if (content && content->IsHTML()) {
       // We need to pad textfields by 1 pixel, since the caret will draw
       // flush against the edge by default if we don't.
       aResult->top++;
@@ -1632,7 +1632,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   // GetPreferredWidgetSize from GetMinimumWidgetSize, so callers can
   // use the one they want.
   if (aWidgetType == NS_THEME_BUTTON &&
-      aFrame->GetContent()->IsNodeOfType(nsINode::eHTML))
+      aFrame->GetContent()->IsHTML())
     sizeReq = 0; /* TS_MIN */
 
   SIZE sz;
@@ -2083,7 +2083,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
           // The down state is flat if the button is focusable
           if (uiData->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL) {
 #ifndef WINCE
-            if (!aFrame->GetContent()->IsNodeOfType(nsINode::eHTML))
+            if (!aFrame->GetContent()->IsHTML())
               aState |= DFCS_FLAT;
 #endif
             aFocused = PR_TRUE;
@@ -2125,7 +2125,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       }
 
       contentState = GetContentState(aFrame, aWidgetType);
-      if (!content->IsNodeOfType(nsINode::eXUL) &&
+      if (!content->IsXUL() &&
           (contentState & NS_EVENT_STATE_FOCUS)) {
         aFocused = PR_TRUE;
       }
@@ -2604,7 +2604,7 @@ RENDER_AGAIN:
 
       // Fill in background
       if (IsDisabled(aFrame) ||
-          (aFrame->GetContent()->IsNodeOfType(nsINode::eXUL) &&
+          (aFrame->GetContent()->IsXUL() &&
            IsReadOnly(aFrame)))
         ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_BTNFACE+1));
       else

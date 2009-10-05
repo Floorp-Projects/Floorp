@@ -1,7 +1,7 @@
 diff --git a/media/liboggplay/include/oggplay/oggplay_seek.h b/media/liboggplay/include/oggplay/oggplay_seek.h
 --- a/media/liboggplay/include/oggplay/oggplay_seek.h
 +++ b/media/liboggplay/include/oggplay/oggplay_seek.h
-@@ -42,15 +42,13 @@
+@@ -53,15 +53,13 @@
  OggPlayErrorCode
  oggplay_seek(OggPlay *me, ogg_int64_t milliseconds);
  
@@ -20,11 +20,11 @@ diff --git a/media/liboggplay/include/oggplay/oggplay_seek.h b/media/liboggplay/
 diff --git a/media/liboggplay/src/liboggplay/oggplay_seek.c b/media/liboggplay/src/liboggplay/oggplay_seek.c
 --- a/media/liboggplay/src/liboggplay/oggplay_seek.c
 +++ b/media/liboggplay/src/liboggplay/oggplay_seek.c
-@@ -75,54 +75,38 @@ oggplay_seek(OggPlay *me, ogg_int64_t mi
-   oggplay_seek_cleanup(me, milliseconds);
+@@ -186,54 +186,39 @@ oggplay_take_out_trash(OggPlay *me, OggP
  
-   return E_OGGPLAY_OK;
- 
+   if (p != NULL) {
+     oggplay_free(p);
+   }
  }
  
  OggPlayErrorCode
@@ -60,7 +60,7 @@ diff --git a/media/liboggplay/src/liboggplay/oggplay_seek.c b/media/liboggplay/s
 -  for (i=0; i<num_tracks; i++) {
 -    serial_nos[i] = me->decode_data[tracks[i]]->serialno;
 -  }
--
+ 
    time = oggz_keyframe_seek_set(me->oggz,
 -                                serial_nos,
 -                                num_tracks,

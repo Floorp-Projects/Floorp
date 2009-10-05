@@ -357,6 +357,7 @@ DWORD nsWindow::WindowStyle()
   /* on CE, WS_OVERLAPPED == WS_BORDER | WS_CAPTION, so don't use OVERLAPPED, just set the
    * separate bits directly for clarity */
   switch (mWindowType) {
+    case eWindowType_plugin:
     case eWindowType_child:
       style = WS_CHILD;
       break;
