@@ -4461,25 +4461,33 @@ PresShell::ClearMouseCapture(nsIView* aView)
       if (doc) {
         nsIPresShell *shell = doc->GetPrimaryShell();
         if (shell) {
+          // not much can happen if frames are being destroyed so just return.
+          if (shell->FrameManager()->IsDestroyingFrames())
+            return;
+
           frame = shell->GetPrimaryFrameFor(gCaptureInfo.mContent);
         }
       }
 
       if (frame) {
         nsIView* view = frame->GetClosestView();
-        while (view) {
-          if (view == aView) {
-            NS_RELEASE(gCaptureInfo.mContent);
-            // the view containing the captured content likely disappeared so
-            // disable capture for now.
-            gCaptureInfo.mAllowed = PR_FALSE;
-            break;
-          }
+        // if there is no view, capturing won't be handled any more, so
+        // just release the capture.
+        if (view) {
+          do {
+            if (view == aView) {
+              NS_RELEASE(gCaptureInfo.mContent);
+              // the view containing the captured content likely disappeared so
+              // disable capture for now.
+              gCaptureInfo.mAllowed = PR_FALSE;
+              break;
+            }
 
-          view = view->GetParent();
+            view = view->GetParent();
+          } while (view);
+          // return if the view wasn't found
+          return;
         }
-        // return if the view wasn't found
-        return;
       }
     }
 
