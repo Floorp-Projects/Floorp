@@ -1,0 +1,10 @@
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>Twitter Search</ShortName>
+  <Description>Realtime Twitter Search</Description>
+  <Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A%2FwD%2FoL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9gHDQMfBlSMJd0AAAHFSURBVDjLjZMxbhRBEEVfdffOjLwWBmmFMJgASDiAA8RhuAEkSARcgAuQcx8CMjAi2cAB8srYlgGvd2a6PsHMjma9gSmpsur%2F6%2F%2F6bfTV5Kw6OzIjIIIZVUrGLZUAXNIqZ%2BZunLViGo3nE8juiiHYrQBIXDp8XbVUwHELs5B4gPNfGwDUEr%2BySMAKyIDJuW4adSRgZsRgpBhtC8CBvy4mBq3gW505jQHv3gJgiIcJ6jarSB1IAggh2Py60R8XEzMM8XnZjgTYAJOA1%2FeqbQkZuBQUCGnYGswwCRBmxiI7C9eNK7jrxypz7k41IlS%2F9nq8lXhaBJ5MwiaAARlx4U5lxlUWb%2B5WHJaJlTQIyIhZjBSj06a1xFqwcLFr8NvFTjCmJu6kCL0kB9KNXIQ%2BBkyAExfHLuYuvjdOMpB7NyCBO66RAWMTH0%2BMwoyjLDB4d77kNJccxEC7ZgdeVmkjSMM6yq0%2BXNS8P7uC2Ju0QSaQsR%2BNLwd77BddDgY73QJv90pe7ZbQeudasFEHiMbP1jlq8qYHADEEiwaf7u%2FwcTblWTJKiVKi6hsXL6rEYRm3JQyBclduG5ZETlz4aEjAo2gUBmX%2F1f8BoQTiSPVwbRoAAAAASUVORK5CYII%3D</Image>
+  <Url type="text/html" method="GET" template="http://search.twitter.com/search">
+    <Param name="q" value="{searchTerms}"/>
+  </Url>
+  <InputEncoding>UTF-8</InputEncoding>
+  <SearchForm>http://search.twitter.com/</SearchForm>
+</SearchPlugin>
