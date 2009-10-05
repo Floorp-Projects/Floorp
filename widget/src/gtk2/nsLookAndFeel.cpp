@@ -43,6 +43,10 @@
 
 #include "gtkdrawing.h"
 
+#ifdef MOZ_PLATFORM_HILDON
+#include "gfxPlatformGtk.h"
+#endif
+
 #define GDK_COLOR_TO_NS_RGB(c) \
     ((nscolor) NS_RGB(c.red>>8, c.green>>8, c.blue>>8))
 
@@ -579,6 +583,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 #ifdef MOZ_PLATFORM_HILDON
         // All Hildon devices are touch-enabled
         aMetric = 1;
+#else
+        aMetric = 0;
+        res = NS_ERROR_NOT_IMPLEMENTED;
+#endif
+        break;
+    case eMetric_MaemoClassic:
+#ifdef MOZ_PLATFORM_HILDON
+        aMetric = gfxPlatformGtk::GetMaemoClassic();
 #else
         aMetric = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;

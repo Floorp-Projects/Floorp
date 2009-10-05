@@ -859,6 +859,11 @@ InitSystemMetrics()
     sSystemMetrics->AppendElement(do_GetAtom("touch-enabled"));
   }
  
+  rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MaemoClassic, metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(do_GetAtom("maemo-classic"));
+  }
+
   return PR_TRUE;
 }
 
