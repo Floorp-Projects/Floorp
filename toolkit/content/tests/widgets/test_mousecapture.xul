@@ -149,6 +149,10 @@ function runTests()
   originalWidth = previousWidth;
   runCaptureTest(frames[1].document.documentElement.lastChild, framesetCallback);
 
+  // ensure that clicking on an element where the frame disappears doesn't crash
+  synthesizeMouse(frames[2].document.getElementById("input"), 8, 8, { type: "mousedown" }, frames[2]);
+  synthesizeMouse(frames[2].document.getElementById("input"), 8, 8, { type: "mouseup" }, frames[2]);
+
   // check to ensure that selection dragging scrolls the right scrollable area
   otherWindow = window.open("data:text/html,<html><p style='margin-top: 4000px'>This is some text</p></html>", "_blank");
   SimpleTest.waitForFocus(selectionScrollCheck, otherWindow);
@@ -247,6 +251,9 @@ SimpleTest.waitForFocus(runTests);
 
   <iframe width="100" height="100"
           src="data:text/html,%3Cframeset cols='50%, 50%'%3E%3Cframe src='about:blank'%3E%3Cframe src='about:blank'%3E%3C/frameset%3E"/>
+
+  <iframe width="100" height="100"
+          src="data:text/html,%3Cinput id='input' onfocus='this.style.display = &quot;none&quot;' style='float: left;'"/>
 </hbox>
 
 <body id="body" xmlns="http://www.w3.org/1999/xhtml">
