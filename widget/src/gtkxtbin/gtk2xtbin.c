@@ -418,7 +418,7 @@ gtk_xtbin_resize (GtkWidget *widget,
   xtbin->height = height;
   xtbin->width  = width;
 
-  // Avoid BadValue errors in XtSetValues
+  /* Avoid BadValue errors in XtSetValues */
   if (height <= 0 || width <=0) {
     height = 1;
     width = 1;
