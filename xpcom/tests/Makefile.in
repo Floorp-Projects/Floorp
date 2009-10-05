@@ -61,6 +61,7 @@ endif
 CPPSRCS		= \
 		nsIFileEnumerator.cpp \
 		TestCallTemplates.cpp \
+		TestCatManPersistency.cpp \
 		TestINIParser.cpp \
 		TestRacingServiceManager.cpp \
 		TestRegistrationOrder.cpp \
@@ -207,3 +208,14 @@ check::
 	regOrderDir="$(call getnativepath,$(abs_srcdir)/regorder)";	\
 	XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
 	  $(DIST)/bin/TestRegistrationOrder$(BIN_SUFFIX) "$$regOrderDir"
+	@echo "Running TestCatManPersistency tests"
+	@XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
+	  $(DIST)/bin/TestCatManPersistency$(BIN_SUFFIX) 1
+	@XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
+	  $(DIST)/bin/TestCatManPersistency$(BIN_SUFFIX) 2
+	@XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
+	  $(DIST)/bin/TestCatManPersistency$(BIN_SUFFIX) 3
+	@XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
+	  $(DIST)/bin/TestCatManPersistency$(BIN_SUFFIX) 4
+	@XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
+	  $(DIST)/bin/TestCatManPersistency$(BIN_SUFFIX) 5
