@@ -129,6 +129,8 @@ public:
       mCompatMode(eCompatibility_FullStandards),
       mIsInitialDocumentInWindow(PR_FALSE),
       mMayStartLayout(PR_TRUE),
+      mVisible(PR_TRUE),
+      mRemovedFromDocShell(PR_FALSE),
       // mAllowDNSPrefetch starts true, so that we can always reliably && it
       // with various values that might disable it.  Since we never prefetch
       // unless we get a window, and in that case the docshell value will get
@@ -1120,6 +1122,16 @@ public:
    * called yet.
    */
   PRBool IsShowing() { return mIsShowing; }
+  /**
+   * Return whether the document is currently visible (in the sense of
+   * OnPageHide having been called and OnPageShow not yet having been called)
+   */
+  PRBool IsVisible() { return mVisible; }
+  /**
+   * Return true when this document is active, i.e., the active document
+   * in a content viewer.
+   */
+  PRBool IsActive() { return mDocumentContainer && !mRemovedFromDocShell; }
 
   void RegisterFreezableElement(nsIContent* aContent);
   PRBool UnregisterFreezableElement(nsIContent* aContent);
@@ -1280,6 +1292,15 @@ protected:
 
   // True iff IsShowing() should be returning true
   PRPackedBool mIsShowing;
+
+  // True iff the document "page" is not hidden (i.e. currently in the
+  // bfcache)
+  PRPackedBool mVisible;
+
+  // True if our content viewer has been removed from the docshell
+  // (it may still be displayed, but in zombie state). Form control data
+  // has been saved.
+  PRPackedBool mRemovedFromDocShell;
 
   // True iff DNS prefetch is allowed for this document.  Note that if the
   // document has no window, DNS prefetch won't be performed no matter what.
