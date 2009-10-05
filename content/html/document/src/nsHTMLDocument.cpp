@@ -274,10 +274,8 @@ nsHTMLDocument::Init()
   nsresult rv = nsDocument::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Now reset the case-sensitivity of the CSSLoader, since we default
-  // to being HTML, not XHTML.  Also, reset the compatibility mode to
-  // match our compat mode.
-  CSSLoader()->SetCaseSensitive(!IsHTML());
+  // Now reset the compatibility mode of the CSSLoader
+  // to match our compat mode.
   CSSLoader()->SetCompatibilityMode(mCompatMode);
 
   PrePopulateIdentifierMap();
@@ -682,7 +680,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 #endif
 
-  CSSLoader()->SetCaseSensitive(!IsHTML());
   CSSLoader()->SetCompatibilityMode(mCompatMode);
   
   PRBool needsParser = PR_TRUE;
@@ -1586,7 +1583,7 @@ nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
   // body.
   if (!newBody || !(newBody->Tag() == nsGkAtoms::body ||
                     newBody->Tag() == nsGkAtoms::frameset) ||
-      !root || !root->IsNodeOfType(nsINode::eHTML) ||
+      !root || !root->IsHTML() ||
       root->Tag() != nsGkAtoms::html) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
@@ -1796,7 +1793,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   if (!IsHTML()) {
     // No calling document.open() on XHTML
 
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
   PRBool loadAsHtml5 = nsHtml5Module::sEnabled;
@@ -2056,7 +2053,7 @@ nsHTMLDocument::Close()
   if (!IsHTML()) {
     // No calling document.close() on XHTML!
 
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
   nsresult rv = NS_OK;
@@ -2121,7 +2118,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
   if (!IsHTML()) {
     // No calling document.write*() on XHTML!
 
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
   nsresult rv = NS_OK;
@@ -2747,7 +2744,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 
   nsIContent *e = entry->GetIdContent();
 
-  if (e && e->IsNodeOfType(nsINode::eHTML)) {
+  if (e && e->IsHTML()) {
     nsIAtom *tag = e->Tag();
 
     if ((tag == nsGkAtoms::embed  ||

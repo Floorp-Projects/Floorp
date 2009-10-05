@@ -128,8 +128,11 @@ nsWifiMonitor::DoScan()
   if (!iwlib_handle) {
     iwlib_handle = dlopen("libiw.so.29", RTLD_NOW);
     if (!iwlib_handle) {
-      LOG(("Could not load libiw\n"));
-      return NS_ERROR_NOT_AVAILABLE;
+      iwlib_handle = dlopen("libiw.so.30", RTLD_NOW);
+      if (!iwlib_handle) {
+        LOG(("Could not load libiw\n"));
+        return NS_ERROR_NOT_AVAILABLE;
+      }
     }
   }
   else {

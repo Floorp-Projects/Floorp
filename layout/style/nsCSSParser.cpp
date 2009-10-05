@@ -161,8 +161,6 @@ public:
 
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
 
-  NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive);
-
   NS_IMETHOD SetQuirkMode(PRBool aQuirkMode);
 
 #ifdef  MOZ_SVG
@@ -625,9 +623,6 @@ protected:
   // ignore CSS comments.
   PRPackedBool mHTMLMediaMode : 1;
 
-  // True if tagnames and attributes are case-sensitive
-  PRPackedBool  mCaseSensitive : 1;
-
   // This flag is set when parsing a non-box shorthand; it's used to not apply
   // some quirks during shorthand parsing
   PRPackedBool  mParsingCompoundProperty : 1;
@@ -728,7 +723,6 @@ CSSParserImpl::CSSParserImpl()
     mNavQuirkMode(PR_FALSE),
     mUnsafeRulesEnabled(PR_FALSE),
     mHTMLMediaMode(PR_FALSE),
-    mCaseSensitive(PR_FALSE),
     mParsingCompoundProperty(PR_FALSE),
     mUnresolvablePrefixException(PR_FALSE)
 #ifdef DEBUG
@@ -759,14 +753,6 @@ CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CSSParserImpl::SetCaseSensitive(PRBool aCaseSensitive)
-{
-  NS_ASSERTION(aCaseSensitive == PR_TRUE || aCaseSensitive == PR_FALSE, "bad PRBool value");
-  mCaseSensitive = aCaseSensitive;
   return NS_OK;
 }
 
@@ -2709,7 +2695,7 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
       if (eCSSToken_Ident == mToken.mType) {  // element name
         aDataMask |= SEL_MASK_ELEM;
 
-        aSelector.SetTag(mToken.mIdent, mCaseSensitive);
+        aSelector.SetTag(mToken.mIdent);
       }
       else if (mToken.IsSymbol('*')) {  // universal selector
         aDataMask |= SEL_MASK_ELEM;
@@ -2747,8 +2733,7 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
       }
       if (eCSSToken_Ident == mToken.mType) {  // element name
         aDataMask |= SEL_MASK_ELEM;
-       
-        aSelector.SetTag(mToken.mIdent, mCaseSensitive);
+        aSelector.SetTag(mToken.mIdent);
       }
       else if (mToken.IsSymbol('*')) {  // universal selector
         aDataMask |= SEL_MASK_ELEM;
@@ -2762,7 +2747,7 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
     }
     else {  // was element name
       SetDefaultNamespaceOnSelector(aSelector);
-      aSelector.SetTag(buffer, mCaseSensitive);
+      aSelector.SetTag(buffer);
 
       aDataMask |= SEL_MASK_ELEM;
     }
@@ -2781,7 +2766,7 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
     }
     if (eCSSToken_Ident == mToken.mType) {  // element name
       aDataMask |= SEL_MASK_ELEM;
-      aSelector.SetTag(mToken.mIdent, mCaseSensitive);
+      aSelector.SetTag(mToken.mIdent);
     }
     else if (mToken.IsSymbol('*')) {  // universal selector
       aDataMask |= SEL_MASK_ELEM;
@@ -2883,9 +2868,6 @@ CSSParserImpl::ParseAttributeSelector(PRInt32&       aDataMask,
     return eSelectorParsingStatus_Error;
   }
 
-  if (! mCaseSensitive) {
-    ToLowerCase(attr);
-  }
   if (! GetToken(PR_TRUE)) { // premature EOF
     REPORT_UNEXPECTED_EOF(PEAttSelInnerEOF);
     return eSelectorParsingStatus_Error;
@@ -2939,11 +2921,12 @@ CSSParserImpl::ParseAttributeSelector(PRInt32&       aDataMask,
         if (mToken.IsSymbol(']')) {
           PRBool isCaseSensitive = PR_TRUE;
 
-          // If we're parsing a style sheet for an HTML document, and
-          // the attribute selector is for a non-namespaced attribute,
-          // then check to see if it's one of the known attributes whose
-          // VALUE is case-insensitive.
-          if (!mCaseSensitive && nameSpaceID == kNameSpaceID_None) {
+          // For cases when this style sheet is applied to an HTML
+          // element in an HTML document, and the attribute selector is
+          // for a non-namespaced attribute, then check to see if it's
+          // one of the known attributes whose VALUE is
+          // case-insensitive.
+          if (nameSpaceID == kNameSpaceID_None) {
             static const char* caseInsensitiveHTMLAttribute[] = {
               // list based on http://www.w3.org/TR/html4/
               "lang",
@@ -4708,13 +4691,7 @@ CSSParserImpl::ParseAttr(nsCSSValue& aValue)
             return PR_FALSE;
           }
           if (eCSSToken_Ident == mToken.mType) {
-            if (mCaseSensitive) {
-              attr.Append(mToken.mIdent);
-            } else {
-              nsAutoString buffer;
-              ToLowerCase(mToken.mIdent, buffer);
-              attr.Append(buffer);
-            }
+            attr.Append(mToken.mIdent);
           }
           else {
             REPORT_UNEXPECTED_TOKEN(PEAttributeNameExpected);
@@ -4723,12 +4700,7 @@ CSSParserImpl::ParseAttr(nsCSSValue& aValue)
           }
         }
         else {  // no namespace
-          if (mCaseSensitive) {
-            attr = holdIdent;
-          }
-          else {
-            ToLowerCase(holdIdent, attr);
-          }
+          attr = holdIdent;
         }
       }
       else if (mToken.IsSymbol('*')) {  // namespace wildcard
@@ -4743,13 +4715,7 @@ CSSParserImpl::ParseAttr(nsCSSValue& aValue)
           return PR_FALSE;
         }
         if (eCSSToken_Ident == mToken.mType) {
-          if (mCaseSensitive) {
-            attr.Append(mToken.mIdent);
-          } else {
-            nsAutoString buffer;
-            ToLowerCase(mToken.mIdent, buffer);
-            attr.Append(buffer);
-          }
+          attr.Append(mToken.mIdent);
         }
         else {
           REPORT_UNEXPECTED_TOKEN(PEAttributeNameExpected);
@@ -5944,6 +5910,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_ime_mode:
     return ParseVariant(aValue, VARIANT_AHK | VARIANT_NORMAL,
                         nsCSSProps::kIMEModeKTable);
+  case eCSSProperty__moz_tab_size:
+    return ParseNonNegativeVariant(aValue, VARIANT_HI, nsnull);
   case eCSSProperty_letter_spacing:
   case eCSSProperty_word_spacing:
     return ParseVariant(aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);

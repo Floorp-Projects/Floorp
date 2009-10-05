@@ -113,4 +113,11 @@ int32_t pluginGetClipRegionRectCount(InstanceData* instanceData);
 int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData, 
     int32_t rectIndex, RectEdge edge);
 
+/**
+ * Check that the platform-specific plugin state is internally consistent.
+ * Just return if everything is OK, otherwise append error messages
+ * to 'error' separated by \n.
+ */
+void pluginDoInternalConsistencyCheck(InstanceData* instanceData, string& error);
+
 #endif // nptest_platform_h_

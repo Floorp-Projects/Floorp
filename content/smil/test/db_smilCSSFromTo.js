@@ -1,0 +1,428 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 sts=2 et: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla SMIL Test Code.
+ *
+ * The Initial Developer of the Original Code is the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Daniel Holbert <dholbert@mozilla.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* testcase data for simple "from-to" animations of CSS properties */
+
+// NOTE: This js file requires db_smilCSSPropertyList.js
+
+// NOTE: I'm Including 'inherit' and 'currentColor' as interpolatable values.
+// According to SVG Mobile 1.2 section 16.2.9, "keywords such as inherit which
+// yield a numeric computed value may be included in the values list for an
+// interpolated animation".
+
+// Path of test URL (stripping off final slash + filename), for use in
+// generating computed value of 'cursor' property
+var _testPath = document.URL.substring(0, document.URL.lastIndexOf('/'));
+
+// Lists of testcases for re-use across multiple properties of the same type
+var _fromToTestLists = {
+  color: [
+    new AnimTestcaseFromTo("rgb(100, 100, 100)", "rgb(200, 200, 200)",
+                           { midComp: "rgb(150, 150, 150)" }),
+    new AnimTestcaseFromTo("#F02000", "#0080A0",
+                           { fromComp: "rgb(240, 32, 0)",
+                             midComp: "rgb(120, 80, 80)",
+                             toComp: "rgb(0, 128, 160)" }),
+    new AnimTestcaseFromTo("crimson", "lawngreen",
+                           { fromComp: "rgb(220, 20, 60)",
+                             midComp: "rgb(172, 136, 30)",
+                             toComp: "rgb(124, 252, 0)" }),
+    new AnimTestcaseFromTo("currentColor", "rgb(100, 100, 100)",
+                           { fromComp: "rgb(50, 50, 50)",
+                             midComp: "rgb(75, 75, 75)" }),
+  ],
+  colorFromInheritBlack: [
+   new AnimTestcaseFromTo("inherit", "rgb(200, 200, 200)",
+                          { fromComp: "rgb(0, 0, 0)",
+                            midComp: "rgb(100, 100, 100)" }),
+  ],
+  colorFromInheritWhite: [
+  new AnimTestcaseFromTo("inherit", "rgb(205, 205, 205)",
+                         { fromComp: "rgb(255, 255, 255)",
+                           midComp: "rgb(230, 230, 230)" }),
+  ],
+  paintServer: [
+    new AnimTestcaseFromTo("none", "blue", { toComp : "rgb(0, 0, 255)" }),
+    new AnimTestcaseFromTo("rgb(50, 50, 50)", "none"),
+    new AnimTestcaseFromTo("url(#gradA)", "url(#gradB) currentColor",
+                           { fromComp: "url(\"" + document.URL +
+                                       "#gradA\") rgb(0, 0, 0)",
+                             toComp: "url(\"" + document.URL +
+                                     "#gradB\") rgb(50, 50, 50)" },
+                           "need support for URI-based paints"),
+    new AnimTestcaseFromTo("url(#gradA) orange", "url(#gradB)",
+                           { fromComp: "url(\"" + document.URL +
+                                       "#gradA\") rgb(255, 165, 0)",
+                             toComp: "url(\"" + document.URL +
+                                     "#gradB\") rgb(0, 0, 0)" },
+                           "need support for URI-based paints"),
+    new AnimTestcaseFromTo("url(#no_grad)", "url(#gradB)",
+                           { fromComp: "url(\"" + document.URL +
+                                      "#no_grad\") " + "rgb(0, 0, 0)",
+                             toComp: "url(\"" + document.URL +
+                                     "#gradB\") rgb(0, 0, 0)" },
+                           "need support for URI-based paints"),
+    new AnimTestcaseFromTo("url(#no_grad) rgb(1,2,3)", "url(#gradB) blue",
+                           { fromComp: "url(\"" + document.URL +
+                                       "#no_grad\") " + "rgb(1, 2, 3)",
+                             toComp: "url(\"" + document.URL +
+                                     "#gradB\") rgb(0, 0, 255)" },
+                           "need support for URI-based paints"),
+  ],
+  lengthPx: [
+    new AnimTestcaseFromTo("10px", "20px", { midComp: "15px"}),
+    new AnimTestcaseFromTo("41px", "1px", { midComp: "21px"}),
+  ],
+  lengthPctSVG: [
+    new AnimTestcaseFromTo("20.5%", "0.5%", { midComp: "10.5%" }),
+  ],
+  lengthPxPctSVG: [
+    new AnimTestcaseFromTo("10px", "10%", { midComp: "15px"},
+                           "need support for interpolating between " +
+                           "px and percent values"),
+  ],
+  opacity: [
+    new AnimTestcaseFromTo("1", "0", { midComp: "0.5" }),
+    new AnimTestcaseFromTo("0.2", "0.12", { midComp: "0.16" }),
+    new AnimTestcaseFromTo("0.5", "0.7", { midComp: "0.6" }),
+    new AnimTestcaseFromTo("0.5", "inherit",
+                           { midComp: "0.75", toComp: "1" }),
+    // Make sure we don't clamp out-of-range values before interpolation
+    new AnimTestcaseFromTo("0.2", "1.2",
+                           { midComp: "0.7", toComp: "1" },
+                           "opacities with abs val >1 get clamped too early"),
+    new AnimTestcaseFromTo("-0.2", "0.6",
+                           { fromComp: "0", midComp: "0.2" }),
+    new AnimTestcaseFromTo("-1.2", "1.6",
+                           { fromComp: "0", midComp: "0.2", toComp: "1" },
+                           "opacities with abs val >1 get clamped too early"),
+    new AnimTestcaseFromTo("-0.6", "1.4",
+                           { fromComp: "0", midComp: "0.4", toComp: "1" },
+                           "opacities with abs val >1 get clamped too early"),
+  ],
+  URIsAndNone: [
+    new AnimTestcaseFromTo("url(#idA)", "url(#idB)",
+                           { fromComp: "url(\"" + document.URL + "#idA\")",
+                             toComp: "url(\"" + document.URL + "#idB\")"},
+                           "need support for URI values"),
+    new AnimTestcaseFromTo("none", "url(#idB)",
+                           { toComp: "url(\"" + document.URL + "#idB\")"},
+                           "need support for URI values"),
+    new AnimTestcaseFromTo("url(#idB)", "inherit",
+                           { fromComp: "url(\"" + document.URL + "#idB\")",
+                             toComp: "none"},
+                           "need support for URI values"),
+  ],
+};
+
+// List of attribute/testcase-list bundles to be tested
+var gFromToBundles = [
+  new TestcaseBundle(gPropList.clip, [
+    // XXXdholbert Add more rect-valued testcases once we support rect values
+    new AnimTestcaseFromTo("rect(1px, 2px, 3px, 4px)",
+                           "rect(11px, 22px, 33px, 44px)",
+                           { midComp: "rect(6px, 12px, 18px, 24px)" }),
+  ], "need support for rect() values"),
+  new TestcaseBundle(gPropList.clip_path, _fromToTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.clip_rule, [
+    new AnimTestcaseFromTo("nonzero", "evenodd"),
+    new AnimTestcaseFromTo("evenodd", "inherit", { toComp: "nonzero" }),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.color,
+                     [].concat(_fromToTestLists.color, [
+    // Note: inherited value is rgb(50, 50, 50) (set on <svg>)
+    new AnimTestcaseFromTo("inherit", "rgb(200, 200, 200)",
+                           { fromComp: "rgb(50, 50, 50)",
+                             midComp: "rgb(125, 125, 125)" }),
+  ])),
+  new TestcaseBundle(gPropList.color_interpolation, [
+    new AnimTestcaseFromTo("sRGB", "auto", { fromComp: "srgb" }),
+    new AnimTestcaseFromTo("inherit", "linearRGB",
+                         { fromComp: "srgb", toComp: "linearrgb" }),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.color_interpolation_filters, [
+    new AnimTestcaseFromTo("sRGB", "auto", { fromComp: "srgb" }),
+    new AnimTestcaseFromTo("auto", "inherit",
+                         { toComp: "linearrgb" }),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.cursor, [
+    new AnimTestcaseFromTo("crosshair", "move"),
+    new AnimTestcaseFromTo("url('a.cur'), url('b.cur'), nw-resize", "sw-resize",
+                           { fromComp: "url(\"" + _testPath + "/a.cur\"), " +
+                                       "url(\"" + _testPath + "/b.cur\"), " +
+                                       "nw-resize"})
+  ], "need support for CSS value-lists and URI values"),
+  new TestcaseBundle(gPropList.direction, [
+    new AnimTestcaseFromTo("ltr", "rtl"),
+    new AnimTestcaseFromTo("rtl", "inherit"),
+  ]),
+  new TestcaseBundle(gPropList.display, [
+    // I'm not testing the "inherit" value for "display", because part of
+    // my test runs with "display: none" on everything, and so the
+    // inherited value isn't always the same.  (i.e. the computed value
+    // of 'inherit' will be different in different tests)
+    new AnimTestcaseFromTo("block", "table-cell", {}),
+    new AnimTestcaseFromTo("inline", "inline-table", {}),
+    new AnimTestcaseFromTo("table-row", "none", {}),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.dominant_baseline, [
+    new AnimTestcaseFromTo("use-script", "no-change"),
+    new AnimTestcaseFromTo("reset-size", "ideographic"),
+    new AnimTestcaseFromTo("text-after-edge", "text-before-edge"),
+  ], "need support for enumerated values"),
+  // NOTE: Mozilla doesn't currently support "enable-background", but I'm
+  // testing it here in case we ever add support for it, because it's
+  // explicitly not animatable in the SVG spec.
+  new TestcaseBundle(gPropList.enable_background, [
+    new AnimTestcaseFromTo("new", "accumulate"),
+  ]),
+  new TestcaseBundle(gPropList.fill,
+                     [].concat(_fromToTestLists.color,
+                               _fromToTestLists.paintServer,
+                               _fromToTestLists.colorFromInheritBlack)),
+  new TestcaseBundle(gPropList.fill_opacity, _fromToTestLists.opacity,
+                     "need support for float values"),
+  new TestcaseBundle(gPropList.fill_rule, [
+    new AnimTestcaseFromTo("nonzero", "evenodd"),
+    new AnimTestcaseFromTo("evenodd", "inherit", { toComp: "nonzero" }),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.filter, _fromToTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.flood_color,
+                     [].concat(_fromToTestLists.color,
+                               _fromToTestLists.colorFromInheritBlack)),
+  new TestcaseBundle(gPropList.flood_opacity, _fromToTestLists.opacity,
+                     "need support for float values"),
+  new TestcaseBundle(gPropList.font, [
+    // NOTE: 'line-height' is hard-wired at 10px in test_smilCSSFromTo.xhtml
+    // because if it's not explicitly set, its value varies across platforms.
+    // NOTE: System font values can't be tested here, because their computed
+    // values vary from platform to platform.  However, they are tested
+    // visually, in the reftest "anim-css-font-1.svg"
+    new AnimTestcaseFromTo("10px serif", "30px serif",
+                           { fromComp: "normal normal 400 10px / 10px serif",
+                             toComp: "normal normal 400 30px / 10px serif"}),
+    new AnimTestcaseFromTo("10px serif", "30px sans-serif",
+                         { fromComp: "normal normal 400 10px / 10px serif",
+                          toComp: "normal normal 400 30px / 10px sans-serif"}),
+    new AnimTestcaseFromTo("1px / 90px cursive", "100px monospace",
+                         { fromComp: "normal normal 400 1px / 10px cursive",
+                           toComp: "normal normal 400 100px / 10px monospace"}),
+    new AnimTestcaseFromTo("italic small-caps 200 1px cursive",
+                           "100px monospace",
+                        { fromComp: "italic small-caps 200 1px / 10px cursive",
+                          toComp: "normal normal 400 100px / 10px monospace"}),
+    new AnimTestcaseFromTo("oblique normal 200 30px / 10px cursive",
+                           "normal small-caps 800 40px / 10px serif"),
+  ], "need support for 'font' shorthand"),
+  new TestcaseBundle(gPropList.font_family, [
+    new AnimTestcaseFromTo("serif", "sans-serif"),
+    new AnimTestcaseFromTo("cursive", "monospace"),
+  ], "need support for all properties that get stored in nsFont"),
+  new TestcaseBundle(gPropList.font_size,
+                     [].concat(_fromToTestLists.lengthPx, [
+    new AnimTestcaseFromTo("10px", "40%", { midComp: "15px", toComp: "20px" }),
+    new AnimTestcaseFromTo("160%", "80%",
+                           { fromComp: "80px",
+                             midComp: "60px",
+                             toComp: "40px"}),
+  ])),
+  new TestcaseBundle(gPropList.font_size_adjust, [
+    new AnimTestcaseFromTo("0.9", "0.1", { midComp: "0.5" }),
+    new AnimTestcaseFromTo("0.5", "0.6", { midComp: "0.55" }),
+    new AnimTestcaseFromTo("none", "0.4"),
+  ], "need support for all properties that get stored in nsFont"),
+  new TestcaseBundle(gPropList.font_stretch, [
+    new AnimTestcaseFromTo("normal", "wider"),
+    new AnimTestcaseFromTo("narrower", "ultra-condensed"),
+    new AnimTestcaseFromTo("extra-condensed", "condensed"),
+    new AnimTestcaseFromTo("semi-condensed", "semi-expanded"),
+    new AnimTestcaseFromTo("expanded", "extra-expanded"),
+    new AnimTestcaseFromTo("ultra-expanded", "inherit", { toComp: "normal" }),
+  ], "need support for all properties that get stored in nsFont"),
+  new TestcaseBundle(gPropList.font_style, [
+    new AnimTestcaseFromTo("normal", "italic"),
+    new AnimTestcaseFromTo("italic", "oblique"),
+  ], "need support for all properties that get stored in nsFont"),
+  new TestcaseBundle(gPropList.font_variant, [
+    new AnimTestcaseFromTo("inherit", "small-caps", { fromComp: "normal" }),
+  ], "need support for all properties that get stored in nsFont"),
+  new TestcaseBundle(gPropList.font_weight, [
+    new AnimTestcaseFromTo("100", "900"),
+    new AnimTestcaseFromTo("700", "100",
+                           // Note that '700' ends up as "bold" in computed
+                           // style (not the other way around)
+                           { fromComp: "bold" }),
+    new AnimTestcaseFromTo("inherit", "200",
+                           { fromComp: "400" }),
+    new AnimTestcaseFromTo("normal", "bold",
+                           { fromComp: "400" }),
+  ], "need support for all properties that get stored in nsFont"),
+  // NOTE: Mozilla doesn't currently support "glyph-orientation-horizontal" or
+  // "glyph-orientation-vertical", but I'm testing them here in case we ever
+  // add support for them, because they're explicitly not animatable in the SVG
+  // spec.
+  new TestcaseBundle(gPropList.glyph_orientation_horizontal,
+                     [ new AnimTestcaseFromTo("45deg", "60deg") ]),
+  new TestcaseBundle(gPropList.glyph_orientation_vertical,
+                     [ new AnimTestcaseFromTo("45deg", "60deg") ]),
+  new TestcaseBundle(gPropList.image_rendering, [
+    new AnimTestcaseFromTo("auto", "optimizeQuality",
+                           { toComp: "optimizequality" }),
+    new AnimTestcaseFromTo("optimizeQuality", "optimizeSpeed",
+                           { fromComp: "optimizequality",
+                             toComp: "optimizespeed" }),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.letter_spacing,
+                     [].concat(_fromToTestLists.lengthPx,
+                               _fromToTestLists.lengthPxPctSVG)),
+  new TestcaseBundle(gPropList.letter_spacing,
+                     _fromToTestLists.lengthPctSVG,
+                     "pct->pct animations don't currently work for " +
+                     "*-spacing properties"),
+  new TestcaseBundle(gPropList.lighting_color,
+                     [].concat(_fromToTestLists.color,
+                               _fromToTestLists.colorFromInheritWhite)),
+  new TestcaseBundle(gPropList.marker, _fromToTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.marker_end, _fromToTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.marker_mid, _fromToTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.marker_start, _fromToTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.mask, _fromToTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.opacity, _fromToTestLists.opacity,
+                     "need support for float values"),
+  new TestcaseBundle(gPropList.overflow, [
+    new AnimTestcaseFromTo("auto", "visible"),
+    new AnimTestcaseFromTo("scroll", "auto"),
+  ], "need support for 'overflow' shorthand"),
+  new TestcaseBundle(gPropList.pointer_events, [
+    new AnimTestcaseFromTo("visibleFill", "stroke",
+                           { fromComp: "visiblefill" }),
+    new AnimTestcaseFromTo("none", "visibleStroke",
+                           { toComp: "visiblestroke" }),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.shape_rendering, [
+    new AnimTestcaseFromTo("auto", "optimizeSpeed",
+                           { toComp: "optimizespeed" }),
+    new AnimTestcaseFromTo("crispEdges", "geometricPrecision",
+                           { fromComp: "crispedges",
+                             toComp: "geometricprecision" }),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.stop_color,
+                        [].concat(_fromToTestLists.color,
+                                  _fromToTestLists.colorFromInheritBlack)),
+  new TestcaseBundle(gPropList.stop_opacity, _fromToTestLists.opacity,
+                     "need support for float values"),
+  new TestcaseBundle(gPropList.stroke,
+                     [].concat(_fromToTestLists.color,
+                               _fromToTestLists.paintServer, [
+     // Note: inherited value is "none" (the default for "stroke" property)
+     new AnimTestcaseFromTo("inherit", "rgb(200, 200, 200)",
+                            { fromComp: "none"})])),
+  new TestcaseBundle(gPropList.stroke_dasharray,
+                     [].concat(_fromToTestLists.lengthPx,
+                               _fromToTestLists.lengthPxPctSVG,
+                               _fromToTestLists.lengthPctSVG,
+                               [
+    new AnimTestcaseFromTo("10px", "20px"),
+    new AnimTestcaseFromTo("1px, 5px", "1px"),
+    new AnimTestcaseFromTo("1px, 15px", "1px, 2px, 3px, 4px, 5px"),
+  ]), "need support for CSS value-lists"),
+  new TestcaseBundle(gPropList.stroke_dashoffset,
+                     [].concat(_fromToTestLists.lengthPx,
+                               _fromToTestLists.lengthPxPctSVG,
+                               _fromToTestLists.lengthPctSVG)),
+  new TestcaseBundle(gPropList.stroke_linecap, [
+    new AnimTestcaseFromTo("butt", "round"),
+    new AnimTestcaseFromTo("round", "square"),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.stroke_linejoin, [
+    new AnimTestcaseFromTo("miter", "round"),
+    new AnimTestcaseFromTo("round", "bevel"),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.stroke_miterlimit, [
+    new AnimTestcaseFromTo("1", "2", { midComp: "1.5" }),
+    new AnimTestcaseFromTo("20.1", "10.1", { midComp: "15.1" }),
+  ], "need support for float values"),
+  new TestcaseBundle(gPropList.stroke_opacity, _fromToTestLists.opacity,
+                     "need support for float values"),
+  new TestcaseBundle(gPropList.stroke_width,
+                     [].concat(_fromToTestLists.lengthPx,
+                               _fromToTestLists.lengthPxPctSVG,
+                               _fromToTestLists.lengthPctSVG, [
+    new AnimTestcaseFromTo("inherit", "7px",
+                           { fromComp: "1px", midComp: "4px"}),
+  ])),
+  new TestcaseBundle(gPropList.text_anchor, [
+    new AnimTestcaseFromTo("start", "middle"),
+    new AnimTestcaseFromTo("middle", "end"),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.text_decoration, [
+    new AnimTestcaseFromTo("none", "underline"),
+    new AnimTestcaseFromTo("overline", "line-through"),
+    new AnimTestcaseFromTo("blink", "underline"),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.text_rendering, [
+    new AnimTestcaseFromTo("auto", "optimizeSpeed",
+                           { toComp: "optimizespeed" }),
+    new AnimTestcaseFromTo("optimizeSpeed", "geometricPrecision",
+                           { fromComp: "optimizespeed",
+                             toComp: "geometricprecision" }),
+    new AnimTestcaseFromTo("geometricPrecision", "optimizeLegibility",
+                           { fromComp: "geometricprecision",
+                             toComp: "optimizelegibility" }),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.unicode_bidi, [
+    new AnimTestcaseFromTo("embed", "bidi-override"),
+  ]),
+  new TestcaseBundle(gPropList.visibility, [
+    new AnimTestcaseFromTo("visible", "hidden"),
+    new AnimTestcaseFromTo("hidden", "collapse"),
+  ], "need support for enumerated values"),
+  new TestcaseBundle(gPropList.word_spacing,
+                     [].concat(_fromToTestLists.lengthPx,
+                               _fromToTestLists.lengthPxPctSVG)),
+  new TestcaseBundle(gPropList.word_spacing,
+                     _fromToTestLists.lengthPctSVG,
+                     "pct->pct animations don't currently work for " +
+                     "*-spacing properties"),
+  // NOTE: Mozilla doesn't currently support "writing-mode", but I'm
+  // testing it here in case we ever add support for it, because it's
+  // explicitly not animatable in the SVG spec.
+  new TestcaseBundle(gPropList.writing_mode, [
+    new AnimTestcaseFromTo("lr", "rl"),
+  ]),
+];

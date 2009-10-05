@@ -106,6 +106,15 @@ public:
                                   PRUint32 aFlags = 0,
                                   PRBool* aIsMedia = nsnull);
 
+  /*
+   * This method checks whether the given string looks like a negative number.
+   * Specifically, it checks whether the string looks matches the pattern
+   * "[whitespace]*-[numeral].*" If the string matches this pattern, this
+   * method returns the index of the first character after the '-' sign
+   * (i.e. the index of the absolute value).  If not, this method returns -1.
+   */
+  static PRInt32 CheckForNegativeNumber(const nsAString& aStr);
+
 private:
   static void   SkipWsp(nsACString::const_iterator& aIter,
                         const nsACString::const_iterator& aIterEnd);

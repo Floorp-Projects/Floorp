@@ -204,23 +204,24 @@ toolbarseparator {
   -moz-box-orient: vertical;
   -moz-box-align: center;
   font: menu;
-  text-shadow: rgba(255, 255, 255, 0.4) 0 1px;
+  text-shadow: @loweredShadow@;
   margin: 4px 0 9px;
-  padding: 1px 4px 0;
-  border: 1px solid rgba(0, 0, 0, 0.6);
-  -moz-border-radius: 3px;
-  -moz-box-shadow: rgba(255, 255, 255, 0.4) 0 1px;
-  background: -moz-linear-gradient(top, bottom, from(#FFF), to(#B4B4B4)) repeat-x;
+  padding: 0 4px;
+  border: 1px solid @toolbarbuttonBorderColor@;
+  -moz-border-radius: @toolbarbuttonCornerRadius@;
+  -moz-box-shadow: @loweredShadow@;
+  background: @toolbarbuttonBackground@;
+  -moz-background-origin: border;
 }
 
 #Console\:clear:active:hover {
-  background: #B5B5B5;
-  text-shadow: rgba(255, 255, 255, 0.4) 0 1px;
-  -moz-box-shadow: inset rgba(0, 0, 0, 0.4) 0 -6px 14px, inset rgba(0, 0, 0, 1) 0 1px 4px, rgba(255, 255, 255, 0.4) 0 1px;
+  background: @toolbarbuttonPressedBackgroundColor@;
+  text-shadow: @loweredShadow@;
+  -moz-box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
 :root:not([active]) #Console\:clear {
-  color: #7C7C7C !important; /* remove this when we support click-through */
-  border-color: rgba(0, 0, 0, 0.25);
-  background-color: #CCC;
+  color: @toolbarbuttonInactiveFontColor@ !important; /* remove this when we support click-through */
+  border-color: @toolbarbuttonInactiveBorderColor@;
+  background-image: @toolbarbuttonInactiveBackgroundImage@;
 }

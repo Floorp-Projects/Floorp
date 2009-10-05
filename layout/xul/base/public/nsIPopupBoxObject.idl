@@ -41,7 +41,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(A41AF368-9F73-4D73-A058-49DD7E41F9EA)]
+[scriptable, uuid(88DC87BF-83EC-4F45-847A-E04C15DDA2FA)]
 interface nsIPopupBoxObject : nsISupports
 {
   /**
@@ -146,10 +146,9 @@ interface nsIPopupBoxObject : nsISupports
   /**
    * Open the popup at a specific screen position specified by x and y. This
    * position may be adjusted if it would cause the popup to be off of the
-   * screen. The x and y coordinates are measured in CSS pixels. The monitor
-   * selected is determined within the platform specific widget code, but
-   * in general, the coordinates are relative to the screen the window
-   * containing the popup is on.
+   * screen. The x and y coordinates are measured in CSS pixels, and like all
+   * screen coordinates, are given relative to the top left of the primary
+   * screen.
    *
    * @param isContextMenu true for context menus, false for other popups
    * @param x horizontal screen position

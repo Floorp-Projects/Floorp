@@ -76,8 +76,8 @@ LightweightThemeConsumer.prototype = {
       root.style.color = aData.textcolor || "black";
       root.style.backgroundColor = aData.accentcolor || "white";
       let [r, g, b] = _parseRGB(this._doc.defaultView.getComputedStyle(root, "").color);
-      let brightness = (r + g + b) / 3;
-      root.setAttribute("lwthemetextcolor", brightness <= 127 ? "dark" : "bright");
+      let luminance = 0.2125 * r + 0.7154 * g + 0.0721 * b;
+      root.setAttribute("lwthemetextcolor", luminance <= 110 ? "dark" : "bright");
       root.setAttribute("lwtheme", "true");
     } else {
       root.style.color = "";
@@ -96,18 +96,15 @@ LightweightThemeConsumer.prototype = {
         footer.removeAttribute("lwthemefooter");
     }
 
-    if (root.hasAttribute("activetitlebarcolor")) {
-      if (!root.hasAttribute("originalactivetitlebarcolor")) {
-        root.setAttribute("originalactivetitlebarcolor",
-                          root.getAttribute("activetitlebarcolor"));
-        root.setAttribute("originalinactivetitlebarcolor",
-                          root.getAttribute("inactivetitlebarcolor"));
-      }
-      root.setAttribute("activetitlebarcolor", (active && aData.accentcolor)
-                          || root.getAttribute("originalactivetitlebarcolor"));
-      root.setAttribute("inactivetitlebarcolor", (active && aData.accentcolor)
-                          || root.getAttribute("originalinactivetitlebarcolor"));
+#ifdef XP_MACOSX
+    if (active && aData.accentcolor) {
+      root.setAttribute("activetitlebarcolor", aData.accentcolor);
+      root.setAttribute("inactivetitlebarcolor", aData.accentcolor);
+    } else {
+      root.removeAttribute("activetitlebarcolor");
+      root.removeAttribute("inactivetitlebarcolor");
     }
+#endif
   }
 }
 

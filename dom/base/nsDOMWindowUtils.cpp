@@ -251,7 +251,7 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
 
   event.clickCount = aClickCount;
   event.time = PR_IntervalNow();
-  event.flags |= NS_EVENT_FLAG_SYNTETIC_TEST_EVENT;
+  event.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
 
   float appPerDev = float(widget->GetDeviceContext()->AppUnitsPerDevPixel());
   event.refPoint.x =

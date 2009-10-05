@@ -1,0 +1,90 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for Animation Behavior on CSS Properties</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="smilTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="300px" height="200px">
+  <!--  At 50% through the animation, the following should be true:
+   * First <g> has font-size = 5px (1/2 between 0px and 10px)
+   * Next <g> has font-size = 10px (1/2 between inherit=5px and 15px)
+   * Next <g> has font-size = 15px (1/2 between inherit=10px and 20px)
+   * Next <g> has font-size = 20px (1/2 between inherit=15px and 25px)
+   * Next <g> has font-size = 25px (1/2 between inherit=20px and 30px)
+   * Next <g> has font-size = 30px (1/2 between inherit=25px and 35px)
+   * Next <g> has font-size = 35px (1/2 between inherit=30px and 40px)
+   * Next <g> has font-size = 40px (1/2 between inherit=35px and 45px)
+   * Next <g> has font-size = 45px (1/2 between inherit=40px and 50px)
+   * Next <g> has font-size = 50px (1/2 between inherit=45px and 55px)
+   * <text> has font-size = 75px (1/2 between inherit=50px and 100px)
+  -->
+  <g><animate attributeName="font-size" attributeType="CSS"
+              from="0px"     to="10px" begin="0s" dur="1s"/>
+  <g><animate attributeName="font-size" attributeType="CSS"
+              from="inherit" to="15px" begin="0s" dur="1s"/>
+  <g><animate attributeName="font-size" attributeType="CSS"
+              from="inherit" to="20px" begin="0s" dur="1s"/>
+  <g><animate attributeName="font-size" attributeType="CSS"
+              from="inherit" to="25px" begin="0s" dur="1s"/>
+  <g><animate attributeName="font-size" attributeType="CSS"
+              from="inherit" to="30px" begin="0s" dur="1s"/>
+  <g><animate attributeName="font-size" attributeType="CSS"
+              from="inherit" to="35px" begin="0s" dur="1s"/>
+  <g><animate attributeName="font-size" attributeType="CSS"
+              from="inherit" to="40px" begin="0s" dur="1s"/>
+  <g><animate attributeName="font-size" attributeType="CSS"
+              from="inherit" to="45px" begin="0s" dur="1s"/>
+  <g><animate attributeName="font-size" attributeType="CSS"
+              from="inherit" to="50px" begin="0s" dur="1s"/>
+  <g><animate attributeName="font-size" attributeType="CSS"
+              from="inherit" to="55px" begin="0s" dur="1s"/>
+  <text y="100px" x="0px">
+    abc
+    <animate attributeName="font-size" attributeType="CSS"
+             from="inherit" to="100px" begin="0s" dur="1s"/>
+  </text></g></g></g></g></g></g></g></g></g></g>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+function main() {
+  if (!SMILUtil.isSMILEnabled()) {
+    ok(false, "SMIL dosn't seem to be enabled");
+    SimpleTest.finish();
+    return;
+  }
+
+  // Pause & seek to halfway through animation
+  var svg = SMILUtil.getSVGRoot();
+  svg.pauseAnimations();
+  svg.setCurrentTime(0.5);
+
+  var text = document.getElementsByTagName("text")[0];
+  var computedVal = SMILUtil.getComputedStyleSimple(text, "font-size");
+  var expectedVal = "75px";
+
+  // NOTE: There's a very small chance (1/11! = 1/39,916,800) that we'll happen
+  // to composite our 11 animations in the correct order, in which cast this
+  // "todo_is" test would sporadically pass. I think this is infrequent enough
+  // to accept as a sporadic pass rate until this bug is fixed (at which point
+  // this "todo_is" will become an "is")
+  todo_is(computedVal, expectedVal,
+         "deeply-inherited font-size halfway through animation");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main, false);
+]]>
+</script>
+</pre>
+</body>
+</html>

@@ -234,6 +234,7 @@
 #include "nsIDOMMessageEvent.h"
 #include "nsPaintRequest.h"
 #include "nsIDOMNotifyPaintEvent.h"
+#include "nsIDOMScrollAreaEvent.h"
 #include "nsIDOMNSDocumentStyle.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMDocumentTraversal.h"
@@ -1346,6 +1347,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(PaintRequestList, nsPaintRequestListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(ScrollAreaEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
 // Objects that shuld be constructable through |new Name();|
@@ -1900,6 +1904,35 @@ nsDOMClassInfo::RegisterExternalClasses()
   }
 
   return nameSpaceManager->RegisterExternalInterfaces(PR_TRUE);
+}
+
+// static
+inline nsresult
+nsDOMClassInfo::WrapNativeParent(JSContext *cx, JSObject *scope,
+                                 nsISupports *native, JSObject **parentObj)
+{
+  // In the common case, |native| is a wrapper cache with an existing wrapper
+  nsWrapperCache* cache = nsnull;
+  CallQueryInterface(native, &cache);
+  if (cache) {
+    JSObject* obj = cache->GetWrapper();
+    if (obj) {
+#ifdef DEBUG
+      jsval debugVal;
+      nsresult rv = WrapNative(cx, scope, native, PR_FALSE, &debugVal);
+      NS_ASSERTION(NS_SUCCEEDED(rv) && JSVAL_TO_OBJECT(debugVal) == obj,
+                   "Unexpected object in nsWrapperCache");
+#endif
+      *parentObj = obj;
+      return NS_OK;
+    }
+  }
+
+  jsval v;
+  nsresult rv = WrapNative(cx, scope, native, PR_FALSE, &v);
+  NS_ENSURE_SUCCESS(rv, rv);
+  *parentObj = JSVAL_TO_OBJECT(v);
+  return NS_OK;
 }
 
 #define _DOM_CLASSINFO_MAP_BEGIN(_class, _ifptr, _has_class_if)               \
@@ -3699,6 +3732,11 @@ nsDOMClassInfo::Init()
  
   DOM_CLASSINFO_MAP_BEGIN(PaintRequestList, nsIDOMPaintRequestList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPaintRequestList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(ScrollAreaEvent, nsIDOMScrollAreaEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMScrollAreaEvent)
+    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
@@ -7068,7 +7106,8 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   nsISupports *native_parent;
 
   PRBool slimWrappers = PR_TRUE;
-  if (node->IsNodeOfType(nsINode::eELEMENT | nsINode::eXUL)) {
+  PRBool nodeIsElement = node->IsNodeOfType(nsINode::eELEMENT);
+  if (nodeIsElement && static_cast<nsIContent*>(node)->IsXUL()) {
     // For XUL elements, use the parent, if any.
     native_parent = node->GetParent();
 
@@ -7084,9 +7123,8 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     native_parent = doc;
 
     // But for HTML form controls, use the form as scope parent.
-    if (node->IsNodeOfType(nsINode::eELEMENT |
-                           nsIContent::eHTML |
-                           nsIContent::eHTML_FORM_CONTROL)) {
+    if (nodeIsElement &&
+        node->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
       nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(node));
 
       if (form_control) {
@@ -7618,11 +7656,14 @@ static PRBool
 GetBindingURL(nsIContent *aContent, nsIDocument *aDocument,
               nsCSSValue::URL **aResult)
 {
-  // If we have a frame the frame has already loaded the binding.
+  // If we have a frame the frame has already loaded the binding.  And
+  // otherwise, don't do anything else here unless we're dealing with
+  // XUL.
   nsIPresShell *shell = aDocument->GetPrimaryShell();
   nsIFrame *frame;
   if (!shell ||
-      (frame = shell->GetPrimaryFrameFor(aContent))) {
+      (frame = shell->GetPrimaryFrameFor(aContent)) ||
+      !aContent->IsXUL()) {
     *aResult = nsnull;
 
     return PR_TRUE;
@@ -7953,11 +7994,8 @@ nsNodeListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
     return NS_ERROR_FAILURE;
   }
 
-  jsval v;
-  nsresult rv = WrapNative(cx, globalObj, native_parent, PR_FALSE, &v);
+  nsresult rv = WrapNativeParent(cx, globalObj, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  *parentObj = JSVAL_TO_OBJECT(v);
 
   return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
 }
@@ -10052,11 +10090,8 @@ nsCSSStyleDeclSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
     return NS_ERROR_FAILURE;
   }
 
-  jsval v;
-  nsresult rv = WrapNative(cx, globalObj, native_parent, PR_FALSE, &v);
+  nsresult rv = WrapNativeParent(cx, globalObj, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  *parentObj = JSVAL_TO_OBJECT(v);
 
   return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
 }

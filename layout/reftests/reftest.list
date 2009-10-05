@@ -144,6 +144,9 @@ include svg/reftest.list
 # svg-integration/
 include svg-integration/reftest.list
 
+# tab-size/
+include tab-size/reftest.list
+
 # table-anonymous-boxes/
 include table-anonymous-boxes/reftest.list
 

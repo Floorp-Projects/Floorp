@@ -39,7 +39,7 @@
 
 #include <cairo.h>
 
-#if CAIRO_HAS_QPAINTER_SURFACE
+#if CAIRO_HAS_QT_SURFACE
 
 class QPainter;
 class QImage;
@@ -70,10 +70,10 @@ cairo_qpainter_surface_get_qimage (cairo_surface_t *surface);
 
 CAIRO_END_DECLS
 
-#else /* CAIRO_HAS_QPAINTER_SURFACE */
+#else /* CAIRO_HAS_QT_SURFACE */
 
 # error Cairo was not compiled with support for the QPainter backend
 
-#endif /* CAIRO_HAS_QPAINTER_SURFACE */
+#endif /* CAIRO_HAS_QT_SURFACE */
 
 #endif /* CAIRO_QPAINTER_H_ */

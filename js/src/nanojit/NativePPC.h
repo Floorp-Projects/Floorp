@@ -54,8 +54,6 @@
 
 namespace nanojit
 {
-    const int NJ_LOG2_PAGE_SIZE = 12;       // 4K
-
 #define NJ_MAX_STACK_ENTRY              256
 #define NJ_ALIGN_STACK                  16
 
@@ -204,8 +202,8 @@ namespace nanojit
         PPC_mulli   = 0x1C000000, // multiply low immediate
         PPC_mullw   = 0x7C0001D6, // multiply low word
         PPC_neg     = 0x7C0000D0, // negate
-        PPC_nor        = 0x7C0000F8, // nor
-        PPC_or        = 0x7C000378, // or
+        PPC_nor     = 0x7C0000F8, // nor
+        PPC_or      = 0x7C000378, // or
         PPC_ori     = 0x60000000, // or immediate
         PPC_oris    = 0x64000000, // or immediate shifted
         PPC_rlwinm  = 0x54000000, // rotate left word then and with mask
@@ -226,7 +224,7 @@ namespace nanojit
         PPC_stdx    = 0x7C00012A, // store doubleword indexed
         PPC_stfd    = 0xD8000000, // store floating-point double
         PPC_stfdx   = 0x7C0005AE, // store floating-point double indexed
-        PPC_stw        = 0x90000000, // store word
+        PPC_stw     = 0x90000000, // store word
         PPC_stwu    = 0x94000000, // store word with update
         PPC_stwux   = 0x7C00016E, // store word with update indexed
         PPC_stwx    = 0x7C00012E, // store word indexed
@@ -277,11 +275,11 @@ namespace nanojit
         void underrunProtect(int bytes);                                    \
         void nativePageReset();                                             \
         void nativePageSetup();                                             \
-        void br(NIns *addr, int link);                                        \
-        void br_far(NIns *addr, int link);                                    \
+        void br(NIns *addr, int link);                                      \
+        void br_far(NIns *addr, int link);                                  \
         void asm_regarg(ArgSize, LIns*, Register);                          \
-        void asm_li(Register r, int32_t imm);                                \
-        void asm_li32(Register r, int32_t imm);                                \
+        void asm_li(Register r, int32_t imm);                               \
+        void asm_li32(Register r, int32_t imm);                             \
         void asm_li64(Register r, uint64_t imm);                            \
         void asm_cmp(LOpcode op, LIns *a, LIns *b, ConditionRegister);      \
         NIns* asm_branch_far(bool onfalse, LIns *cond, NIns * const targ);  \
@@ -470,15 +468,15 @@ namespace nanojit
 #ifdef NANOJIT_64BIT
     #define LP(r, d, b)       LD(r, d, b)
     #define STP(r, d, b)      STD(r, d, b)
-    #define STPU(r, d, b)      STDU(r, d, b)
-    #define STPX(s, a, b)      STDX(s, a, b)
-    #define STPUX(s, a, b)       STDUX(s, a, b)
+    #define STPU(r, d, b)     STDU(r, d, b)
+    #define STPX(s, a, b)     STDX(s, a, b)
+    #define STPUX(s, a, b)    STDUX(s, a, b)
 #else
     #define LP(r, d, b)       LWZ(r, d, b)
     #define STP(r, d, b)      STW(r, d, b)
-    #define STPU(r, d, b)      STWU(r, d, b)
-    #define STPX(s, a, b)      STWX(s, a, b)
-    #define STPUX(s, a, b)       STWUX(s, a, b)
+    #define STPU(r, d, b)     STWU(r, d, b)
+    #define STPX(s, a, b)     STWX(s, a, b)
+    #define STPUX(s, a, b)    STWUX(s, a, b)
 #endif
 
     #define LFD(r,  d, b) FMEMd(lfd,  r, d, b)

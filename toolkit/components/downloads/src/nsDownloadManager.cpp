@@ -2111,10 +2111,6 @@ nsDownload::SetState(DownloadState aState)
   PRInt16 oldState = mDownloadState;
   mDownloadState = aState;
 
-  nsresult rv;
-
-  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
   // We don't want to lose access to our member variables
   nsRefPtr<nsDownload> kungFuDeathGrip = this;
 
@@ -2146,10 +2142,18 @@ nsDownload::SetState(DownloadState aState)
     case nsIDownloadManager::DOWNLOAD_FINISHED:
     {
       // Do what exthandler would have done if necessary
-      (void)ExecuteDesiredAction();
+      nsresult rv = ExecuteDesiredAction();
+      if (NS_FAILED(rv)) {
+        // We've failed to execute the desired action.  As a result, we should
+        // fail the download so the user can try again.
+        (void)FailDownload(rv, nsnull);
+        return rv;
+      }
 
       // Now that we're done with handling the download, clean it up
       Finalize();
+
+      nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
 
       // Master pref to control this function.
       PRBool showTaskbarAlert = PR_TRUE;
@@ -2243,7 +2247,7 @@ nsDownload::SetState(DownloadState aState)
 
   // Before notifying the listener, we must update the database so that calls
   // to it work out properly.
-  rv = UpdateDB();
+  nsresult rv = UpdateDB();
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDownloadManager->NotifyListenersOnDownloadStateChange(oldState, this);

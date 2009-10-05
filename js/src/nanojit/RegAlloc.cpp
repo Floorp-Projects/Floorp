@@ -56,9 +56,14 @@ namespace nanojit
                 continue;
             NanoAssertMsg(!isFree(r), "Coding error; register is both free and active! " );
 
-            s += strlen(s);
+            if (ins->isop(LIR_param) && ins->paramKind()==1 && r == Assembler::savedRegs[ins->paramArg()]) {
+                // dont print callee-saved regs that arent used
+                continue;
+            }
+
+            s += VMPI_strlen(s);
             const char* rname = ins->isQuad() ? fpn(r) : gpn(r);
-            sprintf(s, " %s(%s)", rname, names->formatRef(ins));
+            VMPI_sprintf(s, " %s(%s)", rname, names->formatRef(ins));
         }
     }
     #endif /* NJ_VERBOSE */

@@ -842,7 +842,7 @@ struct PatternToBrushConverter {
             cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t*) pattern;
             cairo_surface_t *surface = spattern->surface;
 
-            if (surface->type == CAIRO_SURFACE_TYPE_QPAINTER) {
+            if (surface->type == CAIRO_SURFACE_TYPE_QT) {
                 cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t*) surface;
 
                 if (qs->image) {
@@ -1148,7 +1148,7 @@ _cairo_qpainter_fast_fill (cairo_qpainter_surface_t *qs,
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
         cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t*) source;
-        if (spattern->surface->type == CAIRO_SURFACE_TYPE_QPAINTER) {
+        if (spattern->surface->type == CAIRO_SURFACE_TYPE_QT) {
             cairo_qpainter_surface_t *p = (cairo_qpainter_surface_t*) spattern->surface;
 
             qsSrc_image = p->image;
@@ -1504,7 +1504,7 @@ _cairo_qpainter_surface_composite (cairo_operator_t op,
             qimg_d.reset(qimg);
         }
 
-        if (surface->type == CAIRO_SURFACE_TYPE_QPAINTER) {
+        if (surface->type == CAIRO_SURFACE_TYPE_QT) {
             cairo_qpainter_surface_t *qsrc = (cairo_qpainter_surface_t*) surface;
 
             if (qsrc->image)
@@ -1557,7 +1557,7 @@ _cairo_qpainter_surface_flush (void *abstract_surface)
  **/
 
 static const cairo_surface_backend_t cairo_qpainter_surface_backend = {
-    CAIRO_SURFACE_TYPE_QPAINTER,
+    CAIRO_SURFACE_TYPE_QT,
     _cairo_qpainter_surface_create_similar,
     _cairo_qpainter_surface_finish,
     _cairo_qpainter_surface_acquire_source_image,
@@ -1776,7 +1776,7 @@ cairo_qpainter_surface_get_qpainter (cairo_surface_t *surface)
 {
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t*) surface;
 
-    if (surface->type != CAIRO_SURFACE_TYPE_QPAINTER)
+    if (surface->type != CAIRO_SURFACE_TYPE_QT)
         return NULL;
 
     return qs->p;
@@ -1787,7 +1787,7 @@ cairo_qpainter_surface_get_qimage (cairo_surface_t *surface)
 {
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t*) surface;
 
-    if (surface->type != CAIRO_SURFACE_TYPE_QPAINTER)
+    if (surface->type != CAIRO_SURFACE_TYPE_QT)
         return NULL;
 
     return qs->image;
@@ -1798,7 +1798,7 @@ cairo_qpainter_surface_get_image (cairo_surface_t *surface)
 {
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t*) surface;
 
-    if (surface->type != CAIRO_SURFACE_TYPE_QPAINTER)
+    if (surface->type != CAIRO_SURFACE_TYPE_QT)
         return NULL;
 
     return (cairo_surface_t*) qs->image_equiv;

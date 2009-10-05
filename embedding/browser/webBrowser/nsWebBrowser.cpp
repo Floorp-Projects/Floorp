@@ -1135,7 +1135,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
       nsIntRect bounds(mInitInfo->x, mInitInfo->y, mInitInfo->cx, mInitInfo->cy);
       
       mInternalWidget->SetClientData(static_cast<nsWebBrowser *>(this));
-      mInternalWidget->Create(mParentNativeWindow, bounds, nsWebBrowser::HandleEvent,
+      mInternalWidget->Create(nsnull, mParentNativeWindow, bounds, nsWebBrowser::HandleEvent,
                               nsnull, nsnull, nsnull, &widgetInit);  
       }
 

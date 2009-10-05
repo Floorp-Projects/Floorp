@@ -441,9 +441,13 @@ public:
   // search from end to beginning of [aBegin, aEnd)
   // Returns PR_TRUE if it found the line and PR_FALSE if not.
   // Moves aEnd as it searches so that aEnd points to the resulting line.
+  // aLastFrameBeforeEnd is the last frame before aEnd (so if aEnd is
+  // the end of the line list, it's just the last frame in the frame
+  // list).
   static PRBool RFindLineContaining(nsIFrame* aFrame,
                                     const nsLineList_iterator& aBegin,
                                     nsLineList_iterator& aEnd,
+                                    nsIFrame* aLastFrameBeforeEnd,
                                     PRInt32* aFrameIndexInLine);
 
 #ifdef DEBUG
@@ -1132,7 +1136,13 @@ class nsLineList {
 
     nsLineList()
     {
+      MOZ_COUNT_CTOR(nsLineList);
       clear();
+    }
+
+    ~nsLineList()
+    {
+      MOZ_COUNT_DTOR(nsLineList);
     }
 
     const_iterator begin() const

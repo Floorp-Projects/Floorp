@@ -5,7 +5,7 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2007                *
+ * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2009                *
  * by the Xiph.Org Foundation http://www.xiph.org/                  *
  *                                                                  *
  ********************************************************************
@@ -24,10 +24,10 @@
  * implementation for <a href="http://www.theora.org/">Theora</a>, a free,
  * patent-unencumbered video codec.
  * Theora is derived from On2's VP3 codec with additional features and
- *  integration for Ogg multimedia formats by
+ *  integration with Ogg multimedia formats by
  *  <a href="http://www.xiph.org/">the Xiph.Org Foundation</a>.
  * Complete documentation of the format itself is available in
- * <a href="http://www.theora.org/doc/Theora_I_spec.pdf">the Theora
+ * <a href="http://www.theora.org/doc/Theora.pdf">the Theora
  *  specification</a>.
  *
  * \subsection Organization
@@ -92,9 +92,9 @@ extern "C" {
 /*@}*/
 
 /**The currently defined color space tags.
- * See <a href="http://www.theora.org/doc/Theora_I_spec.pdf">the Theora
- *  specification</a>, Chapter 4, for exact details on the meaning of each of
- *  these color spaces.*/
+ * See <a href="http://www.theora.org/doc/Theora.pdf">the Theora
+ *  specification</a>, Chapter 4, for exact details on the meaning
+ *  of each of these color spaces.*/
 typedef enum{
   /**The color space was not specified at the encoder.
       It may be conveyed by an external means.*/
@@ -108,13 +108,13 @@ typedef enum{
 }th_colorspace;
 
 /**The currently defined pixel format tags.
- * See <a href="http://www.theora.org/doc/Theora_I_spec.pdf">the Theora
+ * See <a href="http://www.theora.org/doc/Theora.pdf">the Theora
  *  specification</a>, Section 4.4, for details on the precise sample
  *  locations.*/
 typedef enum{
   /**Chroma decimation by 2 in both the X and Y directions (4:2:0).
-     The Cb and Cr chroma planes are half the width and half the height of the
-      luma plane.*/
+     The Cb and Cr chroma planes are half the width and half the
+      height of the luma plane.*/
   TH_PF_420,
   /**Currently reserved.*/
   TH_PF_RSVD,
@@ -133,11 +133,11 @@ typedef enum{
 
 /**A buffer for a single color plane in an uncompressed image.
  * This contains the image data in a left-to-right, top-down format.
- * Each row of pixels is stored contiguously in memory, but successive rows
- *  need not be.
+ * Each row of pixels is stored contiguously in memory, but successive
+ *  rows need not be.
  * Use \a stride to compute the offset of the next row.
- * The encoder accepts both positive \a stride values (top-down in memory) and
- *  negative (bottom-up in memory).
+ * The encoder accepts both positive \a stride values (top-down in memory)
+ *  and negative (bottom-up in memory).
  * The decoder currently always generates images with positive strides.*/
 typedef struct{
   /**The width of this plane.*/
@@ -151,18 +151,18 @@ typedef struct{
 }th_img_plane;
 
 /**A complete image buffer for an uncompressed frame.
- * The chroma planes may be decimated by a factor of two in either direction,
- *  as indicated by th_info#pixel_fmt.
+ * The chroma planes may be decimated by a factor of two in either
+ *  direction, as indicated by th_info#pixel_fmt.
  * The width and height of the Y' plane must be multiples of 16.
- * They may need to be cropped for display, using the rectangle specified by
- *  th_info#pic_x, th_info#pic_y, th_info#pic_width, and
- *  th_info#pic_height.
+ * They may need to be cropped for display, using the rectangle
+ *  specified by th_info#pic_x, th_info#pic_y, th_info#pic_width,
+ *  and th_info#pic_height.
  * All samples are 8 bits.
  * \note The term YUV often used to describe a colorspace is ambiguous.
- * The exact parameters of the RGB to YUV conversion process aside, in many
- *  contexts the U and V channels actually have opposite meanings.
- * To avoid this confusion, we are explicit: the name of the color channels are
- *  Y'CbCr, and they appear in that order, always.
+ * The exact parameters of the RGB to YUV conversion process aside, in
+ *  many contexts the U and V channels actually have opposite meanings.
+ * To avoid this confusion, we are explicit: the name of the color
+ *  channels are Y'CbCr, and they appear in that order, always.
  * The prime symbol denotes that the Y channel is non-linear.
  * Cb and Cr stand for "Chroma blue" and "Chroma red", respectively.*/
 typedef th_img_plane th_ycbcr_buffer[3];
@@ -192,7 +192,7 @@ typedef th_img_plane th_ycbcr_buffer[3];
  *
  * It is also generally recommended that the offsets and sizes should still be
  *  multiples of 2 to avoid chroma sampling shifts when chroma is sub-sampled.
- * See <a href="http://www.theora.org/doc/Theora_I_spec.pdf">the Theora
+ * See <a href="http://www.theora.org/doc/Theora.pdf">the Theora
  *  specification</a>, Section 4.4, for more details.
  *
  * Frame rate, in frames per second, is stored as a rational fraction, as is
@@ -230,8 +230,8 @@ typedef struct{
    *  #frame_height-#pic_height-#pic_y must be no larger than 255.
    * This slightly funny restriction is due to the fact that the offset is
    *  specified from the top of the image for consistency with the standard
-   *  graphics left-handed coordinate system used throughout this API, while it
-   *  is stored in the encoded stream as an offset from the bottom.*/
+   *  graphics left-handed coordinate system used throughout this API, while
+   *  it is stored in the encoded stream as an offset from the bottom.*/
   ogg_uint32_t  pic_y;
   /**\name Frame rate
    * The frame rate, as a fraction.
@@ -259,9 +259,6 @@ typedef struct{
   /**The target bit-rate in bits per second.
      If initializing an encoder with this struct, set this field to a non-zero
       value to activate CBR encoding by default.*/
-  /*TODO: Current encoder does not support CBR mode, or anything like it.
-    We also don't really know what nominal rate each quality level
-     corresponds to yet.*/
   int           target_bitrate;
   /**The target quality level.
      Valid values range from 0 to 63, inclusive, with higher values giving
@@ -314,7 +311,7 @@ typedef struct{
  * A particular tag may occur more than once, and order is significant.
  * The character set encoding for the strings is always UTF-8, but the tag
  *  names are limited to ASCII, and treated as case-insensitive.
- * See <a href="http://www.theora.org/doc/Theora_I_spec.pdf">the Theora
+ * See <a href="http://www.theora.org/doc/Theora.pdf">the Theora
  *  specification</a>, Section 6.3.3 for details.
  *
  * In filling in this structure, th_decode_headerin() will null-terminate

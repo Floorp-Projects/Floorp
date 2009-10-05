@@ -236,6 +236,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug450160.html \
 		test_bug453736.html \
 		test_bug454326.html \
+		test_bug505783.html \
 		test_bug457746.html \
 		bug457746.sjs \
 		test_CrossSiteXHR.html \
@@ -277,6 +278,7 @@ _TEST_FILES = 	test_bug5141.html \
 		file_xhtmlserializer_2_enthtml.xhtml \
 		file_xhtmlserializer_2_entw3c.xhtml \
 		file_xhtmlserializer_2_latin1.xhtml \
+		test_bug500937.html \
 		test_htmlcopyencoder.html \
 		test_htmlcopyencoder.xhtml \
 		test_bug270145.xhtml \
@@ -312,7 +314,9 @@ _TEST_FILES = 	test_bug5141.html \
 		test_classList.html \
 		test_bug489925.xhtml \
 		test_bug514487.html \
+		test_range_bounds.html \
 		$(NULL)
+
 # Disabled; see bug 492181
 #		test_plugin_freezing.html
 

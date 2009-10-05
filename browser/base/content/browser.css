@@ -17,7 +17,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   display: none;
 }
 
-#main-window[lwtheme="true"] {
+#main-window:-moz-lwtheme {
   background-repeat: no-repeat;
   background-position: top right;
 }
@@ -71,6 +71,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
 }
 
 /* ::::: Unified Back-/Forward Button ::::: */
+#back-button > dropmarker,
+#forward-button > dropmarker,
 #back-forward-dropmarker > image ,
 #back-forward-dropmarker > label {
   display: none;

@@ -435,8 +435,8 @@ nsGenericHTMLElement::SetClassName(const nsAString& aClassName)
 static PRBool
 IsBody(nsIContent *aContent)
 {
-  return (aContent->NodeInfo()->Equals(nsGkAtoms::body) &&
-          aContent->IsNodeOfType(nsINode::eHTML));
+  return aContent->NodeInfo()->Equals(nsGkAtoms::body) &&
+         aContent->IsHTML();
 }
 
 static PRBool IS_TABLE_CELL(nsIAtom* frameType) {
@@ -751,14 +751,13 @@ nsGenericHTMLElement::GetSpellcheck(PRBool* aSpellcheck)
   *aSpellcheck = PR_FALSE;              // Default answer is to not spellcheck
 
   // Has the state has been explicitly set?
-  nsINode* node;
-  for (node = this; node; node = node->GetNodeParent()) {
-    if (node->IsNodeOfType(nsINode::eHTML)) {
+  nsIContent* node;
+  for (node = this; node; node = node->GetParent()) {
+    if (node->IsHTML()) {
       static nsIContent::AttrValuesArray strings[] =
         {&nsGkAtoms::_true, &nsGkAtoms::_false, nsnull};
-      switch (static_cast<nsIContent*>(node)->
-              FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::spellcheck,
-                              strings, eCaseMatters)) {
+      switch (node->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::spellcheck,
+                                    strings, eCaseMatters)) {
         case 0:                         // spellcheck = "true"
           *aSpellcheck = PR_TRUE;
           // Fall through
@@ -905,7 +904,7 @@ nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
   while (content != bindingParent && content) {
     // If the current ancestor is a form, return it as our form
     if (content->Tag() == nsGkAtoms::form &&
-        content->IsNodeOfType(nsINode::eHTML)) {
+        content->IsHTML()) {
 #ifdef DEBUG
       if (!nsContentUtils::IsInSameAnonymousTree(this, content)) {
         // It's possible that we started unbinding at |content| or
@@ -958,7 +957,7 @@ static PRBool
 IsArea(nsIContent *aContent)
 {
   return (aContent->Tag() == nsGkAtoms::area &&
-          aContent->IsNodeOfType(nsINode::eHTML));
+          aContent->IsHTML());
 }
 
 PRBool
@@ -1200,7 +1199,7 @@ nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 PRBool
 nsGenericHTMLElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eELEMENT | eHTML));
+  return !(aFlags & ~(eCONTENT | eELEMENT));
 }
 
 //----------------------------------------------------------------------
@@ -2160,7 +2159,11 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr,
                                               attr->GetStringValue(),
                                             GetOwnerDoc(), baseURI);
 
-  if (isURIAttr) {
+  // We may have to re-resolve all our cached hrefs when the document's base
+  // URI changes.  The base URI depends on the owner document, but it's the
+  // current document that keeps track of links.  If the two documents don't
+  // match, we shouldn't cache.
+  if (isURIAttr && GetOwnerDoc() == GetCurrentDoc()) {
     const_cast<nsAttrValue*>(attr)->CacheURIValue(*aURI);
   }
   return PR_TRUE;
@@ -2265,14 +2268,8 @@ nsGenericHTMLFormElement::nsGenericHTMLFormElement(nsINodeInfo *aNodeInfo)
 
 nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
 {
-  // Check that this element is not still the default content
-  // of its parent form.
-  NS_ASSERTION(!mForm || mForm->GetDefaultSubmitElement() != this,
-               "Content being destroyed is the default content");
-
-  // Clean up.  Set the form to nsnull so it knows we went away.
-  // Do not notify as the content is being destroyed.
-  ClearForm(PR_TRUE, PR_FALSE);
+  // Check that this element doesn't know anything about its form at this point.
+  NS_ASSERTION(!mForm, "How did we get here?");
 }
 
 NS_IMPL_QUERY_INTERFACE_INHERITED1(nsGenericHTMLFormElement,
@@ -2282,7 +2279,7 @@ NS_IMPL_QUERY_INTERFACE_INHERITED1(nsGenericHTMLFormElement,
 PRBool
 nsGenericHTMLFormElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eELEMENT | eHTML | eHTML_FORM_CONTROL));
+  return !(aFlags & ~(eCONTENT | eELEMENT | eHTML_FORM_CONTROL));
 }
 
 void

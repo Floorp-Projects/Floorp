@@ -1887,6 +1887,19 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
         if (NS_SUCCEEDED(rv))
           rv = OpenWithApplication();
       }
+      else
+      {
+        // Cancel the download and report an error.  We do not want to end up in
+        // a state where it appears that we have a normal download that is
+        // pointing to a file that we did not actually create.
+        nsAutoString path;
+        mTempFile->GetPath(path);
+        SendStatusChange(kWriteError, rv, nsnull, path);
+        Cancel(rv);
+
+        // We still need to notify if we have a progress listener, so we cannot
+        // return at this point.
+      }
     }
     else // Various unknown actions go here too
     {
@@ -1899,7 +1912,7 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
         gExtProtSvc->FixFilePermissions(destfile);
       }
     }
-    
+
     // Notify dialog that download is complete.
     // By waiting till this point, it ensures that the progress dialog doesn't indicate
     // success until we're really done.
@@ -1915,7 +1928,7 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
         nsIWebProgressListener::STATE_IS_NETWORK, NS_OK);
     }
   }
-  
+
   return rv;
 }
 

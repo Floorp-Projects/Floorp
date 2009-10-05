@@ -150,7 +150,7 @@ public:
         return PR_FALSE;
       }
       nsIContent* content = aNode.Content();
-      return content->IsNodeOfType(nsINode::eHTML) && content->IsInHTMLDocument();
+      return content->IsHTML() && content->IsInHTMLDocument();
     }
 #else
 private:

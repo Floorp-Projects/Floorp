@@ -168,7 +168,7 @@ int _histEntryValue (void* id, int64_t value);
 
 #define NUM_EVARS 4
 
-typedef enum {
+enum {
     LOCK_IS_FREE = 0, 
     LOCK_IS_TAKEN = 1
 };

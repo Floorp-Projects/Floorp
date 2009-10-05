@@ -171,7 +171,8 @@ public:
     eDOMEvents_MozRotateGestureUpdate,
     eDOMEvents_MozRotateGesture,
     eDOMEvents_MozTapGesture,
-    eDOMEvents_MozPressTapGesture
+    eDOMEvents_MozPressTapGesture,
+    eDOMEvents_MozScrolledAreaChanged
   };
 
   nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent);

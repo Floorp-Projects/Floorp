@@ -50,11 +50,8 @@ LIBRARY_NAME	= universalchardet
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsUniversalCharDetModule
-ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME	= ucdet
-endif
 LIBXUL_LIBRARY = 1
-
 
 CPPSRCS = \
 		nsUniversalCharDetModule.cpp \

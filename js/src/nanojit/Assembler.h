@@ -157,7 +157,7 @@ namespace nanojit
             void output_asm(const char* s);
 
             bool outputAddr, vpad[3];  // if outputAddr=true then next asm instr. will include address in output
-            void printActivationState();
+            void printActivationState(const char* what);
 
             StringList* _outputCache;
 
@@ -176,13 +176,11 @@ namespace nanojit
             void        beginAssembly(Fragment *frag);
 
             void        releaseRegisters();
-
             void        patch(GuardRecord *lr);
             void        patch(SideExit *exit);
 #ifdef NANOJIT_IA32
             void        patch(SideExit *exit, SwitchInfo* si);
 #endif
-
             AssmError   error()    { return _err; }
             void        setError(AssmError e) { _err = e; }
 
@@ -244,7 +242,7 @@ namespace nanojit
 
             Allocator&          alloc;
             CodeAlloc&          _codeAlloc;
-            DWB(Fragment*)      _thisfrag;
+            Fragment*           _thisfrag;
             RegAllocMap         _branchStateMap;
             NInsMap             _patches;
             LabelStateMap       _labels;
@@ -275,7 +273,6 @@ namespace nanojit
             void        asm_spilli(LInsp i, bool pop);
             void        asm_spill(Register rr, int d, bool pop, bool quad);
             void        asm_load64(LInsp i);
-            void        asm_pusharg(LInsp p);
             void        asm_ret(LInsp p);
             void        asm_quad(LInsp i);
             void        asm_fcond(LInsp i);
@@ -286,7 +283,6 @@ namespace nanojit
             void        asm_cmov(LInsp i);
             void        asm_param(LInsp i);
             void        asm_int(LInsp i);
-            void        asm_short(LInsp i);
             void        asm_qlo(LInsp i);
             void        asm_qhi(LInsp i);
             void        asm_fneg(LInsp ins);
@@ -297,7 +293,6 @@ namespace nanojit
             Register    asm_prep_fcall(Reservation *rR, LInsp ins);
             void        asm_nongp_copy(Register r, Register s);
             void        asm_call(LInsp);
-            void        asm_arg(ArgSize, LInsp, Register);
             Register    asm_binop_rhs_reg(LInsp ins);
             NIns*       asm_branch(bool branchOnFalse, LInsp cond, NIns* targ);
             void        asm_switch(LIns* ins, NIns* target);

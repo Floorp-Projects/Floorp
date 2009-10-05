@@ -176,11 +176,20 @@ js_IsIdentifier(JSString *str)
     return JS_TRUE;
 }
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4351)
+#endif
+
 /* Initialize members that aren't initialized in |init|. */
 JSTokenStream::JSTokenStream(JSContext *cx)
   : tokens(), cursor(), lookahead(), ungetpos(), ungetbuf(), flags(), linelen(),
     linepos(), file(), listenerTSData(), saveEOL(), tokenbuf(cx)
 {}
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 bool
 JSTokenStream::init(JSContext *cx, const jschar *base, size_t length,
@@ -656,7 +665,7 @@ static JSBool
 GetXMLEntity(JSContext *cx, JSTokenStream *ts)
 {
     ptrdiff_t offset, length, i;
-    int32 c, d;
+    int c, d;
     JSBool ispair;
     jschar *bp, digit;
     char *bytes;
@@ -858,7 +867,7 @@ JSTokenType
 js_GetToken(JSContext *cx, JSTokenStream *ts)
 {
     JSTokenType tt;
-    int32 c, qc;
+    int c, qc;
     JSToken *tp;
     JSAtom *atom;
     JSBool hadUnicodeEscape;

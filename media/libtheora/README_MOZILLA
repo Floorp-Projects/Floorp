@@ -1,18 +1,5 @@
-The source from this directory was copied from the libtheora-1.0
-source distribution using the update.sh script. The changes made were
-those applied by update.sh, the addition/update of Makefile.in files
-for the Mozilla build system and the patch in bug below.
+The source from this directory was copied from the theora subversion trunk
+using the update.sh script. The changes made were those applied by update.sh,
+the addition/update of Makefile.in files for the Mozilla build system.
 
-bug498770.patch - Enable optimized theora code in windows build
-Bug 455357 - WinCE LibTheora Pre-defined Macro usage in local variable
-  455357_wince_local_variable_macro_clash_patch
-  This patch is needed for building WinCE / WinMobile because the 
-  Mozilla WinCE Shunt Library currently includes windows.h header file,
-  which causes a conflict with local variables in the oc_dering_block()
-  function.  This issue should be cleared up soon, with a reworking of 
-  the WinCE Shunt Library (Bug 456788 - reduce windows ce shunt impact).  
-  Until then, this simple patch allows WinCE to finish compiling.
-
-bug498815.patch: Fix for this bug from libtheora svn r16143.
-bug498824.patch: Fix for this bug from libtheora thusnelda branch.
-bug504613.patch: Fix for this bug from libtheora svn r16557.
+The subversion revision used was r16584.

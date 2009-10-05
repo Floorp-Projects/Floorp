@@ -40,7 +40,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <sstream>
 
@@ -79,6 +78,8 @@ static bool stopWatchingInstanceCount(NPObject* npobj, const NPVariant* args, ui
 static bool unscheduleAllTimers(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getLastMouseX(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getLastMouseY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getError(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool doInternalConsistencyCheck(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "setUndefinedValueTest",
@@ -96,6 +97,8 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "unscheduleAllTimers",
   "getLastMouseX",
   "getLastMouseY",
+  "getError",
+  "doInternalConsistencyCheck",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
@@ -114,9 +117,13 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   unscheduleAllTimers,
   getLastMouseX,
   getLastMouseY,
+  getError,
+  doInternalConsistencyCheck,
 };
 
 static char* NPN_GetURLNotifyCookie = "NPN_GetURLNotify_Cookie";
+
+static char* SUCCESS_STRING = "pass";
 
 static bool sIdentifiersInitialized = false;
 
@@ -170,7 +177,8 @@ static void addRange(InstanceData* instanceData, const char* range)
 static void sendBufferToFrame(NPP instance)
 {
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
-  string outbuf = "data:text/html,";
+  string outbuf;
+  if (!instanceData->npnNewStream) outbuf = "data:text/html,";
   const char* buf = reinterpret_cast<char *>(instanceData->streamBuf);
   int32_t bufsize = instanceData->streamBufSize;
   if (instanceData->streamMode == NP_ASFILE || 
@@ -179,43 +187,97 @@ static void sendBufferToFrame(NPP instance)
     bufsize = instanceData->fileBufSize;
   }
   if (instanceData->err.str().length() > 0) {
-    buf = instanceData->err.str().c_str();
-    bufsize = strlen(buf);
+    outbuf.append(instanceData->err.str());
   }
-  if (bufsize > 0) {
+  else if (bufsize > 0) {
     outbuf.append(buf);
   }
   else {
     outbuf.append("Error: no data in buffer");
   }
   
-  // Convert CRLF to LF, and escape most other non-alphanumeric chars.
-  for (int i = 0; i < outbuf.length(); i++) {
-    if (outbuf[i] == '\n') {
-      outbuf.replace(i, 1, "%0a");
-      i += 2;
+  if (instanceData->npnNewStream &&
+      instanceData->err.str().length() == 0) {
+    NPStream* stream;
+    printf("calling NPN_NewStream...");
+    NPError err = NPN_NewStream(instance, "text/html", 
+        instanceData->frame.c_str(),
+        &stream);
+    printf("return value %d\n", err);
+    if (err != NPERR_NO_ERROR) {
+      instanceData->err << "NPN_NewStream returned " << err;
+      return;
     }
-    else if (outbuf[i] == '\r') {
-      outbuf.replace(i, 1, "");
-      i -= 1;
+    
+    int32_t bytesToWrite = outbuf.length();
+    int32_t bytesWritten = 0;
+    while ((bytesToWrite - bytesWritten) > 0) {
+      int32_t numBytes = (bytesToWrite - bytesWritten) < 
+          instanceData->streamChunkSize ?
+          bytesToWrite - bytesWritten : instanceData->streamChunkSize;
+      int32_t written = NPN_Write(instance, stream,
+          numBytes, (void*)(outbuf.c_str() + bytesWritten));
+      if (written <= 0) {
+        instanceData->err << "NPN_Write returned " << written;
+        break;
+      }
+      bytesWritten += numBytes;
+      printf("%d bytes written, total %d\n", written, bytesWritten);
     }
-    else {
-      int ascii = outbuf[i];
-      if (!((ascii >= ',' && ascii <= ';') ||
-            (ascii >= 'A' && ascii <= 'Z') ||
-            (ascii >= 'a' && ascii <= 'z'))) {
-        char hex[8];
-        sprintf(hex, "%%%x", ascii);
-        outbuf.replace(i, 1, hex);
+    err = NPN_DestroyStream(instance, stream, NPRES_DONE);
+    if (err != NPERR_NO_ERROR) {
+      instanceData->err << "NPN_DestroyStream returned " << err;
+    }
+  }
+  else {
+    // Convert CRLF to LF, and escape most other non-alphanumeric chars.
+    for (int i = 0; i < outbuf.length(); i++) {
+      if (outbuf[i] == '\n') {
+        outbuf.replace(i, 1, "%0a");
         i += 2;
       }
+      else if (outbuf[i] == '\r') {
+        outbuf.replace(i, 1, "");
+        i -= 1;
+      }
+      else {
+        int ascii = outbuf[i];
+        if (!((ascii >= ',' && ascii <= ';') ||
+              (ascii >= 'A' && ascii <= 'Z') ||
+              (ascii >= 'a' && ascii <= 'z'))) {
+          char hex[8];
+          sprintf(hex, "%%%x", ascii);
+          outbuf.replace(i, 1, hex);
+          i += 2;
+        }
+      }
+    }
+
+    NPError err = NPN_GetURL(instance, outbuf.c_str(), 
+                             instanceData->frame.c_str());
+    if (err != NPERR_NO_ERROR) {
+      instanceData->err << "NPN_GetURL returned " << err;
     }
   }
-  NPError err = NPN_GetURL(instance, outbuf.c_str(), 
-                           instanceData->frame.c_str());
-  if (err != NPERR_NO_ERROR) {
-    instanceData->err << "NPN_GetURL returned " << err;
+}
+
+TestFunction
+getFuncFromString(const char* funcname)
+{
+  FunctionTable funcTable[] = 
+    {
+      FUNCTION_NPP_NEWSTREAM, "npp_newstream",
+      FUNCTION_NPP_WRITEREADY, "npp_writeready",
+      FUNCTION_NPP_WRITE, "npp_write",
+      FUNCTION_NPP_DESTROYSTREAM, "npp_destroystream",
+      FUNCTION_NONE, NULL
+    };
+  int32_t i = 0;
+  while(funcTable[i].funcName) {
+    if (!strcmp(funcname, funcTable[i].funcName)) return funcTable[i].funcId;
+    i++;
   }
+  return FUNCTION_NONE;
 }
 
 //
@@ -367,11 +429,19 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     return NPERR_OUT_OF_MEMORY_ERROR;
   instanceData->npp = instance;
   instanceData->streamMode = NP_ASFILEONLY;
+  instanceData->testFunction = FUNCTION_NONE;
+  instanceData->functionToFail = FUNCTION_NONE;
+  instanceData->failureCode = 0;
   instanceData->streamChunkSize = 1024;
   instanceData->streamBuf = NULL;
   instanceData->streamBufSize = 0;
+  instanceData->fileBuf = NULL;
+  instanceData->fileBufSize = 0;
   instanceData->testrange = NULL;
   instanceData->hasWidget = false;
+  instanceData->npnNewStream = false;
+  instanceData->writeCount = 0;
+  instanceData->writeReadyCount = 0;
   memset(&instanceData->window, 0, sizeof(instanceData->window));
   instance->pdata = instanceData;
 
@@ -422,6 +492,12 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     if (strcmp(argn[i], "streamchunksize") == 0) {
       instanceData->streamChunkSize = atoi(argv[i]);
     }
+    if (strcmp(argn[i], "failurecode") == 0) {
+      instanceData->failureCode = atoi(argv[i]);
+    }
+    if (strcmp(argn[i], "functiontofail") == 0) {
+      instanceData->functionToFail = getFuncFromString(argv[i]);
+    }
     if (strcmp(argn[i], "geturl") == 0) {
       instanceData->testUrl = argv[i];
       instanceData->testFunction = FUNCTION_NPP_GETURL;
@@ -458,6 +534,10 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
         semicolon = range.find(';');
       }
       if (range.length()) addRange(instanceData, range.c_str());
+    }
+    if (strcmp(argn[i], "newstream") == 0 &&
+        strcmp(argv[i], "true") == 0) {
+      instanceData->npnNewStream = true;
     }
   }
 
@@ -534,10 +614,14 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
 NPError
 NPP_Destroy(NPP instance, NPSavedData** save)
 {
+  printf("NPP_Destroy\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
 
   if (instanceData->streamBuf) {
     free(instanceData->streamBuf);
+  }
+  if (instanceData->fileBuf) {
+    free(instanceData->fileBuf);
   }
 
   TestRange* currentrange = instanceData->testrange;
@@ -576,6 +660,16 @@ NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, 
 {
   printf("NPP_NewStream\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+  
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM &&
+      instanceData->failureCode) {
+    instanceData->err << SUCCESS_STRING;
+    if (instanceData->frame.length() > 0) {
+      sendBufferToFrame(instance);
+    }
+    return instanceData->failureCode;
+  }
+  
   *stype = instanceData->streamMode;
 
   if (instanceData->streamBufSize) {
@@ -594,7 +688,29 @@ NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
 {
   printf("NPP_DestroyStream\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
-  if (instanceData->streamMode == NP_ASFILE) {
+
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM) {
+    instanceData->err << "NPP_DestroyStream called";
+  }
+
+  if (instanceData->functionToFail == FUNCTION_NPP_WRITE) {
+    if (instanceData->writeCount == 1)
+      instanceData->err << SUCCESS_STRING;
+    else
+      instanceData->err << "NPP_Write called after returning -1";
+  }
+
+  if (instanceData->functionToFail == FUNCTION_NPP_DESTROYSTREAM &&
+      instanceData->failureCode) {
+    instanceData->err << SUCCESS_STRING;
+    if (instanceData->frame.length() > 0) {
+      sendBufferToFrame(instance);
+    }
+    return instanceData->failureCode;
+  }
+
+  if (instanceData->streamMode == NP_ASFILE &&
+      instanceData->functionToFail == FUNCTION_NONE) {
     if (strcmp(reinterpret_cast<char *>(instanceData->fileBuf), 
       reinterpret_cast<char *>(instanceData->streamBuf)) != 0) {
       instanceData->err <<
@@ -602,8 +718,8 @@ NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
     }
   }
   if (instanceData->frame.length() > 0 && 
-    instanceData->testFunction != FUNCTION_NPP_GETURLNOTIFY &&
-    instanceData->testFunction != FUNCTION_NPP_POSTURL) {
+      instanceData->testFunction != FUNCTION_NPP_GETURLNOTIFY &&
+      instanceData->testFunction != FUNCTION_NPP_POSTURL) {
     sendBufferToFrame(instance);
   }
   if (instanceData->testFunction == FUNCTION_NPP_POSTURL) {
@@ -620,7 +736,18 @@ NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
 int32_t
 NPP_WriteReady(NPP instance, NPStream* stream)
 {
+  printf("NPP_WriteReady\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+  instanceData->writeReadyCount++;
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM) {
+    instanceData->err << "NPP_WriteReady called";
+  }
+  
+  // temporarily disabled per bug 519870
+  //if (instanceData->writeReadyCount == 1) {
+  //  return 0;
+  //}
+
   return instanceData->streamChunkSize;
 }
 
@@ -629,10 +756,25 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
 {
   printf("NPP_Write, offset=%d, len=%d, end=%d\n", offset, len, stream->end);
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+  instanceData->writeCount++;
+
+  // temporarily disabled per bug 519870
+  //if (instanceData->writeReadyCount == 1) {
+  //  instanceData->err << "NPP_Write called even though NPP_WriteReady " <<
+  //      "returned 0";
+  //}
+  
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM) {
+    instanceData->err << "NPP_Write called";
+  }
+
+  if (instanceData->functionToFail == FUNCTION_NPP_WRITE) {
+    return -1;
+  }
 
   // If the complete stream has been written, and we're doing a seek test,
   // then call NPN_RequestRead.
-  if (instanceData->streamMode == NP_SEEK && 
+  if (instanceData->streamMode == NP_SEEK &&
       stream->end != 0 && 
       stream->end == (instanceData->streamBufSize + len)) {
     // prevent recursion
@@ -698,24 +840,33 @@ void
 NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
 {
   printf("NPP_StreamAsFile, file=%s\n", fname);
-  ifstream::pos_type size;
+  size_t size;
 
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM ||
+      instanceData->functionToFail == FUNCTION_NPP_WRITE) {
+    instanceData->err << "NPP_StreamAsFile called";
+  }
 
   if (!fname)
     return;
 
-  ifstream file (fname, ios::in|ios::binary|ios::ate);
-  if (file.is_open())
-  {
-    size = file.tellg();
+  FILE *file = fopen(fname, "rb");
+  if (file) {
+    fseek(file, 0, SEEK_END);
+    size = ftell(file);
     instanceData->fileBuf = malloc((int32_t)size + 1);
     char* buf = reinterpret_cast<char *>(instanceData->fileBuf);
-    file.seekg (0, ios::beg);
-    file.read (buf, size);
-    file.close();
+    fseek(file, 0, SEEK_SET);
+    fread(instanceData->fileBuf, 1, size, file);
+    fclose(file);
     buf[size] = '\0';
     instanceData->fileBufSize = (int32_t)size;
+  }
+  else {
+    printf("Unable to open file\n");
+    instanceData->err << "Unable to open file " << fname;
   }
 }
 
@@ -931,6 +1082,24 @@ NPError
 NPN_DestroyStream(NPP instance, NPStream* stream, NPError reason)
 {
   return sBrowserFuncs->destroystream(instance, stream, reason);
+}
+
+NPError
+NPN_NewStream(NPP instance, 
+              NPMIMEType  type, 
+              const char* target,
+              NPStream**  stream)
+{
+  return sBrowserFuncs->newstream(instance, type, target, stream);
+}
+
+int32_t
+NPN_Write(NPP instance,
+          NPStream* stream,
+          int32_t len,
+          void* buf)
+{
+  return sBrowserFuncs->write(instance, stream, len, buf);
 }
 
 //
@@ -1256,5 +1425,39 @@ getLastMouseY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVaria
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
   INT32_TO_NPVARIANT(id->lastMouseY, *result);
+  return true;
+}
+
+static bool
+getError(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  if (id->err.str().length() == 0)
+    STRINGZ_TO_NPVARIANT(strdup(SUCCESS_STRING), *result);
+  else
+    STRINGZ_TO_NPVARIANT(strdup(id->err.str().c_str()), *result);
+  return true;
+}
+
+static bool
+doInternalConsistencyCheck(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  string error;
+  pluginDoInternalConsistencyCheck(id, error);
+  NPUTF8* utf8String = (NPUTF8*)NPN_MemAlloc(error.length() + 1);
+  if (!utf8String) {
+    return false;
+  }
+  memcpy(utf8String, error.c_str(), error.length() + 1);
+  STRINGZ_TO_NPVARIANT(utf8String, *result);
   return true;
 }

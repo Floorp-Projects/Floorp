@@ -131,7 +131,7 @@ LIBGNOME_VERSION=2.0
 GIO_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.6.16
+SQLITE_VERSION=3.6.18
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -182,7 +182,7 @@ then
 fi
 MOZ_BUILD_ROOT=`pwd`
 
-dnl Default to MSVC for win32
+dnl Default to MSVC for win32 and gcc-4.2 for darwin
 dnl ==============================================================
 if test -z "$CROSS_COMPILE"; then
 case "$target" in
@@ -194,6 +194,10 @@ case "$target" in
     if test -z "$LD"; then LD=link; fi
     if test -z "$AS"; then AS=ml; fi
     if test -z "$MIDL"; then MIDL=midl; fi
+    ;;
+*-darwin*)
+    if test -z "$CC"; then CC=gcc-4.2; fi
+    if test -z "$CXX"; then CXX=g++-4.2; fi
     ;;
 esac
 fi
@@ -466,8 +470,8 @@ case "$target" in
     ;;
 esac
 
-dnl Target the Windows Vista SDK by default
-WINSDK_TARGETVER=600
+dnl Target the Windows 7 SDK by default
+WINSDK_TARGETVER=601
 
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
@@ -1319,12 +1323,24 @@ case "$OS_TEST" in
     CPU_ARCH=x86
     ;;
 
-powerpc* | ppc | rs6000)
+powerpc64 | ppc64)
+    CPU_ARCH=ppc64
+    ;;
+
+powerpc | ppc | rs6000)
     CPU_ARCH=ppc
     ;;
 
 Alpha | alpha | ALPHA)
     CPU_ARCH=Alpha
+    ;;
+
+s390)
+    CPU_ARCH=s390
+    ;;
+
+s390x)
+    CPU_ARCH=s390x
     ;;
 
 hppa* | parisc)
@@ -1619,7 +1635,7 @@ case "$host" in
     case "$host" in
     *mingw*)
     dnl MinGW/MSYS does not need CYGWIN_WRAPPER
-        PERL="/bin/sh ${srcdir}/build/msys-perl-wrapper"
+        PERL="/bin/sh ${_topsrcdir}/build/msys-perl-wrapper"
         ;;
     *)
         CYGWIN_WRAPPER="${srcdir}/build/cygwin-wrapper"
@@ -2049,7 +2065,6 @@ case "$target" in
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
-    USE_SHORT_LIBNAME=1
     MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 
@@ -2167,7 +2182,6 @@ case "$target" in
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
-    USE_SHORT_LIBNAME=1
     MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 
@@ -2410,7 +2424,6 @@ case "$target" in
     AC_DEFINE(XP_OS2)
     AC_DEFINE(OS2EMX_PLAIN_CHAR)
     AC_DEFINE(TCPV40HDRS)
-    USE_SHORT_LIBNAME=1
     DLL_PREFIX=
     LIB_PREFIX=
     LIB_SUFFIX=lib
@@ -3042,6 +3055,9 @@ AC_CHECK_HEADERS(io.h)
 dnl These are all the places some variant of statfs can be hiding.
 AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
+dnl Quota support
+AC_CHECK_HEADERS(sys/quota.h)
+
 dnl Try for MMX support
 dnl NB - later gcc versions require -mmmx for this header to be successfully
 dnl included (or another option which implies it, such as -march=pentium-mmx)
@@ -3134,7 +3150,8 @@ case $target in
 esac
 
 dnl ========================================================
-dnl Check whether we can compile code for Core Text
+dnl Check whether we can compile code for Core Text and
+dnl Cocoa printing
 dnl (Mac OS X 10.5 or later)
 dnl ========================================================
 case "$target" in
@@ -3142,31 +3159,42 @@ case "$target" in
   AC_MSG_CHECKING([for Core Text])
   AC_TRY_COMPILE([#include <ApplicationServices/ApplicationServices.h>],
                  [CTLineRef lineRef;],
-                  ac_cv_have_core_text="yes",
-                  ac_cv_have_core_text="no")
-  AC_MSG_RESULT([$ac_cv_have_core_text])
+                  ac_cv_have_leopard="yes",
+                  ac_cv_have_leopard="no")
+  AC_MSG_RESULT([$ac_cv_have_leopard])
 
-  case "${target_cpu}" in
-  x86_64)
-    MOZ_CORETEXT=1
-    ;;
-  esac
+  MOZ_CORETEXT=1
 
-  MOZ_ARG_ENABLE_BOOL(coretext,
-[  --enable-coretext      Use CoreText instead of ATSUI for text rendering],
-    MOZ_CORETEXT=1,
-    MOZ_CORETEXT=)
+  MOZ_ARG_DISABLE_BOOL(coretext,
+[  --disable-coretext      Use ATSUI instead of Core Text for text rendering],
+    MOZ_CORETEXT=,
+    MOZ_CORETEXT=1)
 
   if test -n "$MOZ_CORETEXT"; then
-    if test "$ac_cv_have_core_text" = "no"; then
+    if test "$ac_cv_have_leopard" = "no"; then
       AC_MSG_ERROR([--enable-coretext requires MacOS SDK 10.5 or newer])
      fi
      AC_DEFINE(MOZ_CORETEXT)
   fi
+
+  MOZ_COCOA_PRINTING=1
+
+  MOZ_ARG_DISABLE_BOOL(cocoa-printing,
+[  --disable-cocoa-printing
+                          Use a Carbon print dialog instead of a Cocoa one],
+    MOZ_COCOA_PRINTING=,
+    MOZ_COCOA_PRINTING=1)
+
+  if test -n "$MOZ_COCOA_PRINTING"; then
+    if test "$ac_cv_have_leopard" = "no"; then
+        AC_MSG_ERROR([--enable-cocoa-printing requires MacOS SDK 10.5 or newer])
+    fi
+    AC_DEFINE(MOZ_COCOA_PRINTING)
+  fi
   ;;
 esac
 
-AC_SUBST(MOZ_CORETEXT)
+AC_SUBST(MOZ_COCOA_PRINTING)
 
 XLDFLAGS="$X_LIBS"
 XLIBS="$X_EXTRA_LIBS"
@@ -4755,8 +4783,6 @@ cairo-cocoa)
     AC_DEFINE(MOZ_WIDGET_COCOA)
     MOZ_USER_DIR="Mozilla"
     AC_DEFINE(XP_MACOSX)
-    AC_DEFINE(TARGET_CARBON)
-    AC_DEFINE(TARGET_API_MAC_CARBON)
     TK_LIBS='-framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook'
     TK_CFLAGS="-DNO_X11"
     LDFLAGS="$LDFLAGS -framework Cocoa"
@@ -7387,7 +7413,7 @@ if test "$MOZ_TREE_CAIRO"; then
         CAIRO_FT_CFLAGS="$FT2_CFLAGS"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "qt"; then
-        QPAINTER_SURFACE_FEATURE="#define CAIRO_HAS_QPAINTER_SURFACE 1"
+        QT_SURFACE_FEATURE="#define CAIRO_HAS_QT_SURFACE 1"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
         QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
@@ -7476,7 +7502,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(WIN32_FONT_FEATURE)
     AC_SUBST(QUARTZ_FONT_FEATURE)
     AC_SUBST(PNG_FUNCTIONS_FEATURE)
-    AC_SUBST(QPAINTER_SURFACE_FEATURE)
+    AC_SUBST(QT_SURFACE_FEATURE)
 
     if test "$_WIN32_MSVC"; then
         MOZ_CAIRO_LIBS='$(DEPTH)/gfx/cairo/cairo/src/mozcairo.lib $(DEPTH)/gfx/cairo/libpixman/src/mozlibpixman.lib'
@@ -7656,6 +7682,19 @@ if test "$NECKO_COOKIES"; then
     AC_DEFINE(NECKO_COOKIES)
 fi
 
+dnl
+dnl Build jsctypes on the platforms we can.
+dnl
+AC_SUBST(BUILD_CTYPES)
+case "$OS_TEST" in
+arm*)
+  ;;
+*)
+  BUILD_CTYPES=1
+  AC_DEFINE(BUILD_CTYPES)
+  ;;
+esac
+
 dnl NECKO_ configuration options are not global
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_"
 
@@ -7694,7 +7733,6 @@ AC_SUBST(LD)
 AC_SUBST(RC)
 AC_SUBST(RCFLAGS)
 AC_SUBST(WINDRES)
-AC_SUBST(USE_SHORT_LIBNAME)
 AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
 AC_SUBST(BIN_FLAGS)
@@ -8248,6 +8286,25 @@ if test "$MOZ_MEMORY"; then
 fi
 AC_OUTPUT_SUBDIRS(js/src)
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+
+# Build jsctypes on the platforms we can.
+if test "$BUILD_CTYPES"; then
+  # Run the libffi 'configure' script on platforms that it supports.
+  if test -z "$_MSC_VER"; then
+    ac_configure_args="--disable-shared --enable-static --disable-raw-api"
+    if test "$MOZ_DEBUG"; then
+      ac_configure_args="$ac_configure_args --enable-debug"
+    fi
+    if test -n "$DSO_PIC_CFLAGS"; then
+      ac_configure_args="$ac_configure_args --with-pic"
+    fi
+    if test -n "$CROSS_COMPILE"; then
+      ac_configure_args="$ac_configure_args --build=$build --host=$target"
+    fi
+    AC_OUTPUT_SUBDIRS(js/ctypes/libffi)
+    ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+  fi
+fi
 
 fi # COMPILE_ENVIRONMENT && !LIBXUL_SDK_DIR
 

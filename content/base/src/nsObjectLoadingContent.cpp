@@ -62,6 +62,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebNavigationInfo.h"
 #include "nsIScriptChannel.h"
+#include "nsIBlocklistService.h"
 
 #include "nsPluginError.h"
 
@@ -196,6 +197,9 @@ nsPluginErrorEvent::Run()
       break;
     case ePluginBlocklisted:
       type = NS_LITERAL_STRING("PluginBlocklisted");
+      break;
+    case ePluginOutdated:
+      type = NS_LITERAL_STRING("PluginOutdated");
       break;
     default:
       return NS_OK;
@@ -522,6 +526,13 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
         // bug 300540; when that's fixed, this if statement can be removed.
         mType = newType;
         notifier.Notify();
+
+        if (!mFrameLoader) {
+          // mFrameLoader got nulled out when we notified, which most
+          // likely means the node was removed from the
+          // document. Abort the load that just started.
+          return NS_BINDING_ABORTED;
+        }
       }
 
       // We're loading a document, so we have to set LOAD_DOCUMENT_URI
@@ -1734,14 +1745,14 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
     IsPluginEnabledByExtension(aURI, typeToUse);
   }
 
+  nsCOMPtr<nsIContent> thisContent = 
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  NS_ASSERTION(thisContent, "must be a content");
+  
   nsCOMPtr<nsIURI> baseURI;
   if (!aURI) {
     // We need some URI. If we have nothing else, use the base URI.
     // XXX(biesi): The code used to do this. Not sure why this is correct...
-    nsCOMPtr<nsIContent> thisContent = 
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-    NS_ASSERTION(thisContent, "must be a content");
-
     GetObjectBaseURI(thisContent, getter_AddRefs(baseURI));
     aURI = baseURI;
   }
@@ -1753,6 +1764,24 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
   nsresult rv = aFrame->Instantiate(typeToUse.get(), aURI);
 
   mInstantiating = oldInstantiatingValue;
+
+  nsCOMPtr<nsIPluginInstance> pluginInstance;
+  aFrame->GetPluginInstance(*getter_AddRefs(pluginInstance));
+  if (pluginInstance) {
+    nsCOMPtr<nsIPluginTag> pluginTag;
+    nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
+    host->GetPluginTagForInstance(pluginInstance, getter_AddRefs(pluginTag));
+
+    nsCOMPtr<nsIBlocklistService> blocklist =
+      do_GetService("@mozilla.org/extensions/blocklist;1");
+    if (blocklist) {
+      PRUint32 blockState = nsIBlocklistService::STATE_NOT_BLOCKED;
+      blocklist->GetPluginBlocklistState(pluginTag, EmptyString(),
+                                         EmptyString(), &blockState);
+      if (blockState == nsIBlocklistService::STATE_OUTDATED)
+        FirePluginError(thisContent, ePluginOutdated);
+    }
+  }
 
   return rv;
 }
@@ -1788,7 +1817,7 @@ nsObjectLoadingContent::ShouldShowDefaultPlugin(nsIContent* aContent,
 nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
                                               const nsCString& aContentType)
 {
-  if (!aContent->IsNodeOfType(nsINode::eHTML)) {
+  if (!aContent->IsHTML()) {
     return ePluginOtherState;
   }
 
@@ -1805,7 +1834,7 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
     nsIContent* child = aContent->GetChildAt(i);
     NS_ASSERTION(child, "GetChildCount lied!");
 
-    if (child->IsNodeOfType(nsINode::eHTML) &&
+    if (child->IsHTML() &&
         child->Tag() == nsGkAtoms::param) {
       if (child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                              NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {

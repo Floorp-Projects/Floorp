@@ -81,43 +81,6 @@
 
 #include "jsatominlines.h"
 
-/*
- * Reserved slot structure for Arguments objects:
- *
- * JSSLOT_PRIVATE       - the corresponding frame until the frame exits.
- * JSSLOT_ARGS_LENGTH   - the number of actual arguments and a flag indicating
- *                        whether arguments.length was overwritten.
- * JSSLOT_ARGS_CALLEE   - the arguments.callee value or JSVAL_HOLE if that was
- *                        overwritten.
- * JSSLOT_ARGS_COPY_START .. - room to store the corresponding arguments after
- *                        the frame exists. The slot's value will be JSVAL_HOLE
- *                        if arguments[i] was deleted or overwritten.
- */
-const uint32 JSSLOT_ARGS_LENGTH =               JSSLOT_PRIVATE + 1;
-const uint32 JSSLOT_ARGS_CALLEE =               JSSLOT_PRIVATE + 2;
-const uint32 JSSLOT_ARGS_COPY_START =           JSSLOT_PRIVATE + 3;
-
-/* Number of extra fixed slots besides JSSLOT_PRIVATE. */
-const uint32 ARGS_CLASS_FIXED_RESERVED_SLOTS =  JSSLOT_ARGS_COPY_START -
-                                                JSSLOT_ARGS_LENGTH;
-
-/*
- * JSSLOT_ARGS_LENGTH stores ((argc << 1) | overwritten_flag) as int jsval.
- * Thus (JS_ARGS_LENGTH_MAX << 1) | 1 must fit JSVAL_INT_MAX. To assert that
- * we check first that the shift does not overflow uint32.
- */
-JS_STATIC_ASSERT(JS_ARGS_LENGTH_MAX <= JS_BIT(30));
-JS_STATIC_ASSERT(jsval((JS_ARGS_LENGTH_MAX << 1) | 1) <= JSVAL_INT_MAX);
-
-static inline bool
-IsOverriddenArgsLength(JSObject *obj)
-{
-    JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_ArgumentsClass);
-
-    jsval v = obj->fslots[JSSLOT_ARGS_LENGTH];
-    return (JSVAL_TO_INT(v) & 1) != 0;
-}
-
 static inline void
 SetOverriddenArgsLength(JSObject *obj)
 {
@@ -136,7 +99,7 @@ InitArgsLengthSlot(JSObject *obj, uint32 argc)
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
     JS_ASSERT(obj->fslots[JSSLOT_ARGS_LENGTH] == JSVAL_VOID);
     obj->fslots[JSSLOT_ARGS_LENGTH] = INT_TO_JSVAL(argc << 1);
-    JS_ASSERT(!IsOverriddenArgsLength(obj));
+    JS_ASSERT(!js_IsOverriddenArgsLength(obj));
 }
 
 static inline uint32
@@ -225,7 +188,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, jsval *vp)
         }
     } else if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
         JSObject *argsobj = JSVAL_TO_OBJECT(fp->argsobj);
-        if (argsobj && IsOverriddenArgsLength(argsobj))
+        if (argsobj && js_IsOverriddenArgsLength(argsobj))
             return argsobj->getProperty(cx, id, vp);
         *vp = INT_TO_JSVAL(jsint(fp->argc));
     }
@@ -321,6 +284,8 @@ js_Arguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee,
              double *argv, js_ArgsPrivateNative *apn)
 {
     JSObject *argsobj = NewArguments(cx, parent, argc, callee);
+    if (!argsobj)
+        return NULL;
     apn->argv = argv;
     SetArgsPrivateNative(argsobj, apn);
     return argsobj;
@@ -559,7 +524,7 @@ ArgGetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
             }
         }
     } else if (idval == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
-        if (!IsOverriddenArgsLength(obj))
+        if (!js_IsOverriddenArgsLength(obj))
             *vp = INT_TO_JSVAL(GetArgsLength(obj));
     } else {
         JS_ASSERT(idval == ATOM_KEY(cx->runtime->atomState.calleeAtom));
@@ -639,7 +604,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
             id = INT_JSVAL_TO_JSID(idval);
         }
     } else if (idval == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
-        if (!IsOverriddenArgsLength(obj))
+        if (!js_IsOverriddenArgsLength(obj))
             id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
 
     } else if (idval == ATOM_KEY(cx->runtime->atomState.calleeAtom)) {
@@ -1590,7 +1555,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         nupvars = flagsword >> 16;
         fun->flags = uint16(flagsword);
         fun->u.i.skipmin = uint16(firstword >> 2);
-        fun->u.i.wrapper = (firstword >> 1) & 1;
+        fun->u.i.wrapper = JSPackedBool((firstword >> 1) & 1);
     }
 
     /* do arguments and local vars */
@@ -2377,20 +2342,16 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
         return NULL;
     fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
     if (!fun)
-        goto bad;
+        return NULL;
     fun->u.i.script = js_NewScript(cx, 1, 1, 0, 0, 0, 0, 0);
     if (!fun->u.i.script)
-        goto bad;
+        return NULL;
     fun->u.i.script->code[0] = JSOP_STOP;
     *fun->u.i.script->notes() = SRC_NULL;
 #ifdef CHECK_SCRIPT_OWNER
     fun->u.i.script->owner = NULL;
 #endif
     return proto;
-
-bad:
-    cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-    return NULL;
 }
 
 JSFunction *
@@ -2955,7 +2916,7 @@ get_local_names_enumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
                   entry->localKind == JSLOCAL_CONST ||
                   entry->localKind == JSLOCAL_UPVAR);
         JS_ASSERT(entry->index < args->fun->u.i.nvars + args->fun->u.i.nupvars);
-        JS_ASSERT(args->nCopiedVars++ < args->fun->u.i.nvars + args->fun->u.i.nupvars);
+        JS_ASSERT(args->nCopiedVars++ < unsigned(args->fun->u.i.nvars + args->fun->u.i.nupvars));
         i = args->fun->nargs;
         if (entry->localKind == JSLOCAL_UPVAR)
            i += args->fun->u.i.nvars;

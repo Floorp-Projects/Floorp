@@ -39,7 +39,7 @@ static void illegal_instruction(int sig)
 }
 # endif
 
-
+#if defined(i386) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_AMD64)
 # if !defined(_MSC_VER)
 #  if defined(__amd64__)||defined(__x86_64__)
 /*On x86-64, gcc seems to be able to figure out how to save %rbx for us when
@@ -64,6 +64,7 @@ static void illegal_instruction(int sig)
   )
 #  endif
 # else
+#   if defined(_M_IX86) 
 /*Why does MSVC need this complicated rigamarole?
   At this point I honestly do not care.*/
 
@@ -110,7 +111,20 @@ static void oc_detect_cpuid_helper(ogg_uint32_t *_eax,ogg_uint32_t *_ebx){
     mov [ecx],ebx
   }
 }
+#   elif defined(_M_AMD64)
+#   include <intrin.h>
+#   define cpuid(_op,_eax,_ebx,_ecx,_edx) \
+	  do{ \
+	    int cpu_info[4]; \
+	    __cpuid(cpu_info,_op); \
+	    (_eax)=cpu_info[0]; \
+	    (_ebx)=cpu_info[1]; \
+	    (_ecx)=cpu_info[2]; \
+	    (_edx)=cpu_info[3]; \
+	  }while(0)
+#   endif
 # endif
+#endif /* x86-only cpuid */
 
 static ogg_uint32_t oc_parse_intel_flags(ogg_uint32_t _edx,ogg_uint32_t _ecx){
   ogg_uint32_t flags;
@@ -166,12 +180,12 @@ static ogg_uint32_t oc_cpu_flags_get(void){
 	signal(SIGILL, handler);
 #  endif	
 /* detect x86 CPU extensions */
-# elif defined(i386) || defined(__x86_64__) || defined(_M_IX86)
+# elif defined(i386) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_AMD64)
   ogg_uint32_t eax;
   ogg_uint32_t ebx;
   ogg_uint32_t ecx;
   ogg_uint32_t edx;
-# if !defined(__amd64__)&&!defined(__x86_64__)
+# if !defined(__amd64__)&&!defined(__x86_64__)&&!defined(_M_AMD64)
   /*Not all x86-32 chips support cpuid, so we have to check.*/
 #  if !defined(_MSC_VER)
   __asm__ __volatile__(

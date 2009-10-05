@@ -8,13 +8,18 @@ var gSmallTests = [
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240 },
   { name:"bug499519.ogv", type:"video/ogg", duration:0.24 },
   { name:"bug506094.ogv", type:"video/ogg", duration:0 },
+  { name:"bug501279.ogg", type:"audio/ogg", duration:0 },
+  { name:"bug498855-1.ogv", type:"video/ogg", duration:0.2 },
+  { name:"bug498855-2.ogv", type:"video/ogg", duration:0.2 },
+  { name:"bug498855-3.ogv", type:"video/ogg", duration:0.2 },
+  { name:"bug504644.ogv", type:"video/ogg", duration:1.56 },
+  { name:"chain.ogv", type:"video/ogg", duration:Number.NaN },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
-// These are files that must fire an error during load or playback, and do not
-// cause a crash.  Put files of the same type together in this list so if
-// something crashes we have some idea of which backend is responsible.  Used
-// by test_playback_errors, which expects one error event and no ended event.
+// These are files that we just want to make sure we can play through.  We can
+// also check metadata.  Put files of the same type together in this list so if
+// something crashes we have some idea of which backend is responsible.
 var gPlayTests = [
   // 8-bit samples
   { name:"r11025_u8_c1.wav", type:"audio/x-wav", duration:1.0 },
@@ -36,24 +41,26 @@ var gPlayTests = [
   { name:"short-video.ogv", type:"video/ogg", duration:1.081 },
   // First Theora data packet is zero bytes.
   { name:"bug504613.ogv", type:"video/ogg" },
+  // Multiple audio streams.
+  { name:"bug516323.ogv", type:"video/ogg", duration:4.424 },
+  // Encoded with vorbis beta1, includes unusually sized codebooks
+  { name:"beta-phrasebook.ogg", type:"audio/ogg", duration:4 },
 
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
-// These are files that should refuse to play and report an error,
-// without crashing of course.
+// These are files that must fire an error during load or playback, and do not
+// cause a crash.  Put files of the same type together in this list so if
+// something crashes we have some idea of which backend is responsible.  Used
+// by test_playback_errors, which expects one error event and no ended event.
 // Put files of the same type together in this list so if something crashes
 // we have some idea of which backend is responsible.
 var gErrorTests = [
-  { name:"bug495129.ogv", type:"video/ogg", duration:2.52 },
-  { name:"bug498855-1.ogv", type:"video/ogg", duration:0.2 },
-  { name:"bug498855-2.ogv", type:"video/ogg", duration:0.2 },
-  { name:"bug498855-3.ogv", type:"video/ogg", duration:0.2 },
-  { name:"bug501279.ogg", type:"audio/ogg", duration:0 },
-  { name:"bug504644.ogv", type:"video/ogg", duration:1.56 },
   { name:"bogus.wav", type:"audio/x-wav" },
   { name:"bogus.ogv", type:"video/ogg" },
   { name:"448636.ogv", type:"video/ogg" },
+  { name:"bug495129.ogv", type:"video/ogg", duration:2.52 },
+  { name:"bug504843.ogv", type:"video/ogg", duration:1.233 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 

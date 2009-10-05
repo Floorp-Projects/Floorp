@@ -200,7 +200,7 @@ public:
    *                        the distance of the interpolated value in the
    *                        interval.
    * @param   aResult       The interpolated value.
-   * @result  NS_OK on success, NS_ERROR_FAILURE if this data type cannot be
+   * @return  NS_OK on success, NS_ERROR_FAILURE if this data type cannot be
    *          interpolated or NS_ERROR_OUT_OF_MEMORY if insufficient memory was
    *          available for storing the result.
    *

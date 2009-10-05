@@ -1,6 +1,5 @@
 /* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4 -*- */
 /* vi: set ts=4 sw=4 expandtab: (add to ~/.vimrc: set modeline modelines=5) */
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -66,10 +65,9 @@ namespace nanojit
 
     static const int kLinkageAreaSize = 68;
     static const int kcalleeAreaSize = 80; // The max size.
-    static const int NJ_PAGE_SIZE_SPARC = 8192; // Use sparc page size here.
 
-#define TODO(x) do{ verbose_only(outputf(#x);) NanoAssertMsgf(false, "%s", #x); } while(0)
 #define BIT_ROUND_UP(v,q)      ( (((uintptr_t)v)+(q)-1) & ~((q)-1) )
+#define TODO(x) do{ verbose_only(outputf(#x);) NanoAssertMsgf(false, "%s", #x); } while(0)
 
     void Assembler::nInit(AvmCore* core)
     {
@@ -97,8 +95,11 @@ namespace nanojit
             SETHI(frameSize, G1);
         }
 
-        verbose_only( verbose_outputf("        %p:",_nIns); )
-        verbose_only( asm_output("        patch entry:"); )
+        verbose_only(
+        if (_logc->lcbits & LC_Assembly) {
+            outputf("        %p:",_nIns);
+            output("        patch entry:");
+        })
         NIns *patchEntry = _nIns;
 
         // The frame size in SAVE is faked. We will still re-caculate SP later.
@@ -160,11 +161,19 @@ namespace nanojit
         ArgSize sizes[MAXARGS];
         uint32_t argc = call->get_sizes(sizes);
 
-        NanoAssert(ins->isop(LIR_call) || ins->isop(LIR_fcall));
+        NanoAssert(ins->isop(LIR_pcall) || ins->isop(LIR_fcall));
         verbose_only(if (_logc->lcbits & LC_Assembly)
                      outputf("        %p:", _nIns);
                      )
-        CALL(call);
+        bool indirect = call->isIndirect();
+        if (!indirect) {
+            CALL(call);
+        }
+        else {
+            argc--;
+            Register r = findSpecificRegFor(ins->arg(argc), I0);
+            JMPL(G0, I0, 15);
+        }
 
         uint32_t GPRIndex = O0;
         uint32_t offset = kLinkageAreaSize; // start of parameters stack postion.
@@ -218,7 +227,7 @@ namespace nanojit
         a.clear();
         a.free = GpRegs | FpRegs;
         debug_only( a.managed = a.free; )
-            }
+    }
 
     void Assembler::nPatchBranch(NIns* branch, NIns* location)
     {
@@ -276,7 +285,7 @@ namespace nanojit
             verbose_only(if (_logc->lcbits & LC_RegAlloc) {
                 outputf("        remat %s size %d", _thisfrag->lirbuf->names->formatRef(i), i->size());
             })
-                }
+        }
         else if (i->isconst()) {
             if (!i->getArIndex()) {
                 i->markAsClear();
@@ -293,7 +302,7 @@ namespace nanojit
             verbose_only(if (_logc->lcbits & LC_RegAlloc) {
                 outputf("        restore %s", _thisfrag->lirbuf->names->formatRef(i));
             })
-                }
+        }
     }
 
     void Assembler::asm_store32(LIns *value, int dr, LIns *base)
@@ -521,7 +530,7 @@ namespace nanojit
         LOpcode condop = cond->opcode();
 
         // LIR_ov recycles the flags set by arithmetic ops
-        if ((condop == LIR_ov))
+        if (condop == LIR_ov)
             return;
 
         LInsp lhs = cond->oprnd1();
@@ -983,18 +992,12 @@ namespace nanojit
         FCMPD(rLhs, rRhs);
     }
 
-/** no longer called by patch/unpatch
-    NIns* Assembler::asm_adjustBranch(NIns* at, NIns* target)
+    verbose_only(
+    void Assembler::asm_inc_m32(uint32_t* pCtr)
     {
-        NIns* was;
-        was = (NIns*)(((*(uint32_t*)&at[0] & 0x3FFFFF) << 10) | (*(uint32_t*)&at[1] & 0x3FF ));
-        *(uint32_t*)&at[0] &= 0xFFC00000;
-        *(uint32_t*)&at[0] |= ((intptr_t)target >> 10) & 0x3FFFFF;
-        *(uint32_t*)&at[1] &= 0xFFFFFC00;
-        *(uint32_t*)&at[1] |= (intptr_t)target & 0x3FF;
-        return was;
+        // TODO(asm_inc_m32);
     }
- */
+    )
 
     void Assembler::nativePageReset()
     {
@@ -1007,8 +1010,10 @@ namespace nanojit
 
     void Assembler::nativePageSetup()
     {
-        if (!_nIns) codeAlloc(codeStart, codeEnd, _nIns);
-        if (!_nExitIns) codeAlloc(exitStart, exitEnd, _nExitIns);
+        if (!_nIns)
+            codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
+        if (!_nExitIns)
+            codeAlloc(exitStart, exitEnd, _nExitIns verbose_only(, exitBytes));
     }
 
     void
@@ -1019,9 +1024,9 @@ namespace nanojit
             // We are done with the current page.  Tell Valgrind that new code
             // has been generated.
             if (_inExit)
-                codeAlloc(exitStart, exitEnd, _nIns);
+                codeAlloc(exitStart, exitEnd, _nIns verbose_only(, exitBytes));
             else
-                codeAlloc(codeStart, codeEnd, _nIns);
+                codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
             JMP_long_nocheck((intptr_t)eip);
         }
     }

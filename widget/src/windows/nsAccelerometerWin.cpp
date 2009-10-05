@@ -264,6 +264,106 @@ SMISensor::GetValues(double *x, double *y, double *z)
   *z = vector.z;
 }
 
+////////////////////////////
+// Toshiba TG01 / T-01A
+////////////////////////////
+
+typedef struct _TS_ACCELERATION
+{
+  SHORT x;
+  SHORT y;
+  SHORT z;
+  FILETIME time;
+} TS_ACCELERATION;
+
+typedef DWORD (WINAPI *TSRegisterAcceleration)(HANDLE,DWORD,DWORD*);
+typedef DWORD (WINAPI *TSDeregisterAcceleration)(DWORD);
+typedef DWORD (WINAPI *TSGetAcceleration)(DWORD,TS_ACCELERATION*);
+
+TSRegisterAcceleration gTSRegisterAcceleration = nsnull;
+TSDeregisterAcceleration gTSDeregisterAcceleration = nsnull;
+TSGetAcceleration gTSGetAcceleration = nsnull;
+
+class TsSensor : public Sensor
+{
+public:
+  TsSensor();
+  ~TsSensor();
+  PRBool Startup();
+  void Shutdown();
+  void GetValues(double *x, double *y, double *z);
+private:
+  HMODULE mLibrary;
+  DWORD mId;
+};
+
+TsSensor::TsSensor() : mLibrary(nsnull), mId(0)
+{
+}
+
+TsSensor::~TsSensor()
+{
+}
+
+PRBool
+TsSensor::Startup()
+{
+  HMODULE hSensorLib = LoadLibraryW(L"axcon.dll");
+
+  if (!hSensorLib)
+    return PR_FALSE;
+
+  gTSRegisterAcceleration = (TSRegisterAcceleration) GetProcAddressW(hSensorLib, L"TSRegisterAcceleration");
+  gTSDeregisterAcceleration = (TSDeregisterAcceleration) GetProcAddressW(hSensorLib, L"TSDeregisterAcceleration");
+  gTSGetAcceleration = (TSGetAcceleration) GetProcAddressW(hSensorLib, L"TSGetAcceleration");
+
+  if (gTSRegisterAcceleration && gTSDeregisterAcceleration && gTSGetAcceleration) {
+    if (!gTSRegisterAcceleration(GetModuleHandle(NULL), 100, &mId)) {
+      mLibrary = hSensorLib;
+      return PR_TRUE;
+    }
+  }
+
+  FreeLibrary(hSensorLib);
+
+  mLibrary = nsnull;
+  mId = 0;
+  gTSRegisterAcceleration = nsnull;
+  gTSDeregisterAcceleration = nsnull;
+  gTSGetAcceleration = nsnull;
+
+  return PR_FALSE;
+}
+
+void
+TsSensor::Shutdown()
+{
+  NS_ASSERTION(mLibrary, "Shutdown called when mLibrary is null?");
+
+  gTSDeregisterAcceleration(mId);
+  FreeLibrary(mLibrary);
+
+  mLibrary = nsnull;
+  mId = 0;
+  gTSRegisterAcceleration = nsnull;
+  gTSDeregisterAcceleration = nsnull;
+  gTSGetAcceleration = nsnull;
+}
+
+void
+TsSensor::GetValues(double *x, double *y, double *z)
+{
+  NS_ASSERTION(mLibrary, "mLibrary should not be null when GetValues is called");
+
+  TS_ACCELERATION data;
+  gTSGetAcceleration(mId, &data);
+
+  // Value for TG-01 is landscaped
+  *x = ((double)data.y) / 1000;
+  *y = ((double)data.x) / 1000;
+  *z = ((double)data.z) / 1000;
+}
+
 #endif // WINCE_WINDOWS_MOBILE
 
 #if !defined(WINCE) && !defined(WINCE_WINDOWS_MOBILE) // normal windows.
@@ -380,6 +480,12 @@ void nsAccelerometerWin::Startup()
 
   if (!started) {
     mSensor = new HTCSensor();
+    if (mSensor)
+      started = mSensor->Startup();
+  }
+
+  if (!started) {
+    mSensor = new TsSensor();
     if (mSensor)
       started = mSensor->Startup();
   }

@@ -434,13 +434,8 @@
         [387, 170, NSMouseMoved, null, right, [
           { type: "mouseover", target: panel },
           { type: "mousemove", target: panel },
-          { type: "mouseout", target: panel, todoShouldNotHaveFired: true },
-          { type: "mouseover", target: left.document.documentElement, todoShouldNotHaveFired: true },
         ]],
-        // Why does left.document.documentElement get entered? This makes no sense. 
         [387, 171, NSMouseMoved, null, left, [
-          { type: "mouseout", target: left.document.documentElement, todoShouldNotHaveFired: true },
-          { type: "mouseover", target: panel, todoShouldNotHaveFired: true },
           { type: "mousemove", target: panel },
         ]],
         [388, 171, NSMouseMoved, panel, left, [

@@ -92,6 +92,7 @@ cairo-directfb.h
 cairo-qpainter.h
 #endif
 dfiff.h
+ffi.h
 fusion/reactor.h
 fusion/property.h
 fusion/conf.h
@@ -733,6 +734,7 @@ sys/procfs.h
 sys/pstat.h
 sys/ptrace.h
 sys/queue.h
+sys/quota.h
 sys/reg.h
 sys/regset.h
 sys/resource.h

@@ -91,6 +91,9 @@ diff -re crt/src/intel/_sample_.def crtsrc/intel/_sample_.def
 495a
     malloc_usable_size
 .
+467a
+    jemalloc_stats
+.
 331,336d
 319d
 313,314d

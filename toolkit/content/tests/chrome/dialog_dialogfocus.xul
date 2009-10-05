@@ -1,0 +1,49 @@
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<dialog buttons="extra2,accept,cancel" onload="loaded()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<tabbox id="tabbox" hidden="true">
+  <tabs>
+    <tab id="tab" label="Tab"/>
+  </tabs>
+  <tabpanels>
+    <tabpanel>
+      <button id="tabbutton" label="Tab Button"/>
+      <button id="tabbutton2" label="Tab Button 2"/>
+    </tabpanel>
+  </tabpanels>
+</tabbox>
+
+<button id="one" label="One"/>
+<button id="two" label="Two" hidden="true"/>
+
+<script>
+function loaded()
+{
+  if (window.arguments) {
+    var step = window.arguments[0];
+    switch (step) {
+      case 2:
+        document.getElementById("one").setAttribute("noinitialfocus", "true");
+        break;
+      case 3:
+        document.getElementById("one").hidden = true;
+      case 4:
+        document.getElementById("tabbutton2").setAttribute("noinitialfocus", "true");
+      case 5:
+        document.getElementById("tabbutton").setAttribute("noinitialfocus", "true");
+      case 6:
+        document.getElementById("tabbox").hidden = false;
+        break;
+      case 7:
+        var two = document.getElementById("two");
+        two.hidden = false;
+        two.focus();
+        break;
+    }
+  }
+}
+</script>
+
+</dialog>

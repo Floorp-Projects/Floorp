@@ -44,9 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = system-pref
 LIBRARY_NAME = system-pref_s
-ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME = syspref
-endif
 
 # We want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

@@ -187,6 +187,11 @@ static const nsModuleComponentInfo components[] =
     NS_ABOUT_MODULE_CONTRACTID_PREFIX "sessionrestore",
     AboutRedirector::Create },
 
+  { "about:support",
+    NS_BROWSER_ABOUT_REDIRECTOR_CID,
+    NS_ABOUT_MODULE_CONTRACTID_PREFIX "support",
+    AboutRedirector::Create },
+
 #ifndef WINCE
 
   { "Profile Migrator",

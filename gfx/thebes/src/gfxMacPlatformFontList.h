@@ -116,9 +116,6 @@ private:
     // eliminate faces which have the same ATS font reference
     void EliminateDuplicateFaces(const nsAString& aFamilyName);
 
-    // get localized name (if any) for a given family
-    void GetLocalizedFamilyName(gfxFontFamily *aFamily, nsAString& aLocalizedName);
-
     static void ATSNotification(ATSFontNotificationInfoRef aInfo, void* aUserArg);
 
     // keep track of ATS generation to prevent unneeded updates when loading downloaded fonts

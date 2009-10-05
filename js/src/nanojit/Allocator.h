@@ -99,9 +99,19 @@ inline void* operator new(size_t size, nanojit::Allocator &a) {
     return a.alloc(size);
 }
 
+/** global new overload enabling this pattern:  new (allocator) T(...) */
+inline void* operator new(size_t size, nanojit::Allocator *a) {
+    return a->alloc(size);
+}
+
 /** global new[] overload enabling this pattern: new (allocator) T[] */
 inline void* operator new[](size_t size, nanojit::Allocator& a) {
     return a.alloc(size);
+}
+
+/** global new[] overload enabling this pattern: new (allocator) T[] */
+inline void* operator new[](size_t size, nanojit::Allocator* a) {
+    return a->alloc(size);
 }
 
 #endif // __nanojit_Allocator__

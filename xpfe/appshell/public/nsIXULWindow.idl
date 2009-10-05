@@ -98,12 +98,15 @@ interface nsIXULWindow : nsISupports
 
   /**
    * Move the window to a centered position.
-   * @param aRelative the window relative to which the window is moved.
-   *                  See screen parameter for details. if null, the
-   *                  window is centered relative to the main screen.
+   * @param aRelative If not null, the window relative to which the window is
+   *                  moved. See aScreen parameter for details.
    * @param aScreen   PR_TRUE to center the window relative to the screen
-   *                  containing aRelative. PR_FALSE to center it relative
-   *                  to aRelative itself.
+   *                  containing aRelative if aRelative is not null. If
+   *                  aRelative is null then relative to the screen of the
+   *                  opener window if it was initialized by passing it to
+   *                  nsWebShellWindow::Initialize. Failing that relative to
+   *                  the main screen.
+   *                  PR_FALSE to center it relative to aRelative itself.
    * @param aAlert    PR_TRUE to move the window to an alert position,
    *                  generally centered horizontally and 1/3 down from the top.
    */
