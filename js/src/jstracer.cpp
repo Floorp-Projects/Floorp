@@ -5983,11 +5983,13 @@ TraceRecorder::attemptTreeCall(VMFragment* f, uintN& inlineCallCount)
     unsigned oldInlineCallCount = inlineCallCount;
 #endif
 
+    JSContext *localCx = cx;
+
     VMSideExit* innermostNestedGuard = NULL;
     VMSideExit* lr = ExecuteTree(cx, f, inlineCallCount, &innermostNestedGuard);
 
     /* ExecuteTree can reenter the interpreter and kill |this|. */
-    if (!TRACE_RECORDER(cx))
+    if (!TRACE_RECORDER(localCx))
         return ARECORD_ABORTED;
 
     if (!lr) {
@@ -6002,10 +6004,9 @@ TraceRecorder::attemptTreeCall(VMFragment* f, uintN& inlineCallCount)
       case LOOP_EXIT:
         /* If the inner tree exited on an unknown loop exit, grow the tree around it. */
         if (innermostNestedGuard) {
-            JSContext* _cx = cx;
             js_AbortRecording(cx, "Inner tree took different side exit, abort current "
                               "recording and grow nesting tree");
-            return AttemptToExtendTree(_cx, innermostNestedGuard, lr, outer) ?
+            return AttemptToExtendTree(localCx, innermostNestedGuard, lr, outer) ?
                 ARECORD_CONTINUE : ARECORD_ABORTED;
         }
 
@@ -6018,10 +6019,9 @@ TraceRecorder::attemptTreeCall(VMFragment* f, uintN& inlineCallCount)
       case UNSTABLE_LOOP_EXIT:
       {
         /* Abort recording so the inner loop can become type stable. */
-        JSContext* _cx = cx;
         JSObject* _globalObj = globalObj;
         js_AbortRecording(cx, "Inner tree is trying to stabilize, abort outer recording");
-        return AttemptToStabilizeTree(_cx, _globalObj, lr, outer, outerFragment->argc) ?
+        return AttemptToStabilizeTree(localCx, _globalObj, lr, outer, outerFragment->argc) ?
             ARECORD_CONTINUE : ARECORD_ABORTED;
       }
 
@@ -6035,9 +6035,8 @@ TraceRecorder::attemptTreeCall(VMFragment* f, uintN& inlineCallCount)
       case BRANCH_EXIT:
       case CASE_EXIT: {
           /* Abort recording the outer tree, extend the inner tree. */
-          JSContext* _cx = cx;
           js_AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
-          return AttemptToExtendTree(_cx, lr, NULL, outer) ? ARECORD_CONTINUE : ARECORD_ABORTED;
+          return AttemptToExtendTree(localCx, lr, NULL, outer) ? ARECORD_CONTINUE : ARECORD_ABORTED;
       }
 
       default:
