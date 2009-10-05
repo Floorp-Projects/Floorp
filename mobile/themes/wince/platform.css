@@ -281,6 +281,7 @@ radio .radio-icon, radio .radio-check {
   display: none;
 }
 
+radio:not([disabled=true]):active:hover,
 radio[selected] {
   color: #000;
 }
@@ -292,6 +293,7 @@ radio[selected] {
     -moz-border-image: url("chrome://browser/skin/images/togglemiddle-inactive-64.png") 8 repeat repeat;
   }
   
+  radio:not([disabled=true]):active:hover,
   radio[selected] {
     -moz-border-image: url("chrome://browser/skin/images/togglemiddle-active-64.png") 8 repeat repeat;
   }
@@ -300,6 +302,7 @@ radio[selected] {
     -moz-border-image: url("chrome://browser/skin/images/toggleleft-inactive-64.png") 8 repeat repeat;
   }
   
+  radio:not([disabled=true]):first-child:active:hover,
   radio:first-child[selected] {
     -moz-border-image: url("chrome://browser/skin/images/toggleleft-active-64.png") 8 repeat repeat;
   }
@@ -308,8 +311,18 @@ radio[selected] {
     -moz-border-image: url("chrome://browser/skin/images/toggleright-inactive-64.png") 8 repeat repeat;
   }
   
+  radio:not([disabled=true]):last-child:active:hover,
   radio:last-child[selected] {
     -moz-border-image: url("chrome://browser/skin/images/toggleright-active-64.png") 8 repeat repeat;
+  }
+
+  radio:first-child:last-child {
+  -moz-border-image: url("chrome://browser/skin/images/toggleboth-inactive-64.png") 8 repeat repeat;
+  }
+
+  radio:not([disabled=true]):first-child:last-child:active:hover,
+  radio:first-child:last-child[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggleboth-active-64.png") 8 repeat repeat;
   }
 }
 
@@ -320,6 +333,7 @@ radio[selected] {
     -moz-border-image: url("chrome://browser/skin/images/togglemiddle-inactive-36.png") 4 repeat repeat;
   }
 
+  radio:not([disabled=true]):active:hover,
   radio[selected] {
     -moz-border-image: url("chrome://browser/skin/images/togglemiddle-active-36.png") 4 repeat repeat;
   }
@@ -328,6 +342,7 @@ radio[selected] {
     -moz-border-image: url("chrome://browser/skin/images/toggleleft-inactive-36.png") 4 repeat repeat;
   }
   
+  radio:not([disabled=true]):first-child:active:hover,
   radio:first-child[selected] {
     -moz-border-image: url("chrome://browser/skin/images/toggleleft-active-36.png") 4 repeat repeat;
   }
@@ -336,8 +351,18 @@ radio[selected] {
     -moz-border-image: url("chrome://browser/skin/images/toggleright-inactive-36.png") 4 repeat repeat;
   }
   
+  radio:not([disabled=true]):last-child:active:hover,
   radio:last-child[selected] {
     -moz-border-image: url("chrome://browser/skin/images/toggleright-active-36.png") 4 repeat repeat;
+  }
+
+  radio:first-child:last-child {
+    -moz-border-image: url("chrome://browser/skin/images/toggleboth-inactive-36.png") 4 repeat repeat;
+  }
+
+  radio:not([disabled=true]):first-child:last-child:active:hover,
+  radio:first-child:last-child[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggleboth-active-36.png") 4 repeat repeat;
   }
 }
 
@@ -398,6 +423,11 @@ radio.checkbox-radio-off:not([selected]) .radio-label-box {
   color: #fff;
 }
 
+.toggle-dark:not([disabled=true]) radio:active:hover,
+.toggle-dark radio[selected] {
+  color: #fff;
+}
+
 /* high-res screens */
 @media all and (min-device-width: 401px) {
   .toggle-dark radio {
@@ -425,6 +455,15 @@ radio.checkbox-radio-off:not([selected]) .radio-label-box {
   .toggle-dark:not([disabled=true]) radio:last-child:active:hover,
   .toggle-dark radio:last-child[selected] {
     -moz-border-image: url("chrome://browser/skin/images/toggledarkright-active-64.png") 8 repeat repeat;
+  }
+
+  .toggle-dark radio:first-child:last-child {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-inactive-64.png") 8 repeat repeat;
+  }
+
+  .toggle-dark:not([disabled=true]) radio:first-child:last-child:active:hover,
+  .toggle-dark radio:first-child:last-child[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-active-64.png") 8 repeat repeat;
   }
 }
 
@@ -455,6 +494,15 @@ radio.checkbox-radio-off:not([selected]) .radio-label-box {
   .toggle-dark:not([disabled=true]) radio:last-child:active:hover,
   .toggle-dark radio:last-child[selected] {
     -moz-border-image: url("chrome://browser/skin/images/toggledarkright-active-36.png") 4 repeat repeat;
+  }
+
+  .toggle-dark radio:first-child:last-child {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-inactive-36.png") 4 repeat repeat;
+  }
+
+  .toggle-dark:not([disabled=true]) radio:first-child:last-child:active:hover,
+  .toggle-dark radio:first-child:last-child[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-active-36.png") 4 repeat repeat;
   }
 }
 

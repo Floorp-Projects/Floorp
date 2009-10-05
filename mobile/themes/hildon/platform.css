@@ -222,6 +222,7 @@ radio .radio-icon, radio .radio-check {
   display: none;
 }
 
+radio:not([disabled=true]):active:hover,
 radio[selected] {
   color: #000;
   -moz-border-image: url("chrome://browser/skin/images/togglemiddle-active-64.png") 8 repeat repeat;
@@ -231,6 +232,7 @@ radio:first-child {
   -moz-border-image: url("chrome://browser/skin/images/toggleleft-inactive-64.png") 8 repeat repeat;
 }
 
+radio:not([disabled=true]):first-child:active:hover,
 radio:first-child[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggleleft-active-64.png") 8 repeat repeat;
 }
@@ -239,8 +241,18 @@ radio:last-child {
   -moz-border-image: url("chrome://browser/skin/images/toggleright-inactive-64.png") 8 repeat repeat;
 }
 
+radio:not([disabled=true]):last-child:active:hover,
 radio:last-child[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggleright-active-64.png") 8 repeat repeat;
+}
+
+radio:first-child:last-child {
+  -moz-border-image: url("chrome://browser/skin/images/toggleboth-inactive-64.png") 8 repeat repeat;
+}
+
+radio:not([disabled=true]):first-child:last-child:active:hover,
+radio:first-child:last-child[selected] {
+  -moz-border-image: url("chrome://browser/skin/images/toggleboth-active-64.png") 8 repeat repeat;
 }
 
 /* checkbox radios --------------------------------------------------------- */
@@ -278,6 +290,7 @@ radio.checkbox-radio-off:not([selected]) .radio-label-box {
 
 .toggle-dark:not([disabled=true]) radio:active:hover,
 .toggle-dark radio[selected] {
+  color: #fff;
   -moz-border-image: url("chrome://browser/skin/images/toggledarkmiddle-active-64.png") 8 repeat repeat;
 }
 
@@ -297,6 +310,15 @@ radio.checkbox-radio-off:not([selected]) .radio-label-box {
 .toggle-dark:not([disabled=true]) radio:last-child:active:hover,
 .toggle-dark radio:last-child[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkright-active-64.png") 8 repeat repeat;
+}
+
+.toggle-dark radio:first-child:last-child {
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-inactive-64.png") 8 repeat repeat;
+}
+
+.toggle-dark:not([disabled=true]) radio:first-child:last-child:active:hover,
+.toggle-dark radio:first-child:last-child[selected] {
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-active-64.png") 8 repeat repeat;
 }
 
 /* richlistbox ------------------------------------------------------------- */
