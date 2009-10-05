@@ -275,7 +275,7 @@
             <label id="identity-popup-connectedToLabel2" flex="1">&identity.unverifiedsite2;</label>
             <description id="identity-popup-content-host" flex="1"/>
           </hbox>
-          <hbox flex="1">
+          <hbox id="identity-popup-runBy-box">
             <label id="identity-popup-runByLabel" value="&identity.runBy2;"/>
             <description id="identity-popup-content-owner"/>
             <description id="identity-popup-content-supplemental"/>

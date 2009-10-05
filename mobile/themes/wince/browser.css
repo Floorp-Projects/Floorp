@@ -491,6 +491,11 @@ findbar {
   -moz-padding-start: 1.1mm; /* core spacing */
 }
 
+/* let the text flow into a second row, if needed */
+#identity-popup-runBy-box {
+  display: block;
+}
+
 #identity-popup-content-box.unknownIdentity > hbox > #identity-popup-connectedToLabel,
 #identity-popup-content-box.unknownIdentity > hbox > #identity-popup-runByLabel,
 #identity-popup-content-box.unknownIdentity > hbox > #identity-popup-content-host,
