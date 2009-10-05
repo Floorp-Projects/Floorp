@@ -73,6 +73,13 @@ The test plugin object supports the following scriptable method:
 Returns true if the plugin has an associated widget. This will return true if
 wmode="window" was specified and the platform supports windowed plugins.
 
+== Plugin invalidation ==
+
+* setColor(colorString)
+Sets the color used for drawmode="solid" and invalidates the plugin area.
+For now, invalidation only works for windowless plugins (including Mac
+plugins).
+
 == Plugin geometry ==
 
 The test plugin supports the following scriptable methods:
