@@ -117,7 +117,7 @@ public:
     mNode = nsnull;
   }
 
-  nsISupports* GetParentObject()
+  nsINode* GetParentObject()
   {
     return mNode;
   }
