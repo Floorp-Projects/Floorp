@@ -71,6 +71,8 @@ public:
     NS_IMETHOD RemoveIdleObserver(nsIObserver* aObserver, PRUint32 aIdleTime);
 
     static void IdleTimerCallback(nsITimer* aTimer, void* aClosure);
+    
+    void IdleTimeWasModified();
 
 protected:
     void CheckAwayState();
