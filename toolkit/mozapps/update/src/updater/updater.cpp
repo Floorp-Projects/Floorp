@@ -161,6 +161,9 @@ void LaunchChild(int argc, char **argv);
 #define USE_EXECV
 #endif
 
+char *BigBuffer = NULL;
+int BigBufferSize = 262144;
+
 //-----------------------------------------------------------------------------
 
 // This variable lives in libbz2.  It's declared in bzlib_private.h, so we just
@@ -528,11 +531,10 @@ static int copy_file(const NS_tchar *spath, const NS_tchar *dpath)
     return WRITE_ERROR;
   }
 
-  char buf[BUFSIZ];
   int sc;
-  while ((sc = fread(buf, 1, sizeof(buf), sfile)) > 0) {
+  while ((sc = fread(BigBuffer, 1, BigBufferSize, sfile)) > 0) {
     int dc;
-    char *bp = buf;
+    char *bp = BigBuffer;
     while ((dc = fwrite(bp, 1, (unsigned int) sc, dfile)) > 0) {
       if ((sc -= dc) == 0)
         break;
@@ -1482,6 +1484,19 @@ int NS_main(int argc, NS_tchar **argv)
 
   LogInit();
 
+  BigBuffer = (char *)malloc(BigBufferSize);
+  if (!BigBuffer) {
+    LOG(("Couldn't allocate default BigBuffer\n"));
+
+    // Try again with a smaller size.
+    BigBufferSize = 1024;
+    BigBuffer = (char *)malloc(BigBufferSize);
+    if (!BigBuffer) {
+      LOG(("Couldn't allocate 1K BigBuffer\n"));
+      return 1;
+    }
+  }
+
   // Run update process on a background thread.  ShowProgressUI may return
   // before QuitProgressUI has been called, so wait for UpdateThreadFunc to
   // terminate.
@@ -1491,6 +1506,8 @@ int NS_main(int argc, NS_tchar **argv)
   t.Join();
 
   LogFinish();
+  free(BigBuffer);
+  BigBuffer = NULL;
 
 #if defined(XP_WIN) && !defined(WINCE)
   if (gSucceeded && argc > 4)
