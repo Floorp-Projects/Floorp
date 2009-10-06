@@ -1648,6 +1648,69 @@ var PlacesUtils = {
   },
 
   /**
+   * Restores bookmarks and tags from a JSON file.
+   * WARNING: This method *removes* any bookmarks in the collection before
+   * restoring from the file.
+   *
+   * @param aFile
+   *        nsIFile of bookmarks in JSON format to be restored.
+   */
+  restoreBookmarksFromJSONFile:
+  function PU_restoreBookmarksFromJSONFile(aFile) {
+    let failed = false;
+    this.observerSvc.notifyObservers(null,
+                                     RESTORE_BEGIN_NSIOBSERVER_TOPIC,
+                                     RESTORE_NSIOBSERVER_DATA);
+
+    try {
+      // open file stream
+      var stream = Cc["@mozilla.org/network/file-input-stream;1"].
+                   createInstance(Ci.nsIFileInputStream);
+      stream.init(aFile, 0x01, 0, 0);
+      var converted = Cc["@mozilla.org/intl/converter-input-stream;1"].
+                      createInstance(Ci.nsIConverterInputStream);
+      converted.init(stream, "UTF-8", 8192,
+                     Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+
+      // read in contents
+      var str = {};
+      var jsonStr = "";
+      while (converted.readString(8192, str) != 0)
+        jsonStr += str.value;
+      converted.close();
+
+      if (jsonStr.length == 0)
+        return; // empty file
+
+      this.restoreBookmarksFromJSONString(jsonStr, true);
+    }
+    catch (exc) {
+      failed = true;
+      this.observerSvc.notifyObservers(null,
+                                       RESTORE_FAILED_NSIOBSERVER_TOPIC,
+                                       RESTORE_NSIOBSERVER_DATA);
+      Cu.reportError("Bookmarks JSON restore failed: " + exc);
+      throw exc;
+    }
+    finally {
+      if (!failed) {
+        this.observerSvc.notifyObservers(null,
+                                         RESTORE_SUCCESS_NSIOBSERVER_TOPIC,
+                                         RESTORE_NSIOBSERVER_DATA);
+      }
+    }
+  },
+
+  /**
+   * Serializes bookmarks using JSON, and writes to the supplied file.
+   *
+   * @see backups.saveBookmarksToJSONFile(aFile)
+   */
+  backupBookmarksToFile: function PU_backupBookmarksToFile(aFile) {
+    this.backups.saveBookmarksToJSONFile(aFile);
+  },
+
+  /**
    * Helper to create and manage backups.
    */
   backups: {
@@ -1904,60 +1967,6 @@ var PlacesUtils = {
         return;
 
       this.saveBookmarksToJSONFile(newBackupFile);
-    },
-
-    /**
-     * Restores bookmarks and tags from a JSON file.
-     * WARNING: This method *removes* any bookmarks in the collection before
-     * restoring from the file.
-     *
-     * @param aFile
-     *        nsIFile of bookmarks in JSON format to be restored.
-     */
-    restoreBookmarksFromJSONFile:
-    function PU_B_restoreBookmarksFromJSONFile(aFile) {
-      let failed = false;
-      PlacesUtils.observerSvc.notifyObservers(null,
-                                              RESTORE_BEGIN_NSIOBSERVER_TOPIC,
-                                              RESTORE_NSIOBSERVER_DATA);
-
-      try {
-        // open file stream
-        var stream = Cc["@mozilla.org/network/file-input-stream;1"].
-                     createInstance(Ci.nsIFileInputStream);
-        stream.init(aFile, 0x01, 0, 0);
-        var converted = Cc["@mozilla.org/intl/converter-input-stream;1"].
-                        createInstance(Ci.nsIConverterInputStream);
-        converted.init(stream, "UTF-8", 8192,
-                       Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-
-        // read in contents
-        var str = {};
-        var jsonStr = "";
-        while (converted.readString(8192, str) != 0)
-          jsonStr += str.value;
-        converted.close();
-
-        if (jsonStr.length == 0)
-          return; // empty file
-
-        PlacesUtils.restoreBookmarksFromJSONString(jsonStr, true);
-      }
-      catch (exc) {
-        failed = true;
-        PlacesUtils.observerSvc.notifyObservers(null,
-                                                RESTORE_FAILED_NSIOBSERVER_TOPIC,
-                                                RESTORE_NSIOBSERVER_DATA);
-        Components.utils.reportError("Bookmarks JSON restore failed: " + exc);
-        throw exc;
-      }
-      finally {
-        if (!failed) {
-          PlacesUtils.observerSvc.notifyObservers(null,
-                                                  RESTORE_SUCCESS_NSIOBSERVER_TOPIC,
-                                                  RESTORE_NSIOBSERVER_DATA);
-        }
-      }
     }
 
   },

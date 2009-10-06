@@ -645,7 +645,7 @@ BrowserGlue.prototype = {
       var bookmarksBackupFile = PlacesUtils.backups.getMostRecent("json");
       if (bookmarksBackupFile) {
         // restore from JSON backup
-        PlacesUtils.backups.restoreBookmarksFromJSONFile(bookmarksBackupFile);
+        PlacesUtils.restoreBookmarksFromJSONFile(bookmarksBackupFile);
         importBookmarks = false;
       }
       else {
