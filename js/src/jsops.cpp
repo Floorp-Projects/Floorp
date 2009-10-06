@@ -3685,7 +3685,10 @@ BEGIN_CASE(JSOP_DEFSHARP)
     slot = GET_UINT16(regs.pc);
     JS_ASSERT(slot + 1 < fp->script->nfixed);
     lval = fp->slots[slot];
-    if (JSVAL_IS_VOID(lval)) {
+    if (!JSVAL_IS_PRIMITIVE(lval)) {
+        obj = JSVAL_TO_OBJECT(lval);
+    } else {
+        JS_ASSERT(JSVAL_IS_VOID(lval));
         obj = js_NewArrayObject(cx, 0, NULL);
         if (!obj)
             goto error;
