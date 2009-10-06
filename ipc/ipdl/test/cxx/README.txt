@@ -8,6 +8,8 @@ following files (for a test "TestFoo"):
 
   - TestFoo.cpp, defining the top-level actors
 
+  - (make sure all are in the namespace mozilla::_ipdltest)
+
 Next
 
   - add PTestFoo.ipdl to ipdl.mk
