@@ -84,11 +84,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // Pref to enable/disable preview-per-tab
-const TOGGLE_PREF_NAME = "aeropeek.enable";
+const TOGGLE_PREF_NAME = "browser.taskbar.previews.enable";
 // Pref to determine the magic auto-disable threshold
-const DISABLE_THRESHOLD_PREF_NAME = "aeropeek.maxpreviews";
+const DISABLE_THRESHOLD_PREF_NAME = "browser.taskbar.previews.max";
 // Pref to control the time in seconds that tab contents live in the cache
-const CACHE_EXPIRATION_TIME_PREF_NAME = "aeropeek.cachetime";
+const CACHE_EXPIRATION_TIME_PREF_NAME = "browser.taskbar.previews.cachetime";
 
 const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
 
