@@ -70,7 +70,7 @@ TaskbarWindowPreview::TaskbarWindowPreview(ITaskbarList4 *aTaskbar, nsITaskbarPr
   (void) SetVisible(PR_TRUE);
 
   memset(mThumbButtons, 0, sizeof mThumbButtons);
-  for (PRInt32 i = 0; i < nsITaskbarWindowPreview::MAX_TOOLBAR_BUTTONS; i++) {
+  for (PRInt32 i = 0; i < nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS; i++) {
     mThumbButtons[i].dwMask = THB_FLAGS | THB_ICON | THB_TOOLTIP;
     mThumbButtons[i].iId = i;
     mThumbButtons[i].dwFlags = THBF_HIDDEN;
@@ -98,7 +98,7 @@ TaskbarWindowPreview::PreviewWindow() {
 
 nsresult
 TaskbarWindowPreview::GetButton(PRUint32 index, nsITaskbarPreviewButton **_retVal) {
-  if (index >= nsITaskbarWindowPreview::MAX_TOOLBAR_BUTTONS)
+  if (index >= nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS)
     return NS_ERROR_INVALID_ARG;
 
   nsCOMPtr<nsITaskbarPreviewButton> button(do_QueryReferent(mWeakButtons[index]));
@@ -118,7 +118,7 @@ TaskbarWindowPreview::GetButton(PRUint32 index, nsITaskbarPreviewButton **_retVa
     WindowHook &hook = GetWindowHook();
     (void) hook.AddHook(WM_COMMAND, WindowHookProc, this);
 
-    if (mVisible && FAILED(mTaskbar->ThumbBarAddButtons(mWnd, nsITaskbarWindowPreview::MAX_TOOLBAR_BUTTONS, mThumbButtons))) {
+    if (mVisible && FAILED(mTaskbar->ThumbBarAddButtons(mWnd, nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS, mThumbButtons))) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -153,7 +153,7 @@ TaskbarWindowPreview::GetEnableCustomDrawing(PRBool *aEnable) {
 nsresult
 TaskbarWindowPreview::UpdateTaskbarProperties() {
   if (mHaveButtons) {
-    if (FAILED(mTaskbar->ThumbBarAddButtons(mWnd, nsITaskbarWindowPreview::MAX_TOOLBAR_BUTTONS, mThumbButtons)))
+    if (FAILED(mTaskbar->ThumbBarAddButtons(mWnd, nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS, mThumbButtons)))
       return NS_ERROR_FAILURE;
   }
   return TaskbarPreview::UpdateTaskbarProperties();
@@ -214,14 +214,14 @@ nsresult
 TaskbarWindowPreview::UpdateButtons() {
   NS_ASSERTION(mVisible, "UpdateButtons called on invisible preview");
 
-  if (FAILED(mTaskbar->ThumbBarUpdateButtons(mWnd, nsITaskbarWindowPreview::MAX_TOOLBAR_BUTTONS, mThumbButtons)))
+  if (FAILED(mTaskbar->ThumbBarUpdateButtons(mWnd, nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS, mThumbButtons)))
     return NS_ERROR_FAILURE;
   return NS_OK;
 }
 
 nsresult
 TaskbarWindowPreview::UpdateButton(PRUint32 index) {
-  if (index >= nsITaskbarWindowPreview::MAX_TOOLBAR_BUTTONS)
+  if (index >= nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS)
     return NS_ERROR_INVALID_ARG;
   if (mVisible) {
     if (FAILED(mTaskbar->ThumbBarUpdateButtons(mWnd, 1, &mThumbButtons[index])))
