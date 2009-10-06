@@ -46,10 +46,10 @@ OKTESTS := $(wildcard $(srcdir)/ok/*.ipdl)
 ERRORTESTS := $(wildcard $(srcdir)/error/*.ipdl)
 
 check::
-	@$(PYTHON) $(srcdir)/runtests.py			\
-		$(srcdir)/ok $(srcdir)/error			\
-		$(PYTHON) $(topsrcdir)/config/pythonpath.py	\
-		-I$(topsrcdir)/other-licenses/ply		\
-		$(topsrcdir)/ipc/ipdl/ipdl.py			\
-		OKTESTS $(OKTESTS)				\
+	@$(PYTHON) $(srcdir)/runtests.py  \
+		$(srcdir)/ok $(srcdir)/error  \
+		$(PYTHON) $(topsrcdir)/config/pythonpath.py  \
+		-I$(topsrcdir)/other-licenses/ply  \
+		$(topsrcdir)/ipc/ipdl/ipdl.py  \
+		OKTESTS $(OKTESTS)  \
 		ERRORTESTS $(ERRORTESTS)

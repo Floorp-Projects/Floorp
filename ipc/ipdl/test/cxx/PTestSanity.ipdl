@@ -1,0 +1,31 @@
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+protocol PTestSanity {
+
+child:
+    Ping(int zero);
+
+parent:
+    Pong(int one);
+
+both:
+    UNREACHED();
+
+
+state PING:
+    send Ping goto PONG;
+
+state PONG:
+    recv Pong goto DEAD;
+
+    // hmm ... maybe support this idiom natively?
+state DEAD:
+    send UNREACHED goto DEAD;
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest
