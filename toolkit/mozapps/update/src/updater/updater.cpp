@@ -890,7 +890,7 @@ PatchFile::LoadSourceFile(FILE* ofile)
   int r = header.slen;
   unsigned char *rb = buf;
   while (r) {
-    int c = fread(rb, 1, mmin(BUFSIZ,r), ofile);
+    int c = fread(rb, 1, r, ofile);
     if (c < 0)
       return READ_ERROR;
 
