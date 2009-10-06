@@ -2157,9 +2157,9 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (op != JSOP_NAME)
             return JS_TRUE;
 
-#ifdef DEBUG
         JSStackFrame *caller = cg->compiler->callerFrame;
         JS_ASSERT(caller);
+        JS_ASSERT(caller->script);
 
         JSTreeContext *tc = cg;
         while (tc->staticLevel != level)
@@ -2168,10 +2168,14 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         JSCodeGenerator *evalcg = (JSCodeGenerator *) tc;
         JS_ASSERT(evalcg->flags & TCF_COMPILE_N_GO);
-        JS_ASSERT(!(evalcg->flags & TCF_IN_FOR_INIT));
-        JS_ASSERT(caller->script);
         JS_ASSERT(caller->fun && caller->varobj == evalcg->scopeChain);
-#endif
+
+        /*
+         * Don't generate upvars on the left side of a for loop. See
+         * bug 470758 and bug 520513.
+         */
+        if (evalcg->flags & TCF_IN_FOR_INIT)
+            return JS_TRUE;
 
         if (cg->staticLevel == level) {
             pn->pn_op = JSOP_GETUPVAR;
