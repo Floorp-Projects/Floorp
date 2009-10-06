@@ -123,20 +123,4 @@ assertEq(testLenientAndStrict('({get x() {}, set x() {}, y:1})',
                               parsesSuccessfully),
          true);
 
-/* Use the old getter/setter syntax as well. */
-assertEq(testLenientAndStrict('({get x() {}, x getter: function() {}})',
-                              parsesSuccessfully,
-                              parseRaisesException(SyntaxError)),
-         true);
-
-assertEq(testLenientAndStrict('({x getter: function() {}, get x() {}})',
-                              parsesSuccessfully,
-                              parseRaisesException(SyntaxError)),
-         true);
-
-assertEq(testLenientAndStrict('({x getter: function() {}, x getter: function() {}})',
-                              parsesSuccessfully,
-                              parseRaisesException(SyntaxError)),
-         true);
-
 reportCompare(true, true);

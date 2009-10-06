@@ -55,7 +55,7 @@ function test()
 
   try
   { 
-    this.x setter = ({}.watch);
+    Object.defineProperty(this, "x", { set: {}.watch, enumerable: true, configurable: true });
     function g() { x = 1; yield; }
     g().next();
   }

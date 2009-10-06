@@ -48,10 +48,10 @@ printStatus (summary);
 var str_with_num = "0.1";
 
 var obj = {
-  elem getter: function() {
+  get elem() {
     return str_with_num;
   },
-  elem setter: function(value) {
+  set elem(value) {
     gc();
   }
 

@@ -5787,23 +5787,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         op = PN_OP(pn);
-#if JS_HAS_GETTER_SETTER
-        if (op == JSOP_GETTER || op == JSOP_SETTER) {
-            if (pn2->pn_type == TOK_NAME && PN_OP(pn2) != JSOP_SETNAME) {
-                /*
-                 * x getter = y where x is a local or let variable is not
-                 * supported.
-                 */
-                ReportCompileErrorNumber(cx, TS(cg->compiler), pn2, JSREPORT_ERROR,
-                                         JSMSG_BAD_GETTER_OR_SETTER,
-                                         (op == JSOP_GETTER) ? js_getter_str : js_setter_str);
-                return JS_FALSE;
-            }
-
-            /* We'll emit these prefix bytecodes after emitting the r.h.s. */
-        } else
-#endif
-        /* If += or similar, dup the left operand and get its value. */
         if (op != JSOP_NOP) {
             switch (pn2->pn_type) {
               case TOK_NAME:
@@ -6655,13 +6638,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!js_EmitTree(cx, cg, pn2->pn_right))
                 return JS_FALSE;
 
-#if JS_HAS_GETTER_SETTER
             op = PN_OP(pn2);
             if (op == JSOP_GETTER || op == JSOP_SETTER) {
                 if (js_Emit1(cx, cg, op) < 0)
                     return JS_FALSE;
             }
-#endif
+
             /* Annotate JSOP_INITELEM so we decompile 2:c and not just c. */
             if (pn3->pn_type == TOK_NUMBER) {
                 if (js_NewSrcNote(cx, cg, SRC_INITPROP) < 0)
@@ -6680,14 +6662,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 bool lambda = PN_OP(init) == JSOP_LAMBDA;
                 if (lambda)
                     ++methodInits;
-                if (
-#if JS_HAS_GETTER_SETTER
-                    op == JSOP_INITPROP &&
-#else
-                    JS_ASSERT(op == JSOP_INITPROP),
-#endif
-                    lambda &&
-                    init->pn_funbox->joinable())
+                if (op == JSOP_INITPROP && lambda && init->pn_funbox->joinable())
                 {
                     op = JSOP_INITMETHOD;
                     pn2->pn_op = uint8(op);

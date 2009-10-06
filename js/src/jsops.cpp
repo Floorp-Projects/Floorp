@@ -1679,7 +1679,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
              */
             JS_ASSERT(entry->vword.isSprop());
             sprop = entry->vword.toSprop();
-            JS_ASSERT(sprop->writable());
+            JS_ASSERT_IF(sprop->isDataDescriptor(), sprop->writable());
             JS_ASSERT_IF(sprop->hasSlot(), entry->vcapTag() == 0);
 
             JSScope *scope = obj->scope();
@@ -3179,7 +3179,6 @@ BEGIN_CASE(JSOP_CALLEE)
     PUSH_OPND(fp->argv[-2]);
 END_CASE(JSOP_CALLEE)
 
-#if JS_HAS_GETTER_SETTER
 BEGIN_CASE(JSOP_GETTER)
 BEGIN_CASE(JSOP_SETTER)
   do_getter_setter:
@@ -3278,7 +3277,6 @@ BEGIN_CASE(JSOP_SETTER)
     }
     len = js_CodeSpec[op2].length;
     DO_NEXT_OP(len);
-#endif /* JS_HAS_GETTER_SETTER */
 
 BEGIN_CASE(JSOP_HOLE)
     PUSH_OPND(JSVAL_HOLE);

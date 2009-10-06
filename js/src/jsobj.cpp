@@ -335,11 +335,9 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
     JSBool ok;
     jsint i, length;
     jsid id;
-#if JS_HAS_GETTER_SETTER
     JSObject *obj2;
     JSProperty *prop;
     uintN attrs;
-#endif
     jsval val;
 
     JS_CHECK_RECURSION(cx, return NULL);
@@ -365,7 +363,6 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
         ok = JS_TRUE;
         for (i = 0, length = ida->length; i < length; i++) {
             id = ida->vector[i];
-#if JS_HAS_GETTER_SETTER
             ok = obj->lookupProperty(cx, id, &obj2, &prop);
             if (!ok)
                 break;
@@ -393,9 +390,6 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
                 }
             }
             obj2->dropProperty(cx, prop);
-#else
-            ok = obj->getProperty(cx, id, &val);
-#endif
             if (!ok)
                 break;
             if (!JSVAL_IS_PRIMITIVE(val) &&
@@ -617,21 +611,16 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     const jschar *idstrchars, *vchars;
     size_t nchars, idstrlength, gsoplength, vlength, vsharplength, curlen;
     const char *comma;
-    jsint i, j, length, valcnt;
-    jsid id;
-#if JS_HAS_GETTER_SETTER
     JSObject *obj2;
     JSProperty *prop;
     uintN attrs;
-#endif
     jsval *val;
-    jsval localroot[4] = {JSVAL_NULL, JSVAL_NULL, JSVAL_NULL, JSVAL_NULL};
-    JSString *gsopold[2];
     JSString *gsop[2];
     JSString *idstr, *valstr, *str;
 
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
+    jsval localroot[4] = {JSVAL_NULL, JSVAL_NULL, JSVAL_NULL, JSVAL_NULL};
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(localroot), localroot);
 
     /* If outermost, we need parentheses to be an expression, not a block. */
@@ -700,17 +689,13 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
      */
     val = localroot + 2;
 
-    for (i = 0, length = ida->length; i < length; i++) {
-        JSBool idIsLexicalIdentifier, needOldStyleGetterSetter;
-
+    for (jsint i = 0, length = ida->length; i < length; i++) {
         /* Get strings for id and value and GC-root them via vp. */
-        id = ida->vector[i];
+        jsid id = ida->vector[i];
 
-#if JS_HAS_GETTER_SETTER
         ok = obj->lookupProperty(cx, id, &obj2, &prop);
         if (!ok)
             goto error;
-#endif
 
         /*
          * Convert id to a jsval and then to a string.  Decide early whether we
@@ -723,76 +708,46 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
             goto error;
         }
         *vp = STRING_TO_JSVAL(idstr);                   /* local root */
-        idIsLexicalIdentifier = js_IsIdentifier(idstr);
-        needOldStyleGetterSetter =
-            !idIsLexicalIdentifier ||
-            js_CheckKeyword(idstr->chars(), idstr->length()) != TOK_EOF;
 
-#if JS_HAS_GETTER_SETTER
-
-        valcnt = 0;
+        jsint valcnt = 0;
         if (prop) {
             ok = obj2->getAttributes(cx, id, prop, &attrs);
             if (!ok) {
                 obj2->dropProperty(cx, prop);
                 goto error;
             }
-            if (obj2->isNative() &&
-                (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
+            if (obj2->isNative() && (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
                 JSScopeProperty *sprop = (JSScopeProperty *) prop;
                 if (attrs & JSPROP_GETTER) {
                     val[valcnt] = sprop->getterValue();
-                    gsopold[valcnt] =
-                        ATOM_TO_STRING(cx->runtime->atomState.getterAtom);
-                    gsop[valcnt] =
-                        ATOM_TO_STRING(cx->runtime->atomState.getAtom);
-
+                    gsop[valcnt] = ATOM_TO_STRING(cx->runtime->atomState.getAtom);
                     valcnt++;
                 }
                 if (attrs & JSPROP_SETTER) {
                     val[valcnt] = sprop->setterValue();
-                    gsopold[valcnt] =
-                        ATOM_TO_STRING(cx->runtime->atomState.setterAtom);
-                    gsop[valcnt] =
-                        ATOM_TO_STRING(cx->runtime->atomState.setAtom);
-
+                    gsop[valcnt] = ATOM_TO_STRING(cx->runtime->atomState.setAtom);
                     valcnt++;
                 }
             } else {
                 valcnt = 1;
                 gsop[0] = NULL;
-                gsopold[0] = NULL;
                 ok = obj->getProperty(cx, id, &val[0]);
             }
             obj2->dropProperty(cx, prop);
         }
 
-#else  /* !JS_HAS_GETTER_SETTER */
-
-        /*
-         * We simplify the source code at the price of minor dead code bloat in
-         * the ECMA version (for testing only, see jsversion.h).  The null
-         * default values in gsop[j] suffice to disable non-ECMA getter and
-         * setter code.
-         */
-        valcnt = 1;
-        gsop[0] = NULL;
-        gsopold[0] = NULL;
-        ok = obj->getProperty(cx, id, &val[0]);
-
-#endif /* !JS_HAS_GETTER_SETTER */
-
         if (!ok)
             goto error;
 
         /*
-         * If id is a string that's not an identifier, then it needs to be
-         * quoted.  Also, negative integer ids must be quoted.
+         * If id is a string that's not an identifier, or if it's a negative
+         * integer, then it must be quoted.
          */
+        bool idIsLexicalIdentifier = !!js_IsIdentifier(idstr);
         if (JSID_IS_ATOM(id)
             ? !idIsLexicalIdentifier
             : (!JSID_IS_INT(id) || JSID_TO_INT(id) < 0)) {
-            idstr = js_QuoteString(cx, idstr, (jschar)'\'');
+            idstr = js_QuoteString(cx, idstr, jschar('\''));
             if (!idstr) {
                 ok = JS_FALSE;
                 goto error;
@@ -801,7 +756,14 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
         }
         idstr->getCharsAndLength(idstrchars, idstrlength);
 
-        for (j = 0; j < valcnt; j++) {
+        for (jsint j = 0; j < valcnt; j++) {
+            /*
+             * Censor an accessor descriptor getter or setter part if it's
+             * undefined.
+             */
+            if (gsop[j] && JSVAL_IS_VOID(val[j]))
+                continue;
+
             /* Convert val[j] to its canonical source form. */
             valstr = js_ValueToSource(cx, val[j]);
             if (!valstr) {
@@ -811,19 +773,16 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
             localroot[j] = STRING_TO_JSVAL(valstr);     /* local root */
             valstr->getCharsAndLength(vchars, vlength);
 
-            if (vchars[0] == '#')
-                needOldStyleGetterSetter = JS_TRUE;
-
-            if (needOldStyleGetterSetter)
-                gsop[j] = gsopold[j];
-
-            /* If val[j] is a non-sharp object, consider sharpening it. */
+            /*
+             * If val[j] is a non-sharp object, and we're not serializing an
+             * accessor (ECMA syntax can't accommodate sharpened accessors),
+             * consider sharpening it.
+             */
             vsharp = NULL;
             vsharplength = 0;
 #if JS_HAS_SHARP_VARS
-            if (!JSVAL_IS_PRIMITIVE(val[j]) && vchars[0] != '#') {
-                he = js_EnterSharpObject(cx, JSVAL_TO_OBJECT(val[j]), NULL,
-                                         &vsharp);
+            if (!gsop[j] && !JSVAL_IS_PRIMITIVE(val[j]) && vchars[0] != '#') {
+                he = js_EnterSharpObject(cx, JSVAL_TO_OBJECT(val[j]), NULL, &vsharp);
                 if (!he) {
                     ok = JS_FALSE;
                     goto error;
@@ -831,27 +790,21 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                 if (IS_SHARP(he)) {
                     vchars = vsharp;
                     vlength = js_strlen(vchars);
-                    needOldStyleGetterSetter = JS_TRUE;
-                    gsop[j] = gsopold[j];
                 } else {
                     if (vsharp) {
                         vsharplength = js_strlen(vsharp);
                         MAKE_SHARP(he);
-                        needOldStyleGetterSetter = JS_TRUE;
-                        gsop[j] = gsopold[j];
                     }
                     js_LeaveSharpObject(cx, NULL);
                 }
             }
 #endif
 
-#ifndef OLD_GETTER_SETTER
             /*
              * Remove '(function ' from the beginning of valstr and ')' from the
              * end so that we can put "get" in front of the function definition.
              */
-            if (gsop[j] && VALUE_IS_FUNCTION(cx, val[j]) &&
-                !needOldStyleGetterSetter) {
+            if (gsop[j] && VALUE_IS_FUNCTION(cx, val[j])) {
                 JSFunction *fun = JS_ValueToFunction(cx, val[j]);
                 const jschar *start = vchars;
                 const jschar *end = vchars + vlength;
@@ -867,8 +820,8 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                  * they might appear here.  This code can be confused by people
                  * defining Function.prototype.toString, so let's be cautious.
                  */
-                if (JSFUN_GETTER_TEST(fun->flags) ||
-                    JSFUN_SETTER_TEST(fun->flags)) { /* skip "getter/setter" */
+                if (JSFUN_GETTER_TEST(fun->flags) || JSFUN_SETTER_TEST(fun->flags)) {
+                    /* skip "getter/setter" */
                     const jschar *tmp = js_strchr_limit(vchars, ' ', end);
                     if (tmp)
                         vchars = tmp + 1;
@@ -877,6 +830,13 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                 /* Try to jump "function" keyword. */
                 if (vchars)
                     vchars = js_strchr_limit(vchars, ' ', end);
+
+                /*
+                 * Jump over the function's name: it can't be encoded as part
+                 * of an ECMA getter or setter.
+                 */
+                if (vchars)
+                    vchars = js_strchr_limit(vchars, '(', end);
 
                 if (vchars) {
                     if (*vchars == ' ')
@@ -887,10 +847,6 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                     vchars = start;
                 }
             }
-#else
-            needOldStyleGetterSetter = JS_TRUE;
-            gsop[j] = gsopold[j];
-#endif
 
 #define SAFE_ADD(n)                                                          \
     JS_BEGIN_MACRO                                                           \
@@ -912,12 +868,11 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
             SAFE_ADD((outermost ? 2 : 1) + 1);
 #undef SAFE_ADD
 
-            if (curlen > (size_t)-1 / sizeof(jschar))
+            if (curlen > size_t(-1) / sizeof(jschar))
                 goto overflow;
 
             /* Allocate 1 + 1 at end for closing brace and terminating 0. */
-            chars = (jschar *)
-                js_realloc((ochars = chars), curlen * sizeof(jschar));
+            chars = (jschar *) js_realloc((ochars = chars), curlen * sizeof(jschar));
             if (!chars) {
                 /* Save code space on error: let JS_free ignore null vsharp. */
                 cx->free(vsharp);
@@ -931,30 +886,17 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
             }
             comma = ", ";
 
-            if (needOldStyleGetterSetter) {
-                js_strncpy(&chars[nchars], idstrchars, idstrlength);
-                nchars += idstrlength;
-                if (gsop[j]) {
-                    chars[nchars++] = ' ';
-                    gsoplength = gsop[j]->length();
-                    js_strncpy(&chars[nchars], gsop[j]->chars(),
-                               gsoplength);
-                    nchars += gsoplength;
-                }
-                chars[nchars++] = ':';
-            } else {  /* New style "decompilation" */
-                if (gsop[j]) {
-                    gsoplength = gsop[j]->length();
-                    js_strncpy(&chars[nchars], gsop[j]->chars(),
-                               gsoplength);
-                    nchars += gsoplength;
-                    chars[nchars++] = ' ';
-                }
-                js_strncpy(&chars[nchars], idstrchars, idstrlength);
-                nchars += idstrlength;
-                /* Extraneous space after id here will be extracted later */
-                chars[nchars++] = gsop[j] ? ' ' : ':';
+            if (gsop[j]) {
+                gsoplength = gsop[j]->length();
+                js_strncpy(&chars[nchars], gsop[j]->chars(),
+                            gsoplength);
+                nchars += gsoplength;
+                chars[nchars++] = ' ';
             }
+            js_strncpy(&chars[nchars], idstrchars, idstrlength);
+            nchars += idstrlength;
+            /* Extraneous space after id here will be extracted later */
+            chars[nchars++] = gsop[j] ? ' ' : ':';
 
             if (vsharplength) {
                 js_strncpy(&chars[nchars], vsharp, vsharplength);
@@ -1796,7 +1738,13 @@ js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     return ok;
 }
 
-#if JS_HAS_GETTER_SETTER
+#if OLD_GETTER_SETTER_METHODS
+
+const char js_defineGetter_str[] = "__defineGetter__";
+const char js_defineSetter_str[] = "__defineSetter__";
+const char js_lookupGetter_str[] = "__lookupGetter__";
+const char js_lookupSetter_str[] = "__lookupSetter__";
+
 JS_FRIEND_API(JSBool)
 js_obj_defineGetter(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -1912,7 +1860,7 @@ obj_lookupSetter(JSContext *cx, uintN argc, jsval *vp)
     }
     return JS_TRUE;
 }
-#endif /* JS_HAS_GETTER_SETTER */
+#endif /* OLD_GETTER_SETTER_METHODS */
 
 JSBool
 obj_getPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
@@ -2720,12 +2668,6 @@ const char js_unwatch_str[] = "unwatch";
 const char js_hasOwnProperty_str[] = "hasOwnProperty";
 const char js_isPrototypeOf_str[] = "isPrototypeOf";
 const char js_propertyIsEnumerable_str[] = "propertyIsEnumerable";
-#if JS_HAS_GETTER_SETTER
-const char js_defineGetter_str[] = "__defineGetter__";
-const char js_defineSetter_str[] = "__defineSetter__";
-const char js_lookupGetter_str[] = "__lookupGetter__";
-const char js_lookupSetter_str[] = "__lookupSetter__";
-#endif
 
 JS_DEFINE_TRCINFO_1(obj_valueOf,
     (3, (static, JSVAL,     Object_p_valueOf,               CONTEXT, THIS, STRING,  0,
@@ -2751,7 +2693,7 @@ static JSFunctionSpec object_methods[] = {
     JS_TN(js_hasOwnProperty_str,       obj_hasOwnProperty,          1,0, &obj_hasOwnProperty_trcinfo),
     JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0),
     JS_TN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0, &obj_propertyIsEnumerable_trcinfo),
-#if JS_HAS_GETTER_SETTER
+#if OLD_GETTER_SETTER_METHODS
     JS_FN(js_defineGetter_str,         js_obj_defineGetter,         2,0),
     JS_FN(js_defineSetter_str,         js_obj_defineSetter,         2,0),
     JS_FN(js_lookupGetter_str,         obj_lookupGetter,            1,0),
@@ -4396,7 +4338,6 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
 
-#if JS_HAS_GETTER_SETTER
     /*
      * If defining a getter or setter, we must check for its counterpart and
      * update the attributes and property ops.  A getter or setter is really
@@ -4438,7 +4379,6 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
             sprop = NULL;
         }
     }
-#endif /* JS_HAS_GETTER_SETTER */
 
     /*
      * Purge the property cache of any properties named by id that are about
@@ -6852,8 +6792,7 @@ dumpValue(jsval val)
         fprintf(stderr, "null");
     } else if (JSVAL_IS_VOID(val)) {
         fprintf(stderr, "undefined");
-    } else if (JSVAL_IS_OBJECT(val) &&
-               JSVAL_TO_OBJECT(val)->isFunction()) {
+    } else if (JSVAL_IS_OBJECT(val) && JSVAL_TO_OBJECT(val)->isFunction()) {
         JSObject *funobj = JSVAL_TO_OBJECT(val);
         JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
         fprintf(stderr, "<%s %s at %p (JSFunction at %p)>",

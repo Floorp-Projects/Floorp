@@ -713,10 +713,13 @@ extern const char js_unwatch_str[];
 extern const char js_hasOwnProperty_str[];
 extern const char js_isPrototypeOf_str[];
 extern const char js_propertyIsEnumerable_str[];
+
+#ifdef OLD_GETTER_SETTER_METHODS
 extern const char js_defineGetter_str[];
 extern const char js_defineSetter_str[];
 extern const char js_lookupGetter_str[];
 extern const char js_lookupSetter_str[];
+#endif
 
 extern JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto,

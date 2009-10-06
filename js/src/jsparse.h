@@ -1025,7 +1025,7 @@ private:
      */
     bool recognizeDirectivePrologue(JSParseNode *pn);
     JSParseNode *functionBody();
-    JSParseNode *functionDef(uintN lambda);
+    JSParseNode *functionDef(uintN lambda, bool namePermitted);
     JSParseNode *condition();
     JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid,
                                    js::TokenKind type = js::TOK_SEMI, JSOp op = JSOP_NOP);
