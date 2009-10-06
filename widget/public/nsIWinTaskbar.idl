@@ -47,6 +47,7 @@ interface nsITaskbarTabPreview;
 interface nsITaskbarWindowPreview;
 interface nsITaskbarPreviewController;
 interface nsITaskbarProgress;
+interface nsIJumpListBuilder;
 
 /*
  * nsIWinTaskbar
@@ -75,8 +76,12 @@ interface nsITaskbarProgress;
  * When taskbar icons are combined as is the default in Windows 7, the progress
  * for those windows is also combined as defined here:
  * http://msdn.microsoft.com/en-us/library/dd391697%28VS.85%29.aspx
+ *
+ * Applications may also define custom taskbar jump lists on application shortcuts
+ * users pin to the taskbar. See nsIJumpListBuilder for more information.
  */
-[scriptable, uuid(0a3abac7-35b7-4b50-8381-7dbc3c55b061)]
+
+[scriptable, uuid(4BC6D594-8FF0-4975-8642-3A5BC1928E81)]
 interface nsIWinTaskbar : nsISupports
 {
   /**
@@ -84,6 +89,10 @@ interface nsIWinTaskbar : nsISupports
    * change during runtime.
    */
   readonly attribute boolean available;
+
+  /**
+   * Taskbar window and tab preview management
+   */
 
   /**
    * Creates a taskbar preview. The docshell is used to find the toplevel window.
@@ -107,4 +116,16 @@ interface nsIWinTaskbar : nsISupports
    * information.
    */
   nsITaskbarProgress getTaskbarProgress(in nsIDocShell shell);
+
+  /**
+   * Retrieve a taskbar jump list builder
+   *
+   * Fails if a jump list build operation has already been initiated, developers
+   * should make use of a single instance of nsIJumpListBuilder for building lists
+   * within an application.
+   *
+   * @thow NS_ERROR_ALREADY_INITIALIZED if an nsIJumpListBuilder instance is
+   * currently building a list.
+   */
+  nsIJumpListBuilder createJumpListBuilder();
 };
