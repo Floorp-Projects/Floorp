@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is the Places test code.
+   -
+   - The Initial Developer of the Original Code is Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2009
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Asaf Romano (Original Author)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="510634: Wrong icons on bookmarks sidebar"
+        onload="runTest();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+  <tree id="tree"
+        type="places"
+        flex="1">
+    <treecols>
+      <treecol label="Title" id="title" anonid="title" primary="true" ordinal="1" flex="1"/>
+    </treecols>
+    <treechildren flex="1"/>
+  </tree>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    /**
+     * Bug 510634 -  Wrong icons on bookmarks sidebar
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=510634
+     *
+     * Ensures that properties for special queries are set on their tree nodes,
+     * even if PlacesUIUtils.leftPaneFolderId was not initialized.
+     */
+
+    SimpleTest.waitForExplicitFinish();
+
+    function createSupportsArray() {
+      return Cc["@mozilla.org/supports-array;1"].
+             createInstance(Ci.nsISupportsArray);
+    }
+
+    // converts nsISupportsArray of atoms to a simple JS-strings array
+    function convertPropertiesToJSArray(aSupportsArray) {
+      var results = [];
+      var count = aSupportsArray.Count();
+      for (var i = 0; i < count; i++)
+        results.push(aSupportsArray.QueryElementAt(i, Ci.nsIAtom).toString());
+
+      return results;
+    }
+
+    function runTest() {
+      // We need to cache and restore this getter in order to simulate
+      // Bug 510634
+      let cachedLeftPaneFolderIdGetter =
+        PlacesUIUtils.__lookupGetter__("leftPaneFolderId");
+
+      let leftPaneFolderId = PlacesUIUtils.leftPaneFolderId;
+
+      // restore the getter
+      PlacesUIUtils.__defineGetter__("leftPaneFolderId", cachedLeftPaneFolderIdGetter);
+
+      // Setup the places tree contents.
+      let tree = document.getElementById("tree");
+      tree.place = "place:queryType=1&folder=" + leftPaneFolderId;
+
+      // Open All Bookmarks
+      asContainer(tree.view.nodeForTreeIndex(2)).containerOpen = true;
+      
+      // The query-property is set on the title column for each row.
+      let titleColumn = tree.treeBoxObject.columns.getColumnAt(0);
+
+      ["History", "Tags", "AllBookmarks", "BookmarksToolbar",
+       "BookmarksMenu", "UnfiledBookmarks"].forEach(
+         function(aQueryName, aRow) {
+           let rowProperties = createSupportsArray();
+           tree.view.getCellProperties(aRow, titleColumn, rowProperties);
+           rowProperties = convertPropertiesToJSArray(rowProperties);
+           ok(rowProperties.indexOf("OrganizerQuery_" + aQueryName) != -1,
+             "OrganizerQuery_" + aQueryName + " is set");
+         }
+       );
+
+      SimpleTest.finish();
+    }
+
+  ]]>
+  </script>
+</window>
