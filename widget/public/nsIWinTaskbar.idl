@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Rob Arnold <tellrob@gmail.com>
+ *   Siddharth Agarwal <sid.bugzilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,6 +46,7 @@ interface nsIDocShell;
 interface nsITaskbarTabPreview;
 interface nsITaskbarWindowPreview;
 interface nsITaskbarPreviewController;
+interface nsITaskbarProgress;
 
 /*
  * nsIWinTaskbar
@@ -65,8 +67,16 @@ interface nsITaskbarPreviewController;
  * elements on the window. Unlike window previews, tab previews require most of
  * the functionality of the nsITaskbarPreviewController to be implemented.
  *
+ * Applications can also show progress on their taskbar icon. This does not
+ * interact with the taskbar previews except if the nsITaskbarWindowPreview is
+ * made invisible in which case the progress is naturally not shown on that
+ * window.
+ *
+ * When taskbar icons are combined as is the default in Windows 7, the progress
+ * for those windows is also combined as defined here:
+ * http://msdn.microsoft.com/en-us/library/dd391697%28VS.85%29.aspx
  */
-[scriptable, uuid(180F1D93-A94D-4D8A-AE37-A388372269B3)]
+[scriptable, uuid(0a3abac7-35b7-4b50-8381-7dbc3c55b061)]
 interface nsIWinTaskbar : nsISupports
 {
   /**
@@ -90,4 +100,11 @@ interface nsIWinTaskbar : nsISupports
    * Note: to implement custom drawing or buttons, a controller is required.
    */
   nsITaskbarWindowPreview getTaskbarWindowPreview(in nsIDocShell shell);
+
+  /**
+   * Gets the taskbar progress for a window. The docshell is used to find the
+   * toplevel window. See the documentation for nsITaskbarProgress for more
+   * information.
+   */
+  nsITaskbarProgress getTaskbarProgress(in nsIDocShell shell);
 };
