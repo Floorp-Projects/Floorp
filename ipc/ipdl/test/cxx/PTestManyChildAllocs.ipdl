@@ -1,0 +1,21 @@
+include protocol "PTestManyChildAllocsSub.ipdl";
+
+namespace mozilla {
+namespace _ipdltest {
+
+protocol PTestManyChildAllocs {
+    manages PTestManyChildAllocsSub;
+
+child:
+    Go();                       // start allocating
+
+    ~PTestManyChildAllocsSub();
+
+parent:
+    Done();
+
+    PTestManyChildAllocsSub();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla
