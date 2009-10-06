@@ -1154,7 +1154,7 @@ nsFrameLoader::TryNewProcess()
     return PR_FALSE;
   }
 
-  if (!mOwnerContent->IsNodeOfType(nsINode::eXUL)) {
+  if (!mOwnerContent->IsXUL()) {
     return PR_FALSE;
   }
 
