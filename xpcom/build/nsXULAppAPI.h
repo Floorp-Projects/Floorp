@@ -426,6 +426,7 @@ enum GeckoProcessType {
   GeckoProcessType_Content,
 
   GeckoProcessType_TestHarness,
+  GeckoProcessType_IPDLUnitTest,
 
   GeckoProcessType_End,
   GeckoProcessType_Invalid = GeckoProcessType_End
@@ -436,6 +437,7 @@ static const char* const kGeckoProcessTypeString[] = {
   "plugin",
   "tab",
   "testharness",
+  "ipdlunittest"
 };
 
 PR_STATIC_ASSERT(sizeof(kGeckoProcessTypeString) /
@@ -468,6 +470,10 @@ XRE_API(nsresult,
 XRE_API(int,
         XRE_RunIPCTestHarness, (int aArgc,
                                 char* aArgv[]))
+
+XRE_API(int,
+        XRE_RunIPDLTest, (int aArgc,
+                          char* aArgv[]))
 
 XRE_API(nsresult,
         XRE_RunAppShell, ())

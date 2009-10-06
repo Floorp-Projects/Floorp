@@ -727,9 +727,10 @@ SYNC_ENUMS(DEFAULT, Default)
 SYNC_ENUMS(PLUGIN, Plugin)
 SYNC_ENUMS(CONTENT, Content)
 SYNC_ENUMS(TESTHARNESS, TestHarness)
+SYNC_ENUMS(IPDLUNITTEST, IPDLUnitTest)
 
 // .. and ensure that that is all of them:
-PR_STATIC_ASSERT(GeckoProcessType_TestHarness + 1 == GeckoProcessType_End);
+PR_STATIC_ASSERT(GeckoProcessType_IPDLUnitTest + 1 == GeckoProcessType_End);
 
 NS_IMETHODIMP
 nsXULAppInfo::GetProcessType(PRUint32* aResult)
