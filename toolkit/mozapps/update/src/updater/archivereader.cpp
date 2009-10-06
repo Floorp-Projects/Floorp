@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <string.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include "bzlib.h"
 #include "archivereader.h"
@@ -52,11 +53,38 @@
 #include "updater_wince.h"
 #endif
 
+static int inbuf_size  = 262144;
+static int outbuf_size = 262144;
+static char *inbuf  = NULL;
+static char *outbuf = NULL;
+
 int
 ArchiveReader::Open(const NS_tchar *path)
 {
   if (mArchive)
     Close();
+
+  if (!inbuf) {
+    inbuf = (char *)malloc(inbuf_size);
+    if (!inbuf) {
+      // Try again with a smaller buffer.
+      inbuf_size = 1024;
+      inbuf = (char *)malloc(inbuf_size);
+      if (!inbuf)
+        return MEM_ERROR;
+    }
+  }
+
+  if (!outbuf) {
+    outbuf = (char *)malloc(outbuf_size);
+    if (!outbuf) {
+      // Try again with a smaller buffer.
+      outbuf_size = 1024;
+      outbuf = (char *)malloc(outbuf_size);
+      if (!outbuf)
+        return MEM_ERROR;
+    }
+  }
 
 #ifdef XP_WIN
   mArchive = mar_wopen(path);
@@ -75,6 +103,16 @@ ArchiveReader::Close()
   if (mArchive) {
     mar_close(mArchive);
     mArchive = NULL;
+  }
+
+  if (inbuf) {
+    free(inbuf);
+    inbuf = NULL;
+  }
+
+  if (outbuf) {
+    free(outbuf);
+    outbuf = NULL;
   }
 }
 
@@ -118,9 +156,8 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
 {
   /* decompress the data chunk by chunk */
 
-  char inbuf[BUFSIZ], outbuf[BUFSIZ];
   bz_stream strm;
-  int offset, inlen, ret = OK;
+  int offset, inlen, outlen, ret = OK;
 
   memset(&strm, 0, sizeof(strm));
   if (BZ2_bzDecompressInit(&strm, 0, 0) != BZ_OK)
@@ -134,7 +171,7 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
     }
 
     if (offset < (int) item->length && strm.avail_in == 0) {
-      inlen = mar_read(mArchive, item, offset, inbuf, BUFSIZ);
+      inlen = mar_read(mArchive, item, offset, inbuf, inbuf_size);
       if (inlen <= 0)
         return READ_ERROR;
       offset += inlen;
@@ -143,7 +180,7 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
     }
 
     strm.next_out = outbuf;
-    strm.avail_out = BUFSIZ;
+    strm.avail_out = outbuf_size;
 
     ret = BZ2_bzDecompress(&strm);
     if (ret != BZ_OK && ret != BZ_STREAM_END) {
@@ -151,8 +188,9 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
       break;
     }
 
-    if (strm.avail_out < BUFSIZ) {
-      if (fwrite(outbuf, BUFSIZ - strm.avail_out, 1, fp) != 1) {
+    outlen = outbuf_size - strm.avail_out;
+    if (outlen) {
+      if (fwrite(outbuf, outlen, 1, fp) != 1) {
         ret = WRITE_ERROR;
         break;
       }
