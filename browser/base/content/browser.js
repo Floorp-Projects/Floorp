@@ -74,7 +74,6 @@ var gLastBrowserCharset = null;
 var gPrevCharset = null;
 var gProxyFavIcon = null;
 var gLastValidURLStr = "";
-var gProgressCollapseTimer = null;
 var gInPrintPreviewMode = false;
 let gDownloadMgr = null;
 
@@ -93,7 +92,6 @@ var gEditUIVisible = true;
   ["gNavToolbox",         "navigator-toolbox"],
   ["gURLBar",             "urlbar"],
   ["gNavigatorBundle",    "bundle_browser"],
-  ["gProgressMeterPanel", "statusbar-progresspanel"],
   ["gFindBar",            "FindToolbar"]
 ].forEach(function (elementGlobal) {
   var [name, id] = elementGlobal;
@@ -3828,7 +3826,7 @@ var XULBrowserWindow = {
   lastURI: null,
   isBusy: false,
 
-  statusTimeoutInEffect: false,
+  _progressCollapseTimer: 0,
 
   QueryInterface: function (aIID) {
     if (aIID.equals(Ci.nsIWebProgressListener) ||
@@ -3977,9 +3975,9 @@ var XULBrowserWindow = {
 
         // Turn the status meter on.
         this.statusMeter.value = 0;  // be sure to clear the progress bar
-        if (gProgressCollapseTimer) {
-          window.clearTimeout(gProgressCollapseTimer);
-          gProgressCollapseTimer = null;
+        if (this._progressCollapseTimer) {
+          clearTimeout(this._progressCollapseTimer);
+          this._progressCollapseTimer = 0;
         }
         else
           this.statusMeter.parentNode.collapsed = false;
@@ -4044,10 +4042,10 @@ var XULBrowserWindow = {
         this._busyUI = false;
 
         // Turn the progress meter and throbber off.
-        gProgressCollapseTimer = window.setTimeout(function () {
-          gProgressMeterPanel.collapsed = true;
-          gProgressCollapseTimer = null;
-        }, 100);
+        this._progressCollapseTimer = setTimeout(function (self) {
+          self.statusMeter.parentNode.collapsed = true;
+          self._progressCollapseTimer = 0;
+        }, 100, this);
 
         if (this.throbberElement)
           this.throbberElement.removeAttribute("busy");
