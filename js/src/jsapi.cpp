@@ -1365,7 +1365,7 @@ static JSStdName object_prototype_names[] = {
     {js_InitObjectClass,        LAZY_ATOM(hasOwnProperty), NULL},
     {js_InitObjectClass,        LAZY_ATOM(isPrototypeOf), NULL},
     {js_InitObjectClass,        LAZY_ATOM(propertyIsEnumerable), NULL},
-#if JS_HAS_GETTER_SETTER
+#if OLD_GETTER_SETTER_METHODS
     {js_InitObjectClass,        LAZY_ATOM(defineGetter), NULL},
     {js_InitObjectClass,        LAZY_ATOM(defineSetter), NULL},
     {js_InitObjectClass,        LAZY_ATOM(lookupGetter), NULL},

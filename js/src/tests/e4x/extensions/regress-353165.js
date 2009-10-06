@@ -56,7 +56,9 @@ function crash1()
     try {
         var set = new XML('<a><b>text</b></a>').children('b');
         var counter = 0;
-        Object.prototype.unrooter getter = function() {
+        Object.defineProperty(Object.prototype, "unrooter",
+        { enumerable: true, configurable: true,
+          get: function() {
             ++counter;
             if (counter == 5) {
                 set[0] = new XML('<c/>');
@@ -68,7 +70,7 @@ function crash1()
                 }
             }
             return undefined;
-        }
+          } });
 
         set.unrooter();
     }
@@ -90,7 +92,9 @@ function crash2() {
                 return String(this);
         }
 
-        Object.prototype.unrooter getter = function() {
+        Object.defineProperty(Object.prototype, "unrooter",
+        { enumerable: true, configurable: true,
+          get: function() {
             ++counter;
             if (counter == 7)
             return unrooter_impl;
@@ -104,7 +108,7 @@ function crash2() {
                 }
             }
             return undefined;
-        }
+          } });
 
         set.unrooter();
     }

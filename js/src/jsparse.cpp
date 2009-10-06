@@ -631,45 +631,6 @@ NameNode::create(JSAtom *atom, JSTreeContext *tc)
 
 } /* namespace js */
 
-#if JS_HAS_GETTER_SETTER
-static TokenKind
-CheckGetterOrSetter(JSContext *cx, TokenStream *ts, TokenKind tt)
-{
-    JSAtom *atom;
-    JSRuntime *rt;
-    JSOp op;
-    const char *name;
-
-    JS_ASSERT(ts->currentToken().type == TOK_NAME);
-    atom = ts->currentToken().t_atom;
-    rt = cx->runtime;
-    if (atom == rt->atomState.getterAtom)
-        op = JSOP_GETTER;
-    else if (atom == rt->atomState.setterAtom)
-        op = JSOP_SETTER;
-    else
-        return TOK_NAME;
-    if (ts->peekTokenSameLine() != tt)
-        return TOK_NAME;
-    (void) ts->getToken();
-    if (ts->currentToken().t_op != JSOP_NOP) {
-        ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR, JSMSG_BAD_GETTER_OR_SETTER,
-                                 (op == JSOP_GETTER) ? js_getter_str : js_setter_str);
-        return TOK_ERROR;
-    }
-    ts->mungeCurrentToken(op);
-    if (JS_HAS_STRICT_OPTION(cx)) {
-        name = js_AtomToPrintableString(cx, atom);
-        if (!name ||
-            !ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_WARNING | JSREPORT_STRICT,
-                                      JSMSG_DEPRECATED_USAGE, name)) {
-            return TOK_ERROR;
-        }
-    }
-    return tt;
-}
-#endif
-
 static bool
 GenerateBlockId(JSTreeContext *tc, uint32& blockid)
 {
@@ -2555,12 +2516,10 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
 }
 
 JSParseNode *
-JSCompiler::functionDef(uintN lambda)
+JSCompiler::functionDef(uintN lambda, bool namePermitted)
 {
-    JSOp op;
     JSParseNode *pn, *body, *result;
     TokenKind tt;
-    JSAtom *funAtom;
     JSAtomListElement *ale;
 #if JS_HAS_DESTRUCTURING
     JSParseNode *item, *list = NULL;
@@ -2568,10 +2527,13 @@ JSCompiler::functionDef(uintN lambda)
     JSAtom *duplicatedArg = NULL;
 #endif
 
+    /*
+     * Save the current op for later so we can tag the created function as a
+     * getter/setter if necessary.
+     */
+    JSOp op = tokenStream.currentToken().t_op;
+
     /* Make a TOK_FUNCTION node. */
-#if JS_HAS_GETTER_SETTER
-    op = tokenStream.currentToken().t_op;
-#endif
     pn = FunctionNode::create(tc);
     if (!pn)
         return NULL;
@@ -2590,17 +2552,19 @@ JSCompiler::functionDef(uintN lambda)
     pn->pn_dflags = (lambda || !topLevel) ? PND_FUNARG : 0;
 
     /* Scan the optional function name into funAtom. */
-    tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
-    if (tt == TOK_NAME) {
-        funAtom = tokenStream.currentToken().t_atom;
-    } else {
-        if (lambda == 0 && (context->options & JSOPTION_ANONFUNFIX)) {
-            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                     JSMSG_SYNTAX_ERROR);
-            return NULL;
+    JSAtom *funAtom = NULL;
+    if (namePermitted) {
+        tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
+        if (tt == TOK_NAME) {
+            funAtom = tokenStream.currentToken().t_atom;
+        } else {
+            if (lambda == 0 && (context->options & JSOPTION_ANONFUNFIX)) {
+                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
+                                         JSMSG_SYNTAX_ERROR);
+                return NULL;
+            }
+            tokenStream.ungetToken();
         }
-        funAtom = NULL;
-        tokenStream.ungetToken();
     }
 
     /*
@@ -2719,10 +2683,8 @@ JSCompiler::functionDef(uintN lambda)
 
     JSFunction *fun = (JSFunction *) funbox->object;
 
-#if JS_HAS_GETTER_SETTER
     if (op != JSOP_NOP)
         fun->flags |= (op == JSOP_GETTER) ? JSPROP_GETTER : JSPROP_SETTER;
-#endif
 
     /* Now parse formal argument list and compute fun->nargs. */
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_FORMAL);
@@ -2985,13 +2947,13 @@ JSCompiler::functionDef(uintN lambda)
 JSParseNode *
 JSCompiler::functionStmt()
 {
-    return functionDef(0);
+    return functionDef(0, true);
 }
 
 JSParseNode *
 JSCompiler::functionExpr()
 {
-    return functionDef(JSFUN_LAMBDA);
+    return functionDef(JSFUN_LAMBDA, true);
 }
 
 /*
@@ -4509,14 +4471,6 @@ JSCompiler::statement()
 
     tt = tokenStream.getToken(TSF_OPERAND);
 
-#if JS_HAS_GETTER_SETTER
-    if (tt == TOK_NAME) {
-        tt = CheckGetterOrSetter(context, &tokenStream, TOK_FUNCTION);
-        if (tt == TOK_ERROR)
-            return NULL;
-    }
-#endif
-
     switch (tt) {
       case TOK_FUNCTION:
 #if JS_HAS_XML_SUPPORT
@@ -5915,13 +5869,6 @@ JSCompiler::assignExpr()
         return NULL;
 
     tt = tokenStream.getToken();
-#if JS_HAS_GETTER_SETTER
-    if (tt == TOK_NAME) {
-        tt = CheckGetterOrSetter(context, &tokenStream, TOK_ASSIGN);
-        if (tt == TOK_ERROR)
-            return NULL;
-    }
-#endif
     if (tt != TOK_ASSIGN) {
         tokenStream.ungetToken();
         return pn;
@@ -7822,14 +7769,6 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
 
     JS_CHECK_RECURSION(context, return NULL);
 
-#if JS_HAS_GETTER_SETTER
-    if (tt == TOK_NAME) {
-        tt = CheckGetterOrSetter(context, &tokenStream, TOK_FUNCTION);
-        if (tt == TOK_ERROR)
-            return NULL;
-    }
-#endif
-
     switch (tt) {
       case TOK_FUNCTION:
 #if JS_HAS_XML_SUPPORT
@@ -8014,7 +7953,6 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
                 }
                 break;
               case TOK_NAME:
-#if JS_HAS_GETTER_SETTER
                 {
                     atom = tokenStream.currentToken().t_atom;
                     if (atom == context->runtime->atomState.getAtom)
@@ -8054,7 +7992,6 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
                     goto skip;
                 }
               property_name:
-#endif
               case TOK_STRING:
                 atom = tokenStream.currentToken().t_atom;
                 pn3 = NullaryNode::create(tc);
@@ -8070,17 +8007,8 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
                 return NULL;
             }
 
-            tt = tokenStream.getToken();
             op = JSOP_INITPROP;
-#if JS_HAS_GETTER_SETTER
-            if (tt == TOK_NAME) {
-                tt = CheckGetterOrSetter(context, &tokenStream, TOK_COLON);
-                if (tt == TOK_ERROR)
-                    return NULL;
-                op = tokenStream.currentToken().t_op;
-            }
-#endif
-
+            tt = tokenStream.getToken();
             if (tt == TOK_COLON) {
                 pnval = assignExpr();
             } else {
@@ -8108,9 +8036,7 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
             }
 
             pn2 = JSParseNode::newBinaryOrAppend(TOK_COLON, op, pn3, pnval, tc);
-#if JS_HAS_GETTER_SETTER
           skip:
-#endif
             if (!pn2)
                 return NULL;
             pn->append(pn2);
