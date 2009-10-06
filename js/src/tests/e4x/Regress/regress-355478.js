@@ -46,7 +46,7 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 START(summary);
 
-expect = 'TypeError: XML.prototype.hasOwnProperty called on incompatible Object';
+expect = 'TypeError: <x/>.hasOwnProperty is not a constructor';
 actual = '';
 
 try

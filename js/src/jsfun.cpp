@@ -1410,10 +1410,14 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     fun = GET_FUNCTION_PRIVATE(cx, obj);
 
     /*
-     * No need to reflect fun.prototype in 'fun.prototype = ... '.
+     * No need to reflect fun.prototype in 'fun.prototype = ... '. Assert that
+     * fun is not a compiler-created function object, which must never leak to
+     * script or embedding code and then be mutated.
      */
-    if (flags & JSRESOLVE_ASSIGNING)
+    if (flags & JSRESOLVE_ASSIGNING) {
+        JS_ASSERT(!js_IsInternalFunctionObject(obj));
         return JS_TRUE;
+    }
 
     /*
      * Ok, check whether id is 'prototype' and bootstrap the function object's
@@ -1421,7 +1425,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
      */
     atom = cx->runtime->atomState.classPrototypeAtom;
     if (id == ATOM_KEY(atom)) {
-        JSObject *proto;
+        JS_ASSERT(!js_IsInternalFunctionObject(obj));
 
         /*
          * Beware of the wacky case of a user function named Object -- trying
@@ -1434,7 +1438,8 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
          * Make the prototype object to have the same parent as the function
          * object itself.
          */
-        proto = js_NewObject(cx, &js_ObjectClass, NULL, OBJ_GET_PARENT(cx, obj));
+        JSObject *proto =
+            js_NewObject(cx, &js_ObjectClass, NULL, OBJ_GET_PARENT(cx, obj));
         if (!proto)
             return JS_FALSE;
 
@@ -1457,6 +1462,8 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
         atom = OFFSET_TO_ATOM(cx->runtime, lfp->atomOffset);
         if (id == ATOM_KEY(atom)) {
+            JS_ASSERT(!js_IsInternalFunctionObject(obj));
+
             if (!js_DefineNativeProperty(cx, obj,
                                          ATOM_TO_JSID(atom), JSVAL_VOID,
                                          fun_getProperty, JS_PropertyStub,
