@@ -1387,6 +1387,7 @@
             this._extraBox.childNodes[0].hidden = false;
             this._extraBox.childNodes[1].hidden = true;
             this._extraBox.pack = "end";
+            this._titleBox.flex = 1;
 
             // The title is separated from the tags by an endash
             let tags;
@@ -1406,6 +1407,7 @@
             this._extraBox.childNodes[0].hidden = true;
             this._extraBox.childNodes[1].hidden = false;
             this._extraBox.pack = "start";
+            this._titleBox.flex = 0;
             
             // Put the parameters next to the title if we have any
             let search = this.getAttribute("text");
@@ -1419,6 +1421,7 @@
           } else {
             // Hide the title's extra box if we don't need extra stuff
             this._extraBox.hidden = true;
+            this._titleBox.flex = 1;
           }
 
           // Give the image the icon style and a special one for the type
