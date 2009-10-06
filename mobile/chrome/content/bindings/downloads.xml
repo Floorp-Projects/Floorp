@@ -56,7 +56,7 @@
     </implementation>
   </binding>
 
-  <binding id="download-downloading" extends="chrome://browser/content/bindings/downloads.xml#download-base">
+  <binding id="download-downloading" extends="#download-base">
    <content orient="horizontal" align="start">
       <xul:image validate="always" xbl:inherits="src=iconURL"/>
       <xul:vbox flex="1">
@@ -76,7 +76,7 @@
     </content>
   </binding>
 
-  <binding id="download-paused" extends="chrome://browser/content/bindings/downloads.xml#download-base">
+  <binding id="download-paused" extends="#download-base">
    <content orient="horizontal" align="start">
       <xul:image validate="always" xbl:inherits="src=iconURL"/>
       <xul:vbox flex="1">
@@ -96,7 +96,7 @@
     </content>
   </binding>
 
-  <binding id="download-retry" extends="chrome://browser/content/bindings/downloads.xml#download-base">
+  <binding id="download-retry" extends="#download-base">
    <content orient="horizontal" align="start">
       <xul:image validate="always" xbl:inherits="src=iconURL"/>
       <xul:vbox flex="1">
@@ -106,14 +106,15 @@
         </xul:hbox>
         <xul:hbox>
           <xul:label class="normal" xbl:inherits="value=status" crop="end" flex="1"/>
-          <xul:button class="download-retry" label="&downloadRetry.label;"
+          <xul:label class="hide-on-select download-retry-failed normal" value="&downloadFailed.label;"/>
+          <xul:button class="show-on-select download-retry" label="&downloadRetry.label;"
                       oncommand="DownloadsView.retryDownload(document.getBindingParent(this));"/>
         </xul:hbox>
       </xul:vbox>
     </content>
   </binding>
 
-  <binding id="download-done" extends="chrome://browser/content/bindings/downloads.xml#download-base">
+  <binding id="download-done" extends="#download-base">
    <content orient="horizontal" align="start">
       <xul:image validate="always" xbl:inherits="src=iconURL"/>
       <xul:vbox flex="1">

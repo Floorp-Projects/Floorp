@@ -275,7 +275,6 @@ var DownloadsView = {
     let strings = document.getElementById("bundle_browser");
 
     let status = "";
-    let state = Number(aItem.getAttribute("state"));
 
     // Display the file size, but show "Unknown" for negative sizes
     let fileSize = Number(aItem.getAttribute("maxBytes"));
@@ -286,7 +285,7 @@ var DownloadsView = {
       sizeText = this._replaceInsert(sizeText, 2, unit);
     }
 
-    // Insert 1 is the download size or download state
+    // Insert 1 is the download size
     status = this._replaceInsert(strings.getString("downloadsStatus"), 1, sizeText);
 
     // Insert 2 is the eTLD + 1 or other variations of the host

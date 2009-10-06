@@ -192,6 +192,11 @@ toolbarbutton.page-button {
   color: #aaa !important;
 }
 
+/* downloads panel UI   ---------------------------------------------------- */
+.download-retry-failed {
+  color: red !important;
+}
+
 /* console panel UI   ------------------------------------------------------ */
 @media (orientation: landscape) {
   #console-filter-warnings,

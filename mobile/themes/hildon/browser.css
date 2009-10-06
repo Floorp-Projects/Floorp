@@ -404,6 +404,11 @@ toolbarbutton.page-button {
   -moz-image-region: rect(90px 78px 108px 0px);
 }
 
+/* downloads panel UI   ---------------------------------------------------- */
+.download-retry-failed {
+  color: red !important;
+}
+
 /* console panel UI   ------------------------------------------------------ */
 @media (orientation: landscape) {
   #console-filter-warnings,
