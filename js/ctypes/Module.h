@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
  *  Dan Witte <dwitte@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,80 +36,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef FUNCTION_H
-#define FUNCTION_H
+#ifndef MODULE_H
+#define MODULE_H
 
-#include "Module.h"
-#include "nsTArray.h"
-#include "prlink.h"
-#include "ffi.h"
+#include "nsIXPCScriptable.h"
 
 namespace mozilla {
 namespace ctypes {
 
-// for JS error reporting
-enum ErrorNum {
-#define MSG_DEF(name, number, count, exception, format) \
-  name = number,
-#include "ctypes.msg"
-#undef MSG_DEF
-  CTYPESERR_LIMIT
+// Each internal CABI and CType class (representing ABI and type constants,
+// respectively) has a unique identifier, stored in a reserved slot on the
+// JSObject.
+enum ABICode {
+#define DEFINE_ABI(name) ABI_##name,
+#define DEFINE_TYPE(name)
+#include "types.h"
+#undef DEFINE_ABI
+#undef DEFINE_TYPE
+  INVALID_ABI
 };
 
-const JSErrorFormatString*
-GetErrorMessage(void* userRef, const char* locale, const uintN errorNumber);
-
-struct Type
-{
-  ffi_type mFFIType;
-  TypeCode mType;
+enum TypeCode {
+#define DEFINE_ABI(name)
+#define DEFINE_TYPE(name) TYPE_##name,
+#include "types.h"
+#undef DEFINE_ABI
+#undef DEFINE_TYPE
+  INVALID_TYPE
 };
 
-struct Value
-{
-  void* mData;
-  union {
-    PRInt8   mInt8;
-    PRInt16  mInt16;
-    PRInt32  mInt32;
-    PRInt64  mInt64;
-    PRUint8  mUint8;
-    PRUint16 mUint16;
-    PRUint32 mUint32;
-    PRUint64 mUint64;
-    float    mFloat;
-    double   mDouble;
-    void*    mPointer;
-  } mValue;
-};
-
-class Function
+class Module : public nsIXPCScriptable
 {
 public:
-  Function();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIXPCSCRIPTABLE
 
-  Function*& Next() { return mNext; }
+  Module();
 
-  static JSObject* Create(JSContext* aContext, JSObject* aLibrary, PRFuncPtr aFunc, const char* aName, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
-  static JSBool Call(JSContext* cx, uintN argc, jsval* vp);
+  // Creates the ctypes object and attaches it to the global object.
+  bool Init(JSContext* aContext, JSObject* aGlobal);
 
-  ~Function();
+  static ABICode GetABICode(JSContext* cx, jsval val);
+  static TypeCode GetTypeCode(JSContext* cx, jsval val);
 
 private:
-  bool Init(JSContext* aContext, PRFuncPtr aFunc, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
-  bool Execute(JSContext* cx, PRUint32 argc, jsval* vp);
-
-protected:
-  PRFuncPtr mFunc;
-
-  ffi_abi mCallType;
-  Type mResultType;
-  nsAutoTArray<Type, 16> mArgTypes;
-  nsAutoTArray<ffi_type*, 16> mFFITypes;
-
-  ffi_cif mCIF;
-
-  Function* mNext;
+  ~Module();
 };
 
 }
