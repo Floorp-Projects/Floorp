@@ -75,5 +75,11 @@ _TEST_FILES += native_menus_window.xul \
                $(NULL)
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifneq ($(OS_ARCH), WINCE)
+_TEST_FILES += taskbar_previews.xul
+endif
+endif
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

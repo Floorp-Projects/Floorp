@@ -184,6 +184,10 @@
 #include "nsIAccessNode.h"
 #endif // defined(ACCESSIBILITY)
 
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+#include "nsIWinTaskbar.h"
+#endif
+
 #if defined(NS_ENABLE_TSF)
 #include "nsTextStore.h"
 #endif // defined(NS_ENABLE_TSF)
@@ -381,6 +385,11 @@ nsWindow::nsWindow() : nsBaseWidget()
 #ifdef WINCE_WINDOWS_MOBILE
   mInvalidatedRegion = do_CreateInstance(kRegionCID);
   mInvalidatedRegion->Init();
+#endif
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+  mTaskbarPreview = nsnull;
+  mHasTaskbarIconBeenCreated = PR_FALSE;
 #endif
 
   // Global initialization
@@ -881,7 +890,10 @@ DWORD nsWindow::WindowExStyle()
 void nsWindow::SubclassWindow(BOOL bState)
 {
   if (NULL != mWnd) {
-    NS_PRECONDITION(::IsWindow(mWnd), "Invalid window handle");
+    //NS_PRECONDITION(::IsWindow(mWnd), "Invalid window handle");
+    if (!::IsWindow(mWnd)) {
+      NS_ERROR("Invalid window handle");
+    }
 
     if (bState) {
       // change the nsWindow proc
@@ -4400,6 +4412,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         HeapDump(msg, wParam, lParam);
         result = PR_TRUE;
       }
+#endif
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+      if (msg == nsAppShell::GetTaskbarButtonCreatedMessage())
+        SetHasTaskbarIconBeenCreated();
 #endif
     }
     break;
