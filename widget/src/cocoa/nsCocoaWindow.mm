@@ -1597,6 +1597,8 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  RollUpPopups();
+
   NSWindow* window = [aNotification object];
   if ([window isSheet])
     [WindowDelegate paintMenubarForWindow:window];
@@ -1607,6 +1609,8 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
 - (void)windowDidResignKey:(NSNotification *)aNotification
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  RollUpPopups();
 
   // If a sheet just resigned key then we should paint the menu bar
   // for whatever window is now main.
