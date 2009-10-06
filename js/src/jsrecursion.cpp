@@ -590,7 +590,7 @@ TraceRecorder::slurpBoolSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
                     lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                     INS_CONSTWORD(JSVAL_SPECIAL)),
           exit);
-    LIns* bool_ins = lir->ins2(LIR_pilsh, val_ins, INS_CONSTWORD(JSVAL_TAGBITS));
+    LIns* bool_ins = lir->ins2(LIR_pirsh, val_ins, INS_CONSTWORD(JSVAL_TAGBITS));
     bool_ins = p2i(bool_ins);
     return bool_ins;
 }
