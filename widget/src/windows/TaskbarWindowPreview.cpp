@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Rob Arnold <tellrob@gmail.com>
+ *   Siddharth Agarwal <sid.bugzilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -59,12 +60,29 @@ PRBool WindowHookProc(void *aContext, HWND hWnd, UINT nMsg, WPARAM wParam, LPARA
 }
 }
 
-NS_IMPL_ISUPPORTS2(TaskbarWindowPreview, nsITaskbarWindowPreview, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(TaskbarWindowPreview, nsITaskbarWindowPreview,
+                   nsITaskbarProgress, nsISupportsWeakReference)
+
+/**
+ * These correspond directly to the states defined in nsITaskbarProgress.idl, so
+ * they should be kept in sync.
+ */
+static TBPFLAG sNativeStates[] =
+{
+  TBPF_NOPROGRESS,
+  TBPF_INDETERMINATE,
+  TBPF_NORMAL,
+  TBPF_ERROR,
+  TBPF_PAUSED
+};
 
 TaskbarWindowPreview::TaskbarWindowPreview(ITaskbarList4 *aTaskbar, nsITaskbarPreviewController *aController, HWND aHWND, nsIDocShell *aShell)
   : TaskbarPreview(aTaskbar, aController, aHWND, aShell),
     mCustomDrawing(PR_FALSE),
-    mHaveButtons(PR_FALSE)
+    mHaveButtons(PR_FALSE),
+    mState(TBPF_NOPROGRESS),
+    mCurrentValue(0),
+    mMaxValue(0)
 {
   // Window previews are visible by default
   (void) SetVisible(PR_TRUE);
@@ -76,6 +94,10 @@ TaskbarWindowPreview::TaskbarWindowPreview(ITaskbarList4 *aTaskbar, nsITaskbarPr
     mThumbButtons[i].dwFlags = THBF_HIDDEN;
   }
 
+  WindowHook &hook = GetWindowHook();
+  if (!CanMakeTaskbarCalls())
+    hook.AddMonitor(nsAppShell::GetTaskbarButtonCreatedMessage(),
+                    TaskbarProgressWindowHook, this);
 }
 
 TaskbarWindowPreview::~TaskbarWindowPreview() {
@@ -150,13 +172,49 @@ TaskbarWindowPreview::GetEnableCustomDrawing(PRBool *aEnable) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TaskbarWindowPreview::SetProgressState(nsTaskbarProgressState aState,
+                                       PRUint64 aCurrentValue,
+                                       PRUint64 aMaxValue)
+{
+  NS_ENSURE_ARG_RANGE(aState, 0, NS_ARRAY_LENGTH(sNativeStates) - 1);
+
+  TBPFLAG nativeState = sNativeStates[aState];
+  if (nativeState == TBPF_NOPROGRESS || nativeState == TBPF_INDETERMINATE) {
+    NS_ENSURE_TRUE(aCurrentValue == 0, NS_ERROR_INVALID_ARG);
+    NS_ENSURE_TRUE(aMaxValue == 0, NS_ERROR_INVALID_ARG);
+  }
+
+  if (aCurrentValue > aMaxValue)
+    return NS_ERROR_ILLEGAL_VALUE;
+
+  mState = nativeState;
+  mCurrentValue = aCurrentValue;
+  mMaxValue = aMaxValue;
+
+  // Only update if we can
+  return CanMakeTaskbarCalls() ? UpdateTaskbarProgress() : NS_OK;
+}
+
 nsresult
 TaskbarWindowPreview::UpdateTaskbarProperties() {
   if (mHaveButtons) {
     if (FAILED(mTaskbar->ThumbBarAddButtons(mWnd, nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS, mThumbButtons)))
       return NS_ERROR_FAILURE;
   }
+  nsresult rv = UpdateTaskbarProgress();
+  NS_ENSURE_SUCCESS(rv, rv);
   return TaskbarPreview::UpdateTaskbarProperties();
+}
+
+nsresult
+TaskbarWindowPreview::UpdateTaskbarProgress() {
+  HRESULT hr = mTaskbar->SetProgressState(mWnd, mState);
+  if (SUCCEEDED(hr) && mState != TBPF_NOPROGRESS &&
+      mState != TBPF_INDETERMINATE)
+    hr = mTaskbar->SetProgressValue(mWnd, mCurrentValue, mMaxValue);
+
+  return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 LRESULT
@@ -175,6 +233,22 @@ TaskbarWindowPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
       return 0;
   }
   return TaskbarPreview::WndProc(nMsg, wParam, lParam);
+}
+
+/* static */
+PRBool
+TaskbarWindowPreview::TaskbarProgressWindowHook(void *aContext,
+                                                HWND hWnd, UINT nMsg,
+                                                WPARAM wParam, LPARAM lParam,
+                                                LRESULT *aResult)
+{
+  NS_ASSERTION(nMsg == nsAppShell::GetTaskbarButtonCreatedMessage(),
+               "Window hook proc called with wrong message");
+  TaskbarWindowPreview *preview =
+    reinterpret_cast<TaskbarWindowPreview*>(aContext);
+  // Now we can make all the calls to mTaskbar
+  preview->UpdateTaskbarProgress();
+  return PR_FALSE;
 }
 
 nsresult
@@ -205,6 +279,8 @@ TaskbarWindowPreview::DetachFromNSWindow(PRBool windowIsAlive) {
 
     WindowHook &hook = GetWindowHook();
     (void) hook.RemoveHook(WM_COMMAND, WindowHookProc, this);
+    (void) hook.RemoveMonitor(nsAppShell::GetTaskbarButtonCreatedMessage(),
+                              TaskbarProgressWindowHook, this);
   }
 
   TaskbarPreview::DetachFromNSWindow(windowIsAlive);

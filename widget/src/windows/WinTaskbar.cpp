@@ -229,6 +229,15 @@ WinTaskbar::GetTaskbarWindowPreview(nsIDocShell *shell, nsITaskbarWindowPreview 
   return NS_OK;
 }
 
+NS_IMETHODIMP
+WinTaskbar::GetTaskbarProgress(nsIDocShell *shell, nsITaskbarProgress **_retval) {
+  nsCOMPtr<nsITaskbarWindowPreview> preview;
+  nsresult rv = GetTaskbarWindowPreview(shell, getter_AddRefs(preview));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(preview, _retval);
+}
+
 } // namespace widget
 } // namespace mozilla
 
