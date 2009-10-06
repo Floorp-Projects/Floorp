@@ -145,7 +145,7 @@ var popupTests = [
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
   steps: ["before_start", "before_end", "after_start", "after_end",
-          "start_before", "start_after", "end_before", "end_after", "overlap"],
+          "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap"],
   test: function(testname, step) { gMenuPopup.openPopup(gTrigger, step, 0, 0, false, false); },
   result: function(testname, step) { compareEdge(gTrigger, gMenuPopup, step, 0, 0, testname); }
 },
@@ -155,7 +155,7 @@ var popupTests = [
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
   steps: ["before_start", "before_end", "after_start", "after_end",
-          "start_before", "start_after", "end_before", "end_after", "overlap"],
+          "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap"],
   test: function(testname, step) {
     gMenuPopup.setAttribute("style", "margin: 10px;");
     gMenuPopup.openPopup(gTrigger, step, 0, 0, false, false);
@@ -175,7 +175,7 @@ var popupTests = [
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
   steps: ["before_start", "before_end", "after_start", "after_end",
-          "start_before", "start_after", "end_before", "end_after", "overlap"],
+          "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap"],
   test: function(testname, step) {
     gMenuPopup.setAttribute("style", "margin: -8px;");
     gMenuPopup.openPopup(gTrigger, step, 0, 0, false, false);
@@ -196,7 +196,7 @@ var popupTests = [
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
   steps: ["before_start", "before_end", "after_start", "after_end",
-          "start_before", "start_after", "end_before", "end_after", "overlap"],
+          "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap"],
   test: function(testname, step) {
     gMenuPopup.setAttribute("position", step);
     gMenuPopup.openPopup(gTrigger, "", 0, 0, false, false);
