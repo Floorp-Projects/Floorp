@@ -118,6 +118,12 @@
 #include "updater_wince.h"
 #endif
 
+// Amount of the progress bar to use in each of the 3 update stages,
+// should total 100.0.
+#define PROGRESS_PREPARE_SIZE 20.0f
+#define PROGRESS_EXECUTE_SIZE 75.0f
+#define PROGRESS_FINISH_SIZE   5.0f
+
 #if defined(XP_MACOSX)
 // This function is defined in launchchild_osx.mm
 void LaunchChild(int argc, char **argv);
@@ -1590,15 +1596,17 @@ ActionList::Prepare()
   }
 
   Action *a = mFirst;
+  int i = 0;
   while (a) {
     int rv = a->Prepare();
     if (rv)
       return rv;
 
+    float percent = float(++i) / float(mCount);
+    UpdateProgressUI(PROGRESS_PREPARE_SIZE * percent);
+
     a = a->mNext;
   }
-
-  UpdateProgressUI(1.0f);
 
   return OK;
 }
@@ -1623,7 +1631,8 @@ ActionList::Execute()
 
     currentProgress += a->mProgressCost;
     float percent = float(currentProgress) / float(maxProgress);
-    UpdateProgressUI(1.0f + 99.0f * percent);
+    UpdateProgressUI(PROGRESS_PREPARE_SIZE +
+                     PROGRESS_EXECUTE_SIZE * percent);
 
     a = a->mNext;
   }
@@ -1635,8 +1644,15 @@ void
 ActionList::Finish(int status)
 {
   Action *a = mFirst;
+  int i = 0;
   while (a) {
     a->Finish(status);
+
+    float percent = float(++i) / float(mCount);
+    UpdateProgressUI(PROGRESS_PREPARE_SIZE +
+                     PROGRESS_EXECUTE_SIZE +
+                     PROGRESS_FINISH_SIZE * percent);
+
     a = a->mNext;
   }
 
@@ -1644,8 +1660,6 @@ ActionList::Finish(int status)
   if (status == OK)
     gSucceeded = TRUE;
 #endif
-
-  UpdateProgressUI(100.0f);
 }
 
 int DoUpdate()
