@@ -47,6 +47,7 @@
 #   Edward Lee <edward.lee@engineering.uiuc.edu>
 #   Paul O’Shannessy <paul@oshannessy.com>
 #   Nils Maier <maierman@web.de>
+#   Rob Arnold <robarnold@cmu.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -134,6 +135,29 @@ let gInitialPages = [
 #include browser-fullZoom.js
 #include browser-places.js
 #include browser-tabPreviews.js
+
+#ifdef XP_WIN
+#ifndef WINCE
+#define WIN7_FEATURES
+XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
+  const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
+  let taskbar = Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar);
+  if (taskbar.available) {
+    Cu.import("resource://gre/modules/wintaskbar/preview-per-tab.jsm");
+    return {
+      onOpenWindow: function () {
+        AeroPeek.onOpenWindow(window);
+      },
+      onCloseWindow: function () {
+        AeroPeek.onCloseWindow(window);
+      }
+    };
+  } else {
+    return { onOpenWindow: function () {}, onCloseWindow: function () {} };
+  }
+});
+#endif
+#endif
 
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
@@ -1341,10 +1365,17 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   gBrowser.mPanelContainer.addEventListener("InstallBrowserTheme", LightWeightThemeWebInstaller, false, true);
   gBrowser.mPanelContainer.addEventListener("PreviewBrowserTheme", LightWeightThemeWebInstaller, false, true);
   gBrowser.mPanelContainer.addEventListener("ResetBrowserThemePreview", LightWeightThemeWebInstaller, false, true);
+
+#ifdef WIN7_FEATURES
+  Win7Features.onOpenWindow();
+#endif
 }
 
 function BrowserShutdown()
 {
+#ifdef WIN7_FEATURES
+  Win7Features.onCloseWindow();
+#endif
   gPrefService.removeObserver(ctrlTab.prefName, ctrlTab);
   gPrefService.removeObserver(allTabs.prefName, allTabs);
   tabPreviews.uninit();
