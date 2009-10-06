@@ -55,6 +55,8 @@
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "WinTaskbar.h"
+#include "JumpListBuilder.h"
+#include "JumpListItem.h"
 
 // Drag & Drop, Clipboard
 
@@ -93,6 +95,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
 using namespace mozilla::widget;
 NS_GENERIC_FACTORY_CONSTRUCTOR(WinTaskbar)
+NS_GENERIC_FACTORY_CONSTRUCTOR(JumpListBuilder)
+NS_GENERIC_FACTORY_CONSTRUCTOR(JumpListItem)
+NS_GENERIC_FACTORY_CONSTRUCTOR(JumpListSeparator)
+NS_GENERIC_FACTORY_CONSTRUCTOR(JumpListLink)
+NS_GENERIC_FACTORY_CONSTRUCTOR(JumpListShortcut)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -175,6 +182,26 @@ static const nsModuleComponentInfo components[] =
     NS_WIN_TASKBAR_CID ,
     "@mozilla.org/windows-taskbar;1",
     WinTaskbarConstructor },
+  { "Windows JumpList Builder",
+    NS_WIN_JUMPLISTBUILDER_CID,
+    "@mozilla.org/windows-jumplistbuilder;1",
+    JumpListBuilderConstructor },
+  { "Windows JumpList Item",
+    NS_WIN_JUMPLISTITEM_CID,
+    "@mozilla.org/windows-jumplistitem;1",
+    JumpListItemConstructor },
+  { "Windows JumpList Separator",
+    NS_WIN_JUMPLISTSEPARATOR_CID,
+    "@mozilla.org/windows-jumplistseparator;1",
+    JumpListSeparatorConstructor },
+  { "Windows JumpList Link",
+    NS_WIN_JUMPLISTLINK_CID,
+    "@mozilla.org/windows-jumplistlink;1",
+    JumpListLinkConstructor },
+  { "Windows JumpList Shortcut",
+    NS_WIN_JUMPLISTSHORTCUT_CID,
+    "@mozilla.org/windows-jumplistshortcut;1",
+    JumpListShortcutConstructor },
 #endif
   { "Drag Service",
     NS_DRAGSERVICE_CID,

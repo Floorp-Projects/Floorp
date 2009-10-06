@@ -40,6 +40,7 @@
 #include "nsAppShell.h"
 #include "nsToolkit.h"
 #include "nsThreadUtils.h"
+#include "WinTaskbar.h"
 
 #ifdef WINCE
 BOOL WaitMessage(VOID)
@@ -123,6 +124,10 @@ nsAppShell::Init()
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
   sTaskbarButtonCreatedMsg = ::RegisterWindowMessageW(L"TaskbarButtonCreated");
   NS_ASSERTION(sTaskbarButtonCreatedMsg, "Could not register taskbar button creation message");
+
+  // Global app registration id for Win7 and up. See
+  // WinTaskbar.cpp for details.
+  mozilla::widget::WinTaskbar::SetAppUserModelID();
 #endif
 
   WNDCLASSW wc;
