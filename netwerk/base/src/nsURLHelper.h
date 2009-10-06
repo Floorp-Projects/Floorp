@@ -78,6 +78,8 @@ NS_HIDDEN_(nsIURLParser *) net_GetStdURLParser();
 
 /* convert between nsIFile and file:// URL spec */
 NS_HIDDEN_(nsresult) net_GetURLSpecFromFile(nsIFile *, nsACString &);
+NS_HIDDEN_(nsresult) net_GetURLSpecFromDir(nsIFile *, nsACString &);
+NS_HIDDEN_(nsresult) net_GetURLSpecFromActualFile(nsIFile *, nsACString &);
 NS_HIDDEN_(nsresult) net_GetFileFromURLSpec(const nsACString &, nsIFile **);
 
 /* extract file path components from file:// URL */
