@@ -75,8 +75,9 @@ static PRLogModuleInfo* gOggDecoderLog;
 
 // The number of entries in oggplay buffer list.  This value is totally
 // arbitrary.  Note that the actual number of video/audio frames buffered is
-// twice this, because the current implementation frees OggPlay's buffer
-// entries and stores copies of the underlying data in the FrameQueue.
+// twice this, because the current implementation releases OggPlay's buffer
+// entries and stores references or copies of the underlying data in the
+// FrameQueue.
 #define OGGPLAY_BUFFER_SIZE 5
 
 // The number of frames to read before audio callback is called.
