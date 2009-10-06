@@ -116,7 +116,6 @@ PurgeThreadData(JSContext *cx, JSThreadData *data)
 
 # ifdef JS_TRACER
     JSTraceMonitor *tm = &data->traceMonitor;
-    tm->reservedDoublePoolPtr = tm->reservedDoublePool;
 
     /*
      * If we are about to regenerate shapes, we have to flush the JIT cache,
@@ -126,12 +125,14 @@ PurgeThreadData(JSContext *cx, JSThreadData *data)
         tm->needFlush = JS_TRUE;
 
     /*
-     * We want to keep tm->reservedObjects after the GC. So, unless we are
-     * shutting down, we don't purge them here and rather mark them during
+     * We want to keep reserved doubles and objects after the GC. So, unless we
+     * are shutting down, we don't purge them here and rather mark them during
      * the GC, see MarkReservedObjects in jsgc.cpp.
      */
-    if (cx->runtime->state == JSRTS_LANDING)
+    if (cx->runtime->state == JSRTS_LANDING) {
+        tm->reservedDoublePoolPtr = tm->reservedDoublePool;
         tm->reservedObjects = NULL;
+    }
 # endif
 
     /* Destroy eval'ed scripts. */
