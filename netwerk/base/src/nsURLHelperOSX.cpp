@@ -145,7 +145,7 @@ static void SwapSlashColon(char *s)
 } 
 
 nsresult
-net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
+net_GetURLSpecFromActualFile(nsIFile *aFile, nsACString &result)
 {
   // NOTE: This is identical to the implementation in nsURLHelperUnix.cpp
   
@@ -171,18 +171,6 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
   // This replacement should be removed in bug #473280
   escPath.ReplaceSubstring(";", "%3b");
 
-  // if this file references a directory, then we need to ensure that the
-  // URL ends with a slash.  this is important since it affects the rules
-  // for relative URL resolution when this URL is used as a base URL.
-  // if the file does not exist, then we make no assumption about its type,
-  // and simply leave the URL unmodified.
-  if (escPath.Last() != '/') {
-    PRBool dir;
-    rv = aFile->IsDirectory(&dir);
-    if (NS_SUCCEEDED(rv) && dir)
-      escPath += '/';
-  }
-  
   result = escPath;
   return NS_OK;
 }
