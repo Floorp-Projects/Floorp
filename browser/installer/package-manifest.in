@@ -40,11 +40,7 @@
 #endif
 
 [xpcom]
-#ifdef XP_WIN32
-@BINPATH@/js3250.dll
-#else
 @BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
-#endif
 @BINPATH@/@DLL_PREFIX@plc4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@plds4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@xpcom@DLL_SUFFIX@
