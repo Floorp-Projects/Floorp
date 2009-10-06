@@ -511,7 +511,7 @@ var PlacesOrganizer = {
       return;
 
     try {
-      PlacesUtils.backups.restoreBookmarksFromJSONFile(aFile);
+      PlacesUtils.restoreBookmarksFromJSONFile(aFile);
     }
     catch(ex) {
       this._showErrorAlert(PlacesUIUtils.getString("bookmarksRestoreParseError"));
