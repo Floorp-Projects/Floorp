@@ -602,26 +602,6 @@ enum {
         asm_output("str %s, [%s, #%d]", gpn(_d), gpn(_n), (_off)); \
     } while(0)
 
-// Rd += _off; [Rd] = Rn
-#define STR_preindex(_d,_n,_off) do {                                   \
-        NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
-        NanoAssert(isS12(_off));                                        \
-        underrunProtect(4);                                             \
-        if ((_off)<0)   *(--_nIns) = (NIns)( COND_AL | (0x52<<20) | ((_n)<<16) | ((_d)<<12) | ((-(_off))&0xFFF) ); \
-        else            *(--_nIns) = (NIns)( COND_AL | (0x5A<<20) | ((_n)<<16) | ((_d)<<12) | ((_off)&0xFFF) ); \
-        asm_output("str %s, [%s, #%d]!", gpn(_d), gpn(_n), (_off));     \
-    } while(0)
-
-// [Rd] = Rn ; Rd += _off
-#define STR_postindex(_d,_n,_off) do {                                  \
-        NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
-        NanoAssert(isS12(_off));                                        \
-        underrunProtect(4);                                             \
-        if ((_off)<0)   *(--_nIns) = (NIns)( COND_AL | (0x40<<20) | ((_n)<<16) | ((_d)<<12) | ((-(_off))&0xFFF) ); \
-        else            *(--_nIns) = (NIns)( COND_AL | (0x48<<20) | ((_n)<<16) | ((_d)<<12) | ((_off)&0xFFF) ); \
-        asm_output("str %s, [%s]!, %d", gpn(_d), gpn(_n), (_off));      \
-    } while(0)
-
 // Encode a breakpoint. The ID is not important and is ignored by the
 // processor, but it can be useful as a marker when debugging emitted code.
 #define BKPT_insn       ((NIns)( COND_AL | (0x12<<20) | (0x7<<4) ))
