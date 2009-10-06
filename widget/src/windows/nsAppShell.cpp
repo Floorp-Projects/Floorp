@@ -59,6 +59,15 @@ BOOL WaitMessage(VOID)
 
 static UINT sMsgId;
 
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+static UINT sTaskbarButtonCreatedMsg;
+
+/* static */
+UINT nsAppShell::GetTaskbarButtonCreatedMessage() {
+	return sTaskbarButtonCreatedMsg;
+}
+#endif
+
 //-------------------------------------------------------------------------
 
 static BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
@@ -110,6 +119,11 @@ nsAppShell::Init()
 {
   if (!sMsgId)
     sMsgId = RegisterWindowMessageW(L"nsAppShell:EventID");
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+  sTaskbarButtonCreatedMsg = ::RegisterWindowMessageW(L"TaskbarButtonCreated");
+  NS_ASSERTION(sTaskbarButtonCreatedMsg, "Could not register taskbar button creation message");
+#endif
 
   WNDCLASSW wc;
   HINSTANCE module = GetModuleHandle(NULL);

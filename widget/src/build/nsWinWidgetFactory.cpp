@@ -54,6 +54,7 @@
 #include "nsSound.h"
 #include "nsToolkit.h"
 #include "nsWindow.h"
+#include "WinTaskbar.h"
 
 // Drag & Drop, Clipboard
 
@@ -88,6 +89,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+using namespace mozilla::widget;
+NS_GENERIC_FACTORY_CONSTRUCTOR(WinTaskbar)
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
@@ -164,6 +170,12 @@ static const nsModuleComponentInfo components[] =
     nsHTMLFormatConverterConstructor },
 
 #ifndef WINCE
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+  { "Windows Taskbar Server",
+    NS_WIN_TASKBAR_CID ,
+    "@mozilla.org/windows-taskbar;1",
+    WinTaskbarConstructor },
+#endif
   { "Drag Service",
     NS_DRAGSERVICE_CID,
     "@mozilla.org/widget/dragservice;1",

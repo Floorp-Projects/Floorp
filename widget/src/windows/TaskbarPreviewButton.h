@@ -1,5 +1,7 @@
-/* -*- Mode: c++; tab-width: 2; indent-tabs-mode: nil; -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* vim: se cin sw=2 ts=2 et : */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -15,11 +17,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Rob Arnold <tellrob@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,35 +38,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAppShell_h__
-#define nsAppShell_h__
-
-#include "nsBaseAppShell.h"
-#include <windows.h>
-
-/**
- * Native Win32 Application shell wrapper
- */
-class nsAppShell : public nsBaseAppShell
-{
-public:
-  nsAppShell() : mEventWnd(NULL) {}
-
-  nsresult Init();
+#ifndef __mozilla_widget_TaskbarPreviewButton_h__
+#define __mozilla_widget_TaskbarPreviewButton_h__
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
-  static UINT GetTaskbarButtonCreatedMessage();
-#endif
 
-protected:
-  virtual void ScheduleNativeEventCallback();
-  virtual PRBool ProcessNextNativeEvent(PRBool mayWait);
-  virtual ~nsAppShell();
+#include <windows.h>
+#include <shobjidl.h>
 
-  static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
+#include <nsITaskbarPreviewButton.h>
+#include <nsAutoPtr.h>
+#include <nsString.h>
+#include <nsWeakReference.h>
 
-protected:
-  HWND mEventWnd;
+namespace mozilla {
+namespace widget {
+
+class TaskbarWindowPreview;
+class TaskbarPreviewButton : public nsITaskbarPreviewButton, public nsSupportsWeakReference
+{
+public: 
+  TaskbarPreviewButton(TaskbarWindowPreview* preview, PRUint32 index);
+  virtual ~TaskbarPreviewButton();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITASKBARPREVIEWBUTTON
+
+private:
+  THUMBBUTTON&            Button();
+  nsresult                Update();
+
+  nsRefPtr<TaskbarWindowPreview> mPreview;
+  PRUint32                mIndex;
+  nsString                mTooltip;
+  nsCOMPtr<imgIContainer> mImage;
 };
 
-#endif // nsAppShell_h__
+} // namespace widget
+} // namespace mozilla
+
+#endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+
+#endif /* __mozilla_widget_TaskbarPreviewButton_h__ */
+
+
