@@ -2157,7 +2157,9 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (op != JSOP_NAME)
             return JS_TRUE;
 
+#ifdef DEBUG
         JSStackFrame *caller = cg->compiler->callerFrame;
+#endif
         JS_ASSERT(caller);
         JS_ASSERT(caller->script);
 
