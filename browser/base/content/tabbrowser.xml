@@ -83,7 +83,7 @@
           <xul:tooltip onpopupshowing="return this.parentNode.parentNode.parentNode.createTooltip(event);"/>
           <xul:menupopup anonid="tabContextMenu" onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
             <xul:menuitem id="context_newTab" label="&newTab.label;" accesskey="&newTab.accesskey;"
-                          xbl:inherits="oncommand=onnewtab"/>
+                          command="cmd_newNavigatorTab"/>
             <xul:menuseparator/>
             <xul:menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
@@ -127,7 +127,6 @@
                     anonid="tabcontainer"
                     setfocus="false"
                     onclick="this.parentNode.parentNode.parentNode.onTabClick(event);"
-                    xbl:inherits="onnewtab"
                     ondblclick="this.parentNode.parentNode.parentNode.onTabBarDblClick(event);"
                     onclosetab="var node = this.parentNode;
                                 while (node.localName != 'tabbrowser')
@@ -1801,12 +1800,8 @@
           <![CDATA[
             // See hack note in the tabbrowser-close-button binding
             if (!this._blockDblClick && aEvent.button == 0 &&
-                aEvent.originalTarget.localName == "box") {
-              // xxx this needs to check that we're in the empty area of the tabstrip
-              var e = document.createEvent("Events");
-              e.initEvent("NewTab", true, true);
-              this.dispatchEvent(e);
-            }
+                aEvent.originalTarget.localName == "box")
+              BrowserOpenTab();
           ]]>
         </body>
       </method>

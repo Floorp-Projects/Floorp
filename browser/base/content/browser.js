@@ -1099,7 +1099,6 @@ function prepareForStartup() {
   gBrowser.addEventListener("PluginOutdated", gMissingPluginInstaller.newMissingPlugin, true, true);
   gBrowser.addEventListener("PluginDisabled", gMissingPluginInstaller.newDisabledPlugin, true, true);
   gBrowser.addEventListener("NewPluginInstalled", gMissingPluginInstaller.refreshBrowser, false);
-  gBrowser.addEventListener("NewTab", BrowserOpenTab, false);
   window.addEventListener("AppCommand", HandleAppCommandEvent, true);
 
   var webNavigation;
