@@ -577,7 +577,6 @@
       <tabbrowser id="content" disablehistory="true"
                   flex="1" contenttooltip="aHTMLTooltip"
                   contentcontextmenu="contentAreaContextMenu"
-                  onnewtab="BrowserOpenTab();"
                   autocompletepopup="PopupAutoComplete"
                   ondrop="contentAreaDNDObserver.onDrop(event)"
                   onclick="return contentAreaClick(event, false);"/>
