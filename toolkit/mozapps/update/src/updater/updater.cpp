@@ -606,7 +606,7 @@ static const int ACTION_DESCRIPTION_BUFSIZE = 256;
 class Action
 {
 public:
-  Action() : mNext(NULL) { }
+  Action() : mProgressCost(1), mNext(NULL) { }
   virtual ~Action() { }
 
   virtual int Parse(char *line) = 0;
@@ -624,6 +624,7 @@ public:
   // all actions were successfully executed.  Otherwise, some action failed.
   virtual void Finish(int status) = 0;
 
+  int mProgressCost;
 private:
   Action* mNext;
 
@@ -676,6 +677,7 @@ RemoveFile::Prepare()
   if (rv) {
     LOG(("file does not exist; skipping\n"));
     mSkip = 1;
+    mProgressCost = 0;
     return OK;
   }
 
@@ -1604,18 +1606,24 @@ ActionList::Prepare()
 int
 ActionList::Execute()
 {
-  int i = 0;
-  float divisor = mCount / 98.0f;
-
+  int currentProgress = 0, maxProgress = 0;
   Action *a = mFirst;
   while (a) {
-    UpdateProgressUI(1.0f + float(i++) / divisor);
+    maxProgress += a->mProgressCost;
+    a = a->mNext;
+  }
 
+  a = mFirst;
+  while (a) {
     int rv = a->Execute();
     if (rv) {
       LOG(("### execution failed\n"));
       return rv;
     }
+
+    currentProgress += a->mProgressCost;
+    float percent = float(currentProgress) / float(maxProgress);
+    UpdateProgressUI(1.0f + 99.0f * percent);
 
     a = a->mNext;
   }
