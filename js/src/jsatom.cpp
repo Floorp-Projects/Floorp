@@ -136,7 +136,6 @@ const char *const js_common_atom_names[] = {
     js_eval_str,                /* evalAtom                     */
     js_fileName_str,            /* fileNameAtom                 */
     js_get_str,                 /* getAtom                      */
-    js_getter_str,              /* getterAtom                   */
     js_index_str,               /* indexAtom                    */
     js_input_str,               /* inputAtom                    */
     js_iterator_str,            /* iteratorAtom                 */
@@ -149,7 +148,6 @@ const char *const js_common_atom_names[] = {
     js_parent_str,              /* parentAtom                   */
     js_proto_str,               /* protoAtom                    */
     js_set_str,                 /* setAtom                      */
-    js_setter_str,              /* setterAtom                   */
     js_stack_str,               /* stackAtom                    */
     js_toLocaleString_str,      /* toLocaleStringAtom           */
     js_toSource_str,            /* toSourceAtom                 */

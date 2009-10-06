@@ -738,8 +738,6 @@ JSScope::addProperty(JSContext *cx, jsid id,
     CHECK_ANCESTOR_LINE(this, true);
 
     JS_ASSERT(!JSVAL_IS_NULL(id));
-    JS_ASSERT_IF(attrs & JSPROP_GETTER, getter);
-    JS_ASSERT_IF(attrs & JSPROP_SETTER, setter);
     JS_ASSERT_IF(!cx->runtime->gcRegenShapes,
                  hasRegenFlag(cx->runtime->gcRegenShapesScopeFlag));
 
@@ -1282,7 +1280,6 @@ JSScopeProperty::trace(JSTracer *trc)
         mark();
     js_TraceId(trc, id);
 
-#if JS_HAS_GETTER_SETTER
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         if ((attrs & JSPROP_GETTER) && rawGetter) {
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 0);
@@ -1293,7 +1290,6 @@ JSScopeProperty::trace(JSTracer *trc)
             js_CallGCMarker(trc, setterObject(), JSTRACE_OBJECT);
         }
     }
-#endif /* JS_HAS_GETTER_SETTER */
 
     if (isMethod()) {
         JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, this, 0);

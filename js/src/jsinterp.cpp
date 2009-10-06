@@ -2280,9 +2280,7 @@ js_Interpret(JSContext *cx)
     JSType type;
     jsint low, high, off, npairs;
     JSBool match;
-#if JS_HAS_GETTER_SETTER
     JSPropertyOp getter, setter;
-#endif
     JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
 
 # ifdef DEBUG

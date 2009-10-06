@@ -250,7 +250,6 @@ struct JSAtomState {
     JSAtom              *evalAtom;
     JSAtom              *fileNameAtom;
     JSAtom              *getAtom;
-    JSAtom              *getterAtom;
     JSAtom              *indexAtom;
     JSAtom              *inputAtom;
     JSAtom              *iteratorAtom;
@@ -263,7 +262,6 @@ struct JSAtomState {
     JSAtom              *parentAtom;
     JSAtom              *protoAtom;
     JSAtom              *setAtom;
-    JSAtom              *setterAtom;
     JSAtom              *stackAtom;
     JSAtom              *toLocaleStringAtom;
     JSAtom              *toSourceAtom;
