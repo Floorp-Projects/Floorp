@@ -1384,6 +1384,8 @@ function BrowserShutdown()
 
   gGestureSupport.init(false);
 
+  FullScreen.cleanup();
+
   try {
     FullZoom.destroy();
   }
@@ -1915,24 +1917,8 @@ function BrowserCloseTabOrWindow() {
 
 function BrowserTryToCloseWindow()
 {
-  if (WindowIsClosing()) {
-    if (window.fullScreen) {
-      gBrowser.mPanelContainer.removeEventListener("mousemove",
-                                                   FullScreen._collapseCallback, false);
-      document.removeEventListener("keypress", FullScreen._keyToggleCallback, false);
-      document.removeEventListener("popupshown", FullScreen._setPopupOpen, false);
-      document.removeEventListener("popuphidden", FullScreen._setPopupOpen, false);
-      gPrefService.removeObserver("browser.fullscreen", FullScreen);
-
-      var fullScrToggler = document.getElementById("fullscr-toggler");
-      if (fullScrToggler) {
-        fullScrToggler.removeEventListener("mouseover", FullScreen._expandCallback, false);
-        fullScrToggler.removeEventListener("dragenter", FullScreen._expandCallback, false);
-      }
-    }
-
+  if (WindowIsClosing())
     window.close();     // WindowIsClosing does all the necessary checks
-  }
 }
 
 function loadURI(uri, referrer, postData, allowThirdPartyFixup)
@@ -3520,11 +3506,11 @@ var FullScreen =
     this.showXULChrome("statusbar", window.fullScreen);
     document.getElementById("View:FullScreen").setAttribute("checked", !window.fullScreen);
 
-    var fullScrToggler = document.getElementById("fullscr-toggler");
     if (!window.fullScreen) {
       // Add a tiny toolbar to receive mouseover and dragenter events, and provide affordance.
       // This will help simulate the "collapse" metaphor while also requiring less code and
       // events than raw listening of mouse coords.
+      let fullScrToggler = document.getElementById("fullscr-toggler");
       if (!fullScrToggler) {
         fullScrToggler = document.createElement("toolbar");
         fullScrToggler.id = "fullscr-toggler";
@@ -3550,16 +3536,6 @@ var FullScreen =
       gPrefService.addObserver("browser.fullscreen", this, false);
     }
     else {
-      document.removeEventListener("keypress", this._keyToggleCallback, false);
-      document.removeEventListener("popupshown", this._setPopupOpen, false);
-      document.removeEventListener("popuphidden", this._setPopupOpen, false);
-      gPrefService.removeObserver("browser.fullscreen", this);
-
-      if (fullScrToggler) {
-        fullScrToggler.removeEventListener("mouseover", this._expandCallback, false);
-        fullScrToggler.removeEventListener("dragenter", this._expandCallback, false);
-      }
-
       // The user may quit fullscreen during an animation
       clearInterval(this._animationInterval);
       clearTimeout(this._animationTimeout);
@@ -3570,8 +3546,24 @@ var FullScreen =
       // This is needed if they use the context menu to quit fullscreen
       this._isPopupOpen = false;
 
+      this.cleanup();
+    }
+  },
+
+  cleanup: function () {
+    if (window.fullScreen) {
       gBrowser.mPanelContainer.removeEventListener("mousemove",
                                                    this._collapseCallback, false);
+      document.removeEventListener("keypress", this._keyToggleCallback, false);
+      document.removeEventListener("popupshown", this._setPopupOpen, false);
+      document.removeEventListener("popuphidden", this._setPopupOpen, false);
+      gPrefService.removeObserver("browser.fullscreen", this);
+
+      let fullScrToggler = document.getElementById("fullscr-toggler");
+      if (fullScrToggler) {
+        fullScrToggler.removeEventListener("mouseover", this._expandCallback, false);
+        fullScrToggler.removeEventListener("dragenter", this._expandCallback, false);
+      }
     }
   },
 
