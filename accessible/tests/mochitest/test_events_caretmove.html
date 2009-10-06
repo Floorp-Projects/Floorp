@@ -20,134 +20,36 @@
 
   <script type="application/javascript">
     /**
-     * Invoker base class.
+     * Generic checker.
      */
-    function synthAction(aNodeOrID, aCaretOffset)
+    function checker(aCaretOffset)
     {
-      this.DOMNode = getNode(aNodeOrID);
-
-      this.check = function synthAction_check(aEvent)
+      this.check = function checker_check(aEvent)
       {
         is(aEvent.QueryInterface(nsIAccessibleCaretMoveEvent).caretOffset,
-           this.caretOffset,
-           "Wrong caret offset for " + aNodeOrID);
+           aCaretOffset,
+           "Wrong caret offset for " + prettyName(aEvent.target));
       }
-
-      this.getID = function synthAction_getID() { return aNodeOrID + " action"; }
-
-      this.caretOffset = aCaretOffset;
     }
 
     /**
-     * Click invoker.
+     * Click checker.
      */
-    function synthClick(aNodeOrID, aCaretOffset,
-                        aExtraNodeOrID, aExtraCaretOffset)
+    function clickChecker(aCaretOffset, aExtraNodeOrID, aExtraCaretOffset)
     {
-      this.__proto__ = new synthAction(aNodeOrID, aCaretOffset);
+      this.__proto__ = new checker(aCaretOffset);
 
       this.extraNode = getNode(aExtraNodeOrID);
-      this.extraCaretOffset = aExtraCaretOffset;
 
-      this.invoke = function synthClick_invoke()
-      {
-        // Scroll the node into view, otherwise synth click may fail.
-        this.DOMNode.scrollIntoView(true);
-
-        synthesizeMouse(this.DOMNode, 1, 1, {});
-      }
-
-      this.check = function synthFocus_check(aEvent)
+      this.check = function clickChecker_check(aEvent)
       {
         this.__proto__.check(aEvent);
 
         if (this.extraNode) {
           var acc = getAccessible(this.extraNode, [nsIAccessibleText]);
-          is(acc.caretOffset, this.extraCaretOffset,
+          is(acc.caretOffset, aExtraCaretOffset,
              "Wrong caret offset for " + aExtraNodeOrID);
         }
-      }
-
-      this.getID = function synthFocus_getID() { return aNodeOrID + " click"; }
-    }
-
-    /**
-     * Key press invokers.
-     */
-    function synthKey(aNodeOrID, aCaretOffset, aKey, aArgs)
-    {
-      this.__proto__ = new synthAction(aNodeOrID, aCaretOffset);
-  
-      this.invoke = function synthKey_invoke()
-      {
-        synthesizeKey(this.mKey, this.mArgs);
-      }
-
-      this.mKey = aKey;
-      this.mArgs = aArgs ? aArgs : {};
-    }
-
-    function synthTabTest(aNodeOrID, aCaretOffset, aBackTab)
-    {
-      this.__proto__ = new synthKey(aNodeOrID, aCaretOffset,
-                                    "VK_TAB", {shiftKey: aBackTab});
-
-      this.getID = function synthTabTest_getID() { return aNodeOrID + " tab"; }
-    }
-
-    function synthDownKey(aNodeOrID, aCaretOffset)
-    {
-      this.__proto__ = new synthKey(aNodeOrID, aCaretOffset, "VK_DOWN");
-
-      this.getID = function synthDownKey_getID()
-      {
-        return aNodeOrID + " key down";
-      }
-    }
-
-    function synthRightKey(aNodeOrID, aCaretOffset)
-    {
-      this.__proto__ = new synthKey(aNodeOrID, aCaretOffset, "VK_RIGHT");
-
-      this.getID = function synthRightKey_getID()
-      {
-        return aNodeOrID + " key right";
-      }
-    }
-
-    /**
-     * Focus invoker.
-     */
-    function synthFocus(aNodeOrID, aCaretOffset)
-    {
-      this.__proto__ = new synthAction(aNodeOrID, aCaretOffset);
-
-      this.invoke = function synthFocus_invoke()
-      {
-        this.DOMNode.focus();
-      }
-
-      this.getID = function synthFocus_getID() { return aNodeOrID + " focus"; }
-    }
-
-    /**
-     * Select all invoker.
-     */
-    function synthSelectAll(aNodeOrID, aCaretOffset)
-    {
-      this.__proto__ = new synthAction(aNodeOrID, aCaretOffset);
-
-      this.invoke = function synthSelectAll_invoke()
-      {
-        if (this.DOMNode instanceof Components.interfaces.nsIDOMHTMLInputElement)
-          this.DOMNode.select();
-        else
-          window.getSelection().selectAllChildren(this.DOMNode);
-      }
-
-      this.getID = function synthSelectAll_getID()
-      {
-        return aNodeOrID + " selectall";
       }
     }
 
@@ -177,26 +79,27 @@
       gQueue = new eventQueue(nsIAccessibleEvent.EVENT_TEXT_CARET_MOVED);
 
       var id = "textbox";
-      gQueue.push(new synthFocus(id, 5));
-      gQueue.push(new synthSelectAll(id, 5));
-      gQueue.push(new synthClick(id, 0));
-      gQueue.push(new synthRightKey(id, 1));
+      gQueue.push(new synthFocus(id, new checker(5)));
+      gQueue.push(new synthSelectAll(id, new checker(5)));
+      gQueue.push(new synthClick(id, new checker(0)));
+      gQueue.push(new synthRightKey(id, new checker(1)));
 
       id = "textarea";
-      gQueue.push(new synthClick(id, 0));
-      gQueue.push(new synthRightKey(id, 1));
-      gQueue.push(new synthDownKey(id, 12));
+      gQueue.push(new synthClick(id, new checker(0)));
+      gQueue.push(new synthRightKey(id, new checker(1)));
+      gQueue.push(new synthDownKey(id, new checker(12)));
 
       id = "p";
-      gQueue.push(new synthClick(id, 0));
-      gQueue.push(new synthRightKey(id, 1));
-      gQueue.push(new synthDownKey(id, 6));
+      gQueue.push(new synthClick(id, new checker(0)));
+      gQueue.push(new synthRightKey(id, new checker(1)));
+      gQueue.push(new synthDownKey(id, new checker(6)));
 
-      gQueue.push(new synthClick("p1_in_div", 0, "p2_in_div", -1));
+      gQueue.push(new synthClick("p1_in_div",
+                                 new clickChecker(0, "p2_in_div", -1)));
 
-      gQueue.push(new synthTabTest("p", 0, true));
-      gQueue.push(new synthTabTest("textarea", 12, true));
-      gQueue.push(new synthTabTest("p", 0, false));
+      gQueue.push(new synthShiftTab("p", new checker(0)));
+      gQueue.push(new synthShiftTab("textarea", new checker(12)));
+      gQueue.push(new synthTab("p", new checker(0)));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
