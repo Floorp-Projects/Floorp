@@ -42,6 +42,8 @@ dnl   Mac OS X 10.4 support
 dnl   Giorgio Maone <g.maone@informaction.com>
 dnl   MSVC l10n compatible version check
 dnl   Ben Turner <mozilla@songbirdnest.com>
+dnl   Windows x64 support
+dnl   Makoto Kato <m_kato@ga2.so-net.ne.jp>
 dnl
 dnl Alternatively, the contents of this file may be used under the terms of
 dnl either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -192,7 +194,16 @@ case "$target" in
     if test -z "$CPP"; then CPP="cl -E -nologo"; fi
     if test -z "$CXXCPP"; then CXXCPP="cl -TP -E -nologo"; ac_cv_prog_CXXCPP="$CXXCPP"; fi
     if test -z "$LD"; then LD=link; fi
-    if test -z "$AS"; then AS=ml; fi
+    if test -z "$AS"; then
+        case "${target_cpu}" in
+        i*86)
+            AS=ml;
+            ;;
+        x86_64)
+            AS=ml64;
+            ;;
+        esac
+    fi
     if test -z "$MIDL"; then MIDL=midl; fi
     ;;
 *-darwin*)
@@ -638,6 +649,9 @@ case "$target" in
             else
                 AC_MSG_RESULT([none needed])
             fi
+            ;;
+        x86_64-*)
+            MIDL_FLAGS="${MIDL_FLAGS} -env x64"
             ;;
         *)
             AC_MSG_RESULT([none needed])
@@ -1590,7 +1604,7 @@ AC_LANG_SAVE
 AC_LANG_C
 AC_MSG_CHECKING(for 64-bit OS)
 AC_TRY_COMPILE([$configure_static_assert_macros],
-               [CONFIGURE_STATIC_ASSERT(sizeof(long) == 8)],
+               [CONFIGURE_STATIC_ASSERT(sizeof(void*) == 8)],
                result="yes", result="no")
 AC_MSG_RESULT("$result")
 if test "$result" = "yes"; then
@@ -1655,6 +1669,12 @@ case "$host" in
         if test "`${PYTHON} -c 'import sys; print sys.platform;'`" != "cygwin"; then
             PYTHON="${CYGWIN_WRAPPER} $PYTHON"
         fi
+        ;;
+    esac
+
+    case "${host_cpu}" in
+    x86_64)
+        HOST_CFLAGS="$HOST_CFLAGS -D_AMD64_"
         ;;
     esac
     ;;
@@ -2041,7 +2061,7 @@ case "$target" in
     MOZ_DEBUG_FLAGS='-Zi'
     MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
     MOZ_FIX_LINK_PATHS=
-    MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
+    MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/mozjs.lib'
     OBJ_SUFFIX=obj
     RANLIB='echo not_ranlib'
     STRIP='echo not_strip'
@@ -2105,7 +2125,7 @@ case "$target" in
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
         LIBS="$LIBS -lgdi32 -lwinmm -lwsock32"
-        MOZ_JS_LIBS='-L$(LIBXUL_DIST)/lib -ljs$(MOZ_BITS)$(VERSION_NUMBER)'
+        MOZ_JS_LIBS='-L$(LIBXUL_DIST)/lib -lmozjs'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom -lxpcom_core'
         XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom'
@@ -2116,6 +2136,9 @@ case "$target" in
         HOST_CC='$(CC)'
         HOST_CXX='$(CXX)'
         HOST_LD='$(LD)'
+        if test "$AS_BIN"; then
+            AS="$(basename "$AS_BIN")"
+        fi
         AR='lib -NOLOGO -OUT:"$@"'
         AR_FLAGS=
         RANLIB='echo not_ranlib'
@@ -2125,6 +2148,7 @@ case "$target" in
         UNZIP=unzip
         DOXYGEN=:
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
+        ASM_SUFFIX=asm
         OBJ_SUFFIX=obj
         LIB_SUFFIX=lib
         DLL_PREFIX=
@@ -2145,14 +2169,14 @@ case "$target" in
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
         WARNINGS_AS_ERRORS='-WX'
     	MOZ_OPTIMIZE_FLAGS='-O1'
-        MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
+        MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/mozjs.lib'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib'
         XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib'
         LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         if test $_MSC_VER -ge 1400; then
-            LDFLAGS="$LDFLAGS -NXCOMPAT -SAFESEH"
+            LDFLAGS="$LDFLAGS -NXCOMPAT"
             dnl For profile-guided optimization
             PROFILE_GEN_CFLAGS="-GL"
             PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
@@ -2312,7 +2336,7 @@ case "$target" in
         ;;
 
     *)
-        AC_CHECK_HEADERS(mmintrin.h oleacc.idl)
+        AC_CHECK_HEADERS(oleacc.idl)
 
         AC_LANG_SAVE
         AC_LANG_CPLUSPLUS
@@ -2323,6 +2347,14 @@ case "$target" in
 
     case "$target" in
     i*86-*)
+        if test "$HAVE_64BIT_OS"; then
+            AC_MSG_ERROR([You are targeting i386 but using the 64-bit compiler.])
+        fi
+
+        if test $_MSC_VER -ge 1400; then
+            LDFLAGS="$LDFLAGS -SAFESEH"
+        fi
+	AC_CHECK_HEADERS(mmintrin.h)
     	AC_DEFINE(_X86_)
 	;;
     alpha-*)
@@ -2331,10 +2363,17 @@ case "$target" in
     mips-*)
     	AC_DEFINE(_MIPS_)
 	;;
+    x86_64-*)
+        AC_DEFINE(_AMD64_)
+        ;;
     *)
     	AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
 	;;
     esac
+
+    if test "$HAVE_64BIT_OS"; then
+    	AC_DEFINE(_WIN64)
+    fi
     ;;
 
 *-netbsd*)
@@ -6469,13 +6508,22 @@ if test "$MOZ_MEMORY"; then
         WIN32_CRT_SRC_DIR="$VCINSTALLDIR\crt\src"
       fi
     fi
+    dnl cpu check
+    case "${target_cpu}" in
+    i*86)
+      _WIN32_CRT_CPU=intel
+      ;;
+    *)
+      AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
+      ;;
+    esac
 
     if test ! -d "$WIN32_CRT_SRC_DIR"; then
       AC_MSG_ERROR([Invalid Win32 CRT source directory: ${WIN32_CRT_SRC_DIR}])
     fi
     WIN32_CRT_SRC_DIR=`cd "$WIN32_CRT_SRC_DIR" && pwd -W`
     _objdir_win=`pwd -W`
-    WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/intel"
+    WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/$_WIN32_CRT_CPU"
     MOZ_MEMORY_LDFLAGS="-MANIFEST:NO -LIBPATH:\"$WIN32_CUSTOM_CRT_DIR\" -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt19 -DEFAULTLIB:mozcpp19"
     dnl Also pass this to NSPR/NSS
     DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
