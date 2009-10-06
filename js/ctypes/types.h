@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
  *  Dan Witte <dwitte@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,83 +36,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef FUNCTION_H
-#define FUNCTION_H
+/**
+ * This file defines the constants available on the ctypes.types object (e.g.
+ * ctypes.types.VOID). They do not have any interesting properties; they simply
+ * exist as unique identifiers for the type they represent.
+ */
 
-#include "Module.h"
-#include "nsTArray.h"
-#include "prlink.h"
-#include "ffi.h"
+/**
+ * ABI constants that specify the calling convention to use.
+ * DEFAULT corresponds to the cdecl convention, and in almost all
+ * cases is the correct choice. STDCALL is provided for calling
+ * functions in the Microsoft Win32 API.
+ */
+DEFINE_ABI(default_abi)    // corresponds to cdecl
+DEFINE_ABI(stdcall_abi)    // for calling Win32 API functions
 
-namespace mozilla {
-namespace ctypes {
+/**
+ * Types available for arguments and return values, representing
+ * their C counterparts.
+ */
+DEFINE_TYPE(void_t)        // Only allowed for return types.
+DEFINE_TYPE(bool)          // _Bool type (assumed 8 bits wide).
+DEFINE_TYPE(int8_t)        // int8_t (signed char) type.
+DEFINE_TYPE(int16_t)       // int16_t (short) type.
+DEFINE_TYPE(int32_t)       // int32_t (int) type.
+DEFINE_TYPE(int64_t)       // int64_t (long long) type.
+DEFINE_TYPE(uint8_t)       // uint8_t (unsigned char) type.
+DEFINE_TYPE(uint16_t)      // uint16_t (unsigned short) type.
+DEFINE_TYPE(uint32_t)      // uint32_t (unsigned int) type.
+DEFINE_TYPE(uint64_t)      // uint64_t (unsigned long long) type.
+DEFINE_TYPE(float)         // float type.
+DEFINE_TYPE(double)        // double type.
+DEFINE_TYPE(string)        // C string (char *).
+DEFINE_TYPE(ustring)       // 16-bit string (char16_t *).
 
-// for JS error reporting
-enum ErrorNum {
-#define MSG_DEF(name, number, count, exception, format) \
-  name = number,
-#include "ctypes.msg"
-#undef MSG_DEF
-  CTYPESERR_LIMIT
-};
-
-const JSErrorFormatString*
-GetErrorMessage(void* userRef, const char* locale, const uintN errorNumber);
-
-struct Type
-{
-  ffi_type mFFIType;
-  TypeCode mType;
-};
-
-struct Value
-{
-  void* mData;
-  union {
-    PRInt8   mInt8;
-    PRInt16  mInt16;
-    PRInt32  mInt32;
-    PRInt64  mInt64;
-    PRUint8  mUint8;
-    PRUint16 mUint16;
-    PRUint32 mUint32;
-    PRUint64 mUint64;
-    float    mFloat;
-    double   mDouble;
-    void*    mPointer;
-  } mValue;
-};
-
-class Function
-{
-public:
-  Function();
-
-  Function*& Next() { return mNext; }
-
-  static JSObject* Create(JSContext* aContext, JSObject* aLibrary, PRFuncPtr aFunc, const char* aName, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
-  static JSBool Call(JSContext* cx, uintN argc, jsval* vp);
-
-  ~Function();
-
-private:
-  bool Init(JSContext* aContext, PRFuncPtr aFunc, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
-  bool Execute(JSContext* cx, PRUint32 argc, jsval* vp);
-
-protected:
-  PRFuncPtr mFunc;
-
-  ffi_abi mCallType;
-  Type mResultType;
-  nsAutoTArray<Type, 16> mArgTypes;
-  nsAutoTArray<ffi_type*, 16> mFFITypes;
-
-  ffi_cif mCIF;
-
-  Function* mNext;
-};
-
-}
-}
-
-#endif

@@ -41,129 +41,215 @@
 #include "Library.h"
 #include "Function.h"
 #include "nsServiceManagerUtils.h"
-#include "nsAutoPtr.h"
+#include "nsString.h"
+#include "nsIXPConnect.h"
 #include "nsILocalFile.h"
-#include "prlink.h"
-#include "jsapi.h"
 
 namespace mozilla {
 namespace ctypes {
 
-static inline bool
-jsvalToUint16(JSContext* aContext, jsval aVal, PRUint16& aResult)
+/*******************************************************************************
+** JSObject implementation
+*******************************************************************************/
+
+static JSClass sLibraryClass = {
+  "Library",
+  JSCLASS_HAS_RESERVED_SLOTS(2),
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_EnumerateStub,JS_ResolveStub, JS_ConvertStub, Library::Finalize,
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+};
+
+static JSFunctionSpec sLibraryFunctions[] = {
+  JS_FN("close",   Library::Close,   0, JSFUN_FAST_NATIVE | JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT),
+  JS_FN("declare", Library::Declare, 0, JSFUN_FAST_NATIVE | JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT),
+  JS_FS_END
+};
+
+JSObject*
+Library::Create(JSContext* cx, jsval aPath)
 {
-  if (JSVAL_IS_INT(aVal)) {
-    PRUint32 i = JSVAL_TO_INT(aVal);
-    if (i <= PR_UINT16_MAX) {
-      aResult = i;
-      return true;
-    }
-  }
+  JSObject* libraryObj = JS_NewObject(cx, &sLibraryClass, NULL, NULL);
+  if (!libraryObj)
+    return NULL;
 
-  JS_ReportError(aContext, "Parameter must be a valid ABI constant");
-  return false;
-}
-
-static inline bool
-jsvalToCString(JSContext* aContext, jsval aVal, const char*& aResult)
-{
-  if (JSVAL_IS_STRING(aVal)) {
-    aResult = JS_GetStringBytes(JSVAL_TO_STRING(aVal));
-    return true;
-  }
-
-  JS_ReportError(aContext, "Parameter must be a string");
-  return false;
-}
-
-NS_IMPL_ISUPPORTS1(Library, nsIForeignLibrary)
-
-Library::Library()
-  : mLibrary(nsnull)
-{
-}
-
-Library::~Library()
-{
-  Close();
-}
-
-NS_IMETHODIMP
-Library::Open(nsILocalFile* aFile)
-{
-  NS_ENSURE_ARG(aFile);
-  NS_ENSURE_TRUE(!mLibrary, NS_ERROR_ALREADY_INITIALIZED);
-
-  return aFile->Load(&mLibrary);
-}
-
-NS_IMETHODIMP
-Library::Close()
-{
-  if (mLibrary) {
-    PR_UnloadLibrary(mLibrary);
-    mLibrary = nsnull;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Library::Declare(nsISupports** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_TRUE(mLibrary, NS_ERROR_NOT_INITIALIZED);
+  // attach API functions
+  if (!JS_DefineFunctions(cx, libraryObj, sLibraryFunctions))
+    return NULL;
 
   nsresult rv;
+  nsCOMPtr<nsILocalFile> localFile;
 
-  nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
+  // get the path argument. we accept either an nsILocalFile or a string path.
+  // determine which we have...
+  if (JSVAL_IS_STRING(aPath)) {
+    const jschar* path = JS_GetStringChars(JSVAL_TO_STRING(aPath));
+    if (!path)
+      return NULL;
 
-  nsAXPCNativeCallContext* ncc;
-  rv = xpc->GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
+    localFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+    if (!localFile)
+      return NULL;
 
-  JSContext *ctx;
-  rv = ncc->GetJSContext(&ctx);
-  NS_ENSURE_SUCCESS(rv, rv);
+    rv = localFile->InitWithPath(nsDependentString(path));
+    if (NS_FAILED(rv))
+      return NULL;
 
-  JSAutoRequest ar(ctx);
+  } else if (JSVAL_IS_OBJECT(aPath)) {
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
 
-  PRUint32 argc;
-  jsval *argv;
-  ncc->GetArgc(&argc);
-  ncc->GetArgvPtr(&argv);
+    nsISupports* file = xpc->GetNativeOfWrapper(cx, JSVAL_TO_OBJECT(aPath));
+    localFile = do_QueryInterface(file);
+    if (!localFile)
+      return NULL;
+
+  } else {
+    // don't convert the argument
+    return NULL;
+  }
+
+  PRLibrary* library;
+  rv = localFile->Load(&library);
+  if (NS_FAILED(rv))
+    return NULL;
+
+  // stash the library
+  if (!JS_SetReservedSlot(cx, libraryObj, 0, PRIVATE_TO_JSVAL(library)))
+    return NULL;
+
+  // initialize our Function list to empty
+  if (!JS_SetReservedSlot(cx, libraryObj, 1, PRIVATE_TO_JSVAL(NULL)))
+    return NULL;
+
+  return libraryObj;
+}
+
+PRLibrary*
+Library::GetLibrary(JSContext* cx, JSObject* obj)
+{
+  JS_ASSERT(JS_GET_CLASS(cx, obj) == &sLibraryClass);
+
+  jsval slot;
+  JS_GetReservedSlot(cx, obj, 0, &slot);
+  return static_cast<PRLibrary*>(JSVAL_TO_PRIVATE(slot));
+}
+
+static Function*
+GetFunctionList(JSContext* cx, JSObject* obj)
+{
+  JS_ASSERT(JS_GET_CLASS(cx, obj) == &sLibraryClass);
+
+  jsval slot;
+  JS_GetReservedSlot(cx, obj, 1, &slot);
+  return static_cast<Function*>(JSVAL_TO_PRIVATE(slot));
+}
+
+bool
+Library::AddFunction(JSContext* cx, JSObject* aLibrary, Function* aFunction)
+{
+  // add the new Function instance to the head of the list
+  aFunction->Next() = GetFunctionList(cx, aLibrary);
+  return JS_SetReservedSlot(cx, aLibrary, 1, PRIVATE_TO_JSVAL(aFunction));
+}
+
+void
+Library::Finalize(JSContext* cx, JSObject* obj)
+{
+  // unload the library
+  PRLibrary* library = GetLibrary(cx, obj);
+  if (library)
+    PR_UnloadLibrary(library);
+
+  // delete each Function instance
+  Function* current = GetFunctionList(cx, obj);
+  while (current) {
+    Function* next = current->Next();
+    delete current;
+    current = next;
+  }
+}
+
+JSBool
+Library::Open(JSContext* cx, uintN argc, jsval *vp)
+{
+  if (argc != 1) {
+    JS_ReportError(cx, "open requires a single argument");
+    return JS_FALSE;
+  }
+
+  JSObject* library = Create(cx, JS_ARGV(cx, vp)[0]);
+  if (!library) {
+    JS_ReportError(cx, "couldn't open library");
+    return JS_FALSE;
+  }
+
+  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(library));
+  return JS_TRUE;
+}
+
+JSBool
+Library::Close(JSContext* cx, uintN argc, jsval* vp)
+{
+  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  if (JS_GET_CLASS(cx, obj) != &sLibraryClass) {
+    JS_ReportError(cx, "not a library");
+    return JS_FALSE;
+  }
+
+  if (argc != 0) {
+    JS_ReportError(cx, "close doesn't take any arguments");
+    return JS_FALSE;
+  }
+
+  // delete our internal objects
+  Finalize(cx, obj);
+  JS_SetReservedSlot(cx, obj, 0, PRIVATE_TO_JSVAL(NULL));
+  JS_SetReservedSlot(cx, obj, 1, PRIVATE_TO_JSVAL(NULL));
+
+  JS_SET_RVAL(cx, vp, JSVAL_VOID);
+  return JS_TRUE;
+}
+
+JSBool
+Library::Declare(JSContext* cx, uintN argc, jsval* vp)
+{
+  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  if (JS_GET_CLASS(cx, obj) != &sLibraryClass) {
+    JS_ReportError(cx, "not a library");
+    return JS_FALSE;
+  }
+
+  PRLibrary* library = GetLibrary(cx, obj);
+  if (!library) {
+    JS_ReportError(cx, "library not open");
+    return JS_FALSE;
+  }
 
   // we always need at least a method name, a call type and a return type
   if (argc < 3) {
-    JS_ReportError(ctx, "Insufficient number of arguments");
-    return NS_OK;
+    JS_ReportError(cx, "declare requires at least three arguments");
+    return JS_FALSE;
   }
 
-  const char* name;
-  if (!jsvalToCString(ctx, argv[0], name))
-    return NS_OK;
-
-  PRUint16 callType;
-  if (!jsvalToUint16(ctx, argv[1], callType))
-    return NS_OK;
-
-  nsAutoTArray<jsval, 16> argTypes;
-  for (PRUint32 i = 3; i < argc; ++i) {
-    argTypes.AppendElement(argv[i]);
+  jsval* argv = JS_ARGV(cx, vp);
+  if (!JSVAL_IS_STRING(argv[0])) {
+    JS_ReportError(cx, "first argument must be a string");
+    return JS_FALSE;
   }
 
-  PRFuncPtr func = PR_FindFunctionSymbol(mLibrary, name);
+  const char* name = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
+  PRFuncPtr func = PR_FindFunctionSymbol(library, name);
   if (!func) {
-    JS_ReportError(ctx, "Couldn't find function symbol in library");
-    return NS_OK;
+    JS_ReportError(cx, "couldn't find function symbol in library");
+    return JS_FALSE;
   }
 
-  nsRefPtr<Function> call = new Function;
-  if (!call->Init(ctx, this, func, callType, argv[2], argTypes))
-    return NS_OK;
+  JSObject* fn = Function::Create(cx, obj, func, name, argv[1], argv[2], &argv[3], argc - 3);
+  if (!fn)
+    return JS_FALSE;
 
-  call.forget(aResult);
-  return NS_OK;
+  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(fn));
+  return JS_TRUE;
 }
 
 }
