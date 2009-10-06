@@ -124,6 +124,9 @@
          }
        );
 
+      // Close the root node
+      tree.getResult().root.containerOpen = false;
+
       SimpleTest.finish();
     }
 
