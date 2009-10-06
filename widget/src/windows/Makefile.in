@@ -65,6 +65,11 @@ CPPSRCS		= \
 	nsIMM32Handler.cpp \
 	WindowHook.cpp \
 	nsAccelerometerWin.cpp \
+	WinTaskbar.cpp \
+	TaskbarPreview.cpp \
+	TaskbarTabPreview.cpp \
+	TaskbarWindowPreview.cpp \
+	TaskbarPreviewButton.cpp \
 	$(NULL)
 
 ifdef NS_PRINTING

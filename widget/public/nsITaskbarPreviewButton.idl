@@ -1,5 +1,7 @@
-/* -*- Mode: c++; tab-width: 2; indent-tabs-mode: nil; -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* vim: se cin sw=2 ts=2 et : */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -15,11 +17,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Rob Arnold <tellrob@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,35 +38,59 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAppShell_h__
-#define nsAppShell_h__
+#include "nsISupports.idl"
 
-#include "nsBaseAppShell.h"
-#include <windows.h>
+interface imgIContainer;
 
 /**
- * Native Win32 Application shell wrapper
+ * nsITaskbarPreviewButton
+ *
+ * Provides access to a window preview's toolbar button's properties.
  */
-class nsAppShell : public nsBaseAppShell
+[scriptable, uuid(CED8842D-FE37-4767-9A8E-FDFA56510C75)]
+interface nsITaskbarPreviewButton : nsISupports
 {
-public:
-  nsAppShell() : mEventWnd(NULL) {}
+  /**
+   * The button's tooltip.
+   *
+   * Default: an empty string
+   */
+  attribute DOMString tooltip;
 
-  nsresult Init();
+  /**
+   * True if the array of previews should be dismissed when this button is clicked.
+   *
+   * Default: false
+   */
+  attribute boolean dismissOnClick;
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
-  static UINT GetTaskbarButtonCreatedMessage();
-#endif
+  /**
+   * True if the taskbar should draw a border around this button's image.
+   *
+   * Default: true
+   */
+  attribute boolean hasBorder;
 
-protected:
-  virtual void ScheduleNativeEventCallback();
-  virtual PRBool ProcessNextNativeEvent(PRBool mayWait);
-  virtual ~nsAppShell();
+  /**
+   * True if the button is disabled. This is not the same as visible.
+   *
+   * Default: false
+   */
+  attribute boolean disabled;
 
-  static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
+  /**
+   * The icon used for the button.
+   *
+   * Default: null
+   */
+  attribute imgIContainer image;
 
-protected:
-  HWND mEventWnd;
+  /**
+   * True if the button is shown. Buttons that are invisible do not
+   * participate in the layout of buttons underneath the preview.
+   *
+   * Default: false
+   */
+  attribute boolean visible;
 };
 
-#endif // nsAppShell_h__
