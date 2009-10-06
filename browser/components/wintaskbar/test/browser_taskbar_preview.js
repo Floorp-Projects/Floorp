@@ -2,10 +2,10 @@ function test() {
   waitForExplicitFinish();
 
   // Cannot do anything if the taskbar service is not available
-  ok(AeroPeek.available == isWin7OrHigher(), "AeroPeek initialized when it should be");
+  ok(("AeroPeek" in window) == isWin7OrHigher(), "AeroPeek initialized when it should be");
 
   // Entire feature is disabled
-  if (!AeroPeek.available)
+  if (!("AeroPeek" in window))
     return;
 
   gPrefService.setBoolPref("aeropeek.enable", true);
