@@ -66,7 +66,7 @@ LOCAL_INCLUDES	= \
 OS_LIBS		+= $(call EXPAND_LIBNAME, uuid ole32 oleaut32 winspool)
 
 ifneq ($(OS_ARCH), WINCE)
-OS_LIBS		+= $(call EXPAND_LIBNAME, comctl32 comdlg32 shell32 imm32)
+OS_LIBS		+= $(call EXPAND_LIBNAME, comctl32 comdlg32 shell32 imm32 shlwapi)
 endif
 
 SHARED_LIBRARY_LIBS = \

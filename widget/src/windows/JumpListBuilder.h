@@ -1,7 +1,5 @@
-/* vim: se cin sw=2 ts=2 et : */
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -22,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Rob Arnold <tellrob@gmail.com>
+ *   Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,34 +36,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __WinTaskbar_h__
-#define __WinTaskbar_h__
+#ifndef __JumpListBuilder_h__
+#define __JumpListBuilder_h__
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
 
 #include <windows.h>
+
+#undef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_WIN7
+// Needed for various com interfaces
 #include <shobjidl.h>
-#include <nsIWinTaskbar.h>
+
+#include "nsString.h"
+#include "nsIMutableArray.h"
+
+#include "nsIJumpListBuilder.h"
+#include "nsIJumpListItem.h"
+#include "JumpListItem.h"
 
 namespace mozilla {
 namespace widget {
 
-class WinTaskbar : public nsIWinTaskbar
+class JumpListBuilder : public nsIJumpListBuilder
 {
-public: 
-  WinTaskbar();
-  virtual ~WinTaskbar();
-
+public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIWINTASKBAR
+  NS_DECL_NSIJUMPLISTBUILDER
 
-  // Registers the global app user model id for the instance. See comments in WinTaskbar.cpp
-  // for more information.
-  static PRBool SetAppUserModelID();
+  JumpListBuilder();
+  virtual ~JumpListBuilder();
+
+protected:
+  static PRPackedBool sBuildingList; 
 
 private:
-  typedef HRESULT (WINAPI * SetCurrentProcessExplicitAppUserModelIDPtr)(PCWSTR AppID);
-  ITaskbarList4 *mTaskbar;
+  nsRefPtr<ICustomDestinationList> mJumpListMgr;
+  PRUint32 mMaxItems;
+  PRBool mHasCommit;
+
+  PRBool IsSeparator(nsCOMPtr<nsIJumpListItem>& item);
+  nsresult TransferIObjectArrayToIMutableArray(IObjectArray *objArray, nsIMutableArray *removedItems);
+
+  friend class WinTaskbar;
 };
 
 } // namespace widget
@@ -73,5 +86,5 @@ private:
 
 #endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
 
-#endif /* __WinTaskbar_h__ */
+#endif /* __JumpListBuilder_h__ */
 

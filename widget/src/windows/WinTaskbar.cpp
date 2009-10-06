@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Rob Arnold <tellrob@gmail.com>
+ *   Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,11 +52,18 @@
 #include <nsIObserverService.h>
 #include <nsServiceManagerUtils.h>
 #include <nsAutoPtr.h>
+#include "nsIJumpListBuilder.h"
 #include "nsUXThemeData.h"
 #include "nsWindow.h"
 #include "TaskbarTabPreview.h"
 #include "TaskbarWindowPreview.h"
+#include "JumpListBuilder.h"
+#include "nsWidgetsCID.h"
 #include <io.h>
+
+const PRUnichar kShellLibraryName[] =  L"shell32.dll";
+
+static NS_DEFINE_CID(kJumpListBuilderCID, NS_WIN_JUMPLISTBUILDER_CID);
 
 namespace {
 HWND
@@ -151,6 +159,21 @@ NS_IMPL_ISUPPORTS1(DefaultController, nsITaskbarPreviewController);
 namespace mozilla {
 namespace widget {
 
+// Unique identifier for a particular application. Windows uses this to group
+// windows from the same process and to tie jump lists to processes. The ID
+// should be unique per application version. If developers plan on using jump
+// list links (nsIJumpListLink) this ID should also be associated with the
+// prog id of the protocol handler of the links. To override the default below,
+// define MOZ_TASKBAR_ID.
+#ifndef MOZ_TASKBAR_ID
+#define MOZ_COMPANY Mozilla
+#define MOZTBID1(x) L#x
+#define MOZTBID2(a,b,c) MOZTBID1(a##.##b##.##c)
+#define MOZTBID(a,b,c) MOZTBID2(a,b,c)
+#define MOZ_TASKBAR_ID MOZTBID(MOZ_COMPANY, MOZ_BUILD_APP, MOZILLA_VERSION_U)
+#endif
+const wchar_t *gMozillaJumpListIDGeneric = MOZ_TASKBAR_ID;
+
 NS_IMPL_ISUPPORTS1(WinTaskbar, nsIWinTaskbar)
 
 WinTaskbar::WinTaskbar() 
@@ -174,6 +197,30 @@ WinTaskbar::WinTaskbar()
 WinTaskbar::~WinTaskbar() {
   NS_IF_RELEASE(mTaskbar);
   ::CoUninitialize();
+}
+
+// (static) Called from AppShell
+PRBool WinTaskbar::SetAppUserModelID()
+{
+  SetCurrentProcessExplicitAppUserModelIDPtr funcAppUserModelID = nsnull;
+  PRBool retVal = PR_FALSE;
+
+  // #define MOZ_TASKBAR_ID L""
+  if (*gMozillaJumpListIDGeneric == nsnull)
+    return PR_FALSE;
+
+  HMODULE hDLL = ::LoadLibraryW(kShellLibraryName);
+
+  funcAppUserModelID = (SetCurrentProcessExplicitAppUserModelIDPtr)
+                        GetProcAddress(hDLL, "SetCurrentProcessExplicitAppUserModelID");
+
+  if (funcAppUserModelID && SUCCEEDED(funcAppUserModelID(gMozillaJumpListIDGeneric)))
+    retVal = PR_TRUE;
+
+  if (hDLL)
+    ::FreeLibrary(hDLL);
+
+  return retVal;
 }
 
 NS_IMETHODIMP
@@ -236,6 +283,24 @@ WinTaskbar::GetTaskbarProgress(nsIDocShell *shell, nsITaskbarProgress **_retval)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(preview, _retval);
+}
+
+/* nsIJumpListBuilder createJumpListBuilder(); */
+NS_IMETHODIMP WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder * *aJumpListBuilder)
+{
+  nsresult rv;
+
+  if (JumpListBuilder::sBuildingList)
+    return NS_ERROR_ALREADY_INITIALIZED;
+
+  nsCOMPtr<nsIJumpListBuilder> builder = 
+    do_CreateInstance(kJumpListBuilderCID, &rv);
+  if (NS_FAILED(rv))
+    return NS_ERROR_UNEXPECTED;
+
+  NS_IF_ADDREF(*aJumpListBuilder = builder);
+
+  return NS_OK;
 }
 
 } // namespace widget
