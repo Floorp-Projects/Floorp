@@ -32,6 +32,7 @@
    -   Mark Pilgrim <pilgrim@gmail.com>
    -   Dão Gottwald <dao@mozilla.com>
    -   Paul O’Shannessy <paul@oshannessy.com>
+   -   Rob Arnold <tellrob@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -235,6 +236,29 @@
       <field name="_autoScrollPopup">
         null
       </field>
+
+      <field name="_previewMode">
+        false
+      </field>
+
+      <method name="previewTab">
+        <parameter name="aTab"/>
+        <parameter name="aCallback"/>
+        <body>
+          <![CDATA[
+            let currentTab = this.selectedTab;
+            try {
+              // Suppress focus, ownership and selected tab changes
+              this._previewMode = true;
+              this.selectedTab = aTab;
+              aCallback();
+            } finally {
+              this.selectedTab = currentTab;
+              this._previewMode = false;
+            }
+          ]]>
+        </body>
+      </method>
 
       <method name="getBrowserAtIndex">
         <parameter name="aIndex"/>
@@ -843,7 +867,8 @@
             if (this.mCurrentBrowser == newBrowser && !aForceUpdate)
               return;
 
-            if (this.mCurrentTab != this.selectedTab)
+            // Preview mode should not reset the owner
+            if (!this._previewMode && this.mCurrentTab != this.selectedTab)
               this.mCurrentTab.owner = null;
 
             this._lastRelatedTab = null;
@@ -897,7 +922,9 @@
                 }
             }
 
-            this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
+            // Don't switch the fast find - this tab switch is temporary
+            if (!this._previewMode)
+              this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
 
             // Update the window title.
             this.updateTitlebar();
@@ -935,18 +962,23 @@
               }
             }
 
-            // We've selected the new tab, so go ahead and notify listeners.
-            var event = document.createEvent("Events");
-            event.initEvent("TabSelect", true, false);
-            this.mCurrentTab.dispatchEvent(event);
+            // TabSelect events are suppressed during preview mode to avoid confusing extensions and other bits of code
+            // that might rely upon the other changes suppressed.
+            // Focus is suppressed in the event that the main browser window is minimized - focusing a tab would restore the window
+            if (!this._previewMode) {
+              // We've selected the new tab, so go ahead and notify listeners.
+              var event = document.createEvent("Events");
+              event.initEvent("TabSelect", true, false);
+              this.mCurrentTab.dispatchEvent(event);
 
-            // change focus to the new tab if nothing is focused, the old tab
-            // is focused or there is something in the new tab to focus. One
-            // specific case where focus is not changed is when the new tab
-            // has no focused element and a chrome element is focused.
-            if (!focusedChromeElement || focusedChromeElement == oldBrowser ||
-                fm.getFocusedElementForWindow(window.content, true, {}))
-              fm.setFocus(newBrowser, fm.FLAG_NOSCROLL);
+              // change focus to the new tab if nothing is focused, the old tab
+              // is focused or there is something in the new tab to focus. One
+              // specific case where focus is not changed is when the new tab
+              // has no focused element and a chrome element is focused.
+              if ((!focusedChromeElement || focusedChromeElement == oldBrowser ||
+                  fm.getFocusedElementForWindow(window.content, true, {})))
+                fm.setFocus(newBrowser, fm.FLAG_NOSCROLL);
+            }
           ]]>
         </body>
       </method>
