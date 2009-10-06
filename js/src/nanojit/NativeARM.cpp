@@ -795,9 +795,9 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
             NanoAssert((stkd & 7) == 0);
 #endif
 
-            STR_preindex(IP, SP, stkd+4);
+            STR(IP, SP, stkd+4);
             LDR(IP, FP, d+4);
-            STR_preindex(IP, SP, stkd);
+            STR(IP, SP, stkd);
             LDR(IP, FP, d);
         }
     }
