@@ -962,6 +962,20 @@ FullTrustSecMan::GetCxSubjectPrincipalAndFrame(JSContext *cx,
     return mSystemPrincipal;
 }
 
+NS_IMETHODIMP
+FullTrustSecMan::PushContextPrincipal(JSContext *cx,
+                                      JSStackFrame *fp,
+                                      nsIPrincipal *principal)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+FullTrustSecMan::PopContextPrincipal(JSContext *cx)
+{
+    return NS_OK;
+}
+
 NS_IMETHODIMP_(nsrefcnt)
 XPCShellDirProvider::AddRef()
 {
