@@ -71,6 +71,7 @@ _TEST_FILES += native_menus_window.xul \
                test_native_mouse_mac.xul \
                test_bug428405.xul \
                test_bug466599.xul \
+               test_bug485118.xul \
                test_platform_colors.xul \
                $(NULL)
 endif

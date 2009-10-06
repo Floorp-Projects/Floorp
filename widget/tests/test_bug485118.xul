@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=485118
+-->
+<window title="Mozilla Bug 485118"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test for Bug 485118</title>
+  <script type="application/javascript" 
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<hbox height="300">
+  <vbox width="300">
+    <scrollbar orient="horizontal"
+               maxpos="10000"
+               pageincrement="1"
+               id="horizontal"/>
+    <scrollbar orient="horizontal"
+               maxpos="10000"
+               pageincrement="1"
+               style="-moz-appearance: scrollbar-small;"
+               id="horizontalSmall"/>
+    <hbox flex="1">
+      <scrollbar orient="vertical"
+                 maxpos="10000"
+                 pageincrement="1"
+                 id="vertical"/>
+      <scrollbar orient="vertical"
+                 maxpos="10000"
+                 pageincrement="1"
+                 style="-moz-appearance: scrollbar-small;"
+                 id="verticalSmall"/>
+      <spacer flex="1"/>
+    </hbox>
+  </vbox>
+</hbox>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.executeSoon(function start() {
+  ["horizontal", "vertical"].forEach(function (orient) {
+    ["", "Small"].forEach(function (size) {
+      var elem = document.getElementById(orient + size);
+      var thumbRect = document.getAnonymousElementByAttribute(elem, 'sbattr', 'scrollbar-thumb').getBoundingClientRect();
+      var sizeToCheck = orient == "horizontal" ? "width" : "height";
+      var expectedSize = size == "Small" ? 19 : 22;
+      is(thumbRect[sizeToCheck], expectedSize, size + " scrollbar has wrong minimum " + sizeToCheck);
+    });
+  });
+  SimpleTest.finish();
+});
+
+
+]]>
+</script>
+
+</window>
