@@ -3119,6 +3119,19 @@ moz_gtk_images_in_menus()
     return result;
 }
 
+gboolean
+moz_gtk_images_in_buttons()
+{
+    gboolean result;
+    GtkSettings* settings;
+
+    ensure_button_widget();
+    settings = gtk_widget_get_settings(gButtonWidget);
+
+    g_object_get(settings, "gtk-button-images", &result, NULL);
+    return result;
+}
+
 gint
 moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                      GdkRectangle* rect, GdkRectangle* cliprect,
