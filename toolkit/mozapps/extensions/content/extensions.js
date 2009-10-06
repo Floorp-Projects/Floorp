@@ -1161,9 +1161,11 @@ function Startup()
     gCheckUpdateSecurity = gPref.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY);
   } catch(e) { }
 
-  try {
-    gPluginUpdateUrl = gPref.getCharPref(PREF_PLUGINS_UPDATEURL);
-  } catch(e) { }
+  if (gPref.getPrefType(PREF_PLUGINS_UPDATEURL) != gPref.PREF_INVALID) {
+    var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                              .getService(Components.interfaces.nsIURLFormatter);
+    gPluginUpdateUrl = formatter.formatURLPref(PREF_PLUGINS_UPDATEURL);
+  }
 
   gPref.addObserver(PREF_DSS_SKIN_TO_SELECT, gPrefObserver, false);
   gPref.addObserver(PREF_GENERAL_SKINS_SELECTEDSKIN, gPrefObserver, false);
