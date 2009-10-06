@@ -103,7 +103,7 @@ function run_test() {
   } catch(ex) { do_throw("couldn't export to file: " + ex); }
   LOG("exported json"); 
   try {
-    PlacesUtils.backups.restoreBookmarksFromJSONFile(jsonFile);
+    PlacesUtils.restoreBookmarksFromJSONFile(jsonFile);
   } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
   LOG("imported json"); 
   validate();
