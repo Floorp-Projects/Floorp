@@ -43,8 +43,6 @@ Components.utils.import("resource://gre/modules/ctypes.jsm");
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-const Types = ctypes.types;
-
 function do_check_throws(f, type, stack)
 {
   if (!stack)
@@ -90,18 +88,39 @@ function run_test()
   var libpath = libfile.path;
   library = ctypes.open(libpath);
   run_void_tests(library);
+
+  // test library.close
+  var test_v = library.declare("test_v", ctypes.default_abi, ctypes.void_t);
+  library.close();
+  do_check_throws(function () { test_v(); }, Error);
+  do_check_throws(function () { library.declare("test_v", ctypes.default_abi, ctypes.void_t); }, Error);
+
+  // test that library functions throw when bound to other objects
+  library = ctypes.open(libpath);
+  let obj = {};
+  obj.declare = library.declare;
+  do_check_throws(function () { obj.declare("test_v", ctypes.default_abi, ctypes.void_t); }, Error);
+  obj.close = library.close;
+  do_check_throws(function () { obj.close(); }, Error);
+
+  // test that functions work as properties of other objects
+  var test_i8 = library.declare("test_i8", ctypes.default_abi, ctypes.int8_t);
+  do_check_eq(test_i8(), 123);
+  obj.t = test_i8;
+  do_check_eq(test_i8(), 123);
+  do_check_eq(obj.t(), 123);
 }
 
 function run_void_tests(library) {
-  var test_v = library.declare("test_v", Types.DEFAULT, Types.VOID);
+  var test_v = library.declare("test_v", ctypes.default_abi, ctypes.void_t);
   do_check_eq(test_v(), undefined);
 }
 
 function run_int8_tests(library) {
-  var test_i8 = library.declare("test_i8", Types.DEFAULT, Types.INT8);
+  var test_i8 = library.declare("test_i8", ctypes.default_abi, ctypes.int8_t);
   do_check_eq(test_i8(), 123);
 
-  var test_i8_i8 = library.declare("test_i8_i8", Types.DEFAULT, Types.INT8, Types.INT8);
+  var test_i8_i8 = library.declare("test_i8_i8", ctypes.default_abi, ctypes.int8_t, ctypes.int8_t);
   do_check_eq(test_i8_i8(5), 5);
   do_check_eq(test_i8_i8(0), 0);
   do_check_eq(test_i8_i8(0x7f), 0x7f);
@@ -118,22 +137,22 @@ function run_int8_tests(library) {
   for (var i = 0; i < vals.length; i++)
     do_check_throws(function () { test_i8_i8(vals[i]); }, TypeError);
 
-  var test_i8_i8_sum = library.declare("test_i8_i8_sum", Types.DEFAULT, Types.INT8, Types.INT8, Types.INT8);
+  var test_i8_i8_sum = library.declare("test_i8_i8_sum", ctypes.default_abi, ctypes.int8_t, ctypes.int8_t, ctypes.int8_t);
   do_check_eq(test_i8_i8_sum(5, 5), 10);
 
   // test the range of unsigned. (we can reuse the signed C function
   // here, since it's binary-compatible.)
-  var test_ui8_ui8 = library.declare("test_i8_i8", Types.DEFAULT, Types.UINT8, Types.UINT8);
+  var test_ui8_ui8 = library.declare("test_i8_i8", ctypes.default_abi, ctypes.uint8_t, ctypes.uint8_t);
   do_check_eq(test_ui8_ui8(0xff), 0xff);
   do_check_throws(function () { test_ui8_ui8(0x100); }, TypeError);
   do_check_throws(function () { test_ui8_ui8(-1); }, TypeError);
 }
 
 function run_int16_tests(library) {
-  var test_i16 = library.declare("test_i16", Types.DEFAULT, Types.INT16);
+  var test_i16 = library.declare("test_i16", ctypes.default_abi, ctypes.int16_t);
   do_check_eq(test_i16(), 12345);
 
-  var test_i16_i16 = library.declare("test_i16_i16", Types.DEFAULT, Types.INT16, Types.INT16);
+  var test_i16_i16 = library.declare("test_i16_i16", ctypes.default_abi, ctypes.int16_t, ctypes.int16_t);
   do_check_eq(test_i16_i16(5), 5);
   do_check_eq(test_i16_i16(0), 0);
   do_check_eq(test_i16_i16(0x7fff), 0x7fff);
@@ -150,22 +169,22 @@ function run_int16_tests(library) {
   for (var i = 0; i < vals.length; i++)
     do_check_throws(function () { test_i16_i16(vals[i]); }, TypeError);
 
-  var test_i16_i16_sum = library.declare("test_i16_i16_sum", Types.DEFAULT, Types.INT16, Types.INT16, Types.INT16);
+  var test_i16_i16_sum = library.declare("test_i16_i16_sum", ctypes.default_abi, ctypes.int16_t, ctypes.int16_t, ctypes.int16_t);
   do_check_eq(test_i16_i16_sum(5, 5), 10);
 
   // test the range of unsigned. (we can reuse the signed C function
   // here, since it's binary-compatible.)
-  var test_ui16_ui16 = library.declare("test_i16_i16", Types.DEFAULT, Types.UINT16, Types.UINT16);
+  var test_ui16_ui16 = library.declare("test_i16_i16", ctypes.default_abi, ctypes.uint16_t, ctypes.uint16_t);
   do_check_eq(test_ui16_ui16(0xffff), 0xffff);
   do_check_throws(function () { test_ui16_ui16(0x10000); }, TypeError);
   do_check_throws(function () { test_ui16_ui16(-1); }, TypeError);
 }
 
 function run_int32_tests(library) {
-  var test_i32 = library.declare("test_i32", Types.DEFAULT, Types.INT32);
+  var test_i32 = library.declare("test_i32", ctypes.default_abi, ctypes.int32_t);
   do_check_eq(test_i32(), 123456789);
 
-  var test_i32_i32 = library.declare("test_i32_i32", Types.DEFAULT, Types.INT32, Types.INT32);
+  var test_i32_i32 = library.declare("test_i32_i32", ctypes.default_abi, ctypes.int32_t, ctypes.int32_t);
   do_check_eq(test_i32_i32(5), 5);
   do_check_eq(test_i32_i32(0), 0);
   do_check_eq(test_i32_i32(0x7fffffff), 0x7fffffff);
@@ -182,24 +201,24 @@ function run_int32_tests(library) {
   for (var i = 0; i < vals.length; i++)
     do_check_throws(function () { test_i32_i32(vals[i]); }, TypeError);
 
-  var test_i32_i32_sum = library.declare("test_i32_i32_sum", Types.DEFAULT, Types.INT32, Types.INT32, Types.INT32);
+  var test_i32_i32_sum = library.declare("test_i32_i32_sum", ctypes.default_abi, ctypes.int32_t, ctypes.int32_t, ctypes.int32_t);
   do_check_eq(test_i32_i32_sum(5, 5), 10);
 
   // test the range of unsigned. (we can reuse the signed C function
   // here, since it's binary-compatible.)
-  var test_ui32_ui32 = library.declare("test_i32_i32", Types.DEFAULT, Types.UINT32, Types.UINT32);
+  var test_ui32_ui32 = library.declare("test_i32_i32", ctypes.default_abi, ctypes.uint32_t, ctypes.uint32_t);
   do_check_eq(test_ui32_ui32(0xffffffff), 0xffffffff);
   do_check_throws(function () { test_ui32_ui32(0x100000000); }, TypeError);
   do_check_throws(function () { test_ui32_ui32(-1); }, TypeError);
 }
 
 function run_int64_tests(library) {
-  var test_i64 = library.declare("test_i64", Types.DEFAULT, Types.INT64);
+  var test_i64 = library.declare("test_i64", ctypes.default_abi, ctypes.int64_t);
   // JS represents 64 bit ints as doubles, so we have to be careful how many
   // significant digits we use
   do_check_eq(test_i64(), 0x28590a1c921de000);
 
-  var test_i64_i64 = library.declare("test_i64_i64", Types.DEFAULT, Types.INT64, Types.INT64);
+  var test_i64_i64 = library.declare("test_i64_i64", ctypes.default_abi, ctypes.int64_t, ctypes.int64_t);
   do_check_eq(test_i64_i64(5), 5);
   do_check_eq(test_i64_i64(0), 0);
   do_check_eq(test_i64_i64(0x7ffffffffffff000), 0x7ffffffffffff000);
@@ -216,22 +235,22 @@ function run_int64_tests(library) {
   for (var i = 0; i < vals.length; i++)
     do_check_throws(function () { test_i64_i64(vals[i]); }, TypeError);
 
-  var test_i64_i64_sum = library.declare("test_i64_i64_sum", Types.DEFAULT, Types.INT64, Types.INT64, Types.INT64);
+  var test_i64_i64_sum = library.declare("test_i64_i64_sum", ctypes.default_abi, ctypes.int64_t, ctypes.int64_t, ctypes.int64_t);
   do_check_eq(test_i64_i64_sum(5, 5), 10);
 
   // test the range of unsigned. (we can reuse the signed C function
   // here, since it's binary-compatible.)
-  var test_ui64_ui64 = library.declare("test_i64_i64", Types.DEFAULT, Types.UINT64, Types.UINT64);
+  var test_ui64_ui64 = library.declare("test_i64_i64", ctypes.default_abi, ctypes.uint64_t, ctypes.uint64_t);
   do_check_eq(test_ui64_ui64(0xfffffffffffff000), 0xfffffffffffff000);
   do_check_throws(function () { test_ui64_ui64(0x10000000000000000); }, TypeError);
   do_check_throws(function () { test_ui64_ui64(-1); }, TypeError);
 }
 
 function run_float_tests(library) {
-  var test_f = library.declare("test_f", Types.DEFAULT, Types.FLOAT);
+  var test_f = library.declare("test_f", ctypes.default_abi, ctypes.float);
   do_check_eq(test_f(), 123456.5);
 
-  var test_f_f = library.declare("test_f_f", Types.DEFAULT, Types.FLOAT, Types.FLOAT);
+  var test_f_f = library.declare("test_f_f", ctypes.default_abi, ctypes.float, ctypes.float);
   do_check_eq(test_f_f(5), 5);
   do_check_eq(test_f_f(5.25), 5.25);
   do_check_eq(test_f_f(Infinity), Infinity);
@@ -249,16 +268,16 @@ function run_float_tests(library) {
   for (var i = 0; i < vals.length; i++)
     do_check_throws(function () { test_f_f(vals[i]); }, TypeError);
 
-  var test_f_f_sum = library.declare("test_f_f_sum", Types.DEFAULT, Types.FLOAT, Types.FLOAT, Types.FLOAT);
+  var test_f_f_sum = library.declare("test_f_f_sum", ctypes.default_abi, ctypes.float, ctypes.float, ctypes.float);
   do_check_eq(test_f_f_sum(5, 5), 10);
   do_check_eq(test_f_f_sum(5.5, 5.5), 11);
 }
 
 function run_double_tests(library) {
-  var test_d = library.declare("test_d", Types.DEFAULT, Types.DOUBLE);
+  var test_d = library.declare("test_d", ctypes.default_abi, ctypes.double);
   do_check_eq(test_d(), 1234567890123456789.5);
 
-  var test_d_d = library.declare("test_d_d", Types.DEFAULT, Types.DOUBLE, Types.DOUBLE);
+  var test_d_d = library.declare("test_d_d", ctypes.default_abi, ctypes.double, ctypes.double);
   do_check_eq(test_d_d(5), 5);
   do_check_eq(test_d_d(5.25), 5.25);
   do_check_eq(test_d_d(Infinity), Infinity);
@@ -273,13 +292,13 @@ function run_double_tests(library) {
   for (var i = 0; i < vals.length; i++)
     do_check_throws(function () { test_d_d(vals[i]); }, TypeError);
 
-  var test_d_d_sum = library.declare("test_d_d_sum", Types.DEFAULT, Types.DOUBLE, Types.DOUBLE, Types.DOUBLE);
+  var test_d_d_sum = library.declare("test_d_d_sum", ctypes.default_abi, ctypes.double, ctypes.double, ctypes.double);
   do_check_eq(test_d_d_sum(5, 5), 10);
   do_check_eq(test_d_d_sum(5.5, 5.5), 11);
 }
 
 function run_string_tests(library) {
-  var test_ansi_len = library.declare("test_ansi_len", Types.DEFAULT, Types.INT32, Types.STRING);
+  var test_ansi_len = library.declare("test_ansi_len", ctypes.default_abi, ctypes.int32_t, ctypes.string);
   do_check_eq(test_ansi_len(""), 0);
   do_check_eq(test_ansi_len("hello world"), 11);
 
@@ -288,22 +307,22 @@ function run_string_tests(library) {
   for (var i = 0; i < vals.length; i++)
     do_check_throws(function() { test_ansi_len(vals[i]); }, TypeError);
 
-  var test_wide_len = library.declare("test_wide_len", Types.DEFAULT, Types.INT32, Types.USTRING);
+  var test_wide_len = library.declare("test_wide_len", ctypes.default_abi, ctypes.int32_t, ctypes.ustring);
   do_check_eq(test_wide_len("hello world"), 11);
 
-  var test_ansi_ret = library.declare("test_ansi_ret", Types.DEFAULT, Types.STRING);
+  var test_ansi_ret = library.declare("test_ansi_ret", ctypes.default_abi, ctypes.string);
   do_check_eq(test_ansi_ret(), "success");
 
-  var test_wide_ret = library.declare("test_wide_ret", Types.DEFAULT, Types.USTRING);
+  var test_wide_ret = library.declare("test_wide_ret", ctypes.default_abi, ctypes.ustring);
   do_check_eq(test_wide_ret(), "success");
 
-  var test_ansi_echo = library.declare("test_ansi_echo", Types.DEFAULT, Types.STRING, Types.STRING);
+  var test_ansi_echo = library.declare("test_ansi_echo", ctypes.default_abi, ctypes.string, ctypes.string);
   do_check_eq(test_ansi_echo("anybody in there?"), "anybody in there?");
   do_check_eq(test_ansi_echo(null), null);
 }
 
 function run_mixed_tests(library) {
-  var test_floor = library.declare("test_floor", Types.DEFAULT, Types.INT32, Types.INT32, Types.FLOAT);
+  var test_floor = library.declare("test_floor", ctypes.default_abi, ctypes.int32_t, ctypes.int32_t, ctypes.float);
   do_check_eq(test_floor(5, 5.5), 10);
   do_check_throws(function() { test_floor(5.5, 5); }, TypeError);
 }
