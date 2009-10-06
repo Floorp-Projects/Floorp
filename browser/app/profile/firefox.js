@@ -48,12 +48,6 @@
 #endif
 #endif
 
-#ifdef XP_WIN
-#ifndef WINCE
-#define WINNT
-#endif
-#endif
-
 pref("general.startup.browser", true);
 
 pref("browser.chromeURL","chrome://browser/content/");
@@ -907,8 +901,10 @@ pref("toolbar.customization.usesheet", true);
 pref("toolbar.customization.usesheet", false);
 #endif
 
-#ifdef WINNT
-pref("aeropeek.enable", true);
-pref("aeropeek.maxpreviews", 20);
-pref("aeropeek.cachetime", 20);
+#ifdef XP_WIN
+#ifndef WINCE
+pref("browser.taskbar.previews.enable", true);
+pref("browser.taskbar.previews.max", 20);
+pref("browser.taskbar.previews.cachetime", 20);
+#endif
 #endif
