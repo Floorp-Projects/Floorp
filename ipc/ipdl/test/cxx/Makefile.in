@@ -40,8 +40,54 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
+TOOL_DIRS += app
+
+MODULE = ipdlunittest
+
+EXPORTS_NAMESPACES = mozilla/_ipdltest
+EXPORTS_mozilla/_ipdltest =  \
+  IPDLUnitTests.h  \
+  IPDLUnitTestThreadChild.h  \
+  $(NULL)
+
+LIBRARY_NAME = $(MODULE)_s
+LIBXUL_LIBRARY = 1
+FORCE_STATIC_LIB = 1
+EXPORT_LIBRARY = 1
+
+
+IPDLTESTS =  \
+  TestSanity  \
+  $(NULL)
+
+IPDLTESTSRCS = $(addsuffix .cpp,$(IPDLTESTS))
+IPDLTESTHDRS = $(addprefix $(srcdir)/,$(addsuffix .h,$(IPDLTESTS)))
+
+TESTER_TEMPLATE := $(srcdir)/IPDLUnitTests.template.cpp
+GENTESTER := $(srcdir)/genIPDLUnitTests.py
+
+CPPSRCS =  \
+  IPDLUnitTests.cpp  \
+  IPDLUnitTestSubprocess.cpp  \
+  IPDLUnitTestThreadChild.cpp  \
+  $(IPDLTESTSRCS)  \
+  $(NULL)
+
+
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 
+RUNIPDLTEST := $(RUN_TEST_PROGRAM) $(DEPTH)/dist/bin/ipdlunittest$(BIN_SUFFIX)
+
+
+IPDLUnitTests.cpp : $(GENTESTER) $(TESTER_TEMPLATE) $(IPDLTESTHDRS)
+	$(PYTHON) $< $(TESTER_TEMPLATE) $(IPDLTESTS) > $@
+
 check::
-	echo "TODO: C++/IPDL unit tests"
+	@$(EXIT_ON_ERROR)  \
+	for test in $(IPDLTESTS); do  \
+		 $(RUNIPDLTEST) $$test ;  \
+	done

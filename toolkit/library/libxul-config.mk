@@ -101,6 +101,10 @@ STATIC_LIBS += \
   ipctestharness_s \
   $(NULL)
 
+ifdef MOZ_IPDL_TESTS
+STATIC_LIBS += ipdlunittest_s
+endif
+
 ifeq (Linux,$(OS_ARCH))
 OS_LIBS += -lrt
 endif

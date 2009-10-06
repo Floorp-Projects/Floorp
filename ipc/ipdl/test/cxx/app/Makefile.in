@@ -11,10 +11,10 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Firefox.
+# The Original Code is Mozilla IPC.
 #
 # The Initial Developer of the Original Code is
-# The Mozilla Foundation <http://www.mozilla.org/>.
+#   The Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
@@ -34,19 +34,39 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../../..
+DEPTH = ../../../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# we ignore MOZ_IPDL_TESTS for the IPDL-compiler-only tests, since they're
-# quick and painless
-DIRS += ipdl
+MODULE = ipdlunittest
+PROGRAM = $(MODULE)$(BIN_SUFFIX)
+ENABLE_CXX_EXCEPTIONS = 1
 
-ifdef MOZ_IPDL_TESTS
-DIRS += cxx
+LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
+
+CPPSRCS = \
+  TestIPDL.cpp \
+  $(NULL)
+
+LIBS = \
+  $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+  $(LIBXUL_LIBS) \
+  $(MOZ_JS_LIBS) \
+  $(NSPR_LIBS) \
+  $(NULL)
+
+include $(topsrcdir)/config/config.mk
+
+ifdef _MSC_VER
+ifdef WINCE
+WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
+else
+WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+endif
 endif
 
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk

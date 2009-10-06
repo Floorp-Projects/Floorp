@@ -1,0 +1,3 @@
+IPDLSRCS =					\
+  PTestSanity.ipdl				\
+  $(NULL)

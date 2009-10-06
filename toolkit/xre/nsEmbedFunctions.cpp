@@ -83,6 +83,13 @@
 #include "mozilla/test/TestThreadChild.h"
 #include "mozilla/Monitor.h"
 
+#ifdef MOZ_IPDL_TESTS
+#include "mozilla/_ipdltest/IPDLUnitTests.h"
+#include "mozilla/_ipdltest/IPDLUnitTestThreadChild.h"
+
+using mozilla::_ipdltest::IPDLUnitTestThreadChild;
+#endif  // ifdef MOZ_IPDL_TESTS
+
 using mozilla::ipc::GeckoChildProcessHost;
 using mozilla::ipc::GeckoThread;
 using mozilla::ipc::BrowserProcessSubThread;
@@ -283,6 +290,14 @@ XRE_InitChildProcess(int aArgc,
       mainThread = new TestThreadChild();
       break;
 
+    case GeckoProcessType_IPDLUnitTest:
+#ifdef MOZ_IPDL_TESTS
+      mainThread = new IPDLUnitTestThreadChild();
+#else
+      NS_RUNTIMEABORT("rebuild with --enable-ipdl-tests");
+#endif
+      break;
+
     default:
       NS_RUNTIMEABORT("Unknown main thread class");
     }
@@ -409,6 +424,29 @@ XRE_RunIPCTestHarness(int aArgc, char* aArgv[])
     NS_ENSURE_SUCCESS(rv, 1);
     return 0;
 }
+
+#ifdef MOZ_IPDL_TESTS
+//-----------------------------------------------------------------------------
+// IPDL unit test
+
+int
+XRE_RunIPDLTest(int aArgc, char** aArgv)
+{
+    if (aArgc < 2) {
+        fprintf(stderr, "TEST-UNEXPECTED-FAIL | <---> | insufficient #args, need at least 2\n");
+        return 1;
+    }
+
+    void* data = reinterpret_cast<void*>(aArgv[aArgc-1]);
+
+    nsresult rv =
+        XRE_InitParentProcess(
+            --aArgc, aArgv, mozilla::_ipdltest::IPDLUnitTestMain, data);
+    NS_ENSURE_SUCCESS(rv, 1);
+
+    return 0;
+}
+#endif  // ifdef MOZ_IPDL_TESTS
 
 nsresult
 XRE_RunAppShell()
