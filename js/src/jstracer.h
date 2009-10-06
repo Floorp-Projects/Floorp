@@ -999,8 +999,7 @@ class TraceRecorder {
         JSScopeProperty  *sprop;         // sprop name was resolved to
     };
 
-    JS_REQUIRES_STACK nanojit::LIns* scopeChain();
-    JS_REQUIRES_STACK nanojit::LIns* entryScopeChain() const;
+    JS_REQUIRES_STACK nanojit::LIns* scopeChain() const;
     JS_REQUIRES_STACK JSStackFrame* frameIfInRange(JSObject* obj, unsigned* depthp = NULL) const;
     JS_REQUIRES_STACK RecordingStatus traverseScopeChain(JSObject *obj, nanojit::LIns *obj_ins, JSObject *obj2, nanojit::LIns *&obj2_ins);
     JS_REQUIRES_STACK AbortableRecordingStatus scopeChainProp(JSObject* obj, jsval*& vp, nanojit::LIns*& ins, NameResult& nr);
@@ -1161,7 +1160,7 @@ class TraceRecorder {
     JS_REQUIRES_STACK RecordingStatus guardNotGlobalObject(JSObject* obj,
                                                              nanojit::LIns* obj_ins);
     void clearFrameSlotsFromCache();
-    JS_REQUIRES_STACK void putActivationObjects();
+    JS_REQUIRES_STACK void putArguments();
     JS_REQUIRES_STACK RecordingStatus guardCallee(jsval& callee);
     JS_REQUIRES_STACK JSStackFrame      *guardArguments(JSObject *obj, nanojit::LIns* obj_ins,
                                                         unsigned *depthp);

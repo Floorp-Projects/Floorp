@@ -480,7 +480,6 @@ JS_DECLARE_CALLINFO(js_ArrayCompPush)
 /* Defined in jsfun.cpp. */
 JS_DECLARE_CALLINFO(js_AllocFlatClosure)
 JS_DECLARE_CALLINFO(js_PutArguments)
-JS_DECLARE_CALLINFO(js_PutCallObjectOnTrace)
 
 /* Defined in jsfun.cpp. */
 JS_DECLARE_CALLINFO(js_SetCallVar)
@@ -524,9 +523,7 @@ JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToNumber)
 JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToString)
 JS_DECLARE_CALLINFO(js_Arguments)
 JS_DECLARE_CALLINFO(js_NewNullClosure)
-JS_DECLARE_CALLINFO(js_CloneFunctionObject)
 JS_DECLARE_CALLINFO(js_ConcatN)
 JS_DECLARE_CALLINFO(js_PopInterpFrame)
-JS_DECLARE_CALLINFO(js_CreateCallObjectOnTrace)
 
 #endif /* jsbuiltins_h___ */
