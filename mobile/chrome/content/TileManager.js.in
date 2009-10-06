@@ -92,10 +92,10 @@
 const kXHTMLNamespaceURI  = "http://www.w3.org/1999/xhtml";
 
 // base-2 exponent for width, height of a single tile.
-const kTileExponentWidth  = 7;
-const kTileExponentHeight = 7;
-const kTileWidth  = Math.pow(2, kTileExponentWidth);   // 2^7 = 128
-const kTileHeight = Math.pow(2, kTileExponentHeight);  // 2^7 = 128
+const kTileExponentWidth  = 9;
+const kTileExponentHeight = 9;
+const kTileWidth  = Math.pow(2, kTileExponentWidth);   // 2^9 = 512
+const kTileHeight = Math.pow(2, kTileExponentHeight);  // 2^9 = 512
 const kTileLazyRoundTimeCap = 500;    // millis
 const kInitialCacheCapacity = 200;
 
@@ -179,10 +179,10 @@ TileManager.prototype = {
       else
         criticalIsDirty = true;
 
-      // XXX we may want to pass rect through to make markDirty only mark the
-      // intersection of tile's boundRect with rect dirty (e.g. if we have big
-      // tiles)
-      tile.markDirty();
+      let intersection = tile.boundRect.intersect(rects[i]);
+      if (intersection) {
+        tile.markDirty(intersection);
+      }
 
       if (crawler)
         crawler.enqueue(tile.i, tile.j);
@@ -346,8 +346,21 @@ TileManager.prototype = {
   },
 
   _renderTile: function _renderTile(tile) {
-    if (tile.isDirty())
+    if (tile.isDirty()) {
+/*
+      let ctx = tile._canvas.getContext("2d");
+      ctx.save();
+      ctx.fillStyle = "rgba(0,255,0,.5)";
+      ctx.translate(-tile.boundRect.left, -tile.boundRect.top);
+      ctx.fillRect(tile._dirtyTileCanvasRect.left, tile._dirtyTileCanvasRect.top,
+        tile._dirtyTileCanvasRect.width, tile._dirtyTileCanvasRect.height);
+      ctx.restore();
+      window.setTimeout(function(bv) {
+        tile.render(bv);
+      }, 1000, this._browserView);
+ */
       tile.render(this._browserView);
+    }
   },
 
   _appendTileSafe: function _appendTileSafe(tile) {
@@ -472,7 +485,6 @@ TileManager.TileCache.prototype = {
 
   lookup: function lookup(i, j) {
     let tile = null;
-
     if (this._tileMap[i])
       tile = this._tileMap[i][j] || null;
 
@@ -504,15 +516,14 @@ TileManager.TileCache.prototype = {
 
       let rem = this._tilePool.splice(newCap);
       for (let k = 0, len = rem.length; k < len; ++k)
-	      this._detachTile(rem[k].i, rem[k].j);
+        this._detachTile(rem[k].i, rem[k].j);
     }
 
     this._capacity = newCap;
   },
 
   inBounds: function inBounds(i, j) {
-    return (0 <= i && 0 <= j
-            && i <= this.iBound && j <= this.jBound);
+    return (0 <= i && 0 <= j && i <= this.iBound && j <= this.jBound);
   },
 
   sortEvictionQueue: function sortEvictionQueue(cmp) {
@@ -541,7 +552,6 @@ TileManager.TileCache.prototype = {
       return null;
 
     let tile = this.lookup(i, j);
-
     if (!tile && create) {
       tile = this._createTile(i, j, evictionGuard);
       if (tile) tile.markDirty();
@@ -625,7 +635,6 @@ TileManager.TileCache.prototype = {
       this._tileMap[i] = [];
 
     let tile = null;
-
     if (this._tilePool.length < this._capacity) { // either capacity is
       tile = new TileManager.Tile(i, j);          // infinite, or we have
       this._tileMap[i][j] = tile;                 // room to allocate more
@@ -659,7 +668,6 @@ TileManager.Tile = function Tile(i, j) {
 };
 
 TileManager.Tile.prototype = {
-
   init: function init(i, j) {
     if (!this.boundRect)
       this.boundRect = new wsRect(i * kTileWidth, j * kTileHeight, kTileWidth, kTileHeight);
@@ -703,25 +711,20 @@ TileManager.Tile.prototype = {
    */
   markDirty: function markDirty(dirtyRect) {
     if (!dirtyRect) {
-
       if (!this._dirtyTileCanvasRect)
         this._dirtyTileCanvasRect = this.boundRect.clone();
       else
         this._dirtyTileCanvasRect.copyFrom(this.boundRect);
-
-    } else {  // XXX this case is not very well-tested
-
+    } else {
       if (!this._dirtyTileCanvasRect)
-        this._dirtyTileCanvasRect = dirtyRect.intersect(this.boundRect);
+        this._dirtyTileCanvasRect = dirtyRect.intersect(this.boundRect).round();
       else if (dirtyRect.intersects(this.boundRect))
-        this._dirtyTileCanvasRect.expandToContain(dirtyRect.intersect(this.boundRect));
-
+        this._dirtyTileCanvasRect.expandToContain(dirtyRect.intersect(this.boundRect)).round();
     }
 
     // XXX if, after the above, the dirty rectangle takes up a large enough
     // portion of the boundRect, we should probably just mark the entire tile
     // dirty and fastpath for future calls.
-
     if (this._dirtyTileCanvasRect)
       this._dirtyTileCanvas = true;
   },
@@ -745,21 +748,17 @@ TileManager.Tile.prototype = {
       this.markDirty();
 
     let rect = this._dirtyTileCanvasRect;
-
     let x = rect.left - this.boundRect.left;
     let y = rect.top - this.boundRect.top;
 
     browserView.viewportToBrowserRect(rect);
 
-    let sourceContent = browserView._contentWindow;
     let ctx = this._canvas.getContext("2d");
     ctx.save();
 
-    browserView.browserToViewportCanvasContext(ctx);
-
     ctx.translate(x, y);
-
-    ctx.drawWindow(sourceContent,
+    browserView.browserToViewportCanvasContext(ctx);
+    ctx.drawWindow(browserView._contentWindow,
                    rect.left, rect.top,
                    rect.right - rect.left, rect.bottom - rect.top,
                    "white",
