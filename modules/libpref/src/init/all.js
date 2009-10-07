@@ -1625,6 +1625,10 @@ pref("ui.panel.default_level_parent", false);
 
 pref("mousewheel.system_scroll_override_on_root_content.enabled", true);
 
+// Bug 514927
+// Enables or disabled the TrackPoint hack, -1 is autodetect, 0 is off,
+// and 1 is on.  Set this to 1 if TrackPoint scrolling is not working.
+pref("ui.trackpoint_hack.enabled", -1);
 # WINNT
 #endif
 
