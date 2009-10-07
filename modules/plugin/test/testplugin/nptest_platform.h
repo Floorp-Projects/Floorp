@@ -118,6 +118,6 @@ int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData,
  * Just return if everything is OK, otherwise append error messages
  * to 'error' separated by \n.
  */
-void pluginDoInternalConsistencyCheck(InstanceData* instanceData, string& error);
+void pluginDoInternalConsistencyCheck(InstanceData* instanceData, std::string& error);
 
 #endif // nptest_platform_h_
