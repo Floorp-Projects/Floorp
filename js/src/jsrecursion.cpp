@@ -67,8 +67,10 @@ AssertDownFrameIsConsistent(JSContext* cx, VMSideExit* anchor, FrameInfo* fi)
     for (unsigned i = 0; i < downPostSlots; i++) {
         if (m1[i] == typeMap[i])
             continue;
-        if (typeMap[i] == TT_INT32 && m1[i] == TT_DOUBLE)
+        if (typeMap[i] == TT_INT32 && m1[i] == TT_DOUBLE ||
+            typeMap[i] == TT_DOUBLE && m1[i] == TT_INT32) {
             continue;
+        }
         JS_NOT_REACHED("invalid RECURSIVE_MISMATCH exit");
     }
     JS_ASSERT(memcmp(anchor->recursive_down, fi, sizeof(FrameInfo)) == 0);
