@@ -23,6 +23,7 @@
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  *   Shyjan Mahamud <mahamud@cs.cmu.edu>
+ *   Frederic Wang <fred.wang@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -90,12 +91,6 @@ public:
 
   friend nsIFrame* NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  virtual void
-  SetAdditionalStyleContext(PRInt32          aIndex, 
-                            nsStyleContext*  aStyleContext);
-  virtual nsStyleContext*
-  GetAdditionalStyleContext(PRInt32 aIndex) const;
-
   virtual eMathMLFrameType GetMathMLFrameType();
 
   NS_IMETHOD
@@ -108,14 +103,9 @@ public:
        nsIFrame*        aParent,
        nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD
-  Reflow(nsPresContext*          aPresContext,
-         nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
-         nsReflowStatus&          aStatus);
-
-  virtual nscoord
-  GetIntrinsicWidth(nsIRenderingContext* aRenderingContext);
+  virtual nsresult
+  MeasureForWidth(nsIRenderingContext& aRenderingContext,
+                  nsHTMLReflowMetrics& aDesiredSize);
 
   virtual nsresult
   Place(nsIRenderingContext& aRenderingContext,
@@ -156,8 +146,21 @@ protected:
   PRBool
   IsBevelled();
 
-  nsRect  mLineRect;
+  nsresult PlaceInternal(nsIRenderingContext& aRenderingContext,
+                         PRBool               aPlaceOrigin,
+                         nsHTMLReflowMetrics& aDesiredSize,
+                         PRBool               aWidthOnly);
+
+  // Display a slash
+  nsresult DisplaySlash(nsDisplayListBuilder* aBuilder,
+                        nsIFrame* aFrame, const nsRect& aRect,
+                        nscoord aThickness,
+                        const nsDisplayListSet& aLists);
+
+  nsRect        mLineRect;
   nsMathMLChar* mSlashChar;
+  nscoord       mLineThickness;
+  PRPackedBool  mIsBevelled;
 };
 
 #endif /* nsMathMLmfracFrame_h___ */
