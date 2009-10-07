@@ -165,6 +165,7 @@ public:
         mIsProxy(PR_FALSE), mIsValid(PR_TRUE), 
         mIsBadUnderlineFont(PR_FALSE), mIsUserFont(PR_FALSE),
         mStandardFace(aIsStandardFace),
+        mSymbolFont(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
         mCmapInitialized(PR_FALSE), mUserFontData(nsnull),
         mFamily(aFamily)
@@ -176,6 +177,7 @@ public:
         mIsValid(aEntry.mIsValid), mIsBadUnderlineFont(aEntry.mIsBadUnderlineFont),
         mIsUserFont(aEntry.mIsUserFont),
         mStandardFace(aEntry.mStandardFace),
+        mSymbolFont(aEntry.mSymbolFont),
         mWeight(aEntry.mWeight), mCmapInitialized(aEntry.mCmapInitialized),
         mCharacterMap(aEntry.mCharacterMap), mUserFontData(aEntry.mUserFontData),
         mFamily(aEntry.mFamily)
@@ -186,13 +188,14 @@ public:
     // unique name for the face, *not* the family
     const nsString& Name() const { return mName; }
 
-    PRUint16 Weight() { return mWeight; }
-    PRInt16 Stretch() { return mStretch; }
+    PRUint16 Weight() const { return mWeight; }
+    PRInt16 Stretch() const { return mStretch; }
 
-    PRBool IsUserFont() { return mIsUserFont; }
-    PRBool IsFixedPitch() { return mFixedPitch; }
-    PRBool IsItalic() { return mItalic; }
-    PRBool IsBold() { return mWeight >= 600; } // bold == weights 600 and above
+    PRBool IsUserFont() const { return mIsUserFont; }
+    PRBool IsFixedPitch() const { return mFixedPitch; }
+    PRBool IsItalic() const { return mItalic; }
+    PRBool IsBold() const { return mWeight >= 600; } // bold == weights 600 and above
+    PRBool IsSymbolFont() const { return mSymbolFont; }
 
     inline PRBool HasCharacter(PRUint32 ch) {
         if (mCharacterMap.test(ch))
@@ -203,6 +206,13 @@ public:
 
     virtual PRBool TestCharacterMap(PRUint32 aCh);
     virtual nsresult ReadCMAP();
+
+    virtual PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
+        return PR_TRUE;
+    }
+    virtual PRBool SupportsLangGroup(const nsACString& aLangGroup) const {
+        return PR_TRUE;
+    }
 
     const nsString& FamilyName();
 
@@ -215,6 +225,7 @@ public:
     PRPackedBool     mIsBadUnderlineFont : 1;
     PRPackedBool     mIsUserFont  : 1;
     PRPackedBool     mStandardFace : 1;
+    PRPackedBool     mSymbolFont  : 1;
 
     PRUint16         mWeight;
     PRInt16          mStretch;
@@ -235,6 +246,7 @@ protected:
         mIsBadUnderlineFont(PR_FALSE),
         mIsUserFont(PR_FALSE),
         mStandardFace(PR_FALSE),
+        mSymbolFont(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
         mCmapInitialized(PR_FALSE),
         mUserFontData(nsnull),
