@@ -1,0 +1,23 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<body>
+<p>:<ms xmlns="http://www.w3.org/1998/Math/MathML" lquote="L" rquote="R">_</ms></p>
+<p>:<ms id="m1" xmlns="http://www.w3.org/1998/Math/MathML">_</ms></p>
+<p>:<ms id="m2" xmlns="http://www.w3.org/1998/Math/MathML">_</ms></p>
+<p>:<ms id="m3" xmlns="http://www.w3.org/1998/Math/MathML" lquote="_">_</ms></p>
+<p>:<ms id="m4" xmlns="http://www.w3.org/1998/Math/MathML" rquote="_">_</ms></p>
+<script>
+function doTest() {
+  var m1 = document.getElementById("m1");
+  m1.setAttribute("lquote", "L");
+  var m2 = document.getElementById("m2");
+  m2.setAttribute("rquote", "R");
+  var m3 = document.getElementById("m3");
+  m3.setAttribute("lquote", "L");
+  var m4 = document.getElementById("m4");
+  m4.setAttribute("rquote", "R");
+  document.documentElement.removeAttribute('class');
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

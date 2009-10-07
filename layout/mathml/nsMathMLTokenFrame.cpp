@@ -142,7 +142,7 @@ nsMathMLTokenFrame::SetInitialChildList(nsIAtom*        aListName,
   if (NS_FAILED(rv))
     return rv;
 
-  SetQuotes();
+  SetQuotes(PR_FALSE);
   ProcessTextData();
   return rv;
 }
@@ -259,7 +259,7 @@ nsMathMLTokenFrame::AttributeChanged(PRInt32         aNameSpaceID,
 {
   if (nsGkAtoms::lquote_ == aAttribute ||
       nsGkAtoms::rquote_ == aAttribute) {
-    SetQuotes();
+    SetQuotes(PR_TRUE);
   }
 
   return nsMathMLContainerFrame::
@@ -378,57 +378,44 @@ nsMathMLTokenFrame::SetTextStyle()
 // So the main idea in this code is to see if there are lquote and 
 // rquote attributes. If these are there, we ovewrite the default
 // quotes in the text frames.
+// XXX this is somewhat bogus, we probably should map lquote and rquote
+// to 'content' style rules
 //
 // But what if the mathml.css file wasn't loaded? 
 // We also check that we are not relying on null pointers...
 
 static void
-SetQuote(nsIFrame*       aFrame, 
-         nsString&       aValue)
+SetQuote(nsIFrame* aFrame, nsString& aValue, PRBool aNotify)
 {
-  nsIFrame* textFrame;
-  do {
-    // walk down the hierarchy of first children because they could be wrapped
-    textFrame = aFrame->GetFirstChild(nsnull);
-    if (textFrame) {
-      if (textFrame->GetType() == nsGkAtoms::textFrame)
-        break;
-    }
-    aFrame = textFrame;
-  } while (textFrame);
-  if (textFrame) {
-    nsIContent* quoteContent = textFrame->GetContent();
-    if (quoteContent && quoteContent->IsNodeOfType(nsINode::eTEXT)) {
-      quoteContent->SetText(aValue, PR_FALSE); // no notify since we don't want a reflow yet
-    }
-  }
+  if (!aFrame)
+    return;
+
+  nsIFrame* textFrame = aFrame->GetFirstChild(nsnull);
+  if (!textFrame)
+    return;
+
+  nsIContent* quoteContent = textFrame->GetContent();
+  if (!quoteContent->IsNodeOfType(nsINode::eTEXT))
+    return;
+
+  quoteContent->SetText(aValue, aNotify);
 }
 
 void
-nsMathMLTokenFrame::SetQuotes()
+nsMathMLTokenFrame::SetQuotes(PRBool aNotify)
 {
   if (mContent->Tag() != nsGkAtoms::ms_)
-    return;
-
-  nsIFrame* rightFrame = nsnull;
-  nsIFrame* baseFrame = nsnull;
-  nsIFrame* leftFrame = mFrames.FirstChild();
-  if (leftFrame)
-    baseFrame = leftFrame->GetNextSibling();
-  if (baseFrame)
-    rightFrame = baseFrame->GetNextSibling();
-  if (!leftFrame || !baseFrame || !rightFrame)
     return;
 
   nsAutoString value;
   // lquote
   if (GetAttribute(mContent, mPresentationData.mstyle,
                    nsGkAtoms::lquote_, value)) {
-    SetQuote(leftFrame, value);
+    SetQuote(nsLayoutUtils::GetBeforeFrame(this), value, aNotify);
   }
   // rquote
   if (GetAttribute(mContent, mPresentationData.mstyle,
                    nsGkAtoms::rquote_, value)) {
-    SetQuote(rightFrame, value);
+    SetQuote(nsLayoutUtils::GetAfterFrame(this), value, aNotify);
   }
 }
