@@ -1,0 +1,11 @@
+url-prefix ../../jsreftest.html?test=ecma_3/Exceptions/
+script 15.11.1.1.js
+script 15.11.4.4-1.js
+script 15.11.7.6-001.js
+script 15.11.7.6-002.js
+script 15.11.7.6-003.js
+script binding-001.js
+script regress-181654.js
+script regress-181914.js
+script regress-58946.js
+script regress-95101.js

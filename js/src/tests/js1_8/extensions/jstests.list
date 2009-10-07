@@ -1,0 +1,41 @@
+url-prefix ../../jsreftest.html?test=js1_8/extensions/
+script dekker.js
+script for-in.js
+script lamport.js
+script peterson.js
+script regress-353116.js
+script regress-378789.js
+script regress-385393-01.js
+script regress-385393-10.js
+script regress-385393-11.js
+script regress-385729.js
+script regress-394709.js
+script regress-415721.js
+script regress-417131.js
+script regress-417817.js
+script regress-419091.js
+script regress-422269.js
+script regress-445818.js
+script regress-446169-01.js
+script regress-446169-02.js
+fails-if(!xulRuntime.shell) script regress-452476.js # NS_ERROR_DOM_NOT_SUPPORTED_ERR
+script regress-452913.js
+script regress-454744.js
+script regress-455973.js
+script regress-465337.js
+script regress-465453.js
+script regress-469625.js
+script regress-471197.js
+script regress-472450-03.js
+script regress-472450-04.js
+script regress-473040.js
+script regress-475971.js
+skip script regress-476414-01.js # slow
+skip script regress-476414-02.js # slow
+fails-if(!xulRuntime.shell) script regress-476427.js # NS_ERROR_DOM_NOT_SUPPORTED_ERR
+script regress-476869.js
+script regress-479252.js
+script regress-479381.js
+script regress-481989.js
+script regress-482263.js
+script simple-tree.js

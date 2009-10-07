@@ -1,0 +1,16 @@
+url-prefix ../../jsreftest.html?test=ecma_3/Array/
+script 15.4.4.11-01.js
+script 15.4.4.3-1.js
+script 15.4.4.4-001.js
+script 15.4.5.1-01.js
+script 15.5.4.8-01.js
+script regress-101488.js
+script regress-130451.js
+script regress-322135-01.js
+script regress-322135-02.js
+skip script regress-322135-03.js # slow
+skip script regress-322135-04.js # slow
+script regress-387501.js
+script regress-421325.js
+script regress-430717.js
+script regress-488989.js

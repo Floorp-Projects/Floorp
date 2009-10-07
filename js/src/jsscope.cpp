@@ -1022,8 +1022,27 @@ JSScope::reportReadOnlyScope(JSContext *cx)
 void
 JSScope::generateOwnShape(JSContext *cx)
 {
-    if (object)
-        js_LeaveTraceIfGlobalObject(cx, object);
+#ifdef JS_TRACER
+    if (object) {
+         js_LeaveTraceIfGlobalObject(cx, object);
+
+        /*
+         * The JIT must have arranged to re-guard after any unpredictable shape
+         * change, so if we are on trace here, we should already be prepared to
+         * bail off trace.
+         */
+        JS_ASSERT_IF(JS_ON_TRACE(cx), cx->bailExit);
+
+        /*
+         * If we are recording, here is where we forget already-guarded shapes.
+         * Any subsequent property operation upon object on the trace currently
+         * being recorded will re-guard (and re-memoize).
+         */
+        JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+        if (TraceRecorder *tr = tm->recorder)
+            tr->forgetGuardedShapesForObject(object);
+    }
+#endif
 
     shape = js_GenerateShape(cx, false);
     setOwnShape();

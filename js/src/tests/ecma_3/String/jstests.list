@@ -1,0 +1,9 @@
+url-prefix ../../jsreftest.html?test=ecma_3/String/
+fails script 15.5.4.11.js
+script 15.5.4.14.js
+script regress-104375.js
+script regress-189898.js
+script regress-304376.js
+script regress-313567.js
+fails script regress-392378.js
+script regress-83293.js

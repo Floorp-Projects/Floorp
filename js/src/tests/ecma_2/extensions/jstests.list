@@ -1,0 +1,9 @@
+url-prefix ../../jsreftest.html?test=ecma_2/extensions/
+script constructor-001.js
+script function-001.js
+script instanceof-001.js
+script instanceof-002.js
+script instanceof-003-n.js
+script instanceof-004-n.js
+script instanceof-005-n.js
+script instanceof-006.js

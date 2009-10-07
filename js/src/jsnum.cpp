@@ -762,10 +762,6 @@ js_FinishRuntimeNumberState(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
 
-    js_UnlockGCThingRT(rt, rt->jsNaN);
-    js_UnlockGCThingRT(rt, rt->jsNegativeInfinity);
-    js_UnlockGCThingRT(rt, rt->jsPositiveInfinity);
-
     rt->jsNaN = NULL;
     rt->jsNegativeInfinity = NULL;
     rt->jsPositiveInfinity = NULL;

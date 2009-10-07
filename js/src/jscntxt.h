@@ -126,6 +126,7 @@ struct VMFragment;
 #ifdef __cplusplus
 struct REHashKey;
 struct REHashFn;
+class FrameInfoCache;
 typedef nanojit::HashMap<REHashKey, nanojit::Fragment*, REHashFn> REHashMap;
 #endif
 
@@ -154,12 +155,30 @@ struct JSTraceMonitor {
      */
     JSContext               *tracecx;
 
-    CLS(VMAllocator)        dataAlloc;   /* A chunk allocator for LIR.    */
+    /*
+     * There are 3 allocators here. This might seem like overkill, but they
+     * have different lifecycles, and by keeping them separate we keep the
+     * amount of retained memory down significantly.
+     *
+     * The dataAlloc has the lifecycle of the monitor. It's flushed only
+     * when the monitor is flushed.
+     *
+     * The traceAlloc has the same flush lifecycle as the dataAlloc, but
+     * it is also *marked* when a recording starts and rewinds to the mark
+     * point if recording aborts. So you can put things in it that are only
+     * reachable on a successful record/compile cycle.
+     *
+     * The tempAlloc is flushed after each recording, successful or not.
+     */
+
+    CLS(VMAllocator)        dataAlloc;   /* A chunk allocator for fragments. */
+    CLS(VMAllocator)        traceAlloc;  /* An allocator for trace metadata. */
     CLS(VMAllocator)        tempAlloc;   /* A temporary chunk allocator.  */
     CLS(nanojit::CodeAlloc) codeAlloc;   /* An allocator for native code. */
     CLS(nanojit::Assembler) assembler;
     CLS(nanojit::LirBuffer) lirbuf;
     CLS(nanojit::LirBuffer) reLirBuf;
+    CLS(FrameInfoCache)     frameCache;
 #ifdef DEBUG
     CLS(nanojit::LabelMap)  labels;
 #endif
@@ -344,7 +363,7 @@ struct JSThread {
     /* Indicates that the thread is waiting in ClaimTitle from jslock.cpp. */
     JSTitle             *titleToShare;
 
-    JSGCThing           *gcFreeLists[GC_NUM_FREELISTS];
+    JSGCThing           *gcFreeLists[FINALIZE_LIMIT];
 
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
@@ -431,7 +450,7 @@ struct JSRuntime {
 
     /* Garbage collector state, used by jsgc.c. */
     JSGCChunkInfo       *gcChunkList;
-    JSGCArenaList       gcArenaList[GC_NUM_FREELISTS];
+    JSGCArenaList       gcArenaList[FINALIZE_LIMIT];
     JSGCDoubleArenaList gcDoubleArenaList;
     JSDHashTable        gcRootsHash;
     JSDHashTable        *gcLocksHash;
@@ -1246,20 +1265,28 @@ FrameAtomBase(JSContext *cx, JSStackFrame *fp)
 class JSAutoTempValueRooter
 {
   public:
-    JSAutoTempValueRooter(JSContext *cx, size_t len, jsval *vec)
+    JSAutoTempValueRooter(JSContext *cx, size_t len, jsval *vec
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_PUSH_TEMP_ROOT(mContext, len, vec, &mTvr);
     }
-    explicit JSAutoTempValueRooter(JSContext *cx, jsval v = JSVAL_NULL)
+    explicit JSAutoTempValueRooter(JSContext *cx, jsval v = JSVAL_NULL
+                                   JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_PUSH_SINGLE_TEMP_ROOT(mContext, v, &mTvr);
     }
-    JSAutoTempValueRooter(JSContext *cx, JSString *str)
+    JSAutoTempValueRooter(JSContext *cx, JSString *str
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_PUSH_TEMP_ROOT_STRING(mContext, str, &mTvr);
     }
-    JSAutoTempValueRooter(JSContext *cx, JSObject *obj)
+    JSAutoTempValueRooter(JSContext *cx, JSObject *obj
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_PUSH_TEMP_ROOT_OBJECT(mContext, obj, &mTvr);
     }
 
@@ -1280,13 +1307,16 @@ class JSAutoTempValueRooter
 #endif
 
     JSTempValueRooter mTvr;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class JSAutoTempIdRooter
 {
   public:
-    explicit JSAutoTempIdRooter(JSContext *cx, jsid id = INT_TO_JSID(0))
+    explicit JSAutoTempIdRooter(JSContext *cx, jsid id = INT_TO_JSID(0)
+                                JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_PUSH_SINGLE_TEMP_ROOT(mContext, ID_TO_VALUE(id), &mTvr);
     }
 
@@ -1300,11 +1330,15 @@ class JSAutoTempIdRooter
   private:
     JSContext *mContext;
     JSTempValueRooter mTvr;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class JSAutoIdArray {
   public:
-    JSAutoIdArray(JSContext *cx, JSIdArray *ida) : cx(cx), idArray(ida) {
+    JSAutoIdArray(JSContext *cx, JSIdArray *ida
+                  JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : cx(cx), idArray(ida) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         if (ida)
             JS_PUSH_TEMP_ROOT(cx, ida->length, ida->vector, &tvr);
     }
@@ -1329,15 +1363,18 @@ class JSAutoIdArray {
     JSContext * const cx;
     JSIdArray * const idArray;
     JSTempValueRooter tvr;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /* The auto-root for enumeration object and its state. */
 class JSAutoEnumStateRooter : public JSTempValueRooter
 {
   public:
-    JSAutoEnumStateRooter(JSContext *cx, JSObject *obj, jsval *statep)
+    JSAutoEnumStateRooter(JSContext *cx, JSObject *obj, jsval *statep
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx), mStatep(statep)
     {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(obj);
         JS_ASSERT(statep);
         JS_PUSH_TEMP_ROOT_COMMON(cx, obj, this, JSTVU_ENUMERATOR, object);
@@ -1355,13 +1392,16 @@ class JSAutoEnumStateRooter : public JSTempValueRooter
   private:
     JSContext   *mContext;
     jsval       *mStatep;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class JSAutoResolveFlags
 {
   public:
-    JSAutoResolveFlags(JSContext *cx, uintN flags)
+    JSAutoResolveFlags(JSContext *cx, uintN flags
+                       JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : mContext(cx), mSaved(cx->resolveFlags) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         cx->resolveFlags = flags;
     }
 
@@ -1370,6 +1410,7 @@ class JSAutoResolveFlags
   private:
     JSContext *mContext;
     uintN mSaved;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 #endif /* __cpluscplus */

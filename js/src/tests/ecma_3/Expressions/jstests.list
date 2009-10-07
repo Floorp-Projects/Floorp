@@ -1,0 +1,9 @@
+url-prefix ../../jsreftest.html?test=ecma_3/Expressions/
+script 11.10-01.js
+script 11.10-02.js
+script 11.10-03.js
+script 11.6.1-1.js
+script 11.7.1-01.js
+script 11.7.2-01.js
+script 11.7.3-01.js
+script 11.9.6-1.js

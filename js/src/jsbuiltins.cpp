@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4; -*-
- * vim: set ts=8 sw=4 et tw=99:
+ * vim: set ts=4 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -150,6 +150,24 @@ js_UnboxInt32(jsval v)
     return js_DoubleToECMAInt32(*JSVAL_TO_DOUBLE(v));
 }
 JS_DEFINE_CALLINFO_1(extern, INT32, js_UnboxInt32, JSVAL, 1, 1)
+
+JSBool FASTCALL
+js_TryUnboxInt32(jsval v, int32* i32p)
+{
+    if (JS_LIKELY(JSVAL_IS_INT(v))) {
+        *i32p = JSVAL_TO_INT(v);
+        return JS_TRUE;
+    }
+    if (!JSVAL_IS_DOUBLE(v))
+        return JS_FALSE;
+    int32 i;
+    jsdouble d = *JSVAL_TO_DOUBLE(v);
+    if (!JSDOUBLE_IS_INT(d, i))
+        return JS_FALSE;
+    *i32p = i;
+    return JS_TRUE;
+}
+JS_DEFINE_CALLINFO_2(extern, BOOL, js_TryUnboxInt32, JSVAL, INT32PTR, 1, 1)
 
 int32 FASTCALL
 js_DoubleToInt32(jsdouble d)
@@ -389,7 +407,7 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     JSFunction *fun = (JSFunction*) funobj;
     JS_ASSERT(GET_FUNCTION_PRIVATE(cx, funobj) == fun);
 
-    JSObject* closure = js_NewGCObject(cx, GCX_OBJECT);
+    JSObject* closure = js_NewGCObject(cx);
     if (!closure)
         return NULL;
 
@@ -405,6 +423,44 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     return closure;
 }
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT, OBJECT, 0, 0)
+
+JS_REQUIRES_STACK JSBool FASTCALL
+js_PopInterpFrame(JSContext* cx, InterpState* state)
+{
+    JS_ASSERT(cx->fp && cx->fp->down);
+    JSInlineFrame* ifp = (JSInlineFrame*)cx->fp;
+
+    /*
+     * Mirror frame popping code from inline_return in js_Interpret. There are
+     * some things we just don't want to handle. In those cases, the trace will
+     * MISMATCH_EXIT.
+     */
+    if (ifp->hookData)
+        return JS_FALSE;
+    if (cx->version != ifp->callerVersion)
+        return JS_FALSE;
+    if (cx->fp->flags & JSFRAME_CONSTRUCTING)
+        return JS_FALSE;
+    if (cx->fp->imacpc)
+        return JS_FALSE;
+    
+    /* Update display table. */
+    if (cx->fp->script->staticLevel < JS_DISPLAY_SIZE)
+        cx->display[cx->fp->script->staticLevel] = cx->fp->displaySave;
+    
+    /* Pop the frame and its memory. */
+    cx->fp = cx->fp->down;
+    JS_ASSERT(cx->fp->regs == &ifp->callerRegs);
+    cx->fp->regs = ifp->frame.regs;
+
+    /* Don't release |ifp->mark| yet, since ExecuteTree uses |cx->stackPool|. */
+    state->stackMark = ifp->mark;
+
+    /* Update the inline call count. */
+    *state->inlineCallCountp = *state->inlineCallCountp - 1;
+    return JS_TRUE;
+}
+JS_DEFINE_CALLINFO_2(extern, BOOL, js_PopInterpFrame, CONTEXT, INTERPSTATE, 0, 0)
 
 JSString* FASTCALL
 js_ConcatN(JSContext *cx, JSString **strArray, uint32 size)

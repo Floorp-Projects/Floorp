@@ -1,0 +1,9 @@
+url-prefix ../../jsreftest.html?test=js1_2/Array/
+skip script array_split_1.js # obsolete test
+script general1.js
+script general2.js
+script slice.js
+script splice1.js
+script splice2.js
+skip script tostring_1.js # obsolete test
+skip script tostring_2.js # obsolete test
