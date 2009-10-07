@@ -87,6 +87,10 @@ body > div {
   <div style="width:300px; height:200px; background:-moz-linear-gradient(left, right, from(red), to(black));"></div>
 </div>
 
+<div id="testMovingClipArea">
+  <div style="margin-top:20px; height:20px; margin-bottom:300px; background-color:blue; overflow:hidden;"></div>
+</div>
+
 <script>
 var tests = document.querySelectorAll("body>div");
 var currentTest = -1;
@@ -214,6 +218,13 @@ function testSimpleScrollWithSubpixelOffset4(blitRegion, paintRegion) {
   // Check that we're not repainting anything in the area that's blitted
   todo(!paintRegion.intersectsRect([0,0,180,200]),
        "Should not repaint area that was blitted: " + paintRegion.toString());
+}
+
+function testMovingClipArea(blitRegion, paintRegion) {
+  ok(blitRegion.equalsRegion(new Region([[0,0,200,40]])),
+     "Should blit everything that's affected: " + blitRegion.toString());
+  ok(paintRegion.isEmpty(),
+     "Shouldn't repaint anything: " + paintRegion.toString());
 }
 
 function clientRectToRect(cr)
