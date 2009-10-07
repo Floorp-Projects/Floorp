@@ -2284,7 +2284,7 @@ TrashTree(JSContext* cx, Fragment* f);
 JS_REQUIRES_STACK
 TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _fragment,
         TreeInfo* ti, unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
-        VMSideExit* innermostNestedGuard, jsbytecode* outer, uint32 outerArgc,
+        VMSideExit* innermost, jsbytecode* outer, uint32 outerArgc,
         MonitorReason reason)
     : tempAlloc(*JS_TRACE_MONITOR(cx).tempAlloc),
       mark(*JS_TRACE_MONITOR(cx).traceAlloc),
@@ -2424,9 +2424,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
      */
     if (_anchor && _anchor->exitType == NESTED_EXIT) {
         LIns* nested_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state,
-                                                offsetof(InterpState, lastTreeExitGuard)),
-                                                "lastTreeExitGuard");
-        guard(true, lir->ins2(LIR_peq, nested_ins, INS_CONSTPTR(innermostNestedGuard)), NESTED_EXIT);
+                                                offsetof(InterpState, outermostTreeExitGuard)),
+                                                "outermostTreeExitGuard");
+        guard(true, lir->ins2(LIR_peq, nested_ins, INS_CONSTPTR(innermost)), NESTED_EXIT);
     }
 }
 
