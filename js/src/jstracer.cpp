@@ -9645,9 +9645,6 @@ TraceRecorder::putArguments()
 static JS_REQUIRES_STACK inline bool
 IsTraceableRecursion(JSContext *cx)
 {
-#ifndef JS_TRACE_RECURSION
-    return false;
-#else
     JSStackFrame *fp = cx->fp;
     JSStackFrame *down = cx->fp->down;
     if (!down)
@@ -9663,7 +9660,6 @@ IsTraceableRecursion(JSContext *cx)
     if ((fp->flags & JSFRAME_CONSTRUCTING) || (down->flags & JSFRAME_CONSTRUCTING))
         return false;
     return true;
-#endif
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -9723,7 +9719,6 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
         RETURN_STOP_A("recursion started inlining");
     }
 
-#ifdef JS_TRACE_RECURSION
     VMFragment* root = (VMFragment*)fragment->root;
     VMFragment* first = getLoop(&JS_TRACE_MONITOR(cx), fp->regs->pc,
                                 root->globalObj, root->globalShape, fp->argc);
@@ -9774,9 +9769,8 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
             return ARECORD_ABORTED;
         return attemptTreeCall(f, inlineCallCount);
     }
-#endif
 
-    return ARECORD_CONTINUE;
+   return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
