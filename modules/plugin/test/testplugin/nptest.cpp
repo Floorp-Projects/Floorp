@@ -63,6 +63,7 @@ static NPClass sNPClass;
 typedef bool (* ScriptableFunction)
   (NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
+static bool npnInvokeTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool setUndefinedValueTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool identifierToStringTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool timerTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -82,6 +83,7 @@ static bool getError(NPObject* npobj, const NPVariant* args, uint32_t argCount, 
 static bool doInternalConsistencyCheck(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
+  "npnInvokeTest",
   "setUndefinedValueTest",
   "identifierToStringTest",
   "timerTest",
@@ -102,6 +104,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
+  npnInvokeTest,
   setUndefinedValueTest,
   identifierToStringTest,
   timerTest,
@@ -1102,6 +1105,25 @@ NPN_Write(NPP instance,
   return sBrowserFuncs->write(instance, stream, len, buf);
 }
 
+bool
+NPN_Enumerate(NPP instance,
+              NPObject *npobj,
+              NPIdentifier **identifiers,
+              uint32_t *identifierCount)
+{
+  return sBrowserFuncs->enumerate(instance, npobj, identifiers, 
+      identifierCount);
+}
+
+bool
+NPN_GetProperty(NPP instance,
+                NPObject *npobj,
+                NPIdentifier propertyName,
+                NPVariant *result)
+{
+  return sBrowserFuncs->getproperty(instance, npobj, propertyName, result);
+}
+
 //
 // npruntime object functions
 //
@@ -1192,6 +1214,145 @@ scriptableConstruct(NPObject* npobj, const NPVariant* args, uint32_t argCount, N
 //
 // test functions
 //
+
+static bool
+compareVariants(NPP instance, const NPVariant* var1, const NPVariant* var2)
+{
+  bool success = true;
+  InstanceData* id = static_cast<InstanceData*>(instance->pdata);
+  if (var1->type != var2->type) {
+    id->err << "Variant types don't match; got " << var1->type <<
+        " expected " << var2->type;
+    return false;
+  }
+  
+  switch (var1->type) {
+    case NPVariantType_Int32: {
+        int32_t result = NPVARIANT_TO_INT32(*var1);
+        int32_t expected = NPVARIANT_TO_INT32(*var2);
+        if (result != expected) {
+          id->err << "Variant values don't match; got " << result <<
+              " expected " << expected;
+          success = false;
+        }
+        break;
+      }
+    case NPVariantType_Double: {
+        double result = NPVARIANT_TO_DOUBLE(*var1);
+        double expected = NPVARIANT_TO_DOUBLE(*var2);
+        if (result != expected) {
+          id->err << "Variant values don't match (double)";
+          success = false;
+        }
+        break;
+      }
+    case NPVariantType_Void: {
+        // void values are always equivalent
+        break;
+      }
+    case NPVariantType_Null: {
+        // null values are always equivalent
+        break;
+      }
+    case NPVariantType_Bool: {
+        bool result = NPVARIANT_TO_BOOLEAN(*var1);
+        bool expected = NPVARIANT_TO_BOOLEAN(*var2);
+        if (result != expected) {
+          id->err << "Variant values don't match (bool)";
+          success = false;
+        }
+        break;
+      }
+    case NPVariantType_String: {
+        const NPString* result = &NPVARIANT_TO_STRING(*var1);
+        const NPString* expected = &NPVARIANT_TO_STRING(*var2);
+        if (strcmp(result->UTF8Characters, expected->UTF8Characters) ||
+            strlen(result->UTF8Characters) != strlen(expected->UTF8Characters)) {
+          id->err << "Variant values don't match; got " << 
+              result->UTF8Characters << " expected " << 
+              expected->UTF8Characters;
+          success = false;
+        }
+        break;
+      }
+    case NPVariantType_Object: {
+        uint32_t i, identifierCount = 0;
+        NPIdentifier* identifiers;
+        NPObject* result = NPVARIANT_TO_OBJECT(*var1);
+        NPObject* expected = NPVARIANT_TO_OBJECT(*var2);
+        bool enumerate_result = NPN_Enumerate(instance, expected,
+            &identifiers, &identifierCount);
+        if (!enumerate_result) {
+          id->err << "NPN_Enumerate failed";
+          success = false;
+        }
+        for (i = 0; i < identifierCount; i++) {
+          NPUTF8* utf8String = NPN_UTF8FromIdentifier(identifiers[i]);
+          NPVariant resultVariant, expectedVariant;
+          if (!NPN_GetProperty(instance, expected, identifiers[i],
+              &expectedVariant)) {
+            id->err << "NPN_GetProperty returned false";
+            success = false;
+          }
+          else {
+            if (!NPN_HasProperty(instance, result, identifiers[i])) {
+              id->err << "NPN_HasProperty returned false";
+              success = false;
+            }
+            else {
+              if (!NPN_GetProperty(instance, result, identifiers[i],
+              &resultVariant)) {
+                id->err << "NPN_GetProperty 2 returned false";
+                success = false;
+              }
+              else {
+                success = compareVariants(instance, &resultVariant, 
+                    &expectedVariant);
+                NPN_ReleaseVariantValue(&expectedVariant);
+              }
+            }
+            NPN_ReleaseVariantValue(&resultVariant);
+          }
+        }
+        break;
+      }
+    default:
+      id->err << "Unknown variant type";
+      success = false;
+  }
+  
+  return success;
+}
+
+static bool
+npnInvokeTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  id->err.str("");
+  if (argCount < 2)
+    return false;
+
+  NPIdentifier function = variantToIdentifier(args[0]);
+  if (!function)
+    return false;
+  
+  NPObject* windowObject;
+  NPN_GetValue(npp, NPNVWindowNPObject, &windowObject);
+  if (!windowObject)
+    return false;
+  
+  NPVariant invokeResult;
+  bool invokeReturn = NPN_Invoke(npp, windowObject, function,
+      argCount > 2 ? &args[2] : NULL, argCount - 2, &invokeResult);
+      
+  bool compareResult = compareVariants(npp, &invokeResult, &args[1]);
+      
+  NPN_ReleaseObject(windowObject);
+  NPN_ReleaseVariantValue(&invokeResult);
+  BOOLEAN_TO_NPVARIANT(invokeReturn && compareResult, *result);
+  return true;
+}
 
 static bool
 setUndefinedValueTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
