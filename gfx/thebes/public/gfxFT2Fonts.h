@@ -204,12 +204,12 @@ protected: // new functions
     PRBool mEnableKerning;
 
     void GetPrefFonts(const char *aLangGroup,
-                      nsTArray<nsRefPtr<FontEntry> >& aFontEntryList);
-    void GetCJKPrefFonts(nsTArray<nsRefPtr<FontEntry> >& aFontEntryList);
+                      nsTArray<nsRefPtr<gfxFontEntry> >& aFontEntryList);
+    void GetCJKPrefFonts(nsTArray<nsRefPtr<gfxFontEntry> >& aFontEntryList);
     void FamilyListToArrayList(const nsString& aFamilies,
                                const nsCString& aLangGroup,
-                               nsTArray<nsRefPtr<FontEntry> > *aFontEntryList);
-    already_AddRefed<gfxFT2Font> WhichFontSupportsChar(const nsTArray<nsRefPtr<FontEntry> >& aFontEntryList,
+                               nsTArray<nsRefPtr<gfxFontEntry> > *aFontEntryList);
+    already_AddRefed<gfxFT2Font> WhichFontSupportsChar(const nsTArray<nsRefPtr<gfxFontEntry> >& aFontEntryList,
                                                        PRUint32 aCh);
     already_AddRefed<gfxFont> WhichPrefFontSupportsChar(PRUint32 aCh);
     already_AddRefed<gfxFont> WhichSystemFontSupportsChar(PRUint32 aCh);
