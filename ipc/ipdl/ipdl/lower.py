@@ -385,12 +385,16 @@ class GenerateProtocolHeader(Visitor):
             opeq = cxx.MethodDefn(opeqdecl)
             opeq.addstmt(cxx.StmtExpr(cxx.ExprAssn(mtypevar, enumvar)))
             opeq.addstmt(cxx.StmtExpr(
+                cxx.ExprNew(cxxt, args=[ ], newargs=[ callptrmeth ])))
+            opeq.addstmt(cxx.StmtExpr(
                 cxx.ExprAssn(cxx.ExprDeref(callptrmeth),
                              rhsvar)))
             opeq.addstmt(returnthis)
             opeqs.append(opeq)
 
             opeqswitch.addstmt(caselabel)
+            opeqswitch.addstmt(cxx.StmtExpr(
+                cxx.ExprNew(cxxt, args=[ ], newargs=[ callptrmeth ])))
             opeqswitch.addstmt(cxx.StmtExpr(
                 cxx.ExprAssn(
                     cxx.ExprDeref(callptrmeth),
@@ -1993,8 +1997,7 @@ class GenerateProtocolActorHeader(Visitor):
                         uavar = cxx.ExprVar('__ua')
 
                         failif = cxx.StmtIf(cxx.ExprPrefixUnop(uavar, '!'))
-                        failif.addifstmt(cxx.StmtReturn(
-                            cxx.ExprVar('MsgValueError')))
+                        failif.addifstmt(cxx.StmtReturn(valueerrcode))
                         ifhandle.addifstmt(failif)
 
                         # finally, slam the actor back into the union
