@@ -262,6 +262,9 @@ BYTE            nsWindow::sLastMouseButton        = 0;
 // Trim heap on minimize. (initialized, but still true.)
 int             nsWindow::sTrimOnMinimize         = 2;
 
+// Default Trackpoint Hack to off
+PRBool          nsWindow::sTrackPointHack         = PR_FALSE;
+
 #ifdef ACCESSIBILITY
 BOOL            nsWindow::sIsAccessibilityOn      = FALSE;
 // Accessibility wm_getobject handler
@@ -423,6 +426,10 @@ nsWindow::nsWindow() : nsBaseWidget()
 #if defined(HEAP_DUMP_EVENT)
   InitHeapDump();
 #endif
+
+#if !defined(WINCE)
+  InitTrackPointHack();
+#endif
   } // !sInstanceCount
 
   // Set gLastInputEventTime to some valid number
@@ -578,7 +585,8 @@ nsWindow::Create(nsIWidget *aParent,
   if (!mWnd)
     return NS_ERROR_FAILURE;
 
-  if (mWindowType != eWindowType_plugin &&
+  if (nsWindow::sTrackPointHack &&
+      mWindowType != eWindowType_plugin &&
       mWindowType != eWindowType_invisible) {
     // Ugly Thinkpad Driver Hack (Bug 507222)
     // We create an invisible scrollbar to trick the 
@@ -6815,6 +6823,52 @@ PRBool nsWindow::CanTakeFocus()
   }
   return PR_FALSE;
 }
+
+#if !defined(WINCE)
+void nsWindow::InitTrackPointHack()
+{
+  // Init Trackpoint Hack
+  nsresult rv;
+  PRInt32 lHackValue;
+  long lResult;
+  const WCHAR wstrKeys[][40] = {L"Software\\Lenovo\\TrackPoint",
+                                L"Software\\Lenovo\\UltraNav"};    
+  // If anything fails turn the hack off
+  sTrackPointHack = false;
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if(NS_SUCCEEDED(rv) && prefs) {
+    prefs->GetIntPref("ui.trackpoint_hack.enabled", &lHackValue);
+    switch (lHackValue) {
+      // 0 means hack disabled
+      case 0:
+        break;
+      // 1 means hack enabled
+      case 1:
+        sTrackPointHack = true;
+        break;
+      // -1 means autodetect
+      case -1:
+        for(int i = 0; i < 2; i++) {
+          HKEY hKey;
+          lResult = ::RegOpenKeyExW(HKEY_CURRENT_USER, (LPCWSTR)&wstrKeys[i],
+                                    0, KEY_READ, &hKey);
+          ::RegCloseKey(hKey);
+          if(lResult == ERROR_SUCCESS) {
+            // If we detected a registry key belonging to a TrackPoint driver
+            // Turn on the hack
+            sTrackPointHack = true;
+            break;
+          }
+        }
+        break;
+      // Shouldn't be any other values, but treat them as disabled
+      default:
+        break;
+    }
+  }
+  return;
+}
+#endif // #if !defined(WINCE)
 
 LPARAM nsWindow::lParamToScreen(LPARAM lParam)
 {
