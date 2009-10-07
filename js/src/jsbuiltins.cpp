@@ -260,6 +260,10 @@ js_CallTree(InterpState* state, Fragment* f)
         state->lastTreeExitGuard = lr;
     }
 
+    /* Keep updating outermostTreeExit so that InterpState always contains the most recent
+       return value of js_CallTree. */
+    state->outermostTreeExitGuard = lr;
+
     return lr;
 }
 JS_DEFINE_CALLINFO_2(extern, SIDEEXIT, js_CallTree, INTERPSTATE, FRAGMENT, 0, 0)
