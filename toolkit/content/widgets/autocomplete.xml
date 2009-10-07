@@ -1411,7 +1411,10 @@
             
             // Put the parameters next to the title if we have any
             let search = this.getAttribute("text");
-            let params = search.substr(search.indexOf(' ') + 1);
+            let params = "";
+            let paramsIndex = search.indexOf(' ');
+            if (paramsIndex != -1)
+              params = search.substr(paramsIndex + 1);
 
             // Emphasize the keyword parameters
             this._setUpDescription(this._extra, params);
