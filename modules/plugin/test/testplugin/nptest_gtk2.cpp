@@ -42,6 +42,8 @@
 #endif
 #include <gtk/gtk.h>
 
+ using namespace std;
+
 struct _PlatformData {
   Display* display;
   GtkWidget* plug;
