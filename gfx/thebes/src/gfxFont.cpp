@@ -55,6 +55,7 @@
 #include "gfxUserFontSet.h"
 #include "gfxPlatformFontList.h"
 #include "gfxScriptItemizer.h"
+#include "gfxUnicodeProperties.h"
 #include "nsMathUtils.h"
 #include "nsBidiUtils.h"
 #include "nsUnicodeRange.h"
@@ -225,7 +226,7 @@ gfxFontEntry::GetFontTable(PRUint32 aTag)
             }
             hb_blob_destroy(entry->GetBlob());
             delete entry; // we failed to cache it!
-            return hb_blob_create_empty();
+            return nsnull;
         }
     }
 
@@ -233,7 +234,7 @@ gfxFontEntry::GetFontTable(PRUint32 aTag)
         return hb_blob_reference(entry->GetBlob());
     }
 
-    return hb_blob_create_empty();
+    return nsnull;
 }
 
 
@@ -920,9 +921,13 @@ gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther, PRBool aOtherIsOnLeft
 gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
                  AntialiasOption anAAOption) :
     mFontEntry(aFontEntry), mIsValid(PR_TRUE),
-    mStyle(*aFontStyle), mSyntheticBoldOffset(0),
+    mStyle(*aFontStyle),
+    mAdjustedSize(0.0),
+    mFUnitsConvFactor(0.0f),
+    mSyntheticBoldOffset(0),
     mAntialiasOption(anAAOption),
-    mShaper(nsnull)
+    mPlatformShaper(nsnull),
+    mHarfBuzzShaper(nsnull)
 {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     ++gFontCount;
@@ -1304,7 +1309,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     return metrics;
 }
 
-void
+PRBool
 gfxFont::InitTextRun(gfxContext *aContext,
                      gfxTextRun *aTextRun,
                      const PRUnichar *aString,
@@ -1312,14 +1317,29 @@ gfxFont::InitTextRun(gfxContext *aContext,
                      PRUint32 aRunLength,
                      PRInt32 aRunScript)
 {
-    NS_ASSERTION(mShaper != nsnull, "no shaper?!");
-    if (!mShaper) {
-        return;
+    PRBool ok = PR_FALSE;
+
+    if (mHarfBuzzShaper) {
+        if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
+            gfxUnicodeProperties::ScriptShapingLevel(aRunScript)) {
+            ok = mHarfBuzzShaper->InitTextRun(aContext, aTextRun, aString,
+                                              aRunStart, aRunLength, aRunScript);
+        }
     }
 
-    PRBool ok = mShaper->InitTextRun(aContext, aTextRun, aString,
-                                     aRunStart, aRunLength, aRunScript);
+    if (!ok) {
+        if (!mPlatformShaper) {
+            CreatePlatformShaper();
+            NS_ASSERTION(mPlatformShaper, "no platform shaper available!");
+        }
+        if (mPlatformShaper) {
+            ok = mPlatformShaper->InitTextRun(aContext, aTextRun, aString,
+                                              aRunStart, aRunLength, aRunScript);
+        }
+    }
+
     NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
+    return ok;
 }
 
 gfxGlyphExtents *
@@ -1462,8 +1482,6 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont)
         aMetrics->underlineSize = aMetrics->maxAscent;
     }
 }
-
-
 
 gfxGlyphExtents::~gfxGlyphExtents()
 {
@@ -3543,6 +3561,24 @@ gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
     details->mXOffset = 0;
     details->mYOffset = 0;
     mCharacterGlyphs[aIndex].SetMissing(1);
+}
+
+PRBool
+gfxTextRun::FilterIfIgnorable(PRUint32 aIndex)
+{
+    PRUint32 ch = GetChar(aIndex);
+    if (IsDefaultIgnorable(ch)) {
+        DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
+        if (details) {
+            details->mGlyphID = ch;
+            details->mAdvance = 0;
+            details->mXOffset = 0;
+            details->mYOffset = 0;
+            mCharacterGlyphs[aIndex].SetMissing(1);
+            return PR_TRUE;
+        }
+    }
+    return PR_FALSE;
 }
 
 static void
