@@ -681,6 +681,10 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest,
   // entry size to take this into account.
   UpdateCacheEntrySize();
 
+  // If we were successful, set STATUS_DECODE_COMPLETE
+  if (NS_SUCCEEDED(aStatus))
+    mImageStatus |= imgIRequest::STATUS_DECODE_COMPLETE;
+
   // ImgContainer and everything below it is completely correct and
   // bulletproof about its handling of decoder notifications.
   // Unfortunately, here and above we have to make some gross and
@@ -711,7 +715,8 @@ NS_IMETHODIMP imgRequest::OnDiscard(imgIRequest *aRequest)
   mState &= ~stateBitsToClear;
 
   // Clear the status bits we no longer deserve.
-  PRUint32 statusBitsToClear = imgIRequest::STATUS_FRAME_COMPLETE;
+  PRUint32 statusBitsToClear = imgIRequest::STATUS_FRAME_COMPLETE
+                               | imgIRequest::STATUS_DECODE_COMPLETE;
   mImageStatus &= ~statusBitsToClear;
 
   // Update the cache entry size, since we just got rid of frame data
