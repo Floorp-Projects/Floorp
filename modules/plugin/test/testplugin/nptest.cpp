@@ -43,6 +43,8 @@
 #include <string>
 #include <sstream>
 
+ using namespace std;
+
 #define PLUGIN_NAME        "Test Plug-in"
 #define PLUGIN_DESCRIPTION "Plug-in for testing purposes."
 #define PLUGIN_VERSION     "1.0.0.0"
