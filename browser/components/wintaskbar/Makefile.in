@@ -50,6 +50,7 @@ MODULE = wintaskbar
 
 _WINTASKBAR_FILES = \
 	preview-per-tab.jsm \
+	jumpLists.jsm \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

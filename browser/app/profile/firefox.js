@@ -906,5 +906,10 @@ pref("toolbar.customization.usesheet", false);
 pref("browser.taskbar.previews.enable", true);
 pref("browser.taskbar.previews.max", 20);
 pref("browser.taskbar.previews.cachetime", 20);
+pref("browser.taskbar.lists.enabled", true);
+pref("browser.taskbar.lists.frequent.enabled", true);
+pref("browser.taskbar.lists.recent.enabled", false);
+pref("browser.taskbar.lists.maxListItemCount", 7);
+pref("browser.taskbar.lists.tasks.enabled", true);
 #endif
 #endif
