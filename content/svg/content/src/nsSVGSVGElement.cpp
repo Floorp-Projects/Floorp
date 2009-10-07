@@ -1133,8 +1133,8 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
     w = viewbox.width;
     h = viewbox.height;
   } else {
-    nsSVGSVGElement *ctx = GetCtx();
-    if (ctx) {
+    if (nsSVGUtils::IsInnerSVG(this)) {
+      nsSVGSVGElement *ctx = GetCtx();
       w = mLengthAttributes[WIDTH].GetAnimValue(ctx);
       h = mLengthAttributes[HEIGHT].GetAnimValue(ctx);
     } else {
