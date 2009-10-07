@@ -215,11 +215,11 @@ MacOSFontEntry::ReadCMAP()
     PRPackedBool  unicodeFont, symbolFont; // currently ignored
     nsresult rv = gfxFontUtils::ReadCMAP(cmap.Elements(), cmap.Length(),
                                          mCharacterMap, mUVSOffset, unicodeFont, symbolFont);
-
     if (NS_FAILED(rv)) {
         mCharacterMap.reset();
         return rv;
     }
+    mHasCmapTable = PR_TRUE;
 
     // for complex scripts, check for the presence of mort/morx
     PRBool checkedForMorphTable = PR_FALSE, hasMorphTable = PR_FALSE;

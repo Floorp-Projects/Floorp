@@ -37,6 +37,7 @@
 
 #include "gfxDWriteFonts.h"
 #include "gfxDWriteShaper.h"
+#include "gfxHarfBuzzShaper.h"
 #include "gfxDWriteFontList.h"
 #include "gfxContext.h"
 #include <dwrite.h>
@@ -74,7 +75,6 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
                              PRBool aNeedsBold,
                              AntialiasOption anAAOption)
     : gfxFont(aFontEntry, aFontStyle, anAAOption)
-    , mAdjustedSize(0.0f)
     , mCairoFontFace(nsnull)
     , mCairoScaledFont(nsnull)
     , mNeedsOblique(PR_FALSE)
@@ -105,7 +105,9 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
 
     ComputeMetrics();
 
-    mShaper = new gfxDWriteShaper(this);
+    if (FontCanSupportHarfBuzz()) {
+        mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
+    }
 }
 
 gfxDWriteFont::~gfxDWriteFont()
@@ -123,6 +125,12 @@ gfxDWriteFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 {
     return new gfxDWriteFont(static_cast<gfxDWriteFontEntry*>(mFontEntry.get()),
                              &mStyle, mNeedsBold, anAAOption);
+}
+
+void
+gfxDWriteFont::CreatePlatformShaper()
+{
+    mPlatformShaper = new gfxDWriteShaper(this);
 }
 
 nsString
@@ -220,6 +228,8 @@ gfxDWriteFont::ComputeMetrics()
                    fontMetrics.designUnitsPerEm) * mAdjustedSize;
     mMetrics.superscriptOffset = 0;
     mMetrics.subscriptOffset = 0;
+
+    mFUnitsConvFactor = GetAdjustedSize() / fontMetrics.designUnitsPerEm;
 
     SanitizeMetrics(&mMetrics, PR_FALSE);
 

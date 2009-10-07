@@ -144,3 +144,31 @@ gfxUnicodeProperties::GetScriptCode(PRUint32 aCh)
                                      [(aCh & 0xffff) >> kScriptCharBits]]
                         [aCh & ((1 << kScriptCharBits) - 1)];
 }
+
+// TODO: replace this with a properties file or similar;
+// expect this to evolve as harfbuzz shaping support matures.
+//
+// The "shaping level" of each script run, as returned by this
+// function, is compared to the gfx.font_rendering.harfbuzz.level
+// preference to decide whether to use the harfbuzz shaper.
+//
+// Currently, we only distinguish "simple" (level 1) scripts
+// and "the rest" (level 2), but may subdivide this further in
+// the future.
+PRInt32
+gfxUnicodeProperties::ScriptShapingLevel(PRInt32 aScriptCode)
+{
+    switch (aScriptCode) {
+    case HB_SCRIPT_LATIN:
+    case HB_SCRIPT_CYRILLIC:
+    case HB_SCRIPT_HAN:
+    case HB_SCRIPT_HIRAGANA:
+    case HB_SCRIPT_KATAKANA:
+    case HB_SCRIPT_COMMON:
+    case HB_SCRIPT_INHERITED:
+    case HB_SCRIPT_UNKNOWN:
+        return 1; // level 1: common scripts that can use "generic" shaping
+    }
+
+    return 2; // all others are considered level 2
+}

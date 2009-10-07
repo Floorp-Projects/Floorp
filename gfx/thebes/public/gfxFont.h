@@ -174,6 +174,7 @@ public:
         mIsLocalUserFont(PR_FALSE), mStandardFace(aIsStandardFace),
         mSymbolFont(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
+        mHasCmapTable(PR_FALSE),
         mCmapInitialized(PR_FALSE),
         mUVSOffset(0), mUVSData(nsnull),
         mUserFontData(nsnull),
@@ -194,6 +195,13 @@ public:
     PRBool IsItalic() const { return mItalic; }
     PRBool IsBold() const { return mWeight >= 600; } // bold == weights 600 and above
     PRBool IsSymbolFont() const { return mSymbolFont; }
+
+    inline PRBool HasCmapTable() {
+        if (!mCmapInitialized) {
+            ReadCMAP();
+        }
+        return mHasCmapTable;
+    }
 
     inline PRBool HasCharacter(PRUint32 ch) {
         if (mCharacterMap.test(ch))
@@ -245,6 +253,7 @@ public:
     PRUint16         mWeight;
     PRInt16          mStretch;
 
+    PRPackedBool     mHasCmapTable;
     PRPackedBool     mCmapInitialized;
     gfxSparseBitSet  mCharacterMap;
     PRUint32         mUVSOffset;
@@ -267,6 +276,7 @@ protected:
         mStandardFace(PR_FALSE),
         mSymbolFont(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
+        mHasCmapTable(PR_FALSE),
         mCmapInitialized(PR_FALSE),
         mUVSOffset(0), mUVSData(nsnull),
         mUserFontData(nsnull),
@@ -733,7 +743,10 @@ private:
 class gfxFontShaper {
 public:
     gfxFontShaper(gfxFont *aFont)
-        : mFont(aFont) { }
+        : mFont(aFont)
+    {
+        NS_ASSERTION(aFont, "shaper requires a valid font!");
+    }
 
     virtual ~gfxFontShaper() { }
 
@@ -743,6 +756,8 @@ public:
                                PRUint32 aRunStart,
                                PRUint32 aRunLength,
                                PRInt32 aRunScript) = 0;
+
+    gfxFont *GetFont() const { return mFont; }
 
 protected:
     // the font this shaper is working with
@@ -845,6 +860,21 @@ public:
         return nsnull;
     }
 
+    gfxFloat GetAdjustedSize() const {
+        return mAdjustedSize > 0.0 ? mAdjustedSize : mStyle.size;
+    }
+
+    float FUnitsToDevUnitsFactor() const {
+        // check this was set up during font initialization
+        NS_ASSERTION(mFUnitsConvFactor > 0.0f, "mFUnitsConvFactor not valid");
+        return mFUnitsConvFactor;
+    }
+
+    // check whether this is an sfnt we can potentially use with harfbuzz
+    PRBool FontCanSupportHarfBuzz() {
+        return mFontEntry->HasCmapTable();
+    }
+
     // Access to raw font table data (needed for Harfbuzz):
     // returns a pointer to data owned by the fontEntry or the OS,
     // which will remain valid until released.
@@ -857,6 +887,17 @@ public:
     // the table doesn't exist in the font
     virtual hb_blob_t *GetFontTable(PRUint32 aTag) {
         return mFontEntry->GetFontTable(aTag);
+    }
+
+    // subclasses may provide hinted glyph widths (in font units);
+    // if they do not override this, harfbuzz will use unhinted widths
+    // derived from the font tables
+    virtual PRBool ProvidesHintedWidths() const {
+        return PR_FALSE;
+    }
+
+    virtual PRInt32 GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID) {
+        return -1;
     }
 
     // Font metrics
@@ -1023,15 +1064,17 @@ public:
         return mFontEntry->GetUVSGlyph(aCh, aVS); 
     }
 
-    // Default implementation simply calls mShaper->InitTextRun().
+    // Default simply calls m[Platform|HarfBuzz]Shaper->InitTextRun().
     // Override if the font class wants to give special handling
     // to shaper failure.
-    virtual void InitTextRun(gfxContext *aContext,
-                             gfxTextRun *aTextRun,
-                             const PRUnichar *aString,
-                             PRUint32 aRunStart,
-                             PRUint32 aRunLength,
-                             PRInt32 aRunScript);
+    // Returns PR_FALSE if shaping failed (though currently we
+    // don't have any good way to handle that situation).
+    virtual PRBool InitTextRun(gfxContext *aContext,
+                               gfxTextRun *aTextRun,
+                               const PRUnichar *aString,
+                               PRUint32 aRunStart,
+                               PRUint32 aRunLength,
+                               PRInt32 aRunScript);
 
 protected:
     nsRefPtr<gfxFontEntry> mFontEntry;
@@ -1040,6 +1083,10 @@ protected:
     nsExpirationState          mExpirationState;
     gfxFontStyle               mStyle;
     nsAutoTArray<gfxGlyphExtents*,1> mGlyphExtentsArray;
+
+    gfxFloat                   mAdjustedSize;
+
+    float                      mFUnitsConvFactor; // conversion factor from font units to dev units
 
     // synthetic bolding for environments where this is not supported by the platform
     PRUint32                   mSyntheticBoldOffset;  // number of devunit pixels to offset double-strike, 0 ==> no bolding
@@ -1051,7 +1098,15 @@ protected:
     // measurement by mathml code
     nsAutoPtr<gfxFont>         mNonAAFont;
 
-    nsAutoPtr<gfxFontShaper>   mShaper;
+    // we may switch between these shapers on the fly, based on the script
+    // of the text run being shaped
+    nsAutoPtr<gfxFontShaper>   mPlatformShaper;
+    nsAutoPtr<gfxFontShaper>   mHarfBuzzShaper;
+
+    // Create a default platform text shaper for this font.
+    // (TODO: This should become pure virtual once all font backends have
+    // been updated.)
+    virtual void CreatePlatformShaper() { }
 
     // some fonts have bad metrics, this method sanitize them.
     // if this font has bad underline offset, aIsBadUnderlineFont should be true.
@@ -1710,7 +1765,11 @@ public:
                    const DetailedGlyph *aGlyphs);
     void SetMissingGlyph(PRUint32 aCharIndex, PRUint32 aUnicodeChar);
     void SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, PRUint32 aCharIndex);
-    
+
+    // If the character at aIndex is default-ignorable, set the glyph
+    // to be invisible-missing and return TRUE, else return FALSE
+    PRBool FilterIfIgnorable(PRUint32 aIndex);
+
     /**
      * Prefetch all the glyph extents needed to ensure that Measure calls
      * on this textrun not requesting tight boundingBoxes will succeed. Note
