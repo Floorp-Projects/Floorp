@@ -1155,10 +1155,15 @@ nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
 
 PRBool
 nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion)
+                                   nsRegion* aVisibleRegion,
+                                   nsRegion* aVisibleRegionBeforeMove)
 {
+  NS_ASSERTION((aVisibleRegionBeforeMove != nsnull) == aBuilder->HasMovingFrames(),
+               "Should have aVisibleRegionBeforeMove when there are moving frames");
+
   mVisibleRegion.And(*aVisibleRegion, GetBounds(aBuilder));  
-  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion);
+  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
+                                          aVisibleRegionBeforeMove);
 }
 
 PRBool
