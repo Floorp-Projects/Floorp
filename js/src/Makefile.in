@@ -66,6 +66,10 @@ DIRS += jsapi-tests
 endif
 endif
 
+ifdef ENABLE_TESTS
+DIRS += tests
+endif
+
 MODULE		    = js
 LIBRARY_NAME	    = mozjs
 STATIC_LIBRARY_NAME = js_static
@@ -231,6 +235,7 @@ INSTALLED_HEADERS += \
 		Native$(NANOJIT_ARCH).h \
 		RegAlloc.h	\
 		nanojit.h	\
+		VMPI.h		\
 		$(NULL)
 
 CPPSRCS += \
@@ -245,6 +250,7 @@ CPPSRCS += \
 		avmplus.cpp    \
 		Native$(NANOJIT_ARCH).cpp \
 		jsbuiltins.cpp         \
+		VMPI.cpp       \
 		$(NULL)
 
 ifdef WINCE

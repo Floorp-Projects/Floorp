@@ -1,0 +1,2 @@
+url-prefix ../../jsreftest.html?test=ecma_3/NumberFormatting/
+script tostring-001.js

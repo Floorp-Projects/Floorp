@@ -58,3 +58,9 @@ asserts-if(false,6-8) load about:blank
 
 # test that <div> is display:block
 == div.html div-ref.html
+
+# test script keyword
+include scripttests.list
+
+# test url-prefix
+include urlprefixtests.list

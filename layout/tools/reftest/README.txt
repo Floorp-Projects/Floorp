@@ -199,6 +199,24 @@ must be one of the following:
    The only difference between <url> and <url_ref> is that results of
    the test are reported using <url> only.
 
+3. Specification of a url prefix
+
+   url-prefix <string>
+
+   <string> will be prepended to relative <url> and <url_ref> for all following
+   test items in the manifest.
+
+   <string> will not be prepended to the relative path when including another
+   manifest, e.g. include <relative_path>.
+
+   <string> will not be prepended to any <url> or <url_ref> matching the pattern
+   /^\w+:/. This will prevent the prefix from being applied to any absolute url
+   containing a protocol such as data:, about:, or http:.
+
+   While the typical use of url-prefix is expected to be as the first line of
+   a manifest, it is legal to use it anywhere in a manifest. Subsequent uses
+   of url-prefix overwrite any existing values.
+
 This test manifest format could be used by other harnesses, such as ones
 that do not depend on XUL, or even ones testing other layout engines.
 

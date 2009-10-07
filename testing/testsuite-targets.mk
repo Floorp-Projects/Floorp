@@ -92,6 +92,10 @@ crashtest:
 	$(call RUN_REFTEST,$(topsrcdir)/testing/crashtest/crashtests.list)
 	$(CHECK_TEST_ERROR)
 
+jstestbrowser: EXTRA_TEST_ARGS += --extra-profile-file=$(topsrcdir)/js/src/tests/user.js
+jstestbrowser:
+	$(call RUN_REFTEST,$(topsrcdir)/js/src/tests/jstests.list)
+	$(CHECK_TEST_ERROR)
 
 # Execute all xpcshell tests in the directories listed in the manifest.
 # See also config/rules.mk 'xpcshell-tests' target for local execution.
@@ -118,7 +122,7 @@ else
 PKG_STAGE = $(DIST)/universal/test-package-stage
 endif
 
-package-tests:
+package-tests: stage-mochitest stage-reftest stage-xpcshell stage-jstests
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	@(cd $(PKG_STAGE) && tar $(TAR_CREATE_FLAGS) - *) | bzip2 -f > $(DIST)/$(PKG_PATH)$(TEST_PACKAGE)
 
@@ -134,9 +138,12 @@ stage-reftest: make-stage-dir
 stage-xpcshell: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/xpcshell stage-package
 
+stage-jstests: make-stage-dir
+	$(MAKE) -C $(DEPTH)/js/src/tests stage-package
 
 .PHONY: \
   mochitest mochitest-plain mochitest-chrome mochitest-a11y \
   reftest crashtest \
   xpcshell-tests \
-  package-tests make-stage-dir stage-mochitest stage-reftest stage-xpcshell
+  jstestbrowser \
+  package-tests make-stage-dir stage-mochitest stage-reftest stage-xpcshell stage-jstests

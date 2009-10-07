@@ -41,6 +41,10 @@
 
 #ifdef FEATURE_NANOJIT
 
+#ifdef VTUNE
+#include "../core/CodegenLIR.h"
+#endif
+
 namespace nanojit
 {
 #ifdef NJ_VERBOSE
@@ -105,6 +109,12 @@ namespace nanojit
         , _labels(alloc)
         , _epilogue(NULL)
         , _err(None)
+    #if PEDANTIC
+        , pedanticTop(NULL)
+    #endif
+    #ifdef VTUNE
+        , cgen(NULL)
+    #endif
         , config(core->config)
     {
         VMPI_memset(&_stats, 0, sizeof(_stats));
@@ -193,6 +203,14 @@ namespace nanojit
         verbose_only( nBytes += (end - start) * sizeof(NIns); )
         NanoAssert(uintptr_t(end) - uintptr_t(start) >= (size_t)LARGEST_UNDERRUN_PROT);
         eip = end;
+
+        #ifdef VTUNE
+        if (_nIns && _nExitIns) {
+            //cgen->jitAddRecord((uintptr_t)list->code, 0, 0, true); // add placeholder record for top of page
+            cgen->jitCodePosUpdate((uintptr_t)list->code);
+            cgen->jitPushInfo(); // new page requires new entry
+        }
+        #endif
     }
 
     void Assembler::reset()
@@ -337,10 +355,14 @@ namespace nanojit
 
     Register Assembler::getBaseReg(LIns *i, int &d, RegisterMask allow)
     {
+    #if !PEDANTIC
         if (i->isop(LIR_alloc)) {
             d += findMemFor(i);
             return FP;
         }
+    #else
+        (void) d;
+    #endif
         return findRegFor(i, allow);
     }
 
@@ -1347,7 +1369,29 @@ namespace nanojit
                     evictScratchRegs();
 
                     asm_call(ins);
+                    break;
                 }
+
+                #ifdef VTUNE
+                case LIR_file:
+                {
+                    // we traverse backwards so we are now hitting the file
+                    // that is associated with a bunch of LIR_lines we already have seen
+                    uintptr_t currentFile = ins->oprnd1()->imm32();
+                    cgen->jitFilenameUpdate(currentFile);
+                    break;
+                }
+                case LIR_line:
+                {
+                    // add a new table entry, we don't yet knwo which file it belongs
+                    // to so we need to add it to the update table too
+                    // note the alloc, actual act is delayed; see above
+                    uint32_t currentLine = (uint32_t) ins->oprnd1()->imm32();
+                    cgen->jitLineNumUpdate(currentLine);
+                    cgen->jitAddRecord((uintptr_t)_nIns, 0, currentLine, true);
+                    break;
+                }
+                #endif // VTUNE
             }
 
 #ifdef NJ_VERBOSE
@@ -1393,6 +1437,10 @@ namespace nanojit
 
             if (error())
                 return;
+
+        #ifdef VTUNE
+            cgen->jitCodePosUpdate((uintptr_t)_nIns);
+        #endif
 
             // check that all is well (don't check in exit paths since its more complicated)
             debug_only( pageValidate(); )

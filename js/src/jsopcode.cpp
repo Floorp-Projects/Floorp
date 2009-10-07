@@ -4099,6 +4099,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * compiler optimizes that to |if (true)|.
                      */
                     pc2 = pc + len;
+                    op = JSOp(*pc2);
+                    if (op == JSOP_TRACE || op == JSOP_NOP)
+                        pc2 += JSOP_NOP_LENGTH;
                     LOCAL_ASSERT(pc2 < endpc ||
                                  endpc < outer->code + outer->length);
                     LOCAL_ASSERT(ss2.top == 1);

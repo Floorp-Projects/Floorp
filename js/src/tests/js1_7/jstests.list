@@ -1,0 +1,10 @@
+include block/jstests.list
+include decompilation/jstests.list
+include expressions/jstests.list
+include extensions/jstests.list
+include GC/jstests.list
+include geniter/jstests.list
+include iterable/jstests.list
+include lexical/jstests.list
+include regexp/jstests.list
+include regress/jstests.list

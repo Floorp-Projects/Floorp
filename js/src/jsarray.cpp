@@ -327,7 +327,7 @@ ResizeSlots(JSContext *cx, JSObject *obj, uint32 oldlen, uint32 newlen)
     }
 
     slots = obj->dslots ? obj->dslots - 1 : NULL;
-    newslots = (jsval *) cx->realloc(slots, (newlen + 1) * sizeof(jsval));
+    newslots = (jsval *) cx->realloc(slots, (size_t(newlen) + 1) * sizeof(jsval));
     if (!newslots)
         return JS_FALSE;
 
@@ -3391,7 +3391,7 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
 {
     JS_ASSERT(OBJ_IS_ARRAY(cx, proto));
 
-    JSObject* obj = js_NewGCObject(cx, GCX_OBJECT);
+    JSObject* obj = js_NewGCObject(cx);
     if (!obj)
         return NULL;
 
@@ -3463,7 +3463,7 @@ js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector, JSBool holey)
     JS_POP_TEMP_ROOT(cx, &tvr);
 
     /* Set/clear newborn root, in case we lost it.  */
-    cx->weakRoots.newborn[GCX_OBJECT] = obj;
+    cx->weakRoots.newbornObject = obj;
     return obj;
 }
 

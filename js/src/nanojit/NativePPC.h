@@ -254,6 +254,9 @@ namespace nanojit
     static const int NumSavedRegs = 18; // R13-R30
 #endif
 
+    static inline bool isValidDisplacement(int32_t d) {
+        return true;
+    }
     static inline bool IsFpReg(Register r) {
         return r >= F0;
     }

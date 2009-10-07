@@ -203,6 +203,7 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_INT32             _JS_CTYPE(int32,                  _JS_I32, "","i", INFALLIBLE)
 #define _JS_CTYPE_INT32_RETRY       _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_NEG)
 #define _JS_CTYPE_INT32_FAIL        _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_STATUS)
+#define _JS_CTYPE_INT32PTR          _JS_CTYPE(int32 *,                _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_UINT32            _JS_CTYPE(uint32,                 _JS_I32, "","i", INFALLIBLE)
 #define _JS_CTYPE_UINT32_RETRY      _JS_CTYPE(uint32,                 _JS_I32, --, --, FAIL_NEG)
 #define _JS_CTYPE_UINT32_FAIL       _JS_CTYPE(uint32,                 _JS_I32, --, --, FAIL_STATUS)
@@ -227,6 +228,7 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_CHARPTR           _JS_CTYPE(char *,                 _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_APNPTR            _JS_CTYPE(js_ArgsPrivateNative *, _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CVIPTR            _JS_CTYPE(const ClosureVarInfo *, _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_FRAMEINFO         _JS_CTYPE(FrameInfo *,            _JS_PTR, --, --, INFALLIBLE)
 
 #define _JS_EXPAND(tokens)  tokens
 
@@ -502,6 +504,7 @@ JS_DECLARE_CALLINFO(js_BoxDouble)
 JS_DECLARE_CALLINFO(js_BoxInt32)
 JS_DECLARE_CALLINFO(js_UnboxDouble)
 JS_DECLARE_CALLINFO(js_UnboxInt32)
+JS_DECLARE_CALLINFO(js_TryUnboxInt32)
 JS_DECLARE_CALLINFO(js_dmod)
 JS_DECLARE_CALLINFO(js_imod)
 JS_DECLARE_CALLINFO(js_DoubleToInt32)
@@ -521,5 +524,6 @@ JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToString)
 JS_DECLARE_CALLINFO(js_Arguments)
 JS_DECLARE_CALLINFO(js_NewNullClosure)
 JS_DECLARE_CALLINFO(js_ConcatN)
+JS_DECLARE_CALLINFO(js_PopInterpFrame)
 
 #endif /* jsbuiltins_h___ */

@@ -152,6 +152,10 @@ namespace nanojit
 
     static const RegisterMask AllowableFlagRegs = 1<<EAX |1<<ECX | 1<<EDX | 1<<EBX;
 
+    static inline bool isValidDisplacement(int32_t d) {
+        return true;
+    }
+
     #define _rmask_(r)      (1<<(r))
     #define _is_xmm_reg_(r) ((_rmask_(r)&XmmRegs)!=0)
     #define _is_x87_reg_(r) ((_rmask_(r)&x87Regs)!=0)

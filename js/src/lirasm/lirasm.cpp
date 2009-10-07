@@ -460,7 +460,9 @@ FragmentAssembler::sProfId = 0;
 FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
     : mParent(parent), mFragName(fragmentName)
 {
-    mFragment = new Fragment(NULL verbose_only(, sProfId++));
+    mFragment = new Fragment(NULL verbose_only(, (mParent.mLogc.lcbits &
+                                                  nanojit::LC_FragProfile) ?
+                                                  sProfId++ : 0));
     mFragment->lirbuf = mParent.mLirbuf;
     mFragment->root = mFragment;
     mParent.mFragments[mFragName].fragptr = mFragment;
@@ -483,6 +485,8 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
 
     mReturnTypeBits = 0;
     mLir->ins0(LIR_start);
+    for (int i = 0; i < nanojit::NumSavedRegs; ++i)
+        mLir->insParam(i, 1);
 
     mLineno = 0;
 }
@@ -732,8 +736,8 @@ FragmentAssembler::endFragment()
     mFragment->lastIns =
         mLir->insGuard(LIR_x, NULL, createGuardRecord(createSideExit()));
 
-    ::compile(&mParent.mAssm, mFragment, mParent.mAlloc
-              verbose_only(, mParent.mLabelMap));
+    ::compile(&mParent.mAssm, mFragment
+              verbose_only(, mParent.mAlloc, mParent.mLabelMap));
 
     if (mParent.mAssm.error() != nanojit::None) {
         cerr << "error during assembly: ";

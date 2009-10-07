@@ -1,0 +1,5 @@
+url-prefix ../../jsreftest.html?test=ecma_2/instanceof/
+script instanceof-001.js
+script instanceof-002.js
+script instanceof-003.js
+script regress-7635.js

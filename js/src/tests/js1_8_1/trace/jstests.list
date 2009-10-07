@@ -1,0 +1,23 @@
+url-prefix ../../jsreftest.html?test=js1_8_1/trace/
+script math-trace-tests.js
+script regress-451673.js # slow
+script regress-451974-01.js
+random-if(xulRuntime.OS=="Linux") script regress-451974-02.js
+fails script regress-452498-01.js
+script regress-458838.js
+script regress-462459-01.js
+script regress-462459-02.js
+script regress-462459-03.js
+script regress-462459-04.js
+script regress-462459-05.js
+script regress-462459-06.js
+script regress-462459-07.js
+script regress-462459-08.js
+script regress-462459-09.js
+script regress-462459-10.js
+script regress-462459-11.js
+script regress-462459-12.js
+script regress-469927.js
+script regress-470739.js
+script regress-471635.js
+fails-if(!xulRuntime.shell) script trace-test.js # uncaught exception: [Exception... "Operation is not supported"  code: "9" nsresult: "0x80530009 (NS_ERROR_DOM_NOT_SUPPORTED_ERR)
