@@ -1,0 +1,9 @@
+include Array/jstests.list
+include function/jstests.list
+include Objects/jstests.list
+include operator/jstests.list
+include regexp/jstests.list
+include regress/jstests.list
+include statements/jstests.list
+include String/jstests.list
+include version120/jstests.list

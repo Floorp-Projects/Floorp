@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -107,7 +107,7 @@ typedef union JSLocalNames {
 #define JSFUN_KINDMASK      0xc000  /* encode interp vs. native and closure
                                        optimization level -- see above */
 
-#define FUN_OBJECT(fun)      (&(fun)->object)
+#define FUN_OBJECT(fun)      (static_cast<JSObject *>(fun))
 #define FUN_KIND(fun)        ((fun)->flags & JSFUN_KINDMASK)
 #define FUN_SET_KIND(fun,k)  ((fun)->flags = ((fun)->flags & ~JSFUN_KINDMASK) | (k))
 #define FUN_INTERPRETED(fun) (FUN_KIND(fun) >= JSFUN_INTERPRETED)
@@ -128,8 +128,7 @@ typedef union JSLocalNames {
                               JS_ASSERT((fun)->flags & JSFUN_TRCINFO),        \
                               fun->u.n.trcinfo)
 
-struct JSFunction {
-    JSObject        object;       /* GC'ed object header */
+struct JSFunction : public JSObject {
     uint16          nargs;        /* maximum number of specified arguments,
                                      reflected as f.length/f.arity */
     uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
@@ -161,8 +160,8 @@ struct JSFunction {
     } u;
     JSAtom          *atom;        /* name for diagnostics and decompiling */
 
-    bool optimizedClosure() { return FUN_KIND(this) > JSFUN_INTERPRETED; }
-    bool needsWrapper()     { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
+    bool optimizedClosure() const { return FUN_KIND(this) > JSFUN_INTERPRETED; }
+    bool needsWrapper()     const { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
 
     uintN countArgsAndVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
@@ -221,6 +220,19 @@ extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
 #define GET_FUNCTION_PRIVATE(cx, funobj)                                      \
     (JS_ASSERT(HAS_FUNCTION_CLASS(funobj)),                                   \
      (JSFunction *) (funobj)->getPrivate())
+
+/*
+ * Return true if this is a compiler-created internal function accessed by
+ * its own object. Such a function object must not be accessible to script
+ * or embedding code.
+ */
+inline bool
+js_IsInternalFunctionObject(JSObject *funobj)
+{
+    JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
+    JSFunction *fun = (JSFunction *) funobj->getPrivate();
+    return funobj == fun && (fun->flags & JSFUN_LAMBDA) && !funobj->getParent();
+}
 
 struct js_ArgsPrivateNative;
 

@@ -1,0 +1,7 @@
+url-prefix ../../jsreftest.html?test=ecma_3/Regress/
+script regress-385393-04.js
+script regress-419152.js
+script regress-420087.js
+script regress-420610.js
+script regress-441477-01.js
+script regress-469937.js

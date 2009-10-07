@@ -1,0 +1,17 @@
+url-prefix ../../jsreftest.html?test=ecma_3/Statements/
+script 12.10-01.js
+script 12.6.3.js
+skip script regress-121744.js # obsolete test
+script regress-131348.js
+script regress-157509.js
+script regress-194364.js
+script regress-226517.js
+script regress-302439.js
+script regress-324650.js
+script regress-444979.js
+script regress-74474-001.js
+script regress-74474-002.js
+script regress-74474-003.js
+script regress-83532-001.js
+script regress-83532-002.js
+script switch-001.js

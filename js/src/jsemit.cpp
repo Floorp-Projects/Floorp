@@ -2159,7 +2159,9 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 #ifdef DEBUG
         JSStackFrame *caller = cg->compiler->callerFrame;
+#endif
         JS_ASSERT(caller);
+        JS_ASSERT(caller->script);
 
         JSTreeContext *tc = cg;
         while (tc->staticLevel != level)
@@ -2168,10 +2170,14 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         JSCodeGenerator *evalcg = (JSCodeGenerator *) tc;
         JS_ASSERT(evalcg->flags & TCF_COMPILE_N_GO);
-        JS_ASSERT(!(evalcg->flags & TCF_IN_FOR_INIT));
-        JS_ASSERT(caller->script);
         JS_ASSERT(caller->fun && caller->varobj == evalcg->scopeChain);
-#endif
+
+        /*
+         * Don't generate upvars on the left side of a for loop. See
+         * bug 470758 and bug 520513.
+         */
+        if (evalcg->flags & TCF_IN_FOR_INIT)
+            return JS_TRUE;
 
         if (cg->staticLevel == level) {
             pn->pn_op = JSOP_GETUPVAR;
@@ -6269,26 +6275,39 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_NEW:
       case TOK_LP:
       {
+        bool callop = (PN_TYPE(pn) == TOK_LP);
         uintN oldflags;
 
         /*
-         * Emit function call or operator new (constructor call) code.
+         * Emit callable invocation or operator new (constructor call) code.
          * First, emit code for the left operand to evaluate the callable or
          * constructable object expression.
+         *
+         * For operator new applied to other expressions than E4X ones, we emit
+         * JSOP_GETPROP instead of JSOP_CALLPROP, etc. This is necessary to
+         * interpose the lambda-initialized method read barrier -- see the code
+         * in jsops.cpp for JSOP_LAMBDA followed by JSOP_{SET,INIT}PROP.
+         *
+         * Then (or in a call case that has no explicit reference-base object)
+         * we emit JSOP_NULL as a placeholder local GC root to hold the |this|
+         * parameter: in the operator new case, the newborn instance; in the
+         * base-less call case, a cookie meaning "use the global object as the
+         * |this| value" (or in ES5 strict mode, "use undefined", so we should
+         * use JSOP_PUSH instead of JSOP_NULL -- see bug 514570).
          */
         pn2 = pn->pn_head;
         switch (pn2->pn_type) {
           case TOK_NAME:
-            if (!EmitNameOp(cx, cg, pn2, JS_TRUE))
+            if (!EmitNameOp(cx, cg, pn2, callop))
                 return JS_FALSE;
             break;
           case TOK_DOT:
-            if (!EmitPropOp(cx, pn2, PN_OP(pn2), cg, JS_TRUE))
+            if (!EmitPropOp(cx, pn2, PN_OP(pn2), cg, callop))
                 return JS_FALSE;
             break;
           case TOK_LB:
             JS_ASSERT(pn2->pn_op == JSOP_GETELEM);
-            if (!EmitElemOp(cx, pn2, JSOP_CALLELEM, cg))
+            if (!EmitElemOp(cx, pn2, callop ? JSOP_CALLELEM : JSOP_GETELEM, cg))
                 return JS_FALSE;
             break;
           case TOK_UNARYOP:
@@ -6296,6 +6315,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (pn2->pn_op == JSOP_XMLNAME) {
                 if (!EmitXMLName(cx, pn2, JSOP_CALLXMLNAME, cg))
                     return JS_FALSE;
+                callop = true;          /* suppress JSOP_NULL after */
                 break;
             }
 #endif
@@ -6307,9 +6327,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              */
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
-            if (js_Emit1(cx, cg, JSOP_NULL) < 0)
-                return JS_FALSE;
+            callop = false;             /* trigger JSOP_NULL after */
+            break;
         }
+        if (!callop && js_Emit1(cx, cg, JSOP_NULL) < 0)
+            return JS_FALSE;
 
         /* Remember start of callable-object bytecode for decompilation hint. */
         off = top;
@@ -6332,6 +6354,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         argc = pn->pn_count - 1;
         if (js_Emit3(cx, cg, PN_OP(pn), ARGC_HI(argc), ARGC_LO(argc)) < 0)
             return JS_FALSE;
+        if (PN_OP(pn) == JSOP_CALL) {
+            /* Add a trace hint opcode for recursion. */
+            if (js_Emit1(cx, cg, JSOP_TRACE) < 0)
+                return JS_FALSE;
+        }
         if (PN_OP(pn) == JSOP_EVAL)
             EMIT_UINT16_IMM_OP(JSOP_LINENO, pn->pn_pos.begin.lineno);
         break;

@@ -1,0 +1,26 @@
+url-prefix ../../jsreftest.html?test=js1_5/GC/
+script regress-104584.js
+skip-if(xulRuntime.OS=="Darwin") script regress-203278-2.js # slow
+script regress-203278-3.js
+script regress-278725.js
+script regress-306788.js
+script regress-311497.js
+script regress-313276.js
+script regress-313479.js
+script regress-316885-01.js
+script regress-316885-02.js
+script regress-316885-03.js
+skip script regress-319980-01.js # slow, sometimes out of memory fatal exception.
+script regress-324278.js
+script regress-331719.js
+skip script regress-338653.js # slow, killed on x86_64
+script regress-341877-01.js
+script regress-341877-02.js
+skip script regress-346794.js # slow, killed
+script regress-348532.js
+script regress-352606.js
+script regress-383269-01.js
+script regress-383269-02.js
+script regress-390078.js
+script regress-418128.js
+script regress-440558.js

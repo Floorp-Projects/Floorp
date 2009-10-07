@@ -58,30 +58,7 @@ JS_BEGIN_EXTERN_C
  */
 #define JSTRACE_LIMIT       4
 
-/*
- * We use the trace kinds as the types for all GC things except external
- * strings.
- */
-#define GCX_OBJECT              JSTRACE_OBJECT      /* JSObject */
-#define GCX_DOUBLE              JSTRACE_DOUBLE      /* jsdouble */
-#define GCX_STRING              JSTRACE_STRING      /* JSString */
-#define GCX_XML                 JSTRACE_XML         /* JSXML */
-#define GCX_EXTERNAL_STRING     JSTRACE_LIMIT       /* JSString with external
-                                                       chars */
-/*
- * The number of defined GC types and the maximum limit for the number of
- * possible GC types.
- */
-#define GCX_NTYPES              (GCX_EXTERNAL_STRING + 8)
-#define GCX_LIMIT_LOG2         4           /* type index bits */
-#define GCX_LIMIT              JS_BIT(GCX_LIMIT_LOG2)
-
-/* GC flag definitions, must fit in 8 bits (type index goes in the low bits). */
-#define GCF_TYPEMASK    JS_BITMASK(GCX_LIMIT_LOG2)
-#define GCF_MARK        JS_BIT(GCX_LIMIT_LOG2)
-#define GCF_FINAL       JS_BIT(GCX_LIMIT_LOG2 + 1)
-#define GCF_LOCKSHIFT   (GCX_LIMIT_LOG2 + 2)   /* lock bit shift */
-#define GCF_LOCK        JS_BIT(GCF_LOCKSHIFT)   /* lock request bit in API */
+const uintN JS_EXTERNAL_STRING_LIMIT = 8;
 
 /*
  * Get the type of the external string or -1 if the string was not created
@@ -150,35 +127,25 @@ extern JSBool
 js_RegisterCloseableIterator(JSContext *cx, JSObject *obj);
 
 /*
- * The private JSGCThing struct, which describes a gcFreeList element.
- */
-struct JSGCThing {
-    JSGCThing   *next;
-    uint8       *flagp;
-};
-
-#define GC_NBYTES_MAX           (10 * sizeof(JSGCThing))
-#define GC_NUM_FREELISTS        (GC_NBYTES_MAX / sizeof(JSGCThing))
-#define GC_FREELIST_NBYTES(i)   (((i) + 1) * sizeof(JSGCThing))
-#define GC_FREELIST_INDEX(n)    (((n) / sizeof(JSGCThing)) - 1)
-
-/*
  * Allocates a new GC thing of the given size. After a successful allocation
  * the caller must fully initialize the thing before calling any function that
  * can potentially trigger GC. This will ensure that GC tracing never sees junk
  * values stored in the partially initialized thing.
  */
 extern JSObject*
-js_NewGCObject(JSContext *cx, uintN flags);
+js_NewGCObject(JSContext *cx);
 
 extern JSString*
-js_NewGCString(JSContext *cx, uintN flags);
+js_NewGCString(JSContext *cx);
+
+extern JSString*
+js_NewGCExternalString(JSContext *cx, uintN type);
 
 extern JSFunction*
-js_NewGCFunction(JSContext *cx, uintN flags);
+js_NewGCFunction(JSContext *cx);
 
 extern JSXML*
-js_NewGCXML(JSContext *cx, uintN flags);
+js_NewGCXML(JSContext *cx);
 
 /*
  * Allocate a new double jsval and store the result in *vp. vp must be a root.
@@ -284,6 +251,36 @@ typedef enum JSGCInvocationKind {
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
 
+/*
+ * The kind of GC thing with a finalizer. The external strings follow the
+ * ordinary string to simplify js_GetExternalStringGCType.
+ */
+enum JSFinalizeGCThingKind {
+    FINALIZE_OBJECT,
+    FINALIZE_FUNCTION,
+#if JS_HAS_XML_SUPPORT
+    FINALIZE_XML,
+#endif
+    FINALIZE_STRING,
+    FINALIZE_EXTERNAL_STRING0,
+    FINALIZE_EXTERNAL_STRING1,
+    FINALIZE_EXTERNAL_STRING2,
+    FINALIZE_EXTERNAL_STRING3,
+    FINALIZE_EXTERNAL_STRING4,
+    FINALIZE_EXTERNAL_STRING5,
+    FINALIZE_EXTERNAL_STRING6,
+    FINALIZE_EXTERNAL_STRING7,
+    FINALIZE_EXTERNAL_STRING_LAST = FINALIZE_EXTERNAL_STRING7,
+    FINALIZE_LIMIT
+};
+
+static inline bool
+IsFinalizableStringKind(unsigned thingKind)
+{
+    return unsigned(FINALIZE_STRING) <= thingKind &&
+           thingKind <= unsigned(FINALIZE_EXTERNAL_STRING_LAST);
+}
+
 typedef struct JSGCArenaInfo JSGCArenaInfo;
 typedef struct JSGCArenaList JSGCArenaList;
 typedef struct JSGCChunkInfo JSGCChunkInfo;
@@ -292,6 +289,7 @@ struct JSGCArenaList {
     JSGCArenaInfo   *last;          /* last allocated GC arena */
     uint32          lastCount;      /* number of allocated things in the last
                                        arena */
+    uint32          thingKind;      /* one of JSFinalizeGCThingKind */
     uint32          thingSize;      /* size of things to allocate on this list
                                      */
     JSGCThing       *freeList;      /* list of free GC things */
@@ -315,7 +313,13 @@ js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data);
 
 struct JSWeakRoots {
     /* Most recently created things by type, members of the GC's root set. */
-    void            *newborn[GCX_NTYPES];
+    JSObject        *newbornObject;
+    jsdouble        *newbornDouble;
+    JSString        *newbornString;
+#if JS_HAS_XML_SUPPORT
+    JSXML           *newbornXML;
+#endif
+    JSString        *newbornExternalString[JS_EXTERNAL_STRING_LIMIT];
 
     /* Atom root for the last-looked-up atom on this context. */
     jsval           lastAtom;
@@ -348,15 +352,8 @@ class JSFreePointerListTask : public JSBackgroundTask {
 };
 #endif
 
-/*
- * Free the chars held by str when it is finalized by the GC. When type is
- * less then zero, it denotes an internal string. Otherwise it denotes the
- * type of the external string allocated with JS_NewExternalString.
- *
- * This function always needs rt but can live with null cx.
- */
 extern void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx);
+js_FinalizeStringRT(JSRuntime *rt, JSString *str);
 
 #ifdef DEBUG_notme
 #define JS_GCMETER 1
@@ -405,7 +402,7 @@ typedef struct JSGCStats {
     uint32  closelater; /* number of close hooks scheduled to run */
     uint32  maxcloselater; /* max number of close hooks scheduled to run */
 
-    JSGCArenaStats  arenaStats[GC_NUM_FREELISTS];
+    JSGCArenaStats  arenaStats[FINALIZE_LIST_LIMIT];
     JSGCArenaStats  doubleArenaStats;
 } JSGCStats;
 

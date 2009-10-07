@@ -265,12 +265,6 @@ namespace nanojit
             btr RegAlloc::free[ecx], eax    // free &= ~rmask(i)
             mov r, eax
         }
-    #elif defined WIN64
-        unsigned long tr, fr;
-        _BitScanForward(&tr, set);
-        _bittestandreset(&fr, tr);
-        regs.free = fr;
-        r = tr;
     #else
         asm(
             "bsf    %1, %%eax\n\t"
@@ -1231,6 +1225,24 @@ namespace nanojit
         }
     }
 
+	// negateMask is used by asm_fneg.
+#if defined __SUNPRO_CC
+    // From Sun Studio C++ Readme: #pragma align inside namespace requires mangled names.
+    // Initialize here to avoid multithreading contention issues during initialization.
+    static uint32_t negateMask_temp[] = {0, 0, 0, 0, 0, 0, 0};
+
+    static uint32_t* negateMaskInit()
+    {
+        uint32_t* negateMask = (uint32_t*)alignUp(negateMask_temp, 16);
+        negateMask[1] = 0x80000000;
+        return negateMask;
+    }
+
+    static uint32_t *negateMask = negateMaskInit();
+#else
+    static const AVMPLUS_ALIGN16(uint32_t) negateMask[] = {0,0x80000000,0,0};
+#endif
+
     void Assembler::asm_fneg(LInsp ins)
     {
         if (config.sse2)
@@ -1255,14 +1267,6 @@ namespace nanojit
                 }
             }
 
-#if defined __SUNPRO_CC
-            // from Sun Studio C++ Readme: #pragma align inside namespace requires mangled names
-            static uint32_t temp[] = {0, 0, 0, 0, 0, 0, 0};
-            static uint32_t *negateMask = (uint32_t *)alignUp(temp, 16);
-            negateMask[1] = 0x80000000;
-#else
-            static const AVMPLUS_ALIGN16(uint32_t) negateMask[] = {0,0x80000000,0,0};
-#endif
             SSE_XORPD(rr, negateMask);
 
             if (rr != ra)

@@ -161,6 +161,13 @@ static const RegisterMask FpRegs = 1<<D0 | 1<<D1 | 1<<D2 | 1<<D3 | 1<<D4 | 1<<D5
 static const RegisterMask GpRegs = 0xFFFF;
 static const RegisterMask AllowableFlagRegs = 1<<R0 | 1<<R1 | 1<<R2 | 1<<R3 | 1<<R4 | 1<<R5 | 1<<R6 | 1<<R7 | 1<<R8 | 1<<R9 | 1<<R10;
 
+#define isS12(offs) ((-(1<<12)) <= (offs) && (offs) < (1<<12))
+#define isU12(offs) (((offs) & 0xfff) == (offs))
+
+static inline bool isValidDisplacement(int32_t d) {
+    return isS12(d);
+}
+
 #define IsFpReg(_r)     ((rmask((Register)_r) & (FpRegs)) != 0)
 #define IsGpReg(_r)     ((rmask((Register)_r) & (GpRegs)) != 0)
 #define FpRegNum(_fpr)  ((_fpr) - FirstFloatReg)
@@ -307,13 +314,14 @@ enum {
         NanoAssert(IsGpReg(rd) && IsGpReg(rl));\
         NanoAssert(isOp2Imm(op2imm));\
         *(--_nIns) = (NIns) ((cond)<<28 | OP_IMM | (ARM_##op)<<21 | (S)<<20 | (rl)<<16 | (rd)<<12 | (op2imm));\
-        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn)\
+        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn) {               \
             asm_output("%s%s%s %s, #0x%X", #op, condNames[cond], (S)?"s":"", gpn(rd), decOp2Imm(op2imm));\
-        else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {\
+        } else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {         \
             NanoAssert(S==1);\
             asm_output("%s%s %s, #0x%X", #op, condNames[cond], gpn(rl), decOp2Imm(op2imm));\
-        } else\
+        } else {                                                        \
             asm_output("%s%s%s %s, %s, #0x%X", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rl), decOp2Imm(op2imm));\
+        }\
     } while (0)
 
 // ALU operation with two register arguments
@@ -329,13 +337,14 @@ enum {
         NanoAssert(((S)==0) || ((S)==1));\
         NanoAssert(IsGpReg(rd) && IsGpReg(rl) && IsGpReg(rr));\
         *(--_nIns) = (NIns) ((cond)<<28 |(ARM_##op)<<21 | (S)<<20 | (rl)<<16 | (rd)<<12 | (rr));\
-        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn)\
+        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn) {               \
             asm_output("%s%s%s %s, %s", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rr));\
-        else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {\
+        } else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {         \
             NanoAssert(S==1);\
             asm_output("%s%s  %s, %s", #op, condNames[cond], gpn(rl), gpn(rr));\
-        } else\
+        } else {                                                        \
             asm_output("%s%s%s %s, %s, %s", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rl), gpn(rr));\
+        }\
     } while (0)
 
 // ALU operation with two register arguments, with rr operated on by a shift and shift immediate
@@ -354,13 +363,14 @@ enum {
         NanoAssert(IsShift(sh));\
         NanoAssert((imm)>=0 && (imm)<32);\
         *(--_nIns) = (NIns) ((cond)<<28 |(ARM_##op)<<21 | (S)<<20 | (rl)<<16 | (rd)<<12 | (imm)<<7 | (sh)<<4 | (rr));\
-        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn)\
+        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn) {               \
             asm_output("%s%s%s %s, %s, %s #%d", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rr), shiftNames[sh], (imm));\
-        else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {\
+        } else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {         \
             NanoAssert(S==1);\
             asm_output("%s%s  %s, %s, %s #%d", #op, condNames[cond], gpn(rl), gpn(rr), shiftNames[sh], (imm));\
-        } else\
+        } else {                                                        \
             asm_output("%s%s%s %s, %s, %s, %s #%d", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rl), gpn(rr), shiftNames[sh], (imm));\
+        }\
     } while (0)
 
 // ALU operation with two register arguments, with rr operated on by a shift and shift register
@@ -378,13 +388,14 @@ enum {
         NanoAssert(IsGpReg(rd) && IsGpReg(rl) && IsGpReg(rr) && IsGpReg(rs));\
         NanoAssert(IsShift(sh));\
         *(--_nIns) = (NIns) ((cond)<<28 |(ARM_##op)<<21 | (S)<<20 | (rl)<<16 | (rd)<<12 | (rs)<<8 | (sh)<<4 | (rr));\
-        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn)\
+        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn) {               \
             asm_output("%s%s%s %s, %s, %s %s", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rr), shiftNames[sh], gpn(rs));\
-        else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {\
+        } else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {         \
             NanoAssert(S==1);\
             asm_output("%s%s  %s, %s, %s %s", #op, condNames[cond], gpn(rl), gpn(rr), shiftNames[sh], gpn(rs));\
-        } else\
+        } else {                                                        \
             asm_output("%s%s%s %s, %s, %s, %s %s", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rl), gpn(rr), shiftNames[sh], gpn(rs));\
+        }\
     } while (0)
 
 // --------
@@ -647,8 +658,6 @@ enum {
 // PC always points to current instruction + 8, so when calculating pc-relative
 // offsets, use PC+8.
 #define PC_OFFSET_FROM(target,frompc) ((intptr_t)(target) - ((intptr_t)(frompc) + 8))
-#define isS12(offs) ((-(1<<12)) <= (offs) && (offs) < (1<<12))
-#define isU12(offs) (((offs) & 0xfff) == (offs))
 
 #define B_cond(_c,_t)                           \
     B_cond_chk(_c,_t,1)

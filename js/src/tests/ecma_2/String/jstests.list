@@ -1,0 +1,9 @@
+url-prefix ../../jsreftest.html?test=ecma_2/String/
+script match-001.js
+script match-002.js
+script match-003.js
+script match-004.js
+skip script replace-001.js # obsolete test
+script split-001.js
+script split-002.js
+script split-003.js
