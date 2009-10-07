@@ -66,12 +66,12 @@ toolbarbutton.urlbar-button {
 }
 
 #tool-app-switch {
-  visibility: hidden;
+  visibility: collapse;
   margin-right: 1mm; /* core spacing */
   list-style-image: url("chrome://browser/skin/images/task-switch-40.png");
 }
 
-#toolbar-main[fullscreen="true"] #tool-app-switch {
+#toolbar-main[fullscreen="true"] #tool-app-switch:not(:-moz-system-metric(maemo-classic)) {
   visibility: visible;
 }
 
