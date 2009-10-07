@@ -113,6 +113,10 @@ protected:
                            NPError* rv);
 
     virtual bool
+    AnswerPPluginInstanceDestructor(PPluginInstanceChild* aActor,
+                                    NPError* rv);
+
+    virtual bool
     AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor,
                                      const nsCString& aMimeType,
                                      const uint16_t& aMode,

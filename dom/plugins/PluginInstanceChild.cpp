@@ -124,6 +124,48 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         return result;
     }
 
+    case NPNVWindowNPObject: {
+        PPluginScriptableObjectChild* actor;
+        NPError result;
+        if (!CallNPN_GetValue_NPNVWindowNPObject(&actor, &result)) {
+            NS_WARNING("Failed to send message!");
+            return NPERR_GENERIC_ERROR;
+        }
+
+        if (result != NPERR_NO_ERROR) {
+            return result;
+        }
+
+        NPObject* object =
+            static_cast<PluginScriptableObjectChild*>(actor)->GetObject();
+        NS_ASSERTION(object, "Null object?!");
+
+        PluginModuleChild::sBrowserFuncs.retainobject(object);
+        *((NPObject**)aValue) = object;
+        return NPERR_NO_ERROR;
+    }
+
+    case NPNVPluginElementNPObject: {
+        PPluginScriptableObjectChild* actor;
+        NPError result;
+        if (!CallNPN_GetValue_NPNVPluginElementNPObject(&actor, &result)) {
+            NS_WARNING("Failed to send message!");
+            return NPERR_GENERIC_ERROR;
+        }
+
+        if (result != NPERR_NO_ERROR) {
+            return result;
+        }
+
+        NPObject* object =
+            static_cast<PluginScriptableObjectChild*>(actor)->GetObject();
+        NS_ASSERTION(object, "Null object?!");
+
+        PluginModuleChild::sBrowserFuncs.retainobject(object);
+        *((NPObject**)aValue) = object;
+        return NPERR_NO_ERROR;
+    }
+
     default:
         printf("  unhandled var %s\n", NPNVariableToString(aVar));
         return NPERR_GENERIC_ERROR;
@@ -222,13 +264,16 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
     }
 
     PluginScriptableObjectChild* actor = GetActorForNPObject(object);
+
+    // If we get an actor then it has retained. Otherwise we don't need it any
+    // longer.
+    PluginModuleChild::sBrowserFuncs.releaseobject(object);
+
     if (!actor) {
-        PluginModuleChild::sBrowserFuncs.releaseobject(object);
         *result = NPERR_GENERIC_ERROR;
         return true;
     }
 
-    PluginModuleChild::sBrowserFuncs.releaseobject(object);
     *value = actor;
     return true;
 }
@@ -345,11 +390,31 @@ bool
 PluginInstanceChild::Initialize()
 {
 #if defined(OS_WIN)
-  if (!CreatePluginWindow())
-      return false;
+    if (!CreatePluginWindow())
+        return false;
 #endif
 
-  return true;
+    return true;
+}
+
+void
+PluginInstanceChild::Destroy()
+{
+    // Copy the actors here so we don't enumerate a mutating array.
+    nsAutoTArray<PluginScriptableObjectChild*, 10> objects;
+    PRUint32 count = mScriptableObjects.Length();
+    for (PRUint32 index = 0; index < count; index++) {
+        objects.AppendElement(mScriptableObjects[index]);
+    }
+
+    count = objects.Length();
+    for (PRUint32 index = 0; index < count; index++) {
+        PluginScriptableObjectChild*& actor = objects[index];
+        NPObject* object = actor->GetObject();
+        if (object->_class == PluginScriptableObjectChild::GetClass()) {
+          PluginScriptableObjectChild::ScriptableInvalidate(object);
+        }
+    }
 }
 
 #if defined(OS_WIN)
@@ -509,10 +574,17 @@ PluginInstanceChild::AllocPPluginScriptableObject()
 }
 
 bool
-PluginInstanceChild::DeallocPPluginScriptableObject(PPluginScriptableObjectChild* aObject)
+PluginInstanceChild::DeallocPPluginScriptableObject(
+                                          PPluginScriptableObjectChild* aObject)
 {
     PluginScriptableObjectChild* object =
         reinterpret_cast<PluginScriptableObjectChild*>(aObject);
+
+    NPObject* npobject = object->GetObject();
+    if (npobject &&
+        npobject->_class != PluginScriptableObjectChild::GetClass()) {
+        PluginModuleChild::current()->UnregisterNPObject(npobject);
+    }
 
     PRUint32 count = mScriptableObjects.Length();
     for (PRUint32 index = 0; index < count; index++) {
@@ -523,6 +595,30 @@ PluginInstanceChild::DeallocPPluginScriptableObject(PPluginScriptableObjectChild
     }
     NS_NOTREACHED("An actor we don't know about?!");
     return false;
+}
+
+bool
+PluginInstanceChild::AnswerPPluginScriptableObjectConstructor(
+                                           PPluginScriptableObjectChild* aActor)
+{
+    // This is only called in response to the parent process requesting the
+    // creation of an actor. This actor will represent an NPObject that is
+    // created by the browser and returned to the plugin.
+    NPClass* npclass =
+        const_cast<NPClass*>(PluginScriptableObjectChild::GetClass());
+
+    ChildNPObject* object = reinterpret_cast<ChildNPObject*>(
+        PluginModuleChild::sBrowserFuncs.createobject(GetNPP(), npclass));
+    if (!object) {
+        NS_WARNING("Failed to create NPObject!");
+        return false;
+    }
+
+    PluginScriptableObjectChild* actor =
+        static_cast<PluginScriptableObjectChild*>(aActor);
+    actor->Initialize(const_cast<PluginInstanceChild*>(this), object);
+
+    return true;
 }
 
 PBrowserStreamChild*
@@ -616,12 +712,18 @@ PluginInstanceChild::GetActorForNPObject(NPObject* aObject)
 {
   NS_ASSERTION(aObject, "Null pointer!");
 
+  if (aObject->_class == PluginScriptableObjectChild::GetClass()) {
+      // One of ours! It's a browser-provided object.
+      ChildNPObject* object = static_cast<ChildNPObject*>(aObject);
+      NS_ASSERTION(object->parent, "Null actor!");
+      return object->parent;
+  }
 
   PluginScriptableObjectChild* actor =
       PluginModuleChild::current()->GetActorForNPObject(aObject);
   if (actor) {
-    PluginModuleChild::sBrowserFuncs.retainobject(aObject);
-    return actor;
+      // Plugin-provided object that we've previously wrapped.
+      return actor;
   }
 
   actor = reinterpret_cast<PluginScriptableObjectChild*>(

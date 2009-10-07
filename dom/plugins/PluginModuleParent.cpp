@@ -102,6 +102,7 @@ PluginModuleParent::DeallocPPluginInstance(PPluginInstanceParent* aActor,
 {
     _MOZ_LOG(__FUNCTION__);
     delete aActor;
+    *_retval = NPERR_NO_ERROR;
     return true;
 }
 
@@ -224,6 +225,8 @@ PluginModuleParent::NPP_Destroy(NPP instance,
 
     PluginInstanceParent* parentInstance =
         static_cast<PluginInstanceParent*>(instance->pdata);
+
+    parentInstance->Destroy();
 
     NPError prv;
     if (!Shim::HACK_target->CallPPluginInstanceDestructor(parentInstance, &prv)) {

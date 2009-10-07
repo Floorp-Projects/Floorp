@@ -839,7 +839,10 @@ _createobject(NPP aNPP,
 NPObject* NP_CALLBACK
 _retainobject(NPObject* aNPObj)
 {
-    _MOZ_LOG(__FUNCTION__);
+#ifdef DEBUG
+    printf("[PluginModuleChild] %s: object %p, refcnt %d\n", __FUNCTION__,
+           aNPObj, aNPObj->referenceCount + 1);
+#endif
     ++aNPObj->referenceCount;
     return aNPObj;
 }
@@ -847,8 +850,10 @@ _retainobject(NPObject* aNPObj)
 void NP_CALLBACK
 _releaseobject(NPObject* aNPObj)
 {
-    _MOZ_LOG(__FUNCTION__);
-
+#ifdef DEBUG
+    printf("[PluginModuleChild] %s: object %p, refcnt %d\n", __FUNCTION__,
+           aNPObj, aNPObj->referenceCount - 1);
+#endif
     if (--aNPObj->referenceCount == 0) {
         if (aNPObj->_class && aNPObj->_class->deallocate) {
             aNPObj->_class->deallocate(aNPObj);
@@ -868,7 +873,11 @@ _invoke(NPP aNPP,
         NPVariant* aResult)
 {
     _MOZ_LOG(__FUNCTION__);
-    return false;
+
+    if (!aNPP || !aNPObj || !aNPObj->_class || !aNPObj->_class->invoke)
+        return false;
+
+    return aNPObj->_class->invoke(aNPObj, aMethod, aArgs, aArgCount, aResult);
 }
 
 bool NP_CALLBACK
@@ -879,7 +888,11 @@ _invokedefault(NPP aNPP,
                NPVariant* aResult)
 {
     _MOZ_LOG(__FUNCTION__);
-    return false;
+
+    if (!aNPP || !aNPObj || !aNPObj->_class || !aNPObj->_class->invokeDefault)
+        return false;
+
+    return aNPObj->_class->invokeDefault(aNPObj, aArgs, aArgCount, aResult);
 }
 
 bool NP_CALLBACK
@@ -889,6 +902,7 @@ _evaluate(NPP aNPP,
           NPVariant* aResult)
 {
     _MOZ_LOG(__FUNCTION__);
+    NS_NOTYETIMPLEMENTED("Implement me!");
     return false;
 }
 
@@ -899,7 +913,11 @@ _getproperty(NPP aNPP,
              NPVariant* aResult)
 {
     _MOZ_LOG(__FUNCTION__);
-    return false;
+
+    if (!aNPP || !aNPObj || !aNPObj->_class || !aNPObj->_class->getProperty)
+        return false;
+
+    return aNPObj->_class->getProperty(aNPObj, aPropertyName, aResult);
 }
 
 bool NP_CALLBACK
@@ -909,7 +927,11 @@ _setproperty(NPP aNPP,
              const NPVariant* aValue)
 {
     _MOZ_LOG(__FUNCTION__);
-    return false;
+
+    if (!aNPP || !aNPObj || !aNPObj->_class || !aNPObj->_class->setProperty)
+        return false;
+
+    return aNPObj->_class->setProperty(aNPObj, aPropertyName, aValue);
 }
 
 bool NP_CALLBACK
@@ -918,7 +940,11 @@ _removeproperty(NPP aNPP,
                 NPIdentifier aPropertyName)
 {
     _MOZ_LOG(__FUNCTION__);
-    return false;
+
+    if (!aNPP || !aNPObj || !aNPObj->_class || !aNPObj->_class->removeProperty)
+        return false;
+
+    return aNPObj->_class->removeProperty(aNPObj, aPropertyName);
 }
 
 bool NP_CALLBACK
@@ -927,7 +953,11 @@ _hasproperty(NPP aNPP,
              NPIdentifier aPropertyName)
 {
     _MOZ_LOG(__FUNCTION__);
-    return false;
+
+    if (!aNPP || !aNPObj || !aNPObj->_class || !aNPObj->_class->hasProperty)
+        return false;
+
+    return aNPObj->_class->hasProperty(aNPObj, aPropertyName);
 }
 
 bool NP_CALLBACK
@@ -936,7 +966,11 @@ _hasmethod(NPP aNPP,
            NPIdentifier aMethodName)
 {
     _MOZ_LOG(__FUNCTION__);
-    return false;
+
+    if (!aNPP || !aNPObj || !aNPObj->_class || !aNPObj->_class->hasMethod)
+        return false;
+
+    return aNPObj->_class->hasMethod(aNPObj, aMethodName);
 }
 
 bool NP_CALLBACK
@@ -946,7 +980,18 @@ _enumerate(NPP aNPP,
            uint32_t* aCount)
 {
     _MOZ_LOG(__FUNCTION__);
-    return false;
+
+    if (!aNPP || !aNPObj || !aNPObj->_class)
+        return false;
+
+    if (!NP_CLASS_STRUCT_VERSION_HAS_ENUM(aNPObj->_class) ||
+        !aNPObj->_class->enumerate) {
+        *aIdentifiers = 0;
+        *aCount = 0;
+        return true;
+    }
+
+    return aNPObj->_class->enumerate(aNPObj, aIdentifiers, aCount);
 }
 
 bool NP_CALLBACK
@@ -957,13 +1002,31 @@ _construct(NPP aNPP,
            NPVariant* aResult)
 {
     _MOZ_LOG(__FUNCTION__);
-    return false;
+
+    if (!aNPP || !aNPObj || !aNPObj->_class ||
+        !NP_CLASS_STRUCT_VERSION_HAS_CTOR(aNPObj->_class) ||
+        !aNPObj->_class->construct) {
+        return false;
+    }
+
+    return aNPObj->_class->construct(aNPObj, aArgs, aArgCount, aResult);
 }
 
 void NP_CALLBACK
 _releasevariantvalue(NPVariant* aVariant)
 {
     _MOZ_LOG(__FUNCTION__);
+    if (NPVARIANT_IS_STRING(*aVariant)) {
+        NPString str = NPVARIANT_TO_STRING(*aVariant);
+        free(const_cast<NPUTF8*>(str.UTF8Characters));
+    }
+    else if (NPVARIANT_IS_OBJECT(*aVariant)) {
+        NPObject* object = NPVARIANT_TO_OBJECT(*aVariant);
+        if (object) {
+            _releaseobject(object);
+        }
+    }
+    VOID_TO_NPVARIANT(*aVariant);
 }
 
 void NP_CALLBACK
@@ -971,6 +1034,7 @@ _setexception(NPObject* aNPObj,
               const NPUTF8* aMessage)
 {
     _MOZ_LOG(__FUNCTION__);
+    NS_NOTYETIMPLEMENTED("Implement me!");
 }
 
 bool NP_CALLBACK
@@ -978,6 +1042,7 @@ _pushpopupsenabledstate(NPP aNPP,
                         NPBool aEnabled)
 {
     _MOZ_LOG(__FUNCTION__);
+    NS_NOTYETIMPLEMENTED("Implement me!");
     return false;
 }
 
@@ -985,6 +1050,7 @@ bool NP_CALLBACK
 _poppopupsenabledstate(NPP aNPP)
 {
     _MOZ_LOG(__FUNCTION__);
+    NS_NOTYETIMPLEMENTED("Implement me!");
     return false;
 }
 
@@ -994,6 +1060,7 @@ _pluginthreadasynccall(NPP aNPP,
                        void* aUserData)
 {
     _MOZ_LOG(__FUNCTION__);
+    NS_NOTYETIMPLEMENTED("Implement me!");
 }
 
 NPError NP_CALLBACK
@@ -1001,6 +1068,7 @@ _getvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
                 char **value, uint32_t *len)
 {
     _MOZ_LOG(__FUNCTION__);
+    NS_NOTYETIMPLEMENTED("Implement me!");
     return NPERR_GENERIC_ERROR;
 }
 
@@ -1009,6 +1077,7 @@ _setvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
                 const char *value, uint32_t len)
 {
     _MOZ_LOG(__FUNCTION__);
+    NS_NOTYETIMPLEMENTED("Implement me!");
     return NPERR_GENERIC_ERROR;
 }
 
@@ -1020,6 +1089,7 @@ _getauthenticationinfo(NPP npp, const char *protocol,
                        char **password, uint32_t *plen)
 {
     _MOZ_LOG(__FUNCTION__);
+    NS_NOTYETIMPLEMENTED("Implement me!");
     return NPERR_GENERIC_ERROR;
 }
 
@@ -1028,12 +1098,14 @@ _scheduletimer(NPP instance, uint32_t interval, NPBool repeat,
                void (*timerFunc)(NPP npp, uint32_t timerID))
 {
     _MOZ_LOG(__FUNCTION__);
+    NS_NOTYETIMPLEMENTED("Implement me!");
     return 0;
 }
 
 void NP_CALLBACK
 _unscheduletimer(NPP instance, uint32_t timerID)
 {
+    NS_NOTYETIMPLEMENTED("Implement me!");
     _MOZ_LOG(__FUNCTION__);
 }
 
@@ -1041,6 +1113,7 @@ NPError NP_CALLBACK
 _popupcontextmenu(NPP instance, NPMenu* menu)
 {
     _MOZ_LOG(__FUNCTION__);
+    NS_NOTYETIMPLEMENTED("Implement me!");
     return NPERR_GENERIC_ERROR;
 }
 
@@ -1050,6 +1123,7 @@ _convertpoint(NPP instance,
               double *destX, double *destY, NPCoordinateSpace destSpace)
 {
     _MOZ_LOG(__FUNCTION__);
+    NS_NOTYETIMPLEMENTED("Implement me!");
     return 0;
 }
 
@@ -1149,14 +1223,25 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
 }
 
 bool
-PluginModuleChild::DeallocPPluginInstance(PPluginInstanceChild* actor,
+PluginModuleChild::DeallocPPluginInstance(PPluginInstanceChild* aActor,
                                           NPError* rv)
 {
     _MOZ_LOG(__FUNCTION__);
 
-    PluginInstanceChild* inst = static_cast<PluginInstanceChild*>(actor);
+    delete aActor;
+
+    return true;
+}
+
+bool
+PluginModuleChild::AnswerPPluginInstanceDestructor(PPluginInstanceChild* aActor,
+                                                   NPError* rv)
+{
+    _MOZ_LOG(__FUNCTION__);
+
+    PluginInstanceChild* inst = static_cast<PluginInstanceChild*>(aActor);
     *rv = mFunctions.destroy(inst->GetNPP(), 0);
-    delete actor;
+    inst->Destroy();
     inst->GetNPP()->ndata = 0;
 
     return true;
