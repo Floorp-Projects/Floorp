@@ -354,6 +354,15 @@ BrowserGlue.prototype = {
     // been warned about them yet, open the plugins update page.
     if (this._prefs.getBoolPref(PREF_PLUGINS_NOTIFYUSER))
       this._showPluginUpdatePage();
+
+#ifdef XP_WIN
+#ifndef WINCE
+    // For windows seven, initialize the jump list module.
+    let temp = {};
+    Cu.import("resource://gre/modules/wintaskbar/winJumpLists.jsm", temp);
+    temp.WinTaskbarJumpList.startup();
+#endif
+#endif
   },
 
   _onQuitRequest: function(aCancelQuit, aQuitType)
