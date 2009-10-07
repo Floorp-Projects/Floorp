@@ -2685,7 +2685,6 @@ ReplenishReservedPool(JSContext* cx, JSTraceMonitor* tm)
         /* Check if the last call to js_NewDoubleInRootedValue GC'd. */
         if (rt->gcNumber != lastgcNumber) {
             lastgcNumber = rt->gcNumber;
-            JS_ASSERT(tm->reservedDoublePoolPtr == tm->reservedDoublePool);
             ptr = tm->reservedDoublePool;
 
             /*
