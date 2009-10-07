@@ -40,6 +40,7 @@
 
 #include "gfxMacFont.h"
 #include "gfxCoreTextShaper.h"
+#include "gfxHarfBuzzShaper.h"
 #include "gfxPlatformMac.h"
 #include "gfxContext.h"
 
@@ -51,8 +52,7 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
       mATSFont(aFontEntry->GetFontRef()),
       mCGFont(nsnull),
       mFontFace(nsnull),
-      mScaledFont(nsnull),
-      mAdjustedSize(0.0)
+      mScaledFont(nsnull)
 {
     if (aNeedsBold) {
         mSyntheticBoldOffset = 1;  // devunit offset when double-striking text to fake boldness
@@ -128,7 +128,9 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
 #endif
     }
 
-    mShaper = new gfxCoreTextShaper(this);
+    if (FontCanSupportHarfBuzz()) {
+        mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
+    }
 }
 
 gfxMacFont::~gfxMacFont()
@@ -142,6 +144,12 @@ gfxMacFont::~gfxMacFont()
 
     // this is documented to be safe if mCGFont is null
     ::CGFontRelease(mCGFont);
+}
+
+void
+gfxMacFont::CreatePlatformShaper()
+{
+    mPlatformShaper = new gfxCoreTextShaper(this);
 }
 
 PRBool
@@ -270,6 +278,8 @@ gfxMacFont::InitMetrics()
         ::CFRelease(cmap);
     }
 
+    mFUnitsConvFactor = mAdjustedSize / upem;
+
     SanitizeMetrics(&mMetrics, mFontEntry->mIsBadUnderlineFont);
 
     mIsValid = PR_TRUE;
@@ -282,7 +292,7 @@ gfxMacFont::InitMetrics()
     fprintf (stderr, "    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics.maxAscent, mMetrics.maxDescent, mMetrics.maxAdvance);
     fprintf (stderr, "    internalLeading: %f externalLeading: %f\n", mMetrics.internalLeading, mMetrics.externalLeading);
     fprintf (stderr, "    spaceWidth: %f aveCharWidth: %f xHeight: %f\n", mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.xHeight);
-    fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f suOff: %f suSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize, mMetrics.superscriptOffset, mMetrics.subscriptOffset);
+    fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f supOff: %f subOff: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize, mMetrics.superscriptOffset, mMetrics.subscriptOffset);
 #endif
 }
 

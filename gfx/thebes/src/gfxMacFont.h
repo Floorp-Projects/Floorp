@@ -57,10 +57,6 @@ public:
     ATSFontRef GetATSFontRef() const { return mATSFont; }
     CGFontRef GetCGFontRef() const { return mCGFont; }
 
-    // TODO: probably should move this up to gfxFont
-    // and ensure it is handled uniformly across all platforms
-    float GetAdjustedSize() const { return mAdjustedSize; }
-
     /* overrides for the pure virtual methods in gfxFont */
     virtual const gfxFont::Metrics& GetMetrics() {
         return mMetrics;
@@ -77,6 +73,8 @@ public:
     virtual hb_blob_t *GetFontTable(PRUint32 aTag);
 
 protected:
+    virtual void CreatePlatformShaper();
+
     void InitMetrics();
 
     gfxFloat GetCharWidth(CFDataRef aCmap, PRUint32 aUpem, gfxFloat aSize,
@@ -92,7 +90,6 @@ protected:
 
     Metrics               mMetrics;
     PRUint32              mSpaceGlyph;
-    float                 mAdjustedSize;
 };
 
 #endif /* GFX_MACFONT_H */

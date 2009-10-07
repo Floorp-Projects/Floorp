@@ -52,6 +52,8 @@ public:
     static PRUint8 GetEastAsianWidth(PRUint32 aCh);
 
     static PRInt32 GetScriptCode(PRUint32 aCh);
+
+    static PRInt32 ScriptShapingLevel(PRInt32 aScriptCode);
 };
 
 #endif /* GFX_UNICODEPROPERTIES_H */

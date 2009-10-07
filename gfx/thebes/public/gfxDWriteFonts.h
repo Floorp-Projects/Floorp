@@ -80,6 +80,8 @@ public:
     virtual hb_blob_t *GetFontTable(PRUint32 aTag);
 
 protected:
+    virtual void CreatePlatformShaper();
+
     void ComputeMetrics();
 
     cairo_font_face_t *CairoFontFace();
@@ -92,7 +94,6 @@ protected:
     cairo_font_face_t *mCairoFontFace;
     cairo_scaled_font_t *mCairoScaledFont;
 
-    gfxFloat mAdjustedSize;
     gfxFont::Metrics mMetrics;
     PRBool mNeedsOblique;
     PRBool mNeedsBold;

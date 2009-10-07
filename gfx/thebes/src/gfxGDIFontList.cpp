@@ -218,9 +218,11 @@ GDIFontEntry::ReadCMAP()
 
     PRPackedBool  unicodeFont = PR_FALSE, symbolFont = PR_FALSE;
     nsresult rv = gfxFontUtils::ReadCMAP(cmap, buffer.Length(),
-                                         mCharacterMap, mUVSOffset, unicodeFont, symbolFont);
+                                         mCharacterMap, mUVSOffset,
+                                         unicodeFont, symbolFont);
     mUnicodeFont = unicodeFont;
     mSymbolFont = symbolFont;
+    mHasCmapTable = NS_SUCCEEDED(rv);
 
     PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit-cmap) psname: %s, size: %d\n", 
                                         NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
