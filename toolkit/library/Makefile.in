@@ -243,7 +243,7 @@ EXTRA_DSO_LDOPTS += -lelf -ldemangle -lCstd
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 imm32 winmm wsock32 msimg32)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 imm32 winmm wsock32 msimg32 shlwapi)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,imagehlp)
 endif
