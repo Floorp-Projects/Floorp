@@ -321,6 +321,35 @@ MacOSFontEntry::GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer)
     return NS_OK;
 }
 
+gfxFont*
+MacOSFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold)
+{
+    gfxFont *newFont;
+#ifdef __LP64__
+    newFont = new gfxCoreTextFont(this, aFontStyle, aNeedsBold);
+#else
+#ifdef MOZ_CORETEXT
+    if (gfxPlatformMac::GetPlatform()->UsingCoreText()) {
+        newFont = new gfxCoreTextFont(this, aFontStyle, aNeedsBold);
+    } else {
+#endif
+        newFont = new gfxAtsuiFont(this, aFontStyle, aNeedsBold);
+#ifdef MOZ_CORETEXT
+    }
+#endif
+#endif
+    if (!newFont) {
+        return nsnull;
+    }
+    if (!newFont->Valid()) {
+        delete newFont;
+        return nsnull;
+    }
+    nsRefPtr<gfxFont> font = newFont;
+    gfxFontCache::GetCache()->AddNew(font);
+    return newFont;
+}
+
 
 /* gfxMacFontFamily */
 #pragma mark-

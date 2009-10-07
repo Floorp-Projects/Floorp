@@ -51,8 +51,6 @@
 
 #include <Carbon/Carbon.h>
 
-class gfxAtsuiFontGroup;
-
 class MacOSFontEntry;
 
 #define kLiGothicBadCharUnicode  0x775B // ATSUI failure on 10.6 (bug 532346)
@@ -87,11 +85,6 @@ public:
     virtual void SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID,
             PRBool aNeedTight, gfxGlyphExtents *aExtents);
 
-    PRBool TestCharacterMap(PRUint32 aCh);
-
-    MacOSFontEntry* GetFontEntry();
-    PRBool Valid() { return mIsValid; }
-
 protected:
     const gfxFontStyle *mFontStyle;
 
@@ -112,105 +105,12 @@ protected:
 
     void InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef);
 
+    virtual void InitTextRun(gfxTextRun *aTextRun,
+                             const PRUnichar *aString,
+                             PRUint32 aRunStart,
+                             PRUint32 aRunLength);
+
     virtual PRBool SetupCairoFont(gfxContext *aContext);
-};
-
-class THEBES_API gfxAtsuiFontGroup : public gfxFontGroup {
-public:
-    gfxAtsuiFontGroup(const nsAString& families,
-                      const gfxFontStyle *aStyle,
-                      gfxUserFontSet *aUserFontSet);
-    virtual ~gfxAtsuiFontGroup() {};
-
-    virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);
-
-    virtual gfxTextRun *MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
-                                    const Parameters* aParams, PRUint32 aFlags);
-    virtual gfxTextRun *MakeTextRun(const PRUint8* aString, PRUint32 aLength,
-                                    const Parameters* aParams, PRUint32 aFlags);
-    // When aWrapped is true, the string includes bidi control
-    // characters. The first character will be LRO or LRO to force setting the
-    // direction for all characters, the last character is PDF, and the
-    // second to last character is a non-whitespace character --- to ensure
-    // that there is no "trailing whitespace" in the string, see
-    // http://weblogs.mozillazine.org/roc/archives/2007/02/superlaser_targ.html#comments
-    void MakeTextRunInternal(const PRUnichar *aString, PRUint32 aLength,
-                             PRBool aWrapped, gfxTextRun *aTextRun);
-
-    gfxAtsuiFont* GetFontAt(PRInt32 aFontIndex) {
-        // If it turns out to be hard for all clients that cache font
-        // groups to call UpdateFontList at appropriate times, we could
-        // instead consider just calling UpdateFontList from someplace
-        // more central (such as here).
-        NS_ASSERTION(!mUserFontSet || mCurrGeneration == GetGeneration(),
-                     "Whoever was caching this font group should have "
-                     "called UpdateFontList on it");
-
-        return static_cast<gfxAtsuiFont*>(static_cast<gfxFont*>(mFonts[aFontIndex]));
-    }
-
-    PRBool HasFont(ATSFontRef aFontRef);
-
-    inline gfxAtsuiFont* WhichFontSupportsChar(nsTArray< nsRefPtr<gfxFont> >& aFontList, 
-                                               PRUint32 aCh)
-    {
-        PRUint32 len = aFontList.Length();
-        for (PRUint32 i = 0; i < len; i++) {
-            gfxAtsuiFont* font = static_cast<gfxAtsuiFont*>(aFontList.ElementAt(i).get());
-            if (font->TestCharacterMap(aCh))
-                return font;
-        }
-        return nsnull;
-    }
-
-    // search through pref fonts for a character, return nsnull if no matching pref font
-    already_AddRefed<gfxFont> WhichPrefFontSupportsChar(PRUint32 aCh);
-
-    already_AddRefed<gfxFont> WhichSystemFontSupportsChar(PRUint32 aCh);
-
-    void UpdateFontList();
-
-protected:
-    static PRBool FindATSFont(const nsAString& aName,
-                              const nsACString& aGenericName,
-                              void *closure);
-
-    PRUint32 GuessMaximumStringLength();
-
-    /**
-     * @param aRun the text run to fill in
-     * @param aString the complete text including all wrapper characters
-     * @param aLength the length of aString
-     * @param aLayoutStart the first character of aString that should be
-     * at the start of the ATSUI layout; this skips any wrapper character
-     * used to override direction
-     * @param aLayoutLength the length of the characters that should be
-     * in the ATSUI layout; this excludes any trailing wrapper character
-     * used to override direction
-     * @param aTrailingCharsToIgnore the number of trailing characters
-     * in the ATSUI layout that are not part of the text run
-     * (characters added to ensure correct RTL and kerning behaviour)
-     * @param aTextRunOffset the character offset in the textrun where
-     * the glyph data from the ATSUI layout should be copied
-     * @return true for success
-     */
-    PRBool InitTextRun(gfxTextRun *aRun,
-                       const PRUnichar *aString, PRUint32 aLength,
-                       PRUint32 aLayoutStart, PRUint32 aLayoutLength,
-                       PRUint32 aOffsetInTextRun, PRUint32 aLengthInTextRun);
-
-    /**
-     * Function to reinitialize our mFonts array and any other data
-     * that depends on mFonts.
-     */
-    void InitFontList();
-    
-    // cache the most recent pref font to avoid general pref font lookup
-    nsRefPtr<gfxFontFamily>       mLastPrefFamily;
-    nsRefPtr<gfxAtsuiFont>        mLastPrefFont;
-    eFontPrefLang                 mLastPrefLang;       // lang group for last pref font
-    PRBool                        mLastPrefFirstFont;  // is this the first font in the list of pref fonts for this lang group?
-    eFontPrefLang                 mPageLang;
 };
 
 #endif /* not __LP64__ */
