@@ -391,13 +391,15 @@ TabWindow.prototype = {
   events: ["TabOpen", "TabClose", "TabSelect", "TabMove"],
 
   destroy: function () {
+    this._destroying = true;
+
     let tabs = this.tabbrowser.mTabs;
 
     for each (let evtName in this.events)
       this.tabbrowser.tabContainer.removeEventListener(evtName, this, false);
 
     for (let i = 0; i < tabs.length; i++)
-      this.removeTab(tabs[i], true);
+      this.removeTab(tabs[i]);
 
     let idx = AeroPeek.windows.indexOf(this.win.gTaskbarTabGroup);
     AeroPeek.windows.splice(idx, 1);
@@ -427,7 +429,7 @@ TabWindow.prototype = {
   },
 
   // Invoked when the given tab is closed
-  removeTab: function (tab, dontSplice) {
+  removeTab: function (tab) {
     let preview = this.previewFromTab(tab);
     preview.active = false;
     preview.visible = false;
@@ -436,7 +438,7 @@ TabWindow.prototype = {
 
     // We don't want to splice from the array if the tabs aren't being removed
     // from the tab bar as well (as is the case when the window closes).
-    if (!dontSplice)
+    if (!this._destroying)
       this.previews.splice(tab._tPos, 1);
     AeroPeek.removePreview(preview);
   },
@@ -445,7 +447,7 @@ TabWindow.prototype = {
     return this._enabled;
   },
 
-  set enabled(enable) {
+  set enabled (enable) {
     this._enabled = enable;
     // Because making a tab visible requires that the tab it is next to be
     // visible, it is far simpler to unset the 'next' tab and recreate them all
@@ -618,9 +620,9 @@ var AeroPeek = {
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
       case "nsPref:changed":
-        if (aData == CACHE_EXPIRATION_TIME_PREF_NAME) {
+        if (aData == CACHE_EXPIRATION_TIME_PREF_NAME)
           break;
-        }
+
         if (aData == TOGGLE_PREF_NAME)
           this._prefenabled = this.prefs.getBoolPref(TOGGLE_PREF_NAME);
         else if (aData == DISABLE_THRESHOLD_PREF_NAME)
