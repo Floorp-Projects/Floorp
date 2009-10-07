@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Frederic Wang <fred.wang@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -91,27 +92,6 @@ public:
   // override the base method so that we can deal with fences and separators
   virtual nscoord
   FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize);
-
-  // exported routines that both mfenced and mfrac share.
-  // mfrac uses these when its bevelled attribute is set.
-  static nsresult
-  doReflow(nsPresContext*          aPresContext,
-           const nsHTMLReflowState& aReflowState,
-           nsHTMLReflowMetrics&     aDesiredSize,
-           nsReflowStatus&          aStatus,
-           nsMathMLContainerFrame*  aForFrame,
-           nsMathMLChar*            aOpenChar,
-           nsMathMLChar*            aCloseChar,
-           nsMathMLChar*            aSeparatorsChar,
-           PRInt32                  aSeparatorsCount);
-
-  static nscoord
-  doGetIntrinsicWidth(nsIRenderingContext*    aRenderingContext,
-                      nsMathMLContainerFrame* aForFrame,
-                      nsMathMLChar*           aOpenChar,
-                      nsMathMLChar*           aCloseChar,
-                      nsMathMLChar*           aSeparatorsChar,
-                      PRInt32                 aSeparatorsCount);
 
   // helper routines to format the MathMLChars involved here
   static nsresult
