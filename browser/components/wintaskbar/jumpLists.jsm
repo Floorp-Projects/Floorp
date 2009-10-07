@@ -306,17 +306,19 @@ var WinTaskbarJumpList =
     if (!list || list.length == 0)
       return true;
 
+    let count = 0;
     for (let idx = 0; idx < list.length; idx++) {
       let entry = list[idx];
       let shortcut = this._getHandlerAppItem(entry.title, entry.title, entry.uri, 1);
-      if (idx >= this._maxItemCount)
+      if (count >= this._maxItemCount)
         break;
       // do not add items to recent that have already been added
       // to frequent.
       if (this._frequentHashList &&
           this._frequentHashList.indexOf(entry.uri) != -1)
-        return;
+        continue;
       items.appendElement(shortcut, false);
+      count++;
     }
     return this._buildCustom(_getString("taskbar.recent.label"), items);
   },
