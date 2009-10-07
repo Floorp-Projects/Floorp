@@ -2175,8 +2175,10 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseCont
     imgIRequest *imgReq = entry.request;
     imgReq->GetImageStatus(&status);
     imgReq->GetImage(aResult); // We hand back the image here.  The GetImage call addrefs *aResult.
-    PRBool animated = PR_FALSE;
-    if (*aResult)
+    PRBool animated = PR_TRUE; // Assuming animated is the safe option
+
+    // We can only call GetAnimated if we're decoded
+    if (*aResult && (status & imgIRequest::STATUS_DECODE_COMPLETE))
       (*aResult)->GetAnimated(&animated);
 
     if ((!(status & imgIRequest::STATUS_LOAD_COMPLETE)) || animated) {
