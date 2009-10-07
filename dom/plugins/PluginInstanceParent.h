@@ -69,6 +69,8 @@ public:
 
     virtual ~PluginInstanceParent();
 
+    void Destroy();
+
     virtual PPluginScriptableObjectParent*
     AllocPPluginScriptableObject();
 
@@ -177,6 +179,25 @@ public:
     {
         return mParent;
     }
+
+    const NPNetscapeFuncs* GetNPNIface()
+    {
+        return mNPNIface;
+    }
+
+    PluginScriptableObjectParent*
+    GetActorForNPObject(NPObject* aObject);
+
+    NPP
+    GetNPP()
+    {
+      return mNPP;
+    }
+
+private:
+    bool InternalGetValueForNPObject(NPNVariable aVariable,
+                                     PPluginScriptableObjectParent** aValue,
+                                     NPError* aResult);
 
 private:
     PluginModuleParent* mParent;

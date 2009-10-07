@@ -90,6 +90,9 @@ protected:
     virtual bool
     DeallocPPluginScriptableObject(PPluginScriptableObjectChild* aObject);
 
+    virtual bool
+    AnswerPPluginScriptableObjectConstructor(PPluginScriptableObjectChild* aActor);
+
     virtual PBrowserStreamChild*
     AllocPBrowserStream(const nsCString& url,
                         const uint32_t& length,
@@ -158,6 +161,7 @@ public:
     virtual ~PluginInstanceChild();
 
     bool Initialize();
+    void Destroy();
 
     NPP GetNPP()
     {

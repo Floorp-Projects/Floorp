@@ -41,15 +41,24 @@
 
 #include "mozilla/plugins/PPluginScriptableObjectChild.h"
 
-struct NPObject;
+#include "npruntime.h"
 
 namespace mozilla {
 namespace plugins {
 
 class PluginInstanceChild;
+class PluginScriptableObjectChild;
+
+struct ChildNPObject : NPObject
+{
+  PluginScriptableObjectChild* parent;
+  bool invalidated;
+};
 
 class PluginScriptableObjectChild : public PPluginScriptableObjectChild
 {
+  friend class PluginInstanceChild;
+
 public:
   PluginScriptableObjectChild();
   virtual ~PluginScriptableObjectChild();
@@ -63,13 +72,13 @@ public:
 
   virtual bool
   AnswerInvoke(const NPRemoteIdentifier& aId,
-               const nsTArray<NPRemoteVariant>& aArgs,
-               NPRemoteVariant* aResult,
+               const nsTArray<Variant>& aArgs,
+               Variant* aResult,
                bool* aSuccess);
 
   virtual bool
-  AnswerInvokeDefault(const nsTArray<NPRemoteVariant>& aArgs,
-                      NPRemoteVariant* aResult,
+  AnswerInvokeDefault(const nsTArray<Variant>& aArgs,
+                      Variant* aResult,
                       bool* aSuccess);
 
   virtual bool
@@ -78,12 +87,12 @@ public:
 
   virtual bool
   AnswerGetProperty(const NPRemoteIdentifier& aId,
-                    NPRemoteVariant* aResult,
+                    Variant* aResult,
                     bool* aSuccess);
 
   virtual bool
   AnswerSetProperty(const NPRemoteIdentifier& aId,
-                    const NPRemoteVariant& aValue,
+                    const Variant& aValue,
                     bool* aSuccess);
 
   virtual bool
@@ -95,8 +104,8 @@ public:
                   bool* aSuccess);
 
   virtual bool
-  AnswerConstruct(const nsTArray<NPRemoteVariant>& aArgs,
-                  NPRemoteVariant* aResult,
+  AnswerConstruct(const nsTArray<Variant>& aArgs,
+                  Variant* aResult,
                   bool* aSuccess);
 
   void
@@ -109,9 +118,80 @@ public:
     return mObject;
   }
 
+  static const NPClass*
+  GetClass()
+  {
+    return &sNPClass;
+  }
+
+  PluginInstanceChild*
+  GetInstance()
+  {
+    return mInstance;
+  }
+
+private:
+  static NPObject*
+  ScriptableAllocate(NPP aInstance,
+                     NPClass* aClass);
+
+  static void
+  ScriptableInvalidate(NPObject* aObject);
+
+  static void
+  ScriptableDeallocate(NPObject* aObject);
+
+  static bool
+  ScriptableHasMethod(NPObject* aObject,
+                      NPIdentifier aName);
+
+  static bool
+  ScriptableInvoke(NPObject* aObject,
+                   NPIdentifier aName,
+                   const NPVariant* aArgs,
+                   uint32_t aArgCount,
+                   NPVariant* aResult);
+
+  static bool
+  ScriptableInvokeDefault(NPObject* aObject,
+                          const NPVariant* aArgs,
+                          uint32_t aArgCount,
+                          NPVariant* aResult);
+
+  static bool
+  ScriptableHasProperty(NPObject* aObject,
+                        NPIdentifier aName);
+
+  static bool
+  ScriptableGetProperty(NPObject* aObject,
+                        NPIdentifier aName,
+                        NPVariant* aResult);
+
+  static bool
+  ScriptableSetProperty(NPObject* aObject,
+                        NPIdentifier aName,
+                        const NPVariant* aValue);
+
+  static bool
+  ScriptableRemoveProperty(NPObject* aObject,
+                           NPIdentifier aName);
+
+  static bool
+  ScriptableEnumerate(NPObject* aObject,
+                      NPIdentifier** aIdentifiers,
+                      uint32_t* aCount);
+
+  static bool
+  ScriptableConstruct(NPObject* aObject,
+                      const NPVariant* aArgs,
+                      uint32_t aArgCount,
+                      NPVariant* aResult);
+
 private:
   PluginInstanceChild* mInstance;
   NPObject* mObject;
+
+  static const NPClass sNPClass;
 };
 
 } /* namespace plugins */

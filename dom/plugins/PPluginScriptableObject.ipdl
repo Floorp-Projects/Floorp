@@ -48,8 +48,7 @@ using mozilla::ipc::NPRemoteIdentifier;
 using nsTArray<NPRemoteIdentifier>;
 using mozilla::void_t;
 using mozilla::null_t;
-using mozilla::ipc::NPRemoteVariant;
-using nsTArray<NPRemoteVariant>;
+using nsTArray<Variant>;
 
 namespace mozilla {
 namespace plugins {
@@ -68,7 +67,7 @@ rpc protocol PPluginScriptableObject
 {
   manager PPluginInstance;
 
-child:
+both:
   // NPClass methods
   rpc Invalidate();
 
@@ -76,23 +75,23 @@ child:
     returns (bool aHasMethod);
 
   rpc Invoke(NPRemoteIdentifier aId,
-             nsTArray<NPRemoteVariant> aArgs)
-    returns (NPRemoteVariant aResult,
+             nsTArray<Variant> aArgs)
+    returns (Variant aResult,
              bool aSuccess);
 
-  rpc InvokeDefault(nsTArray<NPRemoteVariant> aArgs)
-    returns (NPRemoteVariant aResult,
+  rpc InvokeDefault(nsTArray<Variant> aArgs)
+    returns (Variant aResult,
              bool aSuccess);
 
   rpc HasProperty(NPRemoteIdentifier aId)
     returns (bool aHasProperty);
 
   rpc GetProperty(NPRemoteIdentifier aId)
-    returns (NPRemoteVariant aResult,
+    returns (Variant aResult,
              bool aSuccess);
 
   rpc SetProperty(NPRemoteIdentifier aId,
-                  NPRemoteVariant aValue)
+                  Variant aValue)
     returns (bool aSuccess);
 
   rpc RemoveProperty(NPRemoteIdentifier aId)
@@ -102,8 +101,8 @@ child:
     returns (nsTArray<NPRemoteIdentifier> aProperties,
              bool aSuccess);
 
-  rpc Construct(nsTArray<NPRemoteVariant> aArgs)
-    returns (NPRemoteVariant aResult,
+  rpc Construct(nsTArray<Variant> aArgs)
+    returns (Variant aResult,
              bool aSuccess);
 };
 

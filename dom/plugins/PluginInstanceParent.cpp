@@ -61,6 +61,25 @@ PluginInstanceParent::~PluginInstanceParent()
 {
 }
 
+void
+PluginInstanceParent::Destroy()
+{
+    // Copy the actors here so we don't enumerate a mutating array.
+    nsAutoTArray<PluginScriptableObjectParent*, 10> objects;
+    PRUint32 count = mScriptableObjects.Length();
+    for (PRUint32 index = 0; index < count; index++) {
+        objects.AppendElement(mScriptableObjects[index]);
+    }
+
+    count = objects.Length();
+    for (PRUint32 index = 0; index < count; index++) {
+        NPObject* object = objects[index]->GetObject();
+        if (object->_class == PluginScriptableObjectParent::GetClass()) {
+          PluginScriptableObjectParent::ScriptableInvalidate(object);
+        }
+    }
+}
+
 PBrowserStreamParent*
 PluginInstanceParent::AllocPBrowserStream(const nsCString& url,
                                           const uint32_t& length,
@@ -138,25 +157,59 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVisOfflineBool(bool* value,
 }
 
 bool
-PluginInstanceParent::AnswerNPN_GetValue_NPNVWindowNPObject(
-                                        PPluginScriptableObjectParent** value,
-                                        NPError* result)
+PluginInstanceParent::InternalGetValueForNPObject(
+                                         NPNVariable aVariable,
+                                         PPluginScriptableObjectParent** aValue,
+                                         NPError* aResult)
 {
-    // TODO NPRuntime
-    *value = NULL;
-    *result = NPERR_GENERIC_ERROR;
+    NPObject* npobject;
+    NPError result = mNPNIface->getvalue(mNPP, aVariable, (void*)&npobject);
+    if (result != NPERR_NO_ERROR || !npobject) {
+        *aValue = nsnull;
+        *aResult = result;
+        return true;
+    }
+
+    PluginScriptableObjectParent* actor =
+      static_cast<PluginScriptableObjectParent*>(
+        AllocPPluginScriptableObject());
+
+    if (!actor) {
+        mNPNIface->releaseobject(npobject);
+        *aValue = nsnull;
+        *aResult = NPERR_OUT_OF_MEMORY_ERROR;
+        return true;
+    }
+
+    if (!CallPPluginScriptableObjectConstructor(actor)) {
+        mNPNIface->releaseobject(npobject);
+        DeallocPPluginScriptableObject(actor);
+        *aValue = nsnull;
+        *aResult = NPERR_GENERIC_ERROR;
+        return true;
+    }
+
+    actor->Initialize(const_cast<PluginInstanceParent*>(this), npobject);
+    *aValue = actor;
+    *aResult = NPERR_NO_ERROR;
     return true;
 }
 
 bool
-PluginInstanceParent::AnswerNPN_GetValue_NPNVPluginElementNPObject(
-                                        PPluginScriptableObjectParent** value,
-                                        NPError* result)
+PluginInstanceParent::AnswerNPN_GetValue_NPNVWindowNPObject(
+                                         PPluginScriptableObjectParent** aValue,
+                                         NPError* aResult)
 {
-    // TODO NPRuntime
-    *value = NULL;
-    *result = NPERR_GENERIC_ERROR;
-    return true;
+    return InternalGetValueForNPObject(NPNVWindowNPObject, aValue, aResult);
+}
+
+bool
+PluginInstanceParent::AnswerNPN_GetValue_NPNVPluginElementNPObject(
+                                         PPluginScriptableObjectParent** aValue,
+                                         NPError* aResult)
+{
+    return InternalGetValueForNPObject(NPNVPluginElementNPObject, aValue,
+                                       aResult);
 }
 
 bool
@@ -360,8 +413,7 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
         }
 
         NPObject* object =
-            reinterpret_cast<PluginScriptableObjectParent*>(actor)->
-            GetObject();
+            static_cast<PluginScriptableObjectParent*>(actor)->GetObject();
         NS_ASSERTION(object, "This shouldn't ever be null!");
 
         (*(NPObject**)_retval) = npn->retainobject(object);
@@ -486,19 +538,26 @@ bool
 PluginInstanceParent::AnswerPPluginScriptableObjectConstructor(
                                           PPluginScriptableObjectParent* aActor)
 {
+    // This is only called in response to the child process requesting the
+    // creation of an actor. This actor will represent an NPObject that is
+    // created by the plugin and returned to the browser.
     const NPNetscapeFuncs* npn = mParent->GetNetscapeFuncs();
     if (!npn) {
         NS_WARNING("No netscape function pointers?!");
         return false;
     }
 
+    NPClass* npclass =
+        const_cast<NPClass*>(PluginScriptableObjectParent::GetClass());
+
     ParentNPObject* object = reinterpret_cast<ParentNPObject*>(
-        npn->createobject(mNPP, PluginScriptableObjectParent::GetClass()));
+        npn->createobject(mNPP, npclass));
     if (!object) {
+        NS_WARNING("Failed to create NPObject!");
         return false;
     }
 
-    reinterpret_cast<PluginScriptableObjectParent*>(aActor)->Initialize(
+    static_cast<PluginScriptableObjectParent*>(aActor)->Initialize(
         const_cast<PluginInstanceParent*>(this), object);
     return true;
 }
@@ -512,4 +571,34 @@ PluginInstanceParent::NPP_URLNotify(const char* url, NPReason reason,
     PStreamNotifyParent* streamNotify =
         static_cast<PStreamNotifyParent*>(notifyData);
     CallPStreamNotifyDestructor(streamNotify, reason);
+}
+
+PluginScriptableObjectParent*
+PluginInstanceParent::GetActorForNPObject(NPObject* aObject)
+{
+  NS_ASSERTION(aObject, "Null pointer!");
+
+  if (aObject->_class == PluginScriptableObjectParent::GetClass()) {
+      // One of ours!
+      ParentNPObject* object = static_cast<ParentNPObject*>(aObject);
+      NS_ASSERTION(object->parent, "Null actor!");
+      return object->parent;
+  }
+
+  PRUint32 count = mScriptableObjects.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+      nsAutoPtr<PluginScriptableObjectParent>& actor =
+          mScriptableObjects[index];
+      if (actor->GetObject() == aObject) {
+          return actor;
+      }
+  }
+
+  PluginScriptableObjectParent* actor =
+      static_cast<PluginScriptableObjectParent*>(
+          CallPPluginScriptableObjectConstructor());
+  NS_ENSURE_TRUE(actor, nsnull);
+
+  actor->Initialize(const_cast<PluginInstanceParent*>(this), aObject);
+  return actor;
 }
