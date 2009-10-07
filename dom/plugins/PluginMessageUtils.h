@@ -53,15 +53,9 @@ namespace mozilla {
 struct void_t { };
 struct null_t { };
 
-// XXX Uberhack, remove this typedef and forward decl.
-namespace plugins {
-class Variant;
-}
-
 namespace ipc {
 
 typedef intptr_t NPRemoteIdentifier;
-typedef mozilla::plugins::Variant NPRemoteVariant;
 
 } /* namespace ipc */
 

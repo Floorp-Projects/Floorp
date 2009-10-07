@@ -267,6 +267,8 @@ nsresult nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
   mInst->GetNPP(&npp);
 
   if (mStreamStarted && callbacks->destroystream) {
+    NPPAutoPusher nppPusher(npp);
+
     mozilla::SharedLibrary* lib = nsnull;
     lib = mInst->mLibrary;
     NPError error;
@@ -355,6 +357,8 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
   }
 
   mStreamInfo = pluginInfo;
+
+  NPPAutoPusher nppPusher(npp);
 
   NS_TRY_SAFE_CALL_RETURN(error, (*callbacks->newstream)(npp, (char*)contentType, &mNPStream, seekable, &streamType), mInst->mLibrary, mInst);
 
@@ -595,6 +599,8 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
     while (mStreamBufferByteCount > 0) {
       PRInt32 numtowrite;
       if (callbacks->writeready) {
+        NPPAutoPusher nppPusher(npp);
+
         NS_TRY_SAFE_CALL_RETURN(numtowrite, (*callbacks->writeready)(npp, &mNPStream), mInst->mLibrary, mInst);
         NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
                        ("NPP WriteReady called: this=%p, npp=%p, "
@@ -640,6 +646,8 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
         // the whole buffer
         numtowrite = mStreamBufferByteCount;
       }
+
+      NPPAutoPusher nppPusher(npp);
 
       PRInt32 writeCount = 0; // bytes consumed by plugin instance
       NS_TRY_SAFE_CALL_RETURN(writeCount, (*callbacks->write)(npp, &mNPStream, streamPosition, numtowrite, ptrStreamBuffer), mInst->mLibrary, mInst);
@@ -1191,6 +1199,10 @@ nsNPAPIPluginInstance::InitializePlugin()
   PRBool oldVal = mInPluginInitCall;
   mInPluginInitCall = PR_TRUE;
 
+  // Need this on the stack before calling NPP_New otherwise some callbacks that
+  // the plugin may make could fail (NPN_HasProperty, for example).
+  NPPAutoPusher autopush(&mNPP);
+
   NS_TRY_SAFE_CALL_RETURN(error, (*mCallbacks->newp)((char*)mimetype, &mNPP, (PRUint16)mode, count, (char**)names, (char**)values, NULL), mLibrary,this);
 
   mInPluginInitCall = oldVal;
@@ -1244,6 +1256,8 @@ NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(NPWindow* window)
 
     PRBool oldVal = mInPluginInitCall;
     mInPluginInitCall = PR_TRUE;
+
+    NPPAutoPusher nppPusher(&mNPP);
 
     NPError error;
     NS_TRY_SAFE_CALL_RETURN(error, (*mCallbacks->setwindow)(&mNPP, (NPWindow*)window), mLibrary, this);
