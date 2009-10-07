@@ -249,3 +249,14 @@ OK, otherwise returning some kind of error string. On Windows, in windowed
 mode, this checks that the position of the plugin's internal child
 window has not been disturbed relative to the plugin window.
 
+== Windows native widget message behaviour ==
+
+* Mouse events are handled (saving the last mouse event coordinate) and not
+passed to the overridden windowproc.
+
+* WM_MOUSEWHEEL events are handled and not passed to the parent window or the
+overridden windowproc.
+
+* WM_MOUSEACTIVATE events are handled by calling SetFocus on the plugin's
+widget, if the plugin is windowed. If it's not windowed they're passed to
+the overriden windowproc (but hopefully never sent by the browser anyway).
