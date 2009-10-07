@@ -81,7 +81,6 @@ public:
     // nsIScriptGlobalObject methods
     virtual void OnFinalize(PRUint32 aLangID, void *aGlobal);
     virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
-    virtual nsresult SetNewArguments(nsIArray *aArguments);
 
     virtual void *GetScriptGlobal(PRUint32 lang);
     virtual nsresult EnsureScriptEnvironment(PRUint32 aLangID);
@@ -807,13 +806,6 @@ void
 nsXULPDGlobalObject::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 {
     // We don't care...
-}
-
-nsresult
-nsXULPDGlobalObject::SetNewArguments(nsIArray *aArguments)
-{
-    NS_NOTREACHED("waaah!");
-    return NS_ERROR_UNEXPECTED;
 }
 
 //----------------------------------------------------------------------
