@@ -257,7 +257,7 @@ var WinTaskbarJumpList =
       if ((this._shuttingDown && !task.close) || (!this._shuttingDown && !task.open))
         return;
       var item = this._getHandlerAppItem(task.title, task.description,
-                      task.args, task.iconIndex);
+                                         task.args, task.iconIndex);
       items.appendElement(item, false);
     }, this);
     
@@ -289,7 +289,7 @@ var WinTaskbarJumpList =
     // track frequent items so that we don't add them to
     // the recent list.
     this._frequentHashList = [];
-    
+
     list.forEach(function (entry) {
       let shortcut = this._getHandlerAppItem(entry.title, entry.title, entry.uri, 1);
       items.appendElement(shortcut, false);
@@ -308,15 +308,15 @@ var WinTaskbarJumpList =
 
     let count = 0;
     for (let idx = 0; idx < list.length; idx++) {
-      let entry = list[idx];
-      let shortcut = this._getHandlerAppItem(entry.title, entry.title, entry.uri, 1);
       if (count >= this._maxItemCount)
         break;
+      let entry = list[idx];
       // do not add items to recent that have already been added
       // to frequent.
       if (this._frequentHashList &&
           this._frequentHashList.indexOf(entry.uri) != -1)
         continue;
+      let shortcut = this._getHandlerAppItem(entry.title, entry.title, entry.uri, 1);
       items.appendElement(shortcut, false);
       count++;
     }
@@ -349,7 +349,7 @@ var WinTaskbarJumpList =
     var item = Cc["@mozilla.org/windows-jumplistshortcut;1"].
                createInstance(Ci.nsIJumpListShortcut);
     item.app = handlerApp;
-    item.iconIndex  = icon;
+    item.iconIndex = icon;
     return item;
   },
 
