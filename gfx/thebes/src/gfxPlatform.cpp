@@ -70,6 +70,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
+#include "nsCRT.h"
 
 gfxPlatform *gPlatform = nsnull;
 
@@ -186,7 +187,7 @@ gfxPlatform::Init()
 
     nsresult rv;
 
-#if defined(XP_MACOSX) // temporary, until this is implemented on others
+#if defined(XP_MACOSX) || defined(XP_WIN) // temporary, until this is implemented on others
     rv = gfxPlatformFontList::Init();
     if (NS_FAILED(rv)) {
         NS_ERROR("Could not initialize gfxPlatformFontList");
@@ -236,7 +237,7 @@ gfxPlatform::Shutdown()
     gfxTextRunCache::Shutdown();
     gfxTextRunWordCache::Shutdown();
     gfxFontCache::Shutdown();
-#if defined(XP_MACOSX) // temporary, until this is implemented on others
+#if defined(XP_MACOSX) || defined(XP_WIN) // temporary, until this is implemented on others
     gfxPlatformFontList::Shutdown();
 #endif
 
@@ -440,8 +441,27 @@ PRBool gfxPlatform::ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangAr
         prefName.Append(genericDotLang);
         rv = prefs->GetCharPref(prefName.get(), getter_Copies(nameListValue));
         if (NS_SUCCEEDED(rv) && !nameListValue.Equals(nameValue)) {
-            if (!aCallback(prefLang, NS_ConvertUTF8toUTF16(nameListValue), aClosure))
-                return PR_FALSE;
+            const char kComma = ',';
+            const char *p, *p_end;
+            nsCAutoString list(nameListValue);
+            list.BeginReading(p);
+            list.EndReading(p_end);
+            while (p < p_end) {
+                while (nsCRT::IsAsciiSpace(*p)) {
+                    if (++p == p_end)
+                        break;
+                }
+                if (p == p_end)
+                    break;
+                const char *start = p;
+                while (++p != p_end && *p != kComma)
+                    /* nothing */ ;
+                nsCAutoString fontName(Substring(start, p));
+                fontName.CompressWhitespace(PR_FALSE, PR_TRUE);
+                if (!aCallback(prefLang, NS_ConvertUTF8toUTF16(fontName), aClosure))
+                    return PR_FALSE;
+                p++;
+            }
         }
     }
 

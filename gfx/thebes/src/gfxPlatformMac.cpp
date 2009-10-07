@@ -189,14 +189,12 @@ gfxFontEntry*
 gfxPlatformMac::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                  const PRUint8 *aFontData, PRUint32 aLength)
 {
-    // Ownership of aFontData is passed in here.
-    // After activating the font via ATS, we can discard the data.
-    gfxFontEntry *fe =
-        gfxPlatformFontList::PlatformFontList()->MakePlatformFont(aProxyEntry,
-                                                                  aFontData,
-                                                                  aLength);
-    NS_Free((void*)aFontData);
-    return fe;
+    // Ownership of aFontData is received here, and passed on to
+    // gfxPlatformFontList::MakePlatformFont(), which must ensure the data
+    // is released with NS_Free when no longer needed
+    return gfxPlatformFontList::PlatformFontList()->MakePlatformFont(aProxyEntry,
+                                                                     aFontData,
+                                                                     aLength);
 }
 
 PRBool
