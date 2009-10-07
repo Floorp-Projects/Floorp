@@ -1,0 +1,99 @@
+<html>
+<head>
+  <title>Test that clicking on plugins transfers focus correctly</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <style>
+  embed { width:200px; height:200px; }
+  </style>
+</head>
+<body>
+
+<p><input type="text" id="input">
+<p><embed id="p1" type="application/x-test" wmode="window"></embed><embed id="p2" type="application/x-test"></embed>
+
+<script>
+var SimpleTest = window.opener.SimpleTest;
+var is = window.opener.is;
+var ok = window.opener.ok;
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+var gWindowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).
+                     getInterface(Ci.nsIDOMWindowUtils);
+
+var nativeMouseDown;
+var nativeMouseUp;
+
+SimpleTest.waitForExplicitFinish();
+
+function activatePlugin(id) {
+  return function() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var element = document.getElementById(id);
+    var bounds = element.getBoundingClientRect();
+    var x = (bounds.left + window.mozInnerScreenX + 10)*gWindowUtils.screenPixelsPerCSSPixel;
+    var y = (bounds.top + window.mozInnerScreenY + 10)*gWindowUtils.screenPixelsPerCSSPixel;
+
+    gWindowUtils.sendNativeMouseEvent(x, y, nativeMouseDown, 0, element);
+    gWindowUtils.sendNativeMouseEvent(x, y, nativeMouseUp, 0, element);
+  };
+}
+
+function done() {
+  SimpleTest.finish();
+  window.close();
+}
+
+var step = 0;
+var steps = [
+  { event:"focus", id:"input", action:activatePlugin("p1") },
+  { event:"blur", id:"input" },
+  { event:"focus", id:"p1", action:activatePlugin("p2") },
+  { event:"blur", id:"p1" },
+  { event:"focus", id:"p2", action:done }
+];
+
+function handleEvent(event) {
+  if (step >= steps.length)
+    return;
+
+  var s = steps[step++];
+  is(event.type, s.event, "Check event type");
+  is(event.target.id, s.id, "Check event target");
+
+  if (s.action) {
+    // Do the action after this event cycle is done
+    setTimeout(s.action, 0);
+  }
+}
+
+var elems = ["input", "p1", "p2"];
+for (var i = 0; i < elems.length; ++i) {
+  var e = document.getElementById(elems[i]);
+  e.addEventListener("focus", handleEvent, false);
+  e.addEventListener("blur", handleEvent, false);
+}
+
+function doTest() {
+  input.focus();
+}
+
+if (navigator.platform.indexOf("Mac") >= 0) {
+  nativeMouseDown = 1; // NSLeftMouseDown
+  nativeMouseUp = 2; // NSLeftMouseUp
+  SimpleTest.waitForFocus(doTest, window);
+} else if (navigator.platform.indexOf("Win") >= 0) {
+  nativeMouseDown = 2; // MOUSEEVENTF_LEFTDOWN
+  nativeMouseUp = 4; // MOUSEEVENTF_LEFTUP
+  SimpleTest.waitForFocus(doTest, window);
+} else {
+  todo(false, "Platform not supported");
+  SimpleTest.finish();
+}
+</script>
+
+</body>
+</html>
