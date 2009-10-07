@@ -131,7 +131,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(MallocMapped,
 #if defined(HAVE_JEMALLOC_STATS)
 NS_MEMORY_REPORTER_IMPLEMENT(MallocCommitted,
                              "malloc/committed",
-                             "Malloc bytes commited (readable/writable)",
+                             "Malloc bytes committed (readable/writable)",
                              getMallocCommitted,
                              NULL)
 
@@ -143,7 +143,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(MallocDirty,
 #elif defined(XP_MACOSX) && !defined(MOZ_MEMORY)
 NS_MEMORY_REPORTER_IMPLEMENT(MallocDefaultCommitted,
                              "malloc/zone0/committed",
-                             "Malloc bytes commited (r/w) in default zone",
+                             "Malloc bytes committed (r/w) in default zone",
                              getMallocDefaultCommitted,
                              NULL)
 
