@@ -396,6 +396,15 @@ gfxWindowsFont::GetUniqueName()
 }
 
 void
+gfxWindowsFont::InitTextRun(gfxTextRun *aTextRun,
+                            const PRUnichar *aString,
+                            PRUint32 aRunStart,
+                            PRUint32 aRunLength)
+{
+    NS_NOTREACHED("oops");
+}
+
+void
 gfxWindowsFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                      gfxContext *aContext, PRBool aDrawToPath, gfxPoint *aBaselineOrigin,
                      Spacing *aSpacing)

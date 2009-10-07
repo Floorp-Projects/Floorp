@@ -49,8 +49,6 @@
 
 #include <Carbon/Carbon.h>
 
-class gfxCoreTextFontGroup;
-
 class MacOSFontEntry;
 
 class gfxCoreTextFont : public gfxFont {
@@ -101,14 +99,10 @@ public:
 
     MacOSFontEntry* GetFontEntry();
 
-    PRBool Valid() {
-        return mIsValid;
-    }
-
     // clean up static objects that may have been cached
     static void Shutdown();
 
-    static CTFontRef CreateCTFontWithDisabledLigatures(ATSFontRef aFont, CGFloat aSize);
+    static CTFontRef CreateCTFontWithDisabledLigatures(ATSFontRef aFontRef, CGFloat aSize);
 
 protected:
     const gfxFontStyle *mFontStyle;
@@ -131,6 +125,17 @@ protected:
 
     void InitMetrics();
 
+    virtual void InitTextRun(gfxTextRun *aTextRun,
+                             const PRUnichar *aString,
+                             PRUint32 aRunStart,
+                             PRUint32 aRunLength);
+
+    nsresult SetGlyphsFromRun(gfxTextRun *aTextRun,
+                              CTRunRef aCTRun,
+                              PRInt32 aStringOffset,
+                              PRInt32 aLayoutStart,
+                              PRInt32 aLayoutLength);
+
     virtual PRBool SetupCairoFont(gfxContext *aContext);
 
     static void CreateDefaultFeaturesDescriptor();
@@ -145,85 +150,6 @@ protected:
     static CTFontDescriptorRef    sDefaultFeaturesDescriptor;
     // cached descriptor for adding disable-ligatures setting to a font
     static CTFontDescriptorRef    sDisableLigaturesDescriptor;
-};
-
-class THEBES_API gfxCoreTextFontGroup : public gfxFontGroup {
-public:
-    gfxCoreTextFontGroup(const nsAString& families,
-                         const gfxFontStyle *aStyle,
-                         gfxUserFontSet *aUserFontSet);
-    virtual ~gfxCoreTextFontGroup() {};
-
-    virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);
-
-    virtual gfxTextRun *MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
-                                    const Parameters* aParams, PRUint32 aFlags);
-    virtual gfxTextRun *MakeTextRun(const PRUint8* aString, PRUint32 aLength,
-                                    const Parameters* aParams, PRUint32 aFlags);
-    // When aWrapped is true, the string includes bidi control
-    // characters. The first character will be LRO or LRO to force setting the
-    // direction for all characters, the last character is PDF, and the
-    // second to last character is a non-whitespace character --- to ensure
-    // that there is no "trailing whitespace" in the string, see
-    // http://weblogs.mozillazine.org/roc/archives/2007/02/superlaser_targ.html#comments
-    void MakeTextRunInternal(const PRUnichar *aString, PRUint32 aLength,
-                             PRBool aWrapped, gfxTextRun *aTextRun);
-
-    gfxCoreTextFont* GetFontAt(PRInt32 aFontIndex) {
-        return static_cast<gfxCoreTextFont*>(static_cast<gfxFont*>(mFonts[aFontIndex]));
-    }
-
-    PRBool HasFont(ATSFontRef aFontRef);
-
-    inline gfxCoreTextFont* WhichFontSupportsChar(nsTArray< nsRefPtr<gfxFont> >& aFontList, 
-                                                  PRUint32 aCh)
-    {
-        PRUint32 len = aFontList.Length();
-        for (PRUint32 i = 0; i < len; i++) {
-            gfxCoreTextFont* font = static_cast<gfxCoreTextFont*>(aFontList.ElementAt(i).get());
-            if (font->TestCharacterMap(aCh))
-                return font;
-        }
-        return nsnull;
-    }
-
-    // search through pref fonts for a character, return nsnull if no matching pref font
-    already_AddRefed<gfxFont> WhichPrefFontSupportsChar(PRUint32 aCh);
-
-    already_AddRefed<gfxFont> WhichSystemFontSupportsChar(PRUint32 aCh);
-
-    void UpdateFontList();
-
-protected:
-    static PRBool FindCTFont(const nsAString& aName,
-                             const nsACString& aGenericName,
-                             void *closure);
-
-    /**
-     * @param aTextRun the text run to fill in
-     * @param aString the complete text including all wrapper characters
-     * @param aTotalLength the length of aString
-     * @param aLayoutStart the first "real" character of aString, skipping any dir override
-     * @param aLayoutLength the length of the characters that should be actually used
-     */
-    void InitTextRun(gfxTextRun *aTextRun,
-                     const PRUnichar *aString,
-                     PRUint32 aTotalLength,
-                     PRUint32 aLayoutStart,
-                     PRUint32 aLayoutLength);
-
-    nsresult SetGlyphsFromRun(gfxTextRun *aTextRun,
-                              CTRunRef aCTRun,
-                              const PRPackedBool *aUnmatched,
-                              PRInt32 aLayoutStart,
-                              PRInt32 aLayoutLength);
-
-    // cache the most recent pref font to avoid general pref font lookup
-    nsRefPtr<gfxFontFamily>       mLastPrefFamily;
-    nsRefPtr<gfxCoreTextFont>     mLastPrefFont;
-    eFontPrefLang                 mLastPrefLang;       // lang group for last pref font
-    PRBool                        mLastPrefFirstFont;  // is this the first font in the list of pref fonts for this lang group?
-    eFontPrefLang                 mPageLang;
 };
 
 #endif /* GFX_CORETEXTFONTS_H */

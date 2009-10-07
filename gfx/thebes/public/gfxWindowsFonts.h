@@ -95,6 +95,11 @@ public:
     PRBool IsValid() { GetMetrics(); return mIsValid; }
     GDIFontEntry *GetFontEntry();
 
+    virtual void InitTextRun(gfxTextRun *aTextRun,
+                             const PRUnichar *aString,
+                             PRUint32 aRunStart,
+                             PRUint32 aRunLength);
+
     static already_AddRefed<gfxWindowsFont>
     GetOrMakeFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aStyle,
                   PRBool aNeedsBold = PR_FALSE);
