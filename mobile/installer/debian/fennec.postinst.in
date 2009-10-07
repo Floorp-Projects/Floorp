@@ -8,7 +8,7 @@ set -e
 case "$1" in
     configure)
         # for faster initial startup
-#ifdef NS_HILDON        
+#ifdef MOZ_PLATFORM_HILDON        
         /bin/su -l user -c "/usr/bin/fennec -silent" > /dev/null 2>&1  || echo -n ""
 #end
         # for fennec icons
