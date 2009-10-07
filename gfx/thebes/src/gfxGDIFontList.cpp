@@ -218,6 +218,23 @@ GDIFontEntry::ReadCMAP()
     return rv;
 }
 
+gfxFont *
+GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, PRBool /*aNeedsBold*/)
+{
+    gfxFont *newFont;
+    newFont = new gfxWindowsFont(this, aFontStyle);
+    if (!newFont) {
+        return nsnull;
+    }
+    if (!newFont->Valid()) {
+        delete newFont;
+        return nsnull;
+    }
+    nsRefPtr<gfxFont> font = newFont;
+    gfxFontCache::GetCache()->AddNew(font);
+    return newFont;
+}
+
 nsresult
 GDIFontEntry::GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer)
 {

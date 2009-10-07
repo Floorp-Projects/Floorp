@@ -350,6 +350,67 @@ gfxWindowsPlatform::GetFTLibrary()
 }
 #endif
 
+#ifndef MOZ_FT2_FONTS
+void
+gfxWindowsPlatform::SetupClusterBoundaries(gfxTextRun *aTextRun,
+                                           const PRUnichar *aString)
+{
+    NS_ABORT_IF_FALSE(sizeof(WCHAR) == sizeof(PRUnichar),
+                      "WCHAR/PRUnichar not compatible");
+
+    PRUint32 length = aTextRun->GetLength();
+
+    nsAutoTArray<SCRIPT_ITEM,4> items;
+    PRUint32 maxItems = 4;
+    int numItems;
+    HRESULT result;
+    PRUint32 i, j;
+
+    do {
+        items.SetLength(maxItems);
+        result = ::ScriptItemize(aString, length,
+                                 maxItems - 1,
+                                 NULL,
+                                 NULL,
+                                 items.Elements(),
+                                 &numItems);
+        maxItems <<= 1;
+        if (maxItems > INT_MAX)
+            break;
+    } while (result == E_OUTOFMEMORY);
+
+    if (result != 0) {
+        return;
+    }
+
+    nsTArray<SCRIPT_LOGATTR> attrs;
+    for (i = 0; i < PRUint32(numItems); ++i) {
+        PRUint32 offset = items[i].iCharPos;
+        length = items[i + 1].iCharPos - offset;
+        if (attrs.Length() < length) {
+            attrs.SetLength(length);
+        }
+        result = ::ScriptBreak(aString + offset, length,
+                               &items[i].a,
+                               attrs.Elements());
+        if (result != 0) {
+            break;
+        }
+        for (j = 1; j < length; ++j) {
+            if (!attrs[j].fCharStop) {
+                gfxTextRun::CompressedGlyph g;
+                // Remember that this character is not the start of a cluster
+                // by setting its glyph data to "not a cluster start",
+                // "is a ligature start", with no glyphs.
+                aTextRun->SetGlyphs(offset + j,
+                                    g.SetComplex(PR_FALSE, PR_TRUE, 0),
+                                    nsnull);
+            }
+        }
+    }
+}
+#endif
+
 void
 gfxWindowsPlatform::InitDisplayCaps()
 {

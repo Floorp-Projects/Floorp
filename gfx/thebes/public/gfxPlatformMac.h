@@ -91,9 +91,6 @@ public:
                          nsTArray<nsString>& aListOfFonts);
     nsresult UpdateFontList();
 
-    // in some situations, need to make decisions about ambiguous characters, may need to look at multiple pref langs
-    void GetLangPrefs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, eFontPrefLang aCharLang, eFontPrefLang aPageLang);
-    
     // Returns the OS X version as returned from Gestalt(gestaltSystemVersion, ...)
     // Ex: Mac OS X 10.4.x ==> 0x104x 
     PRInt32 OSXVersion();
@@ -110,21 +107,14 @@ public:
 #endif
 
     // record Unicode cluster boundaries in the text run
-    static void SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString);
-
-    // map a Unicode range (based on char code) to a font language for Preferences
-    static eFontPrefLang GetFontPrefLangFor(PRUint8 aUnicodeRange);
+    virtual void SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString);
 
 private:
-    void AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, 
-                            eFontPrefLang aCharLang, eFontPrefLang aPageLang);
-                                               
     virtual qcms_profile* GetPlatformCMSOutputProfile();
     
     // read in the pref value for the lower threshold on font anti-aliasing
     static PRUint32 ReadAntiAliasingThreshold();    
     
-    nsTArray<PRUint32> mCJKPrefLangs;
     PRInt32 mOSXVersion;
     PRUint32 mFontAntiAliasingThreshold;
 

@@ -79,7 +79,13 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
 
 gfxProxyFontEntry::~gfxProxyFontEntry()
 {
+}
 
+gfxFont*
+gfxProxyFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold)
+{
+    // cannot create an actual font for a proxy entry
+    return nsnull;
 }
 
 gfxUserFontSet::gfxUserFontSet()

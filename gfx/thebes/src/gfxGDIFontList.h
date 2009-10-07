@@ -289,6 +289,8 @@ protected:
 
     void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
 
+    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold);
+
     virtual nsresult GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer);
 
     LOGFONTW mLogFont;
