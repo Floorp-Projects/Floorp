@@ -56,6 +56,7 @@ _TEST_FILES = \
 		plugin_clipping_helper_transformed.xhtml \
 		plugin_clipping_helper_table.xhtml \
 		plugin_clipping_lib.js \
+		plugin_focus_helper.html \
 		test_backspace_delete.xul \
 		test_bug263683.html \
 		test_bug288789.html \
@@ -95,6 +96,7 @@ _TEST_FILES = \
 		test_plugin_clipping2.xhtml \
 		test_plugin_clipping_transformed.xhtml \
 		test_plugin_clipping_table.xhtml \
+		test_plugin_focus.html \
 		test_plugin_mouse_coords.html \
 		test_plugin_position.xhtml \
 		test_selection_underline.html \
