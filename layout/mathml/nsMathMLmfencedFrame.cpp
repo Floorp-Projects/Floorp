@@ -23,6 +23,7 @@
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Frederic Wang <fred.wang@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -241,31 +242,6 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
 {
-  return doReflow(aPresContext, aReflowState, aDesiredSize, aStatus, this,
-                  mOpenChar, mCloseChar, mSeparatorsChar, mSeparatorsCount);
-}
-
-/* virtual */ nscoord
-nsMathMLmfencedFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext)
-{
-  return doGetIntrinsicWidth(aRenderingContext, this, mOpenChar, mCloseChar,
-                             mSeparatorsChar, mSeparatorsCount);
-}
-
-// exported routine that both mfenced and mfrac share.
-// mfrac uses this when its bevelled attribute is set.
-/*static*/ nsresult
-nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
-                               const nsHTMLReflowState& aReflowState,
-                               nsHTMLReflowMetrics&     aDesiredSize,
-                               nsReflowStatus&          aStatus,
-                               nsMathMLContainerFrame*  aForFrame,
-                               nsMathMLChar*            aOpenChar,
-                               nsMathMLChar*            aCloseChar,
-                               nsMathMLChar*            aSeparatorsChar,
-                               PRInt32                  aSeparatorsCount)
-
-{
   nsresult rv;
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
@@ -273,7 +249,7 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
 
   PRInt32 i;
   nsCOMPtr<nsIFontMetrics> fm;
-  const nsStyleFont* font = aForFrame->GetStyleFont();
+  const nsStyleFont* font = GetStyleFont();
   aReflowState.rendContext->SetFont(font->mFont, nsnull,
                                     aPresContext->GetUserFontSet());
   aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
@@ -297,10 +273,10 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
 
   nsReflowStatus childStatus;
   nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
-  nsIFrame* firstChild = aForFrame->GetFirstChild(nsnull);
+  nsIFrame* firstChild = GetFirstChild(nsnull);
   nsIFrame* childFrame = firstChild;
   nscoord ascent = 0, descent = 0;
-  if (firstChild || aOpenChar || aCloseChar || aSeparatorsCount > 0) {
+  if (firstChild || mOpenChar || mCloseChar || mSeparatorsCount > 0) {
     // We use the ASCII metrics to get our minimum height. This way, if we have
     // borders or a background, they will fit better with other elements on the line
     fm->GetMaxAscent(ascent);
@@ -311,25 +287,23 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
                                          | NS_REFLOW_CALC_BOUNDING_METRICS);
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
-    rv = aForFrame->ReflowChild(childFrame, aPresContext, childDesiredSize,
-                                childReflowState, childStatus);
+    rv = ReflowChild(childFrame, aPresContext, childDesiredSize,
+                     childReflowState, childStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
     if (NS_FAILED(rv)) {
       // Call DidReflow() for the child frames we successfully did reflow.
-      aForFrame->DidReflowChildren(firstChild, childFrame);
+      DidReflowChildren(firstChild, childFrame);
       return rv;
     }
 
     SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                     childDesiredSize.mBoundingMetrics);
 
-    // compute the bounding metrics right now for mfrac
     nscoord childDescent = childDesiredSize.height - childDesiredSize.ascent;
     if (descent < childDescent)
       descent = childDescent;
     if (ascent < childDesiredSize.ascent)
       ascent = childDesiredSize.ascent;
-    aDesiredSize.mBoundingMetrics += childDesiredSize.mBoundingMetrics;
 
     childFrame = childFrame->GetNextSibling();
   }
@@ -341,44 +315,38 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
   nsStretchDirection stretchDir = NS_STRETCH_DIRECTION_VERTICAL;
 
   nsPresentationData presentationData;
-  aForFrame->GetPresentationData(presentationData);
-  if (!NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(presentationData.flags)) {
-    // case when the call is made for mfrac, we only need to stretch the '/' separator
-    containerSize = aDesiredSize.mBoundingMetrics; // computed earlier
-  }
-  else {
-    // case when the call is made for mfenced
-    aForFrame->GetPreferredStretchSize(*aReflowState.rendContext,
-                                       0, /* i.e., without embellishments */
-                                       stretchDir, containerSize);
-    childFrame = firstChild;
-    while (childFrame) {
-      nsIMathMLFrame* mathmlChild = do_QueryFrame(childFrame);
-      if (mathmlChild) {
-        nsHTMLReflowMetrics childDesiredSize;
-        // retrieve the metrics that was stored at the previous pass
-        GetReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
-                                         childDesiredSize.mBoundingMetrics);
-
-        mathmlChild->Stretch(*aReflowState.rendContext, 
-                             stretchDir, containerSize, childDesiredSize);
-        // store the updated metrics
-        SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
-                                          childDesiredSize.mBoundingMetrics);
-
-        nscoord childDescent = childDesiredSize.height - childDesiredSize.ascent;
-        if (descent < childDescent)
-          descent = childDescent;
-        if (ascent < childDesiredSize.ascent)
-          ascent = childDesiredSize.ascent;
-      }
-      childFrame = childFrame->GetNextSibling();
+  GetPresentationData(presentationData);
+  GetPreferredStretchSize(*aReflowState.rendContext,
+                          0, /* i.e., without embellishments */
+                          stretchDir, containerSize);
+  childFrame = firstChild;
+  while (childFrame) {
+    nsIMathMLFrame* mathmlChild = do_QueryFrame(childFrame);
+    if (mathmlChild) {
+      nsHTMLReflowMetrics childDesiredSize;
+      // retrieve the metrics that was stored at the previous pass
+      GetReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
+                                     childDesiredSize.mBoundingMetrics);
+      
+      mathmlChild->Stretch(*aReflowState.rendContext, 
+                           stretchDir, containerSize, childDesiredSize);
+      // store the updated metrics
+      SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
+                                      childDesiredSize.mBoundingMetrics);
+      
+      nscoord childDescent = childDesiredSize.height - childDesiredSize.ascent;
+      if (descent < childDescent)
+        descent = childDescent;
+      if (ascent < childDesiredSize.ascent)
+        ascent = childDesiredSize.ascent;
     }
-    // bug 121748: for surrounding fences & separators, use a size that covers everything
-    aForFrame->GetPreferredStretchSize(*aReflowState.rendContext,
-                                       STRETCH_CONSIDER_EMBELLISHMENTS,
-                                       stretchDir, containerSize);
+    childFrame = childFrame->GetNextSibling();
   }
+
+  // bug 121748: for surrounding fences & separators, use a size that covers everything
+  GetPreferredStretchSize(*aReflowState.rendContext,
+                          STRETCH_CONSIDER_EMBELLISHMENTS,
+                          stretchDir, containerSize);
 
   //////////////////////////////////////////
   // Prepare the opening fence, separators, and closing fence, and
@@ -394,19 +362,19 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
 
   /////////////////
   // opening fence ...
-  ReflowChar(aPresContext, *aReflowState.rendContext, aOpenChar,
+  ReflowChar(aPresContext, *aReflowState.rendContext, mOpenChar,
              NS_MATHML_OPERATOR_FORM_PREFIX, font->mScriptLevel, 
              axisHeight, leading, em, containerSize, ascent, descent);
   /////////////////
   // separators ...
-  for (i = 0; i < aSeparatorsCount; i++) {
-    ReflowChar(aPresContext, *aReflowState.rendContext, &aSeparatorsChar[i],
+  for (i = 0; i < mSeparatorsCount; i++) {
+    ReflowChar(aPresContext, *aReflowState.rendContext, &mSeparatorsChar[i],
                NS_MATHML_OPERATOR_FORM_INFIX, font->mScriptLevel,
                axisHeight, leading, em, containerSize, ascent, descent);
   }
   /////////////////
   // closing fence ...
-  ReflowChar(aPresContext, *aReflowState.rendContext, aCloseChar,
+  ReflowChar(aPresContext, *aReflowState.rendContext, mCloseChar,
              NS_MATHML_OPERATOR_FORM_POSTFIX, font->mScriptLevel,
              axisHeight, leading, em, containerSize, ascent, descent);
 
@@ -418,8 +386,8 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
   nscoord dx = 0;
   nsBoundingMetrics bm;
   PRBool firstTime = PR_TRUE;
-  if (aOpenChar) {
-    PlaceChar(aOpenChar, ascent, bm, dx);
+  if (mOpenChar) {
+    PlaceChar(mOpenChar, ascent, bm, dx);
     aDesiredSize.mBoundingMetrics = bm;
     firstTime = PR_FALSE;
   }
@@ -435,12 +403,12 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
     else  
       aDesiredSize.mBoundingMetrics += bm;
 
-    aForFrame->FinishReflowChild(childFrame, aPresContext, nsnull, childSize, 
-                                   dx, ascent - childSize.ascent, 0);
+    FinishReflowChild(childFrame, aPresContext, nsnull, childSize, 
+                      dx, ascent - childSize.ascent, 0);
     dx += childSize.width;
 
-    if (i < aSeparatorsCount) {
-      PlaceChar(&aSeparatorsChar[i], ascent, bm, dx);
+    if (i < mSeparatorsCount) {
+      PlaceChar(&mSeparatorsChar[i], ascent, bm, dx);
       aDesiredSize.mBoundingMetrics += bm;
     }
     i++;
@@ -448,8 +416,8 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
     childFrame = childFrame->GetNextSibling();
   }
 
-  if (aCloseChar) {
-    PlaceChar(aCloseChar, ascent, bm, dx);
+  if (mCloseChar) {
+    PlaceChar(mCloseChar, ascent, bm, dx);
     if (firstTime)
       aDesiredSize.mBoundingMetrics  = bm;
     else  
@@ -460,17 +428,17 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
   aDesiredSize.height = ascent + descent;
   aDesiredSize.ascent = ascent;
 
-  aForFrame->SetBoundingMetrics(aDesiredSize.mBoundingMetrics);
-  aForFrame->SetReference(nsPoint(0, aDesiredSize.ascent));
+  SetBoundingMetrics(aDesiredSize.mBoundingMetrics);
+  SetReference(nsPoint(0, aDesiredSize.ascent));
 
   // see if we should fix the spacing
-  aForFrame->FixInterFrameSpacing(aDesiredSize);
+  FixInterFrameSpacing(aDesiredSize);
 
   // Finished with these:
-  aForFrame->ClearSavedChildMetrics();
+  ClearSavedChildMetrics();
 
   // Set our overflow area
-  aForFrame->GatherAndStoreOverflow(&aDesiredSize);
+  GatherAndStoreOverflow(&aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -623,29 +591,24 @@ GetMaxCharWidth(nsPresContext*       aPresContext,
 }
 
 /* virtual */ nscoord
-nsMathMLmfencedFrame::doGetIntrinsicWidth(nsIRenderingContext*    aRenderingContext,
-                                          nsMathMLContainerFrame* aForFrame,
-                                          nsMathMLChar*           aOpenChar,
-                                          nsMathMLChar*           aCloseChar,
-                                          nsMathMLChar*           aSeparatorsChar,
-                                          PRInt32                 aSeparatorsCount)
+nsMathMLmfencedFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext)
 {
   nscoord width = 0;
 
-  nsPresContext* presContext = aForFrame->PresContext();
-  const nsStyleFont* font = aForFrame->GetStyleFont();
+  nsPresContext* presContext = PresContext();
+  const nsStyleFont* font = GetStyleFont();
   nsCOMPtr<nsIFontMetrics> fm = presContext->GetMetricsFor(font->mFont);
   nscoord em;
   GetEmHeight(fm, em);
 
-  if (aOpenChar) {
+  if (mOpenChar) {
     width +=
-      GetMaxCharWidth(presContext, aRenderingContext, aOpenChar,
+      GetMaxCharWidth(presContext, aRenderingContext, mOpenChar,
                       NS_MATHML_OPERATOR_FORM_PREFIX, font->mScriptLevel, em);
   }
 
   PRInt32 i = 0;
-  nsIFrame* childFrame = aForFrame->GetFirstChild(nsnull);
+  nsIFrame* childFrame = GetFirstChild(nsnull);
   while (childFrame) {
     // XXX This includes margin while Reflow currently doesn't consider
     // margin, so we may end up with too much space, but, with stretchy
@@ -653,9 +616,9 @@ nsMathMLmfencedFrame::doGetIntrinsicWidth(nsIRenderingContext*    aRenderingCont
     width += nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
                                                   nsLayoutUtils::PREF_WIDTH);
 
-    if (i < aSeparatorsCount) {
+    if (i < mSeparatorsCount) {
       width +=
-        GetMaxCharWidth(presContext, aRenderingContext, &aSeparatorsChar[i],
+        GetMaxCharWidth(presContext, aRenderingContext, &mSeparatorsChar[i],
                         NS_MATHML_OPERATOR_FORM_INFIX, font->mScriptLevel, em);
     }
     i++;
@@ -663,9 +626,9 @@ nsMathMLmfencedFrame::doGetIntrinsicWidth(nsIRenderingContext*    aRenderingCont
     childFrame = childFrame->GetNextSibling();
   }
 
-  if (aCloseChar) {
+  if (mCloseChar) {
     width +=
-      GetMaxCharWidth(presContext, aRenderingContext, aCloseChar,
+      GetMaxCharWidth(presContext, aRenderingContext, mCloseChar,
                       NS_MATHML_OPERATOR_FORM_POSTFIX, font->mScriptLevel, em);
   }
 
