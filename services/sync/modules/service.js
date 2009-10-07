@@ -264,6 +264,8 @@ WeaveSvc.prototype = {
   // xxx we might need to split some of this out into something we can call
   //     again when username/server/etc changes
   _onStartup: function _onStartup() {
+    Status.service = STATUS_OK;
+
     this._registerEngines();
 
     // Reset our sync id if we're upgrading, so sync knows to reset local data
