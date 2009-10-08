@@ -156,6 +156,10 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 _FILES	= \
+	ua.css \
+	html.css \
+	quirk.css \
+	viewsource.css \
 	arrow.gif \
 	arrowd.gif \
 	contenteditable.css \
