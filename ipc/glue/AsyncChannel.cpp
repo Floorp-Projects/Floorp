@@ -112,6 +112,7 @@ AsyncChannel::Close()
 bool
 AsyncChannel::Send(Message* msg)
 {
+    AssertWorkerThread();
     NS_ABORT_IF_FALSE(MSG_ROUTING_NONE != msg->routing_id(), "need a route");
 
     if (!Connected())
@@ -126,6 +127,7 @@ AsyncChannel::Send(Message* msg)
 void
 AsyncChannel::OnDispatchMessage(const Message& msg)
 {
+    AssertWorkerThread();
     NS_ASSERTION(!msg.is_reply(), "can't process replies here");
     NS_ASSERTION(!(msg.is_sync() || msg.is_rpc()), "async dispatch only");
 
@@ -155,6 +157,7 @@ AsyncChannel::OnDispatchMessage(const Message& msg)
 void
 AsyncChannel::OnMessageReceived(const Message& msg)
 {
+    AssertIOThread();
     NS_ASSERTION(mChannelState != ChannelError, "Shouldn't get here!");
 
     // wake up the worker, there's work to do
@@ -167,6 +170,7 @@ AsyncChannel::OnMessageReceived(const Message& msg)
 void
 AsyncChannel::OnChannelConnected(int32 peer_pid)
 {
+    AssertIOThread();
     MutexAutoLock lock(mMutex);
 
     mChannelState = ChannelConnected;
@@ -177,6 +181,7 @@ AsyncChannel::OnChannelConnected(int32 peer_pid)
 void
 AsyncChannel::OnChannelError()
 {
+    AssertIOThread();
     mChannelState = ChannelError;
 
     if (XRE_GetProcessType() == GeckoProcessType_Default) {
@@ -200,6 +205,7 @@ AsyncChannel::OnChannelError()
 void
 AsyncChannel::OnChannelOpened()
 {
+    AssertIOThread();
     mChannelState = ChannelOpening;
     /*assert*/mTransport->Connect();
 }
@@ -207,6 +213,7 @@ AsyncChannel::OnChannelOpened()
 void
 AsyncChannel::OnSend(Message* aMsg)
 {
+    AssertIOThread();
     mTransport->Send(aMsg);
     // mTransport deletes aMsg
 }

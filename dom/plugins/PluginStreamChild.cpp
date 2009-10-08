@@ -51,6 +51,8 @@ PluginStreamChild::PluginStreamChild(PluginInstanceChild* instance)
 int32_t
 PluginStreamChild::NPN_Write(int32_t length, void* buffer)
 {
+  AssertPluginThread();
+
   int32_t written = 0;
   CallNPN_Write(nsCString(static_cast<char*>(buffer), length),
                 &written);
@@ -63,6 +65,8 @@ PluginStreamChild::NPN_Write(int32_t length, void* buffer)
 void
 PluginStreamChild::NPP_DestroyStream(NPError reason)
 {
+  AssertPluginThread();
+
   if (mClosed)
     return;
 
