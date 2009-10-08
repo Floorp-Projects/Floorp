@@ -134,8 +134,8 @@ let gInitialPages = [
 #define WIN7_FEATURES
 XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
   const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
-  let taskbar = Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar);
-  if (taskbar.available) {
+  if (WINTASKBAR_CONTRACTID in Cc &&
+    Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
     Cu.import("resource://gre/modules/WindowsPreviewPerTab.jsm");
     return {
       onOpenWindow: function () {
