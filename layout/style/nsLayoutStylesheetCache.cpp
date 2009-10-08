@@ -102,7 +102,7 @@ nsLayoutStylesheetCache::FormsSheet()
   if (!gStyleCache->mFormsSheet) {
     nsCOMPtr<nsIURI> sheetURI;
       NS_NewURI(getter_AddRefs(sheetURI),
-                NS_LITERAL_CSTRING("resource://gre/res/forms.css"));
+                NS_LITERAL_CSTRING("resource://gre-resources/forms.css"));
 
     // forms.css needs access to unsafe rules
     if (sheetURI)
@@ -179,13 +179,13 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
   // And make sure that we load our UA sheets.  No need to do this
   // per-profile, since they're profile-invariant.
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), "resource://gre/res/ua.css");
+  NS_NewURI(getter_AddRefs(uri), "resource://gre-resources/ua.css");
   if (uri) {
     LoadSheet(uri, mUASheet, PR_TRUE);
   }
   NS_ASSERTION(mUASheet, "Could not load ua.css");
 
-  NS_NewURI(getter_AddRefs(uri), "resource://gre/res/quirk.css");
+  NS_NewURI(getter_AddRefs(uri), "resource://gre-resources/quirk.css");
   if (uri) {
     LoadSheet(uri, mQuirkSheet, PR_TRUE);
   }

@@ -364,11 +364,6 @@
 
 ; [Layout Engine Resources]
 ; Style Sheets, Graphics and other Resources used by the layout engine. 
-@BINPATH@/res/hiddenWindow.html
-@BINPATH@/res/ua.css
-@BINPATH@/res/html.css
-@BINPATH@/res/quirk.css
-@BINPATH@/res/forms.css
 @BINPATH@/res/EditorOverride.css
 @BINPATH@/res/contenteditable.css
 @BINPATH@/res/designmode.css
@@ -392,11 +387,7 @@
 @BINPATH@/res/table-remove-row.gif
 @BINPATH@/res/arrowd.gif
 @BINPATH@/res/grabber.gif
-@BINPATH@/res/viewsource.css
-@BINPATH@/res/mathml.css
 @BINPATH@/res/arrow.gif
-@BINPATH@/res/loading-image.png
-@BINPATH@/res/broken-image.png
 #ifdef XP_MACOSX
 @BINPATH@/res/cursors/*
 #endif
