@@ -52,6 +52,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSPropertySet.h"
 #include "nsStyleAnimation.h"
+#include "nsCSSDataBlock.h"
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
@@ -134,9 +135,6 @@ public:
     mCoveredValues.AppendElement(v);
   }
 
-  NS_HIDDEN_(void)
-    FillStyleStruct(void* aStyleStruct, nsRuleData* aRuleData) const;
-
   struct CoveredValue {
     nsCSSProperty mProperty;
     nsStyleCoord mCoveredValue;
@@ -201,48 +199,6 @@ ElementTransitionsPropertyDtor(void           *aObject,
 
 NS_IMPL_ISUPPORTS1(ElementTransitionsStyleRule, nsIStyleRule)
 
-static void
-ElementTransitionsPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData,
-                                      nsIStyleRule* aRule)
-{
-  ElementTransitionsStyleRule *rule =
-    static_cast<ElementTransitionsStyleRule*>(aRule);
-  ElementTransitions *et = rule->ElementData();
-  for (PRUint32 i = 0, i_end = et->mPropertyTransitions.Length();
-       i < i_end; ++i)
-  {
-    const ElementPropertyTransition &pt = et->mPropertyTransitions[i];
-    if (aRuleData->mSIDs & nsCachedStyleData::GetBitForSID(
-                             nsCSSProps::kSIDTable[pt.mProperty]))
-    {
-      double timePortion =
-        (rule->RefreshTime() - pt.mStartTime).ToSeconds() /
-        pt.mDuration.ToSeconds();
-      if (timePortion < 0.0)
-        timePortion = 0.0; // use start value during transition-delay
-      if (timePortion > 1.0)
-        timePortion = 1.0; // we might be behind on flushing
-
-      double valuePortion =
-        pt.mTimingFunction.GetSplineValue(timePortion);
-      nsStyleCoord value;
-#ifdef DEBUG
-      PRBool ok =
-#endif
-        nsStyleAnimation::Interpolate(pt.mStartValue, pt.mEndValue,
-                                      valuePortion, value);
-      NS_ABORT_IF_FALSE(ok, "could not interpolate values");
-#ifdef DEBUG
-      ok =
-#endif
-        nsStyleAnimation::StoreComputedValue(pt.mProperty,
-                                             aRuleData->mPresContext,
-                                             aStyleStruct, value);
-      NS_ABORT_IF_FALSE(ok, "could not store computed value");
-    }
-  }
-}
-
 NS_IMETHODIMP
 ElementTransitionsStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
@@ -262,15 +218,31 @@ ElementTransitionsStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
     if (aRuleData->mSIDs & nsCachedStyleData::GetBitForSID(
                              nsCSSProps::kSIDTable[pt.mProperty]))
     {
-      nsPostResolveCallback prc =
-        { &ElementTransitionsPostResolveCallback, this };
-      aRuleData->mPostResolveCallbacks.AppendElement(prc);
-      // This really doesn't matter much, since this ought to be
-      // the only node with the rule, but it's good practice for
-      // post-resolve callbacks.
-      aRuleData->mCanStoreInRuleTree = PR_FALSE;
+      double timePortion =
+        (RefreshTime() - pt.mStartTime).ToSeconds() / pt.mDuration.ToSeconds();
+      if (timePortion < 0.0)
+        timePortion = 0.0; // use start value during transition-delay
+      if (timePortion > 1.0)
+        timePortion = 1.0; // we might be behind on flushing
 
-      return NS_OK;
+      double valuePortion =
+        pt.mTimingFunction.GetSplineValue(timePortion);
+      nsStyleCoord value;
+#ifdef DEBUG
+      PRBool ok =
+#endif
+        nsStyleAnimation::Interpolate(pt.mStartValue, pt.mEndValue,
+                                      valuePortion, value);
+      NS_ABORT_IF_FALSE(ok, "could not interpolate values");
+
+      void *prop =
+        nsCSSExpandedDataBlock::RuleDataPropertyAt(aRuleData, pt.mProperty);
+#ifdef DEBUG
+      ok =
+#endif
+        nsStyleAnimation::UncomputeValue(pt.mProperty, aRuleData->mPresContext,
+                                         value, prop);
+      NS_ABORT_IF_FALSE(ok, "could not store computed value");
     }
   }
 
@@ -316,16 +288,6 @@ ElementTransitions::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 
 NS_IMPL_ISUPPORTS1(CoverTransitionStartStyleRule, nsIStyleRule)
 
-static void
-CoverTransitionStartPostResolveCallback(void* aStyleStruct,
-                                        nsRuleData* aRuleData,
-                                        nsIStyleRule* aRule)
-{
-  CoverTransitionStartStyleRule* coverRule =
-    static_cast<CoverTransitionStartStyleRule*>(aRule);
-  coverRule->FillStyleStruct(aStyleStruct, aRuleData);
-}
-
 NS_IMETHODIMP
 CoverTransitionStartStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
@@ -334,15 +296,14 @@ CoverTransitionStartStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
     if (aRuleData->mSIDs & nsCachedStyleData::GetBitForSID(
                              nsCSSProps::kSIDTable[cv.mProperty]))
     {
-      nsPostResolveCallback prc =
-        { &CoverTransitionStartPostResolveCallback, this };
-      aRuleData->mPostResolveCallbacks.AppendElement(prc);
-      // This really doesn't matter much, since this ought to be
-      // the only node with the rule, but it's good practice for
-      // post-resolve callbacks.
-      aRuleData->mCanStoreInRuleTree = PR_FALSE;
-
-      return NS_OK;
+      void *prop =
+        nsCSSExpandedDataBlock::RuleDataPropertyAt(aRuleData, cv.mProperty);
+#ifdef DEBUG
+      PRBool ok =
+#endif
+        nsStyleAnimation::UncomputeValue(cv.mProperty, aRuleData->mPresContext,
+                                         cv.mCoveredValue, prop);
+      NS_ABORT_IF_FALSE(ok, "could not store computed value");
     }
   }
 
@@ -357,26 +318,6 @@ CoverTransitionStartStyleRule::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 #endif
-
-void
-CoverTransitionStartStyleRule::FillStyleStruct(void* aStyleStruct,
-                                               nsRuleData* aRuleData) const
-{
-  for (PRUint32 i = 0, i_end = mCoveredValues.Length(); i < i_end; ++i) {
-    const CoveredValue &cv = mCoveredValues[i];
-    if (aRuleData->mSIDs & nsCachedStyleData::GetBitForSID(
-                             nsCSSProps::kSIDTable[cv.mProperty]))
-    {
-#ifdef DEBUG
-      PRBool ok =
-#endif
-        nsStyleAnimation::StoreComputedValue(cv.mProperty,
-                                             aRuleData->mPresContext,
-                                             aStyleStruct, cv.mCoveredValue);
-      NS_ABORT_IF_FALSE(ok, "could not store computed value");
-    }
-  }
-}
 
 /*****************************************************************************
  * nsTransitionManager                                                       *
