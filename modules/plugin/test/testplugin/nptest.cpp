@@ -126,9 +126,9 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   doInternalConsistencyCheck,
 };
 
-static char* NPN_GetURLNotifyCookie = "NPN_GetURLNotify_Cookie";
+static const char* NPN_GetURLNotifyCookie = "NPN_GetURLNotify_Cookie";
 
-static char* SUCCESS_STRING = "pass";
+static const char* SUCCESS_STRING = "pass";
 
 static bool sIdentifiersInitialized = false;
 
@@ -203,11 +203,11 @@ static void sendBufferToFrame(NPP instance)
   
   if (instanceData->npnNewStream &&
       instanceData->err.str().length() == 0) {
+    char typeHTML[] = "text/html";
     NPStream* stream;
     printf("calling NPN_NewStream...");
-    NPError err = NPN_NewStream(instance, "text/html", 
-        instanceData->frame.c_str(),
-        &stream);
+    NPError err = NPN_NewStream(instance, typeHTML, 
+        instanceData->frame.c_str(), &stream);
     printf("return value %d\n", err);
     if (err != NPERR_NO_ERROR) {
       instanceData->err << "NPN_NewStream returned " << err;
@@ -236,7 +236,7 @@ static void sendBufferToFrame(NPP instance)
   }
   else {
     // Convert CRLF to LF, and escape most other non-alphanumeric chars.
-    for (int i = 0; i < outbuf.length(); i++) {
+    for (size_t i = 0; i < outbuf.length(); i++) {
       if (outbuf[i] == '\n') {
         outbuf.replace(i, 1, "%0a");
         i += 2;
@@ -271,11 +271,11 @@ getFuncFromString(const char* funcname)
 {
   FunctionTable funcTable[] = 
     {
-      FUNCTION_NPP_NEWSTREAM, "npp_newstream",
-      FUNCTION_NPP_WRITEREADY, "npp_writeready",
-      FUNCTION_NPP_WRITE, "npp_write",
-      FUNCTION_NPP_DESTROYSTREAM, "npp_destroystream",
-      FUNCTION_NONE, NULL
+      { FUNCTION_NPP_NEWSTREAM, "npp_newstream" },
+      { FUNCTION_NPP_WRITEREADY, "npp_writeready" },
+      { FUNCTION_NPP_WRITE, "npp_write" },
+      { FUNCTION_NPP_DESTROYSTREAM, "npp_destroystream" },
+      { FUNCTION_NONE, NULL }
     };
   int32_t i = 0;
   while(funcTable[i].funcName) {
@@ -528,7 +528,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     }
     if (strcmp(argn[i], "range") == 0) {
       string range = argv[i];
-      int16_t semicolon = range.find(';');
+      size_t semicolon = range.find(';');
       while (semicolon != string::npos) {
         addRange(instanceData, range.substr(0, semicolon).c_str());
         if (semicolon == range.length()) {
@@ -781,7 +781,7 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
   // then call NPN_RequestRead.
   if (instanceData->streamMode == NP_SEEK &&
       stream->end != 0 && 
-      stream->end == (instanceData->streamBufSize + len)) {
+      stream->end == ((uint32_t)instanceData->streamBufSize + len)) {
     // prevent recursion
     instanceData->streamMode = NP_NORMAL;
 
@@ -807,7 +807,7 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
     bool stillwaiting = false;
     while(range != NULL) {
       if (offset == range->offset &&
-        len == range->length) {
+        (uint32_t)len == range->length) {
         range->waiting = false;
       }
       if (range->waiting) stillwaiting = true;
@@ -1289,7 +1289,6 @@ compareVariants(NPP instance, const NPVariant* var1, const NPVariant* var2)
           success = false;
         }
         for (i = 0; i < identifierCount; i++) {
-          NPUTF8* utf8String = NPN_UTF8FromIdentifier(identifiers[i]);
           NPVariant resultVariant, expectedVariant;
           if (!NPN_GetProperty(instance, expected, identifiers[i],
               &expectedVariant)) {
