@@ -62,11 +62,11 @@ SyncChannel::Send(Message* msg, Message* reply)
                       "violation of sync handler invariant");
     NS_ABORT_IF_FALSE(msg->is_sync(), "can only Send() sync messages here");
 
+    MutexAutoLock lock(mMutex);
+
     if (!Connected())
         // trying to Send() to a closed or error'd channel
         return false;
-
-    MutexAutoLock lock(mMutex);
 
     mPendingReply = msg->type() + 1;
     if (!AsyncChannel::Send(msg))
