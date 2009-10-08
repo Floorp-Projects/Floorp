@@ -141,6 +141,7 @@ CPPSRCS		= \
 		nsStyleStruct.cpp \
 		nsStyleTransformMatrix.cpp \
 		nsStyleUtil.cpp \
+		nsTransitionManager.cpp \
 		$(NULL)
 
 FORCE_STATIC_LIB = 1

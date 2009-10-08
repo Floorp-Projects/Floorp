@@ -1909,6 +1909,14 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       }
   }
   
+  // Note:  Our current behavior for handling changes to transition
+  // properties is to do nothing.  In other words, the transition
+  // property that matters is what it is when the transition begins, and
+  // we don't stop a transition later because the transition property
+  // changed.
+  // FIXME:  Need to test for this and write it in the spec, if it's
+  // compatible with other browsers.  Test for behavior at
+  // http://dbaron.org/css/test/2009/transitions/dynamic-transition-change
   
   return hint;
 }

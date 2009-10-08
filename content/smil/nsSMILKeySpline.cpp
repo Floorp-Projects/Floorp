@@ -47,15 +47,17 @@
 const double nsSMILKeySpline::kSampleStepSize =
                                         1.0 / double(kSplineTableSize - 1);
 
-nsSMILKeySpline::nsSMILKeySpline(double aX1,
-                                 double aY1,
-                                 double aX2,
-                                 double aY2)
-: mX1(aX1),
-  mY1(aY1),
-  mX2(aX2),
-  mY2(aY2)
+void
+nsSMILKeySpline::Init(double aX1,
+                      double aY1,
+                      double aX2,
+                      double aY2)
 {
+  mX1 = aX1;
+  mY1 = aY1;
+  mX2 = aX2;
+  mY2 = aY2;
+
   if (mX1 != mY1 || mX2 != mY2)
     CalcSampleValues();
 }
