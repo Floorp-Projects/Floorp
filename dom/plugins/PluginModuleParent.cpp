@@ -187,8 +187,8 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType,
     nsTArray<nsCString> values;
 
     for (int i = 0; i < argc; ++i) {
-        names.AppendElement(nsDependentCString(argn[i]));
-        values.AppendElement(nsDependentCString(argv[i]));
+        names.AppendElement(NullableString(argn[i]));
+        values.AppendElement(NullableString(argv[i]));
     }
 
     NPError prv = NPERR_GENERIC_ERROR;
