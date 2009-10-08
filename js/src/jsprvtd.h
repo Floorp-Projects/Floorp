@@ -370,4 +370,17 @@ extern JSBool js_CStringsAreUTF8;
  */
 #define JS_ARGS_LENGTH_MAX      (JS_BIT(24) - 1)
 
+#define DSLOTS_NULL_SHIFT                8
+#define DSLOTS_NULL_RESIZE_SLOTS         ((jsval*) (1 << DSLOTS_NULL_SHIFT))
+#define DSLOTS_NULL_ARRAY_FINALIZE       ((jsval*) (2 << DSLOTS_NULL_SHIFT))
+#define DSLOTS_NULL_NEW_EMPTY_ARRAY      ((jsval*) (3 << DSLOTS_NULL_SHIFT))
+#define DSLOTS_NULL_CLONE_BLOCK_OBJECT   ((jsval*) (4 << DSLOTS_NULL_SHIFT))
+#define DSLOTS_NULL_INIT                 ((jsval*) (5 << DSLOTS_NULL_SHIFT))
+#define DSLOTS_NULL_SHRINK_SLOTS         ((jsval*) (6 << DSLOTS_NULL_SHIFT))
+
+#define DSLOTS_NULL_LIMIT                (16 << DSLOTS_NULL_SHIFT)
+
+#define DSLOTS_IS_NOT_NULL(obj)          (uintptr_t(obj->dslots) >= DSLOTS_NULL_LIMIT)
+#define DSLOTS_NORMALIZE(obj) (DSLOTS_IS_NOT_NULL(obj) ? (obj)->dslots : NULL)
+
 #endif /* jsprvtd_h___ */

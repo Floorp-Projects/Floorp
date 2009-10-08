@@ -2856,7 +2856,7 @@ BEGIN_CASE(JSOP_CALLDSLOT)
     JS_ASSERT(fp->argv);
     obj = JSVAL_TO_OBJECT(fp->argv[-2]);
     JS_ASSERT(obj);
-    JS_ASSERT(obj->dslots);
+    JS_ASSERT(DSLOTS_IS_NOT_NULL(obj));
 
     index = GET_UINT16(regs.pc);
     JS_ASSERT(JS_INITIAL_NSLOTS + index < jsatomid(obj->dslots[-1]));

@@ -123,14 +123,14 @@ static JS_INLINE uint32
 js_DenseArrayCapacity(JSObject *obj)
 {
     JS_ASSERT(js_IsDenseArray(obj));
-    return obj->dslots ? (uint32) obj->dslots[-1] : 0;
+    return DSLOTS_IS_NOT_NULL(obj) ? (uint32) obj->dslots[-1] : 0;
 }
 
 static JS_INLINE void
 js_SetDenseArrayCapacity(JSObject *obj, uint32 capacity)
 {
     JS_ASSERT(js_IsDenseArray(obj));
-    JS_ASSERT(obj->dslots);
+    JS_ASSERT(DSLOTS_IS_NOT_NULL(obj));
     obj->dslots[-1] = (jsval) capacity;
 }
 
