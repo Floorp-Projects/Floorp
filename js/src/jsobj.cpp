@@ -2075,6 +2075,7 @@ obj_keys(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     *vp = OBJECT_TO_JSVAL(aobj);
 
+    JS_ASSERT(DSLOTS_IS_NOT_NULL(aobj));
     jsval *slots = aobj->dslots;
     size_t len = ida.length();
     JS_ASSERT(js_DenseArrayCapacity(aobj) >= len);
@@ -2681,7 +2682,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     JS_ASSERT(scope->freeslot == JSSLOT_BLOCK_DEPTH + 1);
     for (uint32 i = JSSLOT_BLOCK_DEPTH + 1; i < JS_INITIAL_NSLOTS; ++i)
         clone->fslots[i] = JSVAL_VOID;
-    clone->dslots = NULL;
+    clone->dslots = DSLOTS_NULL_CLONE_BLOCK_OBJECT;
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(clone));
     return clone;
 }
@@ -3117,7 +3118,7 @@ bad:
 static bool
 AllocSlots(JSContext *cx, JSObject *obj, size_t nslots)
 {
-    JS_ASSERT(!obj->dslots);
+    JS_ASSERT(!DSLOTS_IS_NOT_NULL(obj));
     JS_ASSERT(nslots > JS_INITIAL_NSLOTS);
 
     jsval* slots;
@@ -3173,7 +3174,7 @@ js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots)
      * If nothing was allocated yet, treat it as initial allocation (but with
      * the exponential growth algorithm applied).
      */
-    jsval* slots = obj->dslots;
+    jsval* slots = DSLOTS_NORMALIZE(obj);
     if (!slots)
         return AllocSlots(cx, obj, nslots);
 
@@ -3194,7 +3195,7 @@ js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots)
 void
 js_ShrinkSlots(JSContext *cx, JSObject *obj, size_t nslots)
 {
-    jsval* slots = obj->dslots;
+    jsval* slots = DSLOTS_NORMALIZE(obj);
 
     /* Nothing to shrink? */
     if (!slots)
@@ -3205,7 +3206,7 @@ js_ShrinkSlots(JSContext *cx, JSObject *obj, size_t nslots)
 
     if (nslots <= JS_INITIAL_NSLOTS) {
         cx->free(slots - 1);
-        obj->dslots = NULL;
+        obj->dslots = DSLOTS_NULL_SHRINK_SLOTS;
     } else {
         size_t nwords = SLOTS_TO_DYNAMIC_WORDS(nslots);
         slots = (jsval*) cx->realloc(slots - 1, nwords * sizeof(jsval));
@@ -3218,7 +3219,7 @@ bool
 js_EnsureReservedSlots(JSContext *cx, JSObject *obj, size_t nreserved)
 {
     JS_ASSERT(OBJ_IS_NATIVE(obj));
-    JS_ASSERT(!obj->dslots);
+    JS_ASSERT(!DSLOTS_IS_NOT_NULL(obj));
 
     uintN nslots = JSSLOT_FREE(STOBJ_GET_CLASS(obj)) + nreserved;
     if (nslots > STOBJ_NSLOTS(obj) && !AllocSlots(cx, obj, nslots))
@@ -5997,7 +5998,7 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
         return false;
 
     uint32 slot = JSSLOT_START(clasp) + index;
-    if (slot >= JS_INITIAL_NSLOTS && !obj->dslots) {
+    if (slot >= JS_INITIAL_NSLOTS && !DSLOTS_IS_NOT_NULL(obj)) {
         /*
          * At this point, obj may or may not own scope, and we may or may not
          * need to allocate dslots. If scope is shared, scope->freeslot may not
