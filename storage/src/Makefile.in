@@ -43,9 +43,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# FIXME: bug 419893
-NO_PROFILE_GUIDED_OPTIMIZE = 1
-
 MODULE           = storage
 LIBRARY_NAME     = storage_s
 MODULE_NAME      = mozStorageModule
