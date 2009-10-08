@@ -87,19 +87,10 @@ EngineManagerSvc.prototype = {
     return engine;
   },
   getAll: function EngMgr_getAll() {
-    let ret = [];
-    for (key in this._engines) {
-      ret.push(this._engines[key]);
-    }
-    return ret;
+    return [engine for ([name, engine] in Iterator(Engines._engines))];
   },
   getEnabled: function EngMgr_getEnabled() {
-    let ret = [];
-    for (key in this._engines) {
-      if(this._engines[key].enabled)
-        ret.push(this._engines[key]);
-    }
-    return ret;
+    return this.getAll().filter(function(engine) engine.enabled);
   },
 
   /**
