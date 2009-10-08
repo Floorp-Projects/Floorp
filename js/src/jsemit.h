@@ -278,14 +278,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                  TCF_HAS_SHARPS)
 
 /*
- * Flags field, not stored in JSTreeContext.flags, for passing a static level
- * into js_CompileScript.
- */
-#define TCF_STATIC_LEVEL_MASK   0xffff0000
-#define TCF_GET_STATIC_LEVEL(f) ((uint32)(f) >> 16)
-#define TCF_PUT_STATIC_LEVEL(d) ((uint16)(d) << 16)
-
-/*
  * Span-dependent instructions are jumps whose span (from the jump bytecode to
  * the jump target) may require 2 or 4 bytes of immediate operand.
  */
