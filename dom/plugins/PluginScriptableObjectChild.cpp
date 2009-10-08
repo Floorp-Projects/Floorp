@@ -847,10 +847,9 @@ PluginScriptableObjectChild::AnswerGetProperty(const NPRemoteIdentifier& aId,
                                                Variant* aResult,
                                                bool* aSuccess)
 {
-  *aResult = null_t();
-
   if (!mObject) {
     NS_WARNING("Calling AnswerGetProperty with an invalidated object!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -858,12 +857,14 @@ PluginScriptableObjectChild::AnswerGetProperty(const NPRemoteIdentifier& aId,
   NS_ASSERTION(mObject->_class != GetClass(), "Bad object type!");
 
   if (!(mObject->_class && mObject->_class->getProperty)) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
 
   NPVariant result;
   if (!mObject->_class->getProperty(mObject, (NPIdentifier)aId, &result)) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -873,6 +874,10 @@ PluginScriptableObjectChild::AnswerGetProperty(const NPRemoteIdentifier& aId,
     PluginModuleChild::sBrowserFuncs.releasevariantvalue(&result);
     *aResult = converted;
   }
+  else {
+    *aResult = void_t();
+  }
+
   return true;
 }
 
