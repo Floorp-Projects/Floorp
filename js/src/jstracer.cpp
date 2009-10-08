@@ -1438,8 +1438,8 @@ LookupLoop(JSTraceMonitor* tm, const void *ip, JSObject* globalObj,
 }
 
 static VMFragment*
-LookupAddLoop(JSTraceMonitor* tm, const void *ip, JSObject* globalObj,
-              uint32 globalShape, uint32 argc)
+LookupOrAddLoop(JSTraceMonitor* tm, const void *ip, JSObject* globalObj,
+                uint32 globalShape, uint32 argc)
 {
     VMFragment *firstInBucket, **prevTreeNextp;
     RawLookupFirstPeer(tm, ip, globalObj, globalShape, argc, firstInBucket, prevTreeNextp);
@@ -5114,9 +5114,9 @@ TraceRecorder::checkTraceEnd(jsbytecode *pc)
             cx->fp->regs->pc = (jsbytecode*)fragment->root->ip;
             cx->fp->regs->sp -= fused ? 2 : 1;
 
+            JSContext* localcx = cx;
             AbortableRecordingStatus ars = closeLoop();
-
-            *cx->fp->regs = orig;
+            *localcx->fp->regs = orig;
             return ars;
         } else {
             return endLoop();
@@ -5899,8 +5899,8 @@ RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 
     JS_ASSERT(r->getFragment() && !r->getFragment()->lastIns);
     VMFragment* root = (VMFragment*)r->getFragment()->root;
-    VMFragment* first = LookupAddLoop(tm, cx->fp->regs->pc, root->globalObj,
-                                      root->globalShape, cx->fp->argc);
+    VMFragment* first = LookupOrAddLoop(tm, cx->fp->regs->pc, root->globalObj,
+                                        root->globalShape, cx->fp->argc);
 
     /* Make sure inner tree call will not run into an out-of-memory condition. */
     if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
@@ -6844,7 +6844,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, MonitorReason reason)
     jsbytecode* pc = cx->fp->regs->pc;
     uint32 argc = cx->fp->argc;
 
-    VMFragment* f = LookupAddLoop(tm, pc, globalObj, globalShape, argc);
+    VMFragment* f = LookupOrAddLoop(tm, pc, globalObj, globalShape, argc);
 
     /*
      * If we have no code in the anchor and no peers, we definitively won't be
