@@ -573,7 +573,7 @@ InitNameNodeCommon(JSParseNode *pn, JSTreeContext *tc)
 }
 
 static JSParseNode *
-NewNameNode(JSContext *cx, JSTokenStream *ts, JSAtom *atom, JSTreeContext *tc)
+NewNameNode(JSContext *cx, JSAtom *atom, JSTreeContext *tc)
 {
     JSParseNode *pn;
 
@@ -1249,7 +1249,7 @@ MakePlaceholder(JSParseNode *pn, JSTreeContext *tc)
         return NULL;
 
     JSDefinition *dn = (JSDefinition *)
-        NewNameNode(tc->compiler->context, TS(tc->compiler), pn->pn_atom, tc);
+        NewNameNode(tc->compiler->context, pn->pn_atom, tc);
     if (!dn)
         return NULL;
 
@@ -1429,7 +1429,7 @@ DefineArg(JSParseNode *pn, JSAtom *atom, uintN i, JSTreeContext *tc)
      * but having TOK_NAME type and JSOP_NOP op. Insert it in a TOK_ARGSBODY
      * list node returned via pn->pn_body.
      */
-    argpn = NewNameNode(tc->compiler->context, TS(tc->compiler), atom, tc);
+    argpn = NewNameNode(tc->compiler->context, atom, tc);
     if (!argpn)
         return false;
     JS_ASSERT(PN_TYPE(argpn) == TOK_NAME && PN_OP(argpn) == JSOP_NOP);
@@ -2652,7 +2652,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                  * anonymous positional parameter into the destructuring
                  * left-hand-side expression and accumulate it in list.
                  */
-                rhs = NewNameNode(cx, ts, cx->runtime->atomState.emptyAtom, &funtc);
+                rhs = NewNameNode(cx, cx->runtime->atomState.emptyAtom, &funtc);
                 if (!rhs)
                     return NULL;
                 rhs->pn_type = TOK_NAME;
@@ -3198,7 +3198,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
             JSParseNode *pnu = pn;
 
             if (pn->pn_defn) {
-                pnu = NewNameNode(cx, TS(tc->compiler), atom, tc);
+                pnu = NewNameNode(cx, atom, tc);
                 if (!pnu)
                     return JS_FALSE;
             }
@@ -3235,7 +3235,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
                 pn = ALE_DEFN(ale);
                 tc->lexdeps.rawRemove(tc->compiler, ale, hep);
             } else {
-                JSParseNode *pn2 = NewNameNode(cx, TS(tc->compiler), atom, tc);
+                JSParseNode *pn2 = NewNameNode(cx, atom, tc);
                 if (!pn2)
                     return JS_FALSE;
 
@@ -4238,7 +4238,7 @@ PushBlocklikeStatement(JSStmtInfo *stmt, JSStmtType type, JSTreeContext *tc)
 }
 
 static JSParseNode *
-NewBindingNode(JSTokenStream *ts, JSAtom *atom, JSTreeContext *tc, bool let = false)
+NewBindingNode(JSAtom *atom, JSTreeContext *tc, bool let = false)
 {
     JSParseNode *pn = NULL;
 
@@ -4276,7 +4276,7 @@ NewBindingNode(JSTokenStream *ts, JSAtom *atom, JSTreeContext *tc, bool let = fa
     }
 
     /* Make a new node for this declarator name (or destructuring pattern). */
-    pn = NewNameNode(tc->compiler->context, ts, atom, tc);
+    pn = NewNameNode(tc->compiler->context, atom, tc);
     if (!pn)
         return NULL;
     return pn;
@@ -4784,7 +4784,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif
                         {
                             JS_ASSERT(pn2->pn_type == TOK_NAME);
-                            pn1 = NewNameNode(cx, ts, pn2->pn_atom, tc);
+                            pn1 = NewNameNode(cx, pn2->pn_atom, tc);
                             if (!pn1)
                                 return NULL;
                             pn1->pn_type = TOK_NAME;
@@ -5037,7 +5037,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
                   case TOK_NAME:
                     label = CURRENT_TOKEN(ts).t_atom;
-                    pn3 = NewBindingNode(ts, label, tc, true);
+                    pn3 = NewBindingNode(label, tc, true);
                     if (!pn3)
                         return NULL;
                     data.pn = pn3;
@@ -5644,7 +5644,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, bool inLetHead)
         }
 
         atom = CURRENT_TOKEN(ts).t_atom;
-        pn2 = NewBindingNode(ts, atom, tc, let);
+        pn2 = NewBindingNode(atom, tc, let);
         if (!pn2)
             return NULL;
         if (data.op == JSOP_DEFCONST)
@@ -6392,7 +6392,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                         tc->parent->lexdeps.remove(tc->compiler, atom);
                     } else {
                         JSDefinition *dn2 = (JSDefinition *)
-                            NewNameNode(tc->compiler->context, TS(tc->compiler), dn->pn_atom, tc);
+                            NewNameNode(tc->compiler->context, dn->pn_atom, tc);
                         if (!dn2)
                             return false;
 
@@ -6548,7 +6548,7 @@ ComprehensionTail(JSParseNode *kid, uintN blockid, JSTreeContext *tc,
              * and it tries to bind all names to slots, so we must let it do
              * the deed.
              */
-            pn3 = NewBindingNode(ts, atom, tc, true);
+            pn3 = NewBindingNode(atom, tc, true);
             if (!pn3)
                 return NULL;
             break;
@@ -6857,7 +6857,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     while ((tt = js_GetToken(cx, ts)) > TOK_EOF) {
         if (tt == TOK_DOT) {
-            pn2 = NewNameNode(cx, ts, NULL, tc);
+            pn2 = NewNameNode(cx, NULL, tc);
             if (!pn2)
                 return NULL;
 #if JS_HAS_XML_SUPPORT
@@ -7128,7 +7128,7 @@ QualifiedSuffix(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
     JSTokenType tt;
 
     JS_ASSERT(CURRENT_TOKEN(ts).type == TOK_DBLCOLON);
-    pn2 = NewNameNode(cx, ts, NULL, tc);
+    pn2 = NewNameNode(cx, NULL, tc);
     if (!pn2)
         return NULL;
 
@@ -7933,7 +7933,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                         js_UngetToken(ts);
                         goto property_name;
                     }
-                    pn3 = NewNameNode(cx, ts, CURRENT_TOKEN(ts).t_atom, tc);
+                    pn3 = NewNameNode(cx, CURRENT_TOKEN(ts).t_atom, tc);
                     if (!pn3)
                         return NULL;
 
@@ -8122,7 +8122,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         break;
 
       case TOK_NAME:
-        pn = NewNameNode(cx, ts, CURRENT_TOKEN(ts).t_atom, tc);
+        pn = NewNameNode(cx, CURRENT_TOKEN(ts).t_atom, tc);
         if (!pn)
             return NULL;
         JS_ASSERT(CURRENT_TOKEN(ts).t_op == JSOP_NAME);
