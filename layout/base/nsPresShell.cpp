@@ -197,7 +197,7 @@
 
 #endif
 #include "nsPlaceholderFrame.h"
-#include "nsHTMLFrame.h"
+#include "nsCanvasFrame.h"
 
 // Content viewer interfaces
 #include "nsIContentViewer.h"
@@ -5312,7 +5312,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
       rect.MoveBy(-pos);
       builder.SetIgnoreScrollFrame(rootScrollFrame);
 
-      CanvasFrame* canvasFrame =
+      nsCanvasFrame* canvasFrame =
         do_QueryFrame(rootScrollableFrame->GetScrolledFrame());
       if (canvasFrame) {
         canvasArea =

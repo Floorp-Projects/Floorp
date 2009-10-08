@@ -2726,14 +2726,14 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
   
       ViewportFrame [fixed-cb]
         nsHTMLScrollFrame
-          CanvasFrame [abs-cb]
+          nsCanvasFrame [abs-cb]
             root element frame (nsBlockFrame, nsSVGOuterSVGFrame,
                                 nsTableOuterFrame, nsPlaceholderFrame)
 
   Galley presentation, non-XUL, without scrolling (i.e. a frameset):
   
       ViewportFrame [fixed-cb]
-        CanvasFrame [abs-cb]
+        nsCanvasFrame [abs-cb]
           root element frame (nsBlockFrame)
 
   Galley presentation, XUL
@@ -2748,7 +2748,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
         nsSimplePageSequenceFrame
           nsPageFrame [fixed-cb]
             nsPageContentFrame
-              CanvasFrame [abs-cb]
+              nsCanvasFrame [abs-cb]
                 root element frame (nsBlockFrame, nsSVGOuterSVGFrame,
                                     nsTableOuterFrame, nsPlaceholderFrame)
 
@@ -2759,7 +2759,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
           nsSimplePageSequenceFrame
             nsPageFrame [fixed-cb]
               nsPageContentFrame
-                CanvasFrame [abs-cb]
+                nsCanvasFrame [abs-cb]
                   root element frame (nsBlockFrame, nsSVGOuterSVGFrame,
                                       nsTableOuterFrame, nsPlaceholderFrame)
 
@@ -2771,7 +2771,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
     mRootElementFrame is "root element frame".  This is the primary frame for
       the root element.
     mDocElementContainingBlock is the parent of mRootElementFrame
-      (i.e. CanvasFrame or nsRootBoxFrame)
+      (i.e. nsCanvasFrame or nsRootBoxFrame)
     mFixedContainingBlock is the [fixed-cb]
     mGfxScrollFrame is the nsHTMLScrollFrame mentioned above, or null if there isn't one
     mPageSequenceFrame is the nsSimplePageSequenceFrame, or null if there isn't one
