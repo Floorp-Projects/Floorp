@@ -44,8 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = dom
 
-DIRS += testplugin
-
 EXPORTS_NAMESPACES = mozilla
 
 EXPORTS_mozilla = \
