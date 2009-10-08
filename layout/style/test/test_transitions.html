@@ -405,8 +405,8 @@ function check_transition_value(func, start_time, end_time,
     } else {
         // seconds
         // FIXME: Why do we need so much tolerance at the low end of the
-        // range (primarily for Mac)?
-        time_range = [ (gCurrentTime - gStartTime2 - 40) / 1000,
+        // range?
+        time_range = [ (gCurrentTime - gStartTime2 - 80) / 1000,
                        (Date.now() - gStartTime1 + 20) / 1000 ];
         uns_range = [ value_at(time_range[0], -0.01),
                       value_at(time_range[1], 0.01) ];
