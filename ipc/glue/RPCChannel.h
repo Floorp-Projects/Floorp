@@ -132,11 +132,11 @@ private:
                 why,
                 type, reply ? "reply" : "");
         // technically we need the mutex for this, but we're dying anyway
-        fprintf(stderr, "  local RPC stack size: %zu\n",
+        fprintf(stderr, "  local RPC stack size: %lu\n",
                 mStack.size());
-        fprintf(stderr, "  remote RPC stack guess: %zd\n",
+        fprintf(stderr, "  remote RPC stack guess: %lu\n",
                 mRemoteStackDepthGuess);
-        fprintf(stderr, "  Pending queue size: %zu, front to back:\n",
+        fprintf(stderr, "  Pending queue size: %lu, front to back:\n",
                 mPending.size());
         while (!mPending.empty()) {
             fprintf(stderr, "    [ %s%s ]\n",
