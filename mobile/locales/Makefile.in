@@ -89,6 +89,12 @@ libs-%:
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/preferences BOTH_MANIFESTS=1
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 
+# Tailored target to just add the chrome processing for multi-locale builds
+chrome-%:
+	@$(MAKE) -C $(DEPTH)/toolkit/locales chrome-$*
+	@$(MAKE) chrome AB_CD=$*
+	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
+
 # This is a generic target that will make a langpack and repack tarball
 # builds. It is called from the tinderbox scripts. Alter it with caution.
 
