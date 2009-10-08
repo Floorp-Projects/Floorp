@@ -58,54 +58,56 @@ function test() {
   
     let newWin = openDialog(location, "_blank", "chrome,all,dialog=no", testURL);
     newWin.addEventListener("load", function(aEvent) {
+      newWin.removeEventListener("load", arguments.callee, false);
       newWin.gBrowser.addEventListener("load", function(aEvent) {
         newWin.gBrowser.removeEventListener("load", arguments.callee, true);
 
         executeSoon(function() {
           newWin.gBrowser.addTab();
+          executeSoon(function() {
+            // mark the window with some unique data to be restored later on
+            ss.setWindowValue(newWin, uniqueKey, uniqueValue);
+            let textbox = newWin.content.document.getElementById("textbox");
+            textbox.wrappedJSObject.value = uniqueText;
 
-          // mark the window with some unique data to be restored later on
-          ss.setWindowValue(newWin, uniqueKey, uniqueValue);
-          let textbox = newWin.content.document.getElementById("textbox");
-          textbox.wrappedJSObject.value = uniqueText;
+            newWin.close();
 
-          newWin.close();
+            is(ss.getClosedWindowCount(), closedWindowCount + 1,
+               "The closed window was added to Recently Closed Windows");
+            let data = JSON.parse(ss.getClosedWindowData())[0];
+            ok(data.title == testURL && data.toSource().indexOf(uniqueText) > -1,
+               "The closed window data was stored correctly");
 
-          is(ss.getClosedWindowCount(), closedWindowCount + 1,
-             "The closed window was added to Recently Closed Windows");
-          let data = JSON.parse(ss.getClosedWindowData())[0];
-          ok(data.title == testURL && data.toSource().indexOf(uniqueText) > -1,
-             "The closed window data was stored correctly");
+            // reopen the closed window and ensure its integrity
+            let newWin2 = ss.undoCloseWindow(0);
 
-          // reopen the closed window and ensure its integrity
-          let newWin2 = ss.undoCloseWindow(0);
+            ok(newWin2 instanceof ChromeWindow,
+               "undoCloseWindow actually returned a window");
+            is(ss.getClosedWindowCount(), closedWindowCount,
+               "The reopened window was removed from Recently Closed Windows");
 
-          ok(newWin2 instanceof ChromeWindow,
-             "undoCloseWindow actually returned a window");
-          is(ss.getClosedWindowCount(), closedWindowCount,
-             "The reopened window was removed from Recently Closed Windows");
+            newWin2.addEventListener("load", function(aEvent) {
+              newWin2.gBrowser.addEventListener("SSTabRestored", function(aEvent) {
+                newWin2.gBrowser.removeEventListener("SSTabRestored", arguments.callee, true);
 
-          newWin2.addEventListener("load", function(aEvent) {
-            newWin2.gBrowser.addEventListener("SSTabRestored", function(aEvent) {
-              newWin2.gBrowser.removeEventListener("SSTabRestored", arguments.callee, true);
+                is(newWin2.gBrowser.tabContainer.childNodes.length, 2,
+                   "The window correctly restored 2 tabs");
+                is(newWin2.gBrowser.currentURI.spec, testURL,
+                   "The window correctly restored the URL");
 
-              is(newWin2.gBrowser.tabContainer.childNodes.length, 2,
-                 "The window correctly restored 2 tabs");
-              is(newWin2.gBrowser.currentURI.spec, testURL,
-                 "The window correctly restored the URL");
+                let textbox = newWin2.content.document.getElementById("textbox");
+                is(textbox.wrappedJSObject.value, uniqueText,
+                   "The window correctly restored the form");
+                is(ss.getWindowValue(newWin2, uniqueKey), uniqueValue,
+                   "The window correctly restored the data associated with it");
 
-              let textbox = newWin2.content.document.getElementById("textbox");
-              is(textbox.wrappedJSObject.value, uniqueText,
-                 "The window correctly restored the form");
-              is(ss.getWindowValue(newWin2, uniqueKey), uniqueValue,
-                 "The window correctly restored the data associated with it");
-
-              // clean up
-              newWin2.close();
-              gPrefService.clearUserPref("browser.sessionstore.max_windows_undo");
-              executeSoon(callback);
-            }, true);
-          }, false);
+                // clean up
+                newWin2.close();
+                gPrefService.clearUserPref("browser.sessionstore.max_windows_undo");
+                executeSoon(callback);
+              }, true);
+            }, false);
+          });
         });
       }, true);
     }, false);
