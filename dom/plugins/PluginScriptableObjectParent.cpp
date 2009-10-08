@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * vim: sw=4 ts=4 et :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -854,6 +854,8 @@ PluginScriptableObjectParent::AnswerInvoke(const NPRemoteIdentifier& aId,
                                            Variant* aResult,
                                            bool* aSuccess)
 {
+  *aResult = void_t();
+
   if (!mObject) {
     NS_WARNING("Calling AnswerInvoke with an invalidated object!");
     *aSuccess = false;
@@ -934,6 +936,8 @@ PluginScriptableObjectParent::AnswerInvokeDefault(const nsTArray<Variant>& aArgs
                                                   Variant* aResult,
                                                   bool* aSuccess)
 {
+  *aResult = void_t();
+
   if (!mObject) {
     NS_WARNING("Calling AnswerInvoke with an invalidated object!");
     *aSuccess = false;
@@ -1046,6 +1050,8 @@ PluginScriptableObjectParent::AnswerGetProperty(const NPRemoteIdentifier& aId,
                                                 Variant* aResult,
                                                 bool* aSuccess)
 {
+  *aResult = void_t();
+
   if (!mObject) {
     NS_WARNING("Calling AnswerGetProperty with an invalidated object!");
     *aSuccess = false;
@@ -1231,6 +1237,8 @@ PluginScriptableObjectParent::AnswerConstruct(const nsTArray<Variant>& aArgs,
                                               Variant* aResult,
                                               bool* aSuccess)
 {
+  *aResult = void_t();
+
   if (!mObject) {
     NS_WARNING("Calling AnswerConstruct with an invalidated object!");
     *aSuccess = false;
