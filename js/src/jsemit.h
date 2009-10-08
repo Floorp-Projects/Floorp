@@ -162,7 +162,7 @@ struct JSStmtInfo {
 #endif
 
 struct JSTreeContext {              /* tree context for semantic checks */
-    uint16          flags;          /* statement state flags, see below */
+    uint32          flags;          /* statement state flags, see below */
     uint16          ngvars;         /* max. no. of global variables/regexps */
     uint32          bodyid;         /* block number of program/function body */
     uint32          blockidGen;     /* preincremented block number generator */
@@ -239,11 +239,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
  */
 #define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
 
-/*
- * TreeContext flags must fit in 16 bits, and all bits are in use now. Widening
- * requires changing JSFunctionBox.tcflags too and repacking. Alternative fix
- * gets rid of flags, probably starting with TCF_HAS_FUNCTION_STMT.
- */
 #define TCF_COMPILING           0x01 /* JSTreeContext is JSCodeGenerator */
 #define TCF_IN_FUNCTION         0x02 /* parsing inside function body */
 #define TCF_RETURN_EXPR         0x04 /* function has 'return expr;' */

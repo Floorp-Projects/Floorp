@@ -343,10 +343,10 @@ UnlinkFunctionBox(JSParseNode *pn, JSTreeContext *tc)
             funboxp = &(*funboxp)->siblings;
         }
 
-        uint16 oldflags = tc->flags;
+        uint32 oldflags = tc->flags;
         JSFunctionBox *oldlist = tc->functionList;
 
-        tc->flags = (uint16) funbox->tcflags;
+        tc->flags = funbox->tcflags;
         tc->functionList = funbox->kids;
         UnlinkFunctionBoxes(pn->pn_body, tc);
         funbox->kids = tc->functionList;
@@ -825,7 +825,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     /* Null script early in case of error, to reduce our code footprint. */
     script = NULL;
 
-    cg.flags |= uint16(tcflags);
+    cg.flags |= tcflags;
     cg.scopeChain = scopeChain;
     if (!SetStaticLevel(&cg, staticLevel))
         goto out;
@@ -1681,7 +1681,7 @@ MatchOrInsertSemicolon(JSContext *cx, JSTokenStream *ts)
 }
 
 bool
-JSCompiler::analyzeFunctions(JSFunctionBox *funbox, uint16& tcflags)
+JSCompiler::analyzeFunctions(JSFunctionBox *funbox, uint32& tcflags)
 {
     if (!markFunArgs(funbox, tcflags))
         return false;
@@ -1900,7 +1900,7 @@ OneBlockId(JSParseNode *fn, uint32 id)
 }
 
 void
-JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint16& tcflags)
+JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
 {
 #ifdef JS_FUNCTION_METERING
 # define FUN_METER(x)   JS_RUNTIME_METER(context->runtime, functionMeter.x)
@@ -8675,10 +8675,10 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
     switch (pn->pn_arity) {
       case PN_FUNC:
       {
-        uint16 oldflags = tc->flags;
+        uint32 oldflags = tc->flags;
         JSFunctionBox *oldlist = tc->functionList;
 
-        tc->flags = (uint16) pn->pn_funbox->tcflags;
+        tc->flags = pn->pn_funbox->tcflags;
         tc->functionList = pn->pn_funbox->kids;
         if (!js_FoldConstants(cx, pn->pn_body, tc))
             return JS_FALSE;
