@@ -7877,8 +7877,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             switch (tt) {
               case TOK_NUMBER:
                 pn3 = NewParseNode(PN_NULLARY, tc);
-                if (pn3)
-                    pn3->pn_dval = CURRENT_TOKEN(ts).t_dval;
+                if (!pn3)
+                    return NULL;
+                pn3->pn_dval = CURRENT_TOKEN(ts).t_dval;
                 break;
               case TOK_NAME:
 #if JS_HAS_GETTER_SETTER
@@ -7915,8 +7916,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #endif
               case TOK_STRING:
                 pn3 = NewParseNode(PN_NULLARY, tc);
-                if (pn3)
-                    pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
+                if (!pn3)
+                    return NULL;
+                pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
                 break;
               case TOK_RC:
                 goto end_obj_init;
