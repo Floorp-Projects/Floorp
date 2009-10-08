@@ -1089,13 +1089,7 @@ WeaveSvc.prototype = {
     this._updateClientMode();
 
     try {
-      for each (let engine in Engines.getAll()) {
-        let name = engine.name;
-
-        // Nothing to do for disabled engines
-        if (!engine.enabled)
-          continue;
-
+      for each (let engine in Engines.getEnabled()) {
         // If there's any problems with syncing the engine, report the failure
         if (!(this._syncEngine(engine)) || Status.enforceBackoff) {
           this._log.info("Aborting sync");
