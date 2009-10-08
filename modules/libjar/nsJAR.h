@@ -62,7 +62,6 @@
 #include "nsIZipReader.h"
 #include "nsIJAR.h"
 #include "nsZipArchive.h"
-#include "zipfile.h"
 #include "nsIPrincipal.h"
 #include "nsISignatureVerifier.h"
 #include "nsIObserverService.h"
