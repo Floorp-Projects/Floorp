@@ -60,6 +60,8 @@ using namespace mozilla::plugins;
 
 namespace {
 PluginModuleChild* gInstance = nsnull;
+// NPN_UserAgent returns a |const char*| that must outlive its stack frame
+nsCString gUserAgent;
 }
 
 
@@ -467,6 +469,7 @@ const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
 PluginInstanceChild*
 InstCast(NPP aNPP)
 {
+    NS_ABORT_IF_FALSE(!!(aNPP->ndata), "nil instance");
     return static_cast<PluginInstanceChild*>(aNPP->ndata);
 }
 
@@ -668,9 +671,8 @@ _useragent(NPP aNPP)
 {
     _MOZ_LOG(__FUNCTION__);
 
-    // FIXME/cjones: go back to the parent for this
-
-    return "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2a1pre) Gecko/20090611 Minefield/3.6a1pre";
+    PluginModuleChild::current()->CallNPN_UserAgent(&gUserAgent);
+    return NullableStringGet(gUserAgent);
 }
 
 void* NP_CALLBACK

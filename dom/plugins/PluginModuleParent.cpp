@@ -343,6 +343,14 @@ PluginModuleParent::NPP_SetValue(NPP instance, NPNVariable variable,
 }
 
 bool
+PluginModuleParent::AnswerNPN_UserAgent(nsCString* userAgent)
+{
+    NPP_t dummy = { 0, 0 };
+    *userAgent = NullableString(mNPNIface->uagent(&dummy));
+    return true;
+}
+
+bool
 PluginModuleParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
                                                 NPRemoteIdentifier* aId)
 {
