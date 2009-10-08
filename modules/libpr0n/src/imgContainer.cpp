@@ -846,7 +846,7 @@ NS_IMETHODIMP imgContainer::EnsureCleanFrame(PRUint32 aFrameNum, PRInt32 aX, PRI
 /* void frameUpdated (in unsigned long framenumber, in nsIntRect rect); */
 NS_IMETHODIMP imgContainer::FrameUpdated(PRUint32 aFrameNum, nsIntRect &aUpdatedRect)
 {
-  NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
+  NS_ASSERTION(aFrameNum < mFrames.Length(), "Invalid frame index!");
   if (aFrameNum >= mFrames.Length())
     return NS_ERROR_INVALID_ARG;
 
