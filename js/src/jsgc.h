@@ -295,18 +295,15 @@ struct JSGCArenaList {
     JSGCThing       *freeList;      /* list of free GC things */
 };
 
-typedef union JSGCDoubleCell JSGCDoubleCell;
-
 union JSGCDoubleCell {
     double          number;
     JSGCDoubleCell  *link;
 };
 
-typedef struct JSGCDoubleArenaList {
+struct JSGCDoubleArenaList {
     JSGCArenaInfo   *first;             /* first allocated GC arena */
-    jsbitmap        *nextDoubleFlags;   /* bitmask with flags to check for free
-                                           things */
-} JSGCDoubleArenaList;
+    JSGCArenaInfo   *cursor;            /* next arena with free cells */
+};
 
 extern void
 js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data);
