@@ -149,9 +149,8 @@ public:
    * content is scrolled all the way in the direction(s) given by aDelta.
    * @param aOverflow if non-null, returns the amount that scrolling
    * was clamped by in each direction (how far we moved the scroll position
-   to bring it back into the legal range). This is never negative. This
-   * is only supported for LINES and DEVICE_PIXELS. The values are in
-   * device pixels.
+   * to bring it back into the legal range). This is never negative. The
+   * values are in device pixels.
    */
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
                         nsIntPoint* aOverflow = nsnull) = 0;
