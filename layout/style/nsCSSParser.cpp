@@ -2478,16 +2478,6 @@ static PRBool IsUniversalSelector(const nsCSSSelector& aSelector)
                 (aSelector.mPseudoClassList == nsnull));
 }
 
-#ifdef MOZ_XUL
-static PRBool IsTreePseudoElement(nsIAtom* aPseudo)
-{
-  const char* str;
-  aPseudo->GetUTF8String(&str);
-  static const char moz_tree[] = ":-moz-tree-";
-  return nsCRT::strncmp(str, moz_tree, PRInt32(sizeof(moz_tree)-1)) == 0;
-}
-#endif
-
 PRBool
 CSSParserImpl::ParseSelectorGroup(nsCSSSelectorList*& aList)
 {
@@ -3040,7 +3030,7 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
   // stash away some info about this pseudo so we only have to get it once.
   PRBool isTreePseudo = PR_FALSE;
 #ifdef MOZ_XUL
-  isTreePseudo = IsTreePseudoElement(pseudo);
+  isTreePseudo = nsCSSAnonBoxes::IsTreePseudoElement(pseudo);
   // If a tree pseudo-element is using the function syntax, it will
   // get isTree set here and will pass the check below that only
   // allows functions if they are in our list of things allowed to be
