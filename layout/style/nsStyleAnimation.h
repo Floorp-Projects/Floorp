@@ -141,8 +141,14 @@ public:
                              nsStyleCoord& aComputedValue);
 
   /**
-   * Creates a specified value (nsAString) for the given computed value
+   * Creates a specified value for the given computed value
    * (nsStyleCoord).
+   *
+   * The first form fills in one of the nsCSSType types into the void*;
+   * for some types this means that the void* is pointing to memory
+   * owned by the nsStyleCoord.  (For all complex types, the
+   * nsStyleCoord owns the necessary objects so that the caller does not
+   * need to do anything to free them.)
    *
    * @param aProperty      The property whose value we're uncomputing.
    * @param aPresContext   The presentation context for the document in
@@ -151,6 +157,10 @@ public:
    * @param [out] aSpecifiedValue The resulting specified value.
    * @return PR_TRUE on success, PR_FALSE on failure.
    */
+  static PRBool UncomputeValue(nsCSSProperty aProperty,
+                               nsPresContext* aPresContext,
+                               const nsStyleCoord& aComputedValue,
+                               void* aSpecifiedValue);
   static PRBool UncomputeValue(nsCSSProperty aProperty,
                                nsPresContext* aPresContext,
                                const nsStyleCoord& aComputedValue,
@@ -168,21 +178,6 @@ public:
   static PRBool ExtractComputedValue(nsCSSProperty aProperty,
                                      nsStyleContext* aStyleContext,
                                      nsStyleCoord& aComputedValue);
-
-  /**
-   * Sets the computed value for the given property in the given style
-   * struct.
-   *
-   * @param aProperty      The property whose value we're setting.
-   * @param aPresContext   The pres context associated with aStyleStruct.
-   * @param aStyleStruct   The style struct in which to set the value.
-   * @param aComputedValue The computed value.
-   * @return  PR_TRUE on success, PR_FALSE on failure.
-   */
-  static PRBool StoreComputedValue(nsCSSProperty aProperty,
-                                   nsPresContext* aPresContext,
-                                   void* aStyleStruct,
-                                   const nsStyleCoord& aComputedValue);
 };
 
 #endif
