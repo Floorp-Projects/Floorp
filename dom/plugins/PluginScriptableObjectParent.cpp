@@ -854,10 +854,9 @@ PluginScriptableObjectParent::AnswerInvoke(const NPRemoteIdentifier& aId,
                                            Variant* aResult,
                                            bool* aSuccess)
 {
-  *aResult = void_t();
-
   if (!mObject) {
     NS_WARNING("Calling AnswerInvoke with an invalidated object!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -867,6 +866,7 @@ PluginScriptableObjectParent::AnswerInvoke(const NPRemoteIdentifier& aId,
   PluginInstanceParent* instance = GetInstance();
   if (!instance) {
     NS_ERROR("No instance?!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -874,12 +874,14 @@ PluginScriptableObjectParent::AnswerInvoke(const NPRemoteIdentifier& aId,
   const NPNetscapeFuncs* npn = GetNetscapeFuncs(instance);
   if (!npn) {
     NS_ERROR("No netscape funcs?!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
 
   if (!EnsureValidIdentifier(instance, (NPIdentifier)aId)) {
     NS_WARNING("Invalid NPIdentifier!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -888,6 +890,7 @@ PluginScriptableObjectParent::AnswerInvoke(const NPRemoteIdentifier& aId,
   PRUint32 argCount = aArgs.Length();
 
   if (!convertedArgs.SetLength(argCount)) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -898,6 +901,7 @@ PluginScriptableObjectParent::AnswerInvoke(const NPRemoteIdentifier& aId,
       while (index-- > 0) {
         ReleaseVariant(convertedArgs[index], instance);
       }
+      *aResult = void_t();
       *aSuccess = false;
       return true;
     }
@@ -912,6 +916,7 @@ PluginScriptableObjectParent::AnswerInvoke(const NPRemoteIdentifier& aId,
   }
 
   if (!success) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -922,12 +927,13 @@ PluginScriptableObjectParent::AnswerInvoke(const NPRemoteIdentifier& aId,
   ReleaseVariant(result, instance);
 
   if (!success) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
 
-  *aSuccess = true;
   *aResult = convertedResult;
+  *aSuccess = true;
   return true;
 }
 
@@ -936,10 +942,9 @@ PluginScriptableObjectParent::AnswerInvokeDefault(const nsTArray<Variant>& aArgs
                                                   Variant* aResult,
                                                   bool* aSuccess)
 {
-  *aResult = void_t();
-
   if (!mObject) {
     NS_WARNING("Calling AnswerInvoke with an invalidated object!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -949,6 +954,7 @@ PluginScriptableObjectParent::AnswerInvokeDefault(const nsTArray<Variant>& aArgs
   PluginInstanceParent* instance = GetInstance();
   if (!instance) {
     NS_ERROR("No instance?!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -956,6 +962,7 @@ PluginScriptableObjectParent::AnswerInvokeDefault(const nsTArray<Variant>& aArgs
   const NPNetscapeFuncs* npn = GetNetscapeFuncs(instance);
   if (!npn) {
     NS_ERROR("No netscape funcs?!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -964,6 +971,7 @@ PluginScriptableObjectParent::AnswerInvokeDefault(const nsTArray<Variant>& aArgs
   PRUint32 argCount = aArgs.Length();
 
   if (!convertedArgs.SetLength(argCount)) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -974,6 +982,7 @@ PluginScriptableObjectParent::AnswerInvokeDefault(const nsTArray<Variant>& aArgs
       while (index-- > 0) {
         ReleaseVariant(convertedArgs[index], instance);
       }
+      *aResult = void_t();
       *aSuccess = false;
       return true;
     }
@@ -989,6 +998,7 @@ PluginScriptableObjectParent::AnswerInvokeDefault(const nsTArray<Variant>& aArgs
   }
 
   if (!success) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -999,12 +1009,13 @@ PluginScriptableObjectParent::AnswerInvokeDefault(const nsTArray<Variant>& aArgs
   ReleaseVariant(result, instance);
 
   if (!success) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
 
-  *aSuccess = true;
   *aResult = convertedResult;
+  *aSuccess = true;
   return true;
 }
 
@@ -1050,10 +1061,9 @@ PluginScriptableObjectParent::AnswerGetProperty(const NPRemoteIdentifier& aId,
                                                 Variant* aResult,
                                                 bool* aSuccess)
 {
-  *aResult = void_t();
-
   if (!mObject) {
     NS_WARNING("Calling AnswerGetProperty with an invalidated object!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1063,6 +1073,7 @@ PluginScriptableObjectParent::AnswerGetProperty(const NPRemoteIdentifier& aId,
   PluginInstanceParent* instance = GetInstance();
   if (!instance) {
     NS_ERROR("No instance?!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1070,12 +1081,14 @@ PluginScriptableObjectParent::AnswerGetProperty(const NPRemoteIdentifier& aId,
   const NPNetscapeFuncs* npn = GetNetscapeFuncs(instance);
   if (!npn) {
     NS_ERROR("No netscape funcs?!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
 
   if (!EnsureValidIdentifier(instance, (NPIdentifier)aId)) {
     NS_WARNING("Invalid NPIdentifier!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1083,6 +1096,7 @@ PluginScriptableObjectParent::AnswerGetProperty(const NPRemoteIdentifier& aId,
   NPVariant result;
   if (!npn->getproperty(instance->GetNPP(), mObject, (NPIdentifier)aId,
                         &result)) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1237,10 +1251,9 @@ PluginScriptableObjectParent::AnswerConstruct(const nsTArray<Variant>& aArgs,
                                               Variant* aResult,
                                               bool* aSuccess)
 {
-  *aResult = void_t();
-
   if (!mObject) {
     NS_WARNING("Calling AnswerConstruct with an invalidated object!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1250,6 +1263,7 @@ PluginScriptableObjectParent::AnswerConstruct(const nsTArray<Variant>& aArgs,
   PluginInstanceParent* instance = GetInstance();
   if (!instance) {
     NS_ERROR("No instance?!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1257,6 +1271,7 @@ PluginScriptableObjectParent::AnswerConstruct(const nsTArray<Variant>& aArgs,
   const NPNetscapeFuncs* npn = GetNetscapeFuncs(instance);
   if (!npn) {
     NS_ERROR("No netscape funcs?!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1265,6 +1280,7 @@ PluginScriptableObjectParent::AnswerConstruct(const nsTArray<Variant>& aArgs,
   PRUint32 argCount = aArgs.Length();
 
   if (!convertedArgs.SetLength(argCount)) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1275,6 +1291,7 @@ PluginScriptableObjectParent::AnswerConstruct(const nsTArray<Variant>& aArgs,
       while (index-- > 0) {
         ReleaseVariant(convertedArgs[index], instance);
       }
+      *aResult = void_t();
       *aSuccess = false;
       return true;
     }
@@ -1289,6 +1306,7 @@ PluginScriptableObjectParent::AnswerConstruct(const nsTArray<Variant>& aArgs,
   }
 
   if (!success) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1299,6 +1317,7 @@ PluginScriptableObjectParent::AnswerConstruct(const nsTArray<Variant>& aArgs,
   ReleaseVariant(result, instance);
 
   if (!success) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }

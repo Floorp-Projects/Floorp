@@ -698,10 +698,9 @@ PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
                                           Variant* aResult,
                                           bool* aSuccess)
 {
-  *aResult = null_t();
-
   if (!mObject) {
     NS_WARNING("Calling AnswerInvoke with an invalidated object!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -709,6 +708,7 @@ PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
   NS_ASSERTION(mObject->_class != GetClass(), "Bad object type!");
 
   if (!(mObject->_class && mObject->_class->invoke)) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -717,6 +717,7 @@ PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
   PRUint32 argCount = aArgs.Length();
 
   if (!convertedArgs.SetLength(argCount)) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -735,6 +736,7 @@ PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
   }
 
   if (!success) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -745,6 +747,7 @@ PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
   PluginModuleChild::sBrowserFuncs.releasevariantvalue(&result);
 
   if (!success) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -759,10 +762,9 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<Variant>& aArgs,
                                                  Variant* aResult,
                                                  bool* aSuccess)
 {
-  *aResult = null_t();
-
   if (!mObject) {
     NS_WARNING("Calling AnswerInvokeDefault with an invalidated object!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -770,6 +772,7 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<Variant>& aArgs,
   NS_ASSERTION(mObject->_class != GetClass(), "Bad object type!");
 
   if (!(mObject->_class && mObject->_class->invokeDefault)) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -778,6 +781,7 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<Variant>& aArgs,
   PRUint32 argCount = aArgs.Length();
 
   if (!convertedArgs.SetLength(argCount)) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -796,6 +800,7 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<Variant>& aArgs,
   }
 
   if (!success) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -806,12 +811,13 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<Variant>& aArgs,
   PluginModuleChild::sBrowserFuncs.releasevariantvalue(&result);
 
   if (!success) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
 
-  *aSuccess = true;
   *aResult = convertedResult;
+  *aSuccess = true;
   return true;
 }
 
@@ -967,10 +973,9 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<Variant>& aArgs,
                                              Variant* aResult,
                                              bool* aSuccess)
 {
-  *aResult = null_t();
-
   if (!mObject) {
     NS_WARNING("Calling AnswerConstruct with an invalidated object!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -978,6 +983,7 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<Variant>& aArgs,
   NS_ASSERTION(mObject->_class != GetClass(), "Bad object type!");
 
   if (!(mObject->_class && mObject->_class->construct)) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -986,6 +992,7 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<Variant>& aArgs,
   PRUint32 argCount = aArgs.Length();
 
   if (!convertedArgs.SetLength(argCount)) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1003,6 +1010,7 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<Variant>& aArgs,
   }
 
   if (!success) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1013,11 +1021,12 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<Variant>& aArgs,
   PluginModuleChild::sBrowserFuncs.releasevariantvalue(&result);
 
   if (!success) {
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
 
-  *aSuccess = true;
   *aResult = convertedResult;
+  *aSuccess = true;
   return true;
 }
