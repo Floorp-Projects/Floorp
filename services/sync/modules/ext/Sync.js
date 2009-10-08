@@ -51,6 +51,24 @@ const CB_FAIL = {};
 // Share a secret only for functions in this file to prevent outside access
 const SECRET = {};
 
+function checkAppReady() {
+  // Watch for app-quit notification to stop any sync. calls
+  let os = Cc["@mozilla.org/observer-service;1"].
+    getService(Ci.nsIObserverService);
+  os.addObserver({
+    observe: function observe() {
+      // Now that the app is quitting, make checkAppReady throw
+      checkAppReady = function() {
+        throw Components.Exception("App. Quitting", Cr.NS_ERROR_ABORT);
+      };
+      os.removeObserver(this, "quit-application");
+    }
+  }, "quit-application", false);
+
+  // In the common case, checkAppReady just returns true
+  return (checkAppReady = function() true)();
+};
+
 /**
  * Create a callback that remembers state like whether it's been called
  */
@@ -98,6 +116,9 @@ function makeCallback() {
  */
 function Sync(func, thisArg, callback) {
   return function syncFunc(/* arg1, arg2, ... */) {
+    // Initialize the observer on first usage
+    checkAppReady();
+
     // Grab the current thread so we can make it give up priority
     let thread = Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
 
@@ -117,7 +138,7 @@ function Sync(func, thisArg, callback) {
 
     // Keep waiting until our callback is triggered
     let callbackData = instanceCallback._(SECRET);
-    while (callbackData.state == CB_READY)
+    while (callbackData.state == CB_READY && checkAppReady())
       thread.processNextEvent(true);
 
     // Reset the state of the callback to prepare for another call
