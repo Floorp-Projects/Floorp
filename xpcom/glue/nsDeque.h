@@ -233,7 +233,7 @@ private:
    */
   nsDeque& operator=(const nsDeque& anOther);
 
-  PRInt32 GrowCapacity();
+  PRBool GrowCapacity();
 };
 
 /******************************************************
