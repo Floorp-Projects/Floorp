@@ -68,9 +68,7 @@ public:
 
   static PRBool IsPseudoElement(nsIAtom *aAtom);
 
-  static PRBool IsCSS2PseudoElement(nsIAtom *aAtom) {
-    return PseudoElementHasFlags(aAtom, CSS_PSEUDO_ELEMENT_IS_CSS2);
-  }
+  static PRBool IsCSS2PseudoElement(nsIAtom *aAtom);
 
   static PRBool PseudoElementContainsElements(nsIAtom *aAtom) {
     return PseudoElementHasFlags(aAtom, CSS_PSEUDO_ELEMENT_CONTAINS_ELEMENTS);
