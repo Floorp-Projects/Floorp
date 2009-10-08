@@ -90,6 +90,7 @@
 #include "nsLayoutUtils.h"
 #include "nsAutoPtr.h"
 #include "imgIRequest.h"
+#include "nsTransitionManager.h"
 
 #include "nsFrameManager.h"
 #ifdef ACCESSIBILITY
@@ -926,6 +927,33 @@ nsFrameManager::DebugVerifyStyleTree(nsIFrame* aFrame)
 
 #endif // DEBUG
 
+// aContent must be the content for the frame in question, which may be
+// :before/:after content
+static void
+TryStartingTransition(nsPresContext *aPresContext, nsIContent *aContent,
+                      nsStyleContext *aOldStyleContext,
+                      nsRefPtr<nsStyleContext> *aNewStyleContext /* inout */)
+{
+  // Notify the transition manager, and if it starts a transition,
+  // it will give us back a transition-covering style rule which
+  // we'll use to get *another* style context.  We want to ignore
+  // any already-running transitions, but cover up any that we're
+  // currently starting with their start value so we don't start
+  // them again for descendants that inherit that value.
+  nsCOMPtr<nsIStyleRule> coverRule = 
+    aPresContext->TransitionManager()->StyleContextChanged(
+      aContent, aOldStyleContext, *aNewStyleContext);
+  if (coverRule) {
+    nsCOMArray<nsIStyleRule> rules;
+    rules.AppendObject(coverRule);
+    *aNewStyleContext = aPresContext->StyleSet()->ResolveStyleForRules(
+                     (*aNewStyleContext)->GetParent(),
+                     (*aNewStyleContext)->GetPseudoType(),
+                     (*aNewStyleContext)->GetRuleNode(),
+                     rules);
+  }
+}
+
 nsresult
 nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
 {
@@ -971,6 +999,16 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
                                                  newParentContext);
     if (newContext) {
       if (newContext != oldContext) {
+        // We probably don't want to initiate transitions from
+        // ReParentStyleContext, since we call it during frame
+        // construction rather than in response to dynamic changes.
+        // Also see the comment at the start of
+        // nsTransitionManager::ConsiderStartingTransition.
+#if 0
+        TryStartingTransition(presContext, aFrame->GetContent(),
+                              oldContext, &newContext);
+#endif
+
         // Make sure to call CalcStyleDifference so that the new context ends
         // up resolving all the structs the old context resolved.
         nsChangeHint styleChange = oldContext->CalcStyleDifference(newContext);
@@ -1260,6 +1298,9 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       }
 
       if (newContext != oldContext) {
+        TryStartingTransition(aPresContext, aFrame->GetContent(),
+                              oldContext, &newContext);
+
         aMinChange = CaptureChange(oldContext, newContext, aFrame,
                                    content, aChangeList, aMinChange,
                                    assumeDifferenceHint);

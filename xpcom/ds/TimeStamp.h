@@ -211,6 +211,18 @@ public:
     NS_ASSERTION(!aOther.IsNull(), "Cannot compute with aOther null value");
     return mValue > aOther.mValue;
   }
+  PRBool operator==(const TimeStamp& aOther) const {
+    // Maybe it's ok to check == with null timestamps?
+    NS_ASSERTION(!IsNull(), "Cannot compute with a null value");
+    NS_ASSERTION(!aOther.IsNull(), "Cannot compute with aOther null value");
+    return mValue == aOther.mValue;
+  }
+  PRBool operator!=(const TimeStamp& aOther) const {
+    // Maybe it's ok to check != with null timestamps?
+    NS_ASSERTION(!IsNull(), "Cannot compute with a null value");
+    NS_ASSERTION(!aOther.IsNull(), "Cannot compute with aOther null value");
+    return mValue != aOther.mValue;
+  }
 
   // Comparing TimeStamps for equality should be discouraged. Adding
   // two TimeStamps, or scaling TimeStamps, is nonsense and must never
