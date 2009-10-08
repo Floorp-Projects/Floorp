@@ -2263,6 +2263,15 @@ jsdValue::GetWrappedValue()
     return NS_OK;
 }
 
+NS_IMETHODIMP
+jsdValue::GetScript(jsdIScript **_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    JSDScript *script = JSD_GetScriptForValue(mCx, mValue);
+    *_rval = jsdScript::FromPtr(mCx, script);
+    return NS_OK;
+}
+
 /******************************************************************************
  * debugger service implementation
  ******************************************************************************/

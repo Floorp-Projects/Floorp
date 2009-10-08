@@ -992,6 +992,9 @@ jsd_GetValueConstructor(JSDContext* jsdc, JSDValue* jsdval);
 extern const char*
 jsd_GetValueClassName(JSDContext* jsdc, JSDValue* jsdval);
 
+extern JSDScript*
+jsd_GetScriptForValue(JSDContext* jsdc, JSDValue* jsdval);
+
 /**************************************************/
 
 extern void
