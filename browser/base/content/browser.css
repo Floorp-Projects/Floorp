@@ -83,7 +83,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
 
 %ifdef MOZ_WIDGET_GTK2
 /* Bookmarks override the "images-in-menus" metric in xul.css */
-.bookmark-item > .menu-iconic-left {
+.bookmark-item > .menu-iconic-left,
+.searchbar-engine-menuitem > .menu-iconic-left {
   visibility: inherit;
 }
 %endif
