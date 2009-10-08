@@ -1589,15 +1589,3 @@ nsXBLBinding::GetAnonymousNodes()
 
   return nsnull;
 }
-
-PRBool
-nsXBLBinding::ShouldBuildChildFrames() const
-{
-  if (mContent)
-    return mPrototypeBinding->ShouldBuildChildFrames();
-
-  if (mNextBinding) 
-    return mNextBinding->ShouldBuildChildFrames();
-
-  return PR_TRUE;
-}

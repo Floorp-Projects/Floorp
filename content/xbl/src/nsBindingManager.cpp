@@ -1373,14 +1373,6 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-PRBool
-nsBindingManager::ShouldBuildChildFrames(nsIContent* aContent)
-{
-  nsXBLBinding *binding = GetBinding(aContent);
-
-  return !binding || binding->ShouldBuildChildFrames();
-}
-
 nsIContent*
 nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild)
 {
