@@ -64,10 +64,18 @@ public:
                                       Message*& aReply) = 0;
     };
 
-    RPCChannel(RPCListener* aListener) :
+    // What happens if RPC calls race?
+    enum RacyRPCPolicy {
+        RRPError,
+        RRPChildWins,
+        RRPParentWins
+    };
+
+    RPCChannel(RPCListener* aListener, RacyRPCPolicy aPolicy=RRPChildWins) :
         SyncChannel(aListener),
         mPending(),
-        mRemoteStackDepth(0)
+        mRemoteStackDepthGuess(0),
+        mRacePolicy(aPolicy)
     {
     }
 
@@ -103,6 +111,37 @@ private:
     size_t StackDepth() {
         mMutex.AssertCurrentThreadOwns();
         return mStack.size();
+    }
+
+#define RPC_DEBUGABORT(...) \
+    DebugAbort(__FILE__, __LINE__,## __VA_ARGS__)
+
+    void DebugAbort(const char* file, int line,
+                    const char* why,
+                    const char* type="rpc", bool reply=false)
+    {
+        fprintf(stderr,
+                "[RPCChannel][%s][%s:%d] Aborting: %s (triggered by %s%s)\n",
+                mChild ? "Child" : "Parent",
+                file, line,
+                why,
+                type, reply ? "reply" : "");
+        // technically we need the mutex for this, but we're dying anyway
+        fprintf(stderr, "  local RPC stack size: %zu\n",
+                mStack.size());
+        fprintf(stderr, "  remote RPC stack guess: %zd\n",
+                mRemoteStackDepthGuess);
+        fprintf(stderr, "  Pending queue size: %zu, front to back:\n",
+                mPending.size());
+        while (!mPending.empty()) {
+            fprintf(stderr, "    [ %s%s ]\n",
+                    mPending.front().is_rpc() ? "rpc" :
+                        (mPending.front().is_sync() ? "sync" : "async"),
+                    mPending.front().is_reply() ? "reply" : "");
+            mPending.pop();
+        }
+
+        NS_RUNTIMEABORT(why);
     }
 
     // 
@@ -187,7 +226,9 @@ private:
     //
     // TODO: and when we detect a race, what should we actually *do* ... ?
     //
-    size_t mRemoteStackDepth;
+    size_t mRemoteStackDepthGuess;
+
+    RacyRPCPolicy mRacePolicy;
 };
 
 
