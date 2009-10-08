@@ -104,8 +104,7 @@ RPCChannel::Call(Message* msg, Message* reply)
         // (it may be an invalid message, but the sync handler will
         // check that).
         if (recvd.is_sync()) {
-            if (!mPending.empty())
-                RPC_DEBUGABORT("other side is malfunctioning");
+            RPC_ASSERT(mPending.empty(), "other side is malfunctioning");
             MutexAutoUnlock unlock(mMutex);
 
             SyncChannel::OnDispatchMessage(recvd);
@@ -117,15 +116,13 @@ RPCChannel::Call(Message* msg, Message* reply)
 
         // reply message
         if (recvd.is_reply()) {
-            if (0 == mStack.size())
-                RPC_DEBUGABORT("invalid RPC stack");
+            RPC_ASSERT(0 < mStack.size(), "invalid RPC stack");
 
             const Message& outcall = mStack.top();
 
-            if (recvd.type() != (outcall.type()+1) && !recvd.is_reply_error()) {
-                // FIXME/cjones: handle error
-                RPC_DEBUGABORT("somebody's misbehavin'", "rpc", true);
-            }
+            // FIXME/cjones: handle error
+            RPC_ASSERT(recvd.type() == (outcall.type()+1) || recvd.is_reply_error(),
+                       "somebody's misbehavin'", "rpc", true);
 
             // we received a reply to our most recent outstanding
             // call.  pop this frame and return the reply
@@ -149,9 +146,9 @@ RPCChannel::Call(Message* msg, Message* reply)
                     mPending.pop();
 
                     if (m.is_sync()) {
-                        if (seenBlocker)
-                            RPC_DEBUGABORT("other side is malfunctioning",
-                                           "sync", m.is_reply());
+                        RPC_ASSERT(!seenBlocker,
+                                   "other side is malfunctioning",
+                                   "sync", m.is_reply());
                         seenBlocker = true;
 
                         MessageLoop::current()->PostTask(
@@ -160,9 +157,9 @@ RPCChannel::Call(Message* msg, Message* reply)
                                               &RPCChannel::OnDelegate, m));
                     }
                     else if (m.is_rpc()) {
-                        if (seenBlocker)
-                            RPC_DEBUGABORT("other side is malfunctioning",
-                                           "rpc", m.is_reply());
+                        RPC_ASSERT(!seenBlocker,
+                                   "other side is malfunctioning",
+                                   "rpc", m.is_reply());
                         seenBlocker = true;
 
                         MessageLoop::current()->PostTask(
@@ -183,8 +180,8 @@ RPCChannel::Call(Message* msg, Message* reply)
                 // shouldn't have queued any more messages, since
                 // the other side is now supposed to be blocked on a
                 // reply from us!
-                if (!mPending.empty())
-                    RPC_DEBUGABORT("other side should have been blocked");
+                RPC_ASSERT(mPending.empty(),
+                           "other side should have been blocked");
             }
 
             // unlocks mMutex
@@ -196,12 +193,12 @@ RPCChannel::Call(Message* msg, Message* reply)
         // the case where this side "won" an RPC race and the other
         // side already replied back
 
-        if (!(mPending.empty()
-              || (1 == mPending.size()
-                  && mPending.front().is_rpc()
-                  && mPending.front().is_reply()
-                  && 1 == StackDepth())))
-            RPC_DEBUGABORT("other side is malfunctioning", "rpc");
+        RPC_ASSERT(mPending.empty()
+                   || (1 == mPending.size()
+                       && mPending.front().is_rpc()
+                       && mPending.front().is_reply()
+                       && 1 == StackDepth()),
+                   "other side is malfunctioning", "rpc");
 
         // "snapshot" the current stack depth while we own the Mutex
         size_t stackDepth = StackDepth();
@@ -224,7 +221,7 @@ RPCChannel::OnDelegate(const Message& msg)
         return SyncChannel::OnDispatchMessage(msg);
     else if (!msg.is_rpc())
         return AsyncChannel::OnDispatchMessage(msg);
-    RPC_DEBUGABORT("fatal logic error");
+    RPC_ASSERT(0, "fatal logic error");
 }
 
 void
@@ -238,10 +235,9 @@ RPCChannel::OnMaybeDequeueOne()
         if (mPending.empty())
             return;
 
-        if (mPending.size() != 1)
-            RPC_DEBUGABORT("should only have one msg");
-        if (!(mPending.front().is_rpc() || mPending.front().is_sync()))
-            RPC_DEBUGABORT("msg should be RPC or sync", "async");
+        RPC_ASSERT(mPending.size() == 1, "should only have one msg");
+        RPC_ASSERT(mPending.front().is_rpc() || mPending.front().is_sync(),
+                   "msg should be RPC or sync", "async");
 
         recvd = mPending.front();
         mPending.pop();
@@ -259,6 +255,14 @@ RPCChannel::OnIncall(const Message& call)
     // StackDepth() == 0.  That's the "snapshot" of the state of the
     // RPCChannel we use when processing this message.
     ProcessIncall(call, 0);
+}
+
+void
+RPCChannel::OnDeferredIncall(const Message& call)
+{
+    AssertWorkerThread();
+    ProcessIncall(call, 0);
+    mRemoteStackDepthGuess = 0; // see the race detector code below
 }
 
 void
@@ -286,7 +290,7 @@ RPCChannel::ProcessIncall(const Message& call, size_t stackDepth)
             // TODO this /could/ be construed as evidence of a
             // misbehaving process, so should probably go through
             // regular error-handling channels
-            RPC_DEBUGABORT("fatal logic error");
+            RPC_ASSERT(0, "fatal logic error");
 
         // the "winner", if there is one, gets to defer processing of
         // the other side's in-call
@@ -313,9 +317,11 @@ RPCChannel::ProcessIncall(const Message& call, size_t stackDepth)
                winner, defer ? " " : " not ");
 
         if (defer) {
+            // we now know there's one frame on the other side's stack
+            mRemoteStackDepthGuess = 1;
             mWorkerLoop->PostTask(
                 FROM_HERE,
-                NewRunnableMethod(this, &RPCChannel::OnIncall, call));
+                NewRunnableMethod(this, &RPCChannel::OnDeferredIncall, call));
             return;
         }
 
@@ -476,12 +482,9 @@ RPCChannel::OnMessageReceived(const Message& msg)
         // never reach this case.  RPCChannel::Call explicitly checks
         // for and disallows this case.  so if we reach here, the other
         // side is malfunctioning (compromised?).
-        if (AwaitingSyncReply() /* msg.is_rpc() */) {
-            // FIXME other error handling?
-            RPC_DEBUGABORT("the other side is malfunctioning",
-                           "rpc", msg.is_reply());
-            return;             // not reached
-        }
+        RPC_ASSERT(!AwaitingSyncReply(),
+                   "the other side is malfunctioning",
+                   "rpc", msg.is_reply());
 
         // otherwise, we (legally) either got (i) async msg; (ii) sync
         // in-msg; (iii) re-entrant rpc in-call; (iv) rpc reply we

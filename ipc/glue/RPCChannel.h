@@ -105,6 +105,7 @@ protected:
 
 private:
     void OnIncall(const Message& msg);
+    void OnDeferredIncall(const Message& msg);
     void ProcessIncall(const Message& call, size_t stackDepth);
 
     // Called from both threads
@@ -113,17 +114,21 @@ private:
         return mStack.size();
     }
 
-#define RPC_DEBUGABORT(...) \
-    DebugAbort(__FILE__, __LINE__,## __VA_ARGS__)
+#define RPC_ASSERT(_cond, ...)                                      \
+    do {                                                            \
+        if (!(_cond))                                               \
+            DebugAbort(__FILE__, __LINE__, #_cond,## __VA_ARGS__);  \
+    } while (0)
 
-    void DebugAbort(const char* file, int line,
+    void DebugAbort(const char* file, int line, const char* cond,
                     const char* why,
                     const char* type="rpc", bool reply=false)
     {
         fprintf(stderr,
-                "[RPCChannel][%s][%s:%d] Aborting: %s (triggered by %s%s)\n",
+                "[RPCChannel][%s][%s:%d] "
+                "Assertion (%s) failed.  %s (triggered by %s%s)\n",
                 mChild ? "Child" : "Parent",
-                file, line,
+                file, line, cond,
                 why,
                 type, reply ? "reply" : "");
         // technically we need the mutex for this, but we're dying anyway
