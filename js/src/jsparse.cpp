@@ -1001,7 +1001,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
 #endif
     script = js_NewScriptFromCG(cx, &cg);
     if (script && funbox)
-        script->flags |= JSSF_SAVED_CALLER_FUN;
+        script->savedCallerFun = true;
 
 #ifdef JS_SCOPE_DEPTH_METER
     if (script) {
