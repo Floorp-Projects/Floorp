@@ -143,6 +143,11 @@ RESOURCES_HTML = \
 		$(srcdir)/folder.png \
 		$(NULL)
 
+RESOURCES = \
+		$(srcdir)/broken-image.png \
+		$(srcdir)/loading-image.png \
+		$(NULL)
+
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
@@ -170,8 +175,10 @@ endif
 
 libs::
 	$(INSTALL) $(RESOURCES_HTML) $(DIST)/bin/res/html
+	$(INSTALL) $(RESOURCES) $(DIST)/bin/res
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(RESOURCES_HTML) $(DESTDIR)$(mozappdir)/res/html
+	$(SYSINSTALL) $(IFLAGS1) $(RESOURCES) $(DESTDIR)$(mozappdir)/res
 
 DEFINES += -D_IMPL_NS_LAYOUT
