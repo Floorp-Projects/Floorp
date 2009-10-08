@@ -283,14 +283,9 @@ class MochitestServer:
   def start(self):
     "Run the Mochitest server, returning the process ID of the server."
     
-    env = dict(os.environ)
-    if automation.UNIXISH:
-      env["LD_LIBRARY_PATH"] = self._xrePath
-      env["MOZILLA_FIVE_HOME"] = self._xrePath
-      env["XPCOM_DEBUG_BREAK"] = "warn"
-    elif automation.IS_MAC:
-      env["DYLD_LIBRARY_PATH"] = self._xrePath
-    elif automation.IS_WIN32:
+    env = automation.environment(xrePath = self._xrePath)
+    env["XPCOM_DEBUG_BREAK"] = "warn"
+    if automation.IS_WIN32:
       env["PATH"] = env["PATH"] + ";" + self._xrePath
 
     args = ["-g", self._xrePath,
@@ -418,18 +413,11 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
       debuggerInfo["interactive"] = options.debuggerInteractive
 
   # browser environment
-  browserEnv = dict(os.environ)
+  browserEnv = automation.environment(xrePath = options.xrePath)
 
   # These variables are necessary for correct application startup; change
   # via the commandline at your own risk.
-  # NO_EM_RESTART: will do a '-silent' run instead.
-  browserEnv["NO_EM_RESTART"] = "1"
   browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
-  appDir = os.path.dirname(options.app)
-  if automation.UNIXISH:
-    browserEnv["LD_LIBRARY_PATH"] = appDir
-    browserEnv["MOZILLA_FIVE_HOME"] = appDir
-    browserEnv["GNOME_DISABLE_CRASH_DIALOG"] = "1"
 
   for v in options.environment:
     ix = v.find("=")
