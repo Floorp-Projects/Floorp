@@ -57,6 +57,8 @@ BrowserStreamChild::BrowserStreamChild(PluginInstanceChild* instance,
   , mURL(url)
   , mHeaders(headers)
 {
+  AssertPluginThread();
+
   memset(&mStream, 0, sizeof(mStream));
   mStream.ndata = static_cast<AStream*>(this);
   if (!mURL.IsEmpty())
@@ -80,6 +82,8 @@ bool
 BrowserStreamChild::AnswerNPP_WriteReady(const int32_t& newlength,
                                          int32_t *size)
 {
+  AssertPluginThread();
+
   if (mClosed) {
     *size = 0;
     return true;
@@ -96,6 +100,9 @@ BrowserStreamChild::AnswerNPP_Write(const int32_t& offset,
                                     const Buffer& data,
                                     int32_t* consumed)
 {
+  _MOZ_LOG(__FUNCTION__);
+  AssertPluginThread();
+
   if (mClosed) {
     *consumed = -1;
     return true;
@@ -111,6 +118,7 @@ bool
 BrowserStreamChild::AnswerNPP_StreamAsFile(const nsCString& fname)
 {
   _MOZ_LOG(__FUNCTION__);
+  AssertPluginThread();
   printf("mClosed: %i\n", mClosed);
 
   if (mClosed)
@@ -124,6 +132,8 @@ BrowserStreamChild::AnswerNPP_StreamAsFile(const nsCString& fname)
 NPError
 BrowserStreamChild::NPN_RequestRead(NPByteRange* aRangeList)
 {
+  AssertPluginThread();
+
   IPCByteRanges ranges;
   for (; aRangeList; aRangeList = aRangeList->next) {
     IPCByteRange br = {aRangeList->offset, aRangeList->length};
@@ -139,6 +149,8 @@ BrowserStreamChild::NPN_RequestRead(NPByteRange* aRangeList)
 void
 BrowserStreamChild::NPP_DestroyStream(NPError reason)
 {
+  AssertPluginThread();
+
   if (mClosed)
     return;
 

@@ -58,6 +58,7 @@ namespace ipc {
 bool
 RPCChannel::Call(Message* msg, Message* reply)
 {
+    AssertWorkerThread();
     NS_ABORT_IF_FALSE(!ProcessingSyncMessage(),
                       "violation of sync handler invariant");
     NS_ABORT_IF_FALSE(msg->is_rpc(),
@@ -207,6 +208,7 @@ RPCChannel::Call(Message* msg, Message* reply)
 void
 RPCChannel::OnDelegate(const Message& msg)
 {
+    AssertWorkerThread();
     if (msg.is_sync())
         return SyncChannel::OnDispatchMessage(msg);
     else if (!msg.is_rpc())
@@ -217,6 +219,7 @@ RPCChannel::OnDelegate(const Message& msg)
 void
 RPCChannel::OnMaybeDequeueOne()
 {
+    AssertWorkerThread();
     Message recvd;  
     {
         MutexAutoLock lock(mMutex);
@@ -236,6 +239,7 @@ RPCChannel::OnMaybeDequeueOne()
 void
 RPCChannel::OnIncall(const Message& call)
 {
+    AssertWorkerThread();
     // We only reach here from the "regular" event loop, when
     // StackDepth() == 0.  That's the "snapshot" of the state of the
     // RPCChannel we use when processing this message.
@@ -245,6 +249,7 @@ RPCChannel::OnIncall(const Message& call)
 void
 RPCChannel::ProcessIncall(const Message& call, size_t stackDepth)
 {
+    AssertWorkerThread();
     mMutex.AssertNotCurrentThreadOwns();
     NS_ABORT_IF_FALSE(call.is_rpc(),
                       "should have been handled by SyncChannel");
@@ -298,6 +303,7 @@ RPCChannel::ProcessIncall(const Message& call, size_t stackDepth)
 void
 RPCChannel::OnMessageReceived(const Message& msg)
 {
+    AssertIOThread();
     MutexAutoLock lock(mMutex);
 
     // regardless of the RPC stack, if we're awaiting a sync reply, we
@@ -414,6 +420,7 @@ RPCChannel::OnMessageReceived(const Message& msg)
 void
 RPCChannel::OnChannelError()
 {
+    AssertIOThread();
     {
         MutexAutoLock lock(mMutex);
 
