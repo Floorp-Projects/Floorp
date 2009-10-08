@@ -61,7 +61,7 @@ public:
 	NS_IMETHOD ScrollPositionWillChange(nscoord aX, nscoord aY) = 0;
 	// The scrollframe implementation of this method appends a list of widget
 	// configuration requests to aConfigurations. No other implementor
-	// should touch it.
+	// should touch it. No longer gets called!!!
 	virtual void ViewPositionDidChange(nsTArray<nsIWidget::Configuration>* aConfigurations) = 0;
 	NS_IMETHOD ScrollPositionDidChange(nscoord aX, nscoord aY) = 0;
 };

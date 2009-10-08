@@ -273,52 +273,10 @@ public: // NOT in nsIViewManager, so private to the view module
 
   nsEventStatus HandleEvent(nsView* aView, nsPoint aPoint, nsGUIEvent* aEvent);
 
-  /**
-   * Called to inform the view manager that a view is about to bit-blit.
-   * @param aView the view that will bit-blit
-   * @param aScrollAmount how much aView will scroll by
-   * @return always returns NS_OK
-   * @note
-   * This method used to return void, but MSVC 6.0 SP5 (without the
-   * Processor Pack) and SP6, and the MS eMbedded Visual C++ 4.0 SP4
-   * (for WINCE) hit an internal compiler error when compiling this
-   * method:
-   *
-   * @par
-@verbatim
-       fatal error C1001: INTERNAL COMPILER ERROR
-                   (compiler file 'E:\8966\vc98\p2\src\P2\main.c', line 494)
-@endverbatim
-   *
-   * @par
-   * Making the method return nsresult worked around the internal
-   * compiler error.  See Bugzilla bug 281158.  (The WINCE internal
-   * compiler error was addressed by the patch in bug 291229 comment
-   * 14 although the bug report did not mention the problem.)
-   */
-  nsresult WillBitBlit(nsView* aView, nsPoint aScrollAmount);
-  
-  /**
-   * Called to inform the view manager that a view has scrolled via a
-   * bitblit.
-   * The view manager will invalidate any widgets which may need
-   * to be rerendered.
-   * @param aView view to paint. should be the nsScrollPortView that
-   * got scrolled.
-   * @param aBlitRegion the region that was blitted; this is just so
-   * we can notify our view observer
-   * @param aUpdateRegion ensure that this part of the view is repainted
-   */
-  void UpdateViewAfterScroll(nsView *aView, const nsRegion& aBlitRegion,
-                             const nsRegion& aUpdateRegion);
-
-  /**
-   * Given that the view aView has being moved by scrolling by aDelta
-   * (so we want to blit pixels by -aDelta), compute the regions that
-   * must be blitted and repainted to correctly update the screen.
-   */
-  void GetRegionsForBlit(nsView* aView, nsPoint aDelta,
-                         nsRegion* aBlitRegion, nsRegion* aRepaintRegion);
+  virtual nsresult WillBitBlit(nsIView* aView, const nsRect& aRect,
+                               nsPoint aScrollAmount);
+  virtual void UpdateViewAfterScroll(nsIView *aView,
+                                     const nsRegion& aUpdateRegion);
 
   nsresult CreateRegion(nsIRegion* *result);
 

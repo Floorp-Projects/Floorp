@@ -836,8 +836,9 @@ public:
   // Returns true on success and false on failure (not safe).
   PRBool EnsureSafeToHandOutCSSRules();
 
-  PRBool MayHavePaintEventListener();
   void NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags);
+  void NotifyInvalidateForScrolling(const nsRegion& aBlitRegion,
+                                    const nsRegion& aInvalidateRegion);
   void FireDOMPaintEvent();
   PRBool IsDOMPaintEventPending() {
     return !mInvalidateRequests.mRequests.IsEmpty();
@@ -954,6 +955,10 @@ protected:
   NS_HIDDEN_(void) GetFontPreferences();
 
   NS_HIDDEN_(void) UpdateCharSet(const nsAFlatCString& aCharSet);
+
+  PRBool MayHavePaintEventListener();
+  void NotifyInvalidateRegion(const nsRegion& aRegion, nsPoint aOffset,
+                              PRUint32 aFlags);
 
   void HandleRebuildUserFontSet() {
     mPostedFlushUserFontSet = PR_FALSE;
