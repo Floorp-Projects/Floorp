@@ -62,7 +62,7 @@ typedef enum {
 
 typedef struct FunctionTable {
   TestFunction funcId;
-  char* funcName;
+  const char* funcName;
 } FunctionTable;
 
 typedef enum {
@@ -87,7 +87,7 @@ typedef struct InstanceData {
   NPWindow window;
   TestNPObject* scriptableObject;
   PlatformData* platformData;
-  uint32_t instanceCountWatchGeneration;
+  int32_t instanceCountWatchGeneration;
   bool lastReportedPrivateModeState;
   bool hasWidget;
   bool npnNewStream;
