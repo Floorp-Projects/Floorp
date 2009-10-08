@@ -74,7 +74,7 @@ class nsXPCFastLoadIO : public nsIFastLoadFileIO
     NS_DECL_ISUPPORTS
     NS_DECL_NSIFASTLOADFILEIO
 
-    nsXPCFastLoadIO(nsIFile *file) : mFile(file) {}
+    nsXPCFastLoadIO(nsIFile *file) : mFile(file), mTruncateOutputFile(true) {}
 
     void SetInputStream(nsIInputStream *stream) { mInputStream = stream; }
     void SetOutputStream(nsIOutputStream *stream) { mOutputStream = stream; }
@@ -85,6 +85,7 @@ class nsXPCFastLoadIO : public nsIFastLoadFileIO
     nsCOMPtr<nsIFile> mFile;
     nsCOMPtr<nsIInputStream> mInputStream;
     nsCOMPtr<nsIOutputStream> mOutputStream;
+    bool mTruncateOutputFile;
 };
 
 
