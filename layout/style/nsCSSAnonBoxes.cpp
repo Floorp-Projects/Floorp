@@ -42,6 +42,7 @@
 #include "nsAtomListUtils.h"
 #include "nsStaticAtom.h"
 #include "nsMemory.h"
+#include "nsCRT.h"
 
 // define storage for all atoms
 #define CSS_ANON_BOX(_name, _value) \
@@ -68,3 +69,13 @@ PRBool nsCSSAnonBoxes::IsAnonBox(nsIAtom *aAtom)
                                    NS_ARRAY_LENGTH(CSSAnonBoxes_info));
 }
 
+#ifdef MOZ_XUL
+/* static */ PRBool
+nsCSSAnonBoxes::IsTreePseudoElement(nsIAtom* aPseudo)
+{
+  const char* str;
+  aPseudo->GetUTF8String(&str);
+  static const char moz_tree[] = ":-moz-tree-";
+  return nsCRT::strncmp(str, moz_tree, PRInt32(sizeof(moz_tree)-1)) == 0;
+}
+#endif
