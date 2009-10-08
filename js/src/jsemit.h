@@ -262,6 +262,19 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_HAS_SHARPS        0x8000 /* source contains sharp defs or uses */
 
 /*
+ * Set when parsing a declaration-like destructuring pattern.  This
+ * flag causes PrimaryExpr to create PN_NAME parse nodes for variable
+ * references which are not hooked into any definition's use chain,
+ * added to any tree context's AtomList, etc. etc.  CheckDestructuring
+ * will do that work later.
+ *
+ * The comments atop CheckDestructuring explain the distinction
+ * between assignment-like and declaration-like destructuring
+ * patterns, and why they need to be treated differently.
+ */
+#define TCF_DECL_DESTRUCTURING    0x10000
+
+/*
  * Sticky deoptimization flags to propagate from FunctionBody.
  */
 #define TCF_FUN_FLAGS           (TCF_FUN_SETS_OUTER_NAME |                    \
