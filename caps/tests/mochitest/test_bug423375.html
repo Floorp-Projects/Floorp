@@ -36,7 +36,7 @@ function tryLoad(url)
 
 is(tryLoad("chrome://global/content/mozilla.xhtml"), "denied",
    "content should have been prevented from loading chrome: URL");
-is(tryLoad("resource://gre-resources/html.css"), "denied",
+is(tryLoad("resource://gre/res/html.css"), "denied",
    "content should have been prevented from loading resource: URL");
 </script>
 </pre>
