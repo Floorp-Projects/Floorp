@@ -174,6 +174,8 @@ NPObject*
 PluginScriptableObjectChild::ScriptableAllocate(NPP aInstance,
                                                 NPClass* aClass)
 {
+  AssertPluginThread();
+
   NS_ASSERTION(aClass == PluginScriptableObjectChild::GetClass(),
                "Huh?! Wrong class!");
 
@@ -189,6 +191,8 @@ PluginScriptableObjectChild::ScriptableAllocate(NPP aInstance,
 void
 PluginScriptableObjectChild::ScriptableInvalidate(NPObject* aObject)
 {
+  AssertPluginThread();
+
   if (aObject->_class != PluginScriptableObjectChild::GetClass()) {
     NS_ERROR("Don't know what kind of object this is!");
     return;
@@ -221,6 +225,8 @@ PluginScriptableObjectChild::ScriptableInvalidate(NPObject* aObject)
 void
 PluginScriptableObjectChild::ScriptableDeallocate(NPObject* aObject)
 {
+  AssertPluginThread();
+
   if (aObject->_class != PluginScriptableObjectChild::GetClass()) {
     NS_ERROR("Don't know what kind of object this is!");
     return;
@@ -241,6 +247,8 @@ bool
 PluginScriptableObjectChild::ScriptableHasMethod(NPObject* aObject,
                                                  NPIdentifier aName)
 {
+  AssertPluginThread();
+
   if (aObject->_class != PluginScriptableObjectChild::GetClass()) {
     NS_ERROR("Don't know what kind of object this is!");
     return false;
@@ -272,6 +280,8 @@ PluginScriptableObjectChild::ScriptableInvoke(NPObject* aObject,
                                               uint32_t aArgCount,
                                               NPVariant* aResult)
 {
+  AssertPluginThread();
+
   if (aObject->_class != PluginScriptableObjectChild::GetClass()) {
     NS_ERROR("Don't know what kind of object this is!");
     return false;
@@ -323,6 +333,8 @@ PluginScriptableObjectChild::ScriptableInvokeDefault(NPObject* aObject,
                                                      uint32_t aArgCount,
                                                      NPVariant* aResult)
 {
+  AssertPluginThread();
+
   if (aObject->_class != PluginScriptableObjectChild::GetClass()) {
     NS_ERROR("Don't know what kind of object this is!");
     return false;
@@ -371,6 +383,8 @@ bool
 PluginScriptableObjectChild::ScriptableHasProperty(NPObject* aObject,
                                                    NPIdentifier aName)
 {
+  AssertPluginThread();
+
   if (aObject->_class != PluginScriptableObjectChild::GetClass()) {
     NS_ERROR("Don't know what kind of object this is!");
     return false;
@@ -400,6 +414,8 @@ PluginScriptableObjectChild::ScriptableGetProperty(NPObject* aObject,
                                                    NPIdentifier aName,
                                                    NPVariant* aResult)
 {
+  AssertPluginThread();
+
   if (aObject->_class != PluginScriptableObjectChild::GetClass()) {
     NS_ERROR("Don't know what kind of object this is!");
     return false;
@@ -435,6 +451,8 @@ PluginScriptableObjectChild::ScriptableSetProperty(NPObject* aObject,
                                                    NPIdentifier aName,
                                                    const NPVariant* aValue)
 {
+  AssertPluginThread();
+
   if (aObject->_class != PluginScriptableObjectChild::GetClass()) {
     NS_ERROR("Don't know what kind of object this is!");
     return false;
@@ -469,6 +487,8 @@ bool
 PluginScriptableObjectChild::ScriptableRemoveProperty(NPObject* aObject,
                                                       NPIdentifier aName)
 {
+  AssertPluginThread();
+
   if (aObject->_class != PluginScriptableObjectChild::GetClass()) {
     NS_ERROR("Don't know what kind of object this is!");
     return false;
@@ -498,6 +518,8 @@ PluginScriptableObjectChild::ScriptableEnumerate(NPObject* aObject,
                                                  NPIdentifier** aIdentifiers,
                                                  uint32_t* aCount)
 {
+  AssertPluginThread();
+
   if (aObject->_class != PluginScriptableObjectChild::GetClass()) {
     NS_ERROR("Don't know what kind of object this is!");
     return false;
@@ -549,6 +571,8 @@ PluginScriptableObjectChild::ScriptableConstruct(NPObject* aObject,
                                                  uint32_t aArgCount,
                                                  NPVariant* aResult)
 {
+  AssertPluginThread();
+
   if (aObject->_class != PluginScriptableObjectChild::GetClass()) {
     NS_ERROR("Don't know what kind of object this is!");
     return false;
@@ -612,10 +636,13 @@ PluginScriptableObjectChild::PluginScriptableObjectChild()
 : mInstance(nsnull),
   mObject(nsnull)
 {
+  AssertPluginThread();
 }
 
 PluginScriptableObjectChild::~PluginScriptableObjectChild()
 {
+  AssertPluginThread();
+
   if (mObject) {
     if (mObject->_class == GetClass()) {
       if (!static_cast<ChildNPObject*>(mObject)->invalidated) {
@@ -633,6 +660,8 @@ void
 PluginScriptableObjectChild::Initialize(PluginInstanceChild* aInstance,
                                         NPObject* aObject)
 {
+  AssertPluginThread();
+
   NS_ASSERTION(!(mInstance && mObject), "Calling Initialize class twice!");
 
   if (aObject->_class == GetClass()) {
@@ -660,6 +689,8 @@ PluginScriptableObjectChild::Initialize(PluginInstanceChild* aInstance,
 bool
 PluginScriptableObjectChild::AnswerInvalidate()
 {
+  AssertPluginThread();
+
   if (mObject) {
     NS_ASSERTION(mObject->_class != GetClass(), "Bad object type!");
     if (mObject->_class && mObject->_class->invalidate) {
@@ -675,6 +706,8 @@ bool
 PluginScriptableObjectChild::AnswerHasMethod(const NPRemoteIdentifier& aId,
                                              bool* aHasMethod)
 {
+  AssertPluginThread();
+
   if (!mObject) {
     NS_WARNING("Calling AnswerHasMethod with an invalidated object!");
     *aHasMethod = false;
@@ -698,6 +731,8 @@ PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
                                           Variant* aResult,
                                           bool* aSuccess)
 {
+  AssertPluginThread();
+
   if (!mObject) {
     NS_WARNING("Calling AnswerInvoke with an invalidated object!");
     *aResult = void_t();
@@ -762,6 +797,8 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<Variant>& aArgs,
                                                  Variant* aResult,
                                                  bool* aSuccess)
 {
+  AssertPluginThread();
+
   if (!mObject) {
     NS_WARNING("Calling AnswerInvokeDefault with an invalidated object!");
     *aResult = void_t();
@@ -825,6 +862,8 @@ bool
 PluginScriptableObjectChild::AnswerHasProperty(const NPRemoteIdentifier& aId,
                                                bool* aHasProperty)
 {
+  AssertPluginThread();
+
   if (!mObject) {
     NS_WARNING("Calling AnswerHasProperty with an invalidated object!");
     *aHasProperty = false;
@@ -847,6 +886,8 @@ PluginScriptableObjectChild::AnswerGetProperty(const NPRemoteIdentifier& aId,
                                                Variant* aResult,
                                                bool* aSuccess)
 {
+  AssertPluginThread();
+
   if (!mObject) {
     NS_WARNING("Calling AnswerGetProperty with an invalidated object!");
     *aResult = void_t();
@@ -886,6 +927,8 @@ PluginScriptableObjectChild::AnswerSetProperty(const NPRemoteIdentifier& aId,
                                                const Variant& aValue,
                                                bool* aSuccess)
 {
+  AssertPluginThread();
+
   if (!mObject) {
     NS_WARNING("Calling AnswerSetProperty with an invalidated object!");
     *aSuccess = false;
@@ -913,6 +956,8 @@ bool
 PluginScriptableObjectChild::AnswerRemoveProperty(const NPRemoteIdentifier& aId,
                                                   bool* aSuccess)
 {
+  AssertPluginThread();
+
   if (!mObject) {
     NS_WARNING("Calling AnswerRemoveProperty with an invalidated object!");
     *aSuccess = false;
@@ -934,6 +979,8 @@ bool
 PluginScriptableObjectChild::AnswerEnumerate(nsTArray<NPRemoteIdentifier>* aProperties,
                                              bool* aSuccess)
 {
+  AssertPluginThread();
+
   if (!mObject) {
     NS_WARNING("Calling AnswerEnumerate with an invalidated object!");
     *aSuccess = false;
@@ -978,6 +1025,8 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<Variant>& aArgs,
                                              Variant* aResult,
                                              bool* aSuccess)
 {
+  AssertPluginThread();
+
   if (!mObject) {
     NS_WARNING("Calling AnswerConstruct with an invalidated object!");
     *aResult = void_t();

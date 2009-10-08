@@ -70,6 +70,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 {
     printf ("[PluginInstanceChild] NPN_GetValue(%s)\n",
             NPNVariableToString(aVar));
+    AssertPluginThread();
 
     switch(aVar) {
 
@@ -179,6 +180,7 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 {
     printf ("[PluginInstanceChild] NPN_SetValue(%s, %ld)\n",
             NPPVariableToString(aVar), reinterpret_cast<intptr_t>(aValue));
+    AssertPluginThread();
 
     switch (aVar) {
     case NPPVpluginWindowBool: {
@@ -212,6 +214,8 @@ bool
 PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginWindow(
     bool* windowed, NPError* rv)
 {
+    AssertPluginThread();
+
     NPBool isWindowed;
     *rv = mPluginIface->getvalue(GetNPP(), NPPVpluginWindowBool,
                                  reinterpret_cast<void*>(&isWindowed));
@@ -223,6 +227,8 @@ bool
 PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginTransparent(
     bool* transparent, NPError* rv)
 {
+    AssertPluginThread();
+
     NPBool isTransparent;
     *rv = mPluginIface->getvalue(GetNPP(), NPPVpluginTransparentBool,
                                  reinterpret_cast<void*>(&isTransparent));
@@ -234,6 +240,8 @@ bool
 PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(
     bool* needs, NPError* rv)
 {
+    AssertPluginThread();
+
 #ifdef OS_LINUX
 
     NPBool needsXEmbed;
@@ -255,6 +263,7 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
                                            PPluginScriptableObjectChild** value,
                                            NPError* result)
 {
+    AssertPluginThread();
 
     NPObject* object;
     *result = mPluginIface->getvalue(GetNPP(), NPPVpluginScriptableNPObject,
@@ -283,6 +292,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPEvent& event,
                                            int16_t* handled)
 {
     _MOZ_LOG(__FUNCTION__);
+    AssertPluginThread();
 
 #if defined(OS_LINUX) && defined(DEBUG_cjones)
     if (GraphicsExpose == event.type)
@@ -334,6 +344,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
            aWindow.window,
            aWindow.x, aWindow.y,
            aWindow.width, aWindow.height);
+    AssertPluginThread();
 
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     // The minimum info is sent over IPC to allow this
@@ -563,6 +574,8 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
 PPluginScriptableObjectChild*
 PluginInstanceChild::AllocPPluginScriptableObject()
 {
+    AssertPluginThread();
+
     nsAutoPtr<PluginScriptableObjectChild>* object =
         mScriptableObjects.AppendElement();
     NS_ENSURE_TRUE(object, nsnull);
@@ -577,6 +590,8 @@ bool
 PluginInstanceChild::DeallocPPluginScriptableObject(
                                           PPluginScriptableObjectChild* aObject)
 {
+    AssertPluginThread();
+
     PluginScriptableObjectChild* object =
         reinterpret_cast<PluginScriptableObjectChild*>(aObject);
 
@@ -601,6 +616,8 @@ bool
 PluginInstanceChild::AnswerPPluginScriptableObjectConstructor(
                                            PPluginScriptableObjectChild* aActor)
 {
+    AssertPluginThread();
+
     // This is only called in response to the parent process requesting the
     // creation of an actor. This actor will represent an NPObject that is
     // created by the browser and returned to the plugin.
@@ -632,6 +649,7 @@ PluginInstanceChild::AllocPBrowserStream(const nsCString& url,
                                          NPError* rv,
                                          uint16_t *stype)
 {
+    AssertPluginThread();
     return new BrowserStreamChild(this, url, length, lastmodified, notifyData,
                                   headers, mimeType, seekable, rv, stype);
 }
@@ -641,6 +659,7 @@ PluginInstanceChild::AnswerPBrowserStreamDestructor(PBrowserStreamChild* stream,
                                                     const NPError& reason,
                                                     const bool& artificial)
 {
+    AssertPluginThread();
     if (!artificial)
         static_cast<BrowserStreamChild*>(stream)->NPP_DestroyStream(reason);
     return true;
@@ -651,6 +670,7 @@ PluginInstanceChild::DeallocPBrowserStream(PBrowserStreamChild* stream,
                                            const NPError& reason,
                                            const bool& artificial)
 {
+    AssertPluginThread();
     delete stream;
     return true;
 }
@@ -669,6 +689,7 @@ PluginInstanceChild::AnswerPPluginStreamDestructor(PPluginStreamChild* stream,
                                                    const NPReason& reason,
                                                    const bool& artificial)
 {
+    AssertPluginThread();
     if (!artificial) {
         static_cast<PluginStreamChild*>(stream)->NPP_DestroyStream(reason);
     }
@@ -680,6 +701,7 @@ PluginInstanceChild::DeallocPPluginStream(PPluginStreamChild* stream,
                                           const NPError& reason,
                                           const bool& artificial)
 {
+    AssertPluginThread();
     delete stream;
     return true;
 }
@@ -692,6 +714,7 @@ PluginInstanceChild::AllocPStreamNotify(const nsCString& url,
                                         const bool& file,
                                         NPError* result)
 {
+    AssertPluginThread();
     NS_RUNTIMEABORT("not reached");
     return NULL;
 }
@@ -700,6 +723,8 @@ bool
 PluginInstanceChild::DeallocPStreamNotify(PStreamNotifyChild* notifyData,
                                           const NPReason& reason)
 {
+    AssertPluginThread();
+
     StreamNotifyChild* sn = static_cast<StreamNotifyChild*>(notifyData);
     mPluginIface->urlnotify(&mData, sn->mURL.get(), reason, sn->mClosure);
     delete sn;
@@ -710,6 +735,7 @@ PluginInstanceChild::DeallocPStreamNotify(PStreamNotifyChild* notifyData,
 PluginScriptableObjectChild*
 PluginInstanceChild::GetActorForNPObject(NPObject* aObject)
 {
+    AssertPluginThread();
   NS_ASSERTION(aObject, "Null pointer!");
 
   if (aObject->_class == PluginScriptableObjectChild::GetClass()) {
@@ -745,6 +771,8 @@ NPError
 PluginInstanceChild::NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
                                    NPStream** aStream)
 {
+    AssertPluginThread();
+
     PluginStreamChild* ps = new PluginStreamChild(this);
 
     NPError result;

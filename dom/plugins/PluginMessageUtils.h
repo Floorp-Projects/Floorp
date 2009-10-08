@@ -45,6 +45,7 @@
 #include "npruntime.h"
 #include "nsAutoPtr.h"
 #include "nsStringGlue.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 
@@ -159,6 +160,12 @@ NPNVariableToString(NPNVariable aVar)
     }
 }
 #undef VARSTR
+
+
+inline void AssertPluginThread()
+{
+  NS_ASSERTION(NS_IsMainThread(), "should be on the plugin's main thread!");
+}
 
 
 } /* namespace plugins */

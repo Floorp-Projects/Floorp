@@ -1129,6 +1129,7 @@ PluginScriptableObjectParent::AnswerSetProperty(const NPRemoteIdentifier& aId,
   PluginInstanceParent* instance = GetInstance();
   if (!instance) {
     NS_ERROR("No instance?!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1136,12 +1137,14 @@ PluginScriptableObjectParent::AnswerSetProperty(const NPRemoteIdentifier& aId,
   const NPNetscapeFuncs* npn = GetNetscapeFuncs(instance);
   if (!npn) {
     NS_ERROR("No netscape funcs?!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
 
   if (!EnsureValidIdentifier(instance, (NPIdentifier)aId)) {
     NS_WARNING("Invalid NPIdentifier!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1174,6 +1177,7 @@ PluginScriptableObjectParent::AnswerRemoveProperty(const NPRemoteIdentifier& aId
   PluginInstanceParent* instance = GetInstance();
   if (!instance) {
     NS_ERROR("No instance?!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1181,6 +1185,7 @@ PluginScriptableObjectParent::AnswerRemoveProperty(const NPRemoteIdentifier& aId
   const NPNetscapeFuncs* npn = GetNetscapeFuncs(instance);
   if (!npn) {
     NS_ERROR("No netscape funcs?!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }
@@ -1211,6 +1216,7 @@ PluginScriptableObjectParent::AnswerEnumerate(nsTArray<NPRemoteIdentifier>* aPro
   PluginInstanceParent* instance = GetInstance();
   if (!instance) {
     NS_ERROR("No instance?!");
+    *aResult = void_t();
     *aSuccess = false;
     return true;
   }

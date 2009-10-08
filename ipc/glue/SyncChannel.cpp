@@ -57,6 +57,7 @@ namespace ipc {
 bool
 SyncChannel::Send(Message* msg, Message* reply)
 {
+    AssertWorkerThread();
     NS_ABORT_IF_FALSE(!ProcessingSyncMessage(),
                       "violation of sync handler invariant");
     NS_ABORT_IF_FALSE(msg->is_sync(), "can only Send() sync messages here");
@@ -99,6 +100,7 @@ SyncChannel::Send(Message* msg, Message* reply)
 void
 SyncChannel::OnDispatchMessage(const Message& msg)
 {
+    AssertWorkerThread();
     NS_ABORT_IF_FALSE(msg.is_sync(), "only sync messages here");
     NS_ABORT_IF_FALSE(!msg.is_reply(), "wasn't awaiting reply");
 
@@ -145,6 +147,7 @@ SyncChannel::OnDispatchMessage(const Message& msg)
 void
 SyncChannel::OnMessageReceived(const Message& msg)
 {
+    AssertIOThread();
     if (!msg.is_sync()) {
         return AsyncChannel::OnMessageReceived(msg);
     }
@@ -167,6 +170,7 @@ SyncChannel::OnMessageReceived(const Message& msg)
 void
 SyncChannel::OnChannelError()
 {
+    AssertIOThread();
     {
         MutexAutoLock lock(mMutex);
 
@@ -183,6 +187,7 @@ SyncChannel::OnChannelError()
 void
 SyncChannel::OnSendReply(Message* aReply)
 {
+    AssertIOThread();
     mTransport->Send(aReply);
 }
 
