@@ -511,7 +511,11 @@ TabWindow.prototype = {
   onLinkIconAvailable: function (aBrowser) {
     let img = getFaviconAsImage(aBrowser.mIconURL);
     let index = this.tabbrowser.browsers.indexOf(aBrowser);
+    try {
     this.previews[index].icon = img;
+    } catch (e) {
+      Cu.reportError([index, this.tabbrowser.browsers.length, this.tabbrowser.mTabs.length, this.previews.length]);
+    }
   }
 }
 
