@@ -79,6 +79,8 @@ AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
         mChannelState = ChannelConnected;
     }
 
+    mChild = needOpen;
+
     mIOLoop = aIOLoop;
     mWorkerLoop = MessageLoop::current();
 
