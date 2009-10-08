@@ -3629,12 +3629,44 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
 }
 
 /*
- * If data is null, the caller is AssignExpr and instead of binding variables,
- * we specialize lvalues in the propery value positions of the left-hand side.
- * If right is null, just check for well-formed lvalues.
+ * Destructuring patterns can appear in two kinds of contexts:
  *
- * See also UndominateInitializers, immediately below. If you change either of
- * these functions, you might have to change the other to match.
+ * - assignment-like: assignment expressions and |for| loop heads.  In
+ *   these cases, the patterns' property value positions can be
+ *   arbitrary lvalue expressions; the destructuring is just a fancy
+ *   assignment.
+ *
+ * - declaration-like: |var| and |let| declarations, functions' formal
+ *   parameter lists, |catch| clauses, and comprehension tails.  In
+ *   these cases, the patterns' property value positions must be
+ *   simple names; the destructuring defines them as new variables.
+ *
+ * In both cases, other code parses the pattern as an arbitrary
+ * PrimaryExpr, and then, here in CheckDestructuring, verify that the
+ * tree is a valid destructuring expression.
+ *
+ * In assignment-like contexts, we parse the pattern with the
+ * TCF_DECL_DESTRUCTURING flag clear, so the lvalue expressions in the
+ * pattern are parsed normally.  PrimaryExpr links variable references
+ * into the appropriate use chains; creates placeholder definitions;
+ * and so on.  CheckDestructuring is called with |data| NULL (since we
+ * won't be binding any new names), and we specialize lvalues as
+ * appropriate.  If right is NULL, we just check for well-formed lvalues.
+ *
+ * In declaration-like contexts, the normal variable reference
+ * processing would just be an obstruction, because we're going to
+ * define the names that appear in the property value positions as new
+ * variables anyway.  In this case, we parse the pattern with
+ * TCF_DECL_DESTRUCTURING set, which directs PrimaryExpr to leave
+ * whatever name nodes it creates unconnected.  Then, here in
+ * CheckDestructuring, we require the pattern's property value
+ * positions to be simple names, and define them as appropriate to the
+ * context.  For these calls, |data| points to the right sort of
+ * BindData.
+ *
+ * See also UndominateInitializers, immediately below. If you change
+ * either of these functions, you might have to change the other to
+ * match.
  */
 static JSBool
 CheckDestructuring(JSContext *cx, BindData *data,
@@ -3855,9 +3887,9 @@ DestructuringExpr(JSContext *cx, BindData *data, JSTreeContext *tc,
     JSParseNode *pn;
 
     ts = TS(tc->compiler);
-    ts->flags |= TSF_DESTRUCTURING;
+    tc->flags |= TCF_DECL_DESTRUCTURING;
     pn = PrimaryExpr(cx, ts, tc, tt, JS_FALSE);
-    ts->flags &= ~TSF_DESTRUCTURING;
+    tc->flags &= ~TCF_DECL_DESTRUCTURING;
     if (!pn)
         return NULL;
     if (!CheckDestructuring(cx, data, pn, NULL, tc))
@@ -5560,9 +5592,9 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, bool inLetHead)
         tt = js_GetToken(cx, ts);
 #if JS_HAS_DESTRUCTURING
         if (tt == TOK_LB || tt == TOK_LC) {
-            ts->flags |= TSF_DESTRUCTURING;
+            tc->flags |= TCF_DECL_DESTRUCTURING;
             pn2 = PrimaryExpr(cx, ts, tc, tt, JS_FALSE);
-            ts->flags &= ~TSF_DESTRUCTURING;
+            tc->flags &= ~TCF_DECL_DESTRUCTURING;
             if (!pn2)
                 return NULL;
 
@@ -6498,9 +6530,9 @@ ComprehensionTail(JSParseNode *kid, uintN blockid, JSTreeContext *tc,
 #if JS_HAS_DESTRUCTURING
           case TOK_LB:
           case TOK_LC:
-            ts->flags |= TSF_DESTRUCTURING;
+            tc->flags |= TCF_DECL_DESTRUCTURING;
             pn3 = PrimaryExpr(cx, ts, tc, tt, JS_FALSE);
-            ts->flags &= ~TSF_DESTRUCTURING;
+            tc->flags &= ~TCF_DECL_DESTRUCTURING;
             if (!pn3)
                 return NULL;
             break;
@@ -8111,7 +8143,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
              * Bind early to JSOP_ARGUMENTS to relieve later code from having
              * to do this work (new rule for the emitter to count on).
              */
-            if (!afterDot && !(ts->flags & TSF_DESTRUCTURING) && !tc->inStatement(STMT_WITH)) {
+            if (!afterDot && !(tc->flags & TCF_DECL_DESTRUCTURING) && !tc->inStatement(STMT_WITH)) {
                 pn->pn_op = JSOP_ARGUMENTS;
                 pn->pn_dflags |= PND_BOUND;
             }
@@ -8119,7 +8151,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #if JS_HAS_XML_SUPPORT
                     || js_PeekToken(cx, ts) == TOK_DBLCOLON
 #endif
-                   ) && !(ts->flags & TSF_DESTRUCTURING)) {
+                   ) && !(tc->flags & TCF_DECL_DESTRUCTURING)) {
             JSStmtInfo *stmt = js_LexicalLookup(tc, pn->pn_atom, NULL);
             if (!stmt || stmt->type != STMT_WITH) {
                 JSDefinition *dn;
