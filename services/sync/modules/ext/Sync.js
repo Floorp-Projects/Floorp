@@ -51,6 +51,9 @@ const CB_FAIL = {};
 // Share a secret only for functions in this file to prevent outside access
 const SECRET = {};
 
+/**
+ * Check if the app is ready (not quitting)
+ */
 function checkAppReady() {
   // Watch for app-quit notification to stop any sync. calls
   let os = Cc["@mozilla.org/observer-service;1"].
@@ -116,9 +119,6 @@ function makeCallback() {
  */
 function Sync(func, thisArg, callback) {
   return function syncFunc(/* arg1, arg2, ... */) {
-    // Initialize the observer on first usage
-    checkAppReady();
-
     // Grab the current thread so we can make it give up priority
     let thread = Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
 
@@ -136,9 +136,9 @@ function Sync(func, thisArg, callback) {
     // Call the async function bound to thisArg with the passed args
     func.apply(thisArg, args);
 
-    // Keep waiting until our callback is triggered
+    // Keep waiting until our callback is triggered unless the app is quitting
     let callbackData = instanceCallback._(SECRET);
-    while (callbackData.state == CB_READY && checkAppReady())
+    while (checkAppReady() && callbackData.state == CB_READY)
       thread.processNextEvent(true);
 
     // Reset the state of the callback to prepare for another call
@@ -183,11 +183,12 @@ Sync.withCb = function Sync_withCb(func, thisArg) {
 function setTimeout(func, delay) {
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   let callback = {
-    _func: func,
-    notify: function(timer) {
-      // Call the function such that "this" inside the function is the global
-      // object, just as it would be with window.setTimeout.
-      (this._func)();
+    notify: function notify() {
+      // This line actually just keeps a reference to timer (prevent GC)
+      timer = null;
+
+      // Call the function so that "this" is global
+      func();
     }
   }
   timer.initWithCallback(callback, delay, Ci.nsITimer.TYPE_ONE_SHOT);
