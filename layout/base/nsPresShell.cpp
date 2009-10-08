@@ -802,9 +802,6 @@ public:
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD_(PRBool) IsVisible();
   NS_IMETHOD_(void) WillPaint();
-  NS_IMETHOD_(void) InvalidateFrameForScrolledView(nsIView *view);
-  NS_IMETHOD_(void) NotifyInvalidateForScrolledView(const nsRegion& aBlitRegion,
-                                                    const nsRegion& aInvalidateRegion);
   NS_IMETHOD_(void) DispatchSynthMouseMove(nsGUIEvent *aEvent,
                                            PRBool aFlushOnHoverChange);
   NS_IMETHOD_(void) ClearMouseCapture(nsIView* aView);
@@ -4360,54 +4357,6 @@ PresShell::GetSelectionForCopy(nsISelection** outSelection)
   *outSelection = sel;
   NS_IF_ADDREF(*outSelection);
   return rv;
-}
-
-void
-PresShell::InvalidateFrameForScrolledView(nsIView *aView)
-{
-  nsIFrame* frame = nsLayoutUtils::GetFrameFor(aView);
-  if (!frame)
-    return;
-  frame->InvalidateWithFlags(frame->GetOverflowRect(),
-                             nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT);
-}
-
-static void
-NotifyInvalidateRegion(nsPresContext* aPresContext, const nsRegion& aRegion,
-                       nsPoint aOffset, PRUint32 aFlags)
-{
-  const nsRect* r;
-  for (nsRegionRectIterator iter(aRegion); (r = iter.Next());) {
-    aPresContext->NotifyInvalidation(*r + aOffset, aFlags);
-  }
-}
-
-void
-PresShell::NotifyInvalidateForScrolledView(const nsRegion& aBlitRegion,
-                                           const nsRegion& aInvalidateRegion)
-{
-  nsPresContext* pc = GetPresContext();
-  PRUint32 crossDocFlags = 0;
-  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
-  nsPoint offset(0,0);
-  while (pc) {
-    if (pc->MayHavePaintEventListener()) {
-      NotifyInvalidateRegion(pc, aBlitRegion, offset,
-                             nsIFrame::INVALIDATE_REASON_SCROLL_BLIT | crossDocFlags);
-      NotifyInvalidateRegion(pc, aInvalidateRegion, offset,
-                             nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT | crossDocFlags);
-    }
-    crossDocFlags = nsIFrame::INVALIDATE_CROSS_DOC;
-
-    nsIFrame* rootParentFrame = nsLayoutUtils::GetCrossDocParentFrame(rootFrame);
-    if (!rootParentFrame)
-      break;
-
-    pc = rootParentFrame->PresContext();
-    nsIFrame* nextRootFrame = pc->PresShell()->FrameManager()->GetRootFrame();
-    offset += rootFrame->GetOffsetTo(nextRootFrame);
-    rootFrame = nextRootFrame;
-  }
 }
 
 NS_IMETHODIMP_(void)

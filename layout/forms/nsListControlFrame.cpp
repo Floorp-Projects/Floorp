@@ -354,7 +354,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
     fRect.MoveBy(childframe->GetParent()->GetOffsetTo(this));
   } else {
     fRect.x = fRect.y = 0;
-    fRect.width = GetScrollPortSize().width;
+    fRect.width = GetScrollPortRect().width;
     fRect.height = CalcFallbackRowHeight();
     fRect.MoveBy(containerFrame->GetOffsetTo(this));
   }
@@ -391,7 +391,7 @@ nsListControlFrame::InvalidateFocus()
     // is drawn.
     // The origin of the scrollport is the origin of containerFrame.
     nsRect invalidateArea = containerFrame->GetOverflowRect();
-    nsRect emptyFallbackArea(0, 0, GetScrollPortSize().width, CalcFallbackRowHeight());
+    nsRect emptyFallbackArea(0, 0, GetScrollPortRect().width, CalcFallbackRowHeight());
     invalidateArea.UnionRect(invalidateArea, emptyFallbackArea);
     containerFrame->Invalidate(invalidateArea);
   }
