@@ -58,6 +58,7 @@
 #include "nsIFrame.h"
 #include "nsContentUtils.h"
 #include "nsRuleProcessorData.h"
+#include "nsTransitionManager.h"
 
 NS_IMPL_ISUPPORTS1(nsEmptyStyleRule, nsIStyleRule)
 
@@ -112,6 +113,8 @@ nsStyleSet::Init(nsPresContext *aPresContext)
     mDefaultStyleData.Destroy(0, aPresContext);
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  GatherRuleProcessors(eTransitionSheet);
 
   return NS_OK;
 }
@@ -190,6 +193,13 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
                                aType == eHTMLPresHintSheet ||
                                aType == eStyleAttrSheet)) {
     //don't regather if this level is disabled
+    return NS_OK;
+  }
+  if (aType == eTransitionSheet) {
+    // We have no sheet for the transitions level; just a rule
+    // processor.  (XXX: We should probably do this for the other
+    // non-CSS levels too!)
+    mRuleProcessors[aType] = PresContext()->TransitionManager();
     return NS_OK;
   }
   if (mSheets[aType].Count()) {
@@ -586,6 +596,16 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   aRuleWalker->SetLevel(eAgentSheet, PR_TRUE);
   AddImportantRules(lastAgentRN, nsnull, aRuleWalker);     //agent
 
+#ifdef DEBUG
+  nsRuleNode *lastImportantRN = aRuleWalker->GetCurrentNode();
+#endif
+  aRuleWalker->SetLevel(eTransitionSheet, PR_FALSE);
+  (*aCollectorFunc)(mRuleProcessors[eTransitionSheet], aData);
+#ifdef DEBUG
+  AssertNoCSSRules(aRuleWalker->GetCurrentNode(), lastImportantRN);
+  AssertNoImportantRules(aRuleWalker->GetCurrentNode(), lastImportantRN);
+#endif
+
 }
 
 // Enumerate all the rules in a way that doesn't care about the order
@@ -623,6 +643,7 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
     (*aFunc)(mRuleProcessors[eStyleAttrSheet], aData);
   if (mRuleProcessors[eOverrideSheet])
     (*aFunc)(mRuleProcessors[eOverrideSheet], aData);
+  (*aFunc)(mRuleProcessors[eTransitionSheet], aData);
 }
 
 PRBool nsStyleSet::BuildDefaultStyleData(nsPresContext* aPresContext)

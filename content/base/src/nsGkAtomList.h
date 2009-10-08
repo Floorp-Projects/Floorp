@@ -1674,6 +1674,9 @@ GK_ATOM(preTransformBBoxProperty, "PreTransformBBoxProperty") // nsRect*
 GK_ATOM(rowUnpaginatedHeightProperty, "RowUnpaginatedHeightProperty")  // nscoord*
 GK_ATOM(tabWidthProperty, "TabWidthProperty")              // nsTArray<TabSetting>* array of tab widths
 GK_ATOM(tableBCProperty, "TableBCProperty")                // table border collapsing info (e.g. damage area, table border widths)
+GK_ATOM(transitionsProperty, "TransitionsProperty")        // FrameTransitions*
+GK_ATOM(transitionsOfBeforeProperty, "TransitionsOfBeforeProperty") // FrameTransitions*
+GK_ATOM(transitionsOfAfterProperty, "TransitionsOfAfterProperty") // FrameTransitions*
 GK_ATOM(usedMarginProperty, "UsedMarginProperty") // nsMargin*
 GK_ATOM(usedPaddingProperty, "UsedPaddingProperty") // nsMargin*
 GK_ATOM(viewProperty, "ViewProperty")                      

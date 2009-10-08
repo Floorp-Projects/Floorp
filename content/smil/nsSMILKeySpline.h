@@ -44,6 +44,8 @@
 class nsSMILKeySpline
 {
 public:
+  nsSMILKeySpline() { /* caller must call Init later */ }
+
   /**
    * Creates a new key spline control point description.
    *
@@ -51,7 +53,13 @@ public:
    * SMILANIM 3.2.3. They must each be in the range 0.0 <= x <= 1.0
    */
   nsSMILKeySpline(double aX1, double aY1,
-                  double aX2, double aY2);
+                  double aX2, double aY2)
+  {
+    Init(aX1, aY1, aX2, aY2);
+  }
+
+  void Init(double aX1, double aY1,
+            double aX2, double aY2);
 
   /**
    * Gets the output (y) value for an input (x).
@@ -104,10 +112,10 @@ private:
     return 3.0 * aA1;
   }
 
-  const double         mX1;
-  const double         mY1;
-  const double         mX2;
-  const double         mY2;
+  double               mX1;
+  double               mY1;
+  double               mX2;
+  double               mY2;
 
   enum { kSplineTableSize = 11 };
   double               mSampleValues[kSplineTableSize];
