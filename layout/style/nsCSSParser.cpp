@@ -3882,20 +3882,22 @@ CSSParserImpl::ParseColorOpacity(PRUint8& aOpacity)
 PRBool
 CSSParserImpl::ParseTreePseudoElement(nsCSSSelector& aSelector)
 {
+  // The argument to a tree pseudo-element is a sequence of identifiers
+  // that are either space- or comma-separated.  (Was the intent to
+  // allow only comma-separated?  That's not what was done.)
   if (ExpectSymbol('(', PR_FALSE)) {
     while (!ExpectSymbol(')', PR_TRUE)) {
       if (!GetToken(PR_TRUE)) {
         return PR_FALSE;
       }
-      else if (eCSSToken_Ident == mToken.mType) {
+      if (eCSSToken_Ident == mToken.mType) {
         nsCOMPtr<nsIAtom> pseudo = do_GetAtom(mToken.mIdent);
         aSelector.AddPseudoClass(pseudo);
       }
-      else if (eCSSToken_Symbol == mToken.mType) {
-        if (!mToken.IsSymbol(','))
-          return PR_FALSE;
+      else if (!mToken.IsSymbol(',')) {
+        SkipUntil(')');
+        return PR_FALSE;
       }
-      else return PR_FALSE;
     }
     return PR_TRUE;
   }
