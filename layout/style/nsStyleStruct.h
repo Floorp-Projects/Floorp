@@ -1700,7 +1700,7 @@ struct nsStyleColumn {
 
   PRUint32     mColumnCount; // [reset] see nsStyleConsts.h
   nsStyleCoord mColumnWidth; // [reset] coord, auto
-  nsStyleCoord mColumnGap;   // [reset] coord, percent, normal
+  nsStyleCoord mColumnGap;   // [reset] coord, normal
 
   nscolor      mColumnRuleColor;  // [reset]
   PRUint8      mColumnRuleStyle;  // [reset]
