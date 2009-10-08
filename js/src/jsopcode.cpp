@@ -2816,7 +2816,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_CALLDSLOT:
               {
                 if (!jp->fun) {
-                    JS_ASSERT(jp->script->flags & JSSF_SAVED_CALLER_FUN);
+                    JS_ASSERT(jp->script->savedCallerFun);
                     jp->fun = jp->script->getFunction(0);
                 }
 

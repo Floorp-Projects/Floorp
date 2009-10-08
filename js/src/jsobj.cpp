@@ -1419,7 +1419,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
         EVAL_CACHE_METER(probe);
         while ((script = *scriptp) != NULL) {
-            if ((script->flags & JSSF_SAVED_CALLER_FUN) &&
+            if (script->savedCallerFun &&
                 script->version == cx->version &&
                 (script->principals == principals ||
                  (principals->subsume(principals, script->principals) &&
