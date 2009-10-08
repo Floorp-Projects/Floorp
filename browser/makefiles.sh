@@ -69,6 +69,7 @@ browser/components/sidebar/src/Makefile
 browser/components/shell/Makefile
 browser/components/shell/public/Makefile
 browser/components/shell/src/Makefile
+browser/components/wintaskbar/Makefile
 browser/fuel/Makefile
 browser/fuel/public/Makefile
 browser/fuel/src/Makefile
@@ -105,6 +106,7 @@ if [ "$ENABLE_TESTS" ]; then
     browser/components/privatebrowsing/test/Makefile
     browser/components/privatebrowsing/test/browser/Makefile
     browser/components/safebrowsing/content/test/Makefile
+    browser/components/wintaskbar/test/Makefile
     browser/fuel/test/Makefile
   "
 fi
