@@ -1106,6 +1106,10 @@ PluginScriptableObjectParent::AnswerGetProperty(const NPRemoteIdentifier& aId,
     ReleaseVariant(result, instance);
     *aResult = converted;
   }
+  else {
+    *aResult = void_t();
+  }
+
   return true;
 }
 
