@@ -225,7 +225,7 @@ PreviewController.prototype = {
     // width/height are occasionally bogus and too large for drawWindow
     // so we clip to the canvas region
     this.dirtyRegion.intersectRect(0, 0, bx.width, bx.height);
-    for each (let r in this.dirtyRects) {
+    this.dirtyRects.forEach(function (r) {
       let x = r.x;
       let y = r.y;
       let width = r.width;
@@ -234,7 +234,7 @@ PreviewController.prototype = {
       ctx.translate(x, y);
       ctx.drawWindow(win, x, y, width, height, "white", flags);
       ctx.restore();
-    }
+    });
     this.dirtyRegion.setToRect(0,0,0,0);
 
     // If we're updating the canvas, then we're in the middle of a peek so
@@ -372,8 +372,8 @@ function TabWindow(win) {
 
   this.previews = [];
 
-  for each (let evtName in this.events)
-    this.tabbrowser.tabContainer.addEventListener(evtName, this, false);
+  for (let i = 0; i < this.events.length; i++)
+    this.tabbrowser.tabContainer.addEventListener(this.events[i], this, false);
   this.tabbrowser.addTabsProgressListener(this);
 
 
@@ -395,8 +395,8 @@ TabWindow.prototype = {
 
     let tabs = this.tabbrowser.mTabs;
 
-    for each (let evtName in this.events)
-      this.tabbrowser.tabContainer.removeEventListener(evtName, this, false);
+    for (let i = 0; i < this.events.length; i++)
+      this.tabbrowser.tabContainer.removeEventListener(this.events[i], this, false);
 
     for (let i = 0; i < tabs.length; i++)
       this.removeTab(tabs[i]);
@@ -452,10 +452,10 @@ TabWindow.prototype = {
     // Because making a tab visible requires that the tab it is next to be
     // visible, it is far simpler to unset the 'next' tab and recreate them all
     // at once.
-    for each (let preview in this.previews) {
+    this.previews.forEach(function (preview) {
       preview.move(null);
       preview.visible = enable;
-    }
+    });
     this.updateTabOrdering();
   },
 
@@ -510,9 +510,8 @@ TabWindow.prototype = {
   },
   onLinkIconAvailable: function (aBrowser) {
     let img = getFaviconAsImage(aBrowser.mIconURL);
-    for each (let tab in this.tabbrowser.mTabs)
-      if (tab.linkedBrowser == aBrowser)
-        this.previewFromTab(tab).icon = img;
+    let index = this.tabbrowser.browsers.indexOf(aBrowser);
+    this.previews[index].icon = img;
   }
 }
 
@@ -569,11 +568,14 @@ var AeroPeek = {
   },
 
   set enabled(enable) {
-    if (this._enabled == enable) return;
+    if (this._enabled == enable)
+      return;
+
     this._enabled = enable;
 
-    for each (let win in this.windows)
+    this.windows.forEach(function (win) {
       win.enabled = enable;
+    });
   },
 
   addPreview: function (preview) {
@@ -631,10 +633,10 @@ var AeroPeek = {
         this.checkPreviewCount();
         break;
       case "timer-callback":
-        for each (let preview in this.previews) {
+        this.previews.forEach(function (preview) {
           let controller = preview.controller.wrappedJSObject;
           controller.resetCanvasPreview();
-        }
+        });
         break;
     }
   }
