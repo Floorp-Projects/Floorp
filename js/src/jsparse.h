@@ -885,7 +885,8 @@ struct JSCompiler {
                   JSPrincipals *principals, uint32 tcflags,
                   const jschar *chars, size_t length,
                   FILE *file, const char *filename, uintN lineno,
-                  JSString *source = NULL);
+                  JSString *source = NULL,
+                  unsigned staticLevel = 0);
 };
 
 /*

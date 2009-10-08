@@ -1243,7 +1243,6 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSStackFrame *fp, *caller, *callerFrame;
     JSBool indirectCall;
-    uint32 tcflags;
     JSPrincipals *principals;
     const char *file;
     uintN line;
@@ -1404,7 +1403,6 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         goto out;
     }
 
-    tcflags = TCF_COMPILE_N_GO | TCF_PUT_STATIC_LEVEL(staticLevel);
     principals = JS_EvalFramePrincipals(cx, fp, caller);
     file = js_ComputeFilename(cx, caller, principals, &line);
 
@@ -1485,9 +1483,9 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     callerFrame = (staticLevel != 0) ? caller : NULL;
     if (!script) {
         script = JSCompiler::compileScript(cx, scopeobj, callerFrame,
-                                           principals, tcflags,
+                                           principals, TCF_COMPILE_N_GO,
                                            str->chars(), str->length(),
-                                           NULL, file, line, str);
+                                           NULL, file, line, str, staticLevel);
         if (!script) {
             ok = JS_FALSE;
             goto out;
