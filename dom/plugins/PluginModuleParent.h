@@ -109,6 +109,9 @@ public:
     static SharedLibrary* LoadModule(const char* aFilePath,
                                      PRLibrary* aLibrary);
 
+    virtual bool
+    AnswerNPN_UserAgent(nsCString* userAgent);
+
     // NPRemoteIdentifier funcs
     virtual bool
     RecvNPN_GetStringIdentifier(const nsCString& aString,
