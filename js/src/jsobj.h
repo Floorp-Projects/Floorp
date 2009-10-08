@@ -248,7 +248,7 @@ struct JSObject {
         fslots[JSSLOT_PRIVATE] = privateSlotValue;
         fslots[JSSLOT_PRIVATE + 1] = JSVAL_VOID;
         fslots[JSSLOT_PRIVATE + 2] = JSVAL_VOID;
-        dslots = NULL;
+        dslots = DSLOTS_NULL_INIT;
     }
 
     JSBool lookupProperty(JSContext *cx, jsid id,
@@ -349,7 +349,7 @@ struct JSObject {
  */
 
 #define STOBJ_NSLOTS(obj)                                                     \
-    ((obj)->dslots ? (uint32)(obj)->dslots[-1] : (uint32)JS_INITIAL_NSLOTS)
+    (DSLOTS_IS_NOT_NULL(obj) ? (uint32)(obj)->dslots[-1] : (uint32)JS_INITIAL_NSLOTS)
 
 inline jsval&
 STOBJ_GET_SLOT(JSObject *obj, uintN slot)
@@ -663,7 +663,7 @@ js_ShrinkSlots(JSContext *cx, JSObject *obj, size_t nslots);
 static inline void
 js_FreeSlots(JSContext *cx, JSObject *obj)
 {
-    if (obj->dslots)
+    if (DSLOTS_IS_NOT_NULL(obj))
         js_ShrinkSlots(cx, obj, 0);
 }
 
