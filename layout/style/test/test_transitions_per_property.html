@@ -1,0 +1,239 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=435441
+-->
+<head>
+  <title>Test for Bug 435441</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+
+  #display > p { margin-top: 0; margin-bottom: 0; }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=435441">Mozilla Bug 435441</a>
+
+<!--
+  fixed-height container so percentage heights compute to different
+  (i.e., nonzero) values
+  FIXME: fixed-width container to avoid something weird with margin-top
+  and margin-bottom
+  -->
+<div style="height: 50px; width: 300px">
+
+<div id="display">
+
+</div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 435441 **/
+
+function has_num(str)
+{
+    return !!String(str).match(/^([\d.]+)/);
+}
+
+function any_unit_to_num(str)
+{
+    return Number(String(str).match(/^([\d.]+)/)[1]);
+}
+
+var supported_properties = {
+    "-moz-column-gap": [ test_length_transition ],
+    "-moz-column-rule-color": [ test_color_transition ],
+    "-moz-column-width": [ test_length_transition ],
+    "background-color": [ test_color_transition ],
+    "bottom": [ test_length_transition, test_percent_transition ],
+    "color": [ test_color_transition ],
+    "fill": [ test_color_transition ],
+    "flood-color": [ test_color_transition ],
+    "font-size": [ test_length_transition, test_percent_transition ],
+    "height": [ test_length_transition, test_percent_transition ],
+    "left": [ test_length_transition, test_percent_transition ],
+    "letter-spacing": [ test_length_transition ],
+    "lighting-color": [ test_color_transition ],
+    "line-height": [ test_length_transition, test_percent_transition ],
+    "margin-bottom": [ test_length_transition, test_percent_transition ],
+    "margin-left": [ test_length_transition, test_percent_transition ],
+    "margin-right": [ test_length_transition, test_percent_transition ],
+    "margin-top": [ test_length_transition, test_percent_transition ],
+    "marker-offset": [ test_length_transition ],
+    "max-height": [ test_length_transition, test_percent_transition ],
+    "max-width": [ test_length_transition, test_percent_transition ],
+    "min-height": [ test_length_transition, test_percent_transition ],
+    "min-width": [ test_length_transition, test_percent_transition ],
+    "outline-offset": [ test_length_transition ],
+    "outline-width": [ test_length_transition ],
+    "padding-bottom": [ test_length_transition, test_percent_transition ],
+    "padding-left": [ test_length_transition, test_percent_transition ],
+    "padding-right": [ test_length_transition, test_percent_transition ],
+    "padding-top": [ test_length_transition, test_percent_transition ],
+    "right": [ test_length_transition, test_percent_transition ],
+    "stop-color": [ test_color_transition ],
+    "stroke": [ test_color_transition ],
+    "stroke-dashoffset": [ test_length_transition, test_percent_transition ],
+    "stroke-width": [ test_length_transition, test_percent_transition ],
+    "text-indent": [ test_length_transition, test_percent_transition ],
+    "top": [ test_length_transition, test_percent_transition ],
+    "vertical-align": [ test_length_transition, test_percent_transition ],
+    "width": [ test_length_transition, test_percent_transition ],
+    "word-spacing": [ test_length_transition ],
+};
+
+var div = document.getElementById("display");
+var cs = getComputedStyle(div, "");
+
+var prop;
+for (prop in supported_properties) {
+  // Test that prop is in the property database.
+  ok(prop in gCSSProperties, "property " + prop + " in gCSSProperties");
+
+  // Test that the entry has at least one test function.
+  ok(supported_properties[prop].length > 0,
+     "property " + prop + " must have at least one test function");
+}
+
+// Test that transitions don't do anything (i.e., aren't supported) on
+// the properties not in our test list above (and not transition
+// properties themselves).
+for (prop in gCSSProperties) {
+  var info = gCSSProperties[prop];
+  if (!(prop in supported_properties) &&
+      info.type != CSS_TYPE_TRUE_SHORTHAND &&
+      !prop.match(/^-moz-transition-/) &&
+      // FIXME: THIS SHOULD REALLY NOT BE NEEDED!
+      prop != "-moz-binding") {
+
+    if ("prerequisites" in info) {
+      var prereqs = info.prerequisites;
+      for (var prereq in prereqs) {
+        div.style.setProperty(prereq, prereqs[prereq], "");
+      }
+    }
+
+    var all_values = info.initial_values.concat(info.other_values);
+    var all_computed = [];
+    for (var idx in all_values) {
+      var val = all_values[idx];
+      div.style.setProperty(prop, val, "");
+      all_computed.push(cs.getPropertyValue(prop));
+    }
+    div.style.removeProperty(prop);
+
+    div.style.setProperty("-moz-transition", prop + " 20s linear", "");
+    for (var i = 0; i < all_values.length; ++i) {
+      for (var j = i + 1; j < all_values.length; ++j) {
+        div.style.setProperty(prop, all_values[i], "");
+        is(cs.getPropertyValue(prop), all_computed[i],
+           "transitions not supported for property " + prop +
+           " value " + all_values[i]);
+        div.style.setProperty(prop, all_values[j], "");
+        is(cs.getPropertyValue(prop), all_computed[j],
+           "transitions not supported for property " + prop +
+           " value " + all_values[j]);
+      }
+    }
+
+    div.style.removeProperty(prop);
+    div.style.removeProperty("-moz-transition");
+    if ("prerequisites" in info) {
+      var prereqs = info.prerequisites;
+      for (var prereq in prereqs) {
+        div.style.removeProperty(prereq);
+      }
+    }
+  }
+}
+
+// Do 4-second linear transitions with -2 second transition delay and
+// linear timing function so that we can expect the transition to be
+// right in the middle just after changing the property.
+div.style.setProperty("-moz-transition-duration", "4s", "");
+div.style.setProperty("-moz-transition-delay", "-2s", "");
+div.style.setProperty("-moz-transition-timing-function", "linear", "");
+for (prop in supported_properties) {
+  var tinfo = supported_properties[prop];
+  var info = gCSSProperties[prop];
+
+  isnot(info.type, CSS_TYPE_TRUE_SHORTHAND,
+        prop + " must not be a shorthand");
+  if ("prerequisites" in info) {
+    var prereqs = info.prerequisites;
+    for (var prereq in prereqs) {
+      div.style.setProperty(prereq, prereqs[prereq], "");
+    }
+  }
+
+  for (var idx in tinfo) {
+    tinfo[idx](prop);
+  }
+
+  // Make sure to unset the property and stop transitions on it.
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty("-moz-transition-delay", "-6s", "");
+  div.style.removeProperty(prop);
+  cs.getPropertyValue(prop);
+  div.style.setProperty("-moz-transition-delay", "-2s", "");
+
+  if ("prerequisites" in info) {
+    var prereqs = info.prerequisites;
+    for (var prereq in prereqs) {
+      div.style.removeProperty(prereq);
+    }
+  }
+}
+div.style.removeProperty("-moz-transition");
+
+function test_length_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "4px", "");
+  is(cs.getPropertyValue(prop), "4px",
+     "length-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "12px", "");
+  is(cs.getPropertyValue(prop), "8px",
+     "length-valued property " + prop + ": interpolation of lengths");
+}
+
+function test_percent_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "25%", "");
+  var av = cs.getPropertyValue(prop);
+  var a = any_unit_to_num(av);
+  div.style.setProperty(prop, "75%", "");
+  var bv = cs.getPropertyValue(prop);
+  var b = any_unit_to_num(bv);
+  isnot(b, a, "different percentages (" + av + " and " + bv +
+              ") should be different for " + prop);
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "25%", "");
+  var res = cs.getPropertyValue(prop);
+  is(any_unit_to_num(res) * 2, a + b,
+     "percent-valued property " + prop + ": interpolation of percents: " +
+     res + " should be halfway between " + av + " and " + bv);
+  ok(has_num(res),
+     "percent-valued property " + prop + ": percent computes to number");
+}
+
+function test_color_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "rgb(255, 28, 0)", "");
+  is(cs.getPropertyValue(prop), "rgb(255, 28, 0)",
+     "length-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "rgb(77, 84, 128)", "");
+  is(cs.getPropertyValue(prop), "rgb(166, 56, 64)",
+     "length-valued property " + prop + ": interpolation of lengths");
+}
+
+</script>
+</pre>
+</body>
+</html>
