@@ -136,7 +136,7 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
   const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
   let taskbar = Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar);
   if (taskbar.available) {
-    Cu.import("resource://gre/modules/wintaskbar/preview-per-tab.jsm");
+    Cu.import("resource://gre/modules/WindowsPreviewPerTab.jsm");
     return {
       onOpenWindow: function () {
         AeroPeek.onOpenWindow(window);

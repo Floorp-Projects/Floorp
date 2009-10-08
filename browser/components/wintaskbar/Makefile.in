@@ -48,14 +48,9 @@ endif
 
 MODULE = wintaskbar
 
-_WINTASKBAR_FILES = \
-	preview-per-tab.jsm \
-	jumpLists.jsm \
+EXTRA_JS_MODULES = \
+	WindowsPreviewPerTab.jsm \
+	WindowsJumpLists.jsm \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-libs:: $(_WINTASKBAR_FILES)
-	$(NSINSTALL) -D $(DIST)/bin/modules/wintaskbar;
-	$(INSTALL) $(foreach f,$^,"$f") $(DIST)/bin/modules/wintaskbar
-
