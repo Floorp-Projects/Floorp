@@ -344,9 +344,15 @@ protected:
   nsSelectorParsingStatus ParseClassSelector(PRInt32&       aDataMask,
                                              nsCSSSelector& aSelector);
 
+  // aPseudoElement and aPseudoElementArgs are the location where
+  // pseudo-elements (as opposed to pseudo-classes) are stored;
+  // pseudo-classes are stored on aSelector.  aPseudoElement and
+  // aPseudoElementArgs must be non-null iff !aIsNegated.
   nsSelectorParsingStatus ParsePseudoSelector(PRInt32&       aDataMask,
                                               nsCSSSelector& aSelector,
-                                              PRBool         aIsNegated);
+                                              PRBool         aIsNegated,
+                                              nsIAtom**      aPseudoElement,
+                                              nsPseudoClassList** aPseudoElementArgs);
 
   nsSelectorParsingStatus ParseAttributeSelector(PRInt32&       aDataMask,
                                                  nsCSSSelector& aSelector);
@@ -364,7 +370,9 @@ protected:
   nsSelectorParsingStatus ParseNegatedSimpleSelector(PRInt32&       aDataMask,
                                                      nsCSSSelector& aSelector);
 
-  nsSelectorParsingStatus ParseSelector(nsCSSSelector& aSelectorResult);
+  nsSelectorParsingStatus ParseSelector(nsCSSSelector& aSelectorResult,
+                                        nsIAtom** aPseudoElement,
+                                        nsPseudoClassList** aPseudoElementArgs);
 
   // If aTerminateAtBrace is true, the selector list is done when we
   // hit a '{'.  Otherwise, it's done when we hit EOF.
@@ -403,7 +411,7 @@ protected:
                                   nsCSSProperty aPropID);
 
 #ifdef MOZ_XUL
-  PRBool ParseTreePseudoElement(nsCSSSelector& aSelector);
+  PRBool ParseTreePseudoElement(nsPseudoClassList **aPseudoElementArgs);
 #endif
 
   void InitBoxPropsAsPhysical(const nsCSSProperty *aSourceProperties);
@@ -2459,7 +2467,7 @@ CSSParserImpl::ParseSelectorList(nsCSSSelectorList*& aListHead,
   return PR_FALSE;
 }
 
-static PRBool IsSinglePseudoClass(const nsCSSSelector& aSelector)
+static PRBool IsUniversalSelector(const nsCSSSelector& aSelector)
 {
   return PRBool((aSelector.mNameSpace == kNameSpaceID_Unknown) &&
                 (aSelector.mLowercaseTag == nsnull) &&
@@ -2467,8 +2475,7 @@ static PRBool IsSinglePseudoClass(const nsCSSSelector& aSelector)
                 (aSelector.mClassList == nsnull) &&
                 (aSelector.mAttrList == nsnull) &&
                 (aSelector.mNegations == nsnull) &&
-                (aSelector.mPseudoClassList != nsnull) &&
-                (aSelector.mPseudoClassList->mNext == nsnull));
+                (aSelector.mPseudoClassList == nsnull));
 }
 
 #ifdef MOZ_XUL
@@ -2495,8 +2502,11 @@ CSSParserImpl::ParseSelectorGroup(nsCSSSelectorList*& aList)
       mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
       return PR_FALSE;
     }
+    nsCOMPtr<nsIAtom> pseudoElement;
+    nsAutoPtr<nsPseudoClassList> pseudoElementArgs;
     nsSelectorParsingStatus parsingStatus =
-      ParseSelector(*newSelector);
+      ParseSelector(*newSelector, getter_AddRefs(pseudoElement),
+                    getter_Transfers(pseudoElementArgs));
     if (parsingStatus == eSelectorParsingStatus_Empty) {
       if (!list) {
         REPORT_UNEXPECTED(PESelectorGroupNoSelector);
@@ -2517,62 +2527,28 @@ CSSParserImpl::ParseSelectorGroup(nsCSSSelectorList*& aList)
     list->AddSelector(newSelector);
     nsCSSSelector* listSel = list->mSelectors;
 
-    // pull out pseudo elements here
-    nsPseudoClassList* prevList = nsnull;
-    nsPseudoClassList* pseudoClassList = listSel->mPseudoClassList;
-    while (nsnull != pseudoClassList) {
-      if (! nsCSSPseudoClasses::IsPseudoClass(pseudoClassList->mAtom)) {
-        havePseudoElement = PR_TRUE;
-        if (IsSinglePseudoClass(*listSel)) {  // convert to pseudo element selector
-          nsIAtom* pseudoElement = pseudoClassList->mAtom;  // steal ref count
-          pseudoClassList->mAtom = nsnull;
-          listSel->Reset();
-          if (listSel->mNext) {// more to the selector
-            listSel->mOperator = PRUnichar('>');
-            nsAutoPtr<nsCSSSelector> empty(new nsCSSSelector());
-            if (!empty) {
-              mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-              return PR_FALSE;
-            }
-            list->AddSelector(empty); // leave a blank (universal) selector in the middle
-            listSel = list->mSelectors; // use the new one for the pseudo
-          }
-          listSel->mLowercaseTag = pseudoElement;
+    // We got a pseudo-element (or anonymous box).  We actually
+    // represent pseudo-elements as a child of the rest of the selector.
+    if (pseudoElement) {
+      if (listSel->mNext || !IsUniversalSelector(*listSel)) {
+        // We need to put the pseudo-element on a new selector that's a
+        // child of the current one.  (If it's the only thing in the
+        // entire selector group, we can just put it on this one.)
+        listSel->mOperator = PRUnichar('>');
+        nsAutoPtr<nsCSSSelector> empty(new nsCSSSelector());
+        if (!empty) {
+          mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+          return PR_FALSE;
         }
-        else {  // append new pseudo element selector
-          nsAutoPtr<nsCSSSelector> pseudoTagSelector(new nsCSSSelector());
-          if (!pseudoTagSelector) {
-            mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-            return PR_FALSE;
-          }
-          pseudoTagSelector->mLowercaseTag = pseudoClassList->mAtom; // steal ref count
-#ifdef MOZ_XUL
-          if (IsTreePseudoElement(pseudoTagSelector->mLowercaseTag)) {
-            // Take the remaining "pseudoclasses" that we parsed
-            // inside the tree pseudoelement's ()-list, and
-            // make our new selector have these pseudoclasses
-            // in its pseudoclass list.
-            pseudoTagSelector->mPseudoClassList = pseudoClassList->mNext;
-            pseudoClassList->mNext = nsnull;
-          }
-#endif
-          list->AddSelector(pseudoTagSelector);
-          pseudoClassList->mAtom = nsnull;
-          listSel->mOperator = PRUnichar('>');
-          if (nsnull == prevList) { // delete list entry
-            listSel->mPseudoClassList = pseudoClassList->mNext;
-          }
-          else {
-            prevList->mNext = pseudoClassList->mNext;
-          }
-          pseudoClassList->mNext = nsnull;
-          delete pseudoClassList;
-          weight += listSel->CalcWeight(); // capture weight from remainder
-        }
-        break;  // only one pseudo element per selector
+        list->AddSelector(empty);
+        listSel = list->mSelectors; // use the new one for the pseudo
       }
-      prevList = pseudoClassList;
-      pseudoClassList = pseudoClassList->mNext;
+      NS_ASSERTION(!listSel->mLowercaseTag &&
+                   !listSel->mCasedTag &&
+                   !listSel->mPseudoClassList,
+                   "already initialized");
+      listSel->mLowercaseTag.swap(pseudoElement);
+      listSel->mPseudoClassList = pseudoElementArgs.forget();
     }
 
     combinator = PRUnichar(0);
@@ -3017,8 +2993,15 @@ CSSParserImpl::ParseAttributeSelector(PRInt32&       aDataMask,
 CSSParserImpl::nsSelectorParsingStatus
 CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
                                    nsCSSSelector& aSelector,
-                                   PRBool         aIsNegated)
+                                   PRBool         aIsNegated,
+                                   nsIAtom**      aPseudoElement,
+                                   nsPseudoClassList** aPseudoElementArgs)
 {
+  NS_ASSERTION(aIsNegated || (aPseudoElement && aPseudoElementArgs),
+               "expected location to store pseudo element");
+  NS_ASSERTION(!aIsNegated || (!aPseudoElement && !aPseudoElementArgs),
+               "negated selectors shouldn't have a place to store "
+               "pseudo elements");
   if (! GetToken(PR_FALSE)) { // premature eof
     REPORT_UNEXPECTED_EOF(PEPseudoSelEOF);
     return eSelectorParsingStatus_Error;
@@ -3049,6 +3032,10 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
   buffer.Append(mToken.mIdent);
   ToLowerCase(buffer);
   nsCOMPtr<nsIAtom> pseudo = do_GetAtom(buffer);
+  if (!pseudo) {
+    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+    return eSelectorParsingStatus_Error;
+  }
 
   // stash away some info about this pseudo so we only have to get it once.
   PRBool isTreePseudo = PR_FALSE;
@@ -3160,7 +3147,7 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
 
     if (0 == (aDataMask & SEL_MASK_PELEM)) {
       aDataMask |= SEL_MASK_PELEM;
-      aSelector.AddPseudoClass(pseudo); // store it here, it gets pulled later
+      NS_ADDREF(*aPseudoElement = pseudo);
 
 #ifdef MOZ_XUL
       if (isTree) {
@@ -3168,7 +3155,7 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
         // -moz-tree-xxxx(a,b,c).  We parse (a,b,c) and add each
         // item in the list to the pseudoclass list.  They will be pulled
         // from the list later along with the pseudo-element.
-        if (!ParseTreePseudoElement(aSelector)) {
+        if (!ParseTreePseudoElement(aPseudoElementArgs)) {
           return eSelectorParsingStatus_Error;
         }
       }
@@ -3251,7 +3238,8 @@ CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&       aDataMask,
     parsingStatus = ParseClassSelector(aDataMask, *newSel);
   }
   else if (mToken.IsSymbol(':')) {    // :pseudo
-    parsingStatus = ParsePseudoSelector(aDataMask, *newSel, PR_TRUE);
+    parsingStatus = ParsePseudoSelector(aDataMask, *newSel, PR_TRUE,
+                                        nsnull, nsnull);
   }
   else if (mToken.IsSymbol('[')) {    // [attribute
     parsingStatus = ParseAttributeSelector(aDataMask, *newSel);
@@ -3459,7 +3447,9 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
  * operator? [[namespace |]? element_name]? [ ID | class | attrib | pseudo ]*
  */
 CSSParserImpl::nsSelectorParsingStatus
-CSSParserImpl::ParseSelector(nsCSSSelector& aSelector)
+CSSParserImpl::ParseSelector(nsCSSSelector& aSelector,
+                             nsIAtom** aPseudoElement,
+                             nsPseudoClassList** aPseudoElementArgs)
 {
   if (! GetToken(PR_TRUE)) {
     REPORT_UNEXPECTED_EOF(PESelectorEOF);
@@ -3481,7 +3471,8 @@ CSSParserImpl::ParseSelector(nsCSSSelector& aSelector)
       parsingStatus = ParseClassSelector(dataMask, aSelector);
     }
     else if (mToken.IsSymbol(':')) {    // :pseudo
-      parsingStatus = ParsePseudoSelector(dataMask, aSelector, PR_FALSE);
+      parsingStatus = ParsePseudoSelector(dataMask, aSelector, PR_FALSE,
+                                          aPseudoElement, aPseudoElementArgs);
     }
     else if (mToken.IsSymbol('[')) {    // [attribute
       parsingStatus = ParseAttributeSelector(dataMask, aSelector);
@@ -3880,11 +3871,12 @@ CSSParserImpl::ParseColorOpacity(PRUint8& aOpacity)
 
 #ifdef MOZ_XUL
 PRBool
-CSSParserImpl::ParseTreePseudoElement(nsCSSSelector& aSelector)
+CSSParserImpl::ParseTreePseudoElement(nsPseudoClassList **aPseudoElementArgs)
 {
   // The argument to a tree pseudo-element is a sequence of identifiers
   // that are either space- or comma-separated.  (Was the intent to
   // allow only comma-separated?  That's not what was done.)
+  nsCSSSelector fakeSelector; // so we can reuse AddPseudoClass
   if (ExpectSymbol('(', PR_FALSE)) {
     while (!ExpectSymbol(')', PR_TRUE)) {
       if (!GetToken(PR_TRUE)) {
@@ -3892,13 +3884,15 @@ CSSParserImpl::ParseTreePseudoElement(nsCSSSelector& aSelector)
       }
       if (eCSSToken_Ident == mToken.mType) {
         nsCOMPtr<nsIAtom> pseudo = do_GetAtom(mToken.mIdent);
-        aSelector.AddPseudoClass(pseudo);
+        fakeSelector.AddPseudoClass(pseudo);
       }
       else if (!mToken.IsSymbol(',')) {
         SkipUntil(')');
         return PR_FALSE;
       }
     }
+    *aPseudoElementArgs = fakeSelector.mPseudoClassList;
+    fakeSelector.mPseudoClassList = nsnull;
     return PR_TRUE;
   }
   return PR_FALSE;
