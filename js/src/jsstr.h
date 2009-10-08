@@ -68,6 +68,8 @@ enum {
 extern jschar *
 js_GetDependentStringChars(JSString *str);
 
+JS_STATIC_ASSERT(JS_BITS_PER_WORD >= 32);
+
 /*
  * The GC-thing "string" type.
  *
@@ -154,7 +156,7 @@ struct JSString {
          * enumeration type requires an explicit cast" unless we cast to size_t
          * here.
          */
-        DEPENDENT_LENGTH_BITS = size_t(LENGTH_BITS) / 2,
+        DEPENDENT_LENGTH_BITS = 8,
         DEPENDENT_LENGTH_MASK = JSSTRING_BITMASK(DEPENDENT_LENGTH_BITS),
         DEPENDENT_START_BITS =  LENGTH_BITS - DEPENDENT_LENGTH_BITS,
         DEPENDENT_START_SHIFT = DEPENDENT_LENGTH_BITS,
