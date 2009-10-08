@@ -1126,7 +1126,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                 {
                     tryConstructSlimWrapper = PR_TRUE;
                 }
-                else if(IS_SLIM_WRAPPER_OBJECT(flat))
+                else if(!IS_WRAPPER_CLASS(STOBJ_GET_CLASS(flat)))
                 {
                     JSObject* global = JS_GetGlobalForObject(cx, flat);
                     if(global == xpcscope->GetGlobalJSObject())
@@ -1185,9 +1185,6 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             }
         }
 
-        NS_ASSERTION(!flat || IS_WRAPPER_CLASS(STOBJ_GET_CLASS(flat)),
-                     "What kind of wrapper is this?");
-
         nsresult rv;
         XPCWrappedNative* wrapper;
         nsRefPtr<XPCWrappedNative> strongWrapper;
@@ -1203,7 +1200,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
 
             wrapper = strongWrapper;
         }
-        else if(IS_WN_WRAPPER_OBJECT(flat))
+        else if(IS_WRAPPER_CLASS(STOBJ_GET_CLASS(flat)))
         {
             wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(flat));
 
