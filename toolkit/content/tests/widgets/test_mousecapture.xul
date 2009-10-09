@@ -153,6 +153,12 @@ function runTests()
   synthesizeMouse(frames[2].document.getElementById("input"), 8, 8, { type: "mousedown" }, frames[2]);
   synthesizeMouse(frames[2].document.getElementById("input"), 8, 8, { type: "mouseup" }, frames[2]);
 
+  synthesizeMouse(document.getElementById("option3"), 2, 2, { type: "mousedown" });
+  synthesizeMouse(document.getElementById("option3"), 2, 1000, { type: "mousemove" });
+  var select = document.getElementById("select");
+  is(select.selectedIndex, 9, "scroll select");
+  synthesizeMouse(document.getElementById("select"), 2, 2, { type: "mouseup" });
+
   // check to ensure that selection dragging scrolls the right scrollable area
   otherWindow = window.open("data:text/html,<html><p style='margin-top: 4000px'>This is some text</p></html>", "_blank");
   SimpleTest.waitForFocus(selectionScrollCheck, otherWindow);
@@ -254,6 +260,19 @@ SimpleTest.waitForFocus(runTests);
 
   <iframe width="100" height="100"
           src="data:text/html,%3Cinput id='input' onfocus='this.style.display = &quot;none&quot;' style='float: left;'"/>
+
+  <select id="select" xmlns="http://www.w3.org/1999/xhtml" size="4">
+    <option id="option1">One</option>
+    <option id="option2">Two</option>
+    <option id="option3">Three</option>
+    <option id="option4">Four</option>
+    <option id="option5">Five</option>
+    <option id="option6">Six</option>
+    <option id="option7">Seven</option>
+    <option id="option8">Eight</option>
+    <option id="option9">Nine</option>
+    <option id="option10">Ten</option>
+  </select>
 </hbox>
 
 <body id="body" xmlns="http://www.w3.org/1999/xhtml">
