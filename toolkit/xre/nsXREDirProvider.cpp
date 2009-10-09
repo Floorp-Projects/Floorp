@@ -927,6 +927,60 @@ GetShellFolderPath(int folder, nsAString& _retval)
   return rv;
 }
 
+#ifndef WINCE
+/**
+ * Provides a fallback for getting the path to APPDATA or LOCALAPPDATA by
+ * querying the registry when the call to SHGetSpecialFolderLocation or
+ * SHGetPathFromIDListW is unable to provide these paths (Bug 513958).
+ */
+static nsresult
+GetRegWindowsAppDataFolder(PRBool aLocal, nsAString& _retval)
+{
+  HKEY key;
+  NS_NAMED_LITERAL_STRING(keyName,
+  "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders");
+  DWORD res = ::RegOpenKeyExW(HKEY_CURRENT_USER, keyName.get(), 0, KEY_READ,
+                              &key);
+  if (res != ERROR_SUCCESS) {
+    _retval.SetLength(0);
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  DWORD type, size;
+  res = RegQueryValueExW(key, (aLocal ? L"Local AppData" : L"AppData"), NULL,
+                         &type, NULL, &size);
+  // The call to RegQueryValueExW must succeed, the type must be REG_SZ, the
+  // buffer size must not equal 0, and the buffer size be a multiple of 2.
+  if (res != ERROR_SUCCESS || type != REG_SZ || size == 0 || size % 2 != 0) {
+    ::RegCloseKey(key);
+    _retval.SetLength(0);
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // |size| includes room for the terminating null character
+  DWORD resultLen = size / 2 - 1;
+
+  _retval.SetLength(resultLen);
+  nsAString::iterator begin;
+  _retval.BeginWriting(begin);
+  if (begin.size_forward() != resultLen) {
+    ::RegCloseKey(key);
+    _retval.SetLength(0);
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  res = RegQueryValueExW(key, (aLocal ? L"Local AppData" : L"AppData"), NULL,
+                         NULL, (LPBYTE) begin.get(), &size);
+  ::RegCloseKey(key);
+  if (res != ERROR_SUCCESS) {
+    _retval.SetLength(0);
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return NS_OK;
+}
+#endif
+
 nsresult
 nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
 {
@@ -1059,10 +1113,23 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, PRBool aLocal)
   localDir = do_QueryInterface(dirFileMac, &rv);
 #elif defined(XP_WIN)
   nsString path;
-  if (aLocal)
+  if (aLocal) {
     rv = GetShellFolderPath(CSIDL_LOCAL_APPDATA, path);
-  if (!aLocal || NS_FAILED(rv))
+#ifndef WINCE
+    if (NS_FAILED(rv))
+      rv = GetRegWindowsAppDataFolder(aLocal, path);
+#endif
+  }
+  if (!aLocal || NS_FAILED(rv)) {
     rv = GetShellFolderPath(CSIDL_APPDATA, path);
+#ifndef WINCE
+    if (NS_FAILED(rv)) {
+      if (!aLocal)
+        rv = GetRegWindowsAppDataFolder(aLocal, path);
+    }
+#endif
+
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewLocalFile(path, PR_TRUE, getter_AddRefs(localDir));
