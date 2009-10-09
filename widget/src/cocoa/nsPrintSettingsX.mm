@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  *   Conrad Carlen <ccarlen@netscape.com>
- *   Markus Stange <mstange@themasta.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,6 +38,7 @@
 
 #include "nsPrintSettingsX.h"
 #include "nsObjCExceptions.h"
+#include "nsIPrintSessionX.h"
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -52,34 +52,15 @@
 #include "nsMenuBarX.h"
 #include "nsMenuUtilsX.h"
 
-#define PRINTING_PREF_BRANCH            "print."
-#define MAC_OS_X_PAGE_SETUP_PREFNAME    "macosx.pagesetup-2"
-
-#ifdef MOZ_COCOA_PRINTING
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsPrintSettingsX, nsPrintSettings, nsPrintSettingsX)
-
-nsPrintSettingsX::nsPrintSettingsX()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  mPrintInfo = [[NSPrintInfo sharedPrintInfo] copy];
-  mPageFormat = (PMPageFormat)[mPrintInfo PMPageFormat];
-  mPrintSettings = (PMPrintSettings)[mPrintInfo PMPrintSettings];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-#else
-
-#include "nsIPrintSessionX.h"
-
 // This struct should be represented identically on all architectures, and
 // there shouldn't be any padding before the data field.
 struct FrozenHandle {
   PRUint32 size;
   char data[0];
 };
+
+#define PRINTING_PREF_BRANCH            "print."
+#define MAC_OS_X_PAGE_SETUP_PREFNAME    "macosx.pagesetup-2"
 
 // Utility class stack-based handle ownership
 class StHandleOwner
@@ -159,8 +140,6 @@ nsPrintSettingsX::nsPrintSettingsX() :
 {
 }
 
-#endif
-
 nsPrintSettingsX::nsPrintSettingsX(const nsPrintSettingsX& src) :
   mPageFormat(kPMNoPageFormat),
   mPrintSettings(kPMNoPrintSettings)
@@ -194,10 +173,6 @@ nsPrintSettingsX& nsPrintSettingsX::operator=(const nsPrintSettingsX& rhs)
   
   nsPrintSettings::operator=(rhs);
 
-#ifdef MOZ_COCOA_PRINTING
-  [mPrintInfo release];
-  mPrintInfo = [rhs.mPrintInfo copy];
-#else
   OSStatus status;
    
   if (mPageFormat != kPMNoPageFormat) {
@@ -235,7 +210,6 @@ nsPrintSettingsX& nsPrintSettingsX::operator=(const nsPrintSettingsX& rhs)
         ::PMRelease(printSettings);
     }
   }
-#endif
 
   return *this;
 
@@ -246,9 +220,6 @@ nsresult nsPrintSettingsX::Init()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-#ifdef MOZ_COCOA_PRINTING
-  return InitUnwriteableMargin();
-#else
   OSStatus status;
 
   PMPrintSession printSession = NULL;
@@ -268,7 +239,6 @@ nsresult nsPrintSettingsX::Init()
       status = tempStatus;
   }
   return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
-#endif
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
@@ -295,75 +265,6 @@ NS_IMETHODIMP nsPrintSettingsX::InitUnwriteableMargin()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;  
 }
 
-#ifdef MOZ_COCOA_PRINTING
-NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  nsresult rv;
-  nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefService->GetBranch(PRINTING_PREF_BRANCH, getter_AddRefs(prefBranch));
-  if (NS_FAILED(rv))
-    return rv;
-      
-  nsXPIDLCString encodedData;
-  rv = prefBranch->GetCharPref(MAC_OS_X_PAGE_SETUP_PREFNAME, getter_Copies(encodedData));
-  if (NS_FAILED(rv))
-    return rv;
-
-  // decode the base64
-  char* decodedData = PL_Base64Decode(encodedData.get(), encodedData.Length(), nsnull);
-  NSData* data = [NSData dataWithBytes:decodedData length:PL_strlen(decodedData)];
-  if (!data)
-    return NS_ERROR_FAILURE;
-
-  PMPageFormat newPageFormat;
-  OSStatus status = ::PMPageFormatCreateWithDataRepresentation((CFDataRef)data, &newPageFormat);
-  if (status == noErr) {
-    ::PMCopyPageFormat(newPageFormat, mPageFormat);
-    [mPrintInfo updateFromPMPageFormat];
-  }
-  InitUnwriteableMargin();
-
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  if (mPageFormat == kPMNoPageFormat)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  nsresult rv;
-  nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefService->GetBranch(PRINTING_PREF_BRANCH, getter_AddRefs(prefBranch));
-  if (NS_FAILED(rv))
-    return rv;
-
-  NSData* data = nil;
-  OSStatus err = ::PMPageFormatCreateDataRepresentation(mPageFormat, (CFDataRef*)&data, kPMDataFormatXMLDefault);
-  if (err != noErr)
-    return NS_ERROR_FAILURE;
-
-  nsXPIDLCString encodedData;
-  encodedData.Adopt(PL_Base64Encode((char*)[data bytes], [data length], nsnull));
-  if (!encodedData.get())
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return prefBranch->SetCharPref(MAC_OS_X_PAGE_SETUP_PREFNAME, encodedData);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-#else
 NS_IMETHODIMP nsPrintSettingsX::GetNativePrintSession(PMPrintSession *aNativePrintSession)
 {
    NS_ENSURE_ARG_POINTER(aNativePrintSession);
@@ -550,7 +451,6 @@ NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs()
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-#endif
 
 nsresult nsPrintSettingsX::_Clone(nsIPrintSettings **_retval)
 {
@@ -574,7 +474,6 @@ NS_IMETHODIMP nsPrintSettingsX::_Assign(nsIPrintSettings *aPS)
   return NS_OK;
 }
 
-#ifndef MOZ_COCOA_PRINTING
 OSStatus nsPrintSettingsX::CreateDefaultPageFormat(PMPrintSession aSession, PMPageFormat& outFormat)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -632,4 +531,3 @@ NS_IMETHODIMP nsPrintSettingsX::CleanUpAfterCarbonDialog()
   
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-#endif
