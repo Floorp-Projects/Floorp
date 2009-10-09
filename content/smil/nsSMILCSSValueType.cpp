@@ -65,6 +65,7 @@ struct ValueWrapper {
 // -------------------------------------
 static const nsStyleCoord sZeroCoord(0);
 static const nsStyleCoord sZeroPercent(0.0f, eStyleUnit_Percent);
+static const nsStyleCoord sZeroFactor(0.0f,  eStyleUnit_Factor);
 static const nsStyleCoord sZeroColor(NS_RGB(0,0,0));
 
 // Helper Methods
@@ -79,6 +80,8 @@ GetZeroValueForUnit(nsStyleUnit aUnit)
       return &sZeroCoord;
     case eStyleUnit_Percent:
       return &sZeroPercent;
+    case eStyleUnit_Factor:
+      return &sZeroFactor;
     case eStyleUnit_Color:
       return &sZeroColor;
     default:
@@ -96,6 +99,9 @@ InvertStyleCoordSign(nsStyleCoord& aStyleCoord)
       break;
     case eStyleUnit_Percent:
       aStyleCoord.SetPercentValue(-aStyleCoord.GetPercentValue());
+      break;
+    case eStyleUnit_Factor:
+      aStyleCoord.SetFactorValue(-aStyleCoord.GetFactorValue());
       break;
     default:
       NS_NOTREACHED("Calling InvertStyleCoordSign with an unsupported unit");

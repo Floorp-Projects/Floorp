@@ -71,7 +71,10 @@ var gFromByBundles =
   new TestcaseBundle(gPropList.fill,           _fromByTestLists.color),
   new TestcaseBundle(gPropList.font_size,      _fromByTestLists.lengthPx),
   new TestcaseBundle(gPropList.lighting_color, _fromByTestLists.color),
-  new TestcaseBundle(gPropList.opacity,        _fromByTestLists.opacity,
-                     "need support for float values"),
+  new TestcaseBundle(gPropList.opacity,        _fromByTestLists.opacity),
+  new TestcaseBundle(gPropList.stroke_miterlimit, [
+    new AnimTestcaseFromBy("1", "1", { midComp: "1.5", toComp: "2" }),
+    new AnimTestcaseFromBy("20.1", "-10", { midComp: "15.1", toComp: "10.1" }),
+  ]),
   new TestcaseBundle(gPropList.stroke_width,   _fromByTestLists.lengthPx),
 ];

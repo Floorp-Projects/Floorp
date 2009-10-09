@@ -57,14 +57,13 @@
 fails == anim-css-fill-overflow-1-from-by.svg anim-css-fill-overflow-1-ref.svg
 
 # 'fill-opacity' property
-# XXXdholbert These tests require float support in nsStyleAnimation (bug 504652 or a followup)
-fails == anim-css-fillopacity-1-by.svg            anim-css-fillopacity-1-ref.svg
-fails == anim-css-fillopacity-1-from-by.svg       anim-css-fillopacity-1-ref.svg
-fails == anim-css-fillopacity-1-from-to.svg       anim-css-fillopacity-1-ref.svg
-fails == anim-css-fillopacity-1-to.svg            anim-css-fillopacity-1-ref.svg
-fails == anim-css-fillopacity-2-paced.svg         anim-css-fillopacity-2-ref.svg
+== anim-css-fillopacity-1-by.svg            anim-css-fillopacity-1-ref.svg
+== anim-css-fillopacity-1-from-by.svg       anim-css-fillopacity-1-ref.svg
+== anim-css-fillopacity-1-from-to.svg       anim-css-fillopacity-1-ref.svg
+== anim-css-fillopacity-1-to.svg            anim-css-fillopacity-1-ref.svg
+== anim-css-fillopacity-2-paced.svg         anim-css-fillopacity-2-ref.svg
 fails == anim-css-fillopacity-3-clamp-big.svg     anim-css-fillopacity-3-ref.svg # bug 501188
-fails == anim-css-fillopacity-3-clamp-small.svg   anim-css-fillopacity-3-ref.svg
+== anim-css-fillopacity-3-clamp-small.svg   anim-css-fillopacity-3-ref.svg
 
 # 'font' shorthand property
 # XXXdholbert We don't yet support animating shorthand properties (bug 520239)
