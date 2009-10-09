@@ -508,6 +508,7 @@ var BrowserUI = {
       return;
 
     this._edit.popup.close();
+    this._edit.value = aURI;
 
     var flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     getBrowser().loadURIWithFlags(aURI, flags, null, null);
