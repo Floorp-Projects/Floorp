@@ -120,6 +120,13 @@ nsStyleAnimation::Add(nsStyleCoord& aDest, const nsStyleCoord& aValueToAdd,
       aDest.SetPercentValue(destPct);
       break;
     }
+    case eStyleUnit_Factor: {
+      float destFactor = aDest.GetFactorValue();
+      float valueToAddFactor = aValueToAdd.GetFactorValue();
+      destFactor += aCount * valueToAddFactor;
+      aDest.SetFactorValue(destFactor);
+      break;
+    }
     case eStyleUnit_Color: {
       // Since nscolor doesn't allow out-of-sRGB values, by-animations
       // of colors don't make much sense in our implementation.
@@ -180,6 +187,12 @@ nsStyleAnimation::ComputeDistance(const nsStyleCoord& aStartValue,
       float startPct = aStartValue.GetPercentValue();
       float endPct = aEndValue.GetPercentValue();
       aDistance = fabs(double(endPct - startPct));
+      break;
+    }
+    case eStyleUnit_Factor: {
+      float startFactor = aStartValue.GetFactorValue();
+      float endFactor = aEndValue.GetFactorValue();
+      aDistance = fabs(double(endFactor - startFactor));
       break;
     }
     case eStyleUnit_Color: {
@@ -260,6 +273,13 @@ nsStyleAnimation::Interpolate(const nsStyleCoord& aStartValue,
       float endPct = aEndValue.GetPercentValue();
       float resultPct = startPct + aPortion * (endPct - startPct);
       aResultValue.SetPercentValue(resultPct);
+      break;
+    }
+    case eStyleUnit_Factor: {
+      float startFactor = aStartValue.GetFactorValue();
+      float endFactor = aEndValue.GetFactorValue();
+      float resultFactor = startFactor + aPortion * (endFactor - startFactor);
+      aResultValue.SetFactorValue(resultFactor);
       break;
     }
     case eStyleUnit_Color: {
@@ -427,6 +447,12 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
       static_cast<nsCSSValue*>(aSpecifiedValue)->
         SetPercentValue(aComputedValue.GetPercentValue());
       break;
+    case eStyleUnit_Factor:
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                        "type mismatch");
+      static_cast<nsCSSValue*>(aSpecifiedValue)->
+        SetFloatValue(aComputedValue.GetFactorValue(), eCSSUnit_Number);
+      break;
     case eStyleUnit_Color:
       // colors can be alone, or part of a paint server
       if (nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_PaintServer) {
@@ -538,6 +564,10 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
       return PR_TRUE;
     case eStyleAnimType_nscoord:
       aComputedValue.SetCoordValue(*static_cast<const nscoord*>(
+        StyleDataAtOffset(styleStruct, ssOffset)));
+      return PR_TRUE;
+    case eStyleAnimType_float:
+      aComputedValue.SetFactorValue(*static_cast<const float*>(
         StyleDataAtOffset(styleStruct, ssOffset)));
       return PR_TRUE;
     case eStyleAnimType_Color:
