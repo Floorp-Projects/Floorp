@@ -51,6 +51,7 @@
 
 // Printing Progress Includes
 #include "nsPrintProgress.h"
+#include "nsPrintProgressParams.h"
 #include "nsIWebProgressListener.h"
 
 
@@ -71,7 +72,9 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
+  nsCOMPtr<nsIWindowWatcher> mWatcher;
   nsCOMPtr<nsIPrintProgress> mPrintProgress;
+  nsCOMPtr<nsIWebProgressListener> mWebProgressListener;  
 };
 
 #endif

@@ -14,6 +14,7 @@
   locale/@AB_CD@/global/global-strres.properties               (%chrome/global-strres.properties)
   locale/@AB_CD@/global/plugins.properties                     (%chrome/plugins.properties)
   locale/@AB_CD@/global/nsWebBrowserPersist.properties         (%chrome/nsWebBrowserPersist.properties)
+  locale/@AB_CD@/global/printdialog.properties                 (%chrome/printdialog.properties)
   locale/@AB_CD@/global/xslt/xslt.properties                   (%chrome/xslt/xslt.properties)
   locale/@AB_CD@/global/dom/dom.properties                     (%chrome/dom/dom.properties)
 #ifdef MOZ_SVG
