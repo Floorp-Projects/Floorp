@@ -2194,7 +2194,7 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
     // If we're asked to do a delayed stop it means we're stopping the
     // plugin because we're destroying the frame. In that case, disown
     // the widget.
-    GetView()->DetachWidgetEventHandler(mWidget);
+    mInnerView->DetachWidgetEventHandler(mWidget);
     mWidget = nsnull;
   }
 #endif
