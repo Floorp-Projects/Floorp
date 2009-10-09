@@ -39,19 +39,25 @@
 #define nsPrintSettingsX_h_
 
 #include "nsPrintSettingsImpl.h"  
-#include "nsIPrintSettingsX.h"  
+#import <Cocoa/Cocoa.h>
 
-class nsPrintSettingsX : public nsPrintSettings,
-                         public nsIPrintSettingsX
+class nsPrintSettingsX : public nsPrintSettings
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIPRINTSETTINGSX
 
   nsPrintSettingsX();
   virtual ~nsPrintSettingsX();
-
   nsresult Init();
+  NSPrintInfo* GetCocoaPrintInfo() { return mPrintInfo; }
+  void SetCocoaPrintInfo(NSPrintInfo* aPrintInfo);
+  virtual nsresult ReadPageFormatFromPrefs();
+  virtual nsresult WritePageFormatToPrefs();
+
+  PMPrintSettings GetPMPrintSettings();
+  PMPrintSession GetPMPrintSession();
+  PMPageFormat GetPMPageFormat();
+  void SetPMPageFormat(PMPageFormat aPageFormat);
 
 protected:
   nsPrintSettingsX(const nsPrintSettingsX& src);
@@ -68,8 +74,7 @@ protected:
   OSStatus CreateDefaultPageFormat(PMPrintSession aSession, PMPageFormat& outFormat);
   OSStatus CreateDefaultPrintSettings(PMPrintSession aSession, PMPrintSettings& outSettings);
 
-  PMPageFormat mPageFormat;
-  PMPrintSettings mPrintSettings;
+  NSPrintInfo* mPrintInfo;
 };
 
 #endif // nsPrintSettingsX_h_

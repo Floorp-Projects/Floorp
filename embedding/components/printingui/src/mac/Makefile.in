@@ -47,7 +47,6 @@ LIBRARY_NAME	= printingui_s
 LIBXUL_LIBRARY	= 1
 
 
-DIRS      = printpde
 
 CMMSRCS = nsPrintingPromptServiceX.mm
 
@@ -57,7 +56,6 @@ CPPSRCS		= \
       $(NULL)
 
 LOCAL_INCLUDES	= \
-		-I$(srcdir)/printpde/public \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a
