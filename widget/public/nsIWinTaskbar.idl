@@ -24,6 +24,7 @@
  * Contributor(s):
  *   Rob Arnold <tellrob@gmail.com>
  *   Siddharth Agarwal <sid.bugzilla@gmail.com>
+ *   Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -77,8 +78,8 @@ interface nsIJumpListBuilder;
  * for those windows is also combined as defined here:
  * http://msdn.microsoft.com/en-us/library/dd391697%28VS.85%29.aspx
  *
- * Applications may also define custom taskbar jump lists on application shortcuts
- * users pin to the taskbar. See nsIJumpListBuilder for more information.
+ * Applications may also define custom taskbar jump lists on application shortcuts.
+ * See nsIJumpListBuilder for more information.
  */
 
 [scriptable, uuid(4BC6D594-8FF0-4975-8642-3A5BC1928E81)]
@@ -111,11 +112,19 @@ interface nsIWinTaskbar : nsISupports
   nsITaskbarWindowPreview getTaskbarWindowPreview(in nsIDocShell shell);
 
   /**
+   * Taskbar icon progress indicator
+   */
+
+  /**
    * Gets the taskbar progress for a window. The docshell is used to find the
    * toplevel window. See the documentation for nsITaskbarProgress for more
    * information.
    */
   nsITaskbarProgress getTaskbarProgress(in nsIDocShell shell);
+
+  /**
+   * Taskbar and start menu jump list management
+   */
 
   /**
    * Retrieve a taskbar jump list builder
