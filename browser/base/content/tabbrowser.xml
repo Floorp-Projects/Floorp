@@ -1345,30 +1345,6 @@
             if (t.previousSibling.selected)
               t.setAttribute("afterselected", true);
 
-            if (!blank) {
-              // Stop the existing about:blank load.  Otherwise, if aURI
-              // doesn't stop in-progress loads on its own, we'll get into
-              // trouble with multiple parallel loads running at once.
-              b.stop();
-
-              // pretend the user typed this so it'll be available till
-              // the document successfully loads
-              b.userTypedValue = aURI;
-
-              if (aPostData === undefined)
-                aPostData = null;
-              const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-              var flags = nsIWebNavigation.LOAD_FLAGS_NONE;
-              if (aAllowThirdPartyFixup) {
-                flags = nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-              }
-              try {
-                b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
-              }
-              catch (ex) {
-              }
-            }
-
             this.tabContainer.adjustTabstrip();
 
             // Do this asynchronically, as we don't know yet if the tab
@@ -1391,6 +1367,25 @@
             var evt = document.createEvent("Events");
             evt.initEvent("TabOpen", true, false);
             t.dispatchEvent(evt);
+
+            if (!blank) {
+              // Stop the existing about:blank load.  Otherwise, if aURI
+              // doesn't stop in-progress loads on its own, we'll get into
+              // trouble with multiple parallel loads running at once.
+              b.stop();
+
+              // pretend the user typed this so it'll be available till
+              // the document successfully loads
+              b.userTypedValue = aURI;
+
+              let flags = aAllowThirdPartyFixup ?
+                          Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP :
+                          Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+              try {
+                b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
+              }
+              catch (ex) { }
+            }
 
             // Check if we're opening a tab related to the current tab and
             // move it to after the current tab.
