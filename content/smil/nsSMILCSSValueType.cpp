@@ -202,6 +202,10 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
     destWrapper->mPresContext = valueToAddWrapper->mPresContext;
   }
 
+  // Special case: font-size-adjust is explicitly non-additive
+  if (destWrapper->mPropID == eCSSProperty_font_size_adjust) {
+    return NS_ERROR_FAILURE;
+  }
   return nsStyleAnimation::Add(destWrapper->mCSSValue,
                                *valueToAddCSSValue, aCount) ?
     NS_OK : NS_ERROR_FAILURE;
