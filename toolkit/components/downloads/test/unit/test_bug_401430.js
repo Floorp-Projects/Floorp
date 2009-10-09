@@ -46,13 +46,35 @@ const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDownloadManager);
 // U+3056 : HIRAGANA LETTER ZA
 const resultFileName = "test\u00e3\u041b\u3056" + Date.now() + ".doc";
 
+// Milliseconds between polls.
+const POLL_REGISTRY_TIMEOUT = 200;
+// Max number of polls.
+const POLL_REGISTRY_MAX_LOOPS = 25;
+
 function checkResult() {
   // delete the saved file (this doesn't affect the "recent documents" list)
   var resultFile = do_get_file(resultFileName);
   resultFile.remove(false);
 
-  do_check_true(checkRecentDocsFor(resultFileName));
-  do_test_finished();
+  // Need to poll RecentDocs value because the SHAddToRecentDocs call
+  // doesn't update the registry immediately.
+  do_timeout(POLL_REGISTRY_TIMEOUT, "pollRecentDocs();");
+}
+
+var gPollsCount = 0;
+function pollRecentDocs() {
+  if (++gPollsCount > POLL_REGISTRY_MAX_LOOPS) {
+    do_throw("Maximum time elapsed while polling RecentDocs.");
+    do_test_finished();
+    return;
+  }
+
+  if (checkRecentDocsFor(resultFileName)) {
+    print("Document found in RecentDocs");
+    do_test_finished();
+  }
+  else
+    do_timeout(POLL_REGISTRY_TIMEOUT, "pollRecentDocs();");
 }
 
 function checkRecentDocsFor(aFileName) {
@@ -104,9 +126,7 @@ function run_test()
   var listener = {
     onDownloadStateChange: function test_401430_odsc(aState, aDownload) {
       if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED) {
-        // Need to run this from a timeout, because the SHAddToRecentDocs call
-        // doesn't update the registry immediately.
-        do_timeout(1000, "checkResult();");
+        checkResult();
       }
     },
     onStateChange: function(a, b, c, d, e) { },
