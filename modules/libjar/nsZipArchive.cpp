@@ -63,12 +63,9 @@
 #include "nsZipArchive.h"
 
 /**
- * Globals
- *
  * Global allocator used with zlib. Destroyed in module shutdown.
  */
 #define NBUCKETS 6
-#define BY4ALLOC_ITEMS 320
 nsRecyclingAllocator *gZlibAllocator = NULL;
 
 // For placement new used for arena allocations of zip file list
@@ -115,62 +112,20 @@ static nsresult ResolveSymlink(const char *path);
 //***********************************************************
 // Allocators for use with zlib
 //
-// These are allocators that are performance tuned for
-// use with zlib. Our use of zlib for every file we read from
-// the jar file when running navigator, we do these allocation.
-// alloc 24
-// alloc 64
-// alloc 11520
-// alloc 32768
-// alloc 1216 [304x4] max
-// alloc 76   [19x4]
-// free  76   [19x4]
-// alloc 1152 [288x4]
-// free  1152 [288x4]
-// free  1216 [304x4]
-// alloc 28
-// free  28
-// free  32768
-// free  11520
-// free  64
-// free  24
-//
-// The pool will allocate these as:
-//
-//          32,768
-//          11,520
-//           1,280 [320x4] - shared by first x4 alloc, 28
-//           1,280 [320x4] - shared by second and third x4 alloc
-//              64
-//              24
-//          ------
-//          46,936
-//
-// And almost all of the file reads happen serially. Hence this
-// allocator tries to keep one set of memory needed for one file around
-// and reused the same blocks for other file reads.
-//
-// The interesting question is when should be free this ?
-// - memory pressure should be one.
-// - after startup of navigator
-// - after startup of mail
-// In general, this allocator should be enabled before
-// we startup and disabled after we startup if memory is a concern.
+// Use a recycling allocator, for re-use of of the zlib buffers.
+// For every inflation the following allocations are done:
+// zlibAlloc(1, 9520)
+// zlibAlloc(32768, 1)
 //***********************************************************
 
 static void *
 zlibAlloc(void *opaque, uInt items, uInt size)
 {
   nsRecyclingAllocator *zallocator = (nsRecyclingAllocator *)opaque;
-  if (zallocator) {
-    // Bump up x4 allocations
-    PRUint32 realitems = items;
-    if (size == 4 && items < BY4ALLOC_ITEMS)
-      realitems = BY4ALLOC_ITEMS;
-    return zallocator->Calloc(realitems, size);
+  if (gZlibAllocator) {
+    return gZlibAllocator->Calloc(items, size);
   }
-  else
-    return calloc(items, size);
+  return calloc(items, size);
 }
 
 static void
@@ -181,7 +136,6 @@ zlibFree(void *opaque, void *ptr)
     zallocator->Free(ptr);
   else
     free(ptr);
-  return;
 }
 
 nsresult gZlibInit(z_stream *zs)
