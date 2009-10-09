@@ -67,6 +67,8 @@ const kQuerySyncPlacesId = 0;
 const kQuerySyncHistoryVisitsId = 1;
 const kQuerySelectExpireVisitsId = 2;
 const kQueryExpireVisitsId = 3;
+const kQuerySelectExpireHistoryOrphansId = 4;
+const kQueryExpireHistoryOrphansId = 5;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsPlacesDBFlush class
@@ -267,6 +269,8 @@ nsPlacesDBFlush.prototype = {
     let queries = [
       kQuerySelectExpireVisitsId,
       kQueryExpireVisitsId,
+      kQuerySelectExpireHistoryOrphansId,
+      kQueryExpireHistoryOrphansId,
       kQuerySyncPlacesId,
       kQuerySyncHistoryVisitsId,
     ];
@@ -290,7 +294,7 @@ nsPlacesDBFlush.prototype = {
       this._expiredResults.push({
         uri: this._ios.newURI(row.getResultByName("url"), null, null),
         visitDate: row.getResultByName("visit_date"),
-        wholeEntry: (row.getResultByName("visit_count") == 1)
+        wholeEntry: (row.getResultByName("whole_entry") == 1)
       });
     }
   },
@@ -385,6 +389,10 @@ nsPlacesDBFlush.prototype = {
           params.visit_date = (Date.now() - (this._expireDays * kMSPerDay)) * 1000;
           params.max_expire = kMaxExpire;
           break;
+        case kQuerySelectExpireHistoryOrphansId:
+        case kQueryExpireHistoryOrphansId:
+          params.max_expire = kMaxExpire;
+          break;
       }
 
       return stmt;
@@ -421,7 +429,7 @@ nsPlacesDBFlush.prototype = {
         // Determine which entries will be flushed out from moz_historyvisits
         // when kQueryExpireVisitsId runs.
         this._cachedStatements[aQueryType] = this._db.createStatement(
-          "SELECT h.url, v.visit_date, h.hidden, h.visit_count " +
+          "SELECT h.url, v.visit_date, h.hidden, 0 AS whole_entry " +
           "FROM moz_places h " +
           "JOIN moz_historyvisits v ON h.id = v.place_id " +
           "WHERE v.visit_date < :visit_date " +
@@ -431,7 +439,7 @@ nsPlacesDBFlush.prototype = {
         break;
 
       case kQueryExpireVisitsId:
-        // Flush out entries from moz_historyvisits
+        // Expire entries from moz_historyvisits.
         this._cachedStatements[aQueryType] = this._db.createStatement(
           "DELETE FROM moz_historyvisits " +
           "WHERE id IN ( " +
@@ -440,6 +448,41 @@ nsPlacesDBFlush.prototype = {
             "WHERE visit_date < :visit_date " +
             "ORDER BY visit_date ASC " +
             "LIMIT :max_expire " +
+          ")"
+        );
+        break;
+
+      case kQuerySelectExpireHistoryOrphansId:
+        // Determine which entries will be flushed out from moz_places
+        // when kQueryExpireHistoryOrphansId runs.
+        this._cachedStatements[aQueryType] = this._db.createStatement(
+          "SELECT h.url, h.last_visit_date AS visit_date, h.hidden, " +
+                 "1 as whole_entry FROM moz_places h " +
+          "LEFT JOIN moz_historyvisits v ON h.id = v.place_id " +
+          "LEFT JOIN moz_historyvisits_temp v_t ON h.id = v_t.place_id " +
+          "LEFT JOIN moz_bookmarks b ON h.id = b.fk " +
+          "WHERE v.id IS NULL " +
+            "AND v_t.id IS NULL " +
+            "AND b.id IS NULL " +
+            "AND SUBSTR(h.url, 1, 6) <> 'place:' " +
+          "LIMIT :max_expire"
+        );
+        break;
+
+      case kQueryExpireHistoryOrphansId:
+        // Flush out entries from moz_historyvisits.
+        this._cachedStatements[aQueryType] = this._db.createStatement(
+          "DELETE FROM moz_places_view " +
+          "WHERE id IN ( " +
+            "SELECT h.id FROM moz_places h " +
+            "LEFT JOIN moz_historyvisits v ON h.id = v.place_id " +
+            "LEFT JOIN moz_historyvisits_temp v_t ON h.id = v_t.place_id " +
+            "LEFT JOIN moz_bookmarks b ON h.id = b.fk " +
+            "WHERE v.id IS NULL " +
+              "AND v_t.id IS NULL " +
+              "AND b.id IS NULL " +
+              "AND SUBSTR(h.url, 1, 6) <> 'place:' " +
+            "LIMIT :max_expire" +
           ")"
         );
         break;
