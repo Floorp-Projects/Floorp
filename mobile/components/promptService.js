@@ -177,7 +177,7 @@ promptService.prototype = {
     if (aNode instanceof Ci.nsIDOMXULLabelElement) {
       aNode.setAttribute("value", aLabel);
     } else if (aNode instanceof Ci.nsIDOMXULDescriptionElement) {
-      text = aNode.ownerDocument.createTextNode(aLabel);
+      let text = aNode.ownerDocument.createTextNode(aLabel);
       aNode.appendChild(text);
     } else {    // Set text for other xul elements
       aNode.setAttribute("label", aLabel);
@@ -431,11 +431,11 @@ promptService.prototype = {
     this.sizeScrollableMsg("prompt-select-message", 25);
     
     let list = doc.getElementById("prompt-select-list");
-    for (let i = 0; i < aCount; i++) {
-      let option = doc.createElementNS("http://www.w3.org/1999/xhtml", "option");
-      option.appendChild(doc.createTextNode(aSelectList[i]));
-      list.appendChild(option);
-    }
+    for (let i = 0; i < aCount; i++)
+      list.appendItem(aSelectList[i], null, null);
+      
+    // select the first one
+    list.selectedIndex = 0;
     
     dialog.waitForClose();
     return params.result;

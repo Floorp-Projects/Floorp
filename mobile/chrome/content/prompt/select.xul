@@ -5,11 +5,10 @@
       script="chrome://browser/content/prompt/prompt.js"
       onclose="this.PromptHelper.onCloseSelect(this)">
   <label id="prompt-select-title"/>
-  <scrollbox orient="vertical">
+  <scrollbox orient="vertical" class="prompt-message">
     <description id="prompt-select-message"/>
   </scrollbox>
-  <select id="prompt-select-list" xmlns="http://www.w3.org/1999/xhtml"
-          onclick="SelectHelper.show(event.target);"/>
+  <menulist id="prompt-select-list" class="button-dark"/>
   <hbox pack="center" id="prompt-prompt-button-box">
     <button class="button-dark" label="&ok.label;"
             oncommand="document.getElementById('prompt-select-dialog').PromptHelper.closeSelect(true);"/>
