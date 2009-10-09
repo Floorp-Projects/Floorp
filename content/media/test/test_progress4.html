@@ -14,7 +14,6 @@
 // Same as test_progress2 but uses a smaller file to test resource loaded
 // before metadata loaded is fired.
 var completed = false;
-var last_progress = false;
 var last_progress_total = 0;
 
 function on_loadedmetadata() {
@@ -29,13 +28,11 @@ function do_progress(e) {
   last_progress_total = e.loaded;
   ok(e.loaded <= e.total, "Check progress in bounds: " + e.loaded);
   is(e.total, 11069, "Check progress total");
-  last_progress = e.loaded;
 }
 
 function do_ended() {
   ok(!completed, "Check for duplicate ended event");
   completed = true;
-  is(last_progress, 11069, "Last progress event size");
   SimpleTest.finish();
 }
 
