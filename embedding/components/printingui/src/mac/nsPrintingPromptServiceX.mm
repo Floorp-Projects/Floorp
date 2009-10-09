@@ -44,14 +44,6 @@
 
 #include "nsIPrintingPromptService.h"
 #include "nsIFactory.h"
-
-#ifdef MOZ_COCOA_PRINTING
-
-#include "nsServiceManagerUtils.h"
-#include "nsIPrintDialogService.h"
-
-#else
-
 #include "nsIDOMWindow.h"
 #include "nsReadableUtils.h"
 #include "nsIEmbeddingSiteWindow.h"
@@ -200,7 +192,6 @@ SetDictionaryBooleanvalue(CFMutableDictionaryRef aDictionary, CFStringRef aKey, 
 
     NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-#endif
 
 //*****************************************************************************
 // nsPrintingPromptService
@@ -208,7 +199,8 @@ SetDictionaryBooleanvalue(CFMutableDictionaryRef aDictionary, CFStringRef aKey, 
 
 NS_IMPL_ISUPPORTS2(nsPrintingPromptService, nsIPrintingPromptService, nsIWebProgressListener)
 
-nsPrintingPromptService::nsPrintingPromptService()
+nsPrintingPromptService::nsPrintingPromptService() :
+    mWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID))
 {
 }
 
@@ -224,39 +216,6 @@ nsresult nsPrintingPromptService::Init()
 //*****************************************************************************
 // nsPrintingPromptService::nsIPrintingPromptService
 //*****************************************************************************   
-
-#ifdef MOZ_COCOA_PRINTING
-
-NS_IMETHODIMP 
-nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrint *webBrowserPrint, nsIPrintSettings *printSettings)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
-                                           NS_PRINTDIALOGSERVICE_CONTRACTID));
-  if (dlgPrint)
-    return dlgPrint->Show(parent, printSettings);
-
-  return NS_ERROR_FAILURE;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-NS_IMETHODIMP 
-nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *printSettings, nsIObserver *aObs)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-  nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
-                                           NS_PRINTDIALOGSERVICE_CONTRACTID));
-  if (dlgPrint)
-    return dlgPrint->ShowPageSetup(parent, printSettings);
-
-  return NS_ERROR_FAILURE;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-#else
 
 NS_IMETHODIMP 
 nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrint *webBrowserPrint, nsIPrintSettings *printSettings)
@@ -485,6 +444,19 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
 }
 
 NS_IMETHODIMP 
+nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent, 
+                                      nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
+                                      nsIPrintSettings*        printSettings,      // ok to be null
+                                      nsIObserver*             openDialogObserver, // ok to be null
+                                      PRBool                   isForPrinting,
+                                      nsIWebProgressListener** webProgressListener,
+                                      nsIPrintProgressParams** printProgressParams,
+                                      PRBool*                  notifyOnOpen)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
 nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *printSettings, nsIObserver *aObs)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -530,21 +502,6 @@ nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *p
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-#endif
-
-NS_IMETHODIMP 
-nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent, 
-                                      nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
-                                      nsIPrintSettings*        printSettings,      // ok to be null
-                                      nsIObserver*             openDialogObserver, // ok to be null
-                                      PRBool                   isForPrinting,
-                                      nsIWebProgressListener** webProgressListener,
-                                      nsIPrintProgressParams** printProgressParams,
-                                      PRBool*                  notifyOnOpen)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP 
 nsPrintingPromptService::ShowPrinterProperties(nsIDOMWindow *parent, const PRUnichar *printerName, nsIPrintSettings *printSettings)
 {
@@ -559,6 +516,13 @@ nsPrintingPromptService::ShowPrinterProperties(nsIDOMWindow *parent, const PRUni
 NS_IMETHODIMP 
 nsPrintingPromptService::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
+    if ((aStateFlags & STATE_STOP) && mWebProgressListener) {
+        mWebProgressListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
+        if (mPrintProgress) 
+          mPrintProgress->CloseProgressDialog(PR_TRUE);
+        mPrintProgress       = nsnull;
+        mWebProgressListener = nsnull;
+    }
     return NS_OK;
 }
 
@@ -566,6 +530,9 @@ nsPrintingPromptService::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest 
 NS_IMETHODIMP 
 nsPrintingPromptService::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
+    if (mWebProgressListener) {
+      return mWebProgressListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+    }
     return NS_OK;
 }
 
@@ -573,6 +540,9 @@ nsPrintingPromptService::OnProgressChange(nsIWebProgress *aWebProgress, nsIReque
 NS_IMETHODIMP 
 nsPrintingPromptService::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
 {
+    if (mWebProgressListener) {
+        return mWebProgressListener->OnLocationChange(aWebProgress, aRequest, location);
+    }
     return NS_OK;
 }
 
@@ -580,6 +550,9 @@ nsPrintingPromptService::OnLocationChange(nsIWebProgress *aWebProgress, nsIReque
 NS_IMETHODIMP 
 nsPrintingPromptService::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
 {
+    if (mWebProgressListener) {
+        return mWebProgressListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+    }
     return NS_OK;
 }
 
@@ -587,5 +560,8 @@ nsPrintingPromptService::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest
 NS_IMETHODIMP 
 nsPrintingPromptService::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
+    if (mWebProgressListener) {
+        return mWebProgressListener->OnSecurityChange(aWebProgress, aRequest, state);
+    }
     return NS_OK;
 }
