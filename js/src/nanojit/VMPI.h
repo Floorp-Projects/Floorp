@@ -46,6 +46,10 @@
 #ifndef __VMPI_h__
 #define __VMPI_h__
 
+#if defined(HAVE_CONFIG_H) && defined(NANOJIT_CENTRAL)
+#include "config.h"
+#endif
+
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
