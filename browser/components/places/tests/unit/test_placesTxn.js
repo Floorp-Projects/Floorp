@@ -789,7 +789,7 @@ function run_test() {
     folderWChildItemTxn.undoTransaction();
     do_check_false(bmsvc.isBookmarked(uri("http://www.childItem.com")));
     folderWChildItemTxn.redoTransaction();
-    newchildItemId = (bmsvc.getBookmarkIdsForURI(uri("http://www.childItem.com"), {}))[0];
+    var newchildItemId = (bmsvc.getBookmarkIdsForURI(uri("http://www.childItem.com"), {}))[0];
     do_check_eq(observer._itemAddedIndex, 0);
     do_check_eq(observer._itemAddedId, newchildItemId);
     do_check_true(bmsvc.isBookmarked(uri("http://www.childItem.com")));
