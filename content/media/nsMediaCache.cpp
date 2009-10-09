@@ -2149,6 +2149,10 @@ nsMediaCacheStream::InitAsClone(nsMediaCacheStream* aOriginal)
   mStreamLength = aOriginal->mStreamLength;
   mIsSeekable = aOriginal->mIsSeekable;
 
+  // Cloned streams are initially suspended, since there is no channel open
+  // initially for a clone.
+  mCacheSuspended = PR_TRUE;
+
   for (PRUint32 i = 0; i < aOriginal->mBlocks.Length(); ++i) {
     PRInt32 cacheBlockIndex = aOriginal->mBlocks[i];
     if (cacheBlockIndex < 0)
@@ -2157,6 +2161,8 @@ nsMediaCacheStream::InitAsClone(nsMediaCacheStream* aOriginal)
     while (i >= mBlocks.Length()) {
       mBlocks.AppendElement(-1);
     }
+    // Every block is a readahead block for the clone because the clone's initial
+    // stream offset is zero
     gMediaCache->AddBlockOwnerAsReadahead(cacheBlockIndex, this, i);
   }
 
