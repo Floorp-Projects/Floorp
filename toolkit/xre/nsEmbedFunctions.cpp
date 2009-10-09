@@ -470,9 +470,11 @@ XRE_ShutdownChildProcess(MessageLoop* aUILoop)
     NS_ASSERTION(aUILoop, "Shouldn't be null!");
     if (aUILoop) {
         NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-        aUILoop->PostTask(FROM_HERE,
-            NewRunnableMethod(ContentProcessChild::GetSingleton(),
-                              &ContentProcessChild::Quit));
+        if (GeckoProcessType_Content == XRE_GetProcessType())
+            aUILoop->PostTask(
+                FROM_HERE,
+                NewRunnableMethod(ContentProcessChild::GetSingleton(),
+                                  &ContentProcessChild::Quit));
     }
 }
 
