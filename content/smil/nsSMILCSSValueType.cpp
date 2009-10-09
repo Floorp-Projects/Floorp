@@ -180,18 +180,6 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   NS_ABORT_IF_FALSE(destWrapper && valueToAddWrapper,
                     "these pointers shouldn't be null");
 
-  // At most one of our two inputs might be "unknown" (zero) values.
-  // If so, replace with an actual zero value
-  const nsStyleCoord* valueToAddCSSValue;
-  if (valueToAddWrapper->mPropID == eCSSProperty_UNKNOWN) {
-    NS_ABORT_IF_FALSE(destWrapper->mPropID != eCSSProperty_UNKNOWN,
-                      "At least one of our inputs should have known value");
-    NS_ABORT_IF_FALSE(valueToAddWrapper->mCSSValue.GetUnit() == eStyleUnit_Null,
-                      "If property ID is unset, then the unit should be, too");
-    valueToAddCSSValue = GetZeroValueForUnit(destWrapper->mCSSValue.GetUnit());
-  } else {
-    valueToAddCSSValue = &valueToAddWrapper->mCSSValue;
-  }
   if (destWrapper->mPropID == eCSSProperty_UNKNOWN) {
     NS_ABORT_IF_FALSE(destWrapper->mCSSValue.IsNull(),
                       "If property ID is unset, then the unit should be, too");
@@ -201,13 +189,16 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
     destWrapper->mPropID = valueToAddWrapper->mPropID;
     destWrapper->mPresContext = valueToAddWrapper->mPresContext;
   }
+  NS_ABORT_IF_FALSE(valueToAddWrapper->mPropID != eCSSProperty_UNKNOWN &&
+                    !valueToAddWrapper->mCSSValue.IsNull(),
+                    "Added amount should be a parsed value");
 
   // Special case: font-size-adjust is explicitly non-additive
   if (destWrapper->mPropID == eCSSProperty_font_size_adjust) {
     return NS_ERROR_FAILURE;
   }
   return nsStyleAnimation::Add(destWrapper->mCSSValue,
-                               *valueToAddCSSValue, aCount) ?
+                               valueToAddWrapper->mCSSValue, aCount) ?
     NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -237,10 +228,9 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
                     !toWrapper->mCSSValue.IsNull(),
                     "ComputeDistance endpoint should be a parsed value");
 
-  PRBool success = nsStyleAnimation::ComputeDistance(*fromCSSValue,
-                                                     toWrapper->mCSSValue,
-                                                     aDistance);
-  return success ? NS_OK : NS_ERROR_FAILURE;
+  return nsStyleAnimation::ComputeDistance(*fromCSSValue, toWrapper->mCSSValue,
+                                           aDistance) ?
+    NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
