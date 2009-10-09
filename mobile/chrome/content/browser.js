@@ -445,7 +445,6 @@ var Browser = {
     window.controllers.appendController(this);
     window.controllers.appendController(BrowserUI);
 
-    var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     var styleSheets = Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService);
 
     // Should we hide the cursors
@@ -453,12 +452,12 @@ var Browser = {
     if (hideCursor) {
       window.QueryInterface(Ci.nsIDOMChromeWindow).setCursor("none");
 
-      var styleURI = ios.newURI("chrome://browser/content/cursor.css", null, null);
+      var styleURI = gIOService.newURI("chrome://browser/content/cursor.css", null, null);
       styleSheets.loadAndRegisterSheet(styleURI, styleSheets.AGENT_SHEET);
     }
 
     // load styles for scrollbars
-    var styleURI = ios.newURI("chrome://browser/content/content.css", null, null);
+    var styleURI = gIOService.newURI("chrome://browser/content/content.css", null, null);
     styleSheets.loadAndRegisterSheet(styleURI, styleSheets.AGENT_SHEET);
 
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
@@ -631,6 +630,15 @@ var Browser = {
    */
   get selectedBrowser() {
     return this._selectedTab.browser;
+  },
+
+  getTabForDocument: function(aDocument) {
+    let tabs = this._tabs;
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].browser.contentDocument === aDocument)
+        return tabs[i];
+    }
+    return null;
   },
 
   getTabAtIndex: function(index) {
@@ -1361,8 +1369,7 @@ nsBrowserAccess.prototype = {
       if (aURI) {
         if (aOpener) {
           location = aOpener.location;
-          referrer = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
-                                                            .newURI(location, null, null);
+          referrer = gIOService.newURI(location, null, null);
         }
         newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                  .getInterface(Ci.nsIWebNavigation)
@@ -2374,6 +2381,7 @@ Tab.prototype = {
   endLoading: function() {
     //if (!this._loading)
     //  dump("!!! Already finished loading this tab, please file a bug\n");
+    this.setIcon(this._browser.mIconURL);
 
     this._loading = false;
     clearTimeout(this._loadingTimeout);
@@ -2510,6 +2518,33 @@ Tab.prototype = {
     let browserView = (Browser.selectedBrowser == this._browser) ? Browser._browserView : null;
     this._chromeTab.updateThumbnail(this._browser, browserView);
   },
+
+  setIcon: function(aURI) {
+    let faviconURI = null;
+    if (aURI) {
+      try {
+        faviconURI = gIOService.newURI(aURI, null, null);
+      }
+      catch (e) {
+        faviconURI = null;
+      }
+    }
+
+    if (!faviconURI || faviconURI.schemeIs("javascript") || gFaviconService.isFailedFavicon(faviconURI)) {
+      try {
+        faviconURI = gIOService.newURI(this._browser.currentURI.prePath + "/favicon.ico", null, null);
+        gFaviconService.setAndLoadFaviconForPage(this._browser.currentURI, faviconURI, true);
+      }
+      catch (e) {
+        faviconURI = null;
+      }
+      if (faviconURI && gFaviconService.isFailedFavicon(faviconURI))
+        faviconURI = null;
+    }
+
+    this._browser.mIconURL = faviconURI ? faviconURI.spec : "";
+  },
+
 
   toString: function() {
     return "[Tab " + (this._browser ? this._browser.contentDocument.location.toString() : "(no browser)") + "]";
