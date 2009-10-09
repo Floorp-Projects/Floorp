@@ -55,7 +55,7 @@ nsSetDefaultBrowser.prototype = {
     }
   },
 
-  helpInfo: "  -setDefaultBrowser   Set this app as the default browser.\n",
+  helpInfo: "  -setDefaultBrowser Set this app as the default browser.\n",
 
   classDescription: "Default Browser Cmdline Handler",
   contractID: "@mozilla.org/browser/default-browser-clh;1",
