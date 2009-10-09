@@ -998,7 +998,7 @@ function SelectWrapper(aControl) {
 }
 
 SelectWrapper.prototype = {
-  get selectedIndex() { return this.control.selectedIndex; },
+  get selectedIndex() { return this._control.selectedIndex; },
   get multiple() { return this._control.multiple; },
   get options() { return this._control.options; },
   get children() { return this._control.children; },
@@ -1013,8 +1013,11 @@ SelectWrapper.prototype = {
   focus: function() { this._control.focus(); },
   fireOnChange: function() {
     let control = this._control.wrappedJSObject;
-    if ("onchange" in control)
-      control.onchange();
+    let evt = document.createEvent("Events");
+    evt.initEvent("change", true, true, window, 0,
+                  false, false,
+                  false, false, null);
+    control.dispatchEvent(evt); 
   }
 };
 
@@ -1023,7 +1026,7 @@ function MenulistWrapper(aControl) {
 }
 
 MenulistWrapper.prototype = {
-  get selectedIndex() { return this.control.selectedIndex; },
+  get selectedIndex() { return this._control.selectedIndex; },
   get multiple() { return false; },
   get options() { return this._control.menupopup.children; },
   get children() { return this._control.menupopup.children; },
@@ -1037,8 +1040,11 @@ MenulistWrapper.prototype = {
   focus: function() { this._control.focus(); },
   fireOnChange: function() {
     let control = this._control;
-    if ("onchange" in control)
-      control.onchange();
+    let evt = document.createEvent("XULCommandEvent");
+    evt.initCommandEvent("command", true, true, window, 0,
+                         false, false,
+                         false, false, null);
+    control.dispatchEvent(evt); 
   }
 };
 
@@ -1052,14 +1058,14 @@ var SelectHelper = {
     let indexes = [];
     let control = this._control;
 
-    if (control.type == 'select-one') {
-      indexes.push(control.selectedIndex);
-    }
-    else {
+    if (control.multiple) {
       for (let i = 0; i < control.options.length; i++) {
         if (control.options[i].selected)
           indexes.push(i);
       }
+    }
+    else {
+      indexes.push(control.selectedIndex);
     }
 
     return indexes;

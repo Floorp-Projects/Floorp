@@ -100,6 +100,17 @@
             if (!xhr.responseXML)
               return;
             
+            function removeTextNode(aDocument) {
+              let currentNode;
+              let nodeIterator = aDocument.createNodeIterator(aDocument,
+                                                              NodeFilter.SHOW_TEXT,
+                                                              null,
+                                                              false);
+              while (currentNode = nodeIterator.nextNode())
+                currentNode.parentNode.removeChild(currentNode);
+            }
+            removeTextNode(xhr.responseXML);
+
             // Only allow <setting> for now
             let prefs = xhr.responseXML.querySelectorAll(":root > setting");
             for (let i = 0; i < prefs.length; i++)
