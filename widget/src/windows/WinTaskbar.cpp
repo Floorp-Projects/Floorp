@@ -178,6 +178,11 @@ NS_IMPL_ISUPPORTS1(WinTaskbar, nsIWinTaskbar)
 
 WinTaskbar::WinTaskbar() 
   : mTaskbar(nsnull) {
+  // Perf regression fix: slow registry lookups for non-existent com interfaces
+  // on freshly rebooted, memory starved machines (like talos). (bug 520837)
+  if (nsWindow::GetWindowsVersion() < WIN7_VERSION)
+    return;
+
   ::CoInitialize(NULL);
   HRESULT hr = ::CoCreateInstance(CLSID_TaskbarList,
                                   NULL,
@@ -202,6 +207,9 @@ WinTaskbar::~WinTaskbar() {
 // (static) Called from AppShell
 PRBool WinTaskbar::SetAppUserModelID()
 {
+  if (nsWindow::GetWindowsVersion() < WIN7_VERSION)
+    return PR_FALSE;
+
   SetCurrentProcessExplicitAppUserModelIDPtr funcAppUserModelID = nsnull;
   PRBool retVal = PR_FALSE;
 
