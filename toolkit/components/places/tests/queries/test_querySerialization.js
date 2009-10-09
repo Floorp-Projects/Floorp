@@ -671,12 +671,14 @@ function flagSwitchMatches(aQuery1, aQuery2)
 {
   if (aQuery1[this.flag] && aQuery2[this.flag]) {
     for (let p in this.subswitches) {
-      if (aQuery1[p] instanceof Ci.nsIURI) {
-        if (!aQuery1[p].equals(aQuery2[p]))
+      if (p in aQuery1 && p in aQuery2) {
+        if (aQuery1[p] instanceof Ci.nsIURI) {
+          if (!aQuery1[p].equals(aQuery2[p]))
+            return false;
+        }
+        else if (aQuery1[p] !== aQuery2[p])
           return false;
       }
-      else if (aQuery1[p] !== aQuery2[p])
-        return false;
     }
   }
   else if (aQuery1[this.flag] || aQuery2[this.flag])
