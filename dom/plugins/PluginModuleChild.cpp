@@ -556,11 +556,19 @@ _posturlnotify(NPP aNPP,
 
     nsCString url = NullableString(aRelativeURL);
     NPError err;
+
     // FIXME what should happen when |aBuffer| is null?
+
+    // FIXME bad hack around using nsDependentCString when we really
+    // want a real byte buffer
+    nsAutoPtr<char> bufferCopy(new char[aLength+1]);
+    memcpy(bufferCopy, aBuffer, aLength);
+    bufferCopy[aLength] = 0;
+
     InstCast(aNPP)->CallPStreamNotifyConstructor(
         new StreamNotifyChild(url, aNotifyData),
         url, NullableString(aTarget), true,
-        nsDependentCString(aBuffer, aLength), aIsFile, &err);
+        nsDependentCString(bufferCopy, aLength), aIsFile, &err);
     // TODO: what if this fails?
     return err;
 }
