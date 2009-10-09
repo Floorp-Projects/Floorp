@@ -83,9 +83,9 @@ CMMSRCS = \
 		nsLookAndFeel.mm \
 		nsNativeThemeCocoa.mm \
 		nsDeviceContextSpecX.mm \
+		nsPrintDialogX.mm \
 		nsPrintOptionsX.mm \
 		nsPrintSettingsX.mm \
-		nsPrintSessionX.mm \
 		nsIdleServiceX.mm \
 		nsAccelerometerX.mm \
 		nsCocoaTextInputHandler.mm \

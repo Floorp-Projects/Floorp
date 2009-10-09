@@ -41,31 +41,12 @@
 #include "nsPrintOptionsX.h"
 #include "nsPrintSettingsX.h"
 
-#include "nsCRT.h"
-#include "plbase64.h"
-#include "prmem.h"
-
 nsPrintOptionsX::nsPrintOptionsX()
 {
 }
 
 nsPrintOptionsX::~nsPrintOptionsX()
 {
-}
-
-NS_IMETHODIMP
-nsPrintOptionsX::ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-} 
-
-NS_IMETHODIMP
-nsPrintOptionsX::GetNativeData(PRInt16 aDataType, void **_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nsnull;
-
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
@@ -76,13 +57,13 @@ nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
   rv = nsPrintOptions::ReadPrefs(aPS, aPrinterName, aFlags);
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintOptions::ReadPrefs() failed");
   
-  nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
+  nsCOMPtr<nsPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
   if (!printSettingsX)
     return NS_ERROR_NO_INTERFACE;
   rv = printSettingsX->ReadPageFormatFromPrefs();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsIPrintSettingsX::ReadPageFormatFromPrefs() failed");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsX::ReadPageFormatFromPrefs() failed");
   
-  return NS_OK;
+  return rv;
 }
 
 nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
@@ -112,11 +93,11 @@ nsPrintOptionsX::WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName
   rv = nsPrintOptions::WritePrefs(aPS, aPrinterName, aFlags);
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintOptions::WritePrefs() failed");
 
-  nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
+  nsCOMPtr<nsPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
   if (!printSettingsX)
     return NS_ERROR_NO_INTERFACE;
   rv = printSettingsX->WritePageFormatToPrefs();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsIPrintSettingsX::WritePageFormatToPrefs() failed");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsX::WritePageFormatToPrefs() failed");
 
   return NS_OK;
 }
