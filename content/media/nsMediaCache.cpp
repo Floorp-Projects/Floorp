@@ -1104,9 +1104,12 @@ nsMediaCache::Update()
       if (stream->mClosed)
         continue;
 
-      // Figure out where we should be reading from. It's normally the first
+      // Figure out where we should be reading from. It's the first
       // uncached byte after the current mStreamOffset.
-      PRInt64 desiredOffset = stream->GetCachedDataEndInternal(stream->mStreamOffset);
+      PRInt64 dataOffset = stream->GetCachedDataEndInternal(stream->mStreamOffset);
+
+      // Compute where we'd actually seek to to read at readOffset
+      PRInt64 desiredOffset = dataOffset;
       if (stream->mIsSeekable) {
         if (desiredOffset > stream->mChannelOffset &&
             desiredOffset <= stream->mChannelOffset + SEEK_VS_READ_THRESHOLD) {
@@ -1137,9 +1140,8 @@ nsMediaCache::Update()
       // Figure out if we should be reading data now or not. It's amazing
       // how complex this is, but each decision is simple enough.
       PRBool enableReading;
-      if (stream->mStreamLength >= 0 &&
-          desiredOffset >= stream->mStreamLength) {
-        // We want to read at the end of the stream, where there's nothing to
+      if (stream->mStreamLength >= 0 && dataOffset >= stream->mStreamLength) {
+        // We want data at the end of the stream, where there's nothing to
         // read. We don't want to try to read if we're suspended, because that
         // might create a new channel and seek unnecessarily (and incorrectly,
         // since HTTP doesn't allow seeking to the actual EOF), and we don't want
@@ -1150,7 +1152,7 @@ nsMediaCache::Update()
         // already there.
         LOG(PR_LOG_DEBUG, ("Stream %p at end of stream", stream));
         enableReading = !stream->mCacheSuspended &&
-          desiredOffset == stream->mChannelOffset;
+          stream->mStreamLength == stream->mChannelOffset;
       } else if (desiredOffset < stream->mStreamOffset) {
         // We're reading to try to catch up to where the current stream
         // reader wants to be. Better not stop.
