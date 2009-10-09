@@ -15,7 +15,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=486646
 <script class="testbody" type="text/javascript">
 function loaded() {
   var vid = document.getElementById("vid");
-  ok(vid.networkState == vid.NETWORK_LOADED, "networkState must be == NETWORK_LOADED");
   ok(vid.readyState >= vid.HAVE_CURRENT_DATA, "readyState must be >= HAVE_CURRENT_DATA");
 
   var ctx = document.getElementById("can").getContext("2d");
@@ -37,9 +36,9 @@ SimpleTest.waitForExplicitFinish();
 <video id="vid" 
        src="320x240.ogv"
        style="display: none;"
-       autobuffer
+       autoplay
        onerror="event.stopPropagation();"
-       onload="loaded();">
+       onended="loaded();">
 </video>
 <canvas id="can" 
         width="320" 

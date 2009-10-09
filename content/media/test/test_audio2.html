@@ -1,18 +1,15 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Media test: Audio Constructor Test 1</title>
+  <title>Media test: Audio Constructor Test 2</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-  <script type="text/javascript" src="use_large_cache.js"></script>
   <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var testsWaiting = 0;
-
 var tmpAudio = new Audio();
 for (var i = 0; i < gAudioTests.length; ++i) {
   var test = gAudioTests[i];
@@ -21,19 +18,8 @@ for (var i = 0; i < gAudioTests.length; ++i) {
 
   var a1 = new Audio(test.name);
   is(a1.getAttribute("autobuffer"), "autobuffer", "Autobuffer automatically set");
-  a1.addEventListener('load', function(event) {
-    is(event.target.networkState, HTMLMediaElement.NETWORK_LOADED,
-       "Audio " + event.target.currentSrc + " loaded");
-    --testsWaiting;
-    if (testsWaiting == 0) {
-      SimpleTest.finish();
-    }
-  }, false);
-  a1.load();
-  ++testsWaiting;
+  is(a1.src.match("/[^/]+$"), "/" + test.name, "src OK");
 }
-
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>
