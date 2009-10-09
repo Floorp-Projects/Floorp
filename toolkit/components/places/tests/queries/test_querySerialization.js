@@ -670,7 +670,7 @@ function choose(aSet, aHowMany, aCallback)
 function flagSwitchMatches(aQuery1, aQuery2)
 {
   if (aQuery1[this.flag] && aQuery2[this.flag]) {
-    for (let p in this.subswitches) {
+    for each (let p in this.subswitches) {
       if (aQuery1[p] instanceof Ci.nsIURI) {
         if (!aQuery1[p].equals(aQuery2[p]))
           return false;
