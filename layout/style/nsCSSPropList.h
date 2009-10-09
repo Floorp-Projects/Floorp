@@ -1830,8 +1830,8 @@ CSS_PROP_DISPLAY(
     mOpacity,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    offsetof(nsStyleDisplay, mOpacity),
+    eStyleAnimType_float) // XXX bug 3935
 CSS_PROP_BACKENDONLY(
     orphans,
     orphans,
@@ -2782,8 +2782,8 @@ CSS_PROP_SVG(
     mFillOpacity,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mFillOpacity),
+    eStyleAnimType_float)
 CSS_PROP_SVG(
     fill-rule,
     fill_rule,
@@ -2826,8 +2826,8 @@ CSS_PROP_SVGRESET(
     mFloodOpacity,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVGReset, mFloodOpacity),
+    eStyleAnimType_float)
 CSS_PROP_SVG(
     image-rendering,
     image_rendering,
@@ -2930,8 +2930,8 @@ CSS_PROP_SVGRESET(
     mStopOpacity,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVGReset, mStopOpacity),
+    eStyleAnimType_float)
 CSS_PROP_SVG(
     stroke,
     stroke,
@@ -2996,8 +2996,8 @@ CSS_PROP_SVG(
     mStrokeMiterlimit,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mStrokeMiterlimit),
+    eStyleAnimType_float)
 CSS_PROP_SVG(
     stroke-opacity,
     stroke_opacity,
@@ -3007,8 +3007,8 @@ CSS_PROP_SVG(
     mStrokeOpacity,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mStrokeOpacity),
+    eStyleAnimType_float)
 CSS_PROP_SVG(
     stroke-width,
     stroke_width,

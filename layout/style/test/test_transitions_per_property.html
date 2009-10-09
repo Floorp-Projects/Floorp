@@ -53,7 +53,9 @@ var supported_properties = {
     "bottom": [ test_length_transition, test_percent_transition ],
     "color": [ test_color_transition ],
     "fill": [ test_color_transition ],
+    "fill-opacity" : [ test_float_zeroToOne_transition ],
     "flood-color": [ test_color_transition ],
+    "flood-opacity" : [ test_float_zeroToOne_transition ],
     "font-size": [ test_length_transition, test_percent_transition ],
     "height": [ test_length_transition, test_percent_transition ],
     "left": [ test_length_transition, test_percent_transition ],
@@ -69,6 +71,7 @@ var supported_properties = {
     "max-width": [ test_length_transition, test_percent_transition ],
     "min-height": [ test_length_transition, test_percent_transition ],
     "min-width": [ test_length_transition, test_percent_transition ],
+    "opacity" : [ test_float_zeroToOne_transition ],
     "outline-offset": [ test_length_transition ],
     "outline-width": [ test_length_transition ],
     "padding-bottom": [ test_length_transition, test_percent_transition ],
@@ -77,8 +80,11 @@ var supported_properties = {
     "padding-top": [ test_length_transition, test_percent_transition ],
     "right": [ test_length_transition, test_percent_transition ],
     "stop-color": [ test_color_transition ],
+    "stop-opacity" : [ test_float_zeroToOne_transition ],
     "stroke": [ test_color_transition ],
     "stroke-dashoffset": [ test_length_transition, test_percent_transition ],
+    "stroke-miterlimit": [ test_float_aboveOne_transition ],
+    "stroke-opacity" : [ test_float_zeroToOne_transition ],
     "stroke-width": [ test_length_transition, test_percent_transition ],
     "text-indent": [ test_length_transition, test_percent_transition ],
     "top": [ test_length_transition, test_percent_transition ],
@@ -202,6 +208,30 @@ function test_length_transition(prop) {
      "length-valued property " + prop + ": interpolation of lengths");
 }
 
+// Test using float values in the range [0, 1] (e.g. opacity)
+function test_float_zeroToOne_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "0.3", "");
+  is(cs.getPropertyValue(prop), "0.3",
+     "float-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "0.8", "");
+  is(cs.getPropertyValue(prop), "0.55",
+     "float-valued property " + prop + ": interpolation of floats");
+}
+
+// Test using float values in the range [1, infinity) (e.g. stroke-miterlimit)
+function test_float_aboveOne_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "1", "");
+  is(cs.getPropertyValue(prop), "1",
+     "float-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "2.1", "");
+  is(cs.getPropertyValue(prop), "1.55",
+     "float-valued property " + prop + ": interpolation of floats");
+}
+
 function test_percent_transition(prop) {
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "25%", "");
@@ -226,11 +256,11 @@ function test_color_transition(prop) {
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "rgb(255, 28, 0)", "");
   is(cs.getPropertyValue(prop), "rgb(255, 28, 0)",
-     "length-valued property " + prop + ": computed value before transition");
+     "color-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "rgb(77, 84, 128)", "");
   is(cs.getPropertyValue(prop), "rgb(166, 56, 64)",
-     "length-valued property " + prop + ": interpolation of lengths");
+     "color-valued property " + prop + ": interpolation of colors");
 }
 
 </script>
