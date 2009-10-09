@@ -67,7 +67,7 @@ function createVideo(id) {
   var v = document.createElement("video");
   v.id = id;
   if (gLog) {
-    var gEventTypes = [ 'loadstart', 'progress', 'suspend', 'load', 'abort', 'error', 'emptied', 'stalled', 'play', 'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'canplay', 'canplaythrough', 'seeking', 'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
+    var gEventTypes = [ 'loadstart', 'progress', 'suspend', 'abort', 'error', 'emptied', 'stalled', 'play', 'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'canplay', 'canplaythrough', 'seeking', 'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
     function listener(evt) {
       log('event ' + evt.target.id + " " + evt.type);
     }
