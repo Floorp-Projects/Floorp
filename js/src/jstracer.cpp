@@ -5392,12 +5392,11 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
         a->avail += nbytes;
         JS_ASSERT(missing == 0);
     } else {
-        /*
-         * This allocation is infallible: ExecuteTree reserved enough stack.
-         * (But see bug 491023.)
-         */
         JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool, nbytes);
-        JS_ASSERT(newsp);
+        if (!newsp) {
+            JS_NOT_REACHED("out of memory");
+            abort();
+        }
 
         /*
          * Move args if the missing ones overflow arena a, then push
@@ -5512,7 +5511,10 @@ SynthesizeSlowNativeFrame(InterpState& state, JSContext *cx, VMSideExit *exit)
     /* This allocation is infallible: ExecuteTree reserved enough stack. */
     mark = JS_ARENA_MARK(&cx->stackPool);
     JS_ARENA_ALLOCATE_CAST(ifp, JSInlineFrame *, &cx->stackPool, sizeof(JSInlineFrame));
-    JS_ASSERT(ifp);
+    if (!ifp) {
+        JS_NOT_REACHED("out of memory");
+        abort();
+    }
 
     JSStackFrame *fp = &ifp->frame;
     fp->regs = NULL;
@@ -6372,11 +6374,7 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     state->eor = callstack_buffer + MAX_CALL_STACK_ENTRIES;
     state->sor = state->rp;
 
-    void *reserve;
-    state->stackMark = JS_ARENA_MARK(&cx->stackPool);
-    JS_ARENA_ALLOCATE(reserve, &cx->stackPool, MAX_INTERP_STACK_BYTES);
-    if (!reserve)
-        return NULL;
+    state->stackMark = NULL;
 
 #ifdef DEBUG
     memset(stack_buffer, 0xCD, sizeof(stack_buffer));
@@ -6604,7 +6602,8 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     JS_ASSERT_IF(innermost->exitType == RECURSIVE_SLURP_FAIL_EXIT,
                  innermost->calldepth == 0 && callstack == rp);
 
-    JS_ARENA_RELEASE(&cx->stackPool, state.stackMark);
+    if (state.stackMark)
+        JS_ARENA_RELEASE(&cx->stackPool, state.stackMark);
 
     while (callstack < rp) {
         FrameInfo* fi = *callstack;
