@@ -263,7 +263,7 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("0.9", "0.1", { midComp: "0.5" }),
     new AnimTestcaseFromTo("0.5", "0.6", { midComp: "0.55" }),
     new AnimTestcaseFromTo("none", "0.4"),
-  ], "need support for all properties that get stored in nsFont"),
+  ]),
   new TestcaseBundle(gPropList.font_stretch, [
     new AnimTestcaseFromTo("normal", "wider"),
     new AnimTestcaseFromTo("narrower", "ultra-condensed"),

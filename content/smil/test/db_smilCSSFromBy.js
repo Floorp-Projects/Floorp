@@ -70,6 +70,11 @@ var gFromByBundles =
 [
   new TestcaseBundle(gPropList.fill,           _fromByTestLists.color),
   new TestcaseBundle(gPropList.font_size,      _fromByTestLists.lengthPx),
+  new TestcaseBundle(gPropList.font_size_adjust, [
+    new AnimTestcaseFromBy("0.5", "0.1"),
+    new AnimTestcaseFromBy("none", "0.1"),
+    new AnimTestcaseFromBy("0.1", "none")
+  ]),
   new TestcaseBundle(gPropList.lighting_color, _fromByTestLists.color),
   new TestcaseBundle(gPropList.opacity,        _fromByTestLists.opacity),
   new TestcaseBundle(gPropList.stroke_miterlimit, [
