@@ -1392,9 +1392,10 @@ void nsHTMLMediaElement::FirstFrameLoaded(PRBool aResourceFullyLoaded)
 void nsHTMLMediaElement::ResourceLoaded()
 {
   mBegun = PR_FALSE;
-  mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADED;
+  mNetworkState = nsIDOMHTMLMediaElement::NETWORK_IDLE;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
-  DispatchAsyncProgressEvent(NS_LITERAL_STRING("load"));
+  // The download has stopped
+  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("suspend"));
 }
 
 void nsHTMLMediaElement::NetworkError()

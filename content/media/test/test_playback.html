@@ -33,13 +33,28 @@ function startTests() {
     var check = function(test, v) { return function() {
       checkMetadata(test.name, v, test);
     }}(test, v);
+    var noLoad = function(test, v) { return function() {
+      ok(false, test.name + " should not fire 'load' event");
+    }}(test, v);
     var checkEnded = function(test, v) { return function() {
       if (test.duration) {
         ok(Math.abs(v.currentTime - test.duration) < 0.1,
            test.name + " current time at end: " + v.currentTime);
       }
       is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
+      ok(v.readyState != v.NETWORK_LOADED, test.name + " shouldn't report NETWORK_LOADED");
       ok(v.ended, test.name + " checking playback has ended");
+      --testsWaiting;
+      if (testsWaiting == 0) {
+        setTimeout(startTests, 0);
+      }
+    }}(test, v);
+    var checkSuspended = function(test, v) { return function() {
+      if (v.seenSuspend)
+        return;
+
+      v.seenSuspend = true;
+      ok(true, test.name + " got suspend");
       --testsWaiting;
       if (testsWaiting == 0) {
         setTimeout(startTests, 0);
@@ -52,10 +67,15 @@ function startTests() {
          v.prevTime + " c=" + v.currentTime);
       v.prevTime = v.currentTime;
     }}(v);
+    v.addEventListener("load", noLoad, false);
     v.addEventListener("loadedmetadata", check, false);
-    v.addEventListener("ended", checkEnded, false);
     v.addEventListener("timeupdate", timeUpdate, false);
-    ++testsWaiting;
+
+    // We should get "ended" and "suspend" events for every resource
+    v.addEventListener("ended", checkEnded, false);
+    v.addEventListener("suspend", checkSuspended, false);
+    testsWaiting += 2;
+
     document.body.appendChild(v);
     v.play();
     videos.push(v);
