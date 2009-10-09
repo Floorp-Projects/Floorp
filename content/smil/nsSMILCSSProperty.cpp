@@ -243,11 +243,11 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     // case eCSSProperty_color_interpolation_filters:
     // case eCSSProperty_display:
     // case eCSSProperty_dominant_baseline:
-    // case eCSSProperty_fill_opacity:
+    case eCSSProperty_fill_opacity:
     // case eCSSProperty_fill_rule:
     // case eCSSProperty_filter:
     case eCSSProperty_flood_color:
-    // case eCSSProperty_flood_opacity:
+    case eCSSProperty_flood_opacity:
     // case eCSSProperty_font_family:
     case eCSSProperty_font_size:
     // case eCSSProperty_font_size_adjust:
@@ -262,16 +262,16 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     // case eCSSProperty_marker_mid:
     // case eCSSProperty_marker_start:
     // case eCSSProperty_mask:
-    // case eCSSProperty_opacity:
+    case eCSSProperty_opacity:
     // case eCSSProperty_pointer_events:
     // case eCSSProperty_shape_rendering:
     case eCSSProperty_stop_color:
-    // case eCSSProperty_stop_opacity:
+    case eCSSProperty_stop_opacity:
     case eCSSProperty_stroke_dashoffset:
     // case eCSSProperty_stroke_linecap:
     // case eCSSProperty_stroke_linejoin:
-    // case eCSSProperty_stroke_miterlimit:
-    // case eCSSProperty_stroke_opacity:
+    case eCSSProperty_stroke_miterlimit:
+    case eCSSProperty_stroke_opacity:
     case eCSSProperty_stroke_width:
     // case eCSSProperty_text_anchor:
     // case eCSSProperty_text_decoration:
