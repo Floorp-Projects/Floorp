@@ -427,10 +427,16 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
 
   switch (aComputedValue.GetUnit()) {
     case eStyleUnit_None:
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
-                          eCSSType_ValuePair, "type mismatch");
-      static_cast<nsCSSValuePair*>(aSpecifiedValue)->
-        SetBothValuesTo(nsCSSValue(eCSSUnit_None));
+      if (nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_PaintServer) {
+        NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
+                            eCSSType_ValuePair, "type mismatch");
+        static_cast<nsCSSValuePair*>(aSpecifiedValue)->
+          SetBothValuesTo(nsCSSValue(eCSSUnit_None));
+      } else {
+        NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                          "type mismatch");
+        static_cast<nsCSSValue*>(aSpecifiedValue)->SetNoneValue();
+      }
       break;
     case eStyleUnit_Coord: {
       NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
@@ -569,6 +575,14 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
     case eStyleAnimType_float:
       aComputedValue.SetFactorValue(*static_cast<const float*>(
         StyleDataAtOffset(styleStruct, ssOffset)));
+      if (aProperty == eCSSProperty_font_size_adjust &&
+          aComputedValue.GetFactorValue() == 0.0f) {
+        // In nsStyleFont, we set mFont.sizeAdjust to 0 to represent
+        // font-size-adjust: none.  Here, we have to treat this as a keyword
+        // instead of a float value, to make sure we don't end up doing
+        // interpolation with it.
+        aComputedValue.SetNoneValue();
+      }
       return PR_TRUE;
     case eStyleAnimType_Color:
       aComputedValue.SetColorValue(*static_cast<const nscolor*>(
