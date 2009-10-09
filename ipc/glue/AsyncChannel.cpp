@@ -115,14 +115,20 @@ bool
 AsyncChannel::Send(Message* msg)
 {
     AssertWorkerThread();
+    mMutex.AssertNotCurrentThreadOwns();
     NS_ABORT_IF_FALSE(MSG_ROUTING_NONE != msg->routing_id(), "need a route");
 
-    if (!Connected())
-        // trying to Send() to a closed or error'd channel
-        return false;
+    {
+        MutexAutoLock lock(mMutex);
 
-    mIOLoop->PostTask(FROM_HERE,
-                      NewRunnableMethod(this, &AsyncChannel::OnSend, msg));
+        if (!Connected())
+            // trying to Send() to a closed or error'd channel
+            return false;
+
+        mIOLoop->PostTask(FROM_HERE,
+                          NewRunnableMethod(this, &AsyncChannel::OnSend, msg));
+    }
+
     return true;
 }
 
@@ -163,20 +169,18 @@ AsyncChannel::OnMessageReceived(const Message& msg)
     NS_ASSERTION(mChannelState != ChannelError, "Shouldn't get here!");
 
     // wake up the worker, there's work to do
-    mWorkerLoop->PostTask(FROM_HERE,
-                          NewRunnableMethod(this,
-                                            &AsyncChannel::OnDispatchMessage,
-                                            msg));
+    mWorkerLoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &AsyncChannel::OnDispatchMessage, msg));
 }
 
 void
 AsyncChannel::OnChannelConnected(int32 peer_pid)
 {
     AssertIOThread();
+
     MutexAutoLock lock(mMutex);
-
     mChannelState = ChannelConnected;
-
     mCvar.Notify();
 }
 
@@ -184,7 +188,11 @@ void
 AsyncChannel::OnChannelError()
 {
     AssertIOThread();
-    mChannelState = ChannelError;
+
+    {
+        MutexAutoLock lock(mMutex);
+        mChannelState = ChannelError;
+    }
 
     if (XRE_GetProcessType() == GeckoProcessType_Default) {
         // Parent process, one of our children died. Notify?
