@@ -42,10 +42,10 @@ MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/branding/official
 
 case "$target" in
 *-wince)
-    MOZ_APP_VERSION=1.0a3
+    MOZ_APP_VERSION=1.0a4pre
     ;;
 *)
-    MOZ_APP_VERSION=1.0b4
+    MOZ_APP_VERSION=1.0b5pre
     ;;
 esac
 
