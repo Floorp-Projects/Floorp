@@ -2236,7 +2236,8 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     obj->init(clasp,
               proto,
               (!parent && proto) ? proto->getParent() : parent,
-              JSObject::defaultPrivate(clasp));
+              JSObject::defaultPrivate(clasp),
+              OPS_IS_NATIVE(ops) ? DSLOTS_NULL_INIT_OBJECT_NATIVE : DSLOTS_NULL_INIT_OBJECT_NONNATIVE);
 
     if (OPS_IS_NATIVE(ops)) {
         if (!InitScopeForObject(cx, obj, proto, ops)) {
@@ -2330,7 +2331,7 @@ NewNativeObject(JSContext* cx, JSClass* clasp, JSObject* proto,
     if (!obj)
         return NULL;
 
-    obj->init(clasp, proto, parent, privateSlotValue);
+    obj->init(clasp, proto, parent, privateSlotValue, DSLOTS_NULL_INIT_NATIVE);
     return InitScopeForObject(cx, obj, proto, &js_ObjectOps) ? obj : NULL;
 }
 
@@ -3275,7 +3276,8 @@ js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto,
         return NULL;
     }
     obj->map = scope;
-    obj->init(clasp, proto, proto->getParent(), privateSlotValue);
+    obj->init(clasp, proto, proto->getParent(), privateSlotValue,
+              DSLOTS_NULL_INIT_JSNATIVE);
     return obj;
 }
 
