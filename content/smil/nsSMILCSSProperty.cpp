@@ -250,7 +250,7 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     case eCSSProperty_flood_opacity:
     // case eCSSProperty_font_family:
     case eCSSProperty_font_size:
-    // case eCSSProperty_font_size_adjust:
+    case eCSSProperty_font_size_adjust:
     // case eCSSProperty_font_stretch:
     // case eCSSProperty_font_style:
     // case eCSSProperty_font_variant:

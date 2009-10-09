@@ -507,7 +507,7 @@ function AnimTestcaseFromBy(aFrom, aBy, aComputedValMap, aSkipReason)
   this.by             = aBy;
   this.computedValMap = aComputedValMap;
   this.skipReason     = aSkipReason;
-  if (!this.computedValMap.toComp) {
+  if (this.computedValMap && !this.computedValMap.toComp) {
     ok(false, "AnimTestcaseFromBy needs expected computed final value");
   }
 }
