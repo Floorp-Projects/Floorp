@@ -62,54 +62,43 @@ GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints)
   if (!UsingSnowLeopard())
     return NS_ERROR_NOT_AVAILABLE;
 
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
-  void *corewlan_library = dlopen("/System/Library/Frameworks/CoreWLAN.framework/CoreWLAN",
-                                  RTLD_LAZY);
-  if (!corewlan_library)
-    return NS_ERROR_NOT_AVAILABLE;
-  
   accessPoints.Clear();
-  
-  id anObject;
-  NSError *err = nil;
-  NSDictionary *params = nil;
 
-  // We do this the hard way because we want to be able to run on pre-10.6.  When we drop
-  // this requirement, this objective-c magic goes away.
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  @try {
 
-  // dynamically call: [CWInterface interface];
-  Class CWI_class = objc_getClass("CWInterface");
-  if (!CWI_class) {
-    dlclose(corewlan_library);
+    NSBundle * bundle = [[NSBundle alloc] initWithPath:@"/System/Library/Frameworks/CoreWLAN.framework"];
+    if (!bundle)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    Class CWI_class = [bundle classNamed:@"CWInterface"];
+    if (!CWI_class)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    NSDictionary *params = nil;
+    NSError *err = nil;
+    id scanResult = [[CWI_class interface] scanForNetworksWithParameters: params error: err];
+
+    if (!scanResult)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    NSArray* scan = [NSMutableArray arrayWithArray:scanResult];
+    NSEnumerator *enumerator = [scan objectEnumerator];
+
+    while (id anObject = [enumerator nextObject]) {
+      nsWifiAccessPoint* ap = new nsWifiAccessPoint();
+      if (!ap)
+        return NS_ERROR_OUT_OF_MEMORY;
+      NSData* data = [anObject bssidData];
+      ap->setMac((unsigned char*)[data bytes]);
+      ap->setSignal([[anObject rssi] intValue]);
+      ap->setSSID([[anObject ssid] UTF8String], 32);
+
+      accessPoints.AppendObject(ap);
+    }
+  }
+  @catch(NSException *_exn) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-
-  SEL interfaceSel = sel_registerName("interface");
-  id interface = objc_msgSend(CWI_class, interfaceSel);
-
-  // call [interface scanForNetworksWithParameters:params err:&err]
-  SEL scanSel = sel_registerName("scanForNetworksWithParameters:error:");
-  id scanResult = objc_msgSend(interface, scanSel, params, err);
-
-  NSArray* scan = [NSMutableArray arrayWithArray:scanResult];
-  NSEnumerator *enumerator = [scan objectEnumerator];
-  
-  while (anObject = [enumerator nextObject]) {
- 
-    nsWifiAccessPoint* ap = new nsWifiAccessPoint();
-    if (!ap)
-      continue;
- 
-
-    NSData* data = [anObject bssidData];
-    ap->setMac((unsigned char*)[data bytes]);
-    ap->setSignal([[anObject rssi] intValue]);
-    ap->setSSID([[anObject ssid] UTF8String], 32);
-    
-    accessPoints.AppendObject(ap);
-  }
-
-  dlclose(corewlan_library);
   return NS_OK;
 }
