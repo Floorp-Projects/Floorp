@@ -61,7 +61,10 @@ EXPORTS		= \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-EXPORTS		+= nsINativeMenuService.h
+EXPORTS		+= \
+		nsINativeMenuService.h \
+		nsIPrintDialogService.h \
+		$(NULL)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -119,11 +122,6 @@ XPIDLSRCS	+= nsIPrintSettingsWin.idl \
 		nsIJumpListBuilder.idl \
 		nsIJumpListItem.idl \
 		$(NULL)
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-XPIDLSRCS	+= nsIPrintSettingsX.idl \
-		nsIPrintSessionX.idl
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

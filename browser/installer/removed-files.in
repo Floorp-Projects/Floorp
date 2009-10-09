@@ -636,6 +636,12 @@ plugins/Default Plugin.plugin/Contents/MacOS/Default Plugin
 plugins/Default Plugin.plugin/Contents/PkgInfo
 plugins/Default Plugin.plugin/Contents/Resources/Default Plugin.rsrc
 plugins/Default Plugin.plugin/Contents/Resources/English.lproj/InfoPlist.strings
+../Plug-Ins/PrintPDE.plugin/Contents/Info.plist
+../Plug-Ins/PrintPDE.plugin/Contents/MacOS/PrintPDE
+../Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/Localizable.strings
+../Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/classes.nib
+../Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/info.nib
+../Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/objects.xib
 res/cursors/CVS/Entries
 res/cursors/CVS/Repository
 res/cursors/CVS/Root

@@ -135,7 +135,7 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
        do_GetService(NS_STRINGBUNDLE_CONTRACTID);
 
   nsCOMPtr<nsIStringBundle> printBundle;
-  bundleSvc->CreateBundle("chrome://global/locale/gnomeprintdialog.properties", getter_AddRefs(printBundle));
+  bundleSvc->CreateBundle("chrome://global/locale/printdialog.properties", getter_AddRefs(printBundle));
   nsXPIDLString intlString;
 
   printBundle->GetStringFromName(NS_LITERAL_STRING("headerFooterCustom").get(), getter_Copies(intlString));
@@ -230,9 +230,9 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSe
   NS_ASSERTION(gtkParent, "Need a GTK window for dialog to be modal.");
 
   nsCOMPtr<nsIStringBundleService> bundleSvc = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-  bundleSvc->CreateBundle("chrome://global/locale/gnomeprintdialog.properties", getter_AddRefs(printBundle));
+  bundleSvc->CreateBundle("chrome://global/locale/printdialog.properties", getter_AddRefs(printBundle));
 
-  dialog = gtk_print_unix_dialog_new(GetUTF8FromBundle("printTitle").get(), gtkParent);
+  dialog = gtk_print_unix_dialog_new(GetUTF8FromBundle("printTitleGTK").get(), gtkParent);
 
   gtk_print_unix_dialog_set_manual_capabilities(GTK_PRINT_UNIX_DIALOG(dialog),
                     GtkPrintCapabilities(
@@ -248,7 +248,7 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSe
   // the set_border_width below, 12px matches that of just about every other window.
   GtkWidget* custom_options_tab = gtk_vbox_new(FALSE, 0);
   gtk_container_set_border_width(GTK_CONTAINER(custom_options_tab), 12);
-  GtkWidget* tab_label = gtk_label_new(GetUTF8FromBundle("optionsTabLabel").get());
+  GtkWidget* tab_label = gtk_label_new(GetUTF8FromBundle("optionsTabLabelGTK").get());
 
   PRInt16 frameUIFlag;
   aSettings->GetHowToEnableFrameUI(&frameUIFlag);
@@ -269,7 +269,7 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSe
 
   // "Print Frames" options label, bold and center-aligned
   GtkWidget* print_frames_label = gtk_label_new(NULL);
-  char* pangoMarkup = g_markup_printf_escaped("<b>%s</b>", GetUTF8FromBundle("printFramesTitle").get());
+  char* pangoMarkup = g_markup_printf_escaped("<b>%s</b>", GetUTF8FromBundle("printFramesTitleGTK").get());
   gtk_label_set_markup(GTK_LABEL(print_frames_label), pangoMarkup);
   g_free(pangoMarkup);
   gtk_misc_set_alignment(GTK_MISC(print_frames_label), 0, 0);
