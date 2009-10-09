@@ -400,9 +400,10 @@ function compareArrayToResult(aArray, aRoot) {
     if (aArray[i].isInQuery) {
       var child = aRoot.getChild(inQueryIndex);
       LOG("testing testData[" + i + "] vs result[" + inQueryIndex + "]");
-      LOG("testing testData[" + aArray[i].uri + "] vs result[" + child.uri + "]");
-      if (!aArray[i].isFolder)
+      if(!aArray[i].isFolder) {
+        LOG("testing testData[" + aArray[i].uri + "] vs result[" + child.uri + "]");
         do_check_eq(aArray[i].uri, child.uri);
+      }
       do_check_eq(aArray[i].title, child.title);
       if (aArray[i].hasOwnProperty("lastVisit"))
         do_check_eq(aArray[i].lastVisit, child.time);

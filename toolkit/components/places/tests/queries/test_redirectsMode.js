@@ -284,16 +284,16 @@ function run_test() {
 
   // This array will be used by cartProd to generate a matrix of all possible
   // combinations.
-  includeHidden_options = [true, false];
-  redirectsMode_options =  [Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_ALL,
-                            Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_SOURCE,
-                            Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_TARGET];
-  maxResults_options = [5, 10, 20, null];
+  let includeHidden_options = [true, false];
+  let redirectsMode_options =  [Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_ALL,
+                                Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_SOURCE,
+                                Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_TARGET];
+  let maxResults_options = [5, 10, 20, null];
   // These sortingMode are choosen to toggle using special queries for history
   // menu and most visited smart bookmark.
-  sorting_options = [Ci.nsINavHistoryQueryOptions.SORT_BY_NONE,
-                     Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING,
-                     Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING];
+  let sorting_options = [Ci.nsINavHistoryQueryOptions.SORT_BY_NONE,
+                         Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING,
+                         Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING];
   // Will execute check_results_callback() for each generated combination.
   cartProd([includeHidden_options, redirectsMode_options, maxResults_options, sorting_options],
            check_results_callback);

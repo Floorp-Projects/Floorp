@@ -1763,8 +1763,8 @@ var PlacesUtils = {
         }
       }
       this.entries.sort(function compare(a, b) {
-        aDate = PlacesUtils.backups.getDateForFile(a);
-        bDate = PlacesUtils.backups.getDateForFile(b);
+        let aDate = PlacesUtils.backups.getDateForFile(a);
+        let bDate = PlacesUtils.backups.getDateForFile(b);
         return aDate < bDate ? 1 : aDate > bDate ? -1 : 0;
       });
       return this.entries;
