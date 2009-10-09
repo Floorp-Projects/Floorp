@@ -94,9 +94,11 @@ protected:
     }
 
     void OnDispatchMessage(const Message& aMsg);
+    void WaitForNotify();
 
     // Executed on the IO thread.
     void OnSendReply(Message* msg);
+    void NotifyWorkerThread();
 
     // On both
     bool AwaitingSyncReply() {
