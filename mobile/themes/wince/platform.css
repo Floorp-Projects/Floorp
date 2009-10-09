@@ -615,10 +615,6 @@ menulist {
   -moz-appearance: none !important;
 }
 
-menulist[disabled="true"] {
-  color: #aaa !important;
-}
-
 /* hi-res screens */
 @media all and (min-device-width: 401px) {
   menulist {
@@ -628,6 +624,16 @@ menulist[disabled="true"] {
   
   menulist:not([disabled="true"]):active:hover {
     -moz-border-image: url("chrome://browser/skin/images/button-active-64.png") 8 repeat repeat;
+  }
+  
+  menulist.button-dark {
+    color: #fff !important;
+    background: transparent !important;
+    -moz-border-image: url("chrome://browser/skin/images/buttondark-default-64.png") 8 repeat repeat;
+  }
+  
+  menulist.button-dark:not([disabled="true"]):active:hover {
+    -moz-border-image: url("chrome://browser/skin/images/buttondark-active-64.png") 8 repeat repeat;
   }
 }
 
@@ -641,6 +647,24 @@ menulist[disabled="true"] {
   menulist:not([disabled="true"]):active:hover {
     -moz-border-image: url("chrome://browser/skin/images/button-active-36.png") 4 repeat repeat;
   }
+  
+  menulist.button-dark {
+    color: #fff !important;
+    background: transparent !important;
+    -moz-border-image: url("chrome://browser/skin/images/buttondark-default-36.png") 8 repeat repeat;
+  }
+  
+  menulist.button-dark:not([disabled="true"]):active:hover {
+    -moz-border-image: url("chrome://browser/skin/images/buttondark-active-36.png") 8 repeat repeat;
+  }
+}
+
+menulist[disabled="true"] {
+  color: #aaa !important;
+}
+
+menulist.button-dark[disabled="true"] {
+  color: #ddd !important;
 }
 
 menulist > dropmarker {
