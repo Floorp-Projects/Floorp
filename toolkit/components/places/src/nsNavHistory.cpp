@@ -47,7 +47,6 @@
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
 #include "nsAnnotationService.h"
-#include "nsIIdleService.h"
 #include "nsILivemarkService.h"
 
 #include "nsPlacesTables.h"
@@ -186,12 +185,6 @@ using namespace mozilla::places;
 #define MAX_LAZY_TIMER_DEFERMENTS 2
 
 #endif // LAZY_ADD
-
-// Perform expiration after 5 minutes of idle time, repeating.
-#define EXPIRE_IDLE_TIME_IN_MSECS (5 * 60 * PR_MSEC_PER_SEC)
-
-// Amount of items to expire at idle time.
-#define MAX_EXPIRE_RECORDS_ON_IDLE 200
 
 // Limit the number of items in the history for performance reasons
 #define EXPIRATION_CAP_SITES 40000
@@ -428,7 +421,6 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mBatchHasTransaction(PR_FALSE),
                                mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
-                               mExpire(this),
                                mExpireDaysMin(0),
                                mExpireDaysMax(0),
                                mExpireSites(0),
@@ -446,7 +438,6 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
   NS_ASSERTION(! gHistoryService, "YOU ARE CREATING 2 COPIES OF THE HISTORY SERVICE. Everything will break.");
   gHistoryService = this;
 }
-
 
 // nsNavHistory::~nsNavHistory
 
@@ -501,6 +492,10 @@ nsNavHistory::Init()
   rv = InitAdditionalDBItems();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Initialize expiration.  There's no need to do this before, since just now
+  // we have a valid database and a working connection.
+  mExpire = new nsNavHistoryExpire();
+
   // Notify we have finished database initialization.
   // Enqueue the notification, so if we init another service that requires
   // nsNavHistoryService we don't recursive try to get it.
@@ -527,9 +522,6 @@ nsNavHistory::Init()
     else
       mLastSessionID = 1;
   }
-
-  // initialize idle timer
-  InitializeIdleTimer();
 
   // recent events hash tables
   NS_ENSURE_TRUE(mRecentTyped.Init(128), NS_ERROR_OUT_OF_MEMORY);
@@ -963,25 +955,6 @@ nsNavHistory::InitAdditionalDBItems()
   rv = InitStatements();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
-}
-
-nsresult
-nsNavHistory::InitializeIdleTimer()
-{
-  if (mIdleTimer) {
-    mIdleTimer->Cancel();
-    mIdleTimer = nsnull;
-  }
-  nsresult rv;
-  mIdleTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 idleTimerTimeout = EXPIRE_IDLE_TIME_IN_MSECS;
-  rv = mIdleTimer->InitWithFuncCallback(IdleTimerCallback, this,
-                                        idleTimerTimeout,
-                                        nsITimer::TYPE_REPEATING_SLACK);
-  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
@@ -4499,7 +4472,7 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
 
   // now that visits have been removed, run annotation expiration.
   // this will remove all expire-able annotations for these URIs.
-  (void)mExpire.OnDeleteURI();
+  (void)mExpire->OnDeleteVisits();
 
   // if the entry is not bookmarked and is not a place: uri
   // then we can remove it from moz_places.
@@ -4887,7 +4860,7 @@ nsNavHistory::RemoveAllPages()
 #endif
 
   // expire everything
-  mExpire.ClearHistory();
+  mExpire->ClearHistory();
 
   // Compress DB. Currently commented out because compression is very slow.
   // Deleted data will be overwritten with 0s by sqlite.
@@ -5498,39 +5471,6 @@ nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
   return NS_OK;
 }
 
-nsresult
-nsNavHistory::OnIdle()
-{
-  nsresult rv;
-  nsCOMPtr<nsIIdleService> idleService =
-    do_GetService("@mozilla.org/widget/idleservice;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 idleTime;
-  rv = idleService->GetIdleTime(&idleTime);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // If we've been idle for more than EXPIRE_IDLE_TIME_IN_MSECS
-  // keep the expiration engine chugging along.
-  if (idleTime > EXPIRE_IDLE_TIME_IN_MSECS) {
-    mozStorageTransaction transaction(mDBConn, PR_TRUE);
-
-    PRBool keepGoing; // We don't care about this value.
-    (void)mExpire.ExpireItems(MAX_EXPIRE_RECORDS_ON_IDLE / 2, &keepGoing);
-
-    (void)mExpire.ExpireOrphans(MAX_EXPIRE_RECORDS_ON_IDLE / 2);
-  }
-
-  return NS_OK;
-}
-
-void // static
-nsNavHistory::IdleTimerCallback(nsITimer* aTimer, void* aClosure)
-{
-  nsNavHistory *history = static_cast<nsNavHistory *>(aClosure);
-  (void)history->OnIdle();
-}
-
 // nsIDownloadHistory **********************************************************
 
 NS_IMETHODIMP
@@ -5638,6 +5578,12 @@ nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
 {
   ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
                       OnPageExpired(aURI, aVisitTime, aWholeEntry));
+  if (aWholeEntry) {
+    // Notify our observers that the URI has been removed.
+    ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                        nsINavHistoryObserver, OnDeleteURI(aURI))
+  }
+
   return NS_OK;
 }
 
@@ -5650,23 +5596,14 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
   if (strcmp(aTopic, gQuitApplicationGrantedMessage) == 0) {
-    if (mIdleTimer) {
-      mIdleTimer->Cancel();
-      mIdleTimer = nsnull;
-    }
     nsresult rv;
     nsCOMPtr<nsIPrefService> prefService =
       do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       prefService->SavePrefFile(nsnull);
 
-    // notify expiring system that we're quitting, it may want to do stuff
-    mExpire.OnQuit();
-
-    // notify the bookmarks service we're quitting
-    nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
-    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-    (void)bookmarks->OnQuit();
+    // Start shutdown expiration.
+    mExpire->OnQuit();
   }
   else if (strcmp(aTopic, gXpcomShutdown) == 0) {
     nsresult rv;
@@ -5719,7 +5656,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     LoadPrefs(PR_FALSE);
     if (oldDaysMin != mExpireDaysMin || oldDaysMax != mExpireDaysMax ||
         oldVisits != mExpireSites)
-      mExpire.OnExpirationChanged();
+      mExpire->OnExpirationChanged();
   }
   else if (strcmp(aTopic, gIdleDaily) == 0) {
     // Ensure our connection is still alive.  The idle-daily observer is removed
