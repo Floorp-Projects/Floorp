@@ -419,7 +419,8 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
 
     closure->map = scope;
     closure->init(&js_FunctionClass, proto, parent,
-                  reinterpret_cast<jsval>(fun));
+                  reinterpret_cast<jsval>(fun),
+                  DSLOTS_NULL_INIT_CLOSURE);
     return closure;
 }
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT, OBJECT, 0, 0)
