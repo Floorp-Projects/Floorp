@@ -457,8 +457,7 @@
 
             if (this.hasAttribute("uri") && this.type != "folder") {
               this._uri = this._ioService.newURI(this.getAttribute("uri"), null, null);
-              let icon = document.getAnonymousElementByAttribute(this, "anonid", "favicon");
-              icon.src = this._faviconService.getFaviconImageForPage(this._uri).spec;
+              this.setAttribute("src", this._faviconService.getFaviconImageForPage(this._uri).spec);
             }
           ]]>
         </body>
@@ -592,28 +591,25 @@
   </binding>
 
   <binding id="place-item" extends="chrome://browser/content/bindings.xml#place-base">
-    <content align="center">
-      <xul:hbox flex="1">
-        <xul:image anonid="favicon" class="bookmark-item-image"/>
+    <content orient="vertical">
+      <xul:hbox anonid="bookmark-item" class="bookmark-item-label" align="center" flex="1" xbl:inherits="tags" mousethrough="always">
+        <xul:image xbl:inherits="src"/>
+        <xul:label flex="1" crop="center" xbl:inherits="value=title"/>
+      </xul:hbox>
+      <xul:label anonid="bookmark-url" class="bookmark-item-url" xbl:inherits="value=uri" crop="center" mousethrough="always"/>
 
+      <xul:hbox anonid="bookmark-manage" class="bookmark-manage" hidden="true" flex="1">
+        <xul:image xbl:inherits="src"/>
         <xul:vbox flex="1">
-          <xul:hbox anonid="description-box" flex="1" align="center">
-            <xul:vbox flex="1">
-              <xul:label class="bookmark-item-name" xbl:inherits="value=title"/>
-              <xul:label class="bookmark-item-uri" xbl:inherits="value=uri" crop="center"/>
-            </xul:vbox>
-            <xul:label class="bookmark-item-tags" xbl:inherits="value=tags"/>
-          </xul:hbox>
-
-          <xul:vbox flex="1" anonid="bookmark-edit-textboxes" class="bookmark-edit-textboxes" hidden="true">
+          <xul:vbox flex="1">
             <xul:textbox anonid="name" xbl:inherits="value=title"/>
             <xul:textbox anonid="uri" xbl:inherits="value=uri"/>
             <xul:textbox anonid="tags" xbl:inherits="value=tags" emptytext="&editBookmarkTags.label;"/>
           </xul:vbox>
         
-          <xul:hbox anonid="bookmark-manage-controls" align="center" class="bookmark-manage-controls" hidden="true">
-            <xul:button anonid="close-button" class="bookmark-close-button"
-                        label="&editBookmarkRemove.label;" oncommand="document.getBindingParent(this).remove()"/>
+         <xul:hbox class="bookmark-controls" align="center">
+            <xul:button anonid="close-button" label="&editBookmarkRemove.label;"
+                        oncommand="document.getBindingParent(this).remove()"/>
             <xul:spacer flex="1"/>
             <xul:button anonid="done-button" label="&editBookmarkDone.label;"
                         oncommand="document.getBindingParent(this).stopEditing(true)"/>
@@ -626,10 +622,10 @@
       <method name="updateFields">
         <body>
           <![CDATA[
-            document.getAnonymousElementByAttribute(this, "anonid", "description-box").hidden = this._isEditing;
+            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-item").hidden = this._isEditing;
+            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-url").hidden = this._isEditing;
 
-            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-edit-textboxes").hidden = !this._isEditing;
-            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-manage-controls").hidden = !this._isEditing;
+            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-manage").hidden = !this._isEditing;
           ]]>
         </body>
       </method>
@@ -641,12 +637,13 @@
       <method name="updateFields">
         <body>
           <![CDATA[
-            document.getAnonymousElementByAttribute(this, "anonid", "description-box").hidden = this._isEditing;
+            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-item").hidden = this._isEditing;
+            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-url").hidden = this._isEditing;
+
 
             this._uriField.hidden = true;
             this._tagsField.hidden = true;
-            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-edit-textboxes").hidden = !this._isEditing;
-            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-manage-controls").hidden = !this._isEditing;
+            document.getAnonymousElementByAttribute(this, "anonid", "bookmark-manage").hidden = !this._isEditing;
           ]]>
         </body>
       </method>

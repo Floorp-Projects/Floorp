@@ -428,7 +428,7 @@ toolbarbutton.page-button {
   }
 }
 
-/* URL List and autocomplete navigation popup ------------------------------ */
+/* bookmarks navigation popup ------------------------------ */
 #tool-bookmarks-close {
   list-style-image: url("chrome://browser/skin/images/task-back-40.png");
 }
@@ -438,21 +438,16 @@ toolbarbutton.page-button {
 }
 
 #bookmarklist-header {
-  color: rgb(255,255,255);
   -moz-box-align: center;
   padding: 0.5mm 1mm; /* half core spacing & core spacing */
 }
 
 #bookmark-items {
   -moz-appearance: none !important;
-  background-color: rgb(255,255,255);
   padding: 0;
 }
 
-.place-list-parents {
-  background-color: rgb(207,207,207);
-}
-
+/* folders navigation row */
 .place-list-parents placelabel {
   visibility: collapse;
 }
@@ -461,95 +456,55 @@ toolbarbutton.page-button {
   visibility: visible;
 }
 
-.place-list-children {
-  -moz-appearance: none;
-  border: none !important;
-  margin: 0.25mm;
-  padding: 0;
-}
-
-.bookmark-folder, .bookmark-item {
-  padding: 0.2mm 0.5mm;
-  border-bottom: 0.1mm solid rgb(207,207,207);
+/* be consistent with the size of placeitem */
+placelabel {
+  -moz-box-align: center;
+  padding-right: 8mm;
+  background: rgb(207,207,207) url(images/arrowup-16.png) no-repeat 98% 50%;
+  color: #000;
   min-height: 6mm; /* row size */
 }
-
-.bookmark-manage-controls {
-  padding-top: 0.5mm;
-  padding-bottom: 0.5mm;
-}
-
-.bookmark-edit-textboxes {
-  padding-top: 0.5mm;
-}
-
-.bookmark-item-image {
-  height: 24px;
-  width: 24px;
-  max-height: 24px;
-  max-width: 24px;
-  margin: 0.8mm 2mm 2.5mm 1mm;
-}
-
-placeitem[selected] .bookmark-item-image {
-  margin-top: 2mm;
-}
-
-.bookmark-item-name {
-  font-size: 2.4mm !important;
-}
-
-.bookmark-item-uri {
-  font-size: 1.8mm !important;
-  color: blue;
-}
-
-.bookmark-item-tags {
-  color: black;
-  margin-right: 1.1mm;
-  font-size: 1.8mm !important;
-  font-weight: lighter;
-}
-
-placelabel.bookmark-folder {
-  border-bottom: 0.1mm solid rgb(255,255,255);
-  background: url(chrome://browser/skin/images/arrowup-16.png) no-repeat 98% 50%;
-}
-
-/* folders have a fixed image */
-placeitem[type="folder"] .bookmark-item-image {
-  list-style-image: url("chrome://browser/skin/images/folder-30.png");
-}
-
+  
+/* folder bookmarks row */
 placeitem[type="folder"] {
-  background: url(chrome://browser/skin/images/arrowright-16.png) no-repeat 98% 50%;
+  -moz-box-pack: center;
+  padding-right: 4mm;
+  background: url(images/arrowright-16.png) no-repeat 98% 50%;
 }
 
-/* hide the unuseful fields for folder */
-placeitem[type="folder"] .bookmark-item-uri,
-placeitem[type="folder"] .bookmark-item-tags {
-  visibility: hidden;
-}
-
-/* control the manage controls */
 placelist[ui="manage"] placeitem[type="folder"] {
   background-image: none;
 }
 
-placeitem[ui="manage"] .bookmark-close-button,
-placeitem[ui="manage"] .bookmark-item-image {
+placeitem[type="folder"] > .bookmark-item-label > image,
+placeitem[type="folder"] > .bookmark-manage > image {
+  list-style-image: url(images/folder-30.png);
+}
+  
+placeitem[type="folder"] .bookmark-item-url {
+  display: none;
+}
+
+/* bookmark manage controls */
+placeitem > .bookmark-manage > image {
+  width: 24px;
+  height: 24px;
+  max-width: 24px;
+  max-height: 24px;
+  margin: 0.5mm 2.5mm 0mm 1mm;
+}
+  
+placeitem > .bookmark-manage .bookmark-controls {
+  padding-top: 1.1mm;
+}
+
+/* bookmark popup for star button */
+placeitem[ui="manage"] {
+  border-bottom: 0;
+}
+
+placeitem[ui="manage"] > .bookmark-manage > image {
   visibility: collapse;
-}
-
-/* be consistent with the size of placeitem */
-placelabel {
-  min-height: 6mm; /* row size */
-  -moz-box-align: center;
-}
-
-/* use a smaller font size for the manage buttons */
-placeitem .button-text {
-  font-size: 2.4mm !important;
 }
 
 .close-button {
@@ -588,7 +543,8 @@ placeitem .button-text {
   background-color: white;
 }
 
-autocompleteresult {
+autocompleteresult,
+placeitem {
   color: black;
   background-color: white;
   padding: 0.2mm 0.5mm;
@@ -601,7 +557,8 @@ autocompleteresult {
   background-color: grey !important;
 }
 
-.autocomplete-item-label {
+.autocomplete-item-label,
+.bookmark-item-label {
   margin: 0;
   padding: 0;
   font-size: 2.4mm !important;
@@ -609,13 +566,15 @@ autocompleteresult {
   margin-right: 1mm;
 }
 
-.autocomplete-item-label > image {
+.autocomplete-item-label > image,
+.bookmark-item-label > image {
   width: 24px;
   height: 24px;
   margin: 0mm 2.5mm 0mm 1mm;
 }
 
-.autocomplete-item-label > label {
+.autocomplete-item-label > label,
+.bookmark-item-label > label {
   -moz-margin-start: 1px;
 }
 
@@ -624,7 +583,8 @@ autocompleteresult {
   background: url(images/star-24.png) no-repeat 100%;
 }
 
-.autocomplete-item-label[favorite="true"]:after {
+.autocomplete-item-label:not([tags=""]):after,
+.bookmark-item-label:not([tags=""]):after {
   float: right;
   content: attr(tags);
   font-size: 1.8mm !important;
@@ -633,7 +593,8 @@ autocompleteresult {
   margin-left: 1mm;
 }
 
-.autocomplete-item-url {
+.autocomplete-item-url,
+.bookmark-item-url {
   margin: 0;
   padding: 0;
   color: blue;

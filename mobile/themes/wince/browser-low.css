@@ -44,7 +44,7 @@
   min-height: 0 !important;
   min-width: 0 !important;
   margin-top: -18px; /* keep pixels */
-  list-style-image: url("chrome://browser/skin/images/fullscreen-close-24.png");
+  list-style-image: url(images/fullscreen-close-24.png);
 }
 
 #toolbar-main[fullscreen="true"] #tool-app-close {
@@ -240,12 +240,13 @@
   min-height: 0 !important;
   min-width: 0 !important;
   margin-top: -18px; /* keep pixels */
-  list-style-image: url("chrome://browser/skin/images/fullscreen-up-24.png");
+  list-style-image: url(images/fullscreen-up-24.png);
 }
 
 /* folders have a fixed image */
-placeitem[type="folder"] .bookmark-item-image {
-  list-style-image: url("chrome://browser/skin/images/folder-24.png");
+placeitem[type="folder"] .bookmark-item-label > image,
+placeitem[type="folder"] > .bookmark-manage > image {
+  list-style-image: url(images/folder-24.png);
 }
 
 .close-button {
