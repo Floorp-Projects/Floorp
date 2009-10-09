@@ -233,7 +233,7 @@ struct JSObject {
 
     /* The map field is not initialized here and should be set separately. */
     void init(JSClass *clasp, JSObject *proto, JSObject *parent,
-              jsval privateSlotValue) {
+              jsval privateSlotValue, jsval *nullPtr) {
         JS_ASSERT(((jsuword) clasp & 3) == 0);
         JS_STATIC_ASSERT(JSSLOT_PRIVATE + 3 == JS_INITIAL_NSLOTS);
         JS_ASSERT_IF(clasp->flags & JSCLASS_HAS_PRIVATE,
@@ -248,7 +248,7 @@ struct JSObject {
         fslots[JSSLOT_PRIVATE] = privateSlotValue;
         fslots[JSSLOT_PRIVATE + 1] = JSVAL_VOID;
         fslots[JSSLOT_PRIVATE + 2] = JSVAL_VOID;
-        dslots = DSLOTS_NULL_INIT;
+        dslots = nullPtr;
     }
 
     JSBool lookupProperty(JSContext *cx, jsid id,
