@@ -119,6 +119,10 @@
   height: 30px;
 }
 
+#urlbar-favicon[src=""] {
+  list-style-image: url("chrome://browser/skin/images/favicon-default-30.png");
+}
+
 #urlbar-editarea {
   min-height: 64px;
   -moz-box-align: center;
