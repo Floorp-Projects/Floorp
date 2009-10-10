@@ -133,6 +133,19 @@ var div = document.getElementById("display");
 
 // Set up all the elements on which we are going to start transitions.
 
+// We have two reference elements to check the expected timing range.
+// They both have 8s linear transitions from 0 to 1000px.
+function make_reference_p() {
+    var p = document.createElement("p");
+    p.appendChild(document.createTextNode("reference"));
+    p.style.textIndent = "0px";
+    p.style.MozTransition = "8s text-indent linear";
+    div.appendChild(p);
+    return p;
+}
+var earlyref = make_reference_p();
+var earlyrefcs = getComputedStyle(earlyref, "");
+
 // Test all timing functions using a set of 8-second transitions, which
 // we check at times 0, 2s, 4s, 6s, and 8s.
 var tftests = [];
@@ -319,6 +332,9 @@ var display_tests = [ from_none_test, to_none_test, always_none_test ];
 
 // FIXME: Test a transition that reverses partway through.
 
+var lateref = make_reference_p();
+var laterefcs = getComputedStyle(lateref, "");
+
 // flush style changes
 var x = getComputedStyle(div, "").color;
 
@@ -331,6 +347,7 @@ for (var i = 1; i <= 8; ++i) {
 gStartTime1 = Date.now(); // set before any transitions have started
 
 // Start all the transitions.
+earlyref.style.textIndent = "1000px";
 for (var test in tftests) {
     var p = tftests[test][0];
     p.style.textIndent = "100px";
@@ -358,6 +375,7 @@ from_none_test.style.display = "";
 to_none_test.style.textIndent = "100px";
 to_none_test.style.display = "none";
 always_none_test.style.textIndent = "100px";
+lateref.style.textIndent = "1000px";
 
 // flush style changes
 x = getComputedStyle(div, "").color;
@@ -376,18 +394,23 @@ function check_transition_value(func, start_time, end_time,
                                 start_value, end_value, cval, desc,
                                 xfail)
 {
-    function value_at(elapsed, error_portion) {
+    function value_at(elapsed, error_direction) {
+        if (start_value > end_value)
+            error_direction = -error_direction;
         var time_portion = (elapsed - start_time) / (end_time - start_time);
         if (time_portion < 0)
             time_portion = 0;
         else if (time_portion > 1)
             time_portion = 1;
-        var value_portion = func(time_portion) + error_portion;
+        // Assume a small error since bezier computation can be off slightly.
+        var value_portion = func(time_portion) + error_direction * 0.0001;
         if (value_portion < 0)
             value_portion = 0;
         else if (value_portion > 1)
             value_portion = 1;
-        return (1 - value_portion) * start_value + value_portion * end_value;
+        var value = (1 - value_portion) * start_value + value_portion * end_value;
+        // Computed values get rounded to 1/60th of a pixel.
+        return value + error_direction * 0.02;
     }
 
     var time_range; // in seconds
@@ -397,31 +420,52 @@ function check_transition_value(func, start_time, end_time,
         // No timers involved
         time_range = [0, 0];
         if (start_time < 0) {
-            uns_range = [ value_at(0, -0.01), value_at(0, 0.01) ];
+            uns_range = [ value_at(0, -1), value_at(0, 1) ];
         } else {
             var val = value_at(0, 0);
             uns_range = [val, val];
         }
     } else {
+        time_range = [ px_to_num(earlyrefcs.textIndent) / 125,
+                       px_to_num(laterefcs.textIndent) / 125 ];
         // seconds
-        // FIXME: Why do we need so much tolerance at the low end of the
-        // range?
-        time_range = [ (gCurrentTime - gStartTime2 - 80) / 1000,
-                       (Date.now() - gStartTime1 + 20) / 1000 ];
-        uns_range = [ value_at(time_range[0], -0.01),
-                      value_at(time_range[1], 0.01) ];
-                    
+        uns_range = [ value_at(time_range[0], -1),
+                      value_at(time_range[1], 1) ];
     }
     var range = uns_range.concat(). /* concat to clone array */
                   sort(function compareNumbers(a,b) { return a - b; });
     var actual = px_to_num(cval);
 
-    var fn = xfail ? todo : ok;
+    var fn = ok;
+    if (xfail && xfail(range))
+      fn = todo;
 
     fn(range[0] <= actual && actual <= range[1],
        desc + ": computed value " + cval + " should be between " +
        uns_range[0].toFixed(6) + "px and " + uns_range[1].toFixed(6) +
        "px at time between " + time_range[0] + "s and " + time_range[1] + "s.");
+}
+
+function check_ref_range()
+{
+    // This is the only test where we compare the progress of the
+    // transitions to an actual time; we need considerable tolerance at
+    // the low end (we are using half a second).
+    var expected_range = [ (gCurrentTime - gStartTime2 - 500) / 8,
+                           (Date.now() - gStartTime1 + 20) / 8 ];
+    function check(desc, value) {
+        ok(expected_range[0] <= value && value <= expected_range[1],
+           desc + ": computed value " + value + "px should be between " +
+           expected_range[0].toFixed(6) + "px and " +
+           expected_range[1].toFixed(6) + "px at time between " +
+           expected_range[0]/125 + "s and " + expected_range[1]/125 + "s.");
+    }
+    check("early reference", px_to_num(earlyrefcs.textIndent));
+    check("late reference", px_to_num(laterefcs.textIndent));
+}
+
+for (var i = 1; i <= 8; ++i) {
+    add_future_call(i, check_ref_range);
 }
 
 function check_tf_test()
@@ -610,7 +654,7 @@ function check_display_tests(time)
                                  p.childNodes[0].data,
         // TODO: Making transitions work on 'display:none' elements is
         // still not implemented.
-                               (time != 8));
+                               function(range) { return range[1] < 100 });
     }
 }
 
