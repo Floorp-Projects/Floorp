@@ -125,7 +125,7 @@ function test() {
           // open another window in PB
           let pbWin = openDialog(location, "_blank", "chrome,all,dialog=no", testURL_B);
           pbWin.addEventListener("load", function(aEvent) {
-            pbWin.removeEventListener("load", arguments.callee, true);
+            pbWin.removeEventListener("load", arguments.callee, false);
             pbWin.gBrowser.addEventListener("load", function(aEvent) {
               pbWin.gBrowser.removeEventListener("load", arguments.callee, true);
 
