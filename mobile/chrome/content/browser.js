@@ -2281,6 +2281,12 @@ ProgressController.prototype = {
       this.browser.docShell.isOffScreenBrowser = true;
     }
 
+    // if we are idle at this point, be sure to kick start the prefetcher
+    if (Browser._browserView._idleServiceObserver.isIdle()) {
+	//dump("kicking off restartPrefetchCrawl\n");
+	Browser._browserView._tileManager.restartPrefetchCrawl();
+    }
+
     this._tab.updateThumbnail();
   },
 
