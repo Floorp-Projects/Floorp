@@ -77,6 +77,7 @@ function test() {
   ss.setBrowserState(blankState);
 
   let closedWindowCount = ss.getClosedWindowCount();
+  is(closedWindowCount, 0, "Correctly set window count");
 
   let testURL_A = "about:config";
   let testURL_B = "about:mozilla";
@@ -90,10 +91,10 @@ function test() {
   // Open a window
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no", testURL_A);
   newWin.addEventListener("load", function(aEvent) {
-    newWin.removeEventListener("load", arguments.callee, true);
+    newWin.removeEventListener("load", arguments.callee, false);
     newWin.gBrowser.addEventListener("load", function(aEvent) {
       newWin.gBrowser.removeEventListener("load", arguments.callee, true);
-
+      info("Window has been loaded");
       executeSoon(function() {
         newWin.gBrowser.addTab();
         executeSoon(function() {
@@ -162,9 +163,9 @@ function test() {
                 });
               });
             }, true);
-          }, true);
+          }, false);
         });
       });
     }, true);
-  }, true);
+  }, false);
 }
