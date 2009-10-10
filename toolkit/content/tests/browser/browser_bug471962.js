@@ -133,7 +133,7 @@ function test() {
     }
     finally {
       // Replace the current tab with a clean one.
-      gBrowser.addTab();
+      gBrowser.addTab().linkedBrowser.stop();
       gBrowser.removeCurrentTab();
     }
   }
