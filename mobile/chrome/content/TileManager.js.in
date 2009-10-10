@@ -96,7 +96,8 @@ const kTileExponentWidth  = 9;
 const kTileExponentHeight = 9;
 const kTileWidth  = Math.pow(2, kTileExponentWidth);   // 2^9 = 512
 const kTileHeight = Math.pow(2, kTileExponentHeight);  // 2^9 = 512
-const kTileLazyRoundTimeCap = 500;    // millis
+const kTileCrawlTimeCap = 100;    // millis
+const kTileCrawlComeAgain = 0;    // millis
 const kInitialCacheCapacity = 200;
 
 
@@ -133,8 +134,12 @@ function TileManager(appendTile, removeTile, browserView) {
   /* timeout of the non-visible-tiles-crawler to cache renders from the browser */
   this._idleTileCrawlerTimeout = 0;
 
-  /* object that keeps state on our current lazyload crawl */
+  /* object that keeps state on our current prefetch crawl */
   this._crawler = null;
+
+  /* remember these values to reduce the recenterEvictionQueue cost */
+  this._ctrx = 0;
+  this._ctry = 0;
 }
 
 TileManager.prototype = {
@@ -201,11 +206,17 @@ TileManager.prototype = {
 
     if (cr) {
       let [ctrx, ctry] = cr.centerRounded();
-      //dump('-----> centering at ' + ctrx + ',' + ctry + '\n');
-      this.recenterEvictionQueue(ctrx, ctry);
+
+      if (this._ctrx != ctrx || this._ctry != ctry) {
+        this._ctrx = ctrx;
+        this._ctry = ctry;
+        this.recenterEvictionQueue(ctrx, ctry);
+      }
 
       //let start = Date.now();
+
       this._renderAppendHoldRect(cr);
+
       //dump("  render, append, hold: " + (Date.now() - start) + "\n");
     }
 
@@ -262,41 +273,46 @@ TileManager.prototype = {
       this.criticalRectPaint();
   },
 
-  restartLazyCrawl: function restartLazyCrawl(startRectOrQueue) {
-    if (!startRectOrQueue || startRectOrQueue instanceof Array) {
+  restartPrefetchCrawl: function restartPrefetchCrawl(startRectOrQueue) {
+    if (startRectOrQueue instanceof Array) {
       this._crawler = new TileManager.CrawlIterator(this._tileCache);
 
       if (startRectOrQueue) {
-        let len = startRectOrQueue.length;
-        for (let k = 0; k < len; ++k)
+        for (let k = 0, len = startRectOrQueue.length; k < len; ++k)
           this._crawler.enqueue(startRectOrQueue[k].i, startRectOrQueue[k].j);
       }
     } else {
-      this._crawler = new TileManager.CrawlIterator(this._tileCache, startRectOrQueue);
+      let cr = this._criticalRect;
+      this._crawler = new TileManager.CrawlIterator(this._tileCache,
+                                                    startRectOrQueue || (cr ? cr.clone() : null));
     }
 
     if (!this._idleTileCrawlerTimeout)
-      this._idleTileCrawlerTimeout = setTimeout(this._idleTileCrawler, 2000, this);
+      this._idleTileCrawlerTimeout = setTimeout(this._idleTileCrawler, kTileCrawlComeAgain, this);
   },
 
-  stopLazyCrawl: function stopLazyCrawl() {
+  stopPrefetchCrawl: function stopPrefetchCrawl(skipRecenter) {
     if (this._idleTileCrawlerTimeout)
       clearTimeout(this._idleTileCrawlerTimeout);
     delete this._idleTileCrawlerTimeout;
     this._crawler = null;
 
-    let cr = this._criticalRect;
-    if (cr) {
-      let [ctrx, ctry] = cr.centerRounded();
-      this.recenterEvictionQueue(ctrx, ctry);
+    if (!skipRecenter) {
+      let cr = this._criticalRect;
+      if (cr) {
+        let [ctrx, ctry] = cr.centerRounded();
+        this.recenterEvictionQueue(ctrx, ctry);
+      }
     }
   },
 
   recenterEvictionQueue: function recenterEvictionQueue(ctrx, ctry) {
+    if (this._crawler) {
+      this.restartPrefetchCrawl();
+    }
+
     let ctri = ctrx >> kTileExponentWidth;
     let ctrj = ctry >> kTileExponentHeight;
-
-    //dump('       that is, ' + ctri + ',' + ctrj + '\n');
 
     this._tileCache.sortEvictionQueue(function evictFarTiles(a, b) {
       let dista = Math.max(Math.abs(a.i - ctri), Math.abs(a.j - ctrj));
@@ -305,6 +321,12 @@ TileManager.prototype = {
     });
   },
 
+  /**
+   * Render a rect to the canvas under the given scale.  We attempt to avoid a
+   * drawWindow() by copying the image (via drawImage()) from  cached tiles, we
+   * may have.  If we find that we're missing a necessary tile, we fall back on
+   * drawWindow() directly to the destination canvas.
+   */
   renderRectToCanvas: function renderRectToCanvas(srcRect, destCanvas, scalex, scaley) {
     let tc = this._tileCache;
     let ctx = destCanvas.getContext("2d");
@@ -394,39 +416,27 @@ TileManager.prototype = {
   _idleTileCrawler: function _idleTileCrawler(self) {
     if (!self) self = this;
 
-    dump('crawl pass.\n');
-    let itered = 0, rendered = 0;
-
     let start = Date.now();
     let comeAgain = true;
 
-    while ((Date.now() - start) <= kTileLazyRoundTimeCap) {
+    while ((Date.now() - start) <= kTileCrawlTimeCap) {
       let tile = self._crawler.next();
-
       if (!tile) {
         comeAgain = false;
         break;
       }
-
       if (tile.isDirty()) {
         self._renderTile(tile);
-        ++rendered;
       }
-      ++itered;
     }
-
-    dump('crawl itered:' + itered + ' rendered:' + rendered + '\n');
 
     if (comeAgain) {
-      self._idleTileCrawlerTimeout = setTimeout(self._idleTileCrawler, 2000, self);
+      self._idleTileCrawlerTimeout = setTimeout(self._idleTileCrawler, kTileCrawlComeAgain, self);
     } else {
-      self.stopLazyCrawl();
-      dump('crawl end\n');
+      self.stopPrefetchCrawl();
     }
   }
-
 };
-
 
 /**
  * The tile cache used by the tile manager to hold and index all
@@ -821,22 +831,24 @@ TileManager.CrawlIterator = function CrawlIterator(tileCache, startRect) {
   this._crawlIndices = !startRect ? null : (function indicesGenerator(rect, tc) {
     let outOfBounds = false;
     while (!outOfBounds) {
-      // expand rect
-      rect.left   -= kTileWidth;
+      rect.left   -= kTileWidth;   // expand the rect
       rect.right  += kTileWidth;
       rect.top    -= kTileHeight;
       rect.bottom += kTileHeight;
 
-      let dx = (rect.right % kTileWidth) - (rect.left % kTileWidth);
-      let dy = (rect.bottom % kTileHeight) - (rect.top % kTileHeight);
+      let starti = rect.left  >> kTileExponentWidth;
+      let endi   = rect.right >> kTileExponentWidth;
+      let startj = rect.top    >> kTileExponentHeight;
+      let endj   = rect.bottom >> kTileExponentHeight;
+      let i, j;
 
       outOfBounds = true;
 
-      // top, bottom borders
+      // top, bottom rect borders
       for each (let y in [rect.top, rect.bottom]) {
-        for (let x = rect.left; x <= rect.right - dx; x += kTileWidth) {
-          let i = x >> kTileExponentWidth;
-          let j = y >> kTileExponentHeight;
+        j = y >> kTileExponentHeight;
+
+        for (i = starti; i <= endi; ++i) {
           if (tc.inBounds(i, j)) {
             outOfBounds = false;
             yield [i, j];
@@ -844,11 +856,11 @@ TileManager.CrawlIterator = function CrawlIterator(tileCache, startRect) {
         }
       }
 
-      // left, right borders
+      // left, right rect borders
       for each (let x in [rect.left, rect.right]) {
-        for (let y = rect.top; y <= rect.bottom - dy; y += kTileHeight) {
-          let i = x >> kTileExponentWidth;
-          let j = y >> kTileExponentHeight;
+        i = x >> kTileExponentWidth;
+
+        for (j = startj; j <= endj; ++j) {
           if (tc.inBounds(i, j)) {
             outOfBounds = false;
             yield [i, j];

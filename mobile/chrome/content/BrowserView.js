@@ -43,6 +43,7 @@ let Ci = Components.interfaces;
 const kBrowserViewZoomLevelMin = 0.2;
 const kBrowserViewZoomLevelMax = 4.0;
 const kBrowserViewZoomLevelPrecision = 10000;
+const kBrowserViewPrefetchBeginIdleWait = 1;    // seconds
 
 
 /**
@@ -218,7 +219,6 @@ BrowserView.Util = {
   }
 };
 
-
 BrowserView.prototype = {
 
   // -----------------------------------------------------------
@@ -234,6 +234,10 @@ BrowserView.prototype = {
     this._renderMode = 0;
     this._tileManager = new TileManager(this._appendTile, this._removeTile, this);
     this._visibleRectFactory = visibleRectFactory;
+
+    this._idleServiceObserver = new BrowserView.IdleServiceObserver(this);
+    this._idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
+    this._idleService.addIdleObserver(this._idleServiceObserver, kBrowserViewPrefetchBeginIdleWait);
   },
 
   getVisibleRect: function getVisibleRect() {
@@ -332,6 +336,9 @@ BrowserView.prototype = {
 
     if (renderNow || this._renderMode == 0)
       this.renderNow();
+
+    if (this._renderMode == 0)
+      this._idleServiceObserver.resumeCrawls();
   },
 
   /**
@@ -709,3 +716,53 @@ BrowserView.BrowserViewportState.prototype = {
 
 };
 
+
+/**
+ * nsIObserver that implements a callback for the nsIIdleService, which starts
+ * and stops the BrowserView's TileManager's prefetch crawl according to user
+ * idleness.
+ */
+BrowserView.IdleServiceObserver = function IdleServiceObserver(browserView) {
+  this._browserView = browserView;
+  this._crawlStarted = false;
+  this._crawlPause = false;
+  this._idleState = false;
+};
+
+BrowserView.IdleServiceObserver.prototype = {
+
+  isIdle: function isIdle() {
+    return this._idleState;
+  },
+
+  observe: function observe(aSubject, aTopic, aUserIdleTime) {
+    let bv = this._browserView;
+
+    if (aTopic == "idle")
+      this._idleState = true;
+    else
+      this._idleState = false;
+
+    if (this._idleState && !this._crawlStarted) {
+      if (bv.isRendering()) {
+        bv._tileManager.restartPrefetchCrawl();
+        this._crawlStarted = true;
+        this._crawlPause = false;
+      } else {
+        this._crawlPause = true;
+      }
+    } else if (!this._idleState && this._crawlStarted) {
+      this._crawlStarted = false;
+      this._crawlPause = false;
+      bv._tileManager.stopPrefetchCrawl();
+    }
+  },
+
+  resumeCrawls: function resumeCrawls() {
+    if (this._crawlPause) {
+      this._browserView._tileManager.restartPrefetchCrawl();
+      this._crawlStarted = true;
+      this._crawlPause = false;
+    }
+  }
+};
