@@ -395,8 +395,6 @@ function check_transition_value(func, start_time, end_time,
                                 xfail)
 {
     function value_at(elapsed, error_direction) {
-        if (start_value > end_value)
-            error_direction = -error_direction;
         var time_portion = (elapsed - start_time) / (end_time - start_time);
         if (time_portion < 0)
             time_portion = 0;
@@ -410,6 +408,8 @@ function check_transition_value(func, start_time, end_time,
         else if (value_portion > 1)
             value_portion = 1;
         var value = (1 - value_portion) * start_value + value_portion * end_value;
+        if (start_value > end_value)
+            error_direction = -error_direction;
         // Computed values get rounded to 1/60th of a pixel.
         return value + error_direction * 0.02;
     }
