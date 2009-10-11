@@ -433,15 +433,20 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
 
     NPEvent* npevent = reinterpret_cast<NPEvent*>(event);
 
-#if defined(OS_LINUX)
+#if defined(MOZ_X11)
     if (GraphicsExpose == npevent->type) {
         printf("  schlepping drawable 0x%lx across the pipe\n",
                npevent->xgraphicsexpose.drawable);
-
-        // FIXME: this is probably rather expensive, should only do it
-        // when necessary.  which raises the question: when is it
-        // necessary?
+        // Make sure the X server has created the Drawable and completes any
+        // drawing before the plugin draws on top.
+        //
+        // XSync() waits for the X server to complete.  Really this parent
+        // process does not need to wait; the child is the process that needs
+        // to wait.  A possibly-slightly-better alternative would be to send
+        // an X event to the child that the child would wait for.
+#  ifdef MOZ_WIDGET_GTK2
         XSync(GDK_DISPLAY(), False);
+#  endif
     }
 #endif
 

@@ -140,23 +140,7 @@ protected:
                          const NPReason& reason);
 
 public:
-    PluginInstanceChild(const NPPluginFuncs* aPluginIface) :
-        mPluginIface(aPluginIface)
-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
-        , mPlug(0)
-#elif defined(OS_WIN)
-        , mPluginWindowHWND(0)
-        , mPluginWndProc(0)
-        , mPluginParentHWND(0)
-#endif
-    {
-        memset(&mWindow, 0, sizeof(mWindow));
-        mData.ndata = (void*) this;
-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
-        mWindow.ws_info = &mWsInfo;
-        memset(&mWsInfo, 0, sizeof(mWsInfo));
-#endif
-    }
+    PluginInstanceChild(const NPPluginFuncs* aPluginIface);
 
     virtual ~PluginInstanceChild();
 
@@ -201,11 +185,8 @@ private:
 
     const NPPluginFuncs* mPluginIface;
     NPP_t mData;
-#ifdef OS_LINUX
-    GtkWidget* mPlug;
-#endif
     NPWindow mWindow;
-#ifdef OS_LINUX
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     NPSetWindowCallbackStruct mWsInfo;
 #elif defined(OS_WIN)
     HWND mPluginWindowHWND;
