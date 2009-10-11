@@ -1245,17 +1245,11 @@ if [ "$MOZ_JAVAXPCOM" ]; then
   "
 fi
 
-if [ "$MOZ_COMPONENTLIB" ]; then
+if [ "$MOZ_STATIC_COMPONENTS" -o "$MOZ_META_COMPONENTS" ]; then
   add_makefiles "
-    embedding/componentlib/Makefile
+    modules/staticmod/Makefile
   "
-else
-  if [ "$MOZ_STATIC_COMPONENTS" -o "$MOZ_META_COMPONENTS" ]; then
-    add_makefiles "
-      modules/staticmod/Makefile
-    "
-  fi
-fi # MOZ_COMPONENTLIB
+fi
 
 if [ "$MOZ_MEDIA" ]; then
  add_makefiles "
