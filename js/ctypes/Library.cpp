@@ -91,7 +91,7 @@ Library::Create(JSContext* cx, jsval aPath)
     if (!localFile)
       return NULL;
 
-    rv = localFile->InitWithPath(nsDependentString(path));
+    rv = localFile->InitWithPath(nsDependentString(reinterpret_cast<const PRUnichar*>(path)));
     if (NS_FAILED(rv))
       return NULL;
 
