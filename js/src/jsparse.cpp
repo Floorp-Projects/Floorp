@@ -343,10 +343,10 @@ UnlinkFunctionBox(JSParseNode *pn, JSTreeContext *tc)
             funboxp = &(*funboxp)->siblings;
         }
 
-        uint16 oldflags = tc->flags;
+        uint32 oldflags = tc->flags;
         JSFunctionBox *oldlist = tc->functionList;
 
-        tc->flags = (uint16) funbox->tcflags;
+        tc->flags = funbox->tcflags;
         tc->functionList = funbox->kids;
         UnlinkFunctionBoxes(pn->pn_body, tc);
         funbox->kids = tc->functionList;
@@ -573,7 +573,7 @@ InitNameNodeCommon(JSParseNode *pn, JSTreeContext *tc)
 }
 
 static JSParseNode *
-NewNameNode(JSContext *cx, JSTokenStream *ts, JSAtom *atom, JSTreeContext *tc)
+NewNameNode(JSContext *cx, JSAtom *atom, JSTreeContext *tc)
 {
     JSParseNode *pn;
 
@@ -788,7 +788,8 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
                           JSPrincipals *principals, uint32 tcflags,
                           const jschar *chars, size_t length,
                           FILE *file, const char *filename, uintN lineno,
-                          JSString *source /* = NULL */)
+                          JSString *source /* = NULL */,
+                          unsigned staticLevel /* = 0 */)
 {
     JSCompiler jsc(cx, principals, callerFrame);
     JSArenaPool codePool, notePool;
@@ -800,15 +801,14 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     void *sbrk(ptrdiff_t), *before = sbrk(0);
 #endif
 
-    JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL |
-                            TCF_STATIC_LEVEL_MASK)));
+    JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL)));
 
     /*
      * The scripted callerFrame can only be given for compile-and-go scripts
      * and non-zero static level requires callerFrame.
      */
     JS_ASSERT_IF(callerFrame, tcflags & TCF_COMPILE_N_GO);
-    JS_ASSERT_IF(TCF_GET_STATIC_LEVEL(tcflags) != 0, callerFrame);
+    JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
     if (!jsc.init(chars, length, file, filename, lineno))
         return NULL;
@@ -825,9 +825,9 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     /* Null script early in case of error, to reduce our code footprint. */
     script = NULL;
 
-    cg.flags |= uint16(tcflags);
+    cg.flags |= tcflags;
     cg.scopeChain = scopeChain;
-    if (!SetStaticLevel(&cg, TCF_GET_STATIC_LEVEL(tcflags)))
+    if (!SetStaticLevel(&cg, staticLevel))
         goto out;
 
     /*
@@ -1001,7 +1001,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
 #endif
     script = js_NewScriptFromCG(cx, &cg);
     if (script && funbox)
-        script->flags |= JSSF_SAVED_CALLER_FUN;
+        script->savedCallerFun = true;
 
 #ifdef JS_SCOPE_DEPTH_METER
     if (script) {
@@ -1249,7 +1249,7 @@ MakePlaceholder(JSParseNode *pn, JSTreeContext *tc)
         return NULL;
 
     JSDefinition *dn = (JSDefinition *)
-        NewNameNode(tc->compiler->context, TS(tc->compiler), pn->pn_atom, tc);
+        NewNameNode(tc->compiler->context, pn->pn_atom, tc);
     if (!dn)
         return NULL;
 
@@ -1429,7 +1429,7 @@ DefineArg(JSParseNode *pn, JSAtom *atom, uintN i, JSTreeContext *tc)
      * but having TOK_NAME type and JSOP_NOP op. Insert it in a TOK_ARGSBODY
      * list node returned via pn->pn_body.
      */
-    argpn = NewNameNode(tc->compiler->context, TS(tc->compiler), atom, tc);
+    argpn = NewNameNode(tc->compiler->context, atom, tc);
     if (!argpn)
         return false;
     JS_ASSERT(PN_TYPE(argpn) == TOK_NAME && PN_OP(argpn) == JSOP_NOP);
@@ -1681,7 +1681,7 @@ MatchOrInsertSemicolon(JSContext *cx, JSTokenStream *ts)
 }
 
 bool
-JSCompiler::analyzeFunctions(JSFunctionBox *funbox, uint16& tcflags)
+JSCompiler::analyzeFunctions(JSFunctionBox *funbox, uint32& tcflags)
 {
     if (!markFunArgs(funbox, tcflags))
         return false;
@@ -1900,7 +1900,7 @@ OneBlockId(JSParseNode *fn, uint32 id)
 }
 
 void
-JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint16& tcflags)
+JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
 {
 #ifdef JS_FUNCTION_METERING
 # define FUN_METER(x)   JS_RUNTIME_METER(context->runtime, functionMeter.x)
@@ -2652,7 +2652,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                  * anonymous positional parameter into the destructuring
                  * left-hand-side expression and accumulate it in list.
                  */
-                rhs = NewNameNode(cx, ts, cx->runtime->atomState.emptyAtom, &funtc);
+                rhs = NewNameNode(cx, cx->runtime->atomState.emptyAtom, &funtc);
                 if (!rhs)
                     return NULL;
                 rhs->pn_type = TOK_NAME;
@@ -3198,7 +3198,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
             JSParseNode *pnu = pn;
 
             if (pn->pn_defn) {
-                pnu = NewNameNode(cx, TS(tc->compiler), atom, tc);
+                pnu = NewNameNode(cx, atom, tc);
                 if (!pnu)
                     return JS_FALSE;
             }
@@ -3235,7 +3235,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
                 pn = ALE_DEFN(ale);
                 tc->lexdeps.rawRemove(tc->compiler, ale, hep);
             } else {
-                JSParseNode *pn2 = NewNameNode(cx, TS(tc->compiler), atom, tc);
+                JSParseNode *pn2 = NewNameNode(cx, atom, tc);
                 if (!pn2)
                     return JS_FALSE;
 
@@ -3629,12 +3629,44 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
 }
 
 /*
- * If data is null, the caller is AssignExpr and instead of binding variables,
- * we specialize lvalues in the propery value positions of the left-hand side.
- * If right is null, just check for well-formed lvalues.
+ * Destructuring patterns can appear in two kinds of contexts:
  *
- * See also UndominateInitializers, immediately below. If you change either of
- * these functions, you might have to change the other to match.
+ * - assignment-like: assignment expressions and |for| loop heads.  In
+ *   these cases, the patterns' property value positions can be
+ *   arbitrary lvalue expressions; the destructuring is just a fancy
+ *   assignment.
+ *
+ * - declaration-like: |var| and |let| declarations, functions' formal
+ *   parameter lists, |catch| clauses, and comprehension tails.  In
+ *   these cases, the patterns' property value positions must be
+ *   simple names; the destructuring defines them as new variables.
+ *
+ * In both cases, other code parses the pattern as an arbitrary
+ * PrimaryExpr, and then, here in CheckDestructuring, verify that the
+ * tree is a valid destructuring expression.
+ *
+ * In assignment-like contexts, we parse the pattern with the
+ * TCF_DECL_DESTRUCTURING flag clear, so the lvalue expressions in the
+ * pattern are parsed normally.  PrimaryExpr links variable references
+ * into the appropriate use chains; creates placeholder definitions;
+ * and so on.  CheckDestructuring is called with |data| NULL (since we
+ * won't be binding any new names), and we specialize lvalues as
+ * appropriate.  If right is NULL, we just check for well-formed lvalues.
+ *
+ * In declaration-like contexts, the normal variable reference
+ * processing would just be an obstruction, because we're going to
+ * define the names that appear in the property value positions as new
+ * variables anyway.  In this case, we parse the pattern with
+ * TCF_DECL_DESTRUCTURING set, which directs PrimaryExpr to leave
+ * whatever name nodes it creates unconnected.  Then, here in
+ * CheckDestructuring, we require the pattern's property value
+ * positions to be simple names, and define them as appropriate to the
+ * context.  For these calls, |data| points to the right sort of
+ * BindData.
+ *
+ * See also UndominateInitializers, immediately below. If you change
+ * either of these functions, you might have to change the other to
+ * match.
  */
 static JSBool
 CheckDestructuring(JSContext *cx, BindData *data,
@@ -3855,9 +3887,9 @@ DestructuringExpr(JSContext *cx, BindData *data, JSTreeContext *tc,
     JSParseNode *pn;
 
     ts = TS(tc->compiler);
-    ts->flags |= TSF_DESTRUCTURING;
+    tc->flags |= TCF_DECL_DESTRUCTURING;
     pn = PrimaryExpr(cx, ts, tc, tt, JS_FALSE);
-    ts->flags &= ~TSF_DESTRUCTURING;
+    tc->flags &= ~TCF_DECL_DESTRUCTURING;
     if (!pn)
         return NULL;
     if (!CheckDestructuring(cx, data, pn, NULL, tc))
@@ -4206,7 +4238,7 @@ PushBlocklikeStatement(JSStmtInfo *stmt, JSStmtType type, JSTreeContext *tc)
 }
 
 static JSParseNode *
-NewBindingNode(JSTokenStream *ts, JSAtom *atom, JSTreeContext *tc, bool let = false)
+NewBindingNode(JSAtom *atom, JSTreeContext *tc, bool let = false)
 {
     JSParseNode *pn = NULL;
 
@@ -4244,7 +4276,7 @@ NewBindingNode(JSTokenStream *ts, JSAtom *atom, JSTreeContext *tc, bool let = fa
     }
 
     /* Make a new node for this declarator name (or destructuring pattern). */
-    pn = NewNameNode(tc->compiler->context, ts, atom, tc);
+    pn = NewNameNode(tc->compiler->context, atom, tc);
     if (!pn)
         return NULL;
     return pn;
@@ -4752,7 +4784,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif
                         {
                             JS_ASSERT(pn2->pn_type == TOK_NAME);
-                            pn1 = NewNameNode(cx, ts, pn2->pn_atom, tc);
+                            pn1 = NewNameNode(cx, pn2->pn_atom, tc);
                             if (!pn1)
                                 return NULL;
                             pn1->pn_type = TOK_NAME;
@@ -5005,7 +5037,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
                   case TOK_NAME:
                     label = CURRENT_TOKEN(ts).t_atom;
-                    pn3 = NewBindingNode(ts, label, tc, true);
+                    pn3 = NewBindingNode(label, tc, true);
                     if (!pn3)
                         return NULL;
                     data.pn = pn3;
@@ -5560,9 +5592,9 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, bool inLetHead)
         tt = js_GetToken(cx, ts);
 #if JS_HAS_DESTRUCTURING
         if (tt == TOK_LB || tt == TOK_LC) {
-            ts->flags |= TSF_DESTRUCTURING;
+            tc->flags |= TCF_DECL_DESTRUCTURING;
             pn2 = PrimaryExpr(cx, ts, tc, tt, JS_FALSE);
-            ts->flags &= ~TSF_DESTRUCTURING;
+            tc->flags &= ~TCF_DECL_DESTRUCTURING;
             if (!pn2)
                 return NULL;
 
@@ -5612,7 +5644,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, bool inLetHead)
         }
 
         atom = CURRENT_TOKEN(ts).t_atom;
-        pn2 = NewBindingNode(ts, atom, tc, let);
+        pn2 = NewBindingNode(atom, tc, let);
         if (!pn2)
             return NULL;
         if (data.op == JSOP_DEFCONST)
@@ -6360,7 +6392,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                         tc->parent->lexdeps.remove(tc->compiler, atom);
                     } else {
                         JSDefinition *dn2 = (JSDefinition *)
-                            NewNameNode(tc->compiler->context, TS(tc->compiler), dn->pn_atom, tc);
+                            NewNameNode(tc->compiler->context, dn->pn_atom, tc);
                         if (!dn2)
                             return false;
 
@@ -6498,9 +6530,9 @@ ComprehensionTail(JSParseNode *kid, uintN blockid, JSTreeContext *tc,
 #if JS_HAS_DESTRUCTURING
           case TOK_LB:
           case TOK_LC:
-            ts->flags |= TSF_DESTRUCTURING;
+            tc->flags |= TCF_DECL_DESTRUCTURING;
             pn3 = PrimaryExpr(cx, ts, tc, tt, JS_FALSE);
-            ts->flags &= ~TSF_DESTRUCTURING;
+            tc->flags &= ~TCF_DECL_DESTRUCTURING;
             if (!pn3)
                 return NULL;
             break;
@@ -6516,7 +6548,7 @@ ComprehensionTail(JSParseNode *kid, uintN blockid, JSTreeContext *tc,
              * and it tries to bind all names to slots, so we must let it do
              * the deed.
              */
-            pn3 = NewBindingNode(ts, atom, tc, true);
+            pn3 = NewBindingNode(atom, tc, true);
             if (!pn3)
                 return NULL;
             break;
@@ -6825,7 +6857,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     while ((tt = js_GetToken(cx, ts)) > TOK_EOF) {
         if (tt == TOK_DOT) {
-            pn2 = NewNameNode(cx, ts, NULL, tc);
+            pn2 = NewNameNode(cx, NULL, tc);
             if (!pn2)
                 return NULL;
 #if JS_HAS_XML_SUPPORT
@@ -7096,7 +7128,7 @@ QualifiedSuffix(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
     JSTokenType tt;
 
     JS_ASSERT(CURRENT_TOKEN(ts).type == TOK_DBLCOLON);
-    pn2 = NewNameNode(cx, ts, NULL, tc);
+    pn2 = NewNameNode(cx, NULL, tc);
     if (!pn2)
         return NULL;
 
@@ -7877,8 +7909,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             switch (tt) {
               case TOK_NUMBER:
                 pn3 = NewParseNode(PN_NULLARY, tc);
-                if (pn3)
-                    pn3->pn_dval = CURRENT_TOKEN(ts).t_dval;
+                if (!pn3)
+                    return NULL;
+                pn3->pn_dval = CURRENT_TOKEN(ts).t_dval;
                 break;
               case TOK_NAME:
 #if JS_HAS_GETTER_SETTER
@@ -7900,7 +7933,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                         js_UngetToken(ts);
                         goto property_name;
                     }
-                    pn3 = NewNameNode(cx, ts, CURRENT_TOKEN(ts).t_atom, tc);
+                    pn3 = NewNameNode(cx, CURRENT_TOKEN(ts).t_atom, tc);
                     if (!pn3)
                         return NULL;
 
@@ -7915,8 +7948,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #endif
               case TOK_STRING:
                 pn3 = NewParseNode(PN_NULLARY, tc);
-                if (pn3)
-                    pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
+                if (!pn3)
+                    return NULL;
+                pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
                 break;
               case TOK_RC:
                 goto end_obj_init;
@@ -8088,7 +8122,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         break;
 
       case TOK_NAME:
-        pn = NewNameNode(cx, ts, CURRENT_TOKEN(ts).t_atom, tc);
+        pn = NewNameNode(cx, CURRENT_TOKEN(ts).t_atom, tc);
         if (!pn)
             return NULL;
         JS_ASSERT(CURRENT_TOKEN(ts).t_op == JSOP_NAME);
@@ -8109,7 +8143,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
              * Bind early to JSOP_ARGUMENTS to relieve later code from having
              * to do this work (new rule for the emitter to count on).
              */
-            if (!afterDot && !(ts->flags & TSF_DESTRUCTURING) && !tc->inStatement(STMT_WITH)) {
+            if (!afterDot && !(tc->flags & TCF_DECL_DESTRUCTURING) && !tc->inStatement(STMT_WITH)) {
                 pn->pn_op = JSOP_ARGUMENTS;
                 pn->pn_dflags |= PND_BOUND;
             }
@@ -8117,7 +8151,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #if JS_HAS_XML_SUPPORT
                     || js_PeekToken(cx, ts) == TOK_DBLCOLON
 #endif
-                   ) && !(ts->flags & TSF_DESTRUCTURING)) {
+                   ) && !(tc->flags & TCF_DECL_DESTRUCTURING)) {
             JSStmtInfo *stmt = js_LexicalLookup(tc, pn->pn_atom, NULL);
             if (!stmt || stmt->type != STMT_WITH) {
                 JSDefinition *dn;
@@ -8673,10 +8707,10 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
     switch (pn->pn_arity) {
       case PN_FUNC:
       {
-        uint16 oldflags = tc->flags;
+        uint32 oldflags = tc->flags;
         JSFunctionBox *oldlist = tc->functionList;
 
-        tc->flags = (uint16) pn->pn_funbox->tcflags;
+        tc->flags = pn->pn_funbox->tcflags;
         tc->functionList = pn->pn_funbox->kids;
         if (!js_FoldConstants(cx, pn->pn_body, tc))
             return JS_FALSE;

@@ -36,10 +36,6 @@
 #ifndef avm_h___
 #define avm_h___
 
-#if defined(HAVE_CONFIG_H) && defined(NANOJIT_CENTRAL)
-#include "config.h"
-#endif
-
 #include "VMPI.h"
 
 #if !defined(AVMPLUS_LITTLE_ENDIAN) && !defined(AVMPLUS_BIG_ENDIAN)

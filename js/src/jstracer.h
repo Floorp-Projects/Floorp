@@ -710,6 +710,7 @@ struct InterpState
     VMSideExit*    lastTreeCallGuard;   // guard we want to grow from if the tree
                                         // call exit guard mismatched
     void*          rpAtLastTreeCall;    // value of rp at innermost tree call guard
+    VMSideExit*    outermostTreeExitGuard; // the last side exit returned by js_CallTree
     TreeInfo*      outermostTree;       // the outermost tree we initially invoked
     double*        stackBase;           // native stack base
     FrameInfo**    callstackBase;       // call stack base

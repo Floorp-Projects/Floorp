@@ -188,7 +188,7 @@ def run_tests(tests, test_dir, lib_dir):
                 pb.update(n)
         complete = True
     except KeyboardInterrupt:
-        pass
+        print('TEST-UNEXPECTED_FAIL | trace-test.py | %s'%test.path)
 
     if pb:
         pb.finish()

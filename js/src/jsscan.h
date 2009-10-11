@@ -329,9 +329,6 @@ struct JSTokenStream {
 /* Ignore keywords and return TOK_NAME instead to the parser. */
 #define TSF_KEYWORD_IS_NAME 0x4000
 
-/* Parsing a destructuring object or array initialiser pattern. */
-#define TSF_DESTRUCTURING   0x8000
-
 /* Unicode separators that are treated as line terminators, in addition to \n, \r */
 #define LINE_SEPARATOR  0x2028
 #define PARA_SEPARATOR  0x2029

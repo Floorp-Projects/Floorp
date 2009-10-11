@@ -471,7 +471,9 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
      * Fill in the rest of wscript. This means if you add members to JSScript
      * you must update this code. FIXME: factor into JSScript::clone method.
      */
-    wscript->flags = script->flags;
+    wscript->noScriptRval = script->noScriptRval;
+    wscript->savedCallerFun = script->savedCallerFun;
+    wscript->hasSharps = script->hasSharps;
     wscript->version = script->version;
     wscript->nfixed = script->nfixed;
     wscript->filename = script->filename;
