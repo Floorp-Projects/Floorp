@@ -764,8 +764,8 @@ struct JSFunctionBox : public JSObjectBox
     JSFunctionBox       *parent;
     uint32              queued:1,
                         inLoop:1,               /* in a loop in parent function */
-                        level:JSFB_LEVEL_BITS,
-                        tcflags:16;
+                        level:JSFB_LEVEL_BITS;
+    uint32              tcflags;
 };
 
 struct JSFunctionBoxQueue {
@@ -869,9 +869,9 @@ struct JSCompiler {
      * starting at funbox, recursively walking its kids, then following its
      * siblings, their kids, etc.
      */
-    bool analyzeFunctions(JSFunctionBox *funbox, uint16& tcflags);
+    bool analyzeFunctions(JSFunctionBox *funbox, uint32& tcflags);
     bool markFunArgs(JSFunctionBox *funbox, uintN tcflags);
-    void setFunctionKinds(JSFunctionBox *funbox, uint16& tcflags);
+    void setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags);
 
     void trace(JSTracer *trc);
 
@@ -885,7 +885,8 @@ struct JSCompiler {
                   JSPrincipals *principals, uint32 tcflags,
                   const jschar *chars, size_t length,
                   FILE *file, const char *filename, uintN lineno,
-                  JSString *source = NULL);
+                  JSString *source = NULL,
+                  unsigned staticLevel = 0);
 };
 
 /*

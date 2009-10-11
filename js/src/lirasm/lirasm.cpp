@@ -113,9 +113,9 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
 }
 #endif
 
-typedef FASTCALL int32_t (*RetInt)();
-typedef FASTCALL double (*RetFloat)();
-typedef FASTCALL GuardRecord* (*RetGuard)();
+typedef int32_t (FASTCALL *RetInt)();
+typedef double (FASTCALL *RetFloat)();
+typedef GuardRecord* (FASTCALL *RetGuard)();
 
 struct Function {
     const char *name;
@@ -324,6 +324,14 @@ private:
     void extract_any_label(string &lab, char lab_delim);
     void endFragment();
 };
+
+// 'sin' is overloaded on some platforms, so taking its address
+// doesn't quite work. Provide a do-nothing function here
+// that's not overloaded.
+double sinFn(double d) {
+    return sin(d);
+}
+#define sin sinFn
 
 Function functions[] = {
     FN(puts, I32 | (PTRARG<<2)),

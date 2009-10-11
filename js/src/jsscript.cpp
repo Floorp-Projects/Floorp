@@ -1531,9 +1531,9 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     if (cg->regexpList.length != 0)
         cg->regexpList.finish(script->regexps());
     if (cg->flags & TCF_NO_SCRIPT_RVAL)
-        script->flags |= JSSF_NO_SCRIPT_RVAL;
+        script->noScriptRval = true;
     if (cg->hasSharps())
-        script->flags |= JSSF_HAS_SHARPS;
+        script->hasSharps = true;
 
     if (cg->upvarList.count != 0) {
         JS_ASSERT(cg->upvarList.count <= cg->upvarMap.length);
