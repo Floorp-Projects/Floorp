@@ -41,9 +41,7 @@
 #include "nsIDOMSVGTextElement.h"
 #include "nsCOMPtr.h"
 #include "nsSVGAnimatedLengthList.h"
-#include "nsSVGAnimatedNumberList.h"
 #include "nsSVGLengthList.h"
-#include "nsSVGNumberList.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextContentElement.h"
 #include "nsIFrame.h"
@@ -90,7 +88,6 @@ protected:
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> mY;
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> mdX;
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> mdY;
-  nsCOMPtr<nsIDOMSVGAnimatedNumberList> mRotate;
 
 };
 
@@ -177,18 +174,6 @@ nsSVGTextElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-  // DOM property: nsIDOMSVGTextPositioningElement::rotate, #IMPLIED attrib: rotate
-  {
-    nsCOMPtr<nsIDOMSVGNumberList> numberList;
-    rv = NS_NewSVGNumberList(getter_AddRefs(numberList));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedNumberList(getter_AddRefs(mRotate),
-                                     numberList);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::rotate, mRotate);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
   return rv;
 }
 
@@ -242,9 +227,8 @@ NS_IMETHODIMP nsSVGTextElement::GetDy(nsIDOMSVGAnimatedLengthList * *aDy)
 /* readonly attribute nsIDOMSVGAnimatedNumberList rotate; */
 NS_IMETHODIMP nsSVGTextElement::GetRotate(nsIDOMSVGAnimatedNumberList * *aRotate)
 {
-  *aRotate = mRotate;
-  NS_IF_ADDREF(*aRotate);
-  return NS_OK;
+  NS_NOTYETIMPLEMENTED("nsSVGTextElement::GetRotate");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //----------------------------------------------------------------------

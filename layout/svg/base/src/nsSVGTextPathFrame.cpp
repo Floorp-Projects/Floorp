@@ -84,32 +84,26 @@ nsSVGTextPathFrame::GetType() const
 }
 
 
-already_AddRefed<nsIDOMSVGLengthList>
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTextPathFrame::GetX()
 {
   return nsnull;
 }
 
-already_AddRefed<nsIDOMSVGLengthList>
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTextPathFrame::GetY()
 {
   return nsnull;
 }
 
-already_AddRefed<nsIDOMSVGLengthList>
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTextPathFrame::GetDx()
 {
   return nsnull;
 }
 
-already_AddRefed<nsIDOMSVGLengthList>
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTextPathFrame::GetDy()
-{
-  return nsnull;
-}
-
-already_AddRefed<nsIDOMSVGNumberList>
-nsSVGTextPathFrame::GetRotate()
 {
   return nsnull;
 }
