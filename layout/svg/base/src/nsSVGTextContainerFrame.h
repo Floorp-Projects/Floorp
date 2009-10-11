@@ -39,6 +39,7 @@
 
 #include "nsSVGContainerFrame.h"
 #include "nsIDOMSVGLengthList.h"
+#include "nsIDOMSVGNumberList.h"
 
 class nsISVGGlyphFragmentNode;
 class nsISVGGlyphFragmentLeaf;
@@ -52,10 +53,11 @@ public:
     nsSVGDisplayContainerFrame(aContext) {}
 
   void NotifyGlyphMetricsChange();
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX();
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY();
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDx();
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDy();
+  virtual already_AddRefed<nsIDOMSVGLengthList> GetX();
+  virtual already_AddRefed<nsIDOMSVGLengthList> GetY();
+  virtual already_AddRefed<nsIDOMSVGLengthList> GetDx();
+  virtual already_AddRefed<nsIDOMSVGLengthList> GetDy();
+  virtual already_AddRefed<nsIDOMSVGNumberList> GetRotate();
   
 public:
   NS_DECL_QUERYFRAME_TARGET(nsSVGTextContainerFrame)
