@@ -109,6 +109,11 @@ FinishThreadData(JSThreadData *data)
 static void
 PurgeThreadData(JSContext *cx, JSThreadData *data)
 {
+    /*
+     * Clear the double free list to release all the pre-allocated doubles.
+     */
+    data->doubleFreeList = NULL;
+
     js_PurgeGSNCache(&data->gsnCache);
 
     /* FIXME: bug 506341. */

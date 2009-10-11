@@ -4362,7 +4362,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             new (cg2space) JSCodeGenerator(cg->compiler,
                                            cg->codePool, cg->notePool,
                                            pn->pn_pos.begin.lineno);
-        cg2->flags = (uint16) (pn->pn_funbox->tcflags | TCF_IN_FUNCTION);
+        cg2->flags = pn->pn_funbox->tcflags | TCF_IN_FUNCTION;
 #if JS_HAS_SHARP_VARS
         if (cg2->flags & TCF_HAS_SHARPS) {
             cg2->sharpSlotBase = fun->sharpSlotBase(cx);

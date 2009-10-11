@@ -289,6 +289,9 @@ typedef struct JSFunctionMeter {
 #endif
 
 struct JSThreadData {
+    /* List of pre-allocated doubles. */
+    JSGCDoubleCell      *doubleFreeList;
+
     /*
      * The GSN cache is per thread since even multi-cx-per-thread embeddings
      * do not interleave js_GetSrcNote calls.
@@ -1090,9 +1093,6 @@ struct JSContext {
 
     /* Stack of thread-stack-allocated temporary GC roots. */
     JSTempValueRooter   *tempValueRooters;
-
-    /* List of pre-allocated doubles. */
-    JSGCDoubleCell      *doubleFreeList;
 
     /* Debug hooks associated with the current context. */
     JSDebugHooks        *debugHooks;
