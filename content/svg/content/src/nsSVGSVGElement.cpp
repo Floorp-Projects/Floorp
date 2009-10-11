@@ -707,13 +707,6 @@ nsSVGSVGElement::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix,
   return NS_OK;
 }
 
-/* DOMString createSVGString (); */
-NS_IMETHODIMP
-nsSVGSVGElement::CreateSVGString(nsAString & _retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* nsIDOMElement getElementById (in DOMString elementId); */
 NS_IMETHODIMP
 nsSVGSVGElement::GetElementById(const nsAString & elementId, nsIDOMElement **_retval)
