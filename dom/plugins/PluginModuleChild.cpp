@@ -176,8 +176,6 @@ PluginModuleChild::InitGraphics()
     // FIXME/cjones: is this the place for this?
 #if defined(OS_LINUX)
     gtk_init(0, 0);
-
-    XSynchronize(GDK_DISPLAY(), True);
 #else
     // may not be necessary on all platforms
 #endif
