@@ -641,7 +641,6 @@ MAKEFILES_embedding="
   embedding/components/printingui/Makefile
   embedding/components/printingui/src/Makefile
   embedding/components/printingui/src/mac/Makefile
-  embedding/components/printingui/src/mac/printpde/Makefile
   embedding/components/printingui/src/unixshared/Makefile
   embedding/components/printingui/src/win/Makefile
   embedding/components/webbrowserpersist/Makefile
