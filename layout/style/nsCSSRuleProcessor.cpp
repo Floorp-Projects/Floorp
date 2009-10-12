@@ -2374,6 +2374,13 @@ AddRule(RuleValue* aRuleInfo, void* aCascade)
         if (!array)
           return PR_FALSE;
         array->AppendElement(selector);
+        if (attr->mLowercaseAttr != attr->mCasedAttr) {
+          nsTArray<nsCSSSelector*> *array =
+            cascade->AttributeListFor(attr->mLowercaseAttr);
+          if (!array)
+            return PR_FALSE;
+          array->AppendElement(selector);
+        }          
       }
     }
   }
