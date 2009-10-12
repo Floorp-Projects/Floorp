@@ -124,9 +124,6 @@ nsIWidget         * gRollupWidget             = nsnull;
 PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 ////////////////////////////////////////////////////
 
-PRBool gJustGotActivate = PR_FALSE;
-PRBool gJustGotDeactivate = PR_FALSE;
-
 ////////////////////////////////////////////////////
 // Mouse Clicks - static variable defintions 
 // for figuring out 1 - 3 Clicks
@@ -184,6 +181,9 @@ static PRUint32  gDragStatus = 0;
 
 #define FAPPCOMMAND_MASK  0xF000
 #define GET_APPCOMMAND_LPARAM(lParam) ((USHORT)(HIUSHORT(lParam) & ~FAPPCOMMAND_MASK))
+
+// used to identify plugin widgets (copied from nsPluginNativeWindowOS2.cpp)
+#define NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION "MozillaPluginWindowPropertyAssociation"
 
 //-------------------------------------------------------------------------
 //
@@ -1141,19 +1141,18 @@ NS_METHOD nsWindow::SetZIndex(PRInt32 aZIndex)
 
 NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode)
 {
-  nsresult rv;
+  PRInt32 previousMode;
+  GetSizeMode(&previousMode);
 
-  // save the requested state
-  rv = nsBaseWidget::SetSizeMode(aMode);
+  // save the new state
+  nsresult rv = nsBaseWidget::SetSizeMode(aMode);
 
-  // this is part of a kludge to keep minimized windows from getting
-  // restored when they get the focus - we defer the activation event
-  // until the window has actually been restored;  see WM_FOCUSCHANGED
-  if (gJustGotActivate) {
+  // Minimized windows would get restored involuntarily if we fired an
+  // NS_ACTIVATE when the user clicks on them.  Instead, we defer the
+  // activation event until the window has explicitly been restored.
+  if (previousMode == nsSizeMode_Minimized && previousMode != aMode) {
     DEBUGFOCUS(deferred NS_ACTIVATE);
-    gJustGotActivate = PR_FALSE;
-    gJustGotDeactivate = PR_FALSE;
-    DispatchFocus(NS_ACTIVATE);
+    ActivateTopLevelWidget();
   }
 
   // nothing to do in these cases
@@ -2384,6 +2383,7 @@ void nsWindow::ConstrainZLevel(HWND *aAfter) {
   NS_IF_RELEASE(event.mActualBelow);
 }
 
+//-----------------------------------------------------------------------
 
 // 'Window procedure'
 PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
@@ -2499,12 +2499,10 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
         case WM_BUTTON1DOWN:
           if (!mIsScrollBar)
             WinSetCapture( HWND_DESKTOP, mWnd);
-          result = DispatchMouseEvent( NS_MOUSE_BUTTON_DOWN, mp1, mp2);
+          DispatchMouseEvent( NS_MOUSE_BUTTON_DOWN, mp1, mp2);
             // there's no need to clear this on button-up
           gLastButton1Down.x = XFROMMP(mp1);
           gLastButton1Down.y = YFROMMP(mp1);
-          WinSetActiveWindow(HWND_DESKTOP, mWnd);
-          result = PR_TRUE;
           break;
         case WM_BUTTON1UP:
           if (!mIsScrollBar)
@@ -2662,58 +2660,25 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           result = OnScroll( msg, mp1, mp2);
           break;
 
-        case WM_ACTIVATE:
-          DEBUGFOCUS(WM_ACTIVATE);
-          if (mp1)
-            gJustGotActivate = PR_TRUE;
-          else
-            gJustGotDeactivate = PR_TRUE;
-          break;
+        // Do not act on WM_ACTIVATE - it is handled by nsFrameWindow.
+        // case WM_ACTIVATE:
+        //   break;
 
+        // This msg is used to activate top-level and plugin widgets
+        // after PM is done changing the focus.  We're only interested
+        // in windows gaining focus, not in those losing it.
         case WM_FOCUSCHANGED:
-        {
           DEBUGFOCUS(WM_FOCUSCHANGED);
-
-          // If the frame was activated earlier or mp1 is 0, dispatch
-          // focus & activation events.  However, if the frame is minimized,
-          // defer activation and let SetSizeMode() dispatch it after the
-          // window has been restored by the user - otherwise, Show() will
-          // restore it involuntarily.  
-
           if (SHORT1FROMMP(mp2)) {
-            if (gJustGotActivate || mp1 == 0) {
-              HWND hActive = WinQueryActiveWindow( HWND_DESKTOP);
-              if (!(WinQueryWindowULong( hActive, QWL_STYLE) & WS_MINIMIZED)) {
-                DEBUGFOCUS(NS_ACTIVATE);
-                gJustGotActivate = PR_FALSE;
-                gJustGotDeactivate = PR_FALSE;
-                result = DispatchFocus(NS_ACTIVATE);
-              }
-            }
-
-            if ( WinIsChild( mWnd, HWNDFROMMP(mp1)) && mNextID == 1) {
-              DEBUGFOCUS(NS_PLUGIN_ACTIVATE);
-              result = DispatchFocus(NS_PLUGIN_ACTIVATE);
-              WinSetFocus(HWND_DESKTOP, mWnd);
-            }
+            ActivateTopLevelWidget();
+            ActivatePlugin(HWNDFROMMP(mp1));
           }
-          // We are losing focus
-          else {
-            if (gJustGotDeactivate) {
-              DEBUGFOCUS(NS_DEACTIVATE);
-              gJustGotDeactivate = PR_FALSE;
-              result = DispatchFocus(NS_DEACTIVATE);
-            }
-          }
-
           break;
-        }
 
         case WM_WINDOWPOSCHANGED: 
           result = OnReposition( (PSWP) mp1);
           break;
-    
-    
+
         case WM_PRESPARAMCHANGED:
           // This is really for font-change notifies.  Do that first.
           rc = GetPrevWP()( mWnd, msg, mp1, mp2);
@@ -2735,6 +2700,73 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
     return result;
 }
 
+//-------------------------------------------------------------------------
+
+// When a window gets the focus, call nsFrameWindow's version of this
+// method.  It will fire an NS_ACTIVATE event on the top-level widget
+// if appropriate.
+
+void    nsWindow::ActivateTopLevelWidget()
+{
+  nsWindow * top = static_cast<nsWindow*>(GetTopLevelWidget());
+  if (top) {
+    top->ActivateTopLevelWidget();
+  }
+  return;
+}
+
+//-------------------------------------------------------------------------
+
+// Fire an NS_PLUGIN_ACTIVATE event whenever a window associated with
+// a plugin widget get the focus.
+
+void    nsWindow::ActivatePlugin(HWND aWnd)
+{
+  // avoid acting on recursive WM_FOCUSCHANGED msgs
+  static PRBool inPluginActivate = FALSE;
+  if (inPluginActivate) {
+    return;
+  }
+
+  // This property is used by the plugin window to store a pointer
+  // to its plugin object.  We just use it as a convenient marker.
+  if (!WinQueryProperty(mWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION)) {
+    return;
+  }
+
+  // Fire a plugin activation event on the plugin widget.
+  inPluginActivate = TRUE;
+  DEBUGFOCUS(NS_PLUGIN_ACTIVATE);
+  DispatchFocus(NS_PLUGIN_ACTIVATE);
+
+  // Activating the plugin moves the focus off the child that had it,
+  // so try to restore it.  If the WM_FOCUSCHANGED msg was synthesized
+  // by the plugin, then mp1 contains the child window that lost focus.
+  // Otherwise, just move it to the plugin's first child unless this
+  // is the mplayer plugin - doing so will put us into an endless loop.
+  // Since its children belong to another process, use the PID as a test.
+  HWND hFocus = 0;
+  if (WinIsChild(aWnd, mWnd)) {
+    hFocus = aWnd;
+  } else {
+    hFocus = WinQueryWindow(mWnd, QW_TOP);
+    if (hFocus) {
+      PID pidFocus, pidThis;
+      TID tid;
+      WinQueryWindowProcess(hFocus, &pidFocus, &tid);
+      WinQueryWindowProcess(mWnd, &pidThis, &tid);
+      if (pidFocus != pidThis) {
+        hFocus = 0;
+      }
+    }
+  }
+  if (hFocus) {
+    WinSetFocus(HWND_DESKTOP, hFocus);
+  }
+
+  inPluginActivate = FALSE;
+  return;
+}
 
 // -----------------------------------------------------------------------
 //
