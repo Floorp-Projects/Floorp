@@ -67,6 +67,11 @@ const TOOLBARSTATE_LOADED   = 2;
     "gPrefService",
     "@mozilla.org/preferences-service;1",
     [Ci.nsIPrefBranch2]
+  ],
+  [
+    "gFocusManager",
+    "@mozilla.org/focus-manager;1",
+    [Ci.nsIFocusManager]
   ]
 ].forEach(function (service) {
   let [name, contract, ifaces] = service;
@@ -220,7 +225,7 @@ var BrowserUI = {
       // IME state to be set properly. Testing shows we only really need to
       // do this the first time.
       this._edit.blur();
-      this._edit.focus();
+      gFocusManager.setFocus(this._edit, Ci.nsIFocusManager.FLAG_NOSCROLL);
     }
     else if (!aEdit && Browser.selectedTab.isLoading() && icons.getAttribute("mode") != "loading") {
       icons.setAttribute("mode", "loading");
