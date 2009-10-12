@@ -192,9 +192,13 @@
   margin-right: -17px; /* big number just to make sure the image overflows the edge */
 }
 
+#tool-panel-open:not([disabled="true"]):active:hover {
+  list-style-image: url("chrome://browser/skin/images/settings-active-36.png");
+}
+
 /* button overflows off the left edge */
 #tool-panel-close {
-  list-style-image: url("chrome://browser/skin/images/settings-active-36.png");
+  list-style-image: url("chrome://browser/skin/images/settings-open-36.png");
   margin-left: -17px; /* big number just to make sure the image overflows the edge */
 }
 
