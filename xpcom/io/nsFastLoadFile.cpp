@@ -871,7 +871,7 @@ nsFastLoadFileReader::Open()
 
     mFileLen = (PRUint32) size;
 
-    PRFileMap *mFileMap = PR_CreateFileMap(mFd, mFileLen, PR_PROT_READONLY);
+    mFileMap = PR_CreateFileMap(mFd, mFileLen, PR_PROT_READONLY);
     if (!mFileMap)
         return NS_ERROR_FAILURE;
 
@@ -880,7 +880,7 @@ nsFastLoadFileReader::Open()
     if (mFileLen < sizeof(nsFastLoadHeader))
         return NS_ERROR_FAILURE;
     
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(SOLARIS)
     madvise(mFileData, mFileLen, MADV_WILLNEED);
 #endif
 
