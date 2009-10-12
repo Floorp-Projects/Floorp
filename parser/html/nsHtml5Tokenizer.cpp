@@ -3489,6 +3489,7 @@ nsHtml5Tokenizer::initializeWithoutStarting()
   confident = PR_FALSE;
   strBuf = jArray<PRUnichar,PRInt32>(64);
   longStrBuf = jArray<PRUnichar,PRInt32>(1024);
+  line = 1;
   resetToDataState();
 }
 

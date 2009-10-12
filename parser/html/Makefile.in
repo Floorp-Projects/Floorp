@@ -73,6 +73,8 @@ CPPSRCS		= \
 		nsHtml5StateSnapshot.cpp \
 		nsHtml5TreeOpExecutor.cpp \
 		nsHtml5StreamParser.cpp \
+		nsHtml5Speculation.cpp \
+		nsHtml5SpeculativeLoader.cpp \
 		$(NULL)
 
 FORCE_STATIC_LIB = 1

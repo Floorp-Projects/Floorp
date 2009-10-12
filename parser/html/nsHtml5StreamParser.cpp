@@ -72,6 +72,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHtml5StreamParser)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
   tmp->mExecutorFlusher = nsnull;
   tmp->mExecutor = nsnull;
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
+  tmp->mTreeBuilder->DropSpeculativeLoader();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
@@ -82,6 +84,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
   if (tmp->mExecutorFlusher) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExecutorFlusher->mExecutor");
     cb.NoteXPCOMChild(static_cast<nsIContentSink*> (tmp->mExecutor));
+  }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)  
+  // hack: count the strongly owned edge wrapped in the speculative loader
+  if (tmp->mDocument) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, 
+      "mTreeBuilder->mSpeculativeLoader->mDocument");
+    cb.NoteXPCOMChild(tmp->mDocument);    
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -109,6 +118,7 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder))
   , mTokenizerMutex("nsHtml5StreamParser mTokenizerMutex")
   , mOwner(aOwner)
+  , mSpeculationMutex("nsHtml5StreamParser mSpeculationMutex")
   , mTerminatedMutex("nsHtml5StreamParser mTerminatedMutex")
   , mThread(nsHtml5Module::GetStreamParserThread())
   , mExecutorFlusher(new nsHtml5ExecutorFlusher(aExecutor))
@@ -132,15 +142,18 @@ nsHtml5StreamParser::~nsHtml5StreamParser()
   mUnicodeDecoder = nsnull;
   mSniffingBuffer = nsnull;
   mMetaScanner = nsnull;
-  while (mFirstBuffer) {
-     nsHtml5UTF16Buffer* old = mFirstBuffer;
-     mFirstBuffer = mFirstBuffer->next;
-     delete old;
-  }
+  mFirstBuffer = nsnull;
   mExecutor = nsnull;
   mTreeBuilder = nsnull;
   mTokenizer = nsnull;
   mOwner = nsnull;
+}
+
+void
+nsHtml5StreamParser::SetSpeculativeLoaderWithDocument(nsIDocument* aDocument) {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  mDocument = aDocument;
+  mTreeBuilder->SetSpeculativeLoaderWithDocument(aDocument);
 }
 
 nsresult
@@ -444,7 +457,7 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
   NS_PRECONDITION(STREAM_NOT_STARTED == mStreamState,
                   "Got OnStartRequest when the stream had already started.");
-  NS_PRECONDITION(mExecutor->GetLifeCycle() == NOT_STARTED, 
+  NS_PRECONDITION(!mExecutor->HasStarted(), 
                   "Got OnStartRequest at the wrong stage in the executor life cycle.");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   if (mObserver) {
@@ -503,6 +516,12 @@ nsHtml5StreamParser::DoStopRequest()
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   NS_PRECONDITION(STREAM_BEING_READ == mStreamState,
                   "Stream ended without being open.");
+  mTokenizerMutex.AssertCurrentThreadOwns();
+
+  if (IsTerminated()) {
+    return;
+  }
+
   if (!mUnicodeDecoder) {
     PRUint32 writeCount;
     FinalizeSniffing(nsnull, 0, &writeCount, 0);
@@ -510,10 +529,12 @@ nsHtml5StreamParser::DoStopRequest()
   }
 
   mStreamState = STREAM_ENDED;
-  
-  if (!mWaitingForScripts) {
-    ParseUntilScript();
-  }  
+
+  if (IsTerminatedOrInterrupted()) {
+    return;
+  }
+
+  ParseAvailableData(); 
 }
 
 class nsHtml5RequestStopper : public nsRunnable
@@ -526,6 +547,7 @@ class nsHtml5RequestStopper : public nsRunnable
     {}
     NS_IMETHODIMP Run()
     {
+      mozilla::MutexAutoLock autoLock(mStreamParser->mTokenizerMutex);
       mStreamParser->DoStopRequest();
       return NS_OK;
     }
@@ -554,14 +576,23 @@ nsHtml5StreamParser::DoDataAvailable(PRUint8* aBuffer, PRUint32 aLength)
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   NS_PRECONDITION(STREAM_BEING_READ == mStreamState,
                   "DoDataAvailable called when stream not open.");
+  mTokenizerMutex.AssertCurrentThreadOwns();
+
+  if (IsTerminated()) {
+    return;
+  }
+
   PRUint32 writeCount;
   HasDecoder() ? WriteStreamBytes(aBuffer, aLength, &writeCount) :
                  SniffStreamBytes(aBuffer, aLength, &writeCount);
   // dropping nsresult here
   NS_ASSERTION(writeCount == aLength, "Wrong number of stream bytes written/sniffed.");
-  if (!mWaitingForScripts) {
-    ParseUntilScript();
+
+  if (IsTerminatedOrInterrupted()) {
+    return;
   }
+
+  ParseAvailableData();
 }
 
 class nsHtml5DataAvailable : public nsRunnable
@@ -580,6 +611,7 @@ class nsHtml5DataAvailable : public nsRunnable
     {}
     NS_IMETHODIMP Run()
     {
+      mozilla::MutexAutoLock autoLock(mStreamParser->mTokenizerMutex);
       mStreamParser->DoDataAvailable(mData, mLength);
       return NS_OK;
     }
@@ -648,48 +680,46 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
 }
 
 void
-nsHtml5StreamParser::ParseUntilScript()
+nsHtml5StreamParser::ParseAvailableData()
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
-  if (IsTerminated()) {
+  mTokenizerMutex.AssertCurrentThreadOwns();
+
+  if (IsTerminatedOrInterrupted()) {
     return;
   }
-
-  // TODO: Relax this mutex so that the parser doesn't speculate to
-  // completion when it's already known that the speculation will fail.
-  // Maybe have another boolean and mutex for checking IsSpeculationFailing()
-  // or something like that instead of trying to be fancy with this mutex.
-  mozilla::MutexAutoLock autoLock(mTokenizerMutex);
-
-  mWaitingForScripts = PR_FALSE;
-
+  
   for (;;) {
     if (!mFirstBuffer->hasMore()) {
       if (mFirstBuffer == mLastBuffer) {
         switch (mStreamState) {
           case STREAM_BEING_READ:
-            // never release the last buffer. instead just zero its indeces for refill
-            mFirstBuffer->setStart(0);
-            mFirstBuffer->setEnd(0);
+            // never release the last buffer.
+            if (!mSpeculating) {
+              // reuse buffer space if not speculating
+              mFirstBuffer->setStart(0);
+              mFirstBuffer->setEnd(0);
+            }
             mTreeBuilder->Flush();
             return; // no more data for now but expecting more
           case STREAM_ENDED:
-            Terminate(); // TODO Don't terminate if this is a speculation
+            if (mAtEOF) {
+                return;
+            }
+            mAtEOF = PR_TRUE;
             mTokenizer->eof();
             mTreeBuilder->StreamEnded();
             mTreeBuilder->Flush();
             if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
               NS_WARNING("failed to dispatch executor flush event");
-            }  
+            }
             return; // no more data and not expecting more
           default:
             NS_NOTREACHED("It should be impossible to reach this.");
             return;
         }
       } else {
-        nsHtml5UTF16Buffer* oldBuf = mFirstBuffer;
         mFirstBuffer = mFirstBuffer->next;
-        delete oldBuf;
         continue;
       }
     }
@@ -703,18 +733,23 @@ nsHtml5StreamParser::ParseUntilScript()
       // Terminate, but that never happens together with script.
       // Can't assert that here, though, because it's possible that the main
       // thread has called Terminate() while this thread was parsing.
-      if (IsTerminated()) {
-        return;
-      }
       if (mTreeBuilder->HasScript()) {
-        mTreeBuilder->AddSnapshotToScript(mTreeBuilder->newSnapshot());
+        mozilla::MutexAutoLock speculationAutoLock(mSpeculationMutex);
+        nsHtml5Speculation* speculation = 
+          new nsHtml5Speculation(mFirstBuffer,
+                                 mFirstBuffer->getStart(),
+                                 mTreeBuilder->newSnapshot());
+        mTreeBuilder->AddSnapshotToScript(speculation->GetSnapshot());
         mTreeBuilder->Flush();
         if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
           NS_WARNING("failed to dispatch executor flush event");
-        }  
-        // XXX start speculation
-        mWaitingForScripts = PR_TRUE;
-        return; // ContinueAfterScripts() will re-enable this parser
+        }
+        mTreeBuilder->SetOpSink(speculation);
+        mSpeculations.AppendElement(speculation); // adopts the pointer
+        mSpeculating = PR_TRUE;
+      }
+      if (IsTerminatedOrInterrupted()) {
+        return;
       }
       mTreeBuilder->MaybeFlush();
     }
@@ -722,17 +757,18 @@ nsHtml5StreamParser::ParseUntilScript()
   }
 }
 
-class nsHtml5ContinueAfterScript : public nsRunnable
+class nsHtml5StreamParserContinuation : public nsRunnable
 {
 private:
   nsHtml5RefPtr<nsHtml5StreamParser> mStreamParser;
 public:
-  nsHtml5ContinueAfterScript(nsHtml5StreamParser* aStreamParser)
+  nsHtml5StreamParserContinuation(nsHtml5StreamParser* aStreamParser)
     : mStreamParser(aStreamParser)
   {}
   NS_IMETHODIMP Run()
   {
-    mStreamParser->ParseUntilScript();
+    mozilla::MutexAutoLock autoLock(mStreamParser->mTokenizerMutex);
+    mStreamParser->ParseAvailableData();
     return NS_OK;
   }
 };
@@ -743,40 +779,102 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
                                           PRBool aLastWasCR)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  mExecutor->StartReadingFromStage();
-  // TODO:
-  // test if the state of the argument tokenizer and tree builder match
-  // the earliest speculation.
-  // If not, rendez-vous at barrier, zaps all speculations, rewind the stream 
-  // and copy over the state.
-  // If yes:
-  // If there are multiple speculations or the stream parser has terminated.
-  // load the tree op queue from the earliest speculation into the tree op 
-  // executor and discard the stream data for that speculation. Return.
-  // Otherwise, rendez-vous at barrier, load the tree op queue from the 
-  // speculation into the tree op executor, set the tree op executor to read 
-  // from the stage, set the stream parser tree builder to write to stage,
-  // discard the stream data for the speculation.
-  
+  #ifdef DEBUG
+    mExecutor->AssertStageEmpty();
+  #endif
+  PRBool speculationFailed = PR_FALSE;
   {
-    mozilla::MutexAutoLock autoLock(mTokenizerMutex); 
+    mozilla::MutexAutoLock speculationAutoLock(mSpeculationMutex);
+    if (mSpeculations.IsEmpty()) {
+      // Not quite sure how exactly this happens...
+      // Maybe an artifact of defer scripts?
+      return;
+    }
+    nsHtml5Speculation* speculation = mSpeculations.ElementAt(0);
+    if (aLastWasCR || 
+        !aTokenizer->isInDataState() || 
+        !aTreeBuilder->snapshotMatches(speculation->GetSnapshot())) {
+      speculationFailed = PR_TRUE;
+      // We've got a failed speculation :-(
+      Interrupt(); // Make the parser thread release the tokenizer mutex sooner
+      // now fall out of the speculationAutoLock into the tokenizerAutoLock block
+    } else {
+      // We've got a successful speculation!
+      if (mSpeculations.Length() > 1) {
+        // the first speculation isn't the current speculation, so there's 
+        // no need to bother the parser thread.
+        speculation->FlushToSink(mExecutor);
+        if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
+          NS_WARNING("failed to dispatch executor flush event");
+        }
+        mSpeculations.RemoveElementAt(0);
+        return;
+      }
+      // else
+      Interrupt(); // Make the parser thread release the tokenizer mutex sooner
+      
+      // now fall through
+      // the first speculation is the current speculation. Need to 
+      // release the the speculation mutex and acquire the tokenizer 
+      // mutex. (Just acquiring the other mutex here would deadlock)
+    }
+  }
+  {
+    mozilla::MutexAutoLock tokenizerAutoLock(mTokenizerMutex);
     #ifdef DEBUG
       nsCOMPtr<nsIThread> mainThread;
       NS_GetMainThread(getter_AddRefs(mainThread));
       mAtomTable.SetPermittedLookupThread(mainThread);
     #endif
-
-    // Approximation: Copy state over for now unconditionally.
-    mLastWasCR = aLastWasCR;
-    mTokenizer->loadState(aTokenizer);
-    mTreeBuilder->loadState(aTreeBuilder, &mAtomTable);
-    
+    // In principle, the speculation mutex should be acquired here,
+    // but there's no point, because the parser thread only acquires it
+    // when it has also acquired the tokenizer mutex and we are already
+    // holding the tokenizer mutex.
+    if (speculationFailed) {
+      // Rewind the stream
+      mAtEOF = PR_FALSE;
+      nsHtml5Speculation* speculation = mSpeculations.ElementAt(0);
+      mFirstBuffer = speculation->GetBuffer();
+      mFirstBuffer->setStart(speculation->GetStart());
+      nsHtml5UTF16Buffer* buffer = mFirstBuffer->next;
+      while (buffer) {
+        buffer->setStart(0);
+        buffer = buffer->next;
+      }
+      
+      mSpeculations.Clear(); // potentially a huge number of destructors 
+                             // run here synchronously on the main thread...
+      
+      mTreeBuilder->SetOpSink(mExecutor->GetStage());
+      mExecutor->StartReadingFromStage();
+      mSpeculating = PR_FALSE;
+      // Copy state over
+      mLastWasCR = aLastWasCR;
+      mTokenizer->loadState(aTokenizer);
+      mTreeBuilder->loadState(aTreeBuilder, &mAtomTable);
+    } else {    
+      // We've got a successful speculation and at least a moment ago it was
+      // the current speculation
+      mSpeculations.ElementAt(0)->FlushToSink(mExecutor);
+      if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
+        NS_WARNING("failed to dispatch executor flush event");
+      }
+      mSpeculations.RemoveElementAt(0);
+      if (mSpeculations.IsEmpty()) {
+        // yes, it was still the only speculation. Now stop speculating
+        mTreeBuilder->SetOpSink(mExecutor->GetStage());
+        mExecutor->StartReadingFromStage();
+        mSpeculating = PR_FALSE;
+      }
+    }
+    Uninterrupt();
+    nsCOMPtr<nsIRunnable> event = new nsHtml5StreamParserContinuation(this);
+    if (NS_FAILED(mThread->Dispatch(event, nsIThread::DISPATCH_NORMAL))) {
+      NS_WARNING("Failed to dispatch ParseAvailableData event");
+    }
+    // A stream event might run before this event runs, but that's harmless.
     #ifdef DEBUG
       mAtomTable.SetPermittedLookupThread(mThread);
     #endif
-  }
-  nsCOMPtr<nsIRunnable> event = new nsHtml5ContinueAfterScript(this);
-  if (NS_FAILED(mThread->Dispatch(event, nsIThread::DISPATCH_NORMAL))) {
-    NS_WARNING("Failed to dispatch ParseUntilScript event");
   }
 }
