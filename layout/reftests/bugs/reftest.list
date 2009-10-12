@@ -1325,3 +1325,5 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == 488692-1.html 488692-1-ref.html # needs
 == 513318-1.xul 513318-1-ref.xul
 != 513318-2.xul 513318-2-ref.xul
 != 513318-3.xul 513318-3-ref.xul
+== 520421-1.html 520421-1-ref.html
+== 521685-1.html 521685-1-ref.html
