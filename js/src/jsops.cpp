@@ -2230,8 +2230,9 @@ BEGIN_CASE(JSOP_APPLY)
 #ifdef DEBUG
                 JSOp traceOp = js_GetOpcode(cx, fp->script,
                                             fp->regs->pc);
-                JS_ASSERT_IF(!fp->imacpc, traceOp == JSOP_TRACE ||
-                             traceOp == JSOP_NOP);
+                JS_ASSERT_IF(!fp->imacpc,
+                             traceOp == JSOP_TRACE || traceOp == JSOP_NOP ||
+                             traceOp == JSOP_GENERATOR);
 #endif
                 if (*fp->regs->pc == JSOP_TRACE)
                     MONITOR_BRANCH(Monitor_EnterFrame);
