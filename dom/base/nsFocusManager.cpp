@@ -1667,7 +1667,7 @@ nsFocusManager::RaiseWindow(nsPIDOMWindow* aWindow)
   if (!aWindow || aWindow == mActiveWindow || aWindow == mWindowBeingLowered)
     return;
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_OS2)
   // Windows would rather we focus the child widget, otherwise, the toplevel
   // widget will always end up being focused. Fortunately, focusing the child
   // widget will also have the effect of raising the window this widget is in.

@@ -65,7 +65,7 @@ class imgIContainer;
 //#define DEBUG_FOCUS
 
 #ifdef DEBUG_FOCUS
-  #define DEBUGFOCUS(what) printf("[%x] "#what" (%d)\n", (int)this, mWindowIdentifier)
+  #define DEBUGFOCUS(what) fprintf(stderr, "[%8x]  %8lx  (%02d)  "#what"\n", (int)this, mWnd, mWindowIdentifier)
 #else
   #define DEBUGFOCUS(what)
 #endif
@@ -206,6 +206,9 @@ protected:
 
    // Return whether message has been processed.
    virtual PRBool ProcessMessage( ULONG m, MPARAM p1, MPARAM p2, MRESULT &r);
+
+           void   ActivatePlugin(HWND aWnd);
+   virtual void   ActivateTopLevelWidget();
    virtual PRBool OnPaint();
    virtual void   OnDestroy();
    virtual PRBool OnReposition( PSWP pNewSwp);
