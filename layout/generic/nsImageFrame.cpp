@@ -1713,8 +1713,8 @@ nsresult nsImageFrame::LoadIcons(nsPresContext *aPresContext)
 {
   NS_ASSERTION(!gIconLoad, "called LoadIcons twice");
 
-  NS_NAMED_LITERAL_STRING(loadingSrc,"resource://gre/res/loading-image.png");
-  NS_NAMED_LITERAL_STRING(brokenSrc,"resource://gre/res/broken-image.png");
+  NS_NAMED_LITERAL_STRING(loadingSrc,"resource://gre-resources/loading-image.png");
+  NS_NAMED_LITERAL_STRING(brokenSrc,"resource://gre-resources/broken-image.png");
 
   gIconLoad = new IconLoad();
   if (!gIconLoad) 
