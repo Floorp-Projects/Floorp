@@ -47,7 +47,7 @@
 
 #include "IPCMessageStart.h"
 
-COMPILE_ASSERT(LastMsgIndex <= 16, need_to_update_IPC_MESSAGE_MACRO);
+COMPILE_ASSERT(LastMsgIndex <= 64, need_to_update_IPC_MESSAGE_MACRO);
 
 namespace IPC {
 

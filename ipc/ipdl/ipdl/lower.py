@@ -767,7 +767,7 @@ class GenerateProtocolHeader(Visitor):
             md.accept(self)
 
         # spit out message type enum and classes
-        msgstart = self.pname +'MsgStart << 12'
+        msgstart = self.pname +'MsgStart << 10'
         msgenum = cxx.TypeEnum('MessageType')
         msgenum.addId(self.pname +'Start', msgstart)
         msgenum.addId(self.pname +'PreStart', '('+ msgstart +') - 1')
