@@ -2462,7 +2462,7 @@ TraceRecorder::~TraceRecorder()
          TrashTree(cx, whichTreesToTrash[i]);
 
     /* Purge the tempAlloc used during recording. */
-    tempAlloc.reset();
+    tempAlloc.reset(true);
     traceMonitor->lirbuf->clear();
 
     forgetGuardedShapes();
@@ -7482,8 +7482,8 @@ js_InitJIT(JSTraceMonitor *tm)
     JS_ASSERT(!tm->dataAlloc && !tm->traceAlloc && !tm->codeAlloc);
     tm->dataAlloc = new VMAllocator();
     tm->traceAlloc = new VMAllocator();
-    tm->tempAlloc = new VMAllocator();
-    tm->reTempAlloc = new VMAllocator();
+    tm->tempAlloc = new VMAllocator(65536);
+    tm->reTempAlloc = new VMAllocator(65536);
     tm->codeAlloc = new CodeAlloc();
     tm->frameCache = new FrameInfoCache(tm->dataAlloc);
     tm->flush();

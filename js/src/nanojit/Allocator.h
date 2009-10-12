@@ -51,10 +51,11 @@ namespace nanojit
      * proceed.
      */
     class Allocator {
+        size_t minChunk;
     public:
-        Allocator();
+        Allocator(size_t minChunk = 2000);
         ~Allocator();
-        void reset();
+        void reset(bool keepFirst = false);
 
         /** alloc memory, never return null. */
         void* alloc(size_t nbytes) {
@@ -74,8 +75,11 @@ namespace nanojit
         class Chunk {
         public:
             Chunk* prev;
+            size_t size;
             int64_t data[1]; // int64_t forces 8-byte alignment.
         };
+
+        void setChunk(Chunk* chunk);
 
         Chunk* current_chunk;
         char* current_top;
