@@ -56,7 +56,8 @@ interface nsIDOMSVGAnimationElement
 { 
   readonly attribute nsIDOMSVGElement targetElement;
   float getStartTime();
+      // raises ( DOMException )
   float getCurrentTime();
   float getSimpleDuration();
-          // raises (nsIDOMDOMException)
+      // raises ( DOMException )
 };
