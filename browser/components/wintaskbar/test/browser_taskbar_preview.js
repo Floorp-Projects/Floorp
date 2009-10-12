@@ -1,10 +1,19 @@
 function test() {
-  // Cannot do anything if the taskbar service is not available
-  ok(("AeroPeek" in window) == isWin7OrHigher(), "AeroPeek initialized when it should be");
+  var isWin7OrHigher = false;
+  try {
+    let version = Cc["@mozilla.org/system-info;1"]
+                    .getService(Ci.nsIPropertyBag2)
+                    .getProperty("version");
+    isWin7OrHigher = (parseFloat(version) >= 6.1);
+  } catch (ex) { }
 
-  // Entire feature is disabled
-  if (!("AeroPeek" in window))
+  is(!!Win7Features, isWin7OrHigher, "Win7Features available when it should be");
+  if (!isWin7OrHigher)
     return;
+
+  let temp = {};
+  Cu.import("resource://gre/modules/WindowsPreviewPerTab.jsm", temp);
+  let AeroPeek = temp.AeroPeek;
 
   waitForExplicitFinish();
 
@@ -94,16 +103,6 @@ function test() {
     is(nPreviews, aPreviews, msg || "Got expected number of previews");
   }
 
-  function isWin7OrHigher() {
-    try {
-      var sysInfo = Cc["@mozilla.org/system-info;1"].
-                    getService(Ci.nsIPropertyBag2);
-      var ver = parseFloat(sysInfo.getProperty("version"));
-      if (ver >= 6.1)
-        return true;
-    } catch (ex) { }
-    return false;
-  }
   function getPreviewForTab(tab)
     window.gTaskbarTabGroup.previewFromTab(tab);
 
