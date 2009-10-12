@@ -1,0 +1,122 @@
+<html>
+<head>
+  <title>NPN_Invoke_Default Tests</title>
+  <script type="text/javascript" 
+          src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests()">
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="100">
+  </embed>
+
+  <script class="testbody" type="application/javascript">
+  
+  SimpleTest.waitForExplicitFinish();
+  
+  // global test function
+  function testMe(arg) {
+    return arg + arg;
+  }
+
+  ////
+  // This test exercises NPN_InvokeDefault using the test plugin's
+  // npnInvokeDefaultTest method.  This method invokes an object
+  // with a single parameter, and returns the result of the invocation.
+  // The test list below is used to drive the tests.  Each member of the 
+  // array contains three members: the object to invoke, an argument to 
+  // invoke it with, and the expected result of the invocation.
+  //
+  var tests = [
+    // Number object
+    ["Number", 3, 3],
+    ["Number", "3", 3],
+    ["Number", "0x20", 32],
+    ["Number", "three", Number.NaN],
+    ["Number", "1e+3", 1000],
+    ["Number", 5.6612, 5.6612],
+    // Array object
+    ["Array", 3, Array(3)],
+    // Boolean object
+    ["Boolean", 0, false],
+    ["Boolean", null, false],
+    ["Boolean", "", false],
+    ["Boolean", false, false],
+    ["Boolean", true, true],
+    ["Boolean", "true", true],
+    ["Boolean", "false", true],
+    ["Boolean", new Boolean(false), true],
+    ["Boolean", { "value": false }, true],
+    // Date object
+    ["Date", 50000, Date(50000)],
+    ["Date", "December 17, 1995 03:24:00", Date("December 17, 1995 03:24:00")],
+    // Function object
+    ["Function", "return 3", Function("return 3")],
+    ["Function", "window.alert('test')", Function("window.alert('test')")],
+    // Object object
+    ["Object", undefined, Object()],
+    ["Object", null, Object()],
+    ["Object", true, new Boolean(true)],
+    ["Object", Boolean(), new Boolean(false)],
+    ["Object", "a string", new String("a string")],
+    ["Object", 3.14, new Number(3.14)],
+    ["Object", { "key1": "test", "key2": 15 }, { "key1": "test", "key2": 15 }],
+    ["Object", [1, 3, 5, 7, 9, 11, 13, 17], [1, 3, 5, 7, 9, 11, 13, 17]], 
+    // RegExp object
+    ["RegExp", "...", RegExp("...")],
+    // String object
+    ["String", "testing", "testing"],
+    ["String", "test\u0020me", "test me"],
+    ["String", "314", "314"],
+    ["String", "true", "true"],
+    ["String", "null", "null"],
+    ["String", "2 + 2", String("2 + 2")],
+    // global functions
+    ["testMe", 3, 6],
+    ["testMe", "me", "meme"],
+    ["testMe", undefined, Number.NaN],
+    ["testMe", [1, 2], "1,21,2"],
+    ["isNaN", "junk", true],
+    ["parseInt", "156", 156],
+    ["encodeURI", "a = b", "a%20=%20b"],
+  ];
+ 
+  function runTests() {
+    var plugin = document.getElementById("plugin1");
+
+    for each (var test in tests) {
+      var result = plugin.npnInvokeDefaultTest(test[0], test[1]);
+      // serialize the two values for easy 
+      var json_expected = JSON.stringify(test[2]);
+      var json_result = JSON.stringify(result);
+      if (typeof(result) == "function")
+          json_result = result.toString();
+      if (typeof(test[2]) == "function")
+          json_expected = test[2].toString();
+      is(json_result, json_expected, 
+          "npnInvokeDefault returned an unexpected value");
+      is(typeof(result), typeof(test[2]), 
+          "npnInvokeDefaultTest return value was of unexpected type");
+      var success = (json_result == json_expected && 
+          typeof(result) == typeof(test[2]));
+      appendChildNodes($("verbose"),
+          SPAN((success ? "pass" : "fail") + ": " + test[0] + "(" +
+          JSON.stringify(test[1]) + ") == " + json_result + "(" + 
+          typeof(result) + "), expected " + json_expected + "(" + 
+          typeof(test[2]) + ")"),
+          BR()
+          );
+    }
+            
+    SimpleTest.finish();
+  }
+  </script>
+  
+  <div id="verbose">
+  </div>
+ </body>
+ </html>

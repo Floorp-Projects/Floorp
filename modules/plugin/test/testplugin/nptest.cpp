@@ -66,6 +66,7 @@ typedef bool (* ScriptableFunction)
   (NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static bool npnInvokeTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool npnInvokeDefaultTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool setUndefinedValueTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool identifierToStringTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool timerTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -86,6 +87,7 @@ static bool doInternalConsistencyCheck(NPObject* npobj, const NPVariant* args, u
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnInvokeTest",
+  "npnInvokeDefaultTest",
   "setUndefinedValueTest",
   "identifierToStringTest",
   "timerTest",
@@ -107,6 +109,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
   npnInvokeTest,
+  npnInvokeDefaultTest,
   setUndefinedValueTest,
   identifierToStringTest,
   timerTest,
@@ -1001,6 +1004,12 @@ NPN_Invoke(NPP npp, NPObject* obj, NPIdentifier methodName, const NPVariant *arg
   return sBrowserFuncs->invoke(npp, obj, methodName, args, argCount, result);
 }
 
+bool
+NPN_InvokeDefault(NPP npp, NPObject* obj, const NPVariant *args, uint32_t argCount, NPVariant *result)
+{
+  return sBrowserFuncs->invokeDefault(npp, obj, args, argCount, result);
+}
+
 const char*
 NPN_UserAgent(NPP instance)
 {
@@ -1322,6 +1331,42 @@ compareVariants(NPP instance, const NPVariant* var1, const NPVariant* var2)
       success = false;
   }
   
+  return success;
+}
+
+static bool
+npnInvokeDefaultTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  bool success = false;
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+ 
+  NPObject* windowObject;
+  NPN_GetValue(npp, NPNVWindowNPObject, &windowObject);
+  if (!windowObject)
+    return false;
+
+  NPIdentifier objectIdentifier = variantToIdentifier(args[0]);
+  if (!objectIdentifier)
+    return false;
+
+  NPVariant objectVariant;
+  if (NPN_GetProperty(npp, windowObject, objectIdentifier,
+      &objectVariant)) {
+    if (NPVARIANT_IS_OBJECT(objectVariant)) {
+      NPObject* selfObject = NPVARIANT_TO_OBJECT(objectVariant);
+      if (selfObject != NULL) {
+        NPVariant resultVariant;
+        if (NPN_InvokeDefault(npp, selfObject, &args[1], argCount - 1,
+            &resultVariant)) {
+          *result = resultVariant;
+          success = true;
+        }
+      }
+    }
+    NPN_ReleaseVariantValue(&objectVariant);
+  }
+
+  NPN_ReleaseObject(windowObject);
   return success;
 }
 
