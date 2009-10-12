@@ -281,7 +281,7 @@ CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
       fprintf(gDumpFile, "Source of: ");
       fputs(NS_ConvertUTF16toUTF8(mFilename).get(), gDumpFile);
       fprintf(gDumpFile, "</title>\n");
-      fprintf(gDumpFile, "<link rel=\"stylesheet\" type=\"text/css\" href=\"resource://gre/res/viewsource.css\">\n");
+      fprintf(gDumpFile, "<link rel=\"stylesheet\" type=\"text/css\" href=\"resource://gre-resources/viewsource.css\">\n");
       fprintf(gDumpFile, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n");
       fprintf(gDumpFile, "</head>\n");
       fprintf(gDumpFile, "<body id=\"viewsource\">\n");
@@ -371,7 +371,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsITokenizer* aTokenizer,
 
           AddAttrToNode(theNode, theAllocator,
                         NS_LITERAL_STRING("href"),
-                        NS_LITERAL_STRING("resource://gre/res/viewsource.css"));
+                        NS_LITERAL_STRING("resource://gre-resources/viewsource.css"));
 
           mSink->AddLeaf(theNode);
         }

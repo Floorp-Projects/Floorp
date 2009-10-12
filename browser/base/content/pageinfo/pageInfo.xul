@@ -289,7 +289,7 @@
             <image id="thepreviewimage"/>
           </hbox>
           <hbox id="brokenimagecontainer" pack="center" collapsed="true">
-            <image id="brokenimage" src="resource:///res/broken-image.png"/>
+            <image id="brokenimage" src="resource://gre-resources/broken-image.png"/>
           </hbox>
         </vbox>
       </vbox>
