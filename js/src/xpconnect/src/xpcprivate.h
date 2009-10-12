@@ -1229,14 +1229,9 @@ public:
         else if(mCallBeginRequest == CALLED_BEGINREQUEST)
             JS_EndRequest(mCx);
     }
-    void SetWrapper(JSObject* currentJSObject,
-                    XPCWrappedNative* wrapper,
-                    XPCWrappedNativeTearOff* tearoff)
-    {
-        mCurrentJSObject = currentJSObject;
-        mWrapper = wrapper;
-        mTearOff = tearoff;
-    }
+    void SetWrapper(XPCWrappedNative* wrapper,
+                    XPCWrappedNativeTearOff* tearoff);
+    void SetWrapper(JSObject* currentJSObject);
 
     JSContext *GetJSContext()
     {
@@ -2481,9 +2476,8 @@ public:
                 XPCNativeInterface* Interface,
                 XPCWrappedNative** wrapper);
 
-    // If pobj2 is not null and *pobj2 is not null after the call and the return
-    // value is null, then *pobj2 points to an object for which
-    // IS_SLIM_WRAPPER_OBJECT is true.
+    // If pobj2 is not null and *pobj2 is not null after the call then *pobj2
+    // points to an object for which IS_SLIM_WRAPPER_OBJECT is true.
     static XPCWrappedNative*
     GetWrappedNativeOfJSObject(JSContext* cx, JSObject* obj,
                                JSObject* funobj = nsnull,

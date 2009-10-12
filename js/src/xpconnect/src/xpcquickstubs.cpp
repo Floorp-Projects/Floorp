@@ -831,7 +831,7 @@ xpc_qsUnwrapThisImpl(JSContext *cx,
         if(NS_SUCCEEDED(rv))
         {
             if(lccx)
-                lccx->SetWrapper(cur, wrapper, tearoff);
+                lccx->SetWrapper(wrapper, tearoff);
             
             return JS_TRUE;
         }
@@ -845,7 +845,7 @@ xpc_qsUnwrapThisImpl(JSContext *cx,
                                   cur, iid, ppThis, pThisRef, vp)))
         {
             if(lccx)
-                lccx->SetWrapper(cur, nsnull, nsnull);
+                lccx->SetWrapper(cur);
 
             return JS_TRUE;
         }

@@ -948,7 +948,7 @@ nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         XPCWrappedNative* other_wrapper =
            XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, nsnull, &obj2);
 
-        if(!obj2)
+        if(!other_wrapper || !obj2)
             return NS_OK;
 
         nsIClassInfo* ci = other_wrapper ?
