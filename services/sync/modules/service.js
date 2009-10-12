@@ -1271,6 +1271,9 @@ WeaveSvc.prototype = {
       for each (let engine in engines)
         if (engine._testDecrypt())
           engine.wipeClient();
+
+      // Save the password/passphrase just in-case they aren't restored by sync
+      this.persistLogin();
     }))(),
 
   /**
