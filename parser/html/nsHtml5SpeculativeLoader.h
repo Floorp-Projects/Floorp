@@ -35,46 +35,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsHtml5TreeOpStage_h___
-#define nsHtml5TreeOpStage_h___
+#ifndef nsHtml5SpeculativeLoader_h__
+#define nsHtml5SpeculativeLoader_h__
 
 #include "mozilla/Mutex.h"
-#include "nsHtml5TreeOperation.h"
-#include "nsTArray.h"
-#include "nsAHtml5TreeOpSink.h"
+#include "nsIURI.h"
+#include "nsString.h"
+#include "nsCOMPtr.h"
+#include "nsIDocument.h"
+#include "nsHashSets.h"
 
-class nsHtml5TreeOpStage : public nsAHtml5TreeOpSink {
+class nsHtml5SpeculativeLoader
+{
   public:
-  
-    nsHtml5TreeOpStage();
-    
-    ~nsHtml5TreeOpStage();
-  
-    /**
-     * Flush the operations from the tree operations from the argument
-     * queue if flushing is not expensive.
-     */
-    virtual void MaybeFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
+    nsHtml5SpeculativeLoader(nsIDocument* aDocument);
+    ~nsHtml5SpeculativeLoader();
 
-    /**
-     * Flush the operations from the tree operations from the argument
-     * queue unconditionally.
-     */
-    virtual void ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
-    
-    /**
-     * Retrieve the staged operations into the argument.
-     */
-    void RetrieveOperations(nsTArray<nsHtml5TreeOperation>& aOpQueue);
+    NS_IMETHOD_(nsrefcnt) AddRef(void);
+    NS_IMETHOD_(nsrefcnt) Release(void);
 
-#ifdef DEBUG
-    void AssertEmpty();
-#endif
+    void PreloadScript(const nsAString& aURL,
+                       const nsAString& aCharset,
+                       const nsAString& aType);
+
+    void PreloadStyle(const nsAString& aURL, const nsAString& aCharset);
+
+    void PreloadImage(const nsAString& aURL);
 
   private:
-    nsTArray<nsHtml5TreeOperation> mOpQueue;
-    mozilla::Mutex                 mMutex;
     
+    /**
+     * Get a nsIURI for an nsString if the URL hasn't been preloaded yet.
+     */
+    already_AddRefed<nsIURI> ConvertIfNotPreloadedYet(const nsAString& aURL);
+  
+    nsAutoRefCnt   mRefCnt;
+    
+    /**
+     * The document to use as the context for preloading.
+     */
+    nsCOMPtr<nsIDocument> mDocument;
+    
+    /**
+     * URLs already preloaded/preloading.
+     */
+    nsCStringHashSet mPreloadedURLs;
 };
 
-#endif /* nsHtml5TreeOpStage_h___ */
+#endif // nsHtml5SpeculativeLoader_h__

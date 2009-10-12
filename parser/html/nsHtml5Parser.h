@@ -331,7 +331,7 @@ class nsHtml5Parser : public nsIParser {
     /**
      * The first buffer in the pending UTF-16 buffer queue
      */
-    nsHtml5UTF16Buffer*           mFirstBuffer; // manually managed strong ref
+    nsRefPtr<nsHtml5UTF16Buffer>  mFirstBuffer;
 
     /**
      * The last buffer in the pending UTF-16 buffer queue
@@ -358,6 +358,11 @@ class nsHtml5Parser : public nsIParser {
      * The stream parser.
      */
     nsRefPtr<nsHtml5StreamParser>       mStreamParser;
+    
+    /**
+     * Whether it's OK to transfer parsing back to the stream parser
+     */
+    PRBool                              mReturnToStreamParserPermitted;
 
     /**
      * The scoped atom table

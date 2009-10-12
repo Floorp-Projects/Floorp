@@ -76,3 +76,13 @@ nsHtml5TreeOpStage::RetrieveOperations(nsTArray<nsHtml5TreeOperation>& aOpQueue)
   }
   aOpQueue.MoveElementsFrom(mOpQueue);
 }
+
+#ifdef DEBUG
+void
+nsHtml5TreeOpStage::AssertEmpty()
+{
+  mozilla::MutexAutoLock autoLock(mMutex);
+  // This shouldn't really need the mutex
+  NS_ASSERTION(mOpQueue.IsEmpty(), "The stage was supposed to be empty.");
+}
+#endif
