@@ -668,6 +668,32 @@ SyncEngine.prototype = {
     new Resource(this.cryptoMetaURL).delete();
   },
 
+  _testDecrypt: function _testDecrypt() {
+    // Report failure even if there's nothing to decrypt
+    let canDecrypt = false;
+
+    // Fetch the most recently uploaded record and try to decrypt it
+    let test = new Collection(this.engineURL, this._recordObj);
+    test.limit = 1;
+    test.sort = "newest";
+    test.full = true;
+    test.recordHandler = function(record) {
+      record.decrypt(ID.get("WeaveCryptoID"));
+      canDecrypt = true;
+    };
+
+    // Any failure fetching/decrypting will just result in false
+    try {
+      this._log.trace("Trying to decrypt a record from the server..");
+      test.get();
+    }
+    catch(ex) {
+      this._log.debug("Failed test decrypt: " + Utils.exceptionStr(ex));
+    }
+
+    return canDecrypt;
+  },
+
   _resetClient: function SyncEngine__resetClient() {
     this.resetLastSync();
     this.toFetch = [];
