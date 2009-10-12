@@ -43,7 +43,8 @@
     nsAHtml5TreeOpSink*                    mOpSink;
     nsAutoArrayPtr<nsIContent*>            mHandles;
     PRInt32                                mHandlesUsed;
-    nsTArray<nsAutoArrayPtr<nsIContent*> > mOldHandles;              
+    nsTArray<nsAutoArrayPtr<nsIContent*> > mOldHandles;
+    nsRefPtr<nsHtml5SpeculativeLoader>     mSpeculativeLoader;
 #ifdef DEBUG
     PRBool                                 mActive;
 #endif
@@ -68,6 +69,10 @@
       mOpSink = aOpSink;
     }
     
+    void SetSpeculativeLoaderWithDocument(nsIDocument* aDocument);
+
+    void DropSpeculativeLoader();
+
     void Flush();
     
     void MaybeFlush();
@@ -79,3 +84,9 @@
     void NeedsCharsetSwitchTo(const nsACString& aEncoding);
 
     void AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot);
+
+    inline void Dispatch(nsIRunnable* aEvent) {
+      if (NS_FAILED(NS_DispatchToMainThread(aEvent))) {
+        NS_WARNING("Failed to dispatch speculative load runnable.");
+      }
+    }

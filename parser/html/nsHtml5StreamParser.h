@@ -51,6 +51,7 @@
 #include "nsICharsetAlias.h"
 #include "mozilla/Mutex.h"
 #include "nsHtml5AtomTable.h"
+#include "nsHtml5Speculation.h"
 
 class nsHtml5Parser;
 
@@ -104,7 +105,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
 
   friend class nsHtml5RequestStopper;
   friend class nsHtml5DataAvailable;
-  friend class nsHtml5ContinueAfterScript;
+  friend class nsHtml5StreamParserContinuation;
 
   public:
     NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
@@ -154,7 +155,9 @@ class nsHtml5StreamParser : public nsIStreamListener,
       NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
       mObserver = aObserver;
     }
-    
+
+    void SetSpeculativeLoaderWithDocument(nsIDocument* aDocument);
+
     nsresult GetChannel(nsIChannel** aChannel);
 
     /**
@@ -169,8 +172,6 @@ class nsHtml5StreamParser : public nsIStreamListener,
     void Terminate() {
       mozilla::MutexAutoLock autoLock(mTerminatedMutex);
       mTerminated = PR_TRUE;
-      // TODO: Make sure this object stays alive as long as there are 
-      // in-flight runnables coming this way
     }
     
   private:
@@ -183,15 +184,34 @@ class nsHtml5StreamParser : public nsIStreamListener,
     }
 #endif
 
-    void ParseUntilScript();
+    void Interrupt() {
+      NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+      mozilla::MutexAutoLock autoLock(mTerminatedMutex);
+      mInterrupted = PR_TRUE;
+    }
+
+    void Uninterrupt() {
+      NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+      mTokenizerMutex.AssertCurrentThreadOwns();
+      // Not acquiring mTerminatedMutex because mTokenizerMutex is already
+      // held at this point and is already stronger.
+      mInterrupted = PR_FALSE;      
+    }
+
+    void ParseAvailableData();
     
     void DoStopRequest();
     
     void DoDataAvailable(PRUint8* aBuffer, PRUint32 aLength);
 
+    PRBool IsTerminatedOrInterrupted() {
+      mozilla::MutexAutoLock autoLock(mTerminatedMutex);
+      return mTerminated || mInterrupted;
+    }
+
     PRBool IsTerminated() {
       mozilla::MutexAutoLock autoLock(mTerminatedMutex);
-      return mTerminated;    
+      return mTerminated;
     }
 
     /**
@@ -324,7 +344,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * The first buffer in the pending UTF-16 buffer queue
      */
-    nsHtml5UTF16Buffer*           mFirstBuffer; // manually managed strong ref
+    nsRefPtr<nsHtml5UTF16Buffer>  mFirstBuffer;
 
     /**
      * The last buffer in the pending UTF-16 buffer queue
@@ -349,7 +369,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
 
     /**
      * Makes sure the main thread can't mess the tokenizer state while it's
-     * tokenizing
+     * tokenizing. This mutex also protects the current speculation.
      */
     mozilla::Mutex                mTokenizerMutex;
 
@@ -374,14 +394,29 @@ class nsHtml5StreamParser : public nsIStreamListener,
     eHtml5StreamState             mStreamState;
     
     /**
-     * Whether we are waiting for scripts to be done.
+     * Whether we are speculating.
      */
-    PRBool                        mWaitingForScripts;
+    PRBool                        mSpeculating;
+
+    /**
+     * Whether the tokenizer has reached EOF. (Reset when stream rewinded.)
+     */
+    PRBool                        mAtEOF;
+
+    /**
+     * The speculations. The mutex protects the nsTArray itself.
+     * To access the queue of current speculation, mTokenizerMutex must be 
+     * obtained.
+     * The current speculation is the last element
+     */
+    nsTArray<nsAutoPtr<nsHtml5Speculation> >  mSpeculations;
+    mozilla::Mutex                            mSpeculationMutex;
 
     /**
      * True to terminate early; protected by mTerminatedMutex
      */
     PRBool                        mTerminated;
+    PRBool                        mInterrupted;
     mozilla::Mutex                mTerminatedMutex;
     
     /**
@@ -390,6 +425,11 @@ class nsHtml5StreamParser : public nsIStreamListener,
     nsCOMPtr<nsIThread>           mThread;
     
     nsCOMPtr<nsIRunnable>         mExecutorFlusher;
+    
+    /**
+     * The document wrapped by the speculative loader.
+     */
+    nsCOMPtr<nsIDocument>         mDocument;
 };
 
 #endif // nsHtml5StreamParser_h__

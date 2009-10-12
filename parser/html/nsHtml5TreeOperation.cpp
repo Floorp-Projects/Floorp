@@ -88,9 +88,6 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
     case eTreeOpNeedsCharsetSwitchTo:
       delete[] mOne.charPtr;
       break;
-    case eTreeOpRunScript:
-      delete mTwo.state;
-      break;
     default: // keep the compiler happy
       break;
   }

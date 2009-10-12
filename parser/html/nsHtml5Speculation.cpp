@@ -35,46 +35,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsHtml5TreeOpStage_h___
-#define nsHtml5TreeOpStage_h___
+#include "nsHtml5Speculation.h"
 
-#include "mozilla/Mutex.h"
-#include "nsHtml5TreeOperation.h"
-#include "nsTArray.h"
-#include "nsAHtml5TreeOpSink.h"
+nsHtml5Speculation::nsHtml5Speculation(nsHtml5UTF16Buffer* aBuffer, 
+                                       PRInt32 aStart, 
+                                       nsAHtml5TreeBuilderState* aSnapshot)
+  : mBuffer(aBuffer)
+  , mStart(aStart)
+  , mSnapshot(aSnapshot)
+{
+  MOZ_COUNT_CTOR(nsHtml5Speculation);
+}
 
-class nsHtml5TreeOpStage : public nsAHtml5TreeOpSink {
-  public:
-  
-    nsHtml5TreeOpStage();
-    
-    ~nsHtml5TreeOpStage();
-  
-    /**
-     * Flush the operations from the tree operations from the argument
-     * queue if flushing is not expensive.
-     */
-    virtual void MaybeFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
+nsHtml5Speculation::~nsHtml5Speculation()
+{
+  MOZ_COUNT_DTOR(nsHtml5Speculation);
+}
 
-    /**
-     * Flush the operations from the tree operations from the argument
-     * queue unconditionally.
-     */
-    virtual void ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
-    
-    /**
-     * Retrieve the staged operations into the argument.
-     */
-    void RetrieveOperations(nsTArray<nsHtml5TreeOperation>& aOpQueue);
+void
+nsHtml5Speculation::MaybeFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue)
+{
+  // No-op
+}
 
-#ifdef DEBUG
-    void AssertEmpty();
-#endif
+void
+nsHtml5Speculation::ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue)
+{
+  if (mOpQueue.IsEmpty()) {
+    mOpQueue.SwapElements(aOpQueue);
+    return;
+  }
+  mOpQueue.MoveElementsFrom(aOpQueue);
+}
 
-  private:
-    nsTArray<nsHtml5TreeOperation> mOpQueue;
-    mozilla::Mutex                 mMutex;
-    
-};
-
-#endif /* nsHtml5TreeOpStage_h___ */
+void
+nsHtml5Speculation::FlushToSink(nsAHtml5TreeOpSink* aSink)
+{
+  aSink->ForcedFlush(mOpQueue);
+}

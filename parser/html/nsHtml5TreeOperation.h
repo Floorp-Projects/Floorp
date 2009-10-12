@@ -148,6 +148,14 @@ class nsHtml5TreeOperation {
       mOne.mode = aMode;
     }
     
+    inline void InitScript(nsIContent** aNode) {
+      NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
+        "Op code must be uninitialized when initializing.");
+      mOpCode = eTreeOpRunScript;
+      mOne.node = aNode;
+      mTwo.state = nsnull;
+    }
+    
     inline void Init(PRInt32 aNamespace, 
                      nsIAtom* aName, 
                      nsHtml5HtmlAttributes* aAttributes,
