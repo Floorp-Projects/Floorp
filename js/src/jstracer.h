@@ -51,10 +51,32 @@
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
+#include "jsvector.h"
 
 #if defined(DEBUG) && !defined(JS_JIT_SPEW)
 #define JS_JIT_SPEW
 #endif
+
+
+/* Policy for using an infallible nanojit allocator doing no error reporting. */
+class NanojitAllocPolicy
+{
+    nanojit::Allocator* mAlloc;
+
+public:
+    NanojitAllocPolicy(nanojit::Allocator* alloc) : mAlloc(alloc) {}
+    void *malloc(size_t bytes) { return new (*mAlloc) char[bytes]; }
+    void *realloc(void *p, size_t oldbytes, size_t newbytes) {
+        if (newbytes > oldbytes) {
+            void* p2 = this->malloc(newbytes);
+            memcpy(p2, p, oldbytes);
+            return p2;
+        }
+        return p;
+    }
+    void free(void *p) { }
+    void reportAllocOverflow() const {}
+};
 
 template <typename T>
 class Queue {
@@ -929,6 +951,7 @@ class TraceRecorder {
     bool                    loop;
     nanojit::LIns*          loopLabel;
     MonitorReason           monitorReason;
+    js::Vector<JSTraceType, 256, NanojitAllocPolicy> tempTypeMap;
 
     nanojit::LIns* insImmObj(JSObject* obj);
     nanojit::LIns* insImmFun(JSFunction* fun);
