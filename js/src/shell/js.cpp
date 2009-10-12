@@ -125,6 +125,8 @@ static jsdouble MAX_TIMEOUT_INTERVAL = 1800.0;
 static jsdouble gTimeoutInterval = -1.0;
 static volatile bool gCanceled = false;
 
+static bool enableJit = false;
+
 static JSBool
 SetTimeoutValue(JSContext *cx, jsdouble t);
 
@@ -717,6 +719,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
 
         case 'j':
+            enableJit = !enableJit;
             JS_ToggleOptions(cx, JSOPTION_JIT);
 #if defined(JS_TRACER) && defined(DEBUG)
 extern struct JSClass jitstats_class;
@@ -4675,6 +4678,8 @@ ContextCallback(JSContext *cx, uintN contextOp)
         JS_SetErrorReporter(cx, my_ErrorReporter);
         JS_SetVersion(cx, JSVERSION_LATEST);
         SetContextOptions(cx);
+        if (enableJit)
+            JS_ToggleOptions(cx, JSOPTION_JIT);
         break;
       case JSCONTEXT_DESTROY:
         data = GetContextData(cx);

@@ -1042,7 +1042,7 @@ LoginManagerStorage_mozStorage.prototype = {
         // We've used a number of prefs over time due to compatibility issues.
         // We want to delete all files referenced in prefs, which are only for
         // importing and clearing logins from storage-Legacy.js.
-        filenamePrefs = ["SignonFileName3", "SignonFileName2", "SignonFileName"];
+        let filenamePrefs = ["SignonFileName3", "SignonFileName2", "SignonFileName"];
         for each (let prefname in filenamePrefs) {
             let filename = this._prefBranch.getCharPref(prefname);
             let file = this._profileDir.clone();

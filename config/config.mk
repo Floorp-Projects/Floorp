@@ -707,18 +707,6 @@ endif
 endif
 endif
 
-# Flags needed to link against the component library
-ifdef MOZ_COMPONENTLIB
-MOZ_COMPONENTLIB_EXTRA_DSO_LIBS = mozcomps
-
-# Tell the linker where NSS is, if we're building crypto
-ifeq ($(OS_ARCH),Darwin)
-ifeq (,$(findstring crypto,$(MOZ_META_COMPONENTS)))
-MOZ_COMPONENTLIB_EXTRA_LIBS = $(foreach library, $(patsubst -l%, $(LIB_PREFIX)%$(DLL_SUFFIX), $(filter -l%, $(NSS_LIBS))), -dylib_file @executable_path/$(library):$(DIST)/bin/$(library))
-endif
-endif
-endif
-
 # If we're building a component on MSVC, we don't want to generate an
 # import lib, because that import lib will collide with the name of a
 # static version of the same library.
@@ -758,7 +746,7 @@ else
 ifeq (OS2,$(CROSS_COMPILE)$(OS_ARCH))
 NSINSTALL	= $(MOZ_TOOLS_DIR)/nsinstall
 else
-NSINSTALL	= $(CONFIG_TOOLS)/nsinstall
+NSINSTALL	= $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX)
 endif # OS2
 endif # NSINSTALL_BIN
 
@@ -786,7 +774,7 @@ endif # WINNT/OS2
 
 ifeq (,$(filter-out WINCE,$(OS_ARCH)))
 NSINSTALL	= $(CYGWIN_WRAPPER) nsinstall
-INSTALL     = $(CYGWIN_WRAPPER) nsinstall 
+INSTALL     = $(CYGWIN_WRAPPER) nsinstall
 endif
 
 # Use nsinstall in copy mode to install files on the system

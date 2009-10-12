@@ -37,6 +37,8 @@
 #include <windows.h>
 #include <windowsx.h>
 
+ using namespace std;
+
 #pragma comment(lib, "msimg32.lib")
 
 void SetSubclass(HWND hWnd, InstanceData* instanceData);

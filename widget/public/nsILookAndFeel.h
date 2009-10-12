@@ -317,7 +317,11 @@ public:
     /**
      * If this metric != 0, show icons in menus.
      */
-    eMetric_ImagesInMenus
+    eMetric_ImagesInMenus,
+    /**
+     * If this metric != 0, show icons in buttons.
+     */
+    eMetric_ImagesInButtons
   } nsMetricID;
 
   enum {

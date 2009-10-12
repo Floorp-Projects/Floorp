@@ -56,6 +56,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469688
       // test gEmptyRoleMap
       testRole("cell", ROLE_NOTHING);
 
+      // abstract roles
+      var abstract_roles = ["composite", "landmark", "structure", "widget",
+                            "window", "input", "range", "select", "section",
+                            "sectionhead"];
+      for (a in abstract_roles)
+        testRole(abstract_roles[a], ROLE_SECTION);
+
       SimpleTest.finish();
     }
 
@@ -110,6 +117,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469688
       <td id="cell">cell</td>
     </tr>
   </table>
+
+  <!-- user agents must not map abstract roles to platform API -->
+  <!-- test abstract base type roles -->
+  <div role="composite" id="composite">composite</div>
+  <div role="landmark" id="landmark">landmark</div>
+  <div role="roletype" id="roletype">roletype</div>
+  <div role="structure" id="structure">structure</div>
+  <div role="widget" id="widget">widget</div>
+  <div role="window" id="window">window</div>
+  <!-- test abstract input roles -->
+  <div role="input" id="input">input</div>
+  <div role="range" id="range">range</div>
+  <div role="select" id="select">select</div>
+  <!-- test abstract structure roles -->
+  <div role="section" id="section">section</div>
+  <div role="sectionhead" id="sectionhead">sectionhead</div>
 
 </body>
 </html>

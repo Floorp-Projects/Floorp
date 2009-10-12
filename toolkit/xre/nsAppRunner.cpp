@@ -1235,28 +1235,28 @@ DumpHelp()
 
 #ifdef MOZ_X11
   printf("X11 options\n"
-         "\t--display=DISPLAY\t\tX display to use\n"
-         "\t--sync\t\tMake X calls synchronous\n"
-         "\t--no-xshm\t\tDon't use X shared memory extension\n"
-         "\t--xim-preedit=STYLE\n"
-         "\t--xim-status=STYLE\n");
+         "  --display=DISPLAY  X display to use\n"
+         "  --sync             Make X calls synchronous\n"
+         "  --no-xshm          Don't use X shared memory extension\n"
+         "  --xim-preedit=STYLE\n"
+         "  --xim-status=STYLE\n");
 #endif
 #ifdef XP_UNIX
-  printf("\t--g-fatal-warnings\t\tMake all warnings fatal\n"
+  printf("  --g-fatal-warnings Make all warnings fatal\n"
          "\n%s options\n", gAppData->name);
 #endif
 
-  printf("\t-h or -help\t\tPrint this message.\n"
-         "\t-v or -version\t\tPrint %s version.\n"
-         "\t-P <profile>\t\tStart with <profile>.\n"
-         "\t-migration\t\tStart with migration wizard.\n"
-         "\t-ProfileManager\t\tStart with ProfileManager.\n"
-         "\t-no-remote\t\tOpen new instance, not a new window in running instance.\n"
-         "\t-UILocale <locale>\tStart with <locale> resources as UI Locale.\n"
-         "\t-safe-mode\t\tDisables extensions and themes for this session.\n", gAppData->name);
+  printf("  -h or -help        Print this message.\n"
+         "  -v or -version     Print %s version.\n"
+         "  -P <profile>       Start with <profile>.\n"
+         "  -migration         Start with migration wizard.\n"
+         "  -ProfileManager    Start with ProfileManager.\n"
+         "  -no-remote         Open new instance, not a new window in running instance.\n"
+         "  -UILocale <locale> Start with <locale> resources as UI Locale.\n"
+         "  -safe-mode         Disables extensions and themes for this session.\n", gAppData->name);
 
 #if defined(XP_WIN) || defined(XP_OS2)
-  printf("\t-console\t\tStart %s with a debugging console.\n", gAppData->name);
+  printf("  -console           Start %s with a debugging console.\n", gAppData->name);
 #endif
 
   // this works, but only after the components have registered.  so if you drop in a new command line handler, -help
@@ -3339,13 +3339,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
         nsCOMPtr<nsICommandLineRunner> cmdLine;
 
-#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
-        nsRefPtr<nsGTKToolkit> toolkit = GetGTKToolkit();
-        if (toolkit && !desktopStartupID.IsEmpty()) {
-          toolkit->SetDesktopStartupID(desktopStartupID);
-        }
-#endif
-
         nsCOMPtr<nsIFile> workingDir;
         rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
         NS_ENSURE_SUCCESS(rv, 1);
@@ -3372,6 +3365,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           NS_ENSURE_SUCCESS(rv, 1);
 
           MOZ_SPLASHSCREEN_UPDATE(50);
+
+#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
+          nsRefPtr<nsGTKToolkit> toolkit = GetGTKToolkit();
+          if (toolkit && !desktopStartupID.IsEmpty()) {
+            toolkit->SetDesktopStartupID(desktopStartupID);
+          }
+#endif
 
           // Extension Compatibility Checking and Startup
           if (gAppData->flags & NS_XRE_ENABLE_EXTENSION_MANAGER) {

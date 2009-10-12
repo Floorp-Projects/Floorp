@@ -61,6 +61,10 @@ class nsFrameWindow : public nsWindow
    PFNWP  fnwpDefFrame;
    nsSize mSizeClient;
    nsSize mSizeBorder;
+   PRBool mNeedActivation;
+
+   // Fires NS_ACTIVATE is mNeedActivation is set
+   virtual void ActivateTopLevelWidget();
 
    // So we can create the frame, parent the client & position it right
    virtual void RealDoCreate( HWND hwndP, nsWindow *aParent,

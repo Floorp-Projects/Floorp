@@ -60,7 +60,9 @@
 #nav-bar:-moz-lwtheme {
   -moz-appearance: none !important;
   background: none !important;
-  border-style: none !important;
+  /* Switching to a lightweight theme shouldn't move the content area,
+     so avoid changing border widths here. */
+  border-color: transparent !important;
 }
 
 .tabbrowser-strip:-moz-lwtheme,

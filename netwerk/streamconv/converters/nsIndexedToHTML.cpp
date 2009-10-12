@@ -231,7 +231,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         rv = file->GetParent(getter_AddRefs(parent));
         
         if (parent && NS_SUCCEEDED(rv)) {
-            net_GetURLSpecFromFile(parent, url);
+            net_GetURLSpecFromDir(parent, url);
             if (NS_FAILED(rv)) return rv;
             parentStr.Assign(url);
         }

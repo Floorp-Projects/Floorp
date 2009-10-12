@@ -118,6 +118,12 @@
 #include "updater_wince.h"
 #endif
 
+// Amount of the progress bar to use in each of the 3 update stages,
+// should total 100.0.
+#define PROGRESS_PREPARE_SIZE 20.0f
+#define PROGRESS_EXECUTE_SIZE 75.0f
+#define PROGRESS_FINISH_SIZE   5.0f
+
 #if defined(XP_MACOSX)
 // This function is defined in launchchild_osx.mm
 void LaunchChild(int argc, char **argv);
@@ -154,6 +160,9 @@ void LaunchChild(int argc, char **argv);
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
 #define USE_EXECV
 #endif
+
+char *BigBuffer = NULL;
+int BigBufferSize = 262144;
 
 //-----------------------------------------------------------------------------
 
@@ -522,11 +531,10 @@ static int copy_file(const NS_tchar *spath, const NS_tchar *dpath)
     return WRITE_ERROR;
   }
 
-  char buf[BUFSIZ];
   int sc;
-  while ((sc = fread(buf, 1, sizeof(buf), sfile)) > 0) {
+  while ((sc = fread(BigBuffer, 1, BigBufferSize, sfile)) > 0) {
     int dc;
-    char *bp = buf;
+    char *bp = BigBuffer;
     while ((dc = fwrite(bp, 1, (unsigned int) sc, dfile)) > 0) {
       if ((sc -= dc) == 0)
         break;
@@ -606,7 +614,7 @@ static const int ACTION_DESCRIPTION_BUFSIZE = 256;
 class Action
 {
 public:
-  Action() : mNext(NULL) { }
+  Action() : mProgressCost(1), mNext(NULL) { }
   virtual ~Action() { }
 
   virtual int Parse(char *line) = 0;
@@ -624,6 +632,7 @@ public:
   // all actions were successfully executed.  Otherwise, some action failed.
   virtual void Finish(int status) = 0;
 
+  int mProgressCost;
 private:
   Action* mNext;
 
@@ -674,8 +683,9 @@ RemoveFile::Prepare()
   // We expect the file to exist if we are to remove it.
   int rv = NS_taccess(mDestFile, F_OK);
   if (rv) {
-    LOG(("file cannot be removed because it does not exist; skipping\n"));
+    LOG(("file does not exist; skipping\n"));
     mSkip = 1;
+    mProgressCost = 0;
     return OK;
   }
 
@@ -701,10 +711,10 @@ RemoveFile::Prepare()
 int
 RemoveFile::Execute()
 {
-  LOG(("EXECUTE REMOVE " LOG_S "\n", mDestFile));
-
   if (mSkip)
     return OK;
+
+  LOG(("EXECUTE REMOVE " LOG_S "\n", mDestFile));
 
   // We expect the file to exist if we are to remove it.  We check here as well
   // as in PREPARE since we might have been asked to remove the same file more
@@ -735,10 +745,10 @@ RemoveFile::Execute()
 void
 RemoveFile::Finish(int status)
 {
-  LOG(("FINISH REMOVE " LOG_S "\n", mDestFile));
-
   if (mSkip)
     return;
+
+  LOG(("FINISH REMOVE " LOG_S "\n", mDestFile));
 
   backup_finish(mDestFile, status);
 }
@@ -880,7 +890,7 @@ PatchFile::LoadSourceFile(FILE* ofile)
   int r = header.slen;
   unsigned char *rb = buf;
   while (r) {
-    int c = fread(rb, 1, mmin(BUFSIZ,r), ofile);
+    int c = fread(rb, 1, r, ofile);
     if (c < 0)
       return READ_ERROR;
 
@@ -1474,6 +1484,19 @@ int NS_main(int argc, NS_tchar **argv)
 
   LogInit();
 
+  BigBuffer = (char *)malloc(BigBufferSize);
+  if (!BigBuffer) {
+    LOG(("Couldn't allocate default BigBuffer\n"));
+
+    // Try again with a smaller size.
+    BigBufferSize = 1024;
+    BigBuffer = (char *)malloc(BigBufferSize);
+    if (!BigBuffer) {
+      LOG(("Couldn't allocate 1K BigBuffer\n"));
+      return 1;
+    }
+  }
+
   // Run update process on a background thread.  ShowProgressUI may return
   // before QuitProgressUI has been called, so wait for UpdateThreadFunc to
   // terminate.
@@ -1483,6 +1506,8 @@ int NS_main(int argc, NS_tchar **argv)
   t.Join();
 
   LogFinish();
+  free(BigBuffer);
+  BigBuffer = NULL;
 
 #if defined(XP_WIN) && !defined(WINCE)
   if (gSucceeded && argc > 4)
@@ -1588,15 +1613,17 @@ ActionList::Prepare()
   }
 
   Action *a = mFirst;
+  int i = 0;
   while (a) {
     int rv = a->Prepare();
     if (rv)
       return rv;
 
+    float percent = float(++i) / float(mCount);
+    UpdateProgressUI(PROGRESS_PREPARE_SIZE * percent);
+
     a = a->mNext;
   }
-
-  UpdateProgressUI(1.0f);
 
   return OK;
 }
@@ -1604,18 +1631,25 @@ ActionList::Prepare()
 int
 ActionList::Execute()
 {
-  int i = 0;
-  float divisor = mCount / 98.0f;
-
+  int currentProgress = 0, maxProgress = 0;
   Action *a = mFirst;
   while (a) {
-    UpdateProgressUI(1.0f + float(i++) / divisor);
+    maxProgress += a->mProgressCost;
+    a = a->mNext;
+  }
 
+  a = mFirst;
+  while (a) {
     int rv = a->Execute();
     if (rv) {
       LOG(("### execution failed\n"));
       return rv;
     }
+
+    currentProgress += a->mProgressCost;
+    float percent = float(currentProgress) / float(maxProgress);
+    UpdateProgressUI(PROGRESS_PREPARE_SIZE +
+                     PROGRESS_EXECUTE_SIZE * percent);
 
     a = a->mNext;
   }
@@ -1627,8 +1661,15 @@ void
 ActionList::Finish(int status)
 {
   Action *a = mFirst;
+  int i = 0;
   while (a) {
     a->Finish(status);
+
+    float percent = float(++i) / float(mCount);
+    UpdateProgressUI(PROGRESS_PREPARE_SIZE +
+                     PROGRESS_EXECUTE_SIZE +
+                     PROGRESS_FINISH_SIZE * percent);
+
     a = a->mNext;
   }
 
@@ -1636,8 +1677,6 @@ ActionList::Finish(int status)
   if (status == OK)
     gSucceeded = TRUE;
 #endif
-
-  UpdateProgressUI(100.0f);
 }
 
 int DoUpdate()

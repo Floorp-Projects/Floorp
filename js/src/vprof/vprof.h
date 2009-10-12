@@ -85,23 +85,19 @@
 #define THREADED 0
 #define THREAD_SAFE 0
 
-#ifdef _MSC_VER
-typedef __int8             int8_t;
-typedef __int16            int16_t;
-typedef __int32            int32_t;
-typedef __int64            int64_t;
-typedef unsigned __int8    uint8_t;
-typedef unsigned __int16   uint16_t;
-typedef unsigned __int32   uint32_t;
-typedef unsigned __int64   uint64_t;
-#else
-#include <inttypes.h>
-#endif
+#include "VMPI.h"
+
+// Note, this is not supported in configurations with more than one AvmCore running
+// in the same process.
 
 // portable align macro
 #if defined(_MSC_VER)
 	#define vprof_align8(t) __declspec(align(8)) t
-#elif defined(__GNUC__) || defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#elif defined(__GNUC__)
+	#define vprof_align8(t) t __attribute__ ((aligned (8)))
+#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+	#define vprof_align8(t) t __attribute__ ((aligned (8)))
+#elif defined(VMCFG_SYMBIAN)
 	#define vprof_align8(t) t __attribute__ ((aligned (8)))
 #endif
 
@@ -113,16 +109,24 @@ int profileValue (void** id, char* file, int line, int64_t value, ...);
 int _profileEntryValue (void* id, int64_t value);
 int histValue(void** id, char* file, int line, int64_t value, int nbins, ...);
 int _histEntryValue (void* id, int64_t value);
+int64_t _tprof_time();
+extern void* _tprof_before_id;
 
 #ifdef __cplusplus
 }
 #endif 
 
+//#define DOPROF
+
 #ifndef DOPROF
-#define _vprof(v)
-#define _nvprof(n,v)
-#define _hprof(h)
-#define _nhprof(n,h)
+#ifndef VMCFG_SYMBIAN
+#define _vprof(v,...)
+#define _nvprof(e,v,...)
+#define _hprof(h,n,...)
+#define _nhprof(e,v,n,...)
+#define _ntprof(e)
+#define _tprof_end()
+#endif // ! VMCFG_SYMBIAN
 #else
 
 #define _vprof(v,...) \
@@ -164,6 +168,30 @@ int _histEntryValue (void* id, int64_t value);
         histValue (&id, (char*) (e), -1, (int64_t) (v), (int) (n), ##__VA_ARGS__) \
     ; \
 }
+
+#define _ntprof(e) \
+{ \
+    uint64_t v = _tprof_time();\
+    (_tprof_before_id != 0) ? \
+        _profileEntryValue(_tprof_before_id, v)\
+        : 0;\
+    static void* id = 0; \
+    (id != 0) ? \
+        _profileEntryValue (id, (int64_t) 0) \
+    : \
+        profileValue (&id, (char*)(e), -1, (int64_t) 0, NULL) \
+    ;\
+    _tprof_before_id = id;\
+}
+
+#define _tprof_end() \
+{\
+    uint64_t v = _tprof_time();\
+    if (_tprof_before_id)\
+        _profileEntryValue(_tprof_before_id, v);\
+    _tprof_before_id = 0;\
+}
+
 #endif
 
 #define NUM_EVARS 4

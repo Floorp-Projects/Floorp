@@ -91,7 +91,7 @@
     <command id="Browser:AddBookmarkAs" 
              oncommand="PlacesCommandHook.bookmarkCurrentPage(true, PlacesUtils.bookmarksMenuFolderId);"/>
     <!-- The command is disabled for the hidden window. Otherwise its enabled
-         state is handled by the BookmarkAllTabsHandler object. -->
+         state is handled by gBookmarkAllTabsHandler. -->
     <command id="Browser:BookmarkAllTabs"
              oncommand="gBookmarkAllTabsHandler.doCommand();"
              disabled="true"/>

@@ -46,12 +46,6 @@ class nsPrintOptionsX : public nsPrintOptions
 public:
              nsPrintOptionsX();
   virtual    ~nsPrintOptionsX();
-
-#ifndef MOZ_COCOA_PRINTING
-  NS_IMETHOD ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings);
-  NS_IMETHOD GetNativeData(PRInt16 aDataType, void * *_retval);
-#endif
-
 protected:
   nsresult   _CreatePrintSettings(nsIPrintSettings **_retval);
   nsresult   ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, PRUint32 aFlags);

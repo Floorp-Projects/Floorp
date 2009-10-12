@@ -1,0 +1,15 @@
+url-prefix ../../jsreftest.html?test=ecma_2/RegExp/
+script constructor-001.js
+skip script exec-001.js # obsolete test
+script exec-002.js
+script function-001.js
+script hex-001.js
+script multiline-001.js
+script octal-001.js
+script octal-002.js
+script octal-003.js
+script properties-001.js
+script properties-002.js
+script regexp-enumerate-001.js
+script regress-001.js
+script unicode-001.js

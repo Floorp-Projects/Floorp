@@ -183,8 +183,7 @@ public:
   // nsIContentSink
   NS_IMETHOD WillParse(void);
   NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
-  NS_IMETHOD DidBuildModel(void);
-  virtual PRBool ReadyToCallDidBuildModel(PRBool aTerminated);
+  NS_IMETHOD DidBuildModel(PRBool aTerminated);
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);
@@ -1755,9 +1754,9 @@ HTMLContentSink::WillBuildModel(nsDTDMode aDTDMode)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::DidBuildModel(void)
+HTMLContentSink::DidBuildModel(PRBool aTerminated)
 {
-  DidBuildModelImpl();
+  DidBuildModelImpl(aTerminated);
 
   // Reflow the last batch of content
   if (mBody || mFrameset) {
@@ -1803,12 +1802,6 @@ HTMLContentSink::DidBuildModel(void)
   DropParserAndPerfHint();
 
   return NS_OK;
-}
-
-PRBool
-HTMLContentSink::ReadyToCallDidBuildModel(PRBool aTerminated)
-{
-  return ReadyToCallDidBuildModelImpl(aTerminated);
 }
 
 NS_IMETHODIMP

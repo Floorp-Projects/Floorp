@@ -21,6 +21,8 @@
  *
  * Contributor(s):
  *   Brian Ryner <bryner@brianryner.com> (original author)
+ *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -105,9 +107,6 @@ public:
    * @return true if it's a real bookmark, false otherwise.
    */
   PRBool IsRealBookmark(PRInt64 aPlaceId);
-
-  // Called by History service when quitting.
-  nsresult OnQuit();
 
   nsresult BeginUpdateBatch();
   nsresult EndUpdateBatch();

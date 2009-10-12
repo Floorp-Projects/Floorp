@@ -1,0 +1,15 @@
+url-prefix ../../jsreftest.html?test=js1_6/extensions/
+script regress-312385-01.js
+script regress-352392.js
+script regress-385393-08.js
+script regress-414098.js
+fails script regress-455464-01.js
+fails script regress-455464-02.js
+fails script regress-455464-03.js
+fails-if(!xulRuntime.shell&&!isDebugBuild) skip-if(!xulRuntime.shell&&isDebugBuild) script regress-455464-04.js # bug xxx - hangs reftests in debug, ### bug xxx - NS_ERROR_DOM_NOT_SUPPORTED_ERR in opt
+skip script regress-456826.js # slow
+script regress-457521.js
+script regress-465443.js
+script regress-470310.js
+script regress-472508.js
+fails-if(!xulRuntime.shell) script regress-475144.js # NS_ERROR_DOM_NOT_SUPPORTED_ERR

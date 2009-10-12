@@ -40,12 +40,9 @@
 #ifndef FUNCTION_H
 #define FUNCTION_H
 
-#include "Library.h"
-#include "nsIXPCScriptable.h"
+#include "Module.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "prlink.h"
-#include "jsapi.h"
 #include "ffi.h"
 
 namespace mozilla {
@@ -66,7 +63,7 @@ GetErrorMessage(void* userRef, const char* locale, const uintN errorNumber);
 struct Type
 {
   ffi_type mFFIType;
-  PRUint16 mType;
+  TypeCode mType;
 };
 
 struct Value
@@ -87,25 +84,23 @@ struct Value
   } mValue;
 };
 
-class Function : public nsIXPCScriptable
+class Function
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCSCRIPTABLE
-
   Function();
 
-  bool Init(JSContext* aContext, Library* aLibrary, PRFuncPtr aFunc, PRUint16 aCallType, jsval aResultType, const nsTArray<jsval>& aArgTypes);
+  Function*& Next() { return mNext; }
 
-private:
+  static JSObject* Create(JSContext* aContext, JSObject* aLibrary, PRFuncPtr aFunc, const char* aName, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
+  static JSBool Call(JSContext* cx, uintN argc, jsval* vp);
+
   ~Function();
 
-  bool Execute(JSContext* aContext, PRUint32 aArgc, jsval* aArgv, jsval* aValue);
+private:
+  bool Init(JSContext* aContext, PRFuncPtr aFunc, jsval aCallType, jsval aResultType, jsval* aArgTypes, uintN aArgLength);
+  bool Execute(JSContext* cx, PRUint32 argc, jsval* vp);
 
 protected:
-  // reference to the library our function is in
-  nsRefPtr<Library> mLibrary;
-
   PRFuncPtr mFunc;
 
   ffi_abi mCallType;
@@ -114,6 +109,8 @@ protected:
   nsAutoTArray<ffi_type*, 16> mFFITypes;
 
   ffi_cif mCIF;
+
+  Function* mNext;
 };
 
 }

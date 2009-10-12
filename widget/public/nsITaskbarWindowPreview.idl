@@ -1,0 +1,103 @@
+/* vim: se cin sw=2 ts=2 et : */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Rob Arnold <tellrob@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsITaskbarPreview.idl"
+interface nsITaskbarPreviewButton;
+
+/*
+ * nsITaskbarWindowPreview
+ *
+ * This interface represents the preview for a window in the taskbar. By
+ * default, Windows implements much of the behavior for applications by
+ * default. The primary purpose of this interface is to allow Gecko
+ * applications to take control over parts of the preview. Some parts are not
+ * controlled through this interface: the title and icon of the preview match
+ * the title and icon of the window always.
+ *
+ * By default, Windows takes care of drawing the thumbnail and preview for the
+ * application however if enableCustomDrawing is set to true, then the
+ * controller will start to receive drawPreview and drawThumbnail calls as well
+ * as reads on the thumbnailAspectRatio, width and height properties.
+ *
+ * By default, nsITaskbarWindowPreviews are visible. When made invisible, the
+ * window disappears from the list of windows in the taskbar for the
+ * application.
+ *
+ * If the window has any visible nsITaskbarTabPreviews, then the
+ * nsITaskbarWindowPreview for the corresponding window is automatically
+ * hidden. This is not reflected in the visible property. Note that other parts
+ * of the system (such as alt-tab) may still request thumbnails and/or previews
+ * through the nsITaskbarWindowPreview's controller.
+ *
+ * nsITaskbarWindowPreview will never invoke the controller's onClose or
+ * onActivate methods since handling them may conflict with other internal
+ * Gecko state and there is existing infrastructure in place to allow clients
+ * to handle those events 
+ *
+ * Window previews may have a toolbar with up to 7 buttons. See
+ * nsITaskbarPreviewButton for more information about button properties.
+ */
+[scriptable, uuid(EC67CC57-342D-4064-B4C6-74A375E07B10)]
+interface nsITaskbarWindowPreview : nsITaskbarPreview
+{
+  /**
+   * Max 7 buttons per preview per the Windows Taskbar API
+   */
+  const long NUM_TOOLBAR_BUTTONS = 7;
+
+  /**
+   * Gets the nth button for the preview image. By default, all of the buttons
+   * are invisible.
+   *
+   * @see nsITaskbarPreviewButton
+   *
+   * @param index The index into the button array. Must be >= 0 and <
+   *              MAX_TOOLBAR_BUTTONS.
+   */
+  nsITaskbarPreviewButton getButton(in unsigned long index);
+
+  /**
+   * Enables/disables custom drawing of thumbnails and previews
+   *
+   * Default value: false
+   */
+  attribute boolean enableCustomDrawing;
+};
+

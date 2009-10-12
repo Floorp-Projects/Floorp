@@ -34,6 +34,8 @@
 #include "nptest_platform.h"
 #include <CoreServices/CoreServices.h>
 
+ using namespace std;
+
 #ifdef __LP64__
 // 64-bit requires the Cocoa event model
 #define USE_COCOA_NPAPI 1

@@ -1,0 +1,161 @@
+<html>
+<head>
+  <title>NPN_Invoke Tests</title>
+  <script type="text/javascript" 
+          src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests()">
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="100">
+  </embed>
+
+  <script class="testbody" type="application/javascript">
+  ////
+  // This test exercises NPN_Invoke by calling the plugin's npnInvokeTest
+  // method, which in turn invokes a script method with 1 or more parameters, 
+  // and then compares the return vale with an expected value.  This is good
+  // for verifying various NPVariant values and types moving between
+  // the browser and the plugin.
+  //
+  
+  SimpleTest.waitForExplicitFinish();
+
+  // This function returns all the arguments passed to it, either as a
+  // single variable (in the caes of 1 argument), or as an array.
+  function returnArgs() {
+    if (arguments.length == 1)
+      return arguments[0];
+    var arr = new Array();
+    for (i = 0; i < arguments.length; i++) {
+      arr.push(arguments[i]);
+    }
+    return arr;
+  }
+  
+  // Same as above but explicitly expects two arguments.
+  function returnTwoArgs(arg1, arg2) {
+    return [arg1, arg2];
+  }
+
+  // some objects and arrays used in the tests...
+  var obj = {"key1": "string", "key2": 0, "key3": true, "key4": undefined, 
+        "key5": null, "key6": -551235.12552, "key7": false};
+  var arr = ["string", 0, true, false, undefined, null, -1, 55512.1252];
+  var obj2 = {"key1": "string", "key2": 0, "key3": true, "key4": undefined, 
+        "key5": null, "key6": -551235.12552, "key7": false, "array": arr};
+  var arr2 = ["string", false, undefined, null, -1, 55512.1252,
+        {"a": "apple", "b": true, "c": undefined}];
+  
+  ////
+  // A list of tests to run.  Each member of the main array contains
+  // two members:  the first contains the arguments passed to npnInvokeTest,
+  // and the second is the expected result.
+  //
+  var tests = [
+    // numeric values
+    [["returnArgs", 0, 0], true],
+    [["returnArgs", 1, 1], true],
+    [["returnArgs", 32768, 32768], true],
+    [["returnArgs", -32768, -32768], true],
+    [["returnArgs", 2147483648, 2147483648], true],
+    [["returnArgs", -2147483648, -2147483648], true],
+    [["returnArgs", 1.0, 1.0], true],
+    [["returnArgs", 1.592786, 1.592786], true],
+    [["returnArgs", 1.592786837, 1.592786837], true],
+    [["returnArgs", -1.592786, -1.592786], true],
+    [["returnArgs", -1.592786837, -1.592786837], true],
+    [["returnArgs", 15235.592786, 15235.592786], true],
+    // null, void, bool
+    [["returnArgs", null, null], true],
+    [["returnArgs", undefined, undefined], true],
+    [["returnArgs", undefined, null], false],
+    [["returnArgs", null, undefined], false],
+    [["returnArgs", 0, undefined], false],
+    [["returnArgs", 0, null], false],
+    [["returnArgs", 0, false], false],
+    [["returnArgs", 1, true], false],
+    [["returnArgs", true, true], true],
+    [["returnArgs", false, false], true],
+    // strings
+    [["returnArgs", "", ""], true],
+    [["returnArgs", "test", "test"], true],
+    [["returnArgs", "test", "testing"], false],
+    [["returnArgs", "test\n", "test\n"], true],
+    [["returnArgs", "test\nline2", "test\nline2"], true],
+    [["returnArgs", "test\nline2", "testline2"], false],
+    [["returnArgs", "test\u000aline2", "test\u000aline2"], true],
+    [["returnArgs", "test\u0020line2", "test line2"], true],
+    [["returnArgs", "test line2", "test\u0020line2"], true],
+    // objects and arrays
+    [["returnArgs", obj, obj], true],
+    [["returnArgs", arr, arr], true],
+    [["returnArgs", obj2, obj2], true],
+    [["returnArgs", arr2, arr2], true],
+    // multiple arguments
+    [["returnArgs", [0, 1, 2], 0, 1, 2], true],
+    [["returnArgs", [5, "a", true, false, null], 
+        5, "a", true, false, null], true],
+    [["returnArgs", [-1500.583, "test string\n", 
+                     [5, 10, 15, 20], {"a": 1, "b": 2}], 
+        -1500.583, "test string\n", [5, 10, 15, 20], {"a": 1, "b": 2}], true],
+    [["returnArgs", [undefined, 0, null, "yes"], 
+        undefined, 0, null, "yes"], true],
+    [["returnArgs", [0, undefined, null, "yes"], 
+        0, undefined, null, "yes"], true],
+    // too many/too few args
+    [["returnTwoArgs", ["a", "b"], "a", "b", "c"], true],
+    [["returnTwoArgs", ["a", undefined], "a"], true],
+    [["returnTwoArgs", [undefined, undefined]], true],
+  ];
+ 
+  function runTests() {
+    var plugin = document.getElementById("plugin1");
+    
+    var result;
+    for each (var test in tests) {
+      switch (test[0].length) {
+        case 2:
+          result = plugin.npnInvokeTest(test[0][0], test[0][1]);
+          break;
+        case 3:
+          result = plugin.npnInvokeTest(test[0][0], test[0][1], test[0][2]);
+          break;
+        case 4:
+          result = plugin.npnInvokeTest(test[0][0], test[0][1], test[0][2],
+              test[0][3]);
+          break;
+        case 5:
+          result = plugin.npnInvokeTest(test[0][0], test[0][1], test[0][2],
+              test[0][3], test[0][4]);
+        case 6:
+          result = plugin.npnInvokeTest(test[0][0], test[0][1], test[0][2],
+              test[0][3], test[0][4], test[0][5]);
+          break;
+        case 7:
+          result = plugin.npnInvokeTest(test[0][0], test[0][1], test[0][2],
+              test[0][3], test[0][4], test[0][5], test[0][6]);
+          break;
+        default:
+          is(false, "bad number of test arguments");
+      }
+      is(result, test[1], "npnInvokeTestFailed: " + plugin.getError());
+      appendChildNodes($("verbose"), 
+          SPAN((result == test[1] ? "pass" : "fail") + ": " + test[0]));
+      if (result != test[1])
+        appendChildNodes($("verbose"), SPAN(" " + plugin.getError()));
+      appendChildNodes($("verbose"), BR());
+    }
+            
+    SimpleTest.finish();
+  }
+  </script>
+  
+  <div id="verbose">
+  </div>
+ </body>
+ </html>
