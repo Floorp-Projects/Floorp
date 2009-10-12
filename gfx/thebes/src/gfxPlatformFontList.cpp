@@ -191,6 +191,7 @@ gfxPlatformFontList::SetFixedPitch(const nsAString& aFamilyName)
     gfxFontFamily *family = FindFamily(aFamilyName);
     if (!family) return;
 
+    family->FindStyleVariations();
     nsTArray<nsRefPtr<gfxFontEntry> >& fontlist = family->GetFontList();
 
     PRUint32 i, numFonts = fontlist.Length();
@@ -213,7 +214,7 @@ gfxPlatformFontList::InitBadUnderlineList()
 
         gfxFontFamily *familyEntry = mFontFamilies.GetWeak(key, &found);
         if (familyEntry)
-            familyEntry->SetBadUnderlineFont(PR_TRUE);
+            familyEntry->SetBadUnderlineFamily();
     }
 }
 
@@ -430,17 +431,21 @@ gfxPlatformFontList::RunLoader()
     PRUint32 i, endIndex = (mStartIndex + mIncrement < mNumFamilies ? mStartIndex + mIncrement : mNumFamilies);
 
     // for each font family, load in various font info
+    AddOtherFamilyNameFunctor addOtherNames(this);
     for (i = mStartIndex; i < endIndex; i++) {
-        AddOtherFamilyNameFunctor addOtherNames(this);
+        gfxFontFamily* familyEntry = mFontFamiliesToLoad[i];
 
-        // load the cmap
-        mFontFamiliesToLoad[i]->ReadCMAP();
+        // find all faces that are members of this family
+        familyEntry->FindStyleVariations();
+
+        // load the cmaps
+        familyEntry->ReadCMAP();
 
         // read in other family names
-        mFontFamiliesToLoad[i]->ReadOtherFamilyNames(addOtherNames);
+        familyEntry->ReadOtherFamilyNames(addOtherNames);
 
         // check whether the family can be considered "simple" for style matching
-        mFontFamiliesToLoad[i]->CheckForSimpleFamily();
+        familyEntry->CheckForSimpleFamily();
     }
 
     mStartIndex += mIncrement;
