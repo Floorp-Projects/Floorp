@@ -1688,7 +1688,7 @@ return_wrapper:
                     continue;
             }
             if(pobj2)
-                *pobj2 = cur;
+                *pobj2 = isWN ? nsnull : cur;
             return wrapper;
         }
 
@@ -1703,7 +1703,7 @@ return_tearoff:
                 protoClassInfo != wrapper->GetProto()->GetClassInfo()))
                 continue;
             if(pobj2)
-                *pobj2 = cur;
+                *pobj2 = nsnull;
             XPCWrappedNativeTearOff* to =
                 (XPCWrappedNativeTearOff*) xpc_GetJSPrivate(cur);
             if(!to)
