@@ -487,8 +487,17 @@ MouseModule.prototype = {
       this._doDragStart(evInfo.event);
     }
 
-    if (this._targetIsContent(evInfo.event))
+    if (this._targetIsContent(evInfo.event)) {
       this._recordEvent(evInfo);
+    }
+    else if(targetScrollInterface) {
+      // look if we can pan in only one direction
+      let cX = {}, cY = {};
+      targetScrollInterface.getScrolledSize(cX, cY);
+      let rect = targetScrollbox.getBoundingClientRect();
+    
+      this._dragData.alreadyLocked = ((cX.value > rect.width) != (cY.value > rect.height));
+    }
   },
 
   /**
@@ -869,7 +878,7 @@ DragData.prototype = {
       // Util.dumpLn("*** pre-lock, return no movement");
       return [this.sX, this.sY];      
     }
-     
+    
     // Util.dumpLn("*** this.sX/sY: ", this.sX, ",", this.sY, "   sX/sY: ", sX, ",", sY);
 
     // look at difference from stored coord to lock movement, but only
