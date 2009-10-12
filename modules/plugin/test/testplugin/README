@@ -39,6 +39,10 @@ passing it 1 or more arguments specified in args.  The return value of this
 call is compared against 'expected', and if they match, npnInvokeTest will 
 return true.  Otherwise, it will return false.
 
+* npnInvokeDefaultTest(object, argument)
+Causes the plugin to call NPN_InvokeDefault on the specified object,
+with the specified argument.  Returns the result of the invocation.
+
 * getError()
 If an error has occurred during the last stream or npruntime function,
 this will return a string error message, otherwise it returns "pass".
