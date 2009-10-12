@@ -490,7 +490,7 @@ MouseModule.prototype = {
     if (this._targetIsContent(evInfo.event)) {
       this._recordEvent(evInfo);
     }
-    else if(targetScrollInterface) {
+    else if (targetScrollInterface) {
       // look if we can pan in only one direction
       let cX = {}, cY = {};
       targetScrollInterface.getScrolledSize(cX, cY);
