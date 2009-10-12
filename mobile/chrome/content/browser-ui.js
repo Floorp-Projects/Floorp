@@ -294,7 +294,6 @@ var BrowserUI = {
       let panel = this._popup.panel;
       if (panel.hide)
         panel.hide();
-      this.popPopup();
     }
   },
 
@@ -824,6 +823,7 @@ var NewTabPopup = {
 
     this._tabs = [];
     this.box.hidden = true;
+    BrowserUI.popPopup();
   },
   
   show: function(aTab) {
@@ -863,6 +863,7 @@ var BookmarkPopup = {
       this._bookmarkPopupTimeout = -1;
     }
     this.box.hidden = true;
+    BrowserUI.popPopup();
   },
   
   show : function (aAutoClose) {
