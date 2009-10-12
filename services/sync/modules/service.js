@@ -1267,9 +1267,10 @@ WeaveSvc.prototype = {
       else
         engines = Engines.get(engines);
 
-      // Fully wipe each engine
+      // Fully wipe each engine if it's able to decrypt data
       for each (let engine in engines)
-        engine.wipeClient();
+        if (engine._testDecrypt())
+          engine.wipeClient();
     }))(),
 
   /**
