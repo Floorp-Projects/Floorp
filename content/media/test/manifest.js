@@ -67,6 +67,7 @@ var gErrorTests = [
   { name:"448636.ogv", type:"video/ogg" },
   { name:"bug495129.ogv", type:"video/ogg", duration:2.52 },
   { name:"bug504843.ogv", type:"video/ogg", duration:1.233 },
+  { name:"bug498380.ogv", type:"video/ogg" },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 

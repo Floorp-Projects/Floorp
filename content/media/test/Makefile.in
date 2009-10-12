@@ -121,6 +121,7 @@ _TEST_FILES += \
 		bug495129.ogv \
 		bug461281.ogg \
 		bug482461.ogv \
+		bug498380.ogv \
 		bug498855-1.ogv \
 		bug498855-2.ogv \
 		bug498855-3.ogv \
