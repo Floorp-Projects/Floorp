@@ -82,7 +82,10 @@ function testChangeBaseVal(anim) {
   // frozen
 
   // preconditions -- element should have ended
-  ok(anim.getStartTime() + anim.getSimpleDuration() <= svg.getCurrentTime());
+  try {
+    anim.getStartTime();
+    ok(false, "Element has not ended yet.");
+  } catch (e) { }
 
   // check frozen value is applied
   var target = anim.targetElement;
