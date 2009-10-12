@@ -561,11 +561,9 @@ nsXREDirProvider::LoadBundleDirectories()
   mExtensionsLoaded = PR_TRUE;
 
   // first load distribution/bundles
-  if (mXULAppDir) {
-    LoadPlatformDirectory(mXULAppDir, mAppBundleDirectories);
+  LoadPlatformDirectory(mXULAppDir, mAppBundleDirectories);
 
-    LoadAppBundleDirs();
-  }
+  LoadAppBundleDirs();
 
   if (mProfileDir && !gSafeMode) {
     nsCOMPtr<nsIFile> extensionsINI;
@@ -593,9 +591,6 @@ nsXREDirProvider::LoadBundleDirectories()
 void
 nsXREDirProvider::LoadAppBundleDirs()
 {
-  if (!mXULAppDir)
-    return;
-
   nsCOMPtr<nsIFile> dir;
   nsresult rv = mXULAppDir->Clone(getter_AddRefs(dir));
   if (NS_FAILED(rv))
@@ -711,7 +706,8 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
     manifest->AppendNative(NS_LITERAL_CSTRING("chrome"));
     manifests.AppendObject(manifest);
 
-    if (mXULAppDir) {
+    PRBool eq;
+    if (NS_SUCCEEDED(mXULAppDir->Equals(mGREDir, &eq)) && !eq) {
       nsCOMPtr<nsIFile> file;
       mXULAppDir->Clone(getter_AddRefs(file));
       file->AppendNative(NS_LITERAL_CSTRING("chrome"));
