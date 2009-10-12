@@ -253,6 +253,16 @@ oggz_read_free_pbuffer_entry(OggzBufferedPacket *p) {
 }
 
 OggzDListIterResponse
+oggz_read_free_pbuffers(void *elem)
+{
+  OggzBufferedPacket *p = (OggzBufferedPacket *)elem;
+
+  oggz_read_free_pbuffer_entry(p);
+
+  return DLIST_ITER_CONTINUE;
+}
+
+OggzDListIterResponse
 oggz_read_update_gp(void *elem) {
 
   OggzBufferedPacket *p = (OggzBufferedPacket *)elem;
