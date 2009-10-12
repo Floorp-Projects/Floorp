@@ -43,8 +43,8 @@
 interface nsIDOMDocumentXBL : nsISupports
 {
   /**
-   * If |elt| does not an XBL binding attached, return null.  Otherwise, return
-   * a nodelist of |elt|'s child nodes in the flattened tree.
+   * If |elt| does not have an XBL binding attached, return null.  Otherwise,
+   * return a nodelist of |elt|'s child nodes in the flattened tree.
    */
   nsIDOMNodeList        getAnonymousNodes(in nsIDOMElement elt);
   nsIDOMElement         getAnonymousElementByAttribute(in nsIDOMElement elt,
