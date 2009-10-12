@@ -836,7 +836,7 @@ XPC_WN_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     JSObject *obj2;
     XPCWrappedNative *wrapper =
         XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, nsnull, &obj2);
-    if(!wrapper && obj2)
+    if(obj2)
     {
         *bp = !JSVAL_IS_PRIMITIVE(v) && (JSVAL_TO_OBJECT(v) == obj2);
 
@@ -1155,7 +1155,8 @@ XPC_WN_Helper_Trace(JSTracer *trc, JSObject *obj)
 {
     JSObject *obj2;
     XPCWrappedNative* wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(trc->context, obj, nsnull, &obj2);
+        XPCWrappedNative::GetWrappedNativeOfJSObject(trc->context, obj, nsnull,
+                                                     &obj2);
     if(wrapper)
     {
         if(wrapper->IsValid())
