@@ -17,6 +17,7 @@
     
     <implementation implements="nsIDOMEventListener">
       <field name="arguments"/>
+      <field name="parent"/>
       
       <constructor><![CDATA[
         if (!this.hasAttribute("orient"))
@@ -53,6 +54,12 @@
           }
           this.parentNode.parentNode.removeChild(this.parentNode);
           this._closed = true;
+
+          // emit DOMModalDialogClosed event
+          let event = document.createEvent("Events");
+          event.initEvent("DOMModalDialogClosed", true, false);
+          let dispatcher = this.parent || getBrowser();
+          dispatcher.dispatchEvent(event);
         </body>
       </method>
       

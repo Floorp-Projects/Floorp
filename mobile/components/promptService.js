@@ -75,14 +75,14 @@ promptService.prototype = {
     elem.parentNode.style.height = height + "px";
   },
   
-  openDialog: function(src, params) {
+  openDialog: function(parent, src, params) {
     let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
     let browser = wm.getMostRecentWindow("navigator:browser");
-    return browser.importDialog(src, params);
+    return browser.importDialog(parent, src, params);
   },
   
   alert: function(aParent, aTitle, aText) {
-    let dialog = this.openDialog("chrome://browser/content/prompt/alert.xul", null);
+    let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/alert.xul", null);
     let doc = this.getDocument();
     doc.getElementById("prompt-alert-title").value = aTitle;
     doc.getElementById("prompt-alert-message").appendChild(doc.createTextNode(aText));
@@ -93,7 +93,7 @@ promptService.prototype = {
   },
   
   alertCheck: function(aParent, aTitle, aText, aCheckMsg, aCheckState) {
-    let dialog = this.openDialog("chrome://browser/content/prompt/alert.xul", aCheckState);
+    let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/alert.xul", aCheckState);
     let doc = this.getDocument();
     doc.getElementById("prompt-alert-title").value = aTitle;
     doc.getElementById("prompt-alert-message").appendChild(doc.createTextNode(aText));
@@ -112,7 +112,7 @@ promptService.prototype = {
     var params = new Object();
     params.result = false;
     let doc = this.getDocument();
-    let dialog = this.openDialog("chrome://browser/content/prompt/confirm.xul", params);
+    let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/confirm.xul", params);
     doc.getElementById("prompt-confirm-title").value = aTitle;
     doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-confirm-message", 80);
@@ -127,7 +127,7 @@ promptService.prototype = {
     params.result = false;
     params.checkbox = aCheckState;
     let doc = this.getDocument();
-    let dialog = this.openDialog("chrome://browser/content/prompt/confirm.xul", params);
+    let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/confirm.xul", params);
     doc.getElementById("prompt-confirm-title").value = aTitle;
     doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-confirm-message", 80);
@@ -198,7 +198,7 @@ promptService.prototype = {
     params.result = false;
     params.checkbox = aCheckState;
     let doc = this.getDocument();
-    let dialog = this.openDialog("chrome://browser/content/prompt/confirm.xul", params);
+    let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/confirm.xul", params);
     doc.getElementById("prompt-confirm-title").value = aTitle;
     doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-confirm-message", 80);
@@ -266,7 +266,7 @@ promptService.prototype = {
     params.result = false;
     params.checkbox = aCheckState;
     params.value = aValue;
-    let dialog = this.openDialog("chrome://browser/content/prompt/prompt.xul", params);
+    let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/prompt.xul", params);
     let doc = this.getDocument();
     doc.getElementById("prompt-prompt-title").value = aTitle;
     doc.getElementById("prompt-prompt-message").appendChild(doc.createTextNode(aText));
@@ -302,7 +302,7 @@ promptService.prototype = {
     params.checkbox = aCheckState;
     params.user = aUsername;
     params.password = aPassword;
-    let dialog = this.openDialog("chrome://browser/content/prompt/promptPassword.xul", params);
+    let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/promptPassword.xul", params);
     let doc = this.getDocument();
     doc.getElementById("prompt-password-title").value = aTitle;
     doc.getElementById("prompt-password-message").appendChild(doc.createTextNode(aText));
@@ -423,7 +423,7 @@ promptService.prototype = {
     var params = new Object();
     params.result = false;
     params.selection = aOutSelection;
-    let dialog = this.openDialog("chrome://browser/content/prompt/select.xul", params);
+    let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/select.xul", params);
     let doc = this.getDocument();
     doc.getElementById("prompt-select-title").value = aTitle;
     doc.getElementById("prompt-select-message").appendChild(doc.createTextNode(aText));
