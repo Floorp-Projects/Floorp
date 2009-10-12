@@ -2111,6 +2111,9 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFra
   return PR_FALSE;
 }
 
+static const PRInt32 kRegularScrollbarThumbMinSize = 22;
+static const PRInt32 kSmallScrollbarThumbMinSize = 19;
+
 NS_IMETHODIMP
 nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
                                          nsIFrame* aFrame,
@@ -2222,47 +2225,19 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       break;
     }
 
-    // Get the rect of the thumb from HITheme, so we can return it to Gecko, which has different ideas about
-    // how big the thumb should be. This is kind of a hack.
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     {
-      // Find our parent scrollbar frame. If we can't, abort.
+      // Find our parent scrollbar frame in order to find out whether we're in
+      // a small or a large scrollbar.
       nsIFrame *scrollbarFrame = GetParentScrollbarFrame(aFrame);
-      if (!scrollbarFrame) return NS_ERROR_FAILURE;
+      if (!scrollbarFrame)
+        return NS_ERROR_FAILURE;
 
-      nsRect scrollbarRect = scrollbarFrame->GetRect();      
-      *aIsOverridable = PR_FALSE;
-
-      if (scrollbarRect.IsEmpty()) {
-        // just return (0,0)
-        return NS_OK;
-      }
-
-      // We need to get the device context to convert from app units :(
-      nsCOMPtr<nsIDeviceContext> dctx;
-      aContext->GetDeviceContext(*getter_AddRefs(dctx));
-      PRInt32 p2a = dctx->AppUnitsPerDevPixel();
-      CGRect macRect = CGRectMake(NSAppUnitsToIntPixels(scrollbarRect.x, p2a),
-                                  NSAppUnitsToIntPixels(scrollbarRect.y, p2a),
-                                  NSAppUnitsToIntPixels(scrollbarRect.width, p2a),
-                                  NSAppUnitsToIntPixels(scrollbarRect.height, p2a));
-
-      // False here means not to get scrollbar button state information.
-      HIThemeTrackDrawInfo tdi;
-      GetScrollbarDrawInfo(tdi, scrollbarFrame, macRect.size, PR_FALSE);
-
-      HIRect thumbRect;
-      ::HIThemeGetTrackPartBounds(&tdi, kControlIndicatorPart, &thumbRect);
-
-      // HITheme is just lying to us, I guess...
-      PRInt32 thumbAdjust = ((scrollbarFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL) ?
-                             2 : 4);
-
-      if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL)
-        aResult->SizeTo(nscoord(thumbRect.size.width), nscoord(thumbRect.size.height - thumbAdjust));
-      else
-        aResult->SizeTo(nscoord(thumbRect.size.width - thumbAdjust), nscoord(thumbRect.size.height));
+      PRBool isSmall = (scrollbarFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
+      PRBool isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL);
+      PRInt32& minSize = isHorizontal ? aResult->width : aResult->height;
+      minSize = isSmall ? kSmallScrollbarThumbMinSize : kRegularScrollbarThumbMinSize;
       break;
     }
 

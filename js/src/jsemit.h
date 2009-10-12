@@ -162,7 +162,7 @@ struct JSStmtInfo {
 #endif
 
 struct JSTreeContext {              /* tree context for semantic checks */
-    uint16          flags;          /* statement state flags, see below */
+    uint32          flags;          /* statement state flags, see below */
     uint16          ngvars;         /* max. no. of global variables/regexps */
     uint32          bodyid;         /* block number of program/function body */
     uint32          blockidGen;     /* preincremented block number generator */
@@ -239,11 +239,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
  */
 #define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
 
-/*
- * TreeContext flags must fit in 16 bits, and all bits are in use now. Widening
- * requires changing JSFunctionBox.tcflags too and repacking. Alternative fix
- * gets rid of flags, probably starting with TCF_HAS_FUNCTION_STMT.
- */
 #define TCF_COMPILING           0x01 /* JSTreeContext is JSCodeGenerator */
 #define TCF_IN_FUNCTION         0x02 /* parsing inside function body */
 #define TCF_RETURN_EXPR         0x04 /* function has 'return expr;' */
@@ -267,6 +262,19 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_HAS_SHARPS        0x8000 /* source contains sharp defs or uses */
 
 /*
+ * Set when parsing a declaration-like destructuring pattern.  This
+ * flag causes PrimaryExpr to create PN_NAME parse nodes for variable
+ * references which are not hooked into any definition's use chain,
+ * added to any tree context's AtomList, etc. etc.  CheckDestructuring
+ * will do that work later.
+ *
+ * The comments atop CheckDestructuring explain the distinction
+ * between assignment-like and declaration-like destructuring
+ * patterns, and why they need to be treated differently.
+ */
+#define TCF_DECL_DESTRUCTURING    0x10000
+
+/*
  * Sticky deoptimization flags to propagate from FunctionBody.
  */
 #define TCF_FUN_FLAGS           (TCF_FUN_SETS_OUTER_NAME |                    \
@@ -276,14 +284,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                  TCF_FUN_IS_GENERATOR    |                    \
                                  TCF_FUN_USES_OWN_NAME   |                    \
                                  TCF_HAS_SHARPS)
-
-/*
- * Flags field, not stored in JSTreeContext.flags, for passing a static level
- * into js_CompileScript.
- */
-#define TCF_STATIC_LEVEL_MASK   0xffff0000
-#define TCF_GET_STATIC_LEVEL(f) ((uint32)(f) >> 16)
-#define TCF_PUT_STATIC_LEVEL(d) ((uint16)(d) << 16)
 
 /*
  * Span-dependent instructions are jumps whose span (from the jump bytecode to

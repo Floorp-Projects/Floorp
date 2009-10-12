@@ -505,7 +505,7 @@ var nsBrowserContentHandler = {
 #endif
   },
 
-  helpInfo : "  -browser            Open a browser window.\n",
+  helpInfo : "  -browser           Open a browser window.\n",
 
   /* nsIBrowserHandler */
 

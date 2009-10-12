@@ -1,0 +1,7 @@
+# test url-prefix on include commands.
+
+# This include file should not be loaded if url-prefix is ignored for
+# the include command in ../urlprefixtests.list. The test fails if
+# this test is loaded.
+
+script scripttest-fail.html

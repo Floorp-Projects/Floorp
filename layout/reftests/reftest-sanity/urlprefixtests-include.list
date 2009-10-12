@@ -1,0 +1,6 @@
+# test url-prefix on include commands.
+
+# This include file should be loaded if url-prefix is ignored for
+# the include command in urlprefixtests.list.
+
+script scripttest-pass.html

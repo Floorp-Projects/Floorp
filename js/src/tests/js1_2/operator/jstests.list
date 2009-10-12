@@ -1,0 +1,3 @@
+url-prefix ../../jsreftest.html?test=js1_2/operator/
+skip script equality.js # obsolete test
+script strictEquality.js

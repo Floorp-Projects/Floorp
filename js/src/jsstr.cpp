@@ -48,6 +48,8 @@
  * of rooting things that might lose their newborn root due to subsequent GC
  * allocations in the same native method.
  */
+#define __STDC_LIMIT_MACROS
+
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
@@ -296,6 +298,8 @@ str_encodeURI(JSContext *cx, uintN argc, jsval *vp);
 
 static JSBool
 str_encodeURI_Component(JSContext *cx, uintN argc, jsval *vp);
+
+static const uint32 OVERLONG_UTF8 = UINT32_MAX;
 
 static uint32
 Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length);
@@ -3025,7 +3029,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
         return NULL;
     }
 
-    str = js_NewGCString(cx, GCX_STRING);
+    str = js_NewGCString(cx);
     if (!str)
         return NULL;
     str->initFlat(chars, length);
@@ -3095,7 +3099,7 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
         return js_NewStringCopyN(cx, base->chars() + start, length);
     }
 
-    ds = js_NewGCString(cx, GCX_STRING);
+    ds = js_NewGCString(cx);
     if (!ds)
         return NULL;
     if (start == 0)
@@ -3643,7 +3647,7 @@ js_InflateStringToBuffer(JSContext *cx, const char *src, size_t srclen,
                 n++;
             if (n > srclen)
                 goto bufferTooSmall;
-            if (n == 1 || n > 6)
+            if (n == 1 || n > 4)
                 goto badCharacter;
             for (j = 1; j < n; j++) {
                 if ((src[j] & 0xC0) != 0x80)
@@ -5162,7 +5166,7 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
     const jschar *chars;
     jschar c, c2;
     uint32 v;
-    uint8 utf8buf[6];
+    uint8 utf8buf[4];
     jschar hexBuf[4];
     static const char HexDigits[] = "0123456789ABCDEF"; /* NB: uppercase */
 
@@ -5226,7 +5230,7 @@ Decode(JSContext *cx, JSString *str, const jschar *reservedSet, jsval *rval)
     jschar c, H;
     uint32 v;
     jsuint B;
-    uint8 octets[6];
+    uint8 octets[4];
     intN j, n;
 
     str->getCharsAndLength(chars, length);
@@ -5252,7 +5256,7 @@ Decode(JSContext *cx, JSString *str, const jschar *reservedSet, jsval *rval)
                 n = 1;
                 while (B & (0x80 >> n))
                     n++;
-                if (n == 1 || n > 6)
+                if (n == 1 || n > 4)
                     goto report_bad_uri;
                 octets[0] = (uint8)B;
                 if (k + 3 * (n - 1) >= length)
@@ -5351,14 +5355,14 @@ str_encodeURI_Component(JSContext *cx, uintN argc, jsval *vp)
 
 /*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at
- * least 6 bytes long.  Return the number of UTF-8 bytes of data written.
+ * least 4 bytes long.  Return the number of UTF-8 bytes of data written.
  */
 int
 js_OneUcs4ToUtf8Char(uint8 *utf8Buffer, uint32 ucs4Char)
 {
     int utf8Length = 1;
 
-    JS_ASSERT(ucs4Char <= 0x7FFFFFFF);
+    JS_ASSERT(ucs4Char <= 0x10FFFF);
     if (ucs4Char < 0x80) {
         *utf8Buffer = (uint8)ucs4Char;
     } else {
@@ -5391,10 +5395,10 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
     uint32 minucs4Char;
     /* from Unicode 3.1, non-shortest form is illegal */
     static const uint32 minucs4Table[] = {
-        0x00000080, 0x00000800, 0x0001000, 0x0020000, 0x0400000
+        0x00000080, 0x00000800, 0x00010000
     };
 
-    JS_ASSERT(utf8Length >= 1 && utf8Length <= 6);
+    JS_ASSERT(utf8Length >= 1 && utf8Length <= 4);
     if (utf8Length == 1) {
         ucs4Char = *utf8Buffer;
         JS_ASSERT(!(ucs4Char & 0x80));
@@ -5407,8 +5411,9 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
             JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
             ucs4Char = ucs4Char<<6 | (*utf8Buffer++ & 0x3F);
         }
-        if (ucs4Char < minucs4Char ||
-            ucs4Char == 0xFFFE || ucs4Char == 0xFFFF) {
+        if (JS_UNLIKELY(ucs4Char < minucs4Char)) {
+            ucs4Char = OVERLONG_UTF8;
+        } else if (ucs4Char == 0xFFFE || ucs4Char == 0xFFFF) {
             ucs4Char = 0xFFFD;
         }
     }

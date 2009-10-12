@@ -91,8 +91,8 @@ function setup() {
   }
 
   // Add a visited page.
-  visitId = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
-                        hs.TRANSITION_TYPED, false, 0);
+  let visitId = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
+                            hs.TRANSITION_TYPED, false, 0);
   // Set a favicon for the page.
   icons.setFaviconUrlForPage(uri(TEST_URI), uri(TEST_ICON_URI));
   // Sanity check the favicon

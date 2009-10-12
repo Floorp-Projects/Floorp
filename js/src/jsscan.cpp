@@ -844,7 +844,7 @@ NewToken(JSTokenStream *ts, ptrdiff_t adjust)
     tp->pos.begin.index = ts->linepos +
                           (tp->ptr - ts->linebuf.base) -
                           ts->ungetpos;
-    tp->pos.begin.lineno = tp->pos.end.lineno = (uint16)ts->lineno;
+    tp->pos.begin.lineno = tp->pos.end.lineno = ts->lineno;
     return tp;
 }
 
@@ -923,7 +923,7 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
             if (!atom)
                 goto error;
         }
-        tp->pos.end.lineno = (uint16)ts->lineno;
+        tp->pos.end.lineno = ts->lineno;
         tp->t_op = JSOP_STRING;
         tp->t_atom = atom;
         goto out;
@@ -1028,7 +1028,7 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
             atom = atomize(cx, tb);
             if (!atom)
                 goto error;
-            tp->pos.end.lineno = (uint16)ts->lineno;
+            tp->pos.end.lineno = ts->lineno;
             tp->t_op = JSOP_STRING;
             tp->t_atom = atom;
             tt = TOK_XMLATTR;
@@ -1298,7 +1298,7 @@ retry:
         atom = atomize(cx, tb);
         if (!atom)
             goto error;
-        tp->pos.end.lineno = (uint16)ts->lineno;
+        tp->pos.end.lineno = ts->lineno;
         tp->t_op = JSOP_STRING;
         tp->t_atom = atom;
         tt = TOK_STRING;
@@ -1532,7 +1532,7 @@ retry:
                 if (!atom)
                     goto error;
                 tp->t_atom = atom;
-                tp->pos.end.lineno = (uint16)ts->lineno;
+                tp->pos.end.lineno = ts->lineno;
                 goto out;
             }
 

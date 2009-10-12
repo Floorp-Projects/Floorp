@@ -175,6 +175,11 @@ public:
                                        const nsCSSValue& aValue,
                                        nsAString& aResult);
 
+  // return whether there was a value in |aStorage| (i.e., it was non-null)
+  static PRBool AppendStorageToString(nsCSSProperty aProperty,
+                                      const void* aStorage,
+                                      nsAString& aResult);
+
 private:
   // Not implemented, and not supported.
   nsCSSDeclaration& operator=(const nsCSSDeclaration& aCopy);

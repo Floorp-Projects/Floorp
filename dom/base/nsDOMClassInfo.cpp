@@ -456,7 +456,9 @@
 #include "nsDOMWorker.h"
 
 #include "nsDOMFile.h"
+#include "nsDOMFileRequest.h"
 #include "nsIDOMFileException.h"
+#include "nsIDOMFileError.h"
 
 // Simple gestures include
 #include "nsIDOMSimpleGestureEvent.h"
@@ -1249,6 +1251,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(FileException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(FileError, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(FileRequest, nsEventTargetSH,
+                           EVENTTARGET_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(ModalContentWindow, nsWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
@@ -1365,6 +1371,7 @@ struct nsContractIDMapData
 static const nsContractIDMapData kConstructorMap[] =
 {
   NS_DEFINE_CONSTRUCTOR_DATA(DOMParser, NS_DOMPARSER_CONTRACTID)
+  NS_DEFINE_CONSTRUCTOR_DATA(FileRequest, NS_FILEREQUEST_CONTRACTID)
   NS_DEFINE_CONSTRUCTOR_DATA(XMLSerializer, NS_XMLSERIALIZER_CONTRACTID)
   NS_DEFINE_CONSTRUCTOR_DATA(XMLHttpRequest, NS_XMLHTTPREQUEST_CONTRACTID)
   NS_DEFINE_CONSTRUCTOR_DATA(XPathEvaluator, NS_XPATH_EVALUATOR_CONTRACTID)
@@ -1414,6 +1421,7 @@ jsval nsDOMClassInfo::sToolbar_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sLocationbar_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sPersonalbar_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sStatusbar_id       = JSVAL_VOID;
+jsval nsDOMClassInfo::sDialogArguments_id = JSVAL_VOID;
 jsval nsDOMClassInfo::sDirectories_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sControllers_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sLength_id          = JSVAL_VOID;
@@ -1609,6 +1617,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sLocationbar_id,     cx, "locationbar");
   SET_JSVAL_TO_STRING(sPersonalbar_id,     cx, "personalbar");
   SET_JSVAL_TO_STRING(sStatusbar_id,       cx, "statusbar");
+  SET_JSVAL_TO_STRING(sDialogArguments_id, cx, "dialogArguments");
   SET_JSVAL_TO_STRING(sDirectories_id,     cx, "directories");
   SET_JSVAL_TO_STRING(sControllers_id,     cx, "controllers");
   SET_JSVAL_TO_STRING(sLength_id,          cx, "length");
@@ -1909,23 +1918,28 @@ nsDOMClassInfo::RegisterExternalClasses()
 // static
 inline nsresult
 nsDOMClassInfo::WrapNativeParent(JSContext *cx, JSObject *scope,
-                                 nsISupports *native, JSObject **parentObj)
+                                 nsISupports *native,
+                                 nsWrapperCache *nativeWrapperCache,
+                                 JSObject **parentObj)
 {
   // In the common case, |native| is a wrapper cache with an existing wrapper
+#ifdef DEBUG
   nsWrapperCache* cache = nsnull;
   CallQueryInterface(native, &cache);
-  if (cache) {
-    JSObject* obj = cache->GetWrapper();
-    if (obj) {
-#ifdef DEBUG
-      jsval debugVal;
-      nsresult rv = WrapNative(cx, scope, native, PR_FALSE, &debugVal);
-      NS_ASSERTION(NS_SUCCEEDED(rv) && JSVAL_TO_OBJECT(debugVal) == obj,
-                   "Unexpected object in nsWrapperCache");
+  NS_PRECONDITION(nativeWrapperCache &&
+                  cache == nativeWrapperCache, "What happened here?");
 #endif
-      *parentObj = obj;
-      return NS_OK;
-    }
+  
+  JSObject* obj = nativeWrapperCache->GetWrapper();
+  if (obj) {
+#ifdef DEBUG
+    jsval debugVal;
+    nsresult rv = WrapNative(cx, scope, native, PR_FALSE, &debugVal);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && JSVAL_TO_OBJECT(debugVal) == obj,
+                 "Unexpected object in nsWrapperCache");
+#endif
+    *parentObj = obj;
+    return NS_OK;
   }
 
   jsval v;
@@ -3553,6 +3567,10 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileList)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(FileError, nsIDOMFileError)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileError)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(File, nsIDOMFile)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMFile)
   DOM_CLASSINFO_MAP_END
@@ -3560,6 +3578,13 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(FileException, nsIDOMFileException)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileException)
     DOM_CLASSINFO_MAP_ENTRY(nsIException)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(FileRequest, nsIDOMFileRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIInterfaceRequestor)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ModalContentWindow, nsIDOMWindow)
@@ -4449,6 +4474,7 @@ nsDOMClassInfo::ShutDown()
   sLocationbar_id     = JSVAL_VOID;
   sPersonalbar_id     = JSVAL_VOID;
   sStatusbar_id       = JSVAL_VOID;
+  sDialogArguments_id = JSVAL_VOID;
   sDirectories_id     = JSVAL_VOID;
   sControllers_id     = JSVAL_VOID;
   sLength_id          = JSVAL_VOID;
@@ -6682,6 +6708,24 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
           return NS_OK;
         }
       }
+    } else if (id == sDialogArguments_id &&
+               mData == &sClassInfoData[eDOMClassInfo_ModalContentWindow_id]) {
+      nsCOMPtr<nsIArray> args;
+      ((nsGlobalModalWindow *)win)->GetDialogArguments(getter_AddRefs(args));
+
+      nsIScriptContext *script_cx = win->GetContext();
+      if (script_cx) {
+        JSAutoSuspendRequest asr(cx);
+
+        // Make nsJSContext::SetProperty()'s magic argument array
+        // handling happen.
+        rv = script_cx->SetProperty(obj, "dialogArguments", args);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        *objp = obj;
+      }
+
+      return NS_OK;
     }
   }
 
@@ -6698,8 +6742,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // binding a name) a new undefined property that's not already
   // defined on our prototype chain. This way we can access this
   // expando w/o ever getting back into XPConnect.
-  if ((flags & JSRESOLVE_ASSIGNING) &&
-      !(flags & JSRESOLVE_WITH) &&
+  if ((flags & JSRESOLVE_ASSIGNING) && !(flags & JSRESOLVE_WITH) &&
       win->IsInnerWindow()) {
     JSObject *realObj;
     wrapper->GetJSObject(&realObj);
@@ -7989,12 +8032,13 @@ nsNodeListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   // nsChildContentList is the only class that uses nsNodeListSH and has a
   // cached wrapper.
   nsChildContentList *list = nsChildContentList::FromSupports(nativeObj);
-  nsISupports *native_parent = list->GetParentObject();
+  nsINode *native_parent = list->GetParentObject();
   if (!native_parent) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = WrapNativeParent(cx, globalObj, native_parent, parentObj);
+  nsresult rv =
+    WrapNativeParent(cx, globalObj, native_parent, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
@@ -8184,17 +8228,15 @@ nsContentListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                            JSObject *globalObj, JSObject **parentObj)
 {
   nsContentList *contentList = nsContentList::FromSupports(nativeObj);
-  nsISupports *native_parent = contentList->GetParentObject();
+  nsINode *native_parent = contentList->GetParentObject();
 
   if (!native_parent) {
     return NS_ERROR_FAILURE;
   }
 
-  jsval v;
-  nsresult rv = WrapNative(cx, globalObj, native_parent, PR_FALSE, &v);
+  nsresult rv =
+    WrapNativeParent(cx, globalObj, native_parent, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  *parentObj = JSVAL_TO_OBJECT(v);
 
   return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
 }
@@ -9601,7 +9643,10 @@ nsHTMLPluginObjElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
                                      JSContext *cx, JSObject *obj)
 {
   if (nsContentUtils::IsSafeToRunScript()) {
-    nsresult rv = SetupProtoChain(wrapper, cx, obj);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+      SetupProtoChain(wrapper, cx, obj);
 
     // If SetupProtoChain failed then we're in real trouble. We're about to fail
     // PostCreate but it's more than likely that we handed our (now invalid)
@@ -10085,12 +10130,13 @@ nsCSSStyleDeclSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   }
 
   nsICSSDeclaration *declaration = static_cast<nsICSSDeclaration*>(nativeObj);
-  nsISupports *native_parent = declaration->GetParentObject();
+  nsINode *native_parent = declaration->GetParentObject();
   if (!native_parent) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = WrapNativeParent(cx, globalObj, native_parent, parentObj);
+  nsresult rv =
+    WrapNativeParent(cx, globalObj, native_parent, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;

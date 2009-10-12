@@ -614,6 +614,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_ImagesInMenus:
         aMetric = moz_gtk_images_in_menus();
         break;
+    case eMetric_ImagesInButtons:
+        aMetric = moz_gtk_images_in_buttons();
+        break;
     default:
         aMetric = 0;
         res     = NS_ERROR_FAILURE;

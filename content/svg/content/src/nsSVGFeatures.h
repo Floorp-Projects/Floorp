@@ -75,7 +75,7 @@ public:
    * Special value to pass to PassesConditionalProcessingTests to ignore systemLanguage
    * attributes
    */
-  static const nsAdoptingString * const kIgnoreSystemLanguage;
+  static const nsString * const kIgnoreSystemLanguage;
 
   /**
    * Check whether the conditional processing attributes requiredFeatures,
@@ -91,7 +91,7 @@ public:
    */
   static PRBool
   PassesConditionalProcessingTests(nsIContent *aContent,
-                                   const nsAdoptingString *aAcceptLangs = nsnull);
+                                   const nsString *aAcceptLangs = nsnull);
 
 private:
   /**

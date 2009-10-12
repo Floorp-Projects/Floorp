@@ -1,0 +1,4 @@
+url-prefix ../../jsreftest.html?test=e4x/Statements/
+script 12.1.js
+script 12.2.js
+script 12.3-01.js

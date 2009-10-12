@@ -1166,6 +1166,12 @@ JSD_GetValueClassName(JSDContext* jsdc, JSDValue* jsdval)
     return jsd_GetValueClassName(jsdc, jsdval);
 }
 
+JSD_PUBLIC_API(JSDScript*)
+JSD_GetScriptForValue(JSDContext* jsdc, JSDValue* jsdval)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_GetScriptForValue(jsdc, jsdval);
+}
 /**************************************************/
 
 JSD_PUBLIC_API(void)

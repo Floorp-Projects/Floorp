@@ -21,7 +21,9 @@
  *
  * Contributor(s):
  *   Brian Ryner <bryner@brianryner.com> (original author)
+ *   Dietrich Ayala <dietrich@mozilla.com>
  *   Drew Willcoxon <adw@mozilla.com>
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -3028,15 +3030,6 @@ NS_IMETHODIMP
 nsNavBookmarks::RemoveObserver(nsINavBookmarkObserver *aObserver)
 {
   return mObservers.RemoveWeakElement(aObserver);
-}
-
-/**
- * Called by the History service when shutting down
- */
-nsresult
-nsNavBookmarks::OnQuit()
-{
-  return NS_OK;
 }
 
 // nsNavBookmarks::nsINavHistoryObserver

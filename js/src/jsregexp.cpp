@@ -3083,6 +3083,7 @@ class RegExpNativeCompiler {
 
         Allocator &alloc = *JS_TRACE_MONITOR(cx).dataAlloc;
 
+        /* Must only create a VMSideExit; see StackFilter::getTops. */
         size_t len = (sizeof(GuardRecord) +
                       sizeof(VMSideExit) +
                       (re_length-1) * sizeof(jschar));
@@ -3196,6 +3197,15 @@ class RegExpNativeCompiler {
 
         if (outOfMemory())
             goto fail;
+
+        /*
+         * Deep in the nanojit compiler, the StackFilter is trying to throw
+         * away stores above the VM interpreter/native stacks. We have no such
+         * stacks, so rely on the fact that lirbuf->sp and lirbuf->rp are null
+         * to ensure our stores are ignored.
+         */
+        JS_ASSERT(!lirbuf->sp && !lirbuf->rp);
+
         ::compile(assm, fragment verbose_only(, tempAlloc, tm->labels));
         if (assm->error() != nanojit::None)
             goto fail;

@@ -1,0 +1,15 @@
+url-prefix ../../jsreftest.html?test=ecma_3/extensions/
+script 10.1.3-2.js
+script 7.9.1.js
+script regress-103087.js
+script regress-188206-01.js
+script regress-188206-02.js
+script regress-220367-002.js
+script regress-228087.js
+script regress-274152.js
+script regress-320854.js
+script regress-327170.js
+script regress-368516.js
+script regress-385393-03.js
+script regress-429248.js
+script regress-430740.js

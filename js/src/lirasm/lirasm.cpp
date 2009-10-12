@@ -113,9 +113,9 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
 }
 #endif
 
-typedef FASTCALL int32_t (*RetInt)();
-typedef FASTCALL double (*RetFloat)();
-typedef FASTCALL GuardRecord* (*RetGuard)();
+typedef int32_t (FASTCALL *RetInt)();
+typedef double (FASTCALL *RetFloat)();
+typedef GuardRecord* (FASTCALL *RetGuard)();
 
 struct Function {
     const char *name;
@@ -325,6 +325,14 @@ private:
     void endFragment();
 };
 
+// 'sin' is overloaded on some platforms, so taking its address
+// doesn't quite work. Provide a do-nothing function here
+// that's not overloaded.
+double sinFn(double d) {
+    return sin(d);
+}
+#define sin sinFn
+
 Function functions[] = {
     FN(puts, I32 | (PTRARG<<2)),
     FN(sin, F64 | (F64<<2)),
@@ -460,7 +468,9 @@ FragmentAssembler::sProfId = 0;
 FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
     : mParent(parent), mFragName(fragmentName)
 {
-    mFragment = new Fragment(NULL verbose_only(, sProfId++));
+    mFragment = new Fragment(NULL verbose_only(, (mParent.mLogc.lcbits &
+                                                  nanojit::LC_FragProfile) ?
+                                                  sProfId++ : 0));
     mFragment->lirbuf = mParent.mLirbuf;
     mFragment->root = mFragment;
     mParent.mFragments[mFragName].fragptr = mFragment;
@@ -483,6 +493,8 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
 
     mReturnTypeBits = 0;
     mLir->ins0(LIR_start);
+    for (int i = 0; i < nanojit::NumSavedRegs; ++i)
+        mLir->insParam(i, 1);
 
     mLineno = 0;
 }
@@ -732,8 +744,8 @@ FragmentAssembler::endFragment()
     mFragment->lastIns =
         mLir->insGuard(LIR_x, NULL, createGuardRecord(createSideExit()));
 
-    ::compile(&mParent.mAssm, mFragment, mParent.mAlloc
-              verbose_only(, mParent.mLabelMap));
+    ::compile(&mParent.mAssm, mFragment
+              verbose_only(, mParent.mAlloc, mParent.mLabelMap));
 
     if (mParent.mAssm.error() != nanojit::None) {
         cerr << "error during assembly: ";

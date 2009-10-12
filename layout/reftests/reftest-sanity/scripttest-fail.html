@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>scripttest-fail</title>
+<script type="text/javascript">
+function getTestCases()
+{
+  return [
+    { testPassed: (function () { return false; }), testDescription: (function () { return "failed"; }) }
+  ];
+}
+</script>
+</head>
+<body>
+<h1>scripttest-fail</h1>
+</body>
+</html>

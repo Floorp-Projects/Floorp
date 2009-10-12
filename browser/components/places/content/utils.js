@@ -1311,7 +1311,7 @@ var PlacesUIUtils = {
     if (this.__lookupGetter__("leftPaneFolderId")) {
       try {
         queryName = PlacesUtils.annotations.
-                                getItemAnnotation(itemId, ORGANIZER_QUERY_ANNO);
+                                getItemAnnotation(aItemId, ORGANIZER_QUERY_ANNO);
       }
       catch (ex) {
         // doesn't have the annotation

@@ -39,7 +39,7 @@
       <children includes="menupopup"/>
     </content>
 
-    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider, nsIDOMEventListener">
+    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider">
 
       <constructor><![CDATA[
         // XXX bug 90337 band-aid until we figure out what's going on here
@@ -48,7 +48,7 @@
         delete this.value;
 
         // listen for menubar activation
-        window.top.addEventListener("DOMMenuBarActive", this, true);
+        window.top.addEventListener("DOMMenuBarActive", this.mMenuBarListener, true);
 
         // set default property values
         this.ifSetAttribute("timeout", 50);
@@ -70,7 +70,7 @@
 
       <destructor><![CDATA[
         this.clearResults(false);
-        window.top.removeEventListener("DOMMenuBarActive", this, true);
+        window.top.removeEventListener("DOMMenuBarActive", this.mMenuBarListener, true);
       ]]></destructor>
       
       <!-- =================== PUBLIC PROPERTIES =================== -->
@@ -236,16 +236,6 @@
         document.getAnonymousElementByAttribute(this, "anonid", "popup");
       ]]></field>
 
-      <!-- nsIDOMEventListener -->
-      <method name="handleEvent">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          this.finishAutoComplete(false, false, aEvent);
-          this.clearTimer();
-          this.closeResultPopup();
-        ]]></body>
-      </method>
-
       <!-- nsIAccessibleProvider --> 
       <property name="accessibleType" readonly="true">
         <getter>
@@ -306,6 +296,21 @@
       <field name="oninit">null</field>
       <field name="mDefaultMatchFilled">false</field>
       <field name="mFirstReturn">true</field>
+
+      <field name="mMenuBarListener"><![CDATA[
+        ({
+          self: this,
+          handleEvent: function(aEvent) {
+            try {
+              this.self.finishAutoComplete(false, false, aEvent);
+              this.self.clearTimer();
+              this.self.closeResultPopup();
+            } catch (e) {
+              window.top.removeEventListener("DOMMenuBarActive", this, true);
+            }
+          }
+        })
+      ]]></field>
 
       <field name="mAutoCompleteSession"><![CDATA[
         var session = function(aSession) { this.session = aSession };

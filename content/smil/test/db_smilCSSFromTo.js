@@ -215,8 +215,7 @@ var gFromToBundles = [
                      [].concat(_fromToTestLists.color,
                                _fromToTestLists.paintServer,
                                _fromToTestLists.colorFromInheritBlack)),
-  new TestcaseBundle(gPropList.fill_opacity, _fromToTestLists.opacity,
-                     "need support for float values"),
+  new TestcaseBundle(gPropList.fill_opacity, _fromToTestLists.opacity),
   new TestcaseBundle(gPropList.fill_rule, [
     new AnimTestcaseFromTo("nonzero", "evenodd"),
     new AnimTestcaseFromTo("evenodd", "inherit", { toComp: "nonzero" }),
@@ -225,8 +224,7 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.flood_color,
                      [].concat(_fromToTestLists.color,
                                _fromToTestLists.colorFromInheritBlack)),
-  new TestcaseBundle(gPropList.flood_opacity, _fromToTestLists.opacity,
-                     "need support for float values"),
+  new TestcaseBundle(gPropList.flood_opacity, _fromToTestLists.opacity),
   new TestcaseBundle(gPropList.font, [
     // NOTE: 'line-height' is hard-wired at 10px in test_smilCSSFromTo.xhtml
     // because if it's not explicitly set, its value varies across platforms.
@@ -265,7 +263,7 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("0.9", "0.1", { midComp: "0.5" }),
     new AnimTestcaseFromTo("0.5", "0.6", { midComp: "0.55" }),
     new AnimTestcaseFromTo("none", "0.4"),
-  ], "need support for all properties that get stored in nsFont"),
+  ]),
   new TestcaseBundle(gPropList.font_stretch, [
     new AnimTestcaseFromTo("normal", "wider"),
     new AnimTestcaseFromTo("narrower", "ultra-condensed"),
@@ -322,8 +320,7 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.marker_mid, _fromToTestLists.URIsAndNone),
   new TestcaseBundle(gPropList.marker_start, _fromToTestLists.URIsAndNone),
   new TestcaseBundle(gPropList.mask, _fromToTestLists.URIsAndNone),
-  new TestcaseBundle(gPropList.opacity, _fromToTestLists.opacity,
-                     "need support for float values"),
+  new TestcaseBundle(gPropList.opacity, _fromToTestLists.opacity),
   new TestcaseBundle(gPropList.overflow, [
     new AnimTestcaseFromTo("auto", "visible"),
     new AnimTestcaseFromTo("scroll", "auto"),
@@ -344,8 +341,7 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.stop_color,
                         [].concat(_fromToTestLists.color,
                                   _fromToTestLists.colorFromInheritBlack)),
-  new TestcaseBundle(gPropList.stop_opacity, _fromToTestLists.opacity,
-                     "need support for float values"),
+  new TestcaseBundle(gPropList.stop_opacity, _fromToTestLists.opacity),
   new TestcaseBundle(gPropList.stroke,
                      [].concat(_fromToTestLists.color,
                                _fromToTestLists.paintServer, [
@@ -376,9 +372,8 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.stroke_miterlimit, [
     new AnimTestcaseFromTo("1", "2", { midComp: "1.5" }),
     new AnimTestcaseFromTo("20.1", "10.1", { midComp: "15.1" }),
-  ], "need support for float values"),
-  new TestcaseBundle(gPropList.stroke_opacity, _fromToTestLists.opacity,
-                     "need support for float values"),
+  ]),
+  new TestcaseBundle(gPropList.stroke_opacity, _fromToTestLists.opacity),
   new TestcaseBundle(gPropList.stroke_width,
                      [].concat(_fromToTestLists.lengthPx,
                                _fromToTestLists.lengthPxPctSVG,

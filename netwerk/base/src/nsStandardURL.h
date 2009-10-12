@@ -155,6 +155,7 @@ protected:
     // Helper for subclass implementation of GetFile().  Subclasses that map
     // URIs to files in a special way should implement this method.  It should
     // ensure that our mFile is initialized, if it's possible.
+    // returns NS_ERROR_NO_INTERFACE if the url does not map to a file
     virtual nsresult EnsureFile();
 
 private:

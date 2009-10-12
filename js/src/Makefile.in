@@ -66,6 +66,10 @@ DIRS += jsapi-tests
 endif
 endif
 
+ifdef ENABLE_TESTS
+DIRS += tests
+endif
+
 MODULE		    = js
 LIBRARY_NAME	    = mozjs
 STATIC_LIBRARY_NAME = js_static
@@ -101,10 +105,6 @@ endif
 endif
 endif
 
-
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-LIBRARY_NAME	= js$(MOZ_BITS)$(VERSION_NUMBER)
-endif
 
 # JavaScript must be built shared, even for static builds, as it is used by
 # other modules which are always built shared. Failure to do so results in
@@ -235,6 +235,7 @@ INSTALLED_HEADERS += \
 		Native$(NANOJIT_ARCH).h \
 		RegAlloc.h	\
 		nanojit.h	\
+		VMPI.h		\
 		$(NULL)
 
 CPPSRCS += \
@@ -249,6 +250,7 @@ CPPSRCS += \
 		avmplus.cpp    \
 		Native$(NANOJIT_ARCH).cpp \
 		jsbuiltins.cpp         \
+		VMPI.cpp       \
 		$(NULL)
 
 ifdef WINCE

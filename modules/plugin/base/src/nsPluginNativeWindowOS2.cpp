@@ -23,6 +23,7 @@
  *   Andrei Volkov <av@netscape.com>
  *   Brian Stell <bstell@netscape.com>
  *   Peter Lubczynski <peterl@netscape.com>
+ *   Rich Walsh <dragtext@e-vertise.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -180,7 +181,6 @@ private:
 
 public:
   // locals
-  PFNWP GetPrevWindowProc();
   PFNWP GetWindowProc();
   PluginWindowEvent* GetPluginWindowEvent(HWND aWnd,
                                           ULONG aMsg,
@@ -188,7 +188,6 @@ public:
                                           MPARAM mp2);
 
 private:
-  PFNWP mPrevWinProc;
   PFNWP mPluginWinProc;
   PluginWindowWeakRef mWeakRef;
   nsRefPtr<PluginWindowEvent> mCachedPluginWindowEvent;
@@ -299,15 +298,27 @@ static MRESULT EXPENTRY PluginWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM m
       enablePopups = PR_TRUE;
       break;
 
-    case WM_SETFOCUS:
-    case WM_FOCUSCHANGE:
-    case WM_FOCUSCHANGED:
-    case WM_ACTIVATE: {
-      // Make sure setfocus and focuschange get through
-      // even if they are eaten by the plugin
-      PFNWP prevWndProc = win->GetPrevWindowProc();
-      if (prevWndProc)
-        prevWndProc(hWnd, msg, mp1, mp2);
+    // When the child of a plugin gets the focus, nsWindow doesn't get
+    // a WM_FOCUSCHANGED msg, so plugin and window activation events
+    // don't happen.  This fixes the problem by synthesizing a msg
+    // that makes it look like the plugin widget just got the focus.
+    case WM_FOCUSCHANGE: {
+
+      // Some plugins don't pass this msg on.  If the default window proc
+      // doesn't receive it, window activation/deactivation won't happen.
+      WinDefWindowProc(hWnd, msg, mp1, mp2);
+
+      // If focus is being gained, and the plugin widget neither lost
+      // nor gained the focus, then a child just got it from some other
+      // window.  Post a WM_FOCUSCHANGED msg that identifies the child
+      // as the window losing focus.  After nsWindow::ActivatePlugin()
+      // activates the plugin, it will restore the focus to the child.
+      if (SHORT1FROMMP(mp2) && (HWND)mp1 != hWnd) {
+        HWND hFocus = WinQueryFocus(HWND_DESKTOP);
+        if (hFocus != hWnd) {
+          WinPostMsg(hWnd, WM_FOCUSCHANGED, (MPARAM)hFocus, mp2);
+        }
+      }
       break;
     }
   }
@@ -370,7 +381,6 @@ nsPluginNativeWindowOS2::nsPluginNativeWindowOS2() : nsPluginNativeWindow()
   width = 0; 
   height = 0; 
 
-  mPrevWinProc = NULL;
   mPluginWinProc = NULL;
   mPluginType = nsPluginType_Unknown;
 
@@ -389,11 +399,6 @@ nsPluginNativeWindowOS2::~nsPluginNativeWindowOS2()
   // clear weak reference to self to prevent any pending events from
   // dereferencing this.
   mWeakRef.forget();
-}
-
-PFNWP nsPluginNativeWindowOS2::GetPrevWindowProc()
-{
-  return mPrevWinProc;
 }
 
 PFNWP nsPluginNativeWindowOS2::GetWindowProc()
@@ -468,14 +473,6 @@ nsresult nsPluginNativeWindowOS2::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
   // not interested in subclassing business any more, undo and don't subclass
   if (!aPluginInstance) {
     UndoSubclassAndAssociateWindow();
-    mPrevWinProc = NULL;
-  }
-
-  // We need WndProc before plug-ins do subclass in nsPluginNativeWindow::CallSetWindow.
-  if (aPluginInstance) {
-    PFNWP currentWndProc = (PFNWP)::WinQueryWindowPtr((HWND)window, QWP_PFNWP);
-    if (currentWndProc != PluginWndProc)
-      mPrevWinProc = currentWndProc;
   }
 
   nsPluginNativeWindow::CallSetWindow(aPluginInstance);

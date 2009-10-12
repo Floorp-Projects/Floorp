@@ -132,11 +132,11 @@ function run_test() {
   LOG("Updating Items in batch");
   var updateBatch = {
     runBatched: function (aUserData) {
-      batchchange = [{isDetails: true, uri:"http://foo.com/changeme2.htm",
-                      title: "moz"},
-                     {isDetails: true, uri: "http://mail.foo.com/yiihah",
-                      title: "moz now updated"},
-                     {isDetails: true, uri: "ftp://foo.com/ftp", title: "gone"}];
+      var batchchange = [{isDetails: true, uri:"http://foo.com/changeme2.htm",
+                          title: "moz"},
+                         {isDetails: true, uri: "http://mail.foo.com/yiihah",
+                          title: "moz now updated"},
+                         {isDetails: true, uri: "ftp://foo.com/ftp", title: "gone"}];
       populateDB(batchchange);
     }
   };

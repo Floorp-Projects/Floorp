@@ -1,0 +1,15 @@
+include e4x/jstests.list
+include ecma/jstests.list
+include ecma_2/jstests.list
+include ecma_3/jstests.list
+include ecma_3_1/jstests.list
+include ecma_5/jstests.list
+include js1_1/jstests.list
+include js1_2/jstests.list
+include js1_3/jstests.list
+include js1_4/jstests.list
+include js1_5/jstests.list
+include js1_6/jstests.list
+include js1_7/jstests.list
+include js1_8/jstests.list
+include js1_8_1/jstests.list

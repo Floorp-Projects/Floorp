@@ -51,7 +51,11 @@ MOZ_PKG_PLATFORM := $(TARGET_OS)-$(TARGET_CPU)
 
 # TARGET_OS/TARGET_CPU may be unintuitive, so we hardcode some special formats
 ifeq ($(OS_ARCH),WINNT)
-MOZ_PKG_PLATFORM := win$(MOZ_BITS)
+ifeq ($(TARGET_CPU),x86_64)
+MOZ_PKG_PLATFORM := win64-$(TARGET_CPU)
+else
+MOZ_PKG_PLATFORM := win32
+endif
 endif
 ifeq ($(OS_ARCH),Darwin)
 MOZ_PKG_PLATFORM := mac

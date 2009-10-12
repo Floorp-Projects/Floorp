@@ -748,6 +748,46 @@ NS_GetURLSpecFromFile(nsIFile      *file,
 }
 
 /**
+ * Converts the nsIFile to the corresponding URL string.
+ * Should only be called on files which are not directories,
+ * is otherwise identical to NS_GetURLSpecFromFile, but is
+ * usually more efficient.
+ * Warning: this restriction may not be enforced at runtime!
+ */
+inline nsresult
+NS_GetURLSpecFromActualFile(nsIFile      *file,
+                            nsACString   &url,
+                            nsIIOService *ioService = nsnull)
+{
+    nsresult rv;
+    nsCOMPtr<nsIFileProtocolHandler> fileHandler;
+    rv = NS_GetFileProtocolHandler(getter_AddRefs(fileHandler), ioService);
+    if (NS_SUCCEEDED(rv))
+        rv = fileHandler->GetURLSpecFromActualFile(file, url);
+    return rv;
+}
+
+/**
+ * Converts the nsIFile to the corresponding URL string.
+ * Should only be called on files which are directories,
+ * is otherwise identical to NS_GetURLSpecFromFile, but is
+ * usually more efficient.
+ * Warning: this restriction may not be enforced at runtime!
+ */
+inline nsresult
+NS_GetURLSpecFromDir(nsIFile      *file,
+                     nsACString   &url,
+                     nsIIOService *ioService = nsnull)
+{
+    nsresult rv;
+    nsCOMPtr<nsIFileProtocolHandler> fileHandler;
+    rv = NS_GetFileProtocolHandler(getter_AddRefs(fileHandler), ioService);
+    if (NS_SUCCEEDED(rv))
+        rv = fileHandler->GetURLSpecFromDir(file, url);
+    return rv;
+}
+
+/**
  * Obtains the referrer for a given channel.  This first tries to obtain the
  * referrer from the property docshell.internalReferrer, and if that doesn't
  * work and the channel is an nsIHTTPChannel, we check it's referrer property.
