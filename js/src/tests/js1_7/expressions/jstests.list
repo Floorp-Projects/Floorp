@@ -1,0 +1,11 @@
+url-prefix ../../jsreftest.html?test=js1_7/expressions/
+script destructuring-scope.js
+script regress-346203.js
+script regress-346645-01.js
+script regress-346645-02.js
+script regress-346645-03.js
+script regress-349624.js
+script regress-349818.js
+script regress-418051.js
+script regress-421806.js
+script regress-451340.js

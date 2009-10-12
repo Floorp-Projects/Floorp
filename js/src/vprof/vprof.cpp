@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "VMPI.h"
+
+// Note, this is not supported in configurations with more than one AvmCore running
+// in the same process.
+
 #ifdef WIN32
 #include "windows.h"
 #else
@@ -44,8 +49,6 @@
 #include <string.h>
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
 #include "vprof.h"
 
 #define MIN(x,y) ((x) <= (y) ? x : y)
@@ -86,6 +89,24 @@ static long glock = LOCK_IS_FREE;
 #define Lock(lock) while (_InterlockedCompareExchange(lock, LOCK_IS_TAKEN, LOCK_IS_FREE) == LOCK_IS_TAKEN){};
 #define Unlock(lock) _InterlockedCompareExchange(lock, LOCK_IS_FREE, LOCK_IS_TAKEN);
 
+#if defined(WIN32) && !defined(UNDER_CE)
+	static void vprof_printf(const char* format, ...)
+	{
+		va_list args;
+		va_start(args, format);
+
+		char buf[1024];
+		vsnprintf(buf, sizeof(buf), format, args);
+		
+		va_end(args);
+
+		printf(buf);
+		::OutputDebugStringA(buf);
+	}
+#else
+	#define vprof_printf printf
+#endif
+
 inline static entry* reverse (entry* s)
 {
     entry_t e, n, p;
@@ -105,7 +126,7 @@ static char* f (double d)
     static char s[80];
     char* p;
     sprintf_s (s, sizeof(s), "%lf", d);
-    p = s+strlen(s)-1;
+    p = s+VMPI_strlen(s)-1;
     while (*p == '0') {
         *p = '\0';
         p--;
@@ -120,40 +141,40 @@ static void dumpProfile (void)
     entry_t e;
 
     entries = reverse(entries);
-    printf ("event avg [min : max] total count\n");
+    vprof_printf ("event avg [min : max] total count\n");
     for (e = entries; e; e = e->next) {
-        printf ("%s", e->file); 
+        vprof_printf ("%s", e->file); 
         if (e->line >= 0) {
-            printf (":%d", e->line);
+            vprof_printf (":%d", e->line);
         } 
-        printf (" %s [%lld : %lld] %lld %lld ", 
-                f(((double)e->sum)/((double)e->count)), e->min, e->max, e->sum, e->count);
+        vprof_printf (" %s [%lld : %lld] %lld %lld ", 
+                f(((double)e->sum)/((double)e->count)), (long long int)e->min, (long long int)e->max, (long long int)e->sum, (long long int)e->count);
         if (e->h) {
             int j = MAXINT;
             for (j = 0; j < e->h->nbins; j ++) {
-                printf ("(%lld < %lld) ", e->h->count[j], e->h->lb[j]);
+                vprof_printf ("(%lld < %lld) ", (long long int)e->h->count[j], (long long int)e->h->lb[j]);
             }
-            printf ("(%lld >= %lld) ", e->h->count[e->h->nbins], e->h->lb[e->h->nbins-1]);
+            vprof_printf ("(%lld >= %lld) ", (long long int)e->h->count[e->h->nbins], (long long int)e->h->lb[e->h->nbins-1]);
         }
         if (e->func) {
             int j;
             for (j = 0; j < NUM_EVARS; j++) {
                 if (e->ivar[j] != 0) {
-                    printf ("IVAR%d %d ", j, e->ivar[j]);
+                    vprof_printf ("IVAR%d %d ", j, e->ivar[j]);
                 }
             }
             for (j = 0; j < NUM_EVARS; j++) {
                 if (e->i64var[j] != 0) {
-                    printf ("I64VAR%d %lld ", j, e->i64var[j]);
+                    vprof_printf ("I64VAR%d %lld ", j, (long long int)e->i64var[j]);
                 }
             }
             for (j = 0; j < NUM_EVARS; j++) {
                 if (e->dvar[j] != 0) {
-                    printf ("DVAR%d %lf ", j, e->dvar[j]);
+                    vprof_printf ("DVAR%d %lf ", j, e->dvar[j]);
                 }
             }
         }
-        printf ("\n");
+        vprof_printf ("\n");
     }
     entries = reverse(entries);
 }
@@ -178,7 +199,7 @@ int _profileEntryValue (void* id, int64_t value)
 inline static entry_t findEntry (char* file, int line)
 {
     for (entry_t e =  entries; e; e = e->next) {
-        if ((e->line == line) && (strcmp (e->file, file) == 0)) {
+        if ((e->line == line) && (VMPI_strcmp (e->file, file) == 0)) {
             return e;
         }
     }
@@ -221,9 +242,9 @@ int profileValue(void** id, char* file, int line, int64_t value, ...)
 
             e->genptr = NULL;
 
-            memset (&e->ivar,   0, sizeof(e->ivar));
-            memset (&e->i64var, 0, sizeof(e->i64var));
-            memset (&e->dvar,   0, sizeof(e->dvar));
+            VMPI_memset (&e->ivar,   0, sizeof(e->ivar));
+            VMPI_memset (&e->i64var, 0, sizeof(e->i64var));
+            VMPI_memset (&e->dvar,   0, sizeof(e->dvar));
 
             e->next = entries;
             entries = e;
@@ -310,9 +331,9 @@ int histValue(void** id, char* file, int line, int64_t value, int nbins, ...)
             s = n*sizeof(int64_t);
             lb = (int64_t*) malloc (s);
             h->lb = lb;
-            memset (h->lb, 0, s);
+            VMPI_memset (h->lb, 0, s);
             h->count = (int64_t*) malloc (s);
-            memset (h->count, 0, s);
+            VMPI_memset (h->count, 0, s);
 
             va_start (va, nbins);
             for (b = 0; b < nbins; b++) {
@@ -329,9 +350,9 @@ int histValue(void** id, char* file, int line, int64_t value, int nbins, ...)
 
             e->genptr = NULL;
 
-            memset (&e->ivar,   0, sizeof(e->ivar));
-            memset (&e->i64var, 0, sizeof(e->i64var));
-            memset (&e->dvar,   0, sizeof(e->dvar));
+            VMPI_memset (&e->ivar,   0, sizeof(e->ivar));
+            VMPI_memset (&e->i64var, 0, sizeof(e->i64var));
+            VMPI_memset (&e->dvar,   0, sizeof(e->dvar));
 
             e->next = entries;
             entries = e;
@@ -358,3 +379,32 @@ int histValue(void** id, char* file, int line, int64_t value, int nbins, ...)
 
     return 0;
 }
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+inline uint64_t _rdtsc() 
+{
+	// read the cpu cycle counter.  1 tick = 1 cycle on IA32
+	_asm rdtsc;
+}
+#elif defined(__GNUC__) && (__i386__ || __x86_64__)
+inline uint64_t _rdtsc() 
+{
+   uint32_t lo, hi;
+   __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+   return (uint64_t(hi) << 32) | lo;
+}
+#else
+// add stub for platforms without it, so fat builds don't fail
+inline uint64_t _rdtsc() { return 0; }
+#endif
+
+void* _tprof_before_id=0;
+static uint64_t _tprof_before = 0;
+int64_t _tprof_time() 
+{
+    uint64_t now = _rdtsc();
+    uint64_t v = _tprof_before ? now-_tprof_before : 0;
+    _tprof_before = now;
+    return v/2600; // v = microseconds on a 2.6ghz cpu
+}
+

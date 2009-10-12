@@ -85,7 +85,10 @@ interface imgIContainer : nsISupports
   readonly attribute PRInt32 height;
 
   /**
-   * Whether this image is animated.
+   * Whether this image is animated. You can only be guaranteed that querying
+   * this will not throw if STATUS_DECODE_COMPLETE is set on the imgIRequest.
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE if the animated state cannot be determined.
    */
   readonly attribute boolean animated;
 

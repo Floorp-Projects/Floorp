@@ -152,6 +152,10 @@ namespace nanojit
 
     static const RegisterMask AllowableFlagRegs = 1<<EAX |1<<ECX | 1<<EDX | 1<<EBX;
 
+    static inline bool isValidDisplacement(int32_t d) {
+        return true;
+    }
+
     #define _rmask_(r)      (1<<(r))
     #define _is_xmm_reg_(r) ((_rmask_(r)&XmmRegs)!=0)
     #define _is_x87_reg_(r) ((_rmask_(r)&x87Regs)!=0)
@@ -167,17 +171,16 @@ namespace nanojit
     #define DECLARE_PLATFORM_REGALLOC()
 
     #define DECLARE_PLATFORM_ASSEMBLER()    \
-        const static Register argRegs[2], retRegs[2]; \
-        bool x87Dirty;                      \
-        bool pad[3];\
+        const static Register argRegs[2], retRegs[2];\
+        int32_t max_stk_args;\
         void nativePageReset();\
         void nativePageSetup();\
         void underrunProtect(int);\
-        void asm_farg(LInsp);\
-        void asm_arg(ArgSize, LIns*, Register);\
-        void asm_pusharg(LInsp);\
-        void asm_fcmp(LIns *cond); \
-        void asm_cmp(LIns *cond); \
+        void asm_stkarg(LInsp p, int32_t& stkd);\
+        void asm_farg(LInsp, int32_t& stkd);\
+        void asm_arg(ArgSize sz, LInsp p, Register r, int32_t& stkd);\
+        void asm_fcmp(LIns *cond);\
+        void asm_cmp(LIns *cond);\
         void asm_div_mod(LIns *cond);
 
     #define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
@@ -514,11 +517,6 @@ namespace nanojit
     NanoAssert(((unsigned)r)<8); \
     *(--_nIns) = (uint8_t) ( 0x50 | (r) );  \
     asm_output("push %s",gpn(r)); } while(0)
-
-#define PUSHm(d,b) do { \
-    count_pushld();\
-    ALUm(0xff, 6, d, b);        \
-    asm_output("push %d(%s)",d,gpn(b)); } while(0)
 
 #define POPr(r) do { \
     count_pop();\

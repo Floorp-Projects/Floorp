@@ -136,7 +136,7 @@
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h"
 #include "nsIDeviceContext.h"
-
+#include "nsIdleService.h"
 #include "nsGUIEvent.h"
 #include "nsFont.h"
 #include "nsRect.h"
@@ -183,6 +183,10 @@
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessNode.h"
 #endif // defined(ACCESSIBILITY)
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+#include "nsIWinTaskbar.h"
+#endif
 
 #if defined(NS_ENABLE_TSF)
 #include "nsTextStore.h"
@@ -258,6 +262,9 @@ BYTE            nsWindow::sLastMouseButton        = 0;
 // Trim heap on minimize. (initialized, but still true.)
 int             nsWindow::sTrimOnMinimize         = 2;
 
+// Default Trackpoint Hack to off
+PRBool          nsWindow::sTrackPointHack         = PR_FALSE;
+
 #ifdef ACCESSIBILITY
 BOOL            nsWindow::sIsAccessibilityOn      = FALSE;
 // Accessibility wm_getobject handler
@@ -305,6 +312,15 @@ static PRUint32 gLastInputEventTime               = 0;
 #else
 PRUint32        gLastInputEventTime               = 0;
 #endif
+
+static void UpdateLastInputEventTime() {
+  gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+  nsCOMPtr<nsIIdleService> idleService = do_GetService("@mozilla.org/widget/idleservice;1");
+  nsIdleService* is = static_cast<nsIdleService*>(idleService.get());
+  if (is)
+    is->IdleTimeWasModified();
+}
+
 
 // Global user preference for disabling native theme. Used
 // in NativeWindowTheme.
@@ -383,6 +399,11 @@ nsWindow::nsWindow() : nsBaseWidget()
   mInvalidatedRegion->Init();
 #endif
 
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+  mTaskbarPreview = nsnull;
+  mHasTaskbarIconBeenCreated = PR_FALSE;
+#endif
+
   // Global initialization
   if (!sInstanceCount) {
 #if !defined(WINCE)
@@ -404,6 +425,10 @@ nsWindow::nsWindow() : nsBaseWidget()
 
 #if defined(HEAP_DUMP_EVENT)
   InitHeapDump();
+#endif
+
+#if !defined(WINCE)
+  InitTrackPointHack();
 #endif
   } // !sInstanceCount
 
@@ -560,7 +585,8 @@ nsWindow::Create(nsIWidget *aParent,
   if (!mWnd)
     return NS_ERROR_FAILURE;
 
-  if (mWindowType != eWindowType_plugin &&
+  if (nsWindow::sTrackPointHack &&
+      mWindowType != eWindowType_plugin &&
       mWindowType != eWindowType_invisible) {
     // Ugly Thinkpad Driver Hack (Bug 507222)
     // We create an invisible scrollbar to trick the 
@@ -881,7 +907,10 @@ DWORD nsWindow::WindowExStyle()
 void nsWindow::SubclassWindow(BOOL bState)
 {
   if (NULL != mWnd) {
-    NS_PRECONDITION(::IsWindow(mWnd), "Invalid window handle");
+    //NS_PRECONDITION(::IsWindow(mWnd), "Invalid window handle");
+    if (!::IsWindow(mWnd)) {
+      NS_ERROR("Invalid window handle");
+    }
 
     if (bState) {
       // change the nsWindow proc
@@ -1215,7 +1244,8 @@ void nsWindow::SetThemeRegion()
 
 /**************************************************************
  *
- * SECTION: nsIWidget::Move, nsIWidget::Resize, nsIWidget::Size
+ * SECTION: nsIWidget::Move, nsIWidget::Resize,
+ * nsIWidget::Size, nsIWidget::BeginResizeDrag
  *
  * Repositioning and sizing a window.
  *
@@ -1339,6 +1369,64 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
   return NS_OK;
 }
 
+#if !defined(WINCE)
+NS_IMETHODIMP
+nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical)
+{
+  NS_ENSURE_ARG_POINTER(aEvent);
+
+  if (aEvent->eventStructType != NS_MOUSE_EVENT) {
+    // you can only begin a resize drag with a mouse event
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsMouseEvent* mouseEvent = static_cast<nsMouseEvent*>(aEvent);
+  if (mouseEvent->button != nsMouseEvent::eLeftButton) {
+    // you can only begin a resize drag with the left mouse button
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // work out what sizemode we're talking about
+  WPARAM syscommand;
+  if (aVertical < 0) {
+    if (aHorizontal < 0) {
+      syscommand = SC_SIZE | WMSZ_TOPLEFT;
+    } else if (aHorizontal == 0) {
+      syscommand = SC_SIZE | WMSZ_TOP;
+    } else {
+      syscommand = SC_SIZE | WMSZ_TOPRIGHT;
+    }
+  } else if (aVertical == 0) {
+    if (aHorizontal < 0) {
+      syscommand = SC_SIZE | WMSZ_LEFT;
+    } else if (aHorizontal == 0) {
+      return NS_ERROR_INVALID_ARG;
+    } else {
+      syscommand = SC_SIZE | WMSZ_RIGHT;
+    }
+  } else {
+    if (aHorizontal < 0) {
+      syscommand = SC_SIZE | WMSZ_BOTTOMLEFT;
+    } else if (aHorizontal == 0) {
+      syscommand = SC_SIZE | WMSZ_BOTTOM;
+    } else {
+      syscommand = SC_SIZE | WMSZ_BOTTOMRIGHT;
+    }
+  }
+
+  // resizing doesn't work if the mouse is already captured
+  CaptureMouse(PR_FALSE);
+
+  // find the top-level window
+  HWND toplevelWnd = GetTopLevelHWND(mWnd, PR_TRUE);
+
+  // tell Windows to start the resize
+  ::PostMessage(toplevelWnd, WM_SYSCOMMAND, syscommand,
+                POINTTOPOINTS(aEvent->refPoint));
+
+  return NS_OK;
+}
+#endif
 /**************************************************************
  *
  * SECTION: Window Z-order and state.
@@ -2988,7 +3076,7 @@ BOOL CALLBACK nsWindow::DispatchStarvedPaints(HWND aWnd, LPARAM aMsg)
 // nsIWidget managed windows.
 void nsWindow::DispatchPendingEvents()
 {
-  gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+  UpdateLastInputEventTime();
 
   // We need to ensure that reflow events do not get starved.
   // At the same time, we don't want to recurse through here
@@ -4400,6 +4488,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         HeapDump(msg, wParam, lParam);
         result = PR_TRUE;
       }
+#endif
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+      if (msg == nsAppShell::GetTaskbarButtonCreatedMessage())
+        SetHasTaskbarIconBeenCreated();
 #endif
     }
     break;
@@ -6731,6 +6823,52 @@ PRBool nsWindow::CanTakeFocus()
   }
   return PR_FALSE;
 }
+
+#if !defined(WINCE)
+void nsWindow::InitTrackPointHack()
+{
+  // Init Trackpoint Hack
+  nsresult rv;
+  PRInt32 lHackValue;
+  long lResult;
+  const WCHAR wstrKeys[][40] = {L"Software\\Lenovo\\TrackPoint",
+                                L"Software\\Lenovo\\UltraNav"};    
+  // If anything fails turn the hack off
+  sTrackPointHack = false;
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if(NS_SUCCEEDED(rv) && prefs) {
+    prefs->GetIntPref("ui.trackpoint_hack.enabled", &lHackValue);
+    switch (lHackValue) {
+      // 0 means hack disabled
+      case 0:
+        break;
+      // 1 means hack enabled
+      case 1:
+        sTrackPointHack = true;
+        break;
+      // -1 means autodetect
+      case -1:
+        for(int i = 0; i < 2; i++) {
+          HKEY hKey;
+          lResult = ::RegOpenKeyExW(HKEY_CURRENT_USER, (LPCWSTR)&wstrKeys[i],
+                                    0, KEY_READ, &hKey);
+          ::RegCloseKey(hKey);
+          if(lResult == ERROR_SUCCESS) {
+            // If we detected a registry key belonging to a TrackPoint driver
+            // Turn on the hack
+            sTrackPointHack = true;
+            break;
+          }
+        }
+        break;
+      // Shouldn't be any other values, but treat them as disabled
+      default:
+        break;
+    }
+  }
+  return;
+}
+#endif // #if !defined(WINCE)
 
 LPARAM nsWindow::lParamToScreen(LPARAM lParam)
 {

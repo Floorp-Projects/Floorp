@@ -572,7 +572,7 @@ pref("pfs.datasource.url", "https://pfs.mozilla.org/plugins/PluginFinderService.
 pref("plugins.hide_infobar_for_missing_plugin", false);
 pref("plugins.hide_infobar_for_outdated_plugin", false);
 
-pref("plugins.update.url", "https://www.mozilla.com/%LOCALE%/plugins/");
+pref("plugins.update.url", "https://www.mozilla.com/%LOCALE%/plugincheck/");
 pref("plugins.update.notifyUser", false);
 
 #ifdef XP_WIN
@@ -903,3 +903,16 @@ pref("toolbar.customization.usesheet", false);
 
 pref("dom.ipc.plugins.enabled", false);
 pref("dom.ipc.tabs.enabled", false);
+
+#ifdef XP_WIN
+#ifndef WINCE
+pref("browser.taskbar.previews.enable", true);
+pref("browser.taskbar.previews.max", 20);
+pref("browser.taskbar.previews.cachetime", 20);
+pref("browser.taskbar.lists.enabled", true);
+pref("browser.taskbar.lists.frequent.enabled", true);
+pref("browser.taskbar.lists.recent.enabled", false);
+pref("browser.taskbar.lists.maxListItemCount", 7);
+pref("browser.taskbar.lists.tasks.enabled", true);
+#endif
+#endif

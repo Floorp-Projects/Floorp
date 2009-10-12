@@ -6,7 +6,7 @@ browser.jar:
 *   content/browser/places/places.js                     (content/places.js)
 *   content/browser/places/places.xml                    (content/places.xml)
     content/browser/places/places.css                    (content/places.css)
-    content/browser/places/organizer.css                 (content/organizer.css)
+*   content/browser/places/organizer.css                 (content/organizer.css)
 *   content/browser/places/bookmarkProperties.xul        (content/bookmarkProperties.xul)
 *   content/browser/places/bookmarkProperties.js         (content/bookmarkProperties.js)
 *   content/browser/places/placesOverlay.xul             (content/placesOverlay.xul)

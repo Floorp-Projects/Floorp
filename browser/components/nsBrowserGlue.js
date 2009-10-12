@@ -354,6 +354,19 @@ BrowserGlue.prototype = {
     // been warned about them yet, open the plugins update page.
     if (this._prefs.getBoolPref(PREF_PLUGINS_NOTIFYUSER))
       this._showPluginUpdatePage();
+
+#ifdef XP_WIN
+#ifndef WINCE
+    // For windows seven, initialize the jump list module.
+    const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
+    if (WINTASKBAR_CONTRACTID in Cc &&
+        Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
+      let temp = {};
+      Cu.import("resource://gre/modules/WindowsJumpLists.jsm", temp);
+      temp.WinTaskbarJumpList.startup();
+    }
+#endif
+#endif
   },
 
   _onQuitRequest: function(aCancelQuit, aQuitType)
@@ -645,7 +658,7 @@ BrowserGlue.prototype = {
       var bookmarksBackupFile = PlacesUtils.backups.getMostRecent("json");
       if (bookmarksBackupFile) {
         // restore from JSON backup
-        PlacesUtils.backups.restoreBookmarksFromJSONFile(bookmarksBackupFile);
+        PlacesUtils.restoreBookmarksFromJSONFile(bookmarksBackupFile);
         importBookmarks = false;
       }
       else {

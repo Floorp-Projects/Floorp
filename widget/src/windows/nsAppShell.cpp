@@ -40,6 +40,7 @@
 #include "nsAppShell.h"
 #include "nsToolkit.h"
 #include "nsThreadUtils.h"
+#include "WinTaskbar.h"
 
 #ifdef WINCE
 BOOL WaitMessage(VOID)
@@ -58,6 +59,15 @@ BOOL WaitMessage(VOID)
 #endif
 
 static UINT sMsgId;
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+static UINT sTaskbarButtonCreatedMsg;
+
+/* static */
+UINT nsAppShell::GetTaskbarButtonCreatedMessage() {
+	return sTaskbarButtonCreatedMsg;
+}
+#endif
 
 //-------------------------------------------------------------------------
 
@@ -110,6 +120,15 @@ nsAppShell::Init()
 {
   if (!sMsgId)
     sMsgId = RegisterWindowMessageW(L"nsAppShell:EventID");
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+  sTaskbarButtonCreatedMsg = ::RegisterWindowMessageW(L"TaskbarButtonCreated");
+  NS_ASSERTION(sTaskbarButtonCreatedMsg, "Could not register taskbar button creation message");
+
+  // Global app registration id for Win7 and up. See
+  // WinTaskbar.cpp for details.
+  mozilla::widget::WinTaskbar::SetAppUserModelID();
+#endif
 
   WNDCLASSW wc;
   HINSTANCE module = GetModuleHandle(NULL);

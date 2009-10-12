@@ -2691,6 +2691,16 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     document->ClearBoxObjectFor(this);
   }
 
+  // Ensure that CSS transitions don't continue on an element at a
+  // different place in the tree (even if reinserted before next
+  // animation refresh).
+  // FIXME: Need a test for this.
+  if (HasFlag(NODE_HAS_PROPERTIES)) {
+    DeleteProperty(nsGkAtoms::transitionsOfBeforeProperty);
+    DeleteProperty(nsGkAtoms::transitionsOfAfterProperty);
+    DeleteProperty(nsGkAtoms::transitionsProperty);
+  }
+
   // Unset this since that's what the old code effectively did.
   UnsetFlags(NODE_FORCE_XBL_BINDINGS);
   

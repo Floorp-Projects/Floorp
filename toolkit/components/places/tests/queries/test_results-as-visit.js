@@ -117,16 +117,16 @@ function createTestData() {
    LOG("Updating Items in batch");
    var updateBatch = {
      runBatched: function (aUserData) {
-       batchchange = [{ isVisit: true,
-                        lastVisit: now++,
-                        uri: "http://foo.mail.com/changeme1.html",
-                        title: "foo"},
-                      { isVisit: true,
-                        lastVisit: now++,
-                        uri: "http://foo.mail.com/changeme3.html",
-                        title: "moz",
-                        isTag: true,
-                        tagArray: ["foo", "moz"] }];
+       var batchchange = [{ isVisit: true,
+                            lastVisit: now++,
+                            uri: "http://foo.mail.com/changeme1.html",
+                            title: "foo"},
+                          { isVisit: true,
+                            lastVisit: now++,
+                            uri: "http://foo.mail.com/changeme3.html",
+                            title: "moz",
+                            isTag: true,
+                            tagArray: ["foo", "moz"] }];
        populateDB(batchchange);
      }
    };

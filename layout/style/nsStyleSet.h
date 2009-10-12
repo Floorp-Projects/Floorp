@@ -196,6 +196,7 @@ class nsStyleSet
     eDocSheet, // CSS
     eStyleAttrSheet,
     eOverrideSheet, // CSS
+    eTransitionSheet,
     eSheetTypeCount
     // be sure to keep the number of bits in |mDirty| below and in
     // NS_RULE_NODE_LEVEL_MASK updated when changing the number of sheet
@@ -351,7 +352,7 @@ class nsStyleSet
   unsigned mInShutdown : 1;
   unsigned mAuthorStyleDisabled: 1;
   unsigned mInReconstruct : 1;
-  unsigned mDirty : 7;  // one dirty bit is used per sheet type
+  unsigned mDirty : 8;  // one dirty bit is used per sheet type
 
 };
 

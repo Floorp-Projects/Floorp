@@ -834,6 +834,11 @@ InitSystemMetrics()
     sSystemMetrics->AppendElement(do_GetAtom("images-in-menus"));
   }
 
+  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ImagesInButtons, metricResult);
+  if (metricResult) {
+    sSystemMetrics->AppendElement(do_GetAtom("images-in-buttons"));
+  }
+
   rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowsDefaultTheme, metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(do_GetAtom("windows-default-theme"));

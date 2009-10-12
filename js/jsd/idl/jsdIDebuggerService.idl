@@ -1020,7 +1020,7 @@ interface jsdIScript : jsdIEphemeral
  * jsdIValue adds a root for the underlying JavaScript value, so don't keep it
  * if you don't need to.
  */
-[scriptable, uuid(f39204c5-4e67-4fd0-9c70-0bd8d14e6511)]
+[scriptable, uuid(9cab158f-dc78-41dd-9d11-79e05cb3f2bd)]
 interface jsdIValue : jsdIEphemeral
 {
     /** Internal use only. */
@@ -1149,6 +1149,12 @@ interface jsdIValue : jsdIEphemeral
      * defined error code.
      */
     void getWrappedValue();
+
+    /**
+     * If this is a function value, return its associated jsdIScript.
+     * Otherwise, return null.
+     */
+    readonly attribute jsdIScript script;
 };
 
 /**

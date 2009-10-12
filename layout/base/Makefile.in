@@ -81,6 +81,7 @@ EXPORTS		= \
 		nsLayoutUtils.h \
 		nsPresContext.h \
 		nsPresState.h \
+		nsRefreshDriver.h \
 		nsStyleChangeList.h \
 		nsStyleConsts.h \
 		$(NULL)
@@ -107,6 +108,7 @@ CPPSRCS		= \
 		nsPresShell.cpp \
 		nsPresState.cpp \
 		nsQuoteList.cpp \
+		nsRefreshDriver.cpp \
 		nsStyleChangeList.cpp \
 		nsStyleSheetService.cpp \
 		$(NULL)

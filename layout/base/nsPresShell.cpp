@@ -6113,7 +6113,7 @@ PresShell::HandleEvent(nsIView         *aView,
   // view that has a frame.
   if (!frame &&
       (dispatchUsingCoordinates || NS_IS_KEY_EVENT(aEvent) ||
-       NS_IS_IME_EVENT(aEvent))) {
+       NS_IS_IME_EVENT(aEvent) || aEvent->message == NS_PLUGIN_ACTIVATE)) {
     nsIView* targetView = aView;
     while (targetView && !targetView->GetClientData()) {
       targetView = targetView->GetParent();
@@ -6162,15 +6162,24 @@ PresShell::HandleEvent(nsIView         *aView,
     PRBool captureRetarget = PR_FALSE;
     if (capturingContent) {
       captureRetarget = gCaptureInfo.mRetargetToElement;
-      // special case for <select> as it needs to capture on the dropdown list,
-      // so get the frame for the dropdown list instead.
-      if (!captureRetarget && capturingContent->Tag() == nsGkAtoms::select &&
-          capturingContent->IsHTML()) {
-        nsIFrame* selectFrame = GetPrimaryFrameFor(capturingContent);
-        if (selectFrame) {
-          nsIFrame* childframe = selectFrame->GetChildList(nsGkAtoms::selectPopupList).FirstChild();
-          if (childframe) {
-            frame = childframe;
+      if (!captureRetarget) {
+        nsIFrame* captureFrame = GetPrimaryFrameFor(capturingContent);
+        if (captureFrame) {
+          if (capturingContent->Tag() == nsGkAtoms::select &&
+              capturingContent->IsHTML()) {
+            // a dropdown <select> has a child in its selectPopupList and we should
+            // capture on that instead.
+            nsIFrame* childFrame = captureFrame->GetChildList(nsGkAtoms::selectPopupList).FirstChild();
+            if (childFrame) {
+              captureFrame = childFrame;
+            }
+          }
+
+          // scrollable frames should use the scrolling container as
+          // the root instead of the document
+          nsIScrollableFrame* scrollFrame = do_QueryFrame(captureFrame);
+          if (scrollFrame) {
+            frame = scrollFrame->GetScrolledFrame();
           }
         }
       }

@@ -143,6 +143,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug402150.html^headers^ \
 		test_bug401662.html \
 		test_bug403852.html \
+		test_fileapi.html \
 		test_bug403868.xml \
 		test_bug405182.html \
 		test_bug403841.html \
@@ -154,6 +155,10 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug414796.html \
 		test_bug416317-1.html \
 		test_bug416317-2.html \
+		test_XHRSendData.html \
+		file_XHRSendData.sjs \
+		file_XHRSendData_doc.xml \
+		file_XHRSendData_doc.xml^headers^ \
 		file_bug416317.xhtml \
 		test_bug416383.html \
 		test_bug417255.html \
@@ -238,6 +243,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug454326.html \
 		test_bug505783.html \
 		test_bug457746.html \
+		test_bug518104.html \
 		bug457746.sjs \
 		test_CrossSiteXHR.html \
 		file_CrossSiteXHR_inner.html \

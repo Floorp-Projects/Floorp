@@ -246,6 +246,8 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
             SPROP_HAS_VALID_SLOT(sprop, scope)) {
             /* Great, let's cache sprop's slot and use it on cache hit. */
             vword = SLOT_TO_PCVAL(sprop->slot);
+            if (sprop->slot >= JS_INITIAL_NSLOTS && !DSLOTS_IS_NOT_NULL(obj))
+                DSLOTS_BUMP(obj);
         } else {
             /* Best we can do is to cache sprop (still a nice speedup). */
             vword = SPROP_TO_PCVAL(sprop);
@@ -1523,11 +1525,11 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
 #if JS_HAS_SHARP_VARS
         JS_STATIC_ASSERT(SHARP_NSLOTS == 2);
 
-        if (script->flags & JSSF_HAS_SHARPS) {
+        if (script->hasSharps) {
             JS_ASSERT(script->nfixed >= SHARP_NSLOTS);
             jsval *sharps = &frame.slots[script->nfixed - SHARP_NSLOTS];
 
-            if (down && down->script && (down->script->flags & JSSF_HAS_SHARPS)) {
+            if (down && down->script && down->script->hasSharps) {
                 JS_ASSERT(down->script->nfixed >= SHARP_NSLOTS);
                 int base = (down->fun && !(down->flags & JSFRAME_SPECIAL))
                            ? down->fun->sharpSlotBase(cx)
@@ -2787,12 +2789,6 @@ js_Interpret(JSContext *cx)
 
 #endif /* !JS_THREADED_INTERP */
 
-#ifdef JS_TRACER
-    /* We cannot reenter the interpreter while recording. */
-    if (TRACE_RECORDER(cx))
-        js_AbortRecording(cx, "attempt to reenter interpreter while recording");
-#endif
-
     /* Check for too deep of a native thread stack. */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
@@ -2854,27 +2850,32 @@ js_Interpret(JSContext *cx)
 #define MONITOR_BRANCH_TRACEVIS
 #endif
 
-#define MONITOR_BRANCH()                                                      \
+#define RESTORE_INTERP_VARS()                                                 \
+    JS_BEGIN_MACRO                                                            \
+        fp = cx->fp;                                                          \
+        script = fp->script;                                                  \
+        atoms = FrameAtomBase(cx, fp);                                        \
+        currentVersion = (JSVersion) script->version;                         \
+        JS_ASSERT(fp->regs == &regs);                                         \
+        if (cx->throwing)                                                     \
+            goto error;                                                       \
+    JS_END_MACRO
+
+#define MONITOR_BRANCH(reason)                                                \
     JS_BEGIN_MACRO                                                            \
         if (TRACING_ENABLED(cx)) {                                            \
-            if (js_MonitorLoopEdge(cx, inlineCallCount)) {                    \
+            if (js_MonitorLoopEdge(cx, inlineCallCount, reason)) {            \
                 JS_ASSERT(TRACE_RECORDER(cx));                                \
                 MONITOR_BRANCH_TRACEVIS;                                      \
                 ENABLE_INTERRUPTS();                                          \
             }                                                                 \
-            fp = cx->fp;                                                      \
-            script = fp->script;                                              \
-            atoms = FrameAtomBase(cx, fp);                                    \
-            currentVersion = (JSVersion) script->version;                     \
-            JS_ASSERT(fp->regs == &regs);                                     \
-            if (cx->throwing)                                                 \
-                goto error;                                                   \
+            RESTORE_INTERP_VARS();                                            \
         }                                                                     \
     JS_END_MACRO
 
 #else /* !JS_TRACER */
 
-#define MONITOR_BRANCH() ((void) 0)
+#define MONITOR_BRANCH(reason) ((void) 0)
 
 #endif /* !JS_TRACER */
 
@@ -2900,13 +2901,13 @@ js_Interpret(JSContext *cx)
             CHECK_BRANCH();                                                   \
             if (op == JSOP_NOP) {                                             \
                 if (TRACE_RECORDER(cx)) {                                     \
-                    MONITOR_BRANCH();                                         \
+                    MONITOR_BRANCH(Monitor_Branch);                           \
                     op = (JSOp) *regs.pc;                                     \
                 } else {                                                      \
                     op = (JSOp) *++regs.pc;                                   \
                 }                                                             \
             } else if (op == JSOP_TRACE) {                                    \
-                MONITOR_BRANCH();                                             \
+                MONITOR_BRANCH(Monitor_Branch);                               \
                 op = (JSOp) *regs.pc;                                         \
             }                                                                 \
         }                                                                     \
@@ -2988,6 +2989,15 @@ js_Interpret(JSContext *cx)
         }
     }
 #endif /* JS_HAS_GENERATORS */
+
+#ifdef JS_TRACER
+    /*
+     * We cannot reenter the interpreter while recording; wait to abort until
+     * after cx->fp->regs is set.
+     */
+    if (TRACE_RECORDER(cx))
+        js_AbortRecording(cx, "attempt to reenter interpreter while recording");
+#endif
 
     /*
      * It is important that "op" be initialized before calling DO_OP because

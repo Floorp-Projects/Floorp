@@ -1,8 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:svg="http://www.w3.org/2000/svg"
   xml:lang="en" lang="en" dir="ltr" id="html" class="unitTest" title=":root selector">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>selectorTest</title>
   <!-- (c) Disruptive Innovations 2008 -->
   <style type="text/css">
@@ -352,14 +352,14 @@
 
       pass = false;
       try {
-        root.querySelectorAll(null);
-      } catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
+        pass = root.querySelectorAll(null).length === 0;
+      } catch(e){ pass = false; }
       assert( pass, type + ".querySelectorAll null" );
 
       pass = false;
       try {
-        root.querySelectorAll(undefined);
-      } catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
+         pass = root.querySelectorAll(undefined).length === 0;
+      } catch(e){ pass = false; }
       assert( pass, type + ".querySelectorAll undefined" );
 
       pass = false;
@@ -369,7 +369,7 @@
       } catch(e){ pass = true; }
       assert( pass, type + ".querySelectorAll no value" );
 
-      var pass = false;
+      pass = false;
       try {
         root.querySelector("");
       } catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
@@ -377,14 +377,14 @@
 
       pass = false;
       try {
-        root.querySelector(null);
-      } catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
+        pass = root.querySelector(null) === null;
+      } catch(e){ pass = false; }
       assert( pass, type + ".querySelector null" );
 
       pass = false;
       try {
-        root.querySelector(undefined);
-      } catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
+        pass = root.querySelector(undefined) === null;
+      } catch(e){ pass = false; }
       assert( pass, type + ".querySelector undefined" );
 
       pass = false;

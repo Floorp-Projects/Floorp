@@ -136,6 +136,13 @@ button[type="menu-button"] {
   -moz-binding: url("chrome://global/content/bindings/button.xml#menu-button");
 }
 
+%ifdef MOZ_WIDGET_GTK2
+/********* detection of system setting to use icons in buttons ***********/
+.button-icon:not(:-moz-system-metric(images-in-buttons)) {
+  display: none;
+}
+%endif
+
 /********** toolbarbutton **********/
 
 toolbarbutton {

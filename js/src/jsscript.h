@@ -115,7 +115,11 @@ struct JSScript {
                                        regexps or 0 if none. */
     uint8           trynotesOffset; /* offset to the array of try notes or
                                        0 if none */
-    uint8           flags;      /* see below */
+    bool            noScriptRval:1; /* no need for result value of last
+                                       expression statement */
+    bool            savedCallerFun:1; /* object 0 is caller function */
+    bool            hasSharps:1;      /* script uses sharp variables */
+
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */
     JSAtomMap       atomMap;    /* maps immediate index to literal struct */
     const char      *filename;  /* source filename or null */
@@ -170,11 +174,6 @@ struct JSScript {
     inline JSObject *getRegExp(size_t index);
 };
 
-#define JSSF_NO_SCRIPT_RVAL     0x01    /* no need for result value of last
-                                           expression statement */
-#define JSSF_SAVED_CALLER_FUN   0x02    /* object 0 is caller function */
-#define JSSF_HAS_SHARPS         0x04    /* script uses sharp variables */
-
 #define SHARP_NSLOTS            2       /* [#array, #depth] slots if the script
                                            uses sharp variables */
 
@@ -213,16 +212,8 @@ extern JSBool
 js_InitRuntimeScriptState(JSRuntime *rt);
 
 /*
- * On last context destroy for rt, if script filenames are all GC'd, free the
- * script filename table and its lock.
- */
-extern void
-js_FinishRuntimeScriptState(JSRuntime *rt);
-
-/*
  * On JS_DestroyRuntime(rt), forcibly free script filename prefixes and any
- * script filename table entries that have not been GC'd, the latter using
- * js_FinishRuntimeScriptState.
+ * script filename table entries that have not been GC'd.
  *
  * This allows script filename prefixes to outlive any context in rt.
  */

@@ -132,17 +132,8 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
     copyExtraFilesToProfile(options, profileDir)
 
     # browser environment
-    browserEnv = dict(os.environ)
-
-    # These variables are necessary for correct application startup; change
-    # via the commandline at your own risk.
-    # NO_EM_RESTART: will do a '-silent' run instead.
-    browserEnv["NO_EM_RESTART"] = "1"
+    browserEnv = automation.environment(xrePath = options.xrePath)
     browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
-    if automation.UNIXISH:
-      browserEnv["LD_LIBRARY_PATH"] = options.xrePath
-      browserEnv["MOZILLA_FIVE_HOME"] = options.xrePath
-      browserEnv["GNOME_DISABLE_CRASH_DIALOG"] = "1"
 
     # Enable leaks detection to its own log file.
     leakLogFile = os.path.join(profileDir, "runreftest_leaks.log")

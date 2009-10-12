@@ -1267,10 +1267,8 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
      * variable references made by this frame.
      */
     script = JSCompiler::compileScript(cx, scobj, fp, JS_StackFramePrincipals(cx, fp),
-                                       TCF_COMPILE_N_GO |
-                                       TCF_PUT_STATIC_LEVEL(JS_DISPLAY_SIZE),
-                                       chars, length, NULL,
-                                       filename, lineno);
+                                       TCF_COMPILE_N_GO, chars, length, NULL,
+                                       filename, lineno, NULL, JS_DISPLAY_SIZE);
 
     if (!script)
         return JS_FALSE;
@@ -1575,7 +1573,7 @@ JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
     JSScope *scope;
 
     nbytes = sizeof *obj;
-    if (obj->dslots) {
+    if (DSLOTS_IS_NOT_NULL(obj)) {
         nbytes += ((uint32)obj->dslots[-1] - JS_INITIAL_NSLOTS + 1)
                   * sizeof obj->dslots[0];
     }

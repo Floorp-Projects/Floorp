@@ -1,0 +1,2 @@
+url-prefix ../../jsreftest.html?test=ecma_2/Expressions/
+script StrictEquality-001.js

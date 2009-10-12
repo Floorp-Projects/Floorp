@@ -42,6 +42,10 @@
 [scriptable, uuid(1a38762b-4da5-4f61-80fb-9317e198cb92)]
 interface nsIDOMDocumentXBL : nsISupports
 {
+  /**
+   * If |elt| does not an XBL binding attached, return null.  Otherwise, return
+   * a nodelist of |elt|'s child nodes in the flattened tree.
+   */
   nsIDOMNodeList        getAnonymousNodes(in nsIDOMElement elt);
   nsIDOMElement         getAnonymousElementByAttribute(in nsIDOMElement elt,
                                                        in DOMString attrName,

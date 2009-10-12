@@ -81,6 +81,7 @@ EXPORTS		= \
 	  nsISMILAttr.h \
 	  nsSMILAnimationController.h \
 	  nsSMILCompositorTable.h \
+	  nsSMILKeySpline.h \
 	  nsSMILTimeContainer.h \
 	  nsSMILTypes.h \
 	  $(NULL)

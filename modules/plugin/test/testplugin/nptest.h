@@ -43,8 +43,6 @@
 #include <string>
 #include <sstream>
 
-using namespace std;
-
 typedef enum  {
   DM_DEFAULT,
   DM_SOLID_COLOR
@@ -64,7 +62,7 @@ typedef enum {
 
 typedef struct FunctionTable {
   TestFunction funcId;
-  char* funcName;
+  const char* funcName;
 } FunctionTable;
 
 typedef enum {
@@ -89,7 +87,7 @@ typedef struct InstanceData {
   NPWindow window;
   TestNPObject* scriptableObject;
   PlatformData* platformData;
-  uint32_t instanceCountWatchGeneration;
+  int32_t instanceCountWatchGeneration;
   bool lastReportedPrivateModeState;
   bool hasWidget;
   bool npnNewStream;
@@ -103,9 +101,9 @@ typedef struct InstanceData {
   TestFunction functionToFail;
   NPError failureCode;
   PostMode postMode;
-  string testUrl;
-  string frame;
-  ostringstream err;
+  std::string testUrl;
+  std::string frame;
+  std::ostringstream err;
   uint16_t streamMode;
   int32_t streamChunkSize;
   int32_t streamBufSize;

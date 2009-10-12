@@ -149,7 +149,7 @@ struct variant_integer_traits<PRInt64>
     if (aValue > PR_INT32_MAX || aValue < PR_INT32_MIN)
       return NS_ERROR_CANNOT_CONVERT_DATA;
 
-    *_result = aValue;
+    *_result = static_cast<PRInt32>(aValue);
     return NS_OK;
   }
   static inline nsresult asInt64(PRInt64 aValue,

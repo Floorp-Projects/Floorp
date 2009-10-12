@@ -1,0 +1,10 @@
+url-prefix ../../jsreftest.html?test=js1_8/genexps/
+script regress-347739.js
+script regress-349012-01.js
+script regress-349326.js
+script regress-349331.js
+script regress-380237-01.js
+script regress-380237-02.js
+skip script regress-380237-03.js # obsolete test
+skip script regress-380237-04.js # obsolete test
+script regress-384991.js

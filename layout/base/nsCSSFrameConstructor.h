@@ -68,6 +68,7 @@ class nsIFrame;
 struct nsGenConInitializer;
 class ChildIterator;
 class nsICSSAnonBoxPseudo;
+class nsPageContentFrame;
 
 struct nsFindFrameHint
 {

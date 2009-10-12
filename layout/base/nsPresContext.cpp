@@ -94,6 +94,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsObjectFrame.h"
+#include "nsTransitionManager.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -257,6 +258,8 @@ nsPresContext::~nsPresContext()
 
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nsnull);
+
+  delete mTransitionManager;
 
   if (mEventManager) {
     // unclear if these are needed, but can't hurt
@@ -868,6 +871,8 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(mEventManager);
+
+  mTransitionManager = new nsTransitionManager(this);
 
   mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
 

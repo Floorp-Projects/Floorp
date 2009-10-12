@@ -41,6 +41,7 @@ import sys, os.path, re
 commentRE = re.compile(r"\s+#")
 conditionsRE = re.compile(r"^(fails|random|skip|asserts)")
 httpRE = re.compile(r"HTTP\((\.\.(\/\.\.)*)\)")
+protocolRE = re.compile(r"^\w+:")
 
 def parseManifest(manifest, dirs):
   """Parse the reftest manifest |manifest|, adding all directories containing
@@ -48,6 +49,7 @@ def parseManifest(manifest, dirs):
   manifestdir = os.path.dirname(os.path.abspath(manifest))
   dirs.add(manifestdir)
   f = file(manifest)
+  urlprefix = ''
   for line in f:
     if line[0] == '#':
       continue # entire line was a comment
@@ -69,7 +71,10 @@ def parseManifest(manifest, dirs):
       dirs.add(d)
       del items[0]
 
-    if items[0] == "include":
+    if items[0] == "url-prefix":
+      urlprefix = items[1]
+      continue
+    elif items[0] == "include":
       parseManifest(os.path.join(manifestdir, items[1]), dirs)
       continue
     elif items[0] == "load" or items[0] == "script":
@@ -77,10 +82,11 @@ def parseManifest(manifest, dirs):
     elif items[0] == "==" or items[0] == "!=":
       testURLs = items[1:3]
     for u in testURLs:
-      if u.startswith("about:") or u.startswith("data:"):
+      m = protocolRE.match(u)
+      if m:
         # can't very well package about: or data: URIs
         continue
-      d = os.path.dirname(os.path.normpath(os.path.join(manifestdir, u)))
+      d = os.path.dirname(os.path.normpath(os.path.join(manifestdir, urlprefix + u)))
       dirs.add(d)
   f.close()
 

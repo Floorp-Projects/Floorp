@@ -1336,6 +1336,13 @@ JSD_GetValueConstructor(JSDContext* jsdc, JSDValue* jsdval);
 extern JSD_PUBLIC_API(const char*)
 JSD_GetValueClassName(JSDContext* jsdc, JSDValue* jsdval);
 
+/*
+* Get the script for the given value if the given value represents a
+* scripted function.  Otherwise, return null.
+*/
+extern JSD_PUBLIC_API(JSDScript*)
+JSD_GetScriptForValue(JSDContext* jsdc, JSDValue* jsdval);
+
 /**************************************************/
 
 /* possible or'd together bitflags returned by JSD_GetPropertyFlags
