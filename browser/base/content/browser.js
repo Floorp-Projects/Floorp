@@ -129,14 +129,15 @@ let gInitialPages = [
 #include browser-places.js
 #include browser-tabPreviews.js
 
+XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
 #ifdef XP_WIN
 #ifndef WINCE
-#define WIN7_FEATURES
-XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
   const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
   if (WINTASKBAR_CONTRACTID in Cc &&
       Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
-    Cu.import("resource://gre/modules/WindowsPreviewPerTab.jsm");
+    let temp = {};
+    Cu.import("resource://gre/modules/WindowsPreviewPerTab.jsm", temp);
+    let AeroPeek = temp.AeroPeek;
     return {
       onOpenWindow: function () {
         AeroPeek.onOpenWindow(window);
@@ -145,12 +146,11 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
         AeroPeek.onCloseWindow(window);
       }
     };
-  } else {
-    return { onOpenWindow: function () {}, onCloseWindow: function () {} };
   }
+#endif
+#endif
+  return null;
 });
-#endif
-#endif
 
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
@@ -1358,16 +1358,15 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   gBrowser.mPanelContainer.addEventListener("PreviewBrowserTheme", LightWeightThemeWebInstaller, false, true);
   gBrowser.mPanelContainer.addEventListener("ResetBrowserThemePreview", LightWeightThemeWebInstaller, false, true);
 
-#ifdef WIN7_FEATURES
-  Win7Features.onOpenWindow();
-#endif
+  if (Win7Features)
+    Win7Features.onOpenWindow();
 }
 
 function BrowserShutdown()
 {
-#ifdef WIN7_FEATURES
-  Win7Features.onCloseWindow();
-#endif
+  if (Win7Features)
+    Win7Features.onCloseWindow();
+
   gPrefService.removeObserver(ctrlTab.prefName, ctrlTab);
   gPrefService.removeObserver(allTabs.prefName, allTabs);
   tabPreviews.uninit();
