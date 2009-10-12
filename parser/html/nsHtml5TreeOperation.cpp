@@ -170,7 +170,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
       return rv;
     }
     case eTreeOpDoneAddingChildren: {
-      mNode->DoneAddingChildren(PR_FALSE);
+      mNode->DoneAddingChildren(aBuilder->HaveNotified(mNode));
       return rv;
     }
     case eTreeOpDoneCreatingElement: {
