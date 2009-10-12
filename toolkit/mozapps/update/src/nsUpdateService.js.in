@@ -85,7 +85,6 @@ const KEY_GRED            = "GreD";
 #ifdef XP_WIN
 #ifndef WINCE
 const KEY_UPDROOT         = "UpdRootD";
-const KEY_UAPPDATA        = "UAppData";
 #endif
 #endif
 
@@ -260,20 +259,6 @@ function binaryToHex(input) {
     result += hex;
   }
   return result;
-}
-
-/**
- * Gets a File URL spec for a nsIFile
- * @param   file
- *          The file to get a file URL spec to
- * @returns The file URL spec to the file
- */
-function getURLSpecFromFile(file) {
-  var ioServ = Cc["@mozilla.org/network/io-service;1"].
-               getService(Ci.nsIIOService);
-  var fph = ioServ.getProtocolHandler("file").
-            QueryInterface(Ci.nsIFileProtocolHandler);
-  return fph.getURLSpecFromFile(file);
 }
 
 /**
@@ -1113,14 +1098,7 @@ const UpdateServiceFactory = {
  * @constructor
  */
 function UpdateService() {
-  // Start the update timer only after a profile has been selected so that the
-  // appropriate values for the update check are read from the user's profile.
-  var os = getObserverService();
-
-  os.addObserver(this, "final-ui-startup", false);
-
-  // Observe xpcom-shutdown to unhook pref branch observers above to avoid
-  // shutdown leaks.
+  let os = getObserverService();
   os.addObserver(this, "xpcom-shutdown", false);
 }
 
@@ -1146,14 +1124,12 @@ UpdateService.prototype = {
    *          Additional data
    */
   observe: function AUS_observe(subject, topic, data) {
-    var os = getObserverService();
-
     switch (topic) {
-    case "final-ui-startup":
-      os.removeObserver(this, "final-ui-startup");
-      this._final_ui_start();
+    case "profile-after-change":
+      this._start();
       break;
     case "xpcom-shutdown":
+      let os = getObserverService();
       os.removeObserver(this, "xpcom-shutdown");
 
       // Prevent leaking the downloader (bug 454964)
@@ -1163,13 +1139,13 @@ UpdateService.prototype = {
   },
 
   /**
-   * The following needs to be performed after final-ui-startup (bug 497578)
+   * The following needs to happen during the profile-after-change notification:
    * 1. post update processing
    * 2. resume of a download that was in progress during a previous session
    * 3. start of a complete update download after the failure to apply a partial
    *    update
    */
-  _final_ui_start: function AUS__delayed_start() {
+  _start: function AUS__start() {
     // Clean up any extant updates
     this._postUpdateProcessing();
 
@@ -1217,11 +1193,6 @@ UpdateService.prototype = {
           status = null;
       }
     }
-
-    // required when updating from Fx 2.0.0.1 to 2.0.0.3 (or later)
-    // on Windows Vista.
-    if (status == null)
-      findPreviousUpdate(KEY_UAPPDATA);
 
     // required to migrate from older versions.
     if (status == null)
@@ -1642,20 +1613,12 @@ UpdateService.prototype = {
 // On Windows CE skip the write access checks and assume we have write access
 #ifndef WINCE
     try {
-      var appDirFile = getUpdateFile([FILE_PERMS_TEST]);
-      LOG("UpdateService", "canUpdate - testing " + appDirFile.path);
-      if (!appDirFile.exists()) {
-        appDirFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-        appDirFile.remove(false);
-      }
-      var updateDir = getUpdatesDir();
-      var upDirFile = updateDir.clone();
-      upDirFile.append(FILE_PERMS_TEST);
-      LOG("UpdateService", "canUpdate - testing " + upDirFile.path);
-      if (!upDirFile.exists()) {
-        upDirFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-        upDirFile.remove(false);
-      }
+      var updateTestFile = getUpdateFile([FILE_PERMS_TEST]);
+      LOG("UpdateService", "canUpdate - testing " + updateTestFile.path);
+      if (updateTestFile.exists())
+        updateTestFile.remove(false);
+      updateTestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+      updateTestFile.remove(false);
 #ifdef XP_WIN
       var sysInfo = Cc["@mozilla.org/system-info;1"].
                     getService(Ci.nsIPropertyBag2);
@@ -1664,17 +1627,17 @@ UpdateService.prototype = {
       var windowsVersion = sysInfo.getProperty("version");
       LOG("UpdateService", "canUpdate - windowsVersion = " + windowsVersion);
 
-      // For Vista, updates can be performed to a location requiring 
-      // admin privileges by requesting elevation via the UAC prompt when 
-      // launching updater.exe if the appDir is under the Program Files 
-      // directory (e.g. C:\Program Files\) and UAC is turned on and 
-      // we can elevate (e.g. user has a split token)
-      //
-      // Note: this does note attempt to handle the case where UAC is
-      // turned on and the installation directory is in a restricted
-      // location that requires admin privileges to update other than 
-      // Program Files.
-
+      /**
+#        For Vista, updates can be performed to a location requiring admin
+#        privileges by requesting elevation via the UAC prompt when launching
+#        updater.exe if the appDir is under the Program Files directory
+#        (e.g. C:\Program Files\) and UAC is turned on and  we can elevate
+#        (e.g. user has a split token).
+#
+#        Note: this does note attempt to handle the case where UAC is turned on
+#        and the installation directory is in a restricted location that
+#        requires admin privileges to update other than Program Files.
+       */
       var userCanElevate = false;
 
       if (parseFloat(windowsVersion) >= 6) {
@@ -1699,37 +1662,35 @@ UpdateService.prototype = {
         }
       }
 
-      // On Windows, we no longer store the update under the app dir
-      // if the app dir is under C:\Program Files.
-      //
-      // If we are on Windows (including Vista, if we can't elevate)
-      // we need to check that
-      // we can create and remove files from the actual app directory
-      // (like C:\Program Files\Mozilla Firefox).  If we can't
-      // (because this user is not an adminstrator, for example)
-      // canUpdate() should return false.
-      //
-      // For Vista, we perform this check to enable updating the 
-      // application when the user has write access to the installation 
-      // directory under the following scenarios:
-      // 1) the installation directory is not under Program Files 
-      //    (e.g. C:\Program Files)
-      // 2) UAC is turned off
-      // 3) UAC is turned on and the user is not an admin 
-      //    (e.g. the user does not have a split token)
-      // 4) UAC is turned on and the user is already elevated,
-      //    so they can't be elevated again.
+      /**
+#        On Windows, we no longer store the update under the app dir if the app
+#        dir is under C:\Program Files.
+#
+#        If we are on Windows (including Vista, if we can't elevate) we need to
+#        check that we can create and remove files from the actual app directory
+#        (like C:\Program Files\Mozilla Firefox).  If we can't (because this
+#        user is not an adminstrator, for example) canUpdate() should return
+#        false.
+#
+#        For Vista, we perform this check to enable updating the  application
+#        when the user has write access to the installation directory under the
+#        following scenarios:
+#        1) the installation directory is not under Program Files
+#           (e.g. C:\Program Files)
+#        2) UAC is turned off
+#        3) UAC is turned on and the user is not an admin 
+#           (e.g. the user does not have a split token)
+#        4) UAC is turned on and the user is already elevated, so they can't be
+#           elevated again
+       */
       if (!userCanElevate) {
-        // if we're unable to create the test file
-        // the code below will throw an exception 
-        var actualAppDir = getDir(KEY_APPDIR, []);
-        var actualAppDirFile = actualAppDir.clone();
-        actualAppDirFile.append(FILE_PERMS_TEST);
-        LOG("UpdateService", "canUpdate - testing " + actualAppDirFile.path);
-        if (!actualAppDirFile.exists()) {
-          actualAppDirFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-          actualAppDirFile.remove(false);
-        }
+        // if we're unable to create the test file this will throw an exception.
+        var appDirTestFile = getFile(KEY_APPDIR, [FILE_PERMS_TEST]);
+        LOG("UpdateService", "canUpdate - testing " + appDirTestFile.path);
+        if (appDirTestFile.exists())
+          appDirTestFile.remove(false)
+        appDirTestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+        appDirTestFile.remove(false);
       }
 #endif //XP_WIN
     }
@@ -1849,7 +1810,7 @@ UpdateService.prototype = {
   classDescription: "Update Service",
   contractID: "@mozilla.org/updates/update-service;1",
   classID: Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}"),
-  _xpcom_categories: [{ category: "app-startup", service: true },
+  _xpcom_categories: [{ category: "profile-after-change" },
                       { category: CATEGORY_UPDATE_TIMER,
                         value: "@mozilla.org/updates/update-service;1," +
                                "getService,background-update-timer," +
