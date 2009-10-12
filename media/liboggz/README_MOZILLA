@@ -29,5 +29,7 @@ bug504843.patch: Propogate read errors from oggz_read_sync().
 
 bug519155.patch: Fix oggz seek's reset so that it can rollback on fail correctly.
 
+bug498380.patch: Remove bogus assert.
+
 bug520493.patch: Fix oggz seek so that it doesn't exit too early, and to use
                  more accurate page offsets while bisecting.
