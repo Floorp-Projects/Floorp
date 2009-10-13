@@ -793,9 +793,12 @@ BookmarksStore.prototype = {
     if (itemPos == 0)
       return;
 
+    // For items directly under unfiled/unsorted, give no predecessor
     let parentId = Svc.Bookmark.getFolderIdForItem(itemId);
-    let predecessorId = Svc.Bookmark.getIdForItemAt(parentId, itemPos - 1);
+    if (parentId == Svc.Bookmark.unfiledBookmarksFolder)
+      return;
 
+    let predecessorId = Svc.Bookmark.getIdForItemAt(parentId, itemPos - 1);
     if (predecessorId == -1) {
       this._log.debug("No predecessor directly before " + itemId + " under " +
         parentId + " at " + itemPos);
