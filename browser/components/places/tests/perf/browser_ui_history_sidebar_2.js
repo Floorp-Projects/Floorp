@@ -37,10 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
-Tests the performance of opening the history menu.
+Tests the performance of opening the History
+sidebar in all the available views.
 */
 
 /*********************** begin header **********************/
+waitForExplicitFinish();
+
 const TEST_IDENTIFIER = "ui-perf-test";
 const TEST_SUITE = "places";
 
@@ -51,7 +54,6 @@ const Cr = Components.results;
 var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
          getService(Ci.nsIWindowMediator);
 var win = wm.getMostRecentWindow("navigator:browser");
-
 var ios = Cc["@mozilla.org/network/io-service;1"].
           getService(Ci.nsIIOService);
 var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
@@ -59,8 +61,7 @@ var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
 var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
          getService(Ci.nsINavBookmarksService);
 
-var historyMenu = document.getElementById("history-menu");
-var historyPopup = document.getElementById("goPopup");
+var sidebar = document.getElementById("sidebar");
 
 function add_visit(aURI, aDate) {
   var visitId = hs.addVisit(aURI,
@@ -89,19 +90,20 @@ var ptests = [];
 
 const TEST_REPEAT_COUNT = 6;
 
-// test duration of history menu opening
+// test duration of history sidebar opening
+// byvisited
 ptests.push({
-  name: "open_history_menu",
+  name: "history_sidebar_byvisited",
   times: [],
   run: function() {
     var self = this;
     var start = Date.now();
-    historyPopup.addEventListener("popupshown", function() {
-      historyPopup.removeEventListener("popupshown", arguments.callee, true);
+    sidebar.addEventListener("load", function() {
+      sidebar.removeEventListener("load", arguments.callee, true);
       executeSoon(function() {
         var duration = Date.now() - start;
-        historyPopup.hidePopup();
-        historyMenu.open = false;
+        sidebar.contentDocument.getElementById("byvisited").doCommand();
+        toggleSidebar("viewHistorySidebar", false);
         self.times.push(duration);
         if (self.times.length == TEST_REPEAT_COUNT)
           self.finish();
@@ -109,8 +111,7 @@ ptests.push({
           self.run();
       });
     }, true);
-    historyMenu.open = true;
-    historyPopup.openPopup();
+    toggleSidebar("viewHistorySidebar", true);
   },
   finish: function() {
     processTestResult(this);
@@ -129,12 +130,6 @@ function processTestResult(aTest) {
 }
 
 function test() {
-  // Skip test on Mac due to native menus.
-  if (navigator.platform.toLowerCase().indexOf("mac") != -1)
-    return;
-
-  waitForExplicitFinish();
-
   // kick off tests
   setTimeout(runNextTest, 0);
 }
