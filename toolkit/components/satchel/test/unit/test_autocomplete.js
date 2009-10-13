@@ -84,9 +84,9 @@ function run_test() {
         prefs = Cc["@mozilla.org/preferences-service;1"].
                 getService(Ci.nsIPrefBranch);
 
-        timeGroupingSize = prefs.getIntPref("browser.formfill.timeGroupingSize") * 1000 * 1000;
-        maxTimeGroupings = prefs.getIntPref("browser.formfill.maxTimeGroupings");
-        bucketSize = prefs.getIntPref("browser.formfill.bucketSize");
+        var timeGroupingSize = prefs.getIntPref("browser.formfill.timeGroupingSize") * 1000 * 1000;
+        var maxTimeGroupings = prefs.getIntPref("browser.formfill.maxTimeGroupings");
+        var bucketSize = prefs.getIntPref("browser.formfill.bucketSize");
 
         // ===== Tests with constant timesUsed and varying lastUsed date =====
         // insert 2 records per bucket to check alphabetical sort within
@@ -131,7 +131,7 @@ function run_test() {
         // ===== 2 =====
         // Check search contains all entries
         testnum++;
-        results = fac.autoCompleteSearch("field1", "", null, null);
+        var results = fac.autoCompleteSearch("field1", "", null, null);
         do_check_eq(numRecords, results.matchCount);
 
         // ===== 3 =====
