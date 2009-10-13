@@ -134,7 +134,10 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
                                           const nsACString & aServerMAC)
 {
   nsresult rv;
-  rv = NS_NewChannel(getter_AddRefs(mChannel), aUpdateUrl, nsnull, nsnull, this);
+  PRUint32 loadFlags = nsIChannel::INHIBIT_CACHING |
+                       nsIChannel::LOAD_BYPASS_CACHE;
+  rv = NS_NewChannel(getter_AddRefs(mChannel), aUpdateUrl, nsnull, nsnull, this,
+                     loadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mBeganStream = PR_FALSE;
