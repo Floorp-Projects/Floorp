@@ -1,0 +1,27 @@
+<!--
+   This testcase checks that we don't clamp negative opacity values to their
+   valid range [0,1] until *after* we've done animation & interpolation.
+   If we clamped intermediate results too early (e.g. after parsing, during
+   interpolation, or right after we add the first animation's interpolated
+   value), we'd end up with the wrong intermediate opacity values here.
+ -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="go()">
+  <style>
+    rect { fill: blue; stroke: black; }
+  </style>
+  <script xlink:href="../smil-grid.js" type="text/javascript"/>
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <script>
+    function go() {
+      var animAttrHashA = { "attributeName" : "fill-opacity",
+                            "from"          : "-0.4",
+                            "by"            : "0.6" };
+      var animAttrHashB = { "attributeName" : "fill-opacity",
+                            "by"            : "0.4" };
+      testAnimatedRectGrid("animate", [animAttrHashA, animAttrHashB]);
+    }
+  </script>
+</svg>

@@ -71,6 +71,8 @@
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 #include "nsIWidget.h"
+#include "mozilla/TimeStamp.h"
+#include "nsRefreshDriver.h"
 
 class nsImageLoader;
 #ifdef IBMBIDI
@@ -100,6 +102,7 @@ class gfxUserFontSet;
 class nsUserFontSet;
 struct nsFontFaceRuleContainer;
 class nsObjectFrame;
+class nsTransitionManager;
 
 #ifdef MOZ_REFLOW_PERF
 class nsIRenderingContext;
@@ -226,6 +229,16 @@ public:
 
   nsFrameManager* FrameManager()
     { return GetPresShell()->FrameManager(); } 
+
+  nsTransitionManager* TransitionManager() { return mTransitionManager; }
+
+  nsRefreshDriver* RefreshDriver() { return &mRefreshDriver; }
+
+  static nsPresContext* FromRefreshDriver(nsRefreshDriver* aRefreshDriver) {
+    return reinterpret_cast<nsPresContext*>(
+             reinterpret_cast<char*>(aRefreshDriver) -
+             offsetof(nsPresContext, mRefreshDriver));
+  }
 #endif
 
   /**
@@ -944,6 +957,8 @@ protected:
                                         // from gfx back to layout.
   nsIEventStateManager* mEventManager;  // [STRONG]
   nsILookAndFeel*       mLookAndFeel;   // [STRONG]
+  nsRefreshDriver       mRefreshDriver;
+  nsTransitionManager*  mTransitionManager; // owns; it aggregates our refcount
   nsIAtom*              mMedium;        // initialized by subclass ctors;
                                         // weak pointer to static atom
 
@@ -1014,6 +1029,8 @@ protected:
   nscoord               mBorderWidthTable[3];
 
   PRUint32              mInterruptChecksToSkip;
+
+  mozilla::TimeStamp    mReflowStartTime;
 
   unsigned              mHasPendingInterrupt : 1;
   unsigned              mInterruptsEnabled : 1;

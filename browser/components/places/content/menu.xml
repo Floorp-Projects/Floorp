@@ -725,8 +725,7 @@
           let popup = parentElt.firstChild;
 
           let index = popup._startMarker + 1 + aIndex;
-          let before = popup.childNodes[index] || null;
-          this._self.insertNewItem(aNode, popup, before);
+          this._self.insertNewItem(aNode, popup, popup.childNodes[index]);
           if (popup._emptyMenuItem)
             popup._emptyMenuItem.hidden = true;
         },
@@ -777,8 +776,9 @@
 
           // Move the node.
           let popup = nodeElt.parentNode;
+          let index = popup._startMarker + 1 + aNewIndex;
           popup.removeChild(nodeElt);
-          popup.insertBefore(nodeElt, popup.childNodes[aNewIndex]);
+          popup.insertBefore(nodeElt, popup.childNodes[index]);
         },
 
         nodeTitleChanged: function PMV__nodeTitleChanged(aNode, aNewTitle) {

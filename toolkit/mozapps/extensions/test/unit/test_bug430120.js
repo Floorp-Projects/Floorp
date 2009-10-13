@@ -98,9 +98,18 @@ function failHandler(metadata, response) {
 }
 
 function pathHandler(metadata, response) {
+  var ABI = "noarch-spidermonkey";
+  // the blacklist service special-cases ABI for Universal binaries,
+  // so do the same here.
+  if ("@mozilla.org/xpcom/mac-utils;1" in Components.classes) {
+    var macutils = Components.classes["@mozilla.org/xpcom/mac-utils;1"]
+                             .getService(Components.interfaces.nsIMacUtils);
+    if (macutils.isUniversalBinary)
+      ABI = "Universal-gcc3";
+  }
   do_check_eq(metadata.queryString,
               "xpcshell@tests.mozilla.org&1&XPCShell&1&2007010101&" +
-              "XPCShell_noarch-spidermonkey&locale&updatechannel&" + 
+              "XPCShell_" + ABI + "&locale&updatechannel&" +
               gOSVersion + "&1.9&distribution&distribution-version");
   gBlocklist.observe(null, "quit-application", "");
   gBlocklist.observe(null, "xpcom-shutdown", "");
@@ -156,9 +165,9 @@ function run_test() {
   defaults.setCharPref(PREF_GENERAL_USERAGENT_LOCALE, "locale");
 
   // This should correctly escape everything
-  gPrefs.setCharPref(PREF_BLOCKLIST_URL, "http://localhost:4444/2?" + 
+  gPrefs.setCharPref(PREF_BLOCKLIST_URL, "http://localhost:4444/2?" +
                      "%APP_ID%&%APP_VERSION%&%PRODUCT%&%VERSION%&%BUILD_ID%&" +
-                     "%BUILD_TARGET%&%LOCALE%&%CHANNEL%&" + 
+                     "%BUILD_TARGET%&%LOCALE%&%CHANNEL%&" +
                      "%OS_VERSION%&%PLATFORM_VERSION%&%DISTRIBUTION%&%DISTRIBUTION_VERSION%");
   gPrefs.setBoolPref(PREF_BLOCKLIST_ENABLED, true);
   timerService.fireTimer(BLOCKLIST_TIMER);

@@ -51,6 +51,9 @@ interface nsIBlocklistService : nsISupports
   const unsigned long STATE_SOFTBLOCKED = 1;
   // Indicates that the item should be blocked and never used.
   const unsigned long STATE_BLOCKED     = 2;
+  // Indicates that the item is considered outdated, and there is a known
+  // update available.
+  const unsigned long STATE_OUTDATED    = 3;
 
   /**
    * Determine if an item is blocklisted

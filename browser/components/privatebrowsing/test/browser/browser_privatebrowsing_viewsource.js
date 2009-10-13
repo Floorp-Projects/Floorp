@@ -61,7 +61,7 @@ function test() {
           win.addEventListener("load", function() {
             win.removeEventListener("load", arguments.callee, false);
 
-            let browser = win.getBrowser();
+            let browser = win.gBrowser;
             browser.addEventListener("load", function() {
               browser.removeEventListener("load", arguments.callee, true);
               
@@ -133,7 +133,7 @@ function test() {
             win.addEventListener("load", function() {
               win.removeEventListener("load", arguments.callee, false);
 
-              let browser = win.getBrowser();
+              let browser = win.gBrowser;
               browser.addEventListener("load", function() {
                 browser.removeEventListener("load", arguments.callee, true);
                 
@@ -168,7 +168,7 @@ function test() {
             win.addEventListener("load", function() {
               win.removeEventListener("load", arguments.callee, false);
 
-              let browser = win.getBrowser();
+              let browser = win.gBrowser;
               browser.addEventListener("load", function() {
                 browser.removeEventListener("load", arguments.callee, true);
                 

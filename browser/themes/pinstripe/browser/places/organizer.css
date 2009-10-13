@@ -256,29 +256,6 @@ window:not([active="true"]) #placesList > treechildren::-moz-tree-row(selected) 
   border: 0px;
 }
 
-.filterList {
-  -moz-appearance: none;
-  background-color: transparent;
-  border: 0px;
-  margin: 2px;
-  padding: 0px;
-  min-width: 0px;
-  width: 16px;
-  height: 16px;
-  list-style-image: url("chrome://browser/skin/Search-bar.png");
-  -moz-user-focus: ignore;
-  cursor: default;
-}
-
-.filterList .button-box {
-  border: 0px;
-  padding: 0px;
-}
-
-.filterList .button-menu-dropmarker {
-  margin: 9px -3px -4px 8px;
-}
-
 /* Scope Bar */
 
 #advancedSearch > hbox, 

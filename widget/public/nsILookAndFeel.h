@@ -271,6 +271,15 @@ public:
     eMetric_MacGraphiteTheme,
 
     /*
+     * A Boolean value to determine whether Mameo is using the new Fremantle
+     * theme.
+     *
+     * The value of this metric is not used on other platforms. These platforms
+     * should return NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
+     */
+    eMetric_MaemoClassic,
+
+    /*
      * eMetric_AlertNotificationOrigin indicates from which corner of the
      * screen alerts slide in, and from which direction (horizontal/vertical).
      * 0, the default, represents bottom right, sliding vertically.
@@ -308,7 +317,11 @@ public:
     /**
      * If this metric != 0, show icons in menus.
      */
-    eMetric_ImagesInMenus
+    eMetric_ImagesInMenus,
+    /**
+     * If this metric != 0, show icons in buttons.
+     */
+    eMetric_ImagesInButtons
   } nsMetricID;
 
   enum {

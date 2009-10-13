@@ -362,8 +362,6 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
                                            nsSMILValue& aBaseValue)
 {
   nsresult rv = NS_OK;
-  const nsSMILValue* from = nsnull;
-  const nsSMILValue* to = nsnull;
   const nsSMILTime& dur = mSimpleDuration.GetMillis();
 
   // Sanity Checks
@@ -409,8 +407,48 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
 
   ScaleSimpleProgress(simpleProgress);
 
-  // Handle CALC_DISCRETE separately, because it's simple.
-  if (GetCalcMode() == CALC_DISCRETE) {
+  if (GetCalcMode() != CALC_DISCRETE) {
+    // Get the normalised progress between adjacent values
+    const nsSMILValue* from = nsnull;
+    const nsSMILValue* to = nsnull;
+    double intervalProgress;
+    if (IsToAnimation()) {
+      // Note: Don't need to do any special-casing for CALC_PACED here,
+      // because To-Animation doesn't use a values list, by definition.
+      from = &aBaseValue;
+      to = &aValues[0];
+      intervalProgress = simpleProgress;
+      ScaleIntervalProgress(intervalProgress, 0, 1);
+    } else {
+      if (GetCalcMode() == CALC_PACED) {
+        rv = ComputePacedPosition(aValues, simpleProgress,
+                                  intervalProgress, from, to);
+        // Note: If the above call fails, we'll skip the "from->Interpolate"
+        // call below, and we'll drop into the CALC_DISCRETE section
+        // instead. (as the spec says we should, because our failure was
+        // presumably due to the values being non-additive)
+      } else { // GetCalcMode() == CALC_LINEAR or GetCalcMode() == CALC_SPLINE
+        PRUint32 index = (PRUint32)floor(simpleProgress *
+                                         (aValues.Length() - 1));
+        from = &aValues[index];
+        to = &aValues[index + 1];
+        intervalProgress = simpleProgress * (aValues.Length() - 1) - index;
+        ScaleIntervalProgress(intervalProgress, index, aValues.Length() - 1);
+      }
+    }
+    if (NS_SUCCEEDED(rv)) {
+      NS_ABORT_IF_FALSE(from, "NULL from-value during interpolation.");
+      NS_ABORT_IF_FALSE(to, "NULL to-value during interpolation.");
+      NS_ABORT_IF_FALSE(0.0f <= intervalProgress && intervalProgress < 1.0f,
+                      "Interval progress should be in the range [0, 1)");
+      rv = from->Interpolate(*to, intervalProgress, aResult);
+    }
+  }
+
+  // Discrete-CalcMode case
+  // Note: If interpolation failed (isn't supported for this type), the SVG
+  // spec says to force discrete mode.
+  if (GetCalcMode() == CALC_DISCRETE || NS_FAILED(rv)) {
     if (IsToAnimation()) {
       // Two discrete values: our base value, and the val in our array
       aResult = (simpleProgress < 0.5f) ? aBaseValue : aValues[0];
@@ -418,35 +456,9 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
       PRUint32 index = (PRUint32) floor(simpleProgress * (aValues.Length()));
       aResult = aValues[index];
     }
-    return NS_OK;
+    rv = NS_OK;
   }
-
-  // Get the normalised progress between adjacent values
-  double intervalProgress;
-  if (IsToAnimation()) {
-    // Note: Don't need to do any special-casing for CALC_PACED here,
-    // because To-Animation doesn't use a values list, by definition.
-    from = &aBaseValue;
-    to = &aValues[0];
-    intervalProgress = simpleProgress;
-    ScaleIntervalProgress(intervalProgress, 0, 1);
-  } else {
-    if (GetCalcMode() == CALC_PACED) {
-      rv = ComputePacedPosition(aValues, simpleProgress, intervalProgress,
-                                from, to);
-      NS_ENSURE_SUCCESS(rv,rv);
-    } else { // GetCalcMode() == CALC_LINEAR or GetCalcMode() == CALC_SPLINE
-      PRUint32 index = (PRUint32)floor(simpleProgress * (aValues.Length() - 1));
-      from = &aValues[index];
-      to = &aValues[index + 1];
-      intervalProgress = simpleProgress * (aValues.Length() - 1) - index;
-      ScaleIntervalProgress(intervalProgress, index, aValues.Length() - 1);
-    }
-  }
-  NS_ASSERTION(from, "NULL from-value during interpolation.");
-  NS_ASSERTION(to, "NULL to-value during interpolation.");
-
-  return from->Interpolate(*to, intervalProgress, aResult);
+  return rv;
 }
 
 nsresult
@@ -472,7 +484,8 @@ nsSMILAnimationFunction::AccumulateResult(const nsSMILValueArray& aValues,
  *  - determines where we are between them
  *    (returned as aIntervalProgress)
  *
- * Returns NS_OK, unless there's an error computing distances.
+ * Returns NS_OK, or NS_ERROR_FAILURE if our values don't support distance
+ * computation.
  */
 nsresult
 nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
@@ -508,8 +521,11 @@ nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
     NS_ASSERTION(remainingDist >= 0, "distance values must be non-negative");
 
     double curIntervalDist;
-    nsresult tmpRv = aValues[i].ComputeDistance(aValues[i+1], curIntervalDist);
-    NS_ASSERTION(NS_SUCCEEDED(tmpRv), "ComputeDistance failed...?");
+    nsresult rv = aValues[i].ComputeDistance(aValues[i+1], curIntervalDist);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv),
+                      "If we got through ComputePacedTotalDistance, we should "
+                      "be able to recompute each sub-distance without errors");
+
     NS_ASSERTION(curIntervalDist >= 0, "distance values must be non-negative");
     // Clamp distance value at 0, just in case ComputeDistance is evil.
     curIntervalDist = PR_MAX(curIntervalDist, 0.0f);
@@ -540,9 +556,10 @@ nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
 }
 
 /*
- * Computes & caches the total distance to be travelled by a paced animation.
+ * Computes the total distance to be travelled by a paced animation.
  *
- * Returns NS_OK, unless there's an error computing distance.
+ * Returns the total distance, or returns COMPUTE_DISTANCE_ERROR if
+ * our values don't support distance computation.
  */
 double
 nsSMILAnimationFunction::ComputePacedTotalDistance(
@@ -555,13 +572,13 @@ nsSMILAnimationFunction::ComputePacedTotalDistance(
   for (PRUint32 i = 0; i < aValues.Length() - 1; i++) {
     double tmpDist;
     nsresult rv = aValues[i].ComputeDistance(aValues[i+1], tmpDist);
-    if (!NS_SUCCEEDED(rv)) {
-      NS_NOTREACHED("ComputeDistance failed...?");
+    if (NS_FAILED(rv)) {
       return COMPUTE_DISTANCE_ERROR;
     }
 
-    // Clamp distance value at 0, just in case ComputeDistance is evil.
-    NS_ASSERTION(tmpDist >= 0, "distance values must be non-negative");
+    // Clamp distance value to 0, just in case we have an evil ComputeDistance
+    // implementation somewhere
+    NS_ABORT_IF_FALSE(tmpDist >= 0.0f, "distance values must be non-negative");
     tmpDist = PR_MAX(tmpDist, 0.0f);
 
     totalDistance += tmpDist;

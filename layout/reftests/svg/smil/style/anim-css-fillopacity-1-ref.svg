@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style>
+    rect { fill: blue; stroke: black; }
+  </style>
+  <rect x="20px" y="20px" width="15px" height="15px"
+        style="fill-opacity: 1">
+  </rect>
+  <rect x="70px" y="20px" width="15px" height="15px"
+        style="fill-opacity: 1">
+  </rect>
+  <rect x="120px" y="20px" width="15px" height="15px"
+        style="fill-opacity: 0.85">
+  </rect>
+  <rect x="20px" y="70px" width="15px" height="15px"
+        style="fill-opacity: 0.625">
+  </rect>
+  <rect x="70px" y="70px" width="15px" height="15px"
+        style="fill-opacity: 0.505">
+  </rect>
+  <rect x="120px" y="70px" width="15px" height="15px"
+        style="fill-opacity: 0.25">
+  </rect>
+  <rect x="20px" y="120px" width="15px" height="15px"
+        style="fill-opacity: 0.2">
+  </rect>
+  <rect x="70px" y="120px" width="15px" height="15px"
+        style="fill-opacity: 0.0">
+  </rect>
+  <rect x="120px" y="120px" width="15px" height="15px"
+        style="fill-opacity: 0.0">
+  </rect>
+</svg>

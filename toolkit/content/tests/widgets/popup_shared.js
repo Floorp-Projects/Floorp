@@ -303,6 +303,12 @@ function compareEdge(anchor, popup, edge, offsetX, offsetY, testname)
      (Math.round(popuprect.bottom) - Math.round(popuprect.top)),
      testname + " size");
 
+  if (edge == "after_pointer") {
+    is(Math.round(popuprect.left), Math.round(anchorrect.left) + offsetX, testname + " x position");
+    is(Math.round(popuprect.top), Math.round(anchorrect.top) + offsetY + 21, testname + " y position");
+    return;
+  }
+
   if (edge == "overlap") {
     ok(Math.round(anchorrect.left) + offsetY == Math.round(popuprect.left) &&
        Math.round(anchorrect.top) + offsetY == Math.round(popuprect.top),

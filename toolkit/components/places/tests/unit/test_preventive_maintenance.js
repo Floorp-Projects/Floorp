@@ -133,7 +133,7 @@ tests.push({
     // add a bookmark
     this._bookmarkId = addBookmark(this._placeId);
     // Add a used attribute and an unused one.
-    stmt = mDBConn.createStatement("INSERT INTO moz_anno_attributes (name) VALUES (:anno)");
+    let stmt = mDBConn.createStatement("INSERT INTO moz_anno_attributes (name) VALUES (:anno)");
     stmt.params['anno'] = this._usedPageAttribute;
     stmt.execute();
     stmt.reset();
@@ -1163,7 +1163,7 @@ function run_test() {
   do_check_false(bs.isBookmarked(uri("http://force.bookmarks.hash")));
 
   // Get current bookmarks max ID for cleanup
-  stmt = mDBConn.createStatement("SELECT MAX(id) FROM moz_bookmarks");
+  let stmt = mDBConn.createStatement("SELECT MAX(id) FROM moz_bookmarks");
   stmt.executeStep();
   defaultBookmarksMaxId = stmt.getInt32(0);
   stmt.finalize();

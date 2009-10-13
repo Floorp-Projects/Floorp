@@ -52,6 +52,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/distribution.js");
 
 const PREF_EM_NEW_ADDONS_LIST = "extensions.newAddons";
+const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
+const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
 
 // We try to backup bookmarks at idle times, to avoid doing that at shutdown.
 // Number of idle seconds before trying to backup bookmarks.  15 minutes.
@@ -92,6 +94,10 @@ function BrowserGlue() {
   XPCOMUtils.defineLazyServiceGetter(this, "_observerService",
                                      "@mozilla.org/observer-service;1",
                                      "nsIObserverService");
+
+  XPCOMUtils.defineLazyGetter(this, "_distributionCustomizer", function() {
+                                return new DistributionCustomizer();
+                              });
 
   this._init();
 }
@@ -178,6 +184,10 @@ BrowserGlue.prototype = {
         // no longer needed, since history was initialized completely.
         this._observerService.removeObserver(this, "places-database-locked");
         this._isPlacesLockedObserver = false;
+
+        // Now apply distribution customized bookmarks.
+        // This should always run after Places initialization.
+        this._distributionCustomizer.applyBookmarks();
         break;
       case "places-database-locked":
         this._isPlacesDatabaseLocked = true;
@@ -189,6 +199,12 @@ BrowserGlue.prototype = {
       case "idle":
         if (this._idleService.idleTime > BOOKMARKS_BACKUP_IDLE_TIME * 1000)
           this._backupBookmarks();
+        break;
+      case "distribution-customization-complete":
+        this._observerService
+            .removeObserver(this, "distribution-customization-complete");
+        // Customization has finished, we don't need the customizer anymore.
+        delete this._distributionCustomizer;
         break;
     }
   }, 
@@ -214,6 +230,7 @@ BrowserGlue.prototype = {
     this._isPlacesInitObserver = true;
     osvr.addObserver(this, "places-database-locked", false);
     this._isPlacesLockedObserver = true;
+    osvr.addObserver(this, "distribution-customization-complete", false);
   },
 
   // cleanup (called on application shutdown)
@@ -245,8 +262,7 @@ BrowserGlue.prototype = {
   {
     // apply distribution customizations (prefs)
     // other customizations are applied in _onProfileStartup()
-    var distro = new DistributionCustomizer();
-    distro.applyPrefDefaults();
+    this._distributionCustomizer.applyPrefDefaults();
   },
 
   // profile startup handler (contains profile initialization routines)
@@ -265,8 +281,7 @@ BrowserGlue.prototype = {
 
     // apply distribution customizations
     // prefs are applied in _onAppDefaults()
-    var distro = new DistributionCustomizer();
-    distro.applyCustomizations();
+    this._distributionCustomizer.applyCustomizations();
 
     // handle any UI migration
     this._migrateUI();
@@ -334,6 +349,24 @@ BrowserGlue.prototype = {
     if (this._isPlacesDatabaseLocked) {
       this._showPlacesLockedNotificationBox();
     }
+
+    // If there are plugins installed that are outdated, and the user hasn't
+    // been warned about them yet, open the plugins update page.
+    if (this._prefs.getBoolPref(PREF_PLUGINS_NOTIFYUSER))
+      this._showPluginUpdatePage();
+
+#ifdef XP_WIN
+#ifndef WINCE
+    // For windows seven, initialize the jump list module.
+    const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
+    if (WINTASKBAR_CONTRACTID in Cc &&
+        Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
+      let temp = {};
+      Cu.import("resource://gre/modules/WindowsJumpLists.jsm", temp);
+      temp.WinTaskbarJumpList.startup();
+    }
+#endif
+#endif
   },
 
   _onQuitRequest: function(aCancelQuit, aQuitType)
@@ -526,6 +559,18 @@ BrowserGlue.prototype = {
     var box = notifyBox.appendNotification(notifyRightsText, "about-rights", null, notifyBox.PRIORITY_INFO_LOW, buttons);
     box.persistence = 3; // arbitrary number, just so bar sticks around for a bit
   },
+  
+  _showPluginUpdatePage : function () {
+    this._prefs.setBoolPref(PREF_PLUGINS_NOTIFYUSER, false);
+
+    var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
+                    getService(Ci.nsIURLFormatter);
+    var updateUrl = formatter.formatURLPref(PREF_PLUGINS_UPDATEURL);
+
+    var win = this.getMostRecentBrowserWindow();
+    var browser = win.gBrowser;
+    browser.selectedTab = browser.addTab(updateUrl);
+  },
 
   // returns the (cached) Sanitizer constructor
   get Sanitizer() 
@@ -613,7 +658,7 @@ BrowserGlue.prototype = {
       var bookmarksBackupFile = PlacesUtils.backups.getMostRecent("json");
       if (bookmarksBackupFile) {
         // restore from JSON backup
-        PlacesUtils.backups.restoreBookmarksFromJSONFile(bookmarksBackupFile);
+        PlacesUtils.restoreBookmarksFromJSONFile(bookmarksBackupFile);
         importBookmarks = false;
       }
       else {

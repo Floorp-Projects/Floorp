@@ -132,7 +132,7 @@ dummyuser6.init("news://localhost", null, "news://localhost/#username",
 /* ========== 1 ========== */
 testnum++;
 
-testdesc = "checking reading of mailnews-like old logins";
+var testdesc = "checking reading of mailnews-like old logins";
 storage = LoginTest.initStorage(INDIR, "signons-403790.txt",
                       OUTDIR, "output-403790.sqlite");
 LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3,

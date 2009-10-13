@@ -43,8 +43,6 @@
 #include <string>
 #include <sstream>
 
-using namespace std;
-
 typedef enum  {
   DM_DEFAULT,
   DM_SOLID_COLOR
@@ -55,8 +53,17 @@ typedef enum {
   FUNCTION_NPP_GETURL,
   FUNCTION_NPP_GETURLNOTIFY,
   FUNCTION_NPP_POSTURL,
-  FUNCTION_NPP_POSTURLNOTIFY
+  FUNCTION_NPP_POSTURLNOTIFY,
+  FUNCTION_NPP_NEWSTREAM,
+  FUNCTION_NPP_WRITEREADY,
+  FUNCTION_NPP_WRITE,
+  FUNCTION_NPP_DESTROYSTREAM
 } TestFunction;
+
+typedef struct FunctionTable {
+  TestFunction funcId;
+  const char* funcName;
+} FunctionTable;
 
 typedef enum {
   POSTMODE_FRAME,
@@ -80,7 +87,7 @@ typedef struct InstanceData {
   NPWindow window;
   TestNPObject* scriptableObject;
   PlatformData* platformData;
-  uint32_t instanceCountWatchGeneration;
+  int32_t instanceCountWatchGeneration;
   bool lastReportedPrivateModeState;
   bool hasWidget;
   bool npnNewStream;
@@ -88,11 +95,15 @@ typedef struct InstanceData {
   uint32_t timerID2;
   int32_t lastMouseX;
   int32_t lastMouseY;
+  int32_t writeCount;
+  int32_t writeReadyCount;
   TestFunction testFunction;
+  TestFunction functionToFail;
+  NPError failureCode;
   PostMode postMode;
-  string testUrl;
-  string frame;
-  ostringstream err;
+  std::string testUrl;
+  std::string frame;
+  std::ostringstream err;
   uint16_t streamMode;
   int32_t streamChunkSize;
   int32_t streamBufSize;

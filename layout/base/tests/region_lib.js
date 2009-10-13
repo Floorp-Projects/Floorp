@@ -99,6 +99,11 @@ Region.prototype.containsRegion = function Region_containsRegion(rgn) {
   return true;
 };
 
+// Return a region which is the union of this region and another region
+Region.prototype.unionRegion = function Region_unionRegion(rgn) {
+  return new Region(this._rects.concat(rgn._rects));
+};
+
 // Returns true if the region covers exactly the same area as region rgn
 Region.prototype.equalsRegion = function Region_equalsRegion(rgn) {
   return this.containsRegion(rgn) && rgn.containsRegion(this);

@@ -72,21 +72,30 @@
   
   <wizardpage id="dummy" pageid="dummy" firstpage="true"/>
 
-  <wizardpage id="checking" pageid="checking" next="noupdatesfound"
+  <wizardpage id="checking" pageid="checking" next="pluginupdatesfound"
               label="&checking.title;" object="gCheckingPage"
               onpageshow="gCheckingPage.onPageShow();">
     <label>&updateCheck.label;</label>
     <separator class="thin"/>
     <progressmeter id="checkingProgress" mode="undetermined" hidden="true"/>
   </wizardpage>
-  
+
+  <wizardpage id="pluginupdatesfound" pageid="pluginupdatesfound"
+              label="&pluginupdatesfound.title;"
+              object="gPluginsPage" onpageshow="gPluginsPage.onPageShow();">
+    <label>&pluginupdatesfound.label;</label>
+    <separator class="thin"/>
+    <label id="pluginupdateslink" class="text-link"
+           onclick="openUpdateURL(event);">&pluginupdateslink.label;</label>
+  </wizardpage>
+
   <wizardpage id="noupdatesfound" pageid="noupdatesfound"
               label="&noupdatesfound.title;" object="gNoUpdatesPage"
               onpageshow="gNoUpdatesPage.onPageShow();">
     <label id="noUpdatesAutoEnabled" hidden="true">&noupdatesautoenabled.intro;</label>
     <label id="noUpdatesAutoDisabled" hidden="true">&noupdatesautodisabled.intro;</label>
   </wizardpage>
-  
+
   <wizardpage id="incompatibleCheck" pageid="incompatibleCheck"
               next="updatesfound" label="&incompatibleCheck.title;"
               object="gIncompatibleCheckPage"

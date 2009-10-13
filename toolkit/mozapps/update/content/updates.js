@@ -53,6 +53,7 @@ const PREF_APP_UPDATE_LOG_BRANCH    = "app.update.log.";
 const PREF_UPDATE_TEST_LOOP         = "app.update.test.loop";
 const PREF_UPDATE_NEVER_BRANCH      = "app.update.never.";
 const PREF_AUTO_UPDATE_ENABLED      = "app.update.enabled";
+const PREF_PLUGINS_UPDATEURL        = "plugins.update.url";
 
 const UPDATE_TEST_LOOP_INTERVAL     = 2000;
 
@@ -535,6 +536,62 @@ var gCheckingPage = {
         throw CoR.NS_ERROR_NO_INTERFACE;
       return this;
     }
+  }
+};
+
+/**
+ * The "You have outdated plugins" page
+ */
+var gPluginsPage = {
+  /**
+   * URL of the plugin updates page
+   */
+  _url: null,
+  
+  /**
+   * Initialize
+   */
+  onPageShow: function() {
+    if (gPref.getPrefType(PREF_PLUGINS_UPDATEURL) == gPref.PREF_INVALID) {
+      gUpdates.wiz.goTo("noupdatesfound");
+      return;
+    }
+    
+    var formatter = CoC["@mozilla.org/toolkit/URLFormatterService;1"].
+                       getService(CoI.nsIURLFormatter);
+    this._url = formatter.formatURLPref(PREF_PLUGINS_UPDATEURL);
+    var link = document.getElementById("pluginupdateslink");
+    link.setAttribute("href", this._url);
+
+
+    var phs = CoC["@mozilla.org/plugin/host;1"].
+                 getService(CoI.nsIPluginHost);
+    var plugins = phs.getPluginTags({});
+    var blocklist = CoC["@mozilla.org/extensions/blocklist;1"].
+                      getService(CoI.nsIBlocklistService);
+
+    var hasOutdated = false;
+    for (let i = 0; i < plugins.length; i++) {
+      let pluginState = blocklist.getPluginBlocklistState(plugins[i]);
+      if (pluginState == CoI.nsIBlocklistService.STATE_OUTDATED) {
+        hasOutdated = true;
+        break;
+      }
+    }
+    if (!hasOutdated) {
+      gUpdates.wiz.goTo("noupdatesfound");
+      return;
+    }
+
+    gUpdates.setButtons(null, null, "okButton", true);
+    gUpdates.wiz.getButton("finish").focus();
+  },
+  
+  /**
+   * Finish button clicked.
+   */
+  onWizardFinish: function() {
+    openURL(this._url);
   }
 };
 

@@ -39,7 +39,7 @@
 #define NSMARGIN_H
 
 #include "nsCoord.h"
-#include "nsMargin.h"
+#include "nsPoint.h"
 #include "gfxCore.h"
 
 struct nsMargin {
@@ -61,6 +61,8 @@ struct nsMargin {
 
   nscoord LeftRight() const { return left + right; }
   nscoord TopBottom() const { return top + bottom; }
+
+  nsPoint TopLeft() const { return nsPoint(left, top); }
 
 #if (NS_SIDE_TOP == 0) && (NS_SIDE_RIGHT == 1) && (NS_SIDE_BOTTOM == 2) && (NS_SIDE_LEFT == 3)
   nscoord& side(PRUint8 aSide) {
@@ -120,6 +122,12 @@ struct nsIntMargin {
   void SizeTo(PRInt32 aLeft,  PRInt32 aTop,
               PRInt32 aRight, PRInt32 aBottom) {left = aLeft; top = aTop;
                                                 right = aRight; bottom = aBottom;}
+
+  PRInt32 LeftRight() const { return left + right; }
+  PRInt32 TopBottom() const { return top + bottom; }
+
+  nsPoint TopLeft() const { return nsPoint(left, top); }
+
   PRInt32& side(PRUint8 aSide) {
     NS_PRECONDITION(aSide <= NS_SIDE_LEFT, "Out of range side");
     return *(&top + aSide);
@@ -129,8 +137,6 @@ struct nsIntMargin {
     NS_PRECONDITION(aSide <= NS_SIDE_LEFT, "Out of range side");
     return *(&top + aSide);
   }
-  PRInt32 LeftRight() const { return left + right; }
-  PRInt32 TopBottom() const { return top + bottom; }
 
   PRBool operator!=(const nsIntMargin& aMargin) const {
     return (PRBool) ((left != aMargin.left) || (top != aMargin.top) ||

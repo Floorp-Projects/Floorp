@@ -94,6 +94,7 @@
       <property name="isCompatible" onget="return this.getAttribute('compatible') == 'true';"/>
       <property name="isBlocklisted" onget="return this.getAttribute('blocklisted') == 'true';"/>
       <property name="isSoftBlocklisted" onget="return this.getAttribute('blocklistedsoft') == 'true';"/>
+      <property name="isOutdated" onget="return this.getAttribute('outdated') == 'true';"/>
       <property name="isDisabled" onget="return this.getAttribute('isDisabled') == 'true';"/>
       <property name="providesUpdatesSecurely" onget="return this.getAttribute('providesUpdatesSecurely') == 'true';"/>
       <property name="satisfiesDependencies" onget="return this.getAttribute('satisfiesDependencies') == 'true';"/>
@@ -136,6 +137,7 @@
             <xul:hbox flex="1" class="blocklistedBox attention" align="center">
               <xul:label class="blocklistedLabel" value="&blocklisted.label;" crop="end"/>
               <xul:label class="softBlocklistedLabel" value="&softBlocklisted.label;" crop="end"/>
+              <xul:label class="outdatedLabel" value="&outdated.label;" crop="end"/>
               <xul:label anonid="blocklistMoreInfo" class="text-link" value="&moreInfo.label;"
                          onclick="if (event.button == 0) { openURL(this.getAttribute('moreInfoURL')); }" />
             </xul:hbox>
@@ -146,14 +148,17 @@
     <implementation implements="nsIAccessibleProvider, nsIDOMXULSelectControlItemElement">
       <constructor>
         <![CDATA[
-          if (this.isBlocklisted || this.isSoftBlocklisted) {
+          if (this.isBlocklisted || this.isSoftBlocklisted || this.isOutdated) {
             try {
               var blocklistMoreInfo = document.getAnonymousElementByAttribute(this, "anonid", "blocklistMoreInfo");
               var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                                     .getService(Components.interfaces.nsIPrefBranch);
               var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                                         .getService(Components.interfaces.nsIURLFormatter);
-              var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
+              if (this.isOutdated)
+                var url = formatter.formatURLPref("plugins.update.url");
+              else
+                var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
               blocklistMoreInfo.setAttribute("moreInfoURL", url);
             } catch(e) {
               blocklistMoreInfo.hidden = true;
@@ -241,6 +246,7 @@
             <xul:hbox flex="1" class="blocklistedBox attention" align="center">
               <xul:label class="blocklistedLabel" value="&blocklisted.label;" crop="end"/>
               <xul:label class="softBlocklistedLabel" value="&softBlocklisted.label;" crop="end"/>
+              <xul:label class="outdatedLabel" value="&outdated.label;" crop="end"/>
               <xul:label anonid="blocklistMoreInfo" class="text-link" value="&moreInfo.label;"
                          onclick="if (event.button == 0) { openURL(this.getAttribute('moreInfoURL')); }" />
             </xul:hbox>
@@ -285,14 +291,17 @@
     <implementation implements="nsIAccessibleProvider, nsIDOMXULSelectControlItemElement">
       <constructor>
         <![CDATA[
-          if (this.isBlocklisted || this.isSoftBlocklisted) {
+          if (this.isBlocklisted || this.isSoftBlocklisted || this.isOutdated) {
             try {
               var blocklistMoreInfo = document.getAnonymousElementByAttribute(this, "anonid", "blocklistMoreInfo");
               var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                                     .getService(Components.interfaces.nsIPrefBranch);
               var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                                         .getService(Components.interfaces.nsIURLFormatter);
-              var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
+              if (this.isOutdated)
+                var url = formatter.formatURLPref("plugins.update.url");
+              else
+                var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
               blocklistMoreInfo.setAttribute("moreInfoURL", url);
             } catch(e) {
               blocklistMoreInfo.hidden = true;

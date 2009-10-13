@@ -64,6 +64,10 @@ menubar, toolbar[type="menubar"] {
   padding: 1px 0px;
 }
 
+toolbar:-moz-lwtheme {
+  -moz-appearance: none;
+}
+
 /* in browser.xul, the menubar is inside a toolbar... */
 toolbaritem > menubar {
   -moz-appearance: none;

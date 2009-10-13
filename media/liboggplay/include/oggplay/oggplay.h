@@ -121,7 +121,7 @@ oggplay_new_with_reader(OggPlayReader *reader);
  * @retval E_OGGPLAY_OK on success
  * @retval E_OGGPLAY_OGGZ_UNHAPPY something went wrong while calling oggz_io_set_* functions.
  * @retval E_OGGPLAY_BAD_INPUT got EOF or OGGZ_ERR_HOLE_IN_DATA occured.
- * @retval E_OGGPLAY_OUT_OF_MEMORY ran out of memory
+ * @retval E_OGGPLAY_OUT_OF_MEMORY ran out of memory or video frame too large.
  * @retval E_OGGPLAY_BAD_OGGPLAY invalid OggPlay handle. 
  */
 OggPlayErrorCode
@@ -348,6 +348,24 @@ oggplay_get_duration(OggPlay * player);
 
 int
 oggplay_media_finished_retrieving(OggPlay * player);
+
+/**
+ * Sets the maximum video frame size, in pixels, which OggPlay will attempt to
+ * decode. Call this after oggplay_new_with_reader() but before
+ * oggplay_initialise() to prevent crashes with excessivly large video frame
+ * sizes. oggplay_initialise() will return E_OGGPLAY_OUT_OF_MEMORY if the
+ * decoded video's frame requires more than max_frame_pixels. Unless
+ * oggplay_set_max_video_size() is called, default maximum number of pixels
+ * per frame is INT_MAX.
+ *
+ * @param player OggPlay handle.
+ * @param max_frame_pixels max number of pixels per frame.
+ * @retval E_OGGPLAY_OK on success.
+ * @retval E_OGGPLAY_BAD_OGGPLAY invalid OggPlay handle.
+ */
+int
+oggplay_set_max_video_frame_pixels(OggPlay *player,
+                                   int max_frame_pixels);
 
 #ifdef __cplusplus
 }

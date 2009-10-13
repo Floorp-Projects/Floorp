@@ -21,7 +21,9 @@
  *
  * Contributor(s):
  *   Brian Ryner <bryner@brianryner.com> (original author)
+ *   Dietrich Ayala <dietrich@mozilla.com>
  *   Drew Willcoxon <adw@mozilla.com>
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -64,10 +66,10 @@ const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Position = 4;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Title = 5;
 
 // These columns sit to the right of the kGetInfoIndex_* columns.
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_Position = 11;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_Type = 12;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_PlaceID = 13;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_ServiceContractId = 14;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_Position = 13;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_Type = 14;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_PlaceID = 15;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_ServiceContractId = 16;
 
 const PRInt32 nsNavBookmarks::kGetItemPropertiesIndex_ID = 0;
 const PRInt32 nsNavBookmarks::kGetItemPropertiesIndex_URI = 1;
@@ -97,9 +99,15 @@ nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 #define GUID_ANNO NS_LITERAL_CSTRING("placesInternal/GUID")
 #define READ_ONLY_ANNO NS_LITERAL_CSTRING("placesInternal/READ_ONLY")
 
-nsNavBookmarks::nsNavBookmarks()
-  : mItemCount(0), mRoot(0), mBookmarksRoot(0), mTagRoot(0), mToolbarFolder(0), mBatchLevel(0),
-    mBatchHasTransaction(PR_FALSE), mCanNotify(false), mCacheObservers("bookmark-observers")
+nsNavBookmarks::nsNavBookmarks() : mItemCount(0)
+                                 , mRoot(0)
+                                 , mBookmarksRoot(0)
+                                 , mTagRoot(0)
+                                 , mToolbarFolder(0)
+                                 , mBatchLevel(0)
+                                 , mBatchHasTransaction(PR_FALSE)
+                                 , mCanNotify(false)
+                                 , mCacheObservers("bookmark-observers")
 {
   NS_ASSERTION(!sInstance, "Multiple nsNavBookmarks instances!");
   sInstance = this;
@@ -242,7 +250,8 @@ nsNavBookmarks::InitStatements()
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, COALESCE(b.title, h.title), "
         "h.rev_host, h.visit_count, h.last_visit_date, f.url, null, b.id, "
-        "b.dateAdded, b.lastModified, b.position, b.type, b.fk, b.folder_type "
+        "b.dateAdded, b.lastModified, b.parent, null, b.position, b.type, "
+        "b.fk, b.folder_type "
       "FROM moz_bookmarks b "
       "JOIN moz_places_temp h ON b.fk = h.id "
       "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -250,7 +259,8 @@ nsNavBookmarks::InitStatements()
       "UNION ALL "
       "SELECT h.id, h.url, COALESCE(b.title, h.title), "
         "h.rev_host, h.visit_count, h.last_visit_date, f.url, null, b.id, "
-        "b.dateAdded, b.lastModified, b.position, b.type, b.fk, b.folder_type "
+        "b.dateAdded, b.lastModified, b.parent, null, b.position, b.type, "
+        "b.fk, b.folder_type "
       "FROM moz_bookmarks b "
       "LEFT JOIN moz_places h ON b.fk = h.id "
       "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -2365,18 +2375,17 @@ nsNavBookmarks::ResultNodeForContainer(PRInt64 aID,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(results, "ResultNodeForContainer expects a valid item id");
 
-  // contract id
-  nsCAutoString contractId;
-  rv = mDBGetItemProperties->GetUTF8String(kGetItemPropertiesIndex_ServiceContractId,
-                                           contractId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // title
   nsCAutoString title;
   rv = mDBGetItemProperties->GetUTF8String(kGetItemPropertiesIndex_Title, title);
 
   PRUint16 itemType = (PRUint16) mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Type);
   if (itemType == TYPE_DYNAMIC_CONTAINER) {
+    // contract id
+    nsCAutoString contractId;
+    rv = mDBGetItemProperties->GetUTF8String(kGetItemPropertiesIndex_ServiceContractId,
+                                             contractId);
+    NS_ENSURE_SUCCESS(rv, rv);
     *aNode = new nsNavHistoryContainerResultNode(EmptyCString(), title, EmptyCString(),
                                                  nsINavHistoryResultNode::RESULT_TYPE_DYNAMIC_CONTAINER,
                                                  PR_TRUE,
@@ -2384,7 +2393,7 @@ nsNavBookmarks::ResultNodeForContainer(PRInt64 aID,
                                                  aOptions);
     (*aNode)->mItemId = aID;
   } else { // TYPE_FOLDER
-    *aNode = new nsNavHistoryFolderResultNode(title, aOptions, aID, contractId);
+    *aNode = new nsNavHistoryFolderResultNode(title, aOptions, aID, EmptyCString());
   }
   if (!*aNode)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -3021,15 +3030,6 @@ NS_IMETHODIMP
 nsNavBookmarks::RemoveObserver(nsINavBookmarkObserver *aObserver)
 {
   return mObservers.RemoveWeakElement(aObserver);
-}
-
-/**
- * Called by the History service when shutting down
- */
-nsresult
-nsNavBookmarks::OnQuit()
-{
-  return NS_OK;
 }
 
 // nsNavBookmarks::nsINavHistoryObserver

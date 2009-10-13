@@ -192,7 +192,7 @@ ProcessTableRulesAttribute(void*       aStyleStruct,
   }
 }
 
-static void TbodyPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData, nsIStyleRule* aStyleRule)
+static void TbodyPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData)
 {
   ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_TOP, PR_TRUE, NS_STYLE_TABLE_RULES_ALL,
                                NS_STYLE_TABLE_RULES_GROUPS, NS_STYLE_TABLE_RULES_ROWS);
@@ -205,14 +205,13 @@ nsHTMLStyleSheet::TableTbodyRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
-    nsPostResolveCallback prc = { &TbodyPostResolveCallback, this };
-    aRuleData->mPostResolveCallbacks.AppendElement(prc);
+    aRuleData->mPostResolveCallback = &TbodyPostResolveCallback;
   }
   return NS_OK;
 }
 // -----------------------------------------------------------
 
-static void RowPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData, nsIStyleRule* aStyleRule)
+static void RowPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData)
 {
   ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_TOP, PR_FALSE, NS_STYLE_TABLE_RULES_ALL,
                                NS_STYLE_TABLE_RULES_ROWS, NS_STYLE_TABLE_RULES_ROWS);
@@ -225,13 +224,12 @@ nsHTMLStyleSheet::TableRowRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
-    nsPostResolveCallback prc = { &RowPostResolveCallback, this };
-    aRuleData->mPostResolveCallbacks.AppendElement(prc);
+    aRuleData->mPostResolveCallback = &RowPostResolveCallback;
   }
   return NS_OK;
 }
 
-static void ColgroupPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData, nsIStyleRule* aStyleRule)
+static void ColgroupPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData)
 {
   ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_LEFT, PR_TRUE, NS_STYLE_TABLE_RULES_ALL,
                                NS_STYLE_TABLE_RULES_GROUPS, NS_STYLE_TABLE_RULES_COLS);
@@ -244,13 +242,12 @@ nsHTMLStyleSheet::TableColgroupRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
-    nsPostResolveCallback prc = { &ColgroupPostResolveCallback, this };
-    aRuleData->mPostResolveCallbacks.AppendElement(prc);
+    aRuleData->mPostResolveCallback = &ColgroupPostResolveCallback;
   }
   return NS_OK;
 }
 
-static void ColPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData, nsIStyleRule* aStyleRule)
+static void ColPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData)
 {
   ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_LEFT, PR_FALSE, NS_STYLE_TABLE_RULES_ALL,
                                NS_STYLE_TABLE_RULES_COLS, NS_STYLE_TABLE_RULES_COLS);
@@ -259,7 +256,7 @@ static void ColPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData, ns
 }
 
 static void UngroupedColPostResolveCallback(void* aStyleStruct,
-                                            nsRuleData* aRuleData, nsIStyleRule* aStyleRule)
+                                            nsRuleData* aRuleData)
 {
   // Pass PR_TRUE for aGroup, so that we find the table's style
   // context correctly.
@@ -274,8 +271,7 @@ nsHTMLStyleSheet::TableColRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
-    nsPostResolveCallback prc = { &ColPostResolveCallback, this };
-    aRuleData->mPostResolveCallbacks.AppendElement(prc);
+    aRuleData->mPostResolveCallback = &ColPostResolveCallback;
   }
   return NS_OK;
 }
@@ -285,8 +281,7 @@ nsHTMLStyleSheet::TableUngroupedColRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
-    nsPostResolveCallback prc = { &UngroupedColPostResolveCallback, this };
-    aRuleData->mPostResolveCallbacks.AppendElement(prc);
+    aRuleData->mPostResolveCallback = &UngroupedColPostResolveCallback;
   }
   return NS_OK;
 }

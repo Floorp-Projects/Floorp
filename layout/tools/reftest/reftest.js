@@ -215,7 +215,7 @@ function StartTests()
 {
     try {
         // Need to read the manifest once we have the final HTTP_SERVER_PORT.
-        args = window.arguments[0].wrappedJSObject;
+        var args = window.arguments[0].wrappedJSObject;
 
         if ("nocache" in args && args["nocache"])
             gNoCanvasCache = true;

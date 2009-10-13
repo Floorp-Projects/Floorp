@@ -204,6 +204,11 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "neterror",
       nsAboutRedirector::Create
     },
+    { "about:memory",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "memory",
+      nsAboutRedirector::Create
+    },
 
     // uriloader
   { "Netscape URI Loader Service", NS_URI_LOADER_CID, NS_URI_LOADER_CONTRACTID, nsURILoaderConstructor, },

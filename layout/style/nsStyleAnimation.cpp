@@ -79,13 +79,8 @@ GetCommonUnit(nsStyleUnit aFirstUnit,
   // XXXdholbert Naive implementation for now: simply require that the input
   // units match.
   if (aFirstUnit != aSecondUnit) {
-    // XXXdholbert Fail on mismatches for now.
-    // Eventually we'll need to be able to resolve conflicts here, e.g. for
-    // rgb() colors vs. named colors.  Some conflicts can't be resolved,
-    // e.g. percent vs coord, which we'll hopefully handle using CSS calc()
-    // once that's implemented.
-    NS_WARNING("start unit & end unit don't match -- need to resolve this "
-               "and pick which one we want to use");
+    // NOTE: Some unit-pairings will need special handling,
+    // e.g. percent vs coord (bug 520234)
     return eStyleUnit_Null;
   }
   return aFirstUnit;
@@ -125,6 +120,13 @@ nsStyleAnimation::Add(nsStyleCoord& aDest, const nsStyleCoord& aValueToAdd,
       aDest.SetPercentValue(destPct);
       break;
     }
+    case eStyleUnit_Factor: {
+      float destFactor = aDest.GetFactorValue();
+      float valueToAddFactor = aValueToAdd.GetFactorValue();
+      destFactor += aCount * valueToAddFactor;
+      aDest.SetFactorValue(destFactor);
+      break;
+    }
     case eStyleUnit_Color: {
       // Since nscolor doesn't allow out-of-sRGB values, by-animations
       // of colors don't make much sense in our implementation.
@@ -155,7 +157,6 @@ nsStyleAnimation::Add(nsStyleCoord& aDest, const nsStyleCoord& aValueToAdd,
       break;
     }
     case eStyleUnit_Null:
-      NS_WARNING("Unable to find a common unit for given values");
       success = PR_FALSE;
       break;
     default:
@@ -186,6 +187,12 @@ nsStyleAnimation::ComputeDistance(const nsStyleCoord& aStartValue,
       float startPct = aStartValue.GetPercentValue();
       float endPct = aEndValue.GetPercentValue();
       aDistance = fabs(double(endPct - startPct));
+      break;
+    }
+    case eStyleUnit_Factor: {
+      float startFactor = aStartValue.GetFactorValue();
+      float endFactor = aEndValue.GetFactorValue();
+      aDistance = fabs(double(endFactor - startFactor));
       break;
     }
     case eStyleUnit_Color: {
@@ -226,7 +233,6 @@ nsStyleAnimation::ComputeDistance(const nsStyleCoord& aStartValue,
       break;
     }
     case eStyleUnit_Null:
-      NS_WARNING("Unable to find a common unit for given values");
       success = PR_FALSE;
       break;
     default:
@@ -269,6 +275,13 @@ nsStyleAnimation::Interpolate(const nsStyleCoord& aStartValue,
       aResultValue.SetPercentValue(resultPct);
       break;
     }
+    case eStyleUnit_Factor: {
+      float startFactor = aStartValue.GetFactorValue();
+      float endFactor = aEndValue.GetFactorValue();
+      float resultFactor = startFactor + aPortion * (endFactor - startFactor);
+      aResultValue.SetFactorValue(resultFactor);
+      break;
+    }
     case eStyleUnit_Color: {
       double inv = 1.0 - aPortion;
       nscolor startColor = aStartValue.GetColorValue();
@@ -304,7 +317,6 @@ nsStyleAnimation::Interpolate(const nsStyleCoord& aStartValue,
       break;
     }
     case eStyleUnit_Null:
-      NS_WARNING("Unable to find a common unit for given values");
       success = PR_FALSE;
       break;
     default:
@@ -409,30 +421,106 @@ PRBool
 nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
                                  nsPresContext* aPresContext,
                                  const nsStyleCoord& aComputedValue,
+                                 void* aSpecifiedValue)
+{
+  NS_ABORT_IF_FALSE(aPresContext, "null pres context");
+
+  switch (aComputedValue.GetUnit()) {
+    case eStyleUnit_None:
+      if (nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_PaintServer) {
+        NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
+                            eCSSType_ValuePair, "type mismatch");
+        static_cast<nsCSSValuePair*>(aSpecifiedValue)->
+          SetBothValuesTo(nsCSSValue(eCSSUnit_None));
+      } else {
+        NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                          "type mismatch");
+        static_cast<nsCSSValue*>(aSpecifiedValue)->SetNoneValue();
+      }
+      break;
+    case eStyleUnit_Coord: {
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                        "type mismatch");
+      float pxVal = aPresContext->AppUnitsToFloatCSSPixels(
+                                    aComputedValue.GetCoordValue());
+      static_cast<nsCSSValue*>(aSpecifiedValue)->
+        SetFloatValue(pxVal, eCSSUnit_Pixel);
+      break;
+    }
+    case eStyleUnit_Percent:
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                        "type mismatch");
+      static_cast<nsCSSValue*>(aSpecifiedValue)->
+        SetPercentValue(aComputedValue.GetPercentValue());
+      break;
+    case eStyleUnit_Factor:
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                        "type mismatch");
+      static_cast<nsCSSValue*>(aSpecifiedValue)->
+        SetFloatValue(aComputedValue.GetFactorValue(), eCSSUnit_Number);
+      break;
+    case eStyleUnit_Color:
+      // colors can be alone, or part of a paint server
+      if (nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_PaintServer) {
+        NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
+                            eCSSType_ValuePair, "type mismatch");
+        nsCSSValue val;
+        val.SetColorValue(aComputedValue.GetColorValue());
+        static_cast<nsCSSValuePair*>(aSpecifiedValue)->
+          SetBothValuesTo(val);
+      } else {
+        NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                          "type mismatch");
+        static_cast<nsCSSValue*>(aSpecifiedValue)->
+          SetColorValue(aComputedValue.GetColorValue());
+      }
+      break;
+    default:
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+PRBool
+nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
+                                 nsPresContext* aPresContext,
+                                 const nsStyleCoord& aComputedValue,
                                  nsAString& aSpecifiedValue)
 {
   NS_ABORT_IF_FALSE(aPresContext, "null pres context");
   aSpecifiedValue.Truncate(); // Clear outparam, if it's not already empty
 
-  nsCSSValue value;
-  switch (aComputedValue.GetUnit()) {
-    case eStyleUnit_Coord: {
-      float pxVal = aPresContext->AppUnitsToFloatCSSPixels(
-                                    aComputedValue.GetCoordValue());
-      value.SetFloatValue(pxVal, eCSSUnit_Pixel);
+  nsCSSValuePair vp;
+  nsCSSRect rect;
+  void *ptr = nsnull;
+  void *storage;
+  switch (nsCSSProps::kTypeTable[aProperty]) {
+    case eCSSType_Value:
+      storage = &vp.mXValue;
       break;
-    }
-    case eStyleUnit_Percent:
-      value.SetPercentValue(aComputedValue.GetPercentValue());
+    case eCSSType_Rect:
+      storage = &rect;
       break;
-    case eStyleUnit_Color:
-      value.SetColorValue(aComputedValue.GetColorValue());
+    case eCSSType_ValuePair: 
+      storage = &vp;
+      break;
+    case eCSSType_ValueList:
+    case eCSSType_ValuePairList:
+      storage = &ptr;
       break;
     default:
-      return PR_FALSE;
+      NS_ABORT_IF_FALSE(PR_FALSE, "unexpected case");
+      storage = nsnull;
+      break;
   }
-  return nsCSSDeclaration::AppendCSSValueToString(aProperty, value,
-                                                  aSpecifiedValue);
+
+  nsCSSValue value;
+  if (!nsStyleAnimation::UncomputeValue(aProperty, aPresContext,
+                                        aComputedValue, storage)) {
+    return PR_FALSE;
+  }
+  return nsCSSDeclaration::AppendStorageToString(aProperty, storage,
+                                                 aSpecifiedValue);
 }
 
 inline const void*
@@ -484,6 +572,18 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
       aComputedValue.SetCoordValue(*static_cast<const nscoord*>(
         StyleDataAtOffset(styleStruct, ssOffset)));
       return PR_TRUE;
+    case eStyleAnimType_float:
+      aComputedValue.SetFactorValue(*static_cast<const float*>(
+        StyleDataAtOffset(styleStruct, ssOffset)));
+      if (aProperty == eCSSProperty_font_size_adjust &&
+          aComputedValue.GetFactorValue() == 0.0f) {
+        // In nsStyleFont, we set mFont.sizeAdjust to 0 to represent
+        // font-size-adjust: none.  Here, we have to treat this as a keyword
+        // instead of a float value, to make sure we don't end up doing
+        // interpolation with it.
+        aComputedValue.SetNoneValue();
+      }
+      return PR_TRUE;
     case eStyleAnimType_Color:
       aComputedValue.SetColorValue(*static_cast<const nscolor*>(
         StyleDataAtOffset(styleStruct, ssOffset)));
@@ -491,86 +591,16 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
     case eStyleAnimType_PaintServer: {
       const nsStyleSVGPaint &paint = *static_cast<const nsStyleSVGPaint*>(
         StyleDataAtOffset(styleStruct, ssOffset));
-      // We *could* animate 'none' by treating it as rgba(0, 0, 0, 0),
-      // but since SVG doesn't have (or really get along with) rgba()
-      // colors, I think we're not supposed to.
-      // FIXME: However, at some point in the future, we should animate
-      // gradients.
+      // FIXME: At some point in the future, we should animate gradients.
       if (paint.mType == eStyleSVGPaintType_Color) {
         aComputedValue.SetColorValue(paint.mPaint.mColor);
         return PR_TRUE;
       }
-      return PR_FALSE;
-    }
-    case eStyleAnimType_None:
-      NS_NOTREACHED("shouldn't use on non-animatable properties");
-  }
-  return PR_FALSE;
-}
-
-PRBool
-nsStyleAnimation::StoreComputedValue(nsCSSProperty aProperty,
-                                     nsPresContext* aPresContext,
-                                     void* aStyleStruct,
-                                     const nsStyleCoord& aComputedValue)
-{
-  NS_ABORT_IF_FALSE(0 <= aProperty &&
-                    aProperty < eCSSProperty_COUNT_no_shorthands,
-                    "bad property");
-  ptrdiff_t ssOffset = nsCSSProps::kStyleStructOffsetTable[aProperty];
-  NS_ABORT_IF_FALSE(0 <= ssOffset, "must be dealing with animatable property");
-  nsStyleAnimType animType = nsCSSProps::kAnimTypeTable[aProperty];
-  switch (animType) {
-    case eStyleAnimType_Coord:
-      *static_cast<nsStyleCoord*>(StyleDataAtOffset(aStyleStruct, ssOffset)) =
-        aComputedValue;
-      return PR_TRUE;
-    case eStyleAnimType_Sides_Top:
-    case eStyleAnimType_Sides_Right:
-    case eStyleAnimType_Sides_Bottom:
-    case eStyleAnimType_Sides_Left: {
-      PR_STATIC_ASSERT(0 == NS_SIDE_TOP);
-      PR_STATIC_ASSERT(eStyleAnimType_Sides_Right - eStyleAnimType_Sides_Top
-                         == NS_SIDE_RIGHT);
-      PR_STATIC_ASSERT(eStyleAnimType_Sides_Bottom - eStyleAnimType_Sides_Top
-                         == NS_SIDE_BOTTOM);
-      PR_STATIC_ASSERT(eStyleAnimType_Sides_Left - eStyleAnimType_Sides_Top
-                         == NS_SIDE_LEFT);
-      static_cast<nsStyleSides*>(StyleDataAtOffset(aStyleStruct, ssOffset))->
-          Set(animType - eStyleAnimType_Sides_Top, aComputedValue);
-
-       nsStyleStructID sid = nsCSSProps::kSIDTable[aProperty];
-       if (sid == eStyleStruct_Margin) {
-         static_cast<nsStyleMargin*>(aStyleStruct)->RecalcData();
-       } else if (sid == eStyleStruct_Padding) {
-         static_cast<nsStylePadding*>(aStyleStruct)->RecalcData();
-       }
-      return PR_TRUE;
-    }
-    case eStyleAnimType_nscoord:
-      *static_cast<nscoord*>(StyleDataAtOffset(aStyleStruct, ssOffset)) =
-        aComputedValue.GetCoordValue();
-      if (aProperty == eCSSProperty_font) {
-        nsStyleFont *font = static_cast<nsStyleFont*>(aStyleStruct);
-        if (!aPresContext->IsChrome()) {
-          nscoord minimumFontSize =
-            aPresContext->GetCachedIntPref(kPresContext_MinimumFontSize);
-          font->mFont.size = NS_MAX(font->mSize, minimumFontSize);
-        } else {
-          font->mFont.size = font->mSize;
-        }
+      if (paint.mType == eStyleSVGPaintType_None) {
+        aComputedValue.SetNoneValue();
+        return PR_TRUE;
       }
-      return PR_TRUE;
-    case eStyleAnimType_Color:
-      *static_cast<nscolor*>(StyleDataAtOffset(aStyleStruct, ssOffset)) =
-        aComputedValue.GetColorValue();
-      return PR_TRUE;
-    case eStyleAnimType_PaintServer: {
-      nsStyleSVGPaint &paint = *static_cast<nsStyleSVGPaint*>(
-        StyleDataAtOffset(aStyleStruct, ssOffset));
-      paint.mType = eStyleSVGPaintType_Color;
-      paint.mPaint.mColor = aComputedValue.GetColorValue();
-      return PR_TRUE;
+      return PR_FALSE;
     }
     case eStyleAnimType_None:
       NS_NOTREACHED("shouldn't use on non-animatable properties");

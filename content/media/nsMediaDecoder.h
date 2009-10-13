@@ -47,15 +47,9 @@
 #include "gfxRect.h"
 #include "nsITimer.h"
 
-#ifdef PR_LOGGING
-extern PRLogModuleInfo* gVideoDecoderLog;
-#define LOG(type, msg) PR_LOG(gVideoDecoderLog, type, msg)
-#else
-#define LOG(type, msg)
-#endif
-
 class nsHTMLMediaElement;
 class nsMediaStream;
+class nsIStreamListener;
 
 // All methods of nsMediaDecoder must be called from the main thread only
 // with the exception of SetRGBData and GetStatistics, which can be
@@ -71,9 +65,6 @@ public:
 
   // Create a new decoder of the same type as this one.
   virtual nsMediaDecoder* Clone() = 0;
-
-  // Initialize the logging object
-  static nsresult InitLogger();
 
   // Perform any initialization required for the decoder.
   // Return PR_TRUE on successful initialisation, PR_FALSE

@@ -288,7 +288,98 @@ MacOSFontEntry::GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer)
 
     return NS_OK;
 }
- 
+
+
+/* gfxMacFontFamily */
+#pragma mark-
+
+class gfxMacFontFamily : public gfxFontFamily
+{
+public:
+    gfxMacFontFamily(nsAString& aName) :
+        gfxFontFamily(aName)
+    {}
+
+    virtual ~gfxMacFontFamily() {}
+
+    virtual void LocalizedName(nsAString& aLocalizedName);
+};
+
+void
+gfxMacFontFamily::LocalizedName(nsAString& aLocalizedName)
+{
+    if (!HasOtherFamilyNames()) {
+        aLocalizedName = mName;
+        return;
+    }
+
+    NSString *family = GetNSStringForString(mName);
+    NSString *localized = [[NSFontManager sharedFontManager]
+                           localizedNameForFamily:family
+                                             face:nil];
+
+    if (localized) {
+        GetStringForNSString(localized, aLocalizedName);
+        return;
+    }
+
+    // failed to get localized name, just use the canonical one
+    aLocalizedName = mName;
+}
+
+
+/* gfxSingleFaceMacFontFamily */
+#pragma mark-
+
+class gfxSingleFaceMacFontFamily : public gfxFontFamily
+{
+public:
+    gfxSingleFaceMacFontFamily(nsAString& aName) :
+        gfxFontFamily(aName)
+    {}
+
+    virtual ~gfxSingleFaceMacFontFamily() {}
+
+    virtual void LocalizedName(nsAString& aLocalizedName);
+
+    virtual void ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFunctor);
+};
+
+void
+gfxSingleFaceMacFontFamily::LocalizedName(nsAString& aLocalizedName)
+{
+    if (!HasOtherFamilyNames()) {
+        aLocalizedName = mName;
+        return;
+    }
+
+    gfxFontEntry *fe = mAvailableFonts[0];
+    NSFont *font = [NSFont fontWithName:GetNSStringForString(fe->Name())
+                                   size:0.0];
+    if (font) {
+        NSString *localized = [font displayName];
+        if (localized) {
+            GetStringForNSString(localized, aLocalizedName);
+            return;
+        }
+    }
+
+    // failed to get localized name, just use the canonical one
+    aLocalizedName = mName;
+}
+
+void
+gfxSingleFaceMacFontFamily::ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFunctor)
+{
+    if (mOtherFamilyNamesInitialized) 
+        return;
+
+    mHasOtherFamilyNames = ReadOtherFamilyNamesForFace(aOtherFamilyFunctor,
+                                                       mAvailableFonts[0].get(),
+                                                       PR_TRUE);
+    mOtherFamilyNamesInitialized = PR_TRUE;
+}
+
 
 /* gfxMacPlatformFontList */
 #pragma mark-
@@ -344,7 +435,7 @@ gfxMacPlatformFontList::InitFontList()
         GetStringForNSString(availableFamily, availableFamilyName);
         
         // create a family entry
-        gfxFontFamily *familyEntry = new gfxFontFamily(availableFamilyName);
+        gfxFontFamily *familyEntry = new gfxMacFontFamily(availableFamilyName);
         if (!familyEntry) break;
         
         // create a font entry for each face
@@ -469,7 +560,7 @@ gfxMacPlatformFontList::InitSingleFaceList()
             PRBool found;
             gfxFontFamily *familyEntry;
             if (!(familyEntry = mFontFamilies.GetWeak(key, &found))) {
-                familyEntry = new gfxFontFamily(familyName);
+                familyEntry = new gfxSingleFaceMacFontFamily(familyName);
                 familyEntry->AddFontEntry(fontEntry);
                 familyEntry->SetHasStyles(PR_TRUE);
                 mFontFamilies.Put(key, familyEntry);
@@ -535,7 +626,7 @@ gfxMacPlatformFontList::GetStandardFamilyName(const nsAString& aFontName, nsAStr
 {
     gfxFontFamily *family = FindFamily(aFontName);
     if (family) {
-        GetLocalizedFamilyName(family, aFamilyName);
+        family->LocalizedName(aFamilyName);
         return PR_TRUE;
     }
 
@@ -569,34 +660,11 @@ gfxMacPlatformFontList::GetStandardFamilyName(const nsAString& aFontName, nsAStr
 
     family = FindFamily(familyName);
     if (family) {
-        GetLocalizedFamilyName(family, aFamilyName);
+        family->LocalizedName(aFamilyName);
         return PR_TRUE;
     }
 
     return PR_FALSE;
-}
-
-void
-gfxMacPlatformFontList::GetLocalizedFamilyName(gfxFontFamily *aFamily,
-                                           nsAString& aLocalizedName)
-{
-    if (!aFamily->HasOtherFamilyNames()) {
-        aLocalizedName = aFamily->Name();
-        return;
-    }
-
-    NSFontManager *fontManager = [NSFontManager sharedFontManager];
-
-    // dig out the localized family name
-    NSString *familyName = GetNSStringForString(aFamily->Name());
-    NSString *localizedFamily = [fontManager localizedNameForFamily:familyName face:nil];
-
-    if (localizedFamily) {
-        GetStringForNSString(localizedFamily, aLocalizedName);
-    } else {
-        // failed to get a localized name, just use the canonical name
-        aLocalizedName = aFamily->Name();
-    }
 }
 
 void

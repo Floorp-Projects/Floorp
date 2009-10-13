@@ -1,0 +1,140 @@
+/* vim: se cin sw=2 ts=2 et : */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Rob Arnold <tellrob@gmail.com>
+ *   Siddharth Agarwal <sid.bugzilla@gmail.com>
+ *   Jim Mathies <jmathies@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIBaseWindow.idl"
+
+interface nsIDocShell;
+interface nsITaskbarTabPreview;
+interface nsITaskbarWindowPreview;
+interface nsITaskbarPreviewController;
+interface nsITaskbarProgress;
+interface nsIJumpListBuilder;
+
+/*
+ * nsIWinTaskbar
+ *
+ * This interface represents a service which exposes the APIs provided by the
+ * Windows taskbar to applications.
+ *
+ * Starting in Windows 7, applications gain some control over their appearance
+ * in the taskbar. By default, there is one taskbar preview per top level
+ * window (excluding popups). This preview is represented by an
+ * nsITaskbarWindowPreview object.
+ *
+ * An application can register its own "tab" previews. Such previews will hide
+ * the corresponding nsITaskbarWindowPreview automatically (though this is not
+ * reflected in the visible attribute of the nsITaskbarWindowPreview). These
+ * tab previews do not have to correspond to tabs in the application - they can
+ * vary in size, shape and location. They do not even need to be actual GUI
+ * elements on the window. Unlike window previews, tab previews require most of
+ * the functionality of the nsITaskbarPreviewController to be implemented.
+ *
+ * Applications can also show progress on their taskbar icon. This does not
+ * interact with the taskbar previews except if the nsITaskbarWindowPreview is
+ * made invisible in which case the progress is naturally not shown on that
+ * window.
+ *
+ * When taskbar icons are combined as is the default in Windows 7, the progress
+ * for those windows is also combined as defined here:
+ * http://msdn.microsoft.com/en-us/library/dd391697%28VS.85%29.aspx
+ *
+ * Applications may also define custom taskbar jump lists on application shortcuts.
+ * See nsIJumpListBuilder for more information.
+ */
+
+[scriptable, uuid(4BC6D594-8FF0-4975-8642-3A5BC1928E81)]
+interface nsIWinTaskbar : nsISupports
+{
+  /**
+   * Returns true if the taskbar service is available. This value does not
+   * change during runtime.
+   */
+  readonly attribute boolean available;
+
+  /**
+   * Taskbar window and tab preview management
+   */
+
+  /**
+   * Creates a taskbar preview. The docshell is used to find the toplevel window.
+   * See the documentation for nsITaskbarTabPreview for more information.
+   */
+  nsITaskbarTabPreview createTaskbarTabPreview(in nsIDocShell shell,
+                                               in nsITaskbarPreviewController controller);
+
+  /**
+   * Gets the taskbar preview for a window. The docshell is used to find the
+   * toplevel window. See the documentation for nsITaskbarTabPreview for more
+   * information.
+   *
+   * Note: to implement custom drawing or buttons, a controller is required.
+   */
+  nsITaskbarWindowPreview getTaskbarWindowPreview(in nsIDocShell shell);
+
+  /**
+   * Taskbar icon progress indicator
+   */
+
+  /**
+   * Gets the taskbar progress for a window. The docshell is used to find the
+   * toplevel window. See the documentation for nsITaskbarProgress for more
+   * information.
+   */
+  nsITaskbarProgress getTaskbarProgress(in nsIDocShell shell);
+
+  /**
+   * Taskbar and start menu jump list management
+   */
+
+  /**
+   * Retrieve a taskbar jump list builder
+   *
+   * Fails if a jump list build operation has already been initiated, developers
+   * should make use of a single instance of nsIJumpListBuilder for building lists
+   * within an application.
+   *
+   * @thow NS_ERROR_ALREADY_INITIALIZED if an nsIJumpListBuilder instance is
+   * currently building a list.
+   */
+  nsIJumpListBuilder createJumpListBuilder();
+};

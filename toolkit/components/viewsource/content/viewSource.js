@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Doron Rosenberg (doronr@naboonline.com)
 #   Neil Rashbrook (neil@parkwaycc.co.uk)
+#   Dão Gottwald (dao@design-noir.de)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,16 +40,36 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-const Cr = Components.results;
-const pageLoaderIface = Components.interfaces.nsIWebPageDescriptor;
-const nsISelectionPrivate = Components.interfaces.nsISelectionPrivate;
-const nsISelectionController = Components.interfaces.nsISelectionController;
-var gBrowser = null;
-var gViewSourceBundle = null;
 var gPrefs = null;
 
 var gLastLineFound = '';
 var gGoToLine = 0;
+
+[
+  ["gBrowser",          "content"],
+  ["gViewSourceBundle", "viewSourceBundle"]
+].forEach(function ([name, id]) {
+  window.__defineGetter__(name, function () {
+    var element = document.getElementById(id);
+    if (!element)
+      return null;
+    delete window[name];
+    return window[name] = element;
+  });
+});
+
+// viewZoomOverlay.js uses this
+function getBrowser() {
+  return gBrowser;
+}
+
+__defineGetter__("gPageLoader", function () {
+  var webnav = getWebNavigation();
+  if (!webnav)
+    return null;
+  delete this.gPageLoader;
+  return this.gPageLoader = webnav.QueryInterface(Ci.nsIWebPageDescriptor);
+});
 
 try {
   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
@@ -68,45 +89,12 @@ var gSelectionListener = {
   }
 }
 
-var gViewSourceProgressListener = {
-
-  QueryInterface: function (aIID) {
-    if (aIID.equals(Ci.nsIWebProgressListener) ||
-        aIID.equals(Ci.nsISupportsWeakReference))
-      return this;
-    throw Cr.NS_NOINTERFACE;
-  },
-
-  onStateChange: function (aWebProgress, aRequest, aStateFlags, aStatus) {
-  },
-
-  onProgressChange: function (aWebProgress, aRequest,
-                              aCurSelfProgress, aMaxSelfProgress,
-                              aCurTotalProgress, aMaxTotalProgress) {
-  },
-
-  onLocationChange: function (aWebProgress, aRequest, aLocationURI) {
-    UpdateBackForwardCommands(getBrowser().webNavigation);
-  },
-
-  onStatusChange: function (aWebProgress, aRequest, aStatus, aMessage) {
-  },
-
-  onSecurityChange: function (aWebProgress, aRequest, aState) {
-  }
-
-}
-
 function onLoadViewSource() 
 {
   viewSource(window.arguments[0]);
   document.commandDispatcher.focusedWindow = content;
       
-  if (isHistoryEnabled()) {
-    // Attach the progress listener.
-    getBrowser().addProgressListener(gViewSourceProgressListener, 
-        Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-  } else {
+  if (!isHistoryEnabled()) {
     // Disable the BACK and FORWARD commands and hide the related menu items.
     var viewSourceNavigation = document.getElementById("viewSourceNavigation");
     viewSourceNavigation.setAttribute("disabled", "true");
@@ -114,65 +102,40 @@ function onLoadViewSource()
   }
 }
 
-function onUnloadViewSource() 
-{
-  // Detach the progress listener.
-  if (isHistoryEnabled()) {
-    getBrowser().removeProgressListener(gViewSourceProgressListener);
-  }
-}
-
 function isHistoryEnabled() {
-  return !getBrowser().hasAttribute("disablehistory");
+  return !gBrowser.hasAttribute("disablehistory");
 }
 
-function getBrowser()
-{
-  if (!gBrowser)
-    gBrowser = document.getElementById("content");
-  return gBrowser;
-}
-
-function getSelectionController()
-{
-  return getBrowser().docShell
-    .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-    .getInterface(Components.interfaces.nsISelectionDisplay)
-    .QueryInterface(nsISelectionController);
-
-}
-
-function getViewSourceBundle()
-{
-  if (!gViewSourceBundle)
-    gViewSourceBundle = document.getElementById("viewSourceBundle");
-  return gViewSourceBundle;
+function getSelectionController() {
+  return gBrowser.docShell
+                 .QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsISelectionDisplay)
+                 .QueryInterface(Ci.nsISelectionController);
 }
 
 function viewSource(url)
 {
   if (!url)
-    return false; // throw Components.results.NS_ERROR_FAILURE;
+    return; // throw Components.results.NS_ERROR_FAILURE;
     
   var viewSrcUrl = "view-source:" + url;
 
-  getBrowser().addEventListener("unload", onUnloadContent, true);
-  getBrowser().addEventListener("load", onLoadContent, true);
+  gBrowser.addEventListener("pagehide", onUnloadContent, true);
+  gBrowser.addEventListener("pageshow", onLoadContent, true);
 
   var loadFromURL = true;
-  //
+
   // Parse the 'arguments' supplied with the dialog.
   //    arg[0] - URL string.
   //    arg[1] - Charset value in the form 'charset=xxx'.
   //    arg[2] - Page descriptor used to load content from the cache.
   //    arg[3] - Line number to go to.
   //    arg[4] - Whether charset was forced by the user
-  //
+
   if ("arguments" in window) {
     var arg;
-    //
+
     // Set the charset of the viewsource window...
-    //
     var charset;
     if (window.arguments.length >= 2) {
       arg = window.arguments[1];
@@ -196,38 +159,31 @@ function viewSource(url)
 
       try {
         if (arg === true) {
-          var docCharset = getBrowser().docShell.QueryInterface
-                             (Components.interfaces.nsIDocCharset);
+          var docCharset = gBrowser.docShell.QueryInterface(Ci.nsIDocCharset);
           docCharset.charset = charset;
         }
       } catch (ex) {
         // Ignore the failure and keep processing arguments...
       }
     }
-    //
+
     // Get any specified line to jump to.
-    //
     if (window.arguments.length >= 4) {
       arg = window.arguments[3];
       gGoToLine = parseInt(arg);
     }
-    //
+
     // Use the page descriptor to load the content from the cache (if
     // available).
-    //
     if (window.arguments.length >= 3) {
       arg = window.arguments[2];
 
       try {
         if (typeof(arg) == "object" && arg != null) {
-          var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
-
-          //
           // Load the page using the page descriptor rather than the URL.
           // This allows the content to be fetched from the cache (if
           // possible) rather than the network...
-          //
-          PageLoader.loadPage(arg, pageLoaderIface.DISPLAY_AS_SOURCE);
+          gPageLoader.loadPage(arg, gPageLoader.DISPLAY_AS_SOURCE);
 
           // The content was successfully loaded.
           loadFromURL = false;
@@ -239,9 +195,9 @@ function viewSource(url)
           shEntry.setTitle(viewSrcUrl);
           shEntry.loadType = Ci.nsIDocShellLoadInfo.loadHistory;
           shEntry.cacheKey = shEntrySource.cacheKey;
-          getBrowser().webNavigation.sessionHistory
-                      .QueryInterface(Ci.nsISHistoryInternal)
-                      .addEntry(shEntry, true);
+          gBrowser.sessionHistory
+                  .QueryInterface(Ci.nsISHistoryInternal)
+                  .addEntry(shEntry, true);
         }
       } catch(ex) {
         // Ignore the failure.  The content will be loaded via the URL
@@ -251,24 +207,24 @@ function viewSource(url)
   }
 
   if (loadFromURL) {
-    //
     // Currently, an exception is thrown if the URL load fails...
-    //
-    var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
-    getBrowser().webNavigation.loadURI(viewSrcUrl, loadFlags, null, null, null);
+    var loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    getWebNavigation().loadURI(viewSrcUrl, loadFlags, null, null, null);
   }
 
-  //check the view_source.wrap_long_lines pref and set the menuitem's checked attribute accordingly
+  // Check the view_source.wrap_long_lines pref and set the menuitem's checked
+  // attribute accordingly.
   if (gPrefs) {
     try {
       var wraplonglinesPrefValue = gPrefs.getBoolPref("view_source.wrap_long_lines");
 
       if (wraplonglinesPrefValue)
-        document.getElementById('menu_wrapLongLines').setAttribute("checked", "true");
+        document.getElementById("menu_wrapLongLines").setAttribute("checked", "true");
     } catch (ex) {
     }
     try {
-      document.getElementById("menu_highlightSyntax").setAttribute("checked", gPrefs.getBoolPref("view_source.syntax_highlight"));
+      document.getElementById("menu_highlightSyntax").setAttribute("checked",
+        gPrefs.getBoolPref("view_source.syntax_highlight"));
     } catch (ex) {
     }
   } else {
@@ -277,15 +233,11 @@ function viewSource(url)
 
   window.addEventListener("AppCommand", HandleAppCommandEvent, true);
   window.content.focus();
-
-  return true;
 }
 
 function onLoadContent()
 {
-  //
   // If the view source was opened with a "go to line" argument.
-  //
   if (gGoToLine > 0) {
     goToLine(gGoToLine);
     gGoToLine = 0;
@@ -294,24 +246,25 @@ function onLoadContent()
 
   // Register a listener so that we can show the caret position on the status bar.
   window.content.getSelection()
-   .QueryInterface(nsISelectionPrivate)
+   .QueryInterface(Ci.nsISelectionPrivate)
    .addSelectionListener(gSelectionListener);
   gSelectionListener.attached = true;
+
+  if (isHistoryEnabled())
+    UpdateBackForwardCommands();
 }
 
 function onUnloadContent()
 {
-  //
   // Disable "go to line" while reloading due to e.g. change of charset
   // or toggling of syntax highlighting.
-  //
   document.getElementById('cmd_goToLine').setAttribute('disabled', 'true');
 
   // If we're not just unloading the initial "about:blank" which doesn't have
   // a selection listener, get rid of it so it doesn't try to fire after the
   // window has gone away.
   if (gSelectionListener.attached) {
-    window.content.getSelection().QueryInterface(nsISelectionPrivate)
+    window.content.getSelection().QueryInterface(Ci.nsISelectionPrivate)
           .removeSelectionListener(gSelectionListener);
     gSelectionListener.attached = false;
   }
@@ -337,8 +290,8 @@ function ViewSourceClose()
 
 function ViewSourceReload()
 {
-  const webNavigation = getBrowser().webNavigation;
-  webNavigation.reload(webNavigation.LOAD_FLAGS_BYPASS_PROXY | webNavigation.LOAD_FLAGS_BYPASS_CACHE);
+  gBrowser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY |
+                           Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);
 }
 
 // Strips the |view-source:| for editPage()
@@ -365,11 +318,11 @@ function onExitPP()
   toolbox.hidden = false;
 }
 
-function getPPBrowser()
-{
-  return document.getElementById("content");
+function getPPBrowser() {
+  return gBrowser;
 }
 
+// printUtils.js uses this
 function getNavToolbox()
 {
   return document.getElementById("appcontent");
@@ -386,41 +339,40 @@ function getWebNavigation()
 
 function ViewSourceGoToLine()
 {
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-        .getService(Components.interfaces.nsIPromptService);
-  var viewSourceBundle = getViewSourceBundle();
+  var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
+                        .getService(Ci.nsIPromptService);
 
   var input = {value:gLastLineFound};
   for (;;) {
     var ok = promptService.prompt(
         window,
-        viewSourceBundle.getString("goToLineTitle"),
-        viewSourceBundle.getString("goToLineText"),
+        gViewSourceBundle.getString("goToLineTitle"),
+        gViewSourceBundle.getString("goToLineText"),
         input,
         null,
         {value:0});
 
-    if (!ok) return;
+    if (!ok)
+      return;
 
     var line = parseInt(input.value, 10);
- 
+
     if (!(line > 0)) {
       promptService.alert(window,
-          viewSourceBundle.getString("invalidInputTitle"),
-          viewSourceBundle.getString("invalidInputText"));
-  
+                          gViewSourceBundle.getString("invalidInputTitle"),
+                          gViewSourceBundle.getString("invalidInputText"));
+
       continue;
     }
 
     var found = goToLine(line);
 
-    if (found) {
+    if (found)
       break;
-    }
 
     promptService.alert(window,
-        viewSourceBundle.getString("outOfRangeTitle"),
-        viewSourceBundle.getString("outOfRangeText"));
+                        gViewSourceBundle.getString("outOfRangeTitle"),
+                        gViewSourceBundle.getString("outOfRangeText"));
   }
 }
 
@@ -428,12 +380,11 @@ function goToLine(line)
 {
   var viewsource = window.content.document.body;
 
-  //
   // The source document is made up of a number of pre elements with
   // id attributes in the format <pre id="line123">, meaning that
   // the first line in the pre element is number 123.
   // Do binary search to find the pre element containing the line.
-  //
+
   var pre;
   for (var lbound = 0, ubound = viewsource.childNodes.length; ; ) {
     var middle = (lbound + ubound) >> 1;
@@ -466,7 +417,7 @@ function goToLine(line)
   // Tune the selection at the beginning of the next line and do some tweaking
   // to position the focusNode and the caret at the beginning of the line.
 
-  selection.QueryInterface(nsISelectionPrivate)
+  selection.QueryInterface(Ci.nsISelectionPrivate)
     .interlinePosition = true;
 
   selection.addRange(result.range);
@@ -491,19 +442,19 @@ function goToLine(line)
   }
 
   var selCon = getSelectionController();
-  selCon.setDisplaySelection(nsISelectionController.SELECTION_ON);
+  selCon.setDisplaySelection(Ci.nsISelectionController.SELECTION_ON);
   selCon.setCaretVisibilityDuringSelection(true);
 
   // Scroll the beginning of the line into view.
   selCon.scrollSelectionIntoView(
-    nsISelectionController.SELECTION_NORMAL,
-    nsISelectionController.SELECTION_FOCUS_REGION,
+    Ci.nsISelectionController.SELECTION_NORMAL,
+    Ci.nsISelectionController.SELECTION_FOCUS_REGION,
     true);
 
   gLastLineFound = line;
 
   document.getElementById("statusbar-line-col").label =
-    getViewSourceBundle().getFormattedString("statusBarLineCol", [line, 1]);
+    gViewSourceBundle.getFormattedString("statusBarLineCol", [line, 1]);
 
   return true;
 }
@@ -525,21 +476,20 @@ function updateStatusBar()
   }
 
   var selCon = getSelectionController();
-  selCon.setDisplaySelection(nsISelectionController.SELECTION_ON);
+  selCon.setDisplaySelection(Ci.nsISelectionController.SELECTION_ON);
   selCon.setCaretVisibilityDuringSelection(true);
 
-  var interlinePosition = selection
-      .QueryInterface(nsISelectionPrivate).interlinePosition;
+  var interlinePosition = selection.QueryInterface(Ci.nsISelectionPrivate)
+                                   .interlinePosition;
 
   var result = {};
   findLocation(null, -1, 
       selection.focusNode, selection.focusOffset, interlinePosition, result);
 
-  statusBarField.label = getViewSourceBundle()
-      .getFormattedString("statusBarLineCol", [result.line, result.col]);
+  statusBarField.label = gViewSourceBundle.getFormattedString(
+                           "statusBarLineCol", [result.line, result.col]);
 }
 
-//
 // Loops through the text lines in the pre element. The arguments are either
 // (pre, line) or (node, offset, interlinePosition). result is an out
 // argument. If (pre, line) are specified (and node == null), result.range is
@@ -547,34 +497,25 @@ function updateStatusBar()
 // interlinePosition) are specified, result.line and result.col are the line
 // and column number of the specified offset in the specified node relative to
 // the whole file.
-//
 function findLocation(pre, line, node, offset, interlinePosition, result)
 {
   if (node && !pre) {
-    //
     // Look upwards to find the current pre element.
-    //
     for (pre = node;
          pre.nodeName != "PRE";
          pre = pre.parentNode);
   }
 
-  //
   // The source document is made up of a number of pre elements with
   // id attributes in the format <pre id="line123">, meaning that
   // the first line in the pre element is number 123.
-  //
   var curLine = parseInt(pre.id.substring(4));
 
-  //
   // Walk through each of the text nodes and count newlines.
-  //
   var treewalker = window.content.document
       .createTreeWalker(pre, NodeFilter.SHOW_TEXT, null, false);
 
-  //
   // The column number of the first character in the current text node.
-  //
   var firstCol = 1;
 
   var found = false;
@@ -582,15 +523,11 @@ function findLocation(pre, line, node, offset, interlinePosition, result)
        textNode && !found;
        textNode = treewalker.nextNode()) {
 
-    //
     // \r is not a valid character in the DOM, so we only check for \n.
-    //
     var lineArray = textNode.data.split(/\n/);
     var lastLineInNode = curLine + lineArray.length - 1;
 
-    //
     // Check if we can skip the text node without further inspection.
-    //
     if (node ? (textNode != node) : (lastLineInNode < line)) {
       if (lineArray.length > 1) {
         firstCol = 1;
@@ -600,10 +537,8 @@ function findLocation(pre, line, node, offset, interlinePosition, result)
       continue;
     }
 
-    //
     // curPos is the offset within the current text node of the first
     // character in the current line.
-    //
     for (var i = 0, curPos = 0;
          i < lineArray.length;
          curPos += lineArray[i++].length + 1) {
@@ -614,16 +549,14 @@ function findLocation(pre, line, node, offset, interlinePosition, result)
 
       if (node) {
         if (offset >= curPos && offset <= curPos + lineArray[i].length) {
-          //
           // If we are right after the \n of a line and interlinePosition is
           // false, the caret looks as if it were at the end of the previous
           // line, so we display that line and column instead.
-          //
+
           if (i > 0 && offset == curPos && !interlinePosition) {
             result.line = curLine - 1;
             var prevPos = curPos - lineArray[i - 1].length;
             result.col = (i == 1 ? firstCol : 1) + offset - prevPos;
-
           } else {
             result.line = curLine;
             result.col = (i == 0 ? firstCol : 1) + offset - curPos;
@@ -638,11 +571,9 @@ function findLocation(pre, line, node, offset, interlinePosition, result)
           result.range = document.createRange();
           result.range.setStart(textNode, curPos);
 
-          //
           // This will always be overridden later, except when we look for
           // the very last line in the file (this is the only line that does
           // not end with \n).
-          //
           result.range.setEndAfter(pre.lastChild);
 
         } else if (curLine == line + 1) {
@@ -657,8 +588,8 @@ function findLocation(pre, line, node, offset, interlinePosition, result)
   return found || ("range" in result);
 }
 
-//function to toggle long-line wrapping and set the view_source.wrap_long_lines 
-//pref to persist the last state
+// Toggle long-line wrapping and sets the view_source.wrap_long_lines
+// pref to persist the last state.
 function wrapLongLines()
 {
   var myWrap = window.content.document.body;
@@ -667,10 +598,10 @@ function wrapLongLines()
     myWrap.className = 'wrap';
   else myWrap.className = '';
 
-  //since multiple viewsource windows are possible, another window could have 
-  //affected the pref, so instead of determining the new pref value via the current
-  //pref value, we use myWrap.className  
-  if (gPrefs){
+  // Since multiple viewsource windows are possible, another window could have
+  // affected the pref, so instead of determining the new pref value via the current
+  // pref value, we use myWrap.className.
+  if (gPrefs) {
     try {
       if (myWrap.className == '') {
         gPrefs.setBoolPref("view_source.wrap_long_lines", false);
@@ -683,31 +614,28 @@ function wrapLongLines()
   }
 }
 
-//function to toggle syntax highlighting and set the view_source.syntax_highlight
-//pref to persist the last state
+// Toggles syntax highlighting and sets the view_source.syntax_highlight
+// pref to persist the last state.
 function highlightSyntax()
 {
   var highlightSyntaxMenu = document.getElementById("menu_highlightSyntax");
   var highlightSyntax = (highlightSyntaxMenu.getAttribute("checked") == "true");
   gPrefs.setBoolPref("view_source.syntax_highlight", highlightSyntax);
 
-  var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
-  PageLoader.loadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
+  gPageLoader.loadPage(gPageLoader.currentDescriptor, gPageLoader.DISPLAY_NORMAL);
 }
 
 // Fix for bug 136322: this function overrides the function in
 // browser.js to call PageLoader.loadPage() instead of BrowserReloadWithFlags()
 function BrowserSetForcedCharacterSet(aCharset)
 {
-  var docCharset = getBrowser().docShell.QueryInterface(Ci.nsIDocCharset);
+  var docCharset = gBrowser.docShell.QueryInterface(Ci.nsIDocCharset);
   docCharset.charset = aCharset;
   if (isHistoryEnabled()) {
-    var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
-    PageLoader.loadPage(PageLoader.currentDescriptor,
-                        pageLoaderIface.DISPLAY_NORMAL);
+    gPageLoader.loadPage(gPageLoader.currentDescriptor,
+                         gPageLoader.DISPLAY_NORMAL);
   } else {
-    getBrowser().webNavigation
-                .reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+    gBrowser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
   }
 }
 
@@ -718,24 +646,21 @@ function BrowserSetForcedCharacterSet(aCharset)
 // instead of BrowserReloadWithFlags()
 function BrowserSetForcedDetector(doReload)
 {
-  getBrowser().documentCharsetInfo.forcedDetector = true; 
+  gBrowser.documentCharsetInfo.forcedDetector = true; 
   if (doReload)
   {
     if (isHistoryEnabled()) {
-      var PageLoader = getBrowser().webNavigation
-                                   .QueryInterface(pageLoaderIface);
-      PageLoader.loadPage(PageLoader.currentDescriptor,
-                          pageLoaderIface.DISPLAY_NORMAL);
+      gPageLoader.loadPage(gPageLoader.currentDescriptor,
+                           gPageLoader.DISPLAY_NORMAL);
     } else {
-      getBrowser().webNavigation
-                  .reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+      gBrowser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
     }
   }
 }
 
 function BrowserForward(aEvent) {
   try {
-    getBrowser().goForward();
+    gBrowser.goForward();
   }
   catch(ex) {
   }
@@ -743,30 +668,23 @@ function BrowserForward(aEvent) {
 
 function BrowserBack(aEvent) {
   try {
-    getBrowser().goBack();
+    gBrowser.goBack();
   }
   catch(ex) {
   }
 }
 
-function UpdateBackForwardCommands(aWebNavigation) {
+function UpdateBackForwardCommands() {
   var backBroadcaster = document.getElementById("Browser:Back");
   var forwardBroadcaster = document.getElementById("Browser:Forward");
 
-  var backDisabled = backBroadcaster.hasAttribute("disabled");
-  var forwardDisabled = forwardBroadcaster.hasAttribute("disabled");
+  if (getWebNavigation().canGoBack)
+    backBroadcaster.removeAttribute("disabled");
+  else
+    backBroadcaster.setAttribute("disabled", "true");
 
-  if (backDisabled == aWebNavigation.canGoBack) {
-    if (backDisabled)
-      backBroadcaster.removeAttribute("disabled");
-    else
-      backBroadcaster.setAttribute("disabled", true);
-  }
-
-  if (forwardDisabled == aWebNavigation.canGoForward) {
-    if (forwardDisabled)
-      forwardBroadcaster.removeAttribute("disabled");
-    else
-      forwardBroadcaster.setAttribute("disabled", true);
-  }
+  if (getWebNavigation().canGoForward)
+    forwardBroadcaster.removeAttribute("disabled");
+  else
+    forwardBroadcaster.setAttribute("disabled", "true");
 }

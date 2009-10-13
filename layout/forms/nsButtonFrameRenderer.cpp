@@ -103,8 +103,8 @@ public:
   }
 #endif  
   
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   NS_DISPLAY_DECL_NAME("ButtonBoxShadowOuter")
 private:
@@ -118,15 +118,14 @@ nsDisplayButtonBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder) {
 
 void
 nsDisplayButtonBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
-                                     nsIRenderingContext* aCtx,
-                                     const nsRect& aDirtyRect) {
+                                     nsIRenderingContext* aCtx) {
   nsRect frameRect = nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
 
   nsRect buttonRect;
   mBFR->GetButtonRect(frameRect, buttonRect);
 
   nsCSSRendering::PaintBoxShadowOuter(mFrame->PresContext(), *aCtx, mFrame,
-                                      buttonRect, aDirtyRect);
+                                      buttonRect, mVisibleRect);
 }
 
 class nsDisplayButtonBorderBackground : public nsDisplayItem {
@@ -145,8 +144,8 @@ public:
                             HitTestState* aState) {
     return mFrame;
   }
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("ButtonBorderBackground")
 private:
   nsButtonFrameRenderer* mBFR;
@@ -164,29 +163,27 @@ public:
   }
 #endif  
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("ButtonForeground")
 private:
   nsButtonFrameRenderer* mBFR;
 };
 
 void nsDisplayButtonBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
-                                            nsIRenderingContext* aCtx,
-                                            const nsRect& aDirtyRect)
+                                            nsIRenderingContext* aCtx)
 {
   NS_ASSERTION(mFrame, "No frame?");
   nsPresContext* pc = mFrame->PresContext();
   nsRect r = nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
   
   // draw the border and background inside the focus and outline borders
-  mBFR->PaintBorderAndBackground(pc, *aCtx, aDirtyRect, r,
+  mBFR->PaintBorderAndBackground(pc, *aCtx, mVisibleRect, r,
                                  aBuilder->GetBackgroundPaintFlags());
 }
 
 void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
-                                      nsIRenderingContext* aCtx,
-                                      const nsRect& aDirtyRect)
+                                      nsIRenderingContext* aCtx)
 {
   nsPresContext *presContext = mFrame->PresContext();
   const nsStyleDisplay *disp = mFrame->GetStyleDisplay();
@@ -194,7 +191,7 @@ void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
       !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, mFrame, disp->mAppearance)) {
     // draw the focus and outline borders
     nsRect r = nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
-    mBFR->PaintOutlineAndFocusBorders(presContext, *aCtx, aDirtyRect, r);
+    mBFR->PaintOutlineAndFocusBorders(presContext, *aCtx, mVisibleRect, r);
   }
 }
 

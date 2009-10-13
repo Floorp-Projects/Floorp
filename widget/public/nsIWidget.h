@@ -102,8 +102,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x155c4b, 0x78da, 0x4607, \
-    { 0x92, 0x87, 0xd6, 0xcf, 0x32, 0xcd, 0x42, 0xb5 } }
+{ 0x6bdb96ba, 0x1727, 0x40ae, \
+  { 0x85, 0x55, 0x9c, 0x53, 0x4b, 0x95, 0x23, 0x98 } }
 
 /*
  * Window shadow styles
@@ -706,14 +706,6 @@ class nsIWidget : public nsISupports {
     virtual nsIDeviceContext* GetDeviceContext() = 0;
 
     //@}
-
-    /**
-     * Set border style
-     * Must be called before Create.
-     * @param aBorderStyle @see nsBorderStyle
-     */
-
-    NS_IMETHOD SetBorderStyle(nsBorderStyle aBorderStyle) = 0;
 
     /**
      * Set the widget's title.

@@ -72,16 +72,10 @@ if __name__ == '__main__':
     t.start()
 
     automation.initializeProfile(PROFILE_DIRECTORY)
-    browserEnv = dict(os.environ)
+    browserEnv = automation.environment()
 
-    browserEnv["NO_EM_RESTART"] = "1"
     if not "XPCOM_DEBUG_BREAK" in browserEnv:
         browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
-    if automation.UNIXISH:
-        browserEnv["LD_LIBRARY_PATH"] = os.path.join(SCRIPT_DIR, DIST_BIN)
-        browserEnv["MOZILLA_FIVE_HOME"] = os.path.join(SCRIPT_DIR, DIST_BIN)
-        browserEnv["GNOME_DISABLE_CRASH_DIALOG"] = "1"
-
     url = "http://localhost:%d/bloatcycle.html" % PORT
     appPath = os.path.join(SCRIPT_DIR, automation.DEFAULT_APP)
     status = automation.runApp(url, browserEnv, appPath, PROFILE_DIRECTORY,

@@ -704,6 +704,7 @@ public:
         IDX_PROTO                   ,
         IDX_ITERATOR                ,
         IDX_PARENT                  ,
+        IDX_EXPOSEDPROPS            ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
@@ -4297,6 +4298,9 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 
 inline JSBool
 xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsval idval);
+
+inline jsid
+GetRTIdByIndex(JSContext *cx, uintN index);
 
 inline jsval
 GetRTStringByIndex(JSContext *cx, uintN index);

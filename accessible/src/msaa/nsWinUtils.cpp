@@ -51,10 +51,16 @@ nsWinUtils::ConvertToIA2Array(nsIArray *aGeckoArray, IUnknown ***aIA2Array,
   *aIA2Array = NULL;
   *aIA2ArrayLen = 0;
 
+  if (!aGeckoArray)
+    return S_FALSE;
+
   PRUint32 length = 0;
   nsresult rv = aGeckoArray->GetLength(&length);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
+
+  if (length == 0)
+    return S_FALSE;
 
   *aIA2Array =
     static_cast<IUnknown**>(nsMemory::Alloc((length) * sizeof(IUnknown*)));

@@ -64,4 +64,3 @@ if (pip.DBConnection.connectionReady) {
   pip.DBConnection.close();
   do_check_false(pip.DBConnection.connectionReady);
 }
-

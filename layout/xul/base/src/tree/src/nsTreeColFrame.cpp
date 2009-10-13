@@ -130,7 +130,7 @@ nsDisplayXULTreeColSplitterTarget::HitTest(nsDisplayListBuilder* aBuilder,
     const nsFrameList& frames(mFrame->GetParent()->GetChildList(nsnull));
     nsIFrame* child;
     if (left)
-      child = frames.GetPrevSiblingFor(mFrame);
+      child = mFrame->GetPrevSibling();
     else
       child = mFrame->GetNextSibling();
 

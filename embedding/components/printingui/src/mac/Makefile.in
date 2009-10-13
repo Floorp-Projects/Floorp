@@ -47,9 +47,6 @@ LIBRARY_NAME	= printingui_s
 LIBXUL_LIBRARY	= 1
 
 
-ifndef MOZ_COCOA_PRINTING
-DIRS      = printpde
-endif
 
 CMMSRCS = nsPrintingPromptServiceX.mm
 
@@ -58,9 +55,8 @@ CPPSRCS		= \
       nsPrintProgress.cpp \
       $(NULL)
 
-ifndef MOZ_COCOA_PRINTING
-LOCAL_INCLUDES	= -I$(srcdir)/printpde/public
-endif
+LOCAL_INCLUDES	= \
+		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

@@ -148,10 +148,12 @@ static void check_profile_version(struct mem_source *src)
 	uint8_t minor_revision = read_u8(src, 8 + 1);
 	uint8_t reserved1      = read_u8(src, 8 + 2);
 	uint8_t reserved2      = read_u8(src, 8 + 3);
-	if (major_revision > 0x2)
-		invalid_source(src, "Unsupported major revision");
-	if (minor_revision > 0x40)
-		invalid_source(src, "Unsupported minor revision");
+	if (major_revision != 0x4) {
+		if (major_revision > 0x2)
+			invalid_source(src, "Unsupported major revision");
+		if (minor_revision > 0x40)
+			invalid_source(src, "Unsupported minor revision");
+	}
 	if (reserved1 != 0 || reserved2 != 0)
 		invalid_source(src, "Invalid reserved bytes");
 }

@@ -77,6 +77,7 @@ function test() {
   ss.setBrowserState(blankState);
 
   let closedWindowCount = ss.getClosedWindowCount();
+  is(closedWindowCount, 0, "Correctly set window count");
 
   let testURL_A = "about:config";
   let testURL_B = "about:mozilla";
@@ -90,77 +91,81 @@ function test() {
   // Open a window
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no", testURL_A);
   newWin.addEventListener("load", function(aEvent) {
+    newWin.removeEventListener("load", arguments.callee, false);
     newWin.gBrowser.addEventListener("load", function(aEvent) {
       newWin.gBrowser.removeEventListener("load", arguments.callee, true);
-
+      info("Window has been loaded");
       executeSoon(function() {
         newWin.gBrowser.addTab();
+        executeSoon(function() {
+          // mark the window with some unique data to be restored later on
+          ss.setWindowValue(newWin, uniqueKey_A, uniqueValue_A);
 
-        // mark the window with some unique data to be restored later on
-        ss.setWindowValue(newWin, uniqueKey_A, uniqueValue_A);
+          newWin.close();
 
-        newWin.close();
+          // ensure that we incremented # of close windows
+          is(ss.getClosedWindowCount(), closedWindowCount + 1,
+             "The closed window was added to the list");
 
-        // ensure that we incremented # of close windows
-        is(ss.getClosedWindowCount(), closedWindowCount + 1,
-           "The closed window was added to the list");
+          // ensure we added window to undo list
+          let data = JSON.parse(ss.getClosedWindowData())[0];
+          ok(data.toSource().indexOf(uniqueValue_A) > -1,
+             "The closed window data was stored correctly");
 
-        // ensure we added window to undo list
-        let data = JSON.parse(ss.getClosedWindowData())[0];
-        ok(data.toSource().indexOf(uniqueValue_A) > -1,
-           "The closed window data was stored correctly");
+          // enter private browsing mode
+          pb.privateBrowsingEnabled = true;
+          ok(pb.privateBrowsingEnabled, "private browsing enabled");
 
-        // enter private browsing mode
-        pb.privateBrowsingEnabled = true;
-        ok(pb.privateBrowsingEnabled, "private browsing enabled");
+          // ensure that we have 0 undo windows when entering PB
+          is(ss.getClosedWindowCount(), 0,
+             "Recently Closed Windows are removed when entering Private Browsing");
+          is(ss.getClosedWindowData(), "[]",
+             "Recently Closed Windows data is cleared when entering Private Browsing");
 
-        // ensure that we have 0 undo windows when entering PB
-        is(ss.getClosedWindowCount(), 0,
-           "Recently Closed Windows are removed when entering Private Browsing");
-        is(ss.getClosedWindowData(), "[]",
-           "Recently Closed Windows data is cleared when entering Private Browsing");
+          // open another window in PB
+          let pbWin = openDialog(location, "_blank", "chrome,all,dialog=no", testURL_B);
+          pbWin.addEventListener("load", function(aEvent) {
+            pbWin.removeEventListener("load", arguments.callee, false);
+            pbWin.gBrowser.addEventListener("load", function(aEvent) {
+              pbWin.gBrowser.removeEventListener("load", arguments.callee, true);
 
-        // open another window in PB
-        let pbWin = openDialog(location, "_blank", "chrome,all,dialog=no", testURL_B);
-        pbWin.addEventListener("load", function(aEvent) {
-          pbWin.gBrowser.addEventListener("load", function(aEvent) {
-            pbWin.gBrowser.removeEventListener("load", arguments.callee, true);
+              executeSoon(function() {
+                // Add another tab, though it's not strictly needed
+                pbWin.gBrowser.addTab();
+                executeSoon(function() {
+                  // mark the window with some unique data to be restored later on
+                  ss.setWindowValue(pbWin, uniqueKey_B, uniqueValue_B);
 
-            executeSoon(function() {
-              // Add another tab, though it's not strictly needed
-              pbWin.gBrowser.addTab();
+                  pbWin.close();
 
-              // mark the window with some unique data to be restored later on
-              ss.setWindowValue(pbWin, uniqueKey_B, uniqueValue_B);
+                  // ensure we added window to undo list
+                  let data = JSON.parse(ss.getClosedWindowData())[0];
+                  ok(data.toSource().indexOf(uniqueValue_B) > -1,
+                     "The closed window data was stored correctly in PB mode");
 
-              pbWin.close();
+                  // exit private browsing mode
+                  pb.privateBrowsingEnabled = false;
+                  ok(!pb.privateBrowsingEnabled, "private browsing disabled");
 
-              // ensure we added window to undo list
-              let data = JSON.parse(ss.getClosedWindowData())[0];
-              ok(data.toSource().indexOf(uniqueValue_B) > -1,
-                 "The closed window data was stored correctly in PB mode");
+                  // ensure that we still have the closed windows from before
+                  is(ss.getClosedWindowCount(), closedWindowCount + 1,
+                     "The correct number of recently closed windows were restored " +
+                     "when exiting PB mode");
 
-              // exit private browsing mode
-              pb.privateBrowsingEnabled = false;
-              ok(!pb.privateBrowsingEnabled, "private browsing disabled");
+                  let data = JSON.parse(ss.getClosedWindowData())[0];
+                  ok(data.toSource().indexOf(uniqueValue_A) > -1,
+                     "The data associated with the recently closed window was " +
+                     "restored when exiting PB mode");
 
-              // ensure that we still have the closed windows from before
-              is(ss.getClosedWindowCount(), closedWindowCount + 1,
-                 "The correct number of recently closed windows were restored " +
-                 "when exiting PB mode");
-
-              let data = JSON.parse(ss.getClosedWindowData())[0];
-              ok(data.toSource().indexOf(uniqueValue_A) > -1,
-                 "The data associated with the recently closed window was " +
-                 "restored when exiting PB mode");
-
-              // cleanup
-              gPrefService.clearUserPref("browser.sessionstore.interval");
-              finish();
-            });
-          }, true);
-        }, true);
+                  // cleanup
+                  gPrefService.clearUserPref("browser.sessionstore.interval");
+                  finish();
+                });
+              });
+            }, true);
+          }, false);
+        });
       });
     }, true);
-  }, true);
+  }, false);
 }

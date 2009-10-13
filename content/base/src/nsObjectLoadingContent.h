@@ -64,6 +64,7 @@ enum PluginSupportState {
   ePluginDisabled,     // The plugin has been explicitly disabled by the
                        // user.
   ePluginBlocklisted,  // The plugin is blocklisted and disabled
+  ePluginOutdated,     // The plugin is considered outdated, but not disabled
   ePluginOtherState    // Something else (e.g. not a plugin at all as far
                        // as we can tell).
 };
