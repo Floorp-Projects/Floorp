@@ -947,15 +947,26 @@ _invokedefault(NPP aNPP,
 
 bool NP_CALLBACK
 _evaluate(NPP aNPP,
-          NPObject* aNPObj,
+          NPObject* aObject,
           NPString* aScript,
           NPVariant* aResult)
 {
     _MOZ_LOG(__FUNCTION__);
     AssertPluginThread();
 
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return false;
+    if (!(aNPP && aObject && aScript && aResult)) {
+        NS_ERROR("Bad arguments!");
+        return false;
+    }
+
+    PluginScriptableObjectChild* actor =
+      InstCast(aNPP)->GetActorForNPObject(aObject);
+    if (!actor) {
+        NS_ERROR("Failed to create actor?!");
+        return false;
+    }
+
+    return actor->Evaluate(aScript, aResult);
 }
 
 bool NP_CALLBACK
@@ -1105,7 +1116,11 @@ _pushpopupsenabledstate(NPP aNPP,
 {
     _MOZ_LOG(__FUNCTION__);
     AssertPluginThread();
-    NS_NOTYETIMPLEMENTED("Implement me!");
+    bool retval;
+    if (InstCast(aNPP)->CallNPN_PushPopupsEnabledState(aEnabled ? true : false,
+                                                       &retval)) {
+        return retval;
+    }
     return false;
 }
 
@@ -1114,7 +1129,10 @@ _poppopupsenabledstate(NPP aNPP)
 {
     _MOZ_LOG(__FUNCTION__);
     AssertPluginThread();
-    NS_NOTYETIMPLEMENTED("Implement me!");
+    bool retval;
+    if (InstCast(aNPP)->CallNPN_PopPopupsEnabledState(&retval)) {
+        return retval;
+    }
     return false;
 }
 

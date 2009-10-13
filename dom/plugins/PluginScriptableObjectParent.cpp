@@ -1330,3 +1330,50 @@ PluginScriptableObjectParent::AnswerConstruct(const nsTArray<Variant>& aArgs,
   *aResult = convertedResult;
   return true;
 }
+
+bool
+PluginScriptableObjectParent::AnswerNPN_Evaluate(const nsCString& aScript,
+                                                 Variant* aResult,
+                                                 bool* aSuccess)
+{
+  PluginInstanceParent* instance = GetInstance();
+  if (!instance) {
+    NS_ERROR("No instance?!");
+    *aResult = void_t();
+    *aSuccess = false;
+    return true;
+  }
+
+  const NPNetscapeFuncs* npn = GetNetscapeFuncs(instance);
+  if (!npn) {
+    NS_ERROR("No netscape funcs?!");
+    *aResult = void_t();
+    *aSuccess = false;
+    return true;
+  }
+
+  NPString script = { aScript.get(), aScript.Length() };
+
+  NPVariant result;
+  bool success = npn->evaluate(instance->GetNPP(), mObject, &script, &result);
+  if (!success) {
+    *aResult = void_t();
+    *aSuccess = false;
+    return true;
+  }
+
+  Variant convertedResult;
+  success = ConvertToRemoteVariant(result, convertedResult, instance);
+
+  ReleaseVariant(result, instance);
+
+  if (!success) {
+    *aResult = void_t();
+    *aSuccess = false;
+    return true;
+  }
+
+  *aSuccess = true;
+  *aResult = convertedResult;
+  return true;
+}
