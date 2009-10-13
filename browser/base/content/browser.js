@@ -4791,6 +4791,16 @@ function asyncOpenWebPanel(event)
    var wrapper = null;
    if (linkNode) {
      wrapper = linkNode;
+
+     // javascript links should be executed in the current browser
+     if (wrapper.href.substr(0, 11) === "javascript:") {
+       if (event.button == 1) {
+         loadURI(wrapper.href, null, null, false);
+         return false;
+       }
+       return true;
+     }
+
      if (event.button == 0 && !event.ctrlKey && !event.shiftKey &&
          !event.altKey && !event.metaKey) {
        // A Web panel's links should target the main content area.  Do this
@@ -4807,12 +4817,6 @@ function asyncOpenWebPanel(event)
            return true;
          if (wrapper.getAttribute("onclick"))
            return true;
-         // javascript links should be executed in the current browser
-         if (wrapper.href.substr(0, 11) === "javascript:")
-           return true;
-         // data links should be executed in the current browser
-         if (wrapper.href.substr(0, 5) === "data:")
-           return true;
 
          try {
            urlSecurityCheck(wrapper.href, wrapper.ownerDocument.nodePrincipal);
@@ -4826,7 +4830,6 @@ function asyncOpenWebPanel(event)
          if (!url)
            return true;
          loadURI(url, null, postData.value, false);
-         event.preventDefault();
          return false;
        }
        else if (linkNode.getAttribute("rel") == "sidebar") {
@@ -4836,12 +4839,11 @@ function asyncOpenWebPanel(event)
          PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(wrapper.href),
                                                 wrapper.getAttribute("title"),
                                                 null, null, true, true);
-         event.preventDefault();
          return false;
        }
      }
      else {
-       handleLinkClick(event, wrapper.href, linkNode);
+       return !handleLinkClick(event, wrapper.href, linkNode);
      }
 
      return true;
@@ -4863,8 +4865,7 @@ function asyncOpenWebPanel(event)
      }
      if (href) {
        href = makeURLAbsolute(baseURI, href);
-       handleLinkClick(event, href, null);
-       return true;
+       return !handleLinkClick(event, href, null);
      }
    }
    if (event.button == 1 &&
@@ -4887,7 +4888,6 @@ function handleLinkClick(event, href, linkNode)
       if (event.ctrlKey) {
 #endif
         openNewTabWith(href, doc, null, event, false);
-        event.stopPropagation();
         return true;
       }
 
@@ -4902,7 +4902,6 @@ function handleLinkClick(event, href, linkNode)
                                                        
       if (event.shiftKey) {
         openNewWindowWith(href, doc, null, false);
-        event.stopPropagation();
         return true;
       }
 
@@ -4919,7 +4918,6 @@ function handleLinkClick(event, href, linkNode)
         openNewTabWith(href, doc, null, event, false);
       else
         openNewWindowWith(href, doc, null, false);
-      event.stopPropagation();
       return true;
   }
   return false;
