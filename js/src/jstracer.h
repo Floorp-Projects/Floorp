@@ -495,9 +495,7 @@ class VMAllocator : public nanojit::Allocator
 {
 
 public:
-    /* Use a chunk size slightly smaller than a page in case malloc wants a header. */
-    VMAllocator(size_t minChunk = 4088) :
-        nanojit::Allocator(minChunk), mOutOfMemory(false), mSize(0)
+    VMAllocator() : mOutOfMemory(false), mSize(0)
     {}
 
     size_t size() {
@@ -754,6 +752,7 @@ struct InterpState
 
     // Used to communicate the location of the return value in case of a deep bail.
     double*        deepBailSp;
+
 
     // Used when calling natives from trace to root the vp vector.
     uintN          nativeVpLen;
