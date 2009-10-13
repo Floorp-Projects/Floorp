@@ -6198,10 +6198,6 @@ fi
 AC_SUBST(LIBOSSO_CFLAGS)
 AC_SUBST(LIBOSSO_LIBS)
 
-PKG_CHECK_MODULES(LIBHILDONFM,hildon-fm-2)
-AC_SUBST(LIBHILDONFM_CFLAGS)
-AC_SUBST(LIBHILDONFM_LIBS)
-
 dnl ========================================================
 dnl = faststripe theme
 dnl ========================================================
