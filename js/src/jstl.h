@@ -242,8 +242,8 @@ class ContextAllocPolicy
     JSContext *context() const { return mCx; }
 
     void *malloc(size_t bytes) { return mCx->malloc(bytes); }
-    void *realloc(void *p, size_t oldbytes, size_t newbytes) { return mCx->realloc(p, newbytes); }
     void free(void *p) { mCx->free(p); }
+    void *realloc(void *p, size_t bytes) { return mCx->realloc(p, bytes); }
     void reportAllocOverflow() const { js_ReportAllocationOverflow(mCx); }
 };
 
@@ -252,7 +252,7 @@ class SystemAllocPolicy
 {
   public:
     void *malloc(size_t bytes) { return ::malloc(bytes); }
-    void *realloc(void *p, size_t oldbytes, size_t newbytes) { return ::realloc(p, newbytes); }
+    void *realloc(void *p, size_t bytes) { return ::realloc(p, bytes); }
     void free(void *p) { ::free(p); }
     void reportAllocOverflow() const {}
 };
