@@ -56,10 +56,6 @@
 #include "nsFilePicker.h"
 #include "nsAccessibilityHelper.h"
 
-#ifdef MOZ_PLATFORM_HILDON
-#include <hildon-fm-2/hildon/hildon-file-chooser-dialog.h>
-#endif
-
 #define MAX_PREVIEW_SIZE 180
 
 nsILocalFile *nsFilePicker::mPrevDisplayDirectory = nsnull;
@@ -433,14 +429,6 @@ nsFilePicker::Show(PRInt16 *aReturn)
   GtkFileChooserAction action = GetGtkFileChooserAction(mMode);
   const gchar *accept_button = (action == GTK_FILE_CHOOSER_ACTION_SAVE)
                                ? GTK_STOCK_SAVE : GTK_STOCK_OPEN;
-#ifdef MOZ_PLATFORM_HILDON
-  GtkWidget *file_chooser =
-    hildon_file_chooser_dialog_new_with_properties(parent_widget,
-                                                   "action", action,
-                                                   "open-button-text", accept_button,
-                                                   NULL);
-  gtk_window_set_title(GTK_WINDOW(file_chooser), title);
-#else
   GtkWidget *file_chooser =
       gtk_file_chooser_dialog_new(title, parent_widget, action,
                                   GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -453,7 +441,6 @@ nsFilePicker::Show(PRInt16 *aReturn)
   if (mAllowURLs) {
     gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(file_chooser), FALSE);
   }
-#endif
 
   if (action == GTK_FILE_CHOOSER_ACTION_OPEN || action == GTK_FILE_CHOOSER_ACTION_SAVE) {
     GtkWidget *img_preview = gtk_image_new();
@@ -541,7 +528,6 @@ nsFilePicker::Show(PRInt16 *aReturn)
   gint response = gtk_dialog_run(GTK_DIALOG(file_chooser));
 
   switch (response) {
-    case GTK_RESPONSE_OK:
     case GTK_RESPONSE_ACCEPT:
     ReadValuesFromFileChooser(file_chooser);
     *aReturn = nsIFilePicker::returnOK;
@@ -553,6 +539,7 @@ nsFilePicker::Show(PRInt16 *aReturn)
         file->Exists(&exists);
         if (exists)
           *aReturn = nsIFilePicker::returnReplace;
+
       }
     }
     break;
