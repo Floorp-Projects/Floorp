@@ -9,7 +9,7 @@
     <description id="prompt-select-message"/>
   </scrollbox>
   <menulist id="prompt-select-list" class="button-dark"/>
-  <hbox pack="center" id="prompt-prompt-button-box">
+  <hbox pack="center" id="prompt-prompt-button-box" class="prompt-buttons">
     <button class="button-dark" label="&ok.label;"
             oncommand="document.getElementById('prompt-select-dialog').PromptHelper.closeSelect(true);"/>
     <button class="button-dark" label="&cancel.label;"

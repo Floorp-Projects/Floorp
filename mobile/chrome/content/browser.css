@@ -175,5 +175,4 @@ richlistitem[type="message"]{
 
 dialog {
     -moz-binding: url("chrome://browser/content/bindings/dialog.xml#dialog");
-    font-size: 100%;
 }

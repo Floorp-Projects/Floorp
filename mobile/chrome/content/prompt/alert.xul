@@ -6,14 +6,14 @@
       script="chrome://browser/content/prompt/prompt.js">
   
   <label id="prompt-alert-title" crop="center"/>
-  <scrollbox orient="vertical">
+  <scrollbox orient="vertical" class="prompt-message">
     <description id="prompt-alert-message"/>
   </scrollbox>
-  <hbox id="prompt-alert-checkbox-box" collapsed="true" align="center">
-    <checkbox class="toggle-dark" id="prompt-alert-checkbox"/>
+  <hbox id="prompt-alert-checkbox-box" collapsed="true" align="center" class="prompt-message">
     <description id="prompt-alert-checkbox-msg"/>
+    <checkbox class="toggle-dark" id="prompt-alert-checkbox"/>
   </hbox>
-  <hbox pack="center">
+  <hbox pack="center" class="prompt-buttons">
     <button class="button-dark" label="&ok.label;"
             oncommand="document.getElementById('prompt-alert-dialog').close()"/>
   </hbox>

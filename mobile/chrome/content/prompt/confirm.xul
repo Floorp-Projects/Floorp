@@ -5,14 +5,14 @@
       onclose="this.PromptHelper.onCloseConfirm(this)"
       script="chrome://browser/content/prompt/prompt.js">
   <label id="prompt-confirm-title"/>
-  <scrollbox orient="vertical">
+  <scrollbox orient="vertical" class="prompt-message">
     <description id="prompt-confirm-message"/>
   </scrollbox>
-  <hbox id="prompt-confirm-checkbox-box" collapsed="true" align="center">
-    <checkbox class="toggle-dark" id="prompt-confirm-checkbox"/>
+  <hbox id="prompt-confirm-checkbox-box" collapsed="true" align="center" class="prompt-message">
     <description id="prompt-confirm-checkbox-msg"/>
+    <checkbox class="toggle-dark" id="prompt-confirm-checkbox"/>
   </hbox>
-  <hbox pack="center" id="prompt-confirm-button-box">
+  <hbox pack="center" id="prompt-confirm-button-box" class="prompt-buttons">
     <button class="button-dark" label="&ok.label;"
             oncommand="document.getElementById('prompt-confirm-dialog').PromptHelper.closeConfirm(true);"/>
     <button class="button-dark" label="&cancel.label;"
