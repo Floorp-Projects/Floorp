@@ -455,7 +455,11 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   if os.path.exists(LEAK_REPORT_FILE):
     os.remove(LEAK_REPORT_FILE)
 
-  # then again to actually run reftest
+  # then again to actually run mochitest
+  # don't use a timeout if we're not auto-running
+  #XXX: use the value from --timeout when bug 521130 lands, for now
+  # use the Mochitest JS harness's timeout + 30 seconds
+  timeout = options.autorun and 330.0 or None
   automation.log.info("INFO | runtests.py | Running tests: start.\n")
   status = automation.runApp(testURL, browserEnv, options.app,
                              PROFILE_DIRECTORY, options.browserArgs,
@@ -464,7 +468,8 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
                              xrePath = options.xrePath,
                              certPath=options.certPath,
                              debuggerInfo=debuggerInfo,
-                             symbolsPath=options.symbolsPath)
+                             symbolsPath=options.symbolsPath,
+                             timeout = timeout)
 
   # Server's no longer needed, and perhaps more importantly, anything it might
   # spew to console shouldn't disrupt the leak information table we print next.

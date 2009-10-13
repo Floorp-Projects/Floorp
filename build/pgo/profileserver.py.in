@@ -68,5 +68,8 @@ if __name__ == '__main__':
 
   url = "http://localhost:%d/index.html" % PORT
   appPath = os.path.join(SCRIPT_DIR, automation.DEFAULT_APP)
-  status = automation.runApp(url, browserEnv, appPath, PROFILE_DIRECTORY, {})
+  status = automation.runApp(url, browserEnv, appPath, PROFILE_DIRECTORY, {},
+                             # the profiling HTML doesn't output anything,
+                             # so let's just ignore this for now.
+                             timeout = None)
   sys.exit(status)
