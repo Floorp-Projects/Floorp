@@ -67,6 +67,11 @@ rpc protocol PPluginScriptableObject
 {
   manager PPluginInstance;
 
+parent:
+  rpc NPN_Evaluate(nsCString aScript)
+    returns (Variant aResult,
+             bool aSuccess);
+
 both:
   // NPClass methods
   rpc Invalidate();
