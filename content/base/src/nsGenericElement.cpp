@@ -5081,6 +5081,12 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
 
   case NS_MOUSE_CLICK:
     if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
+      nsInputEvent* inputEvent = static_cast<nsInputEvent*>(aVisitor.mEvent);
+      if (inputEvent->isControl || inputEvent->isMeta ||
+          inputEvent->isAlt ||inputEvent->isShift) {
+        break;
+      }
+
       // The default action is simply to dispatch DOMActivate
       nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
       if (shell) {
