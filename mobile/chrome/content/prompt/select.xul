@@ -2,17 +2,24 @@
 <!DOCTYPE vbox SYSTEM "chrome://browser/locale/prompt.dtd">
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       id="prompt-select-dialog"
-      script="chrome://browser/content/prompt/prompt.js"
-      onclose="this.PromptHelper.onCloseSelect(this)">
+      onload="document.getElementById('prompt-select-list').focus()"
+      onclose="this.PromptHelper.onCloseSelect(this)"
+      script="chrome://browser/content/prompt/prompt.js">
+  <keyset>
+    <key keycode="VK_RETURN" command="cmd_ok"/>
+    <key keycode="VK_ESCAPE" command="cmd_cancel"/>
+  </keyset>
+  <commandset>
+    <command id="cmd_ok" oncommand="document.getElementById('prompt-alert-dialog').PromptHelper.closeSelect(true)"/>
+    <command id="cmd_cancel" oncommand="document.getElementById('prompt-alert-dialog').PromptHelper.closeSelect(false)"/>
+  </commandset>
   <label id="prompt-select-title"/>
   <scrollbox orient="vertical" class="prompt-message">
     <description id="prompt-select-message"/>
   </scrollbox>
   <menulist id="prompt-select-list" class="button-dark"/>
   <hbox pack="center" id="prompt-prompt-button-box" class="prompt-buttons">
-    <button class="button-dark" label="&ok.label;"
-            oncommand="document.getElementById('prompt-select-dialog').PromptHelper.closeSelect(true);"/>
-    <button class="button-dark" label="&cancel.label;"
-            oncommand="document.getElementById('prompt-select-dialog').PromptHelper.closeSelect(false)"/>
+    <button class="button-dark" label="&ok.label;" command="cmd_ok;"/>
+    <button class="button-dark" label="&cancel.label;" command="cmd_cancel"/>
   </hbox>
 </dialog>
