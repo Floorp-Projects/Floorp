@@ -43,9 +43,8 @@
 
 namespace nanojit
 {
-    Allocator::Allocator(size_t minChunk)
-        : minChunk(minChunk)
-        , current_chunk(NULL)
+    Allocator::Allocator()
+        : current_chunk(NULL)
         , current_top(NULL)
         , current_limit(NULL)
     { }
@@ -55,17 +54,17 @@ namespace nanojit
         reset();
     }
 
-    void Allocator::reset(bool keepFirst)
+    void Allocator::reset()
     {
         Chunk *c = current_chunk;
         while (c) {
             Chunk *prev = c->prev;
-            if (keepFirst && !prev)
-                break;
             freeChunk(c);
             c = prev;
         }
-        setChunk(c);
+        current_chunk = NULL;
+        current_top = NULL;
+        current_limit = NULL;
         postReset();
     }
 
@@ -79,28 +78,18 @@ namespace nanojit
         return p;
     }
 
-    void Allocator::setChunk(Chunk* chunk)
-    {
-        if (chunk) {
-            current_chunk = chunk;
-            current_top = (char*)chunk->data;
-            current_limit = (char*)chunk + chunk->size;
-        } else {
-            current_chunk = NULL;
-            current_top = current_limit = NULL;
-        }
-    }
-
     void Allocator::fill(size_t nbytes)
     {
+        const size_t minChunk = 2000;
         if (nbytes < minChunk)
             nbytes = minChunk;
         size_t chunkbytes = sizeof(Chunk) + nbytes - sizeof(int64_t);
         void* mem = allocChunk(chunkbytes);
         Chunk* chunk = (Chunk*) mem;
         chunk->prev = current_chunk;
-        chunk->size = chunkbytes;
-        setChunk(chunk);
+        current_chunk = chunk;
+        current_top = (char*)chunk->data;
+        current_limit = (char*)mem + chunkbytes;
     }
 }
 
