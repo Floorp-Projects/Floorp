@@ -1,0 +1,42 @@
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+protocol PTestLatency {
+
+child:
+    Ping();
+    Ping5();
+
+parent:
+    Pong();
+    Pong5();
+
+    // Trial 1: single ping/pong latency
+state PING:
+    send Ping goto PONG;
+    send Ping5 goto PING4;
+
+state PONG:
+    recv Pong goto PING;
+
+    // Trial 2: "overlapped" ping/pong latency
+state PING5:
+    send Ping5 goto PING4;
+    //send delete; SOMEDAY!
+state PING4: send Ping5 goto PING3;
+state PING3: send Ping5 goto PING2;
+state PING2: send Ping5 goto PING1;
+state PING1: send Ping5 goto PONG1;
+
+state PONG1: recv Pong5 goto PONG2;
+state PONG2: recv Pong5 goto PONG3;
+state PONG3: recv Pong5 goto PONG4;
+state PONG4: recv Pong5 goto PONG5;
+state PONG5: recv Pong5 goto PING5;
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest
