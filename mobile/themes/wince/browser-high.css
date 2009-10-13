@@ -297,11 +297,11 @@ findbar .findbar-closebutton {
   list-style-image: url("chrome://browser/skin/images/identity-64.png");
 }
 
-#identity-container[mode="verifiedDomain"] > #identity-popup-icon {
+#identity-container[mode="verifiedDomain"] > hbox > #identity-popup-icon {
   list-style-image: url("chrome://browser/skin/images/identitySSL-64.png");
 }
 
-#identity-container[mode="verifiedIdentity"] > #identity-popup-icon {
+#identity-container[mode="verifiedIdentity"] > hbox > #identity-popup-icon {
   list-style-image: url("chrome://browser/skin/images/identityEV-64.png");
 }
 
