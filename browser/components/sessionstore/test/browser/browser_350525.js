@@ -74,6 +74,7 @@ function test() {
   let testURL = "about:";
   tab = tabbrowser.addTab(testURL);
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
+    this.removeEventListener("load", arguments.callee, true);
     // make sure that the next closed tab will increase getClosedTabCount
     gPrefService.setIntPref("browser.sessionstore.max_tabs_undo", max_tabs_undo + 1);
     
@@ -89,6 +90,7 @@ function test() {
     ok(tab, "undoCloseTab doesn't throw")
     
     tab.linkedBrowser.addEventListener("load", function(aEvent) {
+      this.removeEventListener("load", arguments.callee, true);
       is(this.currentURI.spec, testURL, "correct tab was reopened");
       
       // clean up

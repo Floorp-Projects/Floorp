@@ -69,7 +69,8 @@ function test() {
       // wait for all frames to load completely
       if (frameCount++ < 5)
         return;
-      
+      this.removeEventListener("load", arguments.callee, true);
+
       let doc = tab2.linkedBrowser.contentDocument;
       let win = tab2.linkedBrowser.contentWindow;
       isnot(doc.getElementById("out1").value,
