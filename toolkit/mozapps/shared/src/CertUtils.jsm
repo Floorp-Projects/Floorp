@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #endif
+EXPORTED_SYMBOLS = [ "BadCertHandler", "checkCert" ];
 
 /**
  * Only allow built-in certs for HTTPS connections.  See bug 340198.

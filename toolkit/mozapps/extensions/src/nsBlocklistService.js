@@ -91,7 +91,11 @@ var gBlocklistEnabled = true;
 var gBlocklistLevel = DEFAULT_LEVEL;
 
 // shared code for suppressing bad cert dialogs
-#include ../../shared/src/badCertHandler.js
+XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
+  let temp = { };
+  Components.utils.import("resource://gre/modules/CertUtils.jsm", temp);
+  return temp;
+});
 
 /**
  * Logs a string to the error console.
@@ -513,7 +517,7 @@ Blocklist.prototype = {
     var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                   createInstance(Ci.nsIXMLHttpRequest);
     request.open("GET", uri.spec, true);
-    request.channel.notificationCallbacks = new BadCertHandler();
+    request.channel.notificationCallbacks = new gCertUtils.BadCertHandler();
     request.overrideMimeType("text/xml");
     request.setRequestHeader("Cache-Control", "no-cache");
     request.QueryInterface(Components.interfaces.nsIJSXMLHttpRequest);
@@ -532,7 +536,7 @@ Blocklist.prototype = {
   onXMLLoad: function(aEvent) {
     var request = aEvent.target;
     try {
-      checkCert(request.channel);
+      gCertUtils.checkCert(request.channel);
     }
     catch (e) {
       LOG("Blocklist::onXMLLoad: " + e);
