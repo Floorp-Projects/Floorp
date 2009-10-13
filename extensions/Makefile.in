@@ -42,6 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PARALLEL_DIRS = $(MOZ_EXTENSIONS)
+DIRS		= $(MOZ_EXTENSIONS)
 
 include $(topsrcdir)/config/rules.mk
