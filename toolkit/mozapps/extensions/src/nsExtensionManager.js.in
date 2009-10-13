@@ -212,7 +212,11 @@ var gDefaultTheme         = "classic/1.0";
 var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
 
 // shared code for suppressing bad cert dialogs
-#include ../../shared/src/badCertHandler.js
+XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
+  let temp = { };
+  Components.utils.import("resource://gre/modules/CertUtils.jsm", temp);
+  return temp;
+});
 
 /**
  * Creates a Version Checker object.
@@ -6048,7 +6052,7 @@ RDFItemUpdater.prototype = {
     var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                   createInstance(Ci.nsIXMLHttpRequest);
     request.open("GET", uri.spec, true);
-    request.channel.notificationCallbacks = new BadCertHandler();
+    request.channel.notificationCallbacks = new gCertUtils.BadCertHandler();
     request.overrideMimeType("text/xml");
     request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
 
@@ -6061,7 +6065,7 @@ RDFItemUpdater.prototype = {
   onXMLLoad: function RDFItemUpdater_onXMLLoad(aEvent, aItem) {
     var request = aEvent.target;
     try {
-      checkCert(request.channel);
+      gCertUtils.checkCert(request.channel);
     }
     catch (e) {
       // This may be overly restrictive in two cases: corporate installations
