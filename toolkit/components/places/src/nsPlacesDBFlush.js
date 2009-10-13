@@ -50,6 +50,8 @@ const Cu = Components.utils;
 
 const kQuitApplication = "quit-application";
 const kSyncFinished = "places-sync-finished";
+const kDebugStopSync = "places-debug-stop-sync";
+const kDebugStartSync = "places-debug-start-sync";
 
 const kSyncPrefName = "places.syncDBTableIntervalInSecs";
 const kDefaultSyncInterval = 120;
@@ -108,6 +110,8 @@ function nsPlacesDBFlush()
   this._os = Cc["@mozilla.org/observer-service;1"].
              getService(Ci.nsIObserverService);
   this._os.addObserver(this, kQuitApplication, false);
+  this._os.addObserver(this, kDebugStopSync, false);
+  this._os.addObserver(this, kDebugStartSync, false);
 
   let (pb2 = this._prefs.QueryInterface(Ci.nsIPrefBranch2)) {
     pb2.addObserver(kSyncPrefName, this, false);
@@ -147,6 +151,9 @@ nsPlacesDBFlush.prototype = {
   {
     if (aTopic == kQuitApplication) {
       this._os.removeObserver(this, kQuitApplication);
+      this._os.removeObserver(this, kDebugStopSync);
+      this._os.removeObserver(this, kDebugStartSync);
+
       let (pb2 = this._prefs.QueryInterface(Ci.nsIPrefBranch2)) {
         pb2.removeObserver(kSyncPrefName, this);
         pb2.removeObserver(kExpireDaysPrefName, this);
@@ -194,6 +201,13 @@ nsPlacesDBFlush.prototype = {
       this._expireDays = this._prefs.getIntPref(kExpireDaysPrefName);
       if (this._expireDays <= 0)
         this._expireDays = kDefaultExpireDays;
+    }
+    else if (aTopic == kDebugStopSync) {
+      this._syncStopped = true;
+    }
+    else if (aTopic == kDebugStartSync) {
+      if (_syncStopped in this)
+        delete this._syncStopped;
     }
   },
 
@@ -338,7 +352,7 @@ nsPlacesDBFlush.prototype = {
   _flushWithQueries: function DBFlush_flushWithQueries(aQueryNames)
   {
     // No need to do extra work if we are in batch mode
-    if (this._inBatchMode)
+    if (this._inBatchMode || this._syncStopped)
       return;
 
     let statements = [];
