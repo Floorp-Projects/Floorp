@@ -6375,8 +6375,6 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     state->eor = callstack_buffer + MAX_CALL_STACK_ENTRIES;
     state->sor = state->rp;
 
-    state->stackMark = NULL;
-
 #ifdef DEBUG
     memset(stack_buffer, 0xCD, sizeof(stack_buffer));
     memset(global, 0xCD, (globalFrameSize+1)*sizeof(double));
@@ -6602,9 +6600,6 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     /* Slurp failure should have no frames */
     JS_ASSERT_IF(innermost->exitType == RECURSIVE_SLURP_FAIL_EXIT,
                  innermost->calldepth == 0 && callstack == rp);
-
-    if (state.stackMark)
-        JS_ARENA_RELEASE(&cx->stackPool, state.stackMark);
 
     while (callstack < rp) {
         FrameInfo* fi = *callstack;
