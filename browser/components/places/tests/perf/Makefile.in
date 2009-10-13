@@ -48,14 +48,15 @@ _CHROME_FILES = \
 	perf_large_delete.xul \
 	$(NULL)
 
-# XXX disabled tests, not working properly yet
-#  browser_ui_history_menu.js
-#  browser_ui_locationbar.js
-# XXX disabled tests, random failures
-#  browser_ui_bookmarks_sidebar.js
+# Disabled due to bad interactions with next tests.
+# browser_ui_locationbar.js
 _BROWSER_TEST_FILES = \
 	browser_ui_000_data.js \
+	browser_ui_history_menu.js \
+	browser_ui_bookmarks_sidebar.js \
 	browser_ui_history_sidebar.js \
+	browser_ui_history_sidebar_2.js \
+	browser_ui_history_sidebar_3.js \
 	$(NULL)
 
 libs:: $(_CHROME_FILES)
