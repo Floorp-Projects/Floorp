@@ -36,59 +36,62 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../..
+DEPTH     = ../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
-VPATH   = @srcdir@
+VPATH     = @srcdir@
 
 include $(topsrcdir)/config/config.mk
 
 # These component dirs are built for all apps (including suite)
 
 ifdef MOZ_ENABLE_XREMOTE
-DIRS += remote
+PARALLEL_DIRS += remote
 endif
-DIRS += \
-        urlformatter \
-        contentprefs \
-        microformats \
-        places \
-	apppicker \
-	filepicker \
-	console \
-	cookie \
-	exthelper \
-	viewconfig \
-	typeaheadfind \
-	parentalcontrols \
-	passwordmgr \
-	aboutmemory \
-	$(NULL)
+
+PARALLEL_DIRS += \
+  aboutmemory \
+  apppicker \
+  commandlines \
+  console \
+  contentprefs \
+  cookie \
+  exthelper \
+  filepicker \
+  microformats \
+  parentalcontrols \
+  passwordmgr \
+  places \
+  startup \
+  typeaheadfind \
+  urlformatter \
+  viewconfig \
+  $(NULL)
 
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
 TOOL_DIRS += alerts
 else
-DIRS += alerts
+PARALLEL_DIRS += alerts
 endif
 
 ifdef MOZ_FEEDS
-DIRS += feeds
+PARALLEL_DIRS += feeds
 endif
 
 ifdef MOZ_HELP_VIEWER
-DIRS += help
+PARALLEL_DIRS += help
 endif
 
 ifdef NS_PRINTING
-DIRS +=	printing
+PARALLEL_DIRS += printing
 endif
 
 ifdef MOZ_VIEW_SOURCE
-DIRS +=	viewsource
+PARALLEL_DIRS += viewsource
 endif
 
 ifdef MOZ_XUL
-DIRS += \
+PARALLEL_DIRS += \
   autocomplete \
   satchel \
   $(NULL)
@@ -97,28 +100,26 @@ endif
 ifndef MOZ_THUNDERBIRD
 
 ifndef MOZ_SUITE
-DIRS +=	search
+PARALLEL_DIRS += search
 endif
 
 endif # MOZ_THUNDERBIRD
 
 ifdef MOZ_RDF
-DIRS +=	downloads
+PARALLEL_DIRS += downloads
 endif
 
 ifdef MOZ_URL_CLASSIFIER
-DIRS += url-classifier
+PARALLEL_DIRS += url-classifier
 endif
 
 ifdef MOZ_FASTSTART
-DIRS += faststart
+PARALLEL_DIRS += faststart
 endif
 
 DIRS += \
-	commandlines \
-	startup \
-	build \
-	$(NULL)
+  build \
+  $(NULL)
 
 EXTRA_PP_COMPONENTS = nsDefaultCLH.js
 
