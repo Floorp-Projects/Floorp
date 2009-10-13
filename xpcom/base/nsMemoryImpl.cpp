@@ -118,7 +118,7 @@ nsMemoryImpl::IsLowMemory(PRBool *result)
 #if defined(WINCE)
     MEMORYSTATUS stat;
     GlobalMemoryStatus(&stat);
-    *result = (stat.dwMemoryLoad >= 80);
+    *result = (stat.dwMemoryLoad >= 98);
 #elif defined(XP_WIN)
     MEMORYSTATUSEX stat;
     stat.dwLength = sizeof stat;
