@@ -637,14 +637,26 @@ SyncEngine.prototype = {
     this._log.trace("Finishing up sync");
     this._tracker.resetScore();
 
+    let doDelete = Utils.bind2(this, function(key, val) {
+      let coll = new Collection(this.engineURL, this._recordObj);
+      coll[key] = val;
+      coll.delete();
+    });
+
     for (let [key, val] in Iterator(this._delete)) {
       // Remove the key for future uses
       delete this._delete[key];
 
-      // Send a delete for the property
-      let coll = new Collection(this.engineURL, this._recordObj);
-      coll[key] = val;
-      coll.delete();
+      // Send a simple delete for the property
+      if (key != "ids" || val.length <= 100)
+        doDelete(key, val);
+      else {
+        // For many ids, split into chunks of at most 100
+        while (val.length > 0) {
+          doDelete(key, val.slice(0, 100));
+          val = val.slice(100);
+        }
+      }
     }
   },
 
