@@ -821,7 +821,7 @@ xpc_qsUnwrapThisImpl(JSContext *cx,
     }
 
     JSObject *cur = obj;
-    XPCWrappedNativeTearOff *tearoff;
+    XPCWrappedNativeTearOff *tearoff = nsnull;
     XPCWrappedNative *wrapper =
         XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, callee, &cur,
                                                      &tearoff);
