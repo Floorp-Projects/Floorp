@@ -385,6 +385,11 @@ SyncEngine.prototype = {
   _processIncoming: function SyncEngine__processIncoming() {
     this._log.debug("Downloading & applying server changes");
 
+    // Figure out how many total items to fetch this sync; do less on mobile
+    let fetchNum = 1500;
+    if (Svc.Prefs.get("client.type") == "mobile")
+      fetchNum /= 10;
+
     // enable cache, and keep only the first few items.  Otherwise (when
     // we have more outgoing items than can fit in the cache), we will
     // keep rotating items in and out, perpetually getting cache misses
@@ -396,7 +401,7 @@ SyncEngine.prototype = {
     newitems.newer = this.lastSync;
     newitems.full = true;
     newitems.sort = "index";
-    newitems.limit = 300;
+    newitems.limit = fetchNum;
 
     let count = {applied: 0, reconciled: 0};
     let handled = [];
@@ -429,6 +434,9 @@ SyncEngine.prototype = {
         resp.failureCode = ENGINE_DOWNLOAD_FAIL;
         throw resp;
       }
+
+      // Subtract out the number of items we just got
+      fetchNum -= handled.length;
     }
 
     // Check if we got the maximum that we requested; get the rest if so
@@ -448,16 +456,17 @@ SyncEngine.prototype = {
         this.toFetch = extra.concat(Utils.arraySub(this.toFetch, extra));
     }
 
-    // Process any backlog of GUIDs if necessary
-    if (this.toFetch.length > 0) {
+    // Process any backlog of GUIDs if we haven't fetched too many this sync
+    while (this.toFetch.length > 0 && fetchNum > 0) {
       // Reuse the original query, but get rid of the restricting params
       newitems.limit = 0;
       newitems.newer = 0;
 
-      // Get the first bunch of records and save the rest for later, but don't
-      // get too many records as there's a maximum server URI length (HTTP 414)
-      newitems.ids = this.toFetch.slice(0, 150);
-      this.toFetch = this.toFetch.slice(150);
+      // Get the first bunch of records and save the rest for later
+      let minFetch = Math.min(150, this.toFetch.length, fetchNum);
+      newitems.ids = this.toFetch.slice(0, minFetch);
+      this.toFetch = this.toFetch.slice(minFetch);
+      fetchNum -= minFetch;
 
       // Reuse the existing record handler set earlier
       let resp = newitems.get();
@@ -465,7 +474,6 @@ SyncEngine.prototype = {
         resp.failureCode = ENGINE_DOWNLOAD_FAIL;
         throw resp;
       }
-        
     }
 
     if (this.lastSync < this.lastModified)
