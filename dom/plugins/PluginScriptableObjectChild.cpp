@@ -1084,3 +1084,22 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<Variant>& aArgs,
   *aSuccess = true;
   return true;
 }
+
+bool
+PluginScriptableObjectChild::Evaluate(NPString* aScript,
+                                      NPVariant* aResult)
+{
+  nsDependentCString script("");
+  if (aScript->UTF8Characters && aScript->UTF8Length) {
+    script.Rebind(aScript->UTF8Characters, aScript->UTF8Length);
+  }
+
+  bool success;
+  Variant result;
+  if (!(CallNPN_Evaluate(script, &result, &success) && success)) {
+    return false;
+  }
+
+  ConvertToVariant(result, *aResult);
+  return true;
+}

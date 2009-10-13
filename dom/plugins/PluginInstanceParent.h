@@ -153,6 +153,13 @@ public:
     virtual bool
     RecvNPN_InvalidateRect(const NPRect& rect);
 
+    virtual bool
+    AnswerNPN_PushPopupsEnabledState(const bool& aState,
+                                     bool* aSuccess);
+
+    virtual bool
+    AnswerNPN_PopPopupsEnabledState(bool* aSuccess);
+
     NPError NPP_SetWindow(const NPWindow* aWindow);
 
     NPError NPP_GetValue(NPPVariable variable, void *ret_value);

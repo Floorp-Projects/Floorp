@@ -581,29 +581,44 @@ PluginInstanceParent::NPP_URLNotify(const char* url, NPReason reason,
 PluginScriptableObjectParent*
 PluginInstanceParent::GetActorForNPObject(NPObject* aObject)
 {
-  NS_ASSERTION(aObject, "Null pointer!");
+    NS_ASSERTION(aObject, "Null pointer!");
 
-  if (aObject->_class == PluginScriptableObjectParent::GetClass()) {
-      // One of ours!
-      ParentNPObject* object = static_cast<ParentNPObject*>(aObject);
-      NS_ASSERTION(object->parent, "Null actor!");
-      return object->parent;
-  }
+    if (aObject->_class == PluginScriptableObjectParent::GetClass()) {
+        // One of ours!
+        ParentNPObject* object = static_cast<ParentNPObject*>(aObject);
+        NS_ASSERTION(object->parent, "Null actor!");
+        return object->parent;
+    }
 
-  PRUint32 count = mScriptableObjects.Length();
-  for (PRUint32 index = 0; index < count; index++) {
-      nsAutoPtr<PluginScriptableObjectParent>& actor =
-          mScriptableObjects[index];
-      if (actor->GetObject() == aObject) {
-          return actor;
-      }
-  }
+    PRUint32 count = mScriptableObjects.Length();
+    for (PRUint32 index = 0; index < count; index++) {
+        nsAutoPtr<PluginScriptableObjectParent>& actor =
+            mScriptableObjects[index];
+        if (actor->GetObject() == aObject) {
+            return actor;
+        }
+    }
 
-  PluginScriptableObjectParent* actor =
-      static_cast<PluginScriptableObjectParent*>(
-          CallPPluginScriptableObjectConstructor());
-  NS_ENSURE_TRUE(actor, nsnull);
+    PluginScriptableObjectParent* actor =
+        static_cast<PluginScriptableObjectParent*>(
+            CallPPluginScriptableObjectConstructor());
+    NS_ENSURE_TRUE(actor, nsnull);
 
-  actor->Initialize(const_cast<PluginInstanceParent*>(this), aObject);
-  return actor;
+    actor->Initialize(const_cast<PluginInstanceParent*>(this), aObject);
+    return actor;
+}
+
+bool
+PluginInstanceParent::AnswerNPN_PushPopupsEnabledState(const bool& aState,
+                                                       bool* aSuccess)
+{
+    *aSuccess = mNPNIface->pushpopupsenabledstate(mNPP, aState ? 1 : 0);
+    return true;
+}
+
+bool
+PluginInstanceParent::AnswerNPN_PopPopupsEnabledState(bool* aSuccess)
+{
+    *aSuccess = mNPNIface->poppopupsenabledstate(mNPP);
+    return true;
 }

@@ -109,6 +109,11 @@ public:
                   Variant* aResult,
                   bool* aSuccess);
 
+  virtual bool
+  AnswerNPN_Evaluate(const nsCString& aScript,
+                     Variant* aResult,
+                     bool* aSuccess);
+
   void
   Initialize(PluginInstanceParent* aInstance,
              NPObject* aObject);

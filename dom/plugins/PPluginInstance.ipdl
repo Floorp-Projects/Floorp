@@ -113,6 +113,12 @@ parent:
 
   async NPN_InvalidateRect(NPRect rect);
 
+  rpc NPN_PushPopupsEnabledState(bool aState)
+    returns (bool aSuccess);
+
+  rpc NPN_PopPopupsEnabledState()
+    returns (bool aSuccess);
+
 child:
   /**
    * Represents NPP_URLNotify

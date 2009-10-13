@@ -130,6 +130,10 @@ public:
     return mInstance;
   }
 
+  bool
+  Evaluate(NPString* aScript,
+           NPVariant* aResult);
+
 private:
   static NPObject*
   ScriptableAllocate(NPP aInstance,
