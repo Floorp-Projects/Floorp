@@ -162,7 +162,7 @@ public:
     // nsIContentSink
     NS_IMETHOD WillParse(void);
     NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
-    NS_IMETHOD DidBuildModel(void);
+    NS_IMETHOD DidBuildModel(PRBool aTerminated);
     NS_IMETHOD WillInterrupt(void);
     NS_IMETHOD WillResume(void);
     NS_IMETHOD SetParser(nsIParser* aParser);  
@@ -632,7 +632,7 @@ RDFContentSinkImpl::WillBuildModel(nsDTDMode)
 }
 
 NS_IMETHODIMP 
-RDFContentSinkImpl::DidBuildModel(void)
+RDFContentSinkImpl::DidBuildModel(PRBool aTerminated)
 {
     if (mDataSource) {
         nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);

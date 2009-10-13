@@ -90,7 +90,7 @@ public:
   // nsIContentSink
   NS_IMETHOD WillParse(void) { return NS_OK; }
   NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
-  NS_IMETHOD DidBuildModel(void);
+  NS_IMETHOD DidBuildModel(PRBool aTerminated);
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);
@@ -279,7 +279,7 @@ nsHTMLFragmentContentSink::WillBuildModel(nsDTDMode)
 }
 
 NS_IMETHODIMP
-nsHTMLFragmentContentSink::DidBuildModel(void)
+nsHTMLFragmentContentSink::DidBuildModel(PRBool aTerminated)
 {
   FlushText();
 
@@ -667,7 +667,7 @@ nsHTMLFragmentContentSink::DidBuildContent()
 {
   if (!mAllContent) {
     FlushText();
-    DidBuildModel(); // Release our ref to the parser now.
+    DidBuildModel(PR_FALSE); // Release our ref to the parser now.
     mProcessing = PR_FALSE;
   }
 

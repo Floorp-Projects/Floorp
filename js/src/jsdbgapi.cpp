@@ -1573,7 +1573,7 @@ JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
     JSScope *scope;
 
     nbytes = sizeof *obj;
-    if (obj->dslots) {
+    if (DSLOTS_IS_NOT_NULL(obj)) {
         nbytes += ((uint32)obj->dslots[-1] - JS_INITIAL_NSLOTS + 1)
                   * sizeof obj->dslots[0];
     }

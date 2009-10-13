@@ -73,7 +73,7 @@ nsMathMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                             nsIContent* aBindingParent,
                             PRBool aCompileEventHandlers)
 {
-  static const char kMathMLStyleSheetURI[] = "resource://gre/res/mathml.css";
+  static const char kMathMLStyleSheetURI[] = "resource://gre-resources/mathml.css";
 
   nsresult rv = nsMathMLElementBase::BindToTree(aDocument, aParent,
                                                 aBindingParent,

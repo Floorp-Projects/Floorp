@@ -1,0 +1,96 @@
+/* vim: se cin sw=2 ts=2 et : */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Rob Arnold <tellrob@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsITaskbarPreview.idl"
+interface imgIContainer;
+
+/*
+ * nsITaskbarTabPreview
+ *
+ * This interface controls tab preview-specific behavior. Creating an
+ * nsITaskbarTabPreview for a window will hide that window's
+ * nsITaskbarWindowPreview in the taskbar - the native API performs this
+ * unconditionally. When there are no more tab previews for a window, the
+ * nsITaskbarWindowPreview will automatically become visible again.
+ *
+ * An application may have as many tab previews per window as memory allows.
+ *
+ */
+[scriptable, uuid(11E4C8BD-5C2D-4E1A-A9A1-79DD5B0FE544)]
+interface nsITaskbarTabPreview : nsITaskbarPreview
+{
+  /**
+   * The title displayed above the thumbnail
+   *
+   * Default: an empty string
+   */
+  attribute DOMString title;
+
+  /**
+   * The icon displayed next to the title in the preview
+   *
+   * Default: null
+   */
+  attribute imgIContainer icon;
+
+  /**
+   * Rearranges the preview relative to another tab preview from the same window
+   * @param aNext The preview to the right of this one. A value of null
+   *              indicates that the preview is the rightmost one.
+   */
+  void move(in nsITaskbarTabPreview aNext);
+
+  /**
+   * Used internally to grab the handle to the proxy window.
+   */
+  [notxpcom]
+  nativeWindow GetHWND();
+
+  /**
+   * Used internally to ensure that the taskbar knows about this preview. If a
+   * preview is not registered, then the API call to set its sibling (via move)
+   * will silently fail.
+   *
+   * This method is only invoked when it is safe to make taskbar API calls.
+   */
+  [notxpcom]
+  void EnsureRegistration();
+};
+

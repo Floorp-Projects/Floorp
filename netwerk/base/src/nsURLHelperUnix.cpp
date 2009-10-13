@@ -44,8 +44,8 @@
 #include "nsILocalFile.h"
 #include "nsNativeCharsetUtils.h"
 
-nsresult
-net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
+nsresult 
+net_GetURLSpecFromActualFile(nsIFile *aFile, nsACString &result)
 {
     nsresult rv;
     nsCAutoString nativePath, ePath;
@@ -77,19 +77,6 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
     // contains semicolons we need to manually escape them.
     // This replacement should be removed in bug #473280
     escPath.ReplaceSubstring(";", "%3b");
-
-    // if this file references a directory, then we need to ensure that the
-    // URL ends with a slash.  this is important since it affects the rules
-    // for relative URL resolution when this URL is used as a base URL.
-    // if the file does not exist, then we make no assumption about its type,
-    // and simply leave the URL unmodified.
-    if (escPath.Last() != '/') {
-        PRBool dir;
-        rv = aFile->IsDirectory(&dir);
-        if (NS_SUCCEEDED(rv) && dir)
-            escPath += '/';
-    }
-    
     result = escPath;
     return NS_OK;
 }

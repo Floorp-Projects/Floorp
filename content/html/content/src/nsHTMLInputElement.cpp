@@ -1781,11 +1781,14 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 
         case NS_FOCUS_CONTENT:
         {
+          // see if we should select the contents of the textbox. This happens
+          // for text and password fields when the field was focused by the
+          // keyboard or a navigation, the platform allows it, and it wasn't
+          // just because we raised a window.
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm && (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD) &&
+              !(static_cast<nsFocusEvent *>(aVisitor.mEvent))->fromRaise &&
               SelectTextFieldOnFocus()) {
-            // select the text if the field was focused by the keyboard or a
-            // navigation.
             nsIDocument* document = GetCurrentDoc();
             if (document) {
               PRUint32 lastFocusMethod;

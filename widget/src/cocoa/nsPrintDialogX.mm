@@ -43,7 +43,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsIStringBundle.h"
-#include "nsCocoaUtils.h"
 
 #import <Cocoa/Cocoa.h>
 #include "nsObjCExceptions.h"
@@ -75,29 +74,46 @@ nsPrintDialogServiceX::Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings)
   if (!settingsX)
     return NS_ERROR_FAILURE;
 
-  NSPrintInfo* printInfo = settingsX->GetCocoaPrintInfo();  
-  
+  NSPrintInfo* printInfo = settingsX->GetCocoaPrintInfo();
+
+  // Put the print info into the current print operation, since that's where
+  // [panel runModal] will look for it. We create the view because otherwise
+  // we'll get unrelated warnings printed to the console.
+  NSView* tmpView = [[NSView alloc] init];
+  NSPrintOperation* printOperation = [NSPrintOperation printOperationWithView:tmpView printInfo:printInfo];
+  [NSPrintOperation setCurrentOperation:printOperation];
+
   NSPrintPanel* panel = [NSPrintPanel printPanel];
   PrintPanelAccessoryController* viewController =
     [[PrintPanelAccessoryController alloc] initWithSettings:aSettings];
+#ifdef NS_LEOPARD_AND_LATER
   [panel addAccessoryController:viewController];
   [viewController release];
+#else
+  [panel setAccessoryView:[viewController view]];
+  [[viewController view] release];
+#endif
 
   // Show the dialog.
   nsCocoaUtils::PrepareForNativeAppModalDialog();
-  int button = [panel runModalWithPrintInfo:printInfo];
+  int button = [panel runModal];
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
+
+  settingsX->SetCocoaPrintInfo([[[NSPrintOperation currentOperation] printInfo] copy]);
+  [NSPrintOperation setCurrentOperation:nil];
+  [printInfo release];
+  [tmpView release];
 
   if (button != NSOKButton)
     return NS_ERROR_ABORT;
 
   // Export settings.
   [viewController exportSettings];
-  
+
   PRInt16 pageRange;
   aSettings->GetPrintRange(&pageRange);
   if (pageRange != nsIPrintSettings::kRangeSelection) {
-    PMPrintSettings nativePrintSettings = (PMPrintSettings)[printInfo PMPrintSettings];
+    PMPrintSettings nativePrintSettings = settingsX->GetPMPrintSettings();
     UInt32 firstPage, lastPage;
     OSStatus status = ::PMGetFirstPage(nativePrintSettings, &firstPage);
     if (status == noErr) {
@@ -109,7 +125,7 @@ nsPrintDialogServiceX::Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings)
       }
     }
   }
-  
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -239,10 +255,11 @@ static const char sHeaderFooterTags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
 
   nsXPIDLString intlString;
   mPrintBundle->GetStringFromName(NS_ConvertUTF8toUTF16(aKey).get(), getter_Copies(intlString));
-  NSString* s = [NSString stringWithUTF8String:NS_ConvertUTF16toUTF8(intlString).get()];
+  NSMutableString* s = [NSMutableString stringWithUTF8String:NS_ConvertUTF16toUTF8(intlString).get()];
 
   // Remove all underscores (they're used in the GTK dialog for accesskeys).
-  return [s stringByReplacingOccurrencesOfString:@"_" withString:@""];
+  [s replaceOccurrencesOfString:@"_" withString:@"" options:0 range:NSMakeRange(0, [s length])];
+  return s;
 }
 
 // Widget helpers
@@ -560,6 +577,7 @@ static const char sHeaderFooterTags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
           [mFooterRightList titleOfSelectedItem]]]]];
 }
 
+#ifdef NS_LEOPARD_AND_LATER
 - (NSArray*)localizedSummaryItems
 {
   return [NSArray arrayWithObjects:
@@ -586,6 +604,7 @@ static const char sHeaderFooterTags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
       [self footerSummaryValue], NSPrintPanelAccessorySummaryItemDescriptionKey, nil],
     nil];
 }
+#endif
 
 @end
 
@@ -595,7 +614,11 @@ static const char sHeaderFooterTags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
 
 - (id)initWithSettings:(nsIPrintSettings*)aSettings
 {
+#ifdef NS_LEOPARD_AND_LATER
   [super initWithNibName:nil bundle:nil];
+#else
+  [super init];
+#endif
   NSView* accView = [[PrintPanelAccessoryView alloc] initWithSettings:aSettings];
   [self setView:accView];
   [accView release];
@@ -607,9 +630,27 @@ static const char sHeaderFooterTags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
   return [(PrintPanelAccessoryView*)[self view] exportSettings];
 }
 
+#ifdef NS_LEOPARD_AND_LATER
 - (NSArray *)localizedSummaryItems
 {
   return [(PrintPanelAccessoryView*)[self view] localizedSummaryItems];
 }
+#else
+- (void)setView:(NSView*)aView
+{
+  mView = [aView retain];
+}
+
+- (NSView*)view
+{
+  return mView;
+}
+
+- (void)dealloc
+{
+  [mView release];
+  [super dealloc];
+}
+#endif
 
 @end

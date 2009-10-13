@@ -83,6 +83,8 @@
 #include "nsGfxCIID.h"
 #include "nsIObserverService.h"
 
+#include "nsIdleService.h"
+
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleRole.h"
@@ -118,13 +120,6 @@ static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility"
 
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
-#endif
-
-#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_ENABLE_GCONF)
-#include "gconf/gconf-client.h"
-static PRBool gWidgetCompletionEnabled = PR_FALSE;
-static const char sWidgetCompletionGConfPref [] =
-    "/apps/osso/inputmethod/hildon-im-languages/en_GB/word-completion";
 #endif
 
 #ifdef MOZ_DFB
@@ -264,6 +259,14 @@ static PRBool gdk_keyboard_get_modmap_masks(Display*  aDisplay,
 static nsresult    initialize_prefs        (void);
 
 PRUint32        gLastInputEventTime = 0;
+
+static void UpdateLastInputEventTime() {
+  gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+  nsCOMPtr<nsIIdleService> idleService = do_GetService("@mozilla.org/widget/idleservice;1");
+  nsIdleService* is = static_cast<nsIdleService*>(idleService.get());
+  if (is)
+    is->IdleTimeWasModified();
+}
 
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::mLastDragMotionWindow = NULL;
@@ -1777,12 +1780,6 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 }
 
 NS_IMETHODIMP
-nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsWindow::SetTitle(const nsAString& aTitle)
 {
     if (!mShell)
@@ -1865,17 +1862,6 @@ NS_IMETHODIMP
 nsWindow::EnableDragDrop(PRBool aEnable)
 {
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::PreCreateWidget(nsWidgetInitData *aWidgetInitData)
-{
-    if (nsnull != aWidgetInitData) {
-        mWindowType = aWidgetInitData->mWindowType;
-        mBorderStyle = aWidgetInitData->mBorderStyle;
-        return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -2837,33 +2823,6 @@ nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
         return;
     }
 
-#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_ENABLE_GCONF)
-    if (mIsTopLevel) {
-        // For mobile/maemo, it is desired to disable the word completion widget
-        // at the bottom of the screen for some reasons: it interacts badly with
-        // keyboard events sometimes and disabling it will give more screen space
-        // for web content. So whenever a topLevel mobile window gets the focus we
-        // verify what is the current state of the widget-completion through query
-        // the proper gconf property. If it is enabled, we store the property value
-        // and disable it. Where the toplevel window loses the focus we restore the
-        // previous state of the widget completion property so other applications in
-        // the system do not get affected. See 'OnContainerFocusOutEvent'.
-        if (mWindowType == eWindowType_toplevel)
-            if (GConfClient *gConfClient = gconf_client_get_default()) {
-                GError* error = nsnull;
-                gWidgetCompletionEnabled = gconf_client_get_bool(gConfClient,
-                                                                 sWidgetCompletionGConfPref,
-                                                                 &error);
-                if (error)
-                    g_error_free(error);
-                else if (gWidgetCompletionEnabled)
-                    gconf_client_set_bool(gConfClient, sWidgetCompletionGConfPref,
-                                          PR_FALSE, nsnull);
-                g_object_unref(gConfClient);
-            }
-    }
-#endif
-
     // Unset the urgency hint, if possible
     GtkWidget* top_window = nsnull;
     GetToplevelWidget(&top_window);
@@ -2894,16 +2853,6 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
     if (!gFocusWindow)
         return;
 
-#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_ENABLE_GCONF)
-    if (mIsTopLevel && mWindowType == eWindowType_toplevel)
-        if(GConfClient *gConfClient = gconf_client_get_default()) {
-            GError* error = nsnull;
-            gconf_client_set_bool(gConfClient, sWidgetCompletionGConfPref, gWidgetCompletionEnabled, &error);
-            if (error)
-                g_error_free(error);
-            g_object_unref(gConfClient);
-        }
-#endif
     GdkWindow *tmpWindow;
     tmpWindow = (GdkWindow *)gFocusWindow->GetNativeData(NS_NATIVE_WINDOW);
     nsWindow *tmpnsWindow = get_window_for_gdk_window(tmpWindow);
@@ -3761,7 +3710,8 @@ nsWindow::Create(nsIWidget        *aParent,
 
     // save our bounds
     mBounds = aRect;
-    if (mWindowType != eWindowType_child) {
+    if (mWindowType != eWindowType_child &&
+        mWindowType != eWindowType_plugin) {
         // The window manager might place us. Indicate that if we're
         // shown, we want to go through
         // nsWindow::NativeResize(x,y,w,h) to maybe set our own
@@ -3918,6 +3868,7 @@ nsWindow::Create(nsIWidget        *aParent,
         }
     }
         break;
+    case eWindowType_plugin:
     case eWindowType_child: {
         if (parentMozContainer) {
             mGdkWindow = CreateGdkWindow(parentGdkWindow, parentMozContainer);
@@ -5451,7 +5402,7 @@ GetFirstNSWindowForGDKWindow(GdkWindow *aGdkWindow)
 gboolean
 motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 {
-    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+    UpdateLastInputEventTime();
 
     nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
@@ -5469,7 +5420,7 @@ motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 gboolean
 button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
-    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+    UpdateLastInputEventTime();
 
     nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
@@ -5484,7 +5435,7 @@ button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
 gboolean
 button_release_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
-    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+    UpdateLastInputEventTime();
 
     nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
@@ -5622,7 +5573,7 @@ key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
 {
     LOG(("key_press_event_cb\n"));
 
-    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+    UpdateLastInputEventTime();
 
     // find the window with focus and dispatch this event to that widget
     nsWindow *window = get_window_for_gtk_widget(widget);
@@ -5665,7 +5616,7 @@ key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
 {
     LOG(("key_release_event_cb\n"));
 
-    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+    UpdateLastInputEventTime();
 
     // find the window with focus and dispatch this event to that widget
     nsWindow *window = get_window_for_gtk_widget(widget);
@@ -6725,7 +6676,6 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
             int mode;
             g_object_get (G_OBJECT(IMEGetContext()), "hildon-input-mode", &mode, NULL);
 
-
             if (mIMEData->mEnabled == nsIWidget::IME_STATUS_ENABLED ||
                 mIMEData->mEnabled == nsIWidget::IME_STATUS_PLUGIN)
                 mode &= ~HILDON_GTK_INPUT_MODE_INVISIBLE;
@@ -6759,9 +6709,7 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
             rectBuf.Append(NS_LITERAL_STRING("}"));
             observerService->NotifyObservers(nsnull, "softkb-change", rectBuf.get());
         }
-
 #endif
-
     } else {
         if (IsIMEEditableState(mIMEData->mEnabled))
             ResetInputState();

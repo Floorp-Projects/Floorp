@@ -91,6 +91,7 @@ function unregisterA11yEventListener(aEventType, aEventHandler)
   listenA11yEvents(false);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // Event queue
 
@@ -105,15 +106,6 @@ const INVOKER_ACTION_FAILED = 1;
  * tests.
  */
 const DO_NOT_FINISH_TEST = 1;
-
-/**
- * Common invoker checker (see eventSeq of eventQueue).
- */
-function invokerChecker(aEventType, aTarget)
-{
-  this.type = aEventType;
-  this.target = aTarget;
-}
 
 /**
  * Creates event queue for the given event type. The queue consists of invoker
@@ -539,6 +531,9 @@ function eventQueue(aEventType)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// Action sequence
+
 /**
  * Deal with action sequence. Used when you need to execute couple of actions
  * each after other one.
@@ -583,6 +578,168 @@ function sequence()
 
   this.items = new Array();
   this.idx = -1;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Event queue invokers
+
+/**
+ * Invokers defined below take a checker object implementing 'check' method
+ * which will be called when proper event is handled. Invokers listen default
+ * event type registered in event queue object.
+ *
+ * Note, you don't need to initialize 'target' and 'type' members of checker
+ * object. The 'target' member will be initialized by invoker object and you are
+ * free to use it in 'check' method.
+ */
+
+/**
+ * Click invoker.
+ */
+function synthClick(aNodeOrID, aChecker)
+{
+  this.__proto__ = new synthAction(aNodeOrID, aChecker);
+
+  this.invoke = function synthClick_invoke()
+  {
+    // Scroll the node into view, otherwise synth click may fail.
+    this.DOMNode.scrollIntoView(true);
+
+    synthesizeMouse(this.DOMNode, 1, 1, {});
+  }
+
+  this.getID = function synthFocus_getID()
+  {
+    return prettyName(aNodeOrID) + " click"; 
+  }
+}
+
+/**
+ * General key press invoker.
+ */
+function synthKey(aNodeOrID, aKey, aArgs, aChecker)
+{
+  this.__proto__ = new synthAction(aNodeOrID, aChecker);
+
+  this.invoke = function synthKey_invoke()
+  {
+    synthesizeKey(this.mKey, this.mArgs);
+  }
+
+  this.getID = function synthFocus_getID()
+  {
+    return prettyName(aNodeOrID) + " '" + this.mKey + "' key"; 
+  }
+
+  this.mKey = aKey;
+  this.mArgs = aArgs ? aArgs : {};
+}
+
+/**
+ * Tab key invoker.
+ */
+function synthTab(aNodeOrID, aChecker)
+{
+  this.__proto__ = new synthKey(aNodeOrID, "VK_TAB", { shiftKey: false },
+                                aChecker);
+
+  this.getID = function synthTabTest_getID() 
+  { 
+    return prettyName(aNodeOrID) + " tab";
+  }
+}
+
+/**
+ * Shift tab key invoker.
+ */
+function synthShiftTab(aNodeOrID, aChecker)
+{
+  this.__proto__ = new synthKey(aNodeOrID, "VK_TAB", { shiftKey: true },
+                                aChecker);
+
+  this.getID = function synthTabTest_getID() 
+  { 
+    return prettyName(aNodeOrID) + " shift tab";
+  }
+}
+
+/**
+ * Down arrow key invoker.
+ */
+function synthDownKey(aNodeOrID, aChecker)
+{
+  this.__proto__ = new synthKey(aNodeOrID, "VK_DOWN", null, aChecker);
+
+  this.getID = function synthDownKey_getID()
+  {
+    return prettyName(aNodeOrID) + " key down";
+  }
+}
+
+/**
+ * Right arrow key invoker.
+ */
+function synthRightKey(aNodeOrID, aChecker)
+{
+  this.__proto__ = new synthKey(aNodeOrID, "VK_RIGHT", null, aChecker);
+
+  this.getID = function synthRightKey_getID()
+  {
+    return prettyName(aNodeOrID) + " key right";
+  }
+}
+
+/**
+ * Focus invoker.
+ */
+function synthFocus(aNodeOrID, aChecker)
+{
+  this.__proto__ = new synthAction(aNodeOrID, aChecker);
+
+  this.invoke = function synthFocus_invoke()
+  {
+    this.DOMNode.focus();
+  }
+
+  this.getID = function synthFocus_getID() 
+  { 
+    return prettyName(aNodeOrID) + " focus";
+  }
+}
+
+/**
+ * Select all invoker.
+ */
+function synthSelectAll(aNodeOrID, aChecker)
+{
+  this.__proto__ = new synthAction(aNodeOrID, aChecker);
+
+  this.invoke = function synthSelectAll_invoke()
+  {
+    if (this.DOMNode instanceof Components.interfaces.nsIDOMHTMLInputElement)
+      this.DOMNode.select();
+    else
+      window.getSelection().selectAllChildren(this.DOMNode);
+  }
+
+  this.getID = function synthSelectAll_getID()
+  {
+    return aNodeOrID + " selectall";
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Event queue checkers
+
+/**
+ * Common invoker checker (see eventSeq of eventQueue).
+ */
+function invokerChecker(aEventType, aTarget)
+{
+  this.type = aEventType;
+  this.target = aTarget;
 }
 
 
@@ -740,4 +897,23 @@ function sequenceItem(aProcessor, aEventType, aTarget, aItemID)
   };
   
   this.queue.push(invoker);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Event queue invokers
+
+/**
+ * Invoker base class for prepare an action.
+ */
+function synthAction(aNodeOrID, aChecker)
+{
+  this.DOMNode = getNode(aNodeOrID);
+  aChecker.target = this.DOMNode;
+
+  this.check = function synthAction_check(aEvent)
+  {
+    aChecker.check(aEvent);
+  }
+
+  this.getID = function synthAction_getID() { return aNodeOrID + " action"; }
 }

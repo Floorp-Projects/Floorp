@@ -184,6 +184,10 @@ nsresult nsSVGDataParser::MatchNumber(float* aX)
   }
 
   char* end;
+  /* PR_strtod is not particularily fast. We only need a float and not a double so
+   * we could probably use something faster here if needed. The CSS parser uses
+   * nsCSSScanner::ParseNumber() instead of PR_strtod. See bug 516396 for some
+   * additional info. */
   *aX = float(PR_strtod(pos, &end));
   if (pos != end && NS_FloatIsFinite(*aX)) {
     return NS_OK;

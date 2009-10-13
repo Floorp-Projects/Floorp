@@ -159,7 +159,7 @@ oggz_reset_seek (OGGZ * oggz, oggz_off_t offset, ogg_int64_t unit, int whence)
   printf ("reset to %" PRI_OGGZ_OFF_T "d\n", offset_at);
 #endif
 
-  if (unit != -1) reader->current_unit = unit;
+  reader->current_unit = unit;
 
   return offset_at;
 }
@@ -805,6 +805,7 @@ oggz_seek_end (OGGZ * oggz, ogg_int64_t unit_offset)
   ogg_int64_t unit_end;
   long serialno;
   ogg_page * og;
+  OggzReader * reader = &oggz->x.reader;
 
   og = &oggz->current_page;
 
@@ -821,12 +822,22 @@ oggz_seek_end (OGGZ * oggz, ogg_int64_t unit_offset)
   }
 
   unit_end = oggz_get_unit (oggz, serialno, granulepos);
-
+  
 #ifdef DEBUG
   printf ("*** oggz_seek_end: found packet (%lld) at @%" PRI_OGGZ_OFF_T "d [%lld]\n",
 	  unit_end, offset_end, granulepos);
 #endif
 
+  if (unit_end == -1) {
+    /* Failed to get time at the end, reset and fail. */
+    oggz_reset (oggz, offset_orig, -1, SEEK_SET);
+    return -1;
+  }
+
+  reader->current_unit = unit_end;
+  if (unit_offset == 0) {
+    return unit_end;
+  }
   return oggz_bounded_seek_set (oggz, unit_end + unit_offset, 0, -1, 0);
 }
 

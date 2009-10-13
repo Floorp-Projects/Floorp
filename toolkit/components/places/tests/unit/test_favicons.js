@@ -418,7 +418,7 @@ inData = readFileData(iconFile);
 do_check_eq(inData.length, 344);
 var pageURI = uri("http://foo.bar/");
 
-faviconURI = uri("file:///./" + iconName);
+var faviconURI = uri("file:///./" + iconName);
 
 iconsvc.setAndLoadFaviconForPage(pageURI, faviconURI, true);
 

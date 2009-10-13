@@ -262,9 +262,10 @@ class nsFastLoadFileReader
       public nsIFastLoadFileReader
 {
   public:
-    nsFastLoadFileReader(nsIInputStream *aStream)
-      : mCurrentDocumentMapEntry(nsnull) {
-        SetInputStream(aStream);
+    nsFastLoadFileReader(nsIFile *aFile)
+        : mCurrentDocumentMapEntry(nsnull), mFile(aFile), mFd(nsnull),
+          mFileLen(0), mFilePos(0), mFileMap(nsnull), mFileData(nsnull)
+    {
         MOZ_COUNT_CTOR(nsFastLoadFileReader);
     }
 
@@ -280,6 +281,11 @@ class nsFastLoadFileReader
     NS_IMETHOD ReadObject(PRBool aIsStrongRef, nsISupports* *_retval);
     NS_IMETHOD ReadID(nsID *aResult);
 
+    void SeekTo(PRInt64 aOffset) {
+        mFilePos = PR_MAX(0, PR_MIN(aOffset, mFileLen));
+        NS_ASSERTION(aOffset == mFilePos, "Attempt to seek out of bounds");
+    }
+
     // nsIFastLoadFileControl methods
     NS_DECL_NSIFASTLOADFILECONTROL
 
@@ -291,16 +297,6 @@ class nsFastLoadFileReader
 
     // Override Read so we can demultiplex a document interleaved with others.
     NS_IMETHOD Read(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead);
-
-    // Override ReadSegments too, as nsBinaryInputStream::ReadSegments does
-    // not call through our overridden Read method -- it calls directly into
-    // the underlying input stream.
-    NS_IMETHODIMP ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
-                               PRUint32 aCount, PRUint32 *aResult);
-
-    // Override SetInputStream so we can update mSeekableInput
-    NS_IMETHOD SetInputStream(nsIInputStream* aInputStream);
-
     nsresult ReadHeader(nsFastLoadHeader *aHeader);
 
     /**
@@ -312,6 +308,9 @@ class nsFastLoadFileReader
         PRUint16                mSaveStrongRefCnt;      // saved for an Update
         PRUint16                mSaveWeakRefCnt;        // after a Read
     };
+
+    NS_IMETHODIMP ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
+                               PRUint32 aCount, PRUint32 *aResult);
 
     /**
      * In-memory representation of the FastLoad file footer.
@@ -389,20 +388,23 @@ class nsFastLoadFileReader
     NS_IMETHOD Close();
 
   protected:
-    // Kept in sync with mInputStream to avoid repeated QI
-    nsCOMPtr<nsISeekableStream> mSeekableInput;
-
     nsFastLoadHeader mHeader;
     nsFastLoadFooter mFooter;
 
     nsDocumentMapReadEntry* mCurrentDocumentMapEntry;
 
     friend class nsFastLoadFileUpdater;
+    nsIFile *mFile;     // .mfasl file
+    PRFileDesc *mFd;    // OS file-descriptor
+    PRUint32 mFileLen;  // length of file
+    PRUint32 mFilePos;  // current position within file
+    PRFileMap *mFileMap;// nspr datastructure for mmap
+    PRUint8 *mFileData; // pointer to mmaped file
 };
 
 NS_COM nsresult
 NS_NewFastLoadFileReader(nsIObjectInputStream* *aResult NS_OUTPARAM,
-                         nsIInputStream* aSrcStream);
+                         nsIFile* aFile);
 
 /**
  * Inherit from the concrete class nsBinaryInputStream, which inherits from
@@ -537,12 +539,11 @@ NS_NewFastLoadFileWriter(nsIObjectOutputStream* *aResult NS_OUTPARAM,
  * that maps all data on Close.
  */
 class nsFastLoadFileUpdater
-    : public nsFastLoadFileWriter,
-      private nsIFastLoadFileIO
+    : public nsFastLoadFileWriter
 {
   public:
-    nsFastLoadFileUpdater(nsIOutputStream* aOutputStream)
-      : nsFastLoadFileWriter(aOutputStream, nsnull) {
+    nsFastLoadFileUpdater(nsIOutputStream* aOutputStream, nsIFastLoadFileIO *aFileIO)
+        : nsFastLoadFileWriter(aOutputStream, aFileIO) {
         MOZ_COUNT_CTOR(nsFastLoadFileUpdater);
     }
 
@@ -553,9 +554,6 @@ class nsFastLoadFileUpdater
   private:
     // nsISupports methods
     NS_DECL_ISUPPORTS_INHERITED
-
-    // nsIFastLoadFileIO methods
-    NS_DECL_NSIFASTLOADFILEIO
 
     nsresult   Open(nsFastLoadFileReader* aReader);
     NS_IMETHOD Close();
@@ -577,7 +575,7 @@ class nsFastLoadFileUpdater
 
 NS_COM nsresult
 NS_NewFastLoadFileUpdater(nsIObjectOutputStream* *aResult NS_OUTPARAM,
-                          nsIOutputStream* aOutputStream,
+                          nsIFastLoadFileIO* aFileIO,
                           nsIObjectInputStream* aReaderAsStream);
 
 #endif // nsFastLoadFile_h___

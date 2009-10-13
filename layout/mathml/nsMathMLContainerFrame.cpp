@@ -132,13 +132,13 @@ public:
   }
 #endif
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLError")
 };
 
 void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+                                 nsIRenderingContext* aCtx)
 {
   // Set color and font ...
   nsLayoutUtils::SetFontFromStyle(aCtx, mFrame->GetStyleContext());

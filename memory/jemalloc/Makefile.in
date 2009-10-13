@@ -104,6 +104,9 @@ $(MOZ_CRT_DLL): \
 	rm -f $(addsuffix .lib, $(addprefix $(CRT_OBJ_DIR)/build/intel/, $(MOZ_CRT_STATIC_LIBS)))
 	rm -f $(addsuffix .pdb, $(addprefix $(CRT_OBJ_DIR)/build/intel/, $(MOZ_CRT_STATIC_LIBS)))
 
+# but still export jemalloc.h
+EXPORTS = jemalloc.h
+
 else # Not Windows
 
 MODULE_OPTIMIZE_FLAGS = -O2

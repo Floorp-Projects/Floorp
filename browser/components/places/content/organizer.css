@@ -1,15 +1,8 @@
-
+%ifdef PLACES_QUERY_BUILDER
 .history-calendar {
   -moz-binding: url("chrome://browser/content/places/places.xml#calendar");
 }
-
-button.commandButton {
-  -moz-binding: url("chrome://browser/content/places/places.xml#command-button");
-}
-
-.filterList {
-  -moz-binding: url("chrome://browser/content/places/places.xml#filter-button");
-}
+%endif
 
 #contentTitle {
   width: 0px;

@@ -43,6 +43,8 @@
 #include <string>
 #include <sstream>
 
+ using namespace std;
+
 #define PLUGIN_NAME        "Test Plug-in"
 #define PLUGIN_DESCRIPTION "Plug-in for testing purposes."
 #define PLUGIN_VERSION     "1.0.0.0"
@@ -63,6 +65,8 @@ static NPClass sNPClass;
 typedef bool (* ScriptableFunction)
   (NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
+static bool npnInvokeTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool npnInvokeDefaultTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool setUndefinedValueTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool identifierToStringTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool timerTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -79,8 +83,11 @@ static bool unscheduleAllTimers(NPObject* npobj, const NPVariant* args, uint32_t
 static bool getLastMouseX(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getLastMouseY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getError(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool doInternalConsistencyCheck(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
+  "npnInvokeTest",
+  "npnInvokeDefaultTest",
   "setUndefinedValueTest",
   "identifierToStringTest",
   "timerTest",
@@ -97,9 +104,12 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getLastMouseX",
   "getLastMouseY",
   "getError",
+  "doInternalConsistencyCheck",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
+  npnInvokeTest,
+  npnInvokeDefaultTest,
   setUndefinedValueTest,
   identifierToStringTest,
   timerTest,
@@ -116,9 +126,12 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   getLastMouseX,
   getLastMouseY,
   getError,
+  doInternalConsistencyCheck,
 };
 
-static char* NPN_GetURLNotifyCookie = "NPN_GetURLNotify_Cookie";
+static const char* NPN_GetURLNotifyCookie = "NPN_GetURLNotify_Cookie";
+
+static const char* SUCCESS_STRING = "pass";
 
 static bool sIdentifiersInitialized = false;
 
@@ -193,11 +206,11 @@ static void sendBufferToFrame(NPP instance)
   
   if (instanceData->npnNewStream &&
       instanceData->err.str().length() == 0) {
+    char typeHTML[] = "text/html";
     NPStream* stream;
     printf("calling NPN_NewStream...");
-    NPError err = NPN_NewStream(instance, "text/html", 
-        instanceData->frame.c_str(),
-        &stream);
+    NPError err = NPN_NewStream(instance, typeHTML, 
+        instanceData->frame.c_str(), &stream);
     printf("return value %d\n", err);
     if (err != NPERR_NO_ERROR) {
       instanceData->err << "NPN_NewStream returned " << err;
@@ -226,7 +239,7 @@ static void sendBufferToFrame(NPP instance)
   }
   else {
     // Convert CRLF to LF, and escape most other non-alphanumeric chars.
-    for (int i = 0; i < outbuf.length(); i++) {
+    for (size_t i = 0; i < outbuf.length(); i++) {
       if (outbuf[i] == '\n') {
         outbuf.replace(i, 1, "%0a");
         i += 2;
@@ -254,6 +267,25 @@ static void sendBufferToFrame(NPP instance)
       instanceData->err << "NPN_GetURL returned " << err;
     }
   }
+}
+
+TestFunction
+getFuncFromString(const char* funcname)
+{
+  FunctionTable funcTable[] = 
+    {
+      { FUNCTION_NPP_NEWSTREAM, "npp_newstream" },
+      { FUNCTION_NPP_WRITEREADY, "npp_writeready" },
+      { FUNCTION_NPP_WRITE, "npp_write" },
+      { FUNCTION_NPP_DESTROYSTREAM, "npp_destroystream" },
+      { FUNCTION_NONE, NULL }
+    };
+  int32_t i = 0;
+  while(funcTable[i].funcName) {
+    if (!strcmp(funcname, funcTable[i].funcName)) return funcTable[i].funcId;
+    i++;
+  }
+  return FUNCTION_NONE;
 }
 
 //
@@ -406,6 +438,8 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->npp = instance;
   instanceData->streamMode = NP_ASFILEONLY;
   instanceData->testFunction = FUNCTION_NONE;
+  instanceData->functionToFail = FUNCTION_NONE;
+  instanceData->failureCode = 0;
   instanceData->streamChunkSize = 1024;
   instanceData->streamBuf = NULL;
   instanceData->streamBufSize = 0;
@@ -414,6 +448,8 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->testrange = NULL;
   instanceData->hasWidget = false;
   instanceData->npnNewStream = false;
+  instanceData->writeCount = 0;
+  instanceData->writeReadyCount = 0;
   memset(&instanceData->window, 0, sizeof(instanceData->window));
   instance->pdata = instanceData;
 
@@ -464,6 +500,12 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     if (strcmp(argn[i], "streamchunksize") == 0) {
       instanceData->streamChunkSize = atoi(argv[i]);
     }
+    if (strcmp(argn[i], "failurecode") == 0) {
+      instanceData->failureCode = atoi(argv[i]);
+    }
+    if (strcmp(argn[i], "functiontofail") == 0) {
+      instanceData->functionToFail = getFuncFromString(argv[i]);
+    }
     if (strcmp(argn[i], "geturl") == 0) {
       instanceData->testUrl = argv[i];
       instanceData->testFunction = FUNCTION_NPP_GETURL;
@@ -489,7 +531,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     }
     if (strcmp(argn[i], "range") == 0) {
       string range = argv[i];
-      int16_t semicolon = range.find(';');
+      size_t semicolon = range.find(';');
       while (semicolon != string::npos) {
         addRange(instanceData, range.substr(0, semicolon).c_str());
         if (semicolon == range.length()) {
@@ -580,6 +622,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
 NPError
 NPP_Destroy(NPP instance, NPSavedData** save)
 {
+  printf("NPP_Destroy\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
 
   if (instanceData->streamBuf) {
@@ -625,6 +668,16 @@ NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, 
 {
   printf("NPP_NewStream\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+  
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM &&
+      instanceData->failureCode) {
+    instanceData->err << SUCCESS_STRING;
+    if (instanceData->frame.length() > 0) {
+      sendBufferToFrame(instance);
+    }
+    return instanceData->failureCode;
+  }
+  
   *stype = instanceData->streamMode;
 
   if (instanceData->streamBufSize) {
@@ -643,7 +696,29 @@ NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
 {
   printf("NPP_DestroyStream\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
-  if (instanceData->streamMode == NP_ASFILE) {
+
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM) {
+    instanceData->err << "NPP_DestroyStream called";
+  }
+
+  if (instanceData->functionToFail == FUNCTION_NPP_WRITE) {
+    if (instanceData->writeCount == 1)
+      instanceData->err << SUCCESS_STRING;
+    else
+      instanceData->err << "NPP_Write called after returning -1";
+  }
+
+  if (instanceData->functionToFail == FUNCTION_NPP_DESTROYSTREAM &&
+      instanceData->failureCode) {
+    instanceData->err << SUCCESS_STRING;
+    if (instanceData->frame.length() > 0) {
+      sendBufferToFrame(instance);
+    }
+    return instanceData->failureCode;
+  }
+
+  if (instanceData->streamMode == NP_ASFILE &&
+      instanceData->functionToFail == FUNCTION_NONE) {
     if (strcmp(reinterpret_cast<char *>(instanceData->fileBuf), 
       reinterpret_cast<char *>(instanceData->streamBuf)) != 0) {
       instanceData->err <<
@@ -669,7 +744,18 @@ NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
 int32_t
 NPP_WriteReady(NPP instance, NPStream* stream)
 {
+  printf("NPP_WriteReady\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+  instanceData->writeReadyCount++;
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM) {
+    instanceData->err << "NPP_WriteReady called";
+  }
+  
+  // temporarily disabled per bug 519870
+  //if (instanceData->writeReadyCount == 1) {
+  //  return 0;
+  //}
+
   return instanceData->streamChunkSize;
 }
 
@@ -678,12 +764,27 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
 {
   printf("NPP_Write, offset=%d, len=%d, end=%d\n", offset, len, stream->end);
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+  instanceData->writeCount++;
+
+  // temporarily disabled per bug 519870
+  //if (instanceData->writeReadyCount == 1) {
+  //  instanceData->err << "NPP_Write called even though NPP_WriteReady " <<
+  //      "returned 0";
+  //}
+  
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM) {
+    instanceData->err << "NPP_Write called";
+  }
+
+  if (instanceData->functionToFail == FUNCTION_NPP_WRITE) {
+    return -1;
+  }
 
   // If the complete stream has been written, and we're doing a seek test,
   // then call NPN_RequestRead.
   if (instanceData->streamMode == NP_SEEK &&
       stream->end != 0 && 
-      stream->end == (instanceData->streamBufSize + len)) {
+      stream->end == ((uint32_t)instanceData->streamBufSize + len)) {
     // prevent recursion
     instanceData->streamMode = NP_NORMAL;
 
@@ -709,7 +810,7 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
     bool stillwaiting = false;
     while(range != NULL) {
       if (offset == range->offset &&
-        len == range->length) {
+        (uint32_t)len == range->length) {
         range->waiting = false;
       }
       if (range->waiting) stillwaiting = true;
@@ -750,6 +851,11 @@ NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
   size_t size;
 
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+
+  if (instanceData->functionToFail == FUNCTION_NPP_NEWSTREAM ||
+      instanceData->functionToFail == FUNCTION_NPP_WRITE) {
+    instanceData->err << "NPP_StreamAsFile called";
+  }
 
   if (!fname)
     return;
@@ -898,6 +1004,12 @@ NPN_Invoke(NPP npp, NPObject* obj, NPIdentifier methodName, const NPVariant *arg
   return sBrowserFuncs->invoke(npp, obj, methodName, args, argCount, result);
 }
 
+bool
+NPN_InvokeDefault(NPP npp, NPObject* obj, const NPVariant *args, uint32_t argCount, NPVariant *result)
+{
+  return sBrowserFuncs->invokeDefault(npp, obj, args, argCount, result);
+}
+
 const char*
 NPN_UserAgent(NPP instance)
 {
@@ -1004,6 +1116,25 @@ NPN_Write(NPP instance,
   return sBrowserFuncs->write(instance, stream, len, buf);
 }
 
+bool
+NPN_Enumerate(NPP instance,
+              NPObject *npobj,
+              NPIdentifier **identifiers,
+              uint32_t *identifierCount)
+{
+  return sBrowserFuncs->enumerate(instance, npobj, identifiers, 
+      identifierCount);
+}
+
+bool
+NPN_GetProperty(NPP instance,
+                NPObject *npobj,
+                NPIdentifier propertyName,
+                NPVariant *result)
+{
+  return sBrowserFuncs->getproperty(instance, npobj, propertyName, result);
+}
+
 //
 // npruntime object functions
 //
@@ -1094,6 +1225,180 @@ scriptableConstruct(NPObject* npobj, const NPVariant* args, uint32_t argCount, N
 //
 // test functions
 //
+
+static bool
+compareVariants(NPP instance, const NPVariant* var1, const NPVariant* var2)
+{
+  bool success = true;
+  InstanceData* id = static_cast<InstanceData*>(instance->pdata);
+  if (var1->type != var2->type) {
+    id->err << "Variant types don't match; got " << var1->type <<
+        " expected " << var2->type;
+    return false;
+  }
+  
+  switch (var1->type) {
+    case NPVariantType_Int32: {
+        int32_t result = NPVARIANT_TO_INT32(*var1);
+        int32_t expected = NPVARIANT_TO_INT32(*var2);
+        if (result != expected) {
+          id->err << "Variant values don't match; got " << result <<
+              " expected " << expected;
+          success = false;
+        }
+        break;
+      }
+    case NPVariantType_Double: {
+        double result = NPVARIANT_TO_DOUBLE(*var1);
+        double expected = NPVARIANT_TO_DOUBLE(*var2);
+        if (result != expected) {
+          id->err << "Variant values don't match (double)";
+          success = false;
+        }
+        break;
+      }
+    case NPVariantType_Void: {
+        // void values are always equivalent
+        break;
+      }
+    case NPVariantType_Null: {
+        // null values are always equivalent
+        break;
+      }
+    case NPVariantType_Bool: {
+        bool result = NPVARIANT_TO_BOOLEAN(*var1);
+        bool expected = NPVARIANT_TO_BOOLEAN(*var2);
+        if (result != expected) {
+          id->err << "Variant values don't match (bool)";
+          success = false;
+        }
+        break;
+      }
+    case NPVariantType_String: {
+        const NPString* result = &NPVARIANT_TO_STRING(*var1);
+        const NPString* expected = &NPVARIANT_TO_STRING(*var2);
+        if (strcmp(result->UTF8Characters, expected->UTF8Characters) ||
+            strlen(result->UTF8Characters) != strlen(expected->UTF8Characters)) {
+          id->err << "Variant values don't match; got " << 
+              result->UTF8Characters << " expected " << 
+              expected->UTF8Characters;
+          success = false;
+        }
+        break;
+      }
+    case NPVariantType_Object: {
+        uint32_t i, identifierCount = 0;
+        NPIdentifier* identifiers;
+        NPObject* result = NPVARIANT_TO_OBJECT(*var1);
+        NPObject* expected = NPVARIANT_TO_OBJECT(*var2);
+        bool enumerate_result = NPN_Enumerate(instance, expected,
+            &identifiers, &identifierCount);
+        if (!enumerate_result) {
+          id->err << "NPN_Enumerate failed";
+          success = false;
+        }
+        for (i = 0; i < identifierCount; i++) {
+          NPVariant resultVariant, expectedVariant;
+          if (!NPN_GetProperty(instance, expected, identifiers[i],
+              &expectedVariant)) {
+            id->err << "NPN_GetProperty returned false";
+            success = false;
+          }
+          else {
+            if (!NPN_HasProperty(instance, result, identifiers[i])) {
+              id->err << "NPN_HasProperty returned false";
+              success = false;
+            }
+            else {
+              if (!NPN_GetProperty(instance, result, identifiers[i],
+              &resultVariant)) {
+                id->err << "NPN_GetProperty 2 returned false";
+                success = false;
+              }
+              else {
+                success = compareVariants(instance, &resultVariant, 
+                    &expectedVariant);
+                NPN_ReleaseVariantValue(&expectedVariant);
+              }
+            }
+            NPN_ReleaseVariantValue(&resultVariant);
+          }
+        }
+        break;
+      }
+    default:
+      id->err << "Unknown variant type";
+      success = false;
+  }
+  
+  return success;
+}
+
+static bool
+npnInvokeDefaultTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  bool success = false;
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+ 
+  NPObject* windowObject;
+  NPN_GetValue(npp, NPNVWindowNPObject, &windowObject);
+  if (!windowObject)
+    return false;
+
+  NPIdentifier objectIdentifier = variantToIdentifier(args[0]);
+  if (!objectIdentifier)
+    return false;
+
+  NPVariant objectVariant;
+  if (NPN_GetProperty(npp, windowObject, objectIdentifier,
+      &objectVariant)) {
+    if (NPVARIANT_IS_OBJECT(objectVariant)) {
+      NPObject* selfObject = NPVARIANT_TO_OBJECT(objectVariant);
+      if (selfObject != NULL) {
+        NPVariant resultVariant;
+        if (NPN_InvokeDefault(npp, selfObject, &args[1], argCount - 1,
+            &resultVariant)) {
+          *result = resultVariant;
+          success = true;
+        }
+      }
+    }
+    NPN_ReleaseVariantValue(&objectVariant);
+  }
+
+  NPN_ReleaseObject(windowObject);
+  return success;
+}
+
+static bool
+npnInvokeTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  id->err.str("");
+  if (argCount < 2)
+    return false;
+
+  NPIdentifier function = variantToIdentifier(args[0]);
+  if (!function)
+    return false;
+  
+  NPObject* windowObject;
+  NPN_GetValue(npp, NPNVWindowNPObject, &windowObject);
+  if (!windowObject)
+    return false;
+  
+  NPVariant invokeResult;
+  bool invokeReturn = NPN_Invoke(npp, windowObject, function,
+      argCount > 2 ? &args[2] : NULL, argCount - 2, &invokeResult);
+      
+  bool compareResult = compareVariants(npp, &invokeResult, &args[1]);
+      
+  NPN_ReleaseObject(windowObject);
+  NPN_ReleaseVariantValue(&invokeResult);
+  BOOLEAN_TO_NPVARIANT(invokeReturn && compareResult, *result);
+  return true;
+}
 
 static bool
 setUndefinedValueTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
@@ -1333,11 +1638,33 @@ getLastMouseY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVaria
 static bool
 getError(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
+  if (argCount != 0)
+    return false;
+
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
   if (id->err.str().length() == 0)
-    STRINGZ_TO_NPVARIANT(strdup("pass"), *result);
+    STRINGZ_TO_NPVARIANT(strdup(SUCCESS_STRING), *result);
   else
     STRINGZ_TO_NPVARIANT(strdup(id->err.str().c_str()), *result);
+  return true;
+}
+
+static bool
+doInternalConsistencyCheck(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  string error;
+  pluginDoInternalConsistencyCheck(id, error);
+  NPUTF8* utf8String = (NPUTF8*)NPN_MemAlloc(error.length() + 1);
+  if (!utf8String) {
+    return false;
+  }
+  memcpy(utf8String, error.c_str(), error.length() + 1);
+  STRINGZ_TO_NPVARIANT(utf8String, *result);
   return true;
 }

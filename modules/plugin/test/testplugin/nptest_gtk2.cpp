@@ -42,13 +42,7 @@
 #endif
 #include <gtk/gtk.h>
 
-/**
- * XXX In various places in this file we use GDK APIs to inspect the
- * window ancestors of the plugin. These APIs will not work properly if
- * this plugin is used in a browser that does not use GDK for all its
- * widgets. They would also fail for out-of-process plugins. These should
- * be fixed to use raw X APIs instead.
- */
+ using namespace std;
 
 struct _PlatformData {
   Display* display;
@@ -546,4 +540,8 @@ int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData,
     return rect.y + rect.height;
   }
   return NPTEST_INT32_ERROR;
+}
+
+void pluginDoInternalConsistencyCheck(InstanceData* instanceData, string& error)
+{
 }

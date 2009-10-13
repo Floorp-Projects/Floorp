@@ -1113,52 +1113,18 @@ nsSVGUtils::HitTestClip(nsIFrame *aFrame, const nsPoint &aPoint)
 nsIFrame *
 nsSVGUtils::HitTestChildren(nsIFrame *aFrame, const nsPoint &aPoint)
 {
-  // XXX: The frame's children are linked in a singly-linked list in document
-  // order. If we were to hit test the children in this order we would need to
-  // hit test *every* SVG frame, since even if we get a hit, later SVG frames
-  // may lie on top of the matching frame. We really want to traverse SVG
-  // frames in reverse order so we can stop at the first match. Since we don't
-  // have a doubly-linked list, for the time being we traverse the
-  // singly-linked list backwards by first reversing the nextSibling pointers
-  // in place, and then restoring them when done.
-  //
-  // Note: While the child list pointers are reversed, any method which walks
-  // the list would only encounter a single child!
-
-  nsIFrame* current = nsnull;
-  nsIFrame* next = aFrame->GetFirstChild(nsnull);
-
+  // Traverse the list in reverse order, so that if we get a hit we know that's
+  // the topmost frame that intersects the point; then we can just return it.
   nsIFrame* result = nsnull;
-
-  // reverse sibling pointers
-  while (next) {
-    nsIFrame* temp = next->GetNextSibling();
-    next->SetNextSibling(current);
-    current = next;
-    next = temp;    
-  }
-
-  // now do the backwards traversal
-  while (current) {
+  for (nsIFrame* current = aFrame->GetChildList(nsnull).LastChild();
+       current;
+       current = current->GetPrevSibling()) {
     nsISVGChildFrame* SVGFrame = do_QueryFrame(current);
     if (SVGFrame) {
        result = SVGFrame->GetFrameForPoint(aPoint);
        if (result)
          break;
     }
-    // restore current frame's sibling pointer
-    nsIFrame* temp = current->GetNextSibling();
-    current->SetNextSibling(next);
-    next = current;
-    current = temp;
-  }
-
-  // restore remaining pointers
-  while (current) {
-    nsIFrame* temp = current->GetNextSibling();
-    current->SetNextSibling(next);
-    next = current;
-    current = temp;
   }
 
   if (result && !HitTestClip(aFrame, aPoint))

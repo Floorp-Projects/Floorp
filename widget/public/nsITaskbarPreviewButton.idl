@@ -1,0 +1,96 @@
+/* vim: se cin sw=2 ts=2 et : */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Rob Arnold <tellrob@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface imgIContainer;
+
+/**
+ * nsITaskbarPreviewButton
+ *
+ * Provides access to a window preview's toolbar button's properties.
+ */
+[scriptable, uuid(CED8842D-FE37-4767-9A8E-FDFA56510C75)]
+interface nsITaskbarPreviewButton : nsISupports
+{
+  /**
+   * The button's tooltip.
+   *
+   * Default: an empty string
+   */
+  attribute DOMString tooltip;
+
+  /**
+   * True if the array of previews should be dismissed when this button is clicked.
+   *
+   * Default: false
+   */
+  attribute boolean dismissOnClick;
+
+  /**
+   * True if the taskbar should draw a border around this button's image.
+   *
+   * Default: true
+   */
+  attribute boolean hasBorder;
+
+  /**
+   * True if the button is disabled. This is not the same as visible.
+   *
+   * Default: false
+   */
+  attribute boolean disabled;
+
+  /**
+   * The icon used for the button.
+   *
+   * Default: null
+   */
+  attribute imgIContainer image;
+
+  /**
+   * True if the button is shown. Buttons that are invisible do not
+   * participate in the layout of buttons underneath the preview.
+   *
+   * Default: false
+   */
+  attribute boolean visible;
+};
+

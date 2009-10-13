@@ -757,11 +757,17 @@ xpc_SameScope(XPCWrappedNativeScope *objectscope, XPCWrappedNativeScope *xpcscop
     return JS_FALSE;
 }
 
+inline jsid
+GetRTIdByIndex(JSContext *cx, uintN index)
+{
+  XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
+  return rt->GetStringID(index);
+}
+
 inline jsval
 GetRTStringByIndex(JSContext *cx, uintN index)
 {
-  XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
-  return ID_TO_VALUE(rt->GetStringID(index));
+  return ID_TO_VALUE(GetRTIdByIndex(cx, index));
 }
 
 inline

@@ -14,13 +14,18 @@
 </hbox>
 
 <embed id="p" type="application/x-test" width="200" height="200" wmode="window"></embed>
+<embed id="p2" type="application/x-test" wmode="window"
+       style="outline:5px solid blue; width:200px; height:200px;
+              border:solid black; border-width:4px 8px 4px 8px;
+              padding:3px 1px;">
+</embed>
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
 var windowFrameX, windowFrameY;
 
-function checkGeometry(id) {
+function checkGeometry(id, x, y, w, h) {
   var p = document.getElementById(id);
   var bounds = p.getBoundingClientRect();
   var pX = p.getEdge(0);
@@ -28,10 +33,10 @@ function checkGeometry(id) {
   var pWidth = p.getEdge(2) - pX;
   var pHeight = p.getEdge(3) - pY;
 
-  is(pX, windowFrameX + bounds.left, id + " plugin X");
-  is(pY, windowFrameY + bounds.top, id + " plugin Y");
-  is(pWidth, bounds.width, id + " plugin width");
-  is(pHeight, bounds.height, id + " plugin height");
+  is(pX, windowFrameX + bounds.left + x, id + " plugin X");
+  is(pY, windowFrameY + bounds.top + y, id + " plugin Y");
+  is(pWidth, w, id + " plugin width");
+  is(pHeight, h, id + " plugin height");
 }
 
 function runTests() {
@@ -55,7 +60,9 @@ function runTests() {
   windowFrameX = h1.boxObject.screenX - bounds.left - window.screenX;
   windowFrameY = h1.boxObject.screenY - bounds.top - window.screenY;
 
-  checkGeometry("p");
+  checkGeometry("p", 0, 0, 200, 200);
+  // This one tests widget positioning in the presence of borders and padding
+  checkGeometry("p2", 9, 7, 182, 186);
 
   SimpleTest.finish();
 }

@@ -201,9 +201,9 @@ function viewPartialSourceForSelection(selection)
 
   // all our content is held by the data:URI and URIs are internally stored as utf-8 (see nsIURI.idl)
   var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
-  getBrowser().webNavigation
-              .loadURI("view-source:data:text/html;charset=utf-8," + encodeURIComponent(tmpNode.innerHTML),
-                       loadFlags, null, null, null);
+  getWebNavigation().loadURI("view-source:data:text/html;charset=utf-8,"
+                             + encodeURIComponent(tmpNode.innerHTML),
+                             loadFlags, null, null, null);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,8 +237,8 @@ function getPath(ancestor, node)
 // on the inflated view-source DOM
 function drawSelection()
 {
-  getBrowser().contentDocument.title =
-    getViewSourceBundle().getString("viewSelectionSourceTitle");
+  gBrowser.contentDocument.title =
+    gViewSourceBundle.getString("viewSelectionSourceTitle");
 
   // find the special selection markers that we added earlier, and
   // draw the selection between the two...
@@ -260,7 +260,7 @@ function drawSelection()
   var replaceString = findService.replaceString;
 
   // setup our find instance
-  var findInst = getBrowser().webBrowserFind;
+  var findInst = gBrowser.webBrowserFind;
   findInst.matchCase = true;
   findInst.entireWord = false;
   findInst.wrapFind = true;
@@ -271,8 +271,7 @@ function drawSelection()
   var startLength = MARK_SELECTION_START.length;
   findInst.findNext();
 
-  var contentWindow = getBrowser().contentDocument.defaultView;
-  var selection = contentWindow.getSelection();
+  var selection = content.getSelection();
   var range = selection.getRangeAt(0);
 
   var startContainer = range.startContainer;
@@ -302,13 +301,10 @@ function drawSelection()
   // the selection, whereas in this situation, it is more user-friendly
   // to scroll at the beginning. So we override the default behavior here
   try {
-    getBrowser().docShell
-                .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsISelectionDisplay)
-                .QueryInterface(Components.interfaces.nsISelectionController)
-                .scrollSelectionIntoView(Components.interfaces.nsISelectionController.SELECTION_NORMAL,
-                                         Components.interfaces.nsISelectionController.SELECTION_ANCHOR_REGION,
-                                         true);
+    getSelectionController().scrollSelectionIntoView(
+                               Ci.nsISelectionController.SELECTION_NORMAL,
+                               Ci.nsISelectionController.SELECTION_ANCHOR_REGION,
+                               true);
   }
   catch(e) { }
 
@@ -349,7 +345,7 @@ function viewPartialSourceForFragment(node, context)
     return;
 
   // serialize
-  var title = getViewSourceBundle().getString("viewMathMLSourceTitle");
+  var title = gViewSourceBundle.getString("viewMathMLSourceTitle");
   var wrapClass = gWrapLongLines ? ' class="wrap"' : '';
   var source =
     '<!DOCTYPE html>'
@@ -368,7 +364,7 @@ function viewPartialSourceForFragment(node, context)
   ; // end
 
   // display
-  getBrowser().loadURI("data:text/html;charset=utf-8," + encodeURIComponent(source));
+  gBrowser.loadURI("data:text/html;charset=utf-8," + encodeURIComponent(source));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

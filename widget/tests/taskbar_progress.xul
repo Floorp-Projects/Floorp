@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Taskbar Previews Test"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="loaded();">
+
+  <title>Progress - yeah!</title>
+  <script type="application/javascript" 
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+    let Cc = Components.classes;
+    let Ci = Components.interfaces;
+    let Cu = Components.utils;
+    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+    let taskbar = Cc["@mozilla.org/windows-taskbar;1"].getService(Ci.nsIWinTaskbar);
+
+    function IsWin7OrHigher() {
+      try {
+        var sysInfo = Cc["@mozilla.org/system-info;1"].
+                      getService(Ci.nsIPropertyBag2);
+        var ver = parseFloat(sysInfo.getProperty("version"));
+        if (ver >= 6.1)
+          return true;
+      } catch (ex) { }
+      return false;
+    }
+
+    SimpleTest.waitForExplicitFinish();
+
+    function loaded()
+    {
+      if (!taskbar.available)
+        SimpleTest.finish();
+
+      // HACK from mconnor:
+      var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+      let win = wm.getMostRecentWindow("navigator:browser");
+      let docShell = win.gBrowser.docShell;
+
+      let TP = Ci.nsITaskbarProgress;
+
+      let progress = taskbar.getTaskbarProgress(docShell);
+      isnot(progress, null, "Progress is not null");
+
+      try {
+        taskbar.getTaskbarProgress(null);
+        ok(false, "Got progress for null docshell");
+      } catch (e) {
+        ok(true, "Cannot get progress for null docshell");
+      }
+
+      function shouldThrow(s,c,m) {
+        try {
+          progress.setProgressState(s,c,m);
+          return false;
+        } catch (e) {
+          return true;
+        }
+      }
+
+      function doesntThrow(s,c,m) !shouldThrow(s,c,m)
+
+      ok(doesntThrow(TP.STATE_NO_PROGRESS, 0, 0), "No progress state can be set");
+      ok(doesntThrow(TP.STATE_INDETERMINATE, 0, 0), "Indeterminate state can be set");
+      ok(doesntThrow(TP.STATE_NORMAL, 0, 0), "Normal state can be set");
+      ok(doesntThrow(TP.STATE_ERROR, 0, 0), "Error state can be set");
+      ok(doesntThrow(TP.STATE_PAUSED, 0, 0), "Paused state can be set");
+
+      ok(shouldThrow(TP.STATE_NO_PROGRESS, 1, 1), "Cannot set no progress with values");
+      ok(shouldThrow(TP.STATE_INDETERMINATE, 1, 1), "Cannot set indeterminate with values");
+
+      // Technically passes since unsigned(-1) > 10
+      ok(shouldThrow(TP.STATE_NORMAL, -1, 10), "Cannot set negative progress");
+      todo(shouldThrow(TP.STATE_NORMAL, 1, -1), "Cannot set negative progress");
+      todo(shouldThrow(TP.STATE_NORMAL, -1, -1), "Cannot set negative progress");
+      todo(shouldThrow(TP.STATE_NORMAL, -2, -1), "Cannot set negative progress");
+
+      ok(shouldThrow(TP.STATE_NORMAL, 5, 3), "Cannot set progress greater than max");
+
+      ok(doesntThrow(TP.STATE_NORMAL, 1, 5), "Normal state can be set with values");
+      ok(doesntThrow(TP.STATE_ERROR, 3, 6), "Error state can be set with values");
+      ok(doesntThrow(TP.STATE_PAUSED, 2, 9), "Paused state can be set with values");
+
+      SimpleTest.finish();
+    }
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+
+</window>

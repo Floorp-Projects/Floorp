@@ -53,6 +53,8 @@
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
 
 class nsIPrincipal;
+class nsICSSDeclaration;
+class nsComputedDOMStyle;
 
 // Popup control state enum. The values in this enum must go from most
 // permissive to least permissive so that it's safe to push state in
@@ -75,10 +77,11 @@ class nsPresContext;
 struct nsTimeout;
 class nsScriptObjectHolder;
 class nsXBLPrototypeHandler;
+class nsIArray;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x249423c9, 0x42a6, 0x8243, \
-  { 0x49, 0x45, 0x71, 0x7f, 0x8d, 0x28, 0x84, 0x43 } }
+{ 0x70c9f57f, 0xf7b3, 0x4a37, \
+  { 0xbe, 0x36, 0xbb, 0xb2, 0xd7, 0xe9, 0x40, 0x13 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -247,6 +250,10 @@ public:
 
     return win->mIsHandlingResizeEvent;
   }
+
+  // Convenience method for getting an element's computed style
+  virtual already_AddRefed<nsComputedDOMStyle>
+    LookupComputedStyleFor(nsIContent* aElem) = 0;
 
   // Tell this window who opened it.  This only has an effect if there is
   // either no document currently in the window or if the document is the
@@ -463,6 +470,15 @@ public:
    * Tell this window that there is an observer for orientation changes
    */
   virtual void SetHasOrientationEventListener() = 0;
+
+  /**
+   * Set a arguments for this window. This will be set on the window
+   * right away (if there's an existing document) and it will also be
+   * installed on the window when the next document is loaded. Each
+   * language impl is responsible for converting to an array of args
+   * as appropriate for that language.
+   */
+  virtual nsresult SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin) = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should

@@ -48,23 +48,15 @@
 
 #include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"
+#include "nsPrintSettingsX.h"
 
 #include "gfxQuartzSurface.h"
 #include "gfxImageSurface.h"
-
-#ifdef MOZ_COCOA_PRINTING
-#include "nsPrintSettingsX.h"
-#else
-#include "nsIPrintSettingsX.h"
-#endif
 
 nsDeviceContextSpecX::nsDeviceContextSpecX()
 : mPrintSession(NULL)
 , mPageFormat(kPMNoPageFormat)
 , mPrintSettings(kPMNoPrintSettings)
-#ifdef MOZ_COCOA_PRINTING
-, mPrintInfo(nil)
-#endif
 {
 }
 
@@ -86,36 +78,14 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget *aWidget,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-#ifdef MOZ_COCOA_PRINTING
   nsCOMPtr<nsPrintSettingsX> settings(do_QueryInterface(aPS));
   if (!settings)
     return NS_ERROR_NO_INTERFACE;
 
-  mPrintInfo = settings->GetCocoaPrintInfo();
-  mPrintSession = static_cast<PMPrintSession>([mPrintInfo PMPrintSession]);
+  mPrintSession = settings->GetPMPrintSession();
   ::PMRetain(mPrintSession);
-  mPageFormat = static_cast<PMPageFormat>([mPrintInfo PMPageFormat]);
-  mPrintSettings = static_cast<PMPrintSettings>([mPrintInfo PMPrintSettings]);
-#else
-  nsresult rv;
-
-  nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
-  if (!printSettingsX)
-    return NS_ERROR_NO_INTERFACE;
-
-  rv = printSettingsX->GetNativePrintSession(&mPrintSession);
-  if (NS_FAILED(rv))
-    return rv;
-  ::PMRetain(mPrintSession);
-
-  rv = printSettingsX->GetPMPageFormat(&mPageFormat);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = printSettingsX->GetPMPrintSettings(&mPrintSettings);
-  if (NS_FAILED(rv))
-    return rv;
-#endif
+  mPageFormat = settings->GetPMPageFormat();
+  mPrintSettings = settings->GetPMPrintSettings();
 
   return NS_OK;
 

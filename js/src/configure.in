@@ -180,7 +180,16 @@ case "$target" in
     if test -z "$CPP"; then CPP="cl -E -nologo"; fi
     if test -z "$CXXCPP"; then CXXCPP="cl -TP -E -nologo"; ac_cv_prog_CXXCPP="$CXXCPP"; fi
     if test -z "$LD"; then LD=link; fi
-    if test -z "$AS"; then AS=ml; fi
+    if test -z "$AS"; then
+        case "${target_cpu}" in
+        i*86)
+            AS=ml;
+            ;;
+        x86_64)
+            AS=ml64;
+            ;;
+        esac
+    fi
     if test -z "$MIDL"; then MIDL=midl; fi
     ;;
 *-darwin*)
@@ -1409,7 +1418,7 @@ AC_LANG_SAVE
 AC_LANG_C
 AC_MSG_CHECKING(for 64-bit OS)
 AC_TRY_COMPILE([$configure_static_assert_macros],
-               [CONFIGURE_STATIC_ASSERT(sizeof(long) == 8)],
+               [CONFIGURE_STATIC_ASSERT(sizeof(void*) == 8)],
                result="yes", result="no")
 AC_MSG_RESULT("$result")
 if test "$result" = "yes"; then
@@ -1832,7 +1841,7 @@ case "$target" in
     MOZ_DEBUG_FLAGS='-Zi'
     MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
     MOZ_FIX_LINK_PATHS=
-    MOZ_JS_LIBS='$(libdir)/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
+    MOZ_JS_LIBS='$(libdir)/mozjs.lib'
     OBJ_SUFFIX=obj
     RANLIB='echo not_ranlib'
     STRIP='echo not_strip'
@@ -1923,7 +1932,7 @@ case "$target" in
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
         LIBS="$LIBS -lgdi32 -lwinmm -lwsock32"
-        MOZ_JS_LIBS='-L$(libdir) -ljs$(MOZ_BITS)$(VERSION_NUMBER)'
+        MOZ_JS_LIBS='-L$(libdir) -lmozjs'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom -lxpcom_core'
         XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom'
@@ -1963,14 +1972,14 @@ case "$target" in
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
         WARNINGS_AS_ERRORS='-WX'
     	MOZ_OPTIMIZE_FLAGS='-O1'
-        MOZ_JS_LIBS='$(libdir)/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
+        MOZ_JS_LIBS='$(libdir)/mozjs.lib'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib'
         XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib'
         LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         if test $_MSC_VER -ge 1400; then
-            LDFLAGS="$LDFLAGS -NXCOMPAT -SAFESEH"
+            LDFLAGS="$LDFLAGS -NXCOMPAT"
             dnl For profile-guided optimization
             PROFILE_GEN_CFLAGS="-GL"
             PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
@@ -2050,7 +2059,7 @@ case "$target" in
         ;;
 
     *)
-        AC_CHECK_HEADERS(mmintrin.h oleacc.idl)
+        AC_CHECK_HEADERS(oleacc.idl)
 
         AC_LANG_SAVE
         AC_LANG_CPLUSPLUS
@@ -2061,6 +2070,14 @@ case "$target" in
 
     case "$target" in
     i*86-*)
+        if test "$HAVE_64BIT_OS"; then
+            AC_MSG_ERROR([You are targeting i386 but using the 64-bit compiler.])
+        fi
+
+        if test $_MSC_VER -ge 1400; then
+            LDFLAGS="$LDFLAGS -SAFESEH"
+        fi
+    	AC_CHECK_HEADERS(mmintrin.h)
     	AC_DEFINE(_X86_)
 	;;
     alpha-*)
@@ -2069,10 +2086,17 @@ case "$target" in
     mips-*)
     	AC_DEFINE(_MIPS_)
 	;;
+    x86_64-*)
+    	AC_DEFINE(_AMD64_)
+	;;
     *)
     	AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
 	;;
     esac
+
+    if test "$HAVE_64BIT_OS"; then
+    	AC_DEFINE(_WIN64)
+    fi
     ;;
 
 *-netbsd*)

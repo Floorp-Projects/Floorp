@@ -604,7 +604,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      PR_PL(("SeqFr::Paint -> %p PageNo: %d", pf, mPageNum));
+      PR_PL(("SeqFr::PrintNextPage -> %p PageNo: %d", pf, mPageNum));
 
       nsCOMPtr<nsIRenderingContext> renderingContext;
       PresContext()->PresShell()->

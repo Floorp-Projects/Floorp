@@ -142,11 +142,6 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
   
     // nsIContentSink
 
-    virtual PRBool ReadyToCallDidBuildModel(PRBool aTerminated)
-    {
-      return ReadyToCallDidBuildModelImpl(aTerminated);
-    };
-
     /**
      * Unimplemented. For interface compat only.
      */
@@ -166,7 +161,7 @@ class nsHtml5TreeOpExecutor : public nsIContentSink,
     /**
      * Emits EOF.
      */
-    NS_IMETHOD DidBuildModel();
+    NS_IMETHOD DidBuildModel(PRBool aTerminated);
 
     /**
      * Forwards to nsContentSink

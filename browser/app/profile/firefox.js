@@ -568,8 +568,12 @@ pref("plugin.default_plugin_disabled", true);
 // plugin finder service url
 pref("pfs.datasource.url", "https://pfs.mozilla.org/plugins/PluginFinderService.php?mimetype=%PLUGIN_MIMETYPE%&appID=%APP_ID%&appVersion=%APP_VERSION%&clientOS=%CLIENT_OS%&chromeLocale=%CHROME_LOCALE%&appRelease=%APP_RELEASE%");
 
-// by default we show an infobar message when pages require plugins the user has not installed
+// by default we show an infobar message when pages require plugins the user has not installed, or are outdated
 pref("plugins.hide_infobar_for_missing_plugin", false);
+pref("plugins.hide_infobar_for_outdated_plugin", false);
+
+pref("plugins.update.url", "https://www.mozilla.com/%LOCALE%/plugincheck/");
+pref("plugins.update.notifyUser", false);
 
 #ifdef XP_WIN
 pref("browser.preferences.instantApply", false);
@@ -895,4 +899,17 @@ pref("browser.sessionstore.interval", 60000);
 pref("toolbar.customization.usesheet", true);
 #else
 pref("toolbar.customization.usesheet", false);
+#endif
+
+#ifdef XP_WIN
+#ifndef WINCE
+pref("browser.taskbar.previews.enable", true);
+pref("browser.taskbar.previews.max", 20);
+pref("browser.taskbar.previews.cachetime", 20);
+pref("browser.taskbar.lists.enabled", true);
+pref("browser.taskbar.lists.frequent.enabled", true);
+pref("browser.taskbar.lists.recent.enabled", false);
+pref("browser.taskbar.lists.maxListItemCount", 7);
+pref("browser.taskbar.lists.tasks.enabled", true);
+#endif
 #endif

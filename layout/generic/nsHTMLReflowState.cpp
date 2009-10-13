@@ -378,8 +378,9 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
         mCBReflowState) {
       mFlags.mVResize = mCBReflowState->mFlags.mVResize;
     } else {
-      mFlags.mVResize = mFlags.mHResize || NS_SUBTREE_DIRTY(frame); 
+      mFlags.mVResize = mFlags.mHResize;
     }
+    mFlags.mVResize = mFlags.mVResize || NS_SUBTREE_DIRTY(frame);
   } else {
     // not 'auto' height
     mFlags.mVResize = frame->GetSize().height !=

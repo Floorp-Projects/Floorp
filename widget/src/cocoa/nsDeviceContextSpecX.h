@@ -42,9 +42,6 @@
 #include "nsIDeviceContextSpec.h"
 
 #include <ApplicationServices/ApplicationServices.h>
-#ifdef MOZ_COCOA_PRINTING
-#include <Cocoa/Cocoa.h>
-#endif
 
 class nsDeviceContextSpecX : public nsIDeviceContextSpec
 {
@@ -72,9 +69,6 @@ protected:
     PMPrintSession    mPrintSession;              // printing context.
     PMPageFormat      mPageFormat;                // page format.
     PMPrintSettings   mPrintSettings;             // print settings.
-#ifdef MOZ_COCOA_PRINTING
-    NSPrintInfo*      mPrintInfo;                 // Cocoa print info.
-#endif
 };
 
 #endif //nsDeviceContextSpecX_h_

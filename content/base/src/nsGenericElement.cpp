@@ -2691,6 +2691,16 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     document->ClearBoxObjectFor(this);
   }
 
+  // Ensure that CSS transitions don't continue on an element at a
+  // different place in the tree (even if reinserted before next
+  // animation refresh).
+  // FIXME: Need a test for this.
+  if (HasFlag(NODE_HAS_PROPERTIES)) {
+    DeleteProperty(nsGkAtoms::transitionsOfBeforeProperty);
+    DeleteProperty(nsGkAtoms::transitionsOfAfterProperty);
+    DeleteProperty(nsGkAtoms::transitionsProperty);
+  }
+
   // Unset this since that's what the old code effectively did.
   UnsetFlags(NODE_FORCE_XBL_BINDINGS);
   
@@ -5321,4 +5331,31 @@ nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
   TryMatchingElementsInSubtree(aRoot, nsnull, presContext, selectorList,
                                AppendAllMatchingElements, contentList);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::MozMatchesSelector(const nsAString& aSelector, PRBool* aReturn)
+{
+  NS_PRECONDITION(aReturn, "Null out param?");
+  *aReturn = nsGenericElement::doMatchesSelector(mContent, aSelector);
+  return NS_OK;
+}
+
+/* static */
+PRBool
+nsGenericElement::doMatchesSelector(nsIContent* aNode, const nsAString& aSelector)
+{
+  nsAutoPtr<nsCSSSelectorList> selectorList;
+  nsPresContext* presContext;
+  PRBool matches = PR_FALSE;
+
+  if (NS_SUCCEEDED(ParseSelectorList(aNode, aSelector,
+                                     getter_Transfers(selectorList),
+                                     &presContext)))
+  {
+    RuleProcessorData data(presContext, aNode, nsnull);
+    matches = nsCSSRuleProcessor::SelectorListMatches(data, selectorList);
+  }
+
+  return matches;
 }

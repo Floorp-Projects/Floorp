@@ -113,16 +113,16 @@ postflight_all:
 # Now, repeat the process for the test package.
 	$(MAKE) -C $(OBJDIR_PPC) UNIVERSAL_BINARY= package-tests
 	$(MAKE) -C $(OBJDIR_X86) UNIVERSAL_BINARY= package-tests
-# automation.py differs because it hardcodes a path to dist/bin.
-# It doesn't matter which one we use.
-	cp $(DIST_PPC)/test-package-stage/mochitest/automation.py \
-           $(DIST_X86)/test-package-stage/mochitest/
-	cp $(DIST_PPC)/test-package-stage/reftest/automation.py \
-           $(DIST_X86)/test-package-stage/reftest/
 	rm -rf $(DIST_UNI)/test-package-stage
-	if test -d $(DIST_PPC)/test-package-stage -a \
-                -d $(DIST_X86)/test-package-stage; then \
-           $(TOPSRCDIR)/build/macosx/universal/unify \
-             $(DIST_PPC)/test-package-stage \
-             $(DIST_X86)/test-package-stage \
+# automation.py differs because it hardcodes a path to
+# dist/bin. It doesn't matter which one we use.
+	if test -d $(DIST_PPC)/test-package-stage -a                 \
+                -d $(DIST_X86)/test-package-stage; then              \
+           cp $(DIST_PPC)/test-package-stage/mochitest/automation.py \
+             $(DIST_X86)/test-package-stage/mochitest/;              \
+           cp $(DIST_PPC)/test-package-stage/reftest/automation.py   \
+             $(DIST_X86)/test-package-stage/reftest/;                \
+           $(TOPSRCDIR)/build/macosx/universal/unify                 \
+             $(DIST_PPC)/test-package-stage                          \
+             $(DIST_X86)/test-package-stage                          \
              $(DIST_UNI)/test-package-stage; fi

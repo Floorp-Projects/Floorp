@@ -93,11 +93,23 @@ DOMFileResult(nsresult rv)
 NS_IMETHODIMP
 nsDOMFile::GetFileName(nsAString &aFileName)
 {
-  return mFile->GetLeafName(aFileName);
+  return GetName(aFileName);
 }
 
 NS_IMETHODIMP
 nsDOMFile::GetFileSize(PRUint64 *aFileSize)
+{
+  return GetSize(aFileSize);
+}
+
+NS_IMETHODIMP
+nsDOMFile::GetName(nsAString &aFileName)
+{
+  return mFile->GetLeafName(aFileName);
+}
+
+NS_IMETHODIMP
+nsDOMFile::GetSize(PRUint64 *aFileSize)
 {
   PRInt64 fileSize;
   nsresult rv = mFile->GetFileSize(&fileSize);
@@ -108,6 +120,30 @@ nsDOMFile::GetFileSize(PRUint64 *aFileSize)
   }
 
   *aFileSize = fileSize;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMFile::GetMediaType(nsAString &aMediaType)
+{
+  if (!mContentType.Length()) {
+    nsresult rv;
+    nsCOMPtr<nsIMIMEService> mimeService =
+      do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCAutoString mediaType;
+    rv = mimeService->GetTypeFromFile(mFile, mediaType);
+    if (NS_FAILED(rv)) {
+      SetDOMStringToNull(aMediaType);
+      return NS_OK;
+    }
+
+    AppendUTF8toUTF16(mediaType, mContentType);
+  }
+
+  aMediaType = mContentType;
 
   return NS_OK;
 }
@@ -403,5 +439,23 @@ nsDOMFileList::Item(PRUint32 aIndex, nsIDOMFile **aFile)
 {
   NS_IF_ADDREF(*aFile = GetItemAt(aIndex));
 
+  return NS_OK;
+}
+
+// nsDOMFileError implementation
+
+NS_INTERFACE_MAP_BEGIN(nsDOMFileError)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFileError)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMFileError)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(FileError)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(nsDOMFileError)
+NS_IMPL_RELEASE(nsDOMFileError)
+
+NS_IMETHODIMP
+nsDOMFileError::GetCode(PRUint16* aCode)
+{
+  *aCode = mCode;
   return NS_OK;
 }

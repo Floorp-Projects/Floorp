@@ -685,16 +685,11 @@ nsThebesDeviceContext::SetDPI()
 
     if (dotsArePixels) {
         if (prefDevPixelsPerCSSPixel <= 0) {
-            // First figure out the closest multiple of 96, which is the number of
-            // dev pixels per CSS pixel.  Then, divide that into AppUnitsPerCSSPixel()
-            // to get the number of app units per dev pixel.  The PR_MAXes are to
-            // make sure we don't end up dividing by zero.
-            PRUint32 roundedDPIScaleFactor = (dpi + 48)/96;
-#ifdef MOZ_WIDGET_GTK2
-            // be more conservative about activating scaling on GTK2, since the dpi
-            // information is more likely to be wrong
-            roundedDPIScaleFactor = dpi/96;
-#endif
+            // Round down to multiple of 96, which is the number of dev pixels
+            // per CSS pixel.  Then, divide that into AppUnitsPerCSSPixel()
+            // to get the number of app units per dev pixel.  The PR_MAXes are
+            // to make sure we don't end up dividing by zero.
+            PRUint32 roundedDPIScaleFactor = dpi/96;
             mAppUnitsPerDevNotScaledPixel =
                 PR_MAX(1, AppUnitsPerCSSPixel() / PR_MAX(1, roundedDPIScaleFactor));
         } else {

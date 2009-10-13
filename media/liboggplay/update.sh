@@ -59,3 +59,5 @@ patch -p3 < faster_seek.patch
 patch -p3 < fix-17ef4ca82df28.patch
 patch -p3 < handle-read-errors.patch
 patch -p3 < fishsound_reset.patch
+patch -p3 < bug504843.patch
+

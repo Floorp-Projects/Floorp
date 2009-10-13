@@ -339,7 +339,7 @@ nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
   if (!item || item->isDirectory) {
     rv = jis->InitDirectory(this, aJarDirSpec, aEntryName);
   } else {
-    rv = jis->InitFile(mZip.GetFD(item), item);
+    rv = jis->InitFile(this, item);
   }
   if (NS_FAILED(rv)) {
     NS_RELEASE(*result);
@@ -675,8 +675,8 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
             if (curItemMF->mType == JAR_INTERNAL)
             {
               PRBool exists;
-              PRInt32 result = HasEntry(curItemName, &exists);
-              if (result != ZIP_OK || !exists)
+              nsresult rv = HasEntry(curItemName, &exists);
+              if (NS_FAILED(rv) || !exists)
                 curItemMF->mType = JAR_INVALID;
             }
             //-- Check for duplicates

@@ -63,7 +63,7 @@ function signaturesMatch(m1, m2)
   if (m1.shortName != m2.shortName)
     return false;
 
-  if (m1.isVirtual != m2.isVirtual)
+  if ((!!m1.isVirtual) != (!!m2.isVirtual))
     return false;
   
   if (m1.isStatic != m2.isStatic)

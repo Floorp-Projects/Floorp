@@ -46,19 +46,23 @@ interface nsIOutputStream;
 interface nsIObjectInputStream;
 interface nsIObjectOutputStream;
 
-[scriptable, uuid(715577db-d9c5-464a-a32e-0a40c29b22d4)]
+[scriptable, uuid(61cd17e0-b07a-4158-9817-36a206b100e9)]
 interface nsIFastLoadFileIO : nsISupports
 {
     readonly attribute nsIInputStream  inputStream;
     readonly attribute nsIOutputStream outputStream;
+    /**
+     * Causes outputStream to be created in non-truncating mode
+     */
+    [noscript] void disableTruncate();
 };
 
-[scriptable, uuid(759e475e-0c23-4dbf-b1b8-78c9369e3072)]
+[scriptable, uuid(c18df300-c2e4-4115-a61c-9110655f7dd8)]
 interface nsIFastLoadService : nsISupports
 {
     nsIFile newFastLoadFile(in string aBaseName);
 
-    nsIObjectInputStream  newInputStream(in nsIInputStream aSrcStream);
+    nsIObjectInputStream  newInputStream(in nsIFile aFile);
     nsIObjectOutputStream newOutputStream(in nsIOutputStream aDestStream);
 
     // Flag values for the direction attribute and the aDirectionFlags

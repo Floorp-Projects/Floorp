@@ -43,6 +43,9 @@ relativesrcdir  = widget/tests
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE          = test_widget
+XPCSHELL_TESTS  = unit
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifdef NS_ENABLE_TSF
 CPP_UNIT_TESTS += TestWinTSF.cpp  \
@@ -61,6 +64,7 @@ _TEST_FILES =	test_bug343416.xul \
 		test_wheeltransaction.xul \
 		window_wheeltransaction.xul \
 		test_imestate.html \
+		test_plugin_scroll_consistency.html \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
@@ -70,8 +74,17 @@ _TEST_FILES += native_menus_window.xul \
                test_native_mouse_mac.xul \
                test_bug428405.xul \
                test_bug466599.xul \
+               test_bug485118.xul \
                test_platform_colors.xul \
                $(NULL)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifneq ($(OS_ARCH), WINCE)
+_TEST_FILES  += taskbar_previews.xul \
+		taskbar_progress.xul \
+		$(NULL)
+endif
 endif
 
 libs:: $(_TEST_FILES)

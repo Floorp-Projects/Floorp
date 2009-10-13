@@ -210,6 +210,44 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
     return NS_NewLocalFile(nsDependentString(path, len), PR_TRUE, aFile);
 }
 
+#ifndef WINCE
+/**
+ * Provides a fallback for getting the path to APPDATA or LOCALAPPDATA by
+ * querying the registry when the call to SHGetSpecialFolderPathW is unable to
+ * provide these paths (Bug 513958).
+ */
+static nsresult GetRegWindowsAppDataFolder(PRBool aLocal, nsILocalFile** aFile)
+{
+    HKEY key;
+    NS_NAMED_LITERAL_STRING(keyName,
+    "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders");
+    DWORD res = ::RegOpenKeyExW(HKEY_CURRENT_USER, keyName.get(), 0, KEY_READ,
+                                &key);
+    if (res != ERROR_SUCCESS)
+        return NS_ERROR_FAILURE;
+
+    WCHAR path[MAX_PATH + 2];
+    DWORD type, size;
+    res = RegQueryValueExW(key, (aLocal ? L"Local AppData" : L"AppData"), NULL,
+                           &type, (LPBYTE)&path, &size);
+    ::RegCloseKey(key);
+    // The call to RegQueryValueExW must succeed, the type must be REG_SZ, the
+    // buffer size must not equal 0, and the buffer size be a multiple of 2.
+    if (res != ERROR_SUCCESS || type != REG_SZ || size == 0 || size % 2 != 0)
+        return NS_ERROR_FAILURE;
+
+    // Append the trailing slash
+    int len = wcslen(path);
+    if (len > 1 && path[len - 1] != L'\\')
+    {
+        path[len]   = L'\\';
+        path[++len] = L'\0';
+    }
+
+    return NS_NewLocalFile(nsDependentString(path, len), PR_TRUE, aFile);
+}
+#endif
+
 #endif // XP_WIN
 
 #if defined (XP_BEOS)
@@ -827,12 +865,22 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 #endif
         case Win_Appdata:
         {
-            return GetWindowsFolder(CSIDL_APPDATA, aFile);
+            nsresult rv = GetWindowsFolder(CSIDL_APPDATA, aFile);
+#ifndef WINCE
+            if (NS_FAILED(rv))
+                rv = GetRegWindowsAppDataFolder(PR_FALSE, aFile);
+#endif
+            return rv;
         }
 
         case Win_LocalAppdata:
         {
-            return GetWindowsFolder(CSIDL_LOCAL_APPDATA, aFile);
+            nsresult rv = GetWindowsFolder(CSIDL_LOCAL_APPDATA, aFile);
+#ifndef WINCE
+            if (NS_FAILED(rv))
+                rv = GetRegWindowsAppDataFolder(PR_TRUE, aFile);
+#endif
+            return rv;
         }
 #endif  // XP_WIN
 

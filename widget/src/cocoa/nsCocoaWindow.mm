@@ -147,13 +147,13 @@ nsCocoaWindow::~nsCocoaWindow()
 
   // Notify the children that we're gone.  Popup windows (e.g. tooltips) can
   // have nsChildView children.  'kid' is an nsChildView object if and only if
-  // its 'type' is 'eWindowType_child'.  childView->ResetParent() can change
-  // our list of children while it's being iterated, so the way we iterate the
-  // list must allow for this.
+  // its 'type' is 'eWindowType_child' or 'eWindowType_plugin'.
+  // childView->ResetParent() can change our list of children while it's
+  // being iterated, so the way we iterate the list must allow for this.
   for (nsIWidget* kid = mLastChild; kid;) {
     nsWindowType kidType;
     kid->GetWindowType(kidType);
-    if (kidType == eWindowType_child) {
+    if (kidType == eWindowType_child || kidType == eWindowType_plugin) {
       nsChildView* childView = static_cast<nsChildView*>(kid);
       kid = kid->GetPrevSibling();
       childView->ResetParent();
@@ -228,12 +228,14 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
   if (!WindowSizeAllowed(aRect.width, aRect.height))
     return NS_ERROR_FAILURE;
 
+  // Set defaults which can be overriden from aInitData in BaseCreate
+  mWindowType = eWindowType_toplevel;
+  mBorderStyle = eBorderStyle_default;
+
   Inherited::BaseCreate(aParent, aRect, aHandleEventFunction, aContext, aAppShell,
                         aToolkit, aInitData);
 
   mParent = aParent;
-  SetWindowType(aInitData ? aInitData->mWindowType : eWindowType_toplevel);
-  SetBorderStyle(aInitData ? aInitData->mBorderStyle : eBorderStyle_default);
 
   // Applications that use native popups don't want us to create popup windows.
   if ((mWindowType == eWindowType_popup) && UseNativePopupWindows())
@@ -291,6 +293,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   {
     case eWindowType_invisible:
     case eWindowType_child:
+    case eWindowType_plugin:
     case eWindowType_popup:
       break;
     case eWindowType_toplevel:
@@ -1594,6 +1597,8 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  RollUpPopups();
+
   NSWindow* window = [aNotification object];
   if ([window isSheet])
     [WindowDelegate paintMenubarForWindow:window];
@@ -1604,6 +1609,8 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
 - (void)windowDidResignKey:(NSNotification *)aNotification
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  RollUpPopups();
 
   // If a sheet just resigned key then we should paint the menu bar
   // for whatever window is now main.

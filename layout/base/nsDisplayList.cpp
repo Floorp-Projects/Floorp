@@ -290,32 +290,6 @@ void nsDisplayListSet::MoveTo(const nsDisplayListSet& aDestination) const
   aDestination.Outlines()->AppendToTop(Outlines());
 }
 
-// Suitable for leaf items only, overridden by nsDisplayWrapList
-PRBool
-nsDisplayItem::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                  nsRegion* aVisibleRegion) {
-  nsRect bounds = GetBounds(aBuilder);
-  if (!aVisibleRegion->Intersects(bounds))
-    return PR_FALSE;
-
-  nsIFrame* f = GetUnderlyingFrame();
-  NS_ASSERTION(f, "GetUnderlyingFrame() must return non-null for leaf items");
-
-  if (IsOpaque(aBuilder)) {
-    nsRect opaqueArea = bounds;
-    if (aBuilder->IsMovingFrame(f)) {
-      // The display list should include items for both the before and after
-      // states (see nsLayoutUtils::ComputeRepaintRegionForCopy. So the
-      // only area we want to cover is the area that was opaque in the
-      // before state and in the after state.
-      opaqueArea.IntersectRect(bounds - aBuilder->GetMoveDelta(), bounds);
-    }
-    aBuilder->SubtractFromVisibleRegion(aVisibleRegion, nsRegion(opaqueArea));
-  }
-
-  return PR_TRUE;
-}
-
 void
 nsDisplayList::FlattenTo(nsTArray<nsDisplayItem*>* aElements) {
   nsDisplayItem* item;
@@ -339,8 +313,8 @@ nsDisplayList::GetBounds(nsDisplayListBuilder* aBuilder) const {
 }
 
 void
-nsDisplayList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                  nsRegion* aVisibleRegion) {
+nsDisplayList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                 nsRegion* aVisibleRegion) {
   nsAutoTArray<nsDisplayItem*, 512> elements;
   FlattenTo(&elements);
 
@@ -360,21 +334,45 @@ nsDisplayList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
       continue;
     }
 
+    nsRect bounds = item->GetBounds(aBuilder);
+
     nsIFrame* f = item->GetUnderlyingFrame();
-    if (f && aBuilder->IsMovingFrame(f)) {
+    PRBool isMoving = f && aBuilder->IsMovingFrame(f);
+    if (isMoving) {
       if (movingContentAccumulatedBounds.IsEmpty()) {
         // *aVisibleRegion can only shrink during this loop, so storing
         // the first one we see is a sound overapproximation
         movingContentVisibleRegion = *aVisibleRegion;
       }
       nscoord appUnitsPerPixel = f->PresContext()->AppUnitsPerDevPixel();
-      nsRect bounds = item->GetBounds(aBuilder).
+      nsRect roundOutBounds = bounds.
           ToOutsidePixels(appUnitsPerPixel).ToAppUnits(appUnitsPerPixel);
       movingContentAccumulatedBounds.UnionRect(movingContentAccumulatedBounds,
-                                               bounds);
+                                               roundOutBounds);
     }
-    if (item->OptimizeVisibility(aBuilder, aVisibleRegion)) {
+
+    nsRegion itemVisible;
+    itemVisible.And(*aVisibleRegion, bounds);
+    item->mVisibleRect = itemVisible.GetBounds();
+
+    if (!item->mVisibleRect.IsEmpty() &&
+        item->ComputeVisibility(aBuilder, aVisibleRegion)) {
       AppendToBottom(item);
+
+      // Subtract opaque items from the visible region
+      if (item->IsOpaque(aBuilder) && f) {
+        nsRect opaqueArea;
+        if (isMoving) {
+          // The display list should include items for both the before and after
+          // states (see nsLayoutUtils::ComputeRepaintRegionForCopy. So the
+          // only area we want to cover is the area that was opaque in the
+          // before state and in the after state.
+          opaqueArea.IntersectRect(bounds - aBuilder->GetMoveDelta(), bounds);
+        } else {
+          opaqueArea = bounds;
+        }
+        aBuilder->SubtractFromVisibleRegion(aVisibleRegion, nsRegion(opaqueArea));
+      }
     } else {
       item->~nsDisplayItem();
     }
@@ -382,12 +380,19 @@ nsDisplayList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
 
   aBuilder->AccumulateVisibleRegionOfMovingContent(
       nsRegion(movingContentAccumulatedBounds), movingContentVisibleRegion);
+
+#ifdef DEBUG
+  mDidComputeVisibility = PR_TRUE;
+#endif
 }
 
-void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-                          const nsRect& aDirtyRect) const {
+void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder,
+                          nsIRenderingContext* aCtx) const {
+  NS_ASSERTION(mDidComputeVisibility,
+               "Must call ComputeVisibility before calling Paint");
+
   for (nsDisplayItem* i = GetBottom(); i != nsnull; i = i->GetAbove()) {
-    i->Paint(aBuilder, aCtx, aDirtyRect);
+    i->Paint(aBuilder, aCtx);
   }
   nsCSSRendering::DidPaint();
 }
@@ -567,11 +572,9 @@ void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
 }
 
 void nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
-  nsRect dirty;
-  dirty.IntersectRect(GetBounds(aBuilder), aDirtyRect);
+                                nsIRenderingContext* aCtx) {
   aCtx->SetColor(mColor);
-  aCtx->FillRect(dirty);
+  aCtx->FillRect(mVisibleRect);
 }
 
 // Returns TRUE if aContainedRect is guaranteed to be contained in
@@ -674,7 +677,7 @@ nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuild
 
 void
 nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+                           nsIRenderingContext* aCtx) {
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
   PRUint32 flags = aBuilder->GetBackgroundPaintFlags();
   nsDisplayItem* nextItem = GetAbove();
@@ -683,7 +686,8 @@ nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
     flags |= nsCSSRendering::PAINTBG_WILL_PAINT_BORDER;
   }
   nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
-                                  aDirtyRect, nsRect(offset, mFrame->GetSize()),
+                                  mVisibleRect,
+                                  nsRect(offset, mFrame->GetSize()),
                                   flags);
 }
 
@@ -702,20 +706,21 @@ nsDisplayOutline::GetBounds(nsDisplayListBuilder* aBuilder) {
 
 void
 nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+                        nsIRenderingContext* aCtx) {
   // TODO join outlines together
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
   nsCSSRendering::PaintOutline(mFrame->PresContext(), *aCtx, mFrame,
-                               aDirtyRect, nsRect(offset, mFrame->GetSize()),
+                               mVisibleRect,
+                               nsRect(offset, mFrame->GetSize()),
                                *mFrame->GetStyleBorder(),
                                *mFrame->GetStyleOutline(),
                                mFrame->GetStyleContext());
 }
 
 PRBool
-nsDisplayOutline::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                     nsRegion* aVisibleRegion) {
-  if (!nsDisplayItem::OptimizeVisibility(aBuilder, aVisibleRegion))
+nsDisplayOutline::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                    nsRegion* aVisibleRegion) {
+  if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion))
     return PR_FALSE;
 
   const nsStyleOutline* outline = mFrame->GetStyleOutline();
@@ -734,16 +739,16 @@ nsDisplayOutline::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
-    nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+                      nsIRenderingContext* aCtx) {
   // Note: Because we exist, we know that the caret is visible, so we don't
   // need to check for the caret's visibility.
   mCaret->PaintCaret(aBuilder, aCtx, mFrame, aBuilder->ToReferenceFrame(mFrame));
 }
 
 PRBool
-nsDisplayBorder::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                    nsRegion* aVisibleRegion) {
-  if (!nsDisplayItem::OptimizeVisibility(aBuilder, aVisibleRegion))
+nsDisplayBorder::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                   nsRegion* aVisibleRegion) {
+  if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion))
     return PR_FALSE;
 
   nsRect paddingRect = mFrame->GetPaddingRect() - mFrame->GetPosition() +
@@ -766,10 +771,11 @@ nsDisplayBorder::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+                       nsIRenderingContext* aCtx) {
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
   nsCSSRendering::PaintBorder(mFrame->PresContext(), *aCtx, mFrame,
-                              aDirtyRect, nsRect(offset, mFrame->GetSize()),
+                              mVisibleRect,
+                              nsRect(offset, mFrame->GetSize()),
                               *mFrame->GetStyleBorder(),
                               mFrame->GetStyleContext(),
                               mFrame->GetSkipSides());
@@ -777,10 +783,11 @@ nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+                               nsIRenderingContext* aCtx) {
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
   nsCSSRendering::PaintBoxShadowOuter(mFrame->PresContext(), *aCtx, mFrame,
-                                      nsRect(offset, mFrame->GetSize()), aDirtyRect);
+                                      nsRect(offset, mFrame->GetSize()),
+                                      mVisibleRect);
 }
 
 nsRect
@@ -789,9 +796,9 @@ nsDisplayBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder) {
 }
 
 PRBool
-nsDisplayBoxShadowOuter::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                            nsRegion* aVisibleRegion) {
-  if (!nsDisplayItem::OptimizeVisibility(aBuilder, aVisibleRegion))
+nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                           nsRegion* aVisibleRegion) {
+  if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion))
     return PR_FALSE;
 
   nsPoint origin = aBuilder->ToReferenceFrame(mFrame);
@@ -815,10 +822,11 @@ nsDisplayBoxShadowOuter::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayBoxShadowInner::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+                               nsIRenderingContext* aCtx) {
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
   nsCSSRendering::PaintBoxShadowInner(mFrame->PresContext(), *aCtx, mFrame,
-                                      nsRect(offset, mFrame->GetSize()), aDirtyRect);
+                                      nsRect(offset, mFrame->GetSize()),
+                                      mVisibleRect);
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsIFrame* aFrame, nsDisplayList* aList)
@@ -847,9 +855,9 @@ nsDisplayWrapList::GetBounds(nsDisplayListBuilder* aBuilder) {
 }
 
 PRBool
-nsDisplayWrapList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                      nsRegion* aVisibleRegion) {
-  mList.OptimizeVisibility(aBuilder, aVisibleRegion);
+nsDisplayWrapList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                     nsRegion* aVisibleRegion) {
+  mList.ComputeVisibility(aBuilder, aVisibleRegion);
   // If none of the items are visible, they will all have been deleted
   return mList.GetTop() != nsnull;
 }
@@ -857,7 +865,7 @@ nsDisplayWrapList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
 PRBool
 nsDisplayWrapList::IsOpaque(nsDisplayListBuilder* aBuilder) {
   // We could try to do something but let's conservatively just return PR_FALSE.
-  // We reimplement OptimizeVisibility and that's what really matters
+  // We reimplement ComputeVisibility and that's what really matters
   return PR_FALSE;
 }
 
@@ -876,8 +884,8 @@ PRBool nsDisplayWrapList::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* a
 }
 
 void nsDisplayWrapList::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
-  mList.Paint(aBuilder, aCtx, aDirtyRect);
+                              nsIRenderingContext* aCtx) {
+  mList.Paint(aBuilder, aCtx);
 }
 
 static nsresult
@@ -969,12 +977,9 @@ PRBool nsDisplayOpacity::IsOpaque(nsDisplayListBuilder* aBuilder) {
 }
 
 void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
-                             nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+                             nsIRenderingContext* aCtx)
 {
   float opacity = mFrame->GetStyleDisplay()->mOpacity;
-
-  nsRect bounds;
-  bounds.IntersectRect(GetBounds(aBuilder), aDirtyRect);
 
   nsCOMPtr<nsIDeviceContext> devCtx;
   aCtx->GetDeviceContext(*getter_AddRefs(devCtx));
@@ -984,7 +989,8 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   ctx->Save();
 
   ctx->NewPath();
-  gfxRect r(bounds.x, bounds.y, bounds.width, bounds.height);
+  gfxRect r(mVisibleRect.x, mVisibleRect.y,
+            mVisibleRect.width, mVisibleRect.height);
   r.ScaleInverse(devCtx->AppUnitsPerDevPixel());
   ctx->Rectangle(r, PR_TRUE);
   ctx->Clip();
@@ -994,7 +1000,7 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   else
     ctx->PushGroup(gfxASurface::CONTENT_COLOR);
 
-  nsDisplayWrapList::Paint(aBuilder, aCtx, bounds);
+  nsDisplayWrapList::Paint(aBuilder, aCtx);
 
   ctx->PopGroupToSource();
   ctx->SetOperator(gfxContext::OPERATOR_OVER);
@@ -1003,8 +1009,8 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   ctx->Restore();
 }
 
-PRBool nsDisplayOpacity::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                            nsRegion* aVisibleRegion) {
+PRBool nsDisplayOpacity::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                           nsRegion* aVisibleRegion) {
   // Our children are translucent so we should not allow them to subtract
   // area from aVisibleRegion. We do need to find out what is visible under
   // our children in the temporary compositing buffer, because if our children
@@ -1012,11 +1018,11 @@ PRBool nsDisplayOpacity::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   // the temporary compositing buffer.
   nsRegion visibleUnderChildren = *aVisibleRegion;
   PRBool anyVisibleChildren =
-    nsDisplayWrapList::OptimizeVisibility(aBuilder, &visibleUnderChildren);
+    nsDisplayWrapList::ComputeVisibility(aBuilder, &visibleUnderChildren);
   if (!anyVisibleChildren)
     return PR_FALSE;
 
-  mNeedAlpha = visibleUnderChildren.Intersects(GetBounds(aBuilder));
+  mNeedAlpha = visibleUnderChildren.Intersects(mVisibleRect);
   return PR_TRUE;
 }
 
@@ -1059,17 +1065,15 @@ nsDisplayClip::~nsDisplayClip() {
 #endif
 
 void nsDisplayClip::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
-  nsRect dirty;
-  dirty.IntersectRect(mClip, aDirtyRect);
+                          nsIRenderingContext* aCtx) {
   aCtx->PushState();
-  aCtx->SetClipRect(dirty, nsClipCombine_kIntersect);
-  nsDisplayWrapList::Paint(aBuilder, aCtx, dirty);
+  aCtx->SetClipRect(mClip, nsClipCombine_kIntersect);
+  nsDisplayWrapList::Paint(aBuilder, aCtx);
   aCtx->PopState();
 }
 
-PRBool nsDisplayClip::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                         nsRegion* aVisibleRegion) {
+PRBool nsDisplayClip::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                        nsRegion* aVisibleRegion) {
   nsRegion clipped;
   clipped.And(*aVisibleRegion, mClip);
 
@@ -1087,7 +1091,7 @@ PRBool nsDisplayClip::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   }
 
   nsRegion rNew(clipped);
-  PRBool anyVisible = nsDisplayWrapList::OptimizeVisibility(aBuilder, &rNew);
+  PRBool anyVisible = nsDisplayWrapList::ComputeVisibility(aBuilder, &rNew);
   nsRegion subtracted;
   subtracted.Sub(clipped, rNew);
   aBuilder->SubtractFromVisibleRegion(aVisibleRegion, subtracted);
@@ -1261,8 +1265,7 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
  * the transform.
  */
 void nsDisplayTransform::Paint(nsDisplayListBuilder *aBuilder,
-                               nsIRenderingContext *aCtx,
-                               const nsRect &aDirtyRect)
+                               nsIRenderingContext *aCtx)
 {
   /* Get the local transform matrix with which we'll transform all wrapped
    * elements.  If this matrix is singular, we shouldn't display anything
@@ -1289,21 +1292,22 @@ void nsDisplayTransform::Paint(nsDisplayListBuilder *aBuilder,
    */
   gfx->SetMatrix(newTransformMatrix);
 
-  /* Now, send the paint call down.  As we do this, we need to be sure to
-   * untransform the dirty rect, since we want everything that's painting to
-   * think that it's painting in its original rectangular coordinate space.
+  /* Now, send the paint call down.
    */    
-  mStoredList.Paint(aBuilder, aCtx,
-                    UntransformRect(aDirtyRect, mFrame,
-                                    aBuilder->ToReferenceFrame(mFrame)));
+  mStoredList.Paint(aBuilder, aCtx);
 
   /* The AutoSaveRestore object will clean things up. */
 }
 
-/* We don't need to do anything here. */
-PRBool nsDisplayTransform::OptimizeVisibility(nsDisplayListBuilder *aBuilder,
-                                              nsRegion *aVisibleRegion)
+PRBool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,
+                                             nsRegion *aVisibleRegion)
 {
+  /* As we do this, we need to be sure to
+   * untransform the visible rect, since we want everything that's painting to
+   * think that it's painting in its original rectangular coordinate space. */
+  nsRegion untransformedVisible =
+    UntransformRect(mVisibleRect, mFrame, aBuilder->ToReferenceFrame(mFrame));
+  mStoredList.ComputeVisibility(aBuilder, &untransformedVisible);
   return PR_TRUE;
 }
 
@@ -1523,25 +1527,23 @@ nsDisplaySVGEffects::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
 }
 
 void nsDisplaySVGEffects::Paint(nsDisplayListBuilder* aBuilder,
-                                nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+                                nsIRenderingContext* aCtx)
 {
   nsSVGIntegrationUtils::PaintFramesWithEffects(aCtx,
-          mEffectsFrame, aDirtyRect, aBuilder, &mList);
+          mEffectsFrame, mVisibleRect, aBuilder, &mList);
 }
 
-PRBool nsDisplaySVGEffects::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                               nsRegion* aVisibleRegion) {
-  nsRegion vis;
-  vis.And(*aVisibleRegion, GetBounds(aBuilder));
+PRBool nsDisplaySVGEffects::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                              nsRegion* aVisibleRegion) {
   nsPoint offset = aBuilder->ToReferenceFrame(mEffectsFrame);
   nsRect dirtyRect = nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(mEffectsFrame,
-       vis.GetBounds() - offset) + offset;
+      mVisibleRect - offset) + offset;
 
   // Our children may be translucent so we should not allow them to subtract
   // area from aVisibleRegion.
   nsRegion childrenVisibleRegion(dirtyRect);
-  nsDisplayWrapList::OptimizeVisibility(aBuilder, &childrenVisibleRegion);
-  return !vis.IsEmpty();
+  nsDisplayWrapList::ComputeVisibility(aBuilder, &childrenVisibleRegion);
+  return PR_TRUE;
 }
 
 PRBool nsDisplaySVGEffects::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem)

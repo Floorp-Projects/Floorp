@@ -32,6 +32,7 @@
    -   Mark Pilgrim <pilgrim@gmail.com>
    -   Dão Gottwald <dao@mozilla.com>
    -   Paul O’Shannessy <paul@oshannessy.com>
+   -   Rob Arnold <tellrob@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -82,7 +83,7 @@
           <xul:tooltip onpopupshowing="return this.parentNode.parentNode.parentNode.createTooltip(event);"/>
           <xul:menupopup anonid="tabContextMenu" onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
             <xul:menuitem id="context_newTab" label="&newTab.label;" accesskey="&newTab.accesskey;"
-                          xbl:inherits="oncommand=onnewtab"/>
+                          command="cmd_newNavigatorTab"/>
             <xul:menuseparator/>
             <xul:menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
@@ -126,7 +127,6 @@
                     anonid="tabcontainer"
                     setfocus="false"
                     onclick="this.parentNode.parentNode.parentNode.onTabClick(event);"
-                    xbl:inherits="onnewtab"
                     ondblclick="this.parentNode.parentNode.parentNode.onTabBarDblClick(event);"
                     onclosetab="var node = this.parentNode;
                                 while (node.localName != 'tabbrowser')
@@ -235,6 +235,29 @@
       <field name="_autoScrollPopup">
         null
       </field>
+
+      <field name="_previewMode">
+        false
+      </field>
+
+      <method name="previewTab">
+        <parameter name="aTab"/>
+        <parameter name="aCallback"/>
+        <body>
+          <![CDATA[
+            let currentTab = this.selectedTab;
+            try {
+              // Suppress focus, ownership and selected tab changes
+              this._previewMode = true;
+              this.selectedTab = aTab;
+              aCallback();
+            } finally {
+              this.selectedTab = currentTab;
+              this._previewMode = false;
+            }
+          ]]>
+        </body>
+      </method>
 
       <method name="getBrowserAtIndex">
         <parameter name="aIndex"/>
@@ -843,7 +866,8 @@
             if (this.mCurrentBrowser == newBrowser && !aForceUpdate)
               return;
 
-            if (this.mCurrentTab != this.selectedTab)
+            // Preview mode should not reset the owner
+            if (!this._previewMode && this.mCurrentTab != this.selectedTab)
               this.mCurrentTab.owner = null;
 
             this._lastRelatedTab = null;
@@ -897,7 +921,9 @@
                 }
             }
 
-            this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
+            // Don't switch the fast find - this tab switch is temporary
+            if (!this._previewMode)
+              this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
 
             // Update the window title.
             this.updateTitlebar();
@@ -935,18 +961,23 @@
               }
             }
 
-            // We've selected the new tab, so go ahead and notify listeners.
-            var event = document.createEvent("Events");
-            event.initEvent("TabSelect", true, false);
-            this.mCurrentTab.dispatchEvent(event);
+            // TabSelect events are suppressed during preview mode to avoid confusing extensions and other bits of code
+            // that might rely upon the other changes suppressed.
+            // Focus is suppressed in the event that the main browser window is minimized - focusing a tab would restore the window
+            if (!this._previewMode) {
+              // We've selected the new tab, so go ahead and notify listeners.
+              var event = document.createEvent("Events");
+              event.initEvent("TabSelect", true, false);
+              this.mCurrentTab.dispatchEvent(event);
 
-            // change focus to the new tab if nothing is focused, the old tab
-            // is focused or there is something in the new tab to focus. One
-            // specific case where focus is not changed is when the new tab
-            // has no focused element and a chrome element is focused.
-            if (!focusedChromeElement || focusedChromeElement == oldBrowser ||
-                fm.getFocusedElementForWindow(window.content, true, {}))
-              fm.setFocus(newBrowser, fm.FLAG_NOSCROLL);
+              // change focus to the new tab if nothing is focused, the old tab
+              // is focused or there is something in the new tab to focus. One
+              // specific case where focus is not changed is when the new tab
+              // has no focused element and a chrome element is focused.
+              if ((!focusedChromeElement || focusedChromeElement == oldBrowser ||
+                  fm.getFocusedElementForWindow(window.content, true, {})))
+                fm.setFocus(newBrowser, fm.FLAG_NOSCROLL);
+            }
           ]]>
         </body>
       </method>
@@ -1314,30 +1345,6 @@
             if (t.previousSibling.selected)
               t.setAttribute("afterselected", true);
 
-            if (!blank) {
-              // Stop the existing about:blank load.  Otherwise, if aURI
-              // doesn't stop in-progress loads on its own, we'll get into
-              // trouble with multiple parallel loads running at once.
-              b.stop();
-
-              // pretend the user typed this so it'll be available till
-              // the document successfully loads
-              b.userTypedValue = aURI;
-
-              if (aPostData === undefined)
-                aPostData = null;
-              const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-              var flags = nsIWebNavigation.LOAD_FLAGS_NONE;
-              if (aAllowThirdPartyFixup) {
-                flags = nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-              }
-              try {
-                b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
-              }
-              catch (ex) {
-              }
-            }
-
             this.tabContainer.adjustTabstrip();
 
             // Do this asynchronically, as we don't know yet if the tab
@@ -1360,6 +1367,25 @@
             var evt = document.createEvent("Events");
             evt.initEvent("TabOpen", true, false);
             t.dispatchEvent(evt);
+
+            if (!blank) {
+              // Stop the existing about:blank load.  Otherwise, if aURI
+              // doesn't stop in-progress loads on its own, we'll get into
+              // trouble with multiple parallel loads running at once.
+              b.stop();
+
+              // pretend the user typed this so it'll be available till
+              // the document successfully loads
+              b.userTypedValue = aURI;
+
+              let flags = aAllowThirdPartyFixup ?
+                          Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP :
+                          Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+              try {
+                b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
+              }
+              catch (ex) { }
+            }
 
             // Check if we're opening a tab related to the current tab and
             // move it to after the current tab.
@@ -1576,8 +1602,8 @@
               while (this._removingTabs.length)
                 this._endRemoveTab([this._removingTabs[0], false]);
             } else if (!this._windowIsClosing) {
-              if (aNewTab && gURLBar)
-                gURLBar.focus();
+              if (aNewTab)
+                focusAndSelectUrlBar();
 
               // workaround for bug 345399
               this.tabContainer.mTabstrip._updateScrollButtonsDisabledState();
@@ -1769,12 +1795,8 @@
           <![CDATA[
             // See hack note in the tabbrowser-close-button binding
             if (!this._blockDblClick && aEvent.button == 0 &&
-                aEvent.originalTarget.localName == "box") {
-              // xxx this needs to check that we're in the empty area of the tabstrip
-              var e = document.createEvent("Events");
-              e.initEvent("NewTab", true, true);
-              this.dispatchEvent(e);
-            }
+                aEvent.originalTarget.localName == "box")
+              BrowserOpenTab();
           ]]>
         </body>
       </method>

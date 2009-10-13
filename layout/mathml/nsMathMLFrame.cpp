@@ -462,15 +462,15 @@ public:
   }
 #endif
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLBoundingMetrics")
 private:
   nsRect    mRect;
 };
 
 void nsDisplayMathMLBoundingMetrics::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+                                           nsIRenderingContext* aCtx)
 {
   aCtx->SetColor(NS_RGB(0,0,255));
   aCtx->DrawRect(mRect + aBuilder->ToReferenceFrame(mFrame));
@@ -506,15 +506,15 @@ public:
   }
 #endif
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLBar")
 private:
   nsRect    mRect;
 };
 
 void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+                               nsIRenderingContext* aCtx)
 {
   // paint the bar with the current text color
   aCtx->SetColor(mFrame->GetStyleColor()->mColor);
