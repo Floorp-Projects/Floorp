@@ -2,9 +2,17 @@
 <!DOCTYPE vbox SYSTEM "chrome://browser/locale/prompt.dtd">
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       id="prompt-prompt-dialog"
-      onclose="this.PromptHelper.onClosePrompt(this)"
       onload="document.getElementById('prompt-prompt-textbox').focus()"
+      onclose="this.PromptHelper.onClosePrompt(this)"
       script="chrome://browser/content/prompt/prompt.js">
+  <keyset>
+    <key keycode="VK_RETURN" command="cmd_ok"/>
+    <key keycode="VK_ESCAPE" command="cmd_cancel"/>
+  </keyset>
+  <commandset>
+    <command id="cmd_ok" oncommand="document.getElementById('prompt-prompt-dialog').PromptHelper.closePrompt(true)"/>
+    <command id="cmd_cancel" oncommand="document.getElementById('prompt-prompt-dialog').PromptHelper.closePrompt(false)"/>
+  </commandset>
   <label id="prompt-prompt-title"/>
   <scrollbox orient="vertical" class="prompt-message">
     <description id="prompt-prompt-message"/>
@@ -15,9 +23,7 @@
     <checkbox class="toggle-dark" id="prompt-prompt-checkbox"/>
   </hbox>
   <hbox pack="center" id="prompt-prompt-button-box" class="prompt-buttons">
-    <button class="button-dark" label="&ok.label;"
-            oncommand="document.getElementById('prompt-prompt-dialog').PromptHelper.closePrompt(true)"/>
-    <button class="button-dark" label="&cancel.label;"
-            oncommand="document.getElementById('prompt-prompt-dialog').PromptHelper.closePrompt(false)"/>
+    <button class="button-dark" label="&ok.label;" command="cmd_ok"/>
+    <button class="button-dark" label="&cancel.label;" command="cmd_cancel"/>
   </hbox>
 </dialog>
