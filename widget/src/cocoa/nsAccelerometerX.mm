@@ -38,6 +38,13 @@
 #include "nsIServiceManager.h"
 #include "stdlib.h"
 
+#include <sys/sysctl.h>
+#include <sys/resource.h>
+#include <sys/vm.h>
+
+#define MODEL_NAME_LENGTH 64
+static char gModelName[MODEL_NAME_LENGTH];
+
 nsAccelerometerX::nsAccelerometerX()
 {
 }
@@ -116,12 +123,22 @@ nsAccelerometerX::UpdateHandler(nsITimer *aTimer, void *aClosure)
 
   const int normalizeFactor = 250.5;
   
-  // x seems to be the opposite of what i would expect.  we want lifting the
-  // right side of the MacBookPro to mean a negative x.
-
-  xf = ((float)data->x) / normalizeFactor * (-1);
-  yf = ((float)data->y) / normalizeFactor;
-  zf = ((float)data->z) / normalizeFactor;
+  if (!strcmp(gModelName, "MacBookPro5,1")) {
+    xf = ((float)data->x) / normalizeFactor;
+    yf = (((float)data->y) / normalizeFactor) * -1;
+    zf = ((float)data->z) / normalizeFactor;
+  }
+  else if (!strcmp(gModelName, "MacBookPro5,3")) {
+    xf = ((float)data->y) / normalizeFactor;
+    yf = (((float)data->x) / normalizeFactor) * -1;
+    zf = (((float)data->z) / normalizeFactor) * -1;
+  }
+  else
+  {
+    xf = (((float)data->x) / normalizeFactor) * -1;
+    yf = ((float)data->y) / normalizeFactor;
+    zf = ((float)data->z) / normalizeFactor;
+  }
 
   free(input);
   free(output);
@@ -162,6 +179,13 @@ void nsAccelerometerX::Startup()
   
   mach_port_deallocate(mach_task_self(), port);
   
+  /* get the version of the hardware we are running on. */
+  int mib[2];
+  size_t len = MODEL_NAME_LENGTH;
+  mib[0] = CTL_HW;
+  mib[1] = HW_MODEL;
+  sysctl(mib, 2, gModelName, &len, NULL, 0);
+
   mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1");
   if (mUpdateTimer)
     mUpdateTimer->InitWithFuncCallback(UpdateHandler,

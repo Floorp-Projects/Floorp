@@ -10,11 +10,23 @@ findbar {
   padding: 4px 1px;
 }
 
+findbar:-moz-lwtheme {
+  -moz-appearance: none;
+  background: none;
+  border-style: none;
+}
+
 .findbar-container > label {
   margin: 1px 3px 0 !important;
   color: @scopeBarTitleColor@;
   font-weight: bold;
   text-shadow: @loweredShadow@;
+}
+
+.findbar-container:-moz-lwtheme > label,
+.findbar-find-status:-moz-lwtheme {
+  color: inherit;
+  text-shadow: inherit;
 }
 
 .findbar-closebutton {

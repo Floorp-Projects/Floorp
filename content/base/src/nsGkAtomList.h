@@ -515,6 +515,8 @@ GK_ATOM(lowerFirst, "lower-first")
 GK_ATOM(lowest, "lowest")
 GK_ATOM(lowsrc, "lowsrc")
 GK_ATOM(ltr, "ltr")
+GK_ATOM(lwtheme, "lwtheme")
+GK_ATOM(lwthemetextcolor, "lwthemetextcolor")
 GK_ATOM(map, "map")
 GK_ATOM(manifest, "manifest")
 GK_ATOM(marginheight, "marginheight")
@@ -1662,7 +1664,7 @@ GK_ATOM(maxElementWidthProperty, "MaxElementWidthProperty")  // nscoord*
 GK_ATOM(outlineInnerRectProperty, "OutlineInnerRectProperty") // nsRect*
 GK_ATOM(outOfFlowDirtyRectProperty, "OutOfFlowDirtyRectProperty") // nsRect*
 GK_ATOM(overflowAreaProperty, "OverflowArea")              // nsRect*
-GK_ATOM(overflowProperty, "OverflowProperty")              // list of nsIFrame*
+GK_ATOM(overflowProperty, "OverflowProperty")              // nsFrameList*
 GK_ATOM(overflowContainersProperty, "OverflowContainersProperty")             // nsFrameList*
 GK_ATOM(excessOverflowContainersProperty, "ExcessOverflowContainersProperty") // nsFrameList*
 GK_ATOM(overflowLinesProperty, "OverflowLinesProperty")    // list of nsLineBox*
@@ -1672,6 +1674,9 @@ GK_ATOM(preTransformBBoxProperty, "PreTransformBBoxProperty") // nsRect*
 GK_ATOM(rowUnpaginatedHeightProperty, "RowUnpaginatedHeightProperty")  // nscoord*
 GK_ATOM(tabWidthProperty, "TabWidthProperty")              // nsTArray<TabSetting>* array of tab widths
 GK_ATOM(tableBCProperty, "TableBCProperty")                // table border collapsing info (e.g. damage area, table border widths)
+GK_ATOM(transitionsProperty, "TransitionsProperty")        // FrameTransitions*
+GK_ATOM(transitionsOfBeforeProperty, "TransitionsOfBeforeProperty") // FrameTransitions*
+GK_ATOM(transitionsOfAfterProperty, "TransitionsOfAfterProperty") // FrameTransitions*
 GK_ATOM(usedMarginProperty, "UsedMarginProperty") // nsMargin*
 GK_ATOM(usedPaddingProperty, "UsedPaddingProperty") // nsMargin*
 GK_ATOM(viewProperty, "ViewProperty")                      

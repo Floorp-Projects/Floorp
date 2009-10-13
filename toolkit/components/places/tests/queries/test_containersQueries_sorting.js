@@ -231,8 +231,8 @@ function test_query_callback(aSequence) {
     // ...then we check sorting of the contained urls, we can't inherit sorting
     // since the above level does not inherit it, so they will be sorted by
     // title ascending.
-    innerContainer = container.getChild(0)
-                              .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+    let innerContainer = container.getChild(0)
+                                  .QueryInterface(Ci.nsINavHistoryContainerResultNode);
     innerContainer.containerOpen = true;
     check_children_sorting(innerContainer,
                            Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING);
@@ -304,8 +304,8 @@ function test_result_sortingMode_change(aResult, aResultType, aOriginalSortingMo
                              Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING);
       // ...then we check sorting of the second level of containers, result
       // will sort them through recursiveSort.
-      innerContainer = container.getChild(0)
-                                .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+      let innerContainer = container.getChild(0)
+                                    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
       innerContainer.containerOpen = true;
       check_children_sorting(innerContainer, aForcedSortingMode.value);
       innerContainer.containerOpen = false;

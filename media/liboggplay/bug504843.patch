@@ -1,0 +1,185 @@
+diff --git a/media/liboggplay/include/oggplay/oggplay.h b/media/liboggplay/include/oggplay/oggplay.h
+--- a/media/liboggplay/include/oggplay/oggplay.h
++++ b/media/liboggplay/include/oggplay/oggplay.h
+@@ -116,17 +116,17 @@ oggplay_new_with_reader(OggPlayReader *r
+  *
+  * @param me OggPlay handle
+  * @param block passed as the second argument to the OggPlayReader's initialise 
+  * function. E.g. in case of OggPlayTCPReader block == 0 sets the socket to non-blocking
+  * mode.
+  * @retval E_OGGPLAY_OK on success
+  * @retval E_OGGPLAY_OGGZ_UNHAPPY something went wrong while calling oggz_io_set_* functions.
+  * @retval E_OGGPLAY_BAD_INPUT got EOF or OGGZ_ERR_HOLE_IN_DATA occured.
+- * @retval E_OGGPLAY_OUT_OF_MEMORY ran out of memory
++ * @retval E_OGGPLAY_OUT_OF_MEMORY ran out of memory or video frame too large.
+  * @retval E_OGGPLAY_BAD_OGGPLAY invalid OggPlay handle. 
+  */
+ OggPlayErrorCode
+ oggplay_initialise(OggPlay *me, int block);
+ 
+ /**
+  * Sets a user defined OggPlayDataCallback function for the OggPlay handle.
+  *
+@@ -344,13 +344,31 @@ oggplay_get_available(OggPlay *player);
+  * @retval E_OGGPLAY_BAD_OGGPLAY invalid OggPlay handle
+  */
+ ogg_int64_t
+ oggplay_get_duration(OggPlay * player);
+ 
+ int
+ oggplay_media_finished_retrieving(OggPlay * player);
+ 
++/**
++ * Sets the maximum video frame size, in pixels, which OggPlay will attempt to
++ * decode. Call this after oggplay_new_with_reader() but before
++ * oggplay_initialise() to prevent crashes with excessivly large video frame
++ * sizes. oggplay_initialise() will return E_OGGPLAY_OUT_OF_MEMORY if the
++ * decoded video's frame requires more than max_frame_pixels. Unless
++ * oggplay_set_max_video_size() is called, default maximum number of pixels
++ * per frame is INT_MAX.
++ *
++ * @param player OggPlay handle.
++ * @param max_frame_pixels max number of pixels per frame.
++ * @retval E_OGGPLAY_OK on success.
++ * @retval E_OGGPLAY_BAD_OGGPLAY invalid OggPlay handle.
++ */
++int
++oggplay_set_max_video_frame_pixels(OggPlay *player,
++                                   int max_frame_pixels);
++
+ #ifdef __cplusplus
+ }
+ #endif
+ 
+ #endif /* __OGGPLAY_H__ */
+diff --git a/media/liboggplay/src/liboggplay/oggplay.c b/media/liboggplay/src/liboggplay/oggplay.c
+--- a/media/liboggplay/src/liboggplay/oggplay.c
++++ b/media/liboggplay/src/liboggplay/oggplay.c
+@@ -68,16 +68,17 @@ oggplay_new_with_reader(OggPlayReader *r
+   me->target = 0L;
+   me->active_tracks = 0;
+   me->buffer = NULL;
+   me->shutdown = 0;
+   me->trash = NULL;
+   me->oggz = NULL;
+   me->pt_update_valid = 1;
+   me->duration = -1;
++  me->max_video_frame_pixels = OGGPLAY_TYPE_MAX_SIGNED(int);
+ 
+   return me;
+ 
+ }
+ 
+ OggPlayErrorCode
+ oggplay_initialise(OggPlay *me, int block) {
+ 
+@@ -958,8 +959,16 @@ oggplay_media_finished_retrieving(OggPla
+   if (me->reader == NULL) {
+     return E_OGGPLAY_BAD_READER;
+   }
+ 
+   return me->reader->finished_retrieving(me->reader);
+ 
+ }
+ 
++int
++oggplay_set_max_video_frame_pixels(OggPlay *player,
++                                   int max_frame_pixels) {
++  if (!player)
++    return E_OGGPLAY_BAD_OGGPLAY;
++  player->max_video_frame_pixels = max_frame_pixels;
++  return E_OGGPLAY_OK;
++}
+diff --git a/media/liboggplay/src/liboggplay/oggplay_callback.c b/media/liboggplay/src/liboggplay/oggplay_callback.c
+--- a/media/liboggplay/src/liboggplay/oggplay_callback.c
++++ b/media/liboggplay/src/liboggplay/oggplay_callback.c
+@@ -83,16 +83,42 @@ oggplay_shutdown_theora(void *user_data)
+   
+   if (common->initialised == 1 && decoder->decoder.num_header_packets == 0) {
+     theora_clear(&(decoder->video_handle));
+   }
+   theora_info_clear(&(decoder->video_info));
+   theora_comment_clear(&(decoder->video_comment));
+ }
+ 
++/**
++ * Returns 1 if the video as described by |info| requires more than
++ * max_video_pixels pixels per frame, otherwise returns 0.
++ */
++static int
++frame_is_too_large(theora_info *info, long max_video_pixels) {
++  int overflow = 0;
++  long frame_pixels = 0;
++  long display_pixels = 0;
++  if (!info) {
++    return 1;
++  }
++  overflow |= oggplay_mul_signed_overflow(info->frame_width,
++                                          info->frame_height,
++                                          &frame_pixels);
++  overflow |= oggplay_mul_signed_overflow(info->width,
++                                          info->height,
++                                          &display_pixels);
++  if (overflow ||
++      frame_pixels > max_video_pixels ||
++      display_pixels > max_video_pixels) {
++    return 1;
++  }
++  return 0;
++}
++
+ int
+ oggplay_callback_theora (OGGZ * oggz, ogg_packet * op, long serialno,
+                          void * user_data) {
+ 
+   OggPlayTheoraDecode   * decoder     = (OggPlayTheoraDecode *)user_data;
+   OggPlayDecode         * common      = NULL;
+   ogg_int64_t             granulepos  = oggz_tell_granulepos(oggz);
+   yuv_buffer              buffer;
+@@ -184,17 +210,24 @@ oggplay_callback_theora (OGGZ * oggz, og
+         ((decoder->video_info.height - decoder->video_info.offset_y)<decoder->video_info.frame_height)
+         ||
+         ((decoder->video_info.width - decoder->video_info.offset_x)<decoder->video_info.frame_width)
+       )
+       {
+         common->initialised |= -1;
+         return OGGZ_CONTINUE;
+       }
+-      
++
++      /* Ensure the video frames don't require more pixels than our
++       * allowed maximum. */
++      if (frame_is_too_large(&decoder->video_info,
++                             common->player->max_video_frame_pixels)) {
++        return OGGZ_ERR_OUT_OF_MEMORY;
++      }
++
+       if (theora_decode_init(&(decoder->video_handle), &(decoder->video_info))) {
+         common->initialised |= -1;
+         return OGGZ_CONTINUE;
+       }
+ 
+       common->initialised |= 1;
+     }
+     return OGGZ_CONTINUE;
+diff --git a/media/liboggplay/src/liboggplay/oggplay_private.h b/media/liboggplay/src/liboggplay/oggplay_private.h
+--- a/media/liboggplay/src/liboggplay/oggplay_private.h
++++ b/media/liboggplay/src/liboggplay/oggplay_private.h
+@@ -256,16 +256,17 @@ struct _OggPlay {
+   ogg_int64_t               target;                 /**< */
+   int                       active_tracks;          /**< number of active tracks */
+   volatile OggPlayBuffer  * buffer;                 /**< @see OggPlayBuffer */
+   ogg_int64_t               presentation_time;      /**< */
+   OggPlaySeekTrash        * trash;                  /**< @see OggPlaySeekTrash */
+   int                       shutdown;               /**< "= 1" indicates shutdown event */
+   int                       pt_update_valid;        /**< */
+   ogg_int64_t               duration;	              /**< The value of the duration the last time it was retrieved.*/
++  int                       max_video_frame_pixels; /**< Maximum number of pixels we'll allow in a video frame.*/
+ };
+ 
+ void
+ oggplay_set_data_callback_force(OggPlay *me, OggPlayDataCallback callback,
+                                 void *user);
+ 
+ void
+ oggplay_take_out_trash(OggPlay *me, OggPlaySeekTrash *trash);

@@ -61,11 +61,8 @@ EXPORTS		= \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-EXPORTS		+= nsINativeMenuService.h
-endif
-
-ifdef MOZ_COCOA_PRINTING
 EXPORTS		+= \
+		nsINativeMenuService.h \
 		nsIPrintDialogService.h \
 		$(NULL)
 endif
@@ -113,14 +110,18 @@ XPIDLSRCS	= \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-XPIDLSRCS	+= nsIPrintSettingsWin.idl
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-ifndef MOZ_COCOA_PRINTING
-XPIDLSRCS	+= nsIPrintSettingsX.idl \
-		nsIPrintSessionX.idl
-endif
+XPIDLSRCS	+= nsIPrintSettingsWin.idl \
+		nsIWinTaskbar.idl	\
+		nsITaskbarPreview.idl	\
+		nsITaskbarTabPreview.idl \
+		nsITaskbarWindowPreview.idl \
+		nsITaskbarPreviewController.idl \
+		nsITaskbarPreviewButton.idl \
+		nsITaskbarProgress.idl \
+		nsITaskbarPreviewButton.idl \
+		nsIJumpListBuilder.idl \
+		nsIJumpListItem.idl \
+		$(NULL)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

@@ -122,12 +122,11 @@ public:
   }
 
   /**
+   * Take aFrame out of the frame list. This also disconnects aFrame
    * from the sibling list. The frame must be non-null and present on
    * this list.
-   * The second frame is a hint for the prev-sibling of aFrame; if the
-   * hint is correct, then this is O(1) time.
    */
-  void RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint = nsnull);
+  void RemoveFrame(nsIFrame* aFrame);
 
   /**
    * Take aFrame out of the frame list, if present. This also disconnects
@@ -153,10 +152,8 @@ public:
   /**
    * Take aFrame out of the frame list and then destroy it.
    * The frame must be non-null and present on this list.
-   * The second frame is a hint for the prev-sibling of aFrame; if the
-   * hint is correct, then this is O(1) time.
    */
-  void DestroyFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint = nsnull);
+  void DestroyFrame(nsIFrame* aFrame);
 
   /**
    * If aFrame is present on this list then take it out of the list and
@@ -234,8 +231,6 @@ public:
   PRBool ContainsFrameBefore(const nsIFrame* aFrame, const nsIFrame* aEnd) const;
 
   PRInt32 GetLength() const;
-
-  nsIFrame* GetPrevSiblingFor(nsIFrame* aFrame) const;
 
   /**
    * If this frame list has only one frame, return that frame.

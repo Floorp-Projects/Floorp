@@ -454,24 +454,6 @@ nsContainerFrame::PositionFrameView(nsIFrame* aKidFrame)
   vm->MoveViewTo(view, pt.x, pt.y);
 }
 
-static PRBool
-IsMenuPopup(nsIFrame *aFrame)
-{
-  nsIAtom *frameType = aFrame->GetType();
-
-  // We're a menupopup if we're the list control frame dropdown for a combobox.
-  if (frameType == nsGkAtoms::listControlFrame) {
-    nsListControlFrame *listControlFrame = static_cast<nsListControlFrame*>(aFrame);
-      
-    if (listControlFrame) {
-      return listControlFrame->IsInDropDownMode();
-    }
-  }
-
-  // ... or if we're a XUL menupopup frame.
-  return (frameType == nsGkAtoms::menuPopupFrame);
-}
-
 static nsIWidget*
 GetPresContextContainerWidget(nsPresContext* aPresContext)
 {

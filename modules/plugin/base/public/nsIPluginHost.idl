@@ -64,7 +64,7 @@ interface nsIPluginStreamListener;
 [ref] native nsIStreamListenerRef(nsIStreamListener *);
 [ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
 
-[scriptable, uuid(23E8FD98-A625-4B08-BE1A-F7CC18A5B106)]
+[scriptable, uuid(30C7C529-B05C-4950-B5B8-9AF673E46521)]
 interface nsIPluginHost : nsISupports
 {
   [noscript] void init();
@@ -278,6 +278,13 @@ interface nsIPluginHost : nsISupports
    *        copy the string value if you need it longer than that.
    */
   [noscript] void getPluginName(in nsIPluginInstance aInstance, [shared] out string aPluginName);
+
+  /**
+   * Get the plugin tag associated with a given plugin instance.
+   * @param aInstance the plugin instance object
+   * @return plugin tag object
+   */
+  [noscript] nsIPluginTag getPluginTagForInstance(in nsIPluginInstance aInstance);
 };
 
 %{C++

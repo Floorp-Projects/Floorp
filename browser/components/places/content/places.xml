@@ -3,38 +3,7 @@
 <bindings id="placesBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
-          xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
-  <binding id="command-button" extends="chrome://global/content/bindings/button.xml#button">
-    <implementation>
-      <method name="updateActiveView">
-        <body><![CDATA[ 
-          if (this.hasAttribute("view"))
-            PlacesController.activeView = document.getElementById(this.getAttribute("view"));
-        ]]></body>
-      </method>
-    </implementation>
-    <handlers>
-      <handler event="click" button="0" action="this.updateActiveView();"/>
-      <handler event="keypress" keycode="VK_SPACE" action="this.updateActiveView();"/>
-    </handlers>
-  </binding>
-  
-  <binding id="filter-button" extends="chrome://global/content/bindings/button.xml#menu">
-    <content>
-      <xul:stack flex="1" class="box-inherit button-box">
-        <xul:image class="button-icon" xbl:inherits="src=image"/>
-        <xul:dropmarker class="button-menu-dropmarker" xbl:inherits="open,disabled"/>
-      </xul:stack>
-      <children includes="menupopup"/>
-    </content>
-    <handlers>
-      <handler event="command"><![CDATA[
-        PlacesSearchBox.filterCollection = event.target.getAttribute("value");
-      ]]></handler>
-    </handlers>
-  </binding>
 
 #ifdef PLACES_QUERY_BUILDER
   <binding id="calendar">

@@ -574,6 +574,15 @@ res/wincharset.properties
 res/maccharset.properties
 res/unixcharset.properties
 res/cmessage.txt
+res/hiddenWindow.html
+res/ua.css
+res/html.css
+res/quirk.css
+res/forms.css
+res/viewsource.css
+res/mathml.css
+res/loading-image.png
+res/broken-image.png
 res/html/gopher-audio.gif
 res/html/gopher-binary.gif
 res/html/gopher-find.gif
@@ -636,6 +645,12 @@ plugins/Default Plugin.plugin/Contents/MacOS/Default Plugin
 plugins/Default Plugin.plugin/Contents/PkgInfo
 plugins/Default Plugin.plugin/Contents/Resources/Default Plugin.rsrc
 plugins/Default Plugin.plugin/Contents/Resources/English.lproj/InfoPlist.strings
+../Plug-Ins/PrintPDE.plugin/Contents/Info.plist
+../Plug-Ins/PrintPDE.plugin/Contents/MacOS/PrintPDE
+../Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/Localizable.strings
+../Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/classes.nib
+../Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/info.nib
+../Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/objects.xib
 res/cursors/CVS/Entries
 res/cursors/CVS/Repository
 res/cursors/CVS/Root
@@ -780,6 +795,9 @@ components/xuldoc.xpt
 components/xultmpl.xpt
 components/zipwriter.xpt
 components/firefox.xpt
+greprefs/all.js
+greprefs/security-prefs.js
+greprefs/xpinstall.js
 run-mozilla.sh
 firefox
 dependentlibs.list
@@ -808,6 +826,9 @@ xpicleanup@BIN_SUFFIX@
 chrome.manifest
 install.rdf
 @DLL_PREFIX@jsj@DLL_SUFFIX@
+#ifdef XP_WIN
+js3250.dll
+#endif
 #ifdef XP_WIN
 components/brwsrcmp.dll
 #endif

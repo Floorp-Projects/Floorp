@@ -76,6 +76,12 @@ ifndef WINCE
 DIRS += migration
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows) 
+ifndef WINCE
+DIRS += wintaskbar
+endif
+endif
+
 ifdef MOZ_SAFE_BROWSING
 DIRS += safebrowsing
 endif

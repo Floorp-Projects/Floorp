@@ -134,10 +134,10 @@ NS_IMETHODIMP nsSVGGraphicElement::GetTransformToElement(nsIDOMSVGElement *eleme
   if (NS_FAILED(rv)) return rv;
 
   // the easiest way to do this (if likely to increase rounding error):
-  rv = GetScreenCTM(getter_AddRefs(ourScreenCTM));
-  if (NS_FAILED(rv)) return rv;
-  rv = target->GetScreenCTM(getter_AddRefs(targetScreenCTM));
-  if (NS_FAILED(rv)) return rv;
+  GetScreenCTM(getter_AddRefs(ourScreenCTM));
+  if (!ourScreenCTM) return NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE;
+  target->GetScreenCTM(getter_AddRefs(targetScreenCTM));
+  if (!targetScreenCTM) return NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE;
   rv = targetScreenCTM->Inverse(getter_AddRefs(tmp));
   if (NS_FAILED(rv)) return rv;
   return tmp->Multiply(ourScreenCTM, _retval);  // addrefs, so we don't

@@ -89,6 +89,8 @@ int vorbis_block_init(vorbis_dsp_state *v, vorbis_block *vb){
   int i;
   memset(vb,0,sizeof(*vb));
   vb->vd=v;
+  vb->localalloc=0;
+  vb->localstore=NULL;
   if(v->analysisp){
     vorbis_block_internal *vbi=
       vb->internal=_ogg_calloc(1,sizeof(vorbis_block_internal));
@@ -307,10 +309,6 @@ int vorbis_analysis_init(vorbis_dsp_state *v,vorbis_info *vi){
   v->sequence=3;
 
   return(0);
-}
-
-void vorbis_dsp_init(vorbis_dsp_state *v){
-  memset(v,0,sizeof(*v));
 }
 
 void vorbis_dsp_clear(vorbis_dsp_state *v){

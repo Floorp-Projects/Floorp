@@ -63,15 +63,8 @@ if __name__ == '__main__':
   t.start()
 
   automation.initializeProfile(PROFILE_DIRECTORY)
-  browserEnv = dict(os.environ)
-
-  # These variables are necessary for correct application startup; change
-  # via the commandline at your own risk.
-  browserEnv["NO_EM_RESTART"] = "1"
+  browserEnv = automation.environment()
   browserEnv["XPCOM_DEBUG_BREAK"] = "warn"
-  if automation.UNIXISH:
-    browserEnv["LD_LIBRARY_PATH"] = os.path.join(SCRIPT_DIR, automation.DIST_BIN)
-    browserEnv["MOZILLA_FIVE_HOME"] = os.path.join(SCRIPT_DIR, automation.DIST_BIN)
 
   url = "http://localhost:%d/index.html" % PORT
   appPath = os.path.join(SCRIPT_DIR, automation.DEFAULT_APP)

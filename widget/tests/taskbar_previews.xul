@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Taskbar Previews Test"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="loaded();">
+
+  <title>Previews - yeah!</title>
+  <script type="application/javascript" 
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+    let Cc = Components.classes;
+    let Ci = Components.interfaces;
+    let Cu = Components.utils;
+    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+    let taskbar = Cc["@mozilla.org/windows-taskbar;1"].getService(Ci.nsIWinTaskbar);
+
+    function IsWin7OrHigher() {
+      try {
+        var sysInfo = Cc["@mozilla.org/system-info;1"].
+                      getService(Ci.nsIPropertyBag2);
+        var ver = parseFloat(sysInfo.getProperty("version"));
+        if (ver >= 6.1)
+          return true;
+      } catch (ex) { }
+      return false;
+    }
+    isnot(taskbar, null, "Taskbar service is defined");
+    is(taskbar.available, IsWin7OrHigher(), "Expected availability of taskbar");
+
+    SimpleTest.waitForExplicitFinish();
+
+    function stdPreviewSuite(p) {
+      p.visible = !p.visible;
+      p.visible = !p.visible;
+      p.visible = true;
+      p.invalidate();
+      p.visible = false;
+    }
+
+    function loaded()
+    {
+      if (!taskbar.available)
+        SimpleTest.finish();
+      let controller = {
+        width: 400,
+        height: 400,
+        thumbnailAspectRatio: 1.0,
+        drawThumbnail: function () { return false; },
+        drawPreview: function () { return false; },
+        get wrappedJSObject() { return this; }
+      }
+      // HACK from mconnor:
+      var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+      let win = wm.getMostRecentWindow("navigator:browser");
+      let docShell = win.gBrowser.docShell;
+
+      let winPreview = taskbar.getTaskbarWindowPreview(docShell);
+      isnot(winPreview, null, "Window preview is not null");
+      winPreview.controller = controller;
+      let button = winPreview.getButton(0);
+      isnot(button, null, "Could get button at valid index");
+      try {
+        winPreview.getButton(-1);
+        ok(false, "Got button at negative index");
+      } catch (ex) {}
+      try {
+        winPreview.getButton(Ci.nsITaskbarWindowPreview.NUM_TOOLBAR_BUTTONS);
+        ok(false, "Got button at index that is too large");
+      } catch (ex) {}
+      button.image = null;
+      stdPreviewSuite(winPreview);
+      // Let's not perma-hide this window from the taskbar
+      winPreview.visible = true;
+
+      let tabP = taskbar.createTaskbarTabPreview(docShell, controller);
+      isnot(tabP, null, "Tab preview is not null");
+      is(tabP.controller.wrappedJSObject, controller, "Controllers match");
+      tabP.icon = null;
+      tabP.move(null);
+      try {
+        tabP.move(tabP);
+        ok(false, "Moved a preview next to itself!");
+      } catch (ex) {}
+      stdPreviewSuite(tabP);
+
+      let tabP2 = taskbar.createTaskbarTabPreview(docShell, controller);
+      tabP.visible = true;
+      tabP2.visible = true;
+
+      isnot(tabP2, null, "2nd Tab preview is not null");
+      isnot(tabP,tabP2, "Tab previews are different");
+      tabP.active = true;
+      ok(tabP.active && !tabP2.active, "Only one tab is active (part 1)");
+      tabP2.active = true;
+      ok(!tabP.active && tabP2.active, "Only one tab is active (part 2)");
+      tabP.active = true;
+      ok(tabP.active && !tabP2.active, "Only one tab is active (part 3)");
+      tabP.active = false;
+      ok(!tabP.active && !tabP2.active, "Neither tab is active");
+      is(winPreview.active, false, "Window preview is not active");
+      tabP.active = true;
+      winPreview.active = true;
+      ok(winPreview.active && !tabP.active, "Tab preview takes activation from window");
+      tabP.active = true;
+      ok(tabP.active && !winPreview.active, "Tab preview takes activation from window");
+
+      tabP.visible = false;
+      tabP2.visible = false;
+
+      SimpleTest.finish();
+    }
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+
+</window>

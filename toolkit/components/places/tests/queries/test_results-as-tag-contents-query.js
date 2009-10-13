@@ -136,15 +136,15 @@ function run_test() {
   LOG("Updating Items in batch");
   var updateBatch = {
     runBatched: function (aUserData) {
-      batchchange = [{ isDetails: true,
-                       uri: "http://foo3.com/",
-                       title: "foo"},
-                     { isDetails: true,
-                       uri: "http://foo.com/changeme2.html",
-                       title: "zydeco",
-                       isBookmark:true,
-                       isTag: true,
-                       tagArray: ["bugzilla", "moz"] }];
+      var batchchange = [{ isDetails: true,
+                           uri: "http://foo3.com/",
+                           title: "foo"},
+                         { isDetails: true,
+                           uri: "http://foo.com/changeme2.html",
+                           title: "zydeco",
+                           isBookmark:true,
+                           isTag: true,
+                           tagArray: ["bugzilla", "moz"] }];
       populateDB(batchchange);
     }
   };

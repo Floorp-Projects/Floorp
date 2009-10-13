@@ -40,14 +40,14 @@
 
 /**
  * The nsIDOMNodeSelector interface is an interface for getting nodes
- * that mtch a given CSS selector.
+ * that match a given CSS selector.
  *
  * For more information on this interface please see 
- * http://www.w3.org/TR/selectors-api/
+ * <http://dev.w3.org/2006/webapi/selectors-api/>
  */
 [scriptable, uuid(7cebc153-168a-416c-ba5a-56a8c2ddb2ec)]
 interface nsIDOMNodeSelector : nsISupports
 {
-  nsIDOMElement querySelector([Null(Empty), Undefined(Empty)] in DOMString selectors);
-  nsIDOMNodeList querySelectorAll([Null(Empty), Undefined(Empty)] in DOMString selectors);
+  nsIDOMElement querySelector([Null(Stringify)] in DOMString selectors);
+  nsIDOMNodeList querySelectorAll([Null(Stringify)] in DOMString selectors);
 };

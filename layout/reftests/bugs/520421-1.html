@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <style>
+      div {
+        background-color: red;
+      }
+      div[mixedCase=true] {
+        background-color: green !important;
+      }
+    </style>
+    <script>
+      function f() {
+        document.getElementById("t").setAttribute("mixedCase", "true");
+        document.documentElement.className = "";
+      }
+      window.addEventListener("MozReftestInvalidate", f, false);
+    </script>
+  </head>
+  <body>
+    <div id="t">text</div>
+  </body>
+</html>

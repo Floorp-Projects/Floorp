@@ -171,8 +171,6 @@ public:
 
   PRBool ImplementsInterface(REFNSIID aIID) const;
 
-  PRBool ShouldBuildChildFrames() const;
-
   nsresult AddResourceListener(nsIContent* aBoundElement);
 
   void Initialize();

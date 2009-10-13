@@ -40,7 +40,7 @@
                 style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
             <menu id="file-menu" label="&fileMenu.label;"
                   accesskey="&fileMenu.accesskey;">
-              <menupopup id="menu_FilePopup" onpopupshowing="getContentAreaFrameCount();">
+              <menupopup id="menu_FilePopup">
                 <menuitem id="menu_newNavigator"
                           label="&newNavigatorCmd.label;"
                           accesskey="&newNavigatorCmd.accesskey;"
@@ -78,11 +78,6 @@
                           accesskey="&savePageCmd.accesskey;"
                           key="key_savePage"
                           command="Browser:SavePage"/>
-                <menuitem id="menu_saveFrame"
-                          label="&saveFrameCmd.label;"
-                          accesskey="&saveFrameCmd.accesskey;"
-                          command="Browser:SaveFrame"
-                          hidden="true"/>
                 <menuitem id="menu_sendLink"
                           label="&sendPageCmd.label;"
                           accesskey="&sendPageCmd.accesskey;"

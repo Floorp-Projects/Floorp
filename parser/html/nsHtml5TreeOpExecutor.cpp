@@ -121,7 +121,7 @@ nsHtml5TreeOpExecutor::WillParse()
 
 // This is called when the tree construction has ended
 NS_IMETHODIMP
-nsHtml5TreeOpExecutor::DidBuildModel()
+nsHtml5TreeOpExecutor::DidBuildModel(PRBool aTerminated)
 {
   NS_ASSERTION(mLifeCycle == STREAM_ENDING, "Bad life cycle.");
   mLifeCycle = TERMINATED;
@@ -131,7 +131,7 @@ nsHtml5TreeOpExecutor::DidBuildModel()
   }
   GetTokenizer()->end();
   // This is comes from nsXMLContentSink
-  DidBuildModelImpl();
+  DidBuildModelImpl(aTerminated);
   mDocument->ScriptLoader()->RemoveObserver(this);
   nsContentSink::StartLayout(PR_FALSE);
   ScrollToRef();

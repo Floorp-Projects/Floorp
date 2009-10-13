@@ -56,6 +56,10 @@ splitter {
   background-color: ThreeDFace;
 }
 
+splitter:-moz-lwtheme {
+  background: none;
+}
+
 /* ::::: splitter (horizontal) ::::: */
 
 splitter[orient="vertical"] {

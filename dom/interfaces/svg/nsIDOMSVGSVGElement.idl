@@ -55,7 +55,7 @@ interface nsIDOMSVGTransform;
 #endif
 %}
 
-[scriptable, uuid(83b04425-9509-49f5-af75-1ae1f8f3e871)]
+[scriptable, uuid(5255148c-425a-4de5-aefb-4f41d996d3ca)]
 interface nsIDOMSVGSVGElement
   : nsIDOMSVGElement
 /*
@@ -123,7 +123,6 @@ interface nsIDOMSVGSVGElement
   nsIDOMSVGRect         createSVGRect();
   nsIDOMSVGTransform    createSVGTransform();
   nsIDOMSVGTransform    createSVGTransformFromMatrix(in nsIDOMSVGMatrix matrix);
-  DOMString             createSVGString();
   nsIDOMElement         getElementById(in DOMString elementId);
 };
 

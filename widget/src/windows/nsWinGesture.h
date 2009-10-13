@@ -48,7 +48,7 @@
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
 
-#if !defined(NTDDI_WIN7) ||  NTDDI_VERSION < NTDDI_WIN7
+#ifndef HGESTUREINFO  // needs WINVER >= 0x0601
 
 DECLARE_HANDLE(HGESTUREINFO);
 
@@ -163,7 +163,7 @@ typedef struct tagGESTURENOTIFYSTRUCT {
 // WM_TABLET_QUERYSYSTEMGESTURESTATUS return values
 #define TABLET_ROTATE_GESTURE_ENABLE    0x02000000
 
-#endif /* NTDDI_VERSION < NTDDI_WIN7 */
+#endif /* #ifndef HGESTUREINFO */
 
 class nsPointWin : public nsIntPoint
 {

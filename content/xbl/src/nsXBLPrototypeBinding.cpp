@@ -1057,23 +1057,6 @@ nsXBLPrototypeBinding::GetStyleSheets()
   return nsnull;
 }
 
-PRBool
-nsXBLPrototypeBinding::ShouldBuildChildFrames() const
-{
-  if (!mAttributeTable)
-    return PR_TRUE;
-  nsPRUint32Key nskey(kNameSpaceID_XBL);
-  nsObjectHashtable* xblAttributes =
-    static_cast<nsObjectHashtable*>(mAttributeTable->Get(&nskey));
-  if (xblAttributes) {
-    nsISupportsKey key(nsGkAtoms::text);
-    void* entry = xblAttributes->Get(&key);
-    return !entry;
-  }
-
-  return PR_TRUE;
-}
-
 static PRBool
 DeleteAttributeEntry(nsHashKey* aKey, void* aData, void* aClosure)
 {
