@@ -2865,14 +2865,6 @@
           return document.getBindingParent(this).childNodes;
         ]]></body>
       </method>
-#ifdef XP_MACOSX
-      <field name="_scrollButtonDownBox">
-        document.getAnonymousElementByAttribute(this, "anonid", "down-box");
-      </field>
-      <field name="_scrollButtonDownBoxAnimate">
-        document.getAnonymousElementByAttribute(this, "anonid", "down-box-animate");
-      </field>
-#endif
     </implementation>
 
     <handlers>
@@ -2882,10 +2874,6 @@
 
          var tabs = document.getBindingParent(this);
          tabs.removeAttribute("overflow");
-#ifdef XP_MACOSX
-         this._scrollButtonDownBox.collapsed = true;
-         this._scrollButtonDownBoxAnimate.collapsed = true;
-#endif
       ]]></handler>
       <handler event="overflow"><![CDATA[
          if (event.detail == 0)
@@ -2893,59 +2881,9 @@
 
          var tabs = document.getBindingParent(this);
          tabs.setAttribute("overflow", "true");
-#ifdef XP_MACOSX
-         this._scrollButtonDownBox.collapsed = false;
-         this._scrollButtonDownBoxAnimate.collapsed = false;
-#endif
          this.ensureElementIsVisible(tabs.selectedItem, false);
       ]]></handler>
-
-#ifdef XP_MACOSX
-      <handler event="UpdatedScrollButtonsDisabledState"><![CDATA[
-        // fix for bug #352353
-        // unlike the scrollup button on the tab strip (which is a 
-        // simple toolbarbutton) the scrolldown button is 
-        // a more complicated stack of boxes and a toolbarbutton
-        // so that we can animate when a tab is opened offscreen.
-        // in order to style the box with the actual background image
-        // we need to manually set the disable state to match the
-        // disable state of the toolbarbutton.
-        this._scrollButtonDownBox
-            .setAttribute("disabled", this._scrollButtonDown.disabled);
-      ]]></handler>
-#endif
-
     </handlers>
-
-#ifdef XP_MACOSX
-    <content>
-      <xul:toolbarbutton class="scrollbutton-up" collapsed="true"
-                         xbl:inherits="orient"
-                         anonid="scrollbutton-up"
-                         onclick="_distanceScroll(event);"
-                         onmousedown="_startScroll(-1);"
-                         onmouseover="_continueScroll(-1);"
-                         onmouseup="_stopScroll();"
-                         onmouseout="_pauseScroll();"/>
-      <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1" anonid="scrollbox">
-        <children/>
-      </xul:scrollbox>
-      <xul:stack align="center" pack="end" class="scrollbutton-down-stack">
-        <xul:hbox flex="1" class="scrollbutton-down-box" 
-                           collapsed="true" anonid="down-box"/>
-        <xul:hbox flex="1" class="scrollbutton-down-box-animate" 
-                           collapsed="true" anonid="down-box-animate"/>
-        <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
-                           xbl:inherits="orient"
-                           anonid="scrollbutton-down"
-                           onclick="_distanceScroll(event);"
-                           onmousedown="_startScroll(1);"
-                           onmouseover="_continueScroll(1);"
-                           onmouseup="_stopScroll();"
-                           onmouseout="_pauseScroll();"/>
-      </xul:stack>
-    </content>
-#endif
   </binding>
 
   <binding id="tabbrowser-tabs"
@@ -2981,15 +2919,12 @@
           <xul:toolbarbutton class="tabs-newtab-button" anonid="newtab-button"
                              command="cmd_newNavigatorTab"
                              tooltiptext="&newTabButton.tooltip;"/>
-          <xul:stack align="center" pack="end">
-            <xul:hbox flex="1" class="tabs-alltabs-box-animate" anonid="alltabs-box-animate"/>
-            <xul:toolbarbutton class="tabs-alltabs-button" anonid="alltabs-button"
-                               type="menu"
-                               tooltiptext="&listAllTabs.label;">
-             <xul:menupopup class="tabs-alltabs-popup" anonid="alltabs-popup"
-                            position="after_end"/>
-            </xul:toolbarbutton>
-          </xul:stack>
+          <xul:toolbarbutton class="tabs-alltabs-button" anonid="alltabs-button"
+                             type="menu"
+                             tooltiptext="&listAllTabs.label;">
+            <xul:menupopup class="tabs-alltabs-popup" anonid="alltabs-popup"
+                           position="after_end"/>
+          </xul:toolbarbutton>
           <xul:toolbarbutton anonid="tabs-closebutton"
                              class="close-button tabs-closebutton"/>
         </xul:hbox>
@@ -3168,19 +3103,13 @@
                                                 "anonid", "alltabs-popup");
       </field>
 
-      <field name="mAllTabsBoxAnimate">
-        document.getAnonymousElementByAttribute(this, 
-                                                "anonid",
-                                                "alltabs-box-animate");
+      <field name="_animateElement">
+        this.mTabstrip._scrollButtonDown;
       </field>
-
-#ifdef XP_MACOSX
-      <field name="mDownBoxAnimate">
-        this.mTabstrip._scrollButtonDownBoxAnimate;
-      </field>
-#endif
 
       <field name="_animateTimer">null</field>
+      <field name="_animateBaseOpacity">null</field>
+      <field name="_animateBaseColor">null</field>
       <field name="_animateStep">-1</field>
       <field name="_animateDelay">25</field>
       <field name="_animatePercents">
@@ -3199,10 +3128,8 @@
               this._animateTimer.cancel();
 
             this._animateStep = -1;
-            this.mAllTabsBoxAnimate.style.opacity = 0.0;
-#ifdef XP_MACOSX
-            this.mDownBoxAnimate.style.opacity = 0.0;
-#endif
+            this._animateElement.style.outlineColor = "";
+            this._animateElement.style.outlineStyle = "";
           }
         ]]></body>
       </method>
@@ -3232,32 +3159,49 @@
                                                  selected.left - scrollRect.left);
           }
 
+          this._stopAnimation();
+
+          const DEFAULT_OPACITY = .7;
+          var self = this;
+          this._animateBaseColor =
+            window.getComputedStyle(this._animateElement, null)
+                  .outlineColor
+                  .replace(/^rgb\((.*)\)$/, "rgba($1, " + DEFAULT_OPACITY + ")")
+                  .replace(/([^, ]*)\)/, function (m0, m1) {
+                    self._animateBaseOpacity = parseFloat(m1);
+                    return "$opacity)";
+                  });
+
           // start the flash timer
           this._animateStep = 0;
+
+          var outlineWidth =
+            Math.ceil(Math.min(this._animateElement.clientHeight,
+                               this._animateElement.clientWidth) * .6) + "px";
+          this._animateElement.style.outlineWidth = outlineWidth;
+          this._animateElement.style.outlineOffset = "-" + outlineWidth;
+          this._animateElement.style.outlineColor = "rgba(0,0,0,0)";
+          this._animateElement.style.outlineStyle = "solid";
 
           if (!this._animateTimer) 
             this._animateTimer =
               Components.classes["@mozilla.org/timer;1"]
                         .createInstance(Components.interfaces.nsITimer);
-          else
-             this._animateTimer.cancel();
 
           this._animateTimer.initWithCallback(this, this._animateDelay,
                                               this._animateTimer.TYPE_REPEATING_SLACK);
         ]]></body>
       </method>
-      
+
       <method name="notify">
         <parameter name="aTimer"/>
         <body><![CDATA[
           if (!document)
             aTimer.cancel();
 
-          var percent = this._animatePercents[this._animateStep];
-          this.mAllTabsBoxAnimate.style.opacity = percent;
-#ifdef XP_MACOSX
-          this.mDownBoxAnimate.style.opacity = percent;
-#endif
+          var opacity = this._animateBaseOpacity * this._animatePercents[this._animateStep];
+          this._animateElement.style.outlineColor =
+            this._animateBaseColor.replace("$opacity", opacity);
 
           if (this._animateStep < (this._animatePercents.length - 1))
             this._animateStep++;
@@ -3527,13 +3471,8 @@
         var tabs = tabcontainer.childNodes;
 
         // Listen for changes in the tab bar.
-        var tabbrowser = document.getBindingParent(tabcontainer);
-        tabbrowser.addEventListener("TabOpen", this, false);
+        tabcontainer.addEventListener("TabOpen", this, false);
         tabcontainer.mTabstrip.addEventListener("scroll", this, false);
-
-        // if an animation is in progress and the user
-        // clicks on the "all tabs" button, stop the animation
-        tabcontainer._stopAnimation();
 
         for (var i = 0; i < tabs.length; i++) {
           this._createTabMenuItem(tabs[i]);
@@ -3554,7 +3493,7 @@
         }
         var tabcontainer = document.getBindingParent(this);
         tabcontainer.mTabstrip.removeEventListener("scroll", this, false);
-        document.getBindingParent(tabcontainer).removeEventListener("TabOpen", this, false);
+        tabcontainer.removeEventListener("TabOpen", this, false);
       ]]></handler>
 
       <handler event="DOMMenuItemActive">

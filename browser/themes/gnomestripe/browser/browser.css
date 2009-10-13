@@ -1279,11 +1279,7 @@ tabpanels {
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-appearance: tab-scroll-arrow-forward;
   margin: 0px;
-}
-
-.tabs-alltabs-box-animate {
-  background-color: Highlight;
-  opacity: 0.0;
+  outline-color: Highlight;
 }
 
 .tabs-alltabs-button {
