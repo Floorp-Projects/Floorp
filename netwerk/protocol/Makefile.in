@@ -35,22 +35,23 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= about \
-              data \
-              res \
-              file \
-              http \
-              viewsource \
-              ftp \
-              gopher \
-              $(NULL)
+PARALLEL_DIRS = \
+  about \
+  data \
+  file \
+  ftp \
+  gopher \
+  http \
+  res \
+  viewsource \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
