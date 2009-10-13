@@ -51,6 +51,7 @@ function test() {
     "browser/components/sessionstore/test/browser/browser_454908_sample.html";
   let tab = gBrowser.addTab(testURL);
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
+    this.removeEventListener("load", arguments.callee, true);
     let doc = tab.linkedBrowser.contentDocument;
     for (let id in fieldValues)
       doc.getElementById(id).value = fieldValues[id];
@@ -59,6 +60,7 @@ function test() {
     
     tab = undoCloseTab();
     tab.linkedBrowser.addEventListener("load", function(aEvent) {
+      this.removeEventListener("load", arguments.callee, true);
       let doc = tab.linkedBrowser.contentDocument;
       for (let id in fieldValues) {
         let node = doc.getElementById(id);
