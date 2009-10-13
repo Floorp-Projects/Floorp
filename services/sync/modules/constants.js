@@ -54,6 +54,7 @@ PWDMGR_HOST:                           "chrome://weave",
 SINGLE_USER_SYNC:                      24 * 60 * 60 * 1000, // 1 day
 MULTI_DESKTOP_SYNC:                    60 * 60 * 1000, // 1 hour
 MULTI_MOBILE_SYNC:                     5 * 60 * 1000, // 5 minutes
+PARTIAL_DATA_SYNC:                     60 * 1000, // 1 minute
 
 // File IO Flags
 MODE_RDONLY:                           0x01,
