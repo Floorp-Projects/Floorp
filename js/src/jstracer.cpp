@@ -2310,8 +2310,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
       mark(*JS_TRACE_MONITOR(cx).traceAlloc),
       whichTreesToTrash(&tempAlloc),
       cfgMerges(&tempAlloc),
-      monitorReason(reason),
-      tempTypeMap(&tempAlloc)
+      monitorReason(reason)
 {
     JS_ASSERT(!_fragment->vmprivate && ti && cx->fp->regs->pc == (jsbytecode*)_fragment->ip);
     /* Reset the fragment state we care about in case we got a recycled fragment.
@@ -4011,11 +4010,9 @@ TraceRecorder::snapshot(ExitType exitType)
     /* Capture the type map into a temporary location. */
     unsigned ngslots = treeInfo->globalSlots->length();
     unsigned typemap_size = (stackSlots + ngslots) * sizeof(JSTraceType);
-
-    /* Use the recorder-local temporary type map. */
-    JSTraceType* typemap = NULL;
-    if (tempTypeMap.resize(typemap_size))
-        typemap = tempTypeMap.begin(); /* crash if resize() fails. */
+    void *mark = JS_ARENA_MARK(&cx->tempPool);
+    JSTraceType* typemap;
+    JS_ARENA_ALLOCATE_CAST(typemap, JSTraceType*, &cx->tempPool, typemap_size);
 
     /*
      * Determine the type of a store by looking at the current type of the
@@ -4076,6 +4073,7 @@ TraceRecorder::snapshot(ExitType exitType)
 #if defined JS_JIT_SPEW
                 TreevisLogExit(cx, e);
 #endif
+                JS_ARENA_RELEASE(&cx->tempPool, mark);
                 return e;
             }
         }
@@ -4109,6 +4107,8 @@ TraceRecorder::snapshot(ExitType exitType)
 #if defined JS_JIT_SPEW
     TreevisLogExit(cx, exit);
 #endif
+
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
     return exit;
 }
 
