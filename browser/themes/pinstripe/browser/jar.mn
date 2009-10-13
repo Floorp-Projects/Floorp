@@ -98,7 +98,6 @@ browser.jar:
   skin/classic/browser/preferences/preferences.css          (preferences/preferences.css)
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
-  skin/classic/browser/tabbrowser/alltabs-box-overflow-bkgnd-animate.png (tabbrowser/alltabs-box-overflow-bkgnd-animate.png)
   skin/classic/browser/tabbrowser/newtab.png                             (tabbrowser/newtab.png)
   skin/classic/browser/tabbrowser/progress.png                           (tabbrowser/progress.png)
   skin/classic/browser/tabbrowser/progress-pulsing.png                   (tabbrowser/progress-pulsing.png)
