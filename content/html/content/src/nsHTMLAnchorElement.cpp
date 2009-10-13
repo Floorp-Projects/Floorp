@@ -56,12 +56,16 @@
 
 #include "nsHTMLDNSPrefetch.h"
 
+#include "Link.h"
+using namespace mozilla::dom;
+
 nsresult NS_NewPreContentIterator(nsIContentIterator** aInstancePtrResult);
 
 class nsHTMLAnchorElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLAnchorElement,
                             public nsIDOMNSHTMLAnchorElement2,
-                            public nsILink
+                            public nsILink,
+                            public Link
 {
 public:
   nsHTMLAnchorElement(nsINodeInfo *aNodeInfo);
@@ -131,17 +135,13 @@ public:
 
 protected:
   void ResetLinkCacheState();
-  
-  // The cached visited state
-  nsLinkState mLinkState;
 };
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
 
 nsHTMLAnchorElement::nsHTMLAnchorElement(nsINodeInfo *aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo),
-    mLinkState(eLinkState_Unknown)
+  : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
@@ -415,13 +415,13 @@ nsHTMLAnchorElement::SetPing(const nsAString& aValue)
 nsLinkState
 nsHTMLAnchorElement::GetLinkState() const
 {
-  return mLinkState;
+  return Link::GetLinkState();
 }
 
 void
 nsHTMLAnchorElement::SetLinkState(nsLinkState aState)
 {
-  mLinkState = aState;
+  Link::SetLinkState(aState);
 }
 
 already_AddRefed<nsIURI>
@@ -503,11 +503,7 @@ nsHTMLAnchorElement::DropCachedHref()
 void
 nsHTMLAnchorElement::ResetLinkCacheState()
 {
-  nsIDocument* doc = GetCurrentDoc();
-  if (doc) {
-    doc->ForgetLink(this);
-  }
-  mLinkState = eLinkState_Unknown;
+  Link::ResetLinkState();
 
   // Clear our cached URI _after_ we ForgetLink(), since ForgetLink()
   // wants that URI.
