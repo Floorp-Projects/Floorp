@@ -98,7 +98,7 @@ const kTileWidth  = Math.pow(2, kTileExponentWidth);   // 2^9 = 512
 const kTileHeight = Math.pow(2, kTileExponentHeight);  // 2^9 = 512
 const kTileCrawlTimeCap = 100;    // millis
 const kTileCrawlComeAgain = 0;    // millis
-const kInitialCacheCapacity = 200;
+const kInitialCacheCapacity = 15;
 
 
 /**
