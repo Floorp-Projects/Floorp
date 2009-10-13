@@ -1408,6 +1408,7 @@ tabpanels {
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right.png");
+  outline-color: Highlight;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl),
@@ -1462,19 +1463,6 @@ tabpanels {
 .tabs-alltabs-button[type="menu"]:hover:active > .toolbarbutton-icon,
 .tabs-alltabs-button[type="menu"][open="true"] > .toolbarbutton-icon {
   -moz-image-region: rect(0, 26px, 11px, 13px);
-}
-
-.tabs-alltabs-box-animate {
-  margin-top: 2px;
-  margin-bottom: 4px;
-  width: 18px !important;
-  background-image: url("chrome://browser/skin/tabbrowser/alltabs-box-overflow-end-bkgnd-animate.png");
-  background-repeat: no-repeat;
-  opacity: 0.0;
-}
-
-.tabs-alltabs-box-animate:-moz-locale-dir(rtl) {
-  background-image: url("chrome://browser/skin/tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png");
 }
 
 /* All tabs menupopup */
