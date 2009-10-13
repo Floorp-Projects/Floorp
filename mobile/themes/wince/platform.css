@@ -66,9 +66,31 @@ textbox[isempty="true"] {
 .dialog-dark {
   color: #fff;
   background-color: #36373b;
-  -moz-border-radius: 0 0 1mm 1mm;
+  -moz-border-radius: 1mm 1mm 1mm 1mm;
   padding: 8px;
   -moz-box-shadow: black 0 0.25mm 0.25mm;
+}
+
+/* prompt dialogs ---------------------------------------------------------- */
+
+dialog {
+  font-size: 9pt !important;
+}
+
+dialog .prompt-message {
+  font-size: 8pt !important;
+}
+
+dialog > scrollbox.prompt-message {
+  margin: 1mm 0 1mm 0;
+}
+
+dialog > hbox.prompt-message {
+  margin-top: 1mm;
+}
+
+dialog > hbox.prompt-buttons {
+  margin-top: 1mm;
 }
 
 /* buttons ----------------------------------------------------------------- */
