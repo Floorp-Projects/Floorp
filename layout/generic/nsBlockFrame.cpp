@@ -5359,6 +5359,11 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
         // The deceased frames continuation is not a child of the
         // current block. So break out of the loop so that we advance
         // to the next parent.
+        //
+        // If we have a continuation in a different block then all bets are
+        // off regarding whether we are deleting frames without actual content,
+        // so don't propagate FRAMES_ARE_EMPTY any further.
+        aFlags &= ~FRAMES_ARE_EMPTY;
         break;
       }
 
