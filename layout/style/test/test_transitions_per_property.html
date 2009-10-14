@@ -21,8 +21,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435441
 <!--
   fixed-height container so percentage heights compute to different
   (i.e., nonzero) values
-  FIXME: fixed-width container to avoid something weird with margin-top
-  and margin-bottom
+  fixed-width container so that percentages for margin-top and
+  margin-bottom are all relative to the same size container (rather than
+  one that depends on whether we're tall enough to need a scrollbar)
   -->
 <div style="height: 50px; width: 300px">
 
@@ -125,7 +126,7 @@ for (prop in gCSSProperties) {
   if (!(prop in supported_properties) &&
       info.type != CSS_TYPE_TRUE_SHORTHAND &&
       !prop.match(/^-moz-transition-/) &&
-      // FIXME: THIS SHOULD REALLY NOT BE NEEDED!
+      // FIXME (Bug 119078): THIS SHOULD REALLY NOT BE NEEDED!
       prop != "-moz-binding") {
 
     if ("prerequisites" in info) {
