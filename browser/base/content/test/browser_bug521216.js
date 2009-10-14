@@ -1,4 +1,4 @@
-var expected = ["TabOpen", "onLocationChange", "onStateChange", "onLinkIconAvailable"];
+var expected = ["TabOpen", "onLocationChange", "onStateChange"];
 var actual = [];
 var tabIndex = -1;
 __defineGetter__("tab", function () gBrowser.tabContainer.childNodes[tabIndex]);
