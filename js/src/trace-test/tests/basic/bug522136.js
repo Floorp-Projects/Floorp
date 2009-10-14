@@ -4,6 +4,5 @@ try {
 } catch (e) {
 }
 
-if (Q == 100000)
-   assertEq(Q, "fail");
+assertEq(Q, 3000);
 

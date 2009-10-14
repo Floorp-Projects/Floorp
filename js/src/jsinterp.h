@@ -587,6 +587,8 @@ js_GetUpvar(JSContext *cx, uintN level, uintN cookie);
 # endif
 #endif
 
+#define JS_MAX_INLINE_CALL_COUNT 3000
+
 #if !JS_LONE_INTERPRET
 # define JS_STATIC_INTERPRET    static
 #else
