@@ -44,7 +44,7 @@
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(17311145-97da-49eb-b984-965bdee8879c)]
+[scriptable, uuid(C61D0C09-05AD-4E72-BAC5-203F3F380352)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -86,4 +86,11 @@ interface nsIXULRuntime : nsISupports
    * This is taken from the MOZ_WIDGET_TOOLKIT configure variable.
    */
   readonly attribute AUTF8String widgetToolkit;
+
+  /**
+   * Signal the apprunner to invalidate caches on the next restart.
+   * This will cause components to be autoregistered and all
+   * fastload data to be re-created.
+   */
+  void invalidateCachesOnRestart();
 };
