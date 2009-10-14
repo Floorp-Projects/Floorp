@@ -74,7 +74,7 @@ GeolocationPrompt.prototype = {
 
       var buttons = [{
         label: browserBundle.GetStringFromName("geolocation.share"),
-        accessKey: browserBundle.GetStringFromName("geolocation.share.accessKey"),
+        accessKey: null,
         callback: function(notification) {
           setPagePermission(request.requestingURI, true);
           request.allow(); 
@@ -82,7 +82,7 @@ GeolocationPrompt.prototype = {
       },
       {
         label: browserBundle.GetStringFromName("geolocation.dontShare"),
-        accessKey: browserBundle.GetStringFromName("geolocation.dontShare.accessKey"),
+        accessKey: null,
         callback: function(notification) {
           setPagePermission(request.requestingURI, false);
           request.cancel();
