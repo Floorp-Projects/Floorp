@@ -36,6 +36,10 @@
 # ***** END LICENSE BLOCK *****
 
 add_makefiles "
+netwerk/locales/Makefile
+dom/locales/Makefile
+toolkit/locales/Makefile
+security/manager/locales/Makefile
 mobile/app/Makefile
 $MOZ_BRANDING_DIRECTORY/Makefile
 $MOZ_BRANDING_DIRECTORY/locales/Makefile
