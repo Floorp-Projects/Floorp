@@ -112,8 +112,9 @@ xt_event_handler(Widget xt_w, PluginInstance *This, XEvent *xevent, Boolean *b)
     {
         case Expose:
             /* get rid of all other exposure events */
-            while(XCheckTypedWindowEvent(This->display, This->window, Expose, xevent))
-                privatePrintScreenMessage(This);
+            do {} while (XCheckTypedWindowEvent(This->display, This->window,
+                                                Expose, xevent));
+            privatePrintScreenMessage(This);
             break;
         case ButtonRelease:
             break;
