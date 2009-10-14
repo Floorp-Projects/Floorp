@@ -2808,6 +2808,12 @@ JSTraceMonitor::mark(JSTracer* trc)
             while (f) {
                 if (TreeInfo* ti = (TreeInfo*)f->vmprivate)
                     MarkTreeInfo(trc, ti);
+                VMFragment* peer = (VMFragment*)f->peer;
+                while (peer) {
+                    if (TreeInfo* ti = (TreeInfo*)peer->vmprivate)
+                        MarkTreeInfo(trc, ti);
+                    peer = (VMFragment*)peer->peer;
+                }
                 f = f->next;
             }
         }
