@@ -992,13 +992,6 @@ namespace nanojit
         FCMPD(rLhs, rRhs);
     }
 
-    verbose_only(
-    void Assembler::asm_inc_m32(uint32_t* pCtr)
-    {
-        // TODO(asm_inc_m32);
-    }
-    )
-
     void Assembler::nativePageReset()
     {
     }
@@ -1016,13 +1009,20 @@ namespace nanojit
             codeAlloc(exitStart, exitEnd, _nExitIns verbose_only(, exitBytes));
     }
 
+    // Increment the 32-bit profiling counter at pCtr, without
+    // changing any registers.
+    verbose_only(
+    void Assembler::asm_inc_m32(uint32_t*)
+    {
+        // todo: implement this
+    }
+    )
+
     void
     Assembler::underrunProtect(int n)
     {
         NIns *eip = _nIns;
         if (eip - n < (_inExit ? exitStart : codeStart)) {
-            // We are done with the current page.  Tell Valgrind that new code
-            // has been generated.
             if (_inExit)
                 codeAlloc(exitStart, exitEnd, _nIns verbose_only(, exitBytes));
             else
