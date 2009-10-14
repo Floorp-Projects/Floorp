@@ -643,6 +643,7 @@ oggplay_step_decoding(OggPlay *me) {
   int                     i;
   int                     need_data  = 0;
   int                     chunk_count = 0;
+  int                     read_data = 0;
 
   if (me == NULL) {
     return E_OGGPLAY_BAD_OGGPLAY;
@@ -691,7 +692,11 @@ read_more_data:
           remaining++;
         }
       }
-      if (remaining == 0) {
+      if (remaining == 0 && !read_data) {
+        /*
+         * There's no more data to read, and we've not read any that needs 
+         * to be sent to the buffer list via a callback, so exit.
+         */
         return E_OGGPLAY_OK;
       }
     }
@@ -788,6 +793,11 @@ read_more_data:
         return E_OGGPLAY_OUT_OF_MEMORY;
                 
       default:
+        /*
+         * We read some data. Set a flag so that we're guaranteed to try to
+         * send it to the buffer list via a callback.
+         */
+        read_data = 1;
         break;
     }
   }

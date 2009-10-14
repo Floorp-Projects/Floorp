@@ -60,3 +60,4 @@ patch -p3 <bug516847.patch
 patch -p3 <bug518169.patch
 patch -p3 <bug504843.patch
 patch -p3 <bug519155.patch
+patch -p3 <bug520493.patch
