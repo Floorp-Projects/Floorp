@@ -704,10 +704,15 @@ xpc_qsDOMString::xpc_qsDOMString(JSContext *cx, jsval v, jsval *pval,
             behavior = undefinedBehavior;
         }
 
-        if (behavior != eStringify)
+        // If pval is null, that means the argument was optional and
+        // not passed; turn those into void strings if they're
+        // supposed to be stringified.
+        if (behavior != eStringify || !pval)
         {
+            // Here behavior == eStringify implies !pval, so both eNull and
+            // eStringify should end up with void strings.
             (new(mBuf) implementation_type(
-                traits::sEmptyBuffer, PRUint32(0)))->SetIsVoid(behavior == eNull);
+                traits::sEmptyBuffer, PRUint32(0)))->SetIsVoid(behavior != eEmpty);
             mValid = JS_TRUE;
             return;
         }
