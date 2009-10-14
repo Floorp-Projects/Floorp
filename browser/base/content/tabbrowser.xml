@@ -525,7 +525,7 @@
 
               if (aWebProgress.DOMWindow == this.mBrowser.contentWindow &&
                   aWebProgress.isLoadingDocument)
-                this.mTabBrowser.setIcon(this.mTab, null);
+                this.mTabBrowser.getBrowserForTab(this.mTab).mIconURL = null;
 
               // changing location, clear out the missing plugins list
               this.mBrowser.missingPlugins = null;
