@@ -9,6 +9,7 @@
 
 <script type="application/javascript">
   frames[0].addEventListener("DOMContentLoaded", function() {
+    frames[0].removeEventListener("DOMContentLoaded", arguments.callee, false);
     frames[0].document.designMode = "on";
     frames[0].document.__defineGetter__("designMode", function() {
       // inject a cross domain file ...
