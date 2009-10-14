@@ -47,7 +47,9 @@ var gPlayTests = [
   { name:"beta-phrasebook.ogg", type:"audio/ogg", duration:4 },
   // Small file, only 1 frame with audio only.
   { name:"bug520493.ogg", type:"audio/ogg", duration:0.458 },
- 
+  // Small file with vorbis comments with 0 length values and names.
+  { name:"bug520500.ogg", type:"audio/ogg", duration:0.123 },
+
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
