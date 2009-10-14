@@ -115,8 +115,15 @@ toolbarbutton.bookmark-item[open="true"] {
   display: -moz-box !important;
 }
 
+#wrapper-personal-bookmarks[place="palette"] > .toolbarpaletteitem-box {
+  width: 16px;
+  height: 16px;
+  background: url("chrome://browser/skin/places/bookmarksToolbar.png") no-repeat;
+}
+
 .bookmarks-toolbar-customize {
   max-width: 15em !important;
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;
 }
 
 /* Bookmark menus */
