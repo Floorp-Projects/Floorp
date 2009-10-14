@@ -193,12 +193,24 @@ function populatePreferencesSection() {
   let trPrefs = [];
   for each (let pref in sortedPrefs) {
     let tdName = createElement("td", pref.name, "pref-name");
-    let tdValue = createElement("td", pref.value, "pref-value");
+    let tdValue = createElement("td", formatPrefValue(pref.value), "pref-value");
     let tr = createParentElement("tr", [tdName, tdValue]);
     trPrefs.push(tr);
   }
 
   appendChildren(document.getElementById("prefs-tbody"), trPrefs);
+}
+
+function formatPrefValue(prefValue) {
+  // Some pref values are really long and don't have spaces.  This can cause
+  // problems when copying and pasting into some WYSIWYG editors.  In general
+  // the exact contents of really long pref values aren't particularly useful,
+  // so we truncate them to some reasonable length. 
+  let maxPrefValueLen = 120;
+  let text = "" + prefValue;
+  if (text.length > maxPrefValueLen)
+    text = text.substring(0, maxPrefValueLen) + "…";
+  return text;
 }
 
 function getModifiedPrefs() {
@@ -275,7 +287,10 @@ function createTextForElement(elem) {
   // Trim extraneous whitespace before newlines, then squash extraneous
   // blank lines.
   text = text.replace(/[ \t]+\n/g, "\n");
-  text = text.replace(/\n\n\n*/g, "\n\n");
+  text = text.replace(/\n\n\n+/g, "\n\n");
+  
+  // Actual CR/LF pairs are needed for some Windows text editors.
+  text = text.replace(/\n/g, "\r\n");
 
   return text;
 }
