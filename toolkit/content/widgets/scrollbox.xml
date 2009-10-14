@@ -414,15 +414,8 @@
               disableDownButton = true;
           }
 
-          if (this._scrollButtonUp.disabled != disableUpButton ||
-              this._scrollButtonDown.disabled != disableDownButton) {
-            this._scrollButtonUp.disabled = disableUpButton;
-            this._scrollButtonDown.disabled = disableDownButton;
-
-            var event = document.createEvent("Events");
-            event.initEvent("UpdatedScrollButtonsDisabledState", true, false);
-            this.dispatchEvent(event);
-          }
+          this._scrollButtonUp.disabled = disableUpButton;
+          this._scrollButtonDown.disabled = disableDownButton;
         ]]></body>
       </method>
     </implementation>
