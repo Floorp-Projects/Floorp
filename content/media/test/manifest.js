@@ -45,7 +45,9 @@ var gPlayTests = [
   { name:"bug516323.ogv", type:"video/ogg", duration:4.424 },
   // Encoded with vorbis beta1, includes unusually sized codebooks
   { name:"beta-phrasebook.ogg", type:"audio/ogg", duration:4 },
-
+  // Small file, only 1 frame with audio only.
+  { name:"bug520493.ogg", type:"audio/ogg", duration:0.458 },
+ 
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
