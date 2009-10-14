@@ -3316,7 +3316,8 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
   // word-spacing: normal, length, inherit
   nsStyleCoord tempCoord;
   if (SetCoord(textData.mWordSpacing, tempCoord,
-               nsStyleCoord(parentText->mWordSpacing),
+               nsStyleCoord(parentText->mWordSpacing,
+                            nsStyleCoord::CoordConstructor),
                SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
                aContext, mPresContext, canStoreInRuleTree)) {
     if (tempCoord.GetUnit() == eStyleUnit_Coord) {
@@ -5024,7 +5025,8 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
   // outline-offset: length, inherit
   nsStyleCoord tempCoord;
   if (SetCoord(marginData.mOutlineOffset, tempCoord,
-               parentOutline->mOutlineOffset,
+               nsStyleCoord(parentOutline->mOutlineOffset,
+                            nsStyleCoord::CoordConstructor),
                SETCOORD_LH | SETCOORD_INITIAL_ZERO, aContext, mPresContext,
                canStoreInRuleTree)) {
     outline->mOutlineOffset = tempCoord.GetCoordValue();
@@ -5293,7 +5295,8 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
   // border-spacing-x: length, inherit
   nsStyleCoord tempCoord;
   if (SetCoord(tableData.mBorderSpacing.mXValue, tempCoord,
-               parentTable->mBorderSpacingX,
+               nsStyleCoord(parentTable->mBorderSpacingX,
+                            nsStyleCoord::CoordConstructor),
                SETCOORD_LH | SETCOORD_INITIAL_ZERO,
                aContext, mPresContext, canStoreInRuleTree)) {
     table->mBorderSpacingX = tempCoord.GetCoordValue();
@@ -5304,7 +5307,8 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
 
   // border-spacing-y: length, inherit
   if (SetCoord(tableData.mBorderSpacing.mYValue, tempCoord,
-               parentTable->mBorderSpacingY,
+               nsStyleCoord(parentTable->mBorderSpacingY,
+                            nsStyleCoord::CoordConstructor),
                SETCOORD_LH | SETCOORD_INITIAL_ZERO,
                aContext, mPresContext, canStoreInRuleTree)) {
     table->mBorderSpacingY = tempCoord.GetCoordValue();
@@ -5884,7 +5888,7 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
           PRUint32 i = 0;
           while (nsnull != value) {
             SetCoord(value->mValue,
-                     svg->mStrokeDasharray[i++], nsnull,
+                     svg->mStrokeDasharray[i++], nsStyleCoord(),
                      SETCOORD_LP | SETCOORD_FACTOR,
                      aContext, mPresContext, canStoreInRuleTree);
             value = value->mNext;
