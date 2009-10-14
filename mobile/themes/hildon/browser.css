@@ -667,14 +667,20 @@ autocompleteresult.allbookmarks > .autocomplete-item-url {
   -moz-box-pack: start;
 }
 
+box[type="documenttab"] {
+  /* display:block allow us to change the line-height, it won't work otherwise */
+  display: block;
+  line-height: 0;
+}
+
 box[type="documenttab"] .documenttab-canvas {
   /* keep the unselected thumbnails aligned with the selected one */
-  border: 1mm solid transparent;
+  border: 0.8mm solid transparent;
 }
 
 box[type="documenttab"][selected="true"] .documenttab-canvas {
-  border: 1mm solid #262629;
-  -moz-border-radius: 4px;
+  border: 0.8mm solid #262629;
+  -moz-border-radius: 3px;
 }
 
 box[type="documenttab"] .documenttab-close {
