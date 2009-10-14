@@ -22,7 +22,6 @@ browser.jar:
         skin/classic/browser/page-livemarks.png                      (feeds/feedIcon16.png)
         skin/classic/browser/livemark-item.png                       (livemark-item.png)
         skin/classic/browser/livemark-folder.png                     (livemark-folder.png)
-        skin/classic/browser/Bookmarks-folder.png                    (Bookmarks-folder.png)
         skin/classic/browser/Privacy-16.png
         skin/classic/browser/Privacy-48.png
         skin/classic/browser/Secure.png                              (Secure.png)
@@ -114,7 +113,6 @@ browser.jar:
         skin/classic/aero/browser/page-livemarks.png                 (feeds/feedIcon16-aero.png)
         skin/classic/aero/browser/livemark-item.png                  (livemark-item-aero.png)
         skin/classic/aero/browser/livemark-folder.png                (livemark-folder-aero.png)
-        skin/classic/aero/browser/Bookmarks-folder.png               (Bookmarks-folder-aero.png)
         skin/classic/aero/browser/Privacy-16.png                     (Privacy-16-aero.png)
         skin/classic/aero/browser/Privacy-48.png                     (Privacy-48-aero.png)
         skin/classic/aero/browser/Secure.png                         (Secure-aero.png)
