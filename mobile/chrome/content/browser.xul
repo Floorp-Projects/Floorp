@@ -294,8 +294,8 @@
     <vbox id="bookmark-popup" hidden="true" class="panel-dark" oncommand="BookmarkPopup.hide()" align="center">
       <label value="&bookmarkPopup.label;"/>
       <vbox>
-        <button label="&bookmarkEdit.label;" oncommand="BookmarkHelper.edit(); BrowserUI.hideControls();"/>
-        <button label="&bookmarkRemove.label;" oncommand="removeBookmarksForURI(getBrowser().currentURI);"/>
+        <button id="bookmark-popup-edit" label="&bookmarkEdit.label;" oncommand="BookmarkHelper.edit(); BrowserUI.hideControls();"/>
+        <button id="bookmark-popup-remove" label="&bookmarkRemove.label;" oncommand="removeBookmarksForURI(getBrowser().currentURI);"/>
       </vbox>
     </vbox>
 
@@ -431,7 +431,7 @@
       <vbox id="select-container-inner" class="panel-dark" flex="1">
         <scrollbox id="select-list" flex="1" orient="vertical"/>
         <hbox id="select-buttons">
-          <button class="button-dark" label="&selectListDone.label;" oncommand="SelectHelper.close();"/>
+          <button id="select-buttons-done" class="button-dark" label="&selectListDone.label;" oncommand="SelectHelper.close();"/>
         </hbox>
       </vbox>
     </vbox>

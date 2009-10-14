@@ -1,13 +1,17 @@
-    const Cc = Components.classes;
-    const Ci = Components.interfaces;
+// Very basic tests for the main window UI
 
-    function test(){
-       var mainWindow = window;
-       is(mainWindow.location.href, "chrome://browser/content/browser.xul", "Did not get main window");
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
-       mainWindow.focus();
+//------------------------------------------------------------------------------
+// Entry point (must be named "test")
+function test() {
+   is(window.location.href, "chrome://browser/content/browser.xul", "Main window should be browser.xul");
 
-       var browser = mainWindow.getBrowser();
-       isnot(browser, null, "Should have a browser");
-       is(browser.currentURI.spec, "about:blank", "Should be displaying the blank page");
-    }
+   window.focus();
+
+   let browser = Browser.selectedBrowser;
+   isnot(browser, null, "Should have a browser");
+   
+   is(browser.currentURI.spec, Browser.selectedTab.browser.currentURI.spec, "selectedBrowser == selectedTab.browser");
+}

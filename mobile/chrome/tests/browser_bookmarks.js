@@ -5,70 +5,42 @@
  */
  
 var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService); 
-var thread = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager).currentThread;
 var testURL_01 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_01.html";
 var testURL_02 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_02.html";
-var chromeWindow = window;
-
-//------------------------------------------------------------------------------
-// TEST SKELETON: use this template to add new tests. This is based on 
-// browser/components/places/tests/browser/browser_bookmarksProperties.js
-/* 
-gTests.push({
-  desc: "Bug Description",
-  isCompleted: false,
-  
-  run: function() {
-    // Actual test ...
-    
-    // indicate test is completed
-    gCurrentTest.isCompleted = true;
-  },
-  
-});
-*/
 
 // A queue to order the tests and a handle for each test
-gTests = [];
-gCurrentTest = null;
+var gTests = [];
+var gCurrentTest = null;
 
 //------------------------------------------------------------------------------
-// Entry point (must be named 'test')
+// Entry point (must be named "test")
 function test() {
-  // test testing dependencies
-  ok(isnot, "Mochitest must be in context");
-  ok(ioService, "nsIIOService must be in context");
-  ok(thread, "nsIThreadManager must be in context");
-  ok(PlacesUtils, "PlacesUtils must be in context");
-  ok(EventUtils, "EventUtils must be in context");
-  ok(chromeWindow, "ChromeWindow must be in context");
+  // The "runNextTest" approach is async, so we need to call "waitForExplicitFinish()"
+  // We call "finish()" when the tests are finished
+  waitForExplicitFinish();
   
-  ok(true, "*** Starting test browser_bookmarks.js\n");  
+  // Start the tests
   runNextTest();
 }
 
 //------------------------------------------------------------------------------
 // Iterating tests by shifting test out one by one as runNextTest is called.
 function runNextTest() {
-  // Clean up previous test
-  if(gCurrentTest) {
-    ok(true, "*** FINISHED TEST ***");
-  }
-  
   // Run the next test until all tests completed
   if (gTests.length > 0) {
     gCurrentTest = gTests.shift();
-    ok(true, gCurrentTest.desc);
+    info(gCurrentTest.desc);
     gCurrentTest.run();
-    while(!gCurrentTest.isCompleted) {
-      thread.processNextEvent(true);
-    }
-    runNextTest();
   }
   else {
     // Cleanup. All tests are completed at this point
-    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.unfiledBookmarksFolder);
-    ok(true, "*** ALL TESTS COMPLETED ***");
+    try {
+      PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.unfiledBookmarksFolder);
+    }
+    finally {
+      // We must finialize the tests
+      finish();
+    }
   }
 }
 
@@ -76,169 +48,189 @@ function runNextTest() {
 // Case: Test adding a bookmark with the Star button
 gTests.push({
   desc: "Test adding a bookmark with the Star button",
-  isCompleted: false,
   _currenttab: null,
 
   run: function() {
-    _currenttab = chromeWindow.Browser.addTab(testURL_02, true);
+    this._currenttab = Browser.addTab(testURL_01, true);
+
     // Need to wait until the page is loaded
-    _currenttab.browser.addEventListener("load", 
+    this._currenttab.browser.addEventListener("load", 
     function() {
-      _currenttab.browser.removeEventListener("load", arguments.callee, true);
-      gCurrentTest.verify();
+      gCurrentTest._currenttab.browser.removeEventListener("load", arguments.callee, true);
+      gCurrentTest.onPageReady();
     }, 
     true);
   },
   
-  verify: function() {
-    chromeWindow.BrowserUI.doCommand("cmd_star");
+  onPageReady: function() {
+    var starbutton = document.getElementById("tool-star");
+    starbutton.click();    
     
-    var bookmarkItem = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_02));
-    ok(bookmarkItem != -1, testURL_02 + " should be added.");
-    is(PlacesUtils.bookmarks.getItemTitle(bookmarkItem),
-      "Browser Blank Page 02", "the title should match."); 
-    is(PlacesUtils.bookmarks.getBookmarkURI(bookmarkItem).spec,
-      chromeWindow.Browser.selectedTab.browser.currentURI.spec, testURL_02 + " should be added.");  
+    var bookmarkItem = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_01));
+    ok(bookmarkItem != -1, testURL_01 + " should be added.");
 
-    chromeWindow.Browser.closeTab(_currenttab);
+    Browser.closeTab(gCurrentTest._currenttab);
     
-    gCurrentTest.isCompleted = true;
-  },
-  
+    runNextTest();
+  }  
 });
 
 //------------------------------------------------------------------------------
 // Case: Test clicking on a bookmark loads the web page
 gTests.push({
   desc: "Test clicking on a bookmark loads the web page",
-  isCompleted: false,
+  _currenttab: null,
 
   run: function() {
-    isnot(chromeWindow.Browser.selectedTab.browser.currentURI.spec, testURL_02, "Selected tab is not " + testURL_02);
-    
-    chromeWindow.BrowserUI.doCommand("cmd_newTab");
-    chromeWindow.BrowserUI.showBookmarks();  
-    var bookmarkitems = chromeWindow.document.getElementById("bookmark-items");    
-    var bookmarkitem = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_02);
-    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
-    
-    chromeWindow.Browser.selectedTab.browser.addEventListener("load", 
+    this._currenttab = Browser.addTab("about:blank", true);
+
+    // Need to wait until the page is loaded
+    this._currenttab.browser.addEventListener("load", 
     function() {
-      chromeWindow.Browser.selectedTab.browser.removeEventListener("load", arguments.callee, true);
-      is(chromeWindow.Browser.selectedTab.browser.currentURI.spec, testURL_02, "Selected tab is " + testURL_02);      
-      chromeWindow.Browser.closeTab(chromeWindow.Browser.selectedTab);
-      
-      gCurrentTest.isCompleted = true;
+      gCurrentTest._currenttab.browser.removeEventListener("load", arguments.callee, true);
+      gCurrentTest.onPageReady();
     }, 
     true);
   },
+
+  onPageReady: function() {
+    // Open the bookmark list
+    BookmarkList.show();
+
+    waitFor(gCurrentTest.onBookmarksReady, function() { return document.getElementById("bookmarklist-container").hidden == false; });
+  },
   
+  onBookmarksReady: function() {
+    // Create a listener for the opening bookmark  
+    gCurrentTest._currenttab.browser.addEventListener("pageshow", 
+      function() {
+        gCurrentTest._currenttab.browser.removeEventListener("pageshow", arguments.callee, true);
+        todo(gCurrentTest._currenttab.browser.currentURI.spec, testURL_01, "Opened the right bookmark");      
+
+        Browser.closeTab(gCurrentTest._currenttab);
+
+        runNextTest();
+      }, 
+      true);
+
+    var bookmarkitems = document.getElementById("bookmark-items");    
+    var bookmarkitem = document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_01);
+    isnot(bookmarkitem, null, "Found the bookmark");
+    is(bookmarkitem.getAttribute("uri"), testURL_01, "Bookmark has the right URL via attribute");
+    is(bookmarkitem.spec, testURL_01, "Bookmark has the right URL via property");
+
+    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
+  }  
 });
 
 //------------------------------------------------------------------------------
 // Case: Test editing URI of existing bookmark
 gTests.push({
   desc: "Test editing URI of existing bookmark",
-  isCompleted: false,
 
   run: function() {
-    chromeWindow.BrowserUI.showBookmarks();  
-    chromeWindow.BookmarkList.toggleManage();
-    
-    var bookmarkitems = chromeWindow.document.getElementById("bookmark-items");
-    var bookmarkitem = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_02);
-    var editbutton = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "edit-button");    
-    editbutton.click();
+    // Open the bookmark list
+    BookmarkList.show();
 
-    var uritextbox = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "uri");
-    uritextbox.value = testURL_01;
-    
-    var donebutton = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
-    donebutton.click();
-    
-    var bookmark = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_02));
-    is(bookmark, -1, testURL_02 + " should no longer in bookmark");
-    bookmark = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_01));
-    isnot(bookmark, -1, testURL_01 + " is in bookmark");
-    
-    chromeWindow.BookmarkList.close();
-    
-    gCurrentTest.isCompleted = true;
+    // Go into edit mode
+    BookmarkList.toggleManage();
+
+    waitFor(gCurrentTest.onBookmarksReady, function() { return document.getElementById("bookmark-items").manageUI == true; });
   },
   
+  onBookmarksReady: function() {
+    var bookmarkitems = document.getElementById("bookmark-items");
+    var bookmarkitem = document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_01);
+    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
+
+    var uritextbox = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "uri");
+    uritextbox.value = testURL_02;
+
+    var donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
+    donebutton.click();
+
+    var bookmark = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_01));
+    is(bookmark, -1, testURL_01 + " should no longer in bookmark");
+    bookmark = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_02));
+    isnot(bookmark, -1, testURL_02 + " is in bookmark");
+    
+    BookmarkList.close();
+    
+    runNextTest();
+  }  
 });
 
 //------------------------------------------------------------------------------
 // Case: Test editing title of existing bookmark
 gTests.push({
   desc: "Test editing title of existing bookmark",
-  isCompleted: false,
   
   run: function() {
+    // Open the bookmark list
+    BookmarkList.show();
+
+    // Go into edit mode
+    BookmarkList.toggleManage();
+
+    waitFor(gCurrentTest.onBookmarksReady, function() { return document.getElementById("bookmark-items").manageUI == true; });
+  },
+  
+  onBookmarksReady: function() {
+    var bookmark = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_02));
+    is(PlacesUtils.bookmarks.getItemTitle(bookmark), "Browser Blank Page 01", "Title remains the same.");
+    
+    var bookmarkitems = document.getElementById("bookmark-items");
+    var bookmarkitem = document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_02);
+    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
+    
+    var titletextbox = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "name");
     var newtitle = "Changed Title";
-    chromeWindow.BrowserUI.showBookmarks();  
-    chromeWindow.BookmarkList.toggleManage();
-    
-    var bookmark = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_01));
-    is(PlacesUtils.bookmarks.getItemTitle(bookmark), "Browser Blank Page 02", "Title remains the same.");
-    
-    var bookmarkitems = chromeWindow.document.getElementById("bookmark-items");
-    var bookmarkitem = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_01);
-    var editbutton = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "edit-button");    
-    editbutton.click();
-    
-    var titletextbox = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "name");
     titletextbox.value = newtitle;
     
-    var donebutton = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
+    var donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
     donebutton.click();
-    
-    isnot(PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_01)), -1, testURL_01 + " is still in bookmark.");
+
+    isnot(PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_02)), -1, testURL_02 + " is still in bookmark.");
     is(PlacesUtils.bookmarks.getItemTitle(bookmark), newtitle, "Title is changed.");
     
-    chromeWindow.BookmarkList.close();
+    BookmarkList.close();
     
-    gCurrentTest.isCompleted = true;
-  },
-
+    runNextTest();
+  }
 });
 
 //------------------------------------------------------------------------------
 // Case: Test removing existing bookmark
 gTests.push({
   desc: "Test removing existing bookmark",
-  isCompleted: false,
-  _ximage: null,
   
   run: function() {
-    chromeWindow.BrowserUI.showBookmarks();
-    chromeWindow.BookmarkList.toggleManage();
-    
-    var bookmarkitems = chromeWindow.document.getElementById("bookmark-items");
-    var bookmarkitem = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_01);
-    // Close button is an image so not loaded immediately, thus need to listen for its load event before usage
-    _ximage = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "close-button");
-    _ximage.addEventListener("load", 
-    function() {
-      _ximage.removeEventListener("load", arguments.callee, true);
-      gCurrentTest.verify();
-    }, 
-    true);
-  },
+    // Open the bookmark list
+    BookmarkList.show();
 
-  verify: function() {
-    EventUtils.synthesizeMouse(_ximage, _ximage.clientWidth / 2, _ximage.clientHeight / 2, {});
+    // Go into edit mode
+    BookmarkList.toggleManage();
+
+    waitFor(gCurrentTest.onBookmarksReady, function() { return document.getElementById("bookmark-items").manageUI == true; });
+  },
+  
+  onBookmarksReady: function() {
+    var bookmarkitems = document.getElementById("bookmark-items");
+    var bookmarkitem = document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_02);
+    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
+
+    var removebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "close-button");
+    removebutton.click();
     
     var bookmark = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_02));
     ok(bookmark == -1, testURL_02 + " should no longer in bookmark");
     bookmark = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_01));
     ok(bookmark == -1, testURL_01 + " should no longer in bookmark");
 
-    chromeWindow.BookmarkList.close();
+    BookmarkList.close();
 
-    gCurrentTest.isCompleted = true;
-  },
-
+    runNextTest();
+  }
 });
 
 //------------------------------------------------------------------------------
@@ -246,3 +238,16 @@ gTests.push({
 function uri(spec) {
   return ioService.newURI(spec, null, null);
 }
+
+function waitFor(callback, test, timeout) {
+  if (test()) {
+    callback();
+    return;
+  }
+
+  timeout = timeout || Date.now();
+  if (Date.now() - timeout > 1000)
+    throw "waitFor timeout";
+  setTimeout(waitFor, 50, callback, test, timeout);
+}
+

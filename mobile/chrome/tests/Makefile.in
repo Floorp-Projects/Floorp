@@ -49,10 +49,11 @@ _BROWSER_FILES = \
   browser_tabs.js \
   browser_bookmarks.js \
   browser_bookmarks_star.js \
-  browser_bookmarks_folders.js \
   browser_bookmarks_tags.js \
+  browser_select.js \
   browser_blank_01.html \
   browser_blank_02.html \
+  browser_select.html \
   $(NULL)
 
 libs:: $(_BROWSER_FILES)
