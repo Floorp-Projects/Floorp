@@ -88,6 +88,7 @@ const FILE_EXTENSIONS                 = "extensions.rdf";
 const FILE_EXTENSION_MANIFEST         = "extensions.ini";
 const FILE_EXTENSIONS_STARTUP_CACHE   = "extensions.cache";
 const FILE_EXTENSIONS_LOG             = "extensions.log";
+const FILE_AUTOREG                    = ".autoreg";
 const FILE_INSTALL_MANIFEST           = "install.rdf";
 const FILE_CHROME_MANIFEST            = "chrome.manifest";
 
@@ -3598,13 +3599,16 @@ ExtensionManager.prototype = {
    */
   set _extensionListChanged(val) {
     // When an extension has an operation perform on it (e.g. install, upgrade,
-    // disable, etc.) we are responsible for writing this information to 
-    // compatibility.ini, and nsAppRunner is responsible for checking this on 
-    // restart. At some point it may make sense to be able to cancel a 
-    // registration but for now we only create the file.
-    if (val) {
-      let XRE = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-      XRE.invalidateCachesOnRestart();
+    // disable, etc.) we are responsible for creating the .autoreg file and
+    // nsAppRunner is responsible for removing it on restart. At some point it
+    // may make sense to be able to cancel a registration but for now we only
+    // create the file.
+    try {
+      var autoregFile = getFile(KEY_PROFILEDIR, [FILE_AUTOREG]);
+      if (val && !autoregFile.exists())
+        autoregFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+    }
+    catch (e) {
     }
     return val;
   },
