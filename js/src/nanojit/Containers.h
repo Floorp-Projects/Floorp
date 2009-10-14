@@ -346,7 +346,7 @@ namespace nanojit
             const Seq<Node>* current;
 
         public:
-            Iter(HashMap<K,T,H>& map) : map(map), bucket(map.nbuckets-1), current(NULL)
+            Iter(HashMap<K,T,H>& map) : map(map), bucket((int)map.nbuckets-1), current(NULL)
             { }
 
             /** return true if more (k,v) remain to be visited */
