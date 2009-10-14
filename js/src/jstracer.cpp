@@ -9726,7 +9726,6 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
                     return ARECORD_STOP;
                 if (IsBlacklisted((jsbytecode*)f->ip))
                     RETURN_STOP_A("inner recursive tree is blacklisted");
-                JS_ASSERT(f->getTreeInfo()->script != treeInfo->script);
                 JSContext* _cx = cx;
                 SlotList* globalSlots = treeInfo->globalSlots;
                 JSTraceMonitor* tm = traceMonitor;
