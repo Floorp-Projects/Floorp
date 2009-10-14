@@ -229,6 +229,7 @@ verbose_only( extern const char* shiftNames[]; )
     int *       _nSlot;                                                         \
     int *       _startingSlot;                                                  \
     int *       _nExitSlot;                                                     \
+    bool        blx_lr_bug;                                                     \
     int         max_out_args; /* bytes */                                      
 
 //nj_dprintf("jmp_l_n count=%d, nins=%X, %X = %X\n", (_c), nins, _nIns, ((intptr_t)(nins+(_c))-(intptr_t)_nIns - 4) );
