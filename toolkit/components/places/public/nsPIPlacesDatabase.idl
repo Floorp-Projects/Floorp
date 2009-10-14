@@ -46,24 +46,11 @@ interface mozIStorageConnection;
  * database.  If outside consumers wish to use this, they should only read from
  * the database so they do not break any internal invariants.
  */
-[scriptable, uuid(8e6d4f8a-4b8e-4026-9fca-517c4494ddb7)]
+[scriptable, uuid(5fd91813-229c-4d30-851b-700afa39a987)]
 interface nsPIPlacesDatabase : nsISupports
 {
   /**
    * The database connection used by Places.
    */
   readonly attribute mozIStorageConnection DBConnection;
-
-  /**
-   * Finalizes all Places internal statements, allowing to safely close the
-   * database connection.
-   */
-  void finalizeInternalStatements();
-
-  /**
-   * Commits all pending history changes, call this before finalizing
-   * statements and closing the database connection to ensure safety for all
-   * history data.
-   */
-  void commitPendingChanges();
 };

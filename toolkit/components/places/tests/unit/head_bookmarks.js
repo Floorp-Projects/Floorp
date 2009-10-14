@@ -177,26 +177,6 @@ function check_no_bookmarks() {
   root.containerOpen = false;
 }
 
-var syncSvc = null;
-function start_sync() {
-// profile-after-change doesn't create components in xpcshell, so we have to do
-// it ourselves
-  syncSvc = Cc["@mozilla.org/places/sync;1"].getService(Ci.nsISupports);
-}
-
-/**
- * This dispatches the observer topic "quit-application" to clean up the sync
- * component.
- */
-function finish_test()
-{
-  // xpcshell doesn't dispatch shutdown-application
-  let os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  os.notifyObservers(null, "quit-application", null);
-  do_test_finished();
-}
-
 /**
  * Flushes any events in the event loop of the main thread.
  */

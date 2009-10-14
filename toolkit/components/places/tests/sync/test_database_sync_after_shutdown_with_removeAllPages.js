@@ -45,90 +45,113 @@ var prefs = Cc["@mozilla.org/preferences-service;1"].
 var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
          getService(Ci.nsINavHistoryService);
 var bh = hs.QueryInterface(Ci.nsIBrowserHistory);
-var mDBConn = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
-let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
          getService(Ci.nsINavBookmarksService);
 
 const TEST_URI = "http://test.com/";
 
-const kSyncPrefName = "syncDBTableIntervalInSecs";
+const PREF_SYNC_INTERVAL = "syncDBTableIntervalInSecs";
 const SYNC_INTERVAL = 600; // ten minutes
-const kSyncFinished = "places-sync-finished";
-const kQuitApplication = "quit-application";
+const TOPIC_SYNC_FINISHED = "places-sync-finished";
+
+// Polling constants to check the connection closed status.
+const POLLING_TIMEOUT_MS = 100;
+const POLLING_MAX_PASSES = 20;
 
 var historyObserver = {
+  visitId: -1,
+  cleared: false,
   onVisit: function(aURI, aVisitId, aTime, aSessionId, aReferringId,
                     aTransitionType, aAdded) {
-    observer.visitId = aVisitId;
+    this.visitId = aVisitId;
   },
   onClearHistory: function() {
     // check browserHistory returns no entries
     do_check_eq(0, bh.count);
+    this.cleared = true;
+    hs.removeObserver(this);
   }
 }
 hs.addObserver(historyObserver, false);
 
 var observer = {
-  visitId: -1,
   _runCount: 0,
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == kSyncFinished) {
-      // the first sync is due to the insert bookmark, timings here are really
-      // constraint, so it's better adding the observer immediately and discard
-      // first notification. Adding the observer later could result in random
-      // test failures due to the first sync being delayed.
-      if (++this._runCount < 2)
+    if (aTopic == TOPIC_SYNC_FINISHED) {
+      if (++this._runCount == 1) {
+        // The first sync is due to the insert bookmark.
+        // Simulate a clear private data just before shutdown.
+        bh.removeAllPages();
+        // Immediately notify shutdown.
+        shutdownPlaces();
         return;
-      // visit id must be valid
-      do_check_neq(this.visitId, -1);
-      // remove the observer, we don't need to observe sync on quit
-      os.removeObserver(this, kSyncFinished);
-      hs.removeObserver(historyObserver);
-      // Check that tables have been correctly synced
-      // Check that frecency for not cleared items (bookmarks) has been converted
-      // to -MAX(visit_count, 1), so we will be able to recalculate frecency
-      // starting from most frecent bookmarks. 
-      dump_table("moz_places_temp");
-      dump_table("moz_places");
-      stmt = mDBConn.createStatement(
-        "SELECT id FROM moz_places WHERE frecency > 0 LIMIT 1");
-      do_check_false(stmt.executeStep());
-      stmt.finalize();
+      }
 
-      stmt = mDBConn.createStatement(
-        "SELECT h.id FROM moz_places h WHERE h.frecency = -2 " +
-          "AND EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1");
-      do_check_true(stmt.executeStep());
-      stmt.finalize();
+      // Remove the observer, we don't need it anymore.
+      os.removeObserver(this, TOPIC_SYNC_FINISHED);
 
-      // Check that all visit_counts have been brought to 0
-      stmt = mDBConn.createStatement(
-        "SELECT id FROM moz_places WHERE visit_count <> 0 LIMIT 1");
-      do_check_false(stmt.executeStep());
-      stmt.finalize();
+      // Visit id must be valid.
+      do_check_neq(historyObserver.visitId, -1);
+      // History must have been cleared.
+      do_check_true(historyObserver.cleared);
 
-      finish_test();
-    }
-    else if (aTopic == kQuitApplication) {
-      // simulate a clear private data on shutdown
-      bh.removeAllPages();
+      // The database connection will be closed after this sync, but we can't
+      // know how much time it will take, so we use a polling strategy.
+      do_timeout(POLLING_TIMEOUT_MS, "check_results();");
     }
   }
 }
-os.addObserver(observer, kSyncFinished, false);
-os.addObserver(observer, kQuitApplication, false);
+os.addObserver(observer, TOPIC_SYNC_FINISHED, false);
+
+var gPasses = 0;
+function check_results() {
+    if (++gPasses >= POLLING_MAX_PASSES) {
+      do_throw("Maximum time elapsdes waiting for Places database connection to close");
+      do_test_finished();
+    }
+
+    if (hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection.connectionReady) {
+      do_timeout(POLLING_TIMEOUT_MS, "check_results();");
+      return;
+    }
+
+    dbConn = DBConn();
+    do_check_neq(dbConn, null);
+    do_check_true(dbConn.connectionReady);
+
+    // Check that frecency for not cleared items (bookmarks) has been
+    // converted to -MAX(visit_count, 1), so we will be able to
+    // recalculate frecency starting from most frecent bookmarks.
+    let stmt = dbConn.createStatement(
+      "SELECT id FROM moz_places WHERE frecency > 0 LIMIT 1");
+    do_check_false(stmt.executeStep());
+    stmt.finalize();
+
+    stmt = DBConn().createStatement(
+      "SELECT h.id FROM moz_places h WHERE h.frecency = -2 " +
+        "AND EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1");
+    do_check_true(stmt.executeStep());
+    stmt.finalize();
+
+    // Check that all visit_counts have been brought to 0
+    stmt = DBConn().createStatement(
+      "SELECT id FROM moz_places WHERE visit_count <> 0 LIMIT 1");
+    do_check_false(stmt.executeStep());
+    stmt.finalize();
+
+    dbConn.close();
+    do_check_false(dbConn.connectionReady);
+
+    do_test_finished();
+}
 
 function run_test()
 {
-  // Run the event loop to be more like the browser, which normally runs the
-  // event loop long before code like this would run.
-  let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
-  while (tm.mainThread.hasPendingEvents())
-    tm.mainThread.processNextEvent(false);
+  do_test_pending();
 
   // Set the preference for the timer to a really large value, so it won't
   // run before the test finishes.
-  prefs.setIntPref(kSyncPrefName, SYNC_INTERVAL);
+  prefs.setIntPref(PREF_SYNC_INTERVAL, SYNC_INTERVAL);
 
   // Now add a visit before creating bookmark, and one later
   hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
@@ -137,9 +160,4 @@ function run_test()
                     bs.DEFAULT_INDEX, "bookmark");
   hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
               hs.TRANSITION_TYPED, false, 0);
-
-  // Notify that we are quitting the app - we should sync!
-  os.notifyObservers(null, kQuitApplication, null);
-
-  do_test_pending();
 }

@@ -48,7 +48,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-const kQuitApplication = "quit-application";
+const kXPComShutdown = "xpcom-shutdown";
 const kSyncFinished = "places-sync-finished";
 const kDebugStopSync = "places-debug-stop-sync";
 const kDebugStartSync = "places-debug-start-sync";
@@ -109,7 +109,7 @@ function nsPlacesDBFlush()
   // Register observers
   this._os = Cc["@mozilla.org/observer-service;1"].
              getService(Ci.nsIObserverService);
-  this._os.addObserver(this, kQuitApplication, false);
+  this._os.addObserver(this, kXPComShutdown, false);
   this._os.addObserver(this, kDebugStopSync, false);
   this._os.addObserver(this, kDebugStartSync, false);
 
@@ -149,8 +149,8 @@ nsPlacesDBFlush.prototype = {
 
   observe: function DBFlush_observe(aSubject, aTopic, aData)
   {
-    if (aTopic == kQuitApplication) {
-      this._os.removeObserver(this, kQuitApplication);
+    if (aTopic == kXPComShutdown) {
+      this._os.removeObserver(this, kXPComShutdown);
       this._os.removeObserver(this, kDebugStopSync);
       this._os.removeObserver(this, kDebugStartSync);
 
@@ -158,29 +158,41 @@ nsPlacesDBFlush.prototype = {
         pb2.removeObserver(kSyncPrefName, this);
         pb2.removeObserver(kExpireDaysPrefName, this);
       }
-      this._timer.cancel();
-      this._timer = null;
+
+      if (this._timer) {
+        this._timer.cancel();
+        this._timer = null;
+      }
+
       // Other components could still make changes to history at this point,
       // for example to clear private data on shutdown, so here we dispatch
       // an event to the main thread so that we will sync after
-      // quit-application ensuring all data have been saved.
+      // xpcom-shutdown ensuring all data have been saved.
       let tm = Cc["@mozilla.org/thread-manager;1"].
           getService(Ci.nsIThreadManager);
       tm.mainThread.dispatch({
         _self: this,
         run: function() {
-          let pip = Cc["@mozilla.org/browser/nav-history-service;1"].
-                    getService(Ci.nsPIPlacesDatabase);
-          pip.commitPendingChanges();
+          // Flush any remaining change to disk tables.
           this._self._flushWithQueries([kQuerySyncPlacesId, kQuerySyncHistoryVisitsId]);
+
+          // Ensure we won't act anymore as a category observer, so we stop
+          // being notified.
+          let catMan = Cc["@mozilla.org/categorymanager;1"].
+                       getService(Ci.nsICategoryManager);
+          catMan.deleteCategoryEntry("bookmark-observers",
+                                     this._self.classDescription,
+                                     true);
+          catMan.deleteCategoryEntry("history-observers",
+                                     this._self.classDescription,
+                                     true);
+
           // Close the database connection, this was the last sync and we can't
           // ensure database coherence from now on.
-          pip.finalizeInternalStatements();
           this._self._finalizeInternalStatements();
           this._self._db.close();
         }
       }, Ci.nsIThread.DISPATCH_NORMAL);
-
     }
     else if (aTopic == "nsPref:changed" && aData == kSyncPrefName) {
       // Get the new pref value, and then update our timer
