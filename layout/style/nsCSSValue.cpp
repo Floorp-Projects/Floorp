@@ -95,12 +95,6 @@ nsCSSValue::nsCSSValue(const nsString& aValue, nsCSSUnit aUnit)
   }
 }
 
-nsCSSValue::nsCSSValue(nscolor aValue)
-  : mUnit(eCSSUnit_Color)
-{
-  mValue.mColor = aValue;
-}
-
 nsCSSValue::nsCSSValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {

@@ -183,7 +183,6 @@ public:
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit) NS_HIDDEN;
   nsCSSValue(float aValue, nsCSSUnit aUnit) NS_HIDDEN;
   nsCSSValue(const nsString& aValue, nsCSSUnit aUnit) NS_HIDDEN;
-  explicit nsCSSValue(nscolor aValue) NS_HIDDEN;
   nsCSSValue(Array* aArray, nsCSSUnit aUnit) NS_HIDDEN;
   explicit nsCSSValue(URL* aValue) NS_HIDDEN;
   explicit nsCSSValue(Image* aValue) NS_HIDDEN;
