@@ -782,8 +782,8 @@ findbar .findbar-closebutton {
   list-style-image: url("chrome://browser/skin/images/unlock-40.png");
 }
 
-#identity-container[mode="verifiedIdentity"] > vbox > #identity-popup-encryption-icon ,
-#identity-container[mode="verifiedDomain"] > vbox > #identity-popup-encryption-icon {
+#identity-container[mode="verifiedIdentity"] > hbox > vbox > #identity-popup-encryption-icon ,
+#identity-container[mode="verifiedDomain"] > hbox > vbox > #identity-popup-encryption-icon {
   list-style-image: url("chrome://browser/skin/images/lock-40.png");
 }
 
