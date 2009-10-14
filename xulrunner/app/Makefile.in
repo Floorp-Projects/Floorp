@@ -261,6 +261,9 @@ ifeq ($(OS_ARCH),OS2)
 	cp $(srcdir)/xulrunner-os2.ico   $(DIST)/branding/xulrunner.ico
 endif
 
+libs::
+	touch $(DIST)/bin/.autoreg
+
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 
 FRAMEWORK_NAME = XUL

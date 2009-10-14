@@ -728,20 +728,21 @@ nsFastLoadFileReader::ReadFooter(nsFastLoadFooter *aFooter)
         rv = NS_NewNativeLocalFile(filename, PR_TRUE, getter_AddRefs(file));
         if (NS_FAILED(rv))
             return rv;
-#ifdef DEBUG
+
         PRInt64 currentMtime;
         rv = file->GetLastModifiedTime(&currentMtime);
         if (NS_FAILED(rv))
             return rv;
 
         if (LL_NE(fastLoadMtime, currentMtime)) {
+#ifdef DEBUG
             nsCAutoString path;
             file->GetNativePath(path);
             printf("%s mtime changed, invalidating FastLoad file\n",
                    path.get());
+#endif
             return NS_ERROR_FAILURE;
         }
-#endif
 
         rv = readDeps->AppendElement(file);
         if (NS_FAILED(rv))
