@@ -576,10 +576,8 @@ CSS_PROP_BORDER(
     mBorderColor.mBottom,
     eCSSType_Value,
     kBorderColorKTable,
-    // FIXME: should be animatable (but currently involves complex split
-    // between color and an extra bit on the style, all private members)
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_BORDER(
     -moz-border-bottom-colors,
     border_bottom_colors,
@@ -613,7 +611,7 @@ CSS_PROP_BORDER(
     eCSSType_Value,
     kBorderWidthKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_TABLEBORDER(
     border-collapse,
     border_collapse,
@@ -721,10 +719,8 @@ CSS_PROP_BORDER(
     mBorderColor.mLeft,
     eCSSType_Value,
     kBorderColorKTable,
-    // FIXME: should be animatable (but currently involves complex split
-    // between color and an extra bit on the style, all private members)
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_BORDER(
     border-left-color-ltr-source,
     border_left_color_ltr_source,
@@ -822,7 +818,7 @@ CSS_PROP_BORDER(
     eCSSType_Value,
     kBorderWidthKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_BORDER(
     border-left-width-ltr-source,
     border_left_width_ltr_source,
@@ -869,10 +865,8 @@ CSS_PROP_BORDER(
     mBorderColor.mRight,
     eCSSType_Value,
     kBorderColorKTable,
-    // FIXME: should be animatable (but currently involves complex split
-    // between color and an extra bit on the style, all private members)
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_BORDER(
     border-right-color-ltr-source,
     border_right_color_ltr_source,
@@ -970,7 +964,7 @@ CSS_PROP_BORDER(
     eCSSType_Value,
     kBorderWidthKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_BORDER(
     border-right-width-ltr-source,
     border_right_width_ltr_source,
@@ -1086,10 +1080,8 @@ CSS_PROP_BORDER(
     mBorderColor.mTop,
     eCSSType_Value,
     kBorderColorKTable,
-    // FIXME: should be animatable (but currently involves complex split
-    // between color and an extra bit on the style, all private members)
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_BORDER(
     -moz-border-top-colors,
     border_top_colors,
@@ -1123,7 +1115,7 @@ CSS_PROP_BORDER(
     eCSSType_Value,
     kBorderWidthKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_SHORTHAND(
     border-width,
     border_width,
@@ -1855,10 +1847,8 @@ CSS_PROP_OUTLINE(
     mOutlineColor,
     eCSSType_Value,
     kOutlineColorKTable,
-    // FIXME: should be animatable (but currently involves complex split
-    // between color and an extra bit on the style, all private members)
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_OUTLINE(
     outline-style,
     outline_style,

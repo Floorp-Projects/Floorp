@@ -535,6 +535,21 @@ StyleDataAtOffset(void* aStyleStruct, ptrdiff_t aOffset)
   return reinterpret_cast<char*>(aStyleStruct) + aOffset;
 }
 
+static void
+ExtractBorderColor(nsStyleContext* aStyleContext, const void* aStyleBorder,
+                   PRUint8 aSide, nsStyleCoord& aComputedValue)
+{
+  nscolor color; 
+  PRBool foreground;
+  static_cast<const nsStyleBorder*>(aStyleBorder)->
+    GetBorderColor(aSide, color, foreground);
+  if (foreground) {
+    // FIXME: should add test for this
+    color = aStyleContext->GetStyleColor()->mColor;
+  }
+  aComputedValue.SetColorValue(color);
+}
+
 PRBool
 nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                                        nsStyleContext* aStyleContext,
@@ -546,9 +561,64 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
   const void* styleStruct =
     aStyleContext->GetStyleData(nsCSSProps::kSIDTable[aProperty]);
   ptrdiff_t ssOffset = nsCSSProps::kStyleStructOffsetTable[aProperty];
-  NS_ABORT_IF_FALSE(0 <= ssOffset, "must be dealing with animatable property");
   nsStyleAnimType animType = nsCSSProps::kAnimTypeTable[aProperty];
+  NS_ABORT_IF_FALSE(0 <= ssOffset || animType == eStyleAnimType_Custom,
+                    "must be dealing with animatable property");
   switch (animType) {
+    case eStyleAnimType_Custom:
+      switch (aProperty) {
+        // For border-width, ignore the border-image business (which
+        // only exists until we update our implementation to the current
+        // spec) and use GetComputedBorder
+        
+        #define BORDER_WIDTH_CASE(prop_, side_)                               \
+        case prop_:                                                           \
+          aComputedValue.SetCoordValue(                                       \
+            static_cast<const nsStyleBorder*>(styleStruct)->                  \
+              GetComputedBorder().side_);                                     \
+          break;
+        BORDER_WIDTH_CASE(eCSSProperty_border_bottom_width, bottom)
+        BORDER_WIDTH_CASE(eCSSProperty_border_left_width_value, left)
+        BORDER_WIDTH_CASE(eCSSProperty_border_right_width_value, right)
+        BORDER_WIDTH_CASE(eCSSProperty_border_top_width, top)
+        #undef BORDER_WIDTH_CASE
+
+        case eCSSProperty_border_bottom_color:
+          ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_BOTTOM,
+                             aComputedValue);
+          break;
+        case eCSSProperty_border_left_color_value:
+          ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_LEFT,
+                             aComputedValue);
+          break;
+        case eCSSProperty_border_right_color_value:
+          ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_RIGHT,
+                             aComputedValue);
+          break;
+        case eCSSProperty_border_top_color:
+          ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_TOP,
+                             aComputedValue);
+          break;
+
+        case eCSSProperty_outline_color: {
+          const nsStyleOutline *styleOutline =
+            static_cast<const nsStyleOutline*>(styleStruct);
+          nscolor color;
+        #ifdef GFX_HAS_INVERT
+          styleOutline->GetOutlineColor(color);
+        #else
+          if (!styleOutline->GetOutlineColor(color))
+            color = aStyleContext->GetStyleColor()->mColor;
+        #endif
+          aComputedValue.SetColorValue(color);
+          break;
+        }
+
+        default:
+          NS_ABORT_IF_FALSE(PR_FALSE, "missing property implementation");
+          return PR_FALSE;
+      };
+      return PR_TRUE;
     case eStyleAnimType_Coord:
       aComputedValue = *static_cast<const nsStyleCoord*>(
         StyleDataAtOffset(styleStruct, ssOffset));
