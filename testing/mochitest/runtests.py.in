@@ -214,6 +214,12 @@ class MochitestOptions(optparse.OptionParser):
                            "environment")
     defaults["environment"] = []
     
+    self.add_option("--setpref",
+                    action = "append", type = "string",
+                    dest = "extraPrefs", metavar = "PREF=VALUE",
+                    help = "defines an extra user preference")
+    defaults["extraPrefs"] = []    
+    
     self.add_option("--browser-arg",
                     action = "append", type = "string",
                     dest = "browserArgs", metavar = "ARG",
@@ -426,7 +432,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
       sys.exit(1)
     browserEnv[v[:ix]] = v[ix + 1:]
 
-  automation.initializeProfile(PROFILE_DIRECTORY)
+  automation.initializeProfile(PROFILE_DIRECTORY, options.extraPrefs)
   manifest = addChromeToProfile(options)
   copyExtraFilesToProfile(options)
   server = MochitestServer(options)
