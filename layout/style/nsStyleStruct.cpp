@@ -253,7 +253,7 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
 
 nsStyleMargin::nsStyleMargin() {
   MOZ_COUNT_CTOR(nsStyleMargin);
-  nsStyleCoord zero(0);
+  nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
   NS_FOR_CSS_SIDES(side) {
     mMargin.Set(side, zero);
   }
@@ -317,7 +317,7 @@ nsChangeHint nsStyleMargin::MaxDifference()
 
 nsStylePadding::nsStylePadding() {
   MOZ_COUNT_CTOR(nsStylePadding);
-  nsStyleCoord zero(0);
+  nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
   NS_FOR_CSS_SIDES(side) {
     mPadding.Set(side, zero);
   }
@@ -392,7 +392,7 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
     mBorderColor[side] = NS_RGB(0, 0, 0);
   }
   NS_FOR_CSS_HALF_CORNERS(corner) {
-    mBorderRadius.Set(corner, nsStyleCoord(0));
+    mBorderRadius.Set(corner, nsStyleCoord(0, nsStyleCoord::CoordConstructor));
   }
 
   mBorderColors = nsnull;
@@ -562,7 +562,7 @@ nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
 {
   MOZ_COUNT_CTOR(nsStyleOutline);
   // spacing values not inherited
-  nsStyleCoord zero(0);
+  nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
   NS_FOR_CSS_HALF_CORNERS(corner) {
     mOutlineRadius.Set(corner, zero);
   }

@@ -778,7 +778,7 @@ nsComputedDOMStyle::GetColumnRuleWidth(nsIDOMCSSValue** aValue)
   if (!val)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  SetValueToCoord(val, GetStyleColumn()->GetComputedColumnRuleWidth());
+  val->SetAppUnits(GetStyleColumn()->GetComputedColumnRuleWidth());
   return CallQueryInterface(val, aValue);
 }
 
