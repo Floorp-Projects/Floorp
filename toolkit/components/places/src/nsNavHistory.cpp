@@ -4888,66 +4888,6 @@ nsNavHistory::HidePage(nsIURI *aURI)
   NS_ENSURE_ARG(aURI);
 
   return NS_ERROR_NOT_IMPLEMENTED;
-  /*
-  // for speed to save disk accesses
-  mozStorageTransaction transaction(mDBConn, PR_FALSE,
-                                  mozIStorageConnection::TRANSACTION_EXCLUSIVE);
-
-  // We need to do a query anyway to see if this URL is already in the DB.
-  // Might as well ask for the hidden column to save updates in some cases.
-  nsCOMPtr<mozIStorageStatement> dbSelectStatement;
-  nsresult rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT id,hidden FROM moz_places WHERE url = ?1"),
-      getter_AddRefs(dbSelectStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = BindStatementURI(dbSelectStatement, 0, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  PRBool alreadyVisited = PR_TRUE;
-  rv = dbSelectStatement->ExecuteStep(&alreadyVisited);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // don't need to do anything if we've never heard of this page
-  if (!alreadyVisited)
-    return NS_OK;
- 
-  // modify the existing page if necessary
-
-  PRInt32 oldHiddenState = 0;
-  rv = dbSelectStatement->GetInt32(1, &oldHiddenState);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!oldHiddenState)
-    return NS_OK; // already marked as hidden, we're done
-
-  // find the old ID, which can be found faster than long URLs
-  PRInt32 entryid = 0;
-  rv = dbSelectStatement->GetInt32(0, &entryid);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // need to clear the old statement before we create a new one
-  dbSelectStatement = nsnull;
-
-  nsCOMPtr<mozIStorageStatement> dbModStatement;
-  rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("UPDATE moz_places SET hidden = 1 WHERE id = ?1"),
-      getter_AddRefs(dbModStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  dbModStatement->BindInt32Parameter(0, entryid);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = dbModStatement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // notify observers, finish transaction first
-  transaction.Commit();
-  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
-                      OnPageChanged(aURI,
-                                    nsINavHistoryObserver::ATTRIBUTE_HIDDEN,
-                                    EmptyString()))
-
-  return NS_OK;
-  */
 }
 
 
