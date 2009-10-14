@@ -42,6 +42,10 @@
 #define ARM_ARCH   config.arch
 #define ARM_VFP    config.vfp
 #define ARM_THUMB2 config.thumb2
+
+static inline bool blx_lr_broken() {
+    return false;
+}
 #endif
 
 #if !defined(AVMPLUS_LITTLE_ENDIAN) && !defined(AVMPLUS_BIG_ENDIAN)
