@@ -45,6 +45,7 @@ function test() {
   key = "Unique name: " + Math.random();
   value = "Unique value: " + Date.now();
   let tab = tabbrowser.addTab();
+  tab.linkedBrowser.stop();
   
   // test adding
   ok(test(function() ss.setTabValue(tab, key, value)), "store a tab value");
