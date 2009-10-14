@@ -56,6 +56,7 @@ var historyObserver = {
   onVisit: function(aURI, aVisitId, aTime, aSessionId, aReferringId,
                     aTransitionType, aAdded) {
     observer.visitId = aVisitId;
+    hs.removeObserver(this);
   }
 }
 hs.addObserver(historyObserver, false);
@@ -64,11 +65,11 @@ var observer = {
   visitId: -1,
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == kSyncFinished) {
-      // visit id must be valid
-      do_check_neq(this.visitId, -1);
       // remove the observer, we don't need to observe sync on quit
       os.removeObserver(this, kSyncFinished);
-      hs.removeObserver(historyObserver);
+
+      // visit id must be valid
+      do_check_neq(this.visitId, -1);
       // Check that tables have been correctly synced
       new_test_visit_uri_event(this.visitId, TEST_URI, true, true);
     }
@@ -87,7 +88,8 @@ function run_test()
               hs.TRANSITION_TYPED, false, 0);
 
   // Notify that we are quitting the app - we should sync!
-  os.notifyObservers(null, "quit-application", null);
+  shutdownPlaces();
 
+  // Test will continue on sync notification.
   do_test_pending();
 }
