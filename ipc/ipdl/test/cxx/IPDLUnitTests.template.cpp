@@ -37,7 +37,13 @@ IPDLUnitTestName()
     if (!gIPDLUnitTestName) {
         std::vector<std::wstring> args =
             CommandLine::ForCurrentProcess()->GetLooseValues();
-        gIPDLUnitTestName = strdup(WideToUTF8(args[args.size()-1]).c_str());
+        gIPDLUnitTestName = strdup(WideToUTF8(args[
+#ifndef OS_WIN
+args.size()-1
+#else
+args.size()-2
+#endif
+						   ]).c_str());
     }
     return gIPDLUnitTestName;
 }

@@ -2,10 +2,10 @@
 #define mozilla__ipdltest_TestLatency_h 1
 
 
-#include "mozilla/TimeStamp.h"
-
 #include "mozilla/_ipdltest/PTestLatencyParent.h"
 #include "mozilla/_ipdltest/PTestLatencyChild.h"
+
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 namespace _ipdltest {
