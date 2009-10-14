@@ -511,12 +511,11 @@ BrowserView.prototype = {
     var handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
     
     if (handheldFriendly == "true") {
-      browser.handheld = true;
-      browser.setAttribute("style", "width: " + window.screen.width + "px;");
+      browser.className = "browser-handheld";
       this.setZoomLevel(1);
       browser.markupDocumentViewer.textZoom = 1;
     } else {
-      delete  browser.handheld;
+      browser.className = "browser";
       let [w, h] = BrowserView.Util.getBrowserDimensions(browser);
       this.setZoomLevel(BrowserView.Util.pageZoomLevel(this.getVisibleRect(), w, h));
     }

@@ -340,6 +340,7 @@ var Browser = {
   contentScrollboxScroller: null,
   controlsScrollbox: null,
   controlsScrollboxScroller: null,
+  styles: {},
 
   startup: function() {
     var self = this;
@@ -352,13 +353,13 @@ var Browser = {
     /* handles dispatching clicks on tiles into clicks in content or zooms */
     container.customClicker = new ContentCustomClicker(bv);
 
-    /* vertically scrolling box that contains tiles and the urlbar */
+    /* scrolling box that contains tiles */
     let contentScrollbox = this.contentScrollbox = document.getElementById("tile-container-container");
     this.contentScrollboxScroller = contentScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     contentScrollbox.customDragger = new Browser.MainDragger(bv);
 
     /* horizontally scrolling box that holds the sidebars as well as the contentScrollbox */
-    let controlsScrollbox = this.controlsScrollbox = document.getElementById("scrollbox");
+    let controlsScrollbox = this.controlsScrollbox = document.getElementById("controls-scrollbox");
     this.controlsScrollboxScroller = controlsScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     controlsScrollbox.customDragger = {
       dragStart: function dragStart(cx, cy, target, scroller) {},
@@ -369,12 +370,17 @@ var Browser = {
     // during startup a lot of viewportHandler calls happen due to content and window resizes
     bv.beginBatchOperation();
 
+    let stylesheet = document.styleSheets[0];
+    for each (let style in ['window-width', 'window-height', 'toolbar-height', 'browser', 'browser-handheld']) {
+      let index = stylesheet.insertRule("." + style + " {}", stylesheet.cssRules.length);
+      this.styles[style] = stylesheet.cssRules[index].style;
+    }
+
     function resizeHandler(e) {
 
       if (e.target != window)
         return;
 
-      //dump(window.innerWidth + "," + window.innerHeight + "\n");
       // XXX is this code right here actually needed?
       let w = window.innerWidth;
       let h = window.innerHeight;
@@ -384,38 +390,25 @@ var Browser = {
 
       bv.beginBatchOperation();
 
-      contentScrollbox.style.width  = w + 'px';
-      contentScrollbox.style.height = h + 'px';
-
-      controlsScrollbox.style.width  = w + 'px';
-      controlsScrollbox.style.height = h + 'px';
-
       let toolbarHeight = Math.round(document.getElementById("toolbar-main").getBoundingClientRect().height);
-      let spacers = document.getElementsByClassName("sidebar-spacer");
-      for (let i = 0, len = spacers.length; i < len; i++) spacers[i].style.height = toolbarHeight + 'px';
+      let scaledDefaultH = (kDefaultBrowserWidth * (h / w));
+      let scaledScreenH = (window.screen.width * (h / w));
 
-      // toolbar UI
-      document.getElementById("toolbar-main").width = w;
+      Browser.styles["window-width"].width = w + "px";
+      Browser.styles["window-height"].height = h + "px";
+      Browser.styles["toolbar-height"].height = toolbarHeight + "px";
+      Browser.styles["browser"].width = kDefaultBrowserWidth + "px";
+      Browser.styles["browser"].height = scaledDefaultH + "px";
+      Browser.styles["browser-handheld"].width = window.screen.width + "px";
+      Browser.styles["browser-handheld"].height = scaledScreenH + "px";
 
       // Tell the UI to resize the browser controls before calling  updateSize
       BrowserUI.sizeControls(w, h);
 
-      // Resize the browsers...
-      let browsers = Browser.browsers;
-      if (browsers) {
-        let scaledDefaultH = (kDefaultBrowserWidth * (h / w));
-        let scaledScreenH = (window.screen.width * (h / w));
-        for (let i=0; i<browsers.length; i++) {
-          let browserStyle = browsers[i].style;
-          browserStyle.height = ((browsers[i].hasOwnProperty("handheld") && 
-                                  browsers[i].handheld) ? 
-                                 scaledScreenH : scaledDefaultH) + "px";
-        }
-      }
-
       bv.zoomToPage();
       Browser.hideSidebars();
       // hidesidebars calls bv.onAfterVisibleMove();
+
       bv.commitBatchOperation();
     }
     window.addEventListener("resize", resizeHandler, false);
@@ -2174,7 +2167,7 @@ var HelperAppDialog = {
     container.hidden = false;
 
     let rect = container.getBoundingClientRect();
-    container.top = top < 0 ? 0 : top;
+    container.top = Math.max(0, top);
     container.left = (window.innerWidth - rect.width) / 2;
   },
 
@@ -2541,10 +2534,10 @@ Tab.prototype = {
       throw "Browser already exists";
 
     // Create the browser using the current width the dynamically size the height
-    let scaledHeight = kDefaultBrowserWidth * (window.innerHeight / window.innerWidth);
     let browser = this._browser = document.createElement("browser");
 
-    browser.setAttribute("style", "overflow: -moz-hidden-unscrollable; visibility: hidden; width: " + kDefaultBrowserWidth + "px; height: " + scaledHeight + "px;");
+    browser.className = "browser";
+    browser.setAttribute("style", "overflow: -moz-hidden-unscrollable; visibility: hidden;");
     browser.setAttribute("type", "content");
 
     // Append the browser to the document, which should start the page load

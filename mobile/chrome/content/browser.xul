@@ -180,93 +180,87 @@
   </popupset>
 
   <stack flex="1" id="stack">
-    <scrollbox id="scrollbox" style="overflow: hidden;" top="0" left="0" flex="1">
-      <hbox style="position: relative">
-
-        <vbox>
-          <spacer class="sidebar-spacer"/>
-          <!-- Left toolbar -->
-          <vbox id="tabs-container" class="panel-dark" flex="1">
-            <vbox id="tabs" onselect="BrowserUI.selectTab(this);" onclosetab="BrowserUI.closeTab(this)" flex="1"/>
-            <hbox id="tabs-controls">
-              <toolbarbutton id="newtab-button" class="button-image" command="cmd_newTab"/>
-            </hbox>
-          </vbox>
+    <scrollbox id="controls-scrollbox" style="overflow: hidden; -moz-box-orient: horizontal; position: relative;" flex="1">
+      <vbox class="panel-dark">
+        <spacer class="toolbar-height"/>
+        <!-- Left toolbar -->
+        <vbox id="tabs-container" class="panel-dark" flex="1">
+          <vbox id="tabs" onselect="BrowserUI.selectTab(this);" onclosetab="BrowserUI.closeTab(this)" flex="1"/>
+          <hbox id="tabs-controls">
+            <toolbarbutton id="newtab-button" class="button-image" command="cmd_newTab"/>
+          </hbox>
         </vbox>
+      </vbox>
 
-        <!-- Content Area -->
-        <scrollbox id="tile-container-container" style="-moz-box-orient: vertical; overflow: hidden;" flex="1">
-
-          <!-- Main Toolbar -->
-          <box id="toolbar-container" class="panel-dark">
-            <box id="toolbar-moveable-container">
-              <toolbar id="toolbar-main" class="panel-dark">
+      <!-- Content Area -->
+      <scrollbox id="tile-container-container" style="overflow: hidden; -moz-box-orient: vertical;">
+        <!-- Main Toolbar -->
+        <box id="toolbar-container" class="panel-dark toolbar-height">
+          <box id="toolbar-moveable-container">
+            <toolbar id="toolbar-main" class="panel-dark window-width">
 #ifdef MOZ_PLATFORM_HILDON
-                <toolbarbutton id="tool-app-switch" class="button-image" oncommand="BrowserUI.switchTask();"/>
+              <toolbarbutton id="tool-app-switch" class="button-image" oncommand="BrowserUI.switchTask();"/>
 #endif
-                <hbox id="urlbar-container" flex="1">
-                  <box id="identity-box"
-                       onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
-                       onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
-                    <box id="urlbar-image-box">
-                      <image id="urlbar-throbber"/>
-                      <image id="urlbar-favicon" hidden="true"/>
-                    </box>
+              <hbox id="urlbar-container" flex="1">
+                <box id="identity-box"
+                     onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
+                     onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
+                  <box id="urlbar-image-box">
+                    <image id="urlbar-throbber"/>
+                    <image id="urlbar-favicon" hidden="true"/>
                   </box>
-                  <hbox id="urlbar-editarea" flex="1">
-                    <textbox id="urlbar-edit"
-                             type="autocomplete"
-                             autocompletesearch="history"
-                             autocompletepopup="popup_autocomplete"
-                             enablehistory="false"
-                             maxrows="6"
-                             completeselectedindex="true"
-                             minresultsforpopup="0"
-                             flex="1"
-                             ontextentered="BrowserUI.goToURI();"
-                             clickSelectsAll="true"/>
-                  </hbox>
-                  <hbox id="urlbar-icons" mode="view">
-                    <toolbarbutton id="tool-reload" class="urlbar-cap-button" command="cmd_reload"/>
-                    <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
-                    <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
-                  </hbox>
+                </box>
+                <hbox id="urlbar-editarea" flex="1">
+                  <textbox id="urlbar-edit"
+                           type="autocomplete"
+                           autocompletesearch="history"
+                           autocompletepopup="popup_autocomplete"
+                           enablehistory="false"
+                           maxrows="6"
+                           completeselectedindex="true"
+                           minresultsforpopup="0"
+                           flex="1"
+                           ontextentered="BrowserUI.goToURI();"
+                           clickSelectsAll="true"/>
                 </hbox>
-                <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
-              </toolbar>
-            </box>
+                <hbox id="urlbar-icons" mode="view">
+                  <toolbarbutton id="tool-reload" class="urlbar-cap-button" command="cmd_reload"/>
+                  <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
+                  <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
+                </hbox>
+              </hbox>
+              <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
+            </toolbar>
           </box>
+        </box>
 
-          <notificationbox id="notifications"/>
+        <notificationbox id="notifications"/>
 
-          <!-- Content viewport -->
-          <box>
-            <html:div id="tile-container" style="width: 800px; height: 480px; overflow: hidden;"/>
-          </box>
-        </scrollbox>
+        <!-- Content viewport -->
+        <html:div id="tile-container" class="window-height" style="overflow: hidden;"/>
+      </scrollbox>
 
-        <!-- Right toolbar -->
-        <vbox>
-          <spacer class="sidebar-spacer"/>
+      <!-- Right toolbar -->
+      <vbox class="panel-dark">
+        <spacer class="toolbar-height"/>
 
-          <vbox id="browser-controls" style="overflow: -moz-hidden-unscrollable;" class="panel-dark" flex="1">
-            <toolbarbutton id="tool-star" class="browser-control-button button-image" command="cmd_star"/>
-            <toolbarbutton id="tool-back" class="browser-control-button button-image" command="cmd_back"/>
-            <toolbarbutton id="tool-forward" class="browser-control-button button-image" command="cmd_forward"/>
-            <toolbarspring/>
-            <toolbarbutton id="tool-panel-open" class="page-button button-image" command="cmd_panel"/>
-          </vbox>
+        <vbox id="browser-controls" style="overflow: -moz-hidden-unscrollable;" class="panel-dark" flex="1">
+          <toolbarbutton id="tool-star" class="browser-control-button button-image" command="cmd_star"/>
+          <toolbarbutton id="tool-back" class="browser-control-button button-image" command="cmd_back"/>
+          <toolbarbutton id="tool-forward" class="browser-control-button button-image" command="cmd_forward"/>
+          <toolbarspring/>
+          <toolbarbutton id="tool-panel-open" class="page-button button-image" command="cmd_panel"/>
         </vbox>
-      </hbox>
+      </vbox>
     </scrollbox>
 
     <!-- popup for find toolbar -->
-    <hbox id="findbar-container" hidden="true" top="0" left="0">
+    <hbox id="findbar-container" hidden="true" class="window-width">
       <findbar id="findbar" flex="1"/>
     </hbox>
 
     <!-- popup for site identity information -->
-    <vbox id="identity-container" hidden="true" class="panel-dark" top="0" left="0" mode="unknownIdentity">
+    <vbox id="identity-container" hidden="true" class="panel-dark window-width" mode="unknownIdentity">
       <hbox id="identity-popup-container" flex="1" align="top">
         <image id="identity-popup-icon"/>
         <vbox id="identity-popup-content-box" flex="1">
@@ -305,13 +299,13 @@
       </vbox>
     </vbox>
 
-    <vbox id="bookmark-container" hidden="true" class="panel-dark" top="0" left="0">
+    <vbox id="bookmark-container" hidden="true" class="panel-dark window-width">
       <hbox id="bookmark-form" align="start">
         <image id="bookmark-image" src="chrome://browser/skin/images/starred-default-64.png"/>
       </hbox>
     </vbox>
 
-    <box id="panel-container" hidden="true" class="panel-dark" top="0" left="0">
+    <box id="panel-container" hidden="true" class="panel-dark">
       <box id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
         <toolbarbutton id="tool-panel-close" class="page-button button-image" command="cmd_panel"/>
         <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button button-image" linkedpanel="addons-container"/>
@@ -420,7 +414,8 @@
       </deck>
     </box>
 
-    <vbox id="popup_autocomplete" class="panel-dark" hidden="true" top="0" left="0">
+    <!-- titlebar autocomplete results -->
+    <vbox id="popup_autocomplete" class="panel-dark" hidden="true">
       <arrowscrollbox id="autocomplete_navbuttons"
                       align="center"
                       flex="1"
@@ -431,7 +426,8 @@
       </arrowscrollbox>
     </vbox>
 
-    <vbox id="select-container" hidden="true" top="0" left="0">
+    <!-- options dialog for select form field -->
+    <vbox id="select-container" hidden="true">
       <vbox id="select-container-inner" class="panel-dark" flex="1">
         <scrollbox id="select-list" flex="1" orient="vertical"/>
         <hbox id="select-buttons">
@@ -440,7 +436,8 @@
       </vbox>
     </vbox>
 
-    <vbox id="bookmarklist-container" class="panel-dark" hidden="true" top="0" left="0">
+    <!-- bookmark window -->
+    <vbox id="bookmarklist-container" class="panel-dark" hidden="true">
       <hbox id="bookmarklist-header">
         <description flex="1">&bookmarksHeader.label;</description>
         <toolbarbutton id="tool-bookmarks-manage" class="urlbar-button show-text button-dark" type="checkbox" autocheck="true"
@@ -450,7 +447,8 @@
       <placelist id="bookmark-items" type="bookmarks" flex="1" onopen="BookmarkList.openBookmark();"/>
     </vbox>
 
-    <vbox id="helperapp-container" class="dialog-dark" hidden="true" align="center" top="0" left="0">
+    <!-- save/open dialog -->
+    <vbox id="helperapp-container" class="dialog-dark" hidden="true" align="center" top="0">
       <label id="helperapp-prompt" value="&helperApp.prompt;"/>
       <label id="helperapp-target" value="" crop="center"/>
       <separator/>
@@ -461,7 +459,8 @@
       </hbox>
     </vbox>
 
-    <hbox id="alerts-container" hidden="true" align="start" top="0" left="0" width="200"
+    <!-- alerts for content -->
+    <hbox id="alerts-container" hidden="true" align="start" width="200"
           onclick="AlertsHelper.click(event);">
       <image id="alerts-image"/>
       <vbox flex="1">
