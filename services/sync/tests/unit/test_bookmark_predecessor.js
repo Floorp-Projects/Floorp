@@ -7,11 +7,11 @@ function run_test() {
   let store = new (new BookmarksEngine())._storeObj();
   store.wipe();
 
-  let unfiled = Svc.Bookmark.unfiledBookmarksFolder;
   let uri = Utils.makeURI("http://uri/");
-  function insert(pos) {
+  function insert(pos, folder) {
+    folder = folder || Svc.Bookmark.toolbarFolder;
     let name = "pos" + pos;
-    let bmk = Svc.Bookmark.insertBookmark(unfiled, uri, pos, name);
+    let bmk = Svc.Bookmark.insertBookmark(folder, uri, pos, name);
     Svc.Bookmark.setItemGUID(bmk, name);
     return bmk;
   }
@@ -31,4 +31,10 @@ function run_test() {
   _("Make sure the index of item gets fixed");
   do_check_eq(Svc.Bookmark.getItemIndex(first), 0);
   do_check_eq(Svc.Bookmark.getItemIndex(second), 1);
+
+  _("Make sure things that are in unsorted don't set the predecessor");
+  insert(0, Svc.Bookmark.unfiledBookmarksFolder);
+  insert(1, Svc.Bookmark.unfiledBookmarksFolder);
+  do_check_eq(store.createRecord("pos0").predecessorid, undefined);
+  do_check_eq(store.createRecord("pos1").predecessorid, undefined);
 }
