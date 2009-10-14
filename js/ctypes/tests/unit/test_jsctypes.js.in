@@ -109,6 +109,9 @@ function run_test()
   obj.t = test_i8;
   do_check_eq(test_i8(), 123);
   do_check_eq(obj.t(), 123);
+
+  // bug 521937
+  do_check_throws(function () { var nolib = ctypes.open("notfoundlibrary.dll"); nolib.close(); }, Error);
 }
 
 function run_void_tests(library) {
