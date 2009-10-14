@@ -285,85 +285,6 @@ RegisterGenericFactory(nsIComponentRegistrar* registrar,
     return rv;
 }
 
-// In order to support the installer, we need
-// to be told out of band if we should cause
-// an autoregister.  If the file ".autoreg" exists in the binary
-// directory, we check its timestamp against the timestamp of the
-// compreg.dat file.  If the .autoreg file is newer, we autoregister.
-static PRBool CheckUpdateFile()
-{
-    nsresult rv;
-    nsCOMPtr<nsIFile> compregFile;
-    rv = nsDirectoryService::gService->Get(NS_XPCOM_COMPONENT_REGISTRY_FILE,
-                                           NS_GET_IID(nsIFile),
-                                           getter_AddRefs(compregFile));
-
-    if (NS_FAILED(rv)) {
-        NS_WARNING("Getting NS_XPCOM_COMPONENT_REGISTRY_FILE failed");
-        return PR_FALSE;
-    }
-
-    PRInt64 compregModTime;
-    rv = compregFile->GetLastModifiedTime(&compregModTime);
-    if (NS_FAILED(rv))
-        return PR_TRUE;
-    
-    nsCOMPtr<nsIFile> file;
-    rv = nsDirectoryService::gService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, 
-                                           NS_GET_IID(nsIFile), 
-                                           getter_AddRefs(file));
-
-    if (NS_FAILED(rv)) {
-        NS_WARNING("Getting NS_XPCOM_CURRENT_PROCESS_DIR failed");
-        return PR_FALSE;
-    }
-
-    file->AppendNative(nsDependentCString(".autoreg"));
-
-    // superfluous cast
-    PRInt64 nowTime = PR_Now() / PR_USEC_PER_MSEC;
-    PRInt64 autoregModTime;
-    rv = file->GetLastModifiedTime(&autoregModTime);
-    if (NS_FAILED(rv))
-        goto next;
-
-    if (autoregModTime > compregModTime) {
-        if (autoregModTime < nowTime) {
-            return PR_TRUE;
-        } else {
-            NS_WARNING("Screwy timestamps, ignoring .autoreg");
-        }
-    }
-
-next:
-    nsCOMPtr<nsIFile> greFile;
-    rv = nsDirectoryService::gService->Get(NS_GRE_DIR,
-                                           NS_GET_IID(nsIFile),
-                                           getter_AddRefs(greFile));
-
-    if (NS_FAILED(rv)) {
-        NS_WARNING("Getting NS_GRE_DIR failed");
-        return PR_FALSE;
-    }
-
-    greFile->AppendNative(nsDependentCString(".autoreg"));
-
-    PRBool equals;
-    rv = greFile->Equals(file, &equals);
-    if (NS_SUCCEEDED(rv) && equals)
-        return PR_FALSE;
-
-    rv = greFile->GetLastModifiedTime(&autoregModTime);
-    if (NS_FAILED(rv))
-        return PR_FALSE;
-
-    if (autoregModTime > nowTime) {
-        NS_WARNING("Screwy timestamps, ignoring .autoreg");
-        return PR_FALSE;
-    }
-    return autoregModTime > compregModTime; 
-}
-
 
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 PRBool gXPCOMShuttingDown = PR_FALSE;
@@ -684,8 +605,9 @@ NS_InitXPCOM3(nsIServiceManager* *result,
     nsIInterfaceInfoManager* iim =
         xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
 
-    if (CheckUpdateFile() || NS_FAILED(
-        nsComponentManagerImpl::gComponentManager->ReadPersistentRegistry())) {
+    // "Re-register the world" if compreg.dat doesn't exist
+    rv = nsComponentManagerImpl::gComponentManager->ReadPersistentRegistry();
+    if (NS_FAILED(rv)) {
         // If the component registry is out of date, malformed, or incomplete,
         // autoregister the default component directories.
         (void) iim->AutoRegisterInterfaces();
