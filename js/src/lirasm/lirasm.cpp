@@ -1119,7 +1119,6 @@ const CallInfo ci_N_IQF = CI(f_N_IQF, argMask(I32, 1, 3) |
 //   sufficiently big that it's spread across multiple chunks.
 //
 // The following instructions aren't generated yet:
-// - dbreak (hard to test, and not implemented in NJ)
 // - iparam/qparam (hard to test beyond what is auto-generated in fragment
 //   prologues)
 // - ialloc/qalloc (except for the load/store scratch space;  hard to do so
