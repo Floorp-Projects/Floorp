@@ -37,6 +37,7 @@
 
 let ConsoleView = {
   _list: null,
+  _console: null,
   _evalTextbox: null,
   _evalFrame: null,
   _evalCode: "",
@@ -54,6 +55,20 @@ let ConsoleView = {
     this._count = 0;
     this.limit = 250;
 
+    let self = this;
+    let panels = document.getElementById("panel-items");
+    panels.addEventListener("select",
+                            function(aEvent) {
+                              if (panels.selectedPanel.id == "console-container")
+                                self._delayedInit();
+                            },
+                            false);
+  },
+
+  _delayedInit: function cv__delayedInit() {
+    if (this._console)
+      return;
+
     this._console = Cc['@mozilla.org/consoleservice;1'].getService(Ci.nsIConsoleService);
     this._console.registerListener(this);
 
@@ -68,8 +83,13 @@ let ConsoleView = {
     let self = this;
     this._evalFrame.addEventListener("load", function() { self.loadOrDisplayResult(); }, true);
   },
+  
+  uninit: function cv_uninit() {
+    if (this._console)
+      this._console.unregisterListener(this);
+  },
 
-  observe : function(aObject) {
+  observe: function(aObject) {
     this.appendItem(aObject);
   },
 

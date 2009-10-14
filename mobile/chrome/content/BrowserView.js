@@ -239,6 +239,11 @@ BrowserView.prototype = {
     this._idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
     this._idleService.addIdleObserver(this._idleServiceObserver, kBrowserViewPrefetchBeginIdleWait);
   },
+  
+  uninit: function uninit() {
+    this.setBrowser(null, null, false);
+    this._idleService.removeIdleObserver(this._idleServiceObserver, kBrowserViewPrefetchBeginIdleWait);
+  },
 
   getVisibleRect: function getVisibleRect() {
     return this._visibleRectFactory();

@@ -409,10 +409,12 @@ var BrowserUI = {
     ExtensionsView.init();
     DownloadsView.init();
     PreferencesView.init();
+    ConsoleView.init();
   },
 
   uninit : function() {
     ExtensionsView.uninit();
+    ConsoleView.uninit();
   },
 
   update : function(aState) {
