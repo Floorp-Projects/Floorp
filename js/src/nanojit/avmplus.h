@@ -38,6 +38,12 @@
 
 #include "VMPI.h"
 
+#ifdef AVMPLUS_ARM
+#define ARM_ARCH   config.arch
+#define ARM_VFP    config.vfp
+#define ARM_THUMB2 config.thumb2
+#endif
+
 #if !defined(AVMPLUS_LITTLE_ENDIAN) && !defined(AVMPLUS_BIG_ENDIAN)
 #ifdef IS_BIG_ENDIAN
 #define AVMPLUS_BIG_ENDIAN
