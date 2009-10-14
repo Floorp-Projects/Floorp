@@ -5536,14 +5536,6 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     rv = FinalizeInternalStatements();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Remove categories.
-    nsCOMPtr<nsICategoryManager> catMan =
-      do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
-    if (catMan) {
-      (void)catMan->DeleteCategory("bookmark-observers");
-      (void)catMan->DeleteCategory("history-observers");
-    }
-
     // NOTE: We don't close the connection because the sync service could still
     // need it for a final flush.
   }
