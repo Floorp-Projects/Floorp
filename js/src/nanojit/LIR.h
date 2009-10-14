@@ -1076,13 +1076,6 @@ namespace nanojit
         virtual LInsp insSkip(size_t size) {
             return out->insSkip(size);
         }
-        void insAssert(LIns* expr) {
-            #if defined DEBUG
-            LIns* branch = insBranch(LIR_jt, expr, NULL);
-            ins0(LIR_dbreak);
-            branch->setTarget(ins0(LIR_label));
-            #endif
-        }
 
         // convenience functions
 
@@ -1453,7 +1446,7 @@ namespace nanojit
     class Assembler;
 
     void compile(Assembler *assm, Fragment *frag verbose_only(, Allocator& alloc, LabelMap*));
-    verbose_only(void live(Allocator& alloc, Fragment *frag, LirBuffer *lirbuf);)
+    verbose_only(void live(Allocator& alloc, Fragment* frag, LogControl*);)
 
     class StackFilter: public LirFilter
     {
