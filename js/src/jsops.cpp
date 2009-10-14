@@ -2078,7 +2078,7 @@ BEGIN_CASE(JSOP_APPLY)
             JSInterpreterHook hook;
 
             /* Restrict recursion of lightweight functions. */
-            if (inlineCallCount >= MAX_INLINE_CALL_COUNT) {
+            if (inlineCallCount >= JS_MAX_INLINE_CALL_COUNT) {
                 js_ReportOverRecursed(cx);
                 goto error;
             }

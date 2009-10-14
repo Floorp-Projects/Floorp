@@ -6368,11 +6368,14 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     state->sp = stack_buffer + (ti->nativeStackBase/sizeof(double));
     state->eos = stack_buffer + MAX_NATIVE_STACK_SLOTS;
 
+    JS_ASSERT(JS_MAX_INLINE_CALL_COUNT > inlineCallCount);
+
     /* Set up the native call stack frame. */
     FrameInfo* callstack_buffer[MAX_CALL_STACK_ENTRIES];
     state->callstackBase = callstack_buffer;
     state->rp = callstack_buffer;
-    state->eor = callstack_buffer + MAX_CALL_STACK_ENTRIES;
+    state->eor = callstack_buffer +
+                 JS_MIN(MAX_CALL_STACK_ENTRIES, JS_MAX_INLINE_CALL_COUNT - inlineCallCount);
     state->sor = state->rp;
 
 #ifdef DEBUG
