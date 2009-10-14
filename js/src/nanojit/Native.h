@@ -69,6 +69,7 @@
 #endif
 
 namespace nanojit {
+
     class Fragment;
     struct SideExit;
     struct SwitchInfo;
@@ -107,7 +108,7 @@ namespace nanojit {
         #define stack_direction(n)  -n
     #endif
 
-    #define isSPorFP(r)        ( (r)==SP || (r)==FP )
+    #define isSPorFP(r)     ( (r)==SP || (r)==FP )
 
     #ifdef MOZ_NO_VARADIC_MACROS
         static void asm_output(const char *f, ...) {}
@@ -129,8 +130,8 @@ namespace nanojit {
                 outputAddr=(_logc->lcbits & LC_NoCodeAddrs) ? false : true;    \
             } \
         } while (0) /* no semi */
-        #define gpn(r)                    regNames[(r)]
-        #define fpn(r)                    regNames[(r)]
+        #define gpn(r)                  regNames[(r)]
+        #define fpn(r)                  regNames[(r)]
     #else
         #define asm_output(...)
         #define gpn(r)
