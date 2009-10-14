@@ -324,37 +324,12 @@ var BrowserUI = {
   },
 
   sizeControls : function(windowW, windowH) {
-    // tabs
-    document.getElementById("tabs").resize();
-
     // awesomebar
     let popup = document.getElementById("popup_autocomplete");
     popup.top = this.toolbarH;
     popup.height = windowH - this.toolbarH;
     popup.width = windowW;
 
-    // toolbar UI
-    document.getElementById("toolbar-container").height = this.toolbarH;
-    document.getElementById("toolbar-main").width = windowW;
-
-    // notification box
-    document.getElementById("notifications").width = windowW;
-
-    // findbar
-    document.getElementById("findbar-container").width = windowW;
-
-    // identity
-    document.getElementById("identity-container").width = windowW;
-
-    // bookmark editor
-    let bmkeditor = document.getElementById("bookmark-container");
-    bmkeditor.width = windowW;
-
-    // bookmark list
-    let bookmarks = document.getElementById("bookmarklist-container");
-    bookmarks.height = windowH;
-    bookmarks.width = windowW;
-    
     // bookmark popup
     let bookmarkPopup = document.getElementById("bookmark-popup");
     let bookmarkPopupW = windowW / 4;
@@ -364,16 +339,6 @@ var BrowserUI = {
     const popupMargin = 10;
     bookmarkPopup.top = Math.round(starRect.top) + popupMargin;
     bookmarkPopup.left = windowW - this.sidebarW - bookmarkPopupW - popupMargin;
-
-    // select list UI
-    let selectlist = document.getElementById("select-container");
-    selectlist.height = windowH;
-    selectlist.width = windowW;
-
-    // tools panel
-    let panel = document.getElementById("panel-container");
-    panel.height = windowH;
-    panel.width = windowW;
   },
 
   init : function() {

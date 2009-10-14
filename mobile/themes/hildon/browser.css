@@ -48,10 +48,6 @@
   border: none;
 }
 
-#toolbar-moveable-container {
-  display: block;
-}
-
 #toolbar-moveable-container[top="0"] {
   position: fixed;
   left: 0;
