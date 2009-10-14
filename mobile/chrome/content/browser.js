@@ -570,8 +570,7 @@ var Browser = {
   },
 
   shutdown: function() {
-    this._browserView.setBrowser(null, null, false);
-
+    this._browserView.uninit();
     BrowserUI.uninit();
 
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
