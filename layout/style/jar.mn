@@ -3,4 +3,4 @@ toolkit.jar:
    res/html.css    (html.css)
    res/quirk.css    (quirk.css)
    res/viewsource.css    (viewsource.css)
-   res/forms.css    (forms.css)
+*  res/forms.css    (forms.css)
