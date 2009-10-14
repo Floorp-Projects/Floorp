@@ -4,71 +4,43 @@
  *              component, specifically for bookmark management.
  */
 
-//------------------------------------------------------------------------------
-// TEST SKELETON: use this template to add new tests. This is based on 
-// browser/components/places/tests/browser/browser_bookmarksProperties.js
-/* 
-gTests.push({
-  desc: "Bug Description",
-  isCompleted: false,
-  
-  run: function() {
-    // Actual test ...
-    
-    // indicate test is completed
-    gCurrentTest.isCompleted = true;
-  },
-  
-});
-*/
- 
-var thread = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager).currentThread;
 var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService); 
 var testURL_01 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_01.html";
 var testURL_02 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_02.html";
-var chromeWindow = window;
 
 // A queue to order the tests and a handle for each test
 var gTests = [];
 var gCurrentTest = null;
 
 //------------------------------------------------------------------------------
-// Entry point (must be called 'test')
+// Entry point (must be named "test")
 function test() {
-  // test testing dependencies
-  ok(isnot, "Mochitest must be in context");
-  ok(ioService, "nsIIOService must be in context");
-  ok(thread, "nsIThreadManager must be in context");
-  ok(PlacesUtils, "PlacesUtils must be in context");
-  ok(EventUtils, "EventUtils must be in context");
-  ok(chromeWindow, "ChromeWindow must be in context");
+  // The "runNextTest" approach is async, so we need to call "waitForExplicitFinish()"
+  // We call "finish()" when the tests are finished
+  waitForExplicitFinish();
   
-  ok(true, "*** Starting test browser_bookmark_star.js\n");  
+  // Start the tests
   runNextTest();
 }
 
 //------------------------------------------------------------------------------
 // Iterating tests by shifting test out one by one as runNextTest is called.
 function runNextTest() {
-  // Clean up previous test
-  if(gCurrentTest) {
-    ok(true, "*** FINISHED TEST ***");
-  }
-  
   // Run the next test until all tests completed
   if (gTests.length > 0) {
     gCurrentTest = gTests.shift();
-    ok(true, gCurrentTest.desc);
+    info(gCurrentTest.desc);
     gCurrentTest.run();
-    while(!gCurrentTest.isCompleted) {
-      thread.processNextEvent(true);
-    }
-    runNextTest();
   }
   else {
     // Cleanup. All tests are completed at this point
-    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.unfiledBookmarksFolder);
-    ok(true, "*** ALL TESTS COMPLETED ***");
+    try {
+      PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.unfiledBookmarksFolder);
+    }
+    finally {
+      // We must finialize the tests
+      finish();
+    }
   }
 }
 
@@ -76,92 +48,124 @@ function runNextTest() {
 // Case: Test adding tags via star icon
 gTests.push({
   desc: "Test adding tags via star icon",
-  isCompleted: false,
   _currenttab: null,
   
   run: function() {
-    _currenttab = chromeWindow.Browser.addTab(testURL_02, true);
-    var handleevent1 = function() {
-      _currenttab.browser.removeEventListener("load", handleevent1, true);
+    this._currenttab = Browser.addTab(testURL_02, true);
+    var handleEvent = function() {
+      gCurrentTest._currenttab.browser.removeEventListener("load", handleEvent, true);
       gCurrentTest.onPageLoad();
     };
-    _currenttab.browser.addEventListener("load", handleevent1 , true);
+    this._currenttab.browser.addEventListener("load", handleEvent , true);
   },
   
   onPageLoad: function() {
-    var starbutton = chromeWindow.document.getElementById("tool-star");
-    starbutton.click();
-    var starbutton = chromeWindow.document.getElementById("tool-star");
+    var starbutton = document.getElementById("tool-star");
     starbutton.click();
     
-    var bookmarkitem = chromeWindow.document.getElementById("bookmark-item");
+    var editbutton = document.getElementById("bookmark-popup-edit");
+    editbutton.click();
     
-    // Since no event to listen, need to loop until all the elements and attributes are ready before form editing
-    while(!bookmarkitem._isEditing) {
-      thread.processNextEvent(true);
-    }
-    
-    var uritextbox = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "uri");
-    var urispec = uritextbox.value;
-    
-    var tagtextbox = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "tags");
-    tagtextbox.value = "tagone, tag two, tag-three, tag4";
-    
-    var donebutton = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
-    donebutton.click();
-    
-    var tagsarray = PlacesUtils.tagging.getTagsForURI(uri(urispec), {});
-    is(tagsarray.length, 4, "All tags are added.");
-    
-    chromeWindow.BrowserUI.closeTab(_currenttab);
-    
-    gCurrentTest.isCompleted = true;
+    waitFor(gCurrentTest.onEditorReady, function() { return document.getElementById("bookmark-item").isEditing == true; });
   },
   
+  onEditorReady: function() {
+    var bookmarkitem = document.getElementById("bookmark-item");
+    bookmarkitem.tags = "tagone, tag two, tag-three, tag4";
+    
+    var donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
+    donebutton.click();
+    
+    waitFor(gCurrentTest.onEditorDone, function() { return document.getElementById("bookmark-container").hidden == true; });
+  },
+
+  onEditorDone: function() {
+    var tagsarray = PlacesUtils.tagging.getTagsForURI(uri(testURL_02), {});
+    is(tagsarray.length, 4, "All tags are added.");
+    
+    BrowserUI.closeTab(this._currenttab);
+    
+    runNextTest();
+  }  
 });
 
 //------------------------------------------------------------------------------
 // Case: Test editing uri via star icon
 gTests.push({
   desc: "Test editing uri via star icon",
-  isCompleted: false,
   _currenttab: null,
   
   run: function() {
-    _currenttab = chromeWindow.Browser.addTab(testURL_02, true);
-    var handleevent2 = function() {
-      _currenttab.browser.removeEventListener("load", handleevent2, true);
+    this._currenttab = Browser.addTab(testURL_02, true);
+    var handleEvent = function() {
+      gCurrentTest._currenttab.browser.removeEventListener("load", handleEvent, true);
       gCurrentTest.onPageLoad();
     };
-    _currenttab.browser.addEventListener("load", handleevent2, true);
+    this._currenttab.browser.addEventListener("load", handleEvent, true);
   },
   
   onPageLoad: function() {
-    var starbutton = chromeWindow.document.getElementById("tool-star");
+    var starbutton = document.getElementById("tool-star");
     starbutton.click();    
     
-    var bookmarkitem = chromeWindow.document.getElementById("bookmark-item");
+    var editbutton = document.getElementById("bookmark-popup-edit");
+    editbutton.click();
     
-    // Since no event to listen, need to loop until all the elements and attributes are ready before form editing
-    while(!bookmarkitem._isEditing) {
-      thread.processNextEvent(true);
-    }
-    
-    var uritextbox = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "uri");
+    waitFor(gCurrentTest.onEditorReady, function() { return document.getElementById("bookmark-item").isEditing == true; });
+  },
+  
+  onEditorReady: function() {
+    var bookmarkitem = document.getElementById("bookmark-item");    
+    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
+
+    var uritextbox = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "uri");
     uritextbox.value = testURL_01;
 
-    var donebutton = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
+    var donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
     donebutton.click();
     
+    waitFor(gCurrentTest.onEditorDone, function() { return document.getElementById("bookmark-container").hidden == true; });
+  },
+
+  onEditorDone: function() {
     isnot(PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_01)), -1, testURL_01 + " is now bookmarked");
     is(PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_02)), -1, testURL_02 + " is no longer bookmarked");
     
-    PlacesUtils.bookmarks.removeItem(PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_01)));
-    chromeWindow.BrowserUI.closeTab(_currenttab);
+    BrowserUI.closeTab(this._currenttab);
     
-    gCurrentTest.isCompleted = true;
+    runNextTest();
+  }  
+});
+
+//------------------------------------------------------------------------------
+// Case: Test removing existing bookmark via popup
+gTests.push({
+  desc: "Test removing existing bookmark via popup",
+  _currenttab: null,
+  
+  run: function() {
+    this._currenttab = Browser.addTab(testURL_01, true);
+    var handleEvent = function() {
+      gCurrentTest._currenttab.browser.removeEventListener("load", handleEvent, true);
+      gCurrentTest.onPageLoad();
+    };
+    this._currenttab.browser.addEventListener("load", handleEvent, true);
   },
   
+  onPageLoad: function() {
+    var starbutton = document.getElementById("tool-star");
+    starbutton.click();    
+    
+    var removebutton = document.getElementById("bookmark-popup-remove");
+    removebutton.click();
+    
+    var bookmark = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_01));
+    ok(bookmark == -1, testURL_01 + " should no longer in bookmark");
+
+    BrowserUI.closeTab(this._currenttab);
+
+    runNextTest();
+  }
 });
 
 //------------------------------------------------------------------------------
@@ -169,3 +173,16 @@ gTests.push({
 function uri(spec) {
   return ioService.newURI(spec, null, null);
 }
+
+function waitFor(callback, test, timeout) {
+  if (test()) {
+    callback();
+    return;
+  }
+
+  timeout = timeout || Date.now();
+  if (Date.now() - timeout > 1000)
+    throw "waitFor timeout";
+  setTimeout(waitFor, 50, callback, test, timeout);
+}
+

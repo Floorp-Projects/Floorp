@@ -507,18 +507,6 @@ var BrowserUI = {
       this.starButton.removeAttribute("starred");
   },
 
-  goToBookmark : function goToBookmark(aEvent) {
-    if (aEvent.originalTarget.localName == "button")
-      return;
-
-    var list = document.getElementById("urllist-items");
-    this.goToURI(list.selectedItem.value);
-  },
-
-  showBookmarks : function () {
-    BookmarkList.show();
-  },
-
   newTab : function newTab(aURI) {
     aURI = aURI || "about:blank";
     let tab = Browser.addTab(aURI, true);
@@ -722,7 +710,7 @@ var BrowserUI = {
         break;
       }
       case "cmd_bookmarks":
-        this.showBookmarks();
+        BookmarkList.show();
         break;
       case "cmd_quit":
         goQuitApplication();
