@@ -110,7 +110,7 @@ var observer = {
         // remove the observers
         os.removeObserver(this, kSyncFinished);
         hs.removeObserver(historyObserver, false);
-        finish_test();
+        do_test_finished();
       }
       else
         do_throw("bad runCount!");
