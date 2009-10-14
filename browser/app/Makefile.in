@@ -298,9 +298,6 @@ libs::
 endif
 endif
 
-libs::
-	touch $(DIST)/bin/.autoreg
-
 libs:: $(srcdir)/profile/prefs.js
 	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/defaults/profile
 
