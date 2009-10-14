@@ -47,6 +47,7 @@ function test() {
   
   // set a unique value on a new, blank tab
   var tab = gBrowser.addTab();
+  tab.linkedBrowser.stop();
   ss.setTabValue(tab, uniqueName, uniqueValue);
   let valueWasCleaned = false;
   

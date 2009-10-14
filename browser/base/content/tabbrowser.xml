@@ -1266,7 +1266,7 @@
               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                              "tab");
 
-            var blank = (aURI == "about:blank");
+            var blank = !aURI || (aURI == "about:blank");
 
             if (blank)
               t.setAttribute("label", this.mStringBundle.getString("tabs.untitled"));
