@@ -452,6 +452,11 @@ Assembler::asm_eor_imm(Register rd, Register rn, int32_t imm, int stat /* =0 */)
 void
 Assembler::nInit(AvmCore*)
 {
+#ifdef UNDER_CE
+    blx_lr_bug = blx_lr_broken();
+#else
+    blx_lr_bug = 0;
+#endif
 }
 
 void Assembler::nBeginAssembly()
@@ -802,26 +807,10 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
 void
 Assembler::asm_call(LInsp ins)
 {
-    CallInfo const *    call = ins->callInfo();
+    const CallInfo*     call = ins->callInfo();
     ArgSize             sizes[MAXARGS];
     uint32_t            argc = call->get_sizes(sizes);
-
-    // If indirect_reg is UnknownReg (as it is by default), the call is direct.
-    // Otherwise, the call is indirect and we should branch to the contents of
-    // the register specified by indirect_reg.
-    Register            indirect_reg = UnknownReg;
-#if 0   // TODO: Trace Monkey doesn't currently have call->isIndirect().
-    // If necessary, reserve a register for the indirect branch so that we
-    // don't have to go via IP.
-    if (call->isIndirect()) {
-        // Allow the register to be any of the saved registers. Other registers
-        // may be used for ABI arguments or other special functions (or may be
-        // clobbered).
-        RegisterMask    allow = SavedRegs & GpRegs;
-        indirect_reg = findRegFor(ins->arg(--argc), allow);
-        NanoAssert(indirect_reg != UnknownReg);
-    }
-#endif
+    bool indirect = call->isIndirect();
 
     // If we aren't using VFP, assert that the LIR operation is an integer
     // function call.
@@ -831,7 +820,7 @@ Assembler::asm_call(LInsp ins)
     // R0/R1. We need to either place it in the result fp reg, or store it.
     // See comments in asm_prep_fcall() for more details as to why this is
     // necessary here for floating point calls, but not for integer calls.
-    if(ARM_VFP) {
+    if (ARM_VFP) {
         // Determine the size (and type) of the instruction result.
         ArgSize         rsize = (ArgSize)(call->_argtypes & ARGSIZE_MASK_ANY);
 
@@ -867,18 +856,32 @@ Assembler::asm_call(LInsp ins)
     }
 
     // Emit the branch.
-    if (indirect_reg == UnknownReg) {
+    if (!indirect) {
         verbose_only(if (_logc->lcbits & LC_Assembly)
             outputf("        %p:", _nIns);
         )
 
-        // For direct branches, allow BranchWithLink to select the best code
-        // for the branch.
-        BranchWithLink((NIns*)(call->_address));
+        // Direct call: on v5 and above (where the calling sequence doesn't
+        // corrupt LR until the actual branch instruction), we can avoid an
+        // interlock in the "long" branch sequence by manually loading the
+        // target address into LR ourselves before setting up the parameters
+        // in other registers.
+        BranchWithLink((NIns*)call->_address);
     } else {
-        // For indirect branches, we can simply branch to the target address
-        // stored in a register.
-        BLX(indirect_reg);
+        // Indirect call: we assign the address arg to LR since it's not
+        // used for regular arguments, and is otherwise scratch since it's
+        // clobberred by the call. On v4/v4T, where we have to manually do
+        // the equivalent of a BLX, move LR into IP before corrupting LR
+        // with the return address.
+        if (blx_lr_bug) {
+            // workaround for msft device emulator bug (blx lr emulated as no-op)
+            underrunProtect(8);
+            BLX(IP);
+            MOV(IP,LR);
+        } else {
+            BLX(LR);
+        }
+        asm_regarg(ARGSIZE_LO, ins->arg(--argc), LR);
     }
 
     // Encode the arguments, starting at R0 and with an empty argument stack.
