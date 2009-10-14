@@ -574,9 +574,6 @@ extApplication.prototype = {
 
     this._info = Components.classes["@mozilla.org/xre/app-info;1"]
                            .getService(Ci.nsIXULAppInfo);
-
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Ci.nsIObserverService);
   },
 
   // get this contractID registered for certain categories via XPCOMUtils
@@ -684,16 +681,16 @@ extApplication.prototype = {
     if (this._events == null) {
       var self = this;
       function registerCheck(ev, k) {
-	var rmap = { "load": "app-startup",
-		     "ready": "final-ui-startup",
-		     "quit": "quit-application-requested",
-		     "unload": "xpcom-shutdown" };
-	if (!(ev in rmap) || ev in self._registered)
-	  return;
+        var rmap = { "load": "app-startup",
+                     "ready": "final-ui-startup",
+                     "quit": "quit-application-requested",
+                     "unload": "xpcom-shutdown" };
+        if (!(ev in rmap) || ev in self._registered)
+          return;
 
-	Components.classes["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService).
-	  addObserver(self, rmap[ev]);
-	self._registered[ev] = true;
+        Components.classes["@mozilla.org/observer-service;1"]
+                  .getService(Ci.nsIObserverService).addObserver(self, rmap[ev]);
+        self._registered[ev] = true;
       }
 
       this._events = new Events(registerCheck);
