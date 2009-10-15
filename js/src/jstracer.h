@@ -202,7 +202,7 @@ public:
     void            clear();
 };
 
-#if defined(JS_JIT_SPEW) || defined(MOZ_NO_VARADIC_MACROS)
+#if defined(JS_JIT_SPEW) || defined(NJ_NO_VARIADIC_MACROS)
 
 enum LC_TMBits {
     /*
@@ -220,7 +220,7 @@ enum LC_TMBits {
 
 #endif
 
-#ifdef MOZ_NO_VARADIC_MACROS
+#ifdef NJ_NO_VARIADIC_MACROS
 
 #define debug_only_stmt(action)            /* */
 static void debug_only_printf(int mask, const char *fmt, ...) {}

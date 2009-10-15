@@ -85,7 +85,7 @@ static inline bool blx_lr_broken() {
 #include <os2.h>
 #endif
 
-#if defined(DEBUG) || defined(MOZ_NO_VARADIC_MACROS)
+#if defined(DEBUG) || defined(NJ_NO_VARIADIC_MACROS)
 #if !defined _DEBUG
 #define _DEBUG
 #endif
