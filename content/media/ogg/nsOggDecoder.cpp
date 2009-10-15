@@ -2058,6 +2058,7 @@ nsresult nsOggDecoder::Load(nsMediaStream* aStream,
   {
     nsAutoMonitor mon(mMonitor);
     mDecodeStateMachine->SetSeekable(mSeekable);
+    mDecodeStateMachine->SetDuration(mDuration);
   }
 
   ChangeState(PLAY_STATE_LOADING);

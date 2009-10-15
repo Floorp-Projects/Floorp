@@ -1264,6 +1264,12 @@ nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
     return NS_ERROR_FAILURE;
   }
 
+  float duration = aOriginal->GetDuration();
+  if (duration >= 0) {
+    mDecoder->SetDuration(PRInt64(NS_round(duration * 1000)));
+    mDecoder->SetSeekable(aOriginal->GetSeekable());
+  }
+
   nsMediaStream* stream = originalStream->CloneData(mDecoder);
   if (!stream) {
     mDecoder = nsnull;
@@ -1786,7 +1792,7 @@ already_AddRefed<nsIURI> nsHTMLMediaElement::GetNextSource()
     rv = mSourcePointer->GetStartOffset(&startOffset);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
-    if (startOffset == GetChildCount())
+    if (PRUint32(startOffset) == GetChildCount())
       return nsnull; // No more children.
 
     // Advance the range to the next child.
