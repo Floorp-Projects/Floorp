@@ -46,8 +46,8 @@ function tryClone(event) {
 }
 
 // Find something we can play
-for (var i = 0; i < gSmallTests.length; ++i) {
-  var test = gSmallTests[i];
+for (var i = 0; i < gCloneTests.length; ++i) {
+  var test = gCloneTests[i];
   var elemType = /^audio/.test(test.type) ? "audio" : "video";
   var e = document.createElement(elemType);
   if (e.canPlayType(test.type)) {
