@@ -61,3 +61,4 @@ patch -p3 < handle-read-errors.patch
 patch -p3 < fishsound_reset.patch
 patch -p3 < bug504843.patch
 patch -p3 < bug520493.patch
+patch -p3 < bug515217.patch

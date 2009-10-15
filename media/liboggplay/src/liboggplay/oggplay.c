@@ -757,17 +757,15 @@ read_more_data:
         me->active_tracks = 0;
 
         if (info != NULL) {
+          /* ensure all tracks have their final data packet set to end_of_stream */
+          OggPlayCallbackInfo *p = info[0];
+          for (i = 0; i < me->num_tracks; i++) {
+            p->stream_info = OGGPLAY_STREAM_LAST_DATA;
+            p++;
+          }
+
           me->callback (me, num_records, info, me->callback_user_ptr);
           oggplay_callback_info_destroy(me, info);
-        }
-
-        /*
-        * ensure all tracks have their final data packet set to end_of_stream
-        * But skip doing this if we're shutting down --- me->buffer may not
-        * be in a safe state.
-        */
-        if (me->buffer != NULL && !me->shutdown) {
-          oggplay_buffer_set_last_data(me, me->buffer);
         }
 
         /* we reached the end of the stream */

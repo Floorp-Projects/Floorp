@@ -1,0 +1,98 @@
+diff --git a/media/liboggplay/src/liboggplay/oggplay.c b/media/liboggplay/src/liboggplay/oggplay.c
+--- a/media/liboggplay/src/liboggplay/oggplay.c
++++ b/media/liboggplay/src/liboggplay/oggplay.c
+@@ -746,29 +746,27 @@ read_more_data:
+         * set all of the tracks to inactive
+         */
+         for (i = 0; i < me->num_tracks; i++) {
+           me->decode_data[i]->active = 0;
+         }
+         me->active_tracks = 0;
+ 
+         if (info != NULL) {
++          /* ensure all tracks have their final data packet set to end_of_stream */
++          OggPlayCallbackInfo *p = info[0];
++          for (i = 0; i < me->num_tracks; i++) {
++            p->stream_info = OGGPLAY_STREAM_LAST_DATA;
++            p++;
++          }
++
+           me->callback (me, num_records, info, me->callback_user_ptr);
+           oggplay_callback_info_destroy(me, info);
+         }
+ 
+-        /*
+-        * ensure all tracks have their final data packet set to end_of_stream
+-        * But skip doing this if we're shutting down --- me->buffer may not
+-        * be in a safe state.
+-        */
+-        if (me->buffer != NULL && !me->shutdown) {
+-          oggplay_buffer_set_last_data(me, me->buffer);
+-        }
+-
+         /* we reached the end of the stream */
+         return E_OGGPLAY_OK;
+               
+       case OGGZ_ERR_HOLE_IN_DATA:
+         /* there was a whole in the data */
+         return E_OGGPLAY_BAD_INPUT;
+ 
+       case OGGZ_ERR_STOP_ERR:
+diff --git a/media/liboggplay/src/liboggplay/oggplay_buffer.c b/media/liboggplay/src/liboggplay/oggplay_buffer.c
+--- a/media/liboggplay/src/liboggplay/oggplay_buffer.c
++++ b/media/liboggplay/src/liboggplay/oggplay_buffer.c
+@@ -138,38 +138,16 @@ oggplay_buffer_is_full(volatile OggPlayB
+       buffer->buffer_list[WRAP_INC(buffer->last_filled, buffer->buffer_size)]
+       !=
+       NULL
+     )
+   );
+ 
+ }
+ 
+-void
+-oggplay_buffer_set_last_data(OggPlay *me, volatile OggPlayBuffer *buffer) 
+-{
+-
+-  int                   i;
+-  OggPlayCallbackInfo   *p;
+-
+-  /*
+-   * we're at last data before we've even started!
+-   */
+-  if (buffer->last_filled == -1) {
+-    return;
+-  }
+-
+-  p = (OggPlayCallbackInfo *)buffer->buffer_list[buffer->last_filled];
+-
+-  for (i = 0; i < me->num_tracks; i++) {
+-    p->stream_info = OGGPLAY_STREAM_LAST_DATA;
+-    p++;
+-  }
+-}
+-
+ int
+ oggplay_buffer_callback(OggPlay *me, int tracks,
+                         OggPlayCallbackInfo **track_info, void *user) {
+ 
+   int                   i;
+   int                   j;
+   int                   k;
+   OggPlayDataHeader  ** headers;
+diff --git a/media/liboggplay/src/liboggplay/oggplay_buffer.h b/media/liboggplay/src/liboggplay/oggplay_buffer.h
+--- a/media/liboggplay/src/liboggplay/oggplay_buffer.h
++++ b/media/liboggplay/src/liboggplay/oggplay_buffer.h
+@@ -53,12 +53,9 @@ int
+ oggplay_buffer_is_full(volatile OggPlayBuffer *buffer);
+ 
+ void
+ oggplay_buffer_shutdown(OggPlay *me, volatile OggPlayBuffer *buffer);
+ 
+ void
+ oggplay_buffer_prepare(OggPlay *me);
+ 
+-void
+-oggplay_buffer_set_last_data(OggPlay *me, volatile OggPlayBuffer *buffer);
+-
+ #endif
