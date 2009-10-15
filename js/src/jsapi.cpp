@@ -4867,7 +4867,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
 #endif
 
   out:
-    cx->weakRoots.newbornObject = FUN_OBJECT(fun);
+    cx->weakRoots.finalizableNewborns[FINALIZE_FUNCTION] = fun;
     JS_POP_TEMP_ROOT(cx, &tvr);
 
   out2:
