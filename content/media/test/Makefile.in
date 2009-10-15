@@ -98,11 +98,14 @@ _TEST_FILES = \
 		test_playback.html \
 		test_playback_errors.html \
 		test_readyState.html \
-		test_resume.html \
 		test_seek2.html \
 		test_volume.html \
 		use_large_cache.js \
 		$(NULL)
+
+# Disabled due to flakiness
+#		test_resume.html \
+#
 
 ifneq ($(OS_ARCH),WINNT)
 # These tests are disabled on windows until we
