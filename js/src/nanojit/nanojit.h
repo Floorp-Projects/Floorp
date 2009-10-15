@@ -91,15 +91,15 @@ namespace nanojit
 
     const uint32_t MAXARGS = 8;
 
-    #ifdef MOZ_NO_VARADIC_MACROS
-        static void NanoAssertMsgf(bool a,const char *f,...) {}
-        static void NanoAssertMsg(bool a,const char *m) {}
-        static void NanoAssert(bool a) {}
+    #ifdef NJ_NO_VARIADIC_MACROS
+        inline void NanoAssertMsgf(bool a,const char *f,...) {}
+        inline void NanoAssertMsg(bool a,const char *m) {}
+        inline void NanoAssert(bool a) {}
     #elif defined(_DEBUG)
 
         #define __NanoAssertMsgf(a, file_, line_, f, ...)  \
             if (!(a)) { \
-                fprintf(stderr, "Assertion failed: " f "%s (%s:%d)\n", __VA_ARGS__, #a, file_, line_); \
+                avmplus::AvmLog("Assertion failed: " f "%s (%s:%d)\n", __VA_ARGS__, #a, file_, line_); \
                 NanoAssertFail(); \
             }
 
@@ -144,7 +144,7 @@ namespace nanojit
 #endif
 #endif
 
-#ifdef MOZ_NO_VARADIC_MACROS
+#ifdef NJ_NO_VARIADIC_MACROS
     #include <stdio.h>
     #define verbose_outputf            if (_logc->lcbits & LC_Assembly) \
                                         Assembler::outputf
