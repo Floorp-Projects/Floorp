@@ -21,6 +21,14 @@
 
     function doTest()
     {
+      if (!WIN) {
+        ok(true,
+           "Nothing to test because accessible plugins are supported on Windows only");
+
+        SimpleTest.finish();
+        return;
+      }
+
       testRole("plugin", ROLE_EMBEDDED_OBJECT);
       testStates("plugin", STATE_UNAVAILABLE);
 
