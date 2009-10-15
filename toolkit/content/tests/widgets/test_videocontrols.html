@@ -54,11 +54,11 @@ function runTest(event) {
      */
     case 1:
       // Check initial state upon load
-      is(event.type, "suspend", "checking event type");
+      is(event.type, "canplaythrough", "checking event type");
       is(video.paused, true, "checking video play state");
       is(video.muted, false, "checking video mute state");
-      // Don't respond to any more suspends
-      event.target.removeEventListener("suspend", runTest, false);
+      // Don't respond to any more canplaythroughs
+      event.target.removeEventListener("canplaythrough", runTest, false);
 
       // Click the play button
       synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
@@ -217,7 +217,7 @@ var testnum = 1;
 var video = document.getElementById("video");
 
 // Kick off test once video has loaded.
-video.addEventListener("suspend",  runTest, false);
+video.addEventListener("canplaythrough",  runTest, false);
 
 // Other events expected by the test.
 video.addEventListener("play",  runTest, false);
