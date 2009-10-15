@@ -85,7 +85,7 @@ public:
 
 
 NS_INTERFACE_TABLE_HEAD(nsHtml5Parser)
-  NS_INTERFACE_TABLE1(nsHtml5Parser, nsIParser)
+  NS_INTERFACE_TABLE2(nsHtml5Parser, nsIParser, nsISupportsWeakReference)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsHtml5Parser)
 NS_INTERFACE_MAP_END
 
@@ -190,14 +190,7 @@ nsHtml5Parser::GetDTD(nsIDTD** aDTD)
 NS_IMETHODIMP
 nsHtml5Parser::GetStreamListener(nsIStreamListener** aListener)
 {
-  if (!mStreamParser) {
-    mStreamParser = new nsHtml5StreamParser(mExecutor, this);
-    nsIDocument* doc = mExecutor->GetDocument();
-    if (doc) {
-      mStreamParser->SetSpeculativeLoaderWithDocument(doc);
-    }
-  }
-  NS_ADDREF(*aListener = mStreamParser);
+  NS_IF_ADDREF(*aListener = mStreamParser);
   return NS_OK;
 }
 
@@ -224,6 +217,7 @@ nsHtml5Parser::ContinueInterruptedParsing()
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
   nsRefPtr<nsHtml5StreamParser> streamKungFuDeathGrip(mStreamParser);
   nsRefPtr<nsHtml5TreeOpExecutor> treeOpKungFuDeathGrip(mExecutor);
+  CancelParsingEvents(); // If the executor caused us to continue, ignore event
   ParseUntilScript();
   return NS_OK;
 }
@@ -264,13 +258,8 @@ nsHtml5Parser::Parse(nsIURI* aURL, // legacy parameter; ignored
    */
   NS_PRECONDITION(!mExecutor->HasStarted(), 
                   "Tried to start parse without initializing the parser properly.");
-  if (!mStreamParser) {
-    mStreamParser = new nsHtml5StreamParser(mExecutor, this);
-    nsIDocument* doc = mExecutor->GetDocument();
-    if (doc) {
-      mStreamParser->SetSpeculativeLoaderWithDocument(doc);
-    }
-  }
+  NS_PRECONDITION(mStreamParser, 
+                  "Can't call this variant of Parse() on script-created parser");
   mStreamParser->SetObserver(aObserver);
   mExecutor->SetStreamParser(mStreamParser);
   mExecutor->SetParser(this);
@@ -319,83 +308,92 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
       NS_ASSERTION(!mStreamParser,
                    "Had stream parser but got document.close().");
     mDocumentClosed = PR_TRUE;
+    // TODO: Try to tokenize: http://www.w3.org/Bugs/Public/show_bug.cgi?id=7917
     MaybePostContinueEvent();
+    return NS_OK;
+  }
+
+  NS_PRECONDITION(IsInsertionPointDefined(), 
+                  "Document.write called when insertion point not defined.");
+
+  if (aSourceBuffer.IsEmpty()) {
     return NS_OK;
   }
 
   PRInt32 lineNumberSave = mTokenizer->getLineNumber();
 
-  if (!aSourceBuffer.IsEmpty()) {
-    nsRefPtr<nsHtml5UTF16Buffer> buffer = new nsHtml5UTF16Buffer(aSourceBuffer.Length());
-    memcpy(buffer->getBuffer(), aSourceBuffer.BeginReading(), aSourceBuffer.Length() * sizeof(PRUnichar));
-    buffer->setEnd(aSourceBuffer.Length());
-    if (!mBlocked) {
-      // mExecutor->WillResume();
-      while (buffer->hasMore()) {
-        buffer->adjust(mLastWasCR);
-        mLastWasCR = PR_FALSE;
-        if (buffer->hasMore()) {
-          mLastWasCR = mTokenizer->tokenizeBuffer(buffer);
-          if (mTreeBuilder->HasScript()) {
-            mTreeBuilder->flushCharacters(); // Flush trailing characters
-            mTreeBuilder->Flush(); // Move ops to the executor
-            mExecutor->Flush(); // run the ops    
-          }
-          if (mBlocked) {
-            // mExecutor->WillInterrupt();
-            break;
-          }
-          // Ignore suspension requests
-        }
-      }
-    }
+  nsRefPtr<nsHtml5UTF16Buffer> buffer = new nsHtml5UTF16Buffer(aSourceBuffer.Length());
+  memcpy(buffer->getBuffer(), aSourceBuffer.BeginReading(), aSourceBuffer.Length() * sizeof(PRUnichar));
+  buffer->setEnd(aSourceBuffer.Length());
 
-    if (buffer->hasMore()) {
-      // If we got here, the buffer wasn't parsed synchronously to completion
-      // and its tail needs to go into the chain of pending buffers.
-      // The script is identified by aKey. If there's nothing in the buffer
-      // chain for that key, we'll insert at the head of the queue.
-      // When the script leaves something in the queue, a zero-length
-      // key-holder "buffer" is inserted in the queue. If the same script
-      // leaves something in the chain again, it will be inserted immediately
-      // before the old key holder belonging to the same script.
-      nsHtml5UTF16Buffer* prevSearchBuf = nsnull;
-      nsHtml5UTF16Buffer* searchBuf = mFirstBuffer;
-      if (aKey) { // after document.open, the first level of document.write has null key
-        while (searchBuf != mLastBuffer) {
-          if (searchBuf->key == aKey) {
-            // found a key holder
-            // now insert the new buffer between the previous buffer
-            // and the key holder.
-            buffer->next = searchBuf;
-            if (prevSearchBuf) {
-              prevSearchBuf->next = buffer;
-            } else {
-              mFirstBuffer = buffer;
-            }
-            break;
-          }
-          prevSearchBuf = searchBuf;
-          searchBuf = searchBuf->next;
+  // The buffer is inserted to the stream here in case it won't be parsed
+  // to completion.
+  // The script is identified by aKey. If there's nothing in the buffer
+  // chain for that key, we'll insert at the head of the queue.
+  // When the script leaves something in the queue, a zero-length
+  // key-holder "buffer" is inserted in the queue. If the same script
+  // leaves something in the chain again, it will be inserted immediately
+  // before the old key holder belonging to the same script.
+  nsHtml5UTF16Buffer* prevSearchBuf = nsnull;
+  nsHtml5UTF16Buffer* searchBuf = mFirstBuffer;
+  if (aKey) { // after document.open, the first level of document.write has null key
+    while (searchBuf != mLastBuffer) {
+      if (searchBuf->key == aKey) {
+        // found a key holder
+        // now insert the new buffer between the previous buffer
+        // and the key holder.
+        buffer->next = searchBuf;
+        if (prevSearchBuf) {
+          prevSearchBuf->next = buffer;
+        } else {
+          mFirstBuffer = buffer;
         }
+        break;
       }
-      if (searchBuf == mLastBuffer || !aKey) {
-        // key was not found or we have a first-level write after document.open
-        // we'll insert to the head of the queue
-        nsHtml5UTF16Buffer* keyHolder = new nsHtml5UTF16Buffer(aKey);
-        keyHolder->next = mFirstBuffer;
-        buffer->next = keyHolder;
-        mFirstBuffer = buffer;
-      }
-      if (!mStreamParser) {
-        MaybePostContinueEvent();
-      }
-    } else { // buffer didn't have more
-      // Scripting semantics require a forced tree builder flush here
-      mTreeBuilder->flushCharacters(); // Flush trailing characters
-      mTreeBuilder->Flush(); // Move ops to the executor
-      mExecutor->Flush(); // run the ops    
+      prevSearchBuf = searchBuf;
+      searchBuf = searchBuf->next;
     }
+  }
+  if (searchBuf == mLastBuffer || !aKey) {
+    // key was not found or we have a first-level write after document.open
+    // we'll insert to the head of the queue
+    nsHtml5UTF16Buffer* keyHolder = new nsHtml5UTF16Buffer(aKey);
+    keyHolder->next = mFirstBuffer;
+    buffer->next = keyHolder;
+    mFirstBuffer = buffer;
+  }
+
+  if (!mBlocked) {
+    // mExecutor->WillResume();
+    while (buffer->hasMore()) {
+      buffer->adjust(mLastWasCR);
+      mLastWasCR = PR_FALSE;
+      if (buffer->hasMore()) {
+        mLastWasCR = mTokenizer->tokenizeBuffer(buffer);
+        if (mTreeBuilder->HasScript()) {
+          // No need to flush characters, because an end tag was tokenized last
+          mTreeBuilder->Flush(); // Move ops to the executor
+          mExecutor->Flush(); // run the ops    
+        }
+        if (mBlocked) {
+          // mExecutor->WillInterrupt();
+          break;
+        }
+        // Ignore suspension requests
+      }
+    }
+  }
+
+  if (!mBlocked) { // buffer was tokenized to completion
+    // Scripting semantics require a forced tree builder flush here
+    mTreeBuilder->flushCharacters(); // Flush trailing characters
+    mTreeBuilder->Flush(); // Move ops to the executor
+    mExecutor->Flush(); // run the ops    
+  } else if (!mStreamParser && buffer->hasMore() && aKey == mRootContextKey) {
+    // The buffer wasn't parsed completely, the document was created by
+    // document.open() and the script that wrote wasn't created by this parser. 
+    // Can't rely on the executor causing the parser to continue.
+    MaybePostContinueEvent();
   }
 
   mTokenizer->setLineNumber(lineNumberSave);
@@ -525,6 +523,7 @@ nsHtml5Parser::Reset()
   UnblockParser();
   mDocumentClosed = PR_FALSE;
   mStreamParser = nsnull;
+  mParserInsertedScriptsBeingEvaluated = 0;
   mRootContextKey = nsnull;
   mContinueEvent = nsnull;  // weak ref
   mAtomTable.Clear(); // should be already cleared in the fragment case anyway
@@ -538,6 +537,38 @@ PRBool
 nsHtml5Parser::CanInterrupt()
 {
   return !mFragmentMode;
+}
+
+PRBool
+nsHtml5Parser::IsInsertionPointDefined()
+{
+  return !mExecutor->IsFlushing() &&
+    (!mStreamParser || mParserInsertedScriptsBeingEvaluated);
+}
+
+void
+nsHtml5Parser::BeginEvaluatingParserInsertedScript()
+{
+  ++mParserInsertedScriptsBeingEvaluated;
+}
+
+void
+nsHtml5Parser::EndEvaluatingParserInsertedScript()
+{
+  --mParserInsertedScriptsBeingEvaluated;
+}
+
+void
+nsHtml5Parser::MarkAsNotScriptCreated()
+{
+  NS_PRECONDITION(!mStreamParser, "Must not call this twice.");
+  mStreamParser = new nsHtml5StreamParser(mExecutor, this);
+}
+
+PRBool
+nsHtml5Parser::IsScriptCreated()
+{
+  return !mStreamParser;
 }
 
 /* End nsIParser  */

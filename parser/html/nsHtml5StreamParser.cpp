@@ -69,7 +69,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsHtml5StreamParser)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHtml5StreamParser)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
+  tmp->mOwner = nsnull;
   tmp->mExecutorFlusher = nsnull;
   tmp->mExecutor = nsnull;
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
@@ -79,7 +79,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOwner)
+  if (tmp->mOwner) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mOwner");
+    cb.NoteXPCOMChild(static_cast<nsIParser*> (tmp->mOwner));
+  }
   // hack: count the strongly owned edge wrapped in the runnable
   if (tmp->mExecutorFlusher) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExecutorFlusher->mExecutor");

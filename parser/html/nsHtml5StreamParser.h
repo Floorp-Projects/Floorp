@@ -381,7 +381,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * The owner parser.
      */
-    nsCOMPtr<nsHtml5Parser>       mOwner;
+    nsRefPtr<nsHtml5Parser>       mOwner;
 
     /**
      * Whether the last character tokenized was a carriage return (for CRLF)

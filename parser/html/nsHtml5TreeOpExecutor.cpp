@@ -268,6 +268,11 @@ nsHtml5TreeOpExecutor::Flush()
     mFlushTimer->Cancel();
     return;
   }
+  if (mFlushing) {
+    return;
+  }
+  
+  mFlushing = PR_TRUE;
 
   nsRefPtr<nsHtml5TreeOpExecutor> kungFuDeathGrip(this); // avoid crashing near EOF
   nsCOMPtr<nsIParser> parserKungFuDeathGrip(mParser);
@@ -312,9 +317,12 @@ nsHtml5TreeOpExecutor::Flush()
     }
   }
   ScheduleTimer();
+  
+  mFlushing = PR_FALSE;
+  
   if (mScriptElement) {
     NS_ASSERTION(!mCallDidBuildModel, "Had a script element and DidBuildModel call");
-    ExecuteScript();
+    RunScript();
   } else if (mCallDidBuildModel) {
     mCallDidBuildModel = PR_FALSE;
     DidBuildModel(PR_FALSE);
@@ -410,7 +418,7 @@ nsHtml5TreeOpExecutor::DocumentMode(nsHtml5DocumentMode m)
  * although the parser is.
  */
 void
-nsHtml5TreeOpExecutor::ExecuteScript()
+nsHtml5TreeOpExecutor::RunScript()
 {
   mReadingFromStage = PR_FALSE;
   NS_ASSERTION(mScriptElement, "No script to run");
@@ -423,6 +431,7 @@ nsHtml5TreeOpExecutor::ExecuteScript()
     // calling back into mParser anymore. mParser has been nulled out by now.
     return;
   }
+  sele->SetCreatorParser(mParser);
   // Notify our document that we're loading this script.
   nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(mDocument);
   NS_ASSERTION(htmlDocument, "Document didn't QI into HTML document.");
@@ -516,6 +525,7 @@ nsHtml5TreeOpExecutor::MaybeFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 void
 nsHtml5TreeOpExecutor::ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 {
+  NS_PRECONDITION(!mFlushing, "mOpQueue modified during tree op execution.");
   if (mOpQueue.IsEmpty()) {
     mOpQueue.SwapElements(aOpQueue);
     return;
