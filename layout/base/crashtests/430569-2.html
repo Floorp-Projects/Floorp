@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<!-- This height has to be less than 18px to trigger crash, on Linux. -->
+<html   style="height:      10px;
+               background:  lightblue"
+ ><body style="position:    fixed;
+               height:      inherit;
+               -moz-column-count: 1;
+               background: yellow;
+               width: 100px"
+        onload="document.documentElement.style.height = ''"
+  ><div style="outline: 1px dotted green"></div><br/></body></html>
