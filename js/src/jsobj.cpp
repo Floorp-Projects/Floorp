@@ -2247,6 +2247,9 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
         obj->map = const_cast<JSObjectMap *>(ops->objectMap);
     }
 
+    /* Check that the newborn root still holds the object. */
+    JS_ASSERT_IF(!cx->localRootStack, cx->weakRoots.newbornObject == obj);
+
     /*
      * Do not call debug hooks on trace, because we might be in a non-_FAIL
      * builtin. See bug 481444.
@@ -2257,7 +2260,7 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
         cx->debugHooks->objectHook(cx, obj, JS_TRUE,
                                    cx->debugHooks->objectHookData);
         JS_UNKEEP_ATOMS(cx->runtime);
-        cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] = obj;
+        cx->weakRoots.newbornObject = obj;
     }
 
 out:
@@ -5511,8 +5514,7 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, jsid id,
              * instance that delegates to this object, or just query the
              * prototype for its class.
              */
-            cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] =
-                JSVAL_TO_OBJECT(v);
+            cx->weakRoots.newbornObject = JSVAL_TO_OBJECT(v);
         }
     }
     *protop = JSVAL_IS_OBJECT(v) ? JSVAL_TO_OBJECT(v) : NULL;
