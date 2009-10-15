@@ -6374,7 +6374,12 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     state->sp = stack_buffer + (ti->nativeStackBase/sizeof(double));
     state->eos = stack_buffer + MAX_NATIVE_STACK_SLOTS;
 
-    JS_ASSERT(JS_MAX_INLINE_CALL_COUNT > inlineCallCount);
+    /*
+     * inlineCallCount has already been incremented, if being invoked from
+     * EnterFrame. It is okay to have a 0-frame restriction since the JIT
+     * might not need any frames.
+     */
+    JS_ASSERT(inlineCallCount <= JS_MAX_INLINE_CALL_COUNT);
 
     /* Set up the native call stack frame. */
     FrameInfo* callstack_buffer[MAX_CALL_STACK_ENTRIES];
