@@ -2,8 +2,8 @@ var gTestPage = "http://example.org/browser/browser/base/content/test/dummy_page
 var gTestImage = "http://example.org/browser/browser/base/content/test/moz.png";
 var gTab1, gTab2, gTab3;
 var gLevel;
-const kBack = 0;
-const kForward = 1;
+const BACK = 0;
+const FORWARD = 1;
 
 function test() {
   waitForExplicitFinish();
@@ -59,8 +59,8 @@ function imageLoaded() {
 }
 
 function imageZoomSwitch() {
-  navigate(kBack, function() {
-    navigate(kForward, function() {
+  navigate(BACK, function () {
+    navigate(FORWARD, function () {
       zoomTest(gTab1, 1, "Tab 1 should not be zoomed when an image loads");
       gBrowser.selectedTab = gTab2;
       zoomTest(gTab1, 1, "Tab 1 should still not be zoomed when deselected");
@@ -116,9 +116,9 @@ function testPrintPreview(aTab, aCallback) {
     aCallback();
   };
 
-  let printPreview = new Function(document.getElementById("cmd_printPreview")
-                                          .getAttribute("oncommand"));
-  executeSoon(printPreview);
+  executeSoon(function () {
+    document.getElementById("cmd_printPreview").doCommand();
+  });
 }
 
 function finishTest() {
@@ -145,12 +145,12 @@ function load(tab, url, cb) {
 }
 
 function navigate(direction, cb) {
-  gBrowser.addEventListener("pageshow", function(event) {
+  gBrowser.addEventListener("pageshow", function (event) {
     gBrowser.removeEventListener("pageshow", arguments.callee, true);
-    setTimeout(cb, 0);
+    executeSoon(cb);
   }, true);
-  if (direction == kBack)
+  if (direction == BACK)
     gBrowser.goBack();
-  else if (direction == kForward)
+  else if (direction == FORWARD)
     gBrowser.goForward();
 }
