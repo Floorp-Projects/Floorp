@@ -57,6 +57,8 @@ function runTest(event) {
       is(event.type, "suspend", "checking event type");
       is(video.paused, true, "checking video play state");
       is(video.muted, false, "checking video mute state");
+      // Don't respond to any more suspends
+      event.target.removeEventListener("suspend", runTest, false);
 
       // Click the play button
       synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
