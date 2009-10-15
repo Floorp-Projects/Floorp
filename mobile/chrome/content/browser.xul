@@ -193,51 +193,53 @@
       </vbox>
 
       <!-- Content Area -->
-      <scrollbox id="tile-container-container" style="overflow: hidden; -moz-box-orient: vertical;">
-        <!-- Main Toolbar -->
-        <box id="toolbar-container" class="panel-dark toolbar-height">
-          <box id="toolbar-moveable-container">
-            <toolbar id="toolbar-main" class="panel-dark window-width">
+      <scrollbox id="tile-container-container" class="window-width window-height" style="overflow: hidden;">
+        <vbox>
+          <!-- Main Toolbar -->
+          <box id="toolbar-container" class="panel-dark toolbar-height">
+            <box id="toolbar-moveable-container">
+              <toolbar id="toolbar-main" class="panel-dark window-width">
 #ifdef MOZ_PLATFORM_HILDON
-              <toolbarbutton id="tool-app-switch" class="button-image" oncommand="BrowserUI.switchTask();"/>
+                <toolbarbutton id="tool-app-switch" class="button-image" oncommand="BrowserUI.switchTask();"/>
 #endif
-              <hbox id="urlbar-container" flex="1">
-                <box id="identity-box"
-                     onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
-                     onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
-                  <box id="urlbar-image-box">
-                    <image id="urlbar-throbber"/>
-                    <image id="urlbar-favicon" hidden="true"/>
+                <hbox id="urlbar-container" flex="1">
+                  <box id="identity-box"
+                       onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
+                       onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
+                    <box id="urlbar-image-box">
+                      <image id="urlbar-throbber"/>
+                      <image id="urlbar-favicon" hidden="true"/>
+                    </box>
                   </box>
-                </box>
-                <hbox id="urlbar-editarea" flex="1">
-                  <textbox id="urlbar-edit"
-                           type="autocomplete"
-                           autocompletesearch="history"
-                           autocompletepopup="popup_autocomplete"
-                           enablehistory="false"
-                           maxrows="6"
-                           completeselectedindex="true"
-                           minresultsforpopup="0"
-                           flex="1"
-                           ontextentered="BrowserUI.goToURI();"
-                           clickSelectsAll="true"/>
+                  <hbox id="urlbar-editarea" flex="1">
+                    <textbox id="urlbar-edit"
+                             type="autocomplete"
+                             autocompletesearch="history"
+                             autocompletepopup="popup_autocomplete"
+                             enablehistory="false"
+                             maxrows="6"
+                             completeselectedindex="true"
+                             minresultsforpopup="0"
+                             flex="1"
+                             ontextentered="BrowserUI.goToURI();"
+                             clickSelectsAll="true"/>
+                  </hbox>
+                  <hbox id="urlbar-icons" mode="view">
+                    <toolbarbutton id="tool-reload" class="urlbar-cap-button" command="cmd_reload"/>
+                    <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
+                    <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
+                  </hbox>
                 </hbox>
-                <hbox id="urlbar-icons" mode="view">
-                  <toolbarbutton id="tool-reload" class="urlbar-cap-button" command="cmd_reload"/>
-                  <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
-                  <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
-                </hbox>
-              </hbox>
-              <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
-            </toolbar>
+                <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
+              </toolbar>
+            </box>
           </box>
-        </box>
 
-        <notificationbox id="notifications"/>
+          <notificationbox id="notifications"/>
 
-        <!-- Content viewport -->
-        <html:div id="tile-container" class="window-height" style="overflow: hidden;"/>
+          <!-- Content viewport -->
+          <html:div id="tile-container" style="overflow: hidden;"/>
+        </vbox>
       </scrollbox>
 
       <!-- Right toolbar -->
