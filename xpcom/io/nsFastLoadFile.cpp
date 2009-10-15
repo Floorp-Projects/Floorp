@@ -929,6 +929,7 @@ nsFastLoadFileReader::Close()
         nsObjectMapEntry* entry = &mFooter.mObjectMap[i];
         entry->mReadObject = nsnull;
     }
+    mFooter.mNumSharpObjects = 0;
 
     return NS_OK;
 }
