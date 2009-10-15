@@ -9484,7 +9484,7 @@ TraceRecorder::getThis(LIns*& this_ins)
      */
     this_ins = lir->ins_choose(lir->ins_peq0(stobj_get_parent(this_ins)),
                                INS_CONSTOBJ(wrappedGlobal),
-                               this_ins);
+                               this_ins, avmplus::AvmCore::use_cmov());
     return RECORD_CONTINUE;
 }
 
@@ -9509,7 +9509,8 @@ TraceRecorder::getStringLength(LIns* str_ins)
                                         lir->ins2(LIR_piand,
                                                   len_ins,
                                                   INS_CONSTWORD(JSString::DEPENDENT_LENGTH_MASK)),
-                                        masked_len_ins));
+                                        masked_len_ins, avmplus::AvmCore::use_cmov()),
+                        avmplus::AvmCore::use_cmov());
     return p2i(real_len);
 }
 
@@ -10633,7 +10634,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                               lir->ins_choose(lir->ins2((native == js_math_min)
                                                         ? LIR_lt
                                                         : LIR_gt, a, b),
-                                              a, b)));
+                                              a, b, avmplus::AvmCore::use_cmov())));
                 pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
                 return RECORD_CONTINUE;
             }
@@ -10714,7 +10715,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
 
                 this_ins = lir->ins_choose(lir->ins_peq0(stobj_get_parent(this_ins)),
                                            INS_CONSTOBJ(globalObj),
-                                           this_ins);
+                                           this_ins, avmplus::AvmCore::use_cmov());
             }
         }
         this_ins = box_jsval(vp[1], this_ins);
@@ -12273,8 +12274,8 @@ TraceRecorder::record_NativeCallComplete()
             v_ins = lir->insLoad(LIR_ldp, native_rval_ins, 0);
             if (*pc == JSOP_NEW) {
                 LIns* x = lir->ins_peq0(lir->ins2(LIR_piand, v_ins, INS_CONSTWORD(JSVAL_TAGMASK)));
-                x = lir->ins_choose(x, v_ins, INS_CONSTWORD(0));
-                v_ins = lir->ins_choose(lir->ins_peq0(x), newobj_ins, x);
+                x = lir->ins_choose(x, v_ins, INS_CONSTWORD(0), avmplus::AvmCore::use_cmov());
+                v_ins = lir->ins_choose(lir->ins_peq0(x), newobj_ins, x, avmplus::AvmCore::use_cmov());
             }
             set(&v, v_ins);
 
