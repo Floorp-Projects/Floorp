@@ -4,6 +4,7 @@ skip load 353713-1.html # Bug 469626
 load 378993-1.xhtml
 load 388183-1.html
 load 395340-1.html
+load 399694-1.html
 load 407053.html
 load 448564.html
 load 468562-1.html
