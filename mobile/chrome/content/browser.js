@@ -733,7 +733,7 @@ var Browser = {
 
     if (tab.scrollOffset) {
       // XXX incorrect behavior if page was scrolled by tab in the background.
-      let [scrollX, scrollY] = tab.scrollOffset;
+      let { x: scrollX, y: scrollY } = tab.scrollOffset;
       Browser.contentScrollboxScroller.scrollTo(scrollX, scrollY);
     }
 
@@ -905,16 +905,10 @@ var Browser = {
    * @return [leftVisibility, rightVisiblity, leftTotalWidth, rightTotalWidth]
    */
   computeSidebarVisibility: function computeSidebarVisibility(dx, dy) {
-    // XXX these should return 0 if the sidebars aren't visible
     function visibility(bar, visrect) {
-      try {
-        let w = bar.width;
-        let h = bar.height;
-        bar.restrictTo(visrect); // throws exception if intersection of rects is empty
-        return bar.width / w;
-      } catch (e) {
-        return 0;
-      }
+      let w = bar.width;
+      bar.restrictTo(visrect);
+      return bar.width / w;
     }
 
     if (!dx) dx = 0;
@@ -923,12 +917,12 @@ var Browser = {
     let leftbarCBR = document.getElementById('tabs-container').getBoundingClientRect();
     let ritebarCBR = document.getElementById('browser-controls').getBoundingClientRect();
 
-    let leftbar = new wsRect(Math.round(leftbarCBR.left) - dx, 0, Math.round(leftbarCBR.width), 1);
-    let ritebar = new wsRect(Math.round(ritebarCBR.left) - dx, 0, Math.round(ritebarCBR.width), 1);
+    let leftbar = new Rect(Math.round(leftbarCBR.left) - dx, 0, Math.round(leftbarCBR.width), 1);
+    let ritebar = new Rect(Math.round(ritebarCBR.left) - dx, 0, Math.round(ritebarCBR.width), 1);
     let leftw = leftbar.width;
     let ritew = ritebar.width;
 
-    let visrect = new wsRect(0, 0, window.innerWidth, 1);
+    let visrect = new Rect(0, 0, window.innerWidth, 1);
 
     let leftvis = visibility(leftbar, visrect);
     let ritevis = visibility(ritebar, visrect);
@@ -979,8 +973,7 @@ var Browser = {
       return;
 
     let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility(dx, dy);
-    // XXX computeSideBarVisibility will normally return 0.0015... for ritevis
-    if (leftvis > 0.002 || ritevis > 0.002) {
+    if (leftvis > 0 || ritevis > 0) {
       BrowserUI.lockToolbar();
       this.floatedWhileDragging = true;
     }
@@ -1099,7 +1092,7 @@ var Browser = {
 
     //dump('getBoundingContentRect: clientRect is at ' + r.left + ', ' + r.top + '; scrolls are ' + scrollX.value + ', ' + scrollY.value + '\n');
 
-    return new wsRect(r.left + scrollX.value,
+    return new Rect(r.left + scrollX.value,
                       r.top + scrollY.value,
                       r.width, r.height);
   },
@@ -1185,7 +1178,7 @@ var Browser = {
     let w = window.innerWidth;
     let h = window.innerHeight;
 
-    return new wsRect(x, y, w, h);
+    return new Rect(x, y, w, h);
   },
 
   /**
@@ -1199,7 +1192,7 @@ var Browser = {
     let x = {};
     let y = {};
     scroller.getPosition(x, y);
-    return [x.value, y.value];
+    return new Point(x.value, y.value);
   },
 
   forceChromeReflow: function forceChromeReflow() {
@@ -1237,17 +1230,17 @@ Browser.MainDragger.prototype = {
 
   dragMove: function dragMove(dx, dy, scroller) {
     let elem = this.draggedFrame;
-    let doffset = [dx, dy];
+    let doffset = new Point(dx, dy);
     let render = false;
 
     this.bv.onBeforeVisibleMove(dx, dy);
 
     // First calculate any panning to take sidebars out of view
-    let offsetX = this._panSidebarsAwayOffset(doffset);
+    let panOffset = this._panSidebarsAwayOffset(doffset);
 
     // Do all iframe panning
     if (elem) {
-      while (elem.frameElement && (doffset[0] != 0 || doffset[1] != 0)) {
+      while (elem.frameElement && !doffset.isZero()) {
         this._panFrame(elem, doffset);
         elem = elem.frameElement;
         render = true;
@@ -1257,45 +1250,43 @@ Browser.MainDragger.prototype = {
     // Do content panning
     this._panScroller(Browser.contentScrollboxScroller, doffset);
 
-    // Any leftover panning in doffset would bring sidebars into view. Add to sidebar
+    // Any leftover panning in doffset would bring controls into view. Add to sidebar
     // away panning for the total scroll offset.
-    this._panScroller(Browser.controlsScrollboxScroller, [doffset[0] + offsetX, 0]);
+    doffset.x += panOffset;
+    Browser.tryFloatToolbar(doffset.x, 0);
+    this._panScroller(Browser.controlsScrollboxScroller, doffset);
 
     this.bv.onAfterVisibleMove();
-
-    Browser.tryFloatToolbar();
 
     if (render)
       this.bv.renderNow();
 
-    return doffset[0] + offsetX != dx || doffset[1] != dy;
+    return !doffset.equals(dx, dy);
   },
 
   /** Return X offset needed to pan sidebars away if possible. Updates doffset with leftovers. */
   _panSidebarsAwayOffset: function(doffset) {
-    let [scrollLeft] = Browser.getScrollboxPosition(Browser.controlsScrollboxScroller);
+    let scrollLeft = Browser.getScrollboxPosition(Browser.controlsScrollboxScroller).x;
     let scrollRight = scrollLeft + window.innerWidth;
     let leftLock = document.getElementById("tabs-container").getBoundingClientRect().right + scrollLeft;
     let rightLock = document.getElementById("browser-controls").getBoundingClientRect().left + scrollLeft;
     let amount = 0;
-    if (doffset[0] > 0 && scrollLeft < leftLock) {
-      amount = Math.min(doffset[0], leftLock - scrollLeft);
-    } else if (doffset[0] < 0 && scrollRight > rightLock) {
-      amount = Math.max(doffset[0], rightLock - scrollRight);
+    if (doffset.x > 0 && scrollLeft < leftLock) {
+      amount = Math.min(doffset.x, leftLock - scrollLeft);
+    } else if (doffset.x < 0 && scrollRight > rightLock) {
+      amount = Math.max(doffset.x, rightLock - scrollRight);
     }
     amount = Math.round(amount);
-    doffset[0] -= amount;
+    doffset.x -= amount;
     return amount;
   },
 
   /** Pan scroller by the given amount. Updates doffset with leftovers. */
   _panScroller: function _panScroller(scroller, doffset) {
-    let [x0, y0] = Browser.getScrollboxPosition(scroller);
-    scroller.scrollBy(doffset[0], doffset[1]);
-    let [x1, y1] = Browser.getScrollboxPosition(scroller);
-
-    doffset[0] -= x1 - x0;
-    doffset[1] -= y1 - y0;
+    let { x: x0, y: y0 } = Browser.getScrollboxPosition(scroller);
+    scroller.scrollBy(doffset.x, doffset.y);
+    let { x: x1, y: y1 } = Browser.getScrollboxPosition(scroller);
+    doffset.subtract(x1 - x0, y1 - y0);
   },
 
   /** Pan frame by the given amount. Updates doffset with leftovers. */
@@ -1304,11 +1295,10 @@ Browser.MainDragger.prototype = {
     let windowUtils = frame.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
     windowUtils.getScrollXY(false, origX, origY);
-    frame.scrollBy(doffset[0], doffset[1]);
+    frame.scrollBy(doffset.x, doffset.y);
     windowUtils.getScrollXY(false, newX, newY);
 
-    doffset[0] -= newX.value - origX.value;
-    doffset[1] -= newY.value - origY.value;
+    doffset.subtract(newX.value - origX.value, newY.value - origY.value);
   }
   
 };
@@ -2563,7 +2553,7 @@ Tab.prototype = {
     var browser = this._browser;
     var doc = browser.contentDocument;
     state._url = doc.location.href;
-    state._scroll = BrowserView.Util.getContentScrollValues(this.browser);
+    state._scroll = BrowserView.Util.getContentScrollOffset(this.browser);
     if (doc instanceof HTMLDocument) {
       var tags = ["input", "textarea", "select"];
 
@@ -2608,8 +2598,8 @@ Tab.prototype = {
         elem.value = state[item];
     }
 
-    this.browser.contentWindow.scrollX = state._scroll[0];
-    this.browser.contentWindow.scrollY = state._scroll[1];
+    this.browser.contentWindow.scrollX = state._scroll.x;
+    this.browser.contentWindow.scrollY = state._scroll.y;
 
     this._state = null;
   },
