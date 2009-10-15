@@ -344,6 +344,31 @@ class nsParser : public nsIParser,
      */
     virtual PRBool CanInterrupt();
 
+    /**
+     * Return true.
+     */
+    virtual PRBool IsInsertionPointDefined();
+
+    /**
+     * No-op.
+     */
+    virtual void BeginEvaluatingParserInsertedScript();
+
+    /**
+     * No-op.
+     */
+    virtual void EndEvaluatingParserInsertedScript();
+
+    /**
+     * No-op.
+     */
+    virtual void MarkAsNotScriptCreated();
+
+    /**
+     * Always false.
+     */
+    virtual PRBool IsScriptCreated();
+
     /**  
      *  Set to parser state to indicate whether parsing tokens can be interrupted
      *  @param aCanInterrupt PR_TRUE if parser can be interrupted, PR_FALSE if it can not be interrupted.

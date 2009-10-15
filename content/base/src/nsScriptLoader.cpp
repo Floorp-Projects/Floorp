@@ -647,7 +647,9 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
   }
 
   FireScriptAvailable(NS_OK, aRequest);
+  aRequest->mElement->BeginEvaluating();
   nsresult rv = EvaluateScript(aRequest, *script);
+  aRequest->mElement->EndEvaluating();
   FireScriptEvaluated(rv, aRequest);
 
   return rv;
