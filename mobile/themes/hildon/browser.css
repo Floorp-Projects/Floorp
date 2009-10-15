@@ -702,8 +702,16 @@ findbar {
   background: rgba(128, 128, 128, 0.75);
 }
 
+findbar .findbar-highlight,
+findbar checkbox,
+findbar .find-status-icon, 
+findbar .findbar-find-status {
+  display: none;
+}
+
 findbar .findbar-closebutton {
   list-style-image: url("chrome://browser/skin/images/close-30.png");
+  -moz-image-region: -moz-initial;
 }
 
 /* bookmark editor   ------------------------------------------------------- */
