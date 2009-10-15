@@ -324,6 +324,9 @@ var BrowserUI = {
   },
 
   sizeControls : function(windowW, windowH) {
+    // tabs
+    document.getElementById("tabs").resize();
+
     // awesomebar
     let popup = document.getElementById("popup_autocomplete");
     popup.top = this.toolbarH;
