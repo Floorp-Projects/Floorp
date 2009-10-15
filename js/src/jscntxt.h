@@ -289,7 +289,8 @@ typedef struct JSFunctionMeter {
 #endif
 
 struct JSThreadData {
-    JSGCFreeLists       gcFreeLists;
+    /* List of pre-allocated doubles. */
+    JSGCDoubleCell      *doubleFreeList;
 
     /*
      * The GSN cache is per thread since even multi-cx-per-thread embeddings
@@ -364,6 +365,8 @@ struct JSThread {
 
     /* Indicates that the thread is waiting in ClaimTitle from jslock.cpp. */
     JSTitle             *titleToShare;
+
+    JSGCThing           *gcFreeLists[FINALIZE_LIMIT];
 
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
