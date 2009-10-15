@@ -2361,12 +2361,12 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
     mTextTransform(aSource.mTextTransform),
     mWhiteSpace(aSource.mWhiteSpace),
     mWordWrap(aSource.mWordWrap),
+    mTabSize(aSource.mTabSize),
     mLetterSpacing(aSource.mLetterSpacing),
     mLineHeight(aSource.mLineHeight),
     mTextIndent(aSource.mTextIndent),
     mWordSpacing(aSource.mWordSpacing),
-    mTextShadow(aSource.mTextShadow),
-    mTabSize(aSource.mTabSize)
+    mTextShadow(aSource.mTextShadow)
 {
   MOZ_COUNT_CTOR(nsStyleText);
 }
