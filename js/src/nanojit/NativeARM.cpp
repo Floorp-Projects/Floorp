@@ -1437,7 +1437,7 @@ Assembler::underrunProtect(int bytes)
         // _nSlot points to the first empty position in the new code block
         // _nIns points just past the last empty position.
         // Assume B_nochk won't ever try to write to _nSlot. See B_cond_chk macro.
-        B_nochk(target);
+        JMP_nochk(target);
     }
 }
 
@@ -1859,11 +1859,13 @@ Assembler::asm_fcmp(LInsp ins)
 
     NanoAssert(op >= LIR_feq && op <= LIR_fge);
 
+    int e_bit = (op != LIR_feq);
     Register ra = findRegFor(lhs, FpRegs);
     Register rb = findRegFor(rhs, FpRegs);
 
+    // do the comparison and get results loaded in ARM status register
     FMSTAT();
-    FCMPD(ra, rb);
+    FCMPD(ra, rb, e_bit);
 }
 
 Register
@@ -2024,11 +2026,11 @@ Assembler::asm_fcond(LInsp ins)
     Register r = prepResultReg(ins, AllowableFlagRegs);
 
     switch (ins->opcode()) {
-        case LIR_feq: SET(r,EQ); break;
-        case LIR_flt: SET(r,LO); break;
-        case LIR_fle: SET(r,LS); break;
-        case LIR_fge: SET(r,GE); break;
-        case LIR_fgt: SET(r,GT); break;
+        case LIR_feq: SETEQ(r); break;
+        case LIR_flt: SETLO(r); break; // } note: VFP LT/LE operations require use of
+        case LIR_fle: SETLS(r); break; // } unsigned LO/LS condition codes!
+        case LIR_fge: SETGE(r); break;
+        case LIR_fgt: SETGT(r); break;
         default: NanoAssert(0); break;
     }
 
@@ -2041,17 +2043,17 @@ Assembler::asm_cond(LInsp ins)
     Register r = prepResultReg(ins, AllowableFlagRegs);
     switch(ins->opcode())
     {
-        case LIR_eq:    SET(r,EQ);      break;
-        case LIR_ov:    SET(r,VS);      break;
-        case LIR_lt:    SET(r,LT);      break;
-        case LIR_le:    SET(r,LE);      break;
-        case LIR_gt:    SET(r,GT);      break;
-        case LIR_ge:    SET(r,GE);      break;
-        case LIR_ult:   SET(r,LO);      break;
-        case LIR_ule:   SET(r,LS);      break;
-        case LIR_ugt:   SET(r,HI);      break;
-        case LIR_uge:   SET(r,HS);      break;
-        default:        NanoAssert(0);  break;
+        case LIR_eq:  SETEQ(r); break;
+        case LIR_ov:  SETVS(r); break;
+        case LIR_lt:  SETLT(r); break;
+        case LIR_le:  SETLE(r); break;
+        case LIR_gt:  SETGT(r); break;
+        case LIR_ge:  SETGE(r); break;
+        case LIR_ult: SETLO(r); break;
+        case LIR_ule: SETLS(r); break;
+        case LIR_ugt: SETHI(r); break;
+        case LIR_uge: SETHS(r); break;
+        default:      NanoAssert(0);  break;
     }
     asm_cmp(ins);
 }
@@ -2282,10 +2284,10 @@ Assembler::asm_cmov(LInsp ins)
         case LIR_le:    MOVGT(rr, iffalsereg);  break;
         case LIR_gt:    MOVLE(rr, iffalsereg);  break;
         case LIR_ge:    MOVLT(rr, iffalsereg);  break;
-        case LIR_ult:   MOVCS(rr, iffalsereg);  break;
+        case LIR_ult:   MOVHS(rr, iffalsereg);  break;
         case LIR_ule:   MOVHI(rr, iffalsereg);  break;
         case LIR_ugt:   MOVLS(rr, iffalsereg);  break;
-        case LIR_uge:   MOVCC(rr, iffalsereg);  break;
+        case LIR_uge:   MOVLO(rr, iffalsereg);  break;
         default: debug_only( NanoAssert(0) );   break;
     }
     /*const Register iftruereg =*/ findSpecificRegFor(iftrue, rr);
@@ -2318,7 +2320,7 @@ Assembler::asm_param(LInsp ins)
     if (kind == 0) {
         // ordinary param
         AbiKind abi = _thisfrag->lirbuf->abi;
-        uint32_t abi_regcount = abi == ABI_FASTCALL ? 2 : abi == ABI_THISCALL ? 1 : 0;
+        uint32_t abi_regcount = abi == ABI_CDECL ? 4 : abi == ABI_FASTCALL ? 2 : abi == ABI_THISCALL ? 1 : 0;
         if (a < abi_regcount) {
             // incoming arg in register
             prepResultReg(ins, rmask(argRegs[a]));
@@ -2378,5 +2380,4 @@ Assembler::asm_promote(LIns *ins)
 }
 
 }
-
 #endif /* FEATURE_NANOJIT */
