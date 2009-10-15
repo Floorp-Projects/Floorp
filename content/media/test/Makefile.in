@@ -69,6 +69,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
 		can_play_type_ogg.js \
 		can_play_type_wave.js \
+		cancellable_request.sjs \
 		manifest.js \
 		seek1.js \
 		seek2.js \
@@ -97,6 +98,7 @@ _TEST_FILES = \
 		test_playback.html \
 		test_playback_errors.html \
 		test_readyState.html \
+		test_resume.html \
 		test_seek2.html \
 		test_volume.html \
 		use_large_cache.js \
