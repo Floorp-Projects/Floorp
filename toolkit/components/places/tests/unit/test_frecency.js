@@ -23,6 +23,7 @@
  *   Matt Crocker <matt@songbirdnest.com>
  *   Seth Spitzer <sspitzer@mozilla.org>
  *   Edward Lee <edward.lee@engineering.uiuc.edu>
+ *   Kyle Huey <me@kylehuey.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,6 +47,11 @@
  *
  * Also test bug 419068 to make sure tagged pages don't necessarily have to be
  * first in the results.
+ *
+ * Also test bug 426166 to make sure that the results of autocomplete searches
+ * are stable.  Note that failures of this test will be intermittent by nature
+ * since we are testing to make sure that the unstable sort algorithm used
+ * by SQLite is not changing the order of the results on us.
  */
 var current_test = 0;
 
@@ -148,6 +154,8 @@ try {
   var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
   var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
                 getService(Ci.nsITaggingService);
+  var bmksvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                getService(Ci.nsINavBookmarksService);
 } catch(ex) {
   do_throw("Could not get history service\n");
 } 
@@ -159,8 +167,15 @@ function setCountDate(aURI, aCount, aDate)
     histsvc.addVisit(aURI, aDate, null, histsvc.TRANSITION_TYPED, false, 0);
 }
 
+function setBookmark(aURI)
+{
+  bmksvc.insertBookmark(bmksvc.bookmarksMenuFolder, aURI, -1, "bleh");
+}
+
 var uri1 = uri("http://site.tld/1");
 var uri2 = uri("http://site.tld/2");
+var uri3 = uri("http://aaaaaaaaaa/1");
+var uri4 = uri("http://aaaaaaaaaa/2");
 
 // d1 is younger (should show up higher) than d2 (PRTime is in usecs not msec)
 // Make sure the dates fall into different frecency buckets
@@ -234,6 +249,38 @@ function() {
   setCountDate(uri2, c1, d1);
   tagssvc.tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "site");
+},
+// There are multiple tests for 8, hence the multiple functions
+// Bug 426166 section
+function() {
+  setBookmark(uri3);
+  setBookmark(uri4);
+  prepTest("8: same count, same date");  
+  ensure_results([uri4, uri3], "a");
+},
+function() {
+  prepTest("8: same count, same date");  
+  ensure_results([uri4, uri3], "aa");
+},
+function() {
+  prepTest("8: same count, same date");
+  ensure_results([uri4, uri3], "aaa");
+},
+function() {
+  prepTest("8: same count, same date");
+  ensure_results([uri4, uri3], "aaaa");
+},
+function() {
+  prepTest("8: same count, same date");
+  ensure_results([uri4, uri3], "aaa");
+},
+function() {
+  prepTest("8: same count, same date");
+  ensure_results([uri4, uri3], "aa");
+},
+function() {
+  prepTest("8: same count, same date");
+  ensure_results([uri4, uri3], "a");
 }
 ];
 
