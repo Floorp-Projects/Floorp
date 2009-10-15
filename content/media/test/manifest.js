@@ -10,6 +10,13 @@ var gSmallTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
+// Used by test_mozLoadFrom.  Need one test file per decoder backend, plus
+// anything for testing clone-specific bugs.
+var gCloneTests = gSmallTests.concat([
+  // Actual duration is ~200ms, we have X-Content-Duration lie about it.
+  { name:"bug520908.ogv", type:"video/ogg", duration:9000 },
+]);
+
 // These are files that we want to make sure we can play through.  We can
 // also check metadata.  Put files of the same type together in this list so if
 // something crashes we have some idea of which backend is responsible.
@@ -54,8 +61,6 @@ var gPlayTests = [
   { name:"bug498855-3.ogv", type:"video/ogg", duration:0.2 },
   { name:"bug504644.ogv", type:"video/ogg", duration:1.56 },
   { name:"chain.ogv", type:"video/ogg", duration:Number.NaN },
-  // Actual duration is ~200ms, we have X-Content-Duration lie about it.
-  { name:"bug520908.ogv", type:"video/ogg", duration:9000 },
 
   { name:"bogus.duh", type:"bogus/duh" }
 ];
@@ -66,7 +71,6 @@ var gPlayTests = [
 // by test_playback_errors, which expects one error event and no ended event.
 // Put files of the same type together in this list so if something crashes
 // we have some idea of which backend is responsible.
-// Used by test_playback_errors, which expects one error event and no ended event.
 var gErrorTests = [
   { name:"bogus.wav", type:"audio/x-wav" },
   { name:"bogus.ogv", type:"video/ogg" },
