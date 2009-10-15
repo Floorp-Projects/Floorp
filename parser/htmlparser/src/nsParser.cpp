@@ -1932,6 +1932,33 @@ nsParser::CanInterrupt()
   return (mFlags & NS_PARSER_FLAG_CAN_INTERRUPT) != 0;
 }
 
+PRBool
+nsParser::IsInsertionPointDefined()
+{
+  return PR_TRUE;
+}
+
+void
+nsParser::BeginEvaluatingParserInsertedScript()
+{
+}
+
+void
+nsParser::EndEvaluatingParserInsertedScript()
+{
+}
+
+void
+nsParser::MarkAsNotScriptCreated()
+{
+}
+
+PRBool
+nsParser::IsScriptCreated()
+{
+  return PR_FALSE;
+}
+
 void
 nsParser::SetCanInterrupt(PRBool aCanInterrupt)
 {

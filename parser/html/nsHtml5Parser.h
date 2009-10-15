@@ -61,8 +61,11 @@
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5StreamParser.h"
 #include "nsHtml5AtomTable.h"
+#include "nsWeakReference.h"
 
-class nsHtml5Parser : public nsIParser {
+class nsHtml5Parser : public nsIParser,
+                      public nsSupportsWeakReference
+{
   public:
     NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -250,7 +253,33 @@ class nsHtml5Parser : public nsIParser {
      * True in fragment mode and during synchronous document.write
      */
     virtual PRBool CanInterrupt();
-    
+
+    /**
+     * True if the insertion point (per HTML5) is defined.
+     */
+    virtual PRBool IsInsertionPointDefined();
+
+    /**
+     * Call immediately before starting to evaluate a parser-inserted script.
+     */
+    virtual void BeginEvaluatingParserInsertedScript();
+
+    /**
+     * Call immediately after having evaluated a parser-inserted script.
+     */
+    virtual void EndEvaluatingParserInsertedScript();
+
+    /**
+     * Marks the HTML5 parser as not a script-created parser: Prepares the 
+     * parser to be able to read a stream.
+     */
+    virtual void MarkAsNotScriptCreated();
+
+    /**
+     * True if this is a script-created HTML5 parser.
+     */
+    virtual PRBool IsScriptCreated();
+
     /* End nsIParser  */
 
     /**
@@ -318,6 +347,11 @@ class nsHtml5Parser : public nsIParser {
      */
     PRBool                        mBlocked;
     
+    /**
+     * The number of parser-inserted script currently being evaluated.
+     */
+    PRInt32                       mParserInsertedScriptsBeingEvaluated;
+
     /**
      * True if document.close() has been called.
      */
