@@ -314,12 +314,6 @@ BEGIN_CASE(JSOP_STOP)
         if (JS_LIKELY(ok)) {
             JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, script, regs.pc)].length
                       == JSOP_CALL_LENGTH);
-#ifdef DEBUG
-            JSOp traceOp = js_GetOpcode(cx, script, regs.pc +
-                                        JSOP_CALL_LENGTH);
-            JS_ASSERT_IF(*regs.pc == JSOP_CALL && !fp->imacpc,
-                         traceOp == JSOP_TRACE || traceOp == JSOP_NOP);
-#endif
             TRACE_0(LeaveFrame);
             if (!TRACE_RECORDER(cx) && recursive) {
                 if (*(regs.pc + JSOP_CALL_LENGTH) == JSOP_TRACE) {
@@ -2226,16 +2220,9 @@ BEGIN_CASE(JSOP_APPLY)
                 TRACE_1(EnterFrame, inlineCallCount);
                 RESTORE_INTERP_VARS();
             } else if (fp->script == fp->down->script &&
-                       *fp->down->regs->pc == JSOP_CALL) {
-#ifdef DEBUG
-                JSOp traceOp = js_GetOpcode(cx, fp->script,
-                                            fp->regs->pc);
-                JS_ASSERT_IF(!fp->imacpc,
-                             traceOp == JSOP_TRACE || traceOp == JSOP_NOP ||
-                             traceOp == JSOP_GENERATOR);
-#endif
-                if (*fp->regs->pc == JSOP_TRACE)
-                    MONITOR_BRANCH(Monitor_EnterFrame);
+                       *fp->down->regs->pc == JSOP_CALL &&
+                       *fp->regs->pc == JSOP_TRACE) {
+                MONITOR_BRANCH(Monitor_EnterFrame);
             }
 #endif
 
