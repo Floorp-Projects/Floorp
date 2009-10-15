@@ -2161,13 +2161,11 @@ var HelperAppDialog = {
     if (!this._launcher.MIMEInfo.hasDefaultHandler)
       document.getElementById("helperapp-open").disabled = true;
 
-    let toolbar = document.getElementById("toolbar-main");
-    let top = toolbar.top + toolbar.boxObject.height;
     let container = document.getElementById("helperapp-container");
     container.hidden = false;
 
     let rect = container.getBoundingClientRect();
-    container.top = Math.max(0, top);
+    container.top = (window.innerHeight - rect.height) / 2;
     container.left = (window.innerWidth - rect.width) / 2;
   },
 

@@ -448,7 +448,7 @@
     </vbox>
 
     <!-- save/open dialog -->
-    <vbox id="helperapp-container" class="dialog-dark" hidden="true" align="center" top="0">
+    <vbox id="helperapp-container" class="dialog-dark" hidden="true" align="center" top="0" left="0">
       <label id="helperapp-prompt" value="&helperApp.prompt;"/>
       <label id="helperapp-target" value="" crop="center"/>
       <separator/>
@@ -460,7 +460,7 @@
     </vbox>
 
     <!-- alerts for content -->
-    <hbox id="alerts-container" hidden="true" align="start" width="200"
+    <hbox id="alerts-container" hidden="true" align="start" top="0" left="0" width="200"
           onclick="AlertsHelper.click(event);">
       <image id="alerts-image"/>
       <vbox flex="1">
