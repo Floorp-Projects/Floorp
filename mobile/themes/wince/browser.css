@@ -437,6 +437,13 @@ box[type="documenttab"]:only-child .documenttab-close {
 findbar {
   background: rgba(128, 128, 128, 0.75);
 }
+ 
+findbar .findbar-highlight,
+findbar checkbox,
+findbar .find-status-icon, 
+findbar .findbar-find-status {
+  display: none;
+}
 
 /* bookmark editor   ------------------------------------------------------- */
 #bookmark-container {
