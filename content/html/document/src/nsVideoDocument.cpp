@@ -121,13 +121,7 @@ nsVideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
   element->LoadWithChannel(aChannel, aListener);
   UpdateTitle(aChannel);
 
-  nsCOMPtr<nsISupports> container = GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(container));
-  nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
-  if (docShellAsItem) {
-    docShellAsItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
-  }
-  if (sameTypeParent) {
+  if (nsContentUtils::IsChildOfSameType(this)) {
     // Video documents that aren't toplevel should fill their frames and
     // not have margins
     element->SetAttr(kNameSpaceID_None, nsGkAtoms::style,

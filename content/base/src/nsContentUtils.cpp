@@ -3018,6 +3018,18 @@ nsContentUtils::IsChromeDoc(nsIDocument *aDocument)
 }
 
 PRBool
+nsContentUtils::IsChildOfSameType(nsIDocument* aDoc)
+{
+  nsCOMPtr<nsISupports> container = aDoc->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(container));
+  nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
+  if (docShellAsItem) {
+    docShellAsItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
+  }
+  return sameTypeParent != nsnull;
+}
+
+PRBool
 nsContentUtils::GetWrapperSafeScriptFilename(nsIDocument *aDocument,
                                              nsIURI *aURI,
                                              nsACString& aScriptURI)
