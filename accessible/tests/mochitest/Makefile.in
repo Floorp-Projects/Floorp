@@ -89,6 +89,7 @@ _TEST_FILES =\
 		test_elm_filectrl.html \
 		test_elm_listbox.xul \
 	$(warning   test_elm_media.html temporarily disabled) \
+		test_elm_plugin.html \
 		test_elm_tree.xul \
 		test_elm_txtcntnr.html \
 		test_events_caretmove.html \

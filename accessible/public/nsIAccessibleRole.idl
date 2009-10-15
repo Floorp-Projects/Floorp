@@ -44,7 +44,7 @@
  * @note - When adding a new role, be sure to also add it to nsRoleMap.h for
  *         each platform.
  */
-[scriptable, uuid(6793ca5c-c7cb-41db-9fb9-c16c0525f962)]
+[scriptable, uuid(f134da65-39a8-4330-843c-5bd42780b34c)]
 interface nsIAccessibleRole : nsISupports
 {
   /**
@@ -777,9 +777,14 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_GRID_CELL = 121;
 
   /**
+   * Represents an embedded object. It is used for html:object or html:embed.
+   */
+  const unsigned long ROLE_EMBEDDED_OBJECT = 122;
+
+  /**
    * It's not role actually. This constant is important to help ensure
    * nsRoleMap's are synchronized.
    */
-  const unsigned long ROLE_LAST_ENTRY = 122;
+  const unsigned long ROLE_LAST_ENTRY = 123;
 };
 
