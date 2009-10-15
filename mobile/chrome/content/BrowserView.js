@@ -162,7 +162,7 @@ BrowserView.Util = {
   },
 
   createBrowserViewportState: function createBrowserViewportState() {
-    return new BrowserView.BrowserViewportState(new wsRect(0, 0, 1, 1), 0, 0, 1);
+    return new BrowserView.BrowserViewportState(new Rect(0, 0, 1, 1), 0, 0, 1);
   },
 
   getViewportStateFromBrowser: function getViewportStateFromBrowser(browser) {
@@ -185,13 +185,13 @@ BrowserView.Util = {
     return [w, h];
   },
 
-  getContentScrollValues: function getContentScrollValues(browser) {
+  getContentScrollOffset: function getContentScrollOffset(browser) {
     let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
     let scrollX = {};
     let scrollY = {};
     cwu.getScrollXY(false, scrollX, scrollY);
 
-    return [scrollX.value, scrollY.value];
+    return new Point(scrollX.value, scrollY.value);
   },
 
   getBrowserDOMWindowUtils: function getBrowserDOMWindowUtils(browser) {
@@ -442,27 +442,26 @@ BrowserView.prototype = {
     let tm = this._tileManager;
     let vs = this._browserViewportState;
 
-    let [scrollX, scrollY] = BrowserView.Util.getContentScrollValues(browser);
+    let { x: scrollX, y: scrollY } = BrowserView.Util.getContentScrollOffset(browser);
     let clientRects = ev.clientRects;
 
     let rects = [];
     // loop backwards to avoid xpconnect penalty for .length
     for (let i = clientRects.length - 1; i >= 0; --i) {
       let e = clientRects.item(i);
-      let r = new wsRect(e.left + scrollX,
-                         e.top + scrollY,
-                         e.width, e.height);
+      let r = new Rect(e.left + scrollX,
+                            e.top + scrollY,
+                            e.width, e.height);
 
-      this.browserToViewportRect(r);
-      r.round();
+      r = this.browserToViewportRect(r);
+      r.expandToIntegers();
 
       if (r.right < 0 || r.bottom < 0)
         continue;
 
-      try {
-        r.restrictTo(vs.viewportRect);
+      r.restrictTo(vs.viewportRect);
+      if (!r.isEmpty())
         rects.push(r);
-      } catch(ex) { /* dump("fail\n"); */ }
     }
 
     tm.dirtyRects(rects, this.isRendering());
@@ -473,7 +472,7 @@ BrowserView.prototype = {
     if (aEvent.target != this._browser.contentDocument)
       return;
 
-    let [scrollX, scrollY] = BrowserView.Util.getContentScrollValues(this._browser);
+    let { x: scrollX, y: scrollY } = BrowserView.Util.getContentScrollOffset(this._browser);
     Browser.contentScrollboxScroller.scrollTo(this.browserToViewport(scrollX), 
                                               this.browserToViewport(scrollY));
     this.onAfterVisibleMove();

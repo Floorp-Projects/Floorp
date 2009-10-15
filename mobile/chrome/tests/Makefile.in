@@ -51,6 +51,7 @@ _BROWSER_FILES = \
   browser_bookmarks_star.js \
   browser_bookmarks_tags.js \
   browser_select.js \
+  browser_rect.js \
   browser_blank_01.html \
   browser_blank_02.html \
   browser_select.html \

@@ -138,8 +138,7 @@ function TileManager(appendTile, removeTile, browserView) {
   this._crawler = null;
 
   /* remember these values to reduce the recenterEvictionQueue cost */
-  this._ctrx = 0;
-  this._ctry = 0;
+  this._ctr = new Point(0, 0);
 }
 
 TileManager.prototype = {
@@ -205,12 +204,11 @@ TileManager.prototype = {
     //let start = Date.now();
 
     if (cr) {
-      let [ctrx, ctry] = cr.centerRounded();
+      let ctr = cr.center().map(Math.round);
 
-      if (this._ctrx != ctrx || this._ctry != ctry) {
-        this._ctrx = ctrx;
-        this._ctry = ctry;
-        this.recenterEvictionQueue(ctrx, ctry);
+      if (!this._ctr.equals(ctr)) {
+        this._ctr.set(ctr);
+        this.recenterEvictionQueue(ctr);
       }
 
       //let start = Date.now();
@@ -300,19 +298,19 @@ TileManager.prototype = {
     if (!skipRecenter) {
       let cr = this._criticalRect;
       if (cr) {
-        let [ctrx, ctry] = cr.centerRounded();
-        this.recenterEvictionQueue(ctrx, ctry);
+        let ctr = cr.center().map(Math.round);
+        this.recenterEvictionQueue(ctr);
       }
     }
   },
 
-  recenterEvictionQueue: function recenterEvictionQueue(ctrx, ctry) {
+  recenterEvictionQueue: function recenterEvictionQueue(ctr) {
     if (this._crawler) {
       this.restartPrefetchCrawl();
     }
 
-    let ctri = ctrx >> kTileExponentWidth;
-    let ctrj = ctry >> kTileExponentHeight;
+    let ctri = ctr.x >> kTileExponentWidth;
+    let ctrj = ctr.y >> kTileExponentHeight;
 
     this._tileCache.sortEvictionQueue(function evictFarTiles(a, b) {
       let dista = Math.max(Math.abs(a.i - ctri), Math.abs(a.j - ctrj));
@@ -680,7 +678,7 @@ TileManager.Tile = function Tile(i, j) {
 TileManager.Tile.prototype = {
   init: function init(i, j) {
     if (!this.boundRect)
-      this.boundRect = new wsRect(i * kTileWidth, j * kTileHeight, kTileWidth, kTileHeight);
+      this.boundRect = new Rect(i * kTileWidth, j * kTileHeight, kTileWidth, kTileHeight);
     else
       this.boundRect.setRect(i * kTileWidth, j * kTileHeight, kTileWidth, kTileHeight);
 
@@ -727,9 +725,9 @@ TileManager.Tile.prototype = {
         this._dirtyTileCanvasRect.copyFrom(this.boundRect);
     } else {
       if (!this._dirtyTileCanvasRect)
-        this._dirtyTileCanvasRect = dirtyRect.intersect(this.boundRect).round();
+        this._dirtyTileCanvasRect = dirtyRect.intersect(this.boundRect).expandToIntegers();
       else if (dirtyRect.intersects(this.boundRect))
-        this._dirtyTileCanvasRect.expandToContain(dirtyRect.intersect(this.boundRect)).round();
+        this._dirtyTileCanvasRect.expandToContain(dirtyRect.intersect(this.boundRect)).expandToIntegers();
     }
 
     // XXX if, after the above, the dirty rectangle takes up a large enough
