@@ -1081,7 +1081,7 @@ namespace nanojit
 
         // Inserts a conditional to execute and branches to execute if
         // the condition is true and false respectively.
-        LIns*        ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse);
+        LIns*        ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse, bool use_cmov);
         // Inserts an integer comparison to 0
         LIns*        ins_eq0(LIns* oprnd1);
         // Inserts a pointer comparison to 0
