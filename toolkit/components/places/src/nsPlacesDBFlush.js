@@ -178,14 +178,17 @@ nsPlacesDBFlush.prototype = {
 
           // Ensure we won't act anymore as a category observer, so we stop
           // being notified.
+          // This should not be needed but due to bug 522353 we leak in tests
+          // if we don't manually remove the entries.
+          // WARNING: These changes must NOT be persistent!
           let catMan = Cc["@mozilla.org/categorymanager;1"].
                        getService(Ci.nsICategoryManager);
           catMan.deleteCategoryEntry("bookmark-observers",
                                      this._self.classDescription,
-                                     true);
+                                     false); // Only for this session!
           catMan.deleteCategoryEntry("history-observers",
                                      this._self.classDescription,
-                                     true);
+                                     false); // Only for this session!
 
           // Close the database connection, this was the last sync and we can't
           // ensure database coherence from now on.
