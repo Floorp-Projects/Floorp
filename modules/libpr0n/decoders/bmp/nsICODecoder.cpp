@@ -152,43 +152,20 @@ NS_IMETHODIMP nsICODecoder::Flush()
   return NS_OK;
 }
 
-
-NS_METHOD nsICODecoder::ReadSegCb(nsIInputStream* aIn, void* aClosure,
-                             const char* aFromRawSegment, PRUint32 aToOffset,
-                             PRUint32 aCount, PRUint32 *aWriteCount) {
-  nsICODecoder *decoder = reinterpret_cast<nsICODecoder*>(aClosure);
-
-  // Always read everything
-  *aWriteCount = aCount;
-
-  // Process
-  nsresult rv = decoder->ProcessData(aFromRawSegment, aCount);
-
-  // rvs might not propagate correctly. Set a flag before returning.
-  if (NS_FAILED(rv))
-    decoder->mError = PR_TRUE;
-  return rv;
-}
-
-NS_IMETHODIMP nsICODecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount)
+NS_IMETHODIMP
+nsICODecoder::Write(const char* aBuffer, PRUint32 aCount)
 {
-  // Decode, watching for errors
-  nsresult rv = NS_OK;
-  PRUint32 ignored;
-  if (!mError)
-    rv = aInStr->ReadSegments(ReadSegCb, this, aCount, &ignored);
-  if (mError || NS_FAILED(rv))
+  // No forgiveness
+  if (mError)
     return NS_ERROR_FAILURE;
-  return NS_OK;
-}
 
-nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
   if (!aCount) // aCount=0 means EOF
     return NS_OK;
 
   while (aCount && (mPos < ICONCOUNTOFFSET)) { // Skip to the # of icons.
     if (mPos == 2) { // if the third byte is 1: This is an icon, 2: a cursor
       if ((*aBuffer != 1) && (*aBuffer != 2)) {
+        mError = PR_TRUE;
         return NS_ERROR_FAILURE;
       }
       mIsCursor = (*aBuffer == 2);
@@ -231,8 +208,10 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
 
         // ensure mImageOffset is >= the size of the direntry headers (bug #245631)
         PRUint32 minImageOffset = DIRENTRYOFFSET + mNumIcons*sizeof(mDirEntryArray);
-        if (mImageOffset < minImageOffset)
+        if (mImageOffset < minImageOffset) {
+          mError = PR_TRUE;
           return NS_ERROR_FAILURE;
+        }
 
         colorDepth = e.mBitCount;
         memcpy(&mDirEntry, &e, sizeof(IconDirEntry));
@@ -289,12 +268,15 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
           mNumColors = 256;
           break;
         default:
+          mError = PR_TRUE;
           return NS_ERROR_FAILURE;
       }
 
       mColors = new colorTable[mNumColors];
-      if (!mColors)
+      if (!mColors) {
+        mError = PR_TRUE;
         return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
 
     if (mIsCursor) {
@@ -318,9 +300,11 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     // +4 because the line is padded to a 4 bit boundary, but I don't want
     // to make exact calculations here, that's unnecessary.
     // Also, it compensates rounding error.
-    if (!mRow)
+    if (!mRow) {
+      mError = PR_TRUE;
       return NS_ERROR_OUT_OF_MEMORY;
-    
+    }
+
     PRUint32 imageLength;
     rv = mImage->AppendFrame(0, 0, mDirEntry.mWidth, mDirEntry.mHeight,
                              gfxASurface::ImageFormatARGB32, (PRUint8**)&mImageData, &imageLength);
@@ -368,8 +352,10 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     // without allocated memory, the file is most likely invalid.
     NS_ASSERTION(mRow, "mRow is null");
     NS_ASSERTION(mImageData, "mImageData is null");
-    if (!mRow || !mImageData)
+    if (!mRow || !mImageData) {
+      mError = PR_TRUE;
       return NS_ERROR_FAILURE;
+    }
 
     PRUint32 rowSize = (mBIH.bpp * mDirEntry.mWidth + 7) / 8; // +7 to round up
     if (rowSize % 4)
@@ -453,6 +439,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
                 break;
               default:
                 // This is probably the wrong place to check this...
+                mError = PR_TRUE;
                 return NS_ERROR_FAILURE;
             }
 
@@ -473,15 +460,19 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
       mRowBytes = 0;
       mCurLine = mDirEntry.mHeight;
       mRow = (PRUint8*)realloc(mRow, rowSize);
-      if (!mRow)
+      if (!mRow) {
+        mError = PR_TRUE;
         return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
 
     // Ensure memory has been allocated before decoding.
     NS_ASSERTION(mRow, "mRow is null");
     NS_ASSERTION(mImageData, "mImageData is null");
-    if (!mRow || !mImageData)
+    if (!mRow || !mImageData) {
+      mError = PR_TRUE;
       return NS_ERROR_FAILURE;
+    }
 
     while (mCurLine > 0 && aCount > 0) {
       PRUint32 toCopy = PR_MIN(rowSize - mRowBytes, aCount);
