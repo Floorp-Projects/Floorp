@@ -566,7 +566,7 @@ function flush_main_thread_events()
 // These tests are known to randomly fail due to bug 507790 when database
 // flushes are active, so we turn off syncing for them.
 let randomFailingSyncTests = [
-  " test_results-as-visits.js",
+  "test_results-as-visit.js",
 ];
 let currentTestFilename = do_get_file(_TEST_FILE[0], true).leafName;
 if (randomFailingSyncTests.indexOf(currentTestFilename) != -1) {
