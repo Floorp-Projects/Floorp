@@ -47,7 +47,7 @@ endif
 
 
 # Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] mochitest*|.
-mochitest:: mochitest-plain mochitest-chrome mochitest-a11y mochitest-oop
+mochitest:: mochitest-plain mochitest-chrome mochitest-a11y mochitest-ipcplugins
 
 RUN_MOCHITEST = \
 	rm -f ./$@.log && \
@@ -80,7 +80,7 @@ mochitest-a11y:
 	$(RUN_MOCHITEST) --a11y
 	$(CHECK_TEST_ERROR)
 
-mochitest-oop:
+mochitest-ipcplugins:
 	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled=true --test-path=modules/plugin/test
 	$(CHECK_TEST_ERROR)
 
@@ -145,7 +145,7 @@ stage-jstests: make-stage-dir
 	$(MAKE) -C $(DEPTH)/js/src/tests stage-package
 
 .PHONY: \
-  mochitest mochitest-plain mochitest-chrome mochitest-a11y mochitest-oop \
+  mochitest mochitest-plain mochitest-chrome mochitest-a11y mochitest-ipcplugins \
   reftest crashtest \
   xpcshell-tests \
   jstestbrowser \
