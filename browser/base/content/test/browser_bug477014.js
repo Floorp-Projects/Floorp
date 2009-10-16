@@ -80,6 +80,7 @@ function test() {
     is(newWindow.gBrowser.selectedTab.hasAttribute("busy"), true);
     is(newWindow.gBrowser.selectedTab.linkedBrowser.mIconURL,iconURLSpec);
     newWindow.close();
+    gBrowser.removeEventListener("pageshow", onPageShow, false);
     finish();
   }
 

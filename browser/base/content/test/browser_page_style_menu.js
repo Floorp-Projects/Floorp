@@ -9,6 +9,7 @@ function test() {
 }
 
 function checkPageStyleMenu() {
+  this.removeEventListener("load", checkPageStyleMenu, true);
   var menupopup = document.getElementById("pageStyleMenu")
                           .getElementsByTagName("menupopup")[0];
   stylesheetFillPopup(menupopup);

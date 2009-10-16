@@ -146,6 +146,7 @@ var _browser_tabfocus_test_events = "";
 
 function _browser_tabfocus_test_eventOccured(event)
 {
+  this.removeEventListener(event.type, arguments.callee, true);
   var id;
   if (event.target instanceof Window)
     id = event.originalTarget.document.documentElement.id + "-window";
