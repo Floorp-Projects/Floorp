@@ -9781,7 +9781,7 @@ nsHTMLPluginObjElementSH::Call(nsIXPConnectWrappedNative *wrapper,
 
   // If obj is a native wrapper, or if there's no plugin around for
   // this object, throw.
-  if (!ObjectIsNativeWrapper(cx, obj) || !pi) {
+  if (ObjectIsNativeWrapper(cx, obj) || !pi) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
