@@ -20,7 +20,11 @@
   
   // global test function
   function testMe(arg) {
-    return arg + arg;
+    var result = arg+arg;
+    for (var i = 1; i < arguments.length; i++) {
+      result += arguments[i] + arguments[i];
+    }
+    return result;
   }
 
   ////
@@ -72,11 +76,14 @@
     ["String", "true", "true"],
     ["String", "null", "null"],
     ["String", "2 + 2", String("2 + 2")],
+    ["String", ""],
     // global functions
     ["testMe", 3, 6],
+    ["testMe", "string", [1,2], "stringstring1,21,2"],
     ["testMe", "me", "meme"],
     ["testMe", undefined, Number.NaN],
     ["testMe", [1, 2], "1,21,2"],
+    ["testMe", 3, 4, 14],
     ["isNaN", "junk", true],
     ["parseInt", "156", 156],
     ["encodeURI", "a = b", "a%20=%20b"],
@@ -87,25 +94,42 @@
 
     // Test calling NPN_InvokeDefault from within plugin code.
     for each (var test in tests) {
-      var result = plugin.npnInvokeDefaultTest(test[0], test[1]);
+      var result;
+      var expected = test[test.length - 1];
+      switch (test.length) {
+        case 2:
+          result = plugin.npnInvokeDefaultTest(test[0]);
+          break;
+        case 3:
+          result = plugin.npnInvokeDefaultTest(test[0], test[1]);
+          break;
+        case 4:
+          result = plugin.npnInvokeDefaultTest(test[0], test[1], test[2]);
+          break;
+      }
       // serialize the two values for easy 
-      var json_expected = JSON.stringify(test[2]);
+      var json_expected = JSON.stringify(expected);
       var json_result = JSON.stringify(result);
       if (typeof(result) == "function")
           json_result = result.toString();
       if (typeof(test[2]) == "function")
-          json_expected = test[2].toString();
+          json_expected = expected.toString();
       is(json_result, json_expected, 
           "npnInvokeDefault returned an unexpected value");
-      is(typeof(result), typeof(test[2]), 
+      is(typeof(result), typeof(expected), 
           "npnInvokeDefaultTest return value was of unexpected type");
       var success = (json_result == json_expected && 
-          typeof(result) == typeof(test[2]));
+          typeof(result) == typeof(expected));
       appendChildNodes($("verbose"),
-          SPAN((success ? "pass" : "fail") + ": " + test[0] + "(" +
-          JSON.stringify(test[1]) + ") == " + json_result + "(" + 
+          SPAN((success ? "pass" : "fail") + ": " + test[0] + "("));
+      for (var i = 1; i < test.length - 1; i++) {
+        appendChildNodes($("verbose"),
+            SPAN(JSON.stringify(test[i]) + (i < test.length - 2 ? "," : "")));
+      }
+      appendChildNodes($("verbose"),
+          SPAN(") == " + json_result + "(" + 
           typeof(result) + "), expected " + json_expected + "(" + 
-          typeof(test[2]) + ")"),
+          typeof(expected) + ")"),
           BR()
           );
     }
