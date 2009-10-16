@@ -51,9 +51,9 @@
 #include "nsIMutableArray.h"
 #include "nsVariant.h"
 #include "nsIDOMBeforeUnloadEvent.h"
-
-#ifdef NS_DEBUG
+#include "nsPIDOMEventTarget.h"
 #include "nsIJSContextStack.h"
+#ifdef NS_DEBUG
 #include "nsDOMJSUtils.h"
 
 #include "nspr.h" // PR_fprintf
@@ -138,6 +138,35 @@ void
 nsJSEventListener::SetEventName(nsIAtom* aName)
 {
   mEventName = aName;
+}
+
+void
+nsJSEventListener::ToString(const nsAString& aEventName, nsAString& aResult)
+{
+  aResult.Truncate();
+  nsCOMPtr<nsIThreadJSContextStack> stack = nsContentUtils::ThreadJSContextStack();
+  nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(mTarget);
+  if (target && stack && mContext) {
+    JSContext* cx = static_cast<JSContext*>(mContext->GetNativeContext());
+    if (cx && NS_SUCCEEDED(stack->Push(cx))) {
+      JSAutoRequest ar(cx);
+      nsAutoString eventString = NS_LITERAL_STRING("on") + aEventName;
+      nsCOMPtr<nsIAtom> atomName = do_GetAtom(eventString);
+      nsScriptObjectHolder funcval(mContext);
+      mContext->GetBoundEventHandler(mTarget, mScopeObject, atomName,
+                                     funcval);
+      jsval funval =
+        OBJECT_TO_JSVAL(static_cast<JSObject*>(static_cast<void*>(funcval)));
+
+      JSString* str =
+        JS_ValueToSource(static_cast<JSContext*>(mContext->GetNativeContext()),
+                         funval);
+      if (str) {
+        aResult.Assign(nsDependentJSString(str));
+      }
+      stack->Pop(&cx);
+    }
+  }
 }
 
 nsresult

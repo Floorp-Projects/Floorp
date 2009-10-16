@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,12 +14,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Olli Pettay <Olli.Pettay@helsinki.fi> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,51 +35,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsJSEventListener_h__
-#define nsJSEventListener_h__
-
-#include "nsIDOMKeyEvent.h"
-#include "nsIJSEventListener.h"
-#include "nsIDOMMouseListener.h"
-#include "jsapi.h"
-#include "nsCOMPtr.h"
-#include "nsIAtom.h"
-#include "nsIScriptContext.h"
+#ifndef nsEventListenerService_h__
+#define nsEventListenerService_h__
+#include "nsIEventListenerService.h"
+#include "nsAutoPtr.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMEventTarget.h"
+#include "nsString.h"
+#include "nsPIDOMEventTarget.h"
 #include "nsCycleCollectionParticipant.h"
 
-// nsJSEventListener interface
-// misnamed - JS no longer has exclusive rights over this interface!
-class nsJSEventListener : public nsIDOMEventListener,
-                          public nsIJSEventListener
+class nsEventListenerInfo : public nsIEventListenerInfo
 {
 public:
-  nsJSEventListener(nsIScriptContext *aContext, void *aScopeObject,
-                    nsISupports* aObject);
-  virtual ~nsJSEventListener();
-
+  nsEventListenerInfo(const nsAString& aType, nsIDOMEventListener* aListener,
+                      PRBool aCapturing, PRBool aAllowsUntrusted,
+                      PRBool aInSystemEventGroup)
+  : mType(aType), mListener(aListener), mCapturing(aCapturing),
+    mAllowsUntrusted(aAllowsUntrusted),
+    mInSystemEventGroup(aInSystemEventGroup) {}
+  virtual ~nsEventListenerInfo() {}
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-
-  // nsIDOMEventListener interface
-  NS_DECL_NSIDOMEVENTLISTENER
-
-  // nsIJSEventListener interface
-  virtual void SetEventName(nsIAtom* aName);
-
-  virtual void ToString(const nsAString& aEventName, nsAString& aResult);
-
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsJSEventListener,
-                                                         nsIDOMEventListener)
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsEventListenerInfo)
+  NS_DECL_NSIEVENTLISTENERINFO
 protected:
-  nsCOMPtr<nsIAtom> mEventName;
-  
-  enum nsReturnResult {
-     nsReturnResult_eNotSet,
-     nsReturnResult_eReverseReturnResult,
-     nsReturnResult_eDoNotReverseReturnResult
-  };
-
-  nsReturnResult mReturnResult;
+  nsString                      mType;
+  // nsReftPtr because that is what nsListenerStruct uses too.
+  nsRefPtr<nsIDOMEventListener> mListener;
+  PRPackedBool                  mCapturing;
+  PRPackedBool                  mAllowsUntrusted;
+  PRPackedBool                  mInSystemEventGroup;
 };
 
-#endif //nsJSEventListener_h__
-
+class nsEventListenerService : public nsIEventListenerService
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIEVENTLISTENERSERVICE
+};
+#endif
