@@ -156,8 +156,6 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 _FILES	= \
-	arrow.gif \
-	arrowd.gif \
 	contenteditable.css \
 	designmode.css \
 	$(NULL)
