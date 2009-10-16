@@ -455,6 +455,10 @@ findbar .findbar-find-status {
   padding: 1.1mm; /* core spacing */
 }
 
+#bookmark-form button.bookmark-remove {
+  display: none;
+}
+
 /* Identity popup   -------------------------------------------------------- */
 #identity-container {
   border-bottom: 0.1mm solid grey;

@@ -724,6 +724,10 @@ findbar .findbar-closebutton {
   padding: 1mm; /* core spacing */
 }
 
+#bookmark-form button.bookmark-remove {
+  display: none;
+}
+
 /* Identity popup   -------------------------------------------------------- */
 #identity-container {
   border-bottom: 0.1mm solid grey;

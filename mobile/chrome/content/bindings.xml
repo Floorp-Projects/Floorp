@@ -607,10 +607,10 @@
           </xul:vbox>
         
          <xul:hbox class="bookmark-controls" align="center">
-            <xul:button anonid="close-button" label="&editBookmarkRemove.label;"
+            <xul:button anonid="remove-button" class="bookmark-remove" label="&editBookmarkRemove.label;"
                         oncommand="document.getBindingParent(this).remove()"/>
             <xul:spacer flex="1"/>
-            <xul:button anonid="done-button" label="&editBookmarkDone.label;"
+            <xul:button anonid="done-button" class="bookmark-done" label="&editBookmarkDone.label;"
                         oncommand="document.getBindingParent(this).stopEditing(true)"/>
           </xul:hbox>
         </xul:vbox>
