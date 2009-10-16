@@ -1388,8 +1388,8 @@ npnInvokeDefaultTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, 
       NPObject* selfObject = NPVARIANT_TO_OBJECT(objectVariant);
       if (selfObject != NULL) {
         NPVariant resultVariant;
-        if (NPN_InvokeDefault(npp, selfObject, &args[1], argCount - 1,
-            &resultVariant)) {
+        if (NPN_InvokeDefault(npp, selfObject, argCount > 1 ? &args[1] : NULL, 
+            argCount - 1, &resultVariant)) {
           *result = resultVariant;
           success = true;
         }
