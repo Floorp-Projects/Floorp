@@ -197,6 +197,10 @@ private:
 
   void FlushPendingInvalidates();
   void ProcessPendingUpdates(nsView *aView, PRBool aDoInvalidate);
+  /**
+   * Call WillPaint() on all view observers under this vm root.
+   */
+  void CallWillPaintOnObservers();
   void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);
   void ReparentWidgets(nsIView* aView, nsIView *aParent);
   already_AddRefed<nsIRenderingContext> CreateRenderingContext(nsView &aView);
