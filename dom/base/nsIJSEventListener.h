@@ -45,8 +45,8 @@ class nsIDOMEventListener;
 class nsIAtom;
 
 #define NS_IJSEVENTLISTENER_IID     \
-{ 0xa6cf9118, 0x15b3, 0x11d2,       \
-{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+{ 0xe16e7146, 0x109d, 0x4f54, \
+  { 0x94, 0x78, 0xda, 0xc4, 0x3a, 0x71, 0x0b, 0x52 } }
 
 // Implemented by script event listeners. Used to retrieve the
 // script object corresponding to the event target.
@@ -80,6 +80,8 @@ public:
   }
 
   virtual void SetEventName(nsIAtom* aName) = 0;
+
+  virtual void ToString(const nsAString& aEventName, nsAString& aResult) = 0;
 
 protected:
   virtual ~nsIJSEventListener()
