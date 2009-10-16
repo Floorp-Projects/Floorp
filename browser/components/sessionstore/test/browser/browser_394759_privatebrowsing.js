@@ -92,9 +92,10 @@ function test() {
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no", testURL_A);
   newWin.addEventListener("load", function(aEvent) {
     newWin.removeEventListener("load", arguments.callee, false);
-    newWin.gBrowser.addEventListener("load", function(aEvent) {
-      newWin.gBrowser.removeEventListener("load", arguments.callee, true);
-      info("Window has been loaded");
+    info("New window has been opened");
+    newWin.gBrowser.addEventListener("pageshow", function(aEvent) {
+      newWin.gBrowser.removeEventListener("pageshow", arguments.callee, true);
+      info("Content has been loaded");
       executeSoon(function() {
         newWin.gBrowser.addTab();
         executeSoon(function() {
@@ -126,8 +127,8 @@ function test() {
           let pbWin = openDialog(location, "_blank", "chrome,all,dialog=no", testURL_B);
           pbWin.addEventListener("load", function(aEvent) {
             pbWin.removeEventListener("load", arguments.callee, false);
-            pbWin.gBrowser.addEventListener("load", function(aEvent) {
-              pbWin.gBrowser.removeEventListener("load", arguments.callee, true);
+            pbWin.gBrowser.addEventListener("pageshow", function(aEvent) {
+              pbWin.gBrowser.removeEventListener("pageshow", arguments.callee, true);
 
               executeSoon(function() {
                 // Add another tab, though it's not strictly needed

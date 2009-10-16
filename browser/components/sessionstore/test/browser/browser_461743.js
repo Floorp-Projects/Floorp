@@ -47,23 +47,25 @@ function test() {
     this.removeEventListener("load", arguments.callee, true);
     executeSoon(function() {
       let tab2 = gBrowser.duplicateTab(tab);
-      tab2.linkedBrowser.addEventListener("461743", function(aEvent) {
-        tab2.linkedBrowser.removeEventListener("461743", arguments.callee, true);
-        is(aEvent.data, "done", "XSS injection was attempted");
-        
-        executeSoon(function() {
-          let iframes = tab2.linkedBrowser.contentWindow.frames;
-          let innerHTML = iframes[1].document.body.innerHTML;
-          isnot(innerHTML, Components.utils.reportError.toString(),
-                "chrome access denied!");
+      executeSoon(function() {
+        tab2.linkedBrowser.addEventListener("461743", function(aEvent) {
+          tab2.linkedBrowser.removeEventListener("461743", arguments.callee, true);
+          is(aEvent.data, "done", "XSS injection was attempted");
           
-          // clean up
-          gBrowser.removeTab(tab2);
-          gBrowser.removeTab(tab);
-          
-          finish();
-        });
-      }, true, true);
+          executeSoon(function() {
+            let iframes = tab2.linkedBrowser.contentWindow.frames;
+            let innerHTML = iframes[1].document.body.innerHTML;
+            isnot(innerHTML, Components.utils.reportError.toString(),
+                  "chrome access denied!");
+            
+            // clean up
+            gBrowser.removeTab(tab2);
+            gBrowser.removeTab(tab);
+            
+            finish();
+          });
+        }, true, true);
+      });
     });
   }, true);
 }
