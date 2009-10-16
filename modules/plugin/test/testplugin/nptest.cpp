@@ -1192,7 +1192,30 @@ scriptableInvoke(NPObject* npobj, NPIdentifier name, const NPVariant* args, uint
 bool
 scriptableInvokeDefault(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  return false;
+  ostringstream value;
+  value << PLUGIN_NAME;
+  for (uint32_t i = 0; i < argCount; i++) {
+    switch(args[i].type) {
+      case NPVariantType_Int32:
+        value << ";" << NPVARIANT_TO_INT32(args[i]);
+        break;
+      case NPVariantType_String: {
+        const NPString* argstr = &NPVARIANT_TO_STRING(args[i]);
+        value << ";" << argstr->UTF8Characters;
+        break;
+      }
+      case NPVariantType_Void:
+        value << ";undefined";
+        break;
+      case NPVariantType_Null:
+        value << ";null";
+        break;
+      default:
+        value << ";other";
+    }
+  }
+  STRINGZ_TO_NPVARIANT(strdup(value.str().c_str()), *result);
+  return true;
 }
 
 bool
