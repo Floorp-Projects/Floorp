@@ -64,6 +64,7 @@ def createReftestProfile(options, profileDir):
   prefsFile.write("""user_pref("browser.dom.window.dump.enabled", true);
 """)
   prefsFile.write('user_pref("reftest.timeout", %d);' % options.timeout)
+  prefsFile.write('user_pref("ui.caretBlinkTime", -1);')
   prefsFile.close()
 
   # install the reftest extension bits into the profile

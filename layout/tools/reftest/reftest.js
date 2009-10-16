@@ -851,7 +851,8 @@ function InitCurrentCanvasWithSnapshot()
     ctx.drawWindow(win, win.scrollX, win.scrollY,
                    Math.ceil(gCurrentCanvas.width / scale),
                    Math.ceil(gCurrentCanvas.height / scale),
-                   "rgb(255,255,255)");
+                   "rgb(255,255,255)",
+                   ctx.DRAWWINDOW_DRAW_CARET);
     ctx.restore();
 }
 
@@ -880,7 +881,8 @@ function UpdateCurrentCanvasForEvent(event)
         ctx.translate(left, top);
         ctx.drawWindow(win, left + win.scrollX, top + win.scrollY,
                        right - left, bottom - top,
-                       "rgb(255,255,255)");
+                       "rgb(255,255,255)",
+                       ctx.DRAWWINDOW_DRAW_CARET);
         ctx.restore();
     }
 }
