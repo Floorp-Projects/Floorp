@@ -49,6 +49,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
+#include "nsIContentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
@@ -64,6 +65,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIScrollable.h"
 #include "nsFrameLoader.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIFrame.h"
@@ -74,6 +76,8 @@
 #include "nsEventDispatcher.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
+#include "nsIDOMNSHTMLDocument.h"
+#include "nsIView.h"
 
 #include "nsIURI.h"
 #include "nsIURL.h"
@@ -463,6 +467,107 @@ AllDescendantsOfType(nsIDocShellTreeItem* aParentItem, PRInt32 aType)
   }
 
   return PR_TRUE;
+}
+
+bool
+nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
+                    PRInt32 scrollbarPrefX, PRInt32 scrollbarPrefY,
+                    nsIFrameFrame* frame)
+{
+  nsContentType contentType;
+
+  nsresult rv = EnsureDocShell();
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  if (!mDocShell)
+    return false;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  if (presShell)
+    return true;
+
+  mDocShell->SetMarginWidth(marginWidth);
+  mDocShell->SetMarginHeight(marginHeight);
+
+  nsCOMPtr<nsIScrollable> sc = do_QueryInterface(mDocShell);
+  if (sc) {
+    sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
+                                       scrollbarPrefX);
+    sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
+                                       scrollbarPrefY);
+  }
+
+
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
+  NS_ASSERTION(treeItem,
+               "Found a nsIDocShell that isn't a nsIDocShellTreeItem.");
+
+  PRInt32 itemType;
+  treeItem->GetItemType(&itemType);
+
+  if (itemType == nsIDocShellTreeItem::typeChrome)
+    contentType = eContentTypeUI;
+  else {
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
+    treeItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
+    contentType = sameTypeParent ? eContentTypeContentFrame : eContentTypeContent;
+  }
+
+  nsIView* view = frame->CreateViewAndWidget(contentType);
+  if (!view)
+    return false;
+
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mDocShell);
+  NS_ASSERTION(baseWindow, "Found a nsIDocShell that isn't a nsIBaseWindow.");
+  baseWindow->InitWindow(nsnull, view->GetWidget(), 0, 0, 10, 10);
+  // This is kinda whacky, this "Create()" call doesn't really
+  // create anything, one starts to wonder why this was named
+  // "Create"...
+  baseWindow->Create();
+  baseWindow->SetVisibility(PR_TRUE);
+
+  // Trigger editor re-initialization if midas is turned on in the
+  // sub-document. This shouldn't be necessary, but given the way our
+  // editor works, it is. See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=284245
+  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  if (presShell) {
+    nsCOMPtr<nsIDOMNSHTMLDocument> doc =
+      do_QueryInterface(presShell->GetDocument());
+
+    if (doc) {
+      nsAutoString designMode;
+      doc->GetDesignMode(designMode);
+
+      if (designMode.EqualsLiteral("on")) {
+        doc->SetDesignMode(NS_LITERAL_STRING("off"));
+        doc->SetDesignMode(NS_LITERAL_STRING("on"));
+      }
+    }
+  }
+
+  return true;
+}
+
+void
+nsFrameLoader::Hide()
+{
+  if (!mDocShell)
+    return;
+
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
+  if (contentViewer)
+    contentViewer->SetSticky(PR_FALSE);
+
+  nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mDocShell);
+  NS_ASSERTION(baseWin,
+               "Found an nsIDocShell which doesn't implement nsIBaseWindow.");
+  baseWin->SetVisibility(PR_FALSE);
+  baseWin->SetParentWidget(nsnull);
 }
 
 nsresult
