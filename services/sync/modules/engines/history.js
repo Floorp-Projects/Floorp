@@ -142,7 +142,7 @@ HistoryStore.prototype = {
   get _urlStm() {
     this._log.trace("Creating SQL statement: _urlStm");
     let stm = this._db.createStatement(
-      "SELECT url, title " +
+      "SELECT url, title, frecency " +
       "FROM moz_places_view " +
       "WHERE id = (" +
         "SELECT place_id " +
@@ -181,9 +181,13 @@ HistoryStore.prototype = {
       if (!this._urlStm.step())
         return null;
 
-      return {url: this._urlStm.row.url,
-              title: this._urlStm.row.title};
-    } finally {
+      return {
+        url: this._urlStm.row.url,
+        title: this._urlStm.row.title,
+        frecency: this._urlStm.row.frecency
+      };
+    }
+    finally {
       this._urlStm.reset();
     }
   },
@@ -266,6 +270,7 @@ HistoryStore.prototype = {
     if (foo) {
       record.histUri = foo.url;
       record.title = foo.title;
+      record.sortindex = foo.frecency;
       record.visits = this._getVisits(record.histUri);
       record.encryption = cryptoMetaURL;
 
