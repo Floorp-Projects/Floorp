@@ -475,6 +475,23 @@ else:
       return ('', True)
     return (f.readline(), False)
 
+def triggerBreakpad(proc, utilityPath):
+  """Attempt to kill this process in a way that triggers Breakpad crash
+  reporting, if we know how for this platform. Otherwise just .kill() it."""
+  if CRASHREPORTER:
+    if UNIXISH:
+      # SEGV will get picked up by Breakpad's signal handler
+      os.kill(proc.pid, signal.SIGSEGV)
+      return
+    elif IS_WIN32:
+      # We should have a "crashinject" program in our utility path
+      crashinject = os.path.normpath(os.path.join(utilityPath, "crashinject.exe"))
+      if os.path.exists(crashinject) and subprocess.Popen([crashinject, str(proc.pid)]).wait() == 0:
+        return
+  #TODO: kill the process such that it triggers Breakpad on OS X
+  log.info("Can't trigger Breakpad, just killing process")
+  proc.kill()
+
 ###############
 # RUN THE APP #
 ###############
@@ -568,14 +585,7 @@ def runApp(testURL, env, app, profileDir, extraArgs,
       (line, didTimeout) = readWithTimeout(logsource, timeout)
     if didTimeout:
       log.info("TEST-UNEXPECTED-FAIL | automation.py | application timed out after %d seconds with no output", int(timeout))
-      if CRASHREPORTER:
-        if UNIXISH:
-          os.kill(proc.pid, signal.SIGSEGV)
-        else:
-          #TODO: kill the process such that it triggers Breakpad
-          proc.kill()
-      else:
-        proc.kill()
+      triggerBreakpad(proc, utilityPath)
 
   status = proc.wait()
   if status != 0 and not didTimeout:

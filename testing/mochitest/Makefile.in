@@ -98,6 +98,13 @@ TEST_HARNESS_BINS := \
   pk12util$(BIN_SUFFIX) \
   $(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+TEST_HARNESS_BINS += \
+  crashinject$(BIN_SUFFIX) \
+  crashinjectdll$(DLL_SUFFIX) \
+  $(NULL)
+endif
+
 ifeq ($(OS_ARCH),Darwin)
 TEST_HARNESS_BINS += fix-macosx-stack.pl
 endif
