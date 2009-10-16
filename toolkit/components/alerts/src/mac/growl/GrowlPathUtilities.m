@@ -37,15 +37,16 @@ restart:;
 	UInt32 oldestProcessLaunchDate = UINT_MAX;
 
 	while ((err = GetNextProcess(&psn)) == noErr) {
-		struct ProcessInfoRec info = { .processInfoLength = sizeof(struct ProcessInfoRec) };
+		struct ProcessInfoRec info = { .processInfoLength = (UInt32)sizeof(struct ProcessInfoRec) };
 		err = GetProcessInformation(&psn, &info);
 		if (err == noErr) {
 			//Compare the launch dates first, since it's cheaper than comparing bundle IDs.
 			if (info.processLaunchDate < oldestProcessLaunchDate) {
 				//This one is older (fewer ticks since startup), so this is our current prospect to be the result.
 				NSDictionary *dict = (NSDictionary *)ProcessInformationCopyDictionary(&psn, kProcessDictionaryIncludeAllInformationMask);
-
+				
 				if (dict) {
+					CFMakeCollectable(dict);
 					pid_t pid = 0;
 					GetProcessPID(&psn, &pid);
 					if ([[dict objectForKey:(NSString *)kCFBundleIdentifierKey] isEqualToString:identifier]) {
