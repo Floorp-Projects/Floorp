@@ -51,8 +51,6 @@
     ["Boolean", "false", true],
     ["Boolean", new Boolean(false), true],
     ["Boolean", { "value": false }, true],
-    // Date object
-    // ["Date", "December 17, 1995 03:24:00", Date("December 17, 1995 03:24:00")],
     // Function object
     ["Function", "return 3", Function("return 3")],
     ["Function", "window.alert('test')", Function("window.alert('test')")],
@@ -87,6 +85,7 @@
   function runTests() {
     var plugin = document.getElementById("plugin1");
 
+    // Test calling NPN_InvokeDefault from within plugin code.
     for each (var test in tests) {
       var result = plugin.npnInvokeDefaultTest(test[0], test[1]);
       // serialize the two values for easy 
@@ -110,7 +109,17 @@
           BR()
           );
     }
-            
+    
+    // Test calling the invokedefault method of plugin-defined object
+    is(plugin(), "Test Plug-in", 
+        "calling NPN_InvokeDefault on plugin-defined Object doesn't work");
+    is(plugin(1), "Test Plug-in;1", 
+        "calling NPN_InvokeDefault on plugin-defined Object doesn't work");
+    is(plugin("test"), "Test Plug-in;test", 
+        "calling NPN_InvokeDefault on plugin-defined Object doesn't work");
+    is(plugin(undefined, -1, null), "Test Plug-in;undefined;-1;null", 
+        "calling NPN_InvokeDefault on plugin-defined Object doesn't work");
+  
     SimpleTest.finish();
   }
   </script>
