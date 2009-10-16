@@ -49,13 +49,11 @@ function test() {
     // we get here if the test is executed before the pageshow
     // event for the window's first tab
     if (!tabToDetach ||
-         tabToDetach.linkedBrowser.contentDocument != event.target) {
-        return;
-    }
+        tabToDetach.linkedBrowser.contentDocument != event.target)
+      return;
 
     if (!newWindow) {
-      var pageShowFunc = arguments.callee;
-      gBrowser.removeEventListener("pageshow", pageShowFunc, false);
+      gBrowser.removeEventListener("pageshow", onPageShow, false);
 
       // prepare the tab (set icon and busy state)
       // we have to set these only after onState* notification, otherwise
@@ -69,7 +67,7 @@ function test() {
         // wait for gBrowser to come along
         function onLoad(event) {
           newWindow.gBrowser
-                   .addEventListener("pageshow", pageShowFunc, false);
+                   .addEventListener("pageshow", onPageShow, false);
           newWindow.removeEventListener("load", arguments.callee, false);
         }
         newWindow.addEventListener("load", onLoad, false);
@@ -80,7 +78,6 @@ function test() {
     is(newWindow.gBrowser.selectedTab.hasAttribute("busy"), true);
     is(newWindow.gBrowser.selectedTab.linkedBrowser.mIconURL,iconURLSpec);
     newWindow.close();
-    gBrowser.removeEventListener("pageshow", onPageShow, false);
     finish();
   }
 
