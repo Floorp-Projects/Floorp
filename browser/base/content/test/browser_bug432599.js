@@ -46,6 +46,7 @@ let invokers = [invokeUsingStarButton, invokeUsingCtrlD];
 let currentInvoker = 0;
 
 function initTest() {
+  gBrowser.selectedBrowser.removeEventListener("load", initTest, true);
   // first, bookmark the page
   Application.bookmarks.toolbar.addBookmark("Bug 432599 Test", makeURI(testURL));
 

@@ -34,7 +34,7 @@ function test() {
   }
 
   function handleLoad() {
-
+    this.removeEventListener("load", handleLoad, true);
     pageInfo = BrowserPageInfo();
     obs = Components.classes["@mozilla.org/observer-service;1"]
             .getService(Components.interfaces.nsIObserverService);
