@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 521461</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+    
+  loadAsInsecure = true;
+
+  function runTest()
+  {
+    window.location = "https://example.com/tests/security/ssl/mixedcontent/nocontent.sjs";
+    window.setTimeout(function() {
+      isSecurityState("insecure", "location.href doesn't effect the security state");
+      is(document.body.innerHTML, "This is an unsecure page!", "Document has not changed content");
+      finish();
+    }, 1000);
+  }
+
+  function afterNavigationTest()
+  {
+    isSecurityState("insecure", "still not secure after navigation");
+    is(document.body.innerHTML, "This is an unsecure page!", "Document has not changed content");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>This is an unsecure page!</body>
+</html>
