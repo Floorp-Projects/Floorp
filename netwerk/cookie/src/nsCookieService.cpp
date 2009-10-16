@@ -66,8 +66,6 @@
 #include "nsNetCID.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "mozIStorageService.h"
-#include "mozIStorageStatement.h"
-#include "mozIStorageConnection.h"
 #include "mozStorageHelper.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
