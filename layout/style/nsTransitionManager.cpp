@@ -205,12 +205,12 @@ ElementTransitionsStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
   nsStyleContext *contextParent = aRuleData->mStyleContext->GetParent();
   if (contextParent && contextParent->HasPseudoElementData()) {
     // Don't apply transitions to things inside of pseudo-elements.
-    // FIXME: Add tests for this.
+    // FIXME (Bug 522599): Add tests for this.
     return NS_OK;
   }
 
   ElementTransitions *et = ElementData();
-  NS_ENSURE_TRUE(et, NS_OK); // FIXME: Why can this be null?
+  NS_ENSURE_TRUE(et, NS_OK); // FIXME (Bug 522597): Why can this be null?
   for (PRUint32 i = 0, i_end = et->mPropertyTransitions.Length();
        i < i_end; ++i)
   {
@@ -378,15 +378,15 @@ nsTransitionManager::StyleContextChanged(nsIContent *aElement,
       aNewStyleContext->GetParent()->HasPseudoElementData()) {
     // Ignore transitions on things that inherit properties from
     // pseudo-elements.
-    // FIXME: Add tests for this.
+    // FIXME (Bug 522599): Add tests for this.
     return nsnull;
   }
 
-  // FIXME: When we have multiple continuations, we actually repeat this
-  // for each one, and if we have transitions we create separate cover
-  // rules for each one.  However, since we're attaching the transition
-  // data to the element, during the animation we create the same style
-  // rule, so it's not too horrible.
+  // FIXME (Bug 522563): When we have multiple continuations, we
+  // actually repeat this for each one, and if we have transitions we
+  // create separate cover rules for each one.  However, since we're
+  // attaching the transition data to the element, during the animation
+  // we create the same style rule, so it's not too horrible.
 
   // Per http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html
   // I'll consider only the transitions from the number of items in
@@ -501,11 +501,11 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 
   ElementPropertyTransition pt;
   nsStyleCoord dummyValue;
-  // FIXME: This call on the old style context gets incorrect style data
-  // since we don't quite enforce style rule immutability:  we didn't
-  // need to worry about callers calling GetStyleData rather than
-  // PeekStyleData after a style rule becomes "old" before transitions
-  // existed.
+  // FIXME (Bug 522595): This call on the old style context gets
+  // incorrect style data since we don't quite enforce style rule
+  // immutability:  we didn't need to worry about callers calling
+  // GetStyleData rather than PeekStyleData after a style rule becomes
+  // "old" before transitions existed.
   PRBool shouldAnimate =
     nsStyleAnimation::ExtractComputedValue(aProperty, aOldStyleContext,
                                            pt.mStartValue) &&
