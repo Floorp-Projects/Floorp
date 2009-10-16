@@ -43,6 +43,8 @@ class CxxCodeGen(CodePrinter, Visitor):
         cxxfile.accept(self)
 
     def visitWhitespace(self, ws):
+        if ws.indent:
+            self.printdent('')
         self.write(ws.ws)
 
     def visitCppDirective(self, cd):
@@ -54,11 +56,17 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.println('} // namespace '+ ns.name)
 
     def visitType(self, t):
+        if t.const:
+            self.write('const ')
+
+        self.write(t.name)
+
+        if t.T is not None:
+            self.write('<')
+            t.T.accept(self)
+            self.write('>')
+
         ts = ''
-
-        if t.const:  ts += 'const '
-        ts += t.name
-
         if t.ptr:            ts += '*'
         elif t.ptrconst:     ts += '* const'
         elif t.ptrptr:       ts += '**'
@@ -85,7 +93,6 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.println()
         self.dedent()
         self.printdent('}')
-            
 
     def visitTypeUnion(self, u):
         self.write('union')
@@ -94,7 +101,7 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.println(' {')
 
         self.indent()
-        for decl in u.componentDecls:
+        for decl in u.components:
             self.printdent()
             decl.accept(self)
             self.println(';')
@@ -173,7 +180,8 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.printdentln('};')
 
     def visitInherit(self, inh):
-        self.write(inh.viz +' '+ inh.name)
+        self.write(inh.viz +' ')
+        inh.type.accept(self)
 
     def visitFriendClassDecl(self, fcd):
         self.printdentln('friend class '+ fcd.friend +';')
@@ -189,9 +197,16 @@ class CxxCodeGen(CodePrinter, Visitor):
         if md.ret:
             md.ret.accept(self)
             self.write(' ')
-        self.write(md.name +'(')
+        if md.typeop is not None:
+            self.write('operator ')
+            md.typeop.accept(self)
+        else:
+            self.write(md.name)
+
+        self.write('(')
         self.writeDeclList(md.params)
         self.write(')')
+
         if md.const:
             self.write(' const')
         if md.pure:
@@ -265,9 +280,11 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.write(ev.name)
 
     def visitExprPrefixUnop(self, e):
+        self.write('(')
         self.write(e.op)
         self.write('(')
         e.expr.accept(self)
+        self.write(')')
         self.write(')')
 
     def visitExprCast(self, c):
@@ -299,8 +316,16 @@ class CxxCodeGen(CodePrinter, Visitor):
         c.elsee.accept(self)
         self.write(')')
 
+    def visitExprIndex(self, ei):
+        ei.arr.accept(self)
+        self.write('[')
+        ei.idx.accept(self)
+        self.write(']')
+
     def visitExprSelect(self, es):
+        self.write('(')
         es.obj.accept(self)
+        self.write(')')
         self.write(es.op + es.field)
 
     def visitExprAssn(self, ea):
@@ -320,11 +345,15 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.write('(')
             self.writeExprList(en.newargs)
             self.write(') ')
-        self.visitExprCall(en)
+        en.ctype.accept(self)
+        if en.args is not None:
+            self.write('(')
+            self.writeExprList(en.args)
+            self.write(')')
 
     def visitExprDelete(self, ed):
         self.write('delete ')
-        ed.accept(self)
+        ed.obj.accept(self)
 
 
     def visitStmtBlock(self, b):
@@ -367,6 +396,24 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.printdentln('}')
 
 
+    def visitStmtFor(self, sf):
+        self.printdent('for (')
+        if sf.init is not None:
+            sf.init.accept(self)
+        self.write('; ')
+        if sf.cond is not None:
+            sf.cond.accept(self)
+        self.write('; ')
+        if sf.update is not None:
+            sf.update.accept(self)
+        self.println(') {')
+
+        self.indent()
+        self.visitBlock(sf)
+        self.dedent()
+        self.printdentln('}')
+
+
     def visitStmtSwitch(self, sw):
         self.printdent('switch (')
         sw.expr.accept(self)
@@ -383,6 +430,10 @@ class CxxCodeGen(CodePrinter, Visitor):
     def visitStmtDecl(self, sd):
         self.printdent()
         sd.decl.accept(self)
+        if sd.initargs is not None:
+            self.write('(')
+            self.writeDeclList(sd.initargs)
+            self.write(')')
         if sd.init is not None:
             self.write(' = ')
             sd.init.accept(self)

@@ -54,8 +54,9 @@ def typecheck(ast, errout=sys.stderr):
 
 def gencxx(ast, outdir):
     for hdr in LowerToCxx().lower(ast):
-        file = os.path.join(outdir,
-                            *([ns.namespace for ns in ast.protocol.namespaces] + [hdr.filename]))
+        file = os.path.join(
+            outdir,
+            *([ns.name for ns in ast.protocol.namespaces] + [hdr.name]))
 
         tempfile = StringIO()
         CxxCodeGen(tempfile).cgen(hdr)

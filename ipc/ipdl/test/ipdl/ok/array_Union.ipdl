@@ -1,0 +1,10 @@
+union Union {
+    int[];
+    int;
+    double;
+};
+
+sync protocol array_Union {
+parent:
+    sync Msg(Union u, Union[] au) returns (Union r);
+};

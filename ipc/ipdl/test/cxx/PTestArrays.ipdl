@@ -1,0 +1,91 @@
+include protocol "PTestArraysSub.ipdl";
+
+namespace mozilla {
+namespace _ipdltest {
+
+union IntDouble {
+    int;
+    double;
+};
+
+union IntDoubleArrays {
+    int;
+    int[];
+    double[];
+};
+
+union Actors {
+    int;
+    int[];
+    PTestArraysSub[];
+};
+
+union Unions {
+    int;
+    int[];
+    PTestArraysSub[];
+    Actors[];
+};
+
+
+sync protocol PTestArrays {
+    manages PTestArraysSub;
+
+child:
+    PTestArraysSub(int i);
+
+    Start();
+
+parent:
+    ~PTestArraysSub();
+
+    sync Test1(int[] i1)
+        returns (int[] o1);
+
+    sync Test2(PTestArraysSub[] i1)
+        returns (PTestArraysSub[] o1);
+
+    sync Test3(IntDouble i1,
+               IntDouble i2)
+        returns (IntDouble o1,
+                 IntDouble o2);
+
+    sync Test4(IntDouble[] i1)
+        returns (IntDouble[] o1);
+
+    sync Test5(IntDoubleArrays i1,
+               IntDoubleArrays i2,
+               IntDoubleArrays i3)
+        returns (IntDoubleArrays o1,
+                 IntDoubleArrays o2,
+                 IntDoubleArrays o3);
+
+    sync Test6(IntDoubleArrays[] i1)
+        returns (IntDoubleArrays[] o1);
+
+    sync Test7(Actors i1,
+               Actors i2,
+               Actors i3)
+        returns (Actors o1,
+                 Actors o2,
+                 Actors o3);
+
+    sync Test8(Actors[] i1)
+        returns (Actors[] o1);
+
+    sync Test9(Unions i1,
+               Unions i2,
+               Unions i3,
+               Unions i4)
+        returns (Unions o1,
+                 Unions o2,
+                 Unions o3,
+                 Unions o4);
+
+    sync Test10(Unions[] i1)
+        returns (Unions[] o1);
+};
+
+} // namespace _ipdltest
+} // namespace mozilla
+
