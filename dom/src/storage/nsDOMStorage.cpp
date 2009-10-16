@@ -169,7 +169,7 @@ GetQuota(const nsACString &aDomain, PRInt32 *aQuota, PRInt32 *aWarnQuota)
 
     PRUint32 perm;
     if (permissionManager &&
-        NS_SUCCEEDED(permissionManager->TestExactPermission(uri, "offline-app", &perm)) &&
+        NS_SUCCEEDED(permissionManager->TestPermission(uri, "offline-app", &perm)) &&
         perm != nsIPermissionManager::UNKNOWN_ACTION &&
         perm != nsIPermissionManager::DENY_ACTION) {
       // This is an offline app, give more space by default.
@@ -335,7 +335,7 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     nsresult rv = nsDOMStorage::InitDB();
     NS_ENSURE_SUCCESS(rv, rv);
     return nsDOMStorage::gStorageDB->RemoveOwner(NS_ConvertUTF16toUTF8(aData),
-                                                 PR_FALSE);
+                                                 PR_TRUE);
 #endif
   } else if (!strcmp(aTopic, "cookie-changed") &&
              !nsCRT::strcmp(aData, NS_LITERAL_STRING("cleared").get())) {
@@ -349,7 +349,7 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     nsTArray<nsString> domains;
     rv = GetOfflineDomains(domains);
     NS_ENSURE_SUCCESS(rv, rv);
-    return nsDOMStorage::gStorageDB->RemoveOwners(domains, PR_FALSE, PR_FALSE);
+    return nsDOMStorage::gStorageDB->RemoveOwners(domains, PR_TRUE, PR_FALSE);
 #endif
   } else if (!strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC)) {
     mStorages.EnumerateEntries(ClearStorage, nsnull);
@@ -415,7 +415,7 @@ nsDOMStorageManager::ClearOfflineApps()
     nsTArray<nsString> domains;
     rv = GetOfflineDomains(domains);
     NS_ENSURE_SUCCESS(rv, rv);
-    return nsDOMStorage::gStorageDB->RemoveOwners(domains, PR_FALSE, PR_TRUE);
+    return nsDOMStorage::gStorageDB->RemoveOwners(domains, PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP
