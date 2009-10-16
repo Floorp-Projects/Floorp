@@ -2864,7 +2864,7 @@ NativeToValueBase(JSContext* cx, jsval& v, JSTraceType type, double* slot)
          * It's not safe to trigger the GC here, so use an emergency heap if we
          * are out of double boxes.
          */
-            if (JS_THREAD_DATA(cx)->doubleFreeList) {
+            if (JS_THREAD_DATA(cx)->gcFreeLists.doubles) {
 #ifdef DEBUG
             JSBool ok =
 #endif
