@@ -224,24 +224,33 @@ nsFrameLoader::ReallyStartLoading()
 {
   NS_ENSURE_STATE(mURIToLoad && mOwnerContent && mOwnerContent->IsInDoc());
 
-#ifdef MOZ_IPC
-  if (!mTriedNewProcess) {
-    TryNewProcess();
-    mTriedNewProcess = PR_TRUE;
+  nsresult rv = MaybeCreateDocShell();
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  if (mChildProcess) {
+#ifdef MOZ_IPC
+  if (mRemoteFrame) {
+    if (!mChildProcess) {
+      TryNewProcess();
+    }
+
+    if (!mChildProcess) {
+      NS_WARNING("Couldn't create child process for iframe.");
+      return NS_ERROR_FAILURE;
+    }
+
     // FIXME get error codes from child
     mChildProcess->LoadURL(mURIToLoad);
     return NS_OK;
   }
 #endif
-  
-  // Just to be safe, recheck uri.
-  nsresult rv = CheckURILoad(mURIToLoad);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = EnsureDocShell();
+  NS_ASSERTION(mDocShell,
+               "MaybeCreateDocShell succeeded with a null mDocShell");
+
+  // Just to be safe, recheck uri.
+  rv = CheckURILoad(mURIToLoad);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
@@ -305,6 +314,13 @@ nsFrameLoader::CheckURILoad(nsIURI* aURI)
   }
 
   // Bail out if this is an infinite recursion scenario
+  rv = MaybeCreateDocShell();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (mRemoteFrame) {
+    return NS_OK;
+  }
   return CheckForRecursiveLoad(aURI);
 }
 
@@ -317,8 +333,15 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
   // that. If not, we're most likely in the middle of being torn down,
   // then we just return null.
   if (mOwnerContent) {
-    nsresult rv = EnsureDocShell();
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = MaybeCreateDocShell();
+    if (NS_FAILED(rv))
+      return rv;
+    if (mRemoteFrame) {
+      NS_WARNING("No docshells for remote frames!");
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    NS_ASSERTION(mDocShell,
+                 "MaybeCreateDocShell succeeded, but null mDocShell");
   }
 
   *aDocShell = mDocShell;
@@ -827,13 +850,58 @@ nsFrameLoader::GetDepthTooGreat(PRBool* aDepthTooGreat)
   return NS_OK;
 }
 
-nsresult
-nsFrameLoader::EnsureDocShell()
+#ifdef MOZ_IPC
+bool
+nsFrameLoader::ShouldUseRemoteProcess()
 {
-  if (mDocShell) {
+  // Check for *disabled* multi-process first: environment, prefs, attribute
+  // Then check for *enabled* multi-process pref: attribute, prefs
+  // Default is not-remote.
+
+  if (PR_GetEnv("MOZ_DISABLE_OOP_TABS")) {
+    return false;
+  }
+
+  PRBool remoteDisabled = nsContentUtils::GetBoolPref("dom.ipc.tabs.disabled",
+                                                      PR_FALSE);
+  if (remoteDisabled) {
+    return false;
+  }
+
+  static nsIAtom* const *const remoteValues[] = {
+    &nsGkAtoms::_false,
+    &nsGkAtoms::_true,
+    nsnull
+  };
+
+  switch (mOwnerContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::Remote,
+                                         remoteValues, eCaseMatters)) {
+  case 0:
+    return false;
+  case 1:
+    return true;
+  }
+
+  PRBool remoteEnabled = nsContentUtils::GetBoolPref("dom.ipc.tabs.enabled",
+                                                     PR_FALSE);
+  return (bool) remoteEnabled;
+}
+#endif
+
+nsresult
+nsFrameLoader::MaybeCreateDocShell()
+{
+  if (mDocShell || mRemoteFrame) {
     return NS_OK;
   }
   NS_ENSURE_STATE(!mDestroyCalled);
+
+#ifdef MOZ_IPC
+  if (ShouldUseRemoteProcess()) {
+    mRemoteFrame = true;
+    return NS_OK;
+  }
+#endif
 
   // Get our parent docshell off the document of mOwnerContent
   // XXXbz this is such a total hack.... We really need to have a
@@ -858,6 +926,7 @@ nsFrameLoader::EnsureDocShell()
   // Get the frame name and tell the docshell about it.
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+
   nsAutoString frameName;
 
   PRInt32 namespaceID = mOwnerContent->GetNameSpaceID();
@@ -964,9 +1033,18 @@ nsFrameLoader::GetURL(nsString& aURI)
 nsresult
 nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
 {
+  nsresult rv;
+
   mDepthTooGreat = PR_FALSE;
-  nsresult rv = EnsureDocShell();
-  NS_ENSURE_SUCCESS(rv, rv);
+  rv = MaybeCreateDocShell();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  NS_ASSERTION(!mRemoteFrame,
+               "Shouldn't call CheckForRecursiveLoad on remote frames.");
+  if (!mDocShell) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
   NS_ASSERTION(treeItem, "docshell must be a treeitem!");
@@ -1090,6 +1168,8 @@ nsFrameLoader::UpdateBaseWindowPositionAndSize(nsIFrame *aIFrame)
 
     baseWindow->SetPositionAndSize(x, y, size.width, size.height, PR_FALSE);
   }
+
+  return NS_OK;
 }
 
 nsIntSize
@@ -1112,21 +1192,7 @@ nsFrameLoader::GetSubDocumentSize(const nsIFrame *aIFrame)
 PRBool
 nsFrameLoader::TryNewProcess()
 {
-  if (PR_GetEnv("MOZ_DISABLE_OOP_TABS")) {
-      return PR_FALSE;
-  }
-
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (!prefs) {
-      return PR_FALSE;
-  }
-
-  PRBool oopTabsEnabled = PR_FALSE;
-  prefs->GetBoolPref("dom.ipc.tabs.enabled", &oopTabsEnabled);
-
-  if (!oopTabsEnabled) {
-      return PR_FALSE;
-  }
+  NS_ASSERTION(!mChildProcess, "TryNewProcess called with a process already?");
 
   nsIDocument* doc = mOwnerContent->GetDocument();
   if (!doc) {
