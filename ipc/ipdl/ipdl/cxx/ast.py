@@ -138,8 +138,15 @@ class Visitor:
     def visitExprDeref(self, ed):
         self.visitExprPrefixUnop(ed)
 
+    def visitExprNot(self, en):
+        self.visitExprPrefixUnop(en)
+
     def visitExprCast(self, ec):
         ec.expr.accept(self)
+
+    def visitExprIndex(self, ei):
+        ei.arr.accept(self)
+        ei.idx.accept(self)
 
     def visitExprSelect(self, es):
         es.obj.accept(self)
@@ -154,7 +161,13 @@ class Visitor:
             arg.accept(self)
 
     def visitExprNew(self, en):
-        self.visitExprCall(en)
+        en.ctype.accept(self)
+        if en.newargs is not None:
+            for arg in en.newargs:
+                arg.accept(self)
+        if en.args is not None:
+            for arg in en.args:
+                arg.accept(self)
 
     def visitExprDelete(self, ed):
         ed.obj.accept(self)
@@ -188,6 +201,14 @@ class Visitor:
         if si.elseb is not None:
             si.elseb.accept(self)
 
+    def visitStmtFor(self, sf):
+        if sf.init is not None:
+            sf.init.accept(self)
+        if sf.cond is not None:
+            sf.cond.accept(self)
+        if sf.update is not None:
+            sf.update.accept(self)
+
     def visitStmtSwitch(self, ss):
         ss.expr.accept(self)
         self.visitBlock(ss)
@@ -216,25 +237,36 @@ class Node:
 class Whitespace(Node):
     # yes, this is silly.  but we need to stick comments in the
     # generated code without resorting to more serious hacks
-    def __init__(self, ws):
+    def __init__(self, ws, indent=0):
         Node.__init__(self)
         self.ws = ws
+        self.indent = indent
 Whitespace.NL = Whitespace('\n')
 
 class File(Node):
     def __init__(self, filename):
         Node.__init__(self)
-        self.filename = filename
+        self.name = filename
         # array of stuff in the file --- stmts and preprocessor thingies
         self.stuff = [ ]
 
     def addthing(self, thing):
+        assert thing is not None
+        assert not isinstance(thing, list)
         self.stuff.append(thing)
+
+    def addthings(self, things):
+        for t in things:  self.addthing(t)
 
     # "look like" a Block so code doesn't have to care whether they're
     # in global scope or not
     def addstmt(self, stmt):
+        assert stmt is not None
+        assert not isinstance(stmt, list)
         self.stuff.append(stmt)
+
+    def addstmts(self, stmts):
+        for s in stmts:  self.addstmt(s)
 
 class CppDirective(Node):
     '''represents |#[directive] [rest]|, where |rest| is any string'''
@@ -249,11 +281,12 @@ class Block(Node):
         self.stmts = [ ]
 
     def addstmt(self, stmt):
+        assert stmt is not None
+        assert not isinstance(stmt, list)
         self.stmts.append(stmt)
 
     def addstmts(self, stmts):
-        for stmt in stmts:
-            self.addstmt(stmt)
+        for s in stmts:  self.addstmt(s)
 
 ##------------------------------
 # type and decl thingies
@@ -268,7 +301,7 @@ class Type(Node):
     def __init__(self, name, const=0,
                  ptr=0, ptrconst=0, ptrptr=0, ptrconstptr=0,
                  ref=0,
-                 actor=0):
+                 T=None):
         """
 To avoid getting fancy with recursive types, we limit the kinds
 of pointer types that can be be constructed.
@@ -279,10 +312,10 @@ of pointer types that can be be constructed.
   ptrconstptr    => T* const*
 
 Any type, naked or pointer, can be const (const T) or ref (T&).
-
-The "actor" flag is used internally when we need to know if the C++
-type actually represents an IPDL actor type.
 """
+        assert isinstance(name, str)
+        assert not isinstance(const, str)
+
         Node.__init__(self)
         self.name = name
         self.const = const
@@ -291,7 +324,7 @@ type actually represents an IPDL actor type.
         self.ptrptr = ptrptr
         self.ptrconstptr = ptrconstptr
         self.ref = ref
-        self.actor = actor
+        self.T = T
         # XXX could get serious here with recursive types, but shouldn't 
         # need that for this codegen
     def __deepcopy__(self, memo):
@@ -299,7 +332,12 @@ type actually represents an IPDL actor type.
                     const=self.const,
                     ptr=self.ptr, ptrconst=self.ptrconst,
                     ptrptr=self.ptrptr, ptrconstptr=self.ptrconstptr,
-                    ref=self.ref, actor=self.actor)
+                    ref=self.ref,
+                    T=copy.deepcopy(self.T, memo))
+Type.BOOL = Type('bool')
+Type.INT = Type('int')
+Type.INTPTR = Type('intptr_t')
+Type.UINT32 = Type('uint32_t')
 
 class TypeArray(Node):
     def __init__(self, basetype, nmemb):
@@ -323,12 +361,10 @@ class TypeUnion(Node):
     def __init__(self, name=None):
         Node.__init__(self)
         self.name = name
-        self.components = [ ]           # pairs of (Type, name)
-        self.componentDecls = [ ]       # [ Decl ]
+        self.components = [ ]           # [ Decl ]
 
     def addComponent(self, type, name):
-        self.components.append((type, name))
-        self.componentDecls.append(Decl(type, name))
+        self.components.append(Decl(type, name))
 
 class Typedef(Node):
     def __init__(self, fromtype, totypename):
@@ -349,6 +385,10 @@ class ForwardDecl(Node):
 class Decl(Node):
     '''represents |Foo bar|, e.g. in a function signature'''
     def __init__(self, type, name):
+        assert type is not None
+        assert not isinstance(type, str)
+        assert isinstance(name, str)
+
         Node.__init__(self)
         self.type = type
         self.name = name
@@ -376,9 +416,10 @@ class Class(Block):
         self.struct = struct            # bool
 
 class Inherit(Node):
-    def __init__(self, name, viz='public'):
+    def __init__(self, type, viz='public'):
+        assert isinstance(viz, str)
         Node.__init__(self)
-        self.name = name
+        self.type = type
         self.viz = viz
 
 class FriendClassDecl(Node):
@@ -388,12 +429,15 @@ class FriendClassDecl(Node):
 
 class MethodDecl(Node):
     def __init__(self, name, params=[ ], ret=Type('void'),
-                 virtual=0, const=0, pure=0, static=0, typeop=0):
+                 virtual=0, const=0, pure=0, static=0,
+                 typeop=None):
         assert not (virtual and static)
         assert not pure or virtual      # pure => virtual
         assert not (static and typeop)
+        assert not (name and typeop)
+        assert name is None or isinstance(name, str)
 
-        if typeop:
+        if typeop is not None:
             ret = None
 
         Node.__init__(self)
@@ -404,8 +448,8 @@ class MethodDecl(Node):
         self.const = const              # bool
         self.pure = pure                # bool
         self.static = static            # bool
-        self.typeop = typeop            # bool
-        
+        self.typeop = typeop            # Type or None
+
     def __deepcopy__(self, memo):
         return MethodDecl(self.name,
                           copy.deepcopy(self.params, memo),
@@ -443,6 +487,14 @@ class DestructorDefn(MethodDefn):
 
 ##------------------------------
 # expressions
+class ExprVar(Node):
+    def __init__(self, name):
+        assert isinstance(name, str)
+        
+        Node.__init__(self)
+        self.name = name
+ExprVar.THIS = ExprVar('this')
+
 class ExprLiteral(Node):
     def __init__(self, value, type):
         '''|type| is a Python format specifier; 'd' for example'''
@@ -464,16 +516,17 @@ class ExprLiteral(Node):
 ExprLiteral.ZERO = ExprLiteral.Int(0)
 ExprLiteral.ONE = ExprLiteral.Int(1)
 ExprLiteral.NULL = ExprLiteral.ZERO
-
-class ExprVar(Node):
-    def __init__(self, name):
-        Node.__init__(self)
-        self.name = name
+ExprLiteral.TRUE = ExprVar('true')
+ExprLiteral.FALSE = ExprVar('false')
 
 class ExprPrefixUnop(Node):
     def __init__(self, expr, op):
         self.expr = expr
         self.op = op
+
+class ExprNot(ExprPrefixUnop):
+    def __init__(self, expr):
+        ExprPrefixUnop.__init__(self, expr, '!')
 
 class ExprAddrOf(ExprPrefixUnop):
     def __init__(self, expr):
@@ -510,9 +563,19 @@ class ExprConditional(Node):
         self.cond = cond
         self.ife = ife
         self.elsee = elsee
- 
+
+class ExprIndex(Node):
+    def __init__(self, arr, idx):
+        Node.__init__(self)
+        self.arr = arr
+        self.idx = idx
+
 class ExprSelect(Node):
     def __init__(self, obj, op, field):
+        assert obj and op and field
+        assert not isinstance(obj, str)
+        assert isinstance(field, str)
+        
         Node.__init__(self)
         self.obj = obj
         self.op = op
@@ -527,20 +590,21 @@ class ExprAssn(Node):
 
 class ExprCall(Node):
     def __init__(self, func, args=[ ]):
+        assert hasattr(func, 'accept')
+        assert isinstance(args, list)
+
         Node.__init__(self)
         self.func = func
         self.args = args
 
-class ExprNew(ExprCall):
+class ExprNew(Node):
     # XXX taking some poetic license ...
-    def __init__(self, type, args=[ ], newargs=None):
-        assert not (type.const or type.ref)
-        
-        ctorname = type.name
-        if type.ptr:  ctorname += '*'
-        elif type.ptrptr:  ctorname += '**'
-        
-        ExprCall.__init__(self, ExprVar(ctorname), args)
+    def __init__(self, ctype, args=[ ], newargs=None):
+        assert not (ctype.const or ctype.ref)
+
+        Node.__init__(self)
+        self.ctype = ctype
+        self.args = args
         self.newargs = newargs
 
 class ExprDelete(Node):
@@ -559,14 +623,20 @@ class ExprSizeof(ExprCall):
 ##------------------------------
 # statements etc.
 class StmtBlock(Block):
-    def __init__(self):
+    def __init__(self, stmts=[ ]):
         Block.__init__(self)
+        self.addstmts(stmts)
 
 class StmtDecl(Node):
-    def __init__(self, decl, init=None):
+    def __init__(self, decl, init=None, initargs=None):
+        assert not (init and initargs)
+        assert not isinstance(init, str) # easy to confuse with Decl
+        assert not isinstance(decl, tuple)
+        
         Node.__init__(self)
         self.decl = decl
         self.init = init
+        self.initargs = initargs
 
 class Label(Node):
     def __init__(self, name):
@@ -591,11 +661,27 @@ class StmtIf(Node):
         self.cond = cond
         self.ifb = Block()
         self.elseb = None
+
     def addifstmt(self, stmt):
         self.ifb.addstmt(stmt)
+
+    def addifstmts(self, stmts):
+        self.ifb.addstmts(stmts)
+        
     def addelsestmt(self, stmt):
         if self.elseb is None: self.elseb = Block()
         self.elseb.addstmt(stmt)
+
+    def addelsestmts(self, stmts):
+        if self.elseb is None: self.elseb = Block()
+        self.elseb.addstmts(stmts)
+
+class StmtFor(Block):
+    def __init__(self, init=None, cond=None, update=None):
+        Block.__init__(self)
+        self.init = init
+        self.cond = cond
+        self.update = update
 
 class StmtSwitch(Block):
     def __init__(self, expr):
@@ -605,6 +691,11 @@ class StmtSwitch(Block):
 
     def addcase(self, case, block):
         '''NOTE: |case| is not checked for uniqueness'''
+        assert (isinstance(block, StmtBreak)
+                or isinstance(block, StmtReturn)
+                or (hasattr(block, 'stmts')
+                    and (isinstance(block.stmts[-1], StmtBreak)
+                         or isinstance(block.stmts[-1], StmtReturn))))
         self.addstmt(case)
         self.addstmt(block)
         self.nr_cases += 1

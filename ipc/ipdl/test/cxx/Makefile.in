@@ -56,11 +56,12 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
-
-IPDLTESTS =  \
+# Please keep these organized in the order "easy"-to-"hard"
+IPDLTESTS = \
+  TestSanity  \
   TestLatency \
   TestManyChildAllocs  \
-  TestSanity  \
+  TestArrays \
   $(NULL)
 
 IPDLTESTSRCS = $(addsuffix .cpp,$(IPDLTESTS))

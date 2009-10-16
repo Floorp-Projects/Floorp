@@ -1,0 +1,12 @@
+include protocol "PTestArrays.ipdl";
+
+namespace mozilla {
+namespace _ipdltest {
+
+protocol PTestArraysSub {
+    manager PTestArrays;
+    // empty
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

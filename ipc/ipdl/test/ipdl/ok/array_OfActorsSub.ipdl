@@ -1,0 +1,7 @@
+include protocol "array_OfActors.ipdl";
+
+protocol array_OfActorsSub {
+    manager array_OfActors;
+
+    // empty
+};
