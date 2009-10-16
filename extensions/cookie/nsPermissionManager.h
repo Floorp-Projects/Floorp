@@ -60,14 +60,19 @@ class mozIStorageStatement;
 class nsPermissionEntry
 {
 public:
-  nsPermissionEntry(PRUint32 aType, PRUint32 aPermission, PRInt64 aID)
+  nsPermissionEntry(PRUint32 aType, PRUint32 aPermission, PRInt64 aID, 
+                    PRUint32 aExpireType, PRInt64 aExpireTime)
    : mType(aType)
    , mPermission(aPermission)
-   , mID(aID) {}
+   , mID(aID)
+   , mExpireType(aExpireType)
+   , mExpireTime(aExpireTime) {}
 
   PRUint32 mType;
   PRUint32 mPermission;
   PRInt64  mID;
+  PRUint32 mExpireType;
+  PRInt64  mExpireTime;
 };
 
 class nsHostEntry : public PLDHashEntryHdr
@@ -130,13 +135,16 @@ public:
     return -1;
   }
 
-  inline PRUint32 GetPermission(PRUint32 aType) const
+  inline nsPermissionEntry GetPermission(PRUint32 aType) const
   {
     for (PRUint32 i = 0; i < mPermissions.Length(); ++i)
       if (mPermissions[i].mType == aType)
-        return mPermissions[i].mPermission;
+        return mPermissions[i];
 
-    return nsIPermissionManager::UNKNOWN_ACTION;
+    // unknown permission... return relevant data 
+    nsPermissionEntry unk = nsPermissionEntry(aType, nsIPermissionManager::UNKNOWN_ACTION,
+                                              -1, nsIPermissionManager::EXPIRE_NEVER, 0);
+    return unk;
   }
 
 private:
@@ -184,6 +192,8 @@ private:
                        const nsAFlatCString &aType,
                        PRUint32 aPermission,
                        PRInt64 aID,
+                       PRUint32 aExpireType,
+                       PRInt64  aExpireTime,
                        NotifyOperationType aNotifyOperation,
                        DBOperationType aDBOperation);
 
@@ -206,6 +216,8 @@ private:
   void     NotifyObserversWithPermission(const nsACString &aHost,
                                          const nsCString  &aType,
                                          PRUint32          aPermission,
+                                         PRUint32          aExpireType,
+                                         PRInt64           aExpireTime,
                                          const PRUnichar  *aData);
   void     NotifyObservers(nsIPermission *aPermission, const PRUnichar *aData);
   nsresult RemoveAllInternal();
@@ -217,7 +229,9 @@ private:
                        PRInt64               aID,
                        const nsACString     &aHost,
                        const nsACString     &aType,
-                       PRUint32              aPermission);
+                       PRUint32              aPermission,
+                       PRUint32              aExpireType,
+                       PRInt64               aExpireTime);
 
   nsCOMPtr<nsIObserverService> mObserverService;
   nsCOMPtr<nsIIDNService>      mIDNService;
