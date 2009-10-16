@@ -191,49 +191,6 @@ NS_IMETHODIMP nsGIFDecoder2::Flush()
     return NS_OK;
 }
 
-//******************************************************************************
-/* static callback from nsIInputStream::ReadSegments */
-NS_METHOD nsGIFDecoder2::ReadDataOut(nsIInputStream* in,
-                                     void* closure,
-                                     const char* fromRawSegment,
-                                     PRUint32 toOffset,
-                                     PRUint32 count,
-                                     PRUint32 *writeCount)
-{
-  nsGIFDecoder2 *decoder = static_cast<nsGIFDecoder2*>(closure);
-
-  // Always read everything
-  *writeCount = count;
-
-  // Process
-  nsresult rv = decoder->ProcessData((unsigned char*)fromRawSegment, count);
-
-  // We do some fine-grained error control here. If we have at least one frame
-  // of an animated gif, we still want to display it (mostly for legacy reasons).
-  // libpr0n code is strict, so we have to lie and tell it we were successful. So
-  // if we have something to salvage, we send off final decode notifications, and
-  // pretend that we're decoded. Otherwise, we set mError.
-  if (NS_FAILED(rv)) {
-
-    // Determine if we want to salvage the situation
-    PRUint32 numFrames = 0;
-    if (decoder->mImageContainer)
-      decoder->mImageContainer->GetNumFrames(&numFrames);
-
-    // If we're salvaging, send off notifications
-    if (numFrames > 1) { // XXXbholley - this is from the old code, but why not > 0?
-      decoder->EndGIF(/* aSuccess = */ PR_TRUE);
-    }
-
-    // Otherwise, set mError
-    else
-      decoder->mError = PR_TRUE;
-  }
-
-  // Necko is dubious with callbacks, so we don't use rvs to propagate errors.
-  return NS_OK;
-}
-
 // Push any new rows according to mCurrentPass/mLastFlushedPass and
 // mCurrentRow/mLastFlushedRow.  Note: caller is responsible for
 // updating mlastFlushed{Row,Pass}.
@@ -282,38 +239,51 @@ nsGIFDecoder2::FlushImageData()
 }
 
 //******************************************************************************
-nsresult nsGIFDecoder2::ProcessData(unsigned char *data, PRUint32 count)
+/* void write (in string aBuffer, in PRUint32 aCount); */
+NS_IMETHODIMP
+nsGIFDecoder2::Write(const char *aBuffer, PRUint32 aCount)
 {
+  // Don't forgive previously flagged errors
+  if (mError)
+    return NS_ERROR_FAILURE;
+
   // Push the data to the GIF decoder
-  nsresult rv = GifWrite(data, count);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = GifWrite((const unsigned char *)aBuffer, aCount);
 
   // Flushing is only needed for first frame
-  if (!mGIFStruct.images_decoded) {
+  if (NS_SUCCEEDED(rv) && !mGIFStruct.images_decoded) {
     rv = FlushImageData();
     NS_ENSURE_SUCCESS(rv, rv);
     mLastFlushedRow = mCurrentRow;
     mLastFlushedPass = mCurrentPass;
   }
 
-  return NS_OK;
-}
+  // We do some fine-grained error control here. If we have at least one frame
+  // of an animated gif, we still want to display it (mostly for legacy reasons).
+  // libpr0n code is strict, so we have to lie and tell it we were successful. So
+  // if we have something to salvage, we send off final decode notifications, and
+  // pretend that we're decoded. Otherwise, we set mError.
+  if (NS_FAILED(rv)) {
 
-//******************************************************************************
-/* void  writeFrom (in nsIInputStream inStr, in unsigned long count); */
-NS_IMETHODIMP nsGIFDecoder2::WriteFrom(nsIInputStream *inStr, PRUint32 count)
-{
-  // Decode, watching for errors
-  nsresult rv = NS_OK;
-  PRUint32 ignored;
-  if (!mError)
-    rv = inStr->ReadSegments(nsGIFDecoder2::ReadDataOut, this,
-                             count, &ignored);
-  if (mError || NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-  return NS_OK;
-}
+    // Determine if we want to salvage the situation
+    PRUint32 numFrames = 0;
+    if (mImageContainer)
+      mImageContainer->GetNumFrames(&numFrames);
 
+    // If we're salvaging, send off notifications
+    // Note that we need to make sure that we have 2 frames, since that tells us
+    // that the first frame is complete (the second could be in any state).
+    if (numFrames > 1) {
+      EndGIF(/* aSuccess = */ PR_TRUE);
+    }
+
+    // Otherwise, set mError
+    else
+      mError = PR_TRUE;
+  }
+
+  return mError ? NS_ERROR_FAILURE : NS_OK;
+}
 
 //******************************************************************************
 // GIF decoder callback methods. Part of public API for GIF2

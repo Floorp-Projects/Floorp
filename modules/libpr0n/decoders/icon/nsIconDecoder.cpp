@@ -114,105 +114,92 @@ NS_IMETHODIMP nsIconDecoder::Flush()
   return NS_OK;
 }
 
-static nsresult
-WriteIconData(nsIInputStream *aInStream, void *aClosure, const char *aFromSegment,
-              PRUint32 aToOffset, PRUint32 aCount, PRUint32 *aWriteCount)
+NS_IMETHODIMP
+nsIconDecoder::Write(const char *aBuffer, PRUint32 aCount)
 {
   nsresult rv;
-
-  // We always read everything
-  *aWriteCount = aCount;
 
   // We put this here to avoid errors about crossing initialization with case
   // jumps on linux.
   PRUint32 bytesToRead = 0;
 
-  // Grab the parameters
-  nsIconDecoder *decoder = static_cast<nsIconDecoder*>(aClosure);
-
   // Performance isn't critical here, so our update rectangle is 
   // always the full icon
-  nsIntRect r(0, 0, decoder->mWidth, decoder->mHeight);
+  nsIntRect r(0, 0, mWidth, mHeight);
 
   // Loop until the input data is gone
   while (aCount > 0) {
-    switch (decoder->mState) {
+    switch (mState) {
       case iconStateStart:
 
         // Grab the width
-        decoder->mWidth = (PRUint8)*aFromSegment;
+        mWidth = (PRUint8)*aBuffer;
 
         // Book Keeping
-        aFromSegment++;
+        aBuffer++;
         aCount--;
-        decoder->mState = iconStateHaveHeight;
+        mState = iconStateHaveHeight;
         break;
 
       case iconStateHaveHeight:
 
         // Grab the Height
-        decoder->mHeight = (PRUint8)*aFromSegment;
+        mHeight = (PRUint8)*aBuffer;
 
         // Set up the container and signal
-        decoder->mImage->SetSize(decoder->mWidth,
-                                 decoder->mHeight);
-        if (decoder->mObserver)
-          decoder->mObserver->OnStartContainer(nsnull, decoder->mImage);
+        mImage->SetSize(mWidth, mHeight);
+        if (mObserver)
+          mObserver->OnStartContainer(nsnull, mImage);
 
         // If We're doing a header-only decode, we're done
-        if (decoder->mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) {
-          decoder->mState = iconStateFinished;
+        if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) {
+          mState = iconStateFinished;
           break;
         }
 
         // Add the frame and signal
-        rv = decoder->mImage->AppendFrame(0, 0,
-                                          decoder->mWidth,
-                                          decoder->mHeight,
-                                          gfxASurface::ImageFormatARGB32,
-                                          &decoder->mImageData, 
-                                          &decoder->mPixBytesTotal);
+        rv = mImage->AppendFrame(0, 0, mWidth, mHeight,
+                                 gfxASurface::ImageFormatARGB32,
+                                 &mImageData, &mPixBytesTotal);
         if (NS_FAILED(rv)) {
-          decoder->mState = iconStateError;
+          mState = iconStateError;
           return rv;
         }
-        if (decoder->mObserver)
-          decoder->mObserver->OnStartFrame(nsnull, 0);
+        if (mObserver)
+         mObserver->OnStartFrame(nsnull, 0);
 
         // Book Keeping
-        aFromSegment++;
+        aBuffer++;
         aCount--;
-        decoder->mState = iconStateReadPixels;
+        mState = iconStateReadPixels;
         break;
 
       case iconStateReadPixels:
 
         // How many bytes are we reading?
-        bytesToRead = PR_MAX(aCount,
-                             decoder->mPixBytesTotal - decoder->mPixBytesRead);
+        bytesToRead = PR_MAX(aCount, mPixBytesTotal - mPixBytesRead);
 
         // Copy the bytes
-        memcpy(decoder->mImageData + decoder->mPixBytesRead,
-               aFromSegment, bytesToRead);
+        memcpy(mImageData + mPixBytesRead, aBuffer, bytesToRead);
 
         // Notify
-        rv = decoder->mImage->FrameUpdated(0, r);
+        rv = mImage->FrameUpdated(0, r);
         if (NS_FAILED(rv)) {
-          decoder->mState = iconStateError;
+          mState = iconStateError;
           return rv;
         }
-        if (decoder->mObserver)
-          decoder->mObserver->OnDataAvailable(nsnull, PR_TRUE, &r);
+        if (mObserver)
+          mObserver->OnDataAvailable(nsnull, PR_TRUE, &r);
 
         // Book Keeping
-        aFromSegment += bytesToRead;
+        aBuffer += bytesToRead;
         aCount -= bytesToRead;
-        decoder->mPixBytesRead += bytesToRead;
+        mPixBytesRead += bytesToRead;
 
         // If we've got all the pixel bytes, we're finished
-        if (decoder->mPixBytesRead == decoder->mPixBytesTotal) {
-          decoder->NotifyDone(/* aSuccess = */ PR_TRUE);
-          decoder->mState = iconStateFinished;
+        if (mPixBytesRead == mPixBytesTotal) {
+          NotifyDone(/* aSuccess = */ PR_TRUE);
+          mState = iconStateFinished;
         }
         break;
 
@@ -251,18 +238,5 @@ nsIconDecoder::NotifyDone(PRBool aSuccess)
 
   // Flag that we've notified
   mNotifiedDone = PR_TRUE;
-}
-
-
-NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count)
-{
-  // Decode, watching for errors.
-  nsresult rv = NS_OK;
-  PRUint32 ignored;
-  if (mState != iconStateError)
-    rv = inStr->ReadSegments(WriteIconData, this, count, &ignored);
-  if ((mState == iconStateError) || NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-  return NS_OK;
 }
 
