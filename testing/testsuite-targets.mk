@@ -86,12 +86,14 @@ mochitest-a11y:
 RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
   $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
+reftest: TEST_PATH=layout/reftests/reftest.list
 reftest:
-	$(call RUN_REFTEST,$(topsrcdir)/layout/reftests/reftest.list)
+	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH))
 	$(CHECK_TEST_ERROR)
 
+crashtest: TEST_PATH=testing/crashtest/crashtests.list
 crashtest:
-	$(call RUN_REFTEST,$(topsrcdir)/testing/crashtest/crashtests.list)
+	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH))
 	$(CHECK_TEST_ERROR)
 
 jstestbrowser: EXTRA_TEST_ARGS += --extra-profile-file=$(topsrcdir)/js/src/tests/user.js
