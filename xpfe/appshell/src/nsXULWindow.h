@@ -169,6 +169,8 @@ protected:
    PRPackedBool            mCenterAfterLoad;
    PRPackedBool            mIsHiddenWindow;
    PRPackedBool            mLockedUntilChromeLoad;
+   PRPackedBool            mIgnoreXULSize;
+   PRPackedBool            mIgnoreXULPosition;
    PRUint32                mContextFlags;
    PRUint32                mBlurSuppressionLevel;
    PRUint32                mPersistentAttributesDirty; // persistentAttributes
