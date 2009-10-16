@@ -26,12 +26,13 @@ function run_test() {
   // add a permission without expiration
   pm.add(permURI, "test/expiration-perm-nexp", 1, pm.EXPIRE_NEVER, 0);
 
-  // check that the permission expired
-  do_check_eq(0, pm.testPermission(permURI, "test/expiration-perm-exp"));
-
-  // ... and that the others didn't
+  // check that the second two haven't expired yet
   do_check_eq(1, pm.testPermission(permURI, "test/expiration-perm-exp3"));
   do_check_eq(1, pm.testPermission(permURI, "test/expiration-perm-nexp"));
+
+  // ... and the first one has
+  do_test_pending();
+  do_timeout(10, "verifyFirstExpiration();");
 
   // ... and that the short-term one will
   do_test_pending();
@@ -40,6 +41,11 @@ function run_test() {
   // clean up
   do_test_pending();
   do_timeout(300, "end_test();");
+}
+
+function verifyFirstExpiration() { 
+  do_check_eq(0, pm.testPermission(permURI, "test/expiration-perm-exp"));
+  do_test_finished();
 }
 
 function verifyExpiration() { 
