@@ -52,7 +52,7 @@ gTests.push({
   
   run: function() {
     this._currenttab = Browser.addTab(testURL_02, true);
-    var handleEvent = function() {
+    function handleEvent() {
       gCurrentTest._currenttab.browser.removeEventListener("load", handleEvent, true);
       gCurrentTest.onPageLoad();
     };

@@ -105,7 +105,7 @@ gTests.push({
     gCurrentTest._currenttab.browser.addEventListener("pageshow", 
       function() {
         gCurrentTest._currenttab.browser.removeEventListener("pageshow", arguments.callee, true);
-        todo(gCurrentTest._currenttab.browser.currentURI.spec, testURL_01, "Opened the right bookmark");      
+        todo_is(gCurrentTest._currenttab.browser.currentURI.spec, testURL_01, "Opened the right bookmark");      
 
         Browser.closeTab(gCurrentTest._currenttab);
 
@@ -203,6 +203,7 @@ gTests.push({
 // Case: Test removing existing bookmark
 gTests.push({
   desc: "Test removing existing bookmark",
+  bookmarkitem: null,
   
   run: function() {
     // Open the bookmark list
@@ -216,10 +217,14 @@ gTests.push({
   
   onBookmarksReady: function() {
     var bookmarkitems = document.getElementById("bookmark-items");
-    var bookmarkitem = document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_02);
-    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
+    gCurrentTest.bookmarkitem = document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_02);
+    EventUtils.synthesizeMouse(gCurrentTest.bookmarkitem, gCurrentTest.bookmarkitem.clientWidth / 2, gCurrentTest.bookmarkitem.clientHeight / 2, {});
 
-    var removebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "close-button");
+    waitFor(gCurrentTest.onEditorReady, function() { return gCurrentTest.bookmarkitem.isEditing == true; });
+  },
+  
+  onEditorReady: function() {
+    var removebutton = document.getAnonymousElementByAttribute(gCurrentTest.bookmarkitem, "anonid", "remove-button");
     removebutton.click();
     
     var bookmark = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_02));
