@@ -51,6 +51,7 @@
 
 class nsIContent;
 class nsIURI;
+class nsIFrameFrame;
 
 class nsFrameLoader : public nsIFrameLoader
 {
@@ -79,6 +80,21 @@ public:
   nsresult ReallyStartLoading();
   void Finalize();
   nsIDocShell* GetExistingDocShell() { return mDocShell; }
+
+  /**
+   * Called from the layout frame associated with this frame loader;
+   * this notifies us to hook up with the widget and view.
+   */
+  bool Show(PRInt32 marginWidth, PRInt32 marginHeight,
+            PRInt32 scrollbarPrefX, PRInt32 scrollbarPrefY,
+            nsIFrameFrame* frame);
+
+  /**
+   * Called from the layout frame associated with this frame loader, when
+   * the frame is being torn down; this notifies us that out widget and view
+   * are going away and we should unhook from them.
+   */
+  void Hide();
 
   // The guts of an nsIFrameLoaderOwner::SwapFrameLoader implementation.  A
   // frame loader owner needs to call this, and pass in the two references to
