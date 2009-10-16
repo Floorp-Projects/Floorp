@@ -20,6 +20,13 @@
 <!ENTITY aboutSupport.appBasicsPlugins "Installed Plugins">
 <!ENTITY aboutSupport.appBasicsBuildConfig "Build Configuration">
 
+<!ENTITY aboutSupport.show.label "Open Containing Folder">
+
+<!-- LOCALIZATION NOTE (aboutSupport.showMac.label): This is the Mac-specific
+variant of aboutSupport.show.label.  This allows us to use the preferred
+"Finder" terminology on Mac. -->
+<!ENTITY aboutSupport.showMac.label "Show in Finder">
+
 <!ENTITY aboutSupport.modifiedPrefsTitle "Modified Preferences">
 <!ENTITY aboutSupport.modifiedPrefsName "Name">
 <!ENTITY aboutSupport.modifiedPrefsValue "Value">
