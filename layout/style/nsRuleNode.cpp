@@ -3730,7 +3730,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     if (i >= delay.num) {
       transition->SetDelay(display->mTransitions[i % delay.num].GetDelay());
     } else if (delay.inherited) {
-      // FIXME (for all transition properties): write a test that
+      // FIXME (Bug 522599) (for all transition properties): write a test that
       // detects when this was wrong for i >= delay.num if parent had
       // count for this property not equal to length
       NS_ABORT_IF_FALSE(i < parentDisplay->mTransitionDelayCount,
