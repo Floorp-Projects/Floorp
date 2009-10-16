@@ -51,7 +51,7 @@ interface imgIDecoderObserver;
  * @version 0.2
  * @see imagelib2
  */
-[scriptable, uuid(139c6f97-cd2f-4a4f-890d-8d9f4a693682)]
+[scriptable, uuid(6fc61088-5443-4539-9e24-629a266a800a)]
 interface imgIDecoder : nsISupports
 {
   /**
