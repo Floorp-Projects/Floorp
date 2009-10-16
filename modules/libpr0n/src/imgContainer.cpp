@@ -156,7 +156,6 @@ imgContainer::imgContainer() :
   mDecoder(nsnull),
   mWorker(nsnull),
   mBytesDecoded(0),
-  mDecoderInput(nsnull),
   mDecoderFlags(imgIDecoder::DECODER_FLAG_NONE),
   mWorkerPending(PR_FALSE),
   mInDecoder(PR_FALSE),
@@ -2072,14 +2071,6 @@ imgContainer::InitDecoder (PRUint32 dFlags)
   nsresult result = mDecoder->Init(this, observer, dFlags);
   CONTAINER_ENSURE_SUCCESS(result);
 
-  // Create an nsIInputStream for the data. Because nsIStringInputStreams don't
-  // like their dependent data to grow dynamically, we reset the stream to the
-  // proper buffer each time we write data to the decoder. Nevertheless, it's
-  // worth keeping the structure around to avoid needless construction and
-  // destruction.
-  mDecoderInput = do_CreateInstance("@mozilla.org/io/string-input-stream;1");
-  CONTAINER_ENSURE_TRUE(mDecoderInput, NS_ERROR_OUT_OF_MEMORY);
-
   // Create a decode worker
   mWorker = new imgDecodeWorker(this);
   CONTAINER_ENSURE_TRUE(mWorker, NS_ERROR_OUT_OF_MEMORY);
@@ -2138,9 +2129,6 @@ imgContainer::ShutdownDecoder(eShutdownIntent aIntent)
     return rv;
   }
 
-  // Get rid of the stream
-  mDecoderInput = nsnull;
-
   // Kill off the worker
   mWorker = nsnull;
 
@@ -2165,21 +2153,16 @@ imgContainer::ShutdownDecoder(eShutdownIntent aIntent)
   return NS_OK;
 }
 
-// Wraps a shared stream around the data and passes the stream to the decoder,
-// updating the total number of bytes written.
+// Writes the data to the decoder, updating the total number of bytes written.
 nsresult
 imgContainer::WriteToDecoder(const char *aBuffer, PRUint32 aCount)
 {
   // We should have a decoder
   NS_ABORT_IF_FALSE(mDecoder, "Trying to write to null decoder!");
 
-  // Wrap a shared stream around the data
-  nsresult rv = mDecoderInput->ShareData(aBuffer, aCount);
-  CONTAINER_ENSURE_SUCCESS(rv);
-
   // Write
   mInDecoder = PR_TRUE;
-  rv = mDecoder->WriteFrom(mDecoderInput, aCount);
+  nsresult rv = mDecoder->Write(aBuffer, aCount);
   mInDecoder = PR_FALSE;
   CONTAINER_ENSURE_SUCCESS(rv);
 

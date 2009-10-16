@@ -121,38 +121,6 @@ NS_IMETHODIMP nsBMPDecoder::Flush()
     return NS_OK;
 }
 
-NS_METHOD nsBMPDecoder::ReadSegCb(nsIInputStream* aIn, void* aClosure,
-                             const char* aFromRawSegment, PRUint32 aToOffset,
-                             PRUint32 aCount, PRUint32 *aWriteCount) 
-{
-    nsBMPDecoder *decoder = reinterpret_cast<nsBMPDecoder*>(aClosure);
-
-    // Always read everything
-    *aWriteCount = aCount;
-
-    nsresult rv = decoder->ProcessData(aFromRawSegment, aCount);
-
-    // Necko doesn't propagate rvs. Set a flag before returning.
-    if (NS_FAILED(rv))
-        decoder->mError = PR_TRUE;
-    return rv;
-}
-
-NS_IMETHODIMP nsBMPDecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount)
-{
-    PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::WriteFrom(%p, %lu, %p)\n", aInStr, aCount));
-
-    // Decode, watching for errors.
-    nsresult rv = NS_OK;
-    PRUint32 ignored;
-    if (!mError)
-        rv = aInStr->ReadSegments(ReadSegCb, this, aCount, &ignored);
-    if (mError || NS_FAILED(rv)) {
-        return NS_ERROR_FAILURE;
-    }
-    return NS_OK;
-}
-
 // ----------------------------------------
 // Actual Data Processing
 // ----------------------------------------
@@ -193,10 +161,15 @@ NS_METHOD nsBMPDecoder::CalcBitShift()
     return NS_OK;
 }
 
-NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
+NS_IMETHODIMP
+nsBMPDecoder::Write(const char* aBuffer, PRUint32 aCount)
 {
-    PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::ProcessData(%p, %lu)", aBuffer, aCount));
-    if (!aCount || !mCurLine) // aCount=0 means EOF, mCurLine=0 means we're past end of image
+    // No forgiveness
+    if (mError)
+      return NS_ERROR_FAILURE;
+
+    // aCount=0 means EOF, mCurLine=0 means we're past end of image
+    if (!aCount || !mCurLine)
         return NS_OK;
 
     nsresult rv;
@@ -211,8 +184,10 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
     }
     if (mPos == BFH_LENGTH) {
         ProcessFileHeader();
-        if (mBFH.signature[0] != 'B' || mBFH.signature[1] != 'M')
+        if (mBFH.signature[0] != 'B' || mBFH.signature[1] != 'M') {
+            mError = PR_TRUE;
             return NS_ERROR_FAILURE;
+        }
         if (mBFH.bihsize == OS2_BIH_LENGTH)
             mLOH = OS2_HEADER_LENGTH;
     }
@@ -231,14 +206,18 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
             mBIH.width, mBIH.height, mBIH.bpp, mBIH.compression));
         // Verify we support this bit depth
         if (mBIH.bpp != 1 && mBIH.bpp != 4 && mBIH.bpp != 8 &&
-            mBIH.bpp != 16 && mBIH.bpp != 24 && mBIH.bpp != 32)
+            mBIH.bpp != 16 && mBIH.bpp != 24 && mBIH.bpp != 32) {
+          mError = PR_TRUE;
           return NS_ERROR_UNEXPECTED;
+        }
 
         // BMPs with negative width are invalid
         // Reject extremely wide images to keep the math sane
         const PRInt32 k64KWidth = 0x0000FFFF;
-        if (mBIH.width < 0 || mBIH.width > k64KWidth)
+        if (mBIH.width < 0 || mBIH.width > k64KWidth) {
+            mError = PR_TRUE;
             return NS_ERROR_FAILURE;
+        }
 
         PRUint32 real_height = (mBIH.height > 0) ? mBIH.height : -mBIH.height;
 
@@ -265,8 +244,10 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
 
             // Always allocate 256 even though mNumColors might be smaller
             mColors = new colorTable[256];
-            if (!mColors)
+            if (!mColors) {
+                mError = PR_TRUE;
                 return NS_ERROR_OUT_OF_MEMORY;
+            }
 
             memset(mColors, 0, 256 * sizeof(colorTable));
         }
@@ -289,20 +270,24 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
             // to make exact calculations here, that's unnecessary.
             // Also, it compensates rounding error.
             if (!mRow) {
+                mError = PR_TRUE;
                 return NS_ERROR_OUT_OF_MEMORY;
             }
             rv = mImage->AppendFrame(0, 0, mBIH.width, real_height, gfxASurface::ImageFormatRGB24,
                                      (PRUint8**)&mImageData, &imageLength);
         }
         NS_ENSURE_SUCCESS(rv, rv);
-        if (!mImageData)
+        if (!mImageData) {
+            mError = PR_TRUE;
             return NS_ERROR_FAILURE;
+        }
 
         // Prepare for transparancy
         if ((mBIH.compression == BI_RLE8) || (mBIH.compression == BI_RLE4)) {
             if (((mBIH.compression == BI_RLE8) && (mBIH.bpp != 8)) 
              || ((mBIH.compression == BI_RLE4) && (mBIH.bpp != 4) && (mBIH.bpp != 1))) {
                 PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP RLE8/RLE4 compression only supports 8/4 bits per pixel\n"));
+                mError = PR_TRUE;
                 return NS_ERROR_FAILURE;
             }
             // Clear the image, as the RLE may jump over areas
@@ -448,6 +433,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
             if (((mBIH.compression == BI_RLE8) && (mBIH.bpp != 8)) 
              || ((mBIH.compression == BI_RLE4) && (mBIH.bpp != 4) && (mBIH.bpp != 1))) {
                 PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP RLE8/RLE4 compression only supports 8/4 bits per pixel\n"));
+                mError = PR_TRUE;
                 return NS_ERROR_FAILURE;
             }
 
@@ -514,8 +500,10 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                                     // We can work around bitmaps that specify one
                                     // pixel too many, but only if their width is odd.
                                     mStateData -= mBIH.width & 1;
-                                    if (mCurPos + mStateData > (PRUint32)mBIH.width)
+                                    if (mCurPos + mStateData > (PRUint32)mBIH.width) {
+                                        mError = PR_TRUE;
                                         return NS_ERROR_FAILURE;
+                                    }
                                 }
 
                                 // See if we will need to skip a byte
@@ -599,6 +587,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
 
                     default :
                         NS_NOTREACHED("BMP RLE decompression: unknown state!");
+                        mError = PR_TRUE;
                         return NS_ERROR_FAILURE;
                 }
                 // Because of the use of the continue statement
