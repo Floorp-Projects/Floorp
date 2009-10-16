@@ -50,10 +50,11 @@ _CHROME_FILES = \
 
 # Disabled due to bad interactions with next tests.
 # browser_ui_locationbar.js
+# Disabled due to random failures.
+# browser_ui_bookmarks_sidebar.js
 _BROWSER_TEST_FILES = \
 	browser_ui_000_data.js \
 	browser_ui_history_menu.js \
-	browser_ui_bookmarks_sidebar.js \
 	browser_ui_history_sidebar.js \
 	browser_ui_history_sidebar_2.js \
 	browser_ui_history_sidebar_3.js \
