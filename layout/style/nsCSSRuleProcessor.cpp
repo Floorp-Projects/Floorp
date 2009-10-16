@@ -879,6 +879,15 @@ nsCSSRuleProcessor::FreeSystemMetrics()
   sSystemMetrics = nsnull;
 }
 
+/* static */ PRBool
+nsCSSRuleProcessor::HasSystemMetric(nsIAtom* aMetric)
+{
+  if (!sSystemMetrics && !InitSystemMetrics()) {
+    return PR_FALSE;
+  }
+  return sSystemMetrics->IndexOf(aMetric) != sSystemMetrics->NoIndex;
+}
+
 RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
                                      nsIContent* aContent, 
                                      nsRuleWalker* aRuleWalker,
@@ -1424,13 +1433,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       result = (child == nsnull);
     }
     else if (nsCSSPseudoClasses::mozSystemMetric == pseudoClass->mAtom) {
-      if (!sSystemMetrics && !InitSystemMetrics()) {
-        return PR_FALSE;
-      }
       NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
       nsCOMPtr<nsIAtom> metric = do_GetAtom(pseudoClass->u.mString);
-      result = sSystemMetrics->IndexOf(metric) !=
-               sSystemMetrics->NoIndex;
+      result = nsCSSRuleProcessor::HasSystemMetric(metric);
     }
     else if (nsCSSPseudoClasses::mozHasHandlerRef == pseudoClass->mAtom) {
       nsIContent *child = nsnull;

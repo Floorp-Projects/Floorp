@@ -84,6 +84,9 @@ struct nsMediaFeature {
       // If mValueType == eEnumerated:  const PRInt32*: keyword table in
       //   the same format as the keyword tables in nsCSSProps.
       const PRInt32* mKeywordTable;
+      // If mGetter == GetSystemMetric (which implies mValueType ==
+      //   eBoolInteger): nsIAtom * const *, for the system metric.
+      nsIAtom * const * mMetric;
     } mData;
 
     // A function that returns the current value for this feature for a
