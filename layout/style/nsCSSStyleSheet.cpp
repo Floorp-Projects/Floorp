@@ -353,7 +353,8 @@ nsMediaQueryResultCacheKey::Matches(nsPresContext* aPresContext) const
   for (PRUint32 i = 0; i < mFeatureCache.Length(); ++i) {
     const FeatureEntry *entry = &mFeatureCache[i];
     nsCSSValue actual;
-    nsresult rv = (entry->mFeature->mGetter)(aPresContext, actual);
+    nsresult rv =
+      (entry->mFeature->mGetter)(aPresContext, entry->mFeature, actual);
     NS_ENSURE_SUCCESS(rv, PR_FALSE); // any better ideas?
 
     for (PRUint32 j = 0; j < entry->mExpressions.Length(); ++j) {
@@ -494,7 +495,8 @@ nsMediaQuery::Matches(nsPresContext* aPresContext,
   for (PRUint32 i = 0, i_end = mExpressions.Length(); match && i < i_end; ++i) {
     const nsMediaExpression &expr = mExpressions[i];
     nsCSSValue actual;
-    nsresult rv = (expr.mFeature->mGetter)(aPresContext, actual);
+    nsresult rv =
+      (expr.mFeature->mGetter)(aPresContext, expr.mFeature, actual);
     NS_ENSURE_SUCCESS(rv, PR_FALSE); // any better ideas?
 
     match = expr.Matches(aPresContext, actual);
