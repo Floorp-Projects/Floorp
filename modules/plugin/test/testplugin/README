@@ -47,6 +47,10 @@ with the specified argument.  Returns the result of the invocation.
 If an error has occurred during the last stream or npruntime function,
 this will return a string error message, otherwise it returns "pass".
 
+* () - default method
+Returns a string consisting of the plugin name, concatenated with any 
+arguments passed to the method.
+
 == Private browsing ==
 
 The test plugin object supports the following scriptable methods:
