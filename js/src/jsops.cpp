@@ -314,12 +314,6 @@ BEGIN_CASE(JSOP_STOP)
         if (JS_LIKELY(ok)) {
             JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, script, regs.pc)].length
                       == JSOP_CALL_LENGTH);
-#ifdef DEBUG
-            JSOp traceOp = js_GetOpcode(cx, script, regs.pc +
-                                        JSOP_CALL_LENGTH);
-            JS_ASSERT_IF(*regs.pc == JSOP_CALL && !fp->imacpc,
-                         traceOp == JSOP_TRACE || traceOp == JSOP_NOP);
-#endif
             TRACE_0(LeaveFrame);
             if (!TRACE_RECORDER(cx) && recursive) {
                 if (*(regs.pc + JSOP_CALL_LENGTH) == JSOP_TRACE) {
@@ -2078,7 +2072,7 @@ BEGIN_CASE(JSOP_APPLY)
             JSInterpreterHook hook;
 
             /* Restrict recursion of lightweight functions. */
-            if (inlineCallCount >= MAX_INLINE_CALL_COUNT) {
+            if (inlineCallCount >= JS_MAX_INLINE_CALL_COUNT) {
                 js_ReportOverRecursed(cx);
                 goto error;
             }
@@ -2226,15 +2220,9 @@ BEGIN_CASE(JSOP_APPLY)
                 TRACE_1(EnterFrame, inlineCallCount);
                 RESTORE_INTERP_VARS();
             } else if (fp->script == fp->down->script &&
-                       *fp->down->regs->pc == JSOP_CALL) {
-#ifdef DEBUG
-                JSOp traceOp = js_GetOpcode(cx, fp->script,
-                                            fp->regs->pc);
-                JS_ASSERT_IF(!fp->imacpc, traceOp == JSOP_TRACE ||
-                             traceOp == JSOP_NOP);
-#endif
-                if (*fp->regs->pc == JSOP_TRACE)
-                    MONITOR_BRANCH(Monitor_EnterFrame);
+                       *fp->down->regs->pc == JSOP_CALL &&
+                       *fp->regs->pc == JSOP_TRACE) {
+                MONITOR_BRANCH(Monitor_EnterFrame);
             }
 #endif
 
@@ -3474,7 +3462,7 @@ BEGIN_CASE(JSOP_ENDINIT)
     JS_ASSERT(regs.sp - StackBase(fp) >= 1);
     lval = FETCH_OPND(-1);
     JS_ASSERT(JSVAL_IS_OBJECT(lval));
-    cx->weakRoots.newbornObject = JSVAL_TO_OBJECT(lval);
+    cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] = JSVAL_TO_OBJECT(lval);
 END_CASE(JSOP_ENDINIT)
 
 BEGIN_CASE(JSOP_INITPROP)

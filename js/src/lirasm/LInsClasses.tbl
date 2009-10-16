@@ -1,0 +1,117 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=0 ft=C:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is SpiderMonkey nanojit.
+ *
+ * The Initial Developer of the Original Code is
+ * the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Nicholas Nethercote <nnethercote@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* LIns classes, as required for --random mode.  Includers must define a CLASS
+ * macro of the following form:
+ *
+ * #define CLASS(name, only64bit, relFreq)     ...
+ *
+ * Selected arguments can be used within the macro expansions.
+ *
+ * Field        Description
+ * -----        -----------
+ * name         Name of the instruction class.  The types are B (boolean), I
+ *              (32-bit integer), Q (64-bit integer), F (64-bit float), N
+ *              (null).  A name of the form LOP_Z_XY means that it takes
+ *              arguments of type X and Y and produces a result of type Z.
+ *
+ * only64bit    1 if the instruction class is only used on 64-bit platforms, 0
+ *              otherwise.
+ *
+ * relFreq      We weight each class differently, so that some classes are more
+ *              common than others.  This field gives the relative frequency of
+ *              the instruction class.  All the relFreqs together can sum up to
+ *              any number, but it's easier to think about if the sum is a
+ *              round number.  (That's why the relFreqs add up to 100%;  the
+ *              running total is shown in comments.)  The sum also shouldn't be
+ *              too big, as we generate a table with that many elements in it.
+ *
+ *              Note that we want a decent number of value sinks (eg.
+ *              stores, calls, guards) and not too many value sources (eg.
+ *              immediates, loads) so that the amount of dead code generated is
+ *              reasonable.
+ */
+
+CLASS(  LFENCE,         0,  1)  //  1%  LIR_regfence, LIR_xbarrier
+
+CLASS(  LIMM_I,         0,  4)  //  5%  LIR_imm
+CLASS(  LIMM_Q,         1,  3)  //  8%  LIR_quad
+CLASS(  LIMM_F,         0,  4)  // 12%  LIR_float
+
+CLASS(  LOP_I_I,        0,  2)  // 14%  LIR_neg, LIR_not
+CLASS(  LOP_Q_Q,        1,  0)  // 14%  (none)
+CLASS(  LOP_F_F,        0,  2)  // 16%  LIR_fneg
+
+CLASS(  LOP_I_II,       0, 16)  // 32%  LIR_add, LIR_and, LIR_eq, etc.
+CLASS(  LOP_Q_QQ,       1,  9)  // 41%  LIR_qiadd, LIR_qiand, LIR_qeq, etc.
+CLASS(  LOP_F_FF,       0, 10)  // 51%  LIR_fadd, etc.
+
+// cmov has a low weight because is also used with LIR_div/LIR_mod.
+CLASS(  LOP_I_BII,      0,  1)  // 52%  LIR_cmov
+CLASS(  LOP_Q_BQQ,      1,  2)  // 54%  LIR_qcmov
+
+CLASS(  LOP_B_II,       0,  3)  // 57%  LIR_eq,  LIR_lt,  etc
+CLASS(  LOP_B_QQ,       1,  3)  // 60%  LIR_qeq, LIR_qlt, etc
+CLASS(  LOP_B_FF,       0,  3)  // 63%  LIR_feq, LIR_flt, etc
+
+CLASS(  LOP_Q_I,        1,  2)  // 65%  LIR_i2q, LIR_u2q
+CLASS(  LOP_F_I,        0,  2)  // 67%  LIR_i2f, LIR_u2f
+
+CLASS(  LOP_I_F,        0,  2)  // 69%  LIR_qlo, LIR_qhi
+CLASS(  LOP_F_II,       0,  1)  // 70%  LIR_qjoin
+
+    // XXX: "QorF" because the same opcode is used for both 64-bit int and
+    // 64-bit float loads.  Ditto for stores.  That should be fixed, see
+    // bug 520714. 
+CLASS(  LLD_I,          0,  4)  // 74%  LIR_ld
+CLASS(  LLD_QorF,       0,  4)  // 78%  LIR_ldq
+
+CLASS(  LST_I,          0,  7)  // 85%  LIR_sti
+CLASS(  LST_QorF,       0,  7)  // 92%  LIR_stqi
+
+CLASS(  LCALL_I_I1,     0,  1)  // 93%  LIR_icall
+CLASS(  LCALL_I_I6,     0,  1)  // 94%  LIR_icall
+CLASS(  LCALL_Q_Q2,     1,  1)  // 95%  LIR_qcall
+CLASS(  LCALL_Q_Q7,     1,  1)  // 96%  LIR_qcall
+CLASS(  LCALL_F_F3,     0,  1)  // 97%  LIR_fcall
+CLASS(  LCALL_F_F8,     0,  1)  // 98%  LIR_fcall
+CLASS(  LCALL_N_IQF,    1,  1)  // 99%  LIR_icall or LIR_qcall
+
+CLASS(  LLABEL,         0,  1)  //100%  LIR_label
