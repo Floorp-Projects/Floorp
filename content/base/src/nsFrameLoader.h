@@ -53,6 +53,7 @@
 
 class nsIContent;
 class nsIURI;
+class nsIFrameFrame;
 
 #ifdef MOZ_IPC
 namespace mozilla {
@@ -93,6 +94,21 @@ public:
   nsresult ReallyStartLoading();
   void Finalize();
   nsIDocShell* GetExistingDocShell() { return mDocShell; }
+
+  /**
+   * Called from the layout frame associated with this frame loader,
+   * set up and show the base window associated with our docshell.
+   */
+  bool Show(PRInt32 marginWidth, PRInt32 marginHeight,
+            PRInt32 scrollbarPrefX, PRInt32 scrollbarPrefY,
+            nsIFrameFrame* frame);
+
+  /**
+   * Called from the layout frame associated with this frame loader,
+   * which is being torn down: remove our docshell from the widget/view
+   * hierarchy.
+   */
+  void Hide();
 
   // The guts of an nsIFrameLoaderOwner::SwapFrameLoader implementation.  A
   // frame loader owner needs to call this, and pass in the two references to
