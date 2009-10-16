@@ -314,8 +314,7 @@ private:
     NS_DECL_IMGIDECODEROBSERVER
 
     void AddIconObserver(nsImageFrame *frame) {
-        NS_ABORT_IF_FALSE(mIconObservers.IndexOf(frame) ==
-                          nsTArray<nsImageFrame*>::NoIndex,
+        NS_ABORT_IF_FALSE(!mIconObservers.Contains(frame),
                           "Observer shouldn't aleady be in array");
         mIconObservers.AppendElement(frame);
     }
