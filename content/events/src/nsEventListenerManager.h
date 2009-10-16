@@ -134,6 +134,8 @@ public:
 
   virtual PRBool HasListeners();
 
+  virtual nsresult GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList);
+
   static PRUint32 GetIdentifierForEvent(nsIAtom* aEvent);
 
   // nsIDOMEventTarget

@@ -48,13 +48,15 @@ class nsIDOMEventTarget;
 class nsIDOMEventGroup;
 class nsIAtom;
 class nsPIDOMEventTarget;
+class nsIEventListenerInfo;
+template<class E> class nsCOMArray;
 
 /*
  * Event listener manager interface.
  */
 #define NS_IEVENTLISTENERMANAGER_IID \
-{ 0xadfdc265, 0xea1c, 0x4c0b, \
-  { 0x91, 0xca, 0x37, 0x67, 0x2c, 0x83, 0x92, 0x1f } }
+{ 0xac49ce4e, 0xaecf, 0x45db, \
+  { 0xa1, 0xe0, 0xea, 0x1d, 0x38, 0x73, 0x39, 0xa3 } }
 
 class nsIEventListenerManager : public nsISupports {
 
@@ -188,6 +190,12 @@ public:
    *       event listeners is registered to handle DOMSubtreeModified events.
    */
   virtual PRUint32 MutationListenerBits() = 0;
+
+  /**
+   * Sets aList to the list of nsIEventListenerInfo objects representing the
+   * listeners managed by this listener manager.
+   */
+  virtual nsresult GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList) = 0;
 
   /**
    * Returns PR_TRUE if there is at least one event listener for aEventName.
