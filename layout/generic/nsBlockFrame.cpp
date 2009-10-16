@@ -368,6 +368,19 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
     fprintf(out, " next-in-flow=%p", static_cast<void*>(GetNextInFlow()));
   }
 
+  void* IBsibling = GetProperty(nsGkAtoms::IBSplitSpecialSibling);
+  if (IBsibling) {
+    fprintf(out, " IBSplitSpecialSibling=%p", IBsibling);
+  }
+  void* IBprevsibling = GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling);
+  if (IBprevsibling) {
+    fprintf(out, " IBSplitSpecialPrevSibling=%p", IBprevsibling);
+  }
+
+  if (nsnull != mContent) {
+    fprintf(out, " [content=%p]", static_cast<void*>(mContent));
+  }
+
   // Output the rect and state
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
