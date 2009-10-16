@@ -82,22 +82,35 @@ BrowserStartup.prototype = {
 
     Cu.import("resource://gre/modules/utils.js");
 
-    // Get bookmarks.html file location
-    let dirService = Cc["@mozilla.org/file/directory_service;1"].
-                     getService(Ci.nsIProperties);
+    try {
+      let observer = {
+        onStreamComplete : function(aLoader, aContext, aStatus, aLength, aResult) {
+          let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                          createInstance(Ci.nsIScriptableUnicodeConverter);
+          let jsonStr = "";
+          try {
+            converter.charset = "UTF-8";
+            jsonStr = converter.convertFromByteArray(aResult, aResult.length);
 
-    let bookmarksFile = dirService.get("profDef", Ci.nsILocalFile);
-    bookmarksFile.append("bookmarks.json");
-    if (bookmarksFile.exists()) {
-      // import the file
-      try {
-        PlacesUtils.restoreBookmarksFromJSONFile(bookmarksFile);
-      } catch (err) {
-        // Report the error, but ignore it.
-        Cu.reportError("bookmarks.json file could be corrupt. " + err);
-      }
-    } else
-      Cu.reportError("Unable to find default bookmarks.json file.");
+            PlacesUtils.restoreBookmarksFromJSONString(jsonStr, true);
+          } catch (ex) {
+            Cu.reportError("Failed to parse default bookmarks from bookmarks.json: " + err);
+          }
+        }
+      };
+
+      let ioSvc = Cc["@mozilla.org/network/io-service;1"].
+                  getService(Ci.nsIIOService);
+      let uri = ioSvc.newURI("chrome://browser/locale/bookmarks.json", null, null);
+      let channel = ioSvc.newChannelFromURI(uri);
+      let sl = Cc["@mozilla.org/network/stream-loader;1"].
+               createInstance(Ci.nsIStreamLoader);
+      sl.init(observer);
+      channel.asyncOpen(sl, channel);
+    } catch (err) {
+      // Report the error, but ignore it.
+      Cu.reportError("Failed to load default bookmarks from bookmarks.json: " + err);
+    }
   },
 
   // nsIObserver

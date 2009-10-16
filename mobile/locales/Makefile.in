@@ -92,6 +92,7 @@ libs-%:
 # Tailored target to just add the chrome processing for multi-locale builds
 chrome-%:
 	@$(MAKE) -C $(DEPTH)/toolkit/locales chrome-$*
+	@$(MAKE) -B bookmarks.json AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
 
@@ -103,17 +104,14 @@ installers-%: clobber-% langpack-% repackage-zip-%
 
 NO_JA_JP_MAC_AB_CD := $(if $(filter ja-JP-mac, $(AB_CD)),ja,$(AB_CD))
 
-%/defaults/profile/bookmarks.json: bookmarks.inc generic/profile/bookmarks.json.in
-	$(SYSINSTALL) -D $(dir $@)
+bookmarks.json: bookmarks.inc generic/profile/bookmarks.json.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	  -I $< \
 	  -DAB_CD=$(NO_JA_JP_MAC_AB_CD) \
 	  $(srcdir)/generic/profile/bookmarks.json.in \
 	  > $@
 
-libs:: $(FINAL_TARGET)/defaults/profile/bookmarks.json ;
-
-install:: $(DESTDIR)$(mozappdir)/defaults/profile/bookmarks.json ;
+export:: bookmarks.json
 
 ifdef MOZ_UPDATER
 ifdef LOCALE_MERGEDIR
