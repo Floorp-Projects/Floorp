@@ -320,14 +320,5 @@ nsHTMLCanvasFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("HTMLCanvas"), aResult);
 }
-
-NS_IMETHODIMP
-nsHTMLCanvasFrame::List(FILE* out, PRInt32 aIndent) const
-{
-  IndentBy(out, aIndent);
-  ListTag(out);
-  fputs("\n", out);
-  return NS_OK;
-}
 #endif
 

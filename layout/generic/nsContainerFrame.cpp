@@ -1585,6 +1585,14 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   if (nsnull != GetNextContinuation()) {
     fprintf(out, " next-continuation=%p", static_cast<void*>(GetNextContinuation()));
   }
+  void* IBsibling = GetProperty(nsGkAtoms::IBSplitSpecialSibling);
+  if (IBsibling) {
+    fprintf(out, " IBSplitSpecialSibling=%p", IBsibling);
+  }
+  void* IBprevsibling = GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling);
+  if (IBprevsibling) {
+    fprintf(out, " IBSplitSpecialPrevSibling=%p", IBprevsibling);
+  }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
