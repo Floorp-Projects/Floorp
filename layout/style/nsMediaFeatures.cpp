@@ -46,6 +46,7 @@
 #include "nsCSSValue.h"
 #include "nsIDocShell.h"
 #include "nsLayoutUtils.h"
+#include "nsCSSRuleProcessor.h"
 
 static const PRInt32 kOrientationKeywords[] = {
   eCSSKeyword_portrait,                 NS_STYLE_ORIENTATION_PORTRAIT,
@@ -260,6 +261,18 @@ GetGrid(nsPresContext* aPresContext, const nsMediaFeature*,
     return NS_OK;
 }
 
+static nsresult
+GetSystemMetric(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
+                nsCSSValue& aResult)
+{
+    NS_ABORT_IF_FALSE(aFeature->mValueType == nsMediaFeature::eBoolInteger,
+                      "unexpected type");
+    nsIAtom *metricAtom = *aFeature->mData.mMetric;
+    PRBool hasMetric = nsCSSRuleProcessor::HasSystemMetric(metricAtom);
+    aResult.SetIntValue(hasMetric ? 1 : 0, eCSSUnit_Integer);
+    return NS_OK;
+}
+
 /*
  * Adding new media features requires (1) adding the new feature to this
  * array, with appropriate entries (and potentially any new code needed
@@ -362,6 +375,100 @@ nsMediaFeatures::features[] = {
         { nsnull },
         GetGrid
     },
+
+    // Mozilla extensions
+    {
+        &nsGkAtoms::_moz_scrollbar_start_backward,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::scrollbar_start_backward },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_scrollbar_start_forward,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::scrollbar_start_forward },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_scrollbar_end_backward,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::scrollbar_end_backward },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_scrollbar_end_forward,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::scrollbar_end_forward },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_scrollbar_thumb_proportional,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::scrollbar_thumb_proportional },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_images_in_menus,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::images_in_menus },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_images_in_buttons,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::images_in_buttons },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_windows_default_theme,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::windows_default_theme },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_mac_graphite_theme,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::mac_graphite_theme },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_windows_compositor,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::windows_compositor },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_windows_classic,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::windows_classic },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_touch_enabled,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::touch_enabled },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_maemo_classic,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::maemo_classic },
+        GetSystemMetric
+    },
+
     // Null-mName terminator:
     {
         nsnull,
