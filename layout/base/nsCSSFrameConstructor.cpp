@@ -6674,7 +6674,16 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       // If our current parentFrame is a Letter frame, use its parent as our
       // new parent hint
       if (parentFrame->GetType() == nsGkAtoms::letterFrame) {
-        parentFrame = parentFrame->GetParent();
+        // If parentFrame is out of flow, then we actually want the parent of
+        // the placeholder frame.
+        if (parentFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+          nsPlaceholderFrame* placeholderFrame =
+            state.mFrameManager->GetPlaceholderFrameFor(parentFrame);
+          NS_ASSERTION(placeholderFrame, "No placeholder for out-of-flow?");
+          parentFrame = placeholderFrame->GetParent();
+        } else {
+          parentFrame = parentFrame->GetParent();
+        }
       }
 
       // Remove the old letter frames before doing the insertion
