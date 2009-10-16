@@ -144,16 +144,9 @@ window.onload = function () {
                        .getService(Ci.nsIURLFormatter);
   let supportUrl = urlFormatter.formatURLPref("app.support.baseURL");
 
-  // Get the profile directory.
-  let propertiesService = Cc["@mozilla.org/file/directory_service;1"]
-                            .getService(Ci.nsIProperties);
-  let currProfD = propertiesService.get("ProfD", Ci.nsIFile);
-  let profileDir = currProfD.path;
-
   // Update the application basics section.
   document.getElementById("application-box").textContent = Application.name;
   document.getElementById("version-box").textContent = Application.version;
-  document.getElementById("profile-box").textContent = profileDir;
   document.getElementById("supportLink").href = supportUrl;
 
   // Update the other sections.
@@ -331,6 +324,19 @@ function generateTextForTextNode(node, indent, textFragmentAccumulator) {
   textFragmentAccumulator.push(text);
 }
 
+function openProfileDirectory() {
+  // Get the profile directory.
+  let propertiesService = Cc["@mozilla.org/file/directory_service;1"]
+                            .getService(Ci.nsIProperties);
+  let currProfD = propertiesService.get("ProfD", Ci.nsIFile);
+  let profileDir = currProfD.path;
+
+  // Show the profile directory.
+  let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
+                                           "nsILocalFile", "initWithPath");
+  new nsLocalFile(profileDir).reveal();
+}
+
     ]]></script>
 
   </head>
@@ -384,10 +390,17 @@ function generateTextForTextNode(node, indent, textFragmentAccumulator) {
               &aboutSupport.appBasicsProfileDir;
             </th>
 
-            <td id="profile-box">
+            <td>
+              <button onclick="openProfileDirectory()">
+#ifdef XP_MACOSX
+                &aboutSupport.showMac.label;
+#else
+                &aboutSupport.show.label;
+#endif
+               </button>
             </td>
           </tr>
-            
+
           <tr>
             <th class="column">
               &aboutSupport.appBasicsPlugins;
