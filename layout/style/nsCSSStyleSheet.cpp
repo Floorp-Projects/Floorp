@@ -462,7 +462,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
                        "bad unit");
           AppendASCIItoUTF16(
               nsCSSProps::ValueToKeyword(expr.mValue.GetIntValue(),
-                                         feature->mKeywordTable),
+                                         feature->mData.mKeywordTable),
               aString);
           break;
       }

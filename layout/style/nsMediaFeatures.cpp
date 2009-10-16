@@ -262,91 +262,91 @@ nsMediaFeatures::features[] = {
         &nsGkAtoms::width,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eLength,
-        nsnull,
+        { nsnull },
         GetWidth
     },
     {
         &nsGkAtoms::height,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eLength,
-        nsnull,
+        { nsnull },
         GetHeight
     },
     {
         &nsGkAtoms::deviceWidth,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eLength,
-        nsnull,
+        { nsnull },
         GetDeviceWidth
     },
     {
         &nsGkAtoms::deviceHeight,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eLength,
-        nsnull,
+        { nsnull },
         GetDeviceHeight
     },
     {
         &nsGkAtoms::orientation,
         nsMediaFeature::eMinMaxNotAllowed,
         nsMediaFeature::eEnumerated,
-        kOrientationKeywords,
+        { kOrientationKeywords },
         GetOrientation
     },
     {
         &nsGkAtoms::aspectRatio,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eIntRatio,
-        nsnull,
+        { nsnull },
         GetAspectRatio
     },
     {
         &nsGkAtoms::deviceAspectRatio,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eIntRatio,
-        nsnull,
+        { nsnull },
         GetDeviceAspectRatio
     },
     {
         &nsGkAtoms::color,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eInteger,
-        nsnull,
+        { nsnull },
         GetColor
     },
     {
         &nsGkAtoms::colorIndex,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eInteger,
-        nsnull,
+        { nsnull },
         GetColorIndex
     },
     {
         &nsGkAtoms::monochrome,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eInteger,
-        nsnull,
+        { nsnull },
         GetMonochrome
     },
     {
         &nsGkAtoms::resolution,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eResolution,
-        nsnull,
+        { nsnull },
         GetResolution
     },
     {
         &nsGkAtoms::scan,
         nsMediaFeature::eMinMaxNotAllowed,
         nsMediaFeature::eEnumerated,
-        kScanKeywords,
+        { kScanKeywords },
         GetScan
     },
     {
         &nsGkAtoms::grid,
         nsMediaFeature::eMinMaxNotAllowed,
         nsMediaFeature::eBoolInteger,
-        nsnull,
+        { nsnull },
         GetGrid
     },
     // Null-mName terminator:
@@ -354,7 +354,7 @@ nsMediaFeatures::features[] = {
         nsnull,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eInteger,
-        nsnull,
+        { nsnull },
         nsnull
     },
 };
