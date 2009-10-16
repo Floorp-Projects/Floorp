@@ -42,6 +42,7 @@
 
 #ifdef UNDER_CE
 #include <cmnintrin.h>
+extern "C" bool blx_lr_broken();
 #endif
 
 #if defined(AVMPLUS_LINUX)
@@ -116,12 +117,21 @@ Assembler::CountLeadingZeroes(uint32_t data)
     // We can't do CLZ on anything earlier than ARMv5. Architectures as early
     // as that aren't supported, but assert that we aren't running on one
     // anyway.
+    // If ARMv4 support is required in the future for some reason, we can do a
+    // run-time check on config.arch and fall back to the C routine, but for
+    // now we can avoid the cost of the check as we don't intend to support
+    // ARMv4 anyway.
     NanoAssert(ARM_ARCH >= 5);
 
 #if defined(__ARMCC__)
     // ARMCC can do this with an intrinsic.
     leading_zeroes = __clz(data);
-#elif defined(__GNUC__)
+
+// current Android GCC compiler incorrectly refuses to compile 'clz' for armv5
+// (even though this is a legal instruction there). Since we currently only compile for ARMv5
+// for emulation, we don't care too much (but we DO care for ARMv6+ since those are "real"
+// devices).
+#elif defined(__GNUC__) && !(defined(ANDROID) && __ARM_ARCH__ <= 5) 
     // GCC can use inline assembler to insert a CLZ instruction.
     __asm (
         "   clz     %0, %1  \n"
@@ -758,7 +768,7 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
     if (argRes && (argRes->reg != UnknownReg)) {
         // The argument resides somewhere in registers, so we simply need to
         // push it onto the stack.
-        if (!isQuad) {
+        if (!ARM_VFP || !isQuad) {
             NanoAssert(IsGpReg(argRes->reg));
 
             STR(argRes->reg, SP, stkd);
@@ -1116,7 +1126,7 @@ Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
     (void) pop;
     (void) quad;
     if (d) {
-        if (IsFpReg(rr)) {
+        if (ARM_VFP && IsFpReg(rr)) {
             if (isS8(d >> 2)) {
                 FSTD(rr, FP, d);
             } else {
@@ -1132,7 +1142,7 @@ Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
 void
 Assembler::asm_load64(LInsp ins)
 {
-    //output("<<< load64");
+    //asm_output("<<< load64");
 
     NanoAssert(ins->isQuad());
 
@@ -1174,7 +1184,7 @@ Assembler::asm_load64(LInsp ins)
         asm_mmq(FP, d, rb, offset);
     }
 
-    //output(">>> load64");
+    //asm_output(">>> load64");
 }
 
 void
@@ -1254,12 +1264,14 @@ Assembler::asm_quad_nochk(Register rr, int32_t imm64_0, int32_t imm64_1)
     *(--_nIns) = (NIns) imm64_1;
     *(--_nIns) = (NIns) imm64_0;
 
-    JMP_nochk(_nIns+2);
+    B_nochk(_nIns+2);
 }
 
 void
 Assembler::asm_quad(LInsp ins)
 {
+    //asm_output(">>> asm_quad");
+
     Reservation *   res = getresv(ins);
     int             d = disp(res);
     Register        rr = res->reg;
@@ -1280,12 +1292,14 @@ Assembler::asm_quad(LInsp ins)
         STR(IP, FP, d);
         asm_ld_imm(IP, ins->imm64_0());
     }
+
+    //asm_output("<<< asm_quad");
 }
 
 void
 Assembler::asm_nongp_copy(Register r, Register s)
 {
-    if (IsFpReg(r) && IsFpReg(s)) {
+    if (ARM_VFP && IsFpReg(r) && IsFpReg(s)) {
         // fp->fp
         FCPYD(r, s);
     } else {
@@ -1385,7 +1399,7 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
 // Increment the 32-bit profiling counter at pCtr, without
 // changing any registers.
 verbose_only(
-void Assembler::asm_inc_m32(uint32_t* pCtr)
+void Assembler::asm_inc_m32(uint32_t* /*pCtr*/)
 {
     // todo: implement this
 }
@@ -1437,7 +1451,7 @@ Assembler::underrunProtect(int bytes)
         // _nSlot points to the first empty position in the new code block
         // _nIns points just past the last empty position.
         // Assume B_nochk won't ever try to write to _nSlot. See B_cond_chk macro.
-        JMP_nochk(target);
+        B_nochk(target);
     }
 }
 
@@ -1542,7 +1556,7 @@ Assembler::BLX(Register addr, bool chk /* = true */)
     NanoAssert(IsGpReg(addr));
     // There is a bug in the WinCE device emulator which stops "BLX LR" from
     // working as expected. Assert that we never do that!
-    NanoAssert(addr != LR);
+    if (blx_lr_bug) { NanoAssert(addr != LR); }
 
     if (chk) {
         underrunProtect(4);
@@ -1562,7 +1576,7 @@ Assembler::BLX(Register addr, bool chk /* = true */)
 void
 Assembler::asm_ldr_chk(Register d, Register b, int32_t off, bool chk)
 {
-    if (IsFpReg(d)) {
+    if (ARM_VFP && IsFpReg(d)) {
         FLDD_chk(d,b,off,chk);
         return;
     }
@@ -1590,6 +1604,7 @@ Assembler::asm_ldr_chk(Register d, Register b, int32_t off, bool chk)
         // Because of that, we can't do a PC-relative load unless it fits within
         // the single-instruction forms above.
 
+        NanoAssert(b != PC);
         NanoAssert(b != IP);
 
         if (chk) underrunProtect(4+LD32_size);
@@ -1703,7 +1718,7 @@ Assembler::asm_ld_imm(Register d, int32_t imm, bool chk /* = true */)
 // Otherwise, emit the conditional load into pc from a nearby constant,
 // and emit a jump to jump over it it in case the condition fails.
 //
-// NB: JMP_nochk depends on this not calling samepage() when _c == AL
+// NB: B_nochk depends on this not calling samepage() when _c == AL
 void
 Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
 {
@@ -1896,11 +1911,15 @@ Assembler::asm_prep_fcall(Reservation*, LInsp)
     return UnknownReg;
 }
 
+/* Call this with targ set to 0 if the target is not yet known and the branch
+ * will be patched up later.
+ */
 NIns*
 Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
 {
     LOpcode condop = cond->opcode();
     NanoAssert(cond->isCond());
+    NanoAssert(ARM_VFP || ((condop < LIR_feq) || (condop > LIR_fge)));
 
     // The old "never" condition code has special meaning on newer ARM cores,
     // so use "always" as a sensible default code.
@@ -1954,7 +1973,7 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
     // asm_[f]cmp will move _nIns so we must do this now.
     NIns *at = _nIns;
 
-    if (fp_cond)
+    if (ARM_VFP && fp_cond)
         asm_fcmp(cond);
     else
         asm_cmp(cond);
@@ -2358,14 +2377,14 @@ Assembler::asm_ret(LIns *ins)
     }
     else {
         NanoAssert(ins->isop(LIR_fret));
-#ifdef NJ_ARM_VFP
-        Register reg = findRegFor(value, FpRegs);
-        FMRRD(R0, R1, reg);
-#else
-        NanoAssert(value->isop(LIR_qjoin));
-        findSpecificRegFor(value->oprnd1(), R0); // lo
-        findSpecificRegFor(value->oprnd2(), R1); // hi
-#endif
+        if (ARM_VFP) {
+            Register reg = findRegFor(value, FpRegs);
+            FMRRD(R0, R1, reg);
+        } else {
+            NanoAssert(value->isop(LIR_qjoin));
+            findSpecificRegFor(value->oprnd1(), R0); // lo
+            findSpecificRegFor(value->oprnd2(), R1); // hi
+        }
     }
 }
 
