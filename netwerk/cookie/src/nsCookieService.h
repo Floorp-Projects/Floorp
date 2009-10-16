@@ -51,6 +51,8 @@
 #include "nsCookie.h"
 #include "nsString.h"
 #include "nsTHashtable.h"
+#include "mozIStorageStatement.h"
+#include "mozIStorageConnection.h"
 
 struct nsCookieAttributes;
 struct nsListIter;
@@ -62,8 +64,6 @@ class nsIPrefBranch;
 class nsIObserverService;
 class nsIURI;
 class nsIChannel;
-class mozIStorageConnection;
-class mozIStorageStatement;
 
 // hash entry class
 class nsCookieEntry : public PLDHashEntryHdr
