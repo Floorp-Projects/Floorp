@@ -151,7 +151,7 @@ class NamespacedNode(Node):
 
     def qname(self):
         return QualifiedId(self.loc, self.name,
-                           [ ns.namespace for ns in self.namespaces ])
+                           [ ns.name for ns in self.namespaces ])
 
 class TranslationUnit(Node):
     def __init__(self):
@@ -242,7 +242,7 @@ _prettyTable = {
 class Namespace(Node):
     def __init__(self, loc, namespace):
         Node.__init__(self, loc)
-        self.namespace = namespace
+        self.name = namespace
 
 class Protocol(NamespacedNode):
     def __init__(self, loc):
@@ -363,10 +363,11 @@ class Param(Node):
         self.typespec = typespec
 
 class TypeSpec(Node):
-    def __init__(self, loc, spec, state=None):
+    def __init__(self, loc, spec, state=None, array=0):
         Node.__init__(self, loc)
         self.spec = spec
         self.state = state
+        self.array = array
 
     def basename(self):
         return self.spec.baseid

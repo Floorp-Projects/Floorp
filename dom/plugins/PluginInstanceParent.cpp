@@ -84,7 +84,7 @@ PBrowserStreamParent*
 PluginInstanceParent::AllocPBrowserStream(const nsCString& url,
                                           const uint32_t& length,
                                           const uint32_t& lastmodified,
-                                          const PStreamNotifyParent* notifyData,
+                                          PStreamNotifyParent* notifyData,
                                           const nsCString& headers,
                                           const nsCString& mimeType,
                                           const bool& seekable,
