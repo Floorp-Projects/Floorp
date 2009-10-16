@@ -1115,14 +1115,13 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
       PRUint32 depth = mGIFStruct.global_colormap_depth;
       if (q[8] & 0x80)
         depth = (q[8]&0x07) + 1;
-      // Make sure the transparent pixel is within colormap space
-      if (mGIFStruct.tpixel >= (1 << depth)) {
-        mGIFStruct.is_transparent = PR_FALSE;
-        mGIFStruct.tpixel = 0;
-      }
+      PRUint32 realDepth = depth;
+      while (mGIFStruct.tpixel >= (1 << realDepth) && (realDepth < 8)) {
+        realDepth++;
+      } 
       // Mask to limit the color values within the colormap
-      mColorMask = 0xFF >> (8 - depth);
-      nsresult rv = BeginImageFrame(depth);
+      mColorMask = 0xFF >> (8 - realDepth);
+      nsresult rv = BeginImageFrame(realDepth);
       if (NS_FAILED(rv) || !mImageData) {
         mGIFStruct.state = gif_error;
         break;
@@ -1152,7 +1151,7 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
         if (!mGIFStruct.images_decoded) {
           // First frame has local colormap, allocate space for it
           // as the image frame doesn't have its own palette
-          mColormapSize = sizeof(PRUint32) << depth;
+          mColormapSize = sizeof(PRUint32) << realDepth;
           if (!mGIFStruct.local_colormap) {
             mGIFStruct.local_colormap = (PRUint32*)PR_MALLOC(mColormapSize);
             if (!mGIFStruct.local_colormap) {
