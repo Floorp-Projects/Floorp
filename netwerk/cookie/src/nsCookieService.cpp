@@ -688,10 +688,10 @@ nsCookieService::Observe(nsISupports     *aSubject,
           !mPrivateDBState.hostTable.Init())
         return NS_ERROR_OUT_OF_MEMORY;
 
-      NS_ASSERTION(mDBState == &mPrivateDBState, "already in private state");
+      NS_ASSERTION(mDBState == &mDefaultDBState, "already in private state");
       NS_ASSERTION(mPrivateDBState.cookieCount == 0, "private count not 0");
       NS_ASSERTION(mPrivateDBState.hostTable.Count() == 0, "private table not empty");
-      NS_ASSERTION(!mPrivateDBState.dbConn, "private DB connection not null");
+      NS_ASSERTION(mPrivateDBState.dbConn == NULL, "private DB connection not null");
 
       // swap the private and default states
       mDBState = &mPrivateDBState;
