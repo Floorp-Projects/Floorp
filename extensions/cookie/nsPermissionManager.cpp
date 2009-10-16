@@ -327,7 +327,7 @@ nsPermissionManager::Add(nsIURI     *aURI,
 
   // Skip addition if the permission is already expired.
   if (aExpireType == nsIPermissionManager::EXPIRE_TIME &&
-      aExpireTime < PR_Now() / 1000)
+      aExpireTime <= PR_Now() / 1000)
     return NS_OK;
 
   nsCAutoString host;
@@ -593,7 +593,7 @@ nsPermissionManager::GetHostEntry(const nsAFlatCString &aHost,
 
       // if the entry is expired, remove and keep looking for others.
       if (permEntry.mExpireType == nsIPermissionManager::EXPIRE_TIME &&
-          permEntry.mExpireTime < now)
+          permEntry.mExpireTime <= now)
         Remove(aHost, mTypeArray[aType].get());
       else if (permEntry.mPermission != nsIPermissionManager::UNKNOWN_ACTION)
         break;
@@ -758,7 +758,7 @@ nsPermissionManager::Read()
     // this deletion has its own scope so the write lock is released when done.
     nsCOMPtr<mozIStorageStatement> stmtDeleteExpired;
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-          "DELETE FROM moz_hosts WHERE expireType = ?1 AND expireTime < ?2"),
+          "DELETE FROM moz_hosts WHERE expireType = ?1 AND expireTime <= ?2"),
           getter_AddRefs(stmtDeleteExpired));
     NS_ENSURE_SUCCESS(rv, rv);
 
