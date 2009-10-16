@@ -51,6 +51,7 @@
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
+#include "jsvector.h"
 
 #if defined(DEBUG) && !defined(JS_JIT_SPEW)
 #define JS_JIT_SPEW
@@ -201,7 +202,7 @@ public:
     void            clear();
 };
 
-#if defined(JS_JIT_SPEW) || defined(MOZ_NO_VARADIC_MACROS)
+#if defined(JS_JIT_SPEW) || defined(NJ_NO_VARIADIC_MACROS)
 
 enum LC_TMBits {
     /*
@@ -219,7 +220,7 @@ enum LC_TMBits {
 
 #endif
 
-#ifdef MOZ_NO_VARADIC_MACROS
+#ifdef NJ_NO_VARIADIC_MACROS
 
 #define debug_only_stmt(action)            /* */
 static void debug_only_printf(int mask, const char *fmt, ...) {}
@@ -716,7 +717,6 @@ struct InterpState
     FrameInfo**    callstackBase;       // call stack base
     uintN*         inlineCallCountp;    // inline call count counter
     VMSideExit**   innermostNestedGuardp;
-    void*          stackMark;
     VMSideExit*    innermost;
 #ifdef EXECUTE_TREE_TIMER
     uint64         startTime;
@@ -929,6 +929,7 @@ class TraceRecorder {
     bool                    loop;
     nanojit::LIns*          loopLabel;
     MonitorReason           monitorReason;
+    js::Vector<JSTraceType, 256> tempTypeMap;
 
     nanojit::LIns* insImmObj(JSObject* obj);
     nanojit::LIns* insImmFun(JSFunction* fun);

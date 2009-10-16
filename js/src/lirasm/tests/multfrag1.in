@@ -9,7 +9,8 @@ sti c ptr 2
 zero = int 0
 sti zero ptr 3
 ss = icall puts cdecl ptr
-ret ss
+nn = ge ss zero
+ret nn
 .end
 
 .begin b
