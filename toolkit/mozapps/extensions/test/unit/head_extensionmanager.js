@@ -168,6 +168,7 @@ function createAppInfo(id, name, version, platformVersion)
     logConsoleErrors: true,
     OS: "XPCShell",
     XPCOMABI: "noarch-spidermonkey",
+    invalidateCachesOnRestart: function invalidateCachesOnRestart() {},
 
     QueryInterface: function QueryInterface(iid) {
       if (iid.equals(Components.interfaces.nsIXULAppInfo)

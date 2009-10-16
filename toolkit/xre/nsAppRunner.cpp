@@ -238,6 +238,8 @@ protected:
   extern void InstallUnixSignalHandlers(const char *ProgramName);
 #endif
 
+#define FILE_COMPATIBILITY_INFO NS_LITERAL_CSTRING("compatibility.ini")
+
 int    gArgc;
 char **gArgv;
 
@@ -709,6 +711,48 @@ NS_IMETHODIMP
 nsXULAppInfo::GetWidgetToolkit(nsACString& aResult)
 {
   aResult.AssignLiteral(MOZ_WIDGET_TOOLKIT);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::InvalidateCachesOnRestart()
+{
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DIR_STARTUP, 
+                                       getter_AddRefs(file));
+  if (NS_FAILED(rv))
+    return rv;
+  if (!file)
+    return NS_ERROR_NOT_AVAILABLE;
+  
+  file->AppendNative(FILE_COMPATIBILITY_INFO);
+
+  nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file));
+  nsINIParser parser;
+  rv = parser.Init(localFile);
+  if (NS_FAILED(rv)) {
+    // This fails if compatibility.ini is not there, so we'll
+    // flush the caches on the next restart anyways.
+    return NS_OK;
+  }
+  
+  nsCAutoString buf;
+  rv = parser.GetString("Compatibility", "InvalidateCaches", buf);
+  
+  if (NS_FAILED(rv)) {
+    PRFileDesc *fd = nsnull;
+    localFile->OpenNSPRFileDesc(PR_RDWR | PR_APPEND, 0600, &fd);
+    if (!fd) {
+      NS_ERROR("could not create output stream");
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    static const char kInvalidationHeader[] = NS_LINEBREAK "InvalidateCaches=1" NS_LINEBREAK;
+    rv = PR_Write(fd, kInvalidationHeader, sizeof(kInvalidationHeader) - 1);
+    PR_Close(fd);
+    
+    if (NS_FAILED(rv))
+      return rv;
+  }
   return NS_OK;
 }
 
@@ -2147,13 +2191,19 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
   return ShowProfileManager(profileSvc, aNative);
 }
 
-#define FILE_COMPATIBILITY_INFO NS_LITERAL_CSTRING("compatibility.ini")
-
+/** 
+ * Checks the compatibility.ini file to see if we have updated our application
+ * or otherwise invalidated our caches. If the application has been updated, 
+ * we return PR_FALSE; otherwise, we return PR_TRUE. We also write the status 
+ * of the caches (valid/invalid) into the return param aCachesOK. The aCachesOK
+ * is always invalid if the application has been updated. 
+ */
 static PRBool
 CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
                    const nsCString& aOSABI, nsIFile* aXULRunnerDir,
-                   nsIFile* aAppDir)
+                   nsIFile* aAppDir, PRBool* aCachesOK)
 {
+  *aCachesOK = false;
   nsCOMPtr<nsIFile> file;
   aProfileDir->Clone(getter_AddRefs(file));
   if (!file)
@@ -2205,6 +2255,10 @@ CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
       return PR_FALSE;
   }
 
+  rv = parser.GetString("Compatibility", "InvalidateCaches", buf);
+  
+  // If we see this flag, caches are invalid.
+  *aCachesOK = (NS_FAILED(rv) || !buf.EqualsLiteral("1"));
   return PR_TRUE;
 }
 
@@ -2271,19 +2325,6 @@ WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
   PR_Close(fd);
 }
 
-static PRBool ComponentsListChanged(nsIFile* aProfileDir)
-{
-  nsCOMPtr<nsIFile> file;
-  aProfileDir->Clone(getter_AddRefs(file));
-  if (!file)
-    return PR_TRUE;
-  file->AppendNative(NS_LITERAL_CSTRING(".autoreg"));
-
-  PRBool exists = PR_FALSE;
-  file->Exists(&exists);
-  return exists;
-}
-
 static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfileDir,
                                       PRBool aRemoveEMFiles)
 {
@@ -2311,6 +2352,9 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
     return;
 
   file->AppendNative(NS_LITERAL_CSTRING("XUL" PLATFORM_FASL_SUFFIX));
+  file->Remove(PR_FALSE);
+  
+  file->SetNativeLeafName(NS_LITERAL_CSTRING("XPC" PLATFORM_FASL_SUFFIX));
   file->Remove(PR_FALSE);
 }
 
@@ -3172,9 +3216,12 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     // Check for version compatibility with the last version of the app this 
     // profile was started with.  The format of the version stamp is defined
     // by the BuildVersion function.
-    PRBool versionOK = CheckCompatibility(profD, version, osABI,
+    // Also check to see if something has happened to invalidate our
+    // fastload caches, like an extension upgrade or installation.
+    PRBool cachesOK;
+    PRBool versionOK = CheckCompatibility(profD, version, osABI, 
                                           dirProvider.GetGREDir(),
-                                          gAppData->directory);
+                                          gAppData->directory, &cachesOK);
 
     // Every time a profile is loaded by a build with a different version,
     // it updates the compatibility.ini file saying what version last wrote
@@ -3189,11 +3236,15 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
                    dirProvider.GetGREDir(), gAppData->directory);
     }
     else if (versionOK) {
-      if (ComponentsListChanged(profD)) {
+      if (!cachesOK) {
         // Remove compreg.dat and xpti.dat, forcing component re-registration.
         // The new list of additional components directories is derived from
         // information in "extensions.ini".
         RemoveComponentRegistries(profD, profLD, PR_FALSE);
+        
+        // Rewrite compatibility.ini to remove the flag
+        WriteVersion(profD, version, osABI,
+                     dirProvider.GetGREDir(), gAppData->directory);
       }
       // Nothing need be done for the normal startup case.
     }
