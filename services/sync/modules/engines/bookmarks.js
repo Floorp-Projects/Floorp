@@ -758,9 +758,43 @@ BookmarksStore.prototype = {
     record.parentid = this._getParentGUIDForId(placeId);
     record.predecessorid = this._getPredecessorGUIDForId(placeId);
     record.encryption = cryptoMetaURL;
+    record.sortindex = this._calculateIndex(record);
 
     this.cache.put(guid, record);
     return record;
+  },
+
+  get _frecencyStm() {
+    this._log.trace("Creating SQL statement: _frecencyStm");
+    let stm = Svc.History.DBConnection.createStatement(
+      "SELECT frecency " +
+      "FROM moz_places_view " +
+      "WHERE url = :url");
+    this.__defineGetter__("_frecencyStm", function() stm);
+    return stm;
+  },
+
+  _calculateIndex: function _calculateIndex(record) {
+    // For anything directly under the toolbar, give it a boost of more than an
+    // unvisited bookmark
+    let index = 0;
+    if (record.parentid == "toolbar")
+      index += 150;
+
+    // Add in the bookmark's frecency if we have something
+    if (record.bmkUri != null) {
+      try {
+        this._frecencyStm.params.url = record.bmkUri;
+        if (this._frecencyStm.step())
+          index += this._frecencyStm.row.frecency;
+      }
+      finally {
+        this._frecencyStm.reset();
+      }
+    }
+
+    this._log.info("calculating index for: " + record.title + " = " + index);
+    return index;
   },
 
   _getParentGUIDForId: function BStore__getParentGUIDForId(itemId) {
