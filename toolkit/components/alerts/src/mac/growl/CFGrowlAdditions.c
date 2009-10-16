@@ -85,10 +85,10 @@ STRING_TYPE createStringWithStringAndCharacterAndString(STRING_TYPE str0, UniCha
 	CFStringRef cfstr1 = (CFStringRef)str1;
 	CFIndex len0 = (cfstr0 ? CFStringGetLength(cfstr0) : 0);
 	CFIndex len1 = (cfstr1 ? CFStringGetLength(cfstr1) : 0);
-	unsigned length = (len0 + (ch != 0xffff) + len1);
+	size_t length = (len0 + (ch != 0xffff) + len1);
 
 	UniChar *buf = malloc(sizeof(UniChar) * length);
-	unsigned i = 0U;
+	size_t i = 0U;
 
 	if (cfstr0) {
 		CFStringGetCharacters(cfstr0, CFRangeMake(0, len0), buf);
@@ -222,8 +222,8 @@ STRING_TYPE createStringWithAddressData(DATA_TYPE aAddressData) {
 STRING_TYPE createHostNameForAddressData(DATA_TYPE aAddressData) {
 	char hostname[NI_MAXHOST];
 	struct sockaddr *socketAddress = (struct sockaddr *)CFDataGetBytePtr(aAddressData);
-	if (getnameinfo(socketAddress, CFDataGetLength(aAddressData),
-					hostname, sizeof(hostname),
+	if (getnameinfo(socketAddress, (socklen_t)CFDataGetLength(aAddressData),
+					hostname, (socklen_t)sizeof(hostname),
 					/*serv*/ NULL, /*servlen*/ 0,
 					NI_NAMEREQD))
 		return NULL;
@@ -345,9 +345,11 @@ URL_TYPE createURLByMakingDirectoryAtURLWithName(URL_TYPE parent, STRING_TYPE na
 					NSLog(CFSTR("in createURLByMakingDirectoryAtURLWithName in CFGrowlAdditions: could not create directory '%@' in parent directory at %@: FSCreateDirectoryUnicode returned %li (please tell the Growl developers)"), name, parent, (long)err);
 			}
 
-			CFRelease(parent);
 		} //if (name)
-		CFRelease(name);
+		if(parent)
+			CFRelease(parent);
+		if(name)
+			CFRelease(name);
 	} //if (parent)
 
 end:
@@ -524,7 +526,7 @@ static OSStatus GrowlCopyObjectSync(const FSRef *fileRef, const FSRef *destRef, 
 	struct FSForkIOParam forkPB = {
 		.ref = fileRef,
 		.forkIterator = {
-			.initialize = 0L
+			.initialize = 0
 		},
 		.outForkName = &forkName,
 	};
