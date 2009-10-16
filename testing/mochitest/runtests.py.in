@@ -148,6 +148,11 @@ class MochitestOptions(optparse.OptionParser):
                     action = "store_true", dest = "autorun",
                     help = "start running tests when the application starts")
     defaults["autorun"] = False
+    
+    self.add_option("--timeout",
+                    type = "int", dest = "timeout",
+                    help = "per-test timeout in seconds")
+    defaults["timeout"] = None
 
     self.add_option("--total-chunks",
                     type = "int", dest = "totalChunks",
@@ -451,6 +456,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   # logFile -- logs test run to an absolute path
   # totalChunks -- how many chunks to split tests into
   # thisChunk -- which chunk to run
+  # timeout -- per-test timeout in seconds
   #
   
   # consoleLevel, fileLevel: set the logging level of the console and
@@ -478,6 +484,8 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   else:
     if options.autorun:
       urlOpts.append("autorun=1")
+    if options.timeout:
+      urlOpts.append("timeout=%d" % options.timeout)
     if options.closeWhenDone:
       urlOpts.append("closeWhenDone=1")
     if options.logFile:
