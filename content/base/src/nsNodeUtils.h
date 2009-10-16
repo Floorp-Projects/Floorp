@@ -195,10 +195,8 @@ public:
                         JSObject *aNewScope,
                         nsCOMArray<nsINode> &aNodesWithProperties)
   {
-    nsCOMPtr<nsIDOMNode> dummy;
     return CloneAndAdopt(aNode, PR_FALSE, PR_TRUE, aNewNodeInfoManager, aCx,
-                         aOldScope, aNewScope, aNodesWithProperties,
-                         getter_AddRefs(dummy));
+                         aOldScope, aNewScope, aNodesWithProperties, nsnull);
   }
 
   /**
@@ -311,8 +309,8 @@ private:
    *                             descendants) with properties. If aClone is
    *                             PR_TRUE every node will be followed by its
    *                             clone.
-   * @param aResult *aResult will contain the cloned node (if aClone is
-   *                PR_TRUE).
+   * @param aResult If aClone is PR_FALSE then aResult must be null, else
+   *                *aResult will contain the cloned node.
    */
   static nsresult CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
                                 nsNodeInfoManager *aNewNodeInfoManager,
@@ -321,6 +319,10 @@ private:
                                 nsCOMArray<nsINode> &aNodesWithProperties,
                                 nsIDOMNode **aResult)
   {
+    NS_ASSERTION(!aClone == !aResult,
+                 "aResult must be null when adopting and non-null when "
+                 "cloning");
+
     nsCOMPtr<nsINode> clone;
     nsresult rv = CloneAndAdopt(aNode, aClone, aDeep, aNewNodeInfoManager,
                                 aCx, aOldScope, aNewScope, aNodesWithProperties,
@@ -336,6 +338,8 @@ private:
    * @param aParent If aClone is PR_TRUE the cloned node will be appended to
    *                aParent's children. May be null. If not null then aNode
    *                must be an nsIContent.
+   * @param aResult If aClone is PR_TRUE then *aResult will contain the cloned
+   *                node.
    */
   static nsresult CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
                                 nsNodeInfoManager *aNewNodeInfoManager,
