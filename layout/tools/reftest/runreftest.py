@@ -63,7 +63,7 @@ def createReftestProfile(options, profileDir):
   prefsFile = open(os.path.join(profileDir, "user.js"), "w")
   prefsFile.write("""user_pref("browser.dom.window.dump.enabled", true);
 """)
-  prefsFile.write('user_pref("reftest.timeout", %d);' % options.timeout)
+  prefsFile.write('user_pref("reftest.timeout", %d);' % (options.timeout * 1000))
   prefsFile.write('user_pref("ui.caretBlinkTime", -1);')
   prefsFile.close()
 
@@ -90,8 +90,8 @@ def main():
                     help = "copy specified files/dirs to testing profile")
   parser.add_option("--timeout",              
                     action = "store", dest = "timeout", type = "int", 
-                    default = 5 * 60 * 1000, # 5 minutes per bug 479518
-                    help = "reftest will timeout in specified number of milleseconds. [default %default ms].")
+                    default = 5 * 60, # 5 minutes per bug 479518
+                    help = "reftest will timeout in specified number of seconds. [default %default s].")
   parser.add_option("--leak-threshold",
                     action = "store", type = "int", dest = "leakThreshold",
                     default = 0,
