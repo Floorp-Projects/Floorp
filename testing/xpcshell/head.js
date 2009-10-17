@@ -408,3 +408,67 @@ function do_get_profile() {
         .registerProvider(provider);
   return file.clone();
 }
+
+/**
+ * This function loads head.js (this file) in the child process, so that all
+ * functions defined in this file (do_throw, etc) are available to subsequent
+ * sendCommand calls.  It also sets various constants used by these functions.
+ *
+ * (Note that you may use sendCommand without calling this function first;  you
+ * simply won't have any of the functions in this file available.)
+ */
+function do_load_child_test_harness()
+{
+  // Make sure this isn't called from child process
+  var runtime = Components.classes["@mozilla.org/xre/app-info;1"]
+                  .getService(Components.interfaces.nsIXULRuntime);
+  if (runtime.processType != 
+            Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT) 
+  {
+    do_throw("run_test_in_child cannot be called from child!");
+  }
+
+  // Allow to be called multiple times, but only run once
+  if (typeof do_load_child_test_harness.alreadyRun != "undefined")
+    return;
+  do_load_child_test_harness.alreadyRun = 1;
+  
+  function addQuotes (str)  { 
+    return '"' + str + '"'; 
+  }
+  var quoted_head_files = _HEAD_FILES.map(addQuotes);
+  var quoted_tail_files = _TAIL_FILES.map(addQuotes);
+
+  sendCommand(
+        "const _HEAD_JS_PATH='" + _HEAD_JS_PATH + "'; "
+      + "const _HTTPD_JS_PATH='" + _HTTPD_JS_PATH + "'; "
+      + "const _HEAD_FILES=[" + quoted_head_files.join() + "];"
+      + "const _TAIL_FILES=[" + quoted_tail_files.join() + "];"
+      + "load(_HEAD_JS_PATH);");
+}
+
+/**
+ * Runs an entire xpcshell unit test in a child process (rather than in chrome,
+ * which is the default).
+ *
+ * This function returns immediately, before the test has completed.  
+ *
+ * @param testFile
+ *        The name of the script to run.  Path format same as load().
+ * @param optionalCallback.
+ *        Optional function to be called (in parent) when test on child is
+ *        complete.  If provided, the function must call do_test_finished();
+ */
+function run_test_in_child(testFile, optionalCallback) 
+{
+  var callback = (typeof optionalCallback == 'undefined') ? 
+                    do_test_finished : optionalCallback;
+
+  do_load_child_test_harness();
+
+  var testPath = do_get_file(testFile).path.replace(/\\/g, "/");
+  do_test_pending();
+  sendCommand("const _TEST_FILE=['" + testPath + "']; _execute_test();", 
+              callback);
+}
+
