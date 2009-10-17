@@ -382,12 +382,6 @@ nsTransitionManager::StyleContextChanged(nsIContent *aElement,
     return nsnull;
   }
 
-  // FIXME (Bug 522563): When we have multiple continuations, we
-  // actually repeat this for each one, and if we have transitions we
-  // create separate cover rules for each one.  However, since we're
-  // attaching the transition data to the element, during the animation
-  // we create the same style rule, so it's not too horrible.
-
   // Per http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html
   // I'll consider only the transitions from the number of items in
   // 'transition-property' on down, and later ones will override earlier
