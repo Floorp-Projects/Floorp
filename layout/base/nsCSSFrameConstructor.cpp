@@ -5867,7 +5867,9 @@ nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
                                                   PRBool aPrevSibling)
 {
   nsIFrame* sibling = mPresShell->GetPrimaryFrameFor(aContent);
-  if (!sibling) {
+  if (!sibling || sibling->GetContent() != aContent) {
+    // XXX the GetContent() != aContent check is needed due to bug 135040.
+    // Remove it once that's fixed.
     return nsnull;
   }
 
