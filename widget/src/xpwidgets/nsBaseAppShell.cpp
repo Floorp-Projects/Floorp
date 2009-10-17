@@ -40,6 +40,7 @@
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
+#include "nsSound.h"
 
 // When processing the next thread event, the appshell may process native
 // events (if not in performance mode), which can result in suppressing the
@@ -80,6 +81,13 @@ nsBaseAppShell::Init()
       do_GetService("@mozilla.org/observer-service;1");
   if (obsSvc)
     obsSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+
+  // The nsISystemSoundService might need to load the system library and it
+  // shouldn't cause the delay of the first sound.  So, we need to initialize
+  // the service here, but the actual initializing is going to be run at next
+  // idle time because it shouldn't make the startup process slower.
+  nsSystemSoundServiceBase::InitService();
+
   return NS_OK;
 }
 

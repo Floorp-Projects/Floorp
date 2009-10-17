@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/*
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -16,10 +16,11 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2000
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,26 +36,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsSound_h__
-#define __nsSound_h__
+#ifndef __nsSystemSoundService_h__
+#define __nsSystemSoundService_h__
 
-#include "nsISound.h"
-#include "nsIStreamLoader.h"
+#include "nsSound.h"
 
-class BSimpleGameSound;
-
-class nsSound : public nsISound,
-				public nsIStreamLoaderObserver
+class nsSystemSoundService : public nsSystemSoundServiceBase
 {
-public: 
-	nsSound();
-	virtual ~nsSound();
+public:
+  nsSystemSoundService();
+  virtual ~nsSystemSoundService();
 
-	NS_DECL_ISUPPORTS
-	NS_DECL_NSISOUND
-	NS_DECL_NSISTREAMLOADEROBSERVER
-private:
-	BSimpleGameSound *mSound;
+  NS_DECL_ISYSTEMSOUNDSERVICE_GETINSTANCE(nsSystemSoundService)
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Beep();
+  NS_IMETHOD PlayEventSound(PRUint32 aEventID);
 };
 
-#endif /* __nsSound_h__ */
+#endif /* __nsSystemSoundService_h__ */

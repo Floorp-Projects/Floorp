@@ -110,6 +110,7 @@ XPIDLSRCS	= \
 		nsIDragDropHandler.idl \
 		nsIScriptEventHandler.idl \
 		nsIScriptEventManager.idl \
+		nsISoundPlayer.idl \
 		nsIImageLoadingContent.idl \
 		nsIObjectLoadingContent.idl \
 		nsIFrameLoader.idl \
