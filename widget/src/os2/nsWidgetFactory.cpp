@@ -71,6 +71,7 @@
 #include "nsFilePicker.h"
 #include "nsLookAndFeel.h"
 #include "nsSound.h"
+#include "nsSystemSoundService.h"
 #include "nsToolkit.h"
 
 // Drag & Drop, Clipboard
@@ -100,6 +101,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFrameWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemSoundService,
+                                         nsSystemSoundService::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
@@ -151,6 +154,10 @@ static const nsModuleComponentInfo components[] =
     NS_SOUND_CID,
     "@mozilla.org/sound;1",
     nsSoundConstructor },
+  { "System Sound Service",
+    NS_SYSTEM_SOUND_SERVICE_CID,
+    "@mozilla.org/systemsoundservice;1",
+    nsSystemSoundServiceConstructor },
   { "OS/2 Toolkit",
     NS_TOOLKIT_CID,
     "@mozilla.org/widget/toolkit/os2;1",

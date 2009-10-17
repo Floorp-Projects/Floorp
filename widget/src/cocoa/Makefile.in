@@ -79,7 +79,7 @@ CMMSRCS = \
 		nsMacCursor.mm \
 		nsScreenCocoa.mm \
 		nsScreenManagerCocoa.mm \
-		nsSound.mm \
+		nsSystemSoundService.mm \
 		nsLookAndFeel.mm \
 		nsNativeThemeCocoa.mm \
 		nsDeviceContextSpecX.mm \

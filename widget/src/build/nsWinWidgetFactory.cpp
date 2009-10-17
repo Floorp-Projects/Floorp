@@ -52,6 +52,7 @@
 #include "nsNativeThemeWin.h"
 #include "nsScreenManagerWin.h"
 #include "nsSound.h"
+#include "nsSystemSoundService.h"
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "WinTaskbar.h"
@@ -91,6 +92,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemSoundService,
+                                         nsSystemSoundService::GetInstance)
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
 using namespace mozilla::widget;
@@ -167,6 +170,10 @@ static const nsModuleComponentInfo components[] =
     NS_SOUND_CID,
     "@mozilla.org/sound;1",
     nsSoundConstructor },
+  { "System Sound Service",
+    NS_SYSTEM_SOUND_SERVICE_CID,
+    "@mozilla.org/systemsoundservice;1",
+    nsSystemSoundServiceConstructor },
   { "Transferable",
     NS_TRANSFERABLE_CID,
     "@mozilla.org/widget/transferable;1",

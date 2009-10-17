@@ -59,7 +59,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCSSFrameConstructor.h"
 #ifdef XP_WIN
-#include "nsISound.h"
+#include "nsISystemSoundService.h"
 #include "nsWidgetsCID.h"
 #endif
 #include "nsContentUtils.h"
@@ -266,9 +266,7 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
 #ifdef XP_WIN
   // behavior on Windows - this item is on the menu bar, beep and deactivate the menu bar
   if (mIsActive) {
-    nsCOMPtr<nsISound> soundInterface = do_CreateInstance("@mozilla.org/sound;1");
-    if (soundInterface)
-      soundInterface->Beep();
+    nsContentUtils::PlayEventSound(nsISystemSoundService::EVENT_MENU_NOT_FOUND);
   }
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();

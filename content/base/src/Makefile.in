@@ -118,6 +118,7 @@ CPPSRCS		= \
 		nsScriptElement.cpp \
 		nsScriptEventManager.cpp \
 		nsScriptLoader.cpp \
+		nsSoundPlayer.cpp \
 		nsStubDocumentObserver.cpp \
 		nsStubImageDecoderObserver.cpp \
 		nsStubMutationObserver.cpp \

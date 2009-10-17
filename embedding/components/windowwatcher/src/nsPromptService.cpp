@@ -53,6 +53,7 @@
 #include "nsIStringBundle.h"
 #include "nsXPIDLString.h"
 #include "nsISound.h"
+#include "nsISystemSoundService.h"
 
 static const char kPromptURL[] = "chrome://global/content/commonDialog.xul";
 static const char kSelectPromptURL[] = "chrome://global/content/selectDialog.xul";
@@ -140,7 +141,7 @@ nsPromptService::Alert(nsIDOMWindow *parent,
   NS_ConvertASCIItoUTF16 styleClass(kAlertIconClass);
   block->SetString(eIconClass, styleClass.get());
   block->SetString(eOpeningSound, NS_SYSSOUND_ALERT_DIALOG.get());
-  block->SetInt(eSoundEventId, nsISound::EVENT_ALERT_DIALOG_OPEN);
+  block->SetInt(eSoundEventId, nsISystemSoundService::EVENT_ALERT_DIALOG_OPEN);
 
   rv = DoDialog(parent, block, kPromptURL);
 
@@ -186,7 +187,7 @@ nsPromptService::AlertCheck(nsIDOMWindow *parent,
   block->SetString(eCheckboxMsg, checkMsg);
   block->SetInt(eCheckboxState, *checkValue);
   block->SetString(eOpeningSound, NS_SYSSOUND_ALERT_DIALOG.get());
-  block->SetInt(eSoundEventId, nsISound::EVENT_ALERT_DIALOG_OPEN);
+  block->SetInt(eSoundEventId, nsISystemSoundService::EVENT_ALERT_DIALOG_OPEN);
 
   rv = DoDialog(parent, block, kPromptURL);
   if (NS_FAILED(rv))
@@ -233,7 +234,8 @@ nsPromptService::Confirm(nsIDOMWindow *parent,
   NS_ConvertASCIItoUTF16 styleClass(kQuestionIconClass);
   block->SetString(eIconClass, styleClass.get());
   block->SetString(eOpeningSound, NS_SYSSOUND_CONFIRM_DIALOG.get());
-  block->SetInt(eSoundEventId, nsISound::EVENT_CONFIRM_DIALOG_OPEN);
+  block->SetInt(eSoundEventId,
+                nsISystemSoundService::EVENT_CONFIRM_DIALOG_OPEN);
 
   rv = DoDialog(parent, block, kPromptURL);
   if (NS_FAILED(rv))
@@ -284,7 +286,8 @@ nsPromptService::ConfirmCheck(nsIDOMWindow *parent,
   block->SetString(eCheckboxMsg, checkMsg);
   block->SetInt(eCheckboxState, *checkValue);
   block->SetString(eOpeningSound, NS_SYSSOUND_CONFIRM_DIALOG.get());
-  block->SetInt(eSoundEventId, nsISound::EVENT_CONFIRM_DIALOG_OPEN);
+  block->SetInt(eSoundEventId,
+                nsISystemSoundService::EVENT_CONFIRM_DIALOG_OPEN);
 
   rv = DoDialog(parent, block, kPromptURL);
   if (NS_FAILED(rv))
@@ -387,7 +390,8 @@ nsPromptService::ConfirmEx(nsIDOMWindow *parent,
 
   block->SetString(eIconClass, NS_ConvertASCIItoUTF16(kQuestionIconClass).get());
   block->SetString(eOpeningSound, NS_SYSSOUND_CONFIRM_DIALOG.get());
-  block->SetInt(eSoundEventId, nsISound::EVENT_CONFIRM_DIALOG_OPEN);
+  block->SetInt(eSoundEventId,
+                nsISystemSoundService::EVENT_CONFIRM_DIALOG_OPEN);
 
   if (checkMsg && checkValue) {
     block->SetString(eCheckboxMsg, checkMsg);
@@ -464,7 +468,7 @@ nsPromptService::Prompt(nsIDOMWindow *parent,
     block->SetInt(eCheckboxState, *checkValue);
   }
   block->SetString(eOpeningSound, NS_SYSSOUND_PROMPT_DIALOG.get());
-  block->SetInt(eSoundEventId, nsISound::EVENT_PROMPT_DIALOG_OPEN);
+  block->SetInt(eSoundEventId, nsISystemSoundService::EVENT_PROMPT_DIALOG_OPEN);
 
   rv = DoDialog(parent, block, kPromptURL);
   if (NS_FAILED(rv))
@@ -541,7 +545,7 @@ nsPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
     block->SetInt(eCheckboxState, *checkValue);
   }
   block->SetString(eOpeningSound, NS_SYSSOUND_PROMPT_DIALOG.get());
-  block->SetInt(eSoundEventId, nsISound::EVENT_PROMPT_DIALOG_OPEN);
+  block->SetInt(eSoundEventId, nsISystemSoundService::EVENT_PROMPT_DIALOG_OPEN);
 
   rv = DoDialog(parent, block, kPromptURL);
   if (NS_FAILED(rv))
@@ -622,7 +626,7 @@ NS_IMETHODIMP nsPromptService::PromptPassword(nsIDOMWindow *parent,
     block->SetInt(eCheckboxState, *checkValue);
   }
   block->SetString(eOpeningSound, NS_SYSSOUND_PROMPT_DIALOG.get());
-  block->SetInt(eSoundEventId, nsISound::EVENT_PROMPT_DIALOG_OPEN);
+  block->SetInt(eSoundEventId, nsISystemSoundService::EVENT_PROMPT_DIALOG_OPEN);
 
   rv = DoDialog(parent, block, kPromptURL);
   if (NS_FAILED(rv))
@@ -758,7 +762,8 @@ nsPromptService::ShowNonBlockingAlert(nsIDOMWindow *aParent,
   paramBlock->SetString(eDialogTitle, aDialogTitle);
   paramBlock->SetString(eMsg, aText);
   paramBlock->SetString(eOpeningSound, NS_SYSSOUND_ALERT_DIALOG.get());
-  paramBlock->SetInt(eSoundEventId, nsISound::EVENT_ALERT_DIALOG_OPEN);
+  paramBlock->SetInt(eSoundEventId,
+                     nsISystemSoundService::EVENT_ALERT_DIALOG_OPEN);
 
   nsCOMPtr<nsIDOMWindow> dialog;
   mWatcher->OpenWindow(aParent, "chrome://global/content/commonDialog.xul",

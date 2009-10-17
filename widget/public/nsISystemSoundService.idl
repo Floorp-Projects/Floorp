@@ -16,12 +16,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * Mozilla Japan.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@netscape.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,32 +39,19 @@
 
 #include "nsISupports.idl"
 
-interface nsIURL;
-
-/**
- * WARNING:  nsISound is now OBSOLETE.
- *
- *   nsISound instance just delegates the methods to nsISystemSoundService and
- *   nsISoundPlayer.  You should use the new interfaces directly.
- */
-
-[scriptable, uuid(86B75B05-DB60-4c3e-97A7-82B363A41A01)]
-interface nsISound : nsISupports
+[scriptable, uuid(A8948ACA-0C2F-45b2-A4BB-3ED30006EAA4)]
+interface nsISystemSoundService : nsISupports
 {
-  void play(in nsIURL aURL);
   /**
-   * for playing system sounds
-   *
-   * NS_SYSSOUND_* params are obsolete. The new events will not be supported by
-   * this method.  You should use playEventSound method instaed.
+   * Plays the system beep.
    */
-  void playSystemSound(in AString soundAlias);  
   void beep();
 
   /**
-   * init() doesn't do anything now.
+   * Play the platform's sound with the given alias name. Names and supported
+   * sounds are platform specific. _moz_ alias names are not supported.
    */
-  void init(); 
+  void playAlias(in AString aSoundAlias);
 
   /**
    * In some situations, playEventSound will be called.  Then, each
@@ -73,6 +60,10 @@ interface nsISound : nsISupports
    * NOTE: Don't change these values because they are used in
    * nsPIPromptService.idl. So, if they are changed, that makes big impact for
    * the embedders.
+   *
+   * And also they are must be same as the definition in nsISound, however,
+   * when you add new event, you don't need to add the same consts to the
+   * nsISound because the it's obsolete.
    */
   const unsigned long EVENT_NEW_MAIL_RECEIVED           = 0;
   const unsigned long EVENT_ALERT_DIALOG_OPEN           = 1;
@@ -81,25 +72,8 @@ interface nsISound : nsISupports
   const unsigned long EVENT_SELECT_DIALOG_OPEN          = 4;
   const unsigned long EVENT_MENU_EXECUTE                = 5;
   const unsigned long EVENT_MENU_POPUP                  = 6;
-  void playEventSound(in unsigned long aEventId);
+  const unsigned long EVENT_MENU_NOT_FOUND              = 7;
+
+  void playEventSound(in unsigned long aEventID);
 };
 
-%{C++
-
-/**
- * NS_SYSSOUND_* can be used for playSystemSound but they are obsolete.
- * Use nsISound::playEventSound instead.
- */
-#define NS_SYSSOUND_PREFIX          NS_LITERAL_STRING("_moz_")
-#define NS_SYSSOUND_MAIL_BEEP       NS_LITERAL_STRING("_moz_mailbeep")
-#define NS_SYSSOUND_ALERT_DIALOG    NS_LITERAL_STRING("_moz_alertdialog")
-#define NS_SYSSOUND_CONFIRM_DIALOG  NS_LITERAL_STRING("_moz_confirmdialog")
-#define NS_SYSSOUND_PROMPT_DIALOG   NS_LITERAL_STRING("_moz_promptdialog")
-#define NS_SYSSOUND_SELECT_DIALOG   NS_LITERAL_STRING("_moz_selectdialog")
-#define NS_SYSSOUND_MENU_EXECUTE    NS_LITERAL_STRING("_moz_menucommand")
-#define NS_SYSSOUND_MENU_POPUP      NS_LITERAL_STRING("_moz_menupopup")
-
-#define NS_IsMozAliasSound(aSoundAlias) \
-          StringBeginsWith(aSoundAlias, NS_SYSSOUND_PREFIX)
-
-%}
