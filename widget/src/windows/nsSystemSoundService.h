@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +21,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Stuart Parmenter <pavlov@netscape.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,29 +38,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsSound_h__
-#define __nsSound_h__
+#ifndef __nsSystemSoundService_h__
+#define __nsSystemSoundService_h__
 
-#include "nsISound.h"
-#include "nsIStreamLoader.h"
+#include "nsSound.h"
+#include "nsCOMPtr.h"
+#include "nsThreadUtils.h"
 
-class nsSound : public nsISound,
-                public nsIStreamLoaderObserver
+class nsSystemSoundPlayer;
+
+class nsSystemSoundService : public nsSystemSoundServiceBase
 {
- public:
+public:
+  nsSystemSoundService();
+  virtual ~nsSystemSoundService();
 
-  nsSound();
-  virtual ~nsSound();
-
-  static void Shutdown();
+  NS_DECL_ISYSTEMSOUNDSERVICE_GETINSTANCE(nsSystemSoundService)
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISOUND
-  NS_DECL_NSISTREAMLOADEROBSERVER
+
+  NS_IMETHOD Beep();
+  NS_IMETHOD PlayAlias(const nsAString &aSoundAlias);
+  NS_IMETHOD PlayEventSound(PRUint32 aEventID);
+
+protected:
+  virtual nsresult Init();
 
 private:
-  PRBool mInited;
+  nsCOMPtr<nsIThread> mPlayerThread;
 
+  nsresult PostPlayer(nsSystemSoundPlayer *aPlayer);
 };
 
-#endif /* __nsSound_h__ */
+#endif /* __nsSystemSoundService_h__ */

@@ -167,6 +167,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsHtml5Module.h"
 #include "nsPresContext.h"
 #include "nsLayoutStatics.h"
+#include "nsISystemSoundService.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -5172,3 +5173,16 @@ nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
 
   return rv;
 }
+
+// static
+nsresult
+nsContentUtils::PlayEventSound(PRUint32 aEventID)
+{
+  nsresult rv;
+  nsCOMPtr<nsISystemSoundService> sysSound =
+    do_GetService("@mozilla.org/systemsoundservice;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(sysSound, NS_ERROR_FAILURE);
+  return sysSound->PlayEventSound(aEventID);
+}
+

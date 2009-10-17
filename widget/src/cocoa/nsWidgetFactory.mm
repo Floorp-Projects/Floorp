@@ -59,6 +59,7 @@
 
 #include "nsAccelerometerX.h"
 #include "nsSound.h"
+#include "nsSystemSoundService.h"
 #include "nsIdleServiceX.h"
 
 #include "nsScreenManagerCocoa.h"
@@ -73,6 +74,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemSoundService,
+                                         nsSystemSoundService::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
@@ -129,6 +132,10 @@ static const nsModuleComponentInfo gComponents[] =
     NS_SOUND_CID,
     "@mozilla.org/sound;1",
     nsSoundConstructor },
+  { "System Sound Service",
+    NS_SYSTEM_SOUND_SERVICE_CID,
+    "@mozilla.org/systemsoundservice;1",
+    nsSystemSoundServiceConstructor },
   { "Accelerometer",
     NS_ACCELEROMETER_CID,
     NS_ACCELEROMETER_CONTRACTID,

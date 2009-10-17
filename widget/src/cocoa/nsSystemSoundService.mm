@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Stuart Parmenter <stuart@mozilla.com>
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,29 +39,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSound.h"
+#include "nsSystemSoundService.h"
 #include "nsObjCExceptions.h"
-#include "nsNetUtil.h"
-#include "nsCOMPtr.h"
-#include "nsIURL.h"
-#include "nsString.h"
 
 #import <Cocoa/Cocoa.h>
 
-NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
+/*****************************************************************************
+ *  nsSystemSoundService implementation
+ *****************************************************************************/
 
-nsSound::nsSound()
+NS_IMPL_ISUPPORTS1(nsSystemSoundService, nsISystemSoundService)
+
+NS_IMPL_ISYSTEMSOUNDSERVICE_GETINSTANCE(nsSystemSoundService)
+
+nsSystemSoundService::nsSystemSoundService() :
+  nsSystemSoundServiceBase()
 {
 }
 
-nsSound::~nsSound()
+nsSystemSoundService::~nsSystemSoundService()
 {
 }
 
 NS_IMETHODIMP
-nsSound::Beep()
+nsSystemSoundService::Beep()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  nsresult rv = nsSystemSoundServiceBase::Beep();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   NSBeep();
   return NS_OK;
@@ -69,56 +76,18 @@ nsSound::Beep()
 }
 
 NS_IMETHODIMP
-nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
-                          nsISupports *context,
-                          nsresult aStatus,
-                          PRUint32 dataLen,
-                          const PRUint8 *data)
+nsSystemSoundService::PlayAlias(const nsAString &aSoundAlias)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NSData *value = [NSData dataWithBytes:data length:dataLen];
-
-  NSSound *sound = [[NSSound alloc] initWithData:value];
-
-  [sound play];
-
-  [sound autorelease];
-
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-NS_IMETHODIMP
-nsSound::Play(nsIURL *aURL)
-{
-  nsCOMPtr<nsIURI> uri(do_QueryInterface(aURL));
-  nsCOMPtr<nsIStreamLoader> loader;
-  return NS_NewStreamLoader(getter_AddRefs(loader), uri, this);
-}
-
-NS_IMETHODIMP
-nsSound::Init()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSound::PlaySystemSound(const nsAString &aSoundAlias)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  if (NS_IsMozAliasSound(aSoundAlias)) {
-    NS_WARNING("nsISound::playSystemSound is called with \"_moz_\" events, they are obsolete, use nsISound::playEventSound instead");
-    // Mac doesn't have system sound settings for each user actions.
-    return NS_OK;
-  }
+  nsresult rv = nsSystemSoundServiceBase::PlayAlias(aSoundAlias);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   NSString *name = [NSString stringWithCharacters:aSoundAlias.BeginReading()
                                            length:aSoundAlias.Length()];
   NSSound *sound = [NSSound soundNamed:name];
   if (sound) {
+    StopSoundPlayer();
     [sound stop];
     [sound play];
   }
@@ -129,8 +98,11 @@ nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 }
 
 NS_IMETHODIMP
-nsSound::PlayEventSound(PRUint32 aEventId)
+nsSystemSoundService::PlayEventSound(PRUint32 aEventID)
 {
+  nsresult rv = nsSystemSoundServiceBase::PlayEventSound(aEventID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Mac doesn't have system sound settings for each user actions.
   return NS_OK;
 }

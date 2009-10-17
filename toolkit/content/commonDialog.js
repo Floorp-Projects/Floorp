@@ -238,8 +238,8 @@ function commonDialogOnLoad()
   try {
     var sound = gCommonDialogParam.GetInt(7);
     if (sound) {
-      Cc["@mozilla.org/sound;1"]
-        .createInstance(Ci.nsISound)
+      Cc["@mozilla.org/systemsoundservice;1"]
+        .getService(Ci.nsISystemSoundService)
         .playEventSound(sound);
     }
   } catch (e) { }
