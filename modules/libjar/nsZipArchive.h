@@ -43,16 +43,14 @@
 #ifndef nsZipArchive_h_
 #define nsZipArchive_h_
 
-#define ZIP_MAGIC     0x5A49505FL   /* "ZIP_" */
-#define ZIPFIND_MAGIC 0x5A495046L   /* "ZIPF" */
 #define ZIP_TABSIZE   256
-/* We really want to be a (multiple of) 4K for optimal file IO */
 #define ZIP_BUFLEN    (4*1024)      /* Used as output buffer when deflating items to a file */
 
-#define PL_ARENA_CONST_ALIGN_MASK 7
+#define PL_ARENA_CONST_ALIGN_MASK  (sizeof(void*)-1)
 #include "plarena.h"
 
 #include "zlib.h"
+#include "zipstruct.h"
 #include "nsAutoPtr.h"
 
 class nsZipFind;
@@ -80,30 +78,29 @@ struct PRFileDesc;
  * each nsZipItem represents one file in the archive and all the
  * information needed to manipulate it.
  */
-struct nsZipItem
+class nsZipItem
 {
-  nsZipItem*  next;
+public:
+  const char* Name() { return ((const char*)central) + ZIPCENTRAL_SIZE; }
 
-  PRUint32    headerOffset;
-  PRUint32    size;             /* size in original file */
-  PRUint32    realsize;         /* inflated size */
-  PRUint32    crc32;
+  PRUint32 const LocalOffset();
+  PRUint32 const Size();
+  PRUint32 const RealSize();
+  PRUint32 const CRC32();
+  PRUint16 const Date();
+  PRUint16 const Time();
+  PRUint16 const Compression();
+  bool     const IsDirectory();
+  PRUint16 const Mode();
 
-  /*
-   * Keep small items together, to avoid overhead.
-   */
-  PRUint16     time;
-  PRUint16     date;
-  PRUint16     mode;
-  PRUint8      compression;
-  bool         isDirectory;
-  bool         isSynthetic;     /* whether item is an actual zip entry or was
-                                   generated as part of a real entry's path */
 #if defined(XP_UNIX) || defined(XP_BEOS)
-  bool         isSymlink;
+  bool     const IsSymlink();
 #endif
 
-  char         name[1];         /* actually, bigger than 1 */
+  nsZipItem*         next;
+  const ZipCentral*  central;
+  PRUint16           nameLength;
+  bool               isSynthetic;
 };
 
 class nsZipHandle;
@@ -211,7 +208,7 @@ private:
   nsZipArchive& operator=(const nsZipArchive& rhs); // prevent assignments
   nsZipArchive(const nsZipArchive& rhs);            // prevent copies
 
-  nsZipItem*        CreateZipItem(PRUint16 namelen);
+  nsZipItem*        CreateZipItem();
   nsresult          BuildFileList();
   nsresult          BuildSynthetics();
 
@@ -252,7 +249,7 @@ public:
   nsZipFind(nsZipArchive* aZip, char* aPattern, PRBool regExp);
   ~nsZipFind();
 
-  nsresult      FindNext(const char ** aResult);
+  nsresult      FindNext(const char** aResult, PRUint16* aNameLen);
 
 private:
   nsZipArchive* mArchive;
