@@ -44,8 +44,6 @@ relativesrcdir = mobile/locales
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
-vpath %.xml @srcdir@/en-US/searchplugins
-vpath %.xml $(LOCALE_SRCDIR)/searchplugins
 ifdef LOCALE_MERGEDIR
 vpath book%.inc $(LOCALE_MERGEDIR)/mobile/profile
 endif
@@ -67,8 +65,21 @@ SEARCH_PLUGINS = $(shell cat \
   $(firstword $(wildcard $(LOCALE_SRCDIR)/searchplugins/list.txt) \
        @srcdir@/en-US/searchplugins/list.txt ) )
 
-libs:: $(addsuffix .xml, $(SEARCH_PLUGINS))
-	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/searchplugins
+searchplugins::
+	@echo "$(AB_CD).jar:" > tmp-search.jar.mn
+	@for line in $(foreach plugin,$(SEARCH_PLUGINS),"locale/$(AB_CD)/browser/searchplugins/$(notdir $(plugin)).xml ($(plugin).xml)"); do \
+	    echo " $$line" >> tmp-search.jar.mn; \
+	done
+	@echo " locale/$(AB_CD)/browser/searchplugins/list.txt (list.txt)" >> tmp-search.jar.mn;
+	$(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
+          $(QUIET) -j $(FINAL_TARGET)/chrome \
+          -s $(topsrcdir)/$(relativesrcdir)/en-US/searchplugins \
+          -s $(LOCALE_SRCDIR)/searchplugins \
+          $(MAKE_JARS_FLAGS) tmp-search.jar.mn
+
+export:: searchplugins
+
+GARBAGE += tmp-search.jar.mn
 
 include $(topsrcdir)/config/rules.mk
 
@@ -78,8 +89,7 @@ clobber-zip:
 	$(RM) $(STAGEDIST)/chrome/$(AB_CD).jar \
 	  $(STAGEDIST)/chrome/$(AB_CD).manifest \
 	  $(STAGEDIST)/defaults/preferences/mobile-l10n.js
-	$(RM) -r $(STAGEDIST)/searchplugins \
-	  $(STAGEDIST)/dictionaries \
+	$(RM) -r $(STAGEDIST)/dictionaries \
 	  $(STAGEDIST)/defaults/profile \
 	  $(STAGEDIST)/chrome/$(AB_CD)
 
@@ -93,6 +103,7 @@ libs-%:
 chrome-%:
 	@$(MAKE) -C $(DEPTH)/toolkit/locales chrome-$*
 	@$(MAKE) -B bookmarks.json AB_CD=$*
+	@$(MAKE) -B searchplugins AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
 

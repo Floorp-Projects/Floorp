@@ -402,3 +402,6 @@ pref("ui.window", "#efebe7");
 pref("ui.windowtext", "#101010");
 pref("ui.windowframe", "#efebe7");
 
+// Tell the search service to load search plugins from the locale JAR
+pref("browser.search.loadFromJars", true);
+pref("browser.search.jarURIs", "chrome://browser/locale/searchplugins/");
