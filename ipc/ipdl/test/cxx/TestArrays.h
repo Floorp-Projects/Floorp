@@ -19,11 +19,11 @@ class TestArraysSub :
         public PTestArraysSubChild
 {
 public:
-    TestArraysSub(uint32_t i) : mI(i)
+    TestArraysSub(uint32 i) : mI(i)
     { }
     virtual ~TestArraysSub()
     { }
-    uint32_t mI;
+    uint32 mI;
 };
 
 //-----------------------------------------------------------------------------
