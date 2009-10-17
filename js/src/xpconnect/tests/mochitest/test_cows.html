@@ -80,7 +80,7 @@ function COWTests() {
     } catch (e) {
         todo(false,
              "'duck-typing' detection on a non-exposed prop of a COWed " +
-             "obj should not raise error: " + e);
+             "obj should not throw");
     }
 
     var writable = { __exposedProps__: {foo: 'w'}};
