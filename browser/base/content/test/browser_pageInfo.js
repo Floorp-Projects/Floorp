@@ -1,20 +1,24 @@
+var obs = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+
 function test() {
   waitForExplicitFinish();
 
-  var pageInfo, obs, atTest = 0;
-  var gTestPage = gBrowser.addTab();
-  gBrowser.selectedTab = gTestPage;
-  gTestPage.linkedBrowser.addEventListener("load", handleLoad, true);
+  var pageInfo, atTest = 0;
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedBrowser.addEventListener("load", function () {
+    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+    pageInfo = BrowserPageInfo();
+    obs.addObserver(observer, "page-info-dialog-loaded", false);
+  }, true);
   content.location =
     "https://example.com/browser/browser/base/content/test/feed_tab.html";
-  gTestPage.focus();
 
   var observer = {
     observe: function(win, topic, data) {
       if (topic != "page-info-dialog-loaded")
         return;
 
-      switch(atTest) {
+      switch (atTest) {
         case 0:
           atTest++;
           handlePageInfo();
@@ -31,14 +35,6 @@ function test() {
           break;
       }
     }
-  }
-
-  function handleLoad() {
-    this.removeEventListener("load", handleLoad, true);
-    pageInfo = BrowserPageInfo();
-    obs = Components.classes["@mozilla.org/observer-service;1"]
-            .getService(Components.interfaces.nsIObserverService);
-      obs.addObserver(observer, "page-info-dialog-loaded", false);
   }
 
   function $(aId) { return pageInfo.document.getElementById(aId) };
@@ -82,17 +78,16 @@ function test() {
   }
 
   function testLockDoubleClick() {
-    var pageInfoDialogs = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                                    .getService(Components.interfaces.nsIWindowMediator)
-                                    .getEnumerator("Browser:page-info");
+    var pageInfoDialogs = Cc["@mozilla.org/appshell/window-mediator;1"]
+                            .getService(Ci.nsIWindowMediator)
+                            .getEnumerator("Browser:page-info");
     var i = 0;
-    while(pageInfoDialogs.hasMoreElements()) {
+    while (pageInfoDialogs.hasMoreElements()) {
       i++;
       pageInfo = pageInfoDialogs.getNext();
       pageInfo.close();
     }
     is(i, 1, "When the lock is clicked twice there should be only one page info dialog");
-    gTestPage.focus();
     gBrowser.removeCurrentTab();
     finish();
   }
