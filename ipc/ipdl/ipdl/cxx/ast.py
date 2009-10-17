@@ -337,7 +337,7 @@ Any type, naked or pointer, can be const (const T) or ref (T&).
 Type.BOOL = Type('bool')
 Type.INT = Type('int')
 Type.INTPTR = Type('intptr_t')
-Type.UINT32 = Type('uint32_t')
+Type.UINT32 = Type('uint32')
 
 class TypeArray(Node):
     def __init__(self, basetype, nmemb):
