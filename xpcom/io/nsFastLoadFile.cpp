@@ -924,6 +924,10 @@ nsFastLoadFileReader::Close()
         PR_Close(mFd);
         mFd = nsnull;
     }
+    
+    if (!mFooter.mObjectMap)
+        return NS_OK;
+
     for (PRUint32 i = 0, n = mFooter.mNumSharpObjects; i < n; i++) {
         nsObjectMapEntry* entry = &mFooter.mObjectMap[i];
         entry->mReadObject = nsnull;
