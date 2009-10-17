@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace _ipdltest {
 
-static const uint32_t nactors = 10;
+static const uint32 nactors = 10;
 
 #define test_assert(_cond, _msg) \
     if (!(_cond)) fail(_msg)
@@ -21,7 +21,7 @@ static void
 assert_arrays_equal(nsTArray<T> a, nsTArray<T> b)
 {
     test_assert(a.Length() == b.Length(), "Length()s different");
-    for (uint32_t i = 0; i < a.Length(); ++i)
+    for (uint32 i = 0; i < a.Length(); ++i)
         test_assert(a[i] == b[i], "values different");
 }
 
@@ -53,7 +53,7 @@ TestArraysParent::~TestArraysParent()
 void
 TestArraysParent::Main()
 {
-    for (uint32_t i = 0; i < nactors; ++i)
+    for (uint32 i = 0; i < nactors; ++i)
         if (!SendPTestArraysSubConstructor(i))
             fail("can't alloc actor");
 
@@ -97,7 +97,7 @@ bool TestArraysParent::RecvTest2(
         nsTArray<PTestArraysSubParent*>* o1)
 {
     test_assert(nactors == i1.Length(), "wrong #actors");
-    for (uint32_t i = 0; i < i1.Length(); ++i)
+    for (uint32 i = 0; i < i1.Length(); ++i)
         test_assert(i == Cast(i1[i]).mI, "wrong mI value");
     *o1 = i1;
     return true;
@@ -320,7 +320,7 @@ TestArraysChild::RecvStart()
     Test9();
     Test10();
 
-    for (uint32_t i = 0; i < nactors; ++i)
+    for (uint32 i = 0; i < nactors; ++i)
         if (!SendPTestArraysSubDestructor(mKids[i]))
             fail("can't send dtor");
 
