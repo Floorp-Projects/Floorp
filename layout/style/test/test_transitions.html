@@ -402,7 +402,7 @@ function check_transition_value(func, start_time, end_time,
             time_portion = 1;
         // Assume a small error since bezier computation can be off slightly.
         // (This test's computation is probably more accurate than Mozilla's.)
-        var value_portion = func(time_portion) + error_direction * 0.0007;
+        var value_portion = func(time_portion) + error_direction * 0.0015;
         if (value_portion < 0)
             value_portion = 0;
         else if (value_portion > 1)
