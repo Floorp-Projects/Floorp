@@ -1825,6 +1825,18 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
             js_GC(cx, GC_LAST_DITCH);
             METER(astats->retry++);
             canGC = false;
+
+            /*
+             * The JSGC_END callback can legitimately allocate new GC things
+             * and populate the free list. If that happens, just return that
+             * list head.
+             */
+            JSGCThing *freeList = JS_THREAD_DATA(cx)->gcFreeLists.
+                                  finalizables[thingKind];
+            if (freeList) {
+                JS_UNLOCK_GC(rt);
+                return freeList;
+            }
         }
 
         while ((a = arenaList->cursor) != NULL) {
@@ -1919,7 +1931,11 @@ NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
 
         thing = RefillFinalizableFreeList(cx, thingKind);
         if (thing) {
-            JS_ASSERT(!*freeListp);
+            /*
+             * See comments in RefillFinalizableFreeList about a possibility
+             * of *freeListp == thing.
+             */
+            JS_ASSERT(!*freeListp || *freeListp == thing);
             *freeListp = thing->link;
             break;
         }

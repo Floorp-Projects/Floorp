@@ -138,7 +138,7 @@ typedef enum {
     // an instruction encoding unless the special (ARMv5+) meaning is required.
     NV = 0xF  // NeVer
 } ConditionCode;
-#define IsCond(_cc) ( (((_cc) & 0xf) == (_cc)) && ((_cc) != NV) )
+#define IsCond(cc)        (((cc) >= EQ) && ((cc) <= AL))
 
 // Bit 0 of the condition code can be flipped to obtain the opposite condition.
 // However, this won't work for AL because its opposite — NV — has special
@@ -193,7 +193,10 @@ verbose_only( extern const char* shiftNames[]; )
     inline bool         isOp2Imm(uint32_t literal);                     \
     inline uint32_t     decOp2Imm(uint32_t enc);
 #else
-# define DECLARE_PLATFORM_ASSEMBLER_DEBUG()
+// define stubs, for code that defines NJ_VERBOSE without DEBUG
+# define DECLARE_PLATFORM_ASSEMBLER_DEBUG()								\
+    inline bool         isOp2Imm(uint32_t ) { return true; }			\
+    inline uint32_t     decOp2Imm(uint32_t ) { return 0; } 
 #endif
 
 #define DECLARE_PLATFORM_ASSEMBLER()                                            \
@@ -227,12 +230,9 @@ verbose_only( extern const char* shiftNames[]; )
     inline bool     encOp2Imm(uint32_t literal, uint32_t * enc);                \
     inline uint32_t CountLeadingZeroes(uint32_t data);                          \
     int *       _nSlot;                                                         \
-    int *       _startingSlot;                                                  \
     int *       _nExitSlot;                                                     \
     bool        blx_lr_bug;                                                     \
     int         max_out_args; /* bytes */                                      
-
-//nj_dprintf("jmp_l_n count=%d, nins=%X, %X = %X\n", (_c), nins, _nIns, ((intptr_t)(nins+(_c))-(intptr_t)_nIns - 4) );
 
 #define swapptrs()  {                                                   \
         NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins;          \
@@ -260,7 +260,7 @@ typedef enum {
     RRX     = 6, // Rotate Right one bit with extend (c == 0)
     ROR_reg = 7  // Rotate Right
 } ShiftOperator;
-#define IsShift(sh) (((sh) >= LSL_imm) && ((sh) <= ROR_reg))
+#define IsShift(sh)    (((sh) >= LSL_imm) && ((sh) <= ROR_reg))
 
 #define LD32_size 8
 
@@ -299,12 +299,12 @@ enum {
     ARM_bic = 14,
     ARM_mvn = 15
 };
-#define IsOp(op)    (((ARM_##op) >= ARM_and) && ((ARM_##op) <= ARM_mvn))
+#define IsOp(op)      (((ARM_##op) >= ARM_and) && ((ARM_##op) <= ARM_mvn))
 
 // ALU operation with register and 8-bit immediate arguments
-//  S       - bit, 0 or 1, whether the CPSR register is updated
-//  rd      - destination register
-//  rl      - first (left) operand register
+//  S   - bit, 0 or 1, whether the CPSR register is updated
+//  rd  - destination register
+//  rl  - first (left) operand register
 //  op2imm  - operand 2 immediate. Use encOp2Imm (from NativeARM.cpp) to calculate this.
 #define ALUi(cond, op, S, rd, rl, op2imm)   ALUi_chk(cond, op, S, rd, rl, op2imm, 1)
 #define ALUi_chk(cond, op, S, rd, rl, op2imm, chk) do {\
@@ -459,13 +459,22 @@ enum {
 // --------
 
 // _d = _l * _r
-#define MUL(_d,_l,_r)  do {                                  \
+#define MUL_dont_check_op1(_d, _l, _r)  do {                                \
         underrunProtect(4);                                                 \
         NanoAssert((ARM_ARCH >= 6) || ((_d) != (_l)));                      \
         NanoAssert(IsGpReg(_d) && IsGpReg(_l) && IsGpReg(_r));              \
         NanoAssert(((_d) != PC) && ((_l) != PC) && ((_r) != PC));           \
         *(--_nIns) = (NIns)( COND_AL | (_d)<<16 | (_r)<<8 | 0x90 | (_l) );  \
-        asm_output("mul %s,%s,%s",gpn(_d),gpn(_l),gpn(_r)); } while(0)
+        asm_output("mul %s, %s, %s",gpn(_d),gpn(_l),gpn(_r)); } while(0)
+
+#if NJ_ARM_ARCH >= NJ_ARM_V6
+#define MUL(_d, _l, _r) MUL_dont_check_op1(_d, _l, _r)
+#else
+#define MUL(_d, _l, _r) do {            \
+        NanoAssert((_d)!=(_l));         \
+        MUL_dont_check_op1(_d, _l, _r); \
+    } while(0)
+#endif
 
 // RSBS _d, _r
 // _d = 0 - _r
@@ -644,12 +653,14 @@ enum {
         *(--_nIns) = (NIns)( COND_AL | (0x92<<20) | (SP<<16) | (_mask) ); \
         asm_output("push %x", (_mask));} while (0)
 
+// LDMFD SP!,{reg}
 #define POPr(_r) do {                                                   \
         underrunProtect(4);                                             \
         NanoAssert(IsGpReg(_r));                                        \
         *(--_nIns) = (NIns)( COND_AL | (0x8B<<20) | (SP<<16) | rmask(_r) ); \
         asm_output("pop %s",gpn(_r));} while (0)
 
+// LDMFD SP!,{reglist}
 #define POP_mask(_mask) do {                                            \
         underrunProtect(4);                                             \
         NanoAssert(isU16(_mask));                                       \
