@@ -809,6 +809,11 @@ InitSystemMetrics()
   nsCOMPtr<nsILookAndFeel> lookAndFeel(do_GetService(kLookAndFeelCID, &rv));
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
+  /***************************************************************************
+   * ANY METRICS ADDED HERE SHOULD ALSO BE ADDED AS MEDIA QUERIES IN         *
+   * nsMediaFeatures.cpp                                                     *
+   ***************************************************************************/
+
   PRInt32 metricResult;
   lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollArrowStyle, metricResult);
   if (metricResult & nsILookAndFeel::eMetric_ScrollArrowStartBackward) {
