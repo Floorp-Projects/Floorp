@@ -51,6 +51,9 @@
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsIJSEventListener.h"
+#ifdef MOZ_JSDEBUGGER
+#include "jsdIDebuggerService.h"
+#endif
 
 NS_IMPL_CYCLE_COLLECTION_1(nsEventListenerInfo, mListener)
 
@@ -93,37 +96,85 @@ nsEventListenerInfo::GetInSystemEventGroup(PRBool* aInSystemEventGroup)
 
 NS_IMPL_ISUPPORTS1(nsEventListenerService, nsIEventListenerService)
 
-NS_IMETHODIMP
-nsEventListenerInfo::ToSource(nsAString& aResult)
+// Caller must root *aJSVal!
+PRBool
+nsEventListenerInfo::GetJSVal(jsval* aJSVal)
 {
-  aResult.SetIsVoid(PR_TRUE);
+  *aJSVal = JSVAL_NULL;
   nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = do_QueryInterface(mListener);
   if (wrappedJS) {
     JSObject* object = nsnull;
     wrappedJS->GetJSObject(&object);
-    if (object) {
-      nsCOMPtr<nsIThreadJSContextStack> stack =
-        nsContentUtils::ThreadJSContextStack();
-      if (stack) {
-        JSContext* cx = nsnull;
-        stack->GetSafeJSContext(&cx);
-        if (cx && NS_SUCCEEDED(stack->Push(cx))) {
-          JSAutoRequest ar(cx);
-          jsval v = OBJECT_TO_JSVAL(object);
-          JSString* str = JS_ValueToSource(cx, v);
-          if (str) {
-            aResult.Assign(nsDependentJSString(str));
-          }
-          stack->Pop(&cx);
-        }
-      }
-    }
-  } else {
-    nsCOMPtr<nsIJSEventListener> jsl = do_QueryInterface(mListener);
-    if (jsl) {
-      jsl->ToString(mType, aResult);
+    *aJSVal = OBJECT_TO_JSVAL(object);
+    return PR_TRUE;
+  }
+
+  nsCOMPtr<nsIJSEventListener> jsl = do_QueryInterface(mListener);
+  if (jsl) {
+    nsresult rv = jsl->GetJSVal(mType, aJSVal);
+    if (NS_SUCCEEDED(rv)) {
+      return PR_TRUE;
     }
   }
+  return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsEventListenerInfo::ToSource(nsAString& aResult)
+{
+  aResult.SetIsVoid(PR_TRUE);
+
+  nsresult rv;
+  jsval v = JSVAL_NULL;
+  nsAutoGCRoot root(&v, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (GetJSVal(&v)) {
+    nsCOMPtr<nsIThreadJSContextStack> stack =
+      nsContentUtils::ThreadJSContextStack();
+    if (stack) {
+      JSContext* cx = nsnull;
+      stack->GetSafeJSContext(&cx);
+      if (cx && NS_SUCCEEDED(stack->Push(cx))) {
+        JSAutoRequest ar(cx);
+        JSString* str = JS_ValueToSource(cx, v);
+        if (str) {
+          aResult.Assign(nsDependentJSString(str));
+        }
+        stack->Pop(&cx);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventListenerInfo::GetDebugObject(nsISupports** aRetVal)
+{
+  *aRetVal = nsnull;
+
+#ifdef MOZ_JSDEBUGGER
+  nsresult rv = NS_OK;
+  jsval v = JSVAL_NULL;
+  nsAutoGCRoot root(&v, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (GetJSVal(&v)) {
+    nsCOMPtr<jsdIDebuggerService> jsd =
+      do_GetService("@mozilla.org/js/jsd/debugger-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+
+    PRBool isOn = PR_FALSE;
+    jsd->GetIsOn(&isOn);
+    NS_ENSURE_TRUE(isOn, NS_OK);
+
+    nsCOMPtr<jsdIValue> jsdValue;
+    jsd->WrapJSValue(v, getter_AddRefs(jsdValue));
+    *aRetVal = jsdValue.forget().get();
+    return NS_OK;
+  }
+#endif
+
   return NS_OK;
 }
 

@@ -44,6 +44,8 @@
 #include "nsString.h"
 #include "nsPIDOMEventTarget.h"
 #include "nsCycleCollectionParticipant.h"
+#include "jsapi.h"
+
 
 class nsEventListenerInfo : public nsIEventListenerInfo
 {
@@ -59,6 +61,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsEventListenerInfo)
   NS_DECL_NSIEVENTLISTENERINFO
 protected:
+  PRBool GetJSVal(jsval* aJSVal);
+
   nsString                      mType;
   // nsReftPtr because that is what nsListenerStruct uses too.
   nsRefPtr<nsIDOMEventListener> mListener;
