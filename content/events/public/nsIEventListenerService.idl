@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
  * An instance of this interface describes how an event listener
  * was added to an event target.
  */
-[scriptable, uuid(4f132988-4709-44e5-985c-9e16d0f7c954)]
+[scriptable, uuid(cbc2ea6e-4043-4435-ba8f-64cbf6638622)]
 interface nsIEventListenerInfo : nsISupports
 {
   /**
@@ -59,6 +59,12 @@ interface nsIEventListenerInfo : nsISupports
    * (for example with C++ listeners).
    */
   AString toSource();
+
+  /**
+   * If jsdIDebuggerService is active and the listener is implemented in JS,
+   * this returns the listener as a jsdIValue. Otherwise null.
+   */
+  nsISupports getDebugObject();
 };
 
 [scriptable, uuid(551cac0f-31ed-45e0-8d67-bc0d6e117b31)]

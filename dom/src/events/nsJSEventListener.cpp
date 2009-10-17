@@ -140,33 +140,23 @@ nsJSEventListener::SetEventName(nsIAtom* aName)
   mEventName = aName;
 }
 
-void
-nsJSEventListener::ToString(const nsAString& aEventName, nsAString& aResult)
+nsresult
+nsJSEventListener::GetJSVal(const nsAString& aEventName, jsval* aJSVal)
 {
-  aResult.Truncate();
-  nsCOMPtr<nsIThreadJSContextStack> stack = nsContentUtils::ThreadJSContextStack();
   nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(mTarget);
-  if (target && stack && mContext) {
-    JSContext* cx = static_cast<JSContext*>(mContext->GetNativeContext());
-    if (cx && NS_SUCCEEDED(stack->Push(cx))) {
-      JSAutoRequest ar(cx);
-      nsAutoString eventString = NS_LITERAL_STRING("on") + aEventName;
-      nsCOMPtr<nsIAtom> atomName = do_GetAtom(eventString);
-      nsScriptObjectHolder funcval(mContext);
-      mContext->GetBoundEventHandler(mTarget, mScopeObject, atomName,
-                                     funcval);
-      jsval funval =
-        OBJECT_TO_JSVAL(static_cast<JSObject*>(static_cast<void*>(funcval)));
-
-      JSString* str =
-        JS_ValueToSource(static_cast<JSContext*>(mContext->GetNativeContext()),
-                         funval);
-      if (str) {
-        aResult.Assign(nsDependentJSString(str));
-      }
-      stack->Pop(&cx);
-    }
+  if (target && mContext) {
+    nsAutoString eventString = NS_LITERAL_STRING("on") + aEventName;
+    nsCOMPtr<nsIAtom> atomName = do_GetAtom(eventString);
+    nsScriptObjectHolder funcval(mContext);
+    nsresult rv = mContext->GetBoundEventHandler(mTarget, mScopeObject,
+                                                 atomName, funcval);
+    NS_ENSURE_SUCCESS(rv, rv);
+    jsval funval =
+      OBJECT_TO_JSVAL(static_cast<JSObject*>(static_cast<void*>(funcval)));
+    *aJSVal = funval;
+    return NS_OK;
   }
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
