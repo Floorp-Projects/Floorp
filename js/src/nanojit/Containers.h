@@ -207,7 +207,7 @@ namespace nanojit
 
         const unsigned char * data = (const unsigned char *)key;
         while(len >= 4) {
-            uint32_t k = *(size_t *)data;
+            uint32_t k = *(size_t *)(void*)data;
 
             k *= m;
             k ^= k >> r;
