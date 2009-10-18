@@ -2498,7 +2498,7 @@ JS_MaybeGC(JSContext *cx)
      * or approximately F == 0 && B > 4/3 Bl.
      */
     if ((bytes > 8192 && bytes > lastBytes + lastBytes / 3) ||
-        rt->gcMallocBytes >= rt->gcMaxMallocBytes) {
+        rt->isGCMallocLimitReached()) {
         JS_GC(cx);
     }
 }
@@ -2535,7 +2535,7 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32 value)
         rt->gcMaxBytes = value;
         break;
       case JSGC_MAX_MALLOC_BYTES:
-        rt->gcMaxMallocBytes = value;
+        rt->setGCMaxMallocBytes(value);
         break;
       case JSGC_STACKPOOL_LIFESPAN:
         rt->gcEmptyArenaPoolLifespan = value;
