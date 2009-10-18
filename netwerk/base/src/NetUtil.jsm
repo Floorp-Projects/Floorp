@@ -155,7 +155,7 @@ const NetUtil = {
         // we have gotten all the data.
         let pipe = Cc["@mozilla.org/pipe;1"].
                    createInstance(Ci.nsIPipe);
-        pipe.init(false, false, 0, PR_UINT32_MAX, null);
+        pipe.init(true, true, 0, PR_UINT32_MAX, null);
 
         // Create a listener that will give data to the pipe's output stream.
         let listener = Cc["@mozilla.org/network/simple-stream-listener;1"].
@@ -163,6 +163,7 @@ const NetUtil = {
         listener.init(pipe.outputStream, {
             onStartRequest: function(aRequest, aContext) {},
             onStopRequest: function(aRequest, aContext, aStatusCode) {
+                pipe.outputStream.close();
                 aCallback(pipe.inputStream, aStatusCode);
             }
         });
