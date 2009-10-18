@@ -634,7 +634,7 @@ date_UTC(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, msec_time, vp);
 }
 
-/* 
+/*
  * Read and convert decimal digits from s[*i] into *result
  * while *i < limit. 
  * 
