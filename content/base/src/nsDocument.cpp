@@ -1785,6 +1785,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLayoutHistoryState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnloadBlocker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstBaseNodeWithHref)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDOMImplementation)
 
   // An element will only be in the linkmap as long as it's in the
   // document, so we'll traverse the table here instead of from the element.
@@ -1837,6 +1838,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedRootContent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBaseNodeWithHref)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDOMImplementation)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
@@ -4095,22 +4097,22 @@ nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
 NS_IMETHODIMP
 nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
 {
-  // For now, create a new implementation every time. This shouldn't
-  // be a high bandwidth operation
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), "about:blank");
-  NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
-  PRBool hasHadScriptObject = PR_TRUE;
-  nsIScriptGlobalObject* scriptObject =
-    GetScriptHandlingObject(hasHadScriptObject);
-  NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
-  *aImplementation = new nsDOMImplementation(scriptObject, uri, uri,
-                                             NodePrincipal());
-  if (!*aImplementation) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!mDOMImplementation) {
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), "about:blank");
+    NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
+    PRBool hasHadScriptObject = PR_TRUE;
+    nsIScriptGlobalObject* scriptObject =
+      GetScriptHandlingObject(hasHadScriptObject);
+    NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
+    mDOMImplementation = new nsDOMImplementation(scriptObject, uri, uri,
+                                                 NodePrincipal());
+    if (!mDOMImplementation) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
-  NS_ADDREF(*aImplementation);
+  NS_ADDREF(*aImplementation = mDOMImplementation);
 
   return NS_OK;
 }
