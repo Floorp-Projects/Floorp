@@ -61,7 +61,7 @@ CPPSRCS		= \
 		nsWindow.cpp \
 		nsBidiKeyboard.cpp \
 		nsFilePicker.cpp \
-		nsSystemSoundService.cpp \
+		nsSound.cpp \
 		$(NULL)
 
 # always include the PHOTON_DND in the build - the bookmarks in firefox require it

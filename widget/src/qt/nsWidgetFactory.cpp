@@ -65,7 +65,6 @@
 #include "nsIdleServiceQt.h"
 #include "nsDragService.h"
 #include "nsSound.h"
-#include "nsSystemSoundService.h"
 #include "nsBidiKeyboard.h"
 #include "nsNativeThemeQt.h"
 // #include "nsScrollbar.h"
@@ -100,8 +99,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceQt)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemSoundService,
-                                         nsSystemSoundService::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeQt)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
@@ -171,10 +168,6 @@ static const nsModuleComponentInfo components[] =
       NS_SOUND_CID,
       "@mozilla.org/sound;1",
       nsSoundConstructor },
-    { "System Sound Service",
-      NS_SYSTEM_SOUND_SERVICE_CID,
-      "@mozilla.org/systemsoundservice;1",
-      nsSystemSoundServiceConstructor },
     { "Native Theme Renderer",
       NS_THEMERENDERER_CID,
       "@mozilla.org/chrome/chrome-native-theme;1",
@@ -189,6 +182,7 @@ static const nsModuleComponentInfo components[] =
 static void
 nsWidgetQtModuleDtor(nsIModule *aSelf)
 {
+    nsSound::Shutdown();
     nsAppShellShutdown(aSelf);
 }
 

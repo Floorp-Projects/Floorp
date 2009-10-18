@@ -27,7 +27,6 @@
  *   IBM Corp.
  *   Peter Weilbacher <mozilla@Weilbacher.org>
  *   Lars Erdmann
- *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,9 +56,19 @@
 #include <mcios2.h>
 #define MCI_ERROR_LENGTH 128
 
-#include "nsSystemSoundService.h"
+#include "nsSound.h"
+#include "nsIURL.h"
+#include "nsNetUtil.h"
+#include "nsString.h"
+
+#include "nsDirectoryServiceDefs.h"
+
 #include "nsNativeCharsetUtils.h"
 
+NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
+
+static int sInitialized = 0;
+static PRBool sMMPMInstalled = PR_FALSE;
 static HMODULE sHModMMIO = NULLHANDLE;
 
 // function pointer definitions, include underscore (work around redef. warning)
@@ -86,27 +95,8 @@ typedef struct _ARGBUFFER
 
 ////////////////////////////////////////////////////////////////////////
 
-static void FinalizeGlobals(void)
-{
-  if (sHModMMIO == NULLHANDLE) {
-    return;
-  }
-
-  ULONG ulrc;
-  ulrc = DosFreeModule(sHModMMIO);
-  // do not free MDM.DLL because it doesn't like to be unloaded repeatedly
-  if (ulrc != NO_ERROR) {
-    NS_WARNING("DosFreeModule did not work");
-  }
-  sHModMMIO = NULLHANDLE;
-}
-
 static void InitGlobals(void)
 {
-  if (sHModMMIO != NULLHANDLE) {
-    return;
-  }
-
   ULONG ulrc = 0;
   char LoadError[CCHMAXPATH];
   HMODULE hModMDM = NULLHANDLE;
@@ -117,6 +107,7 @@ static void InitGlobals(void)
 #ifdef DEBUG
     printf("InitGlobals: MMOS2 is installed, both DLLs loaded\n");
 #endif
+    sMMPMInstalled = PR_TRUE;
     // MMOS2 is installed, so we can query the necessary functions
     // mmio functions are in MMIO.DLL
     ulrc = DosQueryProcAddr(sHModMMIO, 0L, "mmioOpen", (PFN *)&_mmioOpen);
@@ -136,7 +127,7 @@ static void InitGlobals(void)
     // if one of these failed, we have some kind of non-functional MMOS2 installation
     if (ulrc != NO_ERROR) {
       NS_WARNING("MMOS2 is installed, but seems to have corrupt DLLs");
-      FinalizeGlobals();
+      sMMPMInstalled = PR_FALSE;
     }
   }
 }
@@ -343,9 +334,6 @@ static void playSound(void *aArgs)
       break;
     }
 
-    // stop other sounds
-    nsSystemSoundServiceBase::StopSoundPlayer();
-
     // play the sound
     MCI_PLAY_PARMS mpp;
     memset(&mpp, '\0', sizeof(mpp));
@@ -384,56 +372,132 @@ static void playSound(void *aArgs)
     DosFreeMem(mi.pchBuffer);
 }
 
-/*****************************************************************************
- *  nsSystemSoundService implementation
- *****************************************************************************/
+////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS1(nsSystemSoundService, nsISystemSoundService)
-
-NS_IMPL_ISYSTEMSOUNDSERVICE_GETINSTANCE(nsSystemSoundService)
-
-nsSystemSoundService::nsSystemSoundService() :
-  nsSystemSoundServiceBase()
+nsSound::nsSound()
 {
+  if (!sInitialized) {
+    InitGlobals();
+  }
+  sInitialized++;
+#ifdef DEBUG
+  printf("nsSound::nsSound: sInitialized=%d\n", sInitialized);
+#endif
 }
 
-nsSystemSoundService::~nsSystemSoundService()
+nsSound::~nsSound()
 {
+  sInitialized--;
+#ifdef DEBUG
+  printf("nsSound::~nsSound: sInitialized=%d\n", sInitialized);
+#endif
+  // (try to) unload modules after last user ended
+  if (!sInitialized) {
+#ifdef DEBUG
+    printf("nsSound::~nsSound: Trying to free modules...\n");
+#endif
+    ULONG ulrc;
+    ulrc = DosFreeModule(sHModMMIO);
+    // do not free MDM.DLL because it doesn't like to be unloaded repeatedly
+    if (ulrc != NO_ERROR) {
+      NS_WARNING("DosFreeModule did not work");
+    }
+  }
 }
 
-nsresult
-nsSystemSoundService::Init()
+NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
+                                        nsISupports *context,
+                                        nsresult aStatus,
+                                        PRUint32 dataLen,
+                                        const PRUint8 *data)
 {
-  InitGlobals();
+  if (NS_FAILED(aStatus)) {
+#ifdef DEBUG
+    if (aLoader) {
+      nsCOMPtr<nsIRequest> request;
+      aLoader->GetRequest(getter_AddRefs(request));
+      if (request) {
+        nsCOMPtr<nsIURI> uri;
+        nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+        if (channel) {
+            channel->GetURI(getter_AddRefs(uri));
+            if (uri) {
+                nsCAutoString uriSpec;
+                uri->GetSpec(uriSpec);
+                printf("Failed to load %s\n", uriSpec.get());
+            }
+        }
+      }
+    }
+#endif
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!sMMPMInstalled) {
+    NS_WARNING("Sound output only works with MMOS2 installed");
+    Beep();
+    return NS_OK;
+  }
+
+  ARGBUFFER arg;
+  memset(&arg, '\0', sizeof(arg));
+  APIRET rc = DosCreateEventSem(NULL, &(arg.hev), 0UL, 0UL);
+
+  // Play the sound on a new thread using MMOS2, in this case pass
+  // the memory buffer in the argument structure.
+  arg.bufLen = dataLen;
+  arg.buffer = (char *)data;
+  _beginthread(playSound, NULL, 32768, (void *)&arg);
+
+  // Wait until the buffer was copied, but not indefinitely to not block the
+  // UI in case a really large sound file is copied.
+  rc = DosWaitEventSem(arg.hev, 100);
+  rc = DosCloseEventSem(arg.hev);
+
   return NS_OK;
 }
 
-void
-nsSystemSoundService::OnShutdown()
+NS_IMETHODIMP nsSound::Beep()
 {
-  FinalizeGlobals();
-}
-
-NS_IMETHODIMP
-nsSystemSoundService::Beep()
-{
-  nsresult rv = nsSystemSoundServiceBase::Beep();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   WinAlarm(HWND_DESKTOP, WA_WARNING);
+
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSystemSoundService::PlayAlias(const nsAString &aSoundAlias)
+NS_IMETHODIMP nsSound::Play(nsIURL *aURL)
 {
-  nsresult rv = nsSystemSoundServiceBase::PlayAlias(aSoundAlias);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
 
-  if (sHModMMIO == NULLHANDLE) {
+  nsCOMPtr<nsIStreamLoader> loader;
+  rv = NS_NewStreamLoader(getter_AddRefs(loader), aURL, this);
+
+  return rv;
+}
+
+NS_IMETHODIMP nsSound::Init()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
+{
+  if (!sMMPMInstalled) {
     return Beep();
   }
 
+  if (NS_IsMozAliasSound(aSoundAlias)) {
+    NS_WARNING("nsISound::playSystemSound is called with \"_moz_\" events, they are obsolete, use nsISound::playEventSound instead");
+    PRUint32 eventId;
+    if (aSoundAlias.Equals(NS_SYSSOUND_ALERT_DIALOG))
+        eventId = EVENT_ALERT_DIALOG_OPEN;
+    else if (aSoundAlias.Equals(NS_SYSSOUND_CONFIRM_DIALOG))
+        eventId = EVENT_CONFIRM_DIALOG_OPEN;
+    else if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
+        eventId = EVENT_NEW_MAIL_RECEIVED;
+    else
+        return NS_OK;
+    return PlayEventSound(eventId);
+  }
   nsCAutoString nativeSoundAlias;
   NS_CopyUnicodeToNative(aSoundAlias, nativeSoundAlias);
 
@@ -453,26 +517,20 @@ nsSystemSoundService::PlayAlias(const nsAString &aSoundAlias)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSystemSoundService::PlayEventSound(PRUint32 aEventID)
+NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
 {
-  nsresult rv = nsSystemSoundServiceBase::PlayEventSound(aEventID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Prompt dialog and select dialog sounds do not correspond to OS/2
   // system sounds, ignore them. Ignore the menu sounds, too. Try to handle
   // the rest. Skip the beeps on systems without MMPM, too many of them are
   // confusing and annoying.
-  switch(aEventID) {
+  switch(aEventId) {
   case EVENT_NEW_MAIL_RECEIVED:
     // We don't have a default mail sound on OS/2, so just "beep"
     return Beep(); // this corresponds to the "Warning" sound
   case EVENT_ALERT_DIALOG_OPEN:
-    StopSoundPlayer();
     WinAlarm(HWND_DESKTOP, WA_ERROR); // play "Error" sound
     break;
   case EVENT_CONFIRM_DIALOG_OPEN:
-    StopSoundPlayer();
     WinAlarm(HWND_DESKTOP, WA_NOTE); // play "Information" sound
     break;
   }

@@ -80,7 +80,7 @@
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
 #include "nsIReflowCallback.h"
-#include "nsISystemSoundService.h"
+#include "nsISound.h"
 
 #define NS_MENU_POPUP_LIST_INDEX 0
 
@@ -1174,7 +1174,9 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
     }
   }
 
-  nsContentUtils::PlayEventSound(nsISystemSoundService::EVENT_MENU_EXECUTE);
+  nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));
+  if (sound)
+    sound->PlayEventSound(nsISound::EVENT_MENU_EXECUTE);
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && mMenuParent)

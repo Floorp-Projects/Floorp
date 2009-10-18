@@ -20,8 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Pierre Phaneuf <pp@ludusdesign.com>
- *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,48 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef __nsSound_h__
+#define __nsSound_h__
 
-#include "nsSystemSoundService.h"
+#include "nsISound.h"
+#include "nsIStreamLoader.h"
 
-#include <OS.h>
-#include <SimpleGameSound.h>
-#include <Beep.h>
-#include <unistd.h>
 
-/*****************************************************************************
- *  nsSystemSoundService implementation
- *****************************************************************************/
-
-NS_IMPL_ISUPPORTS1(nsSystemSoundService, nsISystemSoundService)
-
-NS_IMPL_ISYSTEMSOUNDSERVICE_GETINSTANCE(nsSystemSoundService)
-
-nsSystemSoundService::nsSystemSoundService() :
-  nsSystemSoundServiceBase()
+class nsSound : public nsISound, 
+                public nsIStreamLoaderObserver
 {
-}
+ public: 
 
-nsSystemSoundService::~nsSystemSoundService()
-{
-}
+  nsSound();
+  virtual ~nsSound();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISOUND
+  NS_DECL_NSISTREAMLOADEROBSERVER
 
-NS_IMETHODIMP
-nsSystemSoundService::Beep()
-{
-	nsresult rv = nsSystemSoundServiceBase::Beep();
-	NS_ENSURE_SUCCESS(rv, rv);
-	::beep();
-	return NS_OK;
-}
+private:
+  PRBool mInited;
+};
 
-NS_IMETHODIMP
-nsSystemSoundService::PlayEventSound(PRUint32 aEventID)
-{
-	nsresult rv = nsSystemSoundServiceBase::PlayEventSound(aEventID);
-	NS_ENSURE_SUCCESS(rv, rv);
-	if (aEventID == EVENT_NEW_MAIL_RECEIVED) {
-		StopSoundPlayer();
-		return Beep();
-	}
-	return NS_OK;
-}
+#endif /* __nsSound_h__ */

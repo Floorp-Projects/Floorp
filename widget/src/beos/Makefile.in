@@ -58,7 +58,7 @@ CPPSRCS		= \
 		nsDragService.cpp \
 		nsFilePicker.cpp \
 		nsLookAndFeel.cpp \
-		nsSystemSoundService.cpp \
+		nsSound.cpp \
 		nsToolkit.cpp \
 		nsWidgetFactory.cpp \
 		nsWindow.cpp \

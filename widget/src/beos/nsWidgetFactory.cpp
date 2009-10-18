@@ -49,7 +49,6 @@
 #include "nsPopupWindow.h"
 #include "nsChildView.h"
 #include "nsSound.h"
-#include "nsSystemSoundService.h"
 #include "nsToolkit.h"
 #include "nsAppShell.h"
 #include "nsAppShellSingleton.h"
@@ -82,8 +81,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemSoundService,
-                                         nsSystemSoundService::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerBeOS)
@@ -139,10 +136,6 @@ static const nsModuleComponentInfo components[] =
     NS_SOUND_CID,
     "@mozilla.org/sound;1",
     nsSoundConstructor },
-  { "System Sound Service",
-    NS_SYSTEM_SOUND_SERVICE_CID,
-    "@mozilla.org/systemsoundservice;1",
-    nsSystemSoundServiceConstructor },
   { "BeOS Drag Service",
     NS_DRAGSERVICE_CID,
     "@mozilla.org/widget/dragservice;1",
