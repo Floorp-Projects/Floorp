@@ -1049,9 +1049,11 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
   }
   else if (childTag == nsGkAtoms::option) {
     PRInt32 parentIndex = FindContent(aContainer);
-    PRInt32 count = InsertRow(parentIndex, aIndexInContainer, aChild);
+    PRInt32 index = 0;
+    GetIndexInSubtree(aContainer, aChild, &index);
+    PRInt32 count = InsertRow(parentIndex, index, aChild);
     if (mBoxObject)
-      mBoxObject->RowCountChanged(parentIndex + aIndexInContainer + 1, count);
+      mBoxObject->RowCountChanged(parentIndex + index + 1, count);
   }
 }
 
