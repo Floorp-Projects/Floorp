@@ -99,7 +99,6 @@
 #include "nsStyleSheetService.h"
 #include "nsXULPopupManager.h"
 #include "nsFocusManager.h"
-#include "nsSoundPlayer.h"
 
 #include "nsIEventListenerService.h"
 // Transformiix stuff
@@ -296,8 +295,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDOMFileRequest, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDOMStorageManager,
                                          nsDOMStorageManager::GetInstance)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSoundPlayer,
-                                         nsSoundPlayer::GetInstance)
 
 //-----------------------------------------------------------------------------
 
@@ -1071,11 +1068,6 @@ static const nsModuleComponentInfo gComponents[] = {
     RegisterHTMLAudioElement,
     UnregisterHTMLAudioElement },
 #endif
-
-  { "Sound player",
-    NS_SOUNDPLAYER_CID,
-    "@mozilla.org/content/media/soundplayer;1",
-    nsSoundPlayerConstructor },
 
   { "Canvas 2D Rendering Context",
     NS_CANVASRENDERINGCONTEXT2D_CID,

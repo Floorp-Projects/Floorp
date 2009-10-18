@@ -249,7 +249,6 @@ _TEST_FILES += \
 		test_paused_after_ended.html \
 		test_progress2.html \
 		test_progress4.html \
-		test_sound.xul \
 		test_wav_ended1.html \
 		test_wav_ended2.html \
 		test_wav_onloadedmetadata.html \

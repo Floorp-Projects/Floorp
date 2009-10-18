@@ -23,7 +23,6 @@
  * Contributor(s):
  *   Stuart Parmenter <stuart@mozilla.com>
  *   Vladimir Vukicevic <vladimir@pobox.com>
- *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,24 +38,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsSystemSoundService_h__
-#define __nsSystemSoundService_h__
+#ifndef nsSound_h_
+#define nsSound_h_
 
-#include "nsSound.h"
+#include "nsISound.h"
+#include "nsIStreamLoader.h"
 
-class nsSystemSoundService : public nsSystemSoundServiceBase
+class nsSound : public nsISound,
+                public nsIStreamLoaderObserver
 {
-public:
-  nsSystemSoundService();
-  virtual ~nsSystemSoundService();
+public: 
+    nsSound();
+    virtual ~nsSound();
 
-  NS_DECL_ISYSTEMSOUNDSERVICE_GETINSTANCE(nsSystemSoundService)
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Beep();
-  NS_IMETHOD PlayAlias(const nsAString &aSoundAlias);
-  NS_IMETHOD PlayEventSound(PRUint32 aEventID);
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISOUND
+    NS_DECL_NSISTREAMLOADEROBSERVER
 };
 
-#endif // __nsSystemSoundService_h__
+#endif // nsSound_h_

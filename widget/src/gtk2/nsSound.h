@@ -1,6 +1,7 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -16,12 +17,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Japan.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2000
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   Stuart Parmenter <pavlov@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,32 +38,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef __nsSound_h__
+#define __nsSound_h__
 
-interface nsIURL;
+#include "nsISound.h"
+#include "nsIStreamLoader.h"
 
-/**
- *  nsISoundPlayer provides simple sound playback.
- *
- *  The implementation uses the HTML5 <audio> element, so supports any format
- *  supported by <audio>. Gecko in its default configuration supports Wave (with
- *  8-bit or 16-bit PCM samples and at most 2 channels), and Ogg Vorbis.
- *
- *  When you call play() before the previously playing sound is finished,
- *  the previous sound isn't stopped automatically, so the sounds overlap.
- *
- *  If you don't want the overlap, you should call stop() before play().
- *  The stop() method stops playing all in-progress sounds that are being played
- *  via this interface.
- *
- *  NOTE: nsISystemSoundService calls stops() method automatically before it
- *        plays a system sound.
- */
+#include <gtk/gtk.h>
 
-[scriptable, uuid(8AAB1533-7B56-4861-9390-094658447A0C)]
-interface nsISoundPlayer : nsISupports
-{
-  void play(in nsIURL aURL);
-  void stop();
+class nsSound : public nsISound, 
+                public nsIStreamLoaderObserver
+{ 
+public: 
+    nsSound(); 
+    virtual ~nsSound();
+
+    static void Shutdown();
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISOUND
+    NS_DECL_NSISTREAMLOADEROBSERVER
+
+private:
+    PRBool mInited;
+
 };
 
+#endif /* __nsSound_h__ */

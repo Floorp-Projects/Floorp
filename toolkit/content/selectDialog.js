@@ -101,10 +101,10 @@ function selectDialogOnLoad() {
 
   // play sound
   try {
-    const nsISystemSoundService = Components.interfaces.nsISystemSoundService;
-    Components.classes["@mozilla.org/systemsoundservice;1"]
-              .getService(nsISystemSoundService)
-              .playEventSound(nsISystemSoundService.EVENT_SELECT_DIALOG_OPEN);
+    const nsISound = Components.interfaces.nsISound;
+    Components.classes["@mozilla.org/sound;1"]
+              .createInstance(nsISound)
+              .playEventSound(nsISound.EVENT_SELECT_DIALOG_OPEN);
   } catch (e) { }
 }
 

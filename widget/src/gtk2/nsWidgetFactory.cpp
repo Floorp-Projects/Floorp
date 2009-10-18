@@ -52,7 +52,6 @@
 #endif
 #include "nsFilePicker.h"
 #include "nsSound.h"
-#include "nsSystemSoundService.h"
 #include "nsBidiKeyboard.h"
 #include "nsNativeKeyBindings.h"
 #include "nsScreenManagerGtk.h"
@@ -101,8 +100,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemSoundService,
-                                         nsSystemSoundService::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageToPixbuf)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerUnix)
@@ -257,10 +254,6 @@ static const nsModuleComponentInfo components[] =
       NS_SOUND_CID,
       "@mozilla.org/sound;1",
       nsSoundConstructor },
-    { "System Sound Service",
-      NS_SYSTEM_SOUND_SERVICE_CID,
-      "@mozilla.org/systemsoundservice;1",
-      nsSystemSoundServiceConstructor },
     { "Accelerometer",
        NS_ACCELEROMETER_CID,
        NS_ACCELEROMETER_CONTRACTID,
@@ -355,6 +348,7 @@ static void
 nsWidgetGtk2ModuleDtor(nsIModule *aSelf)
 {
   nsFilePicker::Shutdown();
+  nsSound::Shutdown();
   nsWindow::ReleaseGlobals();
   nsAppShellShutdown(aSelf);
 }

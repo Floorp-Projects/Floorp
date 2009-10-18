@@ -54,7 +54,6 @@
 #include "nsDragService.h"
 #endif
 #include "nsSound.h"
-#include "nsSystemSoundService.h"
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
 #endif
@@ -74,8 +73,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemSoundService,
-                                         nsSystemSoundService::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 
 #ifdef IBMBIDI
@@ -130,10 +127,6 @@ static const nsModuleComponentInfo components[] =
     NS_SOUND_CID,
     "@mozilla.org/sound;1",
     nsSoundConstructor },
-  { "System Sound Service",
-    NS_SYSTEM_SOUND_SERVICE_CID,
-    "@mozilla.org/systemsoundservice;1",
-    nsSystemSoundServiceConstructor },
 #ifdef IBMBIDI
     { "Gtk Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,

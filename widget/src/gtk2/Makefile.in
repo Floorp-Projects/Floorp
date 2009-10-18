@@ -72,7 +72,7 @@ CPPSRCS		= \
 		nsLookAndFeel.cpp \
 		nsGtkKeyUtils.cpp \
 		nsFilePicker.cpp \
-		nsSystemSoundService.cpp \
+		nsSound.cpp \
 		nsNativeKeyBindings.cpp \
 		nsScreenGtk.cpp \
 		nsScreenManagerGtk.cpp \
