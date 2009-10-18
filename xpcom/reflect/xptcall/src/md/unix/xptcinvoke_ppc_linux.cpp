@@ -23,6 +23,7 @@
  *   Franz.Sirl-kernel@lauterbach.com (Franz Sirl)
  *   beard@netscape.com (Patrick Beard)
  *   waterson@netscape.com (Chris Waterson)
+ *   bigeasy@linutronix.de (Sebastian Andrzej Siewior)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -53,10 +54,12 @@
 // 8 integral parameters are passed in registers
 #define GPR_COUNT     8
 
-// 8 floating point parameters are passed in registers, floats are
-// promoted to doubles when passed in registers
+// With hardfloat support 8 floating point parameters are passed in registers,
+// floats are promoted to doubles when passed in registers
+// In Softfloat mode, everything is handled via gprs
+#ifndef __NO_FPRS__
 #define FPR_COUNT     8
-
+#endif
 extern "C" PRUint32
 invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
 {
@@ -71,7 +74,9 @@ invoke_copy_to_stack(PRUint32* d,
                      double* fpregs)
 {
     PRUint32 gpr = 1; // skip one GP reg for 'that'
+#ifndef __NO_FPRS__
     PRUint32 fpr = 0;
+#endif
     PRUint32 tempu32;
     PRUint64 tempu64;
     
@@ -98,8 +103,17 @@ invoke_copy_to_stack(PRUint32* d,
         }
 
         if (!s->IsPtrData() && s->type == nsXPTType::T_DOUBLE) {
+#ifndef __NO_FPRS__
             if (fpr < FPR_COUNT)
                 fpregs[fpr++]    = s->val.d;
+#else
+            if (gpr & 1)
+                gpr++;
+            if ((gpr + 1) < GPR_COUNT) {
+                *((double*) &gpregs[gpr]) = s->val.d;
+                gpr += 2;
+            }
+#endif
             else {
                 if ((PRUint32) d & 4) d++; // doubles are 8-byte aligned on stack
                 *((double*) d) = s->val.d;
@@ -107,8 +121,13 @@ invoke_copy_to_stack(PRUint32* d,
             }
         }
         else if (!s->IsPtrData() && s->type == nsXPTType::T_FLOAT) {
+#ifndef __NO_FPRS__
             if (fpr < FPR_COUNT)
                 fpregs[fpr++]   = s->val.f; // if passed in registers, floats are promoted to doubles
+#else
+            if (gpr < GPR_COUNT)
+                *((float*) &gpregs[gpr++]) = s->val.f;
+#endif
             else
                 *((float*) d++) = s->val.f;
         }
