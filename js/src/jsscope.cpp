@@ -391,7 +391,7 @@ JSScope::changeTable(JSContext *cx, int change)
     table = newtable;
 
     /* Treat the above calloc as a JS_malloc, to match CreateScopeTable. */
-    cx->runtime->gcMallocBytes += nbytes;
+    cx->updateMallocCounter(nbytes);
 
     /* Copy only live entries, leaving removed and free ones behind. */
     for (oldspp = oldtable; oldsize != 0; oldspp++) {
