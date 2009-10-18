@@ -316,12 +316,6 @@ struct JSThreadData {
 #endif
 
     /*
-     * Thread-local version of JSRuntime.gcMallocBytes to avoid taking
-     * locks on each JS_malloc.
-     */
-    size_t              gcMallocBytes;
-
-    /*
      * Cache of reusable JSNativeEnumerators mapped by shape identifiers (as
      * stored in scope->shape). This cache is nulled by the GC and protected
      * by gcLock.
@@ -365,9 +359,22 @@ struct JSThread {
     /* Indicates that the thread is waiting in ClaimTitle from jslock.cpp. */
     JSTitle             *titleToShare;
 
+    /*
+     * Thread-local version of JSRuntime.gcMallocBytes to avoid taking
+     * locks on each JS_malloc.
+     */
+    ptrdiff_t           gcThreadMallocBytes;
+
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
 };
+
+/*
+ * Only when JSThread::gcThreadMallocBytes exhausts the following limit we
+ * update JSRuntime::gcMallocBytes.
+ * .
+ */
+const size_t JS_GC_THREAD_MALLOC_LIMIT = 1 << 19;
 
 #define JS_THREAD_DATA(cx)      (&(cx)->thread->data)
 
@@ -494,7 +501,18 @@ struct JSRuntime {
 #endif
 
     JSGCCallback        gcCallback;
-    size_t              gcMallocBytes;
+
+    /*
+     * Malloc counter to measure memory pressure for GC scheduling. It runs
+     * from gcMaxMallocBytes down to zero.
+     */
+    ptrdiff_t           gcMallocBytes;
+
+    /*
+     * Stack of GC arenas containing things that the GC marked, where children
+     * reached from those things have not yet been marked. This helps avoid
+     * using too much native stack during recursive GC marking.
+     */
     JSGCArenaInfo       *gcUntracedArenaStackTop;
 #ifdef DEBUG
     size_t              gcTraceLaterCount;
@@ -671,6 +689,10 @@ struct JSRuntime {
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
 
+#ifdef JS_THREADSAFE
+    JSBackgroundThread    *deallocatorThread;
+#endif
+
     /*
      * Various metering fields are defined at the end of JSRuntime. In this
      * way there is no need to recompile all the code that refers to other
@@ -753,25 +775,26 @@ struct JSRuntime {
     void setGCTriggerFactor(uint32 factor);
     void setGCLastBytes(size_t lastBytes);
 
-    inline void* malloc(size_t bytes) {
-        return ::js_malloc(bytes);
-    }
+    void* malloc(size_t bytes) { return ::js_malloc(bytes); }
 
-    inline void* calloc(size_t bytes) {
-        return ::js_calloc(bytes);
-    }
+    void* calloc(size_t bytes) { return ::js_calloc(bytes); }
 
-    inline void* realloc(void* p, size_t bytes) {
-        return ::js_realloc(p, bytes);
-    }
+    void* realloc(void* p, size_t bytes) { return ::js_realloc(p, bytes); }
 
-    inline void free(void* p) {
-        ::js_free(p);
-    }
+    void free(void* p) { ::js_free(p); }
 
-#ifdef JS_THREADSAFE
-    JSBackgroundThread    *deallocatorThread;
-#endif
+    bool isGCMallocLimitReached() const { return gcMallocBytes <= 0; }
+
+    void resetGCMallocBytes() { gcMallocBytes = ptrdiff_t(gcMaxMallocBytes); }
+
+    void setGCMaxMallocBytes(size_t value) {
+        /*
+         * For compatibility treat any value that exceeds PTRDIFF_T_MAX to
+         * mean that value.
+         */
+        gcMaxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
+        resetGCMallocBytes();
+    }
 };
 
 /* Common macros to access thread-local caches in JSThread or JSRuntime. */
@@ -1130,23 +1153,47 @@ struct JSContext {
     }
 #endif
 
-    /* Call this after succesful malloc of memory for GC-related things. */
-    inline void updateMallocCounter(size_t nbytes) {
-        size_t *pbytes, bytes;
+    ptrdiff_t &getMallocCounter() {
+#ifdef JS_THREADSAFE
+        return thread->gcThreadMallocBytes;
+#else
+        return runtime->gcMallocBytes;
+#endif
+    }
 
-        pbytes = &JS_THREAD_DATA(this)->gcMallocBytes;
-        bytes = *pbytes;
-        *pbytes = (size_t(-1) - bytes <= nbytes) ? size_t(-1) : bytes + nbytes;
+    /*
+     * Call this after allocating memory held by GC things, to update memory
+     * pressure counters or report the OOM error if necessary.
+     */
+    inline void updateMallocCounter(void *p, size_t nbytes) {
+        JS_ASSERT(ptrdiff_t(nbytes) >= 0);
+        ptrdiff_t &counter = getMallocCounter();
+        counter -= ptrdiff_t(nbytes);
+        if (!p || counter <= 0)
+            checkMallocGCPressure(p);
+    }
+
+    /*
+     * Call this after successfully allocating memory held by GC things, to
+     * update memory pressure counters.
+     */
+    inline void updateMallocCounter(size_t nbytes) {
+        JS_ASSERT(ptrdiff_t(nbytes) >= 0);
+        ptrdiff_t &counter = getMallocCounter();
+        counter -= ptrdiff_t(nbytes);
+        if (counter <= 0) {
+            /*
+             * Use 1 as an arbitrary non-null pointer indicating successful
+             * allocation.
+             */
+            checkMallocGCPressure(reinterpret_cast<void *>(jsuword(1)));
+        }
     }
 
     inline void* malloc(size_t bytes) {
         JS_ASSERT(bytes != 0);
         void *p = runtime->malloc(bytes);
-        if (!p) {
-            JS_ReportOutOfMemory(this);
-            return NULL;
-        }
-        updateMallocCounter(bytes);
+        updateMallocCounter(p, bytes);
         return p;
     }
 
@@ -1162,23 +1209,19 @@ struct JSContext {
     inline void* calloc(size_t bytes) {
         JS_ASSERT(bytes != 0);
         void *p = runtime->calloc(bytes);
-        if (!p) {
-            JS_ReportOutOfMemory(this);
-            return NULL;
-        }
-        updateMallocCounter(bytes);
+        updateMallocCounter(p, bytes);
         return p;
     }
 
     inline void* realloc(void* p, size_t bytes) {
         void *orig = p;
         p = runtime->realloc(p, bytes);
-        if (!p) {
-            JS_ReportOutOfMemory(this);
-            return NULL;
-        }
-        if (!orig)
-            updateMallocCounter(bytes);
+
+        /*
+         * For compatibility we do not account for realloc that increases
+         * previously allocated memory.
+         */
+        updateMallocCounter(p, orig ? 0 : bytes);
         return p;
     }
 
@@ -1210,10 +1253,8 @@ struct JSContext {
      */
 #define CREATE_BODY(parms)                                                    \
     void *memory = this->malloc(sizeof(T));                                   \
-    if (!memory) {                                                            \
-        JS_ReportOutOfMemory(this);                                           \
+    if (!memory)                                                              \
         return NULL;                                                          \
-    }                                                                         \
     return new(memory) T parms;
 
     template <class T>
@@ -1242,6 +1283,16 @@ struct JSContext {
         p->~T();
         this->free(p);
     }
+
+private:
+
+    /*
+     * The allocation code calls the function to indicate either OOM failure
+     * when p is null or that a memory pressure counter has reached some
+     * threshold when p is not null. The function takes the pointer and not
+     * a boolean flag to minimize the amount of code in its inlined callers.
+     */
+    void checkMallocGCPressure(void *p);
 };
 
 #ifdef JS_THREADSAFE

@@ -1313,7 +1313,9 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
      * Separate gcMaxMallocBytes from gcMaxBytes but initialize to maxbytes
      * for default backward API compatibility.
      */
-    rt->gcMaxBytes = rt->gcMaxMallocBytes = maxbytes;
+    rt->gcMaxBytes = maxbytes;
+    rt->setGCMaxMallocBytes(maxbytes);
+
     rt->gcEmptyArenaPoolLifespan = 30000;
 
     /*
@@ -1739,17 +1741,6 @@ JSRuntime::setGCLastBytes(size_t lastBytes)
     gcTriggerBytes = size_t(triggerBytes);
 }
 
-static inline void
-RestoreGCArenaFreeList(JSGCThing **freeListp)
-{
-    JSGCThing *freeListHead = *freeListp;
-    JS_ASSERT(freeListHead);
-    JSGCArenaInfo *a = THING_TO_ARENA(freeListHead);
-    JS_ASSERT(!a->finalizable.freeList);
-    a->finalizable.freeList = freeListHead;
-    *freeListp = NULL;
-}
-
 void
 JSGCFreeLists::purge()
 {
@@ -1758,9 +1749,13 @@ JSGCFreeLists::purge()
      * run the finalizers over unitialized bytes from free things.
      */
     for (JSGCThing **p = finalizables; p != JS_ARRAY_END(finalizables); ++p) {
-        JSGCThing *thing = *p;
-        if (thing)
-            RestoreGCArenaFreeList(p);
+        JSGCThing *freeListHead = *p;
+        if (freeListHead) {
+            JSGCArenaInfo *a = THING_TO_ARENA(freeListHead);
+            JS_ASSERT(!a->finalizable.freeList);
+            a->finalizable.freeList = freeListHead;
+            *p = NULL;
+        }
     }
     doubles = NULL;
 }
@@ -1778,8 +1773,7 @@ IsGCThresholdReached(JSRuntime *rt)
      * zero (see the js_InitGC function) the return value is false when
      * the gcBytes value is close to zero at the JS engine start.
      */
-    return rt->gcMallocBytes >= rt->gcMaxMallocBytes ||
-           rt->gcBytes >= rt->gcTriggerBytes;
+    return rt->isGCMallocLimitReached() || rt->gcBytes >= rt->gcTriggerBytes;
 }
 
 static JSGCThing *
@@ -1794,18 +1788,6 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
         JS_UNLOCK_GC(rt);
         return NULL;
     }
-
-#ifdef JS_THREADSAFE
-    /* Transfer thread-local counter to global one. */
-    size_t localMallocBytes = JS_THREAD_DATA(cx)->gcMallocBytes;
-    if (localMallocBytes != 0) {
-        JS_THREAD_DATA(cx)->gcMallocBytes = 0;
-        if (rt->gcMaxMallocBytes - rt->gcMallocBytes < localMallocBytes)
-            rt->gcMallocBytes = rt->gcMaxMallocBytes;
-        else
-            rt->gcMallocBytes += localMallocBytes;
-    }
-#endif
 
     METER(JSGCArenaStats *astats = &cx->runtime->gcStats.arenaStats[thingKind]);
     bool canGC = !JS_ON_TRACE(cx);
@@ -1895,37 +1877,19 @@ NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
     JSGCThing **freeListp =
         JS_THREAD_DATA(cx)->gcFreeLists.finalizables + thingKind;
     JSGCThing *thing = *freeListp;
-    JSRuntime *rt = cx->runtime;
 #ifdef JS_TRACER
     bool fromTraceReserve = false;
 #endif
 
     for (;;) {
         if (thing) {
-#ifdef JS_THREADSAFE
-            bool tooMuchMalloc = (rt->gcMaxMallocBytes - rt->gcMallocBytes <=
-                                  JS_THREAD_DATA(cx)->gcMallocBytes);
-#else
-            bool tooMuchMalloc = (rt->gcMaxMallocBytes <= rt->gcMallocBytes);
-#endif
-            if (!tooMuchMalloc || JS_ON_TRACE(cx)) {
-                *freeListp = thing->link;
-                METER(astats->localalloc++);
-                break;
-            }
-
-            /*
-             * We will try to run the GC in RefillFinalizableFreeList and need
-             * to put the free list starting in thing back into its arena.
-             * Without this, if the GC will be canceled, we would lose this
-             * free list when assigning after RefillFinalizableFreeList
-             * returns and eventually would run finalizars on free GC things.
-             */
-            RestoreGCArenaFreeList(freeListp);
+            *freeListp = thing->link;
+            METER(astats->localalloc++);
+            break;
         }
 
 #if defined JS_GC_ZEAL && defined JS_TRACER
-        if (rt->gcZeal >= 1 && JS_TRACE_MONITOR(cx).useReservedObjects)
+        if (cx->runtime->gcZeal >= 1 && JS_TRACE_MONITOR(cx).useReservedObjects)
             goto testReservedObjects;
 #endif
 
@@ -3513,7 +3477,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     rt->gcIsNeeded = JS_FALSE;
 
     /* Reset malloc counter. */
-    rt->gcMallocBytes = 0;
+    rt->resetGCMallocBytes();
 
 #ifdef JS_DUMP_SCOPE_METERS
   { extern void js_DumpScopeMeters(JSRuntime *rt);
