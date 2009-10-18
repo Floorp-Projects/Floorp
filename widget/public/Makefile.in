@@ -88,7 +88,6 @@ XPIDLSRCS	= \
 		nsIFilePicker.idl \
 		nsIToolkit.idl \
 		nsISound.idl \
-		nsISystemSoundService.idl \
 		nsITransferable.idl \
 		nsIClipboardDragDropHooks.idl \
 		nsIClipboardDragDropHookList.idl \

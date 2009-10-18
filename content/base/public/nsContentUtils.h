@@ -1497,10 +1497,6 @@ public:
     return WrapNative(cx, scope, native, nsnull, vp, aHolder, aAllowWrapping);
   }
 
-  // Play an event sound of the aEventID.  aEventID must be a value that is
-  // declared in nsISystemSoundService.
-  static nsresult PlayEventSound(PRUint32 aEventID);
-
 private:
 
   static PRBool InitializeEventTable();

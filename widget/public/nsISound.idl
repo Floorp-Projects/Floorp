@@ -41,13 +41,6 @@
 
 interface nsIURL;
 
-/**
- * WARNING:  nsISound is now OBSOLETE.
- *
- *   nsISound instance just delegates the methods to nsISystemSoundService and
- *   nsISoundPlayer.  You should use the new interfaces directly.
- */
-
 [scriptable, uuid(86B75B05-DB60-4c3e-97A7-82B363A41A01)]
 interface nsISound : nsISupports
 {
@@ -62,8 +55,9 @@ interface nsISound : nsISupports
   void beep();
 
   /**
-   * init() doesn't do anything now.
-   */
+    * Not strictly necessary, but avoids delay before first sound.
+    * The various methods on nsISound call Init() if they need to.
+	*/
   void init(); 
 
   /**

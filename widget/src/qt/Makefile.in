@@ -78,7 +78,7 @@ CPPSRCS	= \
 		nsDragService.cpp \
 		nsNativeThemeQt.cpp \
 		mozqwidget.cpp \
-		nsSystemSoundService.cpp \
+		nsSound.cpp \
 		nsFilePicker.cpp \
 		$(NULL)
 
