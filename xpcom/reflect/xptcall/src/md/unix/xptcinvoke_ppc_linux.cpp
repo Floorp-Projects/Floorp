@@ -114,8 +114,8 @@ invoke_copy_to_stack(PRUint32* d,
         }
         else if (!s->IsPtrData() && (s->type == nsXPTType::T_I64
                                      || s->type == nsXPTType::T_U64)) {
+            if (gpr & 1) gpr++; // longlongs are aligned in odd/even register pairs, eg. r5/r6
             if ((gpr + 1) < GPR_COUNT) {
-                if (gpr & 1) gpr++; // longlongs are aligned in odd/even register pairs, eg. r5/r6
                 *((PRUint64*) &gpregs[gpr]) = tempu64;
                 gpr += 2;
             }
