@@ -407,7 +407,7 @@ confirm_overwrite_file(GtkWidget *parent, nsILocalFile* file)
                                   GTK_DIALOG_DESTROY_WITH_PARENT,
                                   GTK_MESSAGE_QUESTION,
                                   GTK_BUTTONS_YES_NO,
-                                  NS_ConvertUTF16toUTF8(message).get());
+                                  "%s", NS_ConvertUTF16toUTF8(message).get());
   gtk_window_set_title(GTK_WINDOW(dialog), NS_ConvertUTF16toUTF8(title).get());
   if (parent_window && parent_window->group) {
     gtk_window_group_add_window(parent_window->group, GTK_WINDOW(dialog));
