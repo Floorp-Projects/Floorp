@@ -820,7 +820,8 @@
           <xul:hbox pack="end" align="end">
             <xul:checkbox anonid="includeUpdate" class="includeUpdate" checked="true"
             label="&includeUpdate.label;" tooltiptext="&includeUpdate.tooltip;"
-            includeUpdateAccesskey="&includeUpdate.accesskey;" accesskey="&includeUpdate.accesskey;"/>
+            includeUpdateAccesskey="&includeUpdate.accesskey;" accesskey="&includeUpdate.accesskey;"
+            oncommand="toggleInstallUpdates();"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
