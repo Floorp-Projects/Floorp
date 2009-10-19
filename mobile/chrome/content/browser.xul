@@ -127,11 +127,6 @@
     <command id="cmd_paste" label="&paste.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_delete" label="&delete.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_selectAll" label="&selectAll.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-
-    <!-- find -->
-    <command id="cmd_find" oncommand="Browser.openFind(FINDSTATE_FIND);"/>
-    <command id="cmd_findAgain" oncommand="Browser.openFind(FINDSTATE_FIND_AGAIN);"/>
-    <command id="cmd_findPrevious" oncommand="Browser.openFind(FINDSTATE_FIND_PREVIOUS);"/>
   </commandset>
 
   <keyset id="mainKeyset">
@@ -167,13 +162,6 @@
     <!-- tabs -->
     <key id="key_newTab" key="t" modifiers="accel" command="cmd_newTab"/>
     <key id="key_closeTab" key="w" modifiers="accel" command="cmd_closeTab"/>
-
-    <!-- find -->
-    <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
-    <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
-    <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel shift"/>
-    <key keycode="&findAgainCmd.commandkey2;" command="cmd_findAgain"/>
-    <key keycode="&findAgainCmd.commandkey2;"  command="cmd_findPrevious" modifiers="shift"/>
   </keyset>
 
   <popupset id="mainPopupSet">
@@ -255,11 +243,6 @@
         </vbox>
       </vbox>
     </scrollbox>
-
-    <!-- popup for find toolbar -->
-    <hbox id="findbar-container" hidden="true" class="window-width" top="0" left="0">
-      <findbar id="findbar" flex="1"/>
-    </hbox>
 
     <!-- popup for site identity information -->
     <vbox id="identity-container" hidden="true" class="panel-dark window-width" mode="unknownIdentity">

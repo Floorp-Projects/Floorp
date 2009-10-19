@@ -48,10 +48,6 @@ let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
 
-const FINDSTATE_FIND = 0;
-const FINDSTATE_FIND_AGAIN = 1;
-const FINDSTATE_FIND_PREVIOUS = 2;
-
 const endl = '\n';
 
 Cu.import("resource://gre/modules/SpatialNavigation.js");
@@ -767,31 +763,6 @@ var Browser = {
 
   getNotificationBox: function() {
     return document.getElementById("notifications");
-  },
-
-  findState: FINDSTATE_FIND,
-  openFind: function(aState) {
-    this.findState = aState;
-    let findbar = document.getElementById("findbar");
-    if (!findbar.browser)
-      findbar.browser = this.selectedBrowser;
-
-    let panel = document.getElementById("findbar-container");
-    if (panel.hidden) {
-      panel.hidden = false;
-      setTimeout(function() {
-        panel.top = window.innerHeight - Math.floor(findbar.getBoundingClientRect().height);
-      }, 0);
-    }
-    this.doFind();
-  },
-
-  doFind: function() {
-    let findbar = document.getElementById("findbar");
-    if (Browser.findState == FINDSTATE_FIND)
-      findbar.onFindCommand();
-    else
-      findbar.onFindAgainCommand(Browser.findState == FINDSTATE_FIND_PREVIOUS);
   },
 
   translatePhoneNumbers: function() {
