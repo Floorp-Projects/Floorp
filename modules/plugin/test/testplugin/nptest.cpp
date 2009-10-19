@@ -85,6 +85,7 @@ static bool getLastMouseY(NPObject* npobj, const NPVariant* args, uint32_t argCo
 static bool getError(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool doInternalConsistencyCheck(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool setColor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool throwExceptionNextInvoke(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnInvokeTest",
@@ -107,6 +108,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getError",
   "doInternalConsistencyCheck",
   "setColor",
+  "throwExceptionNextInvoke",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
@@ -130,6 +132,7 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   getError,
   doInternalConsistencyCheck,
   setColor,
+  throwExceptionNextInvoke,
 };
 
 static const char* NPN_GetURLNotifyCookie = "NPN_GetURLNotify_Cookie";
@@ -448,6 +451,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->streamBufSize = 0;
   instanceData->fileBuf = NULL;
   instanceData->fileBufSize = 0;
+  instanceData->throwOnNextInvoke = false;
   instanceData->testrange = NULL;
   instanceData->hasWidget = false;
   instanceData->npnNewStream = false;
@@ -1144,6 +1148,12 @@ NPN_GetProperty(NPP instance,
   return sBrowserFuncs->getproperty(instance, npobj, propertyName, result);
 }
 
+void
+NPN_SetException(NPObject *npobj, const NPUTF8 *message)
+{
+  return sBrowserFuncs->setexception(npobj, message);
+}
+
 //
 // npruntime object functions
 //
@@ -1182,6 +1192,22 @@ scriptableHasMethod(NPObject* npobj, NPIdentifier name)
 bool
 scriptableInvoke(NPObject* npobj, NPIdentifier name, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  if (id->throwOnNextInvoke) {
+    id->throwOnNextInvoke = false;
+    if (argCount == 0) {
+      NPN_SetException(npobj, NULL);
+    }
+    else {
+      for (uint32_t i = 0; i < argCount; i++) {
+        const NPString* argstr = &NPVARIANT_TO_STRING(args[i]);
+        NPN_SetException(npobj, argstr->UTF8Characters);
+      }
+    }
+    return false;
+  }
+  
   for (int i = 0; i < int(ARRAY_LENGTH(sPluginMethodIdentifiers)); i++) {
     if (name == sPluginMethodIdentifiers[i])
       return sPluginMethodFunctions[i](npobj, args, argCount, result);
@@ -1192,6 +1218,22 @@ scriptableInvoke(NPObject* npobj, NPIdentifier name, const NPVariant* args, uint
 bool
 scriptableInvokeDefault(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  if (id->throwOnNextInvoke) {
+    id->throwOnNextInvoke = false;
+    if (argCount == 0) {
+      NPN_SetException(npobj, NULL);
+    }
+    else {
+      for (uint32_t i = 0; i < argCount; i++) {
+        const NPString* argstr = &NPVARIANT_TO_STRING(args[i]);
+        NPN_SetException(npobj, argstr->UTF8Characters);
+      }
+    }
+    return false;
+  }
+
   ostringstream value;
   value << PLUGIN_NAME;
   for (uint32_t i = 0; i < argCount; i++) {
@@ -1364,6 +1406,16 @@ compareVariants(NPP instance, const NPVariant* var1, const NPVariant* var2)
   }
   
   return success;
+}
+
+static bool
+throwExceptionNextInvoke(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  id->throwOnNextInvoke = true;
+  BOOLEAN_TO_NPVARIANT(true, *result);
+  return true;  
 }
 
 static bool
