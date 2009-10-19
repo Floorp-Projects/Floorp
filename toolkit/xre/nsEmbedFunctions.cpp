@@ -40,6 +40,9 @@
 #include "nsXULAppAPI.h"
 
 #include <stdlib.h>
+#if defined(MOZ_WIDGET_GTK2)
+#include <glib.h>
+#endif
 
 #include "prenv.h"
 
@@ -256,6 +259,10 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_MIN(aArgc, 1);
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
+
+#if defined(MOZ_WIDGET_GTK2)
+  g_thread_init(NULL);
+#endif
 
   if (PR_GetEnv("MOZ_DEBUG_CHILD_PROCESS")) {
 #ifdef OS_POSIX
