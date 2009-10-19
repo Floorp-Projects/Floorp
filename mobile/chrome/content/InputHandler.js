@@ -1101,7 +1101,7 @@ KineticController.prototype = {
       if ((mbLast.sx == sx && mbLast.sy == sy) || mbLast.t == now) {
         mbLast.sx = sx;
         mbLast.sy = sy;
-        mbLast.t = t;
+        mbLast.t = now;
         return;
       }
     }
