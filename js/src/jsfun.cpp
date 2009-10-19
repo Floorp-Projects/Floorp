@@ -1668,15 +1668,17 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
             js_FreezeLocalNames(cx, fun);
     }
 
-    if (!js_XDRScript(xdr, &fun->u.i.script, NULL))
+    if (!js_XDRScript(xdr, &fun->u.i.script, false, NULL))
         goto bad;
 
     if (xdr->mode == JSXDR_DECODE) {
         *objp = FUN_OBJECT(fun);
+        if (fun->u.i.script != JSScript::emptyScript()) {
 #ifdef CHECK_SCRIPT_OWNER
-        fun->u.i.script->owner = NULL;
+            fun->u.i.script->owner = NULL;
 #endif
-        js_CallNewScriptHook(cx, fun->u.i.script, fun);
+            js_CallNewScriptHook(cx, fun->u.i.script, fun);
+        }
     }
 
 out:
@@ -2352,14 +2354,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
     if (!fun)
         return NULL;
-    fun->u.i.script = js_NewScript(cx, 1, 1, 0, 0, 0, 0, 0);
-    if (!fun->u.i.script)
-        return NULL;
-    fun->u.i.script->code[0] = JSOP_STOP;
-    *fun->u.i.script->notes() = SRC_NULL;
-#ifdef CHECK_SCRIPT_OWNER
-    fun->u.i.script->owner = NULL;
-#endif
+    fun->u.i.script = JSScript::emptyScript();
     return proto;
 }
 

@@ -272,7 +272,15 @@ struct JSTreeContext {              /* tree context for semantic checks */
  * between assignment-like and declaration-like destructuring
  * patterns, and why they need to be treated differently.
  */
-#define TCF_DECL_DESTRUCTURING    0x10000
+#define TCF_DECL_DESTRUCTURING  0x10000
+
+/*
+ * A request flag passed to JSCompiler::compileScript and then down via
+ * JSCodeGenerator to js_NewScriptFromCG, from script_compile_sub and any
+ * kindred functions that need to make mutable scripts (even empty ones;
+ * i.e., they can't share the const JSScript::emptyScript() singleton).
+ */
+#define TCF_NEED_MUTABLE_SCRIPT 0x20000
 
 /*
  * Sticky deoptimization flags to propagate from FunctionBody.

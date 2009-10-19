@@ -1185,6 +1185,17 @@ have_fun:
             native = NULL;
             script = fun->u.i.script;
             JS_ASSERT(script);
+
+            if (script->isEmpty()) {
+                if (flags & JSINVOKE_CONSTRUCT) {
+                    JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
+                    *vp = vp[1];
+                } else {
+                    *vp = JSVAL_VOID;
+                }
+                ok = JS_TRUE;
+                goto out2;
+            }
         } else {
             native = fun->u.n.native;
             script = NULL;
@@ -1473,6 +1484,12 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     JSStackFrame *oldfp, frame;
     JSObject *obj, *tmp;
     JSBool ok;
+
+    if (script->isEmpty()) {
+        if (result)
+            *result = JSVAL_VOID;
+        return JS_TRUE;
+    }
 
     js_LeaveTrace(cx);
 
@@ -2795,7 +2812,8 @@ js_Interpret(JSContext *cx)
     /* Set registerized frame pointer and derived script pointer. */
     fp = cx->fp;
     script = fp->script;
-    JS_ASSERT(script->length != 0);
+    JS_ASSERT(!script->isEmpty());
+    JS_ASSERT(script->length > 1);
 
     /* Count of JS function calls that nest in this C js_Interpret frame. */
     inlineCallCount = 0;
