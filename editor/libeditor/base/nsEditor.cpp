@@ -3815,17 +3815,22 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
                  "frame for non element-or-text?");
     if (!content->IsNodeOfType(nsINode::eTEXT))
       return PR_TRUE;  // not a text node; has a frame
-    if (resultFrame->GetStateBits() & NS_FRAME_IS_DIRTY) // we can only trust width data for undirty frames
-    {
-      // In the past a comment said:
-      //   "assume all text nodes with dirty frames are editable"
-      // Nowadays we use a virtual function, that assumes TRUE
-      // in the simple editor world,
-      // and uses enhanced logic to find out in the HTML world.
-      return IsTextInDirtyFrameVisible(aNode);
+
+    // test the textframe and all its non-fluid continuations
+    while (resultFrame) {
+      if (resultFrame->GetStateBits() & NS_FRAME_IS_DIRTY) // we can only trust width data for undirty frames
+      {
+        // In the past a comment said:
+        //   "assume all text nodes with dirty frames are editable"
+        // Nowadays we use a virtual function, that assumes TRUE
+        // in the simple editor world,
+        // and uses enhanced logic to find out in the HTML world.
+        return IsTextInDirtyFrameVisible(aNode);
+      }
+      if (resultFrame->GetSize().width > 0) 
+        return PR_TRUE;  // text node has width
+      resultFrame = resultFrame->GetNextContinuation();
     }
-    if (resultFrame->GetSize().width > 0) 
-      return PR_TRUE;  // text node has width
   }
   return PR_FALSE;  // didn't pass any editability test
 }
