@@ -22,5 +22,5 @@
     <toolbarbutton onclick="restart()" label="Recover"/>
   </toolbar>
 
-  <iframe type="content" src="http://www.google.com/" flex="1" id="page" remote="true"/>
+  <browser type="content" src="http://www.google.com/" flex="1" id="page" remote="true"/>
 </window>
