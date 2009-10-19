@@ -2963,7 +2963,6 @@ WebGLContext::TexImage2D()
 
     if (js.argc == 3) {
         JSObject *argPixelsObj;
-        jsuint argPixelsLen;
         if (!::JS_ConvertArguments(js.ctx, js.argc, js.argv, "uuo",
                                    &argTarget, &argLevel,
                                    &argPixelsObj) ||
