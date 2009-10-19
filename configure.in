@@ -5246,7 +5246,10 @@ dnl ========================================================
 MOZ_IPC=1
 
 case "${target}" in
-powerpc-apple-darwin*)
+*-apple-darwin*)
+    MOZ_IPC=
+    ;;
+*wince)
     MOZ_IPC=
     ;;
 esac
@@ -5255,10 +5258,6 @@ MOZ_ARG_DISABLE_BOOL(ipc,
 [  --disable-ipc           Disable IPC supports for tabs and plugins],
     MOZ_IPC=,
     MOZ_IPC=1)
-
-if test -n "$MOZ_IPC" -a -z "$MOZ_ENABLE_LIBXUL"; then
-    AC_MSG_ERROR([--enable-ipc requires --enable-libxul])
-fi
 
 if test -n "$MOZ_IPC"; then
     AC_DEFINE(MOZ_IPC)
@@ -7269,6 +7268,10 @@ fi
 
 if test -n "$MOZ_ENABLE_LIBXUL" -a -n "$BUILD_STATIC_LIBS"; then
 	AC_MSG_ERROR([--enable-libxul is not compatible with --enable-static])
+fi
+
+if test -n "$MOZ_IPC" -a -z "$MOZ_ENABLE_LIBXUL"; then
+    AC_MSG_ERROR([--enable-ipc requires --enable-libxul])
 fi
 
 AC_SUBST(LIBXUL_LIBS)
