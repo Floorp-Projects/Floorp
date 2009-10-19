@@ -224,9 +224,9 @@ nsRefMapEntry::RemoveContent(nsIContent* aContent)
 nsXULDocument::nsXULDocument(void)
     : nsXMLDocument("application/vnd.mozilla.xul+xml"),
       mDocDirection(Direction_Uninitialized),
+      mDocLWTheme(Doc_Theme_Uninitialized),
       mState(eState_Master),
-      mResolutionPhase(nsForwardReference::eStart),
-      mDocLWTheme(Doc_Theme_Uninitialized)
+      mResolutionPhase(nsForwardReference::eStart)
 {
 
     // NOTE! nsDocument::operator new() zeroes out all members, so don't
