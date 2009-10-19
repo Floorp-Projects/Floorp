@@ -235,6 +235,8 @@ function test_asyncFetch()
     do_check_eq(TEST_DATA, result);
 
     server.stop(run_next_test);
+ 
+    run_next_test();
   });
 }
 
