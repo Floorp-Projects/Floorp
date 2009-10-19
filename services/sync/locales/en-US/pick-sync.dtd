@@ -1,9 +1,0 @@
-<!ENTITY dialog.title           "Sync with Weave">
-<!ENTITY dialog.accept          "Sync">
-
-<!ENTITY dir.caption            "Direction to sync">
-<!ENTITY myComputer.label       "[my computer]">
-<!ENTITY weaveCloud.label       "[weave cloud]">
-<!ENTITY dir.resetClient.label  "Do a fresh, full sync with the server">
-<!ENTITY dir.wipeClient.label   "Erase local data and restart with server data">
-<!ENTITY dir.wipeRemote.label   "Erase remote data and restart with local data">
