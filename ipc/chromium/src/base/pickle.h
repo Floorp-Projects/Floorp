@@ -146,6 +146,12 @@ class Pickle {
   // not been changed.
   void TrimWriteData(int length);
 
+#if defined(CHROMIUM_MOZILLA_BUILD)
+  void EndRead(void* iter) const {
+    DCHECK(iter == end_of_payload());
+  }
+#endif
+
   // Payload follows after allocation of Header (header size is customizable).
   struct Header {
     uint32 payload_size;  // Specifies the size of the payload.

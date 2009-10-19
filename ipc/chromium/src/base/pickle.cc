@@ -316,7 +316,11 @@ char* Pickle::BeginWrite(size_t length) {
   // write at a uint32-aligned offset from the beginning of the header
   size_t offset = AlignInt(header_->payload_size, sizeof(uint32));
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+  size_t new_size = offset + AlignInt(length, sizeof(uint32));
+#else
   size_t new_size = offset + length;
+#endif
   size_t needed_size = header_size_ + new_size;
   if (needed_size > capacity_ && !Resize(std::max(capacity_ * 2, needed_size)))
     return NULL;
