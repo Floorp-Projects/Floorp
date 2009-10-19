@@ -55,9 +55,6 @@ parent:
 //-----------------------------------------------------------------------------
 // Example solution to exercise
  /*
-include "nsTArray.h";
-using nsTArray<nsCString>;
-
 namespace mozilla {
 namespace test {
  
@@ -69,12 +66,12 @@ both:
 
 parent:
     GetValue(nsCString key);
-    GetValues(nsTArray<nsCString> keys);
+    GetValues(nsCString[] keys);
     sync SetValue(nsCString key, nsCString val) returns (bool ok);
 
 child:
     TellValue(nsCString key, nsCString val);
-    TellValues(nsTArray<nsCString> keys, nsTArray<nsCString> vals);
+    TellValues(nsCString[] keys, nsCString[] vals);
 
 state START:
     send Ping goto START;
