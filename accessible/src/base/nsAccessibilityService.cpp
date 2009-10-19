@@ -548,6 +548,15 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame *aFrame,
     *aAccessible = new nsHTMLListAccessible(aNode, aWeakShell);
   }
   else if (tag == nsAccessibilityAtoms::a) {
+
+    // Only some roles truly enjoy life as nsHTMLLinkAccessibles, for details
+    // see closed bug 494807.
+    nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(aNode);
+    if (roleMapEntry && roleMapEntry->role != nsIAccessibleRole::ROLE_NOTHING
+        && roleMapEntry->role != nsIAccessibleRole::ROLE_LINK) {
+      return CreateHyperTextAccessible(aFrame, aAccessible);
+    }
+
     *aAccessible = new nsHTMLLinkAccessible(aNode, aWeakShell);
   }
   else if (tag == nsAccessibilityAtoms::li && aFrame->GetType() != nsAccessibilityAtoms::blockFrame) {
