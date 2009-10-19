@@ -117,8 +117,10 @@
 #include "nsICrashReporter.h"
 #endif
 
+#ifdef MOZ_IPC
 using mozilla::dom::ContentProcessParent;
 using mozilla::ipc::TestShellParent;
+#endif
 
 class XPCShellDirProvider : public nsIDirectoryServiceProvider2
 {
