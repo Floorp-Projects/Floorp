@@ -842,24 +842,20 @@ Assembler::asm_call(LInsp ins)
 
             NanoAssert(ins->opcode() == LIR_fcall);
 
-            // We're about to write the result into a register (or a stack
-            // slot). Because we emit code backwards, we must therefore free
-            // it.
-            freeRsrcOf(ins, rr != UnknownReg);
-
             if (rr == UnknownReg) {
                 int d = disp(callRes);
                 NanoAssert(d != 0);
+                freeRsrcOf(ins, false);
 
                 // The result doesn't have a register allocated, so store the
                 // result (in R0,R1) directly to its stack slot.
                 STR(R0, FP, d+0);
                 STR(R1, FP, d+4);
             } else {
-                Register    rr = callRes->reg;
                 NanoAssert(IsFpReg(rr));
 
                 // Copy the result to the (VFP) result register.
+                prepResultReg(ins, rmask(rr));
                 FMDRR(rr, R0, R1);
             }
         }
@@ -1174,7 +1170,6 @@ Assembler::asm_load64(LInsp ins)
         // Either VFP is not available or the result needs to go into memory;
         // in either case, VFP instructions are not required. Note that the
         // result will never be loaded into registers if VFP is not available.
-        NanoAssert(resv->reg == UnknownReg);
         NanoAssert(d != 0);
 
         // Check that the offset is 8-byte (64-bit) aligned.
