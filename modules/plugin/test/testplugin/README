@@ -47,6 +47,16 @@ with the specified argument.  Returns the result of the invocation.
 If an error has occurred during the last stream or npruntime function,
 this will return a string error message, otherwise it returns "pass".
 
+* throwExceptionNextInvoke()
+Sets a flag which causes the next call to a scriptable method to throw
+one or more exceptions.  If no parameters are passed to the next
+scriptable method call, it will cause a generic exception to be thrown. 
+Otherwise there will be one exception thrown per argument, with the argument
+used as the exception message.  Example:
+
+  plugin.throwExceptionNextInvoke();
+  plugin.npnInvokeTest("first exception message", "second exception message");
+
 * () - default method
 Returns a string consisting of the plugin name, concatenated with any 
 arguments passed to the method.
