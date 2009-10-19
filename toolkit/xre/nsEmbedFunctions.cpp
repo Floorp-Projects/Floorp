@@ -35,7 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
 #include "base/basictypes.h"
+#endif
 
 #include "nsXULAppAPI.h"
 
@@ -323,12 +325,6 @@ XRE_InitChildProcess(int aArgc,
   return NS_OK;
 }
 
-GeckoProcessType
-XRE_GetProcessType()
-{
-  return sChildProcessType;
-}
-
 MessageLoop*
 XRE_GetIOMessageLoop()
 {
@@ -521,4 +517,15 @@ XRE_SendTestShellCommand(JSContext* aCx,
     return true;
 }
 
+#endif // MOZ_IPC
+
+GeckoProcessType
+XRE_GetProcessType()
+{
+#ifdef MOZ_IPC
+  return sChildProcessType;
+#else
+  return GeckoProcessType_Default;
 #endif
+}
+
