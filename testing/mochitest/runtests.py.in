@@ -53,7 +53,7 @@ from urllib import quote_plus as encodeURIComponent
 import urllib2
 import commands
 import automation
-from automationutils import addCommonOptions, processLeakLog
+from automationutils import *
 
 # Path to the test script on the server
 TEST_SERVER_HOST = "localhost:8888"
@@ -86,24 +86,6 @@ os.chdir(SCRIPT_DIRECTORY)
 PROFILE_DIRECTORY = os.path.abspath("./mochitesttestingprofile")
 
 LEAK_REPORT_FILE = os.path.join(PROFILE_DIRECTORY, "runtests_leaks.log")
-
-# Map of debugging programs to information about them, like default arguments
-# and whether or not they are interactive.
-DEBUGGER_INFO = {
-  # gdb requires that you supply the '--args' flag in order to pass arguments
-  # after the executable name to the executable.
-  "gdb": {
-    "interactive": True,
-    "args": "-q --args"
-  },
-
-  # valgrind doesn't explain much about leaks unless you set the
-  # '--leak-check=full' flag.
-  "valgrind": {
-    "interactive": False,
-    "args": "--leak-check=full"
-  }
-}
 
 #######################
 # COMMANDLINE OPTIONS #
@@ -251,20 +233,6 @@ class MochitestOptions(optparse.OptionParser):
                     help = "copy specified files/dirs to testing profile")
     defaults["extraProfileFiles"] = []
 
-    self.add_option("--debugger",
-                    action = "store", dest = "debugger",
-                    help = "use the given debugger to launch the application")
-
-    self.add_option("--debugger-args",
-                    action = "store", dest = "debuggerArgs",
-                    help = "pass the given args to the debugger _before_ "
-                           "the application on the command line")
-
-    self.add_option("--debugger-interactive",
-                    action = "store_true", dest = "debuggerInteractive",
-                    help = "prevents the test harness from redirecting stdout "
-                           "and stderr for interactive debuggers")
-
     # -h, --help are automatically handled by OptionParser
 
     self.set_defaults(**defaults)
@@ -342,22 +310,6 @@ def getFullPath(path):
   "Get an absolute path relative to oldcwd."
   return os.path.normpath(os.path.join(oldcwd, os.path.expanduser(path)))
 
-def searchPath(path):
-  "Go one step beyond getFullPath and try the various folders in PATH"
-  # Try looking in the current working directory first.
-  newpath = getFullPath(path)
-  if os.path.exists(newpath):
-    return newpath
-
-  # At this point we have to fail if a directory was given (to prevent cases
-  # like './gdb' from matching '/usr/bin/./gdb').
-  if not os.path.dirname(path):
-    for dir in os.environ['PATH'].split(os.pathsep):
-      newpath = os.path.join(dir, path)
-      if os.path.exists(newpath):
-        return newpath
-  return None
-
 #################
 # MAIN FUNCTION #
 #################
@@ -397,31 +349,8 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   options.certPath = getFullPath(options.certPath)
   options.symbolsPath = getFullPath(options.symbolsPath)
 
-  debuggerInfo = None
-
-  if options.debugger:
-    debuggerPath = searchPath(options.debugger)
-    if not debuggerPath:
-      print "Error: Path %s doesn't exist." % options.debugger
-      sys.exit(1)
-
-    debuggerName = os.path.basename(debuggerPath).lower()
-
-    def getDebuggerInfo(type, default):
-      if debuggerName in DEBUGGER_INFO and type in DEBUGGER_INFO[debuggerName]:
-        return DEBUGGER_INFO[debuggerName][type]
-      return default
-
-    debuggerInfo = {
-      "path": debuggerPath,
-      "interactive" : getDebuggerInfo("interactive", False),
-      "args": getDebuggerInfo("args", "").split()
-    }
-
-    if options.debuggerArgs:
-      debuggerInfo["args"] = options.debuggerArgs.split()
-    if options.debuggerInteractive:
-      debuggerInfo["interactive"] = options.debuggerInteractive
+  debuggerInfo = getDebuggerInfo(oldcwd, options.debugger, options.debuggerArgs,
+    options.debuggerInteractive);
 
   # browser environment
   browserEnv = automation.environment(xrePath = options.xrePath)
