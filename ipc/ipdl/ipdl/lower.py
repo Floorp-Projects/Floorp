@@ -1263,6 +1263,7 @@ def _generateMessageClass(clsname, msgid, inparams, outparams, typedefs):
                           args=[ ExprVar.THIS, ExprVar(p.name) ]))
         for p in inparams
     ])
+    
     cls.addstmts([ ctor, Whitespace.NL ])
 
     # make the message deserializer
@@ -1284,6 +1285,11 @@ def _generateMessageClass(clsname, msgid, inparams, outparams, typedefs):
             args=[ msgvar, ExprAddrOf(itervar), ExprVar(oparam.name) ])))
         failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
         reader.addstmts([ failif, Whitespace.NL ])
+
+    if len(outparams):
+        reader.addstmt(StmtExpr(ExprCall(
+            ExprSelect(msgvar, '->', 'EndRead'),
+            args=[ itervar ])))
 
     reader.addstmt(StmtReturn(ExprLiteral.TRUE))
     cls.addstmts([ reader, Whitespace.NL ])
