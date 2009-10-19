@@ -2028,12 +2028,17 @@ BEGIN_CASE(JSOP_NEW)
             }
             rval = vp[1];
             obj2 = js_NewObject(cx, &js_ObjectClass,
-                                JSVAL_IS_OBJECT(rval)
-                                ? JSVAL_TO_OBJECT(rval)
-                                : NULL,
+                                JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL,
                                 OBJ_GET_PARENT(cx, obj));
             if (!obj2)
                 goto error;
+
+            if (fun->u.i.script->isEmpty()) {
+                *vp = OBJECT_TO_JSVAL(obj2);
+                regs.sp = vp + 1;
+                goto end_new;
+            }
+
             vp[1] = OBJECT_TO_JSVAL(obj2);
             flags = JSFRAME_CONSTRUCTING;
             goto inline_call;
@@ -2045,6 +2050,8 @@ BEGIN_CASE(JSOP_NEW)
     regs.sp = vp + 1;
     CHECK_INTERRUPT_HANDLER();
     TRACE_0(NativeCallComplete);
+
+  end_new:
 END_CASE(JSOP_NEW)
 
 BEGIN_CASE(JSOP_CALL)
@@ -2071,6 +2078,14 @@ BEGIN_CASE(JSOP_APPLY)
             JSInlineFrame *newifp;
             JSInterpreterHook hook;
 
+            script = fun->u.i.script;
+            if (script->isEmpty()) {
+                script = fp->script;
+                *vp = JSVAL_VOID;
+                regs.sp = vp + 1;
+                goto end_call;
+            }
+
             /* Restrict recursion of lightweight functions. */
             if (inlineCallCount >= JS_MAX_INLINE_CALL_COUNT) {
                 js_ReportOverRecursed(cx);
@@ -2078,9 +2093,7 @@ BEGIN_CASE(JSOP_APPLY)
             }
 
             /* Compute the total number of stack slots needed by fun. */
-            nframeslots = JS_HOWMANY(sizeof(JSInlineFrame),
-                                     sizeof(jsval));
-            script = fun->u.i.script;
+            nframeslots = JS_HOWMANY(sizeof(JSInlineFrame), sizeof(jsval));
             atoms = script->atomMap.vector;
             nbytes = (nframeslots + script->nslots) * sizeof(jsval);
 

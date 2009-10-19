@@ -1426,8 +1426,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                  * Get the prior (cache-filling) eval's saved caller function.
                  * See JSCompiler::compileScript in jsparse.cpp.
                  */
-                JSFunction *fun;
-                fun = script->getFunction(0);
+                JSFunction *fun = script->getFunction(0);
 
                 if (fun == caller->fun) {
                     /*
@@ -1446,6 +1445,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                          */
                         JSObjectArray *objarray = script->objects();
                         int i = 1;
+
                         if (objarray->length == 1) {
                             if (script->regexpsOffset != 0) {
                                 objarray = script->regexps();
@@ -1483,7 +1483,8 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     callerFrame = (staticLevel != 0) ? caller : NULL;
     if (!script) {
         script = JSCompiler::compileScript(cx, scopeobj, callerFrame,
-                                           principals, TCF_COMPILE_N_GO,
+                                           principals,
+                                           TCF_COMPILE_N_GO | TCF_NEED_MUTABLE_SCRIPT,
                                            str->chars(), str->length(),
                                            NULL, file, line, str, staticLevel);
         if (!script) {

@@ -4612,7 +4612,7 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     JSScript *script;
 
     CHECK_REQUEST(cx);
-    tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
+    tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
     script = JSCompiler::compileScript(cx, obj, NULL, principals, tcflags,
                                        chars, length, NULL, filename, lineno);
     LAST_FRAME_CHECKS(cx, script);
