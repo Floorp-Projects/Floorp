@@ -75,6 +75,13 @@ pref("browser.cache.disk.capacity", 0); // kilobytes
 pref("browser.cache.memory.enable", true);
 pref("browser.cache.memory.capacity", 1024); // kilobytes
 
+/* tile cache prefs */
+#ifdef WINCE
+pref("tile.cache.size", 15); // tiles
+#else
+pref("tile.cache.size", 30); // tiles
+#endif
+
 /* image cache prefs */
 pref("image.cache.size", 1048576); // bytes
 

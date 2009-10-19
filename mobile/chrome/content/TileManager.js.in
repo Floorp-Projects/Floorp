@@ -98,8 +98,6 @@ const kTileWidth  = Math.pow(2, kTileExponentWidth);   // 2^9 = 512
 const kTileHeight = Math.pow(2, kTileExponentHeight);  // 2^9 = 512
 const kTileCrawlTimeCap = 100;    // millis
 const kTileCrawlComeAgain = 0;    // millis
-const kInitialCacheCapacity = 15;
-
 
 /**
  * The Tile Manager!
@@ -113,7 +111,7 @@ const kInitialCacheCapacity = 15;
  * @param fakeWidth The width of the widest possible visible rectangle, e.g.
  * the width of the screen.  This is used in setting the zoomLevel.
  */
-function TileManager(appendTile, removeTile, browserView) {
+function TileManager(appendTile, removeTile, browserView, cacheSize) {
   /* backref to the BrowserView object that owns us */
   this._browserView = browserView;
 
@@ -124,7 +122,7 @@ function TileManager(appendTile, removeTile, browserView) {
   /* tile cache holds tile objects and pools them under a given capacity */
   let self = this;
   this._tileCache = new TileManager.TileCache(function(tile) { self._removeTileSafe(tile); },
-                                              -1, -1, kInitialCacheCapacity);
+                                              -1, -1, cacheSize);
 
   /* Rectangle within the viewport that is visible to the user.  It is "critical"
    * in the sense that it must be rendered as soon as it becomes dirty, and tiles
