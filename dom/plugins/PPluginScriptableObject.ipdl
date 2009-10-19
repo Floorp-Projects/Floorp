@@ -41,14 +41,11 @@ include protocol "PPluginInstance.ipdl";
 
 include "npapi.h";
 include "npruntime.h";
-include "nsTArray.h";
 include "mozilla/plugins/PluginMessageUtils.h";
 
 using mozilla::ipc::NPRemoteIdentifier;
-using nsTArray<NPRemoteIdentifier>;
 using mozilla::void_t;
 using mozilla::null_t;
-using nsTArray<Variant>;
 
 namespace mozilla {
 namespace plugins {
@@ -80,11 +77,11 @@ both:
     returns (bool aHasMethod);
 
   rpc Invoke(NPRemoteIdentifier aId,
-             nsTArray<Variant> aArgs)
+             Variant[] aArgs)
     returns (Variant aResult,
              bool aSuccess);
 
-  rpc InvokeDefault(nsTArray<Variant> aArgs)
+  rpc InvokeDefault(Variant[] aArgs)
     returns (Variant aResult,
              bool aSuccess);
 
@@ -103,10 +100,10 @@ both:
     returns (bool aSuccess);
 
   rpc Enumerate()
-    returns (nsTArray<NPRemoteIdentifier> aProperties,
+    returns (NPRemoteIdentifier[] aProperties,
              bool aSuccess);
 
-  rpc Construct(nsTArray<Variant> aArgs)
+  rpc Construct(Variant[] aArgs)
     returns (Variant aResult,
              bool aSuccess);
 };

@@ -40,14 +40,10 @@
 include protocol "PPluginInstance.ipdl";
 
 include "npapi.h";
-include "nsTArray.h";
 include "mozilla/plugins/PluginMessageUtils.h";
 
 using NPError;
-using nsTArray<nsCString>;
-using nsTArray<intptr_t>;
 using mozilla::ipc::NPRemoteIdentifier;
-using nsTArray<NPRemoteIdentifier>;
 
 namespace mozilla {
 namespace plugins {
@@ -62,8 +58,8 @@ child:
 
   rpc PPluginInstance(nsCString aMimeType,
                       uint16_t aMode,
-                      nsTArray<nsCString> aNames,
-                      nsTArray<nsCString> aValues)
+                      nsCString[] aNames,
+                      nsCString[] aValues)
     returns (NPError rv);
 
   rpc ~PPluginInstance()
@@ -92,8 +88,8 @@ parent:
   sync NPN_IdentifierIsString(NPRemoteIdentifier aId)
     returns (bool aIsString);
 
-  sync NPN_GetStringIdentifiers(nsTArray<nsCString> aNames)
-    returns (nsTArray<NPRemoteIdentifier> aIds);
+  sync NPN_GetStringIdentifiers(nsCString[] aNames)
+    returns (NPRemoteIdentifier[] aIds);
 };
 
 } // namespace plugins
