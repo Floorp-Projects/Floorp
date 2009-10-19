@@ -95,7 +95,7 @@ let Util = {
  *
  * Any method that takes an x and y may also take a point.
  */
-Point = function Point(x, y) {
+function Point(x, y) {
   this.set(x, y);
 }
 
