@@ -50,6 +50,9 @@
 #else
 @BINPATH@/@DLL_PREFIX@xul@DLL_SUFFIX@
 #endif
+#ifdef MOZ_IPC
+@BINPATH@/mozilla-runtime@BIN_SUFFIX@
+#endif
 #ifdef WINCE
 @BINPATH@/mozce_shunt.dll
 #elifdef XP_WIN32
