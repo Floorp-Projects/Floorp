@@ -731,10 +731,6 @@ let Utils = {
     Utils._openChromeWindow("Status", "status.xul");
   },
 
-  openSync: function Utils_openSync() {
-    Utils._openChromeWindow("Sync", "pick-sync.xul");
-  },
-
   getErrorString: function Utils_getErrorString(error, args) {
     try {
       return Str.errors.get(error, args || null);
