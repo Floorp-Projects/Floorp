@@ -587,11 +587,10 @@ GL_SAME_METHOD_1(Clear, Clear, PRUint32)
 
 GL_SAME_METHOD_4(ClearColor, ClearColor, float, float, float, float)
 
-// XXX the Web IDL method should be glClearDepth!
 #ifdef USE_GLES2
-GL_SAME_METHOD_1(ClearDepthf, ClearDepthf, float)
+GL_SAME_METHOD_1(ClearDepthf, ClearDepth, float)
 #else
-GL_SAME_METHOD_1(ClearDepth, ClearDepthf, float)
+GL_SAME_METHOD_1(ClearDepth, ClearDepth, float)
 #endif
 
 GL_SAME_METHOD_1(ClearStencil, ClearStencil, PRInt32)
@@ -863,11 +862,10 @@ GL_SAME_METHOD_1(DepthFunc, DepthFunc, GLenum)
 
 GL_SAME_METHOD_1(DepthMask, DepthMask, GLboolean)
 
-// XXX should just be glDepthRange in webgl!
 #ifdef USE_GLES2
-GL_SAME_METHOD_2(DepthRangef, DepthRangef, float, float)
+GL_SAME_METHOD_2(DepthRangef, DepthRange, float, float)
 #else
-GL_SAME_METHOD_2(DepthRange, DepthRangef, float, float)
+GL_SAME_METHOD_2(DepthRange, DepthRange, float, float)
 #endif
 
 // XXX arg check!
