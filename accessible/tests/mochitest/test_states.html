@@ -69,6 +69,30 @@
       // offscreen test
       testStates("aria_offscreen_textbox", STATE_OFFSCREEN);
 
+      //
+      // This section tests aria roles on links/anchors for underlying
+      // nsHTMLLinkAccessible creation. (see closed bug 494807)
+      //
+
+      // strong roles
+      testStates("aria_menuitem_link", 0, 0, STATE_LINKED);
+      testStates("aria_button_link", 0, 0, STATE_LINKED);
+      testStates("aria_checkbox_link", 0, 0, STATE_LINKED);
+
+      // strong landmark
+      testStates("aria_application_link", 0, 0, STATE_LINKED);
+      testStates("aria_application_anchor", 0, 0, STATE_SELECTABLE);
+
+      // strange cases
+      testStates("aria_link_link", STATE_LINKED);
+      testStates("aria_link_anchor", STATE_SELECTABLE);
+
+      // some weak landmarks
+      testStates("aria_main_link", STATE_LINKED);
+      testStates("aria_navigation_link", STATE_LINKED);
+      testStates("aria_main_anchor", STATE_SELECTABLE);
+      testStates("aria_navigation_anchor", STATE_SELECTABLE);
+
       SimpleTest.finish();
     }
 
@@ -140,5 +164,24 @@
   <div id="offscreen_log" role="log" class="offscreen">
     <div id="aria_offscreen_textbox" role="textbox" aria-readonly="true">This text should be offscreen</div>
   </div>
+
+  <a id="aria_menuitem_link" role="menuitem" href="foo">menuitem</a>
+  <a id="aria_button_link" role="button" href="foo">button</a>
+  <a id="aria_checkbox_link" role="checkbox" href="foo">checkbox</a>
+
+  <!-- strange edge case: please don't do this in the wild -->
+  <a id="aria_link_link" role="link" href="foo">link</a>
+  <a id="aria_link_anchor" role="link" name="link_anchor">link</a>
+
+  <!-- landmarks: links -->
+  <a id="aria_application_link" role="application" href="foo">app</a>
+  <a id="aria_main_link" role="main" href="foo">main</a>
+  <a id="aria_navigation_link" role="navigation" href="foo">nav</a>
+  
+  <!-- landmarks: anchors -->
+  <a id="aria_application_anchor" role="application" name="app_anchor">app</a>
+  <a id="aria_main_anchor" role="main" name="main_anchor">main</a>
+  <a id="aria_navigation_anchor" role="navigation" name="nav_anchor">nav</a>
+
 </body>
 </html>
