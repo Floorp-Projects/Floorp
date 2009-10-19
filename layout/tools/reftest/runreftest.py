@@ -45,7 +45,7 @@ import sys, shutil, os, os.path
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.append(SCRIPT_DIRECTORY)
 import automation
-from automationutils import addCommonOptions, processLeakLog
+from automationutils import *
 from optparse import OptionParser
 from tempfile import mkdtemp
 
@@ -127,6 +127,9 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
   options.symbolsPath = getFullPath(options.symbolsPath)
   options.utilityPath = getFullPath(options.utilityPath)
 
+  debuggerInfo = getDebuggerInfo(oldcwd, options.debugger, options.debuggerArgs,
+     options.debuggerInteractive);
+
   profileDir = None
   try:
     profileDir = mkdtemp()
@@ -165,6 +168,7 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
                                ["-reftest", reftestlist],
                                utilityPath = options.utilityPath,
                                xrePath=options.xrePath,
+                               debuggerInfo=debuggerInfo,
                                symbolsPath=options.symbolsPath)
     processLeakLog(leakLogFile, options.leakThreshold)
     automation.log.info("\nREFTEST INFO | runreftest.py | Running tests: end.")
