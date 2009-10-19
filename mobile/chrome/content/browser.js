@@ -772,26 +772,26 @@ var Browser = {
   findState: FINDSTATE_FIND,
   openFind: function(aState) {
     this.findState = aState;
-    var findbar = document.getElementById("findbar");
+    let findbar = document.getElementById("findbar");
     if (!findbar.browser)
       findbar.browser = this.selectedBrowser;
 
-    var panel = document.getElementById("findbar-container");
+    let panel = document.getElementById("findbar-container");
     if (panel.hidden) {
       panel.hidden = false;
+      setTimeout(function() {
+        panel.top = window.innerHeight - Math.floor(findbar.getBoundingClientRect().height);
+      }, 0);
     }
     this.doFind();
   },
 
   doFind: function() {
-    var findbar = document.getElementById("findbar");
+    let findbar = document.getElementById("findbar");
     if (Browser.findState == FINDSTATE_FIND)
       findbar.onFindCommand();
     else
       findbar.onFindAgainCommand(Browser.findState == FINDSTATE_FIND_PREVIOUS);
-
-    var panel = document.getElementById("findbar-container");
-    panel.top = window.innerHeight - Math.floor(findbar.getBoundingClientRect().height);
   },
 
   translatePhoneNumbers: function() {

@@ -342,6 +342,11 @@ var BrowserUI = {
     const popupMargin = 10;
     bookmarkPopup.top = Math.round(starRect.top) + popupMargin;
     bookmarkPopup.left = windowW - this.sidebarW - bookmarkPopupW - popupMargin;
+    
+    // findbar
+    let findbar = document.getElementById("findbar");
+    let findpanel = document.getElementById("findbar-container");
+    findpanel.top = windowH - Math.floor(findbar.getBoundingClientRect().height);
   },
 
   init : function() {
