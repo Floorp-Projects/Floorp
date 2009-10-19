@@ -257,7 +257,7 @@
     </scrollbox>
 
     <!-- popup for find toolbar -->
-    <hbox id="findbar-container" hidden="true" class="window-width">
+    <hbox id="findbar-container" hidden="true" class="window-width" top="0" left="0">
       <findbar id="findbar" flex="1"/>
     </hbox>
 
