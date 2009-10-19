@@ -349,7 +349,7 @@ RPCChannel::DebugAbort(const char* file, int line, const char* cond,
                        const char* type, bool reply)
 {
     fprintf(stderr,
-            "[RPCChannel][%s][%s:%d] "
+            "###!!! [RPCChannel][%s][%s:%d] "
             "Assertion (%s) failed.  %s (triggered by %s%s)\n",
             mChild ? "Child" : "Parent",
             file, line, cond,
