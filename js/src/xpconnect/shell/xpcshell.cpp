@@ -267,7 +267,7 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
 #endif
     {
         char line[256];
-        fprintf(gOutFile, prompt);
+        fputs(prompt, gOutFile);
         fflush(gOutFile);
         if (!fgets(line, sizeof line, file))
             return JS_FALSE;
