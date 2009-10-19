@@ -511,7 +511,7 @@ nsDummyJavaPluginOwner::ShowStatus(const PRUnichar *aStatusMsg)
 NPError
 nsDummyJavaPluginOwner::ShowNativeContextMenu(NPMenu* menu, void* event)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NPERR_GENERIC_ERROR;
 }
 
 NPBool
