@@ -43,13 +43,15 @@ from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import mkdtemp
 
-from automationutils import addCommonOptions, checkForCrashes, dumpLeakLog
+from automationutils import *
 
 # Init logging
 log = logging.getLogger()
 handler = logging.StreamHandler(sys.stdout)
 log.setLevel(logging.INFO)
 log.addHandler(handler)
+
+oldcwd = os.getcwd()
 
 def readManifest(manifest):
   """Given a manifest file containing a list of test directories,
@@ -70,7 +72,8 @@ def readManifest(manifest):
 
 def runTests(xpcshell, xrePath=None, symbolsPath=None,
              manifest=None, testdirs=[], testPath=None,
-             interactive=False, logfiles=True):
+             interactive=False, logfiles=True,
+             debuggerInfo=None):
   """Run xpcshell tests.
 
   |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -86,6 +89,8 @@ def runTests(xpcshell, xrePath=None, symbolsPath=None,
     instead of automatically executing the test.
   |logfiles|, if set to False, indicates not to save output to log files.
     Non-interactive only option.
+  |debuggerInfo|, if set, specifies the debugger and debugger arguments
+    that will be used to launch xpcshell.
   """
 
   if not testdirs and not manifest:
@@ -131,16 +136,23 @@ def runTests(xpcshell, xrePath=None, symbolsPath=None,
     pStderr = None
   else:
     xpcsRunArgs = ['-e', '_execute_test();']
-    if sys.platform == 'os2emx':
+    if (debuggerInfo and debuggerInfo["interactive"]):
       pStdout = None
+      pStderr = None
     else:
-      pStdout = PIPE
-    pStderr = STDOUT
+      if sys.platform == 'os2emx':
+        pStdout = None
+      else:
+        pStdout = PIPE
+      pStderr = STDOUT
 
   # <head.js> has to be loaded by xpchell: it can't load itself.
   xpcsCmd = [xpcshell, '-g', xrePath, '-j', '-s'] + \
             ['-e', 'const _HTTPD_JS_PATH = "%s";' % httpdJSPath,
              '-f', os.path.join(testharnessdir, 'head.js')]
+
+  if debuggerInfo:
+    xpcsCmd = [debuggerInfo["path"]] + debuggerInfo["args"] + xpcsCmd
 
   # |testPath| will be the optional path only, or |None|.
   # |singleFile| will be the optional test only, or |None|.
@@ -295,6 +307,9 @@ def main():
                                                            sys.argv[0])
     sys.exit(1)
 
+  debuggerInfo = getDebuggerInfo(oldcwd, options.debugger, options.debuggerArgs,
+    options.debuggerInteractive);
+
   if options.interactive and not options.testPath:
     print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
     sys.exit(1)
@@ -306,7 +321,8 @@ def main():
                   testdirs=args[1:],
                   testPath=options.testPath,
                   interactive=options.interactive,
-                  logfiles=options.logfiles):
+                  logfiles=options.logfiles,
+                  debuggerInfo=debuggerInfo):
     sys.exit(1)
 
 if __name__ == '__main__':
