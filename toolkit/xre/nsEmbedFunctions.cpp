@@ -501,10 +501,7 @@ XRE_SendTestShellCommand(JSContext* aCx,
     nsDependentString command((PRUnichar*)JS_GetStringChars(aCommand),
                               JS_GetStringLength(aCommand));
     if (!aCallback) {
-        if (NS_FAILED(gTestShellParent->SendExecuteCommand(command))) {
-            return false;
-        }
-        return true;
+        return gTestShellParent->SendExecuteCommand(command);
     }
 
     TestShellCommandParent* callback = static_cast<TestShellCommandParent*>(
