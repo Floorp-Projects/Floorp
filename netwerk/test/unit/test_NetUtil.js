@@ -235,7 +235,33 @@ function test_asyncFetch()
     do_check_eq(TEST_DATA, result);
 
     server.stop(run_next_test);
- 
+  });
+}
+
+function test_asyncFetch_does_not_block()
+{
+  // Create our channel that has no data.
+  let channel = NetUtil.ioService.
+                newChannel("data:text/plain,", null, null);
+
+  // Open our channel asynchronously.
+  NetUtil.asyncFetch(channel, function(aInputStream, aResult) {
+    // Check that we had success.
+    do_check_true(Components.isSuccessCode(aResult));
+
+    // Check that reading a byte throws that the stream was closed (as opposed
+    // saying it would block).
+    let is = Cc["@mozilla.org/scriptableinputstream;1"].
+             createInstance(Ci.nsIScriptableInputStream);
+    is.init(aInputStream);
+    try {
+      is.read(1);
+      do_throw("should throw!");
+    }
+    catch (e) {
+      do_check_eq(e.result, Cr.NS_BASE_STREAM_CLOSED);
+    }
+
     run_next_test();
   });
 }
@@ -252,6 +278,7 @@ let tests = [
   test_asyncFetch_no_channel,
   test_asyncFetch_no_callback,
   test_asyncFetch,
+  test_asyncFetch_does_not_block,
 ];
 let index = 0;
 
