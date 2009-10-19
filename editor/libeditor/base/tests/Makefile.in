@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
 		test_bug502673.html \
 		test_selection_move_commands.xul \
+		test_bug514156.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
