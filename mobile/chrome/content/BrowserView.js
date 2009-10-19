@@ -44,7 +44,7 @@ const kBrowserViewZoomLevelMin = 0.2;
 const kBrowserViewZoomLevelMax = 4.0;
 const kBrowserViewZoomLevelPrecision = 10000;
 const kBrowserViewPrefetchBeginIdleWait = 1;    // seconds
-
+const kBrowserViewCacheSize = 15;
 
 /**
  * A BrowserView maintains state of the viewport (browser, zoom level,
@@ -232,7 +232,12 @@ BrowserView.prototype = {
     this._browserViewportState = null;
     this._contentWindow = null;
     this._renderMode = 0;
-    this._tileManager = new TileManager(this._appendTile, this._removeTile, this);
+    
+    let cacheSize = kBrowserViewCacheSize;
+    try {
+      cacheSize = gPrefService.getIntPref("tile.cache.size");
+    } catch(e) {}
+    this._tileManager = new TileManager(this._appendTile, this._removeTile, this, cacheSize);
     this._visibleRectFactory = visibleRectFactory;
 
     this._idleServiceObserver = new BrowserView.IdleServiceObserver(this);
