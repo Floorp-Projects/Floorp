@@ -172,6 +172,33 @@ struct JSScript {
     inline JSFunction *getFunction(size_t index);
 
     inline JSObject *getRegExp(size_t index);
+
+    /*
+     * The isEmpty method tells whether this script has code that computes any
+     * result (not return value, result AKA normal completion value) other than
+     * JSVAL_VOID, or any other effects. It has a fast path for the case where
+     * |this| is the emptyScript singleton, but it also checks this->length and
+     * this->code, to handle debugger-generated mutable empty scripts.
+     */
+    inline bool isEmpty() const;
+
+    /*
+     * Accessor for the emptyScriptConst singleton, to consolidate const_cast.
+     * See the private member declaration.
+     */
+    static JSScript *emptyScript() {
+        return const_cast<JSScript *>(&emptyScriptConst);
+    }
+
+  private:
+    /*
+     * Use const to put this in read-only memory if possible. We are stuck with
+     * non-const JSScript * and jsbytecode * by legacy code (back in the 1990s,
+     * const wasn't supported correctly on all target platforms). The debugger
+     * does mutate bytecode, and script->u.object may be set after construction
+     * in some cases, so making JSScript pointers const will be "hard".
+     */
+    static const JSScript emptyScriptConst;
 };
 
 #define SHARP_NSLOTS            2       /* [#array, #depth] slots if the script
@@ -317,11 +344,19 @@ js_GetOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
  * If magic is null, js_XDRScript returns false on bad magic number errors,
  * which it reports.
  *
- * NB: callers must call js_CallNewScriptHook after successful JSXDR_DECODE
- * and subsequent set-up of owning function or script object, if any.
+ * NB: after a successful JSXDR_DECODE, and provided that *scriptp is not the
+ * JSScript::emptyScript() immutable singleton, js_XDRScript callers must do
+ * any required subsequent set-up of owning function or script object and then
+ * call js_CallNewScriptHook.
+ *
+ * If the caller requires a mutable empty script (for debugging or u.object
+ * ownership setting), pass true for needMutableScript. Otherwise pass false.
+ * Call js_CallNewScriptHook only with a mutable script, i.e. never with the
+ * JSScript::emptyScript() singleton.
  */
 extern JSBool
-js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *magic);
+js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
+             JSBool *hasMagic);
 
 JS_END_EXTERN_C
 
