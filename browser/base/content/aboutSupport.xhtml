@@ -134,6 +134,43 @@ td {
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+// We use a preferences whitelist to make sure we only show preferences that
+// are useful for support and won't compromise the user's privacy.  Note that
+// entries are *prefixes*: for example, "accessibility." applies to all prefs
+// under the "accessibility.*" branch.
+const Whitelist = [
+  "accessibility.",
+  "browser.fixup.",
+  "browser.history_expire_",
+  "browser.link.open_newwindow",
+  "browser.mousewheel.",
+  "browser.places.",
+  "browser.startup.homepage",
+  "browser.tabs.",
+  "browser.zoom.",
+  "dom.",
+  "extensions.checkCompatibility",
+  "extensions.lastAppVersion",
+  "font.",
+  "general.useragent.",
+  "gfx.color_management.mode",
+  "javascript.",
+  "keyword.", 
+  "layout.css.dpi",
+  "network.",
+  "places.",
+  "print.",
+  "privacy.",
+  "security."
+];
+
+// The blacklist, unlike the whitelist, is a list of regular expressions.
+const Blacklist = [
+  /^print[.]print_to_filename$/,
+  /^print[.].*[.]print_to_filename$/,
+  /^network[.]proxy[.].*$/
+];
+
 window.onload = function () {
   // Get the FUEL Application object.
   let Application = Cc["@mozilla.org/fuel/application;1"]
@@ -214,11 +251,25 @@ function getModifiedPrefs() {
   let prefService = Cc["@mozilla.org/preferences-service;1"]
                       .getService(Ci.nsIPrefService);
   let prefRootBranch = prefService.getBranch("");
-  let prefNames = prefRootBranch.getChildList("", { value: 0 });
+  let prefNames = getWhitelistedPrefNames(prefRootBranch);
   let prefs = [Application.prefs.get(prefName)
                       for each (prefName in prefNames)
-                          if (prefRootBranch.prefHasUserValue(prefName))];        
+                          if (prefRootBranch.prefHasUserValue(prefName)
+                            && !isBlacklisted(prefName))];
   return prefs;
+}
+
+function getWhitelistedPrefNames(prefRootBranch) {
+  let results = [];
+  for each (let prefStem in Whitelist) {
+    let prefNames = prefRootBranch.getChildList(prefStem, {});
+    results = results.concat(prefNames);
+  }
+  return results;
+}
+
+function isBlacklisted(prefName) {
+  return Blacklist.some(function (re) {return re.test(prefName);});
 }
 
 function createParentElement(tagName, childElems) {
