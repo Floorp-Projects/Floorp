@@ -96,7 +96,8 @@ class Visitor:
             trans.accept(self)
 
     def visitTransition(self, t):
-        t.toState.accept(self)
+        for toState in t.toStates:
+            toState.accept(self)
 
     def visitState(self, s):
         pass

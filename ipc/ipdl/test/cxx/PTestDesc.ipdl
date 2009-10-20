@@ -1,0 +1,28 @@
+include protocol "PTestDescSub.ipdl";
+include protocol "PTestDescSubsub.ipdl";
+
+namespace mozilla {
+namespace _ipdltest {
+
+protocol PTestDesc {
+    manages PTestDescSub; 
+child:
+    PTestDescSub();
+    ~PTestDescSub();
+
+    Test(PTestDescSubsub a);
+
+parent:
+    Ok(PTestDescSubsub a);
+
+
+state START:
+    send Test goto ACK;
+
+state ACK:
+    recv Ok goto ACK;
+    // delete
+};
+
+}
+}
