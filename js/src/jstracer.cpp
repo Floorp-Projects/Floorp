@@ -7539,29 +7539,29 @@ js_FinishJIT(JSTraceMonitor *tm)
 {
 #ifdef JS_JIT_SPEW
     if (jitstats.recorderStarted) {
-        debug_only_printf(LC_TMStats,
-                          "recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
-                          "trees trashed(%llu), slot promoted(%llu), unstable loop variable(%llu), "
-                          "breaks(%llu), returns(%llu), unstableInnerCalls(%llu), blacklisted(%llu)\n",
-                           (unsigned long long int)jitstats.recorderStarted,
-                           (unsigned long long int)jitstats.recorderAborted,
-                           (unsigned long long int)jitstats.traceCompleted,
-                           (unsigned long long int)jitstats.returnToDifferentLoopHeader,
-                           (unsigned long long int)jitstats.treesTrashed,
-                           (unsigned long long int)jitstats.slotPromoted,
-                           (unsigned long long int)jitstats.unstableLoopVariable,
-                           (unsigned long long int)jitstats.breakLoopExits,
-                           (unsigned long long int)jitstats.returnLoopExits,
-                           (unsigned long long int)jitstats.noCompatInnerTrees,
-                           (unsigned long long int)jitstats.blacklisted);
-        debug_only_printf(LC_TMStats,
-                          "monitor: triggered(%llu), exits(%llu), type mismatch(%llu), "
-                          "global mismatch(%llu), flushed(%llu)\n",
-                           (unsigned long long int)jitstats.traceTriggered,
-                           (unsigned long long int)jitstats.sideExitIntoInterpreter,
-                           (unsigned long long int)jitstats.typeMapMismatchAtEntry,
-                           (unsigned long long int)jitstats.globalShapeMismatchAtEntry,
-                           (unsigned long long int)jitstats.cacheFlushed);
+        char sep = ':';
+        debug_only_print0(LC_TMStats, "recorder");
+#define RECORDER_JITSTAT(_ident, _name)                             \
+        debug_only_printf(LC_TMStats, "%c " _name "(%llu)", sep,    \
+                          (unsigned long long int)jitstats._ident); \
+        sep = ',';
+#define JITSTAT(x) /* nothing */
+#include "jitstats.tbl"
+#undef JITSTAT
+#undef RECORDER_JITSTAT
+        debug_only_print0(LC_TMStats, "\n");
+
+        sep = ':';
+        debug_only_print0(LC_TMStats, "monitor");
+#define MONITOR_JITSTAT(_ident, _name)                              \
+        debug_only_printf(LC_TMStats, "%c " _name "(%llu)", sep,    \
+                          (unsigned long long int)jitstats._ident); \
+        sep = ',';
+#define JITSTAT(x) /* nothing */
+#include "jitstats.tbl"
+#undef JITSTAT
+#undef MONITOR_JITSTAT
+        debug_only_print0(LC_TMStats, "\n");
     }
 #endif
     JS_ASSERT(tm->reservedDoublePool);

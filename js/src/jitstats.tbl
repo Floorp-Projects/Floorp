@@ -37,27 +37,61 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* NB: Keep this list synced with jitstatHandler in trace-test.js. */
-JITSTAT(recorderStarted)
-JITSTAT(recorderAborted)
-JITSTAT(traceCompleted)
-JITSTAT(sideExitIntoInterpreter)
-JITSTAT(timeoutIntoInterpreter)
-JITSTAT(typeMapMismatchAtEntry)
-JITSTAT(returnToDifferentLoopHeader)
-JITSTAT(traceTriggered)
-JITSTAT(globalShapeMismatchAtEntry)
-JITSTAT(treesTrashed)
-JITSTAT(slotPromoted)
-JITSTAT(unstableLoopVariable)
-JITSTAT(breakLoopExits)
-JITSTAT(returnLoopExits)
-JITSTAT(mergedLoopExits)
-JITSTAT(noCompatInnerTrees)
-JITSTAT(blacklisted)
-JITSTAT(cacheFlushed)
+/**
+ * Proper use of this file: Consumers must define JITSTAT; they can optionally
+ * also define MONITOR_JITSTAT or RECORDER_JITSTAT or both to do separate
+ * things with stats that are monitor or recorder specific.  If those are not
+ * defined, they will be automatically defined to JITSTAT.
+ */
+#ifdef DEFINED_MONITOR_JITSTAT
+#error "How did that happen?"
+#endif
+
+#ifdef DEFINED_RECORDER_JITSTAT
+#error "How did that happen?"
+#endif
+
+#ifndef MONITOR_JITSTAT
+#define MONITOR_JITSTAT(_ident, _name) JITSTAT(_ident)
+#define DEFINED_MONITOR_JITSTAT
+#endif
+
+#ifndef RECORDER_JITSTAT
+#define RECORDER_JITSTAT(_ident, _name) JITSTAT(_ident)
+#define DEFINED_RECORDER_JITSTAT
+#endif
+
+RECORDER_JITSTAT(recorderStarted, "started")
+RECORDER_JITSTAT(recorderAborted, "aborted")
+RECORDER_JITSTAT(traceCompleted, "completed")
+MONITOR_JITSTAT(sideExitIntoInterpreter, "exits")
+MONITOR_JITSTAT(timeoutIntoInterpreter, "timeouts")
+MONITOR_JITSTAT(typeMapMismatchAtEntry, "type mismatch")
+RECORDER_JITSTAT(returnToDifferentLoopHeader, "different header")
+MONITOR_JITSTAT(traceTriggered, "triggered")
+MONITOR_JITSTAT(globalShapeMismatchAtEntry, "global mismatch")
+RECORDER_JITSTAT(treesTrashed, "trees trashed")
+RECORDER_JITSTAT(slotPromoted, "slot promoted")
+RECORDER_JITSTAT(unstableLoopVariable, "unstable loop variable")
+RECORDER_JITSTAT(breakLoopExits, "breaks")
+RECORDER_JITSTAT(returnLoopExits, "returns")
+RECORDER_JITSTAT(mergedLoopExits, "merged loop exits")
+RECORDER_JITSTAT(noCompatInnerTrees, "unstableInnerCalls")
+RECORDER_JITSTAT(blacklisted, "blacklisted")
+MONITOR_JITSTAT(cacheFlushed, "flushed")
 JITSTAT(archIsIA32)
 JITSTAT(archIsAMD64)
 JITSTAT(archIs64BIT)
 JITSTAT(archIsARM)
 JITSTAT(archIsSPARC)
 JITSTAT(archIsPPC)
+
+#ifdef DEFINED_MONITOR_JITSTAT
+#undef DEFINED_MONITOR_JITSTAT
+#undef MONITOR_JITSTAT
+#endif
+
+#ifdef DEFINED_RECORDER_JITSTAT
+#undef DEFINED_RECORDER_JITSTAT
+#undef RECORDER_JITSTAT
+#endif
