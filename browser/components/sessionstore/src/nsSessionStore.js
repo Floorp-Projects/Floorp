@@ -269,6 +269,8 @@ SessionStoreService.prototype = {
         
         // make sure that at least the first window doesn't have anything hidden
         delete this._initialState.windows[0].hidden;
+        // Since nothing is hidden in the first window, it cannot be a popup
+        delete this._initialState.windows[0].isPopup;
       }
       catch (ex) { debug("The session file is invalid: " + ex); }
     }

@@ -176,18 +176,17 @@ nsSVGAnimationElement::GetTargetElement(nsIDOMSVGElement** aTarget)
   return NS_OK;
 }
 
-/* float getStartTime(); */
+/* float getStartTime() raises( DOMException ); */
 NS_IMETHODIMP
 nsSVGAnimationElement::GetStartTime(float* retval)
 {
   FlushAnimations();
 
   nsSMILTimeValue startTime = mTimedElement.GetStartTime();
-  if (startTime.IsResolved()) {
-    *retval = double(startTime.GetMillis()) / PR_MSEC_PER_SEC;
-  } else {
-    *retval = 0.f;
-  }
+  if (!startTime.IsResolved())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+
+  *retval = float(double(startTime.GetMillis()) / PR_MSEC_PER_SEC);
 
   return NS_OK;
 }
@@ -200,7 +199,7 @@ nsSVGAnimationElement::GetCurrentTime(float* retval)
 
   nsSMILTimeContainer* root = GetTimeContainer();
   if (root) {
-    *retval = double(root->GetCurrentTime()) / PR_MSEC_PER_SEC;
+    *retval = float(double(root->GetCurrentTime()) / PR_MSEC_PER_SEC);
   } else {
     *retval = 0.f;
   }
@@ -219,7 +218,7 @@ nsSVGAnimationElement::GetSimpleDuration(float* retval)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
-  *retval = double(simpleDur.GetMillis()) / PR_MSEC_PER_SEC;
+  *retval = float(double(simpleDur.GetMillis()) / PR_MSEC_PER_SEC);
   return NS_OK;
 }
 

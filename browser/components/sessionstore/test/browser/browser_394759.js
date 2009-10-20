@@ -63,7 +63,7 @@ function test() {
         newWin.gBrowser.removeEventListener("load", arguments.callee, true);
 
         executeSoon(function() {
-          newWin.gBrowser.addTab();
+          newWin.gBrowser.addTab().linkedBrowser.stop();
           executeSoon(function() {
             // mark the window with some unique data to be restored later on
             ss.setWindowValue(newWin, uniqueKey, uniqueValue);
@@ -87,6 +87,7 @@ function test() {
                "The reopened window was removed from Recently Closed Windows");
 
             newWin2.addEventListener("load", function(aEvent) {
+              this.removeEventListener("load", arguments.callee, false);
               newWin2.gBrowser.addEventListener("SSTabRestored", function(aEvent) {
                 newWin2.gBrowser.removeEventListener("SSTabRestored", arguments.callee, true);
 
@@ -142,12 +143,14 @@ function test() {
       let url = "http://window" + windowsToOpen.length + ".example.com";
       let window = openDialog(location, "_blank", settings, url);
       window.addEventListener("load", function(aEvent) {
+        this.removeEventListener("load", arguments.callee, true);
         window.gBrowser.addEventListener("load", function(aEvent) {
+          this.removeEventListener("load", arguments.callee, true);
           // the window _should_ have state with a tab of url, but it doesn't
           // always happend before window.close(). addTab ensure we don't treat
           // this window as a stateless window
           window.gBrowser.addTab();
-          window.gBrowser.removeEventListener("load", arguments.callee, true);
+
           executeSoon(function() {
             window.close();
             executeSoon(function() {

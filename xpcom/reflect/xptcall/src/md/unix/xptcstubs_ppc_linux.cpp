@@ -23,6 +23,7 @@
  *   Franz.Sirl-kernel@lauterbach.com (Franz Sirl)
  *   beard@netscape.com (Patrick Beard)
  *   waterson@netscape.com (Chris Waterson)
+ *   bigeasy@linutronix.de (Sebastian Andrzej Siewior)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -49,11 +50,14 @@
 // caller.  The rest of the parameters are passed in the callers stack
 // area. The stack pointer has to retain 16-byte alignment, longlongs
 // and doubles are aligned on 8-byte boundaries.
-
+#ifndef __NO_FPRS__
 #define PARAM_BUFFER_COUNT     16
 #define GPR_COUNT               8
 #define FPR_COUNT               8
-
+#else
+#define PARAM_BUFFER_COUNT      8
+#define GPR_COUNT               8
+#endif
 // PrepareAndDispatch() is called by SharedStub() and calls the actual method.
 //
 // - 'args[]' contains the arguments passed on stack
@@ -98,7 +102,9 @@ PrepareAndDispatch(nsXPTCStubBase* self,
 
     PRUint32* ap = args;
     PRUint32 gpr = 1;    // skip one GPR register
+#ifndef __NO_FPRS__
     PRUint32 fpr = 0;
+#endif
     PRUint32 tempu32;
     PRUint64 tempu64;
 
@@ -108,8 +114,17 @@ PrepareAndDispatch(nsXPTCStubBase* self,
         nsXPTCMiniVariant* dp = &dispatchParams[i];
 	
         if (!param.IsOut() && type == nsXPTType::T_DOUBLE) {
+#ifndef __NO_FPRS__
             if (fpr < FPR_COUNT)
                 dp->val.d = fprData[fpr++];
+#else
+            if (gpr & 1)
+                gpr++;
+            if (gpr + 1 < GPR_COUNT) {
+                dp->val.d = *(double*) &gprData[gpr];
+                gpr += 2;
+            }
+#endif
             else {
                 if ((PRUint32) ap & 4) ap++; // doubles are 8-byte aligned on stack
                 dp->val.d = *(double*) ap;
@@ -118,8 +133,13 @@ PrepareAndDispatch(nsXPTCStubBase* self,
             continue;
         }
         else if (!param.IsOut() && type == nsXPTType::T_FLOAT) {
+#ifndef __NO_FPRS__
             if (fpr < FPR_COUNT)
                 dp->val.f = (float) fprData[fpr++]; // in registers floats are passed as doubles
+#else
+            if (gpr  < GPR_COUNT)
+                dp->val.f = *(float*) &gprData[gpr++];
+#endif
             else
                 dp->val.f = *(float*) ap++;
             continue;

@@ -1527,7 +1527,7 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
   nsGlyphTable* glyphTable = aGeneric ?
     &gGlyphTableList->mUnicodeTable : gGlyphTableList->GetGlyphTableFor(aFamily);
 
-  if (context->mTablesTried.IndexOf(glyphTable) != context->mTablesTried.NoIndex)
+  if (context->mTablesTried.Contains(glyphTable))
     return PR_TRUE; // already tried this one
 
   context->mGlyphTable = glyphTable;

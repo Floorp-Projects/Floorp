@@ -41,8 +41,10 @@
 #include "nsCOMPtr.h"
 #include "nsIWindowMediator.h"
 #include "nsISupportsArray.h"
+#include "nsIObserver.h"
 #include "nsTArray.h"
 #include "nsXPIDLString.h"
+#include "nsWeakReference.h"
 #include "nsCRT.h"
 
 class nsAppShellWindowEnumerator;
@@ -55,7 +57,10 @@ class nsASXULWindowBackToFrontEnumerator;
 struct nsWindowInfo;
 struct PRLock;
 
-class nsWindowMediator : public nsIWindowMediator
+class nsWindowMediator :
+  public nsIWindowMediator,
+  public nsIObserver,
+  public nsSupportsWeakReference
 {
 friend class nsAppShellWindowEnumerator;
 friend class nsASXULWindowEarlyToLateEnumerator;
@@ -73,6 +78,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWINDOWMEDIATOR
+  NS_DECL_NSIOBSERVER
 
 private:
   PRInt32 AddEnumerator(nsAppShellWindowEnumerator* inEnumerator);
@@ -90,6 +96,7 @@ private:
   nsWindowInfo *mTopmostWindow;
   PRInt32       mTimeStamp;
   PRBool        mSortingZOrder;
+  PRBool        mReady;
   PRLock       *mListLock;
 
   nsCOMPtr<nsISupportsArray> mListeners;

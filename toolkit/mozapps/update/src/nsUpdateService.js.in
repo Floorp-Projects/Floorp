@@ -129,9 +129,6 @@ const UPDATE_WINDOW_NAME      = "Update:Wizard";
 var gLocale     = null;
 var gCanUpdate  = null;
 
-// shared code for suppressing bad cert dialogs
-#include ../../shared/src/badCertHandler.js
-
 #endif /* MOZ_UPDATER */
 
 XPCOMUtils.defineLazyServiceGetter(this, "gPref",
@@ -198,6 +195,13 @@ function getObserverService()
 }
 
 #ifdef MOZ_UPDATER
+
+// shared code for suppressing bad cert dialogs
+XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
+  let temp = { };
+  Components.utils.import("resource://gre/modules/CertUtils.jsm", temp);
+  return temp;
+});
 
 XPCOMUtils.defineLazyGetter(this, "gApp", function() {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).
@@ -2125,7 +2129,7 @@ Checker.prototype = {
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsIXMLHttpRequest);
     this._request.open("GET", url, true);
-    this._request.channel.notificationCallbacks = new BadCertHandler();
+    this._request.channel.notificationCallbacks = new gCertUtils.BadCertHandler();
     this._request.overrideMimeType("text/xml");
     this._request.setRequestHeader("Cache-Control", "no-cache");
 
@@ -2213,7 +2217,7 @@ Checker.prototype = {
     LOG("Checker", "onLoad - request completed downloading document");
 
     try {
-      checkCert(this._request.channel);
+      gCertUtils.checkCert(this._request.channel);
       // Analyze the resulting DOM and determine the set of updates to install
       var updates = this._updates;
 

@@ -1140,22 +1140,26 @@
             halfInd = Math.ceil(halfInd);
             translateX = 0 - this._scrollbox.getBoundingClientRect().right -
                              halfInd;
-            if (dropPoint.beforeIndex == -1)
-              translateX += this.lastChild.getBoundingClientRect().left;
-            else if (this.childNodes.length) {
-              translateX += this.childNodes[dropPoint.beforeIndex]
+            if (this.firstChild) {
+              if (dropPoint.beforeIndex == -1)
+                translateX += this.lastChild.getBoundingClientRect().left;
+              else {
+                translateX += this.childNodes[dropPoint.beforeIndex]
                                 .getBoundingClientRect().right;
+              }
             }
           }
           else {
             halfInd = Math.floor(halfInd);
             translateX = 0 - this._scrollbox.getBoundingClientRect().left +
                          halfInd;
-            if (dropPoint.beforeIndex == -1)
-              translateX += this.lastChild.getBoundingClientRect().right;
-            else if (this.childNodes.length) {
-              translateX += this.childNodes[dropPoint.beforeIndex]
-                                .getBoundingClientRect().left;
+            if (this.firstChild) {
+              if (dropPoint.beforeIndex == -1)
+                translateX += this.lastChild.getBoundingClientRect().right;
+              else {
+                translateX += this.childNodes[dropPoint.beforeIndex]
+                                  .getBoundingClientRect().left;
+              }
             }
           }
 

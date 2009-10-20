@@ -42,6 +42,11 @@ TestRunner.logger = new Logger();
 // Check the query string for arguments
 var params = parseQueryString(location.search.substring(1), true);
 
+// set the per-test timeout if specified in the query string
+if (params.timeout) {
+  TestRunner.timeout = parseInt(params.timeout) * 1000;
+}
+
 // log levels for console and logfile
 var fileLevel =  params.fileLevel || null;
 var consoleLevel = params.consoleLevel || null;

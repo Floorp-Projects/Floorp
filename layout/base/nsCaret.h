@@ -281,13 +281,14 @@ protected:
 
     // XXX these fields should go away and the values be acquired as needed,
     // probably by ComputeMetrics.
-    PRUint32              mBlinkRate;         // time for one cyle (off then on), in milliseconds
+    PRUint32              mBlinkRate;         // time for one cyle (on then off), in milliseconds
     nscoord               mCaretWidthCSSPx;   // caret width in CSS pixels
     float                 mCaretAspectRatio;  // caret width/height aspect ratio
     
     PRPackedBool          mVisible;           // is the caret blinking
 
     PRPackedBool          mDrawn;             // Denotes when the caret is physically drawn on the screen.
+    PRPackedBool          mPendingDraw;       // True when the last on-state draw was suppressed.
 
     PRPackedBool          mReadOnly;          // it the caret in readonly state (draws differently)      
     PRPackedBool          mShowDuringSelection; // show when text is selected

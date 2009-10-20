@@ -139,7 +139,7 @@ tests.push({
     do_check_eq(profileBookmarksJSONFile.lastModifiedTime, lastMod);
     do_check_eq(profileBookmarksJSONFile.fileSize, fileSize);
 
-    finish_test();
+    do_test_finished();
   }
 });
 

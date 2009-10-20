@@ -394,11 +394,22 @@ pluginGetClipRegionRectEdge(InstanceData* instanceData,
 /* windowless plugin events */
 
 static bool
-handleEventInternal(InstanceData* instanceData, NPEvent* pe)
+handleEventInternal(InstanceData* instanceData, NPEvent* pe, LRESULT* result)
 {
   switch ((UINT)pe->event) {
     case WM_PAINT:
       pluginDraw(instanceData);
+      return true;
+
+    case WM_MOUSEACTIVATE:
+      if (instanceData->hasWidget) {
+        ::SetFocus((HWND)instanceData->window.window);
+        *result = MA_ACTIVATEANDEAT;
+        return true;
+      }
+      return false;
+
+    case WM_MOUSEWHEEL:
       return true;
 
     case WM_MOUSEMOVE:
@@ -429,7 +440,8 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
       instanceData->window.type != NPWindowTypeDrawable)
     return 0;   
 
-  return handleEventInternal(instanceData, pe);
+  LRESULT result = 0;
+  return handleEventInternal(instanceData, pe, &result);
 }
 
 /* windowed plugin events */
@@ -445,8 +457,9 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
   NPEvent event = { uMsg, wParam, lParam };
 
-  if (handleEventInternal(pInstance, &event))
-    return 0;
+  LRESULT result = 0;
+  if (handleEventInternal(pInstance, &event, &result))
+    return result;
 
   if (uMsg == WM_CLOSE) {
     ClearSubclass((HWND)pInstance->window.window);

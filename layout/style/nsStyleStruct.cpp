@@ -253,7 +253,7 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
 
 nsStyleMargin::nsStyleMargin() {
   MOZ_COUNT_CTOR(nsStyleMargin);
-  nsStyleCoord zero(0);
+  nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
   NS_FOR_CSS_SIDES(side) {
     mMargin.Set(side, zero);
   }
@@ -317,7 +317,7 @@ nsChangeHint nsStyleMargin::MaxDifference()
 
 nsStylePadding::nsStylePadding() {
   MOZ_COUNT_CTOR(nsStylePadding);
-  nsStyleCoord zero(0);
+  nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
   NS_FOR_CSS_SIDES(side) {
     mPadding.Set(side, zero);
   }
@@ -392,7 +392,7 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
     mBorderColor[side] = NS_RGB(0, 0, 0);
   }
   NS_FOR_CSS_HALF_CORNERS(corner) {
-    mBorderRadius.Set(corner, nsStyleCoord(0));
+    mBorderRadius.Set(corner, nsStyleCoord(0, nsStyleCoord::CoordConstructor));
   }
 
   mBorderColors = nsnull;
@@ -562,7 +562,7 @@ nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
 {
   MOZ_COUNT_CTOR(nsStyleOutline);
   // spacing values not inherited
-  nsStyleCoord zero(0);
+  nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
   NS_FOR_CSS_HALF_CORNERS(corner) {
     mOutlineRadius.Set(corner, zero);
   }
@@ -1914,8 +1914,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
   // property that matters is what it is when the transition begins, and
   // we don't stop a transition later because the transition property
   // changed.
-  // FIXME:  Need to test for this and write it in the spec, if it's
-  // compatible with other browsers.  Test for behavior at
+  // FIXME (Bug 522599):  Need to test for this and write it in the
+  // spec, if it's compatible with other browsers.  Test for behavior at
   // http://dbaron.org/css/test/2009/transitions/dynamic-transition-change
   
   return hint;
@@ -2361,12 +2361,12 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
     mTextTransform(aSource.mTextTransform),
     mWhiteSpace(aSource.mWhiteSpace),
     mWordWrap(aSource.mWordWrap),
+    mTabSize(aSource.mTabSize),
     mLetterSpacing(aSource.mLetterSpacing),
     mLineHeight(aSource.mLineHeight),
     mTextIndent(aSource.mTextIndent),
     mWordSpacing(aSource.mWordSpacing),
-    mTextShadow(aSource.mTextShadow),
-    mTabSize(aSource.mTabSize)
+    mTextShadow(aSource.mTextShadow)
 {
   MOZ_COUNT_CTOR(nsStyleText);
 }

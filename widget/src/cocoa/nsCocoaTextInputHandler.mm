@@ -43,6 +43,7 @@
 
 #include "nsChildView.h"
 #include "nsObjCExceptions.h"
+#include "nsBidiUtils.h"
 
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
@@ -141,6 +142,24 @@ GetWindowLevelName(NSInteger aWindowLevel)
 
 #endif // DEBUG_IME_HANDLER
 
+static PRUint32 gHandlerInstanceCount = 0;
+static nsTISInputSource gCurrentKeyboardLayout;
+
+static void
+InitCurrentKeyboardLayout()
+{
+  if (gHandlerInstanceCount > 0 &&
+      !gCurrentKeyboardLayout.IsInitializedByCurrentKeyboardLayout()) {
+    gCurrentKeyboardLayout.InitByCurrentKeyboardLayout();
+  }
+}
+
+static void
+FinalizeCurrentKeyboardLayout()
+{
+  gCurrentKeyboardLayout.Clear();
+}
+
 
 #pragma mark -
 
@@ -150,6 +169,61 @@ GetWindowLevelName(NSInteger aWindowLevel)
  *  nsTISInputSource implementation
  *
  ******************************************************************************/
+
+// static
+nsTISInputSource&
+nsTISInputSource::CurrentKeyboardLayout()
+{
+  InitCurrentKeyboardLayout();
+  return gCurrentKeyboardLayout;
+}
+
+// static
+PRBool
+nsTISInputSource::UCKeyTranslateToString(const UCKeyboardLayout* aHandle,
+                                         UInt32 aKeyCode, UInt32 aModifiers,
+                                         UInt32 aKbType, nsAString &aStr)
+{
+#ifdef DEBUG_TEXT_INPUT_HANDLER
+  NSLog(@"**** nsTISInputSource::UCKeyTranslateToString: aHandle: %p, aKeyCode: %X, aModifiers: %X, aKbType: %X",
+        aHandle, aKeyCode, aModifiers, aKbType);
+  PRBool isShift = aModifiers & shiftKey;
+  PRBool isCtrl = aModifiers & controlKey;
+  PRBool isOpt = aModifiers & optionKey;
+  PRBool isCmd = aModifiers & cmdKey;
+  PRBool isCL = aModifiers & alphaLock;
+  PRBool isNL = aModifiers & kEventKeyModifierNumLockMask;
+  NSLog(@"        Shift: %s, Ctrl: %s, Opt: %s, Cmd: %s, CapsLock: %s, NumLock: %s",
+        isShift ? "ON" : "off", isCtrl ? "ON" : "off", isOpt ? "ON" : "off",
+        isCmd ? "ON" : "off", isCL ? "ON" : "off", isNL ? "ON" : "off");
+#endif
+  NS_PRECONDITION(aStr.IsEmpty(), "aStr isn't empty");
+  UInt32 deadKeyState = 0;
+  UniCharCount len;
+  UniChar chars[5];
+  OSStatus err = ::UCKeyTranslate(aHandle, aKeyCode,
+                                  kUCKeyActionDown, aModifiers >> 8,
+                                  aKbType, kUCKeyTranslateNoDeadKeysMask,
+                                  &deadKeyState, 5, &len, chars);
+  if (err != noErr) {
+    return PR_FALSE;
+  }
+  if (len == 0) {
+    return PR_TRUE;
+  }
+  if (!EnsureStringLength(aStr, len)) {
+    return PR_FALSE;
+  }
+  NS_ASSERTION(sizeof(PRUnichar) == sizeof(UniChar),
+               "size of PRUnichar and size of UniChar are different");
+  memcpy(aStr.BeginWriting(), chars, len * sizeof(PRUnichar));
+#ifdef DEBUG_TEXT_INPUT_HANDLER
+  for (PRUint32 i = 0; i < PRUint32(len); i++) {
+    NSLog(@"       result: %X(%C)", chars[i], chars[i] > ' ' ? chars[i] : ' ');
+  }
+#endif
+  return PR_TRUE;
+}
 
 void
 nsTISInputSource::InitByInputSourceID(const char* aID)
@@ -265,13 +339,18 @@ const UCKeyboardLayout*
 nsTISInputSource::GetUCKeyboardLayout()
 {
   NS_ENSURE_TRUE(mInputSource, nsnull);
+  if (mUCKeyboardLayout) {
+    return mUCKeyboardLayout;
+  }
   CFDataRef uchr = static_cast<CFDataRef>(
     ::TISGetInputSourceProperty(mInputSource,
                                 kTISPropertyUnicodeKeyLayoutData));
 
   // We should be always able to get the layout here.
   NS_ENSURE_TRUE(uchr, nsnull);
-  return reinterpret_cast<const UCKeyboardLayout*>(CFDataGetBytePtr(uchr));
+  mUCKeyboardLayout =
+    reinterpret_cast<const UCKeyboardLayout*>(CFDataGetBytePtr(uchr));
+  return mUCKeyboardLayout;
 }
 
 PRBool
@@ -352,6 +431,36 @@ nsTISInputSource::GetPrimaryLanguage(nsAString &aPrimaryLanguage)
   return !aPrimaryLanguage.IsEmpty();
 }
 
+PRBool
+nsTISInputSource::IsForRTLLanguage()
+{
+  if (mIsRTL < 0) {
+    // Get the input character of the 'A' key of ANSI keyboard layout.
+    nsAutoString str;
+    PRBool ret = TranslateToString(kVK_ANSI_A, 0, eKbdType_ANSI, str);
+    NS_ENSURE_TRUE(ret, ret);
+    PRUnichar ch = str.IsEmpty() ? PRUnichar(0) : str.CharAt(0);
+    mIsRTL = UCS2_CHAR_IS_BIDI(ch) || ch == 0xD802 || ch == 0xD803;
+  }
+  return mIsRTL != 0;
+}
+
+PRBool
+nsTISInputSource::IsInitializedByCurrentKeyboardLayout()
+{
+  return mInputSource == ::TISCopyCurrentKeyboardLayoutInputSource();
+}
+
+PRBool
+nsTISInputSource::TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
+                                    UInt32 aKbdType, nsAString &aStr)
+{
+  aStr.Truncate();
+  const UCKeyboardLayout* UCKey = GetUCKeyboardLayout();
+  NS_ENSURE_TRUE(UCKey, PR_FALSE);
+  return UCKeyTranslateToString(UCKey, aKeyCode, aModifiers, aKbdType, aStr);
+}
+
 void
 nsTISInputSource::Select()
 {
@@ -368,6 +477,8 @@ nsTISInputSource::Clear()
   }
   mInputSourceList = nsnull;
   mInputSource = nsnull;
+  mIsRTL = -1;
+  mUCKeyboardLayout = nsnull;
 }
 
 
@@ -798,6 +909,7 @@ nsCocoaIMEHandler::nsCocoaIMEHandler() :
   mIsASCIICapableOnly(PR_FALSE), mIgnoreIMECommit(PR_FALSE),
   mIsInFocusProcessing(PR_FALSE)
 {
+  gHandlerInstanceCount++;
   InitStaticMembers();
 }
 
@@ -809,6 +921,9 @@ nsCocoaIMEHandler::~nsCocoaIMEHandler()
   }
   if (sFocusedIMEHandler == this) {
     sFocusedIMEHandler = nsnull;
+  }
+  if (--gHandlerInstanceCount == 0) {
+    FinalizeCurrentKeyboardLayout();
   }
 }
 

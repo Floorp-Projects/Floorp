@@ -49,6 +49,12 @@
       testRelation("treeitem3", RELATION_NODE_CHILD_OF, "tree");
       testRelation("treeitem4", RELATION_NODE_CHILD_OF, "tree");
       testRelation("treeitem5", RELATION_NODE_CHILD_OF, "treeitem4");
+      testRelation("treeitem6", RELATION_NODE_CHILD_OF, "treeitem5");
+
+      // 'node child of' relation for row role of treegrid
+      testRelation("treegridrow1", RELATION_NODE_CHILD_OF, "treegrid");
+      testRelation("treegridrow2", RELATION_NODE_CHILD_OF, "treegrid");
+      testRelation("treegridrow3", RELATION_NODE_CHILD_OF, "treegridrow2");
 
       // 'node child of' relation for the document having window, returns
       // direct accessible parent (fixed in bug 419770).
@@ -147,6 +153,21 @@
     <div role="treeitem" id="treeitem3">Blue</div>
     <div role="treeitem" id="treeitem4" aria-level="1">Green</div>
     <div role="treeitem" id="treeitem5" aria-level="2">Light green</div>
+    <div role="group">
+      <div role="treeitem" id="treeitem6">Super light green</div>
+    </div>
+  </div>
+
+  <div role="treegrid" id="treegrid">
+    <div role="row" id="treegridrow1">
+      <span role="gridcell">cell1</span><span role="gridcell">cell2</span>
+    </div>
+    <div role="row" id="treegridrow2" aria-level="1">
+      <span role="gridcell">cell3</span><span role="gridcell">cell4</span>
+    </div>
+    <div role="row" id="treegridrow3" aria-level="2">
+      <span role="gridcell">cell5</span><span role="gridcell">cell6</span>
+    </div>
   </div>
 
   <iframe id="iframe"></iframe>

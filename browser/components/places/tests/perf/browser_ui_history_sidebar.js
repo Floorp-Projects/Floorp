@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -87,7 +88,7 @@ var ptests = [];
 
 /*********************** end header **********************/
 
-const TEST_REPEAT_COUNT = 10;
+const TEST_REPEAT_COUNT = 6;
 
 // test duration of history sidebar opening
 // default: bydayandsite
@@ -113,7 +114,7 @@ ptests.push({
   },
   finish: function() {
     processTestResult(this);
-    runNextTest();
+    setTimeout(runNextTest, 0);
   }
 });
 
@@ -141,7 +142,7 @@ ptests.push({
   },
   finish: function() {
     processTestResult(this);
-    runNextTest();
+    setTimeout(runNextTest, 0);
   }
 });
 
@@ -169,63 +170,7 @@ ptests.push({
   },
   finish: function() {
     processTestResult(this);
-    runNextTest();
-  }
-});
-
-// byvisited
-ptests.push({
-  name: "history_sidebar_byvisited",
-  times: [],
-  run: function() {
-    var self = this;
-    var start = Date.now();
-    sidebar.addEventListener("load", function() {
-      sidebar.removeEventListener("load", arguments.callee, true);
-      executeSoon(function() {
-        var duration = Date.now() - start;
-        sidebar.contentDocument.getElementById("byvisited").doCommand();
-        toggleSidebar("viewHistorySidebar", false);
-        self.times.push(duration);
-        if (self.times.length == TEST_REPEAT_COUNT)
-          self.finish();
-        else
-          self.run();
-      });
-    }, true);
-    toggleSidebar("viewHistorySidebar", true);
-  },
-  finish: function() {
-    processTestResult(this);
-    runNextTest();
-  }
-});
-
-// bylastvisited
-ptests.push({
-  name: "history_sidebar_bylastvisited",
-  times: [],
-  run: function() {
-    var self = this;
-    var start = Date.now();
-    sidebar.addEventListener("load", function() {
-      sidebar.removeEventListener("load", arguments.callee, true);
-      executeSoon(function() {
-        var duration = Date.now() - start;
-        sidebar.contentDocument.getElementById("bylastvisited").doCommand();
-        toggleSidebar("viewHistorySidebar", false);
-        self.times.push(duration);
-        if (self.times.length == TEST_REPEAT_COUNT)
-          self.finish();
-        else
-          self.run();
-      });
-    }, true);
-    toggleSidebar("viewHistorySidebar", true);
-  },
-  finish: function() {
-    processTestResult(this);
-    runNextTest();
+    setTimeout(runNextTest, 0);
   }
 });
 
@@ -241,7 +186,7 @@ function processTestResult(aTest) {
 
 function test() {
   // kick off tests
-  runNextTest();
+  setTimeout(runNextTest, 0);
 }
 
 function runNextTest() {

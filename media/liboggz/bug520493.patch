@@ -1,0 +1,46 @@
+diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/oggz_seek.c
+--- a/media/liboggz/src/liboggz/oggz_seek.c
++++ b/media/liboggz/src/liboggz/oggz_seek.c
+@@ -762,40 +762,36 @@ oggz_bounded_seek_set (OGGZ * oggz,
+ 
+     if (abs(unit_at - unit_target) < fuzz_margin) {
+       // Within fuzz_margin of target, stop.
+       break;
+     }
+ 
+ #ifdef DEBUG
+     printf ("oggz_bounded_seek_set: offset_next %" PRI_OGGZ_OFF_T "d\n", offset_next);
+-#endif
+-    if (unit_at == unit_last_iter) break;
+-
+-#ifdef DEBUG
+     printf ("oggz_bounded_seek_set: [D] want u%lld, got page u%lld @%" PRI_OGGZ_OFF_T "d g%lld\n",
+ 	    unit_target, unit_at, offset_at, granule_at);
+ #endif
+ 
+     if (unit_at < unit_target) {
+-      offset_begin = offset_at;
++      offset_begin = offset_next;
+       unit_begin = unit_at;
+       if (unit_end == unit_begin) break;
+     } else if (unit_at > unit_target) {
+       offset_end = offset_at-1;
+       unit_end = unit_at;
+       if (unit_end == unit_begin) break;
+     } else {
+       break;
+     }
+   }
+ 
+    /* Reader is now approximately at the seek target. */
+ 
+-  offset_at = oggz_reset (oggz, offset_at, unit_at, SEEK_SET);
++  offset_at = oggz_reset (oggz, offset_next, unit_at, SEEK_SET);
+   if (offset_at == -1)
+     return -1;
+ 
+   return (long)reader->current_unit;
+ }
+ 
+ static ogg_int64_t
+ oggz_seek_end (OGGZ * oggz, ogg_int64_t unit_offset)

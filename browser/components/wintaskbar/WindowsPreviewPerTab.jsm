@@ -1,4 +1,4 @@
-/* vim: se cin sw=2 ts=2 et :
+/* vim: se cin sw=2 ts=2 et filetype=javascript :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -105,28 +105,31 @@ XPCOMUtils.defineLazyServiceGetter(this, "faviconSvc",
                                    "nsIFaviconService");
 
 // nsIURI -> imgIContainer
-function _imageFromURI(uri) {
+function _imageFromURI(uri, callback) {
   let channel = ioSvc.newChannelFromURI(uri);
-
-  let out_img = { value: null };
-  let inputStream = channel.open();
-  try {
-    imgTools.decodeImageData(inputStream, channel.contentType, out_img);
-    return out_img.value;
-  } catch (e) {
-    return null;
-  }
-}
-
-// string -> imgIContainer
-function _imageFromURL(url) {
-  return _imageFromURI(NetUtil.newURI(url));
+  NetUtil.asyncFetch(channel, function(inputStream, resultCode) {
+    if (!Components.isSuccessCode(resultCode))
+      return;
+    try {
+      let out_img = { value: null };
+      imgTools.decodeImageData(inputStream, channel.contentType, out_img);
+      callback(out_img.value);
+    } catch (e) {
+      // We failed, so use the default favicon (only if this wasn't the default
+      // favicon).
+      let defaultURI = faviconSvc.defaultFavicon;
+      if (!defaultURI.equals(uri))
+        _imageFromURI(defaultURI, callback);
+    }
+  });
 }
 
 // string? -> imgIContainer
-function getFaviconAsImage(iconurl) {
-  return (iconurl ? _imageFromURL(iconurl) : false) ||
-        _imageFromURI(faviconSvc.defaultFavicon);
+function getFaviconAsImage(iconurl, callback) {
+  if (iconurl)
+    _imageFromURI(NetUtil.newURI(iconurl), callback);
+  else
+    _imageFromURI(faviconSvc.defaultFavicon, callback);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -422,8 +425,14 @@ TabWindow.prototype = {
     preview.visible = AeroPeek.enabled;
     preview.active = this.tabbrowser.selectedTab == tab;
     // Grab the default favicon
-    preview.icon = getFaviconAsImage(null);
+    getFaviconAsImage(null, function (img) {
+      // It is possible that we've already gotten the real favicon, so make sure
+      // we have not set one before setting this default one.
+      if (!preview.icon)
+        preview.icon = img;
+    });
 
+    // It's OK to add the preview now while the favicon still loads.
     this.previews.splice(tab._tPos, 0, preview);
     AeroPeek.addPreview(preview);
   },
@@ -509,9 +518,13 @@ TabWindow.prototype = {
   onStatusChange: function () {
   },
   onLinkIconAvailable: function (aBrowser) {
-    let img = getFaviconAsImage(aBrowser.mIconURL);
-    let index = this.tabbrowser.browsers.indexOf(aBrowser);
-    this.previews[index].icon = img;
+    let self = this;
+    getFaviconAsImage(aBrowser.mIconURL, function (img) {
+      let index = self.tabbrowser.browsers.indexOf(aBrowser);
+      // Only add it if we've found the index.  The tab could have closed!
+      if (index != -1)
+        self.previews[index].icon = img;
+    });
   }
 }
 

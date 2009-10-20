@@ -51,9 +51,9 @@
 #include "nsIMutableArray.h"
 #include "nsVariant.h"
 #include "nsIDOMBeforeUnloadEvent.h"
-
-#ifdef NS_DEBUG
+#include "nsPIDOMEventTarget.h"
 #include "nsIJSContextStack.h"
+#ifdef NS_DEBUG
 #include "nsDOMJSUtils.h"
 
 #include "nspr.h" // PR_fprintf
@@ -138,6 +138,25 @@ void
 nsJSEventListener::SetEventName(nsIAtom* aName)
 {
   mEventName = aName;
+}
+
+nsresult
+nsJSEventListener::GetJSVal(const nsAString& aEventName, jsval* aJSVal)
+{
+  nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(mTarget);
+  if (target && mContext) {
+    nsAutoString eventString = NS_LITERAL_STRING("on") + aEventName;
+    nsCOMPtr<nsIAtom> atomName = do_GetAtom(eventString);
+    nsScriptObjectHolder funcval(mContext);
+    nsresult rv = mContext->GetBoundEventHandler(mTarget, mScopeObject,
+                                                 atomName, funcval);
+    NS_ENSURE_SUCCESS(rv, rv);
+    jsval funval =
+      OBJECT_TO_JSVAL(static_cast<JSObject*>(static_cast<void*>(funcval)));
+    *aJSVal = funval;
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 nsresult

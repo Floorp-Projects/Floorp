@@ -39,9 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// execute this test while syncing, this will potentially show possible problems
-start_sync();
-
 // Get services
 var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
               getService(Ci.nsINavHistoryService);
@@ -827,5 +824,5 @@ function checkExpireBadPrefs() {
     do_throw(ex);
   }
   dump("done incremental expiration test 6\n");
-  finish_test();
+  do_test_finished();
 }

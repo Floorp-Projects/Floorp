@@ -109,6 +109,12 @@ function run_test()
   obj.t = test_i8;
   do_check_eq(test_i8(), 123);
   do_check_eq(obj.t(), 123);
+
+  // bug 521937
+  do_check_throws(function () { var nolib = ctypes.open("notfoundlibrary.dll"); nolib.close(); }, Error);
+
+  // bug 522360
+  do_check_eq(run_load_system_library(), true);
 }
 
 function run_void_tests(library) {
@@ -327,3 +333,18 @@ function run_mixed_tests(library) {
   do_check_throws(function() { test_floor(5.5, 5); }, TypeError);
 }
 
+// bug 522360 - try loading system library without full path
+function run_load_system_library()
+{
+#ifdef XP_WIN
+  var syslib = ctypes.open("user32.dll");
+#elifdef XP_MACOSX
+  var syslib = ctypes.open("libm.dylib");
+#elifdef XP_UNIX
+  var syslib = ctypes.open("libm.so");
+#else
+  // nothing run this test
+#endif
+  syslib.close();
+  return true;
+}

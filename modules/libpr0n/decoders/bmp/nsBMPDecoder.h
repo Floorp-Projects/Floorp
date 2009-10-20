@@ -153,15 +153,6 @@ public:
     ~nsBMPDecoder();
 
 private:
-    /** Callback for ReadSegments to avoid copying the data */
-    static NS_METHOD ReadSegCb(nsIInputStream* aIn, void* aClosure,
-                               const char* aFromRawSegment, PRUint32 aToOffset,
-                               PRUint32 aCount, PRUint32 *aWriteCount);
-
-    /** Processes the data.
-     * @param aBuffer Data to process.
-     * @oaram count Number of bytes in mBuffer */
-    NS_METHOD ProcessData(const char* aBuffer, PRUint32 aCount);
 
     /** Calculates the red-, green- and blueshift in mBitFields using
      * the bitmasks from mBitFields */

@@ -896,11 +896,17 @@ class nsIWidget : public nsISupports {
 
     /**
      * Utility method intended for testing. Dispatches native mouse events
-     * to this widget and may even move the mouse cursor.
-     * @param aPoint screen location of the mouse, in pixels, with origin at
-     * the top left
-     * @param aNativeMessage *platform-specific* event type (e.g. NSMouseMoved)
-     * @param aModifierFlags *platform-specific* modifier flags
+     * may even move the mouse cursor. On Mac the events are guaranteed to
+     * be sent to the window containing this widget, but on Windows they'll go
+     * to whatever's topmost on the screen at that position, so for
+     * cross-platform testing ensure that your window is at the top of the
+     * z-order.
+     * @param aPoint screen location of the mouse, in device
+     * pixels, with origin at the top left
+     * @param aNativeMessage *platform-specific* event type (e.g. on Mac,
+     * NSMouseMoved; on Windows, MOUSEEVENTF_MOVE, MOUSEEVENTF_LEFTDOWN etc)
+     * @param aModifierFlags *platform-specific* modifier flags (ignored
+     * on Windows)
      */
     virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
                                                 PRUint32 aNativeMessage,

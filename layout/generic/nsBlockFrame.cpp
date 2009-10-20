@@ -3851,13 +3851,6 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       *aLineReflowStatus = LINE_REFLOW_STOP;
       rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      // Mark next line dirty in case SplitLine didn't end up
-      // pushing any frames.
-      nsLineList_iterator next = aLine.next();
-      if (next != end_lines() && !next->IsBlock()) {
-        next->MarkDirty();
-      }
     }
   }
 
@@ -5359,6 +5352,11 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
         // The deceased frames continuation is not a child of the
         // current block. So break out of the loop so that we advance
         // to the next parent.
+        //
+        // If we have a continuation in a different block then all bets are
+        // off regarding whether we are deleting frames without actual content,
+        // so don't propagate FRAMES_ARE_EMPTY any further.
+        aFlags &= ~FRAMES_ARE_EMPTY;
         break;
       }
 

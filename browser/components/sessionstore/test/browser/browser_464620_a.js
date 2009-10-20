@@ -54,6 +54,7 @@ function test() {
       frameCount = 0;
       let tab2 = gBrowser.duplicateTab(tab);
       tab2.linkedBrowser.addEventListener("464620_a", function(aEvent) {
+        tab2.linkedBrowser.removeEventListener("464620_a", arguments.callee, true);
         is(aEvent.data, "done", "XSS injection was attempted");
         
         // let form restoration complete and take into account the

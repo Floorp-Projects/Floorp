@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,8 +41,6 @@ Tests the performance of opening the history menu.
 */
 
 /*********************** begin header **********************/
-waitForExplicitFinish();
-
 const TEST_IDENTIFIER = "ui-perf-test";
 const TEST_SUITE = "places";
 
@@ -60,14 +59,17 @@ var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
 var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
          getService(Ci.nsINavBookmarksService);
 
+var historyMenu = document.getElementById("history-menu");
+var historyPopup = document.getElementById("goPopup");
+
 function add_visit(aURI, aDate) {
-  var placeID = hs.addVisit(aURI,
+  var visitId = hs.addVisit(aURI,
                             aDate,
                             null, // no referrer
                             hs.TRANSITION_TYPED, // user typed in URL bar
                             false, // not redirect
                             0);
-  return placeID;
+  return visitId;
 }
 
 function add_bookmark(aURI) {
@@ -85,38 +87,56 @@ var ptests = [];
 
 /*********************** end header **********************/
 
+const TEST_REPEAT_COUNT = 6;
+
 // test duration of history menu opening
 ptests.push({
   name: "open_history_menu",
+  times: [],
   run: function() {
-    var menu = document.getElementById("history-menu");
-    ok(menu, "history menu should exist!");
+    var self = this;
     var start = Date.now();
-
-    var popup = document.getElementById("goPopup");
-    popup.addEventListener("popupshown", function() {
-      var duration = Date.now() - start;
-      var report = make_test_report("open_history_menu", duration);
-      ok(true, report);
-
-      // clean up
-      popup.removeEventListener("popupshown", arguments.callee, false);
-      menu.open = false;
-
-      runNextTest();
-    }, false);
-    
-    // XXX does not work, is still open=false immediately after setting it to true
-    //menu.open = true;
-
-    // XXX does nada
-    //EventUtils.sendMouseEvent({type:"click"}, "history-menu");
+    historyPopup.addEventListener("popupshown", function() {
+      historyPopup.removeEventListener("popupshown", arguments.callee, true);
+      executeSoon(function() {
+        var duration = Date.now() - start;
+        historyPopup.hidePopup();
+        historyMenu.open = false;
+        self.times.push(duration);
+        if (self.times.length == TEST_REPEAT_COUNT)
+          self.finish();
+        else
+          self.run();
+      });
+    }, true);
+    historyMenu.open = true;
+    historyPopup.openPopup();
+  },
+  finish: function() {
+    processTestResult(this);
+    setTimeout(runNextTest, 0);
   }
 });
 
+function processTestResult(aTest) {
+  aTest.times.sort();  // sort the scores
+  aTest.times.pop();   // remove worst
+  aTest.times.shift(); // remove best
+  var totalDuration = aTest.times.reduce(function(time, total){ return time + total; });
+  var avgDuration = totalDuration/aTest.times.length;
+  var report = make_test_report(aTest.name, avgDuration);
+  ok(true, report);
+}
+
 function test() {
+  // Skip test on Mac due to native menus.
+  if (navigator.platform.toLowerCase().indexOf("mac") != -1)
+    return;
+
+  waitForExplicitFinish();
+
   // kick off tests
-  runNextTest();
+  setTimeout(runNextTest, 0);
 }
 
 function runNextTest() {

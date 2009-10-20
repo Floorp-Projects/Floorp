@@ -220,8 +220,13 @@ function SetClickAndHoldHandlers() {
     if (aEvent.button == 0 &&
         aEvent.target == aEvent.currentTarget &&
         !aEvent.currentTarget.open &&
-        !aEvent.currentTarget.disabled)
-      aEvent.currentTarget.doCommand();
+        !aEvent.currentTarget.disabled) {
+      let cmdEvent = document.createEvent("xulcommandevent");
+      cmdEvent.initCommandEvent("command", true, true, window, 0,
+                                aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKey,
+                                aEvent.metaKey, null);
+      aEvent.currentTarget.dispatchEvent(cmdEvent);
+    }
   }
 
   function stopTimer(aEvent) {
@@ -786,13 +791,14 @@ let gGestureSupport = {
   _power: function GS__power(aArray) {
     // Create a bitmask based on the length of the array
     let num = 1 << aArray.length;
-    while (--num >= 0)
+    while (--num >= 0) {
       // Only select array elements where the current bit is set
-      yield aArray.reduce(function(aPrev, aCurr, aIndex) {
+      yield aArray.reduce(function (aPrev, aCurr, aIndex) {
         if (num & 1 << aIndex)
           aPrev.push(aCurr);
         return aPrev;
       }, []);
+    }
   },
 
   /**
@@ -807,47 +813,44 @@ let gGestureSupport = {
    *         command is found, no value is returned (undefined).
    */
   _doAction: function GS__doAction(aEvent, aGesture) {
-    // Create a fake event that pretends the gesture is a button click
-    let fakeEvent = { shiftKey: aEvent.shiftKey, ctrlKey: aEvent.ctrlKey,
-      metaKey: aEvent.metaKey, altKey: aEvent.altKey, button: 0 };
-
     // Create an array of pressed keys in a fixed order so that a command for
     // "meta" is preferred over "ctrl" when both buttons are pressed (and a
     // command for both don't exist)
     let keyCombos = [];
-    const keys = ["shift", "alt", "ctrl", "meta"];
-    for each (let key in keys)
+    ["shift", "alt", "ctrl", "meta"].forEach(function (key) {
       if (aEvent[key + "Key"])
         keyCombos.push(key);
+    });
 
-    try {
-      // Try each combination of key presses in decreasing order for commands
-      for (let subCombo in this._power(keyCombos)) {
-        // Convert a gesture and pressed keys into the corresponding command
-        // action where the preference has the gesture before "shift" before
-        // "alt" before "ctrl" before "meta" all separated by periods
-        let command = this._getPref(aGesture.concat(subCombo).join("."));
+    // Try each combination of key presses in decreasing order for commands
+    for each (let subCombo in this._power(keyCombos)) {
+      // Convert a gesture and pressed keys into the corresponding command
+      // action where the preference has the gesture before "shift" before
+      // "alt" before "ctrl" before "meta" all separated by periods
+      let command;
+      try {
+        command = this._getPref(aGesture.concat(subCombo).join("."));
+      } catch (e) {}
 
-        // Do the command if we found one to do
-        if (command) {
-          let node = document.getElementById(command);
-          // Use the command element if it exists
-          if (node && node.hasAttribute("oncommand")) {
-            // XXX: Use node.oncommand(event) once bug 246720 is fixed
-            if (node.getAttribute("disabled") != "true")
-              new Function("event", node.getAttribute("oncommand")).
-                call(node, fakeEvent);
-          }
-          // Otherwise it should be a "standard" command
-          else
-            goDoCommand(command);
+      if (!command)
+        continue;
 
-          return command;
+      let node = document.getElementById(command);
+      if (node) {
+        if (node.getAttribute("disabled") != "true") {
+          let cmdEvent = document.createEvent("xulcommandevent");
+          cmdEvent.initCommandEvent("command", true, true, window, 0,
+                                    aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKey,
+                                    aEvent.metaKey, null);
+          node.dispatchEvent(cmdEvent);
         }
+      } else {
+        goDoCommand(command);
       }
+
+      return command;
     }
-    // The generator ran out of key combinations, so just do nothing
-    catch (e) {}
+    return null;
   },
 
   /**

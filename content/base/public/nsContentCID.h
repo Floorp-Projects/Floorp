@@ -301,6 +301,13 @@
 #define NS_SYNCLOADDOMSERVICE_CONTRACTID            \
 "@mozilla.org/content/syncload-dom-service;1"
 
+#define NS_EVENTLISTENERSERVICE_CID                 \
+ { /* baa34652-f1f1-4185-b224-244ee82a413a */       \
+   0xbaa34652, 0xf1f1, 0x4185,                      \
+  {0xb2, 0x24, 0x24, 0x4e, 0xe8, 0x2a, 0x41, 0x3a } }
+#define NS_EVENTLISTENERSERVICE_CONTRACTID \
+  "@mozilla.org/eventlistenerservice;1"
+
 // {f96f5ec9-755b-447e-b1f3-717d1a84bb41}
 #define NS_PLUGINDOCUMENT_CID \
 { 0xf96f5ec9, 0x755b, 0x447e, { 0xb1, 0xf3, 0x71, 0x7d, 0x1a, 0x84, 0xbb, 0x41 } }

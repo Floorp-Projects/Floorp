@@ -126,7 +126,7 @@ TaskbarTabPreview::SetIcon(imgIContainer *icon) {
 
 NS_IMETHODIMP
 TaskbarTabPreview::GetIcon(imgIContainer **icon) {
-  NS_ADDREF(*icon = mIconImage);
+  NS_IF_ADDREF(*icon = mIconImage);
   return NS_OK;
 }
 

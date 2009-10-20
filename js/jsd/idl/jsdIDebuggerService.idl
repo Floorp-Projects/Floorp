@@ -53,6 +53,7 @@
 [ptr] native JSDValue(JSDValue);
 [ptr] native JSRuntime(JSRuntime);
 [ptr] native JSContext(JSContext);
+native JSVal(jsval);
 
 /* interfaces we declare in this file */
 interface jsdIDebuggerService;
@@ -77,7 +78,7 @@ interface jsdIProperty;
  * Debugger service.  It's not a good idea to have more than one active client of
  * the debugger service.
  */
-[scriptable, uuid(e86c0173-49e2-48f3-b53f-b5b2691a7e45)]
+[scriptable, uuid(dc0a24db-f8ac-4889-80d0-6016545a2dda)]
 interface jsdIDebuggerService : nsISupports
 {
     /** Internal use only. */
@@ -359,6 +360,11 @@ interface jsdIDebuggerService : nsISupports
      * defined error code.
      */
     jsdIValue wrapValue (/*in jsvalue value*/);
+
+    /**
+     * The same as above but to be called from C++.
+     */
+    [noscript] jsdIValue wrapJSValue (in JSVal value);
     
     /* XXX these two routines are candidates for refactoring.  The only problem
      * is that it is not clear where and how they should land.
