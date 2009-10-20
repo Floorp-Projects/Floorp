@@ -50,8 +50,8 @@
   ondialogcancel="return doCancel();"
   onload="onLoad();">
 
-<script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
-<script type="application/x-javascript" src="chrome://pippki/content/certpicker.js"/>
+<script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
+<script type="application/javascript" src="chrome://pippki/content/certpicker.js"/>
 
   <hbox align="center">
     <broadcaster id="certSelected" oncommand="onCertSelected();"/>
