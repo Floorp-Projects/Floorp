@@ -380,7 +380,6 @@ const PRInt32 nsNavHistory::kGetInfoIndex_ItemParentId = 11;
 const PRInt32 nsNavHistory::kGetInfoIndex_ItemTags = 12;
 
 
-static const char* gQuitApplicationGrantedMessage = "quit-application-granted";
 static const char* gXpcomShutdown = "xpcom-shutdown";
 static const char* gAutoCompleteFeedback = "autocomplete-will-enter-text";
 static const char* gIdleDaily = "idle-daily";
@@ -547,7 +546,6 @@ nsNavHistory::Init()
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_SITES, this, PR_FALSE);
   }
 
-  observerService->AddObserver(this, gQuitApplicationGrantedMessage, PR_FALSE);
   observerService->AddObserver(this, gXpcomShutdown, PR_FALSE);
   observerService->AddObserver(this, gAutoCompleteFeedback, PR_FALSE);
   observerService->AddObserver(this, gIdleDaily, PR_FALSE);
@@ -4862,18 +4860,11 @@ nsNavHistory::RemoveAllPages()
   // expire everything
   mExpire->ClearHistory();
 
-  // Compress DB. Currently commented out because compression is very slow.
-  // Deleted data will be overwritten with 0s by sqlite.
-#if 0
-  nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
-  NS_ENSURE_SUCCESS(rv, rv);
-#endif
-
   // privacy cleanup, if there's an old history.dat around, just delete it
   nsCOMPtr<nsIFile> oldHistoryFile;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
                                        getter_AddRefs(oldHistoryFile));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool fileExists;
   if (NS_SUCCEEDED(oldHistoryFile->Exists(&fileExists)) && fileExists) {
@@ -4897,66 +4888,6 @@ nsNavHistory::HidePage(nsIURI *aURI)
   NS_ENSURE_ARG(aURI);
 
   return NS_ERROR_NOT_IMPLEMENTED;
-  /*
-  // for speed to save disk accesses
-  mozStorageTransaction transaction(mDBConn, PR_FALSE,
-                                  mozIStorageConnection::TRANSACTION_EXCLUSIVE);
-
-  // We need to do a query anyway to see if this URL is already in the DB.
-  // Might as well ask for the hidden column to save updates in some cases.
-  nsCOMPtr<mozIStorageStatement> dbSelectStatement;
-  nsresult rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT id,hidden FROM moz_places WHERE url = ?1"),
-      getter_AddRefs(dbSelectStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = BindStatementURI(dbSelectStatement, 0, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  PRBool alreadyVisited = PR_TRUE;
-  rv = dbSelectStatement->ExecuteStep(&alreadyVisited);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // don't need to do anything if we've never heard of this page
-  if (!alreadyVisited)
-    return NS_OK;
- 
-  // modify the existing page if necessary
-
-  PRInt32 oldHiddenState = 0;
-  rv = dbSelectStatement->GetInt32(1, &oldHiddenState);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!oldHiddenState)
-    return NS_OK; // already marked as hidden, we're done
-
-  // find the old ID, which can be found faster than long URLs
-  PRInt32 entryid = 0;
-  rv = dbSelectStatement->GetInt32(0, &entryid);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // need to clear the old statement before we create a new one
-  dbSelectStatement = nsnull;
-
-  nsCOMPtr<mozIStorageStatement> dbModStatement;
-  rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("UPDATE moz_places SET hidden = 1 WHERE id = ?1"),
-      getter_AddRefs(dbModStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  dbModStatement->BindInt32Parameter(0, entryid);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = dbModStatement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // notify observers, finish transaction first
-  transaction.Commit();
-  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
-                      OnPageChanged(aURI,
-                                    nsINavHistoryObserver::ATTRIBUTE_HIDDEN,
-                                    EmptyString()))
-
-  return NS_OK;
-  */
 }
 
 
@@ -5499,21 +5430,10 @@ nsNavHistory::GetDBConnection(mozIStorageConnection **_DBConnection)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_HIDDEN_(nsresult)
 nsNavHistory::FinalizeInternalStatements()
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-
-#ifdef LAZY_ADD
-  // Kill lazy timer or it could fire later when statements won't be valid
-  // anymore.
-  // At this point we should have called CommitPendingChanges before the last
-  // sync, so all data is saved to disk and we can finalize all statements.
-  if (mLazyTimer)
-    mLazyTimer->Cancel();
-  NS_ABORT_IF_FALSE(mLazyMessages.Length() == 0,
-    "There are pending lazy messages, did you call CommitPendingChanges()?");
-#endif
 
   // nsNavHistory
   nsresult rv = FinalizeStatements();
@@ -5536,36 +5456,6 @@ nsNavHistory::FinalizeInternalStatements()
   NS_ENSURE_TRUE(iconsvc, NS_ERROR_OUT_OF_MEMORY);
   rv = iconsvc->FinalizeStatements();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavHistory::CommitPendingChanges()
-{
-  #ifdef LAZY_ADD
-    CommitLazyMessages();
-  #endif
-
-  // Immediately serve topics we generated, this way they won't try to access
-  // the database after CommitPendingChanges has been called.
-  nsCOMPtr<nsIObserverService> os =
-    do_GetService("@mozilla.org/observer-service;1");
-  NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
-  nsCOMPtr<nsISimpleEnumerator> e;
-  nsresult rv = os->EnumerateObservers(PLACES_INIT_COMPLETE_TOPIC,
-                                       getter_AddRefs(e));
-  if (NS_SUCCEEDED(rv) && e) {
-    nsCOMPtr<nsIObserver> observer;
-    PRBool loop = PR_TRUE;
-    while(NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop)
-    {
-      e->GetNext(getter_AddRefs(observer));
-      rv = observer->Observe(observer,
-                             PLACES_INIT_COMPLETE_TOPIC,
-                             nsnull);
-    }
-  }
 
   return NS_OK;
 }
@@ -5595,25 +5485,59 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
-  if (strcmp(aTopic, gQuitApplicationGrantedMessage) == 0) {
-    nsresult rv;
+  if (strcmp(aTopic, gXpcomShutdown) == 0) {
+    nsCOMPtr<nsIObserverService> os =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (os) {
+      os->RemoveObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC);
+      os->RemoveObserver(this, gIdleDaily);
+      os->RemoveObserver(this, gXpcomShutdown);
+    }
+
+    // If xpcom-shutdown is called in the same scope as the service init, we
+    // should Immediately serve topics we generated, this way they won't try to
+    // access the database later.
+    nsCOMPtr<nsISimpleEnumerator> e;
+    nsresult rv = os->EnumerateObservers(PLACES_INIT_COMPLETE_TOPIC,
+                                         getter_AddRefs(e));
+    if (NS_SUCCEEDED(rv) && e) {
+      nsCOMPtr<nsIObserver> observer;
+      PRBool loop = PR_TRUE;
+      while(NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop)
+      {
+        e->GetNext(getter_AddRefs(observer));
+        rv = observer->Observe(observer,
+                               PLACES_INIT_COMPLETE_TOPIC,
+                               nsnull);
+      }
+    }
+
     nsCOMPtr<nsIPrefService> prefService =
-      do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv))
+      do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefService)
       prefService->SavePrefFile(nsnull);
 
     // Start shutdown expiration.
     mExpire->OnQuit();
-  }
-  else if (strcmp(aTopic, gXpcomShutdown) == 0) {
-    nsresult rv;
-    nsCOMPtr<nsIObserverService> observerService =
-      do_GetService("@mozilla.org/observer-service;1", &rv);
+
+#ifdef LAZY_ADD
+    // Commit all pending lazy messages.
+    CommitLazyMessages(PR_TRUE);
+
+    // Kill lazy timer or it could fire later when statements won't be valid
+    // anymore.
+    if (mLazyTimer) {
+      mLazyTimer->Cancel();
+      mLazyTimer = 0;
+    }
+#endif
+
+    // Finalize all statements.
+    rv = FinalizeInternalStatements();
     NS_ENSURE_SUCCESS(rv, rv);
-    observerService->RemoveObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC);
-    observerService->RemoveObserver(this, gIdleDaily);
-    observerService->RemoveObserver(this, gXpcomShutdown);
-    observerService->RemoveObserver(this, gQuitApplicationGrantedMessage);
+
+    // NOTE: We don't close the connection because the sync service could still
+    // need it for a final flush.
   }
 #ifdef MOZ_XUL
   else if (strcmp(aTopic, gAutoCompleteFeedback) == 0) {
@@ -5927,8 +5851,8 @@ nsNavHistory::LazyTimerCallback(nsITimer* aTimer, void* aClosure)
 
 // nsNavHistory::CommitLazyMessages
 
-void
-nsNavHistory::CommitLazyMessages()
+NS_HIDDEN_(void)
+nsNavHistory::CommitLazyMessages(PRBool aIsShutdown)
 {
   mozStorageTransaction transaction(mDBConn, PR_TRUE);
   for (PRUint32 i = 0; i < mLazyMessages.Length(); i ++) {
@@ -5942,6 +5866,9 @@ nsNavHistory::CommitLazyMessages()
         SetPageTitleInternal(message.uri, message.title);
         break;
       case LazyMessage::Type_Favicon: {
+        // Favicons cannot use async channels after xpcom-shutdown.
+        if (aIsShutdown)
+          continue;
         nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
         if (faviconService) {
           faviconService->DoSetAndLoadFaviconForPage(message.uri,
@@ -8082,7 +8009,7 @@ nsNavHistory::GetDBBookmarkToUrlResult()
   return mDBBookmarkToUrlResult;
 }
 
-nsresult
+NS_HIDDEN_(nsresult)
 nsNavHistory::FinalizeStatements() {
   mozIStorageStatement* stmts[] = {
 #ifdef MOZ_XUL

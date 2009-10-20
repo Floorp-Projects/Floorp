@@ -101,7 +101,7 @@
 .tabs-alltabs-button:-moz-lwtheme-darktext,
 .tabs-container:-moz-lwtheme-darktext > .tabs-closebutton,
 .tabbrowser-arrowscrollbox:-moz-lwtheme-darktext > .scrollbutton-up,
-.tabbrowser-arrowscrollbox:-moz-lwtheme-darktext > .scrollbutton-down-stack > .scrollbutton-down,
+.tabbrowser-arrowscrollbox:-moz-lwtheme-darktext > .scrollbutton-down,
 .tabbrowser-tab:-moz-lwtheme-darktext:not([selected="true"]) {
   -moz-box-shadow: inset 0 1px 0 rgba(50,50,50,.5);
 }
@@ -110,7 +110,7 @@
 .tabs-alltabs-button:-moz-lwtheme-brighttext,
 .tabs-container:-moz-lwtheme-brighttext > .tabs-closebutton,
 .tabbrowser-arrowscrollbox:-moz-lwtheme-brighttext > .scrollbutton-up,
-.tabbrowser-arrowscrollbox:-moz-lwtheme-brighttext > .scrollbutton-down-stack > .scrollbutton-down,
+.tabbrowser-arrowscrollbox:-moz-lwtheme-brighttext > .scrollbutton-down,
 .tabbrowser-tab:-moz-lwtheme-brighttext:not([selected="true"]) {
   -moz-box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
 }
@@ -338,8 +338,15 @@ toolbarbutton.bookmark-item-microsummarized {
   background: url("chrome://browser/skin/bookmarks/Toolbar-bookmarks.png") no-repeat;
 }
 
+#wrapper-personal-bookmarks[place="palette"] > .toolbarpaletteitem-box {
+  width: 16px;
+  height: 16px;
+  background: url("chrome://browser/skin/places/bookmarksToolbar.png") no-repeat;
+}
+
 .bookmarks-toolbar-customize {
   max-width: 15em !important;
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;
 }
 
 /* ----- BOOKMARK MENUS ----- */	
@@ -1654,21 +1661,25 @@ tabbrowser > tabbox > tabpanels {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
-.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down {
+.tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-image-region: rect(0, 11px, 17px, 0);
   margin: 0;
   padding: 0 1px;
   border: none;
 }
 
+.tabbrowser-arrowscrollbox > .scrollbutton-down {
+  outline-color: Highlight;
+}
+
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(ltr),
-.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down:-moz-locale-dir(rtl) {
+.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl) {
   border-right: 2px solid;
   -moz-border-right-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down:-moz-locale-dir(ltr),
+.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr),
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl) {
   border-left: 2px solid;
   -moz-border-left-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
@@ -1676,19 +1687,19 @@ tabbrowser > tabbox > tabpanels {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:hover,
-.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down:hover {
+.tabbrowser-arrowscrollbox > .scrollbutton-down:hover {
   -moz-image-region: rect(0, 22px, 17px, 11px);
   background-color: rgba(0,0,0,0.10);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:hover:active,
-.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down:hover:active {
+.tabbrowser-arrowscrollbox > .scrollbutton-down:hover:active {
   -moz-image-region: rect(0, 44px, 17px, 33px);
   background-color: rgba(0,0,0,0.20);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up[disabled="true"],
-.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down[disabled="true"] {
+.tabbrowser-arrowscrollbox > .scrollbutton-down[disabled="true"] {
   -moz-image-region: rect(0, 33px, 17px, 22px) !important;
   background-color: transparent !important; 
 }
@@ -1748,14 +1759,6 @@ tabbrowser > tabbox > tabpanels {
 
 .tabs-alltabs-button > .toolbarbutton-icon {
   -moz-margin-end: 2px;
-}
-
-.tabs-alltabs-box-animate {
-  margin: 1px 0px 0px 0px;
-  width: 25px;
-  background-image: url("chrome://browser/skin/tabbrowser/alltabs-box-overflow-bkgnd-animate.png");
-  background-repeat: no-repeat;
-  opacity: 0.0;
 }
 
 /* All Tabs Menupopup */

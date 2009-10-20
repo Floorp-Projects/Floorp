@@ -1,0 +1,49 @@
+<html>
+<head>
+  <title>NPN_SetException Tests</title>
+  <script type="text/javascript" 
+          src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests()">
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="100">
+  </embed>
+
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  function runTests() {
+    // test a single exception thrown in scriptable invoke
+    var plugin = document.getElementById("plugin1");
+    plugin.throwExceptionNextInvoke();
+    try {
+      plugin.npnInvokeTest("badFunction");
+      ok(false, "exception not thrown");
+    }
+    catch (e) {
+      is(e, "badFunction", "wrong exception thrown");
+    }
+    
+    // test multiple exceptions thrown in scriptable invokedefault
+    plugin.throwExceptionNextInvoke();
+    try {
+      plugin("first exception", "second exception");
+      ok(false, "exception not thrown");
+    }
+    catch (e) {
+      is(e, "second exception", "wrong exception thrown");
+    }    
+            
+    SimpleTest.finish();
+  }
+  </script>
+  
+  <div id="verbose">
+  </div>
+ </body>
+ </html>

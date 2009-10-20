@@ -6239,6 +6239,12 @@ fi
 AC_SUBST(LIBOSSO_CFLAGS)
 AC_SUBST(LIBOSSO_LIBS)
 
+PKG_CHECK_MODULES(LIBHILDONFM,hildon-fm-2,
+                  NS_HILDONFM=1,
+                  NS_HILDONFM)
+AC_SUBST(LIBHILDONFM_CFLAGS)
+AC_SUBST(LIBHILDONFM_LIBS)
+
 dnl ========================================================
 dnl = faststripe theme
 dnl ========================================================

@@ -563,13 +563,13 @@ static BOOL		registerWhenGrowlIsReady = NO;
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	[delegate growlNotificationWasClicked:
 		[[notification userInfo] objectForKey:GROWL_KEY_CLICKED_CONTEXT]];
-	[pool release];
+	[pool drain];
 }
 + (void) growlNotificationTimedOut:(NSNotification *)notification {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	[delegate growlNotificationTimedOut:
 		[[notification userInfo] objectForKey:GROWL_KEY_CLICKED_CONTEXT]];
-	[pool release];
+	[pool drain];
 }
 
 #pragma mark -
@@ -671,7 +671,7 @@ static BOOL		registerWhenGrowlIsReady = NO;
 	[queuedGrowlNotifications release]; queuedGrowlNotifications = nil;
 #endif
 	
-	[pool release];
+	[pool drain];
 }
 
 #ifdef GROWL_WITH_INSTALLER
@@ -725,31 +725,57 @@ static BOOL		registerWhenGrowlIsReady = NO;
 #pragma mark -
 
 + (BOOL) _launchGrowlIfInstalledWithRegistrationDictionary:(NSDictionary *)regDict {
-	NSBundle		*growlPrefPaneBundle;
-	BOOL			success = NO;
+	BOOL success = NO;
+	NSBundle *growlPrefPaneBundle;
+	NSString *growlHelperAppPath;
 
+#ifdef DEBUG
+	//For a debug build, first look for a running GHA. It might not actually be within a Growl prefpane bundle.
+	growlHelperAppPath = [[GrowlPathUtilities runningHelperAppBundle] bundlePath];
+	if (!growlHelperAppPath) {
+		growlPrefPaneBundle = [GrowlPathUtilities growlPrefPaneBundle];
+		growlHelperAppPath = [growlPrefPaneBundle pathForResource:@"GrowlHelperApp"
+														   ofType:@"app"];
+	}
+	NSLog(@"Will use GrowlHelperApp at %@", growlHelperAppPath);
+#else
 	growlPrefPaneBundle = [GrowlPathUtilities growlPrefPaneBundle];
-
-	if (growlPrefPaneBundle) {
-		NSString *growlHelperAppPath = [growlPrefPaneBundle pathForResource:@"GrowlHelperApp"
-																	 ofType:@"app"];
+	growlHelperAppPath = [growlPrefPaneBundle pathForResource:@"GrowlHelperApp"
+													   ofType:@"app"];
+#endif
 
 #ifdef GROWL_WITH_INSTALLER
+	if (growlPrefPaneBundle) {
 		/* Check against our current version number and ensure the installed Growl pane is the same or later */
 		[self _checkForPackagedUpdateForGrowlPrefPaneBundle:growlPrefPaneBundle];
+	}
 #endif
-		//Houston, we are go for launch.
-		if (growlHelperAppPath) {
-			//Let's launch in the background (unfortunately, requires Carbon on Jaguar)
-			LSLaunchFSRefSpec spec;
-			FSRef appRef;
-			OSStatus status = FSPathMakeRef((UInt8 *)[growlHelperAppPath fileSystemRepresentation], &appRef, NULL);
-			if (status == noErr) {
-				FSRef regItemRef;
+
+	//Houston, we are go for launch.
+	if (growlHelperAppPath) {
+		//Let's launch in the background (requires sending the Apple Event ourselves, as LS may activate the application anyway if it's already running)
+		NSURL *appURL = [NSURL fileURLWithPath:growlHelperAppPath];
+		if (appURL) {
+			OSStatus err;
+
+			//Find the PSN for GrowlHelperApp. (We'll need this later.)
+			struct ProcessSerialNumber appPSN = {
+				0, kNoProcess
+			};
+			while ((err = GetNextProcess(&appPSN)) == noErr) {
+				NSDictionary *dict = [(id)ProcessInformationCopyDictionary(&appPSN, kProcessDictionaryIncludeAllInformationMask) autorelease];
+				NSString *bundlePath = [dict objectForKey:@"BundlePath"];
+				if ([bundlePath isEqualToString:growlHelperAppPath]) {
+					//Match!
+					break;
+				}
+			}
+
+			if (err == noErr) {
+				NSURL *regItemURL = nil;
 				BOOL passRegDict = NO;
 
 				if (regDict) {
-					OSStatus regStatus;
 					NSString *regDictFileName;
 					NSString *regDictPath;
 
@@ -782,20 +808,41 @@ static BOOL		registerWhenGrowlIsReady = NO;
 						[error release];
 					}
 
-					regStatus = FSPathMakeRef((UInt8 *)[regDictPath fileSystemRepresentation], &regItemRef, NULL);
-					if (regStatus == noErr)
+					if ([[NSFileManager defaultManager] fileExistsAtPath:regDictPath]) {
+						regItemURL = [NSURL fileURLWithPath:regDictPath];
 						passRegDict = YES;
+					}
 				}
 
-				spec.appRef = &appRef;
-				spec.numDocs = (passRegDict != NO);
-				spec.itemRefs = (passRegDict ? &regItemRef : NULL);
-				spec.passThruParams = NULL;
-				spec.launchFlags = kLSLaunchDontAddToRecents | kLSLaunchDontSwitch | kLSLaunchNoParams | kLSLaunchAsync;
-				spec.asyncRefCon = NULL;
-				status = LSOpenFromRefSpec(&spec, NULL);
+				AEStreamRef stream = AEStreamCreateEvent(kCoreEventClass, kAEOpenDocuments,
+					//Target application
+					typeProcessSerialNumber, &appPSN, sizeof(appPSN),
+					kAutoGenerateReturnID, kAnyTransactionID);
+				if (!stream) {
+					NSLog(@"%@: Could not create open-document event to register this application with Growl", [self class]);
+				} else {
+					if (passRegDict) {
+						NSString *regItemURLString = [regItemURL absoluteString];
+						NSData *regItemURLUTF8Data = [regItemURLString dataUsingEncoding:NSUTF8StringEncoding];
+						err = AEStreamWriteKeyDesc(stream, keyDirectObject, typeFileURL, [regItemURLUTF8Data bytes], [regItemURLUTF8Data length]);
+						if (err != noErr) {
+							NSLog(@"%@: Could not set direct object of open-document event to register this application with Growl because AEStreamWriteKeyDesc returned %li/%s", [self class], (long)err, GetMacOSStatusCommentString(err));
+						}
+					}
 
-				success = (status == noErr);
+					AppleEvent event;
+					err = AEStreamClose(stream, &event);
+					if (err != noErr) {
+						NSLog(@"%@: Could not finish open-document event to register this application with Growl because AEStreamClose returned %li/%s", [self class], (long)err, GetMacOSStatusCommentString(err));
+					} else {
+						err = AESendMessage(&event, /*reply*/ NULL, kAENoReply | kAEDontReconnect | kAENeverInteract | kAEDontRecord, kAEDefaultTimeout);
+						if (err != noErr) {
+							NSLog(@"%@: Could not send open-document event to register this application with Growl because AESend returned %li/%s", [self class], (long)err, GetMacOSStatusCommentString(err));
+						}
+					}
+					
+					success = (err == noErr);
+				}
 			}
 		}
 	}

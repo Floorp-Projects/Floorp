@@ -891,7 +891,7 @@ namespace nanojit
 #endif
     }
 
-    LIns* LirWriter::ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse)
+    LIns* LirWriter::ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse, bool use_cmov)
     {
         // if not a conditional, make it implicitly an ==0 test (then flop results)
         if (!cond->isCmp())
@@ -902,7 +902,7 @@ namespace nanojit
             iffalse = tmp;
         }
 
-        if (avmplus::AvmCore::use_cmov())
+        if (use_cmov)
             return ins3((iftrue->isQuad() || iffalse->isQuad()) ? LIR_qcmov : LIR_cmov, cond, iftrue, iffalse);
 
         LInsp ncond = ins1(LIR_neg, cond); // cond ? -1 : 0
@@ -925,10 +925,10 @@ namespace nanojit
         ArgSize sizes[MAXARGS];
         int32_t argc = ci->get_sizes(sizes);
 
-        if (AvmCore::config.soft_float) {
-            if (op == LIR_fcall)
+#ifdef NJ_SOFTFLOAT
+        if (!ARM_VFP && (op == LIR_fcall || op == LIR_qcall))
                 op = LIR_callh;
-        }
+#endif
 
         NanoAssert(argc <= (int)MAXARGS);
 
@@ -2134,6 +2134,7 @@ namespace nanojit
 #endif // NJ_VERBOSE
 
 
+#ifdef FEATURE_NANOJIT
 #ifdef DEBUG
     LIns* SanityFilter::ins1(LOpcode v, LIns* s0)
     {
@@ -2226,6 +2227,7 @@ namespace nanojit
         }
         return out->ins3(v, s0, s1, s2);
     }
+#endif
 #endif
 
 }

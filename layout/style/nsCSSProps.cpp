@@ -93,7 +93,7 @@ struct PropertyAndCount {
   PRUint32 count;
 };
 
-static int 
+static int
 SortPropertyAndCount(const void* s1, const void* s2, void *closure)
 {
   const PropertyAndCount *pc1 = static_cast<const PropertyAndCount*>(s1);
@@ -106,7 +106,7 @@ SortPropertyAndCount(const void* s1, const void* s2, void *closure)
 }
 
 void
-nsCSSProps::AddRefTable(void) 
+nsCSSProps::AddRefTable(void)
 {
   if (0 == gTableRefCount++) {
     NS_ASSERTION(!gPropertyTable, "pre existing array!");
@@ -125,7 +125,7 @@ nsCSSProps::AddRefTable(void)
         NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in prop table");
       }
     }
-#endif      
+#endif
       gPropertyTable->Init(kCSSRawProperties, eCSSProperty_COUNT);
     }
 
@@ -142,8 +142,8 @@ nsCSSProps::AddRefTable(void)
         NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in desc table");
       }
     }
-#endif      
-      gFontDescTable->Init(kCSSRawFontDescs, eCSSFontDesc_COUNT); 
+#endif
+      gFontDescTable->Init(kCSSRawFontDescs, eCSSFontDesc_COUNT);
     }
 
     BuildShorthandsContainingTable();
@@ -153,7 +153,7 @@ nsCSSProps::AddRefTable(void)
 #undef  DEBUG_SHORTHANDS_CONTAINING
 
 PRBool
-nsCSSProps::BuildShorthandsContainingTable() 
+nsCSSProps::BuildShorthandsContainingTable()
 {
   PRUint32 occurrenceCounts[eCSSProperty_COUNT_no_shorthands];
   memset(occurrenceCounts, 0, sizeof(occurrenceCounts));
@@ -298,7 +298,7 @@ nsCSSProps::BuildShorthandsContainingTable()
 }
 
 void
-nsCSSProps::ReleaseTable(void) 
+nsCSSProps::ReleaseTable(void)
 {
   if (0 == --gTableRefCount) {
     delete gPropertyTable;
@@ -312,7 +312,7 @@ nsCSSProps::ReleaseTable(void)
   }
 }
 
-nsCSSProperty 
+nsCSSProperty
 nsCSSProps::LookupProperty(const nsACString& aProperty)
 {
   NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
@@ -321,7 +321,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty)
   return res;
 }
 
-nsCSSProperty 
+nsCSSProperty
 nsCSSProps::LookupProperty(const nsAString& aProperty)
 {
   // This is faster than converting and calling
@@ -332,21 +332,21 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
   return res;
 }
 
-nsCSSFontDesc 
+nsCSSFontDesc
 nsCSSProps::LookupFontDesc(const nsACString& aFontDesc)
 {
   NS_ASSERTION(gFontDescTable, "no lookup table, needs addref");
   return nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
 }
 
-nsCSSFontDesc 
+nsCSSFontDesc
 nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
 {
   NS_ASSERTION(gFontDescTable, "no lookup table, needs addref");
   return nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
 }
 
-const nsAFlatCString& 
+const nsAFlatCString&
 nsCSSProps::GetStringValue(nsCSSProperty aProperty)
 {
   NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
@@ -358,7 +358,7 @@ nsCSSProps::GetStringValue(nsCSSProperty aProperty)
   }
 }
 
-const nsAFlatCString& 
+const nsAFlatCString&
 nsCSSProps::GetStringValue(nsCSSFontDesc aFontDescID)
 {
   NS_ASSERTION(gFontDescTable, "no lookup table, needs addref");
@@ -763,7 +763,7 @@ const PRInt32 nsCSSProps::kDisplayKTable[] = {
   // nsCSSFrameConstructor::ConstructXULFrame
   eCSSKeyword__moz_box,           NS_STYLE_DISPLAY_BOX,
   eCSSKeyword__moz_inline_box,    NS_STYLE_DISPLAY_INLINE_BOX,
-#ifdef MOZ_XUL  
+#ifdef MOZ_XUL
   eCSSKeyword__moz_grid,          NS_STYLE_DISPLAY_GRID,
   eCSSKeyword__moz_inline_grid,   NS_STYLE_DISPLAY_INLINE_GRID,
   eCSSKeyword__moz_grid_group,    NS_STYLE_DISPLAY_GRID_GROUP,
@@ -1230,8 +1230,8 @@ const PRInt32 nsCSSProps::kBoxAlignKTable[] = {
   eCSSKeyword_stretch,  NS_STYLE_BOX_ALIGN_STRETCH,
   eCSSKeyword_start,   NS_STYLE_BOX_ALIGN_START,
   eCSSKeyword_center, NS_STYLE_BOX_ALIGN_CENTER,
-  eCSSKeyword_baseline, NS_STYLE_BOX_ALIGN_BASELINE, 
-  eCSSKeyword_end, NS_STYLE_BOX_ALIGN_END, 
+  eCSSKeyword_baseline, NS_STYLE_BOX_ALIGN_BASELINE,
+  eCSSKeyword_end, NS_STYLE_BOX_ALIGN_END,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1245,7 +1245,7 @@ const PRInt32 nsCSSProps::kBoxOrientKTable[] = {
   eCSSKeyword_horizontal,  NS_STYLE_BOX_ORIENT_HORIZONTAL,
   eCSSKeyword_vertical,   NS_STYLE_BOX_ORIENT_VERTICAL,
   eCSSKeyword_inline_axis, NS_STYLE_BOX_ORIENT_HORIZONTAL,
-  eCSSKeyword_block_axis, NS_STYLE_BOX_ORIENT_VERTICAL, 
+  eCSSKeyword_block_axis, NS_STYLE_BOX_ORIENT_VERTICAL,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1253,7 +1253,7 @@ const PRInt32 nsCSSProps::kBoxPackKTable[] = {
   eCSSKeyword_start,  NS_STYLE_BOX_PACK_START,
   eCSSKeyword_center,   NS_STYLE_BOX_PACK_CENTER,
   eCSSKeyword_end, NS_STYLE_BOX_PACK_END,
-  eCSSKeyword_justify, NS_STYLE_BOX_PACK_JUSTIFY, 
+  eCSSKeyword_justify, NS_STYLE_BOX_PACK_JUSTIFY,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1382,7 +1382,7 @@ nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
   #undef CSS_PROP
 };
 
-const nsAFlatCString& 
+const nsAFlatCString&
 nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, PRInt32 aValue)
 {
   NS_ASSERTION(aProp >= 0 && aProp < eCSSProperty_COUNT, "property out of range");

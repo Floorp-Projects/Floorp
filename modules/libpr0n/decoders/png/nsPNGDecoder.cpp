@@ -321,9 +321,8 @@ NS_IMETHODIMP nsPNGDecoder::Flush()
   return NS_OK;
 }
 
-// We make this a method to get the benefit of the 'this' parameter
-NS_METHOD
-nsPNGDecoder::ProcessData(unsigned char* aBuffer, PRUint32 aCount)
+NS_IMETHODIMP
+nsPNGDecoder::Write(const char *aBuffer, PRUint32 aCount)
 {
   // We use gotos, so we need to declare variables here
   nsresult rv;
@@ -382,7 +381,7 @@ nsPNGDecoder::ProcessData(unsigned char* aBuffer, PRUint32 aCount)
     }
 
     // Pass the data off to libpng
-    png_process_data(mPNG, mInfo, aBuffer, aCount);
+    png_process_data(mPNG, mInfo, (unsigned char *)aBuffer, aCount);
 
   }
 
@@ -413,43 +412,6 @@ nsPNGDecoder::NotifyDone(PRBool aSuccess)
 
   // Mark that we've been called
   mNotifiedDone = PR_TRUE;
-}
-
-static NS_METHOD ReadDataOut(nsIInputStream* in,
-                             void* closure,
-                             const char* fromRawSegment,
-                             PRUint32 toOffset,
-                             PRUint32 count,
-                             PRUint32 *writeCount)
-{
-  // Grab the decoder
-  NS_ENSURE_ARG_POINTER(closure);
-  nsPNGDecoder *decoder = static_cast<nsPNGDecoder*>(closure);
-
-  // We always read everything
-  *writeCount = count;
-
-  // Twiddle the types, then process the data
-  char *unConst = const_cast<char *>(fromRawSegment);
-  unsigned char *buffer = reinterpret_cast<unsigned char *>(unConst);
-  return decoder->ProcessData(buffer, count);
-}
-
-
-/* writeFrom (in nsIInputStream inStr, in unsigned long count); */
-NS_IMETHODIMP nsPNGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count)
-{
-  NS_ASSERTION(inStr, "Got a null input stream!");
-
-  // Decode, watching for errors
-  nsresult rv = NS_OK;
-  PRUint32 ignored;
-  if (!mError)
-    rv = inStr->ReadSegments(ReadDataOut, this, count, &ignored);
-  if (mError || NS_FAILED(rv))
-    rv = NS_ERROR_FAILURE;
-
-  return rv;
 }
 
 // Sets up gamma pre-correction in libpng before our callback gets called. 

@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url(resource://gre/res/html.css);
+@import url(resource://gre-resources/html.css);
 @import url(chrome://global/content/xul.css);
 
 @namespace parsererror url(http://www.mozilla.org/newlayout/xml/parsererror.xml);

@@ -91,6 +91,7 @@ typedef struct InstanceData {
   bool lastReportedPrivateModeState;
   bool hasWidget;
   bool npnNewStream;
+  bool throwOnNextInvoke;
   uint32_t timerID1;
   uint32_t timerID2;
   int32_t lastMouseX;

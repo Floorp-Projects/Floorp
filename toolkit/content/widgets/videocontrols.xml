@@ -353,7 +353,7 @@
                         (this.video.paused || this.video.ended
                          ? this.video.readyState < this.video.HAVE_CURRENT_DATA
                          : this.video.readyState < this.video.HAVE_FUTURE_DATA) ||
-                        (this.timeUpdateCount <= 1 &&
+                        (this.timeUpdateCount <= 1 && !this.video.ended &&
                          this.video.readyState < this.video.HAVE_ENOUGH_DATA &&
                          this.video.networkState >= this.video.NETWORK_LOADING))
                         this.startFadeIn(this.statusFader, immediate);

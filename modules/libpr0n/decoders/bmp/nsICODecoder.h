@@ -79,13 +79,7 @@ public:
   virtual ~nsICODecoder();
 
 private:
-  /** Callback for ReadSegments to avoid copying the data */
-  static NS_METHOD ReadSegCb(nsIInputStream* aIn, void* aClosure,
-                             const char* aFromRawSegment, PRUint32 aToOffset,
-                             PRUint32 aCount, PRUint32 *aWriteCount);
-
   // Private helper methods
-  nsresult ProcessData(const char* aBuffer, PRUint32 aCount);
   void ProcessDirEntry(IconDirEntry& aTarget);
   void ProcessInfoHeader();
 

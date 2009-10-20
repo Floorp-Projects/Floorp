@@ -80,5 +80,12 @@ _TEST_FILES = \
 		file_bug509055.html \
 		$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+_TEST_FILES += \
+		test_bug511449.html \
+		file_bug511449.html \
+		$(NULL)
+endif
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

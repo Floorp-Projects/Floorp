@@ -87,7 +87,7 @@ function test()
   // Close the window if it's already open
   let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
            getService(Ci.nsIWindowMediator);
-  let win = wm.getMostRecentWindow("Places:Orgainzier");
+  let win = wm.getMostRecentWindow("Places:Organizer");
   if (win)
     win.close();
 

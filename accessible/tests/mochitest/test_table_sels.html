@@ -22,6 +22,9 @@
 
     function doTest()
     {
+      //////////////////////////////////////////////////////////////////////////
+      // table
+
       var cellsArray =
       [
         [false, false,       false,       kColSpanned, false, false,       false, false],
@@ -53,6 +56,20 @@
       var accTable = getAccessible("table", [nsIAccessibleTable]);
       ok(!accTable.isProbablyForLayout(), "table is not for layout");
 
+      //////////////////////////////////////////////////////////////////////////
+      // table instane
+
+      cellsArray =
+      [
+        [false,       false, false,       -1,          -1],
+        [false,       false, false,       -1,          -1],
+        [false,       false, kColSpanned, kColSpanned, -1],
+        [kRowSpanned, false, false,       -1,          -1],
+        [kRowSpanned, false, kRowSpanned, false,       false]
+      ];
+
+      testTableSelection("tableinsane", cellsArray);
+
       SimpleTest.finish();
     }
 
@@ -76,6 +93,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=417929"
      title="nsIAccessiblTable selectRows does not unselect previously selected rows">
     Mozilla Bug 417929
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=501659"
+     title="HTML table's isRowSelected/isColumnSelected shouldn't fail if row or column has cell holes">
+    Mozilla Bug 501659
   </a>
 
   <p id="display"></p>
@@ -122,6 +144,37 @@
      </tr>
     </tbody>
    </table>
+
+   <table border="1" id="tableinsane">
+    <thead>
+     <tr>
+      <th>col1</th>
+      <th>col2</th>
+      <th>col3</th>
+     </tr>
+    </thead>
+     <tbody>
+      <tr>
+       <td>1</td>
+       <td>2</td>
+       <td>3</td>
+      </tr>
+      <tr>
+       <td rowspan="3">4</td>
+       <td colspan="4">5</td>
+      </tr>
+      <tr>
+       <td>6</td>
+       <td rowspan="2">7</td>
+      </tr>
+      <tr>
+       <td>8</td>
+       <td>9</td>
+       <td>10</td>
+      </tr>
+     </tbody>
+    </table>
+
   </center>
  </body>
 </html>

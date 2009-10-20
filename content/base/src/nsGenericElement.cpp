@@ -2694,7 +2694,7 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   // Ensure that CSS transitions don't continue on an element at a
   // different place in the tree (even if reinserted before next
   // animation refresh).
-  // FIXME: Need a test for this.
+  // FIXME (Bug 522599): Need a test for this.
   if (HasFlag(NODE_HAS_PROPERTIES)) {
     DeleteProperty(nsGkAtoms::transitionsOfBeforeProperty);
     DeleteProperty(nsGkAtoms::transitionsOfAfterProperty);

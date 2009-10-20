@@ -1870,7 +1870,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
     if (cv) {
       PRBool okToUnload;
-      rv = cv->PermitUnload(&okToUnload);
+      rv = cv->PermitUnload(PR_FALSE, &okToUnload);
 
       if (NS_SUCCEEDED(rv) && !okToUnload) {
         // We don't want to unload, so stop here, but don't throw an

@@ -77,7 +77,7 @@
 #include "nsIUnicodeDecoder.h"
 
 // Default URL for the hidden window, can be overridden by a pref on Mac
-#define DEFAULT_HIDDENWINDOW_URL "resource://gre/res/hiddenWindow.html"
+#define DEFAULT_HIDDENWINDOW_URL "resource://gre-resources/hiddenWindow.html"
 
 class nsIAppShell;
 

@@ -135,6 +135,25 @@
         ok(/ILLEGAL_VALUE/(e), "not able to wrap a document in a Window XPCNativeWrapper");
     }
 
+    let (w = new XPCNativeWrapper(window)) {
+        w.foopybar = 5;
+        ok(!("foopybar" in window), "XPCNativeWrappers allow expandos through");
+        is(w.foopybar, 5, "can set expandos on XPCNativeWrappers, though");
+
+        ok(delete w.foopybar, "deleting properties returns true correctly");
+        ok(!("foopybar" in w), "Can delete properties from XPCNativeWrappers");
+
+        is(w.window, window, "w.window exists and is the window");
+        ok(delete w.window, "can delete builtin properties");
+        is(w.window, window, "w.window is automatically recreated");
+
+        window.foopy = 5;
+        ok(delete w.foopy, "delete returns true");
+        is(window.foopy, 5, "delete doesn't delete underlying properties");
+        ok(delete window.foopy, "can delete window.foopy");
+        ok(!("foopy" in window), "foopy is no longer in window");
+    }
+
     try {
         is((function(x) { return x+1; }).apply(this,
                                                XPCSafeJSObjectWrapper([1])),

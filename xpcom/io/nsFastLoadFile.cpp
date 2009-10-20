@@ -728,21 +728,20 @@ nsFastLoadFileReader::ReadFooter(nsFastLoadFooter *aFooter)
         rv = NS_NewNativeLocalFile(filename, PR_TRUE, getter_AddRefs(file));
         if (NS_FAILED(rv))
             return rv;
-
+#ifdef DEBUG
         PRInt64 currentMtime;
         rv = file->GetLastModifiedTime(&currentMtime);
         if (NS_FAILED(rv))
             return rv;
 
         if (LL_NE(fastLoadMtime, currentMtime)) {
-#ifdef DEBUG
             nsCAutoString path;
             file->GetNativePath(path);
             printf("%s mtime changed, invalidating FastLoad file\n",
                    path.get());
-#endif
             return NS_ERROR_FAILURE;
         }
+#endif
 
         rv = readDeps->AppendElement(file);
         if (NS_FAILED(rv))
@@ -871,7 +870,7 @@ nsFastLoadFileReader::Open()
 
     mFileLen = (PRUint32) size;
 
-    PRFileMap *mFileMap = PR_CreateFileMap(mFd, mFileLen, PR_PROT_READONLY);
+    mFileMap = PR_CreateFileMap(mFd, mFileLen, PR_PROT_READONLY);
     if (!mFileMap)
         return NS_ERROR_FAILURE;
 
@@ -880,7 +879,7 @@ nsFastLoadFileReader::Open()
     if (mFileLen < sizeof(nsFastLoadHeader))
         return NS_ERROR_FAILURE;
     
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(SOLARIS)
     madvise(mFileData, mFileLen, MADV_WILLNEED);
 #endif
 
@@ -925,10 +924,15 @@ nsFastLoadFileReader::Close()
         PR_Close(mFd);
         mFd = nsnull;
     }
+    
+    if (!mFooter.mObjectMap)
+        return NS_OK;
+
     for (PRUint32 i = 0, n = mFooter.mNumSharpObjects; i < n; i++) {
         nsObjectMapEntry* entry = &mFooter.mObjectMap[i];
         entry->mReadObject = nsnull;
     }
+    mFooter.mNumSharpObjects = 0;
 
     return NS_OK;
 }

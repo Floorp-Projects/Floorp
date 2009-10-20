@@ -462,7 +462,9 @@ xt_event_handler(Widget xt_w, PluginInstance *This, XEvent *xevent, Boolean *b)
     {
         case Expose:
             /* get rid of all other exposure events */
-            while(XCheckTypedWindowEvent(This->display, This->window, Expose, xevent));
+            do {
+            } while (XCheckTypedWindowEvent(This->display, This->window,
+                                            Expose, xevent));
             drawPixmap(This);
             break;
         case ButtonRelease:

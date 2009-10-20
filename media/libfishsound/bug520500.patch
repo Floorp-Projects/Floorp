@@ -1,0 +1,54 @@
+diff --git a/media/libfishsound/src/libfishsound/fishsound_comments.c b/media/libfishsound/src/libfishsound/fishsound_comments.c
+--- a/media/libfishsound/src/libfishsound/fishsound_comments.c
++++ b/media/libfishsound/src/libfishsound/fishsound_comments.c
+@@ -480,44 +480,47 @@ fish_sound_comments_decode (FishSound * 
+       len=readint(c, 0);
+       debug_printf (1, "[%d] len %d\n", i, len);
+ 
+       c+=4;
+       if (len > (unsigned long) (end-c)) return -1;
+ 
+       name = c;
+       value = fs_index_len (c, '=', len);
++      n = 0;
+       if (value) {
+ 	*value = '\0';
+ 	value++;
+-
+ 	n = c+len - value;
++	
++      }
++      if (n) {
+ 	if ((nvalue = fs_strdup_len (value, n)) == NULL)
+           return FISH_SOUND_ERR_OUT_OF_MEMORY;
+ 
+ 	debug_printf (1, "%s -> %s (length %d)", name, nvalue, n);
+ 
+ 	if ((comment = fs_comment_new (name, nvalue)) == NULL) {
+ 	  fs_free (nvalue);
+           return FISH_SOUND_ERR_OUT_OF_MEMORY;
+ 	}
+ 
+ 	if (_fs_comment_add (fsound, comment) == NULL) {
+ 	  fs_free (nvalue);
+           return FISH_SOUND_ERR_OUT_OF_MEMORY;
+ 	}
+ 
+ 	fs_free (nvalue);
+-      } else {
++      } else if (len > 0) {
+         debug_printf (1, "[%d] %s (no value)", i, name, len);
+ 
+ 	if ((nvalue = fs_strdup_len (name, len)) == NULL)
+           return FISH_SOUND_ERR_OUT_OF_MEMORY;
+ 
+-	if ((comment = fs_comment_new (nvalue, NULL)) == NULL) {
++	if ((comment = fs_comment_new (nvalue, "")) == NULL) {
+ 	  fs_free (nvalue);
+           return FISH_SOUND_ERR_OUT_OF_MEMORY;
+ 	}
+ 
+ 	if (_fs_comment_add (fsound, comment) == NULL) {
+ 	  fs_free (nvalue);
+           return FISH_SOUND_ERR_OUT_OF_MEMORY;
+ 	}

@@ -720,12 +720,12 @@ GetScopeOfObject(JSObject* obj)
 {
     nsISupports* supports;
     JSClass* clazz = STOBJ_GET_CLASS(obj);
+    JSBool isWrapper = IS_WRAPPER_CLASS(clazz);
 
-    if(IS_SLIM_WRAPPER_CLASS(clazz))
+    if(isWrapper && IS_SLIM_WRAPPER_OBJECT(obj))
         return GetSlimWrapperProto(obj)->GetScope();
 
-    if(!IS_WRAPPER_CLASS(clazz) ||
-       !(supports = (nsISupports*) xpc_GetJSPrivate(obj)))
+    if(!isWrapper || !(supports = (nsISupports*) xpc_GetJSPrivate(obj)))
     {
 #ifdef DEBUG
         {

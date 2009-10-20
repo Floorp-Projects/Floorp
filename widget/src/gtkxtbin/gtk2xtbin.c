@@ -387,6 +387,15 @@ gtk_xtbin_new (GdkWindow *parent_window, String * f)
   if (user_data)
     gtk_container_add(GTK_CONTAINER(user_data), GTK_WIDGET(xtbin));
 
+  /* This GtkSocket has a visible window, but the Xt plug will cover this
+   * window.  Normally GtkSockets let the X server paint their background and
+   * this would happen immediately (before the plug is mapped).  Setting the
+   * background to None prevents the server from painting this window,
+   * avoiding flicker.
+   */
+  gtk_widget_realize(GTK_WIDGET(xtbin));
+  gdk_window_set_back_pixmap(GTK_WIDGET(xtbin)->window, NULL, FALSE);
+
   return GTK_WIDGET (xtbin);
 }
 

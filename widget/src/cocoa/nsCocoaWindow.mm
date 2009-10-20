@@ -266,9 +266,11 @@ static unsigned int WindowMaskForBorderStyle(nsBorderStyle aBorderStyle)
   if (!allOrDefault && !(aBorderStyle & eBorderStyle_title))
     return NSBorderlessWindowMask;
 
-  unsigned int mask = NSTitledWindowMask | NSMiniaturizableWindowMask;
+  unsigned int mask = NSTitledWindowMask;
   if (allOrDefault || aBorderStyle & eBorderStyle_close)
     mask |= NSClosableWindowMask;
+  if (allOrDefault || aBorderStyle & eBorderStyle_minimize)
+    mask |= NSMiniaturizableWindowMask;
   if (allOrDefault || aBorderStyle & eBorderStyle_resizeh)
     mask |= NSResizableWindowMask;
 

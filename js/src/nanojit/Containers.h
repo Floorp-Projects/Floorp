@@ -207,7 +207,7 @@ namespace nanojit
 
         const unsigned char * data = (const unsigned char *)key;
         while(len >= 4) {
-            uint32_t k = *(size_t *)data;
+            uint32_t k = *(size_t *)(void*)data;
 
             k *= m;
             k ^= k >> r;
@@ -346,7 +346,7 @@ namespace nanojit
             const Seq<Node>* current;
 
         public:
-            Iter(HashMap<K,T,H>& map) : map(map), bucket(map.nbuckets-1), current(NULL)
+            Iter(HashMap<K,T,H>& map) : map(map), bucket((int)map.nbuckets-1), current(NULL)
             { }
 
             /** return true if more (k,v) remain to be visited */

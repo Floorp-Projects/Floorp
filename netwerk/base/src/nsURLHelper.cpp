@@ -152,9 +152,6 @@ net_GetURLSpecFromDir(nsIFile *aFile, nsACString &result)
 nsresult
 net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
 {
-    // This method does an extra stat().
-    NS_WARNING("If possible, callers of GetURLSpecFromFile should use "
-               "GetURLSpecFromDir or GetURLSpecFromActualFile instead.");
     nsCAutoString escPath;
     nsresult rv = net_GetURLSpecFromActualFile(aFile, escPath);
     if (NS_FAILED(rv))

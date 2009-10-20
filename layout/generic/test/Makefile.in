@@ -56,6 +56,7 @@ _TEST_FILES = \
 		plugin_clipping_helper_transformed.xhtml \
 		plugin_clipping_helper_table.xhtml \
 		plugin_clipping_lib.js \
+		plugin_focus_helper.html \
 		test_backspace_delete.xul \
 		test_bug263683.html \
 		test_bug288789.html \
@@ -87,6 +88,7 @@ _TEST_FILES = \
 		test_bug469774.xul \
 		test_bug470212.html \
 		test_bug503813.html \
+		test_bug508115.xul \
 		$(warning test_bug507902.html temporarily disabled - see bug 510001) \
 		test_bug514732.html \
 		test_movement_by_characters.html \
@@ -95,6 +97,7 @@ _TEST_FILES = \
 		test_plugin_clipping2.xhtml \
 		test_plugin_clipping_transformed.xhtml \
 		test_plugin_clipping_table.xhtml \
+		test_plugin_focus.html \
 		test_plugin_mouse_coords.html \
 		test_plugin_position.xhtml \
 		test_selection_underline.html \

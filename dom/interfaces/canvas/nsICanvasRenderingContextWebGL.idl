@@ -648,7 +648,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   GLenum checkFramebufferStatus (in GLenum target);
   void clear (in GLbitfield mask);
   void clearColor (in GLclampf red, in GLclampf green, in GLclampf blue, in GLclampf alpha);
-  void clearDepthf (in GLclampf depth);
+  void clearDepth (in GLclampf depth);
   void clearStencil (in GLint s);
   void colorMask (in GLboolean red, in GLboolean green, in GLboolean blue, in GLboolean alpha);
   void compileShader (in nsIWebGLShader shader);
@@ -679,7 +679,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   void depthFunc (in GLenum func);
   void depthMask (in GLboolean flag);
-  void depthRangef (in GLclampf zNear, in GLclampf zFar);
+  void depthRange (in GLclampf zNear, in GLclampf zFar);
   void detachShader (in nsIWebGLProgram program, in nsIWebGLShader shader);
   void disable (in GLenum cap);
   void disableVertexAttribArray (in GLuint index);

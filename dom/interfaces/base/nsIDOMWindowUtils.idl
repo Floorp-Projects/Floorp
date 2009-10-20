@@ -48,7 +48,7 @@
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 
-[scriptable, uuid(c1b779af-7297-4e2e-9fc4-a6f22038770f)]
+[scriptable, uuid(4171ea1a-3752-4bc3-8c66-1b2936ecde7a)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -346,6 +346,17 @@ interface nsIDOMWindowUtils : nsISupports {
    * @see nsIDOMWindow::scrollX/Y
    */
   void getScrollXY(in boolean aFlushLayout, out long aScrollX, out long aScrollY);
+
+  /**
+   * Creates a ChromeObjectWrapper for the object and returns it.
+   *
+   * @param scope The JavaScript object whose scope we'll use as the
+   *        parent of the wrapper.
+   * @param objToWrap The JavaScript object to wrap.
+   * @return the wrapped object.
+   */
+
+  void getCOWForObject(/* scope, objToWrap */);
 
   /**
    * Get IME open state. TRUE means 'Open', otherwise, 'Close'.

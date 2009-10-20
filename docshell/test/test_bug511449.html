@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=511449
+-->
+<head>
+  <title>Test for Bug 511449</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=511449">Mozilla Bug 511449</a>
+<p id="display"></p>
+<div id="status"></div>
+<div id="content">
+</div>
+<input type="text" id="input">
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+/** Test for Bug 511449 **/
+
+SimpleTest.waitForExplicitFinish();
+window.addEventListener('load', runTest, false);
+
+var win = null;
+
+function runTest() {
+  document.getElementById("input").focus();
+  win = window.open("file_bug511449.html", "");
+  SimpleTest.waitForFocus(runNextTest, win);
+}
+
+function runNextTest() {
+  var didClose = false;
+  win.onunload = function() {
+    didClose = true;
+  }
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                  getInterface(Components.interfaces.nsIDOMWindowUtils);
+  utils.sendNativeKeyEvent(0, 13 /* w */, 0x4000 /* cmd */, "w", "w");
+
+  ok(didClose, "Cmd+W should have closed the tab");
+  if (!didClose) {
+    win.close();
+  }
+  SimpleTest.finish();
+}
+
+</script>
+
+</body>
+</html>

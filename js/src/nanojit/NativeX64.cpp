@@ -293,11 +293,11 @@ namespace nanojit
         if (rA == 0 || (ra = rA->reg) == UnknownReg) {
             ra = findSpecificRegFor(a, rr);
         } else if (!(allow & rmask(ra))) {
-            // rA already has a register assigned, but it's not valid
-            // to make sure floating point operations stay in FPU registers
+            // rA already has a register assigned, but it's not valid.
+            // To make sure floating point operations stay in FPU registers
             // as much as possible, make sure that only a few opcodes are
             // reserving GPRs.
-            NanoAssert(a->opcode() == LIR_quad || a->opcode() == LIR_ldq);
+            NanoAssert(a->isop(LIR_quad) || a->isop(LIR_ldq) || a->isop(LIR_ldqc)|| a->isop(LIR_u2f) || a->isop(LIR_float));
             allow &= ~rmask(rr);
             ra = findRegFor(a, allow);
         }
@@ -1059,8 +1059,8 @@ namespace nanojit
         Register r;
         if (!resv || (r = resv->reg) == UnknownReg) {
             RegisterMask allow;
-            LOpcode op = value->opcode();
-            if ((op >= LIR_fneg && op <= LIR_fmod) || op == LIR_fcall) {
+            // XXX: isFloat doesn't cover float/fmod!  see bug 520208.
+            if (value->isFloat() || value->isop(LIR_float) || value->isop(LIR_fmod)) {
                 allow = FpRegs;
             } else {
                 allow = GpRegs;
@@ -1432,8 +1432,9 @@ namespace nanojit
     // Increment the 32-bit profiling counter at pCtr, without
     // changing any registers.
     verbose_only(
-    void Assembler::asm_inc_m32(uint32_t* pCtr)
+    void Assembler::asm_inc_m32(uint32_t* /*pCtr*/)
     {
+        // todo: implement this
     }
     )
 

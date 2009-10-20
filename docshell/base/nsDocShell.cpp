@@ -6149,7 +6149,7 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
     // in the current document.
 
     PRBool okToUnload;
-    rv = mContentViewer->PermitUnload(&okToUnload);
+    rv = mContentViewer->PermitUnload(PR_FALSE, &okToUnload);
 
     if (NS_SUCCEEDED(rv) && !okToUnload) {
       // The user chose not to unload the page, interrupt the load.
@@ -7939,7 +7939,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // protocol handler deals with this for javascript: URLs.
     if (!bIsJavascript && mContentViewer) {
         PRBool okToUnload;
-        rv = mContentViewer->PermitUnload(&okToUnload);
+        rv = mContentViewer->PermitUnload(PR_FALSE, &okToUnload);
 
         if (NS_SUCCEEDED(rv) && !okToUnload) {
             // The user chose not to unload the page, interrupt the

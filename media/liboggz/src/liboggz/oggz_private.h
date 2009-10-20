@@ -319,4 +319,7 @@ int oggz_io_seek (OGGZ * oggz, long offset, int whence);
 long oggz_io_tell (OGGZ * oggz);
 int oggz_io_flush (OGGZ * oggz);
 
+/* oggz_read */
+OggzDListIterResponse oggz_read_free_pbuffers(void *elem);
+
 #endif /* __OGGZ_PRIVATE_H__ */

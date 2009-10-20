@@ -69,7 +69,8 @@ function test() {
       // wait for all frames to load (and reload!) completely
       if (frameCount++ < 4)
         return;
-      
+      this.removeEventListener("load", arguments.callee, true);
+
       let win = tab2.linkedBrowser.contentWindow;
       isnot(win.frames[0].document.getElementById("original").value, uniqueValue,
             "subframes must match URL to get text restored");

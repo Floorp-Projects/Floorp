@@ -100,6 +100,7 @@
 #include "nsXULPopupManager.h"
 #include "nsFocusManager.h"
 
+#include "nsIEventListenerService.h"
 // Transformiix stuff
 #include "nsXPathEvaluator.h"
 #include "txMozillaXSLTProcessor.h"
@@ -423,6 +424,8 @@ nsresult NS_NewXBLService(nsIXBLService** aResult);
 nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
 
+nsresult NS_NewEventListenerService(nsIEventListenerService** aResult);
+
 NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 #define MAKE_CTOR(ctor_, iface_, func_)                   \
@@ -523,6 +526,7 @@ MAKE_CTOR(CreateXTFService,               nsIXTFService,               NS_NewXTF
 MAKE_CTOR(CreateXMLContentBuilder,        nsIXMLContentBuilder,        NS_NewXMLContentBuilder)
 #endif
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
+MAKE_CTOR(CreateEventListenerService,     nsIEventListenerService,     NS_NewEventListenerService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentAreaDragDrop)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
@@ -1443,12 +1447,16 @@ static const nsModuleComponentInfo gComponents[] = {
       "@mozilla.org/geolocation/service;1",
       nsGeolocationServiceConstructor },
 
+    { "Focus Manager",
+      NS_FOCUSMANAGER_CID,
+      "@mozilla.org/focus-manager;1",
+      CreateFocusManager },
 
 
-  { "Focus Manager",
-    NS_FOCUSMANAGER_CID,
-    "@mozilla.org/focus-manager;1",
-    CreateFocusManager },
+    { "Event Listener Service",
+      NS_EVENTLISTENERSERVICE_CID,
+      NS_EVENTLISTENERSERVICE_CONTRACTID,
+      CreateEventListenerService }
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR(nsLayoutModule, gComponents, Initialize)

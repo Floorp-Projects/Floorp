@@ -418,7 +418,7 @@ XPC_NW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
   );
 
-  return ThrowException(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
+  return JS_TRUE;
 }
 
 JSBool
