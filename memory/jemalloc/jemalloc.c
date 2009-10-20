@@ -2210,20 +2210,20 @@ pages_map(void *addr, size_t size, int pfd)
 static void
 pages_unmap(void *addr, size_t size)
 {
-  if (VirtualFree(addr, 0, MEM_RELEASE) == 0) {
+	if (VirtualFree(addr, 0, MEM_RELEASE) == 0) {
 #if defined(MOZ_MEMORY_WINCE) && !defined(MOZ_MEMORY_WINCE6)
-    if (GetLastError() == ERROR_INVALID_PARAMETER) {
+		if (GetLastError() == ERROR_INVALID_PARAMETER) {
 			MEMORY_BASIC_INFORMATION info;
-      VirtualQuery(addr, &info, sizeof(info));
+			VirtualQuery(addr, &info, sizeof(info));
 			if (VirtualFree(info.AllocationBase, 0, MEM_RELEASE))
 				return;
-    }
+		}
 #endif
-    _malloc_message(_getprogname(),
-        ": (malloc) Error in VirtualFree()\n", "", "");
-    if (opt_abort)
-      abort();
-  }
+		_malloc_message(_getprogname(),
+		    ": (malloc) Error in VirtualFree()\n", "", "");
+		if (opt_abort)
+			abort();
+	}
 }
 #elif (defined(MOZ_MEMORY_DARWIN))
 static void *
