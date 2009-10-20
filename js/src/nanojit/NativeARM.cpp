@@ -42,9 +42,7 @@
 
 #ifdef UNDER_CE
 #include <cmnintrin.h>
-static inline bool blx_lr_broken() {
-    return false;
-}
+extern "C" bool blx_lr_broken();
 #endif
 
 #if defined(AVMPLUS_LINUX)
