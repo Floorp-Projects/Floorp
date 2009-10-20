@@ -13,6 +13,12 @@ do
         exit 1
     fi
 
+    # If it has the special name "random.in", replace filename with --random.
+    if [ `basename $infile` = "random.in" ]
+    then
+        infile="--random 1000"
+    fi
+
     if ./lirasm --execute $infile > testoutput.txt && cmp -s testoutput.txt $outfile
     then
         echo "$0: output correct for $infile"
@@ -24,4 +30,5 @@ do
 	cat $outfile
     fi
 done
+
 rm testoutput.txt

@@ -71,11 +71,13 @@ namespace nanojit
         uint32_t        lowwatermark;                   /* we pre-allocate entries from 0 upto this index-1; so dynamic entries are added above this index */
     };
 
-    #ifdef AVMPLUS_WIN32
-        #define AVMPLUS_ALIGN16(type) __declspec(align(16)) type
-    #else
-        #define AVMPLUS_ALIGN16(type) type __attribute__ ((aligned (16)))
-    #endif
+	#ifndef AVMPLUS_ALIGN16
+		#ifdef AVMPLUS_WIN32
+			#define AVMPLUS_ALIGN16(type) __declspec(align(16)) type
+		#else
+			#define AVMPLUS_ALIGN16(type) type __attribute__ ((aligned (16)))
+		#endif
+	#endif
 
     struct Stats
     {

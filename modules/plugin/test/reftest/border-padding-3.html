@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body style="margin:0">
+<object type="application/x-test" id="plugin"
+        drawmode="solid" color="00000000"
+        style="width:200px; height:200px; display:block; margin:90px 80px;
+               outline:5px dashed blue;
+               background:cyan;
+               border:dotted black; border-width:4px 8px 4px 8px;
+               padding:3px 1px;">
+</object>
+<script>
+function doTest() {
+  document.getElementById("plugin").setColor("FFFF80FF");
+  document.documentElement.removeAttribute('class');
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

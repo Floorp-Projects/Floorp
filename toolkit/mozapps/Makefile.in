@@ -43,6 +43,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = downloads extensions update xpinstall plugins handling
+DIRS = downloads extensions update xpinstall plugins handling shared
 
 include $(topsrcdir)/config/rules.mk

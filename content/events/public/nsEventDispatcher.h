@@ -49,7 +49,7 @@ class nsIDOMEvent;
 class nsPIDOMEventTarget;
 class nsIScriptGlobalObject;
 class nsEventTargetChainItem;
-
+template<class E> class nsCOMArray;
 
 /**
  * About event dispatching:
@@ -230,6 +230,10 @@ public:
    * In other words, aEvent->target is only a property of the event and it has
    * nothing to do with the construction of the event target chain.
    * Neither aTarget nor aEvent is allowed to be nsnull.
+   *
+   * If aTargets is non-null, event target chain will be created, but
+   * event won't be handled. In this case aEvent->message should be
+   * NS_EVENT_TYPE_NULL.
    * @note Use this method when dispatching an nsEvent.
    */
   static nsresult Dispatch(nsISupports* aTarget,
@@ -237,7 +241,8 @@ public:
                            nsEvent* aEvent,
                            nsIDOMEvent* aDOMEvent = nsnull,
                            nsEventStatus* aEventStatus = nsnull,
-                           nsDispatchingCallback* aCallback = nsnull);
+                           nsDispatchingCallback* aCallback = nsnull,
+                           nsCOMArray<nsPIDOMEventTarget>* aTargets = nsnull);
 
   /**
    * Dispatches an event.

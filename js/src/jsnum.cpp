@@ -381,6 +381,9 @@ IntToCString(jsint i, jsint base, char *buf, size_t bufSize)
     return cp;
 }
 
+static JSString * JS_FASTCALL
+js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base);
+
 static JSBool
 num_toString(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -406,19 +409,11 @@ num_toString(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
         }
     }
-    if (base == 10) {
-        str = js_NumberToString(cx, d);
-    } else {
-        char *dStr = JS_dtobasestr(base, d);
-        if (!dStr) {
-            JS_ReportOutOfMemory(cx);
-            return JS_FALSE;
-        }
-        str = JS_NewStringCopyZ(cx, dStr);
-        js_free(dStr);
-    }
-    if (!str)
+    str = js_NumberToStringWithBase(cx, d, base);
+    if (!str) {
+        JS_ReportOutOfMemory(cx);
         return JS_FALSE;
+    }
     *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
@@ -629,8 +624,9 @@ num_toPrecision(JSContext *cx, uintN argc, jsval *vp)
 
 #ifdef JS_TRACER
 
-JS_DEFINE_TRCINFO_1(num_toString,
-    (2, (extern, STRING, js_NumberToString,      CONTEXT, THIS_DOUBLE,        1, 1)))
+JS_DEFINE_TRCINFO_2(num_toString,
+    (2, (extern, STRING_RETRY, js_NumberToString,         CONTEXT, THIS_DOUBLE,        1, 1)),
+    (3, (static, STRING_RETRY, js_NumberToStringWithBase, CONTEXT, THIS_DOUBLE, INT32, 1, 1)))
 
 #endif /* JS_TRACER */
 
@@ -859,8 +855,8 @@ NumberToCString(JSContext *cx, jsdouble d, jsint base, char *buf, size_t bufSize
     return numStr;
 }
 
-static JSString *
-NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
+static JSString * JS_FASTCALL
+js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
 {
     /*
      * The longest possible result here that would need to fit in buf is
@@ -872,8 +868,24 @@ NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
     char *numStr;
     JSString *s;
 
+    /*
+     * Caller is responsible for error reporting. When called from trace,
+     * returning NULL here will cause us to fall of trace and then retry
+     * from the interpreter (which will report the error).
+     */
     if (base < 2 || base > 36)
         return NULL;
+
+    jsint i;
+    if (JSDOUBLE_IS_INT(d, i)) {
+        if (base == 10 && jsuint(i) < INT_STRING_LIMIT)
+            return JSString::intString(i);
+        if (jsuint(i) < jsuint(base)) {
+            if (i < 10)
+                return JSString::intString(i);
+            return JSString::unitString('a' + i - 10);
+        }
+    }
     numStr = NumberToCString(cx, d, base, buf, sizeof buf);
     if (!numStr)
         return NULL;
@@ -886,11 +898,7 @@ NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
 JSString * JS_FASTCALL
 js_NumberToString(JSContext *cx, jsdouble d)
 {
-    jsint i;
-
-    if (JSDOUBLE_IS_INT(d, i) && jsuint(i) < INT_STRING_LIMIT)
-        return JSString::intString(i);
-    return NumberToStringWithBase(cx, d, 10);
+    return js_NumberToStringWithBase(cx, d, 10);
 }
 
 JSBool JS_FASTCALL

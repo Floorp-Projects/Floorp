@@ -45,7 +45,7 @@ import sys, shutil, os, os.path
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.append(SCRIPT_DIRECTORY)
 import automation
-from automationutils import addCommonOptions, processLeakLog
+from automationutils import *
 from optparse import OptionParser
 from tempfile import mkdtemp
 
@@ -63,7 +63,8 @@ def createReftestProfile(options, profileDir):
   prefsFile = open(os.path.join(profileDir, "user.js"), "w")
   prefsFile.write("""user_pref("browser.dom.window.dump.enabled", true);
 """)
-  prefsFile.write('user_pref("reftest.timeout", %d);' % options.timeout)
+  prefsFile.write('user_pref("reftest.timeout", %d);' % (options.timeout * 1000))
+  prefsFile.write('user_pref("ui.caretBlinkTime", -1);')
   prefsFile.close()
 
   # install the reftest extension bits into the profile
@@ -89,8 +90,8 @@ def main():
                     help = "copy specified files/dirs to testing profile")
   parser.add_option("--timeout",              
                     action = "store", dest = "timeout", type = "int", 
-                    default = 5 * 60 * 1000, # 5 minutes per bug 479518
-                    help = "reftest will timeout in specified number of milleseconds. [default %default ms].")
+                    default = 5 * 60, # 5 minutes per bug 479518
+                    help = "reftest will timeout in specified number of seconds. [default %default s].")
   parser.add_option("--leak-threshold",
                     action = "store", type = "int", dest = "leakThreshold",
                     default = 0,
@@ -124,6 +125,10 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
     options.xrePath = getFullPath(options.xrePath)
 
   options.symbolsPath = getFullPath(options.symbolsPath)
+  options.utilityPath = getFullPath(options.utilityPath)
+
+  debuggerInfo = getDebuggerInfo(oldcwd, options.debugger, options.debuggerArgs,
+     options.debuggerInteractive);
 
   profileDir = None
   try:
@@ -163,6 +168,7 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
                                ["-reftest", reftestlist],
                                utilityPath = options.utilityPath,
                                xrePath=options.xrePath,
+                               debuggerInfo=debuggerInfo,
                                symbolsPath=options.symbolsPath)
     processLeakLog(leakLogFile, options.leakThreshold)
     automation.log.info("\nREFTEST INFO | runreftest.py | Running tests: end.")

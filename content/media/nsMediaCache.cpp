@@ -675,7 +675,7 @@ nsMediaCache::BlockIsReusable(PRInt32 aBlockIndex)
   Block* block = &mIndex[aBlockIndex];
   for (PRUint32 i = 0; i < block->mOwners.Length(); ++i) {
     nsMediaCacheStream* stream = block->mOwners[i].mStream;
-    if (stream->mPinCount >= 0 ||
+    if (stream->mPinCount > 0 ||
         stream->mStreamOffset/BLOCK_SIZE == block->mOwners[i].mStreamBlock) {
       return PR_FALSE;
     }

@@ -40,7 +40,6 @@
 #include "nsSMILCSSValueType.h"
 #include "nsString.h"
 #include "nsStyleAnimation.h"
-#include "nsStyleCoord.h"
 #include "nsSMILParserUtils.h"
 #include "nsSMILValue.h"
 #include "nsCSSValue.h"
@@ -56,33 +55,37 @@ struct ValueWrapper {
   ValueWrapper() : mCSSValue(), mPropID(eCSSProperty_UNKNOWN),
                    mPresContext(nsnull) {}
 
-  nsStyleCoord   mCSSValue;
+  nsStyleAnimation::Value mCSSValue;
   nsCSSProperty  mPropID;
   nsPresContext* mPresContext;
 };
 
 // Helper "zero" values of various types
 // -------------------------------------
-static const nsStyleCoord sZeroCoord(0);
-static const nsStyleCoord sZeroPercent(0.0f, eStyleUnit_Percent);
-static const nsStyleCoord sZeroFactor(0.0f,  eStyleUnit_Factor);
-static const nsStyleCoord sZeroColor(NS_RGB(0,0,0));
+static const nsStyleAnimation::Value
+  sZeroCoord(0, nsStyleAnimation::Value::CoordConstructor);
+static const nsStyleAnimation::Value
+  sZeroPercent(0.0f, nsStyleAnimation::Value::PercentConstructor);
+static const nsStyleAnimation::Value
+  sZeroFloat(0.0f,  nsStyleAnimation::Value::FloatConstructor);
+static const nsStyleAnimation::Value
+  sZeroColor(NS_RGB(0,0,0), nsStyleAnimation::Value::ColorConstructor);
 
 // Helper Methods
 // --------------
-static const nsStyleCoord*
-GetZeroValueForUnit(nsStyleUnit aUnit)
+static const nsStyleAnimation::Value*
+GetZeroValueForUnit(nsStyleAnimation::Unit aUnit)
 {
-  NS_ABORT_IF_FALSE(aUnit != eStyleUnit_Null,
+  NS_ABORT_IF_FALSE(aUnit != nsStyleAnimation::eUnit_Null,
                     "Need non-null unit for a zero value.");
   switch (aUnit) {
-    case eStyleUnit_Coord:
+    case nsStyleAnimation::eUnit_Coord:
       return &sZeroCoord;
-    case eStyleUnit_Percent:
+    case nsStyleAnimation::eUnit_Percent:
       return &sZeroPercent;
-    case eStyleUnit_Factor:
-      return &sZeroFactor;
-    case eStyleUnit_Color:
+    case nsStyleAnimation::eUnit_Float:
+      return &sZeroFloat;
+    case nsStyleAnimation::eUnit_Color:
       return &sZeroColor;
     default:
       NS_NOTREACHED("Calling GetZeroValueForUnit with an unsupported unit");
@@ -91,20 +94,20 @@ GetZeroValueForUnit(nsStyleUnit aUnit)
 }
 
 static void
-InvertStyleCoordSign(nsStyleCoord& aStyleCoord)
+InvertSign(nsStyleAnimation::Value& aStyleCoord)
 {
   switch (aStyleCoord.GetUnit()) {
-    case eStyleUnit_Coord:
+    case nsStyleAnimation::eUnit_Coord:
       aStyleCoord.SetCoordValue(-aStyleCoord.GetCoordValue());
       break;
-    case eStyleUnit_Percent:
+    case nsStyleAnimation::eUnit_Percent:
       aStyleCoord.SetPercentValue(-aStyleCoord.GetPercentValue());
       break;
-    case eStyleUnit_Factor:
-      aStyleCoord.SetFactorValue(-aStyleCoord.GetFactorValue());
+    case nsStyleAnimation::eUnit_Float:
+      aStyleCoord.SetFloatValue(-aStyleCoord.GetFloatValue());
       break;
     default:
-      NS_NOTREACHED("Calling InvertStyleCoordSign with an unsupported unit");
+      NS_NOTREACHED("Calling InvertSign with an unsupported unit");
       break;
   }
 }
@@ -216,7 +219,7 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
   NS_ABORT_IF_FALSE(fromWrapper && toWrapper,
                     "These pointers shouldn't be null");
 
-  const nsStyleCoord* fromCSSValue;
+  const nsStyleAnimation::Value* fromCSSValue;
   if (fromWrapper->mPropID == eCSSProperty_UNKNOWN) {
     NS_ABORT_IF_FALSE(fromWrapper->mCSSValue.IsNull(),
                       "If property ID is unset, then the unit should be, too");
@@ -254,7 +257,7 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
   NS_ABORT_IF_FALSE(startWrapper && endWrapper && resultWrapper,
                     "These pointers shouldn't be null");
 
-  const nsStyleCoord* startCSSValue;
+  const nsStyleAnimation::Value* startCSSValue;
   if (startWrapper->mPropID == eCSSProperty_UNKNOWN) {
     NS_ABORT_IF_FALSE(startWrapper->mCSSValue.IsNull(),
                       "If property ID is unset, then the unit should be, too");
@@ -308,7 +311,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
                                      subString, wrapper->mCSSValue)) {
     wrapper->mPropID = aPropID;
     if (isNegative) {
-      InvertStyleCoordSign(wrapper->mCSSValue);
+      InvertSign(wrapper->mCSSValue);
     }
     // Cache a reference to the PresContext, if we've got one
     nsIDocument* doc = aTargetElement->GetCurrentDoc();
@@ -321,7 +324,8 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
     if (wrapper->mPresContext) {
       // Divide out text-zoom, since SVG is supposed to ignore it
       if (aPropID == eCSSProperty_font_size) {
-        NS_ABORT_IF_FALSE(wrapper->mCSSValue.GetUnit() == eStyleUnit_Coord,
+        NS_ABORT_IF_FALSE(wrapper->mCSSValue.GetUnit() ==
+                            nsStyleAnimation::eUnit_Coord,
                           "'font-size' value with unexpected style unit");
         wrapper->mCSSValue.SetCoordValue(wrapper->mCSSValue.GetCoordValue() /
                                          wrapper->mPresContext->TextZoom());

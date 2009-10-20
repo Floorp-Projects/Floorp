@@ -995,8 +995,48 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
     // style context as parent, which is wrong since first-line style should
     // not apply to the anonymous block.
 
-    newContext = mStyleSet->ReParentStyleContext(presContext, oldContext,
-                                                 newParentContext);
+#ifdef DEBUG
+    {
+      // Check that our assumption that continuations of the same
+      // pseudo-type and with the same style context parent have the
+      // same style context is valid before the reresolution.  (We need
+      // to check the pseudo-type and style context parent because of
+      // :first-letter and :first-line, where we create styled and
+      // unstyled letter/line frames distinguished by pseudo-type, and
+      // then need to distinguish their descendants based on having
+      // different parents.)
+      nsIFrame *nextContinuation = aFrame->GetNextContinuation();
+      if (nextContinuation) {
+        nsStyleContext *nextContinuationContext =
+          nextContinuation->GetStyleContext();
+        NS_ASSERTION(oldContext == nextContinuationContext ||
+                     oldContext->GetPseudoType() !=
+                       nextContinuationContext->GetPseudoType() ||
+                     oldContext->GetParent() !=
+                       nextContinuationContext->GetParent(),
+                     "continuations should have the same style context");
+      }
+    }
+#endif
+
+    nsIFrame *prevContinuation = aFrame->GetPrevContinuation();
+    nsStyleContext *prevContinuationContext;
+    PRBool copyFromContinuation =
+      prevContinuation &&
+      (prevContinuationContext = prevContinuation->GetStyleContext())
+        ->GetPseudoType() == oldContext->GetPseudoType() &&
+       prevContinuationContext->GetParent() == newParentContext;
+    if (copyFromContinuation) {
+      // Just use the style context from the frame's previous
+      // continuation (see assertion about aFrame->GetNextContinuation()
+      // above, which we would have previously hit for aFrame's previous
+      // continuation).
+      newContext = prevContinuationContext;
+    } else {
+      newContext = mStyleSet->ReParentStyleContext(presContext, oldContext,
+                                                   newParentContext);
+    }
+
     if (newContext) {
       if (newContext != oldContext) {
         // We probably don't want to initiate transitions from
@@ -1005,8 +1045,10 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
         // Also see the comment at the start of
         // nsTransitionManager::ConsiderStartingTransition.
 #if 0
-        TryStartingTransition(presContext, aFrame->GetContent(),
-                              oldContext, &newContext);
+        if (!copyFromContinuation) {
+          TryStartingTransition(presContext, aFrame->GetContent(),
+                                oldContext, &newContext);
+        }
 #endif
 
         // Make sure to call CalcStyleDifference so that the new context ends
@@ -1236,10 +1278,48 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       // provider again.
       resolvedChild = providerFrame;
     }
-    
+
+#ifdef DEBUG
+    {
+      // Check that our assumption that continuations of the same
+      // pseudo-type and with the same style context parent have the
+      // same style context is valid before the reresolution.  (We need
+      // to check the pseudo-type and style context parent because of
+      // :first-letter and :first-line, where we create styled and
+      // unstyled letter/line frames distinguished by pseudo-type, and
+      // then need to distinguish their descendants based on having
+      // different parents.)
+      nsIFrame *nextContinuation = aFrame->GetNextContinuation();
+      if (nextContinuation) {
+        nsStyleContext *nextContinuationContext =
+          nextContinuation->GetStyleContext();
+        NS_ASSERTION(oldContext == nextContinuationContext ||
+                     oldContext->GetPseudoType() !=
+                       nextContinuationContext->GetPseudoType() ||
+                     oldContext->GetParent() !=
+                       nextContinuationContext->GetParent(),
+                     "continuations should have the same style context");
+      }
+    }
+#endif
+
     // do primary context
     nsRefPtr<nsStyleContext> newContext;
-    if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
+    nsIFrame *prevContinuation = aFrame->GetPrevContinuation();
+    nsStyleContext *prevContinuationContext;
+    PRBool copyFromContinuation =
+      prevContinuation &&
+      (prevContinuationContext = prevContinuation->GetStyleContext())
+        ->GetPseudoType() == oldContext->GetPseudoType() &&
+       prevContinuationContext->GetParent() == parentContext;
+    if (copyFromContinuation) {
+      // Just use the style context from the frame's previous
+      // continuation (see assertion about aFrame->GetNextContinuation()
+      // above, which we would have previously hit for aFrame's previous
+      // continuation).
+      newContext = prevContinuationContext;
+    }
+    else if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
       NS_ASSERTION(localContent,
                    "non pseudo-element frame without content node");
       newContext = styleSet->ResolveStyleForNonElement(parentContext);
@@ -1298,8 +1378,10 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       }
 
       if (newContext != oldContext) {
-        TryStartingTransition(aPresContext, aFrame->GetContent(),
-                              oldContext, &newContext);
+        if (!copyFromContinuation) {
+          TryStartingTransition(aPresContext, aFrame->GetContent(),
+                                oldContext, &newContext);
+        }
 
         aMinChange = CaptureChange(oldContext, newContext, aFrame,
                                    content, aChangeList, aMinChange,

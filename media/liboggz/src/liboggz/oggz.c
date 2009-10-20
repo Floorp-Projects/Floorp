@@ -215,7 +215,7 @@ oggz_close (OGGZ * oggz)
   oggz_vector_foreach (oggz->streams, oggz_stream_clear);
   oggz_vector_delete (oggz->streams);
 
-  assert(oggz_dlist_is_empty(oggz->packet_buffer));
+  oggz_dlist_deliter(oggz->packet_buffer, oggz_read_free_pbuffers);
   oggz_dlist_delete(oggz->packet_buffer);
   
   if (oggz->metric_internal)

@@ -51,6 +51,10 @@ Config AvmCore::config;
 
 void
 avmplus::AvmLog(char const *msg, ...) {
+    va_list ap;
+    va_start(ap, msg);
+    VMPI_vfprintf(stderr, msg, ap);
+    va_end(ap);
 }
 
 #ifdef _DEBUG

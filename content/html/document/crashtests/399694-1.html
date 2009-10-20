@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+function boom()
+{
+  var legend = document.createElementNS("http://www.w3.org/1999/xhtml", "legend")
+  var input = document.getElementById("input");
+  input.appendChild(legend);
+  legend.focus();
+
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload="setTimeout(boom, 3);" contenteditable="true">
+
+<input contenteditable="false"><input id="input"><q><div></div></q>
+
+</body>
+</html>

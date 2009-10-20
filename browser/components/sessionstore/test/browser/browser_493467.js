@@ -40,6 +40,7 @@ function test() {
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   
   let tab = gBrowser.addTab();
+  tab.linkedBrowser.stop();
   let tabState = JSON.parse(ss.getTabState(tab));
   is(tabState.disallow || "", "", "Everything is allowed per default");
   

@@ -177,26 +177,6 @@ function check_no_bookmarks() {
   root.containerOpen = false;
 }
 
-var syncSvc = null;
-function start_sync() {
-// profile-after-change doesn't create components in xpcshell, so we have to do
-// it ourselves
-  syncSvc = Cc["@mozilla.org/places/sync;1"].getService(Ci.nsISupports);
-}
-
-/**
- * This dispatches the observer topic "quit-application" to clean up the sync
- * component.
- */
-function finish_test()
-{
-  // xpcshell doesn't dispatch shutdown-application
-  let os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  os.notifyObservers(null, "quit-application", null);
-  do_test_finished();
-}
-
 /**
  * Flushes any events in the event loop of the main thread.
  */
@@ -205,4 +185,20 @@ function flush_main_thread_events()
   let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
   while (tm.mainThread.hasPendingEvents())
     tm.mainThread.processNextEvent(false);
+}
+
+// These tests are known to randomly fail due to bug 507790 when database
+// flushes are active, so we turn off syncing for them.
+let randomFailingSyncTests = [
+  "test_annotations.js",
+  "test_multi_word_tags.js",
+  "test_removeVisitsByTimeframe.js",
+  "test_tagging.js",
+  "test_utils_getURLsForContainerNode.js",
+];
+let currentTestFilename = do_get_file(_TEST_FILE[0], true).leafName;
+if (randomFailingSyncTests.indexOf(currentTestFilename) != -1) {
+  print("Test " + currentTestFilename + " is known random due to bug 507790, disabling PlacesDBFlush component.");
+  let sync = Cc["@mozilla.org/places/sync;1"].getService(Ci.nsIObserver);
+  sync.observe(null, "places-debug-stop-sync", null);
 }

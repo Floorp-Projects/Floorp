@@ -1116,6 +1116,21 @@ function togglePluginDisabled(aName, aDesc)
   gExtensionsView.selectedItem.focus();
 }
 
+// Disable the "Install Updates" button when no Add-ons are selected for update
+function toggleInstallUpdates()
+{
+  var disableInstallUpdate = true;
+  var children = gExtensionsView.children;
+  for (var i = 0; i < children.length; ++i) {
+    var includeUpdate = document.getAnonymousElementByAttribute(children[i], "anonid", "includeUpdate");
+    if (includeUpdate && includeUpdate.checked) {
+      disableInstallUpdate = false;
+      break;
+    }
+  }
+  setElementDisabledByID("cmd_installUpdatesAll", disableInstallUpdate);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Startup, Shutdown
 function Startup()
@@ -2894,6 +2909,8 @@ var gExtensionsViewController = {
     {
       var includeUpdate = document.getAnonymousElementByAttribute(aSelectedItem, "anonid", "includeUpdate");
       includeUpdate.checked = !includeUpdate.checked;
+
+      toggleInstallUpdates();
     },
 
     cmd_uninstall: function (aSelectedItem)

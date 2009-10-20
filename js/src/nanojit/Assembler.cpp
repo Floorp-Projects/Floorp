@@ -45,6 +45,11 @@
 #include "../core/CodegenLIR.h"
 #endif
 
+#ifdef _MSC_VER
+    // disable some specific warnings which are normally useful, but pervasive in the code-gen macros
+    #pragma warning(disable:4310) // cast truncates constant value
+#endif
+
 namespace nanojit
 {
 #ifdef NJ_VERBOSE
@@ -482,11 +487,10 @@ namespace nanojit
     {
         int d = disp(ins);
         Register r = ins->getReg();
-        bool quad = ins->opcode() == LIR_iparam || ins->isQuad();
         verbose_only( if (d && (_logc->lcbits & LC_RegAlloc)) {
                          outputForEOL("  <= spill %s",
                                       _thisfrag->lirbuf->names->formatRef(ins)); } )
-        asm_spill(r, d, pop, quad);
+        asm_spill(r, d, pop, ins->isQuad());
     }
 
     // NOTE: Because this function frees slots on the stack, it is not safe to

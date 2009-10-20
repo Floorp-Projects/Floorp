@@ -76,7 +76,10 @@ NS_HIDDEN_(nsIURLParser *) net_GetAuthURLParser();
 NS_HIDDEN_(nsIURLParser *) net_GetNoAuthURLParser();
 NS_HIDDEN_(nsIURLParser *) net_GetStdURLParser();
 
-/* convert between nsIFile and file:// URL spec */
+/* convert between nsIFile and file:// URL spec 
+ * net_GetURLSpecFromFile does an extra stat, so callers should
+ * avoid it if possible in favor of net_GetURLSpecFromActualFile
+ * and net_GetURLSpecFromDir */
 NS_HIDDEN_(nsresult) net_GetURLSpecFromFile(nsIFile *, nsACString &);
 NS_HIDDEN_(nsresult) net_GetURLSpecFromDir(nsIFile *, nsACString &);
 NS_HIDDEN_(nsresult) net_GetURLSpecFromActualFile(nsIFile *, nsACString &);

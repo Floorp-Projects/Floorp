@@ -5,5 +5,5 @@ try {
 }
 
 if (Q == 100000)
-	assertEq(Q, "fail");
+   assertEq(Q, "fail");
 

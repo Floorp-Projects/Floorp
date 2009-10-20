@@ -38,6 +38,13 @@
 
 #include "VMPI.h"
 
+#ifdef AVMPLUS_ARM
+#define ARM_ARCH   config.arch
+#define ARM_VFP    config.vfp
+#define ARM_THUMB2 config.thumb2
+
+#endif
+
 #if !defined(AVMPLUS_LITTLE_ENDIAN) && !defined(AVMPLUS_BIG_ENDIAN)
 #ifdef IS_BIG_ENDIAN
 #define AVMPLUS_BIG_ENDIAN
@@ -75,7 +82,7 @@
 #include <os2.h>
 #endif
 
-#if defined(DEBUG) || defined(MOZ_NO_VARADIC_MACROS)
+#if defined(DEBUG) || defined(NJ_NO_VARIADIC_MACROS)
 #if !defined _DEBUG
 #define _DEBUG
 #endif

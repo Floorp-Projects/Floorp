@@ -8,7 +8,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479859
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="use_large_cache.js"></script>
   <script type="application/javascript" src="manifest.js"></script>
 </head>
 <body>
@@ -26,7 +25,7 @@ function log(msg) {
 
 // We don't track: progress, canplay, canplaythrough and stalled events,
 // as these can be delivered out of order, and/or multiple times.
-var gEventTypes = [ 'loadstart', 'load', 'abort', 'error', 'emptied', 'play',
+var gEventTypes = [ 'loadstart', 'abort', 'error', 'emptied', 'play',
   'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'seeking',
   'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
 
@@ -81,7 +80,7 @@ var gTests = [
         document.body.appendChild(gMedia);
         gMedia.src = src;
       },
-    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata',  'load']
+    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
   }, {
     // Test 1: adding video to doc, then adding source.
     create:
@@ -89,7 +88,7 @@ var gTests = [
         document.body.appendChild(gMedia);
         addSource(src, type);
       },
-    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata',  'load']
+    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
   }, {
     // Test 2: video with multiple source, the first of which are bad, we should load the last.
     create:
@@ -99,7 +98,7 @@ var gTests = [
         addSource("404b", type);
         addSource(src, type);
       },
-    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata',  'load']
+    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
   }, {
     // Test 3:  video with bad src, good <source>, ensure that <source> aren't used.
     create:
@@ -124,7 +123,7 @@ var gTests = [
           false);
         document.body.appendChild(gMedia);
       },
-    expectedEvents: ['loadstart', 'error', 'durationchange', 'loadedmetadata', 'loadeddata', 'load']
+    expectedEvents: ['loadstart', 'error', 'durationchange', 'loadedmetadata', 'loadeddata']
   }, {
     // Test 5: video with only 1 bad source, let it fail to load, then prepend
     // a good <source> to the video, it shouldn't be selected, because the

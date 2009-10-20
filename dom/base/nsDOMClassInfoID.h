@@ -486,6 +486,8 @@ enum nsDOMClassInfoID {
 
   eDOMClassInfo_ScrollAreaEvent_id,
 
+  eDOMClassInfo_EventListenerInfo_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

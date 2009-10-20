@@ -17,7 +17,7 @@
         buttonpack="center">
     
   <script type="application/javascript" src="chrome://global/content/commonDialog.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 
   <commandset id="selectEditMenuItems">
     <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')" disabled="true"/>
