@@ -859,7 +859,7 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp)
 }
 
 /* Some objects (e.g., With) delegate 'this' to another object. */
-static JSObject *
+static inline JSObject *
 CallThisObjectHook(JSContext *cx, JSObject *obj, jsval *argv)
 {
     JSObject *thisp = obj->thisObject(cx);
