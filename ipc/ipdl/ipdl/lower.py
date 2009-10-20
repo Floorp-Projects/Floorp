@@ -1931,6 +1931,58 @@ def _generateCxxUnionStuff(ud):
 
 ##-----------------------------------------------------------------------------
 
+class _FindFriends(ipdl.ast.Visitor):
+    def __init__(self):
+        self.mytype = None              # ProtocolType
+        self.vtype = None               # ProtocolType
+        self.friends = set()            # set<ProtocolType>
+        self.visited = set()            # set<ProtocolType>
+
+    def findFriends(self, ptype):
+        self.mytype = ptype
+        self.walkUpTheProtocolTree(ptype)
+        self.walkDownTheProtocolTree(ptype)
+        return self.friends
+
+    # TODO could make this into a _iterProtocolTreeHelper ...
+    def walkUpTheProtocolTree(self, ptype):
+        if not ptype.isManaged():
+            return
+        mtype = ptype.manager
+        self.visit(mtype)
+        self.walkUpTheProtocolTree(mtype)
+
+    def walkDownTheProtocolTree(self, ptype):
+        if not ptype.isManager():
+            return
+        for mtype in ptype.manages:
+            self.visit(mtype)
+            self.walkDownTheProtocolTree(mtype)
+
+    def visit(self, ptype):
+        if ptype in self.visited:
+            return
+        self.visited.add(ptype)
+
+        savedptype = self.vtype
+        self.vtype = ptype
+        ptype._p.accept(self)
+        self.vtype = savedptype
+
+    def visitMessageDecl(self, md):
+        for it in self.iterActorParams(md):
+            if it.protocol == self.mytype:
+                self.friends.add(self.vtype)
+
+    def iterActorParams(self, md):
+        for param in md.inParams:
+            for actor in ipdl.type.iteractortypes(param.type):
+                yield actor
+        for ret in md.outParams:
+            for actor in ipdl.type.iteractortypes(ret.type):
+                yield actor
+
+
 class _Result:
     Type = Type('Result')
 
@@ -2033,14 +2085,18 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             inherits.append(Inherit(p.managerCxxType()))
         self.cls = Class(self.clsname, inherits=inherits, abstract=True)
 
+        friends = _FindFriends().findFriends(p.decl.type)
         if p.decl.type.isManaged():
+            friends.add(p.decl.type.manager)
+
+        for friend in friends:
             self.file.addthings([
                 Whitespace.NL,
-                _makeForwardDecl(p.decl.type.manager, self.prettyside),
+                _makeForwardDecl(friend, self.prettyside),
                 Whitespace.NL
             ])
             self.cls.addstmts([
-                FriendClassDecl(_actorName(p.decl.type.manager.fullname(),
+                FriendClassDecl(_actorName(friend.fullname(),
                                            self.prettyside)),
                 Whitespace.NL ])
 

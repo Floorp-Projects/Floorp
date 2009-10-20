@@ -499,6 +499,10 @@ class GatherDecls(TcheckVisitor):
             shortname=p.name,
             fullname=fullname)
 
+        # XXX ugh, this sucks.  but we need this information to compute
+        # what friend decls we need in generated C++
+        p.decl.type._p = p
+
         # make sure we have decls for all dependent protocols
         for pinc in tu.protocolIncludes:
             pinc.accept(self)
