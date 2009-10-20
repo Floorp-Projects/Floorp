@@ -88,61 +88,21 @@
 #endif
 
 /*
- * Check if posix_memalign is available.
+ * Include the headers for mmap.
  */
-#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600 || MOZ_MEMORY
-# define HAS_POSIX_MEMALIGN 1
-#else
-# define HAS_POSIX_MEMALIGN 0
+#if defined(XP_WIN)
+# include <windows.h>
 #endif
-
-/*
- * jemalloc provides posix_memalign.
- */
-#ifdef MOZ_MEMORY
-extern "C" {
-#include "../../memory/jemalloc/jemalloc.h"
-}
+#if defined(XP_UNIX) || defined(XP_BEOS)
+# include <unistd.h>
+# include <sys/mman.h>
 #endif
-
-/*
- * Include the headers for mmap unless we have posix_memalign and do not
- * insist on mmap.
- */
-#if JS_GC_USE_MMAP || (!defined JS_GC_USE_MMAP && !HAS_POSIX_MEMALIGN)
-# if defined(XP_WIN)
-#  ifndef JS_GC_USE_MMAP
-#   define JS_GC_USE_MMAP 1
-#  endif
-#  include <windows.h>
-# elif defined(__SYMBIAN32__)
-// Symbian's OpenC has mmap (and #defines _POSIX_MAPPED_FILES), but
-// doesn't implement MAP_ANON.  If we have MOZ_MEMORY, then we can use
-// posix_memalign; we've defined HAS_POSIX_MEMALIGN above.  Otherwise,
-// we overallocate.
-# else
-#  if defined(XP_UNIX) || defined(XP_BEOS)
-#   include <unistd.h>
-#  endif
-#  if _POSIX_MAPPED_FILES > 0
-#   ifndef JS_GC_USE_MMAP
-#    define JS_GC_USE_MMAP 1
-#   endif
-#   include <sys/mman.h>
-
 /* On Mac OS X MAP_ANONYMOUS is not defined. */
-#   if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
-#    define MAP_ANONYMOUS MAP_ANON
-#   endif
-#   if !defined(MAP_ANONYMOUS)
-#    define MAP_ANONYMOUS 0
-#   endif
-#  else
-#   if JS_GC_USE_MMAP
-#    error "JS_GC_USE_MMAP is set when mmap is not available"
-#   endif
-#  endif
-# endif
+#if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
+# define MAP_ANONYMOUS MAP_ANON
+#endif
+#if !defined(MAP_ANONYMOUS)
+# define MAP_ANONYMOUS 0
 #endif
 
 /*
@@ -227,66 +187,12 @@ JS_STATIC_ASSERT(FINALIZE_EXTERNAL_STRING_LAST - FINALIZE_EXTERNAL_STRING0 ==
  * just one bit of flags per double to denote if it was marked during the
  * marking phase of the GC. The locking is implemented via a hash table. Thus
  * for doubles the flag area becomes a bitmap.
- *
- * JS_GC_USE_MMAP macro governs the choice of the aligned arena allocator.
- * When it is true, a platform-dependent function like mmap is used to get
- * memory aligned on CPU page boundaries. If the macro is false or undefined,
- * posix_memalign is used when available. Otherwise the code uses malloc to
- * over-allocate a chunk with js_gcArenasPerChunk aligned arenas. The
- * approximate space overhead of this is 1/js_gcArenasPerChunk. For details,
- * see NewGCChunk/DestroyGCChunk below.
- *
- * The code also allocates arenas in chunks when JS_GC_USE_MMAP is 1 to
- * minimize the overhead of mmap/munmap. In this case js_gcArenasPerChunk can
- * not be a compile-time constant as the system page size is not known until
- * runtime.
  */
-#if JS_GC_USE_MMAP
-static uint32 js_gcArenasPerChunk = 0;
-static JSBool js_gcUseMmap = JS_FALSE;
-#elif HAS_POSIX_MEMALIGN
-# define js_gcArenasPerChunk 1
-#else
-# define js_gcArenasPerChunk 7
-#endif
 
-#if defined(js_gcArenasPerChunk) && js_gcArenasPerChunk == 1
-# define CHUNKED_ARENA_ALLOCATION 0
-#else
-# define CHUNKED_ARENA_ALLOCATION 1
-#endif
-
-#define GC_ARENA_SHIFT              12
-#define GC_ARENA_MASK               ((jsuword) JS_BITMASK(GC_ARENA_SHIFT))
-#define GC_ARENA_SIZE               JS_BIT(GC_ARENA_SHIFT)
-
-/*
- * JS_GC_ARENA_PAD defines the number of bytes to pad JSGCArenaInfo structure.
- * It is used to improve allocation efficiency when using posix_memalign. If
- * malloc's implementation uses internal headers, then calling
- *
- *   posix_memalign(&p, GC_ARENA_SIZE, GC_ARENA_SIZE * js_gcArenasPerChunk)
- *
- * in a sequence leaves holes between allocations of the size GC_ARENA_SIZE
- * due to the need to fit headers. JS_GC_ARENA_PAD mitigates that so the code
- * calls
- *
- *     posix_memalign(&p, GC_ARENA_SIZE,
- *                    GC_ARENA_SIZE * js_gcArenasPerChunk - JS_GC_ARENA_PAD)
- *
- * When JS_GC_ARENA_PAD is equal or greater than the number of words in the
- * system header, the system can pack all allocations together without holes.
- *
- * With JS_GC_USE_MEMALIGN we want at least 2 word pad unless posix_memalign
- * comes from jemalloc that does not use any headers/trailers.
- */
-#ifndef JS_GC_ARENA_PAD
-# if HAS_POSIX_MEMALIGN && !MOZ_MEMORY
-#  define JS_GC_ARENA_PAD (2 * JS_BYTES_PER_WORD)
-# else
-#  define JS_GC_ARENA_PAD 0
-# endif
-#endif
+static const jsuword GC_ARENAS_PER_CHUNK = 16;
+static const jsuword GC_ARENA_SHIFT = 12;
+static const jsuword GC_ARENA_MASK = JS_BITMASK(GC_ARENA_SHIFT);
+static const jsuword GC_ARENA_SIZE = JS_BIT(GC_ARENA_SHIFT);
 
 struct JSGCArenaInfo {
     /*
@@ -302,9 +208,6 @@ struct JSGCArenaInfo {
      */
     JSGCArenaInfo   *prev;
 
-#if !CHUNKED_ARENA_ALLOCATION
-    jsuword         prevUntracedPage;
-#else
     /*
      * A link field for the list of arenas with marked but not yet traced
      * things. The field is encoded as arena's page to share the space with
@@ -324,7 +227,6 @@ struct JSGCArenaInfo {
 
     /* Flag indicating if the arena is the first in the chunk. */
     jsuword         firstArena :        1;
-#endif
 
     union {
         struct {
@@ -335,10 +237,6 @@ struct JSGCArenaInfo {
 
         bool            hasMarkedDoubles;   /* the arena has marked doubles */
     };
-
-#if JS_GC_ARENA_PAD != 0
-    uint8           pad[JS_GC_ARENA_PAD];
-#endif
 };
 
 /* GC flag definitions, must fit in 8 bits. */
@@ -381,10 +279,9 @@ struct JSGCThing {
      ((jsuword) (arena) >> GC_ARENA_SHIFT))
 
 #define GET_ARENA_INFO(chunk, index)                                          \
-    (JS_ASSERT((index) < js_gcArenasPerChunk),                                \
+    (JS_ASSERT((index) < GC_ARENAS_PER_CHUNK),                                \
      ARENA_START_TO_INFO(chunk + ((index) << GC_ARENA_SHIFT)))
 
-#if CHUNKED_ARENA_ALLOCATION
 /*
  * Definitions for allocating arenas in chunks.
  *
@@ -408,10 +305,8 @@ struct JSGCChunkInfo {
 
 #define NO_FREE_ARENAS              JS_BITMASK(GC_ARENA_SHIFT - 1)
 
-#ifdef js_gcArenasPerChunk
-JS_STATIC_ASSERT(1 <= js_gcArenasPerChunk &&
-                 js_gcArenasPerChunk <= NO_FREE_ARENAS);
-#endif
+JS_STATIC_ASSERT(1 <= GC_ARENAS_PER_CHUNK &&
+                 GC_ARENAS_PER_CHUNK <= NO_FREE_ARENAS);
 
 #define GET_ARENA_CHUNK(arena, index)                                         \
     (JS_ASSERT(GET_ARENA_INDEX(arena) == index),                              \
@@ -424,18 +319,16 @@ JS_STATIC_ASSERT(1 <= js_gcArenasPerChunk &&
     ((uint32) ARENA_START_TO_INFO(chunk)->arenaIndex)
 
 #define SET_CHUNK_INFO_INDEX(chunk, index)                                    \
-    (JS_ASSERT((index) < js_gcArenasPerChunk || (index) == NO_FREE_ARENAS),   \
+    (JS_ASSERT((index) < GC_ARENAS_PER_CHUNK || (index) == NO_FREE_ARENAS),   \
      (void) (ARENA_START_TO_INFO(chunk)->arenaIndex = (jsuword) (index)))
 
 #define GET_CHUNK_INFO(chunk, infoIndex)                                      \
     (JS_ASSERT(GET_CHUNK_INFO_INDEX(chunk) == (infoIndex)),                   \
-     JS_ASSERT((uint32) (infoIndex) < js_gcArenasPerChunk),                   \
+     JS_ASSERT((uint32) (infoIndex) < GC_ARENAS_PER_CHUNK),                   \
      (JSGCChunkInfo *) ((chunk) + ((infoIndex) << GC_ARENA_SHIFT)))
 
 #define CHUNK_INFO_TO_INDEX(ci)                                               \
     GET_ARENA_INDEX(ARENA_START_TO_INFO((jsuword)ci))
-
-#endif
 
 /*
  * Macros for GC-thing operations.
@@ -674,77 +567,19 @@ JS_STATIC_ASSERT(sizeof(JSObject) % sizeof(JSGCThing) == 0);
 #define METER_UPDATE_MAX(maxLval, rval)                                       \
     METER_IF((maxLval) < (rval), (maxLval) = (rval))
 
-#if JS_GC_USE_MMAP || !HAS_POSIX_MEMALIGN
-
-/*
- * For chunks allocated via over-sized malloc, get a pointer to store the gap
- * between the malloc's result and the first arena in the chunk.
- */
-static uint32 *
-GetMallocedChunkGapPtr(jsuword chunk)
-{
-    JS_ASSERT((chunk & GC_ARENA_MASK) == 0);
-
-    /* Use the memory after the chunk, see NewGCChunk for details. */
-    return (uint32 *) (chunk + (js_gcArenasPerChunk << GC_ARENA_SHIFT));
-}
-
-#endif
-
 static jsuword
 NewGCChunk(void)
 {
     void *p;
 
-#if JS_GC_USE_MMAP
-    if (js_gcUseMmap) {
-# if defined(XP_WIN)
-        p = VirtualAlloc(NULL, js_gcArenasPerChunk << GC_ARENA_SHIFT,
-                         MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-        return (jsuword) p;
-# else
-        p = mmap(NULL, js_gcArenasPerChunk << GC_ARENA_SHIFT,
-                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        return (p == MAP_FAILED) ? 0 : (jsuword) p;
-# endif
-    }
-#endif
-
-#if HAS_POSIX_MEMALIGN
-    if (0 != posix_memalign(&p, GC_ARENA_SIZE,
-                            GC_ARENA_SIZE * js_gcArenasPerChunk -
-                            JS_GC_ARENA_PAD)) {
-        return 0;
-    }
+#if defined(XP_WIN)
+    p = VirtualAlloc(NULL, GC_ARENAS_PER_CHUNK << GC_ARENA_SHIFT,
+                     MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     return (jsuword) p;
 #else
-    /*
-     * Implement chunk allocation using oversized malloc if mmap and
-     * posix_memalign are not available.
-     *
-     * Since malloc allocates pointers aligned on the word boundary, to get
-     * js_gcArenasPerChunk aligned arenas, we need to malloc only
-     *
-     *   ((js_gcArenasPerChunk + 1) << GC_ARENA_SHIFT) - sizeof(size_t)
-     *
-     * bytes. But since we stores the gap between the malloced pointer and the
-     * first arena in the chunk after the chunk, we need to ask for
-     *
-     *   ((js_gcArenasPerChunk + 1) << GC_ARENA_SHIFT)
-     *
-     * bytes to ensure that we always have room to store the gap.
-     */
-    p = js_malloc((js_gcArenasPerChunk + 1) << GC_ARENA_SHIFT);
-    if (!p)
-        return 0;
-
-    {
-        jsuword chunk;
-
-        chunk = ((jsuword) p + GC_ARENA_MASK) & ~GC_ARENA_MASK;
-        *GetMallocedChunkGapPtr(chunk) = (uint32) (chunk - (jsuword) p);
-        return chunk;
-    }
+    p = mmap(NULL, GC_ARENAS_PER_CHUNK << GC_ARENA_SHIFT,
+             PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    return (p == MAP_FAILED) ? 0 : (jsuword) p;
 #endif
 }
 
@@ -752,29 +587,14 @@ static void
 DestroyGCChunk(jsuword chunk)
 {
     JS_ASSERT((chunk & GC_ARENA_MASK) == 0);
-#if JS_GC_USE_MMAP
-    if (js_gcUseMmap) {
-# if defined(XP_WIN)
-        VirtualFree((void *) chunk, 0, MEM_RELEASE);
-# elif defined(SOLARIS)
-        munmap((char *) chunk, js_gcArenasPerChunk << GC_ARENA_SHIFT);
-# else
-        munmap((void *) chunk, js_gcArenasPerChunk << GC_ARENA_SHIFT);
-# endif
-        return;
-    }
-#endif
-
-#if HAS_POSIX_MEMALIGN
-    js_free((void *) chunk);
+#if defined(XP_WIN)
+    VirtualFree((void *) chunk, 0, MEM_RELEASE);
+#elif defined(SOLARIS)
+    munmap((char *) chunk, GC_ARENAS_PER_CHUNK << GC_ARENA_SHIFT);
 #else
-    /* See comments in NewGCChunk. */
-    JS_ASSERT(*GetMallocedChunkGapPtr(chunk) < GC_ARENA_SIZE);
-    js_free((void *) (chunk - *GetMallocedChunkGapPtr(chunk)));
+    munmap((void *) chunk, GC_ARENAS_PER_CHUNK << GC_ARENA_SHIFT);
 #endif
 }
-
-#if CHUNKED_ARENA_ALLOCATION
 
 static void
 AddChunkToList(JSRuntime *rt, JSGCChunkInfo *ci)
@@ -798,8 +618,6 @@ RemoveChunkFromList(JSRuntime *rt, JSGCChunkInfo *ci)
     }
 }
 
-#endif
-
 static JSGCArenaInfo *
 NewGCArena(JSRuntime *rt)
 {
@@ -809,61 +627,50 @@ NewGCArena(JSRuntime *rt)
     if (rt->gcBytes >= rt->gcMaxBytes)
         return NULL;
 
-#if CHUNKED_ARENA_ALLOCATION
-    if (js_gcArenasPerChunk == 1) {
-#endif
+    JSGCChunkInfo *ci;
+    uint32 i;
+    JSGCArenaInfo *aprev;
+
+    ci = rt->gcChunkList;
+    if (!ci) {
         chunk = NewGCChunk();
         if (chunk == 0)
             return NULL;
-        a = ARENA_START_TO_INFO(chunk);
-#if CHUNKED_ARENA_ALLOCATION
+        JS_ASSERT((chunk & GC_ARENA_MASK) == 0);
+        a = GET_ARENA_INFO(chunk, 0);
+        a->firstArena = JS_TRUE;
+        a->arenaIndex = 0;
+        aprev = NULL;
+        i = 0;
+        do {
+            a->prev = aprev;
+            aprev = a;
+            ++i;
+            a = GET_ARENA_INFO(chunk, i);
+            a->firstArena = JS_FALSE;
+            a->arenaIndex = i;
+        } while (i != GC_ARENAS_PER_CHUNK - 1);
+        ci = GET_CHUNK_INFO(chunk, 0);
+        ci->lastFreeArena = aprev;
+        ci->numFreeArenas = GC_ARENAS_PER_CHUNK - 1;
+        AddChunkToList(rt, ci);
     } else {
-        JSGCChunkInfo *ci;
-        uint32 i;
-        JSGCArenaInfo *aprev;
-
-        ci = rt->gcChunkList;
-        if (!ci) {
-            chunk = NewGCChunk();
-            if (chunk == 0)
-                return NULL;
-            JS_ASSERT((chunk & GC_ARENA_MASK) == 0);
-            a = GET_ARENA_INFO(chunk, 0);
-            a->firstArena = JS_TRUE;
-            a->arenaIndex = 0;
-            aprev = NULL;
-            i = 0;
-            do {
-                a->prev = aprev;
-                aprev = a;
-                ++i;
-                a = GET_ARENA_INFO(chunk, i);
-                a->firstArena = JS_FALSE;
-                a->arenaIndex = i;
-            } while (i != js_gcArenasPerChunk - 1);
-            ci = GET_CHUNK_INFO(chunk, 0);
-            ci->lastFreeArena = aprev;
-            ci->numFreeArenas = js_gcArenasPerChunk - 1;
-            AddChunkToList(rt, ci);
+        JS_ASSERT(ci->prevp == &rt->gcChunkList);
+        a = ci->lastFreeArena;
+        aprev = a->prev;
+        if (!aprev) {
+            JS_ASSERT(ci->numFreeArenas == 1);
+            JS_ASSERT(ARENA_INFO_TO_START(a) == (jsuword) ci);
+            RemoveChunkFromList(rt, ci);
+            chunk = GET_ARENA_CHUNK(a, GET_ARENA_INDEX(a));
+            SET_CHUNK_INFO_INDEX(chunk, NO_FREE_ARENAS);
         } else {
-            JS_ASSERT(ci->prevp == &rt->gcChunkList);
-            a = ci->lastFreeArena;
-            aprev = a->prev;
-            if (!aprev) {
-                JS_ASSERT(ci->numFreeArenas == 1);
-                JS_ASSERT(ARENA_INFO_TO_START(a) == (jsuword) ci);
-                RemoveChunkFromList(rt, ci);
-                chunk = GET_ARENA_CHUNK(a, GET_ARENA_INDEX(a));
-                SET_CHUNK_INFO_INDEX(chunk, NO_FREE_ARENAS);
-            } else {
-                JS_ASSERT(ci->numFreeArenas >= 2);
-                JS_ASSERT(ARENA_INFO_TO_START(a) != (jsuword) ci);
-                ci->lastFreeArena = aprev;
-                ci->numFreeArenas--;
-            }
+            JS_ASSERT(ci->numFreeArenas >= 2);
+            JS_ASSERT(ARENA_INFO_TO_START(a) != (jsuword) ci);
+            ci->lastFreeArena = aprev;
+            ci->numFreeArenas--;
         }
     }
-#endif
 
     rt->gcBytes += GC_ARENA_SIZE;
     a->prevUntracedPage = 0;
@@ -884,54 +691,45 @@ DestroyGCArenas(JSRuntime *rt, JSGCArenaInfo *last)
         JS_ASSERT(rt->gcBytes >= GC_ARENA_SIZE);
         rt->gcBytes -= GC_ARENA_SIZE;
 
-#if CHUNKED_ARENA_ALLOCATION
-        if (js_gcArenasPerChunk == 1) {
-#endif
-            DestroyGCChunk(ARENA_INFO_TO_START(a));
-#if CHUNKED_ARENA_ALLOCATION
-        } else {
-            uint32 arenaIndex;
-            jsuword chunk;
-            uint32 chunkInfoIndex;
-            JSGCChunkInfo *ci;
-# ifdef DEBUG
-            jsuword firstArena;
+        uint32 arenaIndex;
+        jsuword chunk;
+        uint32 chunkInfoIndex;
+        JSGCChunkInfo *ci;
+#ifdef DEBUG
+        jsuword firstArena;
 
-            firstArena = a->firstArena;
-            arenaIndex = a->arenaIndex;
-            memset((void *) ARENA_INFO_TO_START(a), JS_FREE_PATTERN,
-                   GC_ARENA_SIZE - JS_GC_ARENA_PAD);
-            a->firstArena = firstArena;
-            a->arenaIndex = arenaIndex;
-# endif
-            arenaIndex = GET_ARENA_INDEX(a);
-            chunk = GET_ARENA_CHUNK(a, arenaIndex);
-            chunkInfoIndex = GET_CHUNK_INFO_INDEX(chunk);
-            if (chunkInfoIndex == NO_FREE_ARENAS) {
-                chunkInfoIndex = arenaIndex;
-                SET_CHUNK_INFO_INDEX(chunk, arenaIndex);
-                ci = GET_CHUNK_INFO(chunk, chunkInfoIndex);
-                a->prev = NULL;
-                ci->lastFreeArena = a;
-                ci->numFreeArenas = 1;
-                AddChunkToList(rt, ci);
+        firstArena = a->firstArena;
+        arenaIndex = a->arenaIndex;
+        memset((void *) ARENA_INFO_TO_START(a), JS_FREE_PATTERN, GC_ARENA_SIZE);
+        a->firstArena = firstArena;
+        a->arenaIndex = arenaIndex;
+#endif
+        arenaIndex = GET_ARENA_INDEX(a);
+        chunk = GET_ARENA_CHUNK(a, arenaIndex);
+        chunkInfoIndex = GET_CHUNK_INFO_INDEX(chunk);
+        if (chunkInfoIndex == NO_FREE_ARENAS) {
+            chunkInfoIndex = arenaIndex;
+            SET_CHUNK_INFO_INDEX(chunk, arenaIndex);
+            ci = GET_CHUNK_INFO(chunk, chunkInfoIndex);
+            a->prev = NULL;
+            ci->lastFreeArena = a;
+            ci->numFreeArenas = 1;
+            AddChunkToList(rt, ci);
+        } else {
+            JS_ASSERT(chunkInfoIndex != arenaIndex);
+            ci = GET_CHUNK_INFO(chunk, chunkInfoIndex);
+            JS_ASSERT(ci->numFreeArenas != 0);
+            JS_ASSERT(ci->lastFreeArena);
+            JS_ASSERT(a != ci->lastFreeArena);
+            if (ci->numFreeArenas == GC_ARENAS_PER_CHUNK - 1) {
+                RemoveChunkFromList(rt, ci);
+                DestroyGCChunk(chunk);
             } else {
-                JS_ASSERT(chunkInfoIndex != arenaIndex);
-                ci = GET_CHUNK_INFO(chunk, chunkInfoIndex);
-                JS_ASSERT(ci->numFreeArenas != 0);
-                JS_ASSERT(ci->lastFreeArena);
-                JS_ASSERT(a != ci->lastFreeArena);
-                if (ci->numFreeArenas == js_gcArenasPerChunk - 1) {
-                    RemoveChunkFromList(rt, ci);
-                    DestroyGCChunk(chunk);
-                } else {
-                    ++ci->numFreeArenas;
-                    a->prev = ci->lastFreeArena;
-                    ci->lastFreeArena = a;
-                }
+                ++ci->numFreeArenas;
+                a->prev = ci->lastFreeArena;
+                ci->lastFreeArena = a;
             }
         }
-# endif
     }
 }
 
@@ -1109,62 +907,17 @@ typedef struct JSGCRootHashEntry {
 /* Initial size of the gcRootsHash table (SWAG, small enough to amortize). */
 #define GC_ROOTS_SIZE   256
 
-#if CHUNKED_ARENA_ALLOCATION
-
 /*
  * For a CPU with extremely large pages using them for GC things wastes
  * too much memory.
  */
-# define GC_ARENAS_PER_CPU_PAGE_LIMIT JS_BIT(18 - GC_ARENA_SHIFT)
+#define GC_ARENAS_PER_CPU_PAGE_LIMIT JS_BIT(18 - GC_ARENA_SHIFT)
 
 JS_STATIC_ASSERT(GC_ARENAS_PER_CPU_PAGE_LIMIT <= NO_FREE_ARENAS);
-
-#endif
 
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
-#if JS_GC_USE_MMAP
-    if (js_gcArenasPerChunk == 0) {
-        size_t cpuPageSize, arenasPerPage;
-# if defined(XP_WIN)
-        SYSTEM_INFO si;
-
-        GetSystemInfo(&si);
-        cpuPageSize = si.dwPageSize;
-
-# elif defined(XP_UNIX) || defined(XP_BEOS)
-        cpuPageSize = (size_t) sysconf(_SC_PAGESIZE);
-# else
-#  error "Not implemented"
-# endif
-        /* cpuPageSize is a power of 2. */
-        JS_ASSERT((cpuPageSize & (cpuPageSize - 1)) == 0);
-        arenasPerPage = cpuPageSize >> GC_ARENA_SHIFT;
-#ifdef DEBUG
-        if (arenasPerPage == 0) {
-            fprintf(stderr,
-"JS engine warning: the size of the CPU page, %u bytes, is too low to use\n"
-"paged allocation for the garbage collector. Please report this.\n",
-                    (unsigned) cpuPageSize);
-        }
-#endif
-        if (arenasPerPage - 1 <= (size_t) (GC_ARENAS_PER_CPU_PAGE_LIMIT - 1)) {
-            /*
-             * Use at least 4 GC arenas per paged allocation chunk to minimize
-             * the overhead of mmap/VirtualAlloc.
-             */
-            js_gcUseMmap = JS_TRUE;
-            js_gcArenasPerChunk = JS_MAX((uint32) arenasPerPage, 4);
-        } else {
-            js_gcUseMmap = JS_FALSE;
-            js_gcArenasPerChunk = 7;
-        }
-    }
-    JS_ASSERT(1 <= js_gcArenasPerChunk &&
-              js_gcArenasPerChunk <= NO_FREE_ARENAS);
-#endif
-
     InitGCArenaLists(rt);
     if (!JS_DHashTableInit(&rt->gcRootsHash, JS_DHashGetStubOps(), NULL,
                            sizeof(JSGCRootHashEntry), GC_ROOTS_SIZE)) {
