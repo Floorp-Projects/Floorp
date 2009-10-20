@@ -82,6 +82,7 @@
       let tabP = taskbar.createTaskbarTabPreview(docShell, controller);
       isnot(tabP, null, "Tab preview is not null");
       is(tabP.controller.wrappedJSObject, controller, "Controllers match");
+      is(tabP.icon, null, "Default icon is null (windows default)");
       tabP.icon = null;
       tabP.move(null);
       try {

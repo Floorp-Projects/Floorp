@@ -940,7 +940,10 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         PRInt32 lastDot = escapeBuf.RFindChar('.');
         if (lastDot != kNotFound) {
             escapeBuf.Cut(0, lastDot);
-            AppendUTF8toUTF16(escapeBuf, pushBuffer);
+            NS_ConvertUTF8toUTF16 utf16EscapeBuf(escapeBuf);
+            nsString htmlFileExt;
+            htmlFileExt.Adopt(nsEscapeHTML2(utf16EscapeBuf.get(), utf16EscapeBuf.Length()));
+            pushBuffer.Append(htmlFileExt);
         } else {
             pushBuffer.AppendLiteral("unknown");
         }

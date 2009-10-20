@@ -91,8 +91,9 @@ function doNextTest()
       break;
 
     case 6:
+      // Also subdomains to example.com must be deleted
       slaveOrigin = "https://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?checknotclean&B&success";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?checkclean&B&success";
       break;
 
     case 7:

@@ -2492,13 +2492,16 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
       if (rv != NS_OK_NO_RELATION_TARGET)
         return NS_OK; // XXX bug 381599, avoid performance problems
 
+      // This is an ARIA tree or treegrid that doesn't use owns, so we need to
+      // get the parent the hard way.
       if (mRoleMapEntry &&
-          mRoleMapEntry->role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
-        // This is an ARIA tree that doesn't use owns, so we need to get
-        // the parent the hard way.
+          (mRoleMapEntry->role == nsIAccessibleRole::ROLE_OUTLINEITEM ||
+           mRoleMapEntry->role == nsIAccessibleRole::ROLE_ROW)) {
+
         nsCOMPtr<nsIAccessible> accTarget;
         nsAccUtils::GetARIATreeItemParent(this, content,
                                           getter_AddRefs(accTarget));
+
         return nsRelUtils::AddTarget(aRelationType, aRelation, accTarget);
       }
 

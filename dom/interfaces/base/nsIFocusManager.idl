@@ -39,7 +39,7 @@
 interface nsIDocument;
 interface nsIContent;
 
-[scriptable, uuid(CD6040A8-243F-412A-8A16-0BF2AA1083B9)]
+[scriptable, uuid(64CAE24B-8C2D-4B75-9047-BC9668D85975)]
 /**
  * The focus manager deals with all focus related behaviour. Only one element
  * in the entire application may have the focus at a time; this element
@@ -245,8 +245,11 @@ interface nsIFocusManager : nsISupports
 
   /**
    * Called when a new document in a window is shown.
+   *
+   * If aNeedsFocus is true, then focus events are expected to be fired on the
+   * window if this window is in the focused window chain.
    */
-  [noscript] void windowShown(in nsIDOMWindow aWindow);
+  [noscript] void windowShown(in nsIDOMWindow aWindow, in PRBool aNeedsFocus);
 
   /**
    * Called when a document in a window has been hidden or otherwise can no

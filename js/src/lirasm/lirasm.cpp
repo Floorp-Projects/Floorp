@@ -104,11 +104,11 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
 
     x = (LasmSideExit *)i->record()->exit;
     sprintf(out,
-            "%s: %s %s -> line=%d (GuardID=%03d)",
+            "%s: %s %s -> line=%ld (GuardID=%03d)",
             formatRef(i),
             lirNames[i->opcode()],
             i->oprnd1() ? formatRef(i->oprnd1()) : "",
-            x->line,
+            (long)x->line,
             i->record()->profGuardID);
 }
 #endif
@@ -134,10 +134,12 @@ enum ReturnType {
 #define DEBUG_ONLY_NAME(name)
 #endif
 
+#define CI(name, args) \
+    {(uintptr_t) (&name), args, /*_cse*/0, /*_fold*/0, nanojit::ABI_CDECL \
+     DEBUG_ONLY_NAME(name)}
+
 #define FN(name, args) \
-    {#name, \
-     {(uintptr_t) (&name), args, 0, 0, nanojit::ABI_CDECL \
-      DEBUG_ONLY_NAME(name)}}
+    {#name, CI(name, args)}
 
 const int I32 = nanojit::ARGSIZE_LO;
 const int I64 = nanojit::ARGSIZE_Q;
@@ -254,6 +256,7 @@ public:
     ~Lirasm();
 
     void assemble(istream &in);
+    void assembleRandom(int nIns);
     void lookupFunction(const string &name, CallInfo *&ci);
 
     LirBuffer *mLirbuf;
@@ -284,6 +287,8 @@ public:
     void assembleFragment(LirTokenStream &in,
                           bool implicitBegin,
                           const LirToken *firstToken);
+
+    void assembleRandomFragment(int nIns);
 
 private:
     static uint32_t sProfId;
@@ -325,6 +330,24 @@ private:
     void endFragment();
 };
 
+// Meaning: arg 'm' of 'n' has size 'sz'.
+static int argMask(int sz, int m, int n)
+{
+    // Order examples, from MSB to LSB:  
+    // - 3 args: 000 | 000 | 000 | 000 | 000 | arg1| arg2| arg3| ret
+    // - 8 args: arg1| arg2| arg3| arg4| arg5| arg6| arg7| arg8| ret
+    // If the mask encoding reversed the arg order the 'n' parameter wouldn't
+    // be necessary, as argN would always be in the same place in the
+    // bitfield.
+    return sz << ((1 + n - m) * ARGSIZE_SHIFT);
+}
+
+// Return value has size 'sz'.
+static int retMask(int sz)
+{
+    return sz;
+}
+
 // 'sin' is overloaded on some platforms, so taking its address
 // doesn't quite work. Provide a do-nothing function here
 // that's not overloaded.
@@ -334,10 +357,10 @@ double sinFn(double d) {
 #define sin sinFn
 
 Function functions[] = {
-    FN(puts, I32 | (PTRARG<<2)),
-    FN(sin, F64 | (F64<<2)),
-    FN(malloc, PTRRET | (PTRARG<<2)),
-    FN(free, I32 | (PTRARG<<2))
+    FN(puts,   argMask(PTRARG, 1, 1) | retMask(I32)),
+    FN(sin,    argMask(F64,    1, 1) | retMask(F64)),
+    FN(malloc, argMask(PTRARG, 1, 1) | retMask(PTRRET)),
+    FN(free,   argMask(PTRARG, 1, 1) | retMask(I32))
 };
 
 template<typename out, typename in> out
@@ -466,7 +489,8 @@ uint32_t
 FragmentAssembler::sProfId = 0;
 
 FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
-    : mParent(parent), mFragName(fragmentName)
+    : mParent(parent), mFragName(fragmentName),
+      mBufWriter(NULL), mCseFilter(NULL), mExprFilter(NULL), mVerboseWriter(NULL)
 {
     mFragment = new Fragment(NULL verbose_only(, (mParent.mLogc.lcbits &
                                                   nanojit::LC_FragProfile) ?
@@ -475,19 +499,15 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
     mFragment->root = mFragment;
     mParent.mFragments[mFragName].fragptr = mFragment;
 
-    mBufWriter = new LirBufWriter(mParent.mLirbuf);
-    mCseFilter = new CseFilter(mBufWriter, mParent.mAlloc);
-    mExprFilter = new ExprFilter(mCseFilter);
-    mVerboseWriter = NULL;
-    mLir = mExprFilter;
+    mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf);
+    mLir = mCseFilter  = new CseFilter(mLir, mParent.mAlloc);
+    mLir = mExprFilter = new ExprFilter(mLir);
 
 #ifdef DEBUG
     if (mParent.mVerbose) {
-        mVerboseWriter = new VerboseWriter(mParent.mAlloc,
-                                           mExprFilter,
-                                           mParent.mLirbuf->names,
-                                           &mParent.mLogc);
-        mLir = mVerboseWriter;
+        mLir = mVerboseWriter = new VerboseWriter(mParent.mAlloc, mLir,
+                                                  mParent.mLirbuf->names,
+                                                  &mParent.mLogc);
     }
 #endif
 
@@ -941,6 +961,677 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
     endFragment();
 }
 
+/* ------------------ Support for --random -------------------------- */
+
+// Returns a positive integer in the range 0..(lim-1).
+static inline size_t
+rnd(size_t lim)
+{
+    size_t i = size_t(rand());
+    return i % lim;
+}
+
+// Returns an int32_t in the range -RAND_MAX..RAND_MAX.
+static inline int32_t
+rndI32()
+{
+    return (rnd(2) ? 1 : -1) * rand();
+}
+
+// The maximum number of live values (per type, ie. B/I/Q/F) that are
+// available to be used as operands.  If we make it too high we're prone to
+// run out of stack space due to spilling.  If the stack size increases (see
+// bug 473769) this situation will improve.
+const size_t maxLiveValuesPerType = 20;
+
+// Returns a uint32_t in the range 0..(RAND_MAX*2).
+static inline uint32_t
+rndU32()
+{
+    return uint32_t(rnd(2) ? 0 : RAND_MAX) + uint32_t(rand());
+}
+
+template<typename t> t
+rndPick(vector<t> &v)
+{
+    assert(!v.empty());
+    return v[rnd(v.size())];
+}
+
+// Add the operand, and retire an old one if we have too many.
+template<typename t> void
+addOrReplace(vector<t> &v, t x)
+{
+    if (v.size() > maxLiveValuesPerType) {
+        v[rnd(v.size())] = x;    // we're full:  overwrite an existing element
+    } else {
+        v.push_back(x);             // add to end
+    }
+}
+
+// Returns a 4-aligned address within the scratch space.
+static int32_t rndOffset32(size_t scratchSzB)
+{
+    return int32_t(rnd(scratchSzB)) & ~3;
+}
+
+// Returns an 8-aligned address within the scratch space.
+static int32_t rndOffset64(size_t scratchSzB)
+{
+    return int32_t(rnd(scratchSzB)) & ~7;
+}
+
+static int32_t f_I_I1(int32_t a)
+{
+    return a;
+}
+
+static int32_t f_I_I6(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f)
+{
+    return a + b + c + d + e + f;
+}
+
+static uint64_t f_Q_Q2(uint64_t a, uint64_t b)
+{
+    return a + b;
+}
+
+static uint64_t f_Q_Q7(uint64_t a, uint64_t b, uint64_t c, uint64_t d,
+                       uint64_t e, uint64_t f, uint64_t g)
+{
+    return a + b + c + d + e + f + g;
+}
+
+static double f_F_F3(double a, double b, double c)
+{
+    return a + b + c;
+}
+
+static double f_F_F8(double a, double b, double c, double d,
+                     double e, double f, double g, double h)
+{
+    return a + b + c + d + e + f + g + h;
+}
+
+static void f_N_IQF(int32_t a, uint64_t b, double c)
+{
+    return;     // no need to do anything
+}
+
+const CallInfo ci_I_I1 = CI(f_I_I1, argMask(I32, 1, 1) |
+                                    retMask(I32));
+
+const CallInfo ci_I_I6 = CI(f_I_I6, argMask(I32, 1, 6) |
+                                    argMask(I32, 2, 6) |
+                                    argMask(I32, 3, 6) |
+                                    argMask(I32, 4, 6) |
+                                    argMask(I32, 5, 6) |
+                                    argMask(I32, 6, 6) |
+                                    retMask(I32));
+
+const CallInfo ci_Q_Q2 = CI(f_Q_Q2, argMask(I64, 1, 2) |
+                                    argMask(I64, 2, 2) |
+                                    retMask(I64));
+
+const CallInfo ci_Q_Q7 = CI(f_Q_Q7, argMask(I64, 1, 7) |
+                                    argMask(I64, 2, 7) |
+                                    argMask(I64, 3, 7) |
+                                    argMask(I64, 4, 7) |
+                                    argMask(I64, 5, 7) |
+                                    argMask(I64, 6, 7) |
+                                    argMask(I64, 7, 7) |
+                                    retMask(I64));
+
+const CallInfo ci_F_F3 = CI(f_F_F3, argMask(F64, 1, 3) |
+                                    argMask(F64, 2, 3) |
+                                    argMask(F64, 3, 3) |
+                                    retMask(F64));
+
+const CallInfo ci_F_F8 = CI(f_F_F8, argMask(F64, 1, 8) |
+                                    argMask(F64, 2, 8) |
+                                    argMask(F64, 3, 8) |
+                                    argMask(F64, 4, 8) |
+                                    argMask(F64, 5, 8) |
+                                    argMask(F64, 6, 8) |
+                                    argMask(F64, 7, 8) |
+                                    argMask(F64, 8, 8) |
+                                    retMask(F64));
+
+const CallInfo ci_N_IQF = CI(f_N_IQF, argMask(I32, 1, 3) |
+                                      argMask(I64, 2, 3) |
+                                      argMask(F64, 3, 3) |
+                                      retMask(ARGSIZE_NONE));
+
+// Generate a random block containing nIns instructions, plus a few more
+// setup/shutdown ones at the start and end.
+//
+// Basic operation:
+// - We divide LIR into numerous classes, mostly according to their type.
+//   (See LInsClasses.tbl for details.) Each time around the loop we choose
+//   the class randomly, but there is weighting so that some classes are more
+//   common than others, in an attempt to reflect the structure of real code.
+// - Each instruction that produces a value is put in a buffer of the
+//   appropriate type, for possible use as an operand of a later instruction.
+//   This buffer is trimmed when its size exceeds 'maxLiveValuesPerType'.
+// - If not enough operands are present in a buffer for the particular
+//   instruction, we don't add it.
+// - Skips aren't explicitly generated, but they do occcur if the fragment is
+//   sufficiently big that it's spread across multiple chunks.
+//
+// The following instructions aren't generated yet:
+// - iparam/qparam (hard to test beyond what is auto-generated in fragment
+//   prologues)
+// - ialloc/qalloc (except for the load/store scratch space;  hard to do so
+//   long as the stack is only 1024 bytes, see bug 473769)
+// - live/flive
+// - callh
+// - x/xt/xf/xtbl (hard to test without having multiple fragments;  when we
+//   only have one fragment we don't really want to leave it early)
+// - ret/fret (hard to test without having multiple fragments)
+// - j/jt/jf/ji/label (ji is not implemented in NJ)
+// - ov (takes an arithmetic (int or FP) value as operand, and must
+//   immediately follow it to be safe... not that that really matters in
+//   randomly generated code)
+// - file/line (#ifdef VTUNE only)
+// - fmod (not implemented in NJ)
+//
+void
+FragmentAssembler::assembleRandomFragment(int nIns)
+{
+    vector<LIns*> Bs;
+    vector<LIns*> Is;
+    vector<LIns*> Qs;
+    vector<LIns*> Fs;
+
+    vector<LOpcode> I_I_ops;
+    I_I_ops.push_back(LIR_neg);
+    I_I_ops.push_back(LIR_not);
+
+    // Nb: there are no Q_Q_ops.
+
+    vector<LOpcode> F_F_ops;
+    F_F_ops.push_back(LIR_fneg);
+
+    vector<LOpcode> I_II_ops;
+    I_II_ops.push_back(LIR_add);
+    I_II_ops.push_back(LIR_iaddp);
+    I_II_ops.push_back(LIR_sub);
+    I_II_ops.push_back(LIR_mul);
+    I_II_ops.push_back(LIR_div);
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
+    I_II_ops.push_back(LIR_mod);
+#endif
+    I_II_ops.push_back(LIR_and);
+    I_II_ops.push_back(LIR_or);
+    I_II_ops.push_back(LIR_xor);
+    I_II_ops.push_back(LIR_lsh);
+    I_II_ops.push_back(LIR_rsh);
+    I_II_ops.push_back(LIR_ush);
+
+    vector<LOpcode> Q_QQ_ops;
+    Q_QQ_ops.push_back(LIR_qiadd);
+    Q_QQ_ops.push_back(LIR_qaddp);
+    Q_QQ_ops.push_back(LIR_qiand);
+    Q_QQ_ops.push_back(LIR_qior);
+    Q_QQ_ops.push_back(LIR_qxor);
+    Q_QQ_ops.push_back(LIR_qilsh);
+    Q_QQ_ops.push_back(LIR_qirsh);
+    Q_QQ_ops.push_back(LIR_qursh);
+
+    vector<LOpcode> F_FF_ops;
+    F_FF_ops.push_back(LIR_fadd);
+    F_FF_ops.push_back(LIR_fsub);
+    F_FF_ops.push_back(LIR_fmul);
+    F_FF_ops.push_back(LIR_fdiv);
+
+    vector<LOpcode> I_BII_ops;
+    I_BII_ops.push_back(LIR_cmov);
+
+    vector<LOpcode> Q_BQQ_ops;
+    Q_BQQ_ops.push_back(LIR_qcmov);
+
+    vector<LOpcode> B_II_ops;
+    B_II_ops.push_back(LIR_eq);
+    B_II_ops.push_back(LIR_lt);
+    B_II_ops.push_back(LIR_gt);
+    B_II_ops.push_back(LIR_le);
+    B_II_ops.push_back(LIR_ge);
+    B_II_ops.push_back(LIR_ult);
+    B_II_ops.push_back(LIR_ugt);
+    B_II_ops.push_back(LIR_ule);
+    B_II_ops.push_back(LIR_uge);
+
+    vector<LOpcode> B_QQ_ops;
+    B_QQ_ops.push_back(LIR_qeq);
+    B_QQ_ops.push_back(LIR_qlt);
+    B_QQ_ops.push_back(LIR_qgt);
+    B_QQ_ops.push_back(LIR_qle);
+    B_QQ_ops.push_back(LIR_qge);
+    B_QQ_ops.push_back(LIR_qult);
+    B_QQ_ops.push_back(LIR_qugt);
+    B_QQ_ops.push_back(LIR_qule);
+    B_QQ_ops.push_back(LIR_quge);
+
+    vector<LOpcode> B_FF_ops;
+    B_FF_ops.push_back(LIR_feq);
+    B_FF_ops.push_back(LIR_flt);
+    B_FF_ops.push_back(LIR_fgt);
+    B_FF_ops.push_back(LIR_fle);
+    B_FF_ops.push_back(LIR_fge);
+
+    vector<LOpcode> Q_I_ops;
+    Q_I_ops.push_back(LIR_i2q);
+    Q_I_ops.push_back(LIR_u2q);
+
+    vector<LOpcode> F_I_ops;
+    F_I_ops.push_back(LIR_i2f);
+    F_I_ops.push_back(LIR_u2f);
+
+    vector<LOpcode> I_F_ops;
+    I_F_ops.push_back(LIR_qlo);
+    I_F_ops.push_back(LIR_qhi);
+
+    vector<LOpcode> F_II_ops;
+    F_II_ops.push_back(LIR_qjoin);
+
+    vector<LOpcode> I_loads;
+    I_loads.push_back(LIR_ld);          // weight LIR_ld the heaviest
+    I_loads.push_back(LIR_ld);
+    I_loads.push_back(LIR_ld);
+    I_loads.push_back(LIR_ldc);
+    I_loads.push_back(LIR_ldcb);
+    I_loads.push_back(LIR_ldcs);
+
+    vector<LOpcode> QorF_loads;
+    QorF_loads.push_back(LIR_ldq);      // weight LIR_ldq the heaviest
+    QorF_loads.push_back(LIR_ldq);
+    QorF_loads.push_back(LIR_ldqc);
+
+    enum LInsClass {
+#define CLASS(name, only64bit, relFreq)     name,
+#include "LInsClasses.tbl"
+#undef CLASS
+        LLAST
+    };
+
+    int relFreqs[LLAST];
+    memset(relFreqs, 0, sizeof(relFreqs));
+#if defined NANOJIT_64BIT
+#define CLASS(name, only64bit, relFreq)     relFreqs[name] = relFreq;
+#else
+#define CLASS(name, only64bit, relFreq)     relFreqs[name] = only64bit ? 0 : relFreq;
+#endif
+#include "LInsClasses.tbl"
+#undef CLASS
+
+    int relFreqsSum = 0;    // the sum of the individual relative frequencies
+    for (int c = 0; c < LLAST; c++) {
+        relFreqsSum += relFreqs[c];
+    }
+
+    // The number of times each LInsClass value appears in classGenerator[]
+    // matches 'relFreqs' (see LInsClasses.tbl).  Eg. if relFreqs[LIMM_I] ==
+    // 10, then LIMM_I appears in classGenerator[] 10 times.
+    LInsClass* classGenerator = new LInsClass[relFreqsSum];
+    int j = 0;
+    for (int c = 0; c < LLAST; c++) {
+        for (int i = 0; i < relFreqs[c]; i++) {
+            classGenerator[j++] = LInsClass(c);
+        }
+    }
+
+    // An area on the stack in which we do our loads and stores.
+    // NJ_MAX_STACK_ENTRY entries has a size of NJ_MAX_STACK_ENTRY*4 bytes, so
+    // we use a quarter of the maximum stack size.
+    const size_t scratchSzB = NJ_MAX_STACK_ENTRY;
+    LIns *scratch = mLir->insAlloc(scratchSzB);
+
+    int n = 0;
+    while (n < nIns) {
+
+        LIns *ins;
+
+        switch (classGenerator[rnd(relFreqsSum)]) {
+
+        case LFENCE:
+            if (rnd(2)) {
+                mLir->ins0(LIR_regfence);
+            } else {
+                mLir->insGuard(LIR_xbarrier, NULL, createGuardRecord(createSideExit()));
+            }
+            n++;
+            break;
+
+        // For the immediates, we bias towards smaller numbers, especially 0
+        // and 1 and small multiples of 4 which are common due to memory
+        // addressing.  This puts some realistic stress on CseFilter.
+        case LIMM_I: {
+            int32_t imm32 = 0;      // shut gcc up
+            switch (rnd(5)) {
+            case 0: imm32 = 0;                  break;
+            case 1: imm32 = 1;                  break;
+            case 2: imm32 = 4 * (rnd(256) + 1); break;  // 4, 8, ..., 1024
+            case 3: imm32 = rnd(19999) - 9999;  break;  // -9999..9999
+            case 4: imm32 = rndI32();           break;  // -RAND_MAX..RAND_MAX
+            }
+            ins = mLir->insImm(imm32);
+            addOrReplace(Is, ins);
+            n++;
+            break;
+        }
+
+        case LIMM_Q: {
+            uint64_t imm64 = 0;
+            switch (rnd(5)) {
+            case 0: imm64 = 0;                                      break;
+            case 1: imm64 = 1;                                      break;
+            case 2: imm64 = 4 * (rnd(256) + 1);                     break;  // 4, 8, ..., 1024
+            case 3: imm64 = rnd(19999) - 9999;                      break;  // -9999..9999
+            case 4: imm64 = uint64_t(rndU32()) << 32 | rndU32();    break;  // possibly big!
+            }
+            ins = mLir->insImmq(imm64);
+            addOrReplace(Qs, ins);
+            n++;
+            break;
+        }
+
+        case LIMM_F: {
+            // We don't explicitly generate infinities and NaNs here, but they
+            // end up occurring due to ExprFilter evaluating expressions like
+            // fdiv(1,0) and fdiv(Infinity,Infinity).
+            double imm64f = 0;
+            switch (rnd(5)) {
+            case 0: imm64f = 0.0;                                           break;
+            case 1: imm64f = 1.0;                                           break;
+            case 2:
+            case 3: imm64f = double(rnd(1000));                             break;  // 0.0..9999.0
+            case 4:
+                union {
+                    double d;
+                    uint64_t q;
+                } u;
+                u.q = uint64_t(rndU32()) << 32 | rndU32();
+                imm64f = u.d;
+                break;
+            }
+            ins = mLir->insImmf(imm64f);
+            addOrReplace(Fs, ins);
+            n++;
+            break;
+        }
+
+        case LOP_I_I:
+            if (!Is.empty()) {
+                ins = mLir->ins1(rndPick(I_I_ops), rndPick(Is));
+                addOrReplace(Is, ins);
+                n++;
+            }
+            break;
+
+        // case LOP_Q_Q:  no instruction in this category
+
+        case LOP_F_F:
+            if (!Fs.empty()) {
+                ins = mLir->ins1(rndPick(F_F_ops), rndPick(Fs));
+                addOrReplace(Fs, ins);
+                n++;
+            }
+            break;
+
+        case LOP_I_II:
+            if (!Is.empty()) {
+                LOpcode op = rndPick(I_II_ops);
+                LIns* lhs = rndPick(Is);
+                LIns* rhs = rndPick(Is);
+                if (op == LIR_div || op == LIR_mod) {
+                    // XXX: ExprFilter can't fold a div/mod with constant
+                    // args, due to the horrible semantics of LIR_mod.  So we
+                    // just don't generate anything if we hit that case.
+                    if (!lhs->isconst() || !rhs->isconst()) {
+                        // If the divisor is positive, no problems.  If it's zero, we get an
+                        // exception.  If it's -1 and the dividend is -2147483648 (-2^31) we get
+                        // an exception (and this has been encountered in practice).  So we only
+                        // allow positive divisors, ie. compute:  lhs / (rhs > 0 ? rhs : -k),
+                        // where k is a random number in the range 2..100 (this ensures we have
+                        // some negative divisors).
+                        LIns* gt0  = mLir->ins2i(LIR_gt, rhs, 0);
+                        LIns* rhs2 = mLir->ins3(LIR_cmov, gt0, rhs, mLir->insImm(-rnd(99) - 2));
+                        LIns* div  = mLir->ins2(LIR_div, lhs, rhs2);
+                        if (op == LIR_div) {
+                            ins = div;
+                            addOrReplace(Is, ins);
+                            n += 5;
+                        } else {
+                            ins = mLir->ins1(LIR_mod, div);
+                            // Add 'div' to the operands too so it might be used again, because
+                            // the code generated is different as compared to the case where 'div'
+                            // isn't used again.
+                            addOrReplace(Is, div);
+                            addOrReplace(Is, ins);
+                            n += 6;
+                        }
+                    }
+                } else {
+                    ins = mLir->ins2(op, lhs, rhs);
+                    addOrReplace(Is, ins);
+                    n++;
+                }
+            }
+            break;
+
+        case LOP_Q_QQ:
+            if (!Qs.empty()) {
+                ins = mLir->ins2(rndPick(Q_QQ_ops), rndPick(Qs), rndPick(Qs));
+                addOrReplace(Qs, ins);
+                n++;
+            }
+            break;
+
+        case LOP_F_FF:
+            if (!Fs.empty()) {
+                ins = mLir->ins2(rndPick(F_FF_ops), rndPick(Fs), rndPick(Fs));
+                addOrReplace(Fs, ins);
+                n++;
+            }
+            break;
+
+        case LOP_I_BII:
+            if (!Bs.empty() && !Is.empty()) {
+                ins = mLir->ins3(rndPick(I_BII_ops), rndPick(Bs), rndPick(Is), rndPick(Is));
+                addOrReplace(Is, ins);
+                n++;
+            }
+            break;
+
+        case LOP_Q_BQQ:
+            if (!Bs.empty() && !Qs.empty()) {
+                ins = mLir->ins3(rndPick(Q_BQQ_ops), rndPick(Bs), rndPick(Qs), rndPick(Qs));
+                addOrReplace(Qs, ins);
+                n++;
+            }
+            break;
+
+        case LOP_B_II:
+           if (!Is.empty()) {
+               ins = mLir->ins2(rndPick(B_II_ops), rndPick(Is), rndPick(Is));
+               addOrReplace(Bs, ins);
+               n++;
+           }
+            break;
+
+        case LOP_B_QQ:
+            if (!Qs.empty()) {
+                ins = mLir->ins2(rndPick(B_QQ_ops), rndPick(Qs), rndPick(Qs));
+                addOrReplace(Bs, ins);
+                n++;
+            }
+            break;
+
+        case LOP_B_FF:
+            if (!Fs.empty()) {
+                ins = mLir->ins2(rndPick(B_FF_ops), rndPick(Fs), rndPick(Fs));
+                // XXX: we don't push the result, because most (all?) of the
+                // backends currently can't handle cmovs/qcmovs that take
+                // float comparisons for the test (see bug 520944).  This means
+                // that all B_FF values are dead, unfortunately.
+                //addOrReplace(Bs, ins);
+                n++;
+            }
+            break;
+
+        case LOP_Q_I:
+            if (!Is.empty()) {
+                ins = mLir->ins1(rndPick(Q_I_ops), rndPick(Is));
+                addOrReplace(Qs, ins);
+                n++;
+            }
+            break;
+
+        case LOP_F_I:
+            if (!Is.empty()) {
+                ins = mLir->ins1(rndPick(F_I_ops), rndPick(Is));
+                addOrReplace(Fs, ins);
+                n++;
+            }
+            break;
+
+        case LOP_I_F:
+// XXX: NativeX64 doesn't implement qhi yet (and it may not need to).
+#if !defined NANOJIT_X64
+            if (!Fs.empty()) {
+                ins = mLir->ins1(rndPick(I_F_ops), rndPick(Fs));
+                addOrReplace(Is, ins);
+                n++;
+            }
+#endif
+            break;
+
+        case LOP_F_II:
+// XXX: NativeX64 doesn't implement qhi yet (and it may not need to).
+#if !defined NANOJIT_X64
+            if (!Is.empty()) {
+                ins = mLir->ins2(rndPick(F_II_ops), rndPick(Is), rndPick(Is));
+                addOrReplace(Fs, ins);
+                n++;
+            }
+#endif
+            break;
+
+        case LLD_I:
+            ins = mLir->insLoad(rndPick(I_loads), scratch, rndOffset32(scratchSzB));
+            addOrReplace(Is, ins);
+            n++;
+            break;
+
+        case LLD_QorF:
+            ins = mLir->insLoad(rndPick(QorF_loads), scratch, rndOffset64(scratchSzB));
+            addOrReplace((rnd(2) ? Qs : Fs), ins);
+            n++;
+            break;
+
+        case LST_I:
+            if (!Is.empty()) {
+                mLir->insStorei(rndPick(Is), scratch, rndOffset32(scratchSzB));
+                n++;
+            }
+            break;
+
+        case LST_QorF:
+            if (!Fs.empty()) {
+                mLir->insStorei(rndPick(Fs), scratch, rndOffset64(scratchSzB));
+                n++;
+            }
+            break;
+
+        case LCALL_I_I1:
+            if (!Is.empty()) {
+                LIns* args[1] = { rndPick(Is) };
+                ins = mLir->insCall(&ci_I_I1, args);
+                addOrReplace(Is, ins);
+                n++;
+            }
+            break;
+
+        case LCALL_I_I6:
+            if (!Is.empty()) {
+                LIns* args[6] = { rndPick(Is), rndPick(Is), rndPick(Is),
+                                  rndPick(Is), rndPick(Is), rndPick(Is) };
+                ins = mLir->insCall(&ci_I_I6, args);
+                addOrReplace(Is, ins);
+                n++;
+            }
+            break;
+
+        case LCALL_Q_Q2:
+            if (!Qs.empty()) {
+                LIns* args[2] = { rndPick(Qs), rndPick(Qs) };
+                ins = mLir->insCall(&ci_Q_Q2, args);
+                addOrReplace(Qs, ins);
+                n++;
+            }
+            break;
+
+        case LCALL_Q_Q7:
+            if (!Qs.empty()) {
+                LIns* args[7] = { rndPick(Qs), rndPick(Qs), rndPick(Qs), rndPick(Qs),
+                                  rndPick(Qs), rndPick(Qs), rndPick(Qs) };
+                ins = mLir->insCall(&ci_Q_Q7, args);
+                addOrReplace(Qs, ins);
+                n++;
+            }
+            break;
+
+        case LCALL_F_F3:
+            if (!Fs.empty()) {
+                LIns* args[3] = { rndPick(Fs), rndPick(Fs), rndPick(Fs) };
+                ins = mLir->insCall(&ci_F_F3, args);
+                addOrReplace(Fs, ins);
+                n++;
+            }
+            break;
+
+        case LCALL_F_F8:
+            if (!Fs.empty()) {
+                LIns* args[8] = { rndPick(Fs), rndPick(Fs), rndPick(Fs), rndPick(Fs),
+                                  rndPick(Fs), rndPick(Fs), rndPick(Fs), rndPick(Fs) };
+                ins = mLir->insCall(&ci_F_F8, args);
+                addOrReplace(Fs, ins);
+                n++;
+            }
+            break;
+
+        case LCALL_N_IQF:
+            if (!Is.empty() && !Qs.empty() && !Fs.empty()) {
+                // Nb: args[] holds the args in reverse order... sigh.
+                LIns* args[3] = { rndPick(Fs), rndPick(Qs), rndPick(Is) };
+                ins = mLir->insCall(&ci_N_IQF, args);
+                n++;
+            }
+            break;
+
+        case LLABEL:
+            // Although no jumps are generated yet, labels are important
+            // because they delimit areas where CSE can be applied.  Without
+            // them, CSE can be applied over very long regions, which leads to
+            // values that have very large live ranges, which leads to stack
+            // overflows.
+            mLir->ins0(LIR_label);
+            n++;
+            break;
+
+        default:
+            NanoAssert(0);
+            break;
+        }
+    }
+
+    delete[] classGenerator;
+
+    // End with a vanilla exit.
+    mReturnTypeBits |= RT_GUARD;
+    endFragment();
+}
+
 Lirasm::Lirasm(bool verbose) :
     mAssm(mCodeAlloc, mAlloc, &mCore, &mLogc)
 {
@@ -951,7 +1642,7 @@ Lirasm::Lirasm(bool verbose) :
     mLirbuf = new (mAlloc) LirBuffer(mAlloc);
 #ifdef DEBUG
     if (mVerbose) {
-        mLogc.lcbits = LC_Assembly;
+        mLogc.lcbits = LC_Assembly | LC_RegAlloc | LC_Activation;
         mLabelMap = new (mAlloc) LabelMap(mAlloc, &mLogc);
         mLirbuf->names = new (mAlloc) LirNameMap(mAlloc, mLabelMap);
     }
@@ -1052,6 +1743,14 @@ Lirasm::assemble(istream &in)
 }
 
 void
+Lirasm::assembleRandom(int nIns)
+{
+    string name = "main";
+    FragmentAssembler assembler(*this, name);
+    assembler.assembleRandomFragment(nIns);
+}
+
+void
 Lirasm::handlePatch(LirTokenStream &in)
 {
     string src, fragName, guardName, destName;
@@ -1080,66 +1779,118 @@ Lirasm::handlePatch(LirTokenStream &in)
     mAssm.patch(ins->record()->exit);
 }
 
-bool
-has_flag(vector<string> &args, const string &flag)
+void
+usageAndQuit(const string& progname)
 {
-    for (vector<string>::iterator i = args.begin(); i != args.end(); ++i) {
-        if (*i == flag) {
-            args.erase(i);
-            return true;
+    cout <<
+        "usage: " << progname << " [options] [filename]\n"
+        "Options:\n"
+        "  -h --help        print this message\n"
+        "  -v --verbose     print LIR and assembly code\n"
+        "  --execute        execute LIR\n"
+        "  --random [N]     generate a random LIR block of size N (default=100)\n"
+        "  --sse            use SSE2 instructions (x86 only)\n"
+        ;
+    exit(0);
+}
+
+void
+errMsgAndQuit(const string& progname, const string& msg)
+{
+    cerr << progname << ": " << msg << endl;
+    exit(1);
+}
+
+struct CmdLineOptions {
+    string  progname;
+    bool    verbose;
+    bool    execute;
+    int     random;
+    string  filename;
+};
+
+static void
+processCmdLine(int argc, char **argv, CmdLineOptions& opts)
+{
+    opts.progname = argv[0];
+    opts.verbose  = false;
+    opts.execute  = false;
+    opts.random   = 0;
+    bool sse      = false;
+
+    for (int i = 1; i < argc; i++) {
+        string arg = argv[i];
+
+        if (arg == "-h" || arg == "--help")
+            usageAndQuit(opts.progname);
+        else if (arg == "-v" || arg == "--verbose")
+            opts.verbose = true;
+        else if (arg == "--execute")
+            opts.execute = true;
+        else if (arg == "--random") {
+            const int defaultSize = 100;
+            if (i == argc - 1) {
+                opts.random = defaultSize;      // no numeric argument, use default
+            } else {
+                char* endptr;
+                int res = strtol(argv[i+1], &endptr, 10);
+                if ('\0' == *endptr) {
+                    // We don't bother checking for overflow.
+                    if (res <= 0)
+                        errMsgAndQuit(opts.progname, "--random argument must be greater than zero");
+                    opts.random = res;          // next arg is a number, use that for the size
+                    i++;
+                } else {
+                    opts.random = defaultSize;  // next arg is not a number
+                }
+            }
         }
+        else if (arg == "--sse") {
+            sse = true;
+        }
+        else if (arg[0] != '-') {
+            if (opts.filename.empty())
+                opts.filename = arg;
+            else
+                errMsgAndQuit(opts.progname, "you can only specify one filename");
+        }
+        else
+            errMsgAndQuit(opts.progname, "bad option: " + arg);
     }
-    return false;
+
+    if ((!opts.random && opts.filename.empty()) || (opts.random && !opts.filename.empty()))
+        errMsgAndQuit(opts.progname,
+                      "you must specify either a filename or --random (but not both)");
+
+#if defined NANOJIT_IA32
+    avmplus::AvmCore::config.use_cmov = avmplus::AvmCore::config.sse2 = sse;
+#else
+    if (sse)
+        errMsgAndQuit(opts.progname, "--sse is only allowed on x86");
+#endif
 }
 
 int
 main(int argc, char **argv)
 {
-    string prog(*argv);
-    vector<string> args;
-    while (--argc)
-        args.push_back(string(*++argv));
+    CmdLineOptions opts;
+    processCmdLine(argc, argv, opts);
 
-#if defined NANOJIT_IA32
-    avmplus::AvmCore::config.use_cmov =
-        avmplus::AvmCore::config.sse2 =
-        has_flag(args, "--sse");
-#endif
-    bool execute = has_flag(args, "--execute");
-    bool verbose = has_flag(args, "-v");
-
-#if defined NANOJIT_IA32
-    if (verbose && !execute) {
-        cerr << "usage: " << prog << " [--sse | --execute [-v]] <filename>" << endl;
-        exit(1);
+    Lirasm lasm(opts.verbose);
+    if (opts.random) {
+        lasm.assembleRandom(opts.random);
+    } else {
+        ifstream in(opts.filename.c_str());
+        if (!in)
+            errMsgAndQuit(opts.progname, "unable to open file " + opts.filename);
+        lasm.assemble(in);
     }
-#endif
-
-    if (args.empty()) {
-#if defined NANOJIT_IA32
-        cerr << "usage: " << prog << " [--sse | --execute [-v]] <filename>" << endl;
-#else
-        cerr << "usage: " << prog << " <filename>" << endl;
-#endif
-        exit(1);
-    }
-
-    ifstream in(args[0].c_str());
-    if (!in) {
-        cerr << prog << ": error: unable to open file " << args[0] << endl;
-        exit(1);
-    }
-
-    Lirasm lasm(verbose);
-    lasm.assemble(in);
 
     Fragments::const_iterator i;
-    if (execute) {
+    if (opts.execute) {
         i = lasm.mFragments.find("main");
-        if (i == lasm.mFragments.end()) {
-            cerr << prog << ": error: atleast one fragment must be named main" << endl;
-            exit(1);
-        }
+        if (i == lasm.mFragments.end())
+            errMsgAndQuit(opts.progname, "error: at least one fragment must be named 'main'");
         switch (i->second.mReturnType) {
           case RT_FLOAT:
             cout << "Output is: " << i->second.rfloat() << endl;

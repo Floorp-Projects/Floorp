@@ -1076,19 +1076,12 @@ namespace nanojit
         virtual LInsp insSkip(size_t size) {
             return out->insSkip(size);
         }
-        void insAssert(LIns* expr) {
-            #if defined DEBUG
-            LIns* branch = insBranch(LIR_jt, expr, NULL);
-            ins0(LIR_dbreak);
-            branch->setTarget(ins0(LIR_label));
-            #endif
-        }
 
         // convenience functions
 
         // Inserts a conditional to execute and branches to execute if
         // the condition is true and false respectively.
-        LIns*        ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse);
+        LIns*        ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse, bool use_cmov);
         // Inserts an integer comparison to 0
         LIns*        ins_eq0(LIns* oprnd1);
         // Inserts a pointer comparison to 0
@@ -1453,7 +1446,7 @@ namespace nanojit
     class Assembler;
 
     void compile(Assembler *assm, Fragment *frag verbose_only(, Allocator& alloc, LabelMap*));
-    verbose_only(void live(Allocator& alloc, Fragment *frag, LirBuffer *lirbuf);)
+    verbose_only(void live(Allocator& alloc, Fragment* frag, LogControl*);)
 
     class StackFilter: public LirFilter
     {

@@ -483,7 +483,7 @@ xpctestEcho::PrintArgTypes(void)
         else if (JSVAL_IS_VOID(argv[i]))
             type = "void";
 
-        printf(type);
+        fputs(type, stdout);
 
         if(i < argc-1)
             printf(", ");

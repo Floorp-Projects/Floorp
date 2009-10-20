@@ -40,15 +40,9 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nanojit.h"
 
-#ifdef _MAC
-// for MakeDataExecutable
-#include <CoreServices/CoreServices.h>
-#endif
-
-#if defined AVMPLUS_UNIX || defined AVMPLUS_MAC
-#include <sys/mman.h>
-#include <errno.h>
-#include <stdlib.h>
+#ifdef _MSC_VER
+    // disable some specific warnings which are normally useful, but pervasive in the code-gen macros
+    #pragma warning(disable:4310) // cast truncates constant value
 #endif
 
 namespace nanojit
@@ -1731,8 +1725,6 @@ namespace nanojit
         NIns *eip = _nIns;
         NanoAssertMsg(n<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small");
         if (eip - n < (_inExit ? exitStart : codeStart)) {
-            // We are done with the current page.  Tell Valgrind that new code
-            // has been generated.
             if (_inExit)
                 codeAlloc(exitStart, exitEnd, _nIns verbose_only(, exitBytes));
             else

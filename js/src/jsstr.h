@@ -393,6 +393,10 @@ struct JSString {
         return isUnitString(ptr) || isIntString(ptr);
     }
 
+#ifdef __SUNPRO_CC
+#pragma align 8 (__1cIJSStringPunitStringTable_, __1cIJSStringOintStringTable_)
+#endif
+
     static JSString unitStringTable[];
     static JSString intStringTable[];
     static const char *deflatedIntStringTable[];

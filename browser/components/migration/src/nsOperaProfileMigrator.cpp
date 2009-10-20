@@ -884,7 +884,9 @@ nsOperaCookieMigrator::AddCookieOverride(nsIPermissionManager* aManager)
   rv = aManager->Add(uri, "cookie",
                      (mCurrHandlingInfo == 1 || mCurrHandlingInfo == 3)
                      ? (PRUint32) nsIPermissionManager::ALLOW_ACTION
-                     : (PRUint32) nsIPermissionManager::DENY_ACTION);
+                     : (PRUint32) nsIPermissionManager::DENY_ACTION,
+                     nsIPermissionManager::EXPIRE_NEVER,
+                     0);
 
   mCurrHandlingInfo = 0;
 

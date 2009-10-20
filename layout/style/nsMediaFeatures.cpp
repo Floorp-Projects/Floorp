@@ -46,6 +46,7 @@
 #include "nsCSSValue.h"
 #include "nsIDocShell.h"
 #include "nsLayoutUtils.h"
+#include "nsCSSRuleProcessor.h"
 
 static const PRInt32 kOrientationKeywords[] = {
   eCSSKeyword_portrait,                 NS_STYLE_ORIENTATION_PORTRAIT,
@@ -73,7 +74,8 @@ GetSize(nsPresContext* aPresContext)
 }
 
 static nsresult
-GetWidth(nsPresContext* aPresContext, nsCSSValue& aResult)
+GetWidth(nsPresContext* aPresContext, const nsMediaFeature*,
+         nsCSSValue& aResult)
 {
     nsSize size = GetSize(aPresContext);
     float pixelWidth = aPresContext->AppUnitsToFloatCSSPixels(size.width);
@@ -82,7 +84,8 @@ GetWidth(nsPresContext* aPresContext, nsCSSValue& aResult)
 }
 
 static nsresult
-GetHeight(nsPresContext* aPresContext, nsCSSValue& aResult)
+GetHeight(nsPresContext* aPresContext, const nsMediaFeature*,
+          nsCSSValue& aResult)
 {
     nsSize size = GetSize(aPresContext);
     float pixelHeight = aPresContext->AppUnitsToFloatCSSPixels(size.height);
@@ -118,7 +121,8 @@ GetDeviceSize(nsPresContext* aPresContext)
 }
 
 static nsresult
-GetDeviceWidth(nsPresContext* aPresContext, nsCSSValue& aResult)
+GetDeviceWidth(nsPresContext* aPresContext, const nsMediaFeature*,
+               nsCSSValue& aResult)
 {
     nsSize size = GetDeviceSize(aPresContext);
     float pixelWidth = aPresContext->AppUnitsToFloatCSSPixels(size.width);
@@ -127,7 +131,8 @@ GetDeviceWidth(nsPresContext* aPresContext, nsCSSValue& aResult)
 }
 
 static nsresult
-GetDeviceHeight(nsPresContext* aPresContext, nsCSSValue& aResult)
+GetDeviceHeight(nsPresContext* aPresContext, const nsMediaFeature*,
+                nsCSSValue& aResult)
 {
     nsSize size = GetDeviceSize(aPresContext);
     float pixelHeight = aPresContext->AppUnitsToFloatCSSPixels(size.height);
@@ -136,7 +141,8 @@ GetDeviceHeight(nsPresContext* aPresContext, nsCSSValue& aResult)
 }
 
 static nsresult
-GetOrientation(nsPresContext* aPresContext, nsCSSValue& aResult)
+GetOrientation(nsPresContext* aPresContext, const nsMediaFeature*,
+               nsCSSValue& aResult)
 {
     nsSize size = GetSize(aPresContext);
     PRInt32 orientation;
@@ -166,20 +172,23 @@ MakeArray(const nsSize& aSize, nsCSSValue& aResult)
 }
 
 static nsresult
-GetAspectRatio(nsPresContext* aPresContext, nsCSSValue& aResult)
+GetAspectRatio(nsPresContext* aPresContext, const nsMediaFeature*,
+               nsCSSValue& aResult)
 {
     return MakeArray(GetSize(aPresContext), aResult);
 }
 
 static nsresult
-GetDeviceAspectRatio(nsPresContext* aPresContext, nsCSSValue& aResult)
+GetDeviceAspectRatio(nsPresContext* aPresContext, const nsMediaFeature*,
+                     nsCSSValue& aResult)
 {
     return MakeArray(GetDeviceSize(aPresContext), aResult);
 }
 
 
 static nsresult
-GetColor(nsPresContext* aPresContext, nsCSSValue& aResult)
+GetColor(nsPresContext* aPresContext, const nsMediaFeature*,
+         nsCSSValue& aResult)
 {
     // FIXME:  This implementation is bogus.  nsThebesDeviceContext
     // doesn't provide reliable information (should be fixed in bug
@@ -197,7 +206,8 @@ GetColor(nsPresContext* aPresContext, nsCSSValue& aResult)
 }
 
 static nsresult
-GetColorIndex(nsPresContext* aPresContext, nsCSSValue& aResult)
+GetColorIndex(nsPresContext* aPresContext, const nsMediaFeature*,
+              nsCSSValue& aResult)
 {
     // We should return zero if the device does not use a color lookup
     // table.  Stuart says that our handling of displays with 8-bit
@@ -210,7 +220,8 @@ GetColorIndex(nsPresContext* aPresContext, nsCSSValue& aResult)
 }
 
 static nsresult
-GetMonochrome(nsPresContext* aPresContext, nsCSSValue& aResult)
+GetMonochrome(nsPresContext* aPresContext, const nsMediaFeature*,
+              nsCSSValue& aResult)
 {
     // For color devices we should return 0.
     // FIXME: On a monochrome device, return the actual color depth, not
@@ -220,7 +231,8 @@ GetMonochrome(nsPresContext* aPresContext, nsCSSValue& aResult)
 }
 
 static nsresult
-GetResolution(nsPresContext* aPresContext, nsCSSValue& aResult)
+GetResolution(nsPresContext* aPresContext, const nsMediaFeature*,
+              nsCSSValue& aResult)
 {
     // Resolution values are in device pixels, not CSS pixels.
     nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
@@ -230,7 +242,8 @@ GetResolution(nsPresContext* aPresContext, nsCSSValue& aResult)
 }
 
 static nsresult
-GetScan(nsPresContext* aPresContext, nsCSSValue& aResult)
+GetScan(nsPresContext* aPresContext, const nsMediaFeature*,
+        nsCSSValue& aResult)
 {
     // Since Gecko doesn't support the 'tv' media type, the 'scan'
     // feature is never present.
@@ -239,11 +252,24 @@ GetScan(nsPresContext* aPresContext, nsCSSValue& aResult)
 }
 
 static nsresult
-GetGrid(nsPresContext* aPresContext, nsCSSValue& aResult)
+GetGrid(nsPresContext* aPresContext, const nsMediaFeature*,
+        nsCSSValue& aResult)
 {
     // Gecko doesn't support grid devices (e.g., ttys), so the 'grid'
     // feature is always 0.
     aResult.SetIntValue(0, eCSSUnit_Integer);
+    return NS_OK;
+}
+
+static nsresult
+GetSystemMetric(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
+                nsCSSValue& aResult)
+{
+    NS_ABORT_IF_FALSE(aFeature->mValueType == nsMediaFeature::eBoolInteger,
+                      "unexpected type");
+    nsIAtom *metricAtom = *aFeature->mData.mMetric;
+    PRBool hasMetric = nsCSSRuleProcessor::HasSystemMetric(metricAtom);
+    aResult.SetIntValue(hasMetric ? 1 : 0, eCSSUnit_Integer);
     return NS_OK;
 }
 
@@ -262,99 +288,193 @@ nsMediaFeatures::features[] = {
         &nsGkAtoms::width,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eLength,
-        nsnull,
+        { nsnull },
         GetWidth
     },
     {
         &nsGkAtoms::height,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eLength,
-        nsnull,
+        { nsnull },
         GetHeight
     },
     {
         &nsGkAtoms::deviceWidth,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eLength,
-        nsnull,
+        { nsnull },
         GetDeviceWidth
     },
     {
         &nsGkAtoms::deviceHeight,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eLength,
-        nsnull,
+        { nsnull },
         GetDeviceHeight
     },
     {
         &nsGkAtoms::orientation,
         nsMediaFeature::eMinMaxNotAllowed,
         nsMediaFeature::eEnumerated,
-        kOrientationKeywords,
+        { kOrientationKeywords },
         GetOrientation
     },
     {
         &nsGkAtoms::aspectRatio,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eIntRatio,
-        nsnull,
+        { nsnull },
         GetAspectRatio
     },
     {
         &nsGkAtoms::deviceAspectRatio,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eIntRatio,
-        nsnull,
+        { nsnull },
         GetDeviceAspectRatio
     },
     {
         &nsGkAtoms::color,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eInteger,
-        nsnull,
+        { nsnull },
         GetColor
     },
     {
         &nsGkAtoms::colorIndex,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eInteger,
-        nsnull,
+        { nsnull },
         GetColorIndex
     },
     {
         &nsGkAtoms::monochrome,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eInteger,
-        nsnull,
+        { nsnull },
         GetMonochrome
     },
     {
         &nsGkAtoms::resolution,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eResolution,
-        nsnull,
+        { nsnull },
         GetResolution
     },
     {
         &nsGkAtoms::scan,
         nsMediaFeature::eMinMaxNotAllowed,
         nsMediaFeature::eEnumerated,
-        kScanKeywords,
+        { kScanKeywords },
         GetScan
     },
     {
         &nsGkAtoms::grid,
         nsMediaFeature::eMinMaxNotAllowed,
         nsMediaFeature::eBoolInteger,
-        nsnull,
+        { nsnull },
         GetGrid
     },
+
+    // Mozilla extensions
+    {
+        &nsGkAtoms::_moz_scrollbar_start_backward,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::scrollbar_start_backward },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_scrollbar_start_forward,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::scrollbar_start_forward },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_scrollbar_end_backward,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::scrollbar_end_backward },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_scrollbar_end_forward,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::scrollbar_end_forward },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_scrollbar_thumb_proportional,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::scrollbar_thumb_proportional },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_images_in_menus,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::images_in_menus },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_images_in_buttons,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::images_in_buttons },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_windows_default_theme,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::windows_default_theme },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_mac_graphite_theme,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::mac_graphite_theme },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_windows_compositor,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::windows_compositor },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_windows_classic,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::windows_classic },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_touch_enabled,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::touch_enabled },
+        GetSystemMetric
+    },
+    {
+        &nsGkAtoms::_moz_maemo_classic,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::maemo_classic },
+        GetSystemMetric
+    },
+
     // Null-mName terminator:
     {
         nsnull,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eInteger,
-        nsnull,
+        { nsnull },
         nsnull
     },
 };

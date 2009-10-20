@@ -24,6 +24,7 @@
 //   Franz.Sirl-kernel@lauterbach.com (Franz Sirl)
 //   beard@netscape.com (Patrick Beard)
 //   waterson@netscape.com (Chris Waterson)
+//   bigeasy@linutronix.de (Sebastian Andrzej Siewior)
 //
 // Alternatively, the contents of this file may be used under the terms of
 // either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -75,7 +76,7 @@ SharedStub:
 	stw	r8,28(sp)
 	stw	r9,32(sp)
 	stw	r10,36(sp)
-
+#ifndef __NO_FPRS__
 	stfd	f1,40(sp)			// save FP registers
 	stfd	f2,48(sp)
 	stfd	f3,56(sp)
@@ -84,6 +85,7 @@ SharedStub:
 	stfd	f6,80(sp)
 	stfd	f7,88(sp)
 	stfd	f8,96(sp)
+#endif
 
 						// r3 has the 'self' pointer already
 	
@@ -94,7 +96,11 @@ SharedStub:
 						// beyond r3-r10/f1-f8 mapped range
 	
 	addi	r6,sp,8				// r6 <= gprData
+#ifndef __NO_FPRS__
 	addi	r7,sp,40			// r7 <= fprData
+#else
+	li	r7, 0				// r7 should be unused
+#endif
       
 	bl	PrepareAndDispatch@local	// Go!
     

@@ -10,11 +10,11 @@ window.onload = run;
 function run() {
   var test = document.getElementById("test");
   var unused = test.offsetWidth;
-  // FIXME: It's a bug that we need to do this at all: the way we change
-  // style data essentially violates style rule immutability because we
-  // assume that all of the difference calculation will use
-  // PeekStyleData, which is no longer true with transitions.
-  // See the FIXME in nsTransitionManager::ConsiderStartingTransition.
+  // FIXME (Bug 522595): It's a bug that we need to do this at all: the
+  // way we change style data essentially violates style rule
+  // immutability because we assume that all of the difference
+  // calculation will use PeekStyleData, which is no longer true with
+  // transitions.
   unused = getComputedStyle(test, "").color;
   test.style.color = "red";
   unused = test.offsetWidth;

@@ -29,6 +29,48 @@
  *	 GrowlDefines.h.
  */
 
+/*!
+ * @defined NSInteger
+ * @abstract Typedef to int so Growl will compile on pre-10.5 SDKs.
+ */
+#ifndef NSINTEGER_DEFINED
+typedef int NSInteger;
+typedef unsigned int NSUInteger;
+#define NSINTEGER_DEFINED
+#endif
+
+/*!
+ * @defined CGFloat
+ * @abstract Typedef to float so Growl will compile on pre-10.5 SDKs.
+ */
+#ifndef CGFLOAT_DEFINED
+typedef float CGFloat;
+#define CGFLOAT_IS_DOUBLE 0
+#define CGFLOAT_DEFINED
+#endif
+
+/*!
+ * @defined GrowlCGFloatCeiling()
+ * @abstract Macro for the ceil() function that uses a different precision depending on the CPU architecture.
+ */
+/*!
+ * @defined GrowlCGFloatAbsoluteValue()
+ * @abstract Macro for the fabs() function that uses a different precision depending on the CPU architecture.
+ */
+/*!
+ * @defined GrowlCGFloatFloor()
+ * @abstract Macro for the floor() function that uses a different precision depending on the CPU architecture.
+ */
+#if CGFLOAT_IS_DOUBLE
+#define GrowlCGFloatCeiling(x) ceil(x)
+#define GrowlCGFloatAbsoluteValue(x) fabs(x)
+#define GrowlCGFloatFloor(x) floor(x)
+#else
+#define GrowlCGFloatCeiling(x) ceilf(x)
+#define GrowlCGFloatAbsoluteValue(x) fabsf(x)
+#define GrowlCGFloatFloor(x) floorf(x)
+#endif
+
 /*!	@defined	GROWL_TCP_PORT
  *	@abstract	The TCP listen port for Growl notification servers.
  */
@@ -390,6 +432,15 @@ struct GrowlNetworkNotification {
  *	@param	domain	The bundle ID of the plug-in.
  *	@param	result	A pointer to a float. Leaves unchanged if the value doesn't exist.
  */
+#ifdef __LP64__
+#define READ_GROWL_PREF_FLOAT(key, domain, result) do {\
+	CFNumberRef floatValue = NULL; \
+	READ_GROWL_PREF_VALUE(key, domain, CFNumberRef, &floatValue); \
+	if (floatValue) {\
+		CFNumberGetValue(floatValue, kCFNumberCGFloatType, result); \
+		CFRelease(floatValue); \
+	} } while(0)
+#else
 #define READ_GROWL_PREF_FLOAT(key, domain, result) do {\
 	CFNumberRef floatValue = NULL; \
 	READ_GROWL_PREF_VALUE(key, domain, CFNumberRef, &floatValue); \
@@ -397,6 +448,7 @@ struct GrowlNetworkNotification {
 		CFNumberGetValue(floatValue, kCFNumberFloatType, result); \
 		CFRelease(floatValue); \
 	} } while(0)
+#endif
 
 /*!	@function    WRITE_GROWL_PREF_FLOAT
  *	@abstract    Writes the given float to the plug-in's preferences.
@@ -406,10 +458,17 @@ struct GrowlNetworkNotification {
  *	@param	value	The float value to write to the preferences.
  *	@param	domain	The bundle ID of the plug-in.
  */
+#ifdef __LP64__
+#define WRITE_GROWL_PREF_FLOAT(key, value, domain) do {\
+	CFNumberRef floatValue = CFNumberCreate(NULL, kCFNumberCGFloatType, &value); \
+	WRITE_GROWL_PREF_VALUE(key, floatValue, domain); \
+	CFRelease(floatValue); } while(0)
+#else
 #define WRITE_GROWL_PREF_FLOAT(key, value, domain) do {\
 	CFNumberRef floatValue = CFNumberCreate(NULL, kCFNumberFloatType, &value); \
 	WRITE_GROWL_PREF_VALUE(key, floatValue, domain); \
 	CFRelease(floatValue); } while(0)
+#endif
 
 
 /*!	@defined	GROWL_CLOSE_ALL_NOTIFICATIONS

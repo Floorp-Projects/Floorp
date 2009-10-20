@@ -44,7 +44,7 @@
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(17311145-97da-49eb-b984-965bdee8879c)]
+[scriptable, uuid(cb6078bb-c6b3-4f35-acfd-3b4efa934484)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -100,4 +100,11 @@ interface nsIXULRuntime : nsISupports
    * The type of the caller's process.  Returns one of the values above.
    */
   readonly attribute unsigned long processType;
+
+  /**
+   * Signal the apprunner to invalidate caches on the next restart.
+   * This will cause components to be autoregistered and all
+   * fastload data to be re-created.
+   */
+  void invalidateCachesOnRestart();
 };

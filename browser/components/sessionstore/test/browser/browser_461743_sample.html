@@ -30,6 +30,10 @@
       var event = document.createEvent("MessageEvent");
       event.initMessageEvent("461743", true, false, "done", location.href, "", window);
       document.dispatchEvent(event);
+      frames[0].document.removeEventListener("DOMNodeInserted", loadChrome, true);
+      frames[0].document.removeEventListener("DOMNodeInserted", delay, true);
+      frames[0].document.removeEventListener("DOMNodeInserted", loadExploit, true);
+      frames[0].document.removeEventListener("DOMNodeInserted", done, true);
     }
     
     frames[0].document.addEventListener("DOMNodeInserted", loadChrome, true);

@@ -143,28 +143,6 @@ oggplay_buffer_is_full(volatile OggPlayBuffer *buffer) {
 
 }
 
-void
-oggplay_buffer_set_last_data(OggPlay *me, volatile OggPlayBuffer *buffer) 
-{
-
-  int                   i;
-  OggPlayCallbackInfo   *p;
-
-  /*
-   * we're at last data before we've even started!
-   */
-  if (buffer->last_filled == -1) {
-    return;
-  }
-
-  p = (OggPlayCallbackInfo *)buffer->buffer_list[buffer->last_filled];
-
-  for (i = 0; i < me->num_tracks; i++) {
-    p->stream_info = OGGPLAY_STREAM_LAST_DATA;
-    p++;
-  }
-}
-
 int
 oggplay_buffer_callback(OggPlay *me, int tracks,
                         OggPlayCallbackInfo **track_info, void *user) {

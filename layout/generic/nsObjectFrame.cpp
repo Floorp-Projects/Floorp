@@ -2194,7 +2194,7 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
     // If we're asked to do a delayed stop it means we're stopping the
     // plugin because we're destroying the frame. In that case, disown
     // the widget.
-    GetView()->DetachWidgetEventHandler(mWidget);
+    mInnerView->DetachWidgetEventHandler(mWidget);
     mWidget = nsnull;
   }
 #endif
@@ -2641,7 +2641,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
                 presContext->DevPixelsToAppUnits(invalidRect->top),
                 presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
                 presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
-    mOwner->Invalidate(rect);
+    mOwner->Invalidate(rect + mOwner->GetUsedBorderAndPadding().TopLeft());
   }
 
   return rv;

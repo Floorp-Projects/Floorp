@@ -753,6 +753,13 @@ protected:
       nsCOMPtr<nsIAtom>       mAttrName;
       PRPackedBool            mSetAttr;
       PRPackedBool            mNeedsAttrChange;
+
+      class Comparator {
+        public:
+          static PRBool Equals(const nsDelayedBroadcastUpdate& a, const nsDelayedBroadcastUpdate& b) {
+            return a.mBroadcaster == b.mBroadcaster && a.mListener == b.mListener && a.mAttrName == b.mAttrName;
+          }
+      };
     };
 
     nsTArray<nsDelayedBroadcastUpdate> mDelayedBroadcasters;

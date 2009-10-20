@@ -58,18 +58,6 @@
 #include "nsIStringBundle.h"
 #include "nsContentUtils.h"
 
-// Don't bother collecting whitespace characters in token's mIdent buffer
-#undef COLLECT_WHITESPACE
-
-static const PRUnichar CSS_ESCAPE = PRUnichar('\\');
-static const PRUint8 IS_HEX_DIGIT = 0x02;
-static const PRUint8 START_IDENT = 0x04;
-static const PRUint8 IS_IDENT = 0x08;
-static const PRUint8 IS_WHITESPACE = 0x10;
-
-static PRBool gLexTableSetup = PR_FALSE;
-static PRUint8 gLexTable[256];
-
 #ifdef CSS_REPORT_PARSE_ERRORS
 static PRBool gReportErrors = PR_TRUE;
 static nsIConsoleService *gConsoleService;
@@ -77,36 +65,65 @@ static nsIFactory *gScriptErrorFactory;
 static nsIStringBundle *gStringBundle;
 #endif
 
-static void
-BuildLexTable()
-{
-  gLexTableSetup = PR_TRUE;
+// Don't bother collecting whitespace characters in token's mIdent buffer
+#undef COLLECT_WHITESPACE
 
-  PRUint8* lt = gLexTable;
-  int i;
-  lt[CSS_ESCAPE] = START_IDENT;
-  lt['-'] |= IS_IDENT;
-  lt['_'] |= IS_IDENT | START_IDENT;
-  lt[' '] |= IS_WHITESPACE;   // space
-  lt['\t'] |= IS_WHITESPACE;  // horizontal tab
-  lt['\r'] |= IS_WHITESPACE;  // carriage return
-  lt['\n'] |= IS_WHITESPACE;  // line feed
-  lt['\f'] |= IS_WHITESPACE;  // form feed
-  for (i = 161; i <= 255; i++) {
-    lt[i] |= IS_IDENT | START_IDENT;
-  }
-  for (i = '0'; i <= '9'; i++) {
-    lt[i] |= IS_HEX_DIGIT | IS_IDENT;
-  }
-  for (i = 'A'; i <= 'Z'; i++) {
-    if ((i >= 'A') && (i <= 'F')) {
-      lt[i] |= IS_HEX_DIGIT;
-      lt[i+32] |= IS_HEX_DIGIT;
-    }
-    lt[i] |= IS_IDENT | START_IDENT;
-    lt[i+32] |= IS_IDENT | START_IDENT;
-  }
-}
+// Table of character classes
+static const PRUnichar CSS_ESCAPE  = PRUnichar('\\');
+
+static const PRUint8 IS_HEX_DIGIT  = 0x01;
+static const PRUint8 START_IDENT   = 0x02;
+static const PRUint8 IS_IDENT      = 0x04;
+static const PRUint8 IS_WHITESPACE = 0x08;
+
+#define W   IS_WHITESPACE
+#define I   IS_IDENT
+#define S            START_IDENT
+#define SI  IS_IDENT|START_IDENT
+#define XI  IS_IDENT            |IS_HEX_DIGIT
+#define XSI IS_IDENT|START_IDENT|IS_HEX_DIGIT
+
+static const PRUint8 gLexTable[256] = {
+//                                     TAB LF      FF  CR
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  W,  W,  0,  W,  W,  0,  0,
+//
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+// SPC !   "   #   $   %   &   '   (   )   *   +   ,   -   .   /
+   W,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  I,  0,  0,
+// 0   1   2   3   4   5   6   7   8   9   :   ;   <   =   >   ?
+   XI, XI, XI, XI, XI, XI, XI, XI, XI, XI, 0,  0,  0,  0,  0,  0,
+// @   A   B   C   D   E   F   G   H   I   J   K   L   M   N   O
+   0,  XSI,XSI,XSI,XSI,XSI,XSI,SI, SI, SI, SI, SI, SI, SI, SI, SI,
+// P   Q   R   S   T   U   V   W   X   Y   Z   [   \   ]   ^   _
+   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, 0,  S,  0,  0,  SI,
+// `   a   b   c   d   e   f   g   h   i   j   k   l   m   n   o
+   0,  XSI,XSI,XSI,XSI,XSI,XSI,SI, SI, SI, SI, SI, SI, SI, SI, SI,
+// p   q   r   s   t   u   v   w   x   y   z   {   |   }   ~
+   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, 0,  0,  0,  0,  0,
+//
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+//
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+//     ¡   ¢   £   ¤   ¥   ¦   §   ¨   ©   ª   «   ¬   ­   ®   ¯
+   0,  SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+// °   ±   ²   ³   ´   µ   ¶   ·   ¸   ¹   º   »   ¼   ½   ¾   ¿
+   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+// À   Á   Â   Ã   Ä   Å   Æ   Ç   È   É   Ê   Ë   Ì   Í   Î   Ï
+   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+// Ð   Ñ   Ò   Ó   Ô   Õ   Ö   ×   Ø   Ù   Ú   Û   Ü   Ý   Þ   ß
+   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+// à   á   â   ã   ä   å   æ   ç   è   é   ê   ë   ì   í   î   ï
+   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+// ð   ñ   ò   ó   ô   õ   ö   ÷   ø   ù   ú   û   ü   ý   þ   ÿ
+   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+};
+
+#undef W
+#undef S
+#undef I
+#undef XI
+#undef SI
+#undef XSI
 
 static inline PRBool
 IsIdentStart(PRInt32 aChar)
@@ -251,10 +268,6 @@ nsCSSScanner::nsCSSScanner()
 #endif
 {
   MOZ_COUNT_CTOR(nsCSSScanner);
-  if (!gLexTableSetup) {
-    // XXX need a monitor
-    BuildLexTable();
-  }
   mPushback = mLocalPushback;
   mPushbackSize = NS_ARRAY_LENGTH(mLocalPushback);
   // No need to init the other members, since they represent state

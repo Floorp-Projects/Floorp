@@ -289,25 +289,6 @@
 #endif
               id="viewMenu" label="&views.label;">
           <menupopup id="viewMenuPopup">
-<!--
-            <menuitem id="viewDetails"
-                      type="radio"
-#ifdef XP_MACOSX
-                      label="&view.detailsMacOSX.label;"
-#else
-                      label="&view.details.label;"
-#endif
-                      accesskey="&view.details.accesskey;">
-            </menuitem>
-
-            <menuseparator id="addonsSeparator"/>
-
-            <menuitem id="viewAddons"
-                      command=""
-                      label="&view.addons.label;"
-                      accesskey="&view.addons.label;"/>
-            <menuseparator id="sortingSeparator"/>
--->
 
             <menu id="viewColumns" 
                   label="&view.columns.label;" accesskey="&view.columns.accesskey;">
@@ -331,14 +312,6 @@
                           oncommand="ViewMenu.setSortColumn(null, 'descending'); event.stopPropagation();"/>
               </menupopup>
             </menu>
-<!--
-            <menuseparator id="groupingSeparator" observes="placesBC_grouping:separator"/>
-
-            <menuitem id="viewGroupNone" type="radio" name="group"
-                      observes="placesBC_grouping:off"/>
-            <menuitem id="viewGroupGroup" type="radio" name="group"
-                      observes="placesBC_grouping:on"/>
--->
           </menupopup>
 #ifdef XP_MACOSX
         </toolbarbutton>
@@ -441,18 +414,8 @@
               <button id="saveSearch" class="small" 
                        label="&saveSearch.label;" accesskey="&saveSearch.accesskey;"
                        command="OrganizerCommand_search:save"/>
-#ifdef PLACES_QUERY_BUILDER
-              <button id="organizerScopeBarExpander"
-                      class="expander-down"
-                      tooltiptext="&search.scopeBarExpanderDown.tooltip;"
-                      tooltiptextdown="&search.scopeBarExpanderDown.tooltip;"
-                      tooltiptextup="&search.scopeBarExpanderUp.tooltip;"
-                      oncommand="PlacesQueryBuilder.toggleVisibility();"/>
             </toolbar>
-#include advancedSearch.inc
-#else
-            </toolbar>
-#endif
+
           </vbox>
           <vbox flex="1">
             <tree id="placeContent" class="placesTree" context="placesContext"

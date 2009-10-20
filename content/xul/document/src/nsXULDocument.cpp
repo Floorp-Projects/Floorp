@@ -224,9 +224,9 @@ nsRefMapEntry::RemoveContent(nsIContent* aContent)
 nsXULDocument::nsXULDocument(void)
     : nsXMLDocument("application/vnd.mozilla.xul+xml"),
       mDocDirection(Direction_Uninitialized),
+      mDocLWTheme(Doc_Theme_Uninitialized),
       mState(eState_Master),
-      mResolutionPhase(nsForwardReference::eStart),
-      mDocLWTheme(Doc_Theme_Uninitialized)
+      mResolutionPhase(nsForwardReference::eStart)
 {
 
     // NOTE! nsDocument::operator new() zeroes out all members, so don't
@@ -1030,36 +1030,35 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
                         = do_QueryReferent(bl->mListener);
                     nsCOMPtr<nsIContent> l = do_QueryInterface(listenerEl);
                     if (l) {
-                        PRBool possibleCycle = PR_FALSE;
-                        for (PRUint32 j = 0; j < mDelayedAttrChangeBroadcasts.Length(); ++j) {
-                            if (mDelayedAttrChangeBroadcasts[j].mListener == listenerEl &&
-                                mDelayedAttrChangeBroadcasts[j].mAttrName == aAttribute) {
-                                possibleCycle = PR_TRUE;
-                                break;
+                        nsAutoString currentValue;
+                        PRBool hasAttr = l->GetAttr(kNameSpaceID_None,
+                                                    aAttribute,
+                                                    currentValue);
+                        // We need to update listener only if we're
+                        // (1) removing an existing attribute,
+                        // (2) adding a new attribute or
+                        // (3) changing the value of an attribute.
+                        PRBool needsAttrChange =
+                            attrSet != hasAttr || !value.Equals(currentValue);
+                        nsDelayedBroadcastUpdate delayedUpdate(domele,
+                                                               listenerEl,
+                                                               aAttribute,
+                                                               value,
+                                                               attrSet,
+                                                               needsAttrChange);
+
+                        PRUint32 index =
+                            mDelayedAttrChangeBroadcasts.IndexOf(delayedUpdate,
+                                0, nsDelayedBroadcastUpdate::Comparator());
+                        if (index != mDelayedAttrChangeBroadcasts.NoIndex) {
+                            if (mHandlingDelayedAttrChange) {
+                                NS_WARNING("Broadcasting loop!");
+                                continue;
                             }
+                            mDelayedAttrChangeBroadcasts.RemoveElementAt(index);
                         }
 
-                        if (possibleCycle) {
-                            NS_WARNING("Broadcasting loop!");
-                        } else {
-                            nsAutoString currentValue;
-                            PRBool hasAttr = l->GetAttr(kNameSpaceID_None,
-                                                        aAttribute,
-                                                        currentValue);
-                            // We need to update listener only if we're
-                            // (1) removing an existing attribute,
-                            // (2) adding a new attribute or
-                            // (3) changing the value of an attribute.
-                            PRBool needsAttrChange =
-                                attrSet != hasAttr || !value.Equals(currentValue);
-                            nsDelayedBroadcastUpdate delayedUpdate(domele,
-                                                                   listenerEl,
-                                                                   aAttribute,
-                                                                   value,
-                                                                   attrSet,
-                                                                   needsAttrChange);
-                            mDelayedAttrChangeBroadcasts.AppendElement(delayedUpdate);
-                        }
+                        mDelayedAttrChangeBroadcasts.AppendElement(delayedUpdate);
                     }
                 }
             }

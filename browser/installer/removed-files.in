@@ -574,6 +574,15 @@ res/wincharset.properties
 res/maccharset.properties
 res/unixcharset.properties
 res/cmessage.txt
+res/hiddenWindow.html
+res/ua.css
+res/html.css
+res/quirk.css
+res/forms.css
+res/viewsource.css
+res/mathml.css
+res/loading-image.png
+res/broken-image.png
 res/html/gopher-audio.gif
 res/html/gopher-binary.gif
 res/html/gopher-find.gif

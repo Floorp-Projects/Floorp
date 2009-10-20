@@ -24,6 +24,7 @@
 //   Franz.Sirl-kernel@lauterbach.com (Franz Sirl)
 //   beard@netscape.com (Patrick Beard)
 //   waterson@netscape.com (Chris Waterson)
+//   bigeasy@linutronix.de (Sebastian Andrzej Siewior)
 //
 // Alternatively, the contents of this file may be used under the terms of
 // either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -86,10 +87,14 @@ NS_InvokeByIndex_P:
 	mr      r5,r6				// r5 <= params
 	add     r6,r3,r10			// r6 <= gpregs ( == args + r10 )
 	mr      r30,r6				// store in r30 for use later...
+#ifndef __NO_FPRS__
 	addi    r7,r6,32			// r7 <= fpregs ( == gpregs + 32 )
+#else
+	li	r7, 0
+#endif
 
 	bl      invoke_copy_to_stack@local	// (args, paramCount, params, gpregs, fpregs)
-
+#ifndef __NO_FPRS__
 	lfd     f1,32(r30)			// load FP registers with method parameters
 	lfd     f2,40(r30)   
 	lfd     f3,48(r30)  
@@ -98,7 +103,7 @@ NS_InvokeByIndex_P:
 	lfd     f6,72(r30)  
 	lfd     f7,80(r30)  
 	lfd     f8,88(r30)
-
+#endif
 	lwz     r3,8(r31)			// r3 <= that
 	lwz     r4,12(r31)			// r4 <= methodIndex
 	lwz     r5,0(r3)			// r5 <= vtable ( == *that )

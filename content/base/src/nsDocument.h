@@ -117,6 +117,7 @@
 #include "nsISecurityEventSink.h"
 #include "nsIChannelEventSink.h"
 #include "imgIRequest.h"
+#include "nsIDOMDOMImplementation.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
@@ -320,7 +321,8 @@ public:
 private:
   void FireChangeCallbacks(nsIContent* aOldContent, nsIContent* aNewContent);
 
-  // empty if there are no nodes with this ID
+  // empty if there are no nodes with this ID.
+  // The content nodes are stored addrefed.
   nsSmallVoidArray mIdContentList;
   // NAME_NOT_VALID if this id cannot be used as a 'name'
   nsBaseContentList *mNameContentList;
@@ -1275,6 +1277,8 @@ private:
 
   // All images in process of being preloaded
   nsCOMArray<imgIRequest> mPreloadingImages;
+
+  nsCOMPtr<nsIDOMDOMImplementation> mDOMImplementation;
 
 #ifdef MOZ_SMIL
   nsAutoPtr<nsSMILAnimationController> mAnimationController;

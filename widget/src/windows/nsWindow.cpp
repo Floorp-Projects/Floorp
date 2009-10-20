@@ -4767,6 +4767,29 @@ nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
 #endif
 }
 
+nsresult
+nsWindow::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
+                                     PRUint32 aNativeMessage,
+                                     PRUint32 aModifierFlags)
+{
+#ifndef WINCE // I don't think WINCE supports SendInput
+  RECT r;
+  ::GetWindowRect(mWnd, &r);
+  ::SetCursorPos(r.left + aPoint.x, r.top + aPoint.y);
+
+  INPUT input;
+  memset(&input, 0, sizeof(input));
+
+  input.type = INPUT_MOUSE;
+  input.mi.dwFlags = aNativeMessage;
+  ::SendInput(1, &input, sizeof(INPUT));
+
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 /**************************************************************
  *
  * SECTION: OnXXX message handlers
@@ -6832,7 +6855,8 @@ void nsWindow::InitTrackPointHack()
   PRInt32 lHackValue;
   long lResult;
   const WCHAR wstrKeys[][40] = {L"Software\\Lenovo\\TrackPoint",
-                                L"Software\\Lenovo\\UltraNav"};    
+                                L"Software\\Lenovo\\UltraNav",
+                                L"Software\\Synaptics\\SynTPEnh\\UltraNavPS2"};    
   // If anything fails turn the hack off
   sTrackPointHack = false;
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
@@ -6848,7 +6872,7 @@ void nsWindow::InitTrackPointHack()
         break;
       // -1 means autodetect
       case -1:
-        for(int i = 0; i < 2; i++) {
+        for(int i = 0; i < NS_ARRAY_LENGTH(wstrKeys); i++) {
           HKEY hKey;
           lResult = ::RegOpenKeyExW(HKEY_CURRENT_USER, (LPCWSTR)&wstrKeys[i],
                                     0, KEY_READ, &hKey);
