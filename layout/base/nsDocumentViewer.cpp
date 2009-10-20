@@ -497,6 +497,7 @@ protected:
   nsCString mPrevDocCharacterSet;
   
   PRPackedBool mIsPageMode;
+  PRPackedBool mCallerIsClosingWindow;
 
 };
 
@@ -528,6 +529,7 @@ void DocumentViewerImpl::PrepareToStartLoad()
   mStopped          = PR_FALSE;
   mLoaded           = PR_FALSE;
   mDeferredWindowClose = PR_FALSE;
+  mCallerIsClosingWindow = PR_FALSE;
 
 #ifdef NS_PRINTING
   mPrintIsPending        = PR_FALSE;
@@ -1083,11 +1085,11 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
+DocumentViewerImpl::PermitUnload(PRBool aCallerClosesWindow, PRBool *aPermitUnload)
 {
   *aPermitUnload = PR_TRUE;
 
-  if (!mDocument || mInPermitUnload) {
+  if (!mDocument || mInPermitUnload || mCallerIsClosingWindow) {
     return NS_OK;
   }
 
@@ -1193,15 +1195,47 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
 
       if (docShell) {
         nsCOMPtr<nsIContentViewer> cv;
-      docShell->GetContentViewer(getter_AddRefs(cv));
+        docShell->GetContentViewer(getter_AddRefs(cv));
 
-      if (cv) {
-        cv->PermitUnload(aPermitUnload);
+        if (cv) {
+          cv->PermitUnload(aCallerClosesWindow, aPermitUnload);
         }
       }
     }
   }
 
+  if (aCallerClosesWindow && *aPermitUnload)
+    mCallerIsClosingWindow = PR_TRUE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::ResetCloseWindow()
+{
+  mCallerIsClosingWindow = PR_FALSE;
+
+  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryReferent(mContainer));
+  if (docShellNode) {
+    PRInt32 childCount;
+    docShellNode->GetChildCount(&childCount);
+
+    for (PRInt32 i = 0; i < childCount; ++i) {
+      nsCOMPtr<nsIDocShellTreeItem> item;
+      docShellNode->GetChildAt(i, getter_AddRefs(item));
+
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
+
+      if (docShell) {
+        nsCOMPtr<nsIContentViewer> cv;
+        docShell->GetContentViewer(getter_AddRefs(cv));
+
+        if (cv) {
+          cv->ResetCloseWindow();
+        }
+      }
+    }
+  }
   return NS_OK;
 }
 
