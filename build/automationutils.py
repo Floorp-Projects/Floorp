@@ -44,7 +44,27 @@ __all__ = [
   "checkForCrashes",
   "dumpLeakLog",
   "processLeakLog",
+  "getDebuggerInfo",
+  "DEBUGGER_INFO",
   ]
+
+# Map of debugging programs to information about them, like default arguments
+# and whether or not they are interactive.
+DEBUGGER_INFO = {
+  # gdb requires that you supply the '--args' flag in order to pass arguments
+  # after the executable name to the executable.
+  "gdb": {
+    "interactive": True,
+    "args": "-q --args"
+  },
+
+  # valgrind doesn't explain much about leaks unless you set the
+  # '--leak-check=full' flag.
+  "valgrind": {
+    "interactive": False,
+    "args": "--leak-check=full"
+  }
+}
 
 log = logging.getLogger()
 
@@ -60,6 +80,17 @@ def addCommonOptions(parser, defaults={}):
                     action = "store", type = "string", dest = "symbolsPath",
                     default = defaults['SYMBOLS_PATH'],
                     help = "absolute path to directory containing breakpad symbols")
+  parser.add_option("--debugger",
+                    action = "store", dest = "debugger",
+                    help = "use the given debugger to launch the application")
+  parser.add_option("--debugger-args",
+                    action = "store", dest = "debuggerArgs",
+                    help = "pass the given args to the debugger _before_ "
+                           "the application on the command line")
+  parser.add_option("--debugger-interactive",
+                    action = "store_true", dest = "debuggerInteractive",
+                    help = "prevents the test harness from redirecting "
+                        "stdout and stderr for interactive debuggers")
 
 def checkForCrashes(dumpDir, symbolsPath, testName=None):
   stackwalkPath = os.environ.get('MINIDUMP_STACKWALK', None)
@@ -74,7 +105,7 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
   dumps = glob.glob(os.path.join(dumpDir, '*.dmp'))
   for d in dumps:
     log.info("TEST-UNEXPECTED-FAIL | %s | application crashed (minidump found)", testName)
-    if symbolsPath and stackwalkPath:
+    if symbolsPath and stackwalkPath and os.path.exists(stackwalkPath):
       nullfd = open(os.devnull, 'w')
       # eat minidump_stackwalk errors
       subprocess.call([stackwalkPath, d, symbolsPath], stderr=nullfd)
@@ -84,6 +115,9 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
         print "No symbols path given, can't process dump."
       if not stackwalkPath:
         print "MINIDUMP_STACKWALK not set, can't process dump."
+      else:
+        if not os.path.exists(stackwalkPath):
+          print "MINIDUMP_STACKWALK binary not found: %s" % stackwalkPath
     os.remove(d)
     extra = os.path.splitext(d)[0] + ".extra"
     if os.path.exists(extra):
@@ -91,6 +125,57 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
     foundCrash = True
 
   return foundCrash
+  
+def getFullPath(directory, path):
+  "Get an absolute path relative to 'directory'."
+  return os.path.normpath(os.path.join(directory, os.path.expanduser(path)))
+
+def searchPath(directory, path):
+  "Go one step beyond getFullPath and try the various folders in PATH"
+  # Try looking in the current working directory first.
+  newpath = getFullPath(directory, path)
+  if os.path.exists(newpath):
+    return newpath
+
+  # At this point we have to fail if a directory was given (to prevent cases
+  # like './gdb' from matching '/usr/bin/./gdb').
+  if not os.path.dirname(path):
+    for dir in os.environ['PATH'].split(os.pathsep):
+      newpath = os.path.join(dir, path)
+      if os.path.exists(newpath):
+        return newpath
+  return None
+
+def getDebuggerInfo(directory, debugger, debuggerArgs, debuggerInteractive = False):
+
+  debuggerInfo = None
+
+  if debugger:
+    debuggerPath = searchPath(directory, debugger)
+    if not debuggerPath:
+      print "Error: Path %s doesn't exist." % debugger
+      sys.exit(1)
+
+    debuggerName = os.path.basename(debuggerPath).lower()
+
+    def getDebuggerInfo(type, default):
+      if debuggerName in DEBUGGER_INFO and type in DEBUGGER_INFO[debuggerName]:
+        return DEBUGGER_INFO[debuggerName][type]
+      return default
+
+    debuggerInfo = {
+      "path": debuggerPath,
+      "interactive" : getDebuggerInfo("interactive", False),
+      "args": getDebuggerInfo("args", "").split()
+    }
+
+    if debuggerArgs:
+      debuggerInfo["args"] = debuggerArgs.split()
+    if debuggerInteractive:
+      debuggerInfo["interactive"] = debuggerInteractive
+  
+  return debuggerInfo
+
 
 def dumpLeakLog(leakLogFile, filter = False):
   """Process the leak log, without parsing it.

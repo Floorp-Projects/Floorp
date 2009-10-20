@@ -200,11 +200,11 @@ public:
 
   static void Shutdown();
 
+  static const char* GetEventName(PRUint32 aEventType);
 protected:
 
   // Internal helper functions
   nsresult SetEventType(const nsAString& aEventTypeArg);
-  static const char* GetEventName(PRUint32 aEventType);
   already_AddRefed<nsIDOMEventTarget> GetTargetFromFrame();
   nsresult ReportWrongPropertyAccessWarning(const char* aPropertyName);
 

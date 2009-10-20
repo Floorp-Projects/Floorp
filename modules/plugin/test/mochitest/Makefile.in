@@ -48,6 +48,7 @@ _MOCHITEST_FILES = \
 		test_npobject_getters.html \
 		test_npruntime_npninvoke.html \
 		test_npruntime_npninvokedefault.html \
+		test_npruntime_npnsetexception.html \
 		loremipsum.txt \
 		loremipsum_file.txt \
 		post.sjs \

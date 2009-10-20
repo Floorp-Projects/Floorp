@@ -6973,7 +6973,7 @@ DoDeletingFrameSubtree(nsFrameManager*      aFrameManager,
         // the out-of-flow frame will be destroyed by aRemovedFrame.
         if (outOfFlowFrame->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_POPUP ||
             !nsLayoutUtils::IsProperAncestorFrame(aRemovedFrame, outOfFlowFrame)) {
-          NS_ASSERTION(aDestroyQueue.IndexOf(outOfFlowFrame) == kNotFound,
+          NS_ASSERTION(!aDestroyQueue.Contains(outOfFlowFrame),
                        "out-of-flow is already in the destroy queue");
           aDestroyQueue.AppendElement(outOfFlowFrame);
           // Recurse into the out-of-flow, it is now the aRemovedFrame.

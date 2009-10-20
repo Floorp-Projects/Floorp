@@ -261,6 +261,13 @@ nsresult nsPluginNativeWindowGtk2::CreateXEmbedWindow() {
   gtk_container_add(container, mSocketWidget);
   gtk_widget_realize(mSocketWidget);
 
+  // The GtkSocket has a visible window, but the plugin's XEmbed plug will
+  // cover this window.  Normally GtkSockets let the X server paint their
+  // background and this would happen immediately (before the plug is
+  // created).  Setting the background to None prevents the server from
+  // painting this window, avoiding flicker.
+  gdk_window_set_back_pixmap(mSocketWidget->window, NULL, FALSE);
+
   // Resize before we show
   SetAllocation();
 

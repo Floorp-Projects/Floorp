@@ -50,6 +50,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsISimpleEnumerator.h"
 #include "nsAppShellWindowEnumerator.h"
@@ -87,7 +88,8 @@ GetDOMWindow(nsIXULWindow* inWindow, nsCOMPtr<nsIDOMWindowInternal>& outDOMWindo
 
 nsWindowMediator::nsWindowMediator() :
   mEnumeratorList(), mOldestWindow(nsnull), mTopmostWindow(nsnull),
-  mTimeStamp(0), mSortingZOrder(PR_FALSE), mListLock(nsnull)
+  mTimeStamp(0), mSortingZOrder(PR_FALSE), mReady(PR_FALSE),
+  mListLock(nsnull)
 {
 }
 
@@ -106,11 +108,21 @@ nsresult nsWindowMediator::Init()
   if (!mListLock)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> obsSvc =
+    do_GetService("@mozilla.org/observer-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = obsSvc->AddObserver(this, "xpcom-shutdown", PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mReady = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsWindowMediator::RegisterWindow(nsIXULWindow* inWindow)
 {
+  NS_ENSURE_STATE(mReady);
+
   if (GetInfoFor(inWindow)) {
     NS_ERROR("multiple window registration");
     return NS_ERROR_FAILURE;
@@ -140,6 +152,7 @@ NS_IMETHODIMP nsWindowMediator::RegisterWindow(nsIXULWindow* inWindow)
 NS_IMETHODIMP
 nsWindowMediator::UnregisterWindow(nsIXULWindow* inWindow)
 {
+  NS_ENSURE_STATE(mReady);
   nsAutoLock lock(mListLock);
   nsWindowInfo *info = GetInfoFor(inWindow);
   if (info)
@@ -225,9 +238,8 @@ nsWindowMediator::GetInfoFor(nsIWidget *aWindow)
 NS_IMETHODIMP
 nsWindowMediator::GetEnumerator(const PRUnichar* inType, nsISimpleEnumerator** outEnumerator)
 {
-  if (!outEnumerator)
-    return NS_ERROR_INVALID_ARG;
-
+  NS_ENSURE_ARG_POINTER(outEnumerator);
+  NS_ENSURE_STATE(mReady);
   nsAutoLock lock(mListLock);
   nsAppShellWindowEnumerator *enumerator = new nsASDOMWindowEarlyToLateEnumerator(inType, *this);
   if (enumerator)
@@ -239,9 +251,8 @@ nsWindowMediator::GetEnumerator(const PRUnichar* inType, nsISimpleEnumerator** o
 NS_IMETHODIMP
 nsWindowMediator::GetXULWindowEnumerator(const PRUnichar* inType, nsISimpleEnumerator** outEnumerator)
 {
-  if (!outEnumerator)
-    return NS_ERROR_INVALID_ARG;
-
+  NS_ENSURE_ARG_POINTER(outEnumerator);
+  NS_ENSURE_STATE(mReady);
   nsAutoLock lock(mListLock);
   nsAppShellWindowEnumerator *enumerator = new nsASXULWindowEarlyToLateEnumerator(inType, *this);
   if (enumerator)
@@ -255,9 +266,8 @@ nsWindowMediator::GetZOrderDOMWindowEnumerator(
             const PRUnichar *aWindowType, PRBool aFrontToBack,
             nsISimpleEnumerator **_retval)
 {
-  if (!_retval)
-    return NS_ERROR_INVALID_ARG;
-
+  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_STATE(mReady);
   nsAutoLock lock(mListLock);
   nsAppShellWindowEnumerator *enumerator;
   if (aFrontToBack)
@@ -275,9 +285,8 @@ nsWindowMediator::GetZOrderXULWindowEnumerator(
             const PRUnichar *aWindowType, PRBool aFrontToBack,
             nsISimpleEnumerator **_retval)
 {
-  if (!_retval)
-    return NS_ERROR_INVALID_ARG;
-
+  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_STATE(mReady);
   nsAutoLock lock(mListLock);
   nsAppShellWindowEnumerator *enumerator;
   if (aFrontToBack)
@@ -309,6 +318,8 @@ nsWindowMediator::GetMostRecentWindow(const PRUnichar* inType, nsIDOMWindowInter
 {
   NS_ENSURE_ARG_POINTER(outWindow);
   *outWindow = nsnull;
+  if (!mReady)
+    return NS_OK;
 
   // Find the most window with the highest time stamp that matches
   // the requested type
@@ -360,6 +371,7 @@ nsWindowMediator::MostRecentWindowInfo(const PRUnichar* inType)
 NS_IMETHODIMP
 nsWindowMediator::UpdateWindowTimeStamp(nsIXULWindow* inWindow)
 {
+  NS_ENSURE_STATE(mReady);
   nsAutoLock lock(mListLock);
   nsWindowInfo *info = GetInfoFor(inWindow);
   if (info) {
@@ -374,6 +386,7 @@ NS_IMETHODIMP
 nsWindowMediator::UpdateWindowTitle(nsIXULWindow* inWindow,
                                     const PRUnichar* inTitle)
 {
+  NS_ENSURE_STATE(mReady);
   nsAutoLock lock(mListLock);
   if (mListeners && GetInfoFor(inWindow)) {
     WindowTitleData winData = { inWindow, inTitle };
@@ -398,8 +411,8 @@ nsWindowMediator::CalculateZPosition(
                 nsIWidget     **outBelow,
                 PRBool         *outAltered)
 {
-  if (!outBelow)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(outBelow);
+  NS_ENSURE_STATE(mReady);
 
   *outBelow = nsnull;
 
@@ -541,6 +554,7 @@ nsWindowMediator::SetZPosition(
   if (mSortingZOrder) // don't fight SortZOrder()
     return NS_OK;
 
+  NS_ENSURE_STATE(mReady);
   nsAutoLock lock(mListLock);
 
   /* Locate inWindow and unlink it from the z-order list.
@@ -598,6 +612,7 @@ nsWindowMediator::GetZLevel(nsIXULWindow *aWindow, PRUint32 *_retval)
 NS_IMETHODIMP
 nsWindowMediator::SetZLevel(nsIXULWindow *aWindow, PRUint32 aZLevel)
 {
+  NS_ENSURE_STATE(mReady);
   nsAutoLock lock(mListLock);
 
   nsWindowInfo *info = GetInfoFor(aWindow);
@@ -746,9 +761,10 @@ nsWindowMediator::SortZOrderBackToFront()
   mSortingZOrder = PR_FALSE;
 }
 
-NS_IMPL_ADDREF(nsWindowMediator)
-NS_IMPL_QUERY_INTERFACE1(nsWindowMediator, nsIWindowMediator)
-NS_IMPL_RELEASE(nsWindowMediator)
+NS_IMPL_ISUPPORTS3(nsWindowMediator,
+  nsIWindowMediator,
+  nsIObserver,
+  nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsWindowMediator::AddListener(nsIWindowMediatorListener* aListener)
@@ -776,6 +792,20 @@ nsWindowMediator::RemoveListener(nsIWindowMediatorListener* aListener)
 
   mListeners->RemoveElement(aListener);
   
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowMediator::Observe(nsISupports* aSubject,
+                          const char* aTopic,
+                          const PRUnichar* aData)
+{
+  if (!strcmp(aTopic, "xpcom-shutdown") && mReady) {
+    nsAutoLock lock(mListLock);
+    while (mOldestWindow)
+      UnregisterWindow(mOldestWindow);
+    mReady = PR_FALSE;
+  }
   return NS_OK;
 }
 

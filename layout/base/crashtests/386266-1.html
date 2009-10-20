@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style>
+#outer { 
+  -moz-column-count: 2;
+}
+#inner {
+  border: 1px solid green;
+}
+</style>
+
+<style id="s">
+#inner { 
+  float: right; 
+  height: 1em; 
+}
+</style>
+
+</head>
+
+<body onload="document.getElementById('s').disabled = true;">
+
+<div id="outer"><div id="inner"></div></div>
+
+</body>
+</html>

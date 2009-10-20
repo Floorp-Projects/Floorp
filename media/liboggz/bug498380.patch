@@ -1,0 +1,68 @@
+diff --git a/media/liboggz/src/liboggz/oggz.c b/media/liboggz/src/liboggz/oggz.c
+--- a/media/liboggz/src/liboggz/oggz.c
++++ b/media/liboggz/src/liboggz/oggz.c
+@@ -210,17 +210,17 @@ oggz_close (OGGZ * oggz)
+     oggz_write_close (oggz);
+   } else if (OGGZ_CONFIG_READ) {
+     oggz_read_close (oggz);
+   }
+ 
+   oggz_vector_foreach (oggz->streams, oggz_stream_clear);
+   oggz_vector_delete (oggz->streams);
+ 
+-  assert(oggz_dlist_is_empty(oggz->packet_buffer));
++  oggz_dlist_deliter(oggz->packet_buffer, oggz_read_free_pbuffers);
+   oggz_dlist_delete(oggz->packet_buffer);
+   
+   if (oggz->metric_internal)
+     oggz_free (oggz->metric_user_data);
+ 
+   if (oggz->file != NULL) {
+     if (fclose (oggz->file) == EOF) {
+       return OGGZ_ERR_SYSTEM;
+diff --git a/media/liboggz/src/liboggz/oggz_private.h b/media/liboggz/src/liboggz/oggz_private.h
+--- a/media/liboggz/src/liboggz/oggz_private.h
++++ b/media/liboggz/src/liboggz/oggz_private.h
+@@ -314,9 +314,12 @@ long oggz_comments_encode (OGGZ * oggz, 
+ 
+ /* oggz_io */
+ size_t oggz_io_read (OGGZ * oggz, void * buf, size_t n);
+ size_t oggz_io_write (OGGZ * oggz, void * buf, size_t n);
+ int oggz_io_seek (OGGZ * oggz, long offset, int whence);
+ long oggz_io_tell (OGGZ * oggz);
+ int oggz_io_flush (OGGZ * oggz);
+ 
++/* oggz_read */
++OggzDListIterResponse oggz_read_free_pbuffers(void *elem);
++
+ #endif /* __OGGZ_PRIVATE_H__ */
+diff --git a/media/liboggz/src/liboggz/oggz_read.c b/media/liboggz/src/liboggz/oggz_read.c
+--- a/media/liboggz/src/liboggz/oggz_read.c
++++ b/media/liboggz/src/liboggz/oggz_read.c
+@@ -248,16 +248,26 @@ void
+ oggz_read_free_pbuffer_entry(OggzBufferedPacket *p) {
+   
+   oggz_free(p->packet.packet);
+   oggz_free(p);
+ 
+ }
+ 
+ OggzDListIterResponse
++oggz_read_free_pbuffers(void *elem)
++{
++  OggzBufferedPacket *p = (OggzBufferedPacket *)elem;
++
++  oggz_read_free_pbuffer_entry(p);
++
++  return DLIST_ITER_CONTINUE;
++}
++
++OggzDListIterResponse
+ oggz_read_update_gp(void *elem) {
+ 
+   OggzBufferedPacket *p = (OggzBufferedPacket *)elem;
+ 
+   if (p->calced_granulepos == -1 && p->stream->last_granulepos != -1) {
+     int content = oggz_stream_get_content(p->oggz, p->serialno);
+ 
+     /* Cancel the iteration (backwards through buffered packets)

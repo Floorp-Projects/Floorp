@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *   Paul O’Shannessy <paul@oshannessy.com>
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,20 +40,20 @@
 function test() {
   /** Private Browsing Test for Bug 394759 **/
 
-  // test setup
   waitForExplicitFinish();
 
-  // private browsing service
+  // Setup.
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
+  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+           getService(Ci.nsISessionStore);
+  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+           getService(Ci.nsIWindowWatcher);
+
+  // Remove the sessionstore.js file before setting the interval to 0
   let profilePath = Cc["@mozilla.org/file/directory_service;1"].
                     getService(Ci.nsIProperties).
                     get("ProfD", Ci.nsIFile);
-
-  // sessionstore service
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
-  // Remove the sessionstore.js file before setting the interval to 0
   let sessionStoreJS = profilePath.clone();
   sessionStoreJS.append("sessionstore.js");
   if (sessionStoreJS.exists())
@@ -79,93 +80,98 @@ function test() {
   let closedWindowCount = ss.getClosedWindowCount();
   is(closedWindowCount, 0, "Correctly set window count");
 
-  let testURL_A = "about:config";
-  let testURL_B = "about:mozilla";
+  // Prevent VM timers issues, cache now and increment it manually.
+  const NOW = Date.now();
 
-  let uniqueKey_A = "bug 394759 Non-PB";
-  let uniqueValue_A = "unik" + Date.now();
-  let uniqueKey_B = "bug 394759 PB";
-  let uniqueValue_B = "uniq" + Date.now();
+  const TESTS = [
+    { url: "about:config",
+      key: "bug 394759 Non-PB",
+      value: "uniq" + (++NOW) },
+    { url: "about:mozilla",
+      key: "bug 394759 PB",
+      value: "uniq" + (++NOW) },
+  ];
 
-
-  // Open a window
-  let newWin = openDialog(location, "_blank", "chrome,all,dialog=no", testURL_A);
-  newWin.addEventListener("load", function(aEvent) {
-    newWin.removeEventListener("load", arguments.callee, false);
-    newWin.gBrowser.addEventListener("load", function(aEvent) {
-      newWin.gBrowser.removeEventListener("load", arguments.callee, true);
-      info("Window has been loaded");
-      executeSoon(function() {
-        newWin.gBrowser.addTab();
-        executeSoon(function() {
-          // mark the window with some unique data to be restored later on
-          ss.setWindowValue(newWin, uniqueKey_A, uniqueValue_A);
-
-          newWin.close();
-
-          // ensure that we incremented # of close windows
-          is(ss.getClosedWindowCount(), closedWindowCount + 1,
-             "The closed window was added to the list");
-
-          // ensure we added window to undo list
-          let data = JSON.parse(ss.getClosedWindowData())[0];
-          ok(data.toSource().indexOf(uniqueValue_A) > -1,
-             "The closed window data was stored correctly");
-
-          // enter private browsing mode
-          pb.privateBrowsingEnabled = true;
-          ok(pb.privateBrowsingEnabled, "private browsing enabled");
-
-          // ensure that we have 0 undo windows when entering PB
-          is(ss.getClosedWindowCount(), 0,
-             "Recently Closed Windows are removed when entering Private Browsing");
-          is(ss.getClosedWindowData(), "[]",
-             "Recently Closed Windows data is cleared when entering Private Browsing");
-
-          // open another window in PB
-          let pbWin = openDialog(location, "_blank", "chrome,all,dialog=no", testURL_B);
-          pbWin.addEventListener("load", function(aEvent) {
-            pbWin.removeEventListener("load", arguments.callee, false);
-            pbWin.gBrowser.addEventListener("load", function(aEvent) {
-              pbWin.gBrowser.removeEventListener("load", arguments.callee, true);
-
+  function openWindowAndTest(aTestIndex, aRunNextTestInPBMode) {
+    info("Opening new window");
+    let windowObserver = {
+      observe: function(aSubject, aTopic, aData) {
+        if (aTopic === "domwindowopened") {
+          ww.unregisterNotification(this);
+          info("New window has been opened");
+          let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+          win.addEventListener("load", function onLoad(event) {
+            win.removeEventListener("load", onLoad, false);
+            info("New window has been loaded");
+            win.gBrowser.addEventListener("load", function(aEvent) {
+              win.gBrowser.removeEventListener("load", arguments.callee, true);
+              info("New window browser has been loaded");
               executeSoon(function() {
-                // Add another tab, though it's not strictly needed
-                pbWin.gBrowser.addTab();
+                // Add a tab.
+                win.gBrowser.addTab();
+
                 executeSoon(function() {
-                  // mark the window with some unique data to be restored later on
-                  ss.setWindowValue(pbWin, uniqueKey_B, uniqueValue_B);
+                  // Mark the window with some unique data to be restored later on.
+                  ss.setWindowValue(win, TESTS[aTestIndex].key, TESTS[aTestIndex].value);
 
-                  pbWin.close();
+                  win.close();
 
-                  // ensure we added window to undo list
-                  let data = JSON.parse(ss.getClosedWindowData())[0];
-                  ok(data.toSource().indexOf(uniqueValue_B) > -1,
-                     "The closed window data was stored correctly in PB mode");
-
-                  // exit private browsing mode
-                  pb.privateBrowsingEnabled = false;
-                  ok(!pb.privateBrowsingEnabled, "private browsing disabled");
-
-                  // ensure that we still have the closed windows from before
+                  // Ensure that we incremented # of close windows.
                   is(ss.getClosedWindowCount(), closedWindowCount + 1,
-                     "The correct number of recently closed windows were restored " +
-                     "when exiting PB mode");
+                     "The closed window was added to the list");
 
+                  // Ensure we added window to undo list.
                   let data = JSON.parse(ss.getClosedWindowData())[0];
-                  ok(data.toSource().indexOf(uniqueValue_A) > -1,
-                     "The data associated with the recently closed window was " +
-                     "restored when exiting PB mode");
+                  ok(data.toSource().indexOf(TESTS[aTestIndex].value) > -1,
+                     "The closed window data was stored correctly");
 
-                  // cleanup
-                  gPrefService.clearUserPref("browser.sessionstore.interval");
-                  finish();
+                  if (aRunNextTestInPBMode) {
+                    // Enter private browsing mode.
+                    pb.privateBrowsingEnabled = true;
+                    ok(pb.privateBrowsingEnabled, "private browsing enabled");
+
+                    // Ensure that we have 0 undo windows when entering PB.
+                    is(ss.getClosedWindowCount(), 0,
+                       "Recently Closed Windows are removed when entering Private Browsing");
+                    is(ss.getClosedWindowData(), "[]",
+                       "Recently Closed Windows data is cleared when entering Private Browsing");
+                  }
+                  else {
+                    // Exit private browsing mode.
+                    pb.privateBrowsingEnabled = false;
+                    ok(!pb.privateBrowsingEnabled, "private browsing disabled");
+
+                    // Ensure that we still have the closed windows from before.
+                    is(ss.getClosedWindowCount(), closedWindowCount + 1,
+                       "The correct number of recently closed windows were restored " +
+                       "when exiting PB mode");
+
+                    let data = JSON.parse(ss.getClosedWindowData())[0];
+                    ok(data.toSource().indexOf(TESTS[aTestIndex].value) > -1,
+                       "The data associated with the recently closed window was " +
+                       "restored when exiting PB mode");
+                  }
+
+                  if (aTestIndex == TESTS.length - 1) {
+                    // Cleanup and finish.
+                    gPrefService.clearUserPref("browser.sessionstore.interval");
+                    finish();
+                  }
+                  else {
+                    // Run next test.
+                    openWindowAndTest(aTestIndex + 1, !aRunNextTestInPBMode);
+                  }
                 });
               });
             }, true);
           }, false);
-        });
-      });
-    }, true);
-  }, false);
+        }
+      }
+    };
+    ww.registerNotification(windowObserver);
+    // Open a window.
+    openDialog(location, "_blank", "chrome,all,dialog=no", TESTS[aTestIndex].url);
+  }
+
+  openWindowAndTest(0, true);
 }

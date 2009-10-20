@@ -12,7 +12,6 @@
 <script class="testbody" type="text/javascript">
 // Test progress events with wav backend
 var completed = false;
-var last_progress = false;
 var last_progress_total = 0;
 
 function on_loadedmetadata() {
@@ -27,13 +26,11 @@ function do_progress(e) {
   last_progress_total = e.loaded;
   ok(e.loaded <= e.total, "Check progress in bounds: " + e.loaded);
   is(e.total, 102444, "Check progress total");
-  last_progress = e.loaded;
 }
 
 function do_ended() {
   ok(!completed, "Check for duplicate ended event");
   completed = true;
-  is(last_progress, 102444, "Last progress event size");
   SimpleTest.finish();
 }
 

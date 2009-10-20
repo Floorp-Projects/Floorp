@@ -164,29 +164,9 @@ nsSMILTimedElement::EndElementAt(double aOffsetSeconds,
 nsSMILTimeValue
 nsSMILTimedElement::GetStartTime() const
 {
-  nsSMILTimeValue startTime;
-
-  switch (mElementState)
-  {
-  case STATE_STARTUP:
-  case STATE_ACTIVE:
-    startTime = mCurrentInterval.mBegin;
-    break;
-
-  case STATE_WAITING:
-  case STATE_POSTACTIVE:
-    if (!mOldIntervals.IsEmpty()) {
-      startTime = mOldIntervals[mOldIntervals.Length() - 1].mBegin;
-    } else {
-      startTime = mCurrentInterval.mBegin;
-    }
-  }
-
-  if (!startTime.IsResolved()) {
-    startTime.SetIndefinite();
-  }
-
-  return startTime;
+  return mElementState == STATE_WAITING || mElementState == STATE_ACTIVE
+         ? mCurrentInterval.mBegin
+         : nsSMILTimeValue();
 }
 
 //----------------------------------------------------------------------

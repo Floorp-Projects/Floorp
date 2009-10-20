@@ -1,0 +1,6 @@
+# GIF tests 
+
+# tests for bug 519589
+== 1bit-255-trans.gif 1bit-255-trans.png
+== in-colormap-trans.gif in-colormap-trans.png
+== out-of-colormap-trans.gif out-of-colormap-trans.png

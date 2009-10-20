@@ -17,14 +17,6 @@ var videos = [];
 
 var testsWaiting = 0;
 
-function startTest() {
-  if (completed)
-    return false;
-  v = document.getElementById('v');
-  v.play();
-  return false;
-}
-
 function startTests() {
   for (var i = 0; i < videos.length; ++i) {
     document.body.removeChild(videos[i]);

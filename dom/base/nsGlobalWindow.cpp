@@ -511,7 +511,7 @@ nsDummyJavaPluginOwner::ShowStatus(const PRUnichar *aStatusMsg)
 NPError
 nsDummyJavaPluginOwner::ShowNativeContextMenu(NPMenu* menu, void* event)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NPERR_GENERIC_ERROR;
 }
 
 NPBool
@@ -5540,7 +5540,7 @@ nsGlobalWindow::Close()
   if (!mInClose && !mIsClosed && cv) {
     PRBool canClose;
 
-    rv = cv->PermitUnload(&canClose);
+    rv = cv->PermitUnload(PR_FALSE, &canClose);
     if (NS_SUCCEEDED(rv) && !canClose)
       return NS_OK;
 
@@ -6836,15 +6836,12 @@ nsGlobalWindow::SetReadyForFocus()
 {
   FORWARD_TO_INNER_VOID(SetReadyForFocus, ());
 
-  // if we don't need to be focused, then just return
-  if (!mNeedsFocus)
-    return;
-
+  PRBool oldNeedsFocus = mNeedsFocus;
   mNeedsFocus = PR_FALSE;
 
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm)
-    fm->WindowShown(this);
+    fm->WindowShown(this, oldNeedsFocus);
 }
 
 void

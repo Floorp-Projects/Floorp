@@ -767,16 +767,12 @@ oggz_bounded_seek_set (OGGZ * oggz,
 
 #ifdef DEBUG
     printf ("oggz_bounded_seek_set: offset_next %" PRI_OGGZ_OFF_T "d\n", offset_next);
-#endif
-    if (unit_at == unit_last_iter) break;
-
-#ifdef DEBUG
     printf ("oggz_bounded_seek_set: [D] want u%lld, got page u%lld @%" PRI_OGGZ_OFF_T "d g%lld\n",
 	    unit_target, unit_at, offset_at, granule_at);
 #endif
 
     if (unit_at < unit_target) {
-      offset_begin = offset_at;
+      offset_begin = offset_next;
       unit_begin = unit_at;
       if (unit_end == unit_begin) break;
     } else if (unit_at > unit_target) {
@@ -790,7 +786,7 @@ oggz_bounded_seek_set (OGGZ * oggz,
 
    /* Reader is now approximately at the seek target. */
 
-  offset_at = oggz_reset (oggz, offset_at, unit_at, SEEK_SET);
+  offset_at = oggz_reset (oggz, offset_next, unit_at, SEEK_SET);
   if (offset_at == -1)
     return -1;
 

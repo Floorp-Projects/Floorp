@@ -65,6 +65,8 @@ public:
   // nsIJSEventListener interface
   virtual void SetEventName(nsIAtom* aName);
 
+  virtual nsresult GetJSVal(const nsAString& aEventName, jsval* aJSVal);
+
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsJSEventListener,
                                                          nsIDOMEventListener)
 protected:

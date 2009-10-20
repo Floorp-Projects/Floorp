@@ -50,10 +50,11 @@ DIRS = \
 
 include $(topsrcdir)/config/rules.mk
 
-_BROWSER_FILES = \
+_BROWSER_TEST_FILES = \
   browser_bug471962.js \
   browser_keyevents_during_autoscrolling.js \
+  browser_bug295977_autoscroll_overflow.js \
   $(NULL)
 
-libs:: $(_BROWSER_FILES)
+libs:: $(_BROWSER_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

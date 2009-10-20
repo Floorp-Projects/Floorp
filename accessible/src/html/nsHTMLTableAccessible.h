@@ -144,20 +144,6 @@ public:
   // nsHTMLTableAccessible
 
   /**
-    * Returns true if the column index is in the valid column range.
-    *
-    * @param aColumn  The index to check for validity.
-    */
-  PRBool IsValidColumn(PRInt32 aColumn);
-
-  /**
-    * Returns true if the given index is in the valid row range.
-    *
-    * @param aRow  The index to check for validity.
-    */
-  PRBool IsValidRow(PRInt32 aRow);
-
-  /**
    * Retun cell element at the given row and column index.
    */
   nsresult GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex,

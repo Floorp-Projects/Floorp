@@ -66,7 +66,7 @@
 interface nsIURI;
 interface nsIObserver;
 
-[scriptable, uuid(00708302-684c-42d6-a5a3-995d51b1d17c)]
+[scriptable, uuid(0b83f9d5-3f96-41b6-91aa-ff3a7e4880d7)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -79,6 +79,15 @@ interface nsIPermissionManager : nsISupports
   const PRUint32 UNKNOWN_ACTION = 0;
   const PRUint32 ALLOW_ACTION = 1;
   const PRUint32 DENY_ACTION = 2;
+
+  /**
+   * Predefined expiration types for permissions.  Permissions can be permanent
+   * (never expire), expire at the end of the session, or expire at a specified
+   * time.
+   */
+  const PRUint32 EXPIRE_NEVER = 0;
+  const PRUint32 EXPIRE_SESSION = 1;
+  const PRUint32 EXPIRE_TIME = 2;
 
   /**
    * Add permission information for a given URI and permission type. This
@@ -98,10 +107,18 @@ interface nsIPermissionManager : nsISupports
    *                    NOTE: UNKNOWN_ACTION (0) is reserved to represent the
    *                    default permission when no entry is found for a host, and
    *                    should not be used by consumers to indicate otherwise.
+   * @param expiretype  a constant defining whether this permission should
+   *                    never expire (EXPIRE_NEVER), expire at the end of the
+   *                    session (EXPIRE_SESSION), or expire at a specified time
+   *                    (EXPIRE_TIME).
+   * @param expiretime  an integer representation of when this permission
+   *                    should be forgotten (milliseconds since Jan 1 1970 0:00:00). 
    */
   void add(in nsIURI uri,
            in string type,
-           in PRUint32 permission);
+           in PRUint32 permission,
+           [optional] in PRUint32 expireType,
+           [optional] in PRInt64 expireTime);
 
   /**
    * Remove permission information for a given host string and permission type.

@@ -286,8 +286,18 @@ nsMediaChannelStream::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
     mChannelStatistics.Stop(TimeStamp::Now());
   }
 
-  if (NS_FAILED(aStatus) && aStatus != NS_ERROR_PARSED_DATA_CACHED &&
-      mReopenOnError) {
+  // Note that aStatus might have succeeded --- this might be a normal close
+  // --- even in situations where the server cut us off because we were
+  // suspended. So we need to "reopen on error" in that case too. The only
+  // cases where we don't need to reopen are when *we* closed the stream.
+  // But don't reopen if we need to seek and we don't think we can... that would
+  // cause us to just re-read the stream, which would be really bad.
+  if (mReopenOnError &&
+      aStatus != NS_ERROR_PARSED_DATA_CACHED && aStatus != NS_BINDING_ABORTED &&
+      (mOffset == 0 || mCacheStream.IsSeekable())) {
+    // If the stream did close normally, then if the server is seekable we'll
+    // just seek to the end of the resource and get an HTTP 416 error because
+    // there's nothing there, so this isn't bad.
     nsresult rv = CacheClientSeek(mOffset, PR_FALSE);
     if (NS_SUCCEEDED(rv))
       return rv;

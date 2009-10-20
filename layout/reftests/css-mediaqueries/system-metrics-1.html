@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<title>test for system metric media queries</title>
+<style>
+
+p { color: red; }
+
+/* Exactly one of the next two should apply */
+
+@media all and (-moz-scrollbar-end-backward) {
+  p:-moz-system-metric(scrollbar-end-backward) { color: green; }
+}
+
+@media not all and (-moz-scrollbar-end-backward) {
+  p:not(:-moz-system-metric(scrollbar-end-backward)) { color: green; }
+}
+
+/* Neither of these should apply */
+
+@media not all and (-moz-scrollbar-end-backward) {
+  p:-moz-system-metric(scrollbar-end-backward) { color: red; }
+}
+
+@media all and (-moz-scrollbar-end-backward) {
+  p:not(:-moz-system-metric(scrollbar-end-backward)) { color: red; }
+}
+
+</style>
+<p>This text should be green.</p>

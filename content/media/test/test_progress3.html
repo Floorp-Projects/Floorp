@@ -13,8 +13,6 @@
 // Same as test_progress1 but uses a smaller file to test resource loaded
 // before metadata loaded is fired.
 var completed = false;
-var load_count = 0;
-var last_progress = false;
 var last_progress_total = 0;
 
 function on_loadedmetadata() {
@@ -32,21 +30,13 @@ function do_progress(e) {
   last_progress_total = e.loaded;
   ok(e.loaded <= e.total, "Check progress in bounds: " + e.loaded);
   is(e.total, 28942, "Check progress total");
-  last_progress = e.loaded;
 }
 
 function do_ended() {
   dump('test_progress3: do_ended\n');
   ok(!completed, "Check for duplicate ended event");
   completed = true;
-  is(last_progress, 28942, "Last progress event size");
-  is(load_count, 1, "load event raised");
   SimpleTest.finish();
-}
-
-function do_load(e) {
-  load_count++;
-  dump('test_progress3: do_loaded ' + e.loaded + "\n");
 }
 
 function do_timeupdate() {
@@ -66,7 +56,6 @@ SimpleTest.waitForExplicitFinish();
        onloadedmetadata='on_loadedmetadata()'
        onended='do_ended()'
        ontimeupdate='do_timeupdate()'
-       onload='do_load(event)'
        onplay='do_play()'
        onprogress='do_progress(event)'>
 </video>
