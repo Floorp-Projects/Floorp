@@ -858,6 +858,17 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp)
     return JS_TRUE;
 }
 
+/* Some objects (e.g., With) delegate 'this' to another object. */
+static JSObject *
+CallThisObjectHook(JSContext *cx, JSObject *obj, jsval *argv)
+{
+    JSObject *thisp = obj->thisObject(cx);
+    if (!thisp)
+        return NULL;
+    argv[-1] = OBJECT_TO_JSVAL(thisp);
+    return thisp;
+}
+
 /*
  * ECMA requires "the global object", but in embeddings such as the browser,
  * which have multiple top-level objects (windows, frames, etc. in the DOM),
@@ -927,12 +938,7 @@ js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
             thisp = parent;
     }
 
-    /* Some objects (e.g., With) delegate 'this' to another object. */
-    thisp = thisp->thisObject(cx);
-    if (!thisp)
-        return NULL;
-    argv[-1] = OBJECT_TO_JSVAL(thisp);
-    return thisp;
+    return CallThisObjectHook(cx, thisp, argv);
 }
 
 static JSObject *
@@ -945,20 +951,14 @@ ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
         if (!js_PrimitiveToObject(cx, &argv[-1]))
             return NULL;
         thisp = JSVAL_TO_OBJECT(argv[-1]);
-    } else {
-        thisp = JSVAL_TO_OBJECT(argv[-1]);
-        if (OBJ_GET_CLASS(cx, thisp) == &js_CallClass ||
-            OBJ_GET_CLASS(cx, thisp) == &js_BlockClass) {
-            return js_ComputeGlobalThis(cx, lazy, argv);
-        }
+        return thisp;
+    } 
 
-        /* Some objects (e.g., With) delegate 'this' to another object. */
-        thisp = thisp->thisObject(cx);
-        if (!thisp)
-            return NULL;
-        argv[-1] = OBJECT_TO_JSVAL(thisp);
-    }
-    return thisp;
+    thisp = JSVAL_TO_OBJECT(argv[-1]);
+    if (OBJ_GET_CLASS(cx, thisp) == &js_CallClass || OBJ_GET_CLASS(cx, thisp) == &js_BlockClass)
+        return js_ComputeGlobalThis(cx, lazy, argv);
+
+    return CallThisObjectHook(cx, thisp, argv);
 }
 
 JSObject *
