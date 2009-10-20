@@ -85,6 +85,7 @@ _TEST_FILES = \
 		test_audio2.html \
 		test_autobuffer.html \
 		test_autoplay.html \
+		test_bug495300.html \
 		test_can_play_type.html \
 		test_constants.html \
 		test_controls.html \
@@ -182,7 +183,6 @@ _TEST_FILES += \
 		test_bug486646.html \
 		test_bug493187.html \
 		test_bug495145.html \
-		test_bug495300.html \
 		test_bug495319.html \
 		test_closing_connections.html \
 		test_contentDuration1.html \
