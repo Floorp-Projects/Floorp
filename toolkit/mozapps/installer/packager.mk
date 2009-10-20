@@ -413,7 +413,14 @@ ifndef PKG_SKIP_STRIP
 			$(PLATFORM_EXCLUDE_LIST) \
 			-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
 	$(SIGN_NSS)
-endif
+else
+ifdef UNIVERSAL_BINARY
+# universal binaries will have had their .chk files removed prior to the unify
+# step, and if they're also --disable-install-strip then they won't get
+# re-signed in the block above.
+	$(SIGN_NSS)
+endif # UNIVERSAL_BINARY
+endif # PKG_SKIP_STRIP
 	@echo "Removing unpackaged files..."
 ifdef NO_PKG_FILES
 	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH); rm -rf $(NO_PKG_FILES)
