@@ -88,83 +88,6 @@ GetCommonUnit(nsStyleAnimation::Unit aFirstUnit,
 // CLASS METHODS
 // -------------
 
-#define MAX_PACKED_COLOR_COMPONENT 255
-
-inline PRUint8 ClampColor(PRUint32 aColor)
-{
-  if (aColor >= MAX_PACKED_COLOR_COMPONENT)
-    return MAX_PACKED_COLOR_COMPONENT;
-  return aColor;
-}
-
-PRBool
-nsStyleAnimation::Add(Value& aDest, const Value& aValueToAdd,
-                      PRUint32 aCount)
-{
-  Unit commonUnit = GetCommonUnit(aDest.GetUnit(), aValueToAdd.GetUnit());
-  PRBool success = PR_TRUE;
-  switch (commonUnit) {
-    case eUnit_Coord: {
-      nscoord destCoord = aDest.GetCoordValue();
-      nscoord valueToAddCoord = aValueToAdd.GetCoordValue();
-      destCoord += aCount * valueToAddCoord;
-      aDest.SetCoordValue(destCoord);
-      break;
-    }
-    case eUnit_Percent: {
-      float destPct = aDest.GetPercentValue();
-      float valueToAddPct = aValueToAdd.GetPercentValue();
-      destPct += aCount * valueToAddPct;
-      aDest.SetPercentValue(destPct);
-      break;
-    }
-    case eUnit_Float: {
-      float destFloat = aDest.GetFloatValue();
-      float valueToAddFloat = aValueToAdd.GetFloatValue();
-      destFloat += aCount * valueToAddFloat;
-      aDest.SetFloatValue(destFloat);
-      break;
-    }
-    case eUnit_Color: {
-      // Since nscolor doesn't allow out-of-sRGB values, by-animations
-      // of colors don't make much sense in our implementation.
-      // FIXME (bug 515919): Animation of colors should really use
-      // floating point colors (and when it does, ClampColor and the
-      // clamping of aCount should go away).
-      // Also, given RGBA colors, it's not clear whether we want
-      // premultiplication.  Probably we don't, given that's hard to
-      // premultiply aValueToAdd since it's a difference rather than a
-      // value.
-      nscolor destColor = aDest.GetColorValue();
-      nscolor colorToAdd = aValueToAdd.GetColorValue();
-      if (aCount > MAX_PACKED_COLOR_COMPONENT) {
-        // Given that we're using integers and clamping at 255, we can
-        // clamp aCount to 255 since that's enough to saturate if we're
-        // multiplying it by anything nonzero.
-        aCount = MAX_PACKED_COLOR_COMPONENT;
-      }
-      PRUint8 resultR =
-        ClampColor(NS_GET_R(destColor) + aCount * NS_GET_R(colorToAdd));
-      PRUint8 resultG =
-        ClampColor(NS_GET_G(destColor) + aCount * NS_GET_G(colorToAdd));
-      PRUint8 resultB =
-        ClampColor(NS_GET_B(destColor) + aCount * NS_GET_B(colorToAdd));
-      PRUint8 resultA =
-        ClampColor(NS_GET_A(destColor) + aCount * NS_GET_A(colorToAdd));
-      aDest.SetColorValue(NS_RGBA(resultR, resultG, resultB, resultA));
-      break;
-    }
-    case eUnit_Null:
-      success = PR_FALSE;
-      break;
-    default:
-      NS_NOTREACHED("Can't add Values using the given common unit");
-      success = PR_FALSE;
-      break;
-  }
-  return success;
-}
-
 PRBool
 nsStyleAnimation::ComputeDistance(const Value& aStartValue,
                                   const Value& aEndValue,
@@ -240,15 +163,23 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
   return success;
 }
 
+#define MAX_PACKED_COLOR_COMPONENT 255
+
+inline PRUint8 ClampColor(double aColor)
+{
+  if (aColor >= MAX_PACKED_COLOR_COMPONENT)
+    return MAX_PACKED_COLOR_COMPONENT;
+  if (aColor <= 0.0)
+    return 0;
+  return NSToIntRound(aColor);
+}
+
 PRBool
-nsStyleAnimation::Interpolate(const Value& aStartValue,
-                              const Value& aEndValue,
-                              double aPortion,
+nsStyleAnimation::AddWeighted(double aCoeff1, const Value& aValue1,
+                              double aCoeff2, const Value& aValue2,
                               Value& aResultValue)
 {
-  NS_ABORT_IF_FALSE(aPortion >= 0.0 && aPortion <= 1.0,
-                    "aPortion out of bounds");
-  Unit commonUnit = GetCommonUnit(aStartValue.GetUnit(), aEndValue.GetUnit());
+  Unit commonUnit = GetCommonUnit(aValue1.GetUnit(), aValue2.GetUnit());
   // Maybe need a followup method to convert the inputs into the common
   // unit-type, if they don't already match it. (Or would it make sense to do
   // that in GetCommonUnit? in which case maybe ConvertToCommonUnit would be
@@ -257,31 +188,26 @@ nsStyleAnimation::Interpolate(const Value& aStartValue,
   PRBool success = PR_TRUE;
   switch (commonUnit) {
     case eUnit_Coord: {
-      nscoord startCoord = aStartValue.GetCoordValue();
-      nscoord endCoord = aEndValue.GetCoordValue();
-      nscoord resultCoord = startCoord +
-        NSToCoordRound(aPortion * (endCoord - startCoord));
-      aResultValue.SetCoordValue(resultCoord);
+      aResultValue.SetCoordValue(NSToCoordRound(
+        aCoeff1 * aValue1.GetCoordValue() +
+        aCoeff2 * aValue2.GetCoordValue()));
       break;
     }
     case eUnit_Percent: {
-      float startPct = aStartValue.GetPercentValue();
-      float endPct = aEndValue.GetPercentValue();
-      float resultPct = startPct + aPortion * (endPct - startPct);
-      aResultValue.SetPercentValue(resultPct);
+      aResultValue.SetPercentValue(
+        aCoeff1 * aValue1.GetPercentValue() +
+        aCoeff2 * aValue2.GetPercentValue());
       break;
     }
     case eUnit_Float: {
-      float startFloat = aStartValue.GetFloatValue();
-      float endFloat = aEndValue.GetFloatValue();
-      float resultFloat = startFloat + aPortion * (endFloat - startFloat);
-      aResultValue.SetFloatValue(resultFloat);
+      aResultValue.SetFloatValue(
+        aCoeff1 * aValue1.GetFloatValue() +
+        aCoeff2 * aValue2.GetFloatValue());
       break;
     }
     case eUnit_Color: {
-      double inv = 1.0 - aPortion;
-      nscolor startColor = aStartValue.GetColorValue();
-      nscolor endColor = aEndValue.GetColorValue();
+      nscolor color1 = aValue1.GetColorValue();
+      nscolor color2 = aValue2.GetColorValue();
       // FIXME (spec): The CSS transitions spec doesn't say whether
       // colors are premultiplied, but things work better when they are,
       // so use premultiplication.  Spec issue is still open per
@@ -289,25 +215,28 @@ nsStyleAnimation::Interpolate(const Value& aStartValue,
 
       // To save some math, scale the alpha down to a 0-1 scale, but
       // leave the color components on a 0-255 scale.
-      double startA = NS_GET_A(startColor) * (1.0 / 255.0);
-      double startR = NS_GET_R(startColor) * startA;
-      double startG = NS_GET_G(startColor) * startA;
-      double startB = NS_GET_B(startColor) * startA;
-      double endA = NS_GET_A(endColor) * (1.0 / 255.0);
-      double endR = NS_GET_R(endColor) * endA;
-      double endG = NS_GET_G(endColor) * endA;
-      double endB = NS_GET_B(endColor) * endA;
-      double resAf = (startA * inv + endA * aPortion);
+      double A1 = NS_GET_A(color1) * (1.0 / 255.0);
+      double R1 = NS_GET_R(color1) * A1;
+      double G1 = NS_GET_G(color1) * A1;
+      double B1 = NS_GET_B(color1) * A1;
+      double A2 = NS_GET_A(color2) * (1.0 / 255.0);
+      double R2 = NS_GET_R(color2) * A2;
+      double G2 = NS_GET_G(color2) * A2;
+      double B2 = NS_GET_B(color2) * A2;
+      double Aresf = (A1 * aCoeff1 + A2 * aCoeff2);
       nscolor resultColor;
-      if (resAf == 0.0) {
+      if (Aresf <= 0.0) {
         resultColor = NS_RGBA(0, 0, 0, 0);
       } else {
-        double factor = 1.0 / resAf;
-        PRUint8 resA = NSToIntRound(resAf * 255.0);
-        PRUint8 resR = NSToIntRound((startR * inv + endR * aPortion) * factor);
-        PRUint8 resG = NSToIntRound((startG * inv + endG * aPortion) * factor);
-        PRUint8 resB = NSToIntRound((startB * inv + endB * aPortion) * factor);
-        resultColor = NS_RGBA(resR, resG, resB, resA);
+        if (Aresf > 1.0) {
+          Aresf = 1.0;
+        }
+        double factor = 1.0 / Aresf;
+        PRUint8 Ares = NSToIntRound(Aresf * 255.0);
+        PRUint8 Rres = ClampColor((R1 * aCoeff1 + R2 * aCoeff2) * factor);
+        PRUint8 Gres = ClampColor((G1 * aCoeff1 + G2 * aCoeff2) * factor);
+        PRUint8 Bres = ClampColor((B1 * aCoeff1 + B2 * aCoeff2) * factor);
+        resultColor = NS_RGBA(Rres, Gres, Bres, Ares);
       }
       aResultValue.SetColorValue(resultColor);
       break;
