@@ -784,7 +784,7 @@ nsJSChannel::EvaluateScript()
             if (cv) {
                 PRBool okToUnload;
 
-                if (NS_SUCCEEDED(cv->PermitUnload(&okToUnload)) &&
+                if (NS_SUCCEEDED(cv->PermitUnload(PR_FALSE, &okToUnload)) &&
                     !okToUnload) {
                     // The user didn't want to unload the current
                     // page, translate this into an undefined

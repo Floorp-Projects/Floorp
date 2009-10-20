@@ -5540,7 +5540,7 @@ nsGlobalWindow::Close()
   if (!mInClose && !mIsClosed && cv) {
     PRBool canClose;
 
-    rv = cv->PermitUnload(&canClose);
+    rv = cv->PermitUnload(PR_FALSE, &canClose);
     if (NS_SUCCEEDED(rv) && !canClose)
       return NS_OK;
 
