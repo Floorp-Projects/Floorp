@@ -25,7 +25,7 @@ function testContentContainerSize() {
   try {
     tiles.style.width = (window.innerWidth + 100) + "px";
     tiles.style.height = (window.innerHeight + 100) + "px";
-    let container = document.getElementById("tile-container-container");
+    let container = Browser.contentScrollbox;
     let rect = container.getBoundingClientRect();
     ok(rect.width == window.innerWidth, "Content container is same width as window");
     ok(rect.height == window.innerHeight, "Content container is same height as window");
