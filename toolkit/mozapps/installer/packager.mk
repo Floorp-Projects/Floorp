@@ -358,6 +358,9 @@ stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
 # do not strip the binaries actually in the tree.
 	@echo "Creating package directory..."
 	@mkdir $(DIST)/$(MOZ_PKG_DIR)
+ifndef UNIVERSAL_BINARY
+# If UNIVERSAL_BINARY, the package will be made from an already-prepared
+# STAGEPATH
 ifdef MOZ_PKG_MANIFEST
 	$(RM) -rf $(DIST)/xpt
 	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
@@ -366,9 +369,6 @@ ifdef MOZ_PKG_MANIFEST
 	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/components -v -x "$(XPIDL_LINK)"
 else # !MOZ_PKG_MANIFEST
 ifeq ($(MOZ_PKG_FORMAT),DMG)
-# If UNIVERSAL_BINARY, the package will be made from an already-prepared
-# STAGEPATH
-ifndef UNIVERSAL_BINARY
 ifndef STAGE_SDK
 	@cd $(DIST) && rsync -auv --copy-unsafe-links $(_APPNAME) $(MOZ_PKG_DIR)
 	@echo "Linking XPT files..."
@@ -378,7 +378,6 @@ ifndef STAGE_SDK
 else
 	@cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_DIR); tar -xf -)
 endif
-endif
 else
 	@cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_DIR); tar -xf -)
 	@echo "Linking XPT files..."
@@ -387,6 +386,7 @@ else
 	@($(XPIDL_LINK) $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/*.xpt && rm -f $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/*.xpt && cp $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components) || echo No *.xpt files found in: $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/.  Continuing...
 endif # DMG
 endif # MOZ_PKG_MANIFEST
+endif # UNIVERSAL_BINARY
 ifndef PKG_SKIP_STRIP
 	@echo "Stripping package directory..."
 	@cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR); find . ! -type d \
