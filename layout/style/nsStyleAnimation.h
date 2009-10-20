@@ -75,7 +75,9 @@ public:
    * @return PR_TRUE on success, PR_FALSE on failure.
    */
   static PRBool Add(Value& aDest, const Value& aValueToAdd,
-                    PRUint32 aCount);
+                    PRUint32 aCount) {
+    return AddWeighted(1.0, aDest, aCount, aValueToAdd, aDest);
+  }
 
   /**
    * Calculates a measure of 'distance' between two values.
@@ -113,6 +115,28 @@ public:
   static PRBool Interpolate(const Value& aStartValue,
                             const Value& aEndValue,
                             double aPortion,
+                            Value& aResultValue) {
+    NS_ABORT_IF_FALSE(0.0 <= aPortion && aPortion <= 1.0, "out of range");
+    return AddWeighted(1.0 - aPortion, aStartValue, aPortion, aEndValue,
+                       aResultValue);
+  }
+
+  /**
+   * Does the calculation:
+   *   aResultValue = aCoeff1 * aValue1 + aCoeff2 * aValue2
+   *
+   * @param [out] aResultValue The resulting interpolated value.  May be
+   *                           the same as aValue1 or aValue2.
+   * @return PR_TRUE on success, PR_FALSE on failure.
+   *
+   * NOTE: Current callers always pass aCoeff1 and aCoeff2 >= 0.  They
+   * are currently permitted to be negative; however, if, as we add
+   * support more value types types, we find that this causes
+   * difficulty, we might change this to restrict them to being
+   * positive.
+   */
+  static PRBool AddWeighted(double aCoeff1, const Value& aValue1,
+                            double aCoeff2, const Value& aValue2,
                             Value& aResultValue);
 
   // Type-conversion methods
