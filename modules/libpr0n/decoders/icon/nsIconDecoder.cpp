@@ -177,7 +177,7 @@ nsIconDecoder::Write(const char *aBuffer, PRUint32 aCount)
       case iconStateReadPixels:
 
         // How many bytes are we reading?
-        bytesToRead = PR_MAX(aCount, mPixBytesTotal - mPixBytesRead);
+        bytesToRead = PR_MIN(aCount, mPixBytesTotal - mPixBytesRead);
 
         // Copy the bytes
         memcpy(mImageData + mPixBytesRead, aBuffer, bytesToRead);
