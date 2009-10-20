@@ -58,6 +58,7 @@
 #include "jsutil.h"
 #include "jsarray.h"
 #include "jstask.h"
+#include "jsvector.h"
 
 /*
  * js_GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
@@ -91,7 +92,6 @@ js_PurgeGSNCache(JSGSNCache *cache);
 typedef struct InterpState InterpState;
 typedef struct VMSideExit VMSideExit;
 
-#ifdef __cplusplus
 namespace nanojit {
     class Assembler;
     class CodeAlloc;
@@ -115,26 +115,19 @@ class VMAllocator;
 extern "C++" { template<typename T> class Queue; }
 typedef Queue<uint16> SlotList;
 
-# define CLS(T)  T*
-#else
-# define CLS(T)  void*
-#endif
-
 #define FRAGMENT_TABLE_SIZE 512
 struct VMFragment;
 
-#ifdef __cplusplus
 struct REHashKey;
 struct REHashFn;
 class FrameInfoCache;
 typedef nanojit::HashMap<REHashKey, nanojit::Fragment*, REHashFn> REHashMap;
-#endif
 
 #define MONITOR_N_GLOBAL_STATES 4
 struct GlobalState {
     JSObject*               globalObj;
     uint32                  globalShape;
-    CLS(SlotList)           globalSlots;
+    SlotList*               globalSlots;
 };
 
 /*
@@ -171,19 +164,19 @@ struct JSTraceMonitor {
      * The tempAlloc is flushed after each recording, successful or not.
      */
 
-    CLS(VMAllocator)        dataAlloc;   /* A chunk allocator for fragments. */
-    CLS(VMAllocator)        traceAlloc;  /* An allocator for trace metadata. */
-    CLS(VMAllocator)        tempAlloc;   /* A temporary chunk allocator.  */
-    CLS(nanojit::CodeAlloc) codeAlloc;   /* An allocator for native code. */
-    CLS(nanojit::Assembler) assembler;
-    CLS(nanojit::LirBuffer) lirbuf;
-    CLS(nanojit::LirBuffer) reLirBuf;
-    CLS(FrameInfoCache)     frameCache;
+    VMAllocator*            dataAlloc;   /* A chunk allocator for fragments. */
+    VMAllocator*            traceAlloc;  /* An allocator for trace metadata. */
+    VMAllocator*            tempAlloc;   /* A temporary chunk allocator.  */
+    nanojit::CodeAlloc*     codeAlloc;   /* An allocator for native code. */
+    nanojit::Assembler*     assembler;
+    nanojit::LirBuffer*     lirbuf;
+    nanojit::LirBuffer*     reLirBuf;
+    FrameInfoCache*         frameCache;
 #ifdef DEBUG
-    CLS(nanojit::LabelMap)  labels;
+    nanojit::LabelMap*      labels;
 #endif
 
-    CLS(TraceRecorder)      recorder;
+    TraceRecorder*          recorder;
     jsval                   *reservedDoublePool;
     jsval                   *reservedDoublePoolPtr;
 
@@ -214,23 +207,23 @@ struct JSTraceMonitor {
     /*
      * Fragment map for the regular expression compiler.
      */
-    CLS(REHashMap)          reFragments;
+    REHashMap*              reFragments;
 
     /*
      * A temporary allocator for RE recording.
      */
-    CLS(VMAllocator)        reTempAlloc;
+    VMAllocator*            reTempAlloc;
 
 #ifdef DEBUG
     /* Fields needed for fragment/guard profiling. */
-    CLS(nanojit::Seq<nanojit::Fragment*>) branches;
+    nanojit::Seq<nanojit::Fragment*>* branches;
     uint32                  lastFragID;
     /*
      * profAlloc has a lifetime which spans exactly from js_InitJIT to
      * js_FinishJIT.
      */
-    CLS(VMAllocator)        profAlloc;
-    CLS(FragStatsMap)       profTab;
+    VMAllocator*            profAlloc;
+    FragStatsMap*           profTab;
 #endif
 
     /* Flush the JIT cache. */
@@ -522,7 +515,7 @@ struct JSRuntime {
      * Table for tracking iterators to ensure that we close iterator's state
      * before finalizing the iterable object.
      */
-    JSPtrTable          gcIteratorTable;
+    js::Vector<JSObject*, 0, js::SystemAllocPolicy> gcIteratorTable;
 
     /*
      * The trace operation and its data argument to trace embedding-specific
@@ -777,6 +770,11 @@ struct JSRuntime {
     JSFunctionMeter     functionMeter;
     char                lastScriptFilename[1024];
 #endif
+
+    JSRuntime();
+    ~JSRuntime();
+
+    bool init(uint32 maxbytes);
 
     void setGCTriggerFactor(uint32 factor);
     void setGCLastBytes(size_t lastBytes);
@@ -1881,6 +1879,30 @@ js_RegenerateShapeForGC(JSContext *cx)
     shape = (shape + 1) | (shape & SHAPE_OVERFLOW_BIT);
     cx->runtime->shapeGen = shape;
     return shape;
+}
+
+namespace js {
+
+/*
+ * Policy that calls JSContext:: memory functions and reports errors to the
+ * context.  Since the JSContext* given on construction is stored for the
+ * lifetime of the container, this policy may only be used for containers whose
+ * lifetime is a shorter than the given JSContext.
+ */
+class ContextAllocPolicy
+{
+    JSContext *mCx;
+
+  public:
+    ContextAllocPolicy(JSContext *cx) : mCx(cx) {}
+    JSContext *context() const { return mCx; }
+
+    void *malloc(size_t bytes) { return mCx->malloc(bytes); }
+    void free(void *p) { mCx->free(p); }
+    void *realloc(void *p, size_t bytes) { return mCx->realloc(p, bytes); }
+    void reportAllocOverflow() const { js_ReportAllocationOverflow(mCx); }
+};
+
 }
 
 #endif /* jscntxt_h___ */
