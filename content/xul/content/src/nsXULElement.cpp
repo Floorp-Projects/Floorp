@@ -2029,12 +2029,20 @@ nsXULElement::LoadSrc()
 nsresult
 nsXULElement::GetFrameLoader(nsIFrameLoader **aFrameLoader)
 {
-    *aFrameLoader = nsnull;
-    nsXULSlots* slots = static_cast<nsXULSlots*>(GetExistingSlots());
-    if (slots) {
-        NS_IF_ADDREF(*aFrameLoader = slots->mFrameLoader);
-    }
+    *aFrameLoader = GetFrameLoader().get();
     return NS_OK;
+}
+
+already_AddRefed<nsFrameLoader>
+nsXULElement::GetFrameLoader()
+{
+    nsXULSlots* slots = static_cast<nsXULSlots*>(GetExistingSlots());
+    if (!slots)
+        return nsnull;
+
+    nsFrameLoader* loader = slots->mFrameLoader;
+    NS_IF_ADDREF(loader);
+    return loader;
 }
 
 nsresult

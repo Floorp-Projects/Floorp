@@ -581,6 +581,7 @@ public:
     nsresult GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
 
     nsresult GetFrameLoader(nsIFrameLoader** aFrameLoader);
+    already_AddRefed<nsFrameLoader> GetFrameLoader();
     nsresult SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner);
 
     virtual void RecompileScriptEventListeners();
