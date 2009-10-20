@@ -180,8 +180,8 @@
         </vbox>
       </vbox>
 
-      <!-- Content Area -->
-      <scrollbox id="tile-container-container" class="window-width window-height" style="overflow: hidden;">
+      <!-- Page Area -->
+      <scrollbox id="page-scrollbox" class="window-width window-height" style="overflow: hidden;">
         <vbox>
           <!-- Main Toolbar -->
           <box id="toolbar-container" class="panel-dark toolbar-height">
@@ -226,7 +226,10 @@
           <notificationbox id="notifications"/>
 
           <!-- Content viewport -->
-          <html:div id="tile-container" style="overflow: hidden;"/>
+          <scrollbox id="content-scrollbox" style="overflow: hidden;" class="window-width window-height">
+            <!-- Content viewport -->
+            <html:div id="tile-container" style="overflow: hidden;"/>
+          </scrollbox>
         </vbox>
       </scrollbox>
 

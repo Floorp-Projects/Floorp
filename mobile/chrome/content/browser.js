@@ -62,7 +62,7 @@ const kDefaultBrowserWidth = 800;
 function debug() {
   let bv = Browser._browserView;
   let tc = bv._tileManager._tileCache;
-  let scrollbox = document.getElementById("tile-container-container")
+  let scrollbox = document.getElementById("content-scrollbox")
                 .boxObject.QueryInterface(Ci.nsIScrollBoxObject);
 
   let x = {};
@@ -111,7 +111,7 @@ function debug() {
     dump('scrollbox scrolledsize: ' + w + ', ' + h + endl);
 
 
-    let sb = document.getElementById("tile-container-container");
+    let sb = document.getElementById("content-scrollbox");
     dump('container location:     ' + Math.round(container.getBoundingClientRect().left) + " " +
                                       Math.round(container.getBoundingClientRect().top) + endl);
 
@@ -336,6 +336,8 @@ var Browser = {
   contentScrollboxScroller: null,
   controlsScrollbox: null,
   controlsScrollboxScroller: null,
+  pageScrollbox: null,
+  pageScrollboxScroller: null,
   styles: {},
 
   startup: function() {
@@ -350,7 +352,7 @@ var Browser = {
     container.customClicker = new ContentCustomClicker(bv);
 
     /* scrolling box that contains tiles */
-    let contentScrollbox = this.contentScrollbox = document.getElementById("tile-container-container");
+    let contentScrollbox = this.contentScrollbox = document.getElementById("content-scrollbox");
     this.contentScrollboxScroller = contentScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     contentScrollbox.customDragger = new Browser.MainDragger(bv);
 
@@ -362,6 +364,11 @@ var Browser = {
       dragStop: function dragStop(dx, dy, scroller) { return false; },
       dragMove: function dragMove(dx, dy, scroller) { return false; }
     };
+
+    /* vertically scrolling box that contains the url bar, notifications, and content */
+    let pageScrollbox = this.pageScrollbox = document.getElementById("page-scrollbox");
+    this.pageScrollboxScroller = pageScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+    pageScrollbox.customDragger = controlsScrollbox.customDragger;
 
     // during startup a lot of viewportHandler calls happen due to content and window resizes
     bv.beginBatchOperation();
@@ -600,17 +607,9 @@ var Browser = {
   },
 
   hideSidebars: function scrollSidebarsOffscreen() {
-    let container = document.getElementById("tile-container");
-    let containerBCR = container.getBoundingClientRect();
-
-    // round here because when going to full screen, this value tends
-    // to be very small but negative
-    let dx = Math.round(containerBCR.left);
-    if (dx < 0)
-      dx = Math.min(Math.round(containerBCR.right - window.innerWidth), 0);
-
-    this.controlsScrollboxScroller.scrollBy(dx, 0);
-    Browser.contentScrollbox.customDragger.scrollingOuterX = false; // XXX ugh.
+    let container = this.contentScrollbox;
+    let rect = container.getBoundingClientRect();
+    this.controlsScrollboxScroller.scrollBy(Math.round(rect.left), 0);
     this._browserView.onAfterVisibleMove();
   },
 
@@ -1207,7 +1206,7 @@ Browser.MainDragger.prototype = {
     this.bv.onBeforeVisibleMove(dx, dy);
 
     // First calculate any panning to take sidebars out of view
-    let panOffset = this._panSidebarsAwayOffset(doffset);
+    let panOffset = this._panControlsAwayOffset(doffset);
 
     // Do all iframe panning
     if (elem) {
@@ -1223,9 +1222,10 @@ Browser.MainDragger.prototype = {
 
     // Any leftover panning in doffset would bring controls into view. Add to sidebar
     // away panning for the total scroll offset.
-    doffset.x += panOffset;
+    doffset.add(panOffset);
     Browser.tryFloatToolbar(doffset.x, 0);
     this._panScroller(Browser.controlsScrollboxScroller, doffset);
+    this._panScroller(Browser.pageScrollboxScroller, doffset);
 
     this.bv.onAfterVisibleMove();
 
@@ -1235,21 +1235,24 @@ Browser.MainDragger.prototype = {
     return !doffset.equals(dx, dy);
   },
 
-  /** Return X offset needed to pan sidebars away if possible. Updates doffset with leftovers. */
-  _panSidebarsAwayOffset: function(doffset) {
-    let scrollLeft = Browser.getScrollboxPosition(Browser.controlsScrollboxScroller).x;
-    let scrollRight = scrollLeft + window.innerWidth;
-    let leftLock = document.getElementById("tabs-container").getBoundingClientRect().right + scrollLeft;
-    let rightLock = document.getElementById("browser-controls").getBoundingClientRect().left + scrollLeft;
-    let amount = 0;
-    if (doffset.x > 0 && scrollLeft < leftLock) {
-      amount = Math.min(doffset.x, leftLock - scrollLeft);
-    } else if (doffset.x < 0 && scrollRight > rightLock) {
-      amount = Math.max(doffset.x, rightLock - scrollRight);
-    }
-    amount = Math.round(amount);
-    doffset.x -= amount;
-    return amount;
+  /** Return offset that pans controls away from screen. Updates doffset with leftovers. */
+  _panControlsAwayOffset: function(doffset) {
+    let x = 0, y = 0, rect;
+
+    rect = Rect.fromRect(Browser.pageScrollbox.getBoundingClientRect()).map(Math.round);
+    if (doffset.x < 0 && rect.right < window.innerWidth)
+      x = Math.max(doffset.x, rect.right - window.innerWidth);
+    if (doffset.x > 0 && rect.left > 0)
+      x = Math.min(doffset.x, rect.left);
+
+    rect = Rect.fromRect(Browser.contentScrollbox.getBoundingClientRect()).map(Math.round);
+    if (doffset.y < 0 && rect.bottom < window.innerHeight)
+      y = Math.max(doffset.y, rect.bottom - window.innerHeight);
+    if (doffset.y > 0 && rect.top > 0)
+      y = Math.min(doffset.y, rect.top);
+
+    doffset.subtract(x, y);
+    return new Point(x, y);
   },
 
   /** Pan scroller by the given amount. Updates doffset with leftovers. */
