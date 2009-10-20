@@ -381,6 +381,10 @@ SetContextOptions(JSContext *cx)
     JS_SetOperationCallback(cx, ShellOperationCallback);
 }
 
+#ifdef WINCE
+int errno;
+#endif
+
 static void
 Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 {
@@ -411,7 +415,9 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 
 #ifndef WINCE
     /* windows mobile (and possibly other os's) does not have a TTY */
-    if (!forceTTY && !isatty(fileno(file))) {
+    if (!forceTTY && !isatty(fileno(file)))
+#endif
+    {
         /*
          * It's not interactive - just execute it.
          *
@@ -443,7 +449,6 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             fclose(file);
         return;
     }
-#endif /* WINCE */
 
     /* It's an interactive filehandle; drop into read-eval-print loop. */
     lineno = 1;
