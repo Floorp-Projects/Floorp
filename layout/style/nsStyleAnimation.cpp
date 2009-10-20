@@ -153,6 +153,7 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
       break;
     }
     case eUnit_Null:
+    case eUnit_None:
       success = PR_FALSE;
       break;
     default:
@@ -242,6 +243,7 @@ nsStyleAnimation::AddWeighted(double aCoeff1, const Value& aValue1,
       break;
     }
     case eUnit_Null:
+    case eUnit_None:
       success = PR_FALSE;
       break;
     default:
