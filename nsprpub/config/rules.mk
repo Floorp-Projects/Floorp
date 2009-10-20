@@ -387,9 +387,8 @@ NEED_ABSOLUTE_PATH = 1
 endif
 
 ifdef NEED_ABSOLUTE_PATH
-PWD := $(shell pwd)
 # The quotes allow absolute paths to contain spaces.
-pr_abspath = "$(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))"
+pr_abspath = "$(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(CURDIR)/$(1)))"
 endif
 
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.cpp
