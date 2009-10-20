@@ -9,7 +9,7 @@
 #include "IPDLUnitTests.h"      // fail etc.
 
 
-#define NR_TRIALS 100000
+#define NR_TRIALS 10000
 
 namespace mozilla {
 namespace _ipdltest {
