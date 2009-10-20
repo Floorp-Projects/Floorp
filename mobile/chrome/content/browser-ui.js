@@ -390,10 +390,6 @@ var BrowserUI = {
     let icons = document.getElementById("urlbar-icons");
     let browser = Browser.selectedBrowser;
 
-    // Use documentURIObject in the favicon construction so that we
-    // do the right thing with about:-style error pages.  Bug 515188
-    let uri = browser.contentDocument.documentURIObject;
-
     switch (aState) {
       case TOOLBARSTATE_LOADED:
         if (icons.getAttribute("mode") != "edit")

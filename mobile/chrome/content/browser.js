@@ -2599,7 +2599,9 @@ Tab.prototype = {
 
     if (!faviconURI || faviconURI.schemeIs("javascript") || gFaviconService.isFailedFavicon(faviconURI)) {
       try {
-        faviconURI = gIOService.newURI(this._browser.currentURI.prePath + "/favicon.ico", null, null);
+        // Use documentURIObject in the favicon construction so that we
+        // do the right thing with about:-style error pages.  Bug 515188
+        faviconURI = gIOService.newURI(this._browser.contentDocument.documentURIObject.prePath + "/favicon.ico", null, null);
         gFaviconService.setAndLoadFaviconForPage(this._browser.currentURI, faviconURI, true);
       }
       catch (e) {
