@@ -53,6 +53,8 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
+const PR_UINT32_MAX = 0xffffffff;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// NetUtil Object
 
@@ -123,6 +125,50 @@ const NetUtil = {
         // start the copying
         copier.asyncCopy(observer, null);
         return copier;
+    },
+
+    /**
+     * Asynchronously opens a channel and fetches the response.  The provided
+     * callback will get an input stream containing the response, and the result
+     * code.
+     *
+     * @param aChannel
+     *        The nsIChannel to open.
+     * @param aCallback
+     *        The callback function that will be notified upon completion.  It
+     *        will get two arguments:
+     *        1) An nsIInputStream containing the data from the channel, if any.
+     *        2) The status code from opening the channel.
+     */
+    asyncFetch: function NetUtil_asyncOpen(aChannel, aCallback)
+    {
+        if (!aChannel || !aCallback) {
+            let exception = new Components.Exception(
+                "Must have a channel and a callback",
+                Cr.NS_ERROR_INVALID_ARG,
+                Components.stack.caller
+            );
+            throw exception;
+        }
+
+        // Create a pipe that will create our output stream that we can use once
+        // we have gotten all the data.
+        let pipe = Cc["@mozilla.org/pipe;1"].
+                   createInstance(Ci.nsIPipe);
+        pipe.init(true, true, 0, PR_UINT32_MAX, null);
+
+        // Create a listener that will give data to the pipe's output stream.
+        let listener = Cc["@mozilla.org/network/simple-stream-listener;1"].
+                       createInstance(Ci.nsISimpleStreamListener);
+        listener.init(pipe.outputStream, {
+            onStartRequest: function(aRequest, aContext) {},
+            onStopRequest: function(aRequest, aContext, aStatusCode) {
+                pipe.outputStream.close();
+                aCallback(pipe.inputStream, aStatusCode);
+            }
+        });
+
+        aChannel.asyncOpen(listener, null);
     },
 
     /**

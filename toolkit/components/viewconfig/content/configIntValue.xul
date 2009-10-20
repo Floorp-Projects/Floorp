@@ -47,7 +47,7 @@
         buttonpack="center"
         style="min-width: 29em; min-height: 10em;">
 
-<script type="application/x-javascript">
+<script type="application/javascript">
   <![CDATA[
     var gIntValueDialogParams;
     function onIntValueDialogLoad()

@@ -44,6 +44,7 @@ function test() {
   
   let tab = gBrowser.addTab();
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
+    this.removeEventListener("load", arguments.callee, true);
     ss.setTabValue(tab, "bug485563", uniqueValue);
     let tabState = eval("(" + ss.getTabState(tab) + ")");
     is(tabState.extData["bug485563"], uniqueValue,

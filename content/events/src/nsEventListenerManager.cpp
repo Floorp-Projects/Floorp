@@ -92,6 +92,9 @@
 #include "nsDOMJSUtils.h"
 #include "nsDOMScriptObjectHolder.h"
 #include "nsDataHashtable.h"
+#include "nsCOMArray.h"
+#include "nsEventListenerService.h"
+#include "nsDOMEvent.h"
 
 #define EVENT_TYPE_EQUALS( ls, type, userType ) \
   (ls->mEventType && ls->mEventType == type && \
@@ -1381,6 +1384,74 @@ PRBool
 nsEventListenerManager::HasListeners()
 {
   return !mListeners.IsEmpty();
+}
+
+nsresult
+nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
+{
+  nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(mTarget);
+  NS_ENSURE_STATE(target);
+  aList->Clear();
+  PRUint32 count = mListeners.Length();
+  for (PRUint32 i = 0; i < count; ++i) {
+    const nsListenerStruct& ls = mListeners.ElementAt(i);
+    PRBool capturing = !!(ls.mFlags & NS_EVENT_FLAG_CAPTURE);
+    PRBool systemGroup = !!(ls.mGroupFlags & NS_EVENT_FLAG_SYSTEM_EVENT);
+    PRBool allowsUntrusted = !!(ls.mFlags & NS_PRIV_EVENT_UNTRUSTED_PERMITTED);
+    // If this is a script handler and we haven't yet
+    // compiled the event handler itself
+    if ((ls.mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) && ls.mHandlerIsString) {
+      nsCOMPtr<nsIJSEventListener> jslistener = do_QueryInterface(ls.mListener);
+      if (jslistener) {
+        CompileEventHandlerInternal(jslistener->GetEventContext(),
+                                    jslistener->GetEventScope(),
+                                    jslistener->GetEventTarget(),
+                                    ls.mTypeAtom,
+                                    const_cast<nsListenerStruct*>(&ls),
+                                    mTarget);
+      }
+    }
+    if (ls.mTypeData) {
+      // Handle special event listener interfaces, like nsIDOMFocusListener.
+      for (PRInt32 j = 0; j < ls.mTypeData->numEvents; ++j) {
+        const EventDispatchData* dispData = &(ls.mTypeData->events[j]);
+        const char* eventName = nsDOMEvent::GetEventName(dispData->message);
+        if (eventName) {
+          NS_ConvertASCIItoUTF16 eventType(eventName);
+          nsRefPtr<nsEventListenerInfo> info =
+            new nsEventListenerInfo(eventType, ls.mListener, capturing,
+                                    allowsUntrusted, systemGroup);
+          NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
+          aList->AppendObject(info);
+        }
+      }
+    } else if (ls.mEventType == NS_USER_DEFINED_EVENT) {
+      // Handle user defined event types.
+      if (ls.mTypeAtom) {
+        nsAutoString atomName;
+        ls.mTypeAtom->ToString(atomName);
+        const nsDependentSubstring& eventType =
+          Substring(atomName, 2, atomName.Length() - 2);
+        nsRefPtr<nsEventListenerInfo> info =
+          new nsEventListenerInfo(eventType, ls.mListener, capturing,
+                                  allowsUntrusted, systemGroup);
+        NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
+        aList->AppendObject(info);
+      }
+    } else {
+      // Handle normal events.
+      const char* eventName = nsDOMEvent::GetEventName(ls.mEventType);
+      if (eventName) {
+        NS_ConvertASCIItoUTF16 eventType(eventName);
+        nsRefPtr<nsEventListenerInfo> info =
+          new nsEventListenerInfo(eventType, ls.mListener, capturing,
+                                  allowsUntrusted, systemGroup);
+        NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
+        aList->AppendObject(info);
+      }
+    }
+  }
+  return NS_OK;
 }
 
 PRBool

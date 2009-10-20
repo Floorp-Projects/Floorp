@@ -784,6 +784,27 @@ void ThrowBadResult(nsresult result, XPCCallContext& ccx)
                                result, ccx);
 }
 
+inline void
+XPCLazyCallContext::SetWrapper(XPCWrappedNative* wrapper,
+                               XPCWrappedNativeTearOff* tearoff)
+{
+    mWrapper = wrapper;
+    mTearOff = tearoff;
+    if(mTearOff)
+        mCurrentJSObject = mTearOff->GetJSObject();
+    else
+        mWrapper->GetJSObject(&mCurrentJSObject);
+}
+inline void
+XPCLazyCallContext::SetWrapper(JSObject* currentJSObject)
+{
+    NS_ASSERTION(IS_SLIM_WRAPPER_OBJECT(currentJSObject),
+                 "What kind of object is this?");
+    mWrapper = nsnull;
+    mTearOff = nsnull;
+    mCurrentJSObject = currentJSObject;
+}
+
 /***************************************************************************/
 
 #endif /* xpcinlines_h___ */

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" onload="setTimeout(boom, 10);" class="reftest-wait">
+
+<script type="text/javascript">
+
+function boom()
+{
+  var ttt = document.getElementById("ttt");
+  ttt.appendChild(document.createTextNode("Pattern on stroke"));
+  ttt.appendChild(document.createTextNode("\n"));
+  ttt.appendChild(document.createTextNode("\n"));
+
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+
+<text id="ttt" stroke="url(#pat2)" x="25" y="275"></text>
+
+<pattern id="pat2" width="20" height="1000"><g/></pattern>
+
+</svg>

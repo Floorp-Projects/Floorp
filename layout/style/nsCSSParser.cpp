@@ -1823,7 +1823,7 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
       break;
     case nsMediaFeature::eEnumerated:
       rv = ParseVariant(expr->mValue, VARIANT_KEYWORD,
-                        feature->mKeywordTable);
+                        feature->mData.mKeywordTable);
       break;
   }
   if (!rv || !ExpectSymbol(')', PR_TRUE)) {

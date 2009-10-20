@@ -130,7 +130,7 @@ static JSClass global_class = {
 static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
-    printf(message);
+    fputs(message, stdout);
 }
 
 /***************************************************************************/
@@ -304,7 +304,7 @@ static void
 EvaluateScript(JSContext* jscontext, JSObject* glob, MySecMan* sm, MySecMan::Mode mode, const char* msg, const char* t, jsval &rval)
 {
     sm->SetMode(mode);
-    printf(msg);
+    fputs(msg, stdout);
     JSAutoRequest ar(jscontext);
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 }
@@ -607,8 +607,7 @@ static void ShowXPCException()
             rv = e->ToString(&str);
             if(NS_SUCCEEDED(rv) && str)
             {
-                printf(str);
-                printf("\n");
+                printf("%s\n", str);
                 nsMemory::Free(str);
 
                 nsresult res;

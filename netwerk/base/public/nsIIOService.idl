@@ -89,6 +89,10 @@ interface nsIIOService : nsISupports
      *
      * @param aFile specifies the file path
      * @return reference to a new nsIURI object
+     *
+     * Note: in the future, for perf reasons we should allow 
+     * callers to specify whether this is a file or directory by
+     * splitting this  into newDirURI() and newActualFileURI().
      */
     nsIURI newFileURI(in nsIFile aFile);
 

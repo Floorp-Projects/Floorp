@@ -43,6 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
+XPIDL_MODULE	= content_events
 
 EXPORTS		= \
 		nsMutationEvent.h \
@@ -55,6 +56,10 @@ EXPORTS		= \
 		nsPLDOMEvent.h \
 		nsEventDispatcher.h \
 		nsPIDOMEventTarget.h \
+		$(NULL)
+
+XPIDLSRCS	= \
+		nsIEventListenerService.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

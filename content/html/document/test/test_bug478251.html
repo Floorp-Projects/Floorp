@@ -21,6 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478251
 /** Test for Bug 478251 **/
 var doc = $("t").contentDocument;
 doc.open();
+doc.write();
+doc.close();
+is(doc.documentElement.textContent, "", "Writing || failed");
+
+doc.open();
 doc.write(null);
 doc.close();
 is(doc.documentElement.textContent, "null", "Writing |null| failed");
@@ -39,6 +44,11 @@ doc.open();
 doc.write(undefined, undefined);
 doc.close();
 is(doc.documentElement.textContent, "undefinedundefined", "Writing |undefined, undefined| failed");
+
+doc.open();
+doc.writeln();
+doc.close();
+is(doc.documentElement.textContent, "\n", "Writing |\\n| failed");
 
 doc.open();
 doc.writeln(null);

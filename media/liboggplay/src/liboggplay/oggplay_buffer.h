@@ -58,7 +58,4 @@ oggplay_buffer_shutdown(OggPlay *me, volatile OggPlayBuffer *buffer);
 void
 oggplay_buffer_prepare(OggPlay *me);
 
-void
-oggplay_buffer_set_last_data(OggPlay *me, volatile OggPlayBuffer *buffer);
-
 #endif

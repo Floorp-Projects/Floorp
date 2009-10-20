@@ -94,10 +94,12 @@ function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
   }
 
   // unavailable
-  if ((state & STATE_UNAVAILABLE)
-      && (getRole(aAccOrElmOrID) != ROLE_GROUPING))
-    isState(state & STATE_FOCUSABLE, STATE_FOCUSABLE, false,
-            "Disabled " + id + " must be focusable!");
+  if (state & STATE_UNAVAILABLE) {
+    var role = getRole(aAccOrElmOrID);
+    if (role != ROLE_GROUPING && role != ROLE_EMBEDDED_OBJECT)
+      isState(state & STATE_FOCUSABLE, STATE_FOCUSABLE, false,
+              "Disabled " + id + " must be focusable!");
+  }
 }
 
 /**

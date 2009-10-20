@@ -80,19 +80,11 @@ function test() {
 
     let tab = gBrowser.selectedTab = gBrowser.addTab();
     let browser = gBrowser.selectedBrowser;
+    browser.stop();
     // ensure that the test is run after the titlebar has been updated
-    let timer = null;
-    let _updateTitlebar = gBrowser.updateTitlebar;
-    gBrowser.updateTitlebar = function() {
-      if (timer) {
-        timer.cancel();
-        timer = null;
-      }
-      timer = Cc["@mozilla.org/timer;1"].
-              createInstance(Ci.nsITimer);
-      timer.initWithCallback(function () {
-        _updateTitlebar.apply(gBrowser, arguments);
-        gBrowser.updateTitlebar = _updateTitlebar;
+    browser.addEventListener("pageshow", function () {
+      browser.removeEventListener("pageshow", arguments.callee, false);
+      executeSoon(function () {
         is(document.title, expected_title, "The window title for " + url +
            " is correct (" + (insidePB ? "inside" : "outside") +
            " private browsing mode)");
@@ -115,8 +107,8 @@ function test() {
             setTimeout(funcNext, 0);
           };
         }, false);
-      }, 300, Ci.nsITimer.TYPE_ONE_SHOT);
-    };
+      });
+    }, false);
 
     browser.loadURI(url);
   }

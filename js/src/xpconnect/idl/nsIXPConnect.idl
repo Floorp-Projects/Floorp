@@ -394,7 +394,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(c29f5d27-21b1-4b87-8282-d724d535ef7b)]
+[uuid(44d52d63-6575-4b09-a29f-e6708203fa9d)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -782,8 +782,7 @@ interface nsIXPConnect : nsISupports
      * a pointer to a nsIXPConnectWrappedNative or to the native in their
      * private date. See IS_WRAPPER_CLASS in xpcprivate.h for details.
      */
-    void GetXPCWrappedNativeJSClassInfo(out JSEqualityOp equality1,
-                                        out JSEqualityOp equality2);
+    void GetXPCWrappedNativeJSClassInfo(out JSEqualityOp equality);
 
     /**
      * Whether or not XPConnect should report all JS exceptions when returning

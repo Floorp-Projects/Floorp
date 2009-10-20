@@ -817,6 +817,11 @@ public:
   static PRBool IsChromeDoc(nsIDocument *aDocument);
 
   /**
+   * Returns true if aDocument is in a docshell whose parent is the same type
+   */
+  static PRBool IsChildOfSameType(nsIDocument* aDoc);
+
+  /**
    * Get the script file name to use when compiling the script
    * referenced by aURI. In cases where there's no need for any extra
    * security wrapper automation the script file name that's returned

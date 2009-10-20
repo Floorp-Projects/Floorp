@@ -102,6 +102,9 @@ public:
 
     NS_IMETHOD PassTwoStrings(const char* s1, const char* s2, char** retval) = 0;
 
+    NS_IMETHOD AddMixedInts3(PRInt64 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
+                             PRInt32 p5, PRInt32 p6, PRInt64 p7, PRInt64 p8,
+                             PRInt32 p9, PRInt64 p10, PRInt64* retval) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(InvokeTestTargetInterface, INVOKETESTTARGET_IID)
@@ -152,6 +155,10 @@ public:
     NS_IMETHOD PassTwoStrings(const char* s1, const char* s2, char** retval);
 
     InvokeTestTarget();
+
+    NS_IMETHOD AddMixedInts3(PRInt64 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
+                             PRInt32 p5, PRInt32 p6, PRInt64 p7, PRInt64 p8,
+                             PRInt32 p9, PRInt64 p10, PRInt64* retval);
 };
 
 NS_IMPL_ISUPPORTS1(InvokeTestTarget, InvokeTestTargetInterface)
@@ -290,6 +297,26 @@ InvokeTestTarget::AddMixedInts2(PRInt32 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
 }
 
 NS_IMETHODIMP
+InvokeTestTarget::AddMixedInts3(PRInt64 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
+                             PRInt32 p5, PRInt32 p6, PRInt64 p7, PRInt64 p8,
+                             PRInt32 p9, PRInt64 p10, PRInt64* retval)
+{
+	printf("P1 : %lld\n", p1);
+	printf("P2 : %lld\n", p2);
+	printf("P3 : %d\n",   p3);
+	printf("P4 : %lld\n", p4);
+	printf("P5 : %d\n",   p5);
+	printf("P6 : %d\n",   p6);
+	printf("P7 : %lld\n", p7);
+	printf("P8 : %lld\n", p8);
+	printf("P9 : %d\n",   p9);
+	printf("P10: %lld\n", p10);
+	printf("ret: %p\n",   retval);
+    *retval = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 InvokeTestTarget::PassTwoStrings(const char* s1, const char* s2, char** retval)
 {
     const char milk[] = "milk";
@@ -381,6 +408,14 @@ int main()
      {
           LL_L2I(tmp32, out64);
          printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n", (int)tmp32);
+     }
+     else
+         printf("\tFAILED");
+
+     if(NS_SUCCEEDED(test->AddMixedInts3(3,5,7,11,13,17,19,23,29,31,&out64)))
+     {
+          LL_L2I(tmp32, out64);
+         printf("\t3 + 5 + 7 + 11 + 13 + 17 + 19 + 23 + 29 + 31 = %d\n", (int)tmp32);
      }
      else
          printf("\tFAILED");
@@ -902,6 +937,57 @@ int main()
     
     if(NS_SUCCEEDED(NS_InvokeByIndex(test, 15, 3, var)))
         printf(" = %s\n", var[2].val.p);
+    else
+        printf("\tFAILED");
+
+    var[0].val.i64 = 3;
+    var[0].type = nsXPTType::T_I64;
+    var[0].flags = 0;
+
+    var[1].val.i64 = 5;
+    var[1].type = nsXPTType::T_I64;
+    var[1].flags = 0;
+
+    var[2].val.i32 = 7;
+    var[2].type = nsXPTType::T_I32;
+    var[2].flags = 0;
+
+    var[3].val.i64 = 11;
+    var[3].type = nsXPTType::T_I64;
+    var[3].flags = 0;
+
+    var[4].val.i32 = 13;
+    var[4].type = nsXPTType::T_I32;
+    var[4].flags = 0;
+
+    var[5].val.i32 = 17;
+    var[5].type = nsXPTType::T_I32;
+    var[5].flags = 0;
+
+    var[6].val.i64 = 19;
+    var[6].type = nsXPTType::T_I64;
+    var[6].flags = 0;
+
+    var[7].val.i64 = 23;
+    var[7].type = nsXPTType::T_I64;
+    var[7].flags = 0;
+
+    var[8].val.i32 = 29;
+    var[8].type = nsXPTType::T_I32;
+    var[8].flags = 0;
+
+    var[9].val.i64 = 31;
+    var[9].type = nsXPTType::T_I64;
+    var[9].flags = 0;
+
+    var[10].val.i64 = 0;
+    var[10].type = nsXPTType::T_I64;
+    var[10].flags = nsXPTCVariant::PTR_IS_DATA;
+    var[10].ptr = &var[10].val.i64;
+
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 16, 11, var)))
+        printf("\t3 + 5 + 7 + 11 + 13 + 17 + 19 + 23 + 29+ 31 = %d\n",
+	       (int)var[10].val.i64);
     else
         printf("\tFAILED");
 

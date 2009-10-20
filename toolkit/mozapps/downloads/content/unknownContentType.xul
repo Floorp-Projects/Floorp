@@ -78,7 +78,7 @@
         <separator class="thin"/>
         <hbox align="center">
           <label value="&whichIsA.label;" id="whichIsA"/>
-          <textbox id="type" class="plain" readonly="true" flex="1"/>
+          <textbox id="type" class="plain" readonly="true" flex="1" noinitialfocus="true"/>
         </hbox>
         <hbox align="center">
           <label value="&from.label;" id="from"/>

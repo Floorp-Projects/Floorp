@@ -15,6 +15,8 @@
   </tabpanels>
 </tabbox>
 
+<textbox id="textbox-yes" value="textbox-yes" hidden="true"/>
+<textbox id="textbox-no" value="textbox-no" noinitialfocus="true" hidden="true"/>
 <button id="one" label="One"/>
 <button id="two" label="Two" hidden="true"/>
 
@@ -40,6 +42,12 @@ function loaded()
         var two = document.getElementById("two");
         two.hidden = false;
         two.focus();
+        break;
+      case 8:
+        document.getElementById("textbox-yes").hidden = false;
+        break;
+      case 9:
+        document.getElementById("textbox-no").hidden = false;
         break;
     }
   }

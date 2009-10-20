@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url("resource://gre/res/viewsource.css");
+@import url("resource://gre-resources/viewsource.css");
 
 #header {
   background-color: #ccc;

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait"
+     onload="setTimeout(removeNode, 0)">
+  <script>
+    function removeNode() {
+      var node = document.getElementById("myRect");
+      node.parentNode.removeChild(node);
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+  <rect id="myRect" x="20" y="20" height="50" width="50" stroke="blue">
+    <animate attributeName="stroke-width" from="1" to="9" begin="0s" dur="2s"/>
+  </rect>
+</svg>

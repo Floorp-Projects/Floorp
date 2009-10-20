@@ -39,14 +39,15 @@
 #define nsIJSEventListener_h__
 
 #include "nsIScriptContext.h"
+#include "jsapi.h"
 
 class nsIScriptObjectOwner;
 class nsIDOMEventListener;
 class nsIAtom;
 
 #define NS_IJSEVENTLISTENER_IID     \
-{ 0xa6cf9118, 0x15b3, 0x11d2,       \
-{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+{ 0x8b4f3ad1, 0x1c2a, 0x43f0, \
+  { 0xac, 0x6c, 0x83, 0x33, 0xe9, 0xe1, 0xcb, 0x7e } }
 
 // Implemented by script event listeners. Used to retrieve the
 // script object corresponding to the event target.
@@ -80,6 +81,8 @@ public:
   }
 
   virtual void SetEventName(nsIAtom* aName) = 0;
+
+  virtual nsresult GetJSVal(const nsAString& aEventName, jsval* aJSVal) = 0;
 
 protected:
   virtual ~nsIJSEventListener()
