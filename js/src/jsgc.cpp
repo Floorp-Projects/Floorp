@@ -663,142 +663,6 @@ JS_STATIC_ASSERT(sizeof(JSGCThing) <= sizeof(jsdouble));
 /* We want to use all the available GC thing space for object's slots. */
 JS_STATIC_ASSERT(sizeof(JSObject) % sizeof(JSGCThing) == 0);
 
-/*
- * JSPtrTable capacity growth descriptor. The table grows by powers of two
- * starting from capacity JSPtrTableInfo.minCapacity, but switching to linear
- * growth when capacity reaches JSPtrTableInfo.linearGrowthThreshold.
- */
-typedef struct JSPtrTableInfo {
-    uint16      minCapacity;
-    uint16      linearGrowthThreshold;
-} JSPtrTableInfo;
-
-#define GC_ITERATOR_TABLE_MIN     4
-#define GC_ITERATOR_TABLE_LINEAR  1024
-
-static const JSPtrTableInfo iteratorTableInfo = {
-    GC_ITERATOR_TABLE_MIN,
-    GC_ITERATOR_TABLE_LINEAR
-};
-
-/* Calculate table capacity based on the current value of JSPtrTable.count. */
-static size_t
-PtrTableCapacity(size_t count, const JSPtrTableInfo *info)
-{
-    size_t linear, log, capacity;
-
-    linear = info->linearGrowthThreshold;
-    JS_ASSERT(info->minCapacity <= linear);
-
-    if (count == 0) {
-        capacity = 0;
-    } else if (count < linear) {
-        log = JS_CEILING_LOG2W(count);
-        JS_ASSERT(log != JS_BITS_PER_WORD);
-        capacity = (size_t)1 << log;
-        if (capacity < info->minCapacity)
-            capacity = info->minCapacity;
-    } else {
-        capacity = JS_ROUNDUP(count, linear);
-    }
-
-    JS_ASSERT(capacity >= count);
-    return capacity;
-}
-
-static void
-FreePtrTable(JSPtrTable *table, const JSPtrTableInfo *info)
-{
-    if (table->array) {
-        JS_ASSERT(table->count > 0);
-        js_free(table->array);
-        table->array = NULL;
-        table->count = 0;
-    }
-    JS_ASSERT(table->count == 0);
-}
-
-static JSBool
-AddToPtrTable(JSContext *cx, JSPtrTable *table, const JSPtrTableInfo *info,
-              void *ptr)
-{
-    size_t count, capacity;
-    void **array;
-
-    count = table->count;
-    capacity = PtrTableCapacity(count, info);
-
-    if (count == capacity) {
-        if (capacity < info->minCapacity) {
-            JS_ASSERT(capacity == 0);
-            JS_ASSERT(!table->array);
-            capacity = info->minCapacity;
-        } else {
-            /*
-             * Simplify the overflow detection assuming pointer is bigger
-             * than byte.
-             */
-            JS_STATIC_ASSERT(2 <= sizeof table->array[0]);
-            capacity = (capacity < info->linearGrowthThreshold)
-                       ? 2 * capacity
-                       : capacity + info->linearGrowthThreshold;
-            if (capacity > (size_t)-1 / sizeof table->array[0])
-                goto bad;
-        }
-        array = (void **) js_realloc(table->array,
-                                     capacity * sizeof table->array[0]);
-        if (!array)
-            goto bad;
-#ifdef DEBUG
-        memset(array + count, JS_FREE_PATTERN,
-               (capacity - count) * sizeof table->array[0]);
-#endif
-        table->array = array;
-    }
-
-    table->array[count] = ptr;
-    table->count = count + 1;
-
-    return JS_TRUE;
-
-  bad:
-    JS_ReportOutOfMemory(cx);
-    return JS_FALSE;
-}
-
-static void
-ShrinkPtrTable(JSPtrTable *table, const JSPtrTableInfo *info,
-               size_t newCount)
-{
-    size_t oldCapacity, capacity;
-    void **array;
-
-    JS_ASSERT(newCount <= table->count);
-    if (newCount == table->count)
-        return;
-
-    oldCapacity = PtrTableCapacity(table->count, info);
-    table->count = newCount;
-    capacity = PtrTableCapacity(newCount, info);
-
-    if (oldCapacity != capacity) {
-        array = table->array;
-        JS_ASSERT(array);
-        if (capacity == 0) {
-            js_free(array);
-            table->array = NULL;
-            return;
-        }
-        array = (void **) js_realloc(array, capacity * sizeof array[0]);
-        if (array)
-            table->array = array;
-    }
-#ifdef DEBUG
-    memset(table->array + newCount, JS_FREE_PATTERN,
-           (capacity - newCount) * sizeof table->array[0]);
-#endif
-}
-
 #ifdef JS_GCMETER
 # define METER(x)               ((void) (x))
 # define METER_IF(condition, x) ((void) ((condition) && (x)))
@@ -1497,7 +1361,7 @@ js_FinishGC(JSRuntime *rt)
     js_DumpGCStats(rt, stdout);
 #endif
 
-    FreePtrTable(&rt->gcIteratorTable, &iteratorTableInfo);
+    rt->gcIteratorTable.clear();
     FinishGCArenaLists(rt);
 
     if (rt->gcRootsHash.ops) {
@@ -1694,7 +1558,7 @@ js_RegisterCloseableIterator(JSContext *cx, JSObject *obj)
     JS_ASSERT(!rt->gcRunning);
 
     JS_LOCK_GC(rt);
-    ok = AddToPtrTable(cx, &rt->gcIteratorTable, &iteratorTableInfo, obj);
+    ok = rt->gcIteratorTable.append(obj);
     JS_UNLOCK_GC(rt);
     return ok;
 }
@@ -1702,24 +1566,19 @@ js_RegisterCloseableIterator(JSContext *cx, JSObject *obj)
 static void
 CloseNativeIterators(JSContext *cx)
 {
-    JSRuntime *rt;
-    size_t count, newCount, i;
-    void **array;
-    JSObject *obj;
+    JSRuntime *rt = cx->runtime;
+    size_t length = rt->gcIteratorTable.length();
+    JSObject **array = rt->gcIteratorTable.begin();
 
-    rt = cx->runtime;
-    count = rt->gcIteratorTable.count;
-    array = rt->gcIteratorTable.array;
-
-    newCount = 0;
-    for (i = 0; i != count; ++i) {
-        obj = (JSObject *)array[i];
+    size_t newLength = 0;
+    for (size_t i = 0; i < length; ++i) {
+        JSObject *obj = array[i];
         if (js_IsAboutToBeFinalized(cx, obj))
             js_CloseNativeIterator(cx, obj);
         else
-            array[newCount++] = obj;
+            array[newLength++] = obj;
     }
-    ShrinkPtrTable(&rt->gcIteratorTable, &iteratorTableInfo, newCount);
+    rt->gcIteratorTable.resize(newLength);
 }
 
 void
