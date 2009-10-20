@@ -57,8 +57,8 @@
         persist="screenX screenY width height">
 
   <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://pippki/content/crlManager.js"/>
+  <script type="application/javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/javascript" src="chrome://pippki/content/crlManager.js"/>
 
   <description value="&validation.crlmanager.description;"/>
   <separator class="thin"/>
