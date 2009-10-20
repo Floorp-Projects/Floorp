@@ -497,6 +497,10 @@ extend(AnimTestcaseFromTo, AnimTestcaseFrom);
  *    - midComp:  Computed value that we expect to visit halfway through the
  *                animation (|aFrom| + |aBy|/2)
  *    - toComp:   Computed value of the animation endpoint (|aFrom| + |aBy|)
+ *    - noEffect: Special flag -- if set, indicates that this testcase is
+ *                expected to have no effect on the computed value. (i.e. the
+ *                attribute may be animatable and additive, but the particular
+ *                "from" & "by" values that are used don't support addition.)
  * @param aSkipReason  If this test-case is known to currently fail, this
  *                     parameter should be a string explaining why.
  *                     Otherwise, this value should be null (or omitted).
@@ -507,7 +511,8 @@ function AnimTestcaseFromBy(aFrom, aBy, aComputedValMap, aSkipReason)
   this.by             = aBy;
   this.computedValMap = aComputedValMap;
   this.skipReason     = aSkipReason;
-  if (this.computedValMap && !this.computedValMap.toComp) {
+  if (this.computedValMap &&
+      !this.computedValMap.noEffect && !this.computedValMap.toComp) {
     ok(false, "AnimTestcaseFromBy needs expected computed final value");
   }
 }
@@ -527,7 +532,7 @@ AnimTestcaseFromBy.prototype =
   },
   buildSeekList : function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze)
   {
-    if (!aAnimAttr.isAdditive) {
+    if (!aAnimAttr.isAdditive || this.computedValMap.noEffect) {
       return this.buildSeekListStatic(aAnimAttr, aBaseVal, aTimeData,
                                       "defined as non-additive in SVG spec");
     }

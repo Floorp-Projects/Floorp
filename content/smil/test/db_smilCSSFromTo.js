@@ -77,6 +77,7 @@ var _fromToTestLists = {
                            midComp: "rgb(230, 230, 230)" }),
   ],
   paintServer: [
+    new AnimTestcaseFromTo("none", "none"),
     new AnimTestcaseFromTo("none", "blue", { toComp : "rgb(0, 0, 255)" }),
     new AnimTestcaseFromTo("rgb(50, 50, 50)", "none"),
     new AnimTestcaseFromTo("url(#gradA)", "url(#gradB) currentColor",
