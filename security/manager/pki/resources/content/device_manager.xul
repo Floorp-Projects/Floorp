@@ -55,8 +55,8 @@
         onload="LoadModules();"
         buttons="accept">
 
-<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-<script type="application/x-javascript" src="chrome://pippki/content/device_manager.js"/>
+<script type="application/javascript" src="chrome://global/content/strres.js"/>
+<script type="application/javascript" src="chrome://pippki/content/device_manager.js"/>
 
 <grid flex="1" style="margin:5px">
   <columns>

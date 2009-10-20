@@ -52,9 +52,9 @@
   ondialogcancel="return doCancel();"
   onload="onLoad();">
 
-<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-<script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
-<script type="application/x-javascript" src="chrome://pippki/content/choosetoken.js"/>
+<script type="application/javascript" src="chrome://global/content/strres.js"/>
+<script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
+<script type="application/javascript" src="chrome://pippki/content/choosetoken.js"/>
 
   <groupbox>
     <description>&chooseToken.message1;</description>
