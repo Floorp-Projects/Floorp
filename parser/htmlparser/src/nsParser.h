@@ -229,16 +229,6 @@ class nsParser : public nsIParser,
      */
     NS_IMETHOD BuildModel(void);
 
-    /**
-     *  Call this when you want control whether or not the parser will parse
-     *  and tokenize input (TRUE), or whether it just caches input to be 
-     *  parsed later (FALSE).
-     *  
-     *  @update  gess 9/1/98
-     *  @param   aState determines whether we parse/tokenize or just cache.
-     *  @return  current state
-     */
-    NS_IMETHOD        ContinueParsing();
     NS_IMETHOD        ContinueInterruptedParsing();
     NS_IMETHOD_(void) BlockParser();
     NS_IMETHOD_(void) UnblockParser();

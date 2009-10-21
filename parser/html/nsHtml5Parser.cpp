@@ -195,13 +195,6 @@ nsHtml5Parser::GetStreamListener(nsIStreamListener** aListener)
 }
 
 NS_IMETHODIMP
-nsHtml5Parser::ContinueParsing()
-{
-  UnblockParser();
-  return ContinueInterruptedParsing();
-}
-
-NS_IMETHODIMP
 nsHtml5Parser::ContinueInterruptedParsing()
 {
   // If there are scripts executing, then the content sink is jumping the gun

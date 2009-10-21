@@ -141,11 +141,6 @@ class nsHtml5Parser : public nsIParser,
     NS_IMETHOD GetStreamListener(nsIStreamListener** aListener);
 
     /**
-     * Unblocks parser and calls ContinueInterruptedParsing()
-     */
-    NS_IMETHOD        ContinueParsing();
-
-    /**
      * If scripts are not executing, maybe flushes tree builder and parses
      * until suspension.
      */
