@@ -360,14 +360,14 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     }
     else if (eCSSProperty_marks == aProperty) {
       PRInt32 intValue = aValue.GetIntValue();
-      if ((NS_STYLE_PAGE_MARKS_CROP & intValue) != 0) {
-        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PAGE_MARKS_CROP), aResult);
-      }
-      if ((NS_STYLE_PAGE_MARKS_REGISTER & intValue) != 0) {
-        if ((NS_STYLE_PAGE_MARKS_CROP & intValue) != 0) {
-          aResult.Append(PRUnichar(' '));
-        }
-        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PAGE_MARKS_REGISTER), aResult);
+      if (intValue == NS_STYLE_PAGE_MARKS_NONE) {
+        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
+                           aResult);
+      } else {
+        nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
+                                           NS_STYLE_PAGE_MARKS_CROP,
+                                           NS_STYLE_PAGE_MARKS_REGISTER,
+                                           aResult);
       }
     }
     else if (eCSSProperty_transition_property == aProperty) {
