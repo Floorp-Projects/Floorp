@@ -900,6 +900,7 @@ var BookmarkHelper = {
 var BookmarkList = {
   _panel: null,
   _bookmarks: null,
+  _manageButtton: null,
 
   show: function() {
     this._panel = document.getElementById("bookmarklist-container");
@@ -909,23 +910,29 @@ var BookmarkList = {
     BrowserUI.pushDialog(this);
 
     this._bookmarks = document.getElementById("bookmark-items");
+    this._bookmarks.addEventListener("BookmarkRemove", this, true);
     this._bookmarks.manageUI = false;
     this._bookmarks.openFolder();
+    
+    this._manageButton = document.getElementById("tool-bookmarks-manage");
+    this._manageButton.disabled = (this._bookmarks.items.length == 0);
   },
 
   close: function() {
     BrowserUI.updateStar();
-    document.getElementById("tool-bookmarks-manage").checked = false;
-
-    if (this._bookmarks.isEditing)
-      this._bookmarks.stopEditing();
+    
+    if (this._bookmarks.manageUI)
+      this.toggleManage();
     this._bookmarks.blur();
+    this._bookmarks.removeEventListener("BookmarkRemove", this, true);
+
     this._panel.hidden = true;
     BrowserUI.popDialog();
   },
 
   toggleManage: function() {
     this._bookmarks.manageUI = !(this._bookmarks.manageUI);
+    this._manageButton.checked = this._bookmarks.manageUI;
   },
 
   openBookmark: function() {
@@ -933,6 +940,15 @@ var BookmarkList = {
     if (item.spec) {
       this.close();
       BrowserUI.goToURI(item.spec);
+    }
+  },
+
+  handleEvent: function(aEvent) {
+    if (aEvent.type == "BookmarkRemove") {
+      if (this._bookmarks.isRootFolder && this._bookmarks.items.length == 1) {
+        this._manageButton.disabled = true;
+        this.toggleManage();
+      }
     }
   }
 };
