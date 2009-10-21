@@ -43,8 +43,6 @@ pref("extensions.weave.log.logger.authenticator", "Debug");
 pref("extensions.weave.network.numRetries", 2);
 
 pref("extensions.weave.tabs.sortMode", "recency");
-pref("extensions.weave.openId.enabled", true);
-pref("extensions.weave.authenticator.enabled", true);
 
 // Preferences to be synced by default
 pref("extensions.weave.prefs.sync.browser.download.manager.scanWhenDone", true);
