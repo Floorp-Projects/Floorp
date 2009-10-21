@@ -1143,8 +1143,8 @@ CSS_PROP_BORDER(
     mBoxShadow,
     eCSSType_ValueList,
     kBoxShadowTypeKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleBorder, mBoxShadow),
+    eStyleAnimType_Shadow)
 CSS_PROP_POSITION(
     -moz-box-sizing,
     box_sizing,
@@ -2308,8 +2308,8 @@ CSS_PROP_TEXT(
     mTextShadow,
     eCSSType_ValueList,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleText, mTextShadow),
+    eStyleAnimType_Shadow)
 CSS_PROP_TEXT(
     text-transform,
     text_transform,

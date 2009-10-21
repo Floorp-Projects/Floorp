@@ -52,6 +52,7 @@ class nsCSSDeclaration;
 class nsIContent;
 class nsPresContext;
 class nsStyleContext;
+struct nsCSSValueList;
 
 /**
  * Utility class to handle animated style values
@@ -173,7 +174,10 @@ public:
    * for some types this means that the void* is pointing to memory
    * owned by the nsStyleAnimation::Value.  (For all complex types, the
    * nsStyleAnimation::Value owns the necessary objects so that the
-   * caller does not need to do anything to free them.)
+   * caller does not need to do anything to free them.  However, this
+   * means that callers using the void* variant must keep
+   * |aComputedValue| alive longer than the structure into which they've
+   * filled the value.)
    *
    * @param aProperty      The property whose value we're uncomputing.
    * @param aPresContext   The presentation context for the document in
@@ -215,7 +219,8 @@ public:
     eUnit_Coord,
     eUnit_Percent,
     eUnit_Float,
-    eUnit_Color
+    eUnit_Color,
+    eUnit_Shadow  // nsCSSValueList* (may be null)
   };
 
   class Value {
@@ -225,6 +230,7 @@ public:
       nscoord mCoord;
       float mFloat;
       nscolor mColor;
+      nsCSSValueList* mCSSValueList;
     } mValue;
   public:
     Unit GetUnit() const {
@@ -254,6 +260,10 @@ public:
       NS_ASSERTION(mUnit == eUnit_Color, "unit mismatch");
       return mValue.mColor;
     }
+    nsCSSValueList* GetCSSValueListValue() const {
+      NS_ASSERTION(IsCSSValueListUnit(mUnit), "unit mismatch");
+      return mValue.mCSSValueList;
+    }
 
     explicit Value(Unit aUnit = eUnit_Null) : mUnit(aUnit) {
       NS_ASSERTION(aUnit == eUnit_Null || aUnit == eUnit_Normal ||
@@ -279,6 +289,8 @@ public:
     void SetPercentValue(float aPercent);
     void SetFloatValue(float aFloat);
     void SetColorValue(nscolor aColor);
+    void SetCSSValueListValue(nsCSSValueList *aValue, Unit aUnit,
+                              PRBool aTakeOwnership);
 
     Value& operator=(const Value& aOther);
 
@@ -288,6 +300,10 @@ public:
 
   private:
     void FreeValue();
+
+    static PRBool IsCSSValueListUnit(Unit aUnit) {
+      return aUnit == eUnit_Shadow;
+    }
   };
 };
 
