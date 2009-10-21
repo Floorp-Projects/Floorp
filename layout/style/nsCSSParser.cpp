@@ -5761,10 +5761,10 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
                         nsCSSProps::kFillRuleKTable);
   case eCSSProperty_color_interpolation:
   case eCSSProperty_color_interpolation_filters:
-    return ParseVariant(aValue, VARIANT_AHK,
+    return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kColorInterpolationKTable);
   case eCSSProperty_dominant_baseline:
-    return ParseVariant(aValue, VARIANT_AHK,
+    return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kDominantBaselineKTable);
   case eCSSProperty_fill_opacity:
     return ParseVariant(aValue, VARIANT_HN,
@@ -5779,7 +5779,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_flood_opacity:
     return ParseVariant(aValue, VARIANT_HN, nsnull);
   case eCSSProperty_image_rendering:
-    return ParseVariant(aValue, VARIANT_AHK,
+    return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kImageRenderingKTable);
   case eCSSProperty_lighting_color:
     return ParseVariant(aValue, VARIANT_HC, nsnull);
@@ -5790,7 +5790,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_mask:
     return ParseVariant(aValue, VARIANT_HUO, nsnull);
   case eCSSProperty_shape_rendering:
-    return ParseVariant(aValue, VARIANT_AHK,
+    return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kShapeRenderingKTable);
   case eCSSProperty_stop_color:
     return ParseVariant(aValue, VARIANT_HC,
@@ -5821,7 +5821,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kTextAnchorKTable);
   case eCSSProperty_text_rendering:
-    return ParseVariant(aValue, VARIANT_AHK,
+    return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kTextRenderingKTable);
 #endif
   case eCSSProperty_box_sizing:
@@ -5849,7 +5849,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kDirectionKTable);
   case eCSSProperty_display:
-    if (ParseVariant(aValue, VARIANT_HOK, nsCSSProps::kDisplayKTable)) {
+    if (ParseVariant(aValue, VARIANT_HK, nsCSSProps::kDisplayKTable)) {
       if (aValue.GetUnit() == eCSSUnit_Enumerated) {
         switch (aValue.GetIntValue()) {
           case NS_STYLE_DISPLAY_MARKER:        // bug 2055
@@ -5974,7 +5974,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_pitch_range:
     return ParseVariant(aValue, VARIANT_HN, nsnull);
   case eCSSProperty_pointer_events:
-    return ParseVariant(aValue, VARIANT_HOK,
+    return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kPointerEventsKTable);
   case eCSSProperty_position:
     return ParseVariant(aValue, VARIANT_HK, nsCSSProps::kPositionKTable);
@@ -8356,25 +8356,30 @@ CSSParserImpl::ParseSize()
 PRBool
 CSSParserImpl::ParseTextDecoration(nsCSSValue& aValue)
 {
-  if (ParseVariant(aValue, VARIANT_HOK, nsCSSProps::kTextDecorationKTable)) {
-    if (eCSSUnit_Enumerated == aValue.GetUnit()) {  // look for more keywords
+  if (ParseVariant(aValue, VARIANT_HK, nsCSSProps::kTextDecorationKTable)) {
+    if (eCSSUnit_Enumerated == aValue.GetUnit()) {
       PRInt32 intValue = aValue.GetIntValue();
-      nsCSSValue  keyword;
-      PRInt32 index;
-      for (index = 0; index < 3; index++) {
-        if (ParseEnum(keyword, nsCSSProps::kTextDecorationKTable)) {
-          PRInt32 newValue = keyword.GetIntValue();
-          if (newValue & intValue) {
-            // duplicate keyword is not allowed
-            return PR_FALSE;
+      if (intValue != NS_STYLE_TEXT_DECORATION_NONE) {
+        // look for more keywords
+        nsCSSValue  keyword;
+        PRInt32 index;
+        for (index = 0; index < 3; index++) {
+          if (ParseEnum(keyword, nsCSSProps::kTextDecorationKTable)) {
+            PRInt32 newValue = keyword.GetIntValue();
+            if (newValue == NS_STYLE_TEXT_DECORATION_NONE ||
+                newValue & intValue) {
+              // 'none' keyword in conjuction with others is not allowed, and
+              // duplicate keyword is not allowed.
+              return PR_FALSE;
+            }
+            intValue |= newValue;
           }
-          intValue |= newValue;
+          else {
+            break;
+          }
         }
-        else {
-          break;
-        }
+        aValue.SetIntValue(intValue, eCSSUnit_Enumerated);
       }
-      aValue.SetIntValue(intValue, eCSSUnit_Enumerated);
     }
     return PR_TRUE;
   }
