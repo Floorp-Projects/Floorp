@@ -86,6 +86,33 @@ GetCommonUnit(nsStyleAnimation::Unit aFirstUnit,
   return aFirstUnit;
 }
 
+// Greatest Common Divisor
+static PRUint32
+gcd(PRUint32 a, PRUint32 b)
+{
+  // Euclid's algorithm; O(N) in the worst case.  (There are better
+  // ways, but we don't need them for stroke-dasharray animation.)
+  NS_ABORT_IF_FALSE(a > 0 && b > 0, "positive numbers expected");
+
+  while (a != b) {
+    if (a > b) {
+      a = a - b;
+    } else {
+      b = b - a;
+    }
+  }
+
+  return a;
+}
+
+// Least Common Multiple
+static PRUint32
+lcm(PRUint32 a, PRUint32 b)
+{
+  // Divide first to reduce overflow risk.
+  return (a / gcd(a, b)) * b;
+}
+
 // CLASS METHODS
 // -------------
 
@@ -153,6 +180,53 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
                        diffG * diffG + diffB * diffB);
       break;
     }
+    case eUnit_Dasharray: {
+      // NOTE: This produces results on substantially different scales
+      // for length values and percentage values, which might even be
+      // mixed in the same property value.  This means the result isn't
+      // particularly useful for paced animation.
+
+      // Call AddWeighted to make us lists of the same length.
+      Value normValue1, normValue2;
+      if (!AddWeighted(1.0, aStartValue, 0.0, aEndValue, normValue1) ||
+          !AddWeighted(0.0, aStartValue, 1.0, aEndValue, normValue2)) {
+        success = PR_FALSE;
+        break;
+      }
+
+      double distance = 0.0;
+      const nsCSSValueList *list1 = normValue1.GetCSSValueListValue();
+      const nsCSSValueList *list2 = normValue2.GetCSSValueListValue();
+
+      NS_ABORT_IF_FALSE(!list1 == !list2, "lists should be same length");
+      while (list1) {
+        const nsCSSValue &val1 = list1->mValue;
+        const nsCSSValue &val2 = list2->mValue;
+
+        NS_ABORT_IF_FALSE(val1.GetUnit() == val2.GetUnit(),
+                          "unit match should be assured by AddWeighted");
+        double diff;
+        switch (val1.GetUnit()) {
+          case eCSSUnit_Percent:
+            diff = val1.GetPercentValue() - val2.GetPercentValue();
+            break;
+          case eCSSUnit_Number:
+            diff = val1.GetFloatValue() - val2.GetFloatValue();
+            break;
+          default:
+            NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
+            return PR_FALSE;
+        }
+        distance += diff * diff;
+
+        list1 = list1->mNext;
+        list2 = list2->mNext;
+        NS_ABORT_IF_FALSE(!list1 == !list2, "lists should be same length");
+      }
+
+      aDistance = sqrt(distance);
+      break;
+    }
     case eUnit_Shadow: {
       // Call AddWeighted to make us lists of the same length.
       Value normValue1, normValue2;
@@ -166,7 +240,8 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
       const nsCSSValueList *shadow2 = normValue2.GetCSSValueListValue();
 
       double distance = 0.0f;
-      while (shadow1 && shadow2) {
+      NS_ABORT_IF_FALSE(!shadow1 == !shadow2, "lists should be same length");
+      while (shadow1) {
         nsCSSValue::Array *array1 = shadow1->mValue.GetArrayValue();
         nsCSSValue::Array *array2 = shadow2->mValue.GetArrayValue();
         for (PRUint32 i = 0; i < 4; ++i) {
@@ -179,10 +254,10 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
           distance += diff * diff;
         }
 
-        const nsCSSValue& color1 = array1->Item(4);
-        const nsCSSValue& color2 = array2->Item(4);
-        const nsCSSValue& inset1 = array1->Item(5);
-        const nsCSSValue& inset2 = array2->Item(5);
+        const nsCSSValue &color1 = array1->Item(4);
+        const nsCSSValue &color2 = array2->Item(4);
+        const nsCSSValue &inset1 = array1->Item(5);
+        const nsCSSValue &inset2 = array2->Item(5);
         // There are only two possible states of the inset value:
         //  (1) GetUnit() == eCSSUnit_Null
         //  (2) GetUnit() == eCSSUnit_Enumerated &&
@@ -209,8 +284,8 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
 
         shadow1 = shadow1->mNext;
         shadow2 = shadow2->mNext;
+        NS_ABORT_IF_FALSE(!shadow1 == !shadow2, "lists should be same length");
       }
-      NS_ABORT_IF_FALSE(!shadow1 && !shadow2, "lists of different lengths");
       aDistance = sqrt(distance);
       break;
     }
@@ -369,6 +444,64 @@ nsStyleAnimation::AddWeighted(double aCoeff1, const Value& aValue1,
         resultColor = NS_RGBA(Rres, Gres, Bres, Ares);
       }
       aResultValue.SetColorValue(resultColor);
+      break;
+    }
+    case eUnit_Dasharray: {
+      const nsCSSValueList *list1 = aValue1.GetCSSValueListValue();
+      const nsCSSValueList *list2 = aValue2.GetCSSValueListValue();
+
+      PRUint32 len1 = 0, len2 = 0;
+      for (const nsCSSValueList *v = list1; v; v = v->mNext) {
+        ++len1;
+      }
+      for (const nsCSSValueList *v = list2; v; v = v->mNext) {
+        ++len2;
+      }
+      NS_ABORT_IF_FALSE(len1 > 0 && len2 > 0, "unexpected length");
+
+      nsAutoPtr<nsCSSValueList> result;
+      nsCSSValueList **resultTail = getter_Transfers(result);
+      for (PRUint32 i = 0, i_end = lcm(len1, len2); i != i_end; ++i) {
+        const nsCSSValue &v1 = list1->mValue;
+        const nsCSSValue &v2 = list2->mValue;
+        NS_ABORT_IF_FALSE(v1.GetUnit() == eCSSUnit_Number ||
+                          v1.GetUnit() == eCSSUnit_Percent, "unexpected");
+        NS_ABORT_IF_FALSE(v2.GetUnit() == eCSSUnit_Number ||
+                          v2.GetUnit() == eCSSUnit_Percent, "unexpected");
+        if (v1.GetUnit() != v2.GetUnit()) {
+          // Can't animate between lengths and percentages (until calc()).
+          return PR_FALSE;
+        }
+
+        nsCSSValueList *item = new nsCSSValueList;
+        if (!item) {
+          return PR_FALSE;
+        }
+        *resultTail = item;
+        resultTail = &item->mNext;
+
+        if (v1.GetUnit() == eCSSUnit_Number) {
+          item->mValue.SetFloatValue(aCoeff1 * v1.GetFloatValue() +
+                                     aCoeff2 * v2.GetFloatValue(),
+                                     eCSSUnit_Number);
+        } else {
+          NS_ABORT_IF_FALSE(v1.GetUnit() == eCSSUnit_Percent, "unexpected");
+          item->mValue.SetPercentValue(aCoeff1 * v1.GetPercentValue() +
+                                       aCoeff2 * v2.GetPercentValue());
+        }
+
+        list1 = list1->mNext;
+        if (!list1) {
+          list1 = aValue1.GetCSSValueListValue();
+        }
+        list2 = list2->mNext;
+        if (!list2) {
+          list2 = aValue2.GetCSSValueListValue();
+        }
+      }
+
+      aResultValue.SetCSSValueListValue(result.forget(), eUnit_Dasharray,
+                                        PR_TRUE);
       break;
     }
     case eUnit_Shadow: {
@@ -578,6 +711,7 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
           SetColorValue(aComputedValue.GetColorValue());
       }
       break;
+    case eUnit_Dasharray:
     case eUnit_Shadow:
       NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
                           eCSSType_ValueList, "type mismatch");
@@ -754,6 +888,54 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
+        case eCSSProperty_stroke_dasharray: {
+          const nsStyleSVG *svg = static_cast<const nsStyleSVG*>(styleStruct);
+          NS_ABORT_IF_FALSE((svg->mStrokeDasharray != nsnull) ==
+                            (svg->mStrokeDasharrayLength != 0),
+                            "pointer/length mismatch");
+          if (svg->mStrokeDasharray) {
+            nsAutoPtr<nsCSSValueList> result;
+            nsCSSValueList **resultTail = getter_Transfers(result);
+            for (PRUint32 i = 0, i_end = svg->mStrokeDasharrayLength;
+                 i != i_end; ++i) {
+              nsCSSValueList *item = new nsCSSValueList;
+              if (!item) {
+                return PR_FALSE;
+              }
+              *resultTail = item;
+              resultTail = &item->mNext;
+
+              const nsStyleCoord &coord = svg->mStrokeDasharray[i];
+              nsCSSValue &value = item->mValue;
+              switch (coord.GetUnit()) {
+                case eStyleUnit_Coord:
+                  // Number means the same thing as length; we want to
+                  // animate them the same way.  Normalize both to number
+                  // since it has more accuracy (float vs nscoord).
+                  value.SetFloatValue(nsPresContext::
+                    AppUnitsToFloatCSSPixels(coord.GetCoordValue()),
+                    eCSSUnit_Number);
+                  break;
+                case eStyleUnit_Factor:
+                  value.SetFloatValue(coord.GetFactorValue(),
+                                      eCSSUnit_Number);
+                  break;
+                case eStyleUnit_Percent:
+                  value.SetPercentValue(coord.GetPercentValue());
+                  break;
+                default:
+                  NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
+                  return PR_FALSE;
+              }
+            }
+            aComputedValue.SetCSSValueListValue(result.forget(),
+                                                eUnit_Dasharray, PR_TRUE);
+          } else {
+            aComputedValue.SetNoneValue();
+          }
+          break;
+        }
+
         default:
           NS_ABORT_IF_FALSE(PR_FALSE, "missing property implementation");
           return PR_FALSE;
@@ -912,6 +1094,7 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
     case eUnit_Color:
       mValue.mColor = aOther.mValue.mColor;
       break;
+    case eUnit_Dasharray:
     case eUnit_Shadow:
       mValue.mCSSValueList = aOther.mValue.mCSSValueList
                                ? aOther.mValue.mCSSValueList->Clone() : nsnull;
@@ -1016,6 +1199,7 @@ nsStyleAnimation::Value::operator==(const Value& aOther) const
       return mValue.mFloat == aOther.mValue.mFloat;
     case eUnit_Color:
       return mValue.mColor == aOther.mValue.mColor;
+    case eUnit_Dasharray:
     case eUnit_Shadow:
       return nsCSSValueList::Equal(mValue.mCSSValueList,
                                    aOther.mValue.mCSSValueList);

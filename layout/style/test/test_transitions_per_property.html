@@ -95,6 +95,7 @@ var supported_properties = {
     "stop-color": [ test_color_transition ],
     "stop-opacity" : [ test_float_zeroToOne_transition ],
     "stroke": [ test_color_transition ],
+    "stroke-dasharray": [ test_dasharray_transition ],
     "stroke-dashoffset": [ test_length_transition, test_percent_transition ],
     "stroke-miterlimit": [ test_float_aboveOne_transition ],
     "stroke-opacity" : [ test_float_zeroToOne_transition ],
@@ -318,6 +319,44 @@ function test_shadow_transition(prop) {
   div.style.setProperty(prop, "4px 8px 6px", "");
   is(cs.getPropertyValue(prop), defaultColor + "3px 5px 4px" + spreadStr,
      "shadow-valued property " + prop + ": interpolation without color");
+}
+
+function test_dasharray_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "3", "");
+  is(cs.getPropertyValue(prop), "3",
+     "dasharray-valued property " + prop +
+     ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "9px", "");
+  is(cs.getPropertyValue(prop), "6",
+     "dasharray-valued property " + prop + ": interpolation of dasharray");
+  div.style.setProperty(prop, "none", "");
+  is(cs.getPropertyValue(prop), "none",
+     "dasharray-valued property " + prop + ": non-interpolability of none");
+  div.style.setProperty(prop, "6,8px,4,4", "");
+  is(cs.getPropertyValue(prop), "6, 8px, 4, 4",
+     "dasharray-valued property " + prop +
+     ": computed value before transition");
+  div.style.setProperty(prop, "10, 10,10,10px", "");
+  is(cs.getPropertyValue(prop), "8, 9, 7, 7",
+     "dasharray-valued property " + prop + ": interpolation of dasharray");
+  div.style.setProperty(prop, "none", "");
+  is(cs.getPropertyValue(prop), "none",
+     "dasharray-valued property " + prop + ": non-interpolability of none");
+  div.style.setProperty(prop, "4,8,2", "");
+  is(cs.getPropertyValue(prop), "4, 8, 2",
+     "dasharray-valued property " + prop +
+     ": computed value before transition");
+  div.style.setProperty(prop, "2,4,6,8", "");
+  is(cs.getPropertyValue(prop), "3, 6, 4, 6, 5, 3, 5, 8, 2, 4, 7, 5",
+     "dasharray-valued property " + prop + ": interpolation of dasharray");
+  div.style.setProperty(prop, "2,50%,6,8", "");
+  is(cs.getPropertyValue(prop), "2, 50%, 6, 8",
+     "dasharray-valued property " + prop + ": non-interpolability of mixed units");
+  div.style.setProperty(prop, "4,20%,2,2", "");
+  is(cs.getPropertyValue(prop), "3, 35%, 4, 5",
+     "dasharray-valued property " + prop + ": interpolation of dasharray");
 }
 
 </script>
