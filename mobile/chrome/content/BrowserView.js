@@ -232,6 +232,7 @@ BrowserView.prototype = {
     this._browserViewportState = null;
     this._contentWindow = null;
     this._renderMode = 0;
+    this._offscreenDepth = 0;
     
     let cacheSize = kBrowserViewCacheSize;
     try {
@@ -298,6 +299,28 @@ BrowserView.prototype = {
       return undefined;
 
     return bvs.zoomLevel;
+  },
+
+  beginOffscreenOperation: function beginOffscreenOperation() {
+    if (this._offscreenDepth == 0) {
+      let vis = this.getVisibleRect();
+      let canvas = document.getElementById("view-buffer");
+      canvas.width = vis.width;
+      canvas.height = vis.height;
+      this.renderToCanvas(canvas, vis.width, vis.height, vis);
+      canvas.style.display = "block";
+      this.pauseRendering();
+    }
+    this._offscreenDepth++;
+  },
+
+  commitOffscreenOperation: function commitOffscreenOperation() {
+    this._offscreenDepth--;
+    if (this._offscreenDepth == 0) {
+      this.resumeRendering();
+      let canvas = document.getElementById("view-buffer");
+      canvas.style.display = "none";
+    }
   },
 
   beginBatchOperation: function beginBatchOperation() {
@@ -504,10 +527,13 @@ BrowserView.prototype = {
   },
 
   zoomToPage: function zoomToPage() {
-    let browser = this._browser;
+    this.setZoomLevel(this.getZoomForPage());
+  },
 
+  getZoomForPage: function getZoomForPage() {
+    let browser = this._browser;
     if (!browser)
-      return;
+      return 0;
 
     var windowUtils = browser.contentWindow
                              .QueryInterface(Ci.nsIInterfaceRequestor)
@@ -515,19 +541,15 @@ BrowserView.prototype = {
     var handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
     
     if (handheldFriendly == "true") {
-      browser.className = "browser-handheld";
-      this.setZoomLevel(1);
-      browser.markupDocumentViewer.textZoom = 1;
+      return 1;
     } else {
-      browser.className = "browser";
       let [w, h] = BrowserView.Util.getBrowserDimensions(browser);
-      this.setZoomLevel(BrowserView.Util.pageZoomLevel(this.getVisibleRect(), w, h));
+      return BrowserView.Util.pageZoomLevel(this.getVisibleRect(), w, h);
     }
   },
 
   zoom: function zoom(aDirection) {
     let bvs = this._browserViewportState;
-
     if (!bvs)
       throw "No browser is set";
 
@@ -574,7 +596,6 @@ BrowserView.prototype = {
 
   viewportToBrowser: function viewportToBrowser(x) {
     let bvs = this._browserViewportState;
-
     if (!bvs)
       throw "No browser is set";
 
@@ -583,7 +604,6 @@ BrowserView.prototype = {
 
   browserToViewport: function browserToViewport(x) {
     let bvs = this._browserViewportState;
-
     if (!bvs)
       throw "No browser is set";
 
@@ -617,7 +637,6 @@ BrowserView.prototype = {
 
   _viewportChanged: function _viewportChanged(viewportSizeChanged, dirtyAll) {
     let bops = this._batchOps;
-
     if (bops.length > 0) {
       let opState = bops[bops.length - 1];
 
@@ -631,7 +650,6 @@ BrowserView.prototype = {
     }
 
     let bvs = this._browserViewportState;
-
     if (bvs) {
       BrowserView.Util.resizeContainerToViewport(this._container, bvs.viewportRect);
 

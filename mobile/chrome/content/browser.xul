@@ -226,10 +226,15 @@
           <notificationbox id="notifications"/>
 
           <!-- Content viewport -->
-          <scrollbox id="content-scrollbox" style="overflow: hidden;" class="window-width window-height">
-            <!-- Content viewport -->
-            <html:div id="tile-container" style="overflow: hidden;"/>
-          </scrollbox>
+          <stack id="tile-stack" class="window-width window-height">
+            <scrollbox id="content-scrollbox" style="overflow: hidden;" class="window-width window-height">
+              <!-- Content viewport -->
+              <html:div id="tile-container" style="overflow: hidden;"/>
+            </scrollbox>
+
+            <html:canvas id="view-buffer" style="display: none;" moz-opaque="true">
+            </html:canvas>
+          </stack>
         </vbox>
       </scrollbox>
 
