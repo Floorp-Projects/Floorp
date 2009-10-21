@@ -1879,18 +1879,3 @@ nsDOMStorageEvent::InitStorageEvent(const nsAString& aTypeArg,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMStorageEvent::InitStorageEventNS(const nsAString& aNamespaceURIArg,
-                                      const nsAString& aTypeArg,
-                                      PRBool aCanBubbleArg,
-                                      PRBool aCancelableArg,
-                                      const nsAString& aDomainArg)
-{
-  // XXXjst: Figure out what to do with aNamespaceURIArg here!
-  nsresult rv = InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mDomain = aDomainArg;
-
-  return NS_OK;
-}
