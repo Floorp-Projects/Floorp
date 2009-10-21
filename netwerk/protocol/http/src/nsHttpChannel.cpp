@@ -1491,8 +1491,10 @@ nsHttpChannel::ProcessNotModified()
 
     LOG(("nsHttpChannel::ProcessNotModified [this=%x]\n", this)); 
 
-    if (mCustomConditionalRequest)
+    if (mCustomConditionalRequest) {
+        LOG(("Bypassing ProcessNotModified due to custom conditional headers")); 
         return NS_ERROR_FAILURE;
+    }
 
     NS_ENSURE_TRUE(mCachedResponseHead, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_INITIALIZED);
