@@ -101,21 +101,6 @@ nsDOMDragEvent::InitDragEvent(const nsAString & aType,
 }
 
 NS_IMETHODIMP
-nsDOMDragEvent::InitDragEventNS(const nsAString & aNamespaceURIArg,
-                                const nsAString & aType,
-                                PRBool aCanBubble, PRBool aCancelable,
-                                nsIDOMAbstractView* aView, PRInt32 aDetail,
-                                PRInt32 aScreenX, PRInt32 aScreenY,
-                                PRInt32 aClientX, PRInt32 aClientY, 
-                                PRBool aCtrlKey, PRBool aAltKey, PRBool aShiftKey,
-                                PRBool aMetaKey, PRUint16 aButton,
-                                nsIDOMEventTarget *aRelatedTarget,
-                                nsIDOMDataTransfer* aDataTransfer)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDOMDragEvent::GetDataTransfer(nsIDOMDataTransfer** aDataTransfer)
 {
   // the dataTransfer field of the event caches the DataTransfer associated
