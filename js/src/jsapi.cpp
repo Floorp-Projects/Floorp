@@ -3194,6 +3194,13 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop,
     if (OBJ_IS_NATIVE(obj2)) {
         JSScopeProperty *sprop = (JSScopeProperty *) prop;
 
+        if (sprop->isMethod()) {
+            JSAutoTempValueRooter root(cx, sprop);
+            JS_UNLOCK_OBJ(cx, obj2);
+            *vp = sprop->methodValue();
+            return OBJ_SCOPE(obj2)->methodReadBarrier(cx, sprop, vp);
+        }
+
         /* Peek at the native property's slot value, without doing a Get. */
         *vp = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
                ? LOCKED_OBJ_GET_SLOT(obj2, sprop->slot)

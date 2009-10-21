@@ -1341,6 +1341,12 @@ class JSAutoTempValueRooter
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_PUSH_TEMP_ROOT_OBJECT(mContext, obj, &mTvr);
     }
+    JSAutoTempValueRooter(JSContext *cx, JSScopeProperty *sprop
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_PUSH_TEMP_ROOT_SPROP(mContext, sprop, &mTvr);
+    }
 
     ~JSAutoTempValueRooter() {
         JS_POP_TEMP_ROOT(mContext, &mTvr);
