@@ -385,7 +385,7 @@ private:
     PRUint32                          mLoadedFromApplicationCache : 1;
     PRUint32                          mTracingEnabled           : 1;
     PRUint32                          mForceAllowThirdPartyCookie : 1;
-    // True if consumer added it's own If-None-Match or If-Modified-Since
+    // True if consumer added its own If-None-Match or If-Modified-Since
     // headers. In such a case we must not override them in the cache code
     // and also we want to pass possible 304 code response through.
     PRUint32                          mCustomConditionalRequest : 1;
