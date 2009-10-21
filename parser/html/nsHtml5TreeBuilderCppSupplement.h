@@ -400,11 +400,7 @@ nsHtml5TreeBuilder::elementPushed(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   NS_ASSERTION(aElement, "No element!");
   // Give autoloading links a chance to fire
   if (aNamespace == kNameSpaceID_XHTML) {
-    if (aName == nsHtml5Atoms::body) {
-      nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-      // XXX if null, OOM!
-      treeOp->Init(eTreeOpStartLayout, nsnull);
-    } else if (aName == nsHtml5Atoms::html) {
+    if (aName == nsHtml5Atoms::html) {
       nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
       // XXX if null, OOM!
       treeOp->Init(eTreeOpProcessOfflineManifest, aElement);
@@ -497,6 +493,12 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     // XXX if null, OOM!
     treeOp->Init(eTreeOpProcessMeta, aElement);
+    return;
+  }
+  if (aName == nsHtml5Atoms::head) {
+    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+    // XXX if null, OOM!
+    treeOp->Init(eTreeOpStartLayout, nsnull);
     return;
   }
   return;

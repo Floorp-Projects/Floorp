@@ -128,7 +128,6 @@ nsHtml5TreeOpExecutor::DidBuildModel(PRBool aTerminated)
   // This is comes from nsXMLContentSink
   DidBuildModelImpl(aTerminated);
   mDocument->ScriptLoader()->RemoveObserver(this);
-  nsContentSink::StartLayout(PR_FALSE);
   ScrollToRef();
   mDocument->RemoveObserver(this);
   mDocument->EndLoad();
@@ -294,6 +293,10 @@ nsHtml5TreeOpExecutor::Flush()
     const nsHtml5TreeOperation* start = mOpQueue.Elements();
     const nsHtml5TreeOperation* end = start + opQueueLength;
     for (nsHtml5TreeOperation* iter = (nsHtml5TreeOperation*)start; iter < end; ++iter) {
+      if (NS_UNLIKELY(!mParser)) {
+        // The previous tree op caused a call to nsIParser::Terminate();
+        break;
+      }
       iter->Perform(this);
     }
     FlushPendingAppendNotifications();
@@ -316,10 +319,15 @@ nsHtml5TreeOpExecutor::Flush()
 #endif
     }
   }
-  ScheduleTimer();
-  
+
   mFlushing = PR_FALSE;
-  
+
+  if (!mParser) {
+    return;
+  }
+
+  ScheduleTimer();
+
   if (mScriptElement) {
     NS_ASSERTION(!mCallDidBuildModel, "Had a script element and DidBuildModel call");
     RunScript();
