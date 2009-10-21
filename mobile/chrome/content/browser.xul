@@ -432,7 +432,7 @@
                        label="&bookmarksManage.label;" oncommand="BookmarkList.toggleManage();"/>
         <toolbarbutton id="tool-bookmarks-close" class="urlbar-button button-image" command="cmd_close"/>
       </hbox>
-      <placelist id="bookmark-items" type="bookmarks" flex="1" onopen="BookmarkList.openBookmark();"/>
+      <placelist id="bookmark-items" type="bookmarks" flex="1" onopen="BookmarkList.openBookmark();" autoedit="true"/>
     </vbox>
 
     <!-- save/open dialog -->

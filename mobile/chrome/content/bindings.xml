@@ -570,12 +570,13 @@
 
             this.stopEditing(false);
 
-            if (this.control)
-              this.control.removeItem(this);
-
             let event = document.createEvent("Events");
             event.initEvent("BookmarkRemove", true, false);
             this.dispatchEvent(event);
+
+            if (this.control)
+              this.control.removeItem(this);
+
           ]]>
         </body>
       </method>
@@ -659,8 +660,7 @@
 
   <binding id="place-list">
     <content orient="vertical" flex="1">
-      <xul:vbox anonid="parent-items" class="place-list-parents">
-      </xul:vbox>
+      <xul:vbox anonid="parent-items" class="place-list-parents" />
       <xul:richlistbox anonid="child-items" class="place-list-children" flex="1"/>
     </content>
     <implementation>
@@ -689,6 +689,17 @@
       </field>
 
       <property name="scrollBoxObject" readonly="true" onget="return this._children.scrollBoxObject;"/>
+
+      <property name="items" readonly="true" onget="return this._children.childNodes"/>
+
+      <property name="isRootFolder" readonly="true">
+        <getter>
+          <![CDATA[
+            let currentFolderId = this._parents.lastChild.getAttribute("itemid");
+            return currentFolderId == PlacesUtils.bookmarks.unfiledBookmarksFolder;
+          ]]>
+        </getter>
+      </property>
 
       <property name="activeItem">
         <getter>
@@ -724,6 +735,8 @@
               this._manageUI = val;
               if (this._manageUI) {
                 this.setAttribute("ui", "manage");
+                if (this.getAttribute("autoedit") == "true" && this._children.hasChildNodes())
+                  this._children.firstChild.startEditing();
               }
               else {
                 if (this._activeItem && this._activeItem.isEditing)
@@ -751,8 +764,8 @@
             let result = PlacesUtils.history.executeQuery(query, options);
             let rootNode = result.root;
             rootNode.containerOpen = true;
+    
             let cc = rootNode.childCount;
-
             for (var i=0; i<cc; ++i) {
               var node = rootNode.getChild(i);
               if (this._mode == "folders" && node.type == node.RESULT_TYPE_FOLDER) {
