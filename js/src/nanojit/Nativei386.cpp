@@ -273,10 +273,8 @@ namespace nanojit
         intptr_t offset = intptr_t(targ) - intptr_t(branch);
         if (branch[0] == JMP32) {
             *(int32_t*)&branch[1] = offset - 5;
-            VALGRIND_DISCARD_TRANSLATIONS(&branch[1], sizeof(int32_t));
         } else if (branch[0] == JCC32) {
             *(int32_t*)&branch[2] = offset - 6;
-            VALGRIND_DISCARD_TRANSLATIONS(&branch[2], sizeof(int32_t));
         } else
             NanoAssertMsg(0, "Unknown branch type in nPatchBranch");
     }
