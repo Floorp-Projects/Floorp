@@ -556,6 +556,7 @@ namespace nanojit
         Fragment *frag = lr->exit->target;
         NanoAssert(frag->fragEntry != 0);
         nPatchBranch((NIns*)lr->jmp, frag->fragEntry);
+        CodeAlloc::flushICache(lr->jmp, LARGEST_BRANCH_PATCH);
         verbose_only(verbose_outputf("patching jump at %p to target %p\n",
             lr->jmp, frag->fragEntry);)
     }
@@ -814,7 +815,7 @@ namespace nanojit
 
         // at this point all our new code is in the d-cache and not the i-cache,
         // so flush the i-cache on cpu's that need it.
-        _codeAlloc.flushICache(codeList);
+        CodeAlloc::flushICache(codeList);
 
         // save entry point pointers
         frag->fragEntry = fragEntry;
