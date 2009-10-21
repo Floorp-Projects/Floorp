@@ -2363,6 +2363,20 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+- (void)setNeedsDisplayInRect:(NSRect)aRect
+{
+  [super setNeedsDisplayInRect:aRect];
+
+  if ([[self window] isKindOfClass:[ToolbarWindow class]]) {
+    ToolbarWindow* window = (ToolbarWindow*)[self window];
+    if ([window drawsContentsIntoWindowFrame]) {
+      // Tell it to mark the rect in the titlebar as dirty.
+      NSView* borderView = [[window contentView] superview];
+      [window setTitlebarNeedsDisplayInRect:[self convertRect:aRect toView:borderView]];
+    }
+  }
+}
+
 - (NSString*)description
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
@@ -2528,31 +2542,38 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+  [self drawRect:aRect inContext:cgContext];
 
+  // If we're a transparent window, and our contents have changed, we need
+  // to make sure the shadow is updated to the new contents.
+  [self maybeInvalidateShadow];
+}
+
+- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext
+{
   PRBool isVisible;
   if (!mGeckoChild || NS_FAILED(mGeckoChild->IsVisible(isVisible)) ||
       !isVisible)
     return;
 
-  CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-
+#ifdef DEBUG_UPDATE
   nsIntRect geckoBounds;
   mGeckoChild->GetBounds(geckoBounds);
 
-  NSRect bounds = [self bounds];
-  nsRefPtr<gfxQuartzSurface> targetSurface =
-    new gfxQuartzSurface(cgContext, gfxSize(bounds.size.width, bounds.size.height));
-
-#ifdef DEBUG_UPDATE
   fprintf (stderr, "---- Update[%p][%p] [%f %f %f %f] cgc: %p\n  gecko bounds: [%d %d %d %d]\n",
            self, mGeckoChild,
-           aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height, cgContext,
+           aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height, aContext,
            geckoBounds.x, geckoBounds.y, geckoBounds.width, geckoBounds.height);
 
-  CGAffineTransform xform = CGContextGetCTM(cgContext);
+  CGAffineTransform xform = CGContextGetCTM(aContext);
   fprintf (stderr, "  xform in: [%f %f %f %f %f %f]\n", xform.a, xform.b, xform.c, xform.d, xform.tx, xform.ty);
 #endif
+
+  // Create Cairo objects.
+  NSSize bufferSize = [self bounds].size;
+  nsRefPtr<gfxQuartzSurface> targetSurface =
+    new gfxQuartzSurface(aContext, gfxSize(bufferSize.width, bufferSize.height));
 
   nsRefPtr<gfxContext> targetContext = new gfxContext(targetSurface);
 
@@ -2560,34 +2581,24 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   mGeckoChild->GetDeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
   rc->Init(mGeckoChild->GetDeviceContext(), targetContext);
 
-  /* clip and build a region */
+  // Build a region.
   nsCOMPtr<nsIRegion> rgn(do_CreateInstance(kRegionCID));
   if (!rgn)
     return;
   rgn->Init();
 
-  // bounding box of the dirty area
-  nsIntRect fullRect;
-  NSRectToGeckoRect(aRect, fullRect);
-
   const NSRect *rects;
   NSInteger count, i;
-  [self getRectsBeingDrawn:&rects count:&count];
+  [[NSView focusView] getRectsBeingDrawn:&rects count:&count];
   if (count < MAX_RECTS_IN_REGION) {
     for (i = 0; i < count; ++i) {
-      const NSRect& r = rects[i];
-
-      // add to the region
+      // Add the rect to the region.
+      const NSRect& r = [self convertRect:rects[i] fromView:[NSView focusView]];
       rgn->Union((PRInt32)r.origin.x, (PRInt32)r.origin.y, (PRInt32)r.size.width, (PRInt32)r.size.height);
-
-      // to the context for clipping
-      targetContext->Rectangle(gfxRect(r.origin.x, r.origin.y, r.size.width, r.size.height));
     }
   } else {
     rgn->Union(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
-    targetContext->Rectangle(gfxRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height));
   }
-  targetContext->Clip();
 
   // Subtract child view rectangles from the region
   NSArray* subviews = [self subviews];
@@ -2599,6 +2610,24 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     rgn->Subtract(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
   }
 
+  // Set up the clip region.
+  nsRegionRectSet* rgnRects = nsnull;
+  rgn->GetRects(&rgnRects);
+  if (!rgnRects)
+    return;
+
+  for (PRUint32 i = 0; i < rgnRects->mNumRects; ++i) {
+    const nsRegionRect& rect = rgnRects->mRects[i];
+    targetContext->Rectangle(gfxRect(rect.x, rect.y, rect.width, rect.height));
+  }
+  rgn->FreeRects(rgnRects);
+  targetContext->Clip();
+
+  // bounding box of the dirty area
+  nsIntRect fullRect;
+  NSRectToGeckoRect(aRect, fullRect);
+
+  // Create the event and dispatch it.
   nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, mGeckoChild);
   paintEvent.renderingContext = rc;
   paintEvent.rect = &fullRect;
@@ -2608,10 +2637,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   mGeckoChild->DispatchWindowEvent(paintEvent);
   if (!mGeckoChild)
     return;
-
-  // If we're a transparent window, and our contents have changed, we need
-  // to make sure the shadow is updated to the new contents.
-  [self maybeInvalidateShadow];
 
   paintEvent.renderingContext = nsnull;
   paintEvent.region = nsnull;
@@ -2628,19 +2653,17 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   fprintf (stderr, "---- update done ----\n");
 
 #if 0
-  CGContextSetRGBStrokeColor (cgContext,
+  CGContextSetRGBStrokeColor (aContext,
                             ((((unsigned long)self) & 0xff)) / 255.0,
                             ((((unsigned long)self) & 0xff00) >> 8) / 255.0,
                             ((((unsigned long)self) & 0xff0000) >> 16) / 255.0,
                             0.5);
 #endif 
-  CGContextSetRGBStrokeColor (cgContext, 1, 0, 0, 0.8);
-  CGContextSetLineWidth (cgContext, 4.0);
-  CGContextStrokeRect (cgContext,
-                       CGRectMake(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height));
+  CGContextSetRGBStrokeColor(aContext, 1, 0, 0, 0.8);
+  CGContextSetLineWidth(aContext, 4.0);
+  CGContextStrokeRect(aContext,
+                      CGRectMake(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height));
 #endif
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // Allows us to turn off setting up the clip region
