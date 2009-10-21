@@ -603,6 +603,7 @@ var Browser = {
 
   scrollContentToTop: function scrollContentToTop() {
     this.contentScrollboxScroller.scrollTo(0, 0);
+    this.pageScrollboxScroller.scrollTo(0, 0);
     this._browserView.onAfterVisibleMove();
   },
 
@@ -610,6 +611,14 @@ var Browser = {
     let container = this.contentScrollbox;
     let rect = container.getBoundingClientRect();
     this.controlsScrollboxScroller.scrollBy(Math.round(rect.left), 0);
+    this._browserView.onAfterVisibleMove();
+  },
+
+  hideTitlebar: function hideTitlebar() {
+    let container = this.contentScrollbox;
+    let rect = container.getBoundingClientRect();
+    this.pageScrollboxScroller.scrollBy(0, Math.round(rect.top));
+    this.tryUnfloatToolbar();
     this._browserView.onAfterVisibleMove();
   },
 
@@ -954,7 +963,7 @@ var Browser = {
       return true;
 
     let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility(dx, dy);
-    if (leftvis <= 0.002 && ritevis <= 0.002) {
+    if (leftvis == 0 && ritevis == 0) {
       BrowserUI.unlockToolbar();
       this.floatedWhileDragging = false;
       return true;
@@ -973,78 +982,101 @@ var Browser = {
                                     // needed then uncomment this line.
   },
 
+  /**
+   * Returns a good zoom rectangle for given element.
+   * @param y Where the user clicked in browser coordinates. For long elements
+   *          (like news columns), this keeps the clicked spot in the viewport.
+   * @return Rectangle in current viewport coordinates, null if nothing works.
+   */
+  _getZoomRectForElement: function _getZoomRectForElement(element, y) {
+    if (element == null)
+      return null;
+
+    const margin = 15;
+    let bv = Browser._browserView;
+    let vis = bv.getVisibleRect();
+    let elRect = bv.browserToViewportRect(Browser.getBoundingContentRect(element));
+    y = bv.browserToViewport(y);
+
+    let zoomLevel = BrowserView.Util.clampZoomLevel(bv.getZoomLevel() * vis.width / (elRect.width + margin * 2));
+    let zoomRatio = bv.getZoomLevel() / zoomLevel;
+
+    // Don't zoom in a marginal amount
+    // > 2/3 means operation increases the zoom level by less than 1.5
+    if (zoomRatio >= .6666)
+       return null;
+
+    let newVisW = vis.width * zoomRatio, newVisH = vis.height * zoomRatio;
+    let result = new Rect(elRect.center().x - newVisW / 2, y - newVisH / 2, newVisW, newVisH).expandToIntegers();
+
+    // Make sure rectangle doesn't poke out of viewport
+    return result.translateInside(bv._browserViewportState.viewportRect);
+  },
+
+  /**
+   * Find a good zoom rectangle for point specified in browser coordinates.
+   * @return Point in viewport coordinates, null if the zoom is too big.
+   */
+  _getZoomRectForPoint: function _getZoomRectForPoint(x, y, zoomLevel) {
+    let bv = Browser._browserView;
+    let vis = bv.getVisibleRect();
+    x = bv.browserToViewport(x);
+    y = bv.browserToViewport(y);
+
+    if (zoomLevel >= 4)
+      return null;
+
+    let zoomRatio = zoomLevel / bv.getZoomLevel();
+    let newVisW = vis.width / zoomRatio, newVisH = vis.height / zoomRatio;
+    let result = new Rect(x - newVisW / 2, y - newVisH / 2, newVisW, newVisH);
+
+    // Make sure rectangle doesn't poke out of viewport
+    return result.translateInside(bv._browserViewportState.viewportRect);
+  },
+
+  setVisibleRect: function setVisibleRect(rect) {
+    let bv = Browser._browserView;
+    let vis = bv.getVisibleRect();
+    let zoomRatio = vis.width / rect.width;
+    let zoomLevel = bv.getZoomLevel() * zoomRatio;
+    let scrollX = rect.left * zoomRatio;
+    let scrollY = rect.top * zoomRatio;
+
+    bv.beginOffscreenOperation();
+
+    Browser.hideSidebars();
+    Browser.hideTitlebar();
+    bv.setZoomLevel(zoomLevel);
+    Browser.contentScrollboxScroller.scrollTo(scrollX, scrollY);
+    bv.onAfterVisibleMove();
+    bv.renderNow();
+
+    bv.commitOffscreenOperation();
+  },
+
   zoomToPoint: function zoomToPoint(cX, cY) {
     const margin = 15;
 
     let [elementX, elementY] = Browser.transformClientToBrowser(cX, cY);
-    let aElement = Browser.elementFromPoint(elementX, elementY);
+    let element = Browser.elementFromPoint(elementX, elementY);
+    let zoomRect = this._getZoomRectForElement(element, elementY);
 
-    let bv = Browser._browserView;
-    let scroller = Browser.contentScrollboxScroller;
-
-    let elRect = Browser.getBoundingContentRect(aElement);
-    let elWidth = elRect.width;
-
-    let vis = bv.getVisibleRect();
-    let vrWidth = vis.width;
-
-    /* Try to set zoom-level such that once zoomed element is as wide
-     *  as the visible rect */
-    let zoomLevel = BrowserView.Util.clampZoomLevel((vrWidth - (2 * margin)) / elWidth);
-    let oldZoomLevel = bv.getZoomLevel();
-
-    //dump("element width: " + elWidth + "\n");
-    //dump("old zoom level: " + oldZoomLevel + "\n");
-    //dump("new zoom level: " + zoomLevel + "\n");
-
-    /* If the new zoom level we've calculated is less than or equal to
-     * the current zoom level, return early and don't progress further.
-     * If the new zoom level is higher, continue to zoom inward.
-     */
-    if (oldZoomLevel >= zoomLevel)
+    if (zoomRect == null)
       return false;
 
-    bv.beginBatchOperation();
-
-    /* XXX
-     * This isn't ideal.
-     */
-    this.hideSidebars();
-
-    bv.setZoomLevel(zoomLevel);
-
-    bv.forceContainerResize();
-    //Browser.forceChromeReflow();
-
-    let dx = Math.round(bv.browserToViewport(elRect.left) - margin - vis.left);
-    let dy = Math.round(bv.browserToViewport(elementY) - (window.innerHeight / 2) - vis.top);
-
-    Browser.contentScrollbox.customDragger.dragMove(dx, dy, scroller);
-    bv.commitBatchOperation();
-
+    this.setVisibleRect(zoomRect);
     return true;
   },
 
   zoomFromPoint: function zoomFromPoint(cX, cY) {
-    let [elementX, elementY] = this.transformClientToBrowser(cX, cY);
-
-    let bv = Browser._browserView;
-
-    bv.beginBatchOperation();
-
-    bv.zoomToPage();
-
-    bv.forceContainerResize();
-
-    let dy = Math.round(bv.browserToViewport(elementY) - (window.innerHeight / 2) - bv.getVisibleRect().top);
-
-    this.contentScrollbox.customDragger.dragMove(0, dy, this.contentScrollboxScroller);
-
-    Browser.forceChromeReflow();
-
-    this.hideSidebars();
-
-    bv.commitBatchOperation();
+    let bv = this._browserView;
+    
+    let zoomLevel = bv.getZoomForPage();
+    if (bv.getZoomLevel() != zoomLevel) {
+      let [elementX, elementY] = this.transformClientToBrowser(cX, cY);
+      let zoomRect = this._getZoomRectForPoint(elementX, elementY, zoomLevel);
+      this.setVisibleRect(zoomRect);
+    }
   },
 
   getBoundingContentRect: function getBoundingContentRect(contentElem) {
@@ -1053,18 +1085,18 @@ var Browser = {
     if (!browser)
       return null;
 
-    let scrollX = { value: 0 };
-    let scrollY = { value: 0 };
-    let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
-    cwu.getScrollXY(false, scrollX, scrollY);
+    let offset = BrowserView.Util.getContentScrollOffset(browser);
 
     let r = contentElem.getBoundingClientRect();
 
-    //dump('getBoundingContentRect: clientRect is at ' + r.left + ', ' + r.top + '; scrolls are ' + scrollX.value + ', ' + scrollY.value + '\n');
+    // step out of iframes and frames, offsetting scroll values
+    for (let frame = contentElem.ownerDocument.defaultView; frame != browser.contentWindow; frame = frame.parent) {
+      // adjust client coordinates' origin to be top left of iframe viewport
+      let rect = frame.frameElement.getBoundingClientRect();
+      offset.add(rect.left, rect.top);
+    }
 
-    return new Rect(r.left + scrollX.value,
-                      r.top + scrollY.value,
-                      r.width, r.height);
+    return new Rect(r.left + offset.x, r.top + offset.y, r.width, r.height);
   },
 
   /**
@@ -2446,6 +2478,18 @@ Tab.prototype = {
   },
 
   endLoading: function() {
+    // Determine at what resolution the browser is rendered based on meta tag
+    let browser = this._browser;
+    let windowUtils = browser.contentWindow
+                             .QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+    let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
+    if (handheldFriendly == "true") {
+      browser.className = "browser-handheld";
+    } else {
+      browser.className = "browser";
+    }
+
     //if (!this._loading)
     //  dump("!!! Already finished loading this tab, please file a bug\n");
     this.setIcon(this._browser.mIconURL);
