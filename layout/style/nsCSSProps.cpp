@@ -555,6 +555,7 @@ const PRInt32 nsCSSProps::kBorderImageKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kBorderStyleKTable[] = {
+  eCSSKeyword_none,   NS_STYLE_BORDER_STYLE_NONE,
   eCSSKeyword_hidden, NS_STYLE_BORDER_STYLE_HIDDEN,
   eCSSKeyword_dotted, NS_STYLE_BORDER_STYLE_DOTTED,
   eCSSKeyword_dashed, NS_STYLE_BORDER_STYLE_DASHED,
@@ -603,6 +604,7 @@ const PRInt32 nsCSSProps::kCaptionSideKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kClearKTable[] = {
+  eCSSKeyword_none, NS_STYLE_CLEAR_NONE,
   eCSSKeyword_left, NS_STYLE_CLEAR_LEFT,
   eCSSKeyword_right, NS_STYLE_CLEAR_RIGHT,
   eCSSKeyword_both, NS_STYLE_CLEAR_LEFT_AND_RIGHT,
@@ -689,6 +691,7 @@ const PRInt32 nsCSSProps::kContentKTable[] = {
 
 const PRInt32 nsCSSProps::kCursorKTable[] = {
   // CSS 2.0
+  eCSSKeyword_auto, NS_STYLE_CURSOR_AUTO,
   eCSSKeyword_crosshair, NS_STYLE_CURSOR_CROSSHAIR,
   eCSSKeyword_default, NS_STYLE_CURSOR_DEFAULT,
   eCSSKeyword_pointer, NS_STYLE_CURSOR_POINTER,
@@ -795,6 +798,7 @@ const PRInt32 nsCSSProps::kEmptyCellsKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kFloatKTable[] = {
+  eCSSKeyword_none,  NS_STYLE_FLOAT_NONE,
   eCSSKeyword_left,  NS_STYLE_FLOAT_LEFT,
   eCSSKeyword_right, NS_STYLE_FLOAT_RIGHT,
   eCSSKeyword_UNKNOWN,-1
@@ -877,6 +881,8 @@ const PRInt32 nsCSSProps::kFontWeightKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kIMEModeKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_IME_MODE_NORMAL,
+  eCSSKeyword_auto, NS_STYLE_IME_MODE_AUTO,
   eCSSKeyword_active, NS_STYLE_IME_MODE_ACTIVE,
   eCSSKeyword_disabled, NS_STYLE_IME_MODE_DISABLED,
   eCSSKeyword_inactive, NS_STYLE_IME_MODE_INACTIVE,
@@ -896,6 +902,7 @@ const PRInt32 nsCSSProps::kListStylePositionKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kListStyleKTable[] = {
+  eCSSKeyword_none, NS_STYLE_LIST_STYLE_NONE,
   eCSSKeyword_disc, NS_STYLE_LIST_STYLE_DISC,
   eCSSKeyword_circle, NS_STYLE_LIST_STYLE_CIRCLE,
   eCSSKeyword_square, NS_STYLE_LIST_STYLE_SQUARE,
@@ -952,6 +959,8 @@ const PRInt32 nsCSSProps::kListStyleKTable[] = {
 
 // Same as kBorderStyleKTable except 'hidden'.
 const PRInt32 nsCSSProps::kOutlineStyleKTable[] = {
+  eCSSKeyword_none,   NS_STYLE_BORDER_STYLE_NONE,
+  eCSSKeyword_auto,   NS_STYLE_BORDER_STYLE_AUTO,
   eCSSKeyword_dotted, NS_STYLE_BORDER_STYLE_DOTTED,
   eCSSKeyword_dashed, NS_STYLE_BORDER_STYLE_DASHED,
   eCSSKeyword_solid,  NS_STYLE_BORDER_STYLE_SOLID,
@@ -996,6 +1005,7 @@ const PRInt32 nsCSSProps::kOverflowSubKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kPageBreakKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_PAGE_BREAK_AUTO,
   eCSSKeyword_always, NS_STYLE_PAGE_BREAK_ALWAYS,
   eCSSKeyword_avoid, NS_STYLE_PAGE_BREAK_AVOID,
   eCSSKeyword_left, NS_STYLE_PAGE_BREAK_LEFT,
@@ -1004,11 +1014,13 @@ const PRInt32 nsCSSProps::kPageBreakKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kPageBreakInsideKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_PAGE_BREAK_AUTO,
   eCSSKeyword_avoid, NS_STYLE_PAGE_BREAK_AVOID,
   eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kPageMarksKTable[] = {
+  eCSSKeyword_none, NS_STYLE_PAGE_MARKS_NONE,
   eCSSKeyword_crop, NS_STYLE_PAGE_MARKS_CROP,
   eCSSKeyword_cross, NS_STYLE_PAGE_MARKS_REGISTER,
   eCSSKeyword_UNKNOWN,-1
@@ -1052,6 +1064,8 @@ const PRInt32 nsCSSProps::kPositionKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kSpeakKTable[] = {
+  eCSSKeyword_none,      NS_STYLE_SPEAK_NONE,
+  eCSSKeyword_normal,    NS_STYLE_SPEAK_NORMAL,
   eCSSKeyword_spell_out, NS_STYLE_SPEAK_SPELL_OUT,
   eCSSKeyword_UNKNOWN,-1
 };
@@ -1069,6 +1083,7 @@ const PRInt32 nsCSSProps::kSpeakNumeralKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kSpeakPunctuationKTable[] = {
+  eCSSKeyword_none, NS_STYLE_SPEAK_PUNCTUATION_NONE,
   eCSSKeyword_code, NS_STYLE_SPEAK_PUNCTUATION_CODE,
   eCSSKeyword_UNKNOWN,-1
 };
@@ -1091,6 +1106,7 @@ const PRInt32 nsCSSProps::kStackSizingKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kTableLayoutKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_TABLE_LAYOUT_AUTO,
   eCSSKeyword_fixed, NS_STYLE_TABLE_LAYOUT_FIXED,
   eCSSKeyword_UNKNOWN,-1
 };
@@ -1119,6 +1135,7 @@ const PRInt32 nsCSSProps::kTextDecorationKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kTextTransformKTable[] = {
+  eCSSKeyword_none, NS_STYLE_TEXT_TRANSFORM_NONE,
   eCSSKeyword_capitalize, NS_STYLE_TEXT_TRANSFORM_CAPITALIZE,
   eCSSKeyword_lowercase, NS_STYLE_TEXT_TRANSFORM_LOWERCASE,
   eCSSKeyword_uppercase, NS_STYLE_TEXT_TRANSFORM_UPPERCASE,
@@ -1135,12 +1152,15 @@ const PRInt32 nsCSSProps::kTransitionTimingFunctionKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kUnicodeBidiKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_UNICODE_BIDI_NORMAL,
   eCSSKeyword_embed, NS_STYLE_UNICODE_BIDI_EMBED,
   eCSSKeyword_bidi_override, NS_STYLE_UNICODE_BIDI_OVERRIDE,
   eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kUserFocusKTable[] = {
+  eCSSKeyword_none,           NS_STYLE_USER_FOCUS_NONE,
+  eCSSKeyword_normal,         NS_STYLE_USER_FOCUS_NORMAL,
   eCSSKeyword_ignore,         NS_STYLE_USER_FOCUS_IGNORE,
   eCSSKeyword_select_all,     NS_STYLE_USER_FOCUS_SELECT_ALL,
   eCSSKeyword_select_before,  NS_STYLE_USER_FOCUS_SELECT_BEFORE,
@@ -1151,6 +1171,8 @@ const PRInt32 nsCSSProps::kUserFocusKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kUserInputKTable[] = {
+  eCSSKeyword_none,     NS_STYLE_USER_INPUT_NONE,
+  eCSSKeyword_auto,     NS_STYLE_USER_INPUT_AUTO,
   eCSSKeyword_enabled,  NS_STYLE_USER_INPUT_ENABLED,
   eCSSKeyword_disabled, NS_STYLE_USER_INPUT_DISABLED,
   eCSSKeyword_UNKNOWN,-1
@@ -1164,6 +1186,8 @@ const PRInt32 nsCSSProps::kUserModifyKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kUserSelectKTable[] = {
+  eCSSKeyword_none,       NS_STYLE_USER_SELECT_NONE,
+  eCSSKeyword_auto,       NS_STYLE_USER_SELECT_AUTO,
   eCSSKeyword_text,       NS_STYLE_USER_SELECT_TEXT,
   eCSSKeyword_element,    NS_STYLE_USER_SELECT_ELEMENT,
   eCSSKeyword_elements,   NS_STYLE_USER_SELECT_ELEMENTS,
@@ -1206,6 +1230,7 @@ const PRInt32 nsCSSProps::kVolumeKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_WHITESPACE_NORMAL,
   eCSSKeyword_pre, NS_STYLE_WHITESPACE_PRE,
   eCSSKeyword_nowrap, NS_STYLE_WHITESPACE_NOWRAP,
   eCSSKeyword_pre_wrap, NS_STYLE_WHITESPACE_PRE_WRAP,
@@ -1222,6 +1247,7 @@ const PRInt32 nsCSSProps::kWidthKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kWindowShadowKTable[] = {
+  eCSSKeyword_none, NS_STYLE_WINDOW_SHADOW_NONE,
   eCSSKeyword_default, NS_STYLE_WINDOW_SHADOW_DEFAULT,
   eCSSKeyword_UNKNOWN,-1
 };
