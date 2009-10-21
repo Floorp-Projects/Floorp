@@ -268,7 +268,7 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
   // # If the stroke is very thin, cairo won't paint any stroke, and so the
   //   stroke bounds that it will return will be empty.
 
-  if (HasStroke(&context)) {
+  if (HasStroke()) {
     SetupCairoStrokeGeometry(&context);
     extent = nsSVGUtils::PathExtentsToMaxStrokeExtents(extent, this);
   } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_None) {
