@@ -210,7 +210,7 @@ public:
 
   void EndUpdate(nsUpdateType aUpdateType);
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLDocument, nsDocument)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLDocument, nsDocument)
 
   virtual already_AddRefed<nsIParser> GetFragmentParser() {
     return mFragmentParser.forget();
