@@ -221,6 +221,7 @@ public:
     eUnit_Normal,
     eUnit_Auto,
     eUnit_None,
+    eUnit_Enumerated,
     eUnit_Coord,
     eUnit_Percent,
     eUnit_Float,
@@ -233,6 +234,7 @@ public:
   private:
     Unit mUnit;
     union {
+      PRInt32 mInt;
       nscoord mCoord;
       float mFloat;
       nscolor mColor;
@@ -250,6 +252,10 @@ public:
       return mUnit == eUnit_Null;
     }
 
+    PRInt32 GetIntValue() const {
+      NS_ASSERTION(mUnit == eUnit_Enumerated, "unit mismatch");
+      return mValue.mInt;
+    }
     nscoord GetCoordValue() const {
       NS_ASSERTION(mUnit == eUnit_Coord, "unit mismatch");
       return mValue.mCoord;
@@ -277,6 +283,8 @@ public:
                    "must be valueless unit");
     }
     Value(const Value& aOther) : mUnit(eUnit_Null) { *this = aOther; }
+    enum EnumeratedConstructorType { EnumeratedConstructor };
+    Value(PRInt32 aInt, EnumeratedConstructorType);
     enum CoordConstructorType { CoordConstructor };
     Value(nscoord aLength, CoordConstructorType);
     enum PercentConstructorType { PercentConstructor };
@@ -291,6 +299,7 @@ public:
     void SetNormalValue();
     void SetAutoValue();
     void SetNoneValue();
+    void SetIntValue(PRInt32 aInt, Unit aUnit);
     void SetCoordValue(nscoord aCoord);
     void SetPercentValue(float aPercent);
     void SetFloatValue(float aFloat);
