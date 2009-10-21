@@ -173,6 +173,15 @@ enum {
   // class) -- for some reason TSMProcessRawKeyEvent() doesn't work with them.
   TSMDocumentID mPluginTSMDoc;
 
+  // This view's tracking rect.
+  NSTrackingRectTag mTrackingRect;
+
+  enum MouseEnterState {
+    eMouseEnterState_Unknown,
+    eMouseEnterState_Inside,
+    eMouseEnterState_Outside
+  } mMouseEnterState;
+
   // Simple gestures support
   //
   // mGestureState is used to detect when Cocoa has called both
@@ -210,6 +219,10 @@ enum {
 - (void)setTransparent:(BOOL)transparent;
 
 - (void)sendFocusEvent:(PRUint32)eventType;
+
+- (MouseEnterState)mouseEnterState;
+
+- (NSTrackingRectTag)trackingRect;
 
 - (void)handleMouseMoved:(NSEvent*)aEvent;
 
