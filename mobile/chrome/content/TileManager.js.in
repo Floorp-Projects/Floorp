@@ -127,7 +127,7 @@ function TileManager(appendTile, removeTile, browserView, cacheSize) {
   /* Rectangle within the viewport that is visible to the user.  It is "critical"
    * in the sense that it must be rendered as soon as it becomes dirty, and tiles
    * within this rectangle should not be evicted for use elsewhere. */
-  this._criticalRect = null;
+  this._criticalRect = new Rect(0, 0, 0, 0);
 
   /* timeout of the non-visible-tiles-crawler to cache renders from the browser */
   this._idleTileCrawlerTimeout = 0;
@@ -154,7 +154,7 @@ TileManager.prototype = {
     tc.iBound = Math.ceil(viewportRect.right / kTileWidth);
     tc.jBound = Math.ceil(viewportRect.bottom / kTileHeight);
 
-    if (!criticalRect || !criticalRect.equals(this._criticalRect)) {
+    if (criticalRect.isEmpty() || !criticalRect.equals(this._criticalRect)) {
       this.beginCriticalMove(criticalRect);
       this.endCriticalMove(criticalRect, !boundsSizeChanged);
     }
@@ -176,15 +176,13 @@ TileManager.prototype = {
 
       BEGIN_FOREACH_IN_RECT(rect, tc, tile)
 
-      if (!criticalRect || !tile.boundRect.intersects(criticalRect))
+      if (!tile.boundRect.intersects(criticalRect))
         this._removeTileSafe(tile);
       else
         criticalIsDirty = true;
 
       let intersection = tile.boundRect.intersect(rects[i]);
-      if (intersection) {
-        tile.markDirty(intersection);
-      }
+      tile.markDirty(intersection);
 
       if (crawler)
         crawler.enqueue(tile.i, tile.j);
@@ -201,7 +199,7 @@ TileManager.prototype = {
 
     //let start = Date.now();
 
-    if (cr) {
+    if (!cr.isEmpty()) {
       let ctr = cr.center().map(Math.round);
 
       if (!this._ctr.equals(ctr)) {
@@ -238,7 +236,7 @@ TileManager.prototype = {
 
     //let start = Date.now();
 
-    if (cr) {
+    if (!cr.isEmpty()) {
       BEGIN_FOREACH_IN_RECT(cr, tc, tile)
 	    tc.releaseTile(tile);
       END_FOREACH_IN_RECT
@@ -260,10 +258,7 @@ TileManager.prototype = {
 
     //dump(" hold: " + (Date.now() - start) + "\n");
 
-    if (cr && destCriticalRect)
-      cr.copyFrom(destCriticalRect);
-    else
-      this._criticalRect = cr = destCriticalRect;
+    cr.copyFrom(destCriticalRect);
 
     if (doCriticalPaint)
       this.criticalRectPaint();
@@ -295,7 +290,7 @@ TileManager.prototype = {
 
     if (!skipRecenter) {
       let cr = this._criticalRect;
-      if (cr) {
+      if (!cr.isEmpty()) {
         let ctr = cr.center().map(Math.round);
         this.recenterEvictionQueue(ctr);
       }
@@ -696,7 +691,7 @@ TileManager.Tile.prototype = {
     this._dirtyTileCanvas = false;
 
     /* keep a dirty rectangle (i.e. only part of the tile is dirty) */
-    this._dirtyTileCanvasRect = null;
+    this._dirtyTileCanvasRect = new Rect(0, 0, 0, 0);
   },
 
   get x() { return this.boundRect.left; },
@@ -717,26 +712,20 @@ TileManager.Tile.prototype = {
    */
   markDirty: function markDirty(dirtyRect) {
     if (!dirtyRect) {
-      if (!this._dirtyTileCanvasRect)
-        this._dirtyTileCanvasRect = this.boundRect.clone();
-      else
-        this._dirtyTileCanvasRect.copyFrom(this.boundRect);
+      this._dirtyTileCanvasRect.copyFrom(this.boundRect);
     } else {
-      if (!this._dirtyTileCanvasRect)
-        this._dirtyTileCanvasRect = dirtyRect.intersect(this.boundRect).expandToIntegers();
-      else if (dirtyRect.intersects(this.boundRect))
-        this._dirtyTileCanvasRect.expandToContain(dirtyRect.intersect(this.boundRect)).expandToIntegers();
+      this._dirtyTileCanvasRect.expandToContain(dirtyRect.intersect(this.boundRect)).expandToIntegers();
     }
 
     // XXX if, after the above, the dirty rectangle takes up a large enough
     // portion of the boundRect, we should probably just mark the entire tile
     // dirty and fastpath for future calls.
-    if (this._dirtyTileCanvasRect)
+    if (!this._dirtyTileCanvasRect.isEmpty())
       this._dirtyTileCanvas = true;
   },
 
   unmarkDirty: function unmarkDirty() {
-    this._dirtyTileCanvasRect = null;
+    this._dirtyTileCanvasRect.setRect(0, 0, 0, 0);
     this._dirtyTileCanvas = false;
   },
 
