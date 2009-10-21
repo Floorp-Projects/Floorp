@@ -151,92 +151,17 @@ TileManager.prototype = {
                                                         dirtyAll) {
     let tc = this._tileCache;
 
-    let iBoundOld = tc.iBound;
-    let jBoundOld = tc.jBound;
-    let iBound = tc.iBound = Math.ceil(viewportRect.right / kTileWidth) - 1;
-    let jBound = tc.jBound = Math.ceil(viewportRect.bottom / kTileHeight) - 1;
+    tc.iBound = Math.ceil(viewportRect.right / kTileWidth);
+    tc.jBound = Math.ceil(viewportRect.bottom / kTileHeight);
 
     if (criticalRect.isEmpty() || !criticalRect.equals(this._criticalRect)) {
       this.beginCriticalMove(criticalRect);
-      this.endCriticalMove(criticalRect, !(dirtyAll || boundsSizeChanged));
+      this.endCriticalMove(criticalRect, !boundsSizeChanged);
     }
 
-    if (dirtyAll) {
+    if (boundsSizeChanged) {
+      // TODO fastpath if !dirtyAll
       this.dirtyRects([viewportRect.clone()], true);
-    } else if (boundsSizeChanged) {
-
-      //
-      // This is a special case.  The bounds size changed, but we are
-      // told that not everything is dirty (so mayhap content grew or
-      // shrank vertically or horizontally).  We might have old tiles
-      // around in those areas just due to the fact that they haven't
-      // been yet evicted, so we patrol the new regions in search of
-      // any such leftover tiles and mark those we find as dirty.
-      //
-      // The two dirty rects below mark dirty any renegade tiles in
-      // the newly annexed grid regions as per the following diagram
-      // of the "new" viewport.
-      //
-      //   +------------+------+
-      //   |old         | A    |
-      //   |viewport    |      |
-      //   |            |      |
-      //   |            |      |
-      //   |            |      |
-      //   +------------+      |
-      //   | B          |      |
-      //   |            |      |
-      //   +------------+------+
-      //
-      // The first rectangle covers annexed region A, the second
-      // rectangle covers annexed region B.
-      //
-      // XXXrf If the tiles are large, then we are creating some
-      // redundant work here by invalidating the entire tile that
-      // the old viewport boundary crossed (note markDirty() being
-      // called with no rectangle parameter).  The rectangular area
-      // within the tile lying beyond the old boundary is certainly
-      // dirty, but not the area before.  Moreover, since we mark
-      // dirty entire tiles that may cross into the old viewport,
-      // they might, in particular, cross into the critical rect
-      // (which is anyhwere in the old viewport), so we call a
-      // criticalRectPaint() for such cleanup. We do all this more
-      // or less because we don't have much of a notion of "the old
-      // viewport" here except for in the sense that we know the
-      // index bounds on the tilecache grid from before (and the new
-      // index bounds now).
-      //
-
-      let t, l, b, r, rect;
-      let rects = [];
-
-      if (iBoundOld <= iBound) {
-        l = iBoundOld * kTileWidth;
-        t = 0;
-        r = (iBound + 1) * kTileWidth;
-        b = (jBound + 1) * kTileHeight;
-
-        rect = new Rect(l, t, r - l, b - t);
-        rect.restrictTo(viewportRect);
-
-        if (!rect.isEmpty())
-          rects.push(rect);
-      }
-
-      if (jBoundOld <= jBound) {
-        l = 0;
-        t = jBoundOld * kTileHeight;
-        r = (iBound + 1) * kTileWidth;
-        b = (jBound + 1) * kTileHeight;
-
-        rect = new Rect(l, t, r - l, b - t);
-        rect.restrictTo(viewportRect);
-
-        if (!rect.isEmpty())
-          rects.push(rect);
-      }
-
-      this.dirtyRects(rects, true);
     }
   },
 
