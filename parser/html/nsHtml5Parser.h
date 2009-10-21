@@ -311,6 +311,8 @@ class nsHtml5Parser : public nsIParser,
     }
     
     void StartTokenizer(PRBool aScriptingEnabled);
+    
+    void ContinueAfterFailedCharsetSwitch();
 
 #ifdef DEBUG
     PRBool HasStreamParser() {

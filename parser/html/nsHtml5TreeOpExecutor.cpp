@@ -328,7 +328,16 @@ nsHtml5TreeOpExecutor::Flush()
 
   ScheduleTimer();
 
-  if (mScriptElement) {
+  if (!mCharsetSwitch.IsEmpty()) {
+    NS_ASSERTION(!mScriptElement, "Had a charset switch and a script");
+    NS_ASSERTION(!mCallDidBuildModel, "Had a charset switch and DidBuildModel call");
+    PerformCharsetSwitch();
+    mCharsetSwitch.Truncate();
+    if (mParser) {
+      // The charset switch was unsuccessful.
+      return (static_cast<nsHtml5Parser*> (mParser.get()))->ContinueAfterFailedCharsetSwitch();      
+    }
+  } else if (mScriptElement) {
     NS_ASSERTION(!mCallDidBuildModel, "Had a script element and DidBuildModel call");
     RunScript();
   } else if (mCallDidBuildModel) {
@@ -489,6 +498,12 @@ nsHtml5TreeOpExecutor::Start()
 void
 nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding)
 {
+  mCharsetSwitch.Assign(aEncoding);
+}
+
+void
+nsHtml5TreeOpExecutor::PerformCharsetSwitch()
+{
   nsresult rv = NS_OK;
   nsCOMPtr<nsIWebShellServices> wss = do_QueryInterface(mDocShell);
   if (!wss) {
@@ -500,7 +515,7 @@ nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding)
     // do nothing and fall thru
   } else if (NS_FAILED(rv = wss->StopDocumentLoad())) {
     rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
-  } else if (NS_FAILED(rv = wss->ReloadDocument(aEncoding, kCharsetFromMetaTag))) {
+  } else if (NS_FAILED(rv = wss->ReloadDocument(mCharsetSwitch.get(), kCharsetFromMetaTag))) {
     rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
   }
   // if the charset switch was accepted, wss has called Terminate() on the
@@ -522,6 +537,7 @@ nsHtml5TreeOpExecutor::Reset() {
   mStarted = PR_FALSE;
   mScriptElement = nsnull;
   mCallDidBuildModel = PR_FALSE;
+  mCharsetSwitch.Truncate();
 }
 
 void

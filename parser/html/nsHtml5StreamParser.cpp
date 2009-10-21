@@ -651,9 +651,16 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
   if (mCharsetSource >= kCharsetFromMetaTag) { // this threshold corresponds to "confident" in the HTML5 spec
     return;
   }
+
+  // The encodings are different.
+  if (mReparseForbidden) {
+    return; // not reparsing even if we wanted to
+  }
+
   nsresult rv = NS_OK;
   nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
   if (NS_FAILED(rv)) {
+    NS_NOTREACHED("Charset alias service not available.");
     return;
   }
   nsCAutoString newEncoding;
@@ -661,6 +668,7 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
   PRBool eq;
   rv = calias->Equals(newEncoding, mCharset, &eq);
   if (NS_FAILED(rv)) {
+    NS_NOTREACHED("Charset name equality check failed.");
     return;
   }
   if (eq) {
@@ -669,17 +677,25 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
   }
   
   // XXX check HTML5 non-IANA aliases here
-
-  // The encodings are different. We want to reparse.
-  if (mReparseForbidden) {
-    return; // not reparsing after all
+  
+  nsCAutoString preferred;
+  
+  rv = calias->GetPreferred(newEncoding, preferred);
+  if (NS_FAILED(rv)) {
+    // the encoding name is bogus
+    return;
   }
   
   // we still want to reparse
-  mTreeBuilder->NeedsCharsetSwitchTo(newEncoding);
+  mTreeBuilder->NeedsCharsetSwitchTo(preferred);
   mTreeBuilder->Flush();
+  Interrupt();
+  if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
+    NS_WARNING("failed to dispatch executor flush event");
+  }
   // the tree op executor will cause the stream parser to terminate
-  // if the charset switch request is accepted
+  // if the charset switch request is accepted or it'll uninterrupt 
+  // if the request failed.
 }
 
 void
@@ -880,4 +896,16 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
       mAtomTable.SetPermittedLookupThread(mThread);
     #endif
   }
+}
+
+void
+nsHtml5StreamParser::ContinueAfterFailedCharsetSwitch()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  mozilla::MutexAutoLock tokenizerAutoLock(mTokenizerMutex);
+  Uninterrupt();
+  nsCOMPtr<nsIRunnable> event = new nsHtml5StreamParserContinuation(this);
+  if (NS_FAILED(mThread->Dispatch(event, nsIThread::DISPATCH_NORMAL))) {
+    NS_WARNING("Failed to dispatch ParseAvailableData event");
+  }  
 }
