@@ -125,6 +125,11 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
 
   PRBool success = PR_TRUE;
   switch (commonUnit) {
+    case eUnit_Null:
+    case eUnit_None:
+    case eUnit_Enumerated:
+      success = PR_FALSE;
+      break;
     case eUnit_Coord: {
       nscoord startCoord = aStartValue.GetCoordValue();
       nscoord endCoord = aEndValue.GetCoordValue();
@@ -289,10 +294,6 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
       aDistance = sqrt(distance);
       break;
     }
-    case eUnit_Null:
-    case eUnit_None:
-      success = PR_FALSE;
-      break;
     default:
       NS_NOTREACHED("Can't compute distance using the given common unit");
       success = PR_FALSE;
@@ -392,6 +393,11 @@ nsStyleAnimation::AddWeighted(double aCoeff1, const Value& aValue1,
 
   PRBool success = PR_TRUE;
   switch (commonUnit) {
+    case eUnit_Null:
+    case eUnit_None:
+    case eUnit_Enumerated:
+      success = PR_FALSE;
+      break;
     case eUnit_Coord: {
       aResultValue.SetCoordValue(NSToCoordRound(
         aCoeff1 * aValue1.GetCoordValue() +
@@ -551,10 +557,6 @@ nsStyleAnimation::AddWeighted(double aCoeff1, const Value& aValue1,
                                         PR_TRUE);
       break;
     }
-    case eUnit_Null:
-    case eUnit_None:
-      success = PR_FALSE;
-      break;
     default:
       NS_NOTREACHED("Can't interpolate using the given common unit");
       success = PR_FALSE;
@@ -673,6 +675,12 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
                           "type mismatch");
         static_cast<nsCSSValue*>(aSpecifiedValue)->SetNoneValue();
       }
+      break;
+    case eUnit_Enumerated:
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                        "type mismatch");
+      static_cast<nsCSSValue*>(aSpecifiedValue)->
+        SetIntValue(aComputedValue.GetIntValue(), eCSSUnit_Enumerated);
       break;
     case eUnit_Coord: {
       NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
@@ -817,8 +825,10 @@ StyleCoordToValue(const nsStyleCoord& aCoord, nsStyleAnimation::Value& aValue)
     case eStyleUnit_Coord:
       aValue.SetCoordValue(aCoord.GetCoordValue());
       break;
-    case eStyleUnit_Integer:
     case eStyleUnit_Enumerated:
+      aValue.SetIntValue(aCoord.GetIntValue(),
+                         nsStyleAnimation::eUnit_Enumerated);
+    case eStyleUnit_Integer:
       return PR_FALSE;
   }
   return PR_TRUE;
@@ -964,6 +974,10 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
       aComputedValue.SetCoordValue(*static_cast<const nscoord*>(
         StyleDataAtOffset(styleStruct, ssOffset)));
       return PR_TRUE;
+    case eStyleAnimType_EnumU8:
+      aComputedValue.SetIntValue(*static_cast<const PRUint8*>(
+        StyleDataAtOffset(styleStruct, ssOffset)), eUnit_Enumerated);
+      return PR_TRUE;
     case eStyleAnimType_float:
       aComputedValue.SetFloatValue(*static_cast<const float*>(
         StyleDataAtOffset(styleStruct, ssOffset)));
@@ -1048,6 +1062,12 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
   return PR_FALSE;
 }
 
+nsStyleAnimation::Value::Value(PRInt32 aInt, EnumeratedConstructorType)
+{
+  mUnit = eUnit_Enumerated;
+  mValue.mInt = aInt;
+}
+
 nsStyleAnimation::Value::Value(nscoord aLength, CoordConstructorType)
 {
   mUnit = eUnit_Coord;
@@ -1083,6 +1103,9 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
     case eUnit_Normal:
     case eUnit_Auto:
     case eUnit_None:
+      break;
+    case eUnit_Enumerated:
+      mValue.mInt = aOther.mValue.mInt;
       break;
     case eUnit_Coord:
       mValue.mCoord = aOther.mValue.mCoord;
@@ -1122,6 +1145,14 @@ nsStyleAnimation::Value::SetNoneValue()
 {
   FreeValue();
   mUnit = eUnit_None;
+}
+
+void
+nsStyleAnimation::Value::SetIntValue(PRInt32 aInt, Unit aUnit)
+{
+  FreeValue();
+  mUnit = aUnit;
+  mValue.mInt = aInt;
 }
 
 void
@@ -1192,6 +1223,8 @@ nsStyleAnimation::Value::operator==(const Value& aOther) const
     case eUnit_Auto:
     case eUnit_None:
       return PR_TRUE;
+    case eUnit_Enumerated:
+      return mValue.mInt == aOther.mValue.mInt;
     case eUnit_Coord:
       return mValue.mCoord == aOther.mValue.mCoord;
     case eUnit_Percent:

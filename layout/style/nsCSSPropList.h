@@ -1359,8 +1359,8 @@ CSS_PROP_DISPLAY(
     mDisplay,
     eCSSType_Value,
     kDisplayKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleDisplay, mDisplay),
+    eStyleAnimType_EnumU8)
 CSS_PROP_BACKENDONLY(
     elevation,
     elevation,
@@ -1463,8 +1463,8 @@ CSS_PROP_FONT(
     mStyle,
     eCSSType_Value,
     kFontStyleKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleFont, mFont.style),
+    eStyleAnimType_EnumU8)
 CSS_PROP_FONT(
     font-variant,
     font_variant,
@@ -1474,8 +1474,8 @@ CSS_PROP_FONT(
     mVariant,
     eCSSType_Value,
     kFontVariantKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleFont, mFont.variant),
+    eStyleAnimType_EnumU8)
 CSS_PROP_FONT(
     font-weight,
     font_weight,
@@ -2146,8 +2146,8 @@ CSS_PROP_VISIBILITY(
     mPointerEvents,
     eCSSType_Value,
     kPointerEventsKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleVisibility, mPointerEvents),
+    eStyleAnimType_EnumU8)
 CSS_PROP_DISPLAY(
     position,
     position,
@@ -2284,8 +2284,8 @@ CSS_PROP_TEXTRESET(
     mDecoration,
     eCSSType_Value,
     kTextDecorationKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleTextReset, mTextDecoration),
+    eStyleAnimType_EnumU8)
 CSS_PROP_TEXT(
     text-indent,
     text_indent,
@@ -2481,8 +2481,8 @@ CSS_PROP_VISIBILITY(
     mVisibility,
     eCSSType_Value,
     kVisibilityKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)  // reflow for collapse
+    offsetof(nsStyleVisibility, mVisible),
+    eStyleAnimType_EnumU8)  // reflow for collapse
 CSS_PROP_BACKENDONLY(
     voice-family,
     voice_family,
@@ -2717,8 +2717,8 @@ CSS_PROP_SVG(
     mClipRule,
     eCSSType_Value,
     kFillRuleKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mClipRule),
+    eStyleAnimType_EnumU8)
 CSS_PROP_SVG(
     color-interpolation,
     color_interpolation,
@@ -2728,8 +2728,8 @@ CSS_PROP_SVG(
     mColorInterpolation,
     eCSSType_Value,
     kColorInterpolationKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mColorInterpolation),
+    eStyleAnimType_EnumU8)
 CSS_PROP_SVG(
     color-interpolation-filters,
     color_interpolation_filters,
@@ -2739,8 +2739,8 @@ CSS_PROP_SVG(
     mColorInterpolationFilters,
     eCSSType_Value,
     kColorInterpolationKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mColorInterpolationFilters),
+    eStyleAnimType_EnumU8)
 CSS_PROP_SVGRESET(
     dominant-baseline,
     dominant_baseline,
@@ -2750,8 +2750,8 @@ CSS_PROP_SVGRESET(
     mDominantBaseline,
     eCSSType_Value,
     kDominantBaselineKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVGReset, mDominantBaseline),
+    eStyleAnimType_EnumU8)
 CSS_PROP_SVG(
     fill,
     fill,
@@ -2783,8 +2783,8 @@ CSS_PROP_SVG(
     mFillRule,
     eCSSType_Value,
     kFillRuleKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mFillRule),
+    eStyleAnimType_EnumU8)
 CSS_PROP_SVGRESET(
     filter,
     filter,
@@ -2827,8 +2827,8 @@ CSS_PROP_SVG(
     mImageRendering,
     eCSSType_Value,
     kImageRenderingKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mImageRendering),
+    eStyleAnimType_EnumU8)
 CSS_PROP_SVGRESET(
     lighting-color,
     lighting_color,
@@ -2898,8 +2898,8 @@ CSS_PROP_SVG(
     mShapeRendering,
     eCSSType_Value,
     kShapeRenderingKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mShapeRendering),
+    eStyleAnimType_EnumU8)
 CSS_PROP_SVGRESET(
     stop-color,
     stop_color,
@@ -2964,8 +2964,8 @@ CSS_PROP_SVG(
     mStrokeLinecap,
     eCSSType_Value,
     kStrokeLinecapKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mStrokeLinecap),
+    eStyleAnimType_EnumU8)
 CSS_PROP_SVG(
     stroke-linejoin,
     stroke_linejoin,
@@ -2975,8 +2975,8 @@ CSS_PROP_SVG(
     mStrokeLinejoin,
     eCSSType_Value,
     kStrokeLinejoinKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mStrokeLinejoin),
+    eStyleAnimType_EnumU8)
 CSS_PROP_SVG(
     stroke-miterlimit,
     stroke_miterlimit,
@@ -3019,8 +3019,8 @@ CSS_PROP_SVG(
     mTextAnchor,
     eCSSType_Value,
     kTextAnchorKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mTextAnchor),
+    eStyleAnimType_EnumU8)
 CSS_PROP_SVG(
     text-rendering,
     text_rendering,
@@ -3030,8 +3030,8 @@ CSS_PROP_SVG(
     mTextRendering,
     eCSSType_Value,
     kTextRenderingKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleSVG, mTextRendering),
+    eStyleAnimType_EnumU8)
 #endif /* !defined (CSS_PROP_LIST_EXCLUDE_INTERNAL) */
 #endif
 
