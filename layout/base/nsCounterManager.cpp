@@ -107,12 +107,7 @@ nsCounterUseNode::GetText(nsString& aResult)
             stack.AppendElement(n->mScopePrev);
 
     const nsCSSValue& styleItem = mCounterStyle->Item(mAllCounters ? 2 : 1);
-    PRInt32 style;
-    if (styleItem.GetUnit() == eCSSUnit_None) {
-        style = NS_STYLE_LIST_STYLE_NONE;
-    } else {
-        style = styleItem.GetIntValue();
-    }
+    PRInt32 style = styleItem.GetIntValue();
     const PRUnichar* separator;
     if (mAllCounters)
         separator = mCounterStyle->Item(1).GetStringBufferValue();

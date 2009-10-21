@@ -3297,17 +3297,15 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
            SETCOORD_LPH | SETCOORD_INITIAL_ZERO, aContext,
            mPresContext, canStoreInRuleTree);
 
-  // text-transform: enum, none, inherit, initial
+  // text-transform: enum, inherit, initial
   SetDiscrete(textData.mTextTransform, text->mTextTransform, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NONE, parentText->mTextTransform,
-              NS_STYLE_TEXT_TRANSFORM_NONE, 0,
-              NS_STYLE_TEXT_TRANSFORM_NONE, 0, 0);
+              SETDSC_ENUMERATED, parentText->mTextTransform,
+              NS_STYLE_TEXT_TRANSFORM_NONE, 0, 0, 0, 0);
 
-  // white-space: enum, normal, inherit, initial
+  // white-space: enum, inherit, initial
   SetDiscrete(textData.mWhiteSpace, text->mWhiteSpace, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NORMAL, parentText->mWhiteSpace,
-              NS_STYLE_WHITESPACE_NORMAL, 0, 0,
-              NS_STYLE_WHITESPACE_NORMAL, 0);
+              SETDSC_ENUMERATED, parentText->mWhiteSpace,
+              NS_STYLE_WHITESPACE_NORMAL, 0, 0, 0, 0);
 
   // word-spacing: normal, length, inherit
   nsStyleCoord tempCoord;
@@ -3328,11 +3326,10 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                  "unexpected unit");
   }
 
-  // word-wrap: enum, normal, inherit, initial
+  // word-wrap: enum, inherit, initial
   SetDiscrete(textData.mWordWrap, text->mWordWrap, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NORMAL, parentText->mWordWrap,
-              NS_STYLE_WORDWRAP_NORMAL, 0, 0,
-              NS_STYLE_WORDWRAP_NORMAL, 0);
+              SETDSC_ENUMERATED, parentText->mWordWrap,
+              NS_STYLE_WORDWRAP_NORMAL, 0, 0, 0, 0);
 
   COMPUTE_END_INHERITED(Text, text)
 }
@@ -3378,12 +3375,10 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
     text->mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
   }
 
-  // unicode-bidi: enum, normal, inherit, initial
+  // unicode-bidi: enum, inherit, initial
   SetDiscrete(textData.mUnicodeBidi, text->mUnicodeBidi, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NORMAL,
-              parentText->mUnicodeBidi,
-              NS_STYLE_UNICODE_BIDI_NORMAL, 0, 0,
-              NS_STYLE_UNICODE_BIDI_NORMAL, 0);
+              SETDSC_ENUMERATED, parentText->mUnicodeBidi,
+              NS_STYLE_UNICODE_BIDI_NORMAL, 0, 0, 0, 0);
 
   COMPUTE_END_RESET(TextReset, text)
 }
@@ -3399,7 +3394,7 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
   COMPUTE_START_INHERITED(UserInterface, (), ui, parentUI,
                           UserInterface, uiData)
 
-  // cursor: enum, auto, url, inherit
+  // cursor: enum, url, inherit
   nsCSSValueList*  list = uiData.mCursor;
   if (nsnull != list) {
     delete [] ui->mCursorArray;
@@ -3447,44 +3442,27 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
       }
 
       NS_ASSERTION(list, "Must have non-array value at the end");
-      NS_ASSERTION(list->mValue.GetUnit() == eCSSUnit_Enumerated ||
-                   list->mValue.GetUnit() == eCSSUnit_Auto,
+      NS_ASSERTION(list->mValue.GetUnit() == eCSSUnit_Enumerated,
                    "Unexpected fallback value at end of cursor list");
-
-      if (eCSSUnit_Enumerated == list->mValue.GetUnit()) {
-        ui->mCursor = list->mValue.GetIntValue();
-      }
-      else if (eCSSUnit_Auto == list->mValue.GetUnit()) {
-        ui->mCursor = NS_STYLE_CURSOR_AUTO;
-      }
+      ui->mCursor = list->mValue.GetIntValue();
     }
   }
 
-  // user-input: auto, none, enum, inherit, initial
+  // user-input: enum, inherit, initial
   SetDiscrete(uiData.mUserInput, ui->mUserInput, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NONE | SETDSC_AUTO,
-              parentUI->mUserInput,
-              NS_STYLE_USER_INPUT_AUTO,
-              NS_STYLE_USER_INPUT_AUTO,
-              NS_STYLE_USER_INPUT_NONE,
-              0, 0);
+              SETDSC_ENUMERATED, parentUI->mUserInput,
+              NS_STYLE_USER_INPUT_AUTO, 0, 0, 0, 0);
 
   // user-modify: enum, inherit, initial
   SetDiscrete(uiData.mUserModify, ui->mUserModify, canStoreInRuleTree,
-              SETDSC_ENUMERATED,
-              parentUI->mUserModify,
+              SETDSC_ENUMERATED, parentUI->mUserModify,
               NS_STYLE_USER_MODIFY_READ_ONLY,
               0, 0, 0, 0);
 
-  // user-focus: none, normal, enum, inherit, initial
+  // user-focus: enum, inherit, initial
   SetDiscrete(uiData.mUserFocus, ui->mUserFocus, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NONE | SETDSC_NORMAL,
-              parentUI->mUserFocus,
-              NS_STYLE_USER_FOCUS_NONE,
-              0,
-              NS_STYLE_USER_FOCUS_NONE,
-              NS_STYLE_USER_FOCUS_NORMAL,
-              0);
+              SETDSC_ENUMERATED, parentUI->mUserFocus,
+              NS_STYLE_USER_FOCUS_NONE, 0, 0, 0, 0);
 
   COMPUTE_END_INHERITED(UserInterface, ui)
 }
@@ -3499,24 +3477,15 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
 {
   COMPUTE_START_RESET(UIReset, (), ui, parentUI, UserInterface, uiData)
 
-  // user-select: auto, none, enum, inherit, initial
+  // user-select: enum, inherit, initial
   SetDiscrete(uiData.mUserSelect, ui->mUserSelect, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NONE | SETDSC_AUTO,
-              parentUI->mUserSelect,
-              NS_STYLE_USER_SELECT_AUTO,
-              NS_STYLE_USER_SELECT_AUTO,
-              NS_STYLE_USER_SELECT_NONE,
-              0, 0);
+              SETDSC_ENUMERATED, parentUI->mUserSelect,
+              NS_STYLE_USER_SELECT_AUTO, 0, 0, 0, 0);
 
-  // ime-mode: auto, normal, enum, inherit, initial
+  // ime-mode: enum, inherit, initial
   SetDiscrete(uiData.mIMEMode, ui->mIMEMode, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NORMAL | SETDSC_AUTO,
-              parentUI->mIMEMode,
-              NS_STYLE_IME_MODE_AUTO,
-              NS_STYLE_IME_MODE_AUTO,
-              0,
-              NS_STYLE_IME_MODE_NORMAL,
-              0);
+              SETDSC_ENUMERATED, parentUI->mIMEMode,
+              NS_STYLE_IME_MODE_AUTO, 0, 0, 0, 0);
 
   // force-broken-image-icons: integer, inherit, initial
   SetDiscrete(uiData.mForceBrokenImageIcon, ui->mForceBrokenImageIcon,
@@ -3525,11 +3494,10 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
               parentUI->mForceBrokenImageIcon,
               0, 0, 0, 0, 0);
 
-  // -moz-window-shadow: enum, none, inherit, initial
+  // -moz-window-shadow: enum, inherit, initial
   SetDiscrete(uiData.mWindowShadow, ui->mWindowShadow, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NONE, parentUI->mWindowShadow,
-              NS_STYLE_WINDOW_SHADOW_DEFAULT, 0,
-              NS_STYLE_WINDOW_SHADOW_NONE, 0, 0);
+              SETDSC_ENUMERATED, parentUI->mWindowShadow,
+              NS_STYLE_WINDOW_SHADOW_DEFAULT, 0, 0, 0, 0);
 
   COMPUTE_END_RESET(UIReset, ui)
 }
@@ -3869,11 +3837,10 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               SETDSC_ENUMERATED, parentDisplay->mDisplay,
               NS_STYLE_DISPLAY_INLINE, 0, 0, 0, 0);
 
-  // appearance: enum, none, inherit, initial
+  // appearance: enum, inherit, initial
   SetDiscrete(displayData.mAppearance, display->mAppearance, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NONE, parentDisplay->mAppearance,
-              NS_THEME_NONE, 0,
-              NS_THEME_NONE, 0, 0);
+              SETDSC_ENUMERATED, parentDisplay->mAppearance,
+              NS_THEME_NONE, 0, 0, 0, 0);
 
   // binding: url, none, inherit
   if (eCSSUnit_URL == displayData.mBinding.GetUnit()) {
@@ -3900,11 +3867,10 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               SETDSC_ENUMERATED, parentDisplay->mPosition,
               NS_STYLE_POSITION_STATIC, 0, 0, 0, 0);
 
-  // clear: enum, none, inherit, initial
+  // clear: enum, inherit, initial
   SetDiscrete(displayData.mClear, display->mBreakType, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NONE, parentDisplay->mBreakType,
-              NS_STYLE_CLEAR_NONE, 0,
-              NS_STYLE_CLEAR_NONE, 0, 0);
+              SETDSC_ENUMERATED, parentDisplay->mBreakType,
+              NS_STYLE_CLEAR_NONE, 0, 0, 0, 0);
 
   // temp fix for bug 24000
   // Map 'auto' and 'avoid' to PR_FALSE, and 'always', 'left', and
@@ -3912,10 +3878,11 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   // "A conforming user agent may interpret the values 'left' and
   // 'right' as 'always'." - CSS2.1, section 13.3.1
   if (eCSSUnit_Enumerated == displayData.mBreakBefore.GetUnit()) {
-    display->mBreakBefore = (NS_STYLE_PAGE_BREAK_AVOID != displayData.mBreakBefore.GetIntValue());
+    display->mBreakBefore =
+      (NS_STYLE_PAGE_BREAK_AVOID != displayData.mBreakBefore.GetIntValue() &&
+       NS_STYLE_PAGE_BREAK_AUTO  != displayData.mBreakBefore.GetIntValue());
   }
-  else if (eCSSUnit_Auto == displayData.mBreakBefore.GetUnit() ||
-           eCSSUnit_Initial == displayData.mBreakBefore.GetUnit()) {
+  else if (eCSSUnit_Initial == displayData.mBreakBefore.GetUnit()) {
     display->mBreakBefore = PR_FALSE;
   }
   else if (eCSSUnit_Inherit == displayData.mBreakBefore.GetUnit()) {
@@ -3924,10 +3891,11 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   }
 
   if (eCSSUnit_Enumerated == displayData.mBreakAfter.GetUnit()) {
-    display->mBreakAfter = (NS_STYLE_PAGE_BREAK_AVOID != displayData.mBreakAfter.GetIntValue());
+    display->mBreakAfter =
+      (NS_STYLE_PAGE_BREAK_AVOID != displayData.mBreakAfter.GetIntValue() &&
+       NS_STYLE_PAGE_BREAK_AUTO  != displayData.mBreakAfter.GetIntValue());
   }
-  else if (eCSSUnit_Auto == displayData.mBreakAfter.GetUnit() ||
-           eCSSUnit_Initial == displayData.mBreakAfter.GetUnit()) {
+  else if (eCSSUnit_Initial == displayData.mBreakAfter.GetUnit()) {
     display->mBreakAfter = PR_FALSE;
   }
   else if (eCSSUnit_Inherit == displayData.mBreakAfter.GetUnit()) {
@@ -3936,11 +3904,10 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   }
   // end temp fix
 
-  // float: enum, none, inherit, initial
+  // float: enum, inherit, initial
   SetDiscrete(displayData.mFloat, display->mFloats, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NONE, parentDisplay->mFloats,
-              NS_STYLE_FLOAT_NONE, 0,
-              NS_STYLE_FLOAT_NONE, 0, 0);
+              SETDSC_ENUMERATED, parentDisplay->mFloats,
+              NS_STYLE_FLOAT_NONE, 0, 0, 0, 0);
 
   // overflow-x: enum, inherit, initial
   SetDiscrete(displayData.mOverflowX, display->mOverflowX, canStoreInRuleTree,
@@ -4733,7 +4700,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
     }
   }
 
-  // border-style, border-*-style: enum, none, inherit
+  // border-style, border-*-style: enum, inherit
   nsCSSRect ourStyle(marginData.mBorderStyle);
   AdjustLogicalBoxProp(aContext,
                        marginData.mBorderLeftStyleLTRSource,
@@ -4749,10 +4716,12 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
     NS_FOR_CSS_SIDES(side) {
       const nsCSSValue &value = ourStyle.*(nsCSSRect::sides[side]);
       nsCSSUnit unit = value.GetUnit();
+      NS_ABORT_IF_FALSE(eCSSUnit_None != unit,
+                        "'none' should be handled as enumerated value");
       if (eCSSUnit_Enumerated == unit) {
         border->SetBorderStyle(side, value.GetIntValue());
       }
-      else if (eCSSUnit_None == unit || eCSSUnit_Initial == unit) {
+      else if (eCSSUnit_Initial == unit) {
         border->SetBorderStyle(side, NS_STYLE_BORDER_STYLE_NONE);
       }
       else if (eCSSUnit_Inherit == unit) {
@@ -5067,16 +5036,16 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
     }
   }
 
-  // outline-style: auto, enum, none, inherit, initial
+  // outline-style: enum, inherit, initial
   // cannot use SetDiscrete because of SetOutlineStyle
-  if (eCSSUnit_Enumerated == marginData.mOutlineStyle.GetUnit())
+  nsCSSUnit unit = marginData.mOutlineStyle.GetUnit();
+  NS_ABORT_IF_FALSE(eCSSUnit_None != unit && eCSSUnit_Auto != unit,
+                    "'none' and 'auto' should be handled as enumerated values");
+  if (eCSSUnit_Enumerated == unit) {
     outline->SetOutlineStyle(marginData.mOutlineStyle.GetIntValue());
-  else if (eCSSUnit_None == marginData.mOutlineStyle.GetUnit() ||
-           eCSSUnit_Initial == marginData.mOutlineStyle.GetUnit())
+  } else if (eCSSUnit_Initial == unit) {
     outline->SetOutlineStyle(NS_STYLE_BORDER_STYLE_NONE);
-  else if (eCSSUnit_Auto == marginData.mOutlineStyle.GetUnit()) {
-    outline->SetOutlineStyle(NS_STYLE_BORDER_STYLE_AUTO);
-  } else if (eCSSUnit_Inherit == marginData.mOutlineStyle.GetUnit()) {
+  } else if (eCSSUnit_Inherit == unit) {
     canStoreInRuleTree = PR_FALSE;
     outline->SetOutlineStyle(parentOutline->GetOutlineStyle());
   }
@@ -5095,11 +5064,10 @@ nsRuleNode::ComputeListData(void* aStartStruct,
 {
   COMPUTE_START_INHERITED(List, (), list, parentList, List, listData)
 
-  // list-style-type: enum, none, inherit, initial
+  // list-style-type: enum, inherit, initial
   SetDiscrete(listData.mType, list->mListStyleType, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NONE, parentList->mListStyleType,
-              NS_STYLE_LIST_STYLE_DISC, 0,
-              NS_STYLE_LIST_STYLE_NONE, 0, 0);
+              SETDSC_ENUMERATED, parentList->mListStyleType,
+              NS_STYLE_LIST_STYLE_DISC, 0, 0, 0, 0);
 
   // list-style-image: url, none, inherit
   if (eCSSUnit_Image == listData.mImage.GetUnit()) {
@@ -5234,12 +5202,10 @@ nsRuleNode::ComputeTableData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Table, (), table, parentTable, Table, tableData)
 
-  // table-layout: auto, enum, inherit, initial
+  // table-layout: enum, inherit, initial
   SetDiscrete(tableData.mLayout, table->mLayoutStrategy, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_AUTO,
-              parentTable->mLayoutStrategy,
-              NS_STYLE_TABLE_LAYOUT_AUTO,
-              NS_STYLE_TABLE_LAYOUT_AUTO, 0, 0, 0);
+              SETDSC_ENUMERATED, parentTable->mLayoutStrategy,
+              NS_STYLE_TABLE_LAYOUT_AUTO, 0, 0, 0, 0);
 
   // rules: enum (not a real CSS prop)
   if (eCSSUnit_Enumerated == tableData.mRules.GetUnit())
@@ -5666,13 +5632,14 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
                                           mPresContext, canStoreInRuleTree));
   }
 
-  // column-rule-style: enum, none, inherit
+  // column-rule-style: enum, inherit
   const nsCSSValue& styleValue = columnData.mColumnRuleStyle;
+  NS_ABORT_IF_FALSE(eCSSUnit_None != styleValue.GetUnit(),
+                    "'none' should be handled as enumerated value");
   if (eCSSUnit_Enumerated == styleValue.GetUnit()) {
     column->mColumnRuleStyle = styleValue.GetIntValue();
   }
-  else if (eCSSUnit_None == styleValue.GetUnit() ||
-           eCSSUnit_Initial == styleValue.GetUnit()) {
+  else if (eCSSUnit_Initial == styleValue.GetUnit()) {
     column->mColumnRuleStyle = NS_STYLE_BORDER_STYLE_NONE;
   }
   else if (eCSSUnit_Inherit == styleValue.GetUnit()) {
