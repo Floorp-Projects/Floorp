@@ -892,7 +892,9 @@ JS_CommenceRuntimeShutDown(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt)
 {
-    delete rt;
+    rt->~JSRuntime();
+
+    js_free(rt);
 }
 
 JS_PUBLIC_API(void)
