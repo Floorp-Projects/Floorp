@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "base/basictypes.h"
+
 #include "mozilla/XPCOM.h"
 #include "nsXULAppAPI.h"
 
