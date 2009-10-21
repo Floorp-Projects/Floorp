@@ -1673,7 +1673,11 @@ RefillDoubleFreeList(JSContext *cx)
         if (!canGC) {
             METER(rt->gcStats.doubleArenaStats.fail++);
             JS_UNLOCK_GC(rt);
-            js_ReportOutOfMemory(cx);
+
+            if (!JS_ON_TRACE(cx)) {
+                /* Trace code handle this on its own. */
+                js_ReportOutOfMemory(cx);
+            }
             return NULL;
         }
         doGC = true;
