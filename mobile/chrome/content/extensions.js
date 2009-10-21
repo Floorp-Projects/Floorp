@@ -393,6 +393,9 @@ var ExtensionsView = {
   uninstall: function ev_uninstall(aItem) {
     let opType;
     if (aItem.getAttribute("type") == "1024") {
+      // Make sure the engine isn't hidden before removing it, to make sure it's
+      // visible if the user later re-adds it (works around bug 341833)
+      aItem._engine.hidden = false;
       this._search.removeEngine(aItem._engine);
       // the search-engine-modified observer in browser.js will take care of
       // updating the list
