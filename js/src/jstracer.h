@@ -1266,7 +1266,6 @@ public:
     unsigned getCallDepth() const;
 
     JS_REQUIRES_STACK void determineGlobalTypes(JSTraceType* typeMap);
-    nanojit::LIns* demoteIns(nanojit::LIns* ins);
 
     JS_REQUIRES_STACK VMSideExit* downSnapshot(FrameInfo* downFrame);
     JS_REQUIRES_STACK AbortableRecordingStatus upRecursion();
@@ -1314,6 +1313,7 @@ public:
     friend class SlotMap;
     friend class DefaultSlotMap;
     friend class RecursiveSlotMap;
+    friend class UpRecursiveSlotMap;
     friend jsval *js_ConcatPostImacroStackCleanup(uint32 argc, JSFrameRegs &regs,
                                                   TraceRecorder *recorder);
 };
