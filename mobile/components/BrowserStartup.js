@@ -93,7 +93,7 @@ BrowserStartup.prototype = {
             jsonStr = converter.convertFromByteArray(aResult, aResult.length);
 
             PlacesUtils.restoreBookmarksFromJSONString(jsonStr, true);
-          } catch (ex) {
+          } catch (err) {
             Cu.reportError("Failed to parse default bookmarks from bookmarks.json: " + err);
           }
         }
