@@ -244,6 +244,10 @@ pref("browser.xul.error_pages.enabled", true);
 pref("browser.urlbar.default.behavior", 0);
 pref("browser.urlbar.default.behavior.emptyRestriction", 0);
 
+// Let the faviconservice know that we display favicons as 32x32px so that it
+// uses the right size when optimizing favicons
+pref("places.favicons.optimizeToDimension", 32);
+
 // various and sundry awesomebar prefs (should remove/re-evaluate
 // these once bug 447900 is fixed)
 pref("browser.urlbar.clickSelectsAll", true);
