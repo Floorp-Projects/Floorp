@@ -33,3 +33,5 @@ bug498380.patch: Remove bogus assert.
 
 bug520493.patch: Fix oggz seek so that it doesn't exit too early, and to use
                  more accurate page offsets while bisecting.
+
+bug523335.patch: Abort oggz seek bisection when the underlying stream closes.
