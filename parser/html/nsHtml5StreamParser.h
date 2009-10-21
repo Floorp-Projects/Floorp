@@ -169,6 +169,12 @@ class nsHtml5StreamParser : public nsIStreamListener,
                               nsHtml5TreeBuilder* aTreeBuilder,
                               PRBool aLastWasCR);
 
+    /**
+     * Uninterrupts and continues the stream parser if the charset switch 
+     * failed.
+     */
+    void ContinueAfterFailedCharsetSwitch();
+
     void Terminate() {
       mozilla::MutexAutoLock autoLock(mTerminatedMutex);
       mTerminated = PR_TRUE;
@@ -185,7 +191,6 @@ class nsHtml5StreamParser : public nsIStreamListener,
 #endif
 
     void Interrupt() {
-      NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
       mozilla::MutexAutoLock autoLock(mTerminatedMutex);
       mInterrupted = PR_TRUE;
     }

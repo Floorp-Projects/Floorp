@@ -694,3 +694,11 @@ nsHtml5Parser::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState)
   mLastWasCR = PR_FALSE;
   mReturnToStreamParserPermitted = PR_TRUE;
 }
+
+void
+nsHtml5Parser::ContinueAfterFailedCharsetSwitch()
+{
+  NS_PRECONDITION(mStreamParser, 
+    "Tried to continue after failed charset switch without a stream parser");
+  mStreamParser->ContinueAfterFailedCharsetSwitch();
+}
