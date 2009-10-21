@@ -55,9 +55,8 @@
 #include "nsIAtom.h"
 
 #define NS_IPARSER_IID \
-{ 0xa44dc586, 0xc521, 0x40a1, \
-{ 0xa0, 0xaf, 0xbe, 0x02, 0xa5, 0x51, 0xe0, 0xb7 } }
-
+{ 0x3db442c2, 0x8a4d, 0x4ce4, \
+{ 0x86, 0x58, 0x48, 0xee, 0x55, 0x4b, 0xbb, 0xd4 } }
 
 // {41421C60-310A-11d4-816F-000064657374}
 #define NS_IDEBUG_DUMP_CONTENT_IID \
@@ -207,9 +206,6 @@ class nsIParser : public nsISupports {
      *  (which may or may not be a proxy for the NGLayout content model).
      ************************************************************************/
     
-    // Call this method to resume the parser from the blocked state.
-    NS_IMETHOD ContinueParsing() = 0;
-
     // Call this method to resume the parser from an unblocked state.
     // This can happen, for example, if parsing was interrupted and then the
     // consumer needed to restart the parser without waiting for more data.
