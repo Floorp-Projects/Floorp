@@ -542,7 +542,7 @@ var Browser = {
       if (addons.length > 0) {
         let disabledStrings = document.getElementById("bundle_browser").getString("alertAddonsDisabled");
         let label = PluralForm.get(addons.length, disabledStrings).replace("#1", addons.length);
-
+  
         let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
         alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
                                      label, false, "", null);
@@ -1274,7 +1274,7 @@ Browser.MainDragger.prototype = {
 
     doffset.subtract(newX.value - origX.value, newY.value - origY.value);
   }
-
+  
 };
 
 function nsBrowserAccess()
@@ -1387,7 +1387,7 @@ const BrowserSearch = {
   get engines() {
     if (this._engines)
       return this._engines;
-    return this._engines = this.searchService.getVisibleEngines({ });
+    return this._engines = this.searchService.getVisibleEngines({ });    
   },
 
   addPageSearchEngine: function (aEngine, aDocument) {
@@ -1425,7 +1425,7 @@ const BrowserSearch = {
       let button = document.createElement("button");
       button.className = "search-engine-button button-dark";
       button.setAttribute("oncommand", "BrowserSearch.addPermanentSearchEngine(this.engine);this.parentNode.hidden=true;");
-
+      
       let engine = newEngines[i];
       button.engine = engine.engine;
       button.setAttribute("label", engine.engine.title);
@@ -1592,7 +1592,7 @@ IdentityHandler.prototype = {
     let state = Browser.selectedTab.getIdentityState();
     let location = getBrowser().contentWindow.location;
     let currentStatus = getBrowser().securityUI.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
-
+    
     this._lastStatus = currentStatus;
     this._lastLocation = {};
     try {
@@ -1766,7 +1766,7 @@ IdentityHandler.prototype = {
   hide: function ih_hide() {
     this._identityPopup.hidden = true;
     this._identityBox.removeAttribute("open");
-
+    
     BrowserUI.popPopup();
     BrowserUI.unlockToolbar();
   },
@@ -1997,7 +1997,7 @@ var MemoryObserver = {
   observe: function() {
     let memory = Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory);
     do {
-      Browser.windowUtils.garbageCollect();
+      Browser.windowUtils.garbageCollect();      
     } while (memory.isLowMemory() && Browser.sacrificeTab());
   }
 };
@@ -2035,27 +2035,27 @@ function importDialog(parent, src, arguments) {
   xhr.send(null);
   if (!xhr.responseXML)
     return null;
-
+  
   let doc = xhr.responseXML.documentElement;
-
+ 
   var dialog  = null;
-
+  
   // we need to insert before select-container if we want it to show correctly
   let selectContainer = document.getElementById("select-container");
   let parent = selectContainer.parentNode;
-
+  
   // emit DOMWillOpenModalDialog event
   let event = document.createEvent("Events");
   event.initEvent("DOMWillOpenModalDialog", true, false);
   let dispatcher = parent || getBrowser();
   dispatcher.dispatchEvent(event);
 
-  // create a full-screen semi-opaque box as a background
+  // create a full-screen semi-opaque box as a background 
   let back = document.createElement("box");
   back.setAttribute("class", "modal-block");
   dialog = back.appendChild(document.importNode(doc, true));
   parent.insertBefore(back, selectContainer);
-
+  
   dialog.arguments = arguments;
   dialog.parent = parent;
   return dialog;
@@ -2401,6 +2401,10 @@ Tab.prototype = {
     let bv = Browser._browserView;
 
     if (this == Browser.selectedTab) {
+      // !!! --- RESIZE HACK BEGIN -----
+      bv.simulateMozAfterSizeChange();
+      // !!! --- RESIZE HACK END -----
+
       let restoringPage = (this._state != null);
 
       if (!this._browserViewportState.zoomChanged && !restoringPage) {
@@ -2436,10 +2440,6 @@ Tab.prototype = {
     if (!this._loadingTimeout) {
       if (this == Browser.selectedTab) {
         Browser._browserView.beginBatchOperation();
-
-        // XXXrf  This is a workaround.  See the comment at the top of
-        // this method's definition in BrowserView.js for details.
-        Browser._browserView.invalidateEntireView();
       }
       this._loadingTimeout = setTimeout(Util.bind(this._resizeAndPaint, this), 2000);
     }
