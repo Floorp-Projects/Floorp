@@ -493,7 +493,6 @@ MouseModule.prototype = {
 
     let targetClicker = this.getClickerFromElement(evInfo.event.target);
 
-    this._movedOutOfRadius = false;
     this._targetScrollInterface = targetScrollInterface;
     this._dragger = (targetScrollInterface) ? (targetScrollbox.customDragger || this._defaultDragger)
                                             : null;
@@ -512,12 +511,11 @@ MouseModule.prototype = {
       this._recordEvent(evInfo);
     }
     else if (targetScrollInterface) {
-      // look if we can pan in only one direction
+      // do not allow axis locking if panning is only possible in one direction
       let cX = {}, cY = {};
       targetScrollInterface.getScrolledSize(cX, cY);
       let rect = targetScrollbox.getBoundingClientRect();
-    
-      this._dragData.alreadyLocked = ((cX.value > rect.width) != (cY.value > rect.height));
+      this._dragData.locked = ((cX.value > rect.width) != (cY.value > rect.height));
     }
   },
 
@@ -535,20 +533,33 @@ MouseModule.prototype = {
 
     let [sX, sY] = dragData.lockAxis(evInfo.event.screenX, evInfo.event.screenY);
 
-    this._movedOutOfRadius = this._movedOutOfRadius || dragData.isPointOutsideRadius(sX, sY);
-
-    if (dragData.dragging)                               // XXX same check as this._dragger but we
-      this._doDragStop(sX, sY, evInfo.event.timeStamp);  //  are using both, no good reason
+    if (dragData.dragging)
+      this._doDragStop(sX, sY, !dragData.checkPan(sX, sY));
 
     if (this._clicker)
       this._clicker.mouseUp(evInfo.event.clientX, evInfo.event.clientY);
 
     if (this._targetIsContent(evInfo.event)) {
+      // User possibly clicked on something in content
       this._recordEvent(evInfo);
-      this._doClick(this._movedOutOfRadius);
+      let commitToClicker = this._clicker && !dragData.checkPan(sX, sY);
+      if (commitToClicker)
+        // commit this click to the doubleclick timewait buffer
+        this._commitAnotherClick();
+      else
+        // clean the click buffer ourselves, since there was no clicker
+        // to commit to.  when there is one, the path taken through
+        // _commitAnotherClick takes care of this.
+        this._cleanClickBuffer();    
     }
-    else if (this._dragger && this._movedOutOfRadius && evInfo.event.detail)
-      this._owner.suppressNextClick();
+    else if (dragData.checkPan(sX, sY)) {
+      // User was panning around, do not allow chrome click
+      // XXX Instead of having suppressNextClick, we could grab until click is seen
+      // and THEN ungrab so that owner does not need to know anything about clicking.
+      let generatesClick = evInfo.event.detail;
+      if (generatesClick)
+        this._owner.suppressNextClick();
+    }
 
     this._owner.ungrab(this);
   },
@@ -563,11 +574,10 @@ MouseModule.prototype = {
       let [sX, sY] = dragData.lockAxis(evInfo.event.screenX, evInfo.event.screenY);
       evInfo.event.stopPropagation();
       evInfo.event.preventDefault();
-      this._doDragMove(sX, sY, evInfo.event.timeStamp);
+      if (dragData.checkPan(sX, sY))
+        // Only pan when mouse event isn't part of a click. Prevent jittering on tap.
+        this._doDragMove(sX, sY);
     }
-
-    this._movedOutOfRadius = this._movedOutOfRadius || 
-      dragData.isPointOutsideRadius(evInfo.event.screenX, evInfo.event.screenY);
   },
 
   /**
@@ -647,21 +657,6 @@ MouseModule.prototype = {
     dragData.setDragPosition(sX, sY);
 
     return this._dragger.dragMove(dX, dY, this._targetScrollInterface);
-  },
-
-  /**
-   * Helper function to mouseup, called  at the point where a DOM click should
-   * occur.  If movedOutOfRadius is true, then we don't call it an internal
-   * clicker-notifiable click.  
-   */
-  _doClick: function _doClick(movedOutOfRadius) {
-    let commitToClicker = this._clicker && !movedOutOfRadius;
-    if (commitToClicker)
-      this._commitAnotherClick();  // commit this click to the doubleclick timewait buffer
-    else
-      this._cleanClickBuffer();    // clean the click buffer ourselves, since there was no clicker
-                                   // to commit to.  when there is one, the path taken through
-                                   // _commitAndClick takes care of this.
   },
 
   /**
@@ -855,11 +850,12 @@ DragData.prototype = {
     this.dragging = false;
     this.sX = null;
     this.sY = null;
-    this.alreadyLocked = false;
+    this.locked = false;
     this.lockedX = null;
     this.lockedY = null;
     this._originX = null;
     this._originY = null;
+    this._isPan = false;
   },
 
   setDragPosition: function setDragPosition(screenX, screenY) {
@@ -872,15 +868,26 @@ DragData.prototype = {
     this.sY = this._originY = screenY;
     this.dragging = true;
     this._dragStartTime = Date.now();
-    this.alreadyLocked = false;
+    this.locked = false;
   },
 
   endDrag: function endDrag() {
     this.dragging = false;
   },
 
+  /** Returns true if drag should pan scrollboxes.*/
+  checkPan: function checkPan(sX, sY) {
+    if (this._originX === null)
+      return false;
+    if (this._isPan)
+      return true;
+
+    let distanceSquared = (Math.pow(sX - this._originX, 2) + Math.pow(sY - this._originY, 2));
+    return (this._isPan = (distanceSquared > Math.pow(this._dragRadius, 2)));
+  },
+
   lockAxis: function lockAxis(sX, sY) {
-    if (this.alreadyLocked) {
+    if (this.locked) {
       if (this.lockedX !== null) {
         sX = this.lockedX;
       }
@@ -920,16 +927,9 @@ DragData.prototype = {
     }
 
     // don't try to lock again... if you moved diagonal, we're free
-    this.alreadyLocked = true;
+    this.locked = true;
 
     return [sX, sY];
-  },
-
-  isPointOutsideRadius: function isPointOutsideRadius(sX, sY) {
-    if (this._originX === null)
-      return false;
-    return (Math.pow(sX - this._originX, 2) + Math.pow(sY - this._originY, 2)) >
-      (Math.pow(this._dragRadius, 2));
   },
 
   toString: function toString() {
