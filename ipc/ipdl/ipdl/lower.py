@@ -1287,9 +1287,11 @@ def _generateMessageClass(clsname, msgid, inparams, outparams, typedefs):
         reader.addstmts([ failif, Whitespace.NL ])
 
     if len(outparams):
-        reader.addstmt(StmtExpr(ExprCall(
+        ifdata = StmtIf(itervar)
+        ifdata.addifstmt(StmtExpr(ExprCall(
             ExprSelect(msgvar, '->', 'EndRead'),
             args=[ itervar ])))
+        reader.addstmt(ifdata)
 
     reader.addstmt(StmtReturn(ExprLiteral.TRUE))
     cls.addstmts([ reader, Whitespace.NL ])
