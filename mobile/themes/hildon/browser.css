@@ -666,6 +666,7 @@ autocompleteresult.allbookmarks > .autocomplete-item-url {
 box[type="documenttab"] {
   /* display:block allow us to change the line-height, it won't work otherwise */
   display: block;
+  width: 128px;
   line-height: 0;
 }
 
