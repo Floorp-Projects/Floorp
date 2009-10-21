@@ -14,6 +14,12 @@ netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var currentTest = 1;
 var prefs = Components.classes["@mozilla.org/preferences-service;1"]
             .getService(Components.interfaces.nsIPrefBranch);
+var io = Components.classes["@mozilla.org/network/io-service;1"]
+  .getService(Components.interfaces.nsIIOService);
+var uri = io.newURI(window.location, "", null);
+var cp = Components.classes["@mozilla.org/cookie/permission;1"]
+  .getService(Components.interfaces.nsICookiePermission);
+
 var quota, quotaOffline;
 
 function addOfflineApp(url)
@@ -61,121 +67,125 @@ function doNextTest()
       }
       prefs.setIntPref("offline-apps.quota.max", 2);
 
+
       slaveOrigin = "http://example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&A&success";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?add&A&success";
       break;
 
     // In subdomain now set another key with length 500 bytes, i.e.
     // allocate 501 bytes
     case 2:
-      slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
+      cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_SESSION);
+      slaveOrigin = "http://example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?add&B&success";
       break;
 
     // Try to set the same key value again to check we don't fail
     // even 1002 bytes has already been exhausted from the quota
     // We just change the value of an existing key.
     case 3:
-      slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
+      slaveOrigin = "http://example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?add&B&success";
       break;
 
     // Try to set the same key to a larger value that would lead to
     // quota reach and check that the value is still the old one
     case 4:
-      slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add2&B&failure";
+      slaveOrigin = "http://example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?add2&B&failure";
       break;
 
-    // In a different subdomain try to set a new 500 bytes key
+    // Try to set a new 500 bytes key
     // and check we fail because we are over the quota
     case 5:
-      slaveOrigin = "https://test2.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&failure";
+      slaveOrigin = "https://example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?add&C&failure";
       break;
 
-    // Remove from the second subdomain the second key, it must not fail
-    // This should release the allocated space of the quota assigned to
-    // example.com.
+    // Remove the key inherited from the non-session-only database
     case 6:
-      slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?remove&B&success";
+      slaveOrigin = "http://example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?remove&A&success";
       break;
 
     // Now try again to set 500 bytes key, it must succeed.
     case 7:
-      slaveOrigin = "https://test2.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&success";
+      slaveOrigin = "https://example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?add&C&success";
       break;
 
     case 8:
       // Do a clean up...
       slaveOrigin = "http://example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?clear";
+      cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DEFAULT);
       break;
 
     case 9:
-      // Do a clean up...
-      slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
-      break;
-
-    case 10:
-      // Do a clean up...
-      slaveOrigin = "https://test2.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
-      break;
-
-    case 11:
       // test1.example.com is now using its own offline app quota
       addOfflineApp("http://test1.example.com");
       slaveOrigin = "http://test1.example.com";
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&A&success";
       break;
 
-    case 12:
+    case 10:
       slaveOrigin = "http://test1.example.com";
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
       break;
 
-    case 13:
+    case 11:
+      cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_SESSION);
       slaveOrigin = "http://test1.example.com";
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&success";
       // Now we have 1503 bytes stored, this exceeds the default storage quota
       break;
 
-    case 14:
+    case 12:
       // Now check that upper level domain that is not set as an offline app
       // domain is allowed to store data and is using the default quota
       slaveOrigin = "http://example.com";
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&A&success";
       break;
 
-    case 15:
+    case 13:
       slaveOrigin = "http://example.com";
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
       break;
 
-    case 16:
+    case 14:
       slaveOrigin = "http://example.com";
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&failure";
       break;
 
-    case 17:
+    case 15:
       slaveOrigin = "http://test2.example.com";
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&D&failure";
       break;
 
-    case 18:
-      // check an offline app domain may store some more data
+    case 16:
+      // Check an offline app domain may store some more data
       slaveOrigin = "http://test1.example.com";
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&D&success";
       break;
 
-    case 19:
-      // check an offline app domain is using its own (larger) quota
+    case 17:
+      // Check an offline app domain is using its own (larger) quota
       slaveOrigin = "http://test1.example.com";
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&E&failure";
+      break;
+
+    case 18:
+      // This test checks we correctly subtract A from the usage. A is inherited
+      // from the persistent database before we switch to session-only cookies
+      // mode
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?remove&A&success";
+      break;
+
+    case 19:
+      // now we shold have more space to store a new value
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&E&success";
       break;
 
     case 20:
@@ -190,10 +200,11 @@ function doNextTest()
       slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
       break;
 
-    default: // end
+    default:
       removeOfflineApp("http://test1.example.com");
       prefs.setIntPref("dom.storage.default_quota", quota);
       prefs.setIntPref("offline-apps.quota.max", quotaOffline);
+      cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DEFAULT);
       SimpleTest.finish();
   }
 

@@ -152,44 +152,60 @@ IsCallerSecure()
   return NS_SUCCEEDED(rv) && isHttps;
 }
 
-
-// Returns two quotas - A hard limit for which adding data will be an error,
-// and a limit after which a warning event will be sent to the observer
-// service.  The warn limit may be -1, in which case there will be no warning.
-static void
-GetQuota(const nsACString &aDomain, PRInt32 *aQuota, PRInt32 *aWarnQuota)
+PRUint32
+GetOfflinePermission(const nsACString &aDomain)
 {
   // Fake a URI for the permission manager
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + aDomain);
 
+  PRUint32 perm;
   if (uri) {
     nsCOMPtr<nsIPermissionManager> permissionManager =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
 
-    PRUint32 perm;
     if (permissionManager &&
-        NS_SUCCEEDED(permissionManager->TestPermission(uri, "offline-app", &perm)) &&
-        perm != nsIPermissionManager::UNKNOWN_ACTION &&
-        perm != nsIPermissionManager::DENY_ACTION) {
-      // This is an offline app, give more space by default.
-      *aQuota = ((PRInt32)nsContentUtils::GetIntPref(kOfflineAppQuota,
-                                                     DEFAULT_OFFLINE_APP_QUOTA) * 1024);
+        NS_SUCCEEDED(permissionManager->TestPermission(uri, "offline-app", &perm)))
+        return perm;
+  }
 
-      if (perm == nsIOfflineCacheUpdateService::ALLOW_NO_WARN) {
-        *aWarnQuota = -1;
-      } else {
-        *aWarnQuota = ((PRInt32)nsContentUtils::GetIntPref(kOfflineAppWarnQuota,
-                                                           DEFAULT_OFFLINE_WARN_QUOTA) * 1024);
-      }
-      return;
+  return nsIPermissionManager::UNKNOWN_ACTION;
+}
+
+PRBool
+IsOfflineAllowed(const nsACString &aDomain)
+{
+  PRInt32 perm = GetOfflinePermission(aDomain);
+  return IS_PERMISSION_ALLOWED(perm);
+}
+
+// Returns two quotas - A hard limit for which adding data will be an error,
+// and a limit after which a warning event will be sent to the observer
+// service.  The warn limit may be -1, in which case there will be no warning.
+static PRUint32
+GetQuota(const nsACString &aDomain, PRInt32 *aQuota, PRInt32 *aWarnQuota)
+{
+  PRUint32 perm = GetOfflinePermission(aDomain);
+  if (IS_PERMISSION_ALLOWED(perm)) {
+    // This is an offline app, give more space by default.
+    *aQuota = ((PRInt32)nsContentUtils::GetIntPref(kOfflineAppQuota,
+                                                   DEFAULT_OFFLINE_APP_QUOTA) * 1024);
+
+    if (perm == nsIOfflineCacheUpdateService::ALLOW_NO_WARN) {
+      *aWarnQuota = -1;
+    } else {
+      *aWarnQuota = ((PRInt32)nsContentUtils::GetIntPref(kOfflineAppWarnQuota,
+                                                         DEFAULT_OFFLINE_WARN_QUOTA) * 1024);
     }
+    return perm;
   }
 
   // FIXME: per-domain quotas?
   *aQuota = ((PRInt32)nsContentUtils::GetIntPref(kDefaultQuota,
                                                  DEFAULT_QUOTA) * 1024);
   *aWarnQuota = -1;
+
+  return perm;
 }
 
 nsSessionStorageEntry::nsSessionStorageEntry(KeyTypePointer aStr)
@@ -639,7 +655,10 @@ nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal)
   // in that case because it produces broken entries w/o owner.
   mUseDB = !mScopeDBKey.IsEmpty();
 
-  nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(mDomain, PR_TRUE, mQuotaDomainDBKey);
+  nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(mDomain,
+      PR_TRUE, PR_FALSE, mQuotaDomainDBKey);
+  nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(mDomain,
+      PR_TRUE, PR_TRUE, mQuotaETLDplus1DomainDBKey);
 #endif
 
   mLocalStorage = PR_TRUE;
@@ -660,7 +679,10 @@ nsDOMStorage::InitAsGlobalStorage(const nsACString &aDomainDemanded)
   if (!(mUseDB = !mScopeDBKey.IsEmpty()))
     mScopeDBKey.AppendLiteral(":");
 
-  nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(aDomainDemanded, PR_TRUE, mQuotaDomainDBKey);
+  nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(aDomainDemanded,
+      PR_TRUE, PR_FALSE, mQuotaDomainDBKey);
+  nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(aDomainDemanded,
+      PR_TRUE, PR_TRUE, mQuotaETLDplus1DomainDBKey);
 #endif
   return NS_OK;
 }
@@ -1034,7 +1056,7 @@ NS_IMETHODIMP nsDOMStorage::RemoveItem(const nsAString& aKey)
       return NS_OK;
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = gStorageDB->RemoveKey(this, aKey,
+    rv = gStorageDB->RemoveKey(this, aKey, !IsOfflineAllowed(mDomain),
                                aKey.Length() + value.Length());
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1195,44 +1217,15 @@ nsDOMStorage::SetDBValue(const nsAString& aKey,
   nsresult rv = InitDB();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Get the current domain for quota enforcement
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  if (!ssm)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIPrincipal> subjectPrincipal;
-  ssm->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
-
-  nsCAutoString currentDomain;
-
-  if (subjectPrincipal) {
-    nsCOMPtr<nsIURI> unused;
-    rv = GetPrincipalURIAndHost(subjectPrincipal, getter_AddRefs(unused),
-                                currentDomain);
-    // Don't bail out on NS_ERROR_DOM_SECURITY_ERR, since we want to allow
-    // trusted file:// URIs below.
-    if (NS_FAILED(rv) && rv != NS_ERROR_DOM_SECURITY_ERR) {
-      return rv;
-    }
-
-    if (currentDomain.IsEmpty()) {
-      // allow chrome urls and trusted file urls to write using
-      // the storage's domain
-      if (nsContentUtils::IsCallerTrustedForWrite())
-        currentDomain = mDomain;
-      else
-        return NS_ERROR_DOM_SECURITY_ERR;
-    }
-  } else {
-    currentDomain = mDomain;
-  }
-
+  PRInt32 offlineAppPermission;
   PRInt32 quota;
   PRInt32 warnQuota;
-  GetQuota(currentDomain, &quota, &warnQuota);
+  offlineAppPermission = GetQuota(mDomain, &quota, &warnQuota);
 
   PRInt32 usage;
-  rv = gStorageDB->SetKey(this, aKey, aValue, aSecure, quota, &usage);
+  rv = gStorageDB->SetKey(this, aKey, aValue, aSecure, quota,
+                          !IS_PERMISSION_ALLOWED(offlineAppPermission),
+                          &usage);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mItemsCached = PR_FALSE;
@@ -1254,7 +1247,7 @@ nsDOMStorage::SetDBValue(const nsAString& aKey,
     nsCOMPtr<nsIObserverService> os =
       do_GetService("@mozilla.org/observer-service;1");
     os->NotifyObservers(window, "dom-storage-warn-quota-exceeded",
-                        NS_ConvertUTF8toUTF16(currentDomain).get());
+                        NS_ConvertUTF8toUTF16(mDomain).get());
   }
 
   BroadcastChangeNotification();
