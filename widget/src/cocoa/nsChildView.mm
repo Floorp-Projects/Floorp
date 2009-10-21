@@ -186,10 +186,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
-- (void)updateTrackingRect;
-- (void)removeTrackingRect;
-- (void)addTrackingRect;
-
 - (void)processPendingRedraws;
 
 - (PRBool)processKeyDownEvent:(NSEvent*)theEvent keyEquiv:(BOOL)isKeyEquiv;
@@ -1483,48 +1479,15 @@ nsresult nsChildView::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
   NSPoint screenPoint = NSMakePoint(aPoint.x, [[NSScreen mainScreen] frame].size.height - aPoint.y);
   NSPoint windowPoint = [[mView window] convertScreenToBase:screenPoint];
 
-  NSEvent* event = nil;
-  switch (aNativeMessage) {
-    case NSLeftMouseDown:
-    case NSLeftMouseUp:
-    case NSRightMouseDown:
-    case NSRightMouseUp:
-    case NSMouseMoved:
-    case NSLeftMouseDragged:
-    case NSRightMouseDragged:
-      event = [NSEvent mouseEventWithType:aNativeMessage
-                                 location:windowPoint
-                            modifierFlags:aModifierFlags
-                                timestamp:[NSDate timeIntervalSinceReferenceDate]
-                             windowNumber:[[mView window] windowNumber]
-                                  context:nil
-                              eventNumber:0
-                               clickCount:1
-                                 pressure:0.0];
-      break;
-    case NSMouseEntered:
-    case NSMouseExited:
-    case NSCursorUpdate:
-    {
-      NSTrackingRectTag trackingRect = 0;
-      if ([mView isKindOfClass:[ChildView class]]) {
-        trackingRect = [(ChildView*)mView trackingRect];
-      }
-      event = [NSEvent enterExitEventWithType:aNativeMessage
-                                     location:windowPoint
-                                modifierFlags:aModifierFlags
-                                    timestamp:[NSDate timeIntervalSinceReferenceDate]
-                                 windowNumber:[[mView window] windowNumber]
-                                      context:nil
-                                  eventNumber:0
-                               trackingNumber:trackingRect
-                                     userData:nil];
-    }
-      break;
-    default:
-      NS_WARNING("unhandled message");
-      break;
-  }
+  NSEvent* event = [NSEvent mouseEventWithType:aNativeMessage
+                                      location:windowPoint
+                                 modifierFlags:aModifierFlags
+                                     timestamp:[NSDate timeIntervalSinceReferenceDate]
+                                  windowNumber:[[mView window] windowNumber]
+                                       context:nil
+                                   eventNumber:0
+                                    clickCount:1
+                                      pressure:0.0];
 
   if (!event)
     return NS_ERROR_FAILURE;
@@ -2227,15 +2190,11 @@ NSEvent* gLastDragEvent = nil;
 
     mPluginTSMDoc = nil;
 
-    mTrackingRect = 0;
-    mMouseEnterState = eMouseEnterState_Unknown;
-
     mGestureState = eGestureState_None;
     mCumulativeMagnification = 0.0;
     mCumulativeRotation = 0.0;
 
     [self setFocusRingType:NSFocusRingTypeNone];
-    [self addTrackingRect];
   }
   
   // register for things we'll take from other applications
@@ -2446,8 +2405,6 @@ NSEvent* gLastDragEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  [self removeTrackingRect];
-
   if (!newWindow)
     HideChildPluginViews(self);
 
@@ -2458,8 +2415,6 @@ NSEvent* gLastDragEvent = nil;
 
 - (void)viewDidMoveToWindow
 {
-  [self addTrackingRect];
-
   if ([self window] && [self isPluginView] && mGeckoChild) {
     mGeckoChild->UpdatePluginPort();
   }
@@ -3004,63 +2959,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   mCumulativeRotation = 0.0;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)updateTrackingRect
-{
-  [self removeTrackingRect];
-  [self addTrackingRect];
-}
-
-- (void)removeTrackingRect
-{
-  if (mTrackingRect) {
-    [self removeTrackingRect:mTrackingRect];
-    mTrackingRect = 0;
-  }
-}
-
-- (void)addTrackingRect
-{
-  if ([self window] && !NSIsEmptyRect([self bounds])) {
-    mMouseEnterState = eMouseEnterState_Unknown;
-    mTrackingRect = [self addTrackingRect:[self bounds] owner:self userData:NULL assumeInside:NO];
-  }
-}
-
-- (void)resetCursorRects
-{
-  [self updateTrackingRect];
-}
-
-- (void)setFrame:(NSRect)aFrame
-{
-  [super setFrame:aFrame];
-  [self updateTrackingRect];
-}
-
-- (void)setBounds:(NSRect)aBounds
-{
-  [super setBounds:aBounds];
-  [self updateTrackingRect];
-}
-
-- (void)mouseEntered:(NSEvent*)aEvent {
-  mMouseEnterState = eMouseEnterState_Inside;
-}
-
-- (void)mouseExited:(NSEvent*)aEvent {
-  mMouseEnterState = eMouseEnterState_Outside;
-}
-
-- (MouseEnterState)mouseEnterState
-{
-  return mMouseEnterState;
-}
-
-- (NSTrackingRectTag)trackingRect
-{
-  return mTrackingRect;
 }
 
 - (void)mouseDown:(NSEvent*)theEvent
@@ -6591,19 +6489,7 @@ ChildViewMouseTracker::ViewForEvent(NSEvent* aEvent)
   NSPoint windowEventLocation = nsCocoaUtils::EventLocationForWindow(aEvent, window);
   NSView* view = [[[window contentView] superview] hitTest:windowEventLocation];
   NS_ASSERTION(view, "How can the mouse be over a window but not over a view in that window?");
-
-  if (![view isKindOfClass:[ChildView class]])
-    return nil;
-
-  // Now we know the view that the mouse is over, assuming the front-most window
-  // is one of our own windows. However, there might be windows of other
-  // applications floating in front of us, for example the Dock or the
-  // Dashboard. If that's the case, then our view's tracking rect knows about it.
-  ChildView* childView = (ChildView*)view;
-  if ([childView mouseEnterState] == eMouseEnterState_Outside)
-    return nil;
-
-  return childView;
+  return [view isKindOfClass:[ChildView class]] ? (ChildView*)view : nil;
 }
 
 // Find the active window under the mouse. Returns nil if the mouse isn't over
