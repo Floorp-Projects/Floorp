@@ -117,7 +117,7 @@ function COWTests() {
 
     try {
         delete getCOW(readable).foo;
-        todo(false, "deleting a read-only exposed prop shouldn't work");
+        ok(false, "deleting a read-only exposed prop shouldn't work");
     } catch (e) {
         ok(/SECURITY_MANAGER/.test(e),
            "deleting a read-only exposed prop should throw error");
