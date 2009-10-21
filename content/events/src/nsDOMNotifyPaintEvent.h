@@ -45,8 +45,8 @@
 
 class nsPaintRequestList;
 
-class nsDOMNotifyPaintEvent : public nsIDOMNotifyPaintEvent,
-                              public nsDOMEvent
+class nsDOMNotifyPaintEvent : public nsDOMEvent,
+                              public nsIDOMNotifyPaintEvent
 {
 public:
   nsDOMNotifyPaintEvent(nsPresContext*           aPresContext,

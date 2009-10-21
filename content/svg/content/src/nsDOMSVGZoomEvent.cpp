@@ -105,14 +105,13 @@ nsDOMSVGZoomEvent::nsDOMSVGZoomEvent(nsPresContext* aPresContext,
 //----------------------------------------------------------------------
 // nsISupports methods:
 
-NS_IMPL_ADDREF_INHERITED(nsDOMSVGZoomEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMSVGZoomEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(nsDOMSVGZoomEvent, nsDOMUIEvent)
+NS_IMPL_RELEASE_INHERITED(nsDOMSVGZoomEvent, nsDOMUIEvent)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMSVGZoomEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGZoomEvent)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMUIEvent,nsIDOMSVGZoomEvent)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGZoomEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
 
 //----------------------------------------------------------------------
