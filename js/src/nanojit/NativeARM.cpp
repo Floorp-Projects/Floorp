@@ -971,14 +971,6 @@ Assembler::nPatchBranch(NIns* branch, NIns* target)
 
         *addr = (NIns) target;
     }
-
-    VALGRIND_DISCARD_TRANSLATIONS(branch, 2*sizeof(NIns));
-#if defined(UNDER_CE)
-    // we changed the code, so we need to do this (sadly)
-    FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
-#elif defined(AVMPLUS_LINUX)
-    __clear_cache((char*)branch, (char*)(branch+3));
-#endif
 }
 
 RegisterMask

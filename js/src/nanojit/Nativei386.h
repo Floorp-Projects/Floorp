@@ -105,6 +105,9 @@ namespace nanojit
 
     typedef uint8_t NIns;
 
+    // Bytes of icache to flush after Assembler::patch
+    const size_t LARGEST_BRANCH_PATCH = 16 * sizeof(NIns);
+
     // These are used as register numbers in various parts of the code
     typedef enum
     {

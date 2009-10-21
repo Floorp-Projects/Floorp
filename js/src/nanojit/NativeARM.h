@@ -71,6 +71,9 @@ const int LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtec
 
 typedef int NIns;
 
+// Bytes of icache to flush after Assembler::patch
+const size_t LARGEST_BRANCH_PATCH = 2 * sizeof(NIns);
+
 /* ARM registers */
 typedef enum {
     R0  = 0,
