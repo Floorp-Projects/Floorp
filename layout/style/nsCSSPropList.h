@@ -2942,8 +2942,8 @@ CSS_PROP_SVG(
     mStrokeDasharray,
     eCSSType_ValueList,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    CSS_PROP_NO_OFFSET, /* property stored in 2 separate members */
+    eStyleAnimType_Custom)
 CSS_PROP_SVG(
     stroke-dashoffset,
     stroke_dashoffset,

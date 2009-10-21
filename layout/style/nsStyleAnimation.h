@@ -83,6 +83,11 @@ public:
   /**
    * Calculates a measure of 'distance' between two values.
    *
+   * This measure of Distance is guaranteed to be proportional to
+   * portions passed to Interpolate, Add, or AddWeighted.  However, for
+   * some types of Value it may not produce sensible results for paced
+   * animation.
+   *
    * If this method succeeds, the returned distance value is guaranteed to be
    * non-negative.
    *
@@ -220,6 +225,7 @@ public:
     eUnit_Percent,
     eUnit_Float,
     eUnit_Color,
+    eUnit_Dasharray, // nsCSSValueList* (never null)
     eUnit_Shadow  // nsCSSValueList* (may be null)
   };
 
@@ -302,7 +308,7 @@ public:
     void FreeValue();
 
     static PRBool IsCSSValueListUnit(Unit aUnit) {
-      return aUnit == eUnit_Shadow;
+      return aUnit == eUnit_Dasharray || aUnit == eUnit_Shadow;
     }
   };
 };
