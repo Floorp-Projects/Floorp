@@ -51,6 +51,7 @@
 #include "nsICSSLoader.h"
 #include "nsCSSDataBlock.h"
 #include "nsCSSDeclaration.h"
+#include "nsCSSStruct.h"
 #include "prlog.h"
 #include <math.h>
 
@@ -152,6 +153,67 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
                        diffG * diffG + diffB * diffB);
       break;
     }
+    case eUnit_Shadow: {
+      // Call AddWeighted to make us lists of the same length.
+      Value normValue1, normValue2;
+      if (!AddWeighted(1.0, aStartValue, 0.0, aEndValue, normValue1) ||
+          !AddWeighted(0.0, aStartValue, 1.0, aEndValue, normValue2)) {
+        success = PR_FALSE;
+        break;
+      }
+
+      const nsCSSValueList *shadow1 = normValue1.GetCSSValueListValue();
+      const nsCSSValueList *shadow2 = normValue2.GetCSSValueListValue();
+
+      double distance = 0.0f;
+      while (shadow1 && shadow2) {
+        nsCSSValue::Array *array1 = shadow1->mValue.GetArrayValue();
+        nsCSSValue::Array *array2 = shadow2->mValue.GetArrayValue();
+        for (PRUint32 i = 0; i < 4; ++i) {
+          NS_ABORT_IF_FALSE(array1->Item(i).GetUnit() == eCSSUnit_Pixel,
+                            "unexpected unit");
+          NS_ABORT_IF_FALSE(array2->Item(i).GetUnit() == eCSSUnit_Pixel,
+                            "unexpected unit");
+          double diff = array1->Item(i).GetFloatValue() -
+                        array2->Item(i).GetFloatValue();
+          distance += diff * diff;
+        }
+
+        const nsCSSValue& color1 = array1->Item(4);
+        const nsCSSValue& color2 = array2->Item(4);
+        const nsCSSValue& inset1 = array1->Item(5);
+        const nsCSSValue& inset2 = array2->Item(5);
+        // There are only two possible states of the inset value:
+        //  (1) GetUnit() == eCSSUnit_Null
+        //  (2) GetUnit() == eCSSUnit_Enumerated &&
+        //      GetIntValue() == NS_STYLE_BOX_SHADOW_INSET
+        NS_ABORT_IF_FALSE(color1.GetUnit() == color2.GetUnit() &&
+                          inset1 == inset2,
+                          "AddWeighted should have failed");
+
+        if (color1.GetUnit() != eCSSUnit_Null) {
+          nsStyleAnimation::Value color1Value
+            (color1.GetColorValue(), nsStyleAnimation::Value::ColorConstructor);
+          nsStyleAnimation::Value color2Value
+            (color2.GetColorValue(), nsStyleAnimation::Value::ColorConstructor);
+          double colorDistance;
+
+        #ifdef DEBUG
+          PRBool ok =
+        #endif
+            nsStyleAnimation::ComputeDistance(color1Value, color2Value,
+                                              colorDistance);
+          NS_ABORT_IF_FALSE(ok, "should not fail");
+          distance += colorDistance * colorDistance;
+        }
+
+        shadow1 = shadow1->mNext;
+        shadow2 = shadow2->mNext;
+      }
+      NS_ABORT_IF_FALSE(!shadow1 && !shadow2, "lists of different lengths");
+      aDistance = sqrt(distance);
+      break;
+    }
     case eUnit_Null:
     case eUnit_None:
       success = PR_FALSE;
@@ -173,6 +235,73 @@ inline PRUint8 ClampColor(double aColor)
   if (aColor <= 0.0)
     return 0;
   return NSToIntRound(aColor);
+}
+
+static PRBool
+AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
+               double aCoeff2, const nsCSSValue &aValue2,
+               nsCSSValueList **&aResultTail)
+{
+  // X, Y, Radius, Spread, Color, Inset
+  NS_ABORT_IF_FALSE(aValue1.GetUnit() == eCSSUnit_Array,
+                    "wrong unit");
+  NS_ABORT_IF_FALSE(aValue2.GetUnit() == eCSSUnit_Array,
+                    "wrong unit");
+  nsCSSValue::Array *array1 = aValue1.GetArrayValue();
+  nsCSSValue::Array *array2 = aValue2.GetArrayValue();
+  nsRefPtr<nsCSSValue::Array> resultArray = nsCSSValue::Array::Create(6);
+  if (!resultArray) {
+    return PR_FALSE;
+  }
+
+  for (PRUint32 i = 0; i < 4; ++i) {
+    NS_ABORT_IF_FALSE(array1->Item(i).GetUnit() == eCSSUnit_Pixel,
+                      "unexpected unit");
+    NS_ABORT_IF_FALSE(array2->Item(i).GetUnit() == eCSSUnit_Pixel,
+                      "unexpected unit");
+    double pixel1 = array1->Item(i).GetFloatValue();
+    double pixel2 = array2->Item(i).GetFloatValue();
+    resultArray->Item(i).SetFloatValue(aCoeff1 * pixel1 + aCoeff2 * pixel2,
+                                       eCSSUnit_Pixel);
+  }
+
+  const nsCSSValue& color1 = array1->Item(4);
+  const nsCSSValue& color2 = array2->Item(4);
+  const nsCSSValue& inset1 = array1->Item(5);
+  const nsCSSValue& inset2 = array2->Item(5);
+  if (color1.GetUnit() != color2.GetUnit() ||
+      inset1.GetUnit() != inset2.GetUnit()) {
+    // We don't know how to animate between color and no-color, or
+    // between inset and not-inset.
+    return PR_FALSE;
+  }
+
+  if (color1.GetUnit() != eCSSUnit_Null) {
+    nsStyleAnimation::Value color1Value
+      (color1.GetColorValue(), nsStyleAnimation::Value::ColorConstructor);
+    nsStyleAnimation::Value color2Value
+      (color2.GetColorValue(), nsStyleAnimation::Value::ColorConstructor);
+    nsStyleAnimation::Value resultColorValue;
+  #ifdef DEBUG
+    PRBool ok =
+  #endif
+      nsStyleAnimation::AddWeighted(aCoeff1, color1Value, aCoeff2, color2Value,
+                                    resultColorValue);
+    NS_ABORT_IF_FALSE(ok, "should not fail");
+    resultArray->Item(4).SetColorValue(resultColorValue.GetColorValue());
+  }
+
+  NS_ABORT_IF_FALSE(inset1 == inset2, "should match");
+  resultArray->Item(5) = inset1;
+
+  nsCSSValueList *resultItem = new nsCSSValueList;
+  if (!resultItem) {
+    return PR_FALSE;
+  }
+  resultItem->mValue.SetArrayValue(resultArray, eCSSUnit_Array);
+  *aResultTail = resultItem;
+  aResultTail = &resultItem->mNext;
+  return PR_TRUE;
 }
 
 PRBool
@@ -240,6 +369,53 @@ nsStyleAnimation::AddWeighted(double aCoeff1, const Value& aValue1,
         resultColor = NS_RGBA(Rres, Gres, Bres, Ares);
       }
       aResultValue.SetColorValue(resultColor);
+      break;
+    }
+    case eUnit_Shadow: {
+      // This is implemented according to:
+      // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
+      // and the third item in the summary of:
+      // http://lists.w3.org/Archives/Public/www-style/2009Jul/0050.html
+      const nsCSSValueList *shadow1 = aValue1.GetCSSValueListValue();
+      const nsCSSValueList *shadow2 = aValue2.GetCSSValueListValue();
+      nsAutoPtr<nsCSSValueList> result;
+      nsCSSValueList **resultTail = getter_Transfers(result);
+      while (shadow1 && shadow2) {
+        if (!AddShadowItems(aCoeff1, shadow1->mValue,
+                            aCoeff2, shadow2->mValue,
+                            resultTail)) {
+          return PR_FALSE;
+        }
+        shadow1 = shadow1->mNext;
+        shadow2 = shadow2->mNext;
+      }
+      if (shadow1 || shadow2) {
+        const nsCSSValueList *longShadow;
+        double longCoeff;
+        if (shadow1) {
+          longShadow = shadow1;
+          longCoeff = aCoeff1;
+        } else {
+          longShadow = shadow2;
+          longCoeff = aCoeff2;
+        }
+
+        while (longShadow) {
+          // Passing coefficients that add to less than 1 produces the
+          // desired result of interpolating "0 0 0 transparent" with
+          // the current shadow.
+          if (!AddShadowItems(longCoeff, longShadow->mValue,
+                              0.0, longShadow->mValue,
+                              resultTail)) {
+            return PR_FALSE;
+            break;
+          }
+
+          longShadow = longShadow->mNext;
+        }
+      }
+      aResultValue.SetCSSValueListValue(result.forget(), eUnit_Shadow,
+                                        PR_TRUE);
       break;
     }
     case eUnit_Null:
@@ -401,6 +577,12 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
         static_cast<nsCSSValue*>(aSpecifiedValue)->
           SetColorValue(aComputedValue.GetColorValue());
       }
+      break;
+    case eUnit_Shadow:
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
+                          eCSSType_ValueList, "type mismatch");
+      *static_cast<nsCSSValueList**>(aSpecifiedValue) =
+        aComputedValue.GetCSSValueListValue();
       break;
     default:
       return PR_FALSE;
@@ -630,6 +812,54 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
       }
       return PR_FALSE;
     }
+    case eStyleAnimType_Shadow: {
+      const nsCSSShadowArray *shadowArray =
+        *static_cast<const nsRefPtr<nsCSSShadowArray>*>(
+          StyleDataAtOffset(styleStruct, ssOffset));
+      if (!shadowArray) {
+        aComputedValue.SetCSSValueListValue(nsnull, eUnit_Shadow, PR_TRUE);
+        return PR_TRUE;
+      }
+      nsAutoPtr<nsCSSValueList> result;
+      nsCSSValueList **resultTail = getter_Transfers(result);
+      for (PRUint32 i = 0, i_end = shadowArray->Length(); i < i_end; ++i) {
+        const nsCSSShadowItem *shadow = shadowArray->ShadowAt(i);
+        // X, Y, Radius, Spread, Color, Inset
+        nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(6);
+        arr->Item(0).SetFloatValue(
+          nsPresContext::AppUnitsToFloatCSSPixels(shadow->mXOffset),
+          eCSSUnit_Pixel);
+        arr->Item(1).SetFloatValue(
+          nsPresContext::AppUnitsToFloatCSSPixels(shadow->mYOffset),
+          eCSSUnit_Pixel);
+        arr->Item(2).SetFloatValue(
+          nsPresContext::AppUnitsToFloatCSSPixels(shadow->mRadius),
+          eCSSUnit_Pixel);
+        // NOTE: This code sometimes stores mSpread: 0 even when
+        // the parser would be required to leave it null.
+        arr->Item(3).SetFloatValue(
+          nsPresContext::AppUnitsToFloatCSSPixels(shadow->mSpread),
+          eCSSUnit_Pixel);
+        if (shadow->mHasColor) {
+          arr->Item(4).SetColorValue(shadow->mColor);
+        }
+        if (shadow->mInset) {
+          arr->Item(5).SetIntValue(NS_STYLE_BOX_SHADOW_INSET,
+                                   eCSSUnit_Enumerated);
+        }
+
+        nsCSSValueList *resultItem = new nsCSSValueList;
+        if (!resultItem) {
+          return PR_FALSE;
+        }
+        resultItem->mValue.SetArrayValue(arr, eCSSUnit_Array);
+        *resultTail = resultItem;
+        resultTail = &resultItem->mNext;
+      }
+      aComputedValue.SetCSSValueListValue(result.forget(), eUnit_Shadow,
+                                          PR_TRUE);
+      return PR_TRUE;
+    }
     case eStyleAnimType_None:
       NS_NOTREACHED("shouldn't use on non-animatable properties");
   }
@@ -682,6 +912,9 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
     case eUnit_Color:
       mValue.mColor = aOther.mValue.mColor;
       break;
+    case eUnit_Shadow:
+      mValue.mCSSValueList = aOther.mValue.mCSSValueList
+                               ? aOther.mValue.mCSSValueList->Clone() : nsnull;
   }
 
   return *this;
@@ -741,8 +974,26 @@ nsStyleAnimation::Value::SetColorValue(nscolor aColor)
 }
 
 void
+nsStyleAnimation::Value::SetCSSValueListValue(nsCSSValueList *aValueList,
+                                              Unit aUnit,
+                                              PRBool aTakeOwnership)
+{
+  FreeValue();
+  NS_ASSERTION(IsCSSValueListUnit(aUnit), "bad unit");
+  mUnit = aUnit;
+  if (aTakeOwnership) {
+    mValue.mCSSValueList = aValueList;
+  } else {
+    mValue.mCSSValueList = aValueList ? aValueList->Clone() : nsnull;
+  }
+}
+
+void
 nsStyleAnimation::Value::FreeValue()
 {
+  if (IsCSSValueListUnit(mUnit)) {
+    delete mValue.mCSSValueList;
+  }
 }
 
 PRBool
@@ -765,6 +1016,9 @@ nsStyleAnimation::Value::operator==(const Value& aOther) const
       return mValue.mFloat == aOther.mValue.mFloat;
     case eUnit_Color:
       return mValue.mColor == aOther.mValue.mColor;
+    case eUnit_Shadow:
+      return nsCSSValueList::Equal(mValue.mCSSValueList,
+                                   aOther.mValue.mCSSValueList);
   }
 
   NS_NOTREACHED("incomplete case");
