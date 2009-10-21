@@ -1523,7 +1523,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
 
         if(wrapper)
         {
-            if(!XPC_XOW_WrapperMoved(ccx, wrapper, aNewScope))
+            if(!XPCCrossOriginWrapper::WrapperMoved(ccx, wrapper, aNewScope))
             {
                 return NS_ERROR_FAILURE;
             }
@@ -1736,7 +1736,7 @@ return_tearoff:
         // Protect against infinite recursion through XOWs.
         JSObject *unsafeObj;
         clazz = STOBJ_GET_CLASS(outer);
-        if(clazz == &sXPC_XOW_JSClass.base &&
+        if(clazz == &XPCCrossOriginWrapper::XOWClass.base &&
            (unsafeObj = XPCWrapper::UnwrapXOW(cx, outer)))
         {
             outer = unsafeObj;
