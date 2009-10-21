@@ -112,6 +112,7 @@ public:
          const nsAString& aValue,
          PRBool aSecure,
          PRInt32 aQuota,
+         PRBool aExcludeOfflineFromUsage,
          PRInt32* aNewUsage);
 
   /**
@@ -129,6 +130,7 @@ public:
   nsresult
   RemoveKey(nsDOMStorage* aStorage,
             const nsAString& aKey,
+            PRBool aExcludeOfflineFromUsage,
             PRInt32 aKeyUsage);
 
   /**
@@ -167,7 +169,7 @@ public:
     * Returns usage for a storage using its GetQuotaDomainDBKey() as a key.
     */
   nsresult
-  GetUsage(nsDOMStorage* aStorage, PRInt32 *aUsage);
+  GetUsage(nsDOMStorage* aStorage, PRBool aExcludeOfflineFromUsage, PRInt32 *aUsage);
 
   /**
     * Returns usage of the domain and optionaly by any subdomain.
@@ -182,7 +184,7 @@ protected:
   PRBool mPreloading;
 
   nsresult
-  GetUsageInternal(const nsACString& aQuotaDomainDBKey, PRInt32 *aUsage);
+  GetUsageInternal(const nsACString& aQuotaDomainDBKey, PRBool aExcludeOfflineFromUsage, PRInt32 *aUsage);
 };
 
 #endif

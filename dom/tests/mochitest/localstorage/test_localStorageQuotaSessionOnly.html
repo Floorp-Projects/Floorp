@@ -22,7 +22,28 @@ var cp = Components.classes["@mozilla.org/cookie/permission;1"]
 
 cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_SESSION);
 
-var quota;
+var quota, quotaOffline;
+
+function addOfflineApp(url)
+{
+  var permissionManager = Components.classes["@mozilla.org/permissionmanager;1"]
+    .getService(Components.interfaces.nsIPermissionManager);
+  var uri = Components.classes["@mozilla.org/network/io-service;1"]
+    .getService(Components.interfaces.nsIIOService)
+    .newURI(url, null, null);
+  permissionManager.add(uri, "offline-app",
+                        Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
+}
+
+function removeOfflineApp(url)
+{
+  var permissionManager = Components.classes["@mozilla.org/permissionmanager;1"]
+    .getService(Components.interfaces.nsIPermissionManager);
+  var uri = Components.classes["@mozilla.org/network/io-service;1"]
+    .getService(Components.interfaces.nsIIOService)
+    .newURI(url, null, null);
+  permissionManager.remove(uri.host, "offline-app");
+}
 
 function doNextTest()
 {
@@ -41,6 +62,13 @@ function doNextTest()
         quota = 5*1024;
       }
       prefs.setIntPref("dom.storage.default_quota", 1);
+      try {
+        quotaOffline = prefs.getIntPref("offline-apps.quota.max");
+      } catch (ex) {
+        quotaOffline = 200*1024;
+      }
+      prefs.setIntPref("offline-apps.quota.max", 2);
+
 
       slaveOrigin = "http://example.com";
       slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?add&A&success";
@@ -91,28 +119,90 @@ function doNextTest()
 
     case 8:
       // Do a clean up...
-      // TODO Bug 455070, use just ?clear what invokes call
-      // of clear() in the target frame. W/o clear method we must
-      // call clear implemented as removeItem for each item in
-      // the localStorage.
       slaveOrigin = "http://example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?clear&A&";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?clear";
       break;
 
     case 9:
       // Do a clean up...
       slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?clear&B&";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?clear";
       break;
 
     case 10:
       // Do a clean up...
       slaveOrigin = "https://test2.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?clear&C&";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?clear";
       break;
 
     case 11:
+      // test1.example.com is now using its own offline app quota
+      addOfflineApp("http://test1.example.com");
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&A&success";
+      break;
+
+    case 12:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
+      break;
+
+    case 13:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&success";
+      // Now we have 1503 bytes stored, this exceeds the default storage quota
+      break;
+
+    case 14:
+      // Now check that upper level domain that is not set as an offline app
+      // domain is allowed to store data and is using the default quota
+      slaveOrigin = "http://example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&A&success";
+      break;
+
+    case 15:
+      slaveOrigin = "http://example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
+      break;
+
+    case 16:
+      slaveOrigin = "http://example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&failure";
+      break;
+
+    case 17:
+      slaveOrigin = "http://test2.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&D&failure";
+      break;
+
+    case 18:
+      // check an offline app domain may store some more data
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&D&success";
+      break;
+
+    case 19:
+      // check an offline app domain is using its own (larger) quota
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&E&failure";
+      break;
+
+    case 20:
+      // Do a clean up...
+      slaveOrigin = "http://example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
+      break;
+
+    case 21:
+      // Do a clean up...
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
+      break;
+
+    default:
+      removeOfflineApp("http://test1.example.com");
       prefs.setIntPref("dom.storage.default_quota", quota);
+      prefs.setIntPref("offline-apps.quota.max", quotaOffline);
       cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DEFAULT);
       SimpleTest.finish();
   }
