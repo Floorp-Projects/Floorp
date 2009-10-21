@@ -551,7 +551,7 @@ treecol.treecol-image {
   -moz-binding: url("chrome://global/content/bindings/tree.xml#treecol-image");
 }
 
-tree > treechildren {
+tree > treechildren:first-of-type {
   display: -moz-box;
   -moz-binding: url("chrome://global/content/bindings/tree.xml#treebody");
   -moz-user-select: none;
