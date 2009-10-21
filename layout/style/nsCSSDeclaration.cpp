@@ -339,19 +339,15 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
   else if (eCSSUnit_Enumerated == unit) {
     if (eCSSProperty_text_decoration == aProperty) {
       PRInt32 intValue = aValue.GetIntValue();
-      NS_ABORT_IF_FALSE(NS_STYLE_TEXT_DECORATION_NONE != intValue,
-                        "none should be parsed as eCSSUnit_None");
-      PRInt32 mask;
-      for (mask = NS_STYLE_TEXT_DECORATION_UNDERLINE;
-           mask <= NS_STYLE_TEXT_DECORATION_PREF_ANCHORS; 
-           mask <<= 1) {
-        if ((mask & intValue) == mask) {
-          AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, mask), aResult);
-          intValue &= ~mask;
-          if (0 != intValue) { // more left
-            aResult.Append(PRUnichar(' '));
-          }
-        }
+      if (NS_STYLE_TEXT_DECORATION_NONE == intValue) {
+        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
+                           aResult);
+      } else {
+        nsStyleUtil::AppendBitmaskCSSValue(
+          aProperty, intValue,
+          NS_STYLE_TEXT_DECORATION_UNDERLINE,
+          NS_STYLE_TEXT_DECORATION_PREF_ANCHORS,
+          aResult);
       }
     }
     else if (eCSSProperty_azimuth == aProperty) {
