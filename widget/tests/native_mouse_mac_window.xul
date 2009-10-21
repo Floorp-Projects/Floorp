@@ -283,7 +283,6 @@
           focusAndThen(left, callback);
         },
         // It's active, so it should respond to mousemove events now.
-        [150, 170, NSMouseEntered, null, left, []],
         [150, 170, NSMouseMoved, null, left, [
           { type: "mouseover", target: leftElem },
           { type: "mousemove", target: leftElem },
@@ -454,7 +453,6 @@
         // Last test for today: Hit testing in the Canyon of Nowhere -
         // the pixel row directly south of the panel, over the left window.
         // Before bug 515003 we wrongly thought the mouse wasn't over any window.
-        [173, 200, NSMouseEntered, null, left, []],
         [173, 200, NSMouseMoved, panel, left, [
           { type: "mouseout", target: panel },
           { type: "mouseover", target: leftElem },
