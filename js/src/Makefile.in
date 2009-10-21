@@ -215,6 +215,7 @@ INSTALLED_HEADERS = \
 		jstypes.h \
 		jsutil.h \
 		jsvector.h \
+	        jstl.h \
 		jsversion.h \
 		jsxdrapi.h \
 		jsxml.h \
