@@ -4540,6 +4540,23 @@ NS_IMETHODIMP
 nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                       JSObject *globalObj, JSObject **parentObj)
 {
+#ifdef DEBUG
+  {
+    nsGlobalWindow *win = nsGlobalWindow::FromSupports(nativeObj);
+    if (win->IsChromeWindow()) {
+      nsCOMPtr<nsIPrincipal> principal;
+      nsresult rv =
+        sSecMan->GetObjectPrincipal(cx, globalObj, getter_AddRefs(principal));
+      if (NS_SUCCEEDED(rv)) {
+        PRBool isSystem;
+        rv = sSecMan->IsSystemPrincipal(principal, &isSystem);
+        NS_ASSERTION(NS_SUCCEEDED(rv) && isSystem,
+                     "Why are we wrapping a chrome window in a content scope?");
+      }
+    }
+  }
+#endif
+
   // Normally ::PreCreate() is used to give XPConnect the parent
   // object for the object that's being wrapped, this parent object is
   // set as the parent of the wrapper and it's also used to find the
