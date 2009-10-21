@@ -5886,10 +5886,10 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HMK | VARIANT_SYSFONT,
                         nsCSSProps::kFontStretchKTable);
   case eCSSProperty_font_style:
-    return ParseVariant(aValue, VARIANT_HMK | VARIANT_SYSFONT,
+    return ParseVariant(aValue, VARIANT_HK | VARIANT_SYSFONT,
                         nsCSSProps::kFontStyleKTable);
   case eCSSProperty_font_variant:
-    return ParseVariant(aValue, VARIANT_HMK | VARIANT_SYSFONT,
+    return ParseVariant(aValue, VARIANT_HK | VARIANT_SYSFONT,
                         nsCSSProps::kFontVariantKTable);
   case eCSSProperty_font_weight:
     return ParseFontWeight(aValue);
@@ -5948,7 +5948,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HL, nsnull);
   case eCSSProperty_overflow_x:
   case eCSSProperty_overflow_y:
-    return ParseVariant(aValue, VARIANT_AHK,
+    return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kOverflowSubKTable);
   case eCSSProperty_padding_bottom:
   case eCSSProperty_padding_end_value: // for internal use
@@ -8207,8 +8207,8 @@ PRBool
 CSSParserImpl::ParseOverflow()
 {
   nsCSSValue overflow;
-  if (!ParseVariant(overflow, VARIANT_AHK,
-                   nsCSSProps::kOverflowKTable) ||
+  if (!ParseVariant(overflow, VARIANT_HK,
+                    nsCSSProps::kOverflowKTable) ||
       !ExpectEndProperty())
     return PR_FALSE;
 

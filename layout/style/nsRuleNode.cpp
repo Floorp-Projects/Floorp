@@ -2786,23 +2786,19 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     aFont->mGenericID = aGenericFontID;
   }
 
-  // font-style: enum, normal, inherit, initial, -moz-system-font
+  // font-style: enum, inherit, initial, -moz-system-font
   SetDiscrete(aFontData.mStyle, aFont->mFont.style, aCanStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NORMAL | SETDSC_SYSTEM_FONT,
+              SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
               aParentFont->mFont.style,
               defaultVariableFont->style,
-              0, 0,
-              NS_STYLE_FONT_STYLE_NORMAL,
-              systemFont.style);
+              0, 0, 0, systemFont.style);
 
-  // font-variant: enum, normal, inherit, initial, -moz-system-font
+  // font-variant: enum, inherit, initial, -moz-system-font
   SetDiscrete(aFontData.mVariant, aFont->mFont.variant, aCanStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NORMAL | SETDSC_SYSTEM_FONT,
+              SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
               aParentFont->mFont.variant,
               defaultVariableFont->variant,
-              0, 0,
-              NS_STYLE_FONT_VARIANT_NORMAL,
-              systemFont.variant);
+              0, 0, 0, systemFont.variant);
 
   // font-weight: int, enum, normal, inherit, initial, -moz-system-font
   // special handling for enum
@@ -3946,21 +3942,15 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               NS_STYLE_FLOAT_NONE, 0,
               NS_STYLE_FLOAT_NONE, 0, 0);
 
-  // overflow-x: enum, auto, inherit, initial
+  // overflow-x: enum, inherit, initial
   SetDiscrete(displayData.mOverflowX, display->mOverflowX, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_AUTO,
-              parentDisplay->mOverflowX,
-              NS_STYLE_OVERFLOW_VISIBLE,
-              NS_STYLE_OVERFLOW_AUTO,
-              0, 0, 0);
+              SETDSC_ENUMERATED, parentDisplay->mOverflowX,
+              NS_STYLE_OVERFLOW_VISIBLE, 0, 0, 0, 0);
 
-  // overflow-y: enum, auto, inherit, initial
+  // overflow-y: enum, inherit, initial
   SetDiscrete(displayData.mOverflowY, display->mOverflowY, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_AUTO,
-              parentDisplay->mOverflowY,
-              NS_STYLE_OVERFLOW_VISIBLE,
-              NS_STYLE_OVERFLOW_AUTO,
-              0, 0, 0);
+              SETDSC_ENUMERATED, parentDisplay->mOverflowY,
+              NS_STYLE_OVERFLOW_VISIBLE, 0, 0, 0, 0);
 
   // CSS3 overflow-x and overflow-y require some fixup as well in some
   // cases.  NS_STYLE_OVERFLOW_VISIBLE and NS_STYLE_OVERFLOW_CLIP are

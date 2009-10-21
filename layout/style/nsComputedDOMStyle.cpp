@@ -1263,14 +1263,8 @@ nsComputedDOMStyle::GetFontStyle(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleFont* font = GetStyleFont();
-
-  if (font->mFont.style != NS_STYLE_FONT_STYLE_NORMAL) {
-    val->SetIdent(nsCSSProps::ValueToKeywordEnum(font->mFont.style,
-                                                 nsCSSProps::kFontStyleKTable));
-  } else {
-    val->SetIdent(eCSSKeyword_normal);
-  }
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(GetStyleFont()->mFont.style,
+                                               nsCSSProps::kFontStyleKTable));
 
   return CallQueryInterface(val, aValue);
 }
@@ -1302,15 +1296,9 @@ nsComputedDOMStyle::GetFontVariant(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleFont* font = GetStyleFont();
-
-  if (font->mFont.variant != NS_STYLE_FONT_VARIANT_NORMAL) {
-    val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(font->mFont.variant,
-                                     nsCSSProps::kFontVariantKTable));
-  } else {
-    val->SetIdent(eCSSKeyword_normal);
-  }
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(GetStyleFont()->mFont.variant,
+                                   nsCSSProps::kFontVariantKTable));
 
   return CallQueryInterface(val, aValue);
 }
@@ -3164,12 +3152,8 @@ nsComputedDOMStyle::GetOverflow(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  if (display->mOverflowX != NS_STYLE_OVERFLOW_AUTO) {
-    val->SetIdent(nsCSSProps::ValueToKeywordEnum(display->mOverflowX,
-                                                 nsCSSProps::kOverflowKTable));
-  } else {
-    val->SetIdent(eCSSKeyword_auto);
-  }
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(display->mOverflowX,
+                                               nsCSSProps::kOverflowKTable));
 
   return CallQueryInterface(val, aValue);
 }
@@ -3180,14 +3164,9 @@ nsComputedDOMStyle::GetOverflowX(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleDisplay* display = GetStyleDisplay();
-
-  if (display->mOverflowX != NS_STYLE_OVERFLOW_AUTO) {
-    val->SetIdent(nsCSSProps::ValueToKeywordEnum(
-                    display->mOverflowX, nsCSSProps::kOverflowSubKTable));
-  } else {
-    val->SetIdent(eCSSKeyword_auto);
-  }
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(GetStyleDisplay()->mOverflowX,
+                                   nsCSSProps::kOverflowSubKTable));
 
   return CallQueryInterface(val, aValue);
 }
@@ -3198,14 +3177,9 @@ nsComputedDOMStyle::GetOverflowY(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleDisplay* display = GetStyleDisplay();
-
-  if (display->mOverflowY != NS_STYLE_OVERFLOW_AUTO) {
-    val->SetIdent(nsCSSProps::ValueToKeywordEnum(
-                    display->mOverflowY, nsCSSProps::kOverflowSubKTable));
-  } else {
-    val->SetIdent(eCSSKeyword_auto);
-  }
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(GetStyleDisplay()->mOverflowY,
+                                   nsCSSProps::kOverflowSubKTable));
 
   return CallQueryInterface(val, aValue);
 }

@@ -857,12 +857,14 @@ const PRInt32 nsCSSProps::kFontStretchKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kFontStyleKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_FONT_STYLE_NORMAL,
   eCSSKeyword_italic, NS_STYLE_FONT_STYLE_ITALIC,
   eCSSKeyword_oblique, NS_STYLE_FONT_STYLE_OBLIQUE,
   eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kFontVariantKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_FONT_VARIANT_NORMAL,
   eCSSKeyword_small_caps, NS_STYLE_FONT_VARIANT_SMALL_CAPS,
   eCSSKeyword_UNKNOWN,-1
 };
@@ -971,6 +973,7 @@ const PRInt32 nsCSSProps::kOutlineColorKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kOverflowKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_OVERFLOW_AUTO,
   eCSSKeyword_visible, NS_STYLE_OVERFLOW_VISIBLE,
   eCSSKeyword_hidden, NS_STYLE_OVERFLOW_HIDDEN,
   eCSSKeyword_scroll, NS_STYLE_OVERFLOW_SCROLL,
@@ -983,6 +986,7 @@ const PRInt32 nsCSSProps::kOverflowKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kOverflowSubKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_OVERFLOW_AUTO,
   eCSSKeyword_visible, NS_STYLE_OVERFLOW_VISIBLE,
   eCSSKeyword_hidden, NS_STYLE_OVERFLOW_HIDDEN,
   eCSSKeyword_scroll, NS_STYLE_OVERFLOW_SCROLL,
