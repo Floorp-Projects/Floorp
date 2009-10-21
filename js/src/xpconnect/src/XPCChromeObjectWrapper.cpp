@@ -540,6 +540,17 @@ XPC_COW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return ThrowException(NS_ERROR_FAILURE, cx);
   }
 
+  JSBool canTouch;
+  jsid interned_id;
+  if (!JS_ValueToId(cx, id, &interned_id) ||
+      !CanTouchProperty(cx, obj, interned_id, JS_TRUE, &canTouch)) {
+    return JS_FALSE;
+  }
+
+  if (!canTouch) {
+    return ThrowException(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
+  }
+
   // Deleting a property is safe.
   return XPCWrapper::DelProperty(cx, wrappedObj, id, vp);
 }
