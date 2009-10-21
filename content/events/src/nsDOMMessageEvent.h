@@ -50,8 +50,8 @@
  * See http://www.whatwg.org/specs/web-apps/current-work/#messageevent for
  * further details.
  */
-class nsDOMMessageEvent : public nsIDOMMessageEvent,
-                          public nsDOMEvent
+class nsDOMMessageEvent : public nsDOMEvent,
+                          public nsIDOMMessageEvent
 {
 public:
   nsDOMMessageEvent(nsPresContext* aPresContext, nsEvent* aEvent)

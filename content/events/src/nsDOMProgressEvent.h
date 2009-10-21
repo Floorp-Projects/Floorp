@@ -49,8 +49,8 @@
  * See http://www.whatwg.org/specs/web-apps/current-work/#progress0 for
  * further details.
  */
-class nsDOMProgressEvent : public nsIDOMProgressEvent,
-                           public nsDOMEvent
+class nsDOMProgressEvent : public nsDOMEvent,
+                           public nsIDOMProgressEvent
 {
 public:
   nsDOMProgressEvent(nsPresContext* aPresContext, nsEvent* aEvent)
