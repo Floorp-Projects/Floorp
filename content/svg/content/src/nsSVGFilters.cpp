@@ -2867,10 +2867,15 @@ nsSVGFETileElement::Filter(nsSVGFilterInstance *instance,
   NS_ENSURE_SUCCESS(res, res); // asserts on failure (not 
   if (tile.IsEmpty())
     return NS_OK;
-  NS_ENSURE_TRUE(instance->GetSurfaceRect().Contains(tile), NS_ERROR_UNEXPECTED);
+
+  const nsIntRect &surfaceRect = instance->GetSurfaceRect();
+  if (!tile.Intersects(surfaceRect)) {
+    // nothing to draw
+    return NS_OK;
+  }
 
   // Get it into surface space
-  tile -= instance->GetSurfaceRect().TopLeft();
+  tile -= surfaceRect.TopLeft();
 
   PRUint8* sourceData = aSources[0]->mImage->Data();
   PRUint8* targetData = aTarget->mImage->Data();
@@ -2882,10 +2887,14 @@ nsSVGFETileElement::Filter(nsSVGFilterInstance *instance,
   nsIntPoint offset(-tile.x + tile.width, -tile.y + tile.height);
   for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
     PRUint32 tileY = tile.y + WrapInterval(y + offset.y, tile.height);
-    for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
-      PRUint32 tileX = tile.x + WrapInterval(x + offset.x, tile.width);
-      *(PRUint32*)(targetData + y * stride + 4 * x) =
-        *(PRUint32*)(sourceData + tileY * stride + 4 * tileX);
+    if (tileY < surfaceRect.height) {
+      for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
+        PRUint32 tileX = tile.x + WrapInterval(x + offset.x, tile.width);
+        if (tileX < surfaceRect.width) {
+          *(PRUint32*)(targetData + y * stride + 4 * x) =
+            *(PRUint32*)(sourceData + tileY * stride + 4 * tileX);
+        }
+      }
     }
   }
 
