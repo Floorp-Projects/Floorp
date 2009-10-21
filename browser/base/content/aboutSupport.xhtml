@@ -50,342 +50,339 @@
 
     <style type="text/css"><![CDATA[
 
-html {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-  font: message-box;
-}
+      html {
+        background-color: -moz-Field;
+        color: -moz-FieldText;
+        font: message-box;
+      }
 
-body {
-  text-align: justify;
-  width: 90%;
-  margin-left: 5%;
-  margin-right: 5%;
-}
+      body {
+        text-align: justify;
+        width: 90%;
+        margin-left: 5%;
+        margin-right: 5%;
+      }
 
-.page-subtitle {
-  margin-bottom: 3em; 
-}
+      .page-subtitle {
+        margin-bottom: 3em; 
+      }
 
-.major-section {
-  margin-top: 2em;
-  margin-bottom: 1em;
-  font-size: large;
-  text-align: start;
-  font-weight: bold;
-}
+      .major-section {
+        margin-top: 2em;
+        margin-bottom: 1em;
+        font-size: large;
+        text-align: start;
+        font-weight: bold;
+      }
 
-table {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
-  font: message-box;
-  text-align: start;
-  width: 100%;
-  border: 1px solid ThreeDShadow;
-  border-spacing: 0px;
-}
+      table {
+        background-color: -moz-Dialog;
+        color: -moz-DialogText;
+        font: message-box;
+        text-align: start;
+        width: 100%;
+        border: 1px solid ThreeDShadow;
+        border-spacing: 0px;
+      }
 
-th, td {
-  border: 1px dotted ThreeDShadow;
-  padding: 3px;
-}
-
-thead th {
-  text-align: center;
-}
-
-th {
-  text-align: start;
-  background-color: Highlight;
-  color: HighlightText;
-}
-
-th.column {
-  white-space: nowrap;
-  width: 0px; 
-}
-
-td {
-  text-align: start;
-  border-top: 1px dotted ThreeDShadow;
-}
-
-.prefs-table {
-  width: 100%;
-  table-layout: fixed;
-}
-
-.pref-name {
-  width: 70%;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.pref-value {
-  width: 30%;
-  white-space: nowrap;
-  overflow: hidden;
-}
+      th, td {
+        border: 1px dotted ThreeDShadow;
+        padding: 3px;
+      }
+      
+      thead th {
+        text-align: center;
+      }
+      
+      th {
+        text-align: start;
+        background-color: Highlight;
+        color: HighlightText;
+      }
+      
+      th.column {
+        white-space: nowrap;
+        width: 0px; 
+      }
+      
+      td {
+        text-align: start;
+        border-top: 1px dotted ThreeDShadow;
+      }
+ 
+      .prefs-table {
+        width: 100%;
+        table-layout: fixed;
+      }
+     
+      .pref-name {
+        width: 70%;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      
+      .pref-value {
+        width: 30%;
+        white-space: nowrap;
+        overflow: hidden;
+      }
 
     ]]></style>
 
     <script type="application/javascript;version=1.7"><![CDATA[
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+      const Cc = Components.classes;
+      const Ci = Components.interfaces;
 
-// We use a preferences whitelist to make sure we only show preferences that
-// are useful for support and won't compromise the user's privacy.  Note that
-// entries are *prefixes*: for example, "accessibility." applies to all prefs
-// under the "accessibility.*" branch.
-const PREFS_WHITELIST = [
-  "accessibility.",
-  "browser.fixup.",
-  "browser.history_expire_",
-  "browser.link.open_newwindow",
-  "browser.mousewheel.",
-  "browser.places.",
-  "browser.startup.homepage",
-  "browser.tabs.",
-  "browser.zoom.",
-  "dom.",
-  "extensions.checkCompatibility",
-  "extensions.lastAppVersion",
-  "font.",
-  "general.useragent.",
-  "gfx.color_management.mode",
-  "javascript.",
-  "keyword.", 
-  "layout.css.dpi",
-  "network.",
-  "places.",
-  "print.",
-  "privacy.",
-  "security."
-];
+      // We use a preferences whitelist to make sure we only show preferences that
+      // are useful for support and won't compromise the user's privacy.  Note that
+      // entries are *prefixes*: for example, "accessibility." applies to all prefs
+      // under the "accessibility.*" branch.
+      const PREFS_WHITELIST = [
+        "accessibility.",
+        "browser.fixup.",
+        "browser.history_expire_",
+        "browser.link.open_newwindow",
+        "browser.mousewheel.",
+        "browser.places.",
+        "browser.startup.homepage",
+        "browser.tabs.",
+        "browser.zoom.",
+        "dom.",
+        "extensions.checkCompatibility",
+        "extensions.lastAppVersion",
+        "font.",
+        "general.useragent.",
+        "gfx.color_management.mode",
+        "javascript.",
+        "keyword.", 
+        "layout.css.dpi",
+        "network.",
+        "places.",
+        "print.",
+        "privacy.",
+        "security."
+      ];
+      
+      // The blacklist, unlike the whitelist, is a list of regular expressions.
+      const PREFS_BLACKLIST = [
+        /^network[.]proxy[.]/,
+        /[.]print_to_filename$/,
+      ];
 
-// The blacklist, unlike the whitelist, is a list of regular expressions.
-const PREFS_BLACKLIST = [
-  /^network[.]proxy[.]/,
-  /[.]print_to_filename$/,
-];
+      window.onload = function ()
+      {
+        // Get the FUEL Application object.
+        let Application = Cc["@mozilla.org/fuel/application;1"]
+                          .getService(Ci.fuelIApplication);
 
-window.onload = function () {
-  // Get the FUEL Application object.
-  let Application = Cc["@mozilla.org/fuel/application;1"]
-                      .getService(Ci.fuelIApplication);
+        // Get the support URL.
+        let urlFormatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
+                           .getService(Ci.nsIURLFormatter);
+        let supportUrl = urlFormatter.formatURLPref("app.support.baseURL");
 
-  // Get the support URL.
-  let urlFormatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
-                       .getService(Ci.nsIURLFormatter);
-  let supportUrl = urlFormatter.formatURLPref("app.support.baseURL");
+        // Update the application basics section.
+        document.getElementById("application-box").textContent = Application.name;
+        document.getElementById("version-box").textContent = Application.version;
+        document.getElementById("supportLink").href = supportUrl;
 
-  // Update the application basics section.
-  document.getElementById("application-box").textContent = Application.name;
-  document.getElementById("version-box").textContent = Application.version;
-  document.getElementById("supportLink").href = supportUrl;
+        // Update the other sections.
+        populateExtensionsSection();
+        populatePreferencesSection();
+      }
 
-  // Update the other sections.
-  populateExtensionsSection();
-  populatePreferencesSection();
-}
+      function populateExtensionsSection()
+      {
+        let extensions = Application.extensions.all;
+        let trExtensions = [];
+        for (let i = 0; i < extensions.length; i++) {
+          let extension = extensions[i];
+          let tr = createParentElement("tr", [
+            createElement("td", extension.name),
+            createElement("td", extension.version),
+            createElement("td", extension.enabled),
+            createElement("td", extension.id),
+          ]);
+          trExtensions.push(tr);
+        }
+        appendChildren(document.getElementById("extensions-tbody"), trExtensions);
+      }
 
-function populateExtensionsSection() {
-  let extensions = Application.extensions.all;
-  let trExtensions = [];
-  for (let i = 0; i < extensions.length; i++) {
-    let extension = extensions[i];
-    let tr = createParentElement("tr", [
-      createElement("td", extension.name),
-      createElement("td", extension.version),
-      createElement("td", extension.enabled),
-      createElement("td", extension.id),
-    ]);
-    trExtensions.push(tr);
-  }
-  appendChildren(document.getElementById("extensions-tbody"), trExtensions);
-}
+      function populatePreferencesSection()
+      {
+        let modifiedPrefs = getModifiedPrefs();
 
-function populatePreferencesSection() {
-  let modifiedPrefs = getModifiedPrefs();
+        function comparePrefs(pref1, pref2) {
+          if (pref1.name < pref2.name)
+            return -1;
+          if (pref1.name > pref2.name)
+            return 1;
+          return 0;
+        }
 
-  function comparePrefs(pref1, pref2) {
-    if (pref1.name < pref2.name)
-      return -1;
-    if (pref1.name > pref2.name)
-      return 1;
-    return 0;
-  }
+        let sortedPrefs = modifiedPrefs.sort(comparePrefs);
 
-  let sortedPrefs = modifiedPrefs.sort(comparePrefs);
+        let trPrefs = [];
+        sortedPrefs.forEach(function (pref) {
+          let tdName = createElement("td", pref.name, "pref-name");
+          let tdValue = createElement("td", pref.value, "pref-value");
+          let tr = createParentElement("tr", [tdName, tdValue]);
+          trPrefs.push(tr);
+        });
 
-  let trPrefs = [];
-  sortedPrefs.forEach(function (pref) {
-    let tdName = createElement("td", pref.name, "pref-name");
-    let tdValue = createElement("td", formatPrefValue(pref.value), "pref-value");
-    let tr = createParentElement("tr", [tdName, tdValue]);
-    trPrefs.push(tr);
-  });
+        appendChildren(document.getElementById("prefs-tbody"), trPrefs);
+      }
 
-  appendChildren(document.getElementById("prefs-tbody"), trPrefs);
-}
+      function getModifiedPrefs()
+      {
+        // We use the low-level prefs API to identify prefs that have been
+        // modified, rather that Application.prefs.all since the latter is
+        // much, much slower.  Application.prefs.all also gets slower each
+        // time it's called.  See bug 517312.
+        let prefService = Cc["@mozilla.org/preferences-service;1"]
+                            .getService(Ci.nsIPrefService);
+        let prefRootBranch = prefService.getBranch("");
+        let prefNames = getWhitelistedPrefNames(prefRootBranch);
+        let prefs = [Application.prefs.get(prefName)
+                            for each (prefName in prefNames)
+                                if (prefRootBranch.prefHasUserValue(prefName)
+                                  && !isBlacklisted(prefName))];
+        return prefs;
+      }
 
-function formatPrefValue(prefValue) {
-  // Some pref values are really long and don't have spaces.  This can cause
-  // problems when copying and pasting into some WYSIWYG editors.  In general
-  // the exact contents of really long pref values aren't particularly useful,
-  // so we truncate them to some reasonable length. 
-  let maxPrefValueLen = 120;
-  let text = "" + prefValue;
-  if (text.length > maxPrefValueLen)
-    text = text.substring(0, maxPrefValueLen) + "…";
-  return text;
-}
+      function getWhitelistedPrefNames(prefRootBranch) {
+        let results = [];
+        PREFS_WHITELIST.forEach(function (prefStem) {
+          let prefNames = prefRootBranch.getChildList(prefStem, {});
+          results = results.concat(prefNames);
+        });
+        return results;
+      }
 
-function getModifiedPrefs() {
-  // We use the low-level prefs API to identify prefs that have been
-  // modified, rather that Application.prefs.all since the latter is
-  // much, much slower.  Application.prefs.all also gets slower each
-  // time it's called.  See bug 517312.
-  let prefService = Cc["@mozilla.org/preferences-service;1"]
-                      .getService(Ci.nsIPrefService);
-  let prefRootBranch = prefService.getBranch("");
-  let prefNames = getWhitelistedPrefNames(prefRootBranch);
-  let prefs = [Application.prefs.get(prefName)
-                      for each (prefName in prefNames)
-                          if (prefRootBranch.prefHasUserValue(prefName)
-                            && !isBlacklisted(prefName))];
-  return prefs;
-}
+      function isBlacklisted(prefName) {
+        return PREFS_BLACKLIST.some(function (re) re.test(prefName));
+      }
 
-function getWhitelistedPrefNames(prefRootBranch) {
-  let results = [];
-  PREFS_WHITELIST.forEach(function (prefStem) {
-    let prefNames = prefRootBranch.getChildList(prefStem, {});
-    results = results.concat(prefNames);
-  });
-  return results;
-}
+      function createParentElement(tagName, childElems)
+      {
+        let elem = document.createElement(tagName);
+        appendChildren(elem, childElems);
+        return elem;
+      }
 
-function isBlacklisted(prefName) {
-  return PREFS_BLACKLIST.some(function (re) re.test(prefName));
-}
+      function createElement(tagName, textContent, opt_class)
+      {
+        let elem = document.createElement(tagName);
+        elem.textContent = textContent;
+        elem.className = opt_class || "";
+        return elem; 
+      }
 
-function createParentElement(tagName, childElems) {
-  let elem = document.createElement(tagName);
-  appendChildren(elem, childElems);
-  return elem;
-}
+      function appendChildren(parentElem, childNodes)
+      {
+        for (let i = 0; i < childNodes.length; i++)
+          parentElem.appendChild(childNodes[i]);
+      }
 
-function createElement(tagName, textContent, opt_class) {
-  let elem = document.createElement(tagName);
-  elem.textContent = textContent;
-  elem.className = opt_class || "";
-  return elem; 
-}
+      function copyContentsToClipboard()
+      {
+        // Get the HTML and text representations for the important part of the page.
+        let contentsDiv = document.getElementById("contents");
+        let dataHtml = contentsDiv.innerHTML;
+        let dataText = createTextForElement(contentsDiv);
 
-function appendChildren(parentElem, childNodes) {
-  for (let i = 0; i < childNodes.length; i++)
-    parentElem.appendChild(childNodes[i]);
-}
+        // We can't use plain strings, we have to use nsSupportsString.
+        let supportsStringClass = Cc["@mozilla.org/supports-string;1"];
+        let ssHtml = supportsStringClass.createInstance(Ci.nsISupportsString);
+        let ssText = supportsStringClass.createInstance(Ci.nsISupportsString);
 
-function copyContentsToClipboard() {
-  // Get the HTML and text representations for the important part of the page.
-  let contentsDiv = document.getElementById("contents");
-  let dataHtml = contentsDiv.innerHTML;
-  let dataText = createTextForElement(contentsDiv);
+        let transferable = Cc["@mozilla.org/widget/transferable;1"]
+                             .createInstance(Ci.nsITransferable);  
 
-  // We can't use plain strings, we have to use nsSupportsString.
-  let supportsStringClass = Cc["@mozilla.org/supports-string;1"];
-  let ssHtml = supportsStringClass.createInstance(Ci.nsISupportsString);
-  let ssText = supportsStringClass.createInstance(Ci.nsISupportsString);
+        // Add the HTML flavor.
+        transferable.addDataFlavor("text/html");
+        ssHtml.data = dataHtml;
+        transferable.setTransferData("text/html", ssHtml, dataHtml.length * 2);
 
-  let transferable = Cc["@mozilla.org/widget/transferable;1"]
-                       .createInstance(Ci.nsITransferable);  
+        // Add the plain text flavor.
+        transferable.addDataFlavor("text/unicode");
+        ssText.data = dataText;
+        transferable.setTransferData("text/unicode", ssText, dataText.length * 2);
 
-  // Add the HTML flavor.
-  transferable.addDataFlavor("text/html");
-  ssHtml.data = dataHtml;
-  transferable.setTransferData("text/html", ssHtml, dataHtml.length * 2);
+        // Store the data into the clipboard.
+        let clipboard = Cc["@mozilla.org/widget/clipboard;1"]
+                          .getService(Ci.nsIClipboard);
+        clipboard.setData(transferable, null, clipboard.kGlobalClipboard);        
+      }
 
-  // Add the plain text flavor.
-  transferable.addDataFlavor("text/unicode");
-  ssText.data = dataText;
-  transferable.setTransferData("text/unicode", ssText, dataText.length * 2);
+      // Return the plain text representation of an element.  Do a little bit
+      // of pretty-printing to make it human-readable.
+      function createTextForElement(elem)
+      {
+        // Generate the initial text.
+        let textFragmentAccumulator = [];
+        generateTextForElement(elem, "", textFragmentAccumulator);
+        let text = textFragmentAccumulator.join("");
 
-  // Store the data into the clipboard.
-  let clipboard = Cc["@mozilla.org/widget/clipboard;1"]
-                    .getService(Ci.nsIClipboard);
-  clipboard.setData(transferable, null, clipboard.kGlobalClipboard);        
-}
+        // Trim extraneous whitespace before newlines, then squash extraneous
+        // blank lines.
+        text = text.replace(/[ \t]+\n/g, "\n");
+        text = text.replace(/\n\n\n*/g, "\n\n");
 
-// Return the plain text representation of an element.  Do a little bit
-// of pretty-printing to make it human-readable.
-function createTextForElement(elem) {
-  // Generate the initial text.
-  let textFragmentAccumulator = [];
-  generateTextForElement(elem, "", textFragmentAccumulator);
-  let text = textFragmentAccumulator.join("");
+        return text;
+      }
 
-  // Trim extraneous whitespace before newlines, then squash extraneous
-  // blank lines.
-  text = text.replace(/[ \t]+\n/g, "\n");
-  text = text.replace(/\n\n\n+/g, "\n\n");
-  
-  // Actual CR/LF pairs are needed for some Windows text editors.
-  text = text.replace(/\n/g, "\r\n");
+      function generateTextForElement(elem, indent, textFragmentAccumulator)
+      {
+        // Add a little extra spacing around most elements.
+        if (elem.tagName != "td")
+          textFragmentAccumulator.push("\n"); 
 
-  return text;
-}
+        // Generate the text representation for each child node.
+        let node = elem.firstChild;
+        while (node != null) {
 
-function generateTextForElement(elem, indent, textFragmentAccumulator) {
-  // Add a little extra spacing around most elements.
-  if (elem.tagName != "td")
-    textFragmentAccumulator.push("\n"); 
+          if (node.nodeType == Node.TEXT_NODE) {
+            // Text belonging to this element uses its indentation level.
+            generateTextForTextNode(node, indent, textFragmentAccumulator);
+          }
+          else if (node.nodeType == Node.ELEMENT_NODE) {
+            // Recurse on the child element with an extra level of indentation.
+            generateTextForElement(node, indent + "  ", textFragmentAccumulator); 
+          }
 
-  // Generate the text representation for each child node.
-  let node = elem.firstChild;
-  while (node) {
+          // Advance!
+          node = node.nextSibling;
+        }
+      }
 
-    if (node.nodeType == Node.TEXT_NODE) {
-      // Text belonging to this element uses its indentation level.
-      generateTextForTextNode(node, indent, textFragmentAccumulator);
-    }
-    else if (node.nodeType == Node.ELEMENT_NODE) {
-      // Recurse on the child element with an extra level of indentation.
-      generateTextForElement(node, indent + "  ", textFragmentAccumulator); 
-    }
+      function generateTextForTextNode(node, indent, textFragmentAccumulator)
+      {
+        // If the text node is the first of a run of text nodes, then start
+        // a new line and add the initial indentation.
+        let prevNode = node.previousSibling;
+        if (prevNode == null || prevNode.nodeType == Node.TEXT_NODE)
+          textFragmentAccumulator.push("\n" + indent);
 
-    // Advance!
-    node = node.nextSibling;
-  }
-}
-
-function generateTextForTextNode(node, indent, textFragmentAccumulator) {
-  // If the text node is the first of a run of text nodes, then start
-  // a new line and add the initial indentation.
-  let prevNode = node.previousSibling;
-  if (!prevNode || prevNode.nodeType == Node.TEXT_NODE)
-    textFragmentAccumulator.push("\n" + indent);
-
-  // Trim the text node's text content and add proper indentation after 
-  // any internal line breaks.  
-  let text = node.textContent.trim().replace("\n[ \t]*", "\n" + indent);
-  textFragmentAccumulator.push(text);
-}
-
-function openProfileDirectory() {
-  // Get the profile directory.
-  let propertiesService = Cc["@mozilla.org/file/directory_service;1"]
-                            .getService(Ci.nsIProperties);
-  let currProfD = propertiesService.get("ProfD", Ci.nsIFile);
-  let profileDir = currProfD.path;
-
-  // Show the profile directory.
-  let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
-                                           "nsILocalFile", "initWithPath");
-  new nsLocalFile(profileDir).reveal();
-}
+        // Trim the text node's text content and add proper indentation after 
+        // any internal line breaks.  
+        let text = node.textContent.trim().replace("\n[ \t]*", "\n" + indent);
+        textFragmentAccumulator.push(text);
+      }
+ 
+      function openProfileDirectory()
+      {
+        // Get the profile directory.
+        let propertiesService = Cc["@mozilla.org/file/directory_service;1"]
+                                  .getService(Ci.nsIProperties);
+        let currProfD = propertiesService.get("ProfD", Ci.nsIFile);
+        let profileDir = currProfD.path;
+      
+        // Show the profile directory.
+        let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
+                                                 "nsILocalFile", "initWithPath");
+        new nsLocalFile(profileDir).reveal();
+      }
 
     ]]></script>
 
@@ -447,7 +444,7 @@ function openProfileDirectory() {
 #else
                 &aboutSupport.show.label;
 #endif
-               </button>
+              </button>
             </td>
           </tr>
 
