@@ -427,6 +427,7 @@ NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
 
   ChildView* newContentView = (ChildView*)mPopupContentView->GetNativeData(NS_NATIVE_WIDGET);
   [mWindow setContentView:newContentView];
+  [newContentView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 
   return NS_OK;
 
