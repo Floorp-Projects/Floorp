@@ -1782,19 +1782,6 @@ nsParser::Terminate(void)
 }
 
 NS_IMETHODIMP
-nsParser::ContinueParsing()
-{
-  if (mFlags & NS_PARSER_FLAG_PARSER_ENABLED) {
-    NS_WARNING("Trying to continue parsing on a unblocked parser.");
-    return NS_OK;
-  }
-
-  mFlags |= NS_PARSER_FLAG_PARSER_ENABLED;
-
-  return ContinueInterruptedParsing();
-}
-
-NS_IMETHODIMP
 nsParser::ContinueInterruptedParsing()
 {
   // If there are scripts executing, then the content sink is jumping the gun
