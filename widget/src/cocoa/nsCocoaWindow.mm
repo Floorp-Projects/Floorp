@@ -1230,11 +1230,20 @@ nsCocoaWindow::ReportSizeEvent(NSRect *r)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSRect windowFrame;
-  if (r)
+  NSRect windowFrame = [mWindow frame];
+  if (!r)
+    r = &windowFrame;
+
+  if ([mWindow isKindOfClass:[ToolbarWindow class]] &&
+      [(ToolbarWindow*)mWindow drawsContentsIntoWindowFrame]) {
+    // Report the frame rect instead of the content rect. This will make our
+    // root widget NSView bigger than the window's content view, and since it's
+    // anchored at the bottom, it will extend upwards into the titlebar.
+    windowFrame = *r;
+  } else {
     windowFrame = [mWindow contentRectForFrameRect:(*r)];
-  else
-    windowFrame = [mWindow contentRectForFrameRect:[mWindow frame]];
+  }
+
   mBounds.width  = nscoord(windowFrame.size.width);
   mBounds.height = nscoord(windowFrame.size.height);
 
@@ -1417,6 +1426,18 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActi
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+void nsCocoaWindow::SetDrawsInTitlebar(PRBool aState)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  
+  if (![mWindow isKindOfClass:[ToolbarWindow class]]) 
+    return;
+
+  [(ToolbarWindow*)mWindow setDrawsContentsIntoWindowFrame:aState];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 NS_IMETHODIMP nsCocoaWindow::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
@@ -1756,12 +1777,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
 
 @end
 
-@interface ToolbarWindow(Private)
-
-- (void)redrawTitlebar;
-
-@end
-
 // This class allows us to have a "unified toolbar" style window. It works like this:
 // 1) We set the window's style to textured.
 // 2) Because of this, the background color applies to the entire window, including
@@ -1810,6 +1825,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
     [super setBackgroundColor:mColor];
 
     mUnifiedToolbarHeight = 0.0f;
+    mDrawsIntoWindowFrame = NO;
 
     // setBottomCornerRounded: is a private API call, so we check to make sure
     // we respond to it just in case.
@@ -1860,7 +1876,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [mColor setTitlebarColor:aColor forActiveWindow:aActive];
-  [self redrawTitlebar];
+  [self setTitlebarNeedsDisplayInRect:[self titlebarRect]];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1873,7 +1889,39 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
   if (mUnifiedToolbarHeight == aToolbarHeight)
     return;
   mUnifiedToolbarHeight = aToolbarHeight;
-  [self redrawTitlebar];
+
+  // Since this function is only called inside painting, the repaint needs to
+  // be synchronous.
+  [self setTitlebarNeedsDisplayInRect:[self titlebarRect] sync:YES];
+}
+
+- (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect
+{
+  [self setTitlebarNeedsDisplayInRect:aRect sync:NO];
+}
+
+- (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect sync:(BOOL)aSync
+{
+  NSRect titlebarRect = [self titlebarRect];
+  NSRect rect = NSIntersectionRect(titlebarRect, aRect);
+  if (NSIsEmptyRect(rect))
+    return;
+
+  NSView* borderView = [[self contentView] superview];
+  if (!borderView)
+    return;
+
+  if (aSync) {
+    [borderView displayRect:rect];
+  } else {
+    [borderView setNeedsDisplayInRect:rect];
+  }
+}
+
+- (NSRect)titlebarRect
+{
+  return NSMakeRect(0, [[self contentView] bounds].size.height,
+                    [self frame].size.width, [self titlebarHeight]);
 }
 
 - (float)unifiedToolbarHeight
@@ -1885,6 +1933,25 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
 {
   NSRect frameRect = [self frame];
   return frameRect.size.height - [self contentRectForFrameRect:frameRect].size.height;
+}
+
+- (void)setDrawsContentsIntoWindowFrame:(BOOL)aState
+{
+  BOOL stateChanged = (mDrawsIntoWindowFrame != aState);
+  mDrawsIntoWindowFrame = aState;
+  if (stateChanged) {
+    nsCocoaWindow *geckoWindow = [[self delegate] geckoWidget];
+    if (geckoWindow) {
+      // Re-layout our contents.
+      geckoWindow->ReportSizeEvent();
+    }
+    [self setTitlebarNeedsDisplayInRect:[self titlebarRect]];
+  }
+}
+
+- (BOOL)drawsContentsIntoWindowFrame
+{
+  return mDrawsIntoWindowFrame;
 }
 
 // Returning YES here makes the setShowsToolbarButton method work even though
@@ -1967,22 +2034,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
 
 @end
 
-@implementation ToolbarWindow(Private)
-
-- (void)redrawTitlebar
-{
-  NSView* borderView = [[self contentView] superview];
-  if (!borderView)
-    return;
-
-  NSRect rect = NSMakeRect(0, [[self contentView] bounds].size.height,
-                           [borderView bounds].size.width, [self titlebarHeight]);
-  // setNeedsDisplayInRect doesn't have any effect here, but displayRect does.
-  [borderView displayRect:rect];
-}
-
-@end
-
 // Custom NSColor subclass where most of the work takes place for drawing in
 // the titlebar area.
 @implementation TitlebarAndBackgroundColor
@@ -1990,10 +2041,8 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
 - (id)initWithActiveTitlebarColor:(NSColor*)aActiveTitlebarColor
             inactiveTitlebarColor:(NSColor*)aInactiveTitlebarColor
                   backgroundColor:(NSColor*)aBackgroundColor
-                        forWindow:(NSWindow*)aWindow
+                        forWindow:(ToolbarWindow*)aWindow
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
   if ((self = [super init])) {
     mActiveTitlebarColor = [aActiveTitlebarColor retain];
     mInactiveTitlebarColor = [aInactiveTitlebarColor retain];
@@ -2001,78 +2050,96 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
     mWindow = aWindow; // weak ref to avoid a cycle
   }
   return self;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void)dealloc
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
   [mActiveTitlebarColor release];
   [mInactiveTitlebarColor release];
   [mBackgroundColor release];
   [super dealloc];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // Our pattern width is 1 pixel. CoreGraphics can cache and tile for us.
 static const float sPatternWidth = 1.0f;
 
-// Callback where all of the drawing for this color takes place.
-void patternDraw(void* aInfo, CGContextRef aContext)
+static void
+DrawTitlebarGradient(CGContextRef aContext, float aTitlebarHeight,
+                     float aTitlebarOrigin, float aToolbarHeight, BOOL aIsMain)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  // Create and draw a CGShading that uses nsCocoaWindow::UnifiedShading() as its callback.
+  CGFunctionCallbacks callbacks = {0, nsCocoaWindow::UnifiedShading, NULL};
+  UnifiedGradientInfo info = { aTitlebarHeight, aToolbarHeight, aIsMain, YES };
+  CGFunctionRef function = CGFunctionCreate(&info, 1, NULL, 4, NULL, &callbacks);
+  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+  CGShadingRef shading = CGShadingCreateAxial(colorSpace,
+                                              CGPointMake(0.0f, aTitlebarOrigin + aTitlebarHeight),
+                                              CGPointMake(0.0f, aTitlebarOrigin),
+                                              function, NO, NO);
+  CGColorSpaceRelease(colorSpace);
+  CGFunctionRelease(function);
+  CGContextDrawShading(aContext, shading);
+  CGShadingRelease(shading);
+  // Draw the one pixel border at the bottom of the titlebar.
+  if (aToolbarHeight == 0) {
+    CGRect borderRect = CGRectMake(0.0f, aTitlebarOrigin, sPatternWidth, 1.0f);
+    DrawNativeGreyColorInRect(aContext, headerBorderGrey, borderRect, aIsMain);
+  }
+}
 
+// Pattern draw callback for standard titlebar gradients and solid titlebar colors
+static void
+RepeatedPatternDrawCallback(void* aInfo, CGContextRef aContext)
+{
   TitlebarAndBackgroundColor *color = (TitlebarAndBackgroundColor*)aInfo;
-  NSColor *backgroundColor = [color backgroundColor];
-  ToolbarWindow *window = (ToolbarWindow*)[color window];
-  BOOL isMain = [window isMainWindow];
-  NSColor *titlebarColor = isMain ? [color activeTitlebarColor] : [color inactiveTitlebarColor];
+  ToolbarWindow *window = [color window];
 
   // Remember: this context is NOT flipped, so the origin is in the bottom left.
   float titlebarHeight = [window titlebarHeight];
   float titlebarOrigin = [window frame].size.height - titlebarHeight;
 
-  UnifiedGradientInfo info = { titlebarHeight, [window unifiedToolbarHeight], isMain, YES };
-
   [NSGraphicsContext saveGraphicsState];
   [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:aContext flipped:NO]];
 
-  // If the titlebar color is nil, draw the default titlebar shading.
+  BOOL isMain = [window isMainWindow];
+  NSColor *titlebarColor = isMain ? [color activeTitlebarColor] : [color inactiveTitlebarColor];
   if (!titlebarColor) {
-    // Create and draw a CGShading that uses nsCocoaWindow::UnifiedShading() as its callback.
-    CGFunctionCallbacks callbacks = {0, nsCocoaWindow::UnifiedShading, NULL};
-    CGFunctionRef function = CGFunctionCreate(&info, 1, NULL, 4, NULL, &callbacks);
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGShadingRef shading = CGShadingCreateAxial(colorSpace,
-                                                CGPointMake(0.0f, titlebarOrigin + titlebarHeight),
-                                                CGPointMake(0.0f, titlebarOrigin),
-                                                function, NO, NO);
-    CGColorSpaceRelease(colorSpace);
-    CGFunctionRelease(function);
-    CGContextDrawShading(aContext, shading);
-    CGShadingRelease(shading);
-
-    // Draw the one pixel border at the bottom of the titlebar.
-    if ([window unifiedToolbarHeight] == 0) {
-      CGRect borderRect = CGRectMake(0.0f, titlebarOrigin, sPatternWidth, 1.0f);
-      DrawNativeGreyColorInRect(aContext, headerBorderGrey, borderRect, isMain);
-    }
+    // If the titlebar color is nil, draw the default titlebar shading.
+    DrawTitlebarGradient(aContext, titlebarHeight, titlebarOrigin,
+                         [window unifiedToolbarHeight], isMain);
   } else {
-    // if the titlebar color is not nil, just set and draw it normally.
+    // If the titlebar color is not nil, just set and draw it normally.
     [titlebarColor set];
     NSRectFill(NSMakeRect(0.0f, titlebarOrigin, sPatternWidth, titlebarHeight));
   }
 
   // Draw the background color of the window everywhere but where the titlebar is.
-  [backgroundColor set];
+  [[color backgroundColor] set];
   NSRectFill(NSMakeRect(0.0f, 0.0f, 1.0f, titlebarOrigin));
 
   [NSGraphicsContext restoreGraphicsState];
+}
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+// Pattern draw callback for "drawsContentsIntoWindowFrame" windows
+static void
+ContentPatternDrawCallback(void* aInfo, CGContextRef aContext)
+{
+  TitlebarAndBackgroundColor *color = (TitlebarAndBackgroundColor*)aInfo;
+  ToolbarWindow *window = (ToolbarWindow*)[color window];
+
+  NSView* view = [[[window contentView] subviews] lastObject];
+  if (!view || ![view isKindOfClass:[ChildView class]])
+    return;
+
+  // Gecko drawing assumes flippedness, but the current context isn't flipped
+  // (because we're painting into the window's border view, which is not a
+  // ChildView, so it isn't flpped).
+  // So we need to set a flip transform.
+  CGContextScaleCTM(aContext, 1.0f, -1.0f);
+  CGContextTranslateCTM(aContext, 0.0f, -[window frame].size.height);
+
+  NSRect titlebarRect = NSMakeRect(0, 0, [window frame].size.width, [window titlebarHeight]);
+  [(ChildView*)view drawRect:titlebarRect inContext:aContext];
 }
 
 - (void)setFill
@@ -2080,12 +2147,12 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-
-  // Set up the pattern to be as tall as our window, and one pixel wide.
-  // CoreGraphics can cache and tile us quickly.
-  CGPatternCallbacks callbacks = {0, &patternDraw, NULL};
-  CGPatternRef pattern = CGPatternCreate(self, CGRectMake(0.0f, 0.0f, sPatternWidth, [mWindow frame].size.height), 
-                                         CGAffineTransformIdentity, 1, [mWindow frame].size.height,
+  CGPatternDrawPatternCallback cb = [mWindow drawsContentsIntoWindowFrame] ?
+                                      &ContentPatternDrawCallback : &RepeatedPatternDrawCallback;
+  CGPatternCallbacks callbacks = {0, cb, NULL};
+  float patternWidth = [mWindow drawsContentsIntoWindowFrame] ? [mWindow frame].size.width : sPatternWidth;
+  CGPatternRef pattern = CGPatternCreate(self, CGRectMake(0.0f, 0.0f, patternWidth, [mWindow frame].size.height), 
+                                         CGAffineTransformIdentity, patternWidth, [mWindow frame].size.height,
                                          kCGPatternTilingConstantSpacing, true, &callbacks);
 
   // Set the pattern as the fill, which is what we were asked to do. All our
@@ -2141,7 +2208,7 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   return mBackgroundColor;
 }
 
-- (NSWindow*)window
+- (ToolbarWindow*)window
 {
   return mWindow;
 }
