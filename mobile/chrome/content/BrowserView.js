@@ -169,6 +169,10 @@ BrowserView.Util = {
     return browser.__BrowserView__vps;
   },
 
+  /**
+   * Calling this is likely to cause a reflow of the browser's document.  Use
+   * wisely.
+   */
   getBrowserDimensions: function getBrowserDimensions(browser) {
     let cdoc = browser.contentDocument;
     if (cdoc instanceof SVGDocument) {
@@ -244,7 +248,7 @@ BrowserView.prototype = {
     this._idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
     this._idleService.addIdleObserver(this._idleServiceObserver, kBrowserViewPrefetchBeginIdleWait);
   },
-  
+
   uninit: function uninit() {
     this.setBrowser(null, null, false);
     this._idleService.removeIdleObserver(this._idleServiceObserver, kBrowserViewPrefetchBeginIdleWait);
@@ -260,8 +264,12 @@ BrowserView.prototype = {
     if (!bvs)
       return;
 
+    let oldwidth  = bvs.viewportRect.right;
+    let oldheight = bvs.viewportRect.bottom;
     bvs.viewportRect.right  = width;
     bvs.viewportRect.bottom = height;
+
+    let sizeChanged = (oldwidth != width || oldheight != height);
 
     // XXX we might not want the user's page to disappear from under them
     // at this point, which could happen if the container gets resized such
@@ -270,21 +278,33 @@ BrowserView.prototype = {
     // then again, we could also argue this is the responsibility of the
     // caller who would do such a thing...
 
-    this._viewportChanged(true, !!causedByZoom);
+    this._viewportChanged(sizeChanged, sizeChanged && !!causedByZoom);
   },
 
-  setZoomLevel: function setZoomLevel(zl) {
+  /**
+   * @return [width, height]
+   */
+  getViewportDimensions: function getViewportDimensions() {
+    let bvs = this._browserViewportState;
+
+    if (!bvs)
+      throw "Cannot get viewport dimensions when no browser is set";
+
+    return [bvs.viewportRect.right, bvs.viewportRect.bottom];
+  },
+
+  setZoomLevel: function setZoomLevel(zoomLevel) {
     let bvs = this._browserViewportState;
 
     if (!bvs)
       return;
 
-    let newZL = BrowserView.Util.clampZoomLevel(zl);
+    let newZoomLevel = BrowserView.Util.clampZoomLevel(zoomLevel);
 
-    if (newZL != bvs.zoomLevel) {
+    if (newZoomLevel != bvs.zoomLevel) {
       let browserW = this.viewportToBrowser(bvs.viewportRect.right);
       let browserH = this.viewportToBrowser(bvs.viewportRect.bottom);
-      bvs.zoomLevel = newZL; // side-effect: now scale factor in transformations is newZL
+      bvs.zoomLevel = newZoomLevel; // side-effect: now scale factor in transformations is newZoomLevel
       this.setViewportDimensions(this.browserToViewport(browserW),
                                  this.browserToViewport(browserH),
                                  true);
@@ -395,19 +415,17 @@ BrowserView.prototype = {
       throw "Cannot set non-null browser with null BrowserViewportState";
     }
 
-    let browserChanged = (this._browser !== browser);
+    let oldBrowser = this._browser;
 
-    if (this._browser) {
-      this._browser.removeEventListener("MozAfterPaint", this.handleMozAfterPaint, false);
-      this._browser.removeEventListener("scroll", this.handlePageScroll, false);
+    let browserChanged = (oldBrowser !== browser);
 
-      // !!! --- RESIZE HACK BEGIN -----
-      // change to the real event type and perhaps refactor the handler function name
-      this._browser.removeEventListener("FakeMozAfterSizeChange", this.handleMozAfterSizeChange, false);
-      // !!! --- RESIZE HACK END -------
+    if (oldBrowser) {
+      oldBrowser.removeEventListener("MozAfterPaint", this.handleMozAfterPaint, false);
+      oldBrowser.removeEventListener("scroll", this.handlePageScroll, false);
+      oldBrowser.removeEventListener("MozScrolledAreaChanged", this.handleMozScrolledAreaChanged, false);
 
-      this._browser.setAttribute("type", "content");
-      this._browser.docShell.isOffScreenBrowser = false;
+      oldBrowser.setAttribute("type", "content");
+      oldBrowser.docShell.isOffScreenBrowser = false;
     }
 
     this._browser = browser;
@@ -421,11 +439,7 @@ BrowserView.prototype = {
 
       browser.addEventListener("MozAfterPaint", this.handleMozAfterPaint, false);
       browser.addEventListener("scroll", this.handlePageScroll, false);
-
-      // !!! --- RESIZE HACK BEGIN -----
-      // change to the real event type and perhaps refactor the handler function name
-      browser.addEventListener("FakeMozAfterSizeChange", this.handleMozAfterSizeChange, false);
-      // !!! --- RESIZE HACK END -------
+      browser.addEventListener("MozScrolledAreaChanged", this.handleMozScrolledAreaChanged, false);
 
       if (doZoom) {
         browser.docShell.isOffScreenBrowser = true;
@@ -478,29 +492,30 @@ BrowserView.prototype = {
       return;
 
     let { x: scrollX, y: scrollY } = BrowserView.Util.getContentScrollOffset(this._browser);
-    Browser.contentScrollboxScroller.scrollTo(this.browserToViewport(scrollX), 
+    Browser.contentScrollboxScroller.scrollTo(this.browserToViewport(scrollX),
                                               this.browserToViewport(scrollY));
     this.onAfterVisibleMove();
   },
 
-  // !!! --- RESIZE HACK BEGIN -----
-  simulateMozAfterSizeChange: function simulateMozAfterSizeChange() {
-    let [w, h] = BrowserView.Util.getBrowserDimensions(this._browser);
-    let ev = document.createEvent("MouseEvents");
-    ev.initMouseEvent("FakeMozAfterSizeChange", false, false, window, 0, w, h, 0, 0, false, false, false, false, 0, null);
-    this._browser.dispatchEvent(ev);
-  },
-  // !!! --- RESIZE HACK END -------
+  handleMozScrolledAreaChanged: function handleMozScrolledAreaChanged(ev) {
+    if (ev.target != this._browser.contentDocument)
+      return;
 
-  handleMozAfterSizeChange: function handleMozAfterSizeChange(ev) {
-    // !!! --- RESIZE HACK BEGIN -----
-    // get the correct properties off of the event, these are wrong because
-    // we're using a MouseEvent, as it has an X and Y prop of some sort and
-    // we piggyback on that.
-    let w = ev.screenX;
-    let h = ev.screenY;
-    // !!! --- RESIZE HACK END -------
-    this.setViewportDimensions(this.browserToViewport(w), this.browserToViewport(h));
+    let { x: scrollX, y: scrollY } = BrowserView.Util.getContentScrollOffset(this._browser);
+
+    let x = ev.x + scrollX;
+    let y = ev.y + scrollY;
+    let w = ev.width;
+    let h = ev.height;
+
+    /* Adjust width and height from the incoming event properties so that we
+       ignore changes to width and height contributed by growth in page
+       quadrants other than x > 0 && y > 0. */
+    if (x < 0) w += x;
+    if (y < 0) h += y;
+
+    this.setViewportDimensions(this.browserToViewport(w),
+                               this.browserToViewport(h));
   },
 
   zoomToPage: function zoomToPage() {
@@ -513,14 +528,16 @@ BrowserView.prototype = {
                              .QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDOMWindowUtils);
     var handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
-    
+
     if (handheldFriendly == "true") {
       browser.className = "browser-handheld";
       this.setZoomLevel(1);
       browser.markupDocumentViewer.textZoom = 1;
     } else {
       browser.className = "browser";
-      let [w, h] = BrowserView.Util.getBrowserDimensions(browser);
+      let bvs = this._browserViewportState;  // browser exists, so bvs must as well
+      let w = this.viewportToBrowser(bvs.viewportRect.right);
+      let h = this.viewportToBrowser(bvs.viewportRect.bottom);
       this.setZoomLevel(BrowserView.Util.pageZoomLevel(this.getVisibleRect(), w, h));
     }
   },
@@ -539,6 +556,49 @@ BrowserView.prototype = {
       zoomDelta *= -1;
 
     this.setZoomLevel(bvs.zoomLevel + zoomDelta);
+  },
+
+  //
+  // XXXrf  This method is used as a workaround for the fact that
+  // MozAfterPaint events do not guarantee to inform us of all
+  // invalidated paints (See
+  // https://developer.mozilla.org/en/Gecko-Specific_DOM_Events#Important_notes
+  // for details on what the event *does* guarantee).  This is only an
+  // issue when the same current <browser> is used to navigate to a
+  // new page.  Unless a zoom was issued during the page transition
+  // (e.g. a call to zoomToPage() or something of that nature), we
+  // aren't guaranteed that we've actually invalidated the entire
+  // page.  We don't want to leave bits of the previous page in the
+  // view of the new one, so this method exists as a way for Browser
+  // to inform us that the page is changing, and that we really ought
+  // to invalidate everything.  Ideally, we wouldn't have to rely on
+  // this being called, and we would get proper invalidates for the
+  // whole page no matter what is or is not visible.
+  //
+  // Note that this workaround isn't necessary in almost all cases.
+  // Most of the time, one of the following two conditions is
+  // satisfied.  Either
+  //   (1) Pages have different widths so the Browser calls a
+  //       zoomToPage() which forces a dirtyAll, or
+  //   (2) MozAfterPaint does indeed inform us of dirtyRects covering
+  //       the entire page (everything that could possibly become
+  //       visible).
+  //
+  // An example where the workaround is necessary is in going from the
+  // firstrun page to a Twitter feed.  Condition (1) isn't satisfied
+  // because both pages have the same in-browser width.  Condition (2)
+  // isn't satisfied for all of the page because of what appears to be
+  // some kind of overflowing container div.  To see this, place some
+  // dumps of the rectangles incoming in the HandleMozAfterPaint
+  // method, and navigate to someone's Twitter feed.  Only sidebar on
+  // the right-hand side of the feed is invalidated across the page,
+  // and otherwise, the 500x800 visible region is invalidated as well.
+  //
+  // See browser.js for where this is invoked.
+  //
+  invalidateEntireView: function invalidateEntireView() {
+    if (this._browserViewportState)
+      this._viewportChanged(false, true);
   },
 
   /**
