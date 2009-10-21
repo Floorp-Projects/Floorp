@@ -742,6 +742,7 @@ const PRInt32 nsCSSProps::kDirectionKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kDisplayKTable[] = {
+  eCSSKeyword_none,               NS_STYLE_DISPLAY_NONE,
   eCSSKeyword_inline,             NS_STYLE_DISPLAY_INLINE,
   eCSSKeyword_block,              NS_STYLE_DISPLAY_BLOCK,
   eCSSKeyword_inline_block,       NS_STYLE_DISPLAY_INLINE_BLOCK,
@@ -1025,6 +1026,7 @@ const PRInt32 nsCSSProps::kPitchKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kPointerEventsKTable[] = {
+  eCSSKeyword_none, NS_STYLE_POINTER_EVENTS_NONE,
   eCSSKeyword_visiblepainted, NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED,
   eCSSKeyword_visiblefill, NS_STYLE_POINTER_EVENTS_VISIBLEFILL,
   eCSSKeyword_visiblestroke, NS_STYLE_POINTER_EVENTS_VISIBLESTROKE,
@@ -1103,6 +1105,7 @@ const PRInt32 nsCSSProps::kTextAlignKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kTextDecorationKTable[] = {
+  eCSSKeyword_none, NS_STYLE_TEXT_DECORATION_NONE,
   eCSSKeyword_underline, NS_STYLE_TEXT_DECORATION_UNDERLINE,
   eCSSKeyword_overline, NS_STYLE_TEXT_DECORATION_OVERLINE,
   eCSSKeyword_line_through, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
@@ -1261,6 +1264,7 @@ const PRInt32 nsCSSProps::kBoxPackKTable[] = {
 // keyword tables for SVG properties
 
 const PRInt32 nsCSSProps::kDominantBaselineKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_DOMINANT_BASELINE_AUTO,
   eCSSKeyword_use_script, NS_STYLE_DOMINANT_BASELINE_USE_SCRIPT,
   eCSSKeyword_no_change, NS_STYLE_DOMINANT_BASELINE_NO_CHANGE,
   eCSSKeyword_reset_size, NS_STYLE_DOMINANT_BASELINE_RESET_SIZE,
@@ -1282,6 +1286,7 @@ const PRInt32 nsCSSProps::kFillRuleKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kImageRenderingKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_IMAGE_RENDERING_AUTO,
   eCSSKeyword_optimizespeed, NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED,
   eCSSKeyword_optimizequality, NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY,
   eCSSKeyword__moz_crisp_edges, NS_STYLE_IMAGE_RENDERING_CRISPEDGES,
@@ -1289,6 +1294,7 @@ const PRInt32 nsCSSProps::kImageRenderingKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kShapeRenderingKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_SHAPE_RENDERING_AUTO,
   eCSSKeyword_optimizespeed, NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED,
   eCSSKeyword_crispedges, NS_STYLE_SHAPE_RENDERING_CRISPEDGES,
   eCSSKeyword_geometricprecision, NS_STYLE_SHAPE_RENDERING_GEOMETRICPRECISION,
@@ -1317,6 +1323,7 @@ const PRInt32 nsCSSProps::kTextAnchorKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kTextRenderingKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_TEXT_RENDERING_AUTO,
   eCSSKeyword_optimizespeed, NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED,
   eCSSKeyword_optimizelegibility, NS_STYLE_TEXT_RENDERING_OPTIMIZELEGIBILITY,
   eCSSKeyword_geometricprecision, NS_STYLE_TEXT_RENDERING_GEOMETRICPRECISION,
@@ -1324,6 +1331,7 @@ const PRInt32 nsCSSProps::kTextRenderingKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kColorInterpolationKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_COLOR_INTERPOLATION_AUTO,
   eCSSKeyword_srgb, NS_STYLE_COLOR_INTERPOLATION_SRGB,
   eCSSKeyword_linearrgb, NS_STYLE_COLOR_INTERPOLATION_LINEARRGB,
   eCSSKeyword_UNKNOWN, -1
