@@ -39,12 +39,12 @@
 #ifndef nsHttpHeaderArray_h__
 #define nsHttpHeaderArray_h__
 
+#include "nsHttp.h"
 #include "nsTArray.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsHttp.h"
 
 class nsHttpHeaderArray
 {
