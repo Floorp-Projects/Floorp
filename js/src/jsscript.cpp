@@ -1550,8 +1550,22 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
             if (cg->flags & TCF_IN_FUNCTION) {
                 fun = cg->fun;
                 JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
+                if (fun->u.i.nupvars != 0) {
+                    /*
+                     * FIXME: upvar uses that were all optimized away may leave
+                     * fun->u.i.nupvars non-zero, and since that count is added
+                     * into fun->countLocalNames() in order to discriminate the
+                     * fun->u.i.names union, we cannot force fun->u.i.nupvars
+                     * to 0 to match JSScript::emptyScript()->upvars()->length.
+                     * So we skip the empty script optimization.
+                     *
+                     * Fixing this requires the compiler to track upvar uses as
+                     * it analyzes and optimizes closures, and subsequently as
+                     * the emitter performs useless expression elimination.
+                     */
+                    goto skip_empty;
+                }
                 js_FreezeLocalNames(cx, fun);
-                fun->u.i.nupvars = 0;
                 fun->u.i.script = empty;
             }
 
@@ -1561,6 +1575,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         }
     }
 
+  skip_empty:
     CG_COUNT_FINAL_SRCNOTES(cg, nsrcnotes);
     script = js_NewScript(cx, prologLength + mainLength, nsrcnotes,
                           cg->atomList.count, cg->objectList.length,
