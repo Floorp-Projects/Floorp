@@ -124,7 +124,8 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
     # allow relative paths
     options.xrePath = getFullPath(options.xrePath)
 
-  options.symbolsPath = getFullPath(options.symbolsPath)
+  if options.symbolsPath:
+    options.symbolsPath = getFullPath(options.symbolsPath)
   options.utilityPath = getFullPath(options.utilityPath)
 
   debuggerInfo = getDebuggerInfo(oldcwd, options.debugger, options.debuggerArgs,

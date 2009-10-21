@@ -45,6 +45,7 @@ else
 TEST_PATH_ARG :=
 endif
 
+SYMBOLS_PATH := --symbols-path=$(DIST)/crashreporter-symbols
 
 # Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] mochitest*|.
 mochitest:: mochitest-plain mochitest-chrome mochitest-a11y
@@ -53,7 +54,7 @@ RUN_MOCHITEST = \
 	rm -f ./$@.log && \
 	$(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done \
 	  --console-level=INFO --log-file=./$@.log --file-level=INFO \
-	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 ifndef NO_FAIL_ON_TEST_ERRORS
 define CHECK_TEST_ERROR
@@ -82,7 +83,8 @@ mochitest-a11y:
 
 
 # Usage: |make [EXTRA_TEST_ARGS=...] *test|.
-RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
+RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
+  $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
 reftest:
 	$(call RUN_REFTEST,$(topsrcdir)/layout/reftests/reftest.list)
@@ -106,7 +108,7 @@ xpcshell-tests:
 	  $(topsrcdir)/testing/xpcshell/runxpcshelltests.py \
 	  --manifest=$(DEPTH)/_tests/xpcshell/all-test-dirs.list \
 	  --no-logfiles \
-	  --symbols-path=$(DIST)/crashreporter-symbols \
+          $(SYMBOLS_PATH) \
 	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS) \
 	  $(DIST)/bin/xpcshell
 

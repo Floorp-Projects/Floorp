@@ -72,7 +72,6 @@ __all__ = [
            "environment",
            "IS_TEST_BUILD",
            "IS_DEBUG_BUILD",
-           "SYMBOLS_PATH",
           ]
 
 # These are generated in mozilla/build/Makefile.in
@@ -95,7 +94,6 @@ UNIXISH = not IS_WIN32 and not IS_MAC
 #expand CERTS_SRC_DIR = __CERTS_SRC_DIR__
 #expand IS_TEST_BUILD = __IS_TEST_BUILD__
 #expand IS_DEBUG_BUILD = __IS_DEBUG_BUILD__
-#expand SYMBOLS_PATH = __SYMBOLS_PATH__
 
 ###########
 # LOGGING #
@@ -444,7 +442,7 @@ def environment(env = None, xrePath = DIST_BIN, crashreporter = True):
 def runApp(testURL, env, app, profileDir, extraArgs,
            runSSLTunnel = False, utilityPath = DIST_BIN,
            xrePath = DIST_BIN, certPath = CERTS_SRC_DIR,
-           debuggerInfo = None, symbolsPath = SYMBOLS_PATH):
+           debuggerInfo = None, symbolsPath = None):
   "Run the app, log the duration it took to execute, return the status code."
 
   # copy env so we don't munge the caller's environment
