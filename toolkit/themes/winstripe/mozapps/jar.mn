@@ -50,6 +50,7 @@ toolkit.jar:
         skin/classic/aero/mozapps/downloads/downloads.css                  (downloads/downloads.css)
         skin/classic/aero/mozapps/downloads/unknownContentType.css         (downloads/unknownContentType.css)
         skin/classic/aero/mozapps/extensions/about.css                     (extensions/about.css)
+        skin/classic/aero/mozapps/extensions/blocklist.css                 (extensions/blocklist.css)
         skin/classic/aero/mozapps/extensions/extensions.css                (extensions/extensions.css)
         skin/classic/aero/mozapps/extensions/itemDisabledFader.png         (extensions/itemDisabledFader.png)
         skin/classic/aero/mozapps/extensions/itemEnabledFader.png          (extensions/itemEnabledFader.png)
