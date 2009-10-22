@@ -354,7 +354,7 @@
               </setting>
               <setting id="prefs-uilanguage" title="&language.title;" type="control">
                 &language.description;
-                <menulist id="prefs-languages" onchange="PreferencesView.updateLocale();">
+                <menulist id="prefs-languages" oncommand="PreferencesView.updateLocale();">
                   <menupopup>
                     <menuitem label="&language.auto;" value="auto"/>
                   </menupopup>
