@@ -7362,11 +7362,11 @@ CSSParserImpl::ParseFont()
   }
   if ((found & 1) == 0) {
     // Provide default font-style
-    values[0].SetNormalValue();
+    values[0].SetIntValue(NS_FONT_STYLE_NORMAL, eCSSUnit_Enumerated);
   }
   if ((found & 2) == 0) {
     // Provide default font-variant
-    values[1].SetNormalValue();
+    values[1].SetIntValue(NS_FONT_VARIANT_NORMAL, eCSSUnit_Enumerated);
   }
   if ((found & 4) == 0) {
     // Provide default font-weight
