@@ -3940,6 +3940,19 @@ nsFrame::CheckInvalidateSizeChange(nsHTMLReflowMetrics& aNewDesiredSize)
       nsSize(aNewDesiredSize.width, aNewDesiredSize.height));
 }
 
+static void
+InvalidateRectForFrameSizeChange(nsIFrame* aFrame, const nsRect& aRect)
+{
+  const nsStyleBackground* bg;
+  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg)) {
+    nsIFrame* rootFrame =
+      aFrame->PresContext()->PresShell()->FrameManager()->GetRootFrame();
+    rootFrame->Invalidate(nsRect(nsPoint(0, 0), rootFrame->GetSize()));
+  }
+
+  aFrame->Invalidate(aRect);
+}
+
 void
 nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
                                     const nsRect& aOldOverflowRect,
@@ -3958,13 +3971,19 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
   // (since in either case the UNION of old and new areas will be
   // invalidated)
 
+  // We use InvalidateRectForFrameSizeChange throughout this method, even
+  // though root-invalidation is technically only needed in the case where
+  // layer.RenderingMightDependOnFrameSize().  This allows us to simplify the
+  // code somewhat and return immediately after invalidation in the earlier
+  // cases.
+
   // Invalidate the entire old frame+outline if the frame has an outline
   PRBool anyOutlineOrEffects;
   nsRect r = ComputeOutlineAndEffectsRect(this, &anyOutlineOrEffects,
                                           aOldOverflowRect, PR_FALSE);
   if (anyOutlineOrEffects) {
     r.UnionRect(aOldOverflowRect, r);
-    Invalidate(r);
+    InvalidateRectForFrameSizeChange(this, r);
     return;
   }
 
@@ -3984,7 +4003,7 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
         // we'll invalidate the entire border-box here anyway.
         continue;
       }
-      Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
+      InvalidateRectForFrameSizeChange(this, nsRect(0, 0, aOldRect.width, aOldRect.height));
       return;
     }
   }
@@ -3995,9 +4014,8 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
     // whose position depends on the size of the frame
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
       const nsStyleBackground::Layer &layer = bg->mLayers[i];
-      if (!layer.mImage.IsEmpty() &&
-          (layer.mPosition.mXIsPercent || layer.mPosition.mYIsPercent)) {
-        Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
+      if (layer.RenderingMightDependOnFrameSize()) {
+        InvalidateRectForFrameSizeChange(this, nsRect(0, 0, aOldRect.width, aOldRect.height));
         return;
       }
     }
@@ -4008,7 +4026,7 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
     // already been invalidated (even if only the top-left corner has a
     // border radius).
     if (nsLayoutUtils::HasNonZeroCorner(border->mBorderRadius)) {
-      Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
+      InvalidateRectForFrameSizeChange(this, nsRect(0, 0, aOldRect.width, aOldRect.height));
       return;
     }
   }

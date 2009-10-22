@@ -356,6 +356,13 @@ struct nsStyleBackground {
     // Initialize to initial values
     void SetInitialValues();
 
+    // True if the effective background image position described by this depends
+    // on the size of the corresponding frame.
+    PRBool DependsOnFrameSize() const {
+      return (mXIsPercent && mXPosition.mFloat != 0.0f) ||
+             (mYIsPercent && mYPosition.mFloat != 0.0f);
+    }
+
     PRBool operator==(const Position& aOther) const {
       return mXIsPercent == aOther.mXIsPercent &&
              (mXIsPercent ? (mXPosition.mFloat == aOther.mXPosition.mFloat)
@@ -378,18 +385,28 @@ struct nsStyleBackground {
     } Dimension;
     Dimension mWidth, mHeight;
 
+    // Dimension types which might change how a layer is painted when the
+    // corresponding frame's dimensions change *must* precede all dimension
+    // types which are agnostic to frame size; see DependsOnFrameSize below.
     enum DimensionType {
       // If one of mWidth and mHeight is eContain or eCover, then both are.
       // Also, these two values must equal the corresponding values in
       // kBackgroundSizeKTable.
       eContain, eCover,
 
-      eAuto,
       ePercentage,
+
+      eAuto,
       eLength,
       eDimensionType_COUNT
     };
     PRUint8 mWidthType, mHeightType;
+
+    // True if the effective image size described by this depends on the size
+    // of the corresponding frame.
+    PRBool DependsOnFrameSize() const {
+      return mWidthType <= ePercentage || mHeightType <= ePercentage;
+    }
 
     // Initialize nothing
     Size() {}
@@ -419,6 +436,14 @@ struct nsStyleBackground {
     ~Layer();
 
     void SetInitialValues();
+
+    // True if the rendering of this layer might change when the size of the
+    // corresponding frame changes (if its position or size is a percentage of
+    // the frame's dimensions).
+    PRBool RenderingMightDependOnFrameSize() const {
+      return !mImage.IsEmpty() &&
+             (mPosition.DependsOnFrameSize() || mSize.DependsOnFrameSize());
+    }
 
     // An equality operator that compares the images using URL-equality
     // rather than pointer-equality.
