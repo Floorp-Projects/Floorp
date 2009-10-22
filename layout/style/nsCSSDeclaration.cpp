@@ -972,8 +972,8 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
         // The font-stretch and font-size-adjust
         // properties are reset by this shorthand property to their
         // initial values, but can't be represented in its syntax.
-        if (stretch != nsCSSValue(eCSSUnit_Normal) ||
-            sizeAdjust != nsCSSValue(eCSSUnit_None)) {
+        if (stretch.GetUnit() != eCSSUnit_Normal ||
+            sizeAdjust.GetUnit() != eCSSUnit_None) {
           return NS_OK;
         }
 
