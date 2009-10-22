@@ -44,3 +44,5 @@ fishsound_reset.patch: Fixes bug 516323.
 
 bug520493.patch: Ensure liboggplay returns data when all tracks
                  are deactivated when a callback reaches EOF.
+
+bug523816.patch: Correct CMML data buffer size calculation.
