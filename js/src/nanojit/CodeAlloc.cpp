@@ -310,12 +310,12 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
 #elif defined AVMPLUS_UNIX
     #ifdef ANDROID
     void CodeAlloc::flushICache(void *start, size_t len) {
-        cacheflush((int)start, (int)(start + len), 0);
+        cacheflush((int)start, (int)start + len, 0);
     }
 	#else
     // fixme: __clear_cache is a libgcc feature, test for libgcc or gcc
     void CodeAlloc::flushICache(void *start, size_t len) {
-        __clear_cache((char*)start, (char*)(start + len));
+        __clear_cache((char*)start, (char*)start + len);
     }
 	#endif
 #endif // AVMPLUS_MAC && NANOJIT_PPC

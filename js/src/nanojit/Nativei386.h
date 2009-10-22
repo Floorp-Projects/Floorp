@@ -101,7 +101,7 @@ namespace nanojit
         // then by the C functions it calls).
     const int NJ_ALIGN_STACK = 16;
 
-    const int32_t LARGEST_UNDERRUN_PROT = 3200;  // largest value passed to underrunProtect
+    const int32_t LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
 
     typedef uint8_t NIns;
 
