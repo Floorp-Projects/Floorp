@@ -977,11 +977,13 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
           return NS_OK;
         }
 
-        if (style.GetIntValue() != NS_FONT_STYLE_NORMAL) {
+        if (style.GetUnit() != eCSSUnit_Enumerated ||
+            style.GetIntValue() != NS_FONT_STYLE_NORMAL) {
           AppendCSSValueToString(eCSSProperty_font_style, style, aValue);
           aValue.Append(PRUnichar(' '));
         }
-        if (variant.GetIntValue() != NS_FONT_VARIANT_NORMAL) {
+        if (variant.GetUnit() != eCSSUnit_Enumerated ||
+            variant.GetIntValue() != NS_FONT_VARIANT_NORMAL) {
           AppendCSSValueToString(eCSSProperty_font_variant, variant, aValue);
           aValue.Append(PRUnichar(' '));
         }
