@@ -22,6 +22,6 @@ var J = new Y.widget.DS_JSArray( [ ] );
 actual = J instanceof Y.widget.DataSource;
 expect = true;
 
-reportCompare(actual, expect, summary);
+reportCompare(expect, actual, summary);
 
 printStatus("All tests passed!");
