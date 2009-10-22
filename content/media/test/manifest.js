@@ -61,6 +61,7 @@ var gPlayTests = [
   { name:"bug498855-3.ogv", type:"video/ogg", duration:0.2 },
   { name:"bug504644.ogv", type:"video/ogg", duration:1.56 },
   { name:"chain.ogv", type:"video/ogg", duration:Number.NaN },
+  { name:"bug523816.ogv", type:"video/ogg", duration:0.5 },
 
   { name:"bogus.duh", type:"bogus/duh" }
 ];
