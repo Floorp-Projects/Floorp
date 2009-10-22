@@ -56,6 +56,22 @@
 
 namespace nanojit
 {
+#if defined VMCFG_DOUBLE_MSW_FIRST || defined _MSC_VER
+#  undef  NJ_ARM_EABI
+#else
+#  define NJ_ARM_EABI  1
+#endif
+
+// default to ARMv5
+#if !defined(ARM_ARCH)
+#  define ARM_ARCH  5
+#endif
+
+// default to no-thumb2
+#if !defined(ARM_THUMB2)
+#  define ARM_THUMB2  0
+#endif
+
 // only d0-d6 are actually used; we'll use d7 as s14-s15 for i2f/u2f/etc.
 #define NJ_VFP_MAX_REGISTERS            8
 #define NJ_MAX_REGISTERS                (11 + NJ_VFP_MAX_REGISTERS)
@@ -108,9 +124,9 @@ typedef enum {
     FirstFloatReg = D0,
     LastFloatReg = D6,
 
-    FirstReg = 0,
-    LastReg = 22,   // This excludes D7 from the register allocator.
-    UnknownReg = 31,
+    FirstReg = R0,
+    LastReg = D6,
+    UnknownReg = 32,
 
     // special value referring to S14
     FpSingleScratch = 24

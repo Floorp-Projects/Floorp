@@ -927,7 +927,7 @@ namespace nanojit
 
 #ifdef NJ_SOFTFLOAT
         if (!ARM_VFP && (op == LIR_fcall || op == LIR_qcall))
-                op = LIR_callh;
+            op = LIR_callh;
 #endif
 
         NanoAssert(argc <= (int)MAXARGS);
