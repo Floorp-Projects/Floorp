@@ -59,18 +59,8 @@ public:
 
   nsBoxSize* next;
 
-  void Clear();
-  void Add(const nsSize& minSize, 
-           const nsSize& prefSize,
-           const nsSize& maxSize,
-           nscoord ascent,
-           nscoord flex,
-           PRBool aIsHorizontal);
-
-  void Add(const nsMargin& aMargin, PRBool aIsHorizontal);
   void* operator new(size_t sz, nsBoxLayoutState& aState) CPP_THROW_NEW;
   void operator delete(void* aPtr, size_t sz);
-
 };
 
 class nsComputedBoxSize
@@ -83,10 +73,8 @@ public:
   PRBool  resized;
   nsComputedBoxSize* next;
 
-  void Clear();
   void* operator new(size_t sz, nsBoxLayoutState& aState) CPP_THROW_NEW;
   void operator delete(void* aPtr, size_t sz);
-
 };
 
 #define GET_WIDTH(size, isHorizontal) (isHorizontal ? size.width : size.height)
@@ -132,29 +120,28 @@ public:
 protected:
 
 
-  virtual void ComputeChildsNextPosition(nsIBox* aBox,
-                                         nsIBox* aChild, 
-                                         nscoord& aCurX, 
-                                         nscoord& aCurY, 
-                                         nscoord& aNextX, 
-                                         nscoord& aNextY, 
-                                         const nsRect& aChildSize, 
-                                         const nsRect& aContainingRect,
-                                         nscoord childAscent,
-                                         nscoord aMaxAscent);
+  void ComputeChildsNextPosition(nsIBox* aBox,
+                                 nscoord& aCurX, 
+                                 nscoord& aCurY, 
+                                 nscoord& aNextX, 
+                                 nscoord& aNextY, 
+                                 const nsRect& aChildSize, 
+                                 const nsRect& aContainingRect,
+                                 nscoord childAscent,
+                                 nscoord aMaxAscent);
 
-  virtual void ChildResized(nsIBox* aBox,
-                            nsBoxLayoutState& aState, 
-                           nsIBox* aChild,
-                           nsBoxSize* aChildBoxSize, 
-                           nsComputedBoxSize* aChildComputedBoxSize, 
-                           nsBoxSize* aBoxSizes, 
-                           nsComputedBoxSize* aComputedBoxSizes, 
-                           const nsRect& aChildLayoutRect, 
-                           nsRect& aChildActualRect, 
-                           nsRect& aContainingRect, 
-                           PRInt32 aFlexes, 
-                           PRBool& aFinished);
+  void ChildResized(nsIBox* aBox,
+                    nsBoxLayoutState& aState, 
+                    nsIBox* aChild,
+                    nsBoxSize* aChildBoxSize, 
+                    nsComputedBoxSize* aChildComputedBoxSize, 
+                    nsBoxSize* aBoxSizes, 
+                    nsComputedBoxSize* aComputedBoxSizes, 
+                    const nsRect& aChildLayoutRect, 
+                    nsRect& aChildActualRect, 
+                    nsRect& aContainingRect, 
+                    PRInt32 aFlexes, 
+                    PRBool& aFinished);
 
   virtual void ComputeChildSizes(nsIBox* aBox, 
                          nsBoxLayoutState& aState, 
@@ -163,7 +150,7 @@ protected:
                          nsComputedBoxSize*& aComputedBoxSizes);
 
 
-  virtual void PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsBoxSize*& aBoxSizes, nsComputedBoxSize*& aComputedBoxSizes, nscoord& aMinSize, nscoord& aMaxSize, PRInt32& aFlexes);
+  virtual void PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsBoxSize*& aBoxSizes, nscoord& aMinSize, nscoord& aMaxSize, PRInt32& aFlexes);
 
   virtual void InvalidateComputedSizes(nsComputedBoxSize* aComputedBoxSizes);
 
