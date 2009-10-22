@@ -5,7 +5,6 @@
   XUL Widget Test for button
   -->
 <window title="Button Test"
-        onload="setTimeout(test_button, 0);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" 
           src="/MochiKit/packed.js"></script>
@@ -42,27 +41,31 @@ function test_button()
   synthesizeMouseExpectEvent($("two"), 2, 2, {}, $("two"), "!command", "button press command when disabled");
   synthesizeMouseExpectEvent($("two"), 2, 2, {}, $("two"), "click", "button press click when disabled");
 
-  $("one").focus();
-  synthesizeKey("VK_DOWN", { });
-  is(document.activeElement, $("three"), "key cursor down on button");
+  if (navigator.platform.indexOf("Mac") == -1) {
+    $("one").focus();
+    synthesizeKey("VK_DOWN", { });
+    is(document.activeElement, $("three"), "key cursor down on button");
 
-  synthesizeKey("VK_RIGHT", { });
-  is(document.activeElement, $("four"), "key cursor right on button");
-  synthesizeKey("VK_DOWN", { });
-  is(document.activeElement, $("four"), "key cursor down on menu button");
-  $("five").focus();
-  synthesizeKey("VK_DOWN", { });
-  is(document.activeElement, $("five"), "key cursor down on panel button");
+    synthesizeKey("VK_RIGHT", { });
+    is(document.activeElement, $("four"), "key cursor right on button");
+    synthesizeKey("VK_DOWN", { });
+    is(document.activeElement, $("four"), "key cursor down on menu button");
+    $("five").focus();
+    synthesizeKey("VK_DOWN", { });
+    is(document.activeElement, $("five"), "key cursor down on panel button");
 
-  $("three").focus();
-  synthesizeKey("VK_UP", { });
-  is(document.activeElement, $("one"), "key cursor up on button");
+    $("three").focus();
+    synthesizeKey("VK_UP", { });
+    is(document.activeElement, $("one"), "key cursor up on button");
+  }
 
   $("two").focus();
   is(document.activeElement, $("one"), "focus disabled button");
 
   SimpleTest.finish();
 }
+
+SimpleTest.waitForFocus(test_button);
 
 ]]>
 </script>
