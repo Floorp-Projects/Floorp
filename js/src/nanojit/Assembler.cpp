@@ -1460,13 +1460,9 @@ namespace nanojit
      */
     void Assembler::emitJumpTable(SwitchInfo* si, NIns* target)
     {
-        underrunProtect(si->count * sizeof(NIns*) + 20);
-        _nIns = reinterpret_cast<NIns*>(uintptr_t(_nIns) & ~(sizeof(NIns*) - 1));
-        for (uint32_t i = 0; i < si->count; ++i) {
-            _nIns = (NIns*) (((intptr_t) _nIns) - sizeof(NIns*));
-            *(NIns**) _nIns = target;
-        }
-        si->table = (NIns**) _nIns;
+        si->table = (NIns **) alloc.alloc(si->count * sizeof(NIns*));
+        for (uint32_t i = 0; i < si->count; ++i)
+            si->table[i] = target;
     }
 
     void Assembler::assignSavedRegs()
