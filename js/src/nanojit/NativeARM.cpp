@@ -45,21 +45,7 @@
 extern "C" bool blx_lr_broken();
 #endif
 
-#if defined(AVMPLUS_LINUX)
-#include <signal.h>
-#include <setjmp.h>
-#include <asm/unistd.h>
-extern "C" void __clear_cache(void *BEG, void *END);
-#endif
-
-// assume EABI, except under CE
-#ifdef UNDER_CE
-#undef NJ_ARM_EABI
-#else
-#define NJ_ARM_EABI
-#endif
-
-#ifdef FEATURE_NANOJIT
+#if defined(FEATURE_NANOJIT) && defined(NANOJIT_ARM)
 
 namespace nanojit
 {
@@ -762,8 +748,8 @@ Assembler::asm_regarg(ArgSize sz, LInsp p, Register r)
 void
 Assembler::asm_stkarg(LInsp arg, int stkd)
 {
-    Reservation*    argRes = getresv(arg);
-    bool            isQuad = arg->isQuad();
+    Reservation* argRes = getresv(arg);
+    bool isQuad = arg->isQuad();
 
     if (argRes && (argRes->reg != UnknownReg)) {
         // The argument resides somewhere in registers, so we simply need to
@@ -817,9 +803,9 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
 void
 Assembler::asm_call(LInsp ins)
 {
-    const CallInfo*     call = ins->callInfo();
-    ArgSize             sizes[MAXARGS];
-    uint32_t            argc = call->get_sizes(sizes);
+    const CallInfo* call = ins->callInfo();
+    ArgSize sizes[MAXARGS];
+    uint32_t argc = call->get_sizes(sizes);
     bool indirect = call->isIndirect();
 
     // If we aren't using VFP, assert that the LIR operation is an integer
@@ -1127,6 +1113,7 @@ Assembler::asm_load64(LInsp ins)
         // Either VFP is not available or the result needs to go into memory;
         // in either case, VFP instructions are not required. Note that the
         // result will never be loaded into registers if VFP is not available.
+        NanoAssert(resv->reg == UnknownReg);
         NanoAssert(d != 0);
 
         // Check that the offset is 8-byte (64-bit) aligned.
