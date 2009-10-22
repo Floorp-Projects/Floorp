@@ -166,6 +166,30 @@ struct nsCSSRendering {
   static const nsStyleBackground* FindRootFrameBackground(nsIFrame* aForFrame);
 
   /**
+   * Returns background style information for the canvas.
+   *
+   * @param aForFrame
+   *   the frame used to represent the canvas, in the CSS sense (i.e.
+   *   nsCSSRendering::IsCanvasFrame(aForFrame) must be true)
+   * @param aRootElementFrame
+   *   the frame representing the root element of the document
+   * @param aBackground
+   *   contains background style information for the canvas on return
+   */
+  static const nsStyleBackground*
+  FindCanvasBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame)
+  {
+    NS_ABORT_IF_FALSE(IsCanvasFrame(aForFrame), "not a canvas frame");
+    if (aRootElementFrame)
+      return FindRootFrameBackground(aRootElementFrame);
+
+    // This should always give transparent, so we'll fill it in with the
+    // default color if needed.  This seems to happen a bit while a page is
+    // being loaded.
+    return aForFrame->GetStyleBackground();
+  }
+
+  /**
    * Find a style context containing a non-transparent background,
    * for various table-related and HR-related backwards-compatibility hacks.
    * This function will also stop if it finds a -moz-appearance value, as
