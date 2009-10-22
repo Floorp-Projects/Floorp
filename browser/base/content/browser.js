@@ -7064,6 +7064,14 @@ var LightWeightThemeWebInstaller = {
   handleEvent: function (event) {
     switch (event.type) {
       case "InstallBrowserTheme":
+      case "PreviewBrowserTheme":
+      case "ResetBrowserThemePreview":
+        // ignore requests from background tabs
+        if (event.target.ownerDocument.defaultView.top != content)
+          return;
+    }
+    switch (event.type) {
+      case "InstallBrowserTheme":
         this._installRequest(event);
         break;
       case "PreviewBrowserTheme":
@@ -7071,6 +7079,10 @@ var LightWeightThemeWebInstaller = {
         break;
       case "ResetBrowserThemePreview":
         this._resetPreview(event);
+        break;
+      case "pagehide":
+      case "TabSelect":
+        this._resetPreview();
         break;
     }
   },
@@ -7164,6 +7176,7 @@ var LightWeightThemeWebInstaller = {
       });
   },
 
+  _previewWindow: null,
   _preview: function (event) {
     if (!this._isAllowed(event.target))
       return;
@@ -7172,12 +7185,23 @@ var LightWeightThemeWebInstaller = {
     if (!data)
       return;
 
+    this._resetPreview();
+
+    this._previewWindow = event.target.ownerDocument.defaultView;
+    this._previewWindow.addEventListener("pagehide", this, true);
+    gBrowser.tabContainer.addEventListener("TabSelect", this, false);
+
     this._manager.previewTheme(data);
   },
 
   _resetPreview: function (event) {
-    if (!this._isAllowed(event.target))
+    if (!this._previewWindow ||
+        event && !this._isAllowed(event.target))
       return;
+
+    this._previewWindow.removeEventListener("pagehide", this, true);
+    this._previewWindow = null;
+    gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
 
     this._manager.resetPreview();
   },
