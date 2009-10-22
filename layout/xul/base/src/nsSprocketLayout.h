@@ -50,7 +50,6 @@ public:
   nscoord pref;
   nscoord min;
   nscoord max;
-  nscoord ascent;
   nscoord flex;
   nscoord left;
   nscoord right;
@@ -121,14 +120,11 @@ protected:
 
 
   void ComputeChildsNextPosition(nsIBox* aBox,
-                                 nscoord& aCurX, 
-                                 nscoord& aCurY, 
+                                 const nscoord& aCurX, 
+                                 const nscoord& aCurY, 
                                  nscoord& aNextX, 
                                  nscoord& aNextY, 
-                                 const nsRect& aChildSize, 
-                                 const nsRect& aContainingRect,
-                                 nscoord childAscent,
-                                 nscoord aMaxAscent);
+                                 const nsRect& aChildSize);
 
   void ChildResized(nsIBox* aBox,
                     nsBoxLayoutState& aState, 
@@ -142,6 +138,10 @@ protected:
                     nsRect& aContainingRect, 
                     PRInt32 aFlexes, 
                     PRBool& aFinished);
+
+  void AlignChildren(nsIBox* aBox,
+                     nsBoxLayoutState& aState,
+                     PRBool* aNeedsRedraw);
 
   virtual void ComputeChildSizes(nsIBox* aBox, 
                          nsBoxLayoutState& aState, 
