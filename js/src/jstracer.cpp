@@ -151,6 +151,9 @@ static const char tagChar[]  = "OIDISIBI";
 /* Max global object size. */
 #define MAX_GLOBAL_SLOTS 4096
 
+/* Max number of slots in a table-switch. */
+#define MAX_TABLE_SWITCH 256
+
 /* Max memory needed to rebuild the interpreter stack when falling off trace. */
 #define MAX_INTERP_STACK_BYTES                                                \
     (MAX_NATIVE_STACK_SLOTS * sizeof(jsval) +                                 \
@@ -8324,11 +8327,8 @@ TraceRecorder::tableswitch()
         high = GET_JUMPX_OFFSET(pc);
     }
 
-    /*
-     * Really large tables won't fit in a page. This is a conservative check.
-     * If it matters in practice we need to go off-page.
-     */
-    if ((high + 1 - low) * sizeof(intptr_t*) + 128 > (unsigned) LARGEST_UNDERRUN_PROT)
+    /* Cap maximum table-switch size for modesty. */
+    if ((high + 1 - low) > MAX_TABLE_SWITCH)
         return InjectStatus(switchop());
 
     /* Generate switch LIR. */
