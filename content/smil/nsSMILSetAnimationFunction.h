@@ -74,7 +74,9 @@ public:
   virtual PRBool UnsetAttr(nsIAtom* aAttribute);
 
 protected:
-  virtual nsSMILAnimationFunction::nsSMILCalcMode GetCalcMode() const;
+  NS_OVERRIDE virtual nsresult
+    InterpolateResult(const nsSMILValueArray& aValues,
+                      nsSMILValue& aResult, nsSMILValue& aBaseValue);
 
   virtual PRBool             HasAttr(nsIAtom* aAttName) const;
   virtual const nsAttrValue* GetAttr(nsIAtom* aAttName) const;
