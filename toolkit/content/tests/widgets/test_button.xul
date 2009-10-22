@@ -60,7 +60,7 @@ function test_button()
   }
 
   $("two").focus();
-  is(document.activeElement, $("one"), "focus disabled button");
+  ok(document.activeElement != $("two"), "focus disabled button");
 
   SimpleTest.finish();
 }
