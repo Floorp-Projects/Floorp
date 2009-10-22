@@ -109,6 +109,8 @@
           <xul:label class="hide-on-select download-retry-failed normal" value="&downloadFailed.label;"/>
           <xul:button class="show-on-select download-retry" label="&downloadRetry.label;"
                       oncommand="DownloadsView.retryDownload(document.getBindingParent(this));"/>
+          <xul:button class="show-on-select download-remove" label="&downloadRemove.label;"
+                      oncommand="DownloadsView.removeDownload(document.getBindingParent(this));"/>
         </xul:hbox>
       </xul:vbox>
     </content>
