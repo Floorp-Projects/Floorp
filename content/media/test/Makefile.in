@@ -144,6 +144,7 @@ _TEST_FILES += \
 		bug520500.ogg \
 		bug520908.ogv \
 		bug520908.ogv^headers^ \
+		bug523816.ogv \
 		chain.ogv \
 		dirac.ogg \
 		seek.ogv \
