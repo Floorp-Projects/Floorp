@@ -786,6 +786,7 @@ Svc.Prefs = new Preferences(PREFS_BRANCH);
  ["Observer", "@mozilla.org/observer-service;1", "nsIObserverService"],
  ["Private", "@mozilla.org/privatebrowsing;1", "nsIPrivateBrowsingService"],
  ["Prompt", "@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService"],
+ ["Script", "@mozilla.org/moz/jssubscript-loader;1", "mozIJSSubScriptLoader"],
  ["Version", "@mozilla.org/xpcom/version-comparator;1", "nsIVersionComparator"],
  ["WinMediator", "@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator"],
  ["WinWatcher", "@mozilla.org/embedcomp/window-watcher;1", "nsIWindowWatcher"],
