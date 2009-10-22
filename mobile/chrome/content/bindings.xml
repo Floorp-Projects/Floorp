@@ -499,6 +499,10 @@
 
             this.updateFields();
 
+            let focusedElement = document.commandDispatcher.focusedElement;
+            if (focusedElement)
+              focusedElement.blur();
+
             let event = document.createEvent("Events");
             event.initEvent("close", true, false);
             this.dispatchEvent(event);
