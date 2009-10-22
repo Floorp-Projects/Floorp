@@ -5,7 +5,7 @@ script regress-101964.js
 script regress-107138.js
 fails script regress-108440.js
 script regress-154338.js
-skip-if(xulRuntime.OS=="Linux"&&XPCOMABI.match(/x86_64/)) script regress-157652.js # No test results
+skip-if(xulRuntime.OS=="Linux"&&xulRuntime.XPCOMABI.match(/x86_64/)) script regress-157652.js # No test results
 script regress-178722.js
 script regress-255555.js
 script regress-299644.js
@@ -14,7 +14,7 @@ script regress-310351.js
 script regress-311515.js
 script regress-313153.js
 script regress-315509-01.js
-skip-if(xulRuntime.OS=="Linux"&&XPCOMABI.match(/x86_64/)) script regress-330812.js # No test results
+skip-if(xulRuntime.OS=="Linux"&&xulRuntime.XPCOMABI.match(/x86_64/)) script regress-330812.js # No test results
 script regress-345961.js
 script regress-348810.js
 script regress-350256-01.js
