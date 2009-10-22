@@ -1032,20 +1032,6 @@ nsCSSRendering::FindRootFrameBackground(nsIFrame* aForFrame)
   return FindRootFrame(aForFrame)->GetStyleBackground();
 }
 
-inline void
-FindCanvasBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
-                     const nsStyleBackground** aBackground)
-{
-  if (aRootElementFrame) {
-    *aBackground = nsCSSRendering::FindRootFrameBackground(aRootElementFrame);
-  } else {
-    // This should always give transparent, so we'll fill it in with the
-    // default color if needed.  This seems to happen a bit while a page is
-    // being loaded.
-    *aBackground = aForFrame->GetStyleBackground();
-  }
-}
-
 inline PRBool
 FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
                       const nsStyleBackground** aBackground)
@@ -1097,7 +1083,7 @@ nsCSSRendering::FindBackground(nsPresContext* aPresContext,
   nsIFrame* rootElementFrame =
     aPresContext->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
   if (IsCanvasFrame(aForFrame)) {
-    FindCanvasBackground(aForFrame, rootElementFrame, aBackground);
+    *aBackground = FindCanvasBackground(aForFrame, rootElementFrame);
     return PR_TRUE;
   } else {
     return FindElementBackground(aForFrame, rootElementFrame, aBackground);
