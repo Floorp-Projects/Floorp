@@ -4,7 +4,6 @@
 #   - Stacking of additive=[sum|replace] animations
 #   - Stacking of additive animations, w/ "hybrid case of to-animation"
 #   - Repeating animations, w/ & w/out accumulate=sum
-#   - <set>
 #   - Interpolation between different units (e.g. font-size attr, 3em to 50px)
 #   - Correct behavior for em/ex font-size animations, when context changes
 #      (with change happening 1. when completed/frozen and 2. when animating)
@@ -17,6 +16,9 @@
 
 # animation sort-order tests
 include sort/reftest.list
+
+# set tests
+include set/reftest.list
 
 # style tests
 include style/reftest.list
