@@ -55,12 +55,12 @@ WeaveService.prototype = {
     case "app-startup":
       let os = Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService);
-      os.addObserver(this, "sessionstore-windows-restored", true);
+      os.addObserver(this, "final-ui-startup", true);
       break;
    /* The following event doesn't exist on Fennec; for Fennec loading, see
     * fennec-weave-overlay.js.
     */
-    case "sessionstore-windows-restored":
+    case "final-ui-startup":
       Cu.import("resource://weave/service.js");
       Weave.Service.onStartup();
       break;

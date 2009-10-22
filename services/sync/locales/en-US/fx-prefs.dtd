@@ -1,0 +1,57 @@
+<!ENTITY weavePrefPane.label        "Services">
+<!ENTITY accountSetupTitle.label    "Account Setup">
+
+<!ENTITY serverType.main.label      "Mozilla Weave Server">
+<!ENTITY serverType.custom.label    "Use a custom server">
+
+<!ENTITY signIn.username.label      "User Name">
+<!ENTITY signIn.password.label      "Password">
+<!ENTITY signIn.serverURL.label     "Server URL">
+
+<!ENTITY setup.confirmPassword.label  "Confirm Password">
+<!ENTITY setup.emailAddress.label     "Email Address">
+
+<!ENTITY setup.generalTitle.label     "Create your Weave Account">
+
+<!ENTITY setup.page1Title.label     "&setup.generalTitle.label; - Page 1 of 4">
+<!ENTITY setup.page2Title.label     "&setup.generalTitle.label; - Page 2 of 4">
+<!ENTITY setup.page3Title.label     "&setup.generalTitle.label; - Page 3 of 4">
+<!ENTITY setup.page4Title.label     "&setup.generalTitle.label; - Page 4 of 4">
+
+<!ENTITY signIn.button.label        "Sign In">
+
+<!ENTITY createAccountButton.label      "Create Mozilla Weave Account">
+<!ENTITY createAccountButton.accesskey  "C">
+
+
+<!ENTITY goBack.label                 "Back">
+<!ENTITY continue.label               "Continue">
+
+<!ENTITY passphraseGroupbox.label     "Enter Secret Phrase">
+<!ENTITY passphraseDesc.label         "Please enter your secret phrase.  Remember that this is separate from your account password and is never sent over the Internet.">
+
+<!ENTITY accountGroupboxCaption.label "Mozilla Weave Account">
+
+<!ENTITY connectedAs.label            "Connected as:">
+
+<!ENTITY manageAccount.label          "Manage Account">
+
+<!ENTITY changePassword.label         "Change Password">
+<!ENTITY recoverPassword.label        "Recover Password">
+<!ENTITY changePassphrase.label       "Change Secret Phrase">
+<!ENTITY startOver.label              "Start Over">
+
+<!ENTITY syncPrefsCaption.label       "Browser Sync">
+
+<!ENTITY syncModeSwitchDesc.label     "Weave will: ">
+
+<!ENTITY syncEverything.label         "Sync Everything">
+<!ENTITY customSync.label             "Use my custom settings">
+
+<!ENTITY syncEverythingDescription.label  "Weave will sync all of your personal data and history using your Weave account.">
+
+<!ENTITY syncItem.bookmarks.label     "Sync Bookmarks">
+<!ENTITY syncItem.tabs.label          "Sync Tabs">
+<!ENTITY syncItem.history.label       "Sync History">
+<!ENTITY syncItem.passwords.label     "Sync Passwords">
+<!ENTITY syncItem.prefs.label         "Sync Preferences">
