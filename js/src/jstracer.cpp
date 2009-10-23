@@ -7475,6 +7475,7 @@ js_InitJIT(JSTraceMonitor *tm)
 #if defined NANOJIT_IA32
         avmplus::AvmCore::config.use_cmov =
             avmplus::AvmCore::config.sse2 = CheckForSSE2();
+        avmplus::AvmCore::config.fixed_esp = true;
 #endif
 #if defined NANOJIT_ARM
 

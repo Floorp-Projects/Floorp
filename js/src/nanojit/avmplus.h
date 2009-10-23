@@ -202,6 +202,8 @@ namespace avmplus {
     // Whether or not we can use SSE2 instructions and conditional moves.
         bool sse2;
         bool use_cmov;
+        // Whether to use a virtual stack pointer
+        bool fixed_esp;
 #endif
 
 #if defined (AVMPLUS_ARM)
