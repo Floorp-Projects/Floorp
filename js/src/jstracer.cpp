@@ -4298,7 +4298,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
         return ARECORD_STOP;
 
     Assembler *assm = tm->assembler;
-    nanojit::compile(assm, fragment verbose_only(, tempAlloc, tm->labels));
+    nanojit::compile(assm, fragment, tempAlloc verbose_only(, tm->labels));
     if (outOfMemory())
         return ARECORD_STOP;
 
