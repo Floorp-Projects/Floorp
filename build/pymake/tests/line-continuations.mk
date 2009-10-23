@@ -4,9 +4,13 @@ VAR = val1 	 \
 VAR2 = val1space\
 val2
 
+VAR3 = val3 \\\
+	cont3
+
 all: otarget test.target
 	test "$(VAR)" = "val1 val2  "
 	test "$(VAR2)" = "val1space val2"
+	test '$(VAR3)' = 'val3 \ cont3'
 	test "hello \
 	  world" = "hello   world"
 	test "hello" = \

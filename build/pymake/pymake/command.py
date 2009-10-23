@@ -90,7 +90,12 @@ class _MakeContext(object):
 
         self.remakecb(True)
 
-    def remakecb(self, remade):
+    def remakecb(self, remade, error=None):
+        if error is not None:
+            print error
+            self.context.defer(self.cb, 2)
+            return
+
         if remade:
             if self.restarts > 0:
                 _log.info("make.py[%i]: Restarting makefile parsing", self.makelevel)
