@@ -3615,9 +3615,6 @@ TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned stackSlots, unsigne
         ImportUnboxedStackSlotVisitor unboxedStackVisitor(*this, sp, offset,
                                                           typeMap);
         VisitStackSlots(unboxedStackVisitor, cx, callDepth);
-    } else {
-        import(sp, nativeStackOffset(&stackval(-1)), &stackval(-1),
-               typeMap[treeInfo->nStackTypes - 1], "retval", 0, cx->fp);
     }
 }
 
@@ -4370,15 +4367,15 @@ class SlotMap : public SlotVisitorBase
     struct SlotInfo
     {
         SlotInfo()
-          : v(NULL), promoteInt(false), lastCheck(TypeCheck_Bad)
+          : vp(NULL), promoteInt(false), lastCheck(TypeCheck_Bad)
         {}
-        SlotInfo(jsval* v, bool promoteInt)
-          : v(v), promoteInt(promoteInt), lastCheck(TypeCheck_Bad), type(getCoercedType(*v))
+        SlotInfo(jsval* vp, bool promoteInt)
+          : vp(vp), promoteInt(promoteInt), lastCheck(TypeCheck_Bad), type(getCoercedType(*vp))
         {}
-        SlotInfo(JSTraceType t)
-          : v(NULL), promoteInt(t == TT_INT32), lastCheck(TypeCheck_Bad), type(t)
+        SlotInfo(jsval* vp, JSTraceType t)
+          : vp(vp), promoteInt(t == TT_INT32), lastCheck(TypeCheck_Bad), type(t)
         {}
-        jsval           *v;
+        jsval           *vp;
         bool            promoteInt;
         TypeCheckResult lastCheck;
         JSTraceType     type;
@@ -4454,7 +4451,13 @@ class SlotMap : public SlotVisitorBase
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
     addSlot(JSTraceType t)
     {
-        slots.add(SlotInfo(t));
+        slots.add(SlotInfo(NULL, t));
+    }
+
+    JS_REQUIRES_STACK JS_ALWAYS_INLINE void
+    addSlot(jsval *vp, JSTraceType t)
+    {
+        slots.add(SlotInfo(vp, t));
     }
 
     JS_REQUIRES_STACK void
@@ -4484,13 +4487,13 @@ class SlotMap : public SlotVisitorBase
         JS_ASSERT(info.lastCheck != TypeCheck_Undemote && info.lastCheck != TypeCheck_Bad);
         if (info.lastCheck == TypeCheck_Promote) {
             JS_ASSERT(info.type == TT_INT32 || info.type == TT_DOUBLE);
-            mRecorder.set(info.v, mRecorder.f2i(mRecorder.get(info.v)));
+            mRecorder.set(info.vp, mRecorder.f2i(mRecorder.get(info.vp)));
         } else if (info.lastCheck == TypeCheck_Demote) {
             JS_ASSERT(info.type == TT_INT32 || info.type == TT_DOUBLE);
-            JS_ASSERT(mRecorder.get(info.v)->isQuad());
+            JS_ASSERT(mRecorder.get(info.vp)->isQuad());
 
             /* Never demote this final i2f. */
-            mRecorder.set(info.v, mRecorder.get(info.v), false, false);
+            mRecorder.set(info.vp, mRecorder.get(info.vp), false, false);
         }
     }
 
@@ -4513,13 +4516,13 @@ class SlotMap : public SlotVisitorBase
             if (!slots[i].promoteInt)
                 return TypeCheck_Undemote;
             /* Looks good, slot is an int32, the last instruction should be promotable. */
-            JS_ASSERT_IF(slots[i].v, isInt32(*slots[i].v) && slots[i].promoteInt);
-            return slots[i].v ? TypeCheck_Promote : TypeCheck_Okay;
+            JS_ASSERT_IF(slots[i].vp, isInt32(*slots[i].vp) && slots[i].promoteInt);
+            return slots[i].vp ? TypeCheck_Promote : TypeCheck_Okay;
           case TT_DOUBLE:
             if (slots[i].type != TT_INT32 && slots[i].type != TT_DOUBLE)
                 return TypeCheck_Bad; /* Not a number? Type mismatch. */
             if (slots[i].promoteInt)
-                return slots[i].v ? TypeCheck_Demote : TypeCheck_Bad;
+                return slots[i].vp ? TypeCheck_Demote : TypeCheck_Bad;
             return TypeCheck_Okay;
           default:
             return slots[i].type == t ? TypeCheck_Okay : TypeCheck_Bad;
