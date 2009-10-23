@@ -143,19 +143,21 @@
     <key id="key_focusURL" key="l" modifiers="accel" command="cmd_openLocation"/>
 
     <!-- scrolling -->
-    <key id="key_pageUp" keycode="VK_UP" command="cmd_scrollPageUp" modifiers="shift"/>
-    <key id="key_pageDown" keycode="VK_DOWN" command="cmd_scrollPageDown" modifiers="shift"/>
+    <key id="key_pageUp" keycode="VK_UP" modifiers="shift" command="cmd_scrollPageUp"/>
+    <key id="key_pageDown" keycode="VK_DOWN" modifiers="shift" command="cmd_scrollPageDown"/>
 
     <!-- misc -->
+    <key id="key_zoomin" keycode="VK_UP" modifiers="accel" command="cmd_zoomin"/>
+    <key id="key_zoomout" keycode="VK_DOWN" modifiers="accel" command="cmd_zoomout"/>
 #ifndef WINCE
     <key id="key_quit" key="q" modifiers="accel" command="cmd_quit"/>
     <key id="key_menu" keycode="VK_F4" command="cmd_menu"/>
     <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
-    <key id="key_zoomin" keycode="VK_F7" command="cmd_zoomin"/>
-    <key id="key_zoomout" keycode="VK_F8" command="cmd_zoomout"/>
+    <key id="key_zoomin2" keycode="VK_F7" command="cmd_zoomin"/>
+    <key id="key_zoomout2" keycode="VK_F8" command="cmd_zoomout"/>
 #else
-    <key id="key_zoomin" keycode="VK_F1" command="cmd_zoomin"/>
-    <key id="key_zoomout" keycode="VK_F2" command="cmd_zoomout"/>
+    <key id="key_zoomin2" keycode="VK_F1" command="cmd_zoomin"/>
+    <key id="key_zoomout2" keycode="VK_F2" command="cmd_zoomout"/>
     <key id="key_quit" keycode="VK_F4" command="cmd_quit"/>
 #endif
 
