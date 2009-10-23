@@ -75,7 +75,7 @@ interface nsIEventListenerService : nsISupports
    * If aEventTarget doesn't have any listeners, this returns null.
    */
   void getListenerInfoFor(in nsIDOMEventTarget aEventTarget,
-                          out unsigned long aCount,
+                          [optional] out unsigned long aCount,
                           [retval, array, size_is(aCount)] out
                             nsIEventListenerInfo aOutArray);
 
@@ -88,7 +88,7 @@ interface nsIEventListenerService : nsISupports
    *       event target chain than what this methods returns.
   */
   void getEventTargetChainFor(in nsIDOMEventTarget aEventTarget,
-                              out unsigned long aCount,
+                              [optional] out unsigned long aCount,
                               [retval, array, size_is(aCount)] out
                                 nsIDOMEventTarget aOutArray);
 };
