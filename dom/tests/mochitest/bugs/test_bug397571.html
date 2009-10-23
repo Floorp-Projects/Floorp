@@ -121,6 +121,17 @@ catch(e) {
 }
 ok(success, "shouldn't throw");
 
+// TEMPORARY workaround for leak bug 524037: send a mouseup event as
+// well so that we don't leak.
+var success = true;
+try {
+   utils.sendMouseEvent("mouseup", 0, 0, 0, 1, 0);
+}
+catch(e) {
+  success = false;
+}
+ok(success, "shouldn't throw");
+
 </script>
 </pre>
 </body>
