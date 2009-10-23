@@ -494,6 +494,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
             break;
           default:
             JS_NOT_REACHED("unknown type");
+            RETURN_STOP_A("unknown type"); 
         }
     }
 
