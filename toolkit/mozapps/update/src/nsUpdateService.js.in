@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -100,15 +100,6 @@ const FILE_LAST_LOG       = "last-update.log";
 const FILE_BACKUP_LOG     = "backup-update.log";
 const FILE_UPDATE_LOCALE  = "update.locale";
 
-const MODE_RDONLY   = 0x01;
-const MODE_WRONLY   = 0x02;
-const MODE_CREATE   = 0x08;
-const MODE_APPEND   = 0x10;
-const MODE_TRUNCATE = 0x20;
-
-const PERMS_FILE      = 0644;
-const PERMS_DIRECTORY = 0755;
-
 const STATE_NONE            = "null";
 const STATE_DOWNLOADING     = "downloading";
 const STATE_PENDING         = "pending";
@@ -134,6 +125,7 @@ var gCanUpdate  = null;
 XPCOMUtils.defineLazyServiceGetter(this, "gPref",
                                    "@mozilla.org/preferences-service;1",
                                    "nsIPrefBranch2");
+
 /**
  * Gets a preference value, handling the case where there is no default.
  * @param   func
@@ -195,6 +187,8 @@ function getObserverService()
 }
 
 #ifdef MOZ_UPDATER
+
+Components.utils.import("resource://gre/modules/FileUtils.jsm");
 
 // shared code for suppressing bad cert dialogs
 XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
@@ -266,37 +260,6 @@ function binaryToHex(input) {
 }
 
 /**
- * Gets the specified directory at the specified hierarchy under a
- * Directory Service key.
- * @param   key
- *          The Directory Service Key to start from
- * @param   pathArray
- *          An array of path components to locate beneath the directory
- *          specified by |key|
- * @return  nsIFile object for the location specified. If the directory
- *          requested does not exist, it is created, along with any
- *          parent directories that need to be created.
- */
-function getDir(key, pathArray) {
-  return getDirInternal(key, pathArray, true, false);
-}
-
-/**
- * Gets the specified directory at the specified hierarchy under a
- * Directory Service key.
- * @param   key
- *          The Directory Service Key to start from
- * @param   pathArray
- *          An array of path components to locate beneath the directory
- *          specified by |key|
- * @return  nsIFile object for the location specified. If the directory
- *          requested does not exist, it is NOT created.
- */
-function getDirNoCreate(key, pathArray) {
-  return getDirInternal(key, pathArray, false, false);
-}
-
-/**
  * Gets the specified directory at the specified hierarchy under the
  * update root directory.
  * @param   pathArray
@@ -307,64 +270,16 @@ function getDirNoCreate(key, pathArray) {
  *          parent directories that need to be created.
  */
 function getUpdateDir(pathArray) {
-  return getDirInternal(KEY_APPDIR, pathArray, true, true);
-}
-
-/**
- * Gets the specified directory at the specified hierarchy under a
- * Directory Service key.
- * @param   key
- *          The Directory Service Key to start from
- * @param   pathArray
- *          An array of path components to locate beneath the directory
- *          specified by |key|
- * @param   shouldCreate
- *          true if the directory hierarchy specified in |pathArray|
- *          should be created if it does not exist,
- *          false otherwise.
- * @param   update
- *          true if finding the update directory,
- *          false otherwise.
- * @return  nsIFile object for the location specified.
- */
-function getDirInternal(key, pathArray, shouldCreate, update) {
-  var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
-                    getService(Ci.nsIProperties);
-  var dir = fileLocator.get(key, Ci.nsIFile);
 #ifdef XP_WIN
 #ifndef WINCE
-  if (update) {
-    try {
-      dir = fileLocator.get(KEY_UPDROOT, Ci.nsIFile);
-    } catch (e) {
-    }
+  try {
+    let dir = FileUtils.getDir(KEY_UPDROOT, pathArray, true);
+    return dir;
+  } catch (e) {
   }
 #endif
 #endif
-  for (var i = 0; i < pathArray.length; ++i) {
-    dir.append(pathArray[i]);
-    if (shouldCreate && !dir.exists())
-      dir.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
-  }
-  return dir;
-}
-
-/**
- * Gets the file at the specified hierarchy under a Directory Service key.
- * @param   key
- *          The Directory Service Key to start from
- * @param   pathArray
- *          An array of path components to locate beneath the directory
- *          specified by |key|. The last item in this array must be the
- *          leaf name of a file.
- * @return  nsIFile object for the file specified. The file is NOT created
- *          if it does not exist, however all required directories along
- *          the way are.
- */
-function getFile(key, pathArray) {
-  var file = getDir(key, pathArray.slice(0, -1));
-  file.append(pathArray[pathArray.length - 1]);
-  return file;
+  return FileUtils.getDir(KEY_APPDIR, pathArray, true);
 }
 
 /**
@@ -381,24 +296,6 @@ function getUpdateFile(pathArray) {
   var file = getUpdateDir(pathArray.slice(0, -1));
   file.append(pathArray[pathArray.length - 1]);
   return file;
-}
-
-/**
- * Closes a Safe Output Stream
- * @param   fos
- *          The Safe Output Stream to close
- */
-function closeSafeOutputStream(fos) {
-  if (fos instanceof Ci.nsISafeOutputStream) {
-    try {
-      fos.finish();
-    }
-    catch (e) {
-      fos.close();
-    }
-  }
-  else
-    fos.close();
 }
 
 /**
@@ -461,7 +358,7 @@ function getUpdatesDir(key) {
   if (!updateDir.exists() && !key) {
     LOG("General", "getUpdatesDir - update directory " + updateDir.path +
         " doesn't exist, creating...");
-    updateDir.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+    updateDir.create(Ci.nsILocalFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   }
   return updateDir;
 }
@@ -601,9 +498,9 @@ function getLocale() {
   if (gLocale)
     return gLocale;
 
-  var localeFile = getFile(KEY_APPDIR, [FILE_UPDATE_LOCALE]);
+  var localeFile = FileUtils.getFile(KEY_APPDIR, [FILE_UPDATE_LOCALE]);
   if (!localeFile.exists())
-    localeFile = getFile(KEY_GRED, [FILE_UPDATE_LOCALE]);
+    localeFile = FileUtils.getFile(KEY_GRED, [FILE_UPDATE_LOCALE]);
 
   if (!localeFile.exists())
     throw Components.Exception(FILE_UPDATE_LOCALE + " file doesn't exist in " +
@@ -693,31 +590,14 @@ ArrayEnumerator.prototype = {
 };
 
 /**
- * Trims a prefix from a string.
- * @param   string
- *          The source string
- * @param   prefix
- *          The prefix to remove.
- * @returns The suffix (string - prefix)
- */
-function stripPrefix(string, prefix) {
-  return string.substr(prefix.length);
-}
-
-/**
  * Writes a string of text to a file.  A newline will be appended to the data
  * written to the file.  This function only works with ASCII text.
  */
 function writeStringToFile(file, text) {
-  var fos = Cc["@mozilla.org/network/safe-file-output-stream;1"].
-            createInstance(Ci.nsIFileOutputStream);
-  var modeFlags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
-  if (!file.exists())
-    file.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-  fos.init(file, modeFlags, PERMS_FILE, 0);
+  var fos = FileUtils.openSafeFileOutputStream(file)
   text += "\n";
   fos.write(text, text.length);
-  closeSafeOutputStream(fos);
+  FileUtils.closeSafeFileOutputStream(fos);
 }
 
 /**
@@ -725,14 +605,13 @@ function writeStringToFile(file, text) {
  * before the result is returned.  This function only works with ASCII text.
  */
 function readStringFromFile(file) {
-  var fis = Cc["@mozilla.org/network/file-input-stream;1"].
-            createInstance(Ci.nsIFileInputStream);
-  var modeFlags = MODE_RDONLY;
   if (!file.exists()) {
     LOG("General", "readStringFromFile - file doesn't exist: " + file.path);
     return null;
   }
-  fis.init(file, modeFlags, PERMS_FILE, 0);
+  var fis = Cc["@mozilla.org/network/file-input-stream;1"].
+            createInstance(Ci.nsIFileInputStream);
+  fis.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
   var sis = Cc["@mozilla.org/scriptableinputstream;1"].
             createInstance(Ci.nsIScriptableInputStream);
   sis.init(fis);
@@ -1617,11 +1496,12 @@ UpdateService.prototype = {
 // On Windows CE skip the write access checks and assume we have write access
 #ifndef WINCE
     try {
+      const NORMAL_FILE_TYPE = Ci.nsILocalFile.NORMAL_FILE_TYPE;
       var updateTestFile = getUpdateFile([FILE_PERMS_TEST]);
       LOG("UpdateService", "canUpdate - testing " + updateTestFile.path);
       if (updateTestFile.exists())
         updateTestFile.remove(false);
-      updateTestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+      updateTestFile.create(NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
       updateTestFile.remove(false);
 #ifdef XP_WIN
       var sysInfo = Cc["@mozilla.org/system-info;1"].
@@ -1689,11 +1569,11 @@ UpdateService.prototype = {
        */
       if (!userCanElevate) {
         // if we're unable to create the test file this will throw an exception.
-        var appDirTestFile = getFile(KEY_APPDIR, [FILE_PERMS_TEST]);
+        var appDirTestFile = FileUtils.getFile(KEY_APPDIR, [FILE_PERMS_TEST]);
         LOG("UpdateService", "canUpdate - testing " + appDirTestFile.path);
         if (appDirTestFile.exists())
           appDirTestFile.remove(false)
-        appDirTestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+        appDirTestFile.create(NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
         appDirTestFile.remove(false);
       }
 #endif //XP_WIN
@@ -1863,7 +1743,7 @@ UpdateManager.prototype = {
     var result = [];
     var fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
                      createInstance(Ci.nsIFileInputStream);
-    fileStream.init(file, MODE_RDONLY, PERMS_FILE, 0);
+    fileStream.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
     try {
       var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                    createInstance(Ci.nsIDOMParser);
@@ -1993,10 +1873,11 @@ UpdateManager.prototype = {
   _writeUpdatesToXMLFile: function UM__writeUpdatesToXMLFile(updates, file) {
     var fos = Cc["@mozilla.org/network/safe-file-output-stream;1"].
               createInstance(Ci.nsIFileOutputStream);
-    var modeFlags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
+    var modeFlags = FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
+                    FileUtils.MODE_TRUNCATE;
     if (!file.exists())
-      file.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-    fos.init(file, modeFlags, PERMS_FILE, 0);
+      file.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+    fos.init(file, modeFlags, FileUtils.PERMS_FILE, 0);
 
     try {
       var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
@@ -2016,7 +1897,7 @@ UpdateManager.prototype = {
     catch (e) {
     }
 
-    closeSafeOutputStream(fos);
+    FileUtils.closeSafeFileOutputStream(fos);
   },
 
   /**
@@ -2050,7 +1931,6 @@ UpdateManager.prototype = {
   classID: Components.ID("{093C2356-4843-4C65-8709-D7DBCBBE7DFB}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateManager])
 };
-
 
 /**
  * Checker
@@ -2364,7 +2244,7 @@ Downloader.prototype = {
 
     var fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
                      createInstance(Ci.nsIFileInputStream);
-    fileStream.init(destination, MODE_RDONLY, PERMS_FILE, 0);
+    fileStream.init(destination, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
 
     try {
       var hash = Cc["@mozilla.org/security/hash;1"].
