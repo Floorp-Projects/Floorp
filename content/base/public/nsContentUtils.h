@@ -1294,7 +1294,7 @@ public:
 
   /**
    * Hide any XUL popups associated with aDocument, including any documents
-   * displayed in child frames.
+   * displayed in child frames. Does nothing if aDocument is null.
    */
   static void HidePopupsInDocument(nsIDocument* aDocument);
 

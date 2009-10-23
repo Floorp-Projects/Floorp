@@ -4601,11 +4601,9 @@ nsContentUtils::ProcessViewportInfo(nsIDocument *aDocument,
 void
 nsContentUtils::HidePopupsInDocument(nsIDocument* aDocument)
 {
-  NS_PRECONDITION(aDocument, "Null document");
-
 #ifdef MOZ_XUL
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm) {
+  if (pm && aDocument) {
     nsCOMPtr<nsISupports> container = aDocument->GetContainer();
     nsCOMPtr<nsIDocShellTreeItem> docShellToHide = do_QueryInterface(container);
     if (docShellToHide)
