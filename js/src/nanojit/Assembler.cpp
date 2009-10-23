@@ -52,53 +52,6 @@
 
 namespace nanojit
 {
-#ifdef NJ_VERBOSE
-    /* A listing filter for LIR, going through backwards.  It merely
-       passes its input to its output, but notes it down too.  When
-       destructed, prints out what went through.  Is intended to be
-       used to print arbitrary intermediate transformation stages of
-       LIR. */
-    class ReverseLister : public LirFilter
-    {
-        Allocator&   _alloc;
-        LirNameMap*  _names;
-        const char*  _title;
-        StringList   _strs;
-        LogControl*  _logc;
-    public:
-        ReverseLister(LirFilter* in, Allocator& alloc,
-                      LirNameMap* names, LogControl* logc, const char* title)
-            : LirFilter(in)
-            , _alloc(alloc)
-            , _names(names)
-            , _title(title)
-            , _strs(alloc)
-            , _logc(logc)
-        { }
-
-        void finish()
-        {
-            _logc->printf("\n");
-            _logc->printf("=== BEGIN %s ===\n", _title);
-            int j = 0;
-            for (Seq<char*>* p = _strs.get(); p != NULL; p = p->tail)
-                _logc->printf("  %02d: %s\n", j++, p->head);
-            _logc->printf("=== END %s ===\n", _title);
-            _logc->printf("\n");
-        }
-
-        LInsp read()
-        {
-            LInsp i = in->read();
-            const char* str = _names->formatIns(i);
-            char* cpy = new (_alloc) char[strlen(str)+1];
-            VMPI_strcpy(cpy, str);
-            _strs.insert(cpy);
-            return i;
-        }
-    };
-#endif
-
     /**
      * Need the following:
      *
@@ -698,7 +651,7 @@ namespace nanojit
         nBeginAssembly();
     }
 
-    void Assembler::assemble(Fragment* frag)
+    void Assembler::assemble(Fragment* frag, LirFilter* reader)
     {
         if (error()) return;
         _thisfrag = frag;
@@ -713,41 +666,9 @@ namespace nanojit
                       else
                           NanoAssert(frag->profFragID == 0); )
 
-        // Used for debug printing, if needed
-        verbose_only(
-        ReverseLister *pp_init = NULL;
-        ReverseLister *pp_after_sf = NULL;
-        )
-
-        // set up backwards pipeline: assembler -> StackFilter -> LirReader
-        LirReader bufreader(frag->lastIns);
-
-        // Used to construct the pipeline
-        LirFilter* prev = &bufreader;
-
-        // The LIR passes through these filters as listed in this
-        // function, viz, top to bottom.
-
-        // INITIAL PRINTING
-        verbose_only( if (_logc->lcbits & LC_ReadLIR) {
-        pp_init = new (alloc) ReverseLister(prev, alloc, frag->lirbuf->names, _logc,
-                                    "Initial LIR");
-        prev = pp_init;
-        })
-
-        // STACKFILTER
-        StackFilter stackfilter(prev, alloc, frag->lirbuf, frag->lirbuf->sp, frag->lirbuf->rp);
-        prev = &stackfilter;
-
-        verbose_only( if (_logc->lcbits & LC_AfterSF) {
-        pp_after_sf = new (alloc) ReverseLister(prev, alloc, frag->lirbuf->names, _logc,
-                                                "After StackFilter");
-        prev = pp_after_sf;
-        })
-
         _inExit = false;
 
-        gen(prev);
+        gen(reader);
 
         if (!error()) {
             // patch all branches
@@ -766,13 +687,6 @@ namespace nanojit
                 }
             }
         }
-
-        // If we were accumulating debug info in the various ReverseListers,
-        // call finish() to emit whatever contents they have accumulated.
-        verbose_only(
-        if (pp_init)        pp_init->finish();
-        if (pp_after_sf)    pp_after_sf->finish();
-        )
     }
 
     void Assembler::endAssembly(Fragment* frag)
