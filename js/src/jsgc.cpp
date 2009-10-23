@@ -619,13 +619,22 @@ RemoveChunkFromList(JSRuntime *rt, JSGCChunkInfo *ci)
 }
 
 static JSGCArenaInfo *
-NewGCArena(JSRuntime *rt)
+NewGCArena(JSContext *cx)
 {
     jsuword chunk;
     JSGCArenaInfo *a;
 
-    if (rt->gcBytes >= rt->gcMaxBytes)
-        return NULL;
+    JSRuntime *rt = cx->runtime;
+    if (rt->gcBytes >= rt->gcMaxBytes) {
+        /*
+         * FIXME bug 524051 We cannot run a last-ditch GC on trace for now, so
+         * as a workaround we allow to breach the max bytes limit here and
+         * schedule the GC later.
+         */
+        if (!JS_ON_TRACE(cx))
+            return NULL;
+        js_TriggerGC(cx, true);
+    }
 
     JSGCChunkInfo *ci;
     uint32 i;
@@ -1443,7 +1452,7 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
             }
         }
 
-        a = NewGCArena(rt);
+        a = NewGCArena(cx);
         if (a)
             break;
         if (!canGC) {
@@ -1667,7 +1676,7 @@ RefillDoubleFreeList(JSContext *cx)
                 return list;
             JS_LOCK_GC(rt);
         }
-        a = NewGCArena(rt);
+        a = NewGCArena(cx);
         if (a)
             break;
         if (!canGC) {
