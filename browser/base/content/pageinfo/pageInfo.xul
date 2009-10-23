@@ -119,7 +119,7 @@
       <radio id="generalTab"  label="&generalTab;"  accesskey="&generalTab.accesskey;"
            oncommand="showTab('general');"/>
       <radio id="mediaTab"    label="&mediaTab;"    accesskey="&mediaTab.accesskey;"
-           oncommand="showTab('media'); ensureSelection(gImageView)" hidden="true"/>
+           oncommand="showTab('media');" hidden="true"/>
       <radio id="feedTab"     label="&feedTab;"     accesskey="&feedTab.accesskey;"
            oncommand="showTab('feed');" hidden="true"/>
       <radio id="permTab"     label="&permTab;"     accesskey="&permTab.accesskey;"
