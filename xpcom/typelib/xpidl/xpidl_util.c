@@ -711,14 +711,14 @@ verify_method_declaration(IDL_tree method_tree)
 
         /*
          * confirm that once an optional argument is used, all remaining
-         * arguments are marked as optional
+         * arguments are marked as optional or retval.
          */
         if (IDL_tree_property_get(simple_decl, "optional") != NULL) {
             hasoptional = PR_TRUE;
         }
-        else if (hasoptional) {
+        else if (hasoptional && IDL_tree_property_get(simple_decl, "retval") == NULL) {
             IDL_tree_error(method_tree,
-                           "non-optional parameter used after one marked [optional]");
+                           "non-optional non-retval parameter used after one marked [optional]");
                 return FALSE;
         }
 
