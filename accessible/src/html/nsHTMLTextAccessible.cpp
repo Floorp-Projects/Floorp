@@ -199,9 +199,10 @@ nsHTMLLabelAccessible::GetRoleInternal(PRUint32 *aRole)
 // nsHTMLLIAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLLIAccessible::nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell, 
-                                       const nsAString& aBulletText):
-  nsLinkableAccessible(aDOMNode, aShell)
+nsHTMLLIAccessible::
+  nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell, 
+                     const nsAString& aBulletText):
+  nsHyperTextAccessibleWrap(aDOMNode, aShell)
 {
   if (!aBulletText.IsEmpty()) {
     mBulletAccessible = new nsHTMLListBulletAccessible(mDOMNode, mWeakShell, 
@@ -211,6 +212,8 @@ nsHTMLLIAccessible::nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* a
   }
 }
 
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLLIAccessible, nsHyperTextAccessible)
+
 nsresult
 nsHTMLLIAccessible::Shutdown()
 {
@@ -219,7 +222,7 @@ nsHTMLLIAccessible::Shutdown()
     mBulletAccessible->Shutdown();
   }
 
-  nsresult rv = nsLinkableAccessible::Shutdown();
+  nsresult rv = nsHyperTextAccessibleWrap::Shutdown();
   mBulletAccessible = nsnull;
   return rv;
 }
@@ -234,7 +237,8 @@ nsHTMLLIAccessible::GetRoleInternal(PRUint32 *aRole)
 nsresult
 nsHTMLLIAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsAccessibleWrap::GetStateInternal(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetStateInternal(aState,
+                                                            aExtraState);
   NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   *aState |= nsIAccessibleStates::STATE_READONLY;
@@ -350,6 +354,8 @@ nsHTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLListAccessible
 ////////////////////////////////////////////////////////////////////////////////
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLListAccessible, nsHyperTextAccessible)
 
 nsresult
 nsHTMLListAccessible::GetRoleInternal(PRUint32 *aRole)

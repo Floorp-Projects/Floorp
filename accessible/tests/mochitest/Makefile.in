@@ -68,6 +68,7 @@ _TEST_FILES =\
 		states.js \
 		table.js \
 		value.js \
+		test_actions.html \
 		test_actions.xul \
 		test_actions_anchors.html \
 		test_actions_aria.html \

@@ -160,7 +160,7 @@
 #define IF_DEBUG_CC_ONLY_PARAM(_p)
 #endif
 
-#define DEFAULT_SHUTDOWN_COLLECTIONS 10
+#define DEFAULT_SHUTDOWN_COLLECTIONS 5
 #ifdef DEBUG_CC
 #define SHUTDOWN_COLLECTIONS(params) params.mShutdownCollections
 #else
