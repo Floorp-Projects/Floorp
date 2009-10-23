@@ -301,6 +301,7 @@ js_PutArguments(JSContext *cx, JSObject *argsobj, jsval *args)
 {
     JS_ASSERT(js_GetArgsPrivateNative(argsobj));
     PutArguments(cx, argsobj, args);
+    argsobj->setPrivate(NULL);
     return true;
 }
 
@@ -509,7 +510,7 @@ ArgGetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 #ifdef JS_TRACER
             js_ArgsPrivateNative *argp = js_GetArgsPrivateNative(obj);
             if (argp) {
-                if (js_NativeToValue(cx, *vp, (JSTraceType) 1, &argp->argv[arg]))
+                if (js_NativeToValue(cx, *vp, argp->typemap()[arg], &argp->argv[arg]))
                     return true;
                 js_LeaveTrace(cx);
                 return false;
