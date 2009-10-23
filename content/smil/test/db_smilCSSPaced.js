@@ -198,6 +198,22 @@ var gPacedBundles =
                           }),
     ])
   ),
+  new TestcaseBundle(gPropList.font_size_adjust, [
+    new AnimTestcasePaced("0.2; 0.6; 0.8",
+                          { comp0:   "0.2",
+                            comp1_6: "0.3",
+                            comp1_3: "0.4",
+                            comp2_3: "0.6",
+                            comp1:   "0.8"
+                          }),
+    new AnimTestcasePaced("none; none; 0.5",
+                          { comp0:   "none",
+                            comp1_6: "none",
+                            comp1_3: "none",
+                            comp2_3: "0.5",
+                            comp1:   "0.5"
+                          }),
+  ]),
   new TestcaseBundle(gPropList.font_family, [
     // Sanity check: 'font-family' isn't interpolatable.  It should end up
     // ignoring the calcMode="paced" and falling into discrete-mode.

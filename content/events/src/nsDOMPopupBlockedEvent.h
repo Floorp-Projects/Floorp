@@ -43,8 +43,8 @@
 #include "nsDOMEvent.h"
 #include "nsIURI.h"
 
-class nsDOMPopupBlockedEvent : public nsIDOMPopupBlockedEvent,
-                               public nsDOMEvent
+class nsDOMPopupBlockedEvent : public nsDOMEvent,
+                               public nsIDOMPopupBlockedEvent
 {
 public:
 

@@ -2085,9 +2085,10 @@ function BrowserViewSourceOfDocument(aDocument)
 
 // doc - document to use for source, or null for this window's document
 // initialTab - name of the initial tab to display, or null for the first tab
-function BrowserPageInfo(doc, initialTab)
+// imageUrl - url of an image to load in the Media Tab of the Page Info window; can be null/omitted
+function BrowserPageInfo(doc, initialTab, imageUrl)
 {
-  var args = {doc: doc, initialTab: initialTab};
+  var args = {doc: doc, initialTab: initialTab, imageUrl: imageUrl};
   return toOpenDialogByTypeAndUrl("Browser:page-info",
                                   doc ? doc.location : window.content.document.location,
                                   "chrome://browser/content/pageinfo/pageInfo.xul",
@@ -7064,6 +7065,14 @@ var LightWeightThemeWebInstaller = {
   handleEvent: function (event) {
     switch (event.type) {
       case "InstallBrowserTheme":
+      case "PreviewBrowserTheme":
+      case "ResetBrowserThemePreview":
+        // ignore requests from background tabs
+        if (event.target.ownerDocument.defaultView.top != content)
+          return;
+    }
+    switch (event.type) {
+      case "InstallBrowserTheme":
         this._installRequest(event);
         break;
       case "PreviewBrowserTheme":
@@ -7071,6 +7080,10 @@ var LightWeightThemeWebInstaller = {
         break;
       case "ResetBrowserThemePreview":
         this._resetPreview(event);
+        break;
+      case "pagehide":
+      case "TabSelect":
+        this._resetPreview();
         break;
     }
   },
@@ -7164,6 +7177,7 @@ var LightWeightThemeWebInstaller = {
       });
   },
 
+  _previewWindow: null,
   _preview: function (event) {
     if (!this._isAllowed(event.target))
       return;
@@ -7172,12 +7186,23 @@ var LightWeightThemeWebInstaller = {
     if (!data)
       return;
 
+    this._resetPreview();
+
+    this._previewWindow = event.target.ownerDocument.defaultView;
+    this._previewWindow.addEventListener("pagehide", this, true);
+    gBrowser.tabContainer.addEventListener("TabSelect", this, false);
+
     this._manager.previewTheme(data);
   },
 
   _resetPreview: function (event) {
-    if (!this._isAllowed(event.target))
+    if (!this._previewWindow ||
+        event && !this._isAllowed(event.target))
       return;
+
+    this._previewWindow.removeEventListener("pagehide", this, true);
+    this._previewWindow = null;
+    gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
 
     this._manager.resetPreview();
   },

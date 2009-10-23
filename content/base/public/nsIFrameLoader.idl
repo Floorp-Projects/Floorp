@@ -84,13 +84,16 @@ interface nsIFrameLoader : nsISupports
   [noscript] void updatePositionAndSize(in nsIFrame aIFrame);
 };
 
-[scriptable, uuid(641c2d90-4ada-4367-bdb1-80831614161d)]
+native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
+
+[scriptable, uuid(8f3b12a0-35ae-4e0d-9152-8e0d7e49d446)]
 interface nsIFrameLoaderOwner : nsISupports
 {
   /**
    * The frame loader owned by this nsIFrameLoaderOwner
    */
   readonly attribute nsIFrameLoader frameLoader;
+  [noscript, notxpcom] alreadyAddRefed_nsFrameLoader GetFrameLoader();
 
   /**
    * Swap frame loaders with the given nsIFrameLoaderOwner.  This may

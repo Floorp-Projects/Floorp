@@ -138,7 +138,7 @@ const Ci = Components.interfaces;
 // are useful for support and won't compromise the user's privacy.  Note that
 // entries are *prefixes*: for example, "accessibility." applies to all prefs
 // under the "accessibility.*" branch.
-const Whitelist = [
+const PREFS_WHITELIST = [
   "accessibility.",
   "browser.fixup.",
   "browser.history_expire_",
@@ -165,10 +165,9 @@ const Whitelist = [
 ];
 
 // The blacklist, unlike the whitelist, is a list of regular expressions.
-const Blacklist = [
-  /^print[.]print_to_filename$/,
-  /^print[.].*[.]print_to_filename$/,
-  /^network[.]proxy[.].*$/
+const PREFS_BLACKLIST = [
+  /^network[.]proxy[.]/,
+  /[.]print_to_filename$/,
 ];
 
 window.onload = function () {
@@ -221,12 +220,12 @@ function populatePreferencesSection() {
   let sortedPrefs = modifiedPrefs.sort(comparePrefs);
 
   let trPrefs = [];
-  for each (let pref in sortedPrefs) {
+  sortedPrefs.forEach(function (pref) {
     let tdName = createElement("td", pref.name, "pref-name");
     let tdValue = createElement("td", formatPrefValue(pref.value), "pref-value");
     let tr = createParentElement("tr", [tdName, tdValue]);
     trPrefs.push(tr);
-  }
+  });
 
   appendChildren(document.getElementById("prefs-tbody"), trPrefs);
 }
@@ -261,15 +260,15 @@ function getModifiedPrefs() {
 
 function getWhitelistedPrefNames(prefRootBranch) {
   let results = [];
-  for each (let prefStem in Whitelist) {
+  PREFS_WHITELIST.forEach(function (prefStem) {
     let prefNames = prefRootBranch.getChildList(prefStem, {});
     results = results.concat(prefNames);
-  }
+  });
   return results;
 }
 
 function isBlacklisted(prefName) {
-  return Blacklist.some(function (re) {return re.test(prefName);});
+  return PREFS_BLACKLIST.some(function (re) re.test(prefName));
 }
 
 function createParentElement(tagName, childElems) {

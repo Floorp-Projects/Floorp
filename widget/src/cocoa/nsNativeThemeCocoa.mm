@@ -1386,6 +1386,7 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
   NSWindow* win = NativeWindowForFrame(aFrame);
 
   if ([win isKindOfClass:[ToolbarWindow class]] &&
+      ![(ToolbarWindow*)win drawsContentsIntoWindowFrame] &&
       DrawingAtWindowTop(cgContext, [[win contentView] bounds].size.height, inBoxRect.origin.y)) {
     // Consider the titlebar height when calculating the gradient.
     titlebarHeight = [(ToolbarWindow*)win titlebarHeight];

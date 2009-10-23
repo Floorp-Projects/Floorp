@@ -45,9 +45,9 @@
   onload="onLoad();"
   onclose="onClose();"
 >
-<script type="application/x-javascript" src="chrome://global/content/strres.js" />
-<script type="application/x-javascript" src="pippki.js" />
-<script type="application/x-javascript" src="createCertInfo.js" />
+<script type="application/javascript" src="chrome://global/content/strres.js" />
+<script type="application/javascript" src="pippki.js" />
+<script type="application/javascript" src="createCertInfo.js" />
 
 <vbox style="margin: 5px; max-width: 50em;">
 

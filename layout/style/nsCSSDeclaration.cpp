@@ -339,19 +339,15 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
   else if (eCSSUnit_Enumerated == unit) {
     if (eCSSProperty_text_decoration == aProperty) {
       PRInt32 intValue = aValue.GetIntValue();
-      NS_ABORT_IF_FALSE(NS_STYLE_TEXT_DECORATION_NONE != intValue,
-                        "none should be parsed as eCSSUnit_None");
-      PRInt32 mask;
-      for (mask = NS_STYLE_TEXT_DECORATION_UNDERLINE;
-           mask <= NS_STYLE_TEXT_DECORATION_PREF_ANCHORS; 
-           mask <<= 1) {
-        if ((mask & intValue) == mask) {
-          AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, mask), aResult);
-          intValue &= ~mask;
-          if (0 != intValue) { // more left
-            aResult.Append(PRUnichar(' '));
-          }
-        }
+      if (NS_STYLE_TEXT_DECORATION_NONE == intValue) {
+        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
+                           aResult);
+      } else {
+        nsStyleUtil::AppendBitmaskCSSValue(
+          aProperty, intValue,
+          NS_STYLE_TEXT_DECORATION_UNDERLINE,
+          NS_STYLE_TEXT_DECORATION_PREF_ANCHORS,
+          aResult);
       }
     }
     else if (eCSSProperty_azimuth == aProperty) {
@@ -364,14 +360,14 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     }
     else if (eCSSProperty_marks == aProperty) {
       PRInt32 intValue = aValue.GetIntValue();
-      if ((NS_STYLE_PAGE_MARKS_CROP & intValue) != 0) {
-        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PAGE_MARKS_CROP), aResult);
-      }
-      if ((NS_STYLE_PAGE_MARKS_REGISTER & intValue) != 0) {
-        if ((NS_STYLE_PAGE_MARKS_CROP & intValue) != 0) {
-          aResult.Append(PRUnichar(' '));
-        }
-        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PAGE_MARKS_REGISTER), aResult);
+      if (intValue == NS_STYLE_PAGE_MARKS_NONE) {
+        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
+                           aResult);
+      } else {
+        nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
+                                           NS_STYLE_PAGE_MARKS_CROP,
+                                           NS_STYLE_PAGE_MARKS_REGISTER,
+                                           aResult);
       }
     }
     else if (eCSSProperty_transition_property == aProperty) {
@@ -976,16 +972,18 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
         // The font-stretch and font-size-adjust
         // properties are reset by this shorthand property to their
         // initial values, but can't be represented in its syntax.
-        if (stretch != nsCSSValue(eCSSUnit_Normal) ||
-            sizeAdjust != nsCSSValue(eCSSUnit_None)) {
+        if (stretch.GetUnit() != eCSSUnit_Normal ||
+            sizeAdjust.GetUnit() != eCSSUnit_None) {
           return NS_OK;
         }
 
-        if (style.GetUnit() != eCSSUnit_Normal) {
+        if (style.GetUnit() != eCSSUnit_Enumerated ||
+            style.GetIntValue() != NS_FONT_STYLE_NORMAL) {
           AppendCSSValueToString(eCSSProperty_font_style, style, aValue);
           aValue.Append(PRUnichar(' '));
         }
-        if (variant.GetUnit() != eCSSUnit_Normal) {
+        if (variant.GetUnit() != eCSSUnit_Enumerated ||
+            variant.GetIntValue() != NS_FONT_VARIANT_NORMAL) {
           AppendCSSValueToString(eCSSProperty_font_variant, variant, aValue);
           aValue.Append(PRUnichar(' '));
         }

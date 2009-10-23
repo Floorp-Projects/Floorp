@@ -11141,23 +11141,6 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
     if (OBJ_GET_CLASS(cx, obj) == &js_CallClass)
         return setCallProp(obj, obj_ins, sprop, v_ins, v);
 
-    /*
-     * Setting a function-valued property might need to rebrand the object, so
-     * we emit a call to the method write barrier. There's no need to guard on
-     * this, because functions have distinct trace-type from other values and
-     * branded-ness is implied by the shape, which we've already guarded on.
-     */
-    if (scope->branded() && VALUE_IS_FUNCTION(cx, v) && entry->directHit()) {
-        if (obj == globalObj)
-            RETURN_STOP("can't trace function-valued property set in branded global scope");
-
-        enterDeepBailCall();
-        LIns* args[] = { v_ins, INS_CONSTSPROP(sprop), obj_ins, cx_ins };
-        LIns* ok_ins = lir->insCall(&MethodWriteBarrier_ci, args);
-        guard(false, lir->ins_eq0(ok_ins), OOM_EXIT);
-        leaveDeepBailCall();
-    }
-
     // Find obj2. If entry->adding(), the TAG bits are all 0.
     JSObject* obj2 = obj;
     for (jsuword i = PCVCAP_TAG(entry->vcap) >> PCVCAP_PROTOBITS; i; i--)
@@ -11175,6 +11158,23 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
     JS_ASSERT(scope->object == obj2);
     JS_ASSERT(scope->has(sprop));
     JS_ASSERT_IF(obj2 != obj, sprop->attrs & JSPROP_SHARED);
+
+    /*
+     * Setting a function-valued property might need to rebrand the object, so
+     * we emit a call to the method write barrier. There's no need to guard on
+     * this, because functions have distinct trace-type from other values and
+     * branded-ness is implied by the shape, which we've already guarded on.
+     */
+    if (scope->branded() && VALUE_IS_FUNCTION(cx, v) && entry->directHit()) {
+        if (obj == globalObj)
+            RETURN_STOP("can't trace function-valued property set in branded global scope");
+
+        enterDeepBailCall();
+        LIns* args[] = { v_ins, INS_CONSTSPROP(sprop), obj_ins, cx_ins };
+        LIns* ok_ins = lir->insCall(&MethodWriteBarrier_ci, args);
+        guard(false, lir->ins_eq0(ok_ins), OOM_EXIT);
+        leaveDeepBailCall();
+    }
 
     // Add a property to the object if necessary.
     if (entry->adding()) {
