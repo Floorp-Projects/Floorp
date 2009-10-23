@@ -432,7 +432,7 @@ function MouseModule(owner, browserViewContainer) {
   var self = this;
   this._kinetic = new KineticController(
     function _dragByBound(dx, dy) { return self._dragBy(dx, dy); },
-    function _dragStopBound() { return self._doDragStop(0, 0, 0, true); }
+    function _dragStopBound() { return self._doDragStop(0, 0, true); }
   );
 }
 
@@ -603,8 +603,10 @@ MouseModule.prototype = {
   _doDragStart: function _doDragStart(event) {
     let dragData = this._dragData;
 
+    // addData must be called before setDragStart. Otherwise addData may end kinetic panning and
+    // thus accidentally end the drag we've just begun.
+    this._kinetic.addData(event.screenX, event.screenY);
     dragData.setDragStart(event.screenX, event.screenY);
-    this._kinetic.addData(event.screenX, event.screenY, event.timeStamp);
 
     this._dragger.dragStart(event.clientX, event.clientY, event.target, this._targetScrollInterface);
   },
@@ -614,7 +616,7 @@ MouseModule.prototype = {
    * between the supposed end of drag caused by a mouseup and the real end
    * of drag which happens when KineticController::end() is called.
    */
-  _doDragStop: function _doDragStop(sX, sY, t, kineticStop) {
+  _doDragStop: function _doDragStop(sX, sY, kineticStop) {
     let dragData = this._dragData;
 
     if (!kineticStop) {    // we're not really done, since now it is
@@ -624,7 +626,7 @@ MouseModule.prototype = {
 
       dragData.endDrag();
 
-      this._kinetic.addData(sX, sY, t);
+      this._kinetic.addData(sX, sY);
 
       this._kinetic.start();
     } else {               // now we're done, says our secret 3rd argument
@@ -636,11 +638,11 @@ MouseModule.prototype = {
   /**
    * Update kinetic with new data and drag.
    */
-  _doDragMove: function _doDragMove(sX, sY, t) {
+  _doDragMove: function _doDragMove(sX, sY) {
     let dragData = this._dragData;
     let dX = dragData.sX - sX;
     let dY = dragData.sY - sY;
-    this._kinetic.addData(sX, sY, t);
+    this._kinetic.addData(sX, sY);
     return this._dragBy(dX, dY);
   },
 
@@ -908,7 +910,7 @@ DragData.prototype = {
     let now = Date.now();
     if (now - this._dragStartTime < kMsUntilLock) {
       // Util.dumpLn("*** pre-lock, return no movement");
-      return [this.sX, this.sY];      
+      return [this.sX, this.sY];
     }
     
     // Util.dumpLn("*** this.sX/sY: ", this.sX, ",", this.sY, "   sX/sY: ", sX, ",", sY);
@@ -1095,13 +1097,13 @@ KineticController.prototype = {
     this._reset();
   },
 
-  addData: function addData(sx, sy, t) {
+  addData: function addData(sx, sy) {
     // if we're active, end that move before adding data
     if (this.isActive())
       this.end();
 
     let mbLength = this.momentumBuffer.length;
-    let now = t || Date.now();
+    let now = Date.now();
  
     // avoid adding duplicates which would otherwise slow down the speed
     if (mbLength > 0) {
