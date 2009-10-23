@@ -16,14 +16,14 @@ findbar:-moz-lwtheme {
   border-style: none;
 }
 
-.findbar-container > label {
+label.findbar-find-fast {
   margin: 1px 3px 0 !important;
   color: @scopeBarTitleColor@;
   font-weight: bold;
   text-shadow: @loweredShadow@;
 }
 
-.findbar-container:-moz-lwtheme > label,
+label.findbar-find-fast:-moz-lwtheme,
 .findbar-find-status:-moz-lwtheme {
   color: inherit;
   text-shadow: inherit;
