@@ -1,0 +1,55 @@
+<html>
+
+<head>
+  <title>nsIAccessible actions testing on HTML elements</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/actions.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      var actionsArray = [
+        {
+          ID: "li_clickable",
+          actionName: "click",
+          events: CLICK_EVENTS
+        }
+      ];
+      testActions(actionsArray);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=523789"
+     title="nsHTMLLiAccessible shouldn't be inherited from linkable accessible">
+    Mozilla Bug 523789
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <ul>
+    <li id="li_clickable" onclick="">Clickable list item</li>
+  </ul>
+</body>
+</html>
