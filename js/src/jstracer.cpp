@@ -6579,20 +6579,23 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                       op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETMETHOD ||
                       op == JSOP_SETELEM || op == JSOP_INITELEM ||
                       op == JSOP_INSTANCEOF);
-            const JSCodeSpec& cs = js_CodeSpec[op];
-            regs->sp -= (cs.format & JOF_INVOKE) ? GET_ARGC(regs->pc) + 2 : cs.nuses;
-            regs->sp += cs.ndefs;
-            regs->pc += cs.length;
+
             /*
              * JSOP_SETELEM can be coalesced with a JSOP_POP in the interpeter.
              * Since this doesn't re-enter the recorder, the post-state snapshot
              * is invalid. Fix it up here.
              */
-            if (op == JSOP_SETELEM && (JSOp)*regs->pc == JSOP_POP) {
-                regs->pc += JSOP_POP_LENGTH;
-                JS_ASSERT(js_CodeSpec[JSOP_POP].ndefs == 0 && js_CodeSpec[JSOP_POP].nuses == 1);
-                regs->sp -= 1;
+            if (op == JSOP_SETELEM && JSOp(regs->pc[JSOP_SETELEM_LENGTH]) == JSOP_POP) {
+                regs->sp -= js_CodeSpec[JSOP_SETELEM].nuses;
+                regs->sp += js_CodeSpec[JSOP_SETELEM].ndefs;
+                regs->pc += JSOP_SETELEM_LENGTH;
+                op = JSOP_POP;
             }
+
+            const JSCodeSpec& cs = js_CodeSpec[op];
+            regs->sp -= (cs.format & JOF_INVOKE) ? GET_ARGC(regs->pc) + 2 : cs.nuses;
+            regs->sp += cs.ndefs;
+            regs->pc += cs.length;
             JS_ASSERT_IF(!cx->fp->imacpc,
                          cx->fp->slots + cx->fp->script->nfixed +
                          js_ReconstructStackDepth(cx, cx->fp->script, regs->pc) ==
