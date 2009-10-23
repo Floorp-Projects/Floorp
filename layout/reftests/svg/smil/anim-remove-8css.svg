@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     onload="go()"
+     class="reftest-wait">
+  <!-- In this test, we temporarily remove the animation target, detach
+       its <animate> node, and then reinsert the (now former) animation target.
+       We verify that animation effects are removed from the former target. -->
+  <script>
+    var parent;
+    var rect;
+    function go() {
+      // Seek animation before we start tweaking things, to make sure we've
+      // already started sampling it.
+      document.documentElement.setCurrentTime(0.5);
+
+      var anim = document.getElementById("anim");
+      rect = anim.parentNode;
+      parent = rect.parentNode;
+      parent.removeChild(rect);
+      rect.removeChild(anim);
+
+      setTimeout(reinsert, 50); // Allow time for a sample
+    }
+    function reinsert() {
+      parent.appendChild(rect);
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect x="15" y="15" width="200" height="200" fill="blue"
+        stroke="red" stroke-width="0">
+    <animate id="anim" attributeName="stroke-width"
+             begin="0s" dur="2s" from="25" to="50" fill="freeze"/>
+  </rect>
+</svg>

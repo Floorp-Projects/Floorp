@@ -2787,6 +2787,14 @@ nsGenericHTMLFrameElement::GetFrameLoader(nsIFrameLoader **aFrameLoader)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(already_AddRefed<nsFrameLoader>)
+nsGenericHTMLFrameElement::GetFrameLoader()
+{
+  nsFrameLoader* loader = mFrameLoader;
+  NS_IF_ADDREF(loader);
+  return loader;
+}
+
 NS_IMETHODIMP
 nsGenericHTMLFrameElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner)
 {

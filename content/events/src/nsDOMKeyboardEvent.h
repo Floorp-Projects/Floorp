@@ -42,8 +42,8 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsDOMUIEvent.h"
 
-class nsDOMKeyboardEvent : public nsIDOMKeyEvent,
-                           public nsDOMUIEvent
+class nsDOMKeyboardEvent : public nsDOMUIEvent,
+                           public nsIDOMKeyEvent
 {
 public:
   nsDOMKeyboardEvent(nsPresContext* aPresContext, nsKeyEvent* aEvent);

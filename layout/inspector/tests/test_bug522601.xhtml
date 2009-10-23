@@ -1,0 +1,181 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=522601
+-->
+<head>
+  <title>Test for Bug 522601</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="testBinding">
+      <content><div><children/></div><children includes="span"/></content>
+    </binding>
+  </bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=522601">Mozilla Bug 522601</a>
+<p id="display" style="-moz-binding: url(#testBinding)">
+  <span id="s">This is some text</span>
+  More text
+  <b id="b">Even more <i id="i1">Italic</i>text<i id="i2">And more italic</i></b></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 522601 **/
+SimpleTest.waitForExplicitFinish();
+
+function testFunc(walker, func, expectedNode, str) {
+  var oldCurrent = walker.currentNode;
+  var newNode = walker[func]();
+  is(newNode, expectedNode, "Unexpected node after " + str);
+  is(walker.currentNode, newNode ? newNode : oldCurrent,
+     "Unexpected current node after " + str);
+}
+
+addLoadEvent(function() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var walkerNonAnon =
+    Components.classes["@mozilla.org/inspector/deep-tree-walker;1"]
+              .createInstance(Components.interfaces.inIDeepTreeWalker);
+  walkerNonAnon.init($("display"), NodeFilter.SHOW_ALL);
+  walkerNonAnon.showAnonymousContent = false;
+
+  is(walkerNonAnon.currentNode, $("display"), "Unexpected non-anon root");
+  testFunc(walkerNonAnon, "nextNode", $("s").previousSibling,
+           "step to some text");
+  testFunc(walkerNonAnon, "nextNode", $("s"), "step to span");
+  testFunc(walkerNonAnon, "nextNode", $("s").firstChild, "step to span text");
+  testFunc(walkerNonAnon, "nextNode", $("s").nextSibling, "step to more text");
+  testFunc(walkerNonAnon, "nextNode", $("b"), "step to bold");
+  testFunc(walkerNonAnon, "nextNode", $("b").firstChild, "step to bold text");
+  testFunc(walkerNonAnon, "nextNode", $("i1"), "step to first italic");
+  testFunc(walkerNonAnon, "nextNode", $("i1").firstChild,
+           "step to first italic text");
+  testFunc(walkerNonAnon, "nextNode", $("i1").nextSibling,
+           "step to more bold text");
+  testFunc(walkerNonAnon, "nextNode", $("i2"), "step to second italic");
+  testFunc(walkerNonAnon, "nextNode", $("i2").firstChild,
+           "step to second italic text");
+  testFunc(walkerNonAnon, "nextNode", null, "step past end");
+  testFunc(walkerNonAnon, "parentNode", $("i2"), "step up to second italic");
+  testFunc(walkerNonAnon, "parentNode", $("b"), "step up to bold");
+  testFunc(walkerNonAnon, "nextNode", $("b").firstChild, "step to bold text again");
+  testFunc(walkerNonAnon, "parentNode", $("b"), "step up to bold again");
+  testFunc(walkerNonAnon, "parentNode", $("display"), "step up to display");
+  testFunc(walkerNonAnon, "parentNode", null, "step up past root");
+  testFunc(walkerNonAnon, "firstChild", $("s").previousSibling,
+           "step firstChild to display first child");
+  testFunc(walkerNonAnon, "nextSibling", $("s"),
+           "step nextSibling to span");
+  testFunc(walkerNonAnon, "nextSibling", $("s").nextSibling,
+           "step nextSibling to more text");
+  testFunc(walkerNonAnon, "nextSibling", $("b"), "step nextSibling to bold");
+  testFunc(walkerNonAnon, "nextSibling", null, "step nextSibling past end");
+  testFunc(walkerNonAnon, "previousSibling", $("s").nextSibling,
+           "step previousSibling to more text");
+  testFunc(walkerNonAnon, "previousSibling", $("s"),
+           "step previousSibling to span");
+  testFunc(walkerNonAnon, "previousSibling", $("s").previousSibling,
+           "step previousSibling to display first child");
+  testFunc(walkerNonAnon, "previousSibling", null,
+           "step previousSibling past end");
+
+  // Move the walker over to the end
+  while (walkerNonAnon.nextNode()) { /* do nothing */ }
+  is(walkerNonAnon.currentNode, $("i2").firstChild, "unexpected last node");
+  testFunc(walkerNonAnon, "previousNode", $("i2"), "step back to second italic");
+  testFunc(walkerNonAnon, "previousNode", $("i1").nextSibling,
+           "step back to more bold text");
+  testFunc(walkerNonAnon, "previousNode", $("i1").firstChild,
+           "step back to first italic text");
+  testFunc(walkerNonAnon, "previousNode", $("i1"), "step back to first italic");
+  testFunc(walkerNonAnon, "previousNode", $("b").firstChild,
+           "step back to bold text");
+  testFunc(walkerNonAnon, "previousNode", $("b"), "step back to bold");
+  testFunc(walkerNonAnon, "previousNode", $("s").nextSibling, "step back to more text");
+  testFunc(walkerNonAnon, "previousNode", $("s").firstChild, "step back to span text");
+  testFunc(walkerNonAnon, "previousNode", $("s"), "step back to span");
+  testFunc(walkerNonAnon, "previousNode", $("s").previousSibling,
+           "step back to some text");
+  testFunc(walkerNonAnon, "previousNode", $("display"),
+           "step back to root");
+  testFunc(walkerNonAnon, "previousNode", null,
+           "step back past root");
+
+  var anonDiv = document.getAnonymousNodes($("display"))[0];
+
+  var walkerAnon =
+    Components.classes["@mozilla.org/inspector/deep-tree-walker;1"]
+              .createInstance(Components.interfaces.inIDeepTreeWalker);
+  walkerAnon.showAnonymousContent = true;
+  walkerAnon.init($("display"), NodeFilter.SHOW_ALL);
+
+  is(walkerAnon.currentNode, $("display"), "Unexpected anon root");
+  testFunc(walkerAnon, "nextNode", anonDiv,
+           "step to anonymous div");
+  testFunc(walkerAnon, "nextNode", $("s").previousSibling,
+           "step to some text (anon)");
+  testFunc(walkerAnon, "nextNode", $("s").nextSibling, "step to more text (anon)");
+  testFunc(walkerAnon, "nextNode", $("b"), "step to bold (anon)");
+  testFunc(walkerAnon, "nextNode", $("b").firstChild, "step to bold text (anon)");
+  testFunc(walkerAnon, "nextNode", $("i1"), "step to first italic (anon)");
+  testFunc(walkerAnon, "nextNode", $("i1").firstChild,
+           "step to first italic text (anon)");
+  testFunc(walkerAnon, "nextNode", $("i1").nextSibling,
+           "step to more bold text (anon)");
+  testFunc(walkerAnon, "nextNode", $("i2"), "step to second italic (anon)");
+  testFunc(walkerAnon, "nextNode", $("i2").firstChild,
+           "step to second italic text (anon)");
+  testFunc(walkerAnon, "nextNode", $("s"), "step to span (anon)");
+  testFunc(walkerAnon, "nextNode", $("s").firstChild, "step to span text (anon)");
+  testFunc(walkerAnon, "nextNode", null, "step past end (anon)");
+  testFunc(walkerAnon, "parentNode", $("s"), "step up to span (anon)");
+  testFunc(walkerAnon, "parentNode", $("display"), "step up to display (anon)");
+  testFunc(walkerAnon, "nextNode", anonDiv, "step to anonymous div again");
+  testFunc(walkerAnon, "parentNode", $("display"),
+           "step up to display again (anon)");
+  testFunc(walkerAnon, "parentNode", null, "step up past root (anon)");
+  testFunc(walkerAnon, "firstChild", anonDiv,
+           "step firstChild to display first child (anon)");
+  testFunc(walkerAnon, "nextSibling", $("s"),
+           "step nextSibling to span (anon)");
+  testFunc(walkerAnon, "nextSibling", null, "step nextSibling past end (anon)");
+  testFunc(walkerAnon, "previousSibling", anonDiv,
+           "step previousSibling to anonymous div");
+  testFunc(walkerAnon, "previousSibling", null, "step previousSibling past end (anon)");
+
+  // Move the walker over to the end
+  while (walkerAnon.nextNode()) { /* do nothing */ }
+  testFunc(walkerAnon, "previousNode", $("s"), "step back to span (anon)");
+  testFunc(walkerAnon, "previousNode", $("i2").firstChild,
+           "step back to second italic text (anon)");
+  testFunc(walkerAnon, "previousNode", $("i2"), "step back to second italic (anon)");
+  testFunc(walkerAnon, "previousNode", $("i1").nextSibling,
+           "step back to more bold text (anon)");
+  testFunc(walkerAnon, "previousNode", $("i1").firstChild,
+           "step back to first italic text (anon)");
+  testFunc(walkerAnon, "previousNode", $("i1"), "step back to first italic (anon)");
+  testFunc(walkerAnon, "previousNode", $("b").firstChild, "step back to bold text (anon)");
+  testFunc(walkerAnon, "previousNode", $("b"), "step back to bold (anon)");
+  testFunc(walkerAnon, "previousNode", $("s").nextSibling, "step back to more text (anon)");
+  testFunc(walkerAnon, "previousNode", $("s").previousSibling,
+           "step back to some text (anon)");
+  testFunc(walkerAnon, "previousNode", anonDiv,
+           "step back to anonymous div");
+  testFunc(walkerAnon, "previousNode", $("display"), "step back to root (anon)");
+  testFunc(walkerAnon, "previousNode", null, "step back past root (anon)");
+  
+  SimpleTest.finish();
+});
+
+]]>
+</script>
+</pre>
+</body>
+</html>

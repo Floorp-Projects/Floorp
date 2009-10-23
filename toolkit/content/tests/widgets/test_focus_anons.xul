@@ -73,24 +73,30 @@ function runTests()
   gExpectedFocus = document.getAnonymousNodes($("scale"))[0];
   synthesizeKey("c", accessKeyDetails);
 
-  gExpectedBlur = gExpectedFocus;
-  gExpectedFocus = $("textbox").inputField;
-  synthesizeKey("VK_TAB", { shiftKey: true });
+  if (navigator.platform.indexOf("Mac") == -1) {
+    gExpectedBlur = gExpectedFocus;
+    gExpectedFocus = $("textbox").inputField;
+    synthesizeKey("VK_TAB", { shiftKey: true });
 
-  gExpectedBlur = gExpectedFocus;
-  gExpectedFocus = $("menulist").inputField;
-  synthesizeKey("VK_TAB", { shiftKey: true });
+    gExpectedBlur = gExpectedFocus;
+    gExpectedFocus = $("menulist").inputField;
+    synthesizeKey("VK_TAB", { shiftKey: true });
 
-  gExpectedBlur = gExpectedFocus;
-  gExpectedFocus = $("textbox").inputField;
-  synthesizeKey("VK_TAB", { });
+    gExpectedBlur = gExpectedFocus;
+    gExpectedFocus = $("textbox").inputField;
+    synthesizeKey("VK_TAB", { });
 
-  gExpectedBlur = gExpectedFocus;
-  gExpectedFocus = document.getAnonymousNodes($("scale"))[0];
-  synthesizeKey("VK_TAB", { });
+    gExpectedBlur = gExpectedFocus;
+    gExpectedFocus = document.getAnonymousNodes($("scale"))[0];
+    synthesizeKey("VK_TAB", { });
 
-  is(gBlurs, 9, "correct number of blurs");
-  is(gFocuses, 10, "correct number of focuses");
+    is(gBlurs, 9, "correct number of blurs");
+    is(gFocuses, 10, "correct number of focuses");
+  }
+  else {
+    is(gBlurs, 5, "correct number of blurs");
+    is(gFocuses, 6, "correct number of focuses");
+  }
 
   SimpleTest.finish();
 }

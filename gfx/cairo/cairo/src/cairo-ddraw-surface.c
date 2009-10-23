@@ -201,6 +201,9 @@ static EGLDisplay _cairo_ddraw_egl_dpy = EGL_NO_DISPLAY;
 static EGLContext _cairo_ddraw_egl_dummy_ctx = EGL_NO_CONTEXT;
 static EGLSurface _cairo_ddraw_egl_dummy_surface = EGL_NO_SURFACE;
 
+static GLint _cairo_ddraw_ogl_max_texture_size;
+
+
 static cairo_status_t _cairo_ddraw_ogl_init(void);
 
 static cairo_status_t
@@ -1505,6 +1508,10 @@ _cairo_ddraw_ogl_analyze_pattern (const cairo_pattern_t * pattern,
 
 	_cairo_surface_get_extents (surface, &extents);
 
+	if (extents.width  > _cairo_ddraw_ogl_max_texture_size ||
+	    extents.height > _cairo_ddraw_ogl_max_texture_size)
+	    return CAIRO_DDRAW_OGL_TEXTURE_UNSUPPORTED;
+
 	if (extents_out)
 	    *extents_out = extents;
 
@@ -1910,6 +1917,8 @@ _cairo_ddraw_ogl_init()
     CHECK_OGL_ERROR ("glPixelStorei");
 
     _cairo_ddraw_ogl_next_scratch_buffer = 0;
+
+    glGetIntegerv (GL_MAX_TEXTURE_SIZE, &_cairo_ddraw_ogl_max_texture_size);
 
     atexit (_cairo_ddraw_ogl_fini);
 

@@ -398,6 +398,62 @@ function run() {
       function (doc) { return doc.getElementsByTagName("test");}
     );      
 
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*[foo]',
+      '<test foo="bar"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*[|foo]',
+      '<test foo="bar"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace test url("test");',
+      '*|*[test|foo]',
+      '<test foo="bar"/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    test_selector_in_html(
+      '@namespace test url("test");',
+      '*|*[test|foo]',
+      '<test xmlns:t="test" t:foo="bar"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*[foo]',
+      '<test xmlns:t="test" t:foo="bar"/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*[*|foo]',
+      '<test xmlns:t="test" t:foo="bar"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '',
+      '*|*[*|foo]',
+      '<test xmlns:t="test" t:foo="bar"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
     SimpleTest.finish();
 }
 

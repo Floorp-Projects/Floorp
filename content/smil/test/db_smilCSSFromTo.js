@@ -77,6 +77,7 @@ var _fromToTestLists = {
                            midComp: "rgb(230, 230, 230)" }),
   ],
   paintServer: [
+    new AnimTestcaseFromTo("none", "none"),
     new AnimTestcaseFromTo("none", "blue", { toComp : "rgb(0, 0, 255)" }),
     new AnimTestcaseFromTo("rgb(50, 50, 50)", "none"),
     new AnimTestcaseFromTo("url(#gradA)", "url(#gradB) currentColor",
@@ -162,7 +163,7 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.clip_rule, [
     new AnimTestcaseFromTo("nonzero", "evenodd"),
     new AnimTestcaseFromTo("evenodd", "inherit", { toComp: "nonzero" }),
-  ], "need support for enumerated values"),
+  ]),
   new TestcaseBundle(gPropList.color,
                      [].concat(_fromToTestLists.color, [
     // Note: inherited value is rgb(50, 50, 50) (set on <svg>)
@@ -174,12 +175,12 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("sRGB", "auto", { fromComp: "srgb" }),
     new AnimTestcaseFromTo("inherit", "linearRGB",
                          { fromComp: "srgb", toComp: "linearrgb" }),
-  ], "need support for enumerated values"),
+  ]),
   new TestcaseBundle(gPropList.color_interpolation_filters, [
     new AnimTestcaseFromTo("sRGB", "auto", { fromComp: "srgb" }),
     new AnimTestcaseFromTo("auto", "inherit",
                          { toComp: "linearrgb" }),
-  ], "need support for enumerated values"),
+  ]),
   new TestcaseBundle(gPropList.cursor, [
     new AnimTestcaseFromTo("crosshair", "move"),
     new AnimTestcaseFromTo("url('a.cur'), url('b.cur'), nw-resize", "sw-resize",
@@ -196,15 +197,19 @@ var gFromToBundles = [
     // my test runs with "display: none" on everything, and so the
     // inherited value isn't always the same.  (i.e. the computed value
     // of 'inherit' will be different in different tests)
-    new AnimTestcaseFromTo("block", "table-cell", {}),
-    new AnimTestcaseFromTo("inline", "inline-table", {}),
-    new AnimTestcaseFromTo("table-row", "none", {}),
-  ], "need support for enumerated values"),
+    new AnimTestcaseFromTo("block", "table-cell"),
+    new AnimTestcaseFromTo("inline", "inline-table"),
+    new AnimTestcaseFromTo("table-row", "none"),
+  ]),
   new TestcaseBundle(gPropList.dominant_baseline, [
     new AnimTestcaseFromTo("use-script", "no-change"),
     new AnimTestcaseFromTo("reset-size", "ideographic"),
-    new AnimTestcaseFromTo("text-after-edge", "text-before-edge"),
-  ], "need support for enumerated values"),
+    new AnimTestcaseFromTo("alphabetic", "hanging"),
+    new AnimTestcaseFromTo("mathematical", "central"),
+    new AnimTestcaseFromTo("middle", "text-after-edge"),
+    new AnimTestcaseFromTo("text-before-edge", "auto"),
+    new AnimTestcaseFromTo("use-script", "inherit", { toComp: "auto" } ),
+  ]),
   // NOTE: Mozilla doesn't currently support "enable-background", but I'm
   // testing it here in case we ever add support for it, because it's
   // explicitly not animatable in the SVG spec.
@@ -219,7 +224,7 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.fill_rule, [
     new AnimTestcaseFromTo("nonzero", "evenodd"),
     new AnimTestcaseFromTo("evenodd", "inherit", { toComp: "nonzero" }),
-  ], "need support for enumerated values"),
+  ]),
   new TestcaseBundle(gPropList.filter, _fromToTestLists.URIsAndNone),
   new TestcaseBundle(gPropList.flood_color,
                      [].concat(_fromToTestLists.color,
@@ -273,12 +278,15 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("ultra-expanded", "inherit", { toComp: "normal" }),
   ], "need support for all properties that get stored in nsFont"),
   new TestcaseBundle(gPropList.font_style, [
+    new AnimTestcaseFromTo("italic", "inherit", { toComp: "normal" }),
     new AnimTestcaseFromTo("normal", "italic"),
     new AnimTestcaseFromTo("italic", "oblique"),
-  ], "need support for all properties that get stored in nsFont"),
+    new AnimTestcaseFromTo("oblique", "normal"),
+  ]),
   new TestcaseBundle(gPropList.font_variant, [
     new AnimTestcaseFromTo("inherit", "small-caps", { fromComp: "normal" }),
-  ], "need support for all properties that get stored in nsFont"),
+    new AnimTestcaseFromTo("small-caps", "normal"),
+  ]),
   new TestcaseBundle(gPropList.font_weight, [
     new AnimTestcaseFromTo("100", "900"),
     new AnimTestcaseFromTo("700", "100",
@@ -304,7 +312,7 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("optimizeQuality", "optimizeSpeed",
                            { fromComp: "optimizequality",
                              toComp: "optimizespeed" }),
-  ], "need support for enumerated values"),
+  ]),
   new TestcaseBundle(gPropList.letter_spacing,
                      [].concat(_fromToTestLists.lengthPx,
                                _fromToTestLists.lengthPxPctSVG)),
@@ -330,14 +338,14 @@ var gFromToBundles = [
                            { fromComp: "visiblefill" }),
     new AnimTestcaseFromTo("none", "visibleStroke",
                            { toComp: "visiblestroke" }),
-  ], "need support for enumerated values"),
+  ]),
   new TestcaseBundle(gPropList.shape_rendering, [
     new AnimTestcaseFromTo("auto", "optimizeSpeed",
                            { toComp: "optimizespeed" }),
     new AnimTestcaseFromTo("crispEdges", "geometricPrecision",
                            { fromComp: "crispedges",
                              toComp: "geometricprecision" }),
-  ], "need support for enumerated values"),
+  ]),
   new TestcaseBundle(gPropList.stop_color,
                         [].concat(_fromToTestLists.color,
                                   _fromToTestLists.colorFromInheritBlack)),
@@ -364,11 +372,11 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.stroke_linecap, [
     new AnimTestcaseFromTo("butt", "round"),
     new AnimTestcaseFromTo("round", "square"),
-  ], "need support for enumerated values"),
+  ]),
   new TestcaseBundle(gPropList.stroke_linejoin, [
     new AnimTestcaseFromTo("miter", "round"),
     new AnimTestcaseFromTo("round", "bevel"),
-  ], "need support for enumerated values"),
+  ]),
   new TestcaseBundle(gPropList.stroke_miterlimit, [
     new AnimTestcaseFromTo("1", "2", { midComp: "1.5" }),
     new AnimTestcaseFromTo("20.1", "10.1", { midComp: "15.1" }),
@@ -384,12 +392,12 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.text_anchor, [
     new AnimTestcaseFromTo("start", "middle"),
     new AnimTestcaseFromTo("middle", "end"),
-  ], "need support for enumerated values"),
+  ]),
   new TestcaseBundle(gPropList.text_decoration, [
     new AnimTestcaseFromTo("none", "underline"),
     new AnimTestcaseFromTo("overline", "line-through"),
     new AnimTestcaseFromTo("blink", "underline"),
-  ], "need support for enumerated values"),
+  ]),
   new TestcaseBundle(gPropList.text_rendering, [
     new AnimTestcaseFromTo("auto", "optimizeSpeed",
                            { toComp: "optimizespeed" }),
@@ -399,14 +407,14 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("geometricPrecision", "optimizeLegibility",
                            { fromComp: "geometricprecision",
                              toComp: "optimizelegibility" }),
-  ], "need support for enumerated values"),
+  ]),
   new TestcaseBundle(gPropList.unicode_bidi, [
     new AnimTestcaseFromTo("embed", "bidi-override"),
   ]),
   new TestcaseBundle(gPropList.visibility, [
     new AnimTestcaseFromTo("visible", "hidden"),
     new AnimTestcaseFromTo("hidden", "collapse"),
-  ], "need support for enumerated values"),
+  ]),
   new TestcaseBundle(gPropList.word_spacing,
                      [].concat(_fromToTestLists.lengthPx,
                                _fromToTestLists.lengthPxPctSVG)),

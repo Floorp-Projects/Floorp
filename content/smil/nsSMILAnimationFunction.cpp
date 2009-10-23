@@ -365,10 +365,10 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
   const nsSMILTime& dur = mSimpleDuration.GetMillis();
 
   // Sanity Checks
-  NS_ASSERTION(mSampleTime >= 0.0f, "Sample time should not be negative...");
-  NS_ASSERTION(dur  >= 0.0f, "Simple duration should not be negative...");
+  NS_ABORT_IF_FALSE(mSampleTime >= 0.0f, "Sample time should not be negative");
+  NS_ABORT_IF_FALSE(dur >= 0.0f, "Simple duration should not be negative");
 
-  if (mSampleTime >= dur || mSampleTime < 0) {
+  if (mSampleTime >= dur || mSampleTime < 0.0f) {
     NS_ERROR("Animation sampled outside interval.");
     return NS_ERROR_FAILURE;
   }

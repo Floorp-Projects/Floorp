@@ -42,8 +42,8 @@
 #include "nsDOMUIEvent.h"
 #include "nsIDOMSVGSVGElement.h"
 
-class nsDOMSVGZoomEvent : public nsIDOMSVGZoomEvent,
-                          public nsDOMUIEvent
+class nsDOMSVGZoomEvent : public nsDOMUIEvent,
+                          public nsIDOMSVGZoomEvent
 {
 public:
   nsDOMSVGZoomEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent);

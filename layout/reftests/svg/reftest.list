@@ -8,8 +8,7 @@ include sizing/reftest.list
 include filters/reftest.list
 
 # smil / animation tests
-# disabled because SMIL is not built by default
-# include smil/reftest.list
+include smil/reftest.list
 
 # Mozilla only tests (i.e. those containing XUL/XBL/etc.)
 include moz-only/reftest.list
