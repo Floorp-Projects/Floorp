@@ -1286,8 +1286,7 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
 #ifdef MOZ_XUL
   // look for open menupopups and close them after the unload event, in case
   // the unload event listeners open any new popups
-  if (mDocument)
-    nsContentUtils::HidePopupsInDocument(mDocument);
+  nsContentUtils::HidePopupsInDocument(mDocument);
 #endif
 
   return NS_OK;
