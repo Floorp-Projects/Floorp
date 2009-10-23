@@ -134,6 +134,13 @@ td {
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+let gPrefService = Cc["@mozilla.org/preferences-service;1"]
+                     .getService(Ci.nsIPrefService)
+                     .QueryInterface(Ci.nsIPrefBranch2);
+
+const ELLIPSIS = gPrefService.getComplexValue("intl.ellipsis",
+                                              Ci.nsIPrefLocalizedString).data;
+
 // We use a preferences whitelist to make sure we only show preferences that
 // are useful for support and won't compromise the user's privacy.  Note that
 // entries are *prefixes*: for example, "accessibility." applies to all prefs
@@ -238,7 +245,7 @@ function formatPrefValue(prefValue) {
   let maxPrefValueLen = 120;
   let text = "" + prefValue;
   if (text.length > maxPrefValueLen)
-    text = text.substring(0, maxPrefValueLen) + "…";
+    text = text.substring(0, maxPrefValueLen) + ELLIPSIS;
   return text;
 }
 
@@ -247,21 +254,18 @@ function getModifiedPrefs() {
   // modified, rather that Application.prefs.all since the latter is
   // much, much slower.  Application.prefs.all also gets slower each
   // time it's called.  See bug 517312.
-  let prefService = Cc["@mozilla.org/preferences-service;1"]
-                      .getService(Ci.nsIPrefService);
-  let prefRootBranch = prefService.getBranch("");
-  let prefNames = getWhitelistedPrefNames(prefRootBranch);
+  let prefNames = getWhitelistedPrefNames();
   let prefs = [Application.prefs.get(prefName)
                       for each (prefName in prefNames)
-                          if (prefRootBranch.prefHasUserValue(prefName)
+                          if (gPrefService.prefHasUserValue(prefName)
                             && !isBlacklisted(prefName))];
   return prefs;
 }
 
-function getWhitelistedPrefNames(prefRootBranch) {
+function getWhitelistedPrefNames() {
   let results = [];
   PREFS_WHITELIST.forEach(function (prefStem) {
-    let prefNames = prefRootBranch.getChildList(prefStem, {});
+    let prefNames = gPrefService.getChildList(prefStem, {});
     results = results.concat(prefNames);
   });
   return results;
@@ -333,7 +337,9 @@ function createTextForElement(elem) {
   text = text.replace(/\n\n\n+/g, "\n\n");
   
   // Actual CR/LF pairs are needed for some Windows text editors.
+#ifdef XP_WIN
   text = text.replace(/\n/g, "\r\n");
+#endif
 
   return text;
 }
