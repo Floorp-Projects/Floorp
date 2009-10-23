@@ -208,6 +208,7 @@ var ExtensionsView = {
       if (item.hideOptions)
         item.hideOptions();
     }
+    this._list.ensureSelectedElementIsVisible();
   },
 
   get visible() {
