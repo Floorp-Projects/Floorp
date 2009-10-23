@@ -57,9 +57,7 @@ WeaveService.prototype = {
         getService(Ci.nsIObserverService);
       os.addObserver(this, "final-ui-startup", true);
       break;
-   /* The following event doesn't exist on Fennec; for Fennec loading, see
-    * fennec-weave-overlay.js.
-    */
+
     case "final-ui-startup":
       Cu.import("resource://weave/service.js");
       Weave.Service.onStartup();
