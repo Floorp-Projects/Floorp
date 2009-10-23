@@ -64,8 +64,9 @@
   <!-- Bookmarks and history tooltip -->
   <tooltip id="bhTooltip"/>
 
-  <hbox align="center">
-    <label value="&search.label;" accesskey="&search.accesskey;" control="search-box"/>
+  <hbox id="sidebar-search-container" align="center">
+    <label id="sidebar-search-label"
+           value="&search.label;" accesskey="&search.accesskey;" control="search-box"/>
     <textbox id="search-box" flex="1" type="search" class="compact"
              aria-controls="bookmarks-view"
              oncommand="searchBookmarks(this.value);"/>

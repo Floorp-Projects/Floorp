@@ -328,7 +328,7 @@ vbox[typeName="status"][type="header-recommended"] {
   margin: 8px 8px 0;
 }
 
-#viewGroup radio {
+#viewGroup > radio {
   -moz-appearance: none;
   min-width: 4.5em;
   margin: 0;
@@ -337,7 +337,7 @@ vbox[typeName="status"][type="header-recommended"] {
   color: -moz-FieldText;
 }
 
-#viewGroup radio[selected="true"] {
+#viewGroup > radio[selected="true"] {
   background-color: Highlight;
   color: HighlightText; 
 }
