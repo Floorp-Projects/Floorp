@@ -767,7 +767,7 @@ WeaveSvc.prototype = {
       let register = res.put(payload);
       if (register.success) {
         this._log.info("Account created: " + register);
-        return;
+        return null;
       }
 
       // Must have failed, so figure out the reason
