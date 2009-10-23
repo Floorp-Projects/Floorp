@@ -987,9 +987,9 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
     // If false, we will scan from start of selection
     isFirstVisiblePreferred = !atEnd && !mCaretBrowsingOn && isSelectionCollapsed;
     if (isFirstVisiblePreferred) {
-      // Get focused content from esm. If it's null, the document is focused.
-      // If not, make sure the selection is in sync with the focus, so we can 
-      // start our search from there.
+      // Get the focused content. If there is a focused node, ensure the
+      // selection is at that point. Otherwise, we will just want to start
+      // from the caret position or the beginning of the document.
       nsPresContext* presContext = presShell->GetPresContext();
       NS_ENSURE_TRUE(presContext, NS_OK);
 
@@ -1002,8 +1002,17 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
 
       nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
       if (fm) {
-        fm->MoveCaretToFocus(window);
-        isFirstVisiblePreferred = PR_FALSE;
+        nsCOMPtr<nsIDOMElement> focusedElement;
+        nsCOMPtr<nsIDOMWindow> focusedWindow;
+        fm->GetFocusedElementForWindow(window, PR_FALSE, getter_AddRefs(focusedWindow),
+                                       getter_AddRefs(focusedElement));
+        // If the root element is focused, then it's actually the document
+        // that has the focus, so ignore this.
+        if (focusedElement &&
+            !SameCOMIdentity(focusedElement, document->GetRootContent())) {
+          fm->MoveCaretToFocus(window);
+          isFirstVisiblePreferred = PR_FALSE;
+        }
       }
     }
   }
