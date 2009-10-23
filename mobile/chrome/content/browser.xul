@@ -334,7 +334,7 @@
           <hbox id="downloads-header" class="panel-header">
             <label value="&downloadsHeader.label;" flex="1"/>
           </hbox>
-          <richlistbox id="downloads-list" flex="1"/>
+          <richlistbox id="downloads-list" flex="1" onselect="this.ensureSelectedElementIsVisible()"/>
         </vbox>
 
         <vbox id="prefs-container" flex="1">
@@ -342,7 +342,7 @@
             <label value="&prefsHeader.label;"/>
           </hbox>
           <notificationbox id="prefs-messages" flex="1">
-            <richlistbox id="prefs-list" seltype="single" flex="1">
+            <richlistbox id="prefs-list" seltype="single" flex="1" onselect="this.ensureSelectedElementIsVisible()">
               <setting title="&about.title;" type="control">
                 &about.description;
                 <button id="prefs-about-button" label="&about.button;"
