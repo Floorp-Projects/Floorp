@@ -85,6 +85,28 @@ let Util = {
         aFunc();
       }
     }, Ci.nsIThread.DISPATCH_NORMAL);
+  },
+
+  getHrefForElement: function getHrefForElement(target) {
+    // XXX: This is kind of a hack to work around a Gecko bug (see bug 266932)
+    // We're going to walk up the DOM looking for a parent link node.
+    // This shouldn't be necessary, but we're matching the existing behaviour for left click
+
+    let link = null;
+    while (target) {
+      if (target instanceof HTMLAnchorElement || 
+          target instanceof HTMLAreaElement ||
+          target instanceof HTMLLinkElement) {
+          if (target.hasAttribute("href"))
+            link = target;
+      }
+      target = target.parentNode;
+    }
+
+    if (link && link.hasAttribute("href"))
+      return link.href;
+    else
+      return null;
   }
 
 };
