@@ -406,9 +406,10 @@ InputHandler.EventInfo.prototype = {
  * customClicker will be notified.  The customClicker must support the following
  * interface:
  *
- *   singleClick(cx, cy)
+ *   singleClick(cx, cy, modifiers)
  *     Signals a single (as opposed to double) click occured at client
- *     coordinates cx, cy
+ *     coordinates cx, cy.  Specify optional modifiers to include
+ *     shift-keys with click.
  *
  *   doubleClick(cx1, cy1, cx2, cy2)
  *     Signals a doubleclick occured, with the first click at client coordinates
@@ -689,7 +690,14 @@ MouseModule.prototype = {
 
     let ev = this._downUpEvents[1].event;
     this._cleanClickBuffer(2);
-    this._clicker.singleClick(ev.clientX, ev.clientY);
+
+    // borrowed from nsIDOMNSEvent.idl
+    let modifiers =
+      (ev.altKey   ? Ci.nsIDOMNSEvent.ALT_MASK     : 0) |
+      (ev.ctrlKey  ? Ci.nsIDOMNSEvent.CONTROL_MASK : 0) |
+      (ev.shiftKey ? Ci.nsIDOMNSEvent.SHIFT_MASK   : 0) |
+      (ev.metaKey  ? Ci.nsIDOMNSEvent.META_MASK    : 0);
+    this._clicker.singleClick(ev.clientX, ev.clientY, modifiers);
   },
 
   /**

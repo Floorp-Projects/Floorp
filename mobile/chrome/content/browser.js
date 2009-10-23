@@ -1524,9 +1524,18 @@ ContentCustomClicker.prototype = {
     mouseUp: function mouseUp(cX, cY) {
     },
 
-    singleClick: function singleClick(cX, cY) {
-      this._dispatchMouseEvent("mousedown", cX, cY);
-      this._dispatchMouseEvent("mouseup", cX, cY);
+    singleClick: function singleClick(cX, cY, modifiers) {
+      if (modifiers == 0) {
+        this._dispatchMouseEvent("mousedown", cX, cY);
+        this._dispatchMouseEvent("mouseup", cX, cY);
+      }
+      else if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
+        let [elementX, elementY] = Browser.transformClientToBrowser(cX, cY);
+        let element = Browser.elementFromPoint(elementX, elementY);
+        let uri = Util.getHrefForElement(element);
+        if (uri)
+          Browser.addTab(uri, false);
+      }
     },
 
     doubleClick: function doubleClick(cX1, cY1, cX2, cY2) {
