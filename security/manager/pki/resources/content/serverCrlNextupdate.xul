@@ -53,9 +53,9 @@
   ondialoghelp="openHelp('exp_crl');"
   onload="onLoad();"
 >
-<script type="application/x-javascript" src="chrome://global/content/strres.js" />
-<script type="application/x-javascript" src="chrome://pippki/content/pippki.js" />
-<script type="application/x-javascript" src="chrome://pippki/content/serverCrlNextupdate.js" />
+<script type="application/javascript" src="chrome://global/content/strres.js" />
+<script type="application/javascript" src="chrome://pippki/content/pippki.js" />
+<script type="application/javascript" src="chrome://pippki/content/serverCrlNextupdate.js" />
 
   <description id="message1"/>
   <separator/>

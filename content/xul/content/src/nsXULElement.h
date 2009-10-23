@@ -581,6 +581,7 @@ public:
     nsresult GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
 
     nsresult GetFrameLoader(nsIFrameLoader** aFrameLoader);
+    already_AddRefed<nsFrameLoader> GetFrameLoader();
     nsresult SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner);
 
     virtual void RecompileScriptEventListeners();
@@ -682,10 +683,13 @@ protected:
                         PRBool aCompileEventHandlers);
     void MaybeAddPopupListener(nsIAtom* aLocalName);
 
+    nsIWidget* GetWindowWidget();
 
     nsresult HideWindowChrome(PRBool aShouldHide);
 
     void SetTitlebarColor(nscolor aColor, PRBool aActive);
+
+    void SetDrawsInTitlebar(PRBool aState);
 
     const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 

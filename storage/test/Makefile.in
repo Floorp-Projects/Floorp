@@ -55,14 +55,12 @@ CPP_UNIT_TESTS = \
   $(NULL)
 
 ifdef MOZ_DEBUG
-# Testing assertion failures is fragile, and test_deadlock_detector doesn't like
-# windows.
-ifneq ($(OS_ARCH), WINNT)
-ifneq ($(OS_ARCH), WINCE)
+# FIXME bug 523392: test_deadlock_detector doesn't like Windows
+# FIXME bug 523378: also fails on OS X
+ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
 CPP_UNIT_TESTS += \
   test_deadlock_detector.cpp \
   $(NULL)
-endif
 endif
 endif
 

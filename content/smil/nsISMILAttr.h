@@ -84,6 +84,9 @@ public:
 
   /**
    * Clears the animated value of this attribute.
+   *
+   * NOTE: The animation target is not guaranteed to be in a document when this
+   * method is called. (See bug 523188)
    */
   virtual void ClearAnimValue() = 0;
 

@@ -123,6 +123,8 @@ struct UnifiedGradientInfo {
   BOOL drawTitlebar; // NO for toolbar, YES for titlebar
 };
 
+@class ToolbarWindow;
+
 // NSColor subclass that allows us to draw separate colors both in the titlebar 
 // and for background of the window.
 @interface TitlebarAndBackgroundColor : NSColor
@@ -130,13 +132,13 @@ struct UnifiedGradientInfo {
   NSColor *mActiveTitlebarColor;
   NSColor *mInactiveTitlebarColor;
   NSColor *mBackgroundColor;
-  NSWindow *mWindow; // [WEAK] (we are owned by the window)
+  ToolbarWindow *mWindow; // [WEAK] (we are owned by the window)
 }
 
 - (id)initWithActiveTitlebarColor:(NSColor*)aActiveTitlebarColor
             inactiveTitlebarColor:(NSColor*)aInactiveTitlebarColor
                   backgroundColor:(NSColor*)aBackgroundColor
-                        forWindow:(NSWindow*)aWindow;
+                        forWindow:(ToolbarWindow*)aWindow;
 
 // Pass nil here to get the default appearance.
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
@@ -146,7 +148,7 @@ struct UnifiedGradientInfo {
 - (void)setBackgroundColor:(NSColor*)aColor;
 - (NSColor*)backgroundColor;
 
-- (NSWindow*)window;
+- (ToolbarWindow*)window;
 @end
 
 // NSWindow subclass for handling windows with toolbars.
@@ -154,11 +156,17 @@ struct UnifiedGradientInfo {
 {
   TitlebarAndBackgroundColor *mColor;
   float mUnifiedToolbarHeight;
+  BOOL mDrawsIntoWindowFrame;
 }
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
 - (void)setUnifiedToolbarHeight:(float)aToolbarHeight;
 - (float)unifiedToolbarHeight;
 - (float)titlebarHeight;
+- (NSRect)titlebarRect;
+- (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect sync:(BOOL)aSync;
+- (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect;
+- (void)setDrawsContentsIntoWindowFrame:(BOOL)aState;
+- (BOOL)drawsContentsIntoWindowFrame;
 // This method is also available on NSWindows (via a category), and is the 
 // preferred way to check the background color of a window.
 - (NSColor*)windowBackgroundColor;
@@ -232,6 +240,7 @@ public:
     NS_IMETHOD SetWindowShadowStyle(PRInt32 aStyle);
     virtual void SetShowsToolbarButton(PRBool aShow);
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive);
+    virtual void SetDrawsInTitlebar(PRBool aState);
     virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
                                                 PRUint32 aNativeMessage,
                                                 PRUint32 aModifierFlags);

@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES =\
 		test_bug462787.html \
 		test_bug462789.html \
+		test_bug522601.xhtml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

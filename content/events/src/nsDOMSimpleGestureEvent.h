@@ -42,8 +42,8 @@
 
 class nsPresContext;
 
-class nsDOMSimpleGestureEvent : public nsIDOMSimpleGestureEvent,
-                                public nsDOMMouseEvent
+class nsDOMSimpleGestureEvent : public nsDOMMouseEvent,
+                                public nsIDOMSimpleGestureEvent
 {
 public:
   nsDOMSimpleGestureEvent(nsPresContext*, nsSimpleGestureEvent*);

@@ -80,6 +80,7 @@ _TEST_FILES = \
 		seek7.js \
 		seek8.js \
 		seek9.js \
+		seek10.js \
 		test_audio1.html \
 		test_audio2.html \
 		test_autobuffer.html \

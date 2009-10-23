@@ -4,7 +4,6 @@
 #   - Stacking of additive=[sum|replace] animations
 #   - Stacking of additive animations, w/ "hybrid case of to-animation"
 #   - Repeating animations, w/ & w/out accumulate=sum
-#   - <set>
 #   - Interpolation between different units (e.g. font-size attr, 3em to 50px)
 #   - Correct behavior for em/ex font-size animations, when context changes
 #      (with change happening 1. when completed/frozen and 2. when animating)
@@ -17,6 +16,9 @@
 
 # animation sort-order tests
 include sort/reftest.list
+
+# set tests
+include set/reftest.list
 
 # style tests
 include style/reftest.list
@@ -74,6 +76,8 @@ fails == anim-fillopacity-1xml.svg  anim-standard-ref.svg # bug 436276
 == anim-remove-5.svg anim-standard-ref.svg
 == anim-remove-6.svg anim-standard-ref.svg
 == anim-remove-7.svg anim-standard-ref.svg
+== anim-remove-8css.svg anim-standard-ref.svg
+== anim-remove-8xml.svg anim-standard-ref.svg
 == anim-retarget-1.svg anim-standard-ref.svg
 == anim-retarget-2.svg anim-standard-ref.svg
 == anim-retarget-3.svg anim-standard-ref.svg

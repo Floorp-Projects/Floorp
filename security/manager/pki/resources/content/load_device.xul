@@ -52,8 +52,8 @@
         buttons="accept,cancel"
         ondialogaccept="return doLoadDevice();">
 
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://pippki/content/device_manager.js"/>
+  <script type="application/javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/javascript" src="chrome://pippki/content/device_manager.js"/>
 
   <description>&loaddevice.info;</description>
   <hbox align="center">

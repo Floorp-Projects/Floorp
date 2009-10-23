@@ -238,6 +238,7 @@ user_pref("dom.allow_scripts_to_close_windows", true);
 user_pref("dom.disable_open_during_load", false);
 user_pref("dom.max_script_run_time", 0); // no slow script dialogs
 user_pref("dom.max_chrome_script_run_time", 0);
+user_pref("dom.popup_maximum", -1);
 user_pref("signed.applets.codebase_principal_support", true);
 user_pref("security.warn_submit_insecure", false);
 user_pref("browser.shell.checkDefaultBrowser", false);

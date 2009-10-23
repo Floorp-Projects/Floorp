@@ -45,8 +45,8 @@
 class nsIContent;
 class nsEvent;
 
-class nsDOMDragEvent : public nsIDOMDragEvent,
-                       public nsDOMMouseEvent
+class nsDOMDragEvent : public nsDOMMouseEvent,
+                       public nsIDOMDragEvent
 {
 public:
   nsDOMDragEvent(nsPresContext* aPresContext, nsInputEvent* aEvent);
