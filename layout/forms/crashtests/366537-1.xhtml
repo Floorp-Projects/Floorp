@@ -5,7 +5,6 @@
 
 function boom()
 {
-dump("DEBUGGING BUG 523934: in boom\n");
   var fieldset = document.getElementById("fieldset");
   var h3 = document.getElementById("h3");
   var legend = document.getElementById("legend");
@@ -14,7 +13,6 @@ dump("DEBUGGING BUG 523934: in boom\n");
   fieldset.appendChild(h3);
   
   document.documentElement.removeAttribute("class");
-dump("DEBUGGING BUG 523934: removed class attribute\n");
 }
 
 </script>
