@@ -410,12 +410,14 @@
               return;
 
             var input = this.inputField;
-            if (accept) {
-              var value = input.value;
-              this.view.setCellText(this._editingRow, this._editingColumn, value);
-            }
+            var editingRow = this._editingRow;
+            var editingColumn = this._editingColumn;
             this._editingRow = -1;
             this._editingColumn = null;
+            if (accept) {
+              var value = input.value;
+              this.view.setCellText(editingRow, editingColumn, value);
+            }
 
             input.hidden = true;
             input.value = "";
