@@ -1022,41 +1022,31 @@ Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
 {
     if (i->isop(LIR_alloc)) {
         asm_add_imm(r, FP, disp(resv));
-    } else if (IsFpReg(r)) {
-        NanoAssert(ARM_VFP);
-
+    } else if (i->isconst()) {
+        if (!resv->arIndex) {
+            i->resv()->clear();
+        }
+        asm_ld_imm(r, i->imm32());
+    }
+    else {
         // We can't easily load immediate values directly into FP registers, so
         // ensure that memory is allocated for the constant and load it from
         // memory.
         int d = findMemFor(i);
-        if (isS8(d >> 2)) {
-            FLDD(r, FP, d);
+        if (ARM_VFP && IsFpReg(r)) {
+            if (isS8(d >> 2)) {
+                FLDD(r, FP, d);
+            } else {
+                FLDD(r, IP, 0);
+                asm_add_imm(IP, FP, d);
+            }
         } else {
-            FLDD(r, IP, 0);
-            asm_add_imm(IP, FP, d);
+            LDR(r, FP, d);
         }
-#if 0
-    // This code tries to use a small constant load to restore the value of r.
-    // However, there was a comment explaining that using this regresses
-    // crypto-aes by about 50%. I do not see that behaviour; however, enabling
-    // this code does cause a JavaScript failure in the first of the
-    // createMandelSet tests in trace-tests. I can't explain either the
-    // original performance issue or the crash that I'm seeing.
-    } else if (i->isconst()) {
-        // asm_ld_imm will automatically select between LDR and MOV as
-        // appropriate.
-        if (!resv->arIndex)
-            i->resv()->clear();
-        asm_ld_imm(r, i->imm32());
-#endif
-    } else {
-        int d = findMemFor(i);
-        LDR(r, FP, d);
     }
-
     verbose_only(
         asm_output("        restore %s",_thisfrag->lirbuf->names->formatRef(i));
-    )
+        )
 }
 
 void
