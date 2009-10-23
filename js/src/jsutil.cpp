@@ -63,7 +63,7 @@ JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
 #if defined(WIN32)
     DebugBreak();
     exit(3);
-#elif defined(XP_OS2) || (defined(__GNUC__) && defined(__i386))
+#elif defined(XP_OS2) || (defined(__GNUC__) && (defined(__i386) || defined(__x86_64__)))
     asm("int $3");
 #endif
     abort();
