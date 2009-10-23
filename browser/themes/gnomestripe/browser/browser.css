@@ -52,16 +52,12 @@
   -moz-box-orient: vertical; /* for flex hack */
 }
 
-#menubar-items > menubar {
+#main-menubar {
   -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
 }
 
 #personal-bookmarks {
   min-height: 29px;
-}
-
-#wrapper-search-container #searchbar html|*.textbox-input {
-  visibility: hidden;
 }
 
 #navigator-toolbox[inFullscreen="true"],
@@ -71,7 +67,7 @@
 }
 
 #urlbar:-moz-lwtheme:not([focused="true"]),
-#searchbar:-moz-lwtheme > textbox:not([focused="true"]),
+.searchbar-textbox:-moz-lwtheme:not([focused="true"]),
 .tabbrowser-tab:-moz-lwtheme:not([selected="true"]) {
   opacity: .85;
 }
@@ -856,12 +852,12 @@ toolbar[iconsize="small"] #fullscreen-button {
   outline: 1px dotted -moz-DialogText;
 }
 
-#identity-box:hover > hbox {
+#identity-box:hover > #identity-box-inner {
   background-color: rgba(255, 255, 255, .2);
 }
 
-#identity-box:hover:active > hbox,
-#identity-box[open="true"] > hbox {
+#identity-box:hover:active > #identity-box-inner,
+#identity-box[open="true"] > #identity-box-inner {
   background-color: rgba(0, 0, 0, .1);
 }
 
@@ -902,14 +898,13 @@ toolbar[iconsize="small"] #fullscreen-button {
 }
 
 /* Identity popup body text */
-#identity-popup-content-box > description,
-#identity-popup-encryption-label {
+.identity-popup-description {
   white-space: pre-wrap;
   -moz-padding-start: 15px;
   margin: 2px 0 4px;
 }
 
-#identity-popup-content-box > label {
+.identity-popup-label {
   white-space: pre-wrap;
   -moz-padding-start: 15px;
   margin: 0;
@@ -947,7 +942,6 @@ toolbar[iconsize="small"] #fullscreen-button {
 
 /* Identity popup bounding box */
 #identity-popup-container {
-  background-image: none;
   min-width: 280px;
   padding: 10px;
 }
