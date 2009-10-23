@@ -745,13 +745,11 @@ function OnDocumentLoad(event)
         }
 
         function FinishWaitingForTestEnd() {
-dump("DEBUGGING BUG 523934: in FinishWaitingForTestEnd\n");
             gBrowser.removeEventListener("MozAfterPaint", AfterPaintListener, false);
             setTimeout(DocumentLoaded, 0);
         }
 
         function AttrModifiedListener() {
-dump("DEBUGGING BUG 523934: in AttrModifiedListener\n");
             if (shouldWait())
                 return;
 
@@ -762,11 +760,9 @@ dump("DEBUGGING BUG 523934: in AttrModifiedListener\n");
             // in an subdocument's load event handler, in which case we need load event processing
             // to complete and unsuppress painting before we check isMozAfterPaintPending.
             setTimeout(AttrModifiedListenerContinuation, 0);
-dump("DEBUGGING BUG 523934: AttrModifiedListener: set timeout\n");
         }
 
         function AttrModifiedListenerContinuation() {
-dump("DEBUGGING BUG 523934: in AttrModifiedListenerContinuation\n");
             if (doPrintMode())
                 setupPrintMode();
             FlushRendering();
@@ -775,11 +771,9 @@ dump("DEBUGGING BUG 523934: in AttrModifiedListenerContinuation\n");
                 // Wait for the last invalidation to have happened and been snapshotted before
                 // we stop the test
                 stopAfterPaintReceived = true;
-dump("DEBUGGING BUG 523934: AttrModifiedListenerContinuation: pending paint\n");
             } else {
                 // Nothing to wait for, so stop now
                 FinishWaitingForTestEnd();
-dump("DEBUGGING BUG 523934: AttrModifiedListenerContinuation: done waiting\n");
             }
         }
 

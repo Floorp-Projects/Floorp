@@ -3,7 +3,6 @@
   <head>
     <script>
       function doIt() {
-dump("DEBUGGING BUG 523934: in doIt\n");
         var p = document.getElementById("p").tBodies[0];
         var nodes = Array.prototype.slice.call(document.getElementsByTagName("tr"));
         for (var i = 0; i < nodes.length; ++i) {
@@ -12,7 +11,6 @@ dump("DEBUGGING BUG 523934: in doIt\n");
           p.insertBefore(nodes[i], n);
         }
         setTimeout('document.documentElement.className = ""', 0);
-dump("DEBUGGING BUG 523934: timeout set\n");
       }
     </script>
   </head>
