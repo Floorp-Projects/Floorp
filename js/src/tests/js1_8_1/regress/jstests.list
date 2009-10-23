@@ -79,3 +79,4 @@ script regress-496922.js
 script regress-507053.js
 script regress-507295.js
 script regress-507424.js
+script regress-515885.js
