@@ -54,6 +54,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOUND
   NS_DECL_NSISTREAMLOADEROBSERVER
+
+protected:
+  nsresult PlaySoundFile(const nsAString &aSoundFile);
+  nsresult PlaySoundFile(const nsACString &aSoundFile);
 };
 
 #endif /* __nsSound_h__ */
