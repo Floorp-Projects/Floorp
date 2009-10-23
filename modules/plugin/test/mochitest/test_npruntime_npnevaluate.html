@@ -1,0 +1,98 @@
+<html>
+<head>
+  <title>NPN_Evaluate Tests</title>
+  <script type="text/javascript" 
+          src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests()">
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="100">
+  </embed>
+
+  <script class="testbody" type="application/javascript">
+  
+  SimpleTest.waitForExplicitFinish();
+  
+  // global test function
+  function testMe(arg) {
+    var result = arg+arg;
+    for (var i = 1; i < arguments.length; i++) {
+      result += arguments[i] + arguments[i];
+    }
+    return result;
+  }
+
+  ////
+  // This test exercises NPN_Evaluate using the test plugin's
+  // npnEvaluateTest method.  This method calls NPN_Evaluate on 
+  // a string argument passed to it, and returns the eval result.
+  // The array below drives the tests; each array member has two
+  // members:  the first is a string to eval, and the second is 
+  // the expected result of the eval.
+  //
+  var tests = [
+    ["3", 3],
+    ["3 + 3", 6],
+    ["'3'", "3"],
+    ["function test() { return 3; } test();", 3],
+    ["testMe(3)", 6],
+    ["testMe(new Object(3))", 6],
+    ["new Object(3)", new Object(3)],
+    ["new Array(1, 2, 3, 4)", [1, 2, 3, 4]],
+    ["document.getElementById('display')", 
+        document.getElementById("display")],
+    ["encodeURI('a = b')", "a%20=%20b"],
+    ["document.getElementById('testdiv').innerHTML = 'Hello world!'", 
+        "Hello world!"],
+    ["function test2() { var x = {a: '1', b: '2'}; return x; } test2();", 
+        {a: '1', b: '2'}],
+  ];
+ 
+  function runTests() {
+    var plugin = document.getElementById("plugin1");
+
+    // Test calling NPN_Evaluate from within plugin code.
+    for each (var test in tests) {
+      var expected = test[1];
+      var result = plugin.npnEvaluateTest(test[0]);
+      // serialize the two values for easy comparison
+      var json_expected = JSON.stringify(expected);
+      var json_result = JSON.stringify(result);
+      if (typeof(result) == "function")
+          json_result = result.toString();
+      if (typeof(expected) == "function")
+          json_expected = expected.toString();
+      is(json_result, json_expected, 
+          "npnEvaluateTest returned an unexpected value");
+      is(typeof(result), typeof(expected), 
+          "npnEvaluateTest return value was of unexpected type");
+      var success = (json_result == json_expected && 
+          typeof(result) == typeof(expected));
+      appendChildNodes($("verbose"),
+          SPAN((success ? "pass" : "fail") + ": eval(" + test[0] + ")"));
+      appendChildNodes($("verbose"),
+          SPAN(" == " + json_result + "(" + 
+          typeof(result) + "), expected " + json_expected + "(" + 
+          typeof(expected) + ")"),
+          BR()
+          );
+    }
+    
+    is(document.getElementById('testdiv').innerHTML, "Hello world!",
+      "innerHTML not set correctly via NPN_Evaluate");
+    
+    SimpleTest.finish();
+  }
+  </script>
+  
+  <div id="verbose">
+  </div>
+  <div id="testdiv">
+  </div>
+ </body>
+ </html>
