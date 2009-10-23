@@ -5,7 +5,7 @@
 random == enveloped-tree-1.xhtml enveloped-tree-1-ref.xhtml  # bug 470868
 == promoted-tree-1.xhtml promoted-tree-1-ref.xhtml
 random == moved-tree-1.xhtml moved-tree-1-ref.xhtml  # bug 470868
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == deferred-anim-1.xhtml deferred-anim-1-ref.xhtml # bug 524098
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == deferred-anim-1.xhtml deferred-anim-1-ref.xhtml # bug 470868
 == deferred-tree-1.xhtml deferred-tree-1-ref.xhtml
 == deferred-tree-2a.xhtml deferred-tree-2-ref.xhtml
 == deferred-tree-2b.xhtml deferred-tree-2-ref.xhtml
