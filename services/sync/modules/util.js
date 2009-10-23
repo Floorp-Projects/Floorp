@@ -719,6 +719,11 @@ let Utils = {
       options || "centerscreen,chrome,dialog,modal,resizable=no", args);
   },
 
+  openGenericDialog: function Utils_openGenericDialog(type) {
+    this._genericDialogType = type;
+    this.openDialog("ChangeSomething", "generic-change.xul");
+  },
+
   openLog: function Utils_openLog() {
     Utils._openChromeWindow("Log", "log.xul");
   },
