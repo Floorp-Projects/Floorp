@@ -64,6 +64,17 @@ textbox {
   background-color: white;
 }
 
+/* textboxes --------------------------------------------------------------- */
+textbox {
+  min-height: 5mm;
+  border: 0.3mm solid #262629;
+  -moz-border-radius: 0.75mm;
+  -moz-border-top-colors: -moz-initial;
+  -moz-border-right-colors: -moz-initial;
+  -moz-border-bottom-colors: -moz-initial;
+  -moz-border-left-colors: -moz-initial;
+}
+
 textbox[isempty="true"] {
   color: gray;
 }
