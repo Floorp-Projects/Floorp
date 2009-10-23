@@ -261,6 +261,10 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
   nsCOMPtr<nsIStreamLoader> loader;
 
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mDocument->GetScriptGlobalObject()));
+  if (!window) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   nsIDocShell *docshell = window->GetDocShell();
 
   nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
