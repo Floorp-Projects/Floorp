@@ -2085,9 +2085,10 @@ function BrowserViewSourceOfDocument(aDocument)
 
 // doc - document to use for source, or null for this window's document
 // initialTab - name of the initial tab to display, or null for the first tab
-function BrowserPageInfo(doc, initialTab)
+// imageUrl - url of an image to load in the Media Tab of the Page Info window; can be null/omitted
+function BrowserPageInfo(doc, initialTab, imageUrl)
 {
-  var args = {doc: doc, initialTab: initialTab};
+  var args = {doc: doc, initialTab: initialTab, imageUrl: imageUrl};
   return toOpenDialogByTypeAndUrl("Browser:page-info",
                                   doc ? doc.location : window.content.document.location,
                                   "chrome://browser/content/pageinfo/pageInfo.xul",
