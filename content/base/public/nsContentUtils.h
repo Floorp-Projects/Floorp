@@ -1606,6 +1606,7 @@ public:
   // Pop() will be a no-op if Push() or PushNull() fail
   void Pop();
 
+  nsIScriptContext* GetCurrentScriptContext() { return mScx; }
 private:
   // Combined code for PushNull() and Push(JSContext*)
   PRBool DoPush(JSContext* cx);
