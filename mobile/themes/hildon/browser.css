@@ -530,13 +530,23 @@ placeitem[ui="manage"] > .bookmark-manage > image {
 }
 
 #autocomplete_navbuttons {
-  padding: 0.5mm 1mm; /* half core spacing & core spacing */
+  padding: 0.5mm 0; /* half core spacing & none (autorepeat arrows compensate) */
   min-height: 6mm; /* row size */
   -moz-user-focus: ignore;
 }
 
-#autocomplete_navbuttons autorepeatbutton {
-  display: none;
+#autocomplete_navbuttons .autorepeatbutton-down {
+  list-style-image: url(images/arrowrightdark-16.png);
+}
+
+#autocomplete_navbuttons .autorepeatbutton-up {
+  list-style-image: url(images/arrowleftdark-16.png);
+}
+
+/* force the autorepeat buttons to create a 'padding' when collapsed */
+#autocomplete_navbuttons autorepeatbutton[collapsed="true"],
+#autocomplete_navbuttons autorepeatbutton[disabled="true"] {
+  visibility: hidden;
 }
 
 .autocomplete-items {
