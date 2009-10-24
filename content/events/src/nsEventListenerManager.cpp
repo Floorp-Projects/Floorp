@@ -1440,7 +1440,8 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
                                     jslistener->GetEventTarget(),
                                     ls.mTypeAtom,
                                     const_cast<nsListenerStruct*>(&ls),
-                                    mTarget);
+                                    mTarget,
+                                    PR_TRUE);
       }
     }
     if (ls.mTypeData) {
