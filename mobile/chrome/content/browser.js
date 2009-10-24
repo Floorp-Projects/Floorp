@@ -1529,8 +1529,12 @@ ContentCustomClicker.prototype = {
     },
 
     doubleClick: function doubleClick(cX1, cY1, cX2, cY2) {
-      if (!Browser.zoomToPoint(cX2, cY2))
-        Browser.zoomFromPoint(cX2, cY2);
+      const kDoubleClickRadius = 32;
+      
+      let maxRadius = kDoubleClickRadius * Browser._browserView.getZoomLevel();
+      let isClickInRadius = (Math.abs(cX1 - cX2) < maxRadius && Math.abs(cY1 - cY2) < maxRadius);
+      if (isClickInRadius && !Browser.zoomToPoint(cX1, cY1))
+        Browser.zoomFromPoint(cX1, cY1);
     },
 
     toString: function toString() {
