@@ -488,14 +488,17 @@ protected:
      * Gets the pres shell from either the canvas element or the doc shell
      */
     nsIPresShell *GetPresShell() {
-      nsIPresShell *presShell = nsnull;
       nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
       if (content) {
-          presShell = content->GetOwnerDoc()->GetPrimaryShell();
-      } else if (mDocShell) {
-          mDocShell->GetPresShell(&presShell);
+        nsIDocument* ownerDoc = content->GetOwnerDoc();
+        return ownerDoc ? ownerDoc->GetPrimaryShell() : nsnull;
       }
-      return presShell;
+      if (mDocShell) {
+        nsCOMPtr<nsIPresShell> shell;
+        mDocShell->GetPresShell(getter_AddRefs(shell));
+        return shell.get();
+      }
+      return nsnull;
     }
 
     // text
