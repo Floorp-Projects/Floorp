@@ -526,10 +526,12 @@ var ExtensionsView = {
 
     let strings = document.getElementById("bundle_browser");
     if (aAddons.length == 0) {
-      let item = this.displaySectionMessage("repo",
-                                            strings.getString("addonsSearchNone.label"),
-                                            strings.getString("addonsSearchSuccess.button"),
-                                            true);
+      let msg = aIsRecommended ? strings.getString("addonsSearchNone.recommended") :
+                                 strings.getString("addonsSearchNone.search");
+      let button = aIsRecommended ? strings.getString("addonsSearchNone.button") :
+                                    strings.getString("addonsSearchSuccess2.button");
+      let item = this.displaySectionMessage("repo", msg, button, true);
+      
       if (aSelectFirstResult)
         this._list.scrollBoxObject.scrollToElement(item);
       return;
@@ -570,7 +572,7 @@ var ExtensionsView = {
     }
 
     if (!aIsRecommended)
-      this.displaySectionMessage("repo", null, strings.getString("addonsSearchSuccess.button"), true);
+      this.displaySectionMessage("repo", null, strings.getString("addonsSearchSuccess2.button"), true);
   },
 
   showPage: function ev_showPage(aItem) {
