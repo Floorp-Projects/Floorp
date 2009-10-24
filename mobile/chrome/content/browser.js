@@ -983,39 +983,21 @@ var Browser = {
   },
 
   /**
-   * Returns a good zoom rectangle for given element.
-   * @param y Where the user clicked in browser coordinates. For long elements
-   *          (like news columns), this keeps the clicked spot in the viewport.
-   * @return Rectangle in current viewport coordinates, null if nothing works.
+   * Find the needed zoom level for zooming on an element
    */
-  _getZoomRectForElement: function _getZoomRectForElement(element, y) {
-    if (element == null)
-      return null;
-
+  _getZoomLevelForElement: function _getZoomLevelForElement(element) {
     const margin = 15;
-    let bv = Browser._browserView;
-    let vis = bv.getVisibleRect();
+
+    let bv = this._browserView;
     let elRect = bv.browserToViewportRect(Browser.getBoundingContentRect(element));
-    y = bv.browserToViewport(y);
 
-    let zoomLevel = BrowserView.Util.clampZoomLevel(bv.getZoomLevel() * vis.width / (elRect.width + margin * 2));
-    let zoomRatio = bv.getZoomLevel() / zoomLevel;
-
-    // Don't zoom in a marginal amount
-    // > 2/3 means operation increases the zoom level by less than 1.5
-    if (zoomRatio >= .6666)
-       return null;
-
-    let newVisW = vis.width * zoomRatio, newVisH = vis.height * zoomRatio;
-    let result = new Rect(elRect.center().x - newVisW / 2, y - newVisH / 2, newVisW, newVisH).expandToIntegers();
-
-    // Make sure rectangle doesn't poke out of viewport
-    return result.translateInside(bv._browserViewportState.viewportRect);
+    let vis = bv.getVisibleRect();
+    return BrowserView.Util.clampZoomLevel(bv.getZoomLevel() * vis.width / (elRect.width + margin * 2));
   },
 
   /**
    * Find a good zoom rectangle for point specified in browser coordinates.
-   * @return Point in viewport coordinates, null if the zoom is too big.
+   * @return Point in viewport coordinates
    */
   _getZoomRectForPoint: function _getZoomRectForPoint(x, y, zoomLevel) {
     let bv = Browser._browserView;
@@ -1023,12 +1005,10 @@ var Browser = {
     x = bv.browserToViewport(x);
     y = bv.browserToViewport(y);
 
-    if (zoomLevel >= 4)
-      return null;
-
+    zoomLevel = Math.min(kBrowserViewZoomLevelMax, zoomLevel);
     let zoomRatio = zoomLevel / bv.getZoomLevel();
     let newVisW = vis.width / zoomRatio, newVisH = vis.height / zoomRatio;
-    let result = new Rect(x - newVisW / 2, y - newVisH / 2, newVisW, newVisH);
+    let result = new Rect(x - newVisW / 2, y - newVisH / 2, newVisW, newVisH).expandToIntegers();
 
     // Make sure rectangle doesn't poke out of viewport
     return result.translateInside(bv._browserViewportState.viewportRect);
@@ -1055,14 +1035,22 @@ var Browser = {
   },
 
   zoomToPoint: function zoomToPoint(cX, cY) {
-    const margin = 15;
-
     let [elementX, elementY] = Browser.transformClientToBrowser(cX, cY);
-    let element = Browser.elementFromPoint(elementX, elementY);
-    let zoomRect = this._getZoomRectForElement(element, elementY);
 
-    if (zoomRect == null)
+    let element = Browser.elementFromPoint(elementX, elementY);
+    if (!element)
       return false;
+
+    let zoomLevel = this._getZoomLevelForElement(element);
+
+    // Don't zoom in a marginal amount
+    // > 2/3 means operation increases the zoom level by less than 1.5
+    let zoomRatio = this._browserView.getZoomLevel() / zoomLevel;
+    if (zoomRatio >= .6666)
+       return false;
+
+    let elRect = Browser.getBoundingContentRect(element);
+    let zoomRect = this._getZoomRectForPoint(elRect.center().x, elementY, zoomLevel);
 
     this.setVisibleRect(zoomRect);
     return true;
@@ -1172,13 +1160,14 @@ var Browser = {
    * the tile container, i.e. BrowserView coordinates.
    */
   getVisibleRect: function getVisibleRect() {
+    let stack = document.getElementById("tile-stack");
     let container = document.getElementById("tile-container");
     let containerBCR = container.getBoundingClientRect();
 
     let x = Math.round(-containerBCR.left);
     let y = Math.round(-containerBCR.top);
     let w = window.innerWidth;
-    let h = window.innerHeight;
+    let h = stack.getBoundingClientRect().height;
 
     return new Rect(x, y, w, h);
   },
@@ -1277,9 +1266,10 @@ Browser.MainDragger.prototype = {
     if (doffset.x > 0 && rect.left > 0)
       x = Math.min(doffset.x, rect.left);
 
+    let height = document.getElementById("tile-stack").getBoundingClientRect().height;
     rect = Rect.fromRect(Browser.contentScrollbox.getBoundingClientRect()).map(Math.round);
-    if (doffset.y < 0 && rect.bottom < window.innerHeight)
-      y = Math.max(doffset.y, rect.bottom - window.innerHeight);
+    if (doffset.y < 0 && rect.bottom < height)
+      y = Math.max(doffset.y, rect.bottom - height);
     if (doffset.y > 0 && rect.top > 0)
       y = Math.min(doffset.y, rect.top);
 

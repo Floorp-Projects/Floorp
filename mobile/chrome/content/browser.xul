@@ -127,6 +127,11 @@
     <command id="cmd_paste" label="&paste.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_delete" label="&delete.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_selectAll" label="&selectAll.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+
+    <!-- forms navigation -->
+    <command id="cmd_formPrevious" oncommand="FormHelper.goToPrevious();"/>
+    <command id="cmd_formNext" oncommand="FormHelper.goToNext();"/>
+    <command id="cmd_formClose" oncommand="FormHelper.close();"/>
   </commandset>
 
   <keyset id="mainKeyset">
@@ -228,15 +233,19 @@
           <notificationbox id="notifications"/>
 
           <!-- Content viewport -->
-          <stack id="tile-stack" class="window-width window-height">
-            <scrollbox id="content-scrollbox" style="overflow: hidden;" class="window-width window-height">
-              <!-- Content viewport -->
-              <html:div id="tile-container" style="overflow: hidden;"/>
-            </scrollbox>
+          <vbox class="window-width window-height">
+            <stack id="tile-stack" class="window-width" flex="1">
+              <scrollbox id="content-scrollbox" style="overflow: hidden;" class="window-width" flex="1">
+                <!-- Content viewport -->
+                <html:div id="tile-container" style="overflow: hidden;"/>
+              </scrollbox>
 
-            <html:canvas id="view-buffer" style="display: none;" moz-opaque="true">
-            </html:canvas>
-          </stack>
+              <html:canvas id="view-buffer" style="display: none;" moz-opaque="true">
+              </html:canvas>
+            </stack>
+            <box id="form-helper-spacer" hidden="true"/>
+          </vbox>
+
         </vbox>
       </scrollbox>
 
@@ -253,6 +262,16 @@
         </vbox>
       </vbox>
     </scrollbox>
+
+    <!-- popup for form helper -->
+    <vbox id="form-helper-container" class="window-width" hidden="true" top="0" pack="end">
+      <hbox id="form-buttons" class="panel-dark" pack="center">
+        <button id="form-helper-previous" class="button-dark" label="&formHelper.previous;" command="cmd_formPrevious"/>
+        <button id="form-helper-next" class="button-dark" label="&formHelper.next;" command="cmd_formNext"/>
+        <spacer flex="1"/>
+        <button id="form-helper-close" class="button-dark" label="&formHelper.done;" command="cmd_formClose"/>
+      </hbox>
+    </vbox>
 
     <!-- popup for site identity information -->
     <vbox id="identity-container" hidden="true" class="panel-dark window-width" mode="unknownIdentity">
@@ -425,8 +444,8 @@
     <vbox id="select-container" hidden="true">
       <vbox id="select-container-inner" class="panel-dark" flex="1">
         <scrollbox id="select-list" flex="1" orient="vertical"/>
-        <hbox id="select-buttons">
-          <button id="select-buttons-done" class="button-dark" label="&selectListDone.label;" oncommand="SelectHelper.close();"/>
+        <hbox id="select-buttons" pack="center">
+          <button id="select-buttons-done" class="button-dark" label="&formHelper.done;" oncommand="SelectHelper.close();"/>
         </hbox>
       </vbox>
     </vbox>

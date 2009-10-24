@@ -342,6 +342,10 @@ var BrowserUI = {
     const popupMargin = 10;
     bookmarkPopup.top = Math.round(starRect.top) + popupMargin;
     bookmarkPopup.left = windowW - this.sidebarW - bookmarkPopupW - popupMargin;
+
+    // form helper
+    let formHelper = document.getElementById("form-helper-container");
+    formHelper.top = windowH - formHelper.getBoundingClientRect().height;
   },
 
   init : function() {
@@ -362,7 +366,7 @@ var BrowserUI = {
 
     let browsers = document.getElementById("browsers");
     browsers.addEventListener("DOMWindowClose", this, true);
-    browsers.addEventListener("UIShowSelect", this, false, true);
+    browsers.addEventListener("UIShowForm", this, false, true);
 
     // XXX these really want to listen to only the current browser
     browsers.addEventListener("DOMTitleChanged", this, true);
@@ -445,6 +449,9 @@ var BrowserUI = {
 
     // Update the navigation buttons
     this._updateButtons(browser);
+
+    // Close the forms assistant
+    FormHelper.close();
 
     // Check for a bookmarked page
     this.updateStar();
@@ -590,8 +597,8 @@ var BrowserUI = {
       case "DOMWindowClose":
         this._domWindowClose(aEvent);
         break;
-      case "UIShowSelect":
-        SelectHelper.show(aEvent.target);
+      case "UIShowForm":
+        FormHelper.open(aEvent.target);
         break;
       case "TabSelect":
         this._tabSelect(aEvent);
@@ -953,6 +960,225 @@ var BookmarkList = {
   }
 };
 
+var FormHelper = {
+  _nodes: null,
+  get _container() {
+    delete this._container;
+    return this._container = document.getElementById("form-helper-container");
+  },
+
+  get _helperSpacer() {
+    delete this._helperSpacer;
+    return this._helperSpacer = document.getElementById("form-helper-spacer");
+  },
+
+  get _selectContainer() {
+    delete this._selectContainer;
+    return this._selectContainer = document.getElementById("select-container");
+  },
+
+  _getRectForElement: function formHelper_getRectForElement(aElement) {
+    let elRect = Browser.getBoundingContentRect(aElement);
+    let bv = Browser._browserView;
+
+    let labels = this.getLabelsFor(aElement);
+    for (let i=0; i<labels.length; i++) {
+      let labelRect = Browser.getBoundingContentRect(labels[i]);
+      if (labelRect.left < elRect.left) {
+        let width = labelRect.width + elRect.width + (elRect.x - labelRect.x - labelRect.width);
+        return new Rect(labelRect.x, labelRect.y, width, elRect.height).expandToIntegers();
+      }
+    }
+    return elRect;
+  },
+
+  _update: function(aPreviousElement, aNewElement) {
+    this._updateSelect(aPreviousElement, aNewElement);
+
+    let height = Math.floor(this._container.getBoundingClientRect().height);
+    this._container.top = window.innerHeight - height;
+
+    document.getElementById("form-helper-previous").disabled = this._getPrevious() ? false : true;
+    document.getElementById("form-helper-next").disabled = this._getNext() ? false : true;
+  },
+
+  _updateSelect: function(aPreviousElement, aNewElement) {
+    let previousIsSelect = this._isValidSelectElement(aPreviousElement);
+    let currentIsSelect = this._isValidSelectElement(aNewElement);
+    
+    if (currentIsSelect && !previousIsSelect) {
+      this._selectContainer.height = window.innerHeight / 1.8;
+
+      let rootNode = this._container;
+      rootNode.insertBefore(this._selectContainer, rootNode.lastChild);
+
+      SelectHelper.show(aNewElement);
+    }
+    else if (currentIsSelect && previousIsSelect) {
+      SelectHelper.reset();
+      SelectHelper.show(aNewElement);
+    }
+    else if (!currentIsSelect && previousIsSelect) {
+      let rootNode = this._container.parentNode;
+      rootNode.insertBefore(this._selectContainer, rootNode.lastChild);
+
+      SelectHelper.close();
+    }
+  },
+
+  _isValidElement: function(aElement) {
+    if (aElement.disabled)
+      return false;
+
+    if (aElement instanceof HTMLSelectElement || aElement instanceof HTMLTextAreaElement) {
+      let rect = aElement.getBoundingClientRect();
+      let isVisible = (rect.height != 0 || rect.width != 0);
+      return isVisible;
+    }
+    
+    if (aElement instanceof HTMLInputElement) {
+      let ignoreInputElements = ["checkbox", "radio", "hidden", "reset", "button"];
+      let isValidElement = (ignoreInputElements.indexOf(aElement.type) == -1);
+      if (!isValidElement)
+       return false;
+ 
+      let rect = aElement.getBoundingClientRect();
+      let isVisible = (rect.height != 0 || rect.width != 0);
+      return isVisible;
+    }
+
+    return false;
+  },
+
+  _isValidSelectElement: function(aElement) {
+    return (aElement instanceof HTMLSelectElement) || (aElement instanceof Ci.nsIDOMXULMenuListElement);
+  },
+
+  _getAll: function() {
+    let doc = getBrowser().contentDocument;
+    let nodes = doc.evaluate("//input|//select",
+                             doc,
+                             null,
+                             XPathResult.ORDERED_NODE_ITERATOR_TYPE,
+                             null);
+
+    let elements = [];
+    let node = nodes.iterateNext();
+    while (node) {
+      if (this._isValidElement(node)) 
+        elements.push(node);
+      node = nodes.iterateNext();
+    }
+
+    function orderByTabIndex(a, b) {
+      return a.tabIndex - b.tabIndex;
+    }
+    return elements.sort(orderByTabIndex);
+  },
+
+  _getPrevious: function() {
+    let elements = this._nodes;
+    for (let i = elements.length; i>0; --i) {
+      if (elements[i] == this._currentElement)
+        return elements[--i];
+   }
+   return null;
+  },
+
+  _getNext: function() {
+    let elements = this._nodes;
+    for (let i = 0; i<elements.length; i++) {
+      if (elements[i] == this._currentElement)
+        return elements[++i];
+    }
+    return null;
+  },
+
+  getLabelsFor: function(aElement) {
+    let associatedLabels = [];
+    if (this._isValidElement(aElement)) {
+      let labels = aElement.ownerDocument.getElementsByTagName("label");
+      for (let i=0; i<labels.length; i++) {
+        if (labels[i].getAttribute("for") == aElement.id)
+          associatedLabels.push(labels[i]);
+      }
+    }
+
+    if (aElement.parentNode instanceof HTMLLabelElement)
+      associatedLabels.push(aElement.parentNode);
+
+    return associatedLabels;
+  },
+
+  _currentElement: null,
+  getCurrentElement: function() {
+    return this._currentElement;
+  },
+
+  setCurrentElement: function(aElement) {
+    if (!aElement)
+      return;
+
+    let previousElement = this._currentElement;
+    this._currentElement = aElement;
+    this._update(previousElement, aElement);
+    
+    let containerHeight = this._container.getBoundingClientRect().height;
+    this._helperSpacer.setAttribute("height", containerHeight);
+
+    this.zoom(aElement);
+    gFocusManager.setFocus(aElement, Ci.nsIFocusManager.FLAG_NOSCROLL);
+  },
+
+  goToPrevious: function formHelperGoToPrevious() {
+    let previous = this._getPrevious();
+    this.setCurrentElement(previous);
+  },
+
+  goToNext: function formHelperGoToNext() {
+    let next = this._getNext();
+    this.setCurrentElement(next);
+  },
+
+  open: function formHelperOpen(aElement) {
+    this._open = true;
+
+    this._container.hidden = false;
+    this._helperSpacer.hidden = false;
+
+    this._nodes = this._getAll();
+    this.setCurrentElement(aElement);
+  },
+
+  close: function formHelperHide() {
+    if (!this._open)
+      return;
+
+    this._updateSelect(this._currentElement, null);
+
+    this._helperSpacer.hidden = true;
+    // give the form spacer area back to the content
+    let bv = Browser._browserView;
+    bv.onBeforeVisibleMove(0, 0);
+    Browser.contentScrollboxScroller.scrollBy(0, 0);
+    bv.onAfterVisibleMove();
+
+    this._container.hidden = true;
+    this._currentElement = null;
+    this._open = false;
+  },
+
+  zoom: function formHelperZoom(aElement) {
+    let zoomLevel = Browser._getZoomLevelForElement(aElement);
+    zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
+
+    let elRect = this._getRectForElement(aElement);
+    let zoomRect = Browser._getZoomRectForPoint(elRect.center().x, elRect.y, zoomLevel);
+
+    Browser.setVisibleRect(zoomRect);
+  }
+};
+
 function SelectWrapper(aControl) {
   this._control = aControl;
 }
@@ -1089,7 +1315,6 @@ var SelectHelper = {
 
     this._scrollElementIntoView(firstSelected);
 
-    this._list.focus();
     this._list.addEventListener("click", this, false);
   },
 
@@ -1144,18 +1369,19 @@ var SelectHelper = {
       this._control.fireOnChange();
   },
 
+  reset: function() {
+    let empty = this._list.cloneNode(false);
+    this._list.parentNode.replaceChild(empty, this._list);
+    this._list = empty;
+  },
+
   close: function() {
     this._updateControl();
 
     this._list.removeEventListener("click", this, false);
     this._panel.hidden = true;
-
-    // Clear out the list for the next show
-    let empty = this._list.cloneNode(false);
-    this._list.parentNode.replaceChild(empty, this._list);
-    this._list = empty;
-
-    this._control.focus();
+    
+    this.reset();
   },
 
   handleEvent: function(aEvent) {

@@ -867,12 +867,44 @@ settings .settings-title {
   font-size: 2.4mm !important;
 }
 
-/* select popup ------------------------------------------------------------ */
-#select-container {
-  padding: 3mm; /* half row size */
+/* form popup -------------------------------------------------------------- */
+#form-helper-container > #select-container > #select-container-inner {
+  -moz-border-radius-topleft: 1mm;
+  -moz-border-radius-topright: 1mm;
+  padding: 1mm 0.5mm 1mm 0.5mm;
 }
 
-#select-container-inner {
+#form-helper-container > #select-container > #select-container-inner,
+#form-buttons {
+  border: 0.1mm solid gray;
+  border-bottom: 0;
+}
+
+#form-buttons,
+#select-buttons {
+  padding: 0.5mm 1mm; /* row size & core spacing */
+}
+
+#form-buttons > button,
+#select-buttons > button {
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
+}
+ 
+#form-helper-container #select-buttons {
+  display: none;
+}
+
+#select-container:not([hidden=true]) + #form-buttons {
+  border-top: 0;
+}
+
+/* select popup ------------------------------------------------------------ */
+#stack > #select-container {
+  padding: 3mm;
+}
+
+#stack > #select-container > #select-container-inner {
   border: 0.5mm solid #36373b;
   -moz-border-top-colors: #fff #36373b;
   -moz-border-right-colors: #fff #36373b;
@@ -880,6 +912,10 @@ settings .settings-title {
   -moz-border-bottom-colors: #fff #36373b;
   -moz-border-radius: 1mm;
   padding-top: 1mm; /* core spacing */
+}
+
+#select-list {
+  border: 0.1mm solid gray;
 }
 
 #select-list > option {
@@ -907,11 +943,6 @@ settings .settings-title {
 
 #select-list > option.in-optgroup {
   -moz-padding-start: 2.2mm;
-}
-
-#select-buttons {
-  padding: 0.5mm 1mm; /* row size & core spacing */
-  -moz-box-pack: center;
 }
 
 #select-list > option > image {

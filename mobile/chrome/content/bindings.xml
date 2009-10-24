@@ -930,6 +930,21 @@
     </handlers>
   </binding>
 
+  <binding id="chrome-input">
+    <content>
+      <children />
+    </content>
+    <handlers>
+      <handler event="click" button="0">
+        <![CDATA[
+          var showEvent = document.createEvent("Events");
+          showEvent.initEvent("UIShowForm", true, false);
+          this.dispatchEvent(showEvent);
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
   <binding id="chrome-select">
     <content>
       <children />
@@ -955,10 +970,8 @@
           if (options.length == 0)
             return;
       
-          this.focus();
-
           var showEvent = document.createEvent("Events");
-          showEvent.initEvent("UIShowSelect", true, false);
+          showEvent.initEvent("UIShowForm", true, false);
           this.dispatchEvent(showEvent);
         ]]>
       </handler>

@@ -569,11 +569,73 @@ settings .settings-title {
   font-size: 8pt !important;
 }
 
+/* forms popup ------------------------------------------------------------- */
+ #forms-buttons {
+  border: 0.25mm solid black;
+  border-bottom: 0;
+  padding: 0.55mm 1.1mm; /* row size & core spacing */
+  -moz-box-pack: center;
+}
+ 
+#select-container:not([hidden=true]) + #forms-buttons {
+  border-top: 0;
+}
+
+#forms-buttons > button {
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
+}
+
+/* form popup -------------------------------------------------------------- */
+#form-helper-container > #select-container > #select-container-inner {
+  -moz-border-radius-topleft: 1mm;
+  -moz-border-radius-topright: 1mm;
+  padding: 0.75mm 0.25mm 0.75mm 0.25mm;
+  border-bottom: 0;
+}
+
+#form-helper-container > #select-container > #select-container-inner,
+#form-buttons {
+  border: 0.25mm solid gray;
+  border-bottom: 0;
+}
+
+#form-buttons,
+#select-buttons {
+  padding: 0.25mm 0.5mm; /* row size & core spacing */
+}
+
+#form-buttons > button,
+#select-buttons > button {
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
+}
+
+#form-helper-container #select-buttons {
+  display: none;
+}
+
+#select-container:not([hidden=true]) + #form-buttons {
+  border-top: 0;
+}
+
 /* select popup ------------------------------------------------------------ */
-#select-container {
-  border: 0.5mm solid #36373b;
-  -moz-border-radius: 1.0mm;
-  padding-top: 1.1mm; /* core spacing */
+#stack > #select-container {
+  padding: 1.5mm;
+}
+
+#stack > #select-container > #select-container-inner {
+  border: 0.25mm solid #36373b;
+  -moz-border-top-colors: #fff #36373b;
+  -moz-border-right-colors: #fff #36373b;
+  -moz-border-left-colors: #fff #36373b;
+  -moz-border-bottom-colors: #fff #36373b;
+  -moz-border-radius: 0.5mm;
+  padding-top: 0.5mm; /* core spacing */
+}
+
+#select-list {
+  border: 0.1mm solid gray;
 }
 
 #select-list > option {
@@ -601,11 +663,6 @@ settings .settings-title {
 
 #select-list > option.in-optgroup {
   -moz-padding-start: 4.4mm;
-}
-
-#select-buttons {
-  padding: 0.55mm 1.1mm; /* row size & core spacing */
-  -moz-box-pack: center;
 }
 
 #select-list > option > image {
