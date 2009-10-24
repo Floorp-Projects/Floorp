@@ -816,7 +816,7 @@ Assembler::asm_call(LInsp ins)
     // R0/R1. We need to either place it in the result fp reg, or store it.
     // See comments in asm_prep_fcall() for more details as to why this is
     // necessary here for floating point calls, but not for integer calls.
-    if (ARM_VFP) {
+    if (ARM_VFP && ins->isUsed()) {
         // Determine the size (and type) of the instruction result.
         ArgSize         rsize = (ArgSize)(call->_argtypes & ARGSIZE_MASK_ANY);
 
