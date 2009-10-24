@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=517851
+-->
+<head>
+  <title>Test for Bug 517851</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=517851">Mozilla Bug 517851</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 517851 **/
+
+window.handledCount = 0;
+window.testReturnValue = false;
+var target = document.createElement("div");
+target.setAttribute("onerror", "++window.handledCount; return window.testReturnValue;");
+target.setAttribute("onmouseover", "++window.handledCount; return window.testReturnValue;");
+target.setAttribute("onbeforeunload", "++window.handledCount; return window.testReturnValue;");
+target.setAttribute("onmousemove", "++window.handledCount; return window.testReturnValue;");                     
+
+var e = document.createEvent("Event");
+e.initEvent("error", true, true);
+window.testReturnValue = false;
+is(target.dispatchEvent(e), !window.testReturnValue,
+   "error event should have reverse return value handling!");
+is(handledCount, 1, "Wrong event count!");
+window.testReturnValue = true;
+is(target.dispatchEvent(e), !window.testReturnValue,
+   "error event should have reverse return value handling (2)!");
+is(handledCount, 2, "Wrong event count!");
+
+e = document.createEvent("MouseEvent");
+e.initEvent("mouseover", true, true);
+window.testReturnValue = false;
+is(target.dispatchEvent(e), !window.testReturnValue,
+   "mouseover event should have reverse return value handling!");
+is(handledCount, 3, "Wrong event count!");
+window.testReturnValue = true;
+is(target.dispatchEvent(e), !window.testReturnValue,
+   "mouseover event should have reverse return value handling (2)!");
+is(handledCount, 4, "Wrong event count!");
+
+e = document.createEvent("BeforeUnloadEvent");
+e.initEvent("beforeunload", true, true);
+window.testReturnValue = true;
+is(target.dispatchEvent(e), false,
+   "beforeunload event should be prevented!");
+is(handledCount, 5, "Wrong event count!");
+window.testReturnValue = false;
+is(target.dispatchEvent(e), false,
+   "beforeunload event should be prevented (2)!");
+is(handledCount, 6, "Wrong event count!");
+
+// Create normal event for beforeunload.
+e = document.createEvent("Event");
+e.initEvent("beforeunload", true, true);
+window.testReturnValue = true;
+is(target.dispatchEvent(e), true,
+   "beforeunload event shouldn't be prevented (3)!");
+is(handledCount, 7, "Wrong event count!");
+
+e = document.createEvent("MouseEvent");
+e.initEvent("mousemove", true, true);
+window.testReturnValue = true;
+is(target.dispatchEvent(e), window.testReturnValue,
+   "mousemove event shouldn't have reverse return value handling!");
+is(handledCount, 8, "Wrong event count!");
+window.testReturnValue = false;
+is(target.dispatchEvent(e), window.testReturnValue,
+   "mousemove event shouldn't have reverse return value handling (2)!");
+is(handledCount, 9, "Wrong event count!");
+
+</script>
+</pre>
+</body>
+</html>

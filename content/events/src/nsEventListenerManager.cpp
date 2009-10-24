@@ -617,7 +617,7 @@ nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
     // If we didn't find a script listener or no listeners existed
     // create and add a new one.
     nsCOMPtr<nsIDOMEventListener> scriptListener;
-    rv = NS_NewJSEventListener(aContext, aScopeObject, aObject,
+    rv = NS_NewJSEventListener(aContext, aScopeObject, aObject, aName,
                                getter_AddRefs(scriptListener));
     if (NS_SUCCEEDED(rv)) {
       AddEventListener(scriptListener, eventType, aName, nsnull,
@@ -1019,10 +1019,22 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
       aListenerStruct->mHandlerIsString) {
     nsCOMPtr<nsIJSEventListener> jslistener = do_QueryInterface(aListener);
     if (jslistener) {
-      nsAutoString eventString;
-      if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
-        nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + eventString);
+      // We probably have the atom already.
+      nsCOMPtr<nsIAtom> atom = aListenerStruct->mTypeAtom;
+      if (!atom) {
+        nsAutoString eventString;
+        if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
+          atom = do_GetAtom(NS_LITERAL_STRING("on") + eventString);
+        }
+      }
 
+      if (atom) {
+#ifdef DEBUG
+        nsAutoString type;
+        aDOMEvent->GetType(type);
+        nsCOMPtr<nsIAtom> eventAtom = do_GetAtom(NS_LITERAL_STRING("on") + type);
+        NS_ASSERTION(eventAtom == atom, "Something wrong with event atoms!");
+#endif
         result = CompileEventHandlerInternal(jslistener->GetEventContext(),
                                              jslistener->GetEventScope(),
                                              jslistener->GetEventTarget(),
