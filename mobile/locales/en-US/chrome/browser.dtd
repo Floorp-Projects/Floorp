@@ -31,6 +31,10 @@
 <!ENTITY helperApp.save            "Save">
 <!ENTITY helperApp.nothing         "Nothing">
 
+<!ENTITY formHelper.previous       "Previous">
+<!ENTITY formHelper.next           "Next">
+<!ENTITY formHelper.done           "Done">
+
 <!ENTITY addonsHeader.label        "Add-ons">
 <!ENTITY addonsLocal.label         "Your Add-ons">
 <!ENTITY addonsUpdate.label        "Update">
@@ -89,5 +93,3 @@
 <!ENTITY consoleErrFile.label      "Source File:">
 <!ENTITY consoleErrLine.label      "Line:">
 <!ENTITY consoleErrColumn.label    "Column:">
-
-<!ENTITY selectListDone.label      "Done">

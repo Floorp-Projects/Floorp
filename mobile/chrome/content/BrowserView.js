@@ -42,6 +42,8 @@ let Ci = Components.interfaces;
 
 const kBrowserViewZoomLevelMin = 0.2;
 const kBrowserViewZoomLevelMax = 4.0;
+const kBrowserFormZoomLevelMin = 1.0;
+const kBrowserFormZoomLevelMax = 2.0;
 const kBrowserViewZoomLevelPrecision = 10000;
 const kBrowserViewPrefetchBeginIdleWait = 1;    // seconds
 const kBrowserViewCacheSize = 15;

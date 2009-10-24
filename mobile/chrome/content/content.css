@@ -54,6 +54,15 @@ thumb {
   -moz-border-radius: 4px !important;
 }
 
+textarea,
+input:not(type),
+input[type=""],
+input[type="file"],
+input[type="password"],
+input[type="text"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#chrome-input");
+}
+
 select {
   -moz-binding: url("chrome://browser/content/bindings.xml#chrome-select");
 }
