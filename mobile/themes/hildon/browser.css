@@ -527,6 +527,9 @@ placeitem[ui="manage"] > .bookmark-manage > image {
 
 .searchengine .radio-icon {
   display: block;
+  width: 24px;
+  height: 24px;
+  -moz-margin-end: 1mm;
 }
 
 #autocomplete_navbuttons {
@@ -806,8 +809,9 @@ box[type="documenttab"]:only-child .documenttab-close {
 }
 
 .search-engine-button .button-icon {
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
+  -moz-margin-end: 1mm;
 }
 
 /* Preferences window   ---------------------------------------------------- */
