@@ -259,7 +259,7 @@ placeitem[type="folder"] > .bookmark-manage > image {
   border: none;
   margin: 0;
   padding: 0;
-  list-style-image: url("chrome://browser/skin/images/close-30.png");
+  list-style-image: url("chrome://browser/skin/images/close-40.png");
 }
 
 .tool-search {

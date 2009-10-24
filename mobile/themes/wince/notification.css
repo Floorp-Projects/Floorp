@@ -12,7 +12,7 @@ notification .messageCloseButton {
 
 @media all and (min-device-width: 401px) {
 notification .messageCloseButton {
-  list-style-image: url("chrome://browser/skin/images/close-30.png");
+  list-style-image: url("chrome://browser/skin/images/close-40.png");
 }
 }
 
