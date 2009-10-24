@@ -1621,7 +1621,7 @@ Assembler::asm_ld_imm(Register d, int32_t imm, bool chk /* = true */)
         ++_nSlot;
         offset += sizeof(_nSlot);
     }
-    NanoAssert(isS12(offset) && (offset < 0));
+    NanoAssert(isS12(offset) && (offset <= -8));
 
     // Write the literal.
     *(_nSlot++) = imm;
