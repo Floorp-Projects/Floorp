@@ -42,7 +42,7 @@
 interface nsIControllers;
 interface nsIDOMFileList;
 
-[scriptable, uuid(71e9ecc0-f2d0-422c-8601-430e7f17fa47)]
+[scriptable, uuid(2cb61f32-b21f-4b87-904c-8876d8bb5f33)]
 interface nsIDOMNSHTMLInputElement : nsISupports
 {
 	readonly attribute nsIControllers   controllers;
@@ -55,6 +55,13 @@ interface nsIDOMNSHTMLInputElement : nsISupports
 	readonly attribute nsIDOMFileList   files;
 
            attribute boolean          indeterminate;
+
+           attribute boolean          multiple;
+
+  void mozGetFileNameArray(out unsigned long aLength,
+                           [array,size_is(aLength), retval] out wstring aFileNames);
+  void mozSetFileNameArray([array,size_is(aLength)] in wstring aFileNames,
+                           in unsigned long aLength);
 
 	/* convenience */
   void                      setSelectionRange(in long selectionStart,
