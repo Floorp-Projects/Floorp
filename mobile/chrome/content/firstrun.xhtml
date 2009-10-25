@@ -4,6 +4,8 @@
   "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd" >
+%globalDTD;
 <!ENTITY % firstrunDTD SYSTEM "chrome://browser/locale/firstrun.dtd" >
 %firstrunDTD;
 ]>
@@ -92,7 +94,7 @@
   ]]></script>
 </head>
 
-<body>
+<body dir="&locale.dir;">
   <div id="wrapper">
 <!--    <p class="intro"><h1>&welcome.title;</h1></p> -->
     <p class="intro"><img src="chrome://branding/content/welcome.png"/></p>
