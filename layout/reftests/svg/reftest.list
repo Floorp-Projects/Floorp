@@ -128,4 +128,5 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weigh
 == text-style-01d.svg text-style-01-ref.svg
 == text-style-01e.svg text-style-01-ref.svg
 == thin-stroke-01.svg pass.svg
+== userSpaceOnUse-and-pattern-01.svg userSpaceOnUse-and-pattern-01-ref.svg
 == viewport-percent-graphic-user-01.svg pass.svg
