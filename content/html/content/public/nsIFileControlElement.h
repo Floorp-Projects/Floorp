@@ -40,7 +40,11 @@
 #define nsIFileControlElement_h___
 
 #include "nsISupports.h"
-class nsAString;
+#include "nsTArray.h"
+#include "nsString.h"
+#include "nsCOMArray.h"
+
+class nsIFile;
 
 // IID for the nsIFileControl interface
 #define NS_IFILECONTROLELEMENT_IID \
@@ -57,14 +61,23 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFILECONTROLELEMENT_IID)
 
   /**
-   * Gets filename to be uploaded when this control is submitted
+   * Gets a readable string representing the list of files currently
+   * selected by this control. This value might not be a valid file name
+   * and should not be used for anything but displaying the filename to the
+   * user.
    */
-  virtual void GetFileName(nsAString& aFileName) = 0;
+  virtual void GetDisplayFileName(nsAString& aFileName) = 0;
 
   /**
-   * Sets filename to be uploaded when this control is submitted
+   * Sets the list of filenames currently selected by this control.
    */
-  virtual void SetFileName(const nsAString& aFileName) = 0;
+  virtual void SetFileNames(const nsTArray<nsString>& aFileNames) = 0;
+
+  /**
+   * Gets a list of nsIFile objects for the files currently selected by
+   * this control.
+   */
+  virtual void GetFileArray(nsCOMArray<nsIFile>& aFiles) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFileControlElement,
