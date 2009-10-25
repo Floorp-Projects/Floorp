@@ -96,33 +96,25 @@
 
 <body dir="&locale.dir;">
   <div id="wrapper">
-<!--    <p class="intro"><h1>&welcome.title;</h1></p> -->
-    <p class="intro"><img src="chrome://branding/content/welcome.png"/></p>
-    <p class="intro"><img onclick="reloadIfDone(this);" src="chrome://browser/content/firstRunAnimation.gif"/></p>
-    <hr/>
-    <p>&overview.description;</p>
-
-    <h2>&nextSteps.title;</h2>
-    <hr/>
+    <div class="intro">
+      <img id="welcomeImage" src="chrome://branding/content/logoWordmark.png"/>
+      <img id="welcomeAnim" onclick="reloadIfDone(this);" src="chrome://browser/content/firstRunAnimation.gif"/>
+    </div>
+    <p id="overview" class="title">&overview.description;</p>
 
     <div class="go" id="weave">
-      <h3>&sync.title;</h3>
+      <p class="title">&sync.title;</p>
       <p>&sync.description;</p>
       <img src="chrome://browser/skin/images/weave.png"/>
-      <p class="rightalign"><input type="button" id="sync" onclick="goToAddons('weave');" value="&sync.link;"/></p>
+      <p class="rightalign"><input type="button" id="sync" onclick="goToAddons('weave');" value="&sync.linkLabel;"/></p>
     </div>
 
     <div class="go" id="addons">
-      <h3>&getPersonal.title;</h3>
+      <p class="title">&getPersonal.title;</p>
       <p>&getPersonal.description;</p>
       <img src="chrome://browser/skin/images/addons.png"/>
-      <p class="rightalign"><input type="button" id="getPersonal" onclick="goToAddons();" value="&getPersonal.link;"/></p>
+      <p class="rightalign"><input type="button" id="getPersonal" onclick="goToAddons();" value="&getPersonal.linkLabel;"/></p>
     </div>
-
-    <!--
-    <hr/>
-    <p><a id="skip" href="">&skip.link;</a></p>
-    -->
   </div>
 </body>
 </html>
