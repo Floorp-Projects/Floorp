@@ -783,10 +783,10 @@ void
 TraceRecorder::tprint(const char *format, int count, nanojit::LIns *insa[])
 {
     size_t size = strlen(format) + 1;
-    char *data = (char*) lir->insSkip(size)->payload();
+    char* data = (char*) traceMonitor->traceAlloc->alloc(size);
     memcpy(data, format, size);
 
-    double *args = (double*) lir->insSkip(count * sizeof(double))->payload();
+    double *args = (double*) traceMonitor->traceAlloc->alloc(count * sizeof(double));
     for (int i = 0; i < count; ++i) {
         JS_ASSERT(insa[i]);
         lir->insStorei(insa[i], INS_CONSTPTR(args), sizeof(double) * i);

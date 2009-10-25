@@ -427,8 +427,8 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     unsigned numGlobalSlots = treeInfo->globalSlots->length();
     unsigned safeSlots = NativeStackSlots(cx, frameDepth) + 1 + numGlobalSlots;
     jsbytecode* recursive_pc = return_pc + JSOP_CALL_LENGTH;
-    LIns* data = lir->insSkip(sizeof(VMSideExit) + sizeof(JSTraceType) * safeSlots);
-    VMSideExit* exit = (VMSideExit*)data->payload();
+    VMSideExit* exit = (VMSideExit*)
+        traceMonitor->traceAlloc->alloc(sizeof(VMSideExit) + sizeof(JSTraceType) * safeSlots);
     memset(exit, 0, sizeof(VMSideExit));
     exit->pc = (jsbytecode*)recursive_pc;
     exit->from = fragment;
