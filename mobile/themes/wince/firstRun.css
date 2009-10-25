@@ -35,51 +35,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-p.intro {
-  text-align: center;
-}
-
 body {
   color: #4b4742;
+  font-size: 8pt;
 }
 
-h1 {
-  margin: 1em 0;
+.intro {
+  padding-top: 10px;
 }
 
-h2 {
-  margin: 0 0 6px;
+p {
+  padding: 0;
+  padding-bottom: 5px;
+  margin: 0;
 }
 
-h3 {
-  margin: 0 0 4px;
-}
-
-a {
-  color: #0489b7;
-  text-decoration: none;
-  display: block;
-  padding: 5px 40px 5px 0;
-  background: url("images/arrowright-16.png") right center no-repeat;
+p.title {
+  font-size: 9pt;
 }
 
 p.rightalign {
   text-align: right;
-  padding: 0;
-  margin: 0;
+  padding-bottom: 0;
 }
 
 input[type="button"] {
-  font-size: 8pt;
+  font-size: 9pt;
   margin-bottom: 20px;
-}
-
-hr {
-  color: #bdcdcf;
-  height: 3px;
-  border: 0;
-  padding: 0;
-  background: #bdcdcf;
 }
 
 .go {
@@ -87,8 +69,21 @@ hr {
   padding-left: 100px;
 }
 
-.go img {
+.go > img {
   position: absolute;
   left: 0;
   top: 0;
+}
+
+#welcomeImage {
+  float: left;
+}
+
+#welcomeAnim {
+  float: right;
+}
+
+#overview {
+  padding-bottom: 30px;
+  clear: both;
 }
