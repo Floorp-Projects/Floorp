@@ -207,10 +207,8 @@ protected:
   PRUint8 mPrettyPrintHasSpecialRoot : 1;
   PRUint8 mPrettyPrintHasFactoredElements : 1;
   PRUint8 mHasProcessedBase : 1;
-  PRUint8 mAllowAutoXLinks : 1;
   PRUint8 mPrettyPrinting : 1;  // True if we called PrettyPrint() and it
                                 // decided we should in fact prettyprint.
-  PRUint8 unused : 1;  // bits available if someone needs one
   
   nsTArray<StackNode>              mContentStack;
 
