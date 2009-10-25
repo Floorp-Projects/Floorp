@@ -292,11 +292,29 @@ protected:
   nsresult GetValues(const nsISMILAttr& aSMILAttr,
                      nsSMILValueArray& aResult);
   void     UpdateValuesArray();
-  PRBool   IsToAnimation() const;
-  PRBool   IsAdditive() const;
   void     CheckKeyTimes(PRUint32 aNumValues);
   void     CheckKeySplines(PRUint32 aNumValues);
 
+  inline PRBool IsToAnimation() const {
+    return !HasAttr(nsGkAtoms::values) &&
+            HasAttr(nsGkAtoms::to) &&
+           !HasAttr(nsGkAtoms::from);
+  }
+
+  inline PRBool IsAdditive() const {
+    /*
+     * Animation is additive if:
+     *
+     * (1) additive = "sum" (GetAdditive() == true), or
+     * (2) it is 'by animation' (by is set, from and values are not)
+     *
+     * Although animation is not additive if it is 'to animation'
+     */
+    PRBool isByAnimation = (!HasAttr(nsGkAtoms::values) &&
+                             HasAttr(nsGkAtoms::by) &&
+                            !HasAttr(nsGkAtoms::from));
+    return !IsToAnimation() && (GetAdditive() || isByAnimation);
+  }
 
   // Members
   // -------
