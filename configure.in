@@ -512,7 +512,7 @@ MOZ_ARG_DISABLE_BOOL(vista-sdk-requirements,
 [  --disable-vista-sdk-requirements
                            Do not build Vista SDK specific code],
    MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1,
-   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=)
+   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=$_PLATFORM_MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
 if test -n "$COMPILE_ENVIRONMENT"; then
 if test -n "$MOZ_DISABLE_VISTA_SDK_REQUIREMENTS"; then
     AC_MSG_WARN([--disable-vista-sdk-requirements is deprecated, use --with-windows-version=502 instead])
@@ -2008,6 +2008,8 @@ case "$target" in
 
 *-wince*)
     TARGET_COMPILER_ABI=msvc
+    _PLATFORM_DEFAULT_TOOLKIT=cairo-windows
+    _PLATFORM_MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1
     MOZ_TOOLS_DIR=`echo $MOZ_TOOLS`
     AR_LIST="$AR -list"
     AR_EXTRACT="$AR -extract"
