@@ -930,7 +930,7 @@ protected:
   nsresult LoadSrc();
   nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
 
-  nsCOMPtr<nsIFrameLoader> mFrameLoader;
+  nsRefPtr<nsFrameLoader> mFrameLoader;
 };
 
 //----------------------------------------------------------------------

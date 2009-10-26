@@ -66,7 +66,7 @@
 
 [browser]
 ; [Base Browser Files]
-#ifdef XP_WIN32
+#ifndef XP_UNIX
 @BINPATH@/@MOZ_APP_NAME@.exe
 #else
 @BINPATH@/@MOZ_APP_NAME@-bin
@@ -84,6 +84,8 @@
 #ifndef WINCE
 @BINPATH@/plugins/npnul32.dll
 #endif
+#elifdef XP_OS2
+@BINPATH@/plugins/npnulos2.dll
 #endif
 @BINPATH@/@DLL_PREFIX@sqlite3@DLL_SUFFIX@
 @BINPATH@/README.txt
@@ -295,8 +297,13 @@
 @BINPATH@/components/nsSessionStartup.js
 @BINPATH@/components/nsSessionStore.js
 @BINPATH@/components/nsURLFormatter.js
+#ifndef XP_OS2
 @BINPATH@/components/@DLL_PREFIX@browserdirprovider@DLL_SUFFIX@
 @BINPATH@/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
+#else
+@BINPATH@/components/brwsrdir@DLL_SUFFIX@
+@BINPATH@/components/brwsrcmp@DLL_SUFFIX@
+#endif
 @BINPATH@/components/txEXSLTRegExFunctions.js
 @BINPATH@/components/nsLivemarkService.js
 @BINPATH@/components/nsTaggingService.js
@@ -349,7 +356,7 @@
 
 
 ; shell icons
-#ifndef XP_WIN32
+#ifdef XP_UNIX
 @BINPATH@/icons/*.xpm
 @BINPATH@/icons/*.png
 #endif

@@ -41,8 +41,8 @@
 #include "nsIDOMMouseScrollEvent.h"
 #include "nsDOMMouseEvent.h"
 
-class nsDOMMouseScrollEvent : public nsIDOMMouseScrollEvent,
-                              public nsDOMMouseEvent
+class nsDOMMouseScrollEvent : public nsDOMMouseEvent,
+                              public nsIDOMMouseScrollEvent
 {
 public:
   nsDOMMouseScrollEvent(nsPresContext* aPresContext, nsInputEvent* aEvent);

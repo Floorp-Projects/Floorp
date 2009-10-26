@@ -79,8 +79,10 @@ nsMIMEInfoUnix::GetHasDefaultHandler(PRBool *_retval)
   nsRefPtr<nsMIMEInfoBase> mimeInfo = nsGNOMERegistry::GetFromType(mType);
   if (!mimeInfo) {
     nsCAutoString ext;
-    GetPrimaryExtension(ext);
-    mimeInfo = nsGNOMERegistry::GetFromExtension(ext);
+    nsresult rv = GetPrimaryExtension(ext);
+    if (NS_SUCCEEDED(rv)) {
+      mimeInfo = nsGNOMERegistry::GetFromExtension(ext);
+    }
   }
   if (mimeInfo)
     *_retval = PR_TRUE;

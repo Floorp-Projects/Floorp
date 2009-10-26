@@ -47,6 +47,7 @@
 #include "nsIDOMStorage.h"
 #include "nsIDOMStorageList.h"
 #include "nsIDOMStorageItem.h"
+#include "nsIPermissionManager.h"
 #include "nsInterfaceHashtable.h"
 #include "nsVoidArray.h"
 #include "nsTArray.h"
@@ -60,6 +61,10 @@
 #ifdef MOZ_STORAGE
 #include "nsDOMStorageDBWrapper.h"
 #endif
+
+#define IS_PERMISSION_ALLOWED(perm) \
+      ((perm) != nsIPermissionManager::UNKNOWN_ACTION && \
+      (perm) != nsIPermissionManager::DENY_ACTION)
 
 class nsDOMStorage;
 class nsIDOMStorage;
@@ -245,6 +250,7 @@ protected:
   // keys are used for database queries.
   // see comments of the getters bellow.
   nsCString mScopeDBKey;
+  nsCString mQuotaETLDplus1DomainDBKey;
   nsCString mQuotaDomainDBKey;
 
   friend class nsIDOMStorage2;
@@ -257,8 +263,11 @@ public:
   nsCString& GetScopeDBKey() {return mScopeDBKey;}
 
   // e.g. "moc.rab.%" - reversed eTLD+1 subpart of the domain or
-  // (in future) reversed offline application allowed domain.
-  nsCString& GetQuotaDomainDBKey() {return mQuotaDomainDBKey;}
+  // reversed offline application allowed domain.
+  nsCString& GetQuotaDomainDBKey(PRBool aOfflineAllowed)
+  {
+    return aOfflineAllowed ? mQuotaDomainDBKey : mQuotaETLDplus1DomainDBKey;
+  }
 
  #ifdef MOZ_STORAGE
    static nsDOMStorageDBWrapper* gStorageDB;
@@ -446,5 +455,11 @@ NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 nsresult
 NS_NewDOMStorageList(nsIDOMStorageList** aResult);
+
+PRUint32
+GetOfflinePermission(const nsACString &aDomain);
+
+PRBool
+IsOfflineAllowed(const nsACString &aDomain);
 
 #endif /* nsDOMStorage_h___ */

@@ -1,0 +1,10 @@
+<html>
+<head><script>
+function boom()
+{
+  var f = document.getElementById("f");
+  window.getComputedStyle(f, null).getPropertyValue("text-decoration");
+}
+</script></head>
+<body onload="boom();"><font id="f" color="black">a</font></body>
+</html>

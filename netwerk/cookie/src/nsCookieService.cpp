@@ -838,10 +838,10 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
     mCookiesPermissions = (PRUint8) LIMIT(val, 0, 2, 0);
 
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefMaxNumberOfCookies, &val)))
-    mMaxNumberOfCookies = (PRUint16) LIMIT(val, 0, 0xFFFF, 0xFFFF);
+    mMaxNumberOfCookies = (PRUint16) LIMIT(val, 1, 0xFFFF, kMaxNumberOfCookies);
 
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefMaxCookiesPerHost, &val)))
-    mMaxCookiesPerHost = (PRUint16) LIMIT(val, 0, 0xFFFF, 0xFFFF);
+    mMaxCookiesPerHost = (PRUint16) LIMIT(val, 1, 0xFFFF, kMaxCookiesPerHost);
 }
 
 /******************************************************************************
@@ -2130,6 +2130,7 @@ removeExpiredCallback(nsCookieEntry *aEntry,
 void
 nsCookieService::RemoveExpiredCookies(PRInt64 aCurrentTime)
 {
+  NS_ASSERTION(mDBState->hostTable.Count() > 0, "table is empty");
 #ifdef PR_LOGGING
   PRUint32 initialCookieCount = mDBState->cookieCount;
 #endif
@@ -2418,5 +2419,6 @@ findOldestCallback(nsCookieEntry *aEntry,
 void
 nsCookieService::FindOldestCookie(nsEnumerationData &aData)
 {
+  NS_ASSERTION(mDBState->hostTable.Count() > 0, "table is empty");
   mDBState->hostTable.EnumerateEntries(findOldestCallback, &aData);
 }

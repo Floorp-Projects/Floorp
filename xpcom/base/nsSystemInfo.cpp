@@ -90,7 +90,32 @@ nsSystemInfo::Init()
       NS_ENSURE_SUCCESS(rv, rv);
     }
 #endif
-   
+
+
+#ifdef MOZ_PLATFORM_HILDON
+    char *  line = nsnull;
+    size_t  len = 0;
+    ssize_t read;
+    FILE *fp = fopen ("/proc/component_version", "r");
+    if (fp) {
+      while ((read = getline(&line, &len, fp)) != -1) {
+        if (line) {
+          if (strstr(line, "RX-51")) {
+            SetPropertyAsACString(NS_ConvertASCIItoUTF16("device"), NS_LITERAL_CSTRING("Nokia N900"));
+            break;
+          } else if (strstr(line, "RX-44") ||
+                     strstr(line, "RX-48") ||
+                     strstr(line, "RX-32") ) {
+            SetPropertyAsACString(NS_ConvertASCIItoUTF16("device"), NS_LITERAL_CSTRING("Nokia N8xx"));
+            break;
+          }
+        }
+      }
+      if (line)
+        free(line);
+      fclose(fp);
+    }
+#endif   
     return NS_OK;
 }
 

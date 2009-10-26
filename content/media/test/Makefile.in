@@ -80,10 +80,12 @@ _TEST_FILES = \
 		seek7.js \
 		seek8.js \
 		seek9.js \
+		seek10.js \
 		test_audio1.html \
 		test_audio2.html \
 		test_autobuffer.html \
 		test_autoplay.html \
+		test_bug495300.html \
 		test_can_play_type.html \
 		test_constants.html \
 		test_controls.html \
@@ -143,6 +145,7 @@ _TEST_FILES += \
 		bug520500.ogg \
 		bug520908.ogv \
 		bug520908.ogv^headers^ \
+		bug523816.ogv \
 		chain.ogv \
 		dirac.ogg \
 		seek.ogv \
@@ -180,7 +183,6 @@ _TEST_FILES += \
 		test_bug486646.html \
 		test_bug493187.html \
 		test_bug495145.html \
-		test_bug495300.html \
 		test_bug495319.html \
 		test_closing_connections.html \
 		test_contentDuration1.html \

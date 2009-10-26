@@ -58,7 +58,7 @@ DEFINES += \
   -DCPPFLAGS="$(CPPFLAGS)" \
   $(NULL)
 
-CHANGESET := $(shell cd $(topsrcdir) && hg identify 2>/dev/null | cut -f1 -d' ')
+CHANGESET := $(shell cd $(topsrcdir) && hg identify . 2>/dev/null | cut -f1 -d' ')
 ifdef CHANGESET
 DEFINES += -DSOURCE_CHANGESET="$(CHANGESET)"
 endif

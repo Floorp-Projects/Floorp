@@ -85,6 +85,8 @@ pageInfoTreeView.prototype = {
   {
     this.rows = this.data.push(row);
     this.rowCountChanged(this.rows - 1, 1);
+    if (this.selection.count == 0 && this.rowCount)
+      this.selection.select(0);
   },
 
   rowCountChanged: function(index, count)
@@ -146,6 +148,7 @@ pageInfoTreeView.prototype = {
 // mmm, yummy. global variables.
 var gWindow = null;
 var gDocument = null;
+var gImageUrl = null;
 
 // column number to help using the data array
 const COL_IMAGE_ADDRESS = 0;
@@ -292,6 +295,11 @@ function onLoadPageInfo()
   // init media view
   var imageTree = document.getElementById("imagetree");
   imageTree.view = gImageView;
+
+  // set gImageUrl if present
+  if ("arguments" in window && window.arguments.length >= 1 &&
+       window.arguments[0] && window.arguments[0].imageUrl)
+    gImageUrl = window.arguments[0].imageUrl;
 
   // build the content
   loadPageInfo();
@@ -523,6 +531,7 @@ function processFrames()
     var iterator = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT, grabAll, true);
     gFrameList.shift();
     setTimeout(doGrab, 16, iterator);
+    onFinished.push(selectImgUrl);
   }
   else
     onFinished.forEach(function(func) { func(); });
@@ -537,14 +546,6 @@ function doGrab(iterator)
     }
 
   setTimeout(doGrab, 16, iterator);
-}
-
-function ensureSelection(view)
-{
-  // only select something if nothing is currently selected
-  // and if there's anything to select
-  if (view.selection.count == 0 && view.rowCount)
-    view.selection.select(0);
 }
 
 function addImage(url, type, alt, elem, isBg)
@@ -1168,4 +1169,18 @@ function doSelectAll()
 
   if (elem && "treeBoxObject" in elem)
     elem.view.selection.selectAll();
+}
+
+function selectImgUrl ()
+{
+  if (gImageUrl) {
+    var tree = document.getElementById("imagetree");
+    for (var c = 0; c < tree.view.rowCount; c++)
+    {
+      if (gImageUrl == gImageView.data[c][COL_IMAGE_ADDRESS]) {
+        tree.view.selection.select(c);
+        return;
+      }
+    }
+  }
 }

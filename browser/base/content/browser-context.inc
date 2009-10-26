@@ -156,6 +156,10 @@
                 type="checkbox"
                 accesskey="&blockImageCmd.accesskey;"
                 oncommand="gContextMenu.toggleImageBlocking(this.getAttribute('checked') == 'true');"/>
+      <menuitem id="context-viewimageinfo"
+                label="&viewImageInfoCmd.label;"
+                accesskey="&viewImageInfoCmd.accesskey;"
+                oncommand="gContextMenu.viewImageInfo();"/>
       <menuitem id="context-savevideo"
                 label="&saveVideoCmd.label;"
                 accesskey="&saveVideoCmd.accesskey;"
