@@ -806,7 +806,7 @@ WebContentConverterRegistrar.prototype = {
      * branch and stop cycling once that's true.  This doesn't fix the case
      * where a user manually removes a reader, but that's not supported yet!
      */
-    var vals = branch.getChildList("", {});
+    var vals = branch.getChildList("");
     if (vals.length == 0)
       return;
 
@@ -832,7 +832,7 @@ WebContentConverterRegistrar.prototype = {
         getService(Ci.nsIPrefService);
 
     var kids = ps.getBranch(PREF_CONTENTHANDLERS_BRANCH)
-                 .getChildList("", {});
+                 .getChildList("");
 
     // first get the numbers of the providers by getting all ###.uri prefs
     var nums = [];
@@ -857,7 +857,7 @@ WebContentConverterRegistrar.prototype = {
     // so that getWebContentHandlerByURI can return successfully.
     try {
       var autoBranch = ps.getBranch(PREF_CONTENTHANDLERS_AUTO);
-      var childPrefs = autoBranch.getChildList("", { });
+      var childPrefs = autoBranch.getChildList("");
       for (var i = 0; i < childPrefs.length; ++i) {
         var type = childPrefs[i];
         var uri = autoBranch.getCharPref(type);
