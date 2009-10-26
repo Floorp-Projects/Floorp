@@ -208,7 +208,7 @@ function getUpdateChannel() {
   }
 
   try {
-    var partners = gPref.getChildList(PREF_PARTNER_BRANCH, { });
+    var partners = gPref.getChildList(PREF_PARTNER_BRANCH);
     if (partners.length) {
       channel += "-cck";
       partners.sort();

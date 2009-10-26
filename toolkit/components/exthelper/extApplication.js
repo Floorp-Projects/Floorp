@@ -211,7 +211,7 @@ PreferenceBranch.prototype = {
   // modified: true, false (prefHasUserValue)
   find : function prefs_find(aOptions) {
     var retVal = [];
-    var items = this._prefs.getChildList("", []);
+    var items = this._prefs.getChildList("");
 
     for (var i = 0; i < items.length; i++) {
       retVal.push(new Preference(items[i], this));
