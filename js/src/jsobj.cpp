@@ -2169,7 +2169,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* o
         if (!scope)
             goto bad;
         if (!DSLOTS_IS_NOT_NULL(obj))
-            DSLOTS_BUMP(obj);
+            DSLOTS_BUMP_1(obj);
     } else {
         scope = JSScope::create(cx, ops, clasp, obj, js_GenerateShape(cx, false));
         if (!scope)

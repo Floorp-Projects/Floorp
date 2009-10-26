@@ -1522,6 +1522,10 @@ BEGIN_CASE(JSOP_GETXPROP)
                 } else if (PCVAL_IS_SLOT(entry->vword)) {
                     slot = PCVAL_TO_SLOT(entry->vword);
                     JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
+                    if (!DSLOTS_IS_NOT_NULL(obj2) &&
+                        OBJ_SHAPE(obj2) >= SHAPE_OVERFLOW_BIT) {
+                        DSLOTS_BUMP_2(obj2);
+                    }
                     rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
                 } else {
                     JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
