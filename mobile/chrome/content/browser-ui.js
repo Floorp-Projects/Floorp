@@ -891,6 +891,10 @@ var BookmarkHelper = {
     }, 0);
   },
 
+  save: function BH_save() {
+    this._editor.stopEditing(true);
+  },
+  
   close: function BH_close() {
     BrowserUI.updateStar();
 

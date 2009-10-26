@@ -62,6 +62,7 @@ autocompleteresult[value=""]:not(:first-child) {
 
 placeitem {
   -moz-binding: url("chrome://browser/content/bindings.xml#place-item");
+  background-color: transparent;
 }
 
 placeitem[type="folder"] {

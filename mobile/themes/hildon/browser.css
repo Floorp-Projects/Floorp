@@ -714,15 +714,19 @@ box[type="documenttab"]:only-child .documenttab-close {
 /* bookmark editor   ------------------------------------------------------- */
 #bookmark-container {
   padding: 1mm; /* core spacing */
+  -moz-box-shadow: black 0 0.25mm 0.25mm;
 }
 
 #bookmark-form {
-  background-color: #fff;
   padding: 1mm; /* core spacing */
 }
 
-#bookmark-form button.bookmark-remove {
+#bookmark-form .bookmark-controls {
   display: none;
+}
+
+#bookmark-image {
+  list-style-image: url("images/star-40.png");
 }
 
 /* Identity popup   -------------------------------------------------------- */
