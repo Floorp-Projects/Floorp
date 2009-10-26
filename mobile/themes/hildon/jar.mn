@@ -29,6 +29,8 @@ chrome.jar:
   images/stop-30.png                   (images/stop-30.png)
   images/reload-30.png                 (images/reload-30.png)
   images/go-30.png                     (images/go-30.png)
+  images/alert-addons-30.png           (images/alert-addons-30.png)
+  images/alert-downloads-30.png        (images/alert-downloads-30.png)
   images/addons-default-64.png         (images/addons-default-64.png)
   images/addons-active-64.png          (images/addons-active-64.png)
   images/back-default-64.png           (images/back-default-64.png)

@@ -355,6 +355,13 @@ box[type="documenttab"] .documenttab-close {
   margin-left: 28px; /* sized based on the 32px addon image */
 }
 
+/* alerts popup ----------------------------------------------------------- */
+/* XXX: hack to get the 30px images to a low res size */
+#alerts-image {
+  width: 16px;
+  height: 16px;
+}
+
 /* select popup ------------------------------------------------------------ */
 #select-list > option[selected="true"] > image {
   list-style-image: url("chrome://browser/skin/images/check-24.png");

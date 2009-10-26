@@ -864,25 +864,26 @@ settings .settings-title {
 }
 
 /* alerts popup ----------------------------------------------------------- */
-#bookmark-popup,
-#newtab-popup,
-#alerts-container {
-  color: #000;
-  background-color: #fff;
-  border: 0.25mm solid gray;
-  -moz-border-radius: 1mm;
-  padding: 1mm; /* core spacing */
-  -moz-box-shadow: black 0.25mm 0.25mm 0.5mm;
+@media (orientation: landscape) {
+  #alerts-container {
+    width: 300px;
+  }
+}
+
+@media (orientation: portrait) {
+  #alerts-container {
+    width: 200px;
+  }
 }
 
 #alerts-text {
-  font-size: 2.4mm !important;
+  font-size: 1.8mm !important;
   white-space: pre-wrap;
 }
 
 /* helperapp (save-as) popup ----------------------------------------------- */
 #helperapp-target {
-  font-size: 2.4mm !important;
+  font-size: 1.8mm !important;
 }
 
 /* form popup -------------------------------------------------------------- */

@@ -66,13 +66,13 @@ textbox[isempty="true"] {
 .dialog-dark {
   color: #fff;
   background-color: #36373b;
+  border: 0.3mm solid #262629;
   -moz-border-radius: 1mm 1mm 1mm 1mm;
-  padding: 8px;
+  padding: 1mm;
   -moz-box-shadow: black 0 0.25mm 0.25mm;
 }
 
 /* prompt dialogs ---------------------------------------------------------- */
-
 dialog {
   font-size: 9pt !important;
 }
