@@ -162,9 +162,16 @@ else
 SDK_LIBRARY = $(SHARED_LIBRARY)
 endif
 
+include $(topsrcdir)/config/rules.mk
+
+export:: $(RDF_UTIL_SRC_CPPSRCS) $(INTL_UNICHARUTIL_UTIL_CPPSRCS)
+	$(INSTALL) $^ .
+
 EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(EXTRA_DSO_LIBS)
 
-ifndef MOZ_ENABLE_LIBXUL
+ifdef MOZ_ENABLE_LIBXUL
+include $(srcdir)/libxul-rules.mk
+else
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_COMPONENT_LIBS) \
 	$(MOZ_JS_LIBS) \
@@ -232,7 +239,7 @@ EXTRA_DSO_LDOPTS += -lbe -ltracker
 endif
 
 ifeq ($(OS_ARCH),SunOS)
-EXTRA_DSO_LDOPTS += -lelf -ldemangle
+EXTRA_DSO_LDOPTS += -lelf -ldemangle -lCstd
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -252,21 +259,13 @@ EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, libGLESv2 libEGL)
 endif
 endif
 
+
 ifdef MOZ_JPROF
 EXTRA_DSO_LDOPTS += -ljprof
 endif
 
 ifdef MOZ_ENABLE_QT
 EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS)
-endif
-
-include $(topsrcdir)/config/rules.mk
-
-export:: $(RDF_UTIL_SRC_CPPSRCS) $(INTL_UNICHARUTIL_UTIL_CPPSRCS)
-	$(INSTALL) $^ .
-
-ifdef MOZ_ENABLE_LIBXUL
-include $(srcdir)/libxul-rules.mk
 endif
 
 ifdef MOZ_JAVAXPCOM
