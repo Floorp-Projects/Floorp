@@ -61,6 +61,7 @@
 #include "jsvector.h"
 
 #include "jsatominlines.h"
+#include "jsscopeinlines.h"
 
 using namespace avmplus;
 using namespace nanojit;
