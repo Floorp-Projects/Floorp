@@ -3352,7 +3352,7 @@ AC_MSG_CHECKING(for ARM NEON support in compiler)
 _SAVE_CFLAGS="$CFLAGS"
 if test "$GNU_CC"; then
   # gcc needs -mfpu=neon to recognize NEON instructions
-  CFLAGS="$CFLAGS -mfpu=neon"
+  CFLAGS="$CFLAGS -mfpu=neon -mfloat-abi=softfp"
 fi
 AC_TRY_COMPILE([],
                [asm("vadd.i8 d0, d0, d0");],
