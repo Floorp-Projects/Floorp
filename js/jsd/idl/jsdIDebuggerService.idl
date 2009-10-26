@@ -866,7 +866,7 @@ interface jsdIStackFrame : jsdIEphemeral
  * Script object.  In JavaScript engine terms, there's a single script for each
  * function, and one for the top level script.
  */
-[scriptable, uuid(b1b7f95d-85f9-431e-afb0-936f91c27244)]
+[scriptable, uuid(18e09893-f461-4b4b-94d3-776fb0069c6f)]
 interface jsdIScript : jsdIEphemeral
 {
     /** Internal use only. */
@@ -923,6 +923,12 @@ interface jsdIScript : jsdIEphemeral
      * invalidated.
      */
     readonly attribute AUTF8String   functionName;
+    /**
+     * The names of the arguments for this function; empty if this is
+     * not a function.
+     */
+    void getParameterNames([optional] out unsigned long count,
+                           [array, size_is(count), retval] out wstring paramNames);
     /**
      * Fetch the function object as a jsdIValue.
      */
