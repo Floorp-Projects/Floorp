@@ -387,6 +387,7 @@ extern JSBool js_CStringsAreUTF8;
 
 #define DSLOTS_IS_NOT_NULL(obj)           (uintptr_t(obj->dslots) >= DSLOTS_NULL_LIMIT)
 #define DSLOTS_NORMALIZE(obj) (DSLOTS_IS_NOT_NULL(obj) ? (obj)->dslots : NULL)
-#define DSLOTS_BUMP(obj)      (obj->dslots = (jsval*) (uintptr_t((obj)->dslots) | (1 << (DSLOTS_NULL_SHIFT-1))))
+#define DSLOTS_BUMP_1(obj)      (obj->dslots = (jsval*) (uintptr_t((obj)->dslots) | (1 << (DSLOTS_NULL_SHIFT-1))))
+#define DSLOTS_BUMP_2(obj)      (obj->dslots = (jsval*) (uintptr_t((obj)->dslots) | (1 << (DSLOTS_NULL_SHIFT-2))))
 
 #endif /* jsprvtd_h___ */
