@@ -37,7 +37,7 @@
 
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 
-const URI_GENERIC_ICON_DOWNLOAD = "chrome://mozapps/skin/downloads/downloadIcon.png";
+const URI_GENERIC_ICON_DOWNLOAD = "chrome://browser/skin/images/alert-downloads-30.png";
 
 var DownloadsView = {
   _initialized: false,

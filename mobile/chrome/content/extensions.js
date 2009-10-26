@@ -41,7 +41,7 @@ const PREFIX_NS_EM = "http://www.mozilla.org/2004/em-rdf#";
 const PREF_GETADDONS_REPOSITORY = "extensions.getAddons.repository";
 const PREF_GETADDONS_MAXRESULTS = "extensions.getAddons.maxResults";
 
-const URI_GENERIC_ICON_XPINSTALL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
+const URI_GENERIC_ICON_XPINSTALL = "chrome://browser/skin/images/alert-addons-30.png";
 
 var ExtensionsView = {
   _extmgr: null,
