@@ -37,7 +37,7 @@
 #filter substitution
 
 pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
-pref("general.useragent.extra.mobile", "@APP_UA_NAME@/@APP_VERSION@");
+pref("general.useragent.extra.mobile", "@APP_UA_NAME_EXTRA@/@APP_VERSION_EXTRA@ @APP_UA_NAME@/@APP_VERSION@");
 pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.startup.homepage", "about:firstrun");
