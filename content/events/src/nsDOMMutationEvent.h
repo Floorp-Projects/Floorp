@@ -44,8 +44,8 @@
 #include "nsDOMEvent.h"
 #include "nsContentUtils.h"
 
-class nsDOMMutationEvent : public nsIDOMMutationEvent,
-                           public nsDOMEvent
+class nsDOMMutationEvent : public nsDOMEvent,
+                           public nsIDOMMutationEvent
 {
 public:
   nsDOMMutationEvent(nsPresContext* aPresContext, nsMutationEvent* aEvent);

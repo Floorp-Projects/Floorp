@@ -114,11 +114,19 @@ function run() {
             "<link rel='stylesheet' href='" + style_sheet + "'>";
         var html_doc = "<!DOCTYPE HTML>" +
                        style_sheet_link + style_sheet_link +
-                       "<body>" + body_contents;
+                       "<body>";
+        if (typeof(body_contents) == "string") {
+            html_doc += body_contents;
+        }
         var docurl = "data:text/html," + escape(html_doc);
         defer_clonedoc_tests(docurl, function() {
             var clonedoc = cloneiframe.contentDocument;
             var clonewin = cloneiframe.contentWindow;
+
+            if (typeof(body_contents) != "string") {
+                body_contents(clonedoc.body);
+            }
+
             var links = clonedoc.getElementsByTagName("link");
             // cause a clone
             links[1].sheet.insertRule("#nonexistent { color: purple}", idx + 1);
@@ -695,6 +703,56 @@ function run() {
     test_balanced_unparseable("::-moz-tree-row(selected {[]} )");
     test_balanced_unparseable(":-moz-tree-twisty(open())");
     test_balanced_unparseable("::-moz-tree-twisty(hover ())");
+
+    // Case sensitivity of tag selectors
+    function setup_cased_spans(body) {
+      var data = [
+        { tag: "span" },
+        { tag: "sPaN" },
+        { tag: "Span" },
+        { tag: "SPAN" },
+        { ns: "http://www.w3.org/1999/xhtml", tag: "span" },
+        { ns: "http://www.w3.org/1999/xhtml", tag: "sPaN" },
+        { ns: "http://www.w3.org/1999/xhtml", tag: "Span" },
+        { ns: "http://www.w3.org/1999/xhtml", tag: "SPAN" },
+        { ns: "http://example.com/useless", tag: "span" },
+        { ns: "http://example.com/useless", tag: "sPaN" },
+        { ns: "http://example.com/useless", tag: "Span" },
+        { ns: "http://example.com/useless", tag: "SPAN" },
+      ]
+      for (var i in data) {
+        var ent = data[i];
+        var elem;
+        if ("ns" in ent) {
+          elem = body.ownerDocument.createElementNS(ent.ns, ent.tag);
+        } else {
+          elem = body.ownerDocument.createElement(ent.tag);
+        }
+        body.appendChild(elem);
+      }
+    }
+    function bodychildset(indices) {
+      return function bodychildset_filter(doc) {
+        var body = doc.body;
+        var result = [];
+        for (var i in indices) {
+          result.push(body.childNodes[indices[i]]);
+        }
+        return result;
+      }
+    }
+    test_selector_in_html("span", setup_cased_spans,
+                          bodychildset([0, 1, 2, 3, 4, 8]),
+                          bodychildset([5, 6, 7, 9, 10, 11]));
+    test_selector_in_html("sPaN", setup_cased_spans,
+                          bodychildset([0, 1, 2, 3, 4, 9]),
+                          bodychildset([5, 6, 7, 8, 10, 11]));
+    test_selector_in_html("Span", setup_cased_spans,
+                          bodychildset([0, 1, 2, 3, 4, 10]),
+                          bodychildset([5, 6, 7, 8, 9, 11]));
+    test_selector_in_html("SPAN", setup_cased_spans,
+                          bodychildset([0, 1, 2, 3, 4, 11]),
+                          bodychildset([5, 6, 7, 8, 9, 10]));
 
     run_deferred_tests();
 }

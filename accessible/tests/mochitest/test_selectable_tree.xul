@@ -1,0 +1,160 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/a11y/accessible/treeview.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL tree selectable tests">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/treeview.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/states.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    // gA11yEventDumpID = "debug";
+
+    /**
+     * Event queue invoker object to test accessible states for XUL tree
+     * accessible.
+     */
+    function statesChecker(aTreeID, aView)
+    {
+      this.DOMNode = getNode(aTreeID);
+      
+      this.invoke = function invoke()
+      {
+        this.DOMNode.treeBoxObject.view = aView;
+      }
+      this.check = function check()
+      {
+        var tree = getAccessible(this.DOMNode);
+
+        var isTreeMultiSelectable = false;
+        var seltype = this.DOMNode.getAttribute("seltype");
+        if (seltype != "single" && seltype != "cell" && seltype != "text")
+          isTreeMultiSelectable = true;
+
+        // test SelectAllSelection correctly discerns multiselect vs single
+        var accSelectable = getAccessible(this.DOMNode,
+                                          [nsIAccessibleSelectable]);
+        ok(accSelectable, "tree is not selectable!");
+        if (accSelectable) {
+          is(accSelectable.selectAllSelection(), isTreeMultiSelectable,
+             "SelectAllSelection is not correct for seltype: " + seltype);
+        }
+
+        // test that the selection worked as expected
+        var rows = tree.children;
+        for (var i = 0; i < rows.length; i++) {
+          var row = rows.queryElementAt(i, nsIAccessible);
+          if (getRole(row) == (ROLE_OUTLINEITEM || ROLE_ROW)){
+            testStates(row, isTreeMultiSelectable? STATE_SELECTED : 0, 0, 0,
+                       isTreeMultiSelectable? 0: STATE_SELECTED);
+          }
+        }
+      }
+
+      this.getID = function getID()
+      {
+        "tree processor for " + prettyName(aTreeID);
+      }
+    }
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      gQueue = new eventQueue("TreeViewChanged");
+      gQueue.push(new statesChecker("tree", new nsTreeTreeView()));
+      gQueue.push(new statesChecker("treesingle", new nsTreeTreeView()));
+      gQueue.push(new statesChecker("treecell", new nsTreeTreeView()));
+      gQueue.push(new statesChecker("treetext", new nsTreeTreeView()));
+      gQueue.push(new statesChecker("tabletree", new nsTreeTreeView()));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+        href="https://bugzilla.mozilla.org/show_bug.cgi?id=523118"
+        title="we mistake 'cell' and text' xul tree seltypes for multiselects">
+       Mozilla Bug 523118
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <tree id="tree" flex="1">
+        <treecols>
+          <treecol id="col" flex="1" primary="true" label="column"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+
+      <tree id="treesingle" flex="1" seltype="single">
+        <treecols>
+          <treecol id="col_single" flex="1" primary="true" label="column"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+
+      <tree id="treecell" flex="1" seltype="cell">
+        <treecols>
+          <treecol id="col_cell" flex="1" primary="true" label="column"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+
+      <tree id="treetext" flex="1" seltype="text">
+        <treecols>
+          <treecol id="col_text" flex="1" primary="true" label="column"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+
+      <tree id="tabletree" flex="1" editable="true">
+        <treecols>
+          <treecol id="tabletree_col1" cycler="true" label="cycler"/>
+          <treecol id="tabletree_col2" flex="1" primary="true" label="column1"/>
+          <treecol id="tabletree_col3" flex="1" label="column2"/>
+          <treecol id="tabletree_col4" flex="1" label="checker"
+                   type="checkbox" editable="true"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+
+      <vbox id="debug"/>
+    </vbox>
+  </hbox>
+
+</window>
+

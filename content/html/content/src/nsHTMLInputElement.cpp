@@ -192,24 +192,23 @@ class nsHTMLInputElementState : public nsISupports
       mValue = aValue;
     }
 
-    const nsString& GetFilename() {
-      return mFilename;
+    const nsTArray<nsString>& GetFilenames() {
+      return mFilenames;
     }
 
-    void SetFilename(const nsAString &aFilename) {
-      mFilename = aFilename;
+    void SetFilenames(const nsTArray<nsString> &aFilenames) {
+      mFilenames = aFilenames;
     }
 
     nsHTMLInputElementState()
       : mValue()
-      , mFilename()
       , mChecked(PR_FALSE)
       , mCheckedSet(PR_FALSE)
     {};
  
   protected:
     nsString mValue;
-    nsString mFilename;
+    nsTArray<nsString> mFilenames;
     PRPackedBool mChecked;
     PRPackedBool mCheckedSet;
 };
@@ -298,8 +297,9 @@ public:
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
   
   // nsIFileControlElement
-  virtual void GetFileName(nsAString& aFileName);
-  virtual void SetFileName(const nsAString& aFileName);
+  virtual void GetDisplayFileName(nsAString& aFileName);
+  virtual void GetFileArray(nsCOMArray<nsIFile> &aFile);
+  virtual void SetFileNames(const nsTArray<nsString>& aFileNames);
 
   // nsIRadioControlElement
   NS_IMETHOD RadioSetChecked(PRBool aNotify);
@@ -330,6 +330,12 @@ protected:
   nsresult SetValueInternal(const nsAString& aValue,
                             nsITextControlFrame* aFrame,
                             PRBool aUserInput);
+
+  void SetSingleFileName(const nsAString& aFileName) {
+    nsAutoTArray<nsString, 1> fileNames;
+    fileNames.AppendElement(aFileName);
+    SetFileNames(fileNames);
+  }
 
   nsresult SetIndeterminateInternal(PRBool aValue,
                                     PRBool aShouldInvalidate);
@@ -405,11 +411,6 @@ protected:
   nsresult MaybeSubmitForm(nsPresContext* aPresContext);
 
   /**
-   * Get an nsIFile for the currently selected file in an file control.
-   */
-  nsresult GetFile(nsIFile** aFile);
-
-  /**
    * Update mFileList with the currently selected file.
    */
   nsresult UpdateFileList();
@@ -431,16 +432,16 @@ protected:
    */
   char*                    mValue;
   /**
-   * The value of the input if it is a file input. This is the filename used
-   * when uploading a file. It is vital that this is kept separate from mValue
-   * so that it won't be possible to 'leak' the value from a text-input to a
-   * file-input. Additionally, the logic for this value is kept as simple as
-   * possible to avoid accidental errors where the wrong filename is used.
-   * Therefor the filename is always owned by this member, never by the frame.
-   * Whenever the frame wants to change the filename it has to call
-   * SetFileName to update this member.
+   * The value of the input if it is a file input. This is the list of filenames
+   * used when uploading a file. It is vital that this is kept separate from
+   * mValue so that it won't be possible to 'leak' the value from a text-input
+   * to a file-input. Additionally, the logic for this value is kept as simple
+   * as possible to avoid accidental errors where the wrong filename is used.
+   * Therefor the list of filenames is always owned by this member, never by
+   * the frame. Whenever the frame wants to change the filename it has to call
+   * SetFileNames to update this member.
    */
-  nsAutoPtr<nsString>      mFileName;
+  nsTArray<nsString>       mFileNames;
 
   nsRefPtr<nsDOMFileList>  mFileList;
 };
@@ -537,9 +538,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
       }
       break;
     case NS_FORM_INPUT_FILE:
-      if (mFileName) {
-        it->mFileName = new nsString(*mFileName);
-      }
+      it->mFileNames = mFileNames;
       break;
     case NS_FORM_INPUT_RADIO:
     case NS_FORM_INPUT_CHECKBOX:
@@ -745,6 +744,7 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Alt, alt)
 //NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Checked, checked)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Disabled, disabled)
+NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Multiple, multiple)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, ReadOnly, readonly)
@@ -868,17 +868,17 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
 
   if (mType == NS_FORM_INPUT_FILE) {
     if (nsContentUtils::IsCallerTrustedForCapability("UniversalFileRead")) {
-      if (mFileName) {
-        aValue = *mFileName;
+      if (!mFileNames.IsEmpty()) {
+        aValue = mFileNames[0];
       }
       else {
         aValue.Truncate();
       }
     } else {
       // Just return the leaf name
-      nsCOMPtr<nsIFile> file;
-      GetFile(getter_AddRefs(file));
-      if (!file || NS_FAILED(file->GetLeafName(aValue))) {
+      nsCOMArray<nsIFile> files;
+      GetFileArray(files);
+      if (files.Count() == 0 || NS_FAILED(files[0]->GetLeafName(aValue))) {
         aValue.Truncate();
       }
     }
@@ -913,11 +913,52 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
         return NS_ERROR_DOM_SECURITY_ERR;
       }
     }
-    SetFileName(aValue);
+    SetSingleFileName(aValue);
   }
   else {
     SetValueInternal(aValue, nsnull, PR_FALSE);
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLInputElement::MozGetFileNameArray(PRUint32 *aLength, PRUnichar ***aFileNames)
+{
+  if (!nsContentUtils::IsCallerTrustedForCapability("UniversalFileRead")) {
+    // Since this function returns full paths it's important that normal pages
+    // can't call it.
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  *aLength = mFileNames.Length();
+  PRUnichar **ret =
+    static_cast<PRUnichar **>(NS_Alloc(mFileNames.Length() * sizeof(PRUnichar*)));
+  
+  for (PRUint32 i = 0; i <  mFileNames.Length(); i++) {
+    ret[i] = NS_strdup(mFileNames[i].get());
+  }
+
+  *aFileNames = ret;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLInputElement::MozSetFileNameArray(const PRUnichar **aFileNames, PRUint32 aLength)
+{
+  if (!nsContentUtils::IsCallerTrustedForCapability("UniversalFileRead")) {
+    // setting the value of a "FILE" input widget requires the
+    // UniversalFileRead privilege
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsTArray<nsString> fileNames(aLength);
+  for (PRUint32 i = 0; i < aLength; ++i) {
+    fileNames.AppendElement(aFileNames[i]);
+  }
+
+  SetFileNames(fileNames);
 
   return NS_OK;
 }
@@ -931,7 +972,7 @@ nsHTMLInputElement::SetUserInput(const nsAString& aValue)
 
   if (mType == NS_FORM_INPUT_FILE)
   {
-    SetFileName(aValue);
+    SetSingleFileName(aValue);
   } else {
     SetValueInternal(aValue, nsnull, PR_TRUE);
   }
@@ -949,28 +990,32 @@ nsHTMLInputElement::TakeTextFrameValue(const nsAString& aValue)
 }
 
 void
-nsHTMLInputElement::GetFileName(nsAString& aValue)
+nsHTMLInputElement::GetDisplayFileName(nsAString& aValue)
 {
-  if (mFileName) {
-    aValue = *mFileName;
-  }
-  else {
-    aValue.Truncate();
+  aValue.Truncate();
+  for (PRUint32 i = 0; i < mFileNames.Length(); ++i) {
+    if (i == 0) {
+      aValue.Append(mFileNames[i]);
+    }
+    else {
+      aValue.Append(NS_LITERAL_STRING(", ") + mFileNames[i]);
+    }
   }
 }
 
 void
-nsHTMLInputElement::SetFileName(const nsAString& aValue)
+nsHTMLInputElement::SetFileNames(const nsTArray<nsString>& aFileNames)
 {
-  // No big deal if |new| fails, we simply won't submit the file
-  mFileName = aValue.IsEmpty() ? nsnull : new nsString(aValue);
+  mFileNames = aFileNames;
 
   // No need to flush here, if there's no frame at this point we
   // don't need to force creation of one just to tell it about this
   // new value.  We just want the display to update as needed.
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
   if (formControlFrame) {
-    formControlFrame->SetFormProperty(nsGkAtoms::value, aValue);
+    nsAutoString readableValue;
+    GetDisplayFileName(readableValue);
+    formControlFrame->SetFormProperty(nsGkAtoms::value, readableValue);
   }
 
   UpdateFileList();
@@ -978,32 +1023,37 @@ nsHTMLInputElement::SetFileName(const nsAString& aValue)
   SetValueChanged(PR_TRUE);
 }
 
-nsresult
-nsHTMLInputElement::GetFile(nsIFile** aFile)
+void
+nsHTMLInputElement::GetFileArray(nsCOMArray<nsIFile> &aFiles)
 {
-  *aFile = nsnull;
+  aFiles.Clear();
 
-  if (!mFileName || mType != NS_FORM_INPUT_FILE) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (mType != NS_FORM_INPUT_FILE) {
+    return;
   }
 
-  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+  for (PRUint32 i = 0; i < mFileNames.Length(); ++i) {
+    nsCOMPtr<nsIFile> file;
+    if (StringBeginsWith(mFileNames[i], NS_LITERAL_STRING("file:"),
+                         nsCaseInsensitiveStringComparator())) {
+      // Converts the URL string into the corresponding nsIFile if possible.
+      // A local file will be created if the URL string begins with file://.
+      NS_GetFileFromURLSpec(NS_ConvertUTF16toUTF8(mFileNames[i]),
+                            getter_AddRefs(file));
+    }
 
-  if (StringBeginsWith(*mFileName, NS_LITERAL_STRING("file:"),
-                       nsCaseInsensitiveStringComparator())) {
-    // Converts the URL string into the corresponding nsIFile if possible.
-    // A local file will be created if the URL string begins with file://.
-    rv = NS_GetFileFromURLSpec(NS_ConvertUTF16toUTF8(*mFileName), aFile);
+    if (!file) {
+      // this is no "file://", try as local file
+      nsCOMPtr<nsILocalFile> localFile;
+      NS_NewLocalFile(mFileNames[i], PR_FALSE, getter_AddRefs(localFile));
+      // Wish there was a better way to downcast an already_AddRefed
+      file = dont_AddRef(static_cast<nsIFile*>(localFile.forget().get()));
+    }
+
+    if (file) {
+      aFiles.AppendObject(file);
+    }
   }
-
-  if (!(*aFile)) {
-    // this is no "file://", try as local file
-    nsCOMPtr<nsILocalFile> localFile;
-    rv = NS_NewLocalFile(*mFileName, PR_FALSE, getter_AddRefs(localFile));
-    NS_IF_ADDREF(*aFile = localFile);
-  }
-
-  return rv;
 }
 
 nsresult
@@ -1012,12 +1062,10 @@ nsHTMLInputElement::UpdateFileList()
   if (mFileList) {
     mFileList->Clear();
 
-    if (mType == NS_FORM_INPUT_FILE && mFileName) {
-      nsCOMPtr<nsIFile> file;
-      nsresult rv = GetFile(getter_AddRefs(file));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsRefPtr<nsDOMFile> domFile = new nsDOMFile(file);
+    nsCOMArray<nsIFile> files;
+    GetFileArray(files);
+    for (PRUint32 i = 0; i < (PRUint32)files.Count(); ++i) {
+      nsRefPtr<nsDOMFile> domFile = new nsDOMFile(files[i]);
       if (domFile) {
         if (!mFileList->Append(domFile)) {
           return NS_ERROR_FAILURE;
@@ -2117,10 +2165,10 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
           // These calls aren't strictly needed any more since we'll never
           // confuse values and filenames. However they're there for backwards
           // compat.
-          SetFileName(EmptyString());
+          SetSingleFileName(EmptyString());
           SetValueInternal(EmptyString(), nsnull, PR_FALSE);
         } else if (mType == NS_FORM_INPUT_FILE) {
-          SetFileName(EmptyString());
+          SetSingleFileName(EmptyString());
         }
 
         mType = newType;
@@ -2471,7 +2519,7 @@ nsHTMLInputElement::Reset()
     case NS_FORM_INPUT_FILE:
     {
       // Resetting it to blank should not perform security check
-      SetFileName(EmptyString());
+      SetSingleFileName(EmptyString());
       break;
     }
     // Value is the same as defaultValue for hidden inputs
@@ -2593,87 +2641,65 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // Submit file if its input type=file and this encoding method accepts files
   //
   if (mType == NS_FORM_INPUT_FILE) {
-    //
-    // Open the file
-    //
-    nsCOMPtr<nsIFile> file;
- 
-    rv = GetFile(getter_AddRefs(file));
+    // Submit files
 
-    if (file) {
+    nsCOMPtr<nsIMIMEService> MIMEService =
+      do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      //
+    nsCOMArray<nsIFile> files;
+    GetFileArray(files);
+
+    for (PRUint32 i = 0; i < (PRUint32)files.Count(); ++i) {
+      nsIFile* file = files[i];
+
       // Get the leaf path name (to be submitted as the value)
-      //
+      PRBool fileSent = PR_FALSE;
+
       nsAutoString filename;
       rv = file->GetLeafName(filename);
+      if (NS_FAILED(rv)) {
+        filename.Truncate();
+      }
 
-      if (NS_SUCCEEDED(rv) && !filename.IsEmpty()) {
-        PRBool acceptsFiles = aFormSubmission->AcceptsFiles();
-
-        if (acceptsFiles) {
-          //
-          // Get content type
-          //
-          nsCOMPtr<nsIMIMEService> MIMEService =
-            do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          nsCAutoString contentType;
-          rv = MIMEService->GetTypeFromFile(file, contentType);
-          if (NS_FAILED(rv)) {
-            contentType.AssignLiteral("application/octet-stream");
-          }
-
-          //
-          // Get input stream
-          //
-          nsCOMPtr<nsIInputStream> fileStream;
-          rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream),
-                                          file, -1, -1,
-                                          nsIFileInputStream::CLOSE_ON_EOF |
-                                          nsIFileInputStream::REOPEN_ON_REWIND);
-          if (fileStream) {
-            //
-            // Create buffered stream (for efficiency)
-            //
-            nsCOMPtr<nsIInputStream> bufferedStream;
-            rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                           fileStream, 8192);
-            NS_ENSURE_SUCCESS(rv, rv);
-            if (bufferedStream) {
-              //
-              // Submit
-              //
-              aFormSubmission->AddNameFilePair(this, name, filename,
-                                               bufferedStream, contentType,
-                                               PR_FALSE);
-              return rv;
-            }
-          }
+      if (!filename.IsEmpty() && aFormSubmission->AcceptsFiles()) {
+        // Get content type
+        nsCAutoString contentType;
+        rv = MIMEService->GetTypeFromFile(file, contentType);
+        if (NS_FAILED(rv)) {
+          contentType.AssignLiteral("application/octet-stream");
         }
 
-        //
+        // Get input stream
+        nsCOMPtr<nsIInputStream> fileStream;
+        rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream),
+                                        file, -1, -1,
+                                        nsIFileInputStream::CLOSE_ON_EOF |
+                                        nsIFileInputStream::REOPEN_ON_REWIND);
+        if (fileStream) {
+          // Create buffered stream (for efficiency)
+          nsCOMPtr<nsIInputStream> bufferedStream;
+          rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                         fileStream, 8192);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // Submit
+          aFormSubmission->AddNameFilePair(this, name, filename,
+                                           bufferedStream, contentType,
+                                           PR_FALSE);
+          fileSent = PR_TRUE;
+        }
+      }
+
+      if (!fileSent) {
         // If we don't submit as a file, at least submit the truncated filename.
-        //
         aFormSubmission->AddNameFilePair(this, name, filename,
-            nsnull, NS_LITERAL_CSTRING("application/octet-stream"),
-            PR_FALSE);
-        return rv;
-      } else {
-        // Ignore error returns from GetLeafName.  See bug 199053
-        rv = NS_OK;
+                                         nsnull, NS_LITERAL_CSTRING("application/octet-stream"),
+                                         PR_FALSE);
       }
     }
-    
-    //
-    // If we can't even make a truncated filename, submit empty string
-    // rather than sending everything
-    //
-    aFormSubmission->AddNameFilePair(this, name, EmptyString(),
-        nsnull, NS_LITERAL_CSTRING("application/octet-stream"),
-        PR_FALSE);
-    return rv;
+
+    return NS_OK;
   }
 
   // Submit
@@ -2740,13 +2766,13 @@ nsHTMLInputElement::SaveState()
     }
     case NS_FORM_INPUT_FILE:
       {
-        if (mFileName) {
+        if (!mFileNames.IsEmpty()) {
           inputState = new nsHTMLInputElementState();
           if (!inputState) {
             return NS_ERROR_OUT_OF_MEMORY;
           }
 
-          inputState->SetFilename(*mFileName);
+          inputState->SetFilenames(mFileNames);
         }
         break;
       }
@@ -2859,7 +2885,7 @@ nsHTMLInputElement::RestoreState(nsPresState* aState)
         }
       case NS_FORM_INPUT_FILE:
         {
-          SetFileName(inputState->GetFilename());
+          SetFileNames(inputState->GetFilenames());
           break;
         }
     }

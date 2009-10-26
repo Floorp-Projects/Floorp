@@ -365,10 +365,10 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
   const nsSMILTime& dur = mSimpleDuration.GetMillis();
 
   // Sanity Checks
-  NS_ASSERTION(mSampleTime >= 0.0f, "Sample time should not be negative...");
-  NS_ASSERTION(dur  >= 0.0f, "Simple duration should not be negative...");
+  NS_ABORT_IF_FALSE(mSampleTime >= 0.0f, "Sample time should not be negative");
+  NS_ABORT_IF_FALSE(dur >= 0.0f, "Simple duration should not be negative");
 
-  if (mSampleTime >= dur || mSampleTime < 0) {
+  if (mSampleTime >= dur || mSampleTime < 0.0f) {
     NS_ERROR("Animation sampled outside interval.");
     return NS_ERROR_FAILURE;
   }
@@ -765,31 +765,6 @@ nsSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
   result.SwapElements(aResult);
 
   return NS_OK;
-}
-
-inline PRBool
-nsSMILAnimationFunction::IsToAnimation() const
-{
-  return !HasAttr(nsGkAtoms::values) &&
-         HasAttr(nsGkAtoms::to) &&
-         !HasAttr(nsGkAtoms::from);
-}
-
-inline PRBool
-nsSMILAnimationFunction::IsAdditive() const
-{
-  /*
-   * Animation is additive if:
-   *
-   * (1) additive = "sum" (GetAdditive() == true), or
-   * (2) it is 'by animation' (by is set, from and values are not)
-   *
-   * Although animation is not additive if it is 'to animation'
-   */
-  PRBool isByAnimation = (!HasAttr(nsGkAtoms::values)
-                       &&  HasAttr(nsGkAtoms::by)
-                       && !HasAttr(nsGkAtoms::from));
-  return !IsToAnimation() && (GetAdditive() || isByAnimation);
 }
 
 /**

@@ -46,7 +46,7 @@
  * Event sent to a window when a storage area changes.
  */
 
-[scriptable, uuid(FC540C28-8EDD-4B7A-9C30-8638289B7A7D)]
+[scriptable, uuid(8c021c75-f6b6-493c-914e-0b6c57ccc88d)]
 interface nsIDOMStorageEvent : nsIDOMEvent
 {
   /**
@@ -62,13 +62,4 @@ interface nsIDOMStorageEvent : nsIDOMEvent
                         in boolean canBubbleArg, 
                         in boolean cancelableArg, 
                         in DOMString domainArg);
-
-  /**
-   * Initialize a storage event.
-   */
-  void initStorageEventNS(in DOMString namespaceURIArg,
-                          in DOMString typeArg, 
-                          in boolean canBubbleArg, 
-                          in boolean cancelableArg, 
-                          in DOMString domainArg);
 };

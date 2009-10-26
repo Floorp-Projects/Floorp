@@ -360,6 +360,10 @@ endif # GNU_CC
 endif # ENABLE_CXX_EXCEPTIONS
 endif # WINNT
 
+ifeq ($(SOLARIS_SUNPRO_CXX),1)
+CXXFLAGS += -features=extensions -D__FUNCTION__=__func__
+endif # Solaris Sun Studio C++
+
 ifeq (,$(filter-out WINNT WINCE,$(HOST_OS_ARCH)))
 HOST_PDBFILE=$(basename $(@F)).pdb
 endif

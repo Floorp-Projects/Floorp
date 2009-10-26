@@ -8,8 +8,7 @@ include sizing/reftest.list
 include filters/reftest.list
 
 # smil / animation tests
-# disabled because SMIL is not built by default
-# include smil/reftest.list
+include smil/reftest.list
 
 # Mozilla only tests (i.e. those containing XUL/XBL/etc.)
 include moz-only/reftest.list
@@ -67,6 +66,7 @@ include moz-only/reftest.list
 == filter-foreignObject-01.svg pass.svg
 == filter-invalidation-01.svg pass.svg
 == filter-translated-01.svg filter-translated-01-ref.svg
+== filters-and-group-opacity-01.svg filters-and-group-opacity-01-ref.svg
 == foreignObject-01.svg pass.svg
 == foreignObject-02.svg foreignObject-02-ref.svg
 == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
@@ -86,6 +86,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == invalid-text-01.svg pass.svg
 == linearGradient-basic-01.svg pass.svg
 == linearGradient-basic-02.svg pass.svg
+== markers-and-group-opacity-01.svg markers-and-group-opacity-01-ref.svg
 == marker-attribute-01.svg pass.svg
 == mask-containing-masked-content-01.svg pass.svg
 # Bug 456323
@@ -129,4 +130,5 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weigh
 == text-style-01d.svg text-style-01-ref.svg
 == text-style-01e.svg text-style-01-ref.svg
 == thin-stroke-01.svg pass.svg
+== userSpaceOnUse-and-pattern-01.svg userSpaceOnUse-and-pattern-01-ref.svg
 == viewport-percent-graphic-user-01.svg pass.svg

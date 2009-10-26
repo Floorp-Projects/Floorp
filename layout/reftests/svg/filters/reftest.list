@@ -74,3 +74,5 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == feMorphology-radius-negative-02.svg pass.svg
 == feMorphology-radius-zero-01.svg pass.svg
 == feMorphology-radius-zero-02.svg pass.svg
+
+== feTile-large-01.svg pass.svg

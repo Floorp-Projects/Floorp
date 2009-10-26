@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -100,15 +100,6 @@ const FILE_LAST_LOG       = "last-update.log";
 const FILE_BACKUP_LOG     = "backup-update.log";
 const FILE_UPDATE_LOCALE  = "update.locale";
 
-const MODE_RDONLY   = 0x01;
-const MODE_WRONLY   = 0x02;
-const MODE_CREATE   = 0x08;
-const MODE_APPEND   = 0x10;
-const MODE_TRUNCATE = 0x20;
-
-const PERMS_FILE      = 0644;
-const PERMS_DIRECTORY = 0755;
-
 const STATE_NONE            = "null";
 const STATE_DOWNLOADING     = "downloading";
 const STATE_PENDING         = "pending";
@@ -134,6 +125,7 @@ var gCanUpdate  = null;
 XPCOMUtils.defineLazyServiceGetter(this, "gPref",
                                    "@mozilla.org/preferences-service;1",
                                    "nsIPrefBranch2");
+
 /**
  * Gets a preference value, handling the case where there is no default.
  * @param   func
@@ -188,13 +180,19 @@ function LOG(module, string) {
   }
 }
 
-function getObserverService()
-{
-  return Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
+function getObserverService() {
+  return Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
 }
 
 #ifdef MOZ_UPDATER
+
+Components.utils.import("resource://gre/modules/FileUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "gUpdateBundle", function() {
+  return Cc["@mozilla.org/intl/stringbundle;1"].
+         getService(Ci.nsIStringBundleService).
+         createBundle(URI_UPDATES_PROPERTIES);
+});
 
 // shared code for suppressing bad cert dialogs
 XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
@@ -266,37 +264,6 @@ function binaryToHex(input) {
 }
 
 /**
- * Gets the specified directory at the specified hierarchy under a
- * Directory Service key.
- * @param   key
- *          The Directory Service Key to start from
- * @param   pathArray
- *          An array of path components to locate beneath the directory
- *          specified by |key|
- * @return  nsIFile object for the location specified. If the directory
- *          requested does not exist, it is created, along with any
- *          parent directories that need to be created.
- */
-function getDir(key, pathArray) {
-  return getDirInternal(key, pathArray, true, false);
-}
-
-/**
- * Gets the specified directory at the specified hierarchy under a
- * Directory Service key.
- * @param   key
- *          The Directory Service Key to start from
- * @param   pathArray
- *          An array of path components to locate beneath the directory
- *          specified by |key|
- * @return  nsIFile object for the location specified. If the directory
- *          requested does not exist, it is NOT created.
- */
-function getDirNoCreate(key, pathArray) {
-  return getDirInternal(key, pathArray, false, false);
-}
-
-/**
  * Gets the specified directory at the specified hierarchy under the
  * update root directory.
  * @param   pathArray
@@ -307,64 +274,16 @@ function getDirNoCreate(key, pathArray) {
  *          parent directories that need to be created.
  */
 function getUpdateDir(pathArray) {
-  return getDirInternal(KEY_APPDIR, pathArray, true, true);
-}
-
-/**
- * Gets the specified directory at the specified hierarchy under a
- * Directory Service key.
- * @param   key
- *          The Directory Service Key to start from
- * @param   pathArray
- *          An array of path components to locate beneath the directory
- *          specified by |key|
- * @param   shouldCreate
- *          true if the directory hierarchy specified in |pathArray|
- *          should be created if it does not exist,
- *          false otherwise.
- * @param   update
- *          true if finding the update directory,
- *          false otherwise.
- * @return  nsIFile object for the location specified.
- */
-function getDirInternal(key, pathArray, shouldCreate, update) {
-  var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
-                    getService(Ci.nsIProperties);
-  var dir = fileLocator.get(key, Ci.nsIFile);
 #ifdef XP_WIN
 #ifndef WINCE
-  if (update) {
-    try {
-      dir = fileLocator.get(KEY_UPDROOT, Ci.nsIFile);
-    } catch (e) {
-    }
+  try {
+    let dir = FileUtils.getDir(KEY_UPDROOT, pathArray, true);
+    return dir;
+  } catch (e) {
   }
 #endif
 #endif
-  for (var i = 0; i < pathArray.length; ++i) {
-    dir.append(pathArray[i]);
-    if (shouldCreate && !dir.exists())
-      dir.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
-  }
-  return dir;
-}
-
-/**
- * Gets the file at the specified hierarchy under a Directory Service key.
- * @param   key
- *          The Directory Service Key to start from
- * @param   pathArray
- *          An array of path components to locate beneath the directory
- *          specified by |key|. The last item in this array must be the
- *          leaf name of a file.
- * @return  nsIFile object for the file specified. The file is NOT created
- *          if it does not exist, however all required directories along
- *          the way are.
- */
-function getFile(key, pathArray) {
-  var file = getDir(key, pathArray.slice(0, -1));
-  file.append(pathArray[pathArray.length - 1]);
-  return file;
+  return FileUtils.getDir(KEY_APPDIR, pathArray, true);
 }
 
 /**
@@ -384,24 +303,6 @@ function getUpdateFile(pathArray) {
 }
 
 /**
- * Closes a Safe Output Stream
- * @param   fos
- *          The Safe Output Stream to close
- */
-function closeSafeOutputStream(fos) {
-  if (fos instanceof Ci.nsISafeOutputStream) {
-    try {
-      fos.finish();
-    }
-    catch (e) {
-      fos.close();
-    }
-  }
-  else
-    fos.close();
-}
-
-/**
  * Returns human readable status text from the updates.properties bundle
  * based on an error code
  * @param   code
@@ -412,18 +313,15 @@ function closeSafeOutputStream(fos) {
  * @returns A human readable status text string
  */
 function getStatusTextFromCode(code, defaultCode) {
-  const updateBundle = Cc["@mozilla.org/intl/stringbundle;1"].
-                       getService(Ci.nsIStringBundleService).
-                       createBundle(URI_UPDATES_PROPERTIES);
   var reason;
   try {
-    reason = updateBundle.GetStringFromName("check_error-" + code);
+    reason = gUpdateBundle.GetStringFromName("check_error-" + code);
     LOG("General", "getStatusTextFromCode - transfer error: " + reason +
         ", code: " + code);
   }
   catch (e) {
     // Use the default reason
-    reason = updateBundle.GetStringFromName("check_error-" + defaultCode);
+    reason = gUpdateBundle.GetStringFromName("check_error-" + defaultCode);
     LOG("General", "getStatusTextFromCode - transfer error: " + reason +
         ", default code: " + defaultCode);
   }
@@ -432,36 +330,18 @@ function getStatusTextFromCode(code, defaultCode) {
 
 /**
  * Get the Active Updates directory
- * @param   key
- *          The Directory Service Key (optional).
- *          If used, don't search local appdata on Win32 and don't create dir.
  * @returns The active updates directory, as a nsIFile object
  */
-function getUpdatesDir(key) {
+function getUpdatesDir() {
   // Right now, we only support downloading one patch at a time, so we always
   // use the same target directory.
-  var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
-                    getService(Ci.nsIProperties);
-  var updateDir;
-  if (key)
-    updateDir = fileLocator.get(key, Ci.nsIFile);
-  else {
-    updateDir = fileLocator.get(KEY_APPDIR, Ci.nsIFile);
-#ifdef XP_WIN
-#ifndef WINCE
-    try {
-      updateDir = fileLocator.get(KEY_UPDROOT, Ci.nsIFile);
-    } catch (e) {
-    }
-#endif
-#endif
-  }
+  var updateDir = getUpdateDir([]);
   updateDir.append(DIR_UPDATES);
   updateDir.append("0");
-  if (!updateDir.exists() && !key) {
+  if (!updateDir.exists()) {
     LOG("General", "getUpdatesDir - update directory " + updateDir.path +
         " doesn't exist, creating...");
-    updateDir.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+    updateDir.create(Ci.nsILocalFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   }
   return updateDir;
 }
@@ -521,16 +401,12 @@ function writeVersionFile(dir, version) {
 }
 
 /**
- * Removes the Updates Directory
- * @param   key
- *          The Directory Service Key under which update directory resides
- *          (optional).
+ * Removes the contents of the Updates Directory
  */
-function cleanUpUpdatesDir(key) {
+function cleanUpUpdatesDir() {
   // Bail out if we don't have appropriate permissions
-  var updateDir;
   try {
-    updateDir = getUpdatesDir(key);
+    var updateDir = getUpdatesDir();
   }
   catch (e) {
     return;
@@ -576,11 +452,8 @@ function cleanUpUpdatesDir(key) {
 
 /**
  * Clean up updates list and the updates directory.
- * @param   key
- *          The Directory Service Key under which update directory resides
- *          (optional).
  */
-function cleanupActiveUpdate(key) {
+function cleanupActiveUpdate() {
   // Move the update from the Active Update list into the Past Updates list.
   var um = Cc["@mozilla.org/updates/update-manager;1"].
            getService(Ci.nsIUpdateManager);
@@ -588,7 +461,7 @@ function cleanupActiveUpdate(key) {
   um.saveUpdates();
 
   // Now trash the updates directory, since we're done with it
-  cleanUpUpdatesDir(key);
+  cleanUpUpdatesDir();
 }
 
 /**
@@ -601,9 +474,9 @@ function getLocale() {
   if (gLocale)
     return gLocale;
 
-  var localeFile = getFile(KEY_APPDIR, [FILE_UPDATE_LOCALE]);
+  var localeFile = FileUtils.getFile(KEY_APPDIR, [FILE_UPDATE_LOCALE]);
   if (!localeFile.exists())
-    localeFile = getFile(KEY_GRED, [FILE_UPDATE_LOCALE]);
+    localeFile = FileUtils.getFile(KEY_GRED, [FILE_UPDATE_LOCALE]);
 
   if (!localeFile.exists())
     throw Components.Exception(FILE_UPDATE_LOCALE + " file doesn't exist in " +
@@ -693,31 +566,14 @@ ArrayEnumerator.prototype = {
 };
 
 /**
- * Trims a prefix from a string.
- * @param   string
- *          The source string
- * @param   prefix
- *          The prefix to remove.
- * @returns The suffix (string - prefix)
- */
-function stripPrefix(string, prefix) {
-  return string.substr(prefix.length);
-}
-
-/**
  * Writes a string of text to a file.  A newline will be appended to the data
  * written to the file.  This function only works with ASCII text.
  */
 function writeStringToFile(file, text) {
-  var fos = Cc["@mozilla.org/network/safe-file-output-stream;1"].
-            createInstance(Ci.nsIFileOutputStream);
-  var modeFlags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
-  if (!file.exists())
-    file.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-  fos.init(file, modeFlags, PERMS_FILE, 0);
+  var fos = FileUtils.openSafeFileOutputStream(file)
   text += "\n";
   fos.write(text, text.length);
-  closeSafeOutputStream(fos);
+  FileUtils.closeSafeFileOutputStream(fos);
 }
 
 /**
@@ -725,14 +581,13 @@ function writeStringToFile(file, text) {
  * before the result is returned.  This function only works with ASCII text.
  */
 function readStringFromFile(file) {
-  var fis = Cc["@mozilla.org/network/file-input-stream;1"].
-            createInstance(Ci.nsIFileInputStream);
-  var modeFlags = MODE_RDONLY;
   if (!file.exists()) {
     LOG("General", "readStringFromFile - file doesn't exist: " + file.path);
     return null;
   }
-  fis.init(file, modeFlags, PERMS_FILE, 0);
+  var fis = Cc["@mozilla.org/network/file-input-stream;1"].
+            createInstance(Ci.nsIFileInputStream);
+  fis.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
   var sis = Cc["@mozilla.org/scriptableinputstream;1"].
             createInstance(Ci.nsIScriptableInputStream);
   sis.init(fis);
@@ -928,13 +783,12 @@ function Update(update) {
   if (update.hasAttribute("name"))
     name = update.getAttribute("name");
   else {
-    var sbs = Cc["@mozilla.org/intl/stringbundle;1"].
-              getService(Ci.nsIStringBundleService);
-    var brandBundle = sbs.createBundle(URI_BRAND_PROPERTIES);
-    var updateBundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
+    var brandBundle = Cc["@mozilla.org/intl/stringbundle;1"].
+                      getService(Ci.nsIStringBundleService).
+                      createBundle(URI_BRAND_PROPERTIES);
     var appName = brandBundle.GetStringFromName("brandShortName");
-    name = updateBundle.formatStringFromName("updateName",
-                                             [appName, this.version], 2);
+    name = gUpdateBundle.formatStringFromName("updateName",
+                                              [appName, this.version], 2);
   }
   this.name = name;
 }
@@ -1150,18 +1004,24 @@ UpdateService.prototype = {
    *    update
    */
   _start: function AUS__start() {
-    // Clean up any extant updates
-    this._postUpdateProcessing();
+    // Bail out if we don't have appropriate permissions
+    if (!this.canUpdate)
+      return;
 
-    // Resume fetching...
-    var um = Cc["@mozilla.org/updates/update-manager;1"].
-             getService(Ci.nsIUpdateManager);
-    var activeUpdate = um.activeUpdate;
-    if (activeUpdate && activeUpdate.state != STATE_SUCCEEDED) {
-      var status = this.downloadUpdate(activeUpdate, true);
-      if (status == STATE_NONE)
-        cleanupActiveUpdate();
+    var status = readStatusFile(getUpdatesDir());
+
+    // null status means the update.status file is not present, because either:
+    // 1) no update was performed, and so there's no UI to show
+    // 2) an update was attempted but failed during checking, transfer or
+    //    verification, and was cleaned up at that point, and UI notifying of
+    //    that error was shown at that stage.
+    if (status == STATE_NONE) {
+      LOG("UpdateService", "_postUpdateProcessing - no status, no update");
+      return;
     }
+
+    // Clean up any extant updates
+    this._postUpdateProcessing(status);
   },
 
   /**
@@ -1170,117 +1030,80 @@ UpdateService.prototype = {
    * optionally attempt to fetch a different version if appropriate) or
    * notify the user of install success.
    */
-  _postUpdateProcessing: function AUS__postUpdateProcessing() {
-    // Detect installation failures and notify
-
-    // Bail out if we don't have appropriate permissions
-    if (!this.canUpdate)
-      return;
-
-    var status = readStatusFile(getUpdatesDir());
-
-    // Make sure to cleanup after an update that failed for an unknown reason
-    if (status == "null")
-      status = null;
-
-    var updRootKey = null;
-#ifdef XP_WIN
-#ifndef WINCE
-    function findPreviousUpdate(key) {
-      var updateDir = getUpdatesDir(key);
-      if (updateDir.exists()) {
-        status = readStatusFile(updateDir);
-        // Previous download should succeed. Otherwise, we will not be here!
-        if (status == STATE_SUCCEEDED)
-          updRootKey = key;
-        else
-          status = null;
-      }
-    }
-
-    // required to migrate from older versions.
-    if (status == null)
-      findPreviousUpdate(KEY_APPDIR);
-#endif
-#endif
+  _postUpdateProcessing: function AUS__postUpdateProcessing(status) {
+    var um = Cc["@mozilla.org/updates/update-manager;1"].
+             getService(Ci.nsIUpdateManager);
+    var update = um.activeUpdate;
 
     if (status == STATE_DOWNLOADING) {
       LOG("UpdateService", "_postUpdateProcessing - patch found in " +
           "downloading state");
+      if (update && update.state != STATE_SUCCEEDED) {
+        // Resume download
+        var status = this.downloadUpdate(update, true);
+        if (status == STATE_NONE)
+          cleanupActiveUpdate();
+      }
+      return;
     }
-    else if (status != null) {
-      // null status means the update.status file is not present, because either:
-      // 1) no update was performed, and so there's no UI to show
-      // 2) an update was attempted but failed during checking, transfer or
-      //    verification, and was cleaned up at that point, and UI notifying of
-      //    that error was shown at that stage.
-      var um = Cc["@mozilla.org/updates/update-manager;1"].
-               getService(Ci.nsIUpdateManager);
-      var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
-                     createInstance(Ci.nsIUpdatePrompt);
 
-      var update = um.activeUpdate;
-      if (!update) {
-        update = new Update(null);
-      }
-      update.state = status;
-      var sbs = Cc["@mozilla.org/intl/stringbundle;1"].
-                getService(Ci.nsIStringBundleService);
-      var bundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
-      if (status == STATE_SUCCEEDED) {
-        update.statusText = bundle.GetStringFromName("installSuccess");
+    if (!update)
+      update = new Update(null);
 
-        // Update the patch's metadata.
-        um.activeUpdate = update;
+    var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
+                   createInstance(Ci.nsIUpdatePrompt);
 
-        prompter.showUpdateInstalled();
+    update.state = status;
+    if (status == STATE_SUCCEEDED) {
+      update.statusText = gUpdateBundle.GetStringFromName("installSuccess");
 
-        // Done with this update. Clean it up.
-        cleanupActiveUpdate(updRootKey);
-      }
-      else {
-        // If we hit an error, then the error code will be included in the
-        // status string following a colon.  If we had an I/O error, then we
-        // assume that the patch is not invalid, and we restage the patch so
-        // that it can be attempted again the next time we restart.
-        var ary = status.split(": ");
-        update.state = ary[0];
-        if (update.state == STATE_FAILED && ary[1]) {
-          update.errorCode = ary[1];
-          if (update.errorCode == WRITE_ERROR) {
-            prompter.showUpdateError(update);
-            writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
-            writeVersionFile(getUpdatesDir(), update.extensionVersion);
-            return;
-          }
-        }
+      // Update the patch's metadata.
+      um.activeUpdate = update;
 
-        // Something went wrong with the patch application process.
-        cleanupActiveUpdate();
+      prompter.showUpdateInstalled();
 
-        update.statusText = bundle.GetStringFromName("patchApplyFailure");
-        var oldType = update.selectedPatch ? update.selectedPatch.type
-                                           : "complete";
-        if (update.selectedPatch && oldType == "partial") {
-          // Partial patch application failed, try downloading the complete
-          // update in the background instead.
-          LOG("UpdateService", "_postUpdateProcessing - install of partial " +
-              "patch failed, downloading complete patch");
-          var status = this.downloadUpdate(update, true);
-          if (status == STATE_NONE)
-            cleanupActiveUpdate();
-        }
-        else {
-          LOG("UpdateService", "_postUpdateProcessing - install of complete or " +
-              "only one patch offered failed... showing error.");
-        }
-        update.QueryInterface(Ci.nsIWritablePropertyBag);
-        update.setProperty("patchingFailed", oldType);
-        prompter.showUpdateError(update);
-      }
+      // Done with this update. Clean it up.
+      cleanupActiveUpdate();
     }
     else {
-      LOG("UpdateService", "_postUpdateProcessing - no status, no update");
+      // If we hit an error, then the error code will be included in the
+      // status string following a colon.  If we had an I/O error, then we
+      // assume that the patch is not invalid, and we restage the patch so
+      // that it can be attempted again the next time we restart.
+      var ary = status.split(": ");
+      update.state = ary[0];
+      if (update.state == STATE_FAILED && ary[1]) {
+        update.errorCode = ary[1];
+        if (update.errorCode == WRITE_ERROR) {
+          prompter.showUpdateError(update);
+          writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
+          writeVersionFile(getUpdatesDir(), update.extensionVersion);
+          return;
+        }
+      }
+
+      // Something went wrong with the patch application process.
+      cleanupActiveUpdate();
+
+      update.statusText = gUpdateBundle.GetStringFromName("patchApplyFailure");
+      var oldType = update.selectedPatch ? update.selectedPatch.type
+                                         : "complete";
+      if (update.selectedPatch && oldType == "partial") {
+        // Partial patch application failed, try downloading the complete
+        // update in the background instead.
+        LOG("UpdateService", "_postUpdateProcessing - install of partial " +
+            "patch failed, downloading complete patch");
+        var status = this.downloadUpdate(update, true);
+        if (status == STATE_NONE)
+          cleanupActiveUpdate();
+      }
+      else {
+        LOG("UpdateService", "_postUpdateProcessing - install of complete or " +
+            "only one patch offered failed... showing error.");
+      }
+      update.QueryInterface(Ci.nsIWritablePropertyBag);
+      update.setProperty("patchingFailed", oldType);
+      prompter.showUpdateError(update);
     }
   },
 
@@ -1617,11 +1440,12 @@ UpdateService.prototype = {
 // On Windows CE skip the write access checks and assume we have write access
 #ifndef WINCE
     try {
+      const NORMAL_FILE_TYPE = Ci.nsILocalFile.NORMAL_FILE_TYPE;
       var updateTestFile = getUpdateFile([FILE_PERMS_TEST]);
       LOG("UpdateService", "canUpdate - testing " + updateTestFile.path);
       if (updateTestFile.exists())
         updateTestFile.remove(false);
-      updateTestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+      updateTestFile.create(NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
       updateTestFile.remove(false);
 #ifdef XP_WIN
       var sysInfo = Cc["@mozilla.org/system-info;1"].
@@ -1689,11 +1513,11 @@ UpdateService.prototype = {
        */
       if (!userCanElevate) {
         // if we're unable to create the test file this will throw an exception.
-        var appDirTestFile = getFile(KEY_APPDIR, [FILE_PERMS_TEST]);
+        var appDirTestFile = FileUtils.getFile(KEY_APPDIR, [FILE_PERMS_TEST]);
         LOG("UpdateService", "canUpdate - testing " + appDirTestFile.path);
         if (appDirTestFile.exists())
           appDirTestFile.remove(false)
-        appDirTestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+        appDirTestFile.create(NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
         appDirTestFile.remove(false);
       }
 #endif //XP_WIN
@@ -1863,7 +1687,7 @@ UpdateManager.prototype = {
     var result = [];
     var fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
                      createInstance(Ci.nsIFileInputStream);
-    fileStream.init(file, MODE_RDONLY, PERMS_FILE, 0);
+    fileStream.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
     try {
       var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                    createInstance(Ci.nsIDOMParser);
@@ -1993,10 +1817,11 @@ UpdateManager.prototype = {
   _writeUpdatesToXMLFile: function UM__writeUpdatesToXMLFile(updates, file) {
     var fos = Cc["@mozilla.org/network/safe-file-output-stream;1"].
               createInstance(Ci.nsIFileOutputStream);
-    var modeFlags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
+    var modeFlags = FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
+                    FileUtils.MODE_TRUNCATE;
     if (!file.exists())
-      file.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-    fos.init(file, modeFlags, PERMS_FILE, 0);
+      file.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+    fos.init(file, modeFlags, FileUtils.PERMS_FILE, 0);
 
     try {
       var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
@@ -2016,7 +1841,7 @@ UpdateManager.prototype = {
     catch (e) {
     }
 
-    closeSafeOutputStream(fos);
+    FileUtils.closeSafeFileOutputStream(fos);
   },
 
   /**
@@ -2050,7 +1875,6 @@ UpdateManager.prototype = {
   classID: Components.ID("{093C2356-4843-4C65-8709-D7DBCBBE7DFB}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateManager])
 };
-
 
 /**
  * Checker
@@ -2364,7 +2188,7 @@ Downloader.prototype = {
 
     var fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
                      createInstance(Ci.nsIFileInputStream);
-    fileStream.init(destination, MODE_RDONLY, PERMS_FILE, 0);
+    fileStream.init(destination, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
 
     try {
       var hash = Cc["@mozilla.org/security/hash;1"].
@@ -2659,9 +2483,6 @@ Downloader.prototype = {
     const NS_BINDING_ABORTED = 0x804b0002;
     const NS_ERROR_ABORT = 0x80004004;
     if (Components.isSuccessCode(status)) {
-      var sbs = Cc["@mozilla.org/intl/stringbundle;1"].
-                getService(Ci.nsIStringBundleService);
-      var updateStrings = sbs.createBundle(URI_UPDATES_PROPERTIES);
       if (this._verifyDownload()) {
         state = STATE_PENDING;
 
@@ -2675,7 +2496,7 @@ Downloader.prototype = {
         writeStatusFile(getUpdatesDir(), state);
         writeVersionFile(getUpdatesDir(), this._update.extensionVersion);
         this._update.installDate = (new Date()).getTime();
-        this._update.statusText = updateStrings.GetStringFromName("installPending");
+        this._update.statusText = gUpdateBundle.GetStringFromName("installPending");
       }
       else {
         LOG("Downloader", "onStopRequest - download verification failed");
@@ -2843,11 +2664,10 @@ UpdatePrompt.prototype = {
     if (!this._enabled || this._getUpdateWindow())
       return;
 
-    var bundle = this._updateBundle;
     var stringsPrefix = "updateAvailable_" + update.type + ".";
-    var title = bundle.formatStringFromName(stringsPrefix + "title",
-                                            [update.name], 1);
-    var text = bundle.GetStringFromName(stringsPrefix + "text");
+    var title = gUpdateBundle.formatStringFromName(stringsPrefix + "title",
+                                                   [update.name], 1);
+    var text = gUpdateBundle.GetStringFromName(stringsPrefix + "text");
     var imageUrl = "";
     this._showUnobtrusiveUI(null, URI_UPDATE_PROMPT_DIALOG, null,
                            UPDATE_WINDOW_NAME, "updatesavailable", update,
@@ -2862,11 +2682,10 @@ UpdatePrompt.prototype = {
       if (!this._enabled)
         return;
 
-      var bundle = this._updateBundle;
       var stringsPrefix = "updateDownloaded_" + update.type + ".";
-      var title = bundle.formatStringFromName(stringsPrefix + "title",
-                                              [update.name], 1);
-      var text = bundle.GetStringFromName(stringsPrefix + "text");
+      var title = gUpdateBundle.formatStringFromName(stringsPrefix + "title",
+                                                     [update.name], 1);
+      var text = gUpdateBundle.GetStringFromName(stringsPrefix + "text");
       var imageUrl = "";
       this._showUnobtrusiveUI(null, URI_UPDATE_PROMPT_DIALOG, null,
                               UPDATE_WINDOW_NAME, "finishedBackground", update,
@@ -2912,10 +2731,9 @@ UpdatePrompt.prototype = {
 
     // In some cases, we want to just show a simple alert dialog:
     if (update.state == STATE_FAILED && update.errorCode == WRITE_ERROR) {
-      var updateBundle = this._updateBundle;
-      var title = updateBundle.GetStringFromName("updaterIOErrorTitle");
-      var text = updateBundle.formatStringFromName("updaterIOErrorMsg",
-                                                   [gApp.name, gApp.name], 2);
+      var title = gUpdateBundle.GetStringFromName("updaterIOErrorTitle");
+      var text = gUpdateBundle.formatStringFromName("updaterIOErrorMsg",
+                                                    [gApp.name, gApp.name], 2);
       var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
                getService(Ci.nsIWindowWatcher);
       ww.getNewPrompter(null).alert(title, text);
@@ -2938,12 +2756,6 @@ UpdatePrompt.prototype = {
    */
   get _enabled() {
     return !getPref("getBoolPref", PREF_APP_UPDATE_SILENT, false);
-  },
-
-  get _updateBundle() {
-    return Cc["@mozilla.org/intl/stringbundle;1"].
-           getService(Ci.nsIStringBundleService).
-           createBundle(URI_UPDATES_PROPERTIES);
   },
 
   /**

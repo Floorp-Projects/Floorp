@@ -82,7 +82,7 @@
 
 // Interfaces Needed
 #include "nsIFrame.h"
-#include "nsICanvasFrame.h"
+#include "nsCanvasFrame.h"
 #include "nsIWidget.h"
 #include "nsIBaseWindow.h"
 #include "nsIAccelerometer.h"
@@ -6887,11 +6887,11 @@ nsGlobalWindow::FireHashchange()
                                               PR_FALSE, PR_FALSE);
 }
 
-// Find an nsICanvasFrame under aFrame.  Only search the principal
+// Find an nsCanvasFrame under aFrame.  Only search the principal
 // child lists.  aFrame must be non-null.
-static nsICanvasFrame* FindCanvasFrame(nsIFrame* aFrame)
+static nsCanvasFrame* FindCanvasFrame(nsIFrame* aFrame)
 {
-    nsICanvasFrame* canvasFrame = do_QueryFrame(aFrame);
+    nsCanvasFrame* canvasFrame = do_QueryFrame(aFrame);
     if (canvasFrame) {
         return canvasFrame;
     }
@@ -6939,7 +6939,7 @@ nsGlobalWindow::UpdateCanvasFocus(PRBool aFocusChanged, nsIContent* aNewContent)
           nsIFrame* frame = presShell->GetPrimaryFrameFor(rootContent);
           if (frame) {
               frame = frame->GetParent();
-              nsICanvasFrame* canvasFrame = do_QueryFrame(frame);
+              nsCanvasFrame* canvasFrame = do_QueryFrame(frame);
               if (canvasFrame) {
                   canvasFrame->SetHasFocus(mHasFocus && rootContent == aNewContent);
               }
@@ -6949,7 +6949,7 @@ nsGlobalWindow::UpdateCanvasFocus(PRBool aFocusChanged, nsIContent* aNewContent)
       // Look for the frame the hard way
       nsIFrame* frame = presShell->GetRootFrame();
       if (frame) {
-          nsICanvasFrame* canvasFrame = FindCanvasFrame(frame);
+          nsCanvasFrame* canvasFrame = FindCanvasFrame(frame);
           if (canvasFrame) {
               canvasFrame->SetHasFocus(PR_FALSE);
           }

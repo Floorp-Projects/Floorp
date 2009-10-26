@@ -823,7 +823,20 @@ class nsIWidget : public nsISupports {
      *                windows.
      */
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive) = 0;
-    
+
+    /**
+     * If set to true, the window will draw its contents into the titlebar
+     * instead of below it.
+     *
+     * Ignored on any platform that does not support it. Ignored by widgets that
+     * do not represent windows.
+     * May result in a resize event, so should only be called from places where
+     * reflow and painting is allowed.
+     *
+     * @param aState Whether drawing into the titlebar should be activated.
+     */
+    virtual void SetDrawsInTitlebar(PRBool aState) = 0;
+
     /*
      * Determine whether the widget shows a resize widget. If it does,
      * aResizerRect returns the resizer's rect.

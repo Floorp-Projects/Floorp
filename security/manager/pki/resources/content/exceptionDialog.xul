@@ -56,9 +56,9 @@
         persist="screenX screenY width height"
         defaultButton="extra2">
   
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
-  <script type="application/x-javascript" src="chrome://pippki/content/exceptionDialog.js"/>
+  <script type="application/javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
+  <script type="application/javascript" src="chrome://pippki/content/exceptionDialog.js"/>
   
   <hbox>
     <vbox>

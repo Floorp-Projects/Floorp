@@ -934,8 +934,10 @@ nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
   aState.SetLayoutFlags(0);
 
   nsresult rv = NS_OK;
-  if (mLayoutManager)
+  if (mLayoutManager) {
+    CoordNeedsRecalc(mAscent);
     rv = mLayoutManager->Layout(this, aState);
+  }
 
   aState.SetLayoutFlags(oldFlags);
 

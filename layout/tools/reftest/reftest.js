@@ -275,12 +275,15 @@ function ReadManifest(aURL)
     var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
     sandbox.MOZ_WIDGET_TOOLKIT = xr.widgetToolkit;
     sandbox.isDebugBuild = gDebug.isDebugBuild;
-    sandbox.xulRuntime = {widgetToolkit: xr.widgettoolkit, OS: xr.OS};
+    sandbox.xulRuntime = {widgetToolkit: xr.widgetToolkit, OS: xr.OS};
 
-    // xr.XPCOMABI throws exception for configurations without full ABI support (mobile builds on ARM)
+    // xr.XPCOMABI throws exception for configurations without full ABI
+    // support (mobile builds on ARM)
     try {
-      sandbox.XPCOMABI = xr.XPCOMABI;
-    } catch(e) {}
+      sandbox.xulRuntime.XPCOMABI = xr.XPCOMABI;
+    } catch(e) {
+      sandbox.xulRuntime.XPCOMABI = "";
+    }
 
     var hh = CC[NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX + "http"].
                  getService(CI.nsIHttpProtocolHandler);

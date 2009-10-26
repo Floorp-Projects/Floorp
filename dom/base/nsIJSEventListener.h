@@ -46,8 +46,8 @@ class nsIDOMEventListener;
 class nsIAtom;
 
 #define NS_IJSEVENTLISTENER_IID     \
-{ 0x8b4f3ad1, 0x1c2a, 0x43f0, \
-  { 0xac, 0x6c, 0x83, 0x33, 0xe9, 0xe1, 0xcb, 0x7e } }
+{ 0x08ca15c4, 0x1c2d, 0x449e, \
+  { 0x9e, 0x88, 0xaa, 0x8b, 0xbf, 0x00, 0xf7, 0x63 } }
 
 // Implemented by script event listeners. Used to retrieve the
 // script object corresponding to the event target.
@@ -80,8 +80,6 @@ public:
     return mScopeObject;
   }
 
-  virtual void SetEventName(nsIAtom* aName) = 0;
-
   virtual nsresult GetJSVal(const nsAString& aEventName, jsval* aJSVal) = 0;
 
 protected:
@@ -98,6 +96,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSEventListener, NS_IJSEVENTLISTENER_IID)
 /* factory function */
 nsresult NS_NewJSEventListener(nsIScriptContext *aContext,
                                void *aScopeObject, nsISupports *aObject,
-                               nsIDOMEventListener **aReturn);
+                               nsIAtom* aType, nsIDOMEventListener **aReturn);
 
 #endif // nsIJSEventListener_h__

@@ -6,7 +6,12 @@ all: vartest run-override
 	$(MAKE) -f $(TESTPATH)/override-propagate.mk vartest
 	@echo TEST-PASS
 
-SORTED_CLINE := $(sort OVAR=oval TESTPATH=$(TESTPATH) NATIVE_TESTPATH=$(NATIVE_TESTPATH))
+CLINE := OVAR=oval TESTPATH=$(TESTPATH) NATIVE_TESTPATH=$(NATIVE_TESTPATH)
+ifdef __WIN32__
+CLINE += __WIN32__=1
+endif
+
+SORTED_CLINE := $(subst \,\\,$(sort $(CLINE)))
 
 vartest:
 	@echo MAKELEVEL: '$(MAKELEVEL)'
