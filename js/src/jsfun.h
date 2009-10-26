@@ -424,7 +424,7 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp);
  * If nameWord does not name a formal parameter, use JS_LOCAL_NAME_IS_CONST to
  * check if nameWord corresponds to the const declaration.
  */
-extern jsuword *
+extern JS_FRIEND_API(jsuword *)
 js_GetLocalNameArray(JSContext *cx, JSFunction *fun, struct JSArenaPool *pool);
 
 #define JS_LOCAL_NAME_TO_ATOM(nameWord)                                       \
