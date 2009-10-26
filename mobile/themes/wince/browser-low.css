@@ -286,6 +286,11 @@ box[type="documenttab"] .documenttab-close {
   list-style-image: url("images/newtab-active-36.png");
 }
 
+/* bookmark editor   ------------------------------------------------------- */
+#bookmark-image {
+  list-style-image: url("images/star-24.png");
+}
+
 /* Popup Icons */
 #identity-popup-icon {
   padding: 0;

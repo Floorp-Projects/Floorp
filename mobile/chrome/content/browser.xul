@@ -315,7 +315,10 @@
 
     <vbox id="bookmark-container" hidden="true" class="panel-dark window-width">
       <hbox id="bookmark-form" align="start">
-        <image id="bookmark-image" src="chrome://browser/skin/images/starred-default-64.png"/>
+        <image id="bookmark-image"/>
+      </hbox>
+      <hbox pack="center">
+        <button class="button-dark" label="&editBookmarkDone.label;" oncommand="BookmarkHelper.save();"/>
       </hbox>
     </vbox>
 
