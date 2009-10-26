@@ -2975,7 +2975,7 @@ SearchService.prototype = {
 
       try {
         var extras =
-          gPrefSvc.getChildList(BROWSER_SEARCH_PREF + "order.extra.", { });
+          gPrefSvc.getChildList(BROWSER_SEARCH_PREF + "order.extra.");
 
         for each (prefName in extras) {
           engineName = gPrefSvc.getCharPref(prefName);
@@ -3173,8 +3173,7 @@ SearchService.prototype = {
 
     // First, look at the "browser.search.order.extra" branch.
     try {
-      var extras = gPrefSvc.getChildList(BROWSER_SEARCH_PREF + "order.extra.",
-                                         {});
+      var extras = gPrefSvc.getChildList(BROWSER_SEARCH_PREF + "order.extra.");
 
       for each (var prefName in extras) {
         engineName = gPrefSvc.getCharPref(prefName);

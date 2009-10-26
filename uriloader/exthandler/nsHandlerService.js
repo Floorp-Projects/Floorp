@@ -235,7 +235,7 @@ HandlerService.prototype = {
                   getService(Ci.nsIPrefService);
 
     let schemesPrefBranch = prefSvc.getBranch("gecko.handlerService.schemes.");
-    let schemePrefList = schemesPrefBranch.getChildList("", {}); 
+    let schemePrefList = schemesPrefBranch.getChildList("");
 
     var schemes = {};
 

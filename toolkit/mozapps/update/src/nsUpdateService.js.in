@@ -153,7 +153,7 @@ XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function() {
     let ps = Cc["@mozilla.org/preferences-service;1"].
              getService(Ci.nsIPrefService);
     let logBranch = ps.getBranch(PREF_APP_UPDATE_LOG_BRANCH);
-    let modules = logBranch.getChildList("", { value: 0 });
+    let modules = logBranch.getChildList("");
     for (let i = 0; i < modules.length; ++i) {
       if (logBranch.prefHasUserValue(modules[i]))
         logEnabled[modules[i]] = logBranch.getBoolPref(modules[i]);
@@ -506,7 +506,7 @@ function getUpdateChannel() {
   }
 
   try {
-    var partners = gPref.getChildList(PREF_PARTNER_BRANCH, { });
+    var partners = gPref.getChildList(PREF_PARTNER_BRANCH);
     if (partners.length) {
       channel += "-cck";
       partners.sort();

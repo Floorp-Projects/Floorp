@@ -1540,8 +1540,7 @@ function initializeSanitizer()
    */
   if (!gPrefService.getBoolPref("privacy.sanitize.migrateFx3Prefs")) {
     let itemBranch = gPrefService.getBranch("privacy.item.");
-    let itemCount = { value: 0 };
-    let itemArray = itemBranch.getChildList("", itemCount);
+    let itemArray = itemBranch.getChildList("");
 
     // See if any privacy.item prefs are set
     let doMigrate = itemArray.some(function (name) itemBranch.prefHasUserValue(name));
