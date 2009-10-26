@@ -167,7 +167,7 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
     memset(exit, 0, sizeof(VMSideExit));
     exit->from = fragment;
     exit->calldepth = 0;
-    JS_ASSERT(unsigned(exit->calldepth) == getCallDepth());
+    JS_ASSERT(unsigned(exit->calldepth) == callDepth);
     exit->numGlobalSlots = ngslots;
     exit->numStackSlots = downPostSlots + 1;
     exit->numStackSlotsBelowCurrentFrame = cx->fp->down->argv ?
