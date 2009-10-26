@@ -309,7 +309,8 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
 }
 
 static JSBool
-ResizeSlots(JSContext *cx, JSObject *obj, uint32 oldlen, uint32 newlen)
+ResizeSlots(JSContext *cx, JSObject *obj, uint32 oldlen, uint32 newlen,
+            bool initializeAllSlots = true)
 {
     jsval *slots, *newslots;
 
@@ -334,8 +335,10 @@ ResizeSlots(JSContext *cx, JSObject *obj, uint32 oldlen, uint32 newlen)
     obj->dslots = newslots + 1;
     js_SetDenseArrayCapacity(obj, newlen);
 
-    for (slots = obj->dslots + oldlen; slots < obj->dslots + newlen; slots++)
-        *slots = JSVAL_HOLE;
+    if (initializeAllSlots) {
+        for (slots = obj->dslots + oldlen; slots < obj->dslots + newlen; slots++)
+            *slots = JSVAL_HOLE;
+    }
 
     return JS_TRUE;
 }
@@ -356,7 +359,8 @@ ResizeSlots(JSContext *cx, JSObject *obj, uint32 oldlen, uint32 newlen)
 #define CAPACITY_CHUNK  (1024 * 1024 / sizeof(jsval))
 
 static JSBool
-EnsureCapacity(JSContext *cx, JSObject *obj, uint32 newcap)
+EnsureCapacity(JSContext *cx, JSObject *obj, uint32 newcap,
+               bool initializeAllSlots = true)
 {
     uint32 oldcap = js_DenseArrayCapacity(obj);
 
@@ -375,12 +379,23 @@ EnsureCapacity(JSContext *cx, JSObject *obj, uint32 newcap)
                           ? oldcap * 2 + 1
                           : oldcap + (oldcap >> 3);
 
-        newcap = JS_MAX(newcap, nextsize);
-        if (newcap >= CAPACITY_CHUNK)
-            newcap = JS_ROUNDUP(newcap + 1, CAPACITY_CHUNK) - 1; /* -1 for dslots[-1] */
-        else if (newcap < ARRAY_CAPACITY_MIN)
-            newcap = ARRAY_CAPACITY_MIN;
-        return ResizeSlots(cx, obj, oldcap, newcap);
+        uint32 actualCapacity = JS_MAX(newcap, nextsize);
+        if (actualCapacity >= CAPACITY_CHUNK)
+            actualCapacity = JS_ROUNDUP(actualCapacity + 1, CAPACITY_CHUNK) - 1; /* -1 for dslots[-1] */
+        else if (actualCapacity < ARRAY_CAPACITY_MIN)
+            actualCapacity = ARRAY_CAPACITY_MIN;
+        if (!ResizeSlots(cx, obj, oldcap, actualCapacity, initializeAllSlots))
+            return JS_FALSE;
+        if (!initializeAllSlots) {
+            /*
+             * Initialize the slots caller didn't actually ask for.
+             */
+            for (jsval *slots = obj->dslots + newcap;
+                 slots < obj->dslots + actualCapacity;
+                 slots++) {
+                *slots = JSVAL_HOLE;
+            }
+        }
     }
     return JS_TRUE;
 }
@@ -3567,4 +3582,25 @@ js_CoerceArrayToCanvasImageData(JSObject *obj, jsuint offset, jsuint count,
     }
 
     return JS_TRUE;
+}
+
+JS_FRIEND_API(JSObject *)
+js_NewArrayObjectWithCapacity(JSContext *cx, jsuint capacity, jsval **vector)
+{
+    JSObject *obj = js_NewArrayObject(cx, capacity, NULL);
+    if (!obj)
+        return NULL;
+
+    JSAutoTempValueRooter tvr(cx, obj);
+    if (!EnsureCapacity(cx, obj, capacity, JS_FALSE))
+        obj = NULL;
+
+    /* Set/clear newborn root, in case we lost it.  */
+    cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] = obj;
+    if (!obj)
+        return NULL;
+
+    obj->fslots[JSSLOT_ARRAY_COUNT] = capacity;
+    *vector = obj->dslots;
+    return obj;
 }
