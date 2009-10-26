@@ -169,6 +169,7 @@ enum { XKeyPress = KeyPress };
 #endif
 
 #ifdef MOZ_PLATFORM_HILDON
+#define MOZ_POST_VISIBILITY_EVENTS 1
 #define MOZ_COMPOSITED_PLUGINS 1
 #endif
 
@@ -381,6 +382,11 @@ public:
   void ReleasePluginPort(void* pluginPort);
 
   void SetPluginHost(nsIPluginHost* aHost);
+
+#ifdef MOZ_PLATFORM_HILDON
+  /* the flash plugin(s) need to have thier visiblity poked */
+  PRBool UpdateVisibility(PRBool aForce = PR_FALSE);
+#endif
 
   nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
 
@@ -952,6 +958,10 @@ nsObjectFrame::FixupWindow(const nsSize& aSize)
 
   NS_ENSURE_TRUE(window, /**/);
 
+#ifdef MOZ_PLATFORM_HILDON
+  mInstanceOwner->UpdateVisibility(PR_TRUE);
+#endif
+
 #ifdef XP_MACOSX
   mInstanceOwner->FixUpPluginWindow(ePluginPaintDisable);
 #endif
@@ -995,6 +1005,10 @@ nsObjectFrame::CallSetWindow()
     return;
 
   nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
+
+#ifdef MOZ_PLATFORM_HILDON
+  mInstanceOwner->UpdateVisibility(PR_TRUE);
+#endif
 
 #ifdef XP_MACOSX
   mInstanceOwner->FixUpPluginWindow(ePluginPaintDisable);
@@ -3455,6 +3469,10 @@ nsPluginInstanceOwner::GetEventloopNestingLevel()
 
 nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
+#ifdef MOZ_PLATFORM_HILDON
+  CancelTimer();
+#endif
+
 #if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
   if (GetEventModel() != NPEventModelCarbon)
     return NS_OK;
@@ -4948,6 +4966,11 @@ nsPluginInstanceOwner::Renderer::NativeDraw(QWidget * drawable,
 
 NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* timer)
 {
+#ifdef MOZ_PLATFORM_HILDON
+  if (mInstance)
+    UpdateVisibility();
+#endif
+
 #if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
   if (GetEventModel() != NPEventModelCarbon)
     return NS_OK;
@@ -4996,6 +5019,20 @@ void nsPluginInstanceOwner::StartTimer(unsigned int aDelay)
   if (mPluginTimer) {
     mTimerCanceled = PR_FALSE;
     mPluginTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_REPEATING_SLACK);
+  }
+#endif
+
+#ifdef MOZ_PLATFORM_HILDON
+  if (!mTimerCanceled)
+    return;
+
+  // start a periodic timer to provide null events to the plugin instance.
+  if (!mPluginTimer)
+    mPluginTimer = do_CreateInstance("@mozilla.org/timer;1");
+
+  if (mPluginTimer) {
+    mTimerCanceled = PR_FALSE;
+    mPluginTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_ONE_SHOT);
   }
 #endif
 }
@@ -5201,6 +5238,31 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
 {
   mPluginHost = aHost;
 }
+
+#ifdef MOZ_PLATFORM_HILDON
+PRBool nsPluginInstanceOwner::UpdateVisibility(PRBool aForce)
+{
+  if (!mPluginWindow || !mInstance || !mOwner)
+    return PR_FALSE;
+
+  // first, check our view for CSS visibility style
+  PRBool isVisible =
+    mOwner->GetView()->GetVisibility() == nsViewVisibility_kShow;
+
+  if (aForce || mWidgetVisible != isVisible) {
+    PRBool handled;
+    NPEvent pluginEvent;
+    XVisibilityEvent& visibilityEvent = pluginEvent.xvisibility;
+    visibilityEvent.type = VisibilityNotify;
+    visibilityEvent.display = 0;
+    visibilityEvent.state = isVisible ? VisibilityUnobscured : VisibilityFullyObscured;
+    mInstance->HandleEvent(&pluginEvent, &handled);
+    mWidgetVisible = isVisible;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+#endif
 
   // Mac specific code to fix up the port location and clipping region
 #ifdef XP_MACOSX
