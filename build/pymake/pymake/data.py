@@ -1008,7 +1008,7 @@ class Target(object):
             makefile.context.defer(cb, error=self.error, didanything=self.didanything)
         del self._callbacks 
 
-    def make(self, makefile, targetstack, cb, avoidremakeloop=False):
+    def make(self, makefile, targetstack, cb, avoidremakeloop=False, printerror=True):
         """
         If we are out of date, asynchronously make ourself. This is a multi-stage process, mostly handled
         by the helper objects RemakeTargetSerially, RemakeTargetParallel,
@@ -1051,7 +1051,8 @@ class Target(object):
         try:
             self.resolvedeps(makefile, targetstack, [], False)
         except util.MakeError, e:
-            print e
+            if printerror:
+                print e
             self.error = True
             self.notifydone(makefile)
             return
@@ -1312,7 +1313,7 @@ class _RemakeContext(object):
 
         if len(self.toremake):
             target, self.required = self.toremake.pop(0)
-            target.make(self.makefile, [], avoidremakeloop=True, cb=self.remakecb)
+            target.make(self.makefile, [], avoidremakeloop=True, cb=self.remakecb, printerror=False)
         else:
             for t, required in self.included:
                 if t.wasremade:
