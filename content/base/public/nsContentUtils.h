@@ -46,7 +46,6 @@
 #include "jsnum.h"
 #include "nsAString.h"
 #include "nsIStatefulFrame.h"
-#include "nsIPref.h"
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentList.h"
@@ -60,6 +59,7 @@
 #include "nsTArray.h"
 #include "nsTextFragment.h"
 #include "nsReadableUtils.h"
+#include "nsIPrefBranch.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -99,7 +99,6 @@ class nsIScriptContext;
 class nsIRunnable;
 class nsIInterfaceRequestor;
 template<class E> class nsCOMArray;
-class nsIPref;
 struct JSRuntime;
 class nsICaseConversion;
 class nsIUGenCategory;
@@ -109,6 +108,7 @@ class nsPIDOMWindow;
 class nsPIDOMEventTarget;
 class nsIPresShell;
 class nsIXPConnectJSObjectHolder;
+class nsPrefOldCallback;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -116,6 +116,11 @@ class nsIXTFService;
 class nsIBidiKeyboard;
 #endif
 class nsIMIMEHeaderParam;
+
+#ifndef have_PrefChangedFunc_typedef
+typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
+#define have_PrefChangedFunc_typedef
+#endif
 
 extern const char kLoadAsData[];
 
@@ -1537,8 +1542,9 @@ private:
 #endif
 
   static nsIPrefBranch *sPrefBranch;
-
-  static nsIPref *sPref;
+  // For old compatibility of RegisterPrefCallback
+  // 85-96 callbacks are registered at start up by default
+  static nsAutoTArray<nsPrefOldCallback*,96> *sPrefCallbackList;
 
   static imgILoader* sImgLoader;
   static imgICache* sImgCache;
