@@ -86,6 +86,9 @@
 #include "jsstaticcheck.h"
 #include "jsvector.h"
 
+#include "jsatominlines.h"
+#include "jsscopeinlines.h"
+
 #if JS_HAS_FILE_OBJECT
 #include "jsfile.h"
 #endif
@@ -93,8 +96,6 @@
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
 #endif
-
-#include "jsatominlines.h"
 
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) ((va_list *)(ap))

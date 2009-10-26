@@ -61,6 +61,8 @@
 #include "jsstr.h"
 #include "jstracer.h"
 
+#include "jsscopeinlines.h"
+
 uint32
 js_GenerateShape(JSContext *cx, bool gcLocked)
 {
