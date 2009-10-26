@@ -335,7 +335,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   for v in extraPrefs:
     thispref = v.split("=")
     if len(thispref) < 2:
-      print "Error: syntax error in --extra-pref=" + v
+      print "Error: syntax error in --setpref=" + v
       sys.exit(1)
     part = 'user_pref("%s", %s);\n' % (thispref[0], thispref[1])
     prefs.append(part)
