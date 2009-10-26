@@ -2916,13 +2916,13 @@ js_Interpret(JSContext *cx)
             CHECK_BRANCH();                                                   \
             if (op == JSOP_NOP) {                                             \
                 if (TRACE_RECORDER(cx)) {                                     \
-                    MONITOR_BRANCH(Monitor_Branch);                           \
+                    MONITOR_BRANCH(Record_Branch);                           \
                     op = (JSOp) *regs.pc;                                     \
                 } else {                                                      \
                     op = (JSOp) *++regs.pc;                                   \
                 }                                                             \
             } else if (op == JSOP_TRACE) {                                    \
-                MONITOR_BRANCH(Monitor_Branch);                               \
+                MONITOR_BRANCH(Record_Branch);                               \
                 op = (JSOp) *regs.pc;                                         \
             }                                                                 \
         }                                                                     \
