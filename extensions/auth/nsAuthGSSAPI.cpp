@@ -72,6 +72,10 @@ typedef KLStatus (*KLCacheHasValidTickets_type)(
     char **);
 #endif
 
+#if defined(HAVE_RES_NINIT)
+#include <resolv.h>
+#endif
+
 //-----------------------------------------------------------------------------
 
 // We define GSS_C_NT_HOSTBASED_SERVICE explicitly since it may be referenced
@@ -416,6 +420,7 @@ nsAuthGSSAPI::GetNextToken(const void *inToken,
     input_token.value = (void *)mServiceName.get();
     input_token.length = mServiceName.Length() + 1;
 
+    res_ninit(&_res);
     major_status = gss_import_name_ptr(&minor_status,
                                    &input_token,
                                    &gss_c_nt_hostbased_service,
