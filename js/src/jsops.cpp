@@ -318,7 +318,7 @@ BEGIN_CASE(JSOP_STOP)
             if (!TRACE_RECORDER(cx) && recursive) {
                 if (*(regs.pc + JSOP_CALL_LENGTH) == JSOP_TRACE) {
                     regs.pc += JSOP_CALL_LENGTH;
-                    MONITOR_BRANCH(Monitor_LeaveFrame);
+                    MONITOR_BRANCH(Record_LeaveFrame);
                     op = (JSOp)*regs.pc;
                     DO_OP();
                 }
@@ -2236,7 +2236,7 @@ BEGIN_CASE(JSOP_APPLY)
             } else if (fp->script == fp->down->script &&
                        *fp->down->regs->pc == JSOP_CALL &&
                        *fp->regs->pc == JSOP_TRACE) {
-                MONITOR_BRANCH(Monitor_EnterFrame);
+                MONITOR_BRANCH(Record_EnterFrame);
             }
 #endif
 
