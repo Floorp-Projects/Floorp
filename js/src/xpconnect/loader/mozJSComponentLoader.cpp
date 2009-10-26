@@ -959,23 +959,6 @@ mozJSComponentLoader::StartFastLoad(nsIFastLoadService *flSvc)
 
                 nsCOMPtr<nsIFastLoadReadControl>
                     readControl(do_QueryInterface(mFastLoadInput));
-                if (readControl) {
-                    // Verify checksum, using the FastLoadService's
-                    // checksum cache to avoid computing more than once
-                    // per session.
-                    PRUint32 checksum;
-                    rv = readControl->GetChecksum(&checksum);
-                    if (NS_SUCCEEDED(rv)) {
-                        PRUint32 verified;
-                        rv = flSvc->ComputeChecksum(mFastLoadFile,
-                                                    readControl, &verified);
-                        if (NS_SUCCEEDED(rv) && verified != checksum) {
-                            LOG(("Incorrect checksum detected"));
-                            rv = NS_ERROR_FAILURE;
-                        }
-                    }
-                }
-
                 if (NS_SUCCEEDED(rv)) {
                     /* Get the JS bytecode version number and validate it. */
                     PRUint32 version;
