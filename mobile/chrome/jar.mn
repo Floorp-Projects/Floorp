@@ -33,6 +33,7 @@ chrome.jar:
 * content/InputHandler.js              (content/InputHandler.js)
   content/Util.js                      (content/Util.js)
   content/preferences.js               (content/preferences.js)
+  content/exceptions.js                (content/exceptions.js)
   content/extensions.js                (content/extensions.js)
   content/downloads.js                 (content/downloads.js)
   content/console.js                   (content/console.js)

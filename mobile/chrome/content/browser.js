@@ -838,25 +838,22 @@ var Browser = {
     if (/^about:certerror\?e=nssBadCert/.test(errorDoc.documentURI)) {
       if (ot == errorDoc.getElementById("temporaryExceptionButton") ||
           ot == errorDoc.getElementById("permanentExceptionButton")) {
-        var params = { exceptionAdded : false };
-
         try {
-          switch (gPrefService.getIntPref("browser.ssl_override_behavior")) {
-            case 2 : // Pre-fetch & pre-populate
-              params.prefetchCert = true;
-            case 1 : // Pre-populate
-              params.location = errorDoc.location.href;
+          // add a new SSL exception for this URL
+          let uri = gIOService.newURI(errorDoc.location.href, null, null);
+          let sslExceptions = new SSLExceptions();
+
+          if (ot == errorDoc.getElementById("permanentExceptionButton")) {
+            sslExceptions.addPermanentException(uri);
+          } else {
+            sslExceptions.addTemporaryException(uri);
           }
         } catch (e) {
-          Components.utils.reportError("Couldn't get ssl_override pref: " + e);
+          dump("EXCEPTION handle content command: " + e + "\n" );
         }
 
-        window.openDialog('chrome://pippki/content/exceptionDialog.xul',
-                          '','chrome,centerscreen,modal', params);
-
-        // If the user added the exception cert, attempt to reload the page
-        if (params.exceptionAdded)
-          errorDoc.location.reload();
+        // automatically reload after the exception was added  
+        errorDoc.location.reload();
       }
       else if (ot == errorDoc.getElementById('getMeOutOfHereButton')) {
         // Get the start page from the *default* pref branch, not the user's
