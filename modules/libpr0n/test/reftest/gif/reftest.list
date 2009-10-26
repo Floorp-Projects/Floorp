@@ -4,3 +4,6 @@
 == 1bit-255-trans.gif 1bit-255-trans.png
 == in-colormap-trans.gif in-colormap-trans.png
 == out-of-colormap-trans.gif out-of-colormap-trans.png
+
+# a GIF file that uses the comment extension
+== comment.gif comment.png

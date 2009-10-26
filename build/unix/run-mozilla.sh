@@ -39,7 +39,6 @@ cmdname=`basename "$0"`
 MOZ_DIST_BIN=`dirname "$0"`
 MOZ_DEFAULT_NAME="./${cmdname}-bin"
 MOZ_APPRUNNER_NAME="./mozilla-bin"
-MOZ_VIEWER_NAME="./viewer"
 MOZ_PROGRAM=""
 
 exitcode=1
@@ -62,17 +61,9 @@ echo "    --debugger debugger"
 echo ""
 echo "  Examples:"
 echo ""
-echo "  Run the viewer"
-echo ""
-echo "    ${cmdname} viewer"
-echo ""
 echo "  Run the mozilla-bin binary"
 echo ""
 echo "    ${cmdname} mozilla-bin"
-echo ""
-echo "  Debug the viewer in a debugger"
-echo ""
-echo "    ${cmdname} -g viewer"
 echo ""
 echo "  Debug the mozilla-bin binary in gdb"
 echo ""
@@ -239,11 +230,6 @@ then
 	if [ -x "$MOZ_DEFAULT_NAME" ]
 	then
 		MOZ_PROGRAM=$MOZ_DEFAULT_NAME
-	## Try viewer (this should be deprecated)
-	## 
-	elif [ -x "$MOZ_VIEWER_NAME" ]
-	then
-		MOZ_PROGRAM=$MOZ_VIEWER_NAME
 	##
 	## Try mozilla-bin
 	## 

@@ -97,10 +97,30 @@ nsSMILSetAnimationFunction::UnsetAttr(nsIAtom* aAttribute)
   return nsSMILAnimationFunction::UnsetAttr(aAttribute);
 }
 
-nsSMILAnimationFunction::nsSMILCalcMode
-nsSMILSetAnimationFunction::GetCalcMode() const
+nsresult
+nsSMILSetAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
+                                              nsSMILValue& aResult,
+                                              nsSMILValue& aBaseValue)
 {
-  return CALC_DISCRETE;
+  // Sanity Checks
+  const nsSMILTime& dur = mSimpleDuration.GetMillis();
+  NS_ABORT_IF_FALSE(mSampleTime >= 0.0f, "Sample time should not be negative");
+  NS_ABORT_IF_FALSE(dur >= 0.0f, "Simple duration should not be negative");
+  NS_ABORT_IF_FALSE(IsToAnimation(), "Set element only supports to-animation");
+
+  if (mSampleTime >= dur || mSampleTime < 0) {
+    NS_ERROR("Animation sampled outside interval.");
+    return NS_ERROR_FAILURE;
+  }
+  if (aValues.Length() != 1) {
+    NS_ERROR("Unexpected number of values.");
+    return NS_ERROR_FAILURE;
+  }
+  // End Sanity Checks
+
+  // Always use the 'to' value (which should be first & only elem in |aValues|)
+  aResult = aValues[0];
+  return NS_OK;
 }
 
 PRBool

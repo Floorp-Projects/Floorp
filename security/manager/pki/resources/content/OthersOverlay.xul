@@ -39,7 +39,7 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<overlay id="WebSitesOverlay" 
+<overlay id="OthersOverlay"
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
          xmlns:cert="http://netscape.com/rdf-cert#" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

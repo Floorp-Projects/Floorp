@@ -213,6 +213,8 @@ enum {
 
 - (void)handleMouseMoved:(NSEvent*)aEvent;
 
+- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
+
 - (void)sendMouseEnterOrExitEvent:(NSEvent*)aEvent
                             enter:(BOOL)aEnter
                              type:(nsMouseEvent::exitType)aType;

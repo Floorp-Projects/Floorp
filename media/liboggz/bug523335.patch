@@ -1,0 +1,15 @@
+diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/oggz_seek.c
+--- a/media/liboggz/src/liboggz/oggz_seek.c
++++ b/media/liboggz/src/liboggz/oggz_seek.c
+@@ -750,9 +750,11 @@ oggz_bounded_seek_set (OGGZ * oggz,
+     if (offset_guess > offset_end) {
+       offset_guess = offset_end;
+       offset_at = oggz_seek_raw (oggz, offset_guess, SEEK_SET);
++      if (offset_at == -1) return -1;
+       offset_next = oggz_get_prev_start_page (oggz, og, &granule_at, &serialno);
+     } else {
+       offset_at = oggz_seek_raw (oggz, offset_guess, SEEK_SET);
++      if (offset_at == -1) return -1;
+       offset_next = oggz_get_next_start_page (oggz, og);
+       serialno = ogg_page_serialno (og);
+       granule_at = ogg_page_granulepos (og);

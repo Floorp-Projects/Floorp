@@ -676,9 +676,15 @@ nsNSSComponent::LaunchSmartCardThreads()
 {
   nsNSSShutDownPreventionLock locker;
   {
-    SECMODModuleList *list = SECMOD_GetDefaultModuleList();
+    SECMODModuleList *list;
     SECMODListLock *lock = SECMOD_GetDefaultModuleListLock();
+    if (!lock) {
+        PR_LOG(gPIPNSSLog, PR_LOG_ERROR,
+               ("Couldn't get the module list lock, can't launch smart card threads\n"));
+        return;
+    }
     SECMOD_GetReadLock(lock);
+    list = SECMOD_GetDefaultModuleList();
 
     while (list) {
       SECMODModule *module = list->module;
@@ -773,9 +779,15 @@ nsNSSComponent::InstallLoadableRoots()
   {
     // Find module containing root certs
 
-    SECMODModuleList *list = SECMOD_GetDefaultModuleList();
+    SECMODModuleList *list;
     SECMODListLock *lock = SECMOD_GetDefaultModuleListLock();
+    if (!lock) {
+        PR_LOG(gPIPNSSLog, PR_LOG_ERROR,
+               ("Couldn't get the module list lock, can't install loadable roots\n"));
+        return;
+    }
     SECMOD_GetReadLock(lock);
+    list = SECMOD_GetDefaultModuleList();
 
     while (!RootsModule && list) {
       SECMODModule *module = list->module;

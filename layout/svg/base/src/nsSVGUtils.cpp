@@ -86,6 +86,7 @@
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGGeometryFrame.h"
 #include "nsComputedDOMStyle.h"
+#include "nsSVGPathGeometryFrame.h"
 
 gfxASurface *nsSVGUtils::mThebesComputationalSurface = nsnull;
 
@@ -994,9 +995,11 @@ nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
 
   /* SVG defines the following rendering model:
    *
-   *  1. Render geometry
-   *  2. Apply filter
-   *  3. Apply clipping, masking, group opacity
+   *  1. Render fill
+   *  2. Render stroke
+   *  3. Render markers
+   *  4. Apply filter
+   *  5. Apply clipping, masking, group opacity
    *
    * We follow this, but perform a couple of optimizations:
    *
@@ -1381,16 +1384,26 @@ nsSVGUtils::GetRelativeRect(PRUint16 aUnits, const nsSVGLength2 *aXYWH,
 PRBool
 nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
 {
-  if (!aFrame->GetStyleSVGReset()->mFilter) {
-    nsIAtom *type = aFrame->GetType();
-    if (type == nsGkAtoms::svgImageFrame)
-      return PR_TRUE;
-    if (type == nsGkAtoms::svgPathGeometryFrame) {
-      const nsStyleSVG *style = aFrame->GetStyleSVG();
-      if (style->mFill.mType == eStyleSVGPaintType_None &&
-          style->mStroke.mType == eStyleSVGPaintType_None)
-        return PR_TRUE;
-    }
+  nsIAtom *type = aFrame->GetType();
+  if (type != nsGkAtoms::svgImageFrame &&
+      type != nsGkAtoms::svgPathGeometryFrame) {
+    return PR_FALSE;
+  }
+  if (aFrame->GetStyleSVGReset()->mFilter) {
+    return PR_FALSE;
+  }
+  // XXX The SVG WG is intending to allow fill, stroke and markers on <image>
+  if (type == nsGkAtoms::svgImageFrame) {
+    return PR_TRUE;
+  }
+  const nsStyleSVG *style = aFrame->GetStyleSVG();
+  if (style->mMarkerStart || style->mMarkerMid || style->mMarkerEnd) {
+    return PR_FALSE;
+  }
+  if (style->mFill.mType == eStyleSVGPaintType_None ||
+      style->mFillOpacity <= 0 ||
+      !static_cast<nsSVGPathGeometryFrame*>(aFrame)->HasStroke()) {
+    return PR_TRUE;
   }
   return PR_FALSE;
 }

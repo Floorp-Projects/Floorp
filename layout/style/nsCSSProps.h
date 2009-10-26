@@ -86,6 +86,12 @@ enum nsStyleAnimType {
   // nscoord values
   eStyleAnimType_nscoord,
 
+  // enumerated values (stored in a PRUint8)
+  // In order for a property to use this unit, _all_ of its enumerated values
+  // must be listed in its keyword table, so that any enumerated value can be
+  // converted into a string via a nsCSSValue of type eCSSUnit_Enumerated.
+  eStyleAnimType_EnumU8,
+
   // float values
   eStyleAnimType_float,
 
@@ -94,6 +100,9 @@ enum nsStyleAnimType {
 
   // nsStyleSVGPaint values
   eStyleAnimType_PaintServer,
+
+  // nsRefPtr<nsCSSShadowArray> values
+  eStyleAnimType_Shadow,
 
   // property not animatable
   eStyleAnimType_None

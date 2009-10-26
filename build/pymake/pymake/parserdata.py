@@ -1,5 +1,5 @@
 import logging, re, os
-import data, functions, util, parser
+import data, parser, functions, util
 from cStringIO import StringIO
 from pymake.globrelative import hasglob, glob
 
@@ -21,36 +21,35 @@ class Location(object):
         self.line = line
         self.column = column
 
-    def __add__(self, data):
+    def offset(self, s, start, end):
         """
         Returns a new location offset by
         the specified string.
         """
 
-        if data == '':
+        if start == end:
             return self
         
-        skiplines = data.count('\n')
+        skiplines = s.count('\n', start, end)
         line = self.line + skiplines
         if skiplines:
-            lastnl = data.rfind('\n')
+            lastnl = s.rfind('\n', start, end)
             assert lastnl != -1
-            data = data[lastnl + 1:]
+            start = lastnl + 1
             column = 0
         else:
             column = self.column
 
-        i = 0
         while True:
-            j = data.find('\t', i)
+            j = s.find('\t', start, end)
             if j == -1:
-                column += len(data) - i
+                column += end - start
                 break
 
-            column += j - i
+            column += j - start
             column += _tabwidth
             column -= column % _tabwidth
-            i = j + 1
+            start = j + 1
 
         return Location(self.path, line, column)
 
@@ -91,7 +90,7 @@ def parsecommandlineargs(args):
 
             stmts.append(SetVariable(vnameexp, token=t,
                                      value=val, valueloc=Location('<command-line>', i, len(vname) + len(t)),
-                                     targetexp=None, source=data.Variables.SOURCE_COMMANDLINE, endloc=None))
+                                     targetexp=None, source=data.Variables.SOURCE_COMMANDLINE))
         else:
             r.append(a)
 
@@ -135,14 +134,18 @@ class Rule(Statement):
             raise data.DataError("Mixed implicit and normal rule", self.targetexp.loc)
         ispattern, = ispatterns
 
+        if ispattern and context.weak:
+            raise data.DataError("Pattern rules not allowed in includedeps", self.targetexp.loc)
+
         deps = [p for p in _expandwildcards(makefile, data.stripdotslashes(self.depexp.resolvesplit(makefile, makefile.variables)))]
         if ispattern:
             rule = data.PatternRule(targets, map(data.Pattern, deps), self.doublecolon, loc=self.targetexp.loc)
             makefile.appendimplicitrule(rule)
         else:
-            rule = data.Rule(deps, self.doublecolon, loc=self.targetexp.loc)
+            rule = data.Rule(deps, self.doublecolon, loc=self.targetexp.loc, weakdeps=context.weak)
             for t in targets:
                 makefile.gettarget(t.gettarget()).addrule(rule)
+
             makefile.foundtarget(targets[0].gettarget())
 
         context.currule = rule
@@ -164,6 +167,9 @@ class StaticPatternRule(Statement):
         self.doublecolon = doublecolon
 
     def execute(self, makefile, context):
+        if context.weak:
+            raise data.DataError("Static pattern rules not allowed in includedeps", self.targetexp.loc)
+
         targets = list(_expandwildcards(makefile, data.stripdotslashes(self.targetexp.resolvesplit(makefile, makefile.variables))))
 
         if not len(targets):
@@ -202,6 +208,9 @@ class Command(Statement):
 
     def execute(self, makefile, context):
         assert context.currule is not None
+        if context.weak:
+            raise data.DataError("rules not allowed in includedeps", self.exp.loc)
+
         context.currule.addcommand(self.exp)
 
     def dump(self, fd, indent):
@@ -210,11 +219,13 @@ class Command(Statement):
 class SetVariable(Statement):
     __slots__ = ('vnameexp', 'token', 'value', 'valueloc', 'targetexp', 'source')
 
-    def __init__(self, vnameexp, token, value, valueloc, targetexp, source,
-                 endloc):
+    def __init__(self, vnameexp, token, value, valueloc, targetexp, source=None):
         assert isinstance(vnameexp, (data.Expansion, data.StringExpansion))
         assert isinstance(value, str)
         assert targetexp is None or isinstance(targetexp, (data.Expansion, data.StringExpansion))
+
+        if source is None:
+            source = data.Variables.SOURCE_MAKEFILE
 
         self.vnameexp = vnameexp
         self.token = token
@@ -222,7 +233,6 @@ class SetVariable(Statement):
         self.valueloc = valueloc
         self.targetexp = targetexp
         self.source = source
-        self.endloc = endloc
 
     def execute(self, makefile, context):
         vname = self.vnameexp.resolvestr(makefile, makefile.variables)
@@ -266,7 +276,7 @@ class SetVariable(Statement):
             v.set(vname, flavor, self.source, value)
 
     def dump(self, fd, indent):
-        print >>fd, "%sSetVariable<%s-%s> %s %s\n%s %r" % (indent, self.valueloc, self.endloc, self.vnameexp, self.token, indent, self.value)
+        print >>fd, "%sSetVariable<%s> %s %s\n%s %r" % (indent, self.valueloc, self.vnameexp, self.token, indent, self.value)
 
 class Condition(object):
     """
@@ -379,17 +389,18 @@ class ConditionBlock(Statement):
         return self._groups[i]
 
 class Include(Statement):
-    __slots__ = ('exp', 'required')
+    __slots__ = ('exp', 'required', 'deps')
 
-    def __init__(self, exp, required):
+    def __init__(self, exp, required, weak):
         assert isinstance(exp, (data.Expansion, data.StringExpansion))
         self.exp = exp
         self.required = required
+        self.weak = weak
 
     def execute(self, makefile, context):
         files = self.exp.resolvesplit(makefile, makefile.variables)
         for f in files:
-            makefile.include(f, self.required, loc=self.exp.loc)
+            makefile.include(f, self.required, loc=self.exp.loc, weak=self.weak)
 
     def dump(self, fd, indent):
         print >>fd, "%sInclude %s" % (indent, self.exp)
@@ -471,7 +482,10 @@ class EmptyDirective(Statement):
         print >>fd, "%sEmptyDirective: %s" % (indent, self.exp)
 
 class _EvalContext(object):
-    __slots__ = ('currule',)
+    __slots__ = ('currule', 'weak')
+
+    def __init__(self, weak):
+        self.weak = weak
 
 class StatementList(list):
     __slots__ = ('mtime',)
@@ -480,9 +494,9 @@ class StatementList(list):
         assert isinstance(statement, Statement)
         list.append(self, statement)
 
-    def execute(self, makefile, context=None):
+    def execute(self, makefile, context=None, weak=False):
         if context is None:
-            context = _EvalContext()
+            context = _EvalContext(weak=weak)
 
         for s in self:
             s.execute(makefile, context)
@@ -501,4 +515,4 @@ def iterstatements(stmts):
         yield s
         if isinstance(s, ConditionBlock):
             for c, sl in s:
-                for s2 in iterstatements(sl): yield s2
+                for s2 in iterstatments(sl): yield s2

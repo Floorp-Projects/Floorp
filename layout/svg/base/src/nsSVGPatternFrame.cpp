@@ -208,7 +208,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
 
   // Construct the CTM that we will provide to our children when we
   // render them into the tile.
-  gfxMatrix ctm = ConstructCTM(callerBBox, callerCTM);
+  gfxMatrix ctm = ConstructCTM(callerBBox, callerCTM, callerContent);
   if (ctm.IsSingular()) {
     return NS_ERROR_FAILURE;
   }
@@ -512,15 +512,10 @@ nsSVGPatternFrame::GetPatternRect(const gfxRect &aTargetBBox,
   return gfxRect(x, y, width, height);
 }
 
-static float
-GetLengthValue(const nsSVGLength2 *aLength)
-{
-  return aLength->GetAnimValue(static_cast<nsSVGSVGElement*>(nsnull));
-}
-
 gfxMatrix
 nsSVGPatternFrame::ConstructCTM(const gfxRect &callerBBox,
-                                const gfxMatrix &callerCTM)
+                                const gfxMatrix &callerCTM,
+                                nsSVGElement *aTargetContent)
 {
   gfxMatrix tCTM;
 
@@ -537,10 +532,11 @@ nsSVGPatternFrame::ConstructCTM(const gfxRect &callerBBox,
   const nsSVGViewBoxRect viewBox = GetViewBox().GetAnimValue();
 
   if (viewBox.height > 0.0f && viewBox.width > 0.0f) {
-    float viewportWidth = GetLengthValue(GetWidth());
-    float viewportHeight = GetLengthValue(GetHeight());
-    float refX = GetLengthValue(GetX());
-    float refY = GetLengthValue(GetY());
+    nsSVGSVGElement *ctx = aTargetContent->GetCtx();
+    float viewportWidth = GetWidth()->GetAnimValue(ctx);
+    float viewportHeight = GetHeight()->GetAnimValue(ctx);
+    float refX = GetX()->GetAnimValue(ctx);
+    float refY = GetY()->GetAnimValue(ctx);
     viewBoxTM = nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
                                                 viewBox.x + refX, viewBox.y + refY,
                                                 viewBox.width, viewBox.height,

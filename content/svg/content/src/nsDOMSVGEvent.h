@@ -41,8 +41,8 @@
 #include "nsIDOMSVGEvent.h"
 #include "nsDOMEvent.h"
 
-class nsDOMSVGEvent : public nsIDOMSVGEvent,
-                      public nsDOMEvent
+class nsDOMSVGEvent : public nsDOMEvent,
+                      public nsIDOMSVGEvent
 {
 public:
   nsDOMSVGEvent(nsPresContext* aPresContext, nsEvent* aEvent);

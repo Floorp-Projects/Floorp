@@ -65,6 +65,7 @@ static NPClass sNPClass;
 typedef bool (* ScriptableFunction)
   (NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
+static bool npnEvaluateTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool npnInvokeTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool npnInvokeDefaultTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool setUndefinedValueTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -88,6 +89,7 @@ static bool setColor(NPObject* npobj, const NPVariant* args, uint32_t argCount, 
 static bool throwExceptionNextInvoke(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
+  "npnEvaluateTest",
   "npnInvokeTest",
   "npnInvokeDefaultTest",
   "setUndefinedValueTest",
@@ -112,6 +114,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
+  npnEvaluateTest,
   npnInvokeTest,
   npnInvokeDefaultTest,
   setUndefinedValueTest,
@@ -1148,6 +1151,12 @@ NPN_GetProperty(NPP instance,
   return sBrowserFuncs->getproperty(instance, npobj, propertyName, result);
 }
 
+bool
+NPN_Evaluate(NPP instance, NPObject *npobj, NPString *script, NPVariant *result)
+{
+  return sBrowserFuncs->evaluate(instance, npobj, script, result);
+}
+
 void
 NPN_SetException(NPObject *npobj, const NPUTF8 *message)
 {
@@ -1482,6 +1491,29 @@ npnInvokeTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVaria
   NPN_ReleaseVariantValue(&invokeResult);
   BOOLEAN_TO_NPVARIANT(invokeReturn && compareResult, *result);
   return true;
+}
+
+static bool
+npnEvaluateTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  bool success = false;
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  
+  if (argCount != 1)
+    return false;
+  
+  if (!NPVARIANT_IS_STRING(args[0]))
+    return false;
+
+  NPObject* windowObject;
+  NPN_GetValue(npp, NPNVWindowNPObject, &windowObject);
+  if (!windowObject)
+    return false;
+  
+  success = NPN_Evaluate(npp, windowObject, (NPString*)&NPVARIANT_TO_STRING(args[0]), result);
+  
+  NPN_ReleaseObject(windowObject);
+  return success;
 }
 
 static bool

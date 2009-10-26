@@ -72,7 +72,6 @@ __all__ = [
            "environment",
            "IS_TEST_BUILD",
            "IS_DEBUG_BUILD",
-           "SYMBOLS_PATH",
           ]
 
 # These are generated in mozilla/build/Makefile.in
@@ -95,7 +94,6 @@ UNIXISH = not IS_WIN32 and not IS_MAC
 #expand CERTS_SRC_DIR = __CERTS_SRC_DIR__
 #expand IS_TEST_BUILD = __IS_TEST_BUILD__
 #expand IS_DEBUG_BUILD = __IS_DEBUG_BUILD__
-#expand SYMBOLS_PATH = __SYMBOLS_PATH__
 
 ###########
 # LOGGING #
@@ -238,6 +236,7 @@ user_pref("dom.allow_scripts_to_close_windows", true);
 user_pref("dom.disable_open_during_load", false);
 user_pref("dom.max_script_run_time", 0); // no slow script dialogs
 user_pref("dom.max_chrome_script_run_time", 0);
+user_pref("dom.popup_maximum", -1);
 user_pref("signed.applets.codebase_principal_support", true);
 user_pref("security.warn_submit_insecure", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
@@ -336,7 +335,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   for v in extraPrefs:
     thispref = v.split("=")
     if len(thispref) < 2:
-      print "Error: syntax error in --extra-pref=" + v
+      print "Error: syntax error in --setpref=" + v
       sys.exit(1)
     part = 'user_pref("%s", %s);\n' % (thispref[0], thispref[1])
     prefs.append(part)
@@ -443,7 +442,7 @@ def environment(env = None, xrePath = DIST_BIN, crashreporter = True):
 def runApp(testURL, env, app, profileDir, extraArgs,
            runSSLTunnel = False, utilityPath = DIST_BIN,
            xrePath = DIST_BIN, certPath = CERTS_SRC_DIR,
-           debuggerInfo = None, symbolsPath = SYMBOLS_PATH):
+           debuggerInfo = None, symbolsPath = None):
   "Run the app, log the duration it took to execute, return the status code."
 
   # copy env so we don't munge the caller's environment

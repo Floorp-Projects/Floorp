@@ -210,7 +210,8 @@ function runTest(testNum) {
                           "context-saveimage",            true,
                           "context-sendimage",            true,
                           "context-setDesktopBackground", true,
-                          "context-blockimage",           true]);
+                          "context-blockimage",           true,
+                          "context-viewimageinfo",        true]);
         closeContextMenu();
         openContextMenuFor(canvas); // Invoke context menu for next test.
         break;
@@ -242,7 +243,7 @@ function runTest(testNum) {
         break;
 
     case 9:
-        // Context menu for a video (with a INVALID media source)
+        // Context menu for a video (with an INVALID media source)
         checkContextMenu(["context-media-play",         false,
                           "context-media-mute",         false,
                           "context-media-showcontrols", false,
@@ -258,7 +259,7 @@ function runTest(testNum) {
         break;
 
     case 10:
-        // Context menu for a video (with a INVALID media source)
+        // Context menu for a video (with an INVALID media source)
         checkContextMenu(["context-media-play",         false,
                           "context-media-mute",         false,
                           "context-media-showcontrols", false,

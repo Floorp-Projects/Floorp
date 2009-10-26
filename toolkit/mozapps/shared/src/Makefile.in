@@ -44,12 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = toolkitShared
 
-EXTRA_JS_MODULES = \
-  CertUtils.jsm \
-  $(NULL)
-
 EXTRA_PP_JS_MODULES = \
   CertUtils.jsm \
+  FileUtils.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

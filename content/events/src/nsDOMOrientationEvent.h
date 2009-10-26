@@ -40,7 +40,8 @@
 #include "nsIDOMOrientationEvent.h"
 #include "nsDOMEvent.h"
 
-class nsDOMOrientationEvent : public nsIDOMOrientationEvent, public nsDOMEvent
+class nsDOMOrientationEvent : public nsDOMEvent,
+                              public nsIDOMOrientationEvent
 {
 public:
 

@@ -40,6 +40,7 @@
 #include "nsCoord.h"
 #include "nsPresContext.h"
 #include "nsILinkHandler.h" // for nsLinkState
+#include "nsCSSProperty.h"
 
 struct nsStyleBackground;
 
@@ -81,6 +82,13 @@ public:
   // Append a quoted (with "") and escaped version of aString to aResult.
   static void AppendEscapedCSSString(const nsString& aString,
                                      nsAString& aResult);
+
+  // Append a bitmask-valued property's value(s) (space-separated) to aResult.
+  static void AppendBitmaskCSSValue(nsCSSProperty aProperty,
+                                    PRInt32 aMaskedValue,
+                                    PRInt32 aFirstMask,
+                                    PRInt32 aLastMask,
+                                    nsAString& aResult);
 
   /*
    * Convert an author-provided floating point number to an integer (0

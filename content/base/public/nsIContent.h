@@ -70,10 +70,10 @@ enum nsLinkState {
 };
 
 // IID for the nsIContent interface
-// d510382f-f5eb-48bb-9ad9-b3dc4806faaf
+// c726e716-a4be-4202-8a5e-32d0525903e8
 #define NS_ICONTENT_IID       \
-{ 0xd510382f, 0xf5eb, 0x48bb, \
-  { 0x9a, 0xd9, 0xb3, 0xdc, 0x48, 0x06, 0xfa, 0xaf } }
+{ 0xc726e716, 0xa4be, 0x4202, \
+  { 0x8a, 0x5e, 0x32, 0xd0, 0x52, 0x59, 0x03, 0xe8 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -671,26 +671,6 @@ public:
   virtual already_AddRefed<nsIURI> GetHrefURI() const
   {
     return nsnull;
-  }
-
-  /**
-   * Give this element a chance to fire links that should be fired
-   * automatically when loaded. If the element was an autoloading link
-   * and it was successfully handled, we will throw special nsresult values.
-   *
-   * @param aShell the current doc shell (to possibly load the link on)
-   * @throws NS_OK if nothing happened
-   * @throws NS_XML_AUTOLINK_EMBED if the caller is loading the link embedded
-   * @throws NS_XML_AUTOLINK_NEW if the caller is loading the link in a new
-   *         window
-   * @throws NS_XML_AUTOLINK_REPLACE if it is loading a link that will replace
-   *         the current window (and thus the caller must stop parsing)
-   * @throws NS_XML_AUTOLINK_UNDEFINED if it is loading in any other way--in
-   *         which case, the caller should stop parsing as well.
-   */
-  virtual nsresult MaybeTriggerAutoLink(nsIDocShell *aShell)
-  {
-    return NS_OK;
   }
 
   /**

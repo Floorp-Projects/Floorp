@@ -54,11 +54,11 @@ LIBXUL_LIBRARY	= 1
 EXPORTS		= \
 		nsQueryFrame.h \
 		nsFrameList.h \
+		nsCanvasFrame.h \
 		nsHTMLParts.h \
 		nsHTMLReflowMetrics.h \
 		nsHTMLReflowState.h \
 		nsIAnonymousContentCreator.h \
-		nsICanvasFrame.h \
 		nsIFrame.h \
 		nsIFrameFrame.h \
 		nsIFrameUtil.h \
@@ -98,7 +98,7 @@ CPPSRCS		= \
 		nsGfxScrollFrame.cpp \
 		nsHTMLCanvasFrame.cpp \
 		nsHTMLContainerFrame.cpp \
-		nsHTMLFrame.cpp \
+		nsCanvasFrame.cpp \
 		nsHTMLReflowState.cpp \
 		nsImageFrame.cpp \
 		nsImageMap.cpp \

@@ -555,6 +555,7 @@ const PRInt32 nsCSSProps::kBorderImageKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kBorderStyleKTable[] = {
+  eCSSKeyword_none,   NS_STYLE_BORDER_STYLE_NONE,
   eCSSKeyword_hidden, NS_STYLE_BORDER_STYLE_HIDDEN,
   eCSSKeyword_dotted, NS_STYLE_BORDER_STYLE_DOTTED,
   eCSSKeyword_dashed, NS_STYLE_BORDER_STYLE_DASHED,
@@ -603,6 +604,7 @@ const PRInt32 nsCSSProps::kCaptionSideKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kClearKTable[] = {
+  eCSSKeyword_none, NS_STYLE_CLEAR_NONE,
   eCSSKeyword_left, NS_STYLE_CLEAR_LEFT,
   eCSSKeyword_right, NS_STYLE_CLEAR_RIGHT,
   eCSSKeyword_both, NS_STYLE_CLEAR_LEFT_AND_RIGHT,
@@ -689,6 +691,7 @@ const PRInt32 nsCSSProps::kContentKTable[] = {
 
 const PRInt32 nsCSSProps::kCursorKTable[] = {
   // CSS 2.0
+  eCSSKeyword_auto, NS_STYLE_CURSOR_AUTO,
   eCSSKeyword_crosshair, NS_STYLE_CURSOR_CROSSHAIR,
   eCSSKeyword_default, NS_STYLE_CURSOR_DEFAULT,
   eCSSKeyword_pointer, NS_STYLE_CURSOR_POINTER,
@@ -742,6 +745,7 @@ const PRInt32 nsCSSProps::kDirectionKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kDisplayKTable[] = {
+  eCSSKeyword_none,               NS_STYLE_DISPLAY_NONE,
   eCSSKeyword_inline,             NS_STYLE_DISPLAY_INLINE,
   eCSSKeyword_block,              NS_STYLE_DISPLAY_BLOCK,
   eCSSKeyword_inline_block,       NS_STYLE_DISPLAY_INLINE_BLOCK,
@@ -794,6 +798,7 @@ const PRInt32 nsCSSProps::kEmptyCellsKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kFloatKTable[] = {
+  eCSSKeyword_none,  NS_STYLE_FLOAT_NONE,
   eCSSKeyword_left,  NS_STYLE_FLOAT_LEFT,
   eCSSKeyword_right, NS_STYLE_FLOAT_RIGHT,
   eCSSKeyword_UNKNOWN,-1
@@ -856,12 +861,14 @@ const PRInt32 nsCSSProps::kFontStretchKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kFontStyleKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_FONT_STYLE_NORMAL,
   eCSSKeyword_italic, NS_STYLE_FONT_STYLE_ITALIC,
   eCSSKeyword_oblique, NS_STYLE_FONT_STYLE_OBLIQUE,
   eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kFontVariantKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_FONT_VARIANT_NORMAL,
   eCSSKeyword_small_caps, NS_STYLE_FONT_VARIANT_SMALL_CAPS,
   eCSSKeyword_UNKNOWN,-1
 };
@@ -874,6 +881,8 @@ const PRInt32 nsCSSProps::kFontWeightKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kIMEModeKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_IME_MODE_NORMAL,
+  eCSSKeyword_auto, NS_STYLE_IME_MODE_AUTO,
   eCSSKeyword_active, NS_STYLE_IME_MODE_ACTIVE,
   eCSSKeyword_disabled, NS_STYLE_IME_MODE_DISABLED,
   eCSSKeyword_inactive, NS_STYLE_IME_MODE_INACTIVE,
@@ -893,6 +902,7 @@ const PRInt32 nsCSSProps::kListStylePositionKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kListStyleKTable[] = {
+  eCSSKeyword_none, NS_STYLE_LIST_STYLE_NONE,
   eCSSKeyword_disc, NS_STYLE_LIST_STYLE_DISC,
   eCSSKeyword_circle, NS_STYLE_LIST_STYLE_CIRCLE,
   eCSSKeyword_square, NS_STYLE_LIST_STYLE_SQUARE,
@@ -949,6 +959,8 @@ const PRInt32 nsCSSProps::kListStyleKTable[] = {
 
 // Same as kBorderStyleKTable except 'hidden'.
 const PRInt32 nsCSSProps::kOutlineStyleKTable[] = {
+  eCSSKeyword_none,   NS_STYLE_BORDER_STYLE_NONE,
+  eCSSKeyword_auto,   NS_STYLE_BORDER_STYLE_AUTO,
   eCSSKeyword_dotted, NS_STYLE_BORDER_STYLE_DOTTED,
   eCSSKeyword_dashed, NS_STYLE_BORDER_STYLE_DASHED,
   eCSSKeyword_solid,  NS_STYLE_BORDER_STYLE_SOLID,
@@ -970,6 +982,7 @@ const PRInt32 nsCSSProps::kOutlineColorKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kOverflowKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_OVERFLOW_AUTO,
   eCSSKeyword_visible, NS_STYLE_OVERFLOW_VISIBLE,
   eCSSKeyword_hidden, NS_STYLE_OVERFLOW_HIDDEN,
   eCSSKeyword_scroll, NS_STYLE_OVERFLOW_SCROLL,
@@ -982,6 +995,7 @@ const PRInt32 nsCSSProps::kOverflowKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kOverflowSubKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_OVERFLOW_AUTO,
   eCSSKeyword_visible, NS_STYLE_OVERFLOW_VISIBLE,
   eCSSKeyword_hidden, NS_STYLE_OVERFLOW_HIDDEN,
   eCSSKeyword_scroll, NS_STYLE_OVERFLOW_SCROLL,
@@ -991,6 +1005,7 @@ const PRInt32 nsCSSProps::kOverflowSubKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kPageBreakKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_PAGE_BREAK_AUTO,
   eCSSKeyword_always, NS_STYLE_PAGE_BREAK_ALWAYS,
   eCSSKeyword_avoid, NS_STYLE_PAGE_BREAK_AVOID,
   eCSSKeyword_left, NS_STYLE_PAGE_BREAK_LEFT,
@@ -999,11 +1014,13 @@ const PRInt32 nsCSSProps::kPageBreakKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kPageBreakInsideKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_PAGE_BREAK_AUTO,
   eCSSKeyword_avoid, NS_STYLE_PAGE_BREAK_AVOID,
   eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kPageMarksKTable[] = {
+  eCSSKeyword_none, NS_STYLE_PAGE_MARKS_NONE,
   eCSSKeyword_crop, NS_STYLE_PAGE_MARKS_CROP,
   eCSSKeyword_cross, NS_STYLE_PAGE_MARKS_REGISTER,
   eCSSKeyword_UNKNOWN,-1
@@ -1025,6 +1042,7 @@ const PRInt32 nsCSSProps::kPitchKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kPointerEventsKTable[] = {
+  eCSSKeyword_none, NS_STYLE_POINTER_EVENTS_NONE,
   eCSSKeyword_visiblepainted, NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED,
   eCSSKeyword_visiblefill, NS_STYLE_POINTER_EVENTS_VISIBLEFILL,
   eCSSKeyword_visiblestroke, NS_STYLE_POINTER_EVENTS_VISIBLESTROKE,
@@ -1046,6 +1064,8 @@ const PRInt32 nsCSSProps::kPositionKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kSpeakKTable[] = {
+  eCSSKeyword_none,      NS_STYLE_SPEAK_NONE,
+  eCSSKeyword_normal,    NS_STYLE_SPEAK_NORMAL,
   eCSSKeyword_spell_out, NS_STYLE_SPEAK_SPELL_OUT,
   eCSSKeyword_UNKNOWN,-1
 };
@@ -1063,6 +1083,7 @@ const PRInt32 nsCSSProps::kSpeakNumeralKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kSpeakPunctuationKTable[] = {
+  eCSSKeyword_none, NS_STYLE_SPEAK_PUNCTUATION_NONE,
   eCSSKeyword_code, NS_STYLE_SPEAK_PUNCTUATION_CODE,
   eCSSKeyword_UNKNOWN,-1
 };
@@ -1085,6 +1106,7 @@ const PRInt32 nsCSSProps::kStackSizingKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kTableLayoutKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_TABLE_LAYOUT_AUTO,
   eCSSKeyword_fixed, NS_STYLE_TABLE_LAYOUT_FIXED,
   eCSSKeyword_UNKNOWN,-1
 };
@@ -1103,6 +1125,7 @@ const PRInt32 nsCSSProps::kTextAlignKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kTextDecorationKTable[] = {
+  eCSSKeyword_none, NS_STYLE_TEXT_DECORATION_NONE,
   eCSSKeyword_underline, NS_STYLE_TEXT_DECORATION_UNDERLINE,
   eCSSKeyword_overline, NS_STYLE_TEXT_DECORATION_OVERLINE,
   eCSSKeyword_line_through, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
@@ -1112,6 +1135,7 @@ const PRInt32 nsCSSProps::kTextDecorationKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kTextTransformKTable[] = {
+  eCSSKeyword_none, NS_STYLE_TEXT_TRANSFORM_NONE,
   eCSSKeyword_capitalize, NS_STYLE_TEXT_TRANSFORM_CAPITALIZE,
   eCSSKeyword_lowercase, NS_STYLE_TEXT_TRANSFORM_LOWERCASE,
   eCSSKeyword_uppercase, NS_STYLE_TEXT_TRANSFORM_UPPERCASE,
@@ -1128,12 +1152,15 @@ const PRInt32 nsCSSProps::kTransitionTimingFunctionKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kUnicodeBidiKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_UNICODE_BIDI_NORMAL,
   eCSSKeyword_embed, NS_STYLE_UNICODE_BIDI_EMBED,
   eCSSKeyword_bidi_override, NS_STYLE_UNICODE_BIDI_OVERRIDE,
   eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kUserFocusKTable[] = {
+  eCSSKeyword_none,           NS_STYLE_USER_FOCUS_NONE,
+  eCSSKeyword_normal,         NS_STYLE_USER_FOCUS_NORMAL,
   eCSSKeyword_ignore,         NS_STYLE_USER_FOCUS_IGNORE,
   eCSSKeyword_select_all,     NS_STYLE_USER_FOCUS_SELECT_ALL,
   eCSSKeyword_select_before,  NS_STYLE_USER_FOCUS_SELECT_BEFORE,
@@ -1144,6 +1171,8 @@ const PRInt32 nsCSSProps::kUserFocusKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kUserInputKTable[] = {
+  eCSSKeyword_none,     NS_STYLE_USER_INPUT_NONE,
+  eCSSKeyword_auto,     NS_STYLE_USER_INPUT_AUTO,
   eCSSKeyword_enabled,  NS_STYLE_USER_INPUT_ENABLED,
   eCSSKeyword_disabled, NS_STYLE_USER_INPUT_DISABLED,
   eCSSKeyword_UNKNOWN,-1
@@ -1157,6 +1186,8 @@ const PRInt32 nsCSSProps::kUserModifyKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kUserSelectKTable[] = {
+  eCSSKeyword_none,       NS_STYLE_USER_SELECT_NONE,
+  eCSSKeyword_auto,       NS_STYLE_USER_SELECT_AUTO,
   eCSSKeyword_text,       NS_STYLE_USER_SELECT_TEXT,
   eCSSKeyword_element,    NS_STYLE_USER_SELECT_ELEMENT,
   eCSSKeyword_elements,   NS_STYLE_USER_SELECT_ELEMENTS,
@@ -1199,6 +1230,7 @@ const PRInt32 nsCSSProps::kVolumeKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_WHITESPACE_NORMAL,
   eCSSKeyword_pre, NS_STYLE_WHITESPACE_PRE,
   eCSSKeyword_nowrap, NS_STYLE_WHITESPACE_NOWRAP,
   eCSSKeyword_pre_wrap, NS_STYLE_WHITESPACE_PRE_WRAP,
@@ -1215,6 +1247,7 @@ const PRInt32 nsCSSProps::kWidthKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kWindowShadowKTable[] = {
+  eCSSKeyword_none, NS_STYLE_WINDOW_SHADOW_NONE,
   eCSSKeyword_default, NS_STYLE_WINDOW_SHADOW_DEFAULT,
   eCSSKeyword_UNKNOWN,-1
 };
@@ -1261,6 +1294,7 @@ const PRInt32 nsCSSProps::kBoxPackKTable[] = {
 // keyword tables for SVG properties
 
 const PRInt32 nsCSSProps::kDominantBaselineKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_DOMINANT_BASELINE_AUTO,
   eCSSKeyword_use_script, NS_STYLE_DOMINANT_BASELINE_USE_SCRIPT,
   eCSSKeyword_no_change, NS_STYLE_DOMINANT_BASELINE_NO_CHANGE,
   eCSSKeyword_reset_size, NS_STYLE_DOMINANT_BASELINE_RESET_SIZE,
@@ -1282,6 +1316,7 @@ const PRInt32 nsCSSProps::kFillRuleKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kImageRenderingKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_IMAGE_RENDERING_AUTO,
   eCSSKeyword_optimizespeed, NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED,
   eCSSKeyword_optimizequality, NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY,
   eCSSKeyword__moz_crisp_edges, NS_STYLE_IMAGE_RENDERING_CRISPEDGES,
@@ -1289,6 +1324,7 @@ const PRInt32 nsCSSProps::kImageRenderingKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kShapeRenderingKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_SHAPE_RENDERING_AUTO,
   eCSSKeyword_optimizespeed, NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED,
   eCSSKeyword_crispedges, NS_STYLE_SHAPE_RENDERING_CRISPEDGES,
   eCSSKeyword_geometricprecision, NS_STYLE_SHAPE_RENDERING_GEOMETRICPRECISION,
@@ -1317,6 +1353,7 @@ const PRInt32 nsCSSProps::kTextAnchorKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kTextRenderingKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_TEXT_RENDERING_AUTO,
   eCSSKeyword_optimizespeed, NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED,
   eCSSKeyword_optimizelegibility, NS_STYLE_TEXT_RENDERING_OPTIMIZELEGIBILITY,
   eCSSKeyword_geometricprecision, NS_STYLE_TEXT_RENDERING_GEOMETRICPRECISION,
@@ -1324,6 +1361,7 @@ const PRInt32 nsCSSProps::kTextRenderingKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kColorInterpolationKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_COLOR_INTERPOLATION_AUTO,
   eCSSKeyword_srgb, NS_STYLE_COLOR_INTERPOLATION_SRGB,
   eCSSKeyword_linearrgb, NS_STYLE_COLOR_INTERPOLATION_LINEARRGB,
   eCSSKeyword_UNKNOWN, -1

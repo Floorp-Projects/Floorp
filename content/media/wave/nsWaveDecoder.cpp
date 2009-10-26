@@ -695,11 +695,15 @@ nsWaveStateMachine::Run()
           // event, playback has not ended as far as the user's
           // concerned--the state machine needs to return to the last
           // playback state.
+          // Special case #3: if seeking to the end of the media, transition
+          // directly into STATE_ENDED.
           State nextState = mNextState;
           if (nextState == STATE_SEEKING) {
             nextState = STATE_PAUSED;
           } else if (nextState == STATE_ENDED) {
             nextState = mPaused ? STATE_PAUSED : STATE_PLAYING;
+          } else if (GetDuration() == seekTime) {
+            nextState = STATE_ENDED;
           }
           ChangeState(nextState);
         }
@@ -795,7 +799,8 @@ IsValidStateTransition(State aStartState, State aEndState)
       return PR_TRUE;
     break;
   case STATE_SEEKING:
-    if (aEndState == STATE_PLAYING || aEndState == STATE_PAUSED)
+    if (aEndState == STATE_PLAYING || aEndState == STATE_PAUSED ||
+        aEndState == STATE_ENDED)
       return PR_TRUE;
     break;
   case STATE_PAUSED:

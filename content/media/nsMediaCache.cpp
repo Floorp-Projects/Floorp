@@ -465,6 +465,8 @@ nsMediaCacheStream::BlockList::NotifyBlockSwapped(PRInt32 aBlockIndex1,
     e1Prev = e1->mPrevBlock;
     e1Next = e1->mNextBlock;
     mEntries.RemoveEntry(aBlockIndex1);
+    // Refresh pointer after hashtable mutation.
+    e2 = mEntries.GetEntry(aBlockIndex2);
   }
   if (e2) {
     e2Prev = e2->mPrevBlock;

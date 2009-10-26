@@ -232,19 +232,19 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
       return PR_TRUE;
 
     // PROPERTIES OF TYPE eCSSType_Value
-    // XXXdholbert: Many properties' types aren't yet supported by
-    // nsStyleAnimation (due to using enumerated values, float values, URI
-    // values).  I'm commenting those properties out here for the time being,
-    // so that we don't try to animate them yet.
-    // case eCSSProperty_clip_rule:
+    // XXXdholbert: Some properties' types aren't yet supported by
+    // nsStyleAnimation (due to using URI values or string values).  I'm
+    // commenting those properties out here for the time being, so that we
+    // don't try to animate them yet.
+    case eCSSProperty_clip_rule:
     // case eCSSProperty_clip_path:
     case eCSSProperty_color:
-    // case eCSSProperty_color_interpolation:
-    // case eCSSProperty_color_interpolation_filters:
-    // case eCSSProperty_display:
-    // case eCSSProperty_dominant_baseline:
+    case eCSSProperty_color_interpolation:
+    case eCSSProperty_color_interpolation_filters:
+    case eCSSProperty_display:
+    case eCSSProperty_dominant_baseline:
     case eCSSProperty_fill_opacity:
-    // case eCSSProperty_fill_rule:
+    case eCSSProperty_fill_rule:
     // case eCSSProperty_filter:
     case eCSSProperty_flood_color:
     case eCSSProperty_flood_opacity:
@@ -252,10 +252,10 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     case eCSSProperty_font_size:
     case eCSSProperty_font_size_adjust:
     // case eCSSProperty_font_stretch:
-    // case eCSSProperty_font_style:
-    // case eCSSProperty_font_variant:
+    case eCSSProperty_font_style:
+    case eCSSProperty_font_variant:
     // case eCSSProperty_font_weight:
-    // case eCSSProperty_image_rendering:
+    case eCSSProperty_image_rendering:
     case eCSSProperty_letter_spacing:
     case eCSSProperty_lighting_color:
     // case eCSSProperty_marker_end:
@@ -263,20 +263,20 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     // case eCSSProperty_marker_start:
     // case eCSSProperty_mask:
     case eCSSProperty_opacity:
-    // case eCSSProperty_pointer_events:
-    // case eCSSProperty_shape_rendering:
+    case eCSSProperty_pointer_events:
+    case eCSSProperty_shape_rendering:
     case eCSSProperty_stop_color:
     case eCSSProperty_stop_opacity:
     case eCSSProperty_stroke_dashoffset:
-    // case eCSSProperty_stroke_linecap:
-    // case eCSSProperty_stroke_linejoin:
+    case eCSSProperty_stroke_linecap:
+    case eCSSProperty_stroke_linejoin:
     case eCSSProperty_stroke_miterlimit:
     case eCSSProperty_stroke_opacity:
     case eCSSProperty_stroke_width:
-    // case eCSSProperty_text_anchor:
-    // case eCSSProperty_text_decoration:
-    // case eCSSProperty_text_rendering:
-    // case eCSSProperty_visibility:
+    case eCSSProperty_text_anchor:
+    case eCSSProperty_text_decoration:
+    case eCSSProperty_text_rendering:
+    case eCSSProperty_visibility:
     case eCSSProperty_word_spacing:
       return PR_TRUE;
 

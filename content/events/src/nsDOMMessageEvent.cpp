@@ -105,19 +105,6 @@ nsDOMMessageEvent::InitMessageEvent(const nsAString& aType,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMMessageEvent::InitMessageEventNS(const nsAString& aNamespaceURI,
-                                      const nsAString& aType,
-                                      PRBool aCanBubble,
-                                      PRBool aCancelable,
-                                      const nsAString& aData,
-                                      const nsAString& aOrigin,
-                                      const nsAString& aLastEventId,
-                                      nsIDOMWindow* aSource)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsresult
 NS_NewDOMMessageEvent(nsIDOMEvent** aInstancePtrResult,
                       nsPresContext* aPresContext,

@@ -54,9 +54,9 @@
   buttonaccesskeyextra1="&examineCert.accesskey;"
   ondialogextra1="viewCert();">
 
-<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-<script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
-<script type="application/x-javascript" src="chrome://pippki/content/certerror.js"/>
+<script type="application/javascript" src="chrome://global/content/strres.js"/>
+<script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
+<script type="application/javascript" src="chrome://pippki/content/certerror.js"/>
 
 <hbox>
   <vbox>

@@ -558,7 +558,7 @@ window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
   var funcIdentifier = "[SimpleTest/SimpleTest.js, window.onerror] ";
 
   // Log the message.
-  ok(false, funcIdentifier + "An error occurred", errorMsg);
+  ok(false, funcIdentifier + "An error occurred", errorMsg + " at " + url + ":" + lineNumber);
   // There is no Components.stack.caller to log. (See bug 511888.)
 
   // Call previous handler.

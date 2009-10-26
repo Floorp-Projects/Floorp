@@ -42,13 +42,14 @@
 #include "nsIDOMElement.h"
 #include "nsGenericElement.h"
 
-class nsIDocShell;
-
 class nsXMLElement : public nsGenericElement,
                      public nsIDOMElement
 {
 public:
-  nsXMLElement(nsINodeInfo *aNodeInfo);
+  nsXMLElement(nsINodeInfo *aNodeInfo)
+    : nsGenericElement(aNodeInfo)
+  {
+  }
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -60,20 +61,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsGenericElement::)
 
   // nsINode interface methods
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  // nsIContent
-  virtual PRBool IsLink(nsIURI** aURI) const;
-  virtual nsresult MaybeTriggerAutoLink(nsIDocShell *aShell);
-  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
-
-  // nsGenericElement specializations
-  virtual void GetLinkTarget(nsAString& aTarget);
-
-  // Get target plus a special rv for MaybeTriggerAutoLink's caller
-  nsresult GetLinkTargetAndAutoType(nsAString& aTarget);
 };
 
 #endif // nsXMLElement_h___
