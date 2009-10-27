@@ -971,10 +971,8 @@ namespace nanojit
         ArgSize sizes[MAXARGS];
         int32_t argc = ci->get_sizes(sizes);
 
-#ifdef NJ_SOFTFLOAT
         if (!ARM_VFP && (op == LIR_fcall || op == LIR_qcall))
             op = LIR_callh;
-#endif
 
         NanoAssert(argc <= (int)MAXARGS);
 
