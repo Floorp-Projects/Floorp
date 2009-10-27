@@ -337,6 +337,10 @@ typedef enum {
   /* Used for negotiating event models */
   , NPPVpluginEventModel = 1001
 #endif
+
+#ifdef MOZ_PLATFORM_HILDON
+  , NPPVpluginWindowlessLocalBool = 2002
+#endif
 } NPPVariable;
 
 /*
@@ -379,6 +383,9 @@ typedef enum {
 #endif
   , NPNVsupportsCocoaBool = 3001 /* TRUE if the browser supports the Cocoa event model */
 #endif
+#ifdef MOZ_PLATFORM_HILDON
+  , NPNVSupportsWindowlessLocal = 2002
+#endif
 } NPNVariable;
 
 typedef enum {
@@ -419,6 +426,21 @@ typedef struct _NPWindow
   NPWindowType type; /* Is this a window or a drawable? */
 } NPWindow;
 
+typedef struct _NPImageExpose
+{
+  char*    data;       /* image pointer */
+  int32_t  stride;     /* Stride of data image pointer */
+  int32_t  depth;      /* Depth of image pointer */
+  int32_t  x;          /* Expose x */
+  int32_t  y;          /* Expose y */
+  uint32_t width;      /* Expose width */
+  uint32_t height;     /* Expose height */
+  NPSize   dataSize;   /* Data buffer size */
+  float    translateX; /* translate X matrix value */
+  float    translateY; /* translate Y matrix value */
+  float    scaleX;     /* scale X matrix value */
+  float    scaleY;     /* scale Y matrix value */
+} NPImageExpose;
 
 typedef struct _NPFullPrint
 {
