@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=4 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -140,6 +140,16 @@ struct JSStackFrame {
         } else if (argsobj) {
             js_PutArgsObject(cx, this);
         }
+    }
+
+    jsval calleeValue() {
+        JS_ASSERT(argv);
+        return argv[-2];
+    }
+
+    JSObject *calleeObject() {
+        JS_ASSERT(argv);
+        return JSVAL_TO_OBJECT(argv[-2]);
     }
 
     JSObject *callee() {
