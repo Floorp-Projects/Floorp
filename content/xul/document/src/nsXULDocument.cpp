@@ -3517,6 +3517,10 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
     NS_ASSERTION(mCurrentScriptProto && mCurrentScriptProto->mSrcLoading,
                  "script source not loading on unichar stream complete?");
+    if (!mCurrentScriptProto) {
+        // XXX Wallpaper for bug 270042
+        return NS_OK;
+    }
 
     // Clear mCurrentScriptProto now, but save it first for use below in
     // the compile/execute code, and in the while loop that resumes walks
