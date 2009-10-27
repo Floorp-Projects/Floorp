@@ -331,6 +331,11 @@ protected:
                             nsITextControlFrame* aFrame,
                             PRBool aUserInput);
 
+  void ClearFileNames() {
+    nsTArray<nsString> fileNames;
+    SetFileNames(fileNames);
+  }
+
   void SetSingleFileName(const nsAString& aFileName) {
     nsAutoTArray<nsString, 1> fileNames;
     fileNames.AppendElement(aFileName);
@@ -912,8 +917,11 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
         // UniversalFileRead privilege
         return NS_ERROR_DOM_SECURITY_ERR;
       }
+      SetSingleFileName(aValue);
     }
-    SetSingleFileName(aValue);
+    else {
+      ClearFileNames();
+    }
   }
   else {
     SetValueInternal(aValue, nsnull, PR_FALSE);
@@ -1007,7 +1015,11 @@ void
 nsHTMLInputElement::SetFileNames(const nsTArray<nsString>& aFileNames)
 {
   mFileNames = aFileNames;
-
+#if DEBUG
+  for (PRUint32 i = 0; i < (PRUint32)aFileNames.Length(); ++i) {
+    NS_ASSERTION(!aFileNames[i].IsEmpty(), "Empty file name");
+  }
+#endif
   // No need to flush here, if there's no frame at this point we
   // don't need to force creation of one just to tell it about this
   // new value.  We just want the display to update as needed.
@@ -2161,14 +2173,11 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
         // makes assumptions about our frame based on mType, but we won't have
         // had time to recreate frames yet -- that happens later in the
         // SetAttr() process).
-        if (newType == NS_FORM_INPUT_FILE) {
-          // These calls aren't strictly needed any more since we'll never
-          // confuse values and filenames. However they're there for backwards
+        if (newType == NS_FORM_INPUT_FILE || mType == NS_FORM_INPUT_FILE) {
+          // This call isn't strictly needed any more since we'll never
+          // confuse values and filenames. However it's there for backwards
           // compat.
-          SetSingleFileName(EmptyString());
-          SetValueInternal(EmptyString(), nsnull, PR_FALSE);
-        } else if (mType == NS_FORM_INPUT_FILE) {
-          SetSingleFileName(EmptyString());
+          ClearFileNames();
         }
 
         mType = newType;
@@ -2519,7 +2528,7 @@ nsHTMLInputElement::Reset()
     case NS_FORM_INPUT_FILE:
     {
       // Resetting it to blank should not perform security check
-      SetSingleFileName(EmptyString());
+      ClearFileNames();
       break;
     }
     // Value is the same as defaultValue for hidden inputs
