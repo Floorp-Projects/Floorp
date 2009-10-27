@@ -375,7 +375,7 @@ class JarMaker(object):
       if realsrc is None:
         if jf is not None:
           jf.close()
-        raise RuntimeError("file not found: " + src)
+        raise RuntimeError('File "%s" not found in %s' % (src, ', '.join(src_base)))
       if m.group('optPreprocess'):
         outf = outHelper.getOutput(out)
         inf = open(realsrc)
