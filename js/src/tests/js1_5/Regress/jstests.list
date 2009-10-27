@@ -185,7 +185,7 @@ script regress-350312.js
 script regress-350415.js
 script regress-350529.js
 skip script regress-350692.js # obsolete test
-skip-if(xulRuntime.OS=="Linux"&&!xulRuntime.shell&&!XPCOMABI.match(/x86_64/)&&isDebugBuild) script regress-351116.js # bug 521549
+skip-if(xulRuntime.OS=="Linux"&&!xulRuntime.shell&&!xulRuntime.XPCOMABI.match(/x86_64/)&&isDebugBuild) script regress-351116.js # bug 521549
 script regress-351515.js
 script regress-352009.js
 script regress-352197.js
