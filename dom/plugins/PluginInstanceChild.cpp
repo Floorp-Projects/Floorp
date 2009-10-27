@@ -324,7 +324,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
     *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
 
 #ifdef MOZ_X11
-    if (GraphicsExpose == event.type) {
+    if (GraphicsExpose == event.event.type) {
         // Make sure the X server completes the drawing before the parent
         // draws on top and destroys the Drawable.
         //
