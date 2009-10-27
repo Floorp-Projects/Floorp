@@ -50,7 +50,7 @@
 
 #include "base/string_util.h"
 
-#include "mozilla/SharedLibrary.h"
+#include "mozilla/PluginLibrary.h"
 #include "mozilla/plugins/PPluginModuleParent.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginProcessParent.h"
@@ -77,10 +77,10 @@ namespace plugins {
  * child process needs to make these calls back into Gecko proper.
  * This class is responsible for "actually" making those function calls.
  */
-class PluginModuleParent : public PPluginModuleParent
+class PluginModuleParent : public PPluginModuleParent, PluginLibrary
 {
 private:
-    typedef mozilla::SharedLibrary SharedLibrary;
+    typedef mozilla::PluginLibrary PluginLibrary;
 
 protected:
     PPluginInstanceParent*
@@ -102,12 +102,10 @@ public:
     /**
      * LoadModule
      *
-     * Returns a SharedLibrary from which plugin symbols should be
-     * resolved.  This may or may not launch a plugin child process,
+     * This may or may not launch a plugin child process,
      * and may or may not be very expensive.
      */
-    static SharedLibrary* LoadModule(const char* aFilePath,
-                                     PRLibrary* aLibrary);
+    static PluginLibrary* LoadModule(const char* aFilePath);
 
     virtual bool
     AnswerNPN_UserAgent(nsCString* userAgent);
@@ -156,42 +154,9 @@ private:
     NPError NP_GetEntryPoints(NPPluginFuncs* nppIface);
 #endif
 
-    NPError NP_Shutdown()
-    {
-        // FIXME/cjones: shut down all our instances, and kill
-        // off the child process
-
-        _MOZ_LOG(__FUNCTION__);
-        return 1;
-    }
-
-    char* NP_GetPluginVersion()
-    {
-        _MOZ_LOG(__FUNCTION__);
-        return (char*) "0.0";
-    }
-
-    char* NP_GetMIMEDescription()
-    {
-        _MOZ_LOG(__FUNCTION__);
-        return (char*) "application/x-foobar";
-    }
-
-    NPError NP_GetValue(void *future,
-                        NPPVariable aVariable, void *aValue)
-    {
-        _MOZ_LOG(__FUNCTION__);
-        return 1;
-    }
-
-
     // NPP-like API that Gecko calls are trampolined into.  These 
     // messages then get forwarded along to the plugin instance,
     // and then eventually the child process.
-
-    NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode,
-                    int16_t argc, char* argn[], char* argv[],
-                    NPSavedData* saved);
 
     static NPError NPP_Destroy(NPP instance, NPSavedData** save);
 
@@ -216,146 +181,27 @@ private:
 
     NPIdentifier GetValidNPIdentifier(NPRemoteIdentifier aRemoteIdentifier);
 
+    virtual bool HasRequiredFunctions();
+
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error);
+#else
+    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error);
+#endif
+    virtual nsresult NP_Shutdown(NPError* error);
+    virtual nsresult NP_GetMIMEDescription(char** mimeDesc);
+    virtual nsresult NP_GetValue(void *future, NPPVariable aVariable,
+                                 void *aValue, NPError* error);
+#if defined(XP_WIN) || defined(XP_MACOSX)
+    virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error);
+#endif
+    virtual nsresult NPP_New(NPMIMEType pluginType, NPP instance,
+                             uint16_t mode, int16_t argc, char* argn[],
+                             char* argv[], NPSavedData* saved,
+                             NPError* error);
 private:
-    const char* mFilePath;
     PluginProcessParent mSubprocess;
     const NPNetscapeFuncs* mNPNIface;
-
-    // NPObject interface
-
-    /**
-     * I look like a shared library, but return functions that trampoline
-     * into my parent class.
-     */
-
-    /************************************************************************
-     * HACK!!!
-     *
-     * TODO/cjones: I want this class to "look" just like a DSO, so as to 
-     * need to change as few lines of modules/plugin/ as possible.  Ideally,
-     * we would fill the NPPLuginFuncs interface with pointers to 
-     * dynamically-allocated functions that trampoline into member functions
-     * of this class; this leaves the NPP interface completely unchanged.
-     *   For example:
-     * NP_GetEntryPoints() {
-     *   return { .newi = new TrampolineFunc(this, ::New); }
-     * }
-     * NPPluginFuncs nppIface = pluginShim->NP_GetEntryPoints();
-     * ...
-     * nppIface->newp(...);     // trampolines to this->New()
-     *
-     * But there doesn't seem to be a way to do this in C++ without falling
-     * back on assembly language.  So for now, we limit ourselves to one
-     * plugin DSO open at a time.
-     ************************************************************************/
-    class Shim : public SharedLibrary
-    {
-    public:
-        Shim(PluginModuleParent* aTarget) :
-            mTarget(aTarget)
-        {
-            HACK_target = mTarget;
-        }
-        virtual ~Shim()
-        {
-            mTarget = 0;
-        }
-
-        virtual symbol_type
-        FindSymbol(const char* aSymbolName)
-        {
-            if (!strcmp("NP_Shutdown", aSymbolName))
-                return (symbol_type) NP_Shutdown;
-            if (!strcmp("NP_Initialize", aSymbolName))
-                return (symbol_type) NP_Initialize;
-            if (!strcmp("NP_GetMIMEDescription", aSymbolName))
-                return (symbol_type) NP_GetMIMEDescription;
-            if (!strcmp("NP_GetValue", aSymbolName))
-                return (symbol_type) NP_GetValue;
-#ifdef OS_WIN
-            if (!strcmp("NP_GetEntryPoints", aSymbolName))
-                return (symbol_type) NP_GetEntryPoints;
-#endif
-
-            _MOZ_LOG("WARNING! FAILED TO FIND SYMBOL");
-            return 0;
-        }
-
-        virtual function_type
-        FindFunctionSymbol(const char* aSymbolName)
-        {
-            if (!strcmp("NP_Shutdown", aSymbolName))
-                return (function_type) NP_Shutdown;
-            if (!strcmp("NP_Initialize", aSymbolName))
-                return (function_type) NP_Initialize;
-            if (!strcmp("NP_GetMIMEDescription", aSymbolName))
-                return (function_type) NP_GetMIMEDescription;
-            if (!strcmp("NP_GetValue", aSymbolName))
-                return (function_type) NP_GetValue;
-#ifdef OS_WINDOWS
-            if (!strcmp("NP_GetEntryPoints", aSymbolName))
-                return (function_type) NP_GetEntryPoints;
-#endif
-
-            _MOZ_LOG("WARNING! FAILED TO FIND SYMBOL");
-            return 0;
-        }
-
-    private:
-        PluginModuleParent* mTarget;
-
-        // HACKS HACKS HACKS! from here on down
-
-#ifdef OS_LINUX
-        static NPError NP_Initialize(const NPNetscapeFuncs* npnIface,
-                                     NPPluginFuncs* nppIface)
-        {
-            return HACK_target->NP_Initialize(npnIface, nppIface);
-        }
-#else
-        static NPError NP_Initialize(const NPNetscapeFuncs* npnIface)
-        {
-            return HACK_target->NP_Initialize(npnIface);
-        }
-        static NPError NP_GetEntryPoints(NPPluginFuncs* nppIface)
-        {
-            return HACK_target->NP_GetEntryPoints(nppIface);
-        }
-#endif
-        static NPError NP_Shutdown()
-        {
-            return HACK_target->NP_Shutdown();
-        }
-        static char* NP_GetPluginVersion()
-        {
-            return HACK_target->NP_GetPluginVersion();
-        }
-        static char* NP_GetMIMEDescription()
-        {
-            return HACK_target->NP_GetMIMEDescription();
-        }
-        static NPError NP_GetValue(void *future,
-                                   NPPVariable aVariable, void *aValue)
-        {
-            return HACK_target->NP_GetValue(future, aVariable, aValue);
-        }
-        static NPError NPP_New(NPMIMEType pluginType, NPP instance,
-                               uint16_t mode,
-                               int16_t argc, char* argn[], char* argv[],
-                               NPSavedData* saved)
-        {
-            return HACK_target->NPP_New(pluginType, instance, mode,
-                                        argc, argn, argv,
-                                        saved);
-        }
-
-        static PluginModuleParent* HACK_target;
-        friend class PluginModuleParent;
-    };
-
-    friend class Shim;
-    Shim* mShim;
-
     nsTHashtable<nsVoidPtrHashKey> mValidIdentifiers;
 };
 

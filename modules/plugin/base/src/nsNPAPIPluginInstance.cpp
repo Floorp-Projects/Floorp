@@ -269,7 +269,7 @@ nsresult nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
   if (mStreamStarted && callbacks->destroystream) {
     NPPAutoPusher nppPusher(npp);
 
-    mozilla::SharedLibrary* lib = nsnull;
+    PluginLibrary* lib = nsnull;
     lib = mInst->mLibrary;
     NPError error;
     NS_TRY_SAFE_CALL_RETURN(error, (*callbacks->destroystream)(npp, &mNPStream, reason), lib, mInst);
@@ -754,7 +754,7 @@ nsNPAPIPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo,
   NPP npp;
   mInst->GetNPP(&npp);
 
-  mozilla::SharedLibrary* lib = nsnull;
+  PluginLibrary* lib = nsnull;
   lib = mInst->mLibrary;
 
   NS_TRY_SAFE_CALL_VOID((*callbacks->asfile)(npp, &mNPStream, fileName), lib, mInst);
@@ -874,7 +874,7 @@ nsInstanceStream::~nsInstanceStream()
 NS_IMPL_ISUPPORTS1(nsNPAPIPluginInstance, nsIPluginInstance)
 
 nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
-                                             mozilla::SharedLibrary* aLibrary)
+                                             PluginLibrary* aLibrary)
   : mCallbacks(callbacks),
 #ifdef XP_MACOSX
 #ifdef NP_NO_QUICKDRAW
@@ -1129,8 +1129,6 @@ nsNPAPIPluginInstance::InitializePlugin()
     }
   }
 
-  NS_ENSURE_TRUE(mCallbacks->newp, NS_ERROR_FAILURE);
-  
   // XXX Note that the NPPluginType_* enums were crafted to be
   // backward compatible...
   
@@ -1202,8 +1200,9 @@ nsNPAPIPluginInstance::InitializePlugin()
   // Need this on the stack before calling NPP_New otherwise some callbacks that
   // the plugin may make could fail (NPN_HasProperty, for example).
   NPPAutoPusher autopush(&mNPP);
-
-  NS_TRY_SAFE_CALL_RETURN(error, (*mCallbacks->newp)((char*)mimetype, &mNPP, (PRUint16)mode, count, (char**)names, (char**)values, NULL), mLibrary,this);
+  nsresult newResult = mLibrary->NPP_New((char*)mimetype, &mNPP, (PRUint16)mode, count, (char**)names, (char**)values, NULL, &error);
+  if (NS_FAILED(newResult))
+    return newResult;
 
   mInPluginInitCall = oldVal;
 

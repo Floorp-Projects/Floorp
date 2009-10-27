@@ -13,10 +13,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Plugin App.
+ * The Original Code is Mozilla Foundation.
  *
  * The Initial Developer of the Original Code is
- *   Chris Jones <jones.chris.g@gmail.com>
+ *   Josh Aas <josh@mozilla.com>
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -36,27 +36,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef SharedLibrary_h
-#define SharedLibrary_h 1
+#ifndef mozilla_PluginLibrary_h
+#define mozilla_PluginLibrary_h 1
+
+#include "prlink.h"
+#include "npapi.h"
+#include "nscore.h"
 
 namespace mozilla {
 
-
-class SharedLibrary
+class PluginLibrary
 {
 public:
-    typedef void* symbol_type;
-    typedef void (*function_type)();
+  virtual ~PluginLibrary() { }
 
-    virtual ~SharedLibrary() { }
+  virtual bool HasRequiredFunctions() = 0;
 
-    // purposely copying the PRLibrary interface
-
-    virtual symbol_type FindSymbol(const char* aSymbolName) = 0;
-    virtual function_type FindFunctionSymbol(const char* aSymbolName) = 0;
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+  virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error) = 0;
+#else
+  virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error) = 0;
+#endif
+  virtual nsresult NP_Shutdown(NPError* error) = 0;
+  virtual nsresult NP_GetMIMEDescription(char** mimeDesc) = 0;
+  virtual nsresult NP_GetValue(void *future, NPPVariable aVariable,
+                               void *aValue, NPError* error) = 0;
+#if defined(XP_WIN) || defined(XP_MACOSX)
+  virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error) = 0;
+#endif
+  virtual nsresult NPP_New(NPMIMEType pluginType, NPP instance,
+                           uint16_t mode, int16_t argc, char* argn[],
+                           char* argv[], NPSavedData* saved,
+                           NPError* error) = 0;
 };
 
 
 } // namespace mozilla
 
-#endif  // ifndef SharedLibrary_h
+#endif  // ifndef mozilla_PluginLibrary_h
