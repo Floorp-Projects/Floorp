@@ -148,29 +148,28 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   // temporary offscreen surface that we'll paint into):
 
   gfxIntSize filterRes;
-  PRBool intOverflow;
-
   if (filter->HasAttr(kNameSpaceID_None, nsGkAtoms::filterRes)) {
     PRInt32 filterResX, filterResY;
     filter->GetAnimatedIntegerValues(&filterResX, &filterResY, nsnull);
     // XXX what if the 'filterRes' attribute has a bad value? error console warning?
 
+    // We don't care if this overflows, because we can handle upscaling/
+    // downscaling to filterRes
+    PRBool overflow;
     filterRes =
       nsSVGUtils::ConvertToSurfaceSize(gfxSize(filterResX, filterResY),
-                                       &intOverflow);
+                                       &overflow);
     // XXX we could send a warning to the error console if the author specified
     // filterRes doesn't align well with our outer 'svg' device space.
-
-    // XXX we should check intOverflow and warn the user if we are going to
-    // clip their insanely large filterRes.
   } else {
     // Match filterRes as closely as possible to the pixel density of the nearest
     // outer 'svg' device space:
-
     float scale = nsSVGUtils::MaxExpansion(userToDeviceSpace);
+    // We don't care if this overflows, because we can handle upscaling/
+    // downscaling to filterRes
+    PRBool overflow;
     filterRes = nsSVGUtils::ConvertToSurfaceSize(filterRegion.size * scale,
-                                                 &intOverflow);
-    NS_ASSERTION(!intOverflow, "filterRegion must be huge! clip it?");
+                                                 &overflow);
   }
 
   if (filterRes.width <= 0 || filterRes.height <= 0) {
