@@ -132,7 +132,6 @@ nsHtml5TreeOpExecutor::DidBuildModel(PRBool aTerminated)
   mDocument->RemoveObserver(this);
   mDocument->EndLoad();
   static_cast<nsHtml5Parser*> (mParser.get())->DropStreamParser();
-  static_cast<nsHtml5Parser*> (mParser.get())->CancelParsingEvents();
   DropParserAndPerfHint();
 #ifdef GATHER_DOCWRITE_STATISTICS
   printf("UNSAFE SCRIPTS: %d\n", sUnsafeDocWrites);

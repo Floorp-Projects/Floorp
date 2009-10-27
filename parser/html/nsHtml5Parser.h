@@ -235,7 +235,7 @@ class nsHtml5Parser : public nsIParser,
     NS_IMETHOD BuildModel(void);
 
     /**
-     *  Removes continue parsing events
+     * Don't call. For interface compat only.
      */
     NS_IMETHODIMP CancelParsingEvents();
 
@@ -277,11 +277,6 @@ class nsHtml5Parser : public nsIParser,
 
     /* End nsIParser  */
 
-    /**
-     *  Fired when the continue parse event is triggered.
-     */
-    void HandleParserContinueEvent(class nsHtml5ParserContinueEvent *);
-
     // Not from an external interface
     // Non-inherited methods
 
@@ -301,11 +296,6 @@ class nsHtml5Parser : public nsIParser,
 
     void InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState);
 
-    /**
-     * Posts a continue event if there isn't one already
-     */
-    void MaybePostContinueEvent();
-    
     void DropStreamParser() {
       mStreamParser = nsnull;
     }
@@ -356,7 +346,6 @@ class nsHtml5Parser : public nsIParser,
 
     // Gecko integration
     void*                         mRootContextKey;
-    nsIRunnable*                  mContinueEvent;  // weak ref
 
     // Portable parser objects
     /**
