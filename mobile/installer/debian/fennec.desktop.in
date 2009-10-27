@@ -1,10 +1,11 @@
+#filter substitution
 [Desktop Entry]
 Version=@MOZ_APP_VERSION@
 Encoding=UTF-8
 Name=@MOZ_APP_DISPLAYNAME@
 Comment=@MOZ_APP_DISPLAYNAME@ mobile browser
 GenericName=@MOZ_APP_DISPLAYNAME@
-Exec=/usr/local/fennec/fennec
+Exec=@installdir@/fennec/fennec
 StartupWMClass=Navigator
 StartupNotify=true
 Terminal=false
