@@ -64,9 +64,10 @@ SyncChannel::Send(Message* msg, Message* reply)
 
     MutexAutoLock lock(mMutex);
 
-    if (!Connected())
-        // trying to Send() to a closed or error'd channel
+    if (!Connected()) {
+        ReportConnectionError("SyncChannel");
         return false;
+    }
 
     mPendingReply = msg->type() + 1;
     mIOLoop->PostTask(
@@ -76,9 +77,10 @@ SyncChannel::Send(Message* msg, Message* reply)
     // wait for the next sync message to arrive
     WaitForNotify();
 
-    if (!Connected())
-        // FIXME more sophisticated error handling
+    if (!Connected()) {
+        ReportConnectionError("SyncChannel");
         return false;
+    }
 
     // we just received a synchronous message from the other side.
     // If it's not the reply we were awaiting, there's a serious
@@ -111,26 +113,13 @@ SyncChannel::OnDispatchMessage(const Message& msg)
         static_cast<SyncListener*>(mListener)->OnMessageReceived(msg, reply);
     mProcessingSyncMessage = false;
 
-    switch (rv) {
-    case MsgProcessed:
-        break;
-
-    case MsgNotKnown:
-    case MsgNotAllowed:
-    case MsgPayloadError:
-    case MsgRouteError:
-    case MsgValueError:
+    if (!MaybeHandleError(rv, "SyncChannel")) {
         // FIXME/cjones: error handling; OnError()?
         delete reply;
         reply = new Message();
         reply->set_sync();
         reply->set_reply();
         reply->set_reply_error();
-        break;
-
-    default:
-        NOTREACHED();
-        return;
     }
 
     mIOLoop->PostTask(
