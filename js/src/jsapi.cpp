@@ -4902,7 +4902,8 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
     CHECK_REQUEST(cx);
     jp = JS_NEW_PRINTER(cx, name, NULL,
                         indent & ~JS_DONT_PRETTY_PRINT,
-                        !(indent & JS_DONT_PRETTY_PRINT));
+                        !(indent & JS_DONT_PRETTY_PRINT),
+                        false);
     if (!jp)
         return NULL;
     if (js_DecompileScript(jp, script))
@@ -4916,41 +4917,21 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
 JS_PUBLIC_API(JSString *)
 JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent)
 {
-    JSPrinter *jp;
-    JSString *str;
-
     CHECK_REQUEST(cx);
-    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunction", fun,
-                        indent & ~JS_DONT_PRETTY_PRINT,
-                        !(indent & JS_DONT_PRETTY_PRINT));
-    if (!jp)
-        return NULL;
-    if (js_DecompileFunction(jp))
-        str = js_GetPrinterOutput(jp);
-    else
-        str = NULL;
-    js_DestroyPrinter(jp);
-    return str;
+    return js_DecompileToString(cx, "JS_DecompileFunction", fun,
+                                indent & ~JS_DONT_PRETTY_PRINT,
+                                !(indent & JS_DONT_PRETTY_PRINT),
+                                false, js_DecompileFunction);
 }
 
 JS_PUBLIC_API(JSString *)
 JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent)
 {
-    JSPrinter *jp;
-    JSString *str;
-
     CHECK_REQUEST(cx);
-    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunctionBody", fun,
-                        indent & ~JS_DONT_PRETTY_PRINT,
-                        !(indent & JS_DONT_PRETTY_PRINT));
-    if (!jp)
-        return NULL;
-    if (js_DecompileFunctionBody(jp))
-        str = js_GetPrinterOutput(jp);
-    else
-        str = NULL;
-    js_DestroyPrinter(jp);
-    return str;
+    return js_DecompileToString(cx, "JS_DecompileFunctionBody", fun,
+                                indent & ~JS_DONT_PRETTY_PRINT,
+                                !(indent & JS_DONT_PRETTY_PRINT),
+                                false, js_DecompileFunctionBody);
 }
 
 JS_PUBLIC_API(JSBool)
