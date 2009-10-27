@@ -82,6 +82,7 @@
 #include "nsIFontMetrics.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGEffects.h"
+#include "nsMathUtils.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGGeometryFrame.h"
@@ -1172,25 +1173,26 @@ nsSVGUtils::ToAppPixelRect(nsPresContext *aPresContext, const gfxRect& rect)
                 aPresContext->DevPixelsToAppUnits(NSToIntCeil(rect.YMost()) - NSToIntFloor(rect.Y())));
 }
 
+static PRInt32
+ClampToInt(double aVal)
+{
+  return NS_lround(NS_MAX(double(PR_INT32_MIN), NS_MIN(double(PR_INT32_MAX), aVal)));
+}
+
 gfxIntSize
 nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize, PRBool *aResultOverflows)
 {
-  gfxIntSize surfaceSize =
-    gfxIntSize(PRInt32(aSize.width + 0.5), PRInt32(aSize.height + 0.5));
+  gfxIntSize surfaceSize(ClampToInt(aSize.width), ClampToInt(aSize.height));
 
-  *aResultOverflows = (aSize.width >= PR_INT32_MAX + 0.5 ||
-                       aSize.height >= PR_INT32_MAX + 0.5 ||
-                       aSize.width <= PR_INT32_MIN - 0.5 ||
-                       aSize.height <= PR_INT32_MIN - 0.5);
+  *aResultOverflows = surfaceSize.width != round(aSize.width) ||
+      surfaceSize.height != round(aSize.height);
 
-  if (*aResultOverflows ||
-      !gfxASurface::CheckSurfaceSize(surfaceSize)) {
-    surfaceSize.width = NS_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION,
-                               surfaceSize.width);
-    surfaceSize.height = NS_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION,
-                                surfaceSize.height);
+  if (!gfxASurface::CheckSurfaceSize(surfaceSize)) {
+    surfaceSize.width = NS_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION, surfaceSize.width);
+    surfaceSize.height = NS_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION, surfaceSize.height);
     *aResultOverflows = PR_TRUE;
   }
+
   return surfaceSize;
 }
 
