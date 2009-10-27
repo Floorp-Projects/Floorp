@@ -141,7 +141,7 @@ num_parseFloat(JSContext *cx, uintN argc, jsval *vp)
     const jschar *bp, *end, *ep;
 
     if (argc == 0) {
-        *vp = cx->runtime->NaNValue;
+        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
         return JS_TRUE;
     }
     str = js_ValueToString(cx, vp[2]);
@@ -151,7 +151,7 @@ num_parseFloat(JSContext *cx, uintN argc, jsval *vp)
     if (!js_strtod(cx, bp, end, &ep, &d))
         return JS_FALSE;
     if (ep == bp) {
-        *vp = cx->runtime->NaNValue;
+        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
         return JS_TRUE;
     }
     return js_NewNumberInRootedValue(cx, d, vp);
@@ -183,7 +183,7 @@ num_parseInt(JSContext *cx, uintN argc, jsval *vp)
     const jschar *bp, *end, *ep;
 
     if (argc == 0) {
-        *vp = cx->runtime->NaNValue;
+        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
         return JS_TRUE;
     }
     if (argc > 1) {
@@ -194,7 +194,7 @@ num_parseInt(JSContext *cx, uintN argc, jsval *vp)
         radix = 0;
     }
     if (radix != 0 && (radix < 2 || radix > 36)) {
-        *vp = cx->runtime->NaNValue;
+        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
         return JS_TRUE;
     }
 
@@ -210,7 +210,7 @@ num_parseInt(JSContext *cx, uintN argc, jsval *vp)
     if (!js_strtointeger(cx, bp, end, &ep, radix, &d))
         return JS_FALSE;
     if (ep == bp) {
-        *vp = cx->runtime->NaNValue;
+        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
         return JS_TRUE;
     }
     return js_NewNumberInRootedValue(cx, d, vp);
@@ -669,8 +669,7 @@ static JSConstDoubleSpec number_constants[] = {
 };
 
 jsdouble js_NaN;
-jsdouble js_PositiveInfinity;
-jsdouble js_NegativeInfinity;
+
 
 #if (defined __GNUC__ && defined __i386__)
 
@@ -695,37 +694,41 @@ inline void FIX_FPU() {
 JSBool
 js_InitRuntimeNumberState(JSContext *cx)
 {
-    JS_STATIC_ASSERT(JSVAL_NULL == jsval(0));
+    JSRuntime *rt;
+    jsdpun u;
+    struct lconv *locale;
 
-    JSRuntime *rt = cx->runtime;
-    JS_ASSERT(JSVAL_IS_NULL(rt->NaNValue));
+    rt = cx->runtime;
+    JS_ASSERT(!rt->jsNaN);
 
     FIX_FPU();
 
-    jsdpun u;
     u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
     u.s.lo = 0xffffffff;
     number_constants[NC_NaN].dval = js_NaN = u.d;
-    if (!js_NewDoubleInRootedValue(cx, u.d, &rt->NaNValue))
-        return false;
+    rt->jsNaN = js_NewWeaklyRootedDouble(cx, js_NaN);
+    if (!rt->jsNaN)
+        return JS_FALSE;
 
     u.s.hi = JSDOUBLE_HI32_EXPMASK;
     u.s.lo = 0x00000000;
-    number_constants[NC_POSITIVE_INFINITY].dval = js_PositiveInfinity = u.d;
-    if (!js_NewDoubleInRootedValue(cx, u.d, &rt->positiveInfinityValue))
-        return false;
+    number_constants[NC_POSITIVE_INFINITY].dval = u.d;
+    rt->jsPositiveInfinity = js_NewWeaklyRootedDouble(cx, u.d);
+    if (!rt->jsPositiveInfinity)
+        return JS_FALSE;
 
     u.s.hi = JSDOUBLE_HI32_SIGNBIT | JSDOUBLE_HI32_EXPMASK;
     u.s.lo = 0x00000000;
-    number_constants[NC_NEGATIVE_INFINITY].dval = js_NegativeInfinity = u.d;
-    if (!js_NewDoubleInRootedValue(cx, u.d, &rt->negativeInfinityValue))
-        return false;
+    number_constants[NC_NEGATIVE_INFINITY].dval = u.d;
+    rt->jsNegativeInfinity = js_NewWeaklyRootedDouble(cx, u.d);
+    if (!rt->jsNegativeInfinity)
+        return JS_FALSE;
 
     u.s.hi = 0;
     u.s.lo = 1;
     number_constants[NC_MIN_VALUE].dval = u.d;
 
-    struct lconv *locale = localeconv();
+    locale = localeconv();
     rt->thousandsSeparator =
         JS_strdup(cx, locale->thousands_sep ? locale->thousands_sep : "'");
     rt->decimalSeparator =
@@ -739,18 +742,15 @@ js_InitRuntimeNumberState(JSContext *cx)
 void
 js_TraceRuntimeNumberState(JSTracer *trc)
 {
-    JSRuntime *rt = trc->context->runtime;
+    JSRuntime *rt;
 
-    if (!JSVAL_IS_NULL(rt->NaNValue))
-        JS_CALL_DOUBLE_TRACER(trc, JSVAL_TO_DOUBLE(rt->NaNValue), "NaN");
-    if (!JSVAL_IS_NULL(rt->positiveInfinityValue)) {
-        JS_CALL_DOUBLE_TRACER(trc, JSVAL_TO_DOUBLE(rt->positiveInfinityValue),
-                              "+Infinity");
-    }
-    if (!JSVAL_IS_NULL(rt->negativeInfinityValue)) {
-        JS_CALL_DOUBLE_TRACER(trc, JSVAL_TO_DOUBLE(rt->negativeInfinityValue),
-                              "-Infinity");
-    }
+    rt = trc->context->runtime;
+    if (rt->jsNaN)
+        JS_CALL_DOUBLE_TRACER(trc, rt->jsNaN, "NaN");
+    if (rt->jsPositiveInfinity)
+        JS_CALL_DOUBLE_TRACER(trc, rt->jsPositiveInfinity, "+Infinity");
+    if (rt->jsNegativeInfinity)
+        JS_CALL_DOUBLE_TRACER(trc, rt->jsNegativeInfinity, "-Infinity");
 }
 
 void
@@ -758,13 +758,13 @@ js_FinishRuntimeNumberState(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
 
-    rt->NaNValue = JSVAL_NULL;
-    rt->negativeInfinityValue = JSVAL_NULL;
-    rt->positiveInfinityValue = JSVAL_NULL;
+    rt->jsNaN = NULL;
+    rt->jsNegativeInfinity = NULL;
+    rt->jsPositiveInfinity = NULL;
 
-    cx->free((void *) rt->thousandsSeparator);
-    cx->free((void *) rt->decimalSeparator);
-    cx->free((void *) rt->numGrouping);
+    cx->free((void *)rt->thousandsSeparator);
+    cx->free((void *)rt->decimalSeparator);
+    cx->free((void *)rt->numGrouping);
     rt->thousandsSeparator = rt->decimalSeparator = rt->numGrouping = NULL;
 }
 
@@ -790,13 +790,14 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
 
     /* ECMA 15.1.1.1 */
     rt = cx->runtime;
-    if (!JS_DefineProperty(cx, obj, js_NaN_str, rt->NaNValue,
+    if (!JS_DefineProperty(cx, obj, js_NaN_str, DOUBLE_TO_JSVAL(rt->jsNaN),
                            NULL, NULL, JSPROP_PERMANENT)) {
         return NULL;
     }
 
     /* ECMA 15.1.1.2 */
-    if (!JS_DefineProperty(cx, obj, js_Infinity_str, rt->positiveInfinityValue,
+    if (!JS_DefineProperty(cx, obj, js_Infinity_str,
+                           DOUBLE_TO_JSVAL(rt->jsPositiveInfinity),
                            NULL, NULL, JSPROP_PERMANENT)) {
         return NULL;
     }
@@ -941,7 +942,7 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
     jsval v;
     JSString *str;
     const jschar *bp, *end, *ep;
-    jsdouble d;
+    jsdouble d, *dp;
     JSObject *obj;
 
     v = *vp;
@@ -1019,8 +1020,9 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
             break;
     }
 
-    *vp = cx->runtime->NaNValue;
-    return js_NaN;
+    dp = cx->runtime->jsNaN;
+    *vp = DOUBLE_TO_JSVAL(dp);
+    return *dp;
 }
 
 int32
@@ -1191,15 +1193,15 @@ js_strtod(JSContext *cx, const jschar *s, const jschar *send,
     if ((negative = (*istr == '-')) != 0 || *istr == '+')
         istr++;
     if (*istr == 'I' && !strncmp(istr, js_Infinity_str, sizeof js_Infinity_str - 1)) {
-        d = negative ? js_NegativeInfinity : js_PositiveInfinity;
+        d = *(negative ? cx->runtime->jsNegativeInfinity : cx->runtime->jsPositiveInfinity);
         estr = istr + 8;
     } else {
         int err;
         d = JS_strtod(cstr, &estr, &err);
         if (d == HUGE_VAL)
-            d = js_PositiveInfinity;
+            d = *cx->runtime->jsPositiveInfinity;
         else if (d == -HUGE_VAL)
-            d = js_NegativeInfinity;
+            d = *cx->runtime->jsNegativeInfinity;
     }
 
     i = estr - cstr;
@@ -1334,7 +1336,7 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar *send,
                 return JS_FALSE;
             }
             if (err == JS_DTOA_ERANGE && value == HUGE_VAL)
-                value = js_PositiveInfinity;
+                value = *cx->runtime->jsPositiveInfinity;
             cx->free(cstr);
         } else if ((base & (base - 1)) == 0) {
             /*
