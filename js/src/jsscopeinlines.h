@@ -117,7 +117,7 @@ JSScope::trace(JSTracer *trc)
     JSContext *cx = trc->context;
     JSScopeProperty *sprop = lastProp;
     uint8 regenFlag = cx->runtime->gcRegenShapesScopeFlag;
-    if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes && hasRegenFlag(regenFlag)) {
+    if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes && !hasRegenFlag(regenFlag)) {
         /*
          * Either this scope has its own shape, which must be regenerated, or
          * it must have the same shape as lastProp.
@@ -140,7 +140,7 @@ JSScope::trace(JSTracer *trc)
 
         /* Also regenerate the shapes of empty scopes, in case they are not shared. */
         for (JSScope *empty = emptyScope;
-             empty && empty->hasRegenFlag(regenFlag);
+             empty && !empty->hasRegenFlag(regenFlag);
              empty = empty->emptyScope) {
             empty->shape = js_RegenerateShapeForGC(cx);
             empty->flags ^= JSScope::SHAPE_REGEN;

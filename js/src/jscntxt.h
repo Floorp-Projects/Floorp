@@ -487,7 +487,7 @@ struct JSRuntime {
      *
      * FIXME Once scopes are GC'd (bug 505004), this will be obsolete.
      */
-    uint8              gcRegenShapesScopeFlag;
+    uint8               gcRegenShapesScopeFlag;
 
 #ifdef JS_GC_ZEAL
     jsrefcount          gcZeal;
