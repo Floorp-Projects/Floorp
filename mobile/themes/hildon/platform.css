@@ -160,6 +160,11 @@ notification button {
   -moz-border-image: url("chrome://browser/skin/images/buttondark-default-64.png") 8 repeat repeat;
 }
 
+/* notification background is too light for a white caption */
+notification button {
+  color: #000 !important;
+}
+
 button.button-dark[type="checkbox"][checked="true"],
 button.button-dark:not([disabled="true"]):active:hover,
 notification button:not([disabled="true"]):active:hover {
@@ -298,7 +303,6 @@ radio.checkbox-radio-on {
 }
 
 radio.checkbox-radio-on[selected] {
-  color: #fff;
   -moz-border-image: url("chrome://browser/skin/images/toggleon-active-64.png") 8 repeat repeat;
 }
 
@@ -505,6 +509,6 @@ progressmeter {
 
 .progress-bar 
 {
-  background-color: #4483d8;
+  background-color: #8db8d8;
 }
 

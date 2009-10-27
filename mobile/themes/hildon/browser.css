@@ -947,8 +947,7 @@ settings .settings-title {
 }
 
 #select-list > option[selected="true"] {
-  color: #fff;
-  background-color: grey;
+  background-color: #8db8d8;
 }
 
 #select-list > option.optgroup {

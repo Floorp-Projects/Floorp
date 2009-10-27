@@ -363,7 +363,7 @@ placeitem {
   content: attr(tags);
   font-size: 8pt !important;
   font-weight: lighter;
-  padding-top: 1mm;
+  padding-top: 1.1mm; /* core spacing */
   margin-left: 2mm;
 }
 
@@ -446,12 +446,12 @@ box[type="documenttab"]:only-child .documenttab-close {
 
 /* bookmark editor   ------------------------------------------------------- */
 #bookmark-container {
-  padding: 1mm; /* core spacing */
+  padding: 1.1mm; /* core spacing */
   -moz-box-shadow: black 0 0.25mm 0.25mm;
 }
 
 #bookmark-form {
-  padding: 1mm; /* core spacing */
+  padding: 1.1mm; /* core spacing */
 }
 
 #bookmark-form .bookmark-controls {
@@ -506,7 +506,7 @@ box[type="documenttab"]:only-child .documenttab-close {
 #search-container {
   border-top: 0.1mm solid rgb(207,207,207);
   padding: 1.1mm; /* core spacing */
-  margin-top: 1mm;
+  margin-top: 1.1mm; /* core spacing */
 }
 
 #search-engine-label-add {
@@ -582,23 +582,6 @@ settings .settings-title {
   font-size: 8pt !important;
 }
 
-/* forms popup ------------------------------------------------------------- */
- #forms-buttons {
-  border: 0.25mm solid black;
-  border-bottom: 0;
-  padding: 0.55mm 1.1mm; /* row size & core spacing */
-  -moz-box-pack: center;
-}
- 
-#select-container:not([hidden=true]) + #forms-buttons {
-  border-top: 0;
-}
-
-#forms-buttons > button {
-  -moz-user-focus: ignore;
-  -moz-user-select: none;
-}
-
 /* form popup -------------------------------------------------------------- */
 #form-helper-container > #select-container > #select-container-inner {
   -moz-border-radius-topleft: 1mm;
@@ -661,8 +644,7 @@ settings .settings-title {
 }
 
 #select-list > option[selected="true"] {
-  color: #fff;
-  background-color: grey;
+  background-color: #8db8d8;
 }
 
 #select-list > option.optgroup {
