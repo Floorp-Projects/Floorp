@@ -1038,7 +1038,6 @@ namespace nanojit
                     asm_arith(ins);
                     break;
                 }
-#ifndef NJ_SOFTFLOAT
                 case LIR_fneg:
                 {
                     countlir_fpu();
@@ -1073,7 +1072,6 @@ namespace nanojit
                     asm_promote(ins);
                     break;
                 }
-#endif // NJ_SOFTFLOAT
                 case LIR_sti:
                 {
                     countlir_st();
@@ -1220,7 +1218,6 @@ namespace nanojit
                     break;
                 }
 
-#ifndef NJ_SOFTFLOAT
                 case LIR_feq:
                 case LIR_fle:
                 case LIR_flt:
@@ -1231,7 +1228,6 @@ namespace nanojit
                     asm_fcond(ins);
                     break;
                 }
-#endif
                 case LIR_eq:
                 case LIR_ov:
                 case LIR_le:
@@ -1259,9 +1255,7 @@ namespace nanojit
                     break;
                 }
 
-            #ifndef NJ_SOFTFLOAT
                 case LIR_fcall:
-            #endif
             #ifdef NANOJIT_64BIT
                 case LIR_qcall:
             #endif
@@ -1269,14 +1263,12 @@ namespace nanojit
                 {
                     countlir_call();
                     Register rr = UnknownReg;
-#ifndef NJ_SOFTFLOAT
-                    if (op == LIR_fcall)
+                    if (ARM_VFP && op == LIR_fcall)
                     {
                         // fcall
                         rr = asm_prep_fcall(getresv(ins), ins);
                     }
                     else
-#endif
                     {
                         rr = retRegs[0];
                         prepResultReg(ins, rmask(rr));
