@@ -71,9 +71,10 @@ RPCChannel::Call(Message* msg, Message* reply)
 
     MutexAutoLock lock(mMutex);
 
-    if (!Connected())
-        // trying to Call() on a closed or error'd channel
+    if (!Connected()) {
+        ReportConnectionError("RPCChannel");
         return false;
+    }
 
     mStack.push(*msg);
     msg->set_rpc_remote_stack_depth_guess(mRemoteStackDepthGuess);
@@ -90,9 +91,10 @@ RPCChannel::Call(Message* msg, Message* reply)
             WaitForNotify();
         }
 
-        if (!Connected())
-            // FIXME more sophisticated error handling
+        if (!Connected()) {
+            ReportConnectionError("RPCChannel");
             return false;
+        }
 
         Message recvd = mPending.front();
         mPending.pop();
@@ -314,27 +316,12 @@ RPCChannel::DispatchIncall(const Message& call)
         static_cast<RPCListener*>(mListener)->OnCallReceived(call, reply);
     --mRemoteStackDepthGuess;
 
-    switch (rv) {
-    case MsgProcessed:
-        break;
-
-    case MsgNotKnown:
-    case MsgNotAllowed:
-    case MsgPayloadError:
-    case MsgRouteError:
-    case MsgValueError:
-        NS_WARNING("[RPCChannel] error processing message!");
+    if (!MaybeHandleError(rv, "RPCChannel")) {
         delete reply;
         reply = new Message();
         reply->set_rpc();
         reply->set_reply();
         reply->set_reply_error();
-        // FIXME/cjones: error handling; OnError()?
-        break;
-
-    default:
-        NOTREACHED();
-        return;
     }
 
     mIOLoop->PostTask(

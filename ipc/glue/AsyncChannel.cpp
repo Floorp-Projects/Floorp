@@ -121,9 +121,10 @@ AsyncChannel::Send(Message* msg)
     {
         MutexAutoLock lock(mMutex);
 
-        if (!Connected())
-            // trying to Send() to a closed or error'd channel
+        if (!Connected()) {
+            ReportConnectionError("AsyncChannel");
             return false;
+        }
 
         mIOLoop->PostTask(FROM_HERE,
                           NewRunnableMethod(this, &AsyncChannel::OnSend, msg));
@@ -139,22 +140,62 @@ AsyncChannel::OnDispatchMessage(const Message& msg)
     NS_ASSERTION(!msg.is_reply(), "can't process replies here");
     NS_ASSERTION(!(msg.is_sync() || msg.is_rpc()), "async dispatch only");
 
-    switch (mListener->OnMessageReceived(msg)) {
-    case MsgProcessed:
-        return;
+    (void)MaybeHandleError(mListener->OnMessageReceived(msg), "AsyncChannel");
+}
 
+bool
+AsyncChannel::MaybeHandleError(Result code, const char* channelName)
+{
+    if (MsgProcessed == code)
+        return true;
+
+    const char* errorMsg;
+    switch (code) {
     case MsgNotKnown:
+        errorMsg = "Unknown message: not processed";
+        break;
     case MsgNotAllowed:
+        errorMsg = "Message not allowed: cannot be sent/recvd in this state";
+        break;
     case MsgPayloadError:
+        errorMsg = "Payload error: message could not be deserialized";
+        break;
     case MsgRouteError:
+        errorMsg = "Route error: message sent to unknown actor ID";
+        break;
     case MsgValueError:
-        // FIXME/cjones: error handling; OnError()?
-        return;
+        errorMsg = "Value error: message was deserialized, but contained an illegal value";
+        break;
 
     default:
         NOTREACHED();
-        return;
+        return false;
     }
+
+    PrintErrorMessage(channelName, errorMsg);
+    return false;
+}
+
+void
+AsyncChannel::ReportConnectionError(const char* channelName)
+{
+    const char* errorMsg;
+    switch (mChannelState) {
+    case ChannelClosed:
+        errorMsg = "Closed channel: cannot send/recv";
+        break;
+    case ChannelOpening:
+        errorMsg = "Opening channel: not yet ready for send/recv";
+        break;
+    case ChannelError:
+        errorMsg = "Channel error: cannot send/recv";
+        break;
+
+    default:
+        NOTREACHED();
+    }
+
+    PrintErrorMessage(channelName, errorMsg);
 }
 
 //
