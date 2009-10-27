@@ -82,7 +82,7 @@ protected:
                                                     NPError* result);
 
     virtual bool
-    AnswerNPP_HandleEvent(const NPEvent& event, int16_t* handled);
+    AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled);
 
     virtual PPluginScriptableObjectChild*
     AllocPPluginScriptableObject();

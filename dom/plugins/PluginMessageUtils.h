@@ -90,7 +90,6 @@ struct NPRemoteWindow
 #endif /* XP_UNIX */
 };
 
-
 // XXX maybe not the best place for these. better one?
 
 #define VARSTR(v_)  case v_: return #v_

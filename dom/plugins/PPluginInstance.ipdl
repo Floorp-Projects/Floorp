@@ -46,8 +46,8 @@ include protocol "PStreamNotify.ipdl";
 include "mozilla/plugins/PluginMessageUtils.h";
 
 using NPError;
-using NPEvent;
 using NPRemoteWindow;
+using NPRemoteEvent;
 using NPReason;
 using NPRect;
 
@@ -77,7 +77,7 @@ child:
   rpc NPP_GetValue_NPPVpluginScriptableNPObject()
     returns (PPluginScriptableObject value, NPError result);
 
-  rpc NPP_HandleEvent(NPEvent event)
+  rpc NPP_HandleEvent(NPRemoteEvent event)
     returns (int16_t handled);
 
 parent:
