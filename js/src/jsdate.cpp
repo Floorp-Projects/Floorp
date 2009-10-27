@@ -478,7 +478,7 @@ msFromTime(jsdouble t)
 
 #define TIMECLIP(d) ((JSDOUBLE_IS_FINITE(d) \
                       && !((d < 0 ? -d : d) > HalfTimeDomain)) \
-                     ? js_DoubleToInteger(d + (+0.)) : *cx->runtime->jsNaN)
+                     ? js_DoubleToInteger(d + (+0.)) : js_NaN)
 
 /**
  * end of ECMA 'support' functions
@@ -595,7 +595,7 @@ date_msecFromArgs(JSContext *cx, uintN argc, jsval *argv, jsdouble *rval)
                 return JS_FALSE;
             /* return NaN if any arg is not finite */
             if (!JSDOUBLE_IS_FINITE(d)) {
-                *rval = *cx->runtime->jsNaN;
+                *rval = js_NaN;
                 return JS_TRUE;
             }
             array[loop] = js_DoubleToInteger(d);
@@ -1164,16 +1164,16 @@ date_parse(JSContext *cx, uintN argc, jsval *vp)
     jsdouble result;
 
     if (argc == 0) {
-        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-        return JS_TRUE;
+        *vp = cx->runtime->NaNValue;
+        return true;
     }
     str = js_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
     vp[2] = STRING_TO_JSVAL(str);
     if (!date_parseString(str, &result)) {
-        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-        return JS_TRUE;
+        *vp = cx->runtime->NaNValue;
+        return true;
     }
 
     result = TIMECLIP(result);
@@ -1218,11 +1218,10 @@ SetDateToNaN(JSContext *cx, JSObject *obj, jsval *vp = NULL)
 {
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_DateClass);
 
-    jsval nan = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-    obj->fslots[JSSLOT_LOCAL_TIME] = nan;
-    obj->fslots[JSSLOT_UTC_TIME] = nan;
+    obj->fslots[JSSLOT_LOCAL_TIME] = cx->runtime->NaNValue;
+    obj->fslots[JSSLOT_UTC_TIME] = cx->runtime->NaNValue;
     if (vp)
-        *vp = nan;
+        *vp = cx->runtime->NaNValue;
 }
 
 /*
@@ -1233,7 +1232,7 @@ SetUTCTime(JSContext *cx, JSObject *obj, jsdouble t, jsval *vp = NULL)
 {
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_DateClass);
 
-    obj->fslots[JSSLOT_LOCAL_TIME] = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+    obj->fslots[JSSLOT_LOCAL_TIME] = cx->runtime->NaNValue;
     if (!js_NewDoubleInRootedValue(cx, t, &obj->fslots[JSSLOT_UTC_TIME]))
         return false;
     if (vp)
@@ -1248,33 +1247,24 @@ SetUTCTime(JSContext *cx, JSObject *obj, jsdouble t, jsval *vp = NULL)
 static JSBool
 GetAndCacheLocalTime(JSContext *cx, JSObject *obj, jsval *vp, jsdouble *dp)
 {
-    jsval v;
-    jsdouble result;
-    jsdouble *cached;
-
     if (!obj || !JS_InstanceOf(cx, obj, &js_DateClass, vp ? vp + 2 : NULL))
-        return JS_FALSE;
-    v = obj->fslots[JSSLOT_LOCAL_TIME];
+        return false;
 
-    result = *JSVAL_TO_DOUBLE(v);
-
+    jsval *slotp = &obj->fslots[JSSLOT_LOCAL_TIME];
+    jsdouble result = *JSVAL_TO_DOUBLE(*vp);
     if (JSDOUBLE_IS_NaN(result)) {
-        if (!GetUTCTime(cx, obj, vp, &result))
-            return JS_FALSE;
+        result = *JSVAL_TO_DOUBLE(obj->fslots[JSSLOT_UTC_TIME]);
 
         /* if result is NaN, it couldn't be finite. */
         if (JSDOUBLE_IS_FINITE(result))
             result = LocalTime(result);
 
-        cached = js_NewWeaklyRootedDouble(cx, result);
-        if (!cached)
-            return JS_FALSE;
-
-        obj->fslots[JSSLOT_LOCAL_TIME] = DOUBLE_TO_JSVAL(cached);
+        if (!js_NewDoubleInRootedValue(cx, result, slotp))
+            return false;
     }
 
     *dp = result;
-    return JS_TRUE;
+    return true;
 }
 
 /*
