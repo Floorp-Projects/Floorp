@@ -56,12 +56,6 @@
         <treecol id="emailcol" label="&certmgr.email;"
                      flex="1"/>
         <splitter class="tree-splitter"/>
-<!-- disable the purposes column until we get a solution
-     to fill in this information that is compatible with OCSP
-     and does not block the whole interface
-        <treecol id="purposecol" label="&certmgr.purpose;"
-                     flex="1"/>
--->
         <treecol id="expiredcol" label="&certmgr.expires;"
                  flex="1"/>
 <!--        <treecol id="certdbkeycol" collapsed="true" flex="1"/> -->

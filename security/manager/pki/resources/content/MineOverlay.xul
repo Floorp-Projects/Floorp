@@ -58,13 +58,6 @@
         <treecol id="tokencol" label="&certmgr.tokenname;"
                      persist="hidden width ordinal" flex="1"/>
         <splitter class="tree-splitter"/>
-<!-- disable the purposes column until we get a solution
-     to fill in this information that is compatible with OCSP
-     and does not block the whole interface
-        <treecol id="purposecol" label="&certmgr.purpose;"
-                     persist="hidden width ordinal" flex="1"/>
-        <splitter class="tree-splitter"/>
--->
         <treecol id="serialnumcol" label="&certmgr.serial;"
                      persist="hidden width ordinal" flex="1"/>
         <splitter class="tree-splitter"/>
