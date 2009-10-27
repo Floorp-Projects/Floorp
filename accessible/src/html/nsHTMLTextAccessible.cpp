@@ -57,6 +57,8 @@ nsTextAccessibleWrap(aDomNode, aShell)
 { 
 }
 
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTextAccessible, nsTextAccessible)
+
 NS_IMETHODIMP
 nsHTMLTextAccessible::GetName(nsAString& aName)
 {

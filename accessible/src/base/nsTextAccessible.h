@@ -49,8 +49,6 @@
 class nsTextAccessible : public nsLinkableAccessible
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   nsTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
 
   // nsIAccessible
