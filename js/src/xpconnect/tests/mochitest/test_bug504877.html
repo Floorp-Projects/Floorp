@@ -34,12 +34,10 @@ function go() {
         var loc = ifr.location;
         (function() {
             netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-            try {
-                ifr.blat = 42;
-            } catch (e) {
-                ok(/UniversalXPConnect/.test(e), "not able to set properties using UniversalXPConnect");
-            }
+            ifr.blat = 42;
 
+            is(ifr.blat, 42, "able to set random properties")
+            is(ifr.getblat(), 42, "setting properties propagates");
             is(ifr.foopy, 42, "able to use UniversalXPConnect to get random properties");
 
             loc.replace; // resolves the property onto the wrapper.
