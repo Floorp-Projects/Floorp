@@ -244,7 +244,7 @@ namespace nanojit
 #if defined NANOJIT_ARM && defined UNDER_CE
     // Use a single flush for the whole CodeList, when we have no
     // finer-granularity flush support, as on WinCE.
-    void CodeAlloc::flushICache(CodeList*) {
+    void CodeAlloc::flushICache(CodeList* &/*blocks*/) {
         FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
     }
 #else
