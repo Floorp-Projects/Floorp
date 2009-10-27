@@ -47,7 +47,7 @@ namespace _ipdltest {
 class IPDLUnitTestThreadChild : public mozilla::ipc::GeckoThread
 {
 public:
-  IPDLUnitTestThreadChild();
+  IPDLUnitTestThreadChild(ProcessHandle aParentHandle);
   ~IPDLUnitTestThreadChild();
 
 protected:

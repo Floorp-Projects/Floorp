@@ -99,6 +99,7 @@ PluginModuleChild::current()
 
 bool
 PluginModuleChild::Init(const std::string& aPluginFilename,
+                        base::ProcessHandle aParentProcessHandle,
                         MessageLoop* aIOLoop,
                         IPC::Channel* aChannel)
 {
@@ -134,7 +135,7 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     NS_ASSERTION(NS_OK == rv, "trouble with mPluginFile");
     NS_ASSERTION(mLibrary, "couldn't open shared object");
 
-    if (!Open(aChannel, aIOLoop))
+    if (!Open(aChannel, aParentProcessHandle, aIOLoop))
         return false;
 
     memset((void*) &mFunctions, 0, sizeof(mFunctions));

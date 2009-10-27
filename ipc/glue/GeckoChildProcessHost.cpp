@@ -41,6 +41,8 @@
 #include "base/string_util.h"
 #include "chrome/common/chrome_switches.h"
 
+#include "prprf.h"
+
 #include "mozilla/ipc/GeckoThread.h"
 
 using mozilla::MonitorAutoEnter;
@@ -59,7 +61,8 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     mProcessType(aProcessType),
     mMonitor("mozilla.ipc.GeckChildProcessHost.mMonitor"),
     mLaunched(false),
-    mDelegate(aDelegate)
+    mDelegate(aDelegate),
+    mChildProcessHandle(0)
 {
 }
 
@@ -118,6 +121,13 @@ GeckoChildProcessHost::AsyncLaunch(std::vector<std::wstring> aExtraOpts)
     cmdLine.AppendLooseValue((*it).c_str());
   }
 
+  // send the child the PID so that it can open a ProcessHandle back to us.
+  // probably don't want to do this in the long run
+  char pidstring[32];
+  PR_snprintf(pidstring, sizeof(pidstring) - 1,
+	      "%ld", base::Process::Current().pid());
+  cmdLine.AppendLooseValue(UTF8ToWide(pidstring));
+
   cmdLine.AppendLooseValue(UTF8ToWide(XRE_ChildProcessTypeToString(mProcessType)));
 
   base::ProcessHandle process;
@@ -142,6 +152,10 @@ GeckoChildProcessHost::OnChannelConnected(int32 peer_pid)
 {
   MonitorAutoEnter mon(mMonitor);
   mLaunched = true;
+
+  if (!base::OpenProcessHandle(peer_pid, &mChildProcessHandle))
+      NS_RUNTIMEABORT("can't open handle to child process");
+
   mon.Notify();
 }
 

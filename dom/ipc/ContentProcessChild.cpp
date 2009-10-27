@@ -65,11 +65,13 @@ ContentProcessChild::~ContentProcessChild()
 }
 
 bool
-ContentProcessChild::Init(MessageLoop* aIOLoop, IPC::Channel* aChannel)
+ContentProcessChild::Init(MessageLoop* aIOLoop,
+                          base::ProcessHandle aParentHandle,
+                          IPC::Channel* aChannel)
 {
     NS_ASSERTION(!sSingleton, "only one ContentProcessChild per child");
   
-    Open(aChannel, aIOLoop);
+    Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
 
     return true;

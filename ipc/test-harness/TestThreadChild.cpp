@@ -40,8 +40,8 @@
 using mozilla::test::TestThreadChild;
 using mozilla::ipc::GeckoThread;
 
-TestThreadChild::TestThreadChild() :
-    GeckoThread()
+TestThreadChild::TestThreadChild(ProcessHandle aParentHandle) :
+    GeckoThread(aParentHandle)
 {
 }
 
@@ -53,7 +53,7 @@ void
 TestThreadChild::Init()
 {
     GeckoThread::Init();
-    mChild.Open(channel(), owner_loop());
+    mChild.Open(channel(), GetParentProcessHandle(), owner_loop());
 }
 
 void
