@@ -3124,7 +3124,11 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      * Same for the protoHazardShape proxy-shape standing in for all object
      * prototypes having readonly or setter properties.
      */
-    if (rt->shapeGen & SHAPE_OVERFLOW_BIT) {
+    if (rt->shapeGen & SHAPE_OVERFLOW_BIT
+#ifdef JS_GC_ZEAL
+        || rt->gcZeal >= 1
+#endif
+        ) {
         rt->gcRegenShapes = true;
         rt->gcRegenShapesScopeFlag ^= JSScope::SHAPE_REGEN;
         rt->shapeGen = 0;

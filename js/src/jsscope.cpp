@@ -1064,10 +1064,11 @@ JSScope::add(JSContext *cx, jsid id,
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, this));
     CHECK_ANCESTOR_LINE(this, true);
 
+    JS_ASSERT(!JSVAL_IS_NULL(id));
     JS_ASSERT_IF(attrs & JSPROP_GETTER, getter);
     JS_ASSERT_IF(attrs & JSPROP_SETTER, setter);
-
-    JS_ASSERT(!JSVAL_IS_NULL(id));
+    JS_ASSERT_IF(!cx->runtime->gcRegenShapes,
+                 hasRegenFlag(cx->runtime->gcRegenShapesScopeFlag));
 
     /*
      * You can't add properties to a sealed scope.  But note well that you can
