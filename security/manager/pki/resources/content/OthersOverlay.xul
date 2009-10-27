@@ -58,7 +58,6 @@
         <splitter class="tree-splitter"/>
         <treecol id="expiredcol" label="&certmgr.expires;"
                  flex="1"/>
-<!--        <treecol id="certdbkeycol" collapsed="true" flex="1"/> -->
       </treecols>
       <treechildren flex="1" ondblclick="viewCerts();"/>
     </tree>
