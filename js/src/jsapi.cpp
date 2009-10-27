@@ -1143,6 +1143,7 @@ static struct v2smap {
     {JSVERSION_1_6,     "1.6"},
     {JSVERSION_1_7,     "1.7"},
     {JSVERSION_1_8,     "1.8"},
+    {JSVERSION_ECMA_5,  "ECMAv5"},
     {JSVERSION_DEFAULT, js_default_str},
     {JSVERSION_UNKNOWN, NULL},          /* must be last, NULL is sentinel */
 };
