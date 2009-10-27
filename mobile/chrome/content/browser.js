@@ -550,6 +550,12 @@ var Browser = {
       gPrefService.clearUserPref("extensions.disabledAddons");
     }
 
+    // some day (maybe fennec 1.0), we can remove both of these
+    // preference reseting checks.  they are here because we wanted to
+    // disable plugins and flash explictly, then we fixed things and
+    // needed to re-enable support.  as time goes on, fewer people
+    // will have ever had these temporary.* preference set.
+
     // Re-enable plugins if we had previously disabled them. We should get rid of
     // this code eventually...
     if (gPrefService.prefHasUserValue("temporary.disablePlugins")) {
@@ -557,10 +563,10 @@ var Browser = {
       this.setPluginState(true);
     }
 
-    // XXX temporarily disable flash
-    if (!gPrefService.prefHasUserValue("temporary.disabledFlash")) {
-      this.setPluginState(false, /flash/i);
-      gPrefService.setBoolPref("temporary.disabledFlash", true);
+    // Re-enable flash
+    if (gPrefService.prefHasUserValue("temporary.disabledFlash")) {
+      this.setPluginState(true, /flash/i);
+      gPrefService.clearUserPref("temporary.disabledFlash");
     }
 
     //dump("end startup\n");

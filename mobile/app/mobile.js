@@ -324,6 +324,10 @@ pref("privacy.item.siteSettings", true);
 
 pref("plugins.enabled", true);
 
+#ifdef MOZ_PLATFORM_HILDON
+pref("plugins.force.wmode", "opaque");
+#endif
+
 // URL to the Learn More link XXX this is the firefox one.  Bug XXX fixes this.
 pref("browser.geolocation.warning.infoURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/firefox/geolocation/");
 
