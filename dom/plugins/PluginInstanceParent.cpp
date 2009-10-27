@@ -432,6 +432,8 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
     _MOZ_LOG(__FUNCTION__);
 
     NPEvent* npevent = reinterpret_cast<NPEvent*>(event);
+    NPRemoteEvent npremoteevent;
+    npremoteevent.event = *npevent;
 
 #if defined(MOZ_X11)
     if (GraphicsExpose == npevent->type) {
@@ -451,7 +453,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
 #endif
 
     int16_t handled;
-    if (!CallNPP_HandleEvent(*npevent, &handled)) {
+    if (!CallNPP_HandleEvent(npremoteevent, &handled)) {
         return 0;               // no good way to handle errors here...
     }
     return handled;

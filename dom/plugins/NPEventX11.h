@@ -48,6 +48,19 @@
 
 #include "npapi.h"
 
+namespace mozilla {
+
+namespace plugins {
+
+struct NPRemoteEvent {
+    NPEvent event;
+};
+
+}
+
+}
+
+
 //
 // XEvent is defined as a union of all more specific X*Events.
 // Luckily, as of xorg 1.6.0 / X protocol 11 rev 0, the only pointer
@@ -68,9 +81,9 @@
 namespace IPC {
 
 template <>
-struct ParamTraits<NPEvent>     // synonym for XEvent
+struct ParamTraits<mozilla::plugins::NPRemoteEvent>     // synonym for XEvent
 {
-    typedef NPEvent paramType;
+    typedef mozilla::plugins::NPRemoteEvent paramType;
 
     static void Write(Message* aMsg, const paramType& aParam)
     {
@@ -86,7 +99,7 @@ struct ParamTraits<NPEvent>     // synonym for XEvent
         }
 
         memcpy(aResult, bytes, sizeof(paramType));
-        SetXDisplay(*aResult);
+        SetXDisplay(aResult->event);
         return true;
     }
 
