@@ -276,16 +276,16 @@ js_QuoteString(JSContext *cx, JSString *str, jschar quote);
  */
 
 #ifdef JS_ARENAMETER
-# define JS_NEW_PRINTER(cx, name, fun, indent, pretty)                        \
-    js_NewPrinter(cx, name, fun, indent, pretty)
+# define JS_NEW_PRINTER(cx, name, fun, indent, pretty, grouped)               \
+    js_NewPrinter(cx, name, fun, indent, pretty, grouped)
 #else
-# define JS_NEW_PRINTER(cx, name, fun, indent, pretty)                        \
-    js_NewPrinter(cx, fun, indent, pretty)
+# define JS_NEW_PRINTER(cx, name, fun, indent, pretty, grouped)               \
+    js_NewPrinter(cx, fun, indent, pretty, grouped)
 #endif
 
 extern JSPrinter *
 JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
-               uintN indent, JSBool pretty);
+               uintN indent, bool pretty, bool grouped);
 
 extern void
 js_DestroyPrinter(JSPrinter *jp);
@@ -421,11 +421,16 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 extern JSBool
 js_DecompileScript(JSPrinter *jp, JSScript *script);
 
-extern JSBool
+extern bool
 js_DecompileFunctionBody(JSPrinter *jp);
 
-extern JSBool
+extern bool
 js_DecompileFunction(JSPrinter *jp);
+
+extern JSString *
+js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
+                     uintN indent, bool pretty, bool grouped,
+                     bool (*decompiler)(JSPrinter *jp));
 
 /*
  * Find the source expression that resulted in v, and return a newly allocated
