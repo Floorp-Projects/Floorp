@@ -50,7 +50,7 @@
 #include "nsITimer.h"
 
 #include "npfunctions.h"
-#include "mozilla/SharedLibrary.h"
+#include "mozilla/PluginLibrary.h"
 
 class nsNPAPIPluginStreamListener;
 class nsPIDOMWindow;
@@ -75,6 +75,9 @@ public:
 
 class nsNPAPIPluginInstance : public nsIPluginInstance
 {
+private:
+  typedef mozilla::PluginLibrary PluginLibrary;
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGININSTANCE
@@ -100,7 +103,7 @@ public:
                            PRBool aCallNotify,
                            const char * aURL);
 
-  nsNPAPIPluginInstance(NPPluginFuncs* callbacks, mozilla::SharedLibrary* aLibrary);
+  nsNPAPIPluginInstance(NPPluginFuncs* callbacks, PluginLibrary* aLibrary);
 
   // Use Release() to destroy this
   virtual ~nsNPAPIPluginInstance();
@@ -157,7 +160,7 @@ protected:
 public:
   // True while creating the plugin, or calling NPP_SetWindow() on it.
   PRPackedBool mInPluginInitCall;
-  mozilla::SharedLibrary* mLibrary;
+  PluginLibrary* mLibrary;
   nsInstanceStream *mStreams;
 
 private:

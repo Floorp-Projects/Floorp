@@ -41,7 +41,7 @@
 
 #include "nsNPAPIPlugin.h"
 
-using mozilla::SharedLibrary;
+using mozilla::PluginLibrary;
 
 using mozilla::ipc::NPRemoteIdentifier;
 
@@ -49,11 +49,8 @@ using namespace mozilla::plugins;
 
 PR_STATIC_ASSERT(sizeof(NPIdentifier) == sizeof(void*));
 
-// HACKS
-PluginModuleParent* PluginModuleParent::Shim::HACK_target;
-
-SharedLibrary*
-PluginModuleParent::LoadModule(const char* aFilePath, PRLibrary* aLibrary)
+PluginLibrary*
+PluginModuleParent::LoadModule(const char* aFilePath)
 {
     _MOZ_LOG(__FUNCTION__);
 
@@ -62,15 +59,12 @@ PluginModuleParent::LoadModule(const char* aFilePath, PRLibrary* aLibrary)
     parent->mSubprocess.Launch();
     parent->Open(parent->mSubprocess.GetChannel());
 
-    // FIXME/cjones: leaking PluginModuleParents ...
-    return parent->mShim;
+    return parent;
 }
 
 
 PluginModuleParent::PluginModuleParent(const char* aFilePath) :
-    mFilePath(aFilePath),
-    mSubprocess(aFilePath),
-    ALLOW_THIS_IN_INITIALIZER_LIST(mShim(new Shim(this)))
+    mSubprocess(aFilePath)
 {
 #ifdef DEBUG
     PRBool ok =
@@ -81,8 +75,6 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath) :
 
 PluginModuleParent::~PluginModuleParent()
 {
-    _MOZ_LOG("  (closing Shim ...)");
-    delete mShim;
 }
 
 PPluginInstanceParent*
@@ -112,9 +104,7 @@ PluginModuleParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
     aFuncs->version = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
     aFuncs->javaClass = nsnull;
 
-    // FIXME/cjones: /should/ dynamically allocate shim trampoline.
-    // but here we just HACK
-    aFuncs->newp = Shim::NPP_New;
+    aFuncs->newp = nsnull; // Gecko should always call this through a PluginLibrary object
     aFuncs->destroy = NPP_Destroy;
     aFuncs->setwindow = NPP_SetWindow;
     aFuncs->newstream = NPP_NewStream;
@@ -129,88 +119,6 @@ PluginModuleParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
     aFuncs->setvalue = NPP_SetValue;
 }
 
-#ifdef OS_LINUX
-NPError
-PluginModuleParent::NP_Initialize(const NPNetscapeFuncs* npnIface,
-                                  NPPluginFuncs* nppIface)
-{
-    _MOZ_LOG(__FUNCTION__);
-
-    mNPNIface = npnIface;
-
-    NPError prv;
-    if (!CallNP_Initialize(&prv))
-        return NPERR_GENERIC_ERROR;
-    else if (NPERR_NO_ERROR != prv)
-        return prv;
-
-    SetPluginFuncs(nppIface);
-    return NPERR_NO_ERROR;
-}
-#else
-NPError
-PluginModuleParent::NP_Initialize(const NPNetscapeFuncs* npnIface)
-{
-    _MOZ_LOG(__FUNCTION__);
-
-    mNPNIface = npnIface;
-
-    NPError prv;
-    if (!CallNP_Initialize(&prv))
-        return NPERR_GENERIC_ERROR;
-    return prv;
-}
-
-NPError
-PluginModuleParent::NP_GetEntryPoints(NPPluginFuncs* nppIface)
-{
-    NS_ASSERTION(nppIface, "Null pointer!");
-
-    SetPluginFuncs(nppIface);
-    return NPERR_NO_ERROR;
-}
-#endif
-
-NPError
-PluginModuleParent::NPP_New(NPMIMEType pluginType,
-                            NPP instance,
-                            uint16_t mode,
-                            int16_t argc,
-                            char* argn[],
-                            char* argv[],
-                            NPSavedData* saved)
-{
-    _MOZ_LOG(__FUNCTION__);
-
-    // create the instance on the other side
-    nsTArray<nsCString> names;
-    nsTArray<nsCString> values;
-
-    for (int i = 0; i < argc; ++i) {
-        names.AppendElement(NullableString(argn[i]));
-        values.AppendElement(NullableString(argv[i]));
-    }
-
-    NPError prv = NPERR_GENERIC_ERROR;
-    nsAutoPtr<PluginInstanceParent> parentInstance(
-        new PluginInstanceParent(this, instance, mNPNIface));
-
-    instance->pdata = parentInstance.get();
-
-    if (!CallPPluginInstanceConstructor(parentInstance,
-                                        nsDependentCString(pluginType), mode,
-                                        names,values, &prv))
-        return NPERR_GENERIC_ERROR;
-
-    printf ("[PluginModuleParent] %s: got return value %hd\n", __FUNCTION__,
-            prv);
-
-    if (NPERR_NO_ERROR == prv)
-        parentInstance.forget();
-
-    return prv;
-}
-
 NPError
 PluginModuleParent::NPP_Destroy(NPP instance,
                                 NPSavedData** save)
@@ -220,7 +128,6 @@ PluginModuleParent::NPP_Destroy(NPP instance,
     //  (2) the child shuts down its instance
     //  (3) remove both parent and child IDs from map
     //  (4) free parent
-
     _MOZ_LOG(__FUNCTION__);
 
     PluginInstanceParent* parentInstance =
@@ -229,12 +136,13 @@ PluginModuleParent::NPP_Destroy(NPP instance,
     parentInstance->Destroy();
 
     NPError prv;
-    if (!Shim::HACK_target->CallPPluginInstanceDestructor(parentInstance, &prv)) {
+    if (!parentInstance->Module()->CallPPluginInstanceDestructor(parentInstance, &prv)) {
         prv = NPERR_GENERIC_ERROR;
     }
     instance->pdata = nsnull;
 
     return prv;
+
  }
 
 bool
@@ -511,5 +419,126 @@ PluginModuleParent::StreamCast(NPP instance,
         NS_RUNTIMEABORT("Corrupted plugin stream data.");
     }
     return sp;
+}
+
+bool
+PluginModuleParent::HasRequiredFunctions()
+{
+    return true;
+}
+
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+nsresult
+PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error)
+{
+    _MOZ_LOG(__FUNCTION__);
+
+    mNPNIface = bFuncs;
+
+    if (!CallNP_Initialize(error)) {
+        return NPERR_GENERIC_ERROR;
+    }
+    else if (*error != NPERR_NO_ERROR) {
+        return NS_OK;
+    }
+
+    SetPluginFuncs(pFuncs);
+    return NS_OK;
+}
+#else
+nsresult
+PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
+{
+    _MOZ_LOG(__FUNCTION__);
+
+    mNPNIface = bFuncs;
+
+    if (!CallNP_Initialize(error))
+        return NPERR_GENERIC_ERROR;
+
+    return NS_OK;
+}
+#endif
+
+nsresult
+PluginModuleParent::NP_Shutdown(NPError* error)
+{
+    _MOZ_LOG(__FUNCTION__);
+
+    // FIXME/cjones: shut down all our instances, and kill
+    // off the child process
+
+    *error = NPERR_NO_ERROR;
+    return NS_OK;
+}
+
+nsresult
+PluginModuleParent::NP_GetMIMEDescription(char** mimeDesc)
+{
+    _MOZ_LOG(__FUNCTION__);
+
+    *mimeDesc = (char*)"application/x-foobar";
+    return NS_OK;
+}
+
+nsresult
+PluginModuleParent::NP_GetValue(void *future, NPPVariable aVariable,
+                                   void *aValue, NPError* error)
+{
+    _MOZ_LOG(__FUNCTION__);
+
+    //TODO: implement this correctly
+    printf("[%s] Not yet implemented\n", __FUNCTION__);
+
+    *error = NPERR_GENERIC_ERROR;
+    return NS_OK;
+}
+
+#if defined(XP_WIN) || defined(XP_MACOSX)
+nsresult
+PluginModuleParent::NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error)
+{
+    NS_ASSERTION(pFuncs, "Null pointer!");
+
+    SetPluginFuncs(pFuncs);
+    *error = NPERR_NO_ERROR;
+    return NS_OK;
+}
+#endif
+
+nsresult
+PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
+                            uint16_t mode, int16_t argc, char* argn[],
+                            char* argv[], NPSavedData* saved,
+                            NPError* error)
+{
+    _MOZ_LOG(__FUNCTION__);
+
+    // create the instance on the other side
+    nsTArray<nsCString> names;
+    nsTArray<nsCString> values;
+
+    for (int i = 0; i < argc; ++i) {
+        names.AppendElement(NullableString(argn[i]));
+        values.AppendElement(NullableString(argv[i]));
+    }
+
+    nsAutoPtr<PluginInstanceParent> parentInstance(
+        new PluginInstanceParent(this, instance, mNPNIface));
+
+    instance->pdata = parentInstance.get();
+
+    if (!CallPPluginInstanceConstructor(parentInstance,
+                                        nsDependentCString(pluginType), mode,
+                                        names,values, error))
+        return NS_ERROR_FAILURE;
+
+    printf ("[PluginModuleParent] %s: got return value %hd\n", __FUNCTION__,
+            *error);
+
+    if (*error == NPERR_NO_ERROR)
+        parentInstance.forget();
+
+    return NS_OK;
 }
 
