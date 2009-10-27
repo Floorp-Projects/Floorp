@@ -3683,6 +3683,28 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     printf("Line reflow status = %s\n", LineReflowStatusNames[lineReflowStatus]);
   }
 #endif
+
+  if (aLineLayout.GetDirtyNextLine()) {
+    // aLine may have been pushed to the overflow lines.
+    nsLineList* overflowLines = GetOverflowLines();
+    // We can't just compare iterators front() to aLine here, since they may be in
+    // different lists.
+    PRBool pushedToOverflowLines = overflowLines &&
+      overflowLines->front() == aLine.get();
+    if (pushedToOverflowLines) {
+      // aLine is stale, it's associated with the main line list but it should
+      // be associated with the overflow line list now
+      aLine = overflowLines->begin();
+    }
+    nsBlockInFlowLineIterator iter(this, aLine, pushedToOverflowLines);
+    if (iter.Next() && iter.GetLine()->IsInline()) {
+      iter.GetLine()->MarkDirty();
+      if (iter.GetContainer() != this) {
+        aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+      }
+    }
+  }
+
   *aLineReflowStatus = lineReflowStatus;
 
   return rv;
@@ -3723,16 +3745,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (frameReflowStatus & NS_FRAME_REFLOW_NEXTINFLOW) {
-    // we need to ensure that the frame's nextinflow gets reflowed.
-    aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
-    nsBlockFrame* ourNext = static_cast<nsBlockFrame*>(GetNextInFlow());
-    if (ourNext && aFrame->GetNextInFlow()) {
-      PRBool isValid;
-      nsBlockInFlowLineIterator iter(ourNext, aFrame->GetNextInFlow(), &isValid);
-      if (isValid) {
-        iter.GetLine()->MarkDirty();
-      }
-    }
+    aLineLayout.SetDirtyNextLine();
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3819,12 +3832,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
 
         if (NS_INLINE_IS_BREAK_AFTER(frameReflowStatus) &&
             !aLineLayout.GetLineEndsInBR()) {
-          // Mark next line dirty in case SplitLine didn't end up
-          // pushing any frames.
-          nsLineList_iterator next = aLine.next();
-          if (next != end_lines() && !next->IsBlock()) {
-            next->MarkDirty();
-          }
+          aLineLayout.SetDirtyNextLine();
         }
       }
     }

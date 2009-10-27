@@ -400,6 +400,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
   InlineReflowState irs;
   irs.mPrevFrame = nsnull;
   irs.mLineContainer = lineContainer;
+  irs.mLineLayout = aReflowState.mLineLayout;
   irs.mNextInFlow = (nsInlineFrame*) GetNextInFlow();
   irs.mSetParentPointer = lazilySetParentPointer;
 
@@ -693,7 +694,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
         aStatus = NS_FRAME_NOT_COMPLETE |
           NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
           (aStatus & NS_INLINE_BREAK_TYPE_MASK);
-        PushFrames(aPresContext, aFrame, irs.mPrevFrame);
+        PushFrames(aPresContext, aFrame, irs.mPrevFrame, irs);
       }
       else {
         // Preserve reflow status when breaking-before our first child
@@ -725,7 +726,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
       nsIFrame* nextFrame = aFrame->GetNextSibling();
       if (nextFrame) {
         NS_FRAME_SET_INCOMPLETE(aStatus);
-        PushFrames(aPresContext, nextFrame, aFrame);
+        PushFrames(aPresContext, nextFrame, aFrame, irs);
       }
       else if (nsnull != GetNextInFlow()) {
         // We must return an incomplete status if there are more child
@@ -759,7 +760,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
       if (!reflowingFirstLetter) {
         nsIFrame* nextFrame = aFrame->GetNextSibling();
         if (nextFrame) {
-          PushFrames(aPresContext, nextFrame, aFrame);
+          PushFrames(aPresContext, nextFrame, aFrame, irs);
         }
       }
     }
@@ -791,6 +792,9 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
       nextInFlow->mFrames.RemoveFirstChild();
       mFrames.InsertFrame(this, irs.mPrevFrame, frame);
       isComplete = PR_FALSE;
+      if (irs.mLineLayout) {
+        irs.mLineLayout->SetDirtyNextLine();
+      }
       nsHTMLContainerFrame::ReparentFrameView(aPresContext, frame, nextInFlow, this);
       break;
     }
@@ -805,7 +809,8 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
 void
 nsInlineFrame::PushFrames(nsPresContext* aPresContext,
                           nsIFrame* aFromChild,
-                          nsIFrame* aPrevSibling)
+                          nsIFrame* aPrevSibling,
+                          InlineReflowState& aState)
 {
   NS_PRECONDITION(aFromChild, "null pointer");
   NS_PRECONDITION(aPrevSibling, "pushing first child");
@@ -819,6 +824,9 @@ nsInlineFrame::PushFrames(nsPresContext* aPresContext,
   // Add the frames to our overflow list (let our next in flow drain
   // our overflow list when it is ready)
   SetOverflowFrames(aPresContext, mFrames.RemoveFramesAfter(aPrevSibling));
+  if (aState.mLineLayout) {
+    aState.mLineLayout->SetDirtyNextLine();
+  }
 }
 
 
