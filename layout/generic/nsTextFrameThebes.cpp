@@ -5987,7 +5987,14 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout)
   // and ChildIsDirty to handle a range of frames would be worse.
   if (aLineLayout &&
       (end != f->mContentOffset || (f->GetStateBits() & NS_FRAME_IS_DIRTY))) {
-    aLineLayout->SetDirtyNextLine();
+    const nsLineList::iterator* line = aLineLayout->GetLine();
+    nsBlockFrame* block = do_QueryFrame(aLineLayout->GetLineContainerFrame());
+    if (line && block) {
+      nsLineList::iterator next = line->next();
+      if (next != block->end_lines() && !next->IsBlock()) {
+        next->MarkDirty();
+      }
+    }
   }
 
   if (end < f->mContentOffset) {
