@@ -4750,12 +4750,16 @@ photon)
 
 cairo-windows)
     MOZ_WIDGET_TOOLKIT=windows
+    if test -z "$WINCE"; then
+        MOZ_WEBGL=1
+    fi
     ;;
 
 cairo-gtk2|cairo-gtk2-x11)
     MOZ_WIDGET_TOOLKIT=gtk2
     MOZ_ENABLE_GTK2=1
     MOZ_ENABLE_XREMOTE=1
+    MOZ_WEBGL=1
 
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
@@ -4768,6 +4772,7 @@ cairo-gtk2|cairo-gtk2-x11)
 cairo-gtk2-dfb)
     MOZ_WIDGET_TOOLKIT=gtk2
     MOZ_ENABLE_GTK2=1
+    MOZ_WEBGL=1
 
     AC_DEFINE(MOZ_DFB)
     MOZ_DFB=1
@@ -4820,8 +4825,21 @@ cairo-cocoa)
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL -lobjc'
     MOZ_FS_LAYOUT=bundle
+    MOZ_WEBGL=1
     ;;
 esac
+
+if test -n "$MOZ_WEBGL"; then
+    if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
+        AC_CHECK_HEADER(GL/glx.h)
+        if test "$ac_cv_header_GL_glx_h" != "yes"; then
+            AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa (SuSE))])
+        fi
+    fi
+    if test "$NS_OSSO"; then
+        MOZ_WEBGL=
+    fi
+fi
 
 if test "$MOZ_ENABLE_XREMOTE"; then
     AC_DEFINE(MOZ_ENABLE_XREMOTE)
@@ -7807,6 +7825,7 @@ AC_SUBST(MOZ_PLACES_BOOKMARKS)
 AC_SUBST(MOZ_STORAGE)
 AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
+AC_SUBST(MOZ_WEBGL)
 
 AC_SUBST(MOZ_JAVAXPCOM)
 AC_SUBST(JAVA_INCLUDE_PATH)
