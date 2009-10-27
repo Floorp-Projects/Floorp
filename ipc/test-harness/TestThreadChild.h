@@ -47,7 +47,7 @@ namespace test {
 class TestThreadChild : public mozilla::ipc::GeckoThread
 {
 public:
-    TestThreadChild();
+    TestThreadChild(ProcessHandle aParentHandle);
     ~TestThreadChild();
 
 protected:

@@ -59,7 +59,7 @@ namespace plugins {
 // live.
 class PluginThreadChild : public mozilla::ipc::GeckoThread {
 public:
-    PluginThreadChild();
+    PluginThreadChild(ProcessHandle aParentHandle);
     ~PluginThreadChild();
 
 private:

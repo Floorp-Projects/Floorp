@@ -59,7 +59,7 @@ namespace dom {
 class ContentProcessThread : public mozilla::ipc::GeckoThread
 {
 public:
-    ContentProcessThread();
+    ContentProcessThread(ProcessHandle mParentHandle);
     ~ContentProcessThread();
 
 private:

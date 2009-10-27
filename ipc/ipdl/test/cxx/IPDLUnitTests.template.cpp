@@ -141,6 +141,8 @@ IPDLUnitTestMain(void* aData)
     if (!transport)
         fail("no transport");
 
+    base::ProcessHandle child = subprocess->GetChildProcessHandle();
+
     switch (test) {
 //-----------------------------------------------------------------------------
 //===== TEMPLATED =====
@@ -169,7 +171,9 @@ namespace mozilla {
 namespace _ipdltest {
 
 void
-IPDLUnitTestChildInit(IPC::Channel* transport, MessageLoop* worker)
+IPDLUnitTestChildInit(IPC::Channel* transport,
+                      base::ProcessHandle parent,
+                      MessageLoop* worker)
 {
     switch (IPDLUnitTest()) {
 //-----------------------------------------------------------------------------

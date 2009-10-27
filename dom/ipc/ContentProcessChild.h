@@ -53,7 +53,9 @@ public:
     ContentProcessChild();
     virtual ~ContentProcessChild();
 
-    bool Init(MessageLoop* aIOLoop, IPC::Channel* aChannel);
+    bool Init(MessageLoop* aIOLoop,
+              base::ProcessHandle aParentHandle,
+              IPC::Channel* aChannel);
 
     static ContentProcessChild* GetSingleton() {
         NS_ASSERTION(sSingleton, "not initialized");

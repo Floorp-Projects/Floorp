@@ -68,19 +68,14 @@ public:
      */
     bool Launch();
 
-    IPC::Channel* GetChannel() {
-        return channelp();
-    }
-
     virtual bool CanShutdown()
     {
         return true;
     }
 
-    base::WaitableEvent* GetShutDownEvent()
-    {
-        return GetProcessEvent();
-    }
+    using mozilla::ipc::GeckoChildProcessHost::GetShutDownEvent;
+    using mozilla::ipc::GeckoChildProcessHost::GetChannel;
+    using mozilla::ipc::GeckoChildProcessHost::GetChildProcessHandle;
 
 private:
     std::string mPluginFilePath;

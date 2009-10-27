@@ -129,6 +129,7 @@ public:
     virtual ~PluginModuleChild();
 
     bool Init(const std::string& aPluginFilename,
+              base::ProcessHandle aParentProcessHandle,
               MessageLoop* aIOLoop,
               IPC::Channel* aChannel);
 

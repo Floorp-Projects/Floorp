@@ -102,7 +102,7 @@ ContentProcessParent::ContentProcessParent()
     // TODO: async launching!
     mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, this);
     mSubprocess->SyncLaunch();
-    Open(mSubprocess->GetChannel());
+    Open(mSubprocess->GetChannel(), mSubprocess->GetChildProcessHandle());
 }
 
 ContentProcessParent::~ContentProcessParent()

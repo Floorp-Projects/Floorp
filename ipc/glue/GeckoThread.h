@@ -39,6 +39,7 @@
 
 #include "base/thread.h"
 #include "base/lock.h"
+#include "base/process.h"
 
 #include "chrome/common/child_thread.h"
 
@@ -52,21 +53,31 @@ namespace ipc {
 class GeckoThread : public ChildThread
 {
 public:
-  GeckoThread()
+  typedef base::ProcessHandle ProcessHandle;
+
+  GeckoThread(ProcessHandle aParentProcessHandle)
   : ChildThread(base::Thread::Options(
                     MessageLoop::TYPE_MOZILLA_CHILD, // message loop type
                     0,                               // stack size
-                    false))                          // wait for Init()?
+                    false)),                         // wait for Init()?
+    mParentProcessHandle(aParentProcessHandle)
   { }
 
 protected:
   virtual void OnControlMessageReceived(const IPC::Message& aMessage);
+
+  ProcessHandle GetParentProcessHandle() {
+    return mParentProcessHandle;
+  }
 
   // Thread implementation:
   virtual void Init();
   virtual void CleanUp();
 
   ScopedXREEmbed mXREEmbed;
+
+private:
+  ProcessHandle mParentProcessHandle;
 
   DISALLOW_EVIL_CONSTRUCTORS(GeckoThread);
 };
