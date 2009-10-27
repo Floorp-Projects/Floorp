@@ -166,7 +166,7 @@ deb: package debian/changelog debian/xulrunner.service debian/xulrunner.links $(
 	$(NSINSTALL)  $(topsrcdir)/$(MOZ_BUILD_APP)/installer/debian .
 	rm -fr $(DEBDESTDIR)
 	$(NSINSTALL) -D $(DEBDESTDIR)$(installdir)
-	cd $(DEBDESTDIR)/$(installdir); cp -pRL ../../../../../../$(DEPTH)/dist/$(MOZ_BUILD_APP)/* .
+	cp -pRL $(DEPTH)/dist/$(MOZ_BUILD_APP)/* $(DEBDESTDIR)/$(installdir)
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/dbus-1/services/
 	cp debian/$(MOZ_BUILD_APP).service $(DEBDESTDIR)/usr/share/dbus-1/services/org.mozilla.$(MOZ_BUILD_APP).service
 	$(NSINSTALL) -D $(DEBDESTDIR)$(regdir)
