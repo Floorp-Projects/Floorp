@@ -86,6 +86,8 @@ public:
 
   NPError SetWindowless(PRBool aWindowless);
 
+  NPError SetWindowlessLocal(PRBool aWindowlessLocal);
+
   NPError SetTransparent(PRBool aTransparent);
 
   NPError SetWantsAllNetworkStreams(PRBool aWantsAllNetworkStreams);
@@ -149,6 +151,7 @@ protected:
   // these are used to store the windowless properties
   // which the browser will later query
   PRPackedBool mWindowless;
+  PRPackedBool mWindowlessLocal;
   PRPackedBool mTransparent;
   PRPackedBool mStarted;
   PRPackedBool mCached;
