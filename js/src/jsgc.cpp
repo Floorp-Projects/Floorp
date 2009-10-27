@@ -2340,7 +2340,7 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
     JS_CALL_VALUE_TRACER(trc, fp->thisv, "this");
 
     if (fp->argv) {
-        JS_CALL_VALUE_TRACER(trc, fp->argv[-2], "callee");
+        JS_CALL_VALUE_TRACER(trc, fp->calleeValue(), "callee");
         nslots = fp->argc;
         skip = 0;
         if (fp->fun) {
