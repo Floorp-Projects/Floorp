@@ -75,11 +75,12 @@ public:
 };
 
 /**
-  * A type of accessible for DOM nodes containing an href="" attribute.
-  *  It knows how to report the state of the link ( traveled or not )
-  *  and can activate ( click ) the link programmatically.
-  */
-class nsLinkableAccessible : public nsHyperTextAccessibleWrap
+ * Used for text or image accessible nodes contained by link accessibles or
+ * accessibles for nodes with registered click event handler. It knows how to
+ * report the state of the host link (traveled or not) and can activate (click)
+ * the host accessible programmatically.
+ */
+class nsLinkableAccessible : public nsAccessibleWrap
 {
 public:
   enum { eAction_Jump = 0 };
@@ -96,7 +97,7 @@ public:
   NS_IMETHOD TakeFocus();
   NS_IMETHOD GetKeyboardShortcut(nsAString& _retval);
 
-  // nsIHyperLinkAccessible
+  // nsIAccessibleHyperLink
   NS_IMETHOD GetURI(PRInt32 i, nsIURI **aURI);
 
   // nsAccessNode
