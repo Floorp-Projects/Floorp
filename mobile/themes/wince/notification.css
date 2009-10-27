@@ -1,8 +1,8 @@
 notification {
-  color: #fff;
-  background: #4483d8;
-  border-top: 1px solid #396dcb;
-  border-bottom: 1px solid #396dcb;
+  color: #000;
+  background: #8db8d8;
+  border-top: 1px solid #6897bd;
+  border-bottom: 1px solid #6897bd;
 }
 
 notification .messageCloseButton {
@@ -23,9 +23,9 @@ notification .messageCloseButton {
 }
 
 notification .outset {
-  border-color: #396dcb !important;
+  border-color: #6897bd !important;
 }
 
 notification .buttons {
-  padding: 1.1mm;
+  padding: 1mm; /* core spacing */
 }

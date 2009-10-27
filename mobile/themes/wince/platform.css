@@ -150,6 +150,11 @@ notification button {
   background: transparent !important;
 }
 
+/* notification background is too light for a white caption */
+notification button {
+  color: #000 !important;
+}
+
 button.button-dark[disabled="true"] {
   color: #ddd !important;
 }
@@ -391,10 +396,6 @@ radio[selected] {
 /* checkbox radios --------------------------------------------------------- */
 checkbox {
   margin: 1px 5px 2px 5px; /* match platform style for buttons */
-}
-
-radio.checkbox-radio-on[selected] {
-  color: #fff;
 }
 
 radio.checkbox-radio-on:not([selected]) .radio-label-box,
@@ -722,5 +723,5 @@ progressmeter {
 
 .progress-bar 
 {
-  background-color: #4483d8;
+  background-color: #8db8d8;
 }
