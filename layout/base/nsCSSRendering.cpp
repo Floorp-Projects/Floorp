@@ -1431,12 +1431,20 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
 }
 
 static PRBool
-IsSolidBorderEdge(const nsStyleBorder& aBorder, PRUint32 aSide)
+IsOpaqueBorderEdge(const nsStyleBorder& aBorder, PRUint32 aSide)
 {
   if (aBorder.GetActualBorder().side(aSide) == 0)
     return PR_TRUE;
-  if (aBorder.GetBorderStyle(aSide) != NS_STYLE_BORDER_STYLE_SOLID)
+  switch (aBorder.GetBorderStyle(aSide)) {
+  case NS_STYLE_BORDER_STYLE_SOLID:
+  case NS_STYLE_BORDER_STYLE_GROOVE:
+  case NS_STYLE_BORDER_STYLE_RIDGE:
+  case NS_STYLE_BORDER_STYLE_INSET:
+  case NS_STYLE_BORDER_STYLE_OUTSET:
+    break;
+  default:
     return PR_FALSE;
+  }
 
   // If we're using a border image, assume it's not fully opaque,
   // because we may not even have the image loaded at this point, and
@@ -1461,12 +1469,12 @@ IsSolidBorderEdge(const nsStyleBorder& aBorder, PRUint32 aSide)
  * Returns true if all border edges are either missing or opaque.
  */
 static PRBool
-IsSolidBorder(const nsStyleBorder& aBorder)
+IsOpaqueBorder(const nsStyleBorder& aBorder)
 {
   if (aBorder.mBorderColors)
     return PR_FALSE;
   for (PRUint32 i = 0; i < 4; ++i) {
-    if (!IsSolidBorderEdge(aBorder, i))
+    if (!IsOpaqueBorderEdge(aBorder, i))
       return PR_FALSE;
   }
   return PR_TRUE;
@@ -1779,7 +1787,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     // background-clip.
     currentBackgroundClip = aBackground.BottomLayer().mClip;
     isSolidBorder =
-      (aFlags & PAINTBG_WILL_PAINT_BORDER) && IsSolidBorder(aBorder);
+      (aFlags & PAINTBG_WILL_PAINT_BORDER) && IsOpaqueBorder(aBorder);
     if (isSolidBorder)
       currentBackgroundClip = NS_STYLE_BG_CLIP_PADDING;
     SetupBackgroundClip(ctx, currentBackgroundClip, aForFrame,
