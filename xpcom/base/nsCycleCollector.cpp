@@ -1019,9 +1019,19 @@ struct nsCycleCollector
 };
 
 
+struct DoWalkDebugInfo
+{
+    PtrInfo *mCurrentPI;
+    EdgePool::Iterator mFirstChild;
+    EdgePool::Iterator mLastChild;
+    EdgePool::Iterator mCurrentChild;
+};
+
 class GraphWalker
 {
 private:
+    DoWalkDebugInfo *mDebugInfo;
+
     void DoWalk(nsDeque &aQueue);
 
 public:
@@ -1216,14 +1226,21 @@ GraphWalker::DoWalk(nsDeque &aQueue)
 {
     // Use a aQueue to match the breadth-first traversal used when we
     // built the graph, for hopefully-better locality.
+    DoWalkDebugInfo debugInfo;
+    mDebugInfo = &debugInfo;
+
     while (aQueue.GetSize() > 0) {
         PtrInfo *pi = static_cast<PtrInfo*>(aQueue.PopFront());
 
+        debugInfo.mCurrentPI = pi;
         if (this->ShouldVisitNode(pi)) {
             this->VisitNode(pi);
+            debugInfo.mFirstChild = pi->mFirstChild;
+            debugInfo.mLastChild = pi->mLastChild;
+            debugInfo.mCurrentChild = pi->mFirstChild;
             for (EdgePool::Iterator child = pi->mFirstChild,
                                 child_end = pi->mLastChild;
-                 child != child_end; ++child) {
+                 child != child_end; ++child, debugInfo.mCurrentChild = child) {
                 aQueue.Push(*child);
             }
         }
