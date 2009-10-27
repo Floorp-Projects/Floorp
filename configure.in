@@ -4829,18 +4829,6 @@ cairo-cocoa)
     ;;
 esac
 
-if test -n "$MOZ_WEBGL"; then
-    if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
-        AC_CHECK_HEADER(GL/glx.h)
-        if test "$ac_cv_header_GL_glx_h" != "yes"; then
-            AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa (SuSE))])
-        fi
-    fi
-    if test "$NS_OSSO"; then
-        MOZ_WEBGL=
-    fi
-fi
-
 if test "$MOZ_ENABLE_XREMOTE"; then
     AC_DEFINE(MOZ_ENABLE_XREMOTE)
 fi
@@ -6215,6 +6203,7 @@ if test $NS_OSSO; then
     fi
     AC_DEFINE(NS_OSSO)
     MOZ_GFX_OPTIMIZE_MOBILE=1
+    MOZ_WEBGL=
 fi
 AC_SUBST(LIBOSSO_CFLAGS)
 AC_SUBST(LIBOSSO_LIBS)
@@ -8056,6 +8045,16 @@ if test "$MOZ_X11"; then
     fi
 
 fi # MOZ_X11
+
+dnl Check for headers, etc. needed by WebGL.
+if test -n "$MOZ_WEBGL"; then
+    if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
+        AC_CHECK_HEADER(GL/glx.h)
+        if test "$ac_cv_header_GL_glx_h" != "yes"; then
+            AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa (SuSE))])
+        fi
+    fi
+fi # MOZ_WEBGL
 fi # COMPILE_ENVIRONMENT
 
 dnl Set various defines and substitutions
