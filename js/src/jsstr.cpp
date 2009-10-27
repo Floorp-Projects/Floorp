@@ -1004,6 +1004,7 @@ out_of_range:
 }
 
 #ifdef JS_TRACER
+extern jsdouble js_NaN;
 
 jsdouble FASTCALL
 js_String_p_charCodeAt(JSString* str, jsdouble d)
