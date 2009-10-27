@@ -321,9 +321,11 @@ nsFrameLoader::CheckURILoad(nsIURI* aURI)
   if (NS_FAILED(rv)) {
     return rv;
   }
+#ifdef MOZ_IPC
   if (mRemoteFrame) {
     return NS_OK;
   }
+#endif
   return CheckForRecursiveLoad(aURI);
 }
 
@@ -339,10 +341,12 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
     nsresult rv = MaybeCreateDocShell();
     if (NS_FAILED(rv))
       return rv;
+#ifdef MOZ_IPC
     if (mRemoteFrame) {
       NS_WARNING("No docshells for remote frames!");
       return NS_ERROR_NOT_AVAILABLE;
     }
+#endif
     NS_ASSERTION(mDocShell,
                  "MaybeCreateDocShell succeeded, but null mDocShell");
   }
@@ -536,10 +540,13 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
     return false;
   }
 
+#ifdef MOZ_IPC
   if (mRemoteFrame) {
     contentType = eContentTypeUI;
   }
-  else {
+  else
+#endif
+  {
     if (!mDocShell)
       return false;
 
@@ -580,7 +587,10 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
   if (!view)
     return false;
 
-  if (!mRemoteFrame) {
+#ifdef MOZ_IPC
+  if (!mRemoteFrame)
+#endif
+  {
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mDocShell);
     NS_ASSERTION(baseWindow, "Found a nsIDocShell that isn't a nsIBaseWindow.");
     baseWindow->InitWindow(nsnull, view->GetWidget(), 0, 0, 10, 10);
@@ -1003,9 +1013,14 @@ nsFrameLoader::ShouldUseRemoteProcess()
 nsresult
 nsFrameLoader::MaybeCreateDocShell()
 {
-  if (mDocShell || mRemoteFrame) {
+  if (mDocShell) {
     return NS_OK;
   }
+#ifdef MOZ_IPC
+  if (mRemoteFrame) {
+    return NS_OK;
+  }
+#endif
   NS_ENSURE_STATE(!mDestroyCalled);
 
 #ifdef MOZ_IPC
@@ -1152,8 +1167,10 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
   if (NS_FAILED(rv)) {
     return rv;
   }
+#ifdef MOZ_IPC
   NS_ASSERTION(!mRemoteFrame,
                "Shouldn't call CheckForRecursiveLoad on remote frames.");
+#endif
   if (!mDocShell) {
     return NS_ERROR_FAILURE;
   }
