@@ -840,14 +840,16 @@ fi
 
 fi # COMPILE_ENVIRONMENT
 
-case "$host_os" in
-cygwin*|mingw*|mks*|msvc*)
-    MOZ_PATH_PROGS(MAKE, $MAKE make gmake, :)
-    ;;
-*)
-    MOZ_PATH_PROGS(MAKE, $MAKE gmake make, :)
-    ;;
-esac
+if test -z "$MAKE"; then
+    case "$host_os" in
+    cygwin*|mingw*|mks*|msvc*)
+        MOZ_PATH_PROGS(MAKE, $MAKE make gmake, :)
+        ;;
+    *)
+        MOZ_PATH_PROGS(MAKE, $MAKE gmake make, :)
+        ;;
+    esac
+fi
 
 if test "$COMPILE_ENVIRONMENT"; then
 
