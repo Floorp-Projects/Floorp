@@ -64,7 +64,7 @@ def main(argv):
         %sParent** parent =
         reinterpret_cast<%sParent**>(&gParentActor);
         *parent = new %sParent();
-        (*parent)->Open(transport);
+        (*parent)->Open(transport, child);
         return (*parent)->Main();
         }
 '''% (t, t, t, t) for t in unittests ])
@@ -75,7 +75,7 @@ def main(argv):
         %sChild** child =
             reinterpret_cast<%sChild**>(&gChildActor);
         *child = new %sChild();
-        (*child)->Open(transport, worker);
+        (*child)->Open(transport, parent, worker);
         return;
     }
 '''% (t, t, t, t) for t in unittests ])

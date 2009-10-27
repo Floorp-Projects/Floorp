@@ -70,6 +70,7 @@
 #include "base/at_exit.h"
 #include "base/command_line.h"
 #include "base/message_loop.h"
+#include "base/process_util.h"
 #include "chrome/common/child_process.h"
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -258,7 +259,7 @@ XRE_InitChildProcess(int aArgc,
                      char* aArgv[],
                      GeckoProcessType aProcess)
 {
-  NS_ENSURE_ARG_MIN(aArgc, 1);
+  NS_ENSURE_ARG_MIN(aArgc, 2);
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
 
@@ -275,6 +276,20 @@ XRE_InitChildProcess(int aArgc,
 #endif
   }
 
+  // child processes launched by GeckoChildProcessHost get this magic
+  // argument appended to their command lines
+  const char* const parentPIDString = aArgv[aArgc-1];
+  NS_ABORT_IF_FALSE(parentPIDString, "NULL parent PID");
+  --aArgc;
+
+  char* end = 0;
+  base::ProcessId parentPID = strtol(parentPIDString, &end, 10);
+  NS_ABORT_IF_FALSE(!*end, "invalid parent PID");
+  base::ProcessHandle parentHandle;
+  NS_ABORT_IF_FALSE(
+      base::OpenProcessHandle(parentPID, &parentHandle),
+      "can't open handle to parent");
+
   base::AtExitManager exitManager;
   CommandLine::Init(aArgc, aArgv);
   MessageLoopForIO mainMessageLoop;
@@ -284,24 +299,24 @@ XRE_InitChildProcess(int aArgc,
 
     switch (aProcess) {
     case GeckoProcessType_Default:
-      mainThread = new GeckoThread();
+      mainThread = new GeckoThread(parentHandle);
       break;
 
     case GeckoProcessType_Plugin:
-      mainThread = new PluginThreadChild();
+      mainThread = new PluginThreadChild(parentHandle);
       break;
 
     case GeckoProcessType_Content:
-      mainThread = new ContentProcessThread();
+      mainThread = new ContentProcessThread(parentHandle);
       break;
 
     case GeckoProcessType_TestHarness:
-      mainThread = new TestThreadChild();
+      mainThread = new TestThreadChild(parentHandle);
       break;
 
     case GeckoProcessType_IPDLUnitTest:
 #ifdef MOZ_IPDL_TESTS
-      mainThread = new IPDLUnitTestThreadChild();
+      mainThread = new IPDLUnitTestThreadChild(parentHandle);
 #else
       NS_RUNTIMEABORT("rebuild with --enable-ipdl-tests");
 #endif
@@ -414,7 +429,8 @@ IPCTestHarnessMain(void* data)
     NS_ASSERTION(launched, "can't launch subprocess");
 
     TestParent* parent = new TestParent(); // leaks
-    parent->Open(subprocess->GetChannel());
+    parent->Open(subprocess->GetChannel(),
+                 subprocess->GetChildProcessHandle());
     parent->DoStuff();
 }
 

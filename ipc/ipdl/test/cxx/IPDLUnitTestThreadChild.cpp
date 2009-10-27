@@ -45,8 +45,8 @@ using mozilla::ipc::GeckoThread;
 namespace mozilla {
 namespace _ipdltest {
 
-IPDLUnitTestThreadChild::IPDLUnitTestThreadChild() :
-    GeckoThread()
+IPDLUnitTestThreadChild::IPDLUnitTestThreadChild(ProcessHandle aParentHandle) :
+    GeckoThread(aParentHandle)
 {
 }
 
@@ -58,7 +58,7 @@ void
 IPDLUnitTestThreadChild::Init()
 {
     GeckoThread::Init();
-    IPDLUnitTestChildInit(channel(), owner_loop());
+    IPDLUnitTestChildInit(channel(), GetParentProcessHandle(), owner_loop());
 }
 
 void

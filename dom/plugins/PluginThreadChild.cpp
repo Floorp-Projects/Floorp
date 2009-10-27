@@ -51,8 +51,8 @@ using mozilla::ipc::GeckoThread;
 namespace mozilla {
 namespace plugins {
 
-PluginThreadChild::PluginThreadChild() :
-    GeckoThread(),
+PluginThreadChild::PluginThreadChild(ProcessHandle aParentHandle) :
+    GeckoThread(aParentHandle),
     mPlugin()
 {
 }
@@ -77,7 +77,8 @@ PluginThreadChild::Init()
     std::string pluginFilename = WideToUTF8(values[0]);
 
     // FIXME owner_loop() is bad here
-    mPlugin.Init(pluginFilename, owner_loop(), channel());
+    mPlugin.Init(pluginFilename,
+                 GetParentProcessHandle(), owner_loop(), channel());
 }
 
 void

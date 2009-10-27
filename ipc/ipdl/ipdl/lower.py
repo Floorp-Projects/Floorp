@@ -1026,7 +1026,11 @@ class Protocol(ipdl.ast.Protocol):
     def unregisterMethod(self):
         return ExprVar('Unregister')
 
+    def otherProcessMethod(self):
+        return ExprVar('OtherProcess')
+
     def nextActorIdExpr(self, side):
+        assert self.decl.type.isToplevel()
         if side is 'parent':   op = '++'
         elif side is 'child':  op = '--'
         return ExprPrefixUnop(self.lastActorIdVar(), op)
@@ -1060,6 +1064,10 @@ class Protocol(ipdl.ast.Protocol):
     def managerVar(self):
         assert not self.decl.type.isToplevel()
         return ExprVar('mManager')
+
+    def otherProcessVar(self):
+        assert self.decl.type.isToplevel()
+        return ExprVar('mOtherProcess')
 
     @staticmethod
     def upgrade(protocol):
@@ -2152,6 +2160,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             Typedef(Type('IPC::Message'), 'Message'),
             Typedef(Type(p.channelName()), 'Channel'),
             Typedef(Type(p.fqListenerName()), 'ChannelListener'),
+            Typedef(Type('base::ProcessHandle'), 'ProcessHandle'),
             Whitespace.NL,
         ])
 
@@ -2184,19 +2193,25 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             # Open()
             aTransportVar = ExprVar('aTransport')
             aThreadVar = ExprVar('aThread')
+            processvar = ExprVar('aOtherProcess')
             openmeth = MethodDefn(
                 MethodDecl(
                     'Open',
                     params=[ Decl(Type('Channel::Transport', ptr=True),
                                       aTransportVar.name),
+                             Decl(Type('ProcessHandle'), processvar.name),
                              Decl(Type('MessageLoop', ptr=True),
                                       aThreadVar.name +' = 0') ],
                     ret=Type.BOOL))
 
-            openmeth.addstmt(StmtReturn(
-                ExprCall(ExprSelect(p.channelVar(), '.', 'Open'),
-                         [ aTransportVar, aThreadVar ])))
-            self.cls.addstmts([ openmeth, Whitespace.NL ])
+            openmeth.addstmts([
+                StmtExpr(ExprAssn(p.otherProcessVar(), processvar)),
+                StmtReturn(ExprCall(ExprSelect(p.channelVar(), '.', 'Open'),
+                                    [ aTransportVar, aThreadVar ]))
+            ])
+            self.cls.addstmts([
+                openmeth,
+                Whitespace.NL ])
 
             # Close()
             closemeth = MethodDefn(MethodDecl('Close'))
@@ -2306,7 +2321,9 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             self.cls.addstmts([
                 StmtDecl(Decl(Type('IDMap', T=Type('ChannelListener')),
                               p.actorMapVar().name)),
-                StmtDecl(Decl(_actorIdType(), p.lastActorIdVar().name))
+                StmtDecl(Decl(_actorIdType(), p.lastActorIdVar().name)),
+                StmtDecl(Decl(Type('ProcessHandle'),
+                              p.otherProcessVar().name))
             ])
         elif p.decl.type.isManaged():
             self.cls.addstmts([
@@ -2350,6 +2367,10 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             p.unregisterMethod().name,
             params=[ Decl(_actorIdType(), idvar.name) ],
             virtual=1))
+        otherprocess = MethodDefn(MethodDecl(
+            p.otherProcessMethod().name,
+            ret=Type('ProcessHandle'),
+            virtual=1))
 
         if p.decl.type.isToplevel():
             tmpvar = ExprVar('tmp')
@@ -2373,6 +2394,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             unregister.addstmt(StmtReturn(
                 ExprCall(ExprSelect(p.actorMapVar(), '.', 'Remove'),
                          [ idvar ])))
+            otherprocess.addstmt(StmtReturn(p.otherProcessVar()))
         # delegate registration to manager
         else:
             register.addstmt(StmtReturn(ExprCall(
@@ -2387,8 +2409,17 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             unregister.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.managerVar(), '->', p.unregisterMethod().name),
                 [ idvar ])))
+            otherprocess.addstmt(StmtReturn(ExprCall(
+                ExprSelect(p.managerVar(), '->',
+                           p.otherProcessMethod().name))))
 
-        return [ register, registerid, lookup, unregister, Whitespace.NL ]
+        return [ register,
+                 registerid,
+                 lookup,
+                 unregister,
+                 otherprocess,
+                 Whitespace.NL ]
+
 
 
     ##-------------------------------------------------------------------------

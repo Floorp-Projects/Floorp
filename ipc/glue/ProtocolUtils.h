@@ -40,6 +40,7 @@
 #ifndef mozilla_ipc_ProtocolUtils_h
 #define mozilla_ipc_ProtocolUtils_h 1
 
+#include "base/process.h"
 #include "chrome/common/ipc_message_utils.h"
 
 #include "mozilla/ipc/RPCChannel.h"
@@ -56,15 +57,18 @@ struct ActorHandle
     int mId;
 };
 
-
 template<class ListenerT>
 class /*NS_INTERFACE_CLASS*/ IProtocolManager
 {
 public:
+    typedef base::ProcessHandle ProcessHandle;
+
     virtual int32 Register(ListenerT*) = 0;
     virtual int32 RegisterID(ListenerT*, int32) = 0;
     virtual ListenerT* Lookup(int32) = 0;
     virtual void Unregister(int32) = 0;
+    // XXX odd duck, acknowledged
+    virtual ProcessHandle OtherProcess() = 0;
 };
 
 } // namespace ipc

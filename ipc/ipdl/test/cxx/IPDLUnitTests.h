@@ -40,6 +40,7 @@
 #define mozilla__ipdltest_IPDLUnitTests_h 1
 
 #include "base/message_loop.h"
+#include "base/process.h"
 #include "chrome/common/ipc_channel.h"
 
 
@@ -82,7 +83,9 @@ void IPDLUnitTestMain(void* aData);
 //-----------------------------------------------------------------------------
 // child process only
 
-void IPDLUnitTestChildInit(IPC::Channel* transport, MessageLoop* worker);
+void IPDLUnitTestChildInit(IPC::Channel* transport,
+                           base::ProcessHandle parent,
+                           MessageLoop* worker);
 void IPDLUnitTestChildCleanUp();
 
 

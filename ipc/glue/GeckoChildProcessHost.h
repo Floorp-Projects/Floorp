@@ -56,6 +56,8 @@ protected:
   typedef mozilla::Monitor Monitor;
 
 public:
+  typedef base::ProcessHandle ProcessHandle;
+
   GeckoChildProcessHost(GeckoProcessType aProcessType=GeckoProcessType_Default,
                         base::WaitableEventWatcher::Delegate* aDelegate=nsnull);
 
@@ -78,6 +80,10 @@ public:
     return GetProcessEvent();
   }
 
+  ProcessHandle GetChildProcessHandle() {
+    return mChildProcessHandle;
+  }
+
 protected:
   GeckoProcessType mProcessType;
   Monitor mMonitor;
@@ -89,6 +95,8 @@ protected:
 #endif
 
   base::WaitableEventWatcher::Delegate* mDelegate;
+
+  ProcessHandle mChildProcessHandle;
 
 private:
   DISALLOW_EVIL_CONSTRUCTORS(GeckoChildProcessHost);
