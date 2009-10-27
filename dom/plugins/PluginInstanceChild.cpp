@@ -94,7 +94,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     switch(aVar) {
 
     case NPNVSupportsWindowless:
-#if defined(OS_LINUX)
+#if defined(OS_LINUX) || defined(OS_WIN)
         *((NPBool*)aValue) = true;
 #else
         *((NPBool*)aValue) = false;
@@ -307,7 +307,7 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
 }
 
 bool
-PluginInstanceChild::AnswerNPP_HandleEvent(const NPEvent& event,
+PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
                                            int16_t* handled)
 {
     _MOZ_LOG(__FUNCTION__);
@@ -320,7 +320,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPEvent& event,
 #endif
 
     // plugins might be fooling with these, make a copy
-    NPEvent evcopy = event;
+    NPEvent evcopy = event.event;
     *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
 
 #ifdef MOZ_X11
@@ -407,7 +407,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
     mWindow.y = aWindow.y;
     mWindow.width = aWindow.width;
     mWindow.height = aWindow.height;
-    mWindow.type = NPWindowTypeWindow;
+    mWindow.type = aWindow.type;
 
     *rv = mPluginIface->setwindow(&mData, &mWindow);
     if (*rv == NPERR_NO_ERROR) {
