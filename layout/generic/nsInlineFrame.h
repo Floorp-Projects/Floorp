@@ -154,7 +154,6 @@ protected:
     nsIFrame* mPrevFrame;
     nsInlineFrame* mNextInFlow;
     nsIFrame*      mLineContainer;
-    nsLineLayout*  mLineLayout;
     PRPackedBool mSetParentPointer;  // when reflowing child frame first set its
                                      // parent frame pointer
 
@@ -162,7 +161,6 @@ protected:
       mPrevFrame = nsnull;
       mNextInFlow = nsnull;
       mLineContainer = nsnull;
-      mLineLayout = nsnull;
       mSetParentPointer = PR_FALSE;
     }
   };
@@ -198,8 +196,7 @@ protected:
 
   virtual void PushFrames(nsPresContext* aPresContext,
                           nsIFrame* aFromChild,
-                          nsIFrame* aPrevSibling,
-                          InlineReflowState& aState);
+                          nsIFrame* aPrevSibling);
 
 };
 
