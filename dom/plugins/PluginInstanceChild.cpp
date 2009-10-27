@@ -313,10 +313,10 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
     _MOZ_LOG(__FUNCTION__);
     AssertPluginThread();
 
-#if defined(OS_LINUX) && defined(DEBUG_cjones)
-    if (GraphicsExpose == event.type)
+#if defined(OS_LINUX) && defined(DEBUG)
+    if (GraphicsExpose == event.event.type)
         printf("  received drawable 0x%lx\n",
-               event.xgraphicsexpose.drawable);
+               event.event.xgraphicsexpose.drawable);
 #endif
 
     // plugins might be fooling with these, make a copy
