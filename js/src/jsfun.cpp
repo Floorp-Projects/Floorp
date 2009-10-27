@@ -808,7 +808,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         fp->scopeChain = env;
         JS_ASSERT(fp->argv);
         if (!js_DefineNativeProperty(cx, fp->scopeChain, ATOM_TO_JSID(lambdaName),
-                                     fp->argv[-2],
+                                     fp->calleeValue(),
                                      CalleeGetter, NULL,
                                      JSPROP_PERMANENT | JSPROP_READONLY,
                                      0, 0, NULL)) {
@@ -824,8 +824,8 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
 
     callobj->setPrivate(fp);
     JS_ASSERT(fp->argv);
-    JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fp->argv[-2])));
-    STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, fp->argv[-2]);
+    JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, fp->calleeObject()));
+    STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, fp->calleeValue());
     fp->callobj = callobj;
 
     /*
@@ -1191,7 +1191,7 @@ call_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         if (fp) {
             JS_ASSERT(fp->fun);
             JS_ASSERT(fp->argv);
-            *vp = fp->argv[-2];
+            *vp = fp->calleeValue();
         }
     }
     return JS_TRUE;
@@ -1325,7 +1325,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             }
 
             JS_ASSERT(fp->down->argv);
-            *vp = fp->down->argv[-2];
+            *vp = fp->down->calleeValue();
         } else {
             *vp = JSVAL_NULL;
         }
