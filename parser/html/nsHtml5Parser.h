@@ -323,9 +323,9 @@ class nsHtml5Parser : public nsIParser,
   private:
 
     /**
-     * Parse until pending data is exhausted or a script end tag is seen
+     * Parse until pending data is exhausted or a script blocks the parser
      */
-    void ParseUntilScript();
+    void ParseUntilBlocked();
 
     // State variables
 
