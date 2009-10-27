@@ -7381,8 +7381,10 @@ arm_read_auxv() {
                 else
                 {
                     // For production code, ignore invalid (or unexpected) platform strings and
-                    // fall back to the default. For debug code, use an assertion to catch this.
-                    JS_ASSERT(false);
+                    // fall back to the default. For debug code, use an assertion to catch this
+                    // when not running in scratchbox.
+                    if (getenv("_SBOX_DIR") == NULL)
+                        JS_ASSERT(false);
                 }
             }
         }
