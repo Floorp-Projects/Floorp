@@ -533,9 +533,9 @@ struct JSRuntime {
     JSSetSlotRequest    *setSlotRequests;
 
     /* Well-known numbers held for use by this runtime's contexts. */
-    jsdouble            *jsNaN;
-    jsdouble            *jsNegativeInfinity;
-    jsdouble            *jsPositiveInfinity;
+    jsval               NaNValue;
+    jsval               negativeInfinityValue;
+    jsval               positiveInfinityValue;
 
 #ifdef JS_THREADSAFE
     JSLock              *deflatedStringCacheLock;
