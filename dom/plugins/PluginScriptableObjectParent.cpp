@@ -66,7 +66,7 @@ GetInstance(NPObject* aObject)
 inline const NPNetscapeFuncs*
 GetNetscapeFuncs(PluginInstanceParent* aInstance)
 {
-  PluginModuleParent* module = aInstance->GetModule();
+  PluginModuleParent* module = aInstance->Module();
   if (!module) {
     NS_WARNING("Null module?!");
     return nsnull;
@@ -120,7 +120,7 @@ inline bool
 EnsureValidIdentifier(PluginInstanceParent* aInstance,
                       NPIdentifier aIdentifier)
 {
-  PluginModuleParent* module = aInstance->GetModule();
+  PluginModuleParent* module = aInstance->Module();
   if (!module) {
     NS_WARNING("Huh?!");
     return false;

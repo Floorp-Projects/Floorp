@@ -182,7 +182,7 @@ public:
 
     void NPP_URLNotify(const char* url, NPReason reason, void* notifyData);
 
-    PluginModuleParent* GetModule()
+    PluginModuleParent* Module()
     {
         return mParent;
     }

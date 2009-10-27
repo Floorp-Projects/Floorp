@@ -47,8 +47,8 @@ MODULE = dom
 EXPORTS_NAMESPACES = mozilla
 
 EXPORTS_mozilla = \
-  SharedLibrary.h \
-  SharedPRLibrary.h \
+  PluginLibrary.h \
+  PluginPRLibrary.h \
   $(NULL)
 
 ifdef MOZ_IPC

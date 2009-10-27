@@ -98,11 +98,11 @@
 #include "nsIHttpAuthManager.h"
 #include "nsICookieService.h"
 
-#include "mozilla/SharedLibrary.h"
-using mozilla::SharedLibrary;
+#include "mozilla/PluginLibrary.h"
+using mozilla::PluginLibrary;
 
-#include "mozilla/SharedPRLibrary.h"
-using mozilla::SharedPRLibrary;
+#include "mozilla/PluginPRLibrary.h"
+using mozilla::PluginPRLibrary;
 
 #ifdef MOZ_IPC
 #include "mozilla/plugins/PluginModuleParent.h"
@@ -291,9 +291,7 @@ nsNPAPIPlugin::CheckClassInitialized(void)
 NS_IMPL_ISUPPORTS1(nsNPAPIPlugin, nsIPlugin)
 
 nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks, 
-                             SharedLibrary* aLibrary,
-                             PRLibrary* aPRLibrary,
-                             NP_PLUGINSHUTDOWN aShutdown)
+                             PluginLibrary* aLibrary)
 {
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
   fLibrary = nsnull;
@@ -302,39 +300,35 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks,
   // On Windows (and Mac) we need to keep a direct reference to the
   // fCallbacks and NOT just copy the struct. See Bugzilla 85334
 
-  NP_GETENTRYPOINTS pfnGetEntryPoints =
-    (NP_GETENTRYPOINTS)aLibrary->FindSymbol("NP_GetEntryPoints");
-
-  if (!pfnGetEntryPoints)
+  NPError gepError;
+  nsresult gepResult = aLibrary->NP_GetEntryPoints(&fCallbacks, &gepError);
+  if (gepResult != NS_OK || gepError != NPERR_NO_ERROR)
     return;
 
   fCallbacks.size = sizeof(fCallbacks);
 
-  nsresult result = pfnGetEntryPoints(&fCallbacks);
-  NS_ASSERTION(result == NS_OK, "Failed to get callbacks");
-
   NS_ASSERTION(HIBYTE(fCallbacks.version) >= NP_VERSION_MAJOR,
                "callback version is less than NP version");
 
-  fShutdownEntry = (NP_PLUGINSHUTDOWN)aLibrary->FindSymbol("NP_Shutdown");
 #elif defined(XP_MACOSX)
   NPPluginFuncs np_callbacks;
   memset((void*) &np_callbacks, 0, sizeof(np_callbacks));
   np_callbacks.size = sizeof(np_callbacks);
 
-  fShutdownEntry = (NP_PLUGINSHUTDOWN)aLibrary->FindSymbol("NP_Shutdown");
-  NP_GETENTRYPOINTS pfnGetEntryPoints = (NP_GETENTRYPOINTS)aLibrary->FindSymbol("NP_GetEntryPoints");
-  NP_PLUGININIT pfnInitialize = (NP_PLUGININIT)aLibrary->FindSymbol("NP_Initialize");
-  if (!pfnGetEntryPoints || !pfnInitialize || !fShutdownEntry) {
+  if (!aLibrary->HasRequiredFunctions()) {
     NS_WARNING("Not all necessary functions exposed by plugin, it will not load.");
     return;
   }
 
   // we call NP_Initialize before getting function pointers to match
   // WebKit's behavior. They implemented this first on Mac OS X.
-  if (pfnInitialize(&(nsNPAPIPlugin::CALLBACKS)) != NPERR_NO_ERROR)
+  NPError initError;
+  nsresult initResult = aLibrary->NP_Initialize(&(nsNPAPIPlugin::CALLBACKS), &initError);
+  if (initResult != NS_OK || initError != NPERR_NO_ERROR)
     return;
-  if (pfnGetEntryPoints(&np_callbacks) != NPERR_NO_ERROR)
+  NPError gepError;
+  nsresult gepResult = aLibrary->NP_GetEntryPoints(&np_callbacks, &gepError);
+  if (gepResult != NS_OK || gepError != NPERR_NO_ERROR)
     return;
 
   fCallbacks.size = sizeof(fCallbacks);
@@ -354,7 +348,6 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks,
   fCallbacks.setvalue = (NPP_SetValueProcPtr)np_callbacks.setvalue;
 #else // for everyone else
   memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
-  fShutdownEntry = aShutdown;
 #endif
 
   fLibrary = aLibrary;
@@ -403,16 +396,16 @@ OOPPluginsEnabled()
 
 #endif // MOZ_IPC
 
-inline SharedLibrary*
-GetNewSharedLibrary(const char* aFilePath,
+inline PluginLibrary*
+GetNewPluginLibrary(const char* aFilePath,
                     PRLibrary* aLibrary)
 {
 #ifdef MOZ_IPC
   if (aFilePath && OOPPluginsEnabled()) {
-    return PluginModuleParent::LoadModule(aFilePath, aLibrary);
+    return PluginModuleParent::LoadModule(aFilePath);
   }
 #endif
-  return new SharedPRLibrary(aFilePath, aLibrary);
+  return new PluginPRLibrary(aFilePath, aLibrary);
 }
 
 } /* anonymous namespace */
@@ -431,14 +424,10 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   memset((void*) &callbacks, 0, sizeof(callbacks));
   callbacks.size = sizeof(callbacks);
 
-  SharedLibrary* pluginLib = GetNewSharedLibrary(aFilePath, aLibrary);
-
-  NP_PLUGINSHUTDOWN pfnShutdown =
-    (NP_PLUGINSHUTDOWN) pluginLib->FindFunctionSymbol("NP_Shutdown");
+  PluginLibrary* pluginLib = GetNewPluginLibrary(aFilePath, aLibrary);
 
   // create the new plugin handler
-  *aResult = plptr =
-    new nsNPAPIPlugin(&callbacks, pluginLib, aLibrary, pfnShutdown);
+  *aResult = plptr = new nsNPAPIPlugin(&callbacks, pluginLib);
 
   if (*aResult == NULL)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -454,13 +443,9 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   // require that mBrowserManager be set up
   plptr->Initialize();
 
-  NP_PLUGINUNIXINIT pfnInitialize =
-    (NP_PLUGINUNIXINIT) pluginLib->FindFunctionSymbol("NP_Initialize");
-
-  if (!pfnInitialize)
-    return NS_ERROR_UNEXPECTED;
-
-  if (pfnInitialize(&(nsNPAPIPlugin::CALLBACKS),&callbacks) != NS_OK)
+  NPError initError;
+  nsresult initResult = pluginLib->NP_Initialize(&(nsNPAPIPlugin::CALLBACKS),&callbacks, &initError);
+  if (initResult != NS_OK || initError != NPERR_NO_ERROR)
     return NS_ERROR_UNEXPECTED;
 
   // now copy function table back to nsNPAPIPlugin instance
@@ -468,12 +453,12 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
 #endif
 
 #ifdef XP_WIN
-  SharedLibrary* pluginLib = GetNewSharedLibrary(aFilePath, aLibrary);
+  PluginLibrary* pluginLib = GetNewPluginLibrary(aFilePath, aLibrary);
 
   // Note: on Windows, we must use the fCallback because plugins may
   // change the function table. The Shockwave installer makes changes
   // in the table while running
-  *aResult = new nsNPAPIPlugin(nsnull, pluginLib, aLibrary, nsnull);
+  *aResult = new nsNPAPIPlugin(nsnull, pluginLib);
 
   if (*aResult == NULL)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -488,19 +473,15 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
     return NS_ERROR_FAILURE;
   }
 
-  NP_PLUGININIT pfnInitialize =
-    (NP_PLUGININIT)pluginLib->FindSymbol("NP_Initialize");
-
-  if (!pfnInitialize)
-    return NS_ERROR_UNEXPECTED;
-
-  if (pfnInitialize(&(nsNPAPIPlugin::CALLBACKS)) != NS_OK)
-    return NS_ERROR_UNEXPECTED;
+  NPError initError;
+  nsresult initResult = pluginLib->NP_Initialize(&(nsNPAPIPlugin::CALLBACKS), &initError);
+  if (initResult != NS_OK || initError != NPERR_NO_ERROR)
+    return NS_ERROR_FAILURE;
 #endif
 
 #ifdef XP_OS2
   // create the new plugin handler
-  *aResult = new nsNPAPIPlugin(nsnull, aLibrary, nsnull);
+  *aResult = new nsNPAPIPlugin(nsnull, aLibrary);
 
   if (*aResult == NULL)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -594,8 +575,8 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   pluginRefNum = pluginFile.OpenPluginResource();
 #endif
 
-  SharedLibrary* pluginLib = GetNewSharedLibrary(aFilePath, aLibrary);
-  nsNPAPIPlugin* plugin = new nsNPAPIPlugin(nsnull, pluginLib, aLibrary, nsnull);
+  PluginLibrary* pluginLib = GetNewPluginLibrary(aFilePath, aLibrary);
+  nsNPAPIPlugin* plugin = new nsNPAPIPlugin(nsnull, pluginLib);
 #ifndef __LP64__
   ::UseResFile(appRefNum);
 #endif
@@ -689,32 +670,22 @@ nsNPAPIPlugin::Shutdown(void)
   NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC,
                  ("NPP Shutdown to be called: this=%p\n", this));
 
-  if (fShutdownEntry) {
-#if defined(XP_MACOSX)
-    (*fShutdownEntry)();
-    if (fPluginRefNum > 0)
-      ::CloseResFile(fPluginRefNum);
-#else
-    NS_TRY_SAFE_CALL_VOID(fShutdownEntry(), nsnull, nsnull);
+  NPError shutdownError;
+  fLibrary->NP_Shutdown(&shutdownError);
+#ifdef XP_MACOSX
+  if (shutdownError == NS_OK && fPluginRefNum > 0)
+    ::CloseResFile(fPluginRefNum);
 #endif
-    fShutdownEntry = nsnull;
-  }
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-             ("NPAPIPlugin Shutdown done, this=%p", this));
   return NS_OK;
 }
 
 nsresult
 nsNPAPIPlugin::GetMIMEDescription(const char* *resultingDesc)
 {
-
-  const char* (*npGetMIMEDescription)() = (const char* (*)())
-      fLibrary->FindFunctionSymbol("NP_GetMIMEDescription");
-  *resultingDesc = npGetMIMEDescription ? npGetMIMEDescription() : "";
-
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-             ("nsNPAPIPlugin::GetMIMEDescription called: this=%p, result=%s\n",
-              this, *resultingDesc));
+  nsresult gmdResult = fLibrary->NP_GetMIMEDescription((char**)resultingDesc);
+  if (gmdResult != NS_OK) {
+    return gmdResult;
+  }
 
   return NS_OK;
 }
@@ -725,14 +696,10 @@ nsNPAPIPlugin::GetValue(NPPVariable variable, void *value)
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsNPAPIPlugin::GetValue called: this=%p, variable=%d\n", this, variable));
 
-  NPError rv = NPERR_NO_ERROR;;
-  NPError (*npGetValue)(void*, NPPVariable, void*) = 
-    (NPError (*)(void*, NPPVariable, void*))
-    fLibrary->FindFunctionSymbol("NP_GetValue");
-  if (npGetValue) {
-    rv = npGetValue(nsnull, variable, value);
-  }
-  return (rv == NPERR_NO_ERROR) ? NS_OK : NS_ERROR_FAILURE;
+  NPError gvError;
+  fLibrary->NP_GetValue(nsnull, variable, value, &gvError);
+
+  return gvError;
 }
 
 // Create a new NPP GET or POST (given in the type argument) url
