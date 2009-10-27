@@ -75,6 +75,9 @@ function cleanupFiles() {
   );
 }
 
+is(singleFileInput.files.length, 0, "single-file .files.length"); // bug 524421
+is(multiFileInput.files.length, 0, "multi-file .files.length"); // bug 524421
+
 setFileInputs();
 
 is(singleFileInput.multiple, false, "single-file input .multiple");
@@ -113,6 +116,10 @@ iframe.onload = function() {
   }
 
   cleanupFiles();
+
+  is(singleFileInput.files.length, 0, "single-file .files.length"); // bug 524421
+  is(multiFileInput.files.length, 0, "multi-file .files.length"); // bug 524421
+
   SimpleTest.finish();
 }
 
