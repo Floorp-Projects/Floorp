@@ -1103,7 +1103,7 @@ WeaveSvc.prototype = {
       }
 
       if (this._syncError)
-        this._log.warn("Some engines did not sync correctly");
+        throw "Some engines did not sync correctly";
       else {
         Svc.Prefs.set("lastSync", new Date().toString());
         Status.sync = SYNC_SUCCEEDED;
@@ -1165,7 +1165,8 @@ WeaveSvc.prototype = {
 
       this._checkServerError(e);
 
-      Status.engine = [engine.name, e.failureCode || ENGINE_UNKNOWN_FAIL];
+      Status.engines = [engine.name, e.failureCode || ENGINE_UNKNOWN_FAIL];
+
       this._syncError = true;
       this._log.debug(Utils.exceptionStr(e));
       return true;
