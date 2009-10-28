@@ -58,7 +58,7 @@ function PrefsEngine() {
 PrefsEngine.prototype = {
   __proto__: SyncEngine.prototype,
   name: "prefs",
-  displayName: "Preferences",
+  _displayName: "Preferences",
   description: "Synchronize your home page, selected persona, and more",
   logName: "Prefs",
   _storeObj: PrefStore,

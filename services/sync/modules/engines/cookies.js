@@ -53,7 +53,7 @@ CookieEngine.prototype = {
   __proto__: SyncEngine.prototype,
 
   get name() { return "cookies"; },
-  get displayName() { return "Cookies"; },
+  get _displayName() { return "Cookies"; },
   get logName() { return "CookieEngine"; },
   get serverPrefix() { return "user-data/cookies/"; },
 

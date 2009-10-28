@@ -44,7 +44,7 @@ ThemeEngine.prototype = {
   get enabled() null, // XXX force disabled in-case the pref was somehow set
   __proto__: SyncEngine.prototype,
 
-  displayName: "Themes",
+  _displayName: "Themes",
   description: "",
   logName: "Themes",
   name: "themes",
