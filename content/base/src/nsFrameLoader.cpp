@@ -80,6 +80,7 @@
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
 #include "nsIDOMNSHTMLDocument.h"
+#include "nsLayoutUtils.h"
 
 #include "nsIURI.h"
 #include "nsIURL.h"
@@ -588,42 +589,102 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
     return false;
 
 #ifdef MOZ_IPC
-  if (!mRemoteFrame)
+  if (mRemoteFrame) {
+    return ShowRemoteFrame(frame, view);
+  }
 #endif
-  {
-    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mDocShell);
-    NS_ASSERTION(baseWindow, "Found a nsIDocShell that isn't a nsIBaseWindow.");
-    baseWindow->InitWindow(nsnull, view->GetWidget(), 0, 0, 10, 10);
-    // This is kinda whacky, this "Create()" call doesn't really
-    // create anything, one starts to wonder why this was named
-    // "Create"...
-    baseWindow->Create();
-    baseWindow->SetVisibility(PR_TRUE);
 
-    // Trigger editor re-initialization if midas is turned on in the
-    // sub-document. This shouldn't be necessary, but given the way our
-    // editor works, it is. See
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=284245
-    nsCOMPtr<nsIPresShell> presShell;
-    mDocShell->GetPresShell(getter_AddRefs(presShell));
-    if (presShell) {
-      nsCOMPtr<nsIDOMNSHTMLDocument> doc =
-        do_QueryInterface(presShell->GetDocument());
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mDocShell);
+  NS_ASSERTION(baseWindow, "Found a nsIDocShell that isn't a nsIBaseWindow.");
+  baseWindow->InitWindow(nsnull, view->GetWidget(), 0, 0, 10, 10);
+  // This is kinda whacky, this "Create()" call doesn't really
+  // create anything, one starts to wonder why this was named
+  // "Create"...
+  baseWindow->Create();
+  baseWindow->SetVisibility(PR_TRUE);
 
-      if (doc) {
-        nsAutoString designMode;
-        doc->GetDesignMode(designMode);
+  // Trigger editor re-initialization if midas is turned on in the
+  // sub-document. This shouldn't be necessary, but given the way our
+  // editor works, it is. See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=284245
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  if (presShell) {
+    nsCOMPtr<nsIDOMNSHTMLDocument> doc =
+      do_QueryInterface(presShell->GetDocument());
 
-        if (designMode.EqualsLiteral("on")) {
-          doc->SetDesignMode(NS_LITERAL_STRING("off"));
-          doc->SetDesignMode(NS_LITERAL_STRING("on"));
-        }
+    if (doc) {
+      nsAutoString designMode;
+      doc->GetDesignMode(designMode);
+
+      if (designMode.EqualsLiteral("on")) {
+        doc->SetDesignMode(NS_LITERAL_STRING("off"));
+        doc->SetDesignMode(NS_LITERAL_STRING("on"));
       }
     }
   }
 
   return true;
 }
+
+#ifdef MOZ_IPC
+bool
+nsFrameLoader::ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view)
+{
+  NS_ASSERTION(mRemoteFrame, "ShowRemote only makes sense on remote frames.");
+
+  TryNewProcess();
+  if (!mChildProcess) {
+    NS_ERROR("Couldn't create child process.");
+    return false;
+  }
+
+  nsIWidget* w = view->GetWidget();
+  if (!w) {
+    NS_ERROR("Our view doesn't have a widget. Totally stuffed!");
+    return false;
+  }
+
+  nsIntSize size = GetSubDocumentSize(frame->GetFrame());
+
+#ifdef XP_WIN
+  HWND parentwin =
+    static_cast<HWND>(w->GetNativeData(NS_NATIVE_WINDOW));
+
+  mChildProcess->SendcreateWidget(parentwin);
+#elif defined(MOZ_WIDGET_GTK2)
+  GdkWindow* parent_win =
+    static_cast<GdkWindow*>(w->GetNativeData(NS_NATIVE_WINDOW));
+
+  gpointer user_data = nsnull;
+  gdk_window_get_user_data(parent_win, &user_data);
+
+  MozContainer* parentMozContainer = MOZ_CONTAINER(user_data);
+  GtkContainer* container = GTK_CONTAINER(parentMozContainer);
+
+  // create the socket for the child and add it to our view's widget
+  mRemoteSocket = gtk_socket_new();
+  gtk_widget_set_parent_window(mRemoteSocket, parent_win);
+  gtk_container_add(container, mRemoteSocket);
+  gtk_widget_realize(mRemoteSocket);
+
+  // set the child window's size and position
+  GtkAllocation alloc = { 0, 0, size.width, size.height };
+  gtk_widget_size_allocate(mRemoteSocket, &alloc);
+
+  gtk_widget_show(mRemoteSocket);
+  GdkNativeWindow id = gtk_socket_get_id(GTK_SOCKET(mRemoteSocket));
+  mChildProcess->SendcreateWidget(id);
+
+#else
+#error TODO for this platform
+#endif
+
+  mChildProcess->Move(0, 0, size.width, size.height);
+
+  return true;
+}
+#endif
 
 void
 nsFrameLoader::Hide()
@@ -941,7 +1002,7 @@ nsFrameLoader::Destroy()
       }
     }
   }
-  
+
   // Let our window know that we are gone
   nsCOMPtr<nsPIDOMWindow> win_private(do_GetInterface(mDocShell));
   if (win_private) {
@@ -1266,6 +1327,14 @@ nsFrameLoader::UpdatePositionAndSize(nsIFrame *aIFrame)
   if (mRemoteFrame) {
     if (mChildProcess) {
       nsIntSize size = GetSubDocumentSize(aIFrame);
+
+#ifdef MOZ_WIDGET_GTK2
+      if (mRemoteSocket) {
+        GtkAllocation alloc = {0, 0, size.width, size.height };
+        gtk_widget_size_allocate(mRemoteSocket, &alloc);
+      }
+#endif
+
       mChildProcess->Move(0, 0, size.width, size.height);
     }
     return NS_OK;
@@ -1306,6 +1375,7 @@ nsFrameLoader::UpdateBaseWindowPositionAndSize(nsIFrame *aIFrame)
 nsIntSize
 nsFrameLoader::GetSubDocumentSize(const nsIFrame *aIFrame)
 {
+  nsAutoDisableGetUsedXAssertions disableAssert;
   nsSize docSizeAppUnits;
   nsPresContext* presContext = aIFrame->PresContext();
   nsCOMPtr<nsIDOMHTMLFrameElement> frameElem = 
@@ -1320,26 +1390,26 @@ nsFrameLoader::GetSubDocumentSize(const nsIFrame *aIFrame)
 }
 
 #ifdef MOZ_IPC
-PRBool
+bool
 nsFrameLoader::TryNewProcess()
 {
   NS_ASSERTION(!mChildProcess, "TryNewProcess called with a process already?");
 
   nsIDocument* doc = mOwnerContent->GetDocument();
   if (!doc) {
-    return PR_FALSE;
+    return false;
   }
 
   if (doc->GetDisplayDocument()) {
     // Don't allow subframe loads in external reference documents
-    return PR_FALSE;
+    return false;
   }
 
   nsCOMPtr<nsIWebNavigation> parentAsWebNav =
     do_GetInterface(doc->GetScriptGlobalObject());
 
   if (!parentAsWebNav) {
-    return PR_FALSE;
+    return false;
   }
 
   nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(parentAsWebNav));
@@ -1348,11 +1418,11 @@ nsFrameLoader::TryNewProcess()
   parentAsItem->GetItemType(&parentType);
 
   if (parentType != nsIDocShellTreeItem::typeChrome) {
-    return PR_FALSE;
+    return false;
   }
 
   if (!mOwnerContent->IsXUL()) {
-    return PR_FALSE;
+    return false;
   }
 
   nsAutoString value;
@@ -1361,79 +1431,11 @@ nsFrameLoader::TryNewProcess()
   if (!value.LowerCaseEqualsLiteral("content") &&
       !StringBeginsWith(value, NS_LITERAL_STRING("content-"),
                         nsCaseInsensitiveStringComparator())) {
-    return PR_FALSE;
+    return false;
   }
 
-  // FIXME shouldn't need to launch a new process every time get here
-
-  // XXXnasty hack get our (parent) widget
-  doc->FlushPendingNotifications(Flush_Layout);
-  nsIFrame* ourFrame =
-    doc->GetPrimaryShell()->GetPrimaryFrameFor(mOwnerContent);
-  nsIView* ancestorView = ourFrame->GetView();
-
-  nsIView* firstChild = ancestorView->GetFirstChild();
-  if (!firstChild) {
-    NS_ERROR("no first child");
-    return PR_FALSE;
-  }
-
-  nsIWidget* w = firstChild->GetWidget();
-  if (!w) {
-    NS_ERROR("we're stuffed!");
-    return PR_FALSE;
-  }
-  // FIXME check that this widget has the size and position we expect for
-  // this iframe?
-
-  nsPresContext* presContext = ourFrame->PresContext();
-
-#ifdef XP_WIN
-  HWND parentwin =
-    static_cast<HWND>(w->GetNativeData(NS_NATIVE_WINDOW));
-
-  mChildProcess = ContentProcessParent::GetSingleton()->CreateTab(parentwin);
-  mChildProcess->Move(0, 0,
-                      presContext->AppUnitsToDevPixels(ourFrame->GetSize().width),
-                      presContext->AppUnitsToDevPixels(ourFrame->GetSize().height));
-                      
-#elif defined(MOZ_WIDGET_GTK2)
-  GdkWindow* parent_win =
-    static_cast<GdkWindow*>(w->GetNativeData(NS_NATIVE_WINDOW));
-  
-  gpointer user_data = nsnull;
-  gdk_window_get_user_data(parent_win, &user_data);
-
-  MozContainer* parentMozContainer = MOZ_CONTAINER(user_data);
-  GtkContainer* container = GTK_CONTAINER(parentMozContainer);
-
-  // create the widget for the child and add it to the parent's window
-  GtkWidget* socket = gtk_socket_new();
-  gtk_widget_set_parent_window(socket, parent_win);
-  gtk_container_add(container, socket);
-  gtk_widget_realize(socket);
-
-  // set the child window's size and position
-  GtkAllocation alloc;
-  alloc.x = 0;                  // setting position doesn't look necessary
-  alloc.y = 0;
-  alloc.width = presContext->AppUnitsToDevPixels(ourFrame->GetSize().width);
-  alloc.height = presContext->AppUnitsToDevPixels(ourFrame->GetSize().height);
-  gtk_widget_size_allocate(socket, &alloc);
-
-  gtk_widget_show(socket);
-
-  GdkNativeWindow id = gtk_socket_get_id((GtkSocket*)socket);
-
-  mChildProcess = ContentProcessParent::GetSingleton()->CreateTab(id);
-
-  mChildProcess->Move(0, 0, alloc.width, alloc.height);
-
-#else
-#error TODO for this platform
-#endif
-
-  return PR_TRUE;
+  mChildProcess = ContentProcessParent::GetSingleton()->CreateTab();
+  return true;
 }
 #endif
 

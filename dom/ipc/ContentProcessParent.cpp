@@ -84,9 +84,9 @@ ContentProcessParent::GetSingleton()
 }
 
 TabParent*
-ContentProcessParent::CreateTab(const MagicWindowHandle& hwnd)
+ContentProcessParent::CreateTab()
 {
-  return static_cast<TabParent*>(SendPIFrameEmbeddingConstructor(hwnd));
+  return static_cast<TabParent*>(SendPIFrameEmbeddingConstructor());
 }
 
 TestShellParent*
@@ -143,8 +143,7 @@ ContentProcessParent::OnWaitableEventSignaled(base::WaitableEvent *event)
 }
 
 PIFrameEmbeddingParent*
-ContentProcessParent::AllocPIFrameEmbedding(
-        const MagicWindowHandle& parentWidget)
+ContentProcessParent::AllocPIFrameEmbedding()
 {
     return new TabParent();
 }

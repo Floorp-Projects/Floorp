@@ -42,6 +42,7 @@ include protocol "PDocumentRenderer.ipdl";
 
 using PRUint32;
 using PRInt32;
+using MagicWindowHandle;
 
 namespace mozilla {
 namespace dom {
@@ -52,6 +53,9 @@ async protocol PIFrameEmbedding
     manages PDocumentRenderer;
 
 child:
+    createWidget(MagicWindowHandle parentWidget);
+    destroyWidget();
+
     loadURL(nsCString uri);
 
     move(PRUint32 x,

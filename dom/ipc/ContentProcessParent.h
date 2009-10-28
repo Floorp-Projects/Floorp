@@ -77,7 +77,7 @@ public:
 
     virtual void OnWaitableEventSignaled(base::WaitableEvent *event);
 
-    TabParent* CreateTab(const MagicWindowHandle& hwnd);
+    TabParent* CreateTab();
     mozilla::ipc::TestShellParent* CreateTestShell();
 
 private:
@@ -91,8 +91,7 @@ private:
     ContentProcessParent();
     virtual ~ContentProcessParent();
 
-    virtual PIFrameEmbeddingParent* AllocPIFrameEmbedding(
-            const MagicWindowHandle& parentWidget);
+    virtual PIFrameEmbeddingParent* AllocPIFrameEmbedding();
     virtual bool DeallocPIFrameEmbedding(PIFrameEmbeddingParent* frame);
 
     virtual PTestShellParent* AllocPTestShell();

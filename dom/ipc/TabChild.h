@@ -49,9 +49,11 @@ namespace dom {
 class TabChild : public PIFrameEmbeddingChild
 {
 public:
-    TabChild(const MagicWindowHandle& parentWidget);
+    TabChild();
     virtual ~TabChild();
 
+    virtual bool RecvcreateWidget(const MagicWindowHandle& parentWidget);
+    virtual bool RecvdestroyWidget();
     virtual bool RecvloadURL(const nsCString& uri);
     virtual bool Recvmove(const PRUint32& x,
                           const PRUint32& y,

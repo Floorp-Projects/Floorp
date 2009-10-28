@@ -55,7 +55,7 @@
 
 using namespace mozilla::dom;
 
-TabChild::TabChild(const MagicWindowHandle& parentWidget)
+TabChild::TabChild()
 {
     printf("creating %d!\n", NS_IsMainThread());
 
@@ -63,10 +63,24 @@ TabChild::TabChild(const MagicWindowHandle& parentWidget)
     gtk_init(NULL, NULL);
 #endif
 
-    nsCOMPtr<nsIWebBrowser> webBrowser(do_CreateInstance(NS_WEBBROWSER_CONTRACTID));
+    mWebNav = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
+    if (!mWebNav) {
+        NS_ERROR("Couldn't create a nsWebBrowser?");
+        return;
+    }
 
-    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(webBrowser);
+    nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(mWebNav));
+    docShellItem->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
+}
 
+bool
+TabChild::RecvcreateWidget(const MagicWindowHandle& parentWidget)
+{
+    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
+    if (!baseWindow) {
+        NS_ERROR("mWebNav doesn't QI to nsIBaseWindow");
+        return true;
+    }
 
 #ifdef MOZ_WIDGET_GTK2
     GtkWidget* win = gtk_plug_new((GdkNativeWindow)parentWidget);
@@ -78,15 +92,20 @@ TabChild::TabChild(const MagicWindowHandle& parentWidget)
 #endif
 
     baseWindow->InitWindow(win, 0, 0, 0, 0, 0);
-
-    nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(baseWindow));
-    docShellItem->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
-
     baseWindow->Create();
-
     baseWindow->SetVisibility(PR_TRUE);
 
-    mWebNav = do_QueryInterface(webBrowser);
+    return true;
+}
+
+bool
+TabChild::RecvdestroyWidget()
+{
+    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
+    if (baseWindow)
+        baseWindow->Destroy();
+
+    return true;
 }
 
 TabChild::~TabChild()
@@ -102,7 +121,10 @@ TabChild::RecvloadURL(const nsCString& uri)
     nsresult rv = mWebNav->LoadURI(NS_ConvertUTF8toUTF16(uri).get(),
                                    nsIWebNavigation::LOAD_FLAGS_NONE,
                                    NULL, NULL, NULL);
-    return NS_FAILED(rv) ? false : true;
+    if (NS_FAILED(rv)) {
+        NS_WARNING("mWebNav->LoadURI failed. Eating exception, what else can I do?");
+    }
+    return true;
 }
 
 bool
