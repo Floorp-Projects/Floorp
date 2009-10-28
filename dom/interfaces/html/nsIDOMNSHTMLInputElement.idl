@@ -58,7 +58,7 @@ interface nsIDOMNSHTMLInputElement : nsISupports
 
            attribute boolean          multiple;
 
-  void mozGetFileNameArray(out unsigned long aLength,
+  void mozGetFileNameArray([optional] out unsigned long aLength,
                            [array,size_is(aLength), retval] out wstring aFileNames);
   void mozSetFileNameArray([array,size_is(aLength)] in wstring aFileNames,
                            in unsigned long aLength);
