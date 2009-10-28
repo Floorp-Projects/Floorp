@@ -671,7 +671,34 @@ libs:: imacro_asm.js $(srcdir)/imacros.jsasm
 update-imacros: imacros.c.tmp
 	cp $< $(srcdir)/imacros.c.out
 
-.PHONY: update-imacros
+# Code for importing the nanojit subtree from its repository.
+
+NANOJIT_CENTRAL_REV=$(shell cat $(srcdir)/nanojit-import-rev)
+NANOJIT_CENTRAL_REPO=http://hg.mozilla.org/users/graydon_mozilla.com/nanojit-central
+NANOJIT_CENTRAL_LOCAL=$(CURDIR)/nanojit-central
+CUR_REPO=$(srcdir)/../..
+
+update-nanojit:
+	rm -Rf $(NANOJIT_CENTRAL_LOCAL) import-splicemap import-revmap
+	hg clone $(NANOJIT_CENTRAL_REPO) $(NANOJIT_CENTRAL_LOCAL)
+	python $(srcdir)/find-child.py \
+	                   --src=$(NANOJIT_CENTRAL_LOCAL) \
+	                   --dst=$(CUR_REPO) \
+	                   --start=$(NANOJIT_CENTRAL_REV) \
+	                   --filemap=$(srcdir)/nanojit-import-filemap \
+	                   >import-splicemap
+	hg convert --config convert.hg.saverev=True \
+	           --config convert.hg.startrev=`cut -d ' ' -f 1 import-splicemap` \
+	           --filemap=$(srcdir)/nanojit-import-filemap \
+	           --splicemap=import-splicemap \
+	           $(NANOJIT_CENTRAL_LOCAL) \
+	           $(CUR_REPO) \
+	           import-revmap
+	(cd $(srcdir) && hg up)
+	(cd $(NANOJIT_CENTRAL_LOCAL) && hg log -r tip --template "{node}\n") >$(srcdir)/nanojit-import-rev
+	(cd $(srcdir) && hg commit --message="Update nanojit-import-rev stamp." nanojit-import-rev)
+
+.PHONY: update-imacros update-nanojit
 endif
 endif
 endif
