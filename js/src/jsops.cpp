@@ -1095,15 +1095,15 @@ BEGIN_CASE(JSOP_DIV)
 #ifdef XP_WIN
         /* XXX MSVC miscompiles such that (NaN == 0) */
         if (JSDOUBLE_IS_NaN(d2))
-            rval = DOUBLE_TO_JSVAL(rt->jsNaN);
+            rval = rt->NaNValue;
         else
 #endif
         if (d == 0 || JSDOUBLE_IS_NaN(d))
-            rval = DOUBLE_TO_JSVAL(rt->jsNaN);
+            rval = rt->NaNValue;
         else if (JSDOUBLE_IS_NEG(d) != JSDOUBLE_IS_NEG(d2))
-            rval = DOUBLE_TO_JSVAL(rt->jsNegativeInfinity);
+            rval = rt->negativeInfinityValue;
         else
-            rval = DOUBLE_TO_JSVAL(rt->jsPositiveInfinity);
+            rval = rt->positiveInfinityValue;
         STORE_OPND(-1, rval);
     } else {
         d /= d2;
@@ -1116,7 +1116,7 @@ BEGIN_CASE(JSOP_MOD)
     FETCH_NUMBER(cx, -2, d);
     regs.sp--;
     if (d2 == 0) {
-        STORE_OPND(-1, DOUBLE_TO_JSVAL(rt->jsNaN));
+        STORE_OPND(-1, rt->NaNValue);
     } else {
         d = js_fmod(d, d2);
         STORE_NUMBER(cx, -1, d);

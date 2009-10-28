@@ -8661,7 +8661,7 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
                 args[0] = l_ins, args[1] = cx_ins;
                 l_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
                 l = (l == JSVAL_VOID)
-                    ? DOUBLE_TO_JSVAL(cx->runtime->jsNaN)
+                    ? cx->runtime->NaNValue
                     : INT_TO_JSVAL(l == JSVAL_TRUE);
                 return equalityHelper(l, r, l_ins, r_ins, negate,
                                       tryBranchAfterCond, rval);
@@ -8675,7 +8675,7 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
                 args[0] = r_ins, args[1] = cx_ins;
                 r_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
                 r = (r == JSVAL_VOID)
-                    ? DOUBLE_TO_JSVAL(cx->runtime->jsNaN)
+                    ? cx->runtime->NaNValue
                     : INT_TO_JSVAL(r == JSVAL_TRUE);
                 return equalityHelper(l, r, l_ins, r_ins, negate,
                                       tryBranchAfterCond, rval);
