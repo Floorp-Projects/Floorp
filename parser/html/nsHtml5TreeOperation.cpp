@@ -324,7 +324,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
       nsIContent* node = *(mOne.node);
       nsAHtml5TreeBuilderState* snapshot = mTwo.state;
       if (snapshot) {
-        aBuilder->InitializeDocWriteParserState(snapshot);
+        aBuilder->InitializeDocWriteParserState(snapshot, mInt);
       }
       aBuilder->SetScriptElement(node);
       return rv;
@@ -390,6 +390,20 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
     }
     case eTreeOpDocumentMode: {
       aBuilder->DocumentMode(mOne.mode);
+      return rv;
+    }
+    case eTreeOpSetStyleLineNumber: {
+      nsIContent* node = *(mOne.node);
+      nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(node);
+      NS_ASSERTION(ssle, "Node didn't QI to style.");
+      ssle->SetLineNumber(mInt);
+      return rv;
+    }
+    case eTreeOpSetScriptLineNumber: {
+      nsIContent* node = *(mOne.node);
+      nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(node);
+      NS_ASSERTION(sele, "Node didn't QI to script.");
+      sele->SetScriptLineNumber(mInt);
       return rv;
     }
     default: {
