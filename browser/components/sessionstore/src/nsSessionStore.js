@@ -123,6 +123,42 @@ __defineGetter__("NetUtil", function() {
   return NetUtil;
 });
 
+// Private Browsing Service
+XPCOMUtils.defineLazyServiceGetter(
+  this, "PBSvc", "@mozilla.org/privatebrowsing;1",
+  "nsIPrivateBrowsingService");
+
+// Directory Service
+XPCOMUtils.defineLazyServiceGetter(
+  this, "DirSvc", "@mozilla.org/file/directory_service;1", "nsIProperties");
+
+// Script Security Manager
+XPCOMUtils.defineLazyServiceGetter(
+  this, "SecSvc", "@mozilla.org/scriptsecuritymanager;1",
+  "Ci.nsIScriptSecurityManager");
+
+// Cookie Manager
+XPCOMUtils.defineLazyServiceGetter(
+  this, "CookieSvc", "@mozilla.org/cookiemanager;1", "nsICookieManager2");
+
+// IO Service
+XPCOMUtils.defineLazyServiceGetter(
+  this, "IOSvc", "@mozilla.org/network/io-service;1", "nsIIOService");
+
+// Window Mediator
+XPCOMUtils.defineLazyServiceGetter(
+  this, "WinMediator", "@mozilla.org/appshell/window-mediator;1",
+  "nsIWindowMediator");
+
+// Window Watcher 
+XPCOMUtils.defineLazyServiceGetter(
+  this, "WinWatcher", "@mozilla.org/embedcomp/window-watcher;1",
+  "nsIWindowWatcher");
+
+// Crash Reporter
+XPCOMUtils.defineLazyServiceGetter(
+  this, "CrashReporter", "@mozilla.org/xre/app-info;1", "nsICrashReporter");
+
 /* :::::::: The Service ::::::::::::::: */
 
 function SessionStoreService() {
@@ -182,6 +218,7 @@ SessionStoreService.prototype = {
   _restoreLastWindow: false,
 #endif
 
+
 /* ........ Global Event Handlers .............. */
 
   /**
@@ -207,9 +244,7 @@ SessionStoreService.prototype = {
       this._observerService.addObserver(this, aTopic, true);
     }, this);
 
-    var pbs = Cc["@mozilla.org/privatebrowsing;1"].
-              getService(Ci.nsIPrivateBrowsingService);
-    this._inPrivateBrowsing = pbs.privateBrowsingEnabled;
+    this._inPrivateBrowsing = PBSvc.privateBrowsingEnabled;
 
     // get interval from prefs - used often, so caching/observing instead of fetching on-demand
     this._interval = this._prefBranch.getIntPref("sessionstore.interval");
@@ -228,9 +263,7 @@ SessionStoreService.prototype = {
       this._prefBranch.getIntPref("sessionhistory.max_entries");
 
     // get file references
-    var dirService = Cc["@mozilla.org/file/directory_service;1"].
-                     getService(Ci.nsIProperties);
-    this._sessionFile = dirService.get("ProfD", Ci.nsILocalFile);
+    this._sessionFile = DirSvc.get("ProfD", Ci.nsILocalFile);
     this._sessionFileBackup = this._sessionFile.clone();
     this._sessionFile.append("sessionstore.js");
     this._sessionFileBackup.append("sessionstore.bak");
@@ -741,6 +774,8 @@ SessionStoreService.prototype = {
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
     }
+
+    this._updateCrashReportURL(aWindow);
   },
 
   /**
@@ -1361,9 +1396,7 @@ SessionStoreService.prototype = {
 
       let storage, storageItemCount = 0;
       try {
-        var principal = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                        getService(Ci.nsIScriptSecurityManager).
-                        getCodebasePrincipal(uri);
+        var principal = SecSvc.getCodebasePrincipal(uri);
 
         // Using getSessionStorageForPrincipal instead of getSessionStorageForURI
         // just to be able to pass aCreate = false, that avoids creation of the
@@ -1613,7 +1646,6 @@ SessionStoreService.prototype = {
       aHash[aHost][aPath][aName] = aCookie;
     }
 
-    var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
     // collect the cookies per window
     for (var i = 0; i < aWindows.length; i++)
       aWindows[i].cookies = [];
@@ -1624,7 +1656,7 @@ SessionStoreService.prototype = {
     var MAX_EXPIRY = Math.pow(2, 62);
     aWindows.forEach(function(aWindow) {
       for (var host in aWindow._hosts) {
-        var list = cm.getCookiesFromHost(host);
+        var list = CookieSvc.getCookiesFromHost(host);
         while (list.hasMoreElements()) {
           var cookie = list.getNext().QueryInterface(Ci.nsICookie2);
           if (cookie.isSession && _this._checkPrivacyLevel(cookie.isSecure)) {
@@ -2125,9 +2157,7 @@ SessionStoreService.prototype = {
     var shEntry = Cc["@mozilla.org/browser/session-history-entry;1"].
                   createInstance(Ci.nsISHEntry);
     
-    var ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
-    shEntry.setURI(ioService.newURI(aEntry.url, null, null));
+    shEntry.setURI(IOSvc.newURI(aEntry.url, null, null));
     shEntry.setTitle(aEntry.title || aEntry.url);
     if (aEntry.subframe)
       shEntry.setIsSubFrame(aEntry.subframe || false);
@@ -2135,7 +2165,7 @@ SessionStoreService.prototype = {
     if (aEntry.contentType)
       shEntry.contentType = aEntry.contentType;
     if (aEntry.referrer) 
-      shEntry.referrerURI = ioService.newURI(aEntry.referrer, null, null);
+      shEntry.referrerURI = IOSvc.newURI(aEntry.referrer, null, null);
     
     if (aEntry.cacheKey) {
       var cacheKey = Cc["@mozilla.org/supports-PRUint32;1"].
@@ -2188,10 +2218,8 @@ SessionStoreService.prototype = {
         shEntry.owner = binaryStream.readObject(true);
       } catch (ex) { debug(ex); }
     } else if (aEntry.ownerURI) { // Firefox 2
-      var uriObj = ioService.newURI(aEntry.ownerURI, null, null);
-      shEntry.owner = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                      getService(Ci.nsIScriptSecurityManager).
-                      getCodebasePrincipal(uriObj);
+      var uriObj = IOSvc.newURI(aEntry.ownerURI, null, null);
+      shEntry.owner = SecSvc.getCodebasePrincipal(uriObj);
     }
     
     if (aEntry.children && shEntry instanceof Ci.nsISHContainer) {
@@ -2214,9 +2242,8 @@ SessionStoreService.prototype = {
    *        A tab's docshell (containing the sessionStorage)
    */
   _deserializeSessionStorage: function sss_deserializeSessionStorage(aStorageData, aDocShell) {
-    let ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     for (let url in aStorageData) {
-      let uri = ioService.newURI(url, null, null);
+      let uri = IOSvc.newURI(url, null, null);
       let storage = aDocShell.getSessionStorageForURI(uri);
       for (let key in aStorageData[url]) {
         try {
@@ -2463,14 +2490,12 @@ SessionStoreService.prototype = {
       aCookies = converted;
     }
     
-    var cookieManager = Cc["@mozilla.org/cookiemanager;1"].
-                        getService(Ci.nsICookieManager2);
     // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision
     var MAX_EXPIRY = Math.pow(2, 62);
     for (i = 0; i < aCookies.length; i++) {
       var cookie = aCookies[i];
       try {
-        cookieManager.add(cookie.host, cookie.path || "", cookie.name || "", cookie.value, !!cookie.secure, !!cookie.httponly, true, "expiry" in cookie ? cookie.expiry : MAX_EXPIRY);
+        CookieSvc.add(cookie.host, cookie.path || "", cookie.name || "", cookie.value, !!cookie.secure, !!cookie.httponly, true, "expiry" in cookie ? cookie.expiry : MAX_EXPIRY);
       }
       catch (ex) { Cu.reportError(ex); } // don't let a single cookie stop recovering
     }
@@ -2579,9 +2604,7 @@ SessionStoreService.prototype = {
    *        Callback each window is passed to
    */
   _forEachBrowserWindow: function sss_forEachBrowserWindow(aFunc) {
-    var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
-                         getService(Ci.nsIWindowMediator);
-    var windowsEnum = windowMediator.getEnumerator("navigator:browser");
+    var windowsEnum = WinMediator.getEnumerator("navigator:browser");
     
     while (windowsEnum.hasMoreElements()) {
       var window = windowsEnum.getNext();
@@ -2596,9 +2619,7 @@ SessionStoreService.prototype = {
    * @returns Window reference
    */
   _getMostRecentBrowserWindow: function sss_getMostRecentBrowserWindow() {
-    var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
-                         getService(Ci.nsIWindowMediator);
-    return windowMediator.getMostRecentWindow("navigator:browser");
+    return WinMediator.getMostRecentWindow("navigator:browser");
   },
 
   /**
@@ -2613,10 +2634,9 @@ SessionStoreService.prototype = {
     argString.data = "";
 
     //XXXzeniko shouldn't it be possible to set the window's dimensions here (as feature)?
-    var window = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-                 getService(Ci.nsIWindowWatcher).
-                 openWindow(null, this._prefBranch.getCharPref("chromeURL"), "_blank",
-                            "chrome,dialog=no,all", argString);
+    var window = WinWatcher.openWindow(
+        null, this._prefBranch.getCharPref("chromeURL"), "_blank",
+        "chrome,dialog=no,all", argString);
     
     do {
       var ID = "window" + Math.random();
@@ -2714,9 +2734,7 @@ SessionStoreService.prototype = {
    * @returns nsIURI
    */
   _getURIFromString: function sss_getURIFromString(aString) {
-    var ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
-    return ioService.newURI(aString, null, null);
+    return IOSvc.newURI(aString, null, null);
   },
 
   /**
@@ -2736,8 +2754,7 @@ SessionStoreService.prototype = {
       } 
       catch (ex) { } // ignore failures on about: URIs
 
-      var cr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsICrashReporter);
-      cr.annotateCrashReport("URL", currentURI.spec);
+      CrashReporter.annotateCrashReport("URL", currentURI.spec);
     }
     catch (ex) {
       // don't make noise when crashreporter is built but not enabled
