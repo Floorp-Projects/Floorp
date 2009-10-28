@@ -165,13 +165,13 @@ package:
 deb: package debian/changelog debian/xulrunner.service debian/xulrunner.links $(MOZILLA_VERSION).system.conf
 	$(NSINSTALL)  $(topsrcdir)/$(MOZ_BUILD_APP)/installer/debian .
 	rm -fr $(DEBDESTDIR)
-	$(NSINSTALL) -D $(DEBDESTDIR)$(installdir)
+	$(NSINSTALL) -D $(DEBDESTDIR)/$(installdir)
 	cp -pRL $(DEPTH)/dist/$(MOZ_BUILD_APP)/* $(DEBDESTDIR)/$(installdir)
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/dbus-1/services/
 	cp debian/$(MOZ_BUILD_APP).service $(DEBDESTDIR)/usr/share/dbus-1/services/org.mozilla.$(MOZ_BUILD_APP).service
 	$(NSINSTALL) -D $(DEBDESTDIR)$(regdir)
 	$(SYSINSTALL) $(MOZILLA_VERSION).system.conf  $(DEBDESTDIR)$(regdir)/
-	rm $(DEBDESTDIR)$(installdir)/xpidl
+	rm $(DEBDESTDIR)/$(installdir)/xpidl
 	dh_shlibdeps; fakeroot dh_fixperms; fakeroot dh_installdeb; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
 endif
 
