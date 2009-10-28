@@ -59,7 +59,6 @@ class nsIFrameFrame;
 namespace mozilla {
   namespace dom {
     class TabParent;
-    class PIFrameEmbeddingParent;
   }
 }
 #endif
@@ -117,11 +116,6 @@ public:
   nsresult SwapWithOtherLoader(nsFrameLoader* aOther,
                                nsRefPtr<nsFrameLoader>& aFirstToSwap,
                                nsRefPtr<nsFrameLoader>& aSecondToSwap);
-
-#ifdef MOZ_IPC
-  mozilla::dom::PIFrameEmbeddingParent* GetChildProcess();
-#endif
-
 private:
 
 #ifdef MOZ_IPC
