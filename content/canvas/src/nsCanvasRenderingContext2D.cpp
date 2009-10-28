@@ -3342,6 +3342,7 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
     if (!frameloader)
         return NS_ERROR_FAILURE;
 
+#ifdef MOZ_IPC
     mozilla::dom::PIFrameEmbeddingParent *child = frameloader->GetChildProcess();
     if (!child)
         return NS_ERROR_FAILURE;
@@ -3374,6 +3375,14 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
     docrender->SetCanvasContext(this, mThebes);
 
     return NS_OK;
+#else
+    nsCOMPtr<nsIDOMWindow> window =
+        do_GetInterface(frameloader->GetExistingDocShell());
+    if (!window)
+        return NS_ERROR_FAILURE;
+
+    return DrawWindow(window, aX, aY, aW, aH, aBGColor, flags);
+#endif
 }
 
 //
