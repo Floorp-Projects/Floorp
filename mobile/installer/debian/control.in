@@ -2,7 +2,7 @@
 Source: fennec
 Section: user/internet
 Priority: extra
-Maintainer: Mozilla fennec <blassey@mozilla.com>
+Maintainer: Mozilla Fennec <mobile@mozilla.com>
 Build-Depends: debhelper (>= 5)
 Standards-Version: 3.7.2
 
@@ -12,35 +12,4 @@ Depends: ${shlibs:Depends}, xulrunner (>=@GRE_MILESTONE@-@GRE_BUILDID@)
 Description: Mozilla's mobile browser
  This browser is the full rendering engine of Mozilla Firefox combined with a user interface designed to make browsing the web on a mobile device a rich and uncompromised experience.
 XB-Maemo-Icon-26:
- iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAAAXNSR0IArs4c
- 6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0
- SU1FB9gIGwMdOFD5xWYAAAUNSURBVEjH7ZbrT1tlHMe/59KW0pa2XC3QMi6D
- bWFjrNFlim4OkLEyg5SJDCUhkl3eGTOzxH/A6MyiJs4YI8k2nKwbY4tjLxS2
- QXSZ6DRsiAIVGKVQSm+HntPTntNzji+WJctEM29vzL4vnzzP55s8v+f3+z7A
- I/1NEX9l88DAFRMbidkUgpb1BtpT+1wN89BGl1yf6gz61LVxyjRXV1cf+h18
- 8ArVdd33ilfSHtKlGzZn5hvUocUYYkw0iTt3blXlUZ88va2wq7a2Xnjw7NC1
- a4TA+c2ikGCIfldXZXE29YOgUCKh0Q0vRRIfKuqsi7U11fKx9z/PO+EWeuTC
- gqqqCitoksC6NalICApmvRy4aQ+uftSNx4vMN9tat+97vmnPJABc/epcucWk
- Oihy7B4lKVqngvSzNKU1LnPxiGw0kCqNRqw256VUh3n2evfJ7lNvX5g4PEEa
- izfb18Eji4gLEqg4jWg8iVkuDqMKyF9rxdcRxi6M+QZ7Xa4jlWW6OinGtoUW
- FyiKpBDlZUikRSYAYNB1/Hs1ydtlWUFhkRVZORn4cTqCjl4PuCIbDFAjtzIf
- BEUCJHG3tIoCMcRi+eOLCEsCchxPomszIEX8CAUiUGtoqDVqLEVVYWPuOgsN
- AFGR6jFTil2rS8Hsr14szPlgs1lwonMDOoZZsFoCv8wHABUJkCQIALIkQfaF
- QDZWIVsScfIpHfyjo1CSEiy5OUgIcbAsj6ig6WuqrUkQANB/qT8z6Rtzk8mY
- Mc2chvwCCyiKQJwXMEWk4eDlWUgaGqBpKBQBKRQF7/YgfseLvK3lOLv/Cegi
- fphMBgQDEXhm5gEFYGW1TGeVbWludo6SAOBocAQE2vAeHxcRXA5jemoOwcAK
- VBSJrRkkOmwE4HaDmJoCMeUGteSFNDMBOTCHN7cYYLfoUVpWAI5LIC5IAEmB
- jwvgScOZ5mbnKACQ956i7rGSowKlH2ciK/D5VxBmEpBAYNHjw2s7S1Gh5lFO
- xbA7R42d2WrY0gi0VBWjrXojRIlAFFkw5JXBYEqHlJTAyLplc7b18KoN2+c6
- vSE4MzYs8VxGhq0EljWlyDSngvVNomhNNkClgNJnQkkKENllEIoEP5eC9IJN
- mHNPwDM5hoBnGpJKmzDZ1jta214evMcm7zd64cV942m29bs5iQ4vzbrBcyzU
- ZiusFTvAcTFEQgFEFucQXphGlGEQ4wVkl9jBxnjwfAzB5SVEJVLQW8v23W8C
- ANSD3Xy2t8+7va5x6VRPb6PMBZFhUCFVDiEeY5HgE+A5DomEgKSYhCQmIcYZ
- LMz7cPF0N1z917B15663Ol/tPP4gl15tLtnt9s+Gh4ZeTyTiG4NzP0NhTTAa
- dZAUGbIk370KkoQiA8yMF6FwFLcnZ1C6sWLJZrO+uxqTXG2xbleN2ORs7Lw5
- 6eO/GRkHkZKNy0M/YXZ+GWw0BjbKY+T2DL4bW8RKTMEXAyNQNHrZ4ag/1NDQ
- wDy0EQDsP7B/pLW9rUOlNypaLQWH0wlO1iHG8khKJKBJx66mRqSoAYHWYu9L
- LW+0t7f3/RGP/LPRnp+Vfr5qm308EvJDXplHa8cBiAqNTGsZWlqc8LtvQpWi
- RvOe6kBJSfEH/yiPvhwY1KwwTGWMCT9Tvqn8iPfWjfScwrXwhZiIPxg5rjOY
- bqQZTN86Gur9/1rwnXOdKZ++NTKkTTMruYXrdzj3Osf+s0g+dvQd24W+8/mP
- Pif/P/0GTJtNNru0m40AAAAASUVORK5CYII=
+#includesubst @ABS_OBJDIR@/@BASE64_ICON@

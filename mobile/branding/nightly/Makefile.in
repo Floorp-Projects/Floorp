@@ -47,18 +47,3 @@ DIRS = \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-#LINUX_BRANDING_FILES = \
-#	default16.png \
-#	default32.png \
-#	default48.png \
-#	document.png \
-#	mozicon128.png \
-#	$(NULL)
-#
-#export::
-#	$(NSINSTALL) -D $(DIST)/branding
-#ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-#	cp $(addprefix $(srcdir)/, $(LINUX_BRANDING_FILES)) $(DIST)/branding/
-#	$(NSINSTALL) -D $(DIST)/install
-#endif
