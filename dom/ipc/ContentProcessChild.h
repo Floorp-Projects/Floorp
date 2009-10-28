@@ -62,8 +62,7 @@ public:
         return sSingleton;
     }
 
-    virtual PIFrameEmbeddingChild* AllocPIFrameEmbedding(
-            const MagicWindowHandle& hwnd);
+    virtual PIFrameEmbeddingChild* AllocPIFrameEmbedding();
     virtual bool DeallocPIFrameEmbedding(PIFrameEmbeddingChild*);
 
     virtual PTestShellChild* AllocPTestShell();

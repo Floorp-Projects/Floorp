@@ -78,9 +78,9 @@ ContentProcessChild::Init(MessageLoop* aIOLoop,
 }
 
 PIFrameEmbeddingChild*
-ContentProcessChild::AllocPIFrameEmbedding(const MagicWindowHandle& hwnd)
+ContentProcessChild::AllocPIFrameEmbedding()
 {
-    PIFrameEmbeddingChild* iframe = new TabChild(hwnd);
+    PIFrameEmbeddingChild* iframe = new TabChild();
     if (iframe && mIFrames.AppendElement(iframe)) {
         return iframe;
     }

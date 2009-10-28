@@ -42,8 +42,6 @@ include protocol "PNecko.ipdl";
 
 include "mozilla/TabTypes.h";
 
-using MagicWindowHandle;
-
 namespace mozilla {
 namespace dom {
 
@@ -54,7 +52,7 @@ sync protocol PContentProcess
     manages PNecko;
 
 child:
-    PIFrameEmbedding(MagicWindowHandle parentWidget);
+    PIFrameEmbedding();
     ~PIFrameEmbedding();
 
     PTestShell();
