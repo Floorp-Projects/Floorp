@@ -204,7 +204,39 @@ CreateBidiContinuation(nsIFrame*       aFrame,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  
+
+  // Have to special case floating first letter frames because the continuation
+  // doesn't go in the first letter frame. The continuation goes with the rest
+  // of the text that the first letter frame was made out of.
+  if (parent->GetType() == nsGkAtoms::letterFrame &&
+      parent->GetStyleDisplay()->IsFloating()) {
+    nsIFrame* oldParent = parent;
+    nsPlaceholderFrame* placeholderFrame =
+      presShell->FrameManager()->GetPlaceholderFrameFor(parent);
+    parent = placeholderFrame->GetParent();
+
+    (*aNewFrame)->SetParent(parent);
+    nsHTMLContainerFrame::ReparentFrameView(aFrame->PresContext(), *aNewFrame,
+                                            oldParent, parent);
+
+    // The continuation will have gotten the first letter style from it's prev
+    // continuation, so we need to repair the style context so it doesn't have
+    // the first letter styling.
+    nsStyleContext* parentSC = oldParent->GetStyleContext()->GetParent();
+    if (parentSC) {
+      nsRefPtr<nsStyleContext> newSC;
+      newSC = presShell->StyleSet()->ResolveStyleForNonElement(parentSC);
+      if (newSC) {
+        (*aNewFrame)->SetStyleContext(newSC);
+      }
+    }
+
+    // The list name nsGkAtoms::nextBidi would indicate we don't want reflow
+    nsFrameList temp(*aNewFrame, *aNewFrame);
+    rv = parent->InsertFrames(nsGkAtoms::nextBidi, placeholderFrame, temp);
+    return rv;
+  }
+
   // The list name nsGkAtoms::nextBidi would indicate we don't want reflow
   // XXXbz this needs higher-level framelist love
   nsFrameList temp(*aNewFrame, *aNewFrame);
