@@ -2238,7 +2238,8 @@ const gLWThemeObserver = {
     }
     else if (aTopic == "lightweight-theme-changed") {
       gLWThemeToSelect = LightweightThemeManager.currentTheme;
-      gPref.clearUserPref(PREF_LWTHEME_TO_SELECT);
+      if (gPref.prefHasUserValue(PREF_LWTHEME_TO_SELECT))
+          gPref.clearUserPref(PREF_LWTHEME_TO_SELECT);
     }
   }
 };
