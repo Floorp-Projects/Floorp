@@ -1509,9 +1509,17 @@ NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
             break;
         }
 
-#if defined JS_GC_ZEAL && defined JS_TRACER
-        if (cx->runtime->gcZeal >= 1 && JS_TRACE_MONITOR(cx).useReservedObjects)
-            goto testReservedObjects;
+#ifdef JS_TRACER
+        if (JS_TRACE_MONITOR(cx).useReservedObjects) {
+            JS_ASSERT(JS_ON_TRACE(cx));
+            JS_ASSERT(thingKind == FINALIZE_OBJECT);
+            JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+            thing = (JSGCThing *) tm->reservedObjects;
+            JS_ASSERT(thing);
+            tm->reservedObjects = JSVAL_TO_OBJECT(tm->reservedObjects->fslots[0]);
+            fromTraceReserve = true;
+            break;
+        }
 #endif
 
         thing = RefillFinalizableFreeList(cx, thingKind);
@@ -1524,22 +1532,6 @@ NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
             *freeListp = thing->link;
             break;
         }
-
-#ifdef JS_TRACER
-        if (JS_TRACE_MONITOR(cx).useReservedObjects) {
-#ifdef JS_GC_ZEAL
-          testReservedObjects:
-#endif
-            JS_ASSERT(JS_ON_TRACE(cx));
-            JS_ASSERT(thingKind == FINALIZE_OBJECT);
-            JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
-            thing = (JSGCThing *) tm->reservedObjects;
-            JS_ASSERT(thing);
-            tm->reservedObjects = JSVAL_TO_OBJECT(tm->reservedObjects->fslots[0]);
-            fromTraceReserve = true;
-            break;
-        }
-#endif
 
         js_ReportOutOfMemory(cx);
         return NULL;
@@ -1709,6 +1701,8 @@ js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
 
     JSGCThing *thing = JS_THREAD_DATA(cx)->gcFreeLists.doubles;
     if (!thing) {
+        if (JS_TRACE_MONITOR(cx).useReservedObjects)
+            return false;
         thing = RefillDoubleFreeList(cx);
         if (!thing) {
             METER(astats->fail++);
