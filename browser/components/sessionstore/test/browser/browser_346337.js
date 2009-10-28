@@ -82,7 +82,7 @@ function test() {
       return false;
     if (node instanceof Ci.nsIDOMHTMLInputElement) {
       if (node.type == "file") {
-        let fileNames = node.mozGetFileNameArray({});
+        let fileNames = node.mozGetFileNameArray();
         return fileNames.length == aValue.length &&
                Array.every(fileNames, function(aFile) aValue.indexOf(aFile) >= 0);
       }
