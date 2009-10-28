@@ -83,7 +83,7 @@
 
     void NeedsCharsetSwitchTo(const nsACString& aEncoding);
 
-    void AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot);
+    void AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot, PRInt32 aLine);
 
     inline void Dispatch(nsIRunnable* aEvent) {
       if (NS_FAILED(NS_DispatchToMainThread(aEvent))) {

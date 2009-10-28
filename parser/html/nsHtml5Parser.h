@@ -294,7 +294,7 @@ class nsHtml5Parser : public nsIParser,
       return mTokenizer;
     }
 
-    void InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState);
+    void InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState, PRInt32 aLine);
 
     void DropStreamParser() {
       mStreamParser = nsnull;
@@ -378,6 +378,11 @@ class nsHtml5Parser : public nsIParser,
      * The stream parser.
      */
     nsRefPtr<nsHtml5StreamParser>       mStreamParser;
+
+    /**
+     *
+     */
+    PRInt32                             mRootContextLineNumber;
     
     /**
      * Whether it's OK to transfer parsing back to the stream parser

@@ -87,6 +87,7 @@ nsHtml5Parser::nsHtml5Parser()
   , mExecutor(new nsHtml5TreeOpExecutor())
   , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor))
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder))
+  , mRootContextLineNumber(1)
 {
   mAtomTable.Init(); // we aren't checking for OOM anyway...
   mTokenizer->setInterner(&mAtomTable);
@@ -293,11 +294,11 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   NS_PRECONDITION(IsInsertionPointDefined(), 
                   "Document.write called when insertion point not defined.");
 
+  NS_PRECONDITION(!(mStreamParser && !aKey), "Got a null key in a non-script-created parser");
+
   if (aSourceBuffer.IsEmpty()) {
     return NS_OK;
   }
-
-  PRInt32 lineNumberSave = mTokenizer->getLineNumber();
 
   nsRefPtr<nsHtml5UTF16Buffer> buffer = new nsHtml5UTF16Buffer(aSourceBuffer.Length());
   memcpy(buffer->getBuffer(), aSourceBuffer.BeginReading(), aSourceBuffer.Length() * sizeof(PRUnichar));
@@ -346,7 +347,25 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
       buffer->adjust(mLastWasCR);
       mLastWasCR = PR_FALSE;
       if (buffer->hasMore()) {
+
+        PRInt32 lineNumberSave;
+        PRBool inRootContext = (!mStreamParser && (aKey == mRootContextKey));
+        if (inRootContext) {
+          mTokenizer->setLineNumber(mRootContextLineNumber);
+        } else {
+          // we aren't the root context, so save the line number on the 
+          // *stack* so that we can restore it.
+          lineNumberSave = mTokenizer->getLineNumber();
+        }
+
         mLastWasCR = mTokenizer->tokenizeBuffer(buffer);
+
+        if (inRootContext) {
+          mRootContextLineNumber = mTokenizer->getLineNumber();
+        } else {
+          mTokenizer->setLineNumber(lineNumberSave);
+        }
+
         if (mTreeBuilder->HasScript()) {
           // No need to flush characters, because an end tag was tokenized last
           mTreeBuilder->Flush(); // Move ops to the executor
@@ -362,13 +381,13 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   }
 
   if (!mBlocked) { // buffer was tokenized to completion
+    NS_ASSERTION(!buffer->hasMore(), "Buffer wasn't tokenized to completion?");  
     // Scripting semantics require a forced tree builder flush here
     mTreeBuilder->flushCharacters(); // Flush trailing characters
     mTreeBuilder->Flush(); // Move ops to the executor
     mExecutor->Flush(); // run the ops    
   }
 
-  mTokenizer->setLineNumber(lineNumberSave);
   return NS_OK;
 }
 
@@ -492,6 +511,7 @@ nsHtml5Parser::Reset()
   UnblockParser();
   mDocumentClosed = PR_FALSE;
   mStreamParser = nsnull;
+  mRootContextLineNumber = 1;
   mParserInsertedScriptsBeingEvaluated = 0;
   mRootContextKey = nsnull;
   mAtomTable.Clear(); // should be already cleared in the fragment case anyway
@@ -603,7 +623,14 @@ nsHtml5Parser::ParseUntilBlocked()
     mFirstBuffer->adjust(mLastWasCR);
     mLastWasCR = PR_FALSE;
     if (mFirstBuffer->hasMore()) {
+      PRBool inRootContext = (!mStreamParser && (mFirstBuffer->key == mRootContextKey));
+      if (inRootContext) {
+        mTokenizer->setLineNumber(mRootContextLineNumber);
+      }
       mLastWasCR = mTokenizer->tokenizeBuffer(mFirstBuffer);
+      if (inRootContext) {
+        mRootContextLineNumber = mTokenizer->getLineNumber();
+      }
       if (mTreeBuilder->HasScript()) {
         mTreeBuilder->Flush();
         mExecutor->Flush();   
@@ -636,9 +663,10 @@ nsHtml5Parser::StartTokenizer(PRBool aScriptingEnabled) {
 }
 
 void
-nsHtml5Parser::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState)
+nsHtml5Parser::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState, PRInt32 aLine)
 {
   mTokenizer->resetToDataState();
+  mTokenizer->setLineNumber(aLine);
   mTreeBuilder->loadState(aState, &mAtomTable);
   mLastWasCR = PR_FALSE;
   mReturnToStreamParserPermitted = PR_TRUE;
