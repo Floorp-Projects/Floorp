@@ -326,9 +326,10 @@ placeitem {
   min-height: 9.2mm; /* row size */
 }
 
+autocompleteresult:active,
+placeitem:active,
 .autocompleteresult-selected {
-  color: white;
-  background-color: grey !important;
+  background-color: #8db8d8;
 }
 
 .autocomplete-item-label,
