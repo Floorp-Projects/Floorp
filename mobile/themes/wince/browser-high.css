@@ -106,8 +106,8 @@
 }
 
 .search-engine-button .button-icon {
-  width: 16px;
-  height: 16px;
+  width: 32px;
+  height: 32px;
 }
 
 #urlbar-throbber[loading] {
@@ -115,8 +115,8 @@
 }
 
 #urlbar-favicon {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
 }
 
 #urlbar-favicon[src=""] {
@@ -251,7 +251,7 @@
 /* folders have a fixed image */
 placeitem[type="folder"] .bookmark-item-label > image,
 placeitem[type="folder"] > .bookmark-manage > image {
-  list-style-image: url(images/folder-30.png);
+  list-style-image: url(images/folder-32.png);
 }
 
 .close-button {
@@ -264,6 +264,19 @@ placeitem[type="folder"] > .bookmark-manage > image {
 
 .tool-search {
   list-style-image: url("chrome://browser/skin/images/navigation-magnifier-30.png");
+}
+
+.autocomplete-item-label > image,
+.bookmark-item-label > image,
+placeitem > .bookmark-manage > image {
+  width: 32px;
+  height: 32px;
+  max-height: 32px;
+}
+
+.autocomplete-item-url,
+.bookmark-item-url {
+  margin-left: 34px;
 }
 
 autocompleteresult.allbookmarks > .autocomplete-item-image {
