@@ -38,10 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 include protocol "PContentProcess.ipdl";
-include protocol "PDocumentRenderer.ipdl";
 
 using PRUint32;
-using PRInt32;
 
 namespace mozilla {
 namespace dom {
@@ -49,7 +47,6 @@ namespace dom {
 async protocol PIFrameEmbedding
 {
     manager PContentProcess;
-    manages PDocumentRenderer;
 
 child:
     loadURL(nsCString uri);
@@ -58,12 +55,6 @@ child:
          PRUint32 y,
          PRUint32 width,
          PRUint32 height);
-
-    PDocumentRenderer(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush);
-
-parent:
-
-    ~PDocumentRenderer(PRUint32 w, PRUint32 h, nsCString data);
 };
 
 }
