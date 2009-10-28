@@ -585,9 +585,9 @@ nsHtml5TreeOpExecutor::ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 }
 
 void
-nsHtml5TreeOpExecutor::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState)
+nsHtml5TreeOpExecutor::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState, PRInt32 aLine)
 {
-  static_cast<nsHtml5Parser*> (mParser.get())->InitializeDocWriteParserState(aState);
+  static_cast<nsHtml5Parser*> (mParser.get())->InitializeDocWriteParserState(aState, aLine);
 }
 
 void

@@ -74,6 +74,8 @@ enum eHtml5TreeOperation {
   eTreeOpProcessOfflineManifest,
   eTreeOpMarkMalformedIfScript,
   eTreeOpStreamEnded,
+  eTreeOpSetStyleLineNumber,
+  eTreeOpSetScriptLineNumber,
   eTreeOpStartLayout
 };
 
@@ -221,14 +223,26 @@ class nsHtml5TreeOperation {
       mOne.charPtr = str;
     }
 
+    inline void Init(eHtml5TreeOperation aOpCode,
+                     nsIContent** aNode,
+                     PRInt32 aInt) {
+      NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
+        "Op code must be uninitialized when initializing.");
+
+      mOpCode = aOpCode;
+      mOne.node = aNode;
+      mInt = aInt;
+    }
+
     inline PRBool IsRunScript() {
       return mOpCode == eTreeOpRunScript;
     }
     
-    inline void SetSnapshot(nsAHtml5TreeBuilderState* aSnapshot) {
+    inline void SetSnapshot(nsAHtml5TreeBuilderState* aSnapshot, PRInt32 aLine) {
       NS_ASSERTION(IsRunScript(), 
         "Setting a snapshot for a tree operation other than eTreeOpRunScript!");
       mTwo.state = aSnapshot;
+      mInt = aLine;
     }
 
     nsresult Perform(nsHtml5TreeOpExecutor* aBuilder);
