@@ -62,16 +62,15 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIAccessible
-  NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetChildCount(PRInt32 *_retval);
-
   // nsAccessible
   virtual nsresult GetChildAtPoint(PRInt32 aX, PRInt32 aY,
                                    PRBool aDeepestChild,
                                    nsIAccessible **aChild);
-  virtual PRBool GetAllowsAnonChildAccessibles();
+
+protected:
+
+  // nsAccessible
+  virtual void CacheChildren();
 };
 
 /**
