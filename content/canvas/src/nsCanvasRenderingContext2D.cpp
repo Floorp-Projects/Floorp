@@ -3344,8 +3344,14 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
 
 #ifdef MOZ_IPC
     mozilla::dom::PIFrameEmbeddingParent *child = frameloader->GetChildProcess();
-    if (!child)
-        return NS_ERROR_FAILURE;
+    if (!child) {
+        nsCOMPtr<nsIDOMWindow> window =
+            do_GetInterface(frameloader->GetExistingDocShell());
+        if (!window)
+            return NS_ERROR_FAILURE;
+
+        return DrawWindow(window, aX, aY, aW, aH, aBGColor, flags);
+    }
 
     // protect against too-large surfaces that will cause allocation
     // or overflow issues
