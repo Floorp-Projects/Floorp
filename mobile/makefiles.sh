@@ -57,6 +57,5 @@ mobile/themes/wince/Makefile
 mobile/installer/debian/changelog
 mobile/installer/debian/compat
 mobile/installer/debian/files
-mobile/installer/debian/icon_base64
 mobile/installer/debian/menu
 mobile/installer/debian/fennec.postinst"
