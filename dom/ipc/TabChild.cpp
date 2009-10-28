@@ -96,9 +96,10 @@ TabChild::RecvloadURL(const nsCString& uri)
 {
     printf("loading %s, %d\n", uri.get(), NS_IsMainThread());
 
-    return mWebNav->LoadURI(NS_ConvertUTF8toUTF16(uri).get(),
-                            nsIWebNavigation::LOAD_FLAGS_NONE,
-                            NULL, NULL, NULL); 
+    nsresult rv = mWebNav->LoadURI(NS_ConvertUTF8toUTF16(uri).get(),
+                                   nsIWebNavigation::LOAD_FLAGS_NONE,
+                                   NULL, NULL, NULL);
+    return NS_FAILED(rv) ? false : true;
 }
 
 bool
