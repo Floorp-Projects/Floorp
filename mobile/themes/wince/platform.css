@@ -564,6 +564,10 @@ richlistitem[selected="true"] {
   background-color: white;
 }
 
+richlistitem:active {
+  background-color: #8db8d8;
+}
+
 richlistitem.section-header,
 richlistitem[selected="true"].section-header {
   font-weight: bold;
