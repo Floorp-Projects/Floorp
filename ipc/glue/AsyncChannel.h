@@ -49,21 +49,23 @@
 
 
 //-----------------------------------------------------------------------------
-namespace {
-enum Result {
-    MsgProcessed,
-    MsgNotKnown,
-    MsgNotAllowed,
-    MsgPayloadError,
-    MsgRouteError,
-    MsgValueError,
-};
-} // namespace {
 
 namespace mozilla {
 namespace ipc {
 
-class AsyncChannel : public IPC::Channel::Listener
+struct HasResultCodes
+{
+    enum Result {
+        MsgProcessed,
+        MsgNotKnown,
+        MsgNotAllowed,
+        MsgPayloadError,
+        MsgRouteError,
+        MsgValueError,
+    };
+};
+
+class AsyncChannel : public IPC::Channel::Listener, protected HasResultCodes
 {
 protected:
     typedef mozilla::CondVar CondVar;
@@ -80,13 +82,14 @@ public:
     typedef IPC::Channel Transport;
     typedef IPC::Message Message;
 
-    class /*NS_INTERFACE_CLASS*/ AsyncListener
+    class /*NS_INTERFACE_CLASS*/ AsyncListener: protected HasResultCodes
     {
     public:
         virtual ~AsyncListener() { }
         virtual Result OnMessageReceived(const Message& aMessage) = 0;
     };
 
+public:
     AsyncChannel(AsyncListener* aListener) :
         mTransport(0),
         mListener(aListener),
