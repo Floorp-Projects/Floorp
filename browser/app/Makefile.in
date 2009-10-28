@@ -69,7 +69,7 @@ GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBX
 
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
 
-SOURCE_STAMP := $(shell cd $(topsrcdir) ; hg identify 2>/dev/null | cut -f1 -d' ')
+SOURCE_STAMP := $(shell cd $(topsrcdir) ; hg identify . 2>/dev/null | cut -f1 -d' ')
 ifdef SOURCE_STAMP
 DEFINES += -DMOZ_SOURCE_STAMP="$(SOURCE_STAMP)"
 endif

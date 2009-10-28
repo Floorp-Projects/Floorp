@@ -767,31 +767,6 @@ nsSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
   return NS_OK;
 }
 
-inline PRBool
-nsSMILAnimationFunction::IsToAnimation() const
-{
-  return !HasAttr(nsGkAtoms::values) &&
-         HasAttr(nsGkAtoms::to) &&
-         !HasAttr(nsGkAtoms::from);
-}
-
-inline PRBool
-nsSMILAnimationFunction::IsAdditive() const
-{
-  /*
-   * Animation is additive if:
-   *
-   * (1) additive = "sum" (GetAdditive() == true), or
-   * (2) it is 'by animation' (by is set, from and values are not)
-   *
-   * Although animation is not additive if it is 'to animation'
-   */
-  PRBool isByAnimation = (!HasAttr(nsGkAtoms::values)
-                       &&  HasAttr(nsGkAtoms::by)
-                       && !HasAttr(nsGkAtoms::from));
-  return !IsToAnimation() && (GetAdditive() || isByAnimation);
-}
-
 /**
  * Performs checks for the keyTimes attribute required by the SMIL spec but
  * which depend on other attributes and therefore needs to be updated as

@@ -3,11 +3,6 @@
 /* Sidebars */
 
 .sidebar-placesTree {
-  border-top: none !important;
-}
-
-#sidebar tree,
-#sidebar page {
   background-color: transparent !important;
   -moz-appearance: none !important;
   border: none !important;
@@ -15,15 +10,14 @@
 
 #bookmarksPanel, 
 #history-panel,
-#bookmarksPanel > hbox,
-#history-panel > hbox {
+#sidebar-search-container {
   -moz-appearance: none !important;
   background-color: transparent !important;
   border-top: none !important;
 }
 
-tree.sidebar-placesTree,
-tree.sidebar-placesTree treechildren::-moz-tree-row {
+.sidebar-placesTree,
+.sidebar-placesTreechildren::-moz-tree-row {
   background-color: transparent;
   border-color: transparent;
   padding-bottom: 1px;
@@ -32,47 +26,41 @@ tree.sidebar-placesTree treechildren::-moz-tree-row {
   border: none;
 }
 
-tree.sidebar-placesTree treechildren::-moz-tree-separator {
+.sidebar-placesTreechildren::-moz-tree-separator {
   border-top: 1px solid #505d6d;
   margin: 0 10px;
 }
 
-#historyTree,
-#bookmarks-view {
+.sidebar-placesTree {
   border-top: 1px solid #bebebe;
 }
 
-#bookmarks-view treechildren::-moz-tree-row(selected), 
-#historyTree treechildren::-moz-tree-row(selected) {
+.sidebar-placesTreechildren::-moz-tree-row(selected) {
   background: @sidebarItemBackground@;
   border-top: @sidebarItemBorderTop@;
 }
 
-#bookmarks-view treechildren::-moz-tree-row(selected,focus),
-#historyTree treechildren::-moz-tree-row(selected,focus) {
+.sidebar-placesTreechildren::-moz-tree-row(selected,focus) {
   background: @sidebarItemFocusedBackground@;
   border-top: @sidebarItemFocusedBorderTop@;
 }
 
-#bookmarks-view:-moz-system-metric(mac-graphite-theme) treechildren::-moz-tree-row(selected), 
-#historyTree:-moz-system-metric(mac-graphite-theme) treechildren::-moz-tree-row(selected) {
+.sidebar-placesTreechildren::-moz-tree-row(selected):-moz-system-metric(mac-graphite-theme) {
   background: @sidebarItemGraphiteBackground@;
   border-top: @sidebarItemGraphiteBorderTop@;
 }
 
-#bookmarks-view:-moz-system-metric(mac-graphite-theme) treechildren::-moz-tree-row(selected,focus),
-#historyTree:-moz-system-metric(mac-graphite-theme) treechildren::-moz-tree-row(selected,focus) {
+.sidebar-placesTreechildren::-moz-tree-row(selected,focus):-moz-system-metric(mac-graphite-theme) {
   background: @sidebarItemGraphiteFocusedBackground@;
   border-top: @sidebarItemGraphiteFocusedBorderTop@;
 }
 
-tree.sidebar-placesTree treechildren::-moz-tree-cell-text(selected) {  
+.sidebar-placesTreechildren::-moz-tree-cell-text(selected) {  
   font-weight: bold !important;
   color: #ffffff !important;
 }
 
-#bookmarksPanel > hbox > label,
-#history-panel > hbox > label {
+#sidebar-search-label {
   display: none;
 }
 
@@ -100,8 +88,8 @@ tree.sidebar-placesTree treechildren::-moz-tree-cell-text(selected) {
   -moz-outline-radius: 10px;
 }
 
-page > hbox {
-  margin: 0 4px 6px 4px;
+#sidebar-search-container {
+  margin: 0 4px 6px;
 }
 
 /* Trees */

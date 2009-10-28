@@ -40,7 +40,7 @@
 @import "chrome://global/skin/";
 
 /* View buttons */
-#viewGroup radio {
+#viewGroup > radio {
   list-style-image: url("chrome://browser/skin/pageInfo.png");
   -moz-box-orient: vertical;
   -moz-box-align: center;
@@ -234,7 +234,7 @@ treechildren::-moz-tree-cell-text(broken) {
   background-color: -moz-field;
 }
 
-#permList > vbox {
+.permission {
   padding-top: 6px;
   padding-bottom: 6px;
   -moz-padding-start: 7px;
@@ -243,11 +243,11 @@ treechildren::-moz-tree-cell-text(broken) {
   border-bottom: 1px dotted #C0C0C0;
 }
 
-#permList > vbox > label {
+.permissionLabel {
   font-weight: bold;
 }
 
-#permList > vbox:hover {
+.permission:hover {
   background-color: -moz-dialog;
 }
 

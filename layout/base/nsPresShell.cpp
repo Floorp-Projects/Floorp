@@ -197,7 +197,7 @@
 
 #endif
 #include "nsPlaceholderFrame.h"
-#include "nsHTMLFrame.h"
+#include "nsCanvasFrame.h"
 
 // Content viewer interfaces
 #include "nsIContentViewer.h"
@@ -5312,7 +5312,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
       rect.MoveBy(-pos);
       builder.SetIgnoreScrollFrame(rootScrollFrame);
 
-      CanvasFrame* canvasFrame =
+      nsCanvasFrame* canvasFrame =
         do_QueryFrame(rootScrollableFrame->GetScrolledFrame());
       if (canvasFrame) {
         canvasArea =
@@ -5350,7 +5350,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
       rc->Init(devCtx, aThebesContext);
 
       nsRegion region(rect);
-      list.ComputeVisibility(&builder, &region);
+      list.ComputeVisibility(&builder, &region, nsnull);
       list.Paint(&builder, rc);
       // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
       list.DeleteAll();
@@ -5640,7 +5640,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
 
     aArea.MoveBy(-rangeInfo->mRootOffset.x, -rangeInfo->mRootOffset.y);
     nsRegion visible(aArea);
-    rangeInfo->mList.ComputeVisibility(&rangeInfo->mBuilder, &visible);
+    rangeInfo->mList.ComputeVisibility(&rangeInfo->mBuilder, &visible, nsnull);
     rangeInfo->mList.Paint(&rangeInfo->mBuilder, rc);
     aArea.MoveBy(rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
   }
@@ -6984,15 +6984,6 @@ PresShell::RemoveOverrideStyleSheet(nsIStyleSheet *aSheet)
 static void
 FreezeElement(nsIContent *aContent, void *aShell)
 {
-#ifdef MOZ_MEDIA
-  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aContent));
-  if (domMediaElem) {
-    nsHTMLMediaElement* mediaElem = static_cast<nsHTMLMediaElement*>(aContent);
-    mediaElem->Freeze();
-    return;
-  }
-#endif
-
   nsIPresShell* shell = static_cast<nsIPresShell*>(aShell);
   nsIFrame *frame = shell->FrameManager()->GetPrimaryFrameFor(aContent, -1);
   nsIObjectFrame *objectFrame = do_QueryFrame(frame);
@@ -7052,15 +7043,6 @@ PresShell::FireOrClearDelayedEvents(PRBool aFireEvents)
 static void
 ThawElement(nsIContent *aContent, void *aShell)
 {
-#ifdef MOZ_MEDIA
-  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aContent));
-  if (domMediaElem) {
-    nsHTMLMediaElement* mediaElem = static_cast<nsHTMLMediaElement*>(aContent);
-    mediaElem->Thaw();
-    return;
-  }
-#endif
-
   nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(aContent));
   if (objlc) {
     nsCOMPtr<nsIPluginInstance> inst;

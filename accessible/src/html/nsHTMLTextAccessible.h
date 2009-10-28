@@ -50,7 +50,10 @@ class nsHTMLTextAccessible : public nsTextAccessibleWrap
 {
 public:
   nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+
   // nsIAccessible
   NS_IMETHOD GetName(nsAString& aName);
 

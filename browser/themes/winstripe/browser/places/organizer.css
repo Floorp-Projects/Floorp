@@ -13,8 +13,8 @@
   border: none;
 }
 
-#placesToolbar > toolbarbutton > image,
-#placesToolbar > toolbarbutton > label {
+#placesToolbar > toolbarbutton > .toolbarbutton-icon,
+#placesToolbar > toolbarbutton > .toolbarbutton-text {
   margin: 0;
   padding: 0;
 }
@@ -89,12 +89,12 @@
   padding-bottom: 1px;
 }
 
-#placesMenu > menu > label {
+#placesMenu > menu > .menubar-text {
   -moz-padding-end: 8px;
   background: url(chrome://global/skin/arrow/arrow-dn.gif) right center no-repeat;
 }
 
-#placesMenu:-moz-locale-dir(rtl) > menu > label {
+#placesMenu > menu > .menubar-text:-moz-locale-dir(rtl) {
   background-position: left center;
 }
 
@@ -171,13 +171,12 @@
   margin: 0 1px;
 }
 
-#organizerScopeBar > toolbarbutton > label,
-#organizerScopeBar > toolbarbutton > image {
+#organizerScopeBar > toolbarbutton > .toolbarbutton-icon {
   padding: 0;
   margin: 0;
 }
 
-#organizerScopeBar .toolbarbutton-text {
+#organizerScopeBar > toolbarbutton > .toolbarbutton-text {
    margin: 0;
    padding: 2px 5px;
 }

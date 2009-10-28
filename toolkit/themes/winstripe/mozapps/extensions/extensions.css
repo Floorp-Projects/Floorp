@@ -325,7 +325,7 @@ vbox[typeName="status"][type="header-recommended"] {
   -moz-padding-start: 10px;
 }
 
-#viewGroup radio {
+#viewGroup > radio {
   -moz-appearance: none;
   margin: 0px 1px 0px 1px;
   padding: 5px 3px 1px;
@@ -333,12 +333,12 @@ vbox[typeName="status"][type="header-recommended"] {
   list-style-image: url("chrome://mozapps/skin/extensions/viewButtons.png");
 }
 
-#viewGroup radio:hover {
+#viewGroup > radio:hover {
   background-color: #E0E8F6;
   color: black;
 }
 
-#viewGroup radio[selected="true"] {
+#viewGroup > radio[selected="true"] {
   background-color: #C1D2EE;
   color: black;
 }

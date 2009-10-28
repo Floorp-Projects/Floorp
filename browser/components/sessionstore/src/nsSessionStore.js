@@ -1555,7 +1555,7 @@ SessionStoreService.prototype = {
         if (node.type != "file")
           data[id] = node.type == "checkbox" || node.type == "radio" ? node.checked : node.value;
         else
-          data[id] = { type: "file", value: node.value };
+          data[id] = { type: "file", fileList: node.mozGetFileNameArray() };
       }
       else if (node instanceof Ci.nsIDOMHTMLTextAreaElement)
         data[id] = node.value;
@@ -2286,8 +2286,8 @@ SessionStoreService.prototype = {
           try {
             node.selectedIndex = value;
           } catch (ex) { /* throws for invalid indices */ }
-        else if (value && value.type && value.type == node.type)
-          node.value = value.value;
+        else if (value && value.fileList && value.type == "file" && node.type == "file")
+          node.mozSetFileNameArray(value.fileList, value.fileList.length);
         else if (value && typeof value.indexOf == "function" && node.options) {
           Array.forEach(node.options, function(aOpt, aIx) {
             aOpt.selected = value.indexOf(aIx) > -1;

@@ -37,7 +37,7 @@
 
 /* rendering object that goes directly inside the document's scrollbars */
 
-#include "nsHTMLFrame.h"
+#include "nsCanvasFrame.h"
 #include "nsIServiceManager.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLContainerFrame.h"
@@ -63,7 +63,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsIScrollableView.h"
 #include "nsIDocShell.h"
-#include "nsICanvasFrame.h"
 
 #ifdef DEBUG_rods
 //#define DEBUG_CANVAS_FOCUS
@@ -75,20 +74,19 @@
 nsIFrame*
 NS_NewCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) CanvasFrame(aContext);
+  return new (aPresShell) nsCanvasFrame(aContext);
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(CanvasFrame)
+NS_IMPL_FRAMEARENA_HELPERS(nsCanvasFrame)
 
-NS_IMPL_QUERY_INTERFACE1(CanvasFrame, nsIScrollPositionListener)
+NS_IMPL_QUERY_INTERFACE1(nsCanvasFrame, nsIScrollPositionListener)
 
-NS_QUERYFRAME_HEAD(CanvasFrame)
-  NS_QUERYFRAME_ENTRY(CanvasFrame)
-  NS_QUERYFRAME_ENTRY(nsICanvasFrame)
+NS_QUERYFRAME_HEAD(nsCanvasFrame)
+  NS_QUERYFRAME_ENTRY(nsCanvasFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
 NS_IMETHODIMP
-CanvasFrame::Init(nsIContent*      aContent,
+nsCanvasFrame::Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow)
 {
@@ -106,7 +104,7 @@ CanvasFrame::Init(nsIContent*      aContent,
 }
 
 void
-CanvasFrame::Destroy()
+nsCanvasFrame::Destroy()
 {
   mAbsoluteContainer.DestroyFrames(this);
 
@@ -120,7 +118,7 @@ CanvasFrame::Destroy()
 }
 
 NS_IMETHODIMP
-CanvasFrame::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
+nsCanvasFrame::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
 #ifdef DEBUG_CANVAS_FOCUS
   {
@@ -148,13 +146,13 @@ CanvasFrame::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX
 }
 
 NS_IMETHODIMP
-CanvasFrame::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
+nsCanvasFrame::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CanvasFrame::SetHasFocus(PRBool aHasFocus)
+nsCanvasFrame::SetHasFocus(PRBool aHasFocus)
 {
   if (mDoPaintFocus != aHasFocus) {
     mDoPaintFocus = aHasFocus;
@@ -164,7 +162,7 @@ CanvasFrame::SetHasFocus(PRBool aHasFocus)
 }
 
 NS_IMETHODIMP
-CanvasFrame::SetInitialChildList(nsIAtom*        aListName,
+nsCanvasFrame::SetInitialChildList(nsIAtom*        aListName,
                                  nsFrameList&    aChildList)
 {
   if (nsGkAtoms::absoluteList == aListName)
@@ -176,7 +174,7 @@ CanvasFrame::SetInitialChildList(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-CanvasFrame::AppendFrames(nsIAtom*        aListName,
+nsCanvasFrame::AppendFrames(nsIAtom*        aListName,
                           nsFrameList&    aFrameList)
 {
   nsresult  rv;
@@ -212,7 +210,7 @@ CanvasFrame::AppendFrames(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-CanvasFrame::InsertFrames(nsIAtom*        aListName,
+nsCanvasFrame::InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsFrameList&    aFrameList)
 {
@@ -234,7 +232,7 @@ CanvasFrame::InsertFrames(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-CanvasFrame::RemoveFrame(nsIAtom*        aListName,
+nsCanvasFrame::RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame)
 {
   nsresult  rv;
@@ -270,7 +268,7 @@ CanvasFrame::RemoveFrame(nsIAtom*        aListName,
 }
 
 nsIAtom*
-CanvasFrame::GetAdditionalChildListName(PRInt32 aIndex) const
+nsCanvasFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
   if (CANVAS_ABS_POS_CHILD_LIST == aIndex)
     return nsGkAtoms::absoluteList;
@@ -279,7 +277,7 @@ CanvasFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 }
 
 nsFrameList
-CanvasFrame::GetChildList(nsIAtom* aListName) const
+nsCanvasFrame::GetChildList(nsIAtom* aListName) const
 {
   if (nsGkAtoms::absoluteList == aListName)
     return mAbsoluteContainer.GetChildList();
@@ -287,7 +285,7 @@ CanvasFrame::GetChildList(nsIAtom* aListName) const
   return nsHTMLContainerFrame::GetChildList(aListName);
 }
 
-nsRect CanvasFrame::CanvasArea() const
+nsRect nsCanvasFrame::CanvasArea() const
 {
   nsRect result(GetOverflowRect());
 
@@ -313,14 +311,14 @@ public:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
   {
-    CanvasFrame* frame = static_cast<CanvasFrame*>(mFrame);
+    nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
     return frame->CanvasArea() + aBuilder->ToReferenceFrame(mFrame);
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx)
   {
-    CanvasFrame* frame = static_cast<CanvasFrame*>(mFrame);
+    nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
     nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
     nsRect bgClipRect = frame->CanvasArea() + offset;
     nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
@@ -340,7 +338,7 @@ public:
  */
 class nsDisplayCanvasFocus : public nsDisplayItem {
 public:
-  nsDisplayCanvasFocus(CanvasFrame *aFrame)
+  nsDisplayCanvasFocus(nsCanvasFrame *aFrame)
     : nsDisplayItem(aFrame)
   {
   }
@@ -348,14 +346,14 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
   {
     // This is an overestimate, but that's not a problem.
-    CanvasFrame* frame = static_cast<CanvasFrame*>(mFrame);
+    nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
     return frame->CanvasArea() + aBuilder->ToReferenceFrame(mFrame);
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx)
   {
-    CanvasFrame* frame = static_cast<CanvasFrame*>(mFrame);
+    nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
     frame->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(mFrame));
   }
 
@@ -363,7 +361,7 @@ public:
 };
 
 NS_IMETHODIMP
-CanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists)
 {
@@ -408,7 +406,7 @@ CanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
   if (docShell) {
     docShell->GetHasFocus(&hasFocus);
-    printf("%p - CanvasFrame::Paint R:%d,%d,%d,%d  DR: %d,%d,%d,%d\n", this, 
+    printf("%p - nsCanvasFrame::Paint R:%d,%d,%d,%d  DR: %d,%d,%d,%d\n", this, 
             mRect.x, mRect.y, mRect.width, mRect.height,
             aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   }
@@ -427,7 +425,7 @@ CanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-CanvasFrame::PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt)
+nsCanvasFrame::PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt)
 {
   nsRect focusRect(aPt, GetSize());
 
@@ -459,7 +457,7 @@ CanvasFrame::PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt)
 }
 
 /* virtual */ nscoord
-CanvasFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsCanvasFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -471,7 +469,7 @@ CanvasFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-CanvasFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsCanvasFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -483,19 +481,19 @@ CanvasFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 }
 
 NS_IMETHODIMP
-CanvasFrame::Reflow(nsPresContext*           aPresContext,
+nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("CanvasFrame");
+  DO_GLOBAL_REFLOW_COUNT("nsCanvasFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
-  NS_FRAME_TRACE_REFLOW_IN("CanvasFrame::Reflow");
+  NS_FRAME_TRACE_REFLOW_IN("nsCanvasFrame::Reflow");
 
   // Initialize OUT parameter
   aStatus = NS_FRAME_COMPLETE;
 
-  CanvasFrame* prevCanvasFrame = static_cast<CanvasFrame*>
+  nsCanvasFrame* prevCanvasFrame = static_cast<nsCanvasFrame*>
                                                (GetPrevInFlow());
   if (prevCanvasFrame) {
     nsAutoPtr<nsFrameList> overflow(prevCanvasFrame->StealOverflowFrames());
@@ -632,25 +630,25 @@ CanvasFrame::Reflow(nsPresContext*           aPresContext,
 
   FinishAndStoreOverflow(&aDesiredSize);
 
-  NS_FRAME_TRACE_REFLOW_OUT("CanvasFrame::Reflow", aStatus);
+  NS_FRAME_TRACE_REFLOW_OUT("nsCanvasFrame::Reflow", aStatus);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 
 PRIntn
-CanvasFrame::GetSkipSides() const
+nsCanvasFrame::GetSkipSides() const
 {
   return 0;
 }
 
 nsIAtom*
-CanvasFrame::GetType() const
+nsCanvasFrame::GetType() const
 {
   return nsGkAtoms::canvasFrame;
 }
 
 NS_IMETHODIMP 
-CanvasFrame::GetContentForEvent(nsPresContext* aPresContext,
+nsCanvasFrame::GetContentForEvent(nsPresContext* aPresContext,
                                 nsEvent* aEvent,
                                 nsIContent** aContent)
 {
@@ -672,7 +670,7 @@ CanvasFrame::GetContentForEvent(nsPresContext* aPresContext,
 
 #ifdef DEBUG
 NS_IMETHODIMP
-CanvasFrame::GetFrameName(nsAString& aResult) const
+nsCanvasFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("Canvas"), aResult);
 }

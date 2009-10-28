@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=507448
+-->
+<head>
+  <title>Test for Bug 507448</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=507448">Mozilla Bug 507448</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 507448 **/
+function assertArraysEqual(arr1, arr2) {
+  is(arr1.length, arr2.length, "Lengths not equal");
+  for (var i = 0 ; i < arr1.length; ++i) {
+    is(arr1[i], arr2[i], "Element " + i + " not equal");
+  }
+}
+
+// This is somewhat unfortunate: jsd only deals with scripts that have a
+// nonzero line number, so we can't just createElement a script here.
+// So break the test up into three <script>s, of which the middle one has our test functions.
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
+var jsd = Components.classes['@mozilla.org/js/jsd/debugger-service;1']
+                    .getService(jsdIDebuggerService);
+var jsdOn = jsd.isOn;
+if (!jsdOn) {
+  jsd.on();
+  ok(jsd.isOn, "JSD should be running.");
+}
+</script>
+<script>
+  function f() {}
+  function g(a,b) {}
+  function h(me, too, here) { var x = 1; }
+  function annoying(a, b, a, b, b, a) {}
+  function manyLocals(a, b, c, d, e, f, g, h, i, j, k, l, m) {
+    var n, o, p, q, r, s, t, u, v, w, x, y, z;
+  }
+</script>
+<script>
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  assertArraysEqual(jsd.wrapValue(f).script.getParameterNames(), []);
+  assertArraysEqual(jsd.wrapValue(g).script.getParameterNames(), ["a", "b"]);
+  assertArraysEqual(jsd.wrapValue(h).script.getParameterNames(), ["me", "too", "here"]);
+  assertArraysEqual(jsd.wrapValue(annoying).script.getParameterNames(),
+                    ["a", "b", "a", "b", "b", "a"]);
+  dump('aa');
+  assertArraysEqual(jsd.wrapValue(manyLocals).script.getParameterNames(),
+                    "abcdefghijklm".split(""));
+
+  if (!jsdOn) {
+    jsd.off();
+    ok(!jsd.isOn, "JSD shouldn't be running anymore.");
+  }
+</script>
+</pre>
+</body>
+</html>

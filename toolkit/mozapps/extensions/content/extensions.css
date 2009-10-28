@@ -147,7 +147,7 @@ richlistitem[opType="needs-disable"] hbox.addon-description {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-needs-disable");
 }
 
-#viewGroup radio {
+#viewGroup > radio {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#viewbutton");
   -moz-box-orient: vertical;
   -moz-box-align: center;

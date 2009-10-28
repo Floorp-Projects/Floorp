@@ -136,7 +136,8 @@ protected:
                               const gfxRect &callerBBox,
                               const gfxMatrix &callerCTM);
   gfxMatrix  ConstructCTM(const gfxRect &callerBBox,
-                          const gfxMatrix &callerCTM);
+                          const gfxMatrix &callerCTM,
+                          nsSVGElement *aTargetContent);
   nsresult   GetTargetGeometry(gfxMatrix *aCTM,
                                gfxRect *aBBox,
                                nsSVGElement **aTargetContent,

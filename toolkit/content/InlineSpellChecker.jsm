@@ -1,53 +1,49 @@
-# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-# ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-#
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-#
-# The Original Code is Inline spellcheck code
-#
-# The Initial Developer of the Original Code is
-# Google Inc.
-# Portions created by the Initial Developer are Copyright (C) 2005
-# the Initial Developer. All Rights Reserved.
-#
-# Contributor(s):
-#   Brett Wilson <brettw@gmail.com>
-#
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-#
-# ***** END LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Inline spellcheck code
+ *
+ * The Initial Developer of the Original Code is
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Brett Wilson <brettw@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-var InlineSpellCheckerUI = {
-  mOverMisspelling: false,
-  mMisspelling: "",
-  mMenu: null,
-  mSpellSuggestions: [], // text of words
-  mSuggestionItems: [],  // menuitem nodes
-  mDictionaryMenu: null,
-  mDictionaryNames: [], // internal dictionary names (e.g. "en-US")
-  mDictionaryItems: [],
-  mLanguageBundle: null, // language names
-  mRegionBundle: null, // region names
+var EXPORTED_SYMBOLS = [ "InlineSpellChecker" ];
+var gLanguageBundle;
+var gRegionBundle;
 
+function InlineSpellChecker(aEditor) {
+  this.init(aEditor);
+}
+
+InlineSpellChecker.prototype = {
   // Call this function to initialize for a given editor
   init: function(aEditor)
   {
@@ -147,7 +143,7 @@ var InlineSpellCheckerUI = {
         break;
       this.mSpellSuggestions.push(suggestion);
 
-      var item = document.createElement("menuitem");
+      var item = menu.ownerDocument.createElement("menuitem");
       this.mSuggestionItems.push(item);
       item.setAttribute("label", suggestion);
       item.setAttribute("value", suggestion);
@@ -179,13 +175,13 @@ var InlineSpellCheckerUI = {
     this.mDictionaryNames = [];
     this.mDictionaryItems = [];
 
-    if (! this.mLanguageBundle) {
+    if (! gLanguageBundle) {
       // create the bundles for language and region
       var bundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
                                     .getService(Components.interfaces.nsIStringBundleService);
-      this.mLanguageBundle = bundleService.createBundle(
+      gLanguageBundle = bundleService.createBundle(
           "chrome://global/locale/languageNames.properties");
-      this.mRegionBundle = bundleService.createBundle(
+      gRegionBundle = bundleService.createBundle(
           "chrome://global/locale/regionNames.properties");
     }
 
@@ -203,13 +199,13 @@ var InlineSpellCheckerUI = {
       // get the display name for this dictionary
       isoStrArray = list[i].split("-");
       var displayName = "";
-      if (this.mLanguageBundle && isoStrArray[0]) {
+      if (gLanguageBundle && isoStrArray[0]) {
         try {
-          displayName = this.mLanguageBundle.GetStringFromName(isoStrArray[0].toLowerCase());
+          displayName = gLanguageBundle.GetStringFromName(isoStrArray[0].toLowerCase());
         } catch(e) {} // ignore language bundle errors
-        if (this.mRegionBundle && isoStrArray[1]) {
+        if (gRegionBundle && isoStrArray[1]) {
           try {
-            displayName += " / " + this.mRegionBundle.GetStringFromName(isoStrArray[1].toLowerCase());
+            displayName += " / " + gRegionBundle.GetStringFromName(isoStrArray[1].toLowerCase());
           } catch(e) {} // ignore region bundle errors
           if (isoStrArray[2])
             displayName += " (" + isoStrArray[2] + ")";
@@ -221,7 +217,7 @@ var InlineSpellCheckerUI = {
         displayName = list[i];
 
       this.mDictionaryNames.push(list[i]);
-      var item = document.createElement("menuitem");
+      var item = menu.ownerDocument.createElement("menuitem");
       item.setAttribute("label", displayName);
       item.setAttribute("type", "checkbox");
       this.mDictionaryItems.push(item);

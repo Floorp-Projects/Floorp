@@ -71,6 +71,7 @@ _TEST_FILES = \
 		can_play_type_wave.js \
 		cancellable_request.sjs \
 		manifest.js \
+		reactivate_helper.html \
 		seek1.js \
 		seek2.js \
 		seek3.js \
@@ -85,6 +86,7 @@ _TEST_FILES = \
 		test_audio2.html \
 		test_autobuffer.html \
 		test_autoplay.html \
+		test_bug495300.html \
 		test_can_play_type.html \
 		test_constants.html \
 		test_controls.html \
@@ -98,6 +100,7 @@ _TEST_FILES = \
 		test_paused.html \
 		test_playback.html \
 		test_playback_errors.html \
+		test_reactivate.html \
 		test_readyState.html \
 		test_seek2.html \
 		test_volume.html \
@@ -144,6 +147,7 @@ _TEST_FILES += \
 		bug520500.ogg \
 		bug520908.ogv \
 		bug520908.ogv^headers^ \
+		bug523816.ogv \
 		chain.ogv \
 		dirac.ogg \
 		seek.ogv \
@@ -181,7 +185,6 @@ _TEST_FILES += \
 		test_bug486646.html \
 		test_bug493187.html \
 		test_bug495145.html \
-		test_bug495300.html \
 		test_bug495319.html \
 		test_closing_connections.html \
 		test_contentDuration1.html \

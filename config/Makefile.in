@@ -157,8 +157,13 @@ clean clobber realclean clobber_all::
 	cd $(MKDEPEND_DIR); $(MAKE) $@
 endif
 
-PYUNITS := unit-Expression.py unit-Preprocessor.py unit-nsinstall.py \
-           unit-printprereleasesuffix.py
+PYUNITS := \
+  unit-Expression.py \
+  unit-Preprocessor.py \
+  unit-nsinstall.py \
+  unit-printprereleasesuffix.py \
+  unit-JarMaker.py \
+  $(NULL)
 
 check:: check-python-modules check-jar-mn
 
