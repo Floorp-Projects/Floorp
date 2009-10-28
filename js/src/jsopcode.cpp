@@ -733,9 +733,17 @@ struct JSPrinter {
     jsuword         *localNames;    /* argument and variable names */
 };
 
+/*
+ * Hack another flag, a la JS_DONT_PRETTY_PRINT, into uintN indent parameters
+ * to functions such as js_DecompileFunction and js_NewPrinter.  This time, as
+ * opposed to JS_DONT_PRETTY_PRINT back in the dark ages, we can assume that a
+ * uintN is at least 32 bits.
+ */
+#define JS_IN_GROUP_CONTEXT 0x10000
+
 JSPrinter *
 JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
-               uintN indent, bool pretty, bool grouped)
+               uintN indent, JSBool pretty)
 {
     JSPrinter *jp;
 
@@ -744,9 +752,9 @@ JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
         return NULL;
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
     JS_INIT_ARENA_POOL(&jp->pool, name, 256, 1, &cx->scriptStackQuota);
-    jp->indent = indent;
+    jp->indent = indent & ~JS_IN_GROUP_CONTEXT;
     jp->pretty = pretty;
-    jp->grouped = grouped;
+    jp->grouped = (indent & JS_IN_GROUP_CONTEXT) != 0;
     jp->script = NULL;
     jp->dvgfence = NULL;
     jp->pcstack = NULL;
@@ -2244,7 +2252,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                   do_function:
                     js_puts(jp, "\n");
                     jp2 = JS_NEW_PRINTER(cx, "nested_function", fun,
-                                         jp->indent, jp->pretty, jp->grouped);
+                                         jp->indent, jp->pretty);
                     if (!jp2)
                         return NULL;
                     ok = js_DecompileFunction(jp2);
@@ -4137,16 +4145,17 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
                 LOAD_FUNCTION(0);
                 {
+                    uintN indent = JS_DONT_PRETTY_PRINT;
+
                     /*
                      * Always parenthesize expression closures. We can't force
                      * saveop to a low-precedence op to arrange for auto-magic
                      * parenthesization without confusing getter/setter code
                      * that checks for JSOP_LAMBDA.
                      */
-                    bool grouped = !(fun->flags & JSFUN_EXPR_CLOSURE);
-                    str = js_DecompileToString(cx, "lambda", fun, 0, 
-                                               false, grouped,
-                                               js_DecompileFunction);
+                    if (!(fun->flags & JSFUN_EXPR_CLOSURE))
+                        indent |= JS_IN_GROUP_CONTEXT;
+                    str = JS_DecompileFunction(cx, fun, indent);
                     if (!str)
                         return NULL;
                 }
@@ -4900,28 +4909,9 @@ js_DecompileScript(JSPrinter *jp, JSScript *script)
     return DecompileCode(jp, script, script->code, (uintN)script->length, 0);
 }
 
-JSString *
-js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
-                     uintN indent, bool pretty, bool grouped,
-                     bool (*decompiler)(JSPrinter *jp))
-{
-    JSPrinter *jp;
-    JSString *str;
-
-    jp = JS_NEW_PRINTER(cx, name, fun, indent, pretty, grouped);
-    if (!jp)
-        return NULL;
-    if (decompiler(jp))
-        str = js_GetPrinterOutput(jp);
-    else
-        str = NULL;
-    js_DestroyPrinter(jp);
-    return str;
-}
-
 static const char native_code_str[] = "\t[native code]\n";
 
-bool
+JSBool
 js_DecompileFunctionBody(JSPrinter *jp)
 {
     JSScript *script;
@@ -4937,7 +4927,7 @@ js_DecompileFunctionBody(JSPrinter *jp)
     return DecompileCode(jp, script, script->code, (uintN)script->length, 0);
 }
 
-bool
+JSBool
 js_DecompileFunction(JSPrinter *jp)
 {
     JSFunction *fun;
@@ -5306,8 +5296,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     }
 
     name = NULL;
-    jp = JS_NEW_PRINTER(cx, "js_DecompileValueGenerator", fun, 0,
-                        false, false);
+    jp = JS_NEW_PRINTER(cx, "js_DecompileValueGenerator", fun, 0, JS_FALSE);
     if (jp) {
         jp->dvgfence = end;
         jp->pcstack = pcstack;
