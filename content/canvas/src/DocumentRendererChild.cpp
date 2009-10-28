@@ -112,7 +112,7 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window, const PRInt32& x, co
         }
     }
     if (!presContext)
-        return NS_ERROR_FAILURE;
+        return false;
 
     nscolor bgColor;
     nsCOMPtr<nsICSSParser> parser = do_CreateInstance("@mozilla.org/content/css-parser;1");
