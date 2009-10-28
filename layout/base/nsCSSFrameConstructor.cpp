@@ -2726,14 +2726,14 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
   
       ViewportFrame [fixed-cb]
         nsHTMLScrollFrame
-          CanvasFrame [abs-cb]
+          nsCanvasFrame [abs-cb]
             root element frame (nsBlockFrame, nsSVGOuterSVGFrame,
                                 nsTableOuterFrame, nsPlaceholderFrame)
 
   Galley presentation, non-XUL, without scrolling (i.e. a frameset):
   
       ViewportFrame [fixed-cb]
-        CanvasFrame [abs-cb]
+        nsCanvasFrame [abs-cb]
           root element frame (nsBlockFrame)
 
   Galley presentation, XUL
@@ -2748,7 +2748,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
         nsSimplePageSequenceFrame
           nsPageFrame [fixed-cb]
             nsPageContentFrame
-              CanvasFrame [abs-cb]
+              nsCanvasFrame [abs-cb]
                 root element frame (nsBlockFrame, nsSVGOuterSVGFrame,
                                     nsTableOuterFrame, nsPlaceholderFrame)
 
@@ -2759,7 +2759,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
           nsSimplePageSequenceFrame
             nsPageFrame [fixed-cb]
               nsPageContentFrame
-                CanvasFrame [abs-cb]
+                nsCanvasFrame [abs-cb]
                   root element frame (nsBlockFrame, nsSVGOuterSVGFrame,
                                       nsTableOuterFrame, nsPlaceholderFrame)
 
@@ -2771,7 +2771,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
     mRootElementFrame is "root element frame".  This is the primary frame for
       the root element.
     mDocElementContainingBlock is the parent of mRootElementFrame
-      (i.e. CanvasFrame or nsRootBoxFrame)
+      (i.e. nsCanvasFrame or nsRootBoxFrame)
     mFixedContainingBlock is the [fixed-cb]
     mGfxScrollFrame is the nsHTMLScrollFrame mentioned above, or null if there isn't one
     mPageSequenceFrame is the nsSimplePageSequenceFrame, or null if there isn't one
@@ -5867,7 +5867,9 @@ nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
                                                   PRBool aPrevSibling)
 {
   nsIFrame* sibling = mPresShell->GetPrimaryFrameFor(aContent);
-  if (!sibling) {
+  if (!sibling || sibling->GetContent() != aContent) {
+    // XXX the GetContent() != aContent check is needed due to bug 135040.
+    // Remove it once that's fixed.
     return nsnull;
   }
 
@@ -6672,7 +6674,16 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       // If our current parentFrame is a Letter frame, use its parent as our
       // new parent hint
       if (parentFrame->GetType() == nsGkAtoms::letterFrame) {
-        parentFrame = parentFrame->GetParent();
+        // If parentFrame is out of flow, then we actually want the parent of
+        // the placeholder frame.
+        if (parentFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+          nsPlaceholderFrame* placeholderFrame =
+            state.mFrameManager->GetPlaceholderFrameFor(parentFrame);
+          NS_ASSERTION(placeholderFrame, "No placeholder for out-of-flow?");
+          parentFrame = placeholderFrame->GetParent();
+        } else {
+          parentFrame = parentFrame->GetParent();
+        }
       }
 
       // Remove the old letter frames before doing the insertion

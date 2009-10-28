@@ -92,11 +92,7 @@
 #endif
 
 #ifdef MOZ_PLATFORM_HILDON
-#include "nsCOMPtr.h"
-#include "nsILocalFile.h"
-#include "nsILineInputStream.h"
-#include "nsNetUtil.h"
-
+#include "nsIPropertyBag2.h"
 PRInt32 gfxPlatformGtk::sMaemoClassic = -1;
 #endif
 
@@ -546,29 +542,22 @@ gfxPlatformGtk::InitDisplayCaps()
     // Check the cached value
     if (gfxPlatform::sDPI == -1) {
         nsresult rv;
-        nsCOMPtr<nsILocalFile> file;
-        rv = NS_NewLocalFile(NS_LITERAL_STRING("/proc/component_version"),
-                             PR_TRUE, getter_AddRefs(file));
+        nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1", &rv);
+        if (NS_FAILED(rv)) {
+            NS_ASSERTION(infoService, "Could not find a system info service");
+            return;
+        }
+        nsCString deviceType;
+        rv = infoService->GetPropertyAsACString(NS_LITERAL_STRING("device"), deviceType);
         if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIInputStream> fileStream;
-            NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);
-            nsCOMPtr<nsILineInputStream> lineStream = do_QueryInterface(fileStream);
-            
-            // Extract the product code from the component_version file
-            nsCAutoString buffer;
-            PRBool isMore = PR_TRUE;
-            if (lineStream && NS_SUCCEEDED(lineStream->ReadLine(buffer, &isMore))) {
-                if (StringEndsWith(buffer, NS_LITERAL_CSTRING("RX-51"))) {
-                    gfxPlatform::sDPI = 265; // It's an N900
-                    gfxPlatformGtk::sMaemoClassic = 0;
-                }
-                else if (StringEndsWith(buffer, NS_LITERAL_CSTRING("RX-44")) ||
-                         StringEndsWith(buffer, NS_LITERAL_CSTRING("RX-48")) ||
-                         StringEndsWith(buffer, NS_LITERAL_CSTRING("RX-34"))) {
-                    gfxPlatform::sDPI = 225; // It's an N810/N800
-                    gfxPlatformGtk::sMaemoClassic = 1;
-                }
-            }
+          if (deviceType.EqualsLiteral("Nokia N900")) {
+              gfxPlatform::sDPI = 265; // It's an N900
+              gfxPlatformGtk::sMaemoClassic = 0;
+          }
+          else if (deviceType.EqualsLiteral("Nokia N8xx")) {
+              gfxPlatform::sDPI = 225; // It's an N810/N800
+              gfxPlatformGtk::sMaemoClassic = 1;
+          }
         }
     }
 #else

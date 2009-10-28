@@ -334,17 +334,14 @@ function onConfigLoad()
 // Unhide the warning message
 function ShowPrefs()
 {
-  var prefCount = { value: 0 };
-  var prefArray = gPrefBranch.getChildList("", prefCount);
+  var prefArray = gPrefBranch.getChildList("");
 
-  for (var i = 0; i < prefCount.value; ++i) 
-  {
-    var prefName = prefArray[i];
+  prefArray.forEach(function (prefName) {
     if (/^capability\./.test(prefName)) // avoid displaying "private" preferences
-      continue;
+      return;
 
     fetchPref(prefName, gPrefArray.length);
-  }
+  });
 
   var descending = document.getElementsByAttribute("sortDirection", "descending");
   if (descending.item(0)) {

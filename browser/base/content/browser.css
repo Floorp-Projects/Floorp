@@ -32,7 +32,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
-#wrapper-urlbar-container #urlbar {
+#wrapper-urlbar-container > #urlbar-container > #urlbar {
   -moz-user-input: disabled;
   cursor: -moz-grab;
 }
@@ -55,26 +55,30 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   display: none;
 }
 
-#feed-menu:-moz-locale-dir(rtl) > menuitem {
+#feed-menu > .feed-menuitem:-moz-locale-dir(rtl) {
   direction: rtl;
 }
 
-#urlbar[pageproxystate="invalid"] > #urlbar-icons > :not(#go-button) ,
+#urlbar[pageproxystate="invalid"] > #urlbar-icons > .urlbar-icon:not(#go-button),
 #urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button ,
 #urlbar[isempty="true"] > #urlbar-icons > #go-button {
   visibility: collapse;
 }
 
-#identity-box > hbox {
+#identity-box-inner {
   max-width: 22em;
   min-width: 1px;
 }
 
+#wrapper-search-container > #search-container > #searchbar > .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input {
+  visibility: hidden;
+}
+
 /* ::::: Unified Back-/Forward Button ::::: */
-#back-button > dropmarker,
-#forward-button > dropmarker,
-#back-forward-dropmarker > image ,
-#back-forward-dropmarker > label {
+#back-button > .toolbarbutton-menu-dropmarker,
+#forward-button > .toolbarbutton-menu-dropmarker,
+#back-forward-dropmarker > .toolbarbutton-icon,
+#back-forward-dropmarker > .toolbarbutton-text {
   display: none;
 }
 .unified-nav-current {

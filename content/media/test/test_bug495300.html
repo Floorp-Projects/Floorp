@@ -9,26 +9,51 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=495300
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=495300">Mozilla Bug 495300</a>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var v;
-var completed = false;
+var testsWaiting = 0;
 
-function start(event) {
-  event.target.currentTime = event.target.duration + 1;
+function mediaEnded(event) {
+  ok(true, "Got expected 'ended' event: " + event.target.currentSrc);
+
+  if (event.target._expectedDuration)
+    ok(Math.abs(event.target.currentTime - event.target._expectedDuration) < 0.1,
+       "currentTime equals duration: " + event.target.currentSrc);
+
+  if (--testsWaiting == 0)
+    SimpleTest.finish();
 }
 
-function didEnd(event) {
-  ok(true, "Got ended event");
-  SimpleTest.finish();
+for (var i = 0; i < gSeekTests.length; ++i) {
+  var test = gSeekTests[i];
+  var elemType = /^audio/.test(test.type) ? "audio" : "video";
+  var v1 = document.createElement(elemType);
+  if (!v1.canPlayType(test.type))
+    continue;
+
+  v1.src = test.name;
+  if (test.duration) {
+    v1._expectedDuration = test.duration;
+  }
+  v1.addEventListener("loadedmetadata", function (event) {
+    event.target.currentTime = event.target.duration;
+  }, false);
+  v1.addEventListener("ended", mediaEnded, false);
+  v1.load();
+
+  ++testsWaiting;
 }
 
-SimpleTest.waitForExplicitFinish();
+if (testsWaiting == 0) {
+  todo(false, "Can't play anything");
+} else {
+  SimpleTest.waitForExplicitFinish();
+}
 </script>
 </pre>
-<video src='seek.ogv' onloadeddata='start(event)' onended='didEnd(event)' controls></video>
 </body>
 </html>

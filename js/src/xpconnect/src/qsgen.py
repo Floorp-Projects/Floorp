@@ -216,7 +216,7 @@ def addStubMember(memberId, member, traceable):
 
     # Check for unknown properties.
     for attrname, value in vars(member).items():
-        if value is True and attrname not in ('readonly',):
+        if value is True and attrname not in ('readonly','optional_argc',):
             raise UserError("%s %s: unrecognized property %r"
                             % (member.kind.capitalize(), memberId,
                                attrname))
@@ -836,6 +836,8 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
         if isMethod:
             comName = header.methodNativeName(member)
             argv = ['arg' + str(i) for i, p in enumerate(member.params)]
+            if member.optional_argc:
+                argv.append('argc - %d' % requiredArgs)
             if not isVoidType(member.realtype):
                 argv.append(outParamForm(resultname, member.realtype))
             args = ', '.join(argv)

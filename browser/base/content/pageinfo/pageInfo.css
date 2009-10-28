@@ -1,5 +1,5 @@
 
-#viewGroup radio {
+#viewGroup > radio {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#viewbutton");
 }
 

@@ -133,14 +133,17 @@
           <description id="editBookmarkPanelDescription"/>
           <hbox>
             <button id="editBookmarkPanelUndoRemoveButton"
+                    class="editBookmarkPanelHeaderButton"
                     hidden="true"
                     oncommand="StarUI.undoRemoveBookmarkCommand();"
                     label="&editBookmark.undo.label;"
                     accesskey="&editBookmark.undo.accessKey;"/>
             <button id="editBookmarkPanelRemoveButton"
+                    class="editBookmarkPanelHeaderButton"
                     oncommand="StarUI.removeBookmarkButtonCommand();"
                     accesskey="&editBookmark.removeBookmark.accessKey;"/>
             <button id="editBookmarkPanelEditButton"
+                    class="editBookmarkPanelHeaderButton"
                     oncommand="StarUI.editButtonCommand();"
                     label="&editBookmark.edit.label;"
                     accesskey="&editBookmark.edit.accessKey;"/>
@@ -151,17 +154,21 @@
       <hbox id="editBookmarkPanelBottomButtons" pack="end">
 #ifndef XP_UNIX
         <button id="editBookmarkPanelDoneButton"
+                class="editBookmarkPanelBottomButton"
                 label="&editBookmark.done.label;"
                 default="true"
                 oncommand="StarUI.panel.hidePopup();"/>
         <button id="editBookmarkPanelDeleteButton"
+                class="editBookmarkPanelBottomButton"
                 label="&editBookmark.cancel.label;"
                 oncommand="StarUI.cancelButtonOnCommand();"/>
 #else
         <button id="editBookmarkPanelDeleteButton"
+                class="editBookmarkPanelBottomButton"
                 label="&editBookmark.cancel.label;"
                 oncommand="StarUI.cancelButtonOnCommand();"/>
         <button id="editBookmarkPanelDoneButton"
+                class="editBookmarkPanelBottomButton"
                 label="&editBookmark.done.label;"
                 default="true"
                 oncommand="StarUI.panel.hidePopup();"/>
@@ -211,25 +218,32 @@
       <hbox id="identity-popup-container" align="top">
         <image id="identity-popup-icon"/>
         <vbox id="identity-popup-content-box">
-          <label id="identity-popup-connectedToLabel" value="&identity.connectedTo;"/>
+          <label id="identity-popup-connectedToLabel"
+                 class="identity-popup-label"
+                 value="&identity.connectedTo;"/>
           <label id="identity-popup-connectedToLabel2"
+                 class="identity-popup-label"
                  value="&identity.unverifiedsite2;"/>
-          <description id="identity-popup-content-host"/>
-          <label id="identity-popup-runByLabel" value="&identity.runBy;"/>
-          <description id="identity-popup-content-owner"/>
-          <description id="identity-popup-content-supplemental"/>
-          <description id="identity-popup-content-verifier"/>
+          <description id="identity-popup-content-host"
+                       class="identity-popup-description"/>
+          <label id="identity-popup-runByLabel"
+                 class="identity-popup-label"
+                 value="&identity.runBy;"/>
+          <description id="identity-popup-content-owner"
+                       class="identity-popup-description"/>
+          <description id="identity-popup-content-supplemental"
+                       class="identity-popup-description"/>
+          <description id="identity-popup-content-verifier"
+                       class="identity-popup-description"/>
           <hbox id="identity-popup-encryption" flex="1">
             <vbox>
               <image id="identity-popup-encryption-icon"/>
-              <spacer flex="1"/>
             </vbox>
-            <description id="identity-popup-encryption-label" flex="1"/>
+            <description id="identity-popup-encryption-label" flex="1"
+                         class="identity-popup-description"/>
           </hbox>
-          <spacer flex="1"/>
           <!-- Footer button to open security page info -->
-          <hbox>
-            <spacer flex="1"/>
+          <hbox pack="end">
             <button id="identity-popup-more-info-button"
                     label="&identity.moreInfoLinkText;"
                     onblur="gIdentityHandler.hideIdentityPopup();"
@@ -392,7 +406,7 @@
           <box id="identity-box" role="button"
                onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
                onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);">
-            <hbox align="center">
+            <hbox id="identity-box-inner" align="center">
               <stack id="page-proxy-stack"
                      onclick="PageProxyClickHandler(event);">
                 <image id="urlbar-throbber" busy="false"/>

@@ -46,10 +46,10 @@ function doNextFile() {
     var name = test.name + " seek test " + i;
     var localIs = function(name) { return function(a, b, msg) {
       is(a, b, name + ": " + msg);
-    }}();
+    }}(name);
     var localOk = function(name) { return function(a, msg) {
       ok(a, name + ": " + msg);
-    }}();
+    }}(name);
     var localFinish = function() {
       --testsWaiting;
       if (testsWaiting == 0) {

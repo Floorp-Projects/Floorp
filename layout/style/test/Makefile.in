@@ -168,6 +168,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		media_queries_dynamic_xbl_iframe.html \
 		media_queries_dynamic_xbl_style.css \
 		bug453896_iframe.html \
+		test_bug524175.html \
 		$(NULL)
 
 _BROWSER_FILES = \

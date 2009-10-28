@@ -1377,6 +1377,25 @@ var PlacesUtils = {
           this.history.setCharsetForURI(this._uri(aData.uri), aData.charset);
         if (aData.uri.substr(0, 6) == "place:")
           searchIds.push(id);
+        if (aData.icon) {
+          try {
+            // Create a fake faviconURI to use (FIXME: bug 523932)
+            let faviconURI = this._uri("fake-favicon-uri:" + aData.uri);
+            this.favicons.setFaviconUrlForPage(this._uri(aData.uri), faviconURI);
+            this.favicons.setFaviconDataFromDataURL(faviconURI, aData.icon, 0);
+          } catch (ex) {
+            Components.utils.reportError("Failed to import favicon data:"  + ex);
+          }
+        }
+        if (aData.iconUri) {
+          try {
+            this.favicons.setAndLoadFaviconForPage(this._uri(aData.uri),
+                                                   this._uri(aData.iconUri),
+                                                   false);
+          } catch (ex) {
+            Components.utils.reportError("Failed to import favicon URI:"  + ex);
+          }
+        }
         break;
       case this.TYPE_X_MOZ_PLACE_SEPARATOR:
         id = this.bookmarks.insertSeparator(aContainer, aIndex);

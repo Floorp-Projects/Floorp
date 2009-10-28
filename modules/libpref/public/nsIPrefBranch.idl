@@ -329,7 +329,8 @@ interface nsIPrefBranch : nsISupports
    * @return NS_OK The preference list was successfully retrieved.
    * @return Other The preference(s) do not exist or an error occurred.
    */
-  void getChildList(in string aStartingAt, out unsigned long aCount,
+  void getChildList(in string aStartingAt,
+                    [optional] out unsigned long aCount,
                     [array, size_is(aCount), retval] out string aChildArray);
 
   /**

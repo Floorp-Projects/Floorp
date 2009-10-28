@@ -343,6 +343,9 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
         AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
                            aResult);
       } else {
+        // Ignore the "override all" internal value.
+        // (It doesn't have a string representation.)
+        intValue &= ~NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL;
         nsStyleUtil::AppendBitmaskCSSValue(
           aProperty, intValue,
           NS_STYLE_TEXT_DECORATION_UNDERLINE,

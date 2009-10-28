@@ -269,8 +269,7 @@ RTestIndexList.prototype = {
 
   load : function()
     {
-      var count = {value:null};
-      var prefList = this.mPrefBranch.getChildList("", count);
+      var prefList = this.mPrefBranch.getChildList("");
 
       var i = 0;
       for (var pref in prefList) {

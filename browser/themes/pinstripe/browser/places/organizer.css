@@ -394,10 +394,6 @@ window:not([active="true"]) #placesList > treechildren::-moz-tree-row(selected) 
   list-style-image: url("chrome://browser/skin/places/expander-open-active.png") !important;
 }
 
-.no-margin-button {
-  min-width:0em;
-}
-
 /**
  * info pane
  */
@@ -425,6 +421,6 @@ window:not([active="true"]) #placesList > treechildren::-moz-tree-row(selected) 
   color: GrayText;
 }
 
-#editBookmarkPanelGrid > rows > row > label {
+.editBMPanel_rowLabel {
   text-align: right !important;
 }

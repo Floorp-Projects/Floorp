@@ -1039,6 +1039,8 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
     gboolean no_generated_args = TRUE;
     gboolean op_notxpcom =
         (IDL_tree_property_get(op->ident, "notxpcom") != NULL);
+    gboolean op_opt_argc =
+        (IDL_tree_property_get(op->ident, "optional_argc") != NULL);
     const char *name;
     const char *binaryname;
     IDL_tree iter;
@@ -1093,6 +1095,19 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
              (!op_notxpcom && op->op_type_spec) || op->f_varargs))
             fputs(", ", outfile);
         no_generated_args = FALSE;
+    }
+
+    if (op_opt_argc) {
+        if ((op_notxpcom || !op->op_type_spec) && !op->f_varargs)
+            fputs(", ", outfile);
+
+        if (mode == AS_DECL || mode == AS_IMPL)
+            fputs("PRUint8 ", outfile);
+
+        fputs("_argc", outfile);
+
+        if ((!op_notxpcom && op->op_type_spec) || op->f_varargs)
+            fputs(", ", outfile);
     }
 
     /* make IDL return value into trailing out argument */

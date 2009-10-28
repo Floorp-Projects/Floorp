@@ -711,15 +711,15 @@ verify_method_declaration(IDL_tree method_tree)
 
         /*
          * confirm that once an optional argument is used, all remaining
-         * arguments are marked as optional
+         * arguments are marked as optional or retval.
          */
         if (IDL_tree_property_get(simple_decl, "optional") != NULL) {
             hasoptional = PR_TRUE;
         }
-        else if (hasoptional) {
+        else if (hasoptional && IDL_tree_property_get(simple_decl, "retval") == NULL) {
             IDL_tree_error(method_tree,
-                           "non-optional parameter used after one marked [optional]");
-                return FALSE;
+                           "non-optional non-retval parameter used after one marked [optional]");
+            return FALSE;
         }
 
         /*
@@ -767,6 +767,14 @@ verify_method_declaration(IDL_tree method_tree)
         if (!verify_type_fits_version(param_type, method_tree))
             return FALSE;
         
+    }
+
+    if (IDL_tree_property_get(op->ident, "optional_argc") != NULL &&
+        !hasoptional) {
+        IDL_tree_error(method_tree,
+                       "[optional_argc] method must contain [optional] "
+                       "arguments");
+        return FALSE;
     }
     
     /* XXX q: can return type be nsid? */

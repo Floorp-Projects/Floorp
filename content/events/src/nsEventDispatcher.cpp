@@ -145,7 +145,8 @@ public:
   nsresult HandleEventTargetChain(nsEventChainPostVisitor& aVisitor,
                                   PRUint32 aFlags,
                                   nsDispatchingCallback* aCallback,
-                                  PRBool aMayHaveNewListenerManagers);
+                                  PRBool aMayHaveNewListenerManagers,
+                                  nsCxPusher* aPusher);
 
   /**
    * Resets aVisitor object and calls PreHandleEvent.
@@ -159,7 +160,8 @@ public:
    * and calls nsIEventListenerManager::HandleEvent().
    */
   nsresult HandleEvent(nsEventChainPostVisitor& aVisitor, PRUint32 aFlags,
-                       PRBool aMayHaveNewListenerManagers);
+                       PRBool aMayHaveNewListenerManagers,
+                       nsCxPusher* aPusher);
 
   /**
    * Copies mItemFlags and mItemData to aVisitor and calls PostHandleEvent.
@@ -221,7 +223,8 @@ nsEventTargetChainItem::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 nsresult
 nsEventTargetChainItem::HandleEvent(nsEventChainPostVisitor& aVisitor,
                                     PRUint32 aFlags,
-                                    PRBool aMayHaveNewListenerManagers)
+                                    PRBool aMayHaveNewListenerManagers,
+                                    nsCxPusher* aPusher)
 {
   if (WantsWillHandleEvent()) {
     mTarget->WillHandleEvent(aVisitor);
@@ -241,7 +244,8 @@ nsEventTargetChainItem::HandleEvent(nsEventChainPostVisitor& aVisitor,
     mManager->HandleEvent(aVisitor.mPresContext, aVisitor.mEvent,
                           &aVisitor.mDOMEvent,
                           CurrentTarget(), aFlags,
-                          &aVisitor.mEventStatus);
+                          &aVisitor.mEventStatus,
+                          aPusher);
     NS_ASSERTION(aVisitor.mEvent->currentTarget == nsnull,
                  "CurrentTarget should be null!");
   }
@@ -260,7 +264,8 @@ nsEventTargetChainItem::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 nsresult
 nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor, PRUint32 aFlags,
                                                nsDispatchingCallback* aCallback,
-                                               PRBool aMayHaveNewListenerManagers)
+                                               PRBool aMayHaveNewListenerManagers,
+                                               nsCxPusher* aPusher)
 {
   PRUint32 createdELMs = nsEventListenerManager::sCreatedCount;
   // Save the target so that it can be restored later.
@@ -276,7 +281,8 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
         !(aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
       item->HandleEvent(aVisitor, aFlags & NS_EVENT_CAPTURE_MASK,
                         aMayHaveNewListenerManagers ||
-                        createdELMs != nsEventListenerManager::sCreatedCount);
+                        createdELMs != nsEventListenerManager::sCreatedCount,
+                        aPusher);
     }
 
     if (item->GetNewTarget()) {
@@ -305,7 +311,8 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
     //       <xul:dialog>'s buttons. Bug 235441.
     item->HandleEvent(aVisitor, aFlags,
                       aMayHaveNewListenerManagers ||
-                      createdELMs != nsEventListenerManager::sCreatedCount);
+                      createdELMs != nsEventListenerManager::sCreatedCount,
+                      aPusher);
   }
   if (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) {
     item->PostHandleEvent(aVisitor);
@@ -327,7 +334,8 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
            item->ForceContentDispatch()) &&
           !(aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
         item->HandleEvent(aVisitor, aFlags & NS_EVENT_BUBBLE_MASK,
-                          createdELMs != nsEventListenerManager::sCreatedCount);
+                          createdELMs != nsEventListenerManager::sCreatedCount,
+                          aPusher);
       }
       if (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) {
         item->PostHandleEvent(aVisitor);
@@ -357,7 +365,8 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
     aVisitor.mEvent->target = firstTarget;
     HandleEventTargetChain(aVisitor, aFlags | NS_EVENT_FLAG_SYSTEM_EVENT,
                            aCallback,
-                           createdELMs != nsEventListenerManager::sCreatedCount);
+                           createdELMs != nsEventListenerManager::sCreatedCount,
+                           aPusher);
   }
 
   return NS_OK;
@@ -542,11 +551,13 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
       } else {
         // Event target chain is created. Handle the chain.
         nsEventChainPostVisitor postVisitor(preVisitor);
+        nsCxPusher pusher;
         rv = topEtci->HandleEventTargetChain(postVisitor,
                                              NS_EVENT_FLAG_BUBBLE |
                                              NS_EVENT_FLAG_CAPTURE,
                                              aCallback,
-                                             PR_TRUE);
+                                             PR_TRUE,
+                                             &pusher);
   
         preVisitor.mEventStatus = postVisitor.mEventStatus;
         // If the DOM event was created during event flow.

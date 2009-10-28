@@ -9,7 +9,7 @@ file names with other Mozilla libraries.
 The git commit id used was 20b5cdf6fe38f61a9847e46e82da60d7ac4b7877
 from git://git.xiph.org/libfishsound.git
 
-endian.patch is applied to fix Bug 45269.
+endian.patch is applied to fix Bug 452698.
 
 bug487519.patch: Fixes for bug487519
 trac497.patch: Annodex trac ticket 497 fix and mozilla bug 462141.
