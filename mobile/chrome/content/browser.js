@@ -2490,7 +2490,13 @@ Tab.prototype = {
                              .QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDOMWindowUtils);
     let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
-    if (handheldFriendly == "true") {
+    let handheldDoctype = 
+          (browser.contentDocument.doctype && 
+           (browser.contentDocument.doctype.publicId.search("WAP") != -1 ||
+            browser.contentDocument.doctype.publicId.search("WML") != -1 ||
+            browser.contentDocument.doctype.publicId.search("Mobile") != -1)); 
+
+    if (handheldFriendly == "true" || handheldDoctype) {
       browser.className = "browser-handheld";
     } else {
       browser.className = "browser";
