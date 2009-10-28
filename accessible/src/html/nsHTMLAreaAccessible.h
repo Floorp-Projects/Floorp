@@ -41,9 +41,9 @@
 
 #include "nsHTMLLinkAccessible.h"
 
-/* Accessible for image map areas - must be child of image
+/**
+ * Accessible for image map areas - must be child of image.
  */
-
 class nsHTMLAreaAccessible : public nsHTMLLinkAccessible
 {
 
@@ -54,10 +54,6 @@ public:
   // nsIAccessible
   NS_IMETHOD GetDescription(nsAString& aDescription);
 
-  NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetChildCount(PRInt32 *_retval);
-
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
 
   // nsAccessible
@@ -65,6 +61,11 @@ public:
   virtual nsresult GetChildAtPoint(PRInt32 aX, PRInt32 aY,
                                    PRBool aDeepestChild,
                                    nsIAccessible **aChild);
+
+protected:
+
+  // nsAccessible
+  virtual void CacheChildren();
 };
 
 #endif  

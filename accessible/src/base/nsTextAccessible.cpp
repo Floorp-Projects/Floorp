@@ -38,52 +38,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// NOTE: alphabetically ordered
 #include "nsTextAccessible.h"
 
-// ------------
-// Text Accessibles
-// ------------
+////////////////////////////////////////////////////////////////////////////////
+// nsTextAccessible
+////////////////////////////////////////////////////////////////////////////////
 
-nsTextAccessible::nsTextAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
-nsLinkableAccessible(aDOMNode, aShell)
-{ 
+nsTextAccessible::
+  nsTextAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell) :
+  nsLinkableAccessible(aDOMNode, aShell)
+{
 }
 
-/**
-  * We are text
-  */
 nsresult
 nsTextAccessible::GetRoleInternal(PRUint32 *aRole)
 {
   *aRole = nsIAccessibleRole::ROLE_TEXT_LEAF;
-  return NS_OK;
-}
-
-/**
-  * No Children
-  */
-NS_IMETHODIMP nsTextAccessible::GetFirstChild(nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-/**
-  * No Children
-  */
-NS_IMETHODIMP nsTextAccessible::GetLastChild(nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-/**
-  * No Children
-  */
-NS_IMETHODIMP nsTextAccessible::GetChildCount(PRInt32 *_retval)
-{
-  *_retval = 0;
   return NS_OK;
 }
 
@@ -96,3 +66,9 @@ nsTextAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32
   return frame->GetRenderedText(&aText, nsnull, nsnull, aStartOffset, aLength);
 }
 
+void
+nsTextAccessible::CacheChildren()
+{
+  // No children for text accessible.
+  mAccChildCount = IsDefunct() ? eChildCountUninitialized : 0;
+}

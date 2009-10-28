@@ -54,9 +54,9 @@
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 
-//-------------
+////////////////////////////////////////////////////////////////////////////////
 // nsLeafAccessible
-//-------------
+////////////////////////////////////////////////////////////////////////////////
 
 nsLeafAccessible::nsLeafAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
 nsAccessibleWrap(aNode, aShell)
@@ -64,34 +64,6 @@ nsAccessibleWrap(aNode, aShell)
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsLeafAccessible, nsAccessible)
-
-/* nsIAccessible getFirstChild (); */
-NS_IMETHODIMP nsLeafAccessible::GetFirstChild(nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-/* nsIAccessible getLastChild (); */
-NS_IMETHODIMP nsLeafAccessible::GetLastChild(nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-/* long getAccChildCount (); */
-NS_IMETHODIMP nsLeafAccessible::GetChildCount(PRInt32 *_retval)
-{
-  *_retval = 0;
-  return NS_OK;
-}
-
-// nsAccessible::GetAllowsAnonChildAccessibles()
-PRBool
-nsLeafAccessible::GetAllowsAnonChildAccessibles()
-{
-  return PR_FALSE;
-}
 
 // nsAccessible::GetChildAtPoint()
 nsresult
@@ -104,8 +76,18 @@ nsLeafAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   return NS_OK;
 }
 
+// nsAccessible::CacheChildren()
+void
+nsLeafAccessible::CacheChildren()
+{
+  // No children for leaf accessible.
+  mAccChildCount = IsDefunct() ? eChildCountUninitialized : 0;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsLinkableAccessible
+////////////////////////////////////////////////////////////////////////////////
 
 nsLinkableAccessible::
   nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
