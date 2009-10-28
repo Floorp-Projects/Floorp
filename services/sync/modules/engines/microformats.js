@@ -44,7 +44,7 @@ MicroFormatEngine.prototype = {
   get enabled() null, // XXX force disabled in-case the pref was somehow set
   __proto__: SyncEngine.prototype,
 
-  displayName: "MicroFormats",
+  _displayName: "MicroFormats",
   description: "",
   logName: "MicroFormats",
   name: "microformats",

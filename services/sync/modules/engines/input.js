@@ -54,7 +54,7 @@ InputEngine.prototype = {
   __proto__: SyncEngine.prototype,
 
   get name() { return "input"; },
-  get displayName() { return "Input History (Location Bar)"; },
+  get _displayName() { return "Input History (Location Bar)"; },
   get logName() { return "InputEngine"; },
   get serverPrefix() { return "user-data/input/"; },
 

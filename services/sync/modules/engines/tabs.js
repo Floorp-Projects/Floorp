@@ -58,7 +58,7 @@ function TabEngine() {
 TabEngine.prototype = {
   __proto__: SyncEngine.prototype,
   name: "tabs",
-  displayName: "Tabs",
+  _displayName: "Tabs",
   description: "Access tabs from other devices via the History menu",
   logName: "Tabs",
   _storeObj: TabStore,

@@ -136,7 +136,7 @@ EngineManagerSvc.prototype = {
 function Engine() { this._init(); }
 Engine.prototype = {
   name: "engine",
-  displayName: "Boring Engine",
+  _displayName: "Boring Engine",
   description: "An engine example - it doesn't actually sync anything",
   logName: "Engine",
 
@@ -160,6 +160,14 @@ Engine.prototype = {
     if (!this.__tracker)
       this.__tracker = new this._trackerObj();
     return this.__tracker;
+  },
+  
+  get displayName() {
+    try {
+      return Str.engines.get(this.name);
+    } catch (e) {}
+    
+    return this._displayName;
   },
 
   _init: function Engine__init() {

@@ -798,5 +798,5 @@ Svc.Prefs = new Preferences(PREFS_BRANCH);
 ].forEach(function(lazy) Utils.lazySvc(Svc, lazy[0], lazy[1], Ci[lazy[2]]));
 
 let Str = {};
-["about", "errors", "sync"]
+["engines", "errors", "sync"]
   .forEach(function(lazy) Utils.lazy2(Str, lazy, Utils.lazyStrings(lazy)));

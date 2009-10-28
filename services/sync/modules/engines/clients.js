@@ -58,7 +58,7 @@ function ClientEngine() {
 ClientEngine.prototype = {
   __proto__: SyncEngine.prototype,
   name: "clients",
-  displayName: "Clients",
+  _displayName: "Clients",
   description: "Sync information about other clients connected to Weave Sync",
   logName: "Clients",
   _storeObj: ClientStore,
