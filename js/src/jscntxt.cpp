@@ -305,7 +305,7 @@ JSThreadData *
 js_CurrentThreadData(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
-    JSThread *thread = js_CurrentThread();
+    JSThread *thread = js_CurrentThread(rt);
     if (!thread)
         return NULL;
 
