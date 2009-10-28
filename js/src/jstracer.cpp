@@ -143,15 +143,6 @@ static const char tagChar[]  = "OIDISIBI";
 /* Max call depths for inlining. */
 #define MAX_CALLDEPTH 10
 
-/* Max native stack size. */
-#define MAX_NATIVE_STACK_SLOTS 4096
-
-/* Max call stack size. */
-#define MAX_CALL_STACK_ENTRIES 500
-
-/* Max global object size. */
-#define MAX_GLOBAL_SLOTS 4096
-
 /* Max number of slots in a table-switch. */
 #define MAX_TABLE_SWITCH 256
 
@@ -2570,8 +2561,8 @@ TraceRecorder::nativeGlobalOffset(jsval* p) const
 {
     JS_ASSERT(isGlobal(p));
     if (size_t(p - globalObj->fslots) < JS_INITIAL_NSLOTS)
-        return sizeof(InterpState) + size_t(p - globalObj->fslots) * sizeof(double);
-    return sizeof(InterpState) + ((p - globalObj->dslots) + JS_INITIAL_NSLOTS) * sizeof(double);
+        return size_t(p - globalObj->fslots) * sizeof(double);
+    return ((p - globalObj->dslots) + JS_INITIAL_NSLOTS) * sizeof(double);
 }
 
 /* Determine whether a value is a global stack slot. */
@@ -3632,7 +3623,7 @@ TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned stackSlots, unsigne
         VisitStackSlots(boxedStackVisitor, cx, callDepth);
     }
 
-    ImportGlobalSlotVisitor globalVisitor(*this, lirbuf->state, globalTypeMap);
+    ImportGlobalSlotVisitor globalVisitor(*this, eos_ins, globalTypeMap);
     VisitGlobalSlots(globalVisitor, cx, globalObj, ngslots,
                      treeInfo->globalSlots->data());
 
@@ -3692,8 +3683,7 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     if (type == TT_INT32 && oracle.isGlobalSlotUndemotable(cx, slot))
         type = TT_DOUBLE;
     treeInfo->typeMap.add(type);
-    import(lirbuf->state, sizeof(struct InterpState) + slot*sizeof(double),
-           vp, type, "global", index, NULL);
+    import(eos_ins, slot*sizeof(double), vp, type, "global", index, NULL);
     SpecializeTreesToMissingGlobals(cx, globalObj, treeInfo);
     return true;
 }
@@ -3730,7 +3720,7 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing, bool demote)
     LIns* x = nativeFrameTracker.get(p);
     if (!x) {
         if (isGlobal(p))
-            x = writeBack(i, lirbuf->state, nativeGlobalOffset(p), demote);
+            x = writeBack(i, eos_ins, nativeGlobalOffset(p), demote);
         else
             x = writeBack(i, lirbuf->sp, -treeInfo->nativeStackBase + nativeStackOffset(p), demote);
         nativeFrameTracker.set(p, x);
@@ -3747,7 +3737,7 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing, bool demote)
 #endif
         disp = x->disp();
 
-        JS_ASSERT(base == lirbuf->sp || base == lirbuf->state);
+        JS_ASSERT(base == lirbuf->sp || base == eos_ins);
         JS_ASSERT(disp == ((base == lirbuf->sp) ?
                   -treeInfo->nativeStackBase + nativeStackOffset(p) :
                   nativeGlobalOffset(p)));
@@ -3768,7 +3758,7 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::addr(jsval* p)
 {
     return isGlobal(p)
-           ? lir->ins2(LIR_piadd, lirbuf->state, INS_CONSTWORD(nativeGlobalOffset(p)))
+           ? lir->ins2(LIR_piadd, eos_ins, INS_CONSTWORD(nativeGlobalOffset(p)))
            : lir->ins2(LIR_piadd, lirbuf->sp,
                        INS_CONSTWORD(-treeInfo->nativeStackBase + nativeStackOffset(p)));
 }
@@ -3850,7 +3840,7 @@ public:
         LIns *ins = mRecorder.get(vp);
         bool isPromote = isPromoteInt(ins);
         if (isPromote && *mTypeMap == TT_DOUBLE) {
-            mLir->insStorei(mRecorder.get(vp), mLirbuf->state,
+            mLir->insStorei(mRecorder.get(vp), mRecorder.eos_ins,
                             mRecorder.nativeGlobalOffset(vp));
 
             /*
@@ -6384,6 +6374,7 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     unsigned ngslots = ti->globalSlots->length();
     uint16* gslots = ti->globalSlots->data();
     unsigned globalFrameSize = STOBJ_NSLOTS(globalObj);
+    JS_ASSERT(globalFrameSize <= MAX_GLOBAL_SLOTS);
 
     /* Make sure the global object is sane. */
     JS_ASSERT_IF(ngslots != 0,
@@ -6397,26 +6388,33 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     if (!js_ReserveObjects(cx, MAX_CALL_STACK_ENTRIES))
         return NULL;
 
-    /* Set up the interpreter state block, which is followed by the native global frame. */
-    InterpState* state = (InterpState*)alloca(sizeof(InterpState) + (globalFrameSize+1)*sizeof(double));
-    state->cx = cx;
-    state->inlineCallCountp = &inlineCallCount;
-    state->innermostNestedGuardp = innermostNestedGuardp;
-    state->outermostTree = ti;
-    state->lastTreeExitGuard = NULL;
-    state->lastTreeCallGuard = NULL;
-    state->rpAtLastTreeCall = NULL;
-    state->nativeVp = NULL;
-    state->builtinStatus = 0;
+    /*
+     * Set up the interpreter state. For the native stacks and global frame,
+     * reuse the storage in |tm->storage|. This reuse depends on the invariant
+     * that only one trace uses |tm->storage| at a time. This is subtley correct
+     * in lieu of deep bail; see comment for |deepBailSp| in js_DeepBail.
+     */
+    InterpState state;
+    state.cx = cx;
+    state.inlineCallCountp = &inlineCallCount;
+    state.innermostNestedGuardp = innermostNestedGuardp;
+    state.outermostTree = ti;
+    state.lastTreeExitGuard = NULL;
+    state.lastTreeCallGuard = NULL;
+    state.rpAtLastTreeCall = NULL;
+    state.nativeVp = NULL;
+    state.builtinStatus = 0;
 
     /* Set up the native global frame. */
-    double* global = (double*)(state+1);
+    double* global = tm->storage.global();
 
     /* Set up the native stack frame. */
-    double stack_buffer[MAX_NATIVE_STACK_SLOTS];
-    state->stackBase = stack_buffer;
-    state->sp = stack_buffer + (ti->nativeStackBase/sizeof(double));
-    state->eos = stack_buffer + MAX_NATIVE_STACK_SLOTS;
+    double* stack = tm->storage.stack();
+    state.stackBase = stack;
+    state.sp = stack + (ti->nativeStackBase/sizeof(double));
+    state.eos = tm->storage.global();
+    JS_ASSERT(state.eos == stack + MAX_NATIVE_STACK_SLOTS);
+    JS_ASSERT(state.sp < state.eos);
 
     /*
      * inlineCallCount has already been incremented, if being invoked from
@@ -6426,17 +6424,17 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     JS_ASSERT(inlineCallCount <= JS_MAX_INLINE_CALL_COUNT);
 
     /* Set up the native call stack frame. */
-    FrameInfo* callstack_buffer[MAX_CALL_STACK_ENTRIES];
-    state->callstackBase = callstack_buffer;
-    state->rp = callstack_buffer;
-    state->eor = callstack_buffer +
-                 JS_MIN(MAX_CALL_STACK_ENTRIES, JS_MAX_INLINE_CALL_COUNT - inlineCallCount);
-    state->sor = state->rp;
+    FrameInfo** callstack = tm->storage.callstack();
+    state.callstackBase = callstack;
+    state.sor = callstack;
+    state.rp = callstack;
+    state.eor = callstack + JS_MIN(MAX_CALL_STACK_ENTRIES,
+                                   JS_MAX_INLINE_CALL_COUNT - inlineCallCount);
 
 #ifdef DEBUG
-    memset(stack_buffer, 0xCD, sizeof(stack_buffer));
-    memset(global, 0xCD, (globalFrameSize+1)*sizeof(double));
-    JS_ASSERT(globalFrameSize <= MAX_GLOBAL_SLOTS);
+    memset(stack, 0xCD, MAX_NATIVE_STACK_SLOTS * sizeof(double));
+    memset(global, 0xCD, GLOBAL_SLOTS_BUFFER_SIZE * sizeof(double));
+    memset(callstack, 0xCD, MAX_CALL_STACK_ENTRIES * sizeof(FrameInfo*));
 #endif
 
     debug_only_stmt(*(uint64*)&global[globalFrameSize] = 0xdeadbeefdeadbeefLL;)
@@ -6450,19 +6448,19 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 
     JS_ASSERT(ti->nGlobalTypes() == ngslots);
     BuildNativeFrame(cx, globalObj, 0 /* callDepth */, ngslots, gslots,
-                     ti->typeMap.data(), global, stack_buffer);
+                     ti->typeMap.data(), global, stack);
 
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
 
 #ifdef EXECUTE_TREE_TIMER
-    state->startTime = rdtsc();
+    state.startTime = rdtsc();
 #endif
 
     JS_ASSERT(!tm->tracecx);
     tm->tracecx = cx;
-    state->prev = cx->interpState;
-    cx->interpState = state;
+    state.prev = cx->interpState;
+    cx->interpState = &state;
 
     debug_only_stmt(fflush(NULL));
     GuardRecord* rec;
@@ -6474,26 +6472,26 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
         TraceVisStateObj tvso_n(cx, S_NATIVE);
 #endif
 #if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
-        SIMULATE_FASTCALL(rec, state, NULL, u.func);
+        SIMULATE_FASTCALL(rec, &state, NULL, u.func);
 #else
-        rec = u.func(state, NULL);
+        rec = u.func(&state, NULL);
 #endif
     }
 
     JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
-    JS_ASSERT(!state->nativeVp);
+    JS_ASSERT(!state.nativeVp);
 
     VMSideExit* lr = (VMSideExit*)rec->exit;
 
     AUDIT(traceTriggered);
 
-    cx->interpState = state->prev;
+    cx->interpState = state.prev;
 
     JS_ASSERT(!cx->bailExit);
     JS_ASSERT(lr->exitType != LOOP_EXIT || !lr->calldepth);
     tm->tracecx = NULL;
-    LeaveTree(*state, lr);
-    return state->innermost;
+    LeaveTree(state, lr);
+    return state.innermost;
 }
 
 static JS_FORCES_STACK void
@@ -6812,9 +6810,8 @@ LeaveTree(InterpState& state, VMSideExit* lr)
         SynthesizeSlowNativeFrame(state, cx, innermost);
 
     /* Write back interned globals. */
-    double* global = (double*)(&state + 1);
-    FlushNativeGlobalFrame(cx, global,
-                           ngslots, gslots, globalTypeMap);
+    JS_ASSERT(state.eos == state.stackBase + MAX_NATIVE_STACK_SLOTS);
+    FlushNativeGlobalFrame(cx, state.eos, ngslots, gslots, globalTypeMap);
 #ifdef DEBUG
     /* Verify that our state restoration worked. */
     for (JSStackFrame* fp = cx->fp; fp; fp = fp->down) {
@@ -7805,6 +7802,16 @@ js_DeepBail(JSContext *cx)
 
     InterpState* state = tracecx->interpState;
     state->builtinStatus |= JSBUILTIN_BAILED;
+
+    /*
+     * Between now and the LeaveTree in ExecuteTree, |tm->storage| may be reused
+     * if another trace executes before the currently executing native returns.
+     * However, all such traces will complete by the time the currently
+     * executing native returns and the return value is written to the native
+     * stack. After that point, no traces may execute until the LeaveTree in
+     * ExecuteTree, hence the invariant is maintained that only one trace uses
+     * |tm->storage| at a time.
+     */
     state->deepBailSp = state->sp;
 }
 
