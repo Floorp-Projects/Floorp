@@ -376,6 +376,9 @@ struct JSThreadsHashEntry {
     JSThread            *thread;
 };
 
+extern JSThread *
+js_CurrentThread(JSRuntime *rt);
+
 /*
  * The function takes the GC lock and does not release in successful return.
  * On error (out of memory) the function releases the lock but delegates
@@ -1515,6 +1518,9 @@ class JSAutoResolveFlags
                                                      JSVERSION_MASK))
 #define JS_HAS_XML_OPTION(cx)           ((cx)->version & JSVERSION_HAS_XML || \
                                          JSVERSION_NUMBER(cx) >= JSVERSION_1_6)
+
+extern JSThreadData *
+js_CurrentThreadData(JSRuntime *rt);
 
 extern JSBool
 js_InitThreads(JSRuntime *rt);
