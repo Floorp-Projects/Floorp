@@ -117,7 +117,7 @@ script regress-361558.js
 script regress-361571.js
 script regress-361856.js
 skip script regress-361964.js # slow
-script regress-363258.js
+random-if(xulRuntime.OS=="WINNT") script regress-363258.js # bug 524788
 script regress-363988.js
 skip-if(isDebugBuild) script regress-365527.js # slow
 script regress-365692.js
