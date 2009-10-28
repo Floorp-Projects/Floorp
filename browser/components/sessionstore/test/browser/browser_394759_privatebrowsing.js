@@ -79,17 +79,18 @@ function test() {
 
   let closedWindowCount = ss.getClosedWindowCount();
   is(closedWindowCount, 0, "Correctly set window count");
+  is(sessionStoreJS.exists(), true, "sessionstore.js has been recreated")
+  gPrefService.clearUserPref("browser.sessionstore.interval");
 
   // Prevent VM timers issues, cache now and increment it manually.
-  const NOW = Date.now();
-
+  let now = Date.now();
   const TESTS = [
     { url: "about:config",
       key: "bug 394759 Non-PB",
-      value: "uniq" + (++NOW) },
+      value: "uniq" + (++now) },
     { url: "about:mozilla",
       key: "bug 394759 PB",
-      value: "uniq" + (++NOW) },
+      value: "uniq" + (++now) },
   ];
 
   function openWindowAndTest(aTestIndex, aRunNextTestInPBMode) {
@@ -97,9 +98,9 @@ function test() {
     let windowObserver = {
       observe: function(aSubject, aTopic, aData) {
         if (aTopic === "domwindowopened") {
-          ww.unregisterNotification(this);
           info("New window has been opened");
           let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+          is(win.document.readyState, "uninitialized");
           win.addEventListener("load", function onLoad(event) {
             win.removeEventListener("load", onLoad, false);
             info("New window has been loaded");
@@ -147,16 +148,13 @@ function test() {
                        "when exiting PB mode");
 
                     let data = JSON.parse(ss.getClosedWindowData())[0];
-                    ok(data.toSource().indexOf(TESTS[aTestIndex].value) > -1,
+                    ok(data.toSource().indexOf(TESTS[aTestIndex - 1].value) > -1,
                        "The data associated with the recently closed window was " +
                        "restored when exiting PB mode");
                   }
 
-                  if (aTestIndex == TESTS.length - 1) {
-                    // Cleanup and finish.
-                    gPrefService.clearUserPref("browser.sessionstore.interval");
+                  if (aTestIndex == TESTS.length - 1)
                     finish();
-                  }
                   else {
                     // Run next test.
                     openWindowAndTest(aTestIndex + 1, !aRunNextTestInPBMode);
@@ -165,12 +163,24 @@ function test() {
               });
             }, true);
           }, false);
+          // Ensure listener has been added.
+          let els = Cc["@mozilla.org/eventlistenerservice;1"].
+                    getService(Ci.nsIEventListenerService);
+          let infos = els.getListenerInfoFor(win, {});
+          is(infos.length, 1, "Window has 1 listener");
+          is(infos[0].type, "load", "Window has load listener");
+          is(infos[0].capturing, false, "Window does not have a capture listener");
+        }
+        else if (aTopic === "domwindowclosed") {
+          info("Window closed");
+          ww.unregisterNotification(this);
         }
       }
     };
     ww.registerNotification(windowObserver);
     // Open a window.
-    openDialog(location, "_blank", "chrome,all,dialog=no", TESTS[aTestIndex].url);
+    let newWin = openDialog(location, "_blank", "chrome,all,dialog=no", TESTS[aTestIndex].url);
+    is(newWin.document.readyState, "uninitialized");
   }
 
   openWindowAndTest(0, true);
