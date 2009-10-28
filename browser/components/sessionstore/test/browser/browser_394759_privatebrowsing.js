@@ -79,7 +79,7 @@ let pass = 0;
 const MAX_PASS = 6;
 function waitForSessionStoreJS() {
   if (++pass > MAX_PASS) {
-    throw("Timed out waiting for sessionstore.js");
+    ok(false, "Timed out waiting for sessionstore.js");
     finish();
   }
 
