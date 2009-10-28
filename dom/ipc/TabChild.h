@@ -57,6 +57,28 @@ public:
                           const PRUint32& y,
                           const PRUint32& width,
                           const PRUint32& height);
+    virtual mozilla::ipc::PDocumentRendererChild* AllocPDocumentRenderer(
+            const PRInt32& x,
+            const PRInt32& y,
+            const PRInt32& w,
+            const PRInt32& h,
+            const nsString& bgcolor,
+            const PRUint32& flags,
+            const bool& flush);
+    virtual bool DeallocPDocumentRenderer(
+            mozilla::ipc::PDocumentRendererChild* __a,
+            const PRUint32& w,
+            const PRUint32& h,
+            const nsCString& data);
+    virtual bool RecvPDocumentRendererConstructor(
+            mozilla::ipc::PDocumentRendererChild *__a,
+            const PRInt32& x,
+            const PRInt32& y,
+            const PRInt32& w,
+            const PRInt32& h,
+            const nsString& bgcolor,
+            const PRUint32& flags,
+            const bool& flush);
 
 private:
     nsCOMPtr<nsIWebNavigation> mWebNav;
