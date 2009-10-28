@@ -51,6 +51,7 @@
 #include "nsIMutableArray.h"
 #include "nsVariant.h"
 #include "nsIDOMBeforeUnloadEvent.h"
+#include "nsGkAtoms.h"
 #include "nsPIDOMEventTarget.h"
 #include "nsIJSContextStack.h"
 #ifdef NS_DEBUG
@@ -73,9 +74,9 @@ static EventListenerCounter sEventListenerCounter;
  */
 nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
                                      void *aScopeObject,
-                                     nsISupports *aTarget)
-  : nsIJSEventListener(aContext, aScopeObject, aTarget),
-    mReturnResult(nsReturnResult_eNotSet)
+                                     nsISupports *aTarget,
+                                     nsIAtom* aType)
+  : nsIJSEventListener(aContext, aScopeObject, aTarget), mEventName(aType)
 {
   // aScopeObject is the inner window's JS object, which we need to lock
   // until we are done with it.
@@ -132,14 +133,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsJSEventListener, nsIDOMEventListener)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsJSEventListener, nsIDOMEventListener)
 
-//static nsString onPrefix = "on";
-
-void
-nsJSEventListener::SetEventName(nsIAtom* aName)
-{
-  mEventName = aName;
-}
-
 nsresult
 nsJSEventListener::GetJSVal(const nsAString& aEventName, jsval* aJSVal)
 {
@@ -163,42 +156,17 @@ nsresult
 nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsresult rv;
-  nsCOMPtr<nsIArray> iargv;
-  nsAutoString eventString;
-  nsCOMPtr<nsIAtom> atomName;
-
-  if (!mEventName) {
-    if (NS_OK != aEvent->GetType(eventString)) {
-      //JS can't handle this event yet or can't handle it at all
-      return NS_OK;
-    }
-    //if (mReturnResult == nsReturnResult_eNotSet) {
-      if (eventString.EqualsLiteral("error") ||
-          eventString.EqualsLiteral("mouseover")) {
-        mReturnResult = nsReturnResult_eReverseReturnResult;
-      }
-      else {
-        mReturnResult = nsReturnResult_eDoNotReverseReturnResult;
-      }
-    //}
-    eventString.Assign(NS_LITERAL_STRING("on") + eventString);
-	atomName = do_GetAtom(eventString);
-  }
-  else {
-    mEventName->ToString(eventString);
-	atomName = mEventName;
-  }
-
+  nsCOMPtr<nsIMutableArray> iargv;
 
   nsScriptObjectHolder funcval(mContext);
-  rv = mContext->GetBoundEventHandler(mTarget, mScopeObject, atomName,
+  rv = mContext->GetBoundEventHandler(mTarget, mScopeObject, mEventName,
                                       funcval);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!funcval)
     return NS_OK;
 
   PRBool handledScriptError = PR_FALSE;
-  if (eventString.EqualsLiteral("onerror")) {
+  if (mEventName == nsGkAtoms::onerror) {
     nsCOMPtr<nsIPrivateDOMEvent> priv(do_QueryInterface(aEvent));
     NS_ENSURE_TRUE(priv, NS_ERROR_UNEXPECTED);
 
@@ -208,8 +176,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       nsScriptErrorEvent *scriptEvent =
         static_cast<nsScriptErrorEvent*>(event);
       // Create a temp argv for the error event.
-      nsCOMPtr<nsIMutableArray> tempargv = 
-        do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+      iargv = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
       if (NS_FAILED(rv)) return rv;
       // Append the event args.
       nsCOMPtr<nsIWritableVariant>
@@ -217,38 +184,33 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       NS_ENSURE_SUCCESS(rv, rv);
       rv = var->SetAsWString(scriptEvent->errorMsg);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = tempargv->AppendElement(var, PR_FALSE);
+      rv = iargv->AppendElement(var, PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);
       // filename
       var = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = var->SetAsWString(scriptEvent->fileName);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = tempargv->AppendElement(var, PR_FALSE);
+      rv = iargv->AppendElement(var, PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);
       // line number
       var = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = var->SetAsUint32(scriptEvent->lineNr);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = tempargv->AppendElement(var, PR_FALSE);
+      rv = iargv->AppendElement(var, PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      // And set the real argv
-      iargv = do_QueryInterface(tempargv);
 
       handledScriptError = PR_TRUE;
     }
   }
 
   if (!handledScriptError) {
-    nsCOMPtr<nsIMutableArray> tempargv = 
-      do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+    iargv = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    NS_ENSURE_TRUE(tempargv != nsnull, NS_ERROR_OUT_OF_MEMORY);
-    rv = tempargv->AppendElement(aEvent, PR_FALSE);
+    NS_ENSURE_TRUE(iargv != nsnull, NS_ERROR_OUT_OF_MEMORY);
+    rv = iargv->AppendElement(aEvent, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
-    iargv = do_QueryInterface(tempargv);
   }
 
   // mContext is the same context which event listener manager pushes
@@ -269,7 +231,8 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     PRUint16 dataType = nsIDataType::VTYPE_VOID;
     if (vrv)
       vrv->GetDataType(&dataType);
-    if (eventString.EqualsLiteral("onbeforeunload")) {
+
+    if (mEventName == nsGkAtoms::onbeforeunload) {
       nsCOMPtr<nsIDOMBeforeUnloadEvent> beforeUnload = do_QueryInterface(aEvent);
       NS_ENSURE_STATE(beforeUnload);
 
@@ -299,7 +262,8 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       // the usual (false means cancel), then prevent default.
       PRBool brv;
       if (NS_SUCCEEDED(vrv->GetAsBool(&brv)) &&
-          brv == (mReturnResult == nsReturnResult_eReverseReturnResult)) {
+          brv == (mEventName == nsGkAtoms::onerror ||
+                  mEventName == nsGkAtoms::onmouseover)) {
         aEvent->PreventDefault();
       }
     }
@@ -314,10 +278,12 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
 nsresult
 NS_NewJSEventListener(nsIScriptContext *aContext, void *aScopeObject,
-                      nsISupports*aTarget, nsIDOMEventListener ** aReturn)
+                      nsISupports*aTarget, nsIAtom* aEventType,
+                      nsIDOMEventListener ** aReturn)
 {
+  NS_ENSURE_ARG(aEventType);
   nsJSEventListener* it =
-    new nsJSEventListener(aContext, aScopeObject, aTarget);
+    new nsJSEventListener(aContext, aScopeObject, aTarget, aEventType);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

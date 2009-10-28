@@ -139,6 +139,8 @@
 #include "gfxWindowsSurface.h"
 #endif
 
+#include "gfxImageSurface.h"
+
 // accessibility support
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -382,6 +384,11 @@ public:
 
   void SetPluginHost(nsIPluginHost* aHost);
 
+#ifdef MOZ_PLATFORM_HILDON
+  /* the flash plugin(s) need to have thier visiblity poked */
+  PRBool UpdateVisibility(PRBool aForce = PR_FALSE);
+#endif
+
   nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
 
 #ifdef XP_MACOSX
@@ -537,7 +544,19 @@ private:
     const nsIntRect& mDirtyRect;
   };
 #endif
+#ifdef MOZ_PLATFORM_HILDON
 
+  // On hildon, we attempt to use NPImageExpose which allows us faster
+  // painting.  We hold a memory buffer to avoid reallocations on
+  // every plugin invalidate.
+  unsigned char*  mImageExposeBuffer;
+  gfxIntSize mImageExposeBufferSize;
+
+  nsresult NativeImageDraw(gfxContext *aContext,
+                           NPWindow* mWindow,
+                           const nsIntSize& mPluginSize,
+                           const nsIntRect& mDirtyRect);
+#endif
 };
 
   // Mac specific code to fix up port position and clip
@@ -952,6 +971,10 @@ nsObjectFrame::FixupWindow(const nsSize& aSize)
 
   NS_ENSURE_TRUE(window, /**/);
 
+#ifdef MOZ_PLATFORM_HILDON
+  mInstanceOwner->UpdateVisibility(PR_TRUE);
+#endif
+
 #ifdef XP_MACOSX
   mInstanceOwner->FixUpPluginWindow(ePluginPaintDisable);
 #endif
@@ -995,6 +1018,10 @@ nsObjectFrame::CallSetWindow()
     return;
 
   nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
+
+#ifdef MOZ_PLATFORM_HILDON
+  mInstanceOwner->UpdateVisibility(PR_TRUE);
+#endif
 
 #ifdef XP_MACOSX
   mInstanceOwner->FixUpPluginWindow(ePluginPaintDisable);
@@ -1141,10 +1168,15 @@ nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
 
 PRBool
 nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion)
+                                   nsRegion* aVisibleRegion,
+                                   nsRegion* aVisibleRegionBeforeMove)
 {
+  NS_ASSERTION((aVisibleRegionBeforeMove != nsnull) == aBuilder->HasMovingFrames(),
+               "Should have aVisibleRegionBeforeMove when there are moving frames");
+
   mVisibleRegion.And(*aVisibleRegion, GetBounds(aBuilder));  
-  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion);
+  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
+                                          aVisibleRegionBeforeMove);
 }
 
 PRBool
@@ -2364,6 +2396,10 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mLastPoint = nsIntPoint(0,0);
 #endif
 
+#ifdef MOZ_PLATFORM_HILDON
+  mImageExposeBuffer = nsnull;
+  mImageExposeBufferSize = gfxIntSize(0,0);
+#endif
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("nsPluginInstanceOwner %p created\n", this));
 }
@@ -2417,6 +2453,13 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   if (mInstance) {
     mInstance->InvalidateOwner();
   }
+
+#ifdef MOZ_PLATFORM_HILDON
+  if (mImageExposeBuffer)
+    free(mImageExposeBuffer);
+  mImageExposeBuffer = nsnull;
+#endif
+
 }
 
 /*
@@ -3120,7 +3163,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   mNumCachedParams = 0;
   nsCOMArray<nsIDOMElement> ourParams;
- 
+
   // use the DOM to get us ALL our dependent PARAM tags, even if not
   // ours
   nsCOMPtr<nsIDOMElement> mydomElement = do_QueryInterface(mContent);
@@ -3131,7 +3174,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // Making DOM method calls can cause our frame to go away, which
   // might kill us...
   nsCOMPtr<nsIPluginInstanceOwner> kungFuDeathGrip(this);
-  
+ 
   NS_NAMED_LITERAL_STRING(xhtml_ns, "http://www.w3.org/1999/xhtml");
 
   mydomElement->GetElementsByTagNameNS(xhtml_ns, NS_LITERAL_STRING("param"),
@@ -3209,6 +3252,11 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
       mNumCachedAttrs++;
   }
 
+  // "plugins.force.wmode" preference is forcing wmode type for plugins
+  // possible values - "opaque", "transparent", "windowed"
+  nsAdoptingCString wmodeType = nsContentUtils::GetCharPref("plugins.force.wmode");
+  if (!wmodeType.IsEmpty())
+    mNumCachedAttrs++;
   // now lets make the arrays
   mCachedAttrParamNames  = (char **)PR_Calloc(sizeof(char *) * (mNumCachedAttrs + 1 + mNumCachedParams), 1);
   NS_ENSURE_TRUE(mCachedAttrParamNames,  NS_ERROR_OUT_OF_MEMORY);
@@ -3236,6 +3284,11 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
     start = 0;
     end = numRealAttrs;
     increment = 1;
+  }
+  if (!wmodeType.IsEmpty()) {
+    mCachedAttrParamNames [c] = ToNewUTF8String(NS_LITERAL_STRING("wmode"));
+    mCachedAttrParamValues[c] = ToNewUTF8String(NS_ConvertUTF8toUTF16(wmodeType));
+    c++;
   }
   for (PRInt16 index = start; index != end; index += increment) {
     const nsAttrName* attrName = mContent->GetAttrNameAt(index);
@@ -3445,6 +3498,10 @@ nsPluginInstanceOwner::GetEventloopNestingLevel()
 
 nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
+#ifdef MOZ_PLATFORM_HILDON
+  CancelTimer();
+#endif
+
 #if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
   if (GetEventModel() != NPEventModelCarbon)
     return NS_OK;
@@ -4729,7 +4786,6 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   NPWindow* window;
   GetWindow(window);
 
-  Renderer renderer(window, mInstance, pluginSize, pluginDirtyRect);
   PRUint32 rendererFlags =
     Renderer::DRAW_SUPPORTS_OFFSET |
     Renderer::DRAW_SUPPORTS_CLIP_RECT |
@@ -4745,6 +4801,16 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   gfxContextAutoSaveRestore autoSR(aContext);
   aContext->Translate(pluginRect.pos);
 
+#ifdef MOZ_PLATFORM_HILDON
+  PRBool simpleImageRender = PR_FALSE;
+  mInstance->GetValueFromPlugin(NPPVpluginWindowlessLocalBool, (void *)&simpleImageRender);
+
+  if (simpleImageRender && NS_SUCCEEDED(NativeImageDraw(aContext, window, pluginSize, pluginDirtyRect)))
+    return;
+
+#endif
+
+  Renderer renderer(window, mInstance, pluginSize, pluginDirtyRect);
   renderer.Draw(aContext, window->width, window->height,
                 rendererFlags, nsnull);
 }
@@ -4763,6 +4829,164 @@ DepthOfVisual(const Screen* screen, const Visual* visual)
 
   NS_ERROR("Visual not on Screen.");
   return 0;
+}
+#endif
+
+#ifdef MOZ_PLATFORM_HILDON
+
+// NativeImageDraw
+//
+// This method supports the NPImageExpose API which is specific to the
+// HILDON platform.  Basically what it allows us to do is to pass a
+// memory buffer into a plugin (namely flash), and have flase draw
+// directly into the buffer.
+//
+// It may be faster if the rest of the system used offscreen image
+// surfaces, but right now offscreen surfaces are using X
+// surfaces. And because of this, we need to create a new image
+// surface and copy that to the passed gfx context.
+//
+// This is not ideal and it should not be faster than what a
+// windowless plugin can do.  However, in A/B testing of flash on the
+// N900, this approach is considerably faster.
+//
+// Hopefully this API can die off in favor of a more robust plugin API.
+
+nsresult
+nsPluginInstanceOwner::NativeImageDraw(gfxContext *aContext,
+                                       NPWindow* mWindow,
+                                       const nsIntSize& mPluginSize,
+                                       const nsIntRect& mDirtyRect)
+{
+  PRBool doupdatewindow = PR_FALSE;
+
+  if (mWindow->x || mWindow->y) {
+    mWindow->x = 0;
+    mWindow->y = 0;
+    doupdatewindow = PR_TRUE;
+  }
+
+  if (nsIntSize(mWindow->width, mWindow->height) != mPluginSize) {
+    mWindow->width = mPluginSize.width;
+    mWindow->height = mPluginSize.height;
+    doupdatewindow = PR_TRUE;
+  }
+
+  // The clip rect is relative to drawable top-left.
+  nsIntRect clipRect;
+  clipRect.x = 0;
+  clipRect.y = 0;
+  clipRect.width  = mWindow->width;
+  clipRect.height = mWindow->height;
+
+  NPRect newClipRect;
+  newClipRect.left = clipRect.x;
+  newClipRect.top = clipRect.y;
+  newClipRect.right = clipRect.XMost();
+  newClipRect.bottom = clipRect.YMost();
+  if (mWindow->clipRect.left    != newClipRect.left   ||
+      mWindow->clipRect.top     != newClipRect.top    ||
+      mWindow->clipRect.right   != newClipRect.right  ||
+      mWindow->clipRect.bottom  != newClipRect.bottom) {
+    mWindow->clipRect = newClipRect;
+    doupdatewindow = PR_TRUE;
+  }
+
+  NPSetWindowCallbackStruct* ws_info =
+    static_cast<NPSetWindowCallbackStruct*>(mWindow->ws_info);
+  ws_info->visual = 0;
+  ws_info->colormap = 0;
+  if (ws_info->depth != 24) {
+    ws_info->depth = 24;
+    doupdatewindow = PR_TRUE;
+  }
+
+  if (doupdatewindow)
+    mInstance->SetWindow(mWindow);
+
+  nsIntRect dirtyRect = mDirtyRect;
+
+  // Intersect the dirty rect with the clip rect to ensure that it lies within
+  // the drawable.
+  if (!dirtyRect.IntersectRect(mDirtyRect, clipRect))
+    return NS_ERROR_FAILURE;
+
+  XEvent pluginEvent;
+  NPImageExpose imageExpose;
+  XGraphicsExposeEvent& exposeEvent = pluginEvent.xgraphicsexpose;
+
+  // set the drawing info
+  exposeEvent.type = GraphicsExpose;
+  exposeEvent.display = 0;
+
+  // Store imageExpose structure pointer as drawable member
+  exposeEvent.drawable = (Drawable)&imageExpose;
+  exposeEvent.x = mDirtyRect.x;
+  exposeEvent.y = mDirtyRect.y;
+  exposeEvent.width = mDirtyRect.width;
+  exposeEvent.height = mDirtyRect.height;
+  exposeEvent.count = 0;
+
+  // information not set:
+  exposeEvent.serial = 0;
+  exposeEvent.send_event = False;
+  exposeEvent.major_code = 0;
+  exposeEvent.minor_code = 0;
+
+  // defaults for NPImageExpose
+  imageExpose.depth = 24;
+  imageExpose.translateX = 1;
+  imageExpose.translateY = 1;
+  imageExpose.scaleX = 1;
+  imageExpose.scaleY = 1;
+
+  // only have the plugin draw what is dirty
+  imageExpose.x = mDirtyRect.x;
+  imageExpose.y = mDirtyRect.y;
+  imageExpose.width = mDirtyRect.width;
+  imageExpose.height = mDirtyRect.height;
+
+  // reallocate buffer if there is a size change or if we haven't allocated one yet.  We probably can do this
+  // somewhere else.
+  if (!mImageExposeBuffer ||
+      (mImageExposeBufferSize.width * mImageExposeBufferSize.height < mWindow->width * mWindow->height)) {
+    if (mImageExposeBuffer)
+      free(mImageExposeBuffer);
+
+    mImageExposeBuffer = (unsigned char*) malloc (mWindow->width * mWindow->height * 4);
+    mImageExposeBufferSize = gfxIntSize(mWindow->width, mWindow->height);
+  }
+
+  NS_ENSURE_TRUE(mImageExposeBuffer, NS_ERROR_OUT_OF_MEMORY);
+
+  // Because we are reusing mImageExposeBuffer, there might be old bytes.  The API NPImageExpose
+  // expects that the buffer be zero'ed out.  
+  memset(mImageExposeBuffer, 0, mImageExposeBufferSize.height * mImageExposeBufferSize.width * 4);
+
+  nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(mImageExposeBuffer,
+                                                       mImageExposeBufferSize,
+                                                       mImageExposeBufferSize.width * 4,
+                                                       gfxASurface::ImageFormatRGB24);
+  NS_ENSURE_TRUE(surf, NS_ERROR_OUT_OF_MEMORY);
+
+  // Setup temporary context scaled size
+  imageExpose.stride = surf->Stride();
+  imageExpose.data = reinterpret_cast<char*>(surf->Data());
+  imageExpose.dataSize.width = surf->Width();
+  imageExpose.dataSize.height = surf->Height(); 
+
+  PRBool eventHandled = PR_FALSE;
+  // Get Image surface from original context
+  // Draw plugin content to temp surface
+  mInstance->HandleEvent(&pluginEvent, &eventHandled);
+  
+  if (eventHandled) {
+    nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
+    aContext->NewPath();
+    aContext->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWindow->width, mWindow->height), pat);
+    aContext->Fill();
+  }
+  return NS_OK;
 }
 #endif
 
@@ -4938,6 +5162,11 @@ nsPluginInstanceOwner::Renderer::NativeDraw(QWidget * drawable,
 
 NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* timer)
 {
+#ifdef MOZ_PLATFORM_HILDON
+  if (mInstance)
+    UpdateVisibility();
+#endif
+
 #if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
   if (GetEventModel() != NPEventModelCarbon)
     return NS_OK;
@@ -4986,6 +5215,20 @@ void nsPluginInstanceOwner::StartTimer(unsigned int aDelay)
   if (mPluginTimer) {
     mTimerCanceled = PR_FALSE;
     mPluginTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_REPEATING_SLACK);
+  }
+#endif
+
+#ifdef MOZ_PLATFORM_HILDON
+  if (!mTimerCanceled)
+    return;
+
+  // start a periodic timer to provide null events to the plugin instance.
+  if (!mPluginTimer)
+    mPluginTimer = do_CreateInstance("@mozilla.org/timer;1");
+
+  if (mPluginTimer) {
+    mTimerCanceled = PR_FALSE;
+    mPluginTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_ONE_SHOT);
   }
 #endif
 }
@@ -5191,6 +5434,31 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
 {
   mPluginHost = aHost;
 }
+
+#ifdef MOZ_PLATFORM_HILDON
+PRBool nsPluginInstanceOwner::UpdateVisibility(PRBool aForce)
+{
+  if (!mPluginWindow || !mInstance || !mOwner)
+    return PR_FALSE;
+
+  // first, check our view for CSS visibility style
+  PRBool isVisible =
+    mOwner->GetView()->GetVisibility() == nsViewVisibility_kShow;
+
+  if (aForce || mWidgetVisible != isVisible) {
+    PRBool handled;
+    NPEvent pluginEvent;
+    XVisibilityEvent& visibilityEvent = pluginEvent.xvisibility;
+    visibilityEvent.type = VisibilityNotify;
+    visibilityEvent.display = 0;
+    visibilityEvent.state = isVisible ? VisibilityUnobscured : VisibilityFullyObscured;
+    mInstance->HandleEvent(&pluginEvent, &handled);
+    mWidgetVisible = isVisible;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+#endif
 
   // Mac specific code to fix up the port location and clipping region
 #ifdef XP_MACOSX

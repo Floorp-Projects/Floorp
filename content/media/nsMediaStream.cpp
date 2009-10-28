@@ -540,7 +540,7 @@ PRInt64 nsMediaChannelStream::Tell()
 
 void nsMediaChannelStream::Suspend(PRBool aCloseImmediately)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Don't call on main thread");
+  NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
   nsHTMLMediaElement* element = mDecoder->GetMediaElement();
   if (!element) {
@@ -569,7 +569,7 @@ void nsMediaChannelStream::Suspend(PRBool aCloseImmediately)
 
 void nsMediaChannelStream::Resume()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Don't call on main thread");
+  NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
   NS_ASSERTION(mSuspendCount > 0, "Too many resumes!");
 
   nsHTMLMediaElement* element = mDecoder->GetMediaElement();
@@ -641,7 +641,9 @@ nsMediaChannelStream::DoNotifyDataReceived()
 void
 nsMediaChannelStream::CacheClientNotifyDataReceived()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Don't call on main thread");
+  NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
+  // NOTE: this can be called with the media cache lock held, so don't
+  // block or do anything which might try to acquire a lock!
 
   if (mDataReceivedEvent.IsPending())
     return;
@@ -667,7 +669,9 @@ private:
 void
 nsMediaChannelStream::CacheClientNotifyDataEnded(nsresult aStatus)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Don't call on main thread");
+  NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
+  // NOTE: this can be called with the media cache lock held, so don't
+  // block or do anything which might try to acquire a lock!
 
   nsCOMPtr<nsIRunnable> event = new DataEnded(mDecoder, aStatus);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
@@ -676,7 +680,7 @@ nsMediaChannelStream::CacheClientNotifyDataEnded(nsresult aStatus)
 nsresult
 nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset, PRBool aResume)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Don't call on main thread");
+  NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
   CloseChannel();
 
@@ -703,12 +707,7 @@ nsMediaChannelStream::CacheClientSuspend()
   }
   Suspend(PR_FALSE);
 
-  // We have to spawn an event here since we're being called back from
-  // a sensitive place in nsMediaCache, which doesn't want us to reenter
-  // the decoder and cause deadlocks or other unpleasantness
-  nsCOMPtr<nsIRunnable> event =
-    NS_NEW_RUNNABLE_METHOD(nsMediaDecoder, mDecoder, NotifySuspendedStatusChanged);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  mDecoder->NotifySuspendedStatusChanged();
   return NS_OK;
 }
 
@@ -721,12 +720,7 @@ nsMediaChannelStream::CacheClientResume()
     --mCacheSuspendCount;
   }
 
-  // We have to spawn an event here since we're being called back from
-  // a sensitive place in nsMediaCache, which doesn't want us to reenter
-  // the decoder and cause deadlocks or other unpleasantness
-  nsCOMPtr<nsIRunnable> event =
-    NS_NEW_RUNNABLE_METHOD(nsMediaDecoder, mDecoder, NotifySuspendedStatusChanged);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  mDecoder->NotifySuspendedStatusChanged();
   return NS_OK;
 }
 

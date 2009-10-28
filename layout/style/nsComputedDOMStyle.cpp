@@ -2423,8 +2423,10 @@ nsComputedDOMStyle::GetTextDecoration(nsIDOMCSSValue** aValue)
     val->SetIdent(eCSSKeyword_none);
   } else {
     nsAutoString decorationString;
-    // Clear (ignore) the -moz-anchor-decoration bit
-    intValue &= ~NS_STYLE_TEXT_DECORATION_PREF_ANCHORS;
+    // Clear the -moz-anchor-decoration bit and the OVERRIDE_ALL bits -- we
+    // don't want these to appear in the computed style.
+    intValue &= ~(NS_STYLE_TEXT_DECORATION_PREF_ANCHORS |
+                  NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL);
     nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_decoration, intValue,
                                        NS_STYLE_TEXT_DECORATION_UNDERLINE,
                                        NS_STYLE_TEXT_DECORATION_BLINK,

@@ -73,6 +73,7 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMEventGroup.h"
 #include "nsIDOM3EventTarget.h"
+#include "nsIDOMNSHTMLInputElement.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -177,7 +178,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
       // Initialize value when we create the content in case the value was set
       // before we got here
       nsAutoString value;
-      fileControl->GetFileName(value);
+      fileControl->GetDisplayFileName(value);
       textControl->SetValue(value);
     }
 
@@ -279,7 +280,9 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 
   // Get parent nsIDOMWindowInternal object.
   nsIContent* content = mFrame->GetContent();
-  if (!content)
+  nsCOMPtr<nsIDOMNSHTMLInputElement> inputElem = do_QueryInterface(content);
+  nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(content);
+  if (!content || !inputElem || !fileControl)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocument> doc = content->GetDocument();
@@ -300,7 +303,13 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
     return NS_ERROR_FAILURE;
   }
 
-  result = filePicker->Init(win, title, nsIFilePicker::modeOpen);
+  PRBool multi;
+  result = inputElem->GetMultiple(&multi);
+  NS_ENSURE_SUCCESS(result, result);
+
+  result = filePicker->Init(win, title, multi ?
+                            (PRInt16)nsIFilePicker::modeOpenMultiple :
+                            (PRInt16)nsIFilePicker::modeOpen);
   if (NS_FAILED(result))
     return result;
 
@@ -309,25 +318,29 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 
   // Set default directry and filename
   nsAutoString defaultName;
-  mFrame->GetFormProperty(nsGkAtoms::value, defaultName);
 
-  nsCOMPtr<nsILocalFile> currentFile = do_CreateInstance("@mozilla.org/file/local;1");
-  if (currentFile && !defaultName.IsEmpty()) {
-    result = currentFile->InitWithPath(defaultName);
-    if (NS_SUCCEEDED(result)) {
+  nsCOMArray<nsIFile> oldFiles;
+  fileControl->GetFileArray(oldFiles);
+
+  if (oldFiles.Count()) {
+    // set directory
+    nsCOMPtr<nsIFile> parentFile;
+    oldFiles[0]->GetParent(getter_AddRefs(parentFile));
+    if (parentFile) {
+      nsCOMPtr<nsILocalFile> parentLocalFile = do_QueryInterface(parentFile, &result);
+      if (parentLocalFile) {
+        filePicker->SetDisplayDirectory(parentLocalFile);
+      }
+    }
+
+    // Unfortunately nsIFilePicker doesn't allow multiple files to be
+    // default-selected, so only select something by default if exactly
+    // one file was selected before.
+    if (oldFiles.Count() == 1) {
       nsAutoString leafName;
-      currentFile->GetLeafName(leafName);
+      oldFiles[0]->GetLeafName(leafName);
       if (!leafName.IsEmpty()) {
         filePicker->SetDefaultString(leafName);
-      }
-
-      // set directory
-      nsCOMPtr<nsIFile> parentFile;
-      currentFile->GetParent(getter_AddRefs(parentFile));
-      if (parentFile) {
-        nsCOMPtr<nsILocalFile> parentLocalFile = do_QueryInterface(parentFile, &result);
-        if (parentLocalFile)
-          filePicker->SetDisplayDirectory(parentLocalFile);
       }
     }
   }
@@ -351,31 +364,52 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   }
   
-  // Set property
-  nsCOMPtr<nsILocalFile> localFile;
-  result = filePicker->GetFile(getter_AddRefs(localFile));
-  if (localFile) {
-    nsAutoString unicodePath;
-    result = localFile->GetPath(unicodePath);
-    if (!unicodePath.IsEmpty()) {
-      // Tell mTextFrame that this update of the value is a user initiated
-      // change. Otherwise it'll think that the value is being set by a script
-      // and not fire onchange when it should.
-      PRBool oldState = mFrame->mTextFrame->GetFireChangeEventState();
-      mFrame->mTextFrame->SetFireChangeEventState(PR_TRUE);
-      nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(content);
-      if (fileControl) {
-        fileControl->SetFileName(unicodePath);
+  // Collect new selected filenames
+  nsTArray<nsString> newFileNames;
+  if (multi) {
+    nsCOMPtr<nsISimpleEnumerator> iter;
+    result = filePicker->GetFiles(getter_AddRefs(iter));
+    NS_ENSURE_SUCCESS(result, result);
+
+    nsCOMPtr<nsISupports> tmp;
+    while (NS_SUCCEEDED(iter->GetNext(getter_AddRefs(tmp)))) {
+      nsCOMPtr<nsIFile> file = do_QueryInterface(tmp);
+      if (file) {
+        nsString unicodePath;
+        result = file->GetPath(unicodePath);
+        if (!unicodePath.IsEmpty()) {
+          newFileNames.AppendElement(unicodePath);
+        }
       }
-      
-      mFrame->mTextFrame->SetFireChangeEventState(oldState);
-      // May need to fire an onchange here
-      mFrame->mTextFrame->CheckFireOnChange();
-      return NS_OK;
+    }
+  }
+  else {
+    nsCOMPtr<nsILocalFile> localFile;
+    result = filePicker->GetFile(getter_AddRefs(localFile));
+    if (localFile) {
+      nsString unicodePath;
+      result = localFile->GetPath(unicodePath);
+      if (!unicodePath.IsEmpty()) {
+        newFileNames.AppendElement(unicodePath);
+      }
     }
   }
 
-  return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
+  // Set new selected files
+  if (!newFileNames.IsEmpty()) {
+    // Tell mTextFrame that this update of the value is a user initiated
+    // change. Otherwise it'll think that the value is being set by a script
+    // and not fire onchange when it should.
+    PRBool oldState = mFrame->mTextFrame->GetFireChangeEventState();
+    mFrame->mTextFrame->SetFireChangeEventState(PR_TRUE);
+    fileControl->SetFileNames(newFileNames);
+
+    mFrame->mTextFrame->SetFireChangeEventState(oldState);
+    // May need to fire an onchange here
+    mFrame->mTextFrame->CheckFireOnChange();
+  }
+
+  return NS_OK;
 }
 
 nscoord
@@ -529,16 +563,10 @@ nsFileControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
   aValue.Truncate();  // initialize out param
 
   if (nsGkAtoms::value == aName) {
-    NS_ASSERTION(!mCachedState || !mTextFrame,
-                 "If we have a cached state, we better have no mTextFrame");
-    if (mCachedState) {
-      aValue.Assign(*mCachedState);
-    } else {
-      nsCOMPtr<nsIFileControlElement> fileControl =
-        do_QueryInterface(mContent);
-      if (fileControl) {
-        fileControl->GetFileName(aValue);
-      }
+    nsCOMPtr<nsIFileControlElement> fileControl =
+      do_QueryInterface(mContent);
+    if (fileControl) {
+      fileControl->GetDisplayFileName(aValue);
     }
   }
   return NS_OK;

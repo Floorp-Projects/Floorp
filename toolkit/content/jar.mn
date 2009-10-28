@@ -34,7 +34,6 @@ toolkit.jar:
 *+ content/global/finddialog.xul              (finddialog.xul)
 *+ content/global/findUtils.js                (findUtils.js)
 *+ content/global/globalOverlay.js            (globalOverlay.js)
-*+ content/global/inlineSpellCheckUI.js       (inlineSpellCheckUI.js)
 +  content/global/mozilla.xhtml               (mozilla.xhtml)
 *+ content/global/nsDragAndDrop.js            (nsDragAndDrop.js)
 +  content/global/selectDialog.js             (selectDialog.js)

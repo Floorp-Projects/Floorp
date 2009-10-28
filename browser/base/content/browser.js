@@ -1540,8 +1540,7 @@ function initializeSanitizer()
    */
   if (!gPrefService.getBoolPref("privacy.sanitize.migrateFx3Prefs")) {
     let itemBranch = gPrefService.getBranch("privacy.item.");
-    let itemCount = { value: 0 };
-    let itemArray = itemBranch.getChildList("", itemCount);
+    let itemArray = itemBranch.getChildList("");
 
     // See if any privacy.item prefs are set
     let doMigrate = itemArray.some(function (name) itemBranch.prefHasUserValue(name));
@@ -6118,6 +6117,7 @@ var FeedHandler = {
       var menuItem = document.createElement("menuitem");
       var baseTitle = feedInfo.title || feedInfo.href;
       var labelStr = gNavigatorBundle.getFormattedString("feedShowFeedNew", [baseTitle]);
+      menuItem.setAttribute("class", "feed-menuitem");
       menuItem.setAttribute("label", labelStr);
       menuItem.setAttribute("feed", feedInfo.href);
       menuItem.setAttribute("tooltiptext", feedInfo.href);

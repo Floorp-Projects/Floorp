@@ -37,8 +37,8 @@
 
 /* rendering object that goes directly inside the document's scrollbars */
 
-#ifndef nsHTMLFrame_h___
-#define nsHTMLFrame_h___
+#ifndef nsCanvasFrame_h___
+#define nsCanvasFrame_h___
 
 
 #include "nsHTMLContainerFrame.h"
@@ -55,7 +55,6 @@
 
 // for focus
 #include "nsIScrollableView.h"
-#include "nsICanvasFrame.h"
 
 /**
  * Root frame class.
@@ -64,15 +63,15 @@
  * It only supports having a single child frame which must be an area
  * frame
  */
-class CanvasFrame : public nsHTMLContainerFrame, 
-                    public nsIScrollPositionListener, 
-                    public nsICanvasFrame {
+class nsCanvasFrame : public nsHTMLContainerFrame, 
+                      public nsIScrollPositionListener
+{
 public:
-  CanvasFrame(nsStyleContext* aContext)
+  nsCanvasFrame(nsStyleContext* aContext)
   : nsHTMLContainerFrame(aContext), mDoPaintFocus(PR_FALSE),
     mAbsoluteContainer(nsGkAtoms::absoluteList) {}
 
-  NS_DECL_QUERYFRAME_TARGET(CanvasFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsCanvasFrame)
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -110,6 +109,11 @@ public:
              ~(nsIFrame::eCanContainOverflowContainers));
   }
 
+  /** SetHasFocus tells the CanvasFrame to draw with focus ring
+   *  @param aHasFocus PR_TRUE to show focus ring, PR_FALSE to hide it
+   */
+  NS_IMETHOD SetHasFocus(PRBool aHasFocus);
+
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
@@ -121,9 +125,6 @@ public:
   virtual void ViewPositionDidChange(nsIScrollableView* aScrollable,
                                      nsTArray<nsIWidget::Configuration>* aConfigurations) {}
   NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
-
-  // nsICanvasFrame
-  NS_IMETHOD SetHasFocus(PRBool aHasFocus);
 
   /**
    * Get the "type" of the frame
@@ -138,7 +139,7 @@ public:
   {
     NS_ASSERTION(!aForceNormal, "No-one should be passing this in here");
 
-    // CanvasFrame keeps overflow container continuations of its child
+    // nsCanvasFrame keeps overflow container continuations of its child
     // frame in main child list
     nsresult rv = nsContainerFrame::StealFrame(aPresContext, aChild, PR_TRUE);
     if (NS_FAILED(rv)) {
@@ -169,4 +170,4 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 };
 
-#endif /* nsHTMLFrame_h___ */
+#endif /* nsCanvasFrame_h___ */

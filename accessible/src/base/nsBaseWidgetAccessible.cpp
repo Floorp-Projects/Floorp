@@ -54,9 +54,9 @@
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 
-//-------------
+////////////////////////////////////////////////////////////////////////////////
 // nsLeafAccessible
-//-------------
+////////////////////////////////////////////////////////////////////////////////
 
 nsLeafAccessible::nsLeafAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
 nsAccessibleWrap(aNode, aShell)
@@ -64,34 +64,6 @@ nsAccessibleWrap(aNode, aShell)
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsLeafAccessible, nsAccessible)
-
-/* nsIAccessible getFirstChild (); */
-NS_IMETHODIMP nsLeafAccessible::GetFirstChild(nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-/* nsIAccessible getLastChild (); */
-NS_IMETHODIMP nsLeafAccessible::GetLastChild(nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-/* long getAccChildCount (); */
-NS_IMETHODIMP nsLeafAccessible::GetChildCount(PRInt32 *_retval)
-{
-  *_retval = 0;
-  return NS_OK;
-}
-
-// nsAccessible::GetAllowsAnonChildAccessibles()
-PRBool
-nsLeafAccessible::GetAllowsAnonChildAccessibles()
-{
-  return PR_FALSE;
-}
 
 // nsAccessible::GetChildAtPoint()
 nsresult
@@ -104,19 +76,29 @@ nsLeafAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   return NS_OK;
 }
 
+// nsAccessible::CacheChildren()
+void
+nsLeafAccessible::CacheChildren()
+{
+  // No children for leaf accessible.
+  mAccChildCount = IsDefunct() ? eChildCountUninitialized : 0;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsLinkableAccessible
+////////////////////////////////////////////////////////////////////////////////
 
 nsLinkableAccessible::
   nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
-  nsHyperTextAccessibleWrap(aNode, aShell),
+  nsAccessibleWrap(aNode, aShell),
   mActionContent(nsnull),
   mIsLink(PR_FALSE),
   mIsOnclick(PR_FALSE)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsHyperTextAccessibleWrap)
+NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsAccessibleWrap)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsLinkableAccessible. nsIAccessible
@@ -128,14 +110,13 @@ nsLinkableAccessible::TakeFocus()
   if (actionAcc)
     return actionAcc->TakeFocus();
 
-  return nsHyperTextAccessibleWrap::TakeFocus();
+  return nsAccessibleWrap::TakeFocus();
 }
 
 nsresult
 nsLinkableAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHyperTextAccessibleWrap::GetStateInternal(aState,
-                                                            aExtraState);
+  nsresult rv = nsAccessibleWrap::GetStateInternal(aState, aExtraState);
   NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   if (mIsLink) {
@@ -153,7 +134,7 @@ nsLinkableAccessible::GetValue(nsAString& aValue)
 {
   aValue.Truncate();
 
-  nsHyperTextAccessible::GetValue(aValue);
+  nsAccessible::GetValue(aValue);
   if (!aValue.IsEmpty())
     return NS_OK;
 
@@ -206,7 +187,7 @@ nsLinkableAccessible::DoAction(PRUint8 aIndex)
   if (actionAcc)
     return actionAcc->DoAction(aIndex);
   
-  return nsHyperTextAccessibleWrap::DoAction(aIndex);
+  return nsAccessibleWrap::DoAction(aIndex);
 }
 
 NS_IMETHODIMP
@@ -250,14 +231,14 @@ nsresult
 nsLinkableAccessible::Init()
 {
   CacheActionContent();
-  return nsHyperTextAccessibleWrap::Init();
+  return nsAccessibleWrap::Init();
 }
 
 nsresult
 nsLinkableAccessible::Shutdown()
 {
   mActionContent = nsnull;
-  return nsHyperTextAccessibleWrap::Shutdown();
+  return nsAccessibleWrap::Shutdown();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

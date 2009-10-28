@@ -184,6 +184,7 @@ private:
   nsIFrame*               mTargetFrame;
   nsSVGFilterPaintCallback* mPaintCallback;
   nsSVGFilterElement*     mFilterElement;
+  // Bounding box of the target element, in user space
   gfxRect                 mTargetBBox;
   gfxMatrix               mFilterSpaceToDeviceSpaceTransform;
   gfxRect                 mFilterRect;

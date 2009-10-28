@@ -107,13 +107,14 @@ private:
   nsresult GetStrokeDashArray(double **arr, PRUint32 *count);
   float GetStrokeDashoffset();
 
-  // Returns opacity that should be used in rendering this primitive.
-  // In the general case the return value is just the passed opacity.
-  // If we can avoid the expense of a specified group opacity, we
-  // multiply the passed opacity by the value of the 'opacity'
-  // property, and elsewhere pretend the 'opacity' property has a
-  // value of 1.
-  float MaybeOptimizeOpacity(float aOpacity);
+  /**
+   * Returns the given 'fill-opacity' or 'stroke-opacity' value multiplied by
+   * the value of the 'opacity' property if it's possible to avoid the expense
+   * of creating and compositing an offscreen surface for 'opacity' by
+   * combining 'opacity' with the 'fill-opacity'/'stroke-opacity'. If not, the
+   * given 'fill-opacity'/'stroke-opacity' is returned unmodified.
+   */
+  float MaybeOptimizeOpacity(float aFillOrStrokeOpacity);
 };
 
 #endif // __NS_SVGGEOMETRYFRAME_H__

@@ -2530,6 +2530,8 @@ CSSParserImpl::ParseSelectorGroup(nsCSSSelectorList*& aList)
           return PR_FALSE;
         }
         list->AddSelector(empty);
+        // Save the weight of the non-pseudo-element part of this selector now
+        weight += listSel->CalcWeight();
         listSel = list->mSelectors; // use the new one for the pseudo
       }
       NS_ASSERTION(!listSel->mLowercaseTag &&
@@ -2538,6 +2540,7 @@ CSSParserImpl::ParseSelectorGroup(nsCSSSelectorList*& aList)
                    "already initialized");
       listSel->mLowercaseTag.swap(pseudoElement);
       listSel->mPseudoClassList = pseudoElementArgs.forget();
+      havePseudoElement = PR_TRUE;
     }
 
     combinator = PRUnichar(0);

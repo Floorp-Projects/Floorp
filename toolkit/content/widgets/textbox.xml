@@ -629,11 +629,8 @@
               return null;
 
             try {
-              var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].
-                             getService(CI.mozIJSSubScriptLoader);
-              loader.loadSubScript("chrome://global/content/inlineSpellCheckUI.js", this);
-              if ("InlineSpellCheckerUI" in this)
-                this.InlineSpellCheckerUI.init(textbox.editor);
+              Components.utils.import("resource://gre/modules/InlineSpellChecker.jsm", this);
+              this.InlineSpellCheckerUI = new this.InlineSpellChecker(textbox.editor);
             } catch(ex) { }
           }
 

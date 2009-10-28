@@ -1367,11 +1367,11 @@ HRESULT nsDataObj::GetFile(FORMATETC& aFE, STGMEDIUM& aSTG)
   PRBool found = PR_FALSE;
   while (NOERROR == m_enumFE->Next(1, &fe, &count)
          && dfInx < mDataFlavors.Length()) {
-    dfInx++;
     if (mDataFlavors[dfInx].EqualsLiteral(kNativeImageMime)) {
       found = PR_TRUE;
       break;
     }
+    dfInx++;
   }
 
   if (!found)

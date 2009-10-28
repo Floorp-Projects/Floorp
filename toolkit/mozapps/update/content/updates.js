@@ -348,7 +348,7 @@ var gUpdates = {
       var ps = CoC["@mozilla.org/preferences-service;1"].
                getService(CoI.nsIPrefService);
       var logBranch = ps.getBranch(PREF_APP_UPDATE_LOG_BRANCH);
-      var modules = logBranch.getChildList("", { value: 0 });
+      var modules = logBranch.getChildList("");
 
       for (var i = 0; i < modules.length; ++i) {
         if (logBranch.prefHasUserValue(modules[i]))

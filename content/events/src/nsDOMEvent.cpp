@@ -235,15 +235,21 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 // nsIDOMEventInterface
 NS_METHOD nsDOMEvent::GetType(nsAString& aType)
 {
+  if (!mCachedType.IsEmpty()) {
+    aType = mCachedType;
+    return NS_OK;
+  }
   const char* name = GetEventName(mEvent->message);
 
   if (name) {
     CopyASCIItoUTF16(name, aType);
+    mCachedType = aType;
     return NS_OK;
   } else if (mEvent->message == NS_USER_DEFINED_EVENT && mEvent->userType) {
     nsAutoString name;
     mEvent->userType->ToString(name);
     aType = Substring(name, 2, name.Length() - 2); // Remove "on"
+    mCachedType = aType;
     return NS_OK;
   }
   
@@ -724,7 +730,7 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, PRBool aCanBubbleArg, PRBo
   // re-dispatching it.
   mEvent->target = nsnull;
   mEvent->originalTarget = nsnull;
-
+  mCachedType = aEventTypeArg;
   return NS_OK;
 }
 
