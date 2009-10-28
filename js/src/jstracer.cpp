@@ -2887,14 +2887,7 @@ NativeToValueBase(JSContext* cx, jsval& v, JSTraceType type, double* slot)
         if (JSDOUBLE_IS_INT(d, i))
             goto store_int;
       store_double:
-        if (js_NewDoubleInRootedValue(cx, d, &v))
-            return true;
-
-        /*
-         * It's not safe to trigger the GC here, so use an emergency heap
-         * if we are out of double boxes.
-         */
-        return E::handleDoubleOOM(cx, d, v);
+        return E::NewDoubleInRootedValue(cx, d, v);
 
       case TT_JSVAL:
         v = *(jsval*)slot;
@@ -2937,7 +2930,13 @@ NativeToValueBase(JSContext* cx, jsval& v, JSTraceType type, double* slot)
 }
 
 struct ReserveDoubleOOMHandler {
-    static bool handleDoubleOOM(JSContext *cx, double d, jsval& v) {
+    static bool NewDoubleInRootedValue(JSContext *cx, double d, jsval& v) {
+        JS_ASSERT(!JS_TRACE_MONITOR(cx).useReservedObjects);
+        JS_TRACE_MONITOR(cx).useReservedObjects = true;
+        bool ok = js_NewDoubleInRootedValue(cx, d, &v);
+        JS_TRACE_MONITOR(cx).useReservedObjects = false;
+        if (ok)
+            return true;
         v = AllocateDoubleFromReservedPool(cx);
         JS_ASSERT(JSVAL_IS_DOUBLE(v) && *JSVAL_TO_DOUBLE(v) == 0.0);
         *JSVAL_TO_DOUBLE(v) = d;
@@ -2956,9 +2955,13 @@ NativeToValue(JSContext* cx, jsval& v, JSTraceType type, double* slot)
 }
 
 struct FailDoubleOOMHandler {
-    static bool handleDoubleOOM(JSContext *cx, double d, jsval& v) {
-        js_ReportOutOfMemory(cx);
-        return false;
+    static bool NewDoubleInRootedValue(JSContext *cx, double d, jsval& v) {
+        bool ok = js_NewDoubleInRootedValue(cx, d, &v);
+        if (!ok) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
     }
 };
 
