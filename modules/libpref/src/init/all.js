@@ -2873,7 +2873,7 @@ pref("geo.enabled", true);
 pref("accelerometer.enabled", true);
 
 // Enable/Disable HTML5 parser
-pref("html5.enable", false);
+pref("html5.enable", true);
 // Toggle which thread the HTML5 parser uses for stream parsing
 pref("html5.offmainthread", true);
 // Time in milliseconds between the time a network buffer is seen and the 
