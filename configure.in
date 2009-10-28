@@ -4160,7 +4160,15 @@ if test "$ac_cv_trouble_comparing_to_zero" = yes ; then
   AC_DEFINE(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)
 fi
 
-
+AC_CACHE_CHECK(for __thread keyword for TLS variables,
+               ac_cv_thread_keyword,
+               [AC_TRY_COMPILE([__thread bool tlsIsMainThread = false;],
+                               [return tlsIsMainThread;],
+                               ac_cv_thread_keyword=yes,
+                               ac_cv_thread_keyword=no)])
+if test "$ac_cv_thread_keyword" = yes; then
+  AC_DEFINE(HAVE_THREAD_TLS_KEYWORD)
+fi
 
 dnl End of C++ language/feature checks
 AC_LANG_C
