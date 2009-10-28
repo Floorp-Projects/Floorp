@@ -1436,3 +1436,14 @@ nsFrameLoader::TryNewProcess()
   return PR_TRUE;
 }
 #endif
+
+mozilla::dom::PIFrameEmbeddingParent*
+nsFrameLoader::GetChildProcess()
+{
+#ifdef MOZ_IPC
+  return mChildProcess;
+#else
+  return nsnull;
+#endif
+}
+
