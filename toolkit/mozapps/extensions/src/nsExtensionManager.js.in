@@ -2316,7 +2316,8 @@ ExtensionManager.prototype = {
         // If we've changed to a non-default theme make sure there is no
         // lightweight theme selected
         if (toSelect != gDefaultTheme) {
-          gPref.clearUserPref(PREF_LWTHEME_TO_SELECT);
+          if (gPref.prefHasUserValue(PREF_LWTHEME_TO_SELECT))
+            gPref.clearUserPref(PREF_LWTHEME_TO_SELECT);
           LightweightThemeManager.currentTheme = null;
         }
       }
@@ -3311,8 +3312,8 @@ ExtensionManager.prototype = {
         // Remember the list of add-ons that were disabled this time around
         gPref.setCharPref(PREF_EM_DISABLED_ADDONS_LIST, disabledAddons.join(","));
       }
-    } else {
-      // Clear the disabled addons list
+    } else if (gPref.prefHasUserValue(PREF_EM_DISABLED_ADDONS_LIST)) {
+      // Clear the disabled addons list if necessary
       gPref.clearUserPref(PREF_EM_DISABLED_ADDONS_LIST);
     }
 

@@ -97,7 +97,7 @@ let gDownloadLastDir = {
     } else {
       if (val instanceof Components.interfaces.nsIFile)
         prefSvc.setComplexValue(LAST_DIR_PREF, nsILocalFile, val);
-      else
+      else if (prefSvc.prefHasUserValue(LAST_DIR_PREF))
         prefSvc.clearUserPref(LAST_DIR_PREF);
     }
   }

@@ -54,7 +54,8 @@ function test() {
 
   function setupCleanSlate() {
     gLastOpenDirectory.reset();
-    gPrefService.clearUserPref(kPrefName);
+    if (gPrefService.prefHasUserValue(kPrefName))
+        gPrefService.clearUserPref(kPrefName);
   }
 
   setupCleanSlate();
