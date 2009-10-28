@@ -259,6 +259,14 @@ private:
                               const nsAString &aServiceContractId,
                               PRInt64 *_retval);
 
+  /**
+   * TArray version of getBookmarksIdForURI for ease of use in C++ code.
+   * Pass in a reference to a TArray; it will get filled with the
+   * resulting list of bookmark IDs.
+   */
+  nsresult GetBookmarkIdsForURITArray(nsIURI *aURI,
+                                      nsTArray<PRInt64> &aResult);
+
   // kGetInfoIndex_* results + kGetChildrenIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetChildren;
   static const PRInt32 kGetChildrenIndex_Position;

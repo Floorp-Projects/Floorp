@@ -1208,7 +1208,7 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
     // query for all bookmarks for that URI, notify for each
     nsTArray<PRInt64> bookmarks;
 
-    rv = GetBookmarkIdsForURITArray(aURI, &bookmarks);
+    rv = GetBookmarkIdsForURITArray(aURI, bookmarks);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (bookmarks.Length()) {
@@ -1320,7 +1320,7 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
       NS_ENSURE_SUCCESS(rv, rv);
       nsTArray<PRInt64> bookmarks;
 
-      rv = GetBookmarkIdsForURITArray(uri, &bookmarks);
+      rv = GetBookmarkIdsForURITArray(uri, bookmarks);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (bookmarks.Length()) {
@@ -1864,7 +1864,7 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsTArray<PRInt64> bookmarks;
-        rv = GetBookmarkIdsForURITArray(uri, &bookmarks);
+        rv = GetBookmarkIdsForURITArray(uri, bookmarks);
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (bookmarks.Length()) {
@@ -2692,12 +2692,12 @@ nsNavBookmarks::GetFolderIdForItem(PRInt64 aItemId, PRInt64 *aFolderId)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI *aURI,
-                                         nsTArray<PRInt64> *aResult) 
+                                           nsTArray<PRInt64> &aResult)
 {
+  NS_PRECONDITION(aURI, "Should not be null");
   NS_ENSURE_ARG(aURI);
-  NS_ENSURE_ARG_POINTER(aResult);
 
   mozStorageStatementScoper scope(mDBFindURIBookmarks);
 
@@ -2708,7 +2708,7 @@ nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI *aURI,
 
   PRBool more;
   while (NS_SUCCEEDED((rv = mDBFindURIBookmarks->ExecuteStep(&more))) && more) {
-    if (! aResult->AppendElement(
+    if (!aResult.AppendElement(
         mDBFindURIBookmarks->AsInt64(kFindBookmarksIndex_ID)))
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2730,7 +2730,7 @@ nsNavBookmarks::GetBookmarkIdsForURI(nsIURI *aURI, PRUint32 *aCount,
   nsTArray<PRInt64> bookmarks;
 
   // Get the information from the DB as a TArray
-  nsresult rv = GetBookmarkIdsForURITArray(aURI, &bookmarks);
+  nsresult rv = GetBookmarkIdsForURITArray(aURI, bookmarks);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Copy the results into a new array for output
@@ -3060,7 +3060,7 @@ nsNavBookmarks::OnVisit(nsIURI *aURI, PRInt64 aVisitID, PRTime aTime,
     // query for all bookmarks for that URI, notify for each
     nsTArray<PRInt64> bookmarks;
 
-    nsresult rv = GetBookmarkIdsForURITArray(aURI, &bookmarks);
+    nsresult rv = GetBookmarkIdsForURITArray(aURI, bookmarks);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (bookmarks.Length()) {
@@ -3088,7 +3088,7 @@ nsNavBookmarks::OnDeleteURI(nsIURI *aURI)
     // query for all bookmarks for that URI, notify for each 
     nsTArray<PRInt64> bookmarks;
 
-    nsresult rv = GetBookmarkIdsForURITArray(aURI, &bookmarks);
+    nsresult rv = GetBookmarkIdsForURITArray(aURI, bookmarks);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (bookmarks.Length()) {
@@ -3157,7 +3157,7 @@ nsNavBookmarks::OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
     else {
       // query for all bookmarks for that URI, notify for each 
       nsTArray<PRInt64> bookmarks;
-      rv = GetBookmarkIdsForURITArray(aURI, &bookmarks);
+      rv = GetBookmarkIdsForURITArray(aURI, bookmarks);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (bookmarks.Length()) {
