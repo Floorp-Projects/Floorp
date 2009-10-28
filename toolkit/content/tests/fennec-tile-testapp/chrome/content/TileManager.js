@@ -854,8 +854,7 @@ TileManager.Tile.prototype = {
     let x = rect.left - this.boundRect.left;
     let y = rect.top - this.boundRect.top;
 
-    // content process is not being scaled, so don't scale our rect either
-    //browserView.viewportToBrowserRect(rect);
+    browserView.viewportToBrowserRect(rect);
     //rect.round(); // snap outward to get whole "pixel" (in browser coords)
 
     let ctx = this._canvas.getContext("2d");
@@ -867,7 +866,7 @@ TileManager.Tile.prototype = {
 
     let cw = browserView._contentWindow;
     //let cw = browser.contentWindow;
-    ctx.asyncDrawXULElement(browserView._browser,
+    ctx.drawWindow(cw,
                    rect.left, rect.top,
                    rect.right - rect.left, rect.bottom - rect.top,
                    "grey",
