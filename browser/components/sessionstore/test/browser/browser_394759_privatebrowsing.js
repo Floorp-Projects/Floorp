@@ -42,13 +42,8 @@ function test() {
 
   waitForExplicitFinish();
 
-  // Setup.
-  let pb = Cc["@mozilla.org/privatebrowsing;1"].
-           getService(Ci.nsIPrivateBrowsingService);
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
 
   // Remove the sessionstore.js file before setting the interval to 0
   let profilePath = Cc["@mozilla.org/file/directory_service;1"].
@@ -77,9 +72,39 @@ function test() {
   });
   ss.setBrowserState(blankState);
 
+  waitForSessionStoreJS();
+}
+
+let pass = 0;
+const MAX_PASS = 6;
+function waitForSessionStoreJS() {
+  if (++pass > MAX_PASS) {
+    throw("Timed out waiting for sessionstore.js");
+    finish();
+  }
+
+  let profilePath = Cc["@mozilla.org/file/directory_service;1"].
+                    getService(Ci.nsIProperties).
+                    get("ProfD", Ci.nsIFile);
+  let sessionStoreJS = profilePath.clone();
+  sessionStoreJS.append("sessionstore.js");
+  if (sessionStoreJS.exists())
+    executeSoon(continue_test);
+  else
+    setTimeout(500, waitForSessionStoreJS);
+}
+
+function continue_test() {
+  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+           getService(Ci.nsIWindowWatcher);
+  let pb = Cc["@mozilla.org/privatebrowsing;1"].
+           getService(Ci.nsIPrivateBrowsingService);
+  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+           getService(Ci.nsISessionStore);
+
   let closedWindowCount = ss.getClosedWindowCount();
   is(closedWindowCount, 0, "Correctly set window count");
-  is(sessionStoreJS.exists(), true, "sessionstore.js has been recreated")
+
   gPrefService.clearUserPref("browser.sessionstore.interval");
 
   // Prevent VM timers issues, cache now and increment it manually.
@@ -169,7 +194,7 @@ function test() {
           let infos = els.getListenerInfoFor(win, {});
           is(infos.length, 1, "Window has 1 listener");
           is(infos[0].type, "load", "Window has load listener");
-          is(infos[0].capturing, false, "Window does not have a capture listener");
+          ok(!infos[0].capturing, "Window does not have a capture listener");
         }
         else if (aTopic === "domwindowclosed") {
           info("Window closed");
