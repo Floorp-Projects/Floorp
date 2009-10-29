@@ -107,8 +107,22 @@ let Util = {
       return link.href;
     else
       return null;
-  }
+  },
 
+  contentIsHandheld: function contentIsHandheld(browser) {
+    let doctype = browser.contentDocument.doctype;
+    if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
+      return true;
+
+    let windowUtils = browser.contentWindow
+                             .QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+    let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
+    if (handheldFriendly == "true")
+      return true;
+
+    return false;
+  }
 };
 
 

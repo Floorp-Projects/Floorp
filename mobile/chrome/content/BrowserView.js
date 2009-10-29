@@ -556,22 +556,11 @@ BrowserView.prototype = {
     if (!browser)
       return 0;
 
-    let windowUtils = browser.contentWindow
-                             .QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
-    let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
-    let handheldDoctype = 
-          (browser.contentDocument.doctype && 
-           (browser.contentDocument.doctype.publicId.search("WAP") != -1 ||
-            browser.contentDocument.doctype.publicId.search("WML") != -1 ||
-            browser.contentDocument.doctype.publicId.search("Mobile") != -1)); 
-
-    if (handheldFriendly == "true" || handheldDoctype) {
+    if (Util.contentIsHandheld(browser))
       return 1;
-    } else {
-      let [w, h] = BrowserView.Util.getBrowserDimensions(browser);
-      return BrowserView.Util.pageZoomLevel(this.getVisibleRect(), w, h);
-    }
+
+    let [w, h] = BrowserView.Util.getBrowserDimensions(browser);
+    return BrowserView.Util.pageZoomLevel(this.getVisibleRect(), w, h);
   },
 
   zoom: function zoom(aDirection) {
