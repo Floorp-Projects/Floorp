@@ -288,18 +288,18 @@ case "$target" in
 
     ac_exeext=.exe
 
-    _pwdw=`pwd -W`
-    _pwd=`pwd`
-    make OGLES_SDK_DIR="$OGLES_SDK_DIR" WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$_topsrcdir" OBJDIR="$_pwdw" -C $srcdir/build/wince/tools
+    _pwd=`pwd -W`
+    _topsrcdirwin=`cd \`dirname $0\`; pwd -W`
+    make OGLES_SDK_DIR="$OGLES_SDK_DIR" WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$_topsrcdirwin" OBJDIR="$_pwd" -C $srcdir/build/wince/tools
 
-    CC="$_pwd/dist/sdk/bin/arm-wince-gcc"
-    CXX="$_pwd/dist/sdk/bin/arm-wince-gcc"
-    CPP="$_pwd/dist/sdk/bin/arm-wince-gcc -E -nologo"
-    CXXCPP="$_pwd/dist/sdk/bin/arm-wince-gcc -TP -E -nologo"
-    LD="$_pwd/dist/sdk/bin/arm-wince-link"
-    AR="$_pwd/dist/sdk/bin/arm-wince-lib"
-    AS="$_pwd/dist/sdk/bin/arm-wince-as"
-    RC="$_pwd/dist/sdk/bin/arm-wince-res"
+    CC="$_pwd/dist/sdk/bin/arm-wince-gcc.exe"
+    CXX="$_pwd/dist/sdk/bin/arm-wince-gcc.exe"
+    CPP="$_pwd/dist/sdk/bin/arm-wince-gcc.exe -E -nologo"
+    CXXCPP="$_pwd/dist/sdk/bin/arm-wince-gcc.exe -TP -E -nologo"
+    LD="$_pwd/dist/sdk/bin/arm-wince-link.exe"
+    AR="$_pwd/dist/sdk/bin/arm-wince-lib.exe"
+    AS="$_pwd/dist/sdk/bin/arm-wince-as.exe"
+    RC="$_pwd/dist/sdk/bin/arm-wince-res.exe"
 
 
     echo -----------------------------------------------------------------------------
@@ -2010,7 +2010,8 @@ case "$target" in
     TARGET_COMPILER_ABI=msvc
     _PLATFORM_DEFAULT_TOOLKIT=cairo-windows
     _PLATFORM_MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1
-    MOZ_TOOLS_DIR=`echo $MOZ_TOOLS`
+    MOZ_TOOLS_DIR=`cd $MOZ_TOOLS && pwd -W`
+    MOZ_BUILD_ROOT=`cd $MOZ_BUILD_ROOT && pwd -W`
     AR_LIST="$AR -list"
     AR_EXTRACT="$AR -extract"
     AR_DELETE="$AR d"
@@ -4159,7 +4160,15 @@ if test "$ac_cv_trouble_comparing_to_zero" = yes ; then
   AC_DEFINE(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)
 fi
 
-
+AC_CACHE_CHECK(for __thread keyword for TLS variables,
+               ac_cv_thread_keyword,
+               [AC_TRY_COMPILE([__thread bool tlsIsMainThread = false;],
+                               [return tlsIsMainThread;],
+                               ac_cv_thread_keyword=yes,
+                               ac_cv_thread_keyword=no)])
+if test "$ac_cv_thread_keyword" = yes; then
+  AC_DEFINE(HAVE_THREAD_TLS_KEYWORD)
+fi
 
 dnl End of C++ language/feature checks
 AC_LANG_C
@@ -4749,12 +4758,16 @@ photon)
 
 cairo-windows)
     MOZ_WIDGET_TOOLKIT=windows
+    if test -z "$WINCE"; then
+        MOZ_WEBGL=1
+    fi
     ;;
 
 cairo-gtk2|cairo-gtk2-x11)
     MOZ_WIDGET_TOOLKIT=gtk2
     MOZ_ENABLE_GTK2=1
     MOZ_ENABLE_XREMOTE=1
+    MOZ_WEBGL=1
 
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
@@ -4767,6 +4780,7 @@ cairo-gtk2|cairo-gtk2-x11)
 cairo-gtk2-dfb)
     MOZ_WIDGET_TOOLKIT=gtk2
     MOZ_ENABLE_GTK2=1
+    MOZ_WEBGL=1
 
     AC_DEFINE(MOZ_DFB)
     MOZ_DFB=1
@@ -4819,6 +4833,7 @@ cairo-cocoa)
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL -lobjc'
     MOZ_FS_LAYOUT=bundle
+    MOZ_WEBGL=1
     ;;
 esac
 
@@ -6196,6 +6211,7 @@ if test $NS_OSSO; then
     fi
     AC_DEFINE(NS_OSSO)
     MOZ_GFX_OPTIMIZE_MOBILE=1
+    MOZ_WEBGL=
 fi
 AC_SUBST(LIBOSSO_CFLAGS)
 AC_SUBST(LIBOSSO_LIBS)
@@ -7806,6 +7822,7 @@ AC_SUBST(MOZ_PLACES_BOOKMARKS)
 AC_SUBST(MOZ_STORAGE)
 AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
+AC_SUBST(MOZ_WEBGL)
 
 AC_SUBST(MOZ_JAVAXPCOM)
 AC_SUBST(JAVA_INCLUDE_PATH)
@@ -8036,6 +8053,16 @@ if test "$MOZ_X11"; then
     fi
 
 fi # MOZ_X11
+
+dnl Check for headers, etc. needed by WebGL.
+if test -n "$MOZ_WEBGL"; then
+    if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
+        AC_CHECK_HEADER(GL/glx.h)
+        if test "$ac_cv_header_GL_glx_h" != "yes"; then
+            AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa (SuSE))])
+        fi
+    fi
+fi # MOZ_WEBGL
 fi # COMPILE_ENVIRONMENT
 
 dnl Set various defines and substitutions

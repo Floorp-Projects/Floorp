@@ -11,5 +11,6 @@ function test() {
   is(gBrowser.mTabs.length, 1, "a new tab has been opened");
   is(document.activeElement, gURLBar.inputField, "location bar is focused for the new tab");
 
-  gPrefService.clearUserPref("browser.tabs.closeWindowWithLastTab");
+  if (gPrefService.prefHasUserValue("browser.tabs.closeWindowWithLastTab"))
+    gPrefService.clearUserPref("browser.tabs.closeWindowWithLastTab");
 }

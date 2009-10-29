@@ -171,8 +171,10 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
                               PRBool aIsTopOfPage)
 {
   NS_ASSERTION(nsnull == mRootSpan, "bad linelayout user");
-  NS_ASSERTION(aWidth != NS_UNCONSTRAINEDSIZE,
-               "should no longer be using unconstrained widths");
+  NS_WARN_IF_FALSE(aWidth != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained width; this should only result from "
+                   "very large sizes, not attempts at intrinsic width "
+                   "calculation");
 #ifdef DEBUG
   if ((aWidth != NS_UNCONSTRAINEDSIZE) && CRAZY_WIDTH(aWidth)) {
     NS_NOTREACHED("bad width");
@@ -313,9 +315,11 @@ nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
 #endif
 
   // Compute the difference between last times width and the new width
-  NS_ASSERTION(mRootSpan->mRightEdge != NS_UNCONSTRAINEDSIZE &&
-               aNewAvailSpace.width != NS_UNCONSTRAINEDSIZE,
-               "shouldn't use unconstrained widths anymore");
+  NS_WARN_IF_FALSE(mRootSpan->mRightEdge != NS_UNCONSTRAINEDSIZE &&
+                   aNewAvailSpace.width != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained width; this should only result from "
+                   "very large sizes, not attempts at intrinsic width "
+                   "calculation");
   // The root span's mLeftEdge moves to aX
   nscoord deltaX = aNewAvailSpace.x - mRootSpan->mLeftEdge;
   // The width of all spans changes by this much (the root span's
@@ -775,8 +779,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Inline-ish and text-ish things don't compute their width;
   // everything else does.  We need to give them an available width that
   // reflects the space left on the line.
-  NS_ASSERTION(psd->mRightEdge != NS_UNCONSTRAINEDSIZE,
-               "shouldn't have unconstrained widths anymore");
+  NS_WARN_IF_FALSE(psd->mRightEdge != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained width; this should only result from "
+                   "very large sizes, not attempts at intrinsic width "
+                   "calculation");
   if (reflowState.ComputedWidth() == NS_UNCONSTRAINEDSIZE)
     reflowState.availableWidth = psd->mRightEdge - psd->mX;
 
@@ -1094,8 +1100,10 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
   else {
     pfd->mBounds.x += ltr ? pfd->mMargin.left : pfd->mMargin.right;
 
-    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth,
-                 "shouldn't have unconstrained widths anymore");
+    NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth,
+                     "have unconstrained width; this should only result from "
+                     "very large sizes, not attempts at intrinsic width "
+                     "calculation");
     if (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedWidth()) {
       // For inline-ish and text-ish things (which don't compute widths
       // in the reflow state), adjust available width to account for the
@@ -2408,8 +2416,10 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
                                     PRBool aAllowJustify)
 {
   PerSpanData* psd = mRootSpan;
-  NS_ASSERTION(psd->mRightEdge != NS_UNCONSTRAINEDSIZE,
-               "shouldn't have unconstrained widths anymore");
+  NS_WARN_IF_FALSE(psd->mRightEdge != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained width; this should only result from "
+                   "very large sizes, not attempts at intrinsic width "
+                   "calculation");
   nscoord availWidth = psd->mRightEdge - psd->mLeftEdge;
   nscoord remainingWidth = availWidth - aLineBounds.width;
 #ifdef NOISY_HORIZONTAL_ALIGN

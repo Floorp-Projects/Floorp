@@ -238,6 +238,10 @@ SimpleTest.waitForFocus = function (callback, targetWindow) {
     var fm = Components.classes["@mozilla.org/focus-manager;1"].
                         getService(Components.interfaces.nsIFocusManager);
 
+    var usedTargetWindow = {};
+    fm.getFocusedElementForWindow(targetWindow, true, usedTargetWindow);
+    targetWindow = usedTargetWindow.value;
+
     function debugFocusLog(prefix) {
         netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 

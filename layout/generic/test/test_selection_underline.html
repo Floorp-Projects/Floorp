@@ -421,12 +421,14 @@ function cleanup()
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
 
-  prefs.clearUserPref("font.size.variable.x-western");
+  if (prefs.prefHasUserValue("font.size.variable.x-western"))
+    prefs.clearUserPref("font.size.variable.x-western");
 
   for (var i = 0; i < gPrefs.length; i++) {
-    prefs.clearUserPref(gPrefs[i].name);
     if (gPrefs[i].wasUserSetValue)
       setPrefValue(prefs, gPrefs[i].name, gPrefs[i].type, gPrefs[i].oldValue);
+    else if (prefs.prefHasUserValue(gPrefs[i].name))
+      prefs.clearUserPref(gPrefs[i].name);
   }
 }
 

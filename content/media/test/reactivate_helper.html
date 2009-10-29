@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<script>
+var loadsWaiting = 0;
+var elements = [];
+
+function loadedData(event) {
+  parent.ok(elements.indexOf(event.target) == -1, "Element already loaded: " + event.target.currentSrc);
+
+  elements.push(event.target);
+
+  --loadsWaiting;
+  parent.ok(true, "Loaded " + event.target.currentSrc);
+  if (loadsWaiting == 0) {
+    parent.loadedAll(elements);
+  }
+}
+
+for (var i = 0; i < parent.gSmallTests.length; ++i) {
+  var test = parent.gSmallTests[i];
+  var elemType = /^audio/.test(test.type) ? "audio" : "video";
+  // Associate these elements with the subframe's document
+  var e = document.createElement(elemType);
+  if (e.canPlayType(test.type)) {
+    e.src = test.name;
+    e.addEventListener("loadeddata", loadedData, false);
+    e.load();
+    ++loadsWaiting;
+  }
+}
+
+if (loadsWaiting == 0) {
+  parent.todo(false, "Can't play anything");
+} else {
+  parent.SimpleTest.waitForExplicitFinish();
+}
+</script>
+</body>
+</html>

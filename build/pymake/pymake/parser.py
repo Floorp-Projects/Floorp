@@ -71,7 +71,7 @@ class Data(object):
         """
         m = _skipws.search(self.s, offset, self.lend)
         if m is None:
-            return None
+            return self.lend
 
         return m.start(0)
 

@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=375363
+-->
+<head>
+  <title>Test for cloning of CSS property values (including 'inherit' and '-moz-initial')</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"><iframe id="iframe" src="about:blank"></iframe></p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for cloning of CSS property values (including 'inherit' and '-moz-initial') **/
+
+var test_queue = [];
+var iframe = document.getElementById("iframe");
+var current_item;
+
+SimpleTest.waitForExplicitFinish();
+
+for (var prop in gCSSProperties) {
+  var info = gCSSProperties[prop];
+
+  test_queue.push({ prop: prop, value: "inherit",
+                    inherited_value: info.initial_values[0] });
+  test_queue.push({ prop: prop, value: "inherit",
+                    inherited_value: info.other_values[0] });
+  test_queue.push({ prop: prop, value: "-moz-initial" });
+  for (var idx in info.initial_values) {
+    test_queue.push({ prop: prop, value: info.initial_values[idx] });
+  }
+  for (var idx in info.other_values) {
+    test_queue.push({ prop: prop, value: info.other_values[idx] });
+  }
+}
+
+test_queue.reverse();
+
+process_next_item();
+
+function process_next_item()
+{
+  if (test_queue.length == 0) {
+    SimpleTest.finish();
+    return;
+  }
+
+  current_item = test_queue.pop();
+
+  var info = gCSSProperties[current_item.prop];
+
+  var sheet_data = "";
+  sheet_data += "#parent, #test { ";
+  for (var prereq in info.prereqs) {
+    sheet_data += prereq + ": " + info.prereqs[prereq] + ";";
+  }
+  sheet_data += " }";
+
+  sheet_data += "#parent { ";
+  if ("inherited_value" in current_item) {
+    sheet_data += current_item.prop + ": " + current_item.inherited_value;
+  }
+  sheet_data += " }";
+
+  sheet_data += "#test { ";
+  sheet_data += current_item.prop + ": " + current_item.value;
+  sheet_data += " }";
+
+  var sheet_url = "data:text/css," + escape(sheet_data);
+
+  var doc_data =
+    "<!DOCTYPE HTML>\n" +
+    "<link rel='stylesheet' type='text/css' href='" + sheet_url + "'>\n" +
+    "<link rel='stylesheet' type='text/css' href='" + sheet_url + "'>\n" +
+    "<body>\n";
+  if ("inherited_value" in current_item) {
+    doc_data += "<span id='parent'>";
+  }
+  doc_data += "<span id='test'></span>";
+  if ("inherited_value" in current_item) {
+    doc_data += "</span>";
+  }
+
+  var doc_url = "data:text/html," + escape(doc_data);
+  iframe.onload = iframe_loaded;
+  iframe.src = doc_url;
+}
+
+function iframe_loaded(event)
+{
+  if (event.target != iframe)
+    return;
+
+  var info = gCSSProperties[current_item.prop];
+  var ifdoc = iframe.contentDocument;
+
+  var test = ifdoc.getElementById("test");
+  var test_cs = iframe.contentWindow.getComputedStyle(test, "");
+  var start_ser =
+    ifdoc.styleSheets[0].cssRules[2].style.getPropertyValue(current_item.prop);
+  if (start_ser == "") {
+    isnot(start_ser, "",
+          "serialization should be nonempty for " +
+          current_item.prop + ": " + current_item.value);
+  }
+
+  var start_compute;
+  if (!("backend_only" in info)) {
+    start_compute = get_computed_value(test_cs, current_item.prop);
+    if (start_compute == "") {
+      isnot(start_compute, "",
+            "computed value should be nonempty for " +
+            current_item.prop + ": " + current_item.value);
+    }
+  }
+
+  // In case the above access didn't force a clone already (though it
+  // currently does), clone the second style sheet's inner and then
+  // remove the first.
+  ifdoc.styleSheets[1].insertRule("#nonexistent { color: red }", 0);
+  var firstlink = ifdoc.getElementsByTagName("link")[0];
+  firstlink.parentNode.removeChild(firstlink);
+
+  // Force a flush
+  ifdoc.body.style.display="none";
+  var ow = ifdoc.body.offsetWidth;
+  ifdoc.body.style.display="";
+
+  var end_ser =
+    ifdoc.styleSheets[0].cssRules[3].style.getPropertyValue(current_item.prop);
+  is(end_ser, start_ser,
+     "serialization should match when cloning " +
+     current_item.prop + ": " + current_item.value);
+
+  if (!("backend_only" in info)) {
+    var end_compute = get_computed_value(test_cs, current_item.prop);
+    is(end_compute, start_compute,
+       "computed values should match when cloning " +
+       current_item.prop + ": " + current_item.value);
+  }
+
+  process_next_item();
+}
+
+</script>
+</pre>
+</body>
+</html>

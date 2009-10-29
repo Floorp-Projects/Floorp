@@ -1555,7 +1555,7 @@ SessionStoreService.prototype = {
         if (node.type != "file")
           data[id] = node.type == "checkbox" || node.type == "radio" ? node.checked : node.value;
         else
-          data[id] = { type: "file", fileList: node.mozGetFileNameArray({}) };
+          data[id] = { type: "file", fileList: node.mozGetFileNameArray() };
       }
       else if (node instanceof Ci.nsIDOMHTMLTextAreaElement)
         data[id] = node.value;

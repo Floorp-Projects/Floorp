@@ -65,6 +65,9 @@ def createReftestProfile(options, profileDir):
 """)
   prefsFile.write('user_pref("reftest.timeout", %d);' % (options.timeout * 1000))
   prefsFile.write('user_pref("ui.caretBlinkTime", -1);')
+  # no slow script dialogs
+  prefsFile.write('user_pref("dom.max_script_run_time", 0);')
+  prefsFile.write('user_pref("dom.max_chrome_script_run_time", 0);')
   prefsFile.close()
 
   # install the reftest extension bits into the profile
