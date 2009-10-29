@@ -1070,18 +1070,28 @@ var FormHelper = {
     return (aElement instanceof HTMLSelectElement) || (aElement instanceof Ci.nsIDOMXULMenuListElement);
   },
 
+
+  _nsResolver: function(aPrefix) {
+    var ns = {
+      "xhtml" : "http://www.w3.org/1999/xhtml"
+    };
+    return ns[aPrefix] || null;
+  },
+
   _getAll: function() {
     let doc = getBrowser().contentDocument;
-    let nodes = doc.evaluate("//input|//select",
+    let prefix = doc.documentElement.wrappedJSObject.namespaceURI ? "xhtml" : "";
+    let expression = "//input|//select|//button".replace("//", "//" + prefix + ":");
+    let nodes = doc.evaluate(expression,
                              doc,
-                             null,
+                             this._nsResolver,
                              XPathResult.ORDERED_NODE_ITERATOR_TYPE,
                              null);
 
     let elements = [];
     let node = nodes.iterateNext();
     while (node) {
-      if (this._isValidElement(node)) 
+      if (this._isValidElement(node))
         elements.push(node);
       node = nodes.iterateNext();
     }
