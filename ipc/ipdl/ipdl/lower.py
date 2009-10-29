@@ -220,6 +220,13 @@ def _otherSide(side):
     if side == 'parent':  return 'child'
     assert 0
 
+def _ifLogging(stmts):
+    iflogging = StmtIf(ExprCall(
+        ExprVar('PR_GetEnv'),
+        args=[ ExprLiteral.String('MOZ_IPC_MESSAGE_LOG') ]))
+    iflogging.addifstmts(stmts)
+    return iflogging
+
 ##-----------------------------------------------------------------------------
 ## Intermediate representation (IR) nodes used during lowering
 
@@ -879,6 +886,10 @@ class MessageDecl(ipdl.ast.MessageDecl):
     def pqMsgClass(self):
         return '%s::%s'% (self.namespace, self.msgClass())
 
+    def msgCast(self, msgexpr):
+        return ExprCast(msgexpr, Type(self.pqMsgClass(), const=1, ptr=1),
+                        reinterpret=1)
+
     def msgId(self):  return self.msgClass()+ '__ID'
     def pqMsgId(self):
         return '%s::%s'% (self.namespace, self.msgId())
@@ -888,6 +899,10 @@ class MessageDecl(ipdl.ast.MessageDecl):
 
     def pqReplyClass(self):
         return '%s::%s'% (self.namespace, self.replyClass())
+
+    def replyCast(self, replyexpr):
+        return ExprCast(replyexpr, Type(self.pqReplyClass(), const=1, ptr=1),
+                        reinterpret=1)
 
     def replyId(self):  return self.replyClass()+ '__ID'
     def pqReplyId(self):
@@ -1334,7 +1349,7 @@ def _generateMessageClass(clsname, msgid, inparams, outparams, typedefs):
 
     # TODO turn this back on when string stuff is sorted
 
-    appendToMsg(ExprLiteral.String(')\\n'))
+    logger.addstmt(appendToMsg(ExprLiteral.String(')\\n')))
 
     # and actually print the log message
     logger.addstmt(StmtExpr(ExprCall(
@@ -2485,9 +2500,11 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         method.addstmts(self.ctorPrologue(md) + [ Whitespace.NL ])
 
         msgvar, stmts = self.makeMessage(md)
+        sendok, sendstmts = self.sendAsync(md, msgvar)
         method.addstmts(
             stmts
-            + self.failCtorIf(md, ExprNot(self.sendAsync(md, msgvar)))
+            + sendstmts
+            + self.failCtorIf(md, ExprNot(sendok))
             + [ StmtReturn(actor.var()) ])
 
         lbl = CaseLabel(md.pqReplyId())
@@ -2507,18 +2524,19 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         msgvar, stmts = self.makeMessage(md)
 
         replyvar = self.replyvar
+        sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar)
         method.addstmts(
             stmts
             + [ Whitespace.NL,
                 StmtDecl(Decl(Type('Message'), replyvar.name)) ]
-            + self.failCtorIf(
-                md, ExprNot(self.sendBlocking(md, msgvar, replyvar))))
+            + sendstmts
+            + self.failCtorIf(md, ExprNot(sendok)))
 
-        okvar, stmts = self.deserializeReply(
+        readok, stmts = self.deserializeReply(
             md, ExprAddrOf(replyvar), self.side)
         method.addstmts(
             stmts
-            + self.failCtorIf(md, ExprNot(okvar))
+            + self.failCtorIf(md, ExprNot(readok))
             + [ StmtReturn(actor.var()) ])
 
         return method
@@ -2568,15 +2586,13 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         method.addstmts(self.dtorPrologue(actor.var()))
 
         msgvar, stmts = self.makeMessage(md)
-
-        rvvar = ExprVar('rv')
+        sendok, sendstmts = self.sendAsync(md, msgvar)
         method.addstmts(
             stmts
-            + [ StmtDecl(Decl(Type.BOOL, rvvar.name)),
-              StmtExpr(ExprAssn(rvvar, self.sendAsync(md, msgvar))),
-              Whitespace.NL ]
+            + sendstmts
+            + [ Whitespace.NL ]
             + self.dtorEpilogue(md, actor.var(), retsems='out')
-            + [ StmtReturn(rvvar) ])
+            + [ StmtReturn(sendok) ])
 
         lbl = CaseLabel(md.pqReplyId())
         case = StmtBlock()
@@ -2595,26 +2611,25 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
 
         msgvar, stmts = self.makeMessage(md)
 
-        okvar = ExprVar('__ok')
         replyvar = self.replyvar
+        sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar)
         method.addstmts(
             stmts
             + [ Whitespace.NL,
-                StmtDecl(Decl(Type('Message'), replyvar.name)),
-                StmtDecl(Decl(Type.BOOL, okvar.name),
-                         self.sendBlocking(md, msgvar, replyvar)) ])
+                StmtDecl(Decl(Type('Message'), replyvar.name)) ]
+            + sendstmts)
 
-        readokvar, destmts = self.deserializeReply(
+        readok, destmts = self.deserializeReply(
             md, ExprAddrOf(replyvar), self.side)
-        ifsendok = StmtIf(okvar)
+        ifsendok = StmtIf(sendok)
         ifsendok.addifstmts(destmts)
         ifsendok.addifstmts([ Whitespace.NL,
-                              StmtExpr(ExprAssn(okvar, readokvar, '&=')) ])
+                              StmtExpr(ExprAssn(sendok, readok, '&=')) ])
 
         method.addstmts(
             [ ifsendok ]
             + self.dtorEpilogue(md, actor.var(), retsems='out')
-            + [ Whitespace.NL, StmtReturn(okvar) ])
+            + [ Whitespace.NL, StmtReturn(sendok) ])
 
         return method
 
@@ -2628,9 +2643,11 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
     def genAsyncSendMethod(self, md):
         method = MethodDefn(self.makeSendMethodDecl(md))
         msgvar, stmts = self.makeMessage(md)
-        method.addstmts(stmts +
-                        [ Whitespace.NL,
-                          StmtReturn(self.sendAsync(md, msgvar)) ])
+        sendok, sendstmts = self.sendAsync(md, msgvar)
+        method.addstmts(stmts
+                        +[ Whitespace.NL ]
+                        + sendstmts
+                        +[ StmtReturn(sendok) ])
         return method
 
 
@@ -2640,7 +2657,8 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         msgvar, serstmts = self.makeMessage(md)
         replyvar = self.replyvar
 
-        failif = StmtIf(ExprNot(self.sendBlocking(md, msgvar, replyvar)))
+        sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar)
+        failif = StmtIf(ExprNot(sendok))
         failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
 
         readok, desstmts = self.deserializeReply(
@@ -2649,10 +2667,12 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         method.addstmts(
             serstmts
             + [ Whitespace.NL,
-                StmtDecl(Decl(Type('Message'), replyvar.name)),
-                failif ]
+                StmtDecl(Decl(Type('Message'), replyvar.name)) ]
+            + sendstmts
+            + [ failif ]
             + desstmts
-            + [ Whitespace.NL, StmtReturn(readok) ])
+            + [ Whitespace.NL,
+                StmtReturn(readok) ])
 
         return method
 
@@ -2779,7 +2799,8 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             StmtExpr(ExprAssn(
                 replyvar,
                 ExprNew(Type(md.pqReplyClass()), args=replyCtorArgs))) ]
-            + self.setMessageFlags(md, replyvar, reply=1))
+            + self.setMessageFlags(md, replyvar, reply=1)
+            +[ self.logMessage(md, md.replyCast(replyvar), 'Sending reply ') ])
         
         return stmts
 
@@ -2804,10 +2825,15 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
 
 
     def deserializeMessage(self, md, side):
+        msgvar = self.msgvar
         isctor = md.decl.type.isCtor()
         vars = [ ]
         readvars = [ ]
-        stmts = [ ]
+        stmts = [
+            self.logMessage(md, md.msgCast(ExprAddrOf(msgvar)),
+                            'Received '),
+            Whitespace.NL
+        ]
         for param in md.params:
             var, declstmts = param.makeDeserializedDecls(self.side)
             vars.append(var)
@@ -2821,7 +2847,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         stmts.append(
             StmtDecl(Decl(Type.BOOL, okvar.name),
                      ExprCall(ExprVar(md.pqMsgClass() +'::Read'),
-                              args=[ ExprAddrOf(self.msgvar) ]
+                              args=[ ExprAddrOf(msgvar) ]
                               + [ ExprAddrOf(p) for p in readvars ])))
 
         ifok = StmtIf(okvar)
@@ -2842,7 +2868,10 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
 
     def deserializeReply(self, md, replyexpr, side):
         readexprs = [ ]
-        stmts = [ ]
+        stmts = [ Whitespace.NL,
+                  self.logMessage(md, md.replyCast(replyexpr),
+                                  'Received reply '),
+                  Whitespace.NL ]
         for ret in md.returns:
             fake, readvar, declstmts = ret.makePipeDecls(ret.var())
             if fake:
@@ -2868,16 +2897,35 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         return okvar, stmts
 
 
-    def sendAsync(self, md, msgexpr):     
-        return ExprCall(ExprSelect(self.protocol.channelVar(),
-                                   self.protocol.channelSel(), 'Send'),
-                        args=[ msgexpr ])
+    def sendAsync(self, md, msgexpr):
+        sendok = ExprVar('__sendok')
+        return (
+            sendok,
+            [ Whitespace.NL,
+              self.logMessage(md, msgexpr, 'Sending '),
+              Whitespace.NL,
+              StmtDecl(Decl(Type.BOOL, sendok.name),
+                       init=ExprCall(
+                           ExprSelect(self.protocol.channelVar(),
+                                      self.protocol.channelSel(), 'Send'),
+                           args=[ msgexpr ]))
+            ])
 
     def sendBlocking(self, md, msgexpr, replyexpr):
-        return ExprCall(ExprSelect(self.protocol.channelVar(),
-                                   self.protocol.channelSel(),
-                                   _sendPrefix(md.decl.type)),
-                        args=[ msgexpr, ExprAddrOf(replyexpr) ])
+        sendok = ExprVar('__sendok')
+        return (
+            sendok,
+            [ Whitespace.NL,
+              self.logMessage(md, msgexpr, 'Sending '),
+              Whitespace.NL,
+              StmtDecl(Decl(Type.BOOL, sendok.name),
+                       init=ExprCall(ExprSelect(self.protocol.channelVar(),
+                                                self.protocol.channelSel(),
+                                                _sendPrefix(md.decl.type)),
+                                     args=[ msgexpr,
+                                            ExprAddrOf(replyexpr) ]))
+            ])
+                                            
 
     def callAllocActor(self, md, retsems):
         return ExprCall(
@@ -2908,6 +2956,13 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         if md.decl.type.isCtor():
             decl.ret = md.actorDecl().bareType(self.side)
         return decl
+
+    def logMessage(self, md, msgptr, pfx):
+        return _ifLogging([
+            StmtExpr(ExprCall(
+                ExprSelect(msgptr, '->', 'Log'),
+                args=[ ExprLiteral.String('['+ self.protocol.name +'] '+ pfx),
+                       ExprVar('stderr') ])) ])
 
 
 class _GenerateProtocolParentHeader(_GenerateProtocolActorHeader):
