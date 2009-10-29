@@ -98,7 +98,6 @@ STATIC_LIBS += \
   mozipc_s \
   chromium_s \
   ipcshell_s \
-  ipctestharness_s \
   $(NULL)
 
 ifdef MOZ_IPDL_TESTS
