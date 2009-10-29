@@ -486,6 +486,7 @@ MouseModule.prototype = {
     this._owner.allowClicks();
     if (this._kinetic.isActive())
       this._kinetic.end();
+    this._dragData.reset();
 
     // walk up the DOM tree in search of nearest scrollable ancestor.  nulls are
     // returned if none found.
@@ -531,11 +532,11 @@ MouseModule.prototype = {
    */
   _onMouseUp: function _onMouseUp(evInfo) {
     let dragData = this._dragData;
-
-    let [sX, sY] = dragData.lockAxis(evInfo.event.screenX, evInfo.event.screenY);
-
-    if (dragData.dragging)
-      this._doDragStop(sX, sY, !dragData.checkPan(sX, sY));
+    if (dragData.dragging) {
+      dragData.setDragPosition(evInfo.event.screenX, evInfo.event.screenY);
+      let [sX, sY] = dragData.panPosition();
+      this._doDragStop(sX, sY, !dragData.isPan());
+    }
 
     if (this._clicker)
       this._clicker.mouseUp(evInfo.event.clientX, evInfo.event.clientY);
@@ -543,7 +544,7 @@ MouseModule.prototype = {
     if (this._targetIsContent(evInfo.event)) {
       // User possibly clicked on something in content
       this._recordEvent(evInfo);
-      let commitToClicker = this._clicker && dragData.checkClick(sX, sY);
+      let commitToClicker = this._clicker && dragData.isClick();
       if (commitToClicker)
         // commit this click to the doubleclick timewait buffer
         this._commitAnotherClick();
@@ -553,7 +554,7 @@ MouseModule.prototype = {
         // _commitAnotherClick takes care of this.
         this._cleanClickBuffer();    
     }
-    else if (dragData.checkPan(sX, sY)) {
+    else if (dragData.isPan()) {
       // User was panning around, do not allow chrome click
       // XXX Instead of having suppressNextClick, we could grab until click is seen
       // and THEN ungrab so that owner does not need to know anything about clicking.
@@ -572,12 +573,14 @@ MouseModule.prototype = {
     let dragData = this._dragData;
 
     if (dragData.dragging) {
-      let [sX, sY] = dragData.lockAxis(evInfo.event.screenX, evInfo.event.screenY);
+      dragData.setDragPosition(evInfo.event.screenX, evInfo.event.screenY);
       evInfo.event.stopPropagation();
       evInfo.event.preventDefault();
-      if (dragData.checkPan(sX, sY))
+      if (dragData.isPan()) {
         // Only pan when mouse event isn't part of a click. Prevent jittering on tap.
+        let [sX, sY] = dragData.panPosition();
         this._doDragMove(sX, sY);
+      }
     }
   },
 
@@ -618,20 +621,15 @@ MouseModule.prototype = {
    */
   _doDragStop: function _doDragStop(sX, sY, kineticStop) {
     let dragData = this._dragData;
+    dragData.endDrag();
 
-    if (!kineticStop) {    // we're not really done, since now it is
-                           // kinetic's turn to scroll about
-      let dx = dragData.sX - sX;
-      let dy = dragData.sY - sY;
-
-      dragData.endDrag();
-
+    if (!kineticStop) {
+      // we're not really done, since now it is kinetic's turn to scroll about
       this._kinetic.addData(sX, sY);
-
       this._kinetic.start();
-    } else {               // now we're done, says our secret 3rd argument
+    } else {
+      // now we're done, says our secret 3rd argument
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
-      dragData.reset();
     }
   },
 
@@ -640,8 +638,8 @@ MouseModule.prototype = {
    */
   _doDragMove: function _doDragMove(sX, sY) {
     let dragData = this._dragData;
-    let dX = dragData.sX - sX;
-    let dY = dragData.sY - sY;
+    let dX = dragData.prevPanX - sX;
+    let dY = dragData.prevPanY - sY;
     this._kinetic.addData(sX, sY);
     return this._dragBy(dX, dY);
   },
@@ -654,11 +652,6 @@ MouseModule.prototype = {
    */
   _dragBy: function _dragBy(dX, dY) {
     let dragData = this._dragData;
-    let sX = dragData.sX - dX;
-    let sY = dragData.sY - dY;
-
-    dragData.setDragPosition(sX, sY);
-
     return this._dragger.dragMove(dX, dY, this._targetScrollInterface);
   },
 
@@ -865,12 +858,62 @@ DragData.prototype = {
     this.lockedY = null;
     this._originX = null;
     this._originY = null;
+    this.prevPanX = null;
+    this.prevPanY = null;
     this._isPan = false;
   },
 
-  setDragPosition: function setDragPosition(screenX, screenY) {
-    this.sX = screenX;
-    this.sY = screenY;
+  /** Depending on drag data, locks sX,sY to X-axis or Y-axis of start position. */
+  _lockAxis: function _lockAxis(sX, sY) {
+    if (this.locked) {
+      if (this.lockedX !== null)
+        sX = this.lockedX;
+      else if (this.lockedY !== null)
+        sY = this.lockedY;
+      return [sX, sY];
+    }
+    else {
+      return [this._originX, this._originY];
+    }
+  },
+
+  setDragPosition: function setDragPosition(sX, sY) {
+    // Check if drag is now a pan.
+    if (!this._isPan) {
+      let distanceSquared = (Math.pow(sX - this._originX, 2) + Math.pow(sY - this._originY, 2));
+      this._isPan = (distanceSquared > Math.pow(this._dragRadius, 2));
+    }
+
+    // If now a pan, mark previous position where panning was.
+    if (this._isPan) {
+      let [prevX, prevY] = this._lockAxis(this.sX, this.sY);
+      this.prevPanX = prevX;
+      this.prevPanY = prevY;
+      this.sX = sX;
+      this.sY = sY;
+    }
+
+    // Check if axes should be locked.
+    if (!this.locked && Date.now() - this._dragStartTime >= kMsUntilLock) {
+      // look at difference from origin coord to lock movement, but only
+      // do it if initial movement is sufficient to detect intent
+
+      // divide possibilty space into eight parts.  Diagonals will allow
+      // free movement, while moving towards a cardinal will lock that
+      // axis.  We pick a direction if you move more than twice as far
+      // on one axis than another, which should be an angle of about 30
+      // degrees from the axis
+
+      let absX = Math.abs(this._originX - sX);
+      let absY = Math.abs(this._originY - sY);
+
+      if (absX > 2 * absY)
+        this.lockedY = this._originY;
+      else if (absY > 2 * absX)
+        this.lockedX = this._originX;
+
+      this.locked = true;
+    }
   },
 
   setDragStart: function setDragStart(screenX, screenY) {
@@ -886,65 +929,21 @@ DragData.prototype = {
   },
 
   /** Returns true if drag should pan scrollboxes.*/
-  checkPan: function checkPan(sX, sY) {
-    if (this._originX === null)
-      return false;
-    if (this._isPan)
-      return true;
-
-    let distanceSquared = (Math.pow(sX - this._originX, 2) + Math.pow(sY - this._originY, 2));
-    return (this._isPan = (distanceSquared > Math.pow(this._dragRadius, 2)));
+  isPan: function isPan() {
+    return this._isPan;
   },
 
   /** Return true if drag should be parsed as a click. */
-  checkClick: function(sX, sY) {
-    return Date.now() - this._dragStartTime >= kMsUntilLock && !this.checkPan(sX, sY);
+  isClick: function isClick() {
+    return !this._isPan;
   },
 
-  lockAxis: function lockAxis(sX, sY) {
-    if (this.locked) {
-      if (this.lockedX !== null) {
-        sX = this.lockedX;
-      }
-      else if (this.lockedY !== null) {
-        sY = this.lockedY;
-      }
-      return [sX, sY];
-    }
-    // check to see if mouse move is after the timeout
-    let now = Date.now();
-    if (now - this._dragStartTime < kMsUntilLock) {
-      // Util.dumpLn("*** pre-lock, return no movement");
-      return [this.sX, this.sY];
-    }
-    
-    // Util.dumpLn("*** this.sX/sY: ", this.sX, ",", this.sY, "   sX/sY: ", sX, ",", sY);
-
-    // look at difference from stored coord to lock movement, but only
-    // do it if initial movement is sufficient to detect intent
-    let absX = Math.abs(this.sX - sX);
-    let absY = Math.abs(this.sY - sY);
-    
-    // Util.dumpLn("*** determining lock with absX/Y: ", absX, ",", absY);
-
-    // divide possibilty space into eight parts.  Diagonals will allow
-    // free movement, while moving towards a cardinal will lock that
-    // axis.  We pick a direction if you move more than twice as far
-    // on one axis than another, which should be an angle of about 30
-    // degrees from the axis
-    if (absX > 2 * absY) {
-      this.lockedY = this.sY;
-      sY = this.sY;
-    }
-    else if (absY > 2 * absX) {
-      this.lockedX = this.sX;
-      sX = this.sX;
-    }
-
-    // don't try to lock again... if you moved diagonal, we're free
-    this.locked = true;
-
-    return [sX, sY];
+  /**
+   * Returns the screen position for a pan. This factors in axis locking.
+   * @return Array of screen X and Y coordinates
+   */
+  panPosition: function panPosition() {
+    return this._lockAxis(this.sX, this.sY);
   },
 
   toString: function toString() {
