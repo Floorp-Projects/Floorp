@@ -319,7 +319,7 @@ placeitem {
 }
 
 autocompleteresult:active,
-placeitem:active,
+placelist placeitem:active,
 .autocompleteresult-selected {
   background-color: #8db8d8;
 }
