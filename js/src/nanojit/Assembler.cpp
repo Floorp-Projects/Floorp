@@ -1412,9 +1412,11 @@ namespace nanojit
             LIns *i = p->head;
             NanoAssert(i->isop(LIR_live) || i->isop(LIR_flive));
             LIns *op1 = i->oprnd1();
-            if (op1->isconst() || op1->isconstf() || op1->isconstq())
-                findMemFor(op1);
-            else
+            // must findMemFor even if we're going to findRegFor; loop-carried
+            // operands may spill on another edge, and we need them to always
+            // spill to the same place.
+            findMemFor(op1);
+            if (! (op1->isconst() || op1->isconstf() || op1->isconstq()))
                 findRegFor(op1, i->isop(LIR_flive) ? FpRegs : GpRegs);
         }
 
