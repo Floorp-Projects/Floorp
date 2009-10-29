@@ -328,7 +328,25 @@ nsContentAreaDragDrop::DragOver(nsIDOMDragEvent* inEvent)
     }
   }
 
-  session->SetCanDrop(dropAllowed);
+  nsCOMPtr<nsIDOMNSEvent> e = do_QueryInterface(inEvent);
+  NS_ENSURE_STATE(e);
+  nsCOMPtr<nsIDOMEventTarget> target;
+  e->GetOriginalTarget(getter_AddRefs(target));
+  nsCOMPtr<nsINode> node = do_QueryInterface(target);
+  if (!node) {
+    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(target);
+    if (win) {
+      node = do_QueryInterface(win->GetExtantDocument());
+    }
+  }
+  PRBool isChrome =
+    node ? nsContentUtils::IsChromeDoc(node->GetOwnerDoc()) : PR_FALSE;
+  if (isChrome) {
+    session->SetCanDrop(dropAllowed);
+  } else if (dropAllowed) {
+    inEvent->PreventDefault();
+  }
+
   return NS_OK;
 }
 

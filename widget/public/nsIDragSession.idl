@@ -53,7 +53,7 @@ interface nsIDOMDocument;
 interface nsIDOMNode;
 interface nsIDOMDataTransfer;
 
-[scriptable, uuid(15860D52-FE2C-4DDD-AC50-9C23E24916C4)]
+[scriptable, uuid(fde41f6a-c710-46f8-a0a8-1ff76ca4ff57)]
 interface nsIDragSession : nsISupports
 {
   /**
@@ -61,6 +61,11 @@ interface nsIDragSession : nsISupports
     * usually the target "frame" sets this so the native system can render the correct feedback
     */
   attribute boolean canDrop;
+
+  /**
+   * Indicates if the drop event should be dispatched only to chrome.
+   */
+  attribute boolean onlyChromeDrop;
   
   /**
     * Sets the action (copy, move, link, et.c) for the current drag 
