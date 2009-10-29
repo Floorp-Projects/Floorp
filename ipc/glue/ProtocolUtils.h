@@ -43,6 +43,8 @@
 #include "base/process.h"
 #include "chrome/common/ipc_message_utils.h"
 
+#include "prenv.h"
+
 #include "mozilla/ipc/RPCChannel.h"
 
 namespace mozilla {
@@ -70,6 +72,17 @@ public:
     // XXX odd duck, acknowledged
     virtual ProcessHandle OtherProcess() = 0;
 };
+
+
+inline bool
+LoggingEnabled()
+{
+#if defined(DEBUG)
+    return !!PR_GetEnv("MOZ_IPC_MESSAGE_LOG");
+#else
+    return false;
+#endif
+}
 
 } // namespace ipc
 } // namespace mozilla

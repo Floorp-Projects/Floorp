@@ -221,9 +221,7 @@ def _otherSide(side):
     assert 0
 
 def _ifLogging(stmts):
-    iflogging = StmtIf(ExprCall(
-        ExprVar('PR_GetEnv'),
-        args=[ ExprLiteral.String('MOZ_IPC_MESSAGE_LOG') ]))
+    iflogging = StmtIf(ExprCall(ExprVar('mozilla::ipc::LoggingEnabled')))
     iflogging.addifstmts(stmts)
     return iflogging
 
