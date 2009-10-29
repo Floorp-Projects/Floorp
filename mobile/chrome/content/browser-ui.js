@@ -274,6 +274,7 @@ var BrowserUI = {
   },
 
   pushPopup: function pushPopup(aPanel, aElements) {
+    this._updatePopup();
     this._popup =  { "panel": aPanel, 
                      "elements": (aElements instanceof Array) ? aElements : [aElements] };
   },
@@ -287,7 +288,7 @@ var BrowserUI = {
       return;
 
     let element = this._popup.elements;
-    let targetNode = aEvent.target;
+    let targetNode = aEvent ? aEvent.target : null;
     while (targetNode && element.indexOf(targetNode) == -1)
       targetNode = targetNode.parentNode;
 
@@ -884,7 +885,7 @@ var BookmarkHelper = {
     this._editor.setAttribute("title", title);
     this._editor.setAttribute("uri", aURI.spec);
     this._editor.setAttribute("tags", tags.join(", "));
-    this._editor.setAttribute("onclose", "BookmarkHelper.close()");
+    this._editor.setAttribute("onclose", "BookmarkHelper.hide()");
     document.getElementById("bookmark-form").appendChild(this._editor);
 
     let toolbar = document.getElementById("toolbar-main");
@@ -893,7 +894,7 @@ var BookmarkHelper = {
     this._panel = document.getElementById("bookmark-container");
     this._panel.top = (top < 0 ? 0 : top);
     this._panel.hidden = false;
-    BrowserUI.pushDialog(this);
+    BrowserUI.pushPopup(this, this._panel);
 
     let self = this;
     setTimeout(function() {
@@ -906,7 +907,7 @@ var BookmarkHelper = {
     this._editor.stopEditing(true);
   },
   
-  close: function BH_close() {
+  hide: function BH_hide() {
     BrowserUI.updateStar();
 
     // Note: the _editor will have already saved the data, if needed, by the time
@@ -915,7 +916,7 @@ var BookmarkHelper = {
     this._editor = null;
 
     this._panel.hidden = true;
-    BrowserUI.popDialog();
+    BrowserUI.popPopup();
   },
 };
 

@@ -306,13 +306,13 @@
       <label/>
     </vbox>
 
-    <vbox id="bookmark-popup" hidden="true" class="dialog-dark" oncommand="BookmarkPopup.hide()" align="center">
+    <vbox id="bookmark-popup" hidden="true" class="dialog-dark" align="center">
       <label value="&bookmarkPopup.label;"/>
       <separator class="thin"/>
       <vbox>
         <button id="bookmark-popup-edit" label="&bookmarkEdit.label;" class="button-dark" oncommand="BookmarkHelper.edit(); BrowserUI.hideControls();"/>
         <spacer/>
-        <button id="bookmark-popup-remove" label="&bookmarkRemove.label;" class="button-dark" oncommand="removeBookmarksForURI(getBrowser().currentURI);"/>
+        <button id="bookmark-popup-remove" label="&bookmarkRemove.label;" class="button-dark" oncommand="BookmarkPopup.hide(); removeBookmarksForURI(getBrowser().currentURI);"/>
       </vbox>
     </vbox>
 
