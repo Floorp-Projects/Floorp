@@ -164,6 +164,13 @@ PrivateBrowsingService.prototype = {
         }]
       });
 
+      // whether we should save and close the current session
+      this._saveSession = true;
+      try {
+        if (this._prefs.getBoolPref("browser.privatebrowsing.keep_current_session"))
+          this._saveSession = false;
+      } catch (ex) {}
+
       if (this._inPrivateBrowsing) {
         // save the whole browser state in order to restore all windows/tabs later
         if (this._saveSession && !this._savedBrowserState) {
@@ -303,15 +310,6 @@ PrivateBrowsingService.prototype = {
   },
 
   _ensureCanCloseWindows: function PBS__ensureCanCloseWindows() {
-    // whether we should save and close the current session
-    this._saveSession = true;
-    try {
-      if (this._prefs.getBoolPref("browser.privatebrowsing.keep_current_session")) {
-        this._saveSession = false;
-        return;
-      }
-    } catch (ex) {}
-
     let windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
                          getService(Ci.nsIWindowMediator);
     let windowsEnum = windowMediator.getXULWindowEnumerator("navigator:browser");
