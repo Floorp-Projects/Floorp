@@ -1701,8 +1701,10 @@ js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
 
     JSGCThing *thing = JS_THREAD_DATA(cx)->gcFreeLists.doubles;
     if (!thing) {
+#ifdef JS_TRACER
         if (JS_TRACE_MONITOR(cx).useReservedObjects)
             return false;
+#endif
         thing = RefillDoubleFreeList(cx);
         if (!thing) {
             METER(astats->fail++);
