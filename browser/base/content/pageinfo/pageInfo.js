@@ -148,7 +148,7 @@ pageInfoTreeView.prototype = {
 // mmm, yummy. global variables.
 var gWindow = null;
 var gDocument = null;
-var gImageUrl = null;
+var gImageElement = null;
 
 // column number to help using the data array
 const COL_IMAGE_ADDRESS = 0;
@@ -296,10 +296,10 @@ function onLoadPageInfo()
   var imageTree = document.getElementById("imagetree");
   imageTree.view = gImageView;
 
-  // set gImageUrl if present
+  // set gImageElement if present
   if ("arguments" in window && window.arguments.length >= 1 &&
-       window.arguments[0] && window.arguments[0].imageUrl)
-    gImageUrl = window.arguments[0].imageUrl;
+      window.arguments[0].imageElement)
+    gImageElement = window.arguments[0].imageElement;
 
   // build the content
   loadPageInfo();
@@ -531,7 +531,7 @@ function processFrames()
     var iterator = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT, grabAll, true);
     gFrameList.shift();
     setTimeout(doGrab, 16, iterator);
-    onFinished.push(selectImgUrl);
+    onFinished.push(selectImage);
   }
   else
     onFinished.forEach(function(func) { func(); });
@@ -1171,16 +1171,15 @@ function doSelectAll()
     elem.view.selection.selectAll();
 }
 
-function selectImgUrl ()
-{
-  if (gImageUrl) {
-    var tree = document.getElementById("imagetree");
-    for (var c = 0; c < tree.view.rowCount; c++)
-    {
-      if (gImageUrl == gImageView.data[c][COL_IMAGE_ADDRESS]) {
-        tree.view.selection.select(c);
-        return;
-      }
+function selectImage() {
+  if (!gImageElement)
+    return;
+
+  var tree = document.getElementById("imagetree");
+  for (var i = 0; i < tree.view.rowCount; i++) {
+    if (gImageElement == gImageView.data[i][COL_IMAGE_NODE]) {
+      tree.view.selection.select(i);
+      return;
     }
   }
 }
