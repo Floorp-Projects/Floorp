@@ -468,6 +468,9 @@ var BrowserUI = {
     if (!aURI)
       return;
 
+    // Give the new page lots of room
+    Browser.hideSidebars();
+
     this._edit.popup.close();
     this._edit.value = aURI;
 
@@ -499,6 +502,9 @@ var BrowserUI = {
 
     // We don't want the button to look pressed for now
     button.parentNode.selectedItem = null;
+
+    // Give the new page lots of room
+    Browser.hideSidebars();
     
     this._edit.popup.closePopup();
 
@@ -523,6 +529,11 @@ var BrowserUI = {
       this.showToolbar(true);
       this.showAutoComplete();
     }
+    else {
+      // Give the new page lots of room
+      Browser.hideSidebars();
+    }
+
     return tab;
   },
 
