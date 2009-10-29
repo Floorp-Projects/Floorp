@@ -1,0 +1,13 @@
+include nanojit
+include vprof
+include lirasm
+
+exclude Makefile.in
+exclude configure.in
+exclude config.h.in
+exclude autoconf
+exclude .hgtags
+
+rename vprof js/src/vprof
+rename nanojit js/src/nanojit
+rename lirasm js/src/lirasm

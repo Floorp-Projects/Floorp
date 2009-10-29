@@ -764,8 +764,8 @@ FragmentAssembler::endFragment()
     mFragment->lastIns =
         mLir->insGuard(LIR_x, NULL, createGuardRecord(createSideExit()));
 
-    ::compile(&mParent.mAssm, mFragment
-              verbose_only(, mParent.mAlloc, mParent.mLabelMap));
+    ::compile(&mParent.mAssm, mFragment, mParent.mAlloc
+              verbose_only(, mParent.mLabelMap));
 
     if (mParent.mAssm.error() != nanojit::None) {
         cerr << "error during assembly: ";
@@ -1862,8 +1862,14 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
         errMsgAndQuit(opts.progname,
                       "you must specify either a filename or --random (but not both)");
 
+#if defined NANOJIT_ARM
+    avmplus::AvmCore::config.arch = 7;
+    avmplus::AvmCore::config.vfp = true;
+#endif
+
 #if defined NANOJIT_IA32
     avmplus::AvmCore::config.use_cmov = avmplus::AvmCore::config.sse2 = sse;
+    avmplus::AvmCore::config.fixed_esp = true;
 #else
     if (sse)
         errMsgAndQuit(opts.progname, "--sse is only allowed on x86");

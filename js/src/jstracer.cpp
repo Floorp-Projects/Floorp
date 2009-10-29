@@ -77,6 +77,7 @@
 #include "jsxml.h"
 
 #include "jsatominlines.h"
+#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 
 #include "jsautooplen.h"        // generated headers last
@@ -150,6 +151,9 @@ static const char tagChar[]  = "OIDISIBI";
 
 /* Max global object size. */
 #define MAX_GLOBAL_SLOTS 4096
+
+/* Max number of slots in a table-switch. */
+#define MAX_TABLE_SWITCH 256
 
 /* Max memory needed to rebuild the interpreter stack when falling off trace. */
 #define MAX_INTERP_STACK_BYTES                                                \
@@ -780,10 +784,10 @@ void
 TraceRecorder::tprint(const char *format, int count, nanojit::LIns *insa[])
 {
     size_t size = strlen(format) + 1;
-    char *data = (char*) lir->insSkip(size)->payload();
+    char* data = (char*) traceMonitor->traceAlloc->alloc(size);
     memcpy(data, format, size);
 
-    double *args = (double*) lir->insSkip(count * sizeof(double))->payload();
+    double *args = (double*) traceMonitor->traceAlloc->alloc(count * sizeof(double));
     for (int i = 0; i < count; ++i) {
         JS_ASSERT(insa[i]);
         lir->insStorei(insa[i], INS_CONSTPTR(args), sizeof(double) * i);
@@ -2302,49 +2306,79 @@ SpecializeTreesToMissingGlobals(JSContext* cx, JSObject* globalObj, TreeInfo* ro
 static void
 TrashTree(JSContext* cx, Fragment* f);
 
-JS_REQUIRES_STACK
-TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _fragment,
-        TreeInfo* ti, unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
-        VMSideExit* innermost, jsbytecode* outer, uint32 outerArgc,
-        MonitorReason reason)
-    : tempAlloc(*JS_TRACE_MONITOR(cx).tempAlloc),
-      mark(*JS_TRACE_MONITOR(cx).traceAlloc),
-      whichTreesToTrash(&tempAlloc),
-      cfgMerges(&tempAlloc),
-      monitorReason(reason),
-      tempTypeMap(cx)
+template <class T>
+static T&
+InitConst(const T &t)
 {
-    JS_ASSERT(!_fragment->vmprivate && ti && cx->fp->regs->pc == (jsbytecode*)_fragment->ip);
-    /* Reset the fragment state we care about in case we got a recycled fragment.
-       This includes resetting any profiling data we might have accumulated. */
-    _fragment->lastIns = NULL;
-    verbose_only( _fragment->profCount = 0; )
-    verbose_only( _fragment->nStaticExits = 0; )
-    verbose_only( _fragment->nCodeBytes = 0; )
-    verbose_only( _fragment->nExitBytes = 0; )
-    verbose_only( _fragment->guardNumberer = 1; )
-    verbose_only( _fragment->guardsForFrag = NULL; )
-    verbose_only( _fragment->loopLabel = NULL; )
-    // don't change _fragment->profFragID, though.  Once the identity of
-    // the Fragment is set up (for profiling purposes), we can't change it.
-    this->cx = cx;
-    this->traceMonitor = &JS_TRACE_MONITOR(cx);
-    this->globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
-    this->lexicalBlock = cx->fp->blockChain;
-    this->anchor = _anchor;
-    this->fragment = _fragment;
-    this->lirbuf = _fragment->lirbuf;
-    this->treeInfo = ti;
-    this->callDepth = _anchor ? _anchor->calldepth : 0;
-    this->atoms = FrameAtomBase(cx, cx->fp);
-    this->trashSelf = false;
-    this->global_dslots = this->globalObj->dslots;
-    this->loop = true; /* default assumption is we are compiling a loop */
-    this->outer = outer;
-    this->outerArgc = outerArgc;
-    this->pendingSpecializedNative = NULL;
-    this->newobj_ins = NULL;
-    this->loopLabel = NULL;
+    return const_cast<T &>(t);
+}
+
+JS_REQUIRES_STACK
+TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, Fragment* fragment,
+                             TreeInfo* ti, unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
+                             VMSideExit* innermost, jsbytecode* outer, uint32 outerArgc,
+                             RecordReason recordReason)
+  : cx(cx),
+    traceMonitor(&JS_TRACE_MONITOR(cx)),
+    fragment(fragment),
+    treeInfo(ti),
+    recordReason(recordReason),
+    globalObj(ti->rootFragment->globalObj),
+    outer(outer),
+    outerArgc(outerArgc),
+    lexicalBlock(cx->fp->blockChain),
+    anchor(anchor),
+    lir(NULL),
+    cx_ins(NULL),
+    eos_ins(NULL),
+    eor_ins(NULL),
+    loopLabel(NULL),
+    lirbuf(traceMonitor->lirbuf),
+    mark(*traceMonitor->traceAlloc),
+    tracker(),
+    nativeFrameTracker(),
+    global_dslots(NULL),
+    callDepth(anchor ? anchor->calldepth : 0),
+    atoms(FrameAtomBase(cx, cx->fp)),
+    cfgMerges(&tempAlloc()),
+    trashSelf(false),
+    whichTreesToTrash(&tempAlloc()),
+    rval_ins(NULL),
+    native_rval_ins(NULL),
+    newobj_ins(NULL),
+    pendingSpecializedNative(NULL),
+    pendingUnboxSlot(NULL),
+    pendingGuardCondition(NULL),
+    pendingLoop(true),
+    generatedSpecializedNative(),
+    tempTypeMap(cx)
+{
+    JS_ASSERT(globalObj == JS_GetGlobalForObject(cx, cx->fp->scopeChain));
+    JS_ASSERT(cx->fp->regs->pc == (jsbytecode*)fragment->ip);
+    JS_ASSERT(fragment->root == treeInfo->rootFragment);
+    JS_ASSERT(!fragment->vmprivate);
+    JS_ASSERT(ti);
+
+    /*
+     * Reset the fragment state we care about in case we got a recycled
+     * fragment.  This includes resetting any profiling data we might have
+     * accumulated.
+     */
+    fragment->lastIns = NULL;
+    fragment->setCode(NULL);
+    fragment->lirbuf = lirbuf;
+    verbose_only( fragment->profCount = 0; )
+    verbose_only( fragment->nStaticExits = 0; )
+    verbose_only( fragment->nCodeBytes = 0; )
+    verbose_only( fragment->nExitBytes = 0; )
+    verbose_only( fragment->guardNumberer = 1; )
+    verbose_only( fragment->guardsForFrag = NULL; )
+    verbose_only( fragment->loopLabel = NULL; )
+
+    /*
+     * Don't change fragment->profFragID, though.  Once the identity of the
+     * Fragment is set up (for profiling purposes), we can't change it.
+     */
 
     guardedShapeTable.ops = NULL;
 
@@ -2352,7 +2386,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     debug_only_print0(LC_TMMinimal, "\n");
     debug_only_printf(LC_TMMinimal, "Recording starting from %s:%u@%u (FragID=%06u)\n",
                       ti->treeFileName, ti->treeLineNumber, ti->treePCOffset,
-                      _fragment->profFragID);
+                      fragment->profFragID);
 
     debug_only_printf(LC_TMTracer, "globalObj=%p, shape=%d\n",
                       (void*)this->globalObj, OBJ_SHAPE(this->globalObj));
@@ -2360,24 +2394,24 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
                       (void*)anchor);
 #endif
 
-    lir = lir_buf_writer = new (tempAlloc) LirBufWriter(lirbuf);
+    nanojit::LirWriter*& lir = InitConst(this->lir);
+    lir = new (tempAlloc()) LirBufWriter(lirbuf);
 #ifdef DEBUG
-    lir = sanity_filter_1 = new (tempAlloc) SanityFilter(lir);
+    lir = new (tempAlloc()) SanityFilter(lir);
 #endif
     debug_only_stmt(
         if (js_LogController.lcbits & LC_TMRecorder) {
-           lir = verbose_filter
-               = new (tempAlloc) VerboseWriter (tempAlloc, lir, lirbuf->names,
-                                                &js_LogController);
+           lir = new (tempAlloc()) VerboseWriter(tempAlloc(), lir, lirbuf->names,
+                                               &js_LogController);
         }
     )
     if (nanojit::AvmCore::config.soft_float)
-        lir = float_filter = new (tempAlloc) SoftFloatFilter(lir);
-    lir = cse_filter = new (tempAlloc) CseFilter(lir, tempAlloc);
-    lir = expr_filter = new (tempAlloc) ExprFilter(lir);
-    lir = func_filter = new (tempAlloc) FuncFilter(lir);
+        lir = new (tempAlloc()) SoftFloatFilter(lir);
+    lir = new (tempAlloc()) CseFilter(lir, tempAlloc());
+    lir = new (tempAlloc()) ExprFilter(lir);
+    lir = new (tempAlloc()) FuncFilter(lir);
 #ifdef DEBUG
-    lir = sanity_filter_2 = new (tempAlloc) SanityFilter(lir);
+    lir = new (tempAlloc()) SanityFilter(lir);
 #endif
     lir->ins0(LIR_start);
 
@@ -2391,7 +2425,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     lirbuf->state = addName(lir->insParam(0, 0), "state");
 
     if (fragment == fragment->root)
-        loopLabel = lir->ins0(LIR_label);
+        InitConst(loopLabel) = lir->ins0(LIR_label);
 
     // if profiling, drop a label, so the assembler knows to put a
     // frag-entry-counter increment at this point.  If there's a
@@ -2411,9 +2445,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
 
     lirbuf->sp = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, sp)), "sp");
     lirbuf->rp = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, rp)), "rp");
-    cx_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, cx)), "cx");
-    eos_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, eos)), "eos");
-    eor_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, eor)), "eor");
+    InitConst(cx_ins) = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, cx)), "cx");
+    InitConst(eos_ins) = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, eos)), "eos");
+    InitConst(eor_ins) = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, eor)), "eor");
 
     /* If we came from exit, we might not have enough global types. */
     if (ti->globalSlots->length() > ti->nGlobalTypes())
@@ -2444,7 +2478,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
      * If we are attached to a tree call guard, make sure the guard the inner
      * tree exited from is what we expect it to be.
      */
-    if (_anchor && _anchor->exitType == NESTED_EXIT) {
+    if (anchor && anchor->exitType == NESTED_EXIT) {
         LIns* nested_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state,
                                                 offsetof(InterpState, outermostTreeExitGuard)),
                                                 "outermostTreeExitGuard");
@@ -2463,7 +2497,7 @@ TraceRecorder::~TraceRecorder()
          TrashTree(cx, whichTreesToTrash[i]);
 
     /* Purge the tempAlloc used during recording. */
-    tempAlloc.reset();
+    tempAlloc().reset();
     traceMonitor->lirbuf->clear();
 
     forgetGuardedShapes();
@@ -2472,9 +2506,9 @@ TraceRecorder::~TraceRecorder()
 bool
 TraceRecorder::outOfMemory()
 {
-    return traceMonitor->dataAlloc->outOfMemory() ||
-        traceMonitor->traceAlloc->outOfMemory() ||
-        tempAlloc.outOfMemory();
+    return dataAlloc().outOfMemory() ||
+           traceAlloc().outOfMemory() ||
+           tempAlloc().outOfMemory();
 }
 
 /* Add debug information to a LIR instruction as we emit it. */
@@ -2528,13 +2562,6 @@ TraceRecorder::p2i(nanojit::LIns* ins)
 #else
     return ins;
 #endif
-}
-
-/* Determine the current call depth (starting with the entry frame.) */
-unsigned
-TraceRecorder::getCallDepth() const
-{
-    return callDepth;
 }
 
 /* Determine the offset in the native global frame for a jsval we track. */
@@ -2859,21 +2886,8 @@ NativeToValueBase(JSContext* cx, jsval& v, JSTraceType type, double* slot)
         debug_only_printf(LC_TMTracer, "double<%g> ", d);
         if (JSDOUBLE_IS_INT(d, i))
             goto store_int;
-      store_double: {
-        /*
-         * It's not safe to trigger the GC here, so use an emergency heap if we
-         * are out of double boxes.
-         */
-            if (JS_THREAD_DATA(cx)->gcFreeLists.doubles) {
-#ifdef DEBUG
-            JSBool ok =
-#endif
-                js_NewDoubleInRootedValue(cx, d, &v);
-            JS_ASSERT(ok);
-            return true;
-        }
-        return E::handleDoubleOOM(cx, d, v);
-      }
+      store_double:
+        return E::NewDoubleInRootedValue(cx, d, v);
 
       case TT_JSVAL:
         v = *(jsval*)slot;
@@ -2916,7 +2930,13 @@ NativeToValueBase(JSContext* cx, jsval& v, JSTraceType type, double* slot)
 }
 
 struct ReserveDoubleOOMHandler {
-    static bool handleDoubleOOM(JSContext *cx, double d, jsval& v) {
+    static bool NewDoubleInRootedValue(JSContext *cx, double d, jsval& v) {
+        JS_ASSERT(!JS_TRACE_MONITOR(cx).useReservedObjects);
+        JS_TRACE_MONITOR(cx).useReservedObjects = true;
+        bool ok = js_NewDoubleInRootedValue(cx, d, &v);
+        JS_TRACE_MONITOR(cx).useReservedObjects = false;
+        if (ok)
+            return true;
         v = AllocateDoubleFromReservedPool(cx);
         JS_ASSERT(JSVAL_IS_DOUBLE(v) && *JSVAL_TO_DOUBLE(v) == 0.0);
         *JSVAL_TO_DOUBLE(v) = d;
@@ -2935,8 +2955,13 @@ NativeToValue(JSContext* cx, jsval& v, JSTraceType type, double* slot)
 }
 
 struct FailDoubleOOMHandler {
-    static bool handleDoubleOOM(JSContext *cx, double d, jsval& v) {
-        return false;
+    static bool NewDoubleInRootedValue(JSContext *cx, double d, jsval& v) {
+        bool ok = js_NewDoubleInRootedValue(cx, d, &v);
+        if (!ok) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
     }
 };
 
@@ -3133,7 +3158,7 @@ GetUpvarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, 
 
     // Next search the trace entry frame, which is not in the FrameInfo stack.
     if (state->outermostTree->script->staticLevel == upvarLevel) {
-        uint32 argc = ((VMFragment*) state->outermostTree->fragment)->argc;
+        uint32 argc = state->outermostTree->rootFragment->argc;
         uint32 native_slot = T::native_slot(argc, slot);
         *result = state->stackBase[native_slot];
         return state->callstackBase[0]->get_typemap()[native_slot];
@@ -3365,9 +3390,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSTraceType* mp, 
                  * has to be the same JSFunction (FIXME: bug 471425, eliminate fp->callee).
                  */
                 JS_ASSERT(JSVAL_IS_OBJECT(fp->argv[-1]));
-                JS_ASSERT(HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(fp->argv[-2])));
-                JS_ASSERT(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fp->argv[-2])) ==
-                          GET_FUNCTION_PRIVATE(cx, fp->callee()));
+                JS_ASSERT(HAS_FUNCTION_CLASS(fp->calleeObject()));
                 JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee()) == fp->fun);
 
                 /*
@@ -3376,7 +3399,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSTraceType* mp, 
                  * scope object here.
                  */
                 if (!fp->scopeChain) {
-                    fp->scopeChain = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
+                    fp->scopeChain = OBJ_GET_PARENT(cx, fp->calleeObject());
                     if (fp->fun->flags & JSFUN_HEAVYWEIGHT) {
                         /*
                          * Set hookData to null because the failure case for js_GetCallObject
@@ -3617,9 +3640,6 @@ TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned stackSlots, unsigne
         ImportUnboxedStackSlotVisitor unboxedStackVisitor(*this, sp, offset,
                                                           typeMap);
         VisitStackSlots(unboxedStackVisitor, cx, callDepth);
-    } else {
-        import(sp, nativeStackOffset(&stackval(-1)), &stackval(-1),
-               typeMap[treeInfo->nStackTypes - 1], "retval", 0, cx->fp);
     }
 }
 
@@ -3715,17 +3735,25 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing, bool demote)
             x = writeBack(i, lirbuf->sp, -treeInfo->nativeStackBase + nativeStackOffset(p), demote);
         nativeFrameTracker.set(p, x);
     } else {
-#define ASSERT_VALID_CACHE_HIT(base, offset)                                  \
-    JS_ASSERT(base == lirbuf->sp || base == lirbuf->state);                   \
-    JS_ASSERT(offset == ((base == lirbuf->sp)                                 \
-        ? -treeInfo->nativeStackBase + nativeStackOffset(p)                   \
-        : nativeGlobalOffset(p)));                                            \
-
         JS_ASSERT(x->isop(LIR_sti) || x->isop(LIR_stqi));
-        ASSERT_VALID_CACHE_HIT(x->oprnd2(), x->disp());
-        writeBack(i, x->oprnd2(), x->disp(), demote);
+
+        int disp;
+        LIns *base = x->oprnd2();
+#ifdef NANOJIT_ARM
+        if (base->isop(LIR_piadd)) {
+            disp = base->oprnd2()->imm32();
+            base = base->oprnd1();
+        } else
+#endif
+        disp = x->disp();
+
+        JS_ASSERT(base == lirbuf->sp || base == lirbuf->state);
+        JS_ASSERT(disp == ((base == lirbuf->sp) ?
+                  -treeInfo->nativeStackBase + nativeStackOffset(p) :
+                  nativeGlobalOffset(p)));
+
+        writeBack(i, base, disp, demote);
     }
-#undef ASSERT_VALID_CACHE_HIT
 }
 
 JS_REQUIRES_STACK LIns*
@@ -4090,8 +4118,7 @@ TraceRecorder::snapshot(ExitType exitType)
 
     /* We couldn't find a matching side exit, so create a new one. */
     VMSideExit* exit = (VMSideExit*)
-        traceMonitor->traceAlloc->alloc(sizeof(VMSideExit) +
-                                        (stackSlots + ngslots) * sizeof(JSTraceType));
+        traceAlloc().alloc(sizeof(VMSideExit) + (stackSlots + ngslots) * sizeof(JSTraceType));
 
     /* Setup side exit structure. */
     exit->from = fragment;
@@ -4122,7 +4149,7 @@ TraceRecorder::snapshot(ExitType exitType)
 JS_REQUIRES_STACK GuardRecord*
 TraceRecorder::createGuardRecord(VMSideExit* exit)
 {
-    GuardRecord* gr = new (*traceMonitor->traceAlloc) GuardRecord();
+    GuardRecord* gr = new (traceAlloc()) GuardRecord();
 
     gr->exit = exit;
     exit->addGuard(gr);
@@ -4178,8 +4205,7 @@ TraceRecorder::copy(VMSideExit* copy)
 {
     size_t typemap_size = copy->numGlobalSlots + copy->numStackSlots;
     VMSideExit* exit = (VMSideExit*)
-        traceMonitor->traceAlloc->alloc(sizeof(VMSideExit) +
-                                        typemap_size * sizeof(JSTraceType));
+        traceAlloc().alloc(sizeof(VMSideExit) + typemap_size * sizeof(JSTraceType));
 
     /* Copy side exit structure. */
     memcpy(exit, copy, sizeof(VMSideExit) + typemap_size * sizeof(JSTraceType));
@@ -4295,7 +4321,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
         return ARECORD_STOP;
 
     Assembler *assm = tm->assembler;
-    nanojit::compile(assm, fragment verbose_only(, tempAlloc, tm->labels));
+    nanojit::compile(assm, fragment, tempAlloc() verbose_only(, tm->labels));
     if (outOfMemory())
         return ARECORD_STOP;
 
@@ -4364,15 +4390,15 @@ class SlotMap : public SlotVisitorBase
     struct SlotInfo
     {
         SlotInfo()
-          : v(NULL), promoteInt(false), lastCheck(TypeCheck_Bad)
+          : vp(NULL), promoteInt(false), lastCheck(TypeCheck_Bad)
         {}
-        SlotInfo(jsval* v, bool promoteInt)
-          : v(v), promoteInt(promoteInt), lastCheck(TypeCheck_Bad), type(getCoercedType(*v))
+        SlotInfo(jsval* vp, bool promoteInt)
+          : vp(vp), promoteInt(promoteInt), lastCheck(TypeCheck_Bad), type(getCoercedType(*vp))
         {}
-        SlotInfo(JSTraceType t)
-          : v(NULL), promoteInt(t == TT_INT32), lastCheck(TypeCheck_Bad), type(t)
+        SlotInfo(jsval* vp, JSTraceType t)
+          : vp(vp), promoteInt(t == TT_INT32), lastCheck(TypeCheck_Bad), type(t)
         {}
-        jsval           *v;
+        jsval           *vp;
         bool            promoteInt;
         TypeCheckResult lastCheck;
         JSTraceType     type;
@@ -4448,7 +4474,13 @@ class SlotMap : public SlotVisitorBase
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
     addSlot(JSTraceType t)
     {
-        slots.add(SlotInfo(t));
+        slots.add(SlotInfo(NULL, t));
+    }
+
+    JS_REQUIRES_STACK JS_ALWAYS_INLINE void
+    addSlot(jsval *vp, JSTraceType t)
+    {
+        slots.add(SlotInfo(vp, t));
     }
 
     JS_REQUIRES_STACK void
@@ -4461,23 +4493,33 @@ class SlotMap : public SlotVisitorBase
     }
 
     JS_REQUIRES_STACK virtual void
+    adjustTail(TypeConsensus consensus)
+    {
+    }
+
+    JS_REQUIRES_STACK virtual void
     adjustTypes()
     {
-        for (unsigned i = 0; i < length(); i++) {
-            SlotInfo& info = get(i);
-            JS_ASSERT(info.lastCheck != TypeCheck_Undemote && info.lastCheck != TypeCheck_Bad);
-            if (info.lastCheck == TypeCheck_Promote) {
-                JS_ASSERT(info.type == TT_INT32 || info.type == TT_DOUBLE);
-                mRecorder.set(info.v, mRecorder.f2i(mRecorder.get(info.v)));
-            } else if (info.lastCheck == TypeCheck_Demote) {
-                JS_ASSERT(info.type == TT_INT32 || info.type == TT_DOUBLE);
-                JS_ASSERT(mRecorder.get(info.v)->isQuad());
+        for (unsigned i = 0; i < length(); i++)
+            adjustType(get(i));
+    }
 
-                /* Never demote this final i2f. */
-                mRecorder.set(info.v, mRecorder.get(info.v), false, false);
-            }
+  protected:
+    JS_REQUIRES_STACK virtual void
+    adjustType(SlotInfo& info) {
+        JS_ASSERT(info.lastCheck != TypeCheck_Undemote && info.lastCheck != TypeCheck_Bad);
+        if (info.lastCheck == TypeCheck_Promote) {
+            JS_ASSERT(info.type == TT_INT32 || info.type == TT_DOUBLE);
+            mRecorder.set(info.vp, mRecorder.f2i(mRecorder.get(info.vp)));
+        } else if (info.lastCheck == TypeCheck_Demote) {
+            JS_ASSERT(info.type == TT_INT32 || info.type == TT_DOUBLE);
+            JS_ASSERT(mRecorder.get(info.vp)->isQuad());
+
+            /* Never demote this final i2f. */
+            mRecorder.set(info.vp, mRecorder.get(info.vp), false, false);
         }
     }
+
   private:
     TypeCheckResult
     checkType(unsigned i, JSTraceType t)
@@ -4497,13 +4539,13 @@ class SlotMap : public SlotVisitorBase
             if (!slots[i].promoteInt)
                 return TypeCheck_Undemote;
             /* Looks good, slot is an int32, the last instruction should be promotable. */
-            JS_ASSERT_IF(slots[i].v, isInt32(*slots[i].v) && slots[i].promoteInt);
-            return slots[i].v ? TypeCheck_Promote : TypeCheck_Okay;
+            JS_ASSERT_IF(slots[i].vp, isInt32(*slots[i].vp) && slots[i].promoteInt);
+            return slots[i].vp ? TypeCheck_Promote : TypeCheck_Okay;
           case TT_DOUBLE:
             if (slots[i].type != TT_INT32 && slots[i].type != TT_DOUBLE)
                 return TypeCheck_Bad; /* Not a number? Type mismatch. */
             if (slots[i].promoteInt)
-                return slots[i].v ? TypeCheck_Demote : TypeCheck_Bad;
+                return slots[i].vp ? TypeCheck_Demote : TypeCheck_Bad;
             return TypeCheck_Okay;
           default:
             return slots[i].type == t ? TypeCheck_Okay : TypeCheck_Bad;
@@ -4649,11 +4691,15 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
 
     JS_ASSERT(!trashSelf);
 
-    /* This exit is indeed linkable to something now. Process any promote/demotes that
-     * are pending in the slot map.
+    /*
+     * This exit is indeed linkable to something now. Process any promote or
+     * demotes that are pending in the slot map.
      */
     if (consensus == TypeConsensus_Okay)
         slotMap.adjustTypes();
+
+    /* Give up-recursion a chance to pop the stack frame. */
+    slotMap.adjustTail(consensus);
 
     if (consensus != TypeConsensus_Okay || peer) {
         fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
@@ -4671,7 +4717,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
             debug_only_print0(LC_TMTracer,
                               "Trace has unstable loop variable with no stable peer, "
                               "compiling anyway.\n");
-            UnstableExit* uexit = new (*traceMonitor->traceAlloc) UnstableExit;
+            UnstableExit* uexit = new (traceAlloc()) UnstableExit;
             uexit->fragment = fragment;
             uexit->exit = exit;
             uexit->next = treeInfo->unstableExits;
@@ -4851,7 +4897,7 @@ TraceRecorder::endLoop(VMSideExit* exit)
         return ARECORD_STOP;
     }
 
-    if (monitorReason != Monitor_Branch)
+    if (recordReason != Record_Branch)
         RETURN_STOP_A("control flow should have been recursive");
 
     fragment->lastIns =
@@ -4898,7 +4944,7 @@ TraceRecorder::endLoop(VMSideExit* exit)
 
 /* Emit code to adjust the stack to match the inner tree's stack expectations. */
 JS_REQUIRES_STACK void
-TraceRecorder::prepareTreeCall(VMFragment* inner)
+TraceRecorder::prepareTreeCall(VMFragment* inner, LIns*& inner_sp_ins)
 {
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
     inner_sp_ins = lirbuf->sp;
@@ -4986,7 +5032,7 @@ BuildGlobalTypeMapFromInnerTree(Queue<JSTraceType>& typeMap, VMSideExit* inner)
 
 /* Record a call to an inner tree. */
 JS_REQUIRES_STACK void
-TraceRecorder::emitTreeCall(VMFragment* inner, VMSideExit* exit)
+TraceRecorder::emitTreeCall(VMFragment* inner, VMSideExit* exit, LIns* inner_sp_ins)
 {
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
 
@@ -5081,7 +5127,7 @@ TraceRecorder::emitIf(jsbytecode* pc, bool cond, LIns* x)
          * here, so we later know whether to emit a loop edge or a loop end.
          */
         if (x->isconst()) {
-            loop = (x->imm32() == int32(cond));
+            pendingLoop = (x->imm32() == int32(cond));
             return;
         }
     } else {
@@ -5113,7 +5159,7 @@ TraceRecorder::checkTraceEnd(jsbytecode *pc)
          * IFNE/IFEQ, so advance pc to the loop header and adjust the stack
          * pointer and pretend we have reached the loop header.
          */
-        if (loop) {
+        if (pendingLoop) {
             JS_ASSERT(!cx->fp->imacpc && (pc == cx->fp->regs->pc || pc == cx->fp->regs->pc + 1));
             bool fused = pc != cx->fp->regs->pc;
             JSFrameRegs orig = *cx->fp->regs;
@@ -5298,7 +5344,7 @@ static JS_REQUIRES_STACK bool
 StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
               unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
               VMSideExit* expectedInnerExit, jsbytecode* outer, uint32 outerArgc,
-              MonitorReason reason)
+              RecordReason reason)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (JS_TRACE_MONITOR(cx).needFlush) {
@@ -5534,7 +5580,7 @@ SynthesizeSlowNativeFrame(InterpState& state, JSContext *cx, VMSideExit *exit)
     fp->thisv = state.nativeVp[1];
     fp->argc = state.nativeVpLen - 2;
     fp->argv = state.nativeVp + 2;
-    fp->fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
+    fp->fun = GET_FUNCTION_PRIVATE(cx, fp->calleeObject());
     fp->rval = JSVAL_VOID;
     fp->down = cx->fp;
     fp->annotation = NULL;
@@ -5552,7 +5598,7 @@ SynthesizeSlowNativeFrame(InterpState& state, JSContext *cx, VMSideExit *exit)
 static JS_REQUIRES_STACK bool
 RecordTree(JSContext* cx, JSTraceMonitor* tm, VMFragment* peer, jsbytecode* outer,
            uint32 outerArgc, JSObject* globalObj, uint32 globalShape,
-           SlotList* globalSlots, uint32 argc, MonitorReason reason)
+           SlotList* globalSlots, uint32 argc, RecordReason reason)
 {
     /* Try to find an unused peer fragment, or allocate a new one. */
     VMFragment* f = peer;
@@ -5572,8 +5618,6 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, VMFragment* peer, jsbytecode* oute
     }
 
     AUDIT(recorderStarted);
-
-    f->lirbuf = tm->lirbuf;
 
     if (tm->dataAlloc->outOfMemory() ||
         tm->traceAlloc->outOfMemory() ||
@@ -5765,7 +5809,7 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
 
     return RecordTree(cx, tm, from->first, outer, outerArgc, from->globalObj,
                       from->globalShape, from_ti->globalSlots, cx->fp->argc,
-                      Monitor_Branch);
+                      Record_Branch);
 }
 
 static JS_REQUIRES_STACK bool
@@ -5833,7 +5877,6 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
     int32_t& hits = c->hits();
     if (outer || (hits++ >= HOTEXIT && hits <= HOTEXIT+MAXEXIT)) {
         /* start tracing secondary trace from this point */
-        c->lirbuf = f->lirbuf;
         unsigned stackSlots;
         unsigned ngslots;
         JSTraceType* typeMap;
@@ -5867,7 +5910,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
         JS_ASSERT(ngslots >= anchor->numGlobalSlots);
         bool rv = StartRecorder(cx, anchor, c, (TreeInfo*)f->vmprivate, stackSlots,
                                 ngslots, typeMap, exitedFrom, outer, cx->fp->argc,
-                                Monitor_Branch);
+                                Record_Branch);
 #ifdef MOZ_TRACEVIS
         if (!rv && tvso)
             tvso->r = R_FAIL_EXTEND_START;
@@ -5888,8 +5931,8 @@ static JS_REQUIRES_STACK VMSideExit*
 ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
             VMSideExit** innermostNestedGuardp);
 
-static JS_REQUIRES_STACK bool
-RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
+JS_REQUIRES_STACK bool
+TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
     if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->title.ownercx != cx) {
@@ -5906,8 +5949,8 @@ RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         return false;
     }
 
-    JS_ASSERT(r->getFragment() && !r->getFragment()->lastIns);
-    VMFragment* root = (VMFragment*)r->getFragment()->root;
+    JS_ASSERT(r->fragment && !r->fragment->lastIns);
+    VMFragment* root = (VMFragment*)r->fragment->root;
     VMFragment* first = LookupOrAddLoop(tm, cx->fp->regs->pc, root->globalObj,
                                         root->globalShape, cx->fp->argc);
 
@@ -5948,7 +5991,7 @@ RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         js_AbortRecording(cx, "No compatible inner tree");
 
         return RecordTree(cx, tm, first, outer, outerArgc, globalObj, globalShape,
-                          globalSlots, argc, Monitor_Branch);
+                          globalSlots, argc, Record_Branch);
     }
 
     return r->attemptTreeCall(f, inlineCallCount) == ARECORD_CONTINUE;
@@ -5978,7 +6021,8 @@ TraceRecorder::attemptTreeCall(VMFragment* f, uintN& inlineCallCount)
     }
 
     adjustCallerTypes(f);
-    prepareTreeCall(f);
+    LIns* inner_sp_ins;
+    prepareTreeCall(f, inner_sp_ins);
 
 #ifdef DEBUG
     unsigned oldInlineCallCount = inlineCallCount;
@@ -6014,7 +6058,7 @@ TraceRecorder::attemptTreeCall(VMFragment* f, uintN& inlineCallCount)
         JS_ASSERT(oldInlineCallCount == inlineCallCount);
 
         /* Emit a call to the inner tree and continue recording the outer tree trace. */
-        emitTreeCall(f, lr);
+        emitTreeCall(f, lr, inner_sp_ins);
         return ARECORD_CONTINUE;
 
       case UNSTABLE_LOOP_EXIT:
@@ -6556,20 +6600,23 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                       op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETMETHOD ||
                       op == JSOP_SETELEM || op == JSOP_INITELEM ||
                       op == JSOP_INSTANCEOF);
-            const JSCodeSpec& cs = js_CodeSpec[op];
-            regs->sp -= (cs.format & JOF_INVOKE) ? GET_ARGC(regs->pc) + 2 : cs.nuses;
-            regs->sp += cs.ndefs;
-            regs->pc += cs.length;
+
             /*
              * JSOP_SETELEM can be coalesced with a JSOP_POP in the interpeter.
              * Since this doesn't re-enter the recorder, the post-state snapshot
              * is invalid. Fix it up here.
              */
-            if (op == JSOP_SETELEM && (JSOp)*regs->pc == JSOP_POP) {
-                regs->pc += JSOP_POP_LENGTH;
-                JS_ASSERT(js_CodeSpec[JSOP_POP].ndefs == 0 && js_CodeSpec[JSOP_POP].nuses == 1);
-                regs->sp -= 1;
+            if (op == JSOP_SETELEM && JSOp(regs->pc[JSOP_SETELEM_LENGTH]) == JSOP_POP) {
+                regs->sp -= js_CodeSpec[JSOP_SETELEM].nuses;
+                regs->sp += js_CodeSpec[JSOP_SETELEM].ndefs;
+                regs->pc += JSOP_SETELEM_LENGTH;
+                op = JSOP_POP;
             }
+
+            const JSCodeSpec& cs = js_CodeSpec[op];
+            regs->sp -= (cs.format & JOF_INVOKE) ? GET_ARGC(regs->pc) + 2 : cs.nuses;
+            regs->sp += cs.ndefs;
+            regs->pc += cs.length;
             JS_ASSERT_IF(!cx->fp->imacpc,
                          cx->fp->slots + cx->fp->script->nfixed +
                          js_ReconstructStackDepth(cx, cx->fp->script, regs->pc) ==
@@ -6785,7 +6832,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
 }
 
 JS_REQUIRES_STACK bool
-js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, MonitorReason reason)
+js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
 {
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_MONITOR);
@@ -6797,11 +6844,11 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, MonitorReason reason)
     if (tm->recorder) {
         jsbytecode* innerLoopHeaderPC = cx->fp->regs->pc;
 
-        if (RecordLoopEdge(cx, tm->recorder, inlineCallCount))
+        if (TraceRecorder::recordLoopEdge(cx, tm->recorder, inlineCallCount))
             return true;
 
         /*
-         * RecordLoopEdge will invoke an inner tree if we have a matching
+         * recordLoopEdge will invoke an inner tree if we have a matching
          * one. If we arrive here, that tree didn't run to completion and
          * instead we mis-matched or the inner tree took a side exit other than
          * the loop exit. We are thus no longer guaranteed to be parked on the
@@ -7337,8 +7384,10 @@ arm_read_auxv() {
                 else
                 {
                     // For production code, ignore invalid (or unexpected) platform strings and
-                    // fall back to the default. For debug code, use an assertion to catch this.
-                    JS_ASSERT(false);
+                    // fall back to the default. For debug code, use an assertion to catch this
+                    // when not running in scratchbox.
+                    if (getenv("_SBOX_DIR") == NULL)
+                        JS_ASSERT(false);
                 }
             }
         }
@@ -7449,6 +7498,7 @@ js_InitJIT(JSTraceMonitor *tm)
 #if defined NANOJIT_IA32
         avmplus::AvmCore::config.use_cmov =
             avmplus::AvmCore::config.sse2 = CheckForSSE2();
+        avmplus::AvmCore::config.fixed_esp = true;
 #endif
 #if defined NANOJIT_ARM
 
@@ -7539,29 +7589,29 @@ js_FinishJIT(JSTraceMonitor *tm)
 {
 #ifdef JS_JIT_SPEW
     if (jitstats.recorderStarted) {
-        debug_only_printf(LC_TMStats,
-                          "recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
-                          "trees trashed(%llu), slot promoted(%llu), unstable loop variable(%llu), "
-                          "breaks(%llu), returns(%llu), unstableInnerCalls(%llu), blacklisted(%llu)\n",
-                           (unsigned long long int)jitstats.recorderStarted,
-                           (unsigned long long int)jitstats.recorderAborted,
-                           (unsigned long long int)jitstats.traceCompleted,
-                           (unsigned long long int)jitstats.returnToDifferentLoopHeader,
-                           (unsigned long long int)jitstats.treesTrashed,
-                           (unsigned long long int)jitstats.slotPromoted,
-                           (unsigned long long int)jitstats.unstableLoopVariable,
-                           (unsigned long long int)jitstats.breakLoopExits,
-                           (unsigned long long int)jitstats.returnLoopExits,
-                           (unsigned long long int)jitstats.noCompatInnerTrees,
-                           (unsigned long long int)jitstats.blacklisted);
-        debug_only_printf(LC_TMStats,
-                          "monitor: triggered(%llu), exits(%llu), type mismatch(%llu), "
-                          "global mismatch(%llu), flushed(%llu)\n",
-                           (unsigned long long int)jitstats.traceTriggered,
-                           (unsigned long long int)jitstats.sideExitIntoInterpreter,
-                           (unsigned long long int)jitstats.typeMapMismatchAtEntry,
-                           (unsigned long long int)jitstats.globalShapeMismatchAtEntry,
-                           (unsigned long long int)jitstats.cacheFlushed);
+        char sep = ':';
+        debug_only_print0(LC_TMStats, "recorder");
+#define RECORDER_JITSTAT(_ident, _name)                             \
+        debug_only_printf(LC_TMStats, "%c " _name "(%llu)", sep,    \
+                          (unsigned long long int)jitstats._ident); \
+        sep = ',';
+#define JITSTAT(x) /* nothing */
+#include "jitstats.tbl"
+#undef JITSTAT
+#undef RECORDER_JITSTAT
+        debug_only_print0(LC_TMStats, "\n");
+
+        sep = ':';
+        debug_only_print0(LC_TMStats, "monitor");
+#define MONITOR_JITSTAT(_ident, _name)                              \
+        debug_only_printf(LC_TMStats, "%c " _name "(%llu)", sep,    \
+                          (unsigned long long int)jitstats._ident); \
+        sep = ',';
+#define JITSTAT(x) /* nothing */
+#include "jitstats.tbl"
+#undef JITSTAT
+#undef MONITOR_JITSTAT
+        debug_only_print0(LC_TMStats, "\n");
     }
 #endif
     JS_ASSERT(tm->reservedDoublePool);
@@ -7849,7 +7899,7 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult&
         // of the scope chain if we are in a function.
         if (cx->fp->argv) {
             LIns* obj_ins;
-            JSObject* parent = STOBJ_GET_PARENT(JSVAL_TO_OBJECT(cx->fp->argv[-2]));
+            JSObject* parent = STOBJ_GET_PARENT(cx->fp->calleeObject());
             LIns* parent_ins = stobj_get_parent(get(&cx->fp->argv[-2]));
             CHECK_STATUS_A(traverseScopeChain(parent, parent_ins, obj, obj_ins));
         }
@@ -7941,11 +7991,11 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
     }
 
     LIns* obj_ins;
-    JSObject* parent = STOBJ_GET_PARENT(JSVAL_TO_OBJECT(cx->fp->argv[-2]));
+    JSObject* parent = STOBJ_GET_PARENT(cx->fp->calleeObject());
     LIns* parent_ins = stobj_get_parent(get(&cx->fp->argv[-2]));
     CHECK_STATUS(traverseScopeChain(parent, parent_ins, obj, obj_ins));
 
-    ClosureVarInfo* cv = new (traceMonitor->traceAlloc) ClosureVarInfo();
+    ClosureVarInfo* cv = new (traceAlloc()) ClosureVarInfo();
     cv->id = id;
     cv->slot = slot;
     cv->callDepth = callDepth;
@@ -8133,7 +8183,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
          * If the result is zero, we must exit if the lhs is negative since
          * the result is -0 in this case, which is not in the integer domain.
          */
-        guard(false, lir->ins2i(LIR_lt, d1, 0), exit);
+        guard(false, lir->ins2i(LIR_lt, d0, 0), exit);
         branch->setTarget(lir->ins0(LIR_label));
         break;
       }
@@ -8315,15 +8365,12 @@ TraceRecorder::tableswitch()
         high = GET_JUMPX_OFFSET(pc);
     }
 
-    /*
-     * Really large tables won't fit in a page. This is a conservative check.
-     * If it matters in practice we need to go off-page.
-     */
-    if ((high + 1 - low) * sizeof(intptr_t*) + 128 > (unsigned) LARGEST_UNDERRUN_PROT)
+    /* Cap maximum table-switch size for modesty. */
+    if ((high + 1 - low) > MAX_TABLE_SWITCH)
         return InjectStatus(switchop());
 
     /* Generate switch LIR. */
-    SwitchInfo* si = new (*traceMonitor->traceAlloc) SwitchInfo();
+    SwitchInfo* si = new (traceAlloc()) SwitchInfo();
     si->count = high + 1 - low;
     si->table = 0;
     si->index = (uint32) -1;
@@ -8617,7 +8664,7 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
                 args[0] = l_ins, args[1] = cx_ins;
                 l_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
                 l = (l == JSVAL_VOID)
-                    ? DOUBLE_TO_JSVAL(cx->runtime->jsNaN)
+                    ? cx->runtime->NaNValue
                     : INT_TO_JSVAL(l == JSVAL_TRUE);
                 return equalityHelper(l, r, l_ins, r_ins, negate,
                                       tryBranchAfterCond, rval);
@@ -8631,7 +8678,7 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
                 args[0] = r_ins, args[1] = cx_ins;
                 r_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
                 r = (r == JSVAL_VOID)
-                    ? DOUBLE_TO_JSVAL(cx->runtime->jsNaN)
+                    ? cx->runtime->NaNValue
                     : INT_TO_JSVAL(r == JSVAL_TRUE);
                 return equalityHelper(l, r, l_ins, r_ins, negate,
                                       tryBranchAfterCond, rval);
@@ -9412,7 +9459,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns* v_ins, VMSideExit* exit)
                         INS_CONSTWORD(JSVAL_STRING)),
               exit);
         return lir->ins2(LIR_piand, v_ins, addName(lir->insImmWord(~JSVAL_TAGMASK),
-    					           "~JSVAL_TAGMASK"));
+                                                   "~JSVAL_TAGMASK"));
     }
 }
 
@@ -9732,7 +9779,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
                 JSTraceMonitor* tm = traceMonitor;
                 js_AbortRecording(cx, "trying to compile inner recursive tree");
                 if (RecordTree(_cx, tm, first, NULL, 0, first->globalObj, first->globalShape,
-                               globalSlots, _cx->fp->argc, Monitor_EnterFrame)) {
+                               globalSlots, _cx->fp->argc, Record_EnterFrame)) {
                     JS_ASSERT(tm->recorder);
                 }
                 break;
@@ -9891,7 +9938,7 @@ TraceRecorder::newArguments()
         ? lir->ins2(LIR_piadd, lirbuf->sp, 
                     lir->insImmWord(-treeInfo->nativeStackBase + nativeStackOffset(&cx->fp->argv[0])))
         : INS_CONSTPTR((void *) 2);
-    js_ArgsPrivateNative *apn = js_ArgsPrivateNative::create(*traceMonitor->traceAlloc, cx->fp->argc);
+    js_ArgsPrivateNative *apn = js_ArgsPrivateNative::create(traceAlloc(), cx->fp->argc);
     for (uintN i = 0; i < cx->fp->argc; ++i) {
         apn->typemap()[i] = determineSlotType(&cx->fp->argv[i]);
     }
@@ -10393,7 +10440,7 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
     if (setflag)
         lir->insStorei(boxed_ins, vp_ins, 0);
 
-    CallInfo* ci = new (*traceMonitor->traceAlloc) CallInfo();
+    CallInfo* ci = new (traceAlloc()) CallInfo();
     ci->_address = uintptr_t(setflag ? sprop->setter : sprop->getter);
     ci->_argtypes = ARGSIZE_I << (0*ARGSIZE_SHIFT) |
                     ARGSIZE_P << (1*ARGSIZE_SHIFT) |
@@ -10777,7 +10824,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     // Do not use JSTN_UNBOX_AFTER for mode JSOP_NEW because
     // record_NativeCallComplete unboxes the result specially.
 
-    CallInfo* ci = new (*traceMonitor->traceAlloc) CallInfo();
+    CallInfo* ci = new (traceAlloc()) CallInfo();
     ci->_address = uintptr_t(fun->u.n.native);
     ci->_cse = ci->_fold = 0;
     ci->_abi = ABI_CDECL;
@@ -11564,7 +11611,7 @@ TraceRecorder::record_JSOP_GETELEM()
                         // The entry type map is not necessarily up-to-date, so we capture a new type map
                         // for this point in the code.
                         unsigned stackSlots = NativeStackSlots(cx, 0 /* callDepth */);
-                        JSTraceType* typemap = new (*traceMonitor->traceAlloc) JSTraceType[stackSlots];
+                        JSTraceType* typemap = new (traceAlloc()) JSTraceType[stackSlots];
                         DetermineTypesVisitor detVisitor(*this, typemap);
                         VisitStackSlots(detVisitor, cx, 0);
                         typemap_ins = INS_CONSTPTR(typemap + 2 /* callee, this */);
@@ -11963,7 +12010,7 @@ TraceRecorder::record_JSOP_CALLUPVAR()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETDSLOT()
 {
-    JSObject* callee = JSVAL_TO_OBJECT(cx->fp->argv[-2]);
+    JSObject* callee = cx->fp->calleeObject();
     LIns* callee_ins = get(&cx->fp->argv[-2]);
 
     unsigned index = GET_UINT16(cx->fp->regs->pc);
@@ -12032,6 +12079,20 @@ TraceRecorder::guardArguments(JSObject *obj, LIns* obj_ins, unsigned *depthp)
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc, bool constructing)
 {
+    /*
+     * The function's identity (JSFunction and therefore JSScript) is guarded,
+     * so we can optimize for the empty script singleton right away. No need to
+     * worry about crossing globals or relocating argv, even, in this case!
+     *
+     * Note that the interpreter shortcuts empty-script call and construct too,
+     * and does not call any TR::record_*CallComplete hook.
+     */
+    if (fun->u.i.script->isEmpty()) {
+        LIns* rval_ins = constructing ? stack(-1 - argc) : INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
+        stack(-2 - argc, rval_ins);
+        return RECORD_CONTINUE;
+    }
+
     if (JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(fval)) != globalObj)
         RETURN_STOP("JSOP_CALL or JSOP_NEW crosses global scopes");
 
@@ -12046,7 +12107,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     // Generate a type map for the outgoing frame and stash it in the LIR
     unsigned stackSlots = NativeStackSlots(cx, 0 /* callDepth */);
     FrameInfo* fi = (FrameInfo*)
-        traceMonitor->tempAlloc->alloc(sizeof(FrameInfo) + stackSlots * sizeof(JSTraceType));
+        tempAlloc().alloc(sizeof(FrameInfo) + stackSlots * sizeof(JSTraceType));
     JSTraceType* typemap = (JSTraceType*)(fi + 1);
 
     DetermineTypesVisitor detVisitor(*this, typemap);
@@ -12065,7 +12126,6 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     fi->callerHeight = NativeStackSlots(cx, 0) - (2 + argc);
     fi->callerArgc = fp->argc;
 
-    unsigned callDepth = getCallDepth();
     if (callDepth >= treeInfo->maxCallDepth)
         treeInfo->maxCallDepth = callDepth + 1;
 
@@ -14712,12 +14772,6 @@ TraceRecorder::determineGlobalTypes(JSTraceType* typeMap)
 {
     DetermineTypesVisitor detVisitor(*this, typeMap);
     VisitGlobalSlots(detVisitor, cx, *treeInfo->globalSlots);
-}
-
-LIns*
-TraceRecorder::demoteIns(LIns* ins)
-{
-    return ::demote(lir, ins);
 }
 
 #include "jsrecursion.cpp"

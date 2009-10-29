@@ -181,7 +181,7 @@ namespace nanojit
             Assembler(CodeAlloc& codeAlloc, Allocator& alloc, AvmCore* core, LogControl* logc);
 
             void        endAssembly(Fragment* frag);
-            void        assemble(Fragment* frag);
+            void        assemble(Fragment* frag, LirFilter* reader);
             void        beginAssembly(Fragment *frag);
 
             void        releaseRegisters();

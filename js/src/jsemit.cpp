@@ -4569,8 +4569,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         jmp = EmitJump(cx, cg, JSOP_GOTO, 0);
         if (jmp < 0)
             return JS_FALSE;
-        top = CG_OFFSET(cg);
-        if (!js_Emit1(cx, cg, JSOP_TRACE))
+        top = js_Emit1(cx, cg, JSOP_TRACE);
+        if (top < 0)
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
             return JS_FALSE;
@@ -4592,8 +4592,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         /* Compile the loop body. */
-        top = CG_OFFSET(cg);
-        if (!js_Emit1(cx, cg, JSOP_TRACE))
+        top = js_Emit1(cx, cg, JSOP_TRACE);
+        if (top < 0)
             return JS_FALSE;
         js_PushStatement(cg, &stmtInfo, STMT_DO_LOOP, top);
         if (!js_EmitTree(cx, cg, pn->pn_left))
@@ -4692,7 +4692,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             top = CG_OFFSET(cg);
             SET_STATEMENT_TOP(&stmtInfo, top);
-            if (!js_Emit1(cx, cg, JSOP_TRACE))
+            if (js_Emit1(cx, cg, JSOP_TRACE) < 0)
                 return JS_FALSE;
 
 #ifdef DEBUG
@@ -4919,7 +4919,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             SET_STATEMENT_TOP(&stmtInfo, top);
 
             /* Emit code for the loop body. */
-            if (!js_Emit1(cx, cg, JSOP_TRACE))
+            if (js_Emit1(cx, cg, JSOP_TRACE) < 0)
                 return JS_FALSE;
             if (!js_EmitTree(cx, cg, pn->pn_right))
                 return JS_FALSE;
@@ -6239,8 +6239,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         jmp = js_Emit3(cx, cg, JSOP_FILTER, 0, 0);
         if (jmp < 0)
             return JS_FALSE;
-        top = CG_OFFSET(cg);
-        if (!js_Emit1(cx, cg, JSOP_TRACE))
+        top = js_Emit1(cx, cg, JSOP_TRACE);
+        if (top < 0)
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
             return JS_FALSE;

@@ -1723,11 +1723,11 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, jsva
 
     JS_ASSERT(start == MAXINDEX);
     jsval tmp[2] = {JSVAL_NULL, JSVAL_NULL};
-    jsdouble* dp = js_NewWeaklyRootedDouble(cx, MAXINDEX);
-    if (!dp)
-        return JS_FALSE;
-    tmp[0] = DOUBLE_TO_JSVAL(dp);
     JSAutoTempValueRooter tvr(cx, JS_ARRAY_LENGTH(tmp), tmp);
+    if (!js_NewDoubleInRootedValue(cx, MAXINDEX, &tmp[0]))
+        return JS_FALSE;
+    jsdouble *dp = JSVAL_TO_DOUBLE(tmp[0]);
+    JS_ASSERT(*dp == MAXINDEX);
     JSAutoTempIdRooter idr(cx);
     do {
         tmp[1] = *vector++;
@@ -3471,6 +3471,12 @@ js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector, JSBool holey)
     obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL);
     if (!obj)
         return NULL;
+
+    /*
+     * If this fails, the global object was not initialized and its class does
+     * not have JSCLASS_IS_GLOBAL.
+     */
+    JS_ASSERT(obj->getProto());
 
     JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
     if (!InitArrayObject(cx, obj, length, vector, holey))

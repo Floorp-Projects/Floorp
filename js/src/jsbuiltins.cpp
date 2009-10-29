@@ -61,11 +61,10 @@
 #include "jsvector.h"
 
 #include "jsatominlines.h"
+#include "jsscopeinlines.h"
 
 using namespace avmplus;
 using namespace nanojit;
-
-extern jsdouble js_NaN;
 
 JS_FRIEND_API(void)
 js_SetTraceableNativeFailed(JSContext *cx)
