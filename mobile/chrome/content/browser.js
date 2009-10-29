@@ -2476,9 +2476,7 @@ Tab.prototype = {
     this._browserViewportState.zoomChanged = false;
 
     if (!this._loadingTimeout) {
-      if (this == Browser.selectedTab) {
-        Browser._browserView.beginBatchOperation();
-      }
+      Browser._browserView.beginBatchOperation();
       this._loadingTimeout = setTimeout(Util.bind(this._resizeAndPaint, this), 2000);
     }
   },
@@ -2573,6 +2571,12 @@ Tab.prototype = {
     if (this._browser) {
       document.getElementById("browsers").removeChild(this._browser);
       this._browser = null;
+
+      if (this._loading) {
+        Browser._browserView.commitBatchOperation();
+        clearTimeout(this._loadingTimeout);
+        delete this._loadingTimeout;
+      }
     }
   },
 
