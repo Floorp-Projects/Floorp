@@ -69,7 +69,7 @@ function test() {
         let iframes = tab2.linkedBrowser.contentWindow.frames;
         if (iframes[1].document.body.innerHTML != uniqueValue &&
             ++pass <= MAX_PASS) {
-          setTimeout(500, arguments.callee);
+          setTimeout(arguments.callee, 500);
           return;
         }
         is(iframes[1].document.body.innerHTML, uniqueValue,
