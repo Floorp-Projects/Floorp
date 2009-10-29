@@ -115,7 +115,7 @@ function check_results() {
       return;
     }
 
-    dbConn = DBConn();
+    let dbConn = DBConn();
     do_check_neq(dbConn, null);
     do_check_true(dbConn.connectionReady);
 
