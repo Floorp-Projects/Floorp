@@ -2492,17 +2492,7 @@ Tab.prototype = {
   endLoading: function() {
     // Determine at what resolution the browser is rendered based on meta tag
     let browser = this._browser;
-    let windowUtils = browser.contentWindow
-                             .QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
-    let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
-    let handheldDoctype = 
-          (browser.contentDocument.doctype && 
-           (browser.contentDocument.doctype.publicId.search("WAP") != -1 ||
-            browser.contentDocument.doctype.publicId.search("WML") != -1 ||
-            browser.contentDocument.doctype.publicId.search("Mobile") != -1)); 
-
-    if (handheldFriendly == "true" || handheldDoctype) {
+    if (Util.contentIsHandheld(browser)) {
       browser.className = "browser-handheld";
     } else {
       browser.className = "browser";
@@ -2510,7 +2500,7 @@ Tab.prototype = {
 
     //if (!this._loading)
     //  dump("!!! Already finished loading this tab, please file a bug\n");
-    this.setIcon(this._browser.mIconURL);
+    this.setIcon(browser.mIconURL);
 
     this._loading = false;
     clearTimeout(this._loadingTimeout);
