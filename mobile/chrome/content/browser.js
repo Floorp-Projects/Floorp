@@ -343,8 +343,6 @@ var Browser = {
   startup: function() {
     var self = this;
 
-    //dump("begin startup\n");
-
     let container = document.getElementById("tile-container");
     let bv = this._browserView = new BrowserView(container, Browser.getVisibleRect);
 
@@ -573,7 +571,8 @@ var Browser = {
       gPrefService.clearUserPref("temporary.disabledFlash");
     }
 
-    //dump("end startup\n");
+    // Force commonly used border-images into the image cache
+    ImagePreloader.cache();
   },
 
   shutdown: function() {
@@ -2688,3 +2687,28 @@ Tab.prototype = {
     return "[Tab " + (this._browser ? this._browser.contentDocument.location.toString() : "(no browser)") + "]";
   }
 };
+
+var ImagePreloader = {
+  cache: function ip_cache() {
+    // Preload images used in border-image CSS
+    let images = ["button-active", "button-default",
+                  "buttondark-active", "buttondark-default",
+                  "toggleon-active", "toggleon-inactive",
+                  "toggleoff-active", "toggleoff-inactive",
+                  "toggleleft-active", "toggleleft-inactive",
+                  "togglemiddle-active", "togglemiddle-inactive",
+                  "toggleright-active", "toggleright-inactive",
+                  "toggleboth-active", "toggleboth-inactive",
+                  "toggledarkleft-active", "toggledarkleft-inactive",
+                  "toggledarkmiddle-active", "toggledarkmiddle-inactive",
+                  "toggledarkright-active", "toggledarkright-inactive",
+                  "toggledarkboth-active", "toggledarkboth-inactive",
+                  "toolbarbutton-active", "toolbarbutton-default"];
+
+    let size = screen.width > 400 ? "-64" : "-36";
+    for (let i = 0; i < images.length; i++) {
+      let image = new Image();
+      image.src = "chrome://browser/skin/images/" + images[i] + size + ".png";
+    }
+  }
+}
