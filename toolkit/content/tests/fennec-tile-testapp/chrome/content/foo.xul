@@ -461,7 +461,7 @@ function getVisibleRect() {
     <html:div style="position: relative; overflow: hidden; max-width: 0px; max-height: 0px; visibility: hidden;">
     <html:div id="browsers" style="position: absolute;">
         <!-- <browser id="googlenews" src="http://www.webhamster.com/" type="content" style="width: 1024px; height: 614px"/> -->
-	<browser id="googlenews" src="http://news.google.com/" type="content" style="width: 1024px; height: 614px"/>
+	<iframe id="googlenews" src="http://news.google.com/" type="content" style="width: 1024px; height: 614px"/>
     </html:div>
     </html:div>
   </box>

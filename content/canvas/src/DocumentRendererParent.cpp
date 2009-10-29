@@ -1,5 +1,3 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8; -*- */
-/* vim: set sw=4 ts=8 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Content App.
+ * The Original Code is Fennec Electrolysis.
  *
  * The Initial Developer of the Original Code is
  *   The Mozilla Foundation.
@@ -36,69 +34,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "TabParent.h"
-
-#include "mozilla/ipc/GeckoThread.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
+#include "gfxImageSurface.h"
+#include "gfxPattern.h"
 
-#include "nsIURI.h"
+using namespace mozilla::ipc;
 
-using mozilla::ipc::BrowserProcessSubThread;
-using mozilla::ipc::DocumentRendererParent;
+DocumentRendererParent::DocumentRendererParent()
+{}
 
-namespace mozilla {
-namespace dom {
+DocumentRendererParent::~DocumentRendererParent()
+{}
 
-TabParent::TabParent()
+void DocumentRendererParent::SetCanvasContext(nsICanvasRenderingContextInternal* aCanvas,
+                                              gfxContext* ctx)
 {
+    mCanvas = aCanvas;
+    mCanvasContext = ctx;
 }
 
-TabParent::~TabParent()
+void DocumentRendererParent::DrawToCanvas(PRUint32 aWidth, PRUint32 aHeight,
+                                          const nsCString& aData)
 {
+    if (!mCanvas || !mCanvasContext)
+        return;
+
+    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(reinterpret_cast<PRUint8*>(const_cast<char*>(aData.Data())),
+                                                         gfxIntSize(aWidth, aHeight),
+                                                         aWidth * 4,
+                                                         gfxASurface::ImageFormatARGB32);
+    nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
+
+    mCanvasContext->NewPath();
+    mCanvasContext->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, aWidth, aHeight), pat);
+    mCanvasContext->Fill();
+
+    // get rid of the pattern surface ref, because aData is very likely to go away shortly
+    mCanvasContext->SetColor(gfxRGBA(1,1,1,1));
+
+    gfxRect damageRect = mCanvasContext->UserToDevice(gfxRect(0, 0, aWidth, aHeight));
+    mCanvas->Redraw(damageRect);
 }
-
-void
-TabParent::LoadURL(nsIURI* aURI)
-{
-    nsCString spec;
-    aURI->GetSpec(spec);
-
-    SendloadURL(spec);
-}
-
-void
-TabParent::Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height)
-{
-    Sendmove(x, y, width, height);
-}
-
-mozilla::ipc::PDocumentRendererParent*
-TabParent::AllocPDocumentRenderer(const PRInt32& x,
-        const PRInt32& y, const PRInt32& w, const PRInt32& h, const nsString& bgcolor,
-        const PRUint32& flags, const bool& flush)
-{
-    return new DocumentRendererParent();
-}
-
-bool
-TabParent::DeallocPDocumentRenderer(mozilla::ipc::PDocumentRendererParent* __a,
-        const PRUint32& w, const PRUint32& h, const nsCString& data)
-{
-    NS_ENSURE_ARG_POINTER(__a);
-    delete __a;
-    return true;
-}
-
-bool
-TabParent::RecvPDocumentRendererDestructor(PDocumentRendererParent* __a,
-        const PRUint32& w, const PRUint32& h, const nsCString& data)
-{
-    NS_ENSURE_ARG_POINTER(__a);
-    DocumentRendererParent *renderer = static_cast<DocumentRendererParent *>(__a);
-    renderer->DrawToCanvas(w, h, data);
-
-    return true;
-}
-
-} // namespace tabs
-} // namespace mozilla
