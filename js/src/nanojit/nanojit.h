@@ -70,6 +70,24 @@
     #define UNLESS_64BIT(...) __VA_ARGS__
 #endif
 
+// set ARM_VFP constant if not already set
+#if !defined(ARM_VFP)
+    #if defined(AVMPLUS_ARM)
+        #if defined(NJ_ARM_VFP)
+            #define ARM_VFP      1
+            #define NJ_SOFTFLOAT 0
+        #else
+            #define ARM_VFP      0
+            #define NJ_SOFTFLOAT 1
+        #endif
+    #else
+        // some LIR features should test VFP on ARM,
+        // but can be set to "always on" on non-ARM
+        #define ARM_VFP          1
+        #define ARM_SOFTFLOAT    1
+    #endif
+#endif
+
 // Embed no-op macros that let Valgrind work with the JIT.
 #ifdef MOZ_VALGRIND
 #  define JS_VALGRIND
