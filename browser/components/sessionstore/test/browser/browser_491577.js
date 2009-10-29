@@ -149,7 +149,8 @@ function test() {
 
     // clean up
     newWin.close();
-    gPrefService.clearUserPref("browser.sessionstore.max_windows_undo");
+    if (gPrefService.prefHasUserValue("browser.sessionstore.max_windows_undo"))
+      gPrefService.clearUserPref("browser.sessionstore.max_windows_undo");
     finish();
   }, false);
 }

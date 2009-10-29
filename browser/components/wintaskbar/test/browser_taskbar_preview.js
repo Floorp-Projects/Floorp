@@ -94,7 +94,8 @@ function test() {
   getPreviewForTab(gBrowser.mTabs[1]).controller.onClose();
   checkPreviews(1);
 
-  gPrefService.clearUserPref(ENABLE_PREF_NAME);
+  if (gPrefService.prefHasUserValue(ENABLE_PREF_NAME))
+    gPrefService.clearUserPref(ENABLE_PREF_NAME);
 
   finish();
 

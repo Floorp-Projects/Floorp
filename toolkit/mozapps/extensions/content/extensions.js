@@ -2789,8 +2789,10 @@ var gExtensionsViewController = {
 
         // If choosing the current skin just reset the pending change
         if (gThemeToSelect == gCurrentTheme) {
-          gPref.clearUserPref(PREF_EXTENSIONS_DSS_SWITCHPENDING);
-          gPref.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
+          if (gPref.prefHasUserValue(PREF_EXTENSIONS_DSS_SWITCHPENDING))
+            gPref.clearUserPref(PREF_EXTENSIONS_DSS_SWITCHPENDING);
+          if (gPref.prefHasUserValue(PREF_DSS_SKIN_TO_SELECT))
+            gPref.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
           gLWThemeToSelect = LightweightThemeManager.currentTheme = null;
           clearRestartMessage();
         }

@@ -56,5 +56,6 @@ function run_test() {
   expected_fail("foo\u0370bar.com");
 
   // reset the pref
-  pbi.clearUserPref(whitelistPref);
+  if (pbi.prefHasUserValue(whitelistPref))
+    pbi.clearUserPref(whitelistPref);
 }

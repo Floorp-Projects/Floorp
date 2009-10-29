@@ -41,7 +41,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
     var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID)
                                                      .getBranch("accessibility.");
     if (!newValue) {
-      prefs.clearUserPref("tabfocus");
+      try {
+        prefs.clearUserPref("tabfocus");
+      } catch(ex) {}
     } else {
       prefs.setIntPref("tabfocus", newValue);
     }
