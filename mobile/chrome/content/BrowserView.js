@@ -279,7 +279,6 @@ BrowserView.prototype = {
 
   setViewportDimensions: function setViewportDimensions(width, height, causedByZoom) {
     let bvs = this._browserViewportState;
-
     if (!bvs)
       return;
 
@@ -298,12 +297,10 @@ BrowserView.prototype = {
 
   setZoomLevel: function setZoomLevel(zl) {
     let bvs = this._browserViewportState;
-
     if (!bvs)
       return;
 
     let newZL = BrowserView.Util.clampZoomLevel(zl);
-
     if (newZL != bvs.zoomLevel) {
       let browserW = this.viewportToBrowser(bvs.viewportRect.right);
       let browserH = this.viewportToBrowser(bvs.viewportRect.bottom);
@@ -311,7 +308,7 @@ BrowserView.prototype = {
       this.setViewportDimensions(this.browserToViewport(browserW),
                                  this.browserToViewport(browserH),
                                  true);
-      this.zoomChanged = true;
+      bvs.zoomChanged = true;
     }
   },
 
@@ -352,11 +349,13 @@ BrowserView.prototype = {
 
   commitBatchOperation: function commitBatchOperation() {
     let bops = this._batchOps;
-
     if (bops.length == 0)
       return;
 
     let opState = bops.pop();
+
+    // XXX If stack is not empty, this just assigns opState variables to the next one
+    // on top. Why then have a stack of these booleans?
     this._viewportChanged(opState.viewportSizeChanged, opState.dirtyAll);
     this.resumeRendering();
   },
@@ -658,6 +657,20 @@ BrowserView.prototype = {
       BrowserView.Util.resizeContainerToViewport(this._container, bvs.viewportRect);
   },
 
+  /**
+   * Force any pending viewport changes to occur.  Batch operations will still be on the
+   * stack so commitBatchOperation is still necessary afterwards.
+   */
+  forceViewportChange: function forceViewportChange() {
+    let bops = this._batchOps;
+    if (bops.length > 0) {
+      let opState = bops[bops.length - 1];
+      this._applyViewportChanges(opState.viewportSizeChanged, opState.dirtyAll);
+      opState.viewportSizeChanged = false;
+      opState.dirtyAll = false;
+    }
+  },
+
   // -----------------------------------------------------------
   // Private instance methods
   //
@@ -676,6 +689,10 @@ BrowserView.prototype = {
       return;
     }
 
+    this._applyViewportChanges(viewportSizeChanged, dirtyAll);
+  },
+
+  _applyViewportChanges: function _applyViewportChanges(viewportSizeChanged, dirtyAll) {
     let bvs = this._browserViewportState;
     if (bvs) {
       BrowserView.Util.resizeContainerToViewport(this._container, bvs.viewportRect);

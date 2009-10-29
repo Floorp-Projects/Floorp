@@ -407,10 +407,14 @@ var Browser = {
 
       // Tell the UI to resize the browser controls before calling  updateSize
       BrowserUI.sizeControls(w, h);
-
+      
       bv.zoomToPage();
-      Browser.hideSidebars();
+
+      // zoomChanged gets set to true, but user did not change zooming
+      bv._browserViewportState.zoomChanged = false;
+
       // hidesidebars calls bv.onAfterVisibleMove();
+      Browser.hideSidebars();
 
       bv.commitBatchOperation();
     }
@@ -1030,9 +1034,11 @@ var Browser = {
     Browser.hideSidebars();
     Browser.hideTitlebar();
     bv.setZoomLevel(zoomLevel);
+    bv.forceViewportChange();  // ensure container is resized for scrollTo
+    Browser.forceChromeReflow();
     Browser.contentScrollboxScroller.scrollTo(scrollX, scrollY);
     bv.onAfterVisibleMove();
-    bv.renderNow();
+    bv.renderNow();  // during loading, make sure new zoom level is rendered
 
     bv.commitOffscreenOperation();
   },
@@ -2449,6 +2455,9 @@ Tab.prototype = {
         // Only fit page if user hasn't started zooming around and this is a page that
         // isn't being restored.
         bv.zoomToPage();
+        
+        // zoomChanged gets set to true, but user did not change zooming
+        this._browserViewportState.zoomChanged = false;
       }
 
     }
