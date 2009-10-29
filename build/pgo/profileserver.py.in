@@ -70,6 +70,9 @@ if __name__ == '__main__':
   appPath = os.path.join(SCRIPT_DIR, automation.DEFAULT_APP)
   status = automation.runApp(url, browserEnv, appPath, PROFILE_DIRECTORY, {},
                              # the profiling HTML doesn't output anything,
-                             # so let's just ignore this for now.
-                             timeout = None)
+                             # so let's just set this really high for now.
+                             #FIXME: the POSIX codepath accepts None
+                             # as "no timeout", the Windows codepath
+                             # should too.
+                             timeout = 1800.0)
   sys.exit(status)
