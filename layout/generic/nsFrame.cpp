@@ -5677,7 +5677,7 @@ GetIBSpecialSiblingForAnonymousBlock(nsPresContext* aPresContext,
   NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL,
                "GetIBSpecialSibling should not be called on a non-special frame");
 
-  nsIAtom* type = aFrame->GetStyleContext()->GetPseudoType();
+  nsIAtom* type = aFrame->GetStyleContext()->GetPseudo();
   if (type != nsCSSAnonBoxes::mozAnonymousBlock &&
       type != nsCSSAnonBoxes::mozAnonymousPositionedBlock) {
     // it's not the anonymous block
@@ -5728,13 +5728,13 @@ GetCorrectedParent(nsPresContext* aPresContext, nsIFrame* aFrame,
   if (!parent) {
     *aSpecialParent = nsnull;
   } else {
-    nsIAtom* pseudo = aFrame->GetStyleContext()->GetPseudoType();
+    nsIAtom* pseudo = aFrame->GetStyleContext()->GetPseudo();
     // Outer tables are always anon boxes; if we're in here for an outer
     // table, that actually means its the _inner_ table that wants to
     // know its parent.  So get the pseudo of the inner in that case.
     if (pseudo == nsCSSAnonBoxes::tableOuter) {
       pseudo =
-        aFrame->GetFirstChild(nsnull)->GetStyleContext()->GetPseudoType();
+        aFrame->GetFirstChild(nsnull)->GetStyleContext()->GetPseudo();
     }
     *aSpecialParent = nsFrame::CorrectStyleParentFrame(parent, pseudo);
   }
@@ -5784,7 +5784,7 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
       }
     }
       
-    nsIAtom* parentPseudo = parent->GetStyleContext()->GetPseudoType();
+    nsIAtom* parentPseudo = parent->GetStyleContext()->GetPseudo();
     if (!parentPseudo ||
         (!nsCSSAnonBoxes::IsAnonBox(parentPseudo) &&
          // nsPlaceholderFrame pases in nsGkAtoms::placeholderFrame for
@@ -5798,7 +5798,7 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
     parent = parent->GetParent();
   } while (parent);
 
-  if (aProspectiveParent->GetStyleContext()->GetPseudoType() ==
+  if (aProspectiveParent->GetStyleContext()->GetPseudo() ==
       nsCSSAnonBoxes::viewportScroll) {
     // aProspectiveParent is the scrollframe for a viewport
     // and the kids are the anonymous scrollbars
@@ -5821,7 +5821,7 @@ nsFrame::DoGetParentStyleContextFrame(nsPresContext* aPresContext,
   *aIsChild = PR_FALSE;
   *aProviderFrame = nsnull;
   if (mContent && !mContent->GetParent() &&
-      !GetStyleContext()->GetPseudoType()) {
+      !GetStyleContext()->GetPseudo()) {
     // we're a frame for the root.  We have no style context parent.
     return NS_OK;
   }

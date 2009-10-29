@@ -3923,7 +3923,7 @@ GetGeneratedContentOwner(nsIFrame* aFrame, PRBool* aIsBefore)
 {
   *aIsBefore = PR_FALSE;
   while (aFrame && (aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT)) {
-    if (aFrame->GetStyleContext()->GetPseudoType() == nsCSSPseudoElements::before) {
+    if (aFrame->GetStyleContext()->GetPseudo() == nsCSSPseudoElements::before) {
       *aIsBefore = PR_TRUE;
     }
     aFrame = aFrame->GetParent();
@@ -6867,7 +6867,7 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
             overflowArea.width, overflowArea.height);
   }
   fprintf(out, " sc=%p", static_cast<void*>(mStyleContext));
-  nsIAtom* pseudoTag = mStyleContext->GetPseudoType();
+  nsIAtom* pseudoTag = mStyleContext->GetPseudo();
   if (pseudoTag) {
     nsAutoString atomString;
     pseudoTag->ToString(atomString);

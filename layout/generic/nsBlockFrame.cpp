@@ -392,7 +392,7 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   }
   fprintf(out, " sc=%p(i=%d,b=%d)",
           static_cast<void*>(mStyleContext), numInlineLines, numBlockLines);
-  nsIAtom* pseudoTag = mStyleContext->GetPseudoType();
+  nsIAtom* pseudoTag = mStyleContext->GetPseudo();
   if (pseudoTag) {
     nsAutoString atomString;
     pseudoTag->ToString(atomString);
@@ -582,7 +582,7 @@ nsBlockFrame::IsContainingBlock() const
   // of an element's containing block.
   // Since the parent of such a block is either a normal block or
   // another such pseudo, this shouldn't cause anything bad to happen.
-  nsIAtom *pseudoType = GetStyleContext()->GetPseudoType();
+  nsIAtom *pseudoType = GetStyleContext()->GetPseudo();
   return pseudoType != nsCSSAnonBoxes::mozAnonymousBlock &&
          pseudoType != nsCSSAnonBoxes::mozAnonymousPositionedBlock;
 }
@@ -1419,7 +1419,7 @@ nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
     // for the scrollframe's padding, which is logically below the
     // bottom margins of the children.
     nscoord bottomEdgeOfContents = aBottomEdgeOfChildren;
-    if (GetStyleContext()->GetPseudoType() == nsCSSAnonBoxes::scrolledContent) {
+    if (GetStyleContext()->GetPseudo() == nsCSSAnonBoxes::scrolledContent) {
       // We're a scrolled frame; the scrollframe's padding should be added
       // to the bottom edge of the children
       bottomEdgeOfContents += aReflowState.mComputedPadding.bottom;
@@ -6314,11 +6314,11 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
     // block in {ib} splits do NOT get first-letter frames.  Note that
     // NS_BLOCK_HAS_FIRST_LETTER_STYLE gets set on all continuations of the
     // block.
-    nsIAtom *pseudo = GetStyleContext()->GetPseudoType();
+    nsIAtom *pseudo = GetStyleContext()->GetPseudo();
     PRBool haveFirstLetterStyle =
       (!pseudo ||
        (pseudo == nsCSSAnonBoxes::cellContent &&
-        mParent->GetStyleContext()->GetPseudoType() == nsnull) ||
+        mParent->GetStyleContext()->GetPseudo() == nsnull) ||
        pseudo == nsCSSAnonBoxes::fieldsetContent ||
        pseudo == nsCSSAnonBoxes::scrolledContent ||
        pseudo == nsCSSAnonBoxes::columnContent) &&
