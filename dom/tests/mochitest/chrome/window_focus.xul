@@ -50,6 +50,8 @@ function initEvents(target)
 {
   target.addEventListener("focus", eventOccured, true);
   target.addEventListener("blur", eventOccured, true);
+  getTopWindow(target).addEventListener("activate", eventOccured, true);
+  getTopWindow(target).addEventListener("deactivate", eventOccured, true);
 }
 
 function eventOccured(event)
@@ -75,6 +77,8 @@ function eventOccured(event)
     else
       id = event.originalTarget.id;
   }
+  else if (event.type == "activate" || event.type == "deactivate")
+    id = event.target.document.documentElement.id + "-window";
   else if (event.target instanceof Window)
     id = (event.target == window) ? "outer-window" : "child-window";
   else if (event.target instanceof Document)
@@ -96,14 +100,21 @@ function expectFocusShift(callback, expectedWindow, expectedElement, focusChange
 
   var expectedEvents = "";
   if (focusChanged) {
+    var id;
+    if (getTopWindow(gLastFocusWindow) != getTopWindow(expectedWindow)) {
+      id = getTopWindow(gLastFocusWindow).document.documentElement.id;
+      expectedEvents += "deactivate: " + id + "-window";
+    }
+
     if (gLastFocus && gLastFocus.id != "t" + kChildDocumentRootIndex &&
         (!gOldExpectedWindow || gOldExpectedWindow.document.documentElement != gLastFocus)) {
+      if (expectedEvents)
+        expectedEvents += " ";
       if (!gOldExpectedWindow)
         expectedEvents += "commandupdate: cu ";
       expectedEvents += "blur: " + gLastFocus.id;
     }
 
-    var id;
     if (gLastFocusWindow && gLastFocusWindow != expectedWindow) {
       if (!gMoveToFocusFrame) {
         if (gOldExpectedWindow)
@@ -115,6 +126,13 @@ function expectFocusShift(callback, expectedWindow, expectedElement, focusChange
         expectedEvents += "blur: " + id + "-document " +
                           "blur: " + id + "-window";
       }
+    }
+
+    if (getTopWindow(gLastFocusWindow) != getTopWindow(expectedWindow)) {
+      id = getTopWindow(expectedWindow).document.documentElement.id;
+      if (expectedEvents)
+        expectedEvents += " ";
+      expectedEvents += "activate: " + id + "-window";
     }
 
     if (expectedWindow && gLastFocusWindow != expectedWindow) {
@@ -956,7 +974,7 @@ function otherWindowFocused(otherWindow)
   is(window.document.commandDispatcher.focusedWindow, window, " commandDispatcher in other window focusedWindow");
   is(window.document.commandDispatcher.focusedElement, expectedElement, " commandDispatcher in other window focusedElement");
 
-  compareEvents("blur: t9 blur: outer-document blur: outer-window",
+  compareEvents("deactivate: outer-document-window blur: t9 blur: outer-document blur: outer-window",
                 otherWindow, null, "other window opened");
 
   otherWindow.document.getElementById("other").focus();
@@ -1024,6 +1042,7 @@ function modalWindowClosed()
 function framesetWindowLoaded(framesetWindow)
 {
   gLastFocus = null;
+  gLastFocusWindow = framesetWindow;
   gEvents = "";
 
   is(fm.activeWindow, getTopWindow(framesetWindow), "frameset window active");
@@ -1124,6 +1143,7 @@ function switchWindowTest(otherWindow, framesetWindow)
   is(fm.focusedElement, otherElement, "focus after inactive window focus");
 
   gLastFocus = otherElement;
+  gLastFocusWindow = otherWindow;
   gEvents = "";
   gOldExpectedWindow = otherWindow;
   gNewExpectedWindow = framesetWindow.frames[1];
