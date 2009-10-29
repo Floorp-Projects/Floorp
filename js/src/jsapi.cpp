@@ -1852,6 +1852,12 @@ JS_free(JSContext *cx, void *p)
     return cx->free(p);
 }
 
+JS_PUBLIC_API(void)
+JS_updateMallocCounter(JSContext *cx, size_t nbytes)
+{
+    return cx->updateMallocCounter(nbytes);
+}
+
 JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s)
 {
