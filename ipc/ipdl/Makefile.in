@@ -48,7 +48,6 @@ IPDLDIRS =  \
   netwerk/ipc  \
   netwerk/protocol/http/src  \
   ipc/ipdl/test/cxx  \
-  ipc/test-harness  \
   ipc/testshell  \
   $(NULL)
 

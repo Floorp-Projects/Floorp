@@ -84,9 +84,6 @@
 
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
-#include "mozilla/test/TestParent.h"
-#include "mozilla/test/TestProcessParent.h"
-#include "mozilla/test/TestThreadChild.h"
 #include "mozilla/Monitor.h"
 
 #ifdef MOZ_IPDL_TESTS
@@ -108,10 +105,6 @@ using mozilla::dom::ContentProcessChild;
 using mozilla::ipc::TestShellParent;
 using mozilla::ipc::TestShellCommandParent;
 using mozilla::ipc::XPCShellEnvironment;
-
-using mozilla::test::TestParent;
-using mozilla::test::TestProcessParent;
-using mozilla::test::TestThreadChild;
 
 using mozilla::Monitor;
 using mozilla::MonitorAutoEnter;
@@ -310,10 +303,6 @@ XRE_InitChildProcess(int aArgc,
       mainThread = new ContentProcessThread(parentHandle);
       break;
 
-    case GeckoProcessType_TestHarness:
-      mainThread = new TestThreadChild(parentHandle);
-      break;
-
     case GeckoProcessType_IPDLUnitTest:
 #ifdef MOZ_IPDL_TESTS
       mainThread = new IPDLUnitTestThreadChild(parentHandle);
@@ -416,32 +405,6 @@ XRE_InitParentProcess(int aArgc,
   }
 
   return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// TestHarness
-
-static void
-IPCTestHarnessMain(void* data)
-{
-    TestProcessParent* subprocess = new TestProcessParent(); // leaks
-    bool launched = subprocess->SyncLaunch();
-    NS_ASSERTION(launched, "can't launch subprocess");
-
-    TestParent* parent = new TestParent(); // leaks
-    parent->Open(subprocess->GetChannel(),
-                 subprocess->GetChildProcessHandle());
-    parent->DoStuff();
-}
-
-int
-XRE_RunIPCTestHarness(int aArgc, char* aArgv[])
-{
-    nsresult rv =
-        XRE_InitParentProcess(
-            aArgc, aArgv, IPCTestHarnessMain, NULL);
-    NS_ENSURE_SUCCESS(rv, 1);
-    return 0;
 }
 
 #ifdef MOZ_IPDL_TESTS
