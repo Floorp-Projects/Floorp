@@ -262,8 +262,10 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
                         const nsMargin* aBorder,
                         const nsMargin* aPadding)
 {
-  NS_ASSERTION(availableWidth != NS_UNCONSTRAINEDSIZE,
-               "shouldn't use unconstrained widths anymore");
+  NS_WARN_IF_FALSE(availableWidth != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained width; this should only result from "
+                   "very large sizes, not attempts at intrinsic width "
+                   "calculation");
 
   mStylePosition = frame->GetStylePosition();
   mStyleDisplay = frame->GetStyleDisplay();
@@ -280,11 +282,13 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
 
   InitResizeFlags(aPresContext);
 
-  NS_ASSERTION((mFrameType == NS_CSS_FRAME_TYPE_INLINE &&
-                !frame->IsFrameOfType(nsIFrame::eReplaced)) ||
-               frame->GetType() == nsGkAtoms::textFrame ||
-               mComputedWidth != NS_UNCONSTRAINEDSIZE,
-               "shouldn't use unconstrained widths anymore");
+  NS_WARN_IF_FALSE((mFrameType == NS_CSS_FRAME_TYPE_INLINE &&
+                    !frame->IsFrameOfType(nsIFrame::eReplaced)) ||
+                   frame->GetType() == nsGkAtoms::textFrame ||
+                   mComputedWidth != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained width; this should only result from "
+                   "very large sizes, not attempts at intrinsic width "
+                   "calculation");
 }
 
 void nsHTMLReflowState::InitCBReflowState()
@@ -1967,9 +1971,11 @@ void
 nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
                                              nscoord aComputedWidth)
 {
-  NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aComputedWidth &&
-               NS_UNCONSTRAINEDSIZE != aAvailWidth,
-               "this shouldn't happen anymore");
+  NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aComputedWidth &&
+                   NS_UNCONSTRAINEDSIZE != aAvailWidth,
+                   "have unconstrained width; this should only result from "
+                   "very large sizes, not attempts at intrinsic width "
+                   "calculation");
 
   nscoord sum = mComputedMargin.left + mComputedBorderPadding.left +
     aComputedWidth + mComputedBorderPadding.right + mComputedMargin.right;
