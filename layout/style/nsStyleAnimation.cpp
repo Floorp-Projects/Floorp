@@ -529,8 +529,8 @@ nsStyleAnimation::AddWeighted(double aCoeff1, const Value& aValue1,
         }
       }
 
-      aResultValue.SetCSSValuePairValue(result.forget(), eUnit_CSSValuePair,
-                                        PR_TRUE);
+      aResultValue.SetAndAdoptCSSValuePairValue(result.forget(),
+                                                eUnit_CSSValuePair);
       break;
     }
     case eUnit_Dasharray: {
@@ -587,8 +587,8 @@ nsStyleAnimation::AddWeighted(double aCoeff1, const Value& aValue1,
         }
       }
 
-      aResultValue.SetCSSValueListValue(result.forget(), eUnit_Dasharray,
-                                        PR_TRUE);
+      aResultValue.SetAndAdoptCSSValueListValue(result.forget(),
+                                                eUnit_Dasharray);
       break;
     }
     case eUnit_Shadow: {
@@ -634,8 +634,7 @@ nsStyleAnimation::AddWeighted(double aCoeff1, const Value& aValue1,
           longShadow = longShadow->mNext;
         }
       }
-      aResultValue.SetCSSValueListValue(result.forget(), eUnit_Shadow,
-                                        PR_TRUE);
+      aResultValue.SetAndAdoptCSSValueListValue(result.forget(), eUnit_Shadow);
       break;
     }
     default:
@@ -1042,8 +1041,8 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                   return PR_FALSE;
               }
             }
-            aComputedValue.SetCSSValueListValue(result.forget(),
-                                                eUnit_Dasharray, PR_TRUE);
+            aComputedValue.SetAndAdoptCSSValueListValue(result.forget(),
+                                                        eUnit_Dasharray);
           } else {
             aComputedValue.SetNoneValue();
           }
@@ -1101,7 +1100,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
       }
       StyleCoordToCSSValue(horiz, pair->mXValue);
       StyleCoordToCSSValue(vert, pair->mYValue);
-      aComputedValue.SetCSSValuePairValue(pair, eUnit_CSSValuePair, PR_TRUE);
+      aComputedValue.SetAndAdoptCSSValuePairValue(pair, eUnit_CSSValuePair);
       return PR_TRUE;
     }
     case eStyleAnimType_nscoord:
@@ -1147,7 +1146,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         *static_cast<const nsRefPtr<nsCSSShadowArray>*>(
           StyleDataAtOffset(styleStruct, ssOffset));
       if (!shadowArray) {
-        aComputedValue.SetCSSValueListValue(nsnull, eUnit_Shadow, PR_TRUE);
+        aComputedValue.SetAndAdoptCSSValueListValue(nsnull, eUnit_Shadow);
         return PR_TRUE;
       }
       nsAutoPtr<nsCSSValueList> result;
@@ -1186,8 +1185,8 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         *resultTail = resultItem;
         resultTail = &resultItem->mNext;
       }
-      aComputedValue.SetCSSValueListValue(result.forget(), eUnit_Shadow,
-                                          PR_TRUE);
+      aComputedValue.SetAndAdoptCSSValueListValue(result.forget(),
+                                                  eUnit_Shadow);
       return PR_TRUE;
     }
     case eStyleAnimType_None:
@@ -1339,39 +1338,26 @@ nsStyleAnimation::Value::SetColorValue(nscolor aColor)
 }
 
 void
-nsStyleAnimation::Value::SetCSSValuePairValue(nsCSSValuePair *aValuePair,
-                                              Unit aUnit,
-                                              PRBool aTakeOwnership)
+nsStyleAnimation::Value::SetAndAdoptCSSValuePairValue(
+                           nsCSSValuePair *aValuePair, Unit aUnit)
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSValuePairUnit(aUnit), "bad unit");
   NS_ABORT_IF_FALSE(aValuePair != nsnull, "value pairs may not be null");
   mUnit = aUnit;
-  if (aTakeOwnership) {
-    mValue.mCSSValuePair = aValuePair;
-  } else {
-    mValue.mCSSValuePair = new nsCSSValuePair(*aValuePair);
-    if (!mValue.mCSSValuePair) {
-      mUnit = eUnit_Null;
-    }
-  }
+  mValue.mCSSValuePair = aValuePair; // take ownership
 }
 
 void
-nsStyleAnimation::Value::SetCSSValueListValue(nsCSSValueList *aValueList,
-                                              Unit aUnit,
-                                              PRBool aTakeOwnership)
+nsStyleAnimation::Value::SetAndAdoptCSSValueListValue(
+                           nsCSSValueList *aValueList, Unit aUnit)
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSValueListUnit(aUnit), "bad unit");
   NS_ABORT_IF_FALSE(aUnit != eUnit_Dasharray || aValueList != nsnull,
                     "dasharrays may not be null");
   mUnit = aUnit;
-  if (aTakeOwnership) {
-    mValue.mCSSValueList = aValueList;
-  } else {
-    mValue.mCSSValueList = aValueList ? aValueList->Clone() : nsnull;
-  }
+  mValue.mCSSValueList = aValueList; // take ownership
 }
 
 void
