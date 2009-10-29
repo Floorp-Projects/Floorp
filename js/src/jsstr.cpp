@@ -1582,8 +1582,11 @@ struct ReplaceData
     {}
 
     ~ReplaceData() {
-        if (invokevp)
+        if (invokevp) {
+            /* If we set invokevp, we already left trace. */
+            VOUCH_HAVE_STACK();
             js_FreeStack(g.cx(), invokevpMark);
+        }
     }
 
     JSString      *str;           /* 'this' parameter object as a string */
