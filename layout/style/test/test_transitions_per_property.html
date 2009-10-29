@@ -47,10 +47,18 @@ function any_unit_to_num(str)
 }
 
 var supported_properties = {
+    "-moz-border-radius-bottomleft": [ test_radius_transition ],
+    "-moz-border-radius-bottomright": [ test_radius_transition ],
+    "-moz-border-radius-topleft": [ test_radius_transition ],
+    "-moz-border-radius-topright": [ test_radius_transition ],
     "-moz-box-shadow": [ test_shadow_transition ],
     "-moz-column-gap": [ test_length_transition ],
     "-moz-column-rule-color": [ test_color_transition ],
     "-moz-column-width": [ test_length_transition ],
+    "-moz-outline-radius-bottomleft": [ test_radius_transition ],
+    "-moz-outline-radius-bottomright": [ test_radius_transition ],
+    "-moz-outline-radius-topleft": [ test_radius_transition ],
+    "-moz-outline-radius-topright": [ test_radius_transition ],
     "background-color": [ test_color_transition ],
     "border-bottom-color": [ test_color_transition ],
     "border-bottom-width": [ test_length_transition ],
@@ -357,6 +365,49 @@ function test_dasharray_transition(prop) {
   div.style.setProperty(prop, "4,20%,2,2", "");
   is(cs.getPropertyValue(prop), "3, 35%, 4, 5",
      "dasharray-valued property " + prop + ": interpolation of dasharray");
+}
+
+function test_radius_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+
+  // FIXME: Test a square for now, since we haven't updated to the spec
+  // for vertical components being relative to the height.
+  div.style.setProperty("width", "200px", "");
+  div.style.setProperty("height", "200px", "");
+  div.style.setProperty("border", "none", "");
+  div.style.setProperty("padding", "0", "");
+
+  div.style.setProperty(prop, "3px", "");
+  is(cs.getPropertyValue(prop), "3px",
+     "radius-valued property " + prop +
+     ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "9px", "");
+  is(cs.getPropertyValue(prop), "6px",
+     "radius-valued property " + prop + ": interpolation of radius");
+  div.style.setProperty(prop, "5%", "");
+  is(cs.getPropertyValue(prop), "10px",
+     "radius-valued property " + prop + ": non-interpolability of unit change");
+  div.style.setProperty(prop, "25%", "");
+  is(cs.getPropertyValue(prop), "30px",
+     "radius-valued property " + prop + ": interpolation of radius");
+  div.style.setProperty(prop, "3px 8px", "");
+  is(cs.getPropertyValue(prop), "3px 8px",
+     "radius-valued property " + prop + ": non-interpolability of unit change");
+  div.style.setProperty(prop, "9px 10px", "");
+  is(cs.getPropertyValue(prop), "6px 9px",
+     "radius-valued property " + prop + ": interpolation of radius");
+  div.style.setProperty(prop, "5% 15%", "");
+  is(cs.getPropertyValue(prop), "10px 30px",
+     "radius-valued property " + prop + ": non-interpolability of unit change");
+  div.style.setProperty(prop, "25%", "");
+  is(cs.getPropertyValue(prop), "30px 40px",
+     "radius-valued property " + prop + ": interpolation of radius");
+
+  div.style.removeProperty("width");
+  div.style.removeProperty("height");
+  div.style.removeProperty("border");
+  div.style.removeProperty("padding");
 }
 
 </script>
