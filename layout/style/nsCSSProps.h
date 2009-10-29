@@ -83,6 +83,13 @@ enum nsStyleAnimType {
   eStyleAnimType_Sides_Bottom,
   eStyleAnimType_Sides_Left,
 
+  // similar, but for the *pair* of coord members of an nsStyleCorners
+  // for the relevant corner
+  eStyleAnimType_Corner_TopLeft,
+  eStyleAnimType_Corner_TopRight,
+  eStyleAnimType_Corner_BottomRight,
+  eStyleAnimType_Corner_BottomLeft,
+
   // nscoord values
   eStyleAnimType_nscoord,
 
