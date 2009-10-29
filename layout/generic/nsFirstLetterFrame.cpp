@@ -227,7 +227,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     PRBool        pushedFrame;
 
     ll->SetInFirstLetter(
-      mStyleContext->GetPseudoType() == nsCSSPseudoElements::firstLetter);
+      mStyleContext->GetPseudo() == nsCSSPseudoElements::firstLetter);
     ll->BeginSpan(this, &aReflowState, bp.left, availSize.width);
     ll->ReflowFrame(kid, aReflowStatus, &aMetrics, pushedFrame);
     ll->EndSpan(this);

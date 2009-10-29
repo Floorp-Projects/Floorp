@@ -347,8 +347,8 @@ nsTransitionManager::StyleContextChanged(nsIContent *aElement,
                                          nsStyleContext *aOldStyleContext,
                                          nsStyleContext *aNewStyleContext)
 {
-  NS_PRECONDITION(aOldStyleContext->GetPseudoType() ==
-                      aNewStyleContext->GetPseudoType(),
+  NS_PRECONDITION(aOldStyleContext->GetPseudo() ==
+                      aNewStyleContext->GetPseudo(),
                   "pseudo type mismatch");
   // If we were called from ReParentStyleContext, this assertion would
   // actually fire.  If we need to be called from there, we can probably
@@ -372,7 +372,7 @@ nsTransitionManager::StyleContextChanged(nsIContent *aElement,
     return nsnull;
   }
   
-  nsIAtom *pseudo = aNewStyleContext->GetPseudoType();
+  nsIAtom *pseudo = aNewStyleContext->GetPseudo();
   if (pseudo && (pseudo != nsCSSPseudoElements::before &&
                  pseudo != nsCSSPseudoElements::after)) {
     return nsnull;
@@ -398,7 +398,7 @@ nsTransitionManager::StyleContextChanged(nsIContent *aElement,
     // when they're both zero, we can ignore the transition.
     if (t.GetDelay() != 0.0f || t.GetDuration() != 0.0f) {
       et = GetElementTransitions(aElement,
-                                 aNewStyleContext->GetPseudoType(),
+                                 aNewStyleContext->GetPseudo(),
                                  PR_FALSE);
 
       // We might have something to transition.  See if any of the
@@ -613,7 +613,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 
   if (!aElementTransitions) {
     aElementTransitions =
-      GetElementTransitions(aElement, aNewStyleContext->GetPseudoType(),
+      GetElementTransitions(aElement, aNewStyleContext->GetPseudo(),
                             PR_TRUE);
     if (!aElementTransitions) {
       NS_WARNING("allocating ElementTransitions failed");

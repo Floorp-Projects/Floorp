@@ -582,7 +582,7 @@ void
 nsFrameManager::SetUndisplayedContent(nsIContent* aContent, 
                                       nsStyleContext* aStyleContext)
 {
-  NS_PRECONDITION(!aStyleContext->GetPseudoType(),
+  NS_PRECONDITION(!aStyleContext->GetPseudo(),
                   "Should only have actual elements here");
 
 #ifdef DEBUG_UNDISPLAYED_MAP
@@ -774,7 +774,7 @@ DumpContext(nsIFrame* aFrame, nsStyleContext* aContext)
   if (aContext) {
     fprintf(stdout, " style: %p ", static_cast<void*>(aContext));
 
-    nsIAtom* pseudoTag = aContext->GetPseudoType();
+    nsIAtom* pseudoTag = aContext->GetPseudo();
     if (pseudoTag) {
       nsAutoString  buffer;
       pseudoTag->ToString(buffer);
@@ -948,7 +948,7 @@ TryStartingTransition(nsPresContext *aPresContext, nsIContent *aContent,
     rules.AppendObject(coverRule);
     *aNewStyleContext = aPresContext->StyleSet()->ResolveStyleForRules(
                      (*aNewStyleContext)->GetParent(),
-                     (*aNewStyleContext)->GetPseudoType(),
+                     (*aNewStyleContext)->GetPseudo(),
                      (*aNewStyleContext)->GetRuleNode(),
                      rules);
   }
@@ -1010,8 +1010,8 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
         nsStyleContext *nextContinuationContext =
           nextContinuation->GetStyleContext();
         NS_ASSERTION(oldContext == nextContinuationContext ||
-                     oldContext->GetPseudoType() !=
-                       nextContinuationContext->GetPseudoType() ||
+                     oldContext->GetPseudo() !=
+                       nextContinuationContext->GetPseudo() ||
                      oldContext->GetParent() !=
                        nextContinuationContext->GetParent(),
                      "continuations should have the same style context");
@@ -1024,7 +1024,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
     PRBool copyFromContinuation =
       prevContinuation &&
       (prevContinuationContext = prevContinuation->GetStyleContext())
-        ->GetPseudoType() == oldContext->GetPseudoType() &&
+        ->GetPseudo() == oldContext->GetPseudo() &&
        prevContinuationContext->GetParent() == newParentContext;
     if (copyFromContinuation) {
       // Just use the style context from the frame's previous
@@ -1232,7 +1232,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
   // could oldContext be null?
   if (oldContext) {
     oldContext->AddRef();
-    nsIAtom* const pseudoTag = oldContext->GetPseudoType();
+    nsIAtom* const pseudoTag = oldContext->GetPseudo();
     nsIContent* localContent = aFrame->GetContent();
     // |content| is the node that we used for rule matching of
     // normal elements (not pseudo-elements) and for which we generate
@@ -1294,8 +1294,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
         nsStyleContext *nextContinuationContext =
           nextContinuation->GetStyleContext();
         NS_ASSERTION(oldContext == nextContinuationContext ||
-                     oldContext->GetPseudoType() !=
-                       nextContinuationContext->GetPseudoType() ||
+                     oldContext->GetPseudo() !=
+                       nextContinuationContext->GetPseudo() ||
                      oldContext->GetParent() !=
                        nextContinuationContext->GetParent(),
                      "continuations should have the same style context");
@@ -1310,7 +1310,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     PRBool copyFromContinuation =
       prevContinuation &&
       (prevContinuationContext = prevContinuation->GetStyleContext())
-        ->GetPseudoType() == oldContext->GetPseudoType() &&
+        ->GetPseudo() == oldContext->GetPseudo() &&
        prevContinuationContext->GetParent() == parentContext;
     if (copyFromContinuation) {
       // Just use the style context from the frame's previous
@@ -1405,7 +1405,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       oldExtraContext = aFrame->GetAdditionalStyleContext(++contextIndex);
       if (oldExtraContext) {
         nsRefPtr<nsStyleContext> newExtraContext;
-        nsIAtom* const extraPseudoTag = oldExtraContext->GetPseudoType();
+        nsIAtom* const extraPseudoTag = oldExtraContext->GetPseudo();
         NS_ASSERTION(extraPseudoTag &&
                      extraPseudoTag != nsCSSAnonBoxes::mozNonElement,
                      "extra style context is not pseudo element");
@@ -1451,7 +1451,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                      undisplayed->mContent ==
                        mPresShell->GetDocument()->GetRootContent(),
                      "undisplayed node child of null must be root");
-        NS_ASSERTION(!undisplayed->mStyle->GetPseudoType(),
+        NS_ASSERTION(!undisplayed->mStyle->GetPseudo(),
                      "Shouldn't have random pseudo style contexts in the "
                      "undisplayed map");
         nsRefPtr<nsStyleContext> undisplayedContext =
