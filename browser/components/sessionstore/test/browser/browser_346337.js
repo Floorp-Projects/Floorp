@@ -131,7 +131,8 @@ function test() {
             ok(!compareFormValue(tab, xpath, fieldList[xpath]),
                "The value for \"" + xpath + "\" was correctly discarded");
         
-        gPrefService.clearUserPref("browser.sessionstore.privacy_level");
+        if (gPrefService.prefHasUserValue("browser.sessionstore.privacy_level"))
+          gPrefService.clearUserPref("browser.sessionstore.privacy_level");
         // undoCloseTab can reuse a single blank tab, so we have to
         // make sure not to close the window when closing our last tab
         if (tabbrowser.tabContainer.childNodes.length == 1)

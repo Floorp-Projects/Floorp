@@ -152,8 +152,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=263683
         var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch);
  
-        prefs.clearUserPref(prefNameFG);
-        prefs.clearUserPref(prefNameBG);
+        if (prefs.prefHasUserValue(prefNameFG))
+          prefs.clearUserPref(prefNameFG);
+        if (prefs.prefHasUserValue(prefNameBG))
+          prefs.clearUserPref(prefNameBG);
 
         if (userSetFG)
           prefs.setCharPref(prefNameFG, userValueFG);

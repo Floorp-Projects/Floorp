@@ -453,7 +453,10 @@ var MigrationWizard = {
             var prefBranch = prefSvc.getBranch(null);
 
             if (this._newHomePage == "DEFAULT") {
-              prefBranch.clearUserPref("browser.startup.homepage");
+              try {
+                prefBranch.clearUserPref("browser.startup.homepage");
+              }
+              catch (e) { }
             }
             else {
               var str = Components.classes["@mozilla.org/supports-string;1"]

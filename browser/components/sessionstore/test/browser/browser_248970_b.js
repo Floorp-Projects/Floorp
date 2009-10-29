@@ -197,7 +197,8 @@ function test() {
           ok(!pb.privateBrowsingEnabled, "private browsing disabled");
 
           // cleanup
-          gPrefService.clearUserPref("browser.privatebrowsing.keep_current_session");
+          if (gPrefService.prefHasUserValue("browser.privatebrowsing.keep_current_session"))
+            gPrefService.clearUserPref("browser.privatebrowsing.keep_current_session");
           finish();
         }, true);
       }, true);

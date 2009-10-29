@@ -103,10 +103,11 @@ function test()
       setClose(false);
       os.removeObserver(testObs, DLMGR_UI_DONE);
 
-      Cc["@mozilla.org/preferences-service;1"].
-      getService(Ci.nsIPrefBranch).
-      clearUserPref("browser.download.manager.closeWhenDone");
-
+      try {
+        Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefBranch).
+        clearUserPref("browser.download.manager.closeWhenDone");
+      } catch (err) { }
       SimpleTest.finish();
     }
   };
