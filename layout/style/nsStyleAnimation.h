@@ -311,10 +311,10 @@ public:
     void SetPercentValue(float aPercent);
     void SetFloatValue(float aFloat);
     void SetColorValue(nscolor aColor);
-    void SetCSSValueListValue(nsCSSValueList *aValue, Unit aUnit,
-                              PRBool aTakeOwnership);
-    void SetCSSValuePairValue(nsCSSValuePair *aValue, Unit aUnit,
-                              PRBool aTakeOwnership);
+    // These setters take ownership of |aValue|, and are therefore named
+    // "SetAndAdopt*".
+    void SetAndAdoptCSSValueListValue(nsCSSValueList *aValue, Unit aUnit);
+    void SetAndAdoptCSSValuePairValue(nsCSSValuePair *aValue, Unit aUnit);
 
     Value& operator=(const Value& aOther);
 
