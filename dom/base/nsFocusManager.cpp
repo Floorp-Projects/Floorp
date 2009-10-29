@@ -653,6 +653,13 @@ nsFocusManager::WindowRaised(nsIDOMWindow* aWindow)
   // is updated on the window
   window->ActivateOrDeactivate(PR_TRUE);
 
+  // send activate event
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(window->GetExtantDocument());
+  nsContentUtils::DispatchTrustedEvent(document,
+                                       window,
+                                       NS_LITERAL_STRING("activate"),
+                                       PR_TRUE, PR_TRUE, nsnull);
+
   // retrieve the last focused element within the window that was raised
   nsCOMPtr<nsPIDOMWindow> currentWindow;
   nsCOMPtr<nsIContent> currentFocus =
@@ -708,6 +715,13 @@ nsFocusManager::WindowLowered(nsIDOMWindow* aWindow)
   // inform the DOM window that it has deactivated, so that the active
   // attribute is updated on the window
   window->ActivateOrDeactivate(PR_FALSE);
+
+  // send deactivate event
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(window->GetExtantDocument());
+  nsContentUtils::DispatchTrustedEvent(document,
+                                       window,
+                                       NS_LITERAL_STRING("deactivate"),
+                                       PR_TRUE, PR_TRUE, nsnull);
 
   // keep track of the window being lowered, so that attempts to raise the
   // window can be prevented until we return. Otherwise, focus can get into
