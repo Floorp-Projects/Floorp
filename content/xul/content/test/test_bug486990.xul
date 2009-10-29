@@ -93,7 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=486990
     var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID)
                                                      .getBranch("dom.event.contextmenu.");
     try {
-      if (allow) {
+      if (allow && prefs.prefHasUserValue("enabled")) {
         prefs.clearUserPref("enabled");
       } else {
         prefs.setBoolPref("enabled", allow);
