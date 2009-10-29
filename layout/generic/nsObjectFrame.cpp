@@ -257,34 +257,13 @@ public:
   NS_DECL_ISUPPORTS
 
   //nsIPluginInstanceOwner interface
-
-  NS_IMETHOD SetInstance(nsIPluginInstance *aInstance);
-
-  NS_IMETHOD GetInstance(nsIPluginInstance *&aInstance);
-
-  NS_IMETHOD GetWindow(NPWindow *&aWindow);
-
-  NS_IMETHOD GetMode(PRInt32 *aMode);
-
-  NS_IMETHOD CreateWidget(void);
+  NS_DECL_NSIPLUGININSTANCEOWNER
 
   NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData, 
                     PRUint32 aPostDataLen, void *aHeadersData, 
                     PRUint32 aHeadersDataLen, PRBool isFile = PR_FALSE);
 
-  NS_IMETHOD ShowStatus(const char *aStatusMsg);
-
   NS_IMETHOD ShowStatus(const PRUnichar *aStatusMsg);
-  
-  NS_IMETHOD GetDocument(nsIDocument* *aDocument);
-
-  NS_IMETHOD InvalidateRect(NPRect *invalidRect);
-
-  NS_IMETHOD InvalidateRegion(NPRegion invalidRegion);
-
-  NS_IMETHOD ForceRedraw();
-
-  NS_IMETHOD GetNetscapeWindow(void *value);
 
   NPError    ShowNativeContextMenu(NPMenu* menu, void* event);
 
@@ -292,37 +271,7 @@ public:
                           double *destX, double *destY, NPCoordinateSpace destSpace);
 
   //nsIPluginTagInfo interface
-
-  NS_IMETHOD GetAttributes(PRUint16& n, const char*const*& names,
-                           const char*const*& values);
-
-  NS_IMETHOD GetAttribute(const char* name, const char* *result);
-
-  NS_IMETHOD GetTagType(nsPluginTagType *result);
-
-  NS_IMETHOD GetTagText(const char* *result);
-
-  NS_IMETHOD GetParameters(PRUint16& n, const char*const*& names, const char*const*& values);
-
-  NS_IMETHOD GetParameter(const char* name, const char* *result);
-  
-  NS_IMETHOD GetDocumentBase(const char* *result);
-  
-  NS_IMETHOD GetDocumentEncoding(const char* *result);
-  
-  NS_IMETHOD GetAlignment(const char* *result);
-  
-  NS_IMETHOD GetWidth(PRUint32 *result);
-  
-  NS_IMETHOD GetHeight(PRUint32 *result);
-
-  NS_IMETHOD GetBorderVertSpace(PRUint32 *result);
-  
-  NS_IMETHOD GetBorderHorizSpace(PRUint32 *result);
-
-  NS_IMETHOD GetUniqueID(PRUint32 *result);
-
-  NS_IMETHOD GetDOMElement(nsIDOMElement* *result);
+  NS_DECL_NSIPLUGINTAGINFO
 
   // nsIDOMMouseListener interfaces 
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
