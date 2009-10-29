@@ -247,7 +247,7 @@ richlistitem:not([blocklisted="true"]):not([blocklistedsoft="true"]):not([outdat
 richlistitem[blocklistedsoft="false"][outdated="false"]:not([selected="true"]) .blocklistedBox,
 richlistitem[blocklisted="false"] .blocklistedLabel,
 richlistitem[blocklistedsoft="false"] .softBlocklistedLabel,
-richlistitem[outdated="false"] .outdatedLabel,
+richlistitem:not([outdated="true"]) .outdatedLabel,
 richlistitem[opType="needs-uninstall"] .blocklistedBox,
 richlistitem[opType="needs-uninstall"] .incompatibleBox,
 richlistitem[opType="needs-uninstall"] .needsDependenciesBox,
