@@ -88,6 +88,6 @@ if (typeof Namespace !== "undefined" && typeof QName !== "undefined")
 
 /******************************************************************************/
 
-reportCompare(actual, expect, "Object.keys");
+reportCompare(expect, actual, "Object.keys");
 
 printStatus("All tests passed!");

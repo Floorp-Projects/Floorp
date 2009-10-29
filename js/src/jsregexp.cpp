@@ -3206,7 +3206,7 @@ class RegExpNativeCompiler {
          */
         JS_ASSERT(!lirbuf->sp && !lirbuf->rp);
 
-        ::compile(assm, fragment verbose_only(, tempAlloc, tm->labels));
+        ::compile(assm, fragment, tempAlloc verbose_only(, tm->labels));
         if (assm->error() != nanojit::None)
             goto fail;
 

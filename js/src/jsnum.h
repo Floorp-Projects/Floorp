@@ -169,6 +169,8 @@ JS_HASH_DOUBLE(jsdouble d)
 #endif
 
 extern jsdouble js_NaN;
+extern jsdouble js_PositiveInfinity;
+extern jsdouble js_NegativeInfinity;
 
 /* Initialize number constants and runtime state for the first context. */
 extern JSBool

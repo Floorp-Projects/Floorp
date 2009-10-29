@@ -277,13 +277,12 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
     iterObj = JSVAL_TO_OBJECT(*keySource);
 
     JSBool memberWritten = JS_FALSE;
-    JSBool ok;
 
-    do {
+    bool ok = false;
+    while (true) {
         outputValue = JSVAL_VOID;
-        ok = js_CallIteratorNext(cx, iterObj, &key);
-        if (!ok)
-            break;
+        if (!js_CallIteratorNext(cx, iterObj, &key))
+            goto error_break;
         if (key == JSVAL_HOLE)
             break;
 
@@ -295,7 +294,7 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
 
             jsval newKey;
             if (!scx->replacer->getProperty(cx, key, &newKey))
-                return JS_FALSE;
+                goto error_break;
             key = newKey;
         }
 
@@ -304,10 +303,8 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
             ks = JSVAL_TO_STRING(key);
         } else {
             ks = js_ValueToString(cx, key);
-            if (!ks) {
-                ok = JS_FALSE;
-                break;
-            }
+            if (!ks)
+                goto error_break;
         }
         JSAutoTempValueRooter keyStringRoot(cx, ks);
 
@@ -317,27 +314,22 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
         JSBool found = JS_FALSE;
         if (!js_ValueToStringId(cx, STRING_TO_JSVAL(ks), &id) ||
             !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &found)) {
-            ok = JS_FALSE;
-            break;
+            goto error_break;
         }
 
         if (!found)
             continue;
 
-        ok = JS_GetPropertyById(cx, obj, id, &outputValue);
-        if (!ok)
-            break;
+        if (!JS_GetPropertyById(cx, obj, id, &outputValue))
+            goto error_break;
 
-        if (JSVAL_IS_OBJECT(outputValue)) {
-            ok = js_TryJSON(cx, &outputValue);
-            if (!ok)
-                break;
-        }
+        if (JSVAL_IS_OBJECT(outputValue) && !js_TryJSON(cx, &outputValue))
+            goto error_break;
 
         // call this here, so we don't write out keys if the replacer function
         // wants to elide the value.
         if (!CallReplacerFunction(cx, id, obj, scx, &outputValue))
-            return JS_FALSE;
+            goto error_break;
 
         JSType type = JS_TypeOfValue(cx, outputValue);
 
@@ -346,39 +338,30 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
             continue;
 
         // output a comma unless this is the first member to write
-        if (memberWritten && !scx->cb.append(',')) {
-            ok = JS_FALSE;
-            break;
-        }
+        if (memberWritten && !scx->cb.append(','))
+            goto error_break;
         memberWritten = JS_TRUE;
 
         if (!WriteIndent(cx, scx, scx->depth))
-            return JS_FALSE;
+            goto error_break;
 
         // Be careful below, this string is weakly rooted
         JSString *s = js_ValueToString(cx, key);
-        if (!s) {
-            ok = JS_FALSE;
-            break;
-        }
+        if (!s)
+            goto error_break;
 
         const jschar *chars;
         size_t length;
         s->getCharsAndLength(chars, length);
-        ok = write_string(cx, scx->cb, chars, length);
-        if (!ok)
-            break;
+        if (!write_string(cx, scx->cb, chars, length) ||
+            !scx->cb.append(':') ||
+            !Str(cx, id, obj, scx, &outputValue, false)) {
+            goto error_break;
+        }
+    }
+    ok = true;
 
-        ok = scx->cb.append(':');
-        if (!ok)
-            break;
-
-        ok = Str(cx, id, obj, scx, &outputValue, false);
-        if (!ok)
-            break;
-
-    } while (ok);
-
+  error_break:
     if (iterObj) {
         // Always close the iterator, but make sure not to stomp on OK
         JS_ASSERT(OBJECT_TO_JSVAL(iterObj) == *keySource);

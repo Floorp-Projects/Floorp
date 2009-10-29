@@ -241,29 +241,55 @@ namespace nanojit
         }
     }
 
+#if defined NANOJIT_ARM && defined UNDER_CE
+    // Use a single flush for the whole CodeList, when we have no
+    // finer-granularity flush support, as on WinCE.
+    void CodeAlloc::flushICache(CodeList* &/*blocks*/) {
+        FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
+    }
+#else
+    void CodeAlloc::flushICache(CodeList* &blocks) {
+        for (CodeList *b = blocks; b != 0; b = b->next)
+            flushICache(b->start(), b->size());
+    }
+#endif
+
 #if defined(AVMPLUS_UNIX) && defined(NANOJIT_ARM)
 #include <asm/unistd.h>
 extern "C" void __clear_cache(char *BEG, char *END);
 #endif
 
 #ifdef AVMPLUS_SPARC
+#ifdef __linux__  // bugzilla 502369
+void sync_instruction_memory(caddr_t v, u_int len)
+{
+	caddr_t end = v + len;
+	caddr_t p = v;
+	while (p < end) {
+		asm("flush %0" : : "r" (p));
+		p += 32;
+	}
+}
+#else
 extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
+#endif
 #endif
 
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
     // intel chips have dcache/icache interlock
-    void CodeAlloc::flushICache(CodeList* &blocks) {
+    void CodeAlloc::flushICache(void *start, size_t len) {
         // Tell Valgrind that new code has been generated, and it must flush
         // any translations it has for the memory range generated into.
-        for (CodeList *b = blocks; b != 0; b = b->next)
-            VALGRIND_DISCARD_TRANSLATIONS(b->start(), b->size());
+        (void)start;
+        (void)len;
+        VALGRIND_DISCARD_TRANSLATIONS(start, len);
     }
 
 #elif defined NANOJIT_ARM && defined UNDER_CE
-    // on arm/winmo, just flush the whole icache
-    // fixme: why?
-    void CodeAlloc::flushICache(CodeList* &) {
-        // just flush all of it
+    // On arm/winmo, just flush the whole icache. The
+    // WinCE docs indicate that this function actually ignores its
+    // 2nd and 3rd arguments, and wants them to be NULL.
+    void CodeAlloc::flushICache(void *, size_t) {
         FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
     }
 
@@ -274,44 +300,34 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
     extern "C" void sys_dcache_flush(const void*, size_t len);
 
     // mac 64bit requires 10.5 so use that api
-    void CodeAlloc::flushICache(CodeList* &blocks) {
-        for (CodeList *b = blocks; b != 0; b = b->next) {
-            void *start = b->start();
-            size_t bytes = b->size();
-            sys_dcache_flush(start, bytes);
-            sys_icache_invalidate(start, bytes);
-        }
+    void CodeAlloc::flushICache(void *start, size_t len) {
+        sys_dcache_flush(start, len);
+        sys_icache_invalidate(start, len);
     }
 #  else
     // mac ppc 32 could be 10.0 or later
     // uses MakeDataExecutable() from Carbon api, OSUtils.h
     // see http://developer.apple.com/documentation/Carbon/Reference/Memory_Manag_nt_Utilities/Reference/reference.html#//apple_ref/c/func/MakeDataExecutable
-    void CodeAlloc::flushICache(CodeList* &blocks) {
-        for (CodeList *b = blocks; b != 0; b = b->next)
-            MakeDataExecutable(b->start(), b->size());
+    void CodeAlloc::flushICache(void *start, size_t len) {
+        MakeDataExecutable(start, len);
     }
 #  endif
 
 #elif defined AVMPLUS_SPARC
     // fixme: sync_instruction_memory is a solaris api, test for solaris not sparc
-    void CodeAlloc::flushICache(CodeList* &blocks) {
-        for (CodeList *b = blocks; b != 0; b = b->next)
-            sync_instruction_memory((char*)b->start(), b->size());
+    void CodeAlloc::flushICache(void *start, size_t len) {
+            sync_instruction_memory((char*)start, len);
     }
 
 #elif defined AVMPLUS_UNIX
     #ifdef ANDROID
-    void CodeAlloc::flushICache(CodeList* &blocks) {
-        for (CodeList *b = blocks; b != 0; b = b->next) {
-			cacheflush((int)b->start(), (int)b->start()+b->size(), 0);
-        }
+    void CodeAlloc::flushICache(void *start, size_t len) {
+        cacheflush((int)start, (int)start + len, 0);
     }
 	#else
     // fixme: __clear_cache is a libgcc feature, test for libgcc or gcc
-    void CodeAlloc::flushICache(CodeList* &blocks) {
-        for (CodeList *b = blocks; b != 0; b = b->next) {
-            __clear_cache((char*)b->start(), (char*)b->start()+b->size());
-        }
+    void CodeAlloc::flushICache(void *start, size_t len) {
+        __clear_cache((char*)start, (char*)start + len);
     }
 	#endif
 #endif // AVMPLUS_MAC && NANOJIT_PPC

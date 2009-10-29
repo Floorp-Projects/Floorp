@@ -862,6 +862,9 @@ JS_realloc(JSContext *cx, void *p, size_t nbytes);
 extern JS_PUBLIC_API(void)
 JS_free(JSContext *cx, void *p);
 
+extern JS_PUBLIC_API(void)
+JS_updateMallocCounter(JSContext *cx, size_t nbytes);
+
 extern JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s);
 
