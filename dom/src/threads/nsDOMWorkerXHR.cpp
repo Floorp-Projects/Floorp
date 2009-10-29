@@ -618,8 +618,9 @@ nsDOMWorkerXHR::OpenRequest(const nsACString& aMethod,
 }
 
 NS_IMETHODIMP
-nsDOMWorkerXHR::Open(const nsACString& aMethod,
-                     const nsACString& aUrl)
+nsDOMWorkerXHR::Open(const nsACString& aMethod, const nsACString& aUrl,
+                     PRBool aAsync, const nsAString& aUser,
+                     const nsAString& aPassword, PRUint8 optional_argc)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -627,67 +628,11 @@ nsDOMWorkerXHR::Open(const nsACString& aMethod,
     return NS_ERROR_ABORT;
   }
 
-  PRBool async = PR_TRUE;
-  nsAutoString user, password;
+  if (!optional_argc) {
+      aAsync = PR_TRUE;
+  }
 
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
-
-  nsAXPCNativeCallContext* cc;
-  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
-
-  do {
-    if (NS_FAILED(rv) || !cc) {
-      break;
-    }
-
-    PRUint32 argc;
-    rv = cc->GetArgc(&argc);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (argc < 3) {
-      break;
-    }
-
-    jsval* argv;
-    rv = cc->GetArgvPtr(&argv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    JSContext* cx;
-    rv = cc->GetJSContext(&cx);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    JSAutoRequest ar(cx);
-
-    JSBool asyncBool;
-    JS_ValueToBoolean(cx, argv[2], &asyncBool);
-    async = (PRBool)asyncBool;
-
-    if (argc < 4) {
-      break;
-    }
-
-    JSString* argStr;
-    if (!JSVAL_IS_NULL(argv[3]) && !JSVAL_IS_VOID(argv[3])) {
-      argStr = JS_ValueToString(cx, argv[3]);
-      if (argStr) {
-        user.Assign(nsDependentJSString(argStr));
-      }
-    }
-
-    if (argc < 5) {
-      break;
-    }
-
-    if (!JSVAL_IS_NULL(argv[4]) && !JSVAL_IS_VOID(argv[4])) {
-      argStr = JS_ValueToString(cx, argv[4]);
-      if (argStr) {
-        password.Assign(nsDependentJSString(argStr));
-      }
-    }
-  } while (PR_FALSE);
-
-  return OpenRequest(aMethod, aUrl, async, user, password);
+  return OpenRequest(aMethod, aUrl, aAsync, aUser, aPassword);
 }
 
 NS_IMETHODIMP

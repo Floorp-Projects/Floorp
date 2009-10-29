@@ -53,6 +53,7 @@ class nsIContent;
 class nsPresContext;
 class nsStyleContext;
 struct nsCSSValueList;
+struct nsCSSValuePair;
 
 /**
  * Utility class to handle animated style values
@@ -226,6 +227,7 @@ public:
     eUnit_Percent,
     eUnit_Float,
     eUnit_Color,
+    eUnit_CSSValuePair, // nsCSSValuePair* (never null)
     eUnit_Dasharray, // nsCSSValueList* (never null)
     eUnit_Shadow  // nsCSSValueList* (may be null)
   };
@@ -238,6 +240,7 @@ public:
       nscoord mCoord;
       float mFloat;
       nscolor mColor;
+      nsCSSValuePair* mCSSValuePair;
       nsCSSValueList* mCSSValueList;
     } mValue;
   public:
@@ -272,6 +275,10 @@ public:
       NS_ASSERTION(mUnit == eUnit_Color, "unit mismatch");
       return mValue.mColor;
     }
+    nsCSSValuePair* GetCSSValuePairValue() const {
+      NS_ASSERTION(IsCSSValuePairUnit(mUnit), "unit mismatch");
+      return mValue.mCSSValuePair;
+    }
     nsCSSValueList* GetCSSValueListValue() const {
       NS_ASSERTION(IsCSSValueListUnit(mUnit), "unit mismatch");
       return mValue.mCSSValueList;
@@ -304,8 +311,10 @@ public:
     void SetPercentValue(float aPercent);
     void SetFloatValue(float aFloat);
     void SetColorValue(nscolor aColor);
-    void SetCSSValueListValue(nsCSSValueList *aValue, Unit aUnit,
-                              PRBool aTakeOwnership);
+    // These setters take ownership of |aValue|, and are therefore named
+    // "SetAndAdopt*".
+    void SetAndAdoptCSSValueListValue(nsCSSValueList *aValue, Unit aUnit);
+    void SetAndAdoptCSSValuePairValue(nsCSSValuePair *aValue, Unit aUnit);
 
     Value& operator=(const Value& aOther);
 
@@ -316,6 +325,9 @@ public:
   private:
     void FreeValue();
 
+    static PRBool IsCSSValuePairUnit(Unit aUnit) {
+      return aUnit == eUnit_CSSValuePair;
+    }
     static PRBool IsCSSValueListUnit(Unit aUnit) {
       return aUnit == eUnit_Dasharray || aUnit == eUnit_Shadow;
     }

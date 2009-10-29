@@ -73,7 +73,7 @@ function test() {
                  "URL bar autocomplete state should be restored correctly");
 
               win.close();
-              callback();
+              executeSoon(callback);
             }, false);
           }
 

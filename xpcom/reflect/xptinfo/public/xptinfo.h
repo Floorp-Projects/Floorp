@@ -181,6 +181,7 @@ public:
     PRBool IsNotXPCOM()    const {return 0 != (XPT_MD_IS_NOTXPCOM(flags));}
     PRBool IsConstructor() const {return 0 != (XPT_MD_IS_CTOR(flags)   );}
     PRBool IsHidden()      const {return 0 != (XPT_MD_IS_HIDDEN(flags) );}
+    PRBool WantsOptArgc()  const {return 0 != (XPT_MD_WANTS_OPT_ARGC(flags));}
     const char* GetName()  const {return name;}
     PRUint8 GetParamCount()  const {return num_args;}
     /* idx was index before I got _sick_ of the warnings on Unix, sorry jband */

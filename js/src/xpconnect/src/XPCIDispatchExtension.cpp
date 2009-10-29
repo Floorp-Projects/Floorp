@@ -130,7 +130,11 @@ JSBool XPCIDispatchExtension::Enumerate(XPCCallContext& ccx, JSObject* obj,
     if(!tearoff)
         return JS_FALSE;
 
+    if(!tearoff->IsIDispatch())
+        return JS_FALSE;
+
     XPCDispInterface* pInfo = tearoff->GetIDispatchInfo();
+
     PRUint32 members = pInfo->GetMemberCount();
     // Iterate over the members and force the properties to be resolved
     for(PRUint32 index = 0; index < members; ++index)

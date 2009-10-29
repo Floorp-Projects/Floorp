@@ -136,6 +136,7 @@ FindPrincipals(JSContext *cx, JSObject *obj, nsIPrincipal **objectPrincipal,
 static PRBool
 CanCallerAccess(JSContext *cx, JSObject *unsafeObj)
 {
+  // TODO bug 508928: Refactor this with the XOW security checking code.
   nsCOMPtr<nsIPrincipal> subjPrincipal, objPrincipal;
   nsCOMPtr<nsIScriptSecurityManager> ssm;
   nsresult rv = FindPrincipals(cx, unsafeObj, getter_AddRefs(objPrincipal),

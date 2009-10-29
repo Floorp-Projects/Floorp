@@ -200,13 +200,16 @@
           prefs.setCharPref(UI_DIRECTION_PREF + "-QA", "ltr");
           is(subwin.getComputedStyle(subdoc.documentElement, "").direction, "ltr",
              "left to right direction specific preference overrides");
-          prefs.clearUserPref(UI_DIRECTION_PREF + "-QA");
+          if (prefs.prefHasUserValue(UI_DIRECTION_PREF + "-QA"))
+            prefs.clearUserPref(UI_DIRECTION_PREF + "-QA");
 
           dirSvc.unregisterProvider(provider);
           cr.checkForNewChrome();
           cr.refreshSkins();
-          prefs.clearUserPref(XUL_CACHE_PREF);
-          prefs.clearUserPref(UI_DIRECTION_PREF);
+          if (prefs.prefHasUserValue(XUL_CACHE_PREF))
+            prefs.clearUserPref(XUL_CACHE_PREF);
+          if (prefs.prefHasUserValue(UI_DIRECTION_PREF))
+            prefs.clearUserPref(UI_DIRECTION_PREF);
 
           SimpleTest.finish();
         }

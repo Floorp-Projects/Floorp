@@ -172,7 +172,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
    */
   *surface = nsnull;
 
-  // Get our child
+  // Get the first child of the pattern data we will render
   nsIFrame *firstKid;
   if (NS_FAILED(GetPatternFirstChild(&firstKid)))
     return NS_ERROR_FAILURE; // Either no kids or a bad reference
@@ -212,7 +212,11 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   if (ctm.IsSingular()) {
     return NS_ERROR_FAILURE;
   }
-  mCTM = NS_NewSVGMatrix(ctm);
+
+  // Get the pattern we are going to render
+  nsSVGPatternFrame *patternFrame =
+    static_cast<nsSVGPatternFrame*>(firstKid->GetParent());
+  patternFrame->mCTM = NS_NewSVGMatrix(ctm);
 
   // Get the bounding box of the pattern.  This will be used to determine
   // the size of the surface, and will also be used to define the bounding
@@ -244,8 +248,8 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
                     surfaceSize.width / patternWidth, 0.0f,
                     0.0f, surfaceSize.height / patternHeight,
                     0.0f, 0.0f);
-    mCTM->Multiply(tempTM, getter_AddRefs(aCTM));
-    aCTM.swap(mCTM);
+    patternFrame->mCTM->Multiply(tempTM, getter_AddRefs(aCTM));
+    aCTM.swap(patternFrame->mCTM);
 
     // and magnify pattern to compensate
     patternMatrix->Scale(patternWidth / surfaceSize.width,
@@ -275,21 +279,21 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   // we got at the beginning because it takes care of the
   // referenced pattern situation for us
 
-  // Set our geometrical parent
-  mSource = aSource;
+  // Set the geometrical parent of the pattern we are rendering
+  patternFrame->mSource = aSource;
 
   // Delay checking mPaintLoopFlag until here so we can give back a clear
   // surface if there's a loop
-  if (!mPaintLoopFlag) {
-    mPaintLoopFlag = PR_TRUE;
+  if (!patternFrame->mPaintLoopFlag) {
+    patternFrame->mPaintLoopFlag = PR_TRUE;
     for (nsIFrame* kid = firstKid; kid;
          kid = kid->GetNextSibling()) {
       nsSVGUtils::PaintFrameWithEffects(&tmpState, nsnull, kid);
     }
-    mPaintLoopFlag = PR_FALSE;
+    patternFrame->mPaintLoopFlag = PR_FALSE;
   }
 
-  mSource = nsnull;
+  patternFrame->mSource = nsnull;
 
   if (aGraphicOpacity != 1.0f) {
     tmpContext->PopGroupToSource();

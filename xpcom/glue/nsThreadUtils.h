@@ -98,14 +98,28 @@ NS_GetCurrentThread(nsIThread **result);
 extern NS_COM_GLUE NS_METHOD
 NS_GetMainThread(nsIThread **result);
 
+#if defined(MOZILLA_INTERNAL_API) && defined(NS_TLS)
+// This is defined in nsThreadManager.cpp and initialized to `true` for the
+// main thread by nsThreadManager::Init.
+extern NS_TLS bool gTLSIsMainThread;
+
+#ifdef MOZ_ENABLE_LIBXUL
+inline bool NS_IsMainThread()
+{
+  return gTLSIsMainThread;
+}
+#else
+NS_COM bool NS_IsMainThread();
+#endif
+#else
 /**
  * Test to see if the current thread is the main thread.
  *
  * @returns PR_TRUE if the current thread is the main thread, and PR_FALSE
  * otherwise.
  */
-extern NS_COM_GLUE NS_METHOD_(PRBool)
-NS_IsMainThread();
+extern NS_COM_GLUE bool NS_IsMainThread();
+#endif
 
 /**
  * Dispatch the given event to the current thread.

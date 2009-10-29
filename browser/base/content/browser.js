@@ -682,8 +682,8 @@ let gGestureSupport = {
     let addRemove = aAddListener ? window.addEventListener :
       window.removeEventListener;
 
-    for each (let event in gestureEvents)
-      addRemove("Moz" + event, this, true);
+    gestureEvents.forEach(function (event) addRemove("Moz" + event, this, true),
+                          this);
   },
 
   /**
@@ -871,9 +871,10 @@ let gGestureSupport = {
    */
   onSwipe: function GS_onSwipe(aEvent) {
     // Figure out which one (and only one) direction was triggered 
-    for each (let dir in ["UP", "RIGHT", "DOWN", "LEFT"])
+    ["UP", "RIGHT", "DOWN", "LEFT"].forEach(function (dir) {
       if (aEvent.direction == aEvent["DIRECTION_" + dir])
         return this._doAction(aEvent, ["swipe", dir.toLowerCase()]);
+    }, this);
   },
 
   /**
@@ -1540,8 +1541,7 @@ function initializeSanitizer()
    */
   if (!gPrefService.getBoolPref("privacy.sanitize.migrateFx3Prefs")) {
     let itemBranch = gPrefService.getBranch("privacy.item.");
-    let itemCount = { value: 0 };
-    let itemArray = itemBranch.getChildList("", itemCount);
+    let itemArray = itemBranch.getChildList("");
 
     // See if any privacy.item prefs are set
     let doMigrate = itemArray.some(function (name) itemBranch.prefHasUserValue(name));
@@ -2085,10 +2085,9 @@ function BrowserViewSourceOfDocument(aDocument)
 
 // doc - document to use for source, or null for this window's document
 // initialTab - name of the initial tab to display, or null for the first tab
-// imageUrl - url of an image to load in the Media Tab of the Page Info window; can be null/omitted
-function BrowserPageInfo(doc, initialTab, imageUrl)
-{
-  var args = {doc: doc, initialTab: initialTab, imageUrl: imageUrl};
+// imageElement - image to load in the Media Tab of the Page Info window; can be null/omitted
+function BrowserPageInfo(doc, initialTab, imageElement) {
+  var args = {doc: doc, initialTab: initialTab, imageElement: imageElement};
   return toOpenDialogByTypeAndUrl("Browser:page-info",
                                   doc ? doc.location : window.content.document.location,
                                   "chrome://browser/content/pageinfo/pageInfo.xul",
@@ -2631,7 +2630,7 @@ function FillInHTMLTooltip(tipElement)
   var tipNode = document.getElementById("aHTMLTooltip");
   tipNode.style.direction = direction;
   
-  for each (var t in [titleText, XLinkTitleText]) {
+  [titleText, XLinkTitleText].forEach(function (t) {
     if (t && /\S/.test(t)) {
 
       // Per HTML 4.01 6.2 (CDATA section), literal CRs and tabs should be
@@ -2645,7 +2644,7 @@ function FillInHTMLTooltip(tipElement)
       tipNode.setAttribute("label", t);
       retVal = true;
     }
-  }
+  });
 
   return retVal;
 }

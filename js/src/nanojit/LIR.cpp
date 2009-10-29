@@ -971,8 +971,10 @@ namespace nanojit
         ArgSize sizes[MAXARGS];
         int32_t argc = ci->get_sizes(sizes);
 
-        if (!ARM_VFP && (op == LIR_fcall || op == LIR_qcall))
-            op = LIR_callh;
+        if (AvmCore::config.soft_float) {
+            if (op == LIR_fcall)
+                op = LIR_callh;
+        }
 
         NanoAssert(argc <= (int)MAXARGS);
 

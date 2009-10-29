@@ -76,7 +76,8 @@
 #define DRAGIMAGES_PREF "nglayout.enable_drag_images"
 
 nsBaseDragService::nsBaseDragService()
-  : mCanDrop(PR_FALSE), mDoingDrag(PR_FALSE), mHasImage(PR_FALSE), mUserCancelled(PR_FALSE),
+  : mCanDrop(PR_FALSE), mOnlyChromeDrop(PR_FALSE), mDoingDrag(PR_FALSE),
+    mHasImage(PR_FALSE), mUserCancelled(PR_FALSE),
     mDragAction(DRAGDROP_ACTION_NONE), mTargetSize(0,0),
     mImageX(0), mImageY(0), mScreenX(-1), mScreenY(-1), mSuppressLevel(0)
 {
@@ -101,6 +102,21 @@ NS_IMETHODIMP
 nsBaseDragService::GetCanDrop(PRBool * aCanDrop)
 {
   *aCanDrop = mCanDrop;
+  return NS_OK;
+}
+//---------------------------------------------------------
+NS_IMETHODIMP
+nsBaseDragService::SetOnlyChromeDrop(PRBool aOnlyChrome)
+{
+  mOnlyChromeDrop = aOnlyChrome;
+  return NS_OK;
+}
+
+//---------------------------------------------------------
+NS_IMETHODIMP
+nsBaseDragService::GetOnlyChromeDrop(PRBool* aOnlyChrome)
+{
+  *aOnlyChrome = mOnlyChromeDrop;
   return NS_OK;
 }
 
@@ -323,6 +339,8 @@ nsBaseDragService::StartDragSession()
     return NS_ERROR_FAILURE;
   }
   mDoingDrag = PR_TRUE;
+  // By default dispatch drop also to content.
+  mOnlyChromeDrop = PR_FALSE;
   return NS_OK;
 }
 

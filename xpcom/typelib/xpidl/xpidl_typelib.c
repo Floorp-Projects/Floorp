@@ -1083,6 +1083,8 @@ typelib_op_dcl(TreeState *state)
                             != NULL);
     gboolean op_noscript = (IDL_tree_property_get(op->ident, "noscript")
                             != NULL);
+    gboolean op_opt_argc = (IDL_tree_property_get(op->ident, "optional_argc")
+                            != NULL);
 
     if (!verify_method_declaration(state->tree))
         return FALSE;
@@ -1101,6 +1103,8 @@ typelib_op_dcl(TreeState *state)
         op_flags |= XPT_MD_HIDDEN;
     if (op_notxpcom)
         op_flags |= XPT_MD_NOTXPCOM;
+    if (op_opt_argc)
+        op_flags |= XPT_MD_OPT_ARGC;
 
     /* XXXshaver constructor? */
 
