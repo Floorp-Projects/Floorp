@@ -56,6 +56,25 @@ public:
 
     void LoadURL(nsIURI* aURI);
     void Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height);
+
+    virtual mozilla::ipc::PDocumentRendererParent* AllocPDocumentRenderer(
+            const PRInt32& x,
+            const PRInt32& y,
+            const PRInt32& w,
+            const PRInt32& h,
+            const nsString& bgcolor,
+            const PRUint32& flags,
+            const bool& flush);
+    virtual bool DeallocPDocumentRenderer(
+            mozilla::ipc::PDocumentRendererParent* __a,
+            const PRUint32& w,
+            const PRUint32& h,
+            const nsCString& data);
+    virtual bool RecvPDocumentRendererDestructor(
+            mozilla::ipc::PDocumentRendererParent* __a,
+            const PRUint32& w,
+            const PRUint32& h,
+            const nsCString& data);
 };
 
 } // namespace dom
