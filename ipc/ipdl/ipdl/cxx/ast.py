@@ -282,7 +282,7 @@ class Block(Node):
 
     def addstmt(self, stmt):
         assert stmt is not None
-        assert not isinstance(stmt, list)
+        assert not isinstance(stmt, tuple)
         self.stmts.append(stmt)
 
     def addstmts(self, stmts):
@@ -521,6 +521,7 @@ ExprLiteral.FALSE = ExprVar('false')
 
 class ExprPrefixUnop(Node):
     def __init__(self, expr, op):
+        assert not isinstance(expr, tuple)
         self.expr = expr
         self.op = op
 
