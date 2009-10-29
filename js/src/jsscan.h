@@ -166,6 +166,14 @@ struct JSTokenPtr {
     uint32              index;          /* index of char in physical line */
     uint32              lineno;         /* physical line number */
 
+    bool operator==(const JSTokenPtr& bptr) {
+        return index == bptr.index && lineno == bptr.lineno;
+    }
+
+    bool operator!=(const JSTokenPtr& bptr) {
+        return index != bptr.index || lineno != bptr.lineno;
+    }
+
     bool operator <(const JSTokenPtr& bptr) {
         return lineno < bptr.lineno ||
                (lineno == bptr.lineno && index < bptr.index);
@@ -188,6 +196,14 @@ struct JSTokenPtr {
 struct JSTokenPos {
     JSTokenPtr          begin;          /* first character and line of token */
     JSTokenPtr          end;            /* index 1 past last char, last line */
+
+    bool operator==(const JSTokenPos& bpos) {
+        return begin == bpos.begin && end == bpos.end;
+    }
+
+    bool operator!=(const JSTokenPos& bpos) {
+        return begin != bpos.begin || end != bpos.end;
+    }
 
     bool operator <(const JSTokenPos& bpos) {
         return begin < bpos.begin;

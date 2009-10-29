@@ -1004,7 +1004,6 @@ out_of_range:
 }
 
 #ifdef JS_TRACER
-extern jsdouble js_NaN;
 
 jsdouble FASTCALL
 js_String_p_charCodeAt(JSString* str, jsdouble d)
@@ -1333,6 +1332,8 @@ class RegExpGuard
             DROP_REGEXP(mCx, mRe);
     }
 
+    JSContext* cx() const { return mCx; }
+
     /* init must succeed in order to call tryFlatMatch or normalizeRegExp. */
     bool
     init(uintN argc, jsval *vp)
@@ -1574,8 +1575,20 @@ str_search(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
-struct ReplaceData {
-    ReplaceData(JSContext *cx) : g(cx), cb(cx) {}
+struct ReplaceData
+{
+    ReplaceData(JSContext *cx)
+     : g(cx), invokevp(NULL), cb(cx)
+    {}
+
+    ~ReplaceData() {
+        if (invokevp) {
+            /* If we set invokevp, we already left trace. */
+            VOUCH_HAVE_STACK();
+            js_FreeStack(g.cx(), invokevpMark);
+        }
+    }
+
     JSString      *str;           /* 'this' parameter object as a string */
     RegExpGuard   g;              /* regexp parameter object and private data */
     JSObject      *lambda;        /* replacement function object or null */
@@ -1586,6 +1599,8 @@ struct ReplaceData {
     jsint         leftIndex;      /* left context index in str->chars */
     JSSubString   dollarStr;      /* for "$$" InterpretDollar result */
     bool          calledBack;     /* record whether callback has been called */
+    jsval         *invokevp;      /* reusable allocation from js_AllocStack */
+    void          *invokevpMark;  /* the mark to return */
     JSCharBuffer  cb;             /* buffer built during DoMatch */
 };
 
@@ -1684,10 +1699,13 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
          */
         uintN p = rdata.g.re()->parenCount;
         uintN argc = 1 + p + 2;
-        void *mark;
-        jsval *invokevp = js_AllocStack(cx, 2 + argc, &mark);
-        if (!invokevp)
-            return false;
+
+        if (!rdata.invokevp) {
+            rdata.invokevp = js_AllocStack(cx, 2 + argc, &rdata.invokevpMark);
+            if (!rdata.invokevp)
+                return false;
+        }
+        jsval* invokevp = rdata.invokevp;
 
         MUST_FLOW_THROUGH("lambda_out");
         bool ok = false;
@@ -1756,7 +1774,6 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
         ok = true;
 
       lambda_out:
-        js_FreeStack(cx, mark);
         if (freeMoreParens)
             cx->free(cx->regExpStatics.moreParens);
         cx->regExpStatics = save;

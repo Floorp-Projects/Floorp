@@ -101,9 +101,12 @@ namespace nanojit
         // then by the C functions it calls).
     const int NJ_ALIGN_STACK = 16;
 
-    const int32_t LARGEST_UNDERRUN_PROT = 3200;  // largest value passed to underrunProtect
+    const int32_t LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
 
     typedef uint8_t NIns;
+
+    // Bytes of icache to flush after Assembler::patch
+    const size_t LARGEST_BRANCH_PATCH = 16 * sizeof(NIns);
 
     // These are used as register numbers in various parts of the code
     typedef enum
@@ -171,7 +174,7 @@ namespace nanojit
     #define DECLARE_PLATFORM_REGALLOC()
 
     #define DECLARE_PLATFORM_ASSEMBLER()    \
-        const static Register argRegs[2], retRegs[2];\
+        const static Register argRegs[2], retRegs[2]; \
         int32_t max_stk_args;\
         void nativePageReset();\
         void nativePageSetup();\
@@ -179,8 +182,9 @@ namespace nanojit
         void asm_stkarg(LInsp p, int32_t& stkd);\
         void asm_farg(LInsp, int32_t& stkd);\
         void asm_arg(ArgSize sz, LInsp p, Register r, int32_t& stkd);\
+        void asm_pusharg(LInsp);\
         void asm_fcmp(LIns *cond);\
-        void asm_cmp(LIns *cond);\
+        void asm_cmp(LIns *cond); \
         void asm_div_mod(LIns *cond);
 
     #define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
@@ -189,6 +193,8 @@ namespace nanojit
     _nIns -= 4;     \
     *((int32_t*)_nIns) = (int32_t)(i)
 
+// XXX rearrange NanoAssert() expression to workaround apparent gcc 4.3 bug:
+// XXX "error: logical && with non-zero constant will always evaluate as true"
 #define MODRMs(r,d,b,l,i) \
         NanoAssert(unsigned(i)<8 && unsigned(b)<8 && unsigned(r)<8); \
         if ((d) == 0 && (b) != EBP) { \
@@ -515,6 +521,11 @@ namespace nanojit
     NanoAssert(((unsigned)r)<8); \
     *(--_nIns) = (uint8_t) ( 0x50 | (r) );  \
     asm_output("push %s",gpn(r)); } while(0)
+
+#define PUSHm(d,b) do { \
+    count_pushld();\
+    ALUm(0xff, 6, d, b);        \
+    asm_output("push %d(%s)",d,gpn(b)); } while(0)
 
 #define POPr(r) do { \
     count_pop();\

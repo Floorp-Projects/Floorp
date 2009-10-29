@@ -52,53 +52,6 @@
 
 namespace nanojit
 {
-#ifdef NJ_VERBOSE
-    /* A listing filter for LIR, going through backwards.  It merely
-       passes its input to its output, but notes it down too.  When
-       destructed, prints out what went through.  Is intended to be
-       used to print arbitrary intermediate transformation stages of
-       LIR. */
-    class ReverseLister : public LirFilter
-    {
-        Allocator&   _alloc;
-        LirNameMap*  _names;
-        const char*  _title;
-        StringList   _strs;
-        LogControl*  _logc;
-    public:
-        ReverseLister(LirFilter* in, Allocator& alloc,
-                      LirNameMap* names, LogControl* logc, const char* title)
-            : LirFilter(in)
-            , _alloc(alloc)
-            , _names(names)
-            , _title(title)
-            , _strs(alloc)
-            , _logc(logc)
-        { }
-
-        void finish()
-        {
-            _logc->printf("\n");
-            _logc->printf("=== BEGIN %s ===\n", _title);
-            int j = 0;
-            for (Seq<char*>* p = _strs.get(); p != NULL; p = p->tail)
-                _logc->printf("  %02d: %s\n", j++, p->head);
-            _logc->printf("=== END %s ===\n", _title);
-            _logc->printf("\n");
-        }
-
-        LInsp read()
-        {
-            LInsp i = in->read();
-            const char* str = _names->formatIns(i);
-            char* cpy = new (_alloc) char[strlen(str)+1];
-            VMPI_strcpy(cpy, str);
-            _strs.insert(cpy);
-            return i;
-        }
-    };
-#endif
-
     /**
      * Need the following:
      *
@@ -556,6 +509,7 @@ namespace nanojit
         Fragment *frag = lr->exit->target;
         NanoAssert(frag->fragEntry != 0);
         nPatchBranch((NIns*)lr->jmp, frag->fragEntry);
+        CodeAlloc::flushICache(lr->jmp, LARGEST_BRANCH_PATCH);
         verbose_only(verbose_outputf("patching jump at %p to target %p\n",
             lr->jmp, frag->fragEntry);)
     }
@@ -697,7 +651,7 @@ namespace nanojit
         nBeginAssembly();
     }
 
-    void Assembler::assemble(Fragment* frag)
+    void Assembler::assemble(Fragment* frag, LirFilter* reader)
     {
         if (error()) return;
         _thisfrag = frag;
@@ -712,41 +666,9 @@ namespace nanojit
                       else
                           NanoAssert(frag->profFragID == 0); )
 
-        // Used for debug printing, if needed
-        verbose_only(
-        ReverseLister *pp_init = NULL;
-        ReverseLister *pp_after_sf = NULL;
-        )
-
-        // set up backwards pipeline: assembler -> StackFilter -> LirReader
-        LirReader bufreader(frag->lastIns);
-
-        // Used to construct the pipeline
-        LirFilter* prev = &bufreader;
-
-        // The LIR passes through these filters as listed in this
-        // function, viz, top to bottom.
-
-        // INITIAL PRINTING
-        verbose_only( if (_logc->lcbits & LC_ReadLIR) {
-        pp_init = new (alloc) ReverseLister(prev, alloc, frag->lirbuf->names, _logc,
-                                    "Initial LIR");
-        prev = pp_init;
-        })
-
-        // STACKFILTER
-        StackFilter stackfilter(prev, alloc, frag->lirbuf, frag->lirbuf->sp, frag->lirbuf->rp);
-        prev = &stackfilter;
-
-        verbose_only( if (_logc->lcbits & LC_AfterSF) {
-        pp_after_sf = new (alloc) ReverseLister(prev, alloc, frag->lirbuf->names, _logc,
-                                                "After StackFilter");
-        prev = pp_after_sf;
-        })
-
         _inExit = false;
 
-        gen(prev);
+        gen(reader);
 
         if (!error()) {
             // patch all branches
@@ -765,13 +687,6 @@ namespace nanojit
                 }
             }
         }
-
-        // If we were accumulating debug info in the various ReverseListers,
-        // call finish() to emit whatever contents they have accumulated.
-        verbose_only(
-        if (pp_init)        pp_init->finish();
-        if (pp_after_sf)    pp_after_sf->finish();
-        )
     }
 
     void Assembler::endAssembly(Fragment* frag)
@@ -814,7 +729,7 @@ namespace nanojit
 
         // at this point all our new code is in the d-cache and not the i-cache,
         // so flush the i-cache on cpu's that need it.
-        _codeAlloc.flushICache(codeList);
+        CodeAlloc::flushICache(codeList);
 
         // save entry point pointers
         frag->fragEntry = fragEntry;
@@ -1123,7 +1038,6 @@ namespace nanojit
                     asm_arith(ins);
                     break;
                 }
-#ifndef NJ_SOFTFLOAT
                 case LIR_fneg:
                 {
                     countlir_fpu();
@@ -1158,7 +1072,6 @@ namespace nanojit
                     asm_promote(ins);
                     break;
                 }
-#endif // NJ_SOFTFLOAT
                 case LIR_sti:
                 {
                     countlir_st();
@@ -1305,7 +1218,6 @@ namespace nanojit
                     break;
                 }
 
-#ifndef NJ_SOFTFLOAT
                 case LIR_feq:
                 case LIR_fle:
                 case LIR_flt:
@@ -1316,7 +1228,6 @@ namespace nanojit
                     asm_fcond(ins);
                     break;
                 }
-#endif
                 case LIR_eq:
                 case LIR_ov:
                 case LIR_le:
@@ -1344,9 +1255,7 @@ namespace nanojit
                     break;
                 }
 
-            #ifndef NJ_SOFTFLOAT
                 case LIR_fcall:
-            #endif
             #ifdef NANOJIT_64BIT
                 case LIR_qcall:
             #endif
@@ -1354,14 +1263,12 @@ namespace nanojit
                 {
                     countlir_call();
                     Register rr = UnknownReg;
-#ifndef NJ_SOFTFLOAT
-                    if (op == LIR_fcall)
+                    if (ARM_VFP && op == LIR_fcall)
                     {
                         // fcall
                         rr = asm_prep_fcall(getresv(ins), ins);
                     }
                     else
-#endif
                     {
                         rr = retRegs[0];
                         prepResultReg(ins, rmask(rr));
@@ -1459,13 +1366,9 @@ namespace nanojit
      */
     void Assembler::emitJumpTable(SwitchInfo* si, NIns* target)
     {
-        underrunProtect(si->count * sizeof(NIns*) + 20);
-        _nIns = reinterpret_cast<NIns*>(uintptr_t(_nIns) & ~(sizeof(NIns*) - 1));
-        for (uint32_t i = 0; i < si->count; ++i) {
-            _nIns = (NIns*) (((intptr_t) _nIns) - sizeof(NIns*));
-            *(NIns**) _nIns = target;
-        }
-        si->table = (NIns**) _nIns;
+        si->table = (NIns **) alloc.alloc(si->count * sizeof(NIns*));
+        for (uint32_t i = 0; i < si->count; ++i)
+            si->table[i] = target;
     }
 
     void Assembler::assignSavedRegs()
@@ -1509,9 +1412,11 @@ namespace nanojit
             LIns *i = p->head;
             NanoAssert(i->isop(LIR_live) || i->isop(LIR_flive));
             LIns *op1 = i->oprnd1();
-            if (op1->isconst() || op1->isconstf() || op1->isconstq())
-                findMemFor(op1);
-            else
+            // must findMemFor even if we're going to findRegFor; loop-carried
+            // operands may spill on another edge, and we need them to always
+            // spill to the same place.
+            findMemFor(op1);
+            if (! (op1->isconst() || op1->isconstf() || op1->isconstq()))
                 findRegFor(op1, i->isop(LIR_flive) ? FpRegs : GpRegs);
         }
 

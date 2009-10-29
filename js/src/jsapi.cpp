@@ -86,6 +86,9 @@
 #include "jsstaticcheck.h"
 #include "jsvector.h"
 
+#include "jsatominlines.h"
+#include "jsscopeinlines.h"
+
 #if JS_HAS_FILE_OBJECT
 #include "jsfile.h"
 #endif
@@ -93,8 +96,6 @@
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
 #endif
-
-#include "jsatominlines.h"
 
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) ((va_list *)(ap))
@@ -126,19 +127,19 @@ JS_Now()
 JS_PUBLIC_API(jsval)
 JS_GetNaNValue(JSContext *cx)
 {
-    return DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+    return cx->runtime->NaNValue;
 }
 
 JS_PUBLIC_API(jsval)
 JS_GetNegativeInfinityValue(JSContext *cx)
 {
-    return DOUBLE_TO_JSVAL(cx->runtime->jsNegativeInfinity);
+    return cx->runtime->negativeInfinityValue;
 }
 
 JS_PUBLIC_API(jsval)
 JS_GetPositiveInfinityValue(JSContext *cx)
 {
-    return DOUBLE_TO_JSVAL(cx->runtime->jsPositiveInfinity);
+    return cx->runtime->positiveInfinityValue;
 }
 
 JS_PUBLIC_API(jsval)
@@ -718,11 +719,112 @@ JS_SameValue(JSContext *cx, jsval v1, jsval v2)
 static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 #endif
 
+JSRuntime::JSRuntime()
+{
+    /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
+    JS_INIT_CLIST(&contextList);
+    JS_INIT_CLIST(&trapList);
+    JS_INIT_CLIST(&watchPointList);
+}
+
+bool
+JSRuntime::init(uint32 maxbytes)
+{
+    if (!js_InitDtoa() ||
+        !js_InitGC(this, maxbytes) ||
+        !js_InitAtomState(this) ||
+        !js_InitDeflatedStringCache(this)) {
+        return false;
+    }
+#ifdef JS_THREADSAFE
+    gcLock = JS_NEW_LOCK();
+    if (!gcLock)
+        return false;
+    gcDone = JS_NEW_CONDVAR(gcLock);
+    if (!gcDone)
+        return false;
+    requestDone = JS_NEW_CONDVAR(gcLock);
+    if (!requestDone)
+        return false;
+    /* this is asymmetric with JS_ShutDown: */
+    if (!js_SetupLocks(8, 16))
+        return false;
+    rtLock = JS_NEW_LOCK();
+    if (!rtLock)
+        return false;
+    stateChange = JS_NEW_CONDVAR(gcLock);
+    if (!stateChange)
+        return false;
+    titleSharingDone = JS_NEW_CONDVAR(gcLock);
+    if (!titleSharingDone)
+        return false;
+    titleSharingTodo = NO_TITLE_SHARING_TODO;
+    debuggerLock = JS_NEW_LOCK();
+    if (!debuggerLock)
+        return false;
+    deallocatorThread = new JSBackgroundThread();
+    if (!deallocatorThread || !deallocatorThread->init())
+        return false;
+#endif
+    return js_InitPropertyTree(this) && js_InitThreads(this);
+}
+
+JSRuntime::~JSRuntime()
+{
+#ifdef DEBUG
+    /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
+    if (!JS_CLIST_IS_EMPTY(&contextList)) {
+        JSContext *cx, *iter = NULL;
+        uintN cxcount = 0;
+        while ((cx = js_ContextIterator(this, JS_TRUE, &iter)) != NULL) {
+            fprintf(stderr,
+"JS API usage error: found live context at %p\n",
+                    (void *) cx);
+            cxcount++;
+        }
+        fprintf(stderr,
+"JS API usage error: %u context%s left in runtime upon JS_DestroyRuntime.\n",
+                cxcount, (cxcount == 1) ? "" : "s");
+    }
+#endif
+
+    js_FinishThreads(this);
+    js_FreeRuntimeScriptState(this);
+    js_FinishAtomState(this);
+
+    /*
+     * Finish the deflated string cache after the last GC and after
+     * calling js_FinishAtomState, which finalizes strings.
+     */
+    js_FinishDeflatedStringCache(this);
+    js_FinishGC(this);
+#ifdef JS_THREADSAFE
+    if (gcLock)
+        JS_DESTROY_LOCK(gcLock);
+    if (gcDone)
+        JS_DESTROY_CONDVAR(gcDone);
+    if (requestDone)
+        JS_DESTROY_CONDVAR(requestDone);
+    if (rtLock)
+        JS_DESTROY_LOCK(rtLock);
+    if (stateChange)
+        JS_DESTROY_CONDVAR(stateChange);
+    if (titleSharingDone)
+        JS_DESTROY_CONDVAR(titleSharingDone);
+    if (debuggerLock)
+        JS_DESTROY_LOCK(debuggerLock);
+    if (deallocatorThread) {
+        deallocatorThread->cancel();
+        delete deallocatorThread;
+    }
+#endif
+    js_FinishPropertyTree(this);
+}
+
+
 JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes)
 {
-    JSRuntime *rt;
-
 #ifdef DEBUG
     if (!js_NewRuntimeWasCalled) {
         /*
@@ -769,64 +871,17 @@ JS_NewRuntime(uint32 maxbytes)
     }
 #endif /* DEBUG */
 
-    rt = (JSRuntime *) js_malloc(sizeof(JSRuntime));
-    if (!rt)
+    void *mem = js_calloc(sizeof(JSRuntime));
+    if (!mem)
         return NULL;
 
-    /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
-    memset(rt, 0, sizeof(JSRuntime));
-    JS_INIT_CLIST(&rt->contextList);
-    JS_INIT_CLIST(&rt->trapList);
-    JS_INIT_CLIST(&rt->watchPointList);
-
-    if (!js_InitDtoa())
-        goto bad;
-    if (!js_InitGC(rt, maxbytes))
-        goto bad;
-    if (!js_InitAtomState(rt))
-        goto bad;
-    if (!js_InitDeflatedStringCache(rt))
-        goto bad;
-#ifdef JS_THREADSAFE
-    rt->gcLock = JS_NEW_LOCK();
-    if (!rt->gcLock)
-        goto bad;
-    rt->gcDone = JS_NEW_CONDVAR(rt->gcLock);
-    if (!rt->gcDone)
-        goto bad;
-    rt->requestDone = JS_NEW_CONDVAR(rt->gcLock);
-    if (!rt->requestDone)
-        goto bad;
-    /* this is asymmetric with JS_ShutDown: */
-    if (!js_SetupLocks(8, 16))
-        goto bad;
-    rt->rtLock = JS_NEW_LOCK();
-    if (!rt->rtLock)
-        goto bad;
-    rt->stateChange = JS_NEW_CONDVAR(rt->gcLock);
-    if (!rt->stateChange)
-        goto bad;
-    rt->titleSharingDone = JS_NEW_CONDVAR(rt->gcLock);
-    if (!rt->titleSharingDone)
-        goto bad;
-    rt->titleSharingTodo = NO_TITLE_SHARING_TODO;
-    rt->debuggerLock = JS_NEW_LOCK();
-    if (!rt->debuggerLock)
-        goto bad;
-    rt->deallocatorThread = new JSBackgroundThread();
-    if (!rt->deallocatorThread || !rt->deallocatorThread->init())
-        goto bad;
-#endif
-    if (!js_InitPropertyTree(rt))
-        goto bad;
-    if (!js_InitThreads(rt))
-        goto bad;
+    JSRuntime *rt = new (mem) JSRuntime();
+    if (!rt->init(maxbytes)) {
+        JS_DestroyRuntime(rt);
+        return NULL;
+    }
 
     return rt;
-
-bad:
-    JS_DestroyRuntime(rt);
-    return NULL;
 }
 
 JS_PUBLIC_API(void)
@@ -838,54 +893,8 @@ JS_CommenceRuntimeShutDown(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt)
 {
-#ifdef DEBUG
-    /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
-    if (!JS_CLIST_IS_EMPTY(&rt->contextList)) {
-        JSContext *cx, *iter = NULL;
-        uintN cxcount = 0;
-        while ((cx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL) {
-            fprintf(stderr,
-"JS API usage error: found live context at %p\n",
-                    (void *) cx);
-            cxcount++;
-        }
-        fprintf(stderr,
-"JS API usage error: %u context%s left in runtime upon JS_DestroyRuntime.\n",
-                cxcount, (cxcount == 1) ? "" : "s");
-    }
-#endif
+    rt->~JSRuntime();
 
-    js_FinishThreads(rt);
-    js_FreeRuntimeScriptState(rt);
-    js_FinishAtomState(rt);
-
-    /*
-     * Finish the deflated string cache after the last GC and after
-     * calling js_FinishAtomState, which finalizes strings.
-     */
-    js_FinishDeflatedStringCache(rt);
-    js_FinishGC(rt);
-#ifdef JS_THREADSAFE
-    if (rt->gcLock)
-        JS_DESTROY_LOCK(rt->gcLock);
-    if (rt->gcDone)
-        JS_DESTROY_CONDVAR(rt->gcDone);
-    if (rt->requestDone)
-        JS_DESTROY_CONDVAR(rt->requestDone);
-    if (rt->rtLock)
-        JS_DESTROY_LOCK(rt->rtLock);
-    if (rt->stateChange)
-        JS_DESTROY_CONDVAR(rt->stateChange);
-    if (rt->titleSharingDone)
-        JS_DESTROY_CONDVAR(rt->titleSharingDone);
-    if (rt->debuggerLock)
-        JS_DESTROY_LOCK(rt->debuggerLock);
-    if (rt->deallocatorThread) {
-        rt->deallocatorThread->cancel();
-        delete rt->deallocatorThread;
-    }
-#endif
-    js_FinishPropertyTree(rt);
     js_free(rt);
 }
 
@@ -1134,6 +1143,7 @@ static struct v2smap {
     {JSVERSION_1_6,     "1.6"},
     {JSVERSION_1_7,     "1.7"},
     {JSVERSION_1_8,     "1.8"},
+    {JSVERSION_ECMA_5,  "ECMAv5"},
     {JSVERSION_DEFAULT, js_default_str},
     {JSVERSION_UNKNOWN, NULL},          /* must be last, NULL is sentinel */
 };
@@ -1842,6 +1852,12 @@ JS_free(JSContext *cx, void *p)
     return cx->free(p);
 }
 
+JS_PUBLIC_API(void)
+JS_updateMallocCounter(JSContext *cx, size_t nbytes)
+{
+    return cx->updateMallocCounter(nbytes);
+}
+
 JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s)
 {
@@ -2498,7 +2514,7 @@ JS_MaybeGC(JSContext *cx)
      * or approximately F == 0 && B > 4/3 Bl.
      */
     if ((bytes > 8192 && bytes > lastBytes + lastBytes / 3) ||
-        rt->gcMallocBytes >= rt->gcMaxMallocBytes) {
+        rt->isGCMallocLimitReached()) {
         JS_GC(cx);
     }
 }
@@ -2535,7 +2551,7 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32 value)
         rt->gcMaxBytes = value;
         break;
       case JSGC_MAX_MALLOC_BYTES:
-        rt->gcMaxMallocBytes = value;
+        rt->setGCMaxMallocBytes(value);
         break;
       case JSGC_STACKPOOL_LIFESPAN:
         rt->gcEmptyArenaPoolLifespan = value;
@@ -3185,6 +3201,13 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop,
     JSBool ok = JS_TRUE;
     if (OBJ_IS_NATIVE(obj2)) {
         JSScopeProperty *sprop = (JSScopeProperty *) prop;
+
+        if (sprop->isMethod()) {
+            JSAutoTempValueRooter root(cx, sprop);
+            JS_UNLOCK_OBJ(cx, obj2);
+            *vp = sprop->methodValue();
+            return OBJ_SCOPE(obj2)->methodReadBarrier(cx, sprop, vp);
+        }
 
         /* Peek at the native property's slot value, without doing a Get. */
         *vp = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
@@ -4612,7 +4635,7 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     JSScript *script;
 
     CHECK_REQUEST(cx);
-    tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
+    tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
     script = JSCompiler::compileScript(cx, obj, NULL, principals, tcflags,
                                        chars, length, NULL, filename, lineno);
     LAST_FRAME_CHECKS(cx, script);

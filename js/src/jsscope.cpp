@@ -61,6 +61,8 @@
 #include "jsstr.h"
 #include "jstracer.h"
 
+#include "jsscopeinlines.h"
+
 uint32
 js_GenerateShape(JSContext *cx, bool gcLocked)
 {
@@ -391,7 +393,7 @@ JSScope::changeTable(JSContext *cx, int change)
     table = newtable;
 
     /* Treat the above calloc as a JS_malloc, to match CreateScopeTable. */
-    cx->runtime->gcMallocBytes += nbytes;
+    cx->updateMallocCounter(nbytes);
 
     /* Copy only live entries, leaving removed and free ones behind. */
     for (oldspp = oldtable; oldsize != 0; oldspp++) {
@@ -1062,10 +1064,11 @@ JSScope::add(JSContext *cx, jsid id,
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, this));
     CHECK_ANCESTOR_LINE(this, true);
 
+    JS_ASSERT(!JSVAL_IS_NULL(id));
     JS_ASSERT_IF(attrs & JSPROP_GETTER, getter);
     JS_ASSERT_IF(attrs & JSPROP_SETTER, setter);
-
-    JS_ASSERT(!JSVAL_IS_NULL(id));
+    JS_ASSERT_IF(!cx->runtime->gcRegenShapes,
+                 hasRegenFlag(cx->runtime->gcRegenShapesScopeFlag));
 
     /*
      * You can't add properties to a sealed scope.  But note well that you can

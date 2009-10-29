@@ -162,7 +162,10 @@ namespace nanojit
         void freeAll(CodeList* &code);
 
         /** flush the icache for all code in the list, before executing */
-        void flushICache(CodeList* &blocks);
+        static void flushICache(CodeList* &blocks);
+
+        /** flush the icache for a specific extent */
+        static void flushICache(void *start, size_t len);
 
         /** add the ranges [start, holeStart) and [holeEnd, end) to code, and
             free [holeStart, holeEnd) if the hole is >= minsize */

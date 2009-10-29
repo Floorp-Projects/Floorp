@@ -227,26 +227,6 @@ PointerRangeSize(T *begin, T *end)
  *      Called on overflow before the container returns NULL.
  */
 
-/*
- * Policy that calls JSContext:: memory functions and reports errors to the
- * context.  Since the JSContext* given on construction is stored for the
- * lifetime of the container, this policy may only be used for containers whose
- * lifetime is a shorter than the given JSContext.
- */
-class ContextAllocPolicy
-{
-    JSContext *mCx;
-
-  public:
-    ContextAllocPolicy(JSContext *cx) : mCx(cx) {}
-    JSContext *context() const { return mCx; }
-
-    void *malloc(size_t bytes) { return mCx->malloc(bytes); }
-    void free(void *p) { mCx->free(p); }
-    void *realloc(void *p, size_t bytes) { return mCx->realloc(p, bytes); }
-    void reportAllocOverflow() const { js_ReportAllocationOverflow(mCx); }
-};
-
 /* Policy for using system memory functions and doing no error reporting. */
 class SystemAllocPolicy
 {

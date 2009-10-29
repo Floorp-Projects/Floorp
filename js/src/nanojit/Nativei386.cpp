@@ -184,14 +184,38 @@ namespace nanojit
             max_regs = iargs;
 
         int32_t istack = iargs-max_regs;  // first 2 4B args are in registers
-        int32_t pushsize = 4*istack + 8*fargs; // actual stack space used
+        int32_t extra = 0;
+        const int32_t pushsize = 4*istack + 8*fargs; // actual stack space used
 
-        // In case of fastcall, stdcall and thiscall the callee cleans up the stack,
-        // and since we reserve max_stk_args words in the prolog to call functions
-        // and don't adjust the stack pointer individually for each call we have
-        // to undo here any changes the callee just did to the stack.
-        if (pushsize && abi != ABI_CDECL)
-            SUBi(SP, pushsize);
+#if _MSC_VER
+        // msc only provides 4-byte alignment, anything more than 4 on windows
+        // x86-32 requires dynamic ESP alignment in prolog/epilog and static
+        // esp-alignment here.
+        uint32_t align = 4;//NJ_ALIGN_STACK;
+#else
+        uint32_t align = NJ_ALIGN_STACK;
+#endif
+
+        if (pushsize) {
+            if (config.fixed_esp) {
+                // In case of fastcall, stdcall and thiscall the callee cleans up the stack,
+                // and since we reserve max_stk_args words in the prolog to call functions
+                // and don't adjust the stack pointer individually for each call we have
+                // to undo here any changes the callee just did to the stack.
+                if (abi != ABI_CDECL)
+                    SUBi(SP, pushsize);
+            } else {
+                // stack re-alignment
+                // only pop our adjustment amount since callee pops args in FASTCALL mode
+                extra = alignUp(pushsize, align) - pushsize;
+                if (call->_abi == ABI_CDECL) {
+                    // with CDECL only, caller pops args
+                    ADDi(SP, extra+pushsize);
+                } else if (extra > 0) {
+                    ADDi(SP, extra);
+                }
+            }
+        }
 
         NanoAssert(ins->isop(LIR_pcall) || ins->isop(LIR_fcall));
         if (!indirect) {
@@ -215,10 +239,12 @@ namespace nanojit
         ArgSize sizes[MAXARGS];
         uint32_t argc = call->get_sizes(sizes);
         int32_t stkd = 0;
-
+        
         if (indirect) {
             argc--;
             asm_arg(ARGSIZE_P, ins->arg(argc), EAX, stkd);
+            if (!config.fixed_esp) 
+                stkd = 0;
         }
 
         for(uint32_t i=0; i < argc; i++)
@@ -230,10 +256,16 @@ namespace nanojit
                 r = argRegs[n++]; // tell asm_arg what reg to use
             }
             asm_arg(sz, ins->arg(j), r, stkd);
+            if (!config.fixed_esp) 
+                stkd = 0;
         }
 
-        if (pushsize > max_stk_args)
-            max_stk_args = pushsize;
+        if (config.fixed_esp) {
+            if (pushsize > max_stk_args)
+                max_stk_args = pushsize;
+        } else if (extra > 0) {
+            SUBi(SP, extra);
+        }
     }
 
     Register Assembler::nRegisterAllocFromSet(RegisterMask set)
@@ -273,10 +305,8 @@ namespace nanojit
         intptr_t offset = intptr_t(targ) - intptr_t(branch);
         if (branch[0] == JMP32) {
             *(int32_t*)&branch[1] = offset - 5;
-            VALGRIND_DISCARD_TRANSLATIONS(&branch[1], sizeof(int32_t));
         } else if (branch[0] == JCC32) {
             *(int32_t*)&branch[2] = offset - 6;
-            VALGRIND_DISCARD_TRANSLATIONS(&branch[2], sizeof(int32_t));
         } else
             NanoAssertMsg(0, "Unknown branch type in nPatchBranch");
     }
@@ -1322,13 +1352,39 @@ namespace nanojit
                 }
             }
             else {
-                asm_stkarg(p, stkd);
+                if (config.fixed_esp)
+                    asm_stkarg(p, stkd);
+                else
+                    asm_pusharg(p);
             }
         }
         else
         {
             NanoAssert(sz == ARGSIZE_F);
             asm_farg(p, stkd);
+        }
+    }
+
+    void Assembler::asm_pusharg(LInsp p)
+    {
+        // arg goes on stack
+        if (!p->isUsed() && p->isconst())
+        {
+            // small const we push directly
+            PUSHi(p->imm32());
+        }
+        else if (!p->isUsed() || p->isop(LIR_alloc))
+        {
+            Register ra = findRegFor(p, GpRegs);
+            PUSHr(ra);
+        }
+        else if (!p->hasKnownReg())
+        {
+            PUSHm(disp(p), FP);
+        }
+        else
+        {
+            PUSHr(p->getReg());
         }
     }
 
@@ -1360,12 +1416,23 @@ namespace nanojit
             SSE_STQ(stkd, SP, r);
         } else {
             FSTPQ(stkd, SP);
+            
+            //
+            // 22Jul09 rickr - Enabling the evict causes a 10% slowdown on primes
+            //
+            // evict() triggers a very expensive fstpq/fldq pair around the store.
+            // We need to resolve the bug some other way.
+            //
+            // see https://bugzilla.mozilla.org/show_bug.cgi?id=491084
+            
             /* It's possible that the same LIns* with r=FST0 will appear in the argument list more
              * than once.  In this case FST0 will not have been evicted and the multiple pop
              * actions will unbalance the FPU stack.  A quick fix is to always evict FST0 manually.
              */
             evictIfActive(FST0);
         }
+        if (!config.fixed_esp)
+            SUBi(ESP,8);
 
         stkd += sizeof(double);
     }
