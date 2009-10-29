@@ -363,7 +363,7 @@ public:
   PRBool IsScrolled() {
     // Note that if mOverflowY is CLIP, so is mOverflowX, and we need to clip the background
     // as if the rowgroup is scrollable.
-    return GetStyleContext()->GetPseudoType() == nsCSSAnonBoxes::scrolledContent ||
+    return GetStyleContext()->GetPseudo() == nsCSSAnonBoxes::scrolledContent ||
            GetStyleDisplay()->mOverflowY == NS_STYLE_OVERFLOW_CLIP;
   }
 

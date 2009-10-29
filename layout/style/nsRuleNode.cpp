@@ -1802,7 +1802,7 @@ GetPseudoRestriction(nsStyleContext *aContext)
 {
   // This needs to match nsStyleSet::WalkRestrictionRule.
   PRUint32 pseudoRestriction = 0;
-  nsIAtom *pseudoType = aContext->GetPseudoType();
+  nsIAtom *pseudoType = aContext->GetPseudo();
   if (pseudoType) {
     if (pseudoType == nsCSSPseudoElements::firstLetter) {
       pseudoRestriction = CSS_PROPERTY_APPLIES_TO_FIRST_LETTER;
@@ -1986,7 +1986,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
       /* Reset structs don't inherit from first-line. */
       /* See similar code in COMPUTE_START_RESET */
       while (parentContext &&
-             parentContext->GetPseudoType() == nsCSSPseudoElements::firstLine) {
+             parentContext->GetPseudo() == nsCSSPseudoElements::firstLine) {
         parentContext = parentContext->GetParent();
       }
     }
@@ -2365,7 +2365,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   /* Reset structs don't inherit from first-line */                           \
   /* See similar code in WalkRuleTree */                                      \
   while (parentContext &&                                                     \
-         parentContext->GetPseudoType() == nsCSSPseudoElements::firstLine) {  \
+         parentContext->GetPseudo() == nsCSSPseudoElements::firstLine) {      \
     parentContext = parentContext->GetParent();                               \
   }                                                                           \
                                                                               \
@@ -4010,7 +4010,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     // and 'position'.  Since generated content can't be floated or
     // positioned, we can deal with it here.
 
-    if (nsCSSPseudoElements::firstLetter == aContext->GetPseudoType()) {
+    if (nsCSSPseudoElements::firstLetter == aContext->GetPseudo()) {
       // a non-floating first-letter must be inline
       // XXX this fix can go away once bug 103189 is fixed correctly
       display->mDisplay = NS_STYLE_DISPLAY_INLINE;
