@@ -80,4 +80,4 @@ script regress-507053.js
 script regress-507295.js
 script regress-507424.js
 script regress-515885.js
-script regress-524743.js
+skip-if(isDebugBuild&&!xulRuntime.shell)  script regress-524743.js # hang
