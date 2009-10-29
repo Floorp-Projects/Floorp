@@ -315,8 +315,8 @@ CSS_PROP_BORDER(
     mBorderRadius.mTopLeft,
     eCSSType_ValuePair,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleBorder, mBorderRadius),
+    eStyleAnimType_Corner_TopLeft)
 CSS_PROP_BORDER(
     -moz-border-radius-topright,
     _moz_border_radius_topRight,
@@ -326,8 +326,8 @@ CSS_PROP_BORDER(
     mBorderRadius.mTopRight,
     eCSSType_ValuePair,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleBorder, mBorderRadius),
+    eStyleAnimType_Corner_TopRight)
 CSS_PROP_BORDER(
     -moz-border-radius-bottomright,
     _moz_border_radius_bottomRight,
@@ -337,8 +337,8 @@ CSS_PROP_BORDER(
     mBorderRadius.mBottomRight,
     eCSSType_ValuePair,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleBorder, mBorderRadius),
+    eStyleAnimType_Corner_BottomRight)
 CSS_PROP_BORDER(
     -moz-border-radius-bottomleft,
     _moz_border_radius_bottomLeft,
@@ -348,8 +348,8 @@ CSS_PROP_BORDER(
     mBorderRadius.mBottomLeft,
     eCSSType_ValuePair,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleBorder, mBorderRadius),
+    eStyleAnimType_Corner_BottomLeft)
 CSS_PROP_SHORTHAND(
     -moz-outline-radius,
     _moz_outline_radius,
@@ -364,8 +364,8 @@ CSS_PROP_OUTLINE(
     mOutlineRadius.mTopLeft,
     eCSSType_ValuePair,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleOutline, mOutlineRadius),
+    eStyleAnimType_Corner_TopLeft)
 CSS_PROP_OUTLINE(
     -moz-outline-radius-topright,
     _moz_outline_radius_topRight,
@@ -375,8 +375,8 @@ CSS_PROP_OUTLINE(
     mOutlineRadius.mTopRight,
     eCSSType_ValuePair,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleOutline, mOutlineRadius),
+    eStyleAnimType_Corner_TopRight)
 CSS_PROP_OUTLINE(
     -moz-outline-radius-bottomright,
     _moz_outline_radius_bottomRight,
@@ -386,8 +386,8 @@ CSS_PROP_OUTLINE(
     mOutlineRadius.mBottomRight,
     eCSSType_ValuePair,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleOutline, mOutlineRadius),
+    eStyleAnimType_Corner_BottomRight)
 CSS_PROP_OUTLINE(
     -moz-outline-radius-bottomleft,
     _moz_outline_radius_bottomLeft,
@@ -397,8 +397,8 @@ CSS_PROP_OUTLINE(
     mOutlineRadius.mBottomLeft,
     eCSSType_ValuePair,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleOutline, mOutlineRadius),
+    eStyleAnimType_Corner_BottomLeft)
 CSS_PROP_TEXT(
     -moz-tab-size,
     _moz_tab_size,

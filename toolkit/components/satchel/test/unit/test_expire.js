@@ -195,7 +195,9 @@ function run_test()
       throw "FAILED in test #" + testnum + " -- " + e;
   } finally {
       // Make sure we always reset prefs.
-      prefs.clearUserPref("browser.history_expire_days");
-      prefs.clearUserPref("browser.formfill.expire_days");
+      if (prefs.prefHasUserValue("browser.history_expire_days"))
+        prefs.clearUserPref("browser.history_expire_days");
+      if (prefs.prefHasUserValue("browser.formfill.expire_days"))
+        prefs.clearUserPref("browser.formfill.expire_days");
   }
 }

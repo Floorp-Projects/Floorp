@@ -118,9 +118,11 @@ function checkSecond()
   is(second, ref, "The modified Accept header used by image loader is correct");
 
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  Cc["@mozilla.org/preferences-service;1"].
-  getService(Ci.nsIPrefBranch).
-  clearUserPref("image.http.accept");
+  try {
+    Cc["@mozilla.org/preferences-service;1"].
+    getService(Ci.nsIPrefBranch).
+    clearUserPref("image.http.accept");
+  } catch (ex) { }
 
   var remoteCanvas = new RemoteCanvas("bug496292-iframe-1.html");
   remoteCanvas.load(checkThird);

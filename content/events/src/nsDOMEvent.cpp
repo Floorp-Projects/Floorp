@@ -459,7 +459,23 @@ nsDOMEvent::PreventDefault()
 {
   if (!(mEvent->flags & NS_EVENT_FLAG_CANT_CANCEL)) {
     mEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
+
+    // Need to set an extra flag for drag events.
+    if (mEvent->eventStructType == NS_DRAG_EVENT &&
+        NS_IS_TRUSTED_EVENT(mEvent)) {
+      nsCOMPtr<nsINode> node = do_QueryInterface(mEvent->currentTarget);
+      if (!node) {
+        nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mEvent->currentTarget);
+        if (win) {
+          node = do_QueryInterface(win->GetExtantDocument());
+        }
+      }
+      if (node && !nsContentUtils::IsChromeDoc(node->GetOwnerDoc())) {
+        mEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT_CALLED_IN_CONTENT;
+      }
+    }
   }
+
   return NS_OK;
 }
 

@@ -47,7 +47,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(d87394af-d31a-484e-8b7c-75381045384d)]
+[scriptable, uuid(b5f8239b-2abf-4896-b772-71e1e374a661)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute long width;
@@ -56,14 +56,13 @@ interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 
   nsISupports getContext(in DOMString contextId);
 
-  // This version will query the JS context for its arguments; C++
-  // callers should use toDataURLAs.
-  //
+
   // Valid calls are:
   //  toDataURL();              -- defaults to image/png
   //  toDataURL(type);          -- uses given type
   //  toDataURL(type, params);  -- only available to trusted callers
-  DOMString toDataURL();
+  [optional_argc] DOMString toDataURL([optional] in DOMString type,
+                                      [optional] in DOMString params);
 
   // This version lets you specify different image types and pass parameters
   // to the encoder. For example toDataURLAs("image/png", "transparency=none")

@@ -220,13 +220,14 @@ public:
   // aClient provides the underlying transport that cache will use to read
   // data for this stream.
   nsMediaCacheStream(nsMediaChannelStream* aClient)
-    : mClient(aClient), mResourceID(0), mChannelOffset(0),
-      mStreamOffset(0), mStreamLength(-1), mPlaybackBytesPerSecond(10000),
-      mPinCount(0), mCurrentMode(MODE_PLAYBACK),
-      mInitialized(PR_FALSE), mClosed(PR_FALSE),
+    : mClient(aClient), mResourceID(0), mInitialized(PR_FALSE),
       mIsSeekable(PR_FALSE), mCacheSuspended(PR_FALSE),
+      mUsingNullPrincipal(PR_FALSE),
+      mChannelOffset(0), mStreamLength(-1),  
+      mStreamOffset(0), mPlaybackBytesPerSecond(10000),
+      mPinCount(0), mCurrentMode(MODE_PLAYBACK),
       mMetadataInPartialBlockBuffer(PR_FALSE),
-      mUsingNullPrincipal(PR_FALSE) {}
+      mClosed(PR_FALSE) {}
   ~nsMediaCacheStream();
 
   // Set up this stream with the cache. Can fail on OOM. One
@@ -432,16 +433,32 @@ private:
   // All streams with the same mResourceID are loading the same
   // underlying resource and should share data.
   PRInt64                mResourceID;
+  // Set to true when Init or InitAsClone has been called
+  PRPackedBool           mInitialized;
 
-  // All other fields are all protected by the cache's monitor and
-  // can be accessed by by any thread.
+  // The following fields are protected by the cache's monitor but are
+  // only written on the main thread. 
+
+  // The last reported seekability state for the underlying channel
+  PRPackedBool mIsSeekable;
+  // true if the cache has suspended our channel because the cache is
+  // full and the priority of the data that would be received is lower
+  // than the priority of the data already in the cache
+  PRPackedBool mCacheSuspended;
+  // true if mPrincipal is a null principal because we saw data from
+  // multiple origins
+  PRPackedBool mUsingNullPrincipal;
   // The offset where the next data from the channel will arrive
-  PRInt64           mChannelOffset;
-  // The offset where the reader is positioned in the stream
-  PRInt64           mStreamOffset;
+  PRInt64      mChannelOffset;
   // The reported or discovered length of the data, or -1 if nothing is
   // known
-  PRInt64           mStreamLength;
+  PRInt64      mStreamLength;
+
+  // The following fields are protected by the cache's monitor can can be written
+  // by any thread.
+
+  // The offset where the reader is positioned in the stream
+  PRInt64           mStreamOffset;
   // For each block in the stream data, maps to the cache entry for the
   // block, or -1 if the block is not cached.
   nsTArray<PRInt32> mBlocks;
@@ -460,22 +477,14 @@ private:
   PRUint32          mPinCount;
   // The last reported read mode
   ReadMode          mCurrentMode;
-  // Set to true when Init or InitAsClone has been called
-  PRPackedBool      mInitialized;
+  // true if some data in mPartialBlockBuffer has been read as metadata
+  PRPackedBool      mMetadataInPartialBlockBuffer;
   // Set to true when the stream has been closed either explicitly or
   // due to an internal cache error
   PRPackedBool      mClosed;
-  // The last reported seekability state for the underlying channel
-  PRPackedBool      mIsSeekable;
-  // true if the cache has suspended our channel because the cache is
-  // full and the priority of the data that would be received is lower
-  // than the priority of the data already in the cache
-  PRPackedBool      mCacheSuspended;
-  // true if some data in mPartialBlockBuffer has been read as metadata
-  PRPackedBool      mMetadataInPartialBlockBuffer;
-  // true if mPrincipal is a null principal because we saw data from
-  // multiple origins
-  PRPackedBool      mUsingNullPrincipal;
+
+  // The following field is protected by the cache's monitor but are
+  // only written on the main thread.
 
   // Data received for the block containing mChannelOffset. Data needs
   // to wait here so we can write back a complete block. The first

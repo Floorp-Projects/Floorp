@@ -41,10 +41,7 @@
 #define _nsXULTextAccessible_H_
 
 #include "nsBaseWidgetAccessible.h"
-#include "nsTextAccessibleWrap.h"
 #include "nsHyperTextAccessibleWrap.h"
-
-class nsIWeakReference;
 
 class nsXULTextAccessible : public nsHyperTextAccessibleWrap
 {

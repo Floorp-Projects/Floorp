@@ -62,11 +62,14 @@ function test() {
         return;
       this.removeEventListener("load", arguments.callee, true);
 
-      let maxWait = Date.now() + 1000;
+      let pass = 0;
+      const MAX_PASS = 6;
       executeSoon(function() {
+        info("Checking innerHTML, pass: " + (pass + 1));
         let iframes = tab2.linkedBrowser.contentWindow.frames;
-        if (iframes[1].document.body.innerHTML != uniqueValue && Date.now() < maxWait) {
-          executeSoon(arguments.callee);
+        if (iframes[1].document.body.innerHTML != uniqueValue &&
+            ++pass <= MAX_PASS) {
+          setTimeout(arguments.callee, 500);
           return;
         }
         is(iframes[1].document.body.innerHTML, uniqueValue,

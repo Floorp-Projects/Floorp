@@ -298,7 +298,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 {
     if(JSVAL_IS_INT(mJSVal))
         return NS_SUCCEEDED(nsVariant::SetFromInt32(&mData, 
-                                                   JSVAL_TO_INT(mJSVal)));
+                                                    JSVAL_TO_INT(mJSVal)));
     if(JSVAL_IS_DOUBLE(mJSVal))
         return NS_SUCCEEDED(nsVariant::SetFromDouble(&mData, 
                                                      *JSVAL_TO_DOUBLE(mJSVal)));

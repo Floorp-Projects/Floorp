@@ -90,8 +90,8 @@ extern "C" {
  * 
  **************************************************************/
 
-nsAutoPtr<PRUint8>  nsWindow::sSharedSurfaceData;
-gfxIntSize          nsWindow::sSharedSurfaceSize;
+static nsAutoPtr<PRUint8>  sSharedSurfaceData;
+static gfxIntSize          sSharedSurfaceSize;
 
 /**************************************************************
  *
@@ -231,15 +231,6 @@ void nsWindowGfx::OnSettingsChangeGfx(WPARAM wParam)
       glpDDSecondary = NULL;
     }
 
-    gfxIntSize oldSize = nsWindow::sSharedSurfaceSize;
-    nsWindow::sSharedSurfaceSize.height = GetSystemMetrics(SM_CYSCREEN);
-    nsWindow::sSharedSurfaceSize.width = GetSystemMetrics(SM_CXSCREEN);
-
-    // if the area is different, reallocate during WM_PAINT.
-    if (nsWindow::sSharedSurfaceSize.height * nsWindow::sSharedSurfaceSize.width !=
-        oldSize.height * oldSize.width)
-      nsWindow::sSharedSurfaceData = nsnull;
-
     if(glpDD)
       glpDD->RestoreAllSurfaces();
   }
@@ -304,6 +295,29 @@ nsCOMPtr<nsIRegion> nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
   }
 #endif
   return paintRgnWin;
+}
+
+#define WORDSSIZE(x) ((x).width * (x).height)
+static PRBool
+EnsureSharedSurfaceSize(gfxIntSize size)
+{
+  gfxIntSize screenSize;
+  screenSize.height = GetSystemMetrics(SM_CYSCREEN);
+  screenSize.width = GetSystemMetrics(SM_CXSCREEN);
+
+  if (WORDSSIZE(screenSize) > WORDSSIZE(size))
+    size = screenSize;
+
+  if (WORDSSIZE(screenSize) < WORDSSIZE(size))
+    NS_WARNING("Trying to create a shared surface larger than the screen");
+
+  if (!sSharedSurfaceData || (WORDSSIZE(size) > WORDSSIZE(sSharedSurfaceSize))) {
+    sSharedSurfaceSize = size;
+    sSharedSurfaceData = nsnull;
+    sSharedSurfaceData = (PRUint8 *)malloc(WORDSSIZE(sSharedSurfaceSize) * 4);
+  }
+
+  return (sSharedSurfaceData != nsnull);
 }
 
 PRBool nsWindow::OnPaint(HDC aDC)
@@ -431,30 +445,20 @@ DDRAW_FAILED:
         (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32) ||
          IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)))
     {
-      if (!sSharedSurfaceData) {
-        sSharedSurfaceSize.height = GetSystemMetrics(SM_CYSCREEN);
-        sSharedSurfaceSize.width = GetSystemMetrics(SM_CXSCREEN);
-        sSharedSurfaceData = (PRUint8*) malloc(sSharedSurfaceSize.width * sSharedSurfaceSize.height * 4);
-      }
-
       gfxIntSize surfaceSize(ps.rcPaint.right - ps.rcPaint.left,
                              ps.rcPaint.bottom - ps.rcPaint.top);
 
-      if (!sSharedSurfaceData ||
-          surfaceSize.width > sSharedSurfaceSize.width ||
-          surfaceSize.height > sSharedSurfaceSize.height)
-      {
-        // allocate a new oversize surface; hopefully this will just be a one-time thing,
-        // and we should really fix whatever's doing it!
-        targetSurfaceImage = new gfxImageSurface(surfaceSize, gfxASurface::ImageFormatRGB24);
-      } else {
-        // don't use the shared surface directly; instead, create a new one
-        // that just reuses its buffer.
-        targetSurfaceImage = new gfxImageSurface(sSharedSurfaceData.get(),
-                                                 surfaceSize,
-                                                 surfaceSize.width * 4,
-                                                 gfxASurface::ImageFormatRGB24);
+      if (!EnsureSharedSurfaceSize(surfaceSize)) {
+        NS_ERROR("Couldn't allocate a shared image surface!");
+        return NS_ERROR_FAILURE;
       }
+
+      // don't use the shared surface directly; instead, create a new one
+      // that just reuses its buffer.
+      targetSurfaceImage = new gfxImageSurface(sSharedSurfaceData.get(),
+                                               surfaceSize,
+                                               surfaceSize.width * 4,
+                                               gfxASurface::ImageFormatRGB24);
 
       if (targetSurfaceImage && !targetSurfaceImage->CairoStatus()) {
         targetSurfaceImage->SetDeviceOffset(gfxPoint(-ps.rcPaint.left, -ps.rcPaint.top));
@@ -871,7 +875,6 @@ HBITMAP nsWindowGfx::DataToBitmap(PRUint8* aImageData,
 
 // Windows Mobile Special image/direct draw painting fun
 #if defined(CAIRO_HAS_DDRAW_SURFACE)
-
 HRESULT nsWindow::PaintRectImageDDraw16(RECT rcPaint, nsPaintEvent* event){
   HRESULT hr;
   gfxIntSize surfaceSize;
@@ -883,6 +886,11 @@ HRESULT nsWindow::PaintRectImageDDraw16(RECT rcPaint, nsPaintEvent* event){
  
   surfaceSize = gfxIntSize(rcPaint.right - rcPaint.left,
                            rcPaint.bottom - rcPaint.top);
+
+  if (!EnsureSharedSurfaceSize(surfaceSize)) {
+    NS_ERROR("Couldn't allocate shared surface!");
+    return E_FAIL;
+  }
   
   targetSurfaceImage = new gfxImageSurface(sSharedSurfaceData.get(),
                                            surfaceSize,
@@ -938,8 +946,8 @@ HRESULT nsWindow::PaintRectImageDDraw16(RECT rcPaint, nsPaintEvent* event){
                                                             surfaceSize.width * 4);
   
   pixman_image_t *dstPixmanImage = pixman_image_create_bits(PIXMAN_r5g6b5,
-                                                            surfaceSize.width,
-                                                            surfaceSize.height,
+                                                            gDDSDSecondary.dwWidth,
+                                                            gDDSDSecondary.dwHeight,
                                                             (uint32_t*) gDDSDSecondary.lpSurface,
                                                             gDDSDSecondary.dwWidth * 2);
   
@@ -996,6 +1004,9 @@ PRBool nsWindow::OnPaintImageDDraw16()
   PAINTSTRUCT ps;
   nsPaintEvent event(PR_TRUE, NS_PAINT, this);
   mPainting = PR_TRUE;
+  gfxIntSize newSize;
+  newSize.height = GetSystemMetrics(SM_CYSCREEN);
+  newSize.width = GetSystemMetrics(SM_CXSCREEN);
 
   HDC hDC = ::BeginPaint(mWnd, &ps);
   mPaintDC = hDC;
@@ -1015,12 +1026,6 @@ PRBool nsWindow::OnPaintImageDDraw16()
       NS_WARNING("DirectDraw init failed.  Giving up.");
       goto cleanup;
     }
-  }  
-  
-  if (!sSharedSurfaceData) {
-    sSharedSurfaceSize.height = GetSystemMetrics(SM_CYSCREEN);
-    sSharedSurfaceSize.width = GetSystemMetrics(SM_CXSCREEN);
-    sSharedSurfaceData = (PRUint8*) malloc(sSharedSurfaceSize.width * sSharedSurfaceSize.height * 4);
   }
 
   if (!glpDDSecondary) {
@@ -1033,8 +1038,8 @@ PRBool nsWindow::OnPaintImageDDraw16()
     
     gDDSDSecondary.dwFlags = DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT;
 
-    gDDSDSecondary.dwHeight = sSharedSurfaceSize.height;
-    gDDSDSecondary.dwWidth  = sSharedSurfaceSize.width;
+    gDDSDSecondary.dwHeight = newSize.height;
+    gDDSDSecondary.dwWidth  = newSize.width;
 
     gDDSDSecondary.ddpfPixelFormat.dwFlags = DDPF_RGB;
     gDDSDSecondary.ddpfPixelFormat.dwRGBBitCount = 16;
@@ -1053,7 +1058,7 @@ PRBool nsWindow::OnPaintImageDDraw16()
   nsRegionRectSet *rects = nsnull;
   RECT r;
   paintRgnWin->GetRects(&rects);
-  for (int i = 0; i < rects->mNumRects; i++) {
+  for (unsigned int i = 0; i < rects->mNumRects; i++) {
     r.left = rects->mRects[i].x;
     r.top = rects->mRects[i].y;
     r.right = rects->mRects[i].width + rects->mRects[i].x;

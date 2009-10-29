@@ -58,7 +58,6 @@
         <splitter class="tree-splitter"/>
         <treecol id="tokencol" label="&certmgr.tokenname;"
                      persist="hidden width ordinal" flex="1"/>
-<!--        <treecol id="certdbkeycol" collapsed="true" flex="1"/> -->
       </treecols>
       <treechildren ondblclick="viewCerts();"/>
     </tree>

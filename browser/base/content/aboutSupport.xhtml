@@ -265,7 +265,7 @@ function getModifiedPrefs() {
 function getWhitelistedPrefNames() {
   let results = [];
   PREFS_WHITELIST.forEach(function (prefStem) {
-    let prefNames = gPrefService.getChildList(prefStem, {});
+    let prefNames = gPrefService.getChildList(prefStem);
     results = results.concat(prefNames);
   });
   return results;
