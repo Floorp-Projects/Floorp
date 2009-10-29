@@ -132,6 +132,12 @@ class nsHashKey;
 // events.
 #define NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT 0x1000
 
+// Use this flag if the event should be dispatched only to chrome.
+#define NS_EVENT_FLAG_ONLY_CHROME_DISPATCH 0x2000
+
+// A flag for drag&drop handling.
+#define NS_EVENT_FLAG_NO_DEFAULT_CALLED_IN_CONTENT 0x4000
+
 #define NS_PRIV_EVENT_UNTRUSTED_PERMITTED 0x8000
 
 #define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))

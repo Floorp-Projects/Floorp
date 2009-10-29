@@ -45,10 +45,12 @@
  * getInterface on a DOMWindow.
  */
 
+interface nsIDOMNode;
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
+interface nsIDOMEvent;
 
-[scriptable, uuid(4171ea1a-3752-4bc3-8c66-1b2936ecde7a)]
+[scriptable, uuid(4775e623-d596-4364-8637-0968a5ce5e3d)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -403,4 +405,20 @@ interface nsIDOMWindowUtils : nsISupports {
    * Get the number of screen pixels per CSS pixel.
    */
   readonly attribute float screenPixelsPerCSSPixel;
+
+  /**
+   * Dispatches aEvent via the nsIPresShell object of the window's document.
+   * The event is dispatched to aTarget, which should be an object
+   * which implements nsIContent interface (#element, #text, etc).
+   *
+   * Cannot be accessed from unprivileged context (not
+   * content-accessible) Will throw a DOM security error if called
+   * without UniversalXPConnect privileges.
+   *
+   * @note Event handlers won't get aEvent as parameter, but a similar event.
+   *       Also, aEvent should not be reused.
+   */
+  boolean dispatchDOMEventViaPresShell(in nsIDOMNode aTarget,
+                                       in nsIDOMEvent aEvent,
+                                       in boolean aTrusted);
 };
