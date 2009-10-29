@@ -393,10 +393,8 @@ typedef void
  * DEBUG only callback that JSTraceOp implementation can provide to return
  * a string describing the reference traced with JS_CallTracer.
  */
-#ifdef DEBUG
 typedef void
 (* JSTraceNamePrinter)(JSTracer *trc, char *buf, size_t bufsize);
-#endif
 
 /*
  * The optional JSClass.reserveSlots hook allows a class to make computed
