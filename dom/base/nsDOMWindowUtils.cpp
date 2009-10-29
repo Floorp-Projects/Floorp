@@ -40,7 +40,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsDOMError.h"
 #include "nsIDOMNSEvent.h"
-
+#include "nsIPrivateDOMEvent.h"
 #include "nsDOMWindowUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
@@ -918,5 +918,34 @@ nsDOMWindowUtils::GetCOWForObject()
     return rv;
 
   cc->SetReturnValueWasSet(PR_TRUE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
+                                               nsIDOMEvent* aEvent,
+                                               PRBool aTrusted,
+                                               PRBool* aRetVal)
+{
+  if (!nsContentUtils::IsCallerTrustedForRead()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsPresContext* presContext = GetPresContext();
+  NS_ENSURE_STATE(presContext);
+  nsCOMPtr<nsIPresShell> shell = presContext->GetPresShell();
+  NS_ENSURE_STATE(shell);
+  nsCOMPtr<nsIPrivateDOMEvent> event = do_QueryInterface(aEvent);
+  NS_ENSURE_STATE(event);
+  event->SetTrusted(aTrusted);
+  nsEvent* internalEvent = event->GetInternalNSEvent();
+  NS_ENSURE_STATE(internalEvent);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aTarget);
+  NS_ENSURE_STATE(content);
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  shell->HandleEventWithTarget(internalEvent, nsnull, content,
+                               &status);
+  *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return NS_OK;
 }
