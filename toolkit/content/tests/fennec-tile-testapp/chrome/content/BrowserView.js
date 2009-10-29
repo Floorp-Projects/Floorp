@@ -184,15 +184,7 @@ function() {
   }
 
   function getBrowserDimensions(browser) {
-    let cdoc = browser.contentDocument;
-
-    // These might not exist yet depending on page load state
-    let body = cdoc.body || {};
-    let html = cdoc.documentElement || {};
-    let w = Math.max(body.scrollWidth || 0, html.scrollWidth);
-    let h = Math.max(body.scrollHeight || 0, html.scrollHeight);
-
-    return [w, h];
+    return [browser.scrollWidth, browser.scrollHeight];
   }
 
   function getContentScrollValues(browser) {

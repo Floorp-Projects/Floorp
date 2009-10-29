@@ -42,8 +42,11 @@
 #include "nsEmbedCID.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIBaseWindow.h"
+#include "nsIDOMWindow.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsThreadUtils.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "mozilla/ipc/DocumentRendererChild.h"
 
 #ifdef MOZ_WIDGET_GTK2
 #include <gdk/gdkx.h>
@@ -114,4 +117,62 @@ TabChild::Recvmove(const PRUint32& x,
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mWebNav);
     baseWin->SetPositionAndSize(x, y, width, height, PR_TRUE);
     return true;
+}
+
+mozilla::ipc::PDocumentRendererChild*
+TabChild::AllocPDocumentRenderer(
+        const PRInt32& x,
+        const PRInt32& y,
+        const PRInt32& w,
+        const PRInt32& h,
+        const nsString& bgcolor,
+        const PRUint32& flags,
+        const bool& flush)
+{
+    return new mozilla::ipc::DocumentRendererChild();
+}
+
+bool
+TabChild::DeallocPDocumentRenderer(
+        mozilla::ipc::PDocumentRendererChild* __a,
+        const PRUint32& w,
+        const PRUint32& h,
+        const nsCString& data)
+{
+    delete __a;
+    return true;
+}
+
+bool
+TabChild::RecvPDocumentRendererConstructor(
+        mozilla::ipc::PDocumentRendererChild *__a,
+        const PRInt32& aX,
+        const PRInt32& aY,
+        const PRInt32& aW,
+        const PRInt32& aH,
+        const nsString& bgcolor,
+        const PRUint32& flags,
+        const bool& flush)
+{
+    mozilla::ipc::DocumentRendererChild *render = 
+        static_cast<mozilla::ipc::DocumentRendererChild *>(__a);
+
+    nsCOMPtr<nsIWebBrowser> browser = do_QueryInterface(mWebNav);
+    if (!browser)
+        return true; // silently ignore
+    nsCOMPtr<nsIDOMWindow> window;
+    if (NS_FAILED(browser->GetContentDOMWindow(getter_AddRefs(window))) ||
+        !window)
+    {
+        return true; // silently ignore
+    }
+
+    PRUint32 width, height;
+    nsCString data;
+    bool ret = render->RenderDocument(window, aX, aY, aW, aH, bgcolor, flags, flush,
+                                      width, height, data);
+    if (!ret)
+        return true; // silently ignore
+
+    return SendPDocumentRendererDestructor(__a, width, height, data);
 }
