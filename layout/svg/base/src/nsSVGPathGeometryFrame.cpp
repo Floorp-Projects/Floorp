@@ -424,11 +424,6 @@ nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
 
   PRUint16 renderMode = aContext->GetRenderMode();
 
-  /* save/restore the state so we don't screw up the xform */
-  gfx->Save();
-
-  GeneratePath(gfx);
-
   switch (GetStyleSVG()->mShapeRendering) {
   case NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED:
   case NS_STYLE_SHAPE_RENDERING_CRISPEDGES:
@@ -439,7 +434,14 @@ nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
     break;
   }
 
+  /* save/restore the state so we don't screw up the xform */
+  gfx->Save();
+
+  GeneratePath(gfx);
+
   if (renderMode != nsSVGRenderState::NORMAL) {
+    gfx->Restore();
+
     if (GetClipRule() == NS_STYLE_FILL_RULE_EVENODD)
       gfx->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
     else
@@ -450,7 +452,6 @@ nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
       gfx->Fill();
       gfx->NewPath();
     }
-    gfx->Restore();
 
     return;
   }
