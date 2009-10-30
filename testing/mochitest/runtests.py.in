@@ -454,8 +454,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   if options.timeout:
       timeout = options.timeout + 30
   elif options.autorun:
-      #FIXME: need to support None for timeout values on Win32
-      timeout = 1000000
+      timeout = None
   else:
       timeout = 330.0 # default JS harness timeout is 300 seconds
   automation.log.info("INFO | runtests.py | Running tests: start.\n")
