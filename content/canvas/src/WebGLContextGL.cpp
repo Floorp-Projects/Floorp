@@ -557,14 +557,14 @@ WebGLContext::BufferData(GLenum target)
 
     MakeContextCurrent();
 
-    GLenum usage;
+    uint32 usage;
 
     if (!::JS_ValueToECMAUint32(js.ctx, js.argv[2], &usage)) {
         return ErrorMessage("bufferData: invalid usage parameter");
     }
 
     if (JSVAL_IS_NUMBER(js.argv[1])) {
-        GLsizei size;
+        int32 size;
         if (!::JS_ValueToECMAInt32(js.ctx, js.argv[1], &size)) {
             return ErrorMessage("bufferData: invalid size parameter");
         }
