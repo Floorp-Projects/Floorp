@@ -11,6 +11,7 @@ TestRunner.logEnabled = false;
 TestRunner._currentTest = 0;
 TestRunner.currentTestURL = "";
 TestRunner._urls = [];
+TestRunner._title = "";
 
 TestRunner.timeout = 5 * 60 * 1000; // 5 minutes.
 TestRunner.maxTimeouts = 4; // halt testing after too many timeouts
@@ -95,7 +96,7 @@ TestRunner._makeIframe = function (url, retry) {
             TestRunner.logger.log("Error: Unable to restore focus, expect failures and timeouts.");
         }
     }
-    window.scrollTo(0, $('indicator').offsetTop);
+    window.scrollTo(0, 0);
     iframe.src = url;
     iframe.name = url;
     iframe.width = "500";
@@ -112,6 +113,7 @@ TestRunner.runTests = function (/*url...*/) {
     if (TestRunner.logEnabled)
         TestRunner.logger.log("SimpleTest START");
 
+    TestRunner._title = document.title;
     TestRunner._urls = flattenArguments(arguments);
     $('testframe').src="";
     TestRunner._checkForHangs();
@@ -169,6 +171,12 @@ TestRunner.runNextTest = function() {
         if (TestRunner.onComplete)
             TestRunner.onComplete();
     }
+  var cur = TestRunner._currentTest;
+  var total = TestRunner._urls.length;
+  var progress = cur + " / " + total + " (" +
+                 Math.floor(100 * (cur / total)) + "%)";
+  document.title = progress + " - " + TestRunner._title;
+  $("progress").innerHTML = progress;
 };
 
 /**
