@@ -7326,7 +7326,7 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
 
     PRInt32 realTargetCount = realTargets.Count();
     for (PRInt32 k = 0; k < realTargetCount; ++k) {
-      mozAutoRemovableBlockerRemover blockerRemover;
+      mozAutoRemovableBlockerRemover blockerRemover(this);
 
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_SUBTREEMODIFIED);
       nsEventDispatcher::Dispatch(realTargets[k], nsnull, &mutation);
@@ -7768,6 +7768,12 @@ nsDocument::UnsuppressEventHandlingAndFireEvents(PRBool aFireEvents)
   } else {
     FireOrClearDelayedEvents(documents, PR_FALSE);
   }
+}
+
+nsISupports*
+nsDocument::GetCurrentContentSink()
+{
+  return mParser ? mParser->GetContentSink() : nsnull;
 }
 
 void

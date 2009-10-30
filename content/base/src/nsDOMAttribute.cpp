@@ -723,7 +723,7 @@ nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationE
       nsContentUtils::HasMutationListeners(mChild,
                                            NS_EVENT_BITS_MUTATION_NODEREMOVED,
                                            this)) {
-    mozAutoRemovableBlockerRemover blockerRemover;
+    mozAutoRemovableBlockerRemover blockerRemover(GetOwnerDoc());
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
     mutation.mRelatedNode =
       do_QueryInterface(static_cast<nsIAttribute*>(this));
