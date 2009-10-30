@@ -118,6 +118,10 @@ public:
         data = nsnull;
     }
 
+    void Zero() {
+        memset(data, 0, capacity);
+    }
+
     void EnsureCapacity(PRBool preserve, PRUint32 cap) {
         if (capacity >= cap)
             return;
