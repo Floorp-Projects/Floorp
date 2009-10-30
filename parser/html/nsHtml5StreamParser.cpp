@@ -866,7 +866,10 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
       
       mSpeculations.Clear(); // potentially a huge number of destructors 
                              // run here synchronously on the main thread...
-      
+
+      mTreeBuilder->flushCharacters(); // empty the pending buffer
+      mTreeBuilder->ClearOps(); // now get rid of the failed ops
+
       mTreeBuilder->SetOpSink(mExecutor->GetStage());
       mExecutor->StartReadingFromStage();
       mSpeculating = PR_FALSE;
