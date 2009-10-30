@@ -43,7 +43,6 @@
 class nsIFormControl;
 class nsISimpleEnumerator;
 class nsIURI;
-template<class T> class nsTArray;
 
 #define NS_FORM_METHOD_GET  0
 #define NS_FORM_METHOD_POST 1
@@ -53,13 +52,12 @@ template<class T> class nsTArray;
 
 // IID for the nsIForm interface
 #define NS_IFORM_IID    \
-{ 0x6e8456c2, 0xcf49, 0x4b6d, \
- { 0xb5, 0xfe, 0x80, 0x0d, 0x03, 0x4f, 0x55, 0x33 } }
+{ 0x27f1ff6c, 0xeb78, 0x405b, \
+ { 0xa6, 0xeb, 0xf0, 0xce, 0xa8, 0x30, 0x85, 0x58 } }
 
 /**
- * This interface provides a complete set of methods dealing with
- * elements which belong to a form element. When nsIDOMHTMLCollection
- * allows write operations
+ * This interface provides some methods that can be used to access the
+ * guts of a form.  It's being slowly phased out.
  */
 
 class nsIForm : public nsISupports
@@ -68,34 +66,13 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORM_IID)
 
   /**
-   * Add an element to end of this form's list of elements
-   *
-   * @param aElement the element to add
-   * @param aNotify If true, send nsIDocumentObserver notifications as needed.
-   * @return NS_OK if the element was successfully added
-   */
-  NS_IMETHOD AddElement(nsIFormControl* aElement,
-                        PRBool aNotify) = 0;
-
-  /**    
-   * Add an element to the lookup table mainted by the form.
-   *
-   * We can't fold this method into AddElement() because when
-   * AddElement() is called, the form control has no
-   * attributes.  The name or id attributes of the form control
-   * are used as a key into the table.
-   */
-  NS_IMETHOD AddElementToTable(nsIFormControl* aElement,
-                               const nsAString& aName) = 0;
-
-  /**
    * Get the element at a specified index position in form.elements
    *
    * @param aIndex the index
    * @param aElement the element at that index
    * @return NS_OK if there was an element at that position, -1 otherwise
    */
-  NS_IMETHOD GetElementAt(PRInt32 aIndex, nsIFormControl** aElement) const = 0;
+  NS_IMETHOD_(nsIFormControl*) GetElementAt(PRInt32 aIndex) const = 0;
 
   /**
    * Get the number of elements in form.elements
@@ -104,30 +81,6 @@ public:
    * @return NS_OK if there was an element at that position, -1 otherwise
    */
   NS_IMETHOD_(PRUint32) GetElementCount() const = 0;
-
-  /**
-   * Remove an element from this form's list of elements
-   *
-   * @param aElement the element to remove
-   * @param aNotify If true, send nsIDocumentObserver notifications as needed.
-   * @return NS_OK if the element was successfully removed.
-   */
-  NS_IMETHOD RemoveElement(nsIFormControl* aElement,
-                           PRBool aNotify) = 0;
-
-  /**
-   * Remove an element from the lookup table mainted by the form.
-   * We can't fold this method into RemoveElement() because when
-   * RemoveElement() is called it doesn't know if the element is
-   * removed because the id attribute has changed, or bacause the
-   * name attribute has changed.
-   *
-   * @param aElement the element to remove
-   * @param aName the name or id of the element to remove
-   * @return NS_OK if the element was successfully removed.
-   */
-  NS_IMETHOD RemoveElementFromTable(nsIFormControl* aElement,
-                                    const nsAString& aName) = 0;
 
   /**
    * Resolve a name in the scope of the form object, this means find
@@ -148,67 +101,10 @@ public:
   NS_IMETHOD_(PRInt32) IndexOfControl(nsIFormControl* aControl) = 0;
 
   /**
-   * Flag the form to know that a button or image triggered scripted form
-   * submission. In that case the form will defer the submission until the
-   * script handler returns and the return value is known.
-   */ 
-  NS_IMETHOD OnSubmitClickBegin() = 0;
-  NS_IMETHOD OnSubmitClickEnd() = 0;
-
-  /**
-   * Flush a possible pending submission. If there was a scripted submission
-   * triggered by a button or image, the submission was defered. This method
-   * forces the pending submission to be submitted. (happens when the handler
-   * returns false or there is an action/target change in the script)
-   */
-  NS_IMETHOD FlushPendingSubmission() = 0;
-  /**
-   * Forget a possible pending submission. Same as above but this time we
-   * get rid of the pending submission cause the handler returned true
-   * so we will rebuild the submission with the name/value of the triggering
-   * element
-   */
-  NS_IMETHOD ForgetPendingSubmission() = 0;
-
-  /**
-   * Get the full URL to submit to.  Do not submit if the returned URL is null.
-   *
-   * @param aActionURL the full, unadulterated URL you'll be submitting to [OUT]
-   */
-  NS_IMETHOD GetActionURL(nsIURI** aActionURL) = 0;
-
-  /**
-   * Get the list of all the form's controls in document order.
-   * This list contains all form control elements, not just those
-   * returned by form.elements in JS. The controls in this list do
-   * not have additional references added.
-   *
-   * @param aControls Sorted list of form controls [out].
-   * @return NS_OK if the list was successfully created.
-   */
-  NS_IMETHOD GetSortedControls(nsTArray<nsIFormControl*>& aControls) const = 0;
-
-  /**
    * Get the default submit element. If there's no default submit element,
    * return null.
    */
    NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const = 0;
-
-  /**
-   * Check whether a given nsIFormControl is the default submit
-   * element.  This is different from just comparing to
-   * GetDefaultSubmitElement() in certain situations inside an update
-   * when GetDefaultSubmitElement() might not be up to date.  aControl
-   * is expected to not be null.
-   */
-  NS_IMETHOD_(PRBool) IsDefaultSubmitElement(const nsIFormControl* aControl) const = 0;
-
-   /**
-    * Return whether there is one and only one input text control.
-    *
-    * @return Whether there is exactly one input text control.
-    */
-   NS_IMETHOD_(PRBool) HasSingleTextControl() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIForm, NS_IFORM_IID)

@@ -9207,8 +9207,7 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     PRInt32 n = GetArrayIndexFromId(cx, id);
 
     if (n >= 0) {
-      nsCOMPtr<nsIFormControl> control;
-      form->GetElementAt(n, getter_AddRefs(control));
+      nsIFormControl* control = form->GetElementAt(n);
 
       if (control) {
         nsresult rv = WrapNative(cx, obj, control, PR_TRUE, vp);
@@ -9256,8 +9255,7 @@ nsHTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
       PRUint32 count = form->GetElementCount();
 
       if ((PRUint32)index < count) {
-        nsCOMPtr<nsIFormControl> controlNode;
-        form->GetElementAt(index, getter_AddRefs(controlNode));
+        nsIFormControl* controlNode = form->GetElementAt(index);
         NS_ENSURE_TRUE(controlNode, NS_ERROR_FAILURE);
 
         nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(controlNode);

@@ -48,6 +48,7 @@
 #include "nsRuleData.h"
 #include "nsMappedAttributes.h"
 #include "nsNetUtil.h"
+#include "nsHTMLFormElement.h"
 
 // XXX nav4 has type= start= (same as OL/UL)
 extern nsAttrValue::EnumTable kListTypeTable[];
@@ -203,7 +204,7 @@ NS_IMPL_INT_ATTR(nsHTMLSharedElement, Size, size)
 NS_IMETHODIMP
 nsHTMLSharedElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  *aForm = FindForm().get();
+  NS_IF_ADDREF(*aForm = FindForm());
 
   return NS_OK;
 }
