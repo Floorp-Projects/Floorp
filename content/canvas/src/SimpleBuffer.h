@@ -85,7 +85,7 @@ public:
         if (type == LOCAL_GL_INT) return sizeof(int);
         if (type == LOCAL_GL_UNSIGNED_INT) return sizeof(unsigned int);
         if (type == LOCAL_GL_DOUBLE) return sizeof(double);
-        return 1;
+        return 0;
     }
 
     void Clear() {
@@ -116,10 +116,6 @@ public:
         length = 0;
         capacity = 0;
         data = nsnull;
-    }
-
-    void Zero() {
-        memset(data, 0, capacity);
     }
 
     void EnsureCapacity(PRBool preserve, PRUint32 cap) {

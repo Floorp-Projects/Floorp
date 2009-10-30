@@ -1335,8 +1335,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLRenderbuffer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CanvasArrayBuffer, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CanvasFloatArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CanvasByteArray, nsDOMGenericSH,
@@ -1398,7 +1396,6 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Worker, nsDOMWorker::NewWorker)
 
   // WebGL Array Types
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasArrayBuffer, NS_NewCanvasArrayBuffer)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasFloatArray, NS_NewCanvasFloatArray)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasByteArray, NS_NewCanvasByteArray)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasUnsignedByteArray, NS_NewCanvasUnsignedByteArray)
@@ -3723,10 +3720,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLRenderbuffer, nsIWebGLRenderbuffer)
     DOM_CLASSINFO_MAP_ENTRY(nsIWebGLRenderbuffer)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(CanvasArrayBuffer, nsICanvasArrayBuffer)
-    DOM_CLASSINFO_MAP_ENTRY(nsICanvasArrayBuffer)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CanvasFloatArray, nsICanvasFloatArray)

@@ -1077,11 +1077,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_CANVASRENDERINGCONTEXTWEBGL_CID,
     "@mozilla.org/content/canvas-rendering-context;1?id=moz-webgl",
     CreateCanvasRenderingContextWebGL },
-  { "Canvas WebGL Rendering Context",
-    NS_CANVASRENDERINGCONTEXTWEBGL_CID,
-    "@mozilla.org/content/canvas-rendering-context;1?id=experimental-webgl",
-    CreateCanvasRenderingContextWebGL },
-
 
   { "XML document encoder",
     NS_TEXT_ENCODER_CID,

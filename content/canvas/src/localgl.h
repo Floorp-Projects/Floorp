@@ -66,8 +66,8 @@ typedef double GLclampd;
 typedef void GLvoid;
 
 typedef char GLchar;
-typedef PRInt32 GLsizeiptr;
-typedef PRInt32 GLintptr;
+typedef ptrdiff_t GLsizeiptr;
+typedef ptrdiff_t GLintptr;
 
 #ifndef GLAPIENTRY
 # ifdef WIN32
