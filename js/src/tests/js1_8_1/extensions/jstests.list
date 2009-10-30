@@ -10,4 +10,4 @@ script regress-466905-04.js
 script regress-466905-05.js
 script regress-477158.js
 script regress-477187.js
-fails script strict-warning.js # bug 461269 does not follow required conventions
+script strict-warning.js
