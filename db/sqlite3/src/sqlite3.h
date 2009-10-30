@@ -99,7 +99,7 @@ extern "C" {
 **
 ** Requirements: [H10011] [H10014]
 */
-#define SQLITE_VERSION         "3.6.16"
+#define SQLITE_VERSION         "3.6.16.1"
 #define SQLITE_VERSION_NUMBER  3006016
 
 /*
