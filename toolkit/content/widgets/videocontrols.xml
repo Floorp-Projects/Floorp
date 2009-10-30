@@ -194,8 +194,8 @@
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                  class="mediaControlsFrame">
         <stack flex="1">
-            <vbox class="statusOverlay" hidden="true">
-                <box class="statusIcon" flex="1"/>
+            <vbox flex="1" class="statusOverlay" hidden="true">
+                <box class="statusIcon"/>
             </vbox>
 
             <vbox>
