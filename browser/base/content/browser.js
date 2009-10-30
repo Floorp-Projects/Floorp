@@ -1287,6 +1287,10 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     Components.utils.reportError("Failed to init content pref service:\n" + ex);
   }
 
+  let NP = {};
+  Cu.import("resource://gre/modules/NetworkPrioritizer.jsm", NP);
+  NP.trackBrowserWindow(window);
+
   // initialize the session-restore service (in case it's not already running)
   if (document.documentElement.getAttribute("windowtype") == "navigator:browser") {
     try {
