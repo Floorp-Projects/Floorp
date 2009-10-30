@@ -441,6 +441,11 @@ def environment(env = None, xrePath = DIST_BIN, crashreporter = True):
   return env
 
 if IS_WIN32:
+  #XXX: disabled on windows for now, see bug 525370 
+  def readWithTimeout(f, timeout):
+    return (f.readline(), False)
+elif False:
+  #XXX: figure out what's going wrong with this code!
   import ctypes, time, msvcrt
   PeekNamedPipe = ctypes.windll.kernel32.PeekNamedPipe
   GetLastError = ctypes.windll.kernel32.GetLastError
