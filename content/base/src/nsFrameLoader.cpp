@@ -44,6 +44,14 @@
  * handling of loads in it, recursion-checking).
  */
 
+#ifdef MOZ_IPC
+#include "ContentProcessParent.h"
+#include "TabParent.h"
+
+using namespace mozilla;
+using namespace mozilla::dom;
+#endif
+
 #include "prenv.h"
 
 #include "nsIDOMHTMLIFrameElement.h"
@@ -91,14 +99,6 @@
 
 #include "nsThreadUtils.h"
 #include "nsIView.h"
-
-#ifdef MOZ_IPC
-#include "ContentProcessParent.h"
-#include "TabParent.h"
-
-using namespace mozilla;
-using namespace mozilla::dom;
-#endif
 
 #ifdef MOZ_WIDGET_GTK2
 #include "mozcontainer.h"
