@@ -55,6 +55,7 @@ endif
 
 EXTRA_JS_MODULES = \
 	content/openLocationLastURL.jsm \
+	content/NetworkPrioritizer.jsm \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
