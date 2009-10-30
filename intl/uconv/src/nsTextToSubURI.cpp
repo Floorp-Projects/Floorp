@@ -119,6 +119,11 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
 {
   if(nsnull == _retval)
     return NS_ERROR_NULL_POINTER;
+  if(nsnull == text) {
+    // set empty string instead of returning error
+    // due to compatibility for old version
+    text = "";
+  }
   *_retval = nsnull;
   nsresult rv = NS_OK;
   
