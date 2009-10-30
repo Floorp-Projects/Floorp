@@ -1102,18 +1102,21 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
     (mZIndex == aOther.mZIndex) ? NS_STYLE_HINT_NONE : nsChangeHint_RepaintFrame;
 
   if (mBoxSizing != aOther.mBoxSizing) {
+    // Can affect both widths and heights; just a bad scene.
     return NS_CombineHint(hint, nsChangeHint_ReflowFrame);
   }
 
   if (mHeight != aOther.mHeight ||
       mMinHeight != aOther.mMinHeight ||
       mMaxHeight != aOther.mMaxHeight) {
-    // Height changes can't affect intrinsic widths, but due to our
+    // Height changes can't affect descendant intrinsic sizes, but due to our
     // not-so-great computation of mVResize in nsHTMLReflowState, do need to
     // force reflow of the whole subtree.
-    hint = NS_CombineHint(hint,
-                          NS_CombineHint(nsChangeHint_NeedReflow,
-                                         nsChangeHint_NeedDirtyReflow));
+    // XXXbz due to XUL caching heights as well, height changes _do_
+    // need to clear ancestor intrinsics!
+    return NS_CombineHint(hint,
+                          NS_SubtractHint(nsChangeHint_ReflowFrame,
+                                          nsChangeHint_ClearDescendantIntrinsics));
   }
 
   if ((mWidth == aOther.mWidth) &&
