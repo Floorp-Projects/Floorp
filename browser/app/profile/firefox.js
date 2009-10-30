@@ -262,8 +262,7 @@ pref("browser.download.useDownloadDir", true);
 
 #ifdef WINCE
 pref("browser.download.folderList", 2);
-// Bug 499807: use Hard Disk filesystem because Desktop is short on space.
-pref("browser.download.dir", "\\Hard Disk");
+pref("browser.download.dir", "\\Storage Card");
 #else
 pref("browser.download.folderList", 1);
 #endif
