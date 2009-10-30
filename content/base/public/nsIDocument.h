@@ -105,8 +105,8 @@ class nsIBoxObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-  { 0x2ca82a51, 0x4a6a, 0x4dfa, \
-      { 0xa6, 0x5f, 0x49, 0x52, 0xa3, 0xaa, 0x02, 0xef } }
+{ 0xd16d73c1, 0xe0f7, 0x415c, \
+ { 0xbd, 0x68, 0x9c, 0x1f, 0x93, 0xb8, 0x73, 0x7a } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1206,6 +1206,8 @@ public:
    * href, if it changed.
    */
   virtual nsresult SetFirstBaseNodeWithHref(nsIContent *node) = 0;
+
+  virtual nsISupports* GetCurrentContentSink() = 0;
 
 protected:
   ~nsIDocument()
