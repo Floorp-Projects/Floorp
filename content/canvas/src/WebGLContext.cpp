@@ -6,10 +6,14 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIClassInfoImpl.h"
 #include "nsContentUtils.h"
+#include "nsIXPConnect.h"
 #include "nsDOMError.h"
 
 #include "gfxContext.h"
 #include "gfxPattern.h"
+
+#include "CanvasUtils.h"
+#include "NativeJSContext.h"
 
 using namespace mozilla;
 
@@ -417,6 +421,16 @@ NS_INTERFACE_MAP_BEGIN(WebGLRenderbuffer)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(WebGLRenderbuffer)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_ADDREF(WebGLArrayBuffer)
+NS_IMPL_RELEASE(WebGLArrayBuffer)
+
+NS_INTERFACE_MAP_BEGIN(WebGLArrayBuffer)
+  NS_INTERFACE_MAP_ENTRY(nsICanvasArrayBuffer)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasArrayBuffer)
+  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasArrayBuffer)
+NS_INTERFACE_MAP_END
+
 NS_IMPL_ADDREF(WebGLFloatArray)
 NS_IMPL_RELEASE(WebGLFloatArray)
 
@@ -496,6 +510,67 @@ NS_INTERFACE_MAP_END
 
 
 nsresult
+NS_NewCanvasArrayBuffer(nsISupports **aResult)
+{
+    nsICanvasArrayBuffer *wgab = new WebGLArrayBuffer();
+    if (!wgab)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aResult = wgab);
+    return NS_OK;
+}
+
+WebGLArrayBuffer::WebGLArrayBuffer(PRUint32 length)
+{
+    Prepare(LOCAL_GL_BYTE, 1, length);
+}
+
+NS_IMETHODIMP
+WebGLArrayBuffer::Initialize(nsISupports *owner,
+                            JSContext *cx,
+                            JSObject *obj,
+                            PRUint32 argc,
+                            jsval *argv)
+{
+    if (JSVAL_IS_NUMBER(argv[0])) {
+        PRUint32 length;
+        ::JS_ValueToECMAUint32(cx, argv[0], &length);
+        if (length == 0)
+            return NS_ERROR_FAILURE;
+        Prepare(LOCAL_GL_BYTE, 1, length);
+    } else {
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteLength; */
+NS_IMETHODIMP WebGLArrayBuffer::GetByteLength(PRUint32 *aByteLength)
+{
+    *aByteLength = capacity;
+    return NS_OK;
+}
+
+/* [noscript, notxpcom] voidPtr GetNativeArrayBuffer (); */
+NS_IMETHODIMP_(WebGLArrayBuffer *) WebGLArrayBuffer::GetNativeArrayBuffer()
+{
+    return this;
+}
+
+/* [noscript, notxpcom] voidPtr nativePointer (); */
+NS_IMETHODIMP_(void *) WebGLArrayBuffer::NativePointer()
+{
+    return data;
+}
+
+/* [noscript, notxpcom] unsigned long nativeSize (); */
+NS_IMETHODIMP_(PRUint32) WebGLArrayBuffer::NativeSize()
+{
+    return capacity;
+}
+
+nsresult
 NS_NewCanvasFloatArray(nsISupports **aResult)
 {
     nsICanvasFloatArray *wgfa = new WebGLFloatArray();
@@ -506,13 +581,22 @@ NS_NewCanvasFloatArray(nsISupports **aResult)
     return NS_OK;
 }
 
-WebGLFloatArray::WebGLFloatArray()
+WebGLFloatArray::WebGLFloatArray(PRUint32 length)
+    : mOffset(0), mLength(length)
+{
+    mBuffer = new WebGLArrayBuffer(length * sizeof(float));
+}
+
+WebGLFloatArray::WebGLFloatArray(WebGLArrayBuffer *buffer, PRUint32 offset, PRUint32 length)
+    : mBuffer(buffer), mOffset(offset), mLength(length)
 {
 }
 
 WebGLFloatArray::WebGLFloatArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+    : mOffset(0), mLength(arrayLen)
 {
-    mBuffer.InitFromJSArray(LOCAL_GL_FLOAT, 1, cx, arrayObj, arrayLen);
+    mBuffer = new WebGLArrayBuffer();
+    mBuffer->InitFromJSArray(LOCAL_GL_FLOAT, 1, cx, arrayObj, arrayLen);
 }
 
 NS_IMETHODIMP
@@ -522,60 +606,191 @@ WebGLFloatArray::Initialize(nsISupports *owner,
                             PRUint32 argc,
                             jsval *argv)
 {
-    JSObject *arrayObj;
-    jsuint arrayLen;
+    if (JSVAL_IS_NUMBER(argv[0])) {
+        PRUint32 length;
+        ::JS_ValueToECMAUint32(cx, argv[0], &length);
+        mBuffer = new WebGLArrayBuffer();
+        mBuffer->Prepare(LOCAL_GL_FLOAT, 1, length);
+        mLength = length;
+    } else {
+        JSObject *arrayObj;
+        jsuint arrayLen;
+        jsuint byteOffset = 0;
+        jsuint length = 0;
 
-    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
-        arrayObj == NULL ||
-        !::JS_IsArrayObject(cx, arrayObj) ||
-        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
-    {
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        if (!::JS_ConvertArguments(cx, argc, argv, "o/uu", &arrayObj, &byteOffset, &length) ||
+            arrayObj == NULL)
+        {
+            return NS_ERROR_DOM_SYNTAX_ERR;
+        }
+
+        if (::JS_IsArrayObject(cx, arrayObj) &&
+            ::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+        {
+            mBuffer = new WebGLArrayBuffer();
+            mBuffer->InitFromJSArray(LOCAL_GL_FLOAT, 1, cx, arrayObj, arrayLen);
+            mLength = arrayLen;
+        } else {
+            nsCOMPtr<nsICanvasArrayBuffer> canvasObj;
+            nsresult rv;
+            rv = nsContentUtils::XPConnect()->WrapJS(cx, arrayObj, NS_GET_IID(nsICanvasArrayBuffer), getter_AddRefs(canvasObj));
+            if (NS_FAILED(rv) || !canvasObj) {
+                return NS_ERROR_SYNTAX_ERR;
+            }
+
+            mBuffer = canvasObj->GetNativeArrayBuffer();
+
+            if (byteOffset % sizeof(float)) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if ((byteOffset + (length * sizeof(float))) > mBuffer->capacity) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if ((mBuffer->capacity - byteOffset) % sizeof(float)) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if (length > 0)
+                mLength = length;
+            else
+                mLength = (mBuffer->capacity - byteOffset) / sizeof(float);
+        }
     }
 
-    mBuffer.InitFromJSArray(LOCAL_GL_FLOAT, 1, cx, arrayObj, arrayLen);
+    return NS_OK;
+}
 
+/* readonly attribute nsICanvasArrayBuffer buffer; */
+NS_IMETHODIMP WebGLFloatArray::GetBuffer(nsICanvasArrayBuffer **aBuffer)
+{
+    NS_ADDREF(*aBuffer = mBuffer);
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteOffset; */
+NS_IMETHODIMP WebGLFloatArray::GetByteOffset(PRUint32 *aByteOffset)
+{
+    *aByteOffset = mOffset;
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteLength; */
+NS_IMETHODIMP WebGLFloatArray::GetByteLength(PRUint32 *aByteLength)
+{
+    *aByteLength = mLength * sizeof(float);
     return NS_OK;
 }
 
 /* attribute unsigned long length; */
 NS_IMETHODIMP WebGLFloatArray::GetLength(PRUint32 *aLength)
 {
-    *aLength = mBuffer.length;
+    *aLength = mLength;
     return NS_OK;
 }
-NS_IMETHODIMP WebGLFloatArray::SetLength(PRUint32 aLength)
+
+/* unsigned long alignedSizeInBytes (); */
+NS_IMETHODIMP WebGLFloatArray::AlignedSizeInBytes(PRUint32 *retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *retval = mBuffer->capacity;
+    return NS_OK;
+}
+
+/* nsICanvasArray slice (in unsigned long offset, in unsigned long length); */
+NS_IMETHODIMP WebGLFloatArray::Slice(PRUint32 offset, PRUint32 length, nsICanvasArray **retval)
+{
+    if (length == 0) 
+        return NS_ERROR_FAILURE;
+
+    if (offset + length > mBuffer->capacity)
+        return NS_ERROR_FAILURE;
+
+    nsICanvasArray *wga = new WebGLFloatArray(mBuffer, offset, length);
+    NS_ADDREF(*retval = wga);
+    return NS_OK;
+}
+
+/* [IndexGetter] float get (in unsigned long index); */
+NS_IMETHODIMP WebGLFloatArray::Get(PRUint32 index, float *retval)
+{
+    if (index >= mLength)
+        return NS_ERROR_FAILURE;
+
+    float *values = static_cast<float*>(mBuffer->data);
+    *retval = values[index];
+
+    return NS_OK;
+}
+
+void
+WebGLFloatArray::Set(PRUint32 index, float value)
+{
+    if (index >= mLength)
+        return;
+
+    float *values = static_cast<float*>(mBuffer->data);
+    values[index] = value;
+}
+
+/* void set (); */
+NS_IMETHODIMP WebGLFloatArray::Set()
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    if (js.argc < 1 || js.argc > 2)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    if (JSVAL_IS_NUMBER(js.argv[0])) {
+        if (js.argc != 2)
+            return NS_ERROR_DOM_SYNTAX_ERR;
+
+        PRUint32 index;
+        ::JS_ValueToECMAUint32(js.ctx, js.argv[0], &index);
+
+        jsdouble value;
+        ::JS_ValueToNumber(js.ctx, js.argv[1], &value);
+
+        if (index >= mLength)
+            return NS_ERROR_FAILURE;
+
+        Set(index, value);
+    } else {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeType()
 {
-    return mBuffer.type;
+    return mBuffer->type;
 }
 
 /* [noscript, notxpcom] voidPtr nativePointer (); */
 NS_IMETHODIMP_(void *) WebGLFloatArray::NativePointer()
 {
-    return mBuffer.data;
+    return mBuffer->data;
 }
 
 /* [noscript, notxpcom] unsigned long nativeSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeSize()
 {
-    return mBuffer.capacity;
+    return mBuffer->capacity;
 }
 
 /* [noscript, notxpcom] unsigned long nativeElementSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeElementSize()
 {
-    return mBuffer.ElementSize();
+    return mBuffer->ElementSize();
 }
 
 /* [noscript, notxpcom] unsigned long nativeCount (); */
 NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeCount()
 {
-    return mBuffer.length;
+    return mBuffer->length;
 }
 
 nsresult
@@ -589,11 +804,22 @@ NS_NewCanvasByteArray(nsISupports **aResult)
     return NS_OK;
 }
 
-WebGLByteArray::WebGLByteArray() { }
- 
-WebGLByteArray::WebGLByteArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+WebGLByteArray::WebGLByteArray(PRUint32 length)
+    : mOffset(0), mLength(length)
 {
-    mBuffer.InitFromJSArray(LOCAL_GL_BYTE, 1, cx, arrayObj, arrayLen);
+    mBuffer = new WebGLArrayBuffer(length);
+}
+
+WebGLByteArray::WebGLByteArray(WebGLArrayBuffer *buffer, PRUint32 offset, PRUint32 length)
+    : mBuffer(buffer), mOffset(offset), mLength(length)
+{
+}
+
+WebGLByteArray::WebGLByteArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+    : mOffset(0), mLength(arrayLen)
+{
+    mBuffer = new WebGLArrayBuffer();
+    mBuffer->InitFromJSArray(LOCAL_GL_UNSIGNED_BYTE, 1, cx, arrayObj, arrayLen);
 }
 
 NS_IMETHODIMP
@@ -603,60 +829,183 @@ WebGLByteArray::Initialize(nsISupports *owner,
                            PRUint32 argc,
                            jsval *argv)
 {
-    JSObject *arrayObj;
-    jsuint arrayLen;
+    if (JSVAL_IS_NUMBER(argv[0])) {
+        PRUint32 length;
+        ::JS_ValueToECMAUint32(cx, argv[0], &length);
+        mBuffer = new WebGLArrayBuffer();
+        mBuffer->Prepare(LOCAL_GL_BYTE, 1, length);
+        mLength = length;
+    } else {
+        JSObject *arrayObj;
+        jsuint arrayLen;
+        jsuint byteOffset = 0;
+        jsuint length = 0;
 
-    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
-        arrayObj == NULL ||
-        !::JS_IsArrayObject(cx, arrayObj) ||
-        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
-    {
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        if (!::JS_ConvertArguments(cx, argc, argv, "o/uu", &arrayObj, &byteOffset, &length) ||
+            arrayObj == NULL)
+        {
+            return NS_ERROR_DOM_SYNTAX_ERR;
+        }
+
+        if (::JS_IsArrayObject(cx, arrayObj) &&
+            ::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+        {
+            mBuffer = new WebGLArrayBuffer();
+            mBuffer->InitFromJSArray(LOCAL_GL_UNSIGNED_BYTE, 1, cx, arrayObj, arrayLen);
+            mLength = arrayLen;
+        } else {
+            nsCOMPtr<nsICanvasArrayBuffer> canvasObj;
+            nsresult rv;
+            rv = nsContentUtils::XPConnect()->WrapJS(cx, arrayObj, NS_GET_IID(nsICanvasArrayBuffer), getter_AddRefs(canvasObj));
+            if (NS_FAILED(rv) || !canvasObj) {
+                return NS_ERROR_SYNTAX_ERR;
+            }
+
+            mBuffer = canvasObj->GetNativeArrayBuffer();
+
+            if ((byteOffset + length) > mBuffer->capacity) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if (length > 0)
+                mLength = length;
+            else
+                mLength = (mBuffer->capacity - byteOffset);
+        }
     }
 
-    mBuffer.InitFromJSArray(LOCAL_GL_BYTE, 1, cx, arrayObj, arrayLen);
+    return NS_OK;
+}
 
+/* readonly attribute nsICanvasArrayBuffer buffer; */
+NS_IMETHODIMP WebGLByteArray::GetBuffer(nsICanvasArrayBuffer **aBuffer)
+{
+    NS_ADDREF(*aBuffer = mBuffer);
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteOffset; */
+NS_IMETHODIMP WebGLByteArray::GetByteOffset(PRUint32 *aByteOffset)
+{
+    *aByteOffset = mOffset;
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteLength; */
+NS_IMETHODIMP WebGLByteArray::GetByteLength(PRUint32 *aByteLength)
+{
+    *aByteLength = mLength;
     return NS_OK;
 }
 
 /* attribute unsigned long length; */
 NS_IMETHODIMP WebGLByteArray::GetLength(PRUint32 *aLength)
 {
-    *aLength = mBuffer.length;
+    *aLength = mLength;
     return NS_OK;
 }
-NS_IMETHODIMP WebGLByteArray::SetLength(PRUint32 aLength)
+
+/* unsigned long alignedSizeInBytes (); */
+NS_IMETHODIMP WebGLByteArray::AlignedSizeInBytes(PRUint32 *retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *retval = mBuffer->capacity;
+    return NS_OK;
+}
+
+/* nsICanvasArray slice (in unsigned long offset, in unsigned long length); */
+NS_IMETHODIMP WebGLByteArray::Slice(PRUint32 offset, PRUint32 length, nsICanvasArray **retval)
+{
+    if (length == 0) 
+        return NS_ERROR_FAILURE;
+
+    if (offset + length > mBuffer->capacity)
+        return NS_ERROR_FAILURE;
+
+    nsICanvasArray *wga = new WebGLByteArray(mBuffer, offset, length);
+    NS_ADDREF(*retval = wga);
+    return NS_OK;
+}
+
+/* [IndexGetter] long get (in unsigned long index); */
+NS_IMETHODIMP WebGLByteArray::Get(PRUint32 index, PRInt32 *retval)
+{
+    if (index >= mLength)
+        return NS_ERROR_FAILURE;
+
+    char *values = static_cast<char*>(mBuffer->data);
+    *retval = values[index];
+
+    return NS_OK;
+}
+
+void
+WebGLByteArray::Set(PRUint32 index, char value)
+{
+    if (index >= mLength)
+        return;
+
+    char *values = static_cast<char*>(mBuffer->data);
+    values[index] = value;
+}
+
+/* void set (); */
+NS_IMETHODIMP WebGLByteArray::Set()
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    if (js.argc < 1 || js.argc > 2)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    if (JSVAL_IS_NUMBER(js.argv[0])) {
+        if (js.argc != 2)
+            return NS_ERROR_DOM_SYNTAX_ERR;
+
+        PRUint32 index;
+        ::JS_ValueToECMAUint32(js.ctx, js.argv[0], &index);
+
+        char value;
+        ::JS_ValueToECMAUint32(js.ctx, js.argv[1], (PRUint32 *) &value);
+
+        if (index >= mLength)
+            return NS_ERROR_FAILURE;
+
+        Set(index, value);
+    } else {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP_(PRUint32) WebGLByteArray::NativeType()
 {
-    return mBuffer.type;
+    return mBuffer->type;
 }
 
 /* [noscript, notxpcom] voidPtr nativePointer (); */
 NS_IMETHODIMP_(void *) WebGLByteArray::NativePointer()
 {
-    return mBuffer.data;
+    return mBuffer->data;
 }
 
 /* [noscript, notxpcom] unsigned long nativeSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLByteArray::NativeSize()
 {
-    return mBuffer.capacity;
+    return mBuffer->capacity;
 }
 
 /* [noscript, notxpcom] unsigned long nativeElementSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLByteArray::NativeElementSize()
 {
-    return mBuffer.ElementSize();
+    return mBuffer->ElementSize();
 }
 
 /* [noscript, notxpcom] unsigned long nativeCount (); */
 NS_IMETHODIMP_(PRUint32) WebGLByteArray::NativeCount()
 {
-    return mBuffer.length;
+    return mBuffer->length;
 }
 
 nsresult
@@ -670,11 +1019,22 @@ NS_NewCanvasUnsignedByteArray(nsISupports **aResult)
     return NS_OK;
 }
 
-WebGLUnsignedByteArray::WebGLUnsignedByteArray() { }
+WebGLUnsignedByteArray::WebGLUnsignedByteArray(PRUint32 length)
+    : mOffset(0), mLength(length)
+{
+    mBuffer = new WebGLArrayBuffer(length);
+}
+
+WebGLUnsignedByteArray::WebGLUnsignedByteArray(WebGLArrayBuffer *buffer, PRUint32 offset, PRUint32 length)
+    : mBuffer(buffer), mOffset(offset), mLength(length)
+{
+}
 
 WebGLUnsignedByteArray::WebGLUnsignedByteArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+    : mOffset(0), mLength(arrayLen)
 {
-    mBuffer.InitFromJSArray(LOCAL_GL_UNSIGNED_BYTE, 1, cx, arrayObj, arrayLen);
+    mBuffer = new WebGLArrayBuffer();
+    mBuffer->InitFromJSArray(LOCAL_GL_UNSIGNED_BYTE, 1, cx, arrayObj, arrayLen);
 }
 
 NS_IMETHODIMP
@@ -684,60 +1044,183 @@ WebGLUnsignedByteArray::Initialize(nsISupports *owner,
                                    PRUint32 argc,
                                    jsval *argv)
 {
-    JSObject *arrayObj;
-    jsuint arrayLen;
+    if (JSVAL_IS_NUMBER(argv[0])) {
+        PRUint32 length;
+        ::JS_ValueToECMAUint32(cx, argv[0], &length);
+        mBuffer = new WebGLArrayBuffer();
+        mBuffer->Prepare(LOCAL_GL_UNSIGNED_BYTE, 1, length);
+        mLength = length;
+    } else {
+        JSObject *arrayObj;
+        jsuint arrayLen;
+        jsuint byteOffset = 0;
+        jsuint length = 0;
 
-    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
-        arrayObj == NULL ||
-        !::JS_IsArrayObject(cx, arrayObj) ||
-        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
-    {
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        if (!::JS_ConvertArguments(cx, argc, argv, "o/uu", &arrayObj, &byteOffset, &length) ||
+            arrayObj == NULL)
+        {
+            return NS_ERROR_DOM_SYNTAX_ERR;
+        }
+
+        if (::JS_IsArrayObject(cx, arrayObj) &&
+            ::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+        {
+            mBuffer = new WebGLArrayBuffer();
+            mBuffer->InitFromJSArray(LOCAL_GL_UNSIGNED_BYTE, 1, cx, arrayObj, arrayLen);
+            mLength = arrayLen;
+        } else {
+            nsCOMPtr<nsICanvasArrayBuffer> canvasObj;
+            nsresult rv;
+            rv = nsContentUtils::XPConnect()->WrapJS(cx, arrayObj, NS_GET_IID(nsICanvasArrayBuffer), getter_AddRefs(canvasObj));
+            if (NS_FAILED(rv) || !canvasObj) {
+                return NS_ERROR_SYNTAX_ERR;
+            }
+
+            mBuffer = canvasObj->GetNativeArrayBuffer();
+
+            if ((byteOffset + length) > mBuffer->capacity) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if (length > 0)
+                mLength = length;
+            else
+                mLength = (mBuffer->capacity - byteOffset);
+        }
     }
 
-    mBuffer.InitFromJSArray(LOCAL_GL_UNSIGNED_BYTE, 1, cx, arrayObj, arrayLen);
+    return NS_OK;
+}
 
+/* readonly attribute nsICanvasArrayBuffer buffer; */
+NS_IMETHODIMP WebGLUnsignedByteArray::GetBuffer(nsICanvasArrayBuffer **aBuffer)
+{
+    NS_ADDREF(*aBuffer = mBuffer);
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteOffset; */
+NS_IMETHODIMP WebGLUnsignedByteArray::GetByteOffset(PRUint32 *aByteOffset)
+{
+    *aByteOffset = mOffset;
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteLength; */
+NS_IMETHODIMP WebGLUnsignedByteArray::GetByteLength(PRUint32 *aByteLength)
+{
+    *aByteLength = mLength;
     return NS_OK;
 }
 
 /* attribute unsigned long length; */
 NS_IMETHODIMP WebGLUnsignedByteArray::GetLength(PRUint32 *aLength)
 {
-    *aLength = mBuffer.length;
+    *aLength = mLength;
     return NS_OK;
 }
-NS_IMETHODIMP WebGLUnsignedByteArray::SetLength(PRUint32 aLength)
+
+/* unsigned long alignedSizeInBytes (); */
+NS_IMETHODIMP WebGLUnsignedByteArray::AlignedSizeInBytes(PRUint32 *retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *retval = mBuffer->capacity;
+    return NS_OK;
+}
+
+/* nsICanvasArray slice (in unsigned long offset, in unsigned long length); */
+NS_IMETHODIMP WebGLUnsignedByteArray::Slice(PRUint32 offset, PRUint32 length, nsICanvasArray **retval)
+{
+    if (length == 0) 
+        return NS_ERROR_FAILURE;
+
+    if (offset + length > mBuffer->capacity)
+        return NS_ERROR_FAILURE;
+
+    nsICanvasArray *wga = new WebGLUnsignedByteArray(mBuffer, offset, length);
+    NS_ADDREF(*retval = wga);
+    return NS_OK;
+}
+
+/* [IndexGetter] unsigned long get (in unsigned long index); */
+NS_IMETHODIMP WebGLUnsignedByteArray::Get(PRUint32 index, PRUint32 *retval)
+{
+    if (index >= mLength)
+        return NS_ERROR_FAILURE;
+
+    unsigned char *values = static_cast<unsigned char*>(mBuffer->data);
+    *retval = values[index];
+
+    return NS_OK;
+}
+
+void
+WebGLUnsignedByteArray::Set(PRUint32 index, unsigned char value)
+{
+    if (index >= mLength)
+        return;
+
+    unsigned char *values = static_cast<unsigned char*>(mBuffer->data);
+    values[index] = value;
+}
+
+/* void set (); */
+NS_IMETHODIMP WebGLUnsignedByteArray::Set()
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    if (js.argc < 1 || js.argc > 2)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    if (JSVAL_IS_NUMBER(js.argv[0])) {
+        if (js.argc != 2)
+            return NS_ERROR_DOM_SYNTAX_ERR;
+
+        PRUint32 index;
+        ::JS_ValueToECMAUint32(js.ctx, js.argv[0], &index);
+
+        unsigned char value;
+        ::JS_ValueToECMAUint32(js.ctx, js.argv[1], (PRUint32 *) &value);
+
+        if (index >= mLength)
+            return NS_ERROR_FAILURE;
+
+        Set(index, value);
+    } else {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedByteArray::NativeType()
 {
-    return mBuffer.type;
+    return mBuffer->type;
 }
 
 /* [noscript, notxpcom] voidPtr nativePointer (); */
 NS_IMETHODIMP_(void *) WebGLUnsignedByteArray::NativePointer()
 {
-    return mBuffer.data;
+    return mBuffer->data;
 }
 
 /* [noscript, notxpcom] unsigned long nativeSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedByteArray::NativeSize()
 {
-    return mBuffer.capacity;
+    return mBuffer->capacity;
 }
 
 /* [noscript, notxpcom] unsigned long nativeElementSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedByteArray::NativeElementSize()
 {
-    return mBuffer.ElementSize();
+    return mBuffer->ElementSize();
 }
 
 /* [noscript, notxpcom] unsigned long nativeCount (); */
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedByteArray::NativeCount()
 {
-    return mBuffer.length;
+    return mBuffer->length;
 }
 
 nsresult
@@ -751,11 +1234,22 @@ NS_NewCanvasShortArray(nsISupports **aResult)
     return NS_OK;
 }
 
-WebGLShortArray::WebGLShortArray() { }
+WebGLShortArray::WebGLShortArray(PRUint32 length)
+    : mOffset(0), mLength(length)
+{
+    mBuffer = new WebGLArrayBuffer(length * sizeof(short));
+}
+
+WebGLShortArray::WebGLShortArray(WebGLArrayBuffer *buffer, PRUint32 offset, PRUint32 length)
+    : mBuffer(buffer), mOffset(offset), mLength(length)
+{
+}
 
 WebGLShortArray::WebGLShortArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+    : mOffset(0), mLength(arrayLen)
 {
-    mBuffer.InitFromJSArray(LOCAL_GL_SHORT, 1, cx, arrayObj, arrayLen);
+    mBuffer = new WebGLArrayBuffer();
+    mBuffer->InitFromJSArray(LOCAL_GL_SHORT, 1, cx, arrayObj, arrayLen);
 }
 
 NS_IMETHODIMP
@@ -765,60 +1259,191 @@ WebGLShortArray::Initialize(nsISupports *owner,
                             PRUint32 argc,
                             jsval *argv)
 {
-    JSObject *arrayObj;
-    jsuint arrayLen;
+    if (JSVAL_IS_NUMBER(argv[0])) {
+        PRUint32 length;
+        ::JS_ValueToECMAUint32(cx, argv[0], &length);
+        mBuffer = new WebGLArrayBuffer();
+        mBuffer->Prepare(LOCAL_GL_SHORT, 1, length);
+        mLength = length;
+    } else {
+        JSObject *arrayObj;
+        jsuint arrayLen;
+        jsuint byteOffset = 0;
+        jsuint length = 0;
 
-    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
-        arrayObj == NULL ||
-        !::JS_IsArrayObject(cx, arrayObj) ||
-        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
-    {
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        if (!::JS_ConvertArguments(cx, argc, argv, "o/uu", &arrayObj, &byteOffset, &length) ||
+            arrayObj == NULL)
+        {
+            return NS_ERROR_DOM_SYNTAX_ERR;
+        }
+
+        if (::JS_IsArrayObject(cx, arrayObj) &&
+            ::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+        {
+            mBuffer = new WebGLArrayBuffer();
+            mBuffer->InitFromJSArray(LOCAL_GL_SHORT, 1, cx, arrayObj, arrayLen);
+            mLength = arrayLen;
+        } else {
+            nsCOMPtr<nsICanvasArrayBuffer> canvasObj;
+            nsresult rv;
+            rv = nsContentUtils::XPConnect()->WrapJS(cx, arrayObj, NS_GET_IID(nsICanvasArrayBuffer), getter_AddRefs(canvasObj));
+            if (NS_FAILED(rv) || !canvasObj) {
+                return NS_ERROR_SYNTAX_ERR;
+            }
+
+            mBuffer = canvasObj->GetNativeArrayBuffer();
+
+            if (byteOffset % sizeof(short)) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if ((byteOffset + (length * sizeof(short))) > mBuffer->capacity) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if ((mBuffer->capacity - byteOffset) % sizeof(short)) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if (length > 0)
+                mLength = length;
+            else
+                mLength = (mBuffer->capacity - byteOffset) / sizeof(short);
+        }
     }
 
-    mBuffer.InitFromJSArray(LOCAL_GL_SHORT, 1, cx, arrayObj, arrayLen);
+    return NS_OK;
+}
 
+/* readonly attribute nsICanvasArrayBuffer buffer; */
+NS_IMETHODIMP WebGLShortArray::GetBuffer(nsICanvasArrayBuffer * *aBuffer)
+{
+    NS_ADDREF(*aBuffer = mBuffer);
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteOffset; */
+NS_IMETHODIMP WebGLShortArray::GetByteOffset(PRUint32 *aByteOffset)
+{
+    *aByteOffset = mOffset;
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteLength; */
+NS_IMETHODIMP WebGLShortArray::GetByteLength(PRUint32 *aByteLength)
+{
+    *aByteLength = mLength * sizeof(short);
     return NS_OK;
 }
 
 /* attribute unsigned long length; */
 NS_IMETHODIMP WebGLShortArray::GetLength(PRUint32 *aLength)
 {
-    *aLength = mBuffer.length;
+    *aLength = mLength;
     return NS_OK;
 }
-NS_IMETHODIMP WebGLShortArray::SetLength(PRUint32 aLength)
+
+/* unsigned long alignedSizeInBytes (); */
+NS_IMETHODIMP WebGLShortArray::AlignedSizeInBytes(PRUint32 *retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *retval = mBuffer->capacity;
+    return NS_OK;
+}
+
+/* nsICanvasArray slice (in unsigned long offset, in unsigned long length); */
+NS_IMETHODIMP WebGLShortArray::Slice(PRUint32 offset, PRUint32 length, nsICanvasArray **retval)
+{
+    if (length == 0) 
+        return NS_ERROR_FAILURE;
+
+    if (offset + length > mBuffer->capacity)
+        return NS_ERROR_FAILURE;
+
+    nsICanvasArray *wga = new WebGLShortArray(mBuffer, offset, length);
+    NS_ADDREF(*retval = wga);
+    return NS_OK;
+}
+
+/* [IndexGetter] long get (in unsigned long index); */
+NS_IMETHODIMP WebGLShortArray::Get(PRUint32 index, PRInt32 *retval)
+{
+    if (index >= mLength)
+        return NS_ERROR_FAILURE;
+
+    short *values = static_cast<short*>(mBuffer->data);
+    *retval = values[index];
+
+    return NS_OK;
+}
+
+void
+WebGLShortArray::Set(PRUint32 index, short value)
+{
+    if (index >= mLength)
+        return;
+
+    short *values = static_cast<short*>(mBuffer->data);
+    values[index] = value;
+}
+
+/* void set (); */
+NS_IMETHODIMP WebGLShortArray::Set()
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    if (js.argc < 1 || js.argc > 2)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    if (JSVAL_IS_NUMBER(js.argv[0])) {
+        if (js.argc != 2)
+            return NS_ERROR_DOM_SYNTAX_ERR;
+
+        PRUint32 index;
+        ::JS_ValueToECMAUint32(js.ctx, js.argv[0], &index);
+
+        short value;
+        ::JS_ValueToECMAUint32(js.ctx, js.argv[1], (PRUint32 *) &value);
+
+        if (index >= mLength)
+            return NS_ERROR_FAILURE;
+
+        Set(index, value);
+    } else {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP_(PRUint32) WebGLShortArray::NativeType()
 {
-    return mBuffer.type;
+    return mBuffer->type;
 }
 
 /* [noscript, notxpcom] voidPtr nativePointer (); */
 NS_IMETHODIMP_(void *) WebGLShortArray::NativePointer()
 {
-    return mBuffer.data;
+    return mBuffer->data;
 }
 
 /* [noscript, notxpcom] unsigned long nativeSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLShortArray::NativeSize()
 {
-    return mBuffer.capacity;
+    return mBuffer->capacity;
 }
 
 /* [noscript, notxpcom] unsigned long nativeElementSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLShortArray::NativeElementSize()
 {
-    return mBuffer.ElementSize();
+    return mBuffer->ElementSize();
 }
 
 /* [noscript, notxpcom] unsigned long nativeCount (); */
 NS_IMETHODIMP_(PRUint32) WebGLShortArray::NativeCount()
 {
-    return mBuffer.length;
+    return mBuffer->length;
 }
 
 
@@ -833,11 +1458,22 @@ NS_NewCanvasUnsignedShortArray(nsISupports **aResult)
     return NS_OK;
 }
 
-WebGLUnsignedShortArray::WebGLUnsignedShortArray() { }
+WebGLUnsignedShortArray::WebGLUnsignedShortArray(PRUint32 length)
+    : mOffset(0), mLength(length)
+{
+    mBuffer = new WebGLArrayBuffer(length * sizeof(short));
+}
+
+WebGLUnsignedShortArray::WebGLUnsignedShortArray(WebGLArrayBuffer *buffer, PRUint32 offset, PRUint32 length)
+    : mBuffer(buffer), mOffset(offset), mLength(length)
+{
+}
 
 WebGLUnsignedShortArray::WebGLUnsignedShortArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+    : mOffset(0), mLength(arrayLen)
 {
-    mBuffer.InitFromJSArray(LOCAL_GL_UNSIGNED_SHORT, 1, cx, arrayObj, arrayLen);
+    mBuffer = new WebGLArrayBuffer();
+    mBuffer->InitFromJSArray(LOCAL_GL_UNSIGNED_SHORT, 1, cx, arrayObj, arrayLen);
 }
 
 NS_IMETHODIMP
@@ -847,60 +1483,191 @@ WebGLUnsignedShortArray::Initialize(nsISupports *owner,
                                    PRUint32 argc,
                                    jsval *argv)
 {
-    JSObject *arrayObj;
-    jsuint arrayLen;
+    if (JSVAL_IS_NUMBER(argv[0])) {
+        PRUint32 length;
+        ::JS_ValueToECMAUint32(cx, argv[0], &length);
+        mBuffer = new WebGLArrayBuffer();
+        mBuffer->Prepare(LOCAL_GL_UNSIGNED_SHORT, 1, length);
+        mLength = length;
+    } else {
+        JSObject *arrayObj;
+        jsuint arrayLen;
+        jsuint byteOffset = 0;
+        jsuint length = 0;
 
-    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
-        arrayObj == NULL ||
-        !::JS_IsArrayObject(cx, arrayObj) ||
-        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
-    {
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        if (!::JS_ConvertArguments(cx, argc, argv, "o/uu", &arrayObj, &byteOffset, &length) ||
+            arrayObj == NULL)
+        {
+            return NS_ERROR_DOM_SYNTAX_ERR;
+        }
+
+        if (::JS_IsArrayObject(cx, arrayObj) &&
+            ::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+        {
+            mBuffer = new WebGLArrayBuffer();
+            mBuffer->InitFromJSArray(LOCAL_GL_UNSIGNED_SHORT, 1, cx, arrayObj, arrayLen);
+            mLength = arrayLen;
+        } else {
+            nsCOMPtr<nsICanvasArrayBuffer> canvasObj;
+            nsresult rv;
+            rv = nsContentUtils::XPConnect()->WrapJS(cx, arrayObj, NS_GET_IID(nsICanvasArrayBuffer), getter_AddRefs(canvasObj));
+            if (NS_FAILED(rv) || !canvasObj) {
+                return NS_ERROR_SYNTAX_ERR;
+            }
+
+            mBuffer = canvasObj->GetNativeArrayBuffer();
+
+            if (byteOffset % sizeof(short)) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if ((byteOffset + (length * sizeof(short))) > mBuffer->capacity) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if ((mBuffer->capacity - byteOffset) % sizeof(short)) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if (length > 0)
+                mLength = length;
+            else
+                mLength = (mBuffer->capacity - byteOffset) / sizeof(short);
+        }
     }
 
-    mBuffer.InitFromJSArray(LOCAL_GL_UNSIGNED_SHORT, 1, cx, arrayObj, arrayLen);
+    return NS_OK;
+}
 
+/* readonly attribute nsICanvasArrayBuffer buffer; */
+NS_IMETHODIMP WebGLUnsignedShortArray::GetBuffer(nsICanvasArrayBuffer * *aBuffer)
+{
+    NS_ADDREF(*aBuffer = mBuffer);
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteOffset; */
+NS_IMETHODIMP WebGLUnsignedShortArray::GetByteOffset(PRUint32 *aByteOffset)
+{
+    *aByteOffset = mOffset;
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteLength; */
+NS_IMETHODIMP WebGLUnsignedShortArray::GetByteLength(PRUint32 *aByteLength)
+{
+    *aByteLength = mLength * sizeof(short);
     return NS_OK;
 }
 
 /* attribute unsigned long length; */
 NS_IMETHODIMP WebGLUnsignedShortArray::GetLength(PRUint32 *aLength)
 {
-    *aLength = mBuffer.length;
+    *aLength = mLength;
     return NS_OK;
 }
-NS_IMETHODIMP WebGLUnsignedShortArray::SetLength(PRUint32 aLength)
+
+/* unsigned long alignedSizeInBytes (); */
+NS_IMETHODIMP WebGLUnsignedShortArray::AlignedSizeInBytes(PRUint32 *retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *retval = mBuffer->capacity;
+    return NS_OK;
+}
+
+/* nsICanvasArray slice (in unsigned long offset, in unsigned long length); */
+NS_IMETHODIMP WebGLUnsignedShortArray::Slice(PRUint32 offset, PRUint32 length, nsICanvasArray **retval)
+{
+    if (length == 0) 
+        return NS_ERROR_FAILURE;
+
+    if (offset + length > mBuffer->capacity)
+        return NS_ERROR_FAILURE;
+
+    nsICanvasArray *wga = new WebGLUnsignedShortArray(mBuffer, offset, length);
+    NS_ADDREF(*retval = wga);
+    return NS_OK;
+}
+
+/* [IndexGetter] unsigned long get (in unsigned long index); */
+NS_IMETHODIMP WebGLUnsignedShortArray::Get(PRUint32 index, PRUint32 *retval)
+{
+    if (index >= mLength)
+        return NS_ERROR_FAILURE;
+
+    unsigned short *values = static_cast<unsigned short*>(mBuffer->data);
+    *retval = values[index];
+
+    return NS_OK;
+}
+
+void
+WebGLUnsignedShortArray::Set(PRUint32 index, unsigned short value)
+{
+    if (index >= mLength)
+        return;
+
+    unsigned short *values = static_cast<unsigned short*>(mBuffer->data);
+    values[index] = value;
+}
+
+/* void set (); */
+NS_IMETHODIMP WebGLUnsignedShortArray::Set()
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    if (js.argc < 1 || js.argc > 2)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    if (JSVAL_IS_NUMBER(js.argv[0])) {
+        if (js.argc != 2)
+            return NS_ERROR_DOM_SYNTAX_ERR;
+
+        PRUint32 index;
+        ::JS_ValueToECMAUint32(js.ctx, js.argv[0], &index);
+
+        unsigned short value;
+        ::JS_ValueToECMAUint32(js.ctx, js.argv[1], (PRUint32 *) &value);
+
+        if (index >= mLength)
+            return NS_ERROR_FAILURE;
+
+        Set(index, value);
+    } else {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeType()
 {
-    return mBuffer.type;
+    return mBuffer->type;
 }
 
 /* [noscript, notxpcom] voidPtr nativePointer (); */
 NS_IMETHODIMP_(void *) WebGLUnsignedShortArray::NativePointer()
 {
-    return mBuffer.data;
+    return mBuffer->data;
 }
 
 /* [noscript, notxpcom] unsigned long nativeSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeSize()
 {
-    return mBuffer.capacity;
+    return mBuffer->capacity;
 }
 
 /* [noscript, notxpcom] unsigned long nativeElementSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeElementSize()
 {
-    return mBuffer.ElementSize();
+    return mBuffer->ElementSize();
 }
 
 /* [noscript, notxpcom] unsigned long nativeCount (); */
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeCount()
 {
-    return mBuffer.length;
+    return mBuffer->length;
 }
 
 nsresult
@@ -914,11 +1681,22 @@ NS_NewCanvasIntArray(nsISupports **aResult)
     return NS_OK;
 }
 
-WebGLIntArray::WebGLIntArray() { }
+WebGLIntArray::WebGLIntArray(PRUint32 length)
+    : mOffset(0), mLength(length)
+{
+    mBuffer = new WebGLArrayBuffer(length * sizeof(int));
+}
+
+WebGLIntArray::WebGLIntArray(WebGLArrayBuffer *buffer, PRUint32 offset, PRUint32 length)
+    : mBuffer(buffer), mOffset(offset), mLength(length)
+{
+}
 
 WebGLIntArray::WebGLIntArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+    : mOffset(0), mLength(arrayLen)
 {
-    mBuffer.InitFromJSArray(LOCAL_GL_INT, 1, cx, arrayObj, arrayLen);
+    mBuffer = new WebGLArrayBuffer();
+    mBuffer->InitFromJSArray(LOCAL_GL_INT, 1, cx, arrayObj, arrayLen);
 }
 
 NS_IMETHODIMP
@@ -928,61 +1706,191 @@ WebGLIntArray::Initialize(nsISupports *owner,
                           PRUint32 argc,
                           jsval *argv)
 {
-    JSObject *arrayObj;
-    jsuint arrayLen;
+    if (JSVAL_IS_NUMBER(argv[0])) {
+        PRUint32 length;
+        ::JS_ValueToECMAUint32(cx, argv[0], &length);
+        mBuffer = new WebGLArrayBuffer();
+        mBuffer->Prepare(LOCAL_GL_INT, 1, length);
+        mLength = length;
+    } else {
+        JSObject *arrayObj;
+        jsuint arrayLen;
+        jsuint byteOffset = 0;
+        jsuint length = 0;
 
-    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
-        arrayObj == NULL ||
-        !::JS_IsArrayObject(cx, arrayObj) ||
-        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
-    {
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        if (!::JS_ConvertArguments(cx, argc, argv, "o/uu", &arrayObj, &byteOffset, &length) ||
+            arrayObj == NULL)
+        {
+            return NS_ERROR_DOM_SYNTAX_ERR;
+        }
+
+        if (::JS_IsArrayObject(cx, arrayObj) &&
+            ::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+        {
+            mBuffer = new WebGLArrayBuffer();
+            mBuffer->InitFromJSArray(LOCAL_GL_INT, 1, cx, arrayObj, arrayLen);
+            mLength = arrayLen;
+        } else {
+            nsCOMPtr<nsICanvasArrayBuffer> canvasObj;
+            nsresult rv;
+            rv = nsContentUtils::XPConnect()->WrapJS(cx, arrayObj, NS_GET_IID(nsICanvasArrayBuffer), getter_AddRefs(canvasObj));
+            if (NS_FAILED(rv) || !canvasObj) {
+                return NS_ERROR_SYNTAX_ERR;
+            }
+
+            mBuffer = canvasObj->GetNativeArrayBuffer();
+
+            if (byteOffset % sizeof(int)) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if ((byteOffset + (length * sizeof(int))) > mBuffer->capacity) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if ((mBuffer->capacity - byteOffset) % sizeof(int)) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if (length > 0)
+                mLength = length;
+            else
+                mLength = (mBuffer->capacity - byteOffset) / sizeof(int);
+        }
     }
-
-    mBuffer.InitFromJSArray(LOCAL_GL_INT, 1, cx, arrayObj, arrayLen);
 
     return NS_OK;
 }
 
+/* readonly attribute nsICanvasArrayBuffer buffer; */
+NS_IMETHODIMP WebGLIntArray::GetBuffer(nsICanvasArrayBuffer * *aBuffer)
+{
+    NS_ADDREF(*aBuffer = mBuffer);
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteOffset; */
+NS_IMETHODIMP WebGLIntArray::GetByteOffset(PRUint32 *aByteOffset)
+{
+    *aByteOffset = mOffset;
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteLength; */
+NS_IMETHODIMP WebGLIntArray::GetByteLength(PRUint32 *aByteLength)
+{
+    *aByteLength = mLength * sizeof(int);
+    return NS_OK;
+}
 
 /* attribute unsigned long length; */
 NS_IMETHODIMP WebGLIntArray::GetLength(PRUint32 *aLength)
 {
-    *aLength = mBuffer.length;
+    *aLength = mLength;
     return NS_OK;
 }
-NS_IMETHODIMP WebGLIntArray::SetLength(PRUint32 aLength)
+
+/* unsigned long alignedSizeInBytes (); */
+NS_IMETHODIMP WebGLIntArray::AlignedSizeInBytes(PRUint32 *retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *retval = mBuffer->capacity;
+    return NS_OK;
+}
+
+/* nsICanvasArray slice (in unsigned long offset, in unsigned long length); */
+NS_IMETHODIMP WebGLIntArray::Slice(PRUint32 offset, PRUint32 length, nsICanvasArray **retval)
+{
+    if (length == 0) 
+        return NS_ERROR_FAILURE;
+
+    if (offset + length > mBuffer->capacity)
+        return NS_ERROR_FAILURE;
+
+    nsICanvasArray *wga = new WebGLIntArray(mBuffer, offset, length);
+    NS_ADDREF(*retval = wga);
+    return NS_OK;
+}
+
+/* [IndexGetter] long get (in unsigned long index); */
+NS_IMETHODIMP WebGLIntArray::Get(PRUint32 index, PRInt32 *retval)
+{
+    if (index >= mLength)
+        return NS_ERROR_FAILURE;
+
+    int *values = static_cast<int*>(mBuffer->data);
+    *retval = values[index];
+
+    return NS_OK;
+}
+
+void
+WebGLIntArray::Set(PRUint32 index, int value)
+{
+    if (index >= mLength)
+        return;
+
+    int *values = static_cast<int*>(mBuffer->data);
+    values[index] = value;
+}
+
+/* void set (); */
+NS_IMETHODIMP WebGLIntArray::Set()
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    if (js.argc < 1 || js.argc > 2)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    if (JSVAL_IS_NUMBER(js.argv[0])) {
+        if (js.argc != 2)
+            return NS_ERROR_DOM_SYNTAX_ERR;
+
+        PRUint32 index;
+        ::JS_ValueToECMAUint32(js.ctx, js.argv[0], &index);
+
+        PRInt32 value;
+        ::JS_ValueToECMAInt32(js.ctx, js.argv[1], &value);
+
+        if (index >= mLength)
+            return NS_ERROR_FAILURE;
+
+        Set(index, value);
+    } else {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP_(PRUint32) WebGLIntArray::NativeType()
 {
-    return mBuffer.type;
+    return mBuffer->type;
 }
 
 /* [noscript, notxpcom] voidPtr nativePointer (); */
 NS_IMETHODIMP_(void *) WebGLIntArray::NativePointer()
 {
-    return mBuffer.data;
+    return mBuffer->data;
 }
 
 /* [noscript, notxpcom] unsigned long nativeSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLIntArray::NativeSize()
 {
-    return mBuffer.capacity;
+    return mBuffer->capacity;
 }
 
 /* [noscript, notxpcom] unsigned long nativeElementSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLIntArray::NativeElementSize()
 {
-    return mBuffer.ElementSize();
+    return mBuffer->ElementSize();
 }
 
 /* [noscript, notxpcom] unsigned long nativeCount (); */
 NS_IMETHODIMP_(PRUint32) WebGLIntArray::NativeCount()
 {
-    return mBuffer.length;
+    return mBuffer->length;
 }
 
 nsresult
@@ -996,11 +1904,22 @@ NS_NewCanvasUnsignedIntArray(nsISupports **aResult)
     return NS_OK;
 }
 
-WebGLUnsignedIntArray::WebGLUnsignedIntArray() { }
+WebGLUnsignedIntArray::WebGLUnsignedIntArray(PRUint32 length)
+    : mOffset(0), mLength(length)
+{
+    mBuffer = new WebGLArrayBuffer(length * sizeof(int));
+}
+
+WebGLUnsignedIntArray::WebGLUnsignedIntArray(WebGLArrayBuffer *buffer, PRUint32 offset, PRUint32 length)
+    : mBuffer(buffer), mOffset(offset), mLength(length)
+{
+}
 
 WebGLUnsignedIntArray::WebGLUnsignedIntArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen)
+    : mOffset(0), mLength(arrayLen)
 {
-    mBuffer.InitFromJSArray(LOCAL_GL_UNSIGNED_INT, 1, cx, arrayObj, arrayLen);
+    mBuffer = new WebGLArrayBuffer();
+    mBuffer->InitFromJSArray(LOCAL_GL_UNSIGNED_INT, 1, cx, arrayObj, arrayLen);
 }
 
 NS_IMETHODIMP
@@ -1010,60 +1929,191 @@ WebGLUnsignedIntArray::Initialize(nsISupports *owner,
                                   PRUint32 argc,
                                   jsval *argv)
 {
-    JSObject *arrayObj;
-    jsuint arrayLen;
+    if (JSVAL_IS_NUMBER(argv[0])) {
+        PRUint32 length;
+        ::JS_ValueToECMAUint32(cx, argv[0], &length);
+        mBuffer = new WebGLArrayBuffer();
+        mBuffer->Prepare(LOCAL_GL_UNSIGNED_INT, 1, length);
+        mLength = length;
+    } else {
+        JSObject *arrayObj;
+        jsuint arrayLen;
+        jsuint byteOffset = 0;
+        jsuint length = 0;
 
-    if (!::JS_ConvertArguments(cx, argc, argv, "o", &arrayObj) ||
-        arrayObj == NULL ||
-        !::JS_IsArrayObject(cx, arrayObj) ||
-        !::JS_GetArrayLength(cx, arrayObj, &arrayLen))
-    {
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        if (!::JS_ConvertArguments(cx, argc, argv, "o/uu", &arrayObj, &byteOffset, &length) ||
+            arrayObj == NULL)
+        {
+            return NS_ERROR_DOM_SYNTAX_ERR;
+        }
+
+        if (::JS_IsArrayObject(cx, arrayObj) &&
+            ::JS_GetArrayLength(cx, arrayObj, &arrayLen))
+        {
+            mBuffer = new WebGLArrayBuffer();
+            mBuffer->InitFromJSArray(LOCAL_GL_UNSIGNED_INT, 1, cx, arrayObj, arrayLen);
+            mLength = arrayLen;
+        } else {
+            nsCOMPtr<nsICanvasArrayBuffer> canvasObj;
+            nsresult rv;
+            rv = nsContentUtils::XPConnect()->WrapJS(cx, arrayObj, NS_GET_IID(nsICanvasArrayBuffer), getter_AddRefs(canvasObj));
+            if (NS_FAILED(rv) || !canvasObj) {
+                return NS_ERROR_SYNTAX_ERR;
+            }
+
+            mBuffer = canvasObj->GetNativeArrayBuffer();
+
+            if (byteOffset % sizeof(int)) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if ((byteOffset + (length * sizeof(int))) > mBuffer->capacity) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if ((mBuffer->capacity - byteOffset) % sizeof(int)) {
+                return NS_ERROR_FAILURE;
+            }
+
+            if (length > 0)
+                mLength = length;
+            else
+                mLength = (mBuffer->capacity - byteOffset) / sizeof(int);
+        }
     }
 
-    mBuffer.InitFromJSArray(LOCAL_GL_UNSIGNED_INT, 1, cx, arrayObj, arrayLen);
+    return NS_OK;
+}
 
+/* readonly attribute nsICanvasArrayBuffer buffer; */
+NS_IMETHODIMP WebGLUnsignedIntArray::GetBuffer(nsICanvasArrayBuffer * *aBuffer)
+{
+    NS_ADDREF(*aBuffer = mBuffer);
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteOffset; */
+NS_IMETHODIMP WebGLUnsignedIntArray::GetByteOffset(PRUint32 *aByteOffset)
+{
+    *aByteOffset = mOffset;
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long byteLength; */
+NS_IMETHODIMP WebGLUnsignedIntArray::GetByteLength(PRUint32 *aByteLength)
+{
+    *aByteLength = mLength * sizeof(int);
     return NS_OK;
 }
 
 /* attribute unsigned long length; */
 NS_IMETHODIMP WebGLUnsignedIntArray::GetLength(PRUint32 *aLength)
 {
-    *aLength = mBuffer.length;
+    *aLength = mLength;
     return NS_OK;
 }
-NS_IMETHODIMP WebGLUnsignedIntArray::SetLength(PRUint32 aLength)
+
+/* unsigned long alignedSizeInBytes (); */
+NS_IMETHODIMP WebGLUnsignedIntArray::AlignedSizeInBytes(PRUint32 *retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *retval = mBuffer->capacity;
+    return NS_OK;
+}
+
+/* nsICanvasArray slice (in unsigned long offset, in unsigned long length); */
+NS_IMETHODIMP WebGLUnsignedIntArray::Slice(PRUint32 offset, PRUint32 length, nsICanvasArray **retval)
+{
+    if (length == 0) 
+        return NS_ERROR_FAILURE;
+
+    if (offset + length > mBuffer->capacity)
+        return NS_ERROR_FAILURE;
+
+    nsICanvasArray *wga = new WebGLUnsignedIntArray(mBuffer, offset, length);
+    NS_ADDREF(*retval = wga);
+    return NS_OK;
+}
+
+/* [IndexGetter] unsigned long get (in unsigned long index); */
+NS_IMETHODIMP WebGLUnsignedIntArray::Get(PRUint32 index, PRUint32 *retval)
+{
+    if (index >= mLength)
+        return NS_ERROR_FAILURE;
+
+    unsigned int *values = static_cast<unsigned int*>(mBuffer->data);
+    *retval = values[index];
+
+    return NS_OK;
+}
+
+void
+WebGLUnsignedIntArray::Set(PRUint32 index, unsigned int value)
+{
+    if (index >= mLength)
+        return;
+
+    unsigned int *values = static_cast<unsigned int*>(mBuffer->data);
+    values[index] = value;
+}
+
+/* void set (); */
+NS_IMETHODIMP WebGLUnsignedIntArray::Set()
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    if (js.argc < 1 || js.argc > 2)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    if (JSVAL_IS_NUMBER(js.argv[0])) {
+        if (js.argc != 2)
+            return NS_ERROR_DOM_SYNTAX_ERR;
+
+        PRUint32 index;
+        ::JS_ValueToECMAUint32(js.ctx, js.argv[0], &index);
+
+        PRUint32 value;
+        ::JS_ValueToECMAUint32(js.ctx, js.argv[1], &value);
+
+        if (index >= mLength)
+            return NS_ERROR_FAILURE;
+
+        Set(index, value);
+    } else {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedIntArray::NativeType()
 {
-    return mBuffer.type;
+    return mBuffer->type;
 }
 
 /* [noscript, notxpcom] voidPtr nativePointer (); */
 NS_IMETHODIMP_(void *) WebGLUnsignedIntArray::NativePointer()
 {
-    return mBuffer.data;
+    return mBuffer->data;
 }
 
 /* [noscript, notxpcom] unsigned long nativeSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedIntArray::NativeSize()
 {
-    return mBuffer.capacity;
+    return mBuffer->capacity;
 }
 
 /* [noscript, notxpcom] unsigned long nativeElementSize (); */
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedIntArray::NativeElementSize()
 {
-    return mBuffer.ElementSize();
+    return mBuffer->ElementSize();
 }
 
 /* [noscript, notxpcom] unsigned long nativeCount (); */
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedIntArray::NativeCount()
 {
-    return mBuffer.length;
+    return mBuffer->length;
 }
 
 /* [noscript] attribute GLuint name; */

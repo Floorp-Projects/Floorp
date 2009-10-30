@@ -354,6 +354,20 @@ WebGLContext::Present()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* long sizeInBytes (in GLenum type); */
+NS_IMETHODIMP
+WebGLContext::SizeInBytes(GLenum type, PRInt32 *retval)
+{
+    if (type == LOCAL_GL_FLOAT) *retval = sizeof(float);
+    if (type == LOCAL_GL_SHORT) *retval = sizeof(short);
+    if (type == LOCAL_GL_UNSIGNED_SHORT) *retval = sizeof(unsigned short);
+    if (type == LOCAL_GL_BYTE) *retval = 1;
+    if (type == LOCAL_GL_UNSIGNED_BYTE) *retval = 1;
+    if (type == LOCAL_GL_INT) *retval = sizeof(int);
+    if (type == LOCAL_GL_UNSIGNED_INT) *retval = sizeof(unsigned int);
+    if (type == LOCAL_GL_DOUBLE) *retval = sizeof(double);
+    return NS_OK;
+}
 
 /* void GlActiveTexture (in PRUint32 texture); */
 NS_IMETHODIMP
@@ -508,15 +522,28 @@ GL_SAME_METHOD_2(BlendFunc, BlendFunc, PRUint32, PRUint32)
 GL_SAME_METHOD_4(BlendFuncSeparate, BlendFuncSeparate, PRUint32, PRUint32, PRUint32, PRUint32)
 
 NS_IMETHODIMP
-WebGLContext::BufferData(GLenum target, nsICanvasArray *na, GLenum usage)
+WebGLContext::BufferData(GLenum target)
 {
+    // overloaded:
+    // void bufferData (in GLenum target, in GLsizei size, in GLenum usage);
+    // void bufferData (in GLenum target, in nsICanvasArray data, in GLenum usage);
+    // void bufferData (in GLenum target, in nsICanvasArrayBuffer data, in GLenum usage)
+
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    if (js.argc != 3)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     WebGLBuffer *boundBuffer = NULL;
 
     if (target == LOCAL_GL_ARRAY_BUFFER) {
         boundBuffer = mBoundArrayBuffer;
     } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
-        if (na->NativeType() != LOCAL_GL_UNSIGNED_SHORT)
-            return ErrorMessage("glBufferData: %x - GL_ELEMENT_ARRAY_BUFFER target must be used with UnsignedShortBuffer", na->NativeType());
+        // XXX fix type check
+        //if (na->NativeType() != LOCAL_GL_UNSIGNED_SHORT)
+        //    return ErrorMessage("glBufferData: %x - GL_ELEMENT_ARRAY_BUFFER target must be used with UnsignedShortBuffer", na->NativeType());
 
         boundBuffer = mBoundElementArrayBuffer;
     } else {
@@ -527,18 +554,62 @@ WebGLContext::BufferData(GLenum target, nsICanvasArray *na, GLenum usage)
         return ErrorMessage("glBufferData: no buffer bound!");
     }
 
+
     MakeContextCurrent();
 
-    boundBuffer->Set(na);
+    GLenum usage;
 
-    gl->fBufferData(target, na->NativeSize(), na->NativePointer(), usage);
+    if (!::JS_ValueToECMAUint32(js.ctx, js.argv[2], &usage)) {
+        return ErrorMessage("bufferData: invalid usage parameter");
+    }
+
+    if (JSVAL_IS_NUMBER(js.argv[1])) {
+        GLsizei size;
+        if (!::JS_ValueToECMAInt32(js.ctx, js.argv[1], &size)) {
+            return ErrorMessage("bufferData: invalid size parameter");
+        }
+        boundBuffer->SetCount(size);
+        gl->fBufferData(target, size, 0, usage);
+    } else if (JSVAL_IS_OBJECT(js.argv[1])) {
+        nsCOMPtr<nsICanvasArray> canvasArrayObj;
+        nsresult rv;
+
+        rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, JSVAL_TO_OBJECT(js.argv[1]),
+                                                 NS_GET_IID(nsICanvasArray), getter_AddRefs(canvasArrayObj));
+        if (NS_FAILED(rv) || !canvasArrayObj) {
+            nsCOMPtr<nsICanvasArrayBuffer> arrayBuf;
+            rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, JSVAL_TO_OBJECT(js.argv[1]),
+                                                     NS_GET_IID(nsICanvasArrayBuffer), getter_AddRefs(arrayBuf));
+            if (NS_FAILED(rv) || !arrayBuf)
+                return ErrorMessage("bufferData: need CanvasArray or CanvasArrayBuffer");
+
+            boundBuffer->SetCount(arrayBuf->NativeSize());
+            gl->fBufferData(target, arrayBuf->NativeSize(), arrayBuf->NativePointer(), usage);
+        } else {
+            boundBuffer->Set(canvasArrayObj);
+            gl->fBufferData(target, canvasArrayObj->NativeSize(), canvasArrayObj->NativePointer(), usage);
+        }
+    } else {
+        return ErrorMessage("bufferData: invalid data");
+    }
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-WebGLContext::BufferSubData(GLenum target, GLuint offset, nsICanvasArray *na)
+WebGLContext::BufferSubData(GLenum target, GLsizeiptr offset)
 {
+    // overloaded:
+    // void bufferSubData(in GLenum target, in GLsizeiptr offset, in CanvasArray data) 
+    // void bufferSubData(in GLenum target, in GLsizeiptr offset, in CanvasArrayBuffer data) 
+
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    if (js.argc != 3)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     WebGLBuffer *boundBuffer = NULL;
 
     if (target == LOCAL_GL_ARRAY_BUFFER) {
@@ -553,23 +624,62 @@ WebGLContext::BufferSubData(GLenum target, GLuint offset, nsICanvasArray *na)
         return ErrorMessage("glBufferSubData: no buffer bound!");
     }
 
+    /* XXX FIXME 
     // check type
     if (na->NativeType() != boundBuffer->GLType()) {
         return ErrorMessage("glBufferSubData: existing buffer has different base type (0x%04x) the sub data (0x%04x)!", boundBuffer->GLType(), na->NativeType());
         return NS_ERROR_FAILURE;
     }
+    */
 
-    // check size
-    if ((offset + na->NativeCount()) > boundBuffer->Count()) {
-        return ErrorMessage("glBufferSubData: existing buffer is too small for additional data");
-        return NS_ERROR_FAILURE;
+    if (JSVAL_IS_OBJECT(js.argv[2])) {
+        nsCOMPtr<nsICanvasArray> canvasArrayObj;
+        nsresult rv;
+
+        rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, JSVAL_TO_OBJECT(js.argv[2]),
+                                                 NS_GET_IID(nsICanvasArray), getter_AddRefs(canvasArrayObj));
+        if (NS_FAILED(rv) || !canvasArrayObj) {
+            nsCOMPtr<nsICanvasArrayBuffer> arrayBuf;
+            rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, JSVAL_TO_OBJECT(js.argv[2]),
+                                                     NS_GET_IID(nsICanvasArrayBuffer), getter_AddRefs(arrayBuf));
+            if (NS_FAILED(rv) || !arrayBuf)
+                return ErrorMessage("bufferData: need CanvasArray or CanvasArrayBuffer");
+
+            // check size
+            // XXX should be bytes
+            if ((offset + arrayBuf->NativeSize()) > boundBuffer->Count()) {
+                return ErrorMessage("glBufferSubData: existing buffer is too small (%d) for data at offset (%d+%d)",
+                                    boundBuffer->Count(), offset, arrayBuf->NativeSize());
+                return NS_ERROR_FAILURE;
+            }
+#ifdef DEBUG
+            LogMessage("bufferSubData: buffer (%d) for data at offset (%d+%d)", boundBuffer->Count(), offset, arrayBuf->NativeSize());
+#endif
+            // all good
+
+            MakeContextCurrent();
+
+            gl->fBufferSubData(target, offset, arrayBuf->NativeSize(), arrayBuf->NativePointer());
+        } else {
+            // check size
+            // XXX should be bytes
+            if ((offset + canvasArrayObj->NativeCount()) > boundBuffer->Count()) {
+                return ErrorMessage("glBufferSubData: existing buffer is too small (%d) for data at offset (%d+%d)",
+                                    boundBuffer->Count(), offset, canvasArrayObj->NativeCount());
+                return NS_ERROR_FAILURE;
+            }
+#ifdef DEBUG
+            LogMessage("bufferSubData: buffer (%d) for data at offset (%d+%d)", boundBuffer->Count(), offset, canvasArrayObj->NativeSize());
+#endif
+            // all good
+
+            MakeContextCurrent();
+
+            gl->fBufferSubData(target, offset, canvasArrayObj->NativeSize(), canvasArrayObj->NativePointer());
+        }
+    } else {
+        return ErrorMessage("bufferData: invalid data");
     }
-
-    // all good
-
-    MakeContextCurrent();
-
-    gl->fBufferSubData(target, offset * na->NativeElementSize(), na->NativeSize(), na->NativePointer());
 
     return NS_OK;
 }
@@ -970,7 +1080,7 @@ WebGLContext::DrawElements(GLenum mode, GLuint count, GLenum type, GLuint offset
         return ErrorMessage("glDrawElements: ValidateBuffers failed");
 #endif
     // XXX uh, is this offset, or offset * elementsize?
-    gl->fDrawElements(mode, count, type, (GLvoid*) (offset * mBoundElementArrayBuffer->ElementSize()));
+    gl->fDrawElements(mode, count, type, (GLvoid*) (offset));
 
     Invalidate();
 
@@ -2400,7 +2510,7 @@ GL_SAME_METHOD_5(Uniform4f, Uniform4f, GLint, GLfloat, GLfloat, GLfloat, GLfloat
 // one uint arg followed by an array of c elements of glTypeConst.
 #define GL_SIMPLE_ARRAY_METHOD(glname, name, c, glTypeConst, ptrType)             \
 NS_IMETHODIMP                                                                     \
-WebGLContext::name(GLint idx, nsICanvasArray *v)                                   \
+WebGLContext::name(GLint idx, nsICanvasArray *v)                                  \
 {                                                                                 \
     NativeJSContext js;                                                           \
     if (NS_FAILED(js.error))                                                      \
@@ -2423,22 +2533,20 @@ WebGLContext::name(GLint idx, nsICanvasArray *v)                                
             if (v->NativeType() != LOCAL_GL_INT) {                                \
                 return ErrorMessage(#name ": arg not an array");                  \
             }                                                                     \
-            WebGLIntArray *wga = static_cast<WebGLIntArray*>(v);                  \
-            if (wga->NativeCount() % c != 0) {                                    \
+            if (v->NativeCount() % c != 0) {                                      \
                 return ErrorMessage(#name ": array length not divisible by " #c); \
             }                                                                     \
             MakeContextCurrent();                                                 \
-            gl->f##glname(idx, wga->NativeCount() / c, ( ptrType *)wga->NativePointer()); \
+            gl->f##glname(idx, v->NativeCount() / c, ( ptrType *)v->NativePointer()); \
         } else if (glTypeConst == LOCAL_GL_FLOAT) {                               \
             if (v->NativeType() != LOCAL_GL_FLOAT) {                              \
                 return ErrorMessage(#name ": arg not an array");                  \
             }                                                                     \
-            WebGLFloatArray *wga = static_cast<WebGLFloatArray*>(v);              \
-            if (wga->NativeCount() % c != 0) {                                    \
+            if (v->NativeCount() % c != 0) {                                      \
                 return ErrorMessage(#name ": array length not divisible by " #c); \
             }                                                                     \
             MakeContextCurrent();                                                 \
-            gl->f##glname(idx, wga->NativeCount() / c, ( ptrType *)wga->NativePointer()); \
+            gl->f##glname(idx, v->NativeCount() / c, ( ptrType *)v->NativePointer()); \
         } else {                                                                  \
             return ErrorMessage("Unhandled glTypeConst"); /* need compiler fail */\
         }                                                                         \
@@ -2448,7 +2556,7 @@ WebGLContext::name(GLint idx, nsICanvasArray *v)                                
 
 #define GL_SIMPLE_ARRAY_METHOD_NO_COUNT(glname, name, c, glTypeConst, ptrType)    \
 NS_IMETHODIMP                                                                     \
-WebGLContext::name(GLuint idx, nsICanvasArray *v)                                  \
+WebGLContext::name(GLuint idx, nsICanvasArray *v)                                 \
 {                                                                                 \
     NativeJSContext js;                                                           \
     if (NS_FAILED(js.error))                                                      \
@@ -2471,22 +2579,20 @@ WebGLContext::name(GLuint idx, nsICanvasArray *v)                               
             if (v->NativeType() != LOCAL_GL_INT) {                                \
                 return ErrorMessage(#name ": arg not an array");                  \
             }                                                                     \
-            WebGLIntArray *wga = static_cast<WebGLIntArray*>(v);                  \
-            if (wga->NativeCount() % c != 0) {                                    \
-                return ErrorMessage(#name ": array wrong size %d, expected " #c, wga->NativeCount()); \
+            if (v->NativeCount() % c != 0) {                                      \
+                return ErrorMessage(#name ": array wrong size %d, expected " #c, v->NativeCount()); \
             }                                                                     \
             MakeContextCurrent();                                                 \
-            gl->f##glname(idx, ( ptrType *)wga->NativePointer());                 \
+            gl->f##glname(idx, ( ptrType *)v->NativePointer());                   \
         } else if (glTypeConst == LOCAL_GL_FLOAT) {                               \
             if (v->NativeType() != LOCAL_GL_FLOAT) {                              \
                 return ErrorMessage(#name ": arg not an array");                  \
             }                                                                     \
-            WebGLFloatArray *wga = static_cast<WebGLFloatArray*>(v);              \
-            if (wga->NativeCount() % c != 0) {                                    \
-                return ErrorMessage(#name ": array wrong size %d, expected " #c, wga->NativeCount()); \
+            if (v->NativeCount() % c != 0) {                                      \
+                return ErrorMessage(#name ": array wrong size %d, expected " #c, v->NativeCount()); \
             }                                                                     \
             MakeContextCurrent();                                                 \
-            gl->f##glname(idx, ( ptrType *)wga->NativePointer());                 \
+            gl->f##glname(idx, ( ptrType *)v->NativePointer());                   \
         } else {                                                                  \
             return ErrorMessage("Unhandled glTypeConst"); /* need compiler fail */\
         }                                                                         \
@@ -2496,7 +2602,7 @@ WebGLContext::name(GLuint idx, nsICanvasArray *v)                               
 
 #define GL_SIMPLE_MATRIX_METHOD(glname, name, c, glTypeConst, ptrType)            \
 NS_IMETHODIMP                                                                     \
-WebGLContext::name(GLint location, GLboolean transpose, nsICanvasArray *value)     \
+WebGLContext::name(GLint location, GLboolean transpose, nsICanvasArray *value)    \
 {                                                                                 \
     NativeJSContext js;                                                           \
     if (NS_FAILED(js.error))                                                      \
@@ -2519,12 +2625,11 @@ WebGLContext::name(GLint location, GLboolean transpose, nsICanvasArray *value)  
             if (value->NativeType() != LOCAL_GL_FLOAT) {                          \
                 return ErrorMessage(#name ": arg not an array");                  \
             }                                                                     \
-            WebGLFloatArray *wga = static_cast<WebGLFloatArray*>(value);          \
-            if (wga->NativeCount() % c != 0) {                                    \
-                return ErrorMessage(#name ": array wrong size %d, expected " #c, wga->NativeCount());     \
+            if (value->NativeCount() % c != 0) {                                  \
+                return ErrorMessage(#name ": array wrong size %d, expected " #c, value->NativeCount());     \
             }                                                                     \
             MakeContextCurrent();                                                 \
-            gl->f##glname(location, wga->NativeCount() / c, transpose, ( ptrType *)wga->NativePointer()); \
+            gl->f##glname(location, value->NativeCount() / c, transpose, ( ptrType *)value->NativePointer()); \
         } else {                                                                  \
             return ErrorMessage("Unhandled glTypeConst"); /* need compiler fail */\
         }                                                                         \
@@ -2780,8 +2885,10 @@ WebGLContext::VertexAttribPointer(GLuint index, GLint size, GLenum type,
     if (size < 1 || size > 4)
         return ErrorMessage("glVertexAttribPointer: invalid element size");
 
+    /* XXX make work with bufferSubData & heterogeneous types 
     if (type != mBoundArrayBuffer->GLType())
         return ErrorMessage("glVertexAttribPointer: type must match bound VBO type: %d != %d", type, mBoundArrayBuffer->GLType());
+    */
 
     // XXX 0 stride?
     //if (stride < (GLuint) size)
@@ -2797,8 +2904,8 @@ WebGLContext::VertexAttribPointer(GLuint index, GLint size, GLenum type,
     MakeContextCurrent();
 
     gl->fVertexAttribPointer(index, size, type, normalized,
-                             stride * mBoundArrayBuffer->ElementSize(),
-                             (void*) (offset * mBoundArrayBuffer->ElementSize()));
+                             stride,
+                             (void*) (offset));
 
     return NS_OK;
 }
