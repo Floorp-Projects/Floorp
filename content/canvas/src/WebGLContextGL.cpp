@@ -456,7 +456,8 @@ WebGLContext::BindFramebuffer(GLenum target, nsIWebGLFramebuffer *fb)
     if (target >= LOCAL_GL_COLOR_ATTACHMENT0 &&
         target < (LOCAL_GL_COLOR_ATTACHMENT0 + mBoundColorFramebuffers.Length()))
     {
-        mBoundColorFramebuffers[target] = wfb;
+        int targetOffset = target - LOCAL_GL_COLOR_ATTACHMENT0;
+        mBoundColorFramebuffers[targetOffset] = wfb;
     } else if (target == LOCAL_GL_DEPTH_ATTACHMENT) {
         mBoundDepthFramebuffer = wfb;
     } else if (target == LOCAL_GL_STENCIL_ATTACHMENT) {
