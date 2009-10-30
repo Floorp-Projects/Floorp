@@ -115,6 +115,7 @@
 #include "nsIDOMWindowInternal.h"
 
 #include "mozAutoDocUpdate.h"
+#include "nsHTMLFormElement.h"
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
@@ -1341,10 +1342,11 @@ nsHTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
     shell->HandleDOMEventWithTarget(submitContent, &event, &status);
   } else if (mForm->HasSingleTextControl()) {
     // If there's only one text control, just submit the form
-    nsCOMPtr<nsIContent> form = do_QueryInterface(mForm);
+    // Hold strong ref across the event
+    nsRefPtr<nsHTMLFormElement> form(mForm);
     nsFormEvent event(PR_TRUE, NS_FORM_SUBMIT);
     nsEventStatus status  = nsEventStatus_eIgnore;
-    shell->HandleDOMEventWithTarget(form, &event, &status);
+    shell->HandleDOMEventWithTarget(mForm, &event, &status);
   }
 
   return NS_OK;
@@ -2050,8 +2052,9 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             // handling the event the pres context will return a null
             // pres shell.  See bug 125624.
             if (presShell) {
-              nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
-              presShell->HandleDOMEventWithTarget(form, &event, &status);
+              // Hold a strong ref while dispatching
+              nsRefPtr<nsHTMLFormElement> form(mForm);
+              presShell->HandleDOMEventWithTarget(mForm, &event, &status);
             }
           }
           break;
