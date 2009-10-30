@@ -753,7 +753,11 @@ pref("browser.rights.3.shown", false);
 pref("browser.rights.override", true);
 #endif
 
+#ifdef WINCE
+pref("browser.sessionstore.resume_from_crash", false);
+#else
 pref("browser.sessionstore.resume_from_crash", true);
+#endif
 pref("browser.sessionstore.resume_session_once", false);
 
 // minimal interval between two save operations in milliseconds
