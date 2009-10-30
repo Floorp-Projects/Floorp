@@ -1,0 +1,14 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <style>
+      @namespace foo "test";
+      div { color: green; }
+      div[xml|lang="foo"] { color: red; }
+      div[xmlns|lang="foo"] { color: red; }
+    </style>
+  </head>
+  <body>
+    <div xml:lang="foo">Test</div>
+    <div xmlns:lang="foo">Test</div>
+  </body>
+</html>

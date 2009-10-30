@@ -61,10 +61,10 @@ class nsXMLNameSpaceMap
 {
 public:
   /**
-   * Allocates a new nsXMLNameSpaceMap (with new()) and initializes it with the
-   * xmlns and xml namespaces.
+   * Allocates a new nsXMLNameSpaceMap (with new()) and if aForXML is
+   * true initializes it with the xmlns and xml namespaces.
    */
-  static NS_HIDDEN_(nsXMLNameSpaceMap*) Create();
+  static NS_HIDDEN_(nsXMLNameSpaceMap*) Create(PRBool aForXML);
 
   /**
    * Add a prefix and its corresponding namespace ID to the map.
