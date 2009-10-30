@@ -694,7 +694,15 @@ WebGLContext::CheckFramebufferStatus(GLenum target, GLenum *retval)
     return NS_OK;
 }
 
-GL_SAME_METHOD_1(Clear, Clear, PRUint32)
+NS_IMETHODIMP
+WebGLContext::Clear(PRUint32 mask)
+{
+    MakeContextCurrent();
+    gl->fClear(mask);
+    Invalidate();
+
+    return NS_OK;
+}
 
 GL_SAME_METHOD_4(ClearColor, ClearColor, float, float, float, float)
 
