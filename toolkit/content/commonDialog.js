@@ -243,6 +243,8 @@ function commonDialogOnLoad()
         .playEventSound(sound);
     }
   } catch (e) { }
+
+  observerService.notifyObservers(window, "common-dialog-loaded", null);
 }
 
 function commonDialogOnUnload(){
