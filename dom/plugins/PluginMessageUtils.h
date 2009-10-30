@@ -43,6 +43,7 @@
 
 #include "npapi.h"
 #include "npruntime.h"
+#include "npfunctions.h"
 #include "nsAutoPtr.h"
 #include "nsStringGlue.h"
 #include "nsThreadUtils.h"
@@ -166,6 +167,8 @@ inline void AssertPluginThread()
   NS_ASSERTION(NS_IsMainThread(), "should be on the plugin's main thread!");
 }
 
+void DeferNPObjectLastRelease(const NPNetscapeFuncs* f, NPObject* o);
+void DeferNPVariantLastRelease(const NPNetscapeFuncs* f, NPVariant* v);
 
 } /* namespace plugins */
 

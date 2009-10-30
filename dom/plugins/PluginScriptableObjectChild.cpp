@@ -559,7 +559,7 @@ PluginScriptableObjectChild::ScriptableEnumerate(NPObject* aObject,
   }
 
   for (PRUint32 index = 0; index < *aCount; index++) {
-    *aIdentifiers[index] = (NPIdentifier)identifiers[index];
+    (*aIdentifiers)[index] = (NPIdentifier)identifiers[index];
   }
   return true;
 }
@@ -779,7 +779,7 @@ PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
   Variant convertedResult;
   success = ConvertToRemoteVariant(result, convertedResult, GetInstance());
 
-  PluginModuleChild::sBrowserFuncs.releasevariantvalue(&result);
+  DeferNPVariantLastRelease(&PluginModuleChild::sBrowserFuncs, &result);
 
   if (!success) {
     *aResult = void_t();
@@ -845,7 +845,7 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<Variant>& aArgs,
   Variant convertedResult;
   success = ConvertToRemoteVariant(result, convertedResult, GetInstance());
 
-  PluginModuleChild::sBrowserFuncs.releasevariantvalue(&result);
+  DeferNPVariantLastRelease(&PluginModuleChild::sBrowserFuncs, &result);
 
   if (!success) {
     *aResult = void_t();
@@ -912,7 +912,7 @@ PluginScriptableObjectChild::AnswerGetProperty(const NPRemoteIdentifier& aId,
 
   Variant converted;
   if ((*aSuccess = ConvertToRemoteVariant(result, converted, GetInstance()))) {
-    PluginModuleChild::sBrowserFuncs.releasevariantvalue(&result);
+    DeferNPVariantLastRelease(&PluginModuleChild::sBrowserFuncs, &result);
     *aResult = converted;
   }
   else {
@@ -1072,7 +1072,7 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<Variant>& aArgs,
   Variant convertedResult;
   success = ConvertToRemoteVariant(result, convertedResult, GetInstance());
 
-  PluginModuleChild::sBrowserFuncs.releasevariantvalue(&result);
+  DeferNPVariantLastRelease(&PluginModuleChild::sBrowserFuncs, &result);
 
   if (!success) {
     *aResult = void_t();
