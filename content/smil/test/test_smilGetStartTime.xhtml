@@ -27,6 +27,9 @@ var anim = document.getElementById("anim");
 SimpleTest.waitForExplicitFinish();
 
 function main() {
+  svg.pauseAnimations();
+  svg.setCurrentTime(0);
+
   // indefinite 
   var exceptionCaught = false;
   try {
