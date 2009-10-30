@@ -21,3 +21,4 @@
 == hScrollSimpleMinHeightQuirks-3D.html greenboxhbar.html
 == hScrollAbsMinHeightD.html greenboxhbar.html
 == hScrollAbsMinHeightQuirksD.html greenboxhbar.html
+== dynamicHeight100.html dynamicHeight100-ref.html

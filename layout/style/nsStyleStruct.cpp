@@ -1102,29 +1102,42 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
     // FIXME: Bug 507764.  Why do we need reflow here?
     return NS_STYLE_HINT_REFLOW;
   }
-  
+
+  if (mBoxSizing != aOther.mBoxSizing) {
+    return nsChangeHint_ReflowFrame;
+  }
+
+  nsChangeHint heightHint = NS_STYLE_HINT_NONE;
+  if (mHeight != aOther.mHeight ||
+      mMinHeight != aOther.mMinHeight ||
+      mMaxHeight != aOther.mMaxHeight) {
+    // Height changes can't affect intrinsic widths, but due to our
+    // not-so-great computation of mVResize in nsHTMLReflowState, do need to
+    // force reflow of the whole subtree.
+    heightHint =
+      NS_CombineHint(nsChangeHint_NeedReflow, nsChangeHint_NeedDirtyReflow);
+  }
+
   if ((mWidth == aOther.mWidth) &&
       (mMinWidth == aOther.mMinWidth) &&
-      (mMaxWidth == aOther.mMaxWidth) &&
-      (mHeight == aOther.mHeight) &&
-      (mMinHeight == aOther.mMinHeight) &&
-      (mMaxHeight == aOther.mMaxHeight) &&
-      (mBoxSizing == aOther.mBoxSizing)) {
+      (mMaxWidth == aOther.mMaxWidth)) {
     if (mOffset == aOther.mOffset) {
-      return NS_STYLE_HINT_NONE;
+      return heightHint;
     } else {
       // Offset changes only affect positioned content, and can't affect any
       // intrinsic widths.  They also don't need to force reflow of
       // descendants.
-      return nsChangeHint_NeedReflow;
+      return NS_CombineHint(heightHint, nsChangeHint_NeedReflow);
     }
   }
 
-  // None of our differences can affect descendant intrinsic sizes and none of
-  // them need to force children to reflow.
-  return NS_SubtractHint(nsChangeHint_ReflowFrame,
-                         NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
-                                        nsChangeHint_NeedDirtyReflow));
+  // None of our width differences can affect descendant intrinsic
+  // sizes and none of them need to force children to reflow.
+  return
+    NS_CombineHint(heightHint,
+                   NS_SubtractHint(nsChangeHint_ReflowFrame,
+                                   NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
+                                                  nsChangeHint_NeedDirtyReflow)));
 }
 
 #ifdef DEBUG
