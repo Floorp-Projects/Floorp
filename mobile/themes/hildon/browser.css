@@ -631,6 +631,11 @@ autocompleteresult.allbookmarks {
   background: #E9E9E9 url("images/arrowright-16.png") no-repeat 98% 50%;
 }
 
+autocompleteresult.allbookmarks:active,
+autocompleteresult.allbookmarks.autocompleteresult-selected {
+  background-color: #8db8d8;
+}
+
 autocompleteresult.allbookmarks > .autocomplete-item-label {
   font-size: 2.4mm !important;
 }
