@@ -114,6 +114,8 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     PRBool                        mFlushing;
     
+    PRBool                        mInDocumentUpdate;
+
     /**
      * Used for deferring DidBuildModel call out of notification batch
      */
@@ -225,6 +227,20 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     void InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState);
 
     PRBool IsScriptEnabled();
+
+    inline void BeginDocUpdate() {
+      NS_PRECONDITION(!mInDocumentUpdate, "Tried to double-open update.");
+      NS_PRECONDITION(mParser, "Started update without parser.");
+      mInDocumentUpdate = PR_TRUE;
+      mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
+    }
+
+    inline void EndDocUpdate() {
+      if (mInDocumentUpdate) {
+        mInDocumentUpdate = PR_FALSE;
+        mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
+      }
+    }
 
     void PostPendingAppendNotification(nsIContent* aParent, nsIContent* aChild) {
       PRBool newParent = PR_TRUE;

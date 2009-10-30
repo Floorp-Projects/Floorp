@@ -247,17 +247,30 @@ nsHtml5TreeOpExecutor::PostEvaluateScript(nsIScriptElement *aElement)
 void
 nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
 {
-  nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aElement));
-  if (ssle) {
-    ssle->SetEnableUpdates(PR_TRUE);
-    PRBool willNotify;
-    PRBool isAlternate;
-    nsresult rv = ssle->UpdateStyleSheet(this, &willNotify, &isAlternate);
-    if (NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
-      ++mPendingSheetCount;
-      mScriptLoader->AddExecuteBlocker();
-    }
+  // Break out of the doc update created by Flush() to zap a runnable 
+  // waiting to call UpdateStyleSheet without the right observer
+  EndDocUpdate();
+
+  if (NS_UNLIKELY(!mParser)) {
+    // EndDocUpdate ran stuff that called nsIParser::Terminate()
+    return;
   }
+
+  nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aElement));
+  NS_ASSERTION(ssle, "Node didn't QI to style.");
+
+  ssle->SetEnableUpdates(PR_TRUE);
+
+  PRBool willNotify;
+  PRBool isAlternate;
+  nsresult rv = ssle->UpdateStyleSheet(this, &willNotify, &isAlternate);
+  if (NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
+    ++mPendingSheetCount;
+    mScriptLoader->AddExecuteBlocker();
+  }
+
+  // Re-open update
+  BeginDocUpdate();
 }
 
 void
@@ -280,45 +293,51 @@ nsHtml5TreeOpExecutor::Flush()
     mStage.RetrieveOperations(mOpQueue);
   }
   
-  { // scope for the auto update so that it ends before we try to run the 
-    // script
-    MOZ_AUTO_DOC_UPDATE(GetDocument(), UPDATE_CONTENT_MODEL, PR_TRUE);
-    PRIntervalTime flushStart = 0;
-    PRUint32 opQueueLength = mOpQueue.Length();
-    if (opQueueLength > NS_HTML5_TREE_OP_EXECUTOR_MIN_QUEUE_LENGTH) { // avoid computing averages with too few ops
-      flushStart = PR_IntervalNow();
-    }
-    mElementsSeenInThisAppendBatch.SetCapacity(opQueueLength * 2);
-    // XXX alloc failure
-    const nsHtml5TreeOperation* start = mOpQueue.Elements();
-    const nsHtml5TreeOperation* end = start + opQueueLength;
-    for (nsHtml5TreeOperation* iter = (nsHtml5TreeOperation*)start; iter < end; ++iter) {
-      if (NS_UNLIKELY(!mParser)) {
-        // The previous tree op caused a call to nsIParser::Terminate();
-        break;
-      }
-      iter->Perform(this);
-    }
-    FlushPendingAppendNotifications();
-#ifdef DEBUG_hsivonen
-    if (mOpQueue.Length() > sInsertionBatchMaxLength) {
-      sInsertionBatchMaxLength = opQueueLength;
-    }
-#endif
-    mOpQueue.Clear();
-    if (flushStart) {
-      PRUint32 delta = PR_IntervalToMilliseconds(PR_IntervalNow() - flushStart);
-      sTreeOpQueueMaxLength = delta ?
-        (PRUint32)((NS_HTML5_TREE_OP_EXECUTOR_MAX_QUEUE_TIME * (PRUint64)opQueueLength) / delta) :
-        0;
-      if (sTreeOpQueueMaxLength < NS_HTML5_TREE_OP_EXECUTOR_MIN_QUEUE_LENGTH) {
-        sTreeOpQueueMaxLength = NS_HTML5_TREE_OP_EXECUTOR_MIN_QUEUE_LENGTH;
-      }
-#ifdef DEBUG_hsivonen
-      printf("QUEUE MAX LENGTH: %d\n", sTreeOpQueueMaxLength);
-#endif
-    }
+  BeginDocUpdate();
+
+  PRIntervalTime flushStart = 0;
+  PRUint32 opQueueLength = mOpQueue.Length();
+  if (opQueueLength > NS_HTML5_TREE_OP_EXECUTOR_MIN_QUEUE_LENGTH) { // avoid computing averages with too few ops
+    flushStart = PR_IntervalNow();
   }
+  mElementsSeenInThisAppendBatch.SetCapacity(opQueueLength * 2);
+  // XXX alloc failure
+  const nsHtml5TreeOperation* start = mOpQueue.Elements();
+  const nsHtml5TreeOperation* end = start + opQueueLength;
+  for (nsHtml5TreeOperation* iter = (nsHtml5TreeOperation*)start; iter < end; ++iter) {
+    if (NS_UNLIKELY(!mParser)) {
+      // The previous tree op caused a call to nsIParser::Terminate();
+      break;
+    }
+    iter->Perform(this);
+  }
+
+  if (NS_LIKELY(mParser)) {
+    FlushPendingAppendNotifications();
+  } else {
+    mPendingNotifications.Clear();
+  }
+
+#ifdef DEBUG_hsivonen
+  if (mOpQueue.Length() > sInsertionBatchMaxLength) {
+    sInsertionBatchMaxLength = opQueueLength;
+  }
+#endif
+  mOpQueue.Clear();
+  if (flushStart) {
+    PRUint32 delta = PR_IntervalToMilliseconds(PR_IntervalNow() - flushStart);
+    sTreeOpQueueMaxLength = delta ?
+      (PRUint32)((NS_HTML5_TREE_OP_EXECUTOR_MAX_QUEUE_TIME * (PRUint64)opQueueLength) / delta) :
+      0;
+    if (sTreeOpQueueMaxLength < NS_HTML5_TREE_OP_EXECUTOR_MIN_QUEUE_LENGTH) {
+      sTreeOpQueueMaxLength = NS_HTML5_TREE_OP_EXECUTOR_MIN_QUEUE_LENGTH;
+    }
+#ifdef DEBUG_hsivonen
+    printf("QUEUE MAX LENGTH: %d\n", sTreeOpQueueMaxLength);
+#endif
+  }
+
+  EndDocUpdate();
 
   mFlushing = PR_FALSE;
 
@@ -538,6 +557,8 @@ nsHtml5TreeOpExecutor::Reset() {
   mScriptElement = nsnull;
   mCallDidBuildModel = PR_FALSE;
   mCharsetSwitch.Truncate();
+  mInDocumentUpdate = PR_FALSE;
+  mFlushing = PR_FALSE;
 }
 
 void

@@ -230,6 +230,14 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
 
       aBuilder->HoldElement(*target = newContent);      
 
+      if (NS_UNLIKELY(name == nsHtml5Atoms::style || name == nsHtml5Atoms::link)) {
+        nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(newContent));
+        if (ssle) {
+          ssle->InitStyleLinkElement(PR_FALSE);
+          ssle->SetEnableUpdates(PR_FALSE);
+        }
+      }
+
       if (!attributes) {
         return rv;
       }
@@ -241,13 +249,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
         nsCOMPtr<nsIAtom> localName = Reget(attributes->getLocalName(i));
         newContent->SetAttr(attributes->getURI(i), localName, attributes->getPrefix(i), *(attributes->getValue(i)), PR_FALSE);
         // XXX what to do with nsresult?
-      }
-      if (ns != kNameSpaceID_MathML && (name == nsHtml5Atoms::style || (ns == kNameSpaceID_XHTML && name == nsHtml5Atoms::link))) {
-        nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(newContent));
-        if (ssle) {
-          ssle->InitStyleLinkElement(PR_FALSE);
-          ssle->SetEnableUpdates(PR_FALSE);
-        }
       }
       return rv;
     }
@@ -351,6 +352,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
     }
     case eTreeOpUpdateStyleSheet: {
       nsIContent* node = *(mOne.node);
+      aBuilder->FlushPendingAppendNotifications();
       aBuilder->UpdateStyleSheet(node);
       return rv;
     }
