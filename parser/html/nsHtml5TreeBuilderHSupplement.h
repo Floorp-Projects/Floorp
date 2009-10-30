@@ -68,6 +68,10 @@
     void SetOpSink(nsAHtml5TreeOpSink* aOpSink) {
       mOpSink = aOpSink;
     }
+
+    void ClearOps() {
+      mOpQueue.Clear();
+    }
     
     void SetSpeculativeLoaderWithDocument(nsIDocument* aDocument);
 

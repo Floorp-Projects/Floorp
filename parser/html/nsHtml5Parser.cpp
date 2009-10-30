@@ -602,6 +602,8 @@ nsHtml5Parser::ParseUntilBlocked()
           if (mStreamParser && 
               mReturnToStreamParserPermitted && 
               !mExecutor->IsScriptExecuting()) {
+            mTreeBuilder->flushCharacters();
+            mTreeBuilder->Flush();
             mReturnToStreamParserPermitted = PR_FALSE;
             mStreamParser->ContinueAfterScripts(mTokenizer, 
                                                 mTreeBuilder, 
