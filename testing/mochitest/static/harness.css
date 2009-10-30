@@ -91,7 +91,7 @@ div#current-test {
   margin: 0;
 }
 
-#pass, #fail {
+#pass, #fail, #file {
   margin: 0;
   padding: .5em;
 }

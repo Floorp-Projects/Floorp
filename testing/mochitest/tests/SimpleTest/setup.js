@@ -138,11 +138,16 @@ RunSet.runall = function(e) {
 }
 RunSet.reloadAndRunAll = function(e) {
   e.preventDefault();
-  //window.location.hash = "";
   var addParam = "";
   if (params.autorun) {
-    window.location.search += "";
-    window.location.href = window.location.href;
+    if (!TestRunner._haltTests) {
+      TestRunner._haltTests = true;
+      $('runtests').innerHTML = "Restart Tests";
+    }
+    else {
+      // already clicked stop, so just reload
+      window.location.href = window.location.href;
+    }
   } else if (window.location.search) {
     window.location.href += "&autorun=1";
   } else {
