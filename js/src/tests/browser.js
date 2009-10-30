@@ -489,7 +489,7 @@ function Preferences_clearPref(aPrefName)
   }
   catch(ex)
   {
-    print('Preferences_clearPref: ' + ex);
+    //print('Preferences_clearPref: ' + ex);
   }
 }
 
