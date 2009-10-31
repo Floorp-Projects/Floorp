@@ -21,7 +21,10 @@
       isBusy: false,
       setOverLink: function (link, b) {
       }
-    }
+    };
+    var gFindBar = {
+      hidden: true
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Invoker implementation.

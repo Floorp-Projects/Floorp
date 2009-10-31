@@ -872,10 +872,6 @@
 
             this._lastRelatedTab = null;
 
-            var fm = Components.classes["@mozilla.org/focus-manager;1"].
-                       getService(Components.interfaces.nsIFocusManager);
-            var focusedChromeElement = fm.getFocusedElementForWindow(window, false, {});
-
             var oldBrowser = this.mCurrentBrowser;
             if (oldBrowser)
               oldBrowser.setAttribute("type", "content-targetable");
@@ -970,13 +966,10 @@
               event.initEvent("TabSelect", true, false);
               this.mCurrentTab.dispatchEvent(event);
 
-              // change focus to the new tab if nothing is focused, the old tab
-              // is focused or there is something in the new tab to focus. One
-              // specific case where focus is not changed is when the new tab
-              // has no focused element and a chrome element is focused.
-              if ((!focusedChromeElement || focusedChromeElement == oldBrowser ||
-                  fm.getFocusedElementForWindow(window.content, true, {})))
-                fm.setFocus(newBrowser, fm.FLAG_NOSCROLL);
+              // Change focus to the new browser unless the findbar is focused.
+              if (gFindBar.hidden ||
+                  gFindBar.getElement("findbar-textbox").getAttribute("focused") != "true")
+                newBrowser.focus();
             }
           ]]>
         </body>
