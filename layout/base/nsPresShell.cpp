@@ -5245,13 +5245,17 @@ PresShell::ComputeRepaintRegionForCopy(nsIView*      aRootView,
       aDelta, aUpdateRect, aBlitRegion, aRepaintRegion);
 }
 
-NS_IMETHODIMP
-PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
-                          nscolor aBackgroundColor,
-                          gfxContext* aThebesContext)
+/*
+ * Fill with background color and set up paint operator for an arbitrary gfxContext
+ *
+ * @param aFillRegion clip region for background filling
+ *   partial clipping is not implemented yet,
+ *   nsnull or IsEmpty - then whole aRect painted
+ */
+static inline PRBool
+PrepareContext(const nsRect& aRect, nscolor aBackgroundColor,
+               gfxContext* aThebesContext, nsRegion *aFillRegion = nsnull)
 {
-  NS_ENSURE_TRUE(!(aFlags & RENDER_IS_UNTRUSTED), NS_ERROR_NOT_IMPLEMENTED);
-
   gfxRect r(0, 0,
             nsPresContext::AppUnitsToFloatCSSPixels(aRect.width),
             nsPresContext::AppUnitsToFloatCSSPixels(aRect.height));
@@ -5282,18 +5286,31 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
   }
 
   // draw background color
-  if (NS_GET_A(aBackgroundColor) > 0) {
+  if (NS_GET_A(aBackgroundColor) > 0 &&
+      !(aFillRegion && aFillRegion->IsEmpty())) {
     aThebesContext->SetColor(gfxRGBA(aBackgroundColor));
     aThebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
     aThebesContext->Paint();
   }
 
+  aThebesContext->SetOperator(gfxContext::OPERATOR_OVER);
+  return needsGroup;
+}
+
+NS_IMETHODIMP
+PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
+                          nscolor aBackgroundColor,
+                          gfxContext* aThebesContext)
+{
+  NS_ENSURE_TRUE(!(aFlags & RENDER_IS_UNTRUSTED), NS_ERROR_NOT_IMPLEMENTED);
+
   // we want the window to be composited as a single image using
   // whatever operator was set; set OPERATOR_OVER here, which is
   // either already the case, or overrides the operator in a group.
   // the original operator will be present when we PopGroup.
-  aThebesContext->SetOperator(gfxContext::OPERATOR_OVER);
 
+  PRBool needsGroup = PR_TRUE;
+  PRBool didPrepareContext = PR_FALSE;
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   if (rootFrame) {
     nsDisplayListBuilder builder(rootFrame, PR_FALSE,
@@ -5336,6 +5353,12 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
     builder.LeavePresShell(rootFrame, rect);
 
     if (NS_SUCCEEDED(rv)) {
+      nsRegion region(rect);
+      list.ComputeVisibility(&builder, &region, nsnull);
+
+      didPrepareContext = PR_TRUE;
+      needsGroup = PrepareContext(aRect, aBackgroundColor, aThebesContext, &region);
+
       // Ensure that r.x,r.y gets drawn at (0,0)
       aThebesContext->Save();
       aThebesContext->Translate(gfxPoint(-nsPresContext::AppUnitsToFloatCSSPixels(rect.x),
@@ -5349,8 +5372,6 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
       devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
       rc->Init(devCtx, aThebesContext);
 
-      nsRegion region(rect);
-      list.ComputeVisibility(&builder, &region, nsnull);
       list.Paint(&builder, rc);
       // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
       list.DeleteAll();
@@ -5358,6 +5379,9 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
       aThebesContext->Restore();
     }
   }
+
+  if (!didPrepareContext)
+    needsGroup = PrepareContext(aRect, aBackgroundColor, aThebesContext, nsnull);
 
   // if we had to use a group, paint it to the destination now
   if (needsGroup) {

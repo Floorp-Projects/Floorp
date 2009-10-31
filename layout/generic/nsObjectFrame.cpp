@@ -1201,6 +1201,15 @@ nsObjectFrame::IsOpaque() const
     if (window->type == NPWindowTypeDrawable) {
       // XXX we possibly should check NPPVpluginTransparentBool
       // here to optimize for windowless but opaque plugins
+      if (mInstanceOwner) {
+        nsresult rv;
+        PRBool transparent = PR_FALSE;
+        nsCOMPtr<nsIPluginInstance> pi;
+        if (NS_SUCCEEDED(rv = mInstanceOwner->GetInstance(*getter_AddRefs(pi)))) {
+          pi->IsTransparent(&transparent);
+          return !transparent;
+        }
+      }
       return PR_FALSE;
     }
   }
