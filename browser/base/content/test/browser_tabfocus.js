@@ -6,13 +6,11 @@ let testPage1 = "data:text/html,<html id='tab1'><body><button id='button1'>Tab 1
 let testPage2 = "data:text/html,<html id='tab2'><body><button id='button2'>Tab 2</button></body></html>";
 let testPage3 = "data:text/html,<html id='tab3'><body><button id='button3'>Tab 3</button></body></html>";
 
-var browser1;
-
 function test() {
   waitForExplicitFinish();
 
   var tab1 = gBrowser.addTab();
-  browser1 = gBrowser.getBrowserForTab(tab1);
+  var browser1 = gBrowser.getBrowserForTab(tab1);
 
   var tab2 = gBrowser.addTab();
   var browser2 = gBrowser.getBrowserForTab(tab2);
@@ -34,25 +32,26 @@ function test() {
     window.addEventListener("focus", _browser_tabfocus_test_eventOccured, true);
     window.addEventListener("blur", _browser_tabfocus_test_eventOccured, true);
 
-    gBrowser.selectedTab = tab2;
-
-    var fm = Components.classes["@mozilla.org/focus-manager;1"].
-               getService(Components.interfaces.nsIFocusManager);
-    is(fm.focusedWindow, window, "focusedWindow after tab load");
-    is(fm.focusedElement, gURLBar.inputField, "focusedElement after tab load");
-
     // make sure that the focus initially starts out blank
+    var fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
     var focusedWindow = {};
     is(fm.getFocusedElementForWindow(browser1.contentWindow, false, focusedWindow), null, "initial focus in tab 1");
     is(focusedWindow.value, browser1.contentWindow, "initial frame focus in tab 1");
     is(fm.getFocusedElementForWindow(browser2.contentWindow, false, focusedWindow), null, "initial focus in tab 2");
     is(focusedWindow.value, browser2.contentWindow, "initial frame focus in tab 2");
 
+    expectFocusShift(function () gBrowser.selectedTab = tab2,
+                     browser2.contentWindow, null, true,
+                     "focusedElement after tab change, focus in new tab");
+
     // switching tabs when the urlbar is focused and nothing in the new tab is focused
-    // should keep focus in the urlbar
+    // should focus the browser
+    expectFocusShift(function () gURLBar.focus(),
+                     window, gURLBar.inputField, true,
+                     "url field focused");
     expectFocusShift(function () gBrowser.selectedTab = tab1,
-                     window, gURLBar.inputField, false,
-                     "focusedElement after tab change, focus in url field, no focus in new tab");
+                     browser1.contentWindow, null, true,
+                     "focusedElement after tab change, focus in new tab");
 
     // focusing a button in the current tab should focus it
     var button1 = browser1.contentDocument.getElementById("button1");
@@ -223,8 +222,7 @@ function expectFocusShift(callback, expectedWindow, expectedElement, focusChange
   is(_browser_tabfocus_test_events, expectedEvents, testid + " events");
   _browser_tabfocus_test_events = "";
 
-  var fm = Components.classes["@mozilla.org/focus-manager;1"].
-             getService(Components.interfaces.nsIFocusManager);
+  var fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
 
   var focusedElement = fm.focusedElement;
   is(focusedElement ? getId(focusedElement) : "none",
