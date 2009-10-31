@@ -139,6 +139,7 @@ _BROWSER_FILES = \
                  browser_bug304198.js \
                  browser_drag.js \
                  browser_relatedTabs.js \
+                 browser_plainTextLinks.js \
                  browser_contextSearchTabPosition.js \
                  browser_NetworkPrioritizer.js \
     $(NULL)
