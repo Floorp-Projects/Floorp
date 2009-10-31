@@ -77,7 +77,7 @@
 
     const Ci = Components.interfaces;
 
-    function onload()
+    function doTest()
     {
       var tabBrowser = document.getElementById("content");
       tabBrowser.loadURI("about:");
@@ -88,6 +88,8 @@
       gQueue.onFinish = function() { window.close(); }
       gQueue.invoke();
     }
+
+    gOpenerWnd.addA11yLoadEvent(doTest);
   ]]>
   </script>
 
