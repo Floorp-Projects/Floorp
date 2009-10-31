@@ -3774,10 +3774,13 @@ var FullScreen =
       }
     }
 
-    if (aShow)
+    if (aShow) {
       gNavToolbox.removeAttribute("inFullscreen");
-    else
+      document.documentElement.removeAttribute("inFullscreen");
+    } else {
       gNavToolbox.setAttribute("inFullscreen", true);
+      document.documentElement.setAttribute("inFullscreen", true);
+    }
 
     var controls = document.getElementsByAttribute("fullscreencontrol", "true");
     for (var i = 0; i < controls.length; ++i)
