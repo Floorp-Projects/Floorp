@@ -47,7 +47,7 @@ namespace mozilla {
 class PluginPRLibrary : public PluginLibrary
 {
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
-    typedef NPError (*NP_InitializeFunc)(NPNetcapeFuncs*, NPPluginFuncs*);
+    typedef NPError (*NP_InitializeFunc)(NPNetscapeFuncs*, NPPluginFuncs*);
 #else
     typedef NPError (OSCALL *NP_InitializeFunc)(NPNetscapeFuncs*);
 #endif
