@@ -22,6 +22,12 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   background-position: top right;
 }
 
+%ifdef XP_MACOSX
+#main-window[inFullscreen="true"] {
+  padding-top: 0; /* override drawintitlebar="true" */
+}
+%endif
+
 #browser-bottombox[lwthemefooter="true"] {
   background-repeat: no-repeat;
   background-position: bottom left;
