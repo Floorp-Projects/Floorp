@@ -77,6 +77,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(
 NS_IMETHODIMP
 ResultSet::GetNextRow(mozIStorageRow **_row)
 {
+  NS_ENSURE_ARG_POINTER(_row);
+
   if (mCurrentIndex >= mData.Count()) {
     // Just return null here
     return NS_OK;
