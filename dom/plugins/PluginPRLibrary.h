@@ -44,9 +44,20 @@
 
 namespace mozilla {
 
-
 class PluginPRLibrary : public PluginLibrary
 {
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+    typedef NPError (*NP_InitializeFunc)(NPNetcapeFuncs*, NPPluginFuncs*);
+#else
+    typedef NPError (OSCALL *NP_InitializeFunc)(NPNetscapeFuncs*);
+#endif
+    typedef NPError (OSCALL *NP_ShutdownFunc)();
+    typedef char* (*NP_GetMIMEDescriptionFunc)();
+    typedef NPError (*NP_GetValueFunc)(void *, NPPVariable, void*);
+#if defined(XP_WIN) || defined(XP_MACOSX)
+    typedef NPError (OSCALL *NP_GetEntryPointsFunc)(NPPluginFuncs*);
+#endif
+
 public:
     PluginPRLibrary(const char* aFilePath, PRLibrary* aLibrary) :
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
@@ -73,28 +84,29 @@ public:
     }
 
     virtual bool HasRequiredFunctions() {
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-        mNP_Initialize = (NPError (*)(NPNetscapeFuncs*,NPPluginFuncs*))PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
-#else
-        mNP_Initialize = (NPError (*)(NPNetscapeFuncs*))PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
-#endif
+        mNP_Initialize = (NP_InitializeFunc)
+            PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
         if (!mNP_Initialize)
             return false;
 
-        mNP_Shutdown = (NPError (*)())PR_FindFunctionSymbol(mLibrary, "NP_Shutdown");
+        mNP_Shutdown = (NP_ShutdownFunc)
+            PR_FindFunctionSymbol(mLibrary, "NP_Shutdown");
         if (!mNP_Shutdown)
             return false;
 
-        mNP_GetMIMEDescription = (char* (*)())PR_FindFunctionSymbol(mLibrary, "NP_GetMIMEDescription");
+        mNP_GetMIMEDescription = (NP_GetMIMEDescriptionFunc)
+            PR_FindFunctionSymbol(mLibrary, "NP_GetMIMEDescription");
         if (!mNP_GetMIMEDescription)
             return false;
 
-        mNP_GetValue = (NPError (*)(void*, NPPVariable, void*))PR_FindFunctionSymbol(mLibrary, "NP_GetValue");
+        mNP_GetValue = (NP_GetValueFunc)
+            PR_FindFunctionSymbol(mLibrary, "NP_GetValue");
         if (!mNP_GetValue)
             return false;
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
-        mNP_GetEntryPoints = (NPError (*)(NPPluginFuncs*))PR_FindFunctionSymbol(mLibrary, "NP_GetEntryPoints");
+        mNP_GetEntryPoints = (NP_GetEntryPointsFunc)
+            PR_FindFunctionSymbol(mLibrary, "NP_GetEntryPoints");
         if (!mNP_GetEntryPoints)
             return false;
 #endif
@@ -106,8 +118,8 @@ public:
         if (mNP_Initialize) {
             *error = mNP_Initialize(bFuncs, pFuncs);
         } else {
-            NPError (*pfNP_Initialize)(NPNetscapeFuncs*,NPPluginFuncs*) =
-                (NPError (*)(NPNetscapeFuncs*,NPPluginFuncs*))PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
+            NP_InitializeFunc pfNP_Initialize = (NP_InitializeFunc)
+                PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
             if (!pfNP_Initialize)
                 return NS_ERROR_FAILURE;
             *error = pfNP_Initialize(bFuncs, pFuncs);
@@ -122,8 +134,8 @@ public:
         if (mNP_Initialize) {
             *error = mNP_Initialize(bFuncs);
         } else {
-            NPError (*pfNP_Initialize)(NPNetscapeFuncs*) =
-                (NPError (*)(NPNetscapeFuncs*))PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
+            NP_InitializeFunc pfNP_Initialize = (NP_InitializeFunc)
+                PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
             if (!pfNP_Initialize)
                 return NS_ERROR_FAILURE;
             *error = pfNP_Initialize(bFuncs);
@@ -137,8 +149,8 @@ public:
         if (mNP_Shutdown) {
             *error = mNP_Shutdown();
         } else {
-            NPError (*pfNP_Shutdown)()  =
-                (NPError (*)())PR_FindFunctionSymbol(mLibrary, "NP_Shutdown");
+            NP_ShutdownFunc pfNP_Shutdown = (NP_ShutdownFunc)
+                PR_FindFunctionSymbol(mLibrary, "NP_Shutdown");
             if (!pfNP_Shutdown)
                 return NS_ERROR_FAILURE;
             *error = pfNP_Shutdown();
@@ -152,8 +164,9 @@ public:
             *mimeDesc = mNP_GetMIMEDescription();
         }
         else {
-            char* (*pfNP_GetMIMEDescription)() =
-                (char* (*)())PR_FindFunctionSymbol(mLibrary, "NP_GetMIMEDescription");
+            NP_GetMIMEDescriptionFunc pfNP_GetMIMEDescription =
+                (NP_GetMIMEDescriptionFunc)
+                PR_FindFunctionSymbol(mLibrary, "NP_GetMIMEDescription");
             if (!pfNP_GetMIMEDescription) {
                 *mimeDesc = "";
                 return NS_ERROR_FAILURE;
@@ -165,12 +178,12 @@ public:
     }
 
     virtual nsresult NP_GetValue(void *future, NPPVariable aVariable,
-                                     void *aValue, NPError* error) {
+                                 void *aValue, NPError* error) {
         if (mNP_GetValue) {
             *error = mNP_GetValue(future, aVariable, aValue);
         } else {
-            NPError (*pfNP_GetValue)(void*, NPPVariable, void*) =
-                (NPError (*)(void*, NPPVariable, void*))PR_FindFunctionSymbol(mLibrary, "NP_GetValue");
+            NP_GetValueFunc pfNP_GetValue = (NP_GetValueFunc)
+                PR_FindFunctionSymbol(mLibrary, "NP_GetValue");
             if (!pfNP_GetValue)
                 return NS_ERROR_FAILURE;
             *error = pfNP_GetValue(future, aVariable, aValue);
@@ -184,8 +197,8 @@ public:
         if (mNP_GetEntryPoints) {
             *error = mNP_GetEntryPoints(pFuncs);
         } else {
-            NPError (*pfNP_GetEntryPoints)(NPPluginFuncs*) =
-                (NPError (*)(NPPluginFuncs*))PR_FindFunctionSymbol(mLibrary, "NP_GetEntryPoints");
+            NP_GetEntryPointsFunc pfNP_GetEntryPoints = (NP_GetEntryPointsFunc)
+                PR_FindFunctionSymbol(mLibrary, "NP_GetEntryPoints");
             if (!pfNP_GetEntryPoints)
                 return NS_ERROR_FAILURE;
             *error = pfNP_GetEntryPoints(pFuncs);
@@ -208,18 +221,14 @@ public:
     }
 
 private:
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-    NPError (*mNP_Initialize)(NPNetscapeFuncs*,NPPluginFuncs*);
-#else
-    NPError (*mNP_Initialize)(NPNetscapeFuncs*);
-#endif
-    NPError (*mNP_Shutdown)();
-    char* (*mNP_GetMIMEDescription)();
-    NPError (*mNP_GetValue)(void*, NPPVariable, void*);
+    NP_InitializeFunc mNP_Initialize;
+    NP_ShutdownFunc mNP_Shutdown;
+    NP_GetMIMEDescriptionFunc mNP_GetMIMEDescription;
+    NP_GetValueFunc mNP_GetValue;
 #if defined(XP_WIN) || defined(XP_MACOSX)
-    NPError (*mNP_GetEntryPoints)(NPPluginFuncs*);
+    NP_GetEntryPointsFunc mNP_GetEntryPoints;
 #endif
-    NPError (*mNPP_New)(NPMIMEType, NPP, uint16_t, int16_t, char**, char**, NPSavedData*);
+    NPP_NewProcPtr mNPP_New;
     PRLibrary* mLibrary;
 };
 
