@@ -11244,13 +11244,14 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     // Set variables in on-trace-stack call objects by updating the tracker.
     JSStackFrame *fp = frameIfInRange(callobj);
     if (fp) {
-        jsint slot = JSVAL_TO_INT(SPROP_USERID(sprop));
         if (sprop->setter == SetCallArg) {
+            jsint slot = JSVAL_TO_INT(SPROP_USERID(sprop));
             jsval *vp2 = &fp->argv[slot];
             set(vp2, v_ins);
             return RECORD_CONTINUE;
         }
         if (sprop->setter == SetCallVar) {
+            jsint slot = JSVAL_TO_INT(SPROP_USERID(sprop));
             jsval *vp2 = &fp->slots[slot];
             set(vp2, v_ins);
             return RECORD_CONTINUE;
