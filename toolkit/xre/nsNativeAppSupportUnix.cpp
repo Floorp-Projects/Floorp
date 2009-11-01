@@ -312,6 +312,7 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
       applicationName.Append(".");
   }
   applicationName.Append(gAppData->name);
+  ToLowerCase(applicationName);
 
   m_osso_context = osso_initialize(applicationName.get(), 
                                    gAppData->version ? gAppData->version : "1.0",
