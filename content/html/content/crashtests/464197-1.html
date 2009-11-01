@@ -1,0 +1,23 @@
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+var i = 0;
+
+function boom()
+{
+  var s = document.createElement("span");
+  s.innerHTML = "<audio src='javascript:5'><\/audio>";
+  s.innerHTML = "";
+
+  if (++i < 10)
+    setTimeout(boom, 0);
+  else
+    document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+<body onload="boom();">
+</body>
+</html>
