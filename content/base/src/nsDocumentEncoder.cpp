@@ -1399,6 +1399,10 @@ nsHTMLCopyEncoder::PromoteAncestorChain(nsCOMPtr<nsIDOMNode> *ioNode,
 
   nsCOMPtr<nsIDOMNode> frontNode, endNode, parent;
   PRInt32 frontOffset, endOffset;
+
+  //save the editable state of the ioNode, so we don't promote an ancestor if it has different editable state
+  nsCOMPtr<nsINode> node = do_QueryInterface(*ioNode);
+  PRBool isEditable = node->IsEditable();
   
   // loop for as long as we can promote both endpoints
   while (!done)
@@ -1415,8 +1419,11 @@ nsHTMLCopyEncoder::PromoteAncestorChain(nsCOMPtr<nsIDOMNode> *ioNode,
       // then we make the same attempt with the endpoint
       rv = GetPromotedPoint( kEnd, *ioNode, *ioEndOffset, address_of(endNode), &endOffset, parent);
       NS_ENSURE_SUCCESS(rv, rv);
-      // if both endpoints were promoted one level, keep looping - otherwise we are done.
-      if ( (frontNode != parent) || (endNode != parent) )
+
+      nsCOMPtr<nsINode> frontINode = do_QueryInterface(frontNode);
+      // if both endpoints were promoted one level and isEditable is the same as the original node, 
+      // keep looping - otherwise we are done.
+      if ( (frontNode != parent) || (endNode != parent) || (frontINode->IsEditable() != isEditable) )
         done = PR_TRUE;
       else
       {
