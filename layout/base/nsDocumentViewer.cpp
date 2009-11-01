@@ -1054,8 +1054,19 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   // Notify the document that it has been shown (regardless of whether
   // it was just loaded). Note: mDocument may be null now if the above
   // firing of onload caused the document to unload.
-  if (mDocument)
-    mDocument->OnPageShow(restoring, nsnull);
+  if (mDocument) {
+    // Re-get window, since it might have changed during above firing of onload
+    window = mDocument->GetWindow();
+    if (window) {
+      nsIDocShell *docShell = window->GetDocShell();
+      PRBool beingDestroyed;
+      if (docShell &&
+          NS_SUCCEEDED(docShell->IsBeingDestroyed(&beingDestroyed)) &&
+          !beingDestroyed) {
+        mDocument->OnPageShow(restoring, nsnull);
+      }
+    }
+  }
 
   // Now that the document has loaded, we can tell the presshell
   // to unsuppress painting.
@@ -4002,7 +4013,7 @@ NS_IMETHODIMP
 DocumentViewerImpl::ExitPrintPreview()
 {
   printf("TEST-INFO ExitPrintPreview: mPrintEngine=%p, GetIsPrinting()=%d\n",
-         mPrintEngine.get(), GetIsPrinting());
+         static_cast<void*>(mPrintEngine.get()), GetIsPrinting());
   if (GetIsPrinting())
     return NS_ERROR_FAILURE;
   NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_FAILURE);
