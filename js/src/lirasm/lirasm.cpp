@@ -1899,15 +1899,23 @@ main(int argc, char **argv)
             errMsgAndQuit(opts.progname, "error: at least one fragment must be named 'main'");
         switch (i->second.mReturnType) {
           case RT_FLOAT:
-            cout << "Output is: " << i->second.rfloat() << endl;
+          {
+            float res = i->second.rfloat();
+            cout << "Output is: " << res << endl;
             break;
+          }
           case RT_INT32:
-            cout << "Output is: " << i->second.rint() << endl;
+          {
+            int res = i->second.rint();
+            cout << "Output is: " << res << endl;
             break;
+          }
           case RT_GUARD:
+          {
             LasmSideExit *ls = (LasmSideExit*) i->second.rguard()->exit;
             cout << "Output is: " << ls->line << endl;
             break;
+          }
         }
     } else {
         for (i = lasm.mFragments.begin(); i != lasm.mFragments.end(); i++)
