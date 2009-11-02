@@ -1038,30 +1038,23 @@ NS_IMETHODIMP nsLocalFile::IsHidden(PRBool *_retval)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
+  CHECK_INIT();
+
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
-  
-  FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef);
+
+  // If the leaf name begins with a '.', consider it invisible
+  nsAutoString name;
+  nsresult rv = GetLeafName(name);
   if (NS_FAILED(rv))
     return rv;
-  
-  FSCatalogInfo catalogInfo;
-  HFSUniStr255 leafName;  
-  OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoFinderInfo, &catalogInfo,
-                                &leafName, nsnull, nsnull);
-  if (err != noErr)
-    return MacErrorMapper(err);
-      
-  FileInfo *fInfoPtr = (FileInfo *)(catalogInfo.finderInfo); // Finder flags are in the same place whether we use FileInfo or FolderInfo
-  if ((fInfoPtr->finderFlags & kIsInvisible) != 0) {
+  if (name.Length() >= 1 && Substring(name, 0, 1).EqualsLiteral("."))
     *_retval = PR_TRUE;
-  }
-  else {
-    // If the leaf name begins with a '.', consider it invisible
-    if (leafName.length >= 1 && leafName.unicode[0] == UniChar('.'))
-      *_retval = PR_TRUE;
-  }
+
+  LSItemInfoRecord itemInfo;
+  LSCopyItemInfoForURL(mBaseURL, kLSRequestBasicFlagsOnly, &itemInfo);
+  *_retval = !!(itemInfo.flags & kLSItemInfoIsInvisible);
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
