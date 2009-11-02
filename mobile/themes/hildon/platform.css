@@ -444,6 +444,7 @@ colorpicker > vbox {
 
 /* menulist ---------------------------------------------------------------- */
 .menulist-label {
+  font-family: "Nokia Sans", Tahoma, sans-serif !important;
   font-weight: normal;
   font-size: 2.4mm !important;
 }
