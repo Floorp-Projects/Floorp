@@ -1002,7 +1002,7 @@ BrowserGlue.prototype = {
                  newInVersion: 1 };
         smartBookmarks.push(smart);
 
-        var smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO, {});
+        var smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
         // Set current itemId, parent and position if Smart Bookmark exists,
         // we will use these informations to create the new version at the same
         // position.

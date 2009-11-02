@@ -208,7 +208,7 @@ gTests.push({
     // Add a tag to this bookmark.
     PlacesUtils.tagging.tagURI(PlacesUtils._uri(TEST_URL),
                                ["testTag"]);
-    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(TEST_URL), {});
+    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(TEST_URL));
     is(tags[0], "testTag", "Correctly added a tag");
   },
 
@@ -282,7 +282,7 @@ gTests.push({
 
   cleanup: function() {
     // Check tags have not changed.
-    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(TEST_URL), {});
+    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(TEST_URL));
     is(tags[0], "testTag", "Tag on node has not changed");
 
     // Cleanup.
@@ -366,7 +366,7 @@ gTests.push({
     // Add a tag to this bookmark.
     PlacesUtils.tagging.tagURI(PlacesUtils._uri(TEST_URL),
                                ["testTag"]);
-    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(TEST_URL), {});
+    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(TEST_URL));
     is(tags[0], "testTag", "Correctly added a tag");
   },
 
@@ -440,7 +440,7 @@ gTests.push({
 
   cleanup: function() {
     // Check tags have not changed.
-    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(TEST_URL), {});
+    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(TEST_URL));
     is(tags[0], "testTag", "Tag on node has not changed");
 
     // Cleanup.

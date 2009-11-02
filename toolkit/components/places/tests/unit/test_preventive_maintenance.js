@@ -1110,12 +1110,12 @@ tests.push({
     do_check_true(bh.isVisited(this._uri2));
     
     do_check_eq(bs.getBookmarkURI(this._bookmarkId).spec, this._uri1.spec);
-    do_check_true(bs.getItemIndex(this._folderId) == 0);
+    do_check_eq(bs.getItemIndex(this._folderId), 0);
 
     do_check_eq(bs.getItemType(this._folderId), bs.TYPE_FOLDER);
     do_check_eq(bs.getItemType(this._separatorId), bs.TYPE_SEPARATOR);
 
-    do_check_true(ts.getTagsForURI(this._uri1, {}).length == 1);
+    do_check_eq(ts.getTagsForURI(this._uri1).length, 1);
     do_check_eq(bs.getKeywordForBookmark(this._bookmarkId), "testkeyword");
     do_check_eq(fs.getFaviconForPage(this._uri2).spec,
                 "http://www2.mozilla.org/favicon.ico");

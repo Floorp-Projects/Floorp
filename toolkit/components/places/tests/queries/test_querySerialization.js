@@ -267,8 +267,8 @@ const querySwitches = [
   {
     desc:    "nsINavHistoryQuery.getFolders",
     matches: function (aQuery1, aQuery2) {
-      var q1Folders = aQuery1.getFolders({}, {});
-      var q2Folders = aQuery2.getFolders({}, {});
+      var q1Folders = aQuery1.getFolders();
+      var q2Folders = aQuery2.getFolders();
       if (q1Folders.length !== q2Folders.length)
         return false;
       for (let i = 0; i < q1Folders.length; i++) {

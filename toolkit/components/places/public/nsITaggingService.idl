@@ -87,7 +87,9 @@ interface nsITaggingService : nsISupports
    *        a URL.
    * @returns array of tags (sorted by name).
    */
-  void getTagsForURI(in nsIURI aURI, out unsigned long length, [retval, array, size_is(length)] out wstring aTags);
+  void getTagsForURI(in nsIURI aURI,
+                     [optional] out unsigned long length,
+                     [retval, array, size_is(length)] out wstring aTags);
 
   /**
    * Retrieves all tags used to tag URIs in the data-base (sorted by name).

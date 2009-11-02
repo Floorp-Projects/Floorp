@@ -143,7 +143,7 @@ TaggingService.prototype = {
     var tagId = this._getItemIdForTag(aTagName);
     if (tagId == -1)
       return -1;
-    var bookmarkIds = this._bms.getBookmarkIdsForURI(aURI, {});
+    var bookmarkIds = this._bms.getBookmarkIdsForURI(aURI);
     for (var i=0; i < bookmarkIds.length; i++) {
       var parent = this._bms.getFolderIdForItem(bookmarkIds[i]);
       if (parent == tagId)
@@ -236,7 +236,7 @@ TaggingService.prototype = {
     if (!aTags) {
       // see IDL.
       // XXXmano: write a perf-sensitive version of this code path...
-      aTags = this.getTagsForURI(aURI, { });
+      aTags = this.getTagsForURI(aURI);
     }
 
     this._bms.runInBatchMode({
@@ -300,7 +300,7 @@ TaggingService.prototype = {
       throw Cr.NS_ERROR_INVALID_ARG;
 
     var tags = [];
-    var bookmarkIds = this._bms.getBookmarkIdsForURI(aURI, {});
+    var bookmarkIds = this._bms.getBookmarkIdsForURI(aURI);
     for (var i=0; i < bookmarkIds.length; i++) {
       var folderId = this._bms.getFolderIdForItem(bookmarkIds[i]);
       if (this._tagFolders[folderId])
@@ -311,7 +311,8 @@ TaggingService.prototype = {
     tags.sort(function(a, b) {
         return a.toLowerCase().localeCompare(b.toLowerCase());
       });
-    aCount.value = tags.length;
+    if (aCount)
+      aCount.value = tags.length;
     return tags;
   },
 
@@ -370,7 +371,7 @@ TaggingService.prototype = {
   _getTagsIfUnbookmarkedURI: function TS__getTagsIfUnbookmarkedURI(aURI) {
     var tagIds = [];
     var isBookmarked = false;
-    var itemIds = this._bms.getBookmarkIdsForURI(aURI, {});
+    var itemIds = this._bms.getBookmarkIdsForURI(aURI);
 
     for (let i = 0; !isBookmarked && i < itemIds.length; i++) {
       var parentId = this._bms.getFolderIdForItem(itemIds[i]);

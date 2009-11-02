@@ -307,7 +307,7 @@ function testTags() {
   for each(let {uri: u, tags: t} in tagData) {
     var i = 0;
     dump("test tags for " + u.spec + ": " + t + "\n");
-    var tt = PlacesUtils.tagging.getTagsForURI(u, {});
+    var tt = PlacesUtils.tagging.getTagsForURI(u);
     dump("true tags for " + u.spec + ": " + tt + "\n");
     do_check_true(t.every(function(el) {
       i++;

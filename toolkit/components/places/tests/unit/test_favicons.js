@@ -76,8 +76,7 @@ function setAndGetFaviconData(aFilename, aData, aMimeType) {
   } catch (ex) {}
   var mimeTypeOutparam = {};
 
-  var outData = iconsvc.getFaviconData(iconURI,
-                         mimeTypeOutparam, {});
+  var outData = iconsvc.getFaviconData(iconURI, mimeTypeOutparam);
 
   return [outData, mimeTypeOutparam.value];
 }
@@ -389,19 +388,19 @@ var savedIcon3URI = iconsvc.getFaviconForPage(page3URI);
 
 // check first page icon
 var out1MimeType = {};
-var out1Data = iconsvc.getFaviconData(savedIcon1URI, out1MimeType, {});
+var out1Data = iconsvc.getFaviconData(savedIcon1URI, out1MimeType);
 do_check_eq(icon1MimeType, out1MimeType.value);
 compareArrays(icon1Data, out1Data);
 
 // check second page icon
 var out2MimeType = {};
-var out2Data = iconsvc.getFaviconData(savedIcon2URI, out2MimeType, {});
+var out2Data = iconsvc.getFaviconData(savedIcon2URI, out2MimeType);
 do_check_eq(icon2MimeType, out2MimeType.value);
 compareArrays(icon2Data, out2Data);
 
 // check third page icon
 var out3MimeType = {};
-var out3Data = iconsvc.getFaviconData(savedIcon3URI, out3MimeType, {});
+var out3Data = iconsvc.getFaviconData(savedIcon3URI, out3MimeType);
 do_check_eq(icon1MimeType, out3MimeType.value);
 compareArrays(icon1Data, out3Data);
 
@@ -424,7 +423,7 @@ iconsvc.setAndLoadFaviconForPage(pageURI, faviconURI, true);
 
 var savedFaviconURI = iconsvc.getFaviconForPage(pageURI);
 outMimeType = {};
-outData = iconsvc.getFaviconData(savedFaviconURI, outMimeType, {});
+outData = iconsvc.getFaviconData(savedFaviconURI, outMimeType);
 
 // Ensure input and output are identical
 do_check_eq(inMimeType, outMimeType.value);

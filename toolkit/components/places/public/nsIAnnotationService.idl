@@ -296,10 +296,10 @@ interface nsIAnnotationService : nsISupports
      * Returns a list of all URIs having a given annotation.
      */
     void getPagesWithAnnotation(in AUTF8String name,
-      out unsigned long resultCount,
+      [optional] out unsigned long resultCount,
       [retval, array, size_is(resultCount)] out nsIURI results);
     void getItemsWithAnnotation(in AUTF8String name,
-      out unsigned long resultCount,
+      [optional] out unsigned long resultCount,
       [retval, array, size_is(resultCount)] out long long results);
 
     /**
@@ -308,9 +308,11 @@ interface nsIAnnotationService : nsISupports
      * example JS:
      *   var annotations = annotator.getPageAnnotations(myURI, {});
      */
-    void getPageAnnotationNames(in nsIURI aURI, out unsigned long count,
+    void getPageAnnotationNames(in nsIURI aURI,
+      [optional] out unsigned long count,
       [retval, array, size_is(count)] out nsIVariant result);
-    void getItemAnnotationNames(in long long aItemId, out unsigned long count,
+    void getItemAnnotationNames(in long long aItemId,
+      [optional] out unsigned long count,
       [retval, array, size_is(count)] out nsIVariant result);
 
     /**

@@ -76,7 +76,7 @@ function run_test() {
   // TEST 1: smart bookmarks disabled
   pref.setIntPref("browser.places.smartBookmarksVersion", -1);
   gluesvc.ensurePlacesDefaultQueriesInitialized();
-  var smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO, {});
+  var smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   do_check_eq(smartBookmarkItemIds.length, 0);
   // check that pref has not been bumped up
   do_check_eq(pref.getIntPref("browser.places.smartBookmarksVersion"), -1);
@@ -84,7 +84,7 @@ function run_test() {
   // TEST 2: create smart bookmarks
   pref.setIntPref("browser.places.smartBookmarksVersion", 0);
   gluesvc.ensurePlacesDefaultQueriesInitialized();
-  smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO, {});
+  smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   do_check_neq(smartBookmarkItemIds.length, 0);
   // check that pref has been bumped up
   do_check_true(pref.getIntPref("browser.places.smartBookmarksVersion") > 0);
@@ -96,7 +96,7 @@ function run_test() {
   bmsvc.removeItem(smartBookmarkItemIds[0]);
   pref.setIntPref("browser.places.smartBookmarksVersion", 0);
   gluesvc.ensurePlacesDefaultQueriesInitialized();
-  smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO, {});
+  smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   do_check_eq(smartBookmarkItemIds.length, smartBookmarksCount);
   // check that pref has been bumped up
   do_check_true(pref.getIntPref("browser.places.smartBookmarksVersion") > 0);
@@ -113,7 +113,7 @@ function run_test() {
   // restore
   pref.setIntPref("browser.places.smartBookmarksVersion", 0);
   gluesvc.ensurePlacesDefaultQueriesInitialized();
-  smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO, {});
+  smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   do_check_eq(smartBookmarkItemIds.length, smartBookmarksCount);
   do_check_eq(bmsvc.getFolderIdForItem(smartBookmarkItemIds[0]), newParent);
   do_check_eq(bmsvc.getItemTitle(smartBookmarkItemIds[0]), oldTitle);
