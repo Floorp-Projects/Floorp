@@ -44,7 +44,8 @@ relativesrcdir = gfx/thebes/mochitest
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug513439.html \
+_TEST_FILES = 	test_bug509244.html \
+		test_bug513439.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
