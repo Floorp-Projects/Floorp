@@ -834,6 +834,10 @@ int nsWindow::EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Move( PRInt32 aX, PRInt32 aY ) {
 
+	if( mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog ) {
+		SetSizeMode(nsSizeMode_Normal);
+		}
+
 	if( mWindowType != eWindowType_popup && (mBounds.x == aX) && (mBounds.y == aY) )
 		return NS_OK;
 

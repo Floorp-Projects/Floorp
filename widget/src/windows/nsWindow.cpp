@@ -1254,6 +1254,10 @@ void nsWindow::SetThemeRegion()
 // Move this component
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
+  if (mWindowType == eWindowType_toplevel ||
+      mWindowType == eWindowType_dialog) {
+    SetSizeMode(nsSizeMode_Normal);
+  }
   // Check to see if window needs to be moved first
   // to avoid a costly call to SetWindowPos. This check
   // can not be moved to the calling code in nsView, because
