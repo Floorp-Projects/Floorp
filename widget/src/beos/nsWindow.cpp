@@ -912,6 +912,9 @@ void nsWindow::HideKids(PRBool state)
 //-------------------------------------------------------------------------
 nsresult nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
+	if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog)
+		SetSizeMode(nsSizeMode_Normal);
+
 	// Only perform this check for non-popup windows, since the positioning can
 	// in fact change even when the x/y do not.  We always need to perform the
 	// check. See bug #97805 for details.
