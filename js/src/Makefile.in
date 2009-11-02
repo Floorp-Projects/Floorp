@@ -674,7 +674,7 @@ update-imacros: imacros.c.tmp
 # Code for importing the nanojit subtree from its repository.
 
 NANOJIT_CENTRAL_REV=$(shell cat $(srcdir)/nanojit-import-rev)
-NANOJIT_CENTRAL_REPO=http://hg.mozilla.org/users/graydon_mozilla.com/nanojit-central
+NANOJIT_CENTRAL_REPO=http://hg.mozilla.org/projects/nanojit-central
 NANOJIT_CENTRAL_LOCAL=$(CURDIR)/nanojit-central
 CUR_REPO=$(srcdir)/../..
 
