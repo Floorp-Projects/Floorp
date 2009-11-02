@@ -200,7 +200,7 @@ public:
             token.data.clear();
             mLine.clear();
         } else {
-            cerr << mLineno << ": error: Unrecognized character in file." << endl;
+            cerr << "line " << mLineno << ": error: Unrecognized character in file." << endl;
             return false;
         }
 
@@ -260,7 +260,7 @@ public:
     bool mVerbose;
     Fragments mFragments;
     Assembler mAssm;
-    map<string, pair<LOpcode, size_t> > mOpMap;
+    map<string, LOpcode> mOpMap;
 
     void bad(const string &msg) {
         cerr << "error: " << msg << endl;
@@ -312,11 +312,11 @@ private:
     void tokenizeLine(LirTokenStream &in, LirToken &token);
     void need(size_t);
     LIns *ref(const string &);
-    LIns *assemble_call(const string &);
-    LIns *assemble_general();
-    LIns *assemble_guard();
-    LIns *assemble_jump();
+    LIns *assemble_jump(bool isCond);
     LIns *assemble_load();
+    LIns *assemble_call(const string &);
+    LIns *assemble_ret(ReturnType rt);
+    LIns *assemble_guard(bool isCond);
     void bad(const string &msg);
     void nyi(const string &opname);
     void extract_any_label(string &lab, char lab_delim);
@@ -382,18 +382,19 @@ imm(const string &s)
 uint64_t
 quad(const string &s)
 {
-    stringstream tmp1(s), tmp2(s);
-    union {
-        uint64_t u64;
-        double d;
-    } pun;
+    stringstream tmp(s);
+    uint64_t ret;
     if ((s.find("0x") == 0 || s.find("0X") == 0) &&
-        (tmp1 >> hex >> pun.u64 && tmp1.eof()))
-        return pun.u64;
-    if ((s.find(".") != string::npos) &&
-        (tmp2 >> pun.d && tmp2.eof()))
-        return pun.u64;
+        (tmp >> hex >> ret && tmp.eof())) {
+        return ret;
+    }
     return lexical_cast<uint64_t>(s);
+}
+
+double
+immf(const string &s)
+{
+    return lexical_cast<double>(s);
 }
 
 template<typename t> t
@@ -524,7 +525,8 @@ FragmentAssembler::~FragmentAssembler()
 void
 FragmentAssembler::bad(const string &msg)
 {
-    cerr << "instruction " << mLineno << ": " <<  msg << endl;
+    cerr << "line " << mLineno << ": " << msg << endl;
+    exit(1);
     exit(1);
 }
 
@@ -553,24 +555,24 @@ FragmentAssembler::ref(const string &lab)
 }
 
 LIns *
-FragmentAssembler::assemble_jump()
+FragmentAssembler::assemble_jump(bool isCond)
 {
-    LIns *target = NULL;
-    LIns *condition = NULL;
+    LIns *condition;
 
-    if (mOpcode == LIR_j) {
-        need(1);
-    } else {
+    if (isCond) {
         need(2);
         string cond = pop_front(mTokens);
         condition = ref(cond);
+    } else {
+        need(1);
+        condition = NULL;
     }
     string name = pop_front(mTokens);
     if (mLabels.find(name) != mLabels.end()) {
-        target = ref(name);
+        LIns *target = ref(name);
         return mLir->insBranch(mOpcode, condition, target);
     } else {
-        LIns *ins = mLir->insBranch(mOpcode, condition, target);
+        LIns *ins = mLir->insBranch(mOpcode, condition, NULL);
         mFwdJumps.insert(make_pair(name, ins));
         return ins;
     }
@@ -676,6 +678,14 @@ FragmentAssembler::assemble_call(const string &op)
     return mLir->insCall(ci, args);
 }
 
+LIns *
+FragmentAssembler::assemble_ret(ReturnType rt)
+{
+    need(1);
+    mReturnTypeBits |= rt;
+    return mLir->ins1(mOpcode, ref(mTokens[0]));
+}
+
 LasmSideExit*
 FragmentAssembler::createSideExit()
 {
@@ -699,59 +709,25 @@ FragmentAssembler::createGuardRecord(LasmSideExit *exit)
 
 
 LIns *
-FragmentAssembler::assemble_guard()
+FragmentAssembler::assemble_guard(bool isCond)
 {
     GuardRecord* guard = createGuardRecord(createSideExit());
 
-    need(mOpcount);
+    LIns *ins_cond;
+    if (isCond) {
+        need(1);
+        ins_cond = ref(pop_front(mTokens));
+    } else {
+        need(0);
+        ins_cond = NULL;
+    }
 
     mReturnTypeBits |= RT_GUARD;
-
-    LIns *ins_cond;
-    if (mOpcode == LIR_xt || mOpcode == LIR_xf)
-        ins_cond = ref(pop_front(mTokens));
-    else
-        ins_cond = NULL;
 
     if (!mTokens.empty())
         bad("too many arguments");
 
     return mLir->insGuard(mOpcode, ins_cond, guard);
-}
-
-LIns *
-FragmentAssembler::assemble_general()
-{
-    if (mOpcount == 0) {
-        // 0-ary ops may, or may not, have an immediate
-        // thing wedged in them; depends on the op. We
-        // are lax and set it if it's provided.
-        LIns *ins = mLir->ins0(mOpcode);
-        if (mTokens.size() > 0) {
-            assert(mTokens.size() == 1);
-            ins->initLInsI(mOpcode, imm(mTokens[0]));
-        }
-        return ins;
-    } else {
-        need(mOpcount);
-        if (mOpcount == 1) {
-            if (mOpcode == LIR_ret)
-                mReturnTypeBits |= RT_INT32;
-            if (mOpcode == LIR_fret)
-                mReturnTypeBits |= RT_FLOAT;
-
-            return mLir->ins1(mOpcode,
-                              ref(mTokens[0]));
-        } else if (mOpcount == 2) {
-            return mLir->ins2(mOpcode,
-                              ref(mTokens[0]),
-                              ref(mTokens[1]));
-        } else {
-            bad("too many operands");
-        }
-    }
-    // Never get here.
-    return NULL;
 }
 
 void
@@ -885,18 +861,106 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
         if (mParent.mOpMap.find(op) == mParent.mOpMap.end())
             bad("unknown instruction '" + op + "'");
 
-        pair<LOpcode, size_t> entry = mParent.mOpMap[op];
-        mOpcode = entry.first;
-        mOpcount = entry.second;
+        mOpcode = mParent.mOpMap[op];
 
         switch (mOpcode) {
-        // A few special opcode cases.
+          case LIR_start:
+            bad("start instructions cannot be specified explicitly");
+            break;
+
+          case LIR_regfence:
+            need(0);
+            ins = mLir->ins0(mOpcode);
+            break;
+
+          case LIR_live:
+          case LIR_flive:
+          case LIR_neg:
+          case LIR_fneg:
+          case LIR_qlo:
+          case LIR_qhi:
+          case LIR_ov:
+          case LIR_i2q:
+          case LIR_u2q:
+          case LIR_i2f:
+          case LIR_u2f:
+            need(1);
+            ins = mLir->ins1(mOpcode,
+                             ref(mTokens[0]));
+            break;
+
+          case LIR_iaddp:
+          case LIR_qaddp:
+          case LIR_add:
+          case LIR_sub:
+          case LIR_mul:
+          case LIR_div:
+          case LIR_mod:
+          case LIR_fadd:
+          case LIR_fsub:
+          case LIR_fmul:
+          case LIR_fdiv:
+          case LIR_fmod:
+          case LIR_qiadd:
+          case LIR_and:
+          case LIR_or:
+          case LIR_xor:
+          case LIR_qiand:
+          case LIR_qior:
+          case LIR_qxor:
+          case LIR_not:
+          case LIR_lsh:
+          case LIR_rsh:
+          case LIR_ush:
+          case LIR_qilsh:
+          case LIR_qirsh:
+          case LIR_qursh:
+          case LIR_eq:
+          case LIR_lt:
+          case LIR_gt:
+          case LIR_le:
+          case LIR_ge:
+          case LIR_ult:
+          case LIR_ugt:
+          case LIR_ule:
+          case LIR_uge:
+          case LIR_feq:
+          case LIR_flt:
+          case LIR_fgt:
+          case LIR_fle:
+          case LIR_fge:
+          case LIR_qeq:
+          case LIR_qlt:
+          case LIR_qgt:
+          case LIR_qle:
+          case LIR_qge:
+          case LIR_qult:
+          case LIR_qugt:
+          case LIR_qule:
+          case LIR_quge:
+          case LIR_qjoin:
+            need(2);
+            ins = mLir->ins2(mOpcode,
+                             ref(mTokens[0]),
+                             ref(mTokens[1]));
+            break;
+
+          case LIR_cmov:
+          case LIR_qcmov:
+            need(3);
+            ins = mLir->ins3(mOpcode,
+                             ref(mTokens[0]),
+                             ref(mTokens[1]),
+                             ref(mTokens[2]));
+            break;
 
           case LIR_j:
+            ins = assemble_jump(/*isCond*/false);
+            break;
+
           case LIR_jt:
           case LIR_jf:
-          case LIR_ji:
-            ins = assemble_jump();
+            ins = assemble_jump(/*isCond*/true);
             break;
 
           case LIR_int:
@@ -907,6 +971,11 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_quad:
             need(1);
             ins = mLir->insImmq(quad(mTokens[0]));
+            break;
+
+          case LIR_float:
+            need(1);
+            ins = mLir->insImmf(immf(mTokens[0]));
             break;
 
           case LIR_sti:
@@ -926,13 +995,19 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             ins = assemble_load();
             break;
 
+          // XXX: insParam gives the one appropriate for the platform.  Eg. if
+          // you specify qparam on x86 you'll end up with iparam anyway.  Fix
+          // this.
           case LIR_iparam:
+          case LIR_qparam:
             need(2);
             ins = mLir->insParam(imm(mTokens[0]),
                                  imm(mTokens[1]));
             break;
 
+          // XXX: similar to iparam/qparam above.
           case LIR_ialloc:
+          case LIR_qalloc:
             need(1);
             ins = mLir->insAlloc(imm(mTokens[0]));
             break;
@@ -941,21 +1016,41 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             bad("skip instruction is deprecated");
             break;
 
-          case LIR_xt:
-          case LIR_xf:
           case LIR_x:
           case LIR_xbarrier:
-            ins = assemble_guard();
+            ins = assemble_guard(/*isCond*/false);
+            break;
+
+          case LIR_xt:
+          case LIR_xf:
+            ins = assemble_guard(/*isCond*/true);
             break;
 
           case LIR_icall:
           case LIR_callh:
           case LIR_fcall:
+          case LIR_qcall:
             ins = assemble_call(op);
             break;
 
+          case LIR_ret:
+            ins = assemble_ret(RT_INT32);
+            break;
+
+          case LIR_fret:
+            ins = assemble_ret(RT_FLOAT);
+            break;
+
+          case LIR_label:
+          case LIR_file:
+          case LIR_line:
+          case LIR_xtbl:
+          case LIR_ji:
+            nyi(op);
+            break;
+
           default:
-            ins = assemble_general();
+            nyi(op);
             break;
         }
 
@@ -1656,9 +1751,9 @@ Lirasm::Lirasm(bool verbose) :
 
     // Populate the mOpMap table.
 #define OPDEF(op, number, args, repkind) \
-    mOpMap[#op] = make_pair(LIR_##op, args);
+    mOpMap[#op] = LIR_##op;
 #define OPDEF64(op, number, args, repkind) \
-    mOpMap[#op] = make_pair(LIR_##op, args);
+    mOpMap[#op] = LIR_##op;
 #include "nanojit/LIRopcode.tbl"
 #undef OPDEF
 #undef OPDEF64
