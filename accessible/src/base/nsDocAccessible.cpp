@@ -1590,7 +1590,8 @@ nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent)
 {
   NS_ENSURE_ARG(aEvent);
 
-  mEventsToFire.AppendElement(aEvent);
+  nsRefPtr<nsAccEvent> accEvent = nsAccUtils::QueryObject<nsAccEvent>(aEvent);
+  mEventsToFire.AppendElement(accEvent);
 
   // Filter events.
   nsAccEvent::ApplyEventRules(mEventsToFire);

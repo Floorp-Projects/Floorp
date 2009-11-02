@@ -296,7 +296,7 @@ protected:
 
   PRBool mInFlushPendingEvents;
   PRBool mFireEventTimerStarted;
-  nsTArray<nsCOMPtr<nsIAccessibleEvent> > mEventsToFire;
+  nsTArray<nsRefPtr<nsAccEvent> > mEventsToFire;
 
     static PRUint32 gLastFocusedAccessiblesState;
     static nsIAtom *gLastFocusedFrameType;
