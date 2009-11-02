@@ -9,7 +9,6 @@
 <!ENTITY username.label       "Username">
 <!ENTITY password.label       "Password">
 <!ENTITY secretPhrase.label   "Secret Phrase">
-<!ENTITY disconnected.label   "Disconnected">
 <!ENTITY connect.label        "Connect">
 <!ENTITY disconnect.label     "Disconnect">
 <!ENTITY syncNow.label        "Sync Now">
