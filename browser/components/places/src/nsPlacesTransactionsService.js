@@ -691,7 +691,7 @@ placesRemoveItemTransaction.prototype = {
         // children, see getMostRecentBookmarkForURI) for the bookmark's url,
         // remove the url from tag containers as well.
         if (PlacesUtils.getMostRecentBookmarkForURI(this._uri) == -1) {
-          this._tags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
+          this._tags = PlacesUtils.tagging.getTagsForURI(this._uri);
           PlacesUtils.tagging.untagURI(this._uri, this._tags);
         }
       }
@@ -776,7 +776,7 @@ placesEditBookmarkURITransactions.prototype = {
     this._oldURI = PlacesUtils.bookmarks.getBookmarkURI(this._id);
     PlacesUtils.bookmarks.changeBookmarkURI(this._id, this._newURI);
     // move tags from old URI to new URI
-    this._tags = PlacesUtils.tagging.getTagsForURI(this._oldURI, {});
+    this._tags = PlacesUtils.tagging.getTagsForURI(this._oldURI);
     if (this._tags.length != 0) {
       // only untag the old URI if this is the only bookmark
       if (PlacesUtils.getBookmarksForURI(this._oldURI, {}).length == 0)
@@ -1157,7 +1157,7 @@ function placesUntagURITransaction(aURI, aTags) {
     }
   }
   else
-    this._tags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
+    this._tags = PlacesUtils.tagging.getTagsForURI(this._uri);
 
   this.redoTransaction = this.doTransaction;
 }

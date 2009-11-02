@@ -87,7 +87,7 @@ function test() {
 
   // Get the left pane folder.
   var leftPaneItems = PlacesUtils.annotations
-                                 .getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO, {});
+                                 .getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO);
 
   is(leftPaneItems.length, 1, "We correctly have only 1 left pane folder");
   // Check version.
@@ -98,7 +98,7 @@ function test() {
 
   // Get all left pane queries.
   var items = PlacesUtils.annotations
-                         .getItemsWithAnnotation(ORGANIZER_QUERY_ANNO, {});
+                         .getItemsWithAnnotation(ORGANIZER_QUERY_ANNO);
   // Get current queries names.
   for (var i = 0; i < items.length; i++) {
     var itemId = items[i];

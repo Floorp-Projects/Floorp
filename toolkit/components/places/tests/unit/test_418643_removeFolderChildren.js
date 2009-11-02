@@ -131,7 +131,7 @@ function add_bookmarks() {
 
 function check_bookmarks(aFolderId) {
   // check that we still have valid bookmarks
-  var bookmarks = bmSvc.getBookmarkIdsForURI(bookmarkedURI, {});
+  var bookmarks = bmSvc.getBookmarkIdsForURI(bookmarkedURI);
   for(var i = 0; i < bookmarks.length; i++) {
     do_check_eq(bmSvc.getItemTitle(bookmarks[i]), validItemName);
     do_check_true(annoSvc.itemHasAnnotation(bookmarks[i],validAnnoName));
@@ -155,7 +155,7 @@ function check_bookmarks(aFolderId) {
   do_check_true(pastDate < bmSvc.getItemLastModified(aFolderId));
 
   // test that all children have been deleted, we use annos for that
-  var deletedItems = annoSvc.getItemsWithAnnotation(deletedAnnoName, {});
+  var deletedItems = annoSvc.getItemsWithAnnotation(deletedAnnoName);
   do_check_eq(deletedItems.length, 0);
 
   // test that observer has been called for (and only for) deleted items

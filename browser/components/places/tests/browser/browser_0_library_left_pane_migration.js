@@ -60,7 +60,7 @@ var windowObserver = {
              "Left pane folder correctly created");
           var leftPaneItems =
             PlacesUtils.annotations
-                       .getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO, {});
+                       .getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO);
           is(leftPaneItems.length, 1,
              "We correctly have only 1 left pane folder");
           var leftPaneRoot = leftPaneItems[0];
@@ -99,7 +99,7 @@ function test() {
 
   // Check if we have any left pane folder already set, remove it eventually.
   var leftPaneItems = PlacesUtils.annotations
-                                 .getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO, {});
+                                 .getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO);
   if (leftPaneItems.length > 0) {
     // The left pane has already been created, touching it now would cause
     // next tests to rely on wrong values (and possibly crash)
@@ -125,7 +125,7 @@ function test() {
 
   // Check fake left pane root has been correctly created.
   var leftPaneItems =
-    PlacesUtils.annotations.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO, {});
+    PlacesUtils.annotations.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO);
   is(leftPaneItems.length, 1, "We correctly have only 1 left pane folder");
   is(leftPaneItems[0], fakeLeftPaneRoot, "left pane root itemId is correct");
 

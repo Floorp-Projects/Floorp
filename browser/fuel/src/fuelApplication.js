@@ -287,7 +287,7 @@ function Annotations(aId) {
 
 Annotations.prototype = {
   get names() {
-    return Utilities.annotations.getItemAnnotationNames(this._id, {});
+    return Utilities.annotations.getItemAnnotationNames(this._id);
   },
 
   has : function ann_has(aName) {

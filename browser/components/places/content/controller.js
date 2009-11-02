@@ -248,7 +248,7 @@ PlacesController.prototype = {
     case "placesCmd_deleteDataHost":
       var host;
       if (PlacesUtils.nodeIsHost(this._view.selectedNode)) {
-        var queries = this._view.selectedNode.getQueries({});
+        var queries = this._view.selectedNode.getQueries();
         host = queries[0].domain;
       }
       else
@@ -509,7 +509,7 @@ PlacesController.prototype = {
 
       // annotations
       if (uri) {
-        var names = PlacesUtils.annotations.getPageAnnotationNames(uri, {});
+        var names = PlacesUtils.annotations.getPageAnnotationNames(uri);
         for (var j = 0; j < names.length; ++j)
           nodeData[names[j]] = true;
       }
@@ -517,7 +517,7 @@ PlacesController.prototype = {
       // For items also include the item-specific annotations
       if (node.itemId != -1) {
         names = PlacesUtils.annotations
-                           .getItemAnnotationNames(node.itemId, {});
+                           .getItemAnnotationNames(node.itemId);
         for (j = 0; j < names.length; ++j)
           nodeData[names[j]] = true;
       }
@@ -1058,7 +1058,7 @@ PlacesController.prototype = {
     }
     else if (PlacesUtils.nodeIsDay(aContainerNode)) {
       // Day container.
-      var query = aContainerNode.getQueries({})[0];
+      var query = aContainerNode.getQueries()[0];
       var beginTime = query.beginTime;
       var endTime = query.endTime;
       NS_ASSERT(query && beginTime && endTime,

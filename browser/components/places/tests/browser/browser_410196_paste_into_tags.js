@@ -101,7 +101,7 @@ function test() {
           var bmId = add_bookmark(PlacesUtils._uri(TEST_URL));
           ok(bmId > 0, "A bookmark was added");
           ts.tagURI(PlacesUtils._uri(TEST_URL), ["foo"]);
-          var tags = ts.getTagsForURI(PU._uri(TEST_URL), {});
+          var tags = ts.getTagsForURI(PU._uri(TEST_URL));
           is(tags[0], 'foo', "tag is foo");
         },
 
@@ -168,13 +168,13 @@ function test() {
           var histNode = PO._content.view.nodeForTreeIndex(0);
           ok(histNode, "histNode exists: " + histNode.title);
           // check to see if the history node is tagged!
-          var tags = PU.tagging.getTagsForURI(PU._uri(MOZURISPEC), {});
+          var tags = PU.tagging.getTagsForURI(PU._uri(MOZURISPEC));
           ok(tags.length == 1, "history node is tagged: " + tags.length);
           // check if a bookmark was created
           var isBookmarked = PU.bookmarks.isBookmarked(PU._uri(MOZURISPEC));
           is(isBookmarked, true, MOZURISPEC + " is bookmarked");
           var bookmarkIds = PU.bookmarks.getBookmarkIdsForURI(
-                              PU._uri(histNode.uri), {});
+                              PU._uri(histNode.uri));
           ok(bookmarkIds.length > 0, "bookmark exists for the tagged history item: " + bookmarkIds);
         },
 
@@ -194,7 +194,7 @@ function test() {
           ts.untagURI(PU._uri(MOZURISPEC), ["foo"]);
           ts.untagURI(PU._uri(TEST_URL), ["foo"]);
           hs.removeAllPages();
-          var tags = ts.getTagsForURI(PU._uri(TEST_URL), {});
+          var tags = ts.getTagsForURI(PU._uri(TEST_URL));
           is(tags.length, 0, "tags are gone");
           bs.removeFolderChildren(bs.unfiledBookmarksFolder);
         }

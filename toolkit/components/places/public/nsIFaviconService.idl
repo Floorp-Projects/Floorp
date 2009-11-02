@@ -201,7 +201,7 @@ interface nsIFaviconService : nsISupports
    */
   void getFaviconData(in nsIURI aFaviconURI,
                       out AUTF8String aMimeType,
-                      out unsigned long aDataLen,
+                      [optional] out unsigned long aDataLen,
                       [array,retval,size_is(aDataLen)] out octet aData);
 
   /**
