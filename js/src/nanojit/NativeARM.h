@@ -477,26 +477,6 @@ enum {
 // Other operations.
 // --------
 
-// [_d_hi,_d] = _l * _r
-#define SMULL_dont_check_op1(_d, _d_hi, _l, _r)  do {                               \
-        underrunProtect(4);                                                         \
-        NanoAssert((ARM_ARCH >= 6) || ((_d) != (_l)));                              \
-        NanoAssert(IsGpReg(_d) && IsGpReg(_d_hi) && IsGpReg(_l) && IsGpReg(_r));    \
-        NanoAssert(((_d) != PC) && ((_d_hi) != PC) && ((_l) != PC) && ((_r) != PC));\
-        *(--_nIns) = (NIns)( COND_AL | 0xc00090 | (_d_hi)<<16 | (_d)<<12 | (_r)<<8 | (_l) );\
-        asm_output("smull %s, %s, %s, %s",gpn(_d),gpn(_d_hi),gpn(_l),gpn(_r));      \
-} while(0)
-
-#if NJ_ARM_ARCH >= NJ_ARM_V6
-#define SMULL(_d, _d_hi, _l, _r) SMULL_dont_check_op1(_d, _d_hi, _l, _r)
-#else
-#define SMULL(_d, _d_hi, _l, _r) do {               \
-        NanoAssert(   (_d)!=(_l));                  \
-        NanoAssert((_d_hi)!=(_l));                  \
-        SMULL_dont_check_op1(_d, _d_hi, _l, _r);    \
-    } while(0)
-#endif
-
 // _d = _l * _r
 #define MUL_dont_check_op1(_d, _l, _r)  do {                                \
         underrunProtect(4);                                                 \
@@ -747,7 +727,6 @@ enum {
     } while (0)
 
 #define SETEQ(r)    SET(r,EQ)
-#define SETNE(r)    SET(r,NE)
 #define SETLT(r)    SET(r,LT)
 #define SETLE(r)    SET(r,LE)
 #define SETGT(r)    SET(r,GT)
