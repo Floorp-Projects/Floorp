@@ -1290,26 +1290,26 @@ nsChangeHint nsStyleColor::MaxDifference()
 PRBool
 nsStyleGradient::operator==(const nsStyleGradient& aOther) const
 {
-  NS_ABORT_IF_FALSE(mIsRadial || (mStartRadius == 0 && mEndRadius == 0),
-                    "incorrect unused radius values");
-  NS_ABORT_IF_FALSE(aOther.mIsRadial ||
-                    (aOther.mStartRadius == 0 && aOther.mEndRadius == 0),
-                    "incorrect unused radius values");
+  NS_ABORT_IF_FALSE(mSize == NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER ||
+                    mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR,
+                    "incorrect combination of shape and size");
+  NS_ABORT_IF_FALSE(aOther.mSize == NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER ||
+                    aOther.mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR,
+                    "incorrect combination of shape and size");
 
-  if (mIsRadial != aOther.mIsRadial ||
-      mStartX != aOther.mStartX ||
-      mStartY != aOther.mStartY ||
-      mStartRadius != aOther.mStartRadius ||
-      mEndX != aOther.mEndX ||
-      mEndY != aOther.mEndY ||
-      mEndRadius != aOther.mEndRadius)
+  if (mShape != aOther.mShape ||
+      mSize != aOther.mSize ||
+      mRepeating != aOther.mRepeating ||
+      mBgPosX != aOther.mBgPosX ||
+      mBgPosY != aOther.mBgPosY ||
+      mAngle != aOther.mAngle)
     return PR_FALSE;
 
   if (mStops.Length() != aOther.mStops.Length())
     return PR_FALSE;
 
   for (PRUint32 i = 0; i < mStops.Length(); i++) {
-    if (mStops[i].mPosition != aOther.mStops[i].mPosition ||
+    if (mStops[i].mLocation != aOther.mStops[i].mLocation ||
         mStops[i].mColor != aOther.mStops[i].mColor)
       return PR_FALSE;
   }
@@ -1318,15 +1318,11 @@ nsStyleGradient::operator==(const nsStyleGradient& aOther) const
 }
 
 nsStyleGradient::nsStyleGradient(void)
-  : mIsRadial(PR_FALSE)
-  , mStartRadius(0)
-  , mEndRadius(0)
+  : mShape(NS_STYLE_GRADIENT_SHAPE_LINEAR)
+  , mSize(NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER)
+  , mRepeating(PR_FALSE)
   , mRefCnt(0)
 {
-  mStartX.SetCoordValue(0);
-  mStartY.SetCoordValue(0);
-  mEndX.SetCoordValue(0);
-  mEndY.SetCoordValue(0);
 }
 
 // --------------------

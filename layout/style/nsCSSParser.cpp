@@ -540,8 +540,9 @@ protected:
   PRBool TranslateDimension(nsCSSValue& aValue, PRInt32 aVariantMask,
                             float aNumber, const nsString& aUnit);
   PRBool ParseImageRect(nsCSSValue& aImage);
-  PRBool ParseGradientStop(nsCSSValueGradient* aGradient);
-  PRBool ParseGradient(nsCSSValue& aValue, PRBool aIsRadial);
+  PRBool ParseColorStop(nsCSSValueGradient* aGradient);
+  PRBool ParseGradient(nsCSSValue& aValue, PRBool aIsRadial,
+                       PRBool aIsRepeating);
 
   void SetParsingCompoundProperty(PRBool aBool) {
     NS_ASSERTION(aBool == PR_TRUE || aBool == PR_FALSE, "bad PRBool value");
@@ -4521,10 +4522,16 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
       eCSSToken_Function == tk->mType) {
     // a generated gradient
     if (tk->mIdent.LowerCaseEqualsLiteral("-moz-linear-gradient"))
-      return ParseGradient(aValue, PR_FALSE);
+      return ParseGradient(aValue, PR_FALSE, PR_FALSE);
 
     if (tk->mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient"))
-      return ParseGradient(aValue, PR_TRUE);
+      return ParseGradient(aValue, PR_TRUE, PR_FALSE);
+
+    if (tk->mIdent.LowerCaseEqualsLiteral("-moz-repeating-linear-gradient"))
+      return ParseGradient(aValue, PR_FALSE, PR_TRUE);
+
+    if (tk->mIdent.LowerCaseEqualsLiteral("-moz-repeating-radial-gradient"))
+      return ParseGradient(aValue, PR_TRUE, PR_TRUE);
   }
   if ((aVariantMask & VARIANT_IMAGE_RECT) != 0 &&
       eCSSToken_Function == tk->mType &&
@@ -4822,167 +4829,165 @@ CSSParserImpl::ParseImageRect(nsCSSValue& aImage)
   return PR_FALSE;
 }
 
+// <color-stop> : <color> [ <percentage> | <length> ]?
 PRBool
-CSSParserImpl::ParseGradientStop(nsCSSValueGradient* aGradient)
+CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
 {
-  if (!GetToken(PR_TRUE))
-    return PR_FALSE;
-
-  if (eCSSToken_Function != mToken.mType) {
-    UngetToken();
+  nsCSSValueGradientStop* stop = aGradient->mStops.AppendElement();
+  if (!stop) {
+    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
     return PR_FALSE;
   }
 
-  if (mToken.mIdent.LowerCaseEqualsLiteral("from")) {
-    // Start of the gradient
-    if (!ExpectSymbol('(', PR_FALSE)) {
-      NS_ABORT_IF_FALSE(PR_FALSE, "function token without (");
-    }
-
-    nsCSSValue fromFloat(0.0f, eCSSUnit_Percent);
-    nsCSSValue fromColor;
-    if (!ParseVariant(fromColor, VARIANT_COLOR, nsnull)) {
-      SkipUntil(')');
-      return PR_FALSE;
-    }
-
-    if (!ExpectSymbol(')', PR_TRUE)) {
-      SkipUntil(')');
-      return PR_FALSE;
-    }
-
-    aGradient->mStops.AppendElement(nsCSSValueGradientStop(fromFloat, fromColor));
-    return PR_TRUE;
+  if (!ParseVariant(stop->mColor, VARIANT_COLOR, nsnull)) {
+    return PR_FALSE;
   }
 
-  if (mToken.mIdent.LowerCaseEqualsLiteral("to")) {
-    // End of the gradient
-    if (!ExpectSymbol('(', PR_FALSE)) {
-      NS_ABORT_IF_FALSE(PR_FALSE, "function token without (");
-    }
-
-    nsCSSValue toFloat(1.0f, eCSSUnit_Percent);
-    nsCSSValue toColor;
-    if (!ParseVariant(toColor, VARIANT_COLOR, nsnull)) {
-      SkipUntil(')');
-      return PR_FALSE;
-    }
-
-    if (!ExpectSymbol(')', PR_TRUE)) {
-      SkipUntil(')');
-      return PR_FALSE;
-    }
-
-    aGradient->mStops.AppendElement(nsCSSValueGradientStop(toFloat, toColor));
-    return PR_TRUE;
+  // Stop positions do not have to fall between the starting-point and
+  // ending-point, so we don't use ParseNonNegativeVariant.
+  if (!ParseVariant(stop->mLocation, VARIANT_LP, nsnull)) {
+    stop->mLocation.SetNoneValue();
   }
-
-  if (mToken.mIdent.LowerCaseEqualsLiteral("color-stop")) {
-    // Some kind of gradient stop, somewhere...
-    if (!ExpectSymbol('(', PR_FALSE)) {
-      NS_ABORT_IF_FALSE(PR_FALSE, "function token without (");
-    }
-
-    nsCSSValue stopFloat;
-    if (!ParseVariant(stopFloat, VARIANT_PERCENT | VARIANT_NUMBER, nsnull)) {
-      SkipUntil(')');
-      return PR_FALSE;
-    }
-
-    // Check for a sane position value, and clamp it if it isn't
-    if (stopFloat.GetUnit() == eCSSUnit_Percent) {
-      if (stopFloat.GetPercentValue() > 1.0)
-        stopFloat.SetPercentValue(1.0);
-      else if (stopFloat.GetPercentValue() < 0.0)
-        stopFloat.SetPercentValue(0.0);
-    } else {
-      if (stopFloat.GetFloatValue() > 1.0)
-        stopFloat.SetFloatValue(1.0, eCSSUnit_Number);
-      else if (stopFloat.GetFloatValue() < 0.0)
-        stopFloat.SetFloatValue(0.0, eCSSUnit_Number);
-    }
-
-    if (!ExpectSymbol(',', PR_TRUE)) {
-      SkipUntil(')');
-      return PR_FALSE;
-    }
-
-    nsCSSValue stopColor;
-    if (!ParseVariant(stopColor, VARIANT_COLOR, nsnull)) {
-      SkipUntil(')');
-      return PR_FALSE;
-    }
-
-    if (!ExpectSymbol(')', PR_TRUE)) {
-      SkipUntil(')');
-      return PR_FALSE;
-    }
-
-    aGradient->mStops.AppendElement(nsCSSValueGradientStop(stopFloat, stopColor));
-    return PR_TRUE;
-  }
-
-  // No idea what this is
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
+// <gradient>
+//    : linear-gradient( <gradient-line>? <color-stops> ')'
+//    : radial-gradient( <gradient-line>? <gradient-shape-size>?
+//                       <color-stops> ')'
+//
+// <gradient-line> : [<bg-position> || <angle>] ,
+//
+// <gradient-shape-size> : [<gradient-shape> || <gradient-size>] ,
+// <gradient-shape> : circle | ellipse
+// <gradient-size> : closest-side | closest-corner
+//                 | farthest-side | farthest-corner
+//                 | contain | cover
+//
+// <color-stops> : <color-stop> , <color-stop> [, <color-stop>]*
+
+
 PRBool
-CSSParserImpl::ParseGradient(nsCSSValue& aValue,
-                             PRBool aIsRadial)
+CSSParserImpl::ParseGradient(nsCSSValue& aValue, PRBool aIsRadial,
+                             PRBool aIsRepeating)
 {
   if (!ExpectSymbol('(', PR_FALSE)) {
     NS_ABORT_IF_FALSE(PR_FALSE, "function token without (");
   }
 
-  nsCSSValuePair startPos;
-  if (!ParseBoxPositionValues(startPos, PR_FALSE))
-    return PR_FALSE;
+  nsRefPtr<nsCSSValueGradient> cssGradient
+    = new nsCSSValueGradient(aIsRadial, aIsRepeating);
 
-  if (!ExpectSymbol(',', PR_TRUE)) {
+  // <gradient-line>
+  // N.B. ParseBoxPositionValues is not guaranteed to put back
+  // everything it scanned if it fails, so we must only call it
+  // if there is no alternative to consuming a <box-position>.
+  // ParseVariant, as used here, will either succeed and consume
+  // a single token, or fail and consume none, so we can be more
+  // cavalier about calling it.
+
+  if (!GetToken(PR_TRUE)) {
+    return PR_FALSE;
+  }
+  nsCSSTokenType ty = mToken.mType;
+  nsString id = mToken.mIdent;
+  UngetToken();
+
+  PRBool haveGradientLine = PR_FALSE;
+  switch (ty) {
+  case eCSSToken_Percentage:
+  case eCSSToken_Number:
+  case eCSSToken_Dimension:
+    haveGradientLine = PR_TRUE;
+    break;
+
+  case eCSSToken_Function:
+  case eCSSToken_ID:
+  case eCSSToken_Ref:
+    // this is a color
+    break;
+
+  case eCSSToken_Ident: {
+    // This is only a gradient line if it's a box position keyword.
+    nsCSSKeyword kw = nsCSSKeywords::LookupKeyword(id);
+    PRInt32 junk;
+    if (kw != eCSSKeyword_UNKNOWN &&
+        nsCSSProps::FindKeyword(kw, nsCSSProps::kBackgroundPositionKTable,
+                                junk)) {
+      haveGradientLine = PR_TRUE;
+    }
+    break;
+  }
+
+  default:
+    // error
     SkipUntil(')');
     return PR_FALSE;
   }
 
-  nsCSSValue startRadius;
-  if (aIsRadial) {
-    if (!ParseNonNegativeVariant(startRadius, VARIANT_LENGTH, nsnull)) {
-      SkipUntil(')');
-      return PR_FALSE;
-    }
+  if (haveGradientLine) {
+    PRBool haveAngle =
+      ParseVariant(cssGradient->mAngle, VARIANT_ANGLE, nsnull);
 
-    if (!ExpectSymbol(',', PR_TRUE)) {
+    // if we got an angle, we might now have a comma, ending the gradient-line
+    if (!haveAngle || !ExpectSymbol(',', PR_TRUE)) {
+      // This intermediate is necessary because nsCSSValueGradient cannot
+      // contain a nsCSSValuePair (because the latter type is defined in
+      // nsCSSStruct.h rather than nsCSSValue.h).
+      nsCSSValuePair bgPos;
+      if (ParseBoxPositionValues(bgPos, PR_FALSE)) {
+        cssGradient->mBgPosX = bgPos.mXValue;
+        cssGradient->mBgPosY = bgPos.mYValue;
+      } else {
+        SkipUntil(')');
+        return PR_FALSE;
+      }
+
+      if (!ExpectSymbol(',', PR_TRUE) &&
+          // if we didn't already get an angle, we might have one now,
+          // otherwise it's an error
+          (haveAngle ||
+           !ParseVariant(cssGradient->mAngle, VARIANT_ANGLE, nsnull) ||
+           // now we better have a comma
+           !ExpectSymbol(',', PR_TRUE))) {
+        SkipUntil(')');
+        return PR_FALSE;
+      }
+    }
+  }
+
+  // radial gradients might have a <gradient-shape-size> here
+  if (aIsRadial) {
+    PRBool haveShape =
+      ParseVariant(cssGradient->mRadialShape, VARIANT_KEYWORD,
+                   nsCSSProps::kRadialGradientShapeKTable);
+    PRBool haveSize =
+      ParseVariant(cssGradient->mRadialSize, VARIANT_KEYWORD,
+                   nsCSSProps::kRadialGradientSizeKTable);
+
+    // could be in either order
+    if (!haveShape) {
+      haveShape =
+        ParseVariant(cssGradient->mRadialShape, VARIANT_KEYWORD,
+                     nsCSSProps::kRadialGradientShapeKTable);
+    }
+    if ((haveShape || haveSize) && !ExpectSymbol(',', PR_TRUE)) {
       SkipUntil(')');
       return PR_FALSE;
     }
   }
 
-  nsCSSValuePair endPos;
-  if (!ParseBoxPositionValues(endPos, PR_FALSE)) {
+  // At least two color stops are required
+  if (!ParseColorStop(cssGradient) ||
+      !ExpectSymbol(',', PR_TRUE) ||
+      !ParseColorStop(cssGradient)) {
     SkipUntil(')');
     return PR_FALSE;
   }
 
-  nsCSSValue endRadius;
-  if (aIsRadial) {
-    if (!ExpectSymbol(',', PR_TRUE)) {
-      SkipUntil(')');
-      return PR_FALSE;
-    }
-
-    if (!ParseNonNegativeVariant(endRadius, VARIANT_LENGTH, nsnull)) {
-      SkipUntil(')');
-      return PR_FALSE;
-    }
-  }
-
-  nsRefPtr<nsCSSValueGradient> cssGradient =
-    new nsCSSValueGradient(aIsRadial, startPos.mXValue, startPos.mYValue,
-                           startRadius, endPos.mXValue, endPos.mYValue,
-                           endRadius);
-
-  // Do optional stop functions
+  // Additional color stops
   while (ExpectSymbol(',', PR_TRUE)) {
-    if (!ParseGradientStop(cssGradient)) {
+    if (!ParseColorStop(cssGradient)) {
       SkipUntil(')');
       return PR_FALSE;
     }
@@ -6460,6 +6465,8 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
                (mToken.mIdent.LowerCaseEqualsLiteral("url") ||
                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-linear-gradient") ||
                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient") ||
+                mToken.mIdent.LowerCaseEqualsLiteral("-moz-repeating-linear-gradient") ||
+                mToken.mIdent.LowerCaseEqualsLiteral("-moz-repeating-radial-gradient") ||
                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-image-rect"))) {
       if (haveImage)
         return PR_FALSE;
