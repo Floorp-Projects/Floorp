@@ -861,41 +861,6 @@ nsresult nsDocAccessible::RemoveEventListeners()
 }
 
 void
-nsDocAccessible::FireAnchorJumpEvent()
-{
-  if (!mIsContentLoaded || !mDocument)
-    return;
-
-  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
-  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(container));
-  nsCAutoString theURL;
-  if (webNav) {
-    nsCOMPtr<nsIURI> pURI;
-    webNav->GetCurrentURI(getter_AddRefs(pURI));
-    if (pURI) {
-      pURI->GetSpec(theURL);
-    }
-  }
-  static nsCAutoString lastAnchor;
-  const char kHash = '#';
-  nsCAutoString currentAnchor;
-  PRInt32 hasPosition = theURL.FindChar(kHash);
-  if (hasPosition > 0 && hasPosition < (PRInt32)theURL.Length() - 1) {
-    mIsAnchor = PR_TRUE;
-    currentAnchor.Assign(Substring(theURL,
-                                   hasPosition+1, 
-                                   (PRInt32)theURL.Length()-hasPosition-1));
-  }
-
-  if (currentAnchor.Equals(lastAnchor)) {
-    mIsAnchorJumped = PR_FALSE;
-  } else {
-    mIsAnchorJumped = PR_TRUE;
-    lastAnchor.Assign(currentAnchor);
-  }
-}
-
-void
 nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
 {
   if (IsDefunct())
@@ -948,7 +913,6 @@ nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
           nsCOMPtr<nsIAccessibleEvent> accEvent =
             new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_BUSY, PR_FALSE, PR_FALSE);
           FireAccessibleEvent(accEvent);
-          FireAnchorJumpEvent();
         }
       }
     }
