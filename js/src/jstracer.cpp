@@ -8093,13 +8093,11 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
     case LIR_fsub:
         r = v0 - v1;
         break;
-#if !defined NANOJIT_ARM
     case LIR_fmul:
         r = v0 * v1;
         if (r == 0.0)
             goto out;
         break;
-#endif
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
     case LIR_fdiv:
         if (v1 == 0)
