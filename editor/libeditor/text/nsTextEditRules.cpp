@@ -63,6 +63,8 @@
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
 #include "DeleteTextTxn.h"
+#include "nsNodeIterator.h"
+#include "nsIDOMNodeFilter.h"
 
 // for IBMBIDI
 #include "nsIPresShell.h"
@@ -659,8 +661,32 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
 
   if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
   {
-    res = EchoInsertionToPWBuff(start, end, outString);
-    if (NS_FAILED(res)) return res;
+    // manage the password buffer
+    mPasswordText.Insert(*outString, start);
+
+    nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
+    if (lookAndFeel->GetEchoPassword()) {
+      if (mPasswordText.Length() > outString->Length()) {
+        HideLastPWInput();
+      }
+      mLastStart = start;
+      mLastLength = outString->Length();
+      if (mTimer)
+      {
+        mTimer->Cancel();
+      }
+      else
+      {
+        mTimer = do_CreateInstance("@mozilla.org/timer;1", &res);
+        if (NS_FAILED(res)) return res;
+      }
+      mTimer->InitWithCallback(this, 600, nsITimer::TYPE_ONE_SHOT);
+    } 
+    else 
+    {
+      res = FillBufWithPWChars(outString, outString->Length());
+      if (NS_FAILED(res)) return res;
+    }
   }
 
   // get the (collapsed) selection location
@@ -1367,13 +1393,50 @@ nsTextEditRules::RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsTextEditRules::Notify(class nsITimer *) {
+  return HideLastPWInput();
+}
+
+nsresult nsTextEditRules::HideLastPWInput() {
+  nsCOMPtr<nsIDOMNode> selNode;
+  nsCOMPtr<nsISelection> selection;
+  PRInt32 selOffset;
+  PRUint32 start, end;
+  nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  res = mEditor->GetTextSelectionOffsets(selection, start, end);
+  if (NS_FAILED(res)) return res;
+  res = mEditor->GetStartNodeAndOffset(selection, address_of(selNode), &selOffset);
+  if (NS_FAILED(res)) return res;
+  if (!mEditor->IsTextNode(selNode)) {
+    // Get an nsINode from the nsIDOMNode
+    nsCOMPtr<nsINode> node = do_QueryInterface(selNode);
+    // if node is null, return NS_OK because there's no text to hide
+    if (!node) return NS_OK;
+    // This should be the root node, walk the tree looking for text nodes
+    nsNodeIterator iter(node, nsIDOMNodeFilter::SHOW_TEXT, nsnull, PR_TRUE);
+    while (!mEditor->IsTextNode(selNode)) {
+      if (NS_FAILED(res = iter.NextNode(getter_AddRefs(selNode))) || 
+          selNode == nsnull) {
+        return NS_SUCCEEDED(res) ? NS_ERROR_NULL_POINTER : res;
+      }
+    }
+  }
+  nsCOMPtr<nsIDOMCharacterData> nodeAsText(do_QueryInterface(selNode));
+  if (!nodeAsText) return NS_ERROR_FAILURE;
+  nsAutoString hiddenText;
+  FillBufWithPWChars(&hiddenText, mLastLength);
+  nodeAsText->ReplaceData(mLastStart, mLastLength, hiddenText);
+  selection->Collapse(selNode, start);
+  if (start != end)
+    selection->Extend(selNode, end);
+  return NS_OK;
+}
+
 nsresult
-nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAString *aOutString)
+nsTextEditRules::FillBufWithPWChars(nsAString *aOutString, PRInt32 aLength)
 {
   if (!aOutString) {return NS_ERROR_NULL_POINTER;}
-
-  // manage the password buffer
-  mPasswordText.Insert(*aOutString, aStart);
 
   // change the output to the platform password character
   PRUnichar passwordChar = PRUnichar('*');
@@ -1383,13 +1446,10 @@ nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAString *
     passwordChar = lookAndFeel->GetPasswordCharacter();
   }
 
-  PRInt32 length = aOutString->Length();
   PRInt32 i;
   aOutString->Truncate();
-  for (i=0; i<length; i++)
-  {
+  for (i=0; i < aLength; i++)
     aOutString->Append(passwordChar);
-  }
 
   return NS_OK;
 }
