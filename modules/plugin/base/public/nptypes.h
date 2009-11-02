@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nptypes_h_
+#define nptypes_h_
+
 /*
  * Header file for ensuring that C99 types ([u]int32_t and bool) and
  * true/false macros are available.
@@ -111,3 +114,5 @@
     #endif
   #endif
 #endif
+
+#endif /* nptypes_h_ */
