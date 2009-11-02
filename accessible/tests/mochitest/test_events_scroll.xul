@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/treeview.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Hack to make xul:tabbrowser work
+
+    const Ci = Components.interfaces;
+
+    var XULBrowserWindow = {
+      isBusy: false,
+      setOverLink: function (link, b) {
+      }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Tests
+
+    var gScrollHandler = {
+      handleEvent: function gScrollHandler_handleEvent(aEvent) {
+        if (aEvent.DOMNode.getAttribute("name") == "link1") {
+          unregisterA11yEventListener(EVENT_SCROLLING_START, this);
+          SimpleTest.finish();
+        }
+      }
+    };
+
+    function doTest()
+    {
+      registerA11yEventListener(EVENT_SCROLLING_START, gScrollHandler);
+
+      var url =
+        "chrome://mochikit/content/a11y/accessible/events_scroll.html#link1";
+
+      var tabBrowser = document.getElementById("tabBrowser");
+      tabBrowser.loadURI(url);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=437607"
+         title="Clicking the 'Skip to main content' link once works, second time fails to initiate a V cursor jump">
+        Mozilla Bug 437607
+      </a><br/>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=519303"
+         title="Same page links to targets with content fires scrolling start accessible event on leaf text node">
+        Mozilla Bug 519303
+      </a>
+
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <!-- Hack to make xul:tabbrowser work -->
+      <menubar>
+        <menu label="menu">
+          <menupopup>
+            <menuitem label="close window hook" id="menu_closeWindow"/>
+            <menuitem label="close hook" id="menu_close"/>
+          </menupopup>
+        </menu>
+      </menubar>
+
+      <tabbrowser type="content-primary" flex="1" id="tabBrowser"/>
+    </vbox>
+  </hbox>
+
+</window>
