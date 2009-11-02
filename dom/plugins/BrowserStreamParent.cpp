@@ -18,7 +18,7 @@ BrowserStreamParent::BrowserStreamParent(PluginInstanceParent* npp,
 BrowserStreamParent::~BrowserStreamParent()
 {
   printf("BrowserStreamParent::~BrowserStreamParent<%p>\n", (void*) this);
-}  
+}
 
 bool
 BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
@@ -29,10 +29,8 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
   if (!mStream)
     return false;
 
-  if (ranges.size() > PR_INT32_MAX) {
-    // TODO: abort all processing!
+  if (ranges.size() > PR_INT32_MAX)
     return false;
-  }
 
   nsAutoArrayPtr<NPByteRange> rp(new NPByteRange[ranges.size()]);
   for (PRUint32 i = 0; i < ranges.size(); ++i) {
