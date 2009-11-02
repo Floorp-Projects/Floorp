@@ -54,7 +54,7 @@ enum nsStyleUnit {
   eStyleUnit_Percent      = 10,     // (float) 1.0 == 100%
   eStyleUnit_Factor       = 11,     // (float) a multiplier
   eStyleUnit_Degree       = 12,     // (float) angle in degrees
-  eStyleUnit_Grad         = 13,     // (float) angle in radians
+  eStyleUnit_Grad         = 13,     // (float) angle in grads
   eStyleUnit_Radian       = 14,     // (float) angle in radians
   eStyleUnit_Coord        = 20,     // (nscoord) value is twips
   eStyleUnit_Integer      = 30,     // (int) value is simple integer
@@ -91,6 +91,10 @@ public:
   nsStyleUnit GetUnit(void) const {
     NS_ASSERTION(mUnit != eStyleUnit_Null, "reading uninitialized value");
     return mUnit;
+  }
+
+  PRBool IsAngleValue(void) const {
+    return eStyleUnit_Degree <= mUnit && mUnit <= eStyleUnit_Radian;
   }
 
   nscoord     GetCoordValue(void) const;

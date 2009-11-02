@@ -135,8 +135,7 @@ struct nsCSSRendering {
                             nsStyleGradient* aGradient,
                             const nsRect& aDirtyRect,
                             const nsRect& aOneCellArea,
-                            const nsRect& aFillArea,
-                            PRBool aRepeat);
+                            const nsRect& aFillArea);
 
   /**
    * Gets the root frame for the frame

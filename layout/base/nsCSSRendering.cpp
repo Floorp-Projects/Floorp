@@ -109,7 +109,6 @@ public:
   nsSize ComputeSize(const nsSize& aDefault);
   /**
    * Draws the image to the target rendering context.
-   * @param aRepeat indicates whether the image is to be repeated (tiled)
    * @see nsLayoutUtils::DrawImage() for other parameters
    */
   void Draw(nsPresContext*       aPresContext,
@@ -117,8 +116,7 @@ public:
             const nsRect&        aDest,
             const nsRect&        aFill,
             const nsPoint&       aAnchor,
-            const nsRect&        aDirty,
-            PRBool               aRepeat);
+            const nsRect&        aDirty);
 
 private:
   nsIFrame*                 mForFrame;
@@ -1602,18 +1600,185 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
 
 static gfxFloat
 ConvertGradientValueToPixels(const nsStyleCoord& aCoord,
-                             nscoord aFillLength,
-                             nscoord aAppUnitsPerPixel)
+                             gfxFloat aFillLength,
+                             PRInt32 aAppUnitsPerPixel)
 {
   switch (aCoord.GetUnit()) {
     case eStyleUnit_Percent:
-      return aCoord.GetPercentValue() * aFillLength / aAppUnitsPerPixel;
+      return aCoord.GetPercentValue() * aFillLength;
     case eStyleUnit_Coord:
-      return aCoord.GetCoordValue() / aAppUnitsPerPixel;
+      return NSAppUnitsToFloatPixels(aCoord.GetCoordValue(), aAppUnitsPerPixel);
     default:
       NS_WARNING("Unexpected coord unit");
       return 0;
   }
+}
+
+// Given a box with size aBoxSize and origin (0,0), and an angle aAngle,
+// and a starting point for the gradient line aStart, find the endpoint of
+// the gradient line --- the intersection of the gradient line with a line
+// perpendicular to aAngle that passes through the farthest corner in the
+// direction aAngle.
+static gfxPoint
+ComputeGradientLineEndFromAngle(const gfxPoint& aStart,
+                                double aAngle,
+                                const gfxSize& aBoxSize)
+{
+  double dx = cos(-aAngle);
+  double dy = sin(-aAngle);
+  gfxPoint farthestCorner(dx > 0 ? aBoxSize.width : 0,
+                          dy > 0 ? aBoxSize.height : 0);
+  gfxPoint delta = farthestCorner - aStart;
+  double u = delta.x*dy - delta.y*dx;
+  return farthestCorner + gfxPoint(-u*dy, u*dx);
+}
+
+// Compute the start and end points of the gradient line for a linear gradient.
+static void
+ComputeLinearGradientLine(nsPresContext* aPresContext,
+                          nsStyleGradient* aGradient,
+                          const gfxSize& aBoxSize,
+                          gfxPoint* aLineStart,
+                          gfxPoint* aLineEnd)
+{
+  if (aGradient->mBgPosX.GetUnit() == eStyleUnit_None) {
+    double angle;
+    if (aGradient->mAngle.IsAngleValue()) {
+      angle = aGradient->mAngle.GetAngleValueInRadians();
+    } else {
+      angle = -M_PI_2; // defaults to vertical gradient starting from top
+    }
+    gfxPoint center(aBoxSize.width/2, aBoxSize.height/2);
+    *aLineEnd = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
+    *aLineStart = gfxPoint(aBoxSize.width, aBoxSize.height) - *aLineEnd;
+  } else {
+    PRInt32 appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
+    *aLineStart = gfxPoint(
+      ConvertGradientValueToPixels(aGradient->mBgPosX, aBoxSize.width,
+                                   appUnitsPerPixel),
+      ConvertGradientValueToPixels(aGradient->mBgPosY, aBoxSize.height,
+                                   appUnitsPerPixel));
+    if (aGradient->mAngle.IsAngleValue()) {
+      double angle = aGradient->mAngle.GetAngleValueInRadians();
+      *aLineEnd = ComputeGradientLineEndFromAngle(*aLineStart, angle, aBoxSize);
+    } else {
+      // No angle, the line end is just the reflection of the start point
+      // through the center of the box
+      *aLineEnd = gfxPoint(aBoxSize.width, aBoxSize.height) - *aLineStart;
+    }
+  }
+}
+
+// Compute the start and end points of the gradient line for a radial gradient.
+// Also returns the horizontal and vertical radii defining the circle or
+// ellipse to use.
+static void
+ComputeRadialGradientLine(nsPresContext* aPresContext,
+                          nsStyleGradient* aGradient,
+                          const gfxSize& aBoxSize,
+                          gfxPoint* aLineStart,
+                          gfxPoint* aLineEnd,
+                          double* aRadiusX,
+                          double* aRadiusY)
+{
+  if (aGradient->mBgPosX.GetUnit() == eStyleUnit_None) {
+    // Default line start point is the center of the box
+    *aLineStart = gfxPoint(aBoxSize.width/2, aBoxSize.height/2);
+  } else {
+    PRInt32 appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
+    *aLineStart = gfxPoint(
+      ConvertGradientValueToPixels(aGradient->mBgPosX, aBoxSize.width,
+                                   appUnitsPerPixel),
+      ConvertGradientValueToPixels(aGradient->mBgPosY, aBoxSize.height,
+                                   appUnitsPerPixel));
+  }
+
+  // Compute gradient shape: the x and y radii of an ellipse.
+  double radiusX, radiusY;
+  double leftDistance = PR_ABS(aLineStart->x);
+  double rightDistance = PR_ABS(aBoxSize.width - aLineStart->x);
+  double topDistance = PR_ABS(aLineStart->y);
+  double bottomDistance = PR_ABS(aBoxSize.height - aLineStart->y);
+  switch (aGradient->mSize) {
+  case NS_STYLE_GRADIENT_SIZE_CLOSEST_SIDE:
+    radiusX = NS_MIN(leftDistance, rightDistance);
+    radiusY = NS_MIN(topDistance, bottomDistance);
+    if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_CIRCULAR) {
+      radiusX = radiusY = NS_MIN(radiusX, radiusY);
+    }
+    break;
+  case NS_STYLE_GRADIENT_SIZE_CLOSEST_CORNER: {
+    // Compute x and y distances to nearest corner
+    double offsetX = NS_MIN(leftDistance, rightDistance);
+    double offsetY = NS_MIN(topDistance, bottomDistance);
+    if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_CIRCULAR) {
+      radiusX = radiusY = NS_hypot(offsetX, offsetY);
+    } else {
+      // maintain aspect ratio
+      radiusX = offsetX*M_SQRT2;
+      radiusY = offsetY*M_SQRT2;
+    }
+    break;
+  }
+  case NS_STYLE_GRADIENT_SIZE_FARTHEST_SIDE:
+    radiusX = NS_MAX(leftDistance, rightDistance);
+    radiusY = NS_MAX(topDistance, bottomDistance);
+    if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_CIRCULAR) {
+      radiusX = radiusY = NS_MAX(radiusX, radiusY);
+    }
+    break;
+  case NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER: {
+    // Compute x and y distances to nearest corner
+    double offsetX = NS_MAX(leftDistance, rightDistance);
+    double offsetY = NS_MAX(topDistance, bottomDistance);
+    if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_CIRCULAR) {
+      radiusX = radiusY = NS_hypot(offsetX, offsetY);
+    } else {
+      // maintain aspect ratio
+      radiusX = offsetX*M_SQRT2;
+      radiusY = offsetY*M_SQRT2;
+    }
+    break;
+  }
+  default:
+    NS_ABORT_IF_FALSE(PR_FALSE, "unknown radial gradient sizing method");
+  }
+  *aRadiusX = radiusX;
+  *aRadiusY = radiusY;
+
+  double angle;
+  if (aGradient->mAngle.IsAngleValue()) {
+    angle = aGradient->mAngle.GetAngleValueInRadians();
+  } else {
+    // Default angle is 0deg
+    angle = 0.0;
+  }
+
+  // The gradient line end point is where the gradient line intersects
+  // the ellipse.
+  *aLineEnd = *aLineStart + gfxPoint(radiusX*cos(-angle), radiusY*sin(-angle));
+}
+
+// A resolved color stop --- with a specific position along the gradient line,
+// and a Thebes color
+struct ColorStop {
+  ColorStop(double aPosition, nscolor aColor) :
+    mPosition(aPosition), mColor(aColor) {}
+  double mPosition; // along the gradient line; 0=start, 1=end
+  gfxRGBA mColor;
+};
+
+// Returns aFrac*aC2 + (1 - aFrac)*C1. The interpolation is done
+// in unpremultiplied space, which is what SVG gradients and cairo
+// gradients expect.
+static gfxRGBA
+InterpolateColor(const gfxRGBA& aC1, const gfxRGBA& aC2, double aFrac)
+{
+  double other = 1 - aFrac;
+  return gfxRGBA(aC2.r*aFrac + aC1.r*other,
+                 aC2.g*aFrac + aC1.g*other,
+                 aC2.b*aFrac + aC1.b*other,
+                 aC2.a*aFrac + aC1.a*other);
 }
 
 void
@@ -1622,62 +1787,269 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               nsStyleGradient* aGradient,
                               const nsRect& aDirtyRect,
                               const nsRect& aOneCellArea,
-                              const nsRect& aFillArea,
-                              PRBool aRepeat)
+                              const nsRect& aFillArea)
 {
-#if 0
-  gfxContext *ctx = aRenderingContext.ThebesContext();
-  nscoord appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
-
-  gfxRect dirtyRect = RectToGfxRect(aDirtyRect, appUnitsPerPixel);
-  gfxRect areaToFill = RectToGfxRect(aFillArea, appUnitsPerPixel);
-  gfxRect oneCellArea = RectToGfxRect(aOneCellArea, appUnitsPerPixel);
-  gfxPoint fillOrigin = oneCellArea.TopLeft();
-
-  areaToFill = areaToFill.Intersect(dirtyRect);
-  if (areaToFill.IsEmpty())
+  if (aOneCellArea.IsEmpty())
     return;
 
-  gfxFloat gradX0 = ConvertGradientValueToPixels(aGradient->mStartX,
-                        aOneCellArea.width, appUnitsPerPixel);
-  gfxFloat gradY0 = ConvertGradientValueToPixels(aGradient->mStartY,
-                        aOneCellArea.height, appUnitsPerPixel);
-  gfxFloat gradX1 = ConvertGradientValueToPixels(aGradient->mEndX,
-                        aOneCellArea.width, appUnitsPerPixel);
-  gfxFloat gradY1 = ConvertGradientValueToPixels(aGradient->mEndY,
-                        aOneCellArea.height, appUnitsPerPixel);
+  gfxContext *ctx = aRenderingContext.ThebesContext();
+  nscoord appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
+  gfxRect oneCellArea = RectToGfxRect(aOneCellArea, appUnitsPerPixel);
 
-  nsRefPtr<gfxPattern> gradientPattern;
-  if (aGradient->mIsRadial) {
-    gfxFloat gradRadius0 = double(aGradient->mStartRadius) / appUnitsPerPixel;
-    gfxFloat gradRadius1 = double(aGradient->mEndRadius) / appUnitsPerPixel;
-    gradientPattern = new gfxPattern(gradX0, gradY0, gradRadius0,
-                                     gradX1, gradY1, gradRadius1);
+  // Compute "gradient line" start and end relative to oneCellArea
+  gfxPoint lineStart, lineEnd;
+  double radiusX = 0, radiusY = 0; // for radial gradients only
+  if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
+    ComputeLinearGradientLine(aPresContext, aGradient, oneCellArea.size,
+                              &lineStart, &lineEnd);
   } else {
-    gradientPattern = new gfxPattern(gradX0, gradY0, gradX1, gradY1);
+    ComputeRadialGradientLine(aPresContext, aGradient, oneCellArea.size,
+                              &lineStart, &lineEnd, &radiusX, &radiusY);
+  }
+  gfxFloat lineLength = NS_hypot(lineEnd.x - lineStart.x,
+                                 lineEnd.y - lineStart.y);
+
+  NS_ABORT_IF_FALSE(aGradient->mStops.Length() >= 2,
+                    "The parser should reject gradients with less than two stops");
+
+  // Build color stop array and compute stop positions
+  nsTArray<ColorStop> stops;
+  // If there is a run of stops before stop i that did not have specified
+  // positions, then this is the index of the first stop in that run, otherwise
+  // it's -1.
+  PRInt32 firstUnsetPosition = -1;
+  for (PRUint32 i = 0; i < aGradient->mStops.Length(); ++i) {
+    const nsStyleGradientStop& stop = aGradient->mStops[i];
+    double position;
+    switch (stop.mLocation.GetUnit()) {
+    case eStyleUnit_None:
+      if (i == 0) {
+        // First stop defaults to position 0.0
+        position = 0.0;
+      } else if (i == aGradient->mStops.Length() - 1) {
+        // Last stop defaults to position 1.0
+        position = 1.0;
+      } else {
+        // Other stops with no specified position get their position assigned
+        // later by interpolation, see below.
+        // Remeber where the run of stops with no specified position starts,
+        // if it starts here.
+        if (firstUnsetPosition < 0) {
+          firstUnsetPosition = i;
+        }
+        stops.AppendElement(ColorStop(0, stop.mColor));
+        continue;
+      }
+      break;
+    case eStyleUnit_Percent:
+      position = stop.mLocation.GetPercentValue();
+      break;
+    case eStyleUnit_Coord:
+      position = lineLength < 1e-6 ? 0.0 :
+          stop.mLocation.GetCoordValue() / appUnitsPerPixel / lineLength;
+      break;
+    default:
+      NS_ABORT_IF_FALSE(PR_FALSE, "Unknown stop position type");
+    }
+
+    if (i > 0) {
+      // Prevent decreasing stop positions by advancing this position
+      // to the previous stop position, if necessary
+      position = NS_MAX(position, stops[i - 1].mPosition);
+    }
+    stops.AppendElement(ColorStop(position, stop.mColor));
+    if (firstUnsetPosition > 0) {
+      // Interpolate positions for all stops that didn't have a specified position
+      double p = stops[firstUnsetPosition - 1].mPosition;
+      double d = (stops[i].mPosition - p)/(i - firstUnsetPosition + 1);
+      for (PRUint32 j = firstUnsetPosition; j < i; ++j) {
+        p += d;
+        stops[j].mPosition = p;
+      }
+      firstUnsetPosition = -1;
+    }
   }
 
+  // Eliminate negative-position stops if the gradient is radial.
+  double firstStop = stops[0].mPosition;
+  if (aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR && firstStop < 0.0) {
+    if (aGradient->mRepeating) {
+      // Choose an instance of the repeated pattern that gives us all positive
+      // stop-offsets.
+      double lastStop = stops[stops.Length() - 1].mPosition;
+      double stopDelta = lastStop - firstStop;
+      // If all the stops are in approximately the same place then logic below
+      // will kick in that makes us draw just the last stop color, so don't
+      // try to do anything in that case. We certainly need to avoid
+      // dividing by zero.
+      if (stopDelta >= 1e-6) {
+        double instanceCount = NS_ceil(-firstStop/stopDelta);
+        // Advance stops by instanceCount multiples of the period of the
+        // repeating gradient.
+        double offset = instanceCount*stopDelta;
+        for (PRUint32 i = 0; i < stops.Length(); i++) {
+          stops[i].mPosition += offset;
+        }
+      }
+    } else {
+      // Move negative-position stops to position 0.0. We may also need
+      // to set the color of the stop to the color the gradient should have
+      // at the center of the ellipse.
+      for (PRUint32 i = 0; i < stops.Length(); i++) {
+        double pos = stops[i].mPosition;
+        if (pos < 0.0) {
+          stops[i].mPosition = 0.0;
+          // If this is the last stop, we don't need to adjust the color,
+          // it will fill the entire area.
+          if (i < stops.Length() - 1) {
+            double nextPos = stops[i + 1].mPosition;
+            // If nextPos is approximately equal to pos, then we don't
+            // need to adjust the color of this stop because it's
+            // not going to be displayed.
+            // If nextPos is negative, we don't need to adjust the color of
+            // this stop since it's not going to be displayed because
+            // nextPos will also be moved to 0.0.
+            if (nextPos >= 0.0 && nextPos - pos >= 1e-6) {
+              // Compute how far the new position 0.0 is along the interval
+              // between pos and nextPos.
+              // XXX Color interpolation (in cairo, too) should use the
+              // CSS 'color-interpolation' property!
+              double frac = (0.0 - pos)/(nextPos - pos);
+              stops[i].mColor =
+                InterpolateColor(stops[i].mColor, stops[i + 1].mColor, frac);
+            }
+          }
+        }
+      }
+    }
+    firstStop = stops[0].mPosition;
+    NS_ABORT_IF_FALSE(firstStop >= 0.0, "Failed to fix stop offsets");
+  }
+
+  double lastStop = stops[stops.Length() - 1].mPosition;
+  // Cairo gradients must have stop positions in the range [0, 1]. So,
+  // stop positions will be normalized below by subtracting firstStop and then
+  // multiplying by stopScale.
+  double stopScale;
+  double stopDelta = lastStop - firstStop;
+  if (stopDelta < 1e-6 || lineLength < 1e-6 ||
+      (aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR &&
+       (radiusX < 1e-6 || radiusY < 1e-6))) {
+    // Stops are all at the same place. Map all stops to 0.0.
+    // For radial gradients we need to fill with the last stop color,
+    // so just set both radii to 0.
+    stopScale = 0.0;
+    radiusX = radiusY = 0.0;
+    lastStop = firstStop;
+  } else {
+    stopScale = 1.0/stopDelta;
+  }
+
+  // Create the gradient pattern.
+  nsRefPtr<gfxPattern> gradientPattern;
+  if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
+    // Compute the actual gradient line ends we need to pass to cairo after
+    // stops have been normalized.
+    gfxPoint gradientStart = lineStart + (lineEnd - lineStart)*firstStop;
+    gfxPoint gradientEnd = lineStart + (lineEnd - lineStart)*lastStop;
+
+    if (stopScale == 0.0) {
+      // Stops are all at the same place. For repeating gradients, this will
+      // just paint the last stop color. We don't need to do anything.
+      // For non-repeating gradients, this should render as two colors, one
+      // on each "side" of the gradient line segment, which is a point. All
+      // our stops will be at 0.0; we just need to set the direction vector
+      // correctly.
+      gradientEnd = gradientStart + (lineEnd - lineStart);
+    }
+
+    gradientPattern = new gfxPattern(gradientStart.x, gradientStart.y,
+                                     gradientEnd.x, gradientEnd.y);
+  } else {
+    NS_ASSERTION(firstStop >= 0.0,
+                 "Negative stops not allowed for radial gradients");
+
+    // To form an ellipse, we'll stretch a circle vertically, if necessary.
+    // So our radii are based on radiusX.
+    double innerRadius = radiusX*firstStop;
+    double outerRadius = radiusX*lastStop;
+    gradientPattern = new gfxPattern(lineStart.x, lineStart.y, innerRadius,
+                                     lineStart.x, lineStart.y, outerRadius);
+    if (gradientPattern && radiusX != radiusY) {
+      // Stretch the circles into ellipses vertically by setting a transform
+      // in the pattern.
+      // Recall that this is the transform from user space to pattern space.
+      // So to stretch the ellipse by factor of P vertically, we scale
+      // user coordinates by 1/P.
+      gfxMatrix matrix;
+      matrix.Translate(lineStart);
+      matrix.Scale(1.0, radiusX/radiusY);
+      matrix.Translate(-lineStart);
+      gradientPattern->SetMatrix(matrix);
+    }
+  }
   if (!gradientPattern || gradientPattern->CairoStatus())
     return;
 
-  for (PRUint32 i = 0; i < aGradient->mStops.Length(); i++) {
-    gradientPattern->AddColorStop(aGradient->mStops[i].mPosition,
-                                  gfxRGBA(aGradient->mStops[i].mColor));
+  // Now set normalized color stops in pattern.
+  if (stopScale == 0.0) {
+    // Non-repeating linear gradient with all stops in same place -> just add
+    // first stop and last stop, both at position 0.
+    // Repeating or radial gradient with all stops in the same place -> just
+    // paint the last stop color.
+    if (!aGradient->mRepeating &&
+        aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
+      gradientPattern->AddColorStop(0.0, stops[0].mColor);
+    }
+    gradientPattern->AddColorStop(0.0, stops[stops.Length() - 1].mColor);
+  } else {
+    // Use all stops
+    for (PRUint32 i = 0; i < stops.Length(); i++) {
+      double pos = stopScale*(stops[i].mPosition - firstStop);
+      gradientPattern->AddColorStop(pos, stops[i].mColor);
+    }
   }
 
-  if (aRepeat)
+  // Set repeat mode. Default cairo extend mode is PAD.
+  if (aGradient->mRepeating) {
     gradientPattern->SetExtend(gfxPattern::EXTEND_REPEAT);
+  }
 
-  ctx->Save();
-  ctx->NewPath();
-  // The fill origin is part of the translate call so the pattern starts at
-  // the desired point, rather than (0,0).
-  ctx->Translate(fillOrigin);
-  ctx->SetPattern(gradientPattern);
-  ctx->Rectangle(areaToFill - fillOrigin, PR_TRUE);
-  ctx->Fill();
-  ctx->Restore();
-#endif
+  // Paint gradient tiles. This isn't terribly efficient, but doing it this
+  // way is simple and sure to get pixel-snapping right. We could speed things
+  // up by drawing tiles into temporary surfaces and copying those to the
+  // destination, but after pixel-snapping tiles may not all be the same size.
+  nsRect dirty;
+  dirty.IntersectRect(aDirtyRect, aFillArea);
+  gfxRect areaToFill = RectToGfxRect(aFillArea, appUnitsPerPixel);
+  gfxMatrix ctm = ctx->CurrentMatrix();
+
+  // Compute which tile is the top-left tile to be drawn.
+  PRInt32 firstTileX = (dirty.x - aOneCellArea.x)/aOneCellArea.width;
+  PRInt32 firstTileY = (dirty.y - aOneCellArea.y)/aOneCellArea.height;
+  // xStart/yStart are the top-left corner of the top-left tile.
+  nscoord xStart = firstTileX*aOneCellArea.width + aOneCellArea.x;
+  nscoord yStart = firstTileY*aOneCellArea.height + aOneCellArea.y;
+  nscoord xEnd = dirty.XMost();
+  nscoord yEnd = dirty.YMost();
+  // x and y are the top-left corner of the tile to draw
+  for (nscoord y = yStart; y < yEnd; y += aOneCellArea.height) {
+    for (nscoord x = xStart; x < xEnd; x += aOneCellArea.width) {
+      // The coordinates of the tile
+      gfxRect tileRect =
+        RectToGfxRect(nsRect(x, y, aOneCellArea.width, aOneCellArea.height),
+                      appUnitsPerPixel);
+      // The actual area to fill with this tile is the intersection of this
+      // tile with the overall area we're supposed to be filling
+      gfxRect fillRect = tileRect.Intersect(areaToFill);
+      ctx->NewPath();
+      ctx->Translate(tileRect.pos);
+      ctx->SetPattern(gradientPattern);
+      ctx->Rectangle(fillRect - tileRect.pos, PR_TRUE);
+      ctx->Fill();
+      ctx->SetMatrix(ctm);
+    }
+  }
 }
 
 void
@@ -2104,8 +2476,7 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   fillArea.IntersectRect(fillArea, aBGClipRect);
 
   imageRenderer.Draw(aPresContext, aRenderingContext, destArea, fillArea,
-                     anchor + aBorderArea.TopLeft(), aDirtyRect,
-                     (repeat != NS_STYLE_BG_REPEAT_OFF));
+                     anchor + aBorderArea.TopLeft(), aDirtyRect);
 }
 
 static void
@@ -3225,8 +3596,7 @@ ImageRenderer::Draw(nsPresContext*       aPresContext,
                          const nsRect&        aDest,
                          const nsRect&        aFill,
                          const nsPoint&       aAnchor,
-                         const nsRect&        aDirty,
-                         PRBool               aRepeat)
+                         const nsRect&        aDirty)
 {
   if (!mIsReady) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
@@ -3249,7 +3619,7 @@ ImageRenderer::Draw(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Gradient:
       nsCSSRendering::PaintGradient(aPresContext, aRenderingContext,
-          mGradientData, aDirty, aDest, aFill, aRepeat);
+          mGradientData, aDirty, aDest, aFill);
       break;
     case eStyleImageType_Null:
     default:
