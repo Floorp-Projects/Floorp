@@ -60,6 +60,7 @@ _TEST_FILES =	test_bug343416.xul \
 		test_bug462106.xul \
 		test_bug478536.xul \
 		window_bug478536.xul \
+		test_bug517396.xul \
 		test_keycodes.xul \
 		test_wheeltransaction.xul \
 		window_wheeltransaction.xul \
