@@ -78,7 +78,7 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
   nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
                                            NS_PRINTDIALOGSERVICE_CONTRACTID));
   if (dlgPrint)
-    return dlgPrint->Show(parent, printSettings);
+    return dlgPrint->Show(parent, printSettings, webBrowserPrint);
 
   return NS_ERROR_FAILURE;
 

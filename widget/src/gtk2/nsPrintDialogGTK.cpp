@@ -568,7 +568,8 @@ nsPrintDialogServiceGTK::Init()
 }
 
 NS_IMETHODIMP
-nsPrintDialogServiceGTK::Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings)
+nsPrintDialogServiceGTK::Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings,
+                              nsIWebBrowserPrint *aWebBrowserPrint)
 {
   NS_PRECONDITION(aParent, "aParent must not be null");
   NS_PRECONDITION(aSettings, "aSettings must not be null");
