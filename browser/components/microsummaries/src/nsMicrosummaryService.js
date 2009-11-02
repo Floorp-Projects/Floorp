@@ -552,7 +552,7 @@ MicrosummaryService.prototype = {
    *
    */
   get _bookmarks() {
-    var bookmarks = this._ans.getItemsWithAnnotation(ANNO_MICSUM_GEN_URI, {});
+    var bookmarks = this._ans.getItemsWithAnnotation(ANNO_MICSUM_GEN_URI);
     this.__defineGetter__("_bookmarks", function() bookmarks);
     return this._bookmarks;
   },

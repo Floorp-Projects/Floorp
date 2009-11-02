@@ -160,7 +160,7 @@ function LivemarkService() {
                                   BindToObject(this._shutdown, this),
                                   true /*only once*/);
 
-  var livemarks = this._ans.getItemsWithAnnotation(LMANNO_FEEDURI, {});
+  var livemarks = this._ans.getItemsWithAnnotation(LMANNO_FEEDURI);
   for (var i = 0; i < livemarks.length; i++) {
     var feedURI = this._ios.newURI(this._ans.getItemAnnotation(livemarks[i],
                                                                LMANNO_FEEDURI),

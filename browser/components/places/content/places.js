@@ -216,7 +216,7 @@ var PlacesOrganizer = {
       return;
 
     var node = this._places.selectedNode;
-    var queries = asQuery(node).getQueries({});
+    var queries = asQuery(node).getQueries();
 
     // Items are only excluded on the left pane.
     var options = node.queryOptions.clone();
@@ -359,7 +359,7 @@ var PlacesOrganizer = {
    * main places pane.
    */
   getCurrentQueries: function PO_getCurrentQueries() {
-    return asQuery(this._content.getResult().root).getQueries({});
+    return asQuery(this._content.getResult().root).getQueries();
   },
 
   /**

@@ -81,7 +81,7 @@
 
       // We need 2 left pane folders to simulate a corrupt profile.
       do {
-        let leftPaneItems = as.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO, {});
+        let leftPaneItems = as.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO);
         // Create a fake left pane folder.
         let fakeLeftPaneRoot = bs.createFolder(PlacesUtils.placesRootId, "",
                                                bs.DEFAULT_INDEX);
@@ -97,7 +97,7 @@
       // Check left pane.
       ok(PlacesUIUtils.leftPaneFolderId > 0,
          "Left pane folder correctly created");
-      var leftPaneItems = as.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO, {});
+      var leftPaneItems = as.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO);
       is(leftPaneItems.length, 1,
          "We correctly have only 1 left pane folder");
 

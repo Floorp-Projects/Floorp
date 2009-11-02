@@ -204,7 +204,7 @@ var gEditItemOverlay = {
 
       this._initTextField("locationField", this._uri.spec);
       if (!aItemIdList) {
-        var tags = PlacesUtils.tagging.getTagsForURI(this._uri, {}).join(", ");
+        var tags = PlacesUtils.tagging.getTagsForURI(this._uri).join(", ");
         this._initTextField("tagsField", tags, false);
       }
       else {
@@ -218,8 +218,8 @@ var gEditItemOverlay = {
             this._itemIds[i] = -1;
           }
           else
-            this._uris[i] = PlacesUtils.bookmarks.getBookmarkURI(this._itemIds[i], {});
-          this._tags[i] = PlacesUtils.tagging.getTagsForURI(this._uris[i], {});
+            this._uris[i] = PlacesUtils.bookmarks.getBookmarkURI(this._itemIds[i]);
+          this._tags[i] = PlacesUtils.tagging.getTagsForURI(this._uris[i]);
           if (this._tags[i].length < this._tags[nodeToCheck].length)
             nodeToCheck =  i;
         }
@@ -328,7 +328,7 @@ var gEditItemOverlay = {
     }
 
     // List of recently used folders:
-    var folderIds = annos.getItemsWithAnnotation(LAST_USED_ANNO, { });
+    var folderIds = annos.getItemsWithAnnotation(LAST_USED_ANNO);
 
     /**
      * The value of the LAST_USED_ANNO annotation is the time (in the form of
@@ -573,7 +573,7 @@ var gEditItemOverlay = {
   },
 
   _updateSingleTagForItem: function EIO__updateSingleTagForItem() {
-    var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri, { });
+    var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri);
     var tags = this._getTagsArrayFromTagField();
     if (tags.length > 0 || currentTags.length > 0) {
       var tagsToRemove = [];
@@ -599,7 +599,7 @@ var gEditItemOverlay = {
         PlacesUIUtils.ptm.doTransaction(aggregate);
 
         // Ensure the tagsField is in sync, clean it up from empty tags
-        var tags = PlacesUtils.tagging.getTagsForURI(this._uri, {}).join(", ");
+        var tags = PlacesUtils.tagging.getTagsForURI(this._uri).join(", ");
         this._initTextField("tagsField", tags, false);
         return true;
       }
@@ -666,7 +666,7 @@ var gEditItemOverlay = {
         this._allTags = tags;
         this._tags = [];
         for (i = 0; i < this._uris.length; i++)
-          this._tags[i] = PlacesUtils.tagging.getTagsForURI(this._uris[i], {});
+          this._tags[i] = PlacesUtils.tagging.getTagsForURI(this._uris[i]);
 
         // Ensure the tagsField is in sync, clean it up from empty tags
         this._initTextField("tagsField", tags, false);
@@ -1112,7 +1112,7 @@ var gEditItemOverlay = {
         this._initNamePicker(); // for microsummaries
         this._initTextField("tagsField",
                              PlacesUtils.tagging
-                                        .getTagsForURI(this._uri, { }).join(", "),
+                                        .getTagsForURI(this._uri).join(", "),
                             false);
         this._rebuildTagsSelectorList();
       }

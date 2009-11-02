@@ -392,7 +392,7 @@ interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
    * Get the queries which build this node's children.
    * Only valid for RESULT_TYPE_QUERY nodes.
    */
-  void getQueries(out unsigned long queryCount,
+  void getQueries([optional] out unsigned long queryCount,
                   [retval,array,size_is(queryCount)] out nsINavHistoryQuery queries);
 
   /**
@@ -973,7 +973,7 @@ interface nsINavHistoryQuery : nsISupports
   /**
    * Limit results to items that are in all of the given folders.
    */
-  void getFolders(out unsigned long count,
+  void getFolders([optional] out unsigned long count,
                   [retval,array,size_is(count)] out long long folders);
   readonly attribute unsigned long folderCount;
 
