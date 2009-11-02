@@ -273,7 +273,8 @@ public:
                                     PRBool  aRepaint);
 
     virtual void       NativeShow  (PRBool  aAction);
-    virtual nsIntSize  GetSafeWindowSize(nsIntSize aSize);
+    void               SetHasMappedToplevel(PRBool aState);
+    nsIntSize          GetSafeWindowSize(nsIntSize aSize);
 
     void               EnsureGrabs  (void);
     void               GrabPointer  (void);
@@ -431,7 +432,6 @@ protected:
     PRPackedBool        mPlaced;
 
 private:
-    PRBool             CanBeSeen();
     void               GetToplevelWidget(GtkWidget **aWidget);
     GtkWidget         *GetMozContainerWidget();
     nsWindow          *GetContainerWindow();
@@ -452,7 +452,8 @@ private:
     PRUint32            mContainerGotFocus : 1,
                         mContainerLostFocus : 1,
                         mContainerBlockFocus : 1,
-                        mIsVisible : 1,
+                        mHasMappedToplevel : 1,
+                        mIsFullyObscured : 1,
                         mRetryPointerGrab : 1,
                         mRetryKeyboardGrab : 1;
     GtkWindow          *mTransientParent;
