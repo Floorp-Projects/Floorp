@@ -112,9 +112,8 @@ struct JSXML {
     void                *domnode;       /* DOM node if mapped info item */
     JSXML               *parent;
     JSObject            *name;
-    uint16              xml_class;      /* discriminates u, below */
-    uint16              xml_flags;      /* flags, see below */
-    uint32              align;
+    uint32              xml_class;      /* discriminates u, below */
+    uint32              xml_flags;      /* flags, see below */
     union {
         JSXMLListVar    list;
         JSXMLElemVar    elem;
