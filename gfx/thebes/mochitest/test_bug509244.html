@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=509244
+-->
+<head>
+  <title>Test for Bug 509244</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=509244">Mozilla Bug 509244</a>
+<p id="display">A</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 509244 **/
+
+function flush() { document.documentElement.offsetHeight; }
+
+var text = document.getElementById("display");
+
+// layout text, caching monospace font
+text.style.fontFamily = "monospace";
+flush();
+// relayout text so that monospace font is no longer used (but cached)
+text.style.fontFamily = "sans-serif";
+flush();
+
+// flush cache
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var os = Components.classes["@mozilla.org/observer-service;1"]
+         .getService(Components.interfaces.nsIObserverService);
+os.notifyObservers(null, "memory-pressure", "heap-minimize");
+
+// reuse font that was flushed from cache
+text.style.fontFamily = "monospace";
+flush(); 
+
+ok(true, "not crashed");
+
+</script>
+</pre>
+</body>
+</html>
