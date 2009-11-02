@@ -265,7 +265,8 @@ protected:
     void MakeContextCurrent() { mGLPbuffer->MakeContextCurrent(); }
 
     nsresult TexImageElementBase(nsIDOMHTMLElement *imageOrCanvas,
-                                 gfxImageSurface **imageOut);
+                                 gfxImageSurface **imageOut,
+                                 bool flipY, bool premultiplyAlpha);
 
     GLuint mActiveTexture;
 
