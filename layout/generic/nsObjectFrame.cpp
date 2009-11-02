@@ -208,11 +208,9 @@ enum { XKeyPress = KeyPress };
 static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 #endif /* PR_LOGGING */
 
-// 1020 / 60
-#define NORMAL_PLUGIN_DELAY 17
-
-// low enough to avoid audio skipping/delays
-#define HIDDEN_PLUGIN_DELAY 100
+#define NORMAL_PLUGIN_DELAY 20
+// must avoid audio skipping/delays
+#define HIDDEN_PLUGIN_DELAY 250
 
 // special class for handeling DOM context menu events because for
 // some reason it starves other mouse events if implemented on the
