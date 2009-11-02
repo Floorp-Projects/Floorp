@@ -144,15 +144,7 @@ enum ReturnType {
 const int I32 = nanojit::ARGSIZE_LO;
 const int I64 = nanojit::ARGSIZE_Q;
 const int F64 = nanojit::ARGSIZE_F;
-const int PTRARG = nanojit::ARGSIZE_LO;
-
-const int PTRRET =
-#if defined AVMPLUS_64BIT
-    nanojit::ARGSIZE_Q
-#else
-    nanojit::ARGSIZE_LO
-#endif
-    ;
+const int PTR = nanojit::ARGSIZE_P;
 
 enum LirTokenType {
     NAME, NUMBER, PUNCT, NEWLINE
@@ -257,7 +249,7 @@ public:
 
     void assemble(istream &in);
     void assembleRandom(int nIns);
-    void lookupFunction(const string &name, CallInfo *&ci);
+    bool lookupFunction(const string &name, CallInfo *&ci);
 
     LirBuffer *mLirbuf;
     verbose_only( LabelMap *mLabelMap; )
@@ -326,6 +318,7 @@ private:
     LIns *assemble_jump();
     LIns *assemble_load();
     void bad(const string &msg);
+    void nyi(const string &opname);
     void extract_any_label(string &lab, char lab_delim);
     void endFragment();
 };
@@ -357,10 +350,10 @@ double sinFn(double d) {
 #define sin sinFn
 
 Function functions[] = {
-    FN(puts,   argMask(PTRARG, 1, 1) | retMask(I32)),
-    FN(sin,    argMask(F64,    1, 1) | retMask(F64)),
-    FN(malloc, argMask(PTRARG, 1, 1) | retMask(PTRRET)),
-    FN(free,   argMask(PTRARG, 1, 1) | retMask(I32))
+    FN(puts,   argMask(PTR, 1, 1) | retMask(I32)),
+    FN(sin,    argMask(F64, 1, 1) | retMask(F64)),
+    FN(malloc, argMask(PTR, 1, 1) | retMask(PTR)),
+    FN(free,   argMask(PTR, 1, 1) | retMask(I32))
 };
 
 template<typename out, typename in> out
@@ -536,6 +529,13 @@ FragmentAssembler::bad(const string &msg)
 }
 
 void
+FragmentAssembler::nyi(const string &opname)
+{
+    cerr << "line " << mLineno << ": '" << opname << "' not yet implemented, sorry" << endl;
+    exit(1);
+}
+
+void
 FragmentAssembler::need(size_t n)
 {
     if (mTokens.size() != n) {
@@ -629,43 +629,49 @@ FragmentAssembler::assemble_call(const string &op)
         _abi = ABI_CDECL;
     else
         bad("call abi name '" + abi + "'");
-    ci->_abi = _abi;
 
     if (mTokens.size() > MAXARGS)
     bad("too many args to " + op);
 
-    if (func.find("0x") == 0) {
-        ci->_address = imm(func);
-
-        ci->_cse = 0;
-        ci->_fold = 0;
-
-#ifdef DEBUG
-        ci->_name = "fn";
-#endif
-    } else {
-        mParent.lookupFunction(func, ci);
-        if (ci == NULL)
-            bad("invalid function reference " + func);
+    bool isBuiltin = mParent.lookupFunction(func, ci);
+    if (isBuiltin) {
+        // Built-in:  use its CallInfo.  Also check (some) CallInfo details
+        // against those from the call site.
         if (_abi != ci->_abi)
             bad("invalid calling convention for " + func);
+
+        size_t i;
+        for (i = 0; i < mTokens.size(); ++i) {
+            args[i] = ref(mTokens[mTokens.size() - (i+1)]);
+        }
+        if (i != ci->count_args())
+            bad("wrong number of arguments for " + func);
+
+    } else {
+        // User-defined function:  infer CallInfo details (ABI, arg types, ret
+        // type) from the call site.
+        int ty;
+
+        ci->_abi = _abi;
+
+        ci->_argtypes = 0;
+        size_t argc = mTokens.size();
+        for (size_t i = 0; i < argc; ++i) {
+            args[argc - (i+1)] = ref(mTokens[i]);   // args[] is in reverse order!
+            if      (args[i]->isFloat()) ty = ARGSIZE_F;
+            else if (args[i]->isQuad())  ty = ARGSIZE_Q;
+            else                         ty = ARGSIZE_I;
+            // Nb: i+1 because argMask() uses 1-based arg counting.
+            ci->_argtypes |= argMask(ty, i+1, argc);
+        }
+
+        // Select return type from opcode.
+        if      (mOpcode == LIR_icall) ty = ARGSIZE_LO;
+        else if (mOpcode == LIR_fcall) ty = ARGSIZE_F;
+        else if (mOpcode == LIR_qcall) ty = ARGSIZE_Q;
+        else                           nyi("callh");
+        ci->_argtypes |= retMask(ty);
     }
-
-    ci->_argtypes = 0;
-
-    for (size_t i = 0; i < mTokens.size(); ++i) {
-        args[i] = ref(mTokens[mTokens.size() - (i+1)]);
-        ci->_argtypes |= args[i]->isQuad() ? ARGSIZE_F : ARGSIZE_LO;
-        ci->_argtypes <<= ARGSIZE_SHIFT;
-    }
-
-    // Select return type from opcode.
-    // FIXME: callh needs special treatment currently
-    // missing from here.
-    if (mOpcode == LIR_icall)
-        ci->_argtypes |= ARGSIZE_LO;
-    else
-        ci->_argtypes |= ARGSIZE_F;
 
     return mLir->insCall(ci, args);
 }
@@ -1671,35 +1677,37 @@ Lirasm::~Lirasm()
 }
 
 
-void
+bool
 Lirasm::lookupFunction(const string &name, CallInfo *&ci)
 {
     const size_t nfuns = sizeof(functions) / sizeof(functions[0]);
     for (size_t i = 0; i < nfuns; i++) {
         if (name == functions[i].name) {
             *ci = functions[i].callInfo;
-            return;
+            return true;
         }
     }
 
     Fragments::const_iterator func = mFragments.find(name);
     if (func != mFragments.end()) {
+        // The ABI, arg types and ret type will be overridden by the caller.
         if (func->second.mReturnType == RT_FLOAT) {
             CallInfo target = {(uintptr_t) func->second.rfloat,
-                               ARGSIZE_F, 0, 0,
-                               nanojit::ABI_FASTCALL
+                               0, 0, 0, ABI_FASTCALL
                                verbose_only(, func->first.c_str()) };
             *ci = target;
 
         } else {
             CallInfo target = {(uintptr_t) func->second.rint,
-                               ARGSIZE_LO, 0, 0,
-                               nanojit::ABI_FASTCALL
+                               0, 0, 0, ABI_FASTCALL
                                verbose_only(, func->first.c_str()) };
             *ci = target;
         }
+        return false;
+
     } else {
-        ci = NULL;
+        bad("invalid function reference " + name);
+        return false;
     }
 }
 
