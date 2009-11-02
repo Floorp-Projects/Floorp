@@ -346,5 +346,31 @@ COMPONENT_LIBS += gkdebug
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-EXTRA_DSO_LDOPTS += -framework OpenGL
+EXTRA_DSO_LDOPTS += -framework OpenGL -lcups
+endif
+
+EXTRA_DSO_LDOPTS += \
+	$(LIBS_DIR) \
+	$(JPEG_LIBS) \
+	$(PNG_LIBS) \
+	$(QCMS_LIBS) \
+	$(MOZ_JS_LIBS) \
+	$(NSS_LIBS) \
+	$(MOZ_CAIRO_LIBS) \
+	$(NULL)
+
+ifdef MOZ_NATIVE_ZLIB
+EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
+else
+EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
+endif
+
+ifdef MOZ_NATIVE_HUNSPELL
+EXTRA_DSO_LDOPTS += $(MOZ_HUNSPELL_LIBS)
+endif
+
+ifdef MOZ_SYDNEYAUDIO
+ifeq ($(OS_ARCH),Linux)
+EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
+endif
 endif
