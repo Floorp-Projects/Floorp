@@ -64,6 +64,8 @@ bool LaunchApp(const std::vector<std::string>& argv,
 #endif
     exit(127);
   } else {
+    printf("==> process %d launched child process %d\n", 
+           GetCurrentProcId(), pid);
     if (wait)
       HANDLE_EINTR(waitpid(pid, 0, 0));
 

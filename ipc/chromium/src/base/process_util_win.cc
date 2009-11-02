@@ -162,6 +162,10 @@ bool LaunchApp(const std::wstring& cmdline,
                      &startup_info, &process_info))
     return false;
 
+  printf("==> process %d launched child process %d\n",
+         GetCurrentProcId(),
+         process_info.dwProcessId);
+
   // Handles must be closed or they will leak
   CloseHandle(process_info.hThread);
 
