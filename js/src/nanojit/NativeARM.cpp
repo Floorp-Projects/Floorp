@@ -1857,6 +1857,14 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
     // Detect whether or not this is a floating-point comparison.
     bool    fp_cond;
 
+    // Because MUL can't set the V flag, we use SMULL and CMP to set the Z flag
+    // to detect overflow on multiply. Thus, if cond points to a LIR_ov which
+    // in turn points to a LIR_mul, we must be conditional on !Z, not V.
+    if ((condop == LIR_ov) && (cond->oprnd1()->isop(LIR_mul))) {
+        condop = LIR_eq;
+        branchOnFalse = !branchOnFalse;
+    }
+
     // Select the appropriate ARM condition code to match the LIR instruction.
     switch (condop)
     {
@@ -1991,10 +1999,11 @@ void
 Assembler::asm_cond(LInsp ins)
 {
     Register r = prepResultReg(ins, AllowableFlagRegs);
-    switch(ins->opcode())
+    LOpcode op = ins->opcode();
+    
+    switch(op)
     {
         case LIR_eq:  SETEQ(r); break;
-        case LIR_ov:  SETVS(r); break;
         case LIR_lt:  SETLT(r); break;
         case LIR_le:  SETLE(r); break;
         case LIR_gt:  SETGT(r); break;
@@ -2003,6 +2012,17 @@ Assembler::asm_cond(LInsp ins)
         case LIR_ule: SETLS(r); break;
         case LIR_ugt: SETHI(r); break;
         case LIR_uge: SETHS(r); break;
+        case LIR_ov:
+            // Because MUL can't set the V flag, we use SMULL and CMP to set
+            // the Z flag to detect overflow on multiply. Thus, if ins points
+            // to a LIR_ov which in turn points to a LIR_mul, we must be
+            // conditional on !Z, not V.
+            if (!ins->oprnd1()->isop(LIR_mul)) {
+                SETVS(r);
+            } else {
+                SETNE(r);
+            }
+            break;
         default:      NanoAssert(0);  break;
     }
     asm_cmp(ins);
@@ -2106,12 +2126,19 @@ Assembler::asm_arith(LInsp ins)
             //
             // We try to use rb as the first operand by default because it is
             // common for (rr == ra) and is thus likely to be the most
-            // efficient case; if ra is no longer used after this LIR
-            // instruction, it is re-used for the result register (rr).
+            // efficient method.
+
             if ((ARM_ARCH > 5) || (rr != rb)) {
-                // Newer cores place no restrictions on the registers used in a
-                // MUL instruction (compared to other arithmetic instructions).
-                MUL(rr, rb, ra);
+                // IP is used to temporarily store the high word of the result from
+                // SMULL, so we make use of this to perform an overflow check, as
+                // ARM's MUL instruction can't set the overflow flag by itself.
+                // We can check for overflow using the following:
+                //   SMULL  rr, ip, ra, rb
+                //   CMP    ip, rr, ASR #31
+                // An explanation can be found in bug 521161. This sets Z if we did
+                // _not_ overflow, and clears it if we did.
+                ALUr_shi(AL, cmp, 1, IP, IP, rr, ASR_imm, 31);
+                SMULL(rr, IP, rb, ra);
             } else {
                 // ARM_ARCH is ARMv5 (or below) and rr == rb, so we must
                 // find a different way to encode the instruction.
@@ -2120,19 +2147,40 @@ Assembler::asm_arith(LInsp ins)
                 if (rr != ra) {
                     // We know that rr == rb, so this will be something like
                     // rX = rY * rX.
-                    MUL(rr, ra, rb);
+                    // Other than swapping ra and rb, this works in the same as
+                    // as the ARMv6+ case, above.
+                    ALUr_shi(AL, cmp, 1, IP, IP, rr, ASR_imm, 31);
+                    SMULL(rr, IP, ra, rb);
                 } else {
-                    // We're trying to do rX = rX * rX, so we must use a
-                    // temporary register to achieve this correctly on ARMv5.
+                    // We're trying to do rX = rX * rX, but we also need to
+                    // check for overflow so we would need two extra registers
+                    // on ARMv5 and below. We achieve this by observing the
+                    // following:
+                    //   - abs(rX)*abs(rX) = rX*rX, so we force the input to be
+                    //     positive to simplify the detection logic.
+                    //   - Any argument greater than 0xffff will _always_
+                    //     overflow, and we can easily check that the top 16
+                    //     bits are zero.
+                    //   - Any argument lower than (or equal to) 0xffff that
+                    //     also overflows is guaranteed to set output bit 31.
+                    // 
+                    // Thus, we know we have _not_ overflowed if:
+                    //   abs(rX)&0xffff0000 == 0 AND result[31] == 0
+                    //
+                    // The following instruction sequence will be emitted:
+                    // MOVS     IP, rX      // Put abs(rX) into IP.
+                    // RSBMI    IP, IP, #0  // ...
+                    // MUL      rX, IP, IP  // Do the actual multiplication.
+                    // MOVS     IP, IP, LSR #16 // Check that abs(arg)<=0xffff
+                    // CMPEQ    IP, rX, ASR #31 // Check that result[31] == 0
 
-                    // The register allocator will never allocate IP so it will
-                    // be safe to use here.
-                    NanoAssert(ra != IP);
                     NanoAssert(rr != IP);
 
-                    // In this case, rr == ra == rb.
-                    MUL(rr, IP, rb);
-                    MOV(IP, ra);
+                    ALUr_shi(AL, cmp, 1, IP, rr, rr, ASR_imm, 31);
+                    ALUr_shi(AL, mov, 1, IP, IP, IP, LSR_imm, 16);
+                    MUL(rr, IP, IP);
+                    ALUi(MI, rsb, 0, IP, IP, 0);
+                    ALUr(AL, mov, 1, IP, ra, ra);
                 }
             }
             break;
@@ -2229,7 +2277,6 @@ Assembler::asm_cmov(LInsp ins)
     switch (condval->opcode()) {
         // note that these are all opposites...
         case LIR_eq:    MOVNE(rr, iffalsereg);  break;
-        case LIR_ov:    MOVVC(rr, iffalsereg);  break;
         case LIR_lt:    MOVGE(rr, iffalsereg);  break;
         case LIR_le:    MOVGT(rr, iffalsereg);  break;
         case LIR_gt:    MOVLE(rr, iffalsereg);  break;
@@ -2238,6 +2285,17 @@ Assembler::asm_cmov(LInsp ins)
         case LIR_ule:   MOVHI(rr, iffalsereg);  break;
         case LIR_ugt:   MOVLS(rr, iffalsereg);  break;
         case LIR_uge:   MOVLO(rr, iffalsereg);  break;
+        case LIR_ov:
+            // Because MUL can't set the V flag, we use SMULL and CMP to set
+            // the Z flag to detect overflow on multiply. Thus, if ins points
+            // to a LIR_ov which in turn points to a LIR_mul, we must be
+            // conditional on !Z, not V.
+            if (!condval->oprnd1()->isop(LIR_mul)) {
+                MOVVC(rr, iffalsereg);
+            } else {
+                MOVEQ(rr, iffalsereg);
+            }
+            break;
         default: debug_only( NanoAssert(0) );   break;
     }
     /*const Register iftruereg =*/ findSpecificRegFor(iftrue, rr);
