@@ -5,7 +5,7 @@ script 15.9.4.3.js
 script 15.9.5.3.js
 script 15.9.5.4.js
 script 15.9.5.5-02.js
-fails-if(xulRuntime.OS=="Linux") script 15.9.5.5.js # bug xxx
+script 15.9.5.5.js # bug 332722 - Linux fails during DST
 script 15.9.5.6.js
 script 15.9.5.7.js
 script regress-452786.js
