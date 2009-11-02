@@ -25,12 +25,12 @@ body > div {
      passing the blit region and the paint region as a parameters. -->
 
 <div id="testSimpleScroll">
-  <div style="height:300px; background:-moz-linear-gradient(top, bottom, from(red), to(black));"></div>
+  <div style="height:300px; background:-moz-linear-gradient(top, red, black);"></div>
 </div>
 
 <div id="testFixedBackground">
-  <div style="height:300px; margin-bottom:-300px; background:-moz-linear-gradient(left, right, from(red), to(black)) fixed;"></div>
-  <div style="height:300px; background:-moz-linear-gradient(top, bottom, from(rgba(0,0,0,0.7)), to(rgba(255,0,0,0.7)));"></div>
+  <div style="height:300px; margin-bottom:-300px; background:-moz-linear-gradient(left, red, black) fixed;"></div>
+  <div style="height:300px; background:-moz-linear-gradient(top, rgba(0,0,0,0.7), rgba(255,0,0,0.7));"></div>
 </div>
 
 <div id="testFixedPosOverlay">
@@ -60,31 +60,31 @@ body > div {
 </div>
 
 <div style="border:1px solid black;" id="testBorder">
-  <div style="height:300px; background:-moz-linear-gradient(top, bottom, from(red), to(black));"></div>
+  <div style="height:300px; background:-moz-linear-gradient(top, red, black);"></div>
 </div>
 
 <div id="testScrollOutOfView">
-  <div style="height:10px; margin-bottom:210px; background:-moz-linear-gradient(top, bottom, from(rgba(0,0,0,0.7)), to(rgba(255,0,0,0.7)));"></div>
+  <div style="height:10px; margin-bottom:210px; background:-moz-linear-gradient(top, rgba(0,0,0,0.7), rgba(255,0,0,0.7));"></div>
 </div>
 
 <div id="testScrollIntoView">
-  <div style="height:10px; margin-top:210px; background:-moz-linear-gradient(top, bottom, from(rgba(0,0,0,0.7)), to(rgba(255,0,0,0.7)));"></div>
+  <div style="height:10px; margin-top:210px; background:-moz-linear-gradient(top, rgba(0,0,0,0.7), rgba(255,0,0,0.7));"></div>
 </div>
 
 <div id="testSimpleScrollWithSubpixelOffset1" style="top:0.2px">
-  <div style="height:300px; background:-moz-linear-gradient(top, bottom, from(red), to(black));"></div>
+  <div style="height:300px; background:-moz-linear-gradient(top, red, black);"></div>
 </div>
 
 <div id="testSimpleScrollWithSubpixelOffset2" style="top:0.8px">
-  <div style="height:300px; background:-moz-linear-gradient(top, bottom, from(red), to(black));"></div>
+  <div style="height:300px; background:-moz-linear-gradient(top, red, black);"></div>
 </div>
 
 <div id="testSimpleScrollWithSubpixelOffset3" style="left:0.2px" class="horizontal">
-  <div style="width:300px; height:200px; background:-moz-linear-gradient(left, right, from(red), to(black));"></div>
+  <div style="width:300px; height:200px; background:-moz-linear-gradient(left, red, black);"></div>
 </div>
 
 <div id="testSimpleScrollWithSubpixelOffset4" style="left:0.8px" class="horizontal">
-  <div style="width:300px; height:200px; background:-moz-linear-gradient(left, right, from(red), to(black));"></div>
+  <div style="width:300px; height:200px; background:-moz-linear-gradient(left, red, black);"></div>
 </div>
 
 <div id="testMovingClipArea">
