@@ -3117,7 +3117,7 @@ nsAccessible::GetNameInternal(nsAString& aName)
 // nsAccessible private methods
 
 already_AddRefed<nsIAccessible>
-nsAccessible::GetFirstAvailableAccessible(nsIDOMNode *aStartNode, PRBool aRequireLeaf)
+nsAccessible::GetFirstAvailableAccessible(nsIDOMNode *aStartNode)
 {
   nsIAccessibilityService *accService = GetAccService();
   nsCOMPtr<nsIAccessible> accessible;
@@ -3126,11 +3126,9 @@ nsAccessible::GetFirstAvailableAccessible(nsIDOMNode *aStartNode, PRBool aRequir
 
   while (currentNode) {
     accService->GetAccessibleInWeakShell(currentNode, mWeakShell, getter_AddRefs(accessible)); // AddRef'd
-    if (accessible && (!aRequireLeaf || nsAccUtils::IsLeaf(accessible))) {
-      nsIAccessible *retAccessible = accessible;
-      NS_ADDREF(retAccessible);
-      return retAccessible;
-    }
+    if (accessible)
+      return accessible.forget();
+
     if (!walker) {
       // Instantiate walker lazily since we won't need it in 90% of the cases
       // where the first DOM node we're given provides an accessible

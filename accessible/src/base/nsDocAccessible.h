@@ -56,11 +56,11 @@ class nsIScrollableView;
 const PRUint32 kDefaultCacheSize = 256;
 
 #define NS_DOCACCESSIBLE_IMPL_CID                       \
-{  /* 9735bc5f-a4b6-4668-ab73-6f8434c8e750 */           \
-  0x9735bc5f,                                           \
-  0xa4b6,                                               \
-  0x4668,                                               \
-  { 0xab, 0x73, 0x6f, 0x84, 0x34, 0xc8, 0xe7, 0x50 }    \
+{  /* 9e97d7af-b20a-4a5a-a8d9-bcae0de0b7a2 */           \
+  0x9e97d7af,                                           \
+  0xb20a,                                               \
+  0x4a5a,                                               \
+  { 0xa8, 0xd9, 0xbc, 0xae, 0x0d, 0xe0, 0xb7, 0xa2 }    \
 }
 
 class nsDocAccessible : public nsHyperTextAccessibleWrap,
@@ -171,11 +171,6 @@ public:
    * @param  aEventType  [in] nsIAccessibleEvent constant
    */
   virtual void FireDocLoadEvents(PRUint32 aEventType);
-
-  /**
-   * Process the case when anchor was clicked.
-   */
-  virtual void FireAnchorJumpEvent();
 
   /**
    * Used to flush pending events, called after timeout. See FlushPendingEvents.
@@ -298,8 +293,6 @@ protected:
     PRPackedBool mIsLoadCompleteFired;
 
 protected:
-    PRBool mIsAnchor;
-    PRBool mIsAnchorJumped;
 
   PRBool mInFlushPendingEvents;
   PRBool mFireEventTimerStarted;

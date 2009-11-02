@@ -54,6 +54,7 @@ _TEST_FILES =\
 		attributes.js \
 		common.js \
 		events.js \
+		events_scroll.html \
 		grid.js \
 		layout.js \
 		name.css \
@@ -102,6 +103,7 @@ _TEST_FILES =\
 		test_events_focus.html \
 		test_events_focus.xul \
 		test_events_mutation.html \
+		test_events_scroll.xul \
 		test_events_tree.xul \
 		test_events_valuechange.html \
 		test_groupattrs.xul \
