@@ -44,6 +44,7 @@
 #include "nsIDOMNode.h"
 
 #include "nsEditRules.h"
+#include "nsITimer.h"
 
 /** Object that encapsulates HTML text-specific editing rules.
   *  
@@ -56,11 +57,12 @@
   * 2. Selection must not be explicitly set by the rule method.  
   *    Any manipulation of Selection must be done by the editor.
   */
-class nsTextEditRules : public nsIEditRules
+class nsTextEditRules : public nsIEditRules, public nsITimerCallback
 {
 public:
+  NS_DECL_NSITIMERCALLBACK
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsTextEditRules)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsTextEditRules, nsIEditRules)
   
               nsTextEditRules();
   virtual     ~nsTextEditRules();
@@ -186,7 +188,7 @@ protected:
   
   /** Echo's the insertion text into the password buffer, and converts
       insertion text to '*'s */                                        
-  nsresult EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAString *aOutString);
+  nsresult FillBufWithPWChars(nsAString *aOutString, PRInt32 aLength);
 
   /** Remove IME composition text from password buffer */
   nsresult RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString);
@@ -198,6 +200,8 @@ protected:
                                      PRInt32               aSelOffset, 
                                      nsIEditor::EDirection aAction,
                                      PRBool               *aCancel);
+
+  nsresult HideLastPWInput();
 
   // data members
   nsPlaintextEditor   *mEditor;        // note that we do not refcount the editor
@@ -216,6 +220,9 @@ protected:
                                                // adjacent to the caret without
                                                // moving the caret first.
   PRInt32              mTheAction;     // the top level editor action
+  nsCOMPtr<nsITimer>   mTimer;
+  PRUint32             mLastStart, mLastLength;
+
   // friends
   friend class nsAutoLockRulesSniffing;
 
