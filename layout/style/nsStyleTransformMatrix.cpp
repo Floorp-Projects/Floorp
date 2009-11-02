@@ -45,71 +45,35 @@
 #include "nsPresContext.h"
 #include "nsRuleNode.h"
 #include "nsCSSKeywords.h"
-#include <math.h>
+#include "nsMathUtils.h"
 
-/* Arguably, this loses precision, but it doesn't hurt! */
-const float kPi      = 3.1415926535897932384626433832795f;
-const float kTwoPi   = 6.283185307179586476925286766559f;
-const float kEpsilon = 0.0001f;
-
-/* Computes tan(theta).  For values of theta such that
- * tan(theta) is undefined or arbitrarily large, SafeTangent
- * returns a managably large or small value of the correct sign.
+/* Note on floating point precision: The transform matrix is an array
+ * of single precision 'float's, and so are most of the input values
+ * we get from the style system, but intermediate calculations
+ * involving angles need to be done in 'double'.
  */
-static float SafeTangent(float aTheta)
+
+/* Computes tan(aTheta).  For values of aTheta such that tan(aTheta) is
+ * undefined or very large, SafeTangent returns a manageably large value
+ * of the correct sign.
+ */
+static double SafeTangent(double aTheta)
 {
-  /* We'll do this by computing sin and cos theta.  If cos(theta) is
-   * is too close to zero, we'll set it to some arbitrary epsilon value
-   * that avoid float overflow or undefined result.
+  const double kEpsilon = 0.0001;
+
+  /* tan(theta) = sin(theta)/cos(theta); problems arise when
+   * cos(theta) is too close to zero.  Limit cos(theta) to the
+   * range [-1, -epsilon] U [epsilon, 1].
    */
-  float sinTheta = sin(aTheta);
-  float cosTheta = cos(aTheta);
-  
-  /* Bound cos(theta) to be in the range [-1, -epsilon) U (epsilon, 1] */
+  double sinTheta = sin(aTheta);
+  double cosTheta = cos(aTheta);
+
   if (cosTheta >= 0 && cosTheta < kEpsilon)
     cosTheta = kEpsilon;
   else if (cosTheta < 0 && cosTheta >= -kEpsilon)
     cosTheta = -kEpsilon;
-  
+
   return sinTheta / cosTheta;
-}
-
-/* Helper function to constrain an angle to a value in the range [-pi, pi),
- * which reduces accumulated floating point errors from trigonometric functions
- * by keeping the error terms small.
- */
-static inline float ConstrainFloatValue(float aValue)
-{
-  /* Get in range [0, 2pi) */
-  aValue = fmod(aValue, kTwoPi);
-  return aValue >= kPi ? aValue - kTwoPi : aValue;
-}
-
-/* Converts an nsCSSValue containing an angle into an equivalent measure
- * of radians.  The value is guaranteed to be in the range (-pi, pi) to
- * minimize error.
- */
-static float CSSToRadians(const nsCSSValue &aValue)
-{
-  NS_PRECONDITION(aValue.IsAngularUnit(),
-                  "Expected an angle, but didn't find one!");
-  
-  switch (aValue.GetUnit()) {
-  case eCSSUnit_Degree:
-    /* 360deg = 2pi rad, so deg = pi / 180 rad */
-    return
-      ConstrainFloatValue(aValue.GetFloatValue() * kPi / 180.0f);
-  case eCSSUnit_Grad:
-    /* 400grad = 2pi rad, so grad = pi / 200 rad */
-    return
-      ConstrainFloatValue(aValue.GetFloatValue() * kPi / 200.0f);
-  case eCSSUnit_Radian:
-    /* Yay identity transforms! */
-    return ConstrainFloatValue(aValue.GetFloatValue());
-  default:
-    NS_NOTREACHED("Unexpected angular unit!");
-    return 0.0f;
-  }
 }
 
 /* Constructor sets the data to the identity matrix. */
@@ -410,13 +374,13 @@ static void ProcessScale(float aMain[4], const nsCSSValue::Array* aData)
 /* Helper function that, given a set of angles, constructs the appropriate
  * skew matrix.
  */
-static void ProcessSkewHelper(float aXAngle, float aYAngle, float aMain[4])
+static void ProcessSkewHelper(double aXAngle, double aYAngle, float aMain[4])
 {
   /* We want our matrix to look like this:
    * |  1           tan(ThetaX)  0|
    * |  tan(ThetaY) 1            0|
    * |  0           0            1|
-   * However, to avoid infinte values, we'll use the SafeTangent function
+   * However, to avoid infinite values, we'll use the SafeTangent function
    * instead of the C standard tan function.
    */
   aMain[2] = SafeTangent(aXAngle);
@@ -427,23 +391,24 @@ static void ProcessSkewHelper(float aXAngle, float aYAngle, float aMain[4])
 static void ProcessSkewX(float aMain[4], const nsCSSValue::Array* aData)
 {
   NS_ASSERTION(aData->Count() == 2, "Bad array!");
-  ProcessSkewHelper(CSSToRadians(aData->Item(1)), 0.0f, aMain);
+  ProcessSkewHelper(aData->Item(1).GetAngleValueInRadians(), 0.0, aMain);
 }
 
 /* Function that converts a skewy transform into a matrix. */
 static void ProcessSkewY(float aMain[4], const nsCSSValue::Array* aData)
 {
   NS_ASSERTION(aData->Count() == 2, "Bad array!");
-  ProcessSkewHelper(0.0f, CSSToRadians(aData->Item(1)), aMain);
+  ProcessSkewHelper(0.0, aData->Item(1).GetAngleValueInRadians(), aMain);
 }
 
 /* Function that converts a skew transform into a matrix. */
 static void ProcessSkew(float aMain[4], const nsCSSValue::Array* aData)
 {
   NS_ASSERTION(aData->Count() == 2 || aData->Count() == 3, "Bad array!");
-  
-  float xSkew = CSSToRadians(aData->Item(1));
-  float ySkew = (aData->Count() == 2 ? 0.0f : CSSToRadians(aData->Item(2)));
+
+  double xSkew = aData->Item(1).GetAngleValueInRadians();
+  double ySkew = (aData->Count() == 2
+                  ? 0.0 : aData->Item(2).GetAngleValueInRadians());
 
   ProcessSkewHelper(xSkew, ySkew, aMain);
 }
@@ -459,7 +424,7 @@ static void ProcessRotate(float aMain[4], const nsCSSValue::Array* aData)
    * |           0            0  1|
    * (see http://www.w3.org/TR/SVG/coords.html#RotationDefined)
    */
-  float theta = CSSToRadians(aData->Item(1));
+  double theta = aData->Item(1).GetAngleValueInRadians();
   float cosTheta = cos(theta);
   float sinTheta = sin(theta);
 

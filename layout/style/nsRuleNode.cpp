@@ -314,6 +314,7 @@ nsRuleNode::CalcLengthWithInitialFont(nsPresContext* aPresContext,
 #define SETCOORD_LPAH   (SETCOORD_LP | SETCOORD_AH)
 #define SETCOORD_LPEH   (SETCOORD_LP | SETCOORD_ENUMERATED | SETCOORD_INHERIT)
 #define SETCOORD_LPAEH  (SETCOORD_LPAH | SETCOORD_ENUMERATED)
+#define SETCOORD_LPO    (SETCOORD_LP | SETCOORD_NONE)
 #define SETCOORD_LPOH   (SETCOORD_LPH | SETCOORD_NONE)
 #define SETCOORD_LPOEH  (SETCOORD_LPOH | SETCOORD_ENUMERATED)
 #define SETCOORD_LE     (SETCOORD_LENGTH | SETCOORD_ENUMERATED)
@@ -517,9 +518,11 @@ static void SetGradientCoord(const nsCSSValue& aValue, nsPresContext* aPresConte
   }
 
   // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
-  PRBool result = SetCoord(aValue, aResult, nsStyleCoord(), SETCOORD_LP,
-                           aContext, aPresContext, aCanStoreInRuleTree);
-  NS_ABORT_IF_FALSE(result, "Incorrect data structure created by parsing code");
+  if (!SetCoord(aValue, aResult, nsStyleCoord(), SETCOORD_LPO,
+                aContext, aPresContext, aCanStoreInRuleTree)) {
+    NS_NOTREACHED("unexpected unit for gradient anchor point");
+    aResult.SetNoneValue();
+  }
 }
 
 static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
@@ -530,34 +533,55 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
                     "The given data is not a gradient");
 
   nsCSSValueGradient* gradient = aValue.GetGradientValue();
-  aResult.mIsRadial = gradient->mIsRadial;
-
-  // start values
-  SetGradientCoord(gradient->mStartX, aPresContext, aContext,
-                   aResult.mStartX, aCanStoreInRuleTree);
-
-  SetGradientCoord(gradient->mStartY, aPresContext, aContext,
-                   aResult.mStartY, aCanStoreInRuleTree);
 
   if (gradient->mIsRadial) {
-    NS_ABORT_IF_FALSE(gradient->mStartRadius.IsLengthUnit(),
-                      "Incorrect data structure created by parsing code");
-    aResult.mStartRadius = CalcLength(gradient->mStartRadius, aContext,
-                                      aPresContext, aCanStoreInRuleTree);
+    if (gradient->mRadialShape.GetUnit() == eCSSUnit_Enumerated) {
+      aResult.mShape = gradient->mRadialShape.GetIntValue();
+    } else {
+      NS_ASSERTION(gradient->mRadialShape.GetUnit() == eCSSUnit_None,
+                   "bad unit for radial shape");
+      aResult.mShape = NS_STYLE_GRADIENT_SHAPE_ELLIPTICAL;
+    }
+    if (gradient->mRadialSize.GetUnit() == eCSSUnit_Enumerated) {
+      aResult.mSize = gradient->mRadialSize.GetIntValue();
+    } else {
+      NS_ASSERTION(gradient->mRadialSize.GetUnit() == eCSSUnit_None,
+                   "bad unit for radial shape");
+      aResult.mSize = NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER;
+    }
+  } else {
+    NS_ASSERTION(gradient->mRadialShape.GetUnit() == eCSSUnit_None,
+                 "bad unit for linear shape");
+    NS_ASSERTION(gradient->mRadialSize.GetUnit() == eCSSUnit_None,
+                 "bad unit for linear size");
+    aResult.mShape = NS_STYLE_GRADIENT_SHAPE_LINEAR;
+    aResult.mSize = NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER;
   }
 
-  // end values
-  SetGradientCoord(gradient->mEndX, aPresContext, aContext,
-                   aResult.mEndX, aCanStoreInRuleTree);
+  // bg-position
+  SetGradientCoord(gradient->mBgPosX, aPresContext, aContext,
+                   aResult.mBgPosX, aCanStoreInRuleTree);
 
-  SetGradientCoord(gradient->mEndY, aPresContext, aContext,
-                   aResult.mEndY, aCanStoreInRuleTree);
+  SetGradientCoord(gradient->mBgPosY, aPresContext, aContext,
+                   aResult.mBgPosY, aCanStoreInRuleTree);
 
-  if (gradient->mIsRadial) {
-    NS_ABORT_IF_FALSE(gradient->mEndRadius.IsLengthUnit(),
-                      "Incorrect data structure created by parsing code");
-    aResult.mEndRadius = CalcLength(gradient->mEndRadius, aContext,
-                                    aPresContext, aCanStoreInRuleTree);
+  aResult.mRepeating = gradient->mIsRepeating;
+
+  // angle
+  if (gradient->mAngle.IsAngularUnit()) {
+    nsStyleUnit unit;
+    switch (gradient->mAngle.GetUnit()) {
+    case eCSSUnit_Degree: unit = eStyleUnit_Degree; break;
+    case eCSSUnit_Grad:   unit = eStyleUnit_Grad; break;
+    case eCSSUnit_Radian: unit = eStyleUnit_Radian; break;
+    default: NS_NOTREACHED("unrecognized angular unit");
+      unit = eStyleUnit_Degree;
+    }
+    aResult.mAngle.SetAngleValue(gradient->mAngle.GetAngleValue(), unit);
+  } else {
+    NS_ASSERTION(gradient->mAngle.GetUnit() == eCSSUnit_None,
+                 "bad unit for gradient angle");
+    aResult.mAngle.SetNoneValue();
   }
 
   // stops
@@ -565,10 +589,11 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
     nsStyleGradientStop stop;
     nsCSSValueGradientStop &valueStop = gradient->mStops[i];
 
-    if (valueStop.mLocation.GetUnit() == eCSSUnit_Percent)
-      stop.mPosition = valueStop.mLocation.GetPercentValue();
-    else
-      stop.mPosition = valueStop.mLocation.GetFloatValue();
+    if (!SetCoord(valueStop.mLocation, stop.mLocation,
+                  nsStyleCoord(), SETCOORD_LPO,
+                  aContext, aPresContext, aCanStoreInRuleTree)) {
+      NS_NOTREACHED("unexpected unit for gradient stop location");
+    }
 
     // inherit is not a valid color for stops, so we pass in a dummy
     // parent color

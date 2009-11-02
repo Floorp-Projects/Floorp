@@ -41,6 +41,7 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "prlog.h"
+#include "nsMathUtils.h"
 
 nsStyleCoord::nsStyleCoord(nsStyleUnit aUnit)
   : mUnit(aUnit)
@@ -72,15 +73,11 @@ nsStyleCoord::nsStyleCoord(PRInt32 aValue, nsStyleUnit aUnit)
 nsStyleCoord::nsStyleCoord(float aValue, nsStyleUnit aUnit)
   : mUnit(aUnit)
 {
-  NS_ASSERTION((aUnit == eStyleUnit_Percent) ||
-               (aUnit == eStyleUnit_Factor), "not a float value");
-  if ((aUnit == eStyleUnit_Percent) ||
-      (aUnit == eStyleUnit_Factor)) {
+  if (aUnit < eStyleUnit_Percent || aUnit >= eStyleUnit_Coord) {
+    NS_NOTREACHED("not a float value");
+    Reset();
+  } else {
     mValue.mFloat = aValue;
-  }
-  else {
-    mUnit = eStyleUnit_Null;
-    mValue.mInt = 0;
   }
 }
 
@@ -147,6 +144,19 @@ void nsStyleCoord::SetFactorValue(float aValue)
   mValue.mFloat = aValue;
 }
 
+void nsStyleCoord::SetAngleValue(float aValue, nsStyleUnit aUnit)
+{
+  if (aUnit == eStyleUnit_Degree ||
+      aUnit == eStyleUnit_Grad ||
+      aUnit == eStyleUnit_Radian) {
+    mUnit = aUnit;
+    mValue.mFloat = aValue;
+  } else {
+    NS_NOTREACHED("not an angle value");
+    Reset();
+  }
+}
+
 void nsStyleCoord::SetNormalValue(void)
 {
   mUnit = eStyleUnit_Normal;
@@ -163,6 +173,24 @@ void nsStyleCoord::SetNoneValue(void)
 {
   mUnit = eStyleUnit_None;
   mValue.mInt = 0;
+}
+
+// accessors that are not inlined
+
+double
+nsStyleCoord::GetAngleValueInRadians() const
+{
+  double angle = mValue.mFloat;
+
+  switch (GetUnit()) {
+  case eStyleUnit_Radian: return angle;
+  case eStyleUnit_Degree: return angle * M_PI / 180.0;
+  case eStyleUnit_Grad:   return angle * M_PI / 200.0;
+
+  default:
+    NS_NOTREACHED("unrecognized angular unit");
+    return 0.0;
+  }
 }
 
 // used by nsStyleSides and nsStyleCorners

@@ -45,6 +45,7 @@
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
+#include "nsMathUtils.h"
 
 // Paint forcing
 #include "prenv.h"
@@ -207,6 +208,21 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
   }
   return PR_FALSE;
+}
+
+double nsCSSValue::GetAngleValueInRadians() const
+{
+  double angle = GetFloatValue();
+
+  switch (GetUnit()) {
+  case eCSSUnit_Radian: return angle;
+  case eCSSUnit_Degree: return angle * M_PI / 180.0;
+  case eCSSUnit_Grad:   return angle * M_PI / 200.0;
+
+  default:
+    NS_NOTREACHED("unrecognized angular unit");
+    return 0.0;
+  }
 }
 
 imgIRequest* nsCSSValue::GetImageValue() const
@@ -550,18 +566,17 @@ nsCSSValue::Image::~Image()
 {
 }
 
-nsCSSValueGradientStop::nsCSSValueGradientStop(const nsCSSValue& aLocation,
-                                               const nsCSSValue& aColor)
-  : mLocation(aLocation),
-    mColor(aColor)
-{ 
+nsCSSValueGradientStop::nsCSSValueGradientStop()
+  : mLocation(eCSSUnit_None),
+    mColor(eCSSUnit_Null)
+{
   MOZ_COUNT_CTOR(nsCSSValueGradientStop);
 }
 
 nsCSSValueGradientStop::nsCSSValueGradientStop(const nsCSSValueGradientStop& aOther)
   : mLocation(aOther.mLocation),
     mColor(aOther.mColor)
-{ 
+{
   MOZ_COUNT_CTOR(nsCSSValueGradientStop);
 }
 
@@ -570,16 +585,15 @@ nsCSSValueGradientStop::~nsCSSValueGradientStop()
   MOZ_COUNT_DTOR(nsCSSValueGradientStop);
 }
 
-nsCSSValueGradient::nsCSSValueGradient(PRBool aIsRadial, const nsCSSValue& aStartX,
-           const nsCSSValue& aStartY, const nsCSSValue& aStartRadius, const nsCSSValue& aEndX,
-           const nsCSSValue& aEndY, const nsCSSValue& aEndRadius)
+nsCSSValueGradient::nsCSSValueGradient(PRBool aIsRadial,
+                                       PRBool aIsRepeating)
   : mIsRadial(aIsRadial),
-    mStartX(aStartX),
-    mStartY(aStartY),
-    mEndX(aEndX),
-    mEndY(aEndY),
-    mStartRadius(aStartRadius),
-    mEndRadius(aEndRadius),
+    mIsRepeating(aIsRepeating),
+    mBgPosX(eCSSUnit_None),
+    mBgPosY(eCSSUnit_None),
+    mAngle(eCSSUnit_None),
+    mRadialShape(eCSSUnit_None),
+    mRadialSize(eCSSUnit_None),
     mRefCnt(0)
-{ 
+{
 }

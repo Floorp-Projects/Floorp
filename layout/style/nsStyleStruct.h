@@ -132,24 +132,21 @@ struct nsStyleFont {
 };
 
 struct nsStyleGradientStop {
+  nsStyleCoord mLocation; // percent, coord, none
   nscolor mColor;
-  float mPosition; // 0.0 - 1.0
 };
 
 class nsStyleGradient {
 public:
   nsStyleGradient();
+  PRUint8 mShape;  // NS_STYLE_GRADIENT_SHAPE_*
+  PRUint8 mSize;   // NS_STYLE_GRADIENT_SIZE_*;
+                   // not used (must be FARTHEST_CORNER) for linear shape
+  PRPackedBool mRepeating;
 
-  PRPackedBool mIsRadial;
-
-  nsStyleCoord mStartX; // percent or coord
-  nsStyleCoord mStartY; // percent or coord
-
-  nsStyleCoord mEndX; // percent or coord
-  nsStyleCoord mEndY; // percent or coord
-
-  nscoord mStartRadius;
-  nscoord mEndRadius;
+  nsStyleCoord mBgPosX; // percent, coord, none
+  nsStyleCoord mBgPosY; // percent, coord, none
+  nsStyleCoord mAngle;  // none, angle
 
   // stops are in the order specified in the stylesheet
   nsTArray<nsStyleGradientStop> mStops;
