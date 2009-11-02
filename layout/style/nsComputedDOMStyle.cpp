@@ -1358,76 +1358,92 @@ AppendCSSGradientLength(const nsStyleCoord& aValue,
   aString.Append(tokenString);
 }
 
-static void
-AppendCSSGradientRadius(const nscoord aValue,
-                        nsROCSSPrimitiveValue* aPrimitive,
-                        nsAString& aString)
-{
-  nsAutoString tokenString;
-  aPrimitive->SetAppUnits(aValue);
-  aPrimitive->GetCssText(tokenString);
-  aString.Append(tokenString);
-}
-
 nsresult
 nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
                                          nsAString& aString)
 {
-  if (aGradient->mIsRadial)
-    aString.AssignLiteral("-moz-radial-gradient(");
-  else
-    aString.AssignLiteral("-moz-linear-gradient(");
+  if (aGradient->mRepeating) {
+    if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR)
+      aString.AssignLiteral("-moz-repeating-linear-gradient(");
+    else
+      aString.AssignLiteral("-moz-repeating-radial-gradient(");
+  } else {
+    if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR)
+      aString.AssignLiteral("-moz-linear-gradient(");
+    else
+      aString.AssignLiteral("-moz-radial-gradient(");
+  }
 
+  PRBool needSep = PR_FALSE;
+  nsAutoString tokenString;
   nsROCSSPrimitiveValue *tmpVal = GetROCSSPrimitiveValue();
   if (!tmpVal)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // starting X position
-  AppendCSSGradientLength(aGradient->mStartX, tmpVal, aString);
-  aString.AppendLiteral(" ");
-
-  // starting Y position
-  AppendCSSGradientLength(aGradient->mStartY, tmpVal, aString);
-  aString.AppendLiteral(", ");
-
-  // starting radius
-  if (aGradient->mIsRadial) {
-    AppendCSSGradientRadius(aGradient->mStartRadius, tmpVal, aString);
-    aString.AppendLiteral(", ");
+  if (aGradient->mBgPosX.mUnit != eStyleUnit_None) {
+    AppendCSSGradientLength(aGradient->mBgPosX, tmpVal, aString);
+    needSep = PR_TRUE;
+  }
+  if (aGradient->mBgPosY.mUnit != eStyleUnit_None) {
+    if (needSep) {
+      aString.AppendLiteral(" ");
+    }
+    AppendCSSGradientLength(aGradient->mBgPosY, tmpVal, aString);
+    needSep = PR_TRUE;
+  }
+  if (aGradient->mAngle.mUnit != eStyleUnit_None) {
+    if (needSep) {
+      aString.AppendLiteral(" ");
+    }
+    tmpVal->SetNumber(aGradient->mAngle.GetAngleValue());
+    tmpVal->GetCssText(tokenString);
+    aString.Append(tokenString);
+    switch (aGradient->mAngle.mUnit) {
+    case eStyleUnit_Degree: aString.AppendLiteral("deg"); break;
+    case eStyleUnit_Grad: aString.AppendLiteral("grad"); break;
+    case eStyleUnit_Radian: aString.AppendLiteral("rad"); break;
+    default: NS_NOTREACHED("unrecognized angle unit");
+    }
+    needSep = PR_TRUE;
   }
 
-  // ending X position
-  AppendCSSGradientLength(aGradient->mEndX, tmpVal, aString);
-  aString.AppendLiteral(" ");
-
-  // ending Y position
-  AppendCSSGradientLength(aGradient->mEndY, tmpVal, aString);
-
-  // ending radius
-  if (aGradient->mIsRadial) {
-    aString.AppendLiteral(", ");
-    AppendCSSGradientRadius(aGradient->mStartRadius, tmpVal, aString);
+  if (aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR) {
+    if (needSep) {
+      aString.AppendLiteral(", ");
+    }
+    AppendASCIItoUTF16(nsCSSProps::
+                       ValueToKeyword(aGradient->mShape,
+                                      nsCSSProps::kRadialGradientShapeKTable),
+                       aString);
+    if (aGradient->mSize != NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER) {
+      aString.AppendLiteral(" ");
+      AppendASCIItoUTF16(nsCSSProps::
+                         ValueToKeyword(aGradient->mSize,
+                                        nsCSSProps::kRadialGradientSizeKTable),
+                         aString);
+    }
+    needSep = PR_TRUE;
   }
+
 
   // color stops
   for (PRUint32 i = 0; i < aGradient->mStops.Length(); ++i) {
-    nsAutoString tokenString;
-    aString.AppendLiteral(", color-stop(");
-
-    tmpVal->SetPercent(aGradient->mStops[i].mPosition);
-    tmpVal->GetCssText(tokenString);
-    aString.Append(tokenString);
-    aString.AppendLiteral(", ");
-
+    if (needSep) {
+      aString.AppendLiteral(", ");
+    }
     nsresult rv = SetToRGBAColor(tmpVal, aGradient->mStops[i].mColor);
     if (NS_FAILED(rv)) {
       delete tmpVal;
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
     tmpVal->GetCssText(tokenString);
     aString.Append(tokenString);
-    aString.AppendLiteral(")");
+
+    if (aGradient->mStops[i].mLocation.mUnit != eStyleUnit_None) {
+      aString.AppendLiteral(" ");
+      AppendCSSGradientLength(aGradient->mStops[i].mLocation, tmpVal, aString);
+    }
+    needSep = PR_TRUE;
   }
 
   delete tmpVal;

@@ -1625,6 +1625,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               const nsRect& aFillArea,
                               PRBool aRepeat)
 {
+#if 0
   gfxContext *ctx = aRenderingContext.ThebesContext();
   nscoord appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
 
@@ -1676,6 +1677,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   ctx->Rectangle(areaToFill - fillOrigin, PR_TRUE);
   ctx->Fill();
   ctx->Restore();
+#endif
 }
 
 void
