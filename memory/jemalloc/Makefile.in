@@ -92,9 +92,9 @@ $(CRT_OBJ_DIR)/jemalloc.c: $(srcdir)/$(CRTDIFF)
 
 $(MOZ_CRT_DLL): \
   $(CRT_OBJ_DIR)/jemalloc.c $(srcdir)/jemalloc.c $(srcdir)/jemalloc.h \
-  $(srcdir)/ql.h $(srcdir)/qr.h $(srcdir)/rb.h
-	cp $(srcdir)/jemalloc.c $(srcdir)/jemalloc.h $(srcdir)/ql.h \
-	$(srcdir)/qr.h $(srcdir)/rb.h $(CRT_OBJ_DIR)
+  $(srcdir)/rb.h
+	cp $(srcdir)/jemalloc.c $(srcdir)/jemalloc.h $(srcdir)/rb.h \
+	$(CRT_OBJ_DIR)
 # this pretty much sucks, but nmake and make don't play well together
 	$(PYTHON) $(srcdir)/build-crt.py $(CRT_OBJ_DIR)
 # XXX: these don't link right for some reason; the problem is likely

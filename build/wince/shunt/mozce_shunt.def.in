@@ -47,15 +47,6 @@ posix_memalign
 memalign
 malloc_usable_size
 jemalloc_stats
-xmalloc
-xcalloc
-xrealloc
-xmemalign
-reserve_cb_register
-reserve_cb_unregister
-reserve_cur_get
-reserve_min_get
-reserve_min_set
 _strdup
 _wcsdup
 _strndup
