@@ -1,11 +1,11 @@
-<html xmlns="http://www.w3.org/1999/xhtml" 
+<html xmlns="http://www.w3.org/1999/xhtml"
       class="reftest-wait">
 <head>
 <script>
 function doDraw() {
   var ctx = document.getElementById('canvas').getContext('2d');
 
-  var radgrad = ctx.createRadialGradient(45,45,10,45,45,30);
+  var radgrad = ctx.createRadialGradient(100,100,25,100,100,50);
   radgrad.addColorStop(0, '#FF0000');
   radgrad.addColorStop(1, '#0000FF');
 
@@ -20,4 +20,3 @@ function doDraw() {
 <canvas id="canvas" width="300" height="300"/>
 </body>
 </html>
-
