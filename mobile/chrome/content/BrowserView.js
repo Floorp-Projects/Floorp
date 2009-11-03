@@ -575,8 +575,11 @@ BrowserView.prototype = {
     if (!browser)
       return 0;
 
-    if (Util.contentIsHandheld(browser))
+    let metaData = Util.contentIsHandheld(browser);
+    if (metaData.reason == "handheld" || metaData.reason == "doctype")
       return 1;
+    else if (metaData.reason == "viewport" && metaData.scale > 0)
+      return metaData.scale;
 
     let bvs = this._browserViewportState;  // browser exists, so bvs must as well
     let w = this.viewportToBrowser(bvs.viewportRect.right);
