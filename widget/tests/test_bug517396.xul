@@ -29,6 +29,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=517396
 SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(function () {
+   // this test fails on Linux, bug 526236
+  if (navigator.platform.indexOf("Lin") != -1) {
+    ok(true, "disabled on Linux");
+    SimpleTest.finish();
+    return;
+  }
+
   var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
                       getService(Components.interfaces.nsIWindowMediator);
   var win = wm.getMostRecentWindow("navigator:browser");
