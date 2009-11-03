@@ -55,6 +55,12 @@ function LOG(aMsg) {
   print(aMsg);
 }
 
+function uri(spec) {
+  return Cc["@mozilla.org/network/io-service;1"].
+         getService(Ci.nsIIOService).
+         newURI(spec, null, null);
+}
+
 // If there's no location registered for the profile direcotry, register one now.
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 var profileDir = null;
