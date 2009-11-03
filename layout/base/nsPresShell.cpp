@@ -3205,6 +3205,12 @@ nsIPresShell::GetRootScrollFrameAsScrollable() const
   return scrollableFrame;
 }
 
+nsIScrollableFrame*
+nsIPresShell::GetRootScrollFrameAsScrollableExternal() const
+{
+  return GetRootScrollFrameAsScrollable();
+}
+
 NS_IMETHODIMP
 PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
 {

@@ -124,8 +124,8 @@ typedef struct CapturingContentInfo {
 
 // eed2ef56-133f-4696-9eee-5fc45d816be8
 #define NS_IPRESSHELL_IID     \
-{ 0xeed2ef56, 0x133f, 0x4696, \
-  { 0x9e, 0xee, 0x5f, 0xc4, 0x5d, 0x81, 0x6b, 0xe8 } }
+{ 0x8ceb97da, 0x5075, 0x4bdd, \
+  { 0xb1, 0xd5, 0x4e, 0x1e, 0xf2, 0x88, 0x0b, 0x5e } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -344,6 +344,12 @@ public:
    * The same as GetRootScrollFrame, but returns an nsIScrollableFrame
    */
   nsIScrollableFrame* GetRootScrollFrameAsScrollable() const;
+
+  /*
+   * The same as GetRootScrollFrame, but returns an nsIScrollableFrame.
+   * Can be called by code not linked into gklayout.
+   */
+  virtual nsIScrollableFrame* GetRootScrollFrameAsScrollableExternal() const;
 
   /**
    * Returns the page sequence frame associated with the frame hierarchy.

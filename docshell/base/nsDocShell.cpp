@@ -6957,7 +6957,8 @@ nsDocShell::RestoreFromHistory()
 #endif
             mContentViewer->SetBounds(newBounds);
         } else {
-            nsIScrollableFrame *rootScrollFrame = do_QueryFrame(shell->GetRootScrollFrame());
+            nsIScrollableFrame *rootScrollFrame =
+              shell->GetRootScrollFrameAsScrollableExternal();
             if (rootScrollFrame) {
                 rootScrollFrame->PostScrolledAreaEventForCurrentArea();
             }
