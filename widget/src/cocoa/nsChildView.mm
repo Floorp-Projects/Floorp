@@ -1700,6 +1700,19 @@ nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigur
   return NS_OK;
 }  
 
+static PRInt32
+PickValueForSign(PRInt32 aSign, PRInt32 aLessThanZero, PRInt32 aZero,
+                 PRInt32 aGreaterThanZero)
+{
+  if (aSign < 0) {
+    return aLessThanZero;
+  }
+  if (aSign > 0) {
+    return aGreaterThanZero;
+  }
+  return aZero;
+}
+
 void nsChildView::Scroll(const nsIntPoint& aDelta,
                          const nsTArray<nsIntRect>& aDestRects,
                          const nsTArray<Configuration>& aConfigurations)
@@ -1713,7 +1726,7 @@ void nsChildView::Scroll(const nsIntPoint& aDelta,
 #ifndef NS_LEOPARD_AND_LATER
   BOOL viewWasDirty = mVisible && [mView needsDisplay];
 #endif // NS_LEOPARD_AND_LATER
-  if (mVisible) {
+  if (mVisible && !aDestRects.IsEmpty()) {
     for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
       NSRect rect;
       GeckoRectToNSRect(aDestRects[i] - aDelta, rect);
@@ -1723,6 +1736,21 @@ void nsChildView::Scroll(const nsIntPoint& aDelta,
       [mView translateRectsNeedingDisplayInRect:rect by:scrollVector];
 #endif // NS_LEOPARD_AND_LATER
     }
+    // Leopard, at least, has a nasty bug where calling scrollRect:by: doesn't
+    // actually trigger a window update. A window update is only triggered
+    // if you actually paint something. In some cases Gecko might optimize
+    // scrolling in such a way that nothing actually gets repainted.
+    // So let's invalidate one pixel. We'll pick a pixel on the trailing edge
+    // of the last destination rectangle, since in most situations that's going
+    // to be invalidated anyway.
+    nsIntRect lastRect = aDestRects[aDestRects.Length() - 1] + aDelta;
+    nsIntPoint pointToInvalidate(
+      PickValueForSign(aDelta.x, lastRect.XMost(), lastRect.x, lastRect.x - 1),
+      PickValueForSign(aDelta.y, lastRect.YMost(), lastRect.y, lastRect.y - 1));
+    if (!nsIntRect(0,0,mBounds.width,mBounds.height).Contains(pointToInvalidate)) {
+      pointToInvalidate = nsIntPoint(0, 0);
+    }
+    Invalidate(nsIntRect(pointToInvalidate, nsIntSize(1,1)), PR_FALSE);
   }
 
   // Don't force invalidation of the child if it's moving by the scroll
