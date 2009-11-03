@@ -37,7 +37,7 @@ SimpleTest.waitForFocus(function () {
   var newWidth = win.outerWidth, newHeight = win.outerHeight;
   win.moveBy(10, 0);
   var sizeShouldHaveChanged = !navigator.platform.match(/Mac/);
-  var compFunc = sizeShouldHaveChanged ? is_not : is;
+  var compFunc = sizeShouldHaveChanged ? isnot : is;
   var not = sizeShouldHaveChanged ? "" : "not ";
   compFunc(win.outerWidth, newWidth, "moving a maximized window should " + not + "have changed its width");
   compFunc(win.outerHeight, newHeight, "moving a maximized window should " + not + "have changed its height");
