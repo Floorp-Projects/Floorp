@@ -197,8 +197,8 @@ function testSimpleScrollWithSubpixelOffset2(blitRegion, paintRegion) {
   ok(paintRegion.containsRegion(new Region([[0,181,200,200]])),
      "Should repaint area that was scrolled into view: " + paintRegion.toString());
   // Check that we're not repainting anything in the area that's blitted
-  todo(!paintRegion.intersectsRect([0,0,200,180]),
-       "Should not repaint area that was blitted: " + paintRegion.toString());
+  ok(!paintRegion.intersectsRect([0,0,200,180]),
+     "Should not repaint area that was blitted: " + paintRegion.toString());
 }
 
 function testSimpleScrollWithSubpixelOffset3(blitRegion, paintRegion) {
@@ -221,8 +221,8 @@ function testSimpleScrollWithSubpixelOffset4(blitRegion, paintRegion) {
   ok(paintRegion.containsRegion(new Region([[181,0,200,200]])),
      "Should repaint area that was scrolled into view: " + paintRegion.toString());
   // Check that we're not repainting anything in the area that's blitted
-  todo(!paintRegion.intersectsRect([0,0,180,200]),
-       "Should not repaint area that was blitted: " + paintRegion.toString());
+  ok(!paintRegion.intersectsRect([0,0,180,200]),
+     "Should not repaint area that was blitted: " + paintRegion.toString());
 }
 
 function testMovingClipArea(blitRegion, paintRegion) {
