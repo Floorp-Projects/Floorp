@@ -2,7 +2,7 @@ pref("extensions.weave.serverURL", "@server_url@");
 pref("extensions.weave.userURL", "user/");
 pref("extensions.weave.miscURL", "misc/");
 pref("extensions.weave.pwChangeURL", "https://services.mozilla.com/pw/forgot.php");
-pref("extensions.weave.termsURL", "https://labs.mozilla.com/projects/weave/tos/");
+pref("extensions.weave.termsURL", "http://mozillalabs.com/weave/tos/");
 
 pref("extensions.weave.encryption", "aes-256-cbc");
 
