@@ -11,6 +11,10 @@
 <!ENTITY setup.confirmPassword.label  "Confirm Password">
 <!ENTITY setup.emailAddress.label     "Email Address">
 
+<!ENTITY setup.tosAgree1.label      "I agree to the">
+<!ENTITY setup.tosLink.label        "Terms of Service">
+<!ENTITY setup.tosAgree2.label      "">
+
 <!ENTITY setup.generalTitle.label     "Create your Weave Account">
 
 <!ENTITY setup.page1Title.label     "&setup.generalTitle.label; - Page 1 of 4">
