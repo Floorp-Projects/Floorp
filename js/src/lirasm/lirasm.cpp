@@ -601,6 +601,7 @@ FragmentAssembler::assemble_call(const string &op)
     CallInfo *ci = new (mParent.mAlloc) CallInfo();
     mCallInfos.push_back(ci);
     LIns *args[MAXARGS];
+    memset(&args[0], 0, sizeof(args));
 
     // Assembler syntax for a call:
     //
@@ -658,7 +659,7 @@ FragmentAssembler::assemble_call(const string &op)
         ci->_argtypes = 0;
         size_t argc = mTokens.size();
         for (size_t i = 0; i < argc; ++i) {
-            args[argc - (i+1)] = ref(mTokens[i]);   // args[] is in reverse order!
+            args[i] = ref(mTokens[mTokens.size() - (i+1)]);
             if      (args[i]->isFloat()) ty = ARGSIZE_F;
             else if (args[i]->isQuad())  ty = ARGSIZE_Q;
             else                         ty = ARGSIZE_I;
