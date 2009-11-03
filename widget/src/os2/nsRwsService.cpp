@@ -89,7 +89,7 @@
 //  function prototypes
 //------------------------------------------------------------------------
 
-static nsresult IsDescendedFrom(PRUint32 wpsFilePtr, char *pszClassname);
+static nsresult IsDescendedFrom(PRUint32 wpsFilePtr, const char *pszClassname);
 static nsresult CreateFileForExtension(const char *aFileExt, nsACString& aPath);
 static nsresult DeleteFileForExtension(const char *aPath);
 static void     AssignNLSString(const PRUnichar *aKey, nsAString& _retval);
@@ -682,7 +682,7 @@ nsRwsService::Observe(nsISupports *aSubject, const char *aTopic,
 
 // this wrapper for somIsA() makes HandlerFromPath() easier to read
 
-static nsresult IsDescendedFrom(PRUint32 wpsFilePtr, char *pszClassname)
+static nsresult IsDescendedFrom(PRUint32 wpsFilePtr, const char *pszClassname)
 {
   PRWSHDR   pHdr = 0;
   nsresult  rv = NS_ERROR_FAILURE;
