@@ -58,6 +58,7 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_opendir.js \
 		browser_privatebrowsing_openlocation.js \
 		browser_privatebrowsing_pageinfo.js \
+		browser_privatebrowsing_placestitle.js \
 		browser_privatebrowsing_popupmode.js \
 		browser_privatebrowsing_searchbar.js \
 		browser_privatebrowsing_sslsite_transition.js \
@@ -71,6 +72,7 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_zoom.js \
 		browser_privatebrowsing_zoomrestore.js \
 		staller.sjs \
+		title.sjs \
 		$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
