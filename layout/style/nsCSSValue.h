@@ -238,7 +238,7 @@ public:
   float GetAngleValue() const
   {
     NS_ASSERTION(eCSSUnit_Degree <= mUnit &&
-                 eCSSUnit_Radian >=-mUnit, "not an angle value");
+                 mUnit <= eCSSUnit_Radian, "not an angle value");
     return mValue.mFloat;
   }
 
