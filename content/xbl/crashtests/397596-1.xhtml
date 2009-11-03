@@ -1,0 +1,29 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Testcase bug - 100% cpu usage with binding setting position: fixed in constructor</title>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+<binding id="b" inheritstyle="false">
+<content>
+<div xmlns="http://www.w3.org/1999/xhtml" style=" -moz-binding: url(#a);"/>
+<children/>
+</content>
+</binding>
+
+<binding id="a">
+<implementation>
+<constructor>
+  this.style.position='fixed';
+</constructor>
+</implementation>
+<content>
+<children xmlns="http://www.mozilla.org/xbl"/>
+</content>
+</binding>
+</bindings>
+
+</head>
+<body>
+<span style="-moz-binding:url();"></span>
+</body>
+</html>
