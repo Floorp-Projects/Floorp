@@ -74,21 +74,6 @@
 #define NS_MATHML_ACTION_TYPE_TOOLTIP      3 // unsupported
 #define NS_MATHML_ACTION_TYPE_RESTYLE      4
 
-NS_IMETHODIMP_(nsrefcnt)
-nsMathMLmactionFrame::AddRef()
-{
-  return 2;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsMathMLmactionFrame::Release()
-{
-  return 1;
-}
-
-NS_IMPL_QUERY_INTERFACE2(nsMathMLmactionFrame,
-                         nsIDOMMouseListener,
-                         nsIDOMEventListener)
 
 nsIFrame*
 NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -102,7 +87,8 @@ nsMathMLmactionFrame::~nsMathMLmactionFrame()
 {
   // unregister us as a mouse event listener ...
   //  printf("maction:%p unregistering as mouse event listener ...\n", this);
-  mContent->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
+  if (mListener)
+    mContent->RemoveEventListenerByIID(mListener, NS_GET_IID(nsIDOMMouseListener));
 }
 
 NS_IMETHODIMP
@@ -251,9 +237,10 @@ nsMathMLmactionFrame::SetInitialChildList(nsIAtom*        aListName,
     mActionType = NS_MATHML_ACTION_TYPE_NONE;
   }
   else {
-    // register us as a mouse event listener ...
+    // create mouse event listener and register it
+    mListener = new nsMathMLmactionFrame::MouseListener(this);
     // printf("maction:%p registering as mouse event listener ...\n", this);
-    mContent->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
+    mContent->AddEventListenerByIID(mListener, NS_GET_IID(nsIDOMMouseListener));
   }
   return rv;
 }
@@ -337,11 +324,15 @@ nsMathMLmactionFrame::Place(nsIRenderingContext& aRenderingContext,
 // Event handlers 
 // ################################################################
 
+NS_IMPL_ISUPPORTS2(nsMathMLmactionFrame::MouseListener,
+                   nsIDOMEventListener,
+                   nsIDOMMouseListener)
+
+
 // helper to show a msg on the status bar
 // curled from nsObjectFrame.cpp ...
-nsresult
-nsMathMLmactionFrame::ShowStatus(nsPresContext* aPresContext,
-                                 nsString&       aStatusMsg)
+void
+ShowStatus(nsPresContext* aPresContext, nsString& aStatusMsg)
 {
   nsCOMPtr<nsISupports> cont = aPresContext->GetContainer();
   if (cont) {
@@ -357,11 +348,17 @@ nsMathMLmactionFrame::ShowStatus(nsPresContext* aPresContext,
       }
     }
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMathMLmactionFrame::MouseOver(nsIDOMEvent* aMouseEvent) 
+nsMathMLmactionFrame::MouseListener::MouseOver(nsIDOMEvent* aMouseEvent)
+{
+  mOwner->MouseOver();
+  return NS_OK;
+}
+
+void
+nsMathMLmactionFrame::MouseOver()
 {
   // see if we should display a status message
   if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) {
@@ -373,23 +370,35 @@ nsMathMLmactionFrame::MouseOver(nsIDOMEvent* aMouseEvent)
       ShowStatus(PresContext(), value);
     }
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMathMLmactionFrame::MouseOut(nsIDOMEvent* aMouseEvent) 
-{ 
+nsMathMLmactionFrame::MouseListener::MouseOut(nsIDOMEvent* aMouseEvent) 
+{
+  mOwner->MouseOut();
+  return NS_OK;
+}
+
+void
+nsMathMLmactionFrame::MouseOut()
+{
   // see if we should remove the status message
   if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) {
     nsAutoString value;
     value.SetLength(0);
     ShowStatus(PresContext(), value);
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
+nsMathMLmactionFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
+{
+  mOwner->MouseClick();
+  return NS_OK;
+}
+
+void
+nsMathMLmactionFrame::MouseClick()
 {
   if (NS_MATHML_ACTION_TYPE_TOGGLE == mActionType) {
     if (mChildCount > 1) {
@@ -424,5 +433,4 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       }
     }
   }
-  return NS_OK;
 }
