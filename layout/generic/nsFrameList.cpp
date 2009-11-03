@@ -97,7 +97,10 @@ void
 nsFrameList::RemoveFrame(nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "null ptr");
+#ifdef DEBUG_FRAME_LIST
+  // ContainsFrame is O(N)
   NS_PRECONDITION(ContainsFrame(aFrame), "wrong list");
+#endif
 
   nsIFrame* nextFrame = aFrame->GetNextSibling();
   if (aFrame == mFirstChild) {
@@ -137,7 +140,9 @@ nsFrameList
 nsFrameList::RemoveFramesAfter(nsIFrame* aAfterFrame)
 {
   NS_PRECONDITION(NotEmpty(), "illegal operation on empty list");
+#ifdef DEBUG_FRAME_LIST
   NS_PRECONDITION(ContainsFrame(aAfterFrame), "wrong list");
+#endif
 
   nsIFrame* tail = aAfterFrame->GetNextSibling();
   // if (!tail) return EmptyList();  -- worth optimizing this case?
@@ -193,8 +198,11 @@ nsFrameList::InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
   NS_ASSERTION(!aPrevSibling ||
                aPrevSibling->GetParent() == aFrameList.FirstChild()->GetParent(),
                "prev sibling has different parent");
+#ifdef DEBUG_FRAME_LIST
+  // ContainsFrame is O(N)
   NS_ASSERTION(!aPrevSibling || ContainsFrame(aPrevSibling),
                "prev sibling is not on this list");
+#endif
 
   nsIFrame* firstNewFrame = aFrameList.FirstChild();
   nsIFrame* nextSibling;
@@ -213,9 +221,7 @@ nsFrameList::InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
     mLastChild = lastNewFrame;
   }
 
-#ifdef DEBUG
   VerifyList();
-#endif
 
   aFrameList.Clear();
   return Slice(*this, firstNewFrame, nextSibling);
@@ -604,7 +610,7 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
 }
 #endif
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_LIST
 void
 nsFrameList::VerifyList() const
 {
