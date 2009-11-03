@@ -302,6 +302,9 @@ var BrowserUI = {
   },
 
   switchPane : function(id) {
+    let button = document.getElementsByAttribute("linkedpanel", id)[0];
+    if (button)
+      button.checked = true;
     document.getElementById("panel-items").selectedPanel = document.getElementById(id);
   },
 
