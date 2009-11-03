@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=507067
   <g font-size="10px">
     <circle cx="-100" cy="20" r="15" fill="blue" id="circle">
       <animate attributeName="cx" from="0em" to="10em" dur="8s" begin="1s"
-        fill="freeze"/>
+        fill="freeze" id="animate"/>
     </circle>
   </g>
 </svg>
@@ -43,6 +43,10 @@ SimpleTest.waitForExplicitFinish();
 // 
 
 function main() {
+  // Initialise timeline
+  svg.pauseAnimations();
+  svg.setCurrentTime(0);
+
   // Sanity check: check initial values
   is(circle.cx.baseVal.valueInSpecifiedUnits, -100,
     "Unexpected initial baseVal");
@@ -54,7 +58,6 @@ function main() {
     "Unexpected initial animVal units");
 
   // Sample mid-way through the animation
-  svg.pauseAnimations();
   svg.setCurrentTime(5);
 
   // (1) Check the absolute value is right
@@ -110,8 +113,8 @@ function checkWhilstFrozen() {
   SimpleTest.finish();
 }
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalPreferencesRead");
-if (navigator.preference('svg.smil.enabled')) {
+var animate = document.getElementById('animate');
+if (animate && animate.targetElement) {
   window.addEventListener("load", main, false);
 } else {
   ok(true); // Skip tests but don't report 'todo' either
