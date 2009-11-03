@@ -7,7 +7,7 @@ function check_request_header(chan, name, value) {
   try {
     chanValue = chan.getRequestHeader(name);
   } catch (e) {
-    do_throw("Expected to find header '" + name + "' but didn't find it");
+    do_throw("Expected to find header '" + name + "' but didn't find it, got exception: " + e);
   }
   dump("Value for header '" + name + "' is '" + chanValue + "'\n");
   do_check_eq(chanValue, value);
@@ -18,7 +18,7 @@ var cookieVal = "C1=V1";
 var listener = {
   onStartRequest: function test_onStartR(request, ctx) {
     try {
-      var chan = request.QueryInterface(Components.interfaces.nsIChannel);
+      var chan = request.QueryInterface(Components.interfaces.nsIHttpChannel);
       check_request_header(chan, "Cookie", cookieVal);
     } catch (e) {
       do_throw("Unexpected exception: " + e);
