@@ -112,16 +112,27 @@ let Util = {
   contentIsHandheld: function contentIsHandheld(browser) {
     let doctype = browser.contentDocument.doctype;
     if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
-      return true;
+      return {reason: "doctype", result: true};
 
     let windowUtils = browser.contentWindow
                              .QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDOMWindowUtils);
     let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
     if (handheldFriendly == "true")
-      return true;
+      return {reason: "handheld", result: true};
 
-    return false;
+    let viewportScale = parseFloat(windowUtils.getDocumentMetadata("viewport-initial-scale"));
+    if (viewportScale > 0) {
+      return {
+        reason: "viewport",
+        result: true,
+        scale: viewportScale,
+        width: parseInt(windowUtils.getDocumentMetadata("viewport-width")),
+        height: parseInt(windowUtils.getDocumentMetadata("viewport-height"))
+      }
+    }
+
+    return {reason: "", result: false};
   }
 };
 
