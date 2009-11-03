@@ -832,3 +832,7 @@ js3250.dll
 #ifdef XP_WIN
 components/brwsrcmp.dll
 #endif
+#ifndef MOZ_UPDATER
+components/nsUpdateService.js
+components/nsUpdateServiceStub.js
+#endif
