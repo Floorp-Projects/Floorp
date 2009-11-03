@@ -49,6 +49,7 @@ var _passed = true;
 var _tests_pending = 0;
 var _passedChecks = 0, _falsePassedChecks = 0;
 var _cleanupFunctions = [];
+var _pendingCallbacks = [];
 
 // Disable automatic network detection, so tests work correctly when
 // not connected to a network.
@@ -73,8 +74,10 @@ if ("@mozilla.org/toolkit/crash-reporter;1" in Components.classes) {
 }
 
 
-function _TimerCallback(expr) {
+function _TimerCallback(expr, timer) {
   this._expr = expr;
+  // Keep timer alive until it fires
+  _pendingCallbacks.push(timer);
 }
 _TimerCallback.prototype = {
   _expr: "",
@@ -88,6 +91,7 @@ _TimerCallback.prototype = {
   },
 
   notify: function(timer) {
+    _pendingCallbacks.splice(_pendingCallbacks.indexOf(timer), 1);
     eval(this._expr);
   }
 };
@@ -173,7 +177,7 @@ function _load_files(aFiles) {
 function do_timeout(delay, expr) {
   var timer = Components.classes["@mozilla.org/timer;1"]
                         .createInstance(Components.interfaces.nsITimer);
-  timer.initWithCallback(new _TimerCallback(expr), delay, timer.TYPE_ONE_SHOT);
+  timer.initWithCallback(new _TimerCallback(expr, timer), delay, timer.TYPE_ONE_SHOT);
 }
 
 function do_execute_soon(callback) {
