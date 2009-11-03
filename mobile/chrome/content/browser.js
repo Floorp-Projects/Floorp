@@ -372,7 +372,7 @@ var Browser = {
     bv.beginBatchOperation();
 
     let stylesheet = document.styleSheets[0];
-    for each (let style in ['window-width', 'window-height', 'toolbar-height', 'browser', 'browser-handheld']) {
+    for each (let style in ["window-width", "window-height", "toolbar-height", "browser", "browser-handheld", "browser-viewport"]) {
       let index = stylesheet.insertRule("." + style + " {}", stylesheet.cssRules.length);
       this.styles[style] = stylesheet.cssRules[index].style;
     }
@@ -2489,8 +2489,29 @@ Tab.prototype = {
   endLoading: function() {
     // Determine at what resolution the browser is rendered based on meta tag
     let browser = this._browser;
-    if (Util.contentIsHandheld(browser)) {
+    let metaData = Util.contentIsHandheld(browser);
+
+    if (metaData.reason == "handheld" || metaData.reason == "doctype") {
       browser.className = "browser-handheld";
+    } else if (metaData.reason == "viewport") {
+      let screenW = window.innerWidth;
+      let screenH = window.innerHeight;
+      let viewportW = metaData.width; 
+      let viewportH = metaData.height;
+      let validW = viewportW > 0;
+      let validH = viewportH > 0;
+
+      if (validW && !validH) {
+        viewportH = viewportW * (screenH / screenW);
+      } else if (!validW && validH) {
+        viewportW = viewportH * (screenW / screenH);
+      } else {
+        viewportW = kDefaultBrowserWidth;
+        viewportH = kDefaultBrowserWidth * (screenH / screenW);
+      }
+      browser.className = "browser-viewport";
+      browser.style.width = viewportW + "px";
+      browser.style.height = viewportH + "px";
     } else {
       browser.className = "browser";
     }
