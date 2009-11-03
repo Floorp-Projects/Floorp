@@ -91,6 +91,11 @@ body > div {
   <div style="margin-top:20px; height:20px; margin-bottom:300px; background-color:blue; overflow:hidden;"></div>
 </div>
 
+<div id="testFixedOverUniform">
+  <div style="height:300px; background:blue;"></div>
+  <div style="position:fixed; left:0; top:50px; width:100px; height:45px; background:yellow; opacity:0.5;"></div>
+</div>
+
 <script>
 var tests = document.querySelectorAll("body>div");
 var currentTest = -1;
@@ -223,6 +228,13 @@ function testSimpleScrollWithSubpixelOffset4(blitRegion, paintRegion) {
 function testMovingClipArea(blitRegion, paintRegion) {
   ok(blitRegion.equalsRegion(new Region([[0,0,200,40]])),
      "Should blit everything that's affected: " + blitRegion.toString());
+  ok(paintRegion.isEmpty(),
+     "Shouldn't repaint anything: " + paintRegion.toString());
+}
+
+function testFixedOverUniform(blitRegion, paintRegion) {
+  ok(!blitRegion.intersectsRect([0,20,200,200]),
+     "Shouldn't blit anything except possibly to cover the area that has moved offscreen: " + blitRegion.toString());
   ok(paintRegion.isEmpty(),
      "Shouldn't repaint anything: " + paintRegion.toString());
 }
