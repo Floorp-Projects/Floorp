@@ -6432,8 +6432,11 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
                                    JS_MAX_INLINE_CALL_COUNT - inlineCallCount);
 
 #ifdef DEBUG
+    /*
+     * Cannot 0xCD-fill global frame since it may overwrite a bailed outer
+     * ExecuteTree's 0xdeadbeefdeadbeef marker.
+     */
     memset(stack, 0xCD, MAX_NATIVE_STACK_SLOTS * sizeof(double));
-    memset(global, 0xCD, GLOBAL_SLOTS_BUFFER_SIZE * sizeof(double));
     memset(callstack, 0xCD, MAX_CALL_STACK_ENTRIES * sizeof(FrameInfo*));
 #endif
 
