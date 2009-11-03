@@ -153,7 +153,7 @@ function setDefaultPrefs() {
   // pref to false like Firefox does.
   pb.setBoolPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI, false);
   // Enable Update logging
-  pb.setBoolPref("app.update.log.all", true);
+  pb.setBoolPref("app.update.log", true);
 }
 
 /**
@@ -163,10 +163,12 @@ function setDefaultPrefs() {
 function startAUS() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1.0", "2.0");
   setDefaultPrefs();
+  // Initialize the update service stub component
+  AUS_Cc["@mozilla.org/updates/update-service-stub;1"].
+  createInstance(AUS_Ci.nsISupports);
   gAUS = AUS_Cc["@mozilla.org/updates/update-service;1"].
          getService(AUS_Ci.nsIApplicationUpdateService).
          QueryInterface(AUS_Ci.nsIObserver);
-  gAUS.observe(null, "profile-after-change", "");
 }
 
 /* Initializes nsIUpdateChecker */
