@@ -4289,6 +4289,10 @@ nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
 
+  // Don't update the page title inside the private browsing mode.
+  if (InPrivateBrowsingMode())
+    return NS_OK;
+
   PRInt64 visitID;
   nsresult rv = AddVisit(aURI, aLastVisited, 0, TRANSITION_LINK, PR_FALSE,
                          0, &visitID);
@@ -5254,6 +5258,10 @@ nsNavHistory::SetPageTitle(nsIURI* aURI,
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
 
+  // Don't update the page title inside the private browsing mode.
+  if (InPrivateBrowsingMode())
+    return NS_OK;
+
   // if aTitle is empty we want to clear the previous title.
   // We don't want to set it to an empty string, but to a NULL value,
   // so we use SetIsVoid and SetPageTitleInternal will take care of that
@@ -5593,9 +5601,25 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
   }
   else if (strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
     if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData)) {
+#ifdef LAZY_ADD
+      // Commit all lazy messages in order to protect against edge cases where a
+      // lazy message which is not allowed in private browsing mode has been
+      // added before entering the private browsing mode, and is going to be
+      // scheduled to be processed after entering the private browsing mode.
+      CommitLazyMessages();
+#endif
+
       mInPrivateBrowsing = PR_TRUE;
     }
     else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
+#ifdef LAZY_ADD
+      // Commit all lazy messages in order to protect against edge cases where a
+      // lazy message which should be processed in private browsing mode has been
+      // added before leaving the private browsing mode, and is going to be
+      // scheduled to be processed after leaving the private browsing mode.
+      CommitLazyMessages();
+#endif
+
       mInPrivateBrowsing = PR_FALSE;
     }
   }
