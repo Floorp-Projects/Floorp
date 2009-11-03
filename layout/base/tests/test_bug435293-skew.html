@@ -121,19 +121,9 @@ function runtests() {
   is(style.getPropertyValue("-moz-transform"), "matrix(1, 1, 1, 1, 0px, 0px)",
      "Test3: Skew proper matrix is applied");
 
-  // Argument reduction here may give us a value that is close to but not
-  // exactly zero.
   style = window.getComputedStyle(document.getElementById("test4"), "");
-  tformStyle = style.getPropertyValue("-moz-transform");
-  tformValues = tformStyle.substring(tformStyle.indexOf('(') + 1,
-                                     tformStyle.indexOf(')')).split(',');
-  is((+tformValues[0]), 1, "Test4: skew angle wrap: param 0 is 1");
-  is((+tformValues[1]), 1, "Test4: skew angle wrap: param 1 is 1");
-  ok(verifyRounded(tformValues[2], 0),
-     "Test4: skew angle wrap: rounded param 2 is 0");
-  is((+tformValues[3]), 1, "Test4: skew angle wrap: param 3 is 1");
-  is(tformValues[4].trim(), "0px", "Test4: skew angle wrap: param 4 is 0px");
-  is(tformValues[5].trim(), "0px", "Test4: skew angle wrap: param 5 is 0px");
+  is(style.getPropertyValue("-moz-transform"), "matrix(1, 1, 0, 1, 0px, 0px)",
+     "Test4: Skew angle wrap: proper matrix is applied");
 
   style = window.getComputedStyle(document.getElementById("test5"), "");
   is(style.getPropertyValue("-moz-transform"), "matrix(1, -1, 1, 1, 0px, 0px)",
