@@ -5,7 +5,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=421640
 -->
 <head>
   <title>Test for Bug 396392</title>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
@@ -14,15 +13,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=421640
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=396392">Mozilla Bug Range getClientRects and getBoundingClientRect</a>
 <div id="content" style="font-face:monospace;font-size:12px;width:100px">
-<p>000000<span>0</span></p><div>00000<span>0</span></div><p>0000<span>0000</span>0000</p><div><span>000000000000 00000000000000 000000</span></div><div>000000000000 00000000000003 100305</div>
+<p>000000<span>0</span></p><div>00000<span>0</span></div><p>0000<span>0000</span>0000</p>
 </div>
-<div id="mixeddir" style="font-face:monospace;font-size:12px;width:100px"><span>english פתרונות עסקיים word</span></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var isLTR=true;
 function isEmptyRect(rect, name) {
-  name = (isLTR ? 'isLTR ' : 'isRTL ') + name;
   is(rect.left, 0, name+'empty rect should have left = 0');
   is(rect.right, 0, name+'empty rect should have right = 0');
   is(rect.top, 0, name+'empty rect should have top = 0');
@@ -32,7 +28,6 @@ function isEmptyRect(rect, name) {
 }
 
 function isEmptyRectList(rectlist, name) {
-  name = (isLTR ? 'isLTR ' : 'isRTL ') + name;
   is(rectlist.length, 0, name + 'empty rectlist should have zero rects');
 }
 
@@ -54,8 +49,7 @@ function runATest(obj) {
     }
     //test getBoundingClientRect()
     var rect = range.getBoundingClientRect();
-    var testname = (isLTR ? 'isLTR ' : 'isRTL ') + 
-      'range.getBoundingClientRect for ' + obj.name;
+    var testname = 'range.getBoundingClientRect for ' + obj.name;
     if (obj.rect) {
       is(_getRect(rect),_getRect(obj.rect), testname);
     } else {
@@ -63,8 +57,7 @@ function runATest(obj) {
     }
     //test getClientRects()
     var rectlist = range.getClientRects();
-    testname = (isLTR ? 'isLTR ' : 'isRTL ') +
-      'range.getClientRects for '+obj.name;
+    testname = 'range.getClientRects for '+obj.name;
     if (!obj.rectList) {
       //rectList is not specified, use obj.rect to figure out rectList
       obj.rectList = obj.rect?[obj.rect]:[];
@@ -73,10 +66,6 @@ function runATest(obj) {
       isEmptyRectList(rectlist, testname+": ");
     } else {
       is(rectlist.length, obj.rectList.length, testname+' should return '+obj.rectList.length+' rects.');
-      if(!obj.rectList.forEach){
-        //convert RectList to a real array
-        obj.rectList=Array.prototype.slice.call(obj.rectList, 0);
-      }
       obj.rectList.forEach(function(rect,i) {
         is(_getRect(rectlist[i]),_getRect(rect),testname+": item at "+i);
       });
@@ -86,37 +75,30 @@ function runATest(obj) {
   }
 }
 /** Test for Bug 396392 **/
-function doTest(){
+function test() {
   var root = document.getElementById('content');
   var firstP = root.firstElementChild, spanInFirstP = firstP.childNodes[1],
     firstDiv = root.childNodes[2], spanInFirstDiv = firstDiv.childNodes[1],
-    secondP = root.childNodes[3], spanInSecondP = secondP.childNodes[1],
-    secondDiv = root.childNodes[4], spanInSecondDiv = secondDiv.firstChild,
-    thirdDiv = root.childNodes[5];
+    secondP = root.childNodes[3], spanInSecondP = secondP.childNodes[1];
   var firstPRect = firstP.getBoundingClientRect(),
     spanInFirstPRect = spanInFirstP.getBoundingClientRect(),
     firstDivRect = firstDiv.getBoundingClientRect(),
     spanInFirstDivRect = spanInFirstDiv.getBoundingClientRect(),
     secondPRect = secondP.getBoundingClientRect(),
-    secondDivRect = secondDiv.getBoundingClientRect(),
-    spanInSecondPRect = spanInSecondP.getBoundingClientRect(),
-    spanInSecondDivRect = spanInSecondDiv.getBoundingClientRect(),
-    spanInSecondDivRectList = spanInSecondDiv.getClientRects();
+    spanInSecondPRect = spanInSecondP.getBoundingClientRect();
   var widthPerchar = spanInSecondPRect.width / spanInSecondP.firstChild.length;
   var testcases = [
     {name:'nodesNotInDocument', range:[document.createTextNode('abc'), 1], 
       rect:null},
     {name:'collapsedInBlockNode', range:[firstP, 2], rect:null},
     {name:'collapsedAtBeginningOfTextNode', range:[firstP.firstChild, 0],
-      rect:[spanInFirstPRect.left - 6 * widthPerchar, 
-      spanInFirstPRect.left - 6 * widthPerchar, spanInFirstPRect.top, 
+      rect:[firstPRect.left, firstPRect.left, spanInFirstPRect.top, 
       spanInFirstPRect.bottom, 0, spanInFirstPRect.height]},
     {name:'collapsedWithinTextNode', range:[firstP.firstChild, 1], 
-      rect:[spanInFirstPRect.left  - 5 * widthPerchar, 
-        spanInFirstPRect.left  - 5 * widthPerchar,
+      rect:[firstPRect.left+widthPerchar, firstPRect.left+widthPerchar,
         spanInFirstPRect.top, spanInFirstPRect.bottom, 0, spanInFirstPRect.height]},
     {name:'collapsedAtEndOfTextNode', range:[firstP.firstChild, 6], 
-      rect:[spanInFirstPRect.left, spanInFirstPRect.left,
+      rect:[firstPRect.left + 6*widthPerchar, firstPRect.left + 6*widthPerchar,
         spanInFirstPRect.top, spanInFirstPRect.bottom, 0, spanInFirstPRect.height]},
     {name:'singleBlockNode', range:[root, 1, root, 2], rect:firstPRect},
     {name:'twoBlockNodes', range:[root, 1, root, 3],
@@ -126,7 +108,7 @@ function doTest(){
       rectList:[firstPRect, firstDivRect]},
     {name:'endOfTextNodeToEndOfAnotherTextNodeInAnotherBlock',
       range:[spanInFirstP.firstChild, 1, firstDiv.firstChild, 5],
-      rect:[spanInFirstDivRect.left - 5*widthPerchar, spanInFirstDivRect.left,
+      rect:[firstDivRect.left, firstDivRect.left + 5*widthPerchar,
         spanInFirstDivRect.top, spanInFirstDivRect.bottom, 5 * widthPerchar, 
         spanInFirstDivRect.height]},
     {name:'startOfTextNodeToStartOfAnotherTextNodeInAnotherBlock', 
@@ -135,66 +117,28 @@ function doTest(){
         spanInFirstPRect.bottom, widthPerchar, spanInFirstPRect.height]},
     {name:'endPortionOfATextNode', range:[firstP.firstChild, 3, 
         firstP.firstChild, 6],
-      rect:[spanInFirstPRect.left - 3*widthPerchar, spanInFirstPRect.left,
+      rect:[firstPRect.left + 3*widthPerchar, firstPRect.left + 6*widthPerchar,
         spanInFirstPRect.top, spanInFirstPRect.bottom, 3*widthPerchar, spanInFirstPRect.height]},
     {name:'startPortionOfATextNode', range:[firstP.firstChild, 0, 
         firstP.firstChild, 3],
-      rect:[spanInFirstPRect.left - 6*widthPerchar, 
-        spanInFirstPRect.left - 3*widthPerchar, spanInFirstPRect.top,
+      rect:[firstPRect.left, firstPRect.left + 3*widthPerchar, spanInFirstPRect.top,
         spanInFirstPRect.bottom, 3 * widthPerchar, spanInFirstPRect.height]},
     {name:'spanTextNodes', range:[secondP.firstChild, 1, secondP.lastChild, 1],
-      rect:[spanInSecondPRect.left - 3*widthPerchar, spanInSecondPRect.right + 
+      rect:[secondPRect.left + widthPerchar, spanInSecondPRect.right + 
         widthPerchar, spanInSecondPRect.top, spanInSecondPRect.bottom,
         spanInSecondPRect.width + 4*widthPerchar, spanInSecondPRect.height],
-      rectList:[[spanInSecondPRect.left - 3*widthPerchar, spanInSecondPRect.left,
+      rectList:[[secondPRect.left + widthPerchar, spanInSecondPRect.left,
         spanInSecondPRect.top, spanInSecondPRect.bottom, 3 * widthPerchar,
         spanInSecondPRect.height],
 	spanInSecondPRect,
 	[spanInSecondPRect.right, spanInSecondPRect.right + widthPerchar,
           spanInSecondPRect.top, spanInSecondPRect.bottom, widthPerchar,
-          spanInSecondPRect.height]]},
-    {name:'spanAcrossLines',range:[spanInSecondDiv.firstChild, 1, spanInSecondDiv.firstChild, 30],
-      rect: spanInSecondDivRect,
-      rectList:[[spanInSecondDivRectList[0].left+widthPerchar,
-        spanInSecondDivRectList[0].right, spanInSecondDivRectList[0].top,
-	spanInSecondDivRectList[0].bottom, spanInSecondDivRectList[0].width - widthPerchar,
-	spanInSecondDivRectList[0].height],
-	spanInSecondDivRectList[1],
-	[spanInSecondDivRectList[2].left,
-	spanInSecondDivRectList[2].right - 4 * widthPerchar, spanInSecondDivRectList[2].top,
-	spanInSecondDivRectList[2].bottom, 
-	spanInSecondDivRectList[2].width - 4 * widthPerchar,
-	spanInSecondDivRectList[2].height]]},
-    {name:'textAcrossLines',range:[thirdDiv.firstChild, 13, thirdDiv.firstChild, 28],
-      rect: [spanInSecondDivRectList[1].left, spanInSecondDivRectList[1].right,
-        spanInSecondDivRectList[1].top + secondDivRect.height, 
-        spanInSecondDivRectList[1].bottom + secondDivRect.height,
-        spanInSecondDivRectList[1].width, spanInSecondDivRectList[1].height]}
-    
+          spanInSecondPRect.height]]}
   ];
-  if(!isLTR){
-    //the last two tests does not work in RTL case
-    testcases.splice(testcases.length-2,2)
-  }
-  testcases.forEach(runATest);
-}
-function testMixedDir(){
-  var root = document.getElementById('mixeddir');
-  var firstSpan = root.firstElementChild, firstSpanRect=firstSpan.getBoundingClientRect(),
-      firstSpanRectList = firstSpan.getClientRects();
-  runATest({name:'mixeddir',range:[firstSpan.firstChild,0,firstSpan.firstChild,firstSpan.firstChild.length],
-             rect: firstSpanRect, rectList:firstSpanRectList});
-}
-function test(){
-  //test ltr
-  doTest();
-  isLTR = false;
-  var root = document.getElementById('content');
-  root.dir = 'rtl';
-  //test rtl
-  doTest();
-
-  testMixedDir();
+  testcases.forEach(function(tc) {
+    runATest(tc);
+  });
+  //alert(_getRect(rect));
 
   SimpleTest.finish();
 }
