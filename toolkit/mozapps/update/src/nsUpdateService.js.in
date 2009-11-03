@@ -42,26 +42,21 @@
 #
 # ***** END LICENSE BLOCK ***** */
 */
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/FileUtils.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-const PREF_APP_UPDATE_LASTUPDATETIME_FMT  = "app.update.lastUpdateTime.%ID%";
-const PREF_APP_UPDATE_TIMER               = "app.update.timer";
-const CATEGORY_UPDATE_TIMER               = "update-timer";
-
-#ifdef MOZ_UPDATER
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
 const PREF_APP_UPDATE_AUTO                = "app.update.auto";
 const PREF_APP_UPDATE_MODE                = "app.update.mode";
 const PREF_APP_UPDATE_SILENT              = "app.update.silent";
 const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
+const PREF_APP_UPDATE_LOG                 = "app.update.log";
 const PREF_APP_UPDATE_PROMPTWAITTIME      = "app.update.promptWaitTime";
-const PREF_APP_UPDATE_LOG_BRANCH          = "app.update.log.";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
 const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
@@ -79,6 +74,8 @@ const URI_UPDATE_HISTORY_DIALOG = "chrome://mozapps/content/update/history.xul";
 const URI_BRAND_PROPERTIES      = "chrome://branding/locale/brand.properties";
 const URI_UPDATES_PROPERTIES    = "chrome://mozapps/locale/update/updates.properties";
 const URI_UPDATE_NS             = "http://www.mozilla.org/2005/app-update";
+
+const CATEGORY_UPDATE_TIMER               = "update-timer";
 
 const KEY_APPDIR          = "XCurProcD";
 const KEY_GRED            = "GreD";
@@ -118,101 +115,44 @@ const DOWNLOAD_FOREGROUND_INTERVAL  = 0;
 const UPDATE_WINDOW_NAME      = "Update:Wizard";
 
 var gLocale     = null;
-var gCanUpdate  = null;
-
-#endif /* MOZ_UPDATER */
 
 XPCOMUtils.defineLazyServiceGetter(this, "gPref",
                                    "@mozilla.org/preferences-service;1",
                                    "nsIPrefBranch2");
 
-/**
- * Gets a preference value, handling the case where there is no default.
- * @param   func
- *          The name of the preference function to call, on nsIPrefBranch
- * @param   preference
- *          The name of the preference
- * @param   defaultValue
- *          The default value to return in the event the preference has
- *          no setting
- * @returns The value of the preference, or undefined if there was no
- *          user or default value.
- */
-function getPref(func, preference, defaultValue) {
-  try {
-    return gPref[func](preference);
-  }
-  catch (e) {
-  }
-  return defaultValue;
-}
-
-XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function() {
-  let logEnabled = { };
-  try {
-    let ps = Cc["@mozilla.org/preferences-service;1"].
-             getService(Ci.nsIPrefService);
-    let logBranch = ps.getBranch(PREF_APP_UPDATE_LOG_BRANCH);
-    let modules = logBranch.getChildList("");
-    for (let i = 0; i < modules.length; ++i) {
-      if (logBranch.prefHasUserValue(modules[i]))
-        logEnabled[modules[i]] = logBranch.getBoolPref(modules[i]);
-    }
-  }
-  catch (e) {
-  }
-  return logEnabled;
-});
-
 XPCOMUtils.defineLazyServiceGetter(this, "gConsole",
                                    "@mozilla.org/consoleservice;1",
                                    "nsIConsoleService");
 
-/**
- * Logs a string to the error console.
- * @param   string
- *          The string to write to the error console..
- */
-function LOG(module, string) {
-  if (module in gLogEnabled || "all" in gLogEnabled) {
-    dump("*** AUS:SVC " + module + ":" + string + "\n");
-    gConsole.logStringMessage("AUS:SVC " + module + ":" + string);
-  }
-}
+XPCOMUtils.defineLazyGetter(this, "gApp", function aus_gApp() {
+  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).
+         QueryInterface(Ci.nsIXULRuntime);
+});
 
-function getObserverService() {
-  return Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-}
+XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
+  return getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
+});
 
-#ifdef MOZ_UPDATER
-
-Components.utils.import("resource://gre/modules/FileUtils.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "gUpdateBundle", function() {
+XPCOMUtils.defineLazyGetter(this, "gUpdateBundle", function aus_gUpdateBundle() {
   return Cc["@mozilla.org/intl/stringbundle;1"].
          getService(Ci.nsIStringBundleService).
          createBundle(URI_UPDATES_PROPERTIES);
 });
 
 // shared code for suppressing bad cert dialogs
-XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
+XPCOMUtils.defineLazyGetter(this, "gCertUtils", function aus_gCertUtils() {
   let temp = { };
   Components.utils.import("resource://gre/modules/CertUtils.jsm", temp);
   return temp;
 });
 
-XPCOMUtils.defineLazyGetter(this, "gApp", function() {
-  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).
-         QueryInterface(Ci.nsIXULRuntime);
-});
-
-XPCOMUtils.defineLazyGetter(this, "gABI", function() {
+XPCOMUtils.defineLazyGetter(this, "gABI", function aus_gABI() {
   let abi = null;
   try {
     abi = gApp.XPCOMABI;
   }
   catch (e) {
-    LOG("General", "gABI - XPCOM ABI unknown: updates are not possible.");
+    LOG("gABI - XPCOM ABI unknown: updates are not possible.");
   }
 #ifdef XP_MACOSX
   // Mac universal build should report a different ABI than either macppc
@@ -226,7 +166,7 @@ XPCOMUtils.defineLazyGetter(this, "gABI", function() {
   return abi;
 });
 
-XPCOMUtils.defineLazyGetter(this, "gOSVersion", function() {
+XPCOMUtils.defineLazyGetter(this, "gOSVersion", function aus_gOSVersion() {
   let osVersion;
   let sysInfo = Cc["@mozilla.org/system-info;1"].
                 getService(Ci.nsIPropertyBag2);
@@ -234,7 +174,7 @@ XPCOMUtils.defineLazyGetter(this, "gOSVersion", function() {
     osVersion = sysInfo.getProperty("name") + " " + sysInfo.getProperty("version");
   }
   catch (e) {
-    LOG("UpdateService", "init - OS Version unknown: updates are not possible.");
+    LOG("gOSVersion - OS Version unknown: updates are not possible.");
   }
 
   if (osVersion) {
@@ -248,6 +188,158 @@ XPCOMUtils.defineLazyGetter(this, "gOSVersion", function() {
   }
   return osVersion;
 });
+
+XPCOMUtils.defineLazyGetter(this, "gCanUpdate", function aus_gCanUpdate() {
+  try {
+    const NORMAL_FILE_TYPE = Ci.nsILocalFile.NORMAL_FILE_TYPE;
+    var updateTestFile = getUpdateFile([FILE_PERMS_TEST]);
+    LOG("gCanUpdate - testing write access " + updateTestFile.path);
+    if (updateTestFile.exists())
+      updateTestFile.remove(false);
+    updateTestFile.create(NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+    updateTestFile.remove(false);
+#ifdef XP_WIN
+#ifndef WINCE
+    var sysInfo = Cc["@mozilla.org/system-info;1"].
+                  getService(Ci.nsIPropertyBag2);
+
+    // Example windowsVersion:  Windows XP == 5.1
+    var windowsVersion = sysInfo.getProperty("version");
+    LOG("gCanUpdate - windowsVersion = " + windowsVersion);
+
+  /**
+#    For Vista, updates can be performed to a location requiring admin
+#    privileges by requesting elevation via the UAC prompt when launching
+#    updater.exe if the appDir is under the Program Files directory
+#    (e.g. C:\Program Files\) and UAC is turned on and  we can elevate
+#    (e.g. user has a split token).
+#
+#    Note: this does note attempt to handle the case where UAC is turned on
+#    and the installation directory is in a restricted location that
+#    requires admin privileges to update other than Program Files.
+   */
+    var userCanElevate = false;
+
+    if (parseFloat(windowsVersion) >= 6) {
+      try {
+        var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
+                          getService(Ci.nsIProperties);
+        // KEY_UPDROOT will fail and throw an exception if
+        // appDir is not under the Program Files, so we rely on that
+        var dir = fileLocator.get(KEY_UPDROOT, Ci.nsIFile);
+        // appDir is under Program Files, so check if the user can elevate
+        userCanElevate = gApp.QueryInterface(Ci.nsIWinAppHelper).
+                         userCanElevate;
+        LOG("gCanUpdate - on Vista, userCanElevate: " + userCanElevate);
+      }
+      catch (ex) {
+        // When the installation directory is not under Program Files,
+        // fall through to checking if write access to the 
+        // installation directory is available.
+        LOG("gCanUpdate - on Vista, appDir is not under Program Files");
+      }
+    }
+
+    /**
+#      On Windows, we no longer store the update under the app dir if the app
+#      dir is under C:\Program Files.
+#
+#      If we are on Windows (including Vista, if we can't elevate) we need to
+#      to check that we can create and remove files from the actual app 
+#      directory (like C:\Program Files\Mozilla Firefox).  If we can't
+#      (because this user is not an adminstrator, for example) canUpdate()
+#      should return false.
+#
+#      For Vista, we perform this check to enable updating the  application
+#      when the user has write access to the installation directory under the
+#      following scenarios:
+#      1) the installation directory is not under Program Files
+#         (e.g. C:\Program Files)
+#      2) UAC is turned off
+#      3) UAC is turned on and the user is not an admin 
+#         (e.g. the user does not have a split token)
+#      4) UAC is turned on and the user is already elevated, so they can't be
+#         elevated again
+     */
+    if (!userCanElevate) {
+      // if we're unable to create the test file this will throw an exception.
+      var appDirTestFile = FileUtils.getFile(KEY_APPDIR, [FILE_PERMS_TEST]);
+      LOG("gCanUpdate - testing write access " + appDirTestFile.path);
+      if (appDirTestFile.exists())
+        appDirTestFile.remove(false)
+      appDirTestFile.create(NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+      appDirTestFile.remove(false);
+    }
+#endif //WINCE
+#endif //XP_WIN
+  }
+  catch (e) {
+     LOG("gCanUpdate - unable to update. Exception: " + e);
+    // No write privileges to install directory
+    return false;
+  }
+
+  // If the administrator has locked the app update functionality
+  // OFF - this is not just a user setting, so disable the manual
+  // UI too.
+  var enabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
+  if (!enabled && gPref.prefIsLocked(PREF_APP_UPDATE_ENABLED)) {
+    LOG("gCanUpdate - unable to update, disabled by pref");
+    return false;
+  }
+
+  // If we don't know the binary platform we're updating, we can't update.
+  if (!gABI) {
+    LOG("gCanUpdate - unable tp update, unknown ABI");
+    return false;
+  }
+
+  // If we don't know the OS version we're updating, we can't update.
+  if (!gOSVersion) {
+    LOG("gCanUpdate - unable to update, unknown OS version");
+    return false;
+  }
+
+  LOG("gCanUpdate - able to update");
+  return true;
+});
+
+/**
+ * Logs a string to the error console.
+ * @param   string
+ *          The string to write to the error console.
+ */
+function LOG(string) {
+  if (gLogEnabled) {
+    dump("*** AUS:SVC " + string + "\n");
+    gConsole.logStringMessage("AUS:SVC " + string);
+  }
+}
+
+/**
+#  Gets a preference value, handling the case where there is no default.
+#  @param   func
+#           The name of the preference function to call, on nsIPrefBranch
+#  @param   preference
+#           The name of the preference
+#  @param   defaultValue
+#           The default value to return in the event the preference has
+#           no setting
+#  @returns The value of the preference, or undefined if there was no
+#           user or default value.
+ */
+function getPref(func, preference, defaultValue) {
+  try {
+    return gPref[func](preference);
+  }
+  catch (e) {
+  }
+  return defaultValue;
+}
+
+function getObserverService() {
+  return Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+}
 
 /**
  * Convert a string containing binary values to hex.
@@ -264,16 +356,14 @@ function binaryToHex(input) {
 }
 
 /**
- * Gets the specified directory at the specified hierarchy under the
- * update root directory.
- * @param   pathArray
- *          An array of path components to locate beneath the directory
- *          specified by |key|
- * @return  nsIFile object for the location specified. If the directory
- *          requested does not exist, it is created, along with any
- *          parent directories that need to be created.
+#  Gets the specified directory at the specified hierarchy under the
+#  update root directory and creates it if it doesn't exist.
+#  @param   pathArray
+#           An array of path components to locate beneath the directory
+#           specified by |key|
+#  @return  nsIFile object for the location specified.
  */
-function getUpdateDir(pathArray) {
+function getUpdateDirCreate(pathArray) {
 #ifdef XP_WIN
 #ifndef WINCE
   try {
@@ -297,7 +387,7 @@ function getUpdateDir(pathArray) {
  *          the way are.
  */
 function getUpdateFile(pathArray) {
-  var file = getUpdateDir(pathArray.slice(0, -1));
+  var file = getUpdateDirCreate(pathArray.slice(0, -1));
   file.append(pathArray[pathArray.length - 1]);
   return file;
 }
@@ -316,13 +406,13 @@ function getStatusTextFromCode(code, defaultCode) {
   var reason;
   try {
     reason = gUpdateBundle.GetStringFromName("check_error-" + code);
-    LOG("General", "getStatusTextFromCode - transfer error: " + reason +
-        ", code: " + code);
+    LOG("getStatusTextFromCode - transfer error: " + reason + ", code: " +
+        code);
   }
   catch (e) {
     // Use the default reason
     reason = gUpdateBundle.GetStringFromName("check_error-" + defaultCode);
-    LOG("General", "getStatusTextFromCode - transfer error: " + reason +
+    LOG("getStatusTextFromCode - transfer error: " + reason +
         ", default code: " + defaultCode);
   }
   return reason;
@@ -335,15 +425,7 @@ function getStatusTextFromCode(code, defaultCode) {
 function getUpdatesDir() {
   // Right now, we only support downloading one patch at a time, so we always
   // use the same target directory.
-  var updateDir = getUpdateDir([]);
-  updateDir.append(DIR_UPDATES);
-  updateDir.append("0");
-  if (!updateDir.exists()) {
-    LOG("General", "getUpdatesDir - update directory " + updateDir.path +
-        " doesn't exist, creating...");
-    updateDir.create(Ci.nsILocalFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  }
-  return updateDir;
+  return getUpdateDirCreate([DIR_UPDATES, "0"]);
 }
 
 /**
@@ -357,8 +439,7 @@ function readStatusFile(dir) {
   var statusFile = dir.clone();
   statusFile.append(FILE_UPDATE_STATUS);
   var status = readStringFromFile(statusFile) || STATE_NONE;
-  LOG("General", "readStatusFile - status: " + status + ", path: " +
-      statusFile.path);
+  LOG("readStatusFile - status: " + status + ", path: " + statusFile.path);
   return status;
 }
 
@@ -426,16 +507,16 @@ function cleanUpUpdatesDir() {
             logFile.moveTo(dir, FILE_BACKUP_LOG);
           }
           catch (e) {
-            LOG("General", "cleanUpUpdatesDir - failed to rename file " +
-                logFile.path + " to " + FILE_BACKUP_LOG);
+            LOG("cleanUpUpdatesDir - failed to rename file " + logFile.path +
+                " to " + FILE_BACKUP_LOG);
           }
         }
         f.moveTo(dir, FILE_LAST_LOG);
         continue;
       }
       catch (e) {
-        LOG("General", "cleanUpUpdatesDir - failed to move file " + f.path +
-            " to " + dir.path + " and rename it to " + FILE_LAST_LOG);
+        LOG("cleanUpUpdatesDir - failed to move file " + f.path + " to " +
+            dir.path + " and rename it to " + FILE_LAST_LOG);
       }
     }
     // Now, recursively remove this file.  The recusive removal is really
@@ -445,7 +526,7 @@ function cleanUpUpdatesDir() {
       f.remove(true);
     }
     catch (e) {
-      LOG("General", "cleanUpUpdatesDir - failed to remove file " + f.path);
+      LOG("cleanUpUpdatesDir - failed to remove file " + f.path);
     }
   }
 }
@@ -484,7 +565,7 @@ function getLocale() {
                                " directories", Cr.NS_ERROR_FILE_NOT_FOUND);
 
   gLocale = readStringFromFile(localeFile);
-  LOG("General", "getLocale - getting locale from file: " + localeFile.path +
+  LOG("getLocale - getting locale from file: " + localeFile.path +
       ", locale: " + gLocale);
   return gLocale;
 }
@@ -582,7 +663,7 @@ function writeStringToFile(file, text) {
  */
 function readStringFromFile(file) {
   if (!file.exists()) {
-    LOG("General", "readStringFromFile - file doesn't exist: " + file.path);
+    LOG("readStringFromFile - file doesn't exist: " + file.path);
     return null;
   }
   var fis = Cc["@mozilla.org/network/file-input-stream;1"].
@@ -598,8 +679,7 @@ function readStringFromFile(file) {
   return text;
 }
 
-function getDefaultPrefBranch()
-{
+function getDefaultPrefBranch() {
   return gPref.QueryInterface(Ci.nsIPrefService).getDefaultBranch(null);
 }
 /**
@@ -620,7 +700,7 @@ function UpdatePatch(patch) {
       break;
     case "size":
       if (0 == parseInt(attr.value)) {
-        LOG("UpdatePatch", "init - 0-sized patch!");
+        LOG("UpdatePatch:init - 0-sized patch!");
         throw Cr.NS_ERROR_ILLEGAL_VALUE;
       }
       // fall through
@@ -983,8 +1063,9 @@ UpdateService.prototype = {
    */
   observe: function AUS_observe(subject, topic, data) {
     switch (topic) {
-    case "profile-after-change":
-      this._start();
+    case "post-update-processing":
+      // Clean up any extant updates
+      this._postUpdateProcessing();
       break;
     case "xpcom-shutdown":
       let os = getObserverService();
@@ -1003,26 +1084,6 @@ UpdateService.prototype = {
    * 3. start of a complete update download after the failure to apply a partial
    *    update
    */
-  _start: function AUS__start() {
-    // Bail out if we don't have appropriate permissions
-    if (!this.canUpdate)
-      return;
-
-    var status = readStatusFile(getUpdatesDir());
-
-    // null status means the update.status file is not present, because either:
-    // 1) no update was performed, and so there's no UI to show
-    // 2) an update was attempted but failed during checking, transfer or
-    //    verification, and was cleaned up at that point, and UI notifying of
-    //    that error was shown at that stage.
-    if (status == STATE_NONE) {
-      LOG("UpdateService", "_postUpdateProcessing - no status, no update");
-      return;
-    }
-
-    // Clean up any extant updates
-    this._postUpdateProcessing(status);
-  },
 
   /**
    * Perform post-processing on updates lingering in the updates directory
@@ -1030,14 +1091,33 @@ UpdateService.prototype = {
    * optionally attempt to fetch a different version if appropriate) or
    * notify the user of install success.
    */
-  _postUpdateProcessing: function AUS__postUpdateProcessing(status) {
+  _postUpdateProcessing: function AUS__postUpdateProcessing() {
+    if (!gCanUpdate) {
+      LOG("UpdateService:_postUpdateProcessing - unable to update");
+      return;
+    }
+
+    var status = readStatusFile(getUpdatesDir());
+    /**
+     * STATE_NONE status means the update.status file is not present, because
+     * either:
+     * 1) no update was performed, and so there's no UI to show
+     * 2) an update was attempted but failed during checking, transfer or
+     *    verification, and was cleaned up at that point, and UI notifying of
+     *    that error was shown at that stage.
+     */
+    if (status == STATE_NONE) {
+      LOG("UpdateService:_postUpdateProcessing - no status, no update");
+      return;
+    }
+
     var um = Cc["@mozilla.org/updates/update-manager;1"].
              getService(Ci.nsIUpdateManager);
     var update = um.activeUpdate;
 
     if (status == STATE_DOWNLOADING) {
-      LOG("UpdateService", "_postUpdateProcessing - patch found in " +
-          "downloading state");
+      LOG("UpdateService:_postUpdateProcessing - patch found in downloading " +
+          "state");
       if (update && update.state != STATE_SUCCEEDED) {
         // Resume download
         var status = this.downloadUpdate(update, true);
@@ -1091,14 +1171,14 @@ UpdateService.prototype = {
       if (update.selectedPatch && oldType == "partial") {
         // Partial patch application failed, try downloading the complete
         // update in the background instead.
-        LOG("UpdateService", "_postUpdateProcessing - install of partial " +
-            "patch failed, downloading complete patch");
+        LOG("UpdateService:_postUpdateProcessing - install of partial patch " +
+            "failed, downloading complete patch");
         var status = this.downloadUpdate(update, true);
         if (status == STATE_NONE)
           cleanupActiveUpdate();
       }
       else {
-        LOG("UpdateService", "_postUpdateProcessing - install of complete or " +
+        LOG("UpdateService:_postUpdateProcessing - install of complete or " +
             "only one patch offered failed... showing error.");
       }
       update.QueryInterface(Ci.nsIWritablePropertyBag);
@@ -1137,8 +1217,8 @@ UpdateService.prototype = {
        * See nsIUpdateService.idl
        */
       onError: function AUS_notify_onError(request, update) {
-        LOG("UpdateService", "notify:listener - error during background " +
-            "update: " + update.statusText);
+        LOG("UpdateService:notify:listener - error during background update: " +
+            update.statusText);
       },
     }
     this.backgroundChecker.checkForUpdates(listener, false);
@@ -1208,8 +1288,8 @@ UpdateService.prototype = {
 
     var updateEnabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
     if (!updateEnabled) {
-      LOG("Checker", "_selectAndInstallUpdate - not prompting because update " +
-          "is disabled");
+      LOG("Checker:_selectAndInstallUpdate - not prompting because update is " +
+          "disabled");
       return;
     }
 
@@ -1233,8 +1313,8 @@ UpdateService.prototype = {
                         encodeURIComponent(update.version);
     if (update.type == "major" &&
         getPref("getBoolPref", neverPrefName, false)) {
-      LOG("Checker", "_selectAndInstallUpdate - not prompting because this " +
-          "is a major update and the preference " + neverPrefName + " is true");
+      LOG("Checker:_selectAndInstallUpdate - not prompting because this is a " +
+          "major update and the preference " + neverPrefName + " is true");
       return;
     }
 
@@ -1257,14 +1337,14 @@ UpdateService.prototype = {
 #      Minor            1 or 2      No                     Auto Install
      */
     if (update.type == "major") {
-      LOG("Checker", "_selectAndInstallUpdate - prompting because it is a " +
-          "major update");
+      LOG("Checker:_selectAndInstallUpdate - prompting because it is a major " +
+          "update");
       this._showPrompt(update);
       return;
     }
 
     if (!getPref("getBoolPref", PREF_APP_UPDATE_AUTO, true)) {
-      LOG("Checker", "_selectAndInstallUpdate - prompting because silent " +
+      LOG("Checker:_selectAndInstallUpdate - prompting because silent " +
           "install is disabled");
       this._showPrompt(update);
       return;
@@ -1272,8 +1352,8 @@ UpdateService.prototype = {
 
     if (getPref("getIntPref", PREF_APP_UPDATE_MODE, 1) == 0) {
       // Do not prompt regardless of add-on incompatibilities
-      LOG("UpdateService", "_selectAndInstallUpdate - no need to show " +
-          "prompt, just download the update");
+      LOG("UpdateService:_selectAndInstallUpdate - no need to show prompt, " +
+          "just download the update");
       var status = this.downloadUpdate(update, true);
       if (status == STATE_NONE)
         cleanupActiveUpdate();
@@ -1290,8 +1370,8 @@ UpdateService.prototype = {
       this._checkAddonCompatibility();
     }
     else {
-      LOG("UpdateService", "_selectAndInstallUpdate - no need to show " +
-          "prompt, just download the update");
+      LOG("UpdateService:_selectAndInstallUpdate - no need to show prompt, " +
+          "just download the update");
       var status = this.downloadUpdate(update, true);
       if (status == STATE_NONE)
         cleanupActiveUpdate();
@@ -1353,7 +1433,7 @@ UpdateService.prototype = {
 #          only as a hidden option for those that want it.
        */
       this._incompatAddonsCount = currentAddons.length;
-      LOG("UpdateService", "_checkAddonCompatibility - checking for " +
+      LOG("UpdateService:_checkAddonCompatibility - checking for " +
           "incompatible add-ons");
       var updateIncompatMode = getPref("getIntPref", PREF_APP_UPDATE_INCOMPATIBLE_MODE, 0);
       var mode = (updateIncompatMode == 1) ? Ci.nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY :
@@ -1363,8 +1443,8 @@ UpdateService.prototype = {
                 this._update.extensionVersion, this._update.platformVersion);
     }
     else {
-      LOG("UpdateService", "_checkAddonCompatibility - no need to show " +
-          "prompt, just download the update");
+      LOG("UpdateService:_checkAddonCompatibility - no need to show prompt, " +
+          "just download the update");
       var status = this.downloadUpdate(this._update, true);
       if (status == STATE_NONE)
         cleanupActiveUpdate();
@@ -1383,12 +1463,12 @@ UpdateService.prototype = {
    */
   onUpdateEnded: function AUS_onUpdateEnded() {
     if (this._incompatAddonsCount > 0) {
-      LOG("Checker", "onUpdateEnded - prompting because there are " +
-          "incompatible add-ons");
+      LOG("Checker:onUpdateEnded - prompting because there are incompatible " +
+          "add-ons");
       this._showPrompt(this._update);
     }
     else {
-      LOG("UpdateService", "onUpdateEnded - no need to show prompt, just " +
+      LOG("UpdateService:onUpdateEnded - no need to show prompt, just " +
           "download the update");
       var status = this.downloadUpdate(this._update, true);
       if (status == STATE_NONE)
@@ -1411,7 +1491,7 @@ UpdateService.prototype = {
         status != Ci.nsIAddonUpdateCheckListener.STATUS_VERSIONINFO)
       return;
 
-    LOG("UpdateService", "onAddonUpdateEnded - found update for add-on ID: " +
+    LOG("UpdateService:onAddonUpdateEnded - found update for add-on ID: " +
         addon.id);
     --this._incompatAddonsCount;
   },
@@ -1434,124 +1514,7 @@ UpdateService.prototype = {
    * See nsIUpdateService.idl
    */
   get canUpdate() {
-    if (gCanUpdate !== null)
-      return gCanUpdate;
-
-// On Windows CE skip the write access checks and assume we have write access
-#ifndef WINCE
-    try {
-      const NORMAL_FILE_TYPE = Ci.nsILocalFile.NORMAL_FILE_TYPE;
-      var updateTestFile = getUpdateFile([FILE_PERMS_TEST]);
-      LOG("UpdateService", "canUpdate - testing " + updateTestFile.path);
-      if (updateTestFile.exists())
-        updateTestFile.remove(false);
-      updateTestFile.create(NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-      updateTestFile.remove(false);
-#ifdef XP_WIN
-      var sysInfo = Cc["@mozilla.org/system-info;1"].
-                    getService(Ci.nsIPropertyBag2);
-
-      // Example windowsVersion:  Windows XP == 5.1
-      var windowsVersion = sysInfo.getProperty("version");
-      LOG("UpdateService", "canUpdate - windowsVersion = " + windowsVersion);
-
-      /**
-#        For Vista, updates can be performed to a location requiring admin
-#        privileges by requesting elevation via the UAC prompt when launching
-#        updater.exe if the appDir is under the Program Files directory
-#        (e.g. C:\Program Files\) and UAC is turned on and  we can elevate
-#        (e.g. user has a split token).
-#
-#        Note: this does note attempt to handle the case where UAC is turned on
-#        and the installation directory is in a restricted location that
-#        requires admin privileges to update other than Program Files.
-       */
-      var userCanElevate = false;
-
-      if (parseFloat(windowsVersion) >= 6) {
-        try {
-          var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
-                            getService(Ci.nsIProperties);
-          // KEY_UPDROOT will fail and throw an exception if
-          // appDir is not under the Program Files, so we rely on that
-          var dir = fileLocator.get(KEY_UPDROOT, Ci.nsIFile);
-          // appDir is under Program Files, so check if the user can elevate
-          userCanElevate = gApp.QueryInterface(Ci.nsIWinAppHelper).
-                           userCanElevate;
-          LOG("UpdateService", "canUpdate - on Vista, userCanElevate: " +
-              userCanElevate);
-        }
-        catch (ex) {
-          // When the installation directory is not under Program Files,
-          // fall through to checking if write access to the 
-          // installation directory is available.
-          LOG("UpdateService", "canUpdate - on Vista, appDir is not under " +
-              "Program Files");
-        }
-      }
-
-      /**
-#        On Windows, we no longer store the update under the app dir if the app
-#        dir is under C:\Program Files.
-#
-#        If we are on Windows (including Vista, if we can't elevate) we need to
-#        check that we can create and remove files from the actual app directory
-#        (like C:\Program Files\Mozilla Firefox).  If we can't (because this
-#        user is not an adminstrator, for example) canUpdate() should return
-#        false.
-#
-#        For Vista, we perform this check to enable updating the  application
-#        when the user has write access to the installation directory under the
-#        following scenarios:
-#        1) the installation directory is not under Program Files
-#           (e.g. C:\Program Files)
-#        2) UAC is turned off
-#        3) UAC is turned on and the user is not an admin 
-#           (e.g. the user does not have a split token)
-#        4) UAC is turned on and the user is already elevated, so they can't be
-#           elevated again
-       */
-      if (!userCanElevate) {
-        // if we're unable to create the test file this will throw an exception.
-        var appDirTestFile = FileUtils.getFile(KEY_APPDIR, [FILE_PERMS_TEST]);
-        LOG("UpdateService", "canUpdate - testing " + appDirTestFile.path);
-        if (appDirTestFile.exists())
-          appDirTestFile.remove(false)
-        appDirTestFile.create(NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-        appDirTestFile.remove(false);
-      }
-#endif //XP_WIN
-    }
-    catch (e) {
-       LOG("UpdateService", "canUpdate - unable to update. Exception: " + e);
-      // No write privileges to install directory
-      return gCanUpdate = false;
-    }
-#endif //WINCE
-
-    // If the administrator has locked the app update functionality
-    // OFF - this is not just a user setting, so disable the manual
-    // UI too.
-    var enabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
-    if (!enabled && gPref.prefIsLocked(PREF_APP_UPDATE_ENABLED)) {
-      LOG("UpdateService", "canUpdate - unable to update, disabled by pref");
-      return gCanUpdate = false;
-    }
-
-    // If we don't know the binary platform we're updating, we can't update.
-    if (!gABI) {
-      LOG("UpdateService", "canUpdate - unable tp update, unknown ABI");
-      return gCanUpdate = false;
-    }
-
-    // If we don't know the OS version we're updating, we can't update.
-    if (!gOSVersion) {
-      LOG("UpdateService", "canUpdate unable to update, unknown OS version");
-      return gCanUpdate = false;
-    }
-
-    LOG("UpdateService", "canUpdate - able to update");
-    return gCanUpdate = true;
+    return gCanUpdate;
   },
 
   /**
@@ -1559,7 +1522,7 @@ UpdateService.prototype = {
    */
   addDownloadListener: function AUS_addDownloadListener(listener) {
     if (!this._downloader) {
-      LOG("UpdateService", "addDownloadListener - no downloader!");
+      LOG("UpdateService:addDownloadListener - no downloader!");
       return;
     }
     this._downloader.addDownloadListener(listener);
@@ -1570,7 +1533,7 @@ UpdateService.prototype = {
    */
   removeDownloadListener: function AUS_removeDownloadListener(listener) {
     if (!this._downloader) {
-      LOG("UpdateService", "removeDownloadListener - no downloader!");
+      LOG("UpdateService:removeDownloadListener - no downloader!");
       return;
     }
     this._downloader.removeDownloadListener(listener);
@@ -1589,8 +1552,9 @@ UpdateService.prototype = {
              getService(Ci.nsIVersionComparator);
     // Don't download the update if the update's version is less than the
     // current application's version.
-    if (update.extensionVersion && vc.compare(update.extensionVersion, ai.version) < 0) {
-      LOG("UpdateService", "downloadUpdate - removing update for previous " +
+    if (update.extensionVersion &&
+        vc.compare(update.extensionVersion, ai.version) < 0) {
+      LOG("UpdateService:downloadUpdate - removing update for previous " +
           "application version " + update.extensionVersion);
       cleanupActiveUpdate();
       return STATE_NONE;
@@ -1599,8 +1563,8 @@ UpdateService.prototype = {
     if (this.isDownloading) {
       if (update.isCompleteUpdate == this._downloader.isCompleteUpdate &&
           background == this._downloader.background) {
-        LOG("UpdateService", "downloadUpdate - no support for downloading " +
-            "more than one update at a time");
+        LOG("UpdateService:downloadUpdate - no support for downloading more " +
+            "than one update at a time");
         return readStatusFile(getUpdatesDir());
       }
       this._downloader.cancel();
@@ -1638,8 +1602,7 @@ UpdateService.prototype = {
   classDescription: "Update Service",
   contractID: "@mozilla.org/updates/update-service;1",
   classID: Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}"),
-  _xpcom_categories: [{ category: "profile-after-change" },
-                      { category: CATEGORY_UPDATE_TIMER,
+  _xpcom_categories: [{ category: CATEGORY_UPDATE_TIMER,
                         value: "@mozilla.org/updates/update-service;1," +
                                "getService,background-update-timer," +
                                 PREF_APP_UPDATE_INTERVAL + ",86400" }],
@@ -1656,7 +1619,8 @@ UpdateService.prototype = {
  */
 function UpdateManager() {
   // Ensure the Active Update file is loaded
-  var updates = this._loadXMLFileIntoArray(getUpdateFile([FILE_UPDATE_ACTIVE]));
+  var updates = this._loadXMLFileIntoArray(getUpdateFile(
+                  [FILE_UPDATE_ACTIVE]));
   if (updates.length > 0)
     this._activeUpdate = updates[0];
 }
@@ -1680,7 +1644,7 @@ UpdateManager.prototype = {
    */
   _loadXMLFileIntoArray: function UM__loadXMLFileIntoArray(file) {
     if (!file.exists()) {
-      LOG("UpdateManager", "_loadXMLFileIntoArray: XML file does not exist");
+      LOG("UpdateManager:_loadXMLFileIntoArray: XML file does not exist");
       return [];
     }
 
@@ -1706,15 +1670,15 @@ UpdateManager.prototype = {
         try {
           var update = new Update(updateElement);
         } catch (e) {
-          LOG("UpdateManager", "_loadXMLFileIntoArray - invalid update");
+          LOG("UpdateManager:_loadXMLFileIntoArray - invalid update");
           continue;
         }
         result.push(update);
       }
     }
     catch (e) {
-      LOG("UpdateManager", "_loadXMLFileIntoArray - error constructing " +
-          "update list. Exception: " + e);
+      LOG("UpdateManager:_loadXMLFileIntoArray - error constructing update " +
+          "list. Exception: " + e);
     }
     fileStream.close();
     return result;
@@ -1727,7 +1691,6 @@ UpdateManager.prototype = {
     if (!this._updates) {
       this._updates = this._loadXMLFileIntoArray(getUpdateFile(
                         [FILE_UPDATES_DB]));
-
       var activeUpdates = this._loadXMLFileIntoArray(getUpdateFile(
                             [FILE_UPDATE_ACTIVE]));
       if (activeUpdates.length > 0)
@@ -1913,7 +1876,7 @@ Checker.prototype = {
     }
 
     if (!url || url == "") {
-      LOG("Checker", "getUpdateURL - update URL not defined");
+      LOG("Checker:getUpdateURL - update URL not defined");
       return null;
     }
 
@@ -1935,7 +1898,7 @@ Checker.prototype = {
     if (force)
       url += (url.indexOf("?") != -1 ? "&" : "?") + "force=1";
 
-    LOG("Checker", "getUpdateURL - update URL: " + url);
+    LOG("Checker:getUpdateURL - update URL: " + url);
     return url;
   },
 
@@ -1962,7 +1925,7 @@ Checker.prototype = {
     this._request.onload      = function(event) { self.onLoad(event);     };
     this._request.onprogress  = function(event) { self.onProgress(event); };
 
-    LOG("Checker", "checkForUpdates - sending request to: " + url);
+    LOG("Checker:checkForUpdates - sending request to: " + url);
     this._request.send(null);
 
     this._callback = listener;
@@ -1974,7 +1937,7 @@ Checker.prototype = {
    *          The nsIDOMLSProgressEvent for the load.
    */
   onProgress: function UC_onProgress(event) {
-    LOG("Checker", "onProgress - " + event.position + "/" + event.totalSize);
+    LOG("Checker:onProgress - " + event.position + "/" + event.totalSize);
     this._callback.onProgress(event.target, event.position, event.totalSize);
   },
 
@@ -1984,12 +1947,12 @@ Checker.prototype = {
   get _updates() {
     var updatesElement = this._request.responseXML.documentElement;
     if (!updatesElement) {
-      LOG("Checker", "get_updates - empty updates document?!");
+      LOG("Checker:_updates get - empty updates document?!");
       return [];
     }
 
     if (updatesElement.nodeName != "updates") {
-      LOG("Checker", "get_updates - unexpected node name!");
+      LOG("Checker:updates get - unexpected node name!");
       throw "";
     }
 
@@ -2005,7 +1968,7 @@ Checker.prototype = {
       try {
         var update = new Update(updateElement);
       } catch (e) {
-        LOG("Checker", "get_updates - invalid <update/>, ignoring...");
+        LOG("Checker:updates get - invalid <update/>, ignoring...");
         continue;
       }
       update.serviceURL = this.getUpdateURL(this._forced);
@@ -2038,25 +2001,25 @@ Checker.prototype = {
    *          The nsIDOMEvent for the load
    */
   onLoad: function UC_onLoad(event) {
-    LOG("Checker", "onLoad - request completed downloading document");
+    LOG("Checker:onLoad - request completed downloading document");
 
     try {
       gCertUtils.checkCert(this._request.channel);
       // Analyze the resulting DOM and determine the set of updates to install
       var updates = this._updates;
 
-      LOG("Checker", "onLoad - number of updates available: " + updates.length);
+      LOG("Checker:onLoad - number of updates available: " + updates.length);
 
       // ... and tell the Update Service about what we discovered.
       this._callback.onCheckComplete(event.target, updates, updates.length);
     }
     catch (e) {
-      LOG("Checker", "onLoad - there was a problem with the update service " +
-          "URL specified, either the XML file was malformed or it does not " +
-          "exist at the location specified. Exception: " + e);
+      LOG("Checker:onLoad - there was a problem with the update service URL " +
+          "specified, either the XML file was malformed or it does not exist " +
+          "at the location specified. Exception: " + e);
       var request = event.target;
       var status = this._getChannelStatus(request);
-      LOG("Checker", "onLoad - request.status: " + status);
+      LOG("Checker:onLoad - request.status: " + status);
       var update = new Update(null);
       update.statusText = getStatusTextFromCode(status, 404);
       this._callback.onError(request, update);
@@ -2073,7 +2036,7 @@ Checker.prototype = {
   onError: function UC_onError(event) {
     var request = event.target;
     var status = this._getChannelStatus(request);
-    LOG("Checker", "onError - request.status: " + status);
+    LOG("Checker:onError - request.status: " + status);
 
     // If we can't find an error string specific to this status code,
     // just use the 200 message from above, which means everything
@@ -2090,11 +2053,8 @@ Checker.prototype = {
    */
   _enabled: true,
   get enabled() {
-    var aus = Cc["@mozilla.org/updates/update-service;1"].
-              getService(Ci.nsIApplicationUpdateService);
-    var enabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true) &&
-                  aus.canUpdate && this._enabled;
-    return enabled;
+    return getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true) &&
+           gCanUpdate && this._enabled;
   },
 
   /**
@@ -2204,7 +2164,7 @@ Downloader.prototype = {
       // we choose to compute these hashes.
       digest = binaryToHex(hash.finish(false));
     } catch (e) {
-      LOG("Downloader", "_verifyDownload - failed to compute hash of " +
+      LOG("Downloader:_verifyDownload - failed to compute hash of the " +
           "downloaded update archive");
       digest = "";
     }
@@ -2253,13 +2213,14 @@ Downloader.prototype = {
     // that we do not know about, then remove it and use our default logic.
     var useComplete = false;
     if (selectedPatch) {
-      LOG("Downloader", "_selectPatch - found existing patch with state: " + state);
+      LOG("Downloader:_selectPatch - found existing patch with state: " +
+          state);
       switch (state) {
       case STATE_DOWNLOADING:
-        LOG("Downloader", "_selectPatch - resuming download");
+        LOG("Downloader:_selectPatch - resuming download");
         return selectedPatch;
       case STATE_PENDING:
-        LOG("Downloader", "_selectPatch - already downloaded and staged");
+        LOG("Downloader:_selectPatch - already downloaded and staged");
         return null;
       default:
         // Something went wrong when we tried to apply the previous patch.
@@ -2268,7 +2229,7 @@ Downloader.prototype = {
           useComplete = true;
         } else {
           // This is a pretty fatal error.  Just bail.
-          LOG("Downloader", "_selectPatch - failed to apply complete patch!");
+          LOG("Downloader:_selectPatch - failed to apply complete patch!");
           writeStatusFile(updateDir, STATE_NONE);
           writeVersionFile(getUpdatesDir(), null);
           return null;
@@ -2333,7 +2294,7 @@ Downloader.prototype = {
     // to download.
     this._patch = this._selectPatch(update, updateDir);
     if (!this._patch) {
-      LOG("Downloader", "downloadUpdate - no patch to download");
+      LOG("Downloader:downloadUpdate - no patch to download");
       return readStatusFile(updateDir);
     }
     this.isCompleteUpdate = this._patch.type == "complete";
@@ -2348,7 +2309,7 @@ Downloader.prototype = {
     this._request = Cc["@mozilla.org/network/incremental-download;1"].
                     createInstance(Ci.nsIIncrementalDownload);
 
-    LOG("Downloader", "downloadUpdate - downloading from " + uri.spec + " to " +
+    LOG("Downloader:downloadUpdate - downloading from " + uri.spec + " to " +
         patchFile.path);
     var interval = this.background ? getPref("getIntPref",
                                              PREF_APP_UPDATE_BACKGROUND_INTERVAL,
@@ -2409,7 +2370,7 @@ Downloader.prototype = {
    */
   onStartRequest: function Downloader_onStartRequest(request, context) {
     if (request instanceof Ci.nsIIncrementalDownload)
-      LOG("Downloader", "onStartRequest - spec: " + request.URI.spec);
+      LOG("Downloader:onStartRequest - spec: " + request.URI.spec);
 
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i)
@@ -2429,7 +2390,7 @@ Downloader.prototype = {
    */
   onProgress: function Downloader_onProgress(request, context, progress,
                                              maxProgress) {
-    LOG("Downloader.onProgress", "onProgress - progress: " + progress + "/" +
+    LOG("Downloader.onProgress:onProgress - progress: " + progress + "/" +
         maxProgress);
 
     var listenerCount = this._listeners.length;
@@ -2452,7 +2413,7 @@ Downloader.prototype = {
    *          Human readable version of |status|
    */
   onStatus: function Downloader_onStatus(request, context, status, statusText) {
-    LOG("Downloader", "onStatus - status: " + status + ", statusText: " +
+    LOG("Downloader:onStatus - status: " + status + ", statusText: " +
         statusText);
 
     var listenerCount = this._listeners.length;
@@ -2474,7 +2435,7 @@ Downloader.prototype = {
    */
   onStopRequest: function  Downloader_onStopRequest(request, context, status) {
     if (request instanceof Ci.nsIIncrementalDownload)
-      LOG("Downloader", "onStopRequest - spec: " + request.URI.spec +
+      LOG("Downloader:onStopRequest - spec: " + request.URI.spec +
           ", status: " + status);
 
     var state = this._patch.state;
@@ -2499,7 +2460,7 @@ Downloader.prototype = {
         this._update.statusText = gUpdateBundle.GetStringFromName("installPending");
       }
       else {
-        LOG("Downloader", "onStopRequest - download verification failed");
+        LOG("Downloader:onStopRequest - download verification failed");
         state = STATE_DOWNLOAD_FAILED;
 
         // TODO: use more informative error code here
@@ -2519,7 +2480,7 @@ Downloader.prototype = {
     }
     else if (status != NS_BINDING_ABORTED &&
              status != NS_ERROR_ABORT) {
-      LOG("Downloader", "onStopRequest - non-verification failure");
+      LOG("Downloader:onStopRequest - non-verification failure");
       // Some sort of other failure, log this in the |statusText| property
       state = STATE_DOWNLOAD_FAILED;
 
@@ -2535,7 +2496,7 @@ Downloader.prototype = {
 
       deleteActiveUpdate = true;
     }
-    LOG("Downloader", "onStopRequest - setting state to: " + state);
+    LOG("Downloader:onStopRequest - setting state to: " + state);
     this._patch.state = state;
     var um = Cc["@mozilla.org/updates/update-manager;1"].
              getService(Ci.nsIUpdateManager);
@@ -2561,7 +2522,7 @@ Downloader.prototype = {
 
         // If we were downloading a patch and the patch verification phase
         // failed, log this and then commence downloading the complete update.
-        LOG("Downloader", "onStopRequest - verification of patch failed, " +
+        LOG("Downloader:onStopRequest - verification of patch failed, " +
             "downloading complete update");
         this._update.isCompleteUpdate = true;
         var status = this.downloadUpdate(this._update);
@@ -2929,185 +2890,9 @@ UpdatePrompt.prototype = {
   classID: Components.ID("{27ABA825-35B5-4018-9FDD-F99250A0E722}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdatePrompt])
 };
-#endif /* MOZ_UPDATER */
 
-/**
- * A manager for timers. Manages timers that fire over long periods of time
- * (e.g. days, weeks, months).
- * @constructor
- */
-function TimerManager() {
-  let os = getObserverService();
-  os.addObserver(this, "xpcom-shutdown", false);
-}
-TimerManager.prototype = {
-  /**
-   * The Checker Timer
-   */
-  _timer: null,
-
-  /**
-   * The Checker Timer interval as specified by the app.update.timer pref. If
-   * the app.update.timer pref doesn't exist this will default to 600000.
-   */
-   _timerInterval: null,
-
-  /**
-   * The set of registered timers.
-   */
-  _timers: { },
-
-  /**
-   * The amount to fudge the lastUpdateTime where fudge is a random increment of
-   * the update check interval (e.g. some random slice of 10 minutes). When the
-   * time comes to notify a timer or a timer is first registered the timer is
-   * offset by this amount to lessen the number of timers firing at the same
-   * time. this._timerInterval is in milliseconds, whereas the lastUpdateTime is
-   * in seconds so this._timerInterval is divided by 1000.
-   */
-  get _fudge() { return Math.round(Math.random() * this._timerInterval / 1000); },
-
-  /**
-   * See nsIObserver.idl
-   */
-  observe: function TM_observe(aSubject, aTopic, aData) {
-    switch (aTopic) {
-    case "profile-after-change":
-      this._start();
-      break;
-    case "xpcom-shutdown":
-      let os = getObserverService();
-      os.removeObserver(this, "xpcom-shutdown");
-
-      // Release everything we hold onto.
-      if (this._timer) {
-        this._timer.cancel();
-        this._timer = null;
-      }
-      for (var timerID in this._timers)
-        delete this._timers[timerID];
-      this._timers = null;
-      break;
-    }
-  },
-
-  _start: function TM__start() {
-    this._timerInterval = getPref("getIntPref", "app.update.timer", 600000);
-    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this._timer.initWithCallback(this, this._timerInterval,
-                                 Ci.nsITimer.TYPE_REPEATING_SLACK);
-  },
-  /**
-   * Called when the checking timer fires.
-   * @param   timer
-   *          The checking timer that fired.
-   */
-  notify: function TM_notify(timer) {
-    var prefLastUpdate;
-    var lastUpdateTime;
-    var now = Math.round(Date.now() / 1000);
-    var catMan = Cc["@mozilla.org/categorymanager;1"].
-                 getService(Ci.nsICategoryManager);
-    var entries = catMan.enumerateCategory(CATEGORY_UPDATE_TIMER);
-    while (entries.hasMoreElements()) {
-      let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
-      let value = catMan.getCategoryEntry(CATEGORY_UPDATE_TIMER, entry);
-      let [cid, method, timerID, prefInterval, defaultInterval] = value.split(",");
-      defaultInterval = parseInt(defaultInterval);
-      // cid and method are validated below when calling notify.
-      if (!timerID || !defaultInterval || isNaN(defaultInterval)) {
-        LOG("TimerManager", "notify - update-timer category registered" +
-            (cid ? " for " + cid : "") + " without required parameters - " +
-             "skipping");
-        continue;
-      }
-
-      let interval = getPref("getIntPref", prefInterval, defaultInterval);
-      prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/,
-                                                                      timerID);
-      if (gPref.prefHasUserValue(prefLastUpdate)) {
-        lastUpdateTime = gPref.getIntPref(prefLastUpdate);
-      }
-      else {
-        lastUpdateTime = now + this._fudge;
-        gPref.setIntPref(prefLastUpdate, lastUpdateTime);
-        continue;
-      }
-
-      if ((now - lastUpdateTime) > interval) {
-        try {
-          Components.classes[cid][method](Ci.nsITimerCallback).notify(timer);
-          LOG("TimerManager", "notify - notified " + cid);
-        }
-        catch (e) {
-          LOG("TimerManager", "notify - error notifying component id: " +
-              cid + " ,error: " + e);
-        }
-        lastUpdateTime = now + this._fudge;
-        gPref.setIntPref(prefLastUpdate, lastUpdateTime);
-      }
-    }
-
-    for (var timerID in this._timers) {
-      var timerData = this._timers[timerID];
-
-      if ((now - timerData.lastUpdateTime) > timerData.interval) {
-        if (timerData.callback instanceof Ci.nsITimerCallback) {
-          try {
-            timerData.callback.notify(timer);
-            LOG("TimerManager", "notify - notified timerID: " + timerID);
-          }
-          catch (e) {
-            LOG("TimerManager", "notify - error notifying timerID: " + timerID +
-                ", error: " + e);
-          }
-        }
-        else {
-          LOG("TimerManager", "notify - timerID: " + timerID + " doesn't " +
-              "implement nsITimerCallback - skipping");
-        }
-        lastUpdateTime = now + this._fudge;
-        timerData.lastUpdateTime = lastUpdateTime;
-        prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, timerID);
-        gPref.setIntPref(prefLastUpdate, lastUpdateTime);
-      }
-    }
-  },
-
-  /**
-   * See nsIUpdateService.idl
-   */
-  registerTimer: function TM_registerTimer(id, callback, interval) {
-    LOG("TimerManager", "registerTimer - id: " + id);
-    var prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, id);
-    var lastUpdateTime;
-    if (gPref.prefHasUserValue(prefLastUpdate)) {
-      lastUpdateTime = gPref.getIntPref(prefLastUpdate);
-    } else {
-      lastUpdateTime = Math.round(Date.now() / 1000) + this._fudge;
-      gPref.setIntPref(prefLastUpdate, lastUpdateTime);
-    }
-    this._timers[id] = { callback       : callback,
-                         interval       : interval,
-                         lastUpdateTime : lastUpdateTime };
-  },
-
-  classDescription: "Timer Manager",
-  contractID: "@mozilla.org/updates/timer-manager;1",
-  classID: Components.ID("{B322A5C0-A419-484E-96BA-D7182163899F}"),
-  _xpcom_categories: [{ category: "profile-after-change" }],
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateTimerManager,
-                                         Ci.nsITimerCallback,
-                                         Ci.nsIObserver])
-};
-
-#ifdef MOZ_UPDATER
 function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([UpdateService, Checker, UpdatePrompt, TimerManager, UpdateManager]);
-#else
-function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([TimerManager]);
-#endif
+  XPCOMUtils.generateModule([UpdateService, Checker, UpdatePrompt, UpdateManager]);
 
 #if 0
 /**

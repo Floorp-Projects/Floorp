@@ -87,7 +87,7 @@
    mime types, file extensions, etc that are required.
    Use a vertical bar to separate types, end types with \0.
    FileVersion and ProductVersion are 32bit ints, all other
-   entries are strings the MUST be terminated wwith a \0.
+   entries are strings that MUST be terminated with a \0.
 
 AN EXAMPLE:
 
@@ -264,7 +264,7 @@ typedef enum {
  *   compatible with older compilers. To prevent older plugins from 
  *   not understanding a new browser's ABI, these masks change the 
  *   values of those selectors on those platforms. To remain backwards
- *   compatible with differenet versions of the browser, plugins can 
+ *   compatible with different versions of the browser, plugins can 
  *   use these masks to dynamically determine and use the correct C++
  *   ABI that the browser is expecting. This does not apply to Windows 
  *   as Microsoft's COM ABI will likely not change.
@@ -394,7 +394,7 @@ typedef enum {
 } NPNURLVariable;
 
 /*
- * The type of Tookkit the widgets use
+ * The type of Toolkit the widgets use
  */
 typedef enum {
   NPNVGtk12 = 1,
@@ -421,7 +421,7 @@ typedef struct _NPWindow
   uint32_t height;
   NPRect   clipRect; /* Clipping rectangle in port coordinates */
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
-  void * ws_info; /* Platform-dependent additonal data */
+  void * ws_info; /* Platform-dependent additional data */
 #endif /* XP_UNIX */
   NPWindowType type; /* Is this a window or a drawable? */
 } NPWindow;
