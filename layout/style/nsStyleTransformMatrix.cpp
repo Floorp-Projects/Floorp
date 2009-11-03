@@ -53,6 +53,17 @@
  * involving angles need to be done in 'double'.
  */
 
+/* Force small values to zero.  We do this to avoid having sin(360deg)
+ * evaluate to a tiny but nonzero value.
+ */
+static double FlushToZero(double aVal)
+{
+  if (-FLT_EPSILON < aVal && aVal < FLT_EPSILON)
+    return 0.0f;
+  else
+    return aVal;
+}
+
 /* Computes tan(aTheta).  For values of aTheta such that tan(aTheta) is
  * undefined or very large, SafeTangent returns a manageably large value
  * of the correct sign.
@@ -73,7 +84,7 @@ static double SafeTangent(double aTheta)
   else if (cosTheta < 0 && cosTheta >= -kEpsilon)
     cosTheta = -kEpsilon;
 
-  return sinTheta / cosTheta;
+  return FlushToZero(sinTheta / cosTheta);
 }
 
 /* Constructor sets the data to the identity matrix. */
@@ -425,8 +436,8 @@ static void ProcessRotate(float aMain[4], const nsCSSValue::Array* aData)
    * (see http://www.w3.org/TR/SVG/coords.html#RotationDefined)
    */
   double theta = aData->Item(1).GetAngleValueInRadians();
-  float cosTheta = cos(theta);
-  float sinTheta = sin(theta);
+  float cosTheta = FlushToZero(cos(theta));
+  float sinTheta = FlushToZero(sin(theta));
 
   aMain[0] = cosTheta;
   aMain[1] = sinTheta;
