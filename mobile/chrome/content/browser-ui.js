@@ -193,6 +193,8 @@ var BrowserUI = {
   lockToolbar: function lockToolbar() {
     this._toolbarLocked++;
     document.getElementById("toolbar-moveable-container").top = "0";
+    if (this._toolbarLocked == 1)
+      Browser.forceChromeReflow();
   },
   
   unlockToolbar: function unlockToolbar() {
