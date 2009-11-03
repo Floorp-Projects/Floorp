@@ -312,7 +312,6 @@ BrowserView.prototype = {
    */
   getViewportDimensions: function getViewportDimensions() {
     let bvs = this._browserViewportState;
-
     if (!bvs)
       throw "Cannot get viewport dimensions when no browser is set";
 
@@ -321,12 +320,10 @@ BrowserView.prototype = {
 
   setZoomLevel: function setZoomLevel(zoomLevel) {
     let bvs = this._browserViewportState;
-
     if (!bvs)
       return;
 
     let newZoomLevel = BrowserView.Util.clampZoomLevel(zoomLevel);
-
     if (newZoomLevel != bvs.zoomLevel) {
       let browserW = this.viewportToBrowser(bvs.viewportRect.right);
       let browserH = this.viewportToBrowser(bvs.viewportRect.bottom);
@@ -466,7 +463,6 @@ BrowserView.prototype = {
     }
 
     let oldBrowser = this._browser;
-
     let browserChanged = (oldBrowser !== browser);
 
     if (oldBrowser) {
