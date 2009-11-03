@@ -2632,18 +2632,28 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument* *aDocument)
 
 NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
 {
-  nsresult rv = NS_ERROR_FAILURE;
+  if (!mOwner || !invalidRect || !mWidgetVisible)
+    return NS_ERROR_FAILURE;
 
-  if (mOwner && invalidRect && mWidgetVisible) {
-    nsPresContext* presContext = mOwner->PresContext();
-    nsRect rect(presContext->DevPixelsToAppUnits(invalidRect->left),
-                presContext->DevPixelsToAppUnits(invalidRect->top),
-                presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
-                presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
-    mOwner->Invalidate(rect + mOwner->GetUsedBorderAndPadding().TopLeft());
+#ifndef XP_MACOSX
+  // Windowed plugins should not be calling NPN_InvalidateRect, but
+  // Silverlight does and expects it to "work"
+  if (mWidget) {
+    mWidget->Invalidate(nsIntRect(invalidRect->left, invalidRect->top,
+                                  invalidRect->right - invalidRect->left,
+                                  invalidRect->bottom - invalidRect->top),
+                        PR_FALSE);
+    return NS_OK;
   }
+#endif
 
-  return rv;
+  nsPresContext* presContext = mOwner->PresContext();
+  nsRect rect(presContext->DevPixelsToAppUnits(invalidRect->left),
+              presContext->DevPixelsToAppUnits(invalidRect->top),
+              presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
+              presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
+  mOwner->Invalidate(rect + mOwner->GetUsedBorderAndPadding().TopLeft());
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(NPRegion invalidRegion)
