@@ -583,6 +583,8 @@ settings .settings-title {
 #form-helper-container > #select-container > #select-container-inner {
   -moz-border-radius-topleft: 1mm;
   -moz-border-radius-topright: 1mm;
+  -moz-border-radius-bottomright: 0;
+  -moz-border-radius-bottomleft: 0;
   padding: 0.75mm 0.25mm 0.75mm 0.25mm;
   border-bottom: 0;
 }
@@ -615,16 +617,6 @@ settings .settings-title {
 /* select popup ------------------------------------------------------------ */
 #stack > #select-container {
   padding: 1.5mm;
-}
-
-#stack > #select-container > #select-container-inner {
-  border: 0.25mm solid #36373b;
-  -moz-border-top-colors: #fff #36373b;
-  -moz-border-right-colors: #fff #36373b;
-  -moz-border-left-colors: #fff #36373b;
-  -moz-border-bottom-colors: #fff #36373b;
-  -moz-border-radius: 0.5mm;
-  padding-top: 0.5mm; /* core spacing */
 }
 
 #select-list {
