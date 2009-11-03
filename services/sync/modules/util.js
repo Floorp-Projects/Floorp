@@ -727,9 +727,6 @@ let Utils = {
   openLog: function Utils_openLog() {
     Utils._openChromeWindow("Log", "log.xul");
   },
-  openStatus: function Utils_openStatus() {
-    Utils._openChromeWindow("Status", "status.xul");
-  },
 
   getErrorString: function Utils_getErrorString(error, args) {
     try {
