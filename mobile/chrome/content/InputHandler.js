@@ -49,7 +49,7 @@ const kDoubleClickInterval = 400;
 const kMsUntilLock = 50;
 
 // threshold in pixels for sensing a tap as opposed to a pan
-const kTapRadius = 15;
+const kTapRadius = 25;
 
 // how many milliseconds between each kinetic pan update
 const kKineticUpdateInterval = 25;
@@ -601,16 +601,11 @@ MouseModule.prototype = {
   },
 
   /**
-   * Inform our dragger of a dragStart and update kinetic with new data.
+   * Inform our dragger of a dragStart.
    */
   _doDragStart: function _doDragStart(event) {
     let dragData = this._dragData;
-
-    // addData must be called before setDragStart. Otherwise addData may end kinetic panning and
-    // thus accidentally end the drag we've just begun.
-    this._kinetic.addData(event.screenX, event.screenY);
     dragData.setDragStart(event.screenX, event.screenY);
-
     this._dragger.dragStart(event.clientX, event.clientY, event.target, this._targetScrollInterface);
   },
 
@@ -886,41 +881,48 @@ DragData.prototype = {
 
     // If now a pan, mark previous position where panning was.
     if (this._isPan) {
-      let [prevX, prevY] = this._lockAxis(this.sX, this.sY);
-      this.prevPanX = prevX;
-      this.prevPanY = prevY;
-      this.sX = sX;
-      this.sY = sY;
-    }
-
-    // Check if axes should be locked.
-    if (!this.locked && Date.now() - this._dragStartTime >= kMsUntilLock) {
-      // look at difference from origin coord to lock movement, but only
-      // do it if initial movement is sufficient to detect intent
-
-      // divide possibilty space into eight parts.  Diagonals will allow
-      // free movement, while moving towards a cardinal will lock that
-      // axis.  We pick a direction if you move more than twice as far
-      // on one axis than another, which should be an angle of about 30
-      // degrees from the axis
-
       let absX = Math.abs(this._originX - sX);
       let absY = Math.abs(this._originY - sY);
 
-      if (absX > 2 * absY)
-        this.lockedY = this._originY;
-      else if (absY > 2 * absX)
-        this.lockedX = this._originX;
+      // After the first lock, see if locking decision should be reverted.
+      if (this.lockedX && absX > 3 * absY)
+        this.lockedX = null;
+      else if (this.lockedY && absY > 3 * absX)
+        this.lockedY = null;
 
-      this.locked = true;
+      if (!this.locked) {
+        // look at difference from origin coord to lock movement, but only
+        // do it if initial movement is sufficient to detect intent
+
+        // divide possibilty space into eight parts.  Diagonals will allow
+        // free movement, while moving towards a cardinal will lock that
+        // axis.  We pick a direction if you move more than twice as far
+        // on one axis than another, which should be an angle of about 30
+        // degrees from the axis
+
+        if (absX > 2.5 * absY)
+          this.lockedY = sY;
+        else if (absY > absX)
+          this.lockedX = sX;
+
+        this.locked = true;
+      }
+
+      // After pan lock, figure out previous panning position. Base it on last drag
+      // position so there isn't a jump in panning.
+      let [prevX, prevY] = this._lockAxis(this.sX, this.sY);
+      this.prevPanX = prevX;
+      this.prevPanY = prevY;
     }
+
+    this.sX = sX;
+    this.sY = sY;
   },
 
   setDragStart: function setDragStart(screenX, screenY) {
     this.sX = this._originX = screenX;
     this.sY = this._originY = screenY;
     this.dragging = true;
-    this._dragStartTime = Date.now();
     this.locked = false;
   },
 
