@@ -106,9 +106,12 @@ AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
 void
 AsyncChannel::Close()
 {
-    // FIXME impl
+    mTransport->Close();
+    // don't lose error-state information
+    if (ChannelError != mChannelState)
+        mChannelState = ChannelClosed;
 
-    mChannelState = ChannelClosed;
+    mTransport = NULL;
 }
 
 bool

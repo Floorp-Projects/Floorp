@@ -123,6 +123,8 @@ protected:
                                      const nsTArray<nsCString>& aNames,
                                      const nsTArray<nsCString>& aValues,
                                      NPError* rv);
+    virtual bool
+    AnswerNP_Shutdown(NPError *rv);
 
 public:
     PluginModuleChild();
