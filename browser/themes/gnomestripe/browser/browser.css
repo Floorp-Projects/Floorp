@@ -229,9 +229,7 @@ menuitem:not([type]) {
 }
 
 #menu_close {
-  /*XXX Avoiding size=menu as some themes (e.g. Human) don't provide the icon
-        at 16*16px (bug 426930), and upscaled images are ugly (bug 422179). */
-  list-style-image: url("moz-icon://stock/gtk-close?size=toolbar");
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
 }
 
 #context-media-play {
@@ -1193,9 +1191,7 @@ tabpanels {
 }
 
 #context_closeTab {
-  /*XXX Avoiding size=menu as some themes (e.g. Human) don't provide the icon
-        at 16*16px (bug 426930), and upscaled images are ugly (bug 422179). */
-  list-style-image: url("moz-icon://stock/gtk-close?size=toolbar");
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
 }
 
 /* tabbrowser-tab focus ring */
