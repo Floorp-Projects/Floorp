@@ -763,9 +763,6 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(const nsRect& anchorRect,
   // first, determine at which corner of the anchor the popup should appear
   nsPoint pnt;
   switch (popupAnchor) {
-    case POPUPALIGNMENT_TOPLEFT:
-      pnt = anchorRect.TopLeft();
-      break;
     case POPUPALIGNMENT_TOPRIGHT:
       pnt = anchorRect.TopRight();
       break;
@@ -774,6 +771,10 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(const nsRect& anchorRect,
       break;
     case POPUPALIGNMENT_BOTTOMRIGHT:
       pnt = anchorRect.BottomRight();
+      break;
+    case POPUPALIGNMENT_TOPLEFT:
+    default:
+      pnt = anchorRect.TopLeft();
       break;
   }
 
@@ -784,9 +785,6 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(const nsRect& anchorRect,
   nsMargin margin(0, 0, 0, 0);
   GetStyleMargin()->GetMargin(margin);
   switch (popupAlign) {
-    case POPUPALIGNMENT_TOPLEFT:
-      pnt.MoveBy(margin.left, margin.top);
-      break;
     case POPUPALIGNMENT_TOPRIGHT:
       pnt.MoveBy(-mRect.width - margin.right, margin.top);
       break;
@@ -796,11 +794,15 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(const nsRect& anchorRect,
     case POPUPALIGNMENT_BOTTOMRIGHT:
       pnt.MoveBy(-mRect.width - margin.right, -mRect.height - margin.bottom);
       break;
+    case POPUPALIGNMENT_TOPLEFT:
+    default:
+      pnt.MoveBy(margin.left, margin.top);
+      break;
   }
 
-  // Flipping horizontally is allowed as long as the popup is above or below
-  // the anchor. This will happen if both the anchor and alignment are top or
-  // both are bottom, but different values. Similarly, flipping vertically is
+  // Flipping vertically is allowed as long as the popup is above or below the
+  // anchor. This will happen if both the anchor and alignment are top or both
+  // are bottom, but different values. Similarly, flipping horizontally is
   // allowed if the popup is to the left or right of the anchor. In this case,
   // the values of the constants are such that both must be positive or both
   // must be negative. A special case, used for overlap, allows flipping
@@ -858,6 +860,7 @@ nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
           aScreenPoint = aScreenEnd - aSize;
         }
         else {
+          aScreenPoint = aAnchorEnd + aMarginBegin;
           popupSize = aScreenEnd - aScreenPoint;
         }
       }
@@ -880,7 +883,22 @@ nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
     }
   }
 
-  return popupSize;
+  // Make sure that the point in within the screen boundaries and that the
+  // size isn't off the edge of the screen. This can happen when a large
+  // positive or negative margin is used.
+  if (aScreenPoint < aScreenBegin) {
+    aScreenPoint = aScreenBegin;
+  }
+  if (aScreenPoint > aScreenEnd) {
+    aScreenPoint = aScreenEnd - aSize;
+  }
+
+  // If popupSize ended up being negative, or the original size was actually
+  // smaller than the calculated popup size, just use the original size instead.
+  if (popupSize <= 0 || aSize < popupSize) {
+    popupSize = aSize;
+  }
+  return NS_MIN(popupSize, aScreenEnd - aScreenPoint);
 }
 
 nsresult
