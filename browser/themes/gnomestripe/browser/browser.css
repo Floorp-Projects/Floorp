@@ -974,7 +974,7 @@ toolbar[iconsize="small"] #fullscreen-button {
 
 .ac-result-type-keyword,
 .autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage) {
-  list-style-image: url(chrome://global/skin/icons/Search-glass.png);
+  list-style-image: url(moz-icon://stock/gtk-find?size=menu);
   width: 16px;
   height: 16px;
 }
