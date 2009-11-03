@@ -48,7 +48,7 @@ nsICharsetConverterManager* OS2Uni::gCharsetManager = nsnull;
 struct ConverterInfo
 {
   PRUint16            mCodePage;
-  char*               mConvName;
+  const char*         mConvName;
   nsIUnicodeEncoder*  mEncoder;
   nsIUnicodeDecoder*  mDecoder;
 };
