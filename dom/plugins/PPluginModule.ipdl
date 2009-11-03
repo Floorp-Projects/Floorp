@@ -65,6 +65,9 @@ child:
   rpc ~PPluginInstance()
     returns (NPError rv);
 
+  rpc NP_Shutdown()
+    returns (NPError rv);
+
 parent:
   // XXX does NPN_UserAgent need to be RPC? certainly hope not, but to
   // XXX be safe ...

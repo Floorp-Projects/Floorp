@@ -64,7 +64,7 @@ public:
     ~PluginProcessParent();
 
     /**
-     * Asynchronously launch the plugin process.
+     * Synchronously launch the plugin process.
      */
     bool Launch();
 

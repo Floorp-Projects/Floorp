@@ -105,6 +105,8 @@ public:
     {
         if (mTransport)
             Close();
+        // we only hold a weak ref to the transport, which is "owned"
+        // by GeckoChildProcess/GeckoThread
         mTransport = 0;
     }
 
@@ -115,8 +117,7 @@ public:
     // i.e., mChannelState == ChannelConnected.
     bool Open(Transport* aTransport, MessageLoop* aIOLoop=0);
     
-    // Close from the perspective of the RPC layer; leaves the
-    // underlying transport channel open, however.
+    // Close the underlying transport channel.
     void Close();
 
     // Asynchronously send a message to the other side of the channel

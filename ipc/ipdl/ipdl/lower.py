@@ -2200,6 +2200,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             DestructorDecl(self.clsname, virtual=True))
         dtor.addstmt(StmtExpr(ExprCall(ExprVar('MOZ_COUNT_DTOR'),
                                                [ ExprVar(self.clsname) ])))
+
         self.cls.addstmts([ dtor, Whitespace.NL ])
 
         if p.decl.type.isToplevel():

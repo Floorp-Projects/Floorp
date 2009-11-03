@@ -141,6 +141,7 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     memset((void*) &mFunctions, 0, sizeof(mFunctions));
     mFunctions.size = sizeof(mFunctions);
 
+    // TODO: use PluginPRLibrary here
 
 #if defined(OS_LINUX)
     mShutdownFunc =
@@ -165,7 +166,7 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     NS_ENSURE_TRUE(mInitializeFunc, false);
 #else
 
-#error Please copy the initialization code from nsNPAPIPlugin.cpp
+#  error Please copy the initialization code from nsNPAPIPlugin.cpp
 
 #endif
     return true;
@@ -184,10 +185,22 @@ PluginModuleChild::InitGraphics()
     return true;
 }
 
+bool
+PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
+{
+    AssertPluginThread();
+
+    // FIXME/cjones: should all instances be dead by now?
+
+    if (mShutdownFunc)
+        *rv = mShutdownFunc();
+
+    return true;
+}
+
 void
 PluginModuleChild::CleanUp()
 {
-    // FIXME/cjones: destroy all instances
 }
 
 bool

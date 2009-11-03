@@ -357,6 +357,8 @@ nsNPAPIPlugin::~nsNPAPIPlugin()
 {
   // reset the callbacks list
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
+  delete fLibrary;
+  fLibrary = NULL;
 }
 
 
@@ -480,8 +482,10 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
 #endif
 
 #ifdef XP_OS2
+  PluginLibrary* pluginLib = GetNewPluginLibrary(aFilePath, aLibrary);
+
   // create the new plugin handler
-  *aResult = new nsNPAPIPlugin(nsnull, aLibrary);
+  *aResult = new nsNPAPIPlugin(nsnull, pluginLib);
 
   if (*aResult == NULL)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -599,6 +603,8 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
 #ifdef XP_BEOS
   // I just copied UNIX version.
   // Makoto Hamanaka <VYA04230@nifty.com>
+
+  // XXX this code won't compile with the new e10s changes
 
   nsNPAPIPlugin *plptr;
 
