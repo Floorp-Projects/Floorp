@@ -595,7 +595,9 @@ var Browser = {
   setPluginState: function(enabled, nameMatch) {
     // XXX clear this out so that we always disable flash on startup, even
     // after the user has disabled/re-enabled plugins
-    gPrefService.clearUserPref("temporary.disabledFlash");
+    try {
+      gPrefService.clearUserPref("temporary.disabledFlash");
+    } catch (ex) {}
 
     var phs = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
     var plugins = phs.getPluginTags({ });
