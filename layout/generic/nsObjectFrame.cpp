@@ -1852,7 +1852,6 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
     break;
     
   default:
-    // instead of using an event listener, we can dispatch events to plugins directly.
     rv = nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
   }
 
