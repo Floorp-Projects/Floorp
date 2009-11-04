@@ -770,12 +770,6 @@ namespace nanojit
         // only want certain regs
         Register r = prepResultReg(ins, AllowableFlagRegs);
         asm_setcc(r, ins);
-
-        // SETcc only sets low 8 bits, so extend
-        MOVZX8(r,r);
-        SETNP(r);
-
-        asm_fcmp(ins);
     }
 
     void Assembler::asm_cond(LInsp ins)
