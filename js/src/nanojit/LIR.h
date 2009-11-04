@@ -1275,50 +1275,93 @@ namespace nanojit
         LIns* insLoad(LOpcode op, LInsp base, int32_t off);
     };
 
+    enum LInsHashKind {
+        // We divide instruction kinds into groups for the use of LInsHashSet.
+        // LIns0 isn't present because we don't need to record any 0-ary
+        // instructions.
+        LInsImm   = 0,
+        LInsImmq  = 1,
+        LInsImmf  = 2,
+        LIns1     = 3,
+        LIns2     = 4,
+        LIns3     = 5,
+        LInsLoad  = 6,
+        LInsCall  = 7,
+
+        LInsFirst = 0,
+        LInsLast = 7
+    };
+    #define nextKind(kind)  LInsHashKind(kind+1)
+
     // @todo, this could be replaced by a generic HashMap or HashSet, if we had one
     class LInsHashSet
     {
-        // must be a power of 2.
-        // don't start too small, or we'll waste time growing and rehashing.
-        // don't start too large, will waste memory.
-        static const uint32_t kInitialCap = 64;
+        // Must be a power of 2.
+        // Don't start too small, or we'll waste time growing and rehashing.
+        // Don't start too large, will waste memory.
+        static const uint32_t kInitialCap[LInsLast + 1];
 
-        LInsp *m_list;
-        uint32_t m_used, m_cap;
+        // There is one list for each instruction kind.  This lets us size the
+        // lists appropriately (some instructions are more common than others).
+        // It also lets us have kind-specific find/add/grow functions, which
+        // are faster than generic versions.
+        LInsp *m_list[LInsLast + 1];
+        uint32_t m_cap[LInsLast + 1];
+        uint32_t m_used[LInsLast + 1];
+        typedef uint32_t (LInsHashSet::*find_t)(LInsp);
+        find_t m_find[LInsLast + 1];
         Allocator& alloc;
 
-        static uint32_t hashcode(LInsp i);
-        uint32_t find(LInsp name, uint32_t hash, const LInsp *list, uint32_t cap);
-        static bool equals(LInsp a, LInsp b);
-        void grow();
-
-    public:
-
-        LInsHashSet(Allocator&);
-        LInsp find32(int32_t a, uint32_t &i);
-        LInsp find64(LOpcode v, uint64_t a, uint32_t &i);
-        LInsp find1(LOpcode v, LInsp a, uint32_t &i);
-        LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &i);
-        LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &i);
-        LInsp findLoad(LOpcode v, LInsp a, int32_t b, uint32_t &i);
-        LInsp findcall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &i);
-        LInsp add(LInsp i, uint32_t k);
-        void clear();
-
-        static uint32_t hashimm(int32_t);
-        static uint32_t hashimmq(uint64_t);
+        static uint32_t hashImm(int32_t);
+        static uint32_t hashImmq(uint64_t);
+        static uint32_t hashImmf(double);
         static uint32_t hash1(LOpcode v, LInsp);
         static uint32_t hash2(LOpcode v, LInsp, LInsp);
         static uint32_t hash3(LOpcode v, LInsp, LInsp, LInsp);
         static uint32_t hashLoad(LOpcode v, LInsp, int32_t);
-        static uint32_t hashcall(const CallInfo *call, uint32_t argc, LInsp args[]);
+        static uint32_t hashCall(const CallInfo *call, uint32_t argc, LInsp args[]);
+
+        // These private versions are used after an LIns has been created;
+        // they are used for rehashing after growing.
+        uint32_t findImm(LInsp ins);
+        uint32_t findImmq(LInsp ins);
+        uint32_t findImmf(LInsp ins);
+        uint32_t find1(LInsp ins);
+        uint32_t find2(LInsp ins);
+        uint32_t find3(LInsp ins);
+        uint32_t findLoad(LInsp ins);
+        uint32_t findCall(LInsp ins);
+
+        void grow(LInsHashKind kind);
+
+    public:
+        // kInitialCaps[i] holds the initial size for m_list[i].
+        LInsHashSet(Allocator&, uint32_t kInitialCaps[]);
+
+        // These public versions are used before an LIns has been created.
+        LInsp findImm(int32_t a, uint32_t &k);
+        LInsp findImmq(uint64_t a, uint32_t &k);
+        LInsp findImmf(double d, uint32_t &k);
+        LInsp find1(LOpcode v, LInsp a, uint32_t &k);
+        LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &k);
+        LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &k);
+        LInsp findLoad(LOpcode v, LInsp a, int32_t b, uint32_t &k);
+        LInsp findCall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &k);
+
+        // 'k' is the index found by findXYZ().
+        LInsp add(LInsHashKind kind, LInsp ins, uint32_t k);
+
+        void clear();
     };
 
     class CseFilter: public LirWriter
     {
+    private:
+        LInsHashSet* exprs;
+
     public:
-        LInsHashSet exprs;
         CseFilter(LirWriter *out, Allocator&);
+
         LIns* insImm(int32_t imm);
         LIns* insImmq(uint64_t q);
         LIns* insImmf(double d);
@@ -1470,13 +1513,25 @@ namespace nanojit
     {
     public:
         LInsp sp, rp;
-        LInsHashSet exprs;
+        LInsHashSet* exprs;
 
         void clear(LInsp p);
+
     public:
         LoadFilter(LirWriter *out, Allocator& alloc)
-            : LirWriter(out), sp(NULL), rp(NULL), exprs(alloc)
-        { }
+            : LirWriter(out), sp(NULL), rp(NULL)
+        { 
+            uint32_t kInitialCaps[LInsLast + 1];
+            kInitialCaps[LInsImm]   = 1;
+            kInitialCaps[LInsImmq]  = 1;
+            kInitialCaps[LInsImmf]  = 1;
+            kInitialCaps[LIns1]     = 1;
+            kInitialCaps[LIns2]     = 1;
+            kInitialCaps[LIns3]     = 1;
+            kInitialCaps[LInsLoad]  = 64;
+            kInitialCaps[LInsCall]  = 1;
+            exprs = new (alloc) LInsHashSet(alloc, kInitialCaps);
+        }
 
         LInsp ins0(LOpcode);
         LInsp insLoad(LOpcode, LInsp base, int32_t disp);
