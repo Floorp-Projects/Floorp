@@ -233,9 +233,9 @@ Engine.prototype = {
           sum: 0
         };
         time.forEach(function(val) {
-          if (val < stat.min || stat.min == null)
+          if (stat.min == null || val < stat.min)
             stat.min = val;
-          if (val > stat.max || stat.max == null)
+          if (stat.max == null || val > stat.max)
             stat.max = val;
           stat.sum += val;
         });
