@@ -59,16 +59,15 @@ function test() {
   ss.setBrowserState(blankState);
 
   // Wait for the sessionstore.js file to be written before going on.
+  // Note: we don't wait for the complete event, since if asyncCopy fails we
+  // would timeout.
   let os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
   os.addObserver({observe: function(aSubject, aTopic, aData) {
     os.removeObserver(this, aTopic);
-    info("sessionstore.js was written");
-    if (gPrefService.prefHasUserValue("browser.sessionstore.interval"))
-      gPrefService.clearUserPref("browser.sessionstore.interval");
-
+    info("sessionstore.js is being written");
     executeSoon(continue_test);
-  }}, "sessionstore-state-write-complete", false);
+  }}, "sessionstore-state-write", false);
 
   // Remove the sessionstore.js file before setting the interval to 0
   let profilePath = Cc["@mozilla.org/file/directory_service;1"].
@@ -78,7 +77,7 @@ function test() {
   sessionStoreJS.append("sessionstore.js");
   if (sessionStoreJS.exists())
     sessionStoreJS.remove(false);
-  ok(sessionStoreJS.exists() == false, "sessionstore.js was removed");
+  info("sessionstore.js was correctly removed: " + (!sessionStoreJS.exists()));
 
   // Make sure that sessionstore.js can be forced to be created by setting
   // the interval pref to 0.
@@ -90,6 +89,8 @@ function continue_test() {
            getService(Ci.nsIWindowWatcher);
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
+  // Ensure Private Browsing mode is disabled.
+  ok(!pb.privateBrowsingEnabled, "Private Browsing is disabled");
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
 
@@ -168,8 +169,11 @@ function continue_test() {
                        "restored when exiting PB mode");
                   }
 
-                  if (aTestIndex == TESTS.length - 1)
+                  if (aTestIndex == TESTS.length - 1) {
+                    if (gPrefService.prefHasUserValue("browser.sessionstore.interval"))
+                      gPrefService.clearUserPref("browser.sessionstore.interval");
                     finish();
+                  }
                   else {
                     // Run next test.
                     openWindowAndTest(aTestIndex + 1, !aRunNextTestInPBMode);
