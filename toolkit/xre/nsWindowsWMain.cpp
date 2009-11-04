@@ -8,6 +8,13 @@
 
 #include "nsUTF8Utils.h"
 
+#if defined(_MSC_VER) && defined(_M_IX86) && defined(XRE_WANT_DLL_BLOCKLIST)
+#include "nsWindowsDllBlocklist.cpp"
+#else
+#undef XRE_WANT_DLL_BLOCKLIST
+#endif
+
+
 #ifdef __MINGW32__
 
 /* MingW currently does not implement a wide version of the
@@ -81,9 +88,12 @@ void ExtractEnvironmentFromCL(int &argc, char **&argv)
 }
 #endif  
 
-
 int wmain(int argc, WCHAR **argv)
 {
+#ifdef XRE_WANT_DLL_BLOCKLIST
+  SetupDllBlocklist();
+#endif
+  
   char **argvConverted = new char*[argc + 1];
   if (!argvConverted)
     return 127;
