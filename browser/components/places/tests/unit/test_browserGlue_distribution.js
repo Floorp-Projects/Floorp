@@ -47,7 +47,6 @@ const PREF_BMPROCESSED = "distribution.516444.bookmarksProcessed";
 const PREF_DISTRIBUTION_ID = "distribution.id";
 
 const TOPIC_FINAL_UI_STARTUP = "final-ui-startup";
-const TOPIC_PLACES_INIT_COMPLETE = "places-init-complete";
 const TOPIC_CUSTOMIZATION_COMPLETE = "distribution-customization-complete";
 
 let os = Cc["@mozilla.org/observer-service;1"].
@@ -95,10 +94,9 @@ function run_test() {
   // Initialize nsBrowserGlue.
   Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIBrowserGlue);
 
-  // Places initialization has already happened, so we need to simulate a new
-  // one.  This will force browserGlue::_initPlaces().
   os.notifyObservers(null, TOPIC_FINAL_UI_STARTUP, null);
-  os.notifyObservers(null, TOPIC_PLACES_INIT_COMPLETE, null);
+  // places-init-complete is an enqueued notification so it will be notified
+  // when exiting from this scope.
 
   do_test_pending();
   // Test will continue on customization complete notification.
