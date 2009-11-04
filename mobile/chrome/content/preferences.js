@@ -164,7 +164,8 @@ var PreferencesView = {
     let newLocale = this._list.selectedItem.value;
     
     if (newLocale == "auto") {
-      gPrefService.clearUserPref("general.useragent.locale");
+      if (gPrefService.prefHasUserValue("general.useragent.locale"))
+        gPrefService.clearUserPref("general.useragent.locale");
       gPrefService.setBoolPref("intl.locale.matchOS", true);
     } else {
       gPrefService.setBoolPref("intl.locale.matchOS", false);
