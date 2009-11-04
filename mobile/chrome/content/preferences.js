@@ -150,9 +150,19 @@ var PreferencesView = {
       }
       localeCount++;
     }
-            
-    // Highlight current locale
-    this._list.selectedItem = selectedItem;
+
+    // Are we using auto-detection?
+    let autoDetect = false;
+    try {
+      autoDetect = gPrefService.getBoolPref("intl.locale.matchOS");
+    }
+    catch (e) {}
+    
+    // Highlight current locale (or auto-detect entry)
+    if (autoDetect)
+      this._list.selectedItem = document.getElementById("prefs-languages-auto");
+    else
+      this._list.selectedItem = selectedItem;
     
     // Hide the setting if we only have one locale
     if (localeCount == 1)

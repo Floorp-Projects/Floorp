@@ -383,7 +383,7 @@
                 &language.description;
                 <menulist id="prefs-languages" oncommand="PreferencesView.updateLocale();">
                   <menupopup>
-                    <menuitem label="&language.auto;" value="auto"/>
+                    <menuitem id="prefs-languages-auto" label="&language.auto;" value="auto"/>
                   </menupopup>
                 </menulist>
                </setting>
