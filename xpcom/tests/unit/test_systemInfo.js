@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 50; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,19 +11,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is XPCOM unit tests.
  *
  * The Initial Developer of the Original Code is
- * mozilla.org
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Seth Spitzer <sspitzer@mozilla.org> (original author)
+ *  Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,31 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NSSYSTEMINFO_H_
-#define _NSSYSTEMINFO_H_
+function run_test() {
+  const PROPERTIES = ["name", "host", "arch", "version", "pagesize",
+                      "pageshift", "memmapalign", "cpucount", "memsize"];
+  let sysInfo = Components.classes["@mozilla.org/system-info;1"].
+                getService(Components.interfaces.nsIPropertyBag2);
 
-#include "nsHashPropertyBag.h"
-
-class nsSystemInfo : public nsHashPropertyBag {
-public:
-    nsSystemInfo();
-
-    nsresult Init();
-
-protected:
-    void SetInt32Property(const nsAString &aPropertyName,
-                          const PRInt32 aValue);
-    void SetUint64Property(const nsAString &aPropertyName,
-                           const PRUint64 aValue);
-
-private:
-    ~nsSystemInfo();
-};
-
-#define NS_SYSTEMINFO_CONTRACTID "@mozilla.org/system-info;1"
-#define NS_SYSTEMINFO_CLASSNAME "System Info Service"
-#define NS_SYSTEMINFO_CID \
-{ 0xd962398a, 0x99e5, 0x49b2, \
-{ 0x85, 0x7a, 0xc1, 0x59, 0x04, 0x9c, 0x7f, 0x6c } }
-
-#endif /* _NSSYSTEMINFO_H_ */
+  PROPERTIES.forEach(function(aPropertyName) {
+    print("Testing property: " + aPropertyName);
+    let value = sysInfo.getProperty(aPropertyName);
+    do_check_true(!!value);
+  });
+}
