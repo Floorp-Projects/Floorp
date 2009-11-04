@@ -5797,14 +5797,14 @@ memalign(size_t alignment, size_t size)
 {
 	void *ret;
 
-	assert(((alignment - 1) & alignment) == 0 && alignment >=
-	    sizeof(void *));
+	assert(((alignment - 1) & alignment) == 0);
 
 	if (malloc_init()) {
 		ret = NULL;
 		goto RETURN;
 	}
 
+	alignment = alignment < sizeof(void*) ? sizeof(void*) : alignment;
 	ret = ipalloc(alignment, size);
 
 RETURN:
