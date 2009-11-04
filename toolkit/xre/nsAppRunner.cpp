@@ -3035,30 +3035,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   MOZ_SPLASHSCREEN_UPDATE(20);
 
-#if defined(MOZ_IPC) && !defined(OS_WIN)
-  // FIXME: this and its constituents leak
-  char** canonArgs = new char*[gArgc];
-
-  // get the canonical version of the binary's path
-  nsCOMPtr<nsILocalFile> binFile;
-  rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(binFile));
-  NS_ENSURE_SUCCESS(rv, 2);
-
-  nsCAutoString canonBinPath;
-  rv = binFile->GetNativePath(canonBinPath);
-  NS_ENSURE_SUCCESS(rv, 2);
-
-  canonArgs[0] = strdup(canonBinPath.get());
-
-  for (int i = 1; i < gArgc; ++i) {
-    if (gArgv[i]) {
-      canonArgs[i] = strdup(gArgv[i]); // new[] zeros memory
-    }
-  }
- 
-  NS_ASSERTION(!CommandLine::IsInitialized(), "Bad news!");
-  CommandLine::Init(gArgc, canonArgs);
-#endif
+  rv = XRE_InitCommandLine(gArgc, gArgv);
+  NS_ENSURE_SUCCESS(rv, 1);
 
   {
     nsXREDirProvider dirProvider;
