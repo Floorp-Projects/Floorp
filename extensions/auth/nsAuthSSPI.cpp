@@ -233,8 +233,8 @@ nsAuthSSPI::Init(const char *serviceName,
 
     // if we're configured for SPNEGO (Negotiate) or Kerberos, then it's critical 
     // that the caller supply a service name to be used.
-    if (mPackage != PACKAGE_TYPE_NTLM)
-        NS_ENSURE_TRUE(serviceName && *serviceName, NS_ERROR_INVALID_ARG);
+    // For NTLM, the service principal name can no longer be null. (Bug 487872)
+    NS_ENSURE_TRUE(serviceName && *serviceName, NS_ERROR_INVALID_ARG);
 
     nsresult rv;
 
@@ -247,13 +247,11 @@ nsAuthSSPI::Init(const char *serviceName,
     SEC_WCHAR *package;
 
     package = (SEC_WCHAR *) pTypeName[(int)mPackage];
-    if (mPackage != PACKAGE_TYPE_NTLM)
-    {
-        rv = MakeSN(serviceName, mServiceName);
-        if (NS_FAILED(rv))
-            return rv;
-        mServiceFlags = serviceFlags;
-    }
+    rv = MakeSN(serviceName, mServiceName);
+    if (NS_FAILED(rv))
+        return rv;
+
+    mServiceFlags = serviceFlags;
 
     SECURITY_STATUS rc;
 
@@ -338,11 +336,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
     memset(ob.pvBuffer, 0, ob.cbBuffer);
 
     NS_ConvertUTF8toUTF16 wSN(mServiceName);
-    SEC_WCHAR *sn;
-    if (mPackage == PACKAGE_TYPE_NTLM)
-        sn = NULL;
-    else
-        sn = (SEC_WCHAR *) wSN.get();
+    SEC_WCHAR *sn = (SEC_WCHAR *) wSN.get();
 
     rc = (sspi->InitializeSecurityContextW)(&mCred,
                                             ctxIn,
