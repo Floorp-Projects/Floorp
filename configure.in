@@ -7158,9 +7158,6 @@ dnl ========================================================
 dnl C++ rtti
 dnl Should be smarter and check that the compiler does indeed have rtti
 dnl ========================================================
-if test -n "$GNU_CC"; then
-    _MOZ_USE_RTTI=1
-fi
 
 MOZ_ARG_ENABLE_BOOL(cpp-rtti,
 [  --enable-cpp-rtti       Enable C++ RTTI ],

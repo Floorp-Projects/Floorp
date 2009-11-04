@@ -250,7 +250,7 @@ namespace __gnu_cxx {
 template<>
 struct hash<FilePath> {
   size_t operator()(const FilePath& f) const {
-    return std::tr1::hash<FilePath::StringType>()(f.value());
+    return hash<FilePath::StringType>()(f.value());
   }
 };
 
