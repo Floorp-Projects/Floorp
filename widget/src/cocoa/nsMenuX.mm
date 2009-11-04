@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <dlfcn.h>
+
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
@@ -93,6 +95,12 @@ nsMenuX::nsMenuX()
                                 @selector(nsMenuX_NSMenu_addItem:toTable:), PR_TRUE);
       nsToolkit::SwizzleMethods([NSMenu class], @selector(_removeItem:fromTable:),
                                 @selector(nsMenuX_NSMenu_removeItem:fromTable:), PR_TRUE);
+      // On SnowLeopard the Shortcut framework (which contains the
+      // SCTGRLIndex class) is loaded on demand, whenever the user first opens
+      // a menu (which normally hasn't happened yet).  So we need to load it
+      // here explicitly.
+      if (nsToolkit::OnSnowLeopardOrLater())
+        dlopen("/System/Library/PrivateFrameworks/Shortcut.framework/Shortcut", RTLD_LAZY);
       Class SCTGRLIndexClass = ::NSClassFromString(@"SCTGRLIndex");
       nsToolkit::SwizzleMethods(SCTGRLIndexClass, @selector(indexMenuBarDynamically),
                                 @selector(nsMenuX_SCTGRLIndex_indexMenuBarDynamically));
@@ -943,6 +951,12 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
   if (!mGeckoMenu)
     return;
 
+  // Don't do anything while the OS is (re)indexing our menus (on Leopard and
+  // higher).  This stops the Help menu from being able to search in our
+  // menus, but it also resolves many other problems.
+  if (nsMenuX::sIndexingMenuLevel > 0)
+    return;
+
   if (gRollupListener && gRollupWidget) {
     gRollupListener->Rollup(nsnull, nsnull);
     [menu cancelTracking];
@@ -954,6 +968,12 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
 - (void)menuDidClose:(NSMenu *)menu
 {
   if (!mGeckoMenu)
+    return;
+
+  // Don't do anything while the OS is (re)indexing our menus (on Leopard and
+  // higher).  This stops the Help menu from being able to search in our
+  // menus, but it also resolves many other problems.
+  if (nsMenuX::sIndexingMenuLevel > 0)
     return;
 
   mGeckoMenu->MenuClosed();
