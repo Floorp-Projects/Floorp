@@ -177,9 +177,6 @@ WeaveSvc.prototype = {
   get keyGenEnabled() { return this._keyGenEnabled; },
   set keyGenEnabled(value) { this._keyGenEnabled = value; },
 
-  get enabled() { return Svc.Prefs.get("enabled"); },
-  set enabled(value) { Svc.Prefs.set("enabled", value); },
-
   // nextSync is in milliseconds, but prefs can't hold that much
   get nextSync() Svc.Prefs.get("nextSync", 0) * 1000,
   set nextSync(value) Svc.Prefs.set("nextSync", Math.floor(value / 1000)),
@@ -270,6 +267,7 @@ WeaveSvc.prototype = {
   //     again when username/server/etc changes
   _onStartup: function _onStartup() {
     Status.service = STATUS_OK;
+    this.enabled = true;
 
     this._registerEngines();
 
@@ -289,7 +287,6 @@ WeaveSvc.prototype = {
                       "Weave, since it will not work correctly.");
     }
 
-    Utils.prefs.addObserver("", this, false);
     Svc.Observer.addObserver(this, "network:offline-status-changed", true);
     Svc.Observer.addObserver(this, "private-browsing", true);
     Svc.Observer.addObserver(this, "quit-application", true);
@@ -381,14 +378,6 @@ WeaveSvc.prototype = {
 
   observe: function WeaveSvc__observe(subject, topic, data) {
     switch (topic) {
-      case "nsPref:changed":
-        switch (data) {
-          case "enabled":
-            // Potentially we'll want to reschedule syncs
-            this._checkSyncStatus();
-            break;
-        }
-        break;
       case "network:offline-status-changed":
         // Whether online or offline, we'll reschedule syncs
         this._log.debug("Network offline status change: " + data);
