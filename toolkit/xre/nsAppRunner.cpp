@@ -1222,7 +1222,9 @@ static void DumpArbitraryHelp()
 
   {
     nsXREDirProvider dirProvider;
-    dirProvider.Initialize(nsnull, gAppData->xreDirectory);
+    rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
+    if (NS_FAILED(rv))
+      return;
 
     ScopedXPCOMStartup xpcom;
     xpcom.Initialize();
