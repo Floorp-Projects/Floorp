@@ -466,15 +466,14 @@ XRE_API(nsresult,
                                 void* aMainFunctionExtraData))
 
 XRE_API(int,
-        XRE_RunIPCTestHarness, (int aArgc,
-                                char* aArgv[]))
-
-XRE_API(int,
         XRE_RunIPDLTest, (int aArgc,
                           char* aArgv[]))
 
 XRE_API(nsresult,
         XRE_RunAppShell, ())
+
+XRE_API(nsresult,
+        XRE_InitCommandLine, (int aArgc, char* aArgv[]))
 
 class MessageLoop;
 
