@@ -219,9 +219,9 @@ var gAdvancedPane = {
   {
     var cacheService = Components.classes["@mozilla.org/network/application-cache-service;1"].
                        getService(Components.interfaces.nsIApplicationCacheService);
-    if (!groups) {
-      groups = cacheService.getGroups({});
-    }
+    if (!groups)
+      groups = cacheService.getGroups();
+
     var ios = Components.classes["@mozilla.org/network/io-service;1"].
               getService(Components.interfaces.nsIIOService);
 
@@ -256,7 +256,7 @@ var gAdvancedPane = {
 
     var cacheService = Components.classes["@mozilla.org/network/application-cache-service;1"].
                        getService(Components.interfaces.nsIApplicationCacheService);
-    var groups = cacheService.getGroups({});
+    var groups = cacheService.getGroups();
 
     var bundle = document.getElementById("bundlePreferences");
 
@@ -316,7 +316,7 @@ var gAdvancedPane = {
                        getService(Components.interfaces.nsIApplicationCacheService);
     var ios = Components.classes["@mozilla.org/network/io-service;1"].
               getService(Components.interfaces.nsIIOService);
-    var groups = cacheService.getGroups({});
+    var groups = cacheService.getGroups();
     for (var i = 0; i < groups.length; i++) {
         var uri = ios.newURI(groups[i], null, null);
         if (uri.asciiHost == host) {
