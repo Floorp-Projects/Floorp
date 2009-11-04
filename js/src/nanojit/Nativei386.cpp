@@ -870,7 +870,7 @@ namespace nanojit
         // if this is last use of lhs in reg, we can re-use result reg
         // else, lhs already has a register assigned.
         Register ra = ( lhs->isUnusedOrHasUnknownReg()
-                      ? findSpecificRegFor(lhs, rr)
+                      ? findSpecificRegForUnallocated(lhs, rr)
                       : lhs->getReg() );
 
         if (forceReg)
@@ -996,7 +996,7 @@ namespace nanojit
         // if this is last use of lhs in reg, we can re-use result reg
         // else, lhs already has a register assigned.
         Register ra = ( lhs->isUnusedOrHasUnknownReg()
-                      ? findSpecificRegFor(lhs, rr)
+                      ? findSpecificRegForUnallocated(lhs, rr)
                       : lhs->getReg() );
 
         if (op == LIR_not)
@@ -1048,12 +1048,12 @@ namespace nanojit
              * @todo -- If LHS is const, we could eliminate a register use.
              */
             Register rleft = ( lhs->isUnusedOrHasUnknownReg()
-                             ? findSpecificRegFor(lhs, rr)
+                             ? findSpecificRegForUnallocated(lhs, rr)
                              : lhs->getReg() );
 
             /* Does RHS have a register yet? If not, try to re-use the result reg. */
             Register rright = ( rr != rleft && rhs->isUnusedOrHasUnknownReg()
-                              ? findSpecificRegFor(rhs, rr)
+                              ? findSpecificRegForUnallocated(rhs, rr)
                               : findRegFor(rhs, GpRegs & ~(rmask(rleft))) );
 
             if (op == LIR_ldcb)
@@ -1268,7 +1268,7 @@ namespace nanojit
             // if this is last use of lhs in reg, we can re-use result reg
             // else, lhs already has a register assigned.
             if (lhs->isUnusedOrHasUnknownReg()) {
-                ra = findSpecificRegFor(lhs, rr);
+                ra = findSpecificRegForUnallocated(lhs, rr);
             } else {
                 ra = lhs->getReg();
                 if ((rmask(ra) & XmmRegs) == 0) {
@@ -1296,7 +1296,7 @@ namespace nanojit
             // if this is last use of lhs in reg, we can re-use result reg
             // else, lhs already has a different reg assigned
             if (lhs->isUnusedOrHasUnknownReg())
-                findSpecificRegFor(lhs, rr);
+                findSpecificRegForUnallocated(lhs, rr);
 
             NanoAssert(lhs->getReg()==FST0);
             // assume that the lhs is in ST(0) and rhs is on stack
@@ -1457,7 +1457,7 @@ namespace nanojit
 
             // if this is last use of lhs in reg, we can re-use result reg
             if (lhs->isUnusedOrHasUnknownReg()) {
-                ra = findSpecificRegFor(lhs, rr);
+                ra = findSpecificRegForUnallocated(lhs, rr);
             } else if ((rmask(lhs->getReg()) & XmmRegs) == 0) {
                 // We need this case on AMD64, because it's possible that
                 // an earlier instruction has done a quadword load and reserved a
@@ -1499,7 +1499,7 @@ namespace nanojit
             // last use of lhs in reg, can reuse rr
             // else, lhs already has a different reg assigned
             if (lhs->isUnusedOrHasUnknownReg())
-                findSpecificRegFor(lhs, rr);
+                findSpecificRegForUnallocated(lhs, rr);
 
             NanoAssert(lhs->getReg()==FST0);
             // assume that the lhs is in ST(0) and rhs is on stack
@@ -1747,7 +1747,7 @@ namespace nanojit
                 // compare two different numbers
                 int d = findMemFor(rhs);
                 int pop = lhs->isUnusedOrHasUnknownReg();
-                findSpecificRegFor(lhs, FST0);
+                findSpecificRegForUnallocated(lhs, FST0);
                 // lhs is in ST(0) and rhs is on stack
                 FCOM(pop, d, FP);
             }
@@ -1755,7 +1755,7 @@ namespace nanojit
             {
                 // compare n to itself, this is a NaN test.
                 int pop = lhs->isUnusedOrHasUnknownReg();
-                findSpecificRegFor(lhs, FST0);
+                findSpecificRegForUnallocated(lhs, FST0);
                 // value in ST(0)
                 if (pop)
                     FCOMPP();
