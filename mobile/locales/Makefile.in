@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #   Mark Finkle <mfinkle@mozilla.com>
+#   Axel Hecht <l10n@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,6 +61,11 @@ SUBMAKEFILES += \
 MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox-mobile.mozilla.org
 PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/mobile-l10n.js) \
                        @srcdir@/en-US/mobile-l10n.js )
+
+# Shouldn't := DEB_BUILD_ARCH despite the $(shell ) as deb isn't everywhere
+DEB_BUILD_ARCH = $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+DEB_PKG_NAME = fennec_$(MOZ_APP_VERSION)_$(DEB_BUILD_ARCH).deb
+DATASTAGE = $(CURDIR)/data-stage
 
 SEARCH_PLUGINS = $(shell cat \
   $(firstword $(wildcard $(LOCALE_SRCDIR)/searchplugins/list.txt) \
@@ -150,9 +156,40 @@ else
 GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/xulrunner/platform.ini"
 FENNEC_APPLICATION_INI_PATH="$(STAGEDIST)/application.ini"
 endif
-    
+
 ident:
 	@printf "gecko_revision "
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(GECKO_PLATFORM_INI_PATH) Build SourceStamp
 	@printf "fennec_revision "
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App SourceStamp
+
+# special targets just to do the debian single locale packages
+wget-deb:
+ifndef WGET
+	$(error Wget not installed)
+endif
+	$(WGET) -nv -N  $(EN_US_BINARY_URL)/$(DEB_PKG_NAME)
+
+$(DATASTAGE): $(DEB_PKG_NAME)
+	$(RM) -rf $(DATASTAGE)
+	$(NSINSTALL) -D $(DATASTAGE)
+	ar -p $(DEB_PKG_NAME) data.tar.gz | $(TAR) -zx -C $(DATASTAGE)
+	$(MAKE) clobber-zip AB_CD=en-US STAGEDIST=$(DATASTAGE)/$(installdir)/$(MOZ_APP_NAME)
+# XXX hack around multi-locale deb right now
+	$(RM) $(DATASTAGE)/$(installdir)/$(MOZ_APP_NAME)/chrome/??.*
+	$(RM) $(DATASTAGE)/$(installdir)/$(MOZ_APP_NAME)/chrome/??-??.*
+
+repackage-deb: $(DATASTAGE)
+	$(RM) -rf $(AB_CD)
+	$(NSINSTALL) -D $(AB_CD)
+	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
+	  tar --exclude=install.rdf --exclude=chrome.manifest --exclude=crashreporter.app $(TAR_CREATE_FLAGS) - * | ( cd $(DATASTAGE)/$(installdir)/$(MOZ_APP_NAME) && tar -xf - )
+	$(NSINSTALL) $(DEB_PKG_NAME) $(AB_CD)
+	cd $(DATASTAGE) && $(TAR) -zcf $(CURDIR)/$(AB_CD)/data.tar.gz *
+	$(MAKE) clobber-zip STAGEDIST=$(DATASTAGE)/$(installdir)/$(MOZ_APP_NAME)
+	cd $(AB_CD) && ar -rv $(DEB_PKG_NAME) data.tar.gz
+	$(RM) $(AB_CD)/data.tar.gz
+
+deb-%: AB_CD=$*
+deb-%: clobber-% langpack-%
+	@$(MAKE) repackage-deb AB_CD=$(AB_CD)
