@@ -136,6 +136,9 @@ void StackTrace::PrintBacktrace() {
 }
 
 void StackTrace::OutputToStream(std::ostream* os) {
+#ifdef CHROMIUM_MOZILLA_BUILD
+  return;
+#else
   scoped_ptr_malloc<char*> trace_symbols(
       backtrace_symbols(&trace_[0], trace_.size()));
 
@@ -153,4 +156,5 @@ void StackTrace::OutputToStream(std::ostream* os) {
       (*os) << "\t" << trace_symbols.get()[i] << "\n";
     }
   }
+#endif
 }
