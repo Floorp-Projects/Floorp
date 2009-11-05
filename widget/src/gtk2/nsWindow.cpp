@@ -539,9 +539,6 @@ nsWindow::DispatchActivateEvent(void)
     NS_ASSERTION(mContainer || mIsDestroyed,
                  "DispatchActivateEvent only intended for container windows");
 
-    if (!mIsTopLevel)
-        return;
-
 #ifdef ACCESSIBILITY
     DispatchActivateEventAccessible();
 #endif //ACCESSIBILITY
@@ -553,9 +550,6 @@ nsWindow::DispatchActivateEvent(void)
 void
 nsWindow::DispatchDeactivateEvent(void)
 {
-    if (!mIsTopLevel)
-        return;
-
     nsGUIEvent event(PR_TRUE, NS_DEACTIVATE, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
