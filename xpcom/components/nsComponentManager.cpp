@@ -2987,7 +2987,7 @@ nsComponentManagerImpl::AutoRegisterComponentsList(nsIFile* inDir,
     if (PR_SUCCESS != PR_GetOpenFileInfo(fd, &info))
         return NS_ErrorAccordingToNSPR();
 
-    nsAutoArrayPtr<char> buf = new char[info.size + 1];
+    nsAutoArrayPtr<char> buf(new char[info.size + 1]);
     if (!buf)
         return NS_ERROR_OUT_OF_MEMORY;
 
