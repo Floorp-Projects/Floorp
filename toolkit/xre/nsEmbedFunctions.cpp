@@ -507,7 +507,11 @@ XRE_InitCommandLine(int aArgc, char* aArgv[])
 {
     nsresult rv = NS_OK;
 
-#if defined(MOZ_IPC) && !defined(OS_WIN)
+#if defined(MOZ_IPC)
+
+#if defined(OS_WIN)
+  CommandLine::Init(aArgc, aArgv);
+#else
   // these leak on error, but that's OK: we'll just exit()
   char** canonArgs = new char*[aArgc];
 
@@ -535,7 +539,7 @@ XRE_InitCommandLine(int aArgc, char* aArgv[])
 
   delete[] canonArgs;
 #endif
-
+#endif
   return rv;
 }
 
