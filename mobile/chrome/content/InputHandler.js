@@ -42,11 +42,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// how much movement input to take before mouse up for calculating kinetic speed
+const kSwipeLength = 160;
+
 // how many msecs elapse before two taps are not a double tap
 const kDoubleClickInterval = 400;
-
-// milliseconds between mouse down and drag direction determined
-const kMsUntilLock = 50;
 
 // threshold in pixels for sensing a tap as opposed to a pan
 const kTapRadius = 25;
@@ -55,13 +55,10 @@ const kTapRadius = 25;
 const kKineticUpdateInterval = 25;
 
 // How much speed is removed every update
-const kDecelerationRate = .10;
+const kDecelerationRate = .09;
 
 // How sensitive kinetic scroll is to mouse movement
-const kSpeedSensitivity = .8;
-
-// How relevant x earlier milliseconds is to determining the speed.
-const kTimeRelevance = .01;
+const kSpeedSensitivity = 1.1;
 
 // Same as NS_EVENT_STATE_ACTIVE from nsIEventStateManager.h
 const kStateActive = 0x00000001;
@@ -433,10 +430,8 @@ function MouseModule(owner, browserViewContainer) {
   this._targetScrollInterface = null;
 
   var self = this;
-  this._kinetic = new KineticController(
-    function _dragByBound(dx, dy) { return self._dragBy(dx, dy); },
-    function _dragStopBound() { return self._doDragStop(0, 0, true); }
-  );
+  this._kinetic = new KineticController(Util.bind(this._dragBy, this),
+                                        Util.bind(this._kineticStop, this));
 }
 
 
@@ -487,8 +482,11 @@ MouseModule.prototype = {
    */
   _onMouseDown: function _onMouseDown(evInfo) {
     this._owner.allowClicks();
-    if (this._kinetic.isActive())
-      this._kinetic.end();
+    if (this._dragData.dragging) {
+      // Somehow a mouse up was missed.
+      let [sX, sY] = dragData.panPosition();
+      this._doDragStop(sX, sY, !dragData.isPan());
+    }
     this._dragData.reset();
 
     // walk up the DOM tree in search of nearest scrollable ancestor.  nulls are
@@ -609,7 +607,9 @@ MouseModule.prototype = {
   _doDragStart: function _doDragStart(event) {
     let dragData = this._dragData;
     dragData.setDragStart(event.screenX, event.screenY);
-    this._dragger.dragStart(event.clientX, event.clientY, event.target, this._targetScrollInterface);
+    this._kinetic.addData(0, 0);
+    if (!this._kinetic.isActive())
+      this._dragger.dragStart(event.clientX, event.clientY, event.target, this._targetScrollInterface);
   },
 
   /**
@@ -623,7 +623,9 @@ MouseModule.prototype = {
 
     if (!kineticStop) {
       // we're not really done, since now it is kinetic's turn to scroll about
-      this._kinetic.addData(sX, sY);
+      let dX = dragData.prevPanX - sX;
+      let dY = dragData.prevPanY - sY;
+      this._kinetic.addData(-dX, -dY);
       this._kinetic.start();
     } else {
       // now we're done, says our secret 3rd argument
@@ -638,8 +640,8 @@ MouseModule.prototype = {
     let dragData = this._dragData;
     let dX = dragData.prevPanX - sX;
     let dY = dragData.prevPanY - sY;
-    this._kinetic.addData(sX, sY);
-    return this._dragBy(dX, dY);
+    this._kinetic.addData(-dX, -dY);
+    this._dragBy(dX, dY);
   },
 
   /**
@@ -651,6 +653,13 @@ MouseModule.prototype = {
   _dragBy: function _dragBy(dX, dY) {
     let dragData = this._dragData;
     return this._dragger.dragMove(dX, dY, this._targetScrollInterface);
+  },
+
+  /** Callback for kinetic scroller. */
+  _kineticStop: function _kineticStop() {
+    let dragData = this._dragData;
+    if (!dragData.dragging)
+      this._doDragStop(0, 0, true);
   },
 
   /**
@@ -1005,9 +1014,9 @@ function KineticController(aPanBy, aEndCallback) {
   }
 
   try {
-    this._timeRelevance = gPrefService.getIntPref("browser.ui.kinetic.timerelevance") / 100;
+    this._swipeLength = gPrefService.getIntPref("browser.ui.kinetic.swipelength");
   } catch(e) {
-    this._timeRelevance = kTimeRelevance;
+    this._swipeLength = kSwipeLength;
   }
 
   this._reset();
@@ -1081,35 +1090,27 @@ KineticController.prototype = {
     let mb = this.momentumBuffer;
     let mblen = this.momentumBuffer.length;
 
-    // If we don't have at least 2 events do not do kinetic panning
-    if (mblen < 2) {
-      this.end();
-      return false;
-    }
-
     let lastTime = mb[mblen - 1].t;
-    let weightedSpeedSumX = 0;
-    let weightedSpeedSumY = 0;
-    let weightSum = 0;
-    let prev = mb[0];
+    let distanceX = 0;
+    let distanceY = 0;
+    let swipeLength = this._swipeLength;
 
-    // determine speed based on recorded input, giving the most weight to inputs
-    // closest to the end
-    for (let i = 1; i < mblen; i++) {
+    // determine speed based on recorded input
+    for (let i = 0; i < mblen; i++) {
       let me = mb[i];
-      let weight = Math.exp((me.t - lastTime) * this._timeRelevance);
-      let timeDiff = me.t - prev.t;
-      weightSum += weight;
-      weightedSpeedSumX += weight * (me.sx - prev.sx) / timeDiff;
-      weightedSpeedSumY += weight * (me.sy - prev.sy) / timeDiff;
-      prev = me;
+      if (lastTime - me.t < swipeLength) {
+        distanceX += me.dx;
+        distanceY += me.dy;
+      }
     }
 
-    this._speedX = (weightedSpeedSumX / weightSum) * this._speedSensitivity;
-    this._speedY = (weightedSpeedSumY / weightSum) * this._speedSensitivity;
-
-    // fire off our kinetic timer which will do all the work
-    this._startTimer();
+    // Only allow kinetic scrolling to speed up if kinetic scrolling is active.
+    this._speedX = (distanceX < 0 ? Math.min : Math.max)((distanceX / swipeLength) * this._speedSensitivity, this._speedX);
+    this._speedY = (distanceY < 0 ? Math.min : Math.max)((distanceY / swipeLength) * this._speedSensitivity, this._speedY);
+    this.momentumBuffer = [];
+    if (!this.isActive()) {
+      this._startTimer();
+    }
 
     return true;
   },
@@ -1120,27 +1121,19 @@ KineticController.prototype = {
     this._reset();
   },
 
-  addData: function addData(sx, sy) {
-    // if we're active, end that move before adding data
-    if (this.isActive())
-      this.end();
-
+  addData: function addData(dx, dy) {
     let mbLength = this.momentumBuffer.length;
     let now = Date.now();
- 
-    // avoid adding duplicates which would otherwise slow down the speed
-    if (mbLength > 0) {
-      let mbLast = this.momentumBuffer[mbLength - 1];
-      if ((mbLast.sx == sx && mbLast.sy == sy) || mbLast.t == now) {
-        mbLast.sx = sx;
-        mbLast.sy = sy;
-        mbLast.t = now;
-        return;
-      }
-    }
 
-    // Util.dumpLn("adding t:", now, ", sx: ", sx, ", sy: ", sy);
-    this.momentumBuffer.push({'t': now, 'sx' : sx, 'sy' : sy});
+    if (this.isActive()) {
+      // Stop active movement when dragging in other direction.
+      if (dx * this._speedX < 0)
+        this._speedX = 0;
+      if (dy * this._speedY < 0)
+        this._speedY = 0;
+    }
+ 
+    this.momentumBuffer.push({'t': now, 'dx' : dx, 'dy' : dy});
   }
 };
 
