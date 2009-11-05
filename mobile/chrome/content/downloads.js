@@ -309,6 +309,8 @@ var DownloadsView = {
     // Get the end time to display
     let end = new Date(parseInt(aItem.getAttribute("endTime")));
 
+    let strings = document.getElementById("bundle_browser");
+
     // Figure out if the end time is from today, yesterday, this week, etc.
     let dateTime;
     if (end >= today) {
@@ -317,7 +319,7 @@ var DownloadsView = {
     }
     else if (today - end < (24 * 60 * 60 * 1000)) {
       // Download finished after yesterday started, show yesterday
-      dateTime = "Yesterday";//gStr.yesterday;
+      dateTime = strings.getString("donwloadsYesterday");
     }
     else if (today - end < (6 * 24 * 60 * 60 * 1000)) {
       // Download finished after last week started, show day of week
@@ -328,8 +330,7 @@ var DownloadsView = {
       let month = end.toLocaleFormat("%B");
       // Remove leading 0 by converting the date string to a number
       let date = Number(end.toLocaleFormat("%d"));
-      //dateTime = this._replaceInsert(gStr.monthDate, 1, month);
-      dateTime = this._replaceInsert("#1 #2", 1, month);
+      dateTime = this._replaceInsert(strings.getString("downloadsMonthDate"), 1, month);
       dateTime = this._replaceInsert(dateTime, 2, date);
     }
 
