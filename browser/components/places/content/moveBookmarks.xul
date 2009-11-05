@@ -57,7 +57,7 @@
         screenY="24"
         persist="screenX screenY width height">
 
-  <script type="application/x-javascript"
+  <script type="application/javascript"
           src="chrome://browser/content/places/moveBookmarks.js"/>
 
   <hbox flex="1">

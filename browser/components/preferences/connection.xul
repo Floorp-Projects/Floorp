@@ -93,7 +93,7 @@
       <preference id="network.proxy.backup.gopher_port"  name="network.proxy.backup.gopher_port"  type="int"/>
     </preferences>
     
-    <script type="application/x-javascript" src="chrome://browser/content/preferences/connection.js"/>
+    <script type="application/javascript" src="chrome://browser/content/preferences/connection.js"/>
 
     <stringbundle id="preferencesBundle" src="chrome://browser/locale/preferences/preferences.properties"/>
 

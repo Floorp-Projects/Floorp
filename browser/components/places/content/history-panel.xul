@@ -60,9 +60,9 @@
       onload="HistorySidebarInit();"
       onunload="SidebarUtils.clearURLFromStatusBar();">
 
-  <script type="application/x-javascript" 
+  <script type="application/javascript" 
           src="chrome://browser/content/bookmarks/sidebarUtils.js"/>
-  <script type="application/x-javascript" 
+  <script type="application/javascript" 
           src="chrome://browser/content/places/history-panel.js"/>
 
   <commandset id="editMenuCommands"/>

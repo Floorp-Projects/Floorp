@@ -120,7 +120,7 @@
     
     <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
     
-    <script type="application/x-javascript" src="chrome://browser/content/preferences/privacy.js"/>
+    <script type="application/javascript" src="chrome://browser/content/preferences/privacy.js"/>
 
     <!-- History -->
     <groupbox id="historyGroup">
