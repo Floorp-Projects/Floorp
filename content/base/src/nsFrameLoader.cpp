@@ -1470,3 +1470,24 @@ nsFrameLoader::ActivateRemoteFrame() {
 #endif
   return NS_ERROR_UNEXPECTED;
 }
+
+NS_IMETHODIMP
+nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType,
+                                          float aX,
+                                          float aY,
+                                          PRInt32 aButton,
+                                          PRInt32 aClickCount,
+                                          PRInt32 aModifiers,
+                                          PRBool aIgnoreRootScrollFrame)
+{
+#ifdef MOZ_IPC
+  if (mChildProcess) {
+    mChildProcess->SendMouseEvent(aType, aX, aY, aButton,
+                                  aClickCount, aModifiers,
+                                  aIgnoreRootScrollFrame);
+    return NS_OK;
+  }
+#endif
+  return NS_ERROR_FAILURE;
+}
+
