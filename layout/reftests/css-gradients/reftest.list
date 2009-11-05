@@ -65,3 +65,24 @@
 fails == twostops-1c.html twostops-1-ref.html # bug 524173
 == twostops-1d.html twostops-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == twostops-1e.html twostops-1-ref.html # bug 524173
+
+# from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
+== aja-linear-1a.html aja-linear-1-ref.html
+fails == aja-linear-1b.html aja-linear-1-ref.html # reversed gradient not pixel perfect (visually OK)
+== aja-linear-1c.html aja-linear-1-ref.html
+== aja-linear-1d.html aja-linear-1-ref.html
+== aja-linear-1e.html aja-linear-1-ref.html
+== aja-linear-1f.html aja-linear-1-ref.html
+== aja-linear-1g.html aja-linear-1-ref.html
+== aja-linear-2a.html aja-linear-2-ref.html
+== aja-linear-2b.html aja-linear-2-ref.html
+fails == aja-linear-2c.html aja-linear-2-ref.html # bug 522607
+fails == aja-linear-2d.html aja-linear-2-ref.html # reversed gradient not pixel perfect (visually OK)
+== aja-linear-3a.html aja-linear-3-ref.html
+== aja-linear-3b.html aja-linear-3-ref.html
+== aja-linear-4a.html aja-linear-4-ref.html
+== aja-linear-4b.html aja-linear-4-ref.html
+== aja-linear-5a.html aja-linear-5-ref.html
+== aja-linear-6a.html aja-linear-6-ref.html
+fails == aja-linear-6b.html aja-linear-6-ref.html # bug 522607
+
