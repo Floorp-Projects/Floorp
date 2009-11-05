@@ -33,7 +33,7 @@
 
 <!ENTITY passphraseGroupbox.label     "Enter Secret Phrase">
 <!ENTITY passphraseDesc.label         "Please enter your secret phrase.  Remember that this is separate from your account password and is never sent over the Internet.">
-<!ENTITY connecting.label             "Connecting...">
+<!ENTITY connecting.label             "Connecting…">
 
 <!ENTITY accountGroupboxCaption.label "Mozilla Weave Account">
 
