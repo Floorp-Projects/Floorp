@@ -178,9 +178,13 @@ namespace nanojit
         return (op & ~LIR64) == LIR_ret;
     }
 
-    // The opcode is not logically part of the Reservation, but we include it
-    // in this struct to ensure that opcode plus the Reservation fits in a
-    // single word.  Yuk.
+    // This structure is used transiently during assembly to record
+    // information relating to register allocation.  See class RegAlloc for
+    // more details.
+    //
+    // Note: The opcode is not logically part of the Reservation, but we
+    // include it in this struct to ensure that opcode plus the Reservation
+    // fits in a single word.  Yuk.
     struct Reservation
     {
         uint32_t arIndex:16;    // index into stack frame.  displ is -4*arIndex
