@@ -46,8 +46,9 @@ pref("browser.startup.homepage", "about:firstrun");
 pref("browser.ui.cursor", false);
 #elifdef WINCE
 pref("browser.ui.cursor", false);
-#else
+#else // DESKTOP
 pref("browser.ui.cursor", true);
+pref("layout.css.dpi", 265);
 #endif
 
 #ifdef MOZ_PLATFORM_HILDON
