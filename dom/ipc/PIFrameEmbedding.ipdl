@@ -52,6 +52,13 @@ async protocol PIFrameEmbedding
     manager PContentProcess;
     manages PDocumentRenderer;
 
+parent:
+    /**
+     * When child sends this message, parent should move focus to
+     * the next or previous focusable element.
+     */
+    moveFocus(bool forward);
+
 child:
     createWidget(MagicWindowHandle parentWidget);
     destroyWidget();
@@ -62,6 +69,11 @@ child:
          PRUint32 y,
          PRUint32 width,
          PRUint32 height);
+
+    /**
+     * Sending an activate message moves focus to the child.
+     */
+    activate();
 
     PDocumentRenderer(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush);
 

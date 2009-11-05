@@ -47,6 +47,11 @@
 #include "nsThreadUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "mozilla/ipc/DocumentRendererChild.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDOMWindowUtils.h"
+#include "nsISupportsImpl.h"
+#include "nsIWebBrowserFocus.h"
 
 #ifdef MOZ_WIDGET_GTK2
 #include <gdk/gdkx.h>
@@ -58,19 +63,173 @@ using namespace mozilla::dom;
 TabChild::TabChild()
 {
     printf("creating %d!\n", NS_IsMainThread());
+}
 
+nsresult
+TabChild::Init()
+{
 #ifdef MOZ_WIDGET_GTK2
-    gtk_init(NULL, NULL);
+  gtk_init(NULL, NULL);
 #endif
 
-    mWebNav = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
-    if (!mWebNav) {
-        NS_ERROR("Couldn't create a nsWebBrowser?");
-        return;
-    }
+  nsCOMPtr<nsIWebBrowser> webBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
+  if (!webBrowser) {
+    NS_ERROR("Couldn't create a nsWebBrowser?");
+    return NS_ERROR_FAILURE;
+  }
 
-    nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(mWebNav));
-    docShellItem->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
+  webBrowser->SetContainerWindow(this);
+
+  mWebNav = do_QueryInterface(webBrowser);
+  NS_ASSERTION(mWebNav, "nsWebBrowser doesn't implement nsIWebNavigation?");
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(mWebNav));
+  docShellItem->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS5(TabChild, nsIWebBrowserChrome, nsIWebBrowserChrome2,
+                   nsIEmbeddingSiteWindow, nsIEmbeddingSiteWindow2,
+                   nsIWebBrowserChromeFocus)
+
+NS_IMETHODIMP
+TabChild::SetStatus(PRUint32 aStatusType, const PRUnichar* aStatus)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::GetWebBrowser(nsIWebBrowser** aWebBrowser)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::SetWebBrowser(nsIWebBrowser* aWebBrowser)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::GetChromeFlags(PRUint32* aChromeFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::SetChromeFlags(PRUint32 aChromeFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::DestroyBrowserWindow()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::ShowAsModal()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::IsWindowModal(PRBool* aRetVal)
+{
+  *aRetVal = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::ExitModalEventLoop(nsresult aStatus)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::SetStatusWithContext(PRUint32 aStatusType,
+                                    const nsAString& aStatusText,
+                                    nsISupports* aStatusContext)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::SetDimensions(PRUint32 aFlags, PRInt32 aX, PRInt32 aY,
+                             PRInt32 aCx, PRInt32 aCy)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::GetDimensions(PRUint32 aFlags, PRInt32* aX,
+                             PRInt32* aY, PRInt32* aCx, PRInt32* aCy)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::SetFocus()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::GetVisibility(PRBool* aVisibility)
+{
+  *aVisibility = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::SetVisibility(PRBool aVisibility)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::GetTitle(PRUnichar** aTitle)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::SetTitle(const PRUnichar* aTitle)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::GetSiteWindow(void** aSiteWindow)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::Blur()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChild::FocusNextElement()
+{
+  SendmoveFocus(PR_TRUE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::FocusPrevElement()
+{
+  SendmoveFocus(PR_FALSE);
+  return NS_OK;
 }
 
 bool
@@ -110,6 +269,10 @@ TabChild::RecvdestroyWidget()
 
 TabChild::~TabChild()
 {
+    nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(mWebNav);
+    if (webBrowser) {
+      webBrowser->SetContainerWindow(nsnull);
+    }
     // TODObsmedberg: destroy the window!
 }
 
@@ -139,6 +302,14 @@ TabChild::Recvmove(const PRUint32& x,
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mWebNav);
     baseWin->SetPositionAndSize(x, y, width, height, PR_TRUE);
     return true;
+}
+
+bool
+TabChild::Recvactivate()
+{
+  nsCOMPtr<nsIWebBrowserFocus> browser = do_QueryInterface(mWebNav);
+  browser->Activate();
+  return true;
 }
 
 mozilla::ipc::PDocumentRendererChild*

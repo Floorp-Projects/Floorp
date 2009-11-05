@@ -43,7 +43,7 @@ interface nsIDocShell;
 interface nsIURI;
 interface nsIFrame;
 
-[scriptable, uuid(fe5f43b1-6b9d-4639-be08-03f0de1a22f9)]
+[scriptable, uuid(897af00a-c907-4311-88dc-f9d12f05b110)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -82,6 +82,12 @@ interface nsIFrameLoader : nsISupports
    *  @param aIFrame The nsIFrame for the content node that owns this frameloader
    */
   [noscript] void updatePositionAndSize(in nsIFrame aIFrame);
+
+  /**
+   * Activate remote frame.
+   * Throws an exception with non-remote frames.
+   */
+  void activateRemoteFrame();
 };
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
