@@ -2,7 +2,7 @@
 <!ENTITY logInItem.label      "Connect">
 <!ENTITY logOutItem.label     "Disconnect">
 <!ENTITY syncNowItem.label    "Sync Now">
-<!ENTITY openPrefsItem.label  "Preferences...">
+<!ENTITY openPrefsItem.label  "Preferences…">
 <!ENTITY openLogItem.label    "Activity Log">
 <!ENTITY status.offline.label "Offline">
 
