@@ -335,7 +335,8 @@ WeaveSvc.prototype = {
     if (!verbose.exists())
       verbose.create(verbose.NORMAL_FILE_TYPE, PERMS_FILE);
 
-    this._debugApp = new Log4Moz.RotatingFileAppender(verbose, formatter);
+    let maxSize = 65536; // 64 * 1024 (64KB)
+    this._debugApp = new Log4Moz.RotatingFileAppender(verbose, formatter, maxSize);
     this._debugApp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.debugLog")];
     root.addAppender(this._debugApp);
   },
