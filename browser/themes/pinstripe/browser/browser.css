@@ -1657,7 +1657,12 @@ tabbrowser > tabbox > tabpanels {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
-  outline-color: Highlight;
+  -moz-transition: 1s background-color ease-out;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
+  background-color: Highlight;
+  -moz-transition: none;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(ltr),
@@ -1678,6 +1683,7 @@ tabbrowser > tabbox > tabpanels {
 .tabbrowser-arrowscrollbox > .scrollbutton-down:hover {
   -moz-image-region: rect(0, 22px, 17px, 11px);
   background-color: rgba(0,0,0,0.10);
+  -moz-transition: none;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:hover:active,
