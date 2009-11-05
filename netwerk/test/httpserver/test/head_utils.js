@@ -293,7 +293,7 @@ function runHttpTests(testArray, done)
       }
       catch (e)
       {
-        do_throw("error running test-completion callback: " + e);
+        do_report_unexpected_exception(e, "running test-completion callback");
       }
       return;
     }
@@ -310,9 +310,12 @@ function runHttpTests(testArray, done)
     {
       try
       {
-        do_throw("testArray[" + testIndex + "].initChannel(ch) failed: " + e);
+        do_report_unexpected_exception(e, "testArray[" + testIndex + "].initChannel(ch)");
       }
-      catch (e) { /* swallow and let tests continue */ }
+      catch (e)
+      {
+        /* swallow and let tests continue */
+      }
     }
 
     ch.asyncOpen(listener, null);
@@ -341,12 +344,12 @@ function runHttpTests(testArray, done)
           }
           catch (e)
           {
-            do_throw("testArray[" + testIndex + "].onStartRequest: " + e);
+            do_report_unexpected_exception(e, "testArray[" + testIndex + "].onStartRequest");
           }
         }
         catch (e)
         {
-          dumpn("!!! swallowing onStartRequest exception so onStopRequest is " +
+          do_note_exception(e, "!!! swallowing onStartRequest exception so onStopRequest is " +
                 "called...");
         }
       },
@@ -464,7 +467,7 @@ function runRawTests(testArray, done)
       }
       catch (e)
       {
-        do_throw("error running test-completion callback: " + e);
+        do_report_unexpected_exception(e, "running test-completion callback");
       }
       return;
     }
@@ -519,20 +522,31 @@ function runRawTests(testArray, done)
     {
       onInputStreamReady: function(stream)
       {
-        var bis = new BinaryInputStream(stream);
-
-        var av = 0;
         try
         {
-          av = bis.available();
-        }
-        catch (e) { /* default to 0 */ }
+          var bis = new BinaryInputStream(stream);
 
-        if (av > 0)
+          var av = 0;
+          try
+          {
+            av = bis.available();
+          }
+          catch (e)
+          {
+            /* default to 0 */
+            do_note_exception(e);
+          }
+
+          if (av > 0)
+          {
+            received += String.fromCharCode.apply(null, bis.readByteArray(av));
+            waitForMoreInput(stream);
+            return;
+          }
+        }
+        catch(e)
         {
-          received += String.fromCharCode.apply(null, bis.readByteArray(av));
-          waitForMoreInput(stream);
-          return;
+          do_report_unexpected_exception(e);
         }
 
         var rawTest = testArray[testIndex];
@@ -542,12 +556,19 @@ function runRawTests(testArray, done)
         }
         catch (e)
         {
-          do_throw("error thrown by responseCheck: " + e);
+          do_report_unexpected_exception(e);
         }
         finally
         {
-          stream.close();
-          performNextTest();
+          try
+          {
+            stream.close();
+            performNextTest();
+          }
+          catch (e)
+          {
+            do_report_unexpected_exception(e);
+          }
         }
       }
     };
@@ -568,14 +589,25 @@ function runRawTests(testArray, done)
           else
             testArray[testIndex].data[dataIndex] = str.substring(written);
         }
-        catch (e) { /* stream could have been closed, just ignore */ }
+        catch (e)
+        {
+          do_note_exception(e);
+          /* stream could have been closed, just ignore */
+        }
 
-        // Keep writing data while we can write and 
-        // until there's no more data to read
-        if (written > 0 && dataIndex < testArray[testIndex].data.length)
-          waitToWriteOutput(stream);
-        else
-          stream.close();
+        try
+        {
+          // Keep writing data while we can write and 
+          // until there's no more data to read
+          if (written > 0 && dataIndex < testArray[testIndex].data.length)
+            waitToWriteOutput(stream);
+          else
+            stream.close();
+        }
+        catch (e)
+        {
+          do_report_unexpected_exception(e);
+        }
       }
     };
 
