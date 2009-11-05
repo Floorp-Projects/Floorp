@@ -1511,7 +1511,7 @@ NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
 
 #ifdef JS_TRACER
         if (JS_TRACE_MONITOR(cx).useReservedObjects) {
-            JS_ASSERT(JS_ON_TRACE(cx));
+            JS_ASSERT(!JS_ON_TRACE(cx));
             JS_ASSERT(thingKind == FINALIZE_OBJECT);
             JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
             thing = (JSGCThing *) tm->reservedObjects;
