@@ -7,9 +7,110 @@
 
 #include <string>
 #include <cstring>
-#include <sstream>
 
 #include "base/basictypes.h"
+
+#ifdef CHROMIUM_MOZILLA_BUILD
+
+#include "prlog.h"
+
+// Replace the Chromium logging code with NSPR-based logging code and
+// some C++ wrappers to emulate std::ostream
+
+#ifdef PR_LOGGING
+
+#define ERROR 0
+
+typedef int LogSeverity;
+const LogSeverity LOG_INFO = PR_LOG_DEBUG;
+const LogSeverity LOG_WARNING = PR_LOG_WARNING;
+const LogSeverity LOG_ERROR = PR_LOG_ERROR;
+const LogSeverity LOG_ERROR_REPORT = PR_LOG_ERROR;
+const LogSeverity LOG_FATAL = PR_LOG_ERROR;
+const LogSeverity LOG_0 = LOG_ERROR;
+
+struct ChromiumLogger
+{
+public:
+  ChromiumLogger(int severity)
+    : mSeverity(static_cast<PRLogModuleLevel>(severity))
+    , mMsg(NULL)
+  { }
+  ~ChromiumLogger();
+
+  // not private so that the operator<< overloads can get to it
+  void printf(const char* fmt, ...) const;
+
+private:
+  static PRLogModuleInfo* gChromiumPRLog;
+
+  PRLogModuleLevel mSeverity;
+  mutable char* mMsg;
+
+  DISALLOW_EVIL_CONSTRUCTORS(ChromiumLogger);
+};
+
+struct Voidifier
+{
+  Voidifier() { }
+  // Precedence lower than << but higher than ?:
+  void operator&(const ChromiumLogger&) { }
+};
+
+const ChromiumLogger& operator<<(const ChromiumLogger& log, const char* s);
+const ChromiumLogger& operator<<(const ChromiumLogger& log, const std::string& s);
+const ChromiumLogger& operator<<(const ChromiumLogger& log, int i);
+const ChromiumLogger& operator<<(const ChromiumLogger& log, const std::wstring& s);
+const ChromiumLogger& operator<<(const ChromiumLogger& log, void* p);
+
+#define LOG(info) ChromiumLogger(LOG_ ## info) << __FILE__ ":" << __LINE__
+#define LOG_IF(info, condition) \
+  !(condition) ? (void) 0 : Voidifier() & ChromiumLogger(LOG_ ## info) << __FILE__ ":" << __LINE__
+#define CHECK(condition) \
+  !(condition) ? (void) 0 : Voidifier() & ChromiumLogger(LOG_FATAL)
+#define DLOG(info) LOG(info)
+#define DLOG_IF(info) LOG_IF(info)
+#define DCHECK(condition) CHECK(condition)
+
+#else
+
+struct EmptyLog
+{
+};
+
+template<class T>
+const EmptyLog& operator <<(const EmptyLog& log, const T&) { return log; }
+
+#define LOG(info) EmptyLog()
+#define LOG_IF(info, condition) EmptyLog()
+#define CHECK(condition) while ((condition) && false) EmptyLog()
+#define DLOG(info) EmptyLog()
+#define DLOG_IF(info, condition) EmptyLog()
+#define DCHECK(condition) while (false && (condition)) EmptyLog()
+
+#endif // PR_LOGGING
+
+#define LOG_ASSERT(cond) CHECK(ERROR)
+#define DLOG_ASSERT(cond) DCHECK(ERROR)
+
+#define NOTREACHED() LOG(ERROR)
+#define NOTIMPLEMENTED() LOG(ERROR)
+
+#define DCHECK_EQ(v1, v2) DCHECK((v1) == (v2))
+#define DCHECK_NE(v1, v2) DCHECK((v1) != (v2))
+#define DCHECK_LE(v1, v2) DCHECK((v1) <= (v2))
+#define DCHECK_LT(v1, v2) DCHECK((v1) < (v2))
+#define DCHECK_GE(v1, v2) DCHECK((v1) >= (v2))
+#define DCHECK_GT(v1, v2) DCHECK((v1) > (v2))
+
+#ifdef assert
+#undef assert
+#endif
+#define assert DLOG_ASSERT
+
+#else
+
+#include <sstream>
 
 //
 // Optional message capabilities
@@ -640,5 +741,7 @@ inline std::ostream& operator<<(std::ostream& out, const std::wstring& wstr) {
   LOG_IF(ERROR, 0 == count++) << NOTIMPLEMENTED_MSG;\
 } while(0)
 #endif
+
+#endif // CHROMIUM_MOZILLA_BUILD
 
 #endif  // BASE_LOGGING_H_
