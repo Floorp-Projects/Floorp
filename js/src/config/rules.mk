@@ -887,6 +887,7 @@ ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/components
 	$(ELF_DYNSTR_GC) $(FINAL_TARGET)/components/$(SHARED_LIBRARY)
+	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_TARGET)/components/components.list $(SHARED_LIBRARY)
 ifdef BEOS_ADDON_WORKAROUND
 	( cd $(FINAL_TARGET)/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
@@ -1807,6 +1808,7 @@ ifdef EXTRA_COMPONENTS
 libs:: $(EXTRA_COMPONENTS)
 ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/components
+	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_TARGET)/components/components.list $(notdir $^)
 endif
 
 endif
@@ -1817,9 +1819,11 @@ ifndef NO_DIST_INSTALL
 	$(EXIT_ON_ERROR) \
 	$(NSINSTALL) -D $(FINAL_TARGET)/components; \
 	for i in $^; do \
-	  dest=$(FINAL_TARGET)/components/`basename $$i`; \
+	  fname=`basename $$i`; \
+	  dest=$(FINAL_TARGET)/components/$${fname}; \
 	  $(RM) -f $$dest; \
 	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
+	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_TARGET)/components/components.list $$fname; \
 	done
 endif
 
