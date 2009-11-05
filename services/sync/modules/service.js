@@ -1177,7 +1177,7 @@ WeaveSvc.prototype = {
     Sync.sleep(2000);
 
     this._log.debug("Uploading new metadata record");
-    meta = new WBORecord(this.metaURL);
+    let meta = new WBORecord(this.metaURL);
     meta.payload.syncID = Clients.syncID;
     this._updateRemoteVersion(meta);
   },
