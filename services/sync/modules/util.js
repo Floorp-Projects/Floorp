@@ -724,10 +724,6 @@ let Utils = {
     this.openDialog("ChangeSomething", "generic-change.xul");
   },
 
-  openLog: function Utils_openLog() {
-    Utils._openChromeWindow("Log", "log.xul");
-  },
-
   getErrorString: function Utils_getErrorString(error, args) {
     try {
       return Str.errors.get(error, args || null);
