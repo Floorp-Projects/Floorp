@@ -689,52 +689,10 @@ public:
     UnstableExit* removeUnstableExit(VMSideExit* exit);
 };
 
-#if defined(JS_JIT_SPEW) && (defined(NANOJIT_IA32) || defined(NANOJIT_X64))
-# define EXECUTE_TREE_TIMER
-#endif
-
 typedef enum JSBuiltinStatus {
     JSBUILTIN_BAILED = 1,
     JSBUILTIN_ERROR = 2
 } JSBuiltinStatus;
-
-struct InterpState
-{
-    double*        sp;                  // native stack pointer, stack[0] is spbase[0]
-    FrameInfo**    rp;                  // call stack pointer
-    JSContext*     cx;                  // current VM context handle
-    double*        eos;                 // first unusable word after the native stack
-    void*          eor;                 // first unusable word after the call stack
-    void*          sor;                 // start of rp stack
-    VMSideExit*    lastTreeExitGuard;   // guard we exited on during a tree call
-    VMSideExit*    lastTreeCallGuard;   // guard we want to grow from if the tree
-                                        // call exit guard mismatched
-    void*          rpAtLastTreeCall;    // value of rp at innermost tree call guard
-    VMSideExit*    outermostTreeExitGuard; // the last side exit returned by js_CallTree
-    TreeInfo*      outermostTree;       // the outermost tree we initially invoked
-    double*        stackBase;           // native stack base
-    FrameInfo**    callstackBase;       // call stack base
-    uintN*         inlineCallCountp;    // inline call count counter
-    VMSideExit**   innermostNestedGuardp;
-    VMSideExit*    innermost;
-#ifdef EXECUTE_TREE_TIMER
-    uint64         startTime;
-#endif
-    InterpState*   prev;
-
-    // Used by _FAIL builtins; see jsbuiltins.h. The builtin sets the
-    // JSBUILTIN_BAILED bit if it bails off trace and the JSBUILTIN_ERROR bit
-    // if an error or exception occurred.
-    uint32         builtinStatus;
-
-    // Used to communicate the location of the return value in case of a deep bail.
-    double*        deepBailSp;
-
-
-    // Used when calling natives from trace to root the vp vector.
-    uintN          nativeVpLen;
-    jsval*         nativeVp;
-};
 
 // Arguments objects created on trace have a private value that points to an
 // instance of this struct. The struct includes a typemap that is allocated

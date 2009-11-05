@@ -89,10 +89,9 @@ js_PurgeGSNCache(JSGSNCache *cache);
 #define JS_PURGE_GSN_CACHE(cx)      js_PurgeGSNCache(&JS_GSN_CACHE(cx))
 #define JS_METER_GSN_CACHE(cx,cnt)  GSN_CACHE_METER(&JS_GSN_CACHE(cx), cnt)
 
-typedef struct InterpState InterpState;
-typedef struct VMSideExit VMSideExit;
-
-namespace nanojit {
+/* Forward declarations of nanojit types. */
+namespace nanojit
+{
     class Assembler;
     class CodeAlloc;
     class Fragment;
@@ -100,30 +99,93 @@ namespace nanojit {
 #ifdef DEBUG
     class LabelMap;
 #endif
-    extern "C++" {
-        template<typename K> struct DefaultHash;
-        template<typename K, typename V, typename H> class HashMap;
-        template<typename T> class Seq;
-    }
+    template<typename K> struct DefaultHash;
+    template<typename K, typename V, typename H> class HashMap;
+    template<typename T> class Seq;
 }
+
+/* Tracer constants. */
+static const size_t MONITOR_N_GLOBAL_STATES = 4;
+static const size_t FRAGMENT_TABLE_SIZE = 512;
+static const size_t MAX_NATIVE_STACK_SLOTS = 4096;
+static const size_t MAX_CALL_STACK_ENTRIES = 500;
+static const size_t MAX_GLOBAL_SLOTS = 4096;
+static const size_t GLOBAL_SLOTS_BUFFER_SIZE = MAX_GLOBAL_SLOTS + 1;
+
+/* Forward declarations of tracer types. */
+class TreeInfo;
+class VMAllocator;
+class TraceRecorder;
+class FrameInfoCache;
+struct REHashFn;
+struct REHashKey;
+struct FrameInfo;
+struct VMSideExit;
+struct VMFragment;
+struct InterpState;
+template<typename T> class Queue;
+typedef Queue<uint16> SlotList;
+typedef nanojit::HashMap<REHashKey, nanojit::Fragment*, REHashFn> REHashMap;
+
 #if defined(JS_JIT_SPEW) || defined(DEBUG)
 struct FragPI;
 typedef nanojit::HashMap<uint32, FragPI, nanojit::DefaultHash<uint32> > FragStatsMap;
 #endif
-class TraceRecorder;
-class VMAllocator;
-extern "C++" { template<typename T> class Queue; }
-typedef Queue<uint16> SlotList;
 
-#define FRAGMENT_TABLE_SIZE 512
-struct VMFragment;
+/* Holds the execution state during trace execution. */
+struct InterpState
+{
+    double*        sp;                  // native stack pointer, stack[0] is spbase[0]
+    FrameInfo**    rp;                  // call stack pointer
+    JSContext*     cx;                  // current VM context handle
+    double*        eos;                 // first unusable word after the native stack / begin of globals
+    void*          eor;                 // first unusable word after the call stack
+    void*          sor;                 // start of rp stack
+    VMSideExit*    lastTreeExitGuard;   // guard we exited on during a tree call
+    VMSideExit*    lastTreeCallGuard;   // guard we want to grow from if the tree
+                                        // call exit guard mismatched
+    void*          rpAtLastTreeCall;    // value of rp at innermost tree call guard
+    VMSideExit*    outermostTreeExitGuard; // the last side exit returned by js_CallTree
+    TreeInfo*      outermostTree;       // the outermost tree we initially invoked
+    double*        stackBase;           // native stack base
+    FrameInfo**    callstackBase;       // call stack base
+    uintN*         inlineCallCountp;    // inline call count counter
+    VMSideExit**   innermostNestedGuardp;
+    VMSideExit*    innermost;
+    uint64         startTime;
+    InterpState*   prev;
 
-struct REHashKey;
-struct REHashFn;
-class FrameInfoCache;
-typedef nanojit::HashMap<REHashKey, nanojit::Fragment*, REHashFn> REHashMap;
+    // Used by _FAIL builtins; see jsbuiltins.h. The builtin sets the
+    // JSBUILTIN_BAILED bit if it bails off trace and the JSBUILTIN_ERROR bit
+    // if an error or exception occurred.
+    uint32         builtinStatus;
 
-#define MONITOR_N_GLOBAL_STATES 4
+    // Used to communicate the location of the return value in case of a deep bail.
+    double*        deepBailSp;
+
+
+    // Used when calling natives from trace to root the vp vector.
+    uintN          nativeVpLen;
+    jsval*         nativeVp;
+};
+
+/*
+ * Storage for the execution state and store during trace execution. Generated
+ * code depends on the fact that the globals begin |MAX_NATIVE_STACK_SLOTS|
+ * doubles after the stack begins. Thus, on trace, |InterpState::eos| holds a
+ * pointer to the first global.
+ */
+struct TraceNativeStorage
+{
+    double stack_global_buf[MAX_NATIVE_STACK_SLOTS + GLOBAL_SLOTS_BUFFER_SIZE];
+    FrameInfo *callstack_buf[MAX_CALL_STACK_ENTRIES];
+
+    double *stack() { return stack_global_buf; }
+    double *global() { return stack_global_buf + MAX_NATIVE_STACK_SLOTS; }
+    FrameInfo **callstack() { return callstack_buf; } 
+};
+
+/* Holds data to track a single globa. */
 struct GlobalState {
     JSObject*               globalObj;
     uint32                  globalShape;
@@ -147,6 +209,13 @@ struct JSTraceMonitor {
      * tracecx && recorder: executing inner loop, recording outer loop
      */
     JSContext               *tracecx;
+
+    /*
+     * Cached storage to use when executing on trace. While we may enter nested
+     * traces, we always reuse the outer trace's storage, so never need more
+     * than of these.
+     */
+    TraceNativeStorage      storage;
 
     /*
      * There are 3 allocators here. This might seem like overkill, but they

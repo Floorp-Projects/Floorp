@@ -517,11 +517,21 @@ Assembler::nFragExit(LInsp guard)
         // will work correctly.
         JMP_far(_epilogue);
 
-        asm_ld_imm(R0, int(gr));
-
-        // Set the jmp pointer to the start of the sequence so that patched
-        // branches can skip the LDi sequence.
+        // In the future you may want to move this further down so that we can
+        // overwrite the r0 guard record load during a patch to a different
+        // fragment with some assumed input-register state. Not today though.
         gr->jmp = _nIns;
+
+        // NB: this is a workaround for the fact that, by patching a
+        // fragment-exit jump, we could be changing the *meaning* of the R0
+        // register we're passing to the jump target. If we jump to the
+        // epilogue, ideally R0 means "return value when exiting fragment".
+        // If we patch this to jump to another fragment however, R0 means
+        // "incoming 0th parameter". This is just a quirk of ARM ABI. So
+        // we compromise by passing "return value" to the epilogue in IP,
+        // not R0, and have the epilogue MOV(R0, IP) first thing.
+
+        asm_ld_imm(IP, int(gr));
     }
 
 #ifdef NJ_VERBOSE
@@ -547,6 +557,11 @@ Assembler::genEpilogue()
     RegisterMask savingMask = rmask(FP) | rmask(PC);
 
     POP_mask(savingMask); // regs
+
+    // NB: this is the later half of the dual-nature patchable exit branch
+    // workaround noted above in nFragExit. IP has the "return value"
+    // incoming, we need to move it to R0.
+    MOV(R0, IP);
 
     return _nIns;
 }
@@ -926,35 +941,95 @@ Assembler::nRegisterResetAll(RegAlloc& a)
     debug_only(a.managed = a.free);
 }
 
+static inline ConditionCode
+get_cc(NIns *ins)
+{
+    return ConditionCode((*ins >> 28) & 0xF);
+}
+
+static inline bool
+branch_is_B(NIns* branch)
+{
+    return (*branch & 0x0E000000) == 0x0A000000;
+}
+
+static inline bool
+branch_is_LDR_PC(NIns* branch)
+{
+    return (*branch & 0x0F7FF000) == 0x051FF000;
+}
+
 void
 Assembler::nPatchBranch(NIns* branch, NIns* target)
 {
     // Patch the jump in a loop
 
-    int32_t offset = PC_OFFSET_FROM(target, branch);
+    //
+    // There are two feasible cases here, the first of which has 2 sub-cases:
+    //
+    //   (1) We are patching a patchable unconditional jump emitted by
+    //       JMP_far.  All possible encodings we may be looking at with
+    //       involve 2 words, though we *may* have to change from 1 word to
+    //       2 or vice verse.
+    //
+    //          1a:  B ±32MB ; BKPT
+    //          1b:  LDR PC [PC, #-4] ; $imm
+    //
+    //   (2) We are patching a patchable conditional jump emitted by
+    //       B_cond_chk.  Short conditional jumps are non-patchable, so we
+    //       won't have one here; will only ever have an instruction of the
+    //       following form:
+    //
+    //          LDRcc PC [PC, #lit] ...
+    //
+    //       We don't actually know whether the lit-address is in the
+    //       constant pool or in-line of the instruction stream, following
+    //       the insn (with a jump over it) and we don't need to. For our
+    //       purposes here, cases 2, 3 and 4 all look the same.
+    //
+    // For purposes of handling our patching task, we group cases 1b and 2
+    // together, and handle case 1a on its own as it might require expanding
+    // from a short-jump to a long-jump.
+    //
+    // We do not handle contracting from a long-jump to a short-jump, though
+    // this is a possible future optimisation for case 1b. For now it seems
+    // not worth the trouble.
+    //
 
-    //avmplus::AvmLog("---patching branch at 0x%08x to location 0x%08x (%d-0x%08x)\n", branch, target, offset, offset);
+    if (branch_is_B(branch)) {
+        // Case 1a
+        // A short B branch, must be unconditional.
+        NanoAssert(get_cc(branch) == AL);
 
-    // We have 2 words to work with here -- if offset is in range of a 24-bit
-    // relative jump, emit that; otherwise, we do a pc-relative load into pc.
-    if (isS24(offset>>2)) {
-        // write a new instruction that preserves the condition of what's there.
-        NIns cond = *branch & 0xF0000000;
-        *branch = (NIns)( cond | (0xA<<24) | ((offset>>2) & 0xFFFFFF) );
+        int32_t offset = PC_OFFSET_FROM(target, branch);
+        if (isS24(offset>>2)) {
+            // We can preserve the existing form, just rewrite its offset.
+            NIns cond = *branch & 0xF0000000;
+            *branch = (NIns)( cond | (0xA<<24) | ((offset>>2) & 0xFFFFFF) );
+        } else {
+            // We need to expand the existing branch to a long jump.
+            // make sure the next instruction is a dummy BKPT
+            NanoAssert(*(branch+1) == BKPT_insn);
+
+            // Set the branch instruction to   LDRcc pc, [pc, #-4]
+            NIns cond = *branch & 0xF0000000;
+            *branch++ = (NIns)( cond | (0x51<<20) | (PC<<16) | (PC<<12) | (4));
+            *branch++ = (NIns)target;
+        }
     } else {
-        // update const-addr, branch instruction is:
-        // LDRcc pc, [pc, #off-to-const-addr]
-        NanoAssert((*branch & 0x0F7FF000) == 0x051FF000);
+        // Case 1b & 2
+        // Not a B branch, must be LDR, might be any kind of condition.
+        NanoAssert(branch_is_LDR_PC(branch));
 
         NIns *addr = branch+2;
         int offset = (*branch & 0xFFF) / sizeof(NIns);
-
         if (*branch & (1<<23)) {
             addr += offset;
         } else {
             addr -= offset;
         }
 
+        // Just redirect the jump target, leave the insn alone.
         *addr = (NIns) target;
     }
 }
@@ -1399,6 +1474,8 @@ Assembler::JMP_far(NIns* addr)
         // Emit a BKPT to ensure that we reserve enough space for a full 32-bit
         // branch patch later on. The BKPT should never be executed.
         BKPT_nochk();
+
+        asm_output("bkpt");
 
         // B [PC+offs]
         *(--_nIns) = (NIns)( COND_AL | (0xA<<24) | ((offs>>2) & 0xFFFFFF) );
@@ -2297,6 +2374,13 @@ void
 Assembler::asm_ret(LIns *ins)
 {
     genEpilogue();
+
+    // NB: our contract with genEpilogue is actually that the return value
+    // we are intending for R0 is currently IP, not R0. This has to do with
+    // the strange dual-nature of the patchable jump in a side-exit. See
+    // nPatchBranch.
+
+    MOV(IP, R0);
 
     // Pop the stack frame.
     MOV(SP,FP);
