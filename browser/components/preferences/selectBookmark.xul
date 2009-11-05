@@ -16,7 +16,7 @@
         onload="SelectBookmarkDialog.init();" 
         ondialogaccept="SelectBookmarkDialog.accept();">
 
-  <script type="application/x-javascript"
+  <script type="application/javascript"
           src="chrome://browser/content/preferences/selectBookmark.js"/>
   
   <description>&selectBookmark.label;</description>
