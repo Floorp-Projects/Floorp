@@ -102,6 +102,7 @@
 #endif
 
 ; [Components]
+@BINPATH@/components/components.list
 @BINPATH@/components/alerts.xpt
 #ifdef ACCESSIBILITY
 #ifdef XP_WIN32
