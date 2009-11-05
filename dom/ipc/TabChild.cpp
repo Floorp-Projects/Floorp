@@ -312,6 +312,23 @@ TabChild::Recvactivate()
   return true;
 }
 
+bool
+TabChild::RecvsendMouseEvent(const nsString& aType,
+                             const PRInt32&  aX,
+                             const PRInt32&  aY,
+                             const PRInt32&  aButton,
+                             const PRInt32&  aClickCount,
+                             const PRInt32&  aModifiers,
+                             const bool&     aIgnoreRootScrollFrame)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
+  nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
+  NS_ENSURE_TRUE(utils, true);
+  utils->SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
+                        aIgnoreRootScrollFrame);
+  return true;
+}
+
 mozilla::ipc::PDocumentRendererChild*
 TabChild::AllocPDocumentRenderer(
         const PRInt32& x,

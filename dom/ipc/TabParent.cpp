@@ -124,5 +124,14 @@ TabParent::RecvPDocumentRendererDestructor(PDocumentRendererParent* __a,
     return true;
 }
 
+void
+TabParent::SendMouseEvent(const nsAString& aType, float aX, float aY,
+                          PRInt32 aButton, PRInt32 aClickCount,
+                          PRInt32 aModifiers, PRBool aIgnoreRootScrollFrame)
+{
+  SendsendMouseEvent(nsString(aType), aX, aY, aButton, aClickCount,
+                     aModifiers, aIgnoreRootScrollFrame);
+}
+
 } // namespace tabs
 } // namespace mozilla

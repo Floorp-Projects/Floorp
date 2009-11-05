@@ -43,7 +43,7 @@ interface nsIDocShell;
 interface nsIURI;
 interface nsIFrame;
 
-[scriptable, uuid(897af00a-c907-4311-88dc-f9d12f05b110)]
+[scriptable, uuid(8f94788d-ec69-4220-971c-0fd68d47b80f)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -88,6 +88,18 @@ interface nsIFrameLoader : nsISupports
    * Throws an exception with non-remote frames.
    */
   void activateRemoteFrame();
+
+  /**
+   * @see nsIDOMWindowUtils sendMouseEvent.
+   */
+  void sendCrossProcessMouseEvent(in AString aType,
+                                  in float aX,
+                                  in float aY,
+                                  in long aButton,
+                                  in long aClickCount,
+                                  in long aModifiers,
+                                  [optional] in boolean aIgnoreRootScrollFrame);
+
 };
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
