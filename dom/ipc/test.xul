@@ -13,6 +13,18 @@
     function loadURL(url) {
       document.getElementById('page').setAttribute('src', url);
     }
+
+    function randomClick() {
+       // First focus the remote frame, then dispatch click. This way remote frame gets focus before
+       // mouse event.
+       document.getElementById('page').QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
+                                      .frameLoader.activateRemoteFrame();
+       var frameLoader = document.getElementById('page').QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+       var x = parseInt(Math.random() * 100);
+       var y = parseInt(Math.random() * 100);
+       frameLoader.sendCrossProcessMouseEvent("mousedown", x, y, 0, 1, 0, false);
+       frameLoader.sendCrossProcessMouseEvent("mouseup", x, y, 0, 1, 0, false);
+     }
   </script>
 
   <toolbar id="controls">
@@ -20,6 +32,7 @@
     <toolbarbutton label="Forward"/>
     <textbox onchange="loadURL(this.value)" flex="1" id="URL"/>
     <toolbarbutton onclick="restart()" label="Recover"/>
+    <toolbarbutton onclick="randomClick()" label="random click"/>
   </toolbar>
 
   <browser type="content" src="http://www.google.com/" flex="1" id="page" remote="true"

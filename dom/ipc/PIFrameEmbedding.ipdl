@@ -75,6 +75,17 @@ child:
      */
     activate();
 
+  /**
+   * @see nsIDOMWindowUtils sendMouseEvent.
+   */
+    sendMouseEvent(nsString aType,
+                   PRInt32 aX, //XXX should be float, but ipdl doesn't seem to support that.
+                   PRInt32 aY, //XXX - " -
+                   PRInt32 aButton,
+                   PRInt32 aClickCount,
+                   PRInt32 aModifiers,
+                   bool aIgnoreRootScrollFrame);
+
     PDocumentRenderer(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush);
 
 parent:

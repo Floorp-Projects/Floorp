@@ -75,6 +75,13 @@ public:
                           const PRUint32& width,
                           const PRUint32& height);
     virtual bool Recvactivate();
+    virtual bool RecvsendMouseEvent(const nsString& aType,
+                                    const PRInt32&  aX,
+                                    const PRInt32&  aY,
+                                    const PRInt32&  aButton,
+                                    const PRInt32&  aClickCount,
+                                    const PRInt32&  aModifiers,
+                                    const bool&     aIgnoreRootScrollFrame);
     virtual mozilla::ipc::PDocumentRendererChild* AllocPDocumentRenderer(
             const PRInt32& x,
             const PRInt32& y,
