@@ -69,7 +69,6 @@ struct nsGenConInitializer;
 class ChildIterator;
 class nsICSSAnonBoxPseudo;
 class nsPageContentFrame;
-struct PendingBinding;
 
 struct nsFindFrameHint
 {
@@ -768,12 +767,11 @@ private:
                                       nsIAtom* aTag,
                                       PRInt32 aNameSpaceID,
                                       PRInt32 aContentIndex,
-                                      PendingBinding* aPendingBinding,
                                       already_AddRefed<nsStyleContext> aStyleContext)
     {
       FrameConstructionItem* item =
         new FrameConstructionItem(aFCData, aContent, aTag, aNameSpaceID,
-                                  aContentIndex, aPendingBinding, aStyleContext);
+                                  aContentIndex, aStyleContext);
       if (item) {
         PR_APPEND_LINK(item, &mItems);
         ++mItemCount;
@@ -925,11 +923,10 @@ private:
                           nsIAtom* aTag,
                           PRInt32 aNameSpaceID,
                           PRInt32 aContentIndex,
-                          PendingBinding* aPendingBinding,
                           already_AddRefed<nsStyleContext> aStyleContext) :
       mFCData(aFCData), mContent(aContent), mTag(aTag),
       mNameSpaceID(aNameSpaceID), mContentIndex(aContentIndex),
-      mPendingBinding(aPendingBinding), mStyleContext(aStyleContext),
+      mStyleContext(aStyleContext),
       mIsText(PR_FALSE), mIsGeneratedContent(PR_FALSE),
       mIsRootPopupgroup(PR_FALSE), mIsAllInline(PR_FALSE), mIsBlock(PR_FALSE),
       mHasInlineEnds(PR_FALSE), mIsPopup(PR_FALSE),
@@ -966,15 +963,6 @@ private:
     // The index of mContent in its parent's child list, or -1 if it's
     // not in the parent's child list or not known.
     PRInt32 mContentIndex;
-    // The PendingBinding for this frame construction item, if any.  May be
-    // null.  We maintain a list of PendingBindings in the frame construction
-    // state in the order in which AddToAttachedQueue should be called on them:
-    // depth-first, post-order traversal order.  Since we actually traverse the
-    // DOM in a mix of breadth-first and depth-first, it is the responsibility
-    // of whoever constructs FrameConstructionItem kids of a given
-    // FrameConstructionItem to push its mPendingBinding as the current
-    // insertion point before doing so and pop it afterward.
-    PendingBinding* mPendingBinding;
     // The style context to use for creating the new frame.
     nsRefPtr<nsStyleContext> mStyleContext;
     // Whether this is a text content item.
@@ -1177,7 +1165,6 @@ private:
   nsresult CreateAnonymousFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aParent,
                                  nsIFrame*                aParentFrame,
-                                 PendingBinding  *        aPendingBinding,
                                  nsFrameItems&            aChildItems);
 
   nsresult GetAnonymousContent(nsIContent* aParent,
@@ -1308,8 +1295,9 @@ private:
    * @param aFrameItems the list in which we should place the in-flow children
    * @param aAllowBlockStyles Whether to allow first-letter and first-line
    *        styles on the parent.
-   * @param aPendingBinding Make sure to push this into aState before doing any
-   *        child item construction.
+   * @param aTableCreator if non-null, will just make this method call
+   *        TableProcessChildren between constructing the ::before and ::after
+   *        content instead of doing whatever it would normally do.
    */
   nsresult ProcessChildren(nsFrameConstructorState& aState,
                            nsIContent*              aContent,
@@ -1317,8 +1305,7 @@ private:
                            nsIFrame*                aFrame,
                            const PRBool             aCanHaveGeneratedContent,
                            nsFrameItems&            aFrameItems,
-                           const PRBool             aAllowBlockStyles,
-                           PendingBinding*          aPendingBinding);
+                           const PRBool             aAllowBlockStyles);
 
   nsIFrame* GetFrameFor(nsIContent* aContent);
 
@@ -1375,7 +1362,6 @@ private:
                         nsIFrame*                aParentFrame,
                         nsStyleContext*          aStyleContext,
                         PRBool                   aBuildCombobox,
-                        PendingBinding*          aPendingBinding,
                         nsFrameItems&            aFrameItems);
 
   nsresult MaybeRecreateFramesForContent(nsIContent* aContent);
@@ -1449,8 +1435,6 @@ private:
   // block
   // @param aContentParent is the parent the block would have if it
   // were in-flow
-  // @param aPendingBinding the pending binding  from this block's frame
-  // construction item.
   nsresult ConstructBlock(nsFrameConstructorState& aState,
                           const nsStyleDisplay*    aDisplay,
                           nsIContent*              aContent,
@@ -1459,8 +1443,7 @@ private:
                           nsStyleContext*          aStyleContext,
                           nsIFrame**               aNewFrame,
                           nsFrameItems&            aFrameItems,
-                          PRBool                   aAbsPosContainer,
-                          PendingBinding*          aPendingBinding);
+                          PRBool                   aAbsPosContainer);
 
   nsresult ConstructInline(nsFrameConstructorState& aState,
                            FrameConstructionItem&   aItem,
