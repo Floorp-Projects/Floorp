@@ -67,7 +67,7 @@
             onload="onLoad();"
             buttondisabledaccept="true">
 
-  <script type="application/x-javascript" src="chrome://browser/content/safeMode.js"/>
+  <script type="application/javascript" src="chrome://browser/content/safeMode.js"/>
 
   <stringbundle id="preferencesBundle" src="chrome://browser/locale/preferences/preferences.properties"/>
 

@@ -75,8 +75,8 @@
                   onchange="gContentPane._rebuildFonts();"/>
     </preferences>
     
-    <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
-    <script type="application/x-javascript" src="chrome://browser/content/preferences/content.js"/>
+    <script type="application/javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
+    <script type="application/javascript" src="chrome://browser/content/preferences/content.js"/>
 
     <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 
