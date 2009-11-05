@@ -1409,7 +1409,12 @@ tabpanels {
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right.png");
-  outline-color: Highlight;
+  -moz-transition: 1s background-color ease-out;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
+  background-color: Highlight;
+  -moz-transition: none;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl),

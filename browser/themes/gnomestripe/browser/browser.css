@@ -1274,13 +1274,19 @@ tabpanels {
 /* Tabbrowser arrowscrollbox arrows */
 .tabbrowser-arrowscrollbox > .scrollbutton-up {
   -moz-appearance: tab-scroll-arrow-back;
-  margin: 0px;
+  margin: 0;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-appearance: tab-scroll-arrow-forward;
-  margin: 0px;
-  outline-color: Highlight;
+  margin: 0;
+  -moz-transition: 1s -moz-box-shadow ease-out;
+  -moz-border-radius: 4px;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
+  -moz-box-shadow: 0 0 7px 5px Highlight inset;
+  -moz-transition: none;
 }
 
 .tabs-alltabs-button {
