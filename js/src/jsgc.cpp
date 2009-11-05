@@ -576,6 +576,15 @@ NewGCChunk(void)
     p = VirtualAlloc(NULL, GC_ARENAS_PER_CHUNK << GC_ARENA_SHIFT,
                      MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     return (jsuword) p;
+#elif defined(XP_OS2)
+    if (DosAllocMem(&p, GC_ARENAS_PER_CHUNK << GC_ARENA_SHIFT,
+                    OBJ_ANY | PAG_COMMIT | PAG_READ | PAG_WRITE)) {
+        if (DosAllocMem(&p, GC_ARENAS_PER_CHUNK << GC_ARENA_SHIFT,
+                        PAG_COMMIT | PAG_READ | PAG_WRITE)) {
+            return 0;
+        }
+    }
+    return (jsuword) p;
 #else
     p = mmap(NULL, GC_ARENAS_PER_CHUNK << GC_ARENA_SHIFT,
              PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -589,6 +598,8 @@ DestroyGCChunk(jsuword chunk)
     JS_ASSERT((chunk & GC_ARENA_MASK) == 0);
 #if defined(XP_WIN)
     VirtualFree((void *) chunk, 0, MEM_RELEASE);
+#elif defined(XP_OS2)
+    DosFreeMem((void *) chunk);
 #elif defined(SOLARIS)
     munmap((char *) chunk, GC_ARENAS_PER_CHUNK << GC_ARENA_SHIFT);
 #else
