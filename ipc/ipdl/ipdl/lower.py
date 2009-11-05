@@ -1604,8 +1604,7 @@ def _generateCxxUnionStuff(ud):
 
     # Union(const Union&) copy ctor
     copyctor = ConstructorDefn(ConstructorDecl(
-        ud.name, params=[ Decl(inClsType, othervar.name) ],
-        explicit=1))
+        ud.name, params=[ Decl(inClsType, othervar.name) ]))
     othertype = ud.callType(othervar)
     copyswitch = StmtSwitch(othertype)
     for c in ud.components:

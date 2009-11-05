@@ -38,10 +38,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef MOZ_IPC
-#include "mozilla/ipc/PDocumentRendererParent.h"
-#include "mozilla/dom/PIFrameEmbeddingParent.h"
-#include "mozilla/ipc/DocumentRendererParent.h"
+#  include "base/basictypes.h"
 #endif
+
 #include "nsIDOMXULElement.h"
 
 #ifdef _MSC_VER
@@ -115,6 +114,14 @@
 #include "nsBidiPresUtils.h"
 
 #include "CanvasUtils.h"
+
+#ifdef MOZ_IPC
+#  include "mozilla/ipc/PDocumentRendererParent.h"
+#  include "mozilla/dom/PIFrameEmbeddingParent.h"
+#  include "mozilla/ipc/DocumentRendererParent.h"
+// windows.h (included by chromium code) defines this, in its infinite wisdom
+#  undef DrawText
+#endif
 
 using namespace mozilla;
 
