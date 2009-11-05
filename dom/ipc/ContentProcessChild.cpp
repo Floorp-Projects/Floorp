@@ -80,18 +80,20 @@ ContentProcessChild::Init(MessageLoop* aIOLoop,
 PIFrameEmbeddingChild*
 ContentProcessChild::AllocPIFrameEmbedding()
 {
-    PIFrameEmbeddingChild* iframe = new TabChild();
-    if (iframe && mIFrames.AppendElement(iframe)) {
-        return iframe;
-    }
-    delete iframe;
-    return nsnull;
+  nsRefPtr<TabChild> iframe = new TabChild();
+  NS_ENSURE_TRUE(iframe && NS_SUCCEEDED(iframe->Init()) &&
+                 mIFrames.AppendElement(iframe),
+                 nsnull);
+  return iframe.forget().get();
 }
 
 bool
 ContentProcessChild::DeallocPIFrameEmbedding(PIFrameEmbeddingChild* iframe)
 {
-    mIFrames.RemoveElement(iframe);
+    if (mIFrames.RemoveElement(iframe)) {
+      TabChild* child = static_cast<TabChild*>(iframe);
+      NS_RELEASE(child);
+    }
     return true;
 }
 

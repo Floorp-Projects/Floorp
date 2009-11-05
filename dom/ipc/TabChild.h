@@ -42,15 +42,30 @@
 #include "mozilla/dom/PIFrameEmbeddingChild.h"
 #include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
+#include "nsIWebBrowserChrome2.h"
+#include "nsIEmbeddingSiteWindow2.h"
+#include "nsIWebBrowserChromeFocus.h"
 
 namespace mozilla {
 namespace dom {
 
-class TabChild : public PIFrameEmbeddingChild
+class TabChild : public PIFrameEmbeddingChild,
+                 public nsIWebBrowserChrome2,
+                 public nsIEmbeddingSiteWindow2,
+                 public nsIWebBrowserChromeFocus
 {
 public:
     TabChild();
     virtual ~TabChild();
+    nsresult Init();
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBBROWSERCHROME
+    NS_DECL_NSIWEBBROWSERCHROME2
+    NS_DECL_NSIEMBEDDINGSITEWINDOW
+    NS_DECL_NSIEMBEDDINGSITEWINDOW2
+    NS_DECL_NSIWEBBROWSERCHROMEFOCUS
 
     virtual bool RecvcreateWidget(const MagicWindowHandle& parentWidget);
     virtual bool RecvdestroyWidget();
@@ -59,6 +74,7 @@ public:
                           const PRUint32& y,
                           const PRUint32& width,
                           const PRUint32& height);
+    virtual bool Recvactivate();
     virtual mozilla::ipc::PDocumentRendererChild* AllocPDocumentRenderer(
             const PRInt32& x,
             const PRInt32& y,

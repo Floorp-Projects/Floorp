@@ -77,7 +77,7 @@ public:
 private:
     static ContentProcessChild* sSingleton;
 
-    nsTArray<nsAutoPtr<PIFrameEmbeddingChild> > mIFrames;
+    nsTArray<PIFrameEmbeddingChild* > mIFrames;
     nsTArray<nsAutoPtr<PTestShellChild> > mTestShells;
 
     PRBool mQuit;
