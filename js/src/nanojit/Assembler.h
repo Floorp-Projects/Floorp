@@ -64,6 +64,42 @@ namespace nanojit
 
     #define STACK_GRANULARITY        sizeof(void *)
 
+    // Basics:
+    // - 'entry' records the state of the native machine stack at particular
+    //   points during assembly.  Each entry represents four bytes.
+    //
+    // - Parts of the stack can be allocated by LIR_ialloc, in which case each
+    //   slot covered by the allocation contains a pointer to the LIR_ialloc
+    //   LIns.
+    //
+    // - The stack also holds spilled values, in which case each slot holding
+    //   a spilled value (one slot for 32-bit values, two slots for 64-bit
+    //   values) contains a pointer to the instruction defining the spilled
+    //   value.
+    //
+    // - Each LIns has a Reservation which includes a stack index, 'arIndex'.
+    //   Combined with AR, it provides a two-way mapping between stack slots
+    //   and LIR instructions.
+    //
+    // - Invariant: the two-way mapping between active stack slots and their
+    //   defining/allocating instructions must hold in both directions and be
+    //   unambiguous.  More specifically:
+    //
+    //   * An LIns can appear in at most one contiguous sequence of slots in
+    //     AR, and the length of that sequence depends on the opcode (1 slot
+    //     for instructions producing 32-bit values, 2 slots for instructions
+    //     producing 64-bit values, N slots for LIR_ialloc).
+    //
+    //   * An LIns named by 'entry[i]' must have an in-use Reservation with
+    //     arIndex==i (or an 'i' indexing the start of the same contiguous
+    //     sequence that 'entry[i]' belongs to).
+    //
+    //   * And vice versa:  an LIns with an in-use Reservation with arIndex==i
+    //     must be named by 'entry[i]'.
+    //
+    //   * If an LIns's Reservation names has arIndex==0 then LIns should not
+    //     be in 'entry[]'.
+    //
     struct AR
     {
         LIns*           entry[ NJ_MAX_STACK_ENTRY ];    /* maps to 4B contiguous locations relative to the frame pointer */

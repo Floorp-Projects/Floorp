@@ -243,30 +243,27 @@ namespace nanojit
 
     void Assembler::registerConsistencyCheck()
     {
-        // check registers
-        RegAlloc *regs = &_allocator;
-        RegisterMask managed = regs->managed;
-        Register r = FirstReg;
-        while(managed)
-        {
-            if (managed&1)
-            {
-                if (regs->isFree(r))
-                {
-                    NanoAssertMsgf(regs->getActive(r)==0, "register %s is free but assigned to ins", gpn(r));
+        RegisterMask managed = _allocator.managed;
+        for (Register r = FirstReg; r <= LastReg; r = nextreg(r)) {
+            if (rmask(r) & managed) {
+                // A register managed by register allocation must be either
+                // free or active, but not both.
+                if (_allocator.isFree(r)) {
+                    NanoAssertMsgf(_allocator.getActive(r)==0,
+                        "register %s is free but assigned to ins", gpn(r));
+                } else {
+                    // An LIns defining a register must have that register in
+                    // its reservation.
+                    LIns* ins = _allocator.getActive(r);
+                    NanoAssert(ins);
+                    NanoAssertMsg(r == ins->getReg(), "Register record mismatch");
                 }
-                else
-                {
-                    LIns* ins = regs->getActive(r);
-                    // @todo we should be able to check across RegAlloc's somehow (to include savedGP...)
-                    Register r2 = ins->getReg();
-                    NanoAssertMsg(regs->getActive(r2)==ins, "Register record mismatch");
-                }
+            } else {
+                // A register not managed by register allocation must be
+                // neither free nor active.
+                NanoAssert(!_allocator.isFree(r));
+                NanoAssert(!_allocator.getActive(r));
             }
-
-            // next register in bitfield
-            r = nextreg(r);
-            managed >>= 1;
         }
     }
     #endif /* _DEBUG */
@@ -773,15 +770,13 @@ namespace nanojit
         for (Register r = FirstReg; r <= LastReg; r = nextreg(r))
         {
             LIns *ins = _allocator.getActive(r);
-            if (ins)
-            {
-                // clear reg allocation, preserve stack allocation.
+            if (ins) {
+                // Clear reg allocation, preserve stack allocation.
                 _allocator.retire(r);
                 NanoAssert(r == ins->getReg());
                 ins->setReg(UnknownReg);
 
-                if (!ins->getArIndex())
-                {
+                if (!ins->getArIndex()) {
                     ins->markAsClear();
                 }
             }
