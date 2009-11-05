@@ -50,6 +50,10 @@
 #define IN_WINDOWS_DLL_BLOCKLIST
 #include "nsWindowsDllBlocklist.h"
 
+#ifndef STATUS_DLL_NOT_FOUND
+#define STATUS_DLL_NOT_FOUND ((DWORD)0xC0000135L)
+#endif
+
 typedef NTSTATUS (NTAPI *LdrLoadDll_func) (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle);
 
 static LdrLoadDll_func stub_LdrLoadDll = 0;
