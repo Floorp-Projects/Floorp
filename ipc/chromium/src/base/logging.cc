@@ -4,6 +4,72 @@
 
 #include "base/logging.h"
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+
+#include "prmem.h"
+#include "prprf.h"
+#include "base/string_util.h"
+
+#ifdef PR_LOGGING
+
+ChromiumLogger::~ChromiumLogger()
+{
+  if (mMsg) {
+    PR_LOG(gChromiumPRLog, mSeverity, ("%s", mMsg));
+    PR_Free(mMsg);
+  }
+}
+
+void
+ChromiumLogger::printf(const char* fmt, ...) const
+{
+  va_list args;
+  va_start(args, fmt);
+  mMsg = PR_vsprintf_append(mMsg, fmt, args);
+  va_end(args);
+}
+
+PRLogModuleInfo* ChromiumLogger::gChromiumPRLog = PR_NewLogModule("chromium");
+
+const ChromiumLogger&
+operator<<(const ChromiumLogger& log, const char* s)
+{
+  log.printf("%s", s);
+  return log;
+}
+
+const ChromiumLogger&
+operator<<(const ChromiumLogger& log, const std::string& s)
+{
+  log.printf("%s", s.c_str());
+  return log;
+}
+
+const ChromiumLogger&
+operator<<(const ChromiumLogger& log, int i)
+{
+  log.printf("%i", i);
+  return log;
+}
+
+const ChromiumLogger&
+operator<<(const ChromiumLogger& log, const std::wstring& s)
+{
+  log.printf("%s", WideToASCII(s).c_str());
+  return log;
+}
+
+const ChromiumLogger&
+operator<<(const ChromiumLogger& log, void* p)
+{
+  log.printf("%p", p);
+  return log;
+}
+
+#endif // PR_LOGGING
+
+#else
+
 #if defined(OS_WIN)
 #include <windows.h>
 typedef HANDLE FileHandle;
@@ -566,3 +632,5 @@ void CloseLogFile() {
 std::ostream& operator<<(std::ostream& out, const wchar_t* wstr) {
   return out << base::SysWideToUTF8(std::wstring(wstr));
 }
+
+#endif // CHROMIUM_MOZILLA_BUILD
