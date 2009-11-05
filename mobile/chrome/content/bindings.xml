@@ -77,11 +77,7 @@
       </xul:vbox>
     </content>
 
-    <implementation implements="nsIAutoCompletePopup, nsIDOMEventListener">
-      <constructor><![CDATA[
-        window.addEventListener("blur", this, true);
-      ]]></constructor>
-
+    <implementation implements="nsIAutoCompletePopup">
       <!-- Used by the chrome input handler -->
       <property name="boxObject"
                 readonly="true"
@@ -312,20 +308,6 @@
           return matchCount + (this._allBookmarksItem._hidden ? 0 : 1);
         ]]></getter>
       </property>
-
-      <!-- Handles blur events on the window while the popup is open. -->
-      <method name="handleEvent">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          if (aEvent.type == "blur") {
-            if (this._popupOpen)
-              this.close();
-          } else {
-            Components.utils.reportError("autocomplete popup received " +
-                                         "unexpected event: " + aEvent.type);
-          }
-        ]]></body>
-      </method>
 
       <method name="_styleItem">
         <parameter name="aItem"/>
