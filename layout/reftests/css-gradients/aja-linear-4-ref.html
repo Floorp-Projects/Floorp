@@ -1,0 +1,24 @@
+<!doctype html>
+<!-- Derived from http://a-ja.net/newgrad.html -->
+<html class="reftest-wait">
+<head>
+<script>
+function doDraw() {
+  var ctx = document.getElementById('canvas').getContext('2d');
+
+  var grad = ctx.createLinearGradient(50, 0, 50, 200);
+  grad.addColorStop(0, 'yellow');
+  grad.addColorStop(0.5, 'blue');
+  grad.addColorStop(1, '#0f0');
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,100,200);
+
+  document.documentElement.removeAttribute('class');
+}
+</script>
+</head>
+<body onload="doDraw();">
+<canvas id="canvas" width="100" height="200"></canvas>
+</body>
+</html>
