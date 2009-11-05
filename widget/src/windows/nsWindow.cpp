@@ -205,6 +205,10 @@
 #include "nsGfxCIID.h"
 #endif
 
+// A magic APP message that can be sent to quit, sort of like a QUERYENDSESSION/ENDSESSION,
+// but without the query.
+#define MOZ_WM_APP_QUIT (WM_APP+0x0300)
+
 /**************************************************************
  **************************************************************
  **
@@ -3705,9 +3709,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       *aRetValue = sCanQuit ? TRUE : FALSE;
       result = PR_TRUE;
       break;
+#endif
 
+#ifndef WINCE
     case WM_ENDSESSION:
-      if (wParam == TRUE && sCanQuit == TRI_TRUE)
+#endif
+    case MOZ_WM_APP_QUIT:
+      if (msg == MOZ_WM_APP_QUIT || (wParam == TRUE && sCanQuit == TRI_TRUE))
       {
         // Let's fake a shutdown sequence without actually closing windows etc.
         // to avoid Windows killing us in the middle. A proper shutdown would
@@ -3729,6 +3737,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       result = PR_TRUE;
       break;
 
+#ifndef WINCE
     case WM_DISPLAYCHANGE:
       DispatchStandardEvent(NS_DISPLAYCHANGED);
       break;
