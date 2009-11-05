@@ -268,7 +268,7 @@ protected:
 
   friend class nsCellMap;
   friend class BCMapCellIterator;
-  friend class BCMapBorderIterator;
+  friend class BCPaintBorderIterator;
   friend class nsCellMapColumnIterator;
   
 /** Insert a row group cellmap after aPrevMap, if aPrefMap is null insert it
@@ -474,7 +474,7 @@ public:
 protected:
   friend class nsTableCellMap;
   friend class BCMapCellIterator;
-  friend class BCMapBorderIterator;
+  friend class BCPaintBorderIterator;
   friend class nsTableFrame;
   friend class nsCellMapColumnIterator;
 
