@@ -45,11 +45,7 @@
  */
 
 #ifdef MOZ_IPC
-#include "ContentProcessParent.h"
-#include "TabParent.h"
-
-using namespace mozilla;
-using namespace mozilla::dom;
+#  include "base/basictypes.h"
 #endif
 
 #include "prenv.h"
@@ -105,6 +101,14 @@ using namespace mozilla::dom;
 
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
+#endif
+
+#ifdef MOZ_IPC
+#include "ContentProcessParent.h"
+#include "TabParent.h"
+
+using namespace mozilla;
+using namespace mozilla::dom;
 #endif
 
 class nsAsyncDocShellDestroyer : public nsRunnable
