@@ -490,7 +490,6 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
                                                   nanojit::LC_FragProfile) ?
                                                   sProfId++ : 0));
     mFragment->lirbuf = mParent.mLirbuf;
-    mFragment->root = mFragment;
     mParent.mFragments[mFragName].fragptr = mFragment;
 
     mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf);

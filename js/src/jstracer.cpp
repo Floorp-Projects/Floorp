@@ -1369,6 +1369,15 @@ FragmentHash(const void *ip, JSObject* globalObj, uint32 globalShape, uint32 arg
     return size_t(h);
 }
 
+struct LinkableFragment : public VMFragment
+{
+    LinkableFragment(const void* _ip verbose_only(, uint32_t profFragID))
+      : VMFragment(_ip verbose_only(, profFragID))
+    { }
+
+    uint32 branchCount;
+};
+
 /*
  * argc is cx->fp->argc at the trace loop header, i.e., the number of arguments
  * pushed for the innermost JS frame. This is required as part of the fragment
@@ -1378,11 +1387,12 @@ FragmentHash(const void *ip, JSObject* globalObj, uint32 globalShape, uint32 arg
  * inner tree with two different values of argc, and entry type checking or
  * exit frame synthesis could crash.
  */
-struct VMFragment : public Fragment
+struct TreeFragment : public LinkableFragment
 {
-    VMFragment(const void* _ip, JSObject* _globalObj, uint32 _globalShape, uint32 _argc
+    TreeFragment(const void* _ip, JSObject* _globalObj, uint32 _globalShape, uint32 _argc
                verbose_only(, uint32_t profFragID)) :
-        Fragment(_ip verbose_only(, profFragID)),
+        LinkableFragment(_ip verbose_only(, profFragID)),
+        treeInfo(NULL),
         first(NULL),
         next(NULL),
         peer(NULL),
@@ -1391,13 +1401,10 @@ struct VMFragment : public Fragment
         argc(_argc)
     { }
 
-    inline TreeInfo* getTreeInfo() {
-        return (TreeInfo*)vmprivate;
-    }
-
-    VMFragment* first;
-    VMFragment* next;
-    VMFragment* peer;
+    TreeInfo *treeInfo;
+    TreeFragment* first;
+    TreeFragment* next;
+    TreeFragment* peer;
     JSObject* globalObj;
     uint32 globalShape;
     uint32 argc;
@@ -1406,12 +1413,12 @@ struct VMFragment : public Fragment
 static void
 RawLookupFirstPeer(JSTraceMonitor* tm, const void *ip, JSObject* globalObj,
                    uint32 globalShape, uint32 argc,
-                   VMFragment*& firstInBucket, VMFragment**& prevTreeNextp)
+                   TreeFragment*& firstInBucket, TreeFragment**& prevTreeNextp)
 {
     size_t h = FragmentHash(ip, globalObj, globalShape, argc);
-    VMFragment** ppf = &tm->vmfragments[h];
+    TreeFragment** ppf = &tm->vmfragments[h];
     firstInBucket = *ppf;
-    for (; VMFragment* pf = *ppf; ppf = &pf->next) {
+    for (; TreeFragment* pf = *ppf; ppf = &pf->next) {
         if (pf->globalObj == globalObj &&
             pf->globalShape == globalShape &&
             pf->ip == ip &&
@@ -1424,29 +1431,29 @@ RawLookupFirstPeer(JSTraceMonitor* tm, const void *ip, JSObject* globalObj,
     return;
 }
 
-static VMFragment*
+static TreeFragment*
 LookupLoop(JSTraceMonitor* tm, const void *ip, JSObject* globalObj,
                 uint32 globalShape, uint32 argc)
 {
-    VMFragment *_, **prevTreeNextp;
+    TreeFragment *_, **prevTreeNextp;
     RawLookupFirstPeer(tm, ip, globalObj, globalShape, argc, _, prevTreeNextp);
     return *prevTreeNextp;
 }
 
-static VMFragment*
+static TreeFragment*
 LookupOrAddLoop(JSTraceMonitor* tm, const void *ip, JSObject* globalObj,
                 uint32 globalShape, uint32 argc)
 {
-    VMFragment *firstInBucket, **prevTreeNextp;
+    TreeFragment *firstInBucket, **prevTreeNextp;
     RawLookupFirstPeer(tm, ip, globalObj, globalShape, argc, firstInBucket, prevTreeNextp);
-    if (VMFragment *f = *prevTreeNextp)
+    if (TreeFragment *f = *prevTreeNextp)
         return f;
 
     verbose_only(
     uint32_t profFragID = (js_LogController.lcbits & LC_FragProfile)
                           ? (++(tm->lastFragID)) : 0;
     )
-    VMFragment* f = new (*tm->dataAlloc) VMFragment(ip, globalObj, globalShape, argc
+    TreeFragment* f = new (*tm->dataAlloc) TreeFragment(ip, globalObj, globalShape, argc
                                                     verbose_only(, profFragID));
     f->root = f;                /* f is the root of a new tree */
     *prevTreeNextp = f;         /* insert f at the end of the vmfragments bucket-list */
@@ -1456,15 +1463,15 @@ LookupOrAddLoop(JSTraceMonitor* tm, const void *ip, JSObject* globalObj,
     return f;
 }
 
-static VMFragment*
-AddNewPeerToPeerList(JSTraceMonitor* tm, VMFragment* peer)
+static TreeFragment*
+AddNewPeerToPeerList(JSTraceMonitor* tm, TreeFragment* peer)
 {
     JS_ASSERT(peer);
     verbose_only(
     uint32_t profFragID = (js_LogController.lcbits & LC_FragProfile)
                           ? (++(tm->lastFragID)) : 0;
     )
-    VMFragment* f = new (*tm->dataAlloc) VMFragment(peer->ip, peer->globalObj,
+    TreeFragment* f = new (*tm->dataAlloc) TreeFragment(peer->ip, peer->globalObj,
                                                     peer->globalShape, peer->argc
                                                     verbose_only(, profFragID));
     f->root = f;                /* f is the root of a new tree */
@@ -1472,13 +1479,13 @@ AddNewPeerToPeerList(JSTraceMonitor* tm, VMFragment* peer)
     f->peer = peer->peer;
     peer->peer = f;
     /* only the |first| Fragment of a peer list needs a valid |next| field */
-    debug_only(f->next = (VMFragment*)0xcdcdcdcd);
+    debug_only(f->next = (TreeFragment*)0xcdcdcdcd);
     return f;
 }
 
 #ifdef DEBUG
 static void
-AssertTreeIsUnique(JSTraceMonitor* tm, VMFragment* f, TreeInfo* ti)
+AssertTreeIsUnique(JSTraceMonitor* tm, TreeFragment* f, TreeInfo* ti)
 {
     JS_ASSERT(f->root == f);
 
@@ -1488,12 +1495,12 @@ AssertTreeIsUnique(JSTraceMonitor* tm, VMFragment* f, TreeInfo* ti)
      * properly connecting peer edges.
      */
     TreeInfo* ti_other;
-    for (VMFragment* peer = LookupLoop(tm, f->ip, f->globalObj, f->globalShape, f->argc);
+    for (TreeFragment* peer = LookupLoop(tm, f->ip, f->globalObj, f->globalShape, f->argc);
          peer != NULL;
          peer = peer->peer) {
         if (!peer->code() || peer == f)
             continue;
-        ti_other = (TreeInfo*)peer->vmprivate;
+        ti_other = peer->treeInfo;
         JS_ASSERT(ti_other);
         JS_ASSERT(!ti->typeMap.matches(ti_other->typeMap));
     }
@@ -1511,7 +1518,7 @@ AttemptCompilation(JSContext *cx, JSTraceMonitor* tm, JSObject* globalObj, jsbyt
     ResetRecordingAttempts(cx, pc);
 
     /* Breathe new life into all peer fragments at the designated loop header. */
-    VMFragment* f = (VMFragment*)LookupLoop(tm, pc, globalObj, OBJ_SHAPE(globalObj), argc);
+    TreeFragment* f = LookupLoop(tm, pc, globalObj, OBJ_SHAPE(globalObj), argc);
     if (!f) {
         /*
          * If the global object's shape changed, we can't easily find the
@@ -2281,21 +2288,21 @@ SpecializeTreesToMissingGlobals(JSContext* cx, JSObject* globalObj, TreeInfo* ro
     JS_ASSERT(ti->globalSlots->length() == ti->typeMap.length() - ti->nStackTypes);
 
     for (unsigned i = 0; i < root->dependentTrees.length(); i++) {
-        ti = (TreeInfo*)root->dependentTrees[i]->vmprivate;
+        ti = root->dependentTrees[i]->treeInfo;
 
         /* ti can be NULL if we hit the recording tree in emitTreeCall; this is harmless. */
         if (ti && ti->nGlobalTypes() < ti->globalSlots->length())
             SpecializeTreesToMissingGlobals(cx, globalObj, ti);
     }
     for (unsigned i = 0; i < root->linkedTrees.length(); i++) {
-        ti = (TreeInfo*)root->linkedTrees[i]->vmprivate;
+        ti = root->linkedTrees[i]->treeInfo;
         if (ti && ti->nGlobalTypes() < ti->globalSlots->length())
             SpecializeTreesToMissingGlobals(cx, globalObj, ti);
     }
 }
 
 static void
-TrashTree(JSContext* cx, Fragment* f);
+TrashTree(JSContext* cx, TreeFragment* f);
 
 template <class T>
 static T&
@@ -2305,7 +2312,7 @@ InitConst(const T &t)
 }
 
 JS_REQUIRES_STACK
-TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, Fragment* fragment,
+TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* fragment,
                              TreeInfo* ti, unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
                              VMSideExit* innermost, jsbytecode* outer, uint32 outerArgc,
                              RecordReason recordReason)
@@ -2347,7 +2354,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, Fragment* fragme
     JS_ASSERT(globalObj == JS_GetGlobalForObject(cx, cx->fp->scopeChain));
     JS_ASSERT(cx->fp->regs->pc == (jsbytecode*)fragment->ip);
     JS_ASSERT(fragment->root == treeInfo->rootFragment);
-    JS_ASSERT(!fragment->vmprivate);
+    JS_ASSERT_IF(fragment->root == fragment, !fragment->root->treeInfo);
     JS_ASSERT(ti);
 
     /*
@@ -2757,9 +2764,9 @@ JSTraceMonitor::flush()
     // recover profiling data from expiring Fragments
     verbose_only(
         for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
-            for (VMFragment *f = vmfragments[i]; f; f = f->next) {
+            for (TreeFragment *f = vmfragments[i]; f; f = f->next) {
                 JS_ASSERT(f->root == f);
-                for (VMFragment *p = f; p; p = p->peer)
+                for (TreeFragment *p = f; p; p = p->peer)
                     js_FragProfiling_FragFinalizer(p, this);
             }
         }
@@ -2793,7 +2800,7 @@ JSTraceMonitor::flush()
     lirbuf->names = new (alloc) LirNameMap(alloc, labels);
 #endif
 
-    memset(&vmfragments[0], 0, FRAGMENT_TABLE_SIZE * sizeof(VMFragment*));
+    memset(&vmfragments[0], 0, FRAGMENT_TABLE_SIZE * sizeof(TreeFragment*));
     reFragments = new (alloc) REHashMap(alloc);
 
     needFlush = JS_FALSE;
@@ -2822,15 +2829,15 @@ JSTraceMonitor::mark(JSTracer* trc)
 {
     if (!trc->context->runtime->gcFlushCodeCaches) {
         for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
-            VMFragment* f = vmfragments[i];
+            TreeFragment* f = vmfragments[i];
             while (f) {
-                if (TreeInfo* ti = (TreeInfo*)f->vmprivate)
+                if (TreeInfo* ti = f->treeInfo)
                     MarkTreeInfo(trc, ti);
-                VMFragment* peer = (VMFragment*)f->peer;
+                TreeFragment* peer = f->peer;
                 while (peer) {
-                    if (TreeInfo* ti = (TreeInfo*)peer->vmprivate)
+                    if (TreeInfo* ti = peer->treeInfo)
                         MarkTreeInfo(trc, ti);
-                    peer = (VMFragment*)peer->peer;
+                    peer = peer->peer;
                 }
                 f = f->next;
             }
@@ -3909,9 +3916,9 @@ public:
  * possible to reconcile the types for each slot in the inner and outer trees.
  */
 JS_REQUIRES_STACK void
-TraceRecorder::adjustCallerTypes(Fragment* f)
+TraceRecorder::adjustCallerTypes(TreeFragment* f)
 {
-    TreeInfo* ti = (TreeInfo*)f->vmprivate;
+    TreeInfo* ti = f->treeInfo;
 
     AdjustCallerGlobalTypesVisitor globalVisitor(*this, ti->globalTypeMap());
     VisitGlobalSlots(globalVisitor, cx, *treeInfo->globalSlots);
@@ -4306,7 +4313,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
         return ARECORD_STOP;
     }
     if (anchor && anchor->exitType != CASE_EXIT)
-        ++treeInfo->branchCount;
+        ++fragment->root->branchCount;
     if (outOfMemory())
         return ARECORD_STOP;
 
@@ -4331,9 +4338,9 @@ TraceRecorder::compile(JSTraceMonitor* tm)
             assm->patch(anchor);
     }
     JS_ASSERT(fragment->code());
-    JS_ASSERT(!fragment->vmprivate);
+    JS_ASSERT_IF(fragment == fragment->root, !fragment->root->treeInfo);
     if (fragment == fragment->root)
-        fragment->vmprivate = treeInfo;
+        fragment->root->treeInfo = treeInfo;
 
     /* :TODO: windows support */
 #if defined DEBUG && !defined WIN32
@@ -4350,7 +4357,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
 }
 
 static void
-JoinPeers(Assembler* assm, VMSideExit* exit, VMFragment* target)
+JoinPeers(Assembler* assm, VMSideExit* exit, TreeFragment* target)
 {
     exit->target = target;
     assm->patch(exit);
@@ -4360,8 +4367,8 @@ JoinPeers(Assembler* assm, VMSideExit* exit, VMFragment* target)
     if (exit->root() == target)
         return;
 
-    target->getTreeInfo()->dependentTrees.addUnique(exit->root());
-    exit->root()->getTreeInfo()->linkedTrees.addUnique(target);
+    target->treeInfo->dependentTrees.addUnique(exit->root());
+    exit->root()->treeInfo->linkedTrees.addUnique(target);
 }
 
 /* Results of trying to connect an arbitrary type A with arbitrary type B */
@@ -4584,22 +4591,22 @@ TraceRecorder::selfTypeStability(SlotMap& slotMap)
 }
 
 JS_REQUIRES_STACK TypeConsensus
-TraceRecorder::peerTypeStability(SlotMap& slotMap, const void* ip, VMFragment** pPeer)
+TraceRecorder::peerTypeStability(SlotMap& slotMap, const void* ip, TreeFragment** pPeer)
 {
     /* See if there are any peers that would make this stable */
-    VMFragment* root = (VMFragment*)fragment->root;
-    VMFragment* peer = LookupLoop(traceMonitor, ip, root->globalObj, root->globalShape, root->argc);
+    TreeFragment* root = fragment->root;
+    TreeFragment* peer = LookupLoop(traceMonitor, ip, root->globalObj, root->globalShape, root->argc);
 
     /* This condition is possible with recursion */
     JS_ASSERT_IF(!peer, fragment->root->ip != ip);
     if (!peer)
         return TypeConsensus_Bad;
     bool onlyUndemotes = false;
-    for (; peer != NULL; peer = (VMFragment*)peer->peer) {
-        if (!peer->vmprivate || peer == fragment)
+    for (; peer != NULL; peer = peer->peer) {
+        if (!peer->treeInfo || peer == fragment)
             continue;
         debug_only_printf(LC_TMTracer, "Checking type stability against peer=%p\n", (void*)peer);
-        TypeConsensus consensus = slotMap.checkTypes((TreeInfo*)peer->vmprivate);
+        TypeConsensus consensus = slotMap.checkTypes(peer->treeInfo);
         if (consensus == TypeConsensus_Okay) {
             *pPeer = peer;
             /* Return this even though there will be linkage; the trace itself is not stable.
@@ -4658,8 +4665,8 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
     JS_ASSERT_IF(exit->exitType == RECURSIVE_UNLINKED_EXIT,
                  exit->recursive_pc != fragment->root->ip);
 
-    VMFragment* peer = NULL;
-    VMFragment* root = (VMFragment*)fragment->root;
+    TreeFragment* peer = NULL;
+    TreeFragment* root = fragment->root;
 
     TypeConsensus consensus = TypeConsensus_Bad;
 
@@ -4718,7 +4725,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
             debug_only_printf(LC_TMTracer,
                               "Joining type-unstable trace to target fragment %p.\n",
                               (void*)peer);
-            ((TreeInfo*)peer->vmprivate)->dependentTrees.addUnique(fragment->root);
+            peer->treeInfo->dependentTrees.addUnique(fragment->root);
             treeInfo->linkedTrees.addUnique(peer);
         }
     } else {
@@ -4749,8 +4756,8 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
 
     debug_only_print0(LC_TMTracer,
                       "updating specializations on dependent and linked trees\n");
-    if (fragment->root->vmprivate)
-        SpecializeTreesToMissingGlobals(cx, globalObj, (TreeInfo*)fragment->root->vmprivate);
+    if (fragment->root->treeInfo)
+        SpecializeTreesToMissingGlobals(cx, globalObj, fragment->root->treeInfo);
 
     /*
      * If this is a newly formed tree, and the outer tree has not been compiled yet, we
@@ -4779,23 +4786,23 @@ FullMapFromExit(TypeMap& typeMap, VMSideExit* exit)
     typeMap.fromRaw(exit->stackTypeMap(), exit->numStackSlots);
     typeMap.fromRaw(exit->globalTypeMap(), exit->numGlobalSlots);
     /* Include globals that were later specialized at the root of the tree. */
-    if (exit->numGlobalSlots < exit->root()->getTreeInfo()->nGlobalTypes()) {
-        typeMap.fromRaw(exit->root()->getTreeInfo()->globalTypeMap() + exit->numGlobalSlots,
-                        exit->root()->getTreeInfo()->nGlobalTypes() - exit->numGlobalSlots);
+    if (exit->numGlobalSlots < exit->root()->treeInfo->nGlobalTypes()) {
+        typeMap.fromRaw(exit->root()->treeInfo->globalTypeMap() + exit->numGlobalSlots,
+                        exit->root()->treeInfo->nGlobalTypes() - exit->numGlobalSlots);
     }
 }
 
 static JS_REQUIRES_STACK TypeConsensus
-TypeMapLinkability(JSContext* cx, const TypeMap& typeMap, VMFragment* peer)
+TypeMapLinkability(JSContext* cx, const TypeMap& typeMap, TreeFragment* peer)
 {
-    const TypeMap& peerMap = peer->getTreeInfo()->typeMap;
+    const TypeMap& peerMap = peer->treeInfo->typeMap;
     unsigned minSlots = JS_MIN(typeMap.length(), peerMap.length());
     TypeConsensus consensus = TypeConsensus_Okay;
     for (unsigned i = 0; i < minSlots; i++) {
         if (typeMap[i] == peerMap[i])
             continue;
         if (typeMap[i] == TT_INT32 && peerMap[i] == TT_DOUBLE &&
-            IsSlotUndemotable(cx, peer->getTreeInfo(), i, peer->ip)) {
+            IsSlotUndemotable(cx, peer->treeInfo, i, peer->ip)) {
             consensus = TypeConsensus_Undemotes;
         } else {
             return TypeConsensus_Bad;
@@ -4823,7 +4830,7 @@ FindUndemotesInTypemaps(JSContext* cx, const TypeMap& typeMap, TreeInfo* treeInf
 }
 
 JS_REQUIRES_STACK void
-TraceRecorder::joinEdgesToEntry(VMFragment* peer_root)
+TraceRecorder::joinEdgesToEntry(TreeFragment* peer_root)
 {
     if (fragment->root != fragment)
         return;
@@ -4831,8 +4838,8 @@ TraceRecorder::joinEdgesToEntry(VMFragment* peer_root)
     TypeMap typeMap(NULL);
     Queue<unsigned> undemotes(NULL);
 
-    for (VMFragment* peer = peer_root; peer; peer = (VMFragment*)peer->peer) {
-        TreeInfo* ti = peer->getTreeInfo();
+    for (TreeFragment* peer = peer_root; peer; peer = peer->peer) {
+        TreeInfo* ti = peer->treeInfo;
         if (!ti)
             continue;
         UnstableExit* uexit = ti->unstableExits;
@@ -4845,14 +4852,14 @@ TraceRecorder::joinEdgesToEntry(VMFragment* peer_root)
             /* Build the full typemap for this unstable exit */
             FullMapFromExit(typeMap, uexit->exit);
             /* Check its compatibility against this tree */
-            TypeConsensus consensus = TypeMapLinkability(cx, typeMap, (VMFragment*)fragment->root);
+            TypeConsensus consensus = TypeMapLinkability(cx, typeMap, fragment->root);
             JS_ASSERT_IF(consensus == TypeConsensus_Okay, peer != fragment);
             if (consensus == TypeConsensus_Okay) {
                 debug_only_printf(LC_TMTracer,
                                   "Joining type-stable trace to target exit %p->%p.\n",
                                   (void*)uexit->fragment, (void*)uexit->exit);
                 /* It's okay! Link together and remove the unstable exit. */
-                JoinPeers(traceMonitor->assembler, uexit->exit, (VMFragment*)fragment);
+                JoinPeers(traceMonitor->assembler, uexit->exit, (TreeFragment*)fragment);
                 uexit = ti->removeUnstableExit(uexit->exit);
             } else {
                 /* Check for int32->double slots that suggest trashing. */
@@ -4897,7 +4904,7 @@ TraceRecorder::endLoop(VMSideExit* exit)
 
     debug_only_printf(LC_TMTreeVis, "TREEVIS ENDLOOP EXIT=%p\n", (void*)exit);
 
-    VMFragment* root = (VMFragment*)fragment->root;
+    TreeFragment* root = fragment->root;
     joinEdgesToEntry(LookupLoop(traceMonitor, root->ip, root->globalObj,
                                 root->globalShape, root->argc));
     debug_only_stmt(DumpPeerStability(traceMonitor, root->ip, root->globalObj,
@@ -4909,8 +4916,8 @@ TraceRecorder::endLoop(VMSideExit* exit)
      */
     debug_only_print0(LC_TMTracer,
                       "updating specializations on dependent and linked trees\n");
-    if (fragment->root->vmprivate)
-        SpecializeTreesToMissingGlobals(cx, globalObj, (TreeInfo*)fragment->root->vmprivate);
+    if (fragment->root->treeInfo)
+        SpecializeTreesToMissingGlobals(cx, globalObj, fragment->root->treeInfo);
 
     /*
      * If this is a newly formed tree, and the outer tree has not been compiled
@@ -4934,9 +4941,9 @@ TraceRecorder::endLoop(VMSideExit* exit)
 
 /* Emit code to adjust the stack to match the inner tree's stack expectations. */
 JS_REQUIRES_STACK void
-TraceRecorder::prepareTreeCall(VMFragment* inner, LIns*& inner_sp_ins)
+TraceRecorder::prepareTreeCall(TreeFragment* inner, LIns*& inner_sp_ins)
 {
-    TreeInfo* ti = (TreeInfo*)inner->vmprivate;
+    TreeInfo* ti = inner->treeInfo;
     inner_sp_ins = lirbuf->sp;
     VMSideExit* exit = snapshot(OOM_EXIT);
 
@@ -5010,7 +5017,7 @@ BuildGlobalTypeMapFromInnerTree(Queue<JSTraceType>& typeMap, VMSideExit* inner)
     typeMap.add(inner->globalTypeMap(), inner->numGlobalSlots);
 
     /* Add missing global types from the innermost exit's tree. */
-    TreeInfo* innerTree = inner->root()->getTreeInfo();
+    TreeInfo* innerTree = inner->root()->treeInfo;
     unsigned slots = inner->numGlobalSlots;
     if (slots < innerTree->nGlobalTypes()) {
         typeMap.add(innerTree->globalTypeMap() + slots, innerTree->nGlobalTypes() - slots);
@@ -5022,9 +5029,9 @@ BuildGlobalTypeMapFromInnerTree(Queue<JSTraceType>& typeMap, VMSideExit* inner)
 
 /* Record a call to an inner tree. */
 JS_REQUIRES_STACK void
-TraceRecorder::emitTreeCall(VMFragment* inner, VMSideExit* exit, LIns* inner_sp_ins)
+TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit, LIns* inner_sp_ins)
 {
-    TreeInfo* ti = (TreeInfo*)inner->vmprivate;
+    TreeInfo* ti = inner->treeInfo;
 
     /* Invoke the inner tree. */
     LIns* args[] = { INS_CONSTPTR(inner), lirbuf->state }; /* reverse order */
@@ -5067,7 +5074,7 @@ TraceRecorder::emitTreeCall(VMFragment* inner, VMSideExit* exit, LIns* inner_sp_
                       (void*)nested, (void*)exit);
 
     /* Register us as a dependent tree of the inner tree. */
-    ((TreeInfo*)inner->vmprivate)->dependentTrees.addUnique(fragment->root);
+    inner->treeInfo->dependentTrees.addUnique(fragment->root);
     treeInfo->linkedTrees.addUnique(inner);
 }
 
@@ -5280,7 +5287,7 @@ CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
     uint32 globalShape = OBJ_SHAPE(globalObj);
 
     if (tm->recorder) {
-        VMFragment* root = (VMFragment*)tm->recorder->getFragment()->root;
+        TreeFragment* root = tm->recorder->getFragment()->root;
         TreeInfo* ti = tm->recorder->getTreeInfo();
 
         /* Check the global shape matches the recorder's treeinfo's shape. */
@@ -5331,7 +5338,7 @@ CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
 }
 
 static JS_REQUIRES_STACK bool
-StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
+StartRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* f, TreeInfo* ti,
               unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
               VMSideExit* expectedInnerExit, jsbytecode* outer, uint32 outerArgc,
               RecordReason reason)
@@ -5361,9 +5368,9 @@ StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
 }
 
 static void
-TrashTree(JSContext* cx, Fragment* f)
+TrashTree(JSContext* cx, TreeFragment* f)
 {
-    JS_ASSERT((!f->code()) == (!f->vmprivate));
+    JS_ASSERT((!f->code()) == (!f->treeInfo));
     JS_ASSERT(f == f->root);
     debug_only_printf(LC_TMTreeVis, "TREEVIS TRASH FRAG=%p\n", (void*)f);
 
@@ -5371,10 +5378,10 @@ TrashTree(JSContext* cx, Fragment* f)
         return;
     AUDIT(treesTrashed);
     debug_only_print0(LC_TMTracer, "Trashing tree info.\n");
-    TreeInfo* ti = (TreeInfo*)f->vmprivate;
-    f->vmprivate = NULL;
+    TreeInfo* ti = f->treeInfo;
+    f->treeInfo = NULL;
     f->setCode(NULL);
-    Fragment** data = ti->dependentTrees.data();
+    TreeFragment** data = ti->dependentTrees.data();
     unsigned length = ti->dependentTrees.length();
     for (unsigned n = 0; n < length; ++n)
         TrashTree(cx, data[n]);
@@ -5586,12 +5593,12 @@ SynthesizeSlowNativeFrame(InterpState& state, JSContext *cx, VMSideExit *exit)
 }
 
 static JS_REQUIRES_STACK bool
-RecordTree(JSContext* cx, JSTraceMonitor* tm, VMFragment* peer, jsbytecode* outer,
+RecordTree(JSContext* cx, JSTraceMonitor* tm, TreeFragment* peer, jsbytecode* outer,
            uint32 outerArgc, JSObject* globalObj, uint32 globalShape,
            SlotList* globalSlots, uint32 argc, RecordReason reason)
 {
     /* Try to find an unused peer fragment, or allocate a new one. */
-    VMFragment* f = peer;
+    TreeFragment* f = peer;
     while (f->code() && f->peer)
         f = f->peer;
     if (f->code())
@@ -5619,7 +5626,7 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, VMFragment* peer, jsbytecode* oute
         return false;
     }
 
-    JS_ASSERT(!f->code() && !f->vmprivate);
+    JS_ASSERT(!f->code() && !f->treeInfo);
 
     /* Set up the VM-private treeInfo structure for this fragment. */
     TreeInfo* ti = new (*tm->traceAlloc) TreeInfo(tm->dataAlloc, f, globalSlots);
@@ -5629,7 +5636,7 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, VMFragment* peer, jsbytecode* oute
     ti->nStackTypes = ti->typeMap.length() - globalSlots->length();
 
 #ifdef DEBUG
-    AssertTreeIsUnique(tm, (VMFragment*)f, ti);
+    AssertTreeIsUnique(tm, f, ti);
     ti->treeFileName = cx->fp->script->filename;
     ti->treeLineNumber = js_FramePCToLineNumber(cx, cx->fp);
     ti->treePCOffset = FramePCOffset(cx->fp);
@@ -5664,10 +5671,10 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, VMFragment* peer, jsbytecode* oute
 }
 
 static JS_REQUIRES_STACK TypeConsensus
-FindLoopEdgeTarget(JSContext* cx, VMSideExit* exit, VMFragment** peerp)
+FindLoopEdgeTarget(JSContext* cx, VMSideExit* exit, TreeFragment** peerp)
 {
-    VMFragment* from = exit->root();
-    TreeInfo* from_ti = from->getTreeInfo();
+    TreeFragment* from = exit->root();
+    TreeInfo* from_ti = from->treeInfo;
 
     JS_ASSERT(from->code());
 
@@ -5695,16 +5702,16 @@ FindLoopEdgeTarget(JSContext* cx, VMSideExit* exit, VMFragment** peerp)
     JS_ASSERT(exit->exitType == UNSTABLE_LOOP_EXIT ||
               (exit->exitType == RECURSIVE_UNLINKED_EXIT && exit->recursive_pc));
 
-    VMFragment* firstPeer = NULL;
+    TreeFragment* firstPeer = NULL;
     if (exit->exitType == UNSTABLE_LOOP_EXIT || exit->recursive_pc == from->ip) {
-        firstPeer = (VMFragment*)from->first;
+        firstPeer = from->first;
     } else {
         firstPeer = LookupLoop(&JS_TRACE_MONITOR(cx), exit->recursive_pc, from->globalObj,
                                from->globalShape, from->argc);
     }
 
-    for (VMFragment* peer = firstPeer; peer; peer = peer->peer) {
-        TreeInfo* peer_ti = peer->getTreeInfo();
+    for (TreeFragment* peer = firstPeer; peer; peer = peer->peer) {
+        TreeInfo* peer_ti = peer->treeInfo;
         if (!peer_ti)
             continue;
         JS_ASSERT(peer->argc == from->argc);
@@ -5745,13 +5752,13 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
         return false;
     }
 
-    VMFragment* from = exit->root();
-    TreeInfo* from_ti = from->getTreeInfo();
+    TreeFragment* from = exit->root();
+    TreeInfo* from_ti = from->treeInfo;
 
-    VMFragment* peer = NULL;
+    TreeFragment* peer = NULL;
     TypeConsensus consensus = FindLoopEdgeTarget(cx, exit, &peer);
     if (consensus == TypeConsensus_Okay) {
-        TreeInfo* peer_ti = peer->getTreeInfo();
+        TreeInfo* peer_ti = peer->treeInfo;
         JS_ASSERT(from_ti->globalSlots == peer_ti->globalSlots);
         JS_ASSERT_IF(exit->exitType == UNSTABLE_LOOP_EXIT,
                      from_ti->nStackTypes == peer_ti->nStackTypes);
@@ -5818,31 +5825,30 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
         return false;
     }
 
-    Fragment* f = anchor->root();
-    JS_ASSERT(f->vmprivate);
-    TreeInfo* ti = (TreeInfo*)f->vmprivate;
+    TreeFragment* f = anchor->root();
+    JS_ASSERT(f->treeInfo);
 
     /*
      * Don't grow trees above a certain size to avoid code explosion due to
      * tail duplication.
      */
-    if (ti->branchCount >= MAX_BRANCHES) {
+    if (f->branchCount >= MAX_BRANCHES) {
 #ifdef MOZ_TRACEVIS
         if (tvso) tvso->r = R_FAIL_EXTEND_MAX_BRANCHES;
 #endif
         return false;
     }
 
-    Fragment* c;
-    if (!(c = anchor->target)) {
+    VMFragment* c;
+    if (!anchor->target) {
         JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
         Allocator& alloc = *tm->dataAlloc;
         verbose_only(
         uint32_t profFragID = (js_LogController.lcbits & LC_FragProfile)
                               ? (++(tm->lastFragID)) : 0;
         )
-        c = new (alloc) Fragment(cx->fp->regs->pc verbose_only(, profFragID));
-        c->root = anchor->from->root;
+        c = new (alloc) VMFragment(cx->fp->regs->pc verbose_only(, profFragID));
+        c->root = anchor->root();
         debug_only_printf(LC_TMTreeVis, "TREEVIS CREATEBRANCH ROOT=%p FRAG=%p PC=%p FILE=\"%s\""
                           " LINE=%d ANCHOR=%p OFFS=%d\n",
                           (void*)f, (void*)c, (void*)cx->fp->regs->pc, cx->fp->script->filename,
@@ -5851,6 +5857,8 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
         anchor->target = c;
         c->root = f;
         verbose_only( tm->branches = new (alloc) Seq<Fragment*>(c, tm->branches); )
+    } else {
+        c = (VMFragment*)anchor->target;
     }
 
     /*
@@ -5871,7 +5879,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
         unsigned ngslots;
         JSTraceType* typeMap;
         TypeMap fullMap(NULL);
-        if (exitedFrom == NULL) {
+        if (!exitedFrom) {
             /*
              * If we are coming straight from a simple side exit, just use that
              * exit's type map as starting point.
@@ -5898,7 +5906,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
             typeMap = fullMap.data();
         }
         JS_ASSERT(ngslots >= anchor->numGlobalSlots);
-        bool rv = StartRecorder(cx, anchor, c, (TreeInfo*)f->vmprivate, stackSlots,
+        bool rv = StartRecorder(cx, anchor, c, f->treeInfo, stackSlots,
                                 ngslots, typeMap, exitedFrom, outer, cx->fp->argc,
                                 Record_Branch);
 #ifdef MOZ_TRACEVIS
@@ -5918,7 +5926,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
 }
 
 static JS_REQUIRES_STACK VMSideExit*
-ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
+ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
             VMSideExit** innermostNestedGuardp);
 
 JS_REQUIRES_STACK bool
@@ -5940,8 +5948,8 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
     }
 
     JS_ASSERT(r->fragment && !r->fragment->lastIns);
-    VMFragment* root = (VMFragment*)r->fragment->root;
-    VMFragment* first = LookupOrAddLoop(tm, cx->fp->regs->pc, root->globalObj,
+    TreeFragment* root = r->fragment->root;
+    TreeFragment* first = LookupOrAddLoop(tm, cx->fp->regs->pc, root->globalObj,
                                         root->globalShape, cx->fp->argc);
 
     /* Make sure inner tree call will not run into an out-of-memory condition. */
@@ -5970,11 +5978,11 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
                       FramePCOffset(cx->fp));
 
     // Find a matching inner tree. If none can be found, compile one.
-    VMFragment* f = r->findNestedCompatiblePeer(first);
+    TreeFragment* f = r->findNestedCompatiblePeer(first);
     if (!f || !f->code()) {
         AUDIT(noCompatInnerTrees);
 
-        VMFragment* outerFragment = (VMFragment*) tm->recorder->getFragment()->root;
+        TreeFragment* outerFragment = tm->recorder->getFragment()->root;
         jsbytecode* outer = (jsbytecode*) outerFragment->ip;
         uint32 outerArgc = outerFragment->argc;
         uint32 argc = cx->fp->argc;
@@ -5988,7 +5996,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::attemptTreeCall(VMFragment* f, uintN& inlineCallCount)
+TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
 {
     /*
      * It is absolutely forbidden to have recursive loops tree call themselves
@@ -6000,13 +6008,13 @@ TraceRecorder::attemptTreeCall(VMFragment* f, uintN& inlineCallCount)
      * In the interim, just do tree calls knowing that they won't go into
      * recursive trees that can pop parent frames.
      */
-    if (f->getTreeInfo()->script == cx->fp->script) {
-        if (f->getTreeInfo()->recursion >= Recursion_Unwinds) {
+    if (f->treeInfo->script == cx->fp->script) {
+        if (f->treeInfo->recursion >= Recursion_Unwinds) {
             Blacklist(cx->fp->script->code);
             js_AbortRecording(cx, "Inner tree is an unsupported type of recursion");
             return ARECORD_ABORTED;
         } else {
-            f->getTreeInfo()->recursion = Recursion_Disallowed;
+            f->treeInfo->recursion = Recursion_Disallowed;
         }
     }
 
@@ -6032,7 +6040,7 @@ TraceRecorder::attemptTreeCall(VMFragment* f, uintN& inlineCallCount)
         return ARECORD_ABORTED;
     }
 
-    VMFragment* outerFragment = (VMFragment*)fragment->root;
+    TreeFragment* outerFragment = fragment->root;
     jsbytecode* outer = (jsbytecode*) outerFragment->ip;
     switch (lr->exitType) {
       case RECURSIVE_LOOP_EXIT:
@@ -6193,8 +6201,8 @@ public:
     }
 };
 
-JS_REQUIRES_STACK VMFragment*
-TraceRecorder::findNestedCompatiblePeer(VMFragment* f)
+JS_REQUIRES_STACK TreeFragment*
+TraceRecorder::findNestedCompatiblePeer(TreeFragment* f)
 {
     JSTraceMonitor* tm;
 
@@ -6202,11 +6210,11 @@ TraceRecorder::findNestedCompatiblePeer(VMFragment* f)
     unsigned int ngslots = treeInfo->globalSlots->length();
 
     TreeInfo* ti;
-    for (; f != NULL; f = (VMFragment*)f->peer) {
+    for (; f != NULL; f = f->peer) {
         if (!f->code())
             continue;
 
-        ti = (TreeInfo*)f->vmprivate;
+        ti = f->treeInfo;
 
         debug_only_printf(LC_TMTracer, "checking nested types %p: ", (void*)f);
 
@@ -6307,16 +6315,16 @@ CheckEntryTypes(JSContext* cx, JSObject* globalObj, TreeInfo* ti)
  * @param nodemote      If true, will try to find a peer that does not require demotion.
  * @out   count         Number of fragments consulted.
  */
-static JS_REQUIRES_STACK VMFragment*
-FindVMCompatiblePeer(JSContext* cx, JSObject* globalObj, VMFragment* f, uintN& count)
+static JS_REQUIRES_STACK TreeFragment*
+FindVMCompatiblePeer(JSContext* cx, JSObject* globalObj, TreeFragment* f, uintN& count)
 {
     count = 0;
     for (; f != NULL; f = f->peer) {
-        if (f->vmprivate == NULL)
+        if (!f->treeInfo)
             continue;
         debug_only_printf(LC_TMTracer,
                           "checking vm types %p (ip: %p): ", (void*)f, f->ip);
-        if (CheckEntryTypes(cx, globalObj, (TreeInfo*)f->vmprivate))
+        if (CheckEntryTypes(cx, globalObj, f->treeInfo))
             return f;
         ++count;
     }
@@ -6327,14 +6335,14 @@ static void
 LeaveTree(InterpState&, VMSideExit* lr);
 
 static JS_REQUIRES_STACK VMSideExit*
-ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
+ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
             VMSideExit** innermostNestedGuardp)
 {
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_EXECUTE);
 #endif
 
-    JS_ASSERT(f->root == f && f->code() && f->vmprivate);
+    JS_ASSERT(f->root == f && f->code() && f->treeInfo);
 
     /*
      * The JIT records and expects to execute with two scope-chain
@@ -6370,7 +6378,7 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     }
 
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    TreeInfo* ti = (TreeInfo*)f->vmprivate;
+    TreeInfo* ti = f->treeInfo;
     unsigned ngslots = ti->globalSlots->length();
     uint16* gslots = ti->globalSlots->data();
     unsigned globalFrameSize = STOBJ_NSLOTS(globalObj);
@@ -6379,7 +6387,7 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     /* Make sure the global object is sane. */
     JS_ASSERT_IF(ngslots != 0,
                  OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain)) ==
-                 ((VMFragment*)f)->globalShape);
+                 f->globalShape);
 
     /* Make sure our caller replenished the double pool. */
     JS_ASSERT(tm->reservedDoublePoolPtr >= tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS);
@@ -6572,7 +6580,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
         if (!cx->fp->script) {
             JSStackFrame *fp = cx->fp;
             JS_ASSERT(FUN_SLOW_NATIVE(fp->fun));
-            JS_ASSERT(fp->regs == NULL);
+            JS_ASSERT(!fp->regs);
             JS_ASSERT(fp->down->regs != &((JSInlineFrame *) fp)->callerRegs);
             cx->fp = fp->down;
             JS_ARENA_RELEASE(&cx->stackPool, ((JSInlineFrame *) fp)->mark);
@@ -6787,8 +6795,8 @@ LeaveTree(InterpState& state, VMSideExit* lr)
          * is lazily added into a tree, all dependent and linked trees are
          * immediately specialized (see bug 476653).
          */
-        JS_ASSERT(innermost->root()->getTreeInfo()->nGlobalTypes() == ngslots);
-        JS_ASSERT(innermost->root()->getTreeInfo()->nGlobalTypes() > innermost->numGlobalSlots);
+        JS_ASSERT(innermost->root()->treeInfo->nGlobalTypes() == ngslots);
+        JS_ASSERT(innermost->root()->treeInfo->nGlobalTypes() > innermost->numGlobalSlots);
         typeMap.ensure(ngslots);
 #ifdef DEBUG
         unsigned check_ngslots =
@@ -6900,7 +6908,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
     jsbytecode* pc = cx->fp->regs->pc;
     uint32 argc = cx->fp->argc;
 
-    VMFragment* f = LookupOrAddLoop(tm, pc, globalObj, globalShape, argc);
+    TreeFragment* f = LookupOrAddLoop(tm, pc, globalObj, globalShape, argc);
 
     /*
      * If we have no code in the anchor and no peers, we definitively won't be
@@ -6935,7 +6943,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
                       FramePCOffset(cx->fp), (void*)f, f->ip);
 
     uintN count;
-    VMFragment* match = FindVMCompatiblePeer(cx, globalObj, f, count);
+    TreeFragment* match = FindVMCompatiblePeer(cx, globalObj, f, count);
     if (!match) {
         if (count < MAXPEERS)
             goto record;
@@ -6957,7 +6965,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
      * most time will be spent entering and exiting ExecuteTree(). There's no
      * benefit to doing this until the down-recursive side completes.
      */
-    if (match->getTreeInfo()->recursion == Recursion_Unwinds)
+    if (match->treeInfo->recursion == Recursion_Unwinds)
         return false;
 
     VMSideExit* lr = NULL;
@@ -7108,7 +7116,7 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
         return ARECORD_ABORTED;
 
     JS_ASSERT(status != ARECORD_IMACRO);
-    JS_ASSERT_IF(!wasInImacro, cx->fp->imacpc == NULL);
+    JS_ASSERT_IF(!wasInImacro, !cx->fp->imacpc);
 
     if (assm->error()) {
         js_AbortRecording(cx, "error during recording");
@@ -7149,7 +7157,7 @@ js_AbortRecording(JSContext* cx, const char* reason)
     JS_ASSERT(tm->recorder != NULL);
 
     /* Abort the trace and blacklist its starting point. */
-    Fragment* f = tm->recorder->getFragment();
+    VMFragment* f = tm->recorder->getFragment();
 
     /*
      * If the recorder already had its fragment disposed, or we actually
@@ -7164,7 +7172,7 @@ js_AbortRecording(JSContext* cx, const char* reason)
 
     AUDIT(recorderAborted);
 
-    JS_ASSERT(!f->vmprivate);
+    JS_ASSERT_IF(f == f->root, !f->root->treeInfo);
 #ifdef DEBUG
     TreeInfo* ti = tm->recorder->getTreeInfo();
     debug_only_printf(LC_TMAbort,
@@ -7189,7 +7197,7 @@ js_AbortRecording(JSContext* cx, const char* reason)
      * TreeInfo object.
      */
     if (!f->code() && (f->root == f))
-        TrashTree(cx, f);
+        TrashTree(cx, f->root);
 }
 
 #if defined NANOJIT_IA32
@@ -7627,15 +7635,15 @@ js_FinishJIT(JSTraceMonitor *tm)
             js_FragProfiling_FragFinalizer(f->head, tm);
         }
         for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
-            for (VMFragment *f = tm->vmfragments[i]; f; f = f->next) {
+            for (TreeFragment *f = tm->vmfragments[i]; f; f = f->next) {
                 JS_ASSERT(f->root == f);
-                for (VMFragment *p = f; p; p = p->peer)
+                for (TreeFragment *p = f; p; p = p->peer)
                     js_FragProfiling_FragFinalizer(p, tm);
             }
         }
         REHashMap::Iter iter(*(tm->reFragments));
         while (iter.next()) {
-            nanojit::Fragment* frag = iter.value();
+            VMFragment* frag = (VMFragment*)iter.value();
             js_FragProfiling_FragFinalizer(frag, tm);
         }
 
@@ -7648,7 +7656,7 @@ js_FinishJIT(JSTraceMonitor *tm)
     }
 #endif
 
-    memset(&tm->vmfragments[0], 0, FRAGMENT_TABLE_SIZE * sizeof(VMFragment*));
+    memset(&tm->vmfragments[0], 0, FRAGMENT_TABLE_SIZE * sizeof(TreeFragment*));
 
     delete[] tm->reservedDoublePool;
     tm->reservedDoublePool = tm->reservedDoublePoolPtr = NULL;
@@ -7713,12 +7721,12 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
 
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
-        VMFragment** fragp = &tm->vmfragments[i];
-        while (VMFragment* frag = *fragp) {
+        TreeFragment** fragp = &tm->vmfragments[i];
+        while (TreeFragment* frag = *fragp) {
             if (JS_UPTRDIFF(frag->ip, script->code) < script->length) {
                 /* This fragment is associated with the script. */
                 debug_only_printf(LC_TMTracer,
-                                  "Disconnecting VMFragment %p "
+                                  "Disconnecting TreeFragment %p "
                                   "with ip %p, in range [%p,%p).\n",
                                   (void*)frag, frag->ip, script->code,
                                   script->code + script->length);
@@ -9765,20 +9773,20 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
         RETURN_STOP_A("recursion started inlining");
     }
 
-    VMFragment* root = (VMFragment*)fragment->root;
-    VMFragment* first = LookupLoop(&JS_TRACE_MONITOR(cx), fp->regs->pc, root->globalObj,
+    TreeFragment* root = fragment->root;
+    TreeFragment* first = LookupLoop(&JS_TRACE_MONITOR(cx), fp->regs->pc, root->globalObj,
                                    root->globalShape, fp->argc);
     if (!first)
         return ARECORD_CONTINUE;
-    VMFragment* f = findNestedCompatiblePeer(first);
+    TreeFragment* f = findNestedCompatiblePeer(first);
     if (!f) {
         /*
          * If there were no compatible peers, but there were peers at all, then it is probable that
          * an inner recursive function is type mismatching. Start a new recorder that must be
          * recursive.
          */
-        for (f = first; f; f = (VMFragment*)f->peer) {
-            if (f->getTreeInfo() && f->getTreeInfo()->recursion == Recursion_Detected) {
+        for (f = first; f; f = f->peer) {
+            if (f->treeInfo && f->treeInfo->recursion == Recursion_Detected) {
                 /* Since this recorder is about to die, save its values. */
                 if (++first->hits() <= HOTLOOP)
                     return ARECORD_STOP;
@@ -14657,16 +14665,16 @@ void
 DumpPeerStability(JSTraceMonitor* tm, const void* ip, JSObject* globalObj, uint32 globalShape,
                   uint32 argc)
 {
-    VMFragment* f;
+    TreeFragment* f;
     TreeInfo* ti;
     bool looped = false;
     unsigned length = 0;
 
     for (f = LookupLoop(tm, ip, globalObj, globalShape, argc); f != NULL; f = f->peer) {
-        if (!f->vmprivate)
+        if (!f->treeInfo)
             continue;
         debug_only_printf(LC_TMRecorder, "Stability of fragment %p:\nENTRY STACK=", (void*)f);
-        ti = (TreeInfo*)f->vmprivate;
+        ti = f->treeInfo;
         if (looped)
             JS_ASSERT(ti->nStackTypes == length);
         for (unsigned i = 0; i < ti->nStackTypes; i++)

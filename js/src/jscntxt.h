@@ -121,11 +121,12 @@ struct REHashFn;
 struct REHashKey;
 struct FrameInfo;
 struct VMSideExit;
-struct VMFragment;
+struct TreeFragment;
 struct InterpState;
 template<typename T> class Queue;
 typedef Queue<uint16> SlotList;
-typedef nanojit::HashMap<REHashKey, nanojit::Fragment*, REHashFn> REHashMap;
+struct REFragment;
+typedef nanojit::HashMap<REHashKey, REFragment*, REHashFn> REHashMap;
 
 #if defined(JS_JIT_SPEW) || defined(DEBUG)
 struct FragPI;
@@ -250,7 +251,7 @@ struct JSTraceMonitor {
     jsval                   *reservedDoublePoolPtr;
 
     struct GlobalState      globalStates[MONITOR_N_GLOBAL_STATES];
-    struct VMFragment*      vmfragments[FRAGMENT_TABLE_SIZE];
+    struct TreeFragment*    vmfragments[FRAGMENT_TABLE_SIZE];
     JSDHashTable            recordAttempts;
 
     /*

@@ -202,6 +202,19 @@ public:
     void            clear();
 };
 
+class VMFragment : public nanojit::Fragment {
+public:
+    VMFragment(const void* _ip verbose_only(, uint32_t profFragID))
+      : Fragment(_ip verbose_only(, profFragID))
+    {}
+
+    /*
+     * If this is anchored off a TreeFragment, this points to that tree fragment.
+     * Otherwise, it is |this|.
+     */
+    TreeFragment *root;
+};
+
 #if defined(JS_JIT_SPEW) || defined(NJ_NO_VARIADIC_MACROS)
 
 enum LC_TMBits {
@@ -465,8 +478,12 @@ struct VMSideExit : public nanojit::SideExit
         return stackTypeMap();
     }
 
-    inline VMFragment* root() {
-        return (VMFragment*)from->root;
+    inline VMFragment* fromFrag() {
+        return (VMFragment*)from;
+    }
+
+    inline TreeFragment* root() {
+        return fromFrag()->root;
     }
 };
 
@@ -608,7 +625,7 @@ struct FrameInfo {
 
 struct UnstableExit
 {
-    nanojit::Fragment* fragment;
+    VMFragment* fragment;
     VMSideExit* exit;
     UnstableExit* next;
 };
@@ -630,7 +647,7 @@ enum RecursionStatus
 
 class TreeInfo {
 public:
-    VMFragment* const       rootFragment;
+    TreeFragment* const       rootFragment;
     JSScript*               script;
     unsigned                maxNativeStackSlots;
     ptrdiff_t               nativeStackBase;
@@ -639,10 +656,9 @@ public:
     unsigned                nStackTypes;
     SlotList*               globalSlots;
     /* Dependent trees must be trashed if this tree dies, and updated on missing global types */
-    Queue<nanojit::Fragment*> dependentTrees;
+    Queue<TreeFragment*> dependentTrees;
     /* Linked trees must be updated on missing global types, but are not dependent */
-    Queue<nanojit::Fragment*> linkedTrees;
-    unsigned                branchCount;
+    Queue<TreeFragment*> linkedTrees;
     Queue<VMSideExit*>      sideExits;
     UnstableExit*           unstableExits;
     /* All embedded GC things are registered here so the GC can scan them. */
@@ -656,7 +672,7 @@ public:
     RecursionStatus         recursion;
 
     TreeInfo(nanojit::Allocator* alloc,
-             VMFragment* fragment,
+             TreeFragment* fragment,
              SlotList* globalSlots)
         : rootFragment(fragment),
           script(NULL),
@@ -668,7 +684,6 @@ public:
           globalSlots(globalSlots),
           dependentTrees(alloc),
           linkedTrees(alloc),
-          branchCount(0),
           sideExits(alloc),
           unstableExits(NULL),
           gcthings(alloc),
@@ -851,7 +866,7 @@ class TraceRecorder
     JSTraceMonitor* const           traceMonitor;
 
     /* The Fragment being recorded by this recording session. */
-    nanojit::Fragment* const        fragment;
+    VMFragment* const               fragment;
 
     /* The tree to which this |fragment| will belong when finished. */
     TreeInfo* const                 treeInfo;
@@ -919,7 +934,7 @@ class TraceRecorder
     bool                            trashSelf;
 
     /* A list of trees to trash at the end of the recording session. */
-    Queue<nanojit::Fragment*>       whichTreesToTrash;
+    Queue<TreeFragment*>            whichTreesToTrash;
 
     /***************************************** Temporal state hoisted into the recording session */
 
@@ -1026,7 +1041,7 @@ class TraceRecorder
 
     JS_REQUIRES_STACK TypeConsensus selfTypeStability(SlotMap& smap);
     JS_REQUIRES_STACK TypeConsensus peerTypeStability(SlotMap& smap, const void* ip,
-                                                      VMFragment** peer);
+                                                      TreeFragment** peer);
 
     JS_REQUIRES_STACK jsval& argval(unsigned n) const;
     JS_REQUIRES_STACK jsval& varval(unsigned n) const;
@@ -1250,14 +1265,14 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus closeLoop(SlotMap& slotMap, VMSideExit* exit);
     JS_REQUIRES_STACK AbortableRecordingStatus endLoop();
     JS_REQUIRES_STACK AbortableRecordingStatus endLoop(VMSideExit* exit);
-    JS_REQUIRES_STACK void joinEdgesToEntry(VMFragment* peer_root);
-    JS_REQUIRES_STACK void adjustCallerTypes(nanojit::Fragment* f);
-    JS_REQUIRES_STACK void prepareTreeCall(VMFragment* inner, nanojit::LIns*& inner_sp_ins);
-    JS_REQUIRES_STACK void emitTreeCall(VMFragment* inner, VMSideExit* exit, nanojit::LIns* inner_sp_ins);
+    JS_REQUIRES_STACK void joinEdgesToEntry(TreeFragment* peer_root);
+    JS_REQUIRES_STACK void adjustCallerTypes(TreeFragment* f);
+    JS_REQUIRES_STACK void prepareTreeCall(TreeFragment* inner, nanojit::LIns*& inner_sp_ins);
+    JS_REQUIRES_STACK void emitTreeCall(TreeFragment* inner, VMSideExit* exit, nanojit::LIns* inner_sp_ins);
     JS_REQUIRES_STACK void determineGlobalTypes(JSTraceType* typeMap);
     JS_REQUIRES_STACK VMSideExit* downSnapshot(FrameInfo* downFrame);
-    JS_REQUIRES_STACK VMFragment* findNestedCompatiblePeer(VMFragment* f);
-    JS_REQUIRES_STACK AbortableRecordingStatus attemptTreeCall(VMFragment* inner,
+    JS_REQUIRES_STACK TreeFragment* findNestedCompatiblePeer(TreeFragment* f);
+    JS_REQUIRES_STACK AbortableRecordingStatus attemptTreeCall(TreeFragment* inner,
                                                                uintN& inlineCallCount);
 
     static JS_REQUIRES_STACK bool recordLoopEdge(JSContext* cx, TraceRecorder* r,
@@ -1293,14 +1308,14 @@ public:
     inline void operator delete(void *p) { free(p); }
 
     JS_REQUIRES_STACK
-    TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
+    TraceRecorder(JSContext* cx, VMSideExit*, VMFragment*, TreeInfo*,
                   unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
                   VMSideExit* expectedInnerExit, jsbytecode* outerTree,
                   uint32 outerArgc, RecordReason reason);
     ~TraceRecorder();
 
     /* Accessors. */
-    nanojit::Fragment*  getFragment() const { return fragment; }
+    VMFragment*  getFragment() const { return fragment; }
     TreeInfo*           getTreeInfo() const { return treeInfo; }
     bool                outOfMemory();
 
