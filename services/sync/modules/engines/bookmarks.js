@@ -139,6 +139,7 @@ BookmarksEngine.prototype = {
   _syncFinish: function _syncFinish() {
     SyncEngine.prototype._syncFinish.call(this);
     delete this._folderTitles;
+    delete this._separatorPos;
   },
 
   _findDupe: function _findDupe(item) {
