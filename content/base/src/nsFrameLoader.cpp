@@ -993,6 +993,11 @@ nsFrameLoader::Destroy()
 
     mOwnerContent = nsnull;
   }
+#ifdef MOZ_IPC
+  if (mChildProcess) {
+    mChildProcess->SetOwnerElement(nsnull);
+  }
+#endif
 
   // Let the tree owner know we're gone.
   if (mIsTopLevelContent) {
@@ -1439,6 +1444,10 @@ nsFrameLoader::TryNewProcess()
   }
 
   mChildProcess = ContentProcessParent::GetSingleton()->CreateTab();
+  if (mChildProcess) {
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mOwnerContent);
+    mChildProcess->SetOwnerElement(element);
+  }
   return true;
 }
 #endif
@@ -1450,3 +1459,14 @@ nsFrameLoader::GetChildProcess()
   return mChildProcess;
 }
 #endif
+
+NS_IMETHODIMP
+nsFrameLoader::ActivateRemoteFrame() {
+#ifdef MOZ_IPC
+  if (mChildProcess) {
+    mChildProcess->Activate();
+    return NS_OK;
+  }
+#endif
+  return NS_ERROR_UNEXPECTED;
+}

@@ -22,5 +22,6 @@
     <toolbarbutton onclick="restart()" label="Recover"/>
   </toolbar>
 
-  <browser type="content" src="http://www.google.com/" flex="1" id="page" remote="true"/>
+  <browser type="content" src="http://www.google.com/" flex="1" id="page" remote="true"
+           onfocus="this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.activateRemoteFrame();"/>
 </window>

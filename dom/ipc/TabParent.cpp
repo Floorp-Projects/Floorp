@@ -42,6 +42,10 @@
 #include "mozilla/ipc/DocumentRendererParent.h"
 
 #include "nsIURI.h"
+#include "nsFocusManager.h"
+#include "nsCOMPtr.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIDOMElement.h"
 
 using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::DocumentRendererParent;
@@ -57,6 +61,20 @@ TabParent::~TabParent()
 {
 }
 
+bool
+TabParent::RecvmoveFocus(const bool& aForward)
+{
+  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  if (fm) {
+    nsCOMPtr<nsIDOMElement> dummy;
+    PRUint32 type = aForward ? nsIFocusManager::MOVEFOCUS_FORWARD
+                             : nsIFocusManager::MOVEFOCUS_BACKWARD;
+    fm->MoveFocus(nsnull, mFrameElement, type, nsIFocusManager::FLAG_BYKEY, 
+                  getter_AddRefs(dummy));
+  }
+  return true;
+}
+
 void
 TabParent::LoadURL(nsIURI* aURI)
 {
@@ -70,6 +88,12 @@ void
 TabParent::Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height)
 {
     Sendmove(x, y, width, height);
+}
+
+void
+TabParent::Activate()
+{
+    Sendactivate();
 }
 
 mozilla::ipc::PDocumentRendererParent*
