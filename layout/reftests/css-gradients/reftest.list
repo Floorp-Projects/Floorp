@@ -83,6 +83,6 @@ fails == aja-linear-2d.html aja-linear-2-ref.html # reversed gradient not pixel 
 == aja-linear-4a.html aja-linear-4-ref.html
 == aja-linear-4b.html aja-linear-4-ref.html
 == aja-linear-5a.html aja-linear-5-ref.html
-== aja-linear-6a.html aja-linear-6-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == aja-linear-6a.html aja-linear-6-ref.html # see bug 526402 comment 17
 fails == aja-linear-6b.html aja-linear-6-ref.html # bug 522607
 
