@@ -3670,7 +3670,7 @@ var engineUpdateService = {
                         getService(Ci.nsIBrowserSearchService);
     var currentTime = Date.now();
     ULOG("currentTime: " + currentTime);
-    for each (engine in searchService.getEngines({})) {
+    for each (engine in searchService.getEngines()) {
       engine = engine.wrappedJSObject;
       if (!engine._hasUpdates)
         continue;
