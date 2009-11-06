@@ -42,7 +42,7 @@ interface nsIPropertyBag2;
 interface nsIContentURIGrouper;
 interface mozIStorageConnection;
 
-[scriptable, uuid(0d896125-a97e-4617-84e1-004a5de27e76)]
+[scriptable, uuid(746c7a02-f6c1-4869-b434-7c8b86e60e61)]
 interface nsIContentPrefObserver : nsISupports
 {
   /**
@@ -65,7 +65,7 @@ interface nsIContentPrefObserver : nsISupports
   void onContentPrefRemoved(in AString aGroup, in AString aName);
 };
 
-[scriptable, uuid(ea7d29eb-7095-476e-b5d9-13263f3ae243)]
+[scriptable, uuid(b3976fa1-189f-4fcb-9c3b-49d1f6d8073d)]
 interface nsIContentPrefService : nsISupports
 {
   /**

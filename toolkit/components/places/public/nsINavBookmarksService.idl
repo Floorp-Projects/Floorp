@@ -50,7 +50,7 @@ interface nsINavHistoryBatchCallback;
  * Observer for bookmark changes.
  */
 
-[scriptable, uuid(4270ae71-d92c-4a6f-81c7-0d7f76f01c06)]
+[scriptable, uuid(1f7e9032-b2c0-4561-b35b-94ba3f8344e2)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -194,7 +194,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(3b6ff5c5-0ab4-4aab-b1be-d569763a6ce0)]
+[scriptable, uuid(573f99bd-988c-4253-836f-4ce009d33ac6)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
