@@ -470,9 +470,6 @@ protected:
   // Graphics
   HDC                   mPaintDC; // only set during painting
 
-  static nsAutoPtr<PRUint8> sSharedSurfaceData;
-  static gfxIntSize     sSharedSurfaceSize;
-
   // Transparency
 #ifdef MOZ_XUL
   // Use layered windows to support full 256 level alpha translucency

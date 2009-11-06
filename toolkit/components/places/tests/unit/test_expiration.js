@@ -529,8 +529,8 @@ function checkExpireNeither() {
   dump("checkExpireNeither()\n");
   try {
     do_check_eq(observer.expiredURI, null);
-    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 1);
-    do_check_eq(annosvc.getPageAnnotationNames(triggerURI, {}).length, 1);
+    do_check_eq(annosvc.getPageAnnotationNames(testURI).length, 1);
+    do_check_eq(annosvc.getPageAnnotationNames(triggerURI).length, 1);
   } catch(ex) {
     do_throw(ex);
   }
@@ -590,11 +590,11 @@ function checkExpireDaysOnly() {
   try {
     // test expired record
     do_check_eq(observer.expiredURI, testURI.spec);
-    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 0);
+    do_check_eq(annosvc.getPageAnnotationNames(testURI).length, 0);
 
     // test unexpired record
     do_check_neq(histsvc.getPageTitle(unexpirableURI), null);
-    do_check_eq(annosvc.getPageAnnotationNames(unexpirableURI, {}).length, 1);
+    do_check_eq(annosvc.getPageAnnotationNames(unexpirableURI).length, 1);
   } catch(ex) {}
   dump("done expiration test 2\n");
   startExpireBoth();
@@ -659,8 +659,8 @@ function startExpireBoth() {
 function checkExpireBoth() {
   try {
     do_check_eq(observer.expiredURI, testURI.spec);
-    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 0);
-    do_check_eq(annosvc.getPageAnnotationNames(triggerURI, {}).length, 1);
+    do_check_eq(annosvc.getPageAnnotationNames(testURI).length, 0);
+    do_check_eq(annosvc.getPageAnnotationNames(triggerURI).length, 1);
   } catch(ex) {}
   dump("done expiration test 3\n");
   startExpireNeitherOver()
@@ -718,8 +718,8 @@ function checkExpireNeitherOver() {
   dump("checkExpireNeitherOver()\n");
   try {
     do_check_eq(observer.expiredURI, null);
-    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 1);
-    do_check_eq(annosvc.getPageAnnotationNames(triggerURI, {}).length, 1);
+    do_check_eq(annosvc.getPageAnnotationNames(testURI).length, 1);
+    do_check_eq(annosvc.getPageAnnotationNames(triggerURI).length, 1);
   } catch(ex) {
     do_throw(ex);
   }
@@ -767,7 +767,7 @@ function checkExpireHistoryDisabled() {
   dump("checkExpireHistoryDisabled()\n");
   try {
     do_check_eq(observer.expiredURI, testURI.spec);
-    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 0);
+    do_check_eq(annosvc.getPageAnnotationNames(testURI).length, 0);
   } catch(ex) {
     do_throw(ex);
   }
@@ -819,7 +819,7 @@ function checkExpireBadPrefs() {
   dump("checkExpireBadPrefs()\n");
   try {
     do_check_eq(observer.expiredURI, null);
-    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 1);
+    do_check_eq(annosvc.getPageAnnotationNames(testURI).length, 1);
   } catch(ex) {
     do_throw(ex);
   }

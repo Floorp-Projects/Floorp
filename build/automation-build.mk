@@ -68,6 +68,12 @@ else
 AUTOMATION_PPARGS += -DIS_DEBUG_BUILD=0
 endif
 
+ifdef MOZ_CRASHREPORTER
+AUTOMATION_PPARGS += -DCRASHREPORTER=1
+else
+AUTOMATION_PPARGS += -DCRASHREPORTER=0
+endif
+
 $(CURDIR)/automationutils.py: $(MOZILLA_DIR)/build/automationutils.py
 	$(INSTALL) $< .
 

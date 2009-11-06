@@ -87,7 +87,7 @@ private:
 BOOL PrnClosePrinter( PRTQUEUE *pPrintQueue);
 
 // Get a DC for the selected printer.  Must supply the application name.
-HDC PrnOpenDC( PRTQUEUE *pPrintQueue, PSZ pszApplicationName, int copies, int destination, char *file);
+HDC PrnOpenDC( PRTQUEUE *pPrintQueue, PCSZ pszApplicationName, int copies, int destination, char *file);
 
 // Get the hardcopy caps for the selected form
 BOOL PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo);

@@ -2700,33 +2700,34 @@ nsresult nsPluginHost::GetURLWithHeaders(nsISupports* pluginInst,
   // we can only send a stream back to the plugin (as specified by a
   // null target) if we also have a nsIPluginStreamListener to talk to
   if (!target && !streamListener)
-   return NS_ERROR_ILLEGAL_VALUE;
+    return NS_ERROR_ILLEGAL_VALUE;
 
   nsresult rv;
   nsCOMPtr<nsIPluginInstance> instance = do_QueryInterface(pluginInst, &rv);
-  if (NS_SUCCEEDED(rv))
-    rv = DoURLLoadSecurityCheck(instance, url);
+  if (NS_FAILED(rv))
+    return rv;
 
-  if (NS_SUCCEEDED(rv)) {
-    if (target) {
-      nsCOMPtr<nsIPluginInstanceOwner> owner;
-      rv = instance->GetOwner(getter_AddRefs(owner));
-      if (owner) {
-        if ((0 == PL_strcmp(target, "newwindow")) ||
-            (0 == PL_strcmp(target, "_new")))
-          target = "_blank";
-        else if (0 == PL_strcmp(target, "_current"))
-          target = "_self";
+  rv = DoURLLoadSecurityCheck(instance, url);
+  if (NS_FAILED(rv))
+    return rv;
 
-        rv = owner->GetURL(url, target, nsnull, 0, (void *) getHeaders, getHeadersLength);
-      }
-    }
+  if (target) {
+    nsCOMPtr<nsIPluginInstanceOwner> owner;
+    rv = instance->GetOwner(getter_AddRefs(owner));
+    if (owner) {
+      if ((0 == PL_strcmp(target, "newwindow")) ||
+          (0 == PL_strcmp(target, "_new")))
+        target = "_blank";
+      else if (0 == PL_strcmp(target, "_current"))
+        target = "_self";
 
-    if (streamListener) {
-      rv = NewPluginURLStream(string, instance, streamListener, nsnull,
-                              PR_FALSE, nsnull, getHeaders, getHeadersLength);
+      rv = owner->GetURL(url, target, nsnull, 0, (void *) getHeaders, getHeadersLength);
     }
   }
+
+  if (streamListener)
+    rv = NewPluginURLStream(string, instance, streamListener, nsnull,
+                            PR_FALSE, nsnull, getHeaders, getHeadersLength);
 
   return rv;
 }
@@ -2744,66 +2745,70 @@ NS_IMETHODIMP nsPluginHost::PostURL(nsISupports* pluginInst,
                                     PRUint32 postHeadersLength,
                                     const char* postHeaders)
 {
-  nsAutoString string; string.AssignWithConversion(url);
+  nsAutoString string;
   nsresult rv;
+
+  string.AssignWithConversion(url);
 
   // we can only send a stream back to the plugin (as specified
   // by a null target) if we also have a nsIPluginStreamListener
   // to talk to also
   if (!target && !streamListener)
-   return NS_ERROR_ILLEGAL_VALUE;
+    return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr<nsIPluginInstance> instance = do_QueryInterface(pluginInst, &rv);
-  if (NS_SUCCEEDED(rv))
-    rv = DoURLLoadSecurityCheck(instance, url);
+  if (NS_FAILED(rv))
+    return rv;
 
-  if (NS_SUCCEEDED(rv)) {
-    char *dataToPost;
-    if (isFile) {
-      rv = CreateTmpFileToPost(postData, &dataToPost);
-      if (NS_FAILED(rv) || !dataToPost)
-        return rv;
-    } else {
-      PRUint32 newDataToPostLen;
-      ParsePostBufferToFixHeaders(postData, postDataLen, &dataToPost, &newDataToPostLen);
-      if (!dataToPost)
-        return NS_ERROR_UNEXPECTED;
+  rv = DoURLLoadSecurityCheck(instance, url);
+  if (NS_FAILED(rv))
+    return rv;
 
-      // we use nsIStringInputStream::adoptDataa()
-      // in NS_NewPluginPostDataStream to set the stream
-      // all new data alloced in  ParsePostBufferToFixHeaders()
-      // well be nsMemory::Free()d on destroy the stream
-      postDataLen = newDataToPostLen;
-    }
+  char *dataToPost;
+  if (isFile) {
+    rv = CreateTmpFileToPost(postData, &dataToPost);
+    if (NS_FAILED(rv) || !dataToPost)
+      return rv;
+  } else {
+    PRUint32 newDataToPostLen;
+    ParsePostBufferToFixHeaders(postData, postDataLen, &dataToPost, &newDataToPostLen);
+    if (!dataToPost)
+      return NS_ERROR_UNEXPECTED;
 
-    if (target) {
-      nsCOMPtr<nsIPluginInstanceOwner> owner;
-      rv = instance->GetOwner(getter_AddRefs(owner));
-      if (owner) {
-        if (!target) {
-          target = "_self";
-        } else {
-          if ((0 == PL_strcmp(target, "newwindow")) ||
-              (0 == PL_strcmp(target, "_new"))) {
-            target = "_blank";
-          } else if (0 == PL_strcmp(target, "_current")) {
-            target = "_self";
-          }
-        }
-        rv = owner->GetURL(url, target, (void*)dataToPost, postDataLen,
-                           (void*)postHeaders, postHeadersLength, isFile);
-      }
-    }
-
-    // if we don't have a target, just create a stream.  This does
-    // NS_OpenURI()!
-    if (streamListener)
-      rv = NewPluginURLStream(string, instance, streamListener,
-                              (const char*)dataToPost, isFile, postDataLen,
-                              postHeaders, postHeadersLength);
-    if (isFile)
-      NS_Free(dataToPost);
+    // we use nsIStringInputStream::adoptDataa()
+    // in NS_NewPluginPostDataStream to set the stream
+    // all new data alloced in  ParsePostBufferToFixHeaders()
+    // well be nsMemory::Free()d on destroy the stream
+    postDataLen = newDataToPostLen;
   }
+
+  if (target) {
+    nsCOMPtr<nsIPluginInstanceOwner> owner;
+    rv = instance->GetOwner(getter_AddRefs(owner));
+    if (owner) {
+      if (!target) {
+        target = "_self";
+      } else {
+        if ((0 == PL_strcmp(target, "newwindow")) ||
+            (0 == PL_strcmp(target, "_new"))) {
+          target = "_blank";
+        } else if (0 == PL_strcmp(target, "_current")) {
+          target = "_self";
+        }
+      }
+      rv = owner->GetURL(url, target, (void*)dataToPost, postDataLen,
+                         (void*)postHeaders, postHeadersLength, isFile);
+    }
+  }
+
+  // if we don't have a target, just create a stream.  This does
+  // NS_OpenURI()!
+  if (streamListener)
+    rv = NewPluginURLStream(string, instance, streamListener,
+                            (const char*)dataToPost, isFile, postDataLen,
+                            postHeaders, postHeadersLength);
+  if (isFile)
+    NS_Free(dataToPost);
 
   return rv;
 }
@@ -5097,105 +5102,108 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
     absUrl.Assign(aURL);
 
   rv = NS_NewURI(getter_AddRefs(url), absUrl);
+  if (NS_FAILED(rv))
+    return rv;
 
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPluginTagInfo> pti = do_QueryInterface(owner);
-    nsCOMPtr<nsIDOMElement> element;
-    if (pti)
-      pti->GetDOMElement(getter_AddRefs(element));
+  nsCOMPtr<nsIPluginTagInfo> pti = do_QueryInterface(owner);
+  nsCOMPtr<nsIDOMElement> element;
+  if (pti)
+    pti->GetDOMElement(getter_AddRefs(element));
 
-    PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
-                                   url,
-                                   (doc ? doc->NodePrincipal() : nsnull),
-                                   element,
-                                   EmptyCString(), //mime guess
-                                   nsnull,         //extra
-                                   &shouldLoad);
-    if (NS_FAILED(rv)) return rv;
-    if (NS_CP_REJECTED(shouldLoad)) {
-      // Disallowed by content policy
-      return NS_ERROR_CONTENT_BLOCKED;
-    }
-
-    nsPluginStreamListenerPeer *listenerPeer = new nsPluginStreamListenerPeer;
-    if (listenerPeer == NULL)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(listenerPeer);
-    rv = listenerPeer->Initialize(url, aInstance, aListener);
-
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIInterfaceRequestor> callbacks;
-      if (doc) {
-        // Get the script global object owner and use that as the
-        // notification callback.
-        nsIScriptGlobalObject* global = doc->GetScriptGlobalObject();
-        if (global) {
-          nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(global);
-          callbacks = do_QueryInterface(webNav);
-        }
-      }
-
-      nsCOMPtr<nsIChannel> channel;
-
-      rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull,
-        nsnull, /* do not add this internal plugin's channel
-                on the load group otherwise this channel could be canceled
-                form |nsDocShell::OnLinkClickSync| bug 166613 */
-        callbacks);
-      if (NS_FAILED(rv))
-        return rv;
-
-      if (doc) {
-        // Set the owner of channel to the document principal...
-        channel->SetOwner(doc->NodePrincipal());
-
-        // And if it's a script allow it to execute against the
-        // document's script context.
-        nsCOMPtr<nsIScriptChannel> scriptChannel(do_QueryInterface(channel));
-        if (scriptChannel) {
-          scriptChannel->SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
-          // Plug-ins seem to depend on javascript: URIs running synchronously
-          scriptChannel->SetExecuteAsync(PR_FALSE);
-        }
-      }
-
-      // deal with headers and post data
-      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-      if (httpChannel) {
-        if (aPostData) {
-
-          nsCOMPtr<nsIInputStream> postDataStream;
-          rv = NS_NewPluginPostDataStream(getter_AddRefs(postDataStream), (const char*)aPostData,
-                                          aPostDataLen, aIsFile);
-
-          if (!postDataStream) {
-            NS_RELEASE(aInstance);
-            return NS_ERROR_UNEXPECTED;
-          }
-
-          // XXX it's a bit of a hack to rewind the postdata stream
-          // here but it has to be done in case the post data is
-          // being reused multiple times.
-          nsCOMPtr<nsISeekableStream>
-          postDataSeekable(do_QueryInterface(postDataStream));
-          if (postDataSeekable)
-            postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-
-          nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
-          NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
-
-          uploadChannel->SetUploadStream(postDataStream, EmptyCString(), -1);
-        }
-
-        if (aHeadersData)
-          rv = AddHeadersToChannel(aHeadersData, aHeadersDataLen, httpChannel);
-      }
-      rv = channel->AsyncOpen(listenerPeer, nsnull);
-    }
-    NS_RELEASE(listenerPeer);
+  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
+                                 url,
+                                 (doc ? doc->NodePrincipal() : nsnull),
+                                 element,
+                                 EmptyCString(), //mime guess
+                                 nsnull,         //extra
+                                 &shouldLoad);
+  if (NS_FAILED(rv))
+    return rv;
+  if (NS_CP_REJECTED(shouldLoad)) {
+    // Disallowed by content policy
+    return NS_ERROR_CONTENT_BLOCKED;
   }
+
+  nsPluginStreamListenerPeer *listenerPeer = new nsPluginStreamListenerPeer;
+  if (listenerPeer == NULL)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(listenerPeer);
+  rv = listenerPeer->Initialize(url, aInstance, aListener);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(listenerPeer);
+    return rv;
+  }
+
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  if (doc) {
+    // Get the script global object owner and use that as the
+    // notification callback.
+    nsIScriptGlobalObject* global = doc->GetScriptGlobalObject();
+    if (global) {
+      nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(global);
+      callbacks = do_QueryInterface(webNav);
+    }
+  }
+
+  nsCOMPtr<nsIChannel> channel;
+
+  rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull,
+    nsnull, /* do not add this internal plugin's channel
+            on the load group otherwise this channel could be canceled
+            form |nsDocShell::OnLinkClickSync| bug 166613 */
+    callbacks);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (doc) {
+    // Set the owner of channel to the document principal...
+    channel->SetOwner(doc->NodePrincipal());
+
+    // And if it's a script allow it to execute against the
+    // document's script context.
+    nsCOMPtr<nsIScriptChannel> scriptChannel(do_QueryInterface(channel));
+    if (scriptChannel) {
+      scriptChannel->SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
+      // Plug-ins seem to depend on javascript: URIs running synchronously
+      scriptChannel->SetExecuteAsync(PR_FALSE);
+    }
+  }
+
+  // deal with headers and post data
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+  if (httpChannel) {
+    if (aPostData) {
+      nsCOMPtr<nsIInputStream> postDataStream;
+      rv = NS_NewPluginPostDataStream(getter_AddRefs(postDataStream), (const char*)aPostData,
+                                      aPostDataLen, aIsFile);
+
+      if (!postDataStream) {
+        NS_RELEASE(aInstance);
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      // XXX it's a bit of a hack to rewind the postdata stream
+      // here but it has to be done in case the post data is
+      // being reused multiple times.
+      nsCOMPtr<nsISeekableStream>
+      postDataSeekable(do_QueryInterface(postDataStream));
+      if (postDataSeekable)
+        postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+
+      nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
+      NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
+
+      uploadChannel->SetUploadStream(postDataStream, EmptyCString(), -1);
+    }
+
+    if (aHeadersData)
+      rv = AddHeadersToChannel(aHeadersData, aHeadersDataLen, httpChannel);
+  }
+  rv = channel->AsyncOpen(listenerPeer, nsnull);
+
+  NS_RELEASE(listenerPeer);
   return rv;
 }
 

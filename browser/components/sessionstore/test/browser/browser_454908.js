@@ -71,7 +71,8 @@ function test() {
       }
       
       // clean up
-      gPrefService.clearUserPref("browser.sessionstore.privacy_level");
+      if (gPrefService.prefHasUserValue("browser.sessionstore.privacy_level"))
+        gPrefService.clearUserPref("browser.sessionstore.privacy_level");
       // undoCloseTab can reuse a single blank tab, so we have to
       // make sure not to close the window when closing our last tab
       if (gBrowser.tabContainer.childNodes.length == 1)

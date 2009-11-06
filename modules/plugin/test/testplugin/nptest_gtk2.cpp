@@ -155,8 +155,7 @@ pluginDrawWindow(InstanceData* instanceData, GdkDrawable* gdkWindow)
   int width = window.width;
   int height = window.height;
 
-  if (!instanceData->hasWidget)
-    gdk_drawable_set_colormap(gdkWindow, gdk_rgb_get_colormap());
+  ++instanceData->paintCount;
 
   if (instanceData->scriptableObject->drawMode == DM_SOLID_COLOR) {
     // drawing a solid color for reftests
@@ -314,6 +313,7 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
 
     GdkNativeWindow nativeWinId =
       reinterpret_cast<XID>(instanceData->window.window);
+
     GdkDisplay* gdkDisplay = gdk_x11_lookup_xdisplay(expose->display);
     if (!gdkDisplay) {
       g_warning("Display not opened by GDK");

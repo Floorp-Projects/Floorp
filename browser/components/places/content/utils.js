@@ -231,7 +231,7 @@ var PlacesUIUtils = {
       var tags = aData.tags.split(", ");
       // filter out tags already present, so that undo doesn't remove them
       // from pre-existing bookmarks
-      var storedTags = PlacesUtils.tagging.getTagsForURI(itemURL, {});
+      var storedTags = PlacesUtils.tagging.getTagsForURI(itemURL);
       tags = tags.filter(function (aTag) {
         return (storedTags.indexOf(aTag) == -1);
       }, this);
@@ -1147,7 +1147,7 @@ var PlacesUIUtils = {
 
     // Get all items marked as being the left pane folder.  We should only have
     // one of them.
-    var items = as.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO, {});
+    var items = as.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO);
     if (items.length > 1) {
       // Something went wrong, we cannot have more than one left pane folder,
       // remove all left pane folders and continue.  We will create a new one.
@@ -1182,7 +1182,7 @@ var PlacesUIUtils = {
       // associating a mnemonic name to the real item ids.
       delete this.leftPaneQueries;
       this.leftPaneQueries = {};
-      var items = as.getItemsWithAnnotation(ORGANIZER_QUERY_ANNO, {});
+      var items = as.getItemsWithAnnotation(ORGANIZER_QUERY_ANNO);
       // While looping through queries we will also check for titles validity.
       for (var i = 0; i < items.length; i++) {
         var queryName = as.getItemAnnotation(items[i], ORGANIZER_QUERY_ANNO);

@@ -1480,6 +1480,13 @@ void nsViewManager::GetRegionsForBlit(nsView* aView, nsPoint aDelta,
   nsView* displayRoot = GetDisplayRootFor(aView);
   nsPoint displayOffset = aView->GetParent()->GetOffsetTo(displayRoot);
   nsRect parentBounds = aView->GetParent()->GetDimensions() + displayOffset;
+
+  // The area clipped by the scrolling view is snapped to device pixels
+  // (in nsThebesRenderingContext::SetClipRect), so snap the bound here
+  // that we use to compute the blit and repaint regions
+  PRInt32 p2a = mContext->AppUnitsPerDevPixel();
+  parentBounds = parentBounds.ToNearestPixels(p2a).ToAppUnits(p2a);
+
   if (IsPainting() || !mObserver) {
     // Be simple and safe
     aBlitRegion->SetEmpty();

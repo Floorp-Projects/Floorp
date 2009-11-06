@@ -160,7 +160,7 @@ function LivemarkService() {
                                   BindToObject(this._shutdown, this),
                                   true /*only once*/);
 
-  var livemarks = this._ans.getItemsWithAnnotation(LMANNO_FEEDURI, {});
+  var livemarks = this._ans.getItemsWithAnnotation(LMANNO_FEEDURI);
   for (var i = 0; i < livemarks.length; i++) {
     var feedURI = this._ios.newURI(this._ans.getItemAnnotation(livemarks[i],
                                                                LMANNO_FEEDURI),
@@ -509,7 +509,7 @@ LivemarkService.prototype = {
         aIID.equals(Ci.nsINavBookmarkObserver) ||
         aIID.equals(Ci.nsISupports))
       return this;
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
 

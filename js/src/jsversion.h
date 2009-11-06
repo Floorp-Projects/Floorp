@@ -41,26 +41,26 @@
  * JS configuration macros.
  */
 #ifndef JS_VERSION
-#define JS_VERSION 180
+#define JS_VERSION 185
 #endif
 
 /*
  * Compile-time JS version configuration.  The JS version numbers lie on the
  * number line like so:
  *
- * 1.0     1.1     1.2     1.3     1.4     ECMAv3  1.5     1.6     1.7     1.8
+ * 1.0     1.1     1.2     1.3     1.4     ECMAv3  1.5     1.6     1.7     1.8     ECMAv5
  *         ^                       ^
  *         |                       |
  *         basis for ECMAv1        close to ECMAv2
  *
- * where ECMAv3 stands for ECMA-262 Edition 3.  See the runtime version enum
- * JSVersion in jspubtd.h.  Code in the engine can therefore count on version
- * <= JSVERSION_1_4 to mean "before the Third Edition of ECMA-262" and version
- * > JSVERSION_1_4 to mean "at or after the Third Edition".
+ * where ECMAv3 stands for ECMA-262 Edition 3, and ECMAv5 stands for Edition 5.
+ * See the runtime version enum JSVersion in jspubtd.h. Code in the engine can
+ * therefore count on version <= JSVERSION_1_4 to mean "before the Third
+ * Edition of ECMA-262" and version > JSVERSION_1_4 to mean "at or after the
+ * Third Edition".
  *
  * In the (likely?) event that SpiderMonkey grows to implement JavaScript 2.0,
- * or ECMA-262 Edition 4 (JS2 without certain extensions), the version number
- * to use would be near 200, or greater.
+ * the version number to use would be near 200, or greater.
  *
  * The JS_VERSION_ECMA_3 version is the minimal configuration conforming to
  * the ECMA-262 Edition 3 specification.  Use it for minimal embeddings, where
@@ -196,7 +196,7 @@
 #define JS_HAS_GENERATOR_EXPRS  0       /* has (expr for (lhs in iterable)) */
 #define JS_HAS_EXPR_CLOSURES    0       /* has function (formals) listexpr */
 
-#elif JS_VERSION == 180
+#elif 180 <= JS_VERSION && JS_VERSION <= 185
 
 #define JS_HAS_STR_HTML_HELPERS 1       /* has str.anchor, str.bold, etc. */
 #define JS_HAS_PERL_SUBSTR      1       /* has str.substr */

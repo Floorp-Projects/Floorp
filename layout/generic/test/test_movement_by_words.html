@@ -38,8 +38,12 @@ function setPrefs(eat_space, stop_at_punctuation) {
 }
 
 function restorePrefs() {
-  getPrefs().clearUserPref("eat_space_to_next_word");
-  getPrefs().clearUserPref("stop_at_punctuation");
+  try {
+    getPrefs().clearUserPref("eat_space_to_next_word");
+  } catch(ex) {}
+  try {
+    getPrefs().clearUserPref("stop_at_punctuation");
+  } catch(ex) {}
 }
 
 function test() {

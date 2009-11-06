@@ -92,7 +92,7 @@ public:
 
   // Return the duration of the video in seconds.
   virtual float GetDuration() = 0;
-  
+
   // Pause video playback.
   virtual void Pause() = 0;
 
@@ -170,7 +170,7 @@ public:
   // This is called via a channel listener if it can pick up the duration
   // from a content header. Must be called from the main thread only.
   virtual void SetDuration(PRInt64 aDuration) = 0;
- 
+
   // Set a flag indicating whether seeking is supported
   virtual void SetSeekable(PRBool aSeekable) = 0;
 
@@ -191,7 +191,7 @@ public:
   // should stop buffering or otherwise waiting for download progress and
   // start consuming data, if possible, because the cache is full.
   virtual void NotifySuspendedStatusChanged() = 0;
-  
+
   // Called by nsMediaStream when some data has been received.
   // Call on the main thread only.
   virtual void NotifyBytesDownloaded() = 0;
@@ -202,7 +202,7 @@ public:
   virtual void NotifyDownloadEnded(nsresult aStatus) = 0;
 
   // Cleanup internal data structures. Must be called on the main
-  // thread by the owning object before that object disposes of this object.  
+  // thread by the owning object before that object disposes of this object.
   virtual void Shutdown();
 
   // Suspend any media downloads that are in progress. Called by the
@@ -248,7 +248,7 @@ protected:
                   unsigned char* aRGBBuffer);
 
 protected:
-  // Timer used for updating progress events 
+  // Timer used for updating progress events
   nsCOMPtr<nsITimer> mProgressTimer;
 
   // This should only ever be accessed from the main thread.

@@ -60,7 +60,7 @@
 # so that they can be shared by this overlay.
 #include global-scripts.inc
 
-<script type="application/x-javascript">
+<script type="application/javascript">
   addEventListener("load", nonBrowserWindowStartup, false);
   addEventListener("unload", nonBrowserWindowShutdown, false);
 </script>

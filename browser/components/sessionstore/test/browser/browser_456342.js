@@ -66,7 +66,8 @@ function test() {
     is(countBad,  0, "Didn't save text for ignored field types");
     
     // clean up
-    gPrefService.clearUserPref("browser.sessionstore.privacy_level");
+    if (gPrefService.prefHasUserValue("browser.sessionstore.privacy_level"))
+      gPrefService.clearUserPref("browser.sessionstore.privacy_level");
     finish();
   }, true);
 }

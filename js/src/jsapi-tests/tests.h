@@ -123,15 +123,14 @@ public:
     bool exec(const char *bytes, const char *filename, int lineno) {
         jsvalRoot v(cx);
         return JS_EvaluateScript(cx, global, bytes, strlen(bytes), filename, lineno, v.addr()) ||
-            fail(bytes, filename, lineno);
-        return true;
+               fail(bytes, filename, lineno);
     }
 
 #define EVAL(s, vp) do { if (!evaluate(s, __FILE__, __LINE__, vp)) return false; } while (false)
 
     bool evaluate(const char *bytes, const char *filename, int lineno, jsval *vp) {
         return JS_EvaluateScript(cx, global, bytes, strlen(bytes), filename, lineno, vp) ||
-            fail(bytes, filename, lineno);
+               fail(bytes, filename, lineno);
     }
 
     std::string toSource(jsval v) {
@@ -152,9 +151,9 @@ public:
                    const char *actualExpr, const char *expectedExpr,
                    const char *filename, int lineno) {
         return JS_SameValue(cx, actual, expected) ||
-            fail(std::string("CHECK_SAME failed: expected JS_SameValue(cx, ") +
-                 actualExpr + ", " + expectedExpr + "), got !JS_SameValue(cx, " +
-                 toSource(actual) + ", " + toSource(expected) + ")", filename, lineno);
+               fail(std::string("CHECK_SAME failed: expected JS_SameValue(cx, ") +
+                    actualExpr + ", " + expectedExpr + "), got !JS_SameValue(cx, " +
+                    toSource(actual) + ", " + toSource(expected) + ")", filename, lineno);
     }
 
 #define CHECK(expr) \

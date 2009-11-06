@@ -127,7 +127,7 @@
     <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
 #endif
 
-    <script type="application/x-javascript" src="chrome://browser/content/preferences/advanced.js"/>
+    <script type="application/javascript" src="chrome://browser/content/preferences/advanced.js"/>
 
     <tabbox id="advancedPrefs" flex="1"
             onselect="gAdvancedPane.tabSelectionChanged();">

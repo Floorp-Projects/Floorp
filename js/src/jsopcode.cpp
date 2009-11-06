@@ -4969,25 +4969,34 @@ js_DecompileFunction(JSPrinter *jp)
         jp->indent -= 4;
         js_printf(jp, "\t}");
     } else {
+        JSScript *script = fun->u.i.script;
 #if JS_HAS_DESTRUCTURING
         SprintStack ss;
         void *mark;
 #endif
 
         /* Print the parameters. */
-        pc = fun->u.i.script->main;
-        endpc = pc + fun->u.i.script->length;
+        pc = script->main;
+        endpc = pc + script->length;
         ok = JS_TRUE;
 
-#if JS_HAS_DESTRUCTURING
         /* Skip trace hint if it appears here. */
-        if (js_GetOpcode(jp->sprinter.context, fun->u.i.script, pc) == JSOP_TRACE) {
-            JS_STATIC_ASSERT(JSOP_TRACE_LENGTH == JSOP_NOP_LENGTH);
-            pc += JSOP_TRACE_LENGTH;
+#if JS_HAS_GENERATORS
+        if (js_GetOpcode(jp->sprinter.context, script, script->code) != JSOP_GENERATOR)
+#endif
+        {
+            JSOp op = js_GetOpcode(jp->sprinter.context, script, pc);
+            if (op == JSOP_TRACE || op == JSOP_NOP) {
+                JS_STATIC_ASSERT(JSOP_TRACE_LENGTH == JSOP_NOP_LENGTH);
+                pc += JSOP_TRACE_LENGTH;
+            } else {
+                JS_ASSERT(op == JSOP_STOP);  /* empty script singleton */
+            }
         }
 
+#if JS_HAS_DESTRUCTURING
         ss.printer = NULL;
-        jp->script = fun->u.i.script;
+        jp->script = script;
         mark = JS_ARENA_MARK(&jp->sprinter.context->tempPool);
 #endif
 
@@ -5008,8 +5017,7 @@ js_DecompileFunction(JSPrinter *jp)
                 pc += JSOP_GETARG_LENGTH;
                 LOCAL_ASSERT(*pc == JSOP_DUP);
                 if (!ss.printer) {
-                    ok = InitSprintStack(jp->sprinter.context, &ss, jp,
-                                         StackDepth(fun->u.i.script));
+                    ok = InitSprintStack(jp->sprinter.context, &ss, jp, StackDepth(script));
                     if (!ok)
                         break;
                 }
@@ -5051,8 +5059,8 @@ js_DecompileFunction(JSPrinter *jp)
             jp->indent += 4;
         }
 
-        len = fun->u.i.script->code + fun->u.i.script->length - pc;
-        ok = DecompileCode(jp, fun->u.i.script, pc, (uintN)len, 0);
+        len = script->code + script->length - pc;
+        ok = DecompileCode(jp, script, pc, (uintN)len, 0);
         if (!ok)
             return JS_FALSE;
 

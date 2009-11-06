@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var st = document.getElementById("s").firstChild
+
+  var range = document.createRange();
+  range.setStart(document.documentElement, 0); 
+  range.setEnd(st, 1); 
+  range.deleteContents()
+
+  try { range.surroundContents(st); } catch(e) { }
+}
+
+</script>
+
+<style type="text/css">
+
+div:first-letter { float: left; }
+
+</style>
+</head>
+
+<body onload="boom();"><div><span id="s">Foo</span></div></body>
+
+</html>

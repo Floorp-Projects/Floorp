@@ -2,7 +2,7 @@ url-prefix ../../jsreftest.html?test=js1_8_1/trace/
 script math-trace-tests.js
 script regress-451673.js # slow
 script regress-451974-01.js
-random-if(xulRuntime.OS=="Linux") script regress-451974-02.js
+random script regress-451974-02.js # bug 524734
 fails script regress-452498-01.js
 script regress-458838.js
 script regress-462459-01.js

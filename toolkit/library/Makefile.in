@@ -162,16 +162,9 @@ else
 SDK_LIBRARY = $(SHARED_LIBRARY)
 endif
 
-include $(topsrcdir)/config/rules.mk
-
-export:: $(RDF_UTIL_SRC_CPPSRCS) $(INTL_UNICHARUTIL_UTIL_CPPSRCS)
-	$(INSTALL) $^ .
-
 EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(EXTRA_DSO_LIBS)
 
-ifdef MOZ_ENABLE_LIBXUL
-include $(srcdir)/libxul-rules.mk
-else
+ifndef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_COMPONENT_LIBS) \
 	$(MOZ_JS_LIBS) \
@@ -239,26 +232,25 @@ EXTRA_DSO_LDOPTS += -lbe -ltracker
 endif
 
 ifeq ($(OS_ARCH),SunOS)
-EXTRA_DSO_LDOPTS += -lelf -ldemangle -lCstd
+EXTRA_DSO_LDOPTS += -lelf -ldemangle
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 imm32 winmm wsock32 msimg32 shlwapi)
+OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 imm32 winmm wsock32 msimg32 shlwapi)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,imagehlp)
+OS_LIBS += $(call EXPAND_LIBNAME,imagehlp)
 endif
 endif # WINNT
 ifeq ($(OS_ARCH),WINCE)
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, aygshell uuid ole32 oleaut32 Ws2 ddraw)
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, ceosutil libcmt comsuppw)
+OS_LIBS += $(call EXPAND_LIBNAME, aygshell uuid ole32 oleaut32 Ws2 ddraw)
+OS_LIBS += $(call EXPAND_LIBNAME, ceosutil libcmt comsuppw)
 ifdef WINCE_WINDOWS_MOBILE
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, cellcore)
+OS_LIBS += $(call EXPAND_LIBNAME, cellcore)
 endif
 ifdef HAS_OGLES
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, libGLESv2 libEGL)
+OS_LIBS += $(call EXPAND_LIBNAME, libGLESv2 libEGL)
 endif
 endif
-
 
 ifdef MOZ_JPROF
 EXTRA_DSO_LDOPTS += -ljprof
@@ -266,6 +258,15 @@ endif
 
 ifdef MOZ_ENABLE_QT
 EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS)
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+export:: $(RDF_UTIL_SRC_CPPSRCS) $(INTL_UNICHARUTIL_UTIL_CPPSRCS)
+	$(INSTALL) $^ .
+
+ifdef MOZ_ENABLE_LIBXUL
+include $(srcdir)/libxul-rules.mk
 endif
 
 ifdef MOZ_JAVAXPCOM

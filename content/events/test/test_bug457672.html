@@ -29,7 +29,9 @@ function setUserPref(reset) {
   var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID)
                                                    .getBranch("browser.link.");
   if (reset) {
-    prefs.clearUserPref("open_newwindow");
+    try {
+      prefs.clearUserPref("open_newwindow");
+    } catch (ex) {}
   } else {
     prefs.setIntPref("open_newwindow", 3);
   }

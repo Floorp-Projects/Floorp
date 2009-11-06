@@ -969,7 +969,7 @@ nsStyleSet::ReParentStyleContext(nsPresContext* aPresContext,
       return aStyleContext;
     }
     else {  // really a new parent
-      nsIAtom* pseudoTag = aStyleContext->GetPseudoType();
+      nsIAtom* pseudoTag = aStyleContext->GetPseudo();
       nsRuleNode* ruleNode = aStyleContext->GetRuleNode();
 
       already_AddRefed<nsStyleContext> result =

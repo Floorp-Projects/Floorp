@@ -47,6 +47,12 @@ public:
 
     nsresult Init();
 
+protected:
+    void SetInt32Property(const nsAString &aPropertyName,
+                          const PRInt32 aValue);
+    void SetUint64Property(const nsAString &aPropertyName,
+                           const PRUint64 aValue);
+
 private:
     ~nsSystemInfo();
 };

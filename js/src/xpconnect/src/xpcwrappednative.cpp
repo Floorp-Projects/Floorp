@@ -1192,6 +1192,9 @@ XPCWrappedNative::FinishInit(XPCCallContext &ccx)
             "MainThread only wrapper created on the wrong thread", this);
 #endif
 
+    // A hack for bug 517665, increase the probability for GC.
+    JS_updateMallocCounter(ccx.GetJSContext(), 2 * sizeof(XPCWrappedNative));
+
     return JS_TRUE;
 }
 

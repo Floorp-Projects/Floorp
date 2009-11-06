@@ -91,7 +91,7 @@ function run_test() {
   }
   zipW.close();
 
-  zipR = new ZipReader(tmpFile);
+  var zipR = new ZipReader(tmpFile);
   for (let i = 0; i < TESTS.length; i++) {
     zipR.extract(TESTS[i].name, file);
     dump("Testing file permissions for " + TESTS[i].name + "\n");

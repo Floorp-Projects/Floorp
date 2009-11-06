@@ -63,6 +63,7 @@ build/pgo/blueprint/Makefile
 build/pgo/js-input/Makefile
 build/unix/Makefile
 build/win32/Makefile
+build/win32/crashinjectdll/Makefile
 config/Makefile
 config/autoconf.mk
 config/mkdepend/Makefile

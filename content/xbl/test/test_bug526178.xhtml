@@ -1,0 +1,80 @@
+<html xmlns="http://www.w3.org/1999/xhtml" style="display: none">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=526178
+-->
+<head>
+  <title>Test for Bug 526178</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style id="sheet">
+    #content * {
+      display: block;
+      -moz-binding: url("#binding");
+    }
+  </style>
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="binding">
+      <implementation>
+        <constructor>
+          window.logString += this.localName;
+          window.bindingDone();
+        </constructor>
+      </implementation>
+    </binding>
+  </bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=526178">Mozilla Bug 526178</a>
+<div id="content">
+  <a>
+    <b>
+      <c/>
+    </b>
+    <d/>
+    <e style="display: inline">
+      <f style="display: inline">
+        <g style="display: inline"/>
+        <h style="display: none"/>
+        <i style="display: inline"/>
+      </f>
+      <j style="display: none"/>
+      <k style="display: inline">
+        <l style="display: inline"/>
+        <m/>
+        <n style="display: inline"/>
+      </k>
+    </e>
+    <o style="display: none"/>
+    <p/>
+  </a>
+</div>
+<p id="display">
+</p>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 526178 **/
+var logString = "";
+// Add one for the root
+var pendingBindings = $("content").getElementsByTagName("*").length + 1;
+function bindingDone() {
+  if (--pendingBindings == 0) {
+    is(logString, "apoeknmljfihgdbchtml");
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// Have to add the rule for the root dynamically so the binding doesn't try
+//  to load before bindingDone() is defined.
+$("sheet").sheet.insertRule(':root { -moz-binding: url("#binding"); }', 0);
+document.documentElement.style.display = "";
+
+]]>
+</script>
+</pre>
+</body>
+</html>

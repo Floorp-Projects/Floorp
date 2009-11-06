@@ -309,7 +309,6 @@ namespace nanojit
 
     static const RegisterMask GpRegs = 0xffff;
     static const RegisterMask FpRegs = 0xffff0000;
-    static const bool CalleeRegsNeedExplicitSaving = true;
 #ifdef _MSC_VER
     static const RegisterMask SavedRegs = 1<<RBX | 1<<RSI | 1<<RDI | 1<<R12 | 1<<R13 | 1<<R14 | 1<<R15;
     static const int NumSavedRegs = 7; // rbx, rsi, rdi, r12-15
@@ -382,6 +381,9 @@ namespace nanojit
     const int LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
 
     typedef uint8_t NIns;
+
+    // Bytes of icache to flush after Assembler::patch
+    const size_t LARGEST_BRANCH_PATCH = 16 * sizeof(NIns);
 
     inline Register nextreg(Register r) {
         return Register(r+1);

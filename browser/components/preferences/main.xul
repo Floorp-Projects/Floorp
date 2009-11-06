@@ -54,7 +54,7 @@
             onpaneload="gMainPane.init();"
             helpTopic="prefs-main">
 
-    <script type="application/x-javascript" src="chrome://browser/content/preferences/main.js"/>
+    <script type="application/javascript" src="chrome://browser/content/preferences/main.js"/>
 
     <preferences id="mainPreferences">
       <!-- XXX Button preferences -->

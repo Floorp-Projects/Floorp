@@ -42,26 +42,10 @@
 
 #ifdef UNDER_CE
 #include <cmnintrin.h>
-static inline bool blx_lr_broken() {
-    return false;
-}
+extern "C" bool blx_lr_broken();
 #endif
 
-#if defined(AVMPLUS_LINUX)
-#include <signal.h>
-#include <setjmp.h>
-#include <asm/unistd.h>
-extern "C" void __clear_cache(void *BEG, void *END);
-#endif
-
-// assume EABI, except under CE
-#ifdef UNDER_CE
-#undef NJ_ARM_EABI
-#else
-#define NJ_ARM_EABI
-#endif
-
-#ifdef FEATURE_NANOJIT
+#if defined(FEATURE_NANOJIT) && defined(NANOJIT_ARM)
 
 namespace nanojit
 {
@@ -187,7 +171,7 @@ Assembler::encOp2Imm(uint32_t literal, uint32_t * enc)
     uint32_t    leading_zeroes;
 
     // Components of the operand 2 encoding.
-    uint32_t    rot;
+    int32_t    rot;
     uint32_t    imm8;
 
     // Check the literal to see if it is a simple 8-bit value. I suspect that
@@ -533,11 +517,21 @@ Assembler::nFragExit(LInsp guard)
         // will work correctly.
         JMP_far(_epilogue);
 
-        asm_ld_imm(R0, int(gr));
-
-        // Set the jmp pointer to the start of the sequence so that patched
-        // branches can skip the LDi sequence.
+        // In the future you may want to move this further down so that we can
+        // overwrite the r0 guard record load during a patch to a different
+        // fragment with some assumed input-register state. Not today though.
         gr->jmp = _nIns;
+
+        // NB: this is a workaround for the fact that, by patching a
+        // fragment-exit jump, we could be changing the *meaning* of the R0
+        // register we're passing to the jump target. If we jump to the
+        // epilogue, ideally R0 means "return value when exiting fragment".
+        // If we patch this to jump to another fragment however, R0 means
+        // "incoming 0th parameter". This is just a quirk of ARM ABI. So
+        // we compromise by passing "return value" to the epilogue in IP,
+        // not R0, and have the epilogue MOV(R0, IP) first thing.
+
+        asm_ld_imm(IP, int(gr));
     }
 
 #ifdef NJ_VERBOSE
@@ -563,6 +557,11 @@ Assembler::genEpilogue()
     RegisterMask savingMask = rmask(FP) | rmask(PC);
 
     POP_mask(savingMask); // regs
+
+    // NB: this is the later half of the dual-nature patchable exit branch
+    // workaround noted above in nFragExit. IP has the "return value"
+    // incoming, we need to move it to R0.
+    MOV(R0, IP);
 
     return _nIns;
 }
@@ -764,8 +763,8 @@ Assembler::asm_regarg(ArgSize sz, LInsp p, Register r)
 void
 Assembler::asm_stkarg(LInsp arg, int stkd)
 {
-    Reservation*    argRes = getresv(arg);
-    bool            isQuad = arg->isQuad();
+    Reservation* argRes = getresv(arg);
+    bool isQuad = arg->isQuad();
 
     if (argRes && (argRes->reg != UnknownReg)) {
         // The argument resides somewhere in registers, so we simply need to
@@ -819,9 +818,9 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
 void
 Assembler::asm_call(LInsp ins)
 {
-    const CallInfo*     call = ins->callInfo();
-    ArgSize             sizes[MAXARGS];
-    uint32_t            argc = call->get_sizes(sizes);
+    const CallInfo* call = ins->callInfo();
+    ArgSize sizes[MAXARGS];
+    uint32_t argc = call->get_sizes(sizes);
     bool indirect = call->isIndirect();
 
     // If we aren't using VFP, assert that the LIR operation is an integer
@@ -832,7 +831,7 @@ Assembler::asm_call(LInsp ins)
     // R0/R1. We need to either place it in the result fp reg, or store it.
     // See comments in asm_prep_fcall() for more details as to why this is
     // necessary here for floating point calls, but not for integer calls.
-    if (ARM_VFP) {
+    if (ARM_VFP && ins->isUsed()) {
         // Determine the size (and type) of the instruction result.
         ArgSize         rsize = (ArgSize)(call->_argtypes & ARGSIZE_MASK_ANY);
 
@@ -844,24 +843,20 @@ Assembler::asm_call(LInsp ins)
 
             NanoAssert(ins->opcode() == LIR_fcall);
 
-            // We're about to write the result into a register (or a stack
-            // slot). Because we emit code backwards, we must therefore free
-            // it.
-            freeRsrcOf(ins, rr != UnknownReg);
-
             if (rr == UnknownReg) {
                 int d = disp(callRes);
                 NanoAssert(d != 0);
+                freeRsrcOf(ins, false);
 
                 // The result doesn't have a register allocated, so store the
                 // result (in R0,R1) directly to its stack slot.
                 STR(R0, FP, d+0);
                 STR(R1, FP, d+4);
             } else {
-                Register    rr = callRes->reg;
                 NanoAssert(IsFpReg(rr));
 
                 // Copy the result to the (VFP) result register.
+                prepResultReg(ins, rmask(rr));
                 FMDRR(rr, R0, R1);
             }
         }
@@ -939,87 +934,104 @@ Assembler::nRegisterResetAll(RegAlloc& a)
     a.free =
         rmask(R0) | rmask(R1) | rmask(R2) | rmask(R3) | rmask(R4) |
         rmask(R5) | rmask(R6) | rmask(R7) | rmask(R8) | rmask(R9) |
-        rmask(R10);
+        rmask(R10) | rmask(LR);
     if (ARM_VFP)
         a.free |= FpRegs;
 
     debug_only(a.managed = a.free);
 }
 
-void
-Assembler::nPatchBranch(NIns* at, NIns* target)
+static inline ConditionCode
+get_cc(NIns *ins)
 {
-    // Patch the jump in a loop, as emitted by JMP_far.
-    // Figure out which, and do the right thing.
+    return ConditionCode((*ins >> 28) & 0xF);
+}
 
-    NIns* was = 0;
+static inline bool
+branch_is_B(NIns* branch)
+{
+    return (*branch & 0x0E000000) == 0x0A000000;
+}
 
-    // Determine how the existing branch was emitted so we can report the
-    // original destination. Note that this is only useful for debug purposes;
-    // no real code uses this result.
-    debug_only(
-        if (at[0] == (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4) )) {
-            // The existing branch looks like this:
-            //  at[0]           LDR pc, [addr]
-            //  at[1]   addr:   target
-            was = (NIns*) at[1];
-        } else if ((at[0] && 0xff000000) == (NIns)( COND_AL | (0xA<<24))) {
-            // The existing branch looks like this:
-            //  at[0]           B target
-            //  at[1]           BKPT (dummy instruction).
-            was = (NIns*) (((intptr_t)at + 8) + (intptr_t)((at[0] & 0xffffff) << 2));
+static inline bool
+branch_is_LDR_PC(NIns* branch)
+{
+    return (*branch & 0x0F7FF000) == 0x051FF000;
+}
+
+void
+Assembler::nPatchBranch(NIns* branch, NIns* target)
+{
+    // Patch the jump in a loop
+
+    //
+    // There are two feasible cases here, the first of which has 2 sub-cases:
+    //
+    //   (1) We are patching a patchable unconditional jump emitted by
+    //       JMP_far.  All possible encodings we may be looking at with
+    //       involve 2 words, though we *may* have to change from 1 word to
+    //       2 or vice verse.
+    //
+    //          1a:  B ±32MB ; BKPT
+    //          1b:  LDR PC [PC, #-4] ; $imm
+    //
+    //   (2) We are patching a patchable conditional jump emitted by
+    //       B_cond_chk.  Short conditional jumps are non-patchable, so we
+    //       won't have one here; will only ever have an instruction of the
+    //       following form:
+    //
+    //          LDRcc PC [PC, #lit] ...
+    //
+    //       We don't actually know whether the lit-address is in the
+    //       constant pool or in-line of the instruction stream, following
+    //       the insn (with a jump over it) and we don't need to. For our
+    //       purposes here, cases 2, 3 and 4 all look the same.
+    //
+    // For purposes of handling our patching task, we group cases 1b and 2
+    // together, and handle case 1a on its own as it might require expanding
+    // from a short-jump to a long-jump.
+    //
+    // We do not handle contracting from a long-jump to a short-jump, though
+    // this is a possible future optimisation for case 1b. For now it seems
+    // not worth the trouble.
+    //
+
+    if (branch_is_B(branch)) {
+        // Case 1a
+        // A short B branch, must be unconditional.
+        NanoAssert(get_cc(branch) == AL);
+
+        int32_t offset = PC_OFFSET_FROM(target, branch);
+        if (isS24(offset>>2)) {
+            // We can preserve the existing form, just rewrite its offset.
+            NIns cond = *branch & 0xF0000000;
+            *branch = (NIns)( cond | (0xA<<24) | ((offset>>2) & 0xFFFFFF) );
         } else {
-            // The existing code is not a branch. This can occur, for example,
-            // when patching exit code generated by nFragExit. Exit branches to
-            // an epilogue load a value into R2 (using LDi), but this is not
-            // required for other exit branches so the new branch can be
-            // emitted over the top of the LDi sequence. It would be nice to
-            // assert that we're looking at an LDi sequence, but this is not
-            // trivial because the output of LDi is both platform- and
-            // context-dependent.
-            was = (NIns*)-1;    // Return an obviously incorrect target address.
+            // We need to expand the existing branch to a long jump.
+            // make sure the next instruction is a dummy BKPT
+            NanoAssert(*(branch+1) == BKPT_insn);
+
+            // Set the branch instruction to   LDRcc pc, [pc, #-4]
+            NIns cond = *branch & 0xF0000000;
+            *branch++ = (NIns)( cond | (0x51<<20) | (PC<<16) | (PC<<12) | (4));
+            *branch++ = (NIns)target;
         }
-    );
-
-    // Assert that the existing placeholder is not conditional.
-    NanoAssert((uint32_t)(at[0] & 0xf0000000) == COND_AL);
-
-    // We only have to patch unconditional branches, but these may take one of
-    // the following patterns:
-    //
-    //  --- Short branch.
-    //          B       ±32MB
-    //
-    //  --- Long branch.
-    //          LDR     PC, #lit
-    //  lit:    #target
-
-    intptr_t offs = PC_OFFSET_FROM(target, at);
-    if (isS24(offs>>2)) {
-        // Emit a simple branch (B) in the first of the two available
-        // instruction addresses.
-        at[0] = (NIns)( COND_AL | (0xA<<24) | ((offs >> 2) & 0xffffff) );
-        // and reset at[1] for good measure
-        at[1] = BKPT_insn;
     } else {
-        // Emit a branch to a pc-relative address, which we'll store right
-        // after this instruction
-        at[0] = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4) );
-        // the target address
-        at[1] = (NIns)(target);
+        // Case 1b & 2
+        // Not a B branch, must be LDR, might be any kind of condition.
+        NanoAssert(branch_is_LDR_PC(branch));
+
+        NIns *addr = branch+2;
+        int offset = (*branch & 0xFFF) / sizeof(NIns);
+        if (*branch & (1<<23)) {
+            addr += offset;
+        } else {
+            addr -= offset;
+        }
+
+        // Just redirect the jump target, leave the insn alone.
+        *addr = (NIns) target;
     }
-    VALGRIND_DISCARD_TRANSLATIONS(at, 2*sizeof(NIns));
-
-#if defined(UNDER_CE)
-    // we changed the code, so we need to do this (sadly)
-    FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
-#elif defined(AVMPLUS_LINUX)
-    __clear_cache((char*)at, (char*)(at+3));
-#endif
-
-#ifdef AVMPLUS_PORTING_API
-    NanoJIT_PortAPI_FlushInstructionCache(at, at+3);
-#endif
 }
 
 RegisterMask
@@ -1085,41 +1097,31 @@ Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
 {
     if (i->isop(LIR_alloc)) {
         asm_add_imm(r, FP, disp(resv));
-    } else if (IsFpReg(r)) {
-        NanoAssert(ARM_VFP);
-
+    } else if (i->isconst()) {
+        if (!resv->arIndex) {
+            i->resv()->clear();
+        }
+        asm_ld_imm(r, i->imm32());
+    }
+    else {
         // We can't easily load immediate values directly into FP registers, so
         // ensure that memory is allocated for the constant and load it from
         // memory.
         int d = findMemFor(i);
-        if (isS8(d >> 2)) {
-            FLDD(r, FP, d);
+        if (ARM_VFP && IsFpReg(r)) {
+            if (isS8(d >> 2)) {
+                FLDD(r, FP, d);
+            } else {
+                FLDD(r, IP, 0);
+                asm_add_imm(IP, FP, d);
+            }
         } else {
-            FLDD(r, IP, 0);
-            asm_add_imm(IP, FP, d);
+            LDR(r, FP, d);
         }
-#if 0
-    // This code tries to use a small constant load to restore the value of r.
-    // However, there was a comment explaining that using this regresses
-    // crypto-aes by about 50%. I do not see that behaviour; however, enabling
-    // this code does cause a JavaScript failure in the first of the
-    // createMandelSet tests in trace-tests. I can't explain either the
-    // original performance issue or the crash that I'm seeing.
-    } else if (i->isconst()) {
-        // asm_ld_imm will automatically select between LDR and MOV as
-        // appropriate.
-        if (!resv->arIndex)
-            i->resv()->clear();
-        asm_ld_imm(r, i->imm32());
-#endif
-    } else {
-        int d = findMemFor(i);
-        LDR(r, FP, d);
     }
-
     verbose_only(
         asm_output("        restore %s",_thisfrag->lirbuf->names->formatRef(i));
-    )
+        )
 }
 
 void
@@ -1274,21 +1276,24 @@ Assembler::asm_quad(LInsp ins)
 {
     //asm_output(">>> asm_quad");
 
-    Reservation *   res = getresv(ins);
-    int             d = disp(res);
-    Register        rr = res->reg;
+    Reservation *res = getresv(ins);
+    int d = disp(res);
+    Register rr = res->reg;
 
     freeRsrcOf(ins, false);
 
     if (ARM_VFP && rr != UnknownReg)
     {
-        if (d)
-            FSTD(rr, FP, d);
+        asm_spill(rr, d, false, true);
 
         underrunProtect(4*4);
         asm_quad_nochk(rr, ins->imm64_0(), ins->imm64_1());
     } else {
         NanoAssert(d);
+        // asm_mmq might spill a reg, so don't call it;
+        // instead do the equivalent directly.
+        //asm_mmq(FP, d, PC, -16);
+
         STR(IP, FP, d+4);
         asm_ld_imm(IP, ins->imm64_1());
         STR(IP, FP, d);
@@ -1364,7 +1369,7 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
     // Find the list of free registers from the allocator's free list and the
     // GpRegs mask. This excludes any floating-point registers that may be on
     // the free list.
-    RegisterMask    free = _allocator.free & GpRegs;
+    RegisterMask    free = _allocator.free & AllowableFlagRegs;
 
     if (free) {
         // There is at least one register on the free list, so grab one for
@@ -1469,6 +1474,8 @@ Assembler::JMP_far(NIns* addr)
         // Emit a BKPT to ensure that we reserve enough space for a full 32-bit
         // branch patch later on. The BKPT should never be executed.
         BKPT_nochk();
+
+        asm_output("bkpt");
 
         // B [PC+offs]
         *(--_nIns) = (NIns)( COND_AL | (0xA<<24) | ((offs>>2) & 0xFFFFFF) );
@@ -1691,7 +1698,7 @@ Assembler::asm_ld_imm(Register d, int32_t imm, bool chk /* = true */)
         ++_nSlot;
         offset += sizeof(_nSlot);
     }
-    NanoAssert(isS12(offset) && (offset < 0));
+    NanoAssert(isS12(offset) && (offset <= -8));
 
     // Write the literal.
     *(_nSlot++) = imm;
@@ -1726,11 +1733,6 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
     int32_t offs = PC_OFFSET_FROM(_t,_nIns-1);
     //nj_dprintf("B_cond_chk target: 0x%08x offset: %d @0x%08x\n", _t, offs, _nIns-1);
 
-    // We don't patch conditional branches, and nPatchBranch can't cope with
-    // them. We should therefore check that they are not generated at this
-    // stage.
-    NanoAssert((_t != 0) || (_c == AL));
-
     // optimistically check if this will fit in 24 bits
     if (_chk && isS24(offs>>2) && (_t != 0)) {
         underrunProtect(4);
@@ -1764,11 +1766,13 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
     if (isS24(offs>>2) && (_t != 0)) {
         // The underrunProtect for this was done above (if required by _chk).
         *(--_nIns) = (NIns)( ((_c)<<28) | (0xA<<24) | (((offs)>>2) & 0xFFFFFF) );
+        asm_output("b%s %p", _c == AL ? "" : condNames[_c], (void*)(_t));
     } else if (_c == AL) {
         if(_chk) underrunProtect(8);
         *(--_nIns) = (NIns)(_t);
         *(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | 0x4 );
-    } else if (PC_OFFSET_FROM(_nSlot, _nIns-1) > -0x1000 /*~(NJ_PAGE_SIZE-1)*/) {
+        asm_output("b%s %p", _c == AL ? "" : condNames[_c], (void*)(_t));
+    } else if (PC_OFFSET_FROM(_nSlot, _nIns-1) > -0x1000) {
         if(_chk) underrunProtect(8);
         *(_nSlot++) = (NIns)(_t);
         offs = PC_OFFSET_FROM(_nSlot-1,_nIns-1);
@@ -1786,9 +1790,8 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
         *(--_nIns) = (NIns)( COND_AL | (0xA<<24) | 0x0 );
         // Emit the conditional branch.
         *(--_nIns) = (NIns)( ((_c)<<28) | (0x51<<20) | (PC<<16) | (PC<<12) | 0x0 );
+        asm_output("b%s %p", _c == AL ? "" : condNames[_c], (void*)(_t));
     }
-
-    asm_output("b%s %p", condNames[_c], (void*)(_t));
 }
 
 /*
@@ -1875,9 +1878,12 @@ Assembler::asm_fcmp(LInsp ins)
 
     NanoAssert(op >= LIR_feq && op <= LIR_fge);
 
+    Reservation *rA, *rB;
+    findRegFor2(FpRegs, lhs, rA, rhs, rB);
+    Register ra = rA->reg;
+    Register rb = rB->reg;
+
     int e_bit = (op != LIR_feq);
-    Register ra = findRegFor(lhs, FpRegs);
-    Register rb = findRegFor(rhs, FpRegs);
 
     // do the comparison and get results loaded in ARM status register
     FMSTAT();
@@ -1901,13 +1907,12 @@ Assembler::asm_prep_fcall(Reservation*, LInsp)
      * which is clearly broken.
      *
      * This is not a problem for non-floating point calls, because the
-     * restoring of spilled data into R0 is done via a call to
-     * prepResultReg(R0) at the same point in the sequence as this function is
-     * called, meaning that evictScratchRegs() will not modify R0. However,
-     * prepResultReg is not aware of the concept of using a register pair
-     * (R0,R1) for the result of a single operation, so it can only be used
-     * here with the ultimate VFP register, and not R0/R1, which potentially
-     * allows for R0/R1 to get corrupted as described.
+     * restoring of spilled data into R0 is done via a call to prepResultReg(R0)
+     * at the same point in the sequence as this function is called, meaning that
+     * evictScratchRegs() will not modify R0. However, prepResultReg is not aware
+     * of the concept of using a register pair (R0,R1) for the result of a single
+     * operation, so it can only be used here with the ultimate VFP register, and
+     * not R0/R1, which potentially allows for R0/R1 to get corrupted as described.
      */
     return UnknownReg;
 }
@@ -2026,6 +2031,7 @@ Assembler::asm_cmpi(Register r, int32_t imm)
         if (imm > -256) {
             ALUi(AL, cmn, 1, 0, r, -imm);
         } else {
+            underrunProtect(4 + LD32_size);
             CMP(r, IP);
             asm_ld_imm(IP, imm);
         }
@@ -2033,6 +2039,7 @@ Assembler::asm_cmpi(Register r, int32_t imm)
         if (imm < 256) {
             ALUi(AL, cmp, 1, 0, r, imm);
         } else {
+            underrunProtect(4 + LD32_size);
             CMP(r, IP);
             asm_ld_imm(IP, imm);
         }
@@ -2367,6 +2374,13 @@ void
 Assembler::asm_ret(LIns *ins)
 {
     genEpilogue();
+
+    // NB: our contract with genEpilogue is actually that the return value
+    // we are intending for R0 is currently IP, not R0. This has to do with
+    // the strange dual-nature of the patchable jump in a side-exit. See
+    // nPatchBranch.
+
+    MOV(IP, R0);
 
     // Pop the stack frame.
     MOV(SP,FP);
