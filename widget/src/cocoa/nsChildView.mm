@@ -2163,13 +2163,11 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
 // occurs in this view.
 NSPasteboard* globalDragPboard = nil;
 
-// gLastDragView and gLastDragEvent are only non-null during calls to |mouseDragged:|
-// in our native NSView. They are used to communicate information to the drag service
-// during drag invocation (starting a drag in from the view). All drag service drag
-// invocations happen only while these two global variables are non-null, while |mouseDragged:|
-// is on the stack.
+// gLastDragView and gLastDragMouseDownEvent are used to communicate information
+// to the drag service during drag invocation (starting a drag in from the view).
+// gLastDragView is only non-null while mouseDragged is on the call stack.
 NSView* gLastDragView = nil;
-NSEvent* gLastDragEvent = nil;
+NSEvent* gLastDragMouseDownEvent = nil;
 
 + (void)initialize
 {
@@ -3012,6 +3010,9 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     mLastMouseDownEvent = [theEvent retain];
   }
 
+  [gLastDragMouseDownEvent release];
+  gLastDragMouseDownEvent = [theEvent retain];
+
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   if ([self maybeRollup:theEvent] ||
@@ -3231,7 +3232,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     return;
 
   gLastDragView = self;
-  gLastDragEvent = theEvent;
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
@@ -3268,9 +3268,8 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   // Note, sending the above event might have destroyed our widget since we didn't retain.
   // Fine so long as we don't access any local variables from here on.
-
   gLastDragView = nil;
-  gLastDragEvent = nil;
+
   // XXX maybe call markedTextSelectionChanged:client: here?
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -5953,6 +5952,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   [globalDragPboard release];
   globalDragPboard = nil;
+  [gLastDragMouseDownEvent release];
+  gLastDragMouseDownEvent = nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
