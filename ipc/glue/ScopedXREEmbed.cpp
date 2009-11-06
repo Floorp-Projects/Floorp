@@ -64,7 +64,14 @@ ScopedXREEmbed::~ScopedXREEmbed()
 void
 ScopedXREEmbed::Start()
 {
-  std::string path = WideToUTF8(CommandLine::ForCurrentProcess()->program());
+  std::string path;
+#if defined(OS_WIN)
+  path = WideToUTF8(CommandLine::ForCurrentProcess()->program());
+#elif defined(OS_POSIX)
+  path = CommandLine::ForCurrentProcess()->argv()[0];
+#else
+#  error Sorry
+#endif
 
   nsCOMPtr<nsILocalFile> localFile;
   nsresult rv = XRE_GetBinaryPath(path.c_str(), getter_AddRefs(localFile));
