@@ -283,35 +283,12 @@ function onLoadPageInfo()
              window.arguments.length >= 1 &&
              window.arguments[0];
 
-  if (args && args.doc) {
-    gDocument = args.doc;
-    gWindow = gDocument.defaultView;
-  }
-  else {
-    if ("gBrowser" in window.opener)
-      gWindow = window.opener.gBrowser.contentWindow;
-    else
-      gWindow = window.opener.frames[0];
-    gDocument = gWindow.document;
-  }
-
   // init media view
   var imageTree = document.getElementById("imagetree");
   imageTree.view = gImageView;
 
-  // set gImageElement if present
-  gImageElement = args && args.imageElement;
-
-  // build the content
-  loadPageInfo();
-
   /* Select the requested tab, if the name is specified */
-  var initialTab = (args && args.initialTab) || "generalTab";
-  var radioGroup = document.getElementById("viewGroup");
-  initialTab = document.getElementById(initialTab) || document.getElementById("generalTab");
-  radioGroup.selectedItem = initialTab;
-  radioGroup.selectedItem.doCommand();
-  radioGroup.focus();
+  loadTab(args);
   Components.classes["@mozilla.org/observer-service;1"]
             .getService(Components.interfaces.nsIObserverService)
             .notifyObservers(window, "page-info-dialog-loaded", null);
@@ -338,7 +315,7 @@ function loadPageInfo()
   onLoadRegistry.forEach(function(func) { func(); });
 }
 
-function resetPageInfo()
+function resetPageInfo(args)
 {
   /* Reset Meta tags part */
   gMetaView.clear();
@@ -362,8 +339,7 @@ function resetPageInfo()
   /* Call registered overlay reset functions */
   onResetRegistry.forEach(function(func) { func(); });
 
-  /* And let's rebuild the data */
-  loadPageInfo();
+  loadTab(args);
 }
 
 function onUnloadPageInfo()
@@ -399,6 +375,37 @@ function showTab(id)
   var deck  = document.getElementById("mainDeck");
   var pagel = document.getElementById(id + "Panel");
   deck.selectedPanel = pagel;
+}
+
+function loadTab(args)
+{
+  if (args && args.doc) {
+    gDocument = args.doc;
+    gWindow = gDocument.defaultView;
+  }
+  else {
+    if ("gBrowser" in window.opener)
+      gWindow = window.opener.gBrowser.contentWindow;
+    else
+      gWindow = window.opener.frames[0];
+    gDocument = gWindow.document;
+  }
+
+  if (args && args.imageElement)
+    gImageElement = args.imageElement;
+
+  /* Rebuild the data */
+  gImageElement = args && args.imageElement;
+
+  /* Load the page info */
+  loadPageInfo();
+
+  var initialTab = (args && args.initialTab) || "generalTab";
+  var radioGroup = document.getElementById("viewGroup");
+  initialTab = document.getElementById(initialTab) || document.getElementById("generalTab");
+  radioGroup.selectedItem = initialTab;
+  radioGroup.selectedItem.doCommand();
+  radioGroup.focus();
 }
 
 function onClickMore()
