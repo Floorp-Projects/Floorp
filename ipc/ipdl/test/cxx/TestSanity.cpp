@@ -27,16 +27,19 @@ TestSanityParent::~TestSanityParent()
 void
 TestSanityParent::Main()
 {
-    if (!SendPing(0))
+    if (!SendPing(0, 0.5f))
         fail("sending Ping");
 }
 
 
 bool
-TestSanityParent::RecvPong(const int& one)
+TestSanityParent::RecvPong(const int& one, const float& zeroPtTwoFive)
 {
     if (1 != one)
         fail("invalid argument `%d', should have been `1'", one);
+
+    if (0.25f != zeroPtTwoFive)
+        fail("invalid argument `%g', should have been `0.25'", zeroPtTwoFive);
 
     passed("sent ping/received pong");
 
@@ -69,12 +72,15 @@ TestSanityChild::~TestSanityChild()
 }
 
 bool
-TestSanityChild::RecvPing(const int& zero)
+TestSanityChild::RecvPing(const int& zero, const float& zeroPtFive)
 {
     if (0 != zero)
         fail("invalid argument `%d', should have been `0'", zero);
 
-    if (!SendPong(1))
+    if (0.5f != zeroPtFive)
+        fail("invalid argument `%g', should have been `0.5'", zeroPtFive);
+
+    if (!SendPong(1, 0.25f))
         fail("sending Pong");
     return true;
 }

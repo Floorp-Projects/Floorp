@@ -6,10 +6,10 @@ namespace _ipdltest {
 protocol PTestSanity {
 
 child:
-    Ping(int zero);
+    Ping(int zero, float zeroPtFive);
 
 parent:
-    Pong(int one);
+    Pong(int one, float zeroPtTwoFive);
 
 both:
     UNREACHED();
