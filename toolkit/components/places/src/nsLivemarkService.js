@@ -509,7 +509,7 @@ LivemarkService.prototype = {
         aIID.equals(Ci.nsINavBookmarkObserver) ||
         aIID.equals(Ci.nsISupports))
       return this;
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
 
