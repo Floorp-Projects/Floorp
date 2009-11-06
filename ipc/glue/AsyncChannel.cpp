@@ -250,8 +250,10 @@ AsyncChannel::OnChannelError()
         // Must exit the IO loop, which will then join with the UI loop.
         MessageLoop::current()->Quit();
 #else
-        // Go ahead and abort here.
-        NS_DebugBreak(NS_DEBUG_ABORT, nsnull, nsnull, nsnull, 0);
+        // FIXME need to devote some thought to the most
+        // effective/least easily overrideable, yet quiet, way to
+        // exit.  abort() is a little loud
+        _exit(0);
 #endif
     }
 }
