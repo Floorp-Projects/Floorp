@@ -2892,7 +2892,8 @@ nsXULDocument::ResumeWalk()
     // <html:script src="..." />) can be properly re-loaded if the
     // cached copy of the document becomes stale.
     nsresult rv;
-    nsCOMPtr<nsIURI> overlayURI = mCurrentPrototype->GetURI();
+    nsCOMPtr<nsIURI> overlayURI =
+        mCurrentPrototype ? mCurrentPrototype->GetURI() : nsnull;
 
     while (1) {
         // Begin (or resume) walking the current prototype.
