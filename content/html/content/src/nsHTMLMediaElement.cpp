@@ -164,13 +164,13 @@ class nsAsyncEventRunner : public nsMediaEvent
 private:
   nsString mName;
   PRPackedBool mProgress;
-  
+
 public:
-  nsAsyncEventRunner(const nsAString& aName, nsHTMLMediaElement* aElement, PRBool aProgress) : 
+  nsAsyncEventRunner(const nsAString& aName, nsHTMLMediaElement* aElement, PRBool aProgress) :
     nsMediaEvent(aElement), mName(aName), mProgress(aProgress)
   {
   }
-  
+
   NS_IMETHOD Run() {
     // Silently cancel if our load has been cancelled.
     if (IsCancelled())
@@ -386,7 +386,7 @@ NS_IMETHODIMP nsHTMLMediaElement::GetEnded(PRBool *aEnded)
 NS_IMETHODIMP nsHTMLMediaElement::GetCurrentSrc(nsAString & aCurrentSrc)
 {
   nsCAutoString src;
-  
+
   if (mDecoder) {
     nsMediaStream* stream = mDecoder->GetCurrentStream();
     if (stream) {
@@ -504,7 +504,7 @@ static PRBool HasSourceChildren(nsIContent *aElement)
 }
 
 // Returns true if aElement has a src attribute, or a <source> child.
-static PRBool HasPotentialResource(nsIContent *aElement) 
+static PRBool HasPotentialResource(nsIContent *aElement)
 {
   nsAutoString src;
   if (aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src))
@@ -518,7 +518,7 @@ void nsHTMLMediaElement::SelectResource()
 
   if (!HasPotentialResource(this)) {
     // While the media element has neither a src attribute nor any source
-    // element children, wait. (This steps might wait forever.) 
+    // element children, wait. (This steps might wait forever.)
     mNetworkState = nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE;
     mLoadWaitStatus = WAITING_FOR_SRC_OR_SOURCE;
     // This clears mDelayingLoadEvent, so AddRemoveSelfReference will be called
@@ -538,7 +538,7 @@ void nsHTMLMediaElement::SelectResource()
   if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
     nsresult rv = NewURIFromString(src, getter_AddRefs(uri));
     if (NS_SUCCEEDED(rv)) {
-      LOG(PR_LOG_DEBUG, ("%p Trying load from src=%s", this, NS_ConvertUTF16toUTF8(src).get()));  
+      LOG(PR_LOG_DEBUG, ("%p Trying load from src=%s", this, NS_ConvertUTF16toUTF8(src).get()));
       mIsLoadingFromSrcAttribute = PR_TRUE;
       rv = LoadResource(uri);
       if (NS_SUCCEEDED(rv))
@@ -576,7 +576,7 @@ void nsHTMLMediaElement::LoadFromSourceChildren()
     }
 
     mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
-  
+
     rv = LoadResource(uri);
     if (NS_SUCCEEDED(rv))
       return;
@@ -624,14 +624,14 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
   // after it is finished with the element.
   nsRefPtr<MediaLoadListener> loadListener = new MediaLoadListener(this);
   if (!loadListener) return NS_ERROR_OUT_OF_MEMORY;
-  
+
   mChannel->SetNotificationCallbacks(loadListener);
 
   nsCOMPtr<nsIStreamListener> listener;
   if (ShouldCheckAllowOrigin()) {
     listener = new nsCrossSiteListenerProxy(loadListener,
                                             NodePrincipal(),
-                                            mChannel, 
+                                            mChannel,
                                             PR_FALSE,
                                             &rv);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -748,18 +748,18 @@ NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(float aCurrentTime)
   StopSuspendingAfterFirstFrame();
 
   if (!mDecoder) {
-    LOG(PR_LOG_DEBUG, ("%p SetCurrentTime(%f) failed: no decoder", this, aCurrentTime));  
+    LOG(PR_LOG_DEBUG, ("%p SetCurrentTime(%f) failed: no decoder", this, aCurrentTime));
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
-    LOG(PR_LOG_DEBUG, ("%p SetCurrentTime(%f) failed: no source", this, aCurrentTime));  
+    LOG(PR_LOG_DEBUG, ("%p SetCurrentTime(%f) failed: no source", this, aCurrentTime));
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   // Detect for a NaN and invalid values.
   if (aCurrentTime != aCurrentTime) {
-    LOG(PR_LOG_DEBUG, ("%p SetCurrentTime(%f) failed: bad time", this, aCurrentTime));  
+    LOG(PR_LOG_DEBUG, ("%p SetCurrentTime(%f) failed: bad time", this, aCurrentTime));
     return NS_ERROR_FAILURE;
   }
 
@@ -773,7 +773,7 @@ NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(float aCurrentTime)
   mPlayingBeforeSeek = IsPotentiallyPlaying();
   // The media backend is responsible for dispatching the timeupdate
   // event if it changes the playback position as a result of the seek.
-  LOG(PR_LOG_DEBUG, ("%p SetCurrentTime(%f) starting seek", this, aCurrentTime));  
+  LOG(PR_LOG_DEBUG, ("%p SetCurrentTime(%f) starting seek", this, aCurrentTime));
   nsresult rv = mDecoder->Seek(clampedTime);
 
   // We changed whether we're seeking so we need to AddRemoveSelfReference
@@ -812,7 +812,7 @@ NS_IMETHODIMP nsHTMLMediaElement::Pause()
   mAutoplaying = PR_FALSE;
   // We changed mPaused and mAutoplaying which can affect AddRemoveSelfReference
   AddRemoveSelfReference();
-  
+
   if (!oldPaused) {
     DispatchAsyncSimpleEvent(NS_LITERAL_STRING("timeupdate"));
     DispatchAsyncSimpleEvent(NS_LITERAL_STRING("pause"));
@@ -949,7 +949,7 @@ void nsHTMLMediaElement::SetPlayedOrSeeked(PRBool aValue)
   // Force a reflow so that the poster frame hides or shows immediately.
   nsIDocument *doc = GetDocument();
   if (!doc) return;
-  nsIPresShell *presShell = doc->GetPrimaryShell();  
+  nsIPresShell *presShell = doc->GetPrimaryShell();
   if (!presShell) return;
   nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
   if (!frame) return;
@@ -976,7 +976,7 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
     }
   }
 
-  // TODO: If the playback has ended, then the user agent must set 
+  // TODO: If the playback has ended, then the user agent must set
   // seek to the effective start.
   // TODO: The playback rate must be set to the default playback rate.
   if (mPaused) {
@@ -1031,7 +1031,7 @@ nsresult nsHTMLMediaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                      nsIAtom* aPrefix, const nsAString& aValue,
                                      PRBool aNotify)
 {
-  nsresult rv = 
+  nsresult rv =
     nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
                                     aNotify);
   if (aNotify && aNameSpaceID == kNameSpaceID_None) {
@@ -1058,7 +1058,7 @@ nsresult nsHTMLMediaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
-nsresult nsHTMLMediaElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 
+nsresult nsHTMLMediaElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
                                        PRBool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttr, aNotify);
@@ -1085,9 +1085,9 @@ nsresult nsHTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aPar
 {
   mIsBindingToTree = PR_TRUE;
   mAutoplayEnabled = IsAutoplayEnabled();
-  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, 
-                                                 aParent, 
-                                                 aBindingParent, 
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument,
+                                                 aParent,
+                                                 aBindingParent,
                                                  aCompileEventHandlers);
   if (NS_SUCCEEDED(rv) &&
       mIsDoneAddingChildren &&
@@ -1345,7 +1345,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
   if (!decoder)
     return NS_ERROR_FAILURE;
 
-  LOG(PR_LOG_DEBUG, ("%p Cloned decoder %p from %p", this, decoder.get(), aOriginal));  
+  LOG(PR_LOG_DEBUG, ("%p Cloned decoder %p from %p", this, decoder.get(), aOriginal));
 
   if (!decoder->Init(this)) {
     return NS_ERROR_FAILURE;
@@ -1383,7 +1383,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
     return NS_ERROR_FAILURE;
   }
 
-  LOG(PR_LOG_DEBUG, ("%p Created decoder %p for type %s", this, decoder.get(), mimeType.get()));  
+  LOG(PR_LOG_DEBUG, ("%p Created decoder %p for type %s", this, decoder.get(), mimeType.get()));
 
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
 
@@ -1638,7 +1638,7 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
   nsMediaReadyState oldState = mReadyState;
   mReadyState = aState;
 
-  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY || 
+  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY ||
       oldState == mReadyState) {
     return;
   }
@@ -1652,7 +1652,7 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
   }
 
   if (oldState < nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
-      mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA && 
+      mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
       !mLoadedFirstFrame)
   {
     DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadeddata"));
@@ -1663,7 +1663,7 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
     mWaitingFired = PR_FALSE;
   }
 
-  if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA && 
+  if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
     DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplay"));
   }
@@ -1671,8 +1671,8 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
   if (mReadyState == nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) {
     NotifyAutoplayDataReady();
   }
-  
-  if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA && 
+
+  if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
       IsPotentiallyPlaying()) {
     DispatchAsyncSimpleEvent(NS_LITERAL_STRING("playing"));
@@ -1709,7 +1709,7 @@ void nsHTMLMediaElement::NotifyAutoplayDataReady()
 
 void nsHTMLMediaElement::Paint(gfxContext* aContext,
                                gfxPattern::GraphicsFilter aFilter,
-                               const gfxRect& aRect) 
+                               const gfxRect& aRect)
 {
   if (mDecoder)
     mDecoder->Paint(aContext, aFilter, aRect);
@@ -1720,10 +1720,10 @@ nsresult nsHTMLMediaElement::DispatchSimpleEvent(const nsAString& aName)
   LOG_EVENT(PR_LOG_DEBUG, ("%p Dispatching simple event %s", this,
                           NS_ConvertUTF16toUTF8(aName).get()));
 
-  return nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(), 
-                                              static_cast<nsIContent*>(this), 
-                                              aName, 
-                                              PR_TRUE, 
+  return nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
+                                              static_cast<nsIContent*>(this),
+                                              aName,
+                                              PR_TRUE,
                                               PR_TRUE);
 }
 
@@ -1732,8 +1732,8 @@ nsresult nsHTMLMediaElement::DispatchAsyncSimpleEvent(const nsAString& aName)
   LOG_EVENT(PR_LOG_DEBUG, ("%p Queuing simple event %s", this, NS_ConvertUTF16toUTF8(aName).get()));
 
   nsCOMPtr<nsIRunnable> event = new nsAsyncEventRunner(aName, this, PR_FALSE);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL); 
-  return NS_OK;                           
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  return NS_OK;
 }
 
 nsresult nsHTMLMediaElement::DispatchAsyncProgressEvent(const nsAString& aName)
@@ -1741,8 +1741,8 @@ nsresult nsHTMLMediaElement::DispatchAsyncProgressEvent(const nsAString& aName)
   LOG_EVENT(PR_LOG_DEBUG, ("%p Queuing progress event %s", this, NS_ConvertUTF16toUTF8(aName).get()));
 
   nsCOMPtr<nsIRunnable> event = new nsAsyncEventRunner(aName, this, PR_TRUE);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL); 
-  return NS_OK;                           
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  return NS_OK;
 }
 
 nsresult nsHTMLMediaElement::DispatchProgressEvent(const nsAString& aName)
@@ -1754,7 +1754,7 @@ nsresult nsHTMLMediaElement::DispatchProgressEvent(const nsAString& aName)
   nsCOMPtr<nsIDOMEvent> event;
   nsresult rv = docEvent->CreateEvent(NS_LITERAL_STRING("ProgressEvent"), getter_AddRefs(event));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   nsCOMPtr<nsIDOMProgressEvent> progressEvent(do_QueryInterface(event));
   NS_ENSURE_TRUE(progressEvent, NS_ERROR_FAILURE);
 
@@ -1771,16 +1771,16 @@ nsresult nsHTMLMediaElement::DispatchProgressEvent(const nsAString& aName)
 
   LOG_EVENT(PR_LOG_DEBUG, ("%p Dispatching progress event %s", this,
                           NS_ConvertUTF16toUTF8(aName).get()));
-  
+
   PRBool dummy;
-  return target->DispatchEvent(event, &dummy);  
+  return target->DispatchEvent(event, &dummy);
 }
 
 nsresult nsHTMLMediaElement::DoneAddingChildren(PRBool aHaveNotified)
 {
   if (!mIsDoneAddingChildren) {
     mIsDoneAddingChildren = PR_TRUE;
-  
+
     if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
       QueueSelectResourceTask();
     }
@@ -1796,11 +1796,11 @@ PRBool nsHTMLMediaElement::IsDoneAddingChildren()
 
 PRBool nsHTMLMediaElement::IsPotentiallyPlaying() const
 {
-  // TODO: 
-  //   playback has not stopped due to errors, 
+  // TODO:
+  //   playback has not stopped due to errors,
   //   and the element has not paused for user interaction
   return
-    !mPaused && 
+    !mPaused &&
     (mReadyState == nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA ||
     mReadyState == nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) &&
     !IsPlaybackEnded();
@@ -1896,7 +1896,7 @@ void nsHTMLMediaElement::NotifyAddedSource()
 {
   if (mLoadWaitStatus == WAITING_FOR_SRC_OR_SOURCE) {
     QueueSelectResourceTask();
-  } else if (mLoadWaitStatus == WAITING_FOR_SOURCE) { 
+  } else if (mLoadWaitStatus == WAITING_FOR_SOURCE) {
     QueueLoadFromSourceTask();
   }
 }
@@ -1955,9 +1955,9 @@ already_AddRefed<nsIURI> nsHTMLMediaElement::GetNextSource()
       if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
           GetCanPlay(type) == CANPLAY_NO)
         continue;
-      
+
       LOG(PR_LOG_DEBUG, ("%p Trying load from <source>=%s type=%s", this,
-                         NS_ConvertUTF16toUTF8(src).get(), NS_ConvertUTF16toUTF8(type).get()));  
+                         NS_ConvertUTF16toUTF8(src).get(), NS_ConvertUTF16toUTF8(type).get()));
       NewURIFromString(src, getter_AddRefs(uri));
       return uri.forget();
     }
