@@ -66,6 +66,7 @@ enum eHtml5TreeOperation {
   eTreeOpRunScript,
   eTreeOpDoneAddingChildren,
   eTreeOpDoneCreatingElement,
+  eTreeOpFlushPendingAppendNotifications,
   eTreeOpSetDocumentCharset,
   eTreeOpNeedsCharsetSwitchTo,
   eTreeOpUpdateStyleSheet,
@@ -257,7 +258,7 @@ class nsHtml5TreeOperation {
       mInt = aLine;
     }
 
-    nsresult Perform(nsHtml5TreeOpExecutor* aBuilder);
+    nsresult Perform(nsHtml5TreeOpExecutor* aBuilder, nsIContent** aScriptElement);
 
     inline already_AddRefed<nsIAtom> Reget(nsIAtom* aAtom) {
       if (!aAtom || aAtom->IsStaticAtom()) {

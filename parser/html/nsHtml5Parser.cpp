@@ -251,7 +251,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
                      PRBool aLastCall,
                      nsDTDMode aMode) // ignored
 {
-  NS_PRECONDITION(!mFragmentMode, "Document.write called in fragment mode!");
+  NS_PRECONDITION(!mExecutor->IsFragmentMode(), "Document.write called in fragment mode!");
 
   // Maintain a reference to ourselves so we don't go away
   // till we're completely done. The old parser grips itself in this method.
@@ -458,7 +458,7 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
 
   nsIContent* weakTarget = target;
   mTreeBuilder->setFragmentContext(aContextLocalName, aContextNamespace, &weakTarget, aQuirks);
-  mFragmentMode = PR_TRUE;
+  mExecutor->EnableFragmentMode();
   
   NS_PRECONDITION(!mExecutor->HasStarted(), "Tried to start parse without initializing the parser properly.");
   mTreeBuilder->setScriptingEnabled(mExecutor->IsScriptEnabled());
@@ -474,7 +474,6 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
       lastWasCR = PR_FALSE;
       if (buffer.hasMore()) {
         lastWasCR = mTokenizer->tokenizeBuffer(&buffer);
-        mExecutor->MaybePreventExecution();
       }
     }
   }
@@ -507,7 +506,6 @@ nsHtml5Parser::Reset()
 {
   mExecutor->Reset();
   mLastWasCR = PR_FALSE;
-  mFragmentMode = PR_FALSE;
   UnblockParser();
   mDocumentClosed = PR_FALSE;
   mStreamParser = nsnull;
@@ -524,7 +522,7 @@ nsHtml5Parser::Reset()
 PRBool
 nsHtml5Parser::CanInterrupt()
 {
-  return !mFragmentMode;
+  return !mExecutor->IsFragmentMode();
 }
 
 PRBool
@@ -565,7 +563,7 @@ nsHtml5Parser::IsScriptCreated()
 void
 nsHtml5Parser::ParseUntilBlocked()
 {
-  NS_PRECONDITION(!mFragmentMode, "ParseUntilBlocked called in fragment mode.");
+  NS_PRECONDITION(!mExecutor->IsFragmentMode(), "ParseUntilBlocked called in fragment mode.");
 
   if (mBlocked) {
     return;
