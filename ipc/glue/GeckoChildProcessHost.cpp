@@ -67,12 +67,11 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
 }
 
 bool
-GeckoChildProcessHost::SyncLaunch(std::vector<std::wstring> aExtraOpts)
+GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts)
 {
-  MessageLoop* loop = MessageLoop::current();
   MessageLoop* ioLoop = 
     BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
-  NS_ASSERTION(loop != ioLoop, "sync launch from the IO thread NYI");
+  NS_ASSERTION(MessageLoop::current() != ioLoop, "sync launch from the IO thread NYI");
 
   ioLoop->PostTask(FROM_HERE,
                    NewRunnableMethod(this,
@@ -90,7 +89,7 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::wstring> aExtraOpts)
 }
 
 bool
-GeckoChildProcessHost::AsyncLaunch(std::vector<std::wstring> aExtraOpts)
+GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
 {
   // FIXME/cjones: make this work from non-IO threads, too
 
@@ -98,45 +97,74 @@ GeckoChildProcessHost::AsyncLaunch(std::vector<std::wstring> aExtraOpts)
     return false;
   }
 
-  FilePath exePath =
-    FilePath::FromWStringHack(CommandLine::ForCurrentProcess()->program());
-  exePath = exePath.DirName();
-
-  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
-
-  // remap the IPC socket fd to a well-known int, as the OS does for
-  // STDOUT_FILENO, for example
-#if defined(OS_POSIX)
-  int srcChannelFd, dstChannelFd;
-  channel().GetClientFileDescriptorMapping(&srcChannelFd, &dstChannelFd);
-  mFileMap.push_back(std::pair<int,int>(srcChannelFd, dstChannelFd));
-#endif
-
-  CommandLine cmdLine(exePath.ToWStringHack());
-  cmdLine.AppendSwitchWithValue(switches::kProcessChannelID, channel_id());
-
-  for (std::vector<std::wstring>::iterator it = aExtraOpts.begin();
-       it != aExtraOpts.end();
-       ++it) {
-    cmdLine.AppendLooseValue((*it).c_str());
-  }
+  base::ProcessHandle process;
 
   // send the child the PID so that it can open a ProcessHandle back to us.
   // probably don't want to do this in the long run
   char pidstring[32];
   PR_snprintf(pidstring, sizeof(pidstring) - 1,
 	      "%ld", base::Process::Current().pid());
+
+  const char* const childProcessType =
+      XRE_ChildProcessTypeToString(mProcessType);
+
+//--------------------------------------------------
+#if defined(OS_POSIX)
+  // For POSIX, we have to be extremely anal about *not* using
+  // std::wstring in code compiled with Mozilla's -fshort-wchar
+  // configuration, because chromium is compiled with -fno-short-wchar
+  // and passing wstrings from one config to the other is unsafe.  So
+  // we split the logic here.
+
+  FilePath exePath = FilePath(CommandLine::ForCurrentProcess()->argv()[0]);
+  exePath = exePath.DirName();
+  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
+
+  // remap the IPC socket fd to a well-known int, as the OS does for
+  // STDOUT_FILENO, for example
+  int srcChannelFd, dstChannelFd;
+  channel().GetClientFileDescriptorMapping(&srcChannelFd, &dstChannelFd);
+  mFileMap.push_back(std::pair<int,int>(srcChannelFd, dstChannelFd));
+  
+  // no need for kProcessChannelID, the child process inherits the
+  // other end of the socketpair() from us
+
+  std::vector<std::string> childArgv;
+
+  childArgv.push_back(exePath.value());
+
+  childArgv.insert(childArgv.end(), aExtraOpts.begin(), aExtraOpts.end());
+
+  childArgv.push_back(pidstring);
+  childArgv.push_back(childProcessType);
+
+  base::LaunchApp(childArgv, mFileMap, false, &process);
+
+//--------------------------------------------------
+#elif defined(OS_WIN)
+
+  FilePath exePath =
+    FilePath::FromWStringHack(CommandLine::ForCurrentProcess()->program());
+  exePath = exePath.DirName();
+
+  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
+
+  CommandLine cmdLine(exePath.ToWStringHack());
+  cmdLine.AppendSwitchWithValue(switches::kProcessChannelID, channel_id());
+
+  for (std::vector<std::string>::iterator it = aExtraOpts.begin();
+       it != aExtraOpts.end();
+       ++it) {
+      cmdLine.AppendLooseValue(UTF8ToWide(*it));
+  }
+
   cmdLine.AppendLooseValue(UTF8ToWide(pidstring));
+  cmdLine.AppendLooseValue(UTF8ToWide(childProcessType));
 
-  cmdLine.AppendLooseValue(UTF8ToWide(XRE_ChildProcessTypeToString(mProcessType)));
-
-  base::ProcessHandle process;
-#if defined(OS_WIN)
   base::LaunchApp(cmdLine, false, false, &process);
-#elif defined(OS_POSIX)
-  base::LaunchApp(cmdLine.argv(), mFileMap, false, &process);
+
 #else
-#error Bad!
+#  error Sorry
 #endif
 
   if (!process) {

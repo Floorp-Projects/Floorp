@@ -61,8 +61,8 @@ public:
   GeckoChildProcessHost(GeckoProcessType aProcessType=GeckoProcessType_Default,
                         base::WaitableEventWatcher::Delegate* aDelegate=nsnull);
 
-  bool SyncLaunch(std::vector<std::wstring> aExtraOpts=std::vector<std::wstring>());
-  bool AsyncLaunch(std::vector<std::wstring> aExtraOpts=std::vector<std::wstring>());
+  bool SyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>());
+  bool AsyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>());
 
   virtual void OnChannelConnected(int32 peer_pid);
   virtual void OnMessageReceived(const IPC::Message& aMsg);

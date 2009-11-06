@@ -61,8 +61,8 @@ PluginProcessParent::~PluginProcessParent()
 bool
 PluginProcessParent::Launch()
 {
-    std::vector<std::wstring> args;
-    args.push_back(UTF8ToWide(mPluginFilePath));
+    std::vector<std::string> args;
+    args.push_back(mPluginFilePath);
     return SyncLaunch(args);
 }
 

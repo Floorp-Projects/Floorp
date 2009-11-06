@@ -35,15 +35,17 @@ const char* const
 IPDLUnitTestName()
 {
     if (!gIPDLUnitTestName) {
+#if defined(OS_WIN)
         std::vector<std::wstring> args =
             CommandLine::ForCurrentProcess()->GetLooseValues();
-        gIPDLUnitTestName = strdup(WideToUTF8(args[
-#ifndef OS_WIN
-args.size()-1
+        gIPDLUnitTestName = strdup(WideToUTF8(args[0]).c_str());
+#elif defined(OS_POSIX)
+        std::vector<std::string> argv =
+            CommandLine::ForCurrentProcess()->argv();
+        gIPDLUnitTestName = strdup(argv[1].c_str());
 #else
-args.size()-2
+#  error Sorry
 #endif
-						   ]).c_str());
     }
     return gIPDLUnitTestName;
 }
@@ -129,9 +131,8 @@ IPDLUnitTestMain(void* aData)
     }
     gIPDLUnitTestName = testString;
 
-    std::wstring testWString = UTF8ToWide(testString);
-    std::vector<std::wstring> testCaseArgs;
-    testCaseArgs.push_back(testWString);
+    std::vector<std::string> testCaseArgs;
+    testCaseArgs.push_back(testString);
 
     IPDLUnitTestSubprocess* subprocess = new IPDLUnitTestSubprocess();
     if (!subprocess->SyncLaunch(testCaseArgs))
