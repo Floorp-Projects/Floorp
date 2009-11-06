@@ -75,7 +75,7 @@ extern PRLogModuleInfo* sCocoaLog;
 
 extern NSPasteboard* globalDragPboard;
 extern NSView* gLastDragView;
-extern NSEvent* gLastDragEvent;
+extern NSEvent* gLastDragMouseDownEvent;
 extern PRBool gUserCancelledDrag;
 
 // This global makes the transferable array available to Cocoa's promised
@@ -166,7 +166,7 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  NSPoint screenPoint = [[gLastDragView window] convertBaseToScreen:[gLastDragEvent locationInWindow]];
+  NSPoint screenPoint = [[gLastDragView window] convertBaseToScreen:[gLastDragMouseDownEvent locationInWindow]];
   // Y coordinates are bottom to top, so reverse this
   if ([[NSScreen screens] count] > 0)
     screenPoint.y = NSMaxY([[[NSScreen screens] objectAtIndex:0] frame]) - screenPoint.y;
@@ -303,12 +303,12 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
 
   // We need to retain the view and the event during the drag in case either gets destroyed.
   mNativeDragView = [gLastDragView retain];
-  mNativeDragEvent = [gLastDragEvent retain];
+  mNativeDragEvent = [gLastDragMouseDownEvent retain];
 
   gUserCancelledDrag = PR_FALSE;
   [mNativeDragView dragImage:image
                           at:localPoint
-                      offset:NSMakeSize(0,0)
+                      offset:NSZeroSize
                        event:mNativeDragEvent
                   pasteboard:[NSPasteboard pasteboardWithName:NSDragPboard]
                       source:mNativeDragView
