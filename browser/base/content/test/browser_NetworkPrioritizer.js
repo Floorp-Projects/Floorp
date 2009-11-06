@@ -104,31 +104,31 @@ function test() {
       window_B.addEventListener("load", function(aEvent) {
         window_B.removeEventListener("load", arguments.callee, false);
         window_B.gBrowser.addEventListener("load", function(aEvent) {
+          // waitForFocus can attach to the wrong "window" with about:blank loading first
+          // So just ensure that we're getting the load event for the right URI
+          if (window_B.gBrowser.currentURI.spec == "about:blank")
+            return;
           window_B.gBrowser.removeEventListener("load", arguments.callee, true);
 
-          // On Linux, waitForFocus doesn't work if the window is already focused,
-          // so focus window_A first.
           waitForFocus(function() {
+            isWindowState(window_A, [10, 0]);
+            isWindowState(window_B, [-10]);
+
             waitForFocus(function() {
-              isWindowState(window_A, [10, 0]);
-              isWindowState(window_B, [-10]);
+              isWindowState(window_A, [0, -10]);
+              isWindowState(window_B, [0]);
 
               waitForFocus(function() {
-                isWindowState(window_A, [0, -10]);
-                isWindowState(window_B, [0]);
+                isWindowState(window_A, [10, 0]);
+                isWindowState(window_B, [-10]);
 
-                waitForFocus(function() {
-                  isWindowState(window_A, [10, 0]);
-                  isWindowState(window_B, [-10]);
-
-                  // And we're done. Cleanup & run the next test
-                  window_B.close();
-                  window_A.gBrowser.removeTab(tab_A3);
-                  executeSoon(runNextTest);
-                }, window_B);
-              }, window_A);
-            }, window_B);
-          }, window_A);
+                // And we're done. Cleanup & run the next test
+                window_B.close();
+                window_A.gBrowser.removeTab(tab_A3);
+                executeSoon(runNextTest);
+              }, window_B);
+            }, window_A);
+          }, window_B);
 
         }, true);
       }, false);
