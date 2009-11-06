@@ -282,7 +282,7 @@ NeuteredWindowProc(HWND hwnd,
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-static inline bool
+static bool
 WindowIsMozillaWindow(HWND hWnd)
 {
     if (!IsWindow(hWnd)) {
@@ -522,7 +522,7 @@ SyncChannel::RunWindowsEventLoop()
     }
 }
 
-inline void
+void
 SyncChannel::WaitForNotify()
 {
     RunWindowsEventLoop();
@@ -542,7 +542,7 @@ SyncChannel::NotifyWorkerThread()
 // Not windows
 #else
 
-inline void
+void
 SyncChannel::WaitForNotify()
 {
     mCvar.Wait();
