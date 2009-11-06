@@ -59,7 +59,7 @@ interface nsINavHistoryResult;
 interface nsINavHistoryBatchCallback;
 interface nsITreeColumn;
 
-[scriptable, uuid(464ae28f-3a9c-4483-afb2-bb0fb0ddb893)]
+[scriptable, uuid(081452e5-be5c-4038-a5ea-f1f34cb6fd81)]
 interface nsINavHistoryResultNode : nsISupports
 {
   /**
