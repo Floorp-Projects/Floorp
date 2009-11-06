@@ -15,7 +15,7 @@
 ChromiumLogger::~ChromiumLogger()
 {
   if (mMsg) {
-    PR_LOG(gChromiumPRLog, mSeverity, ("%s", mMsg));
+    PR_LOG(GetLog(), mSeverity, ("%s", mMsg));
     PR_Free(mMsg);
   }
 }
@@ -29,7 +29,14 @@ ChromiumLogger::printf(const char* fmt, ...) const
   va_end(args);
 }
 
-PRLogModuleInfo* ChromiumLogger::gChromiumPRLog = PR_NewLogModule("chromium");
+PRLogModuleInfo* ChromiumLogger::gChromiumPRLog;
+
+PRLogModuleInfo* ChromiumLogger::GetLog()
+{
+  if (!gChromiumPRLog)
+    gChromiumPRLog = PR_NewLogModule("chromium");
+  return gChromiumPRLog;
+}
 
 const ChromiumLogger&
 operator<<(const ChromiumLogger& log, const char* s)

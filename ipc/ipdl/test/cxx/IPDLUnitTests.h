@@ -43,34 +43,50 @@
 #include "base/process.h"
 #include "chrome/common/ipc_channel.h"
 
+#include "nsDebug.h"
 
 #define MOZ_IPDL_TESTFAIL_LABEL "TEST-UNEXPECTED-FAIL"
 #define MOZ_IPDL_TESTPASS_LABEL "TEST-PASS"
-
-// NB: these are named like the similar functions in
-// xpcom/test/TestHarness.h.  The names should nominally be kept in
-// sync.
-
-#define fail(fmt, ...)                                                  \
-    do {                                                                \
-        fprintf(stderr, MOZ_IPDL_TESTFAIL_LABEL " | %s | " fmt "\n",    \
-                IPDLUnitTestName(), ## __VA_ARGS__);                    \
-        NS_RUNTIMEABORT("failed test");                                 \
-    } while (0)
-
-#define passed(fmt, ...)                                                \
-    fprintf(stderr, MOZ_IPDL_TESTPASS_LABEL " | %s | " fmt "\n",        \
-            IPDLUnitTestName(), ## __VA_ARGS__)
 
 
 namespace mozilla {
 namespace _ipdltest {
 
-
 //-----------------------------------------------------------------------------
 // both processes
 const char* const IPDLUnitTestName();
 
+// NB: these are named like the similar functions in
+// xpcom/test/TestHarness.h.  The names should nominally be kept in
+// sync.
+
+inline void fail(const char* fmt, ...)
+{
+  va_list ap;
+
+  fprintf(stderr, MOZ_IPDL_TESTFAIL_LABEL " | %s | ", IPDLUnitTestName());
+
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+
+  fputc('\n', stderr);
+
+  NS_RUNTIMEABORT("failed test");
+}
+
+inline void passed(const char* fmt, ...)
+{
+  va_list ap;
+
+  printf(MOZ_IPDL_TESTPASS_LABEL " | %s | ", IPDLUnitTestName());
+
+  va_start(ap, fmt);
+  vprintf(fmt, ap);
+  va_end(ap);
+
+  fputc('\n', stdout);
+}
 
 //-----------------------------------------------------------------------------
 // parent process only
