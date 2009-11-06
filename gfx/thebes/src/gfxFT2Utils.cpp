@@ -45,6 +45,10 @@
 #include FT_TRUETYPE_TAGS_H
 #include FT_TRUETYPE_TABLES_H
 
+#ifdef CAIRO_HAS_FC_FONT
+#include <fontconfig/fcfreetype.h>
+#endif
+
 // aScale is intended for a 16.16 x/y_scale of an FT_Size_Metrics
 static inline FT_Long
 ScaleRoundDesignUnits(FT_Short aDesignMetric, FT_Fixed aScale)
@@ -301,7 +305,22 @@ gfxFT2LockedFace::GetGlyph(PRUint32 aCharCode)
     if (NS_UNLIKELY(!mFace))
         return 0;
 
+#ifdef CAIRO_HAS_FC_FONT
+    // FcFreeTypeCharIndex will search starting from the most recently
+    // selected charmap.  This can cause non-determistic behavior when more
+    // than one charmap supports a character but with different glyphs, as
+    // with older versions of MS Gothic, for example.  Always prefer a Unicode
+    // charmap, if there is one.  (FcFreeTypeCharIndex usually does the
+    // appropriate Unicode conversion, but some fonts have non-Roman glyphs
+    // for FT_ENCODING_APPLE_ROMAN characters.)
+    if (!mFace->charmap || mFace->charmap->encoding != FT_ENCODING_UNICODE) {
+        FT_Select_Charmap(mFace, FT_ENCODING_UNICODE);
+    }
+
+    return FcFreeTypeCharIndex(mFace, aCharCode);
+#else
     return FT_Get_Char_Index(mFace, aCharCode);
+#endif
 }
 
 PRUint32
