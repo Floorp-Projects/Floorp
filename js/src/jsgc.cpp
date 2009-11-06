@@ -2706,7 +2706,7 @@ static inline void
 FinalizeGCThing(JSContext *cx, JSFunction *fun, unsigned thingKind)
 {
     JS_ASSERT(thingKind == FINALIZE_FUNCTION);
-    FinalizeGCThing(cx, FUN_OBJECT(fun), thingKind);
+    ::FinalizeGCThing(cx, FUN_OBJECT(fun), thingKind);
 }
 
 #if JS_HAS_XML_SUPPORT
@@ -2858,7 +2858,7 @@ FinalizeArenaList(JSContext *cx, unsigned thingKind,
                  * js_IsAboutToBeFinalized will be false.
                  */
                 *flagp = 0;
-                FinalizeGCThing(cx, reinterpret_cast<T *>(thing), thingKind);
+                ::FinalizeGCThing(cx, reinterpret_cast<T *>(thing), thingKind);
 #ifdef DEBUG
                 memset(thing, JS_FREE_PATTERN, sizeof(T));
 #endif
