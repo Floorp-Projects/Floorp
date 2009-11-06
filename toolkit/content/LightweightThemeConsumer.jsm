@@ -46,7 +46,7 @@ function LightweightThemeConsumer(aDocument) {
 
   var temp = {};
   Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
-  this._update(temp.LightweightThemeManager.currentTheme);
+  this._update(temp.LightweightThemeManager.currentThemeForDisplay);
 }
 
 LightweightThemeConsumer.prototype = {
