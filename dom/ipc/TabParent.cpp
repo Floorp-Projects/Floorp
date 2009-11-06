@@ -40,6 +40,7 @@
 
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/ipc/DocumentRendererShmemParent.h"
+#include "mozilla/jsipc/ContextWrapperParent.h"
 
 #include "nsIURI.h"
 #include "nsFocusManager.h"
@@ -54,6 +55,8 @@
 
 using mozilla::ipc::DocumentRendererParent;
 using mozilla::ipc::DocumentRendererShmemParent;
+using mozilla::jsipc::PContextWrapperParent;
+using mozilla::jsipc::ContextWrapperParent;
 
 namespace mozilla {
 namespace dom {
@@ -171,6 +174,32 @@ TabParent::DeallocPDocumentRendererShmem(PDocumentRendererShmemParent* actor)
 {
     delete actor;
     return true;
+}
+
+PContextWrapperParent*
+TabParent::AllocPContextWrapper()
+{
+    return new ContextWrapperParent();
+}
+
+bool
+TabParent::DeallocPContextWrapper(PContextWrapperParent* actor)
+{
+    delete actor;
+    return true;
+}
+
+bool
+TabParent::GetGlobalJSObject(JSContext* cx, JSObject** globalp)
+{
+    // TODO Unify this code with TestShellParent::GetGlobalJSObject.
+    nsTArray<PContextWrapperParent*> cwps(1);
+    ManagedPContextWrapperParent(cwps);
+    if (cwps.Length() < 1)
+        return false;
+    NS_ASSERTION(cwps.Length() == 1, "More than one PContextWrapper?");
+    ContextWrapperParent* cwp = static_cast<ContextWrapperParent*>(cwps[0]);
+    return (cwp->GetGlobalJSObject(cx, globalp));
 }
 
 void

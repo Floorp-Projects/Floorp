@@ -43,6 +43,7 @@ interface nsIDocShell;
 interface nsIURI;
 interface nsIFrame;
 interface nsIChromeFrameMessageManager;
+interface nsIVariant;
 
 [scriptable, uuid(e511f61f-97db-448a-8b29-a10c470df3fa)]
 interface nsIFrameLoader : nsISupports
@@ -121,7 +122,7 @@ interface nsIFrameLoader : nsISupports
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
 
-[scriptable, uuid(8f3b12a0-35ae-4e0d-9152-8e0d7e49d446)]
+[scriptable, uuid(5879040e-83e9-40e3-b2bb-5ddf43b76e47)]
 interface nsIFrameLoaderOwner : nsISupports
 {
   /**
@@ -129,6 +130,8 @@ interface nsIFrameLoaderOwner : nsISupports
    */
   readonly attribute nsIFrameLoader frameLoader;
   [noscript, notxpcom] alreadyAddRefed_nsFrameLoader GetFrameLoader();
+
+  readonly attribute nsIVariant crossProcessObjectWrapper;
 
   /**
    * Swap frame loaders with the given nsIFrameLoaderOwner.  This may

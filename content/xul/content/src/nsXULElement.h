@@ -563,6 +563,8 @@ public:
     already_AddRefed<nsFrameLoader> GetFrameLoader();
     nsresult SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner);
 
+    NS_IMETHOD GetCrossProcessObjectWrapper(nsIVariant** cpow);
+
     virtual void RecompileScriptEventListeners();
 
     // This function should ONLY be used by BindToTree implementations.

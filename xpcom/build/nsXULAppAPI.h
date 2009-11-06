@@ -503,6 +503,12 @@ XRE_API(bool,
         XRE_SendTestShellCommand, (JSContext* aCx,
                                    JSString* aCommand,
                                    void* aCallback))
+struct JSObject;
+
+XRE_API(bool,
+        XRE_GetChildGlobalObject, (JSContext* aCx,
+                                   JSObject** globalp))
+
 XRE_API(bool,
         XRE_ShutdownTestShell, ())
 
