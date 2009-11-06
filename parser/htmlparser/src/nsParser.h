@@ -396,6 +396,10 @@ class nsParser : public nsIParser,
       return mSink && mSink->IsScriptExecuting();
     }
 
+    PRBool IsOkToProcessNetworkData() {
+      return !IsScriptExecuting() && !mProcessingNetworkData;
+    }
+
  protected:
 
     void Initialize(PRBool aConstructor = PR_FALSE);
@@ -484,6 +488,8 @@ protected:
     nsString            mUnusedInput;
     nsCString           mCharset;
     nsCString           mCommandStr;
+
+    PRBool              mProcessingNetworkData;
 
     static nsICharsetAlias*            sCharsetAliasService;
     static nsICharsetConverterManager* sCharsetConverterManager;
