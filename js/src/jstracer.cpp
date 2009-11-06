@@ -13045,10 +13045,9 @@ TraceRecorder::record_JSOP_NEXTITER()
     JSObject* iterobj = JSVAL_TO_OBJECT(iterobj_val);
     JSClass* clasp = STOBJ_GET_CLASS(iterobj);
     LIns* iterobj_ins = get(&iterobj_val);
-    if (clasp == &js_IteratorClass || clasp == &js_GeneratorClass) {
-        guardClass(iterobj, iterobj_ins, clasp, snapshot(BRANCH_EXIT));
+    guardClass(iterobj, iterobj_ins, clasp, snapshot(BRANCH_EXIT));
+    if (clasp == &js_IteratorClass || clasp == &js_GeneratorClass)
         return InjectStatus(call_imacro(nextiter_imacros.native_iter_next));
-    }
     return InjectStatus(call_imacro(nextiter_imacros.custom_iter_next));
 }
 
