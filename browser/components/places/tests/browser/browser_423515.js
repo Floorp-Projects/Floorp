@@ -152,7 +152,7 @@ function test() {
           }
         }
         node.containerOpen = false;
-        throw("Unable to find child node");
+        ok(false, "Unable to find child node");
         return null;
       }
 

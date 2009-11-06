@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=260264
+-->
+<head>
+  <title>Test for Bug 260264</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="utils_bug260264.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=260264">Mozilla Bug 260264</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 260264 **/
+
+SimpleTest.waitForExplicitFinish();
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var popupEvents = makePrefAccessor("dom.popup_allowed_events"),
+    blockPopups = makePrefAccessor("dom.disable_open_during_load"),
+    ownPopupPriv = makePopupPrivAccessor(location.href),
+    ecPopupPriv = makePopupPrivAccessor("http://example.com");
+
+function test_nested_frames() {
+
+  var savedBlockPopups = blockPopups(true);
+
+  // Grandchild will use this name to refer to the current window:
+  window.name = "parent260264";
+
+  function performer(event) {
+    $("display").appendChild(document.createElement("iframe")).src =
+      alter_file(alter_host(location.href, "example.com"),
+                             "child_bug260264.html#" + event);
+  }
+
+  function finisher(old) {
+    popupEvents(old.events);
+    ownPopupPriv(old.ownPriv);
+    ecPopupPriv(old.ecPriv);
+  }
+
+  function should_have_blocked(popup) {
+    ok(!popup, "popup should have been blocked");
+  }
+
+  function should_not_have_blocked(popup) {
+    ok(popup, "popup should not have been blocked");
+  }
+
+  /**
+   * The example_priv parameter controls whether or not the child frame has
+   * popup clearance.  Neither the top window nor the grandchild frame have
+   * this clearance.  The point of these tests is to make sure the child's
+   * clearance (or lack thereof) is properly considered when opening a popup
+   * from the grandchild.
+   */
+  function makeTest(event, example_priv, reporter, allowed_events) {
+    return {
+      event: event,
+      setup: function(old) {
+        old.events = popupEvents(allowed_events || "click mouseup");
+        old.ownPriv = ownPopupPriv(DENY_ACTION);
+        old.ecPriv = ecPopupPriv(example_priv);
+      },
+      report: reporter,
+      perform: performer,
+      finish: finisher
+    };
+  };
+
+  var tests = [
+    makeTest("mouseup",    DENY_ACTION, should_not_have_blocked),
+    makeTest("mouseup",   ALLOW_ACTION, should_not_have_blocked),
+    makeTest("mouseup",   ALLOW_ACTION, should_not_have_blocked, "click"),
+    makeTest("mouseup",    DENY_ACTION, should_have_blocked, "click"),
+    makeTest("mouseover",  DENY_ACTION, should_have_blocked),
+    makeTest("mouseover", ALLOW_ACTION, should_not_have_blocked),
+    makeTest("click",      DENY_ACTION, should_not_have_blocked),
+    makeTest("click",     ALLOW_ACTION, should_not_have_blocked)
+  ];
+
+  function resume() {
+    var options = tests[0];
+    if (options) {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      options.setup(tests[0].old = {});
+      options.perform(options.event);
+    } else {
+      blockPopups(savedBlockPopups);
+      SimpleTest.finish();
+    }
+  }
+
+  // Visible to child windows:
+  window.report = function(popup) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    try { tests[0].report(popup) }
+    finally {
+      tests[0].finish(tests[0].old);
+      tests.shift();
+      resume();
+    }
+  }
+
+  resume();
+
+}
+
+test_nested_frames();
+
+</script>
+</pre>
+</body>
+</html>

@@ -69,6 +69,7 @@ struct nsGenConInitializer;
 class ChildIterator;
 class nsICSSAnonBoxPseudo;
 class nsPageContentFrame;
+struct PendingBinding;
 
 struct nsFindFrameHint
 {
@@ -439,10 +440,10 @@ private:
                                   nsIAtom*                 aPseudoElement,
                                   FrameConstructionItemList& aItems);
 
-  // This method can change aFrameList: it can chop off the end and put it in a
-  // special sibling of aParentFrame.  It can also change aState by moving some
-  // floats out of it.  aPrevSibling must be the frame after which aFrameList
-  // is to be placed on aParentFrame's principal child list.  It may be null if
+  // This method can change aFrameList: it can chop off the beginning and put
+  // it in aParentFrame while putting the remainder into a special sibling of
+  // aParentFrame.  aPrevSibling must be the frame after which aFrameList is to
+  // be placed on aParentFrame's principal child list.  It may be null if
   // aFrameList is being added at the beginning of the child list.
   nsresult AppendFrames(nsFrameConstructorState&       aState,
                         nsIFrame*                      aParentFrame,
@@ -720,6 +721,7 @@ private:
   public:
     FrameConstructionItemList() :
       mInlineCount(0),
+      mBlockCount(0),
       mLineParticipantCount(0),
       mItemCount(0),
       mLineBoundaryAtStart(PR_FALSE),
@@ -753,14 +755,7 @@ private:
     PRBool IsEmpty() const { return PR_CLIST_IS_EMPTY(&mItems); }
     PRBool AnyItemsNeedBlockParent() const { return mLineParticipantCount != 0; }
     PRBool AreAllItemsInline() const { return mInlineCount == mItemCount; }
-    PRBool IsStartInline() const {
-      NS_ASSERTION(!IsEmpty(), "Someone forgot to check IsEmpty()");
-      return ToItem(PR_LIST_HEAD(&mItems))->mHasInlineEnds;
-    }
-    PRBool IsEndInline() const {
-      NS_ASSERTION(!IsEmpty(), "Someone forgot to check IsEmpty()");
-      return ToItem(PR_LIST_TAIL(&mItems))->mHasInlineEnds;
-    }
+    PRBool AreAllItemsBlock() const { return mBlockCount == mItemCount; }
     PRBool AllWantParentType(ParentType aDesiredParentType) const {
       return mDesiredParentCounts[aDesiredParentType] == mItemCount;
     }
@@ -773,11 +768,12 @@ private:
                                       nsIAtom* aTag,
                                       PRInt32 aNameSpaceID,
                                       PRInt32 aContentIndex,
+                                      PendingBinding* aPendingBinding,
                                       already_AddRefed<nsStyleContext> aStyleContext)
     {
       FrameConstructionItem* item =
         new FrameConstructionItem(aFCData, aContent, aTag, aNameSpaceID,
-                                  aContentIndex, aStyleContext);
+                                  aContentIndex, aPendingBinding, aStyleContext);
       if (item) {
         PR_APPEND_LINK(item, &mItems);
         ++mItemCount;
@@ -790,6 +786,7 @@ private:
     }
 
     void InlineItemAdded() { ++mInlineCount; }
+    void BlockItemAdded() { ++mBlockCount; }
     void LineParticipantItemAdded() { ++mLineParticipantCount; }
 
     class Iterator;
@@ -900,6 +897,7 @@ private:
 
     PRCList mItems;
     PRUint32 mInlineCount;
+    PRUint32 mBlockCount;
     PRUint32 mLineParticipantCount;
     PRUint32 mItemCount;
     PRUint32 mDesiredParentCounts[eParentTypeCount];
@@ -927,12 +925,13 @@ private:
                           nsIAtom* aTag,
                           PRInt32 aNameSpaceID,
                           PRInt32 aContentIndex,
+                          PendingBinding* aPendingBinding,
                           already_AddRefed<nsStyleContext> aStyleContext) :
       mFCData(aFCData), mContent(aContent), mTag(aTag),
       mNameSpaceID(aNameSpaceID), mContentIndex(aContentIndex),
-      mStyleContext(aStyleContext),
+      mPendingBinding(aPendingBinding), mStyleContext(aStyleContext),
       mIsText(PR_FALSE), mIsGeneratedContent(PR_FALSE),
-      mIsRootPopupgroup(PR_FALSE), mIsAllInline(PR_FALSE),
+      mIsRootPopupgroup(PR_FALSE), mIsAllInline(PR_FALSE), mIsBlock(PR_FALSE),
       mHasInlineEnds(PR_FALSE), mIsPopup(PR_FALSE),
       mIsLineParticipant(PR_FALSE)
     {}
@@ -953,7 +952,7 @@ private:
     PRBool IsWhitespace() const;
 
     PRBool IsLineBoundary() const {
-      return !mHasInlineEnds || (mFCData->mBits & FCDATA_IS_LINE_BREAK);
+      return mIsBlock || (mFCData->mBits & FCDATA_IS_LINE_BREAK);
     }
 
     // The FrameConstructionData to use.
@@ -967,6 +966,15 @@ private:
     // The index of mContent in its parent's child list, or -1 if it's
     // not in the parent's child list or not known.
     PRInt32 mContentIndex;
+    // The PendingBinding for this frame construction item, if any.  May be
+    // null.  We maintain a list of PendingBindings in the frame construction
+    // state in the order in which AddToAttachedQueue should be called on them:
+    // depth-first, post-order traversal order.  Since we actually traverse the
+    // DOM in a mix of breadth-first and depth-first, it is the responsibility
+    // of whoever constructs FrameConstructionItem kids of a given
+    // FrameConstructionItem to push its mPendingBinding as the current
+    // insertion point before doing so and pop it afterward.
+    PendingBinding* mPendingBinding;
     // The style context to use for creating the new frame.
     nsRefPtr<nsStyleContext> mStyleContext;
     // Whether this is a text content item.
@@ -977,8 +985,16 @@ private:
     // Whether this is an item for the root popupgroup.
     PRPackedBool mIsRootPopupgroup;
     // Whether construction from this item will create only frames that are
-    // IsInlineOutside() in the principal child list.
+    // IsInlineOutside() in the principal child list.  This is not precise, but
+    // conservative: if true the frames will really be inline, whereas if false
+    // they might still all be inline.
     PRPackedBool mIsAllInline;
+    // Whether construction from this item will create only frames that are
+    // IsBlockOutside() in the principal child list.  This is not precise, but
+    // conservative: if true the frames will really be blocks, whereas if false
+    // they might still be blocks (and in particular, out-of-flows that didn't
+    // find a containing block).
+    PRPackedBool mIsBlock;
     // Whether construction from this item will give leading and trailing
     // inline frames.  This is equal to mIsAllInline, except for inline frame
     // items, where it's always true, whereas mIsAllInline might be false due
@@ -1161,6 +1177,7 @@ private:
   nsresult CreateAnonymousFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aParent,
                                  nsIFrame*                aParentFrame,
+                                 PendingBinding  *        aPendingBinding,
                                  nsFrameItems&            aChildItems);
 
   nsresult GetAnonymousContent(nsIContent* aParent,
@@ -1291,9 +1308,8 @@ private:
    * @param aFrameItems the list in which we should place the in-flow children
    * @param aAllowBlockStyles Whether to allow first-letter and first-line
    *        styles on the parent.
-   * @param aTableCreator if non-null, will just make this method call
-   *        TableProcessChildren between constructing the ::before and ::after
-   *        content instead of doing whatever it would normally do.
+   * @param aPendingBinding Make sure to push this into aState before doing any
+   *        child item construction.
    */
   nsresult ProcessChildren(nsFrameConstructorState& aState,
                            nsIContent*              aContent,
@@ -1301,7 +1317,8 @@ private:
                            nsIFrame*                aFrame,
                            const PRBool             aCanHaveGeneratedContent,
                            nsFrameItems&            aFrameItems,
-                           const PRBool             aAllowBlockStyles);
+                           const PRBool             aAllowBlockStyles,
+                           PendingBinding*          aPendingBinding);
 
   nsIFrame* GetFrameFor(nsIContent* aContent);
 
@@ -1358,6 +1375,7 @@ private:
                         nsIFrame*                aParentFrame,
                         nsStyleContext*          aStyleContext,
                         PRBool                   aBuildCombobox,
+                        PendingBinding*          aPendingBinding,
                         nsFrameItems&            aFrameItems);
 
   nsresult MaybeRecreateFramesForContent(nsIContent* aContent);
@@ -1431,6 +1449,8 @@ private:
   // block
   // @param aContentParent is the parent the block would have if it
   // were in-flow
+  // @param aPendingBinding the pending binding  from this block's frame
+  // construction item.
   nsresult ConstructBlock(nsFrameConstructorState& aState,
                           const nsStyleDisplay*    aDisplay,
                           nsIContent*              aContent,
@@ -1439,7 +1459,8 @@ private:
                           nsStyleContext*          aStyleContext,
                           nsIFrame**               aNewFrame,
                           nsFrameItems&            aFrameItems,
-                          PRBool                   aAbsPosContainer);
+                          PRBool                   aAbsPosContainer,
+                          PendingBinding*          aPendingBinding);
 
   nsresult ConstructInline(nsFrameConstructorState& aState,
                            FrameConstructionItem&   aItem,
@@ -1449,22 +1470,28 @@ private:
                            nsIFrame**               aNewFrame);
 
   /**
-   * Move an already-constructed framelist into the inline frame at
-   * the tail end of an {ib} split.
+   * Create any additional {ib} siblings needed to contain aChildItems and put
+   * them in aSiblings.
    *
-   * @param aState the frame construction state we're using right now.
-   * @param aExistingEndFrame the already-existing end frame.
-   * @param aFramesToMove The frame list to move over.  Must be nonempty.
-   * @param aBlockPart the block part of the {ib} split.
-   * @param aTargetState if non-null, the target state to pass to
-   *        MoveChildrenTo for float reparenting.
-   * XXXbz test float reparenting?
+   * @param aState the frame constructor state
+   * @param aInitialInline is an already-existing inline frame that will be
+   *                       part of this {ib} split and come before everything
+   *                       in aSiblings.
+   * @param aIsPositioned true if aInitialInline is positioned.
+   * @param aChildItems is a child list starting with a block; this method
+   *                    assumes that the inline has already taken all the
+   *                    children it wants.  When the method returns aChildItems
+   *                    will be empty.
+   * @param aSiblings the nsFrameItems to put the newly-created siblings into.
+   *
+   * This method is responsible for making any SetFrameIsSpecial calls that are
+   * needed.
    */
-  void MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
-                                nsIFrame* aExistingEndFrame,
-                                nsFrameList& aFramesToMove,
-                                nsIFrame* aBlockPart,
-                                nsFrameConstructorState* aTargetState);
+  void CreateIBSiblings(nsFrameConstructorState& aState,
+                        nsIFrame* aInitialInline,
+                        PRBool aIsPositioned,
+                        nsFrameItems& aChildItems,
+                        nsFrameItems& aSiblings);
 
   /**
    * For an inline aParentItem, construct its list of child

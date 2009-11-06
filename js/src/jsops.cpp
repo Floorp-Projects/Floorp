@@ -318,7 +318,7 @@ BEGIN_CASE(JSOP_STOP)
             if (!TRACE_RECORDER(cx) && recursive) {
                 if (*(regs.pc + JSOP_CALL_LENGTH) == JSOP_TRACE) {
                     regs.pc += JSOP_CALL_LENGTH;
-                    MONITOR_BRANCH(Monitor_LeaveFrame);
+                    MONITOR_BRANCH(Record_LeaveFrame);
                     op = (JSOp)*regs.pc;
                     DO_OP();
                 }
@@ -1095,15 +1095,15 @@ BEGIN_CASE(JSOP_DIV)
 #ifdef XP_WIN
         /* XXX MSVC miscompiles such that (NaN == 0) */
         if (JSDOUBLE_IS_NaN(d2))
-            rval = DOUBLE_TO_JSVAL(rt->jsNaN);
+            rval = rt->NaNValue;
         else
 #endif
         if (d == 0 || JSDOUBLE_IS_NaN(d))
-            rval = DOUBLE_TO_JSVAL(rt->jsNaN);
+            rval = rt->NaNValue;
         else if (JSDOUBLE_IS_NEG(d) != JSDOUBLE_IS_NEG(d2))
-            rval = DOUBLE_TO_JSVAL(rt->jsNegativeInfinity);
+            rval = rt->negativeInfinityValue;
         else
-            rval = DOUBLE_TO_JSVAL(rt->jsPositiveInfinity);
+            rval = rt->positiveInfinityValue;
         STORE_OPND(-1, rval);
     } else {
         d /= d2;
@@ -1116,7 +1116,7 @@ BEGIN_CASE(JSOP_MOD)
     FETCH_NUMBER(cx, -2, d);
     regs.sp--;
     if (d2 == 0) {
-        STORE_OPND(-1, DOUBLE_TO_JSVAL(rt->jsNaN));
+        STORE_OPND(-1, rt->NaNValue);
     } else {
         d = js_fmod(d, d2);
         STORE_NUMBER(cx, -1, d);
@@ -2032,12 +2032,17 @@ BEGIN_CASE(JSOP_NEW)
             }
             rval = vp[1];
             obj2 = js_NewObject(cx, &js_ObjectClass,
-                                JSVAL_IS_OBJECT(rval)
-                                ? JSVAL_TO_OBJECT(rval)
-                                : NULL,
+                                JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL,
                                 OBJ_GET_PARENT(cx, obj));
             if (!obj2)
                 goto error;
+
+            if (fun->u.i.script->isEmpty()) {
+                *vp = OBJECT_TO_JSVAL(obj2);
+                regs.sp = vp + 1;
+                goto end_new;
+            }
+
             vp[1] = OBJECT_TO_JSVAL(obj2);
             flags = JSFRAME_CONSTRUCTING;
             goto inline_call;
@@ -2049,6 +2054,8 @@ BEGIN_CASE(JSOP_NEW)
     regs.sp = vp + 1;
     CHECK_INTERRUPT_HANDLER();
     TRACE_0(NativeCallComplete);
+
+  end_new:
 END_CASE(JSOP_NEW)
 
 BEGIN_CASE(JSOP_CALL)
@@ -2075,16 +2082,23 @@ BEGIN_CASE(JSOP_APPLY)
             JSInlineFrame *newifp;
             JSInterpreterHook hook;
 
+            script = fun->u.i.script;
+            if (script->isEmpty()) {
+                script = fp->script;
+                *vp = JSVAL_VOID;
+                regs.sp = vp + 1;
+                goto end_call;
+            }
+
             /* Restrict recursion of lightweight functions. */
             if (inlineCallCount >= JS_MAX_INLINE_CALL_COUNT) {
                 js_ReportOverRecursed(cx);
+                script = fp->script;
                 goto error;
             }
 
             /* Compute the total number of stack slots needed by fun. */
-            nframeslots = JS_HOWMANY(sizeof(JSInlineFrame),
-                                     sizeof(jsval));
-            script = fun->u.i.script;
+            nframeslots = JS_HOWMANY(sizeof(JSInlineFrame), sizeof(jsval));
             atoms = script->atomMap.vector;
             nbytes = (nframeslots + script->nslots) * sizeof(jsval);
 
@@ -2226,7 +2240,7 @@ BEGIN_CASE(JSOP_APPLY)
             } else if (fp->script == fp->down->script &&
                        *fp->down->regs->pc == JSOP_CALL &&
                        *fp->regs->pc == JSOP_TRACE) {
-                MONITOR_BRANCH(Monitor_EnterFrame);
+                MONITOR_BRANCH(Record_EnterFrame);
             }
 #endif
 

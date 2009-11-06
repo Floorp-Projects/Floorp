@@ -183,6 +183,8 @@ public:
       if (NS_UNLIKELY(refcount == 0)) {
         if (NS_UNLIKELY(!NS_CycleCollectorForget2(e))) {
           NS_NOTREACHED("forget should not fail when reference count hits 0");
+          // Clear the entry's pointer to us.
+          e->mObject = nsnull;
         }
         mTagged = NS_CCAR_REFCNT_TO_TAGGED(refcount);
       } else {

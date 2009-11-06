@@ -682,8 +682,8 @@ let gGestureSupport = {
     let addRemove = aAddListener ? window.addEventListener :
       window.removeEventListener;
 
-    for each (let event in gestureEvents)
-      addRemove("Moz" + event, this, true);
+    gestureEvents.forEach(function (event) addRemove("Moz" + event, this, true),
+                          this);
   },
 
   /**
@@ -871,9 +871,10 @@ let gGestureSupport = {
    */
   onSwipe: function GS_onSwipe(aEvent) {
     // Figure out which one (and only one) direction was triggered 
-    for each (let dir in ["UP", "RIGHT", "DOWN", "LEFT"])
+    ["UP", "RIGHT", "DOWN", "LEFT"].forEach(function (dir) {
       if (aEvent.direction == aEvent["DIRECTION_" + dir])
         return this._doAction(aEvent, ["swipe", dir.toLowerCase()]);
+    }, this);
   },
 
   /**
@@ -1285,6 +1286,10 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   catch(ex) {
     Components.utils.reportError("Failed to init content pref service:\n" + ex);
   }
+
+  let NP = {};
+  Cu.import("resource://gre/modules/NetworkPrioritizer.jsm", NP);
+  NP.trackBrowserWindow(window);
 
   // initialize the session-restore service (in case it's not already running)
   if (document.documentElement.getAttribute("windowtype") == "navigator:browser") {
@@ -2084,15 +2089,28 @@ function BrowserViewSourceOfDocument(aDocument)
 
 // doc - document to use for source, or null for this window's document
 // initialTab - name of the initial tab to display, or null for the first tab
-// imageUrl - url of an image to load in the Media Tab of the Page Info window; can be null/omitted
-function BrowserPageInfo(doc, initialTab, imageUrl)
-{
-  var args = {doc: doc, initialTab: initialTab, imageUrl: imageUrl};
-  return toOpenDialogByTypeAndUrl("Browser:page-info",
-                                  doc ? doc.location : window.content.document.location,
-                                  "chrome://browser/content/pageinfo/pageInfo.xul",
-                                  "chrome,toolbar,dialog=no,resizable",
-                                  args);
+// imageElement - image to load in the Media Tab of the Page Info window; can be null/omitted
+function BrowserPageInfo(doc, initialTab, imageElement) {
+  var args = {doc: doc, initialTab: initialTab, imageElement: imageElement};
+  var windows = Cc['@mozilla.org/appshell/window-mediator;1']
+                  .getService(Ci.nsIWindowMediator)
+                  .getEnumerator("Browser:page-info");
+
+  var documentURL = doc ? doc.location : window.content.document.location;
+
+  // Check for windows matching the url
+  while (windows.hasMoreElements()) {
+    var currentWindow = windows.getNext();
+    if (currentWindow.document.documentElement.getAttribute("relatedUrl") == documentURL) {
+      currentWindow.focus();
+      currentWindow.resetPageInfo(args);
+      return currentWindow;
+    }
+  }
+
+  // We didn't find a matching window, so open a new one.
+  return openDialog("chrome://browser/content/pageinfo/pageInfo.xul", "",
+                    "chrome,toolbar,dialog=no,resizable", args);
 }
 
 #ifdef DEBUG
@@ -2630,7 +2648,7 @@ function FillInHTMLTooltip(tipElement)
   var tipNode = document.getElementById("aHTMLTooltip");
   tipNode.style.direction = direction;
   
-  for each (var t in [titleText, XLinkTitleText]) {
+  [titleText, XLinkTitleText].forEach(function (t) {
     if (t && /\S/.test(t)) {
 
       // Per HTML 4.01 6.2 (CDATA section), literal CRs and tabs should be
@@ -2644,7 +2662,7 @@ function FillInHTMLTooltip(tipElement)
       tipNode.setAttribute("label", t);
       retVal = true;
     }
-  }
+  });
 
   return retVal;
 }
@@ -3249,28 +3267,6 @@ function toOpenWindowByType(inType, uri, features)
     window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
 }
 
-function toOpenDialogByTypeAndUrl(inType, relatedUrl, windowUri, features, extraArgument)
-{
-  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-  var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-  var windows = windowManagerInterface.getEnumerator(inType);
-
-  // Check for windows matching the url
-  while (windows.hasMoreElements()) {
-    var currentWindow = windows.getNext();
-    if (currentWindow.document.documentElement.getAttribute("relatedUrl") == relatedUrl) {
-    	currentWindow.focus();
-    	return;
-    }
-  }
-
-  // We didn't find a matching window, so open a new one.
-  if (features)
-    return window.openDialog(windowUri, "_blank", features, extraArgument);
-
-  return window.openDialog(windowUri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar", extraArgument);
-}
-
 function OpenBrowserWindow()
 {
   var charsetArg = new String();
@@ -3770,10 +3766,13 @@ var FullScreen =
       }
     }
 
-    if (aShow)
+    if (aShow) {
       gNavToolbox.removeAttribute("inFullscreen");
-    else
+      document.documentElement.removeAttribute("inFullscreen");
+    } else {
       gNavToolbox.setAttribute("inFullscreen", true);
+      document.documentElement.setAttribute("inFullscreen", true);
+    }
 
     var controls = document.getElementsByAttribute("fullscreencontrol", "true");
     for (var i = 0; i < controls.length; ++i)
@@ -5461,9 +5460,9 @@ var OfflineApps = {
   {
     var cacheService = Components.classes["@mozilla.org/network/application-cache-service;1"].
                        getService(Components.interfaces.nsIApplicationCacheService);
-    if (!groups) {
-      groups = cacheService.getGroups({});
-    }
+    if (!groups)
+      groups = cacheService.getGroups();
+
     var ios = Components.classes["@mozilla.org/network/io-service;1"].
               getService(Components.interfaces.nsIIOService);
 
@@ -5938,6 +5937,7 @@ var gMissingPluginInstaller = {
     }
 
     function showOutdatedPluginsInfo() {
+      gPrefService.setBoolPref("plugins.update.notifyUser", false);
       var url = formatURL("plugins.update.url", true);
       gBrowser.loadOneTab(url, {inBackground: false});
       return true;

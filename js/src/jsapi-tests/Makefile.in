@@ -48,11 +48,12 @@ PROGRAM         = jsapi-tests$(BIN_SUFFIX)
 CPPSRCS = \
   tests.cpp \
   selfTest.cpp \
-  testPropCache.cpp \
-  testXDR.cpp \
-  testIntString.cpp \
-  testSameValue.cpp \
   testDefineGetterSetterNonEnumerable.cpp \
+  testIntString.cpp \
+  testLookup.cpp \
+  testPropCache.cpp \
+  testSameValue.cpp \
+  testXDR.cpp \
   $(NULL)
 
 DEFINES         += -DEXPORT_JS_API

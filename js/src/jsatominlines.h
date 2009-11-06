@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsatom_inlines_h___
-#define jsatom_inlines_h___
+#ifndef jsatominlines_h___
+#define jsatominlines_h___
 
 #include "jsatom.h"
 #include "jsnum.h"
@@ -92,4 +92,4 @@ js_Int32ToId(JSContext* cx, int32 index, jsid* id)
     return js_ValueToStringId(cx, STRING_TO_JSVAL(str), id);
 }
 
-#endif /* jsatom_inlines_h___ */
+#endif /* jsatominlines_h___ */

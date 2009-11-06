@@ -101,7 +101,9 @@ nsIsIndexFrame::Destroy()
 {
   // remove ourself as a listener of the text control (bug 40533)
   if (mInputContent) {
-    mInputContent->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMKeyListener));
+    if (mListener) {
+      mInputContent->RemoveEventListenerByIID(mListener, NS_GET_IID(nsIDOMKeyListener));
+    }
     nsContentUtils::DestroyAnonymousContent(&mInputContent);
   }
   nsContentUtils::DestroyAnonymousContent(&mTextContent);
@@ -226,7 +228,8 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Register as an event listener to submit on Enter press
-  mInputContent->AddEventListenerByIID(this, NS_GET_IID(nsIDOMKeyListener));
+  mListener = new nsIsIndexFrame::KeyListener(this);
+  mInputContent->AddEventListenerByIID(mListener, NS_GET_IID(nsIDOMKeyListener));
 
   // Create an hr
   NS_NewHTMLElement(getter_AddRefs(mPostHr), hrInfo, PR_FALSE);
@@ -241,23 +244,9 @@ NS_QUERYFRAME_HEAD(nsIsIndexFrame)
   NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
-// Frames are not refcounted, no need to AddRef
-NS_IMETHODIMP
-nsIsIndexFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {
-    *aInstancePtr = static_cast<nsIDOMKeyListener*>(this);
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
-    *aInstancePtr = static_cast<nsIDOMEventListener*>(this);
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS2(nsIsIndexFrame::KeyListener,
+                   nsIDOMKeyListener,
+                   nsIDOMEventListener)
 
 nscoord
 nsIsIndexFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
@@ -291,8 +280,14 @@ nsIsIndexFrame::AttributeChanged(PRInt32         aNameSpaceID,
   return rv;
 }
 
-
 nsresult 
+nsIsIndexFrame::KeyListener::KeyPress(nsIDOMEvent* aEvent)
+{
+  mOwner->KeyPress(aEvent);
+  return NS_OK;
+}
+
+void
 nsIsIndexFrame::KeyPress(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
@@ -307,8 +302,6 @@ nsIsIndexFrame::KeyPress(nsIDOMEvent* aEvent)
       aEvent->PreventDefault(); // XXX Needed?
     }
   }
-
-  return NS_OK;
 }
 
 #ifdef NS_DEBUG

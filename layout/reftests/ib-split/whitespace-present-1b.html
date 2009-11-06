@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <style>
+    body > span { border: 3px solid blue }
+  </style>
+  <script>
+    function doIt() {
+      var t = document.createTextNode("   ");
+      var d = document.getElementById("d");
+      d.parentNode.insertBefore(t, d);
+    }
+  </script>
+ </head>
+ <body onload="doIt()">
+   <span>
+     <div>One</div><div id="d">Two</div>
+   </span>
+ </body>
+</html>

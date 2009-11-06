@@ -37,8 +37,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
-<script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
-<script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
-<script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
-<script type="application/x-javascript" src="chrome://global/content/viewSourceUtils.js"/>
+<script type="application/javascript" src="chrome://global/content/printUtils.js"/>
+<script type="application/javascript" src="chrome://global/content/viewZoomOverlay.js"/>
+<script type="application/javascript" src="chrome://browser/content/browser.js"/>
+<script type="application/javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
+<script type="application/javascript" src="chrome://global/content/viewSourceUtils.js"/>

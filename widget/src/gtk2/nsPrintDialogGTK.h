@@ -51,7 +51,8 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHODIMP Init();
-  NS_IMETHODIMP Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings);
+  NS_IMETHODIMP Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings,
+                     nsIWebBrowserPrint *aWebBrowserPrint);
   NS_IMETHODIMP ShowPageSetup(nsIDOMWindow *aParent,
                               nsIPrintSettings *aSettings);
 };

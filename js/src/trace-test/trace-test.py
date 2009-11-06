@@ -212,8 +212,10 @@ def run_tests(tests, test_dir, lib_dir):
                 print('    ' + subprocess.list2cmdline(get_test_cmd(test, lib_dir)))
             else:
                 print('    ' + test)
+        return False
     else:
         print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user %s)'%doing))
+        return True
 
 if __name__ == '__main__':
     script_path = os.path.abspath(__file__)
@@ -317,7 +319,9 @@ if __name__ == '__main__':
         sys.exit()
 
     try:
-        run_tests(test_list, test_dir, lib_dir)
+        ok = run_tests(test_list, test_dir, lib_dir)
+        if not ok:
+            sys.exit(2)
     except OSError:
         if not os.path.exists(JS):
             print >> sys.stderr, "JS shell argument: file does not exist: '%s'"%JS

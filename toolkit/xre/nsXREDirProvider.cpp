@@ -119,6 +119,7 @@ nsXREDirProvider::Initialize(nsIFile *aXULAppDir,
                              nsILocalFile *aGREDir,
                              nsIDirectoryServiceProvider* aAppProvider)
 {
+  NS_ENSURE_ARG(aXULAppDir);
   NS_ENSURE_ARG(aGREDir);
 
   mAppProvider = aAppProvider;
@@ -813,6 +814,8 @@ nsXREDirProvider::DoStartup()
     // should also be created at this time.
     (void)NS_CreateServicesFromCategory("profile-after-change", nsnull,
                                         "profile-after-change");
+
+    obsSvc->NotifyObservers(nsnull, "profile-initial-state", nsnull);
   }
   return NS_OK;
 }

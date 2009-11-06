@@ -122,7 +122,7 @@ void nsMediaDecoder::Invalidate()
     return;
 
   nsIFrame* frame = mElement->GetPrimaryFrame();
-  
+
   {
     nsAutoLock lock(mVideoUpdateLock);
     if (mSizeChanged) {
@@ -142,9 +142,9 @@ void nsMediaDecoder::Invalidate()
 
       mSizeChanged = PR_FALSE;
       if (frame) {
-        nsPresContext* presContext = frame->PresContext();      
+        nsPresContext* presContext = frame->PresContext();
         nsIPresShell *presShell = presContext->PresShell();
-        presShell->FrameNeedsReflow(frame, 
+        presShell->FrameNeedsReflow(frame,
                                     nsIPresShell::eStyleChange,
                                     NS_FRAME_IS_DIRTY);
       }
@@ -199,7 +199,7 @@ nsresult nsMediaDecoder::StartProgress()
 
   mProgressTimer = do_CreateInstance("@mozilla.org/timer;1");
   return mProgressTimer->InitWithFuncCallback(ProgressCallback,
-                                              this, 
+                                              this,
                                               PROGRESS_MS,
                                               nsITimer::TYPE_REPEATING_SLACK);
 }

@@ -38,7 +38,17 @@
     catch (e) {
       is(e, "second exception", "wrong exception thrown");
     }    
-            
+
+    // test calling exception with NULL message
+    plugin.throwExceptionNextInvoke();
+    try {
+      plugin();
+      ok(false, "exception not thrown");
+    }
+    catch (e) {
+      is(e.message, "Error calling method on NPObject!", "wrong exception thrown");
+    }    
+
     SimpleTest.finish();
   }
   </script>

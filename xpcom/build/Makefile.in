@@ -176,14 +176,14 @@ endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version)
+OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,imagehlp)
+OS_LIBS += $(call EXPAND_LIBNAME,imagehlp)
 endif
 endif # WINNT
 
 ifeq ($(OS_ARCH),WINCE)
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,ole32)
+OS_LIBS += $(call EXPAND_LIBNAME,ole32)
 endif # WINCE
 
 export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUE_SRC_CPPSRCS) $(XPCOM_GLUENS_SRC_CPPSRCS)

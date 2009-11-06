@@ -765,7 +765,6 @@ MAKEFILES_xulapp="
   toolkit/mozapps/xpinstall/Makefile
   toolkit/profile/Makefile
   toolkit/profile/public/Makefile
-  toolkit/profile/skin/Makefile
   toolkit/profile/src/Makefile
   toolkit/system/dbus/Makefile
   toolkit/system/gnome/Makefile

@@ -181,7 +181,7 @@ namespace nanojit
             Assembler(CodeAlloc& codeAlloc, Allocator& alloc, AvmCore* core, LogControl* logc);
 
             void        endAssembly(Fragment* frag);
-            void        assemble(Fragment* frag);
+            void        assemble(Fragment* frag, LirFilter* reader);
             void        beginAssembly(Fragment *frag);
 
             void        releaseRegisters();
@@ -229,7 +229,8 @@ namespace nanojit
             Register    findRegFor(LIns* i, RegisterMask allow);
             void        findRegFor2(RegisterMask allow, LIns* ia, Reservation* &resva, LIns *ib, Reservation* &resvb);
             void        findRegFor2b(RegisterMask allow, LIns* ia, Register &ra, LIns *ib, Register &rb);
-            Register    findSpecificRegFor(LIns* i, Register w);
+            Register    findSpecificRegFor(LIns* i, Register r);
+            Register    findSpecificRegForUnallocated(LIns* i, Register r);
             Register    prepResultReg(LIns *i, RegisterMask allow);
             void        freeRsrcOf(LIns *i, bool pop);
             void        evictIfActive(Register r);

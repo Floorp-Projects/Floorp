@@ -59,11 +59,11 @@ public:
   /**
    * This is used when the browser is constructing a video element to play
    * a channel that we've already started loading. The src attribute and
-   * <source> children are ignored. 
+   * <source> children are ignored.
    * @param aChannel the channel to use
    * @param aListener returns a stream listener that should receive
    * notifications for the stream
-   */ 
+   */
   nsresult LoadWithChannel(nsIChannel *aChannel, nsIStreamListener **aListener);
 
   // nsIDOMHTMLMediaElement
@@ -88,7 +88,7 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
                              PRBool aNotify);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -155,7 +155,7 @@ public:
   // (no data has arrived for a while).
   void DownloadStalled();
 
-  // Draw the latest video data. See nsMediaDecoder for 
+  // Draw the latest video data. See nsMediaDecoder for
   // details.
   void Paint(gfxContext* aContext,
              gfxPattern::GraphicsFilter aFilter,
@@ -263,7 +263,7 @@ public:
    */
   already_AddRefed<nsILoadGroup> GetDocumentLoadGroup();
 
-  /** 
+  /**
    * Returns PR_TRUE if the media has played or completed a seek.
    * Used by video frame to determine whether to paint the poster.
    */
@@ -291,7 +291,7 @@ protected:
    * Initialize a decoder as a clone of an existing decoder in another
    * element.
    */
-  nsresult InitializeDecoderAsClone(nsMediaDecoder* aOriginal); 
+  nsresult InitializeDecoderAsClone(nsMediaDecoder* aOriginal);
 
   /**
    * Initialize a decoder to load the given channel. The decoder's stream
@@ -335,7 +335,7 @@ protected:
    * Sends an async event to call LoadFromSourceChildren().
    */
   void QueueLoadFromSourceTask();
- 
+
   /**
    * Media selection algorithm.
    */
@@ -412,7 +412,7 @@ protected:
   // we're bound to when loading starts.
   nsCOMPtr<nsIDocument> mLoadBlockedDoc;
 
-  // Media loading flags. See: 
+  // Media loading flags. See:
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
   nsMediaNetworkState mNetworkState;
   nsMediaReadyState mReadyState;
@@ -421,13 +421,13 @@ protected:
     // Not waiting for any src/<source>.
     NOT_WAITING,
     // No src or <source> children, load is waiting at load algorithm step 1.
-    WAITING_FOR_SRC_OR_SOURCE, 
+    WAITING_FOR_SRC_OR_SOURCE,
     // No src at load time, and all <source> children don't resolve or
     // give network errors during fetch, waiting for more <source> children
     // to be added.
-    WAITING_FOR_SOURCE 
+    WAITING_FOR_SOURCE
   };
-  
+
   // When the load algorithm is waiting for more src/<source>, this denotes
   // what type of waiting we're doing.
   LoadAlgorithmState mLoadWaitStatus;
@@ -449,7 +449,7 @@ protected:
 
   // Indicates whether current playback is a result of user action
   // (ie. calling of the Play method), or automatic playback due to
-  // the 'autoplay' attribute being set. A true value indicates the 
+  // the 'autoplay' attribute being set. A true value indicates the
   // latter case.
   // The 'autoplay' HTML attribute indicates that the video should
   // start playing when loaded. The 'autoplay' attribute of the object
@@ -458,7 +458,7 @@ protected:
   // is a result of the autoplay attribute.
   PRPackedBool mAutoplaying;
 
-  // Indicates whether |autoplay| will actually autoplay based on the pref 
+  // Indicates whether |autoplay| will actually autoplay based on the pref
   // media.autoplay.enabled
   PRPackedBool mAutoplayEnabled;
 
@@ -481,7 +481,7 @@ protected:
 
   // PR_TRUE iff this element is paused because the document is inactive
   PRPackedBool mPausedForInactiveDocument;
-  
+
   // PR_TRUE if we've reported a "waiting" event since the last
   // readyState change to HAVE_CURRENT_DATA.
   PRPackedBool mWaitingFired;

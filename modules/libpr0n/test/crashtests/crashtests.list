@@ -1,2 +1,8 @@
 load 83804-1.gif
 load 89341-1.gif
+
+# the following tests were inspired by bug 525326
+# they have image sizes of 65535x65535 which is larger than we allow
+load invalid-size.gif
+# this image has a valid size for the first frame, but the second frame is 65535x65535
+load invalid-size-second-frame.gif

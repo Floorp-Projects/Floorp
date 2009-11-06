@@ -91,6 +91,6 @@ interface nsIApplicationCacheService : nsISupports
     /**
      * Get the list of application cache groups.
      */
-    void getGroups(out unsigned long count,
+    void getGroups([optional] out unsigned long count,
                    [array, size_is(count), retval] out string groupIDs);
 };

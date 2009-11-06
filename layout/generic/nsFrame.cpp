@@ -3940,6 +3940,19 @@ nsFrame::CheckInvalidateSizeChange(nsHTMLReflowMetrics& aNewDesiredSize)
       nsSize(aNewDesiredSize.width, aNewDesiredSize.height));
 }
 
+static void
+InvalidateRectForFrameSizeChange(nsIFrame* aFrame, const nsRect& aRect)
+{
+  const nsStyleBackground* bg;
+  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg)) {
+    nsIFrame* rootFrame =
+      aFrame->PresContext()->PresShell()->FrameManager()->GetRootFrame();
+    rootFrame->Invalidate(nsRect(nsPoint(0, 0), rootFrame->GetSize()));
+  }
+
+  aFrame->Invalidate(aRect);
+}
+
 void
 nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
                                     const nsRect& aOldOverflowRect,
@@ -3958,13 +3971,19 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
   // (since in either case the UNION of old and new areas will be
   // invalidated)
 
+  // We use InvalidateRectForFrameSizeChange throughout this method, even
+  // though root-invalidation is technically only needed in the case where
+  // layer.RenderingMightDependOnFrameSize().  This allows us to simplify the
+  // code somewhat and return immediately after invalidation in the earlier
+  // cases.
+
   // Invalidate the entire old frame+outline if the frame has an outline
   PRBool anyOutlineOrEffects;
   nsRect r = ComputeOutlineAndEffectsRect(this, &anyOutlineOrEffects,
                                           aOldOverflowRect, PR_FALSE);
   if (anyOutlineOrEffects) {
     r.UnionRect(aOldOverflowRect, r);
-    Invalidate(r);
+    InvalidateRectForFrameSizeChange(this, r);
     return;
   }
 
@@ -3984,7 +4003,7 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
         // we'll invalidate the entire border-box here anyway.
         continue;
       }
-      Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
+      InvalidateRectForFrameSizeChange(this, nsRect(0, 0, aOldRect.width, aOldRect.height));
       return;
     }
   }
@@ -3995,9 +4014,8 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
     // whose position depends on the size of the frame
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
       const nsStyleBackground::Layer &layer = bg->mLayers[i];
-      if (!layer.mImage.IsEmpty() &&
-          (layer.mPosition.mXIsPercent || layer.mPosition.mYIsPercent)) {
-        Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
+      if (layer.RenderingMightDependOnFrameSize()) {
+        InvalidateRectForFrameSizeChange(this, nsRect(0, 0, aOldRect.width, aOldRect.height));
         return;
       }
     }
@@ -4008,7 +4026,7 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
     // already been invalidated (even if only the top-left corner has a
     // border radius).
     if (nsLayoutUtils::HasNonZeroCorner(border->mBorderRadius)) {
-      Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
+      InvalidateRectForFrameSizeChange(this, nsRect(0, 0, aOldRect.width, aOldRect.height));
       return;
     }
   }
@@ -5661,53 +5679,39 @@ nsFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
 
 
 /**
- * This function takes a "special" frame and _if_ that frame is the
- * anonymous block crated by an ib split it returns the split inline
- * as aSpecialSibling.  This is needed because the split inline's
- * style context is the parent of the anonymous block's srtyle context.
+ * This function takes a "special" frame and _if_ that frame is an anonymous
+ * block created by an ib split it returns the block's preceding inline.  This
+ * is needed because the split inline's style context is the parent of the
+ * anonymous block's style context.
  *
- * If aFrame is not the anonymous block, aSpecialSibling is set to null.
+ * If aFrame is not ananonymous block, null is returned.
  */
-static nsresult
-GetIBSpecialSiblingForAnonymousBlock(nsPresContext* aPresContext,
-                                     nsIFrame* aFrame,
-                                     nsIFrame** aSpecialSibling)
+static nsIFrame*
+GetIBSpecialSiblingForAnonymousBlock(nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "Must have a non-null frame!");
   NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL,
                "GetIBSpecialSibling should not be called on a non-special frame");
 
-  nsIAtom* type = aFrame->GetStyleContext()->GetPseudoType();
+  nsIAtom* type = aFrame->GetStyleContext()->GetPseudo();
   if (type != nsCSSAnonBoxes::mozAnonymousBlock &&
       type != nsCSSAnonBoxes::mozAnonymousPositionedBlock) {
-    // it's not the anonymous block
-    *aSpecialSibling = nsnull;
-    return NS_OK;
+    // it's not an anonymous block
+    return nsnull;
   }
 
-  // Find the first-in-flow of the frame.  (Ugh.  This ends up
+  // Find the first continuation of the frame.  (Ugh.  This ends up
   // being O(N^2) when it is called O(N) times.)
-  aFrame = aFrame->GetFirstInFlow();
+  aFrame = aFrame->GetFirstContinuation();
 
   /*
    * Now look up the nsGkAtoms::IBSplitSpecialPrevSibling
-   * property, which is only set on the anonymous block frames we're
-   * interested in.
+   * property.
    */
-  nsresult rv;
-  nsIFrame *specialSibling = static_cast<nsIFrame*>
-                                        (aPresContext->PropertyTable()->GetProperty(aFrame,
-                               nsGkAtoms::IBSplitSpecialPrevSibling, &rv));
-
-  if (NS_PROPTABLE_PROP_NOT_THERE == rv) {
-    *aSpecialSibling = nsnull;
-    rv = NS_OK;
-  } else if (NS_SUCCEEDED(rv)) {
-    NS_ASSERTION(specialSibling, "null special sibling");
-    *aSpecialSibling = specialSibling;
-  }
-
-  return rv;
+  nsIFrame *specialSibling =
+    static_cast<nsIFrame*>(aFrame->GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling));
+  NS_ASSERTION(specialSibling, "Broken frame tree?");
+  return specialSibling;
 }
 
 /**
@@ -5728,13 +5732,13 @@ GetCorrectedParent(nsPresContext* aPresContext, nsIFrame* aFrame,
   if (!parent) {
     *aSpecialParent = nsnull;
   } else {
-    nsIAtom* pseudo = aFrame->GetStyleContext()->GetPseudoType();
+    nsIAtom* pseudo = aFrame->GetStyleContext()->GetPseudo();
     // Outer tables are always anon boxes; if we're in here for an outer
     // table, that actually means its the _inner_ table that wants to
     // know its parent.  So get the pseudo of the inner in that case.
     if (pseudo == nsCSSAnonBoxes::tableOuter) {
       pseudo =
-        aFrame->GetFirstChild(nsnull)->GetStyleContext()->GetPseudoType();
+        aFrame->GetFirstChild(nsnull)->GetStyleContext()->GetPseudo();
     }
     *aSpecialParent = nsFrame::CorrectStyleParentFrame(parent, pseudo);
   }
@@ -5766,25 +5770,16 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
   nsIFrame* parent = aProspectiveParent;
   do {
     if (parent->GetStateBits() & NS_FRAME_IS_SPECIAL) {
-      nsIFrame* sibling;
-      nsresult rv =
-        GetIBSpecialSiblingForAnonymousBlock(parent->PresContext(), parent, &sibling);
-      if (NS_FAILED(rv)) {
-        // If GetIBSpecialSiblingForAnonymousBlock fails, then what?
-        // we used to return what is now |aProspectiveParent|, but maybe
-        // |parent| would make more sense?
-        NS_NOTREACHED("Shouldn't get here");
-        return aProspectiveParent;
-      }
+      nsIFrame* sibling = GetIBSpecialSiblingForAnonymousBlock(parent);
 
       if (sibling) {
-        // |parent| was the block in an {ib} split; use the inline as
+        // |parent| was a block in an {ib} split; use the inline as
         // |the style parent.
         parent = sibling;
       }
     }
       
-    nsIAtom* parentPseudo = parent->GetStyleContext()->GetPseudoType();
+    nsIAtom* parentPseudo = parent->GetStyleContext()->GetPseudo();
     if (!parentPseudo ||
         (!nsCSSAnonBoxes::IsAnonBox(parentPseudo) &&
          // nsPlaceholderFrame pases in nsGkAtoms::placeholderFrame for
@@ -5798,7 +5793,7 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
     parent = parent->GetParent();
   } while (parent);
 
-  if (aProspectiveParent->GetStyleContext()->GetPseudoType() ==
+  if (aProspectiveParent->GetStyleContext()->GetPseudo() ==
       nsCSSAnonBoxes::viewportScroll) {
     // aProspectiveParent is the scrollframe for a viewport
     // and the kids are the anonymous scrollbars
@@ -5821,26 +5816,19 @@ nsFrame::DoGetParentStyleContextFrame(nsPresContext* aPresContext,
   *aIsChild = PR_FALSE;
   *aProviderFrame = nsnull;
   if (mContent && !mContent->GetParent() &&
-      !GetStyleContext()->GetPseudoType()) {
+      !GetStyleContext()->GetPseudo()) {
     // we're a frame for the root.  We have no style context parent.
     return NS_OK;
   }
   
   if (!(mState & NS_FRAME_OUT_OF_FLOW)) {
     /*
-     * If this frame is the anonymous block created when an inline
-     * with a block inside it got split, then the parent style context
-     * is on the first of the three special frames.  We can get to it
-     * using GetIBSpecialSiblingForAnonymousBlock
+     * If this frame is an anonymous block created when an inline with a block
+     * inside it got split, then the parent style context is on its preceding
+     * inline. We can get to it using GetIBSpecialSiblingForAnonymousBlock.
      */
     if (mState & NS_FRAME_IS_SPECIAL) {
-      nsresult rv =
-        GetIBSpecialSiblingForAnonymousBlock(aPresContext, this, aProviderFrame);
-      if (NS_FAILED(rv)) {
-        NS_NOTREACHED("Shouldn't get here");
-        *aProviderFrame = nsnull;
-        return rv;
-      }
+      *aProviderFrame = GetIBSpecialSiblingForAnonymousBlock(this);
 
       if (*aProviderFrame) {
         return NS_OK;

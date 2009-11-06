@@ -801,7 +801,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     void *sbrk(ptrdiff_t), *before = sbrk(0);
 #endif
 
-    JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL)));
+    JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL | TCF_NEED_MUTABLE_SCRIPT)));
 
     /*
      * The scripted callerFrame can only be given for compile-and-go scripts
@@ -6625,8 +6625,7 @@ ComprehensionTail(JSParseNode *kid, uintN blockid, JSTreeContext *tc,
     pn2->pn_kid = kid;
     *pnp = pn2;
 
-    if (type == TOK_ARRAYPUSH)
-        PopStatement(tc);
+    PopStatement(tc);
     return pn;
 }
 
@@ -8450,15 +8449,15 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, JSParseNode *pn1, JSParseNode *pn2,
 #if defined(XP_WIN)
             /* XXX MSVC miscompiles such that (NaN == 0) */
             if (JSDOUBLE_IS_NaN(d2))
-                d = *cx->runtime->jsNaN;
+                d = js_NaN;
             else
 #endif
             if (d == 0 || JSDOUBLE_IS_NaN(d))
-                d = *cx->runtime->jsNaN;
+                d = js_NaN;
             else if (JSDOUBLE_IS_NEG(d) != JSDOUBLE_IS_NEG(d2))
-                d = *cx->runtime->jsNegativeInfinity;
+                d = js_NegativeInfinity;
             else
-                d = *cx->runtime->jsPositiveInfinity;
+                d = js_PositiveInfinity;
         } else {
             d /= d2;
         }
@@ -8466,7 +8465,7 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, JSParseNode *pn1, JSParseNode *pn2,
 
       case JSOP_MOD:
         if (d2 == 0) {
-            d = *cx->runtime->jsNaN;
+            d = js_NaN;
         } else {
             d = js_fmod(d, d2);
         }

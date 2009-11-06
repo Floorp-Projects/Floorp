@@ -68,6 +68,12 @@ _MOCHITEST_FILES = \
 
 #		test_npruntime_npnsetexception.html \ Disabled for e10s
 
+ifeq ($(OS_ARCH),WINNT)
+_MOCHITEST_FILES += \
+ 		test_windowed_invalidate.html \
+        $(NULL)
+endif
+
 _MOCHICHROME_FILES = \
 		test_bug479979.xul \
 		test_npruntime.xul   \

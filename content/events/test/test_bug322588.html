@@ -28,16 +28,16 @@ var result = "";
 
 var w;
 function pop350d(url) {
-  w = window.open(url);
-  w.addEventListener("unload", function () { result += " unload"; }, false);
-  w.addEventListener("load", function () { result += " load"; }, false);
-  w.addEventListener("blur", function () { result += " blur"; }, false);
+  w = window.open();
+  w.addEventListener("unload", function () { result += " unload";}, false);
+  w.addEventListener("load", function () { result += " load"; setTimeout(done, 1000);}, false);
+  w.addEventListener("blur", function () { result += " blur";}, false);
+  w.location = url;
 }
 
 function doTest() {
   try {
     sendMouseEvent({type:'click'}, 'link');
-    setTimeout(done,1500);
   } catch(e) {
     if (w)
       w.close();

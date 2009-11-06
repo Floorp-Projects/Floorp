@@ -78,11 +78,11 @@
       .getService(Components.interfaces.nsIPrefService);
     prefs = prefs.getBranch("browser.download.");
 
-    prefs.clearUserPref("dir");
-    prefs.clearUserPref("useDownloadDir");
-    prefs.clearUserPref("folderList");
-    prefs.clearUserPref("manager.closeWhenDone");
-    prefs.clearUserPref("manager.showWhenStarting");
+    var prefKeys = ["dir", "useDownloadDir", "folderList", 
+                    "manager.closeWhenDone", "manager.showWhenStarting"];
+    for (var i = 0; i < prefKeys.length; i++)
+      if (prefs.prefHasUserValue(prefKeys[i]))
+        prefs.clearUserPref(prefKeys[i]);
   }
   
   </script>

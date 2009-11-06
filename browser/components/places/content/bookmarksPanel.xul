@@ -52,9 +52,9 @@
       onload="init();"
       onunload="SidebarUtils.clearURLFromStatusBar();">
 
-  <script type="application/x-javascript" 
+  <script type="application/javascript" 
           src="chrome://browser/content/bookmarks/sidebarUtils.js"/>
-  <script type="application/x-javascript" 
+  <script type="application/javascript" 
           src="chrome://browser/content/bookmarks/bookmarksPanel.js"/>
 
   <commandset id="placesCommands"/>

@@ -157,6 +157,15 @@ function testHtmlCopyEncoder () {
   expected = '<ol id=\"aList\">\n   <li value=\"8\">Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus \naliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
   is(out, expected, "test list selection with a value on a LI");
 
+  //test Bug 436703
+  node = document.getElementById('aContentEditable');
+  select.selectAllChildren(node);
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<p>one</p><p>two</p>';
+  is(out, expected, "select all children in an contentEditable div should not select the div itself");
+
   SimpleTest.finish();
 }
 
@@ -183,5 +192,7 @@ addLoadEvent(testHtmlCopyEncoder);
 </ol>
 foo bar
 </div>
+
+<div id="aContentEditable" contentEditable="true"><p>one</p><p>two</p></div>
 </body>
 </html>

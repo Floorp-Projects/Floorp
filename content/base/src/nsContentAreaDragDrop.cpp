@@ -329,6 +329,7 @@ nsContentAreaDragDrop::DragOver(nsIDOMDragEvent* inEvent)
   }
 
   session->SetCanDrop(dropAllowed);
+
   return NS_OK;
 }
 

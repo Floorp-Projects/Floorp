@@ -135,7 +135,8 @@ function test() {
             gBrowser.removeTab(tab_A);
 
             // record the timestamp of sessionstore.js at the end of the private session
-            gPrefService.clearUserPref("browser.sessionstore.interval");
+            if (gPrefService.prefHasUserValue("browser.sessionstore.interval"))
+              gPrefService.clearUserPref("browser.sessionstore.interval");
             gPrefService.setIntPref("browser.sessionstore.interval", 0);
             let endPBModeTimeStamp = getSessionstorejsModificationTime();
 

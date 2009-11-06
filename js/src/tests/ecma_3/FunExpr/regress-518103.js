@@ -3,6 +3,7 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
+var gTestfile = 'regress-518103.js';
 var BUGNUMBER = 518103;
 var summary = 'lambda constructor "method" vs. instanceof';
 var actual;
@@ -22,6 +23,6 @@ var J = new Y.widget.DS_JSArray( [ ] );
 actual = J instanceof Y.widget.DataSource;
 expect = true;
 
-reportCompare(actual, expect, summary);
+reportCompare(expect, actual, summary);
 
 printStatus("All tests passed!");

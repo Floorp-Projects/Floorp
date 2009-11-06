@@ -88,4 +88,8 @@ function setEmptyPref(aValue)
   prefs.setIntPref("browser.urlbar.default.behavior.emptyRestriction", aValue);
 
 function clearEmptyPref()
-  prefs.clearUserPref("browser.urlbar.default.behavior.emptyRestriction");
+{
+  if (prefs.prefHasUserValue("browser.urlbar.default.behavior.emptyRestriction"))
+    prefs.clearUserPref("browser.urlbar.default.behavior.emptyRestriction");
+}
+

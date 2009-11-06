@@ -862,6 +862,9 @@ JS_realloc(JSContext *cx, void *p, size_t nbytes);
 extern JS_PUBLIC_API(void)
 JS_free(JSContext *cx, void *p);
 
+extern JS_PUBLIC_API(void)
+JS_updateMallocCounter(JSContext *cx, size_t nbytes);
+
 extern JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s);
 
@@ -1114,11 +1117,9 @@ JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg);
 struct JSTracer {
     JSContext           *context;
     JSTraceCallback     callback;
-#ifdef DEBUG
     JSTraceNamePrinter  debugPrinter;
     const void          *debugPrintArg;
     size_t              debugPrintIndex;
-#endif
 };
 
 /*
@@ -1222,7 +1223,9 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind);
     JS_BEGIN_MACRO                                                            \
         (trc)->context = (cx_);                                               \
         (trc)->callback = (callback_);                                        \
-        JS_SET_TRACING_DETAILS(trc, NULL, NULL, (size_t)-1);                  \
+        (trc)->debugPrinter = NULL;                                           \
+        (trc)->debugPrintArg = NULL;                                          \
+        (trc)->debugPrintIndex = (size_t)-1;                                  \
     JS_END_MACRO
 
 extern JS_PUBLIC_API(void)

@@ -252,7 +252,7 @@ public:
     gfxPattern* GetPattern() {
         return mPattern;
     }
-    
+
     nsIPrincipal* Principal() { return mPrincipal; }
     PRBool GetForceWriteOnly() { return mForceWriteOnly; }
 
@@ -369,7 +369,7 @@ protected:
      * by global alpha, and is ignored otherwise.
      */
     void ApplyStyle(Style aWhichStyle, PRBool aUseGlobalAlpha = PR_TRUE);
-    
+
     // Member vars
     PRInt32 mWidth, mHeight;
     PRPackedBool mValid;
@@ -553,7 +553,7 @@ protected:
                                float maxWidth,
                                TextDrawOperation op,
                                float* aWidth);
- 
+
     // style handling
     /*
      * The previous set style. Is equal to STYLE_MAX when there is no valid
@@ -566,7 +566,7 @@ protected:
     class ContextState {
     public:
         ContextState() : shadowOffset(0.0, 0.0),
-                         globalAlpha(1.0),             
+                         globalAlpha(1.0),
                          shadowBlur(0.0),
                          textAlign(TEXT_ALIGN_START),
                          textBaseline(TEXT_BASELINE_ALPHABETIC),
@@ -975,7 +975,7 @@ nsCanvasRenderingContext2D::SetIsOpaque(PRBool isOpaque)
 
     return NS_OK;
 }
- 
+
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFilter)
 {
@@ -2072,7 +2072,7 @@ nsCanvasRenderingContext2D::SetTextBaseline(const nsAString& tb)
     // spec says to not throw error for invalid arg, but do it anyway
     else
         return NS_ERROR_INVALID_ARG;
-    
+
     return NS_OK;
 }
 
@@ -2227,7 +2227,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProces
 
     // current font
     gfxFontGroup* mFontgrp;
-    
+
     // dev pixel conversion factor
     PRUint32 mAppUnitsPerDevPixel;
 
@@ -2548,7 +2548,7 @@ nsCanvasRenderingContext2D::MozDrawText(const nsAString& textToDraw)
 
     // Fill color is text color
     ApplyStyle(STYLE_FILL);
-    
+
     textRun->Draw(mThebes,
                   pt,
                   /* offset = */ 0,
@@ -3035,7 +3035,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         rv = NS_ERROR_DOM_INDEX_SIZE_ERR;
         goto FINISH;
     }
-    
+
     matrix.Translate(gfxPoint(sx, sy));
     matrix.Scale(sw/dw, sh/dh);
 #ifdef WINCE
@@ -3242,7 +3242,7 @@ FlushLayoutForTree(nsIDOMWindow* aWindow)
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY,
-                                       float aW, float aH, 
+                                       float aW, float aH,
                                        const nsAString& aBGColor,
                                        PRUint32 flags)
 {

@@ -104,14 +104,14 @@
       gEditItemOverlay.onTagsFieldBlur();
 
       // test that the tag has been added in the backend
-      is(ts.getTagsForURI(testURI, {})[0], testTag, "tags match");
+      is(ts.getTagsForURI(testURI)[0], testTag, "tags match");
 
       // change the tag
       document.getElementById("editBMPanel_tagsField").value = testTagUpper;
       gEditItemOverlay.onTagsFieldBlur();
 
       // test that the tag has been added in the backend
-      is(ts.getTagsForURI(testURI, {})[0], testTagUpper, "tags match");
+      is(ts.getTagsForURI(testURI)[0], testTagUpper, "tags match");
 
       // Cleanup.
       ts.untagURI(testURI, [testTag]);

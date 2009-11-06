@@ -169,12 +169,10 @@ DestroyThread(JSThread *thread)
     js_free(thread);
 }
 
-JSBool
-js_InitContextThread(JSContext *cx)
+JSThread *
+js_CurrentThread(JSRuntime *rt)
 {
-    JS_ASSERT(!cx->thread);
     jsword id = js_CurrentThreadId();
-    JSRuntime *rt = cx->runtime;
     JS_LOCK_GC(rt);
 
     /*
@@ -194,7 +192,7 @@ js_InitContextThread(JSContext *cx)
         JS_UNLOCK_GC(rt);
         thread = NewThread(id);
         if (!thread)
-            return false;
+            return NULL;
         JS_LOCK_GC(rt);
         js_WaitForGC(rt);
         entry = (JSThreadsHashEntry *)
@@ -203,13 +201,23 @@ js_InitContextThread(JSContext *cx)
         if (!entry) {
             JS_UNLOCK_GC(rt);
             DestroyThread(thread);
-            return false;
+            return NULL;
         }
 
         /* Another thread cannot initialize entry->thread. */
         JS_ASSERT(!entry->thread);
         entry->thread = thread;
     }
+
+    return thread;
+}
+
+JSBool
+js_InitContextThread(JSContext *cx)
+{
+    JSThread *thread = js_CurrentThread(cx->runtime);
+    if (!thread)
+        return false;
 
     JS_APPEND_LINK(&cx->threadLinks, &thread->contextList);
     cx->thread = thread;
@@ -278,6 +286,7 @@ thread_purger(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
         return JS_DHASH_REMOVE;
     }
     PurgeThreadData(cx, &thread->data);
+    thread->gcThreadMallocBytes = JS_GC_THREAD_MALLOC_LIMIT;
     return JS_DHASH_NEXT;
 }
 
@@ -291,6 +300,20 @@ thread_tracer(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
 }
 
 #endif /* JS_THREADSAFE */
+
+JSThreadData *
+js_CurrentThreadData(JSRuntime *rt)
+{
+#ifdef JS_THREADSAFE
+    JSThread *thread = js_CurrentThread(rt);
+    if (!thread)
+        return NULL;
+
+    return &thread->data;
+#else
+    return &rt->threadData;
+#endif
+}
 
 JSBool
 js_InitThreads(JSRuntime *rt)
@@ -1862,4 +1885,38 @@ js_CurrentPCIsInImacro(JSContext *cx)
 #else
     return false;
 #endif
+}
+
+void
+JSContext::checkMallocGCPressure(void *p)
+{
+    if (!p) {
+        js_ReportOutOfMemory(this);
+        return;
+    }
+
+#ifdef JS_THREADSAFE
+    JS_ASSERT(thread->gcThreadMallocBytes <= 0);
+    ptrdiff_t n = JS_GC_THREAD_MALLOC_LIMIT - thread->gcThreadMallocBytes;
+    thread->gcThreadMallocBytes = JS_GC_THREAD_MALLOC_LIMIT;
+
+    JS_LOCK_GC(runtime);
+    runtime->gcMallocBytes -= n;
+    if (runtime->isGCMallocLimitReached())
+#endif
+    {
+        JS_ASSERT(runtime->isGCMallocLimitReached());
+        runtime->gcMallocBytes = -1;
+
+        /*
+         * Empty the GC free lists to trigger a last-ditch GC when allocating
+         * any GC thing later on this thread. This minimizes the amount of
+         * checks on the fast path of the GC allocator. Note that we cannot
+         * touch the free lists on other threads as their manipulation is not
+         * thread-safe.
+         */
+        JS_THREAD_DATA(this)->gcFreeLists.purge();
+        js_TriggerGC(this, true);
+    }
+    JS_UNLOCK_GC(runtime);
 }

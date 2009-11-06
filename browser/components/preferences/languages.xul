@@ -72,7 +72,7 @@
                   type="bool"/>
     </preferences>
 
-    <script type="application/x-javascript" src="chrome://browser/content/preferences/languages.js"/>
+    <script type="application/javascript" src="chrome://browser/content/preferences/languages.js"/>
 
     <stringbundleset id="languageSet">
       <stringbundle id="bundleRegions"      src="chrome://global/locale/regionNames.properties"/>
