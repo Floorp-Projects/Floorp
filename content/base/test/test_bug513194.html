@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=513194
+-->
+<head>
+  <title>Test for Bug 513194</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  const Cr = Components.results;
+
+  var consoleService =
+    Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
+
+  var consoleListener = {
+    seenError: false,
+
+    observe: function(message) {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+      if (this.seenError) {
+        ok(false, "Seen too many errors!");
+      }
+      
+      this.seenError = true;
+
+      ok(message.message.indexOf("Unknown property") > -1,
+         "Wrong message");
+    },
+    
+    finish: function() {
+      ok(this.seenError , "Didn't get message.");
+      SimpleTest.finish();
+    },
+
+    QueryInterface: function(iid) {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      if (iid.equals(Ci.nsIConsoleListener) ||
+          iid.equals(Ci.nsISupports)) {
+        return this;
+      }
+      throw Cr.NS_NOINTERFACE;
+    }
+  };
+
+  consoleService.reset();
+  consoleService.registerListener(consoleListener);
+  SimpleTest.waitForExplicitFinish();
+
+  document.write("<style>qux { foo: bar; }<\/style>");
+
+  function done() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    consoleListener.finish();
+    consoleService.unregisterListener(consoleListener);
+  }
+  setTimeout(done, 1);
+</script>
+</pre>
+</body>
+</html>
+
