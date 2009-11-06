@@ -2617,7 +2617,14 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   paintEvent.region = rgn;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  mGeckoChild->DispatchWindowEvent(paintEvent);
+  PRBool painted = mGeckoChild->DispatchWindowEvent(paintEvent);
+  if (!painted && [self isOpaque]) {
+    // Gecko refused to draw, but we've claimed to be opaque, so we have to
+    // draw something--fill with white.
+    CGContextSetRGBFillColor(aContext, 1, 1, 1, 1);
+    CGContextFillRect(aContext, CGRectMake(aRect.origin.x, aRect.origin.y,
+                                           aRect.size.width, aRect.size.height));
+  }
   if (!mGeckoChild)
     return;
 
