@@ -5937,6 +5937,7 @@ var gMissingPluginInstaller = {
     }
 
     function showOutdatedPluginsInfo() {
+      gPrefService.setBoolPref("plugins.update.notifyUser", false);
       var url = formatURL("plugins.update.url", true);
       gBrowser.loadOneTab(url, {inBackground: false});
       return true;
