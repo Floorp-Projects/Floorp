@@ -617,12 +617,8 @@ FragmentAssembler::assemble_call(const string &op)
     string abi = pop_front(mTokens);
 
     AbiKind _abi = ABI_CDECL;
-    if (abi == "fastcall") {
-#ifdef NO_FASTCALL
-        bad("no fastcall support");
-#endif
+    if (abi == "fastcall")
         _abi = ABI_FASTCALL;
-    }
     else if (abi == "stdcall")
         _abi = ABI_STDCALL;
     else if (abi == "thiscall")
