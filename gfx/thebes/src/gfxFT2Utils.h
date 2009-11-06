@@ -68,7 +68,7 @@ public:
      * glyph, or return zero if there is no such glyph.  This does no caching,
      * so you probably want gfxFcFont::GetGlyph.
      */
-    virtual PRUint32 GetGlyph(PRUint32 aCharCode);
+    PRUint32 GetGlyph(PRUint32 aCharCode);
 
     void GetMetrics(gfxFont::Metrics* aMetrics, PRUint32* aSpaceGlyph);
 
