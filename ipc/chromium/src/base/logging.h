@@ -67,7 +67,7 @@ const ChromiumLogger& operator<<(const ChromiumLogger& log, void* p);
 #define LOG_IF(info, condition) \
   !(condition) ? (void) 0 : Voidifier() & ChromiumLogger(LOG_ ## info) << __FILE__ ":" << __LINE__
 #define CHECK(condition) \
-  !(condition) ? (void) 0 : Voidifier() & ChromiumLogger(LOG_FATAL)
+  !(condition) ? (void) 0 : Voidifier() & LOG(FATAL)
 #define DLOG(info) LOG(info)
 #define DLOG_IF(info) LOG_IF(info)
 #define DCHECK(condition) CHECK(condition)
