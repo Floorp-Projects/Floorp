@@ -1005,7 +1005,9 @@ GlobalPrinters::EnumerateNativePrinters()
   PR_PL(("EnumerateNativePrinters\n"));
 
   TCHAR szDefaultPrinterName[1024];    
-  DWORD status = GetProfileString("devices", 0, ",", szDefaultPrinterName, sizeof(szDefaultPrinterName)/sizeof(TCHAR));
+  DWORD status = GetProfileString(TEXT("devices"), 0, TEXT(","),
+                                  szDefaultPrinterName,
+                                  NS_ARRAY_LENGTH(szDefaultPrinterName));
   if (status > 0) {
     DWORD count = 0;
     LPTSTR sPtr   = (LPTSTR)szDefaultPrinterName;
@@ -1036,7 +1038,9 @@ GlobalPrinters::GetDefaultPrinterName(LPTSTR& aDefaultPrinterName)
 #ifndef WINCE
   aDefaultPrinterName = nsnull;
   TCHAR szDefaultPrinterName[1024];    
-  DWORD status = GetProfileString("windows", "device", 0, szDefaultPrinterName, sizeof(szDefaultPrinterName)/sizeof(TCHAR));
+  DWORD status = GetProfileString(TEXT("windows"), TEXT("device"), 0,
+                                  szDefaultPrinterName,
+                                  NS_ARRAY_LENGTH(szDefaultPrinterName));
   if (status > 0) {
     TCHAR comma = (TCHAR)',';
     LPTSTR sPtr = (LPTSTR)szDefaultPrinterName;
@@ -1047,7 +1051,7 @@ GlobalPrinters::GetDefaultPrinterName(LPTSTR& aDefaultPrinterName)
     }
     aDefaultPrinterName = _tcsdup(szDefaultPrinterName);
   } else {
-    aDefaultPrinterName = _tcsdup("");
+    aDefaultPrinterName = _tcsdup(TEXT(""));
   }
 
   PR_PL(("DEFAULT PRINTER [%s]\n", aDefaultPrinterName));
