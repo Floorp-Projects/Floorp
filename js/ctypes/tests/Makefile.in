@@ -66,7 +66,7 @@ xpctestdir = $(testxpcobjdir)/$(MODULE)/unit
 # install the .js.in from the tests srcdir, so remove it when we're done.
 libs:: unit/test_jsctypes.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
-	  $^ > $(xpctestdir)/test_jsctypes.js
+	  -DCTYPES_TEST_LIB=\"$(SHARED_LIBRARY)\" $^ > $(xpctestdir)/test_jsctypes.js
 	$(TEST_INSTALLER) $(SHARED_LIBRARY) $(xpctestdir)
 	$(RM) $(xpctestdir)/test_jsctypes.js.in
 

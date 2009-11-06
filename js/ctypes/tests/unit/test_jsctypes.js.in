@@ -43,6 +43,8 @@ Components.utils.import("resource://gre/modules/ctypes.jsm");
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+#expand const CTYPES_TEST_LIB = __CTYPES_TEST_LIB__;
+
 function do_check_throws(f, type, stack)
 {
   if (!stack)
@@ -60,16 +62,7 @@ function do_check_throws(f, type, stack)
 
 function run_test()
 {
-#ifdef XP_WIN
-  var libfile = do_get_file("jsctypes-test.dll");
-#elifdef XP_MACOSX
-  var libfile = do_get_file("libjsctypes-test.dylib");
-#elifdef XP_UNIX
-  var libfile = do_get_file("libjsctypes-test.so");
-#else
-  // unsupported OS - don't run the test
-  return;
-#endif
+  var libfile = do_get_file(CTYPES_TEST_LIB);
 
   // open the library with an nsILocalFile
   var library = ctypes.open(libfile);
