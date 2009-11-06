@@ -43,6 +43,7 @@ public:
 
 private:
   static PRLogModuleInfo* gChromiumPRLog;
+  static PRLogModuleInfo* GetLog();
 
   PRLogModuleLevel mSeverity;
   mutable char* mMsg;
