@@ -843,6 +843,8 @@ nsParser::Initialize(PRBool aConstructor)
   mFlags = NS_PARSER_FLAG_OBSERVERS_ENABLED |
            NS_PARSER_FLAG_PARSER_ENABLED |
            NS_PARSER_FLAG_CAN_TOKENIZE;
+
+  mProcessingNetworkData = PR_FALSE;
 }
 
 void
@@ -1798,7 +1800,7 @@ nsParser::ContinueInterruptedParsing()
   // If there are scripts executing, then the content sink is jumping the gun
   // (probably due to a synchronous XMLHttpRequest) and will re-enable us
   // later, see bug 460706.
-  if (IsScriptExecuting()) {
+  if (!IsOkToProcessNetworkData()) {
     return NS_OK;
   }
 
@@ -1822,10 +1824,12 @@ nsParser::ContinueInterruptedParsing()
   PRBool isFinalChunk = mParserContext &&
                         mParserContext->mStreamListenerState == eOnStop;
 
+  mProcessingNetworkData = PR_TRUE;
   if (mSink) {
     mSink->WillParse();
   }
   result = ResumeParse(PR_TRUE, isFinalChunk); // Ref. bug 57999
+  mProcessingNetworkData = PR_FALSE;
 
   if (result != NS_OK) {
     result=mInternalState;
@@ -1888,7 +1892,8 @@ void nsParser::HandleParserContinueEvent(nsParserContinueEvent *ev)
   mFlags &= ~NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
   mContinueEvent = nsnull;
 
-  NS_ASSERTION(!IsScriptExecuting(), "Interrupted in the middle of a script?");
+  NS_ASSERTION(IsOkToProcessNetworkData(),
+               "Interrupted in the middle of a script?");
   ContinueInterruptedParsing();
 }
 
@@ -2947,12 +2952,14 @@ nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
 
     // Don't bother to start parsing until we've seen some
     // non-whitespace data
-    if (!IsScriptExecuting() &&
+    if (IsOkToProcessNetworkData() &&
         theContext->mScanner->FirstNonWhitespacePosition() >= 0) {
+      mProcessingNetworkData = PR_TRUE;
       if (mSink) {
         mSink->WillParse();
       }
       rv = ResumeParse();
+      mProcessingNetworkData = PR_FALSE;
     }
   } else {
     rv = NS_ERROR_UNEXPECTED;
@@ -2992,11 +2999,13 @@ nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
   if (mParserFilter)
     mParserFilter->Finish();
 
-  if (!IsScriptExecuting() && NS_SUCCEEDED(rv)) {
+  if (IsOkToProcessNetworkData() && NS_SUCCEEDED(rv)) {
+    mProcessingNetworkData = PR_TRUE;
     if (mSink) {
       mSink->WillParse();
     }
     rv = ResumeParse(PR_TRUE, PR_TRUE);
+    mProcessingNetworkData = PR_FALSE;
   }
 
   // If the parser isn't enabled, we don't finish parsing till
