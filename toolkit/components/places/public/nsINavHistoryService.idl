@@ -416,7 +416,7 @@ interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
  *
  * @see nsINavHistoryResult for where this fits in
  */
-[scriptable, uuid(e60f4429-3787-45c8-a8c0-18ef52621bbf)]
+[scriptable, uuid(af4ac418-a687-4775-8ffa-97c160196432)]
 interface nsINavHistoryResultViewer : nsISupports
 {
   /**
