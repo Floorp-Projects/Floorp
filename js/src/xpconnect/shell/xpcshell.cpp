@@ -92,9 +92,6 @@
 #ifdef __SYMBIAN32__
 #include <unistd.h>
 #endif
-#if defined(MOZ_WIDGET_GTK2)
-#include <gtk/gtk.h>
-#endif
 
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
@@ -1757,10 +1754,6 @@ main(int argc, char **argv)
     // unbuffer stdout so that output is in the correct order; note that stderr
     // is unbuffered by default
     setbuf(stdout, 0);
-#endif
-
-#ifdef MOZ_WIDGET_GTK2
-    gtk_init(0, 0);
 #endif
 
     gErrFile = stderr;
