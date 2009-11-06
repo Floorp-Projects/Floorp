@@ -94,7 +94,8 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
 }
 
 nsresult
-nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
+nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
+                              nsIContent** aScriptElement)
 {
   nsresult rv = NS_OK;
   switch(mOpCode) {
@@ -325,7 +326,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
       if (snapshot) {
         aBuilder->InitializeDocWriteParserState(snapshot, mInt);
       }
-      aBuilder->SetScriptElement(node);
+      *aScriptElement = node;
       return rv;
     }
     case eTreeOpDoneAddingChildren: {
@@ -336,6 +337,10 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
     case eTreeOpDoneCreatingElement: {
       nsIContent* node = *(mOne.node);
       node->DoneCreatingElement();
+      return rv;
+    }
+    case eTreeOpFlushPendingAppendNotifications: {
+      aBuilder->FlushPendingAppendNotifications();
       return rv;
     }
     case eTreeOpSetDocumentCharset: {
@@ -380,11 +385,11 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
       return rv;
     }
     case eTreeOpStreamEnded: {
-      aBuilder->StreamEnded();
+      aBuilder->DidBuildModel(PR_FALSE); // this causes a notifications flush anyway
       return rv;
     }
     case eTreeOpStartLayout: {
-      aBuilder->StartLayout(); // this causes a flush anyway
+      aBuilder->StartLayout(); // this causes a notification flush anyway
       return rv;
     }
     case eTreeOpDocumentMode: {
