@@ -37,6 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "TabChild.h"
+#include "mozilla/dom/PContentProcessChild.h"
+#include "mozilla/jsipc/ContextWrapperChild.h"
 
 #include "nsIWebBrowser.h"
 #include "nsEmbedCID.h"
@@ -68,6 +70,8 @@
 #include "nsPIWindowRoot.h"
 #include "nsIScriptContext.h"
 #include "nsPresContext.h"
+#include "nsIDocument.h"
+#include "nsIScriptGlobalObject.h"
 
 #ifdef MOZ_WIDGET_QT
 #include <QX11EmbedWidget>
@@ -81,6 +85,7 @@
 #endif
 
 using namespace mozilla::dom;
+using namespace mozilla::jsipc;
 
 NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
 
@@ -375,6 +380,9 @@ TabChild::RecvloadURL(const nsCString& uri)
     if (NS_FAILED(rv)) {
         NS_WARNING("mWebNav->LoadURI failed. Eating exception, what else can I do?");
     }
+
+    SendPContextWrapperConstructor()->SendPObjectWrapperConstructor(true);
+
     return true;
 }
 
@@ -431,6 +439,37 @@ TabChild::RecvsendKeyEvent(const nsString& aType,
   utils->SendKeyEvent(aType, aKeyCode, aCharCode,
                       aModifiers, aPreventDefault, &ignored);
   return true;
+}
+
+static JSContext*
+GetJSContextFrom(nsIWebNavigation* webNav)
+{
+    nsCOMPtr<nsIDOMDocument> domDocument;
+    nsCOMPtr<nsIDocument> document;
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    nsCOMPtr<nsIScriptContext> context;
+
+    if (NS_SUCCEEDED(webNav->GetDocument(getter_AddRefs(domDocument))) &&
+        (document = do_QueryInterface(domDocument)) &&
+        (global = do_QueryInterface(document->GetScriptGlobalObject())) &&
+        (context = do_QueryInterface(global->GetContext()))) {
+        return static_cast<JSContext*>(context->GetNativeContext());
+    }
+
+    return NULL;
+}
+
+PContextWrapperChild*
+TabChild::AllocPContextWrapper()
+{
+    return new ContextWrapperChild(GetJSContextFrom(mWebNav));
+}
+
+bool
+TabChild::DeallocPContextWrapper(PContextWrapperChild* actor)
+{
+    delete actor;
+    return true;
 }
 
 mozilla::ipc::PDocumentRendererChild*

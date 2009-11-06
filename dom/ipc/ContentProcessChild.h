@@ -78,6 +78,7 @@ public:
 
     virtual PTestShellChild* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellChild*);
+    virtual bool RecvPTestShellConstructor(PTestShellChild*);
 
     virtual PNeckoChild* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoChild*);

@@ -60,6 +60,7 @@ IPDLDIRS =  \
   netwerk/protocol/http/src  \
   ipc/ipdl/test/cxx  \
   ipc/testshell  \
+  js/src/ipc  \
   $(NULL)
 ##-----------------------------------------------------------------------------
 

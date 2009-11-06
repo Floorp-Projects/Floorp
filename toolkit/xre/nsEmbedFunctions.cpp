@@ -91,6 +91,8 @@
 #include "mozilla/dom/ContentProcessParent.h"
 #include "mozilla/dom/ContentProcessChild.h"
 
+#include "mozilla/jsipc/ContextWrapperParent.h"
+
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/Monitor.h"
@@ -110,6 +112,10 @@ using mozilla::plugins::PluginThreadChild;
 using mozilla::dom::ContentProcessThread;
 using mozilla::dom::ContentProcessParent;
 using mozilla::dom::ContentProcessChild;
+
+using mozilla::jsipc::PContextWrapperParent;
+using mozilla::jsipc::ContextWrapperParent;
+
 using mozilla::ipc::TestShellParent;
 using mozilla::ipc::TestShellCommandParent;
 using mozilla::ipc::XPCShellEnvironment;
@@ -514,6 +520,16 @@ XRE_ShutdownChildProcess()
 
 namespace {
 TestShellParent* gTestShellParent = nsnull;
+TestShellParent* GetOrCreateTestShellParent()
+{
+    if (!gTestShellParent) {
+        ContentProcessParent* parent = ContentProcessParent::GetSingleton();
+        NS_ENSURE_TRUE(parent, nsnull);
+        gTestShellParent = parent->CreateTestShell();
+        NS_ENSURE_TRUE(gTestShellParent, nsnull);
+    }
+    return gTestShellParent;
+}
 }
 
 bool
@@ -521,28 +537,30 @@ XRE_SendTestShellCommand(JSContext* aCx,
                          JSString* aCommand,
                          void* aCallback)
 {
-    if (!gTestShellParent) {
-        ContentProcessParent* parent = ContentProcessParent::GetSingleton();
-        NS_ENSURE_TRUE(parent, false);
-
-        gTestShellParent = parent->CreateTestShell();
-        NS_ENSURE_TRUE(gTestShellParent, false);
-    }
+    TestShellParent* tsp = GetOrCreateTestShellParent();
+    NS_ENSURE_TRUE(tsp, false);
 
     nsDependentString command((PRUnichar*)JS_GetStringChars(aCommand),
                               JS_GetStringLength(aCommand));
     if (!aCallback) {
-        return gTestShellParent->SendExecuteCommand(command);
+        return tsp->SendExecuteCommand(command);
     }
 
     TestShellCommandParent* callback = static_cast<TestShellCommandParent*>(
-        gTestShellParent->SendPTestShellCommandConstructor(command));
+        tsp->SendPTestShellCommandConstructor(command));
     NS_ENSURE_TRUE(callback, false);
 
     jsval callbackVal = *reinterpret_cast<jsval*>(aCallback);
     NS_ENSURE_TRUE(callback->SetCallback(aCx, callbackVal), false);
 
     return true;
+}
+
+bool
+XRE_GetChildGlobalObject(JSContext* aCx, JSObject** aGlobalP)
+{
+    TestShellParent* tsp = GetOrCreateTestShellParent();
+    return tsp && tsp->GetGlobalJSObject(aCx, aGlobalP);
 }
 
 bool

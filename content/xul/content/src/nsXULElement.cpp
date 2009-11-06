@@ -2003,6 +2003,12 @@ nsXULElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner)
                                                     otherSlots->mFrameLoader);
 }
 
+NS_IMETHODIMP
+nsXULElement::GetCrossProcessObjectWrapper(nsIVariant** cpow)
+{
+    nsRefPtr<nsFrameLoader> frameLoader(GetFrameLoader());
+    return frameLoader->GetCrossProcessObjectWrapper(cpow);
+}
 
 NS_IMETHODIMP
 nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
