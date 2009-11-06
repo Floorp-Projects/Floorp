@@ -214,6 +214,31 @@ struct ParamTraits<nsTArray<E> >
   }
 };
 
+template<>
+struct ParamTraits<float>
+{
+  typedef float paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    aMsg->WriteBytes(&aParam, sizeof(paramType));
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    const char* outFloat;
+    if (!aMsg->ReadBytes(aIter, &outFloat, sizeof(float)))
+      return false;
+    *aResult = *reinterpret_cast<const float*>(outFloat);
+    return true;
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    aLog->append(StringPrintf(L"%g", aParam));
+  }
+};
+
 } /* namespace IPC */
 
 #endif /* __IPC_GLUE_IPCMESSAGEUTILS_H__ */

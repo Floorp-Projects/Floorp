@@ -19,7 +19,7 @@ public:
     void Main();
 
 protected:    
-    virtual bool RecvPong(const int& one);
+    virtual bool RecvPong(const int& one, const float& zeroPtTwoFive);
     virtual bool RecvUNREACHED();
 };
 
@@ -32,7 +32,7 @@ public:
     virtual ~TestSanityChild();
 
 protected:
-    virtual bool RecvPing(const int& zero);
+    virtual bool RecvPing(const int& zero, const float& zeroPtFive);
     virtual bool RecvUNREACHED();
 };
 
