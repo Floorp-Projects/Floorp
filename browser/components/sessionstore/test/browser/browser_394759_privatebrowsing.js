@@ -42,32 +42,13 @@ function test() {
 
   waitForExplicitFinish();
 
-  // Setup.
-  let pb = Cc["@mozilla.org/privatebrowsing;1"].
-           getService(Ci.nsIPrivateBrowsingService);
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
-
-  // Remove the sessionstore.js file before setting the interval to 0
-  let profilePath = Cc["@mozilla.org/file/directory_service;1"].
-                    getService(Ci.nsIProperties).
-                    get("ProfD", Ci.nsIFile);
-  let sessionStoreJS = profilePath.clone();
-  sessionStoreJS.append("sessionstore.js");
-  if (sessionStoreJS.exists())
-    sessionStoreJS.remove(false);
-  ok(sessionStoreJS.exists() == false, "sessionstore.js was removed");
-  // Make sure that sessionstore.js can be forced to be created by setting
-  // the interval pref to 0
-  gPrefService.setIntPref("browser.sessionstore.interval", 0);
-  // sessionstore.js should be re-created at this point
-  sessionStoreJS = profilePath.clone();
-  sessionStoreJS.append("sessionstore.js");
+  // Set interval to a large time so state won't be written while we setup env.
+  gPrefService.setIntPref("browser.sessionstore.interval", 100000);
 
   // Set up the browser in a blank state. Popup windows in previous tests result
   // in different states on different platforms.
+  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+           getService(Ci.nsISessionStore);
   let blankState = JSON.stringify({
     windows: [{
       tabs: [{ entries: [{ url: "about:blank" }] }],
@@ -77,27 +58,62 @@ function test() {
   });
   ss.setBrowserState(blankState);
 
+  // Wait for the sessionstore.js file to be written before going on.
+  // Note: we don't wait for the complete event, since if asyncCopy fails we
+  // would timeout.
+  let os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
+  os.addObserver({observe: function(aSubject, aTopic, aData) {
+    os.removeObserver(this, aTopic);
+    info("sessionstore.js is being written");
+    executeSoon(continue_test);
+  }}, "sessionstore-state-write", false);
+
+  // Remove the sessionstore.js file before setting the interval to 0
+  let profilePath = Cc["@mozilla.org/file/directory_service;1"].
+                    getService(Ci.nsIProperties).
+                    get("ProfD", Ci.nsIFile);
+  let sessionStoreJS = profilePath.clone();
+  sessionStoreJS.append("sessionstore.js");
+  if (sessionStoreJS.exists())
+    sessionStoreJS.remove(false);
+  info("sessionstore.js was correctly removed: " + (!sessionStoreJS.exists()));
+
+  // Make sure that sessionstore.js can be forced to be created by setting
+  // the interval pref to 0.
+  gPrefService.setIntPref("browser.sessionstore.interval", 0);
+}
+
+function continue_test() {
+  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+           getService(Ci.nsIWindowWatcher);
+  let pb = Cc["@mozilla.org/privatebrowsing;1"].
+           getService(Ci.nsIPrivateBrowsingService);
+  // Ensure Private Browsing mode is disabled.
+  ok(!pb.privateBrowsingEnabled, "Private Browsing is disabled");
+  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+           getService(Ci.nsISessionStore);
+
   let closedWindowCount = ss.getClosedWindowCount();
   is(closedWindowCount, 0, "Correctly set window count");
 
   // Prevent VM timers issues, cache now and increment it manually.
-  const NOW = Date.now();
-
+  let now = Date.now();
   const TESTS = [
     { url: "about:config",
       key: "bug 394759 Non-PB",
-      value: "uniq" + (++NOW) },
+      value: "uniq" + (++now) },
     { url: "about:mozilla",
       key: "bug 394759 PB",
-      value: "uniq" + (++NOW) },
+      value: "uniq" + (++now) },
   ];
 
+  let loadWasCalled = false;
   function openWindowAndTest(aTestIndex, aRunNextTestInPBMode) {
     info("Opening new window");
     let windowObserver = {
       observe: function(aSubject, aTopic, aData) {
         if (aTopic === "domwindowopened") {
-          ww.unregisterNotification(this);
           info("New window has been opened");
           let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
           win.addEventListener("load", function onLoad(event) {
@@ -106,6 +122,7 @@ function test() {
             win.gBrowser.addEventListener("load", function(aEvent) {
               win.gBrowser.removeEventListener("load", arguments.callee, true);
               info("New window browser has been loaded");
+              loadWasCalled = true;
               executeSoon(function() {
                 // Add a tab.
                 win.gBrowser.addTab();
@@ -147,14 +164,14 @@ function test() {
                        "when exiting PB mode");
 
                     let data = JSON.parse(ss.getClosedWindowData())[0];
-                    ok(data.toSource().indexOf(TESTS[aTestIndex].value) > -1,
+                    ok(data.toSource().indexOf(TESTS[aTestIndex - 1].value) > -1,
                        "The data associated with the recently closed window was " +
                        "restored when exiting PB mode");
                   }
 
                   if (aTestIndex == TESTS.length - 1) {
-                    // Cleanup and finish.
-                    gPrefService.clearUserPref("browser.sessionstore.interval");
+                    if (gPrefService.prefHasUserValue("browser.sessionstore.interval"))
+                      gPrefService.clearUserPref("browser.sessionstore.interval");
                     finish();
                   }
                   else {
@@ -165,6 +182,14 @@ function test() {
               });
             }, true);
           }, false);
+        }
+        else if (aTopic === "domwindowclosed") {
+          info("Window closed");
+          ww.unregisterNotification(this);
+          if (!loadWasCalled) {
+            ok(false, "Window was closed before load could fire!");
+            finish();
+          }
         }
       }
     };

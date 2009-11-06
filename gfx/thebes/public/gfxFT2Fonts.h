@@ -36,12 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_GTKDFBFONTS_H
-#define GFX_GTKDFBFONTS_H
+#ifndef GFX_FT2FONTS_H
+#define GFX_FT2FONTS_H
 
 #include "cairo.h"
 #include "gfxTypes.h"
 #include "gfxFont.h"
+#include "gfxFT2FontBase.h"
 #include "gfxContext.h"
 #include "gfxFontUtils.h"
 #include "gfxUserFontSet.h"
@@ -106,21 +107,14 @@ public:
 };
 
 
-
-class gfxFT2Font : public gfxFont {
+class gfxFT2Font : public gfxFT2FontBase {
 public: // new functions
-    gfxFT2Font(FontEntry *aFontEntry,
+    gfxFT2Font(cairo_scaled_font_t *aCairoFont,
+               FontEntry *aFontEntry,
                const gfxFontStyle *aFontStyle);
     virtual ~gfxFT2Font ();
 
-    virtual const gfxFont::Metrics& GetMetrics();
-
     cairo_font_face_t *CairoFontFace();
-    cairo_scaled_font_t *CairoScaledFont();
-
-    virtual PRBool SetupCairoFont(gfxContext *aContext);
-    virtual nsString GetUniqueName();
-    virtual PRUint32 GetSpaceGlyph();
 
     FontEntry *GetFontEntry();
 
@@ -156,27 +150,7 @@ public: // new functions
         return &entry->mData;
     }
 
-    class FaceLock {
-    public:
-        FaceLock(gfxFT2Font *font);
-        ~FaceLock();
-
-        FT_Face Face() { return mFace; }
-
-    protected:
-        cairo_scaled_font_t *mScaledFont;
-        FT_Face mFace;
-    };
-
 protected:
-    cairo_scaled_font_t *mScaledFont;
-
-    PRBool mHasSpaceGlyph;
-    PRUint32 mSpaceGlyph;
-    PRBool mHasMetrics;
-    Metrics mMetrics;
-    gfxFloat mAdjustedSize;
-
     void FillGlyphDataForChar(PRUint32 ch, CachedGlyphData *gd);
 
     typedef nsBaseHashtableET<nsUint32HashKey, CachedGlyphData> CharGlyphMapEntryType;
@@ -244,5 +218,5 @@ protected: // new functions
     nsString mString;
 };
 
-#endif /* GFX_GTKDFBFONTS_H */
+#endif /* GFX_FT2FONTS_H */
 

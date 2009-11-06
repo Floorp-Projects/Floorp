@@ -81,10 +81,13 @@ var LightweightThemeManager = {
         var data = this.usedThemes[0];
     } catch (e) {}
 
-    if (!data)
-      return null;
+    return data || null;
+  },
 
-    if (PERSIST_ENABLED) {
+  get currentThemeForDisplay () {
+    var data = this.currentTheme;
+
+    if (data && PERSIST_ENABLED) {
       for (let key in PERSIST_FILES) {
         try {
           if (data[key] && _prefs.getBoolPref("persisted." + key))
@@ -171,7 +174,7 @@ var LightweightThemeManager = {
     if (_previewTimer) {
       _previewTimer.cancel();
       _previewTimer = null;
-      _notifyWindows(this.currentTheme);
+      _notifyWindows(this.currentThemeForDisplay);
     }
   }
 };

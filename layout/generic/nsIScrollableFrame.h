@@ -119,6 +119,13 @@ public:
    * restored after reflows are done...
    */
   virtual void ScrollToRestoredPosition() = 0;
+
+  /**
+   * Allows the docshell to request that the scroll frame post an event
+   * after being restored from history.
+   */
+  NS_IMETHOD PostScrolledAreaEventForCurrentArea() = 0;
+
 };
 
 #endif

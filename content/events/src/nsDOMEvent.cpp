@@ -60,7 +60,7 @@ static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
   "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "beforeunload", "unload", "hashchange", "abort", "error",
-  "submit", "reset", "change", "select", "input", "paint" ,"text",
+  "submit", "reset", "change", "select", "input" ,"text",
   "compositionstart", "compositionend", "popupshowing", "popupshown",
   "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture",
@@ -146,6 +146,8 @@ nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent)
       mExplicitOriginalTarget = nsnull;
     }
   }
+
+  NS_ASSERTION(mEvent->message != NS_PAINT, "Trying to create a DOM paint event!");
 }
 
 nsDOMEvent::~nsDOMEvent() 
@@ -459,7 +461,23 @@ nsDOMEvent::PreventDefault()
 {
   if (!(mEvent->flags & NS_EVENT_FLAG_CANT_CANCEL)) {
     mEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
+
+    // Need to set an extra flag for drag events.
+    if (mEvent->eventStructType == NS_DRAG_EVENT &&
+        NS_IS_TRUSTED_EVENT(mEvent)) {
+      nsCOMPtr<nsINode> node = do_QueryInterface(mEvent->currentTarget);
+      if (!node) {
+        nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mEvent->currentTarget);
+        if (win) {
+          node = do_QueryInterface(win->GetExtantDocument());
+        }
+      }
+      if (node && !nsContentUtils::IsChromeDoc(node->GetOwnerDoc())) {
+        mEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT_CALLED_IN_CONTENT;
+      }
+    }
   }
+
   return NS_OK;
 }
 
@@ -786,11 +804,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       zLevelEvent->mImmediate = oldZLevelEvent->mImmediate;
       zLevelEvent->mAdjusted = oldZLevelEvent->mAdjusted;
       newEvent = zLevelEvent;
-      break;
-    }
-    case NS_PAINT_EVENT:
-    {
-      newEvent = new nsPaintEvent(PR_FALSE, msg, nsnull);
       break;
     }
     case NS_SCROLLBAR_EVENT:
@@ -1316,8 +1329,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_select];
   case NS_FORM_INPUT:
     return sEventNames[eDOMEvents_input];
-  case NS_PAINT:
-    return sEventNames[eDOMEvents_paint];
   case NS_RESIZE_EVENT:
     return sEventNames[eDOMEvents_resize];
   case NS_SCROLL_EVENT:

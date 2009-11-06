@@ -101,6 +101,11 @@ _TEST_FILES	= \
 		test_bug495219.html \
 		test_bug504862.html \
 		file_bug504862.html \
+		test_bug260264.html \
+		test_bug260264_nested.html \
+		child_bug260264.html \
+		grandchild_bug260264.html \
+		utils_bug260264.js \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)

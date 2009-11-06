@@ -41,23 +41,16 @@
 
 #include "nsISupports.idl"
 
-%{C++
-#include "nsTArray.h"
-#include "prtypes.h"
-%}
-
 interface nsIFile;
 interface nsIURI;
 interface nsITransaction;
 interface nsINavHistoryBatchCallback;
 
-[ptr] native PRInt64Array(nsTArray<PRInt64>);
-
 /**
  * Observer for bookmark changes.
  */
 
-[scriptable, uuid(1f7e9032-b2c0-4561-b35b-94ba3f8344e2)]
+[scriptable, uuid(4270ae71-d92c-4a6f-81c7-0d7f76f01c06)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -524,16 +517,8 @@ interface nsINavBookmarksService : nsISupports
   /**
    * Returns the list of bookmark ids that contain the given URI.
    */
-  void getBookmarkIdsForURI(in nsIURI aURI, out unsigned long count,
+  void getBookmarkIdsForURI(in nsIURI aURI, [optional] out unsigned long count,
                             [array, retval, size_is(count)] out long long bookmarks);
-
-  /**
-   * TArray version of getBookmarksIdForURI for ease of use in C++ code.
-   * Pass in a reference to a TArray; it will get cleared and filled with
-   * the resulting list of folder IDs.
-   */
-  [noscript] void getBookmarkIdsForURITArray(in nsIURI aURI,
-                                           in PRInt64Array aResult);
 
   /**
    * Associates the given keyword with the given bookmark.

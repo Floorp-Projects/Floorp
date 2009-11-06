@@ -14,6 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479143
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 
+<pre id="test">
 <script class="testbody" type="text/javascript">
 
   SimpleTest.waitForExplicitFinish();
@@ -31,6 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479143
 
     clearInterval(interval);
 
+    ok(true, "did not crash");
     SimpleTest.finish();
   }, 0);
 

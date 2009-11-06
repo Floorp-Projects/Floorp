@@ -23,7 +23,8 @@ function test() {
       tab2Zoom = ZoomManager.getZoomForBrowser(tab2.linkedBrowser);
       isnot(tab1Zoom, tab2Zoom, "Zoom should not affect background tabs");
 
-      gPrefService.clearUserPref("browser.zoom.updateBackgroundTabs");
+      if (gPrefService.prefHasUserValue("browser.zoom.updateBackgroundTabs"))
+        gPrefService.clearUserPref("browser.zoom.updateBackgroundTabs");
       gBrowser.removeTab(tab1);
       gBrowser.removeTab(tab2);
       finish();

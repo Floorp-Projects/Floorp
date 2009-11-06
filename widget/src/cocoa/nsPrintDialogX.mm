@@ -43,6 +43,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsIStringBundle.h"
+#include "nsIWebBrowserPrint.h"
+#include "nsCRT.h"
 
 #import <Cocoa/Cocoa.h>
 #include "nsObjCExceptions.h"
@@ -64,7 +66,8 @@ nsPrintDialogServiceX::Init()
 }
 
 NS_IMETHODIMP
-nsPrintDialogServiceX::Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings)
+nsPrintDialogServiceX::Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings,
+                            nsIWebBrowserPrint *aWebBrowserPrint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -73,6 +76,24 @@ nsPrintDialogServiceX::Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings)
   nsCOMPtr<nsPrintSettingsX> settingsX(do_QueryInterface(aSettings));
   if (!settingsX)
     return NS_ERROR_FAILURE;
+
+  // Set the print job title
+  PRUnichar** docTitles;
+  PRUint32 titleCount;
+  nsresult rv = aWebBrowserPrint->EnumerateDocumentNames(&titleCount, &docTitles);
+  if (NS_SUCCEEDED(rv) && titleCount > 0) {
+    CFStringRef cfTitleString = CFStringCreateWithCharacters(NULL, docTitles[0], nsCRT::strlen(docTitles[0]));
+    if (cfTitleString) {
+      ::PMPrintSettingsSetJobName(settingsX->GetPMPrintSettings(), cfTitleString);
+      CFRelease(cfTitleString);
+    }
+    for (PRInt32 i = titleCount - 1; i >= 0; i--) {
+      NS_Free(docTitles[i]);
+    }
+    NS_Free(docTitles);
+    docTitles = NULL;
+    titleCount = 0;
+  }
 
   NSPrintInfo* printInfo = settingsX->GetCocoaPrintInfo();
 

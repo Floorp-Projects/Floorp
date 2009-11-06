@@ -738,3 +738,13 @@ nsTSubstring_CharT::StripChar( char_type aChar, PRInt32 aOffset )
     *to = char_type(0); // add the null
     mLength = to - mData;
   }
+
+void nsTSubstring_CharT::AppendPrintf( const char* format, ...)
+  {
+    char buf[32];
+    va_list ap;
+    va_start(ap, format);
+    PRUint32 len = PR_vsnprintf(buf, sizeof(buf), format, ap);
+    AppendASCII(buf, len);
+    va_end(ap);
+  }

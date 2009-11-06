@@ -56,7 +56,9 @@
 #endif
 #include "nsBindingManager.h"
 #include "nsGenericHTMLElement.h"
+#ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
+#endif // MOZ_MEDIA
 
 // This macro expects the ownerDocument of content_ to be in scope as
 // |nsIDocument* doc|

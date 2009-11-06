@@ -1335,6 +1335,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLRenderbuffer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CanvasArrayBuffer, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CanvasFloatArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CanvasByteArray, nsDOMGenericSH,
@@ -1396,6 +1398,7 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Worker, nsDOMWorker::NewWorker)
 
   // WebGL Array Types
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasArrayBuffer, NS_NewCanvasArrayBuffer)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasFloatArray, NS_NewCanvasFloatArray)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasByteArray, NS_NewCanvasByteArray)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(CanvasUnsignedByteArray, NS_NewCanvasUnsignedByteArray)
@@ -3720,6 +3723,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLRenderbuffer, nsIWebGLRenderbuffer)
     DOM_CLASSINFO_MAP_ENTRY(nsIWebGLRenderbuffer)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CanvasArrayBuffer, nsICanvasArrayBuffer)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasArrayBuffer)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CanvasFloatArray, nsICanvasFloatArray)
@@ -9207,8 +9214,7 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     PRInt32 n = GetArrayIndexFromId(cx, id);
 
     if (n >= 0) {
-      nsCOMPtr<nsIFormControl> control;
-      form->GetElementAt(n, getter_AddRefs(control));
+      nsIFormControl* control = form->GetElementAt(n);
 
       if (control) {
         nsresult rv = WrapNative(cx, obj, control, PR_TRUE, vp);
@@ -9256,8 +9262,7 @@ nsHTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
       PRUint32 count = form->GetElementCount();
 
       if ((PRUint32)index < count) {
-        nsCOMPtr<nsIFormControl> controlNode;
-        form->GetElementAt(index, getter_AddRefs(controlNode));
+        nsIFormControl* controlNode = form->GetElementAt(index);
         NS_ENSURE_TRUE(controlNode, NS_ERROR_FAILURE);
 
         nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(controlNode);

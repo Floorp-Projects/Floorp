@@ -77,8 +77,8 @@
     </preferences>
     
     <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
-    <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
-    <script type="application/x-javascript" src="chrome://browser/content/preferences/fonts.js"/>
+    <script type="application/javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
+    <script type="application/javascript" src="chrome://browser/content/preferences/fonts.js"/>
 
     <!-- Fonts for: [ Language ] -->
     <groupbox>

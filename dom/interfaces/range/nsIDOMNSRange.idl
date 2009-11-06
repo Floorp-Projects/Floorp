@@ -39,7 +39,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(59188642-23b4-41d6-bde1-302c3906d1f0)]
+[scriptable, uuid(fed93d11-f24d-41d8-ae55-4197927999bb)]
 interface nsIDOMNSRange : nsISupports
 {
   nsIDOMDocumentFragment    createContextualFragment(in DOMString fragment);
@@ -55,4 +55,7 @@ interface nsIDOMNSRange : nsISupports
   //    1 if point is after the end boundary point.
   // Sort of a strcmp for ranges.
   short                     comparePoint(in nsIDOMNode parent, in long offset);
+
+  nsIDOMClientRectList getClientRects();
+  nsIDOMClientRect getBoundingClientRect();
 };

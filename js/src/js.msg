@@ -240,7 +240,7 @@ MSG_DEF(JSMSG_ANON_NO_RETURN_VALUE,   157, 0, JSEXN_TYPEERR, "anonymous function
 MSG_DEF(JSMSG_DEPRECATED_USAGE,       158, 1, JSEXN_REFERENCEERR, "deprecated {0} usage")
 MSG_DEF(JSMSG_BAD_URI,                159, 0, JSEXN_URIERR, "malformed URI sequence")
 MSG_DEF(JSMSG_GETTER_ONLY,            160, 0, JSEXN_TYPEERR, "setting a property that has only a getter")
-MSG_DEF(JSMSG_UNUSED161,              161, 0, JSEXN_NONE, "unused161")
+MSG_DEF(JSMSG_IDSTART_AFTER_NUMBER,   161, 0, JSEXN_SYNTAXERR, "identifier starts immediately after numeric literal")
 MSG_DEF(JSMSG_UNDEFINED_PROP,         162, 1, JSEXN_REFERENCEERR, "reference to undefined property {0}")
 MSG_DEF(JSMSG_USELESS_EXPR,           163, 0, JSEXN_TYPEERR, "useless expression")
 MSG_DEF(JSMSG_REDECLARED_PARAM,       164, 1, JSEXN_TYPEERR, "redeclaration of formal parameter {0}")

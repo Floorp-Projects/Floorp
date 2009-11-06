@@ -42,6 +42,7 @@
 #define jsscriptinlines_h___
 
 #include "jsfun.h"
+#include "jsopcode.h"
 #include "jsregexp.h"
 #include "jsscript.h"
 
@@ -64,6 +65,25 @@ JSScript::getRegExp(size_t index)
     JSObject *obj = arr->vector[index];
     JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_RegExpClass);
     return obj;
+}
+
+inline bool
+JSScript::isEmpty() const
+{
+    if (this == emptyScript())
+        return true;
+
+    if (length <= 3) {
+        jsbytecode *pc = code;
+
+        if (JSOp(*pc) == JSOP_TRACE)
+            ++pc;
+        if (noScriptRval && JSOp(*pc) == JSOP_FALSE)
+            ++pc;
+        if (JSOp(*pc) == JSOP_STOP)
+            return true;
+    }
+    return false;
 }
 
 #endif /* jsscriptinlines_h___ */

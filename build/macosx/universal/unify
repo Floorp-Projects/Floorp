@@ -53,6 +53,7 @@ I<universal-path>
 [B<--dry-run>]
 [B<--only-one> I<action>]
 [B<--verbosity> I<level>]
+[B<--unify-with-sort> I<regex>]
 
 =head1 DESCRIPTION
 
@@ -134,6 +135,13 @@ I<level> are:
 
 The default I<level> is 2.
 
+=item B<--unify-with-sort> I<regex>
+
+Allows merging files matching I<regex> that differ only by the ordering
+of the lines contained within them. The unified file will have its contents
+sorted. This option may be given multiple times to specify multiple
+regexes for matching files.
+
 =back
 
 =head1 EXAMPLES
@@ -183,13 +191,17 @@ use File::Compare;
 use File::Copy;
 use Getopt::Long;
 
-my (%gConfig, $gDryRun, $gOnlyOne, $gVerbosity);
+my (%gConfig, $gDryRun, $gOnlyOne, $gVerbosity, @gSortMatches);
 
 sub argumentEscape(@);
 sub command(@);
 sub compareZipArchives($$);
 sub complain($$@);
 sub copyIfIdentical($$$);
+sub slurp($);
+sub compare_sorted($$);
+sub copy_sorted($$);
+sub copyIfIdenticalWhenSorted($$$);
 sub createUniqueFile($$);
 sub makeUniversal($$$);
 sub makeUniversalDirectory($$$);
@@ -228,12 +240,14 @@ sub readZipCRCs($);
 $gDryRun = 0;
 $gOnlyOne = 'copy';
 $gVerbosity = 2;
+@gSortMatches = ();
 
 Getopt::Long::Configure('pass_through');
-GetOptions('dry-run'     => \$gDryRun,
-           'only-one=s'  => \$gOnlyOne,
-           'verbosity=i' => \$gVerbosity,
-           'config=s'    => \%gConfig); # "hidden" option not in usage()
+GetOptions('dry-run'           => \$gDryRun,
+           'only-one=s'        => \$gOnlyOne,
+           'verbosity=i'       => \$gVerbosity,
+           'unify-with-sort=s' => \@gSortMatches,
+           'config=s'          => \%gConfig); # "hidden" option not in usage()
 
 if (scalar(@ARGV) != 3 || $gVerbosity < 0 || $gVerbosity > 3 ||
     ($gOnlyOne ne 'skip' && $gOnlyOne ne 'copy' && $gOnlyOne ne 'fail')) {
@@ -471,6 +485,116 @@ sub copyIfIdentical($$$) {
 
     if (!copy($source1->path(), $target)) {
       complain(1, 'copyIfIdentical: copy: '.$!.' while copying',
+               $source1->path(),
+               $target);
+      unlink($target);
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
+# slurp($file)
+#
+# Read the contents of $file into an array and return it.
+# Returns undef on error.
+sub slurp($) {
+  my $file = $_[0];
+  open FILE, $file or return undef;
+  my @lines = <FILE>;
+  close FILE;
+  return @lines;
+}
+
+# compare_sorted($file1, $file2)
+#
+# Read the contents of both files into arrays, sort the arrays,
+# and then compare the two arrays for equality.
+#
+# Returns 0 if the sorted array contents are equal, or 1 if not.
+# Returns undef on error.
+sub compare_sorted($$) {
+  my ($file1, $file2) = @_;
+  my @lines1 = sort(slurp($file1));
+  my @lines2 = sort(slurp($file2));
+
+  return undef if !@lines1 || !@lines2;
+  return 1 unless scalar @lines1 == scalar @lines2;
+
+  for (my $i = 0; $i < scalar @lines1; $i++) {
+    return 1 if $lines1[$i] ne $lines2[$i];
+  }
+  return 0;
+}
+
+# copy_sorted($source, $destination)
+#
+# $source and $destination are filenames. Read the contents of $source
+# into an array, sort it, and then write the sorted contents to $destination.
+# Returns 1 on success, and undef on failure.
+sub copy_sorted($$) {
+  my ($src, $dest) = @_;
+  my @lines = sort(slurp($src));
+  return undef unless @lines;
+  open FILE, "> $dest" or return undef;
+  print FILE @lines;
+  close FILE;
+  return 1;
+}
+
+# copyIfIdenticalWhenSorted($source1, $source2, $target)
+#
+# $source1 and $source2 are FileAttrCache objects that are compared, and if
+# identical, copied to path string $target.  The comparison is done by
+# sorting the individual lines within the two files and comparing the results.
+#
+# Returns true on success, false for files that are not equivalent,
+# and undef if an error occurs.
+sub copyIfIdenticalWhenSorted($$$) {
+  my ($source1, $source2, $target);
+  ($source1, $source2, $target) = @_;
+
+  if ($gVerbosity >= 3 || $gDryRun) {
+    print('cmp -s '.
+          join(' ',argumentEscape($source1->path(), $source2->path()))."\n");
+  }
+  my ($comparison);
+  if (!defined($comparison = compare_sorted($source1->path(),
+                                            $source2->path())) ||
+      $comparison == -1) {
+    return complain(1, 'copyIfIdenticalWhenSorted: compare: '.$!
+                    .' while comparing:',
+                      $source1->path(),
+                      $source2->path());
+  }
+  if ($comparison != 0) {
+    return complain(1, 'copyIfIdenticalWhenSorted: files differ:',
+                    $source1->path(),
+                    $source2->path());
+  }
+
+  if ($gVerbosity >= 3 || $gDryRun) {
+    print('cp '.
+          join(' ',argumentEscape($source1->path(), $target))."\n");
+  }
+
+  if (!$gDryRun) {
+    my ($isExecutable);
+
+    # Set the execute bits (as allowed by the umask) on the new file if any
+    # execute bit is set on either old file.
+    $isExecutable = $source1->lIsExecutable() ||
+                    (defined($source2) && $source2->lIsExecutable());
+
+    if (!createUniqueFile($target, $isExecutable ? 0777 : 0666)) {
+      # createUniqueFile printed an error.
+      return 0;
+    }
+
+    if (!copy_sorted($source1->path(), $target)) {
+      complain(1, 'copyIfIdenticalWhenSorted: copy_sorted: '.$!
+               .' while copying',
                $source1->path(),
                $target);
       unlink($target);
@@ -966,6 +1090,12 @@ sub makeUniversalInternal($$$$) {
     if ($machPPC) {
       # makeUniversalFile will print an error if it fails.
       return makeUniversalFile($filePPC, $fileX86, $fileTargetPath);
+    }
+
+    if (grep { $filePPC->path() =~ m/$_/; } @gSortMatches) {
+      # Regular files, but should be compared with sorting first.
+      # copyIfIdenticalWhenSorted will print an error if it fails.
+      return copyIfIdenticalWhenSorted($filePPC, $fileX86, $fileTargetPath);
     }
 
     # Regular file.  copyIfIdentical will print an error if it fails.

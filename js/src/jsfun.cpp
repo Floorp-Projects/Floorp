@@ -301,6 +301,7 @@ js_PutArguments(JSContext *cx, JSObject *argsobj, jsval *args)
 {
     JS_ASSERT(js_GetArgsPrivateNative(argsobj));
     PutArguments(cx, argsobj, args);
+    argsobj->setPrivate(NULL);
     return true;
 }
 
@@ -509,7 +510,7 @@ ArgGetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 #ifdef JS_TRACER
             js_ArgsPrivateNative *argp = js_GetArgsPrivateNative(obj);
             if (argp) {
-                if (js_NativeToValue(cx, *vp, (JSTraceType) 1, &argp->argv[arg]))
+                if (js_NativeToValue(cx, *vp, argp->typemap()[arg], &argp->argv[arg]))
                     return true;
                 js_LeaveTrace(cx);
                 return false;
@@ -807,7 +808,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         fp->scopeChain = env;
         JS_ASSERT(fp->argv);
         if (!js_DefineNativeProperty(cx, fp->scopeChain, ATOM_TO_JSID(lambdaName),
-                                     fp->argv[-2],
+                                     fp->calleeValue(),
                                      CalleeGetter, NULL,
                                      JSPROP_PERMANENT | JSPROP_READONLY,
                                      0, 0, NULL)) {
@@ -823,8 +824,8 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
 
     callobj->setPrivate(fp);
     JS_ASSERT(fp->argv);
-    JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fp->argv[-2])));
-    STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, fp->argv[-2]);
+    JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, fp->calleeObject()));
+    STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, fp->calleeValue());
     fp->callobj = callobj;
 
     /*
@@ -1190,7 +1191,7 @@ call_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         if (fp) {
             JS_ASSERT(fp->fun);
             JS_ASSERT(fp->argv);
-            *vp = fp->argv[-2];
+            *vp = fp->calleeValue();
         }
     }
     return JS_TRUE;
@@ -1324,7 +1325,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             }
 
             JS_ASSERT(fp->down->argv);
-            *vp = fp->down->argv[-2];
+            *vp = fp->down->calleeValue();
         } else {
             *vp = JSVAL_NULL;
         }
@@ -1382,21 +1383,6 @@ static LazyFunctionProp lazy_function_props[] = {
     {ATOM_OFFSET(caller),    FUN_CALLER,     JSPROP_PERMANENT},
     {ATOM_OFFSET(name),      FUN_NAME,       JSPROP_PERMANENT},
 };
-
-static JSBool
-fun_enumerate(JSContext *cx, JSObject *obj)
-{
-    jsid prototypeId;
-    JSObject *pobj;
-    JSProperty *prop;
-
-    prototypeId = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
-    if (!obj->lookupProperty(cx, prototypeId, &pobj, &prop))
-        return JS_FALSE;
-    if (prop)
-        pobj->dropProperty(cx, prop);
-    return JS_TRUE;
-}
 
 static JSBool
 fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
@@ -1668,15 +1654,17 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
             js_FreezeLocalNames(cx, fun);
     }
 
-    if (!js_XDRScript(xdr, &fun->u.i.script, NULL))
+    if (!js_XDRScript(xdr, &fun->u.i.script, false, NULL))
         goto bad;
 
     if (xdr->mode == JSXDR_DECODE) {
         *objp = FUN_OBJECT(fun);
+        if (fun->u.i.script != JSScript::emptyScript()) {
 #ifdef CHECK_SCRIPT_OWNER
-        fun->u.i.script->owner = NULL;
+            fun->u.i.script->owner = NULL;
 #endif
-        js_CallNewScriptHook(cx, fun->u.i.script, fun);
+            js_CallNewScriptHook(cx, fun->u.i.script, fun);
+        }
     }
 
 out:
@@ -1823,7 +1811,7 @@ JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
-    fun_enumerate,    (JSResolveOp)fun_resolve,
+    JS_EnumerateStub, (JSResolveOp)fun_resolve,
     fun_convert,      fun_finalize,
     NULL,             NULL,
     NULL,             NULL,
@@ -2352,14 +2340,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
     if (!fun)
         return NULL;
-    fun->u.i.script = js_NewScript(cx, 1, 1, 0, 0, 0, 0, 0);
-    if (!fun->u.i.script)
-        return NULL;
-    fun->u.i.script->code[0] = JSOP_STOP;
-    *fun->u.i.script->notes() = SRC_NULL;
-#ifdef CHECK_SCRIPT_OWNER
-    fun->u.i.script->owner = NULL;
-#endif
+    fun->u.i.script = JSScript::emptyScript();
     return proto;
 }
 

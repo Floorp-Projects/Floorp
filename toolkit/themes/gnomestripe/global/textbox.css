@@ -106,11 +106,7 @@ textbox.plain {
 /* ::::: search textbox ::::: */
 
 .textbox-search-icon {
-  list-style-image: url(chrome://global/skin/icons/Search-glass.png);
-}
-
-.textbox-search-icon:-moz-locale-dir(rtl) {
-  -moz-transform: scaleX(-1);
+  list-style-image: url(moz-icon://stock/gtk-find?size=menu);
 }
 
 .textbox-search-clear {

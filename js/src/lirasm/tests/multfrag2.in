@@ -1,6 +1,6 @@
 .begin sinpibytwo
-pi = quad 3.14
-half = quad 0.5
+pi = float 3.14
+half = float 0.5
 halfpi = fmul pi half
 res = fcall sin cdecl halfpi
 fret res
@@ -8,7 +8,7 @@ fret res
 
 .begin main
 aa = fcall sinpibytwo fastcall
-bb = quad 5.53
+bb = float 5.53
 res = fadd aa bb
 fret res
 .end

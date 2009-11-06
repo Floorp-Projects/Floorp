@@ -243,7 +243,6 @@ namespace nanojit
 
     static const RegisterMask GpRegs = 0xffffffff;
     static const RegisterMask FpRegs = 0xffffffff00000000LL;
-    static const bool CalleeRegsNeedExplicitSaving = true;
     // R31 is a saved reg too, but we use it as our Frame ptr FP
 #ifdef NANOJIT_64BIT
     // R13 reserved for thread-specific storage on ppc64-darwin
@@ -297,6 +296,9 @@ namespace nanojit
     const int LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
 
     typedef uint32_t NIns;
+
+    // Bytes of icache to flush after Assembler::patch
+    const size_t LARGEST_BRANCH_PATCH = 4 * sizeof(NIns);
 
     inline Register nextreg(Register r) {
         return Register(r+1);

@@ -69,8 +69,6 @@ typedef struct {
 	size_t	large_max;	/* Max sub-chunksize allocation size. */
 	size_t	chunksize;	/* Size of each virtual memory mapping. */
 	size_t	dirty_max;	/* Max dirty pages per arena. */
-	size_t	reserve_min;	/* reserve_low callback threshold. */
-	size_t	reserve_max;	/* Maximum reserve size before unmapping. */
 
 	/*
 	 * Current memory usage statistics.
@@ -79,7 +77,6 @@ typedef struct {
 	size_t	committed;	/* Bytes committed (readable/writable). */
 	size_t	allocated;	/* Bytes allocted (in use by application). */
 	size_t	dirty;		/* Bytes dirty (committed unused pages). */
-	size_t	reserve_cur;	/* Current memory reserve. */
 } jemalloc_stats_t;
 
 #ifndef MOZ_MEMORY_DARWIN
@@ -94,125 +91,6 @@ int	posix_memalign(void **memptr, size_t alignment, size_t size);
 void	*memalign(size_t alignment, size_t size);
 size_t	malloc_usable_size(const void *ptr);
 void	jemalloc_stats(jemalloc_stats_t *stats);
-
-/* The x*() functions never return NULL. */
-void	*xmalloc(size_t size);
-void	*xcalloc(size_t num, size_t size);
-void	*xrealloc(void *ptr, size_t size);
-void	*xmemalign(size_t alignment, size_t size);
-
-/*
- * The allocator maintains a memory reserve that is used to satisfy allocation
- * requests when no additional memory can be acquired from the operating
- * system.  Under normal operating conditions, the reserve size is at least
- * reserve_min bytes.  If the reserve is depleted or insufficient to satisfy an
- * allocation request, then condition notifications are sent to one or more of
- * the registered callback functions:
- *
- *   RESERVE_CND_LOW: The reserve had to be used to satisfy an allocation
- *                    request, which dropped the reserve size below the
- *                    minimum.  The callee should try to free memory in order
- *                    to restore the reserve.
- *
- *   RESERVE_CND_CRIT: The reserve was not large enough to satisfy a pending
- *                     allocation request.  Some callee must free adequate
- *                     memory in order to prevent application failure (unless
- *                     the condition spontaneously desists due to concurrent
- *                     deallocation).
- *
- *   RESERVE_CND_FAIL: An allocation request could not be satisfied, despite all
- *                     attempts.  The allocator is about to terminate the
- *                     application.
- *
- * The order in which the callback functions are called is only loosely
- * specified: in the absence of interposing callback
- * registrations/unregistrations, enabled callbacks will be called in an
- * arbitrary round-robin order.
- *
- * Condition notifications are sent to callbacks only while conditions exist.
- * For example, just before the allocator sends a RESERVE_CND_LOW condition
- * notification to a callback, the reserve is in fact depleted.  However, due
- * to allocator concurrency, the reserve may have been restored by the time the
- * callback function executes.  Furthermore, if the reserve is restored at some
- * point during the delivery of condition notifications to callbacks, no
- * further deliveries will occur, since the condition no longer exists.
- *
- * Callback functions can freely call back into the allocator (i.e. the
- * allocator releases all internal resources before calling each callback
- * function), though allocation is discouraged, since recursive callbacks are
- * likely to result, which places extra burden on the application to avoid
- * deadlock.
- *
- * Callback functions must be thread-safe, since it is possible that multiple
- * threads will call into the same callback function concurrently.
- */
-
-/* Memory reserve condition types. */
-typedef enum {
-	RESERVE_CND_LOW,
-	RESERVE_CND_CRIT,
-	RESERVE_CND_FAIL
-} reserve_cnd_t;
-
-/*
- * Reserve condition notification callback function type definition.
- *
- * Inputs:
- *   ctx: Opaque application data, as passed to reserve_cb_register().
- *   cnd: Condition type being delivered.
- *   size: Allocation request size for the allocation that caused the condition.
- */
-typedef void reserve_cb_t(void *ctx, reserve_cnd_t cnd, size_t size);
-
-/*
- * Register a callback function.
- *
- * Inputs:
- *   cb: Callback function pointer.
- *   ctx: Opaque application data, passed to cb().
- *
- * Output:
- *   ret: If true, failure due to OOM; success otherwise.
- */
-jemalloc_bool	reserve_cb_register(reserve_cb_t *cb, void *ctx);
-
-/*
- * Unregister a callback function.
- *
- * Inputs:
- *   cb: Callback function pointer.
- *   ctx: Opaque application data, same as that passed to reserve_cb_register().
- *
- * Output:
- *   ret: False upon success, true if the {cb,ctx} registration could not be
- *        found.
- */
-jemalloc_bool	reserve_cb_unregister(reserve_cb_t *cb, void *ctx);
-
-/*
- * Get the current reserve size.
- *
- * ret: Current reserve size.
- */
-size_t	reserve_cur_get(void);
-
-/*
- * Get the minimum acceptable reserve size.  If the reserve drops below this
- * value, the RESERVE_CND_LOW condition notification is sent to the callbacks.
- *
- * ret: Minimum acceptable reserve size.
- */
-size_t	reserve_min_get(void);
-
-/*
- * Set the minimum acceptable reserve size.
- *
- * min: Reserve threshold.  This value may be internally rounded up.
- * ret: False if the reserve was successfully resized; true otherwise.  Note
- *      that failure to resize the reserve also results in a RESERVE_CND_LOW
- *      condition.
- */
-jemalloc_bool	reserve_min_set(size_t min);
 
 #ifdef __cplusplus
 } /* extern "C" */

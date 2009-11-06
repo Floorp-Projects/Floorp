@@ -98,6 +98,26 @@ var progressListener = {
         var percentPrint = getString( "progressText" );
         percentPrint = replaceInsert( percentPrint, 1, 100 );
         dialog.progressText.setAttribute("value", percentPrint);
+
+        var fm = Components.classes["@mozilla.org/focus-manager;1"]
+                     .getService(Components.interfaces.nsIFocusManager);
+        if (fm && fm.activeWindow == window) {
+          // This progress dialog is the currently active window. In
+          // this case we need to make sure that some other window
+          // gets focus before we close this dialog to work around the
+          // buggy Windows XP Fax dialog, which ends up parenting
+          // itself to the currently focused window and is unable to
+          // survive that window going away. What happens without this
+          // opener.focus() call on Windows XP is that the fax dialog
+          // is opened only to go away when this dialog actually
+          // closes (which can happen asynchronously, so the fax
+          // dialog just flashes once and then goes away), so w/o this
+          // fix, it's impossible to fax on Windows XP w/o manually
+          // switching focus to another window (or holding on to the
+          // progress dialog with the mouse long enough).
+          opener.focus();
+        }
+
         window.close();
       }
     },

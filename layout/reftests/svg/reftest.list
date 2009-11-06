@@ -18,6 +18,7 @@ include moz-only/reftest.list
 == clip-02b.svg clip-02-ref.svg
 == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg
 == clipPath-basic-01.svg pass.svg
+== clipPath-winding-01.svg pass.svg
 == clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
 == conditions-01.svg pass.svg
 == currentColor-01.svg pass.svg

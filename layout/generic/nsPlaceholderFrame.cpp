@@ -241,6 +241,9 @@ nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
   if (nsnull != nextInFlow) {
     fprintf(out, " next-in-flow=%p", static_cast<void*>(nextInFlow));
   }
+  if (nsnull != mContent) {
+    fprintf(out, " [content=%p]", static_cast<void*>(mContent));
+  }
   if (mOutOfFlowFrame) {
     fprintf(out, " outOfFlowFrame=");
     nsFrame::ListTag(out, mOutOfFlowFrame);

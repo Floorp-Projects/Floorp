@@ -58,6 +58,7 @@
 #include "jsutil.h"
 #include "jsarray.h"
 #include "jstask.h"
+#include "jsvector.h"
 
 /*
  * js_GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
@@ -88,11 +89,9 @@ js_PurgeGSNCache(JSGSNCache *cache);
 #define JS_PURGE_GSN_CACHE(cx)      js_PurgeGSNCache(&JS_GSN_CACHE(cx))
 #define JS_METER_GSN_CACHE(cx,cnt)  GSN_CACHE_METER(&JS_GSN_CACHE(cx), cnt)
 
-typedef struct InterpState InterpState;
-typedef struct VMSideExit VMSideExit;
-
-#ifdef __cplusplus
-namespace nanojit {
+/* Forward declarations of nanojit types. */
+namespace nanojit
+{
     class Assembler;
     class CodeAlloc;
     class Fragment;
@@ -100,41 +99,97 @@ namespace nanojit {
 #ifdef DEBUG
     class LabelMap;
 #endif
-    extern "C++" {
-        template<typename K> struct DefaultHash;
-        template<typename K, typename V, typename H> class HashMap;
-        template<typename T> class Seq;
-    }
+    template<typename K> struct DefaultHash;
+    template<typename K, typename V, typename H> class HashMap;
+    template<typename T> class Seq;
 }
+
+/* Tracer constants. */
+static const size_t MONITOR_N_GLOBAL_STATES = 4;
+static const size_t FRAGMENT_TABLE_SIZE = 512;
+static const size_t MAX_NATIVE_STACK_SLOTS = 4096;
+static const size_t MAX_CALL_STACK_ENTRIES = 500;
+static const size_t MAX_GLOBAL_SLOTS = 4096;
+static const size_t GLOBAL_SLOTS_BUFFER_SIZE = MAX_GLOBAL_SLOTS + 1;
+
+/* Forward declarations of tracer types. */
+class TreeInfo;
+class VMAllocator;
+class TraceRecorder;
+class FrameInfoCache;
+struct REHashFn;
+struct REHashKey;
+struct FrameInfo;
+struct VMSideExit;
+struct VMFragment;
+struct InterpState;
+template<typename T> class Queue;
+typedef Queue<uint16> SlotList;
+typedef nanojit::HashMap<REHashKey, nanojit::Fragment*, REHashFn> REHashMap;
+
 #if defined(JS_JIT_SPEW) || defined(DEBUG)
 struct FragPI;
 typedef nanojit::HashMap<uint32, FragPI, nanojit::DefaultHash<uint32> > FragStatsMap;
 #endif
-class TraceRecorder;
-class VMAllocator;
-extern "C++" { template<typename T> class Queue; }
-typedef Queue<uint16> SlotList;
 
-# define CLS(T)  T*
-#else
-# define CLS(T)  void*
-#endif
+/* Holds the execution state during trace execution. */
+struct InterpState
+{
+    double*        sp;                  // native stack pointer, stack[0] is spbase[0]
+    FrameInfo**    rp;                  // call stack pointer
+    JSContext*     cx;                  // current VM context handle
+    double*        eos;                 // first unusable word after the native stack / begin of globals
+    void*          eor;                 // first unusable word after the call stack
+    void*          sor;                 // start of rp stack
+    VMSideExit*    lastTreeExitGuard;   // guard we exited on during a tree call
+    VMSideExit*    lastTreeCallGuard;   // guard we want to grow from if the tree
+                                        // call exit guard mismatched
+    void*          rpAtLastTreeCall;    // value of rp at innermost tree call guard
+    VMSideExit*    outermostTreeExitGuard; // the last side exit returned by js_CallTree
+    TreeInfo*      outermostTree;       // the outermost tree we initially invoked
+    double*        stackBase;           // native stack base
+    FrameInfo**    callstackBase;       // call stack base
+    uintN*         inlineCallCountp;    // inline call count counter
+    VMSideExit**   innermostNestedGuardp;
+    VMSideExit*    innermost;
+    uint64         startTime;
+    InterpState*   prev;
 
-#define FRAGMENT_TABLE_SIZE 512
-struct VMFragment;
+    // Used by _FAIL builtins; see jsbuiltins.h. The builtin sets the
+    // JSBUILTIN_BAILED bit if it bails off trace and the JSBUILTIN_ERROR bit
+    // if an error or exception occurred.
+    uint32         builtinStatus;
 
-#ifdef __cplusplus
-struct REHashKey;
-struct REHashFn;
-class FrameInfoCache;
-typedef nanojit::HashMap<REHashKey, nanojit::Fragment*, REHashFn> REHashMap;
-#endif
+    // Used to communicate the location of the return value in case of a deep bail.
+    double*        deepBailSp;
 
-#define MONITOR_N_GLOBAL_STATES 4
+
+    // Used when calling natives from trace to root the vp vector.
+    uintN          nativeVpLen;
+    jsval*         nativeVp;
+};
+
+/*
+ * Storage for the execution state and store during trace execution. Generated
+ * code depends on the fact that the globals begin |MAX_NATIVE_STACK_SLOTS|
+ * doubles after the stack begins. Thus, on trace, |InterpState::eos| holds a
+ * pointer to the first global.
+ */
+struct TraceNativeStorage
+{
+    double stack_global_buf[MAX_NATIVE_STACK_SLOTS + GLOBAL_SLOTS_BUFFER_SIZE];
+    FrameInfo *callstack_buf[MAX_CALL_STACK_ENTRIES];
+
+    double *stack() { return stack_global_buf; }
+    double *global() { return stack_global_buf + MAX_NATIVE_STACK_SLOTS; }
+    FrameInfo **callstack() { return callstack_buf; } 
+};
+
+/* Holds data to track a single globa. */
 struct GlobalState {
     JSObject*               globalObj;
     uint32                  globalShape;
-    CLS(SlotList)           globalSlots;
+    SlotList*               globalSlots;
 };
 
 /*
@@ -156,6 +211,13 @@ struct JSTraceMonitor {
     JSContext               *tracecx;
 
     /*
+     * Cached storage to use when executing on trace. While we may enter nested
+     * traces, we always reuse the outer trace's storage, so never need more
+     * than of these.
+     */
+    TraceNativeStorage      storage;
+
+    /*
      * There are 3 allocators here. This might seem like overkill, but they
      * have different lifecycles, and by keeping them separate we keep the
      * amount of retained memory down significantly.
@@ -171,19 +233,19 @@ struct JSTraceMonitor {
      * The tempAlloc is flushed after each recording, successful or not.
      */
 
-    CLS(VMAllocator)        dataAlloc;   /* A chunk allocator for fragments. */
-    CLS(VMAllocator)        traceAlloc;  /* An allocator for trace metadata. */
-    CLS(VMAllocator)        tempAlloc;   /* A temporary chunk allocator.  */
-    CLS(nanojit::CodeAlloc) codeAlloc;   /* An allocator for native code. */
-    CLS(nanojit::Assembler) assembler;
-    CLS(nanojit::LirBuffer) lirbuf;
-    CLS(nanojit::LirBuffer) reLirBuf;
-    CLS(FrameInfoCache)     frameCache;
+    VMAllocator*            dataAlloc;   /* A chunk allocator for fragments. */
+    VMAllocator*            traceAlloc;  /* An allocator for trace metadata. */
+    VMAllocator*            tempAlloc;   /* A temporary chunk allocator.  */
+    nanojit::CodeAlloc*     codeAlloc;   /* An allocator for native code. */
+    nanojit::Assembler*     assembler;
+    nanojit::LirBuffer*     lirbuf;
+    nanojit::LirBuffer*     reLirBuf;
+    FrameInfoCache*         frameCache;
 #ifdef DEBUG
-    CLS(nanojit::LabelMap)  labels;
+    nanojit::LabelMap*      labels;
 #endif
 
-    CLS(TraceRecorder)      recorder;
+    TraceRecorder*          recorder;
     jsval                   *reservedDoublePool;
     jsval                   *reservedDoublePoolPtr;
 
@@ -214,23 +276,23 @@ struct JSTraceMonitor {
     /*
      * Fragment map for the regular expression compiler.
      */
-    CLS(REHashMap)          reFragments;
+    REHashMap*              reFragments;
 
     /*
      * A temporary allocator for RE recording.
      */
-    CLS(VMAllocator)        reTempAlloc;
+    VMAllocator*            reTempAlloc;
 
 #ifdef DEBUG
     /* Fields needed for fragment/guard profiling. */
-    CLS(nanojit::Seq<nanojit::Fragment*>) branches;
+    nanojit::Seq<nanojit::Fragment*>* branches;
     uint32                  lastFragID;
     /*
      * profAlloc has a lifetime which spans exactly from js_InitJIT to
      * js_FinishJIT.
      */
-    CLS(VMAllocator)        profAlloc;
-    CLS(FragStatsMap)       profTab;
+    VMAllocator*            profAlloc;
+    FragStatsMap*           profTab;
 #endif
 
     /* Flush the JIT cache. */
@@ -316,12 +378,6 @@ struct JSThreadData {
 #endif
 
     /*
-     * Thread-local version of JSRuntime.gcMallocBytes to avoid taking
-     * locks on each JS_malloc.
-     */
-    size_t              gcMallocBytes;
-
-    /*
      * Cache of reusable JSNativeEnumerators mapped by shape identifiers (as
      * stored in scope->shape). This cache is nulled by the GC and protected
      * by gcLock.
@@ -365,9 +421,22 @@ struct JSThread {
     /* Indicates that the thread is waiting in ClaimTitle from jslock.cpp. */
     JSTitle             *titleToShare;
 
+    /*
+     * Thread-local version of JSRuntime.gcMallocBytes to avoid taking
+     * locks on each JS_malloc.
+     */
+    ptrdiff_t           gcThreadMallocBytes;
+
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
 };
+
+/*
+ * Only when JSThread::gcThreadMallocBytes exhausts the following limit we
+ * update JSRuntime::gcMallocBytes.
+ * .
+ */
+const size_t JS_GC_THREAD_MALLOC_LIMIT = 1 << 19;
 
 #define JS_THREAD_DATA(cx)      (&(cx)->thread->data)
 
@@ -375,6 +444,9 @@ struct JSThreadsHashEntry {
     JSDHashEntryHdr     base;
     JSThread            *thread;
 };
+
+extern JSThread *
+js_CurrentThread(JSRuntime *rt);
 
 /*
  * The function takes the GC lock and does not release in successful return.
@@ -487,14 +559,25 @@ struct JSRuntime {
      *
      * FIXME Once scopes are GC'd (bug 505004), this will be obsolete.
      */
-    uint8              gcRegenShapesScopeFlag;
+    uint8               gcRegenShapesScopeFlag;
 
 #ifdef JS_GC_ZEAL
     jsrefcount          gcZeal;
 #endif
 
     JSGCCallback        gcCallback;
-    size_t              gcMallocBytes;
+
+    /*
+     * Malloc counter to measure memory pressure for GC scheduling. It runs
+     * from gcMaxMallocBytes down to zero.
+     */
+    ptrdiff_t           gcMallocBytes;
+
+    /*
+     * Stack of GC arenas containing things that the GC marked, where children
+     * reached from those things have not yet been marked. This helps avoid
+     * using too much native stack during recursive GC marking.
+     */
     JSGCArenaInfo       *gcUntracedArenaStackTop;
 #ifdef DEBUG
     size_t              gcTraceLaterCount;
@@ -504,7 +587,7 @@ struct JSRuntime {
      * Table for tracking iterators to ensure that we close iterator's state
      * before finalizing the iterable object.
      */
-    JSPtrTable          gcIteratorTable;
+    js::Vector<JSObject*, 0, js::SystemAllocPolicy> gcIteratorTable;
 
     /*
      * The trace operation and its data argument to trace embedding-specific
@@ -522,9 +605,9 @@ struct JSRuntime {
     JSSetSlotRequest    *setSlotRequests;
 
     /* Well-known numbers held for use by this runtime's contexts. */
-    jsdouble            *jsNaN;
-    jsdouble            *jsNegativeInfinity;
-    jsdouble            *jsPositiveInfinity;
+    jsval               NaNValue;
+    jsval               negativeInfinityValue;
+    jsval               positiveInfinityValue;
 
 #ifdef JS_THREADSAFE
     JSLock              *deflatedStringCacheLock;
@@ -671,6 +754,10 @@ struct JSRuntime {
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
 
+#ifdef JS_THREADSAFE
+    JSBackgroundThread    *deallocatorThread;
+#endif
+
     /*
      * Various metering fields are defined at the end of JSRuntime. In this
      * way there is no need to recompile all the code that refers to other
@@ -723,6 +810,12 @@ struct JSRuntime {
     double              lengthSquaredSum;
     double              strdepLengthSum;
     double              strdepLengthSquaredSum;
+
+    /* Script instrumentation. */
+    jsrefcount          liveScripts;
+    jsrefcount          totalScripts;
+    jsrefcount          liveEmptyScripts;
+    jsrefcount          totalEmptyScripts;
 #endif /* DEBUG || JS_DUMP_PROPTREE_STATS */
 
 #ifdef JS_SCOPE_DEPTH_METER
@@ -750,28 +843,34 @@ struct JSRuntime {
     char                lastScriptFilename[1024];
 #endif
 
+    JSRuntime();
+    ~JSRuntime();
+
+    bool init(uint32 maxbytes);
+
     void setGCTriggerFactor(uint32 factor);
     void setGCLastBytes(size_t lastBytes);
 
-    inline void* malloc(size_t bytes) {
-        return ::js_malloc(bytes);
-    }
+    void* malloc(size_t bytes) { return ::js_malloc(bytes); }
 
-    inline void* calloc(size_t bytes) {
-        return ::js_calloc(bytes);
-    }
+    void* calloc(size_t bytes) { return ::js_calloc(bytes); }
 
-    inline void* realloc(void* p, size_t bytes) {
-        return ::js_realloc(p, bytes);
-    }
+    void* realloc(void* p, size_t bytes) { return ::js_realloc(p, bytes); }
 
-    inline void free(void* p) {
-        ::js_free(p);
-    }
+    void free(void* p) { ::js_free(p); }
 
-#ifdef JS_THREADSAFE
-    JSBackgroundThread    *deallocatorThread;
-#endif
+    bool isGCMallocLimitReached() const { return gcMallocBytes <= 0; }
+
+    void resetGCMallocBytes() { gcMallocBytes = ptrdiff_t(gcMaxMallocBytes); }
+
+    void setGCMaxMallocBytes(size_t value) {
+        /*
+         * For compatibility treat any value that exceeds PTRDIFF_T_MAX to
+         * mean that value.
+         */
+        gcMaxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
+        resetGCMallocBytes();
+    }
 };
 
 /* Common macros to access thread-local caches in JSThread or JSRuntime. */
@@ -1130,23 +1229,47 @@ struct JSContext {
     }
 #endif
 
-    /* Call this after succesful malloc of memory for GC-related things. */
-    inline void updateMallocCounter(size_t nbytes) {
-        size_t *pbytes, bytes;
+    ptrdiff_t &getMallocCounter() {
+#ifdef JS_THREADSAFE
+        return thread->gcThreadMallocBytes;
+#else
+        return runtime->gcMallocBytes;
+#endif
+    }
 
-        pbytes = &JS_THREAD_DATA(this)->gcMallocBytes;
-        bytes = *pbytes;
-        *pbytes = (size_t(-1) - bytes <= nbytes) ? size_t(-1) : bytes + nbytes;
+    /*
+     * Call this after allocating memory held by GC things, to update memory
+     * pressure counters or report the OOM error if necessary.
+     */
+    inline void updateMallocCounter(void *p, size_t nbytes) {
+        JS_ASSERT(ptrdiff_t(nbytes) >= 0);
+        ptrdiff_t &counter = getMallocCounter();
+        counter -= ptrdiff_t(nbytes);
+        if (!p || counter <= 0)
+            checkMallocGCPressure(p);
+    }
+
+    /*
+     * Call this after successfully allocating memory held by GC things, to
+     * update memory pressure counters.
+     */
+    inline void updateMallocCounter(size_t nbytes) {
+        JS_ASSERT(ptrdiff_t(nbytes) >= 0);
+        ptrdiff_t &counter = getMallocCounter();
+        counter -= ptrdiff_t(nbytes);
+        if (counter <= 0) {
+            /*
+             * Use 1 as an arbitrary non-null pointer indicating successful
+             * allocation.
+             */
+            checkMallocGCPressure(reinterpret_cast<void *>(jsuword(1)));
+        }
     }
 
     inline void* malloc(size_t bytes) {
         JS_ASSERT(bytes != 0);
         void *p = runtime->malloc(bytes);
-        if (!p) {
-            JS_ReportOutOfMemory(this);
-            return NULL;
-        }
-        updateMallocCounter(bytes);
+        updateMallocCounter(p, bytes);
         return p;
     }
 
@@ -1162,23 +1285,19 @@ struct JSContext {
     inline void* calloc(size_t bytes) {
         JS_ASSERT(bytes != 0);
         void *p = runtime->calloc(bytes);
-        if (!p) {
-            JS_ReportOutOfMemory(this);
-            return NULL;
-        }
-        updateMallocCounter(bytes);
+        updateMallocCounter(p, bytes);
         return p;
     }
 
     inline void* realloc(void* p, size_t bytes) {
         void *orig = p;
         p = runtime->realloc(p, bytes);
-        if (!p) {
-            JS_ReportOutOfMemory(this);
-            return NULL;
-        }
-        if (!orig)
-            updateMallocCounter(bytes);
+
+        /*
+         * For compatibility we do not account for realloc that increases
+         * previously allocated memory.
+         */
+        updateMallocCounter(p, orig ? 0 : bytes);
         return p;
     }
 
@@ -1210,10 +1329,8 @@ struct JSContext {
      */
 #define CREATE_BODY(parms)                                                    \
     void *memory = this->malloc(sizeof(T));                                   \
-    if (!memory) {                                                            \
-        JS_ReportOutOfMemory(this);                                           \
+    if (!memory)                                                              \
         return NULL;                                                          \
-    }                                                                         \
     return new(memory) T parms;
 
     template <class T>
@@ -1242,6 +1359,16 @@ struct JSContext {
         p->~T();
         this->free(p);
     }
+
+private:
+
+    /*
+     * The allocation code calls the function to indicate either OOM failure
+     * when p is null or that a memory pressure counter has reached some
+     * threshold when p is not null. The function takes the pointer and not
+     * a boolean flag to minimize the amount of code in its inlined callers.
+     */
+    void checkMallocGCPressure(void *p);
 };
 
 #ifdef JS_THREADSAFE
@@ -1285,6 +1412,12 @@ class JSAutoTempValueRooter
         : mContext(cx) {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_PUSH_TEMP_ROOT_OBJECT(mContext, obj, &mTvr);
+    }
+    JSAutoTempValueRooter(JSContext *cx, JSScopeProperty *sprop
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mContext(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_PUSH_TEMP_ROOT_SPROP(mContext, sprop, &mTvr);
     }
 
     ~JSAutoTempValueRooter() {
@@ -1454,6 +1587,9 @@ class JSAutoResolveFlags
                                                      JSVERSION_MASK))
 #define JS_HAS_XML_OPTION(cx)           ((cx)->version & JSVERSION_HAS_XML || \
                                          JSVERSION_NUMBER(cx) >= JSVERSION_1_6)
+
+extern JSThreadData *
+js_CurrentThreadData(JSRuntime *rt);
 
 extern JSBool
 js_InitThreads(JSRuntime *rt);
@@ -1824,6 +1960,30 @@ js_RegenerateShapeForGC(JSContext *cx)
     shape = (shape + 1) | (shape & SHAPE_OVERFLOW_BIT);
     cx->runtime->shapeGen = shape;
     return shape;
+}
+
+namespace js {
+
+/*
+ * Policy that calls JSContext:: memory functions and reports errors to the
+ * context.  Since the JSContext* given on construction is stored for the
+ * lifetime of the container, this policy may only be used for containers whose
+ * lifetime is a shorter than the given JSContext.
+ */
+class ContextAllocPolicy
+{
+    JSContext *mCx;
+
+  public:
+    ContextAllocPolicy(JSContext *cx) : mCx(cx) {}
+    JSContext *context() const { return mCx; }
+
+    void *malloc(size_t bytes) { return mCx->malloc(bytes); }
+    void free(void *p) { mCx->free(p); }
+    void *realloc(void *p, size_t bytes) { return mCx->realloc(p, bytes); }
+    void reportAllocOverflow() const { js_ReportAllocationOverflow(mCx); }
+};
+
 }
 
 #endif /* jscntxt_h___ */
