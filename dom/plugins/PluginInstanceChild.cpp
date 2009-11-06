@@ -42,6 +42,8 @@
 #include "PluginStreamChild.h"
 #include "StreamNotifyChild.h"
 
+#include "mozilla/ipc/SyncChannel.h"
+
 using namespace mozilla::plugins;
 
 #ifdef MOZ_WIDGET_GTK2
@@ -578,6 +580,9 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
                                       WPARAM wParam,
                                       LPARAM lParam)
 {
+    NS_ASSERTION(!mozilla::ipc::SyncChannel::IsPumpingMessages(),
+                 "Failed to prevent a nonqueued message from running!");
+
     PluginInstanceChild* self = reinterpret_cast<PluginInstanceChild*>(
         GetProp(hWnd, kPluginInstanceChildProperty));
     if (!self) {

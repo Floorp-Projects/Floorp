@@ -40,8 +40,6 @@
 #ifndef ipc_glue_SyncChannel_h
 #define ipc_glue_SyncChannel_h 1
 
-#include <queue>
-
 #include "mozilla/ipc/AsyncChannel.h"
 
 namespace mozilla {
@@ -68,6 +66,10 @@ public:
         AsyncChannel(aListener),
         mPendingReply(0),
         mProcessingSyncMessage(false)
+#ifdef OS_WIN
+      , mUIThreadId(0)
+      , mEventLoopDepth(0)
+#endif
     {
     }
 
@@ -87,6 +89,8 @@ public:
     NS_OVERRIDE virtual void OnMessageReceived(const Message& msg);
     NS_OVERRIDE virtual void OnChannelError();
 
+    static bool IsPumpingMessages();
+
 protected:
     // Executed on the worker thread
     bool ProcessingSyncMessage() {
@@ -95,6 +99,10 @@ protected:
 
     void OnDispatchMessage(const Message& aMsg);
     void WaitForNotify();
+
+#ifdef OS_WIN
+    void RunWindowsEventLoop();
+#endif
 
     // Executed on the IO thread.
     void OnSendReply(Message* msg);
@@ -109,6 +117,11 @@ protected:
     MessageId mPendingReply;
     bool mProcessingSyncMessage;
     Message mRecvd;
+
+#ifdef OS_WIN
+    DWORD mUIThreadId;
+    int mEventLoopDepth;
+#endif
 };
 
 
