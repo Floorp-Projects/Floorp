@@ -69,6 +69,11 @@
 class gfxMatrix;
 
 namespace mozilla {
+
+namespace jsipc {
+class PContextWrapperChild;
+}
+
 namespace dom {
 
 class TabChild;
@@ -228,6 +233,10 @@ public:
     JSContext* GetJSContext() { return mCx; }
 
     nsIPrincipal* GetPrincipal() { return mPrincipal; }
+
+    virtual PContextWrapperChild* AllocPContextWrapper();
+    virtual bool DeallocPContextWrapper(PContextWrapperChild* actor);
+
 private:
     bool InitTabChildGlobal();
 

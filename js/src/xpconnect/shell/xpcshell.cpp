@@ -681,6 +681,21 @@ SendCommand(JSContext* cx,
     return JS_TRUE;
 }
 
+static JSBool
+GetChildGlobalObject(JSContext* cx,
+                     JSObject*,
+                     uintN,
+                     jsval*,
+                     jsval* rval)
+{
+    JSObject* global;
+    if (XRE_GetChildGlobalObject(cx, &global)) {
+        *rval = OBJECT_TO_JSVAL(global);
+        return JS_TRUE;
+    }
+    return JS_FALSE;
+}
+
 #endif // MOZ_IPC
 
 /*
@@ -798,6 +813,7 @@ static JSFunctionSpec glob_functions[] = {
 #endif
 #ifdef MOZ_IPC
     {"sendCommand",     SendCommand,    1,0,0},
+    {"getChildGlobalObject", GetChildGlobalObject, 0,0,0},
 #endif
 #ifdef MOZ_SHARK
     {"startShark",      js_StartShark,      0,0,0},

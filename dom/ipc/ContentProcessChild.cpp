@@ -45,6 +45,8 @@
 
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/ipc/XPCShellEnvironment.h"
+#include "mozilla/jsipc/PContextWrapperChild.h"
 
 #include "nsXULAppAPI.h"
 
@@ -128,6 +130,13 @@ bool
 ContentProcessChild::DeallocPTestShell(PTestShellChild* shell)
 {
     mTestShells.RemoveElement(shell);
+    return true;
+}
+
+bool
+ContentProcessChild::RecvPTestShellConstructor(PTestShellChild* actor)
+{
+    actor->SendPContextWrapperConstructor()->SendPObjectWrapperConstructor(true);
     return true;
 }
 

@@ -50,7 +50,15 @@ class nsIURI;
 class nsIDOMElement;
 class gfxMatrix;
 
+struct JSContext;
+struct JSObject;
+
 namespace mozilla {
+
+namespace jsipc {
+class PContextWrapperParent;
+}
+
 namespace dom {
 
 class TabParent : public PIFrameEmbeddingParent
@@ -105,6 +113,11 @@ public:
             const PRInt32& bufh,
             Shmem& buf);
     virtual bool DeallocPDocumentRendererShmem(PDocumentRendererShmemParent* actor);
+
+    virtual PContextWrapperParent* AllocPContextWrapper();
+    virtual bool DeallocPContextWrapper(PContextWrapperParent* actor);
+
+    bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
 protected:
     nsIDOMElement* mFrameElement;

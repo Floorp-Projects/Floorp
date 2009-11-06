@@ -795,6 +795,12 @@ nsObjectLoadingContent::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoader)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsObjectLoadingContent::GetCrossProcessObjectWrapper(nsIVariant**)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // nsIObjectLoadingContent
 NS_IMETHODIMP
 nsObjectLoadingContent::GetActualType(nsACString& aType)

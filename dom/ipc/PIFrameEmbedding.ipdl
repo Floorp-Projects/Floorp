@@ -40,6 +40,7 @@
 include protocol "PContentProcess.ipdl";
 include protocol "PDocumentRenderer.ipdl";
 include protocol "PDocumentRendererShmem.ipdl";
+include protocol "PContextWrapper.ipdl";
 
 include "mozilla/TabTypes.h";
 include "TabMessageUtils.h";
@@ -57,6 +58,7 @@ rpc protocol PIFrameEmbedding
     manager PContentProcess;
     manages PDocumentRenderer;
     manages PDocumentRendererShmem;
+    manages PContextWrapper;
 
 child:
     __delete__();
@@ -71,6 +73,8 @@ parent:
     sendEvent(RemoteDOMEvent aEvent);
 
     rpc createWindow() returns (PIFrameEmbedding window);
+
+    PContextWrapper();
 
     sync sendSyncMessageToParent(nsString aMessage, nsString aJSON) returns (nsString[] retval);
     sendAsyncMessageToParent(nsString aMessage, nsString aJSON);
