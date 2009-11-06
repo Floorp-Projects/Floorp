@@ -58,20 +58,25 @@ menuitem[default="true"] {
   font-weight: bold;
 }
 
-menu[disabled="true"], menuitem[disabled="true"],
+menu[disabled="true"],
+menuitem[disabled="true"],
 menu[_moz-menuactive="true"][disabled="true"],
 menuitem[_moz-menuactive="true"][disabled="true"] {
   color: GrayText;
+  text-shadow: none;
 }
 
-menu[disabled="true"]:not([_moz-menuactive="true"]):-moz-system-metric(windows-classic),
-menuitem[disabled="true"]:not([_moz-menuactive="true"]):-moz-system-metric(windows-classic) {
-  color: ThreeDShadow;
-  text-shadow: 1px 1px ThreeDHighlight;
+@media all and (-moz-windows-classic) {
+  menu[disabled="true"],
+  menubar > menu[disabled="true"][_moz-menuactive="true"],
+  menuitem[disabled="true"] {
+    color: ThreeDShadow;
+    text-shadow: 1px 1px ThreeDHighlight;
+  }
 }
 
 menuitem.spell-suggestion {
-  font-weight:bold;
+  font-weight: bold;
 }
 
 /* ..... internal content .... */
@@ -140,16 +145,28 @@ menuitem.menuitem-iconic > .menu-iconic-left {
 menubar > menu {
   border: 2px solid transparent;
 }
+
+menubar > menu[_moz-menuactive="true"]:not([disabled="true"]) {
+  color: -moz-menubarhovertext;
+}
+
 menubar > menu[_moz-menuactive="true"][open="true"] {
   border-width: 3px 1px 1px 3px;
 }
-menubar > menu[_moz-menuactive="true"],
-menubar > menu[_moz-menuactive="true"][open="true"] {
-  color: -moz-menubarhovertext;
-}
+
 menubar > menu:-moz-lwtheme {
   -moz-appearance: none;
+  border-style: none;
+}
+
+menubar > menu:-moz-lwtheme:not([disabled="true"]) {
   color: inherit !important;
+}
+
+menubar > menu:-moz-lwtheme[_moz-menuactive="true"]:not([disabled="true"]) {
+  background-color: Highlight;
+  color: HighlightText !important;
+  text-shadow: none;
 }
 
 /* ..... internal content .... */
