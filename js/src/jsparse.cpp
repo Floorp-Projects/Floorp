@@ -8772,8 +8772,20 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
         break;
 
       case PN_UNARY:
-        /* Our kid may be null (e.g. return; vs. return e;). */
         pn1 = pn->pn_kid;
+
+        /*
+         * Kludge to deal with typeof expressions: because constant folding
+         * can turn an expression into a name node, we have to check here,
+         * before folding, to see if we should throw undefined name errors.
+         *
+         * NB: We know that if pn->pn_op is JSOP_TYPEOF, pn1 will not be
+         * null. This assumption does not hold true for other unary
+         * expressions.
+         */
+        if (pn->pn_op == JSOP_TYPEOF && pn1->pn_type != TOK_NAME)
+            pn->pn_op = JSOP_TYPEOFEXPR;
+
         if (pn1 && !js_FoldConstants(cx, pn1, tc, pn->pn_op == JSOP_NOT))
             return JS_FALSE;
         break;
