@@ -35,6 +35,9 @@
       // attribute.
       testDescr("img3", "description");
 
+      // Description from content of h2.
+      testDescr("p", "heading");
+
       SimpleTest.finish();
     }
 
@@ -61,5 +64,7 @@
   <img id="img2" title="title" />
   <img id="img3" alt="name" title="description" />
 
+  <h2 id="heading">heading</h2>
+  <p id="p" aria-describedby="heading" role="button">click me</p>
 </body>
 </html>
