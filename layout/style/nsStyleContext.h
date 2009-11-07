@@ -107,7 +107,7 @@ public:
 
   nsStyleContext* GetParent() const { return mParent; }
 
-  nsIAtom* GetPseudoType() const { return mPseudoTag; }
+  nsIAtom* GetPseudo() const { return mPseudoTag; }
 
   NS_HIDDEN_(already_AddRefed<nsStyleContext>)
   FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules);
@@ -120,7 +120,7 @@ public:
   // Does this style context represent the style for a pseudo-element or
   // inherit data from such a style context?  Whether this returns true
   // is equivalent to whether it or any of its ancestors returns
-  // non-null for GetPseudoType.
+  // non-null for GetPseudo.
   PRBool HasPseudoElementData() const
     { return !!(mBits & NS_STYLE_HAS_PSEUDO_ELEMENT_DATA); }
 
@@ -195,8 +195,8 @@ protected:
   nsStyleContext* mPrevSibling;
   nsStyleContext* mNextSibling;
 
-  // If this style context is for a pseudo-element, the pseudo-element
-  // atom.  Otherwise, null.
+  // If this style context is for a pseudo-element or anonymous box,
+  // the relevant atom.
   nsCOMPtr<nsIAtom> mPseudoTag;
 
   // The rule node is the node in the lexicographic tree of rule nodes

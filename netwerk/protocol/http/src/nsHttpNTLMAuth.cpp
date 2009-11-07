@@ -304,8 +304,19 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpChannel  *httpChannel,
 
     // initial challenge
     if (PL_strcasecmp(challenge, "NTLM") == 0) {
+        // NTLM service name format is 'HTTP@host' for both http and https
+        nsCOMPtr<nsIURI> uri;
+        rv = httpChannel->GetURI(getter_AddRefs(uri));
+        if (NS_FAILED(rv))
+            return rv;
+        nsCAutoString serviceName, host;
+        rv = uri->GetAsciiHost(host);
+        if (NS_FAILED(rv))
+            return rv;
+        serviceName.AppendLiteral("HTTP@");
+        serviceName.Append(host);
         // initialize auth module
-        rv = module->Init(nsnull, nsIAuthModule::REQ_DEFAULT, domain, user, pass);
+        rv = module->Init(serviceName.get(), nsIAuthModule::REQ_DEFAULT, domain, user, pass);
         if (NS_FAILED(rv))
             return rv;
 

@@ -56,10 +56,13 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =	test_bug343416.xul \
+		test_bug429954.xul \
+		window_bug429954.xul \
 		test_bug444800.xul \
 		test_bug462106.xul \
 		test_bug478536.xul \
 		window_bug478536.xul \
+		test_bug517396.xul \
 		test_keycodes.xul \
 		test_wheeltransaction.xul \
 		window_wheeltransaction.xul \
@@ -75,6 +78,8 @@ _TEST_FILES += native_menus_window.xul \
                test_bug428405.xul \
                test_bug466599.xul \
                test_bug485118.xul \
+               test_bug522217.xul \
+               window_bug522217.xul \
                test_platform_colors.xul \
                $(NULL)
 endif

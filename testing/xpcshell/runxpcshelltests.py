@@ -37,7 +37,7 @@
 #
 # ***** END LICENSE BLOCK ***** */
 
-import re, sys, os, os.path, logging, shutil
+import re, sys, os, os.path, logging, shutil, signal
 from glob import glob
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
@@ -232,8 +232,13 @@ def runTests(xpcshell, xrePath=None, symbolsPath=None,
 
         proc = Popen(cmdH + cmdT + xpcsRunArgs,
                      stdout=pStdout, stderr=pStderr, env=env, cwd=testdir)
+
+        # allow user to kill hung subprocess with SIGINT w/o killing this script
+        # - don't move this line above Popen, or child will inherit the SIG_IGN
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
         # |stderr == None| as |pStderr| was either |None| or redirected to |stdout|.
         stdout, stderr = proc.communicate()
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
 
         if interactive:
           # Not sure what else to do here...

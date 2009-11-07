@@ -142,41 +142,6 @@ __try {
   return E_FAIL;
 }
 
-void
-nsDocAccessibleWrap::FireAnchorJumpEvent()
-{
-  // Staying on the same page, jumping to a named anchor
-  // Fire EVENT_SCROLLING_START on first leaf accessible -- because some
-  // assistive technologies only cache the child numbers for leaf accessibles
-  // the can only relate events back to their internal model if it's a leaf.
-  // There is usually an accessible for the focus node, but if it's an empty text node
-  // we have to move forward in the document to get one
-  nsDocAccessible::FireAnchorJumpEvent();
-  if (!mIsAnchorJumped)
-    return;
-
-  nsCOMPtr<nsIDOMNode> focusNode;
-  if (mIsAnchor) {
-    nsCOMPtr<nsISelectionController> selCon(do_QueryReferent(mWeakShell));
-    if (!selCon)
-      return;
-
-    nsCOMPtr<nsISelection> domSel;
-    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
-    if (!domSel)
-      return;
-
-    domSel->GetFocusNode(getter_AddRefs(focusNode));
-  }
-  else {
-    focusNode = mDOMNode; // Moved to top, so event is for 1st leaf after root
-  }
-
-  nsCOMPtr<nsIAccessible> accessible = GetFirstAvailableAccessible(focusNode, PR_TRUE);
-  nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
-                           accessible);
-}
-
 STDMETHODIMP nsDocAccessibleWrap::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
 {
 __try {

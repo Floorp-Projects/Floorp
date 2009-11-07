@@ -110,8 +110,6 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_sorttemplate.xul \
 		test_contextmenu_list.xul \
 		test_videocontrols.html \
-		test_videocontrols_video_direction.html \
-		test_videocontrols_audio_direction.html \
 		test_richlist_direction.xul \
 		videocontrols_direction-1-ref.html \
 		videocontrols_direction-1a.html \
@@ -132,6 +130,10 @@ _TEST_FILES = 	test_bug360220.xul \
 		video.ogg \
 		videomask.css \
 		$(NULL)
+
+# Disabled for now -- see bug 501754
+#		test_videocontrols_video_direction.html \
+#		test_videocontrols_audio_direction.html \
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _TEST_FILES += test_menubar.xul \

@@ -1791,6 +1791,8 @@ _setexception(NPObject* npobj, const NPUTF8 *message)
     return;
   }
 
+  if (!message) return;
+
   if (gNPPException) {
     // If a plugin throws multiple exceptions, we'll only report the
     // last one for now.

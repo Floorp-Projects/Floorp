@@ -3923,7 +3923,7 @@ GetGeneratedContentOwner(nsIFrame* aFrame, PRBool* aIsBefore)
 {
   *aIsBefore = PR_FALSE;
   while (aFrame && (aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT)) {
-    if (aFrame->GetStyleContext()->GetPseudoType() == nsCSSPseudoElements::before) {
+    if (aFrame->GetStyleContext()->GetPseudo() == nsCSSPseudoElements::before) {
       *aIsBefore = PR_TRUE;
     }
     aFrame = aFrame->GetParent();
@@ -5987,14 +5987,7 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout)
   // and ChildIsDirty to handle a range of frames would be worse.
   if (aLineLayout &&
       (end != f->mContentOffset || (f->GetStateBits() & NS_FRAME_IS_DIRTY))) {
-    const nsLineList::iterator* line = aLineLayout->GetLine();
-    nsBlockFrame* block = do_QueryFrame(aLineLayout->GetLineContainerFrame());
-    if (line && block) {
-      nsLineList::iterator next = line->next();
-      if (next != block->end_lines() && !next->IsBlock()) {
-        next->MarkDirty();
-      }
-    }
+    aLineLayout->SetDirtyNextLine();
   }
 
   if (end < f->mContentOffset) {
@@ -6867,7 +6860,7 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
             overflowArea.width, overflowArea.height);
   }
   fprintf(out, " sc=%p", static_cast<void*>(mStyleContext));
-  nsIAtom* pseudoTag = mStyleContext->GetPseudoType();
+  nsIAtom* pseudoTag = mStyleContext->GetPseudo();
   if (pseudoTag) {
     nsAutoString atomString;
     pseudoTag->ToString(atomString);

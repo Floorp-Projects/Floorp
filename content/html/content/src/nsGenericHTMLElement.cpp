@@ -98,6 +98,7 @@
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsHTMLFormElement.h"
 #include "nsFocusManager.h"
 
 #include "nsMutationEvent.h"
@@ -897,8 +898,8 @@ nsGenericHTMLElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   nsGenericElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-already_AddRefed<nsIDOMHTMLFormElement>
-nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
+nsHTMLFormElement*
+nsGenericHTMLElement::FindForm(nsHTMLFormElement* aCurrentForm)
 {
   // Make sure we don't end up finding a form that's anonymous from
   // our point of view.
@@ -921,10 +922,7 @@ nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
         }
       }
 #endif
-      nsIDOMHTMLFormElement* form;
-      CallQueryInterface(content, &form);
-
-      return form;
+      return static_cast<nsHTMLFormElement*>(content);
     }
 
     nsIContent *prevContent = content;
@@ -938,19 +936,9 @@ nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
       // we're one of those inputs-in-a-table that have a hacked mForm pointer
       // and a subtree containing both us and the form got removed from the
       // DOM.
-      nsCOMPtr<nsIContent> formCOMPtr = do_QueryInterface(aCurrentForm);
-      NS_ASSERTION(formCOMPtr, "aCurrentForm isn't an nsIContent?");
-      // Use an nsIContent temporary to reduce addref/releasing as we go up the
-      // tree
-      nsINode* iter = formCOMPtr;
-      do {
-        iter = iter->GetNodeParent();
-        if (iter == prevContent) {
-          nsIDOMHTMLFormElement* form;
-          CallQueryInterface(aCurrentForm, &form);
-          return form;
-        }
-      } while (iter);
+      if (nsContentUtils::ContentIsDescendantOf(aCurrentForm, prevContent)) {
+        return aCurrentForm;
+      }
     }
   }
 
@@ -2265,9 +2253,9 @@ nsGenericHTMLElement::SetContentEditable(const nsAString& aContentEditable)
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsGenericHTMLFrameElement, TabIndex, tabindex, 0)
 
 nsGenericHTMLFormElement::nsGenericHTMLFormElement(nsINodeInfo *aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo),
+    mForm(nsnull)
 {
-  mForm = nsnull;
 }
 
 nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
@@ -2302,8 +2290,7 @@ nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm)
                "We don't support switching from one non-null form to another.");
 
   // keep a *weak* ref to the form here
-  CallQueryInterface(aForm, &mForm);
-  mForm->Release();
+  mForm = static_cast<nsHTMLFormElement*>(aForm);
 }
 
 void
@@ -2341,12 +2328,7 @@ NS_IMETHODIMP
 nsGenericHTMLFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   NS_ENSURE_ARG_POINTER(aForm);
-  *aForm = nsnull;
-
-  if (mForm) {
-    CallQueryInterface(mForm, aForm);
-  }
-
+  NS_IF_ADDREF(*aForm = mForm);
   return NS_OK;
 }
 
@@ -2434,10 +2416,7 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
     // it to the right value.  Also note that even if being bound here didn't
     // change our parent, we still need to search, since our parent chain
     // probably changed _somewhere_.
-    nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm();
-    if (form) {
-      SetForm(form);
-    }
+    mForm = FindForm();
   }
 
   if (mForm && !HasFlag(ADDED_TO_FORM)) {
@@ -2476,8 +2455,7 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
       ClearForm(PR_TRUE, PR_TRUE);
     } else {
       // Recheck whether we should still have an mForm.
-      nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm(mForm);
-      if (!form) {
+      if (!FindForm(mForm)) {
         ClearForm(PR_TRUE, PR_TRUE);
       } else {
         UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);

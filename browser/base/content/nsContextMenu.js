@@ -144,18 +144,64 @@ nsContextMenu.prototype = {
                           (mailtoHandler.preferredApplicationHandler instanceof Ci.nsIWebHandlerApp));
     }
 
-    // time to do some bad things and see if we've highlighted a URL that isn't actually linked
+    // Time to do some bad things and see if we've highlighted a URL that
+    // isn't actually linked.
+    var onPlainTextLink = false;
     if (this.isTextSelected) {
-      // ok, we have some text, let's figure out if it looks like a URL
-      var someText = document.commandDispatcher.focusedWindow
-                             .getSelection().toString();
-      try {
-       var uri = makeURI(someText);
+      // Ok, we have some text, let's figure out if it looks like a URL.
+      let selection =  document.commandDispatcher.focusedWindow
+                               .getSelection();
+      let linkText = selection.toString().trim();
+      let uri;
+      if (/^(?:https?|ftp):/i.test(linkText)) {
+        try {
+          uri = makeURI(linkText);
+        } catch (ex) {}
       }
-      catch (ex) { }
- 
-      var onPlainTextLink = false;
-      if (uri && /^(https?|ftp)$/i.test(uri.scheme) && uri.host) {
+      // Check if this could be a valid url, just missing the protocol.
+      else if (/^(?:\w+\.)+\D\S*$/.test(linkText)) {
+        // Now let's see if this is an intentional link selection. Our guess is
+        // based on whether the selection begins/ends with whitespace or is
+        // preceded/followed by a non-word character.
+
+        // selection.toString() trims trailing whitespace, so we look for
+        // that explicitly in the first and last ranges.
+        let beginRange = selection.getRangeAt(0);
+        let delimitedAtStart = /^\s/.test(beginRange);
+        if (!delimitedAtStart) {
+          let container = beginRange.startContainer;
+          let offset = beginRange.startOffset;
+          if (container.nodeType == Node.TEXT_NODE && offset > 0)
+            delimitedAtStart = /\W/.test(container.textContent[offset - 1]);
+          else
+            delimitedAtStart = true;
+        }
+
+        let delimitedAtEnd = false;
+        if (delimitedAtStart) {
+          let endRange = selection.getRangeAt(selection.rangeCount - 1);
+          delimitedAtEnd = /\s$/.test(endRange);
+          if (!delimitedAtEnd) {
+            let container = endRange.endContainer;
+            let offset = endRange.endOffset;
+            if (container.nodeType == Node.TEXT_NODE &&
+                offset < container.textContent.length)
+              delimitedAtEnd = /\W/.test(container.textContent[offset]);
+            else
+              delimitedAtEnd = true;
+          }
+        }
+
+        if (delimitedAtStart && delimitedAtEnd) {
+          let uriFixup = Cc["@mozilla.org/docshell/urifixup;1"]
+                           .getService(Ci.nsIURIFixup);
+          try {
+            uri = uriFixup.createFixupURI(linkText, uriFixup.FIXUP_FLAG_NONE);
+          } catch (ex) {}
+        }
+      }
+
+      if (uri && uri.host) {
         this.linkURI = uri;
         this.linkURL = this.linkURI.spec;
         onPlainTextLink = true;

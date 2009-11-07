@@ -362,7 +362,8 @@ interface nsIExtensionManager : nsISupports
    * XXXben - it would be good if this function took an optional
    *          install location.
    */
-  void getItemList(in unsigned long type, out unsigned long itemCount,
+  void getItemList(in unsigned long type,
+                   [optional] out unsigned long itemCount,
                    [retval, array, size_is(itemCount)] out nsIUpdateItem items);
 
   /**
@@ -385,7 +386,7 @@ interface nsIExtensionManager : nsISupports
                                in AString platformVersion,
                                in unsigned long type,
                                in boolean includeDisabled,
-                               out unsigned long itemCount,
+                               [optional] out unsigned long itemCount,
                                [retval, array, size_is(itemCount)] out nsIUpdateItem items);
 
   /**
@@ -463,7 +464,7 @@ interface nsIExtensionManager : nsISupports
    */
   void getDependentItemListForID(in AString id,
                                  in boolean includeDisabled,
-                                 out unsigned long itemCount,
+                                 [optional] out unsigned long itemCount,
                                  [retval, array, size_is(itemCount)] out nsIUpdateItem items);
 
   /**
@@ -479,7 +480,7 @@ interface nsIExtensionManager : nsISupports
    * @returns An array of nsIUpdateItems that are blocklisted or the user should
    *          be warned about but are currently enabled.
    */
-  void updateAndGetNewBlocklistedItems(out unsigned long itemCount,
+  void updateAndGetNewBlocklistedItems([optional] out unsigned long itemCount,
                                        [retval, array, size_is(itemCount)] out nsIUpdateItem items);
 };
 

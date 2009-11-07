@@ -162,7 +162,7 @@ interface nsIDOMDataTransfer : nsISupports
   void addElement(in nsIDOMElement element);
 };
 
-[scriptable, uuid(53C854FC-33F9-4647-B045-46D7AB06A6F1)]
+[scriptable, uuid(990758e9-fd38-4444-a1e8-395195802bda)]
 interface nsIDOMNSDataTransfer : nsISupports
 {
   /*

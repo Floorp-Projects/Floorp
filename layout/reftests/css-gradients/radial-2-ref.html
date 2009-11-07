@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      class="reftest-wait">
+<head>
+<script>
+function doDraw() {
+  var ctx = document.getElementById('canvas').getContext('2d');
+
+  var radgrad = ctx.createRadialGradient(100,100,0,100,100,50);
+  radgrad.addColorStop(0, '#FF0000');
+  radgrad.addColorStop(1, '#0000FF');
+
+  ctx.fillStyle = radgrad;
+  ctx.fillRect(0,0,300,300);
+
+  document.documentElement.removeAttribute('class');
+}
+</script>
+</head>
+<body onload="doDraw();">
+<canvas id="canvas" width="300" height="300"/>
+</body>
+</html>

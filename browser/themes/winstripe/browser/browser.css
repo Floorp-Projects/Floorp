@@ -103,7 +103,7 @@ toolbarbutton.bookmark-item-microsummarized {
   max-width: 20em;
 }
 
-toolbarbutton.bookmark-item:hover:active,
+toolbarbutton.bookmark-item:hover:active:not([disabled="true"]),
 toolbarbutton.bookmark-item[open="true"] {
   padding-top: 3px;
   padding-bottom: 1px;
@@ -1142,11 +1142,15 @@ statusbarpanel#statusbar-display {
   width: 16px;
   min-height: 16px;
   margin: 0 3px;
-  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
 }
 
 #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
+#navigator-throbber,
+#wrapper-navigator-throbber > #navigator-throbber {
+  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
 }
 
 /* Tabstrip */
@@ -1405,7 +1409,12 @@ tabpanels {
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right.png");
-  outline-color: Highlight;
+  -moz-transition: 1s background-color ease-out;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
+  background-color: Highlight;
+  -moz-transition: none;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl),

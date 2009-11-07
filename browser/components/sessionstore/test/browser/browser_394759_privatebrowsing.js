@@ -42,8 +42,32 @@ function test() {
 
   waitForExplicitFinish();
 
+  // Set interval to a large time so state won't be written while we setup env.
+  gPrefService.setIntPref("browser.sessionstore.interval", 100000);
+
+  // Set up the browser in a blank state. Popup windows in previous tests result
+  // in different states on different platforms.
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
+  let blankState = JSON.stringify({
+    windows: [{
+      tabs: [{ entries: [{ url: "about:blank" }] }],
+      _closedTabs: []
+    }],
+    _closedWindows: []
+  });
+  ss.setBrowserState(blankState);
+
+  // Wait for the sessionstore.js file to be written before going on.
+  // Note: we don't wait for the complete event, since if asyncCopy fails we
+  // would timeout.
+  let os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
+  os.addObserver({observe: function(aSubject, aTopic, aData) {
+    os.removeObserver(this, aTopic);
+    info("sessionstore.js is being written");
+    executeSoon(continue_test);
+  }}, "sessionstore-state-write", false);
 
   // Remove the sessionstore.js file before setting the interval to 0
   let profilePath = Cc["@mozilla.org/file/directory_service;1"].
@@ -53,43 +77,11 @@ function test() {
   sessionStoreJS.append("sessionstore.js");
   if (sessionStoreJS.exists())
     sessionStoreJS.remove(false);
-  ok(sessionStoreJS.exists() == false, "sessionstore.js was removed");
+  info("sessionstore.js was correctly removed: " + (!sessionStoreJS.exists()));
+
   // Make sure that sessionstore.js can be forced to be created by setting
-  // the interval pref to a low value.
-  gPrefService.setIntPref("browser.sessionstore.interval", 100);
-  // sessionstore.js should be re-created at this point
-  sessionStoreJS = profilePath.clone();
-  sessionStoreJS.append("sessionstore.js");
-
-  // Wait for the sessionstore.js file to be written before going on.
-  let os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  os.addObserver({observe: function(aSubject, aTopic, aData) {
-    if (gPrefService.prefHasUserValue("browser.sessionstore.interval"))
-      gPrefService.clearUserPref("browser.sessionstore.interval");
-    os.removeObserver(this, aTopic);
-    executeSoon(continue_test);
-  }}, "sessionstore-state-write-complete", false);
-
-  //XXXDEBUG Detect spurious windows-restored notifications.
-  os.addObserver({observe: function(aSubject, aTopic, aData) {
-    // If this is not called in this test it will be called by next ones,
-    // but i don't mind actually, it's just an info(), and will go away once
-    // the randomness has been fixed.
-    info("Windows status has been restored, was that expected?");
-    os.removeObserver(this, aTopic);
-  }}, "sessionstore-windows-restored", false);
-
-  // Set up the browser in a blank state. Popup windows in previous tests result
-  // in different states on different platforms.
-  let blankState = JSON.stringify({
-    windows: [{
-      tabs: [{ entries: [{ url: "about:blank" }] }],
-      _closedTabs: []
-    }],
-    _closedWindows: []
-  });
-  ss.setBrowserState(blankState);
+  // the interval pref to 0.
+  gPrefService.setIntPref("browser.sessionstore.interval", 0);
 }
 
 function continue_test() {
@@ -97,6 +89,8 @@ function continue_test() {
            getService(Ci.nsIWindowWatcher);
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
+  // Ensure Private Browsing mode is disabled.
+  ok(!pb.privateBrowsingEnabled, "Private Browsing is disabled");
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
 
@@ -175,8 +169,11 @@ function continue_test() {
                        "restored when exiting PB mode");
                   }
 
-                  if (aTestIndex == TESTS.length - 1)
+                  if (aTestIndex == TESTS.length - 1) {
+                    if (gPrefService.prefHasUserValue("browser.sessionstore.interval"))
+                      gPrefService.clearUserPref("browser.sessionstore.interval");
                     finish();
+                  }
                   else {
                     // Run next test.
                     openWindowAndTest(aTestIndex + 1, !aRunNextTestInPBMode);

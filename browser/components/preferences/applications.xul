@@ -103,7 +103,7 @@
                   type="bool"/>
     </preferences>
 
-    <script type="application/x-javascript" src="chrome://browser/content/preferences/applications.js"/>
+    <script type="application/javascript" src="chrome://browser/content/preferences/applications.js"/>
 
     <keyset>
       <key key="&focusSearch1.key;" modifiers="accel" oncommand="gApplicationsPane.focusFilterBox();"/>

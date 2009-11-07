@@ -231,7 +231,7 @@ function nsPlacesAutoComplete()
                    "UNION ALL " +
                    sql_base_fragment("moz_places") +
                    "AND +h.id NOT IN (SELECT id FROM moz_places_temp) " +
-                   "ORDER BY h.frecency DESC " +
+                   "ORDER BY h.frecency DESC, h.id DESC " +
                    "LIMIT :maxResults";
 
   //////////////////////////////////////////////////////////////////////////////

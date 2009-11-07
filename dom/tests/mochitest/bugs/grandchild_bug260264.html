@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <script type="application/javascript" src="utils_bug260264.js"></script>
+  </head>
+  <body>
+    <a id="nested link" href="javascript:(function(){})()">nested link</a>
+    <script type="application/javascript">
+      var event = location.hash.split("#").pop();
+      send(document.getElementById("nested link"), event, function() {
+        var popup = window.open("http://example.com"),
+            grandparent = window.open(null, "parent260264");
+        try { grandparent.report(popup) }
+        finally { popup && popup.close() }
+      });
+    </script>
+  </body>
+</html>

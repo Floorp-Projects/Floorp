@@ -67,6 +67,12 @@ _MOCHITEST_FILES = \
 		test_pluginstream_newstream.html \
 		$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+_MOCHITEST_FILES += \
+ 		test_windowed_invalidate.html \
+        $(NULL)
+endif
+
 _MOCHICHROME_FILES = \
 		test_bug479979.xul \
 		test_npruntime.xul   \

@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=517396
+-->
+<window title="Mozilla Bug 517396"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test for Bug 517396</title>
+  <script type="application/javascript" 
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(function () {
+   // this test fails on Linux, bug 526236
+  if (navigator.platform.indexOf("Lin") != -1) {
+    ok(true, "disabled on Linux");
+    SimpleTest.finish();
+    return;
+  }
+
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
+                      getService(Components.interfaces.nsIWindowMediator);
+  var win = wm.getMostRecentWindow("navigator:browser");
+  var oldWidth = win.outerWidth, oldHeight = win.outerHeight;
+  win.maximize();
+  var newWidth = win.outerWidth, newHeight = win.outerHeight;
+  win.moveBy(10, 0);
+  var sizeShouldHaveChanged = !navigator.platform.match(/Mac/);
+  var compFunc = sizeShouldHaveChanged ? isnot : is;
+  var not = sizeShouldHaveChanged ? "" : "not ";
+  compFunc(win.outerWidth, newWidth, "moving a maximized window should " + not + "have changed its width");
+  compFunc(win.outerHeight, newHeight, "moving a maximized window should " + not + "have changed its height");
+  win.restore();
+  is(win.outerWidth, oldWidth, "restored window has wrong width");
+  is(win.outerHeight, oldHeight, "restored window has wrong height");
+  SimpleTest.finish();
+});
+
+]]>
+</script>
+
+</window>

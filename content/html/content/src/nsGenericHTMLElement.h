@@ -62,6 +62,7 @@ class nsILayoutHistoryState;
 class nsIEditor;
 struct nsRect;
 struct nsSize;
+class nsHTMLFormElement;
 
 typedef nsMappedAttributeElement nsGenericHTMLElementBase;
 
@@ -506,7 +507,7 @@ public:
    *        returned.  This is needed to handle cases when HTML elements have a
    *        current form that they're not descendants of.
    */
-  already_AddRefed<nsIDOMHTMLFormElement> FindForm(nsIForm* aCurrentForm = nsnull);
+  nsHTMLFormElement* FindForm(nsHTMLFormElement* aCurrentForm = nsnull);
 
   virtual void RecompileScriptEventListeners();
 
@@ -855,7 +856,7 @@ protected:
   FocusTristate FocusState();
 
   /** The form that contains this control */
-  nsIForm* mForm;
+  nsHTMLFormElement* mForm;
 };
 
 // If this flag is set on an nsGenericHTMLFormElement, that means that we have

@@ -47,8 +47,7 @@ function run_test() {
   result.root.containerOpen = true;
   var rootNode = result.root;
   rootNode.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-  var outObj = {};
-  var queries = rootNode.getQueries(outObj);
+  var queries = rootNode.getQueries();
   do_check_eq(queries[0].uri, null); // Should be null, instead of crashing the browser
   rootNode.containerOpen = false;
 }

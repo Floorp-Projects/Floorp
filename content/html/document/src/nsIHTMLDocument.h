@@ -55,10 +55,10 @@ class nsIDOMHTMLBodyElement;
 class nsIScriptElement;
 class nsIEditor;
 
-// 5a959364-a2f4-4cac-9a2c-957055dc3569
+// 56ff0e81-191c-421c-b75c-1727e13091c0
 #define NS_IHTMLDOCUMENT_IID \
-{ 0x5a959364, 0xa2f4, 0x4cac, \
-  { 0x9a, 0x2c, 0x95, 0x70, 0x55, 0xdc, 0x35, 0x69 } }
+{ 0x56ff0e81, 0x191c, 0x421c, \
+  { 0xb7, 0x5c, 0x17, 0x27, 0xe1, 0x30, 0x91, 0xc0 } }
 
 
 /**
@@ -197,6 +197,8 @@ public:
   virtual void TearingDownEditor(nsIEditor *aEditor) = 0;
 
   virtual void SetIsXHTML(PRBool aXHTML) = 0;
+
+  virtual void SetDocWriteDisabled(PRBool aDisabled) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLDocument, NS_IHTMLDOCUMENT_IID)

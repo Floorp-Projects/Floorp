@@ -226,6 +226,10 @@ public:
     nsresult AutoRegisterDirectory(nsIFile*                  aComponentFile,
                                    nsCOMArray<nsILocalFile> &aLeftovers,
                                    nsTArray<DeferredModule> &aDeferred);
+    nsresult AutoRegisterComponentsList(nsIFile* inDir,
+                                        PRFileDesc* fd,
+                                        nsCOMArray<nsILocalFile>& aLeftovers,
+                                        nsTArray<DeferredModule>& aDeferred);
     nsresult AutoRegisterComponent(nsILocalFile*             aComponentFile,
                                    nsTArray<DeferredModule> &aDeferred,
                                    LoaderType                minLoader = NS_LOADER_TYPE_NATIVE);
