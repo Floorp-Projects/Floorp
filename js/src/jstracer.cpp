@@ -5269,8 +5269,8 @@ DeleteRecorder(JSContext* cx)
 
 /*
  * Check whether the shape of the global object has changed. The return value
- * indicates whether the recorder is still active.  If 'false', the JIT has
- * been reset in response to a global object change.
+ * indicates whether the recorder is still active.  If 'false', any active
+ * recording has been aborted and the JIT may have been reset.
  */
 static JS_REQUIRES_STACK bool
 CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
@@ -5282,7 +5282,8 @@ CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
     }
 
     if (STOBJ_NSLOTS(globalObj) > MAX_GLOBAL_SLOTS) {
-        ResetJIT(cx, FR_GLOBALS_FULL);
+        if (tm->recorder)
+            js_AbortRecording(cx, "too many slots in global object");
         return false;
     }
 
