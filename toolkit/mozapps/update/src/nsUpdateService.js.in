@@ -1392,13 +1392,13 @@ UpdateService.prototype = {
     var currentAddons = em.getIncompatibleItemList(this._update.extensionVersion,
                                                    this._update.platformVersion,
                                                    Ci.nsIUpdateItem.TYPE_ANY,
-                                                   false, { });
+                                                   false);
     if (currentAddons.length > 0) {
       // Get the add-ons that are incompatible with the current application
       // version and toolkit version.
       var previousAddons = em.getIncompatibleItemList(null, null,
                                                       Ci.nsIUpdateItem.TYPE_ANY,
-                                                      false, { });
+                                                      false);
       // Don't include add-ons that are already incompatible with the current
       // application version and toolkit version.
       for (var i = 0; i < previousAddons.length; ++i) {

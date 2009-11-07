@@ -2525,7 +2525,7 @@ ExtensionManager.prototype = {
     if (!getPref("getBoolPref", PREF_EM_UPDATE_ENABLED, true))
       return;
 
-    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
+    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY);
 
     var updater = new ExtensionItemUpdater(this);
     updater.checkForUpdates(items, items.length,
@@ -3405,7 +3405,7 @@ ExtensionManager.prototype = {
    * @returns An array of active items of the specified type.
    */
   _getActiveItems: function EM__getActiveItems(type) {
-    var allItems = this.getItemList(type, { });
+    var allItems = this.getItemList(type);
     var activeItems = [];
     var ds = this.datasource;
     for (var i = 0; i < allItems.length; ++i) {
@@ -4863,7 +4863,7 @@ ExtensionManager.prototype = {
    */
   _updateDependentItemsForID: function EM__updateDependentItemsForID(id) {
     var ds = this.datasource;
-    var dependentItems = this.getDependentItemListForID(id, true, { });
+    var dependentItems = this.getDependentItemListForID(id, true);
     for (var i = 0; i < dependentItems.length; ++i) {
       var dependentID = dependentItems[i].id;
       ds.updateProperty(dependentID, "satisfiesDependencies");
@@ -4901,7 +4901,7 @@ ExtensionManager.prototype = {
     }
 
     if (items.length == 0)
-      items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
+      items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY);
 
     var updater = new ExtensionItemUpdater(this);
     updater.checkForUpdates(items, items.length, updateCheckType, listener,
@@ -4918,7 +4918,7 @@ ExtensionManager.prototype = {
 
     var list = [];
     var ds = this.datasource;
-    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
+    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY);
     for (var i = 0; i < items.length; ++i) {
       var id = items[i].id;
 
@@ -4952,7 +4952,8 @@ ExtensionManager.prototype = {
       ds.updateProperty(id, "blocklistedsoft");
     }
 
-    itemCount.value = list.length;
+    if (itemCount)
+      itemCount.value = list.length;
     return list;
   },
 
@@ -5016,7 +5017,8 @@ ExtensionManager.prototype = {
     var items = this.datasource.getIncompatibleItemList(appVersion ? appVersion : undefined,
                                                         platformVersion ? platformVersion : undefined,
                                                         type, includeDisabled);
-    countRef.value = items.length;
+    if (countRef)
+      countRef.value = items.length;
     return items;
   },
 
@@ -6732,7 +6734,8 @@ ExtensionsDataSource.prototype = {
       if (type != -1 && type & desiredType)
         items.push(this.getItemForID(eID));
     }
-    countRef.value = items.length;
+    if (countRef)
+      countRef.value = items.length;
     return items;
   },
 
@@ -6771,7 +6774,8 @@ ExtensionsDataSource.prototype = {
         }
       }
     }
-    countRef.value = items.length;
+    if (countRef)
+      countRef.value = items.length;
     return items;
   },
 
