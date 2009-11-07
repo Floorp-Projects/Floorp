@@ -1,6 +1,8 @@
 <!ENTITY weavePrefPane.label        "Services">
 <!ENTITY accountSetupTitle.label    "Account Setup">
 
+<!ENTITY connectTo.label            "Connect to">
+
 <!ENTITY serverType.main.label      "Mozilla Weave Server">
 <!ENTITY serverType.custom.label    "Use a custom server">
 
