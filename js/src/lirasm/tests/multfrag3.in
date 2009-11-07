@@ -2,8 +2,8 @@
 p1 = param 0 0
 p2 = param 1 0
 sum = add p1 p2
-two = int 2
-avg = div sum two
+one = int 1
+avg = rsh sum one
 ret avg
 .end
 
