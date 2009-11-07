@@ -2336,22 +2336,23 @@ ExtensionManager.prototype = {
     catch (e) {
     }
 
-    if ("nsICrashReporter" in Ci && gApp instanceof Ci.nsICrashReporter) {
-      // Annotate the crash report with the list of add-ons
-      try {
-        try {
-          gApp.annotateCrashReport("Add-ons", gPref.getCharPref(PREF_EM_ENABLED_ITEMS));
-        } catch (e) { }
-        gApp.annotateCrashReport("Theme", gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN));
-      }
-      catch (ex) {
-        // This will fail in unnofficial builds, ignorable error
-      }
-    }
-
     gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
     gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
     gCheckUpdateSecurity = getPref("getBoolPref", PREF_EM_CHECK_UPDATE_SECURITY, true);
+
+    if ("nsICrashReporter" in Ci && gApp instanceof Ci.nsICrashReporter) {
+      // Annotate the crash report with relevant add-on information.
+      try {
+        gApp.annotateCrashReport("Add-ons", gPref.getCharPref(PREF_EM_ENABLED_ITEMS));
+      } catch (e) { }
+      try {
+        gApp.annotateCrashReport("Theme", gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN));
+      } catch (e) { }
+      try {
+        gApp.annotateCrashReport("EMCheckCompatibility", gCheckCompatibility);
+      } catch (e) { }
+    }
+
     gPref.addObserver("extensions.", this, false);
     gPref.addObserver(PREF_MATCH_OS_LOCALE, this, false);
     gPref.addObserver(PREF_SELECTED_LOCALE, this, false);
