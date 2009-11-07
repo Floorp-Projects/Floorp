@@ -94,6 +94,10 @@ ifdef NSS_DISABLE_DBM
 DEFINES += -DNSS_DISABLE_DBM=1
 endif
 
+ifdef MOZ_UPDATER
+DEFINES += -DMOZ_UPDATER=1
+endif
+
 ifdef MOZ_PKG_MANIFEST_P
 MOZ_PKG_MANIFEST = package-manifest
 

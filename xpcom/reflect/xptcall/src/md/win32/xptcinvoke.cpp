@@ -80,13 +80,11 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
 // Tell the PDB file this function has a standard frame pointer, and not to use
 // a custom FPO program.
 #pragma optimize( "y", off )
-extern "C" NS_EXPORT __declspec(naked) nsresult NS_FROZENCALL
+extern "C" NS_EXPORT nsresult NS_FROZENCALL
 NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
                  PRUint32 paramCount, nsXPTCVariant* params)
 {
     __asm {
-        push    ebp
-        mov     ebp,esp
         mov     edx,paramCount      // Save paramCount for later
         test    edx,edx             // maybe we don't have any params to copy
         jz      noparams
@@ -103,8 +101,6 @@ noparams:
         mov     eax,methodIndex
         call    [edx][eax*4]        // stdcall, i.e. callee cleans up stack.
         mov     esp,ebp
-        pop     ebp
-        ret
     }
 }
 #pragma warning(default : 4035) // restore default

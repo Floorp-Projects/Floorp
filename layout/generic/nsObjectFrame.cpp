@@ -208,11 +208,9 @@ enum { XKeyPress = KeyPress };
 static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 #endif /* PR_LOGGING */
 
-// 1020 / 60
-#define NORMAL_PLUGIN_DELAY 17
-
-// low enough to avoid audio skipping/delays
-#define HIDDEN_PLUGIN_DELAY 100
+#define NORMAL_PLUGIN_DELAY 20
+// must avoid audio skipping/delays
+#define HIDDEN_PLUGIN_DELAY 250
 
 // special class for handeling DOM context menu events because for
 // some reason it starves other mouse events if implemented on the
@@ -1201,6 +1199,15 @@ nsObjectFrame::IsOpaque() const
     if (window->type == NPWindowTypeDrawable) {
       // XXX we possibly should check NPPVpluginTransparentBool
       // here to optimize for windowless but opaque plugins
+      if (mInstanceOwner) {
+        nsresult rv;
+        PRBool transparent = PR_FALSE;
+        nsCOMPtr<nsIPluginInstance> pi;
+        if (NS_SUCCEEDED(rv = mInstanceOwner->GetInstance(*getter_AddRefs(pi)))) {
+          pi->IsTransparent(&transparent);
+          return !transparent;
+        }
+      }
       return PR_FALSE;
     }
   }
@@ -1845,7 +1852,6 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
     break;
     
   default:
-    // instead of using an event listener, we can dispatch events to plugins directly.
     rv = nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
   }
 
@@ -2625,18 +2631,28 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument* *aDocument)
 
 NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
 {
-  nsresult rv = NS_ERROR_FAILURE;
+  if (!mOwner || !invalidRect || !mWidgetVisible)
+    return NS_ERROR_FAILURE;
 
-  if (mOwner && invalidRect && mWidgetVisible) {
-    nsPresContext* presContext = mOwner->PresContext();
-    nsRect rect(presContext->DevPixelsToAppUnits(invalidRect->left),
-                presContext->DevPixelsToAppUnits(invalidRect->top),
-                presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
-                presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
-    mOwner->Invalidate(rect + mOwner->GetUsedBorderAndPadding().TopLeft());
+#ifndef XP_MACOSX
+  // Windowed plugins should not be calling NPN_InvalidateRect, but
+  // Silverlight does and expects it to "work"
+  if (mWidget) {
+    mWidget->Invalidate(nsIntRect(invalidRect->left, invalidRect->top,
+                                  invalidRect->right - invalidRect->left,
+                                  invalidRect->bottom - invalidRect->top),
+                        PR_FALSE);
+    return NS_OK;
   }
+#endif
 
-  return rv;
+  nsPresContext* presContext = mOwner->PresContext();
+  nsRect rect(presContext->DevPixelsToAppUnits(invalidRect->left),
+              presContext->DevPixelsToAppUnits(invalidRect->top),
+              presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
+              presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
+  mOwner->Invalidate(rect + mOwner->GetUsedBorderAndPadding().TopLeft());
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(NPRegion invalidRegion)

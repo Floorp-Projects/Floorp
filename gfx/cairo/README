@@ -60,6 +60,8 @@ quartz-const-globals.patch: make some Quartz color function data const globals i
 
 quartz-minimze-gradient-repeat.patch: reduce the number of gradient stop repetitions we use, to improve quality of Quartz's gradient rendering
 
+quartz-first-stop.patch: return the first stop for negative positions on the gradient line of a nonrepeating linear gradient
+
 ==== pixman patches ====
 
 pixman-neon.patch: add ARM NEON optimized compositing functions

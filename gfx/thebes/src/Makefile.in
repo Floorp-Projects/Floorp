@@ -53,6 +53,8 @@ CPPSRCS	+= 	gfxWindowsPlatform.cpp \
 
 ifdef WINCE
 CPPSRCS	+= gfxFT2Fonts.cpp \
+	   gfxFT2FontBase.cpp \
+	   gfxFT2Utils.cpp \
 	   gfxDDrawSurface.cpp \
 	   $(NULL)
 EXTRA_DSO_LDOPTS += ddraw.lib
@@ -96,6 +98,8 @@ endif
 CPPSRCS +=  gfxPlatformGtk.cpp gfxGdkNativeRenderer.cpp
 CPPSRCS +=	gfxPDFSurface.cpp gfxPSSurface.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
+CPPSRCS +=	gfxFT2FontBase.cpp
+CPPSRCS +=	gfxFT2Utils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
 
 ifdef MOZ_X11
@@ -117,6 +121,8 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp
 CPPSRCS += gfxXlibSurface.cpp gfxQtNativeRenderer.cpp
 CPPSRCS +=	gfxFT2Fonts.cpp
+CPPSRCS +=	gfxFT2FontBase.cpp
+CPPSRCS +=	gfxFT2Utils.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
 #CSRCS = cairo-xlib-utils.c
@@ -126,6 +132,8 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 CPPSRCS	+= 	gfxBeOSSurface.cpp gfxBeOSPlatform.cpp
 CPPSRCS +=	gfxPangoFonts.cpp 
+CPPSRCS +=	gfxFT2FontBase.cpp
+CPPSRCS +=	gfxFT2Utils.cpp
 #CPPSRCS +=	gfxPDFSurface.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp

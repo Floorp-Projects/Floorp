@@ -617,7 +617,7 @@ nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
 {
   // XXX Check needed because frame construction can't properly figure out when
   // a frame is the child of a scrollframe
-  if (aFrame->GetStyleContext()->GetPseudoType() ==
+  if (aFrame->GetStyleContext()->GetPseudo() ==
       nsCSSAnonBoxes::scrolledContent) {
     return PR_TRUE;
   }
@@ -1585,6 +1585,14 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   if (nsnull != GetNextContinuation()) {
     fprintf(out, " next-continuation=%p", static_cast<void*>(GetNextContinuation()));
   }
+  void* IBsibling = GetProperty(nsGkAtoms::IBSplitSpecialSibling);
+  if (IBsibling) {
+    fprintf(out, " IBSplitSpecialSibling=%p", IBsibling);
+  }
+  void* IBprevsibling = GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling);
+  if (IBprevsibling) {
+    fprintf(out, " IBSplitSpecialPrevSibling=%p", IBprevsibling);
+  }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
@@ -1597,7 +1605,7 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
             overflowArea.width, overflowArea.height);
   }
   fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
-  nsIAtom* pseudoTag = mStyleContext->GetPseudoType();
+  nsIAtom* pseudoTag = mStyleContext->GetPseudo();
   if (pseudoTag) {
     nsAutoString atomString;
     pseudoTag->ToString(atomString);

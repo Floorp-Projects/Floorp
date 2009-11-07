@@ -100,7 +100,7 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
     mPosterImage = NS_NewHTMLImageElement(nodeInfo);
     NS_ENSURE_TRUE(mPosterImage, NS_ERROR_OUT_OF_MEMORY);
-    
+
     // Set the nsImageLoadingContent::ImageState() to 0. This means that the
     // image will always report its state as 0, so it will never be reframed
     // to show frames for loading or the broken image icon. This is important,
@@ -108,14 +108,14 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     nsCOMPtr<nsIImageLoadingContent> imgContent = do_QueryInterface(mPosterImage);
     NS_ENSURE_TRUE(imgContent, NS_ERROR_FAILURE);
 
-    imgContent->ForceImageState(PR_TRUE, 0);    
+    imgContent->ForceImageState(PR_TRUE, 0);
 
     nsresult res = UpdatePosterSource(PR_FALSE);
     NS_ENSURE_SUCCESS(res,res);
-    
+
     if (!aElements.AppendElement(mPosterImage))
       return NS_ERROR_OUT_OF_MEMORY;
-  } 
+  }
 
   // Set up "videocontrols" XUL element which will be XBL-bound to the
   // actual controls.
@@ -167,7 +167,7 @@ CorrectForAspectRatio(const gfxRect& aRect, const nsIntSize& aRatio)
 
 void
 nsVideoFrame::PaintVideo(nsIRenderingContext& aRenderingContext,
-                         const nsRect& aDirtyRect, nsPoint aPt) 
+                         const nsRect& aDirtyRect, nsPoint aPt)
 {
   nsRect area = GetContentRect() - GetPosition() + aPt;
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
@@ -177,9 +177,9 @@ nsVideoFrame::PaintVideo(nsIRenderingContext& aRenderingContext,
 
   gfxContext* ctx = static_cast<gfxContext*>(aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
   nsPresContext* presContext = PresContext();
-  gfxRect r = gfxRect(presContext->AppUnitsToGfxUnits(area.x), 
-                      presContext->AppUnitsToGfxUnits(area.y), 
-                      presContext->AppUnitsToGfxUnits(area.width), 
+  gfxRect r = gfxRect(presContext->AppUnitsToGfxUnits(area.x),
+                      presContext->AppUnitsToGfxUnits(area.y),
+                      presContext->AppUnitsToGfxUnits(area.width),
                       presContext->AppUnitsToGfxUnits(area.height));
 
   r = CorrectForAspectRatio(r, videoSize);
@@ -233,7 +233,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
         kidReflowState.SetComputedHeight(aReflowState.ComputedHeight());
       } else {
         kidReflowState.SetComputedWidth(0);
-        kidReflowState.SetComputedHeight(0);      
+        kidReflowState.SetComputedHeight(0);
       }
       ReflowChild(imageFrame, aPresContext, kidDesiredSize, kidReflowState,
                   mBorderPadding.left, mBorderPadding.top, 0, aStatus);
@@ -350,10 +350,10 @@ nsVideoFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 nsSize nsVideoFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
-                                     nsSize aCBSize, 
+                                     nsSize aCBSize,
                                      nscoord aAvailableWidth,
-                                     nsSize aMargin, 
-                                     nsSize aBorder, 
+                                     nsSize aMargin,
+                                     nsSize aBorder,
                                      nsSize aPadding,
                                      PRBool aShrinkWrap)
 {
@@ -365,13 +365,13 @@ nsSize nsVideoFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
 
   nsSize& intrinsicRatio = size; // won't actually be used
 
-  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aRenderingContext, 
+  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aRenderingContext,
                                                            this,
                                                            intrinsicSize,
                                                            intrinsicRatio,
-                                                           aCBSize, 
-                                                           aMargin, 
-                                                           aBorder, 
+                                                           aCBSize,
+                                                           aMargin,
+                                                           aBorder,
                                                            aPadding);
 }
 
@@ -405,7 +405,7 @@ PRBool nsVideoFrame::ShouldDisplayPoster()
 
   nsCOMPtr<nsIImageLoadingContent> imgContent = do_QueryInterface(mPosterImage);
   NS_ENSURE_TRUE(imgContent, PR_FALSE);
-  
+
   nsCOMPtr<imgIRequest> request;
   nsresult res = imgContent->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
                                         getter_AddRefs(request));
@@ -416,8 +416,8 @@ PRBool nsVideoFrame::ShouldDisplayPoster()
   PRUint32 status = 0;
   res = request->GetImageStatus(&status);
   if (NS_FAILED(res) || (status & imgIRequest::STATUS_ERROR))
-    return PR_FALSE;  
-  
+    return PR_FALSE;
+
   return PR_TRUE;
 }
 
@@ -454,7 +454,7 @@ nsSize nsVideoFrame::GetIntrinsicSize(nsIRenderingContext *aRenderingContext)
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
   size = element->GetVideoSize(size);
 
-  return nsSize(nsPresContext::CSSPixelsToAppUnits(size.width), 
+  return nsSize(nsPresContext::CSSPixelsToAppUnits(size.width),
                 nsPresContext::CSSPixelsToAppUnits(size.height));
 }
 
@@ -498,6 +498,6 @@ PRBool nsVideoFrame::HasVideoData()
   if (!HasVideoElement())
     return PR_FALSE;
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
-  nsIntSize size = element->GetVideoSize(nsIntSize(0,0));    
+  nsIntSize size = element->GetVideoSize(nsIntSize(0,0));
   return size != nsIntSize(0,0);
 }

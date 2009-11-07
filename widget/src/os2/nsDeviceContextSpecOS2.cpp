@@ -497,10 +497,10 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::BeginDocument(PRUnichar* aTitle,
   }
 
   char *title = GetACPString(aTitle);
-  const PSZ pszGenericDocName = "Mozilla Document";
-  PSZ pszDocName = title ? title : pszGenericDocName;
+  PCSZ pszGenericDocName = "Mozilla Document";
+  PCSZ pszDocName = title ? title : pszGenericDocName;
   LONG lResult = DevEscape(mPrintDC, DEVESC_STARTDOC,
-                           strlen(pszDocName) + 1, pszDocName,
+                           strlen(pszDocName) + 1, const_cast<BYTE*>(pszDocName),
                            (PLONG)NULL, (PBYTE)NULL);
   mPrintingStarted = PR_TRUE;
   if (title) {

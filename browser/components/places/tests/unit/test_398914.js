@@ -170,7 +170,7 @@ function run_test() {
   do_check_eq(bm1lm, bm2lm);
 
 
-  var ids = bmsvc.getBookmarkIdsForURI(testURI, {});
+  var ids = bmsvc.getBookmarkIdsForURI(testURI);
   do_check_eq(ids[0], bm2);
   do_check_eq(ids[1], bm1);
 

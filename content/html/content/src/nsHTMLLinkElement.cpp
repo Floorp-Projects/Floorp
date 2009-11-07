@@ -60,10 +60,14 @@
 #include "nsPIDOMWindow.h"
 #include "nsPLDOMEvent.h"
 
+#include "Link.h"
+using namespace mozilla::dom;
+
 class nsHTMLLinkElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLLinkElement,
                           public nsILink,
-                          public nsStyleLinkElement
+                          public nsStyleLinkElement,
+                          public Link
 {
 public:
   nsHTMLLinkElement(nsINodeInfo *aNodeInfo);
@@ -121,9 +125,6 @@ protected:
                                  nsAString& aType,
                                  nsAString& aMedia,
                                  PRBool* aIsAlternate);
- 
-  // The cached visited state
-  nsLinkState mLinkState;
 };
 
 
@@ -131,8 +132,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Link)
 
 
 nsHTMLLinkElement::nsHTMLLinkElement(nsINodeInfo *aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo),
-    mLinkState(eLinkState_Unknown)
+  : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
@@ -234,16 +234,11 @@ nsHTMLLinkElement::LinkRemoved()
 void
 nsHTMLLinkElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
-  if (oldDoc) {
-    GetCurrentDoc()->ForgetLink(this);
-    // If this link is ever reinserted into a document, it might
-    // be under a different xml:base, so forget the cached state now
-    mLinkState = eLinkState_Unknown;
-  }
+  Link::ResetLinkState();
 
   // Once we have XPCOMGC we shouldn't need to call UnbindFromTree during Unlink
   // and so this messy event dispatch can go away.
+  nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
   CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMLinkRemoved"));
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
   UpdateStyleSheetInternal(oldDoc);
@@ -273,15 +268,9 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
 
   nsRefPtr<nsPLDOMEvent> event = new nsPLDOMEvent(this, aEventName, PR_TRUE);
   if (event) {
-    // If we have script blockers on the stack then we want to run as soon as
-    // they are removed. Otherwise punt the runable to the event loop as we
-    // don't know when it will be safe to run script.  In particular, we might
-    // be in the middle of a pagehide right now, and firing this event at that
-    // point is not such a great idea.
-    if (nsContentUtils::IsSafeToRunScript())
-      event->PostDOMEvent();
-    else
-      event->RunDOMEventWhenSafe();
+    // Always run async in order to avoid running script when the content
+    // sink isn't expecting it.
+    event->PostDOMEvent();
   }
 }
 
@@ -291,14 +280,7 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            PRBool aNotify)
 {
   if (aName == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
-    nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
-      doc->ForgetLink(this);
-        // The change to 'href' will cause style reresolution which will
-        // eventually recompute the link state and re-add this element
-        // to the link map if necessary.
-    }
-    SetLinkState(eLinkState_Unknown);
+    Link::ResetLinkState();
   }
 
   nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
@@ -328,11 +310,7 @@ nsHTMLLinkElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify)
 {
   if (aAttribute == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
-    nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
-      doc->ForgetLink(this);
-    }
-    SetLinkState(eLinkState_Unknown);
+    Link::ResetLinkState();
   }
 
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
@@ -379,13 +357,13 @@ nsHTMLLinkElement::GetLinkTarget(nsAString& aTarget)
 nsLinkState
 nsHTMLLinkElement::GetLinkState() const
 {
-  return mLinkState;
+  return Link::GetLinkState();
 }
 
 void
 nsHTMLLinkElement::SetLinkState(nsLinkState aState)
 {
-  mLinkState = aState;
+  Link::SetLinkState(aState);
 }
 
 already_AddRefed<nsIURI>

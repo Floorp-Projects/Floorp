@@ -36,8 +36,10 @@ function setOrRestoreTabFocus(newValue) {
   const prefSvcIID = Components.interfaces.nsIPrefService;
   var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID)
                                                    .getBranch("accessibility.");
-  if (!newValue && prefs.prefHasUserValue("tabfocus")) {
-    prefs.clearUserPref("tabfocus");
+  if (!newValue) {
+    if (prefs.prefHasUserValue("tabfocus")) {
+      prefs.clearUserPref("tabfocus");
+    }
   } else {
     prefs.setIntPref("tabfocus", newValue);
   }

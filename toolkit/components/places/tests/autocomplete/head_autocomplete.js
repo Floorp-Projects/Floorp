@@ -117,7 +117,8 @@ function ensure_results(aSearch, aExpected)
       let j;
       for (j = 0; j < aExpected.length; j++) {
         // Skip processed expected results
-        if (aExpected[j] == undefined) continue;
+        if (aExpected[j] == undefined)
+          continue;
 
         let [uri, title, tags] = gPages[aExpected[j]];
 
@@ -164,23 +165,19 @@ function ensure_results(aSearch, aExpected)
 }
 
 // Get history services
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
-  var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-  var tagsvc = Cc["@mozilla.org/browser/tagging-service;1"].
-               getService(Ci.nsITaggingService);
-  var iosvc = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-  var prefs = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
-  var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].
-              getService(Ci.nsILivemarkService);
-} catch(ex) {
-  do_throw("Could not get services\n");
-}
+var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+              getService(Ci.nsINavHistoryService);
+var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
+var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+            getService(Ci.nsINavBookmarksService);
+var tagsvc = Cc["@mozilla.org/browser/tagging-service;1"].
+             getService(Ci.nsITaggingService);
+var iosvc = Cc["@mozilla.org/network/io-service;1"].
+            getService(Ci.nsIIOService);
+var prefs = Cc["@mozilla.org/preferences-service;1"].
+            getService(Ci.nsIPrefBranch);
+var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].
+            getService(Ci.nsILivemarkService);
 
 // Some date not too long ago
 let gDate = new Date(Date.now() - 1000 * 60 * 60) * 1000;
@@ -241,7 +238,7 @@ function addLivemark(aContainerSiteURI, aContainerFeedURI, aContainerTitle,
                      aChildURI, aChildTitle, aTransitionType, aNoChildVisit)
 {
   // Add a page entry for the child uri
-  gPages[aChildURI] = [aChildURI, aChildTitle, /* no tags */];
+  gPages[aChildURI] = [aChildURI, aChildTitle, null];
 
   let out = [aChildURI, aChildTitle];
   out.push("\nchild uri=" + kURIs[aChildURI]);

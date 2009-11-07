@@ -128,7 +128,7 @@ endif
 
 package-tests:
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-	@(cd $(PKG_STAGE) && tar $(TAR_CREATE_FLAGS) - *) | bzip2 -f > $(DIST)/$(PKG_PATH)$(TEST_PACKAGE)
+	@(cd $(PKG_STAGE) && tar $(TAR_CREATE_FLAGS) - *) | bzip2 -f > "$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)"
 
 make-stage-dir:
 	rm -rf $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE)/bin && $(NSINSTALL) -D $(PKG_STAGE)/bin/components && $(NSINSTALL) -D $(PKG_STAGE)/certs

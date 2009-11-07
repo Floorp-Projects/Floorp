@@ -63,7 +63,7 @@
                  name="dom.disable_window_status_change" type="bool"/>
     </preferences>
     
-    <script type="application/x-javascript" src="chrome://browser/content/preferences/advanced-scripts.js"/>
+    <script type="application/javascript" src="chrome://browser/content/preferences/advanced-scripts.js"/>
 
     <stringbundle id="preferencesBundle" src="chrome://browser/locale/preferences/preferences.properties"/>
 

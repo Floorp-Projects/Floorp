@@ -1184,14 +1184,8 @@ nsUnknownContentTypeDialog.prototype = {
 // This Component's module implementation.  All the code below is used to get this
 // component registered and accessible via XPCOM.
 var module = {
-    firstTime: true,
-
     // registerSelf: Register this component.
     registerSelf: function (compMgr, fileSpec, location, type) {
-        if (this.firstTime) {
-            this.firstTime = false;
-            throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
-        }
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
         compMgr.registerFactoryLocation( this.cid,

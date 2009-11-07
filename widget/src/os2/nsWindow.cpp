@@ -1249,8 +1249,12 @@ NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop,
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
-   Resize( aX, aY, mBounds.width, mBounds.height, PR_FALSE);
-   return NS_OK;
+  if (mWindowType == eWindowType_toplevel ||
+      mWindowType == eWindowType_dialog) {
+    SetSizeMode(nsSizeMode_Normal);
+  }
+  Resize(aX, aY, mBounds.width, mBounds.height, PR_FALSE);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1677,9 +1681,9 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData, PRUint32 aWidth,
   } bi;
 
   memset( &bi, 0, sizeof(bi));
-  bi.white.bBlue = 255;
-  bi.white.bGreen = 255;
-  bi.white.bRed = 255;
+  bi.white.bBlue = (BYTE)255;
+  bi.white.bGreen = (BYTE)255;
+  bi.white.bRed = (BYTE)255;
 
   // fill in the particulars
   bi.head.cbFix = sizeof(bi.head);
@@ -3596,13 +3600,14 @@ PRBool nsWindow::CheckDragStatus(PRUint32 aAction, HPS * oHps)
     // for this window, get the hps;  otherwise, return zero;
     // (if we provide a 2nd hps for a window, the cursor in text
     // fields won't be erased when it's moved to another position)
-  if (oHps)
+  if (oHps) {
     if (getHps && !mDragHps) {
       mDragHps = DrgGetPS(mWnd);
       *oHps = mDragHps;
-    }
-    else
+    } else {
       *oHps = 0;
+    }
+  }
 
   return rtn;
 }

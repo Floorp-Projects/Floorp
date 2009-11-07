@@ -39,14 +39,6 @@
 
     function doTest()
     {
-      if (!WIN) {
-        ok(true,
-           "Nothing to test because scolling events are fired on Windows only");
-
-        SimpleTest.finish();
-        return;
-      }
-
       var actionsArray = [
         {
           ID: "anchor1",
@@ -63,7 +55,7 @@
           actionIndex: 0,
           events: CLICK_EVENTS,
           eventSeq: [
-            new scrollingChecker(getAccessible("bottom2").firstChild)
+            new scrollingChecker(getAccessible("bottom2"))
           ]
         }
       ];
@@ -82,7 +74,18 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=506389"
      title="Some same page links do not fire EVENT_SYSTEM_SCROLLINGSTART">
     Mozilla Bug 506389
+  </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=437607"
+     title="Clicking the 'Skip to main content' link once works, second time fails to initiate a V cursor jump">
+    Mozilla Bug 437607
+  </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=519303"
+     title="Same page links to targets with content fires scrolling start accessible event on leaf text node">
+    Mozilla Bug 519303
   </a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">

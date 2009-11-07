@@ -21,7 +21,7 @@ function fireEvent(target, event) {
   utils.dispatchDOMEventViaPresShell(target, event, true);
 }
 
-function fireDrop(element, dragData, effectAllowed) {
+function fireDrop(element, dragData, shouldAllowDrop, shouldAllowOnlyChromeDrop) {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var ds = Components.classes["@mozilla.org/widget/dragservice;1"].
     getService(Components.interfaces.nsIDragService);
@@ -31,6 +31,10 @@ function fireDrop(element, dragData, effectAllowed) {
   var event = document.createEvent("DragEvents");
   event.initDragEvent("dragover", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, null);
   fireEvent(element, event);
+
+  is(ds.getCurrentSession().canDrop, shouldAllowDrop, "Unexpected .canDrop");
+  is(ds.getCurrentSession().onlyChromeDrop, shouldAllowOnlyChromeDrop,
+     "Unexpected .onlyChromeDrop");
 
   event = document.createEvent("DragEvents");
   event.initDragEvent("drop", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, null);
@@ -43,7 +47,7 @@ function fireDrop(element, dragData, effectAllowed) {
 function runTests()
 {
   var targetHandling = document.getElementById("handling_target");
-  fireDrop(targetHandling, [{"test/plain": "Hello!"}]);
+  fireDrop(targetHandling, [{"test/plain": "Hello!"}], false, false);
 
   is(gGotHandlingDrop, true, "Got drop on accepting element (1)");
   is(gGotNotHandlingDrop, false, "Didn't get drop on unaccepting element (1)");
@@ -53,7 +57,7 @@ function runTests()
   gGotNotHandlingDrop = false;
 
   var targetNotHandling = document.getElementById("nothandling_target");
-  fireDrop(targetNotHandling, [{"test/plain": "Hello!"}]);
+  fireDrop(targetNotHandling, [{"test/plain": "Hello!"}], true, true);
 
   is(gGotHandlingDrop, false, "Didn't get drop on accepting element (2)");
   is(gGotNotHandlingDrop, false, "Didn't get drop on unaccepting element (2)");

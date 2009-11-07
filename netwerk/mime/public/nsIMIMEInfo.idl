@@ -53,7 +53,7 @@ typedef long nsHandlerInfoAction;
  * nsIHandlerInfo gives access to the information about how a given protocol
  * scheme or MIME-type is handled.
  */
-[scriptable, uuid(8E726396-3E02-467C-855E-5900E562BA42)] 
+[scriptable, uuid(325e56a7-3762-4312-aec7-f1fcf84b4145)] 
 interface nsIHandlerInfo : nsISupports {
     /**
      * The type of this handler info.  For MIME handlers, this is the MIME type.
@@ -157,7 +157,7 @@ interface nsIHandlerInfo : nsISupports {
  * MIMEInfo objects are generally retrieved from the MIME Service
  * @see nsIMIMEService
  */
-[scriptable, uuid(cd7083f8-5fe9-4248-bb09-0b0e2982fde8)]
+[scriptable, uuid(1c21acef-c7a1-40c6-9d40-a20480ee53a1)]
 interface nsIMIMEInfo : nsIHandlerInfo {
     /**
      * Gives you an array of file types associated with this type.

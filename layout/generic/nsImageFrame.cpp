@@ -1935,7 +1935,7 @@ IsInAutoWidthTableCellForQuirk(nsIFrame *aFrame)
     return PR_FALSE;
   // Check if the parent of the closest nsBlockFrame has auto width.
   nsBlockFrame *ancestor = nsLayoutUtils::FindNearestBlockAncestor(aFrame);
-  if (ancestor->GetStyleContext()->GetPseudoType() == nsCSSAnonBoxes::cellContent) {
+  if (ancestor->GetStyleContext()->GetPseudo() == nsCSSAnonBoxes::cellContent) {
     // Assume direct parent is a table cell frame.
     nsFrame *grandAncestor = static_cast<nsFrame*>(ancestor->GetParent());
     return grandAncestor &&

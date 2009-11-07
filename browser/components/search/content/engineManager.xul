@@ -56,7 +56,7 @@
         persist="screenX screenY"
         windowtype="Browser:SearchManager">
 
-  <script type="application/x-javascript"
+  <script type="application/javascript"
           src="chrome://browser/content/search/engineManager.js"/>
 
   <commandset id="engineManagerCommandSet">

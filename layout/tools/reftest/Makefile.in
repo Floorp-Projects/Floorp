@@ -88,6 +88,8 @@ copy-harness: $(_HARNESS_FILES)
 	$(INSTALL) $(_HARNESS_FILES) $(_DEST_DIR)
 	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - reftest) | (cd $(_DEST_DIR) && tar -xf -)
 	$(INSTALL) $(DIST)/bin/components/httpd.js $(_DEST_DIR)/reftest/components
+# need to get httpd.js into components.list so it loads
+	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(_DEST_DIR)/reftest/components/components.list httpd.js
 	$(INSTALL) $(DIST)/bin/components/test_necko.xpt $(_DEST_DIR)/reftest/components
 
 PKG_STAGE = $(DIST)/test-package-stage

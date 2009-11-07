@@ -204,7 +204,39 @@ CreateBidiContinuation(nsIFrame*       aFrame,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  
+
+  // Have to special case floating first letter frames because the continuation
+  // doesn't go in the first letter frame. The continuation goes with the rest
+  // of the text that the first letter frame was made out of.
+  if (parent->GetType() == nsGkAtoms::letterFrame &&
+      parent->GetStyleDisplay()->IsFloating()) {
+    nsIFrame* oldParent = parent;
+    nsPlaceholderFrame* placeholderFrame =
+      presShell->FrameManager()->GetPlaceholderFrameFor(parent);
+    parent = placeholderFrame->GetParent();
+
+    (*aNewFrame)->SetParent(parent);
+    nsHTMLContainerFrame::ReparentFrameView(aFrame->PresContext(), *aNewFrame,
+                                            oldParent, parent);
+
+    // The continuation will have gotten the first letter style from it's prev
+    // continuation, so we need to repair the style context so it doesn't have
+    // the first letter styling.
+    nsStyleContext* parentSC = oldParent->GetStyleContext()->GetParent();
+    if (parentSC) {
+      nsRefPtr<nsStyleContext> newSC;
+      newSC = presShell->StyleSet()->ResolveStyleForNonElement(parentSC);
+      if (newSC) {
+        (*aNewFrame)->SetStyleContext(newSC);
+      }
+    }
+
+    // The list name nsGkAtoms::nextBidi would indicate we don't want reflow
+    nsFrameList temp(*aNewFrame, *aNewFrame);
+    rv = parent->InsertFrames(nsGkAtoms::nextBidi, placeholderFrame, temp);
+    return rv;
+  }
+
   // The list name nsGkAtoms::nextBidi would indicate we don't want reflow
   // XXXbz this needs higher-level framelist love
   nsFrameList temp(*aNewFrame, *aNewFrame);
@@ -886,18 +918,19 @@ nsBidiPresUtils::IsLeftOrRightMost(nsIFrame*              aFrame,
 
   if ((aIsLeftMost || aIsRightMost) &&
       (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
-    // For ib splits, don't treat the first part as endmost or the
-    // last part as startmost.
-    if (nsLayoutUtils::FrameIsInFirstPartOfIBSplit(aFrame)) {
+    // For ib splits, don't treat anything except the last part as
+    // endmost or anything except the first part as startmost.
+    // As an optimization, only get the first continuation once.
+    nsIFrame* firstContinuation = aFrame->GetFirstContinuation();
+    if (nsLayoutUtils::FrameIsNonLastInIBSplit(firstContinuation)) {
       // We are not endmost
       if (isLTR) {
         aIsRightMost = PR_FALSE;
       } else {
         aIsLeftMost = PR_FALSE;
       }
-    } else {
-      NS_ASSERTION(nsLayoutUtils::FrameIsInLastPartOfIBSplit(aFrame),
-                   "How did that happen?");
+    }
+    if (nsLayoutUtils::FrameIsNonFirstInIBSplit(firstContinuation)) {
       // We are not startmost
       if (isLTR) {
         aIsLeftMost = PR_FALSE;
@@ -1030,7 +1063,7 @@ nsBidiPresUtils::RepositionInlineFrames(nsIFrame* aFirstChild) const
   // have been reflowed, which is required for GetUsedMargin/Border/Padding
   nsMargin margin = aFirstChild->GetUsedMargin();
   if (!aFirstChild->GetPrevContinuation() &&
-      !nsLayoutUtils::FrameIsInLastPartOfIBSplit(aFirstChild))
+      !nsLayoutUtils::FrameIsNonFirstInIBSplit(aFirstChild))
     leftSpace = isLTR ? margin.left : margin.right;
 
   nscoord left = aFirstChild->GetPosition().x - leftSpace;

@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=260264
+-->
+<head>
+  <title>Test for Bug 260264</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="utils_bug260264.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=260264">Mozilla Bug 260264</a>
+<p id="display">
+  <a id="link" href="javascript:(function(){})()">link</a>
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 260264 **/
+
+SimpleTest.waitForExplicitFinish();
+
+/**
+ * These functions can be called without arguments to retrieve the current
+ * value of the preference/privilege, or called with a single argument to set
+ * the preference/privilege to a new value.
+ *
+ * In other words, they obey the interface that |hold| expects its |accessor|
+ * parameter to obey.
+ */
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var popupMax = makePrefAccessor("dom.popup_maximum"),
+    popupEvents = makePrefAccessor("dom.popup_allowed_events"),
+    blockPopups = makePrefAccessor("dom.disable_open_during_load"),
+    ownPopupPriv = makePopupPrivAccessor(location.href);
+
+var a = $("link"),
+    checkOpened = function() { ok(window.open("http://example.com"), "not properly opened") },
+    checkBlocked = function() { ok(!window.open("http://example.com"), "not properly blocked") };
+
+/**
+ * Intentional popups are not limited by dom.popup_maximum.
+ */
+function testIntentional(event) {
+  hold(popupMax, 3, function() {
+    send(a, event, checkOpened);
+    send(a, event, checkOpened);
+    send(a, event, checkOpened);
+    send(a, event, checkOpened);
+  });
+  window.open.close();
+}
+
+/**
+ * Probably-intentional popups are limited only by dom.popup_maximum, and
+ * closing the popup window immediately allows another to open.
+ */
+function testProbablyIntentional(event) {
+  var max = 3;
+  hold(popupMax, max, function() {
+    for (var count = 0, n = 0; n < max; n++)
+      send(a, event, function() { if (window.open("http://example.com")) count++ });
+    send(a, event, checkBlocked);
+    window.open.close(1);
+    send(a, event, checkOpened);
+    send(a, event, checkBlocked);
+    send(a, event, checkBlocked);
+    window.open.close();
+    ok(count > 0, "Windows left open by previous tests?");
+    while (count --> 0)
+      send(a, event, checkOpened);
+    send(a, event, checkBlocked);
+  });
+  window.open.close();
+}
+
+/**
+ * Probably-unintentional popups are forbidden entirely.
+ */
+function testProbablyUnintentional(event) {
+  hold(popupMax, 2, function() {
+    send(a, event, checkBlocked);
+  });
+  window.open.close();
+}
+
+/**
+ * Please be patient; run_tests opens/closes a LOT of windows.
+ */
+function run_tests() {
+  hold(popupEvents, "click mouseup", function() {
+    // Note: UNKNOWN_ACTION is the same as DENY_ACTION.
+    hold(ownPopupPriv, DENY_ACTION, function() {
+      testIntentional("click");
+      testProbablyIntentional("mouseup");
+      testProbablyUnintentional("mouseover");
+    });
+    hold(ownPopupPriv, ALLOW_ACTION, function() {
+      testIntentional("click");
+      testIntentional("mouseup");
+      testProbablyIntentional("mouseover");
+    });
+  });
+
+  hold(popupEvents, "click", function() {
+    // Note: UNKNOWN_ACTION is the same as DENY_ACTION.
+    hold(ownPopupPriv, DENY_ACTION, function() {
+      testIntentional("click");
+      testProbablyUnintentional("mouseup");
+      testProbablyUnintentional("mouseover");
+    });
+    hold(ownPopupPriv, ALLOW_ACTION, function() {
+      testIntentional("click");
+      testProbablyIntentional("mouseup");
+      testProbablyIntentional("mouseover");
+    });
+  });
+
+  window.open.close(); // just in case
+}
+
+function check_sanity() {
+  hold(ownPopupPriv, UNKNOWN_ACTION, function(unknown) {
+    hold(ownPopupPriv, ALLOW_ACTION, function(allow) {
+      is(ownPopupPriv(), allow, "properly set to allow");
+    });
+    is(ownPopupPriv(), unknown, "properly reset to unknown");
+  });
+}
+
+setTimeout(function() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  check_sanity();
+  hold(blockPopups, true, run_tests);
+  SimpleTest.finish();
+}, 200);
+
+</script>
+</pre>
+</body>
+</html>

@@ -62,6 +62,10 @@ var windowObserver = {
             var query = leftPaneQueries[i];
             is(PlacesUtils.bookmarks.getItemTitle(query.itemId),
                query.correctTitle, "Title is correct for query " + query.name);
+            if ("concreteId" in query) {
+              is(PlacesUtils.bookmarks.getItemTitle(query.concreteId),
+               query.concreteTitle, "Concrete title is correct for query " + query.name);
+            }
           }
 
           // Close Library window.
@@ -87,7 +91,7 @@ function test() {
 
   // Get the left pane folder.
   var leftPaneItems = PlacesUtils.annotations
-                                 .getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO, {});
+                                 .getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO);
 
   is(leftPaneItems.length, 1, "We correctly have only 1 left pane folder");
   // Check version.
@@ -98,19 +102,35 @@ function test() {
 
   // Get all left pane queries.
   var items = PlacesUtils.annotations
-                         .getItemsWithAnnotation(ORGANIZER_QUERY_ANNO, {});
+                         .getItemsWithAnnotation(ORGANIZER_QUERY_ANNO);
   // Get current queries names.
   for (var i = 0; i < items.length; i++) {
     var itemId = items[i];
     var queryName = PlacesUtils.annotations
                                .getItemAnnotation(items[i],
                                                   ORGANIZER_QUERY_ANNO);
-    leftPaneQueries.push({ name: queryName,
-                           itemId: itemId,
-                           correctTitle: PlacesUtils.bookmarks
-                                                    .getItemTitle(itemId) });
+    var query = { name: queryName,
+                  itemId: itemId,
+                  correctTitle: PlacesUtils.bookmarks.getItemTitle(itemId) }
+    switch (queryName) {
+      case "BookmarksToolbar":
+        query.concreteId = PlacesUtils.toolbarFolderId;
+        query.concreteTitle = PlacesUtils.bookmarks.getItemTitle(query.concreteId);
+        break;
+      case "BookmarksMenu":
+        query.concreteId = PlacesUtils.bookmarksMenuFolderId;
+        query.concreteTitle = PlacesUtils.bookmarks.getItemTitle(query.concreteId);
+        break;
+      case "UnfiledBookmarks":
+        query.concreteId = PlacesUtils.unfiledBookmarksFolderId;
+        query.concreteTitle = PlacesUtils.bookmarks.getItemTitle(query.concreteId);
+        break;
+    }
+    leftPaneQueries.push(query);
     // Rename to a bad title.
-    PlacesUtils.bookmarks.setItemTitle(itemId, "badName");
+    PlacesUtils.bookmarks.setItemTitle(query.itemId, "badName");
+    if ("concreteId" in query)
+      PlacesUtils.bookmarks.setItemTitle(query.concreteId, "badName");
   }
 
   // Open Library, this will kick-off left pane code.

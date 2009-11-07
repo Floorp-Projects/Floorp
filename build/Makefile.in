@@ -120,6 +120,8 @@ check::
 	@if ! file -b ./unify-test-universal | head -n1 | grep -q "^Mach-O universal binary"; then \
           echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to produce a universal binary!"; \
           false; \
+        else \
+          echo "TEST-PASS | build/ | unify produced a universal binary!"; \
         fi
 # try unifying two identical Java class files
 	rm -f unifytesta.class unifytestb.class unifytestc.class
@@ -137,6 +139,26 @@ check::
 	@if ! diff -q ./unifytesta.class ./unifytestc.class; then \
           echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to unify a Java class file!"; \
           false; \
+        else \
+          echo "TEST-PASS | build/ | unify unified a Java class file!"; \
+        fi
+# try unifying some files that differ only in line ordering
+	rm -rf unify-sort-test
+	mkdir unify-sort-test unify-sort-test/a unify-sort-test/b
+	printf "lmn\nabc\nxyz\n" > unify-sort-test/a/file.foo
+	printf "xyz\nlmn\nabc\n" > unify-sort-test/b/file.foo
+	printf "abc\nlmn\nxyz\n" > unify-sort-test/expected-result
+	@if ! $(srcdir)/macosx/universal/unify --unify-with-sort "\.foo$$" \
+          ./unify-sort-test/a ./unify-sort-test/b \
+          ./unify-sort-test/c; then \
+          echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to unify files with differing line ordering!"; \
+          false; \
+        fi
+	@if ! diff -q ./unify-sort-test/expected-result ./unify-sort-test/c/file.foo; then \
+          echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to unify files with differing line ordering!"; \
+          false; \
+        else \
+          echo "TEST-PASS | build/ | unify unified files with differing line ordering!"; \
         fi
 endif
 

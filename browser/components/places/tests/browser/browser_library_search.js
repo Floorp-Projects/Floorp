@@ -205,7 +205,7 @@ function search(aFolderId, aSearchStr, aExpectedScopeButtonId) {
       // contentTree.place should be equal to contentTree.getResult().root.uri,
       // but it's not until bug 476952 is fixed.
       var query = queryStringToQuery(contentTree.getResult().root.uri);
-      is(query.getFolders({}, {})[0], aFolderId,
+      is(query.getFolders()[0], aFolderId,
          "Content tree's folder should be what was selected in the left pane");
     }
   }
