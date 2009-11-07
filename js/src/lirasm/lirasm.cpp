@@ -890,8 +890,10 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_add:
           case LIR_sub:
           case LIR_mul:
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
           case LIR_div:
           case LIR_mod:
+#endif
           case LIR_fadd:
           case LIR_fsub:
           case LIR_fmul:
@@ -1254,8 +1256,8 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     I_II_ops.push_back(LIR_iaddp);
     I_II_ops.push_back(LIR_sub);
     I_II_ops.push_back(LIR_mul);
-    I_II_ops.push_back(LIR_div);
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
+    I_II_ops.push_back(LIR_div);
     I_II_ops.push_back(LIR_mod);
 #endif
     I_II_ops.push_back(LIR_and);
