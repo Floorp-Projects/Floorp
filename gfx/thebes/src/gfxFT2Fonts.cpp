@@ -50,6 +50,8 @@
 #endif
 #include "gfxTypes.h"
 #include "gfxFT2Fonts.h"
+#include "gfxFT2FontBase.h"
+#include "gfxFT2Utils.h"
 #include <locale.h>
 #include "cairo-ft.h"
 #include FT_TRUETYPE_TAGS_H
@@ -711,8 +713,8 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
 {
     const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     // we'll pass this in/figure it out dynamically, but at this point there can be only one face.
-    gfxFT2Font::FaceLock faceLock(font);
-    FT_Face face = faceLock.Face();
+    gfxFT2LockedFace faceLock(font);
+    FT_Face face = faceLock.get();
 
     gfxTextRun::CompressedGlyph g;
 
@@ -803,33 +805,14 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
     }
 }
 
-/*
- * Stack-based face lock helper
- */
-gfxFT2Font::FaceLock::FaceLock(gfxFT2Font *font)
-{
-    mScaledFont = font->CairoScaledFont();
-    mFace = cairo_ft_scaled_font_lock_face(mScaledFont);
-}
-
-gfxFT2Font::FaceLock::~FaceLock()
-{
-    cairo_ft_scaled_font_unlock_face(mScaledFont);
-}
-
 /**
  * gfxFT2Font
  */
-gfxFT2Font::gfxFT2Font(FontEntry *aFontEntry,
-                     const gfxFontStyle *aFontStyle)
-    : gfxFont(aFontEntry, aFontStyle),
-      mScaledFont(nsnull),
-      mHasSpaceGlyph(PR_FALSE),
-      mSpaceGlyph(0),
-      mHasMetrics(PR_FALSE),
-      mAdjustedSize(0)
+gfxFT2Font::gfxFT2Font(cairo_scaled_font_t *aCairoFont,
+                       FontEntry *aFontEntry,
+                       const gfxFontStyle *aFontStyle)
+    : gfxFT2FontBase(aCairoFont, aFontEntry, aFontStyle)
 {
-    mFontEntry = aFontEntry;
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
 
     mCharGlyphCache.Init(64);
@@ -837,155 +820,6 @@ gfxFT2Font::gfxFT2Font(FontEntry *aFontEntry,
 
 gfxFT2Font::~gfxFT2Font()
 {
-    if (mScaledFont) {
-        cairo_scaled_font_destroy(mScaledFont);
-        mScaledFont = nsnull;
-    }
-}
-
-const gfxFont::Metrics&
-gfxFT2Font::GetMetrics()
-{
-    if (mHasMetrics)
-        return mMetrics;
-
-    mMetrics.emHeight = GetStyle()->size;
-
-    gfxFT2Font::FaceLock faceLock(this);
-    FT_Face face = faceLock.Face();
-
-    if (!face) {
-        // Abort here already, otherwise we crash in the following
-        // this can happen if the font-size requested is zero.
-        // The metrics will be incomplete, but then we don't care.
-        return mMetrics;
-    }
-
-    mMetrics.emHeight = GetStyle()->size;
-
-    FT_UInt gid; // glyph ID
-
-    const double emUnit = 1.0 * face->units_per_EM;
-    const double xScale = face->size->metrics.x_ppem / emUnit;
-    const double yScale = face->size->metrics.y_ppem / emUnit;
-
-    // cache properties of space
-    GetSpaceGlyph();
-
-    // properties of 'x', also use its width as average width
-    gid = FT_Get_Char_Index(face, 'x'); // select the glyph
-    if (gid) {
-        // Load glyph into glyph slot. Here, use no_scale to get font units.
-        FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
-        mMetrics.xHeight = face->glyph->metrics.height * yScale;
-        mMetrics.aveCharWidth = face->glyph->metrics.width * xScale;
-    } else {
-        // this font doesn't have an 'x'...
-        // fake these metrics using a fraction of the font size
-        mMetrics.xHeight = mMetrics.emHeight * 0.5;
-        mMetrics.aveCharWidth = mMetrics.emHeight * 0.5;
-    }
-
-    // compute an adjusted size if we need to
-    if (mAdjustedSize == 0 && GetStyle()->sizeAdjust != 0) {
-        gfxFloat aspect = mMetrics.xHeight / GetStyle()->size;
-        mAdjustedSize = GetStyle()->GetAdjustedSize(aspect);
-        mMetrics.emHeight = mAdjustedSize;
-    }
-
-    // now load the OS/2 TrueType table to load access some more properties
-    TT_OS2 *os2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, ft_sfnt_os2);
-    if (os2 && os2->version != 0xFFFF) { // should be there if not old Mac font
-        // if we are here we can improve the avgCharWidth
-        mMetrics.aveCharWidth = os2->xAvgCharWidth * xScale;
-
-        mMetrics.superscriptOffset = os2->ySuperscriptYOffset * yScale;
-        mMetrics.superscriptOffset = PR_MAX(1, mMetrics.superscriptOffset);
-        // some fonts have the incorrect sign (from gfxPangoFonts)
-        mMetrics.subscriptOffset   = fabs(os2->ySubscriptYOffset * yScale);
-        mMetrics.subscriptOffset   = PR_MAX(1, fabs(mMetrics.subscriptOffset));
-        mMetrics.strikeoutOffset   = os2->yStrikeoutPosition * yScale;
-        mMetrics.strikeoutSize     = os2->yStrikeoutSize * yScale;
-    } else {
-        // use fractions of emHeight instead of xHeight for these to be more robust
-        mMetrics.superscriptOffset = mMetrics.emHeight * 0.5;
-        mMetrics.subscriptOffset   = mMetrics.emHeight * 0.2;
-        mMetrics.strikeoutOffset   = mMetrics.emHeight * 0.3;
-        mMetrics.strikeoutSize     = face->underline_thickness * yScale;
-    }
-    // seems that underlineOffset really has to be negative
-    mMetrics.underlineOffset = face->underline_position * yScale;
-    mMetrics.underlineSize   = face->underline_thickness * yScale;
-
-    // descents are negative in FT but Thebes wants them positive
-    mMetrics.emAscent        = face->ascender * yScale;
-    mMetrics.emDescent       = -face->descender * yScale;
-    mMetrics.maxHeight       = face->height * yScale;
-    mMetrics.maxAscent       = face->bbox.yMax * yScale;
-    mMetrics.maxDescent      = -face->bbox.yMin * yScale;
-    mMetrics.maxAdvance      = face->max_advance_width * xScale;
-    // leading are not available directly (only for WinFNTs)
-    double lineHeight = mMetrics.maxAscent + mMetrics.maxDescent;
-    if (lineHeight > mMetrics.emHeight) {
-        mMetrics.internalLeading = lineHeight - mMetrics.emHeight;
-    } else {
-        mMetrics.internalLeading = 0;
-    }
-    mMetrics.externalLeading = 0; // normal value for OS/2 fonts, too
-
-    SanitizeMetrics(&mMetrics, PR_FALSE);
-
-    /*
-    printf("gfxOS2Font[%#x]::GetMetrics():\n"
-           "  emHeight=%f == %f=gfxFont::style.size == %f=adjSz\n"
-           "  maxHeight=%f  xHeight=%f\n"
-           "  aveCharWidth=%f==xWidth  spaceWidth=%f\n"
-           "  supOff=%f SubOff=%f   strOff=%f strSz=%f\n"
-           "  undOff=%f undSz=%f    intLead=%f extLead=%f\n"
-           "  emAsc=%f emDesc=%f maxH=%f\n"
-           "  maxAsc=%f maxDes=%f maxAdv=%f\n",
-           (unsigned)this,
-           mMetrics.emHeight, GetStyle()->size, mAdjustedSize,
-           mMetrics.maxHeight, mMetrics.xHeight,
-           mMetrics.aveCharWidth, mMetrics.spaceWidth,
-           mMetrics.superscriptOffset, mMetrics.subscriptOffset,
-           mMetrics.strikeoutOffset, mMetrics.strikeoutSize,
-           mMetrics.underlineOffset, mMetrics.underlineSize,
-           mMetrics.internalLeading, mMetrics.externalLeading,
-           mMetrics.emAscent, mMetrics.emDescent, mMetrics.maxHeight,
-           mMetrics.maxAscent, mMetrics.maxDescent, mMetrics.maxAdvance
-          );
-    */
-
-    // XXX mMetrics.height needs to be set.
-
-    mHasMetrics = PR_TRUE;
-    return mMetrics;
-}
-
-
-nsString
-gfxFT2Font::GetUniqueName()
-{
-    return GetName();
-}
-
-PRUint32
-gfxFT2Font::GetSpaceGlyph()
-{
-    NS_ASSERTION (GetStyle()->size != 0, "forgot to short-circuit a text run with zero-sized font?");
-
-    if (!mHasSpaceGlyph) {
-        const CachedGlyphData *gdata = GetGlyphDataForChar(' ');
-
-        mSpaceGlyph = gdata->glyphIndex;
-        NS_ASSERTION(mSpaceGlyph != 0, "Font has no space glyph!");
-
-        mMetrics.spaceWidth = MOZ_FT_TRUNC(gdata->xAdvance);
-        mHasSpaceGlyph = PR_TRUE;
-    }
-
-    return mSpaceGlyph;
 }
 
 cairo_font_face_t *
@@ -998,59 +832,45 @@ gfxFT2Font::CairoFontFace()
     return GetFontEntry()->CairoFontFace();
 }
 
-cairo_scaled_font_t *
-gfxFT2Font::CairoScaledFont()
+static cairo_scaled_font_t *
+CreateScaledFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
 {
-    if (!mScaledFont) {
-        cairo_matrix_t sizeMatrix;
-        cairo_matrix_t identityMatrix;
+    cairo_scaled_font_t *scaledFont = NULL;
 
-        // XXX deal with adjusted size
-        cairo_matrix_init_scale(&sizeMatrix, mStyle.size, mStyle.size);
-        cairo_matrix_init_identity(&identityMatrix);
+    cairo_matrix_t sizeMatrix;
+    cairo_matrix_t identityMatrix;
 
-        // synthetic oblique by skewing via the font matrix
-        PRBool needsOblique = (!mFontEntry->mItalic && (mStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)));
+    // XXX deal with adjusted size
+    cairo_matrix_init_scale(&sizeMatrix, aStyle->size, aStyle->size);
+    cairo_matrix_init_identity(&identityMatrix);
 
-        if (needsOblique) {
-            const double kSkewFactor = 0.25;
+    // synthetic oblique by skewing via the font matrix
+    PRBool needsOblique = (!aFontEntry->mItalic && (aStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)));
 
-            cairo_matrix_t style;
-            cairo_matrix_init(&style,
-                              1,                //xx
-                              0,                //yx
-                              -1 * kSkewFactor,  //xy
-                              1,                //yy
-                              0,                //x0
-                              0);               //y0
-            cairo_matrix_multiply(&sizeMatrix, &sizeMatrix, &style);
-        }
+    if (needsOblique) {
+        const double kSkewFactor = 0.25;
 
-        cairo_font_options_t *fontOptions = cairo_font_options_create();
-        mScaledFont = cairo_scaled_font_create(CairoFontFace(), &sizeMatrix,
-                                               &identityMatrix, fontOptions);
-        cairo_font_options_destroy(fontOptions);
+        cairo_matrix_t style;
+        cairo_matrix_init(&style,
+                          1,                //xx
+                          0,                //yx
+                          -1 * kSkewFactor,  //xy
+                          1,                //yy
+                          0,                //x0
+                          0);               //y0
+        cairo_matrix_multiply(&sizeMatrix, &sizeMatrix, &style);
     }
 
-    NS_ASSERTION(mAdjustedSize == 0.0 ||
-                 cairo_scaled_font_status(mScaledFont) == CAIRO_STATUS_SUCCESS,
+    cairo_font_options_t *fontOptions = cairo_font_options_create();
+    scaledFont = cairo_scaled_font_create(aFontEntry->CairoFontFace(),
+                                          &sizeMatrix,
+                                          &identityMatrix, fontOptions);
+    cairo_font_options_destroy(fontOptions);
+
+    NS_ASSERTION(cairo_scaled_font_status(scaledFont) == CAIRO_STATUS_SUCCESS,
                  "Failed to make scaled font");
 
-    return mScaledFont;
-}
-
-PRBool
-gfxFT2Font::SetupCairoFont(gfxContext *aContext)
-{
-    cairo_scaled_font_t *scaledFont = CairoScaledFont();
-
-    if (cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
-        // Don't cairo_set_scaled_font as that would propagate the error to
-        // the cairo_t, precluding any further drawing.
-        return PR_FALSE;
-    }
-    cairo_set_scaled_font(aContext->GetCairo(), scaledFont);
-    return PR_TRUE;
+    return scaledFont;
 }
 
 /**
@@ -1076,7 +896,9 @@ gfxFT2Font::GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
 {
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry->Name(), aStyle);
     if (!font) {
-        font = new gfxFT2Font(aFontEntry, aStyle);
+        cairo_scaled_font_t *scaledFont = CreateScaledFont(aFontEntry, aStyle);
+        font = new gfxFT2Font(scaledFont, aFontEntry, aStyle);
+        cairo_scaled_font_destroy(scaledFont);
         if (!font)
             return nsnull;
         gfxFontCache::GetCache()->AddNew(font);
@@ -1089,8 +911,8 @@ gfxFT2Font::GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
 void
 gfxFT2Font::FillGlyphDataForChar(PRUint32 ch, CachedGlyphData *gd)
 {
-    gfxFT2Font::FaceLock faceLock(this);
-    FT_Face face = faceLock.Face();
+    gfxFT2LockedFace faceLock(this);
+    FT_Face face = faceLock.get();
 
     FT_UInt gid = FT_Get_Char_Index(face, ch);
 

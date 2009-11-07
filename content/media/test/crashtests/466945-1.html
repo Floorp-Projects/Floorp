@@ -1,0 +1,25 @@
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+var s;
+
+function boom()
+{
+  s = document.createElement("span");
+  s.innerHTML = "<video src='data:text/html,' autoplay='autoplay'><\/video>";
+  document.body.appendChild(document.createElement("iframe"));
+  setTimeout(boom2, 0);
+}
+
+function boom2()
+{
+  s.innerHTML = "";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 0);"></body>
+</html>

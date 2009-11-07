@@ -44,15 +44,20 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = update
 
+EXTRA_PP_COMPONENTS = nsUpdateTimerManager.js
+
 ifdef MOZ_UPDATER
-DEFINES += -DMOZ_UPDATER
 DIRS = updater
-endif
+
+EXTRA_PP_COMPONENTS += nsUpdateServiceStub.js
 
 EXTRA_COMPONENTS = nsUpdateService.js
 GARBAGE += nsUpdateService.js
+endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifdef MOZ_UPDATER
 nsUpdateService.js: nsUpdateService.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $@ 
+endif

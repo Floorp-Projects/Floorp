@@ -42,6 +42,7 @@
 
 class nsIDOMWindow;
 class nsIPrintSettings;
+class nsIWebBrowserPrint;
 
 /*
  * Interface to a print dialog accessed through the widget library.
@@ -73,11 +74,14 @@ public:
    *                  print dialog. On return, if the print operation should
    *                  proceed then this contains settings for the print
    *                  operation.
+   * @param aWebBrowserPrint A nsIWebBrowserPrint object that can be used for
+   *                         retreiving the title of the printed document.
    * @return NS_OK if the print operation should proceed
    * @return NS_ERROR_ABORT if the user indicated not to proceed
    * @return a suitable error for failures to show the print dialog.
    */
-  NS_IMETHOD Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings) = 0;
+  NS_IMETHOD Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings,
+                  nsIWebBrowserPrint *aWebBrowserPrint) = 0;
 
   /**
    * Show the page setup dialog. Note that there is no way to tell whether the

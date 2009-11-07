@@ -94,7 +94,6 @@ public:
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 #endif
 
 protected:

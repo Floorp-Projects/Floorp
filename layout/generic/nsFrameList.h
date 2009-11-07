@@ -45,6 +45,9 @@
 
 class nsIFrame;
 
+// Uncomment this to enable expensive frame-list integrity checking
+// #define DEBUG_FRAME_LIST
+
 /**
  * A class for managing a list of frames.
  */
@@ -60,9 +63,7 @@ public:
     mFirstChild(aFirstFrame), mLastChild(aLastFrame)
   {
     MOZ_COUNT_CTOR(nsFrameList);
-#ifdef DEBUG
     VerifyList();
-#endif
   }
 
   nsFrameList(const nsFrameList& aOther) :
@@ -265,9 +266,6 @@ public:
 
 #ifdef DEBUG
   void List(FILE* out) const;
-protected:
-  void VerifyList() const;
-public:
 #endif
 
   static nsresult Init();
@@ -437,6 +435,12 @@ public:
   };
 
 private:
+#ifdef DEBUG_FRAME_LIST
+  void VerifyList() const;
+#else
+  void VerifyList() const {}
+#endif
+
   static const nsFrameList* sEmptyList;
 
 protected:

@@ -326,13 +326,15 @@ protected:
   already_AddRefed<nsIAccessible> GetNextWithState(nsIAccessible *aStart, PRUint32 matchState);
 
   /**
-   * Return an accessible for the given DOM node, or if that node isn't accessible, return the
-   * accessible for the next DOM node which has one (based on forward depth first search)
-   * @param aStartNode, the DOM node to start from
-   * @param aRequireLeaf, only accept leaf accessible nodes
-   * @return the resulting accessible
+   * Return an accessible for the given DOM node, or if that node isn't
+   * accessible, return the accessible for the next DOM node which has one
+   * (based on forward depth first search).
+   *
+   * @param  aStartNode  [in] the DOM node to start from
+   * @return              the resulting accessible
    */   
-  already_AddRefed<nsIAccessible> GetFirstAvailableAccessible(nsIDOMNode *aStartNode, PRBool aRequireLeaf = PR_FALSE);
+  already_AddRefed<nsIAccessible>
+    GetFirstAvailableAccessible(nsIDOMNode *aStartNode);
 
   // Hyperlink helpers
   virtual nsresult GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset);

@@ -60,7 +60,7 @@ static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
   "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "beforeunload", "unload", "hashchange", "abort", "error",
-  "submit", "reset", "change", "select", "input", "paint" ,"text",
+  "submit", "reset", "change", "select", "input" ,"text",
   "compositionstart", "compositionend", "popupshowing", "popupshown",
   "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture",
@@ -146,6 +146,8 @@ nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent)
       mExplicitOriginalTarget = nsnull;
     }
   }
+
+  NS_ASSERTION(mEvent->message != NS_PAINT, "Trying to create a DOM paint event!");
 }
 
 nsDOMEvent::~nsDOMEvent() 
@@ -804,11 +806,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent = zLevelEvent;
       break;
     }
-    case NS_PAINT_EVENT:
-    {
-      newEvent = new nsPaintEvent(PR_FALSE, msg, nsnull);
-      break;
-    }
     case NS_SCROLLBAR_EVENT:
     {
       newEvent = new nsScrollbarEvent(PR_FALSE, msg, nsnull);
@@ -1332,8 +1329,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_select];
   case NS_FORM_INPUT:
     return sEventNames[eDOMEvents_input];
-  case NS_PAINT:
-    return sEventNames[eDOMEvents_paint];
   case NS_RESIZE_EVENT:
     return sEventNames[eDOMEvents_resize];
   case NS_SCROLL_EVENT:

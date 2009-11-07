@@ -106,11 +106,11 @@ function run_test() {
   do_check_eq(tag1node.childCount, 2);
 
   // test getTagsForURI
-  var uri1tags = tagssvc.getTagsForURI(uri1, {});
+  var uri1tags = tagssvc.getTagsForURI(uri1);
   do_check_eq(uri1tags.length, 2);
   do_check_eq(uri1tags[0], "Tag 1");
   do_check_eq(uri1tags[1], "Tag 2");
-  var uri2tags = tagssvc.getTagsForURI(uri2, {});
+  var uri2tags = tagssvc.getTagsForURI(uri2);
   do_check_eq(uri2tags.length, 1);
   do_check_eq(uri2tags[0], "Tag 1");
 
@@ -148,14 +148,14 @@ function run_test() {
   // as well as non-id numeric tags
   var uri3 = uri("http://testuri/3");
   tagssvc.tagURI(uri3, [tagId, "tag 3", "456"]);
-  var tags = tagssvc.getTagsForURI(uri3, {});
+  var tags = tagssvc.getTagsForURI(uri3);
   do_check_true(tags.indexOf(tagTitle) != -1);
   do_check_true(tags.indexOf("tag 3") != -1);
   do_check_true(tags.indexOf("456") != -1);
 
   // test mixed id/name tagging
   tagssvc.untagURI(uri3, [tagId, "tag 3", "456"]);
-  tags = tagssvc.getTagsForURI(uri3, {});
+  tags = tagssvc.getTagsForURI(uri3);
   do_check_eq(tags.length, 0);
 
   // Terminate tagging service, fire up a new instance and check that existing
@@ -166,7 +166,7 @@ function run_test() {
   tagssvc = null;
   tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
             getService(Ci.nsITaggingService);
-  var uri4Tags = tagssvc.getTagsForURI(uri4, {});
+  var uri4Tags = tagssvc.getTagsForURI(uri4);
   do_check_eq(uri4Tags.length, 3);
   do_check_true(uri4Tags.indexOf(tagTitle) != -1);
   do_check_true(uri4Tags.indexOf("tag 3") != -1);

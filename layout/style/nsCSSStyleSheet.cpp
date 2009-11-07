@@ -962,7 +962,7 @@ nsCSSStyleSheetInner::RebuildNameSpaces()
 nsresult
 nsCSSStyleSheetInner::CreateNamespaceMap()
 {
-  mNameSpaceMap = nsXMLNameSpaceMap::Create();
+  mNameSpaceMap = nsXMLNameSpaceMap::Create(PR_FALSE);
   NS_ENSURE_TRUE(mNameSpaceMap, NS_ERROR_OUT_OF_MEMORY);
   // Override the default namespace map behavior for the null prefix to
   // return the wildcard namespace instead of the null namespace.

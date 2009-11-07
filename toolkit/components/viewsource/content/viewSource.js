@@ -232,6 +232,7 @@ function viewSource(url)
   }
 
   window.addEventListener("AppCommand", HandleAppCommandEvent, true);
+  window.addEventListener("MozSwipeGesture", HandleSwipeGesture, true);
   window.content.focus();
 }
 
@@ -279,6 +280,24 @@ function HandleAppCommandEvent(evt)
       break;
     case "Forward":
       BrowserForward();
+      break;
+  }
+}
+
+function HandleSwipeGesture(evt) {
+  evt.stopPropagation();
+  switch (evt.direction) {
+    case SimpleGestureEvent.DIRECTION_LEFT:
+      BrowserBack();
+      break;
+    case SimpleGestureEvent.DIRECTION_RIGHT:
+      BrowserForward();
+      break;
+    case SimpleGestureEvent.DIRECTION_UP:
+      goDoCommand("cmd_scrollTop");
+      break;
+    case SimpleGestureEvent.DIRECTION_DOWN:
+      goDoCommand("cmd_scrollBottom");
       break;
   }
 }

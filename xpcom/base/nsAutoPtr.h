@@ -184,6 +184,19 @@ class nsAutoPtr
           return get();
         }
 
+      // This operator is needed for gcc <= 4.0.* and for Sun Studio; it
+      // causes internal compiler errors for some MSVC versions.  (It's not
+      // clear to me whether it should be needed.)
+#ifndef _MSC_VER
+      template <class U, class V>
+      U&
+      operator->*(U V::* aMember)
+        {
+          NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsAutoPtr with operator->*().");
+          return get()->*aMember;
+        }
+#endif
+
 #ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
   // broken version for IRIX
 
@@ -1084,6 +1097,19 @@ class nsRefPtr
           NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsRefPtr with operator->().");
           return get();
         }
+
+      // This operator is needed for gcc <= 4.0.* and for Sun Studio; it
+      // causes internal compiler errors for some MSVC versions.  (It's not
+      // clear to me whether it should be needed.)
+#ifndef _MSC_VER
+      template <class U, class V>
+      U&
+      operator->*(U V::* aMember)
+        {
+          NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsRefPtr with operator->*().");
+          return get()->*aMember;
+        }
+#endif
 
 #ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
   // broken version for IRIX

@@ -1,0 +1,15 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml">
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+<binding id="a" inheritstyle="false">
+<content>
+<style xmlns="http://www.w3.org/1999/xhtml">
+window::after, box::after, bindings::after { content:"m"; float:right;}
+</style>
+</content>
+</binding>
+</bindings>
+
+<box style="-moz-binding:url(crash1.xul);overflow: scroll;"/>
+
+</window>

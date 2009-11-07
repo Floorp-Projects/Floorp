@@ -1084,12 +1084,12 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
   PRBool ltr = (NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection);
 
   // Only apply start-margin on the first-in flow for inline frames,
-  // and make sure to not apply it to the last part of an ib split.
-  // Note that the ib special sibling annotations only live on the
-  // first continuation, but we don't want to apply the start margin
-  // for later continuations anyway.
+  // and make sure to not apply it to any inline other than the first
+  // in an ib split.  Note that the ib special sibling annotations
+  // only live on the first continuation, but we don't want to apply
+  // the start margin for later continuations anyway.
   if (pfd->mFrame->GetPrevContinuation() ||
-      nsLayoutUtils::FrameIsInLastPartOfIBSplit(pfd->mFrame)) {
+      nsLayoutUtils::FrameIsNonFirstInIBSplit(pfd->mFrame)) {
     // Zero this out so that when we compute the max-element-width of
     // the frame we will properly avoid adding in the starting margin.
     if (ltr)
@@ -1159,20 +1159,21 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
     /*
      * We want to only apply the end margin if we're the last continuation and
-     * not in the first part of an {ib} split.  In all other cases we want to
-     * zero it out.  That means zeroing it out if any of these conditions hold:
+     * either not in an {ib} split or the last inline in it.  In all other
+     * cases we want to zero it out.  That means zeroing it out if any of these
+     * conditions hold:
      * 1) The frame is not complete (in this case it will get a next-in-flow)
      * 2) The frame is complete but has a non-fluid continuation on its
      *    continuation chain.  Note that if it has a fluid continuation, that
      *    continuation will get destroyed later, so we don't want to drop the
      *    end-margin in that case.
-     * 3) The frame is in the first part of an {ib} split.
+     * 3) The frame is in an {ib} split and is not the last part.
      *
      * However, none of that applies if this is a letter frame (XXXbz why?)
      */
     if ((NS_FRAME_IS_NOT_COMPLETE(aStatus) ||
          pfd->mFrame->GetLastInFlow()->GetNextContinuation() ||
-         nsLayoutUtils::FrameIsInFirstPartOfIBSplit(pfd->mFrame))
+         nsLayoutUtils::FrameIsNonLastInIBSplit(pfd->mFrame))
         && !pfd->GetFlag(PFD_ISLETTERFRAME)) {
       if (ltr)
         pfd->mMargin.right = 0;

@@ -41,12 +41,15 @@
 #include "nsILink.h"
 #include "nsSVGString.h"
 
+#include "Link.h"
+
 typedef nsSVGGraphicElement nsSVGAElementBase;
 
 class nsSVGAElement : public nsSVGAElementBase,
                       public nsIDOMSVGAElement,
                       public nsIDOMSVGURIReference,
-                      public nsILink
+                      public nsILink,
+                      public mozilla::dom::Link
 {
 protected:
   friend nsresult NS_NewSVGAElement(nsIContent **aResult,
@@ -89,7 +92,4 @@ protected:
   enum { HREF, TARGET };
   nsSVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
-
-  // The cached visited state (for the implementation of nsILink)
-  nsLinkState mLinkState;
 };

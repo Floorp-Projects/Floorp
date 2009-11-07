@@ -123,7 +123,7 @@ var invalidTagChildTest = {
     toolbar.containerOpen = false;
 
     // test for our tag
-    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(this._itemUrl), {});
+    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(this._itemUrl));
     do_check_eq(tags.length, 1);
     do_check_eq(tags[0], this._tag);
   }

@@ -49,6 +49,7 @@
 #include "nsIComponentManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOM3Document.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMElement.h"
@@ -1713,6 +1714,36 @@ nsEventStatus nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
       rc->SetColor(oldColor);
       return nsEventStatus_eConsumeDoDefault;
     }
+
+  case NS_ACTIVATE: {
+#if defined(DEBUG_smaug)
+    nsCOMPtr<nsIDOMDocument> domDocument = do_GetInterface(browser->mDocShell);
+    nsAutoString documentURI;
+    if (domDocument) {
+      nsCOMPtr<nsIDOM3Document> d3 = do_QueryInterface(domDocument);
+      d3->GetDocumentURI(documentURI);
+    }
+    printf("nsWebBrowser::NS_ACTIVATE %p %s\n", (void*)browser,
+           NS_ConvertUTF16toUTF8(documentURI).get());
+#endif
+    browser->Activate();
+    break;
+  }
+
+  case NS_DEACTIVATE: {
+#if defined(DEBUG_smaug)
+    nsCOMPtr<nsIDOMDocument> domDocument = do_GetInterface(browser->mDocShell);
+    nsAutoString documentURI;
+    if (domDocument) {
+      nsCOMPtr<nsIDOM3Document> d3 = do_QueryInterface(domDocument);
+      d3->GetDocumentURI(documentURI);
+    }
+    printf("nsWebBrowser::NS_DEACTIVATE %p %s\n", (void*)browser,
+           NS_ConvertUTF16toUTF8(documentURI).get());
+#endif
+    browser->Deactivate();
+    break;
+  }
 
   default:
     break;

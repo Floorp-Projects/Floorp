@@ -620,6 +620,38 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
                                 &absPosBounds);
       aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, absPosBounds);
     }
+
+    // Handle invalidating fixed-attachment backgrounds propagated to the
+    // canvas when the canvas size (and therefore the background positioning
+    // area's size) changes.  Such backgrounds are not invalidated in the
+    // normal manner because the size of the original frame for that background
+    // may not have changed.
+    //
+    // This isn't the right fix for this issue, taken more generally.  In
+    // particular, this doesn't handle fixed-attachment backgrounds that are *not*
+    // propagated.  If a layer with the characteristics tested for below exists
+    // in a non-propagated background, we should invalidate the "corresponding"
+    // frame (which subsumes this special case if defined broadly).  For now,
+    // however, this addresses the most common case.  Given that this behavior has
+    // long been broken (non-zero percent background-size may be a new instance,
+    // but non-zero percent background-position is longstanding), we defer a
+    // fully correct fix until later.
+    if (nsSize(aDesiredSize.width, aDesiredSize.height) != GetSize()) {
+      nsIFrame* rootElementFrame =
+        aPresContext->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
+      const nsStyleBackground* bg =
+        nsCSSRendering::FindCanvasBackground(this, rootElementFrame);
+      if (!bg->IsTransparent()) {
+        NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+          const nsStyleBackground::Layer& layer = bg->mLayers[i];
+          if (layer.mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
+              layer.RenderingMightDependOnFrameSize()) {
+            Invalidate(nsRect(nsPoint(0, 0), GetSize()));
+            break;
+          }
+        }
+      }
+    }
   }
 
   if (prevCanvasFrame) {

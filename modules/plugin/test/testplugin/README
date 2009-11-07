@@ -95,8 +95,13 @@ wmode="window" was specified and the platform supports windowed plugins.
 
 * setColor(colorString)
 Sets the color used for drawmode="solid" and invalidates the plugin area.
-For now, invalidation only works for windowless plugins (including Mac
-plugins).
+This calls NPN_Invalidate, even for windowed plugins, since that should work
+for windowed plugins too (Silverlight depends on it).
+
+* getPaintCount()
+Returns the number of times this plugin instance has processed a paint request.
+This can be used to detect whether painting has happened in a plugin's
+window.
 
 == Plugin geometry ==
 

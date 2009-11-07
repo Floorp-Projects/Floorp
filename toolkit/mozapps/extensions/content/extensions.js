@@ -2923,7 +2923,7 @@ var gExtensionsViewController = {
       var dependentItems = [];
       if (!aSelectedItem.hasAttribute("lwtheme")) {
         var id = getIDFromResourceURI(aSelectedItem.id);
-        dependentItems = gExtensionManager.getDependentItemListForID(id, true, { });
+        dependentItems = gExtensionManager.getDependentItemListForID(id, true);
       }
       var result = confirmOperation(name, "uninstallTitle", "uninstallQueryMessage",
                                     "uninstallButton", "cancelButton",
@@ -3055,7 +3055,7 @@ var gExtensionsViewController = {
       }
 
       var id = getIDFromResourceURI(aSelectedItem.id);
-      var dependentItems = gExtensionManager.getDependentItemListForID(id, false, { });
+      var dependentItems = gExtensionManager.getDependentItemListForID(id, false);
 
       if (dependentItems.length > 0) {
         name = aSelectedItem.getAttribute("name");

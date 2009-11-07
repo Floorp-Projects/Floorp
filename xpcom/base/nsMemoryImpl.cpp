@@ -115,10 +115,13 @@ static const int kRequiredMemory = 0x3000000;
 NS_IMETHODIMP
 nsMemoryImpl::IsLowMemory(PRBool *result)
 {
-#if defined(WINCE)
+#if defined(WINCE_WINDOWS_MOBILE)
     MEMORYSTATUS stat;
     GlobalMemoryStatus(&stat);
     *result = (stat.dwMemoryLoad >= 98);
+#elif defined(WINCE)
+    // Bug 525323 - GlobalMemoryStatus kills perf on WinCE.
+    *result = PR_FALSE;
 #elif defined(XP_WIN)
     MEMORYSTATUSEX stat;
     stat.dwLength = sizeof stat;

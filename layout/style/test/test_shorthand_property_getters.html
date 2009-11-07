@@ -148,17 +148,17 @@ e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-back
 is(e.style.background, "", "should not have background shorthand (-moz-background-size too long)");
 
 // Check that we only serialize transition when the lists are the same length.
-e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0, 1s");
+e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0s, 1s");
 isnot(e.style.MozTransition, "", "should have -moz-transition shorthand (lists same length)");
-e.setAttribute("style", "-moz-transition-property: color, width, left; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0, 1s");
+e.setAttribute("style", "-moz-transition-property: color, width, left; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0s, 1s");
 is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists different lengths)");
-e.setAttribute("style", "-moz-transition-property: all; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0, 1s");
+e.setAttribute("style", "-moz-transition-property: all; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0s, 1s");
 is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists different lengths)");
-e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms, 300ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0, 1s");
+e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms, 300ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0s, 1s");
 is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists different lengths)");
-e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear, ease-out; -moz-transition-delay: 0, 1s");
+e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear, ease-out; -moz-transition-delay: 0s, 1s");
 is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists different lengths)");
-e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0, 1s, 0");
+e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0s, 1s, 0s");
 is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists different lengths)");
 
 

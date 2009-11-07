@@ -46,7 +46,7 @@ interface nsObjectFrame;
 interface nsIContent;
 interface nsITimer;
 
-[uuid(6a58f7e8-587c-40dd-b684-dc3e54f1342a)]
+[uuid(29384ba1-f9ce-425d-afb5-54e2ee949d87)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -113,6 +113,12 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
    *                                                     nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED
    */
   void processDocLoadEvent(in nsITimer aTimer, in voidPtr aClosure, in PRUint32 aEventType);
+
+  /**
+   * Notify accessibility that anchor jump has been accomplished to the given
+   * target. Used by layout.
+   */
+  void notifyOfAnchorJumpTo(in nsIContent aTarget);
 
   /**
    * Fire accessible event of the given type for the given target.

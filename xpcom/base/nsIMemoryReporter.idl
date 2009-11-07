@@ -62,7 +62,7 @@ interface nsIMemoryReporter : nsISupports
   readonly attribute long long memoryUsed;
 };
 
-[scriptable, uuid(63fc8fbd-509b-4fdb-93b4-2e6caeeddab1)]
+[scriptable, uuid(7c62de18-1edd-40f8-9da2-a8c622763074)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*

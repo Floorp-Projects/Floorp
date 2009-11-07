@@ -307,17 +307,17 @@ nsAccEvent::GetAccessibleByNode()
 
 /* static */
 void
-nsAccEvent::ApplyEventRules(nsTArray<nsCOMPtr<nsIAccessibleEvent> > &aEventsToFire)
+nsAccEvent::ApplyEventRules(nsTArray<nsRefPtr<nsAccEvent> > &aEventsToFire)
 {
   PRUint32 numQueuedEvents = aEventsToFire.Length();
   PRInt32 tail = numQueuedEvents - 1;
 
-  nsRefPtr<nsAccEvent> tailEvent = GetAccEventPtr(aEventsToFire[tail]);
+  nsAccEvent* tailEvent = aEventsToFire[tail];
   switch(tailEvent->mEventRule) {
     case nsAccEvent::eCoalesceFromSameSubtree:
     {
       for (PRInt32 index = 0; index < tail; index ++) {
-        nsRefPtr<nsAccEvent> thisEvent = GetAccEventPtr(aEventsToFire[index]);
+        nsAccEvent* thisEvent = aEventsToFire[index];
         if (thisEvent->mEventType != tailEvent->mEventType)
           continue; // Different type
 
@@ -381,7 +381,7 @@ nsAccEvent::ApplyEventRules(nsTArray<nsCOMPtr<nsIAccessibleEvent> > &aEventsToFi
     {
       // Check for repeat events.
       for (PRInt32 index = 0; index < tail; index ++) {
-        nsRefPtr<nsAccEvent> accEvent = GetAccEventPtr(aEventsToFire[index]);
+        nsAccEvent* accEvent = aEventsToFire[index];
         if (accEvent->mEventType == tailEvent->mEventType &&
             accEvent->mEventRule == tailEvent->mEventRule &&
             accEvent->mDOMNode == tailEvent->mDOMNode) {
@@ -397,13 +397,13 @@ nsAccEvent::ApplyEventRules(nsTArray<nsCOMPtr<nsIAccessibleEvent> > &aEventsToFi
 
 /* static */
 void
-nsAccEvent::ApplyToSiblings(nsTArray<nsCOMPtr<nsIAccessibleEvent> > &aEventsToFire,
+nsAccEvent::ApplyToSiblings(nsTArray<nsRefPtr<nsAccEvent> > &aEventsToFire,
                             PRUint32 aStart, PRUint32 aEnd,
-                             PRUint32 aEventType, nsIDOMNode* aDOMNode,
-                             EEventRule aEventRule)
+                            PRUint32 aEventType, nsIDOMNode* aDOMNode,
+                            EEventRule aEventRule)
 {
   for (PRUint32 index = aStart; index < aEnd; index ++) {
-    nsRefPtr<nsAccEvent> accEvent = GetAccEventPtr(aEventsToFire[index]);
+    nsAccEvent* accEvent = aEventsToFire[index];
     if (accEvent->mEventType == aEventType &&
         accEvent->mEventRule != nsAccEvent::eDoNotEmit &&
         nsCoreUtils::AreSiblings(accEvent->mDOMNode, aDOMNode)) {

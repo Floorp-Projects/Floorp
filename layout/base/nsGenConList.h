@@ -101,9 +101,9 @@ protected:
       // 'counter-increment'.
 
     NS_ASSERTION(mContentIndex < 0 ||
-                 mPseudoFrame->GetStyleContext()->GetPseudoType() ==
+                 mPseudoFrame->GetStyleContext()->GetPseudo() ==
                    nsCSSPseudoElements::before ||
-                 mPseudoFrame->GetStyleContext()->GetPseudoType() ==
+                 mPseudoFrame->GetStyleContext()->GetPseudo() ==
                    nsCSSPseudoElements::after,
                  "not :before/:after generated content and not counter change");
     NS_ASSERTION(mContentIndex < 0 ||

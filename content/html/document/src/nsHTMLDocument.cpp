@@ -1806,7 +1806,7 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
 nsresult
 nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 {
-  if (!IsHTML()) {
+  if (!IsHTML() || mDisableDocWrite) {
     // No calling document.open() on XHTML
 
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
@@ -2131,7 +2131,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
     (mWriteLevel > NS_MAX_DOCUMENT_WRITE_DEPTH || mTooDeepWriteRecursion);
   NS_ENSURE_STATE(!mTooDeepWriteRecursion);
 
-  if (!IsHTML()) {
+  if (!IsHTML() || mDisableDocWrite) {
     // No calling document.write*() on XHTML!
 
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
