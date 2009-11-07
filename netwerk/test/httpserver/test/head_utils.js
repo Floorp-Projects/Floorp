@@ -164,7 +164,7 @@ function expectLines(iter, expectedLines)
 /**
  * Spew a bunch of HTTP metadata from request into the body of response.
  *
- * @param request : nsIHttpRequestMetadata
+ * @param request : nsIHttpRequest
  *   the request whose metadata should be output
  * @param response : nsIHttpResponse
  *   the response to which the metadata is written
